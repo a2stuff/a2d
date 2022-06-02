@@ -13929,7 +13929,7 @@ content:
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::ok_button_rect
+        param_call ButtonEventLoop, winfo_prompt_dialog::kWindowId, aux::ok_button_rect
         bmi     :+
         lda     #PromptResult::ok
 :       rts
@@ -13938,7 +13938,7 @@ check_button_yes:
         MGTK_CALL MGTK::InRect, aux::yes_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_no
-        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::yes_button_rect
+        param_call ButtonEventLoop, winfo_prompt_dialog::kWindowId, aux::yes_button_rect
         bmi     :+
         lda     #PromptResult::yes
 :       rts
@@ -13947,7 +13947,7 @@ check_button_no:
         MGTK_CALL MGTK::InRect, aux::no_button_rect
         cmp     #MGTK::inrect_inside
         bne     check_button_all
-        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::no_button_rect
+        param_call ButtonEventLoop, winfo_prompt_dialog::kWindowId, aux::no_button_rect
         bmi     :+
         lda     #PromptResult::no
 :       rts
@@ -13956,7 +13956,7 @@ check_button_all:
         MGTK_CALL MGTK::InRect, aux::all_button_rect
         cmp     #MGTK::inrect_inside
         bne     maybe_check_button_cancel
-        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::all_button_rect
+        param_call ButtonEventLoop, winfo_prompt_dialog::kWindowId, aux::all_button_rect
         bmi     :+
         lda     #PromptResult::all
 :       rts
@@ -13970,7 +13970,7 @@ check_button_cancel:
         MGTK_CALL MGTK::InRect, aux::cancel_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonEventLoopRelay, winfo_prompt_dialog::kWindowId, aux::cancel_button_rect
+        param_call ButtonEventLoop, winfo_prompt_dialog::kWindowId, aux::cancel_button_rect
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
@@ -15908,6 +15908,8 @@ driver: jmp     (RAMSLOT)
 
         .include "../lib/datetime.s"
         .include "../lib/is_diskii.s"
+        .include "../lib/buttonloop.s"
+        .include "../lib/doubleclick.s"
 
 ;;; ============================================================
 

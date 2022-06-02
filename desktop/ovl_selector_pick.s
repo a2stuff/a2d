@@ -650,7 +650,7 @@ handle_button:
         MGTK_CALL MGTK::InRect, entry_picker_ok_rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
-        param_call ButtonEventLoopRelay, winfo_entry_picker::kWindowId, entry_picker_ok_rect
+        param_call main::ButtonEventLoop, winfo_entry_picker::kWindowId, entry_picker_ok_rect
         bmi     :+              ; nothing selected, re-enter loop
         lda     #$00            ; OK selected
 :       rts
@@ -658,7 +658,7 @@ handle_button:
 not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_rect
         cmp     #MGTK::inrect_inside
         bne     not_cancel
-        param_call ButtonEventLoopRelay, winfo_entry_picker::kWindowId, entry_picker_cancel_rect
+        param_call main::ButtonEventLoop, winfo_entry_picker::kWindowId, entry_picker_cancel_rect
         bmi     :+              ; nothing selected, re-enter loop
         lda     #$01            ; Cancel selected
 :       rts

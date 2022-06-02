@@ -272,32 +272,12 @@ op:     lda     SELF_MODIFIED
 .endproc
 
 ;;; ============================================================
-;;; ButtonEventLoop
-;;; Assert: Main is banked in
-
-.proc ButtonEventLoopRelay
-        jsr     BankInAux
-        jsr     aux::ButtonEventLoop
-        jmp     BankInMain
-.endproc
-
-;;; ============================================================
 ;;; Bell
 ;;; Assert: Main is banked in
 
 .proc Bell
         jsr     BankInAux
         jsr     aux::Bell
-        jmp     BankInMain
-.endproc
-
-;;; ============================================================
-;;; Detect double click
-;;; Assert: Main is banked in
-
-.proc DetectDoubleClick
-        jsr     BankInAux
-        jsr     aux::DetectDoubleClick
         jmp     BankInMain
 .endproc
 
