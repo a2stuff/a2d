@@ -53,7 +53,7 @@ _segoffset .set 0
         DEFSEG InvokerSegment, INVOKER, $160
         DEFSEG AppSegment, $4000, $6400
         DEFSEG AlertSegment, $D000, $800
-        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1800
+        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1700
         DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $D00
 
 ;;; ============================================================
