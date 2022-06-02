@@ -326,7 +326,6 @@ ret:    rts
 
         bit     extra_controls_flag
     IF_NS
-        jsr     SetPortForDialog
         jsr     click_handler_hook
         bpl     :+
         rts

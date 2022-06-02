@@ -420,6 +420,7 @@ draw:
         dey
         bpl     :-
 
+        jsr     file_dialog::SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintBits, rb_params
