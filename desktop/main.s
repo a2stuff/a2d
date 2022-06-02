@@ -13916,8 +13916,7 @@ content:
         cmp     #winfo_prompt_dialog::kWindowId
         beq     :+
         return  #$FF
-:       jsr     SetPortForDialogWindow
-        copy    winfo_prompt_dialog, event_params
+:       copy    winfo_prompt_dialog, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         bit     prompt_button_flags
@@ -14065,31 +14064,22 @@ ignore:
 
         ;; --------------------------------------------------
 
-do_yes: jsr     SetPenModeXOR
-        MGTK_CALL MGTK::PaintRect, aux::yes_button_rect
+do_yes: param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::yes_button_rect
         return  #PromptResult::yes
 
-do_no:  jsr     SetPenModeXOR
-        MGTK_CALL MGTK::PaintRect, aux::no_button_rect
+do_no:  param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::no_button_rect
         return  #PromptResult::no
 
-do_all: jsr     SetPenModeXOR
-        MGTK_CALL MGTK::PaintRect, aux::all_button_rect
+do_all: param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::all_button_rect
         return  #PromptResult::all
 
 .proc HandleKeyOk
-        jsr     SetPortForDialogWindow
-        jsr     SetPenModeXOR
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
+        param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::ok_button_rect
         return  #0
 .endproc
 
 .proc HandleKeyCancel
-        jsr     SetPortForDialogWindow
-        jsr     SetPenModeXOR
-        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
-        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
+        param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::cancel_button_rect
         return  #1
 .endproc
 
@@ -15908,6 +15898,7 @@ driver: jmp     (RAMSLOT)
 
         .include "../lib/datetime.s"
         .include "../lib/is_diskii.s"
+        grafport_win := window_grafport
         .include "../lib/buttonloop.s"
         .include "../lib/doubleclick.s"
 

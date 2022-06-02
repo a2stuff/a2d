@@ -330,26 +330,12 @@ selected_index:
 
         .include "../lib/event_params.s"
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
-port:           .addr   grafport
+port:           .addr   grafport_win
 .endparams
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
+grafport_win:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 ;;; Dialog Logic
@@ -421,10 +407,16 @@ textfont:       .addr   0
 
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     Exit
+    IF_EQ
+        param_call ButtonFlash, kDAWindowId, ok_button_rect
+        jmp     Exit
+    END_IF
 
         cmp     #CHAR_RETURN
-        beq     Exit
+    IF_EQ
+        param_call ButtonFlash, kDAWindowId, ok_button_rect
+        jmp     Exit
+    END_IF
 
         ;; Select previous
         cmp     #CHAR_UP
@@ -562,9 +554,6 @@ modifiers:
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        copy    winfo::window_id, winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
-        MGTK_CALL MGTK::SetPort, grafport
         param_call ButtonEventLoop, kDAWindowId, ok_button_rect
         jeq     Exit
         jmp     InputLoop
@@ -824,9 +813,9 @@ ret:    rts
         stax    itemrect::y1
         addax   #kListItemHeight-1, itemrect::y2
 
-        copy    #kListBoxWindowId, winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
-        MGTK_CALL MGTK::SetPort, grafport
+        copy    #kListBoxWindowId, getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, grafport_win
 
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, itemrect
@@ -839,9 +828,9 @@ ret:    rts
 .proc DrawWindow
 
         ;; Dialog Box
-        copy    #kDAWindowId, winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
-        MGTK_CALL MGTK::SetPort, grafport
+        copy    #kDAWindowId, getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, grafport_win
 
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -867,9 +856,9 @@ ret:    rts
 ;;; ============================================================
 
 .proc DrawListEntries
-        copy    #kListBoxWindowId, winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
-        MGTK_CALL MGTK::SetPort, grafport
+        copy    #kListBoxWindowId, getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, grafport_win
 
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, winfo_listbox::maprect

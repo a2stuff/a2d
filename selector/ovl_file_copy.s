@@ -816,9 +816,10 @@ l7:     lda     RAMCARD_PREFIX,y
 ;;; ============================================================
 
 .params winfo
+        kWindowId = $0B
         kWidth = 350
         kHeight = 70
-window_id:      .byte   $0B
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -1025,11 +1026,7 @@ event_loop:
         lda     event_params::key
         cmp     #CHAR_RETURN
         bne     event_loop
-        lda     winfo::window_id
-        jsr     app::GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
+        param_call app::ButtonFlash, winfo::kWindowId, ok_button_rect
         jsr     app::SetWatchCursor
         rts
 

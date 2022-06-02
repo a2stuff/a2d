@@ -223,10 +223,10 @@ grafport2:
 
 .params getwinport_params
 window_id:     .byte   0
-a_grafport:    .addr   grafport
+a_grafport:    .addr   grafport_win
 .endparams
 
-grafport:       .tag    MGTK::GrafPort
+grafport_win:   .tag    MGTK::GrafPort
 
 setzp_params:   .byte   MGTK::zp_overwrite ; performance over convenience
 
@@ -687,11 +687,7 @@ quick_boot_slot:
         cmp     #TO_LOWER(kShortcutRunDeskTop)
         bne     not_desktop
 
-:       lda     winfo::window_id
-        jsr     GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, desktop_button_rect
-        MGTK_CALL MGTK::PaintRect, desktop_button_rect
+:       param_call ButtonFlash, winfo::kDialogId, desktop_button_rect
 @retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     :+
         lda     #AlertID::insert_system_disk
@@ -733,7 +729,7 @@ ClearUpdates:
 
 @do_update:
         lda     event_params::window_id
-        cmp     winfo::window_id
+        cmp     #winfo::kDialogId
         bne     done
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
@@ -903,13 +899,13 @@ L9443:  lda     #AlertID::insert_system_disk
         rts
 
 :       lda     findwindow_params::window_id
-        cmp     winfo::window_id
+        cmp     #winfo::kDialogId
         beq     :+
         rts
 
-:       lda     winfo::window_id
+:       lda     #winfo::kDialogId
         jsr     GetWindowPort
-        lda     winfo::window_id
+        lda     #winfo::kDialogId
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -920,9 +916,7 @@ L9443:  lda     #AlertID::insert_system_disk
         cmp     #MGTK::inrect_inside
         bne     check_desktop_btn
 
-        ldy     winfo::window_id
-        ldax    #ok_button_rect
-        jsr     ButtonEventLoop
+        param_call ButtonEventLoop, winfo::kDialogId, ok_button_rect
         bmi     done
         jsr     TryInvokeSelectedIndex
 done:   rts
@@ -936,9 +930,7 @@ check_desktop_btn:
         cmp     #MGTK::inrect_inside
         bne     check_entries
 
-        ldy     winfo::window_id
-        ldax    #desktop_button_rect
-        jsr     ButtonEventLoop
+        param_call ButtonEventLoop, winfo::kDialogId, desktop_button_rect
         bmi     done
 
 @retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
@@ -1042,7 +1034,7 @@ noop:   rts
 
 .proc HandleNonmenuKey
 
-        lda     winfo::window_id
+        lda     #winfo::kDialogId
         jsr     GetWindowPort
         lda     event_params::key
         cmp     #$1C            ; Control character?
@@ -1090,11 +1082,7 @@ no_cur_sel:
 control_char:
         cmp     #CHAR_RETURN
         bne     not_return
-        lda     winfo::window_id
-        jsr     GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
+        param_call ButtonFlash, winfo::kDialogId, ok_button_rect
         jsr     TryInvokeSelectedIndex
         rts
 not_return:
@@ -1523,7 +1511,7 @@ backup_devlst:
 ;;; ============================================================
 
 .proc GetPortAndDrawWindow
-        lda     winfo::window_id
+        lda     #winfo::kDialogId
         jsr     GetWindowPort
         FALL_THROUGH_TO DrawWindow
 .endproc
@@ -1643,7 +1631,7 @@ L9A10:  dey
 .proc GetWindowPort
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport_win
         rts
 .endproc
 
@@ -1825,7 +1813,7 @@ prefix: pla
         sta     entry_string_buf+3
 
         ;; Draw the string
-common: lda     winfo::window_id
+common: lda     #winfo::kDialogId
         jsr     GetWindowPort
         pla
         jsr     GetOptionPos

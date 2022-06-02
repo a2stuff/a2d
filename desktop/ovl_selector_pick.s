@@ -757,18 +757,14 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleKeyReturn
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, entry_picker_ok_rect
-        MGTK_CALL MGTK::PaintRect, entry_picker_ok_rect
+        param_call main::ButtonFlash, winfo_entry_picker::kWindowId, entry_picker_ok_rect
         return  #0
 .endproc
 
 ;;; ============================================================
 
 .proc HandleKeyEscape
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, entry_picker_cancel_rect
-        MGTK_CALL MGTK::PaintRect, entry_picker_cancel_rect
+        param_call main::ButtonFlash, winfo_entry_picker::kWindowId, entry_picker_cancel_rect
         return  #1
 .endproc
 

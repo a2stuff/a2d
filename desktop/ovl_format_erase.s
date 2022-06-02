@@ -336,9 +336,7 @@ valid:  cmp     selected_device_index
         bmi     l6
 
         ;; Activated by double-click
-l5:     MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
+l5:     param_call main::ButtonFlash, winfo_prompt_dialog::kWindowId, aux::ok_button_rect
         lda     #$00
 l6:     rts
 

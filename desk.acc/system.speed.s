@@ -150,10 +150,10 @@ nextwinfo:      .addr   0
 
 .params getwinport_params
 window_id:      .byte   0
-a_grafport:     .addr   grafport
+a_grafport:     .addr   grafport_win
 .endparams
 
-grafport:       .tag MGTK::GrafPort
+grafport_win:       .tag MGTK::GrafPort
 
 ;;; ============================================================
 ;;; Resources for an animation to show speed
@@ -318,33 +318,18 @@ frame_counter:
 .endproc
 
 .proc OnKeyOk
-        lda     winfo::window_id
-        jsr     GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-
+        param_call ButtonFlash, kDAWindowId, ok_button_rect
         jmp     CloseWindow
 .endproc
 
 .proc OnKeyNorm
-        lda     winfo::window_id
-        jsr     GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, norm_button_rect
-        MGTK_CALL MGTK::PaintRect, norm_button_rect
-
+        param_call ButtonFlash, kDAWindowId, norm_button_rect
         jsr     DoNorm
         jmp     InputLoop
 .endproc
 
 .proc OnKeyFast
-        lda     winfo::window_id
-        jsr     GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, fast_button_rect
-        MGTK_CALL MGTK::PaintRect, fast_button_rect
-
+        param_call ButtonFlash, kDAWindowId, fast_button_rect
         jsr     DoFast
         jmp     InputLoop
 .endproc
@@ -368,16 +353,6 @@ frame_counter:
         sta     RAMWRTON
         rts
 .endproc
-
-;;; ============================================================
-
-.proc GetWindowPort
-        sta     getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport
-        rts
-.endproc
-
 
 ;;; ============================================================
 
@@ -407,8 +382,6 @@ frame_counter:
 miss:   jmp     InputLoop
 
 hit:    lda     winfo::window_id
-        jsr     GetWindowPort
-        lda     winfo::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window

@@ -885,25 +885,12 @@ nextwinfo:      .addr   0
 
         .include "../lib/event_params.s"
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   0
-port:           .addr   grafport
+port:           .addr   grafport_win
 .endparams
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .word   0
-        DEFINE_RECT maprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
+grafport_win:   .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
@@ -999,9 +986,9 @@ top_row:        .byte   0
         click_coords := screentowindow_params::window
 
 .proc SetPort
-        copy    #kDAWindowID, winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
-        MGTK_CALL MGTK::SetPort, grafport
+        copy    #kDAWindowID, getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, grafport_win
         rts
 .endproc
 
@@ -1057,13 +1044,13 @@ line_edit__Activate := line_edit::Activate
         ;; Not modified
         cmp     #CHAR_ESCAPE
       IF_EQ
-        param_call FlashButton, cancel_button_rect
+        param_call ButtonFlash, kDAWindowID, cancel_button_rect
         jmp     Exit
       END_IF
 
         cmp     #CHAR_RETURN
       IF_EQ
-        param_call FlashButton, search_button_rect
+        param_call ButtonFlash, kDAWindowID, search_button_rect
         jmp     DoSearch
       END_IF
 
@@ -1384,23 +1371,6 @@ bottom: add16   winfo_results::maprect::y1, #kResultsHeight, winfo_results::mapr
 .endproc
 
 ;;; ============================================================
-;;; Call with rect addr in A,X
-
-.proc FlashButton
-        stax    fillrect_addr
-
-        copy    #kDAWindowID, winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        jsr     sub
-        FALL_THROUGH_TO sub
-
-sub:    MGTK_CALL MGTK::PaintRect, 0, fillrect_addr
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Determine if mouse moved (returns w/ carry set if moved)
 ;;; Used in dialogs to possibly change cursor
 
@@ -1452,10 +1422,10 @@ done:   jmp     InputLoop
 ;;; ============================================================
 
 .proc DrawWindow
-        copy    #kDAWindowID, winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        copy    #kDAWindowID, getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; No need to check results, since window is always visible.
-        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport_win
         MGTK_CALL MGTK::HideCursor
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -1484,10 +1454,10 @@ done:   rts
 ;;; ============================================================
 
 .proc DrawResults
-        copy    #kResultsWindowID, winport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        copy    #kResultsWindowID, getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; No need to check results, since window is always visible.
-        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport_win
         MGTK_CALL MGTK::HideCursor
 
         ;; TODO: Optimize erasing

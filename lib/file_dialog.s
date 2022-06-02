@@ -10,6 +10,7 @@
 ;;; * `AdjustFileEntryCase`
 ;;; * `AdjustVolumeNameCase`
 ;;; * `ButtonEventLoop`
+;;; * `ButtonFlash`
 ;;; * `CheckMouseMoved`
 ;;; * `DetectDoubleClick`
 ;;; * `MLIRelayImpl`
@@ -255,7 +256,6 @@ ret:    rts
     IF_EQ
         jsr     IsChangeDriveAllowed
         bcs     :+
-        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         bmi     :+
         jsr     DoChangeDrive
@@ -273,7 +273,6 @@ ret:    rts
      IF_EQ
         jsr     IsOpenAllowed
         bcs     :+
-        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     :+
         jsr     DoOpen
@@ -288,7 +287,6 @@ ret:    rts
     IF_EQ
         jsr     IsCloseAllowed
         bcs     :+
-        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
         jsr     DoClose
@@ -301,7 +299,6 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
         jsr     HandleOk
@@ -314,7 +311,6 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        jsr     SetPortForDialog
         param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
         jsr     HandleCancel
@@ -430,22 +426,14 @@ open:   ldx     file_dialog_res::selected_index
         bmi     folder
 
         ;; File - select it.
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         jsr     HandleOk
         jmp     rts1
 
         ;; Folder - open it.
 folder: and     #$7F
         pha                     ; A = index
-
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-
+        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         pla                     ; A = index
         jsr     GetNthFilename
         jsr     AppendToPathBuf
@@ -889,10 +877,7 @@ exit:   rts
         jsr     IsOpenAllowed
         bcs     ret
 
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::open_button_rect
+        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         jsr     DoOpen
 
 ret:    rts
@@ -904,10 +889,7 @@ ret:    rts
         jsr     IsCloseAllowed
         bcs     ret
 
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::close_button_rect
+        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         jsr     DoClose
 
 ret:    rts
@@ -924,10 +906,7 @@ ret:    rts
         rts
 :
 .endif
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::ok_button_rect
+        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         jsr     HandleOk
         rts
 .endproc
@@ -935,10 +914,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc KeyEscape
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::cancel_button_rect
+        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         jsr     HandleCancel
         rts
 .endproc
@@ -949,10 +925,7 @@ ret:    rts
         jsr     IsChangeDriveAllowed
         bcs     ret
 
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::change_drive_button_rect
+        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         jsr     DoChangeDrive
 ret:    rts
 .endproc

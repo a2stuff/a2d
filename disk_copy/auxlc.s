@@ -1115,9 +1115,7 @@ LDB98:  cmp     current_drive_selection
         bne     LDBCD
         bit     LD368
         bpl     LDBC0
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
+        param_call ButtonFlash, winfo_dialog::kWindowId, ok_button_rect
         return  #$00
 
 LDBC0:  lda     #$FF
@@ -1176,20 +1174,12 @@ dialog_shortcuts:
         beq     LDC09
         cmp     #TO_LOWER(kShortcutReadDisk)
         bne     LDC2D
-LDC09:  lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, read_drive_button_rect
-        MGTK_CALL MGTK::PaintRect, read_drive_button_rect
+LDC09:  param_call ButtonFlash, winfo_dialog::kWindowId, read_drive_button_rect
         return  #$01
 
 LDC2D:  cmp     #CHAR_RETURN
     IF_EQ
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
+        param_call ButtonFlash, winfo_dialog::kWindowId, ok_button_rect
         return  #$00
     END_IF
 

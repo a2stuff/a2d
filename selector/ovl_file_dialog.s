@@ -169,6 +169,7 @@ start:  jsr     OpenWindow
 YieldLoop               := app::YieldLoop
 DetectDoubleClick       := app::DetectDoubleClick
 ButtonEventLoop         := app::ButtonEventLoop
+ButtonFlash             := app::ButtonFlash
 ModifierDown            := app::ModifierDown
 ShiftDown               := app::ShiftDown
 

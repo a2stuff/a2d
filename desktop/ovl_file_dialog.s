@@ -24,6 +24,7 @@ CheckMouseMoved         := main::CheckMouseMoved
 YieldLoop               := main::YieldLoop
 DetectDoubleClick       := main::StashCoordsAndDetectDoubleClick
 ButtonEventLoop         := main::ButtonEventLoop
+ButtonFlash             := main::ButtonFlash
 ModifierDown            := main::ModifierDown
 ShiftDown               := main::ShiftDown
 AdjustVolumeNameCase    := main::AdjustVolumeNameCase

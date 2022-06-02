@@ -1,13 +1,29 @@
 ;;; ============================================================
+;;; Button Routines
+;;; ============================================================
+;;; Requires:
+;;; * `penXOR`
+;;; * `event_params`
+;;; * `screentowindow_params` (overlapping `event_params`)
+;;; * `screentowindow_window_id`
+;;; * `getwinport_params` - which must reference...
+;;; * `grafport_win`
+;;; ============================================================
+
+;;; ============================================================
 ;;; Event loop during button press - initial invert and
 ;;; inverting as mouse is dragged in/out.
 ;;; Input: A,X = rect address, Y = window_id
 ;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
+;;; Note: Sets current GrafPort to window's port.
 
 .proc ButtonEventLoop
         sty     window_id
         stax    rect_addr1
         stax    rect_addr2
+
+        tya
+        jsr     _ButtonSetWinPort
 
         ;; Initial state
         copy    #0, down_flag
@@ -60,4 +76,31 @@ down_flag:
 
 window_id:
         .byte   0
+.endproc
+
+;;; ============================================================
+;;; Flash button, following keypress
+;;; Input: A,X = rect address, Y = window_id
+;;; Note: Sets current GrafPort to window's port.
+
+.proc ButtonFlash
+        stax    rect_addr
+        tya
+        jsr     _ButtonSetWinPort
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        jsr     Invert
+        FALL_THROUGH_TO Invert
+
+Invert: MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr
+        rts
+.endproc
+
+;;; ============================================================
+;;; Helper
+
+.proc _ButtonSetWinPort
+        sta     getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, grafport_win
+        rts
 .endproc
