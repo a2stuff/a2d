@@ -1025,7 +1025,7 @@ noop:   rts
 
         sta     CLRALTCHAR
         sta     CLR80VID
-        sta     CLR80COL
+        sta     CLR80STORE
 
         rts
 .endproc

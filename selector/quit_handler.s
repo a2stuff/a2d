@@ -48,7 +48,7 @@ start:
         jsr     SETKBD
         sta     CLR80VID
         sta     SETALTCHAR
-        sta     CLR80COL
+        sta     CLR80STORE
         jsr     SLOT3ENTRY
         jsr     HOME
 

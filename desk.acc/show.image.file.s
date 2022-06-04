@@ -310,7 +310,7 @@ signature:
 .proc CopyHiresToAux
         ptr := $06
 
-        sta     CLR80COL
+        sta     CLR80STORE
         sta     RAMWRTON
 
         copy16  #hires, ptr
@@ -324,7 +324,7 @@ signature:
         dex
         bne     :-
 
-        sta     SET80COL
+        sta     SET80STORE
         sta     RAMWRTOFF
         rts
 .endproc

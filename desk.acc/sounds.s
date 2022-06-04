@@ -1470,7 +1470,7 @@ loop:   ldx     #48
         FALL_THROUGH_TO InvertMenu
 
 .proc InvertMenu
-        sta     SET80COL
+        sta     SET80STORE
 
         ldx     #kMenuBarHeight-1
 rloop:  lda     hires_table_lo,x
@@ -1486,7 +1486,7 @@ rloop:  lda     hires_table_lo,x
         dex
         bpl     rloop
 
-        sta     CLR80COL
+        sta     CLR80STORE
 
         rts
 

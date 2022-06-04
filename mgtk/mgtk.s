@@ -85,7 +85,7 @@ kScreenHeight   = 192
 
 .proc Dispatch
         lda     LOWSCR
-        sta     SET80COL
+        sta     SET80STORE
 
         bit     preserve_zp_flag ; save ZP?
         bpl     adjust_stack
@@ -5224,7 +5224,7 @@ body:                           ; returned by GetIntHandler
         lda     RD80STORE
         sta     int_stash_rd80store
         lda     LOWSCR
-        sta     SET80COL
+        sta     SET80STORE
 
         COPY_BYTES 9, $82, int_stash_zp ; preserve 9 bytes of ZP
 
@@ -5240,13 +5240,13 @@ body:                           ; returned by GetIntHandler
 :       COPY_BYTES 9, int_stash_zp, $82 ; restore ZP
 
         lda     LOWSCR          ;  restore soft switches
-        sta     CLR80COL
+        sta     CLR80STORE
         lda     int_stash_rdpage2
         bpl     :+
         lda     HISCR
 :       lda     int_stash_rd80store
         bpl     :+
-        sta     SET80COL
+        sta     SET80STORE
 
 :       rts
 .endproc

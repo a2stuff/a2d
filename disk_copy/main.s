@@ -107,7 +107,7 @@ params:  .res    3
 
         sta     CLRALTCHAR
         sta     CLR80VID
-        sta     CLR80COL
+        sta     CLR80STORE
 
         MLI_CALL QUIT, quit_params
         rts

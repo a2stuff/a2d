@@ -22,7 +22,7 @@
         ;; Detection routine
         php
         sei
-        sta     SET80COL        ; 80STORE on - let PAGE2 control banking
+        sta     SET80STORE      ; let PAGE2 control banking
         sta     PAGE2ON         ; access PAGE1X
 
         ldx     $400            ; save PAGE1X value in X
@@ -46,7 +46,7 @@
         sta     PAGE2OFF        ; access PAGE1
         sty     $400            ; restore PAGE1 from Y
 
-        sta     CLR80COL        ; 80STORE off - restore PAGE2 meaning
+        sta     CLR80STORE      ; restore PAGE2 meaning
         plp
 
         result := *+1

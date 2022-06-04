@@ -46,7 +46,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
 ;;; Save and clear main/aux text page 1 (preserving screen holes)
 .proc SaveText
-        sta     SET80COL        ; 80STORE on - let page1/2 control banking
+        sta     SET80STORE      ; let PAGE2 control banking
         lda     #0
         sta     CV
 
@@ -83,13 +83,13 @@ cloop:
         cmp     #24
         bne     rloop
 
-        sta     CLR80COL
+        sta     CLR80STORE
         rts
 .endproc
 
 ;;; Restore main/aux text page 1 (preserving screen holes)
 .proc RestoreText
-        sta     SET80COL        ; 80STORE on - let page1/2 control banking
+        sta     SET80STORE      ; let PAGE2 control banking
         lda     #0
         sta     CV
 
@@ -121,7 +121,7 @@ cloop:
         cmp     #24
         bne     rloop
 
-        sta     CLR80COL
+        sta     CLR80STORE
         rts
 .endproc
 

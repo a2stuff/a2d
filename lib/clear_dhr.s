@@ -5,7 +5,7 @@
         HIRES_ADDR = $2000
         kHiresSize = $2000
 
-        sta     CLR80COL        ; Make sure RAMWRTON works
+        sta     CLR80STORE      ; Make sure RAMWRTON works
         sta     RAMWRTON        ; Clear aux
         jsr     clear
         sta     RAMWRTOFF       ; Clear main

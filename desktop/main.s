@@ -2810,7 +2810,7 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 
         sta     CLRALTCHAR
         sta     CLR80VID
-        sta     CLR80COL
+        sta     CLR80STORE
 
         ;; Restore /RAM if possible.
         jmp     MaybeReformatRam

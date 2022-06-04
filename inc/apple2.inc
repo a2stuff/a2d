@@ -136,18 +136,23 @@ FBUFFR          := $100
 ;;; Softswitches
 ;;; ============================================================
 
-RAMRDOFF        := $C002        ; Read from main 48K RAM
-RAMRDON         := $C003        ; Read from alternate 48K RAM
-RAMWRTOFF       := $C004        ; Write to main 48K RAM
-RAMWRTON        := $C005        ; Write to alternate 48K RAM
-ALTZPOFF        := $C008        ; Use main zero page/stack
-ALTZPON         := $C009        ; Use alternate zero page/stack
+CLR80STORE      := $C000        ; (W) cause PAGE2 to bank display memory
+SET80STORE      := $C001        ; (W) restore normal PAGE2 control
 
-CLR80VID        := $C00C        ; Disable 80-column hardware
-SET80VID        := $C00D        ; Enable 80-column hardware
-RDALTZP         := $C016        ; Bit 7 = 1 if slot zp enabled
-RD80STORE       := $C018        ; Bit 7 = 1 if 80-column store
-RDPAGE2         := $C01C
+RAMRDOFF        := $C002        ; (W) Read from main 48K RAM ($200-$BFFF)
+RAMRDON         := $C003        ; (W) Read from auxiliary 48K RAM ($200-$BFFF)
+RAMWRTOFF       := $C004        ; (W) Write to main 48K RAM ($200-$BFFF)
+RAMWRTON        := $C005        ; (W) Write to auxiliary 48K RAM ($200-$BFFF)
+ALTZPOFF        := $C008        ; (W) Use main zero page/stack/LC
+ALTZPON         := $C009        ; (W) Use auxiliary zero page/stack/LC
+
+CLR80VID        := $C00C        ; (W) Disable 80-column hardware
+SET80VID        := $C00D        ; (W) Enable 80-column hardware
+RDBNK2          := $C011        ; (R7) bit 7=1 if LCBANK2 enabled
+RDALTZP         := $C016        ; (R7) bit 7=1 if auxiliary ZP/stack/LC enabled
+RD80STORE       := $C018        ; (R7) bit 7=1 if 80STORE enabled
+RDPAGE2         := $C01C        ; (R7) bit 7=1 if PAGE2 on
+RDALTCHAR       := $C01E        ; (R7) bit 7=1 if ALTCHAR on
 
 MONOCOLOR       := $C021        ; IIgs - bit 7=1 switches composite to mono
 
