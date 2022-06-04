@@ -2779,7 +2779,10 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         jsr     SaveWindows
         jsr     RestoreDeviceList
 
-        ;; Switch back to main ZP, preserving return address.
+        ;; Switch back to color DHR mode
+        jsr     SetColorMode
+
+        ;; Switch back to main ZP/LC, preserving return address.
         pla
         tax
         pla
@@ -2787,9 +2790,6 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         pha
         txa
         pha
-
-        ;; Switch back to color DHR mode
-        jsr     SetColorMode
 
         ;; Exit graphics mode entirely
         bit     ROMIN2
