@@ -3924,13 +3924,13 @@ vert_scroll_max:        .byte   0
 
 .proc CmdCheckDrives
         copy    #0, pending_alert
-        jsr     LoadDesktopEntryTable
         jsr     CmdCloseAll
         jsr     ClearSelection
 
         ;; --------------------------------------------------
         ;; Destroy existing volume icons
 .scope
+        jsr     LoadDesktopEntryTable
         ldx     cached_window_entry_count
         dex
 loop:   lda     cached_window_entry_list,x
