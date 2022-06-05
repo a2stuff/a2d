@@ -145,9 +145,7 @@ pathbuf:        .res    kPathBufferSize, 0
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
-exit:   lda     #kDynamicRoutineRestore5000
-        jmp     JUMP_TABLE_RESTORE_OVL
-
+        rts
 .endproc
 
 ;;; ============================================================
@@ -248,6 +246,11 @@ str_instruct:   PASCAL_STRING res_string_instructions
 .proc ClearUpdates
         sta     RAMRDOFF
         sta     RAMWRTOFF
+
+        ;; Page DeskTop's code back in.
+        lda     #kDynamicRoutineRestore5000
+        jsr     JUMP_TABLE_RESTORE_OVL
+
         jsr     JUMP_TABLE_CLEAR_UPDATES
         sta     RAMRDON
         sta     RAMWRTON
