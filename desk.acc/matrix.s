@@ -58,7 +58,6 @@ rloop:  jsr     VTAB
         add16   BASL, #save_buffer-$400, ptr1
         add16   ptr1, #$400, ptr2
         ldy     #39
-        ldx     #0
 
 cloop:
         ;; Main
@@ -70,7 +69,7 @@ cloop:
         ;; Aux
         sta     PAGE2ON
         lda     (BASL),y
-        sta     (ptr1),y
+        sta     (ptr2),y
         lda     #kAuxPageClearByte
         sta     (BASL),y
         sta     PAGE2OFF
