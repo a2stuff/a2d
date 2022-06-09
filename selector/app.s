@@ -1451,9 +1451,11 @@ saved_ram_unitnum:
 ;;; ============================================================
 
 .proc SaveAndAdjustDeviceList
-        ;; Save original DEVLST
+        ;; Save original DEVCNT+DEVLST
+        .assert DEVLST = DEVCNT+1, error, "DEVCNT must precede DEVLST"
         ldx     DEVCNT
-:       copy    DEVLST,x, backup_devlst,x
+        inx                     ; include DEVCNT itself
+:       copy    DEVCNT,x, backup_devlst,x
         dex
         bpl     :-
 
@@ -1498,15 +1500,22 @@ done:   rts
 .endproc
 
 .proc RestoreDeviceList
-        ldx     DEVCNT
-:       copy    backup_devlst,x, DEVLST,x
+        ;; Verify that a backup was done. Note that DEVCNT can be
+        ;; zero (since it is num devices - 1) so the high bit is used.
+        ldx     backup_devlst   ; the original DEVCNT
+        bmi     ret             ; backup was never done
+
+        inx                     ; include DEVCNT itself
+:       copy    backup_devlst,x, DEVCNT,x
         dex
         bpl     :-
-        rts
+
+ret:    rts
 .endproc
 
 backup_devlst:
-        .res    14, 0
+        .byte   $FF             ; backup for DEVCNT (w/ high bit set)
+        .res    14, 0           ; backup for DEVLST (7 slots * 2 drives)
 
 ;;; ============================================================
 

@@ -585,6 +585,8 @@ Image File:
 * Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch Selector. File > Run a Program.... Verify that the non-RAMCard volume containing Selector is the first disk shown.
 * Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch Selector. File > Run a Program.... Verify that the non-RAMCard volume containing Selector is the first disk shown.
 
+* Using DeskTop, either delete LOCAL/SELECTOR.LIST or just delete all shortcuts. Configure Selector to start. Launch Selector. Ensure DeskTop is automatically invoked and starts correctly.
+
 # Disk Copy
 
 * Launch DeskTop. Special > Disk Copy.... File > Quit. Special > Disk Copy.... Ensure drive list is correct.
