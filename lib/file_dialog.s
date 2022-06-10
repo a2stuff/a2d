@@ -1360,6 +1360,7 @@ ret:    rts
         sta     change_drive_button_dimmed_flag
         MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
         param_call DrawString, file_dialog_res::change_drive_button_label
+        bit     change_drive_button_dimmed_flag
         bpl     ret
         param_call DisableButton, file_dialog_res::change_drive_button_rect
 
