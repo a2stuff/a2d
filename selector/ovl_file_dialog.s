@@ -168,7 +168,7 @@ start:  jsr     OpenWindow
 ;;; Required proc definitions:
 YieldLoop               := app::YieldLoop
 DetectDoubleClick       := app::DetectDoubleClick
-ButtonEventLoop         := app::ButtonEventLoop
+ButtonClick             := app::ButtonClick
 ButtonFlash             := app::ButtonFlash
 ModifierDown            := app::ModifierDown
 ShiftDown               := app::ShiftDown

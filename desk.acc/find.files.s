@@ -1364,7 +1364,7 @@ bottom: add16   winfo_results::maprect::y1, #kResultsHeight, winfo_results::mapr
 :
         ldax    inrect_addr
         ldy     #kDAWindowID
-        jsr     ButtonEventLoop
+        jsr     ButtonClick
         bmi     :+
         lda     #kClicked
 :       rts
@@ -1508,7 +1508,7 @@ line:   .byte   0
 
 ;;; ============================================================
 
-        .include "../lib/buttonloop.s"
+        .include "../lib/button.s"
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
 

@@ -1047,7 +1047,7 @@ HandleButtonDown:
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     event_loop
-        param_call app::ButtonEventLoop, winfo::kWindowId, ok_button_rect
+        param_call app::ButtonClick, winfo::kWindowId, ok_button_rect
         bmi     event_loop
         jsr     app::SetWatchCursor
         rts

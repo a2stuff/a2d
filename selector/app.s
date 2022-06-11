@@ -916,7 +916,7 @@ L9443:  lda     #AlertID::insert_system_disk
         cmp     #MGTK::inrect_inside
         bne     check_desktop_btn
 
-        param_call ButtonEventLoop, winfo::kDialogId, ok_button_rect
+        param_call ButtonClick, winfo::kDialogId, ok_button_rect
         bmi     done
         jsr     TryInvokeSelectedIndex
 done:   rts
@@ -930,7 +930,7 @@ check_desktop_btn:
         cmp     #MGTK::inrect_inside
         bne     check_entries
 
-        param_call ButtonEventLoop, winfo::kDialogId, desktop_button_rect
+        param_call ButtonClick, winfo::kDialogId, desktop_button_rect
         bmi     done
 
 @retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
@@ -2198,7 +2198,7 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         rts
 .endproc
 
-        .include "../lib/buttonloop.s"
+        .include "../lib/button.s"
 
 ;;; ============================================================
 

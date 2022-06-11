@@ -1067,7 +1067,7 @@ handle_dialog_button_down:
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonEventLoop, winfo_dialog::kWindowId, ok_button_rect
+        param_call ButtonClick, winfo_dialog::kWindowId, ok_button_rect
         bmi     :+
         lda     #$00
 :       rts
@@ -1076,7 +1076,7 @@ handle_dialog_button_down:
         MGTK_CALL MGTK::InRect, read_drive_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonEventLoop, winfo_dialog::kWindowId, read_drive_button_rect
+        param_call ButtonClick, winfo_dialog::kWindowId, read_drive_button_rect
         bmi     :+
         lda     #$01
 :
@@ -1405,7 +1405,7 @@ l3:     lda     #$3A
 
 ;;; ============================================================
 
-        .include "../lib/buttonloop.s"
+        .include "../lib/button.s"
         .include "../lib/inttostring.s"
         .include "../lib/bell.s"
 

@@ -404,7 +404,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClickOk
-        param_call ButtonEventLoop, kDAWindowId, ok_button_rect
+        param_call ButtonClick, kDAWindowId, ok_button_rect
         jeq     CloseWindow
         jmp     InputLoop
 .endproc
@@ -412,7 +412,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClickNorm
-        param_call ButtonEventLoop, kDAWindowId, norm_button_rect
+        param_call ButtonClick, kDAWindowId, norm_button_rect
         bne     :+
         jsr     DoNorm
 :       jmp     InputLoop
@@ -421,7 +421,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClickFast
-        param_call ButtonEventLoop, kDAWindowId, fast_button_rect
+        param_call ButtonClick, kDAWindowId, fast_button_rect
         bne     :+
         jsr     DoFast
 :       jmp     InputLoop
@@ -548,7 +548,7 @@ hit:    lda     winfo::window_id
 
 ;;; ============================================================
 
-        .include "../lib/buttonloop.s"
+        .include "../lib/button.s"
         .include "../lib/drawstring.s"
         .include "../lib/normfast.s"
 

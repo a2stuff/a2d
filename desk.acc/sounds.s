@@ -554,7 +554,7 @@ modifiers:
         MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonEventLoop, kDAWindowId, ok_button_rect
+        param_call ButtonClick, kDAWindowId, ok_button_rect
         jeq     Exit
         jmp     InputLoop
     END_IF
@@ -1514,7 +1514,7 @@ END_SOUND_PROC
 ;;; ============================================================
 
         .include "../lib/drawstring.s"
-        .include "../lib/buttonloop.s"
+        .include "../lib/button.s"
         .include "../lib/muldiv.s"
 
 ;;; ============================================================

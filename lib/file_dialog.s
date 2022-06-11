@@ -9,7 +9,7 @@
 ;;; Requires the following proc definitions:
 ;;; * `AdjustFileEntryCase`
 ;;; * `AdjustVolumeNameCase`
-;;; * `ButtonEventLoop`
+;;; * `ButtonClick`
 ;;; * `ButtonFlash`
 ;;; * `CheckMouseMoved`
 ;;; * `DetectDoubleClick`
@@ -256,7 +256,7 @@ ret:    rts
     IF_EQ
         jsr     IsChangeDriveAllowed
         bcs     :+
-        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
+        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
         bmi     :+
         jsr     DoChangeDrive
 :       rts
@@ -273,7 +273,7 @@ ret:    rts
      IF_EQ
         jsr     IsOpenAllowed
         bcs     :+
-        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
+        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
         bmi     :+
         jsr     DoOpen
 :       rts
@@ -287,7 +287,7 @@ ret:    rts
     IF_EQ
         jsr     IsCloseAllowed
         bcs     :+
-        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
+        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
         bmi     :+
         jsr     DoClose
 :       rts
@@ -299,7 +299,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
+        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
         bmi     :+
         jsr     HandleOk
 :       rts
@@ -311,7 +311,7 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonEventLoop, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
+        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
         bmi     :+
         jsr     HandleCancel
 :       rts

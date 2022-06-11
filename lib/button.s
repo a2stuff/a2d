@@ -1,6 +1,11 @@
 ;;; ============================================================
 ;;; Button Routines
 ;;; ============================================================
+;;; API:
+;;; * `ButtonClick` - call on button down to track mouse
+;;; * `ButtonFlash` - flash button when shortcut key pressed
+;;; Internal procs are prefixed with `_`
+;;; ============================================================
 ;;; Requires:
 ;;; * `penXOR`
 ;;; * `event_params`
@@ -17,7 +22,7 @@
 ;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
 ;;; Note: Sets current GrafPort to window's port.
 
-.proc ButtonEventLoop
+.proc ButtonClick
         sty     window_id
         stax    rect_addr1
         stax    rect_addr2
