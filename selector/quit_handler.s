@@ -6,23 +6,19 @@
 
         RESOURCE_FILE "quit_handler.res"
 
-        .org $1000
-
 ;;; This gets invoked via ProDOS QUIT, which relocated it to
 ;;; $1000 Main.
 
-.scope
+.proc QuitRoutine
+        .org $1000
+
         MLIEntry := MLI
 
-        self := *
-
+self:
         jmp     start
 
-
-        PRODOS_QUIT_ROUTINE := $D100
-
-
-flag:   .byte   0
+reinstall_flag:                ; set once prefix saved and reinstalled
+        .byte   0
 
 str_loading:
         PASCAL_STRING res_string_status_loading
@@ -32,13 +28,14 @@ filename:
 
         ;; ProDOS MLI call param blocks
 
+        load_target := LOADER_ADDRESS - kLoaderOffset
+        kLoadSize = kInvokerOffset
         io_buf := $1800
-        load_target := $1D00
-        kLoadSize = $600
+        .assert io_buf + $400 <= load_target, error, "memory overlap"
 
         DEFINE_READ_PARAMS read_params, load_target, kLoadSize
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buf
+        DEFINE_GET_PREFIX_PARAMS prefix_params, prefix_buf
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
 
 start:
@@ -93,9 +90,9 @@ start:
         lda     #%11001111      ; Protect ZP, Stack, Text Page 1
         sta     BITMAP
 
-        lda     flag
+        lda     reinstall_flag
         bne     proceed
-        MLI_CALL GET_PREFIX, get_prefix_params
+        MLI_CALL GET_PREFIX, prefix_params
         beq     install
         jmp     ErrorHandler
 
@@ -103,7 +100,7 @@ start:
 
 install:
         lda     #$FF
-        sta     flag
+        sta     reinstall_flag
         copy16  IRQLOC, irq_vector_stash
 
         ;; Copy self into the ProDOS QUIT routine
@@ -111,9 +108,9 @@ install:
         bit     LCBANK2
         ldy     #0
 :       lda     self,y
-        sta     PRODOS_QUIT_ROUTINE,y
+        sta     SELECTOR,y
         lda     self+$100,y
-        sta     PRODOS_QUIT_ROUTINE+$100,y
+        sta     SELECTOR+$100,y
         dey
         bne     :-
         bit     ROMIN2
@@ -128,9 +125,9 @@ proceed:
 ;;; The code is at offset $300 length $300 in the file; load it
 ;;; by loading $600 at $2000-$400=$1D00 to avoid a SET_MARK call.
 
-L10F2:  MLI_CALL SET_PREFIX, get_prefix_params
+L10F2:  MLI_CALL SET_PREFIX, prefix_params
         beq     :+
-        jmp     disk_prompt
+        jmp     prompt_for_system_disk
 
 :       MLI_CALL OPEN, open_params
         beq     :+
@@ -150,38 +147,41 @@ L10F2:  MLI_CALL SET_PREFIX, get_prefix_params
 
 ;;; ============================================================
 
-disk_prompt:
+prompt_for_system_disk:
         ;; Clear screen and center text
         jsr     SLOT3ENTRY
         jsr     HOME
         lda     #12
         sta     CV
         jsr     VTAB
+
         lda     #80
         sec
-        sbc     prompt
+        sbc     disk_prompt
         lsr     a               ; /= 2
         sta     OURCH
 
         ;; Display prompt
         ldy     #0
-:       lda     prompt+1,y
+:       lda     disk_prompt+1,y
         ora     #$80
         jsr     COUT
         iny
-        cpy     prompt
+        cpy     disk_prompt
         bne     :-
 
-loop:   sta     KBDSTRB
+wait:   sta     KBDSTRB
 :       lda     KBD
         bpl     :-
         and     #CHAR_MASK
         cmp     #CHAR_RETURN
-        bne     loop
+        bne     wait
         jmp     start
 
-prompt:
+disk_prompt:
         PASCAL_STRING res_string_prompt_insert_system_disk
+
+;;; ============================================================
 
 irq_vector_stash:
         .word   0
@@ -197,8 +197,5 @@ irq_vector_stash:
 prefix_buf:
         .res 64, 0
 
-;;; ============================================================
-
-.endscope
-
-        PAD_TO $1200
+.endproc ; QuitRoutine
+sizeof_QuitRoutine = .sizeof(QuitRoutine)

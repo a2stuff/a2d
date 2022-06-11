@@ -18,7 +18,15 @@
 
         .include "internal.inc"
 
+        .include "bootstrap.s"
+        .include "quit_handler.s"
+
+        ;; Pad to be at $200 into the file
+        .res    $200 - (.sizeof(InstallAsQuit) + .sizeof(QuitRoutine)), 0
+
         .include "loader.s"
+
+        .assert .sizeof(InstallSegments) + $200 = kSegStartOffset, error, "Size mismatch"
 
         .include "auxmem.s"
         .include "lc.s"

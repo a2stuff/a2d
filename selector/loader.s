@@ -4,12 +4,12 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .org $2000
+        .org LOADER_ADDRESS
 
 ;;; Loads the Invoker (page 2/3), Selector App (at $4000...$A1FF),
 ;;; and Resources (Aux LC), then invokes the app.
 
-.scope
+.proc InstallSegments
         jmp     start
 
         alert_load_addr := $3400
@@ -120,6 +120,6 @@ L2049:  lda     open_params::ref_num
 
 ;;; ============================================================
 
-.endscope
+.endproc ; InstallSegments
 
         PAD_TO $2300

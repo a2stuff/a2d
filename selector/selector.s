@@ -39,6 +39,8 @@ kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 ;;; SELECTOR file structure
 ;;; ============================================================
 
+LOADER_ADDRESS          = $2000
+kLoaderOffset           = $300
 kInvokerOffset          = $600
 
 _segoffset .set 0
@@ -64,7 +66,7 @@ _segoffset .set 0
         .include "quit_handler.s"
 
         ;; Ensure loader.starts at correct offset ($300) from start of file.
-        .res 217
+        .res    kLoaderOffset - .sizeof(InstallAsQuit) - .sizeof(QuitRoutine)
 
         .include "loader.s"
         .include "../lib/invoker.s"
