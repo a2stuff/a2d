@@ -475,8 +475,8 @@ Menu Bar record:
 Menu record:
 ```
 .word       count           Number of items in menu
-
 .res  5     reserved        Reserved
+
 .byte       options         bit 0=OA, 1=SA, 2=mark, 5=check, 6=filler, 7=disabled
 .byte       mark_char       Custom mark character if mark option set
 .byte       char1           ASCII code of shortcut #1 (e.g. uppercase B); or 0
