@@ -30,8 +30,8 @@ filename:
         ;; ProDOS MLI call param blocks
 
         ;; Arrange these so loader is placed at target address
-        load_target = LOADER_ADDRESS - kLoaderOffset
-        kLoadSize = kSegmentLoaderLength ; preamble + loader
+        load_target = kSegmentLoaderAddress - kSegmentLoaderOffset
+        kLoadSize = kLoaderOffset + kSegmentLoaderLength
         io_buf := $1A00
         .assert io_buf + $400 <= load_target, error, "memory overlap"
 

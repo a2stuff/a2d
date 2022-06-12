@@ -12,7 +12,7 @@
 .proc InstallSegments
         MLIEntry := MLI
 
-        .org ::LOADER_ADDRESS
+        .org ::kSegmentLoaderAddress
 
         jmp     start
 
@@ -200,7 +200,7 @@ loop:   lda     (src),y
 
 ;;; ============================================================
 
-        PAD_TO ::kSegmentLoaderAddress + ::kSegmentLoaderLength - $200
+        PAD_TO ::kSegmentLoaderAddress + ::kSegmentLoaderLength
 .endproc ; InstallSegments
 
 ;;; ============================================================

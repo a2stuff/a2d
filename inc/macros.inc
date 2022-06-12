@@ -967,7 +967,7 @@ __pushorg_depth__ .set 0
 ;;; ============================================================
 
 .macro ASSERT_EQUALS actual, expected
-    .assert (actual) = (expected), error, .sprintf("expected %d actual %d", (actual), (expected))
+    .assert (actual) = (expected), error, .sprintf("expected %d actual %d", (expected), (actual))
 .endmacro
 
 .macro ASSERT_ADDRESS addr, opt_message

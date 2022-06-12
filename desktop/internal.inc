@@ -194,7 +194,6 @@ kDeskTopFileVersion  = $80  ; Increment when format changes
 ;;; defines the file offsets, load addresses and lengths of each
 ;;; segment and offset
 
-LOADER_ADDRESS := $2000
 kLoaderOffset = $200
 
 _segoffset .set 0
@@ -205,10 +204,9 @@ _segoffset .set 0
         _segoffset .set _segoffset + len
 .endmacro
 
-kSegStartOffset = $580
-
 ;;; Segments
-        DEFSEG SegmentLoader,      $2000, kSegStartOffset
+        _segoffset .set kLoaderOffset
+        DEFSEG SegmentLoader,      $2000,  $380
         DEFSEG SegmentDeskTopAux,  $4000, $8000
         DEFSEG SegmentDeskTopLC1A, $D000, $1D00
         DEFSEG SegmentDeskTopLC1B, $FB00, $0500

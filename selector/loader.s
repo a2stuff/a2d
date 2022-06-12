@@ -4,7 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .org LOADER_ADDRESS
+        .org kSegmentLoaderAddress
 
 ;;; Loads the Invoker (page 2/3), Selector App (at $4000...$A1FF),
 ;;; and Resources (Aux LC), then invokes the app.
@@ -13,18 +13,18 @@
         jmp     start
 
         alert_load_addr := $3400
-        alert_final_addr := kAlertSegmentAddress
+        alert_final_addr := kSegmentAlertAddress
 
         ;; ProDOS parameter blocks
 
         io_buf := $3000
 
         DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
-        DEFINE_READ_PARAMS read_params1, INVOKER, kInvokerSegmentSize
-        DEFINE_READ_PARAMS read_params2, kAppSegmentAddress, kAppSegmentSize
-        DEFINE_READ_PARAMS read_params3, alert_load_addr, kAlertSegmentSize
+        DEFINE_READ_PARAMS read_params1, INVOKER, kSegmentInvokerSize
+        DEFINE_READ_PARAMS read_params2, kSegmentAppAddress, kSegmentAppSize
+        DEFINE_READ_PARAMS read_params3, alert_load_addr, kSegmentAlertSize
 
-        DEFINE_SET_MARK_PARAMS set_mark_params, kInvokerOffset
+        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentInvokerOffset
         DEFINE_CLOSE_PARAMS close_params
 
 str_selector:

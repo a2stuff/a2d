@@ -26,7 +26,7 @@
 
         .include "loader.s"
 
-        .assert .sizeof(InstallSegments) + $200 = kSegStartOffset, error, "Size mismatch"
+        .assert .sizeof(InstallSegments) = kSegmentLoaderLength, error, "Size mismatch"
 
         .include "auxmem.s"
         .include "lc.s"

@@ -14,7 +14,7 @@ MGTKEntry       := $4000
 FONT            := $8600
 START           := $8E00
 
-OVERLAY_ADDR    := MGTKEntry + kAppSegmentSize
+OVERLAY_ADDR    := MGTKEntry + kSegmentAppSize
 SETTINGS        := OVERLAY_ADDR - .sizeof(DeskTopSettings)
 BELLDATA        := SETTINGS - kBellProcLength
 
@@ -39,9 +39,7 @@ kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 ;;; SELECTOR file structure
 ;;; ============================================================
 
-LOADER_ADDRESS          = $2000
-kLoaderOffset           = $300
-kInvokerOffset          = $600
+kLoaderOffset = $300
 
 _segoffset .set 0
 .macro DEFSEG name, addr, len
@@ -51,12 +49,16 @@ _segoffset .set 0
         _segoffset .set _segoffset + len
 .endmacro
 
-        _segoffset .set kInvokerOffset
-        DEFSEG InvokerSegment, INVOKER, $160
-        DEFSEG AppSegment, $4000, $6400
-        DEFSEG AlertSegment, $D000, $800
+;;; Segments
+        _segoffset .set kLoaderOffset
+        DEFSEG SegmentLoader,     $2000,        $0300
+        DEFSEG SegmentInvoker,    INVOKER,      $0160
+        DEFSEG SegmentApp,        $4000,        $6400
+        DEFSEG SegmentAlert,      $D000,        $0800
+
+;;; Dynamically loaded overlays
         DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1700
-        DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $D00
+        DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0D00
 
 ;;; ============================================================
 ;;; Selector application
