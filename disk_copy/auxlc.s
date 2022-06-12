@@ -131,7 +131,7 @@ label_facilities:
         PASCAL_STRING res_string_menu_bar_item_facilities ; menu bar item
 
 label_desktop:
-        PASCAL_STRING .sprintf(res_string_menu_item_desktop, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; menu item
+        PASCAL_STRING .sprintf(res_string_version_format_short, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; menu item
 
 label_blank:
         PASCAL_STRING " "       ; do not localize

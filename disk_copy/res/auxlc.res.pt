@@ -1,6 +1,5 @@
 .define res_string_dc_menu_bar_item_file "Arquivo"
 .define res_string_menu_bar_item_facilities "Op]#es"
-.define res_string_menu_item_desktop "%s Vers[o %d.%d"
 .define res_string_dc_menu_item_quit "Sair"
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "C~pia R@pida"

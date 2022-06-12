@@ -1,6 +1,5 @@
 .define res_string_dc_menu_bar_item_file "File"
 .define res_string_menu_bar_item_facilities "Options"
-.define res_string_menu_item_desktop "%s Version %d.%d"
 .define res_string_dc_menu_item_quit "Quit"
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Quick Copy"

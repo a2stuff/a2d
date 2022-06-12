@@ -107,7 +107,7 @@ str_startup:
         PASCAL_STRING res_string_menu_bar_item_startup ; menu bar item
 
 str_a2desktop:
-        PASCAL_STRING .sprintf("%s Version %d.%d", kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; do not localize
+        PASCAL_STRING .sprintf(res_string_version_format_short, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor)
 
 str_blank:
         PASCAL_STRING " "       ; do not localize
