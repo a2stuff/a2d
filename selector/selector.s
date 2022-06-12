@@ -67,8 +67,8 @@ _segoffset .set 0
         .include "bootstrap.s"
         .include "quit_handler.s"
 
-        ;; Ensure loader.starts at correct offset ($300) from start of file.
-        .res    kLoaderOffset - .sizeof(InstallAsQuit) - .sizeof(QuitRoutine)
+        ;; Ensure loader.starts at correct offset from start of file.
+        .res    kSegmentLoaderOffset - (.sizeof(InstallAsQuit) + .sizeof(QuitRoutine))
 
         .include "loader.s"
         .include "../lib/invoker.s"

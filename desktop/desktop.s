@@ -21,8 +21,8 @@
         .include "bootstrap.s"
         .include "quit_handler.s"
 
-        ;; Pad to be at $200 into the file
-        .res    $200 - (.sizeof(InstallAsQuit) + .sizeof(QuitRoutine)), 0
+        ;; Ensure loader.starts at correct offset from start of file.
+        .res    kSegmentLoaderOffset - (.sizeof(InstallAsQuit) + .sizeof(QuitRoutine))
 
         .include "loader.s"
 

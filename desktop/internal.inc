@@ -206,7 +206,7 @@ _segoffset .set 0
 
 ;;; Segments
         _segoffset .set kLoaderOffset
-        DEFSEG SegmentLoader,      $2000,  $380
+        DEFSEG SegmentLoader,      $2000, $0300
         DEFSEG SegmentDeskTopAux,  $4000, $8000
         DEFSEG SegmentDeskTopLC1A, $D000, $1D00
         DEFSEG SegmentDeskTopLC1B, $FB00, $0500

@@ -21,7 +21,7 @@
         DEFINE_READ_PARAMS read_params, 0, 0
 
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_SET_MARK_PARAMS set_mark_params, $580 ; This many bytes before the good stuff.
+        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentDeskTopAuxOffset ; This many bytes before the good stuff.
 
 filename:
         PASCAL_STRING kFilenameDeskTop

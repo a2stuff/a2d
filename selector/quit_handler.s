@@ -28,8 +28,8 @@ filename:
 
         ;; ProDOS MLI call param blocks
 
-        load_target := kSegmentLoaderAddress - kLoaderOffset
-        kLoadSize = kLoaderOffset + kSegmentLoaderSize
+        load_target := kSegmentLoaderAddress - kSegmentLoaderOffset
+        kLoadSize = kSegmentLoaderOffset + kSegmentLoaderSize
         io_buf := $1800
         .assert io_buf + $400 <= load_target, error, "memory overlap"
 
