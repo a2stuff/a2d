@@ -122,8 +122,9 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
 ;;; ============================================================
 
+        SETTINGS_IO_BUF := src_io_buffer
+        SETTINGS_LOAD_BUF := copy_buffer
         .include "../lib/load_settings.s"
-        DEFINEPROC_LOAD_SETTINGS src_io_buffer, copy_buffer
 
 ;;; ============================================================
 ;;;

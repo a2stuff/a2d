@@ -110,8 +110,9 @@ L2049:  lda     open_params::ref_num
 
 ;;; ============================================================
 
+        SETTINGS_IO_BUF := io_buf
+        SETTINGS_LOAD_BUF := SAVE_AREA_BUFFER
         .include "../lib/load_settings.s"
-        DEFINEPROC_LOAD_SETTINGS io_buf, SAVE_AREA_BUFFER
 
 ;;; ============================================================
 

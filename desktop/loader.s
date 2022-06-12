@@ -194,8 +194,9 @@ loop:   lda     (src),y
 
 ;;; ============================================================
 
+        SETTINGS_IO_BUF := $1A00
+        SETTINGS_LOAD_BUF := $1E00
         .include "../lib/load_settings.s"
-        DEFINEPROC_LOAD_SETTINGS $1A00, $1E00
 
 ;;; ============================================================
 
