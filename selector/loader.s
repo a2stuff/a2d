@@ -123,4 +123,4 @@ L2049:  lda     open_params::ref_num
 
 .endproc ; InstallSegments
 
-        PAD_TO $2300
+        PAD_TO kSegmentLoaderAddress + kSegmentLoaderSize

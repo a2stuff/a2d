@@ -39,7 +39,7 @@ kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 ;;; SELECTOR file structure
 ;;; ============================================================
 
-kLoaderOffset = $300
+kLoaderOffset = $200
 
 _segoffset .set 0
 .macro DEFSEG name, addr, len
