@@ -131,4 +131,4 @@ start:  pha                     ; alert number
 
 ;;; ============================================================
 
-        PAD_TO kSegmentAlertAddress + kSegmentAlertSize
+        PAD_TO kSegmentAlertAddress + kSegmentAlertLength

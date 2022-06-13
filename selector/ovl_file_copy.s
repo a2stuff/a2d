@@ -1137,4 +1137,4 @@ str_count:
 
 file_copier__Exec   := file_copier::Exec
 
-        PAD_TO OVERLAY_ADDR + kOverlayCopyDialogSize
+        PAD_TO OVERLAY_ADDR + kOverlayCopyDialogLength

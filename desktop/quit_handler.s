@@ -21,7 +21,7 @@ reinstall_flag:                ; set once prefix saved and reinstalled
         .byte   0
 
 kSplashVtab = 12
-splash_string:
+str_loading:
         PASCAL_STRING .sprintf(res_string_splash_string, kDeskTopProductName)
 
 filename:
@@ -41,7 +41,7 @@ filename:
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
 
 start:
-        ;; Show a splash message on 80 column text screen
+        ;; Show and clear 80-column text screen
         bit     ROMIN2
         jsr     SETVID
         jsr     SETKBD
@@ -70,27 +70,30 @@ start:
         sta     $0101           ; Aux stack pointer, in Aux ZP
         sta     ALTZPOFF
 
+        ;; --------------------------------------------------
+
+        ;; Display the loading string
         lda     #kSplashVtab
         jsr     VTABZ
 
         lda     #80             ; HTAB (80-width)/2
         sec                     ; to center
-        sbc     splash_string
-        lsr     a
+        sbc     str_loading     ; -= width
+        lsr     a               ; /= 2
         sta     OURCH
 
-        ldy     #$00
-:       lda     splash_string+1,y
+        ldy     #0
+:       lda     str_loading+1,y
         ora     #$80
         jsr     COUT
         iny
-        cpy     splash_string
+        cpy     str_loading
         bne     :-
 
-        ;; Close all open files (???)
+        ;; Close all open files (just in case)
         MLI_CALL CLOSE, close_params
 
-        ;; Initialize system memory bitmap
+        ;; Initialize system bitmap
         ldx     #BITMAP_SIZE-1
         lda     #$01            ; Protect ProDOS global page
         sta     BITMAP,x
@@ -99,20 +102,26 @@ start:
 :       sta     BITMAP,x
         dex
         bne     :-
-        lda     #%11001111       ; Protect ZP, stack, Text Page 1
+        lda     #%11001111      ; Protect ZP, Stack, Text Page 1
         sta     BITMAP
 
         lda     reinstall_flag
-        bne     no_reinstall
+        bne     proceed
 
         ;; Re-install quit routine (with prefix memorized)
         MLI_CALL GET_PREFIX, prefix_params
         beq     :+
         jmp     ErrorHandler
-:       dec     reinstall_flag
+:
+        ;; --------------------------------------------------
+
+        dec     reinstall_flag
 
         tay
-        copy16  IRQLOC, irq_saved
+        copy16  IRQLOC, irq_vector_stash
+
+        ;; --------------------------------------------------
+        ;; Copy self into the ProDOS QUIT routine
         bit     LCBANK2
         bit     LCBANK2
 
@@ -124,15 +133,15 @@ start:
         bne     :-
 
         bit     ROMIN2
-        jmp     done_reinstall
+        jmp     load_loader
 
-no_reinstall:
-        copy16  irq_saved, IRQLOC
+proceed:
+        copy16  irq_vector_stash, IRQLOC
 
-done_reinstall:
-        ;; Set the prefix, read the first $400 bytes of this system
-        ;; file in (at $1E00), and invoke $200 bytes into it (at $2000)
+;;; ============================================================
+;;; Load the Loader at $2000 and invoke it.
 
+load_loader:
         MLI_CALL SET_PREFIX, prefix_params
         bne     prompt_for_system_disk
         MLI_CALL OPEN, open_params
@@ -143,22 +152,22 @@ done_reinstall:
         bne     ErrorHandler
         MLI_CALL CLOSE, close_params
         bne     ErrorHandler
-        jmp     $2000           ; Invoke system file
 
+        jmp     kSegmentLoaderAddress
 
 ;;; ============================================================
+;;; Display a string, and wait for Return keypress
 
-        ;; Display a string, and wait for Return keypress
 prompt_for_system_disk:
         jsr     SLOT3ENTRY      ; 80 column mode
-        jsr     HOME
-        lda     #12             ; VTAB 12
+        jsr     HOME            ; clear screen
+        lda     #kSplashVtab    ; VTAB 12
         jsr     VTABZ
 
-        lda     #80             ; HTAB (80 - width)/2
+        lda     #80             ; HTAB (80-width)/2
         sec                     ; to center the string
-        sbc     disk_prompt
-        lsr     a
+        sbc     disk_prompt     ; -= width
+        lsr     a               ; /= 2
         sta     OURCH
 
         ;; Display prompt
@@ -182,14 +191,14 @@ disk_prompt:
 
 ;;; ============================================================
 
-irq_saved:
-        .addr   0
+irq_vector_stash:
+        .word   0
 
 ;;; ============================================================
 ;;; Error Handler
 
 .proc ErrorHandler
-        sta     $6              ; Crash?
+        sta     $06             ; Crash?
         jmp     MONZ
 .endproc
 

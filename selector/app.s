@@ -342,8 +342,8 @@ str_selector:
 
         DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, kOverlayFileDialogOffset
         DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, kOverlayCopyDialogOffset
-        DEFINE_READ_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlayFileDialogSize
-        DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogSize
+        DEFINE_READ_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlayFileDialogLength
+        DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogLength
         DEFINE_CLOSE_PARAMS close_params2
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_desktop2_params, str_desktop2_2
@@ -2519,5 +2519,5 @@ pb2_initial_state:
 
 .endscope
 
-        PAD_TO kSegmentAppAddress + kSegmentAppSize
+        PAD_TO kSegmentAppAddress + kSegmentAppLength
         ASSERT_ADDRESS OVERLAY_ADDR

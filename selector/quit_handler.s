@@ -20,6 +20,7 @@ self:
 reinstall_flag:                ; set once prefix saved and reinstalled
         .byte   0
 
+kSplashVtab = 12
 str_loading:
         PASCAL_STRING res_string_status_loading
 
@@ -29,13 +30,13 @@ filename:
         ;; ProDOS MLI call param blocks
 
         load_target := kSegmentLoaderAddress - kSegmentLoaderOffset
-        kLoadSize = kSegmentLoaderOffset + kSegmentLoaderSize
+        kLoadSize = kSegmentLoaderOffset + kSegmentLoaderLength
         io_buf := $1800
         .assert io_buf + $400 <= load_target, error, "memory overlap"
 
         DEFINE_READ_PARAMS read_params, load_target, kLoadSize
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_GET_PREFIX_PARAMS prefix_params, prefix_buf
+        DEFINE_GET_PREFIX_PARAMS prefix_params, prefix_buffer
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
 
 start:
@@ -59,14 +60,16 @@ start:
         ;; --------------------------------------------------
 
         ;; Display the loading string
-        lda     #12             ; vtab
+        lda     #kSplashVtab
         sta     CV
         jsr     VTAB
-        lda     #80             ; htab - center the string
-        sec
-        sbc     str_loading
+
+        lda     #80             ; HTAB (80-width)/2
+        sec                     ; to center
+        sbc     str_loading     ; -= width
         lsr     a               ; /= 2
         sta     OURCH
+
         ldy     #0
 :       lda     str_loading+1,y
         ora     #$80
@@ -75,7 +78,7 @@ start:
         cpy     str_loading
         bne     :-
 
-        ;; Close all open files
+        ;; Close all open files (just in case)
         MLI_CALL CLOSE, close_params
 
         ;; Initialize system bitmap
@@ -92,17 +95,19 @@ start:
 
         lda     reinstall_flag
         bne     proceed
-        MLI_CALL GET_PREFIX, prefix_params
-        beq     install
-        jmp     ErrorHandler
 
+        ;; Re-install quit routine (with prefix memorized)
+        MLI_CALL GET_PREFIX, prefix_params
+        beq     :+
+        jmp     ErrorHandler
+:
         ;; --------------------------------------------------
 
-install:
         lda     #$FF
         sta     reinstall_flag
         copy16  IRQLOC, irq_vector_stash
 
+        ;; --------------------------------------------------
         ;; Copy self into the ProDOS QUIT routine
         bit     LCBANK2
         bit     LCBANK2
@@ -113,19 +118,18 @@ install:
         sta     SELECTOR+$100,y
         dey
         bne     :-
-        bit     ROMIN2
 
-        jmp     L10F2
+        bit     ROMIN2
+        jmp     load_loader
 
 proceed:
         copy16  irq_vector_stash, IRQLOC
 
 ;;; ============================================================
 ;;; Load the Loader at $2000 and invoke it.
-;;; The code is at offset $300 length $300 in the file; load it
-;;; by loading $600 at $2000-$400=$1D00 to avoid a SET_MARK call.
 
-L10F2:  MLI_CALL SET_PREFIX, prefix_params
+load_loader:
+        MLI_CALL SET_PREFIX, prefix_params
         beq     :+
         jmp     prompt_for_system_disk
 
@@ -142,22 +146,22 @@ L10F2:  MLI_CALL SET_PREFIX, prefix_params
 :       MLI_CALL CLOSE, close_params
         beq     :+
         jmp     ErrorHandler
-
-:       jmp     LOADER
+:
+        jmp     kSegmentLoaderAddress
 
 ;;; ============================================================
+;;; Display a string, and wait for Return keypress
 
 prompt_for_system_disk:
-        ;; Clear screen and center text
-        jsr     SLOT3ENTRY
-        jsr     HOME
-        lda     #12
+        jsr     SLOT3ENTRY      ; 80 column mode
+        jsr     HOME            ; clear screen
+        lda     #kSplashVtab    ; VTAB 12
         sta     CV
         jsr     VTAB
 
-        lda     #80
-        sec
-        sbc     disk_prompt
+        lda     #80             ; HTAB (80-width)/2
+        sec                     ; to center the string
+        sbc     disk_prompt     ; -= width
         lsr     a               ; /= 2
         sta     OURCH
 
@@ -190,12 +194,12 @@ irq_vector_stash:
 ;;; Error Handler
 
 .proc ErrorHandler
-        sta     $06
+        sta     $06             ; Crash?
         jmp     MONZ
 .endproc
 
-prefix_buf:
-        .res 64, 0
+prefix_buffer:
+        .res    64, 0
 
 .endproc ; QuitRoutine
 sizeof_QuitRoutine = .sizeof(QuitRoutine)

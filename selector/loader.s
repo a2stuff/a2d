@@ -20,9 +20,9 @@
         io_buf := $3000
 
         DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
-        DEFINE_READ_PARAMS read_params1, INVOKER, kSegmentInvokerSize
-        DEFINE_READ_PARAMS read_params2, kSegmentAppAddress, kSegmentAppSize
-        DEFINE_READ_PARAMS read_params3, alert_load_addr, kSegmentAlertSize
+        DEFINE_READ_PARAMS read_params1, INVOKER, kSegmentInvokerLength
+        DEFINE_READ_PARAMS read_params2, kSegmentAppAddress, kSegmentAppLength
+        DEFINE_READ_PARAMS read_params3, alert_load_addr, kSegmentAlertLength
 
         DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentInvokerOffset
         DEFINE_CLOSE_PARAMS close_params
@@ -123,4 +123,4 @@ L2049:  lda     open_params::ref_num
 
 .endproc ; InstallSegments
 
-        PAD_TO kSegmentLoaderAddress + kSegmentLoaderSize
+        PAD_TO kSegmentLoaderAddress + kSegmentLoaderLength

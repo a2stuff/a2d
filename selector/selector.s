@@ -9,12 +9,11 @@
         .include "../common.inc"
 
 SAVE_AREA_BUFFER:= $0800
-LOADER          := $2000
 MGTKEntry       := $4000
 FONT            := $8600
 START           := $8E00
 
-OVERLAY_ADDR    := MGTKEntry + kSegmentAppSize
+OVERLAY_ADDR    := MGTKEntry + kSegmentAppLength
 SETTINGS        := OVERLAY_ADDR - .sizeof(DeskTopSettings)
 BELLDATA        := SETTINGS - kBellProcLength
 
@@ -44,7 +43,7 @@ kLoaderOffset = $200
 _segoffset .set 0
 .macro DEFSEG name, addr, len
         .ident(.sprintf("k%sAddress", .string(name))) = addr
-        .ident(.sprintf("k%sSize", .string(name))) = len
+        .ident(.sprintf("k%sLength", .string(name))) = len
         .ident(.sprintf("k%sOffset", .string(name))) = _segoffset
         _segoffset .set _segoffset + len
 .endmacro
