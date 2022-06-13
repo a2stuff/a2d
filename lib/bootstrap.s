@@ -1,7 +1,7 @@
 ;;; ============================================================
 ;;; Bootstrap
 ;;;
-;;; Compiled as part of desktop.s
+;;; Compiled as part of DeskTop and Selector
 ;;; ============================================================
 
         .org $2000

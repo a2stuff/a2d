@@ -18,7 +18,7 @@
 
         .include "internal.inc"
 
-        .include "bootstrap.s"
+        .include "../lib/bootstrap.s"
         .include "quit_handler.s"
 
         ;; Ensure loader.starts at correct offset from start of file.
