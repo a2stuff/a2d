@@ -5734,7 +5734,7 @@ filler: ldx     menu_item_index
         bmi     :+
         copy16  need_savebehind, savebehind_usage ; calculate max savebehind data needed
 
-:       add16_8 curmenuinfo::x_min, max_width, curmenuinfo::x_max
+:       add16   curmenuinfo::x_min, max_width, curmenuinfo::x_max
 
         jsr     PutMenu
 

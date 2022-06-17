@@ -478,9 +478,12 @@ end:
     _addsub16in adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
 
-;;; Add arg1 (absolute) to arg2 (8-bit absolute), store to arg3
+;;; Add arg1 (absolute) to arg2 (8-bit absolute/immediate), store to arg3
 ;;;    add16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    add16_8 $1111, $22, $3333        ; absolute, absolute, absolute
+;;; Add arg1 (absolute) to arg2 (8-bit absolute/immediate), store to arg1
+;;;    add16_8 $1111, #$22              ; absolute, immediate
+;;;    add16_8 $1111, $22               ; absolute, absolute
 .macro add16_8 arg1, arg2, arg3
     .ifblank arg3
         _op_lo  lda, {arg1}
