@@ -46,23 +46,24 @@ kScreenHeight   = 192
 ;;; Prefer DEFAULT_FONT+MGTK::Font::height, but that's not always convenient.
 kSystemFontHeight = 9
 
-kMenuBarHeight  = 13
-kTitleBarHeight = 12
+kMenuBarHeight  = kSystemFontHeight+4
 
 ;;; Standard button sizes; sometimes narrower
 kButtonWidth  = 100
-kButtonHeight = 11
+kButtonHeight = kSystemFontHeight+2
+kButtonTextHOffset = 5                   ; from left edge of rect to text pos
+kButtonTextVOffset = kSystemFontHeight+1 ; from top edge of rect to text pos
 
 ;;; Horizontal distance for label/control pairs
 kLabelHOffset = 3
 
 ;;; Standard line edit (text input) control metrics
-kTextBoxHeight = 11
-kTextBoxTextHOffset = 5         ; from left edge of rect to text pos
-kTextBoxTextVOffset = 10        ; from top edge of rect to text pos
+kTextBoxHeight = kSystemFontHeight+2
+kTextBoxTextHOffset = 5                   ; from left edge of rect to text pos
+kTextBoxTextVOffset = kSystemFontHeight+1 ; from top edge of rect to text pos
 
 ;;; Standard list box control metrics
-kListItemHeight = 10
+kListItemHeight = kSystemFontHeight+1
 
 ;;; Mouse threshold for double click detection.
 kDoubleClickDeltaX      = 5
@@ -278,7 +279,7 @@ kGlyphCheckmark         = $1D
 .else
         DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), kButtonWidth, kButtonHeight
 .endif
-        DEFINE_POINT .ident(.sprintf("%s_button_pos", .string(ident))), ((xpos) + 5), ((ypos) + 10)
+        DEFINE_POINT .ident(.sprintf("%s_button_pos", .string(ident))), ((xpos) + kButtonTextHOffset), ((ypos) + kButtonTextVOffset)
         .ident(.sprintf("%s_button_label", .string(ident))) := *
         PASCAL_STRING {label}
 .endmacro
