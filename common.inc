@@ -122,13 +122,13 @@ kDeskTopSettingsFileSize = 1 + .sizeof(DeskTopSettings)
 kDeskTopSettingsFileOffset = 1  ; offset into file of settings (first byte is version)
 
 ;;; ============================================================
-;;; Alert Sounds
+;;; Alert Sounds. See lib/bell.s
 
 kBellProcLength = 128
 BELLPROC   := $300
 
 ;;; ============================================================
-;;; Alert library options
+;;; Alert library options. See lib/alert_dialog.s
 
 ;;; Button options
 ;;; $C0 (%11xxxxxx) = Cancel + Ok
@@ -150,7 +150,7 @@ BELLPROC   := $300
 .endenum
 
 ;;; ============================================================
-;;; Date/Time
+;;; Date/Time. See lib/datetime.s
 
 .struct ParsedDateTime
         year    .word
@@ -212,7 +212,7 @@ COPIED_TO_RAMCARD_FLAG  := $D3FF
 ;;; Invoker routine locations
 
 ;;; DeskTop and Selector both use a routine at $290 to launch
-;;; other apps.
+;;; other apps. See: lib/invoker.s
 
 INVOKER_PREFIX          := $220 ; Prefix to set
 INVOKER                 := $290 ; Invoke other programs
@@ -226,31 +226,31 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 ;;; Glyphs $00-$1F are useful symbols; some overlap with MouseText
 ;;; (called out as MT:X in the table below)
 ;;;
-;;; $00 = space                $10 = TM left      *
-;;; $01 = folder left  (MT:X)  $11 = TM right     *
-;;; $02 = folder right (MT:Y)  $12 = pound        *
-;;; $03 = hourglass    (MT:C)  $13 = pi           *
-;;; $04 = insertion pt         $14 = divide       *
-;;; $05 = pointer      (MT:B)  $15 = rarrow       (MT:U)
-;;; $06 = vbar         (MT:_)  $16 = tri
-;;; $07 = hbar         (MT:S)  $17 = open circ
-;;; $08 = larrow       (MT:H)  $18 = close        (MT:])
-;;; $09 = left box             $19 = gray odd     (MT:W)
-;;; $0A = darrow       (MT:J)  $1A = gray even    (MT:V)
-;;; $0B = uarrow       (MT:K)  $1B = solid circ
-;;; $0C = right box            $1C = inv check    (MT:E)
-;;; $0D = return       (MT:M)  $1D = check        (MT:D)
-;;; $0E = (C)                  $1E = solid apple  (MT:@)
-;;; $0F = (R)                  $1F = open apple   (MT:A)
+;;; $00 = spacer       !           $10 = TM left      *
+;;; $01 = folder left  ! (MT:X)    $11 = TM right     *
+;;; $02 = folder right ! (MT:Y)    $12 = pound        *
+;;; $03 = hourglass      (MT:C)    $13 = pi           *
+;;; $04 = I-beam                   $14 = divide       *
+;;; $05 = pointer        (MT:B)    $15 = rarrow       ! (MT:U)
+;;; $06 = vbar           (MT:_)    $16 = tri
+;;; $07 = hbar           (MT:S)    $17 = open circ
+;;; $08 = larrow       ! (MT:H)    $18 = close          (MT:])
+;;; $09 = left box                 $19 = gray odd       (MT:W)
+;;; $0A = darrow       ! (MT:J)    $1A = gray even      (MT:V)
+;;; $0B = uarrow       ! (MT:K)    $1B = solid circ
+;;; $0C = right box                $1C = inv check      (MT:E)
+;;; $0D = return       ! (MT:M)    $1D = check        ! (MT:D)
+;;; $0E = (C)                      $1E = solid apple  ! (MT:@)
+;;; $0F = (R)                      $1F = open apple   ! (MT:A)
 ;;;
-;;; * = used to provide additional characters in some languages
+;;; ! = Used in this application; glyphs must be present in font.
+;;; Any other code points can be repurposed.
+;;; * = Used to provide additional characters in some languages
 ;;; (notably Spanish) where Apple's character sets are lacking.
 
+kGlyphSpacer            = $00
 kGlyphFolderLeft        = $01
 kGlyphFolderRight       = $02
-
-kGlyphSpacer            = $00
-kGlyphInsertionPoint    = $06
 
 kGlyphLeftArrow         = $08
 kGlyphRightArrow        = $15
@@ -266,7 +266,6 @@ kGlyphCheckmark         = $1D
 ;;;   Open Mod    $1F
 ;;;   Check       $1D
 ;;;   Control     $01
-;;;   Inactive    $7F
 
 ;;; ============================================================
 ;;; Macros (specific to this project)
