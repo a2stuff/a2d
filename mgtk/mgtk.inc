@@ -599,27 +599,27 @@ event_modifier_solid_apple = 1 << 1
 
 ;;; Used in OpenWindow
 .enum Option
-	dialog_box       = 1 << 0
-	go_away_box      = 1 << 1
-	grow_box         = 1 << 2
+        dialog_box       = 1 << 0
+        go_away_box      = 1 << 1
+        grow_box         = 1 << 2
 .endenum
 
 .enum Scroll
-	option_none      = 0
-	option_present   = 1 << 7
-	option_thumb     = 1 << 6
-	option_active    = 1 << 0
-	option_normal    = Scroll::option_present | Scroll::option_thumb | Scroll::option_active
+        option_none      = 0
+        option_present   = 1 << 7
+        option_thumb     = 1 << 6
+        option_active    = 1 << 0
+        option_normal    = Scroll::option_present | Scroll::option_thumb | Scroll::option_active
 .endenum
 
 ;;; Used in menu structs
 .enum MenuOpt
-	open_apple      = 1 << 0
-	solid_apple     = 1 << 1
-	item_has_mark   = 1 << 2
-	item_is_checked = 1 << 5
-	item_is_filler  = 1 << 6
-	disable_flag    = 1 << 7
+        open_apple      = 1 << 0
+        solid_apple     = 1 << 1
+        item_has_mark   = 1 << 2
+        item_is_checked = 1 << 5
+        item_is_filler  = 1 << 6
+        disable_flag    = 1 << 7
 .endenum
 
 disablemenu_enable      = 0
