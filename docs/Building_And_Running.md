@@ -57,7 +57,7 @@ INSTALL_PATH=/prodos/directory          # e.g. /HD/A2.DESKTOP
 
 Then run: `make install`
 
-This will create the target ProDOS directory if necessary, then copy the built files in, overwriting an existing files.
+This will create the target ProDOS directory if necessary, then copy the built files in, overwriting any existing files.
 
 After building and installing, you can use `bin/setopt sel` and `bin/setopt nosel` to toggle whether Selector starts or not, and `bin/setopt ram` and `bin/setopt noram` to toggle whether DeskTop is copied to a RAMCard or not. These can be controlled within DeskTop using the Startup Options control panel, but being able to toggle these on the command line is useful during development.
 

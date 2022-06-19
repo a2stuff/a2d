@@ -20,7 +20,7 @@ Lengths/offsets are defined in `disk_copy.s`.
 ## Structure
 
 DeskTop's `CmdDiskCopy` loads Disk Copy's $200-byte loader into main
-memory (`loader.s`, $1800-$19FF), does sometidying,t hen hands over
+memory (`loader.s`, $1800-$19FF), does sometidying, then hands over
 control. This then loads app code and a replacement for the resources
 in the aux language card area (`auxlc.s`, Aux LC $D000-$F1FF) and
 another block of code in main memory (`main.s`, Main $0800-$12FF).
