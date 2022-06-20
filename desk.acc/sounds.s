@@ -240,7 +240,9 @@ nextwinfo:      .addr   0
         kListLeft = kMarginX + kLabelWidth
         kListTop = kMarginY
         kListRight  = kDAWidth - kMarginX - kScrollBarWidth
-        kListBottom = kListTop + kListItemHeight * kListRows - 1
+        kListHeight = kListItemHeight * kListRows - 1
+        kListBottom = kListTop + kListHeight
+
         DEFINE_RECT listbox_rect, kListLeft, kListTop, kListRight, kListBottom
 
 
@@ -251,7 +253,7 @@ kListBoxWindowId = kDAWindowId + 1
         kLeft =   kListLeft + kDALeft
         kTop =    kListTop + kDATop
         kWidth = kListRight - kListLeft
-        kHeight = kListBottom - kListTop
+        kHeight = kListHeight
 
 window_id:      .byte   kListBoxWindowId
 options:        .byte   MGTK::Option::dialog_box

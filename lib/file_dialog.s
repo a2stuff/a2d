@@ -520,7 +520,7 @@ different:
 :
         lda     file_dialog_res::winfo_listbox::vthumbpos
         sec
-        sbc     #file_dialog_res::kPageDelta
+        sbc     #file_dialog_res::kListRows
         bpl     :+
         lda     #0
 :
@@ -537,7 +537,7 @@ different:
 :
         lda     file_dialog_res::winfo_listbox::vthumbpos
         clc
-        adc     #file_dialog_res::kPageDelta
+        adc     #file_dialog_res::kListRows
         cmp     file_dialog_res::winfo_listbox::vthumbmax
         beq     :+
         bcc     :+
@@ -1820,7 +1820,7 @@ UpdateScrollbar:
 .proc UpdateScrollbarWithIndex
         sta     index
         lda     num_file_names
-        cmp     #file_dialog_res::kPageDelta + 1
+        cmp     #file_dialog_res::kListRows + 1
         bcs     :+
         ;; Deactivate scrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
@@ -1833,7 +1833,7 @@ UpdateScrollbar:
         ;; Activate scrollbar
         lda     num_file_names
         sec
-        sbc     #file_dialog_res::kPageDelta
+        sbc     #file_dialog_res::kListRows
         cmp     file_dialog_res::winfo_listbox::vthumbmax
         beq     :+
         sta     file_dialog_res::winfo_listbox::vthumbmax
@@ -1893,7 +1893,7 @@ finish: sty     file_dialog_res::filename_buf
 .proc ScrollClipRect
         sta     tmp
         clc
-        adc     #file_dialog_res::kPageDelta
+        adc     #file_dialog_res::kListRows
         cmp     num_file_names
         beq     l1
         bcs     l2
@@ -1901,13 +1901,13 @@ l1:     lda     tmp
         jmp     l4
 
 l2:     lda     num_file_names
-        cmp     #file_dialog_res::kPageDelta+1
+        cmp     #file_dialog_res::kListRows+1
         bcs     l3
         lda     tmp
         jmp     l4
 
 l3:     sec
-        sbc     #file_dialog_res::kPageDelta
+        sbc     #file_dialog_res::kListRows
 
 l4:     ldx     #$00            ; A,X = line
         ldy     #kListItemHeight
@@ -2283,7 +2283,7 @@ has_sel:
     END_IF
 
         sec
-        sbc     #file_dialog_res::kPageDelta-1
+        sbc     #file_dialog_res::kListRows-1
         bmi     no_change
         cmp     file_dialog_res::winfo_listbox::vthumbpos
         beq     no_change

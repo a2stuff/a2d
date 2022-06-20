@@ -23,6 +23,7 @@ filename_buf:
         DEFINE_POINT pos_title, 0, 14
 
         kListBoxWidth = 125
+        kListRows = 7
 
         DEFINE_RECT rect_selection, 0, 0, kListBoxWidth, 0
 
@@ -145,11 +146,10 @@ kListEntryGlyphX = 1
 kListEntryNameX  = 16
 
 kLineDelta = 1
-kPageDelta = 7
 
 .params winfo_listbox
         kWidth = kListBoxWidth
-        kHeight = kListItemHeight * kPageDelta - 1
+        kHeight = kListItemHeight * kListRows - 1
         kLeft =   kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
         kTop =    kFilePickerDlgTop + 28
 

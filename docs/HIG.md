@@ -22,8 +22,11 @@ Note that these are for inspiration, not to be dutifully followed.
 
 ## Buttons
 
-* Default size for buttons with text labels is 100x11.
+* Default size for buttons with text labels is 101px x 12px, counting the border.
+  * This gives 1px padding above the text, 0px below (counting descenders).
 * Border is 1x1 pixels thick, drawn with XOR pen to give subtly rounded corners.
+* Horizontal text inset is 5px.
+* Vertical text position is 10px (just above bottom border).
 * Indicate keyboard shortcut support for default action with carriage return glyph ⏎.
 * Indicate keyboard shortcut support for cancel action with Esc.
 * Arrow buttons to increment or decrement values can be non-default height.
@@ -34,9 +37,11 @@ Note that these are for inspiration, not to be dutifully followed.
 
 ## Line Edit (Text Input) Controls
 
-* Height is 12 pixels, counting the border.
+* Height is 12px, counting the border. Internal size is 10px
+  * This gives 1px padding above the text, 0px below (counting descenders).
 * Border is 1x1 pixels thick, drawn with solid pen black pen (not XOR).
-* Text baseline is 5x10 pixels from top left corner of border.
+* Horizontal text inset is 5px.
+* Vertical text position is 10px (just above bottom border).
 * Insertion point (a.k.a. text caret) is the full height of field, XOR-drawn between text glyphs. Moving the insertion point does not cause the string to change.
 * The following keyboard shortcuts are supported:
   * Left Arrow - move IP one character left.
@@ -49,15 +54,17 @@ Note that these are for inspiration, not to be dutifully followed.
 
 ## List Box Controls
 
+* Item height is 10 pixels.
+  * This gives 1px margin above the text, 0px below (counting descenders).
 * The following keyboard shortcuts are supported:
   * Up/Down Arrow - move selection or scroll by one line.
   * Apple+Up/Down Arrow - scroll by one page.
   * Open-Apple+Solid-Apple+Up/Down Arrow - move selection or scroll to start/end.
-* Item height is 10 pixels.
 
 ## Choice Dialogs
 
 * Item height is 10 pixels.
+  * This gives 1px margin above the text, 0px below (counting descenders).
 * Left/Right Arrow keys should wrap selection to the previous/next row.
 * Up/Down Arrow keys should wrap selection to the previous/next column.
 

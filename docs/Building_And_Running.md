@@ -77,7 +77,7 @@ If you have a workflow amenable to ShrinkIt disk images, first install `nulib2`,
 
 ### Other
 
-If you need to copy the files some other way (e.g. via [CiderPress](http://a2ciderpress.com/)), it's probably easiest to transfer the files from the disk images created by `bin/package` as they will have the appropriate ProDOS file types and aux types.
+If you need to copy the files some other way (e.g. via [CiderPress](http://a2ciderpress.com/)), it's probably easiest to transfer the files from the disk images created by `make package` as they will have the appropriate ProDOS file types and aux types.
 
 
 ## Install Instructions
@@ -110,3 +110,7 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
          UNSHRINK         SYS
          ...
 ```
+
+## Running
+
+Invoke `DESKTOP.SYSTEM` to launch the app. By default, DeskTop will launch. You can use the control panel Startup Options to configure Selector to start instead, which will show a dialog containing any shortcuts you have configued in DeskTop, for faster access to programs.
