@@ -451,6 +451,9 @@ OpenDone:
         jsr     ChopName        ; Restores the name
         inc     num_entries
 
+        ;; Render it
+        jsr     DrawNextResultFromMain
+
         ;; If we've hit max number of entries, terminate operation.
         lda     num_entries
         cmp     #kMaxFilePaths
@@ -776,7 +779,25 @@ fail:   clc                     ; Yes, no match found, return with C=0
 
 ;;; ============================================================
 
+;;; Called from Main with normal ZP/ROM. Bank in everything
+;;; needed for MGTK, draw the latest result, and restore banks.
 
+.proc DrawNextResultFromMain
+        sta     RAMRDON
+        sta     RAMWRTON
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+
+        jsr     DrawNextResult
+
+        sta     ALTZPOFF
+        bit     ROMIN2
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Used in both Main and Aux
@@ -880,6 +901,8 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
+        DEFINE_POINT cur_pos, 5, 0
+cur_line:       .byte   0
 
 ;;; ============================================================
 
@@ -1130,10 +1153,34 @@ ignore: sec
 .proc DoSearch
         param_call JTRelay, JUMP_TABLE_CUR_WATCH
 
+        copy    #0, top_row
+        copy    #0, num_entries
+        jsr     UpdateScrollbar
+        jsr     UpdateViewport
+        jsr     PrepDrawResults
+
         ;; Do the search
         jsr     RecursiveCatalog::Start
+        jsr     UpdateScrollbar
 
-        ;; Update the scrollbar
+        ;;  Update the results display
+        ;;         copy    #0, top_row
+        ;;         jsr     UpdateViewport
+        ;;         jsr     DrawResults
+
+        bit     cursor_ip_flag
+    IF_PLUS
+        param_call JTRelay, JUMP_TABLE_CUR_POINTER
+    ELSE
+        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
+    END_IF
+
+finish: jmp     InputLoop
+.endproc
+
+;;; ============================================================
+
+.proc UpdateScrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         lda     num_entries
         cmp     #kResultsRows+1
@@ -1151,22 +1198,8 @@ ignore: sec
         copy    #MGTK::activatectl_activate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
     END_IF
-
-        ;; Update the results display
-        copy    #0, top_row
-        jsr     UpdateViewport
-        jsr     DrawResults
-
-        bit     cursor_ip_flag
-    IF_PLUS
-        param_call JTRelay, JUMP_TABLE_CUR_POINTER
-    ELSE
-        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
-    END_IF
-
-finish: jmp     InputLoop
+        rts
 .endproc
-
 
 ;;; ============================================================
 
@@ -1456,41 +1489,47 @@ done:   rts
 ;;; ============================================================
 
 .proc DrawResults
+        MGTK_CALL MGTK::HideCursor
+        jsr     PrepDrawResults
+
+loop:   lda     cur_line
+        cmp     num_entries
+        beq     done
+
+        jsr     DrawNextResult
+        jmp     loop
+
+done:   MGTK_CALL MGTK::ShowCursor
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc PrepDrawResults
         copy    #kResultsWindowID, getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; No need to check results, since window is always visible.
         MGTK_CALL MGTK::SetPort, grafport_win
         MGTK_CALL MGTK::HideCursor
-
-        ;; TODO: Optimize erasing
         MGTK_CALL MGTK::PaintRect, winfo_results::maprect
+        MGTK_CALL MGTK::ShowCursor
 
-        lda     num_entries
-        beq     done
-
-        copy    #0, line
-        copy16  #0, pos_ycoord
-loop:   add16_8   pos_ycoord, #kListItemHeight, pos_ycoord
-        MGTK_CALL MGTK::MoveTo, pos
-
-        lda     line
-        jsr     GetEntry
-
-        param_call DrawString, entry_buf
-        inc     line
-        lda     line
-        cmp     num_entries
-        bcc     loop
-
-done:   MGTK_CALL MGTK::ShowCursor
+        copy    #0, cur_line
+        copy16  #0, cur_pos::ycoord
         rts
-
-line:   .byte   0
-        DEFINE_POINT pos, 5, 0
-        pos_ycoord := pos::ycoord
-
 .endproc
 
+.proc DrawNextResult
+        add16_8   cur_pos::ycoord, #kListItemHeight, cur_pos::ycoord
+        MGTK_CALL MGTK::MoveTo, cur_pos
+
+        lda     cur_line
+        jsr     GetEntry
+        param_call DrawString, entry_buf
+
+        inc     cur_line
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Populate entry_buf with entry in A
