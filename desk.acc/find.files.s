@@ -1320,6 +1320,7 @@ kPartEnd  = $81
 store:  sta     top_row
 
 update: copy    top_row, updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         jsr     UpdateViewport
