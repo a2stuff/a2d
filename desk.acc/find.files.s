@@ -1134,6 +1134,7 @@ ignore: sec
         jsr     RecursiveCatalog::Start
 
         ;; Update the scrollbar
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         lda     num_entries
         cmp     #kResultsRows+1
     IF_LT
