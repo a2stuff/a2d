@@ -909,7 +909,7 @@ filenum:
         DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + BLOCK_SIZE, 1
 
 str_slash_desktop:
-        PASCAL_STRING .concat("/", kFilenameRAMCardDir) ; do not localize
+        PASCAL_STRING .concat("/", kFilenameRAMCardDir)
 
 ;;; ============================================================
 
@@ -1478,7 +1478,7 @@ str_desktop2:
 
         DEFINE_OPEN_PARAMS open_params, str_desktop1_path, dst_io_buffer
 str_desktop1_path:
-        PASCAL_STRING .concat(kFilenameRAMCardDir, "/", kFilenameLauncher) ; do not localize
+        PASCAL_STRING .concat(kFilenameRAMCardDir, "/", kFilenameLauncher)
         DEFINE_WRITE_PARAMS write_params, dt1_addr, kWriteBackSize
         DEFINE_CLOSE_PARAMS close_params
 

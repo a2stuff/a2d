@@ -282,28 +282,28 @@ hour:   .byte   0
 minute: .byte   0
 
 spaces_string:
-        PASCAL_STRING "    "    ; do not localize
+        PASCAL_STRING "    "
 
 day_string:
-        PASCAL_STRING "  "      ; do not localize
+        PASCAL_STRING "  "
 
 month_string:
-        PASCAL_STRING "   "     ; do not localize
+        PASCAL_STRING "   "
 
 year_string:
-        PASCAL_STRING "  "      ; do not localize
+        PASCAL_STRING "  "
 
 hour_string:
-        PASCAL_STRING "  "      ; do not localize
+        PASCAL_STRING "  "
 
 minute_string:
-        PASCAL_STRING "  "      ; do not localize
+        PASCAL_STRING "  "
 
 str_date_separator:
-        PASCAL_STRING "/"       ; do not localize
+        PASCAL_STRING "/"
 
 str_time_separator:
-        PASCAL_STRING ":"       ; do not localize
+        PASCAL_STRING ":"
 
 .params event_params
 kind:  .byte   0
@@ -1091,9 +1091,9 @@ label_ok:
 label_cancel:
         PASCAL_STRING res_string_button_cancel ; button label
 label_uparrow:
-        PASCAL_STRING kGlyphUpArrow ; do not localize
+        PASCAL_STRING kGlyphUpArrow
 label_downarrow:
-        PASCAL_STRING kGlyphDownArrow ; do not localize
+        PASCAL_STRING kGlyphDownArrow
 
 ;;; ============================================================
 ;;; Render the window contents

@@ -99,7 +99,7 @@ mi_x6:  DEFINE_MENU_ITEM str_slot_x6, '0'
 mi_x7:  DEFINE_MENU_ITEM str_slot_x7, '0'
 
 str_apple:
-        PASCAL_STRING kGlyphSolidApple ; do not localize
+        PASCAL_STRING kGlyphSolidApple
 
 str_file:
         PASCAL_STRING res_string_menu_bar_item_file    ; menu bar item
@@ -110,7 +110,7 @@ str_a2desktop:
         PASCAL_STRING .sprintf(res_string_version_format_short, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor)
 
 str_blank:
-        PASCAL_STRING " "       ; do not localize
+        PASCAL_STRING " "
 str_copyright1:
         PASCAL_STRING res_string_copyright_line1 ; menu item
 str_copyright2:
@@ -380,13 +380,13 @@ lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
         DEFINE_POINT pos_clock, kScreenWidth - 11, 10
 
 str_time:
-        PASCAL_STRING "00:00 XM" ; do not localize
+        PASCAL_STRING "00:00 XM"
 
 str_4_spaces:
-        PASCAL_STRING "    "    ; do not localize
+        PASCAL_STRING "    "
 
 str_space:
-        PASCAL_STRING " "    ; do not localize
+        PASCAL_STRING " "
 
 dow_strings:
         PASCAL_STRING res_string_weekday_abbrev_1, 3
@@ -2091,7 +2091,7 @@ check_path:
 
 kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
 str_basix_system:
-        PASCAL_STRING "BASIx.SYSTEM" ; do not localize
+        PASCAL_STRING "BASIx.SYSTEM"
 
 .proc CheckBasixSystemImpl
         launch_path := INVOKER_PREFIX

@@ -895,9 +895,9 @@ str_files_to_copy:
 str_files_remaining:
         PASCAL_STRING res_string_label_files_remaining
 str_spaces:
-        PASCAL_STRING "    "    ; do not localize
+        PASCAL_STRING "    "
 str_space:
-        PASCAL_STRING " "    ; do not localize
+        PASCAL_STRING " "
 
 ;;; ============================================================
 
@@ -1129,7 +1129,7 @@ nonzero_flag:
 .endproc
 
 str_count:
-        PASCAL_STRING "       " ; do not localize
+        PASCAL_STRING "       "
 
 ;;; ============================================================
 

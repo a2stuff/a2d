@@ -33,7 +33,7 @@ interpreter_flag:
 
 kBSOffset       = 5             ; Offset of 'C' in BASIC.SYSTEM
 str_basic_system:
-        PASCAL_STRING "BASIC.SYSTEM" ; do not localize
+        PASCAL_STRING "BASIC.SYSTEM"
 
         ;; $EE = extended call signature for IIgs/GS/OS variation.
         DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME

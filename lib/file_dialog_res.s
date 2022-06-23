@@ -30,7 +30,7 @@ filename_buf:
         DEFINE_POINT picker_entry_pos, 2, 0
 
 str_folder:
-        PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight} ; do not localize
+        PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
 
 selected_index:                 ; $FF if none
         .byte   0

@@ -117,7 +117,7 @@ menu_file:
         ASSERT_RECORD_TABLE_SIZE @items, 1, .sizeof(MGTK::MenuItem)
 
 label_apple:
-        PASCAL_STRING kGlyphSolidApple ; do not localize
+        PASCAL_STRING kGlyphSolidApple
 
 menu_facilities:
         DEFINE_MENU 2
@@ -134,7 +134,7 @@ label_desktop:
         PASCAL_STRING .sprintf(res_string_version_format_short, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; menu item
 
 label_blank:
-        PASCAL_STRING " "       ; do not localize
+        PASCAL_STRING " "
 label_copyright1:
         PASCAL_STRING res_string_copyright_line1 ; menu item
 label_copyright2:
@@ -351,8 +351,8 @@ block_count_table:
 source_drive_index:  .byte   0
 dest_drive_index:  .byte   0
 
-str_d:  PASCAL_STRING 0         ; do not localize
-str_s:  PASCAL_STRING 0         ; do not localize
+str_d:  PASCAL_STRING 0
+str_s:  PASCAL_STRING 0
 unit_num:       .byte   0
 ejectable_flag: .byte   0
 
@@ -397,8 +397,8 @@ LD44E:  .byte   0
 disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
         .byte   0
 
-str_2_spaces:   PASCAL_STRING "  "      ; do not localize
-str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString - do not localize
+str_2_spaces:   PASCAL_STRING "  "
+str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 
 ;;; Label positions
         DEFINE_POINT point_blocks_read, 300, 125

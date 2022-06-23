@@ -371,7 +371,7 @@ text_buffer2:
         .res    kTextBufferSize+2, 0
 
 spaces_string:
-        PASCAL_STRING "          " ; do not localize
+        PASCAL_STRING "          "
 error_string:
         PASCAL_STRING res_string_error_string
 

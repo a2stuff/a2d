@@ -3437,7 +3437,7 @@ str_about5:  PASCAL_STRING res_string_about_text_line5
 str_about6:  PASCAL_STRING res_string_about_text_line6
 str_about7:  PASCAL_STRING res_string_about_text_line7
 str_about8:  PASCAL_STRING kBuildDate
-str_about9:  PASCAL_STRING .sprintf(res_string_noprod_version_format_long,::kDeskTopVersionMajor,::kDeskTopVersionMinor,kDeskTopVersionSuffix) ; do not localize
+str_about9:  PASCAL_STRING .sprintf(res_string_noprod_version_format_long,::kDeskTopVersionMajor,::kDeskTopVersionMinor,kDeskTopVersionSuffix)
 
         ;; "Copy File" dialog strings
 str_copy_title:

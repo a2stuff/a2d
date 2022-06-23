@@ -491,7 +491,7 @@ str_ace2000:
 ;;; ============================================================
 
 str_prodos_version:
-        PASCAL_STRING "ProDOS #.#.#" ; do not localize
+        PASCAL_STRING "ProDOS #.#.#"
         kVersionStrMajor = 8
         kVersionStrMinor = 10
         kVersionStrPatch = 12
@@ -1838,7 +1838,7 @@ status_code:    .byte   3       ; Return Device Information Block (DIB)
 ;;; Output: str_from_int populated, with separator if needed
 
 str_from_int:
-        PASCAL_STRING "000,000" ; do not localize
+        PASCAL_STRING "000,000"
 
         .include "../lib/inttostring.s"
 

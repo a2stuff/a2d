@@ -489,7 +489,7 @@ str_files_suffix:
         PASCAL_STRING res_string_files_suffix
 
 str_file_count:                 ; populated with number of files
-        PASCAL_STRING " ##,### " ; do not localize
+        PASCAL_STRING " ##,### "
 
 str_kb_suffix:
         PASCAL_STRING res_string_kb_suffix       ; suffix for kilobytes
@@ -688,7 +688,7 @@ str_no_date:
         PASCAL_STRING res_string_no_date
 
 str_space:
-        PASCAL_STRING " "       ; do not localize
+        PASCAL_STRING " "
 str_comma:
         PASCAL_STRING res_string_comma_infix
 str_at:
@@ -763,7 +763,7 @@ window_path_addr_table:
 ;;; ============================================================
 
 str_file_type:
-        PASCAL_STRING " $00"    ; do not localize
+        PASCAL_STRING " $00"
 
 ;;; ============================================================
 
@@ -1081,7 +1081,7 @@ str_k_available:
         PASCAL_STRING res_string_window_header_k_available_suffix ; suffix for disk space available
 
 str_from_int:                   ; populated by IntToString
-        PASCAL_STRING "000,000" ; 6 digits plus thousands separator - do not localize
+        PASCAL_STRING "000,000" ; 6 digits plus thousands separator
 
 ;;; Computed during startup
 width_items_label_padded:
@@ -1276,10 +1276,10 @@ checkerboard_pattern:
         DEFINE_POINT pos_clock, kScreenWidth - 11, 10
 
 str_time:
-        PASCAL_STRING "00:00 XM" ; do not localize
+        PASCAL_STRING "00:00 XM"
 
 str_4_spaces:
-        PASCAL_STRING "    "    ; do not localize
+        PASCAL_STRING "    "
 
 dow_strings:
         PASCAL_STRING res_string_weekday_abbrev_1, 3

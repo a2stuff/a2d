@@ -1196,27 +1196,27 @@ nope:   lda     #$FF
 
 kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
 str_basix_system:
-        PASCAL_STRING "BASIx.SYSTEM" ; do not localize
+        PASCAL_STRING "BASIx.SYSTEM"
 
 str_unshrink:
-        PASCAL_STRING .concat(kFilenameExtrasDir, "/UnShrink") ; do not localize
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/UnShrink")
 
 str_preview_fot:
-        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.image.file") ; do not localize
+        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.image.file")
 
 str_preview_fnt:
-        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.font.file") ; do not localize
+        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.font.file")
 
 str_preview_txt:
-        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.text.file") ; do not localize
+        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.text.file")
 
 str_preview_mus:
-        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.duet.file") ; do not localize
+        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.duet.file")
 
 ;;; ============================================================
 
 str_empty:
-        PASCAL_STRING ""        ; do not localize
+        PASCAL_STRING ""
 
 ;;; ============================================================
 ;;; Aux $D000-$DFFF b2 holds FileRecord entries. These are stored
@@ -1618,7 +1618,7 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, path
 
 str_desk_acc:
-        PASCAL_STRING .concat(kFilenameDADir, "/") ; do not localize
+        PASCAL_STRING .concat(kFilenameDADir, "/")
 
 start:  jsr     SetCursorWatch  ; before loading DA
 
