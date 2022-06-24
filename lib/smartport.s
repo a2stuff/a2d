@@ -141,7 +141,7 @@ mirrored:
 .proc DeviceDriverAddress
         clv
 
-        and     #%11110000      ; mask off drive/slot
+        and     #UNIT_NUM_MASK  ; mask off drive/slot
         lsr                     ; 0DSSS000
         lsr                     ; 00DSSS00
         lsr                     ; 000DSSS0

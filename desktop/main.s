@@ -15867,8 +15867,8 @@ ret:    rts
         ;; Search DEVLST to see if S3D2 RAM was restored
         ldx     DEVCNT
 :       lda     DEVLST,x
-        and     #%11110000      ; DSSSnnnn
-        cmp     #$B0            ; Slot 2, Drive 2 = /RAM
+        and     #UNIT_NUM_MASK  ; DSSSnnnn
+        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
         beq     format
         dex
         bpl     :-

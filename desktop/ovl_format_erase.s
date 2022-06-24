@@ -680,7 +680,7 @@ loop:   lda     (ptr),y
         ;; A volume with that name exists... but is it the one
         ;; we're about to format/erase?
         lda     DEVNUM
-        and     #UNIT_NUM_MASK
+        and     #UNIT_NUM_MASK  ; TODO: Should be unnecessary
 
         unit_num := *+1
         cmp     #SELF_MODIFIED_BYTE

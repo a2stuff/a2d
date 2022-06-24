@@ -228,7 +228,7 @@ end:
         ;; Find the device's index in the list
         ldx     #0
 :       lda     DEVLST,x
-        and     #$F0            ; just want S/D
+        and     #UNIT_NUM_MASK  ; to compare against DEVNUM
         target := *+1
         cmp     #SELF_MODIFIED_BYTE
         beq     found
@@ -261,7 +261,7 @@ done:
         ;; Look for /RAM
         ldx     DEVCNT
 :       lda     DEVLST,x
-        and     #%11110000      ; DSSSnnnn
+        and     #UNIT_NUM_MASK  ; DSSSnnnn
         cmp     #$B0            ; Slot 3, Drive 2 = /RAM
         beq     found_ram
         dex

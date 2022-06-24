@@ -1553,7 +1553,7 @@ incr:   ldx     device_num
 .if FD_EXTENDED
 .proc InitDeviceNumber
         lda     DEVNUM
-        and     #UNIT_NUM_MASK
+        and     #UNIT_NUM_MASK  ; TODO: Should be unnecessary
         sta     last
 
         ldx     DEVCNT

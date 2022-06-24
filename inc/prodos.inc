@@ -33,9 +33,12 @@ BLOCK_SIZE      = $200
 ;;; Unit Numbers
 ;;; ============================================================
 
-;;; Mask needed when preparing a `DEVLST` entry for use with
-;;; `DRIVER_UNIT_NUMBER` an `ON_LINE` call, or just extracting
-;;; the slot and drive, as the high nibble is DSSS.
+;;; Mask needed when preparing a `DEVLST` entry for:
+;;; * Filling `DRIVER_UNIT_NUMBER` before a driver call
+;;; * Preparing params for an `ON_LINE` call
+;;; * Comparing against `DEVNUM`
+;;; * Looking up a driver address in `DEVADR` (mask then LSR 3x)
+;;; * Extracting the slot and drive (high bits are DSSS)
 UNIT_NUM_MASK   = $F0
 
 ;;; Mask off just the slot bits from a unit number. Used when

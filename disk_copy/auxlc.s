@@ -1415,7 +1415,7 @@ l3:     lda     #$3A
         ;; Find Slot 3 Drive 2 RAM disk
         ldx     DEVCNT
 :       lda     DEVLST,x
-        and     #%11110000      ; DSSSnnnn
+        and     #UNIT_NUM_MASK  ; DSSSnnnn
         cmp     #$B0            ; Slot 3, Drive 2 = /RAM
         beq     remove
         dex
