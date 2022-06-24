@@ -1612,7 +1612,7 @@ fail:   clc
 .endproc
 
 ;;; ============================================================
-;;; Update str_memory with memory count in kilobytes
+;;; Update `str_memory` with memory count in kilobytes
 
 ;;; Assert: Main is banked in (for `CheckSlinkyMemory` call)
 .proc IdentifyMemory
@@ -1835,7 +1835,7 @@ status_code:    .byte   3       ; Return Device Information Block (DIB)
 
 ;;; ============================================================
 ;;; Input: 16-bit unsigned integer in A,X
-;;; Output: str_from_int populated, with separator if needed
+;;; Output: `str_from_int` populated, with separator if needed
 
 str_from_int:
         PASCAL_STRING "000,000"
@@ -1874,10 +1874,8 @@ p65802: return16 #str_65802     ; Other boards support 65802
 .endproc
 
 ;;; ============================================================
-;;; Look up SmartPort device names.
-;;; (unit number 1) as the name.
+;;; Look up and print SmartPort device names to current GrafPort.
 ;;; Inputs: $06 points at $Cn00
-;;; Output: str_smartport populated with device names, or "(none)"
 
 ;;; Follows Technical Note: SmartPort #4: SmartPort Device Types
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
@@ -2080,6 +2078,6 @@ nope:   lda     #$FF
 
 
 da_end  := *
-.assert * < $1B00, error, "DA too big"
+.assert * < WINDOW_ENTRY_TABLES, error, "DA too big"
         ;; I/O Buffer starts at MAIN $1C00
         ;; ... but entry tables start at AUX $1B00

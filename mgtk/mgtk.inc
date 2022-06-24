@@ -81,7 +81,7 @@
         lastchar        .byte   ; char code of last character (usually $7F)
         height          .byte   ; pixels (1-16)
         charwidth       .byte   ; pixels, for each char
-        ;; kRow0         .res N    bits
+        ;; kRow0        .res N    bits
         ;; row0right    .res N    bits (double-width only)
 .endstruct
 
@@ -271,12 +271,12 @@ GetCursorAdr    = $28           ; Get cursor definition
 .struct Event
         kind    .byte           ; EventKind::*
     .union
-      .struct                   ; event_kind_down
+      .struct                   ; EventKind::down
         key     .byte           ; ASCII code; high bit clear
         modifiers .byte         ; 0=none, 1=open-apple, 2=solid-apple, 3=both
       .endstruct
 
-      .struct                   ; event_kind_update
+      .struct                   ; EventKind::update
         window_id .byte
       .endstruct
 

@@ -94,10 +94,10 @@ nextwinfo:      .addr   0
 
 .params event_params
 kind:  .byte   0
-;;; event_kind_key_down
+;;; EventKind::key_down
 key             := *
 modifiers       := * + 1
-;;; event_kind_update
+;;; EventKind::update
 window_id       := *
 ;;; otherwise
 xcoord          := *

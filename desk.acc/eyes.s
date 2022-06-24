@@ -1106,6 +1106,6 @@ BumpOval := oval::BumpOval
 ;;; ============================================================
 
 da_end := *
-.assert * < $1B00, error, "DA too big"
+.assert * < WINDOW_ENTRY_TABLES, error, "DA too big"
         ;; I/O Buffer starts at MAIN $1C00
         ;; ... but entry tables start at AUX $1B00
