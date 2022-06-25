@@ -39,7 +39,12 @@ BLOCK_SIZE      = $200
 ;;; * Comparing against `DEVNUM`
 ;;; * Looking up a driver address in `DEVADR` (mask then LSR 3x)
 ;;; * Extracting the slot and drive (high bits are DSSS)
-UNIT_NUM_MASK   = $F0
+.ifndef PRODOS_2_5
+UNIT_NUM_MASK   = $F0           ; DSSS0000
+.else
+;;; Per https://prodos8.com/releases/prodos-25/
+UNIT_NUM_MASK   = $FF           ; DSSS00XY (but preserve all bits)
+.endif ; PRODOS_2_5
 
 ;;; Mask off just the slot bits from a unit number. Used when
 ;;; constructing $Cn00 pointer to probe firmware.
