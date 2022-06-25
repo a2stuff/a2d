@@ -40,7 +40,6 @@ Project Page: https://github.com/a2stuff/a2d
 * Short icon names are centered. ([#208](https://github.com/a2stuff/a2d/issues/208))
 * AppleWorks filenames are shown with correct case. ([#179](https://github.com/a2stuff/a2d/issues/179))
 * GS/OS filenames (supported by ProDOS 2.5) are shown with correct case. ([#64](https://github.com/a2stuff/a2d/issues/64), [#385](https://github.com/a2stuff/a2d/issues/385))
-* ProDOS 2.5 extended dates (through year 4095) are supported. ([#169](https://github.com/a2stuff/a2d/issues/169))
 * If present, **BASIS.SYSTEM** is used to launch unknown file types. ([#40](https://github.com/a2stuff/a2d/issues/40))
 * Use standard ProDOS alert tone.
 * File modification time-of-day is shown in file lists and **File > Get Info**. ([#221](https://github.com/a2stuff/a2d/issues/221))

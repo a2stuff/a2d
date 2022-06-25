@@ -168,11 +168,14 @@ month_offset_table:
         rts
 
 not_null:
+
+.ifdef PRODOS_2_5
         ;; Is it a ProDOS 2.5 extended date/time? (see below)
         ldy     #3
         lda     (datetime_ptr),y
         and     #%11100000      ; Top 3 bits would be 0...
         bne     prodos_2_5      ; unless ProDOS 2.5a4+
+.endif ; PRODOS_2_5
 
         ;; --------------------------------------------------
         ;; ProDOS 8 DateTime:
@@ -255,6 +258,7 @@ do1900: ldy     #ParsedDateTime::year
 
         rts
 
+.ifdef PRODOS_2_5
         ;; --------------------------------------------------
         ;; ProDOS 8 2.5.0a4+ Extended DateTime:
         ;; https://prodos8.com/releases/prodos-25/
@@ -329,6 +333,7 @@ prodos_2_5:
         sta     (parsed_ptr),y
 
         rts
+.endif ; PRODOS_2_5
 
 ytmp:   .word   0
 
