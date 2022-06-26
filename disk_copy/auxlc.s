@@ -515,7 +515,7 @@ watch_cursor:
 
 LD5E0:  .byte   0
 
-init:   jsr     RemoveRamDisk
+init:   jsr     DisconnectRAM
         MGTK_CALL MGTK::SetMenu, menu_definition
         jsr     SetCursorPointer
         copy    #1, checkitem_params::menu_item
@@ -1408,48 +1408,9 @@ l3:     lda     #$3A
         .include "../lib/button.s"
         .include "../lib/inttostring.s"
         .include "../lib/bell.s"
-
-;;; ============================================================
-
-.proc RemoveRamDisk
-        ;; Find Slot 3 Drive 2 RAM disk
-        ldx     DEVCNT
-:       lda     DEVLST,x
-        and     #UNIT_NUM_MASK  ; DSSSnnnn
-        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
-        beq     remove
-        dex
-        bpl     :-
-        rts
-
-        ;; Remove it, shuffle everything else down.
-remove: lda     DEVLST,x
-        sta     saved_ram_unitnum
-
-shift:  lda     DEVLST+1,x
-        sta     DEVLST,x
-        cpx     DEVCNT
-        beq     :+
-        inx
-        jmp     shift
-
-:       dec     DEVCNT
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc RestoreRamDisk
-        lda     saved_ram_unitnum
-        beq     :+
-        inc     DEVCNT
-        ldx     DEVCNT
-        sta     DEVLST,x
-:       rts
-.endproc
-
-saved_ram_unitnum:
-        .byte   0
+        saved_ram_unitnum := main__saved_ram_unitnum
+        saved_ram_drvec   := main__saved_ram_drvec
+        .include "../lib/disconnect_ram.s"
 
 ;;; ============================================================
 

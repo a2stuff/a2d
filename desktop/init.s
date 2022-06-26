@@ -201,10 +201,10 @@ end:
 
 .scope
         ;; Make a copy of the original device list
+        .assert DEVLST = DEVCNT+1, error, "DEVCNT must precede DEVLST"
         ldx     DEVCNT          ; number of devices
         inx                     ; include DEVCNT itself
-:       lda     DEVLST-1,x      ; DEVCNT is at DEVLST-1
-        sta     devlst_backup,x
+:       copy    DEVLST-1,x, main::devlst_backup,x ; DEVCNT is at DEVLST-1
         dex
         bpl     :-
         ;; fall through
@@ -255,25 +255,8 @@ done:
 .endscope
 
 ;;; ============================================================
-;;; Detach aux-memory RAM Disk
 
-.scope
-        ;; Look for /RAM
-        ldx     DEVCNT
-:       lda     DEVLST,x
-        and     #UNIT_NUM_MASK  ; DSSSnnnn
-        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
-        beq     found_ram
-        dex
-        bpl     :-
-        bmi     end
-
-found_ram:
-        jsr     RemoveDevice
-        ;; fall through
-
-end:
-.endscope
+        jsr     DisconnectRAM
 
 ;;; ============================================================
 ;;; Initialize MGTK
@@ -1301,6 +1284,9 @@ str_volume_type_unknown:
 
         .include "../lib/detect_lcmeve.s"
         .include "../lib/clear_dhr.s"
+        saved_ram_unitnum := main::saved_ram_unitnum
+        saved_ram_drvec   := main::saved_ram_drvec
+        .include "../lib/disconnect_ram.s"
 
 ;;; ============================================================
 

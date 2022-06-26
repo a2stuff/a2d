@@ -1251,6 +1251,10 @@ filerecords_free_start:
         rts
 .endproc
 
+;;; Backup copy of DEVLST made before reordering and detaching offline devices
+devlst_backup:
+        .res    ::kMaxDevListSize+1, 0 ; +1 for DEVCNT itself
+
 ;;; ============================================================
 
 .proc CmdNoOp
@@ -2777,7 +2781,6 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 
 .proc RestoreSystem
         jsr     SaveWindows
-        jsr     RestoreDeviceList
 
         ;; Switch back to color DHR mode
         jsr     SetColorMode
@@ -2812,8 +2815,8 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         sta     CLR80VID
         sta     CLR80STORE
 
-        ;; Restore /RAM if possible.
-        jmp     MaybeReformatRam
+        jsr     ReconnectRAM
+        jmp     RestoreDeviceList
 .endproc
 
 ;;; ============================================================
@@ -15859,48 +15862,13 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
-;;; Reformat /RAM (Slot 3, Drive 2) if present
-;;; Assumes ROM is banked in, restores it when complete. Also
-;;; assumes hires screen (main and aux) are safe to destroy.
-
-.proc MaybeReformatRam
-        ;; Search DEVLST to see if S3D2 RAM was restored
-        ldx     DEVCNT
-:       lda     DEVLST,x
-        and     #UNIT_NUM_MASK  ; DSSSnnnn
-        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
-        beq     format
-        dex
-        bpl     :-
-        rts
-
-        ;; NOTE: Assumes driver (in DEVADR) was not modified
-        ;; when detached.
-
-        ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
-format: lda     DEVLST,x
-        and     #UNIT_NUM_MASK
-        sta     DRIVER_UNIT_NUMBER
-        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
-        copy16  #$2000, DRIVER_BUFFER
-        bit     LCBANK1
-        bit     LCBANK1
-        jsr     driver
-        bit     ROMIN2
-        rts
-
-RAMSLOT := DEVADR + $16         ; Slot 3, Drive 2
-
-driver: jmp     (RAMSLOT)
-.endproc
-
-;;; ============================================================
 
         .include "../lib/datetime.s"
         .include "../lib/is_diskii.s"
         grafport_win := window_grafport
         .include "../lib/button.s"
         .include "../lib/doubleclick.s"
+        .include "../lib/reconnect_ram.s"
 
 ;;; ============================================================
 

@@ -504,7 +504,7 @@ done_keys:
         ;; --------------------------------------------------
 
         jsr     SaveAndAdjustDeviceList
-        jsr     DisconnectRamdisk
+        jsr     DisconnectRAM
 
         ;; --------------------------------------------------
         ;; Find slots with devices using ProDOS Device ID Bytes
@@ -989,12 +989,12 @@ noop:   rts
 ;;; ============================================================
 
 .proc RunDesktop
-        ;; DeskTop will immediately disconnect RAMDisk, but it is
-        ;; restored differently.
-        jsr     ReconnectRamdisk
-        jsr     RestoreDeviceList
         ;; no SetColorMode since DeskTop will immediately override
         jsr     RestoreTextMode
+        ;; DeskTop will immediately disconnect RAMDisk, but it is
+        ;; restored differently.
+        jsr     ReconnectRAM
+        jsr     RestoreDeviceList
 
         MLI_CALL OPEN, open_desktop2_params
         lda     open_desktop2_params::ref_num
@@ -1404,49 +1404,6 @@ error:  lda     #AlertID::insert_system_disk
         MGTK_CALL MGTK::SetCursor, pointer_cursor
         rts
 .endproc
-
-;;; ============================================================
-
-;;; Disconnect /RAM
-.proc DisconnectRamdisk
-        ldx     DEVCNT
-:       lda     DEVLST,x
-        and     #UNIT_NUM_MASK  ; DSSSnnnn
-        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
-        beq     remove
-        dex
-        bpl     :-
-        rts
-
-remove: lda     DEVLST,x
-        sta     saved_ram_unitnum
-
-        ;; Shift other devices down
-shift:  lda     DEVLST+1,x
-        sta     DEVLST,x
-        cpx     DEVCNT
-        beq     done
-        inx
-        jmp     shift
-
-done:   dec     DEVCNT
-        rts
-.endproc
-
-;;; Restore /RAM
-.proc ReconnectRamdisk
-        lda     saved_ram_unitnum
-        beq     done
-
-        inc     DEVCNT
-        ldx     DEVCNT
-        sta     DEVLST,x
-
-done:   rts
-.endproc
-
-saved_ram_unitnum:
-        .byte   0
 
 ;;; ============================================================
 
@@ -1887,13 +1844,13 @@ ret:    rts
         lda     #<$C000
         sta     @addr
 
-        jsr     ReconnectRamdisk  ; unnecessary, but harmless
-        jsr     RestoreDeviceList ; unnecessary, but harmless
-        jsr     SetColorMode
-        jsr     RestoreTextMode
-
         sta     ALTZPOFF
         bit     ROMIN2
+
+        jsr     SetColorMode
+        jsr     RestoreTextMode
+        jsr     ReconnectRAM      ; unnecessary, but harmless
+        jsr     RestoreDeviceList ; unnecessary, but harmless
 
         @addr := * + 1
         jmp     SELF_MODIFIED
@@ -2057,10 +2014,13 @@ check_path:
         ;; --------------------------------------------------
         ;; Invoke
 
-        jsr     ReconnectRamdisk
-        jsr     RestoreDeviceList
+        sta     ALTZPOFF
+        bit     ROMIN2
+
         jsr     SetColorMode
         jsr     RestoreTextMode
+        jsr     ReconnectRAM
+        jsr     RestoreDeviceList
 
         jsr     INVOKER
 
@@ -2504,6 +2464,8 @@ pb2_initial_state:
         .include "../lib/bell.s"
         .include "../lib/detect_lcmeve.s"
         .include "../lib/clear_dhr.s"
+        .include "../lib/disconnect_ram.s"
+        .include "../lib/reconnect_ram.s"
 
 ;;; ============================================================
 ;;; Settings - modified by Control Panels

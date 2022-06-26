@@ -87,7 +87,6 @@ params:  .res    3
         ;; Override in this scope
         MLIEntry := MLI
 
-        jsr     auxlc::RestoreRamDisk
         sta     ALTZPOFF
         bit     ROMIN2
 
@@ -108,6 +107,8 @@ params:  .res    3
         sta     CLRALTCHAR
         sta     CLR80VID
         sta     CLR80STORE
+
+        jsr     ReconnectRAM
 
         MLI_CALL QUIT, quit_params
         rts
@@ -1149,6 +1150,7 @@ done:   rts
         .define SP_ALTZP 1
         .define SP_LCBANK1 1
         .include "../lib/smartport.s"
+        .include "../lib/reconnect_ram.s"
 
 ;;; ============================================================
 
@@ -1179,3 +1181,5 @@ main__DeviceDriverAddress       := main::DeviceDriverAddress
 main__GetDeviceBlocksUsingDriver := main::GetDeviceBlocksUsingDriver
 main__on_line_buffer2           := main::on_line_buffer2
 main__ResetIIgsRGB              := main::ResetIIgsRGB
+main__saved_ram_unitnum         := main::saved_ram_unitnum
+main__saved_ram_drvec           := main::saved_ram_drvec
