@@ -4,8 +4,6 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        RESOURCE_FILE "ovl_file_copy.res"
-
         .org OVERLAY_ADDR
 
 .scope file_copier

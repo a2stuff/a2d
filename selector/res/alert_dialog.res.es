@@ -1,8 +1,0 @@
-.define res_string_alert_selector_unable_to_run "No puede ejecutar el programa."
-.define res_string_alert_io_error "Error de E/S."
-.define res_string_alert_no_device "Ning\x14n dispositivo conectado."
-.define res_string_alert_pathname_does_not_exist "Parte de la ruta no existe."
-.define res_string_alert_insert_source_disk "Por favor inserte el disco fuente."
-.define res_string_alert_file_not_found "El archivo no se puede encontrar."
-.define res_string_alert_insert_system_disk "Por favor inserte el disco de sistema."
-.define res_string_alert_basic_system_not_found "No se encuentra el BASIC.SYSTEM."

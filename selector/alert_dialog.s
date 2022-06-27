@@ -4,8 +4,6 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        RESOURCE_FILE "alert_dialog.res"
-
         .org kSegmentAlertAddress
 
 kShortcutTryAgain = res_char_button_try_again_shortcut

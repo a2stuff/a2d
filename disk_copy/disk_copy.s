@@ -44,6 +44,8 @@ _segoffset .set 0
 ;;; ============================================================
 ;;; Disk Copy application
 
+        RESOURCE_FILE "disk_copy.res"
+
 .scope disk_copy
         .include "loader.s"
         .include "auxlc.s"

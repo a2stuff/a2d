@@ -4,8 +4,6 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        RESOURCE_FILE "quit_handler.res"
-
 ;;; This gets invoked via ProDOS QUIT, which relocated it to
 ;;; $1000 Main.
 

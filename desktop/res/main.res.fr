@@ -1,9 +1,0 @@
-.define res_char_resize_shortcut 'G'
-.define res_char_move_shortcut 'M'
-.define res_char_scroll_shortcut 'X'
-.define res_string_auxtype_prefix "     Type auxiliaire : $"
-.define res_string_volume "Volume"
-.define res_string_volume_type_disk_ii "Disque"
-.define res_string_volume_type_ramcard "Carte RAM"
-.define res_string_volume_type_fileshare "AppleShare"
-.define res_string_volume_type_vdrive "ADTPro VDRIVE"

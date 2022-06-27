@@ -16,6 +16,8 @@
 ;;; DeskTop - the actual application
 ;;; ============================================================
 
+        RESOURCE_FILE "desktop.res"
+
         .include "internal.inc"
 
         .include "../lib/bootstrap.s"

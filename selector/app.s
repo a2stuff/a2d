@@ -4,10 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        RESOURCE_FILE "app.res"
-
         .org kSegmentAppAddress
-
 
 ;;; ============================================================
 ;;; MGTK library

@@ -1,8 +1,0 @@
-.define res_string_label_download "En cours de copie vers la carte RAM..."
-.define res_string_label_copying "Copie :"
-.define res_string_errmsg_not_enough_room "M{moire insuffisante en carte RAM pour copier l'application."
-.define res_string_prompt_click_ok "Cliquez sur OK pour continuer."
-.define res_string_errmsg_error_download "Erreur pendant le t{l{chargement."
-.define res_string_errmsg_copy_incomplete "Copie arret{e."
-.define res_string_label_files_to_copy "Fichiers @ copier dans la carte RAM : "
-.define res_string_label_files_remaining "Fichiers restant @ copier : "

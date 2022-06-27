@@ -4,8 +4,6 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        RESOURCE_FILE "ovl_file_dialog.res"
-
 .scope file_dialog
         .org ::OVERLAY_ADDR
 

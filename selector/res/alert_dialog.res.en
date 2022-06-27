@@ -1,8 +1,0 @@
-.define res_string_alert_selector_unable_to_run "Unable to run the program."
-.define res_string_alert_io_error "I/O error."
-.define res_string_alert_no_device "No device connected."
-.define res_string_alert_pathname_does_not_exist "Part of the pathname does not exist."
-.define res_string_alert_insert_source_disk "Please insert source disk."
-.define res_string_alert_file_not_found "The file cannot be found."
-.define res_string_alert_insert_system_disk "Please insert the system disk."
-.define res_string_alert_basic_system_not_found "BASIC.SYSTEM not found."

@@ -4,8 +4,6 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        RESOURCE_FILE "loader.res"
-
 ;;; New QUIT routine. Gets relocated to $1000 by ProDOS before
 ;;; being executed.
 

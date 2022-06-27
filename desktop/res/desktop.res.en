@@ -1,3 +1,4 @@
+.define res_char_button_all_shortcut 'A'
 .define res_string_menu_bar_item_file "File"
 .define res_string_menu_bar_item_view "View"
 .define res_string_menu_bar_item_special "Special"
@@ -124,3 +125,54 @@
 .define res_string_errmsg_FC "Please insert source disk."
 .define res_string_errmsg_FD "Please insert destination disk."
 .define res_string_errmsg_FE "BASIC.SYSTEM not found."
+.define res_string_trash_icon_name "Trash"
+.define res_string_sd_prefix_pattern "S#,D#: "
+.define res_const_sd_prefix_pattern_offset1 2
+.define res_const_sd_prefix_pattern_offset2 5
+.define res_string_volume_type_unknown "Unknown"
+.define res_string_splash_string "Loading %s..."
+.define res_string_prompt_insert_system_disk "Insert the system disk and press Return."
+.define res_char_resize_shortcut 'G'
+.define res_char_move_shortcut 'M'
+.define res_char_scroll_shortcut 'X'
+.define res_string_auxtype_prefix "     AuxType: $"
+.define res_string_volume "Volume"
+.define res_string_volume_type_disk_ii "Disk II"
+.define res_string_volume_type_ramcard "RAMCard"
+.define res_string_volume_type_fileshare "AppleShare"
+.define res_string_volume_type_vdrive "ADTPro VDRIVE"
+.define res_string_selector_label_enter_pathname "Enter the full pathname of the file:"
+.define res_string_selector_label_enter_name "Enter the name (14 characters max.):"
+.define res_string_selector_label_add_a_new_entry_to "Add a shortcut to the:"
+.define res_string_selector_label_primary_run_list "1 menu and list"
+.define res_string_selector_label_secondary_run_list "2 list only"
+.define res_string_selector_label_download "Copy to RAMCard:"
+.define res_string_selector_label_at_first_boot "3 at boot"
+.define res_string_selector_label_at_first_use "4 at first use"
+.define res_string_selector_label_never "5 never"
+.define res_string_the_dos_33_disk_suffix_pattern "the DOS 3.3 disk in slot # drive #"
+.define res_const_the_dos_33_disk_suffix_pattern_offset1 26
+.define res_const_the_dos_33_disk_suffix_pattern_offset2 34
+.define res_string_the_disk_in_slot_suffix_pattern "the disk in slot # drive #"
+.define res_const_the_disk_in_slot_suffix_pattern_offset1 18
+.define res_const_the_disk_in_slot_suffix_pattern_offset2 26
+.define res_string_file_suffix "file"
+.define res_string_files_suffix "files"
+.define res_string_kb_suffix "K"
+.define res_string_copy_file_label_source_filename "Source filename:"
+.define res_string_copy_file_label_destination_filename "Destination filename:"
+.define res_string_delete_file_label_file_to_delete "File to delete:"
+.define res_string_menu_item_slot_pattern "Slot #"
+.define res_const_menu_item_slot_pattern_offset1 6
+.define res_string_menu_item_add_entry "Add a Shortcut..."
+.define res_string_menu_item_edit_entry "Edit a Shortcut..."
+.define res_string_menu_item_delete_entry "Delete a Shortcut..."
+.define res_string_menu_item_run_entry "Run a Shortcut..."
+.define res_string_menu_item_about "About %s"
+.define res_string_window_header_item_suffix " Item"
+.define res_string_window_header_items_suffix " Items"
+.define res_string_window_header_k_used_suffix "K in disk"
+.define res_string_window_header_k_available_suffix "K available"
+.define res_string_no_date "no date"
+.define res_string_comma_infix ", "
+.define res_string_at_infix " at "

@@ -4,8 +4,6 @@
 ;;; Compiled as part of disk_copy.s
 ;;; ============================================================
 
-        RESOURCE_FILE "auxlc.res"
-
 .scope auxlc
         .org ::kSegmentAuxLCAddress
 

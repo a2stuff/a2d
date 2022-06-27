@@ -1,3 +1,4 @@
+.define res_char_button_all_shortcut 'A'
 .define res_string_menu_bar_item_file "Archivo"
 .define res_string_menu_bar_item_view "Listado"
 .define res_string_menu_bar_item_special "Especial"
@@ -124,3 +125,54 @@
 .define res_string_errmsg_FC "Por favor inserte el disco original."
 .define res_string_errmsg_FD "Por favor inserte el disco de destino."
 .define res_string_errmsg_FE "No se encuentra BASIC.SYSTEM."
+.define res_string_trash_icon_name "Papelera"
+.define res_string_sd_prefix_pattern "S#,D#: "
+.define res_const_sd_prefix_pattern_offset1 2
+.define res_const_sd_prefix_pattern_offset2 5
+.define res_string_volume_type_unknown "Desconocido"
+.define res_string_splash_string "Cargando %s..."
+.define res_string_prompt_insert_system_disk "Inserte el disco de sistema y presione Return."
+.define res_char_resize_shortcut 'G'
+.define res_char_move_shortcut 'M'
+.define res_char_scroll_shortcut 'X'
+.define res_string_auxtype_prefix "     Tipo Aux: $"
+.define res_string_volume "Volumen"
+.define res_string_volume_type_disk_ii "Disk II"
+.define res_string_volume_type_ramcard "RAMDisk"
+.define res_string_volume_type_fileshare "AppleShare"
+.define res_string_volume_type_vdrive "ADTPro VDRIVE"
+.define res_string_selector_label_enter_pathname "Escriba la ruta completa del archivo:"
+.define res_string_selector_label_enter_name "Escriba el nombre (14 caracteres m\x10x.):"
+.define res_string_selector_label_add_a_new_entry_to "A|adir atajo a la:"
+.define res_string_selector_label_primary_run_list "1 men\x14 y lista"
+.define res_string_selector_label_secondary_run_list "2 solo la lista"
+.define res_string_selector_label_download "Copiar a RAMDisk:"
+.define res_string_selector_label_at_first_boot "3 en el arranque"
+.define res_string_selector_label_at_first_use "4 por primera vez"
+.define res_string_selector_label_never "5 nunca"
+.define res_string_the_dos_33_disk_suffix_pattern "el disco DOS 3.3 en la ranura # unidad #"
+.define res_const_the_dos_33_disk_suffix_pattern_offset1 31
+.define res_const_the_dos_33_disk_suffix_pattern_offset2 40
+.define res_string_the_disk_in_slot_suffix_pattern "el disco en la ranura # unidad #"
+.define res_const_the_disk_in_slot_suffix_pattern_offset1 23
+.define res_const_the_disk_in_slot_suffix_pattern_offset2 32
+.define res_string_file_suffix "archivo"
+.define res_string_files_suffix "archivos"
+.define res_string_kb_suffix "K"
+.define res_string_copy_file_label_source_filename "Nombre del archivo original:"
+.define res_string_copy_file_label_destination_filename "Nombre del archivo de destino:"
+.define res_string_delete_file_label_file_to_delete "Archivo a borrar:"
+.define res_string_menu_item_slot_pattern "Ranura #"
+.define res_const_menu_item_slot_pattern_offset1 8
+.define res_string_menu_item_add_entry "A|adir atajo..."
+.define res_string_menu_item_edit_entry "Editar atajo..."
+.define res_string_menu_item_delete_entry "Borrar atajo..."
+.define res_string_menu_item_run_entry "Ejecutar atajo..."
+.define res_string_menu_item_about "Acerca %s"
+.define res_string_window_header_item_suffix " Elemento"
+.define res_string_window_header_items_suffix " Elementos"
+.define res_string_window_header_k_used_suffix "K en disco"
+.define res_string_window_header_k_available_suffix "K disponible"
+.define res_string_no_date "sin fecha"
+.define res_string_comma_infix ", "
+.define res_string_at_infix " en "

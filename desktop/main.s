@@ -4,7 +4,6 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        RESOURCE_FILE "main.res"
         .include "../disk_copy/disk_copy.inc"
 
 ;;; ============================================================

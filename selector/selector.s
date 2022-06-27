@@ -63,6 +63,8 @@ _segoffset .set 0
 ;;; Selector application
 ;;; ============================================================
 
+        RESOURCE_FILE "selector.res"
+
         .include "../lib/bootstrap.s"
         .include "quit_handler.s"
 
