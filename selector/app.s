@@ -989,12 +989,9 @@ noop:   rts
 ;;; ============================================================
 
 .proc RunDesktop
-        ;; no SetColorMode since DeskTop will immediately override
-        jsr     RestoreTextMode
-        ;; DeskTop will immediately disconnect RAMDisk, but it is
-        ;; restored differently.
-        jsr     ReconnectRAM
-        jsr     RestoreDeviceList
+        sta     ALTZPOFF
+        bit     ROMIN2
+        jsr     RestoreSystem
 
         MLI_CALL OPEN, open_desktop2_params
         lda     open_desktop2_params::ref_num
@@ -1005,8 +1002,18 @@ noop:   rts
 .endproc
 
 ;;; ============================================================
+;;; Assert: ROM banked in, ALTZP/LC is OFF
+
+.proc RestoreSystem
+        jsr     SetColorMode
+        jsr     RestoreTextMode
+        jsr     ReconnectRAM
+        jmp     RestoreDeviceList
+.endproc
+
+;;; ============================================================
 ;;; Disable 80-col firmware, clear and show the text screen.
-;;; Assert: ROM is banked in, ALTZP is off
+;;; Assert: ROM is banked in, ALTZP/LC is off
 
 .proc RestoreTextMode
         jsr     HOME            ; Clear 80-col screen
@@ -1846,11 +1853,7 @@ ret:    rts
 
         sta     ALTZPOFF
         bit     ROMIN2
-
-        jsr     SetColorMode
-        jsr     RestoreTextMode
-        jsr     ReconnectRAM      ; unnecessary, but harmless
-        jsr     RestoreDeviceList ; unnecessary, but harmless
+        jsr     RestoreSystem
 
         @addr := * + 1
         jmp     SELF_MODIFIED
@@ -2016,11 +2019,7 @@ check_path:
 
         sta     ALTZPOFF
         bit     ROMIN2
-
-        jsr     SetColorMode
-        jsr     RestoreTextMode
-        jsr     ReconnectRAM
-        jsr     RestoreDeviceList
+        jsr     RestoreSystem
 
         jsr     INVOKER
 
