@@ -5,12 +5,18 @@
 ;;; Internal ProDOS tables are used to handle mirrored drives. The
 ;;; locations vary between ProDOS versions. For details, see:
 ;;; https://github.com/a2stuff/a2d/issues/685
-;;; TODO: Handle versions other than 2.4, either by adding more
+
+;;; TODO: Handle additional versions, either by adding more
 ;;; logic or building mirroring tables ourselves on startup.
 DevAdrP24       = $FCE6
 SPUnitP24       = $D6EF
 SPVecLP24       = $FD51
 SPVecHP24       = $FD60
+
+DevAdrP20x      = $FD08
+SPUnitP20x      = $D6EF
+SPVecLP20x      = $FD6E
+SPVecHP20x      = $FD7D
 
 ;;; ============================================================
 ;;; Look up SmartPort dispatch address.
@@ -97,6 +103,9 @@ fail:   sec
         ;; Mirrored SmartPort device with a known handler.
         ;; Look at ProDOS's internal tables to determine.
 mirrored:
+        tya
+        tax                     ; X = ProDOS version index
+
         lda     unit_number
         lsr
         lsr
@@ -112,10 +121,20 @@ mirrored:
         bit     LCBANK1
 .endif
 
+        cpx     #1
+    IF_EQ
+        ;; ProDOS 2.0.x
+        ldx     SPVecHP20x,y    ; X = sp vec hi
+        lda     SPVecLP20x,y
+        pha
+        lda     SPUnitP20x,y
+    ELSE
+        ;; ProDOS 2.4.x
         ldx     SPVecHP24,y     ; X = sp vec hi
         lda     SPVecLP24,y
         pha
         lda     SPUnitP24,y
+    END_IF
         tay                     ; Y = sp unit
         pla                     ; A = sp vec lo
 
@@ -128,14 +147,13 @@ mirrored:
 
         clc
         rts
-
 .endproc
 
 ;;; ============================================================
 ;;; Get driver address for unit number
 ;;; Input: A = unit number
 ;;; Output: A,X=driver address
-;;;         V=1 if a mirrored SmartPort device (ProDOS 2.4 only)
+;;;         V=1 if a mirrored SmartPort device, and Y is table index
 ;;;         Z=1 if a firmware address ($CnXX)
 
 .proc DeviceDriverAddress
@@ -150,14 +168,20 @@ mirrored:
         lda     DEVADR,y        ; A = lo
         ldx     DEVADR+1,y      ; X = hi
 
-        ;; ProDOS 2.4.x SmartPort remapping?
+        ;; ProDOS 2.x SmartPort mirroring?
+        ldy     #0              ; Y=0 = ProDOS 2.4.x
         cmp     #<DevAdrP24
         bne     :+
         cpx     #>DevAdrP24
-        bne     :+
-        bit     ret             ; set V
-ret:    rts
+        beq     mirrored
 :
+        iny                     ; Y=1 = ProDOS 2.0.x
+        cmp     #<DevAdrP20x
+        bne     :+
+        cpx     #>DevAdrP20x
+        beq     mirrored
+:
+        ;; Not mirrored - set Z flag for firmware address
         pha
         txa
         and     #$F0
@@ -165,4 +189,8 @@ ret:    rts
         pla
         cpy     #$C0            ; leave Z set if it is $Cn
         rts
+
+mirrored:
+        bit     ret             ; set V
+ret:    rts
 .endproc

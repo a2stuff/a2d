@@ -2831,6 +2831,6 @@ Alert := alert_dialog::Alert
 ;;; ============================================================
 
         ASSERT_ADDRESS ::kSegmentAuxLCAddress + ::kSegmentAuxLCLength
-
+        .assert * <= $F400, error, "Update memory_bitmap if code extends past $F400"
 .endscope
        auxlc__start := auxlc::start

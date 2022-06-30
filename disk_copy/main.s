@@ -15,7 +15,7 @@
 
 ;;; ============================================================
 
-        default_block_buffer := $1C00
+        default_block_buffer := $1C00 ; if this is changed, update `memory_bitmap`
 
         DEFINE_QUIT_PARAMS quit_params
 
@@ -1155,7 +1155,7 @@ done:   rts
 ;;; ============================================================
 
         PAD_TO ::kSegmentMainAddress + ::kSegmentMainLength
-
+        .assert * <= $1400, error, "Update memory_bitmap if code extends past $1400"
 .endscope
 
 main__FormatDevice              := main::FormatDevice

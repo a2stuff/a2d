@@ -39,7 +39,7 @@ _segoffset .set 0
 ;;; Segments
         DEFSEG Loader,          DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
         DEFSEG SegmentAuxLC,    $D000, $2400
-        DEFSEG SegmentMain,     $0800, $0B80
+        DEFSEG SegmentMain,     $0800, $0C00
 
 ;;; ============================================================
 ;;; Disk Copy application
