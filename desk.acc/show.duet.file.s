@@ -115,15 +115,18 @@ pathbuf:        .res    kPathBufferSize, 0
 
         jsr     JUMP_TABLE_CUR_WATCH
         JUMP_TABLE_MLI_CALL OPEN, open_params
-        beq     :+
+        bcc     :+
         jsr     JUMP_TABLE_CUR_POINTER
         rts
 :       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        JUMP_TABLE_MLI_CALL READ, read_params ; TODO: Check for error
+        JUMP_TABLE_MLI_CALL READ, read_params
+        php                     ; preserve error
         JUMP_TABLE_MLI_CALL CLOSE, close_params
         jsr     JUMP_TABLE_CUR_POINTER
+        plp
+        bcs     exit
 
         ;; TODO: Try to verify that this is a duet file
 
@@ -145,7 +148,7 @@ pathbuf:        .res    kPathBufferSize, 0
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
-        rts
+exit:   rts
 .endproc
 
 ;;; ============================================================
