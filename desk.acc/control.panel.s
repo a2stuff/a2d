@@ -648,7 +648,6 @@ ipblink_ip_bitmap:
 
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bne     Exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
         jne     InputLoop

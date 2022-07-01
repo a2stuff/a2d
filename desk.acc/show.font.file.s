@@ -352,9 +352,7 @@ char_label:  .byte   0
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bpl     :+
-        jmp     Exit
-:       lda     findwindow_params::window_id
+        lda     findwindow_params::window_id
         cmp     winfo::window_id
         bpl     :+
         jmp     InputLoop

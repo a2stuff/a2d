@@ -515,10 +515,7 @@ modifiers:
 ;;; ============================================================
 
 .proc HandleDown
-        copy16  event_params::xcoord, findwindow_params::mousex
-        copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        jne     InputLoop       ; TODO: Standardize behavior here across DAs
 
         lda     findwindow_params::window_id
         cmp     winfo::window_id
@@ -651,8 +648,6 @@ tmp:    .word   0
 
         cmp     #MGTK::Part::thumb
     IF_EQ
-        copy16  event_params::xcoord, trackthumb_params::mousex
-        copy16  event_params::ycoord, trackthumb_params::mousey
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     done

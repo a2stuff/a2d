@@ -1668,8 +1668,6 @@ CheckAlpha:
 
         cmp     #MGTK::Part::thumb
     IF_EQ
-        copy16  event_params::xcoord, trackthumb_params::mousex
-        copy16  event_params::ycoord, trackthumb_params::mousey
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     done
