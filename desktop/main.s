@@ -537,19 +537,30 @@ not_desktop:
         jmp     MenuDispatch2
 
 not_menu:
-        pha                     ; which window - active or not?
+        pha                     ; A = MGTK::Area::*
+
+        ;; Activate if needed
         lda     active_window_id
         cmp     findwindow_params::window_id
-        beq     HandleActiveWindowClick
-        pla
-        jmp     HandleInactiveWindowClick
-.endproc
+    IF_NE
+        jsr     ClearSelection
+        jsr     ActivateWindow
+    END_IF
 
-;;; ============================================================
-;;; Inputs: MGTK::Area pushed to stack
+        pla                     ; A = MGTK::Area::*
+        jsr     dispatch_click
 
-.proc HandleActiveWindowClick
-        pla
+        lda     selected_icon_count
+    IF_ZERO
+        ;; Try to select the window's parent icon. (Only works
+        ;; for volume icons, otherwise it would put selection
+        ;; in an inactive window.)
+        lda     active_window_id
+        jmp     SelectIconForWindow
+    END_IF
+        rts
+
+dispatch_click:
         cmp     #MGTK::Area::content
         jeq     HandleClientClick
         cmp     #MGTK::Area::dragbar
@@ -562,12 +573,18 @@ not_menu:
 .endproc
 
 ;;; ============================================================
+;;; Inputs: MGTK::Area pushed to stack
+
+.proc HandleActiveWindowClick
+        pla
+.endproc
+
+;;; ============================================================
+;;; Activate the window, and sets selection to its parent icon
 ;;; Inputs: window id to activate in `findwindow_params::window_id`
 
-;;; Activate the window, and sets selection to its parent icon
-.proc HandleInactiveWindowClick
+.proc ActivateWindowAndSelectIcon
         jsr     ClearSelection
-
         jsr     ActivateWindow
 
         ;; Try to select the window's parent icon. (Only works
@@ -577,7 +594,10 @@ not_menu:
         jmp     SelectIconForWindow
 .endproc
 
+;;; ============================================================
+;;; Activate the window, draw contents, and update menu items
 ;;; Inputs: window id to activate in `findwindow_params::window_id`
+
 .proc ActivateWindow
         ;; Make the window active.
         MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
@@ -3722,7 +3742,7 @@ reverse:
 
 found:  inx
         stx     findwindow_params::window_id
-        jmp     HandleInactiveWindowClick
+        jmp     ActivateWindowAndSelectIcon
 
 done:   rts
 .endproc
@@ -4702,7 +4722,7 @@ exception_flag:
         cmp     active_window_id
         beq     :+
         sta     findwindow_params::window_id
-        jsr     HandleInactiveWindowClick ; bring to front
+        jsr     ActivateWindowAndSelectIcon ; bring to front
 :
         ;; Clear background
         lda     active_window_id

@@ -482,6 +482,13 @@
 
 * Launch DeskTop. Open a volume containing no files. Verify that the default minimum window size is used - about 170px by 50px not counting title/scrollbars.
 
+* Launch DeskTop. Open two windows. Attempt to drag the inactive window by dragging its title bar. Verify that the window activates and the drag works.
+* Launch DeskTop. Open two windows. Click on an icon in the inactive window. Verify that the window activates and that the icon is selected.
+* Launch DeskTop. Open two volume windows. Click and drag in the inactive window without selecting any icons. Verify that the window activates and that the drag rectangle appears, and that when the button is released the volume icon is selected.
+* Launch DeskTop. Open two volume windows. Click in the inactive window without selecting any icons. Verify that the window activates and the volume icon is selected.
+* Launch DeskTop. Open a volume window. Click on the desktop to clear selection. Click in an empty area within the window. Verify that the volume icon is selected.
+* Launch DeskTop. Open a volume window. Select a file icon. Click in an empty area within the window. Verify that the volume icon is selected.
+
 # Preview
 
 Text File:
