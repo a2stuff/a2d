@@ -356,24 +356,10 @@ which_ctl:      .byte   0
 which_part:     .byte   0
 .endparams
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kScreenWidth-1, kScreenHeight-1
-penpattern:     .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_black
-fontptr:        .addr   DEFAULT_FONT
-.endparams
-        .assert .sizeof(grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
+;;; GrafPort used to restore port after clipping for volume
+grafport:       .tag    MGTK::GrafPort
 
-;;; Grafport used to draw icon outlines during drag
+;;; GrafPort used to draw icon outlines during drag
 drag_outline_grafport:  .tag    MGTK::GrafPort
 
 .params getwinport_params
@@ -381,22 +367,7 @@ window_id:      .byte   0
 a_grafport:     .addr   icon_grafport
 .endparams
 
-.params icon_grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-penpattern:     .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_black
-fontptr:        .addr   0
-.endparams
-        .assert .sizeof(icon_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
+icon_grafport:  .tag    MGTK::GrafPort
 
 ;;; ============================================================
 ;;; IconTK command jump table
@@ -1665,13 +1636,13 @@ headery:
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into icon_grafport
 
-        sub16   icon_grafport::cliprect::x2, icon_grafport::cliprect::x1, width
-        sub16   icon_grafport::cliprect::y2, icon_grafport::cliprect::y1, height
+        sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x2, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x1, width
+        sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, height
 
-        COPY_STRUCT MGTK::Point, icon_grafport::viewloc, icon_grafport::cliprect
+        COPY_STRUCT MGTK::Point, icon_grafport+MGTK::GrafPort::viewloc, icon_grafport+MGTK::GrafPort::maprect
 
-        add16   icon_grafport::cliprect::x1, width, icon_grafport::cliprect::x2
-        add16   icon_grafport::cliprect::y1, height, icon_grafport::cliprect::y2
+        add16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x1, width, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x2
+        add16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, height, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2
 
         ;; Account for window header, and set port to icon_grafport
         jmp     ShiftPortDown
@@ -2993,8 +2964,8 @@ case2:
         ;; For window's items/used/free space bar
         kOffset = kWindowHeaderHeight + 1
 
-        add16   icon_grafport::viewloc::ycoord, #kOffset, icon_grafport::viewloc::ycoord
-        add16   icon_grafport::cliprect::y1, #kOffset, icon_grafport::cliprect::y1
+        add16   icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kOffset, icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
+        add16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kOffset, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc

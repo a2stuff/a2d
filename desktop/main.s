@@ -6270,6 +6270,7 @@ header_and_offset_flag:
         beq     use_win_port
 
         ;; Selection is in a non-active window
+        ;; TODO: Is this still possible?
         jsr     PrepareNullGrafPort
         jmp     loop
 
@@ -9388,11 +9389,12 @@ saved_portbits:
 ;;; Zero out and then select `null_grafport`.
 
 .proc PrepareNullGrafPort
+        MGTK_CALL MGTK::InitPort, null_grafport
         lda     #0
         tax
-:       sta     null_grafport::cliprect::topleft,x
-        sta     null_grafport::viewloc::xcoord,x
-        sta     null_grafport::cliprect::bottomright,x
+:       sta     null_grafport+MGTK::GrafPort::maprect+MGTK::Rect::topleft,x
+        sta     null_grafport+MGTK::GrafPort::viewloc+MGTK::Point::xcoord,x
+        sta     null_grafport+MGTK::GrafPort::maprect+MGTK::Rect::bottomright,x
         inx
         cpx     #.sizeof(MGTK::Point)
         bne     :-

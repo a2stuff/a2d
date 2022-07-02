@@ -56,23 +56,7 @@ desktop_grafport:        .tag   MGTK::GrafPort
 
 ;;; GrafPort used for icon operations in inactive windows, to
 ;;; prevent any drawing.
-
-.params null_grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 10, 10
-penpattern:     .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_black
-fontptr:        .addr   DEFAULT_FONT
-.endparams
-        .assert .sizeof(null_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
+null_grafport:          .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
