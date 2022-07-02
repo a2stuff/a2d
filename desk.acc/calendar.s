@@ -217,7 +217,7 @@ str_date:
 clicked:        .byte   0
 .endparams
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
@@ -339,7 +339,7 @@ fin:    jsr     UpdateWindow
         jmp     InputLoop
 
 .proc InvertDec
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
     IF_NE
         MGTK_CALL MGTK::SetPort, grafport
@@ -374,7 +374,7 @@ fin:    jsr     UpdateWindow
         jmp     InputLoop
 
 .proc InvertInc
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
     IF_NE
         MGTK_CALL MGTK::SetPort, grafport
@@ -449,7 +449,7 @@ update: lda     #0
 
 
         ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         IF_EQ
         rts

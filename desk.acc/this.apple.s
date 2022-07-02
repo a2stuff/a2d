@@ -622,7 +622,7 @@ dragy:          .word   0
 moved:          .byte   0
 .endparams
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
@@ -1063,7 +1063,7 @@ egg:    .byte   0
 ;;; ============================================================
 
 .proc ClearWindow
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
         rts
@@ -1078,7 +1078,7 @@ egg:    .byte   0
 .proc DrawWindow
         ptr := $06
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
         rts

@@ -156,7 +156,7 @@ penheight:      .byte   2
 clicked:        .byte   0
 .endparams
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
@@ -902,7 +902,7 @@ lasty:  .byte   0
 .endproc
 
 .proc UpdateBits
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
         jsr     DrawBits
@@ -944,7 +944,7 @@ next:   dex
         copy16  dblclick_speed_table,x, SETTINGS + DeskTopSettings::dblclick_speed
         jsr     MarkDirty
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
         jsr     DrawDblclickButtons
@@ -995,7 +995,7 @@ next:   dex
         ;; --------------------------------------------------
         ;; Update the UI
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
         jsr     DrawTrackingButtons
@@ -1051,7 +1051,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
 .proc DrawWindow
         ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         IF_EQ
         rts
@@ -1296,7 +1296,7 @@ arrow_num:
 ;;; Assert: called from a routine that ensures window is onscreen
 .proc DrawPreview
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
 
         ;; Shift the pattern so that when interpreted as NTSC color it
@@ -1436,7 +1436,7 @@ mode:   .byte   0
         lda     #MGTK::notpencopy
 :       sta     mode
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::SetPattern, winfo::pattern
@@ -1703,7 +1703,7 @@ next:   dex
         jsr     MarkDirty
         jsr     ResetIPBlinkCounter
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
         jsr     DrawIpblinkButtons
@@ -1729,7 +1729,7 @@ next:   dex
         jsr     ResetIPBlinkCounter
 
         ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         beq     done
 
