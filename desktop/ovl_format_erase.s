@@ -21,6 +21,11 @@
 
 ;;; ============================================================
 
+        ;; This must be page-aligned.
+        .include "../lib/formatdiskii.s"
+
+;;; ============================================================
+
 Exec:
         pha
         jsr     main::SetCursorPointer
@@ -694,13 +699,6 @@ no_match:
         clc
         rts
 .endproc
-;;; ============================================================
-
-        ;; TODO: Minimize amount of padding here...
-        PAD_TO $D00
-
-        ;; This must be page-aligned.
-        .include "../lib/formatdiskii.s"
 
 ;;; ============================================================
 
@@ -1276,8 +1274,6 @@ non_pro:
         jsr     GetNonprodosVolName
         rts
 .endproc
-
-
 
 ;;; ============================================================
 
