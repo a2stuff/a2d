@@ -7514,6 +7514,12 @@ common: sta     preserve_window_size_flag
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         sub16in iconbb_rect+MGTK::Rect::y2, (winfo_ptr),y, iconbb_rect+MGTK::Rect::y2
 
+        ;; --------------------------------------------------
+        ;; Width
+
+        lda     cached_window_entry_count
+        beq     use_minw        ; `iconbb_rect` is bogus if there are no icons
+
         ;; Check if width is < min or > max
         cmp16   iconbb_rect+MGTK::Rect::x2, #kMinWindowWidth
         bcc     use_minw
@@ -7541,8 +7547,13 @@ assign_width:
         iny
         sta     (winfo_ptr),y
 
-        ;; Check if height is < min or > max
+        ;; --------------------------------------------------
+        ;; Height
 
+        lda     cached_window_entry_count
+        beq     use_minh        ; `iconbb_rect` is bogus if there are no icons
+
+        ;; Check if height is < min or > max
         cmp16   iconbb_rect+MGTK::Rect::y2, #kMinWindowHeight
         bcc     use_minh
         cmp16   iconbb_rect+MGTK::Rect::y2, #kMaxWindowHeight
@@ -7568,6 +7579,8 @@ assign_height:
         txa
         iny
         sta     (winfo_ptr),y
+
+        ;; --------------------------------------------------
 
         ;; Update scrollbars
         lda     thumbmax

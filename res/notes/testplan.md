@@ -480,6 +480,8 @@
   * Drag a file in B onto C while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Drag a file in B onto D while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
 
+* Launch DeskTop. Open a volume containing no files. Verify that the default minimum window size is used - about 170px by 50px not counting title/scrollbars.
+
 # Preview
 
 Text File:
