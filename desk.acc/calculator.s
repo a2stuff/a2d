@@ -419,22 +419,7 @@ pixels: .byte   PX(%1000001)
         .byte   PX(%1001001)
 .endparams
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
-        .assert .sizeof(grafport) = .sizeof(MGTK::GrafPort), error
+grafport:       .tag    MGTK::GrafPort
 
         ;; params for MGTK::SetPortBits when decorating title bar
 .params screen_port

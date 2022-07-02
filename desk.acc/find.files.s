@@ -856,7 +856,8 @@ maxcontlength:  .word   kDAHeight
 port:
         DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
@@ -888,7 +889,8 @@ maxcontlength:  .word   kResultsHeight
 port:
         DEFINE_POINT viewloc, kResultsLeft, kResultsTop
 mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .word   MGTK::screen_mapwidth
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kResultsWidth, kResultsHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or

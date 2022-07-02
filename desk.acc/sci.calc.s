@@ -501,22 +501,7 @@ base:   .word   16
 
 farg:   .byte   $00,$00,$00,$00,$00,$00
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   0
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
-        .assert .sizeof(grafport) = .sizeof(MGTK::GrafPort), error
+grafport:       .tag    MGTK::GrafPort
 
 .params penmode_normal
 penmode:   .byte   MGTK::pencopy

@@ -47,25 +47,12 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endparams
+        .assert .sizeof(window_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
 
 ;;; GrafPort used for nearly all operations. Usually re-initialized
 ;;; before use.
 
-.params desktop_grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-penpattern:     .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_black
-fontptr:        .addr   0
-.endparams
+desktop_grafport:        .tag   MGTK::GrafPort
 
 ;;; GrafPort used for icon operations in inactive windows, to
 ;;; prevent any drawing.
@@ -85,6 +72,7 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   DEFAULT_FONT
 .endparams
+        .assert .sizeof(null_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
 
 ;;; ============================================================
 

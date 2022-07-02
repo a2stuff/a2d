@@ -371,23 +371,10 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   DEFAULT_FONT
 .endparams
+        .assert .sizeof(grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
 
 ;;; Grafport used to draw icon outlines during drag
-.params drag_outline_grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-penpattern:     .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_black
-fontptr:        .addr   0
-.endparams
+drag_outline_grafport:  .tag    MGTK::GrafPort
 
 .params getwinport_params
 window_id:      .byte   0
@@ -409,6 +396,7 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endparams
+        .assert .sizeof(icon_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
 
 ;;; ============================================================
 ;;; IconTK command jump table
@@ -1023,7 +1011,7 @@ is_drag:
         port_ptr := $06
         MGTK_CALL MGTK::GetPort, port_ptr
 
-        COPY_BLOCK drag_outline_grafport::cliprect, iconinrect_params::rect
+        COPY_STRUCT MGTK::Rect, drag_outline_grafport+MGTK::GrafPort::maprect, iconinrect_params::rect
 
         ldx     highlight_count
         stx     L9C74
