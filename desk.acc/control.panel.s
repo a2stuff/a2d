@@ -177,7 +177,7 @@ kRadioButtonHeight      = 7
 mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 checked_rb_bitmap:
@@ -208,7 +208,7 @@ kCheckboxHeight      = 8
 mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
 .endparams
 
 checked_cb_bitmap:
@@ -278,7 +278,7 @@ kLeftArrowBottom        = kLeftArrowTop + kArrowHeight - 1
 mapbits:        .addr   larr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kArrowWidth-1, kArrowHeight-1
+        DEFINE_RECT maprect, 0, 0, kArrowWidth-1, kArrowHeight-1
 .endparams
 
 .params rarr_params
@@ -286,7 +286,7 @@ reserved:       .byte   0
 mapbits:        .addr   rarr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kArrowWidth-1, kArrowHeight-1
+        DEFINE_RECT maprect, 0, 0, kArrowWidth-1, kArrowHeight-1
 .endparams
 
         DEFINE_RECT larr_rect, kLeftArrowLeft-2, kLeftArrowTop, kLeftArrowRight+2, kLeftArrowBottom
@@ -333,7 +333,7 @@ dblclick_speed_table:
 mapbits:        .addr   dblclick_bitmap
 mapwidth:       .byte   8
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 53, 33
+        DEFINE_RECT maprect, 0, 0, 53, 33
 .endparams
 
         kNumArrows = 6
@@ -393,7 +393,7 @@ dblclick_bitmap:
 mapbits:        .addr   darr_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 16, 7
+        DEFINE_RECT maprect, 0, 0, 16, 7
 .endparams
 
 darr_bitmap:
@@ -425,7 +425,7 @@ kMouseTrackingY = 78
 mapbits:        .addr   mouse_tracking_bitmap
 mapwidth:       .byte   9
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 62, 31
+        DEFINE_RECT maprect, 0, 0, 62, 31
 .endparams
 
 mouse_tracking_bitmap:
@@ -491,7 +491,7 @@ ipblink_selection:
 mapbits:        .addr   ipblink_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 37, 12
+        DEFINE_RECT maprect, 0, 0, 37, 12
 .endparams
 
 ipblink_bitmap:
@@ -519,7 +519,7 @@ kIPBmpHeight = 13
 mapbits:        .addr   ipblink_ip_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kIPBmpWidth - 1, kIPBmpHeight - 1
+        DEFINE_RECT maprect, 0, 0, kIPBmpWidth - 1, kIPBmpHeight - 1
 .endparams
 
 kCursorWidth    = 8

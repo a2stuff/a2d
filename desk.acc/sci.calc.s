@@ -537,7 +537,7 @@ top:            .word   kDATop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kDAWidth, kDAHeight
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0

@@ -364,7 +364,7 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kDialogWidth, kDialogHeight
+        DEFINE_RECT maprect, 0, 0, kDialogWidth, kDialogHeight
 pattern:        .res    8,$FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -390,7 +390,7 @@ kRadioButtonHeight      = 7
 mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 checked_rb_bitmap:
@@ -427,7 +427,7 @@ kOptionDisplayY = 44
 mapbits:        .addr   date_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 39, 17
+        DEFINE_RECT maprect, 0, 0, 39, 17
 .endparams
 date_bitmap:
         .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000000),PX(%0000000)
@@ -454,7 +454,7 @@ date_bitmap:
 mapbits:        .addr   time_bitmap
 mapwidth:       .byte   5
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 31, 14
+        DEFINE_RECT maprect, 0, 0, 31, 14
 .endparams
 time_bitmap:
         .byte   PX(%0000000),PX(%0001111),PX(%1111111),PX(%1000000),PX(%0000000)

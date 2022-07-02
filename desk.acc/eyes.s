@@ -149,7 +149,7 @@ kGrowBoxHeight = 7
 mapbits:        .addr   grow_box_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 2, 2, 19, 9
+        DEFINE_RECT maprect, 2, 2, 19, 9
 .endparams
 
 grow_box_bitmap:

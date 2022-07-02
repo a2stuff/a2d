@@ -275,8 +275,7 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -579,7 +578,7 @@ modifiers:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        add16   screentowindow_params::windowy, winfo_listbox::cliprect::y1, tmp
+        add16   screentowindow_params::windowy, winfo_listbox::maprect::y1, tmp
         ldax    tmp
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
@@ -705,12 +704,12 @@ ret:    rts
 .proc UpdateViewport
         ;; Compute height of line (font height + 1)
         ;; Update top of maprect: 1 + top_row * line_height
-        copy16  #0, winfo_listbox::cliprect::y1
+        copy16  #0, winfo_listbox::maprect::y1
         ldax    #kListItemHeight
         ldy     top_row
         jsr     Multiply_16_8_16
-        stax    winfo_listbox::cliprect::y1
-        addax   #winfo_listbox::kHeight, winfo_listbox::cliprect::y2
+        stax    winfo_listbox::maprect::y1
+        addax   #winfo_listbox::kHeight, winfo_listbox::maprect::y2
 
         rts
 .endproc

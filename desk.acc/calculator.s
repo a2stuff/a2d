@@ -468,7 +468,7 @@ top:            .word   kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWindowWidth, kWindowHeight
+        DEFINE_RECT maprect, 0, 0, kWindowWidth, kWindowHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0

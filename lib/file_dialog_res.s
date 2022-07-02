@@ -126,7 +126,7 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kFilePickerDlgWidth, kFilePickerDlgHeight
+        DEFINE_RECT maprect, 0, 0, kFilePickerDlgWidth, kFilePickerDlgHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -173,8 +173,7 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-maprect:
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0

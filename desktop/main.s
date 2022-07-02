@@ -226,7 +226,7 @@ ClearUpdates := ClearUpdatesImpl::clear
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     DrawWindowHeader
 
-        ;; Overwrite the Winfo's port with the cliprect we got for the update
+        ;; Overwrite the Winfo's port with the maprect we got for the update
         ;; since downstream calls will use the Winfo's port.
         lda     active_window_id
         jsr     SwapWindowPortbits
@@ -234,8 +234,8 @@ ClearUpdates := ClearUpdatesImpl::clear
 
         winfo_ptr := $06
 
-        ;; Determine the update's cliprect is already below the header; if
-        ;; not, we need to offset the cliprect below the header.
+        ;; Determine the update's maprect is already below the header; if
+        ;; not, we need to offset the maprect below the header.
         lda     active_window_id
         jsr     WindowLookup
         stax    winfo_ptr
@@ -2611,12 +2611,12 @@ stashed_name:
 
         ;; Is left of icon beyond window? If so, adjust by delta (negative)
         sub16_8 cur_icon_bounds::x1, #kIconBBoxOffsetLeft, delta
-        sub16   delta, window_grafport::cliprect::x1, delta
+        sub16   delta, window_grafport::maprect::x1, delta
         bmi     adjustx
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
         add16_8 cur_icon_bounds::x1, #kIconBBoxOffsetRight
-        sub16   cur_icon_bounds::x1, window_grafport::cliprect::x2, delta
+        sub16   cur_icon_bounds::x1, window_grafport::maprect::x2, delta
         bmi     donex
 
 adjustx:
@@ -2625,8 +2625,8 @@ adjustx:
         beq     donex
 
         inc     dirty
-        add16   window_grafport::cliprect::x1, delta, window_grafport::cliprect::x1
-        add16   window_grafport::cliprect::x2, delta, window_grafport::cliprect::x2
+        add16   window_grafport::maprect::x1, delta, window_grafport::maprect::x1
+        add16   window_grafport::maprect::x2, delta, window_grafport::maprect::x2
 
 donex:
 
@@ -2635,12 +2635,12 @@ donex:
 
         ;; Is top of icon beyond window? If so, adjust by delta (negative)
         sub16_8 cur_icon_bounds::y1, #kIconBBoxOffsetTop, delta
-        sub16   delta, window_grafport::cliprect::y1, delta
+        sub16   delta, window_grafport::maprect::y1, delta
         bmi     adjusty
 
         ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
         add16_8 cur_icon_bounds::y2, #kIconBBoxOffsetBottom
-        sub16   cur_icon_bounds::y2, window_grafport::cliprect::y2, delta
+        sub16   cur_icon_bounds::y2, window_grafport::maprect::y2, delta
         bmi     doney
 
 adjusty:
@@ -2649,8 +2649,8 @@ adjusty:
         beq     doney
 
         inc     dirty
-        add16   window_grafport::cliprect::y1, delta, window_grafport::cliprect::y1
-        add16   window_grafport::cliprect::y2, delta, window_grafport::cliprect::y2
+        add16   window_grafport::maprect::y1, delta, window_grafport::maprect::y1
+        add16   window_grafport::maprect::y2, delta, window_grafport::maprect::y2
 
 doney:
         dirty := *+1
@@ -4758,7 +4758,7 @@ exception_flag:
 .proc ClearWindowBackgroundIfNotObscured
     IF_ZERO                     ; Skip drawing if obscured
         jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, window_grafport::cliprect
+        MGTK_CALL MGTK::PaintRect, window_grafport::maprect
     END_IF
         rts
 .endproc
@@ -5262,7 +5262,7 @@ aa:     .byte   0               ; A
         jsr     CalcHeightMinusHeader
         sta     useful_height
 
-        sub16_8 window_grafport::cliprect::y1, useful_height, delta
+        sub16_8 window_grafport::maprect::y1, useful_height, delta
         scmp16  delta, iconbb_rect+MGTK::Rect::y1
         bmi     clamp
         ldax    delta
@@ -5270,8 +5270,8 @@ aa:     .byte   0               ; A
 
 clamp:  ldax    iconbb_rect+MGTK::Rect::y1
 
-adjust: stax    window_grafport::cliprect::y1
-        add16_8 window_grafport::cliprect::y1, height, window_grafport::cliprect::y2
+adjust: stax    window_grafport::maprect::y1
+        add16_8 window_grafport::maprect::y1, height, window_grafport::maprect::y2
         jmp     FinishScrollAdjustAndRedraw
 
 useful_height:
@@ -5288,7 +5288,7 @@ delta:  .word   0
         jsr     CalcHeightMinusHeader
         sta     useful_height
 
-        add16_8 window_grafport::cliprect::y2, useful_height, delta
+        add16_8 window_grafport::maprect::y2, useful_height, delta
         scmp16  delta, iconbb_rect+MGTK::Rect::y2
         bpl     clamp
         ldax    delta
@@ -5296,8 +5296,8 @@ delta:  .word   0
 
 clamp:  ldax    iconbb_rect+MGTK::Rect::y2
 
-adjust: stax    window_grafport::cliprect::y2
-        sub16_8 window_grafport::cliprect::y2, height, window_grafport::cliprect::y1
+adjust: stax    window_grafport::maprect::y2
+        sub16_8 window_grafport::maprect::y2, height, window_grafport::maprect::y1
         jmp     FinishScrollAdjustAndRedraw
 
 useful_height:
@@ -5323,7 +5323,7 @@ delta:  .word   0
         jsr     ComputeActiveWindowDimensions
         stax    width
 
-        sub16   window_grafport::cliprect::x1, width, delta
+        sub16   window_grafport::maprect::x1, width, delta
         scmp16  delta, iconbb_rect+MGTK::Rect::x1
         bmi     clamp
 
@@ -5332,8 +5332,8 @@ delta:  .word   0
 
 clamp:  ldax    iconbb_rect+MGTK::Rect::x1
 
-adjust: stax    window_grafport::cliprect::x1
-        add16   window_grafport::cliprect::x1, width, window_grafport::cliprect::x2
+adjust: stax    window_grafport::maprect::x1
+        add16   window_grafport::maprect::x1, width, window_grafport::maprect::x2
         jmp     FinishScrollAdjustAndRedraw
 
 width:  .word   0               ; of window's port
@@ -5346,7 +5346,7 @@ delta:  .word   0
         jsr     ComputeActiveWindowDimensions
         stax    width
 
-        add16   window_grafport::cliprect::x2, width, delta
+        add16   window_grafport::maprect::x2, width, delta
         scmp16  delta, iconbb_rect+MGTK::Rect::x2
         bpl     clamp
         ldax    delta
@@ -5354,8 +5354,8 @@ delta:  .word   0
 
 clamp:  ldax    iconbb_rect+MGTK::Rect::x2
 
-adjust: stax    window_grafport::cliprect::x2
-        sub16   window_grafport::cliprect::x2, width, window_grafport::cliprect::x1
+adjust: stax    window_grafport::maprect::x2
+        sub16   window_grafport::maprect::x2, width, window_grafport::maprect::x1
         jmp     FinishScrollAdjustAndRedraw
 
 width:  .word   0               ; of window's port
@@ -5401,7 +5401,7 @@ delta:  .word   0
         stax    ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     window_grafport::cliprect,x
+:       lda     window_grafport::maprect,x
         sta     (ptr),y
         dey
         dex
@@ -5410,7 +5410,7 @@ delta:  .word   0
 .endproc
 
 ;;; ============================================================
-;;; After scrolling which adjusts cliprect, update the window,
+;;; After scrolling which adjusts maprect, update the window,
 ;;; scrollbars, and redraw the window contents.
 ;;; If icon view, restores icons mapped to screen coords.
 
@@ -5461,12 +5461,12 @@ delta:  .word   0
         ldx     size            ; X = (content size - window size)/2
 
         ;; Compute offset
-        sub16   window_grafport::cliprect::x1, iconbb_rect+MGTK::Rect::x1, size
+        sub16   window_grafport::maprect::x1, iconbb_rect+MGTK::Rect::x1, size
         bpl     :+
         lda     #0              ; content near edge within window; clamp
         beq     calc            ; always
 
-:       scmp16  window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
+:       scmp16  window_grafport::maprect::x2, iconbb_rect+MGTK::Rect::x2
         bmi     :+              ; content far edge within window? no
         tya                     ; yes; skip calculation
         jmp     skip
@@ -5519,12 +5519,12 @@ size:   .word   0
         ldx     size            ; X = (content size - window size)/4
 
         ;; Compute offset
-        sub16   window_grafport::cliprect::y1, iconbb_rect+MGTK::Rect::y1, size
+        sub16   window_grafport::maprect::y1, iconbb_rect+MGTK::Rect::y1, size
         bpl     :+
         lda     #0              ; content near edge within window; clamp
         beq     calc            ; always
 
-:       scmp16  window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
+:       scmp16  window_grafport::maprect::y2, iconbb_rect+MGTK::Rect::y2
         bmi     neg             ; content far edge within window? no
         tya                     ; yes; skip calculation
         jmp     skip
@@ -6216,7 +6216,7 @@ icon_view:
         jsr     CachedIconsScreenToWindow
 
         ;; Set up test rect for quick exclusion
-        COPY_BLOCK window_grafport::cliprect, tmp_rect
+        COPY_BLOCK window_grafport::maprect, tmp_rect
 
         ;; Loop over all icons
         copy    #0, index
@@ -6345,9 +6345,9 @@ config_port:
         jsr     ApplyActiveWinfoToWindowGrafport
 
         ;; check horizontal bounds
-        scmp16  iconbb_rect+MGTK::Rect::x1, window_grafport::cliprect::x1
+        scmp16  iconbb_rect+MGTK::Rect::x1, window_grafport::maprect::x1
         bmi     activate_hscroll
-        scmp16  window_grafport::cliprect::x2, iconbb_rect+MGTK::Rect::x2
+        scmp16  window_grafport::maprect::x2, iconbb_rect+MGTK::Rect::x2
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
@@ -6370,9 +6370,9 @@ activate_hscroll:
 
 check_vscroll:
         ;; check vertical bounds
-        scmp16  iconbb_rect+MGTK::Rect::y1, window_grafport::cliprect::y1
+        scmp16  iconbb_rect+MGTK::Rect::y1, window_grafport::maprect::y1
         bmi     activate_vscroll
-        scmp16  window_grafport::cliprect::y2, iconbb_rect+MGTK::Rect::y2
+        scmp16  window_grafport::maprect::y2, iconbb_rect+MGTK::Rect::y2
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
@@ -6448,7 +6448,7 @@ noset:  lda     #$80
 set:    lda     #0
         sta     flag
         add16   window_grafport::viewloc::ycoord, #kOffset, window_grafport::viewloc::ycoord
-        add16   window_grafport::cliprect::y1, #kOffset, window_grafport::cliprect::y1
+        add16   window_grafport::maprect::y1, #kOffset, window_grafport::maprect::y1
         bit     flag
         bmi     :+
         MGTK_CALL MGTK::SetPort, window_grafport
@@ -7906,30 +7906,30 @@ flags:  .byte   0
         ;; Compute header coords
 
         ;; x coords
-        lda     window_grafport::cliprect::x1
+        lda     window_grafport::maprect::x1
         sta     header_line_left::xcoord
         clc
         adc     #5
         sta     items_label_pos::xcoord
-        lda     window_grafport::cliprect::x1+1
+        lda     window_grafport::maprect::x1+1
         sta     header_line_left::xcoord+1
         adc     #0
         sta     items_label_pos::xcoord+1
 
         ;; y coords
-        lda     window_grafport::cliprect::y1
+        lda     window_grafport::maprect::y1
         clc
         adc     #kWindowHeaderHeight - 2
         sta     header_line_left::ycoord
         sta     header_line_right::ycoord
-        lda     window_grafport::cliprect::y1+1
+        lda     window_grafport::maprect::y1+1
         adc     #0
         sta     header_line_left::ycoord+1
         sta     header_line_right::ycoord+1
 
         ;; Draw top line
         MGTK_CALL MGTK::MoveTo, header_line_left
-        copy16  window_grafport::cliprect::x2, header_line_right::xcoord
+        copy16  window_grafport::maprect::x2, header_line_right::xcoord
         jsr     SetPenModeNotCopy
         MGTK_CALL MGTK::LineTo, header_line_right
 
@@ -7949,7 +7949,7 @@ flags:  .byte   0
         MGTK_CALL MGTK::LineTo, header_line_right
 
         ;; Baseline for header text
-        add16 window_grafport::cliprect::y1, #kWindowHeaderHeight-4, items_label_pos::ycoord
+        add16 window_grafport::maprect::y1, #kWindowHeaderHeight-4, items_label_pos::ycoord
 
         ;; Draw "XXX Items"
         lda     cached_window_entry_count
@@ -8013,7 +8013,7 @@ ptr_str_items_suffix:
 
 .proc CalcHeaderCoords
         ;; Width of window
-        sub16   window_grafport::cliprect::x2, window_grafport::cliprect::x1, xcoord
+        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, xcoord
 
         ;; Is there room to spread things out?
         sub16   xcoord, width_items_label, xcoord
@@ -8039,8 +8039,8 @@ skipcenter:
         copy16  width_left_labels, pos_k_available::xcoord
 
 finish:
-        add16   pos_k_in_disk::xcoord, window_grafport::cliprect::x1, pos_k_in_disk::xcoord
-        add16   pos_k_available::xcoord, window_grafport::cliprect::x1, pos_k_available::xcoord
+        add16   pos_k_in_disk::xcoord, window_grafport::maprect::x1, pos_k_in_disk::xcoord
+        add16   pos_k_available::xcoord, window_grafport::maprect::x1, pos_k_available::xcoord
 
         ;; Update y coords
         lda     items_label_pos::ycoord
@@ -8538,7 +8538,7 @@ found:  txa
         bit     LCBANK1
 
         ;; Below bottom?
-        scmp16  pos_col_name::ycoord, window_grafport::cliprect::y2
+        scmp16  pos_col_name::ycoord, window_grafport::maprect::y2
         bpl     ret
 
         add16_8 pos_col_icon::ycoord, #kRowHeight
@@ -8548,7 +8548,7 @@ found:  txa
         add16_8 pos_col_date::ycoord, #kRowHeight
 
         ;; Above top?
-        scmp16  pos_col_name::ycoord, window_grafport::cliprect::y1
+        scmp16  pos_col_name::ycoord, window_grafport::maprect::y1
         bpl     in_range
 ret:    rts
 
@@ -8760,8 +8760,8 @@ min     := parsed_date + ParsedDateTime::minute
 ;;; ============================================================
 ;;; After a scroll, update window clipping region
 ;;;
-;;; Inputs are thumbpos, thumbmax, icon bbox, window cliprect.
-;;; Output is an updated cliprect.
+;;; Inputs are thumbpos, thumbmax, icon bbox, window maprect.
+;;; Output is an updated maprect.
 ;;;
 ;;; Assert: cached icons mapped to window space
 ;;; Assert: window_grafport reflects active window
@@ -8770,8 +8770,8 @@ min     := parsed_date + ParsedDateTime::minute
         copy    #0, sense_flag
 
         ;; Compute window size
-        sub16   window_grafport::cliprect::x2, window_grafport::cliprect::x1, win_width
-        sub16   window_grafport::cliprect::y2, window_grafport::cliprect::y1, win_height
+        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, win_width
+        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, win_height
 
         ;; Set `dir` to be an offset to either 0 (if horiz) or 2 (if vert)
         ;; Used for both an offset to Point::xcoord or Point::ycoord
@@ -8810,11 +8810,11 @@ horiz:  lda     #0              ; == Point::xcoord
         ;; NOTE: Icons are in window space!
     IF_NEG
         ;; If content to left of window, delta is distance to left edge
-        sub16   window_grafport::cliprect::topleft,x, iconbb_rect::topleft,x, delta
+        sub16   window_grafport::maprect::topleft,x, iconbb_rect::topleft,x, delta
       IF_NEG
         ;; Else, to the right, delta is distance to right edge
         copy    #$80, sense_flag
-        sub16   iconbb_rect::bottomright,x, window_grafport::cliprect::bottomright,x, delta
+        sub16   iconbb_rect::bottomright,x, window_grafport::maprect::bottomright,x, delta
       END_IF
     END_IF
 
@@ -8845,13 +8845,13 @@ horiz:  lda     #0              ; == Point::xcoord
         bit     sense_flag
     IF_POS
         ;; win min = content min + delta
-        add16   delta, iconbb_rect::topleft,x, window_grafport::cliprect::topleft,x
+        add16   delta, iconbb_rect::topleft,x, window_grafport::maprect::topleft,x
     ELSE
         ;; win near += delta, which derives from:
         ;; new win min = content min + content size - orig delta + new delta - window size
-        add16   window_grafport::cliprect::topleft,x, delta, window_grafport::cliprect::topleft,x
+        add16   window_grafport::maprect::topleft,x, delta, window_grafport::maprect::topleft,x
     END_IF
-        add16   window_grafport::cliprect::topleft,x, win_size,x, window_grafport::cliprect::bottomright,x
+        add16   window_grafport::maprect::topleft,x, win_size,x, window_grafport::maprect::bottomright,x
 
         ;; Update window's port
 update_port:
@@ -8861,7 +8861,7 @@ update_port:
 
         ldy     #.sizeof(MGTK::GrafPort)-1
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     window_grafport::cliprect,x
+:       lda     window_grafport::maprect,x
         sta     (ptr),y
         dey
         dex
@@ -8870,7 +8870,7 @@ update_port:
         rts
 
 dir:    .byte   0               ; 0 if horizontal, 2 if vertical (word offset)
-delta:  .word   0               ; offset between content and cliprect
+delta:  .word   0               ; offset between content and maprect
 
 win_size:
 win_width:      .word   0
@@ -10050,8 +10050,8 @@ open:   ldy     #$00
         dex
         bpl     :-
 
-        sub16   window_grafport::cliprect::x2, window_grafport::cliprect::x1, L8D54
-        sub16   window_grafport::cliprect::y2, window_grafport::cliprect::y1, L8D56
+        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, L8D54
+        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, L8D56
         add16   $0858, L8D54, $085C
         add16   $085A, L8D56, $085E
         lda     #$00

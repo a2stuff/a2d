@@ -151,7 +151,7 @@ kRadioButtonHeight      = 7
 mapbits:        .addr   checked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 checked_rb_bitmap:
@@ -169,7 +169,7 @@ checked_rb_bitmap:
 mapbits:        .addr   unchecked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 unchecked_rb_bitmap:
@@ -213,7 +213,7 @@ joy_btn2_label:   PASCAL_STRING res_string_label_joy_btn2 ; dialog label
 mapbits:        .addr   joy_marker_bitmap
 mapwidth:       .byte   2
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 7, 4
+        DEFINE_RECT maprect, 0, 0, 7, 4
 .endparams
 
 joy_marker_bitmap:
@@ -229,7 +229,7 @@ joy_marker_bitmap:
 mapbits:        .addr   joystick_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 35, 18
+        DEFINE_RECT maprect, 0, 0, 35, 18
 .endparams
 
 joystick_bitmap:

@@ -402,7 +402,7 @@ in_list:
         lda     #file_dialog_res::kEntryListCtlWindowID
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::cliprect::y1, screentowindow_params::windowy
+        add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::maprect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
@@ -1771,7 +1771,7 @@ d4:     .byte   0
 
 .proc DrawListEntries
         jsr     SetPortForList
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::cliprect
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::maprect
         copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
         copy16  #kListItemHeight-1, file_dialog_res::picker_entry_pos::ycoord
         copy    #0, index
@@ -1911,8 +1911,8 @@ l3:     sec
 l4:     ldx     #$00            ; A,X = line
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
-        stax    file_dialog_res::winfo_listbox::cliprect::y1
-        add16_8 file_dialog_res::winfo_listbox::cliprect::y1, #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::cliprect::y2
+        stax    file_dialog_res::winfo_listbox::maprect::y1
+        add16_8 file_dialog_res::winfo_listbox::maprect::y1, #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::maprect::y2
         rts
 
 tmp:    .byte   0

@@ -1626,7 +1626,7 @@ headery:
         rts
 .endproc
 
-;;; Set cliprect to `highlight_icon_id`'s window's content area, in screen
+;;; Set maprect to `highlight_icon_id`'s window's content area, in screen
 ;;; space, using `icon_grafport`.
 .proc SetPortForHighlightIcon
         ptr := $06
@@ -2171,7 +2171,7 @@ loop:   dex
         and     #kIconEntryWinIdMask ; desktop icon
         bne     next                 ; no, skip it
 
-        ;; In cliprect?
+        ;; In maprect?
         ITK_DIRECT_CALL IconTK::IconInRect, icon
         beq     next            ; no, skip it
 
@@ -2613,7 +2613,7 @@ bounds_b:  .word   0
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
+        DEFINE_RECT maprect, 0, 0, 0, 0
 .endparams
 
 .proc SetPortForVolIcon
@@ -2622,11 +2622,11 @@ reserved:       .byte   0
         ;; Set up bounds_t
         lda     poly::v0::ycoord
         sta     bounds_t
-        sta     portbits::cliprect::y1
+        sta     portbits::maprect::y1
         sta     portbits::viewloc::ycoord
         lda     poly::v0::ycoord+1
         sta     bounds_t+1
-        sta     portbits::cliprect::y1+1
+        sta     portbits::maprect::y1+1
         sta     portbits::viewloc::ycoord+1
 
         ;; Set up bounds_l
@@ -2638,18 +2638,18 @@ reserved:       .byte   0
         bcc     :+
         ldx     poly::v5::xcoord
         ldy     poly::v5::xcoord + 1
-:       stx     portbits::cliprect::x1
+:       stx     portbits::maprect::x1
         stx     portbits::viewloc::xcoord
-        sty     portbits::cliprect::x1+1
+        sty     portbits::maprect::x1+1
         sty     portbits::viewloc::xcoord+1
 
         ;; Set up bounds_b
         lda     poly::v4::ycoord
         sta     bounds_b
-        sta     portbits::cliprect::y2
+        sta     portbits::maprect::y2
         lda     poly::v4::ycoord+1
         sta     bounds_b+1
-        sta     portbits::cliprect::y2+1
+        sta     portbits::maprect::y2+1
 
         ;; Set up bounds_r
         ldx     poly::v1::xcoord
@@ -2671,8 +2671,8 @@ reserved:       .byte   0
 
 done:   stx     bounds_r
         sty     bounds_r+1
-        stx     portbits::cliprect::x2
-        sty     portbits::cliprect::x2+1
+        stx     portbits::maprect::x2
+        sty     portbits::maprect::x2+1
         MGTK_CALL MGTK::SetPortBits, portbits
         rts
 .endproc
@@ -2718,10 +2718,10 @@ stash_r: .word   0
         ;; Viewport/Cliprect to adjust
         vx := portbits::viewloc::xcoord
         vy := portbits::viewloc::ycoord
-        cr_l := portbits::cliprect::x1
-        cr_t := portbits::cliprect::y1
-        cr_r := portbits::cliprect::x2
-        cr_b := portbits::cliprect::y2
+        cr_l := portbits::maprect::x1
+        cr_t := portbits::maprect::y1
+        cr_r := portbits::maprect::x2
+        cr_b := portbits::maprect::y2
 
 start:  lda     more_drawing_needed_flag
         beq     reclip
@@ -3361,7 +3361,7 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
         kPromptDialogInsetBottom = 20
         DEFINE_RECT clear_dialog_labels_rect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom
 
-        ;; Offset cliprect for drawing labels within dialog
+        ;; Offset maprect for drawing labels within dialog
         ;; Coordinates are unchanged, but clipping rect is set
         ;; to `clear_dialog_labels_rect` so labels don't overflow.
 .params prompt_dialog_labels_mapinfo

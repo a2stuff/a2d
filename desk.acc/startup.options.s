@@ -171,7 +171,7 @@ kCheckboxHeight      = 8
 mapbits:        .addr   checked_cb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
 .endparams
 
 checked_cb_bitmap:
@@ -190,7 +190,7 @@ checked_cb_bitmap:
 mapbits:        .addr   unchecked_cb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
 .endparams
 
 unchecked_cb_bitmap:

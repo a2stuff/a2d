@@ -267,7 +267,7 @@ port:
 mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   $00
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   $FF, 0
         DEFINE_POINT penloc, 0, 0

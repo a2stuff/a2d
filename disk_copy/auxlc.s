@@ -200,7 +200,7 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kDialogWidth, kDialogHeight
+        DEFINE_RECT maprect, 0, 0, kDialogWidth, kDialogHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -241,7 +241,7 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kListBoxWidth, kListBoxHeight
+        DEFINE_RECT maprect, 0, 0, kListBoxWidth, kListBoxHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
@@ -1737,13 +1737,13 @@ ret:    rts
 
 ;;; Assert: `top_row` is set.
 .proc UpdateViewport
-        copy16  #0, winfo_drive_select::cliprect::y1
+        copy16  #0, winfo_drive_select::maprect::y1
         lda     top_row         ; lo
         ldx     #0              ; hi
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
-        stax    winfo_drive_select::cliprect::y1
-        addax   #kListBoxHeight, winfo_drive_select::cliprect::y2
+        stax    winfo_drive_select::maprect::y1
+        addax   #kListBoxHeight, winfo_drive_select::maprect::y2
 
         rts
 .endproc
@@ -1914,7 +1914,7 @@ match:  lda     DEVLST,x
         jsr     SetWinPort
 
         MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, winfo_drive_select::cliprect
+        MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
 
         lda     #0
         sta     index
@@ -1997,7 +1997,7 @@ src_block_count:
         jsr     SetWinPort
 
         MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, winfo_drive_select::cliprect
+        MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
 
         lda     #0
         sta     index
