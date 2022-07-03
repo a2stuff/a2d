@@ -661,9 +661,6 @@ init_window:
 ;;; ============================================================
 
 .proc OnClick
-        MGTK_CALL MGTK::SetPort, winfo::port
-        MGTK_CALL MGTK::SetPenMode, penxor
-
         MGTK_CALL MGTK::FindWindow, event_params::xcoord
         lda     findwindow_params::window_id
         cmp     #kDAWindowId
@@ -672,11 +669,15 @@ init_window:
         bne     hit
 miss:   rts
 
-
         ;; ----------------------------------------
 
+hit:
+        pha
+        MGTK_CALL MGTK::SetPort, winfo::port
+        MGTK_CALL MGTK::SetPenMode, penxor
+        pla
 
-hit:    cmp     #MGTK::Area::content
+        cmp     #MGTK::Area::content
         bne     miss
         jsr     FindHitTarget
         cpx     #0
