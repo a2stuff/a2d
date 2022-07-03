@@ -96,7 +96,7 @@ LA1F6:  .res    16, 0
 ;;; ============================================================
 
 recursion_depth:        .byte   0 ; How far down the directory structure are we
-entries_per_block:      .byte   13 ; TODO: Read this from directory header
+entries_per_block:      .byte   0
 ref_num:                .byte   0
 entry_index_in_dir:     .word   0
 target_index:           .word   0
@@ -155,6 +155,9 @@ l1:     lda     open_params::ref_num
         jmp     HandleErrorCode
 
 l2:     jsr     ReadFileEntry
+
+        copy    buf_dir_header + SubdirectoryHeader::entries_per_block - 4, entries_per_block
+
         rts
 .endproc
 

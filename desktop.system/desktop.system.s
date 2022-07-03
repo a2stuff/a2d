@@ -504,7 +504,7 @@ close:  MLI_CALL CLOSE, close_dstfile_params
 ;;; ============================================================
 
 recursion_depth:        .byte   0 ; How far down the directory structure are we
-entries_per_block:      .byte   13 ; TODO: Read this from directory header
+entries_per_block:      .byte   0
 ref_num:                .byte   0
 entry_index_in_dir:     .word   0
 target_index:           .word   0
@@ -569,6 +569,8 @@ entry_index_in_block:   .byte   0
         ;; Header size is next/prev blocks + a file entry
         .assert .sizeof(SubdirectoryHeader) = .sizeof(FileEntry) + 4, error, "incorrect struct size"
 :       jsr     ReadFileEntry   ; read the rest of the header
+
+        copy    filename + SubdirectoryHeader::entries_per_block - 4, entries_per_block
 
         rts
 .endproc
