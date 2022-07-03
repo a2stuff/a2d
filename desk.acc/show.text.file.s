@@ -273,63 +273,13 @@ first_visible_line:
 fixed_mode_flag:
         .byte   0               ; 0 = proportional, otherwise = fixed
 
-.params event_params
-kind:  .byte   0
 
-;;; if state is MGTK::EventKind::key_down
-key             := *
-modifiers       := *+1
-
-;;; otherwise
-coords  := *
-mousex  := *                      ; spills into target query
-mousey  := *+2
-
-        .res    4               ; space for both
-.endparams
-
-.assert findwindow_params = event_params+5, error, "param alignment"
-.params findwindow_params       ; TODO: Make this address correct, via union
-which_area:     .byte   0
-window_id:      .byte   0
-.endparams
-
-.params growwindow_params
-window_id:      .byte   kDAWindowId
-mousex:         .word   0
-mousey:         .word   0
-it_grew:        .byte   0
-.endparams
+        .include "../lib/event_params.s"
 
 .params trackgoaway_params      ; queried after close clicked to see if aborted/finished
 goaway:         .byte   0       ; 0 = aborted, 1 = clicked
 .endparams
 
-.params findcontrol_params      ; queried after a client click to identify target
-mousex:         .word   0
-mousey:         .word   0
-which_ctl:      .byte   0       ; 0 = client, 1 = vscroll, 2 = hscroll
-which_part:     .byte   0       ; 1 = up, 2 = down, 3 = above, 4 = below, 5 = thumb
-.endparams
-
-.params updatethumb_params      ; called to update scroll bar position
-which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
-thumbpos:       .byte   0       ; new position
-.endparams
-
-.params activatectl_params
-which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
-activate:       .byte   0
-.endparams
-
-;;; Used when dragging vscroll thumb
-.params trackthumb_params
-which_ctl:      .byte   MGTK::Ctl::vertical_scroll_bar
-mousex:         .word   0
-mousey:         .word   0
-thumbpos:       .byte   0       ; position
-thumbmoved:     .byte   0       ; 0 if not moved, 1 if moved
-.endparams
 
 .params drawtext_params
 textptr:        .addr   0       ; address
@@ -445,18 +395,6 @@ reserved:       .byte   0
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         jeq     OnCloseClick
-
-        ;; title and resize clicks need mouse location
-        ;; TODO: use lib/event_params.s
-        ldx     event_params::mousex
-        stx     growwindow_params::mousex
-        stx     findcontrol_params::mousex
-        ldx     event_params::mousex+1
-        stx     growwindow_params::mousex+1
-        stx     findcontrol_params::mousex+1
-        ldx     event_params::mousey
-        stx     growwindow_params::mousey
-        stx     findcontrol_params::mousey
 
         cmp     #MGTK::Area::dragbar
         beq     title
@@ -607,8 +545,7 @@ end:    rts
 .endproc
 
 .proc OnVScrollThumbClick
-        copy16  event_params::mousex, trackthumb_params::mousex
-        copy    event_params::mousey, trackthumb_params::mousey
+        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     end
@@ -785,6 +722,7 @@ ForceScrollBottom := ScrollBottom::force
     END_IF
         sta     updatethumb_params::thumbpos
 
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         jmp     DrawContent
@@ -1183,6 +1121,7 @@ end:    rts
     IF_GE
         ;; File entirely fit; deactivate scrollbar
         copy    #0, activatectl_params::activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
     END_IF
@@ -1211,6 +1150,7 @@ end:    rts
     END_IF
 
         copy    #1, activatectl_params::activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
 .endproc
@@ -1219,10 +1159,10 @@ end:    rts
 ;;; Title Bar (Proportional/Fixed mode button)
 
 .proc OnTitleBarClick
-        lda     event_params::mousex+1           ; mouse x high byte?
+        lda     event_params::xcoord+1           ; mouse x high byte?
         cmp     mode_mapinfo_viewloc_xcoord+1
         bne     :+
-        lda     event_params::mousex
+        lda     event_params::xcoord
         cmp     mode_mapinfo_viewloc_xcoord
 :       bcs     ToggleMode
         clc                     ; Click ignored
