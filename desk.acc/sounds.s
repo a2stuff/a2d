@@ -1437,12 +1437,25 @@ SOUND_PROC Silent
 
         ;; Delay using some heuristic.
 
-        ;; Option #1: Hit speaker to slow accelerator, with inaudible pitch.
+        ;; Option #1: Slow accelerator down to 1MHz
         ;;
-        ;; (1) This causes Virtual ][ to stop playing sounds for a bit (!)
-        ;; (2) This has an audible click in MAME (!)
-        ;;         sta     SPKR
-        ;;         sta     SPKR
+        ;; 1a: Using documented accelerator access for each type of
+        ;;     hardware (IIgs, Mac IIe Card, IIc+, Laser, add-ons, ...)
+        ;;     like NORMFAST does it.
+        ;;
+        ;;   * This is overkill, and doesn't slow emulators.
+        ;;
+        ;; 1b: Touching the speaker quickly (i.e. STA SPKR twice), to
+        ;;      temporarily slow accelerators; this is inadible on real
+        ;;      hardware.
+        ;;
+        ;;   * This causes Virtual ][ to stop playing sounds for a bit (!)
+        ;;   * (2) This has an audible click in MAME (!)
+        ;;
+        ;; 1c: Hit slot 6 (e.g. BIT $C0EC) to temporarily slow accelerator.
+        ;; 1d: Hit PTRIG to temporarily slow accelerator.
+        ;;
+        ;;   * These doesn't slow emulators like Virtual ][.
 
         ;; Option #2: Wait based on double-click setting.
         ;;
@@ -1458,10 +1471,15 @@ loop:   ldx     #48
         dec     ptr+1
         bne     loop
 
-        ;; TODO: Consider using VBL on Enh IIe/IIc/IIgs
+        ;; Option #3: Use VBL on Enh IIe/IIc/IIgs
         ;; https://comp.sys.apple2.narkive.com/dHkvl39d/vblank-apple-iic
-        ;; Note that emulators tend to not throttle to 60/50Hz real time,
-        ;; but have VBL synchronized to cycle counts.
+        ;;
+        ;; * Emulators don't throttle to 60/50Hz, and rather sync VBL to
+        ;;   cycle counts.
+
+        ;; Option #4: Use interrupt timer from mouse card
+        ;;
+        ;; * Interrupts are hard. PRs welcome!
 
         FALL_THROUGH_TO InvertMenu
 

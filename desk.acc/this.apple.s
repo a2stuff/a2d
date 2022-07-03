@@ -1573,7 +1573,9 @@ fail:   clc
 
         ;; Hit Slot 6, which causes accelerators e.g. Zip Chip
         ;; to slow down.
-        bit     $C0E0
+        ;; NOTE: $C0E0 causes Virtual ][ emulator to make sound;
+        ;; $C0EC (data read location) does not.
+        bit     $C0EC
 
         ldy     #4              ; $Cn04
         ldx     #2              ; try 2 times
