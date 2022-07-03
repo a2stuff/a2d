@@ -305,36 +305,9 @@ str_date_separator:
 str_time_separator:
         PASCAL_STRING ":"
 
-.params event_params
-kind:  .byte   0
-
-key       := *
-modifiers := *+1
-
-xcoord    := *
-ycoord    := *+2
-        .byte   0,0,0,0
-.endparams
-        ;; xcoord/ycoord are used to query...
-.params findwindow_params
-mousex    := *                  ; TODO: These are wrong; fix this union
-mousey    := *+2
-which_area:.byte   0
-window_id: .byte   0
-.endparams
-
+        .include "../lib/event_params.s"
 
         kDAWindowId = 100
-
-.params screentowindow_params
-window_id:     .byte   kDAWindowId
-screen:
-screenx:.word   0
-screeny:.word   0
-window:
-windowx:.word   0
-windowy:.word   0
-.endparams
 
 .params closewindow_params
 window_id:     .byte   kDAWindowId
@@ -1026,8 +999,7 @@ dialog_result:  .byte   0
 ;;; Index returned in X.
 
 .proc FindHitTarget
-        copy16  event_params::xcoord, screentowindow_params::screenx
-        copy16  event_params::ycoord, screentowindow_params::screeny
+        copy    #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
