@@ -172,7 +172,7 @@ ShowCopyingScreen:
 buf_block_pointers:     .res    kBlockPointersSize, 0
 
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_READ_PARAMS read_fileentry_params, filename, .sizeof(FileEntry)
+        DEFINE_READ_PARAMS read_fileentry_params, file_entry, .sizeof(FileEntry)
 
         ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
         ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
@@ -570,7 +570,7 @@ entry_index_in_block:   .byte   0
         .assert .sizeof(SubdirectoryHeader) = .sizeof(FileEntry) + 4, error, "incorrect struct size"
 :       jsr     ReadFileEntry   ; read the rest of the header
 
-        copy    filename + SubdirectoryHeader::entries_per_block - 4, entries_per_block
+        copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
 
         rts
 .endproc
@@ -602,7 +602,7 @@ entry_index_in_block:   .byte   0
         beq     eof
         jmp     (hook_handle_error_code)
 :
-        ldax    #filename
+        ldax    #file_entry
         jsr     AdjustFileEntryCase
 
         inc     entry_index_in_block

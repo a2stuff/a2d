@@ -40,7 +40,7 @@ buf_block_pointers:
 
         DEFINE_CLOSE_PARAMS close_params
 
-        DEFINE_READ_PARAMS read_fileentry_params, buf_dir_header, .sizeof(FileEntry)
+        DEFINE_READ_PARAMS read_fileentry_params, file_entry, .sizeof(FileEntry)
 
         ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
         ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
@@ -73,7 +73,7 @@ buf_padding_bytes:
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, pathname_dst
 
-buf_dir_header:
+file_entry:
         .res    48, 0
 
 addr_table:
@@ -156,7 +156,7 @@ l1:     lda     open_params::ref_num
 
 l2:     jsr     ReadFileEntry
 
-        copy    buf_dir_header + SubdirectoryHeader::entries_per_block - 4, entries_per_block
+        copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
 
         rts
 .endproc
@@ -248,19 +248,19 @@ eof:    return  #$FF
         jsr     OpenSrcDir
 l1:     jsr     ReadFileEntry
         bne     l2
-        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        lda     file_entry+FileEntry::storage_type_name_length
         beq     l1
-        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        lda     file_entry+FileEntry::storage_type_name_length
         sta     LA3EC
         and     #NAME_LENGTH_MASK
-        sta     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        sta     file_entry+FileEntry::storage_type_name_length
         lda     #$00
         sta     copy_err_flag
         jsr     LA3E3
         lda     copy_err_flag
         bne     l1
-        lda     buf_dir_header+SubdirectoryHeader::reserved-4
-        cmp     #$0F
+        lda     file_entry+FileEntry::file_type
+        cmp     #FT_DIRECTORY
         bne     l1
         jsr     DescendDirectory
         inc     recursion_depth
@@ -419,8 +419,8 @@ LA4FC:  jmp     LA7C0
 ;;; ============================================================
 
 .proc DoCopy
-        lda     buf_dir_header+SubdirectoryHeader::reserved-4
-        cmp     #$0F
+        lda     file_entry+FileEntry::file_type
+        cmp     #FT_DIRECTORY
         bne     LA536
         jsr     LA75D
         jsr     draw_window_content_ep2
@@ -664,7 +664,7 @@ blocks_total:
 ;;; ============================================================
 
 .proc LA75D
-        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        lda     file_entry+FileEntry::storage_type_name_length
         bne     l1
         rts
 
@@ -673,9 +673,9 @@ l1:     ldx     #$00
         lda     #'/'
         sta     pathname1+1,y
         iny
-l2:     cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+l2:     cpx     file_entry+FileEntry::storage_type_name_length
         bcs     l3
-        lda     buf_dir_header+SubdirectoryHeader::file_name-4,x
+        lda     file_entry+FileEntry::file_name,x
         sta     pathname1+1,y
         inx
         iny
@@ -708,7 +708,7 @@ l3:     sty     pathname1
 ;;; ============================================================
 
 .proc LA79B
-        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        lda     file_entry+FileEntry::storage_type_name_length
         bne     l1
         rts
 
@@ -717,9 +717,9 @@ l1:     ldx     #$00
         lda     #'/'
         sta     pathname_dst+1,y
         iny
-l2:     cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+l2:     cpx     file_entry+FileEntry::storage_type_name_length
         bcs     l3
-        lda     buf_dir_header+SubdirectoryHeader::file_name-4,x
+        lda     file_entry+FileEntry::file_name,x
         sta     pathname_dst+1,y
         inx
         iny
