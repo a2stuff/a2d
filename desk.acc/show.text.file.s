@@ -560,13 +560,6 @@ end:    rts
 
         jsr     UpdateScrollPos
 
-        ;; Clear the window if the view wasn't drawn to
-        ;; TODO: Maybe this is no longer necessary?
-        lda     read_flag
-        beq     end
-        lda     view_dirty_flag
-        bne     end
-        jsr     ClearWindow
 end:    rts
 .endproc
 
