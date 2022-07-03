@@ -782,7 +782,7 @@ entries_read_this_block:
 
         ;; index is device number (in DEVLST), value is icon number
 device_to_icon_map:
-        .res    kMaxVolumes+1, 0 ; TODO: Why +1?
+        .res    kMaxVolumes, 0
 
 ;;; Window to file record mapping list. Each entry is a window
 ;;; id. Position in the list is the same as position in the

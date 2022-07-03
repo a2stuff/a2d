@@ -4075,7 +4075,7 @@ by_unit_number:
 
         ;; Map icon number to index in DEVLST
         lda     drive_to_refresh
-        ldy     #kMaxVolumes
+        ldy     #kMaxVolumes-1
 :       cmp     device_to_icon_map,y
         beq     :+
         dey
@@ -10937,6 +10937,7 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Inputs: A = icon number
 
 .proc SmartportEject
         ptr := $6
@@ -10954,22 +10955,13 @@ Version                 .word
 END_PARAM_BLOCK
 
         ;; Look up device index by icon number
-        sta     @compare
-        ldy     #0
-
-:       lda     device_to_icon_map,y
-
-        @compare := *+1
-        cmp     #SELF_MODIFIED_BYTE
-
-        beq     found
-        cpy     DEVCNT
-        beq     exit
-        iny
-        bne     :-
-exit:   rts
-
-found:  lda     DEVLST,y        ; unit_number
+        ldy     #kMaxVolumes-1
+:       cmp     device_to_icon_map,y
+        beq     :+
+        dey
+        bpl     :-
+        rts
+:       lda     DEVLST,y        ; A = unit_number
 
         ;; Compute SmartPort dispatch address
         jsr     FindSmartportDispatchAddress
@@ -11109,7 +11101,7 @@ vol_icon2:
         lda     selected_icon_list,x
 
         ;; Map icon to unit number
-        ldy     #kMaxVolumes
+        ldy     #kMaxVolumes-1
 
 :       cmp     device_to_icon_map,y
         beq     :+
