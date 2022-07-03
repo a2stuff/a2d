@@ -7639,6 +7639,7 @@ do_select_win:
         lda     current_winfo::id
         sta     sel_window_id
 
+        jsr     SetDesktopPort
         jsr     DrawWindow
         jmp     ShowCursorAndRestore
 .endproc

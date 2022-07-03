@@ -47,7 +47,6 @@ kScreenHeight   = 192
 kSystemFontHeight = 9
 
 kMenuBarHeight  = kSystemFontHeight+4
-kTitleBarHeight = kSystemFontHeight+3
 
 ;;; Standard button sizes; sometimes narrower
 kButtonWidth  = 100
