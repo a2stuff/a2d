@@ -4986,14 +4986,28 @@ last_pos:
 .proc HandleTitleClick
         ptr := $06
 
-        copy    active_window_id, event_params
+        copy    active_window_id, dragwindow_params::window_id
 
         jsr     GetActiveWindowViewBy
         bmi     :+
         jsr     LoadActiveWindowEntryTable
         jsr     CachedIconsScreenToWindow
 :
-        MGTK_CALL MGTK::DragWindow, event_params
+        MGTK_CALL MGTK::DragWindow, dragwindow_params
+        ;; `dragwindow_params::moved` is not checked; harmless if it didn't.
+
+        ;; Enforce minumum Y position
+        ;; Needed to prevent https://github.com/a2stuff/a2d/issues/707
+        kMinYPosition = kMenuBarHeight + kTitleBarHeight
+        lda     active_window_id
+        jsr     WindowLookup
+        stax    ptr
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        lda     #kMinYPosition
+        cmp     (ptr),y
+    IF_GE
+        sta     (ptr),y
+    END_IF
 
         jsr     GetActiveWindowViewBy
         bmi     :+

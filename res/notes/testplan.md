@@ -317,6 +317,7 @@
   * Launch DeskTop. Open two windows with icons. Obscure one window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
   * Launch DeskTop. Open two windows with icons. Activate a window, View > by Name, and then obscure the window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
   * Launch DeskTop. Open a window with icons. Select an icon. Obscure the window. File > Rename..., enter a new name, OK. Verify that the icon does not paint on the desktop.
+* Launch DeskTop. Open a window. Try to drag the window so that the title bar is behind the menu bar. Verify that the window ends up positioned entirely below the menu bar.
 
 * Launch DeskTop. Open a window containing a folder. Open the folder's window. Activate the first window by clicking on it. Activate the second window by clicking on it. Verify that the folder icon is not selected by moving the second window around to force repaints.
 
