@@ -82,8 +82,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         beq     exit
         jmp     loop
 
-exit:   jsr     Invert
-        rts
+exit:   jmp     Invert
 .endproc
 
 ;;; ============================================================
