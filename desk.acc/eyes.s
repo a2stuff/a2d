@@ -236,8 +236,7 @@ eye_rect:
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     ClearUpdates
-        rts
+        jmp     ClearUpdates
 .endproc
 
 ;;; ============================================================
