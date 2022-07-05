@@ -94,8 +94,7 @@ kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
         jsr     JUMP_TABLE_CUR_WATCH
         JUMP_TABLE_MLI_CALL OPEN, open_params
         bcc     :+
-        jsr     JUMP_TABLE_CUR_POINTER
-        rts
+        jmp     JUMP_TABLE_CUR_POINTER
 :       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
@@ -318,8 +317,7 @@ char_label:  .byte   0
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     ClearUpdates
-        rts                     ; exits input loop
+        jmp     ClearUpdates    ; exits input loop
 .endproc
 
 ;;; ============================================================
