@@ -957,8 +957,7 @@ done:   rts
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     ClearUpdates
-        rts                     ; exits input loop
+        jmp     ClearUpdates    ; exits input loop
 .endproc
 
 ;;; ============================================================
@@ -1619,8 +1618,7 @@ fail:   clc
         dey
         bne     :-
         ldax    memory
-        jsr     IntToStringWithSeparators
-        rts
+        jmp     IntToStringWithSeparators
 .endproc
 
 ;;; ============================================================
