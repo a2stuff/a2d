@@ -393,8 +393,7 @@ grafport_win:       .tag    MGTK::GrafPort
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo_listbox
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     ClearUpdates
-        rts
+        jmp     ClearUpdates
 .endproc
 
 ;;; ============================================================
@@ -766,8 +765,7 @@ ret:    rts
         sta     ptr
         jsr     Swap
 
-        jsr     MarkDirty
-        rts
+        jmp     MarkDirty
 
 .proc Swap
         .assert kBellProcLength <= 128, error, "Can't BPL this loop"
@@ -845,8 +843,7 @@ ret:    rts
         ;; ============================================================
         ;; List Box
 
-        jsr     DrawListEntries
-        rts
+        jmp     DrawListEntries
 .endproc
 
 ;;; ============================================================
