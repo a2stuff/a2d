@@ -281,8 +281,7 @@ signature:
         JUMP_TABLE_MLI_CALL READ, read_params
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
-        jsr     HRToDHR
-        rts
+        jmp     HRToDHR
 .endproc
 
 .proc ShowDHRFile
@@ -760,8 +759,7 @@ ShowPackedDHRFile    := UnpackRead::dhr_file
         sta     PAGE2ON         ; Clear aux
         jsr     clear
         sta     PAGE2OFF        ; Clear main
-        jsr     clear
-        rts
+        jmp     clear
 
 clear:  copy16  #hires, ptr
         lda     #0              ; clear to black
