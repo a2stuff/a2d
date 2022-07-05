@@ -928,8 +928,7 @@ rotate:
 
         ptr := $06
         copy16  io_params::oval, ptr
-        jsr     SaveOval
-        rts
+        jmp     SaveOval
 
         ;; --------------------------------------------------
         ;; Local variables
@@ -1048,8 +1047,7 @@ endloop2:
         ;; --------------------------------------------------
         ;; Finish
 
-        jsr     SaveOval
-        rts
+        jmp     SaveOval
 
         ;; --------------------------------------------------
         ;; Local variables
