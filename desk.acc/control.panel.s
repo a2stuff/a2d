@@ -604,8 +604,7 @@ ipblink_ip_bitmap:
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     ClearUpdates
-        rts
+        jmp     ClearUpdates
 .endproc
 
 ;;; ============================================================
@@ -1191,9 +1190,7 @@ arrow_num:
         ldax    #dblclick_button_rect3
         ldy     dblclick_selection
         cpy     #3
-        jsr     DrawRadioButton
-
-        rts
+        jmp     DrawRadioButton
 .endproc
 
 
@@ -1208,9 +1205,7 @@ arrow_num:
         ldax    #tracking_button_rect2
         ldy     SETTINGS + DeskTopSettings::mouse_tracking
         cpy     #1
-        jsr     DrawRadioButton
-
-        rts
+        jmp     DrawRadioButton
 .endproc
 
 
@@ -1230,9 +1225,7 @@ arrow_num:
         ldax    #ipblink_btn3_rect
         ldy     ipblink_selection
         cpy     #3
-        jsr     DrawRadioButton
-
-        rts
+        jmp     DrawRadioButton
 .endproc
 
 .proc DrawRGBCheckbox
@@ -1241,9 +1234,7 @@ arrow_num:
         ldax    #rect_rgb
         ldy     SETTINGS + DeskTopSettings::rgb_color
         cpy     #$80
-        jsr     DrawCheckbox
-
-        rts
+        jmp     DrawCheckbox
 .endproc
 
 
