@@ -201,8 +201,7 @@ loop:   jsr     SendRow
         lda     #<SLOT1
         sta     COUT_HOOK
         lda     #(CHAR_RETURN | $80)
-        jsr     invoke_slot1
-        rts
+        jmp     invoke_slot1
 .endproc
 
 .proc COut
