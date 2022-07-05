@@ -631,8 +631,7 @@ exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         jsr     ClearUpdates
-        jsr     DrawContent
-        rts
+        jmp     DrawContent
 .endproc
 exit := OnClick::exit
 
@@ -1357,8 +1356,7 @@ loop:   ldy     #0
         MGTK_CALL MGTK::SetPortBits, screen_port ; set clipping rect to whole screen
         MGTK_CALL MGTK::PaintBits, title_bar_bitmap     ; Draws decoration in title bar
         MGTK_CALL MGTK::ShowCursor
-        jsr     DisplayBuffer2
-        rts
+        jmp     DisplayBuffer2
 .endproc
 
 ;;; ============================================================

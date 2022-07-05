@@ -236,8 +236,7 @@ eye_rect:
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     ClearUpdates
-        rts
+        jmp     ClearUpdates
 .endproc
 
 ;;; ============================================================
@@ -928,8 +927,7 @@ rotate:
 
         ptr := $06
         copy16  io_params::oval, ptr
-        jsr     SaveOval
-        rts
+        jmp     SaveOval
 
         ;; --------------------------------------------------
         ;; Local variables
@@ -1048,8 +1046,7 @@ endloop2:
         ;; --------------------------------------------------
         ;; Finish
 
-        jsr     SaveOval
-        rts
+        jmp     SaveOval
 
         ;; --------------------------------------------------
         ;; Local variables
