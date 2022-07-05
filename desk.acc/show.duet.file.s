@@ -116,8 +116,7 @@ pathbuf:        .res    kPathBufferSize, 0
         jsr     JUMP_TABLE_CUR_WATCH
         JUMP_TABLE_MLI_CALL OPEN, open_params
         bcc     :+
-        jsr     JUMP_TABLE_CUR_POINTER
-        rts
+        jmp     JUMP_TABLE_CUR_POINTER
 :       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
