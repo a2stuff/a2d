@@ -81,7 +81,7 @@
         lastchar        .byte   ; char code of last character (usually $7F)
         height          .byte   ; pixels (1-16)
         charwidth       .byte   ; pixels, for each char
-        ;; kRow0         .res N    bits
+        ;; kRow0        .res N    bits
         ;; row0right    .res N    bits (double-width only)
 .endstruct
 
@@ -186,9 +186,9 @@ DrawText        = $19           ; Drawn at penpos as left, baseline
 ;;; --------------------------------------------------
 ;;; Utility Commands
 
-SetZP1          = $1A           ; Configure lower half of ZP usage by API (speed vs. convenience)
-SetZP2          = $1B           ; Configure upper half ZP usage by API (speed vs. convenience)
-;;; .byte       preserve        0=stash/no auto restore; 1=restore now and onward
+SetZP1          = $1A           ; Configure usage of upper ZP ($80-$FF) (speed vs. convenience)
+SetZP2          = $1B           ; Configure usage of lower ZP ($00-$43) (speed vs. convenience)
+;;; .byte       preserve        $00=stash/no auto restore; $80=restore now and onward
 
 Version         = $1C           ; Get toolkit version
 ;;; .byte       (out) major
@@ -262,7 +262,7 @@ HideCursor      = $26           ; Cursor hidden until ShowCursor call
 ObscureCursor   = $27           ; Cursor hidden until moved
 ;;; (no parameters)
 
-GetCursorAddr   = $28           ; Get cursor definition
+GetCursorAdr    = $28           ; Get cursor definition
 ;;; .addr definition            (out) Address of cursor record
 
 ;;; --------------------------------------------------
@@ -271,12 +271,12 @@ GetCursorAddr   = $28           ; Get cursor definition
 .struct Event
         kind    .byte           ; EventKind::*
     .union
-      .struct                   ; event_kind_down
+      .struct                   ; EventKind::down
         key     .byte           ; ASCII code; high bit clear
         modifiers .byte         ; 0=none, 1=open-apple, 2=solid-apple, 3=both
       .endstruct
 
-      .struct                   ; event_kind_update
+      .struct                   ; EventKind::update
         window_id .byte
       .endstruct
 
@@ -519,6 +519,9 @@ GetWinFrameRect = $52           ; Get outer frame rect of window
 ;;; .byte window_id
 ;;; Rect        rect            (out)
 
+RedrawDeskTop   = $53           ; Redraw desktop, post updates for desktop and all windows
+;;; (no parameters)
+
 ;;; ============================================================
 ;;; Graphics Primitives Constants
 
@@ -536,7 +539,7 @@ notpenOR        = 5
 notpenXOR       = 6
 notpenBIC       = 7
 
-;;; Used in SetZP1
+;;; Used in SetZP1/SetZP2
 zp_overwrite       = 0
 zp_preserve        = 1<<7
 
@@ -596,27 +599,27 @@ event_modifier_solid_apple = 1 << 1
 
 ;;; Used in OpenWindow
 .enum Option
-	dialog_box       = 1 << 0
-	go_away_box      = 1 << 1
-	grow_box         = 1 << 2
+        dialog_box       = 1 << 0
+        go_away_box      = 1 << 1
+        grow_box         = 1 << 2
 .endenum
 
 .enum Scroll
-	option_none      = 0
-	option_present   = 1 << 7
-	option_thumb     = 1 << 6
-	option_active    = 1 << 0
-	option_normal    = Scroll::option_present | Scroll::option_thumb | Scroll::option_active
+        option_none      = 0
+        option_present   = 1 << 7
+        option_thumb     = 1 << 6
+        option_active    = 1 << 0
+        option_normal    = Scroll::option_present | Scroll::option_thumb | Scroll::option_active
 .endenum
 
 ;;; Used in menu structs
 .enum MenuOpt
-	open_apple      = 1 << 0
-	solid_apple     = 1 << 1
-	item_has_mark   = 1 << 2
-	item_is_checked = 1 << 5
-	item_is_filler  = 1 << 6
-	disable_flag    = 1 << 7
+        open_apple      = 1 << 0
+        solid_apple     = 1 << 1
+        item_has_mark   = 1 << 2
+        item_is_checked = 1 << 5
+        item_is_filler  = 1 << 6
+        disable_flag    = 1 << 7
 .endenum
 
 disablemenu_enable      = 0
@@ -681,10 +684,10 @@ event_size                      = 5        ; any kind of event
 ;;;     MGTK_CALL n                      - params is $0000
 ;;;     MGTK_CALL n, params_addr
 ;;;     MGTK_CALL m, params_addr, label  - params_addr is labeled for modifying
-;;; Callers must define MGTK::MLI as the entry point.
+;;; Callers must define MGTKEntry as the entry point.
 
 .macro  MGTK_CALL    op, addr, label
-        jsr MGTK::MLI
+        jsr MGTKEntry
         .byte op
 
 .if .paramcount > 2
@@ -718,8 +721,10 @@ y2:     .word   bottom
 .macro DEFINE_RECT_SZ ident, left, top, width, height
         ident := *
 .scope ident
+topleft:
 x1:     .word   left
 y1:     .word   top
+bottomright:
 x2:     .word   ((left) + (width))
 y2:     .word   ((top) + (height))
 .endscope
@@ -729,8 +734,10 @@ y2:     .word   ((top) + (height))
 .macro DEFINE_RECT_INSET ident, left, top, width, height
         ident := *
 .scope ident
+topleft:
 x1:     .word   left
 y1:     .word   top
+bottomright:
 x2:     .word   ((width) - (left))
 y2:     .word   ((height) - (top))
 .endscope

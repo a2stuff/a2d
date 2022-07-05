@@ -1,5 +1,0 @@
-.define res_string_button_change_drive "Lecteur"
-.define res_string_button_open "Ouvrir"
-.define res_string_button_close "Fermer"
-.define res_string_disk " Disque : "
-.define res_string_label_file_to_run "Fichier @ ex{cuter :"

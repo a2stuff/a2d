@@ -1,0 +1,4 @@
+.define res_string_playing "Sto suonando: "
+.define res_string_credit1 "Electric Duet di Paul Lutus"
+.define res_string_credit2 "Player di Alexander Patalenski"
+.define res_string_instructions "Premi un tasto qualsiasi per fermare"

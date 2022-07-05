@@ -46,6 +46,8 @@
 bs_path:        .res    kPathBufferSize, 0
 prefix_path:    .res    kPathBufferSize, 0
 
+        MLIEntry := MLI
+
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, bs_path
         DEFINE_OPEN_PARAMS open_params, bs_path, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI-PRODOS_SYS_START
@@ -56,17 +58,17 @@ prefix_path:    .res    kPathBufferSize, 0
 ;;; ============================================================
 
         ;; Early errors - show alert and return to DeskTop
-fail:   jmp     JUMP_TABLE_SHOW_ALERT
+fail:   jmp     JUMP_TABLE_SHOW_ALERT ; NOTE: Trashes AUX $800-$1AFF
 
 start:
         ;; Get active window's path
-        jsr     get_win_path
+        jsr     GetWinPath
         beq     :+
         lda     #kErrNoWindowsOpen
         bne     fail            ; always
 
         ;; Find BASIC.SYSTEM
-:       jsr     check_basic_system
+:       jsr     CheckBasicSystem
         beq     :+
         lda     #kErrBasicSysNotFound
         bne     fail
@@ -103,14 +105,17 @@ quit:   MLI_CALL QUIT, quit_params
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, bs_path
 
-.proc check_basic_system
+.proc CheckBasicSystem
         ;; Was DeskTop copied to a RAM Card?
-        jsr     GetCopiedToRAMCardFlag
+        jsr     JUMP_TABLE_GET_RAMCARD_FLAG
         bpl     get_current_prefix ; nope
 
         ;; Use original location, since BASIC.SYSTEM was unlikely
         ;; to be copied.
-        param_call CopyDeskTopOriginalPrefix, bs_path
+        param_call JUMP_TABLE_GET_ORIG_PREFIX, bs_path
+        inc     bs_path         ; Append trailing '/'
+        ldx     bs_path
+        copy    #'/', bs_path,x
         jmp     got_prefix
 
 get_current_prefix:
@@ -158,12 +163,12 @@ path_length:
         .byte   0
 
 str_basic_system:
-        PASCAL_STRING "BASIC.SYSTEM" ; do not localize
+        PASCAL_STRING "BASIC.SYSTEM"
 .endproc
 
 ;;; ============================================================
 
-.proc get_win_path
+.proc GetWinPath
         ptr := $06
 
         JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
@@ -188,5 +193,3 @@ fail:   return  #1
 .endproc
 
 ;;; ============================================================
-
-        .include "../lib/ramcard.s"

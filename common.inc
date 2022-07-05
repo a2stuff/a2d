@@ -8,38 +8,62 @@
 ;;; Filenames
 
 .define kFilenameLauncher      "DeskTop.system"
-.define kFilenameDeskTop       "DeskTop2"
-.define kFilenameSelector      "Selector"
-.define kFilenameSelectorList  "Selector.List"
-.define kFilenameDeskTopConfig "DeskTop.config"
-.define kFilenameDeskTopState  "DeskTop.file"
+.define kFilenameModulesDir    "Modules"
+.define kFilenameDeskTop       .concat(kFilenameModulesDir, "/DeskTop2")
+.define kFilenameDiskCopy      .concat(kFilenameModulesDir, "/Disk.Copy")
+.define kFilenameSelector      .concat(kFilenameModulesDir, "/Selector")
+.define kFilenameLocalDir      "Local"
+.define kFilenameSelectorList  .concat(kFilenameLocalDir, "/Selector.List")
+.define kFilenameDeskTopConfig .concat(kFilenameLocalDir, "/DeskTop.config")
+.define kFilenameDeskTopState  .concat(kFilenameLocalDir, "/DeskTop.file")
+.define kFilenameBellProc     .concat(kFilenameLocalDir, "/Bell.proc")
+.define kFilenameQuitSave      .concat(kFilenameLocalDir, "/Quit.tmp")
 .define kFilenameDADir         "Desk.Acc"
 .define kFilenamePreviewDir    "Preview"
-.define kFilenameQuitSave      "Quit.tmp"
+.define kFilenameExtrasDir     "Extras"
 .define kFilenameRAMCardDir    "DeskTop"
 
 ;;; ============================================================
 
-;;; For addresses that will be filled in at runtime.
+;;; For addresses/values that will be filled in at runtime.
 
-SELF_MODIFIED   = $1234            ; To avoid ZP addressing mode
+SELF_MODIFIED   = $1234          ; To avoid ZP addressing mode
+SELF_MODIFIED_BYTE = $12
 
 ;;; ============================================================
 
 kMaxPathLength  = 64
 kPathBufferSize = 65
+kDirStackBufferSize = 170
+kMaxFilenameLength = 15
 
 ;;; ============================================================
+;;; Metrics
 
 kScreenWidth    = 560
 kScreenHeight   = 192
 
-kMenuBarHeight  = 13
-kTitleBarHeight = 12
+;;; Prefer DEFAULT_FONT+MGTK::Font::height, but that's not always convenient.
+kSystemFontHeight = 9
+
+kMenuBarHeight  = kSystemFontHeight+4
 
 ;;; Standard button sizes; sometimes narrower
 kButtonWidth  = 100
-kButtonHeight = 11
+kButtonHeight = kSystemFontHeight+2
+kButtonTextHOffset = 5                   ; from left edge of rect to text pos
+kButtonTextVOffset = kSystemFontHeight+1 ; from top edge of rect to text pos
+
+;;; Horizontal distance for label/control pairs
+kLabelHOffset = 3
+
+;;; Standard line edit (text input) control metrics
+kTextBoxHeight = kSystemFontHeight+2
+kTextBoxTextHOffset = 5                   ; from left edge of rect to text pos
+kTextBoxTextVOffset = kSystemFontHeight+1 ; from top edge of rect to text pos
+
+;;; Standard list box control metrics
+kListItemHeight = kSystemFontHeight+1
 
 ;;; Mouse threshold for double click detection.
 kDoubleClickDeltaX      = 5
@@ -50,15 +74,17 @@ kDoubleClickDeltaY      = 4
 
 ;;; See docs/Selector_List_Format.md for file format.
 
-kSelectorListNumRunListEntries  = 8
-kSelectorListNumEntries         = 24
-kSelectorListNameLength         = 16
-kSelectorListPathLength         = 64
+kSelectorListNumPrimaryRunListEntries   = 8
+kSelectorListNumSecondaryRunListEntries = 16
+kSelectorListNumEntries                 = kSelectorListNumPrimaryRunListEntries + kSelectorListNumSecondaryRunListEntries
+kSelectorListNameLength                 = 16 ; includes leading size byte and trailing flags byte
+kSelectorListPathLength                 = 64
+kSelectorMaxNameLength                  = 14
 
-kSelectorListNumRunListOffset   = 0
-kSelectorListNumOtherListOffset = 1
-kSelectorListEntriesOffset      = 2
-kSelectorListPathsOffset        = kSelectorListEntriesOffset + kSelectorListNumEntries * kSelectorListNameLength
+kSelectorListNumPrimaryRunListOffset    = 0
+kSelectorListNumSecondaryRunListOffset  = 1
+kSelectorListEntriesOffset              = 2
+kSelectorListPathsOffset                = kSelectorListEntriesOffset + kSelectorListNumEntries * kSelectorListNameLength
 
 kSelectorEntryFlagsOffset       = $F
 kSelectorEntryCopyOnBoot        = $00
@@ -71,25 +97,68 @@ kSelectorListBufSize = $800
 ;;; ============================================================
 ;;; Settings Config File
 
-kDefaultDblClickSpeed   = $12C
-kDefaultIPBlinkSpeed    = 60
+kDefaultDblClickSpeed   = 1200
+kDefaultIPBlinkSpeed    =  500
 
 .struct DeskTopSettings
-        version_major   .byte
-        version_minor   .byte
         pattern         .res 8
         dblclick_speed  .word
-        ip_blink_speed  .byte
+        ip_blink_speed  .word
         clock_24hours   .byte   ; $00 = 12 hour, $80 = 24 hour
         rgb_color       .byte   ; $00 = B&W, $80 = Color
         mouse_tracking  .byte   ; 0 = normal, 1 = 2x speed
 
-        startup_ramcard .byte   ; $00 = copy to RAMCard on startup, $80 = skip
-        startup_selector .byte  ; $00 = start Selector if present, $80 = skip
+        startup         .byte   ; kStartupXYZ options
 
-        reserved        .res 110
+        reserved        .res 112
 .endstruct
         .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
+
+DeskTopSettings::kStartupSkipRAMCard  = %00000001 ; skip copy to RAMCard, if set
+DeskTopSettings::kStartupSkipSelector = %00000010 ; skip starting Selector, if set
+
+kDeskTopSettingsFileVersion = 2
+kDeskTopSettingsFileSize = 1 + .sizeof(DeskTopSettings)
+kDeskTopSettingsFileOffset = 1  ; offset into file of settings (first byte is version)
+
+;;; ============================================================
+;;; Alert Sounds. See lib/bell.s
+
+kBellProcLength = 128
+BELLPROC   := $300
+
+;;; ============================================================
+;;; Alert library options. See lib/alert_dialog.s
+
+;;; Button options
+;;; $C0 (%11xxxxxx) = Cancel + Ok
+;;; $81 (%10xxxxx1) = Cancel + Yes + No
+;;; $80 (%10xx0000) = Cancel + Try Again
+;;; $00 (%0xxxxxxx) = Ok
+;;; Note: Wrapper APIs that take A=id, X=options use X=0 to mean
+;;; "use default options for that id", otherwise X & %00000001.
+.enum AlertButtonOptions
+        OkCancel       = $C0
+        YesNoCancel    = $81
+        TryAgainCancel = $80
+        Ok             = $00
+.endenum
+
+.enum AlertOptions
+        Beep       = %10000000  ; N = play beep sound
+        SaveBack   = %01000000  ; V = save/restore background
+.endenum
+
+;;; ============================================================
+;;; Date/Time. See lib/datetime.s
+
+.struct ParsedDateTime
+        year    .word
+        month   .byte
+        day     .byte
+        hour    .byte
+        minute  .byte
+.endstruct
 
 ;;; ============================================================
 ;;; Offsets into launcher
@@ -97,11 +166,27 @@ kDefaultIPBlinkSpeed    = 60
 kLauncherDateOffset     = 3
 
 ;;; ============================================================
-;;; RAM Disk
+;;; Drive Special Cases
 
-;;; UnitNum used by Glen E. Bredon's RAM.DRV.SYSTEM
-;;; RAM disk driver for RamWorks.
+;;; Unit number used by Glen E. Bredon's RAM.DRV.SYSTEM
+;;; RAM disk driver for RamWorks, appears in `DEVLST`.
 kRamDrvSystemUnitNum = $3E
+
+;;; Unit number used by John Brooks' RAMAUX.SYSTEM
+;;; RAM disk driver for RamWorks, appears in `DEVLST`.
+kRamAuxSystemUnitNum = $3F
+
+;;; ADTPro's VDRIVE: https://adtpro.com/vdrive.html
+;;; Driver address used by ADTPro's VEDRIVE in `DEVADR`.
+kVEDRIVEDriverAddress = $D004
+;;; Driver address used by ADTPro's VSDRIVE in `DEVADR`.
+kVSDRIVEDriverAddress = $D000
+;;; Driver signature byte/value for ADTPro's VSDRIVE
+VSDRIVE_SIGNATURE_BYTE := $D003 ; in Main/LCBANK1
+kVSDRIVESignatureValue = $63
+
+;;; ============================================================
+;;; RAM Disk
 
 ;;; On startup, DeskTop will copy itself (including resources) and
 ;;; (optionally) selector entries to a RAM disk if available. Flags
@@ -124,6 +209,16 @@ RAMCARD_PREFIX          := $D3EE
 COPIED_TO_RAMCARD_FLAG  := $D3FF
 
 ;;; ============================================================
+;;; Invoker routine locations
+
+;;; DeskTop and Selector both use a routine at $290 to launch
+;;; other apps. See: lib/invoker.s
+
+INVOKER_PREFIX          := $220 ; Prefix to set
+INVOKER                 := $290 ; Invoke other programs
+INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
+
+;;; ============================================================
 ;;; Default Font
 
 ;;; Control Character Glyphs
@@ -131,33 +226,36 @@ COPIED_TO_RAMCARD_FLAG  := $D3FF
 ;;; Glyphs $00-$1F are useful symbols; some overlap with MouseText
 ;;; (called out as MT:X in the table below)
 ;;;
-;;; $00 = space                $10 = TM left
-;;; $01 = folder left  (MT:X)  $11 = TM right
-;;; $02 = folder right (MT:Y)  $12 = pound
-;;; $03 = hourglass    (MT:C)  $13 = pi
-;;; $04 = insertion pt         $14 = divide
-;;; $05 = pointer      (MT:B)  $15 = rarrow       (MT:U)
-;;; $06 = vbar         (MT:_)  $16 = tri
-;;; $07 = hbar         (MT:S)  $17 = open circ
-;;; $08 = larrow       (MT:H)  $18 = close        (MT:])
-;;; $09 = left box             $19 = gray odd     (MT:W)
-;;; $0A = darrow       (MT:J)  $1A = gray even    (MT:V)
-;;; $0B = uarrow       (MT:K)  $1B = solid circ
-;;; $0C = right box            $1C = inv check    (MT:E)
-;;; $0D = return       (MT:M)  $1D = check        (MT:D)
-;;; $0E = (C)                  $1E = solid apple  (MT:@)
-;;; $0F = (R)                  $1F = open apple   (MT:A)
-
-kGlyphFolderLeft        = $01
-kGlyphFolderRight       = $02
+;;; $00 = spacer       !           $10 = TM left      *
+;;; $01 = folder left  ! (MT:X)    $11 = TM right     *
+;;; $02 = folder right ! (MT:Y)    $12 = pound        *
+;;; $03 = hourglass      (MT:C)    $13 = pi           *
+;;; $04 = I-beam                   $14 = divide       *
+;;; $05 = pointer        (MT:B)    $15 = rarrow       ! (MT:U)
+;;; $06 = vbar           (MT:_)    $16 = tri
+;;; $07 = hbar           (MT:S)    $17 = open circ
+;;; $08 = larrow       ! (MT:H)    $18 = close          (MT:])
+;;; $09 = left box                 $19 = gray odd       (MT:W)
+;;; $0A = darrow       ! (MT:J)    $1A = gray even      (MT:V)
+;;; $0B = uarrow       ! (MT:K)    $1B = solid circ
+;;; $0C = right box                $1C = inv check      (MT:E)
+;;; $0D = return       ! (MT:M)    $1D = check        ! (MT:D)
+;;; $0E = (C)                      $1E = solid apple  ! (MT:@)
+;;; $0F = (R)                      $1F = open apple   ! (MT:A)
+;;;
+;;; ! = Used in this application; glyphs must be present in font.
+;;; Any other code points can be repurposed.
+;;; * = Used to provide additional characters in some languages
+;;; (notably Spanish) where Apple's character sets are lacking.
 
 kGlyphSpacer            = $00
-kGlyphInsertionPoint    = $06
+kGlyphFolderLeft        = $01
+kGlyphFolderRight       = $02
 
 kGlyphLeftArrow         = $08
 kGlyphRightArrow        = $15
 kGlyphUpArrow           = $0B
-kGlyphDdownArrow        = $0A
+kGlyphDownArrow         = $0A
 kGlyphReturn            = $0D
 kGlyphOpenApple         = $1F
 kGlyphSolidApple        = $1E
@@ -168,25 +266,19 @@ kGlyphCheckmark         = $1D
 ;;;   Open Mod    $1F
 ;;;   Check       $1D
 ;;;   Control     $01
-;;;   Inactive    $7F
 
 ;;; ============================================================
 ;;; Macros (specific to this project)
 
-.macro DEFINE_BUTTON_COORDS ident, xpos, ypos, width, height
-.if .paramcount > 3
-        DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), width, height
+.macro DEFINE_BUTTON ident, label, xpos, ypos, width, height
+.if     .paramcount = 6
+        DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), (width), (height)
+.elseif .paramcount = 5
+        DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), (width), kButtonHeight
 .else
         DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), kButtonWidth, kButtonHeight
 .endif
-        DEFINE_POINT .ident(.sprintf("%s_button_pos", .string(ident))), ((xpos) + 5), ((ypos) + 10)
-.endmacro
-.macro DEFINE_BUTTON ident, label, xpos, ypos, width, height
-.if .paramcount > 4
-        DEFINE_BUTTON_COORDS ident, xpos, ypos, width, height
-.else
-        DEFINE_BUTTON_COORDS ident, xpos, ypos
-.endif
+        DEFINE_POINT .ident(.sprintf("%s_button_pos", .string(ident))), ((xpos) + kButtonTextHOffset), ((ypos) + kButtonTextVOffset)
         .ident(.sprintf("%s_button_label", .string(ident))) := *
         PASCAL_STRING {label}
 .endmacro
@@ -196,4 +288,19 @@ kGlyphCheckmark         = $1D
         DEFINE_POINT .ident(.sprintf("%s_label_pos", .string(ident))), (xpos), (ypos)
         .ident(.sprintf("%s_label_str", .string(ident))) := *
         PASCAL_STRING {label}
+.endmacro
+
+;;; Define an rect for an inset frame drawn with a 4x2 pen, with a 4x2
+;;; gap between the passed window bounds and the border. This is the
+;;; standard style for modal dialog boxes and alerts.
+kBorderDX = 4
+kBorderDY = 2
+.macro DEFINE_RECT_FRAME ident, width, height
+        ident := *
+.scope ident
+x1:     .word   kBorderDX
+y1:     .word   kBorderDY
+x2:     .word   ((width) - kBorderDX*2 + 1)
+y2:     .word   ((height) - kBorderDY*2 + 1)
+.endscope
 .endmacro

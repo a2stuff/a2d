@@ -4,50 +4,54 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        RESOURCE_FILE "ovl_file_copy.res"
-
         .org OVERLAY_ADDR
 
 .scope file_copier
-exec:
+Exec:
         sta     LA027
-        jsr     open_window
+        jsr     OpenWindow
         lda     LA027
-        jsr     app::get_selector_list_path_addr
+        jsr     app::GetSelectorListPathAddr
         jsr     LA802
         jsr     LA6BD
-        jsr     draw_window_content
+        jsr     DrawWindowContent
         lda     LA027
-        jsr     app::get_selector_list_path_addr
+        jsr     app::GetSelectorListPathAddr
         jsr     LA802
         jsr     LA3F6
         pha
-        jsr     close_window
+        jsr     CloseWindow
         pla
         rts
 
 LA027:
         .byte   $00
 
+;;; ============================================================
+
         DEFINE_OPEN_PARAMS open_params, pathname1, $800
-        DEFINE_READ_PARAMS read_params, buf_read_ptr, 4 ; next/prev blocks
-buf_read_ptr:
-        .res 4, 0
+
+        ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
+        kBlockPointersSize = 4
+        .assert .sizeof(SubdirectoryHeader) - .sizeof(FileEntry) = kBlockPointersSize, error, "bad structs"
+        DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
+buf_block_pointers:
+        .res    kBlockPointersSize, 0
+
         DEFINE_CLOSE_PARAMS close_params
 
-        DEFINE_READ_PARAMS read_params2, buf_dir_header, .sizeof(SubdirectoryHeader)-4
-        DEFINE_READ_PARAMS read_params3, buf_5_bytes, 5
-buf_5_bytes:
-        .res    5, 0
+        DEFINE_READ_PARAMS read_fileentry_params, file_entry, .sizeof(FileEntry)
 
-        .res    4, 0            ; Unused???
-
+        ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
+        ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
+        ;; block pointers are the next 4.
+        kMaxPaddingBytes = 5
+        DEFINE_READ_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
+buf_padding_bytes:
+        .res    kMaxPaddingBytes, 0
 
         DEFINE_CLOSE_PARAMS close_params_src
         DEFINE_CLOSE_PARAMS close_params_dst
-
-        .byte   $01
-        .addr   pathname1
 
         io_buf_src = $D00
         io_buf_dst = $1100
@@ -63,32 +67,22 @@ buf_5_bytes:
 
         DEFINE_CREATE_PARAMS create_params2, pathname_dst, $C3
 
-        DEFINE_CREATE_PARAMS create_params, pathname_dst,
-        .byte   0, 0
+        DEFINE_CREATE_PARAMS create_params, pathname_dst
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params2, pathname1
-        .byte   0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, pathname_dst
-        .byte   0
 
-        .byte   $02
-        .byte   0
-        .byte   0
-        .byte   0
-
-buf_dir_header:
+file_entry:
         .res    48, 0
 
 addr_table:
 
-LA0EC:  .word   do_copy
+LA0EC:  .word   DoCopy
 LA0EE:  .word   LA4FC
 LA0F0:  .word   LA0F2
 
 LA0F2:  rts
-
-        .byte   0
 
 pathname_dst:
         .res    ::kPathBufferSize, 0
@@ -98,138 +92,195 @@ pathname1:
 LA176:  .res    64, 0
 LA1B6:  .res    64, 0
 LA1F6:  .res    16, 0
-LA206:  .byte   0
-LA207:
-LA208           := * + 1
-LA209           := * + 2
-        .byte   $0D, $00, $00
-LA20A:  .byte   0
-LA20B:  .res    170, 0
-LA2B5:  .byte   0
-LA2B6:  .byte   0
 
-LA2B7:  ldx     LA2B5
-        lda     LA20A
-        sta     LA20B,x
+;;; ============================================================
+
+recursion_depth:        .byte   0 ; How far down the directory structure are we
+entries_per_block:      .byte   0
+ref_num:                .byte   0
+entry_index_in_dir:     .word   0
+target_index:           .word   0
+
+;;; Stack used when descending directories; keeps track of entry index within
+;;; directories.
+index_stack:    .res    ::kDirStackBufferSize, 0
+stack_index:    .byte   0
+
+entry_index_in_block:   .byte   0
+
+;;; ============================================================
+
+.proc PushIndexToStack
+        ldx     stack_index
+        lda     target_index
+        sta     index_stack,x
         inx
-        stx     LA2B5
+        lda     target_index+1
+        sta     index_stack,x
+        inx
+        stx     stack_index
         rts
+.endproc
 
-LA2C5:  ldx     LA2B5
+;;; ============================================================
+
+.proc PopIndexFromStack
+        ldx     stack_index
         dex
-        lda     LA20B,x
-        sta     LA20A
-        stx     LA2B5
+        lda     index_stack,x
+        sta     target_index+1
+        dex
+        lda     index_stack,x
+        sta     target_index
+        stx     stack_index
         rts
+.endproc
 
-LA2D3:  lda     #$00
-        sta     LA208
-        sta     LA2B6
+;;; ============================================================
+
+.proc OpenSrcDir
+        lda     #$00
+        sta     entry_index_in_dir
+        sta     entry_index_in_dir+1
+        sta     entry_index_in_block
         MLI_CALL OPEN, open_params
-        beq     LA2E9
-        jmp     handle_error_code
+        beq     l1
+        jmp     HandleErrorCode
 
-LA2E9:  lda     open_params::ref_num
-        sta     LA209
-        sta     read_params::ref_num
-        MLI_CALL READ, read_params
-        beq     LA300
-        jmp     handle_error_code
+l1:     lda     open_params::ref_num
+        sta     ref_num
+        sta     read_block_pointers_params::ref_num
+        MLI_CALL READ, read_block_pointers_params
+        beq     l2
+        jmp     HandleErrorCode
 
-LA300:  jsr     LA319
+l2:     jsr     ReadFileEntry
+
+        copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
+
         rts
+.endproc
 
-LA304:  lda     LA209
+;;; ============================================================
+
+.proc DoCloseFile
+        lda     ref_num
         sta     close_params::ref_num
         MLI_CALL CLOSE, close_params
-        beq     LA318
-        jmp     handle_error_code
+        beq     l1
+        jmp     HandleErrorCode
 
-LA318:  rts
+l1:     rts
+.endproc
 
-LA319:  inc     LA208
-        lda     LA209
-        sta     read_params2::ref_num
-        MLI_CALL READ, read_params2
-        beq     LA330
-        jmp     handle_error_code
+;;; ============================================================
 
-LA330:  inc     LA2B6
-        lda     LA2B6
-        cmp     LA207
-        bcc     LA35B
-        lda     #$00
-        sta     LA2B6
-        lda     LA209
-        sta     read_params3::ref_num
-        MLI_CALL READ, read_params3
-        beq     LA354
-        jmp     handle_error_code
+.proc ReadFileEntry
+        inc16   entry_index_in_dir
 
-LA354:  lda     read_params3::trans_count
-        cmp     read_params3::request_count
-        rts
+        ;; Skip entry
+        lda     ref_num
+        sta     read_fileentry_params::ref_num
+        MLI_CALL READ, read_fileentry_params
+        beq     :+
+        cmp     #ERR_END_OF_FILE
+        beq     eof
+        jmp     HandleErrorCode
+:
+        ;; TODO: Could AdjustFileEntryCase here
 
-LA35B:  return  #$00
+        inc     entry_index_in_block
+        lda     entry_index_in_block
+        cmp     entries_per_block
+        bcc     done
 
-LA35E:  lda     LA208
-        sta     LA20A
-        jsr     LA304
-        jsr     LA2B7
+        ;; Advance to first entry in next "block"
+        lda     #0
+        sta     entry_index_in_block
+        lda     ref_num
+        sta     read_padding_bytes_params::ref_num
+        MLI_CALL READ, read_padding_bytes_params
+        beq     :+
+        jmp     HandleErrorCode
+:
+
+done:   return  #0
+
+eof:    return  #$FF
+.endproc
+
+;;; ============================================================
+
+.proc DescendDirectory
+        copy16  entry_index_in_dir, target_index
+        jsr     DoCloseFile
+        jsr     PushIndexToStack
         jsr     LA75D
-        jsr     LA2D3
+        jsr     OpenSrcDir
         rts
+.endproc
 
-LA371:  jsr     LA304
+.proc AscendDirectory
+        jsr     DoCloseFile
         jsr     LA3E9
         jsr     LA782
-        jsr     LA2C5
-        jsr     LA2D3
-        jsr     LA387
+        jsr     PopIndexFromStack
+        jsr     OpenSrcDir
+        jsr     AdvanceToTargetEntry
         jsr     LA3E6
         rts
+.endproc
 
-LA387:  lda     LA208
-        cmp     LA20A
-        beq     LA395
-        jsr     LA319
-        jmp     LA387
+.proc AdvanceToTargetEntry
+:       cmp16   entry_index_in_dir, target_index
+        bcs     :+
+        jsr     ReadFileEntry
+        jmp     :-
 
-LA395:  rts
+:       rts
+.endproc
 
-LA396:  lda     #$00
-        sta     LA206
-        jsr     LA2D3
-LA39E:  jsr     LA319
-        bne     LA3D0
-        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        beq     LA39E
-        lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+;;; ============================================================
+
+.proc CopyDirectory
+        lda     #$00
+        sta     recursion_depth
+        jsr     OpenSrcDir
+l1:     jsr     ReadFileEntry
+        bne     l2
+        lda     file_entry+FileEntry::storage_type_name_length
+        beq     l1
+        lda     file_entry+FileEntry::storage_type_name_length
         sta     LA3EC
         and     #NAME_LENGTH_MASK
-        sta     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
+        sta     file_entry+FileEntry::storage_type_name_length
         lda     #$00
-        sta     LA3E2
+        sta     copy_err_flag
         jsr     LA3E3
-        lda     LA3E2
-        bne     LA39E
-        lda     buf_dir_header+SubdirectoryHeader::reserved-4
-        cmp     #$0F
-        bne     LA39E
-        jsr     LA35E
-        inc     LA206
-        jmp     LA39E
+        lda     copy_err_flag
+        bne     l1
+        lda     file_entry+FileEntry::file_type
+        cmp     #FT_DIRECTORY
+        bne     l1
+        jsr     DescendDirectory
+        inc     recursion_depth
+        jmp     l1
 
-LA3D0:  lda     LA206
-        beq     LA3DE
-        jsr     LA371
-        dec     LA206
-        jmp     LA39E
+l2:     lda     recursion_depth
+        beq     l3
+        jsr     AscendDirectory
+        dec     recursion_depth
+        jmp     l1
 
-LA3DE:  jsr     LA304
+l3:     jsr     DoCloseFile
         rts
+.endproc
 
-LA3E2:  .byte   0
+;;; ============================================================
+
+copy_err_flag:  .byte   0
+
+;;; ============================================================
 
 LA3E3:  jmp     (LA0EC)
 LA3E6:  jmp     (LA0EE)
@@ -241,11 +292,14 @@ LA3EC:  .byte   0
         .byte   0
 
 
-LA3F0:  .addr   do_copy
+LA3F0:  .addr   DoCopy
         .addr   LA4FC
         .addr   LA0F2
 
-LA3F6:  ldy     #5
+;;; ============================================================
+
+.proc LA3F6
+        ldy     #5
 LA3F8:  lda     LA3F0,y
         sta     LA0EC,y
         dey
@@ -257,10 +311,10 @@ LA3F8:  lda     LA3F0,y
         jsr     LA7D9
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     LA41B
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA41B:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA4F3
-        cmp16   LA4F3, LA75B
+        cmp16   LA4F3, blocks_total
         bcs     LA43F
         jmp     LAACB
 
@@ -292,10 +346,10 @@ LA475:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA488
         cmp     #ERR_FILE_NOT_FOUND
         bne     LA48E
-LA488:  jsr     LAABD
-        jmp     LA475
+LA488:  jsr     ShowInsertSourceDiskAlert
+        jmp     LA475           ; retry
 
-LA48E:  jmp     handle_error_code
+LA48E:  jmp     HandleErrorCode
 
 LA491:  lda     get_file_info_params2::storage_type
         cmp     #ST_VOLUME_DIRECTORY
@@ -305,7 +359,7 @@ LA491:  lda     get_file_info_params2::storage_type
         lda     #$00
         beq     LA4A2
 LA4A0:  lda     #$FF
-LA4A2:  sta     LA4F8
+LA4A2:  sta     is_dir_flag
         ldy     #$07
 LA4A7:  lda     get_file_info_params2,y
         sta     create_params,y
@@ -335,21 +389,26 @@ LA4BF:  ldy     #(get_file_info_params2::create_time+1 - get_file_info_params2)
         sta     create_params::storage_type
 LA4DB:  MLI_CALL CREATE, create_params
         beq     LA4E9
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
-LA4E9:  lda     LA4F8
+LA4E9:  lda     is_dir_flag
         beq     LA4F5
-        jmp     LA396
+        jmp     CopyDirectory
 
         .byte   0
         rts
 
 LA4F3:  .byte   0
         .byte   0
-LA4F5:  jmp     copy_dir
+LA4F5:  jmp     CopyDir
 
-LA4F8:  .byte   0
+is_dir_flag:
+        .byte   0
 LA4F9:  .byte   0
+.endproc
+
+;;; ============================================================
+
 LA4FA:  .byte   0
 
 saved_stack:
@@ -359,20 +418,20 @@ LA4FC:  jmp     LA7C0
 
 ;;; ============================================================
 
-.proc do_copy
-        lda     buf_dir_header+SubdirectoryHeader::reserved-4
-        cmp     #$0F
+.proc DoCopy
+        lda     file_entry+FileEntry::file_type
+        cmp     #FT_DIRECTORY
         bne     LA536
         jsr     LA75D
         jsr     draw_window_content_ep2
         MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA528
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA51A:  jsr     LA7C0
         jsr     LA782
         lda     #$FF
-        sta     LA3E2
+        sta     copy_err_flag
         jmp     LA569
 
 LA528:  jsr     LA79B
@@ -386,7 +445,7 @@ LA536:  jsr     LA79B
         jsr     draw_window_content_ep2
         MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA54D
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA54D:  jsr     LA56D
         bcc     LA555
@@ -396,7 +455,7 @@ LA555:  jsr     LA782
         jsr     LA69A
         bcs     LA56A
         jsr     LA75D
-        jsr     copy_dir
+        jsr     CopyDir
         jsr     LA782
         jsr     LA7C0
 LA569:  rts
@@ -409,7 +468,7 @@ LA569:  rts
 LA56A:  jsr     LA7C0
 LA56D:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA57B
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA57B:  lda     #$00
         sta     LA60E
@@ -418,7 +477,7 @@ LA57B:  lda     #$00
         beq     LA595
         cmp     #ERR_FILE_NOT_FOUND
         beq     LA5A1
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA595:  copy16  get_file_info_params::blocks_used, LA60E
 LA5A1:  lda     pathname_dst
@@ -435,7 +494,7 @@ LA5A9:  iny
         sta     LA60D
         MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     LA5CB
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA5CB:  sub16   get_file_info_params::aux_type, get_file_info_params::blocks_used, LA60A
         sub16   LA60A, LA60E, LA60A
@@ -456,13 +515,13 @@ LA60F:  .byte   0
 
 ;;; ============================================================
 
-.proc copy_dir
+.proc CopyDir
         MLI_CALL OPEN, open_params_src
         beq     LA61E
-        jsr     handle_error_code
+        jsr     HandleErrorCode
 LA61E:  MLI_CALL OPEN, open_params_dst
         beq     LA62C
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA62C:  lda     open_params_src::ref_num
         sta     read_params_src::ref_num
@@ -475,14 +534,14 @@ LA63E:  copy16  #kDirCopyBufSize, read_params_src::request_count
         beq     LA65A
         cmp     #ERR_END_OF_FILE
         beq     LA687
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA65A:  copy16  read_params_src::trans_count, write_params_dst::request_count
         ora     read_params_src::trans_count
         beq     LA687
         MLI_CALL WRITE, write_params_dst
         beq     LA679
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA679:  lda     write_params_dst::trans_count
         cmp     #<kDirCopyBufSize
@@ -507,7 +566,7 @@ LA69C:  lda     get_file_info_params2,x
         MLI_CALL CREATE, create_params2
         clc
         beq     LA6B6
-        jmp     handle_error_code
+        jmp     HandleErrorCode
 
 LA6B6:  rts
 
@@ -515,17 +574,20 @@ LA6B7:  .addr   LA729
         .addr   LA728
         .addr   LA0F2
 
-LA6BD:  ldy     #5
+;;; ============================================================
+
+.proc LA6BD
+        ldy     #5
 :       lda     LA6B7,y
         sta     addr_table,y
         dey
         bpl     :-
 
         lda     #$00
-        sta     LA759
-        sta     LA75A
-        sta     LA75B
-        sta     LA75C
+        sta     file_count
+        sta     file_count+1
+        sta     blocks_total
+        sta     blocks_total+1
         ldy     #BITMAP_SIZE-1
         lda     #$00
 LA6DA:  sta     BITMAP,y
@@ -538,13 +600,13 @@ LA6E3:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA6F6
         cmp     #ERR_FILE_NOT_FOUND
         bne     LA6FC
-LA6F6:  jsr     LAABD
-        jmp     LA6E3
+LA6F6:  jsr     ShowInsertSourceDiskAlert
+        jmp     LA6E3           ; retry
 
-LA6FC:  jmp     handle_error_code
+LA6FC:  jmp     HandleErrorCode
 
 LA6FF:  lda     get_file_info_params2::storage_type
-        sta     LA724
+        sta     storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     LA711
         cmp     #ST_LINKED_DIRECTORY
@@ -552,124 +614,162 @@ LA6FF:  lda     get_file_info_params2::storage_type
         lda     #$00
         beq     LA713
 LA711:  lda     #$FF
-LA713:  sta     LA723
+LA713:  sta     is_dir_flag
         beq     LA725
-        jsr     LA396
-        lda     LA724
-        cmp     #$0F
+        jsr     CopyDirectory
+        lda     storage_type
+        cmp     #ST_VOLUME_DIRECTORY
         bne     LA725
+
+        ;; If copying a volume dir to RAMCard, the volume dir
+        ;; will not be counted as a file during enumeration but
+        ;; will be counted during copy, so include it to avoid
+        ;; off-by-one.
+        ;; https://github.com/a2stuff/a2d/issues/564
+        inc16   file_count
+        jsr     UpdateFileCountDisplay
+
         rts
 
-LA723:  .byte   0
-LA724:  .byte   0
+is_dir_flag:
+        .byte   0
+storage_type:
+        .byte   0
+
 LA725:  jmp     LA729
+.endproc
+
+;;; ============================================================
 
 LA728:  rts
 
-LA729:  jsr     LA75D
+;;; ============================================================
+
+.proc LA729
+        jsr     LA75D
         MLI_CALL GET_FILE_INFO, get_file_info_params2
-        bne     LA74A
-        add16   LA75B, get_file_info_params2::blocks_used, LA75B
-LA74A:  inc16   LA759
+        bne     :+
+        add16   blocks_total, get_file_info_params2::blocks_used, blocks_total
+:       inc16   file_count
         jsr     LA782
-        jsr     update_file_count_display
+        jsr     UpdateFileCountDisplay
+        rts
+.endproc
+
+file_count:
+        .word   0
+blocks_total:
+        .word   0
+
+;;; ============================================================
+
+.proc LA75D
+        lda     file_entry+FileEntry::storage_type_name_length
+        bne     l1
         rts
 
-LA759:  .byte   0
-LA75A:  .byte   0
-LA75B:  .byte   0
-LA75C:  .byte   0
-LA75D:  lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        bne     LA763
-        rts
-
-LA763:  ldx     #$00
+l1:     ldx     #$00
         ldy     pathname1
         lda     #'/'
         sta     pathname1+1,y
         iny
-LA76E:  cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        bcs     LA77E
-        lda     buf_dir_header+SubdirectoryHeader::file_name-4,x
+l2:     cpx     file_entry+FileEntry::storage_type_name_length
+        bcs     l3
+        lda     file_entry+FileEntry::file_name,x
         sta     pathname1+1,y
         inx
         iny
-        jmp     LA76E
+        jmp     l2
 
-LA77E:  sty     pathname1
+l3:     sty     pathname1
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc LA782
+        ldx     pathname1
+        bne     :+
         rts
 
-LA782:  ldx     pathname1
-        bne     LA788
-        rts
-
-LA788:  lda     pathname1,x
+:       lda     pathname1,x
         cmp     #'/'
-        beq     LA796
+        beq     :+
         dex
-        bne     LA788
+        bne     :-
         stx     pathname1
         rts
 
-LA796:  dex
+:       dex
         stx     pathname1
         rts
+.endproc
 
-LA79B:  lda     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        bne     LA7A1
+;;; ============================================================
+
+.proc LA79B
+        lda     file_entry+FileEntry::storage_type_name_length
+        bne     l1
         rts
 
-LA7A1:  ldx     #$00
+l1:     ldx     #$00
         ldy     pathname_dst
         lda     #'/'
         sta     pathname_dst+1,y
         iny
-LA7AC:  cpx     buf_dir_header+SubdirectoryHeader::storage_type_name_length-4
-        bcs     LA7BC
-        lda     buf_dir_header+SubdirectoryHeader::file_name-4,x
+l2:     cpx     file_entry+FileEntry::storage_type_name_length
+        bcs     l3
+        lda     file_entry+FileEntry::file_name,x
         sta     pathname_dst+1,y
         inx
         iny
-        jmp     LA7AC
+        jmp     l2
 
-LA7BC:  sty     pathname_dst
+l3:     sty     pathname_dst
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc LA7C0
+        ldx     pathname_dst
+        bne     l1
         rts
 
-LA7C0:  ldx     pathname_dst
-        bne     LA7C6
-        rts
-
-LA7C6:  lda     pathname_dst,x
+l1:     lda     pathname_dst,x
         cmp     #'/'
-        beq     LA7D4
+        beq     l2
         dex
-        bne     LA7C6
+        bne     l1
         stx     pathname_dst
         rts
 
-LA7D4:  dex
+l2:     dex
         stx     pathname_dst
         rts
+.endproc
 
-LA7D9:  ldy     #$00
+;;; ============================================================
+
+.proc LA7D9
+        ldy     #$00
         sta     LA4FA
         dey
-LA7DF:  iny
+l1:     iny
         lda     LA1B6,y
         cmp     #'/'
-        bne     LA7EA
+        bne     l2
         sty     LA4FA
-LA7EA:  sta     pathname1,y
+l2:     sta     pathname1,y
         cpy     LA1B6
-        bne     LA7DF
+        bne     l1
         ldy     LA176
-LA7F5:  lda     LA176,y
+l3:     lda     LA176,y
         sta     pathname_dst,y
         dey
-        bpl     LA7F5
+        bpl     l3
         rts
-
-        return  #$00
+.endproc
 
 ;;; ============================================================
 
@@ -678,98 +778,83 @@ LA7F5:  lda     LA176,y
         ldy     #$00
         lda     ($06),y
         tay
-LA80B:  lda     ($06),y
+l1:     lda     ($06),y
         sta     LA1B6,y
         dey
-        bpl     LA80B
+        bpl     l1
         ldy     LA1B6
-LA816:  lda     LA1B6,y
-        and     #CHAR_MASK
+l2:     lda     LA1B6,y
         cmp     #'/'
-        beq     LA822
+        beq     l3
         dey
-        bne     LA816
-LA822:  dey
+        bne     l2
+l3:     dey
         sty     LA1B6
-LA826:  lda     LA1B6,y
-        and     #CHAR_MASK
+l4:     lda     LA1B6,y
         cmp     #'/'
-        beq     LA832
+        beq     l5
         dey
-        bpl     LA826
-LA832:  ldx     #$00
-LA834:  iny
+        bpl     l4
+l5:     ldx     #$00
+l6:     iny
         inx
         lda     LA1B6,y
         sta     LA1F6,x
         cpy     LA1B6
-        bne     LA834
+        bne     l6
         stx     LA1F6
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldy     RAMCARD_PREFIX
-LA84D:  lda     RAMCARD_PREFIX,y
+l7:     lda     RAMCARD_PREFIX,y
         sta     LA176,y
         dey
-        bpl     LA84D
-        lda     ROMIN2
+        bpl     l7
+        bit     ROMIN2
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc winfo
+.params winfo
+        kWindowId = $0B
         kWidth = 350
         kHeight = 70
-window_id:
-        .byte   $0B
-        .byte   $01,$00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $96,$00
-        .byte   $32
-        .byte   $00
-        .word   500
-        .word   140
-        .byte   $64
-        .byte   $00
-        .byte   $32
-        .byte   $00
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .word   350, 70
-        .byte   $FF
-        .res    8, $FF
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
+window_id:      .byte   kWindowId
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontheight:  .word   50
+maxcontwidth:   .word   500
+maxcontheight:  .word   140
+port:
+        DEFINE_POINT viewloc, 100, 50
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textback:       .byte   $7F
+textfont:       .addr   FONT
+nextwinfo:      .addr   0
+.endparams
 
-        .byte   $01,$01
-        .byte   $00
-        .byte   $7F
-        .addr   FONT
-        .addr   0
-.endproc
+        DEFINE_BUTTON ok, res_string_button_ok, winfo::kWidth-20-kButtonWidth, 49
 
-        DEFINE_RECT_SZ rect1, 20, 49, kButtonWidth, kButtonHeight
-        DEFINE_POINT pos1, 24, 59
-
-        DEFINE_RECT_INSET rect_frame1, 4, 2, winfo::kWidth, winfo::kHeight
-        DEFINE_RECT_INSET rect_frame2, 5, 3, winfo::kWidth, winfo::kHeight
+        DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
         DEFINE_LABEL download, res_string_label_download, 116, 16
 
@@ -779,20 +864,20 @@ window_id:
 str_copying:
         PASCAL_STRING res_string_label_copying
 
-        DEFINE_RECT rect_clear_count, 18, 24, 344, 32
-        DEFINE_RECT rect_clear_details, 6, 24, 344, 66
+        DEFINE_RECT rect_clear_count, 18, 24, winfo::kWidth-kBorderDX*2, 32
+        DEFINE_RECT rect_clear_details, kBorderDX*2, 24, winfo::kWidth-kBorderDX*2, winfo::kHeight-kBorderDY*2
 
 .params setportbits_params
         DEFINE_POINT viewloc, 100, 50
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 346, 66
+        DEFINE_RECT maprect, 0, 0, 340, 66
 pattern:        .res    8, $FF
 masks:          .byte   $FF, $00
 penloc:         .word   0, 0
 pensize:        .byte   1, 1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   FONT
 next:           .addr   0
@@ -811,17 +896,22 @@ str_files_to_copy:
 str_files_remaining:
         PASCAL_STRING res_string_label_files_remaining
 str_spaces:
-        PASCAL_STRING "    "    ; do not localize
+        PASCAL_STRING "    "
+str_space:
+        PASCAL_STRING " "
 
 ;;; ============================================================
 
-.proc open_window
+.proc OpenWindow
         MGTK_CALL MGTK::OpenWindow, winfo
         lda     winfo::window_id
-        jsr     app::get_window_port
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::FrameRect, rect_frame1
-        MGTK_CALL MGTK::FrameRect, rect_frame2
+        jsr     app::GetWindowPort
+
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, app::pensize_frame
+        MGTK_CALL MGTK::FrameRect, rect_frame
+        MGTK_CALL MGTK::SetPenSize, app::pensize_normal
+
         MGTK_CALL MGTK::MoveTo, download_label_pos
         param_call app::DrawString, download_label_str
         rts
@@ -829,23 +919,27 @@ str_spaces:
 
 ;;; ============================================================
 
-.proc draw_window_content
+.proc DrawWindowContent
         lda     winfo::window_id
-        jsr     app::get_window_port
-        MGTK_CALL MGTK::SetPenMode, app::pencopy
+        jsr     app::GetWindowPort
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
-ep2:    dec     LA759
-        lda     LA759
+
+ep2:    dec     file_count
+        lda     file_count
         cmp     #$FF
-        bne     LAA4C
-        dec     LA75A
-LAA4C:  jsr     populate_count
+        bne     :+
+        dec     file_count+1
+:
+
+        jsr     PopulateCount
         MGTK_CALL MGTK::SetPortBits, setportbits_params
-        MGTK_CALL MGTK::SetPenMode, app::pencopy
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_count
         param_call app::AdjustPathCase, pathname1
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_copying
+        param_call app::DrawString, str_space
         param_call app::DrawString, pathname1
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_files_remaining
@@ -853,11 +947,11 @@ LAA4C:  jsr     populate_count
         param_call app::DrawString, str_spaces
         rts
 .endproc
-        draw_window_content_ep2 := draw_window_content::ep2
+        draw_window_content_ep2 := DrawWindowContent::ep2
 ;;; ============================================================
 
-.proc update_file_count_display
-        jsr     populate_count
+.proc UpdateFileCountDisplay
+        jsr     PopulateCount
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_files_to_copy
@@ -868,142 +962,100 @@ LAA4C:  jsr     populate_count
 
 ;;; ============================================================
 
-LAABD:  lda     #$FD            ; Unknown alert number ???
+.proc ShowInsertSourceDiskAlert
+        lda     #AlertID::insert_source_disk
         jsr     app::ShowAlert
-        bne     :+
-        jsr     app::set_watch_cursor
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        bne     :+              ; `kAlertResultCancel` = 1
+        jsr     app::SetWatchCursor ; try again
         rts
 
-:       jmp     restore_stack_and_return
+:       jmp     RestoreStackAndReturn
+.endproc
 
 ;;; ============================================================
 
 LAACB:  lda     winfo::window_id
-        jsr     app::get_window_port
-        MGTK_CALL MGTK::SetPenMode, app::pencopy
+        jsr     app::GetWindowPort
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_not_enough_room
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_click_ok
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::FrameRect, rect1
-        MGTK_CALL MGTK::MoveTo, pos1
-        param_call app::DrawString, app::ok_button_label
-        jsr     set_pointer_cursor
-        jmp     restore_stack_and_return
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
+        param_call app::DrawString, ok_button_label
+        jsr     SetPointerCursor
+        jmp     RestoreStackAndReturn
 
 ;;; ============================================================
 
-.proc handle_error_code
+.proc HandleErrorCode
         lda     winfo::window_id
-        jsr     app::get_window_port
-        MGTK_CALL MGTK::SetPenMode, app::pencopy
+        jsr     app::GetWindowPort
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_error_download
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_copy_incomplete
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::FrameRect, rect1
-        MGTK_CALL MGTK::MoveTo, pos1
-        param_call app::DrawString, app::ok_button_label
-        jsr     set_pointer_cursor
-        jmp     restore_stack_and_return
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
+        param_call app::DrawString, ok_button_label
+        jsr     SetPointerCursor
+        jmp     RestoreStackAndReturn
 .endproc
 
 ;;; ============================================================
 
-set_pointer_cursor:
-        jsr     app::set_pointer_cursor
+SetPointerCursor:
+        jsr     app::SetPointerCursor
 
 ;;; ============================================================
 
 event_loop:
-        MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_kind
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        beq     handle_button_down
+        beq     HandleButtonDown
         cmp     #MGTK::EventKind::key_down
         bne     event_loop
-        lda     app::event_key
+        lda     event_params::key
         cmp     #CHAR_RETURN
         bne     event_loop
-        lda     winfo::window_id
-        jsr     app::get_window_port
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect1
-        MGTK_CALL MGTK::PaintRect, rect1
-        jsr     app::set_watch_cursor
+        param_call app::ButtonFlash, winfo::kWindowId, ok_button_rect
+        jsr     app::SetWatchCursor
         rts
 
-handle_button_down:
-        MGTK_CALL MGTK::FindWindow, app::findwindow_params
-        lda     app::findwindow_which_area
+HandleButtonDown:
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
         beq     event_loop
         cmp     #MGTK::Area::content
         bne     event_loop
-        lda     app::findwindow_window_id
+        lda     findwindow_params::window_id
         cmp     winfo::window_id
         bne     event_loop
         lda     winfo::window_id
-        jsr     app::get_window_port
+        jsr     app::GetWindowPort
         lda     winfo::window_id
-        sta     app::screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, app::screentowindow_params
-        MGTK_CALL MGTK::MoveTo, app::screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect1
+        sta     screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     event_loop
-        MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect1
-        jsr     LABE6
+        param_call app::ButtonClick, winfo::kWindowId, ok_button_rect
         bmi     event_loop
-        jsr     app::set_watch_cursor
+        jsr     app::SetWatchCursor
         rts
-
-LABE6:  lda     #$00
-        sta     LAC53
-LABEB:  MGTK_CALL MGTK::GetEvent, app::event_params
-        lda     app::event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     LAC3C
-        lda     winfo::window_id
-        sta     app::screentowindow_window_id
-        MGTK_CALL MGTK::ScreenToWindow, app::screentowindow_params
-        MGTK_CALL MGTK::MoveTo, app::screentowindow_windowx
-        MGTK_CALL MGTK::InRect, rect1
-        cmp     #MGTK::inrect_inside
-        beq     LAC1C
-        lda     LAC53
-        beq     LAC24
-        jmp     LABEB
-
-LAC1C:  lda     LAC53
-        bne     LAC24
-        jmp     LABEB
-
-LAC24:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect1
-        lda     LAC53
-        clc
-        adc     #$80
-        sta     LAC53
-        jmp     LABEB
-
-LAC3C:  lda     LAC53
-        beq     LAC44
-        return  #$FF
-
-LAC44:  MGTK_CALL MGTK::SetPenMode, app::penXOR
-        MGTK_CALL MGTK::PaintRect, rect1
-        return  #$00
-
-LAC53:  .byte   0
 
 ;;; ============================================================
 
-.proc restore_stack_and_return
+.proc RestoreStackAndReturn
         ldx     saved_stack
         txs
         return  #$FF
@@ -1011,15 +1063,15 @@ LAC53:  .byte   0
 
 ;;; ============================================================
 
-.proc close_window
+.proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, winfo
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc populate_count
-        copy16  LA759, value
+.proc PopulateCount
+        copy16  file_count, value
         ldx     #7
         lda     #' '
 :       sta     str_count,x
@@ -1033,7 +1085,7 @@ LAC53:  .byte   0
 loop:   lda     #0
         sta     digit
 sloop:  cmp16   value, powers,x
-        bpl     subtract
+        bcs     subtract
         lda     digit
         bne     not_pad
         bit     nonzero_flag
@@ -1078,12 +1130,12 @@ nonzero_flag:
 .endproc
 
 str_count:
-        PASCAL_STRING "       " ; do not localize
+        PASCAL_STRING "       "
 
 ;;; ============================================================
 
 .endscope
 
-file_copier_exec   := file_copier::exec
+file_copier__Exec   := file_copier::Exec
 
-        PAD_TO OVERLAY_ADDR + kOverlay2Size
+        PAD_TO OVERLAY_ADDR + kOverlayCopyDialogLength

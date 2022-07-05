@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# Call with a command to execute. If the command outputs anything to
+# stderr, this will return false (fail).
+# Also color-codes such output as red.
+#
+# Workaround for: https://github.com/cc65/cc65/issues/1563
+#
+# Sample usage:
+#     warnerr ca65 -o target.o target.s $<
+#     warnerr ld65 -o target target.o
+#
+# Implementation notes:
+# * The "3>&1 1>&2 2>&3" incantation swaps STDOUT and STDERR.
+# * The "< <( ... )" incantation is bash process substitution.
+
+bad=''
+
+while read line; do
+    tput setaf 1 && echo "$line" && tput sgr0
+    bad='bad'
+done < <($@ 3>&1 1>&2 2>&3)
+
+if [ -n "$bad" ]; then
+    false
+fi

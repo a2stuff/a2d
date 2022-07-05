@@ -23,14 +23,14 @@
 
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor, 0
         jsr     JUMP_TABLE_HILITE_MENU
-        jsr     dump_screen
+        jsr     DumpScreen
         jsr     JUMP_TABLE_HILITE_MENU
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor, 0
         rts
 
 ;;; ============================================================
 
-.proc dump_screen
+.proc DumpScreen
 
         SLOT1   := $C100
 
@@ -38,36 +38,36 @@
         kScreenWidth  = 560
         kScreenHeight = 192
 
-        lda     ROMIN2
-        jsr     print_screen
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     ROMIN2
+        jsr     PrintScreen
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 
-.proc send_spacing
+.proc SendSpacing
         ldy     #0
 :       lda     spacing_sequence,y
         beq     done
-        jsr     cout
+        jsr     COut
         iny
         jmp     :-
 done:   rts
 .endproc
 
-.proc send_restore_state
+.proc SendRestoreState
         ldy     #$00
 :       lda     restore_state,y
         beq     done
-        jsr     cout
+        jsr     COut
         iny
         jmp     :-
 done:   rts
 .endproc
 
-.proc send_init_graphics
+.proc SendInitGraphics
         ldx     #0
 :       lda     init_graphics,x
-        jsr     cout
+        jsr     COut
         inx
         cpx     #6
         bne     :-
@@ -76,16 +76,14 @@ init_graphics:
         .byte   CHAR_ESCAPE,"G0560"     ; Graphics, 560 data bytes
 .endproc
 
-.proc send_row
+.proc SendRow
         ;; Tell printer to expect graphics
-        jsr     send_init_graphics
+        jsr     SendInitGraphics
         ldy     #0
         sty     col_num
         lda     #1
         sta     mask
-        lda     #0
-        sta     x_coord
-        sta     x_coord+1
+        copy16  #0, x_coord
 
 col_loop:
         lda     #8              ; 8 vertical pixels per row
@@ -95,7 +93,7 @@ col_loop:
 
         ;; Accumulate 8 pixels
 y_loop: lda     y_coord
-        jsr     compute_hbasl   ; Row address in screen
+        jsr     ComputeHBASL    ; Row address in screen
 
         lda     col_num
         lsr     a               ; Even or odd column?
@@ -116,7 +114,7 @@ y_loop: lda     y_coord
         lda     accum           ; Now output it
         eor     #$FF            ; Invert pixels (screen vs. print)
         sta     PAGE2OFF        ; Read main mem $2000-$3FFF
-        jsr     cout            ; And actually print
+        jsr     COut            ; And actually print
 
         ;; Done all pixels across?
         lda     x_coord
@@ -142,20 +140,20 @@ done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
         rts
 .endproc
 
-.proc print_screen
+.proc PrintScreen
         ;; Init printer
-        jsr     pr_num_1
-        jsr     send_spacing
+        jsr     PRNum1
+        jsr     SendSpacing
 
         lda     #0
         sta     y_row
 
         ;; Print a row (560x8), CR+LF
-loop:   jsr     send_row
+loop:   jsr     SendRow
         lda     #CHAR_RETURN
-        jsr     cout
+        jsr     COut
         lda     #CHAR_DOWN
-        jsr     cout
+        jsr     COut
 
         lda     y_coord
         sta     y_row
@@ -164,16 +162,16 @@ loop:   jsr     send_row
 
         ;; Finish up
         lda     #CHAR_RETURN
-        jsr     cout
+        jsr     COut
         lda     #CHAR_RETURN
-        jsr     cout
-        jsr     send_restore_state
+        jsr     COut
+        jsr     SendRestoreState
 
         rts
 .endproc
 
         ;; Given y-coordinate in A, compute HBASL-equivalent
-.proc compute_hbasl
+.proc ComputeHBASL
         pha
         and     #$C7
         eor     #$08
@@ -197,7 +195,7 @@ loop:   jsr     send_row
         rts
 .endproc
 
-.proc pr_num_1
+.proc PRNum1
         lda     #>SLOT1
         sta     COUT_HOOK+1
         lda     #<SLOT1
@@ -207,7 +205,7 @@ loop:   jsr     send_row
         rts
 .endproc
 
-.proc cout
+.proc COut
         jsr     COUT
         rts
 .endproc
@@ -237,6 +235,6 @@ restore_state:
 invoke_slot1:
         jmp     SLOT1
 
-.endproc ; dump_screen
+.endproc ; DumpScreen
 
 ;;; ============================================================

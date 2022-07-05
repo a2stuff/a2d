@@ -1,4 +1,4 @@
-HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard ../lib/*.s) $(wildcard ../mgtk/*.inc) $(wildcard *.inc) $(wildcard res/*.res.??) $(wildcard ../common/res/*.res.??)
+HEADERS = $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard ../lib/*.s) $(wildcard ../mgtk/*.inc) $(wildcard *.inc) $(wildcard res/*.res.??) $(wildcard ../common/res/*.res.??) $(wildcard ../mgtk/fonts/System.*)
 
 include ../res/Makefile.common
 
@@ -15,9 +15,9 @@ clean:
 	rm -f $(OUTDIR)/*.list
 	rm -f $(TARGETS)
 
-$(OUTDIR)/desktop.o: desktop.s $(HEADERS) loader.s aux.s lc.s res.s main.s init.s ovl*.s ../disk_copy/*.s invoker.s ../mgtk/mgtk.s
-	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+$(OUTDIR)/desktop.o: desktop.s $(HEADERS) quit_handler.s loader.s auxmem.s lc.s res.s main.s init.s ovl*.s ../disk_copy/disk_copy.inc ../mgtk/mgtk.s
+	../bin/warnerr ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built segments
 $(OUTDIR)/%.built: $(OUTDIR)/%.o ../res/asm.cfg
-	ld65 $(LDFLAGS) -o '$@' $<
+	../bin/warnerr ld65 $(LDFLAGS) -o '$@' $<

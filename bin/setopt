@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+
+# Use Cadius to modify settings in A2D on an existing image file.
+# https://github.com/mach-kernel/cadius
+#
+# Usage:
+#
+#   INSTALL_IMG=/path/to/hd.2mg INSTALL_PATH=/hd/a2.desktop bin/setopt [options...]
+#
+# Options:
+#
+#   sel     - run Selector on startup
+#   nosel   - skip Selector on startup
+#   ram     - copy to RAMCard on starutp
+#   noram   - skip RAMCard on startup
+#
+
+set -e
+source "bin/util.sh"
+
+if [ -z "$INSTALL_IMG" ]; then
+    cecho red "Variable \$INSTALL_IMG not set, aborting."
+    exit 1
+fi
+if [ -z "$INSTALL_PATH" ]; then
+    cecho red "Variable \$INSTALL_PATH not set, aborting."
+    exit 1
+fi
+if ! command -v "cadius" >/dev/null; then
+    cecho red "Cadius not installed."
+    exit 1
+fi
+
+
+# ============================================================
+# Read config file
+tempdir=$(mktemp -d "${TMPDIR:-/tmp}/shk.XXXXXXXXX")
+test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
+suppress cadius EXTRACTFILE "$INSTALL_IMG" "$INSTALL_PATH/Local/DeskTop.config" "$tempdir" --quiet --no-case-bits
+config="$tempdir/DESKTOP.CONFIG#F10000"
+
+# ============================================================
+# Modify bytes based on command line args
+
+# See config.inc for the DeskTopSettings definition. Note that first byte
+# of the file is version number, rest is settings struct.
+#
+# file_version   = offset  0 len 1
+# pattern        = offset  1 len 8
+# dblclick_speed = offset  9 len 2
+# ipblink_speed  = offset 11 len 2
+# clock_24hours  = offset 13 len 1
+#   bit 7 = 24-hour (else 12-hour)
+# rgb_color      = offset 14 len 1
+#   bit 7 = color (else monochrome)
+# mouse_tracking = offset 15 len 1
+#   0 = normal, 1 = 2x speed
+# startup        = offset 16 len 1
+#   bit 0 = skip RAMCard (else copy), bit 1 = skip Selector (else run)
+
+for var in "$@"; do
+    case "$var" in
+        "color")
+            offset=14
+            printf "\x80" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "mono")
+            offset=14
+            printf "\x00" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "sel")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$((${a} & ~0x02))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "nosel")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$((${a} | 0x02))" | \
+                dd of="$config" bs=1 seek=16 count=1 conv=notrunc 2> /dev/null
+            ;;
+        "ram")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$((${a} & ~0x01))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "noram")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$((${a} | 0x01))" | \
+                dd of="$config" bs=1 seek=16 count=1 conv=notrunc 2> /dev/null
+            ;;
+        *)
+            cecho red "$0: Unknown option: $var"
+            exit 1
+    esac
+done
+
+# ============================================================
+# Write file back out
+
+suppress cadius REPLACEFILE "$INSTALL_IMG" "$INSTALL_PATH/Local" "$config" --quiet --no-case-bits
+rm -rf "${tempdir}"

@@ -7,6 +7,3 @@
 .define res_string_label_fast "Veloce"
 .define res_string_label_ipblink1 "Velocit{ di inserimento"
 .define res_string_label_ipblink2 "Lampeggiamento"
-.define res_string_label_clock "Orologio"
-.define res_string_label_clock_12hour "12 ore"
-.define res_string_label_clock_24hour "24 ore"

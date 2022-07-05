@@ -1,8 +1,0 @@
-.define res_string_label_download "Copio sull'espansione RAM..."
-.define res_string_label_copying "Sto copiando:"
-.define res_string_errmsg_not_enough_room "Non c'} spazio sufficiente nell'espansione RAM per copiare."
-.define res_string_prompt_click_ok "Clicca OK per continuare."
-.define res_string_errmsg_error_download "Si } verificato un errore durante il download."
-.define res_string_errmsg_copy_incomplete "La copia non } stata completata, clicca OK per continuare."
-.define res_string_label_files_to_copy "Files da copiare sull'espansione RAM: "
-.define res_string_label_files_remaining "Files ancora da copiare: "

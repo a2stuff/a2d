@@ -4,28 +4,27 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .org $2000
+        .org kSegmentLoaderAddress
 
 ;;; Loads the Invoker (page 2/3), Selector App (at $4000...$A1FF),
 ;;; and Resources (Aux LC), then invokes the app.
 
-.scope
-
+.proc InstallSegments
         jmp     start
 
         alert_load_addr := $3400
-        alert_final_addr := $D000
+        alert_final_addr := kSegmentAlertAddress
 
         ;; ProDOS parameter blocks
 
         io_buf := $3000
 
         DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
-        DEFINE_READ_PARAMS read_params1, INVOKER, kInvokerSegmentSize
-        DEFINE_READ_PARAMS read_params2, MGTK, kAppSegmentSize
-        DEFINE_READ_PARAMS read_params3, alert_load_addr, kAlertSegmentSize
+        DEFINE_READ_PARAMS read_params1, INVOKER, kSegmentInvokerLength
+        DEFINE_READ_PARAMS read_params2, kSegmentAppAddress, kSegmentAppLength
+        DEFINE_READ_PARAMS read_params3, alert_load_addr, kSegmentAlertLength
 
-        DEFINE_SET_MARK_PARAMS set_mark_params, kInvokerOffset
+        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentInvokerOffset
         DEFINE_CLOSE_PARAMS close_params
 
 str_selector:
@@ -40,6 +39,9 @@ start:
 :       sta     BITMAP+1,x
         dex
         bpl     :-
+
+        jsr     DetectMousetext
+        jsr     InitProgress
 
         ;; Open up Selector itself
         MLI_CALL OPEN, open_params
@@ -58,24 +60,24 @@ L2049:  lda     open_params::ref_num
         MLI_CALL SET_MARK, set_mark_params
         beq     :+
         brk
-:       jsr     update_progress
+:       jsr     UpdateProgress
         MLI_CALL READ, read_params1
         beq     :+
         brk
-:       jsr     update_progress
+:       jsr     UpdateProgress
         MLI_CALL READ, read_params2
         beq     :+
         brk
-:       jsr     update_progress
+:       jsr     UpdateProgress
         MLI_CALL READ, read_params3
         beq     :+
         brk
-:       jsr     update_progress
+:       jsr     UpdateProgress
 
         ;; Copy Alert segment to Aux LC1
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         ;; Set stack pointers to arbitrarily low values for use when
         ;; interrupts occur. DeskTop does not utilize this convention,
@@ -96,11 +98,11 @@ L2049:  lda     open_params::ref_num
         bne     :-
 
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
 
         MLI_CALL CLOSE, close_params
 
-        jsr     load_settings
+        jsr     LoadSettings
 
         ;; --------------------------------------------------
         ;; Invoke the Selector application
@@ -108,39 +110,17 @@ L2049:  lda     open_params::ref_num
 
 ;;; ============================================================
 
+        SETTINGS_IO_BUF := io_buf
+        SETTINGS_LOAD_BUF := SAVE_AREA_BUFFER
         .include "../lib/load_settings.s"
-        DEFINEPROC_LOAD_SETTINGS io_buf, SAVE_AREA_BUFFER
 
 ;;; ============================================================
 
-.proc update_progress
-
-        kProgressVtab = 14
         kProgressStops = kNumSegments + 1
-        kProgressTick = 40 / kProgressStops
-        kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
+        .include "../lib/loader_progress.s"
 
-        lda     #kProgressVtab
-        jsr     VTABZ
-        lda     #kProgressHtab
-        sta     CH
+;;; ============================================================
 
-        lda     count
-        clc
-        adc     #kProgressTick
-        sta     count
+.endproc ; InstallSegments
 
-        tax
-        lda     #' '
-:       jsr     COUT
-        dex
-        bne     :-
-
-        rts
-
-count:  .byte   0
-.endproc
-
-.endscope
-
-        PAD_TO $2200
+        PAD_TO kSegmentLoaderAddress + kSegmentLoaderLength

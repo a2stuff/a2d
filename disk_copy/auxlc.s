@@ -1,58 +1,50 @@
 ;;; ============================================================
-;;; Overlay for Disk Copy - $D000 - $F1FF (file 3/4)
+;;; Disk Copy - Auxiliary LC Segment $D000 - $F1FF
 ;;;
-;;; Compiled as part of desktop.s
+;;; Compiled as part of disk_copy.s
 ;;; ============================================================
 
-        RESOURCE_FILE "auxlc.res"
+.scope auxlc
+        .org ::kSegmentAuxLCAddress
 
+        MGTKEntry := MGTKRelayImpl
 
-.proc auxlc
-        .org $D000
-
-.macro MGTK_RELAY_CALL2 op, addr, label
-        jsr MGTK_RELAY2
-        .byte op
-
-.if .paramcount > 2
-        label := *
-.endif
-
-.if .paramcount > 1
-        .addr addr
-.else
-        .addr 0
-.endif
-.endmacro
-
+kShortcutYes      = res_char_button_yes_shortcut
+kShortcutNo       = res_char_button_no_shortcut
+kShortcutTryAgain = res_char_button_try_again_shortcut
 kShortcutReadDisk = res_char_button_read_drive_shortcut
 
 ;;; ============================================================
 
 ;;; number of alert messages
-kNumErrorMessages = 11
+kNumAlertMessages = 11
 
-kAlertMsgInsertSource           = 0
-kAlertMsgInsertDestination      = 1
-kAlertMsgConfirmErase           = 2
-kAlertMsgDestinationFormatFail  = 3
-kAlertMsgFormatError            = 4
-kAlertMsgDestinationProtected   = 5
-kAlertMsgConfirmEraseSlotDrive  = 6
-kAlertMsgCopySuccessful         = 7
-kAlertMsgCopyFailure            = 8
-kAlertMsgInsertSourceOrCancel   = 9
-kAlertMsgInsertDestionationOrCancel = 10
+kAlertMsgInsertSource           = 0 ; No bell, *
+kAlertMsgInsertDestination      = 1 ; No bell, *
+kAlertMsgConfirmErase           = 2 ; No bell, X,Y = pointer to volume name
+kAlertMsgDestinationFormatFail  = 3 ; Bell
+kAlertMsgFormatError            = 4 ; Bell
+kAlertMsgDestinationProtected   = 5 ; Bell
+kAlertMsgConfirmEraseSlotDrive  = 6 ; No bell, X = unit number
+kAlertMsgCopySuccessful         = 7 ; No bell
+kAlertMsgCopyFailure            = 8 ; No bell
+kAlertMsgInsertSourceOrCancel   = 9 ; No bell, *
+kAlertMsgInsertDestionationOrCancel = 10 ; No bell, *
+;;; "Bell" or "No bell" determined by the `MaybeBell` proc.
+;;; * = the 'InsertXOrCancel' variants are selected automatically when
+;;; InsertX is specified if X flag is non-zero, and the unit number in
+;;; Y identifies a removable volume. In that case, the alert will
+;;; automatically be dismissed when a disk is inserted.
 
 kAlertResultTryAgain    = 0
-kAlertResultOK          = 0
+kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 kAlertResultCancel      = 1
 kAlertResultYes         = 2
 kAlertResultNo          = 3
 
 ;;; ============================================================
 
-        ASSERT_ADDRESS $D000, "Entry point"
+        ASSERT_ADDRESS ::kSegmentAuxLCAddress, "Entry point"
 
 start:
         jmp     init
@@ -123,7 +115,7 @@ menu_file:
         ASSERT_RECORD_TABLE_SIZE @items, 1, .sizeof(MGTK::MenuItem)
 
 label_apple:
-        PASCAL_STRING kGlyphSolidApple ; do not localize
+        PASCAL_STRING kGlyphSolidApple
 
 menu_facilities:
         DEFINE_MENU 2
@@ -137,10 +129,10 @@ label_facilities:
         PASCAL_STRING res_string_menu_bar_item_facilities ; menu bar item
 
 label_desktop:
-        PASCAL_STRING .sprintf(res_string_menu_item_desktop, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; menu item
+        PASCAL_STRING .sprintf(res_string_version_format_short, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; menu item
 
 label_blank:
-        PASCAL_STRING " "       ; do not localize
+        PASCAL_STRING " "
 label_copyright1:
         PASCAL_STRING res_string_copyright_line1 ; menu item
 label_copyright2:
@@ -170,32 +162,7 @@ menu_item:      .byte   0
 check:          .byte   0
 .endparams
 
-event_params := *
-        event_kind := event_params + 0
-        ;;  if kind is key_down
-        event_key := event_params + 1
-        event_modifiers := event_params + 2
-        ;;  if kind is no_event, button_down/up, drag, or apple_key:
-        event_coords := event_params + 1
-        event_xcoord := event_params + 1
-        event_ycoord := event_params + 3
-        ;;  if kind is update:
-        event_window_id := event_params + 1
-
-screentowindow_params := *
-        screentowindow_window_id := screentowindow_params + 0
-        screentowindow_screenx := screentowindow_params + 1
-        screentowindow_screeny := screentowindow_params + 3
-        screentowindow_windowx := screentowindow_params + 5
-        screentowindow_windowy := screentowindow_params + 7
-
-findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
-        findwindow_mousex := findwindow_params + 0
-        findwindow_mousey := findwindow_params + 2
-        findwindow_which_area := findwindow_params + 4
-        findwindow_window_id := findwindow_params + 5
-
-        .res 10, 0              ; union of all of the above
+        .include "../lib/event_params.s"
 
 grafport:  .res .sizeof(MGTK::GrafPort), 0
 
@@ -212,7 +179,8 @@ kDialogLeft     = (::kScreenWidth - kDialogWidth)/2
 kDialogTop      = (::kScreenHeight - kDialogHeight)/2
 
 .params winfo_dialog
-window_id:      .byte   1
+        kWindowId = 1
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -232,13 +200,13 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kDialogWidth, kDialogHeight
+        DEFINE_RECT maprect, 0, 0, kDialogWidth, kDialogHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -249,14 +217,15 @@ kListBoxOffsetTop = 30
 kListBoxLeft = kDialogLeft + kListBoxOffsetLeft
 kListBoxTop = kDialogTop + kListBoxOffsetTop
 kListBoxWidth = 150
-kListBoxHeight = 70
+kListBoxHeight = kListItemHeight*kListRows-1
 
 .params winfo_drive_select
-window_id:      .byte   $02
+        kWindowId = 2
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_present
+vscroll:        .byte   MGTK::Scroll::option_normal
 hthumbmax:      .byte   0
 hthumbpos:      .byte   0
 vthumbmax:      .byte   3
@@ -272,33 +241,31 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kListBoxWidth, kListBoxHeight
+        DEFINE_RECT maprect, 0, 0, kListBoxWidth, kListBoxHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT_INSET rect_outer_frame, 4, 2, kDialogWidth, kDialogHeight
-        DEFINE_RECT_INSET rect_inner_frame, 5, 3, kDialogWidth, kDialogHeight
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+        DEFINE_RECT_FRAME rect_frame, kDialogWidth, kDialogHeight
 
         ;; For erasing parts of the window
-        DEFINE_RECT_SZ rect_erase_dialog_upper, 6, 20, kDialogWidth-12, 82 ; under title to bottom of list
-        DEFINE_RECT_SZ rect_erase_dialog_lower, 6, 103, kDialogWidth-12, 42 ; bottom of list to bottom of dialog
+        DEFINE_RECT_SZ rect_erase_dialog_upper, 8, 20, kDialogWidth-16, kListBoxHeight + 11 ; under title to bottom of list
+        DEFINE_RECT_SZ rect_erase_dialog_lower, 8, 103, kDialogWidth-16, 42 ; bottom of list to bottom of dialog
 
         DEFINE_BUTTON ok, res_string_button_ok, 350, 90
 
-;;; Label positions
+        ;; For drawing/updating the dialog title
         DEFINE_POINT point_title, 0, 15
-str_disk_copy_padded:
-        PASCAL_STRING res_string_disk_copy_padded_dialog_title ; dialog title (padded to overwrite when swapping)
-str_quick_copy_padded:
-        PASCAL_STRING res_string_quick_copy_padded_dialog_title ; dialog title (padded to overwrite when swapping)
+        DEFINE_RECT rect_title, 8, 4, kDialogWidth-8, 15
 
         DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
 
@@ -341,46 +308,51 @@ bg_white:
 
 current_drive_selection:        ; $FF if no selection
         .byte   0
+
+;;; TODO: This can just use vthumbpos
+top_row:                        ; top row visible in list box
         .byte   0
-        .byte   0
-        .byte   0
+
+kListRows = 8                   ; number of visible rows
+
+selection_mode:
+        .byte   0               ; high bit clear = source; set = desination
+
 
 LD367:  .byte   0
-
 LD368:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
 
-        DEFINE_POINT point_D36D, 0, 0
-        .byte   0
-        .byte   0
-        .byte   $47
-        .byte   0
+kListEntrySlotOffset    = 8
+kListEntryDriveOffset   = 40
+kListEntryNameOffset    = 65
+        DEFINE_POINT list_entry_pos, 0, 0
 
 num_drives:
         .byte   0
 
-LD376:  .byte   0
+num_src_drives:
+        .byte   0
 
-kMaxNumDrives = 8
+;;; 13 devices = 7 slots * 2 devices/slot - 1 device for S3D2 /RAM
+kMaxNumDrives = 13
 
 drive_name_table:
         .res    kMaxNumDrives * 16, 0
 drive_unitnum_table:
         .res    kMaxNumDrives, 0
-LD3FF:  .res    kMaxNumDrives, 0
+;;; Mapping from filtered destination list index to drive_*_table index
+destination_index_table:
+        .res    kMaxNumDrives, 0
 block_count_table:
         .res    kMaxNumDrives * 2, 0
 
 source_drive_index:  .byte   0
 dest_drive_index:  .byte   0
 
-str_d:  PASCAL_STRING 0         ; do not localize
-str_s:  PASCAL_STRING 0         ; do not localize
-LD41D:  .byte   0
-LD41E:  .byte   0
+str_d:  PASCAL_STRING 0
+str_s:  PASCAL_STRING 0
+unit_num:       .byte   0
+ejectable_flag: .byte   0
 
 ;;; Memory index of block, for memory bitmap lookups
 block_index_div8:               ; block index, divided by 8
@@ -394,7 +366,7 @@ block_num_div8:                 ; block number, divided by 8
 block_num_shift:                ; 7-(block number mod 8), for bitmap lookups
         .byte   0
 
-;;; Remember the block_num_div8/shift for the start of a copy_blocks read,
+;;; Remember the block_num_div8/shift for the start of a CopyBlocks read,
 ;;; for the writing pass.
 start_block_div8:
         .word   0
@@ -408,24 +380,23 @@ LD429:  .byte   0
 
         DEFINE_RECT rect_D42A, 18, 20, kDialogWidth-10, 88
 
-        ;; Include 1px borders + extra on right for scrollbar
-        ;; TODO: Use GetWinFrameRect to query this.
-        DEFINE_RECT rect_erase_listbox, kListBoxOffsetLeft - 1, kListBoxOffsetTop - 1, kListBoxOffsetLeft + kListBoxWidth + 25, kListBoxOffsetTop + kListBoxHeight + 1
+.params win_frame_rect_params
+id:     .byte   winfo_drive_select::kWindowId
+rect:   .tag    MGTK::Rect
+.endparams
 
-LD43A:  .res 18, 0
+device_name_buf:
+        .res 18, 0
+
 LD44C:  .byte   0
 LD44D:  .byte   0
 LD44E:  .byte   0
-        .byte   0
-        .byte   0
 
 disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
         .byte   0
 
-        .byte   1, 0
-
-str_2_spaces:   PASCAL_STRING "  "      ; do not localize
-str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString - do not localize
+str_2_spaces:   PASCAL_STRING "  "
+str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 
 ;;; Label positions
         DEFINE_POINT point_blocks_read, 300, 125
@@ -542,20 +513,20 @@ watch_cursor:
 
 LD5E0:  .byte   0
 
-init:   jsr     remove_ram_disk
-        MGTK_RELAY_CALL2 MGTK::SetMenu, menu_definition
-        jsr     set_cursor_pointer
+init:   jsr     DisconnectRAM
+        MGTK_CALL MGTK::SetMenu, menu_definition
+        jsr     SetCursorPointer
         copy    #1, checkitem_params::menu_item
         copy    #1, checkitem_params::check
-        MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
+        MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    #1, disablemenu_params::disable
-        MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
+        MGTK_CALL MGTK::DisableMenu, disablemenu_params
         lda     #$00
         sta     disk_copy_flag
         sta     LD5E0
-        jsr     open_dialog
+        jsr     OpenDialog
 
-init_dialog:
+InitDialog:
         lda     #$00
         sta     LD367
         sta     LD368
@@ -565,135 +536,160 @@ init_dialog:
         lda     #$81
         sta     LD44D
         copy    #0, disablemenu_params::disable
-        MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
+        MGTK_CALL MGTK::DisableMenu, disablemenu_params
         lda     #1
         sta     checkitem_params::check
-        MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
-        jsr     draw_dialog
-        MGTK_RELAY_CALL2 MGTK::OpenWindow, winfo_drive_select
+        MGTK_CALL MGTK::CheckItem, checkitem_params
+        jsr     DrawDialog
+        MGTK_CALL MGTK::OpenWindow, winfo_drive_select
         lda     #$00
         sta     LD429
         lda     #$FF
         sta     LD44C
-        jsr     enumerate_devices
+
+        jsr     EnumerateDevices
+        copy    #$00, selection_mode
+        copy    #0, top_row
+        jsr     UpdateViewport
+        jsr     EnableScrollbar
 
         lda     LD5E0
         bne     :+
-        jsr     get_all_block_counts
-:       jsr     draw_device_list_entries
+        jsr     GetAllBlockCounts
+:       jsr     DrawDeviceListEntries
         inc     LD5E0
+
+        ;; Loop until there's a selection (or drive check)
 LD674:  jsr     LD986
         bmi     LD674
         beq     LD687
-        MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        jmp     init_dialog
-
+        MGTK_CALL MGTK::CloseWindow, winfo_drive_select
+        jmp     InitDialog
 LD687:  lda     current_drive_selection
         bmi     LD674
+
+        ;; Have a source selection
         copy    #1, disablemenu_params::disable
-        MGTK_RELAY_CALL2 MGTK::DisableMenu, disablemenu_params
+        MGTK_CALL MGTK::DisableMenu, disablemenu_params
         lda     current_drive_selection
         sta     source_drive_index
-        lda     winfo_drive_select::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, winfo_drive_select::cliprect
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_select_src
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_source
+
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, rect_erase_select_src
+        MGTK_CALL MGTK::MoveTo, point_select_source
         param_call DrawString, str_select_destination
-        jsr     LE559
-        jsr     LE2B1
+        jsr     DrawSourceDriveInfo
+
+        ;; Prepare for destination selection
+        jsr     EnumerateDestinationDevices
+        copy    #$80, selection_mode
+        copy    #0, top_row
+        jsr     UpdateViewport
+        jsr     EnableScrollbar
+
+        jsr     DrawDestinationListEntries
+
+        ;; Loop until there's a selection (or drive check)
 LD6E6:  jsr     LD986
         bmi     LD6E6
         beq     LD6F9
-        MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        jmp     init_dialog
-
+        MGTK_CALL MGTK::CloseWindow, winfo_drive_select
+        jmp     InitDialog
 LD6F9:  lda     current_drive_selection
         bmi     LD6E6
+
+        ;; Have a destination selection
         tax
-        lda     LD3FF,x
+        lda     destination_index_table,x
         sta     dest_drive_index
         lda     #$00
         sta     LD44C
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
-        MGTK_RELAY_CALL2 MGTK::CloseWindow, winfo_drive_select
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_listbox
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
+
+        MGTK_CALL MGTK::GetWinFrameRect, win_frame_rect_params
+        MGTK_CALL MGTK::CloseWindow, winfo_drive_select
+        sub16   win_frame_rect_params::rect+MGTK::Rect::x1, winfo_dialog::viewloc::xcoord, win_frame_rect_params::rect+MGTK::Rect::x1
+        sub16   win_frame_rect_params::rect+MGTK::Rect::y1, winfo_dialog::viewloc::ycoord, win_frame_rect_params::rect+MGTK::Rect::y1
+        sub16   win_frame_rect_params::rect+MGTK::Rect::x2, winfo_dialog::viewloc::xcoord, win_frame_rect_params::rect+MGTK::Rect::x2
+        sub16   win_frame_rect_params::rect+MGTK::Rect::y2, winfo_dialog::viewloc::ycoord, win_frame_rect_params::rect+MGTK::Rect::y2
+        MGTK_CALL MGTK::PaintRect, win_frame_rect_params::rect
+
 LD734:  ldx     #0
-        lda     #kAlertMsgInsertSource
-        jsr     show_alert_dialog
+        lda     #kAlertMsgInsertSource ; X=0 means just show alert
+        jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     :+              ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 :       lda     #$00
         sta     LD44D
         ldx     source_drive_index
         lda     drive_unitnum_table,x
         sta     main__on_line_params2_unit_num
-        jsr     main__call_on_line2
+        jsr     main__CallOnLine2
         beq     LD77E
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
-        jsr     main__identify_nonprodos_disk_type
+        jsr     main__IdentifyNonprodosDiskType
         jsr     LE674
-        jsr     LE559
+        jsr     DrawSourceDriveInfo
         jmp     LD7AD
 
-LD763:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D42A
+LD763:  lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, rect_D42A
         jmp     LD734
 
 LD77E:  lda     main__on_line_buffer2
-        and     #$0F
-        bne     LD798
+        and     #$0F            ; mask off name length
+        bne     LD798           ; 0 signals error
         lda     main__on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
-        jsr     main__identify_nonprodos_disk_type
+        jsr     main__IdentifyNonprodosDiskType
         jsr     LE674
-        jsr     LE559
+        jsr     DrawSourceDriveInfo
         jmp     LD7AD
 
 LD798:  lda     main__on_line_buffer2
-        and     #$0F
+        and     #$0F            ; mask off name length
         sta     main__on_line_buffer2
-        param_call adjust_case, main__on_line_buffer2
+        param_call AdjustCase, main__on_line_buffer2
         jsr     LE674
-        jsr     LE559
+        jsr     DrawSourceDriveInfo
 LD7AD:  lda     source_drive_index
-        jsr     get_block_count
-        jsr     LE5E1
+        jsr     GetBlockCount
+        jsr     DrawDestinationDriveInfo
         jsr     LE63F
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         tay
-        ldx     #$00
 
-        lda     #kAlertMsgInsertDestination
-        jsr     show_alert_dialog
+        ldx     #0
+        lda     #kAlertMsgInsertDestination ; X=0 means just show alert
+        jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     :+              ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 :       ldx     dest_drive_index
         lda     drive_unitnum_table,x
         sta     main__on_line_params2_unit_num
-        jsr     main__call_on_line2
+        jsr     main__CallOnLine2
         beq     LD7E1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     LD7F2
         jmp     LD852
 
 LD7E1:  lda     main__on_line_buffer2
-        and     #$0F
-        bne     LD7F2
+        and     #$0F            ; mask off name length
+        bne     LD7F2           ; 0 signals error
         lda     main__on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     LD7F2
@@ -702,20 +698,17 @@ LD7E1:  lda     main__on_line_buffer2
 LD7F2:
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$0F            ; low nibble of unit_num
-        beq     LD817           ; Disk II
+        jsr     IsDiskII
+        beq     LD817
 
+        ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        jsr     main__unit_number_to_driver_address
+        jsr     main__DeviceDriverAddress ; Z=1 if firmware
+        stax    $06
         bne     :+              ; if not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
         sta     $06
-        ldy     #$FF            ; $CnFF
-        lda     ($06),y
-        beq     LD817           ; = $00 means 16-sector Disk II
-        cmp     #$FF            ; = $FF means 13-sector Disk II
-        beq     LD817
         ldy     #$FE            ; $CnFE
         lda     ($06),y
         and     #$08            ; bit 3 = The device supports formatting.
@@ -723,27 +716,26 @@ LD7F2:
 :       jmp     LD8A9
 
 LD817:  lda     main__on_line_buffer2
-        and     #$0F
-        bne     LD82C
+        and     #$0F            ; mask off name length
+        bne     LD82C           ; have a name to show; otherwise, use S,D
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$F0
-        tax
-        lda     #7              ; Confirm Erase (with extra spaces???)
-        jmp     LD83C
+        and     #UNIT_NUM_MASK
+        tax                     ; slot/drive
+        lda     #kAlertMsgConfirmEraseSlotDrive ; X = unit number
+        jmp     show
 
 LD82C:  sta     main__on_line_buffer2
-        param_call adjust_case, main__on_line_buffer2
+        param_call AdjustCase, main__on_line_buffer2
 
-        ldx     #$00
-        ldy     #$13            ; ???
-        lda     #kAlertMsgConfirmErase
-LD83C:  jsr     show_alert_dialog
+        ldxy    #main__on_line_buffer2
+        lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
+show:   jsr     ShowAlertDialog
         cmp     #kAlertResultCancel
-        beq     LD847
+        beq     :+              ; Cancel
         cmp     #kAlertResultYes
-        beq     LD84A
-LD847:  jmp     init_dialog
+        beq     LD84A           ; Yes
+:       jmp     InitDialog      ; No
 
 LD84A:  lda     disk_copy_flag
         bne     LD852
@@ -751,65 +743,68 @@ LD84A:  lda     disk_copy_flag
 
 LD852:  ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$0F            ; low nibble of unit_num
-        beq     LD87C           ; Disk II
+        jsr     IsDiskII
+        beq     format
+
+        ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        jsr     main__unit_number_to_driver_address
-        bne     :+              ; if not not firmware, skip these checks
+        jsr     main__DeviceDriverAddress ; Z=1 if firmware
+        stax    $06
+        bne     :+              ; if not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
         sta     $06
         ldy     #$FE            ; $CnFE
         lda     ($06),y
         and     #$08            ; bit 3 = The device supports formatting.
-        bne     LD87C
-        ldy     #$FF            ; low byte of driver address
-        lda     ($06),y
-        beq     LD87C           ; $00 = 16-sector Disk II
-        cmp     #$FF            ; $FF = 13-sector Disk II
-        beq     LD87C
+        bne     format
 
-:       lda     #kAlertMsgDestinationFormatFail
-        jsr     show_alert_dialog
-        jmp     init_dialog
+:       lda     #kAlertMsgDestinationFormatFail ; no args
+        jsr     ShowAlertDialog
+        jmp     InitDialog
 
-LD87C:  MGTK_RELAY_CALL2 MGTK::MoveTo, point_formatting
+format: MGTK_CALL MGTK::MoveTo, point_formatting
         param_call DrawString, str_formatting
-        jsr     main__format_device
+        jsr     main__FormatDevice
         bcc     LD8A9
         cmp     #ERR_WRITE_PROTECTED
         beq     LD89F
 
-        lda     #kAlertMsgFormatError
-        jsr     show_alert_dialog
+        lda     #kAlertMsgFormatError ; no args
+        jsr     ShowAlertDialog
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     LD852           ; Try Again
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
-LD89F:  lda     #kAlertMsgDestinationProtected
-        jsr     show_alert_dialog
+LD89F:  lda     #kAlertMsgDestinationProtected ; no args
+        jsr     ShowAlertDialog
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     LD852           ; Try Again
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
-LD8A9:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
+LD8A9:  lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
         lda     source_drive_index
         cmp     dest_drive_index
         bne     LD8DF
+
+        ;; Disk swap
         tax
         lda     drive_unitnum_table,x
         pha
-        jsr     main__eject_disk
+        jsr     main__EjectDisk
         pla
         tay
         ldx     #$80
-        lda     #kAlertMsgInsertSource
-        jsr     show_alert_dialog
+        lda     #kAlertMsgInsertSource ; X != 0 means Y=unit number, auto-dismiss
+        jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     LD8DF           ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
-LD8DF:  jsr     main__read_volume_bitmap
+LD8DF:  jsr     main__ReadVolumeBitmap
         lda     #$00
         sta     block_num_div8
         sta     block_num_div8+1
@@ -821,7 +816,7 @@ LD8DF:  jsr     main__read_volume_bitmap
         jsr     LE694
 LD8FB:  jsr     LE4A8
         lda     #$00
-        jsr     main__copy_blocks
+        jsr     main__CopyBlocks
         cmp     #$01
         beq     LD97A
         jsr     LE4EC
@@ -831,110 +826,151 @@ LD8FB:  jsr     LE4A8
         tax
         lda     drive_unitnum_table,x
         pha
-        jsr     main__eject_disk
+        jsr     main__EjectDisk
         pla
         tay
         ldx     #$80
-        lda     #kAlertMsgInsertDestination
-        jsr     show_alert_dialog
+        lda     #kAlertMsgInsertDestination ; X != 0 means Y=unit number, auto-dismiss
+        jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     LD928           ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 LD928:  jsr     LE491
         lda     #$80
-        jsr     main__copy_blocks
+        jsr     main__CopyBlocks
         bmi     LD955
         bne     LD97A
         jsr     LE507
         lda     source_drive_index
         cmp     dest_drive_index
         bne     LD8FB
+
+        ;; Disk swap
         tax
         lda     drive_unitnum_table,x
         pha
-        jsr     main__eject_disk
+        jsr     main__EjectDisk
         pla
         tay
         ldx     #$80
-        lda     #kAlertMsgInsertSource
-        jsr     show_alert_dialog
+        lda     #kAlertMsgInsertSource ; X !=0 means Y=unit number, auto-dismiss
+        jsr     ShowAlertDialog
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     LD8FB           ; OK
-        jmp     init_dialog     ; Cancel
+        jmp     InitDialog      ; Cancel
 
 LD955:  jsr     LE507
-        jsr     main__free_vol_bitmap_pages
+        jsr     main__FreeVolBitmapPages
         ldx     source_drive_index
         lda     drive_unitnum_table,x
-        jsr     main__eject_disk
+        jsr     main__EjectDisk
         ldx     dest_drive_index
         cpx     source_drive_index
         beq     :+
         lda     drive_unitnum_table,x
-        jsr     main__eject_disk
-:       lda     #kAlertMsgCopySuccessful
-        jsr     show_alert_dialog
-        jmp     init_dialog
+        jsr     main__EjectDisk
+:       lda     #kAlertMsgCopySuccessful ; no args
+        jsr     ShowAlertDialog
+        jmp     InitDialog
 
-LD97A:  jsr     main__free_vol_bitmap_pages
-        lda     #kAlertMsgCopyFailure
-        jsr     show_alert_dialog
-        jmp     init_dialog
+LD97A:  jsr     main__FreeVolBitmapPages
+        lda     #kAlertMsgCopyFailure ; no args
+        jsr     ShowAlertDialog
+        jmp     InitDialog
 
-        .byte   0
-LD986:  MGTK_RELAY_CALL2 MGTK::InitPort, grafport
-        MGTK_RELAY_CALL2 MGTK::SetPort, grafport
+;;; ============================================================
+
+LD986:  MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
 LD998:  bit     LD368
         bpl     :+
         dec     LD367
         bne     :+
         lda     #$00
         sta     LD368
-:       jsr     yield_loop
-        MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
+:       jsr     YieldLoop
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     LD9BA
-        jmp     handle_button_down
+        jmp     HandleButtonDown
 
 LD9BA:  cmp     #MGTK::EventKind::key_down
         bne     LD998
         jmp     LD9D5
 
+;;; ============================================================
+
 menu_command_table:
         ;; Apple menu
-        .addr   main__noop
-        .addr   main__noop
-        .addr   main__noop
-        .addr   main__noop
-        .addr   main__noop
+        .addr   main__NoOp
+        .addr   main__NoOp
+        .addr   main__NoOp
+        .addr   main__NoOp
+        .addr   main__NoOp
         ;; File menu
-        .addr   main__quit
+        .addr   main__Quit
         ;; Facilities menu
         .addr   cmd_quick_copy
-        .addr   cmd_disk_copy
+        .addr   CmdDiskCopy
 
 menu_offset_table:
         .byte   0, 5*2, 6*2, 8*2
 
-LD9D5:  lda     event_modifiers
+;;; ============================================================
+
+LD9D5:  lda     event_params::modifiers
         bne     :+
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     :+
         jmp     dialog_shortcuts
 
+        ;; Modifiers
+:       lda     event_params::key
+        ldx     event_params::modifiers
+        cpx     #3
+    IF_EQ
+        ;; Double modifiers
+        cmp     #CHAR_UP
+      IF_EQ
+        jsr     DoHome
+        return  #$FF
+      END_IF
+        cmp     #CHAR_DOWN
+      IF_EQ
+        jsr     DoEnd
+        return  #$FF
+      END_IF
+    ELSE
+        ;; Single modifier
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     #MGTK::Part::page_up
+        jsr     HandleScrollWithPart
+        return  #$FF
+      END_IF
+        cmp     #CHAR_DOWN
+      IF_EQ
+        lda     #MGTK::Part::page_down
+        jsr     HandleScrollWithPart
+        return  #$FF
+      END_IF
+    END_IF
+
         ;; Keyboard-based menu selection
-:       lda     event_key
+        lda     event_params::key
         sta     menukey_params::which_key
-        lda     event_modifiers
+        lda     event_params::modifiers
         beq     :+
         lda     #1              ; treat Solid-Apple same as Open-Apple
 :       sta     menukey_params::key_mods
-        MGTK_RELAY_CALL2 MGTK::MenuKey, menukey_params
+        MGTK_CALL MGTK::MenuKey, menukey_params
 handle_menu_selection:
         ldx     menuselect_params::menu_id
         bne     :+
-        rts
+        return  #$FF
         ;; Compute offset into command table - menu offset + item offset
 :       dex
         lda     menu_offset_table,x
@@ -950,7 +986,7 @@ handle_menu_selection:
         tax
         copy16  menu_command_table,x, jump_addr
         jsr     do_jump
-        MGTK_RELAY_CALL2 MGTK::HiliteMenu, hilitemenu_params
+        MGTK_CALL MGTK::HiliteMenu, hilitemenu_params
         jmp     LD986
 
 do_jump:
@@ -959,106 +995,116 @@ do_jump:
         jump_addr := *+1
         jmp     SELF_MODIFIED
 
+;;; ============================================================
+
 cmd_quick_copy:
         lda     disk_copy_flag
         bne     LDA42
         rts
 
 LDA42:  copy    #0, checkitem_params::check
-        MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
+        MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    disk_copy_flag, checkitem_params::menu_item
         copy    #1, checkitem_params::check
-        MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
+        MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    #0, disk_copy_flag
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
-        param_call draw_title_text, str_quick_copy_padded
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::PaintRect, rect_title
+        param_call DrawTitleText, label_quick_copy
         rts
 
-cmd_disk_copy:
+CmdDiskCopy:
         lda     disk_copy_flag
         beq     LDA7D
         rts
 
 LDA7D:  copy    #0, checkitem_params::check
-        MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
+        MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    #2, checkitem_params::menu_item
         copy    #1, checkitem_params::check
-        MGTK_RELAY_CALL2 MGTK::CheckItem, checkitem_params
+        MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    #1, disk_copy_flag
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
-        param_call draw_title_text, str_disk_copy_padded
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::PaintRect, rect_title
+        param_call DrawTitleText, label_disk_copy
         rts
 
-handle_button_down:
-        MGTK_RELAY_CALL2 MGTK::FindWindow, event_xcoord
-        lda     findwindow_which_area
+;;; ============================================================
+
+HandleButtonDown:
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
         bne     :+
         rts                     ; desktop - ignore
 :       cmp     #MGTK::Area::menubar
         bne     :+
-        MGTK_RELAY_CALL2 MGTK::MenuSelect, menuselect_params
+        MGTK_CALL MGTK::MenuSelect, menuselect_params
         jmp     handle_menu_selection
 :       cmp     #MGTK::Area::content
-        bne     :+
-        jmp     handle_content_button_down
-:       return  #$FF
-
-handle_content_button_down:
-        lda     findwindow_window_id
-        cmp     winfo_dialog::window_id
-        bne     check_drive_select
-        jmp     handle_dialog_button_down
-
-check_drive_select:
-        cmp     winfo_drive_select
-        bne     :+
-        jmp     handle_drive_select_button_down
-:       rts
-
-handle_dialog_button_down:
-        lda     winfo_dialog::window_id
-        sta     screentowindow_window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
-
-check_ok_button:
-        MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
-        cmp     #MGTK::inrect_inside
         beq     :+
-        jmp     check_read_drive_button
-:       MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-        jsr     handle_ok_button_down
+        return  #$FF
+:
+        lda     findwindow_params::window_id
+        cmp     #winfo_dialog::kWindowId
+        beq     handle_dialog_button_down
+        cmp     winfo_drive_select
+        jeq     handle_drive_select_button_down
         rts
 
-check_read_drive_button:
-        MGTK_RELAY_CALL2 MGTK::InRect, read_drive_button_rect
+        ;; --------------------------------------------------
+        ;; Dialog window
+handle_dialog_button_down:
+        lda     #winfo_dialog::kWindowId
+        sta     screentowindow_params::window_id
+        jsr     SetWinPort
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+
+        MGTK_CALL MGTK::InRect, ok_button_rect
         cmp     #MGTK::inrect_inside
-        bne     :+
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
-        jsr     handle_read_drive_button_down
+    IF_EQ
+        param_call ButtonClick, winfo_dialog::kWindowId, ok_button_rect
+        bmi     :+
+        lda     #$00
+:       rts
+    END_IF
+
+        MGTK_CALL MGTK::InRect, read_drive_button_rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        param_call ButtonClick, winfo_dialog::kWindowId, read_drive_button_rect
+        bmi     :+
+        lda     #$01
+:
+    END_IF
         rts
 
-:       return  #$FF
+        ;; --------------------------------------------------
+        ;; Drive select window
 
 handle_drive_select_button_down:
-        lda     winfo_drive_select::window_id
-        sta     screentowindow_window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
-        lsr16   screentowindow_windowy ; / 8
-        lsr16   screentowindow_windowy
-        lsr16   screentowindow_windowy
-        lda     screentowindow_windowy
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        jeq     HandleScroll
+
+        cmp     #MGTK::Ctl::not_a_control
+        jne     LDBCA
+
+        copy    #winfo_drive_select::kWindowId, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        ldax    screentowindow_params::windowy
+        ldy     #kListItemHeight
+        jsr     Divide_16_8_16
+        clc
+        adc     top_row
         cmp     num_drives
         bcc     LDB98
         lda     current_drive_selection
-        jsr     highlight_row
+        jsr     HighlightRow
         lda     #$FF
         sta     current_drive_selection           ; $FF if no selection?
         jmp     LDBCA
@@ -1067,9 +1113,7 @@ LDB98:  cmp     current_drive_selection
         bne     LDBCD
         bit     LD368
         bpl     LDBC0
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
+        param_call ButtonFlash, winfo_dialog::kWindowId, ok_button_rect
         return  #$00
 
 LDBC0:  lda     #$FF
@@ -1081,14 +1125,14 @@ LDBCA:  return  #$FF
 LDBCD:  pha
         lda     current_drive_selection
         bmi     LDBD6
-        jsr     highlight_row
+        jsr     HighlightRow
 LDBD6:  pla
         sta     current_drive_selection
-        jsr     highlight_row
+        jsr     HighlightRow
         jmp     LDBC0
 
-.proc MGTK_RELAY2
-        params_src := $80
+.proc MGTKRelayImpl
+        params_src := $7E
 
         ;; Adjust return address on stack, compute
         ;; original params address.
@@ -1114,7 +1158,7 @@ LDBD6:  pla
         ;; Bank and call
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     MGTK::MLI
+        jsr     MGTKAuxEntry
 params: .res    3
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -1123,170 +1167,119 @@ params: .res    3
 .endproc
 
 dialog_shortcuts:
-        lda     event_key
+        lda     event_params::key
         cmp     #kShortcutReadDisk
         beq     LDC09
         cmp     #TO_LOWER(kShortcutReadDisk)
         bne     LDC2D
-LDC09:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
-        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
+LDC09:  param_call ButtonFlash, winfo_dialog::kWindowId, read_drive_button_rect
         return  #$01
 
 LDC2D:  cmp     #CHAR_RETURN
-        bne     LDC55
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
+    IF_EQ
+        param_call ButtonFlash, winfo_dialog::kWindowId, ok_button_rect
         return  #$00
+    END_IF
 
-LDC55:  bit     LD44C
-        bmi     check_down
-        jmp     LDCA9
+        bit     LD44C
+        jpl     LDCA9
 
-.proc check_down
         cmp     #CHAR_DOWN
-        bne     check_up
-        lda     winfo_drive_select::window_id
-        jsr     set_win_port
+    IF_EQ
         lda     current_drive_selection
-        bmi     LDC6F
-        jsr     highlight_row
-LDC6F:  inc     current_drive_selection
-        lda     current_drive_selection
-        cmp     num_drives
-        bcc     LDC7F
-        lda     #$00
-        sta     current_drive_selection
-LDC7F:  jsr     highlight_row
-        jmp     LDCA9
-.endproc
+      IF_MINUS
+        copy    #0, current_drive_selection
+      ELSE
+        tax
+        inx
+        cpx     num_drives
+        beq     LDCA9           ; no-op if last
+        jsr     HighlightRow
+        inc     current_drive_selection
+     END_IF
 
-.proc check_up
-        cmp     #CHAR_UP
-        bne     LDCA9
-        lda     winfo_drive_select::window_id
-        jsr     set_win_port
         lda     current_drive_selection
-        bmi     LDC9C
-        jsr     highlight_row
-        dec     current_drive_selection
-        bpl     LDCA3
-LDC9C:  ldx     num_drives
+        pha
+        jsr     ScrollIntoView
+        pla
+        jsr     HighlightRow
+        jmp     LDCA9
+    END_IF
+
+        cmp     #CHAR_UP
+    IF_EQ
+        lda     current_drive_selection
+      IF_MINUS
+        ldx     num_drives
         dex
         stx     current_drive_selection
-LDCA3:  lda     current_drive_selection
-        jsr     highlight_row
-        ;; fall through
-.endproc
+      ELSE
+        beq     LDCA9           ; no-op if first
+        jsr     HighlightRow
+        dec     current_drive_selection
+      END_IF
+
+        lda     current_drive_selection
+        pha
+        jsr     ScrollIntoView
+        pla
+        jsr     HighlightRow
+    END_IF
+
+        FALL_THROUGH_TO LDCA9
 
 LDCA9:  return  #$FF
 
 ;;; ============================================================
 
-.proc handle_read_drive_button_down
-        lda     #$00
-        sta     state
-loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     LDD14
-        lda     winfo_dialog::window_id
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL2 MGTK::InRect, read_drive_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     LDCEE
-        lda     state
-        beq     LDCF6
-        jmp     loop
+.proc DoHome
+        lda     current_drive_selection
+        bmi     :+
+        beq     ret
+        jsr     HighlightRow
+:
+        lda     #0
+        sta     current_drive_selection
+        pha
+        jsr     ScrollIntoView
+        pla
+        jsr     HighlightRow
 
-LDCEE:  lda     state
-        bne     LDCF6
-        jmp     loop
+ret:    rts
+.endproc
 
-LDCF6:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
+.proc DoEnd
+        lda     current_drive_selection
+        bmi     :+
+        tax
+        dex
+        cpx     num_drives
+        beq     ret
+        jsr     HighlightRow
+:
+        ldx     num_drives
+        dex
+        stx     current_drive_selection
+        txa
+        pha
+        jsr     ScrollIntoView
+        pla
+        jsr     HighlightRow
 
-LDD14:  lda     state
-        beq     LDD1C
-        return  #$FF
-
-LDD1C:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, read_drive_button_rect
-        return  #$01
-
-state:  .byte   0
+ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_ok_button_down
-        lda     #$00
-        sta     state
-loop:   MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_up
-        beq     LDDA0
-        lda     winfo_dialog::window_id
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL2 MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL2 MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
-        cmp     #MGTK::inrect_inside
-        beq     LDD7A
-        lda     state
-        beq     LDD82
-        jmp     loop
-
-LDD7A:  lda     state
-        bne     LDD82
-        jmp     loop
-
-LDD82:  MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-        lda     state
-        clc
-        adc     #$80
-        sta     state
-        jmp     loop
-
-LDDA0:  lda     state
-        beq     LDDA8
-        return  #$FF
-
-LDDA8:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-        return  #$00
-
-state:  .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc set_cursor_watch
-        MGTK_RELAY_CALL2 MGTK::SetCursor, watch_cursor
+.proc SetCursorWatch
+        MGTK_CALL MGTK::SetCursor, watch_cursor
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc set_cursor_pointer
-        MGTK_RELAY_CALL2 MGTK::SetCursor, pointer_cursor
+.proc SetCursorPointer
+        MGTK_CALL MGTK::SetCursor, pointer_cursor
         rts
 .endproc
 
@@ -1297,7 +1290,7 @@ LDDFC:  sta     main__block_params_unit_num
         sta     main__block_params_block_num
         sta     main__block_params_block_num+1
         copy16  #$1C00, main__block_params_data_buffer
-        jsr     main__read_block
+        jsr     main__ReadBlock
         beq     LDE19
         return  #$FF
 
@@ -1368,14 +1361,12 @@ LDE83:  lda     str_dos33_s_d,x
         sta     $0300
         return  #$00
 
-        .byte   0
-
 .proc LDE9F
         ptr := $06
 
         stax    ptr
         copy16  #$0002, main__block_params_block_num
-        jsr     main__read_block
+        jsr     main__ReadBlock
         beq     l1
         ldy     #$00
         lda     #$01
@@ -1412,104 +1403,68 @@ l3:     lda     #$3A
 
 ;;; ============================================================
 
+        .include "../lib/button.s"
         .include "../lib/inttostring.s"
         .include "../lib/bell.s"
+        saved_ram_unitnum := main__saved_ram_unitnum
+        saved_ram_drvec   := main__saved_ram_drvec
+        .include "../lib/disconnect_ram.s"
 
 ;;; ============================================================
 
-.proc remove_ram_disk
-        ;; Find Slot 3 Drive 2 RAM disk
-        ldx     DEVCNT
-:       lda     DEVLST,x
-        and     #%11110000      ; DSSSnnnn
-        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
-        beq     remove
-        dex
-        bpl     :-
-        rts
+.proc OpenDialog
+        MGTK_CALL MGTK::OpenWindow, winfo_dialog
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, rect_frame
 
-        ;; Remove it, shuffle everything else down.
-remove: lda     DEVLST,x
-        sta     saved_ram_unitnum
-
-shift:  lda     DEVLST+1,x
-        sta     DEVLST,x
-        cpx     DEVCNT
-        beq     :+
-        inx
-        jmp     shift
-
-:       dec     DEVCNT
+        MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
         rts
 .endproc
 
-;;; ============================================================
-
-.proc restore_ram_disk
-        lda     saved_ram_unitnum
-        beq     :+
-        inc     DEVCNT
-        ldx     DEVCNT
-        sta     DEVLST,x
-:       rts
-.endproc
-
-saved_ram_unitnum:
-        .byte   0
-
-;;; ============================================================
-
-.proc open_dialog
-        MGTK_RELAY_CALL2 MGTK::OpenWindow, winfo_dialog
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_outer_frame
-        MGTK_RELAY_CALL2 MGTK::FrameRect, rect_inner_frame
-
-        MGTK_RELAY_CALL2 MGTK::InitPort, grafport
-        MGTK_RELAY_CALL2 MGTK::SetPort, grafport
-        rts
-.endproc
-
-.proc draw_dialog
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_upper
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_erase_dialog_lower
+.proc DrawDialog
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
+        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
         lda     disk_copy_flag
         bne     :+
-        param_call draw_title_text, str_quick_copy_padded
+        param_call DrawTitleText, label_quick_copy
         jmp     draw_buttons
-:       param_call draw_title_text, str_disk_copy_padded
+:       param_call DrawTitleText, label_disk_copy
 
 draw_buttons:
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::FrameRect, ok_button_rect
-        MGTK_RELAY_CALL2 MGTK::FrameRect, read_drive_button_rect
-        jsr     draw_ok_label
-        jsr     draw_read_drive_label
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive_name
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::FrameRect, ok_button_rect
+        MGTK_CALL MGTK::FrameRect, read_drive_button_rect
+        jsr     DrawOkLabel
+        jsr     DrawReadDriveLabel
+        MGTK_CALL MGTK::MoveTo, point_slot_drive_name
         param_call DrawString, str_slot_drive_name
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_source
+        MGTK_CALL MGTK::MoveTo, point_select_source
         param_call DrawString, str_select_source
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_select_quit
+        MGTK_CALL MGTK::MoveTo, point_select_quit
         param_call DrawString, str_select_quit
 
-        MGTK_RELAY_CALL2 MGTK::InitPort, grafport
-        MGTK_RELAY_CALL2 MGTK::SetPort, grafport
+        MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
         rts
 
-draw_ok_label:
-        MGTK_RELAY_CALL2 MGTK::MoveTo, ok_button_pos
+.proc DrawOkLabel
+        MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call DrawString, ok_button_label
         rts
+.endproc
 
-draw_read_drive_label:
-        MGTK_RELAY_CALL2 MGTK::MoveTo, read_drive_button_pos
+.proc DrawReadDriveLabel
+        MGTK_CALL MGTK::MoveTo, read_drive_button_pos
         param_call DrawString, read_drive_button_label
         rts
+.endproc
 
 .endproc
 
@@ -1523,13 +1478,13 @@ draw_read_drive_label:
         lda     (ptr),y
         sta     ptr+2
         inc16   ptr
-        MGTK_RELAY_CALL2 MGTK::DrawText, ptr
+        MGTK_CALL MGTK::DrawText, ptr
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc draw_title_text
+.proc DrawTitleText
         text_params     := $6
         text_addr       := text_params + 0
         text_length     := text_params + 2
@@ -1540,18 +1495,18 @@ draw_read_drive_label:
         lda     (text_addr),y
         sta     text_length
         inc16   text_addr       ; point past length
-        MGTK_RELAY_CALL2 MGTK::TextWidth, text_params
+        MGTK_CALL MGTK::TextWidth, text_params
 
         sub16   #kDialogWidth, text_width, point_title::xcoord
         lsr16   point_title::xcoord ; /= 2
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_title
-        MGTK_RELAY_CALL2 MGTK::DrawText, text_params
+        MGTK_CALL MGTK::MoveTo, point_title
+        MGTK_CALL MGTK::DrawText, text_params
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc adjust_case
+.proc AdjustCase
         ptr := $A
 
         stx     ptr+1
@@ -1568,18 +1523,16 @@ next:   dey
 done:   rts
 
 :       lda     (ptr),y
-        and     #CHAR_MASK      ; convert to ASCII
         cmp     #'/'
         beq     skip
         cmp     #'.'
-        bne     check_alpha
+        bne     CheckAlpha
 skip:   dey
         jmp     next
 
-check_alpha:
+CheckAlpha:
         iny
         lda     (ptr),y
-        and     #CHAR_MASK
         cmp     #'A'
         bcc     :+
         cmp     #'Z'+1
@@ -1593,35 +1546,216 @@ check_alpha:
 
 ;;; ============================================================
 
-.proc set_win_port
+.proc SetWinPort
         sta     getwinport_params::window_id
-        MGTK_RELAY_CALL2 MGTK::GetWinPort, getwinport_params
-        MGTK_RELAY_CALL2 MGTK::SetPort, grafport_win
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, grafport_win
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc highlight_row
-        asl     a               ; * 8
-        asl     a
-        asl     a
-        sta     rect_highlight_row::y1
+;;; A = row to highlight
+.proc HighlightRow
+        ldx     #0              ; hi (A=lo)
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        stax    rect_highlight_row::y1
+        addax   #kListItemHeight-1, rect_highlight_row::y2
+
+        lda     #winfo_drive_select::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_highlight_row
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Enable/disable scrollbar as appropriate; resets thumb pos.
+;;; Assert: `num_drives` and `top_row` are set.
+.proc EnableScrollbar
+        lda     num_drives
+        cmp     #kListRows+1
+    IF_LT
+        copy    #0, activatectl_params::activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+        rts
+    END_IF
+
+        lda     num_drives
+        sec
+        sbc     #kListRows
+        sta     setctlmax_params::ctlmax
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+
+        copy    #1, activatectl_params::activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+
+        copy    top_row, updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleScrollWithPart
+        sta     findcontrol_params::which_part
+        FALL_THROUGH_TO HandleScroll
+.endproc
+
+;;; Assert: `top_row` is set.
+.proc HandleScroll
+        lda     winfo_drive_select::vscroll
+        and     #MGTK::Scroll::option_active
+        bne     :+
+        rts
+:
+        lda     num_drives
+        sec
+        sbc     #kListRows
+        sta     max_top
+
+        lda     findcontrol_params::which_part
+
+        cmp     #MGTK::Part::up_arrow
+    IF_EQ
+        lda     top_row
+        cmp     #0
+        jeq     done
+
+        dec     top_row
+        bpl     update
+    END_IF
+
+        cmp     #MGTK::Part::down_arrow
+    IF_EQ
+        lda     top_row
+        cmp     max_top
+        jcs     done
+
+        inc     top_row
+        bpl     update
+    END_IF
+
+        cmp     #MGTK::Part::page_up
+    IF_EQ
+        lda     top_row
+        cmp     #kListRows
+        bcs     :+
+        lda     #0
+        beq     store
+:       sec
+        sbc     #kListRows
+        jmp     store
+    END_IF
+
+        cmp     #MGTK::Part::page_down
+    IF_EQ
+        lda     top_row
         clc
-        adc     #7
-        sta     rect_highlight_row::y2
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_highlight_row
+        adc     #kListRows
+        cmp     max_top
+        bcc     store
+        lda     max_top
+        jmp     store
+    END_IF
+
+        cmp     #MGTK::Part::thumb
+    IF_EQ
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_params::thumbmoved
+        beq     done
+        lda     trackthumb_params::thumbpos
+        FALL_THROUGH_TO store
+    END_IF
+
+store:  sta     top_row
+
+update: copy    top_row, updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        jsr     UpdateViewport
+        jsr     DrawListEntries
+        lda     current_drive_selection
+        bmi     :+
+        jsr     HighlightRow
+:
+done:   return  #$FF
+
+max_top:
+        .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc DrawListEntries
+        bit     selection_mode  ; source or destination?
+        jpl     DrawDeviceListEntries
+        jmp     DrawDestinationListEntries
+.endproc
+
+;;; ============================================================
+
+;;; Input: A = row to ensure visible
+;;; Assert: `top_row` is set.
+.proc ScrollIntoView
+        cmp     top_row
+    IF_LT
+        sta     top_row
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+        sec
+        sbc     #kListRows-1
+        bmi     ret
+        cmp     top_row
+        beq     ret
+    IF_GE
+        sta     top_row
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+;;; Assert: `top_row` is set.
+.proc UpdateViewport
+        copy16  #0, winfo_drive_select::maprect::y1
+        lda     top_row         ; lo
+        ldx     #0              ; hi
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        stax    winfo_drive_select::maprect::y1
+        addax   #kListBoxHeight, winfo_drive_select::maprect::y2
+
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc enumerate_devices
+;;; Populates `num_drives`, `drive_unitnum_table` and `drive_name_table`
+.proc EnumerateDevices
         lda     #$00
         sta     LD44E
         sta     main__on_line_params2_unit_num
-        jsr     main__call_on_line2
+        jsr     main__CallOnLine2
         beq     LE17A
 
         brk                     ; rude!
@@ -1629,9 +1763,9 @@ check_alpha:
 LE17A:  lda     #$00
         sta     device_index
         sta     num_drives
-LE182:  lda     #$13
+LE182:  lda     #>main__on_line_buffer2
         sta     $07
-        lda     #$00
+        lda     #<main__on_line_buffer2
         sta     $06
         sta     LE264
         lda     device_index
@@ -1665,24 +1799,24 @@ LE182:  lda     #$13
         bne     LE1CD
         dey
         lda     ($06),y
-        jsr     find_devlst_index
+        jsr     IsDiskII
+        jne     next_device
         lda     #ERR_DEVICE_NOT_CONNECTED
-        bcc     LE1CD           ; ???
-        jmp     next_device
+        bne     LE1CD           ; always
 
 LE1CC:  rts
 
 LE1CD:  pha
         ldy     #$00
         lda     ($06),y
-        jsr     find_unit_num
+        jsr     FindUnitNum
         ldx     num_drives
         sta     drive_unitnum_table,x
         pla
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LE1EA
         lda     drive_unitnum_table,x
-        and     #$F0
+        and     #UNIT_NUM_MASK
         jsr     LDDFC
         beq     LE207
 LE1EA:  lda     num_drives
@@ -1707,14 +1841,7 @@ LE207:  inc     num_drives
 LE20D:  ldx     num_drives
         ldy     #$00
         lda     ($06),y
-        and     #$70            ; slot 3?
-        cmp     #$30
-        bne     LE21D
-        jmp     next_device     ; if so, skip
-
-LE21D:  ldy     #$00
-        lda     ($06),y
-        jsr     find_unit_num
+        jsr     FindUnitNum
         ldx     num_drives
         sta     drive_unitnum_table,x
         lda     num_drives
@@ -1744,7 +1871,7 @@ LE24D:  lda     ($06),y
 next_device:
         inc     device_index
         lda     device_index
-        cmp     #$08            ; max number of devices shown???
+        cmp     #kMaxNumDrives+1
         beq     LE262
         jmp     LE182
 
@@ -1756,60 +1883,48 @@ LE264:  .byte   0
 
 ;;; --------------------------------------------------
 ;;; Inputs: A=driver/slot (DSSSxxxx)
-;;; Outputs: C=0, X=DEVLST index is found and low bits of unit_num != 0
-;;;          C=1 otherwise
+;;; Outputs: full unit_num
+;;; Assert: Is present in DEVLST
+.proc FindUnitNum
+        and     #UNIT_NUM_MASK
+        sta     masked
 
-.proc find_devlst_index
-        and     #$F0
-        sta     LE28C
         ldx     DEVCNT
 loop:   lda     DEVLST,x
-        and     #$F0
-        cmp     LE28C
+        and     #UNIT_NUM_MASK
+
+        masked := *+1
+        cmp     #SELF_MODIFIED_BYTE
+
         beq     match
         dex
         bpl     loop
-err:    sec
-        rts
+        ;; NOTE: Assertion violated if not found
 
-        ;; Drive/slot matches. Check low nibble.
 match:  lda     DEVLST,x
-        and     #$0F
-        bne     err
-        clc
         rts
 .endproc
-
-;;; --------------------------------------------------
-;;; Inputs: A=driver/slot (DSSSxxxx)
-;;; Outputs: unit_num
-
-.proc find_unit_num
-        jsr     find_devlst_index
-        lda     DEVLST,x
-        rts
-.endproc
-
-LE28C:  .byte   0
 
 .endproc
 
 ;;; ============================================================
 
-.proc draw_device_list_entries
-        lda     winfo_drive_select::window_id
-        jsr     set_win_port
+.proc DrawDeviceListEntries
+        lda     #winfo_drive_select::kWindowId
+        jsr     SetWinPort
+
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
 
         lda     #0
         sta     index
 
 loop:   lda     index
-        jsr     set_ycoord
-
+        jsr     SetYCoord
         lda     index
-        jsr     draw_device_list_entry
-        inc     index
+        jsr     DrawDeviceListEntry
 
+        inc     index
         lda     index
         cmp     num_drives
         bne     loop
@@ -1821,60 +1936,97 @@ index:  .byte   0
 
 ;;; ============================================================
 
-LE2B1:  lda     winfo_drive_select::window_id
-        jsr     set_win_port
+;;; Sets `num_drives` to the number of plausible destination devices,
+;;; and populates `destination_index_table`. Also clears selection.
+.proc EnumerateDestinationDevices
+        ;; Stash source drive details
         lda     current_drive_selection
         asl     a
         tax
         lda     block_count_table,x
-        sta     LE318
+        sta     src_block_count
         lda     block_count_table+1,x
-        sta     LE318+1
+        sta     src_block_count+1
+
         lda     num_drives
-        sta     LD376
-        lda     #$00
+        sta     num_src_drives
+
+        lda     #0
         sta     num_drives
-        sta     LE317
-LE2D6:  lda     LE317
+        sta     index
+loop:   lda     index
+
+        ;; Compare block counts
         asl     a
         tax
         lda     block_count_table,x
-        cmp     LE318
-        bne     LE303
+        cmp     src_block_count
+        bne     next
         lda     block_count_table+1,x
-        cmp     LE318+1
-        bne     LE303
-        lda     LE317
-        ldx     num_drives
-        sta     LD3FF,x
-        lda     num_drives
-        jsr     set_ycoord
-        lda     LE317
-        jsr     draw_device_list_entry
-        inc     num_drives
-LE303:  inc     LE317
-        lda     LE317
-        cmp     LD376
-        beq     LE311
-        jmp     LE2D6
+        cmp     src_block_count+1
+        bne     next
 
-LE311:  lda     #$FF
+        ;; Same - add it
+        lda     index
+        ldx     num_drives
+        sta     destination_index_table,x
+
+        ;; Keep going
+        inc     num_drives
+next:   inc     index
+        lda     index
+        cmp     num_src_drives
+        beq     finish
+        jmp     loop
+
+        ;; Clear selection
+finish: lda     #$FF
         sta     current_drive_selection
         rts
 
-LE317:  .byte   0
-LE318:  .addr   0
-        .byte   0
+index:  .byte   0
+
+src_block_count:
+        .word   0
+.endproc
 
 ;;; ============================================================
 
-.proc draw_device_list_entry
+.proc DrawDestinationListEntries
+        lda     #winfo_drive_select::kWindowId
+        jsr     SetWinPort
+
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
+
+        lda     #0
+        sta     index
+
+loop:   lda     index
+        jsr     SetYCoord
+        ldx     index
+        lda     destination_index_table,x
+        jsr     DrawDeviceListEntry
+
+        inc     index
+        lda     index
+        cmp     num_drives
+        bne     loop
+
+        rts
+
+index:  .byte   0
+.endproc
+
+;;; ============================================================
+
+.proc DrawDeviceListEntry
         sta     device_index
 
         ;; Slot
-        lda     #8
-        sta     point_D36D::xcoord
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
+        lda     #kListEntrySlotOffset
+        sta     list_entry_pos::xcoord
+        MGTK_CALL MGTK::MoveTo, list_entry_pos
         ldx     device_index
         lda     drive_unitnum_table,x
         and     #$70
@@ -1887,9 +2039,9 @@ LE318:  .addr   0
         param_call DrawString, str_s
 
         ;; Drive
-        lda     #40
-        sta     point_D36D::xcoord
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
+        lda     #kListEntryDriveOffset
+        sta     list_entry_pos::xcoord
+        MGTK_CALL MGTK::MoveTo, list_entry_pos
         ldx     device_index
         lda     drive_unitnum_table,x
         and     #$80
@@ -1901,9 +2053,9 @@ LE318:  .addr   0
         param_call DrawString, str_d
 
         ;; Name
-        lda     #65
-        sta     point_D36D::xcoord
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_D36D
+        lda     #kListEntryNameOffset
+        sta     list_entry_pos::xcoord
+        MGTK_CALL MGTK::MoveTo, list_entry_pos
         lda     device_index
         asl     a
         asl     a
@@ -1917,7 +2069,7 @@ LE318:  .addr   0
         sta     $07
         lda     $06
         ldx     $07
-        jsr     adjust_case
+        jsr     AdjustCase
         lda     $06
         ldx     $07
         jsr     DrawString
@@ -1929,23 +2081,22 @@ device_index:
 
 ;;; ============================================================
 
-.proc set_ycoord
-        asl     a               ; * 8
-        asl     a
-        asl     a
-        adc     #8
-        sta     point_D36D::ycoord
+.proc SetYCoord
+        ldx     #0              ; hi (A=lo)
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        addax   #kListItemHeight-1, list_entry_pos::ycoord
         rts
 .endproc
 
 ;;; ============================================================
 ;;; Populate block_count_table across all devices
 
-.proc get_all_block_counts
+.proc GetAllBlockCounts
         lda     #0
         sta     index
 
-:       jsr     get_block_count
+:       jsr     GetBlockCount
         inc     index
         lda     index
         cmp     num_drives
@@ -1959,18 +2110,23 @@ index:  .byte   0
 ;;; Inputs: A = device index
 ;;; Outputs: block_count_table (word) set to block count
 
-.proc get_block_count
+.proc GetBlockCount
 
-        ;; TODO: Figure out why we can't just always use the device driver!
+        ;; Special case Disk II devices, since we may be formatting non-ProDOS
+        ;; disks the driver can't interrogate.
 
         pha
         tax                     ; X is device index
         lda     drive_unitnum_table,x
-        and     #$0F            ; is Disk II ?
+        jsr     IsDiskII
         beq     disk_ii
 
+        pla
+        pha
+        tax
         lda     drive_unitnum_table,x
-        jsr     main__unit_number_to_driver_address
+        jsr     main__DeviceDriverAddress ; Z=1 if firmware
+        stax    $06
         jmp     use_driver
 
         ;; Disk II - always 280 blocks
@@ -1992,7 +2148,7 @@ use_driver:
         lda     drive_unitnum_table,x
         ldxy    $06
 
-        jsr     main__get_device_blocks_using_driver
+        jsr     main__GetDeviceBlocksUsingDriver
 
         stx     tmp             ; blocks available low
         pla
@@ -2010,53 +2166,20 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-        ;; TODO: Identify data
-        .byte   0
-        .byte   0
-
-.params status_params
-param_count:
-        .byte   3
-unit_num:
-        .byte   1
-        .addr   status_buffer
-        .byte   0
-.endparams
-status_unit_num := status_params::unit_num
-
-
-status_buffer:
-        .byte   0
-LE482:  .byte   0
-LE483:  .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-
-LE491:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_writing
+LE491:  lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::MoveTo, point_writing
         param_call DrawString, str_writing
         rts
 
-LE4A8:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_reading
+LE4A8:  lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::MoveTo, point_reading
         param_call DrawString, str_reading
         rts
 
-LE4BF:  lda     winfo_dialog::window_id
-        jsr     set_win_port
+LE4BF:  lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
         lda     source_drive_index
         asl     a
         tay
@@ -2064,27 +2187,27 @@ LE4BF:  lda     winfo_dialog::window_id
         tax
         lda     block_count_table,y
         jsr     IntToStringWithSeparators
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_source
+        MGTK_CALL MGTK::MoveTo, point_source
         param_call DrawString, str_blocks_to_transfer
         param_call DrawString, str_from_int
         rts
 
 LE4EC:  jsr     LE522
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_read
+        MGTK_CALL MGTK::MoveTo, point_blocks_read
         param_call DrawString, str_blocks_read
         param_call DrawString, str_from_int
         param_call DrawString, str_2_spaces
         rts
 
 LE507:  jsr     LE522
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_blocks_written
+        MGTK_CALL MGTK::MoveTo, point_blocks_written
         param_call DrawString, str_blocks_written
         param_call DrawString, str_from_int
         param_call DrawString, str_2_spaces
         rts
 
-LE522:  lda     winfo_dialog::window_id
-        jsr     set_win_port
+LE522:  lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
         lda     block_num_div8+1
         sta     LE558
         lda     block_num_div8
@@ -2108,9 +2231,13 @@ LE522:  lda     winfo_dialog::window_id
 LE550:  .byte   7,6,5,4,3,2,1,0
 
 LE558:  .byte   0
-LE559:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_source2
+
+;;; ============================================================
+
+.proc DrawSourceDriveInfo
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::MoveTo, point_source2
         param_call DrawString, str_source
         ldx     source_drive_index
         lda     drive_unitnum_table,x
@@ -2130,7 +2257,7 @@ LE559:  lda     winfo_dialog::window_id
         clc
         adc     #'1'
         sta     str_d + 1
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive
+        MGTK_CALL MGTK::MoveTo, point_slot_drive
         param_call DrawString, str_slot
         param_call DrawString, str_s
         param_call DrawString, str_drive
@@ -2144,13 +2271,17 @@ LE559:  lda     winfo_dialog::window_id
 LE5C5:  rts
 
 LE5C6:  param_call DrawString, str_2_spaces
-        COPY_STRING main__on_line_buffer2, LD43A
-        param_call DrawString, LD43A
+        COPY_STRING main__on_line_buffer2, device_name_buf
+        param_call DrawString, device_name_buf
         rts
+.endproc
 
-LE5E1:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_destination
+;;; ============================================================
+
+.proc DrawDestinationDriveInfo
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::MoveTo, point_destination
         param_call DrawString, str_destination
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
@@ -2169,16 +2300,19 @@ LE5E1:  lda     winfo_dialog::window_id
         clc
         adc     #'1'
         sta     str_d + 1
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_slot_drive2
+        MGTK_CALL MGTK::MoveTo, point_slot_drive2
         param_call DrawString, str_slot
         param_call DrawString, str_s
         param_call DrawString, str_drive
         param_call DrawString, str_d
         rts
+.endproc
 
-LE63F:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_disk_copy
+;;; ============================================================
+
+LE63F:  lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::MoveTo, point_disk_copy
         bit     LD44D
         bmi     LE65B
         param_call DrawString, str_prodos_disk_copy
@@ -2197,24 +2331,24 @@ LE673:  rts
 LE674:  lda     LD44D
         cmp     #$C0
         beq     LE693
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, rect_D483
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, rect_D483
 LE693:  rts
 
-LE694:  lda     winfo_dialog::window_id
-        jsr     set_win_port
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_escape_stop_copy
+LE694:  lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
+        MGTK_CALL MGTK::MoveTo, point_escape_stop_copy
         param_call DrawString, str_escape_stop_copy
         rts
 
 ;;; ============================================================
 ;;; Flash the message when escape is pressed
 
-.proc flash_escape_message
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
+.proc FlashEscapeMessage
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
         copy    #10, count
         copy    #$80, flag
 
@@ -2225,14 +2359,14 @@ loop:   dec     count
         eor     #$80
         sta     flag
         beq     :+
-        MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
+        MGTK_CALL MGTK::SetTextBG, bg_white
         beq     move
-:       MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_black
-move:   MGTK_RELAY_CALL2 MGTK::MoveTo, point_escape_stop_copy
+:       MGTK_CALL MGTK::SetTextBG, bg_black
+move:   MGTK_CALL MGTK::MoveTo, point_escape_stop_copy
         param_call DrawString, str_escape_stop_copy
         jmp     loop
 
-finish: MGTK_RELAY_CALL2 MGTK::SetTextBG, bg_white
+finish: MGTK_CALL MGTK::SetTextBG, bg_white
         rts
 
 count:  .byte   0
@@ -2242,36 +2376,37 @@ flag:   .byte   0
 ;;; ============================================================
 ;;; Inputs: A = error code, X = writing flag
 ;;; Outputs: A=0 for ok, 1 for retry, $80 for cancel
-.proc show_block_error
+.proc ShowBlockError
         stx     err_writing_flag
 
         cmp     #ERR_WRITE_PROTECTED
         bne     l2
         jsr     Bell
-        lda     #kAlertMsgDestinationProtected
-        jsr     show_alert_dialog
+        lda     #kAlertMsgDestinationProtected ; no args
+        jsr     ShowAlertDialog
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     :+              ; Cancel
         jsr     LE491           ; Try Again
         return  #1
 
-:       jsr     main__free_vol_bitmap_pages
+:       jsr     main__FreeVolBitmapPages
         return  #$80
 
 l2:     jsr     Bell
-        lda     winfo_dialog::window_id
-        jsr     set_win_port
+        lda     #winfo_dialog::kWindowId
+        jsr     SetWinPort
         lda     main__block_params_block_num
         ldx     main__block_params_block_num+1
         jsr     IntToStringWithSeparators
         lda     err_writing_flag
         bne     :+
 
-        MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_reading
+        MGTK_CALL MGTK::MoveTo, point_error_reading
         param_call DrawString, str_error_reading
         param_call DrawString, str_from_int
         return  #0
 
-:       MGTK_RELAY_CALL2 MGTK::MoveTo, point_error_writing
+:       MGTK_CALL MGTK::MoveTo, point_error_writing
         param_call DrawString, str_error_writing
         param_call DrawString, str_from_int
         return  #0
@@ -2285,7 +2420,7 @@ err_writing_flag:
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc read_block_to_auxmem
+.proc ReadBlockToAuxmem
         ptr1 := $06
         ptr2 := $08             ; one page up
 
@@ -2297,10 +2432,10 @@ err_writing_flag:
 
         ;; Read block
         copy16  #$1C00, main__block_params_data_buffer
-retry:  jsr     main__read_block
+retry:  jsr     main__ReadBlock
         beq     move
         ldx     #0              ; reading
-        jsr     show_block_error
+        jsr     ShowBlockError
         beq     move
         bpl     retry
         rts
@@ -2328,7 +2463,7 @@ move:   sta     RAMRDOFF
 ;;; Inputs: A,X=address to read from
 ;;; Outputs: A=0 on success, nonzero otherwise
 
-.proc write_block_from_auxmem
+.proc WriteBlockFromAuxmem
         ptr1 := $06
         ptr2 := $08             ; one page up
 
@@ -2354,10 +2489,10 @@ move:   sta     RAMRDOFF
         sta     RAMWRTOFF
 
         ;; Write block
-retry:  jsr     main__write_block
+retry:  jsr     main__WriteBlock
         beq     done
         ldx     #$80            ; writing
-        jsr     show_block_error
+        jsr     ShowBlockError
         beq     done
         bpl     retry
 done:   rts
@@ -2365,85 +2500,11 @@ done:   rts
 
 ;;; ============================================================
 
-.proc alert_dialog
 
-alert_bitmap:
-        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000000),PX(%1111111),PX(%1111111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111100),PX(%1111100),PX(%0000001),PX(%1110000),PX(%0000111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111100),PX(%1111100),PX(%0000011),PX(%1100000),PX(%0000011),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0000111),PX(%1100111),PX(%1111001),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0001111),PX(%1100111),PX(%1111001),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111111),PX(%1111001),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111111),PX(%1110011),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111111),PX(%1100111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111111),PX(%1001111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111111),PX(%0011111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111110),PX(%0111111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111100),PX(%1111111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1111100),PX(%0011111),PX(%1111100),PX(%1111111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111110),PX(%0000000),PX(%0111111),PX(%1111111),PX(%1111111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%1111111),PX(%1111100),PX(%1111111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100001),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111000),PX(%0000011),PX(%1111111),PX(%1111111),PX(%1111110),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0111111),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+.proc ShowAlertDialog
+        jmp     start
 
-.params alert_bitmap_params
-        DEFINE_POINT viewloc, 20, 8
-mapbits:        .addr   alert_bitmap
-mapwidth:       .byte   7
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 36, 23
-.endparams
-
-kAlertRectWidth         = 420
-kAlertRectHeight        = 55
-kAlertRectLeft          = (::kScreenWidth - kAlertRectWidth)/2
-kAlertRectTop           = (::kScreenHeight - kAlertRectHeight)/2
-
-        DEFINE_RECT_SZ alert_rect, kAlertRectLeft, kAlertRectTop, kAlertRectWidth, kAlertRectHeight
-        DEFINE_RECT_INSET alert_inner_frame_rect1, 4, 2, kAlertRectWidth, kAlertRectHeight
-        DEFINE_RECT_INSET alert_inner_frame_rect2, 5, 3, kAlertRectWidth, kAlertRectHeight
-
-.params portmap
-        DEFINE_POINT viewloc, kAlertRectLeft, kAlertRectTop
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
-.endparams
-
-;;; TODO: Move out of alert scope
-.params portbits2
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
-.endparams
-
-        DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
-        DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
-        DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
-
-        DEFINE_BUTTON yes, res_string_button_yes, 250, 37, 50, kButtonHeight
-        DEFINE_BUTTON no,  res_string_button_no,  350, 37, 50, kButtonHeight
-
-        DEFINE_POINT pos_prompt, 75, 29
-
-;;; %0....... = OK
-;;; %10..0000 = Cancel, Try Again
-;;; %10..XXXX = Cancel, Yes, No
-;;; %11...... = Cancel, OK
-alert_options:  .byte   0
-prompt_addr:    .addr   0
-
-;;; ============================================================
+;;; --------------------------------------------------
 ;;; Messages
 
 str_insert_source:
@@ -2455,6 +2516,8 @@ str_confirm_erase:
         PASCAL_STRING res_string_prompt_erase_prefix
 str_confirm_erase_buf:  .res    18, 0
 kLenConfirmErase = .strlen(res_string_prompt_erase_prefix)
+str_confirm_erase_suffix:
+        PASCAL_STRING res_string_prompt_erase_suffix
 
 str_dest_format_fail:
         PASCAL_STRING res_string_errmsg_dest_format_fail
@@ -2478,12 +2541,6 @@ str_insert_source_or_cancel:
 str_insert_dest_or_cancel:
         PASCAL_STRING res_string_prompt_insert_dest_or_cancel
 
-char_space:
-        .byte   ' '
-
-char_question_mark:
-        .byte   '?'
-
 alert_table:
         .byte   kAlertMsgInsertSource
         .byte   kAlertMsgInsertDestination
@@ -2496,7 +2553,7 @@ alert_table:
         .byte   kAlertMsgCopyFailure
         .byte   kAlertMsgInsertSourceOrCancel
         .byte   kAlertMsgInsertDestionationOrCancel
-        ASSERT_TABLE_SIZE alert_table, auxlc::kNumErrorMessages
+        ASSERT_TABLE_SIZE alert_table, auxlc::kNumAlertMessages
 
 message_table:
         .addr   str_insert_source
@@ -2508,374 +2565,116 @@ message_table:
         .addr   str_confirm_erase_sd
         .addr   str_copy_success
         .addr   str_copy_fail
-        .addr   str_insert_source_or_cancel ; TODO: How is this used?
-        .addr   str_insert_dest_or_cancel   ; TODO: How is this used?
-        ASSERT_ADDRESS_TABLE_SIZE message_table, auxlc::kNumErrorMessages
+        .addr   str_insert_source_or_cancel
+        .addr   str_insert_dest_or_cancel
+        ASSERT_ADDRESS_TABLE_SIZE message_table, auxlc::kNumAlertMessages
 
-        ;; $C0 (%11xxxxxx) = Cancel + Ok
-        ;; $81 (%10xxxxx1) = Cancel + Yes + No
-        ;; $80 (%10xx0000) = Cancel + Try Again
-        ;; $00 (%0xxxxxxx) = Ok
-
-.enum MessageFlags
-        OkCancel = $C0
-        YesNoCancel = $81
-        TryAgainCancel = $80
-        Ok = $00
-.endenum
+alert_button_options_table:
+        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertSource
+        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertDestination
+        .byte   AlertButtonOptions::YesNoCancel ; kAlertMsgConfirmErase
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgDestinationFormatFail
+        .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgFormatError
+        .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgDestinationProtected
+        .byte   AlertButtonOptions::YesNoCancel ; kAlertMsgConfirmEraseSlotDrive
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgCopySuccessful
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgCopyFailure
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertSourceOrCancel
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertDestionationOrCancel
+        ASSERT_TABLE_SIZE alert_button_options_table, auxlc::kNumAlertMessages
 
 alert_options_table:
-        .byte   MessageFlags::OkCancel    ; kAlertMsgInsertSource
-        .byte   MessageFlags::OkCancel    ; kAlertMsgInsertDestination
-        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmErase
-        .byte   MessageFlags::Ok          ; kAlertMsgDestinationFormatFail
-        .byte   MessageFlags::TryAgainCancel ; kAlertMsgFormatError
-        .byte   MessageFlags::TryAgainCancel ; kAlertMsgDestinationProtected
-        .byte   MessageFlags::YesNoCancel ; kAlertMsgConfirmEraseSlotDrive
-        .byte   MessageFlags::Ok          ; kAlertMsgCopySuccessful
-        .byte   MessageFlags::Ok          ; kAlertMsgCopyFailure
-        .byte   MessageFlags::Ok          ; kAlertMsgInsertSourceOrCancel
-        .byte   MessageFlags::Ok          ; kAlertMsgInsertDestionationOrCancel
-        ASSERT_TABLE_SIZE alert_options_table, auxlc::kNumErrorMessages
+        .byte   0                       ; kAlertMsgInsertSource
+        .byte   0                       ; kAlertMsgInsertDestination
+        .byte   0                       ; kAlertMsgConfirmErase
+        .byte   AlertOptions::Beep      ; kAlertMsgDestinationFormatFail
+        .byte   AlertOptions::Beep      ; kAlertMsgFormatError
+        .byte   AlertOptions::Beep      ; kAlertMsgDestinationProtected
+        .byte   0                       ; kAlertMsgConfirmEraseSlotDrive
+        .byte   0                       ; kAlertMsgCopySuccessful
+        .byte   0                       ; kAlertMsgCopyFailure
+        .byte   0                       ; kAlertMsgInsertSourceOrCancel
+        .byte   0                       ; kAlertMsgInsertDestionationOrCancel
+        ASSERT_TABLE_SIZE alert_options_table, auxlc::kNumAlertMessages
 
-message_num:
-        .byte   0
-xarg:   .byte   0               ; ???
-yarg:   .byte   0               ; ???
+.params alert_params
+text:           .addr   0
+buttons:        .byte   0       ; AlertButtonOptions
+options:        .byte   0       ; AlertOptions
+.endparams
 
-show_alert_dialog:
-        sta     message_num
-        stx     xarg
-        sty     yarg
+start:
+        pha                     ; A = alert id
+        copy    #0, ejectable_flag
 
-        ;; Draw the alert
-        MGTK_RELAY_CALL2 MGTK::InitPort, grafport
-        MGTK_RELAY_CALL2 MGTK::SetPort, grafport
+        ;; --------------------------------------------------
+        ;; Determine alert options
 
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, alert_rect
-        jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::FrameRect, alert_rect
-        MGTK_RELAY_CALL2 MGTK::SetPortBits, portmap
-        MGTK_RELAY_CALL2 MGTK::FrameRect, alert_inner_frame_rect1
-        MGTK_RELAY_CALL2 MGTK::FrameRect, alert_inner_frame_rect2
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
+        pla                     ; A = alert id
+        .assert kAlertMsgInsertSource = 0, error, "enum mismatch"
+    IF_EQ                       ; kAlertMsgInsertSource
+        cpx     #0
+        beq     find_in_alert_table
+        jsr     IsDriveEjectable
+        beq     find_in_alert_table ; nope, stick with kAlertMsgInsertSource
+        lda     #kAlertMsgInsertSourceOrCancel
+        bne     find_in_alert_table ; always
+    END_IF
 
-        MGTK_RELAY_CALL2 MGTK::HideCursor
-        MGTK_RELAY_CALL2 MGTK::PaintBits, alert_bitmap_params
-        MGTK_RELAY_CALL2 MGTK::ShowCursor
+        cmp     #kAlertMsgInsertDestination
+    IF_EQ
+        cpx     #0
+        beq     find_in_alert_table
+        jsr     IsDriveEjectable
+        beq     :+              ; nope
+        lda     #kAlertMsgInsertDestionationOrCancel
+        bne     find_in_alert_table ; always
+:       lda     #kAlertMsgInsertDestination
+        bne     find_in_alert_table ; always
+    END_IF
 
-        copy    #0, LD41E
+        cmp     #kAlertMsgConfirmErase
+    IF_EQ
+        jsr     AppendToConfirmErase
+        lda     #kAlertMsgConfirmErase
+        bne     find_in_alert_table ; always
+    END_IF
 
-        lda     message_num
-        jsr     maybe_bell
-        ldy     yarg
-        ldx     xarg
-        lda     message_num
-        bne     LEC1F
-        cpx     #$00
-        beq     LEC5E
-        jsr     LF185
-        beq     LEC5E
-        lda     #$0B
-        bne     LEC5E           ; always
+        cmp     #kAlertMsgConfirmEraseSlotDrive
+    IF_EQ
+        jsr     SetConfirmEraseSdSlotDrive
+        lda     #kAlertMsgConfirmEraseSlotDrive
+        FALL_THROUGH_TO find_in_alert_table
+    END_IF
 
-LEC1F:  cmp     #$01
-        bne     LEC34
-        cpx     #$00
-        beq     LEC5E
-        jsr     LF185
-        beq     LEC30
-        lda     #$0C
-        bne     LEC5E           ; always
-
-LEC30:  lda     #$01
-        bne     LEC5E           ; always
-
-LEC34:  cmp     #$02
-        bne     LEC3F
-        jsr     append_to_confirm_erase
-        lda     #$02
-        bne     LEC5E           ; always
-
-LEC3F:  cmp     #$06            ; duplicate
-        bne     :+
-        jsr     append_to_confirm_erase
-        lda     #$06
-        bne     LEC5E           ; always
-
-:       cmp     #$07
-        bne     LEC55
-        jsr     set_confirm_erase_sd_slot_drive
-        lda     #$07
-        bne     LEC5E           ; always
-
-LEC55:  cmp     #$08            ; TODO: Unused duplicate?
-        bne     LEC5E
-        jsr     set_confirm_erase_sd_slot_drive
-        lda     #$08
-
-LEC5E:
-
+find_in_alert_table:
+        ;; A = alert id; search table to determine index
         ldy     #0
 :       cmp     alert_table,y
         beq     :+
         iny
-        cpy     #30             ; TODO: Should be kNumErrorMessages ???
+        cpy     #kNumAlertMessages
         bne     :-
-
         ldy     #0              ; default
+
+        ;; Y = index
 :       tya
         asl     a
         tay
-        copy16  message_table,y, prompt_addr
+        copy16  message_table,y, alert_params::text
         tya
         lsr     a
         tay
-        copy    alert_options_table,y, alert_options
+        copy    alert_button_options_table,y, alert_params::buttons
+        copy    alert_options_table,y, alert_params::options
 
-        bit     LD41E
-        bpl     LEC8C
-        jmp     draw_prompt
+        ldax    #alert_params
+        jmp     Alert
 
-        ;; Draw appropriate buttons
-LEC8C:  jsr     set_pen_xor
-        bit     alert_options
-        bpl     draw_ok_btn
+;;; --------------------------------------------------
+;;; Inputs: X,Y = volume name
 
-        ;; Cancel button
-        MGTK_RELAY_CALL2 MGTK::FrameRect, cancel_button_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, cancel_button_pos
-        param_call DrawString, cancel_button_label
-
-        bit     alert_options
-        bvs     draw_ok_btn
-
-        lda     alert_options
-        and     #$0F
-        beq     draw_try_again_btn
-
-        MGTK_RELAY_CALL2 MGTK::FrameRect, yes_button_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, yes_button_pos
-        param_call DrawString, yes_button_label
-
-        MGTK_RELAY_CALL2 MGTK::FrameRect, no_button_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, no_button_pos
-        param_call DrawString, no_button_label
-        jmp     draw_prompt
-
-draw_try_again_btn:
-        MGTK_RELAY_CALL2 MGTK::FrameRect, try_again_button_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, try_again_button_pos
-        param_call DrawString, try_again_button_label
-        jmp     draw_prompt
-
-        ;; OK button
-draw_ok_btn:
-        MGTK_RELAY_CALL2 MGTK::FrameRect, ok_button_rect
-        MGTK_RELAY_CALL2 MGTK::MoveTo, ok_button_pos
-        param_call DrawString, ok_button_label
-
-draw_prompt:
-        MGTK_RELAY_CALL2 MGTK::MoveTo, pos_prompt
-        param_call_indirect DrawString, prompt_addr
-        ;; fall through
-
-        ;; --------------------------------------------------
-        ;; Event Loop
-
-event_loop:
-        bit     LD41E
-        bpl     LED45
-        jsr     LF192
-        bne     :+
-        jmp     finish_ok
-:       jmp     finish_cancel
-
-LED45:
-        jsr     yield_loop
-        MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
-        cmp     #MGTK::EventKind::button_down
-        bne     :+
-        jmp     handle_button_down
-
-:       cmp     #MGTK::EventKind::key_down
-        bne     event_loop
-
-        ;; --------------------------------------------------
-        ;; Key Down
-        lda     event_key
-        bit     alert_options   ; has Cancel?
-        bmi     :+              ; yes
-        jmp     check_only_ok   ; nope
-
-:       cmp     #CHAR_ESCAPE
-        bne     :+
-
-do_cancel:
-        jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, cancel_button_rect
-finish_cancel:
-        lda     #kAlertResultCancel
-        jmp     finish
-
-:       bit     alert_options   ; has Try Again?
-        bvs     check_ok        ; nope
-        pha
-        lda     alert_options
-        and     #$0F
-        beq     check_try_again
-
-        pla
-        cmp     #kShortcutNo
-        beq     do_no
-        cmp     #TO_LOWER(kShortcutNo)
-        beq     do_no
-        cmp     #kShortcutYes
-        beq     do_yes
-        cmp     #TO_LOWER(kShortcutYes)
-        beq     do_yes
-        jmp     event_loop
-
-do_no:  jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, no_button_rect
-        lda     #kAlertResultNo
-        jmp     finish
-
-do_yes: jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, yes_button_rect
-        lda     #kAlertResultYes
-        jmp     finish
-
-check_try_again:
-        pla
-        cmp     #TO_LOWER(kShortcutTryAgain)
-        bne     :+
-
-do_try_again:
-        jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, try_again_button_rect
-        lda     #kAlertResultTryAgain
-        jmp     finish
-
-:       cmp     #kShortcutTryAgain
-        beq     do_try_again
-        cmp     #CHAR_RETURN    ; also allow Return as default
-        beq     do_try_again
-        jmp     event_loop
-
-check_only_ok:
-        cmp     #CHAR_ESCAPE    ; also allow Escape as default
-        beq     do_ok
-check_ok:
-        cmp     #CHAR_RETURN
-        bne     :+
-
-do_ok:  jsr     set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::PaintRect, ok_button_rect
-finish_ok:
-        lda     #kAlertResultOK
-        jmp     finish
-
-:       jmp     event_loop
-
-        ;; --------------------------------------------------
-        ;; Buttons
-
-handle_button_down:
-        jsr     map_event_coords
-        MGTK_RELAY_CALL2 MGTK::MoveTo, event_coords
-
-        bit     alert_options   ; Anything but OK?
-        bpl     check_ok_rect   ; nope
-
-        MGTK_RELAY_CALL2 MGTK::InRect, cancel_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     :+
-        param_call AlertButtonEventLoop, cancel_button_rect
-        bne     no_button
-        lda     #kAlertResultCancel
-        jmp     finish
-
-:       bit     alert_options
-        bvs     check_ok_rect   ; Just Cancel/OK
-        lda     alert_options
-        and     #$0F            ;
-        beq     LEE47           ; Just Cancel/Try Again
-
-        ;; Yes & No
-        MGTK_RELAY_CALL2 MGTK::InRect, no_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     :+
-        param_call AlertButtonEventLoop, no_button_rect
-        bne     no_button
-        lda     #kAlertResultNo
-        jmp     finish
-
-:       MGTK_RELAY_CALL2 MGTK::InRect, yes_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     no_button
-        param_call AlertButtonEventLoop, yes_button_rect
-        bne     no_button
-        lda     #kAlertResultYes
-        jmp     finish
-
-        ;; Try Again
-LEE47:  MGTK_RELAY_CALL2 MGTK::InRect, try_again_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     no_button
-        param_call AlertButtonEventLoop, try_again_button_rect
-        bne     no_button
-        lda     #kAlertResultTryAgain
-        jmp     finish
-
-        ;; OK
-check_ok_rect:
-        MGTK_RELAY_CALL2 MGTK::InRect, ok_button_rect
-        cmp     #MGTK::inrect_inside
-        bne     no_button
-        param_call AlertButtonEventLoop, ok_button_rect
-        bne     no_button
-        lda     #kAlertResultOK
-        jmp     finish
-
-no_button:
-        jmp     event_loop
-
-;;; ============================================================
-
-finish: pha
-        MGTK_RELAY_CALL2 MGTK::SetPortBits, portbits2
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL2 MGTK::PaintRect, alert_rect
-        pla
-        rts
-
-;;; ============================================================
-
-        .define LIB_MGTK_CALL MGTK_RELAY_CALL2
-        .include "../lib/alertbuttonloop.s"
-        .undefine LIB_MGTK_CALL
-
-;;; ============================================================
-
-.proc map_event_coords
-        sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
-        sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc set_pen_xor
-        MGTK_RELAY_CALL2 MGTK::SetPenMode, penXOR
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc append_to_confirm_erase
+.proc AppendToConfirmErase
         ptr := $06
         stxy    ptr
         ldy     #$00
@@ -2889,22 +2688,24 @@ finish: pha
         pla
         clc
         adc     #kLenConfirmErase
-        sta     str_confirm_erase
+
         tay
-        inc     str_confirm_erase
-        inc     str_confirm_erase
-        lda     char_space
-        iny
+        ldx     #0
+:       iny
+        inx
+        lda     str_confirm_erase_suffix,x
         sta     str_confirm_erase,y
-        lda     char_question_mark
-        iny
-        sta     str_confirm_erase,y
+        cpx     str_confirm_erase_suffix
+        bne     :-
+
+        sty     str_confirm_erase
         rts
 .endproc
 
-;;; ============================================================
+;;; --------------------------------------------------
+;;; Inputs: X = %DSSSxxxx
 
-.proc set_confirm_erase_sd_slot_drive
+.proc SetConfirmEraseSdSlotDrive
         txa
         and     #$70            ; Mask off slot
         lsr     a
@@ -2922,22 +2723,48 @@ finish: pha
         rts
 .endproc
 
-;;; ============================================================
+;;; --------------------------------------------------
 
-.proc LF185
-        sty     LD41D
+;;; Y = unit number
+;;; If ejectable, sets `ejectable_flag`
+.proc IsDriveEjectable
+        sty     unit_num
         tya
-        jsr     main__is_drive_removable
+        jsr     main__IsDriveEjectable
         beq     :+
-        sta     LD41E
+        sta     ejectable_flag
 :       rts
 .endproc
 
-.proc LF192
-        lda     LD41D
+.endproc
+
+;;; ============================================================
+
+.scope alert_dialog
+
+        alert_grafport := grafport
+        AlertYieldLoop := YieldLoop
+
+        .define AD_YESNO 1
+        .define AD_SAVEBG 0
+        .define AD_WRAP 0
+        .define AD_EJECTABLE 1
+
+        .include "../lib/alert_dialog.s"
+
+;;; ============================================================
+;;; Poll the drive in `unit_num` until a disk is inserted, or
+;;; the Escape key is pressed.
+;;; Output: A = 0 if disk inserted, $80 if Escape pressed
+.proc WaitForDiskOrEsc
+@retry:
+        ;; Poll drive until something is present
+        ;; (either a ProDOS disk or a non-ProDOS disk)
+        lda     unit_num
         sta     main__on_line_params_unit_num
-        jsr     main__call_on_line
+        jsr     main__CallOnLine
         beq     done
+
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
         lda     main__on_line_buffer
@@ -2946,64 +2773,62 @@ finish: pha
         lda     main__on_line_buffer+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
-        jsr     yield_loop
-        MGTK_RELAY_CALL2 MGTK::GetEvent, event_params
-        lda     event_kind
+
+        jsr     AlertYieldLoop
+        MGTK_CALL MGTK::GetEvent, Alert::event_params
+        lda     Alert::event_kind
         cmp     #MGTK::EventKind::key_down
-        bne     LF192
-        lda     event_key
+        bne     @retry
+
+        lda     Alert::event_key
         cmp     #CHAR_ESCAPE
-        bne     LF192
+        bne     @retry
         return  #$80
 
 done:   return  #$00
 .endproc
 
-.proc maybe_bell
-        cmp     #$03
-        bcc     done
-        cmp     #$06
-        bcs     done
-        jsr     Bell
-done:   rts
-.endproc
-
-.endproc
-
-show_alert_dialog := alert_dialog::show_alert_dialog
+.endscope ; alert_dialog
+Alert := alert_dialog::Alert
 
 ;;; ============================================================
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
-.proc yield_loop
+.proc YieldLoop
         kMaxCounter = $E0       ; arbitrary
 
         inc     loop_counter
         inc     loop_counter
-        lda     loop_counter
+
+        loop_counter := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     #kMaxCounter
         bcc     :+
         copy    #0, loop_counter
 
-        jsr     main__reset_iigs_rgb ; in case it was reset by control panel
+        jsr     main__ResetIIgsRGB ; in case it was reset by control panel
 
 :       lda     loop_counter
         rts
-
-loop_counter:
-        .byte   0
 .endproc
 
+        .include "../lib/is_diskii.s"
+        .include "../lib/muldiv.s"
+
+;;; ============================================================
+;;; Settings - modified by Control Panels
 ;;; ============================================================
 
-        PAD_TO ::disk_copy::SETTINGS
+        PAD_TO ::BELLDATA
+        .include "../lib/default_sound.s"
 
+        PAD_TO ::SETTINGS
         .include "../lib/default_settings.s"
 
 ;;; ============================================================
 
-        ASSERT_ADDRESS $F200
-
-.endproc
+        ASSERT_ADDRESS ::kSegmentAuxLCAddress + ::kSegmentAuxLCLength
+        .assert * <= $F400, error, "Update memory_bitmap if code extends past $F400"
+.endscope
        auxlc__start := auxlc::start

@@ -4,34 +4,152 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        RESOURCE_FILE "app.res"
+        .org kSegmentAppAddress
 
-        .org $4000
+;;; ============================================================
+;;; MGTK library
+
+        ASSERT_ADDRESS ::MGTKEntry
+        .include "../mgtk/mgtk.s"
+
+;;; ============================================================
+;;; Font
+
+        PAD_TO ::FONT
+        .incbin .concat("../mgtk/fonts/System.", kBuildLang)
+
+;;; ============================================================
+;;; Generic Resources (outside scope for convenience)
+
+pencopy:        .byte   MGTK::pencopy
+penOR:          .byte   MGTK::penOR
+penXOR:         .byte   MGTK::penXOR
+penBIC:         .byte   MGTK::penBIC
+notpencopy:     .byte   MGTK::notpencopy
+notpenOR:       .byte   MGTK::notpenOR
+notpenXOR:      .byte   MGTK::notpenXOR
+notpenBIC:      .byte   MGTK::notpenBIC
+
+;;; ============================================================
+;;; Event Params (and overlapping param structs)
+
+        .include "../lib/event_params.s"
+
+;;; ============================================================
 
 .scope app
 
 ;;; See docs/Selector_List_Format.md for file format
 selector_list   := $B300
 
-kEntryPickerItemWidth = 127
-kEntryPickerItemHeight = 9
-
 kShortcutRunDeskTop = res_char_button_desktop_shortcut
 kShortcutRunProgram = res_char_menu_item_run_a_program_shortcut
 
 ;;; ============================================================
-;;; MGTK library
+;;; Resources
 
-        ASSERT_ADDRESS ::MGTK
-        .include "../mgtk/mgtk.s"
+saved_stack:
+        .byte   $00
 
-        PAD_TO ::FONT
+;;; for MenuSelect, HiliteMenu, MenuKey
+.params menu_params
+menu_id:
+        .byte   $00
+menu_item:
+        .byte   $00
 
-;;; Font
-        ASSERT_ADDRESS ::FONT, "Font location"
-        .incbin .concat("../mgtk/fonts/A2D.FONT.", kBuildLang)
+;;; for MenuKey only
+which_key:
+        .byte   $00
+key_mods:
+        .byte   $00
+.endparams
 
-;;; Cursors
+menu:   DEFINE_MENU_BAR 3
+        DEFINE_MENU_BAR_ITEM 1, str_apple, apple_menu
+        DEFINE_MENU_BAR_ITEM 2, str_file, file_menu
+        DEFINE_MENU_BAR_ITEM 3, str_startup, startup_menu
+
+apple_menu:
+        DEFINE_MENU 5
+        DEFINE_MENU_ITEM str_a2desktop
+        DEFINE_MENU_ITEM str_blank
+        DEFINE_MENU_ITEM str_copyright1
+        DEFINE_MENU_ITEM str_copyright2
+        DEFINE_MENU_ITEM str_copyright3
+
+file_menu:
+        DEFINE_MENU 1
+        DEFINE_MENU_ITEM str_run_a_program, res_char_menu_item_run_a_program_shortcut
+
+startup_menu:
+        DEFINE_MENU 1
+
+kMenuItemShortcutOffset = 2
+
+mi_x1:  DEFINE_MENU_ITEM str_slot_x1, '0'
+mi_x2:  DEFINE_MENU_ITEM str_slot_x2, '0'
+mi_x3:  DEFINE_MENU_ITEM str_slot_x3, '0'
+mi_x4:  DEFINE_MENU_ITEM str_slot_x4, '0'
+mi_x5:  DEFINE_MENU_ITEM str_slot_x5, '0'
+mi_x6:  DEFINE_MENU_ITEM str_slot_x6, '0'
+mi_x7:  DEFINE_MENU_ITEM str_slot_x7, '0'
+
+str_apple:
+        PASCAL_STRING kGlyphSolidApple
+
+str_file:
+        PASCAL_STRING res_string_menu_bar_item_file    ; menu bar item
+str_startup:
+        PASCAL_STRING res_string_menu_bar_item_startup ; menu bar item
+
+str_a2desktop:
+        PASCAL_STRING .sprintf(res_string_version_format_short, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor)
+
+str_blank:
+        PASCAL_STRING " "
+str_copyright1:
+        PASCAL_STRING res_string_copyright_line1 ; menu item
+str_copyright2:
+        PASCAL_STRING res_string_copyright_line2 ; menu item
+str_copyright3:
+        PASCAL_STRING res_string_copyright_line3 ; menu item
+
+str_run_a_program:
+        PASCAL_STRING res_string_menu_item_run_a_program ; menu item
+
+
+str_slot_x1:
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+str_slot_x2:
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+str_slot_x3:
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+str_slot_x4:
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+str_slot_x5:
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+str_slot_x6:
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+str_slot_x7:
+        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+        kStrSlotXOffset = res_const_menu_item_slot_pattern_offset1
+
+
+;;; Slot numbers
+slot_table:     .byte   0       ; number of entries
+
+slot_x1:        .byte   0
+slot_x2:        .byte   0
+slot_x3:        .byte   0
+slot_x4:        .byte   0
+slot_x5:        .byte   0
+slot_x6:        .byte   0
+slot_x7:        .byte   0
+
+
+;;; ============================================================
+;;; More Resources
 
 pointer_cursor:
         .byte   PX(%0000000),PX(%0000000)
@@ -89,185 +207,25 @@ watch_cursor:
 
 ;;; ============================================================
 
-        PAD_TO ::SETTINGS
-
-        .include "../lib/default_settings.s"
-
-        PAD_TO ::START
+grafport2:
+        .tag    MGTK::GrafPort
 
 ;;; ============================================================
 ;;; Application entry point
 
-        ASSERT_ADDRESS ::START
+        PAD_TO ::START
         jmp     entry
 
-pencopy:        .byte   MGTK::pencopy
-penOR:          .byte   MGTK::penOR
-penXOR:         .byte   MGTK::penXOR
-penBIC:         .byte   MGTK::penBIC
-notpencopy:     .byte   MGTK::notpencopy
-notpenOR:       .byte   MGTK::notpenOR
-notpenXOR:      .byte   MGTK::notpenXOR
-notpenBIC:      .byte   MGTK::notpenBIC
-
-saved_stack:
-        .byte   $00
-
-;;; for MenuSelect, HiliteMenu, MenuKey
-.params menu_params
-menu_id:
-        .byte   $00
-menu_item:
-        .byte   $00
-
-;;; for MenuKey only
-which_key:
-        .byte   $00
-key_mods:
-        .byte   $00
-.endparams
-
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-        .byte   $00
-
-menu:   DEFINE_MENU_BAR 3
-        DEFINE_MENU_BAR_ITEM 1, str_apple, apple_menu
-        DEFINE_MENU_BAR_ITEM 2, str_file, file_menu
-        DEFINE_MENU_BAR_ITEM 3, str_startup, startup_menu
-
-apple_menu:
-        DEFINE_MENU 5
-        DEFINE_MENU_ITEM str_a2desktop
-        DEFINE_MENU_ITEM str_blank
-        DEFINE_MENU_ITEM str_copyright1
-        DEFINE_MENU_ITEM str_copyright2
-        DEFINE_MENU_ITEM str_copyright3
-
-file_menu:
-        DEFINE_MENU 1
-        DEFINE_MENU_ITEM str_run_a_program, res_char_menu_item_run_a_program_shortcut
-
-startup_menu:
-        DEFINE_MENU 1
-
-kMenuItemShortcutOffset = 2
-
-mi_x1:  DEFINE_MENU_ITEM str_slot_x1, '0'
-mi_x2:  DEFINE_MENU_ITEM str_slot_x2, '0'
-mi_x3:  DEFINE_MENU_ITEM str_slot_x3, '0'
-mi_x4:  DEFINE_MENU_ITEM str_slot_x4, '0'
-mi_x5:  DEFINE_MENU_ITEM str_slot_x5, '0'
-mi_x6:  DEFINE_MENU_ITEM str_slot_x6, '0'
-mi_x7:  DEFINE_MENU_ITEM str_slot_x7, '0'
-
-str_apple:
-        PASCAL_STRING kGlyphSolidApple ; do not localize
-
-str_file:
-        PASCAL_STRING res_string_menu_bar_item_file    ; menu bar item
-str_startup:
-        PASCAL_STRING res_string_menu_bar_item_startup ; menu bar item
-
-str_a2desktop:
-        PASCAL_STRING .sprintf("%s Version %d.%d", kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor) ; do not localize
-
-str_blank:
-        PASCAL_STRING " "       ; do not localize
-str_copyright1:
-        PASCAL_STRING res_string_copyright_line1 ; menu item
-str_copyright2:
-        PASCAL_STRING res_string_copyright_line2 ; menu item
-str_copyright3:
-        PASCAL_STRING res_string_copyright_line3 ; menu item
-
-str_run_a_program:
-        PASCAL_STRING res_string_menu_item_run_a_program ; menu item
-
-
-str_slot_x1:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
-str_slot_x2:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
-str_slot_x3:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
-str_slot_x4:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
-str_slot_x5:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
-str_slot_x6:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
-str_slot_x7:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
-        kStrSlotXOffset = res_const_menu_item_slot_pattern_offset1
-
-
-;;; Slot numbers
-slot_table:     .byte   0       ; number of entries
-
-slot_x1:        .byte   0
-slot_x2:        .byte   0
-slot_x3:        .byte   0
-slot_x4:        .byte   0
-slot_x5:        .byte   0
-slot_x6:        .byte   0
-slot_x7:        .byte   0
-
 ;;; ============================================================
-;;; Event Params (and overlapping param structs)
-
-event_params := *
-event_kind := event_params + 0
-        ;; if kind is key_down
-event_key := event_params + 1
-event_modifiers := event_params + 2
-        ;; if kind is no_event, button_down/up, drag, or apple_key:
-event_coords := event_params + 1
-event_xcoord := event_params + 1
-event_ycoord := event_params + 3
-        ;; if kind is update:
-event_window_id := event_params + 1
-
-screentowindow_params := *
-screentowindow_window_id := screentowindow_params + 0
-screentowindow_screenx := screentowindow_params + 1
-screentowindow_screeny := screentowindow_params + 3
-screentowindow_windowx := screentowindow_params + 5
-screentowindow_windowy := screentowindow_params + 7
-        .assert screentowindow_screenx = event_xcoord, error, "param mismatch"
-        .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
-
-findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
-findwindow_mousex := findwindow_params + 0
-findwindow_mousey := findwindow_params + 2
-findwindow_which_area := findwindow_params + 4
-findwindow_window_id := findwindow_params + 5
-        .assert findwindow_mousex = event_xcoord, error, "param mismatch"
-        .assert findwindow_mousey = event_ycoord, error, "param mismatch"
-
-beginupdate_params := * + 1
-beginupdate_window_id := beginupdate_params + 0
-
-;;; Coords used when entry is clicked
-entry_click_x := * + 5
-entry_click_y := * + 7
-
-;;; Union of above params
-        .res    10, 0
-
-;;; ============================================================
-
-grafport2:
-        .tag    MGTK::GrafPort
 
 .params getwinport_params
 window_id:     .byte   0
-a_grafport:    .addr   grafport
+a_grafport:    .addr   grafport_win
 .endparams
 
-grafport:       .tag    MGTK::GrafPort
+grafport_win:   .tag    MGTK::GrafPort
+
+setzp_params:   .byte   MGTK::zp_overwrite ; performance over convenience
 
 .params startdesktop_params
 machine:        .byte   $06
@@ -286,76 +244,73 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
 .endparams
 
 .params winfo
-        kWidth = 500
-        kHeight = 118
-window_id:
-        .byte   $01
-        .byte   $01
-        .addr   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .byte   0
-        .word   150
-        .word   50
-        .word   500
-        .word   140
-
-viewloc:.word   (::kScreenWidth - kWidth)/2, (::kScreenHeight - kHeight)/2
-        .word   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   $00
-
-        .word   0, 0, kWidth, kHeight
-
-        .res    8, $FF
-        .byte   $FF
-        .byte   0
-        .word   0, 0
-        .byte   1, 1
-        .byte   0
-        .byte   $7F
-        .word   FONT
-        .byte   0
-        .byte   0
+        kDialogId = 1
+        kWidth = 460
+        kHeight = 124
+window_id:      .byte   kDialogId
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   0
+vscroll:        .byte   0
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontlength:  .word   50
+maxcontwidth:   .word   500
+maxcontlength:  .word   140
+port:
+        DEFINE_POINT viewloc, (::kScreenWidth - kWidth)/2, (::kScreenHeight - kHeight)/2
+mapbits:        .word   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   $00
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   $FF, 0
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textback:       .byte   $7F
+textfont:       .word   FONT
+nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT_INSET rect_frame, 4, 2, winfo::kWidth, winfo::kHeight
+        DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok,      res_string_button_ok, 340, 102
-        DEFINE_BUTTON desktop, res_string_button_desktop,    60, 102
+        DEFINE_BUTTON ok,      res_string_button_ok, winfo::kWidth - kButtonWidth - 60, winfo::kHeight - 18
+        DEFINE_BUTTON desktop, res_string_button_desktop,                           60, winfo::kHeight - 18
 
-setpensize_params:
-        .byte   2, 1
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
 
-        DEFINE_POINT pos_title_string, 0, 15
+        DEFINE_POINT pos_title_string, 0, 16
 
 str_selector_title:
         PASCAL_STRING res_string_selector_dialog_title ; dialog title
 
-        DEFINE_POINT pt0, 5, 22
+        ;; Options control metrics
+        kEntryPickerCols = 3
+        kEntryPickerRows = 8
+        kEntryPickerRowShift = 3 ; log2(kEntryPickerRows)
+        kEntryPickerLeft = (winfo::kWidth - kEntryPickerItemWidth * kEntryPickerCols + 1) / 2
+        kEntryPickerTop  = 21
+        kEntryPickerItemWidth = 127
+        kEntryPickerItemHeight = kListItemHeight
+        kEntryPickerTextHOffset = 4
+        kEntryPickerTextVOffset = kEntryPickerItemHeight-1
 
-        DEFINE_POINT line1_pt1, 5, 20
-        DEFINE_POINT line1_pt2, winfo::kWidth - 5, 20
-        DEFINE_POINT line2_pt1, 5, winfo::kHeight - 20
-        DEFINE_POINT line2_pt2, winfo::kWidth - 5, winfo::kHeight - 20
+        ;; Line endpoints
+        DEFINE_POINT line1_pt1, kBorderDX*2, 19
+        DEFINE_POINT line1_pt2, winfo::kWidth - kBorderDX*2, 19
+        DEFINE_POINT line2_pt1, kBorderDX*2, winfo::kHeight - 22
+        DEFINE_POINT line2_pt2, winfo::kWidth - kBorderDX*2, winfo::kHeight - 22
 
-;;; Position of entries box
-        DEFINE_POINT pos_entry_base, 16, 30
-
-;;; Point used when rendering entries
-        DEFINE_POINT pos_entry_str, 0, 0
-
-        DEFINE_RECT_SZ rect_entry_base, 16, 22, kEntryPickerItemWidth, kEntryPickerItemHeight - 1
-
-        DEFINE_RECT rect_entry, 0, 0, 0, 0
-
-        .byte   0
-        .byte   $7F
+        ;; Used when rendering entries
+        DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
         io_buf_sl = $BB00
 
@@ -382,10 +337,10 @@ str_desktop2:
 str_selector:
         PASCAL_STRING kFilenameSelector
 
-        DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, kOverlay1Offset
-        DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, kOverlay2Offset
-        DEFINE_READ_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlay1Size
-        DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlay2Size
+        DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, kOverlayFileDialogOffset
+        DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, kOverlayCopyDialogOffset
+        DEFINE_READ_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlayFileDialogLength
+        DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogLength
         DEFINE_CLOSE_PARAMS close_params2
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_desktop2_params, str_desktop2_2
@@ -400,14 +355,12 @@ desktop_available_flag:
 selected_index:
         .byte   0
 
-        .byte   0               ; ???
-
 entry_string_buf:
         .res    20
 
-num_run_list_entries:
+num_primary_run_list_entries:
         .byte   0
-num_other_run_list_entries:
+num_secondary_run_list_entries:
         .byte   0
 
 L9129:  .byte   0
@@ -419,33 +372,71 @@ lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
         .byte   0
 
 ;;; ============================================================
+;;; Clock Resources
+
+        DEFINE_POINT pos_clock, kScreenWidth - 11, 10
+
+str_time:
+        PASCAL_STRING "00:00 XM"
+
+str_4_spaces:
+        PASCAL_STRING "    "
+
+str_space:
+        PASCAL_STRING " "
+
+dow_strings:
+        PASCAL_STRING res_string_weekday_abbrev_1, 3
+        PASCAL_STRING res_string_weekday_abbrev_2, 3
+        PASCAL_STRING res_string_weekday_abbrev_3, 3
+        PASCAL_STRING res_string_weekday_abbrev_4, 3
+        PASCAL_STRING res_string_weekday_abbrev_5, 3
+        PASCAL_STRING res_string_weekday_abbrev_6, 3
+        PASCAL_STRING res_string_weekday_abbrev_7, 3
+        ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
+
+parsed_date:
+        .tag ParsedDateTime
+
+;;; GrafPort used when drawing the clock
+clock_grafport:
+        .tag MGTK::GrafPort
+
+;;; Used to save the current GrafPort while drawing the clock.
+.params getport_params
+portptr:        .addr   0
+.endparams
+
+;;; ============================================================
 ;;; App Initialization
 
 entry:
-.proc app_init
+.proc AppInit
         cli
+
+        copy    BUTN2, pb2_initial_state
 
         sec
         jsr     IDROUTINE       ; clear C if IIgs
         ror     not_iigs_flag   ; rotate C into high bit
 
         jsr     DetectLeChatMauveEve
-        bne     :+
+        beq     :+              ; Z=1 means no LCMEve
         copy    #$80, lcm_eve_flag
 :
 
         copy    #$FF, selected_index
-        jsr     load_selector_list
+        jsr     LoadSelectorList
         copy    #1, L9129
-        lda     num_other_run_list_entries
-        ora     num_run_list_entries
+        lda     num_secondary_run_list_entries
+        ora     num_primary_run_list_entries
         bne     check_key_down
 
 quick_run_desktop:
         MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     :+
         jmp     done_keys
-:       jmp     run_desktop
+:       jmp     RunDesktop
 
         ;; --------------------------------------------------
         ;; Check for key down
@@ -480,10 +471,10 @@ check_key:
         sec
         sbc     #'1'            ; 1-8 run that selector entry
         bmi     done_keys
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         bcs     done_keys
         sta     selected_index
-        jsr     get_selector_list_entry_addr
+        jsr     GetSelectorListEntryAddr
 
         entry_ptr := $06
 
@@ -494,12 +485,12 @@ check_key:
         beq     :+
         jsr     GetCopiedToRAMCardFlag
         beq     done_keys
-        jsr     get_selected_index_file_info
+        jsr     GetSelectedIndexFileInfo
         beq     :+
         jmp     done_keys
 
 :       lda     selected_index
-        jsr     invoke_entry
+        jsr     InvokeEntry
 
         ;; --------------------------------------------------
 
@@ -509,7 +500,8 @@ done_keys:
 
         ;; --------------------------------------------------
 
-        jsr     disconnect_ramdisk
+        jsr     SaveAndAdjustDeviceList
+        jsr     DisconnectRAM
 
         ;; --------------------------------------------------
         ;; Find slots with devices using ProDOS Device ID Bytes
@@ -617,9 +609,13 @@ set_startup_menu_items:
         copy    VERSION, startdesktop_params::machine
         copy    ZIDBYTE, startdesktop_params::subid
 
+        jsr     ClearDHRToBlack
+
+        MGTK_CALL MGTK::SetZP1, setzp_params
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
         jsr     SetRGBMode
         MGTK_CALL MGTK::SetMenu, menu
+        jsr     ShowClock
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
 
@@ -651,12 +647,12 @@ set_startup_menu_items:
         ;; Open the window
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     get_port_and_draw_window
+        jsr     GetPortAndDrawWindow
         copy    #$FF, selected_index
-        jsr     load_selector_list
-        jsr     populate_entries_flag_table
-        jsr     draw_entries
-        jmp     event_loop
+        jsr     LoadSelectorList
+        jsr     PopulateEntriesFlagTable
+        jsr     DrawEntries
+        jmp     EventLoop
 
 quick_boot_slot:
         .byte   0
@@ -665,14 +661,14 @@ quick_boot_slot:
 ;;; ============================================================
 ;;; Event Loop
 
-.proc event_loop
-        jsr     yield_loop
+.proc EventLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jsr     handle_button_down
-        jmp     event_loop
+        jsr     HandleButtonDown
+        jmp     EventLoop
 
 :       cmp     #MGTK::EventKind::key_down
         bne     not_key
@@ -682,69 +678,68 @@ quick_boot_slot:
 
         bit     desktop_available_flag
         bmi     not_desktop
-        lda     event_key
+        lda     event_params::key
         cmp     #kShortcutRunDeskTop
         beq     :+
         cmp     #TO_LOWER(kShortcutRunDeskTop)
         bne     not_desktop
-:       lda     winfo::window_id
-        jsr     get_window_port
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, desktop_button_rect
-        MGTK_CALL MGTK::PaintRect, desktop_button_rect
-        MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
-        beq     found_desktop
+
+:       param_call ButtonFlash, winfo::kDialogId, desktop_button_rect
+@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+        beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     not_desktop     ; Cancel
-        beq     :-
-found_desktop:
-        jmp     run_desktop
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        bne     EventLoop      ; `kAlertResultCancel` = 1
+        beq     @retry          ; `kAlertResultTryAgain` = 0
+:       jmp     RunDesktop
 
 not_desktop:
-        jsr     handle_key
-        jmp     event_loop
+        jsr     HandleKey
+        jmp     EventLoop
 
         ;; --------------------------------------------------
 
 not_key:
         cmp     #MGTK::EventKind::update
         bne     not_update
-        jsr     handle_updates
+        jsr     ClearUpdates
 
 not_update:
-        jmp     event_loop
+        jmp     EventLoop
 .endproc
 
 ;;; ============================================================
 ;;; Handle update events
 
-check_and_handle_updates:
+CheckAndClearUpdates:
         MGTK_CALL MGTK::PeekEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::update
         bne     done
         MGTK_CALL MGTK::GetEvent, event_params
-        ;; Fall through.
+        FALL_THROUGH_TO ClearUpdates
 
-handle_updates:
+ClearUpdates:
         jsr     @do_update
-        jmp     check_and_handle_updates
+        jmp     CheckAndClearUpdates
 
 @do_update:
-        MGTK_CALL MGTK::BeginUpdate, beginupdate_params
+        lda     event_params::window_id
+        cmp     #winfo::kDialogId
         bne     done
-        jsr     draw_window_and_entries
-        MGTK_CALL MGTK::EndUpdate
-        rts
 
+        MGTK_CALL MGTK::BeginUpdate, beginupdate_params
+        bne     done            ; obscured
+        jsr     DrawWindowAndEntries
+        MGTK_CALL MGTK::EndUpdate
 done:   rts
 
 ;;; ============================================================
 
-.proc draw_window_and_entries
-        jsr     draw_window
-        jsr     draw_entries
+.proc DrawWindowAndEntries
+        jsr     DrawWindow
+        jsr     DrawEntries
         rts
 .endproc
 
@@ -762,16 +757,16 @@ menu1:  .addr   noop
         .addr   noop
 
         ;; File menu
-menu2:  .addr   cmd_run_a_program
+menu2:  .addr   CmdRunAProgram
 
         ;; Startup menu
-menu3:  .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
-        .addr   cmd_startup
+menu3:  .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
+        .addr   CmdStartup
 menu_end:
 
 menu_addr_table:
@@ -782,17 +777,17 @@ menu_addr_table:
 
 ;;; ============================================================
 
-.proc handle_key
-        lda     event_modifiers
+.proc HandleKey
+        lda     event_params::modifiers
         bne     has_modifiers
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     menukey
 
-other:  jmp     handle_nonmenu_key
+other:  jmp     HandleNonmenuKey
 
 has_modifiers:
-        lda     event_key
+        lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     menukey
         cmp     #kShortcutRunProgram
@@ -806,22 +801,22 @@ has_modifiers:
 
 menukey:
         sta     menu_params::which_key
-        lda     event_modifiers
+        lda     event_params::modifiers
         beq     :+
         lda     #1
 :       sta     menu_params::key_mods
         MGTK_CALL MGTK::MenuKey, menu_params::menu_id
-        ;; Fall through
+        FALL_THROUGH_TO HandleMenu
 .endproc
 
 ;;; ==================================================
 
-.proc handle_menu
+.proc HandleMenu
         ldx     menu_params::menu_item
         beq     L93BE
         ldx     menu_params::menu_id
         bne     L93C1
-L93BE:  jmp     event_loop
+L93BE:  jmp     EventLoop
 
 L93C1:  dex
         lda     menu_addr_table,x
@@ -849,13 +844,13 @@ L93EB:  tsx
 
 ;;; ============================================================
 
-.proc cmd_run_a_program
+.proc CmdRunAProgram
         lda     selected_index
         bmi     L93FF
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         lda     #$FF
         sta     selected_index
-L93FF:  jsr     set_watch_cursor
+L93FF:  jsr     SetWatchCursor
         MLI_CALL OPEN, open_selector_params
         bne     L9443
         lda     open_selector_params::ref_num
@@ -870,13 +865,14 @@ L9436:  tya
         jsr     invoke_entry_ep2
         jsr     file_dialog_loop
         beq     L9436
-L943F:  jsr     load_selector_list
+L943F:  jsr     LoadSelectorList
         rts
 
 L9443:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     :+           ; Cancel
-        jsr     set_watch_cursor
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        bne     :+           ; `kAlertResultCancel` = 1
+        jsr     SetWatchCursor
         jmp     L93FF
 
 :       rts
@@ -884,32 +880,32 @@ L9443:  lda     #AlertID::insert_system_disk
 
 ;;; ============================================================
 
-.proc handle_button_down
+.proc HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_which_area
+        lda     findwindow_params::which_area
         bne     :+
         rts
 
 :       cmp     #MGTK::Area::menubar
         bne     :+
         MGTK_CALL MGTK::MenuSelect, menu_params
-        jmp     handle_menu
+        jmp     HandleMenu
 
 :       cmp     #MGTK::Area::content
         beq     :+
         rts
 
-:       lda     findwindow_window_id
-        cmp     winfo::window_id
+:       lda     findwindow_params::window_id
+        cmp     #winfo::kDialogId
         beq     :+
         rts
 
-:       lda     winfo::window_id
-        jsr     get_window_port
-        lda     winfo::window_id
-        sta     screentowindow_window_id
+:       lda     #winfo::kDialogId
+        jsr     GetWindowPort
+        lda     #winfo::kDialogId
+        sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_windowx
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ;; OK button?
 
@@ -917,11 +913,9 @@ L9443:  lda     #AlertID::insert_system_disk
         cmp     #MGTK::inrect_inside
         bne     check_desktop_btn
 
-        ldy     winfo::window_id
-        ldax    #ok_button_rect
-        jsr     ButtonEventLoop
+        param_call ButtonClick, winfo::kDialogId, ok_button_rect
         bmi     done
-        jsr     try_invoke_selected_index
+        jsr     TryInvokeSelectedIndex
 done:   rts
 
         ;; DeskTop button?
@@ -933,79 +927,54 @@ check_desktop_btn:
         cmp     #MGTK::inrect_inside
         bne     check_entries
 
-        ldy     winfo::window_id
-        ldax    #desktop_button_rect
-        jsr     ButtonEventLoop
+        param_call ButtonClick, winfo::kDialogId, desktop_button_rect
         bmi     done
 
-:       MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        bne     done
-        beq     :-
-:       jmp     run_desktop
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        bne     done            ; `kAlertResultCancel` = 1
+        beq     @retry          ; `kAlertResultTryAgain` = 0
+:       jmp     RunDesktop
 
         ;; Entry selection?
 
 check_entries:
-        sub16   entry_click_x, pos_entry_base::xcoord, entry_click_x
-        sub16   entry_click_y, pt0::ycoord, entry_click_y
-        lda     entry_click_y+1
-        bpl     :+
-        lda     selected_index
-        jsr     maybe_toggle_entry_hilite
-        copy    #$FF, selected_index
-        rts
+        jsr     GetOptionIndexFromCoords
+        bmi     done
 
-:       ldax    entry_click_y
-        ldy     #kEntryPickerItemHeight
-        jsr     Divide_16_8_16
-        cmp     #8              ; only care about low byte in A
-        bcc     L954C
-        lda     selected_index
-        jsr     maybe_toggle_entry_hilite
-        copy    #$FF, selected_index
-        rts
+        ;; Is it valid?
+        sta     index
+        cmp     #8
+        bcc     primary
+        bcs     secondary
 
-L954C:  sta     L959D
-        lda     #$00
-        sta     L959F
-        asl16   entry_click_x
-        rol     L959F
-        lda     entry_click_x+1
-        asl     a               ; *= 8
-        asl     a
-        asl     a
-        clc
-        adc     L959D
-        sta     L959E
-        cmp     #$08
-        bcc     L9571
-        jmp     L9582
-
-L9571:  cmp     num_run_list_entries
+primary:
+        cmp     num_primary_run_list_entries
         bcc     finish
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         copy    #$FF, selected_index
         rts
 
-L9582:  sec
+secondary:
+        sec
         sbc     #8
-        cmp     num_other_run_list_entries
+        cmp     num_secondary_run_list_entries
         bcc     finish
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         copy    #$FF, selected_index
         rts
 
-finish: lda     L959E
-        jsr     handle_entry_click
+finish: lda     index
+        jsr     HandleEntryClick
         rts
 
 L959D:  .byte   0
-L959E:  .byte   0
+index:  .byte   0
 L959F:  .byte   0
 
 .endproc
@@ -1016,34 +985,62 @@ noop:   rts
 
 ;;; ============================================================
 
-.proc run_desktop
-        ;; DeskTop will immediately disconnect RAMDisk, but it is
-        ;; restored differently.
-        jsr     reconnect_ramdisk
+.proc RunDesktop
+        sta     ALTZPOFF
+        bit     ROMIN2
+        jsr     RestoreSystem
+
         MLI_CALL OPEN, open_desktop2_params
         lda     open_desktop2_params::ref_num
         sta     read_desktop2_params::ref_num
-        sta     DHIRESOFF
-        sta     TXTCLR
-        sta     CLR80VID
-        sta     SETALTCHAR
-        sta     CLR80COL
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
         MLI_CALL READ, read_desktop2_params
         MLI_CALL CLOSE, close_params
         jmp     desktop_load_addr
 .endproc
 
 ;;; ============================================================
+;;; Assert: ROM banked in, ALTZP/LC is OFF
 
-.proc handle_nonmenu_key
+.proc RestoreSystem
+        jsr     SetColorMode
+        jsr     RestoreTextMode
+        jsr     ReconnectRAM
+        jmp     RestoreDeviceList
+.endproc
 
-        lda     winfo::window_id
-        jsr     get_window_port
-        lda     event_key
+;;; ============================================================
+;;; Disable 80-col firmware, clear and show the text screen.
+;;; Assert: ROM is banked in, ALTZP/LC is off
+
+.proc RestoreTextMode
+        jsr     HOME            ; Clear 80-col screen
+        lda     #$11            ; Ctrl-Q - disable 80-col firmware
+        jsr     COUT
+
+        jsr     SETVID
+        jsr     SETKBD
+        jsr     INIT
+
+        sta     DHIRESOFF
+        sta     TXTSET
+        sta     LOWSCR
+        sta     LORES
+        sta     MIXCLR
+
+        sta     CLRALTCHAR
+        sta     CLR80VID
+        sta     CLR80STORE
+
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleNonmenuKey
+
+        lda     #winfo::kDialogId
+        jsr     GetWindowPort
+        lda     event_params::key
         cmp     #$1C            ; Control character?
         bcs     :+
         jmp     control_char
@@ -1063,7 +1060,7 @@ noop:   rts
 :       sec
         sbc     #'1'
         sta     tentative_selection
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         bcc     :+
         rts
 
@@ -1074,11 +1071,11 @@ noop:   rts
         rts
 
 :       lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 no_cur_sel:
         lda     tentative_selection
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         rts
 
         ;; --------------------------------------------------
@@ -1089,12 +1086,8 @@ no_cur_sel:
 control_char:
         cmp     #CHAR_RETURN
         bne     not_return
-        lda     winfo::window_id
-        jsr     get_window_port
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
-        jsr     try_invoke_selected_index
+        param_call ButtonFlash, winfo::kDialogId, ok_button_rect
+        jsr     TryInvokeSelectedIndex
         rts
 not_return:
 
@@ -1102,22 +1095,18 @@ not_return:
         ;; Arrow keys?
 
         cmp     #CHAR_LEFT
-        bne     :+
-        jmp     handle_key_left
+        jeq     HandleKeyLeft
 
-:       cmp     #CHAR_RIGHT
-        bne     :+
-        jmp     handle_key_right
+        cmp     #CHAR_RIGHT
+        jeq     HandleKeyRight
 
-:       cmp     #CHAR_DOWN
-        bne     :+
-        jmp     handle_key_down
+        cmp     #CHAR_DOWN
+        jeq     HandleKeyDown
 
-:       cmp     #CHAR_UP
-        bne     :+
-        jmp     handle_key_up
+        cmp     #CHAR_UP
+        jeq     HandleKeyUp
 
-:       rts
+        rts
 
 ;;; ============================================================
 
@@ -1128,9 +1117,9 @@ tentative_selection:
 
 ;;; ============================================================
 
-.proc handle_key_right
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+.proc HandleKeyRight
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -1151,7 +1140,7 @@ tentative_selection:
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         lda     selected_index
 loop:   clc
@@ -1170,27 +1159,27 @@ loop:   clc
 
 set:    txa
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_left
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+.proc HandleKeyLeft
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
         bpl     move            ; have a selection
 
         ;; No selection - re-use logic to find last item
-        jmp     handle_key_up
+        jmp     HandleKeyUp
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         lda     selected_index
 loop:   sec
@@ -1209,16 +1198,16 @@ loop:   sec
 
 set:    txa
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_up
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+.proc HandleKeyUp
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -1233,7 +1222,7 @@ done:   return  #$FF
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         ldx     selected_index
 loop:   dex                     ; to previous
@@ -1246,16 +1235,16 @@ wrap:   ldx     #kSelectorListNumEntries
         jmp     loop
 
 set:    sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_down
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+.proc HandleKeyDown
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -1270,7 +1259,7 @@ done:   return  #$FF
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         ldx     selected_index
 loop:   inx                     ; to next
@@ -1285,7 +1274,7 @@ wrap:   ldx     #AS_BYTE(-1)
 
         ;; Set the selection
 set:    sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
@@ -1296,7 +1285,7 @@ done:   return  #$FF
 
 ;;; ============================================================
 
-.proc populate_entries_flag_table
+.proc PopulateEntriesFlagTable
         ldx     #kSelectorListNumEntries - 1
         lda     #$FF
 :       sta     entries_flag_table,x
@@ -1304,7 +1293,7 @@ done:   return  #$FF
         bpl     :-
 
         ldx     #0
-:       cpx     num_run_list_entries
+:       cpx     num_primary_run_list_entries
         beq     :+
         txa
         sta     entries_flag_table,x
@@ -1312,7 +1301,7 @@ done:   return  #$FF
         bne     :-
 
 :       ldx     #0
-:       cpx     num_other_run_list_entries
+:       cpx     num_secondary_run_list_entries
         beq     :+
         txa
         clc
@@ -1329,36 +1318,36 @@ entries_flag_table:
 
 ;;; ============================================================
 
-.proc try_invoke_selected_index
+.proc TryInvokeSelectedIndex
         lda     selected_index
         bmi     :+
-        jsr     invoke_entry
+        jsr     InvokeEntry
 :       rts
 .endproc
 
 ;;; ============================================================
 
-.proc draw_entries
+.proc DrawEntries
 
-        ;; Run List
+        ;; Primary Run List
         lda     #0
         sta     count
 :       lda     count
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         beq     :+
-        jsr     draw_list_entry
+        jsr     DrawListEntry
         inc     count
         jmp     :-
 
-        ;; Other Run List
+        ;; Secondary Run List
 :       lda     #0
         sta     count
 :       lda     count
-        cmp     num_other_run_list_entries
+        cmp     num_secondary_run_list_entries
         beq     done
         clc
         adc     #8
-        jsr     draw_list_entry
+        jsr     DrawListEntry
         inc     count
         jmp     :-
 
@@ -1369,11 +1358,11 @@ count:  .byte   0
 
 ;;; ============================================================
 
-.proc load_selector_list
+.proc LoadSelectorList
         ;; Initialize the counts, in case load fails.
         lda     #0
-        sta     selector_list + kSelectorListNumRunListOffset
-        sta     selector_list + kSelectorListNumOtherListOffset
+        sta     selector_list + kSelectorListNumPrimaryRunListOffset
+        sta     selector_list + kSelectorListNumSecondaryRunListOffset
 
         MLI_CALL OPEN, open_selector_list_params
         bne     cache
@@ -1383,14 +1372,14 @@ count:  .byte   0
         MLI_CALL READ, read_selector_list_params
         MLI_CALL CLOSE, close_params
 
-cache:  copy    selector_list + kSelectorListNumRunListOffset, num_run_list_entries
-        copy    selector_list + kSelectorListNumOtherListOffset, num_other_run_list_entries
+cache:  copy    selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
+        copy    selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc load_overlay2
+.proc LoadOverlayCopyDialog
 start:  MLI_CALL OPEN, open_selector_params
         bne     error
         lda     open_selector_params::ref_num
@@ -1402,89 +1391,119 @@ start:  MLI_CALL OPEN, open_selector_params
         rts
 
 error:  lda     #AlertID::insert_system_disk
-        jsr     ShowAlert       ; Cancel
-        beq     start
+        jsr     ShowAlert       ; `kAlertResultCancel` = 1
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        beq     start           ; `kAlertResultTryAgain` = 0
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc set_watch_cursor
+.proc SetWatchCursor
         MGTK_CALL MGTK::SetCursor, watch_cursor
         rts
 .endproc
 
-.proc set_pointer_cursor
+.proc SetPointerCursor
         MGTK_CALL MGTK::SetCursor, pointer_cursor
         rts
 .endproc
 
 ;;; ============================================================
 
-;;; Disconnect /RAM
-.proc disconnect_ramdisk
+.proc SaveAndAdjustDeviceList
+        ;; Save original DEVCNT+DEVLST
+        .assert DEVLST = DEVCNT+1, error, "DEVCNT must precede DEVLST"
         ldx     DEVCNT
-:       lda     DEVLST,x
-        and     #%11110000      ; DSSSnnnn
-        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
-        beq     remove
+        inx                     ; include DEVCNT itself
+:       copy    DEVCNT,x, backup_devlst,x
         dex
         bpl     :-
-        rts
 
-remove: lda     DEVLST,x
-        sta     saved_ram_unitnum
+        ;; Find the startup volume's unit number
+        copy    DEVNUM, target
+        jsr     GetCopiedToRAMCardFlag
+    IF_MINUS
+        param_call CopyDeskTopOriginalPrefix, INVOKER_PREFIX
+        MLI_CALL GET_FILE_INFO, get_file_info_invoke_params
+        bcs     :+
+        copy    DEVNUM, target
+:
+    END_IF
 
-        ;; Shift other devices down
-shift:  lda     DEVLST+1,x
-        sta     DEVLST,x
-        cpx     DEVCNT
-        beq     done
+        ;; Find the device's index in the list
+        ldx     #0
+:       lda     DEVLST,x
+        and     #UNIT_NUM_MASK  ; to compare against DEVNUM
+        target := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        beq     found
         inx
-        jmp     shift
+        cpx     DEVCNT
+        bcc     :-
+        bcs     done            ; last one or not found
 
-done:   dec     DEVCNT
-        rts
-.endproc
+        ;; Save it
+found:  ldy     DEVLST,x
 
-;;; Restore /RAM
-.proc reconnect_ramdisk
-        lda     saved_ram_unitnum
-        beq     done
+        ;; Move everything up
+:       lda     DEVLST+1,x
+        sta     DEVLST,x
+        inx
+        cpx     DEVCNT
+        bne     :-
 
-        inc     DEVCNT
-        ldx     DEVCNT
+        ;; Place it at the end
+        tya
         sta     DEVLST,x
 
 done:   rts
 .endproc
 
-saved_ram_unitnum:
-        .byte   0
+.proc RestoreDeviceList
+        ;; Verify that a backup was done. Note that DEVCNT can be
+        ;; zero (since it is num devices - 1) so the high bit is used.
+        ldx     backup_devlst   ; the original DEVCNT
+        bmi     ret             ; backup was never done
+
+        inx                     ; include DEVCNT itself
+:       copy    backup_devlst,x, DEVCNT,x
+        dex
+        bpl     :-
+
+ret:    rts
+.endproc
+
+backup_devlst:
+        .byte   $FF             ; backup for DEVCNT (w/ high bit set)
+        .res    14, 0           ; backup for DEVLST (7 slots * 2 drives)
 
 ;;; ============================================================
 
-get_port_and_draw_window:
-        lda     winfo::window_id
-        jsr     get_window_port
-        ;; Fall through
+.proc GetPortAndDrawWindow
+        lda     #winfo::kDialogId
+        jsr     GetWindowPort
+        FALL_THROUGH_TO DrawWindow
+.endproc
 
-.proc draw_window
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::SetPenSize, setpensize_params
-
+.proc DrawWindow
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, rect_frame
+
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
         MGTK_CALL MGTK::FrameRect, ok_button_rect
 
         bit     desktop_available_flag
         bmi     :+
         MGTK_CALL MGTK::FrameRect, desktop_button_rect
 :
-        param_call draw_title_string, str_selector_title
-        jsr     draw_ok_label
+        param_call DrawTitleString, str_selector_title
+        jsr     DrawOkLabel
         bit     desktop_available_flag
         bmi     :+
-        jsr     draw_desktop_label
+        jsr     DrawDesktopLabel
 :
         MGTK_CALL MGTK::MoveTo, line1_pt1
         MGTK_CALL MGTK::LineTo, line1_pt2
@@ -1495,13 +1514,13 @@ get_port_and_draw_window:
 
 ;;; ============================================================
 
-.proc draw_ok_label
+.proc DrawOkLabel
         MGTK_CALL MGTK::MoveTo, ok_button_pos
         param_call DrawString, ok_button_label
         rts
 .endproc
 
-.proc draw_desktop_label
+.proc DrawDesktopLabel
         MGTK_CALL MGTK::MoveTo, desktop_button_pos
         param_call DrawString, desktop_button_label
         rts
@@ -1511,7 +1530,7 @@ get_port_and_draw_window:
 ;;; Draw Title String (centered at top of port)
 ;;; Input: A,X = string address
 
-.proc draw_title_string
+.proc DrawTitleString
         text_params     := $6
         text_addr       := text_params + 0
         text_length     := text_params + 2
@@ -1552,7 +1571,6 @@ done:   rts
 
         ;; Seek to next boundary
 :       lda     (ptr),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     L99FA
         cmp     #'.'
@@ -1563,7 +1581,6 @@ L99FA:  dey
         ;; Adjust case
 L99FE:  iny
         lda     (ptr),y
-        and     #CHAR_MASK
         cmp     #'A'
         bcc     L9A10
         cmp     #'Z'+1
@@ -1581,10 +1598,10 @@ L9A10:  dey
 ;;; Set the active GrafPort to the selected window's port
 ;;; Input: A = window id
 
-.proc get_window_port
+.proc GetWindowPort
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport_win
         rts
 .endproc
 
@@ -1592,7 +1609,7 @@ L9A10:  dey
 ;;; Input: A = Entry number
 ;;; Output: A,X = Entry address
 
-.proc get_selector_list_entry_addr
+.proc GetSelectorListEntryAddr
         addr := selector_list + kSelectorListEntriesOffset
 
         ldx     #0
@@ -1619,7 +1636,7 @@ hi:     .byte   0
 
 ;;; ============================================================
 
-.proc get_selector_list_path_addr
+.proc GetSelectorListPathAddr
         addr := selector_list + kSelectorListPathsOffset
 
         ldx     #0
@@ -1642,57 +1659,89 @@ hi:    .byte   0
 .endproc
 
 ;;; ============================================================
-
-.proc set_entry_text_pos
-
-        pha                     ; stack has index
-        lsr     a
-        lsr     a
-        lsr     a
-        pha                     ; ... and index / 8 (= column)
-
-        ;; X coordinate
-        ldx     #0
-        stx     tmp
-        lsr     a
-        ror     tmp
-        tay
-        lda     tmp
+;;; Get the coordinates of an option by index.
+;;; Input: A = volume index
+;;; Output: A,X = x coordinate, Y = y coordinate
+.proc GetOptionPos
+        sta     index
+        .repeat app::kEntryPickerRowShift
+        lsr
+        .endrepeat
+        ldx     #0              ; hi
+        ldy     #kEntryPickerItemWidth
+        jsr     Multiply_16_8_16
         clc
-        adc     pos_entry_base::xcoord
-        sta     pos_entry_str::xcoord
-        tya
-        adc     pos_entry_base::xcoord+1
-        sta     pos_entry_str::xcoord+1
+        adc     #<kEntryPickerLeft
+        pha                     ; lo
+        txa
+        adc     #>kEntryPickerLeft
+        pha                     ; hi
 
         ;; Y coordinate
-        pla                     ; A = column
-
-        asl     a
-        asl     a
-        asl     a
-        sta     tmp
-        pla                     ; A = index
-        sec
-        sbc     tmp             ; A = row
-
-        ldx     #0
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        and     #kEntryPickerRows-1
+        ldx     #0              ; hi
         ldy     #kEntryPickerItemHeight
         jsr     Multiply_16_8_16
-        addax   pos_entry_base::ycoord, pos_entry_str::ycoord
+        clc
+        adc     #kEntryPickerTop
+
+        tay                     ; Y coord
+        pla
+        tax                     ; X coord hi
+        pla                     ; X coord lo
+
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
+;;; Outputs: A=index, N=1 if no match
+.proc GetOptionIndexFromCoords
+        ;; Row
+        sub16   screentowindow_params::windowy, #kEntryPickerTop, screentowindow_params::windowy
+        bmi     done
+
+        ldax    screentowindow_params::windowy
+        ldy     #kEntryPickerItemHeight
+        jsr     Divide_16_8_16  ; A = row
+
+        cmp     #kEntryPickerRows
+        bcs     done
+        sta     row
+
+        ;; Column
+        sub16   screentowindow_params::windowx, #kEntryPickerLeft, screentowindow_params::windowx
+        bmi     done
+
+        ldax    screentowindow_params::windowx
+        ldy     #kEntryPickerItemWidth
+        jsr     Divide_16_8_16  ; A = col
+
+        cmp     #kEntryPickerCols
+        bcs     done
+
+        ;; Index
+        .repeat app::kEntryPickerRowShift
+        asl
+        .endrepeat
+        row := *+1
+        ora     #SELF_MODIFIED_BYTE
         rts
 
-tmp:    .byte   0
+done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 ;;; Input: A = entry number
 
-.proc draw_list_entry
+.proc DrawListEntry
         ptr := $06
 
         pha
-        jsr     get_selector_list_entry_addr
+        jsr     GetSelectorListEntryAddr
         stax    ptr
         ldy     #0
         lda     (ptr),y         ; length
@@ -1734,11 +1783,15 @@ prefix: pla
         sta     entry_string_buf+3
 
         ;; Draw the string
-common: lda     winfo::window_id
-        jsr     get_window_port
+common: lda     #winfo::kDialogId
+        jsr     GetWindowPort
         pla
-        jsr     set_entry_text_pos
-        MGTK_CALL MGTK::MoveTo, pos_entry_str
+        jsr     GetOptionPos
+        addax   #kEntryPickerTextHOffset, entry_picker_item_rect::x1
+        tya
+        ldx     #0
+        addax   #kEntryPickerTextVOffset, entry_picker_item_rect::y1
+        MGTK_CALL MGTK::MoveTo, entry_picker_item_rect::topleft
         param_call DrawString, entry_string_buf
         rts
 .endproc
@@ -1746,115 +1799,58 @@ common: lda     winfo::window_id
 ;;; ============================================================
 ;;; Input: A = clicked entry
 
-.proc handle_entry_click
+.proc HandleEntryClick
         cmp     selected_index  ; same as previous selection?
         beq     :+
         pha
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite ; un-highlight old entry
+        jsr     MaybeToggleEntryHilite ; un-highlight old entry
         pla
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite ; highlight new entry
+        jsr     MaybeToggleEntryHilite ; highlight new entry
 :
 
         jsr     DetectDoubleClick
-        bne     :+
+        jeq     InvokeEntry
 
-        jmp     invoke_entry
-
-:       rts
+        rts
 
 .endproc
 
 ;;; ============================================================
 ;;; Toggle the highlight on an entry in the list
-;;; Input: A = entry number
+;;; Input: A = entry number (negative if no selection)
 
-.proc maybe_toggle_entry_hilite
-        bpl     :+
-        rts
+.proc MaybeToggleEntryHilite
+        bmi     ret
 
-:       pha
-
-        lsr     a
-        lsr     a
-        lsr     a
-        sta     col      ; col
-
-        asl     a
-        asl     a
-        asl     a
-        sta     tmp
-
-        pla
-        sec
-        sbc     tmp
-        sta     row
-
-        lda     #0
-        sta     tmp
-        lda     col
-        lsr     a
-        ror     tmp
-        pha
-
-        ;; X coords
-        lda     tmp
-        clc
-        adc     rect_entry_base::x1
-        sta     rect_entry::x1
-        pla
-        pha
-        adc     rect_entry_base::x1+1
-        sta     rect_entry::x1+1
-        lda     tmp
-        clc
-        adc     rect_entry_base::x2
-        sta     rect_entry::x2
-        pla
-        adc     rect_entry_base::x2+1
-        sta     rect_entry::x2+1
-
-        ;; Y coords
-        lda     row
-        ldx     #0
-        ldy     #kEntryPickerItemHeight
-        jsr     Multiply_16_8_16
-        stax    tmp
-        addax   rect_entry_base::y1, rect_entry::y1
-        add16   tmp, rect_entry_base::y2, rect_entry::y2
+        jsr     GetOptionPos
+        stax    entry_picker_item_rect::x1
+        addax   #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
+        tya                     ; y lo
+        ldx     #0              ; y hi
+        stax    entry_picker_item_rect::y1
+        addax   #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
 
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_entry
+        MGTK_CALL MGTK::PaintRect, entry_picker_item_rect
 
-        rts
-
-tmp:    .word   0
-row:    .byte   0
-col:    .byte   0
+ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc cmd_startup
+.proc CmdStartup
         ldy     menu_params::menu_item
         lda     slot_table,y
-        ora     #$C0
+        ora     #>$C000         ; compute $Cn00
         sta     @addr+1
+        lda     #<$C000
+        sta     @addr
+
         sta     ALTZPOFF
-        lda     ROMIN2
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-        sta     DHIRESOFF
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80COL
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
+        bit     ROMIN2
+        jsr     RestoreSystem
 
         @addr := * + 1
         jmp     SELF_MODIFIED
@@ -1864,13 +1860,13 @@ col:    .byte   0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_invoke_params, INVOKER_PREFIX
 
-.proc invoke_entry
+.proc InvokeEntry
         lda     L9129
         bne     :+
-        jsr     set_watch_cursor
+        jsr     SetWatchCursor
         lda     selected_index
         bmi     :+
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 :       jmp     try
 
 ep2:    jmp     L9C7E
@@ -1886,7 +1882,7 @@ L9C2A:  jsr     GetCopiedToRAMCardFlag
         jmp     L9C78
 
 L9C32:  lda     selected_index
-        jsr     get_selector_list_entry_addr
+        jsr     GetSelectorListEntryAddr
         stax    $06
         ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
@@ -1897,30 +1893,30 @@ L9C32:  lda     selected_index
         ;; Copy on boot
         lda     L9129
         bne     L9C6F
-        jsr     get_selected_index_file_info
+        jsr     GetSelectedIndexFileInfo
         beq     L9C6F
-        jsr     load_overlay2
+        jsr     LoadOverlayCopyDialog
         lda     selected_index
-        jsr     file_copier_exec
+        jsr     file_copier__Exec
         pha
-        jsr     check_and_handle_updates
+        jsr     CheckAndClearUpdates
         pla
         beq     L9C6F
-        jsr     set_pointer_cursor
-        jmp     clear_selected_index
+        jsr     SetPointerCursor
+        jmp     ClearSelectedIndex
 
 L9C65:  lda     L9129
         bne     L9C6F
-        jsr     get_selected_index_file_info
+        jsr     GetSelectedIndexFileInfo
         bne     L9C78
 L9C6F:  lda     selected_index
-        jsr     compose_dst_path
+        jsr     ComposeDstPath
         jmp     L9C7E
 
         ;; --------------------------------------------------
 
 L9C78:  lda     selected_index
-        jsr     get_selector_list_path_addr
+        jsr     GetSelectorListPathAddr
 L9C7E:  stax    $06
         ldy     #$00
         lda     ($06),y
@@ -1943,11 +1939,12 @@ L9C87:  lda     ($06),y
         cmp     #ERR_VOL_NOT_FOUND
         bne     fail
         txa
-        bne     fail            ; Cancel (Seems wrong, kAlertResultCancel = 1 ?)
-        jsr     set_watch_cursor
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        bne     fail            ; `kAlertResultCancel` = 1
+        jsr     SetWatchCursor
         jmp     L9C78
 
-fail:   jmp     clear_selected_index
+fail:   jmp     ClearSelectedIndex
 
         ;; --------------------------------------------------
         ;; Check file type
@@ -1958,8 +1955,12 @@ check_type:
         lda     get_file_info_invoke_params::file_type
         cmp     #FT_BASIC
         bne     not_basic
-        jsr     check_basic_system
-        jmp     check_path
+        jsr     CheckBasicSystem
+        jeq     check_path
+
+        lda     #AlertID::basic_system_not_found
+        jsr     ShowAlert
+        jmp     ClearSelectedIndex
 
 not_basic:
         cmp     #FT_BINARY
@@ -1968,10 +1969,14 @@ not_basic:
         beq     check_path
         cmp     #FT_S16
         beq     check_path
+
+        jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
+        beq     check_path
+
         ;; Don't know how to invoke
         lda     #AlertID::selector_unable_to_run
         jsr     ShowAlert
-        jmp     clear_selected_index
+        jmp     ClearSelectedIndex
 
         ;; --------------------------------------------------
         ;; Check Path
@@ -1985,7 +1990,8 @@ check_path:
         bne     :-
         lda     #AlertID::insert_source_disk
         jsr     ShowAlert
-        bne     clear_selected_index ; Cancel
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        bne     ClearSelectedIndex ; `kAlertResultCancel` = 1
         jmp     try
 
 :       dey
@@ -2002,26 +2008,15 @@ check_path:
         stx     INVOKER_FILENAME
         pla
         sta     INVOKER_PREFIX
-        param_call upcase_string, INVOKER_PREFIX
-        param_call upcase_string, INVOKER_FILENAME
+        param_call UpcaseString, INVOKER_PREFIX
+        param_call UpcaseString, INVOKER_FILENAME
 
         ;; --------------------------------------------------
         ;; Invoke
 
-        jsr     reconnect_ramdisk
-        jsr     SETVID
-        jsr     SETKBD
-        jsr     INIT
-        jsr     HOME
-        sta     DHIRESOFF
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-        sta     CLRALTCHAR
-        jsr     SetColorMode
-        sta     CLR80VID
-        sta     CLR80COL
+        sta     ALTZPOFF
+        bit     ROMIN2
+        jsr     RestoreSystem
 
         jsr     INVOKER
 
@@ -2033,11 +2028,11 @@ check_path:
         brk
 
 .endproc
-        invoke_entry_ep2 := invoke_entry::ep2
+        invoke_entry_ep2 := InvokeEntry::ep2
 
         DEFINE_QUIT_PARAMS quit_params
 
-.proc clear_selected_index
+.proc ClearSelectedIndex
         lda     L9129
         bne     :+
         lda     #$FF
@@ -2050,12 +2045,21 @@ check_path:
         scratch_buf := $1C00
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_bs_params, scratch_buf
 
-.proc check_basic_system
+kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
+str_basix_system:
+        PASCAL_STRING "BASIx.SYSTEM"
+
+.proc CheckBasixSystemImpl
+        launch_path := INVOKER_PREFIX
         path_buf := $1C00
 
-        ;; Find last '/'
-start:  ldx     INVOKER_PREFIX
-:       lda     INVOKER_PREFIX,x
+basic:  lda     #'C'            ; "BASI?" -> "BASIC"
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+basis:  lda     #'S'            ; "BASI?" -> "BASIS"
+        sta     str_basix_system + kBSOffset
+
+        ldx     launch_path
+:       lda     launch_path,x
         cmp     #'/'
         beq     :+
         dex
@@ -2065,7 +2069,7 @@ start:  ldx     INVOKER_PREFIX
 :       dex
         stx     len
         stx     path_buf
-L9D78:  lda     INVOKER_PREFIX,x
+L9D78:  lda     launch_path,x
         sta     path_buf,x
         dex
         bne     L9D78
@@ -2077,9 +2081,9 @@ L9D8C:  ldx     path_buf
         ldy     #$00
 L9D91:  inx
         iny
-        lda     str_basic_system,y
+        lda     str_basix_system,y
         sta     path_buf,x
-        cpy     str_basic_system
+        cpy     str_basix_system
         bne     L9D91
         stx     path_buf
         MLI_CALL GET_FILE_INFO, get_file_info_bs_params
@@ -2092,13 +2096,8 @@ L9DB0:  lda     path_buf,x
         beq     L9DC8
         dex
         bne     L9DB0
-L9DBA:  lda     #AlertID::basic_system_not_found
-        jsr     ShowAlert
-        jsr     clear_selected_index
-        jsr     set_pointer_cursor
-        pla
-        pla
-        rts
+
+L9DBA:  return  #$FF            ; non-zero is failure
 
 L9DC8:  cpx     #$01
         beq     L9DBA
@@ -2109,16 +2108,15 @@ L9DC8:  cpx     #$01
 
 len:    .byte   0
 
-str_basic_system:
-        PASCAL_STRING "Basic.system" ; do not localize
-
 .endproc
+CheckBasicSystem        := CheckBasixSystemImpl::basic
+CheckBasisSystem        := CheckBasixSystemImpl::basis
 
 ;;; ============================================================
 ;;; Uppercase a string
 ;;; Input: A,X = Address
 
-.proc upcase_string
+.proc UpcaseString
         ptr := $06
 
         stax    ptr
@@ -2139,11 +2137,11 @@ str_basic_system:
 
 ;;; ============================================================
 
-.proc get_selected_index_file_info
+.proc GetSelectedIndexFileInfo
         ptr := $06
 
         lda     selected_index
-        jsr     compose_dst_path
+        jsr     ComposeDstPath
         stax    ptr
         ldy     #0
         lda     (ptr),y
@@ -2156,7 +2154,7 @@ str_basic_system:
         rts
 .endproc
 
-        .include "../lib/buttonloop.s"
+        .include "../lib/button.s"
 
 ;;; ============================================================
 
@@ -2164,38 +2162,56 @@ str_basic_system:
 ;;; not running w/ AUXZP and LCBANK1.
 
 .proc GetCopiedToRAMCardFlag
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
         tax
-        lda     ROMIN2
+        bit     ROMIN2
         txa
         rts
 .endproc
 
 .proc CopyRAMCardPrefix
         stax    @addr
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         ldx     RAMCARD_PREFIX
 :       lda     RAMCARD_PREFIX,x
         @addr := * + 1
         sta     SELF_MODIFIED,x
         dex
         bpl     :-
-        lda     ROMIN2
+        bit     ROMIN2
+        rts
+.endproc
+
+;;; Copy the original DeskTop prefix (e.g. "/HD/A2D") to the passed buffer.
+;;; Input: A,X=destination buffer
+.proc CopyDeskTopOriginalPrefix
+        stax    @addr
+        bit     LCBANK2
+        bit     LCBANK2
+
+        ldx     DESKTOP_ORIG_PREFIX
+:       lda     DESKTOP_ORIG_PREFIX,x
+        @addr := *+1
+        sta     SELF_MODIFIED,x
+        dex
+        bpl     :-
+
+        bit     ROMIN2
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc compose_dst_path
+.proc ComposeDstPath
         buf := $800
 
         sta     tmp
         param_call CopyRAMCardPrefix, buf
         lda     tmp
-        jsr     get_selector_list_path_addr
+        jsr     GetSelectorListPathAddr
 
         path_addr := $06
 
@@ -2205,7 +2221,6 @@ str_basic_system:
         sta     len
         tay
 :       lda     (path_addr),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey
@@ -2213,7 +2228,6 @@ str_basic_system:
 
 :       dey
 :       lda     (path_addr),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey
@@ -2240,19 +2254,28 @@ len:    .byte   0
 ;;; Input: A = AlertID
 
 .proc ShowAlert
-        pha
-        jsr     Bell
-        pla
         tax
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         txa
-        jsr     ShowAlertImpl
+        jsr     AlertById
         tax
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         txa
+        rts
+.endproc
+
+;;; Alert code calls here to yield; swaps memory banks back in
+;;; to do things like read the ProDOS clock.
+.proc AlertYieldLoopRelay
+        sta     ALTZPOFF
+        bit     ROMIN2
+        jsr     YieldLoop
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 .endproc
 
@@ -2271,63 +2294,69 @@ len:    .byte   0
         jsr     IDROUTINE
         bcc     iigs
 
+        bit     lcm_eve_flag
+        bmi     lcmeve
+
         ;; AppleColor Card - Mode 2 (Color 140x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
-        sta     SET80VID
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
+        sta     SET80VID        ; set register to 1
+        sta     AN3_OFF
+        sta     AN3_ON          ; shift in 1 as first bit
+        sta     AN3_OFF
+        sta     AN3_ON          ; shift in 1 as second bit
+        sta     DHIRESON        ; re-enable DHR
+        rts
 
         ;; Le Chat Mauve Eve - COL140 mode
         ;; (AN3 off, HR1 off, HR2 off, HR3 off)
-        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
-        ;; lda AN3_OFF ; already done above
-        bit     lcm_eve_flag
-        bpl     done
+lcmeve: sta     AN3_OFF
+        sta     HR1_OFF
         sta     HR2_OFF
         sta     HR3_OFF
-        bmi     done            ; always
+        rts
 
         ;; Apple IIgs - DHR Color
 iigs:   lda     NEWVIDEO
         and     #<~(1<<5)       ; Color
         sta     NEWVIDEO
-
-done:   rts
+        lda     #$00            ; Color
+        sta     MONOCOLOR
+        rts
 .endproc
 
 .proc SetMonoMode
-        ;; IIgs?
         sec
         jsr     IDROUTINE
         bcc     iigs
 
+        bit     lcm_eve_flag
+        bmi     lcmeve
+
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
-        sta     CLR80VID
-        lda     AN3_OFF
-        lda     AN3_ON
-        lda     AN3_OFF
-        lda     AN3_ON
-        sta     SET80VID
-        lda     AN3_OFF
+        sta     CLR80VID        ; set register to 0
+        sta     AN3_OFF
+        sta     AN3_ON          ; shift in 0 as first bit
+        sta     AN3_OFF
+        sta     AN3_ON          ; shift in 0 as second bit
+        sta     SET80VID        ; re-enable DHR
+        sta     DHIRESON
+        rts
 
         ;; Le Chat Mauve Eve - BW560 mode
         ;; (AN3 off, HR1 off, HR2 on, HR3 on)
-        ;; Skip on IIgs since emulators (KEGS/GSport/GSplus) crash.
-        ;; lda AN3_OFF ; already done above
-        bit     lcm_eve_flag
-        bpl     done
+lcmeve: sta     AN3_OFF
+        sta     HR1_OFF
         sta     HR2_ON
         sta     HR3_ON
-        bmi     done            ; always
+        rts
 
         ;; Apple IIgs - DHR B&W
 iigs:   lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
+        lda     #$80            ; Mono
+        sta     MONOCOLOR
 
 done:   rts
 .endproc
@@ -2336,30 +2365,20 @@ done:   rts
 ;;; ============================================================
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 
-.proc reset_iigs_rgb
+.proc ResetIIgsRGB
         bit     not_iigs_flag
-        bmi     done
+        bmi     SetMonoMode::done
 
         bit     SETTINGS + DeskTopSettings::rgb_color
-        bmi     color
-
-mono:   lda     NEWVIDEO
-        ora     #(1<<5)         ; B&W
-        sta     NEWVIDEO
-        rts
-
-color:  lda     NEWVIDEO
-        and     #<~(1<<5)        ; Color
-        sta     NEWVIDEO
-
-done:   rts
+        bmi     SetColorMode::iigs
+        bpl     SetMonoMode::iigs ; always
 .endproc
 
 ;;; ============================================================
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
-.proc yield_loop
+.proc YieldLoop
         kMaxCounter = $E0       ; arbitrary
 
         inc     loop_counter
@@ -2369,7 +2388,8 @@ done:   rts
         bcc     :+
         copy    #0, loop_counter
 
-        jsr     reset_iigs_rgb ; in case it was reset by control panel
+        jsr     ShowClock
+        jsr     ResetIIgsRGB   ; in case it was reset by control panel
 
 :       lda     loop_counter
         rts
@@ -2379,13 +2399,83 @@ loop_counter:
 .endproc
 
 ;;; ============================================================
+;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
+;;; Output: A=high bit/N flag set if either is down.
 
+.proc ModifierDown
+        lda     BUTN0
+        ora     BUTN1
+        rts
+.endproc
+
+;;; Test if shift is down (if it can be detected).
+;;; Output: A=high bit/N flag set if down.
+
+.proc ShiftDown
+        bit     not_iigs_flag
+        bmi     TestShiftMod    ; no, rely on shift key mod
+
+        lda     KEYMODREG       ; On IIgs, use register instead
+        and     #%00000001      ; bit 7 = Command (OA), bit 0 = Shift
+        bne     :+
+        rts
+
+:       lda     #$80
+        rts
+.endproc
+
+;;; Compare the shift key mod state. Returns high bit set if
+;;; not the initial state (i.e. Shift key is likely down), if
+;;; detectable.
+
+.proc TestShiftMod
+        ;; If a IIe, maybe use shift key mod
+        ldx     ZIDBYTE         ; $00 = IIc/IIc+
+        ldy     IDBYTELASER128  ; $AC = Laser 128
+        lda     #0
+        cpx     #0              ; ZIDBYTE = $00 == IIc/IIc+
+        beq     :+
+        cpy     #$AC            ; IDBYTELASER128 = $AC = Laser 128
+        beq     :+              ; On Laser, BUTN2 set when mouse button clicked
+
+        ;; It's a IIe, compare shift key state
+        lda     pb2_initial_state ; if shift key mod installed, %1xxxxxxx
+        eor     BUTN2             ; ... and if shift is down, %0xxxxxxx
+
+:       rts
+.endproc
+
+;;; Shift key mod sets PB2 if shift is *not* down. Since we can't detect
+;;; the mod, snapshot on init (and assume shift is not down) and XOR.
+pb2_initial_state:
+        .byte   0
+
+;;; ============================================================
+
+        .include "../lib/menuclock.s"
+        .include "../lib/datetime.s"
         .include "../lib/doubleclick.s"
         .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"
         .include "../lib/bell.s"
         .include "../lib/detect_lcmeve.s"
+        .include "../lib/clear_dhr.s"
+        .include "../lib/disconnect_ram.s"
+        .include "../lib/reconnect_ram.s"
+
+;;; ============================================================
+;;; Settings - modified by Control Panels
+;;; ============================================================
+
+        PAD_TO ::BELLDATA
+        .include "../lib/default_sound.s"
+
+        PAD_TO ::SETTINGS
+        .include "../lib/default_settings.s"
+
+;;; ============================================================
 
 .endscope
 
-        PAD_TO OVERLAY_ADDR
+        PAD_TO kSegmentAppAddress + kSegmentAppLength
+        ASSERT_ADDRESS OVERLAY_ADDR

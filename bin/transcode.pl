@@ -28,6 +28,8 @@ while (<>) {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/£§˚çéùàòèì/; } else { tr/£§˚çéùàòèì/#@[\\]`{|}~/; }
     } elsif ($lang eq 'es') {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/£§¡Ñ¿`˚ñç~/; } else { tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/; }
+        # unofficial extensions for A2D
+        if ($dir eq 'from') { tr/\x10-\x14/áéíóú/; } else { tr/áéíóú/\x10-\x14/; }
     } elsif ($lang eq 'da') {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/#@ÆØÅ`æøå~/; } else { tr/#@ÆØÅ`æøå~/#@[\\]`{|}~/; }
     } elsif ($lang eq 'sv') {

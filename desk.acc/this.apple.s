@@ -17,9 +17,12 @@
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
+        .include "../inc/smartport.inc"
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
+
+        MGTKEntry := MGTKAuxEntry
 
 ;;; ============================================================
 
@@ -35,9 +38,9 @@ kShortcutEasterEgg = res_char_easter_egg_shortcut
 da_start:
 ;;; Some static checks where we can cache the results.
 .scope
-        jsr     identify_model
-        jsr     identify_prodos_version
-        jsr     identify_memory
+        jsr     IdentifyModel
+        jsr     IdentifyProDOSVersion
+        jsr     IdentifyMemory
 .endscope
 
 ;;; Copy the DA to AUX for easy bank switching
@@ -53,7 +56,7 @@ da_start:
         ;; run the DA (from Aux)
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit (back to Main)
         sta     RAMRDOFF
@@ -96,7 +99,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -451,6 +454,9 @@ str_iie_original:
 str_iie_enhanced:
         PASCAL_STRING res_string_model_iie_enhanced
 
+str_iie_edm:
+        PASCAL_STRING res_string_model_iie_edm
+
 str_iie_card:
         PASCAL_STRING res_string_model_iie_card
 
@@ -485,7 +491,7 @@ str_ace2000:
 ;;; ============================================================
 
 str_prodos_version:
-        PASCAL_STRING "ProDOS #.#.#" ; do not localize
+        PASCAL_STRING "ProDOS #.#.#"
         kVersionStrMajor = 8
         kVersionStrMinor = 10
         kVersionStrPatch = 12
@@ -499,6 +505,9 @@ str_memory_prefix:
 
 str_memory_suffix:
         PASCAL_STRING res_string_memory_suffix       ; memory size suffix for kilobytes
+
+str_list_separator:
+        PASCAL_STRING ", "
 
 memory:.word    0
 
@@ -532,7 +541,7 @@ slot_pos_table:
 ;;; ============================================================
 
         PAD_TO $0FFD
-.proc z80_routine
+.proc Z80Routine
         .assert * = $0FFD, error, "Must be at $0FFD / FFFDH"
         ;; .org $FFFD
         patch := *+2
@@ -546,11 +555,12 @@ slot_pos_table:
 
 ;;; ============================================================
 
+kMaxSmartportDevices = 8
+
 str_diskii:     PASCAL_STRING res_string_card_type_diskii
 str_block:      PASCAL_STRING res_string_card_type_block
-kStrSmartportReserve = .strlen(res_string_card_type_smartport) + (8*16 + 7*2) ; names + ", " seps
 kStrSmartportLength = .strlen(res_string_card_type_smartport)
-str_smartport:  PASCAL_STRING res_string_card_type_smartport, kStrSmartportReserve
+str_smartport:  PASCAL_STRING res_string_card_type_smartport
 str_ssc:        PASCAL_STRING res_string_card_type_ssc
 str_80col:      PASCAL_STRING res_string_card_type_80col
 str_mouse:      PASCAL_STRING res_string_card_type_mouse
@@ -569,6 +579,8 @@ str_network:    PASCAL_STRING res_string_card_type_network
 str_mockingboard: PASCAL_STRING res_string_card_type_mockingboard
 str_z80:        PASCAL_STRING res_string_card_type_z80
 str_uthernet2:  PASCAL_STRING res_string_card_type_uthernet2
+str_lcmeve:     PASCAL_STRING res_string_card_type_lcmeve
+str_vidhd:      PASCAL_STRING res_string_card_type_vidhd
 str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
 str_none:       PASCAL_STRING res_string_none
@@ -610,26 +622,12 @@ dragy:          .word   0
 moved:          .byte   0
 .endparams
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   0
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
+grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
@@ -652,34 +650,45 @@ Version:                .word   0
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.07.html
 ;;; and c/o JohnMBrooks
 
-;;; Machine                    $FBB3    $FB1E    $FBC0    $FBDD    $FBBE    $FBBF
-;;; -----------------------------------------------------------------------------
-;;; Apple ][                    $38     [$AD]    [$60]                      [$2F]
-;;; Apple ][+                   $EA      $AD     [$EA]                      [$EA]
+;;; Machine                    $FBB3    $FB1E    $FBC0    $FBDD    $FBBF
+;;; --------------------------------------------------------------------
+;;; Apple ][                    $38     [$AD]    [$60]             [$2F]
+;;; Apple ][+                   $EA      $AD     [$EA]             [$EA]
 ;;; Apple /// (emulation)       $EA      $8A
-;;; Apple IIe                   $06     [$AD]     $EA     [$A9]             [$00]
-;;; Apple IIe (enhanced)        $06     [$AD]     $E0     [$A9]             [$00]
-;;; Apple IIe Option Card       $06     [$AD]     $E0      $02      $00
-;;; Apple IIc                   $06     [$4C]     $00                        $FF
-;;; Apple IIc (3.5 ROM)         $06     [$4C]     $00                        $00
-;;; Apple IIc (Org. Mem. Exp.)  $06     [$4C]     $00                        $03
-;;; Apple IIc (Rev. Mem. Exp.)  $06     [$4C]     $00                        $04
-;;; Apple IIc Plus              $06     [$4C]     $00                        $05
-;;; Apple IIgs                  $06     [$4C]     $E0  (and SEC, JSR $FE1F, CC=IIgs)
-;;; Laser 128                   $06      $AC     [$E0]
-;;; Franklin ACE 500            $06      $AD      $00                       [$00]
-;;; Franklin ACE 2000           $06      $AD      $E0      $4C     [$00]    [$00]
+;;; Apple IIe                   $06     [$AD]     $EA     [$A9]    [$00]
+;;; Apple IIe (enhanced)        $06     [$AD]     $E0     [$A9]    [$00]
+;;; Apple IIe (Ext. Debug Mon.) $06     [$AD]     $E1
+;;; Apple IIe Option Card *     $06     [$AD]     $E0      $02
+;;; Apple IIc **                $06     [$4C]     $00     [$A9]     $FF
+;;; Apple IIc (3.5 ROM)         $06     [$4C]     $00     [$A9]     $00
+;;; Apple IIc (Org. Mem. Exp.)  $06     [$4C]     $00     [$A9]     $03
+;;; Apple IIc (Rev. Mem. Exp.)  $06     [$4C]     $00     [$A9]     $04
+;;; Apple IIc Plus              $06     [$4C]     $00     [$A9]     $05
+;;; Apple IIgs ***              $06     [$4C]     $E0     [$00]    [$00]
+;;; Laser 128                   $06      $AC     [$E0]    [$8D]    [$00]
+;;; Franklin ACE 500            $06      $AD      $00      $4C     [$00]
+;;; Franklin ACE 2000 ****      $06      $AD    $EA/$E0    $4C     [$00]
 ;;;
 ;;; (Values in [] are for reference, not needed for compatibility check)
 ;;;
-;;; Location $FBBE is the version byte for the Apple IIe Card (just as $FBBF is
-;;; the version byte for the Apple IIc family) and is $00 for the first release
-;;; of the Apple IIe Card.
-
-;;; Per MG: There is more than one release of the Apple IIe Card, so we do not
-;;; check $FBBE.  If you are running the latest Apple release of "IIe Startup"
-;;; this byte is $03.
-
+;;; * = $FBBE is the version byte for the Apple IIe Card.
+;;;   $00 = first release
+;;;   $03 = latest Apple release of IIe Startup (c/o MG)
+;;;
+;;; ** = $FBBF is the version byte for the Apple IIc family:
+;;;   $FF = Original
+;;;   $00 = 3.5 ROM
+;;;   $03 = Original Memory Expansion
+;;;   $04 = Revised Memory Expansion
+;;;   $05 = IIc Plus
+;;;
+;;; *** = Apple IIgs looks like an Enhanced IIe. SEC, JSR $FE1F, CC=IIgs
+;;;
+;;; **** = Franklin ACE 2000 appears to have different ROM versions:
+;;;   v5.X - has $FBC0=$EA (like an original IIe), and does not have $60 (RTS)
+;;;          at $FE1F, so the IIgs IDROUTINE must be used with caution: it
+;;;          will modify A and output text!
+;;;   v6.0 - has $FBC0=$E0 (like an enhanced IIe), and has $FE1F=$60
 
 .enum model
 .if ::INCLUDE_UNSUPPORTED_MACHINES
@@ -689,6 +698,7 @@ Version:                .word   0
 .endif
         iie_original            ; Apple IIe (original)
         iie_enhanced            ; Apple IIe (enhanced)
+        iie_edm                 ; Apple IIe (Extended Debugging Monitor)
         iic_original            ; Apple IIc
         iic_rom0                ; Apple IIc (3.5 ROM)
         iic_rom3                ; Apple IIc (Org. Mem. Exp.)
@@ -711,6 +721,7 @@ model_str_table:
 .endif
         .addr   str_iie_original ; Apple IIe (original)
         .addr   str_iie_enhanced ; Apple IIe (enhanced)
+        .addr   str_iie_edm      ; Apple IIe (Extended Debugging Monitor)
         .addr   str_iic_original ; Apple IIc
         .addr   str_iic_rom0     ; Apple IIc (3.5 ROM)
         .addr   str_iic_rom3     ; Apple IIc (Org. Mem. Exp.)
@@ -731,6 +742,7 @@ model_pix_table:
 .endif
         .addr   iie_bitmap      ; Apple IIe (original)
         .addr   iie_bitmap      ; Apple IIe (enhanced)
+        .addr   iie_bitmap      ; Apple IIe (Extended Debugging Monitor)
         .addr   iic_bitmap      ; Apple IIc
         .addr   iic_bitmap      ; Apple IIc (3.5 ROM)
         .addr   iic_bitmap      ; Apple IIc (Org. Mem. Exp.)
@@ -742,7 +754,6 @@ model_pix_table:
         .addr   ace500_bitmap   ; Franklin ACE 500
         .addr   ace2000_bitmap  ; Franklin ACE 2000
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
-
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.07.html
@@ -799,9 +810,9 @@ model_lookup_table:
 
         .byte   $FF             ; sentinel
 
-.proc identify_model
+.proc IdentifyModel
         ;; Read from ROM
-        lda     ROMIN2
+        bit     ROMIN2
 
         ldx     #0              ; offset into table
 
@@ -834,7 +845,11 @@ b_loop: lda     model_lookup_table,x ; offset from MODEL_ID_PAGE
 fail:   ldy     #0
 
 match:  tya
+
         ;; A has model; but now test for IIgs
+        cmp     #model::iie_enhanced   ; IIgs masquerades as Enhanced IIe
+        bne     :+
+
         sec
         jsr     IDROUTINE
         bcs     :+              ; not IIgs
@@ -846,17 +861,25 @@ match:  tya
         lda     #model::iigs
 
         ;; A has model
-:       asl
-        tax
-        copy16  model_str_table,x, model_str_ptr
-        copy16  model_pix_table,x, model_pix_ptr
+:       jsr     SetModelPtrs
 
         ;; Read from LC RAM
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 .endproc
 
+;;; ============================================================
+
+;;; Input: A = model index
+;;; Output: Sets `model_str_ptr` and `model_pix_ptr`
+.proc SetModelPtrs
+        asl
+        tax
+        copy16  model_str_table,x, model_str_ptr
+        copy16  model_pix_table,x, model_pix_ptr
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -874,7 +897,7 @@ match:  tya
 ;;; $24         2.4.x
 
 ;;; Assert: Main is banked in
-.proc identify_prodos_version
+.proc IdentifyProDOSVersion
 
         ;; Read ProDOS version field from global page in main
         lda     KVERSION
@@ -914,73 +937,72 @@ done:   rts
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     handle_down
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down  ; any key?
-        beq     handle_key
-        jmp     input_loop
+        beq     HandleKey
+        jmp     InputLoop
 .endproc
 
-.proc exit
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     ClearUpdates
         rts                     ; exits input loop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     exit
+        beq     Exit
         cmp     #kShortcutEasterEgg
         beq     :+
         cmp     #TO_LOWER(kShortcutEasterEgg)
-        bne     input_loop
-:       jmp     handle_egg
+        bne     InputLoop
+:       jmp     HandleEgg
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bne     exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     input_loop
+        bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
-        jmp     input_loop
+        beq     HandleDrag
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        beq     input_loop
-        bne     exit
+        beq     InputLoop
+        bne     Exit
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -989,45 +1011,38 @@ done:   rts
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 ;;; ============================================================
 
-.proc handle_egg
+.proc HandleEgg
         lda     egg
-        asl
-        tax
-        copy16  model_str_table,x, model_str_ptr
-        copy16  model_pix_table,x, model_pix_ptr
+        jsr     SetModelPtrs
 
-        inc     egg
-        lda     egg
-        cmp     #kNumModels
+        ldx     egg
+        inx
+        cpx     #kNumModels
         bne     :+
-        lda     #0
-        sta     egg
+        ldx     #0
+:       stx     egg
 
-:       jsr     clear_window
-        jsr     draw_window
-done:   jmp     input_loop
+        jsr     ClearWindow
+        jsr     DrawWindow
+        jmp     InputLoop
 
 egg:    .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -1036,25 +1051,34 @@ egg:    .byte   0
         rts
 .endproc
 
-;;; ============================================================
-
-.proc clear_window
-        MGTK_CALL MGTK::GetWinPort, winport_params
-        cmp     #MGTK::Error::window_obscured
-        bne     :+
-        rts
-
-:       MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::PaintRect, grafport::cliprect
+.proc ClearUpdates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc draw_window
+.proc ClearWindow
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        cmp     #MGTK::Error::window_obscured
+        bne     :+
+        rts
+
+:       MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::PaintRect, grafport + MGTK::GrafPort::maprect
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawWindow
         ptr := $06
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
         rts
@@ -1081,7 +1105,7 @@ egg:    .byte   0
         param_call DrawString, str_from_int
         param_call DrawString, str_memory_suffix
         param_call DrawString, str_cpu_prefix
-        jsr     cpuid
+        jsr     CPUId
         jsr     DrawString
 
         lda     #7
@@ -1113,10 +1137,10 @@ loop:   lda     slot
 
         ;; ProDOS thinks there's a card...
         lda     slot
-        jsr     probe_slot      ; check for matching firmware
+        jsr     ProbeSlot       ; check for matching firmware
         bcs     draw
         lda     slot            ; check non-firmware cases in case of
-        jsr     probe_slot_no_firmware ; false-positive (e.g. emulator)
+        jsr     ProbeSlotNoFirmware ; false-positive (e.g. emulator)
         bcs     draw
 
         ldax    #str_unknown
@@ -1124,16 +1148,48 @@ loop:   lda     slot
 
 pro_no:
         lda     slot
-        jsr     probe_slot_no_firmware
+        jsr     ProbeSlotNoFirmware
         bcs     draw
 
         ldax    #str_empty
 
-draw:   jsr     DrawString
+draw:   php
+        jsr     DrawString
+        plp
+    IF_VS
+        ;; V=1 means smartport - print out the names
+        lda     slot
+        jsr     SetSlotPtr
+        jsr     ShowSmartPortDeviceNames
+    END_IF
+
+        ;; Special case for Slot 3 cards
+        lda     slot
+        cmp     #3
+    IF_EQ
+        bit     ROMIN2
+        jsr     DetectLeChatMauveEve
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
+      IF_NE
+        param_call DrawString, str_list_separator
+        param_call DrawString, str_lcmeve
+      ELSE
+        lda     slot
+        jsr     SetSlotPtr
+        param_call WithInterruptsDisabled, DetectUthernet2
+       IF_CS
+        param_call DrawString, str_list_separator
+        param_call DrawString, str_uthernet2
+       END_IF
+      END_IF
+    END_IF
 
         lsr     mask
         dec     slot
-        bne     loop
+        jne     loop
 
         MGTK_CALL MGTK::ShowCursor
         rts
@@ -1146,7 +1202,7 @@ penmode:.byte   MGTK::notpencopy
 ;;; ============================================================
 ;;; Point $06/$07 at $Cn00
 ;;; Input: Slot in A
-.proc set_slot_ptr
+.proc SetSlotPtr
         ptr     := $6
 
         ora     #$C0
@@ -1160,6 +1216,7 @@ penmode:.byte   MGTK::notpencopy
 ;;; Firmware Detector:
 ;;; Input: Slot # in A
 ;;; Output: Carry set and string ptr in A,X if detected, carry clear otherwise
+;;;         Overflow set if SmartPort.
 ;;;
 ;;; Uses a variety of sources:
 ;;; * Technical Note: ProDOS #21: Identifying ProDOS Devices
@@ -1168,11 +1225,11 @@ penmode:.byte   MGTK::notpencopy
 ;;;   http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
 ;;; * "ProDOS BASIC Programming Examples" disk
 
-.proc probe_slot
+.proc ProbeSlot
         ptr     := $6
 
         ;; Point ptr at $Cn00
-        jsr     set_slot_ptr
+        jsr     SetSlotPtr
 
         ;; Get Firmware Byte
 .macro GET_FWB offset
@@ -1186,43 +1243,43 @@ penmode:.byte   MGTK::notpencopy
         cmp     #value
 .endmacro
 
-.macro RESULT value
-        lda     #<value
-        ldx     #>value
-        sec
-        rts
-.endmacro
-
 ;;; ---------------------------------------------
 ;;; Per Technical Note: Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
 
 ;;; ProDOS and SmartPort Devices
 
-        COMPARE_FWB $01, $20    ; $Cn01 == $20 ?
-        bne     notpro
-
-        COMPARE_FWB $03, $00    ; $Cn03 == $00 ?
-        bne     notpro
-
-        COMPARE_FWB $05, $03    ; $Cn05 == $03 ?
-        bne     notpro
+        ldax    #sigtable_prodos_device
+        jsr     SigCheck
+        bcc     notpro
 
 ;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
         COMPARE_FWB $FF, $00    ; $CnFF == $00 ?
         bne     :+
-        RESULT  str_diskii
+        return16 #str_diskii
 :
-
         COMPARE_FWB $07, $00    ; $Cn07 == $00 ?
         beq     :+
-        RESULT  str_block
-
+        sec
+        return16 #str_block
 :
-        jsr     populate_smartport_name
-        RESULT  str_smartport
+        sec
+        bit     ret             ; set V flag to signal SmartPort
+        ldax    #str_smartport
+ret:    rts
+
 notpro:
+
+;;; ---------------------------------------------
+;;; VidHD
+
+        ldax    #sigtable_vidhd
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_vidhd
+:
+
 ;;; ---------------------------------------------
 ;;; Apple IIe Technical Reference Manual
 ;;; Pascal 1.1 firmware protocol
@@ -1234,21 +1291,16 @@ notpro:
 ;;;              c = device class
 ;;;              i = unique identifier
 
-        COMPARE_FWB $05, $38    ; $Cn05 == $38 ?
-        jne     notpas
-
-        COMPARE_FWB $07, $18    ; $Cn07 == $18 ?
-        jne     notpas
-
-        COMPARE_FWB $0B, $01    ; $Cn0B == $01 ?
-        jne     notpas
+        ldax    #sigtable_pascal
+        jsr     SigCheck
+        jcc     notpas
 
         GET_FWB $0C             ; $Cn0C == ....
 
 .macro IF_SIGNATURE_THEN_RETURN     byte, arg
         cmp     #byte
         bne     :+
-        RESULT  arg
+        return16 #arg           ; C=1 implicitly if Z=1
 :
 .endmacro
 
@@ -1271,7 +1323,8 @@ notpro:
 
         ;; Pascal Firmware, but unknown type. Return
         ;; "unknown" otherwise it will be detected as serial below.
-        RESULT  str_unknown
+        sec
+        return16 #str_unknown
 
 notpas:
 
@@ -1279,51 +1332,88 @@ notpas:
 ;;; Based on ProDOS BASIC Programming Examples
 
 ;;; Silentype
-        COMPARE_FWB $17, $C9
-        bne     :+
-        COMPARE_FWB $37, $CF
-        bne     :+
-        COMPARE_FWB $4C, $EA
-        bne     :+
-        RESULT  str_silentype
+        ldax    #sigtable_silentype
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_silentype
 :
 
 ;;; Clock
-        COMPARE_FWB $00, $08
-        bne     :+
-        COMPARE_FWB $01, $78
-        bne     :+
-        COMPARE_FWB $02, $28
-        bne     :+
-        RESULT  str_clock
+        ldax    #sigtable_clock
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_clock
 :
 
 ;;; Communications Card
-        COMPARE_FWB $05, $18
-        bne     :+
-        COMPARE_FWB $07, $38
-        bne     :+
-        RESULT  str_comm
+        ldax    #sigtable_comm
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_comm
 :
 
 ;;; Serial Card
-        COMPARE_FWB $05, $38
-        bne     :+
-        COMPARE_FWB $07, $18
-        bne     :+
-        RESULT  str_serial
+        ldax    #sigtable_serial
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_serial
 :
 
 ;;; Parallel Card
-        COMPARE_FWB $05, $48
-        bne     :+
-        COMPARE_FWB $07, $48
-        bne     :+
-        RESULT  str_parallel
+        ldax    #sigtable_parallel
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_parallel
 :
 
+        rts
+
+;;; Input: A,X = pointer to table (num, offset, value, offset, value, ...)
+;;; Output: C=1 on match, C=0 on no match
+.proc SigCheck
+        stax    table_ptr
+
+        ldx     #0              ; first byte in table is number of pairs
+        jsr     get_next
+        asl     a               ; if 2 entries, then point at table[4] (etc)
+        tax
+
+:       jsr     get_next        ; second byte in pair is value
+        sta     @compare_byte
+        dex
+        jsr     get_next        ; first byte in pair is offset
+        tay
+        lda     (ptr),y
+        @compare_byte := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     no_match
+        dex
+        bne     :-
+
+        ;; match
+        sec
+        rts
+
+no_match:
         clc
         rts
+
+get_next:
+        table_ptr := *+1
+        lda     SELF_MODIFIED,x
+        rts
+.endproc
+
+;;; Format is: num, offset, value, offset, value, ...
+sigtable_prodos_device: .byte   3, $01, $20, $03, $00, $05, $03
+sigtable_vidhd:         .byte   3, $00, $24, $01, $EA, $02, $4C
+sigtable_pascal:        .byte   3, $05, $38, $07, $18, $0B, $01
+sigtable_silentype:     .byte   3, $17, $C9, $37, $CF, $4C, $EA
+sigtable_clock:         .byte   3, $00, $08, $01, $78, $02, $28
+sigtable_comm:          .byte   2, $05, $18, $07, $38
+sigtable_serial:        .byte   2, $05, $38, $07, $18
+sigtable_parallel:      .byte   2, $05, $48, $07, $48
+
 .endproc
 
 ;;; ============================================================
@@ -1331,48 +1421,73 @@ notpas:
 ;;; Input: Slot # in A
 ;;; Output: Carry set and string ptr in A,X if detected, carry clear otherwise
 
-.proc probe_slot_no_firmware
+.proc ProbeSlotNoFirmware
         ptr     := $6
 
         ;; Point ptr at $Cn00
-        jsr     set_slot_ptr
+        jsr     SetSlotPtr
 
-        jsr     detect_mockingboard
+        param_call WithInterruptsDisabled, DetectMockingboard
         bcc     :+
-        RESULT  str_mockingboard
+        return16 #str_mockingboard
 :
 
-        jsr     detect_z80
+        param_call WithInterruptsDisabled, DetectZ80
         bcc     :+
-        RESULT  str_z80
+        return16 #str_z80
 :
 
-        jsr     detect_uthernet2
+        param_call WithInterruptsDisabled, DetectUthernet2
         bcc     :+
-        RESULT  str_uthernet2
+        return16 #str_uthernet2
 :
         clc
         rts
 .endproc
 
+;;; Wrapper for calling procs with interrupts disabled.
+;;; Inputs: A,X = proc to call
+;;; Outputs: A,X,Y registers and C flag return from proc unscathed.
+;;; Other flags will be trashed.
+.proc WithInterruptsDisabled
+        stax    addr
+
+        ;; Disable interrupts
+        php
+        sei
+
+        addr := *+1
+        jsr     SELF_MODIFIED
+
+        ;; Restore interrupts, while stashing/restoring C
+        rol     tmp
+        plp
+        ror     tmp
+
+        rts
+
+tmp:    .byte   0
+.endproc
+
+
 ;;; Detect Z80
 ;;; Assumes $06 points at $Cn00, returns carry set if found
 
-.proc detect_z80
+.proc DetectZ80
         ;; Convert $Cn to $En, update Z80 code
         lda     $07             ; $Cn
         ora     #$E0
-        sta     z80_routine::patch
+        sta     Z80Routine::patch
 
         ;; Clear detection flag
-        copy    #0, z80_routine::flag
+        copy    #0, Z80Routine::flag
 
         ;; Try to invoke Z80
         ldy     #0
         sta     ($06),y
 
         ;; Flag will be set to 1 by routine if Z80 was present.
-        lda     z80_routine::flag
+        lda     Z80Routine::flag
         ror                     ; move flag into carry
         rts
 .endproc
@@ -1380,10 +1495,19 @@ notpas:
 ;;; Detect Uthernet II
 ;;; Assumes $06 points at $Cn00, returns carry set if found
 
-.proc detect_uthernet2
-        ;; Based on the a2RetroSystems Uthernet II manual
+.proc DetectUthernet2
+        ;;  Based on the a2RetroSystems Uthernet II manual
 
         MR := $C084
+        ;; Mode Register
+        ;; * bit 7 = Software Reset
+        ;; * bit 6 = Reserved
+        ;; * bit 5 = Reserved
+        ;; * bit 4 = Ping Block mode
+        ;; * bit 3 = PPPoE mode
+        ;; * bit 2 = Not Used
+        ;; * bit 1 = Address Auto-Increment
+        ;; * bit 0 = Indirect Bus mode (must be 1 to operate)
 
         lda     $07             ; $Cn
         and     #$0F            ; $0n
@@ -1393,6 +1517,30 @@ notpas:
         asl                     ; $n0
         tax                     ; Slot in high nibble of X
 
+        ;; First, test if it is potentially an Uthernet II in operation
+        ;; (e.g. running VEDRIVE). If so, avoid resetting it.
+        lda     MR,x
+        and     #%00000001      ; required for operation
+        beq     oldtest         ; not set, try reset
+
+        ;; --------------------------------------------------
+        ;; Probe without resetting the device
+newtest:
+        lda     MR,x
+        and     #%01111111      ; Be absolutely sure we don't reset
+        eor     #%01110111      ; Flip all the non-significant bits
+        sta     MR,x
+        cmp     MR,x            ; Did they "stick"?
+        bne     fail
+        eor     #%01110111      ; Flip them all back
+        sta     MR,x
+        cmp     MR,x            ; Did they "stick" again?
+        beq     success
+        bne     fail            ; always
+
+        ;; --------------------------------------------------
+        ;; Probe using reset
+oldtest:
         ;; Send the RESET command
         lda     #$80
         sta     MR,x
@@ -1404,11 +1552,11 @@ notpas:
         ;; Configure operating mode with auto-increment
         lda     #3              ; Operating mode
         sta     MR,x
-        lda     MR,x            ; Read back MR
-        cmp     #3
+        cmp     MR,x            ; Read back MR
         bne     fail
 
         ;; Probe successful
+success:
         sec
         rts
 
@@ -1419,9 +1567,15 @@ fail:   clc
 ;;; Detect Mockingboard
 ;;; Assumes $06 points at $Cn00, returns carry set if found
 
-.proc detect_mockingboard
+.proc DetectMockingboard
         ptr := $06
         tmp := $08
+
+        ;; Hit Slot 6, which causes accelerators e.g. Zip Chip
+        ;; to slow down.
+        ;; NOTE: $C0E0 causes Virtual ][ emulator to make sound;
+        ;; $C0EC (data read location) does not.
+        bit     $C0EC
 
         ldy     #4              ; $Cn04
         ldx     #2              ; try 2 times
@@ -1445,27 +1599,25 @@ fail:   clc
 .endproc
 
 ;;; ============================================================
-;;; Update str_memory with memory count in kilobytes
+;;; Update `str_memory` with memory count in kilobytes
 
-;;; Assert: Main is banked in (for `check_slinky_memory` call)
-.proc identify_memory
+;;; Assert: Main is banked in (for `CheckSlinkyMemory` call)
+.proc IdentifyMemory
         copy16  #0, memory
-        jsr     check_ramworks_memory
+        jsr     CheckRamworksMemory
         sty     memory          ; Y is number of 64k banks
         cpy     #0              ; 0 means 256 banks
         bne     :+
         inc     memory+1
 :       inc16   memory          ; Main 64k memory
 
-        jsr     check_iigs_memory
-        jsr     check_slinky_memory
+        jsr     CheckIIgsMemory
+        jsr     CheckSlinkyMemory
 
-        asl16   memory          ; * 64
-        asl16   memory
-        asl16   memory
-        asl16   memory
-        asl16   memory
-        asl16   memory
+        ldy     #6
+:       asl16   memory          ; * 64
+        dey
+        bne     :-
         ldax    memory
         jsr     IntToStringWithSeparators
         rts
@@ -1495,7 +1647,7 @@ fail:   clc
 ;;; will be handled by an invalid signature check for other banks.
 ;;;
 ;;; Assert: Main is banked in
-.proc check_ramworks_memory
+.proc CheckRamworksMemory
         sigb0   := $00
         sigb1   := $01
 
@@ -1567,12 +1719,12 @@ next:   inx                     ; next bank
 
 ;;; ============================================================
 
-.proc check_iigs_memory
-        lda     ROMIN2          ; Check ROM - is this a IIgs?
+.proc CheckIIgsMemory
+        bit     ROMIN2          ; Check ROM - is this a IIgs?
         sec
         jsr     IDROUTINE
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         bcs     done
 
         .pushcpu
@@ -1595,7 +1747,7 @@ done:   rts
 
 ;;; Assert: Main is banked in (due to SmartPort calls)
 
-.proc check_slinky_memory
+.proc CheckSlinkyMemory
         slot_ptr := $06
 
         lda     #7
@@ -1603,7 +1755,7 @@ done:   rts
 
         ;; Point at $Cn00, look for SmartPort signature bytes
 loop:   lda     slot
-        jsr     set_slot_ptr
+        jsr     SetSlotPtr
 
         ldx     #3
 :       ldy     sig_offsets,x
@@ -1670,17 +1822,17 @@ status_code:    .byte   3       ; Return Device Information Block (DIB)
 
 ;;; ============================================================
 ;;; Input: 16-bit unsigned integer in A,X
-;;; Output: str_from_int populated, with separator if needed
+;;; Output: `str_from_int` populated, with separator if needed
 
 str_from_int:
-        PASCAL_STRING "000,000" ; do not localize
+        PASCAL_STRING "000,000"
 
         .include "../lib/inttostring.s"
 
 ;;; ============================================================
 ;;; Identify CPU - string pointer returned in A,X
 
-.proc cpuid
+.proc CPUId
         sed
         lda     #$99
         clc
@@ -1698,27 +1850,24 @@ str_from_int:
 p6502:  return16 #str_6502
 
         ;; Distinguish 65802 and 65816 by machine ID
-p658xx: lda     ROMIN2
+p658xx: bit     ROMIN2
         sec
         jsr     IDROUTINE
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         bcs     p65802
         return16 #str_65816     ; Only IIgs supports 65816
 p65802: return16 #str_65802     ; Other boards support 65802
 .endproc
 
 ;;; ============================================================
-;;; Look up SmartPort device names.
-;;; (unit number 1) as the name.
+;;; Look up and print SmartPort device names to current GrafPort.
 ;;; Inputs: $06 points at $Cn00
-;;; Output: str_smartport populated with device names, or "(none)"
 
 ;;; Follows Technical Note: SmartPort #4: SmartPort Device Types
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
 
-;;; Assert: Main is banked in (due to SmartPort calls)
-.proc populate_smartport_name_main_impl
+.proc ShowSmartPortDeviceNamesImpl
 
 .params status_params
 param_count:    .byte   3
@@ -1729,7 +1878,10 @@ status_code:    .byte   3       ; Return Device Information Block (DIB)
 
         slot_ptr := $06
 
-start:
+start:  ;; Most SmartPort logic needs to run from Main
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+
         copy    #$80, empty_flag
         copy    #kStrSmartportLength, str_smartport
 
@@ -1745,8 +1897,12 @@ start:
         ;; Query number of devices
         copy    #0, status_params::unit_num ; SmartPort status itself
         copy    #0, status_params::status_code
-        jsr     smartport_call
-        copy    dib_buffer::Number_Devices, num_devices
+        jsr     SmartPortCall
+        lda     dib_buffer::Number_Devices
+        cmp     #kMaxSmartportDevices
+        bcc     :+
+        lda     #kMaxSmartportDevices
+:       sta     num_devices
         bne     :+
         jmp     finish          ; no devices!
 
@@ -1756,7 +1912,7 @@ start:
 
 device_loop:
         ;; Make the call
-        jsr     smartport_call
+        jsr     SmartPortCall
         bcs     next
 
         ;; Trim trailing whitespace (seen in CFFA)
@@ -1781,10 +1937,10 @@ done:   sty     dib_buffer::ID_String_Length
         ;; Look at prior and current character; if both are alpha,
         ;; lowercase current.
 loop:   lda     dib_buffer::Device_Name-1,y ; Test previous character
-        jsr     is_alpha
+        jsr     IsAlpha
         bne     next
         lda     dib_buffer::Device_Name,y ; Adjust this one if also alpha
-        jsr     is_alpha
+        jsr     IsAlpha
         bne     next
         lda     dib_buffer::Device_Name,y
         ora     #AS_BYTE(~CASE_MASK)
@@ -1796,48 +1952,24 @@ next:   dey
 done:
 .endscope
 
-        ldx     str_smartport
-
-        ;; Append separator, unless it's the first
-.scope
+        ;; Need a comma?
         bit     empty_flag
-        bmi     :+
-        lda     #','
-        inx
-        sta     str_smartport,x
-        lda     #' '
-        inx
-        sta     str_smartport,x
-:
-.endscope
-
-        ;; Append device name
-.scope
-        copy    #0, empty_flag  ; saw a unit!
-
-        lda    dib_buffer::ID_String_Length
-    IF_ZERO
-        ;; Seen in wDrive
-        ldy     #0
-:       lda     str_unknown+1,y
-        inx
-        sta     str_smartport,x
-        iny
-        cpy     str_unknown
-        bne     :-
-    ELSE
-        ldy     #0
-:       lda     dib_buffer::Device_Name,y
-        inx
-        sta     str_smartport,x
-        iny
-        cpy     dib_buffer::ID_String_Length
-        bne     :-
+    IF_PLUS
+        ldax    #str_list_separator
+        jsr     DrawStringFromMain
     END_IF
-.endscope
 
-        stx     str_smartport
+        ;; Draw the device name
+        copy    #0, empty_flag  ; saw a unit!
+        lda     dib_buffer::ID_String_Length
+    IF_ZERO
+        ldax    #str_unknown
+    ELSE
+        ldax    #dib_buffer::ID_String_Length
+    END_IF
+        jsr     DrawStringFromMain
 
+        ;; Next!
 next:   lda     status_params::unit_num
         cmp     num_devices
         beq     finish
@@ -1847,57 +1979,68 @@ next:   lda     status_params::unit_num
 finish:
         ;; If no units, populate with "(none)"
         bit     empty_flag
-        bpl     exit
+    IF_MINUS
+        ldax    #str_none
+        jsr     DrawStringFromMain
+    END_IF
 
-        ldx     str_smartport
-        ldy     #0
-:       lda     str_none+1,y
-        inx
-        sta     str_smartport,x
-        iny
-        cpy     str_none
-        bne     :-
-        stx     str_smartport
-
-exit:   rts
+exit:   sta     RAMWRTON
+        sta     RAMRDON
+        rts
 
 empty_flag:
         .byte   0
 num_devices:
         .byte   0
 
-.proc smartport_call
+.proc SmartPortCall
         ;; NOTE: Must be done from Main.
         ;; https://github.com/a2stuff/a2d/issues/483
         sp_addr := * + 1
         jsr     SELF_MODIFIED
-        .byte   $00             ; $00 = STATUS
+        .byte   SPCall::Status
         .addr   status_params
         rts
 .endproc
-        sp_addr = smartport_call::sp_addr
+        sp_addr = SmartPortCall::sp_addr
 
-.endproc
+;;; Inputs: A,X = string to draw
+;;; Assert: Called from Main
+.proc DrawStringFromMain
+        ptr := $06
+        stax    ptr
 
-;;; Assert: Aux is banked in (relays to Main)
-.proc populate_smartport_name
+        ;; Copy the string Main>Aux
+        sta     RAMWRTON
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     (ptr),y
+        dey
+        bpl     :-
+
+        ;; Draw it from Aux
+        sta     RAMRDON
+        ldax    ptr
+        jsr     DrawString
+
+        ;; Return to Main
         sta     RAMRDOFF
         sta     RAMWRTOFF
-
-        jsr     populate_smartport_name_main_impl::start
-
-        sta     RAMWRTON
-        COPY_STRING str_smartport, str_smartport
-        sta     RAMRDON
         rts
 .endproc
 
+.endproc
+ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
+
+
 ;;; ============================================================
 ;;; Inputs: Character in A
-;;; Outputs: Z=0 if alpha, 1 otherwise
+;;; Outputs: Z=1 if alpha, 0 otherwise
 ;;; A is trashed
 
-.proc is_alpha
+.proc IsAlpha
         cmp     #'@'            ; in upper/lower "plane" ?
         bcc     nope
         and     #CASE_MASK      ; force upper-case
@@ -1915,12 +2058,13 @@ nope:   lda     #$FF
 
 ;;; ============================================================
 
+        .include  "../lib/detect_lcmeve.s"
         .include  "../lib/drawstring.s"
 
 ;;; ============================================================
 
 
 da_end  := *
-.assert * < $1B00, error, "DA too big"
+.assert * < WINDOW_ENTRY_TABLES, error, "DA too big"
         ;; I/O Buffer starts at MAIN $1C00
-        ;; ... but icon tables start at AUX $1B00
+        ;; ... but entry tables start at AUX $1B00

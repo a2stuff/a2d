@@ -14,18 +14,25 @@ fi
 tempdir=$(mktemp -d "${TMPDIR:-/tmp}/pkg.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
+# ============================================================
+# Extract metadata for the build
+
 vmajor=$(grep 'kDeskTopVersionMajor =' config.inc | sed -e 's/.* = //')
 vminor=$(grep 'kDeskTopVersionMinor =' config.inc | sed -e 's/.* = //')
 vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc | cut -d'"' -f2)
 lang=$(grep 'define kBuildLang' config.inc | cut -d'"' -f2)
 version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
 
+# ============================================================
+# Define and create the disk images
+
 cecho yellow "Building disk images: $version"
 
 # One 800k image (complete), and two 140k images (two parts).
 
 mkdir -p out
-IMGFILE_COMPLETE="out/A2DeskTop-${version}_800k.2mg"
+IMGFILE_COMPLETE_2MG="out/A2DeskTop-${version}_800k.2mg"
+IMGFILE_COMPLETE_HDV="out/A2DeskTop-${version}_800k.hdv"
 IMGFILE_PART1="out/A2DeskTop-${version}_140k_disk1.po"
 IMGFILE_PART2="out/A2DeskTop-${version}_140k_disk2.po"
 
@@ -33,85 +40,98 @@ VOLNAME_COMPLETE="A2.DeskTop"
 VOLNAME_PART1="A2.DeskTop.1"
 VOLNAME_PART2="A2.DeskTop.2"
 
+IMAGES="$IMGFILE_COMPLETE_2MG $IMGFILE_COMPLETE_HDV $IMGFILE_PART1 $IMGFILE_PART2"
+
 # Create disk images.
 
-rm -f $IMGFILE_COMPLETE
-rm -f $IMGFILE_PART1
-rm -f $IMGFILE_PART2
+for img in $IMAGES; do
+    rm -f "$img"
+done
 
-suppress cadius CREATEVOLUME $IMGFILE_COMPLETE $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
+suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_2MG $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
+suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_HDV $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits
 
-# Add the files into the disk images.
-# Usage: add_file IMGFILE SRCFILE DSTFOLDER DSTFILE TYPESUFFIX
-add_file () {
-    img_file="$1"
-    src_file="$2"
-    folder="$3"
-    dst_file="$4"
-    suffix="$5"
-    tmp_file="$tempdir/$dst_file#$suffix"
+# ============================================================
+# Implementations for manifest operations
 
-    cp "$src_file" "$tmp_file"
-    suppress cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits
-    rm "$tmp_file"
+add_file () {
+    # Add the files into the disk images.
+    # Usage: add_file_internal IMGFILE SRCFILE DSTFOLDER DSTFILE TYPESUFFIX
+    add_file_internal () {
+        local img_file="$1"
+        local src_file="$2"
+        local folder="$3"
+        local dst_file="$4"
+        local suffix="$5"
+
+        local tmp_file="$tempdir/$dst_file#$suffix"
+        cp "$src_file" "$tmp_file"
+
+        if [ "$suffix" = "040000" ]; then
+            perl -p -i -e 's/\r?\n/\r/g' "$tmp_file" # Ensure Apple line endings
+        fi
+
+        suppress cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits
+        rm "$tmp_file"
+    }
+
+    local disposition="$1"
+    local src_file="$2"
+    local folder="$3"
+    local dst_file="$4"
+    local suffix="$5"
+
+    add_file_internal $IMGFILE_COMPLETE_2MG "$src_file" "/$VOLNAME_COMPLETE/$folder" "$dst_file" "$suffix"
+    add_file_internal $IMGFILE_COMPLETE_HDV "$src_file" "/$VOLNAME_COMPLETE/$folder" "$dst_file" "$suffix"
+    if [ "$disposition" = "required" ]; then
+        add_file_internal $IMGFILE_PART1 "$src_file" "/$VOLNAME_PART1/$folder" "$dst_file" "$suffix"
+    else
+        add_file_internal $IMGFILE_PART2 "$src_file" "/$VOLNAME_PART2/$folder" "$dst_file" "$suffix"
+    fi
 }
 
-# Add ProDOS, if present in res/package
-if [ -e "res/package/PRODOS" ]; then
-    add_file $IMGFILE_COMPLETE "res/package/PRODOS" "/$VOLNAME_COMPLETE" "ProDOS" FF0000
-    add_file $IMGFILE_PART1 "res/package/PRODOS" "/$VOLNAME_PART1" "ProDOS" FF0000
-fi
+create_folder() {
+    # Create a folder in the volume
+    # Usage: create_folder_internal IMGFILE PATH
+    create_folder_internal () {
+        local img_file="$1"
+        local path="$2"
+        suppress cadius CREATEFOLDER "$img_file" "$path" --quiet --no-case-bits
+    }
 
-perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
-add_file $IMGFILE_COMPLETE "res/package/READ.ME" "/$VOLNAME_COMPLETE" "Read.Me" 040000
-add_file $IMGFILE_PART1 "res/package/READ.ME" "/$VOLNAME_PART1" "Read.Me" 040000
-perl -p -i -e 's/\r/\n/g' "res/package/READ.ME" # Restore Unix line endings
+    local disposition="$1"
+    local path="$2"
 
-add_file $IMGFILE_COMPLETE "desktop.system/out/desktop.system.SYS" "/$VOLNAME_COMPLETE" "DeskTop.system" FF0000
-add_file $IMGFILE_PART1 "desktop.system/out/desktop.system.SYS" "/$VOLNAME_PART1" "DeskTop.system" FF0000
+    create_folder_internal $IMGFILE_COMPLETE_2MG "/$VOLNAME_COMPLETE/$path"
+    create_folder_internal $IMGFILE_COMPLETE_HDV "/$VOLNAME_COMPLETE/$path"
+    if [ "$disposition" = "required" ]; then
+        create_folder_internal $IMGFILE_PART1 "/$VOLNAME_PART1/$path"
+    else
+        create_folder_internal $IMGFILE_PART2 "/$VOLNAME_PART2/$path"
+    fi
+}
 
-add_file $IMGFILE_COMPLETE "desktop/out/desktop.built" "/$VOLNAME_COMPLETE" "DeskTop2" F10000
-add_file $IMGFILE_PART1 "desktop/out/desktop.built" "/$VOLNAME_PART1" "DeskTop2" F10000
+# ============================================================
+# Populate the images with files and directories
 
-suppress cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/Optional" --quiet --no-case-bits
-suppress cadius CREATEFOLDER $IMGFILE_PART2 "/$VOLNAME_PART2/Optional" --quiet --no-case-bits
+manifest="$(bin/manifest $@)"
+eval "$manifest"
 
-add_file $IMGFILE_COMPLETE "selector/out/selector.built" "/$VOLNAME_COMPLETE/Optional" "Selector" F10000
-add_file $IMGFILE_PART2 "selector/out/selector.built" "/$VOLNAME_PART2/Optional" "Selector" F10000
-
-for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do
-    suppress cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_COMPLETE/$path" --quiet --no-case-bits
-    suppress cadius CREATEFOLDER $IMGFILE_COMPLETE "/$VOLNAME_PART2/$path" --quiet --no-case-bits
-done
-for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
-    IFS=',' read -ra array <<< "$line"
-    file="${array[0]}"
-    path="${array[1]}"
-    add_file "$IMGFILE_COMPLETE" "desk.acc/out/$file.da" "/$VOLNAME_COMPLETE/$path" $file F10641
-    add_file "$IMGFILE_PART2" "desk.acc/out/$file.da" "/$VOLNAME_PART2/$path" $file F10641
-done
-
-# Add BASIC.SYSTEM, if present in res/package
-if [ -e "res/package/BASIC.SYSTEM" ]; then
-    add_file "$IMGFILE_COMPLETE" "res/package/BASIC.SYSTEM" "/$VOLNAME_COMPLETE" "BASIC.system" FF2000
-    add_file "$IMGFILE_PART2" "res/package/BASIC.SYSTEM" "/$VOLNAME_PART2" "BASIC.system" FF2000
-fi
-
-
+# ============================================================
 # Verify and clean up
 
-# cecho green "Catalog of 800k disk:"
-# cadius CATALOG $IMGFILE_COMPLETE --quiet
-ls -l $IMGFILE_COMPLETE
+for img in $IMAGES; do
+    ls -1 "$img"
+    cadius CATALOG "$img" | tail -1
+done
 
-# cecho green "Catalog of 140k disk 1:"
-# cadius CATALOG $IMGFILE_PART1 --quiet
-ls -l $IMGFILE_PART1
+cecho yellow "Building package: $version"
 
-# cecho green "Catalog of 140k disk 2:"
-# cadius CATALOG $IMGFILE_PART2 --quiet
-ls -l $IMGFILE_PART2
+ZIPFILE="out/A2DeskTop-${version}.zip"
+rm -f "$ZIPFILE"
+zip --junk-paths "$ZIPFILE" $IMAGES res/README.txt
+unzip -l "$ZIPFILE"
 
 rmdir "$tempdir"

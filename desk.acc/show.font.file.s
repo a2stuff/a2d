@@ -7,7 +7,8 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
-        .include "../desktop/icontk.inc"
+
+        MGTKEntry := MGTKAuxEntry
 
 ;;; ============================================================
 ;;; Memory map
@@ -34,14 +35,14 @@
 
         .org DA_LOAD_ADDRESS
 
-        jmp     entry
+        jmp     Entry
 
 ;;; ============================================================
 
 pathbuf:        .res    kPathBufferSize, 0
 
 font_buffer     := $D00
-kReadLength      = WINDOW_ICON_TABLES-font_buffer
+kReadLength      = WINDOW_ENTRY_TABLES-font_buffer
 
 ;;; Maximum font size is $E00 = 3584 bytes
 ;;; (largest known is Athens, 3203 bytes)
@@ -51,9 +52,9 @@ kReadLength      = WINDOW_ICON_TABLES-font_buffer
         DEFINE_CLOSE_PARAMS close_params
 
 ;;; ============================================================
-;;; Get filename by checking DeskTop selected window/icon
+;;; Get filename from DeskTop
 
-.proc entry
+.proc Entry
         INVOKE_PATH := $220
         lda     INVOKE_PATH
     IF_EQ
@@ -68,40 +69,74 @@ kReadLength      = WINDOW_ICON_TABLES-font_buffer
         beq     :+
         dey
         bne     :-
-:       ldx     #1
+:       ldx     #0
 :       lda     pathbuf+1,y     ; copy filename
-        sta     titlebuf,x
+        sta     titlebuf+1,x
         inx
         iny
         cpy     pathbuf
         bne     :-
         stx     titlebuf
 
-        jmp     load_file_and_run_da
+        jmp     LoadFileAndRunDA
 .endproc
 
 ;;; ============================================================
 ;;; Load the file
 
-.proc load_file_and_run_da
+.proc LoadFileAndRunDA
 
         ;; TODO: Ensure there's enough room, fail if not
 
         ;; --------------------------------------------------
         ;; Load the file
 
-        JUMP_TABLE_MLI_CALL OPEN, open_params ; TODO: Check for error
-        lda     open_params::ref_num
+        jsr     JUMP_TABLE_CUR_WATCH
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        bcc     :+
+        jsr     JUMP_TABLE_CUR_POINTER
+        rts
+:       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        JUMP_TABLE_MLI_CALL READ, read_params ; TODO: Check for error
+        JUMP_TABLE_MLI_CALL READ, read_params
+        php                     ; preserve error
         JUMP_TABLE_MLI_CALL CLOSE, close_params
+        jsr     JUMP_TABLE_CUR_POINTER
+        plp
+        bcs     exit
+
+        ;; --------------------------------------------------
+        ;; Try to verify that this is a font file
+
+        lda     font_buffer + MGTK::Font::fonttype ; $00 or $80
+        cmp     #$00            ; regular?
+        beq     :+
+        cmp     #$80            ; double-width?
+        bne     exit
+
+:       lda     font_buffer + MGTK::Font::lastchar ; usually $7F
+        beq     exit
+        bmi     exit
+
+        lda     font_buffer + MGTK::Font::height ; 1-16
+        beq     exit
+        cmp     #16+1
+        bcs     exit
+
+        jsr     CalcFontSize
+        lda     expected_size
+        cmp     read_params::trans_count
+        bne     exit
+        lda     expected_size+1
+        cmp     read_params::trans_count+1
+        bne     exit
 
         ;; --------------------------------------------------
         ;; Copy the DA code and loaded data to AUX
 
         copy16  #DA_LOAD_ADDRESS, STARTLO
-        copy16  #WINDOW_ICON_TABLES-1, ENDLO
+        copy16  #WINDOW_ENTRY_TABLES-1, ENDLO
         copy16  #DA_LOAD_ADDRESS, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
@@ -111,9 +146,39 @@ kReadLength      = WINDOW_ICON_TABLES-font_buffer
 
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
         sta     RAMRDOFF
         sta     RAMWRTOFF
+
+exit:   rts
+
+.endproc
+
+;;; ============================================================
+;;; Calculate expected font file size, given font header
+;;; Populates `expected_size`
+
+expected_size:
+        .word   0
+
+.proc CalcFontSize
+        copy    #0, expected_size
+
+        ;; File size should be 3 + (lastchar + 1) + ((lastchar + 1) * height) * (double?2:1)
+
+        ldx     font_buffer + MGTK::Font::lastchar
+        inx                     ; lastchar + 1
+:       add16_8 expected_size, font_buffer + MGTK::Font::height, expected_size
+        dex
+        bne     :-              ; = (lastchar + 1) * height
+
+        bit     font_buffer + MGTK::Font::fonttype
+        bpl     :+
+        asl16   expected_size            ; *= 2 if double width
+:
+        add16_8 expected_size, font_buffer + MGTK::Font::lastchar, expected_size ; += lastchar
+        add16_8 expected_size, #4, expected_size  ; += 3 + 1
+
         rts
 .endproc
 
@@ -152,7 +217,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   2
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   font_buffer
 nextwinfo:      .addr   0
@@ -195,26 +260,12 @@ dragy:          .word   0
 moved:          .byte   0
 .endparams
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   0
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
+grafport:       .tag    MGTK::GrafPort
 
 .params drawtext_params_char
         .addr   char_label
@@ -227,32 +278,27 @@ char_label:  .byte   0
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        bne     :+
-        jmp     handle_down
+        jeq     HandleDown
 
+        cmp     #MGTK::EventKind::key_down  ; any key?
+        jeq     HandleKey
 
-:       cmp     #MGTK::EventKind::key_down  ; any key?
-        bne     :+
-        jmp     handle_key
-
-
-:       jmp     input_loop
+        jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -261,54 +307,62 @@ char_label:  .byte   0
         rts
 .endproc
 
-.proc exit
+.proc ClearUpdates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     ClearUpdates
         rts                     ; exits input loop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        bne     :+
-        jmp     exit
-:       jmp     input_loop
+        jeq     Exit
+
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bpl     :+
-        jmp     exit
-:       lda     findwindow_params::window_id
+        lda     findwindow_params::window_id
         cmp     winfo::window_id
         bpl     :+
-        jmp     input_loop
+        jmp     InputLoop
 :       lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
-        jmp     input_loop
+        beq     HandleDrag
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     :+
-        jmp     input_loop
-:       jmp     exit
+        jeq     InputLoop
+
+        jmp     Exit
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -317,29 +371,25 @@ char_label:  .byte   0
         bpl     :+
 
         ;; Draw DeskTop's windows and icons (from Main)
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 ;;; ============================================================
 
-line1:  PASCAL_STRING "\x00 \x01 \x02 \x03 \x04 \x05 \x06 \x07 \x08 \x09 \x0A \x0B \x0C \x0D \x0E \x0F" ; do not localize
-line2:  PASCAL_STRING "\x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 \x1A \x1B \x1C \x1D \x1E \x1F" ; do not localize
-line3:  PASCAL_STRING "  ! \x22 # $ % & ' ( ) * + , - . /" ; do not localize
-line4:  PASCAL_STRING "0 1 2 3 4 5 6 7 8 9 : ; < = > ?" ; do not localize
-line5:  PASCAL_STRING "@ A B C D E F G H I J K L M N O" ; do not localize
-line6:  PASCAL_STRING "P Q R S T U V W X Y Z [ \x5C ] ^ _" ; do not localize
-line7:  PASCAL_STRING "` a b c d e f g h i j k l m n o" ; do not localize
-line8:  PASCAL_STRING "p q r s t u v w x y z { | } ~ \x7F" ; do not localize
+line1:  PASCAL_STRING "\x00 \x01 \x02 \x03 \x04 \x05 \x06 \x07 \x08 \x09 \x0A \x0B \x0C \x0D \x0E \x0F"
+line2:  PASCAL_STRING "\x10 \x11 \x12 \x13 \x14 \x15 \x16 \x17 \x18 \x19 \x1A \x1B \x1C \x1D \x1E \x1F"
+line3:  PASCAL_STRING "  ! \x22 # $ % & ' ( ) * + , - . /"
+line4:  PASCAL_STRING "0 1 2 3 4 5 6 7 8 9 : ; < = > ?"
+line5:  PASCAL_STRING "@ A B C D E F G H I J K L M N O"
+line6:  PASCAL_STRING "P Q R S T U V W X Y Z [ \x5C ] ^ _"
+line7:  PASCAL_STRING "` a b c d e f g h i j k l m n o"
+line8:  PASCAL_STRING "p q r s t u v w x y z { | } ~ \x7F"
 
         kLineCount = 8
 line_addrs:
@@ -351,7 +401,7 @@ line_addrs:
         kLineHeight = 15
 
 
-.proc draw_window
+.proc DrawWindow
         ptr := $06
 
 PARAM_BLOCK params, $06
@@ -360,7 +410,7 @@ len     .byte
 width   .word
 END_PARAM_BLOCK
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
         rts

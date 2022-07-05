@@ -6,7 +6,6 @@
 ;;;   * Mouse tracking speed
 ;;;   * Double-click speed
 ;;;   * Insertion point blink rate
-;;;   * Time 12- or 24-hour display
 ;;; ============================================================
 
         .include "../config.inc"
@@ -19,6 +18,31 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
+
+        MGTKEntry := MGTKAuxEntry
+
+;;; ============================================================
+;;; Memory map
+;;;
+;;;               Main            Aux
+;;;          :             : :             :
+;;;          |             | |             |
+;;;          | DHR         | | DHR         |
+;;;  $2000   +-------------+ +-------------+
+;;;          | IO Buffer   | |Win Tables   |
+;;;  $1C00   +-------------+ |             |
+;;;          | write_buffer| |             |
+;;;  $1B00   +-------------| +-------------+
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          | DA          | | DA (copy)   |
+;;;   $800   +-------------+ +-------------+
+;;;          :             : :             :
+;;;
 
 ;;; ============================================================
 
@@ -39,16 +63,31 @@ da_start:
         ;; run the DA
         sta     RAMRDON         ; Run from Aux
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
+        lda     dialog_result
         sta     RAMRDOFF        ; Back to Main
         sta     RAMWRTOFF
 
-        jsr     save_settings
-
+        ;; Save settings if dirty
+        jmi     SaveSettings
         rts
+
 .endscope
+
+;;; ============================================================
+
+;;; High bit set when anything changes.
+dialog_result:
+        .byte   0
+
+.proc MarkDirty
+        lda     #$80
+        ora     dialog_result
+        sta     dialog_result
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -88,7 +127,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -101,127 +140,44 @@ penheight:      .byte   2
 
         DEFINE_POINT frame_l1a, 0, 68
         DEFINE_POINT frame_l1b, 190, 68
-        DEFINE_POINT frame_l2a, 190, 58
-        DEFINE_POINT frame_l2b, kDAWidth, 58
+        DEFINE_POINT frame_l2a, 190, 68
+        DEFINE_POINT frame_l2b, kDAWidth, 68
         DEFINE_POINT frame_l3a, 190, 0
         DEFINE_POINT frame_l3b, 190, kDAHeight
-        DEFINE_POINT frame_l4a, 190, 102
-        DEFINE_POINT frame_l4b, kDAWidth, 102
 
-        DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 4 + 2, kDAHeight - 2 + 2
-
-
-.params winfo_fullscreen
-window_id:      .byte   kDAWindowId+1
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   str_title
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_none
-hthumbmax:      .byte   32
-hthumbpos:      .byte   0
-vthumbmax:      .byte   32
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   kScreenWidth
-mincontlength:  .word   kScreenHeight
-maxcontwidth:   .word   kScreenWidth
-maxcontlength:  .word   kScreenHeight
-port:
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT maprect, 0, 0, kScreenWidth, kScreenHeight
-pattern:        .res    8, 0
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   0
-textback:       .byte   $7F
-textfont:       .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-.endparams
+        DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 2, kDAHeight
 
 
 ;;; ============================================================
 
-
-.params event_params
-kind:  .byte   0
-;;; event_kind_key_down
-key             := *
-modifiers       := * + 1
-;;; event_kind_update
-window_id       := *
-;;; otherwise
-xcoord          := *
-ycoord          := * + 2
-        .res    4
-.endparams
-
-.params findwindow_params
-mousex:         .word   0
-mousey:         .word   0
-which_area:     .byte   0
-window_id:      .byte   0
-.endparams
+        .include "../lib/event_params.s"
 
 .params trackgoaway_params
 clicked:        .byte   0
 .endparams
 
-.params dragwindow_params
-window_id:      .byte   0
-dragx:          .word   0
-dragy:          .word   0
-moved:          .byte   0
-.endparams
-
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
 
-
-.params screentowindow_params
-window_id:      .byte   kDAWindowId
-        DEFINE_POINT screen, 0, 0
-        DEFINE_POINT window, 0, 0
-.endparams
-        mx := screentowindow_params::window::xcoord
-        my := screentowindow_params::window::ycoord
-
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   0
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
-
+grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 ;;; Common Resources
 
+;;; Padding between radio/checkbox and label
+kLabelPadding = 5
+
 kRadioButtonWidth       = 15
 kRadioButtonHeight      = 7
 
-.params checked_rb_params
+.params rb_params
         DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   checked_rb_bitmap
+mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 checked_rb_bitmap:
@@ -233,14 +189,6 @@ checked_rb_bitmap:
         .byte   PX(%1110001),PX(%1110001),PX(%1100000)
         .byte   PX(%0011100),PX(%0000111),PX(%0000000)
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-
-.params unchecked_rb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   unchecked_rb_bitmap
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
-.endparams
 
 unchecked_rb_bitmap:
         .byte   PX(%0000111),PX(%1111100),PX(%0000000)
@@ -255,12 +203,12 @@ unchecked_rb_bitmap:
 kCheckboxWidth       = 17
 kCheckboxHeight      = 8
 
-.params checked_cb_params
+.params cb_params
         DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   checked_cb_bitmap
+mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
 .endparams
 
 checked_cb_bitmap:
@@ -273,14 +221,6 @@ checked_cb_bitmap:
         .byte   PX(%1100110),PX(%0000011),PX(%0011000)
         .byte   PX(%1111000),PX(%0000000),PX(%1111000)
         .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-
-.params unchecked_cb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   unchecked_cb_bitmap
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kCheckboxWidth, kCheckboxHeight
-.endparams
 
 unchecked_cb_bitmap:
         .byte   PX(%1111111),PX(%1111111),PX(%1111000)
@@ -338,7 +278,7 @@ kLeftArrowBottom        = kLeftArrowTop + kArrowHeight - 1
 mapbits:        .addr   larr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kArrowWidth-1, kArrowHeight-1
+        DEFINE_RECT maprect, 0, 0, kArrowWidth-1, kArrowHeight-1
 .endparams
 
 .params rarr_params
@@ -346,7 +286,7 @@ reserved:       .byte   0
 mapbits:        .addr   rarr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kArrowWidth-1, kArrowHeight-1
+        DEFINE_RECT maprect, 0, 0, kArrowWidth-1, kArrowHeight-1
 .endparams
 
         DEFINE_RECT larr_rect, kLeftArrowLeft-2, kLeftArrowTop, kLeftArrowRight+2, kLeftArrowBottom
@@ -365,9 +305,9 @@ rarr_bitmap:
         .byte   PX(%1111000)
         .byte   PX(%1100000)
 
-        DEFINE_LABEL rgb_color, res_string_label_rgb_color, kPatternEditX + 68, kPatternEditY + 59
-
-        DEFINE_RECT_SZ rect_rgb, kPatternEditX + 46, kPatternEditY + 50, kCheckboxWidth, kCheckboxHeight
+        DEFINE_LABEL rgb_color, res_string_label_rgb_color, kPatternEditX + kCheckboxWidth + 46 + kLabelPadding, kPatternEditY + 59
+        ;; for hit testing; label width is added dynamically
+        DEFINE_RECT_SZ rect_rgb, kPatternEditX + 46, kPatternEditY + 50, kCheckboxWidth + kLabelPadding, kCheckboxHeight
 
 ;;; ============================================================
 ;;; Double-Click Speed Resources
@@ -393,7 +333,7 @@ dblclick_speed_table:
 mapbits:        .addr   dblclick_bitmap
 mapwidth:       .byte   8
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 53, 33
+        DEFINE_RECT maprect, 0, 0, 53, 33
 .endparams
 
         kNumArrows = 6
@@ -406,6 +346,7 @@ arrows_table:
         DEFINE_POINT dblclick_arrow_pos6, kDblClickX + 155, kDblClickY + 23
         ASSERT_RECORD_TABLE_SIZE arrows_table, kNumArrows, .sizeof(MGTK::Point)
 
+        ;; for hit testing
         DEFINE_RECT_SZ dblclick_button_rect1, kDblClickX + 175, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ dblclick_button_rect2, kDblClickX + 130, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
         DEFINE_RECT_SZ dblclick_button_rect3, kDblClickX +  85, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
@@ -452,7 +393,7 @@ dblclick_bitmap:
 mapbits:        .addr   darr_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 16, 7
+        DEFINE_RECT maprect, 0, 0, 16, 7
 .endparams
 
 darr_bitmap:
@@ -473,18 +414,18 @@ kMouseTrackingY = 78
 
         DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + 30, kMouseTrackingY + 45
 
-        DEFINE_RECT_SZ tracking_button_rect1, kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ tracking_button_rect2, kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth, kRadioButtonHeight
-
-        DEFINE_LABEL tracking_slow, res_string_label_slow, kMouseTrackingX + 105, kMouseTrackingY +  8 + 8
-        DEFINE_LABEL tracking_fast, res_string_label_fast, kMouseTrackingX + 105, kMouseTrackingY + 21 + 8
+        DEFINE_LABEL tracking_slow, res_string_label_slow, kMouseTrackingX + 84 + kRadioButtonWidth + kLabelPadding, kMouseTrackingY + 16
+        DEFINE_LABEL tracking_fast, res_string_label_fast, kMouseTrackingX + 84 + kRadioButtonWidth + kLabelPadding, kMouseTrackingY + 29
+        ;; for hit testing; label width is added dynamically
+        DEFINE_RECT_SZ tracking_button_rect1, kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth + kLabelPadding, kRadioButtonHeight
+        DEFINE_RECT_SZ tracking_button_rect2, kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth + kLabelPadding, kRadioButtonHeight
 
 .params mouse_tracking_params
         DEFINE_POINT viewloc, kMouseTrackingX + 5, kMouseTrackingY
 mapbits:        .addr   mouse_tracking_bitmap
 mapwidth:       .byte   9
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 62, 31
+        DEFINE_RECT maprect, 0, 0, 62, 31
 .endparams
 
 mouse_tracking_bitmap:
@@ -530,27 +471,27 @@ y_exponent:     .byte   0
 ;;; IP Blink Speed Resources
 
 kIPBlinkDisplayX = 214
-kIPBlinkDisplayY = 65
+kIPBlinkDisplayY = 85
 
         ;; Selected index (1-3, or 0 for 'no match')
 ipblink_selection:
         .byte   0
 
         DEFINE_LABEL ipblink1, res_string_label_ipblink1, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 11
-        DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 10 + 11
-        DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 100 - 4 + 4, kIPBlinkDisplayY + 16 + 5 + 12 + 1
-        DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 140 + 4 + 6, kIPBlinkDisplayY + 16 + 5 + 12 + 1
-
-        DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 110 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 130 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ ipblink_btn3_rect, kIPBlinkDisplayX + 150 + 6, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 21
+        DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 100, kIPBlinkDisplayY + 34
+        DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 150, kIPBlinkDisplayY + 34
+        ;; for hit testing
+        DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 116, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 136, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT_SZ ipblink_btn3_rect, kIPBlinkDisplayX + 156, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
 
 .params ipblink_bitmap_params
-        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 + 3, kIPBlinkDisplayY
+        DEFINE_POINT viewloc, kIPBlinkDisplayX + 123, kIPBlinkDisplayY
 mapbits:        .addr   ipblink_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 37, 12
+        DEFINE_RECT maprect, 0, 0, 37, 12
 .endparams
 
 ipblink_bitmap:
@@ -568,13 +509,29 @@ ipblink_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000110),PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000),PX(%0110000)
 
+kIPBmpPosX = kIPBlinkDisplayX + 143
+kIPBmpPosY = kIPBlinkDisplayY
+kIPBmpWidth  = 2
+kIPBmpHeight = 13
+
 .params ipblink_bitmap_ip_params
-        DEFINE_POINT viewloc, kIPBlinkDisplayX + 120 + 3 + 20, kIPBlinkDisplayY
+        DEFINE_POINT viewloc, kIPBmpPosX, kIPBmpPosY
 mapbits:        .addr   ipblink_ip_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 1, 12
+        DEFINE_RECT maprect, 0, 0, kIPBmpWidth - 1, kIPBmpHeight - 1
 .endparams
+
+kCursorWidth    = 8
+kCursorHeight   = 12
+kSlop           = 14            ; Two DHR bytes worth of pixels
+        ;; Bounding rect for where the blinking IP and cursor could overlap.
+        ;; If the cursor is inside this rect, it is hidden before drawing
+        ;; the bitmap.
+        DEFINE_RECT_SZ anim_cursor_rect, kIPBmpPosX - kCursorWidth - kSlop,  kIPBmpPosY - kCursorHeight, kCursorWidth + kIPBmpWidth + 2*kSlop, kCursorHeight + kIPBmpHeight
+cursor_flag:
+        .byte   0
+
 
 ipblink_ip_bitmap:
         .byte   PX(%1100000)
@@ -593,48 +550,41 @@ ipblink_ip_bitmap:
 
 
 ;;; ============================================================
-;;; 12/24 Hour Resources
 
-kHourDisplayX = 210
-kHourDisplayY = 114
+.proc Init
+        jsr     InitPattern
+        jsr     InitIpblink
+        jsr     InitDblclick
 
-        DEFINE_LABEL clock, res_string_label_clock, kHourDisplayX+kRadioButtonWidth-15, kHourDisplayY+8
-
-        DEFINE_RECT_SZ rect_12hour, kHourDisplayX+60-10, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_LABEL clock_12hour, res_string_label_clock_12hour, kHourDisplayX+60+kRadioButtonWidth+6-10, kHourDisplayY+8
-
-        DEFINE_RECT_SZ rect_24hour, kHourDisplayX+120, kHourDisplayY, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_LABEL clock_24hour, res_string_label_clock_24hour, kHourDisplayX+120+kRadioButtonWidth+6, kHourDisplayY+8
-
-;;; ============================================================
-
-.proc init
-        jsr     init_pattern
-        jsr     init_ipblink
-        jsr     init_dblclick
+        param_call MeasureString, rgb_color_label_str
+        addax   rect_rgb::x2
+        param_call MeasureString, tracking_slow_label_str
+        addax   tracking_button_rect1::x2
+        param_call MeasureString, tracking_fast_label_str
+        addax   tracking_button_rect2::x2
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     DoIPBlink
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
-        lda     event_params::kind
+        lda     event_kind
+        .assert MGTK::EventKind::no_event = 0, error, "no_event must be 0"
+        beq     HandleMove
         cmp     #MGTK::EventKind::button_down
-        beq     handle_down
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down
-        beq     handle_key
+        beq     HandleKey
 
-        jsr     do_ipblink
-
-        jmp     input_loop
+        bne     InputLoop       ; always
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -643,79 +593,90 @@ kHourDisplayY = 114
         rts
 .endproc
 
-.proc exit
+.proc ClearUpdates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     ClearUpdates
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleMove
+        copy    winfo::window_id, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::InRect, anim_cursor_rect
+        sta     cursor_flag
+        jmp     InputLoop
+.endproc
+
+;;; ============================================================
+
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     exit
-        bne     input_loop
+        beq     Exit
+        bne     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
-        copy16  event_params::xcoord, findwindow_params::mousex
-        copy16  event_params::ycoord, findwindow_params::mousey
+.proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bne     exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     input_loop
+        jne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
+        beq     HandleDrag
         cmp     #MGTK::Area::content
-        beq     handle_click
-        jmp     input_loop
+        beq     HandleClick
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     exit
-        jmp     input_loop
+        bne     Exit
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
-        copy16  event_params::xcoord, dragwindow_params::dragx
-        copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-common: bit     dragwindow_params::moved
+        bit     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 
 ;;; ============================================================
 
-.proc handle_click
-        copy16  event_params::xcoord, screentowindow_params::screen::xcoord
-        copy16  event_params::ycoord, screentowindow_params::screen::ycoord
+.proc HandleClick
+        copy    winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         ;; ----------------------------------------
@@ -723,33 +684,23 @@ common: bit     dragwindow_params::moved
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, fatbits_rect
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     handle_bits_click
-        END_IF
+        jeq     HandleBitsClick
 
         MGTK_CALL MGTK::InRect, larr_rect
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     handle_larr_click
-        END_IF
+        jeq     HandleLArrClick
 
         MGTK_CALL MGTK::InRect, rarr_rect
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     handle_rarr_click
-        END_IF
+        jeq     HandleRArrClick
 
         MGTK_CALL MGTK::InRect, preview_rect
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     handle_pattern_click
-        END_IF
+        jeq     HandlePatternClick
 
         MGTK_CALL MGTK::InRect, rect_rgb
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     handle_rgb_click
-        END_IF
+        jeq     HandleRGBClick
 
         ;; ----------------------------------------
 
@@ -757,21 +708,21 @@ common: bit     dragwindow_params::moved
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
-        jmp     handle_dblclick_click
+        jmp     HandleDblclickClick
         END_IF
 
         MGTK_CALL MGTK::InRect, dblclick_button_rect2
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #2
-        jmp     handle_dblclick_click
+        jmp     HandleDblclickClick
         END_IF
 
         MGTK_CALL MGTK::InRect, dblclick_button_rect3
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #3
-        jmp     handle_dblclick_click
+        jmp     HandleDblclickClick
         END_IF
 
         ;; ----------------------------------------
@@ -780,14 +731,14 @@ common: bit     dragwindow_params::moved
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #0
-        jmp     handle_tracking_click
+        jmp     HandleTrackingClick
         END_IF
 
         MGTK_CALL MGTK::InRect, tracking_button_rect2
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
-        jmp     handle_tracking_click
+        jmp     HandleTrackingClick
         END_IF
 
         ;; ----------------------------------------
@@ -796,45 +747,29 @@ common: bit     dragwindow_params::moved
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
-        jmp     handle_ipblink_click
+        jmp     HandleIpblinkClick
         END_IF
 
         MGTK_CALL MGTK::InRect, ipblink_btn2_rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #2
-        jmp     handle_ipblink_click
+        jmp     HandleIpblinkClick
         END_IF
 
         MGTK_CALL MGTK::InRect, ipblink_btn3_rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #3
-        jmp     handle_ipblink_click
+        jmp     HandleIpblinkClick
         END_IF
 
-        ;; ----------------------------------------
-
-        MGTK_CALL MGTK::InRect, rect_12hour
-        cmp     #MGTK::inrect_inside
-        IF_EQ
-        lda     #$00
-        jmp     handle_hour_click
-        END_IF
-
-        MGTK_CALL MGTK::InRect, rect_24hour
-        cmp     #MGTK::inrect_inside
-        IF_EQ
-        lda     #$80
-        jmp     handle_hour_click
-        END_IF
-
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_rarr_click
+.proc HandleRArrClick
         inc     pattern_index
 
         lda     pattern_index
@@ -843,21 +778,20 @@ common: bit     dragwindow_params::moved
         copy    #0, pattern_index
         END_IF
 
-        jmp     update_pattern
+        jmp     UpdatePattern
 .endproc
 
-.proc handle_larr_click
+.proc HandleLArrClick
         dec     pattern_index
 
-        lda     pattern_index
         IF_NEG
         copy    #kPatternCount-1, pattern_index
         END_IF
 
-        jmp     update_pattern
+        jmp     UpdatePattern
 .endproc
 
-.proc update_pattern
+.proc UpdatePattern
         ptr := $06
         lda     pattern_index
         asl
@@ -869,19 +803,19 @@ common: bit     dragwindow_params::moved
         dey
         bpl     :-
 
-        jsr     draw_preview
-        jsr     update_bits
-        jmp     input_loop
+        jsr     DrawPreview
+        jsr     UpdateBits
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_bits_click
+.proc HandleBitsClick
 
         ;; Determine sense flag (0=clear, $FF=set)
-        jsr     map_coords
-        ldx     mx
-        ldy     my
+        jsr     MapCoords
+        ldx     screentowindow_params::windowx
+        ldy     screentowindow_params::windowy
 
         stx     lastx
         sty     lasty
@@ -890,13 +824,13 @@ common: bit     dragwindow_params::moved
         and     mask1,x
         beq     :+
         lda     #0
-        jmp     @store
+        beq     @store          ; always
 :       lda     #$FF
 @store: sta     flag
 
         ;; Toggle pattern bit
-loop:   ldx     mx
-        ldy     my
+loop:   ldx     screentowindow_params::windowx
+        ldy     screentowindow_params::windowy
         lda     pattern,y
         bit     flag
         bpl     :+
@@ -907,22 +841,20 @@ loop:   ldx     mx
         beq     event
         sta     pattern,y
 
-        ldx     mx
-        ldy     my
+        ldx     screentowindow_params::windowx
+        ldy     screentowindow_params::windowy
         lda     flag
-        jsr     draw_bit
+        jsr     DrawBit
 
-        jsr     draw_preview
+        jsr     DrawPreview
 
         ;; Repeat until mouse-up
 event:  MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        lda     event_kind
         cmp     #MGTK::EventKind::button_up
-        bne     :+
-        jmp     input_loop
+        jeq     InputLoop
 
-:       copy16  event_params::xcoord, screentowindow_params::screen::xcoord
-        copy16  event_params::ycoord, screentowindow_params::screen::ycoord
+        copy    winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -930,17 +862,16 @@ event:  MGTK_CALL MGTK::GetEvent, event_params
         cmp     #MGTK::inrect_inside
         bne     event
 
-        jsr     map_coords
-        lda     mx
-        cmp     lastx
+        jsr     MapCoords
+        ldx     screentowindow_params::windowx
+        ldy     screentowindow_params::windowy
+        cpx     lastx
         bne     moved
-        lda     my
-        cmp     lasty
-        bne     moved
-        jmp     event
+        cpy     lasty
+        beq     event
 
-moved:  copy    mx, lastx
-        copy    my, lasty
+moved:  stx     lastx
+        sty     lasty
         jmp     loop
 
 mask1:  .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
@@ -953,35 +884,35 @@ lasty:  .byte   0
 .endproc
 
 ;;; Assumes click is within fatbits_rect
-.proc map_coords
-        sub16   mx, fatbits_rect::x1, mx
-        sub16   my, fatbits_rect::y1, my
+.proc MapCoords
+        sub16   screentowindow_params::windowx, fatbits_rect::x1, screentowindow_params::windowx
+        sub16   screentowindow_params::windowy, fatbits_rect::y1, screentowindow_params::windowy
 
         ldy     #kFatBitWidthShift
-:       lsr16   mx
+:       lsr16   screentowindow_params::windowx
         dey
         bne     :-
 
         ldy     #kFatBitHeightShift
-:       lsr16   my
+:       lsr16   screentowindow_params::windowy
         dey
         bne     :-
 
         rts
 .endproc
 
-.proc update_bits
-        MGTK_CALL MGTK::GetWinPort, winport_params
+.proc UpdateBits
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
-        jsr     draw_bits
+        jsr     DrawBits
         MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc init_dblclick
+.proc InitDblclick
         ;; Find matching index in word table, or 0
         ldx     #kDblClickSpeedTableSize * 2
 loop:   lda     SETTINGS + DeskTopSettings::dblclick_speed
@@ -1003,30 +934,33 @@ next:   dex
         rts
 .endproc
 
-.proc handle_dblclick_click
-        sta     dblclick_selection  ; 1, 2 or 3
+.proc HandleDblclickClick
+        sta     dblclick_selection ; 1, 2 or 3
         asl                     ; *= 2
         tax
         dex
         dex                     ; 0, 2 or 4
 
         copy16  dblclick_speed_table,x, SETTINGS + DeskTopSettings::dblclick_speed
+        jsr     MarkDirty
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
-        jsr     draw_dblclick_buttons
+        jsr     DrawDblclickButtons
         MGTK_CALL MGTK::ShowCursor
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_tracking_click
+.proc HandleTrackingClick
         ;; --------------------------------------------------
         ;; Update Settings
 
         sta     SETTINGS + DeskTopSettings::mouse_tracking
+        jsr     MarkDirty
+
         ;; --------------------------------------------------
         ;; Update MGTK
 
@@ -1051,25 +985,29 @@ next:   dex
         inc     scalemouse_params::y_exponent
         END_IF
 
-        ;; TODO: This warps the cursor position; can this be fixed?
         MGTK_CALL MGTK::ScaleMouse, scalemouse_params
+
+        ;; Set the cursor to the same position (c/o click event),
+        ;; to avoid it warping due to the scale change.
+        copy    #MGTK::EventKind::no_event, event_kind
+        MGTK_CALL MGTK::PostEvent, event_params
 
         ;; --------------------------------------------------
         ;; Update the UI
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
-        jsr     draw_tracking_buttons
+        jsr     DrawTrackingButtons
         MGTK_CALL MGTK::ShowCursor
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
 
-.proc init_pattern
+.proc InitPattern
         ptr := $06
 
         MGTK_CALL MGTK::GetDeskPat, ptr
@@ -1081,24 +1019,24 @@ next:   dex
         rts
 .endproc
 
-.proc handle_pattern_click
+.proc HandlePatternClick
         MGTK_CALL MGTK::SetDeskPat, pattern
         COPY_STRUCT MGTK::Pattern, pattern, SETTINGS + DeskTopSettings::pattern
+        jsr     MarkDirty
 
-        MGTK_CALL MGTK::OpenWindow, winfo_fullscreen
-        MGTK_CALL MGTK::CloseWindow, winfo_fullscreen
+        MGTK_CALL MGTK::RedrawDeskTop
 
         ;; Draw DeskTop's windows and icons.
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         sta     RAMRDON
         sta     RAMWRTON
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
@@ -1111,9 +1049,9 @@ notpencopy:     .byte   MGTK::notpencopy
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         IF_EQ
         rts
@@ -1139,15 +1077,15 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::SetPenMode, penBIC
         MGTK_CALL MGTK::FrameRect, preview_line
 
-        jsr     draw_preview
-        jsr     draw_bits
+        jsr     DrawPreview
+        jsr     DrawBits
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
         MGTK_CALL MGTK::MoveTo, rgb_color_label_pos
         param_call DrawString, rgb_color_label_str
 
-        jsr     draw_rgb_checkbox
+        jsr     DrawRGBCheckbox
 
         ;; ==============================
         ;; Double-Click Speed
@@ -1169,7 +1107,7 @@ loop:   ldy     #3
         bpl     :-
 
         MGTK_CALL MGTK::PaintBits, darrow_params
-        add16_8 addr, #.sizeof(MGTK::Point), addr
+        add16_8 addr, #.sizeof(MGTK::Point)
         inc     arrow_num
         lda     arrow_num
         cmp     #kNumArrows
@@ -1177,7 +1115,7 @@ loop:   ldy     #3
 .endscope
 
 
-        jsr     draw_dblclick_buttons
+        jsr     DrawDblclickButtons
 
         MGTK_CALL MGTK::PaintBits, dblclick_params
 
@@ -1193,7 +1131,7 @@ loop:   ldy     #3
         MGTK_CALL MGTK::MoveTo, tracking_fast_label_pos
         param_call DrawString, tracking_fast_label_str
 
-        jsr     draw_tracking_buttons
+        jsr     DrawTrackingButtons
 
         MGTK_CALL MGTK::PaintBits, mouse_tracking_params
 
@@ -1214,21 +1152,7 @@ loop:   ldy     #3
         MGTK_CALL MGTK::MoveTo, ipblink_fast_label_pos
         param_call DrawString, ipblink_fast_label_str
 
-        jsr     draw_ipblink_buttons
-
-        ;; ==============================
-        ;; 12/24 Hour Clock
-
-        MGTK_CALL MGTK::MoveTo, clock_label_pos
-        param_call DrawString, clock_label_str
-
-        MGTK_CALL MGTK::MoveTo, clock_12hour_label_pos
-        param_call DrawString, clock_12hour_label_str
-
-        MGTK_CALL MGTK::MoveTo, clock_24hour_label_pos
-        param_call DrawString, clock_24hour_label_str
-
-        jsr     draw_hour_buttons
+        jsr     DrawIpblinkButtons
 
         ;; ==============================
         ;; Frame
@@ -1240,8 +1164,6 @@ loop:   ldy     #3
         MGTK_CALL MGTK::LineTo, frame_l2b
         MGTK_CALL MGTK::MoveTo, frame_l3a
         MGTK_CALL MGTK::LineTo, frame_l3b
-        MGTK_CALL MGTK::MoveTo, frame_l4a
-        MGTK_CALL MGTK::LineTo, frame_l4b
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, winfo::penwidth
 
@@ -1253,152 +1175,128 @@ arrow_num:
 
 .endproc
 
-.proc draw_dblclick_buttons
+.proc DrawDblclickButtons
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
         ldax    #dblclick_button_rect1
         ldy     dblclick_selection
         cpy     #1
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         ldax    #dblclick_button_rect2
         ldy     dblclick_selection
         cpy     #2
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         ldax    #dblclick_button_rect3
         ldy     dblclick_selection
         cpy     #3
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         rts
 .endproc
 
 
-.proc draw_tracking_buttons
+.proc DrawTrackingButtons
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
         ldax    #tracking_button_rect1
         ldy     SETTINGS + DeskTopSettings::mouse_tracking
         cpy     #0
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         ldax    #tracking_button_rect2
         ldy     SETTINGS + DeskTopSettings::mouse_tracking
         cpy     #1
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         rts
 .endproc
 
 
-.proc draw_ipblink_buttons
+.proc DrawIpblinkButtons
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
         ldax    #ipblink_btn1_rect
         ldy     ipblink_selection
         cpy     #1
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         ldax    #ipblink_btn2_rect
         ldy     ipblink_selection
         cpy     #2
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         ldax    #ipblink_btn3_rect
         ldy     ipblink_selection
         cpy     #3
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         rts
 .endproc
 
-.proc draw_hour_buttons
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-
-        ldax    #rect_12hour
-        ldy     SETTINGS + DeskTopSettings::clock_24hours
-        cpy     #0
-        jsr     draw_radio_button
-
-        ldax    #rect_24hour
-        ldy     SETTINGS + DeskTopSettings::clock_24hours
-        cpy     #$80
-        jsr     draw_radio_button
-
-        rts
-.endproc
-
-.proc draw_rgb_checkbox
+.proc DrawRGBCheckbox
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
         ldax    #rect_rgb
         ldy     SETTINGS + DeskTopSettings::rgb_color
         cpy     #$80
-        jsr     draw_checkbox
+        jsr     DrawCheckbox
 
         rts
 .endproc
 
 
 ;;; A,X = pos ptr, Z = checked
-.proc draw_radio_button
+.proc DrawRadioButton
         ptr := $06
 
         stax    ptr
-        beq     checked
 
-unchecked:
+    IF_EQ
+        copy16  #checked_rb_bitmap, rb_params::mapbits
+    ELSE
+        copy16  #unchecked_rb_bitmap, rb_params::mapbits
+    END_IF
+
         ldy     #3
 :       lda     (ptr),y
-        sta     unchecked_rb_params::viewloc,y
+        sta     rb_params::viewloc,y
         dey
         bpl     :-
-        MGTK_CALL MGTK::PaintBits, unchecked_rb_params
-        rts
 
-checked:
-        ldy     #3
-:       lda     (ptr),y
-        sta     checked_rb_params::viewloc,y
-        dey
-        bpl     :-
-        MGTK_CALL MGTK::PaintBits, checked_rb_params
+        MGTK_CALL MGTK::PaintBits, rb_params
         rts
 .endproc
 
 ;;; A,X = pos ptr, Z = checked
-.proc draw_checkbox
+.proc DrawCheckbox
         ptr := $06
 
         stax    ptr
-        beq     checked
 
-unchecked:
+    IF_EQ
+        copy16  #checked_cb_bitmap, cb_params::mapbits
+    ELSE
+        copy16  #unchecked_cb_bitmap, cb_params::mapbits
+    END_IF
+
         ldy     #3
 :       lda     (ptr),y
-        sta     unchecked_cb_params::viewloc,y
+        sta     cb_params::viewloc,y
         dey
         bpl     :-
-        MGTK_CALL MGTK::PaintBits, unchecked_cb_params
-        rts
 
-checked:
-        ldy     #3
-:       lda     (ptr),y
-        sta     checked_cb_params::viewloc,y
-        dey
-        bpl     :-
-        MGTK_CALL MGTK::PaintBits, checked_cb_params
+        MGTK_CALL MGTK::PaintBits, cb_params
         rts
 .endproc
 
 ;;; ============================================================
 
 ;;; Assert: called from a routine that ensures window is onscreen
-.proc draw_preview
+.proc DrawPreview
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
 
         ;; Shift the pattern so that when interpreted as NTSC color it
@@ -1448,7 +1346,7 @@ rotated_pattern:
         DEFINE_RECT bitrect, 0, 0, 0, 0
 
 ;;; Assert: called from a routine that ensures window is onscreen
-.proc draw_bits
+.proc DrawBits
 
         ;; Perf: Filling rects is slightly faster than using large pens,
         ;; but 64 draw calls is still slow, ~1s to update fully at 1MHz
@@ -1457,11 +1355,11 @@ rotated_pattern:
 
         copy    #0, ypos
         copy16  fatbits_rect::y1, bitrect::y1
-        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
+        add16_8 bitrect::y1, #kFatBitHeight-1, bitrect::y2
 
 yloop:  copy    #0, xpos
         copy16  fatbits_rect::x1, bitrect::x1
-        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
+        add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2
         ldy     ypos
         copy    pattern,y, row
 
@@ -1480,8 +1378,8 @@ store:  sta     mode
         lda     xpos
         cmp     #8
         IF_NE
-        add16   bitrect::x1, #kFatBitWidth, bitrect::x1
-        add16   bitrect::x2, #kFatBitWidth, bitrect::x2
+        add16_8 bitrect::x1, #kFatBitWidth
+        add16_8 bitrect::x2, #kFatBitWidth
         jmp     xloop
         END_IF
 
@@ -1490,8 +1388,8 @@ store:  sta     mode
         lda     ypos
         cmp     #8
         IF_NE
-        add16   bitrect::y1, #kFatBitHeight, bitrect::y1
-        add16   bitrect::y2, #kFatBitHeight, bitrect::y2
+        add16_8 bitrect::y1, #kFatBitHeight
+        add16_8 bitrect::y2, #kFatBitHeight
         jmp     yloop
         END_IF
 
@@ -1508,7 +1406,7 @@ mode:   .byte   0
 
 ;;; Input: A = set/clear X = x coord, Y = y coord
 ;;; Assert: called from a routine that ensures window is onscreen
-.proc draw_bit
+.proc DrawBit
         sta     mode
 
         stx     bitrect::x1
@@ -1528,9 +1426,9 @@ mode:   .byte   0
         bne     :-
 
         add16   bitrect::x1, fatbits_rect::x1, bitrect::x1
-        add16   bitrect::x1, #kFatBitWidth-1, bitrect::x2
+        add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2
         add16   bitrect::y1, fatbits_rect::y1, bitrect::y1
-        add16   bitrect::y1, #kFatBitHeight-1, bitrect::y2
+        add16_8 bitrect::y1, #kFatBitHeight-1, bitrect::y2
 
         lda     #MGTK::pencopy
         bit     mode
@@ -1538,7 +1436,7 @@ mode:   .byte   0
         lda     #MGTK::notpencopy
 :       sta     mode
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::SetPattern, winfo::pattern
@@ -1563,7 +1461,12 @@ pattern:
         .byte   %01010101
         .byte   %10101010
 
-pattern_index:  .byte   0
+;;; The index of the pattern in the table below. We start with -1
+;;; representing the current desktop pattern; either incrementing
+;;; to 0 or decrementing (to a negative and wrapping) will start
+;;; iterating through the table.
+pattern_index:  .byte   AS_BYTE(-1)
+
 kPatternCount = 15 + 14 + 1 ; 15 B&W patterns, 14 solid color patterns + 1
 patterns:
         .addr pattern_checkerboard, pattern_dark, pattern_vdark, pattern_black
@@ -1760,54 +1663,87 @@ pattern_cE:      .res 8, $77     ; E = aqua
 kIPBlinkSpeedTableSize = 3
 
 ipblink_speed_table:
-        .byte   kDefaultIPBlinkSpeed * 2
-        .byte   kDefaultIPBlinkSpeed * 1
-        .byte   kDefaultIPBlinkSpeed * 1/2
+        .word   kDefaultIPBlinkSpeed * 2
+        .word   kDefaultIPBlinkSpeed * 1
+        .word   kDefaultIPBlinkSpeed * 1/2
 
 ipblink_counter:
-        .byte   120
+        .word   kDefaultIPBlinkSpeed
 
-.proc init_ipblink
-        lda     SETTINGS + DeskTopSettings::ip_blink_speed
-        ldx     #kIPBlinkSpeedTableSize
-:       cmp     ipblink_speed_table-1,x
-        beq     done
+.proc InitIpblink
+        ;; Find matching index in word table, or 0
+        ldx     #kIPBlinkSpeedTableSize * 2
+loop:   lda     SETTINGS + DeskTopSettings::ip_blink_speed
+        cmp     ipblink_speed_table-2,x
+        bne     next
+        lda     SETTINGS + DeskTopSettings::ip_blink_speed+1
+        cmp     ipblink_speed_table-2+1,x
+        bne     next
+        ;; Found a match
+        txa
+        lsr                     ; /= 2
+        sta     ipblink_selection
+        rts
+
+next:   dex
         dex
-        bne     :-
-
-done:   stx     ipblink_selection
+        bpl     loop
+        copy    #0, ipblink_selection ; not found
         rts
 .endproc
 
-.proc handle_ipblink_click
-        sta     ipblink_selection
-
+.proc HandleIpblinkClick
+        sta     ipblink_selection ; 1, 2 or 3
+        asl                     ; *= 2
         tax
-        lda     ipblink_speed_table-1,x
-        sta     SETTINGS + DeskTopSettings::ip_blink_speed
-        sta     ipblink_counter
+        dex
+        dex                     ; 0, 2 or 4
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        copy16  ipblink_speed_table,x, SETTINGS + DeskTopSettings::ip_blink_speed
+        jsr     MarkDirty
+        jsr     ResetIPBlinkCounter
+
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
-        jsr     draw_ipblink_buttons
+        jsr     DrawIpblinkButtons
         MGTK_CALL MGTK::ShowCursor
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
-.proc do_ipblink
-        dec     ipblink_counter
+.proc ResetIPBlinkCounter
+        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
+        ;; Scale it because it's much slower in the DA than in DeskTop
+        ;; prompts, due to more hit testing, etc.  1/2 speed seems okay.
+        lsr16   ipblink_counter
+        rts
+.endproc
+
+
+.proc DoIPBlink
+        dec16   ipblink_counter
         lda     ipblink_counter
+        ora     ipblink_counter+1
         bne     done
 
-        copy    SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
+        jsr     ResetIPBlinkCounter
+
         ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         beq     done
 
+        bit     cursor_flag
+        bpl     :+
+        MGTK_CALL MGTK::HideCursor
+:
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintBits, ipblink_bitmap_ip_params
+
+        bit     cursor_flag
+        bpl     :+
+        MGTK_CALL MGTK::ShowCursor
+:
 
 done:   rts
 
@@ -1815,13 +1751,14 @@ done:   rts
 
 ;;; ============================================================
 
-.proc handle_rgb_click
+.proc HandleRGBClick
         lda     SETTINGS + DeskTopSettings::rgb_color
         eor     #$80
         sta     SETTINGS + DeskTopSettings::rgb_color
+        jsr     MarkDirty
 
         MGTK_CALL MGTK::HideCursor
-        jsr     draw_rgb_checkbox
+        jsr     DrawRGBCheckbox
         MGTK_CALL MGTK::ShowCursor
 
         sta     RAMRDOFF
@@ -1830,108 +1767,20 @@ done:   rts
         sta     RAMRDON
         sta     RAMWRTON
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_hour_click
-        sta     SETTINGS + DeskTopSettings::clock_24hours
-        MGTK_CALL MGTK::HideCursor
-        jsr     draw_hour_buttons
-        MGTK_CALL MGTK::ShowCursor
-        jmp     input_loop
-.endproc
-
-;;; ============================================================
-;;; Save Settings
-
-filename:
-        PASCAL_STRING kFilenameDeskTopConfig
-
-filename_buffer:
-        .res kPathBufferSize
-
-write_buffer:
-        .res .sizeof(DeskTopSettings)
-
-        DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
-        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_WRITE_PARAMS write_params, write_buffer, .sizeof(DeskTopSettings)
-        DEFINE_CLOSE_PARAMS close_params
-
-.proc save_settings
-        ;; Run from Main, but with LCBANK1 in
-
-        ;; Copy from LCBANK to somewhere ProDOS can read.
-        COPY_STRUCT DeskTopSettings, SETTINGS, write_buffer
-
-        ;; Write to desktop current prefix
-        ldax    #filename
-        stax    create_params::pathname
-        stax    open_params::pathname
-        jsr     do_write
-
-        ;; Write to the original file location, if necessary
-        jsr     GetCopiedToRAMCardFlag
-        beq     done
-        ldax    #filename_buffer
-        stax    create_params::pathname
-        stax    open_params::pathname
-        jsr     CopyDeskTopOriginalPrefix
-        jsr     append_filename
-        jsr     do_write
-
-done:   rts
-
-.proc append_filename
-        ;; Append filename to buffer
-        inc     filename_buffer ; Add '/' separator
-        ldx     filename_buffer
-        lda     #'/'
-        sta     filename_buffer,x
-
-        ldx     #0              ; Append filename
-        ldy     filename_buffer
-:       inx
-        iny
-        lda     filename,x
-        sta     filename_buffer,y
-        cpx     filename
-        bne     :-
-        sty     filename_buffer
-        rts
-.endproc
-
-.proc do_write
-        ;; Create if necessary
-        copy16  DATELO, create_params::create_date
-        copy16  TIMELO, create_params::create_time
-        JUMP_TABLE_MLI_CALL CREATE, create_params
-
-        JUMP_TABLE_MLI_CALL OPEN, open_params
-        bcs     done
-        lda     open_params::ref_num
-        sta     write_params::ref_num
-        sta     close_params::ref_num
-        JUMP_TABLE_MLI_CALL WRITE, write_params
-close:  JUMP_TABLE_MLI_CALL CLOSE, close_params
-done:   rts
-.endproc
-
-.endproc
-
-
-;;; ============================================================
-
-        .include "../lib/ramcard.s"
+        .include "../lib/save_settings.s"
         .include "../lib/drawstring.s"
+        .include "../lib/measurestring.s"
 
 ;;; ============================================================
 
 da_end  := *
-.assert * < WINDOW_ICON_TABLES, error, .sprintf("DA too big (at $%X)", *)
+.assert * < WINDOW_ENTRY_TABLES, error, .sprintf("DA too big (at $%X)", *)
         ;; I/O Buffer starts at MAIN $1C00
-        ;; ... but icon tables start at AUX $1B00
+        ;; ... but entry tables start at AUX $1B00
 
 ;;; ============================================================

@@ -2,8 +2,6 @@
 ;;; DeskTop Internals
 ;;; ============================================================
 
-        RESOURCE_FILE "internal.res"
-
 kDAFileType     = $F1
 kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
 
@@ -12,6 +10,7 @@ kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
         text
         binary
         graphics
+        music
         font
         relocatable
         command
@@ -20,6 +19,7 @@ kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
         appleworks_db
         appleworks_wp
         appleworks_sp
+        archive
         desk_accessory
         basic
         system
@@ -29,9 +29,24 @@ kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
 
 kMaxDeskAccCount        = 12
 
+;;; Maximum number of ProDOS devices (2 per slot 1-7). This is the
+;;; maximum size of DEVLST not counting DEVCNT itself.
+kMaxDevListSize = 14
+
 ;;; Maximum number of volumes displayed/tracked. This is two per slot,
 ;;; except S3,D2 is assumed to be /RAM which is disconnected.
-kMaxVolumes     = 13
+kMaxVolumes     = kMaxDevListSize - 1
+
+;;; ============================================================
+;;; View types
+
+;;; (low nibble must match menu order)
+kViewByIcon     = $00
+kViewByName     = $81
+kViewByDate     = $82
+kViewBySize     = $83
+kViewByType     = $84
+kViewByMenuMask = $0F           ; Convert kViewByXYZ to menu index
 
 ;;; ============================================================
 ;;; Window/Icon Metrics
@@ -61,7 +76,7 @@ kListViewWidth          = 410
 
 kMaxIconHeight          = 17
 kIconWidth              = 28
-kIconLabelHeight        = 9     ; default font height
+kIconLabelHeight        = kSystemFontHeight
 
 kIconsPerRow    = 5
 kIconSpacingX   = 80
@@ -75,7 +90,7 @@ kIconSpacingY   = 32
 kIconBBoxOffsetTop      = kWindowHeaderHeight + 4
 kIconBBoxOffsetLeft     = 45
 kIconBBoxOffsetBottom   = kIconLabelHeight + 4
-kIconBBoxOffsetRight    = 37 + kIconWidth ; accomodate icon + label
+kIconBBoxOffsetRight    = 37 + kIconWidth ; accommodate icon + label
 ;;; NOTE: kIconBBoxOffsetRight should probably be se to
 ;;; kIconBBoxOffsetLeft + kIconWidth but aesthetically that looks bad.
 
@@ -87,6 +102,12 @@ kShortcutNo       = res_char_button_no_shortcut
 kShortcutTryAgain = res_char_button_try_again_shortcut
 kShortcutAll      = res_char_button_all_shortcut
 
+;;; ============================================================
+;;; Operations
+
+kOperationSucceeded     = 0
+kOperationCanceled      = 1
+kOperationFailed        = $FF
 
 ;;; ============================================================
 ;;; Memory Areas
@@ -95,7 +116,6 @@ kShortcutAll      = res_char_button_all_shortcut
 ;;; * Given to MGTK to save background while menus are shown
 ;;; * Used by DeskTop to save background while alert dialog shown
 ;;; * Used by IconTK to store icon outlines during DragHighlighted
-;;; * Used by IconTK for a temp buffer during HighlightAll
 
 SAVE_AREA_BUFFER := $800        ; through $1AFF
 kSaveAreaSize   = $1300
@@ -110,13 +130,13 @@ IO_BUFFER := $1C00
 
 kMenuIdApple    = 1
 kMenuIdFile     = 2
-kMenuIdView     = 4
-kMenuIdSpecial  = 5
-kMenuIdStartup  = 8
-kMenuIdSelector = 3
+kMenuIdView     = 3
+kMenuIdSpecial  = 4
+kMenuIdStartup  = 5
+kMenuIdSelector = 6
 
 kMenuSizeApple    = 14
-kMenuSizeFile     = 13
+kMenuSizeFile     = 14
 kMenuSizeView     = 5
 kMenuSizeSpecial  = 11
 kMenuSizeStartup  = 7
@@ -142,70 +162,6 @@ kDeviceTypeRemovable    = 3
 kDeviceTypeFileShare    = 4
 
 ;;; ============================================================
-;;; Warning messages
-
-kNumWarningTypes = 7
-
-kWarningMsgInsertSystemDisk     = 0
-kWarningMsgSelectorListFull     = 1
-kWarningMsgSelectorListFull2    = 2
-kWarningMsgWindowMustBeClosed   = 3
-kWarningMsgWindowMustBeClosed2  = 4
-kWarningMsgTooManyWindows       = 5
-kWarningMsgSaveSelectorList     = 6
-
-;;; ============================================================
-;;; Invoker routine locations
-
-INVOKER_PREFIX          := $220 ; Prefix to set
-INVOKER                 := $290 ; Invoke other programs
-INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
-
-;;; ============================================================
-;;; Relays from Main to Aux (params must be in ZP or LC)
-
-.macro MGTK_RELAY_CALL call, addr, label
-        jsr     MGTKRelayImpl
-        .byte   call
-    .if .paramcount > 2
-        label := *
-    .endif
-    .if .paramcount > 1
-        .addr   addr
-    .else
-        .addr   0
-    .endif
-.endmacro
-
-.macro ITK_RELAY_CALL call, addr, label
-        jsr     ITKRelayImpl
-        .byte   call
-    .if .paramcount > 2
-        label := *
-    .endif
-    .if .paramcount > 1
-        .addr   addr
-    .else
-        .addr   0
-    .endif
-.endmacro
-
-;;; Scopes define their own MLIRelayImpl procs.
-
-.macro MLI_RELAY_CALL call, addr
-        jsr     MLIRelayImpl
-        .byte   call
-    .if .paramcount > 2
-        label := *
-    .endif
-    .if .paramcount > 1
-        .addr   addr
-    .else
-        .addr   0
-    .endif
-.endmacro
-
-;;; ============================================================
 ;;; Internals - miscellaneous structures
 
 .struct FileRecord
@@ -228,14 +184,6 @@ kDeskTopFileVersion  = $80  ; Increment when format changes
         rect            .tag MGTK::Rect
 .endstruct
 
-.struct ParsedDateTime
-        year    .word
-        month   .byte
-        day     .byte
-        hour    .byte
-        minute  .byte
-.endstruct
-
 ;;; ============================================================
 ;;; Segments & Overlays
 ;;;
@@ -243,6 +191,8 @@ kDeskTopFileVersion  = $80  ; Increment when format changes
 ;;; loaded overlays, all stored in one file. This section
 ;;; defines the file offsets, load addresses and lengths of each
 ;;; segment and offset
+
+kLoaderOffset = $200
 
 _segoffset .set 0
 .macro DEFSEG name, addr, len
@@ -253,7 +203,8 @@ _segoffset .set 0
 .endmacro
 
 ;;; Segments
-        DEFSEG SegmentLoader,      $2000, $0580
+        _segoffset .set kLoaderOffset
+        DEFSEG SegmentLoader,      $2000, $0300
         DEFSEG SegmentDeskTopAux,  $4000, $8000
         DEFSEG SegmentDeskTopLC1A, $D000, $1D00
         DEFSEG SegmentDeskTopLC1B, $FB00, $0500
@@ -262,16 +213,12 @@ _segoffset .set 0
         DEFSEG SegmentInvoker,     $0290, $0160
 
 ;;; Dynamically loaded overlays
-        DEFSEG OverlayDiskCopy1,   $0800, $0200
-        DEFSEG OverlayDiskCopy2,   $1800, $0200
-        DEFSEG OverlayDiskCopy3,   $D000, $2200
-        DEFSEG OverlayDiskCopy4,   $0800, $0B00
-        DEFSEG OverlayFormatErase, $0800, $1400
-        DEFSEG OverlaySelector1,   $9000, $1000
-        DEFSEG OverlayFileDialog,  $5000, $2000
-        DEFSEG OverlayFileCopy,    $7000, $0800
-        DEFSEG OverlayFileDelete,  $7000, $0800
-        DEFSEG OverlaySelector2,   $7000, $0800
+        DEFSEG OverlayFormatErase,  $0800, $1100
+        DEFSEG OverlayShortcutPick, $9000, $0C00
+        DEFSEG OverlayFileDialog,   $5000, $1700
+        DEFSEG OverlayFileCopy,     $7000, $0200
+        DEFSEG OverlayFileDelete,   $7000, $0100
+        DEFSEG OverlayShortcutEdit, $7000, $0500
 
 ;;; These pseudo-overlays restore DeskTop after overlays are used
 

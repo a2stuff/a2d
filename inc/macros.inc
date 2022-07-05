@@ -9,6 +9,7 @@
 .define _is_y_register(arg)      (.match ({arg}, y))
 .define _immediate_value(arg)    (.right (.tcount ({arg})-1, {arg}))
 
+;;; 16-bit helpers
 .macro _op_lo op, arg
     .if _is_immediate {arg}
         op #<_immediate_value {arg}
@@ -22,6 +23,39 @@
         op #>_immediate_value {arg}
     .else
         op arg+1
+    .endif
+.endmacro
+
+;;; 32-bit helpers
+.macro _op_b0 op, arg
+    .if _is_immediate {arg}
+        op #.lobyte(_immediate_value {arg})
+    .else
+        op arg
+    .endif
+.endmacro
+
+.macro _op_b1 op, arg
+    .if _is_immediate {arg}
+        op #.hibyte(_immediate_value {arg})
+    .else
+        op arg+1
+    .endif
+.endmacro
+
+.macro _op_b2 op, arg
+    .if _is_immediate {arg}
+        op #.bankbyte(_immediate_value {arg})
+    .else
+        op arg+2
+    .endif
+.endmacro
+
+.macro _op_b3 op, arg
+    .if _is_immediate {arg}
+        op #.hibyte(.hiword(_immediate_value {arg}))
+    .else
+        op arg+3
     .endif
 .endmacro
 
@@ -103,12 +137,12 @@ end:
 
 .macro param_call target, param1, param2
 .if     .paramcount = 2
-        lda     #<param1
-        ldx     #>param1
+        lda     #<(param1)
+        ldx     #>(param1)
 .elseif .paramcount = 3
         ldy     #param1
-        lda     #<param2
-        ldx     #>param2
+        lda     #<(param2)
+        ldx     #>(param2)
 .else
         .error "incorrect macro usage"
 .endif
@@ -131,12 +165,26 @@ end:
 
 .macro param_jump target, param1, param2
 .if     .paramcount = 2
-        lda     #<param1
-        ldx     #>param1
+        lda     #<(param1)
+        ldx     #>(param1)
 .elseif .paramcount = 3
         ldy     #param1
-        lda     #<param2
-        ldx     #>param2
+        lda     #<(param2)
+        ldx     #>(param2)
+.else
+        .error "incorrect macro usage"
+.endif
+        jmp     target
+.endmacro
+
+.macro param_jump_indirect target, param1, param2
+.if     .paramcount = 2
+        lda     param1
+        ldx     param1+1
+.elseif .paramcount = 3
+        ldy     #param1
+        lda     param2
+        ldx     param2+1
 .else
         .error "incorrect macro usage"
 .endif
@@ -235,6 +283,13 @@ end:
 ;;;    stax $1234       ; absolute
 .macro stax arg
         sta     arg
+        stx     arg+1
+.endmacro
+
+;;; Store Y,X
+;;;    styx $1234       ; absolute
+.macro styx arg
+        sty     arg
         stx     arg+1
 .endmacro
 
@@ -423,11 +478,22 @@ end:
     _addsub16in adc, clc, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
 
-
-;;; Add arg1 (absolute) to arg2 (8-bit absolute), store to arg3
+;;; Add arg1 (absolute) to arg2 (8-bit absolute/immediate), store to arg3
 ;;;    add16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    add16_8 $1111, $22, $3333        ; absolute, absolute, absolute
+;;; Add arg1 (absolute) to arg2 (8-bit absolute/immediate), store to arg1
+;;;    add16_8 $1111, #$22              ; absolute, immediate
+;;;    add16_8 $1111, $22               ; absolute, absolute
 .macro add16_8 arg1, arg2, arg3
+    .ifblank arg3
+        _op_lo  lda, {arg1}
+        clc
+        adc     arg2
+        sta     arg1
+        bcc     :+
+        _op_hi  inc, {arg1}
+:
+    .else
         _op_lo  lda, {arg1}
         clc
         adc     arg2
@@ -435,18 +501,29 @@ end:
         _op_hi  lda, {arg1}
         adc     #0
         sta     arg3+1
+    .endif
 .endmacro
 
 ;;; Add A,X to arg1 (immediate or absolute), store to arg2
 ;;;    addax #$1111, $3333       ; immediate, absolute
 ;;;    addax $1111, $3333        ; absolute, absolute
+;;;    addax $1111               ; absolute
 .macro addax arg1, arg2
+    .ifblank arg2
+        clc
+        adc     arg1
+        sta     arg1
+        txa
+        adc     arg1+1
+        sta     arg1+1
+    .else
         clc
         _op_lo adc, {arg1}
         sta     arg2
         txa
         _op_hi adc, {arg1}
         sta     arg2+1
+     .endif
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3
@@ -467,6 +544,7 @@ end:
 .macro sub16in arg1, arg2, arg3, arg4, arg5, arg6
     _addsub16in sbc, sec, arg1, arg2, arg3, arg4, arg5, arg6
 .endmacro
+
 
 ;;; Subtract arg2 from arg1, store to arg3
 ;;;    sub16_8 #$1111, #$22, $3333      ; immediate, immediate, absolute
@@ -505,15 +583,29 @@ end:
         sta     arg3+1
     .elseif _is_register {arg3}
         ;; indexed store variant (arg3 is x or y)
+      .if .xmatch ({arg1}, #0)
+        ;; Common special case
+        lda     #0
+        sta     arg2,arg3
+        sta     arg2+1,arg3
+      .else
         _op_lo  lda, {arg1}
         sta     arg2,arg3
         _op_hi  lda, {arg1}
         sta     arg2+1,arg3
+      .endif
     .else
+      .if .xmatch ({arg1}, #0)
+        ;; Common special case
+        lda     #0
+        sta     arg2
+        sta     arg2+1
+      .else
         _op_lo  lda, {arg1}
         sta     arg2
         _op_hi  lda, {arg1}
         sta     arg2+1
+      .endif
     .endif
 .endmacro
 
@@ -549,6 +641,37 @@ end:
         .error "Indirect indexed required at least one use of y reg"
     .endif
 .endmacro
+
+;;; Copy low/high 16-bit value
+;;; 8 bits from $1111[,x] to $3333
+;;; 8 bits from $2222[,x] to $3333+1
+;;; 8 bits from $1111 to $2222
+;;; 8 bits from $1111+1 to $3333
+;;;    copylohi $1111, $2222, $3333        ; absolute, absolute
+;;;    copylohi $1111,x, $2222,x, $3333    ; indirect load, absolute store
+;;;    copylohi $1111, $2222,x, $3333,x    ; absolute load, indirect store
+.macro copylohi arg1, arg2, arg3, arg4, arg5
+    .if _is_register {arg2}
+        ;; indexed load
+        ;; arg4 is also a register
+        lda     arg1,arg2
+        sta     arg5
+        lda     arg3,arg4
+        sta     arg5+1
+    .elseif _is_register {arg3}
+        ;; indexed store
+        lda     arg1
+        sta     arg2,arg3
+        lda     arg1+1
+        sta     arg4,arg5
+    .else
+        lda     arg1
+        sta     arg3
+        lda     arg2
+        sta     arg3+1
+    .endif
+.endmacro
+
 
 
 ;;; Compare 16-bit values
@@ -646,6 +769,73 @@ skip:   dec     arg
 .endmacro
 
 ;;; ============================================================
+;;; 32-bit pseudo-ops
+
+;;; Core for add32/sub32
+.macro _addsub32 op, opc, arg1, arg2, arg3
+        opc
+        _op_b0 lda, {arg1}
+        _op_b0 op, {arg2}
+        sta     arg3
+        _op_b1 lda, {arg1}
+        _op_b1 op, {arg2}
+        sta     arg3+1
+        _op_b2 lda, {arg1}
+        _op_b2 op, {arg2}
+        sta     arg3+2
+        _op_b3 lda, {arg1}
+        _op_b3 op, {arg2}
+        sta     arg3+3
+.endmacro
+
+;;; absolute  + absolute  => absolute
+;;; immediate + absolute  => absolute
+;;; absolute  + immediate => absolute
+.macro add32 arg1, arg2, arg3
+    _addsub32 adc, clc, arg1, arg2, arg3
+.endmacro
+
+;;; absolute  - absolute  => absolute
+;;; immediate - absolute  => absolute
+;;; absolute  - immediate => absolute
+.macro sub32 arg1, arg2, arg3
+    _addsub32 sbc, sec, arg1, arg2, arg3
+.endmacro
+
+;;; Copy 32-bit value
+;;;    copy32 #$11111111, $2222 ; immediate, absolute
+;;;    copy32 $1111, $2222      ; absolute, absolute
+.macro copy32 arg1, arg2
+        _op_b0  lda, {arg1}
+        sta     arg2
+        _op_b1  lda, {arg1}
+        sta     arg2+1
+        _op_b2  lda, {arg1}
+        sta     arg2+2
+        _op_b3  lda, {arg1}
+        sta     arg2+3
+.endmacro
+
+;;; Shift 32-bit values
+;;;    asl32 $1111      ; absolute
+.macro asl32 arg1
+        asl     arg1
+        rol     arg1+1
+        rol     arg1+2
+        rol     arg1+3
+.endmacro
+
+;;;    lsr32 $1111      ; absolute
+.macro lsr32 arg1
+        lsr     arg1+3
+        ror     arg1+2
+        ror     arg1+1
+        ror     arg1
+.endmacro
+
+
+
+;;; ============================================================
 ;;; Placed Param Blocks
 ;;; ============================================================
 
@@ -706,7 +896,8 @@ loop:   lda     src,x
 loop:   lda     src,x
         sta     dst,x
         dex
-        bpl     loop
+        cpx     #$FF
+        bne     loop
 .endscope
 .endmacro
 
@@ -779,7 +970,7 @@ __pushorg_depth__ .set 0
 ;;; ============================================================
 
 .macro ASSERT_EQUALS actual, expected
-    .assert (actual) = (expected), error, .sprintf("expected %d actual %d", (actual), (expected))
+    .assert (actual) = (expected), error, .sprintf("expected %d actual %d", (expected), (actual))
 .endmacro
 
 .macro ASSERT_ADDRESS addr, opt_message
@@ -802,6 +993,9 @@ __pushorg_depth__ .set 0
         .assert (* - name) = (size) * (record_length), error, .sprintf("Table size mismatch: %s (expected: %d, actual: %d)", .string(name), (size) * (record_length), * - name)
 .endmacro
 
+.macro FALL_THROUGH_TO label
+        .assert * = (label), error, .sprintf("Fall through expectation failed: %s", .string(label))
+.endmacro
 
 ;;; ============================================================
 ;;; Flow Control
@@ -820,8 +1014,10 @@ __pushorg_depth__ .set 0
 ;;;     IF_NE           aliases: IF_NOT_ZERO
 ;;;     IF_CC           aliases: IF_LT
 ;;;     IF_CS           aliases: IF_GE
-;;;     IF_PLUS         aliases: IF_POS
-;;;     IF_MINUS        aliases: IF_NEG
+;;;     IF_VC
+;;;     IF_VS
+;;;     IF_NC           aliases: IF_POS, IF_PLUS
+;;;     IF_NS           aliases: IF_NEG, IF_MINUS
 
 __depth__ .set 0
 
@@ -849,24 +1045,38 @@ __depth__ .set 0
         bcc     .ident(.sprintf("__else__%d", ::__depth__))
 .endmacro
 
-.macro IF_PLUS
+.macro IF_NC
         ::__depth__ .set ::__depth__ + 1
         .scope
         bmi     .ident(.sprintf("__else__%d", ::__depth__))
 .endmacro
 
-.macro IF_MINUS
+.macro IF_NS
         ::__depth__ .set ::__depth__ + 1
         .scope
         bpl     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+.macro IF_VC
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        bvs     .ident(.sprintf("__else__%d", ::__depth__))
+.endmacro
+
+.macro IF_VS
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        bvc     .ident(.sprintf("__else__%d", ::__depth__))
 .endmacro
 
         .define IF_ZERO IF_EQ
         .define IF_NOT_ZERO IF_NE
         .define IF_GE IF_CS
         .define IF_LT IF_CC
-        .define IF_POS IF_PLUS
-        .define IF_NEG IF_MINUS
+        .define IF_PLUS IF_NC
+        .define IF_MINUS IF_NS
+        .define IF_POS IF_NC
+        .define IF_NEG IF_NS
 
 ;;; --------------------------------------------------
 
@@ -896,4 +1106,17 @@ __depth__ .set 0
 
 .macro ENDIF
         .error "Do you mean END_IF ?"
+.endmacro
+
+;;; ============================================================
+;;; Jump Table Definitions
+;;; ============================================================
+
+.macro JT_INIT addr
+        __jt_addr__ .set addr
+.endmacro
+
+.macro JT_ENTRY name
+        name := __jt_addr__
+        __jt_addr__ .set __jt_addr__ + 3
 .endmacro

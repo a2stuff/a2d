@@ -38,14 +38,14 @@ vol_name:
         sta     volpath+1
         inc     volpath
 
-        LIB_MLI_CALL OPEN, volname_open_params
+        MLI_CALL OPEN, volname_open_params
         bne     fallback
         lda     volname_open_params::ref_num
         sta     volname_read_params::ref_num
         sta     volname_close_params::ref_num
-        LIB_MLI_CALL READ, volname_read_params
+        MLI_CALL READ, volname_read_params
         bne     fallback
-        LIB_MLI_CALL CLOSE, volname_close_params
+        MLI_CALL CLOSE, volname_close_params
 
         copy16  volbuf + $1A, version_bytes
         jmp     common
@@ -69,7 +69,7 @@ file_entry:
 
         ldy     #FileEntry::version
         copy16in (ptr),y, version_bytes
-        ;; fall through
+        FALL_THROUGH_TO common
 
 common:
         asl16   version_bytes
@@ -84,9 +84,8 @@ fallback:
         and     #NAME_LENGTH_MASK
         beq     done
 
-        ;; Walk backwards through string. At char N, check char N-1
-        ;; to see if it is a '.'. If it isn't, and char N is a letter,
-        ;; lower-case it.
+        ;; Walk backwards through string. At char N, check char N-1; if
+        ;; it is a letter, and char N is also a letter, lower-case it.
         tay
 
 loop:   dey
@@ -95,8 +94,8 @@ loop:   dey
 done:   rts
 
 :       lda     (ptr),y
-        cmp     #'.'
-        bne     check_alpha
+        cmp     #'A'
+        bcs     check_alpha
         dey
         bpl     loop            ; always
 
@@ -138,9 +137,9 @@ apply_bits:
 ;;; Per File Type Notes: File Type $19 (25) All Auxiliary Types
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
 ;;; Per File Type Notes: File Type $1A (26) All Auxiliary Types
-;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.1A.xxxx.html
 ;;; Per File Type Notes: File Type $1B (27) All Auxiliary Types
-;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.1B.xxxx.html
 ;;;
 ;;; "The volume or subdirectory auxiliary type word for this file type is
 ;;; defined to control uppercase and lowercase display of filenames. The
@@ -161,10 +160,18 @@ appleworks:
         jmp     apply_bits
 
 ;;; --------------------------------------------------
+;;; File name (max 15 characters)
+
+file_name:
+        stax    ptr
+        jmp     fallback
+
+;;; --------------------------------------------------
 
 version_bytes:
         .word   0
 .endproc
 
+AdjustFileNameCase      := AdjustCaseImpl::file_name
 AdjustFileEntryCase     := AdjustCaseImpl::file_entry
 AdjustVolumeNameCase    := AdjustCaseImpl::vol_name

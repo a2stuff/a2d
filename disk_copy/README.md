@@ -1,34 +1,30 @@
+# Disk Copy
 
-# Disk Copy diassembly notes
-
-Disk Copy is built as part of DeskTop (see `../desktop/desktop.s`) and
-relies on DeskTop for loading/invoking MGTK and the initial Disk Copy
-load. Once running, it takes over all memory and functions as a
+Disk Copy relies on DeskTop for loading/invoking MGTK and the default
+font. Once running, it takes over all memory and functions as a
 separate application.
 
-| Purpose       | Bank    | Address | Sources          |
-|---------------|---------|---------|------------------|
-| MGTK          | Aux     | A$4000  | `mgtk.s`         |
-| Disk Copy 1/4 | Main    | A$0800  | `bootstrap.s`    |
-| Disk Copy 2/4 | Main    | A$1800  | `loader.s`       |
-| Disk Copy 3/4 | Aux LC1 | A$D000  | `auxlc.s`        |
-| Disk Copy 4/4 | Main    | A$0800  | `main.s`         |
+It was originally built as part of the monolithic DeskTop binary but
+has been pulled out into a separate file to simplify building and
+maintenance, and potentially running on lower capacity devices.
 
-Lengths/offsets are defined in `../desktop/internal.inc`.
+| Purpose                 | Bank    | Address | Source     |
+|-------------------------|---------|---------|------------|
+| MGTK                    | Aux     | A$4000  | `mgtk.s`   |
+| Loader                  | Main    | A$1800  | `loader.s` |
+| App Logic and Resources | Aux LC1 | A$D000  | `auxlc.s`  |
+| Disk Copy Logic         | Main    | A$0800  | `main.s`   |
+
+Lengths/offsets are defined in `disk_copy.s`.
 
 ## Structure
 
-The Disk Copy command in DeskTop loads several overlays, which
-effectively become a new application.
-
-The first part (`bootstrap.s`, $800-$9FF) loads into main memory
-like the other DeskTop overlays, but in turn it loads a second short
-($200-byte) overlay (`loader.s`, $1800-$19FF). This then loads
-app code and a replacement for the resources in the aux language card area
-(`auxlc.s`, Aux LC $D000-$F1FF) and another block of code in
-main memory (`main.s`, Main $0800-$12FF). When exiting, the
-DeskTop is restarted from the beginning.
-
+DeskTop's `CmdDiskCopy` loads Disk Copy's $200-byte loader into main
+memory (`loader.s`, $1800-$19FF), does sometidying, then hands over
+control. This then loads app code and a replacement for the resources
+in the aux language card area (`auxlc.s`, Aux LC $D000-$F1FF) and
+another block of code in main memory (`main.s`, Main $0800-$12FF).
+When exiting, the DeskTop is restarted from the beginning.
 
 ## Memory Map
 
@@ -37,7 +33,7 @@ DeskTop is restarted from the beginning.
 $FFFF +-------------+       +-------------+       +-------------+
       |.ProDOS......|       |#############|       |.Monitor.....|
 $F800 |.............|       |#############|       +-------------+
-$F200 |.............|       +-------------+       |.Applesoft...|
+$F400 |.............|       +-------------+       |.Applesoft...|
       |.............|Bank2  | App Logic   |Bank2  |.............|
 $E000 |......+-----------+  | &    +-----------+  |.............|
       |......|.ProDOS....|  | Rsrc |###########|  |.............|
@@ -57,7 +53,7 @@ $BF00 +-------------+       |#############|
 $9000 |#############|       +-------------+
       |#############|       |             |
       |#############|       | Font        |      # = Copy Buffer
-$8800 |#############|       +-------------+
+$8600 |#############|       +-------------+
       |#############|       |             |
       |#############|       |             |
       |#############|       |             |
@@ -82,7 +78,7 @@ $1C00 +-------------+       |#############|
       |#############|       |#############|
 $1400 +-------------+       |#############|
       | Scratch     |       |#############|
-$1300 +-------------+       |#############|
+$1380 +-------------+       |#############|
       |             |       |#############|
       |             |       |#############|
       | I/O Code    |       |#############|

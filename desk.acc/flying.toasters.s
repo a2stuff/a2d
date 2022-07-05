@@ -13,16 +13,18 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 
         .org DA_LOAD_ADDRESS
 
 da_start:
-        jmp     start
+        jmp     Start
 
 save_stack:.byte   0
 
-.proc start
+.proc Start
         tsx
         stx     save_stack
 
@@ -38,7 +40,7 @@ save_stack:.byte   0
         sta     RAMRDON
 
         ;; run the DA
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
         sta     RAMRDOFF
@@ -76,47 +78,8 @@ frame_table:
 ;;; ============================================================
 ;;; Graphics Resources
 
-        kDAWindowId = 100
-
 event_params:   .tag MGTK::Event
 
-.params window_title
-        .byte 0                 ; length
-.endparams
-
-.params winfo
-window_id:      .byte   kDAWindowId ; window identifier
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   window_title
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_none
-hthumbmax:      .byte   32
-hthumbpos:      .byte   0
-vthumbmax:      .byte   32
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   kScreenWidth
-mincontlength:  .word   kScreenHeight
-maxcontwidth:   .word   kScreenWidth
-maxcontlength:  .word   kScreenHeight
-.params port
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kScreenWidth, kScreenHeight
-.endparams
-pattern:        .res    8, 0
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::notpencopy
-textback:       .byte   $7F
-textfont:       .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-.endparams
 
 .params paintbits_params
         DEFINE_POINT viewloc, 0, 0
@@ -129,20 +92,13 @@ reserved:       .byte   0
 notpencopy:     .byte   MGTK::notpencopy
 penXOR:         .byte   MGTK::penXOR
 
-.params getwinport_params
-window_id:     .byte   kDAWindowId
-        .addr   grafport
-.endparams
-
 grafport:       .tag MGTK::GrafPort
 
 ;;; ============================================================
 ;;; DA Init
 
-.proc init
+.proc Init
         MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::OpenWindow, winfo
-        MGTK_CALL MGTK::SetPort, winfo::port
 
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
@@ -155,7 +111,7 @@ grafport:       .tag MGTK::GrafPort
 ;;; ============================================================
 ;;; Main Input Loop
 
-.proc input_loop
+.proc InputLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
@@ -163,19 +119,18 @@ grafport:       .tag MGTK::GrafPort
         cmp     #MGTK::EventKind::key_down  ; any key?
         beq     exit
 
-        jsr     animate
-        jmp     input_loop
+        jsr     Animate
+        jmp     InputLoop
 
 exit:
+        MGTK_CALL MGTK::RedrawDeskTop
+
         MGTK_CALL MGTK::DrawMenu
         sta     RAMWRTOFF
         sta     RAMRDOFF
         jsr     JUMP_TABLE_HILITE_MENU
         sta     RAMWRTON
         sta     RAMRDON
-
-        ;; Force desktop redraw
-        MGTK_CALL MGTK::CloseWindow, winfo
 
         MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop
@@ -184,7 +139,7 @@ exit:
 ;;; ============================================================
 ;;; Animate
 
-.proc animate
+.proc Animate
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, penXOR
 

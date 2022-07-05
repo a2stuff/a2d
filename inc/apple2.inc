@@ -17,8 +17,15 @@ IN              := $200
 ;;; Vectors
 ;;; ============================================================
 
+NMI             := $3FB
 IRQLOC          := $3FE
 
+VECTORS         := $FFFA
+NMI_VECTOR      := $FFFA        ; on NMI
+RESET_VECTOR    := $FFFC        ; on RESET
+IRQ_VECTOR      := $FFFE        ; on IRQ or BRK
+
+kIntVectorsSize = 6             ; 3 vectors, 2 bytes each
 
 ;;; ============================================================
 ;;; Monitor ROM
@@ -31,6 +38,7 @@ SETPWRC         := $FB6F        ; Create power-up byte.
 VERSION         := $FBB3        ; Monitor ROM ID byte. $06 = IIe or later
 ZIDBYTE2        := $FBBF        ; * IIc ROM version ($05 = IIc+)
 ZIDBYTE         := $FBC0        ; * $EA = IIe, $E0 = IIe enh/IIgs, $00 = IIc/IIc+
+IDBYTEMACIIE    := $FBDD        ; * $02 = Mac IIe Card
 BELL1           := $FBDD        ; Generate tone.
 VTAB            := $FC22        ; Vertical tab. Uses value at CV.
 VTABZ           := $FC24        ; Vertical tab (alternate entry). Uses A.
@@ -59,6 +67,7 @@ CHRGET          := $B1          ; Routine called by ROM
 TXTPTR          := $B8
 FAC             := $9D
 SHIFT_SIGN_EXT  := $A4          ; Zero before using FP ops
+ARG             := $A5
 
 ;;; Entry Points
 GIVAYF          := $E2F2        ; FAC from signed integer in (Y,A)
@@ -73,16 +82,16 @@ ZERO_FAC        := $E84E        ; FAC = 0
 LOG             := $E941        ; FAC = LOG(FAC)
 FMULT           := $E97F        ; FAC = (Y,A) * FAC
 FMULTT          := $E982        ; FAC = ARG * FAC
+LOAD_ARG        := $E9E3        ; ARG = (Y,A)
 DIV10           := $EA55        ; FAC = FAC / 10
 FDIV            := $EA66        ; FAC = (Y,A) / FAC
 FDIVT           := $EA69        ; FAC = ARG / FAC
-LOAD_ARG        := $EAE3        ; ARG = (Y,A)
 MOVFM           := $EAF9        ; FAC = (Y,A)
 LOAD_FAC        := $EAF9        ; FAC = (Y,A)
 MOVMF           := $EB2B        ; (Y,X) = FAC
 ROUND           := $EB2B        ; Round FAC, store at (Y,X)
-ARG_TO_FAC      := $EB53        ; ARG = FAC
-FAC_TO_ARG_R    := $EB63        ; FAC = ARG, rounded
+ARG_TO_FAC      := $EB53        ; FAC = ARG
+FAC_TO_ARG_R    := $EB63        ; ARG = FAC, rounded
 SGN             := $EB90        ; FAC = SGN(FAC)
 FLOAT           := $EB93        ; FAC = A as signed byte
 FLOAT1          := $EB9B        ; FAC from unsigned integer in FAC+1,2 eX
@@ -94,12 +103,13 @@ INT             := $EC23        ; FAC = INT(FAC)
 FIN             := $EC4A        ; Parse TEXTPTR to FAC (first char in A, C set if digit)
 FOUT            := $ED34        ; FAC as string to FBUFFR (trashes FAC)
 SQR             := $EE8D        ; FAC = SQR(FAC)
+FPWRT           := $EE97        ; FAC = ARG ^ FAC
 NEGOP           := $EED0        ; FAC = -FAC
 EXP             := $EF09        ; FAC = EXP(FAC)
 RND             := $EFAE        ; FAC = RND(FAC)
 COS             := $EFEA        ; FAC = COS(FAC)
 SIN             := $EFF1        ; FAC = SIN(FAC)
-TAN             := $F03A        ; FAC = SIN(FAC)
+TAN             := $F03A        ; FAC = TAN(FAC)
 ATN             := $F09E        ; FAC = ATN(FAC)
 
 ;;; Constants
@@ -108,11 +118,13 @@ CON_SQR_HALF    := $E92D        ; SQR(1/2)
 CON_SQR_TWO     := $E932        ; SQR(2)
 CON_NEG_HALF    := $E937        ; -1/2
 CON_LOG_TWO     := $E93C        ; LOG(2)
-CON_TEN         := $E950        ; 10
+CON_TEN         := $EA50        ; 10
+CON_1E8M1       := $ED0A        ; 1E8 - 1
+CON_1E9M1       := $ED0F        ; 1E9 - 1
 CON_BILLION     := $ED14        ; 1E9
 CON_HALF        := $EE64        ; 1/2
-CON_LOG2_E      := $EEDB        ; Log(E) base 2 ????
-CON_HALF_PI     := $F063        ; pi/2
+CON_LOG2_E      := $EEDB        ; Log(E) base 2
+CON_HALF_PI     := $F066        ; pi/2
 CON_TWO_PI      := $F06B        ; pi/*2
 CON_QUARTER     := $F070        ; 1/4
 
@@ -124,18 +136,25 @@ FBUFFR          := $100
 ;;; Softswitches
 ;;; ============================================================
 
-RAMRDOFF        := $C002        ; Read from main 48K RAM
-RAMRDON         := $C003        ; Read from alternate 48K RAM
-RAMWRTOFF       := $C004        ; Write to main 48K RAM
-RAMWRTON        := $C005        ; Write to alternate 48K RAM
-ALTZPOFF        := $C008        ; Use main zero page/stack
-ALTZPON         := $C009        ; Use alternate zero page/stack
+CLR80STORE      := $C000        ; (W) cause PAGE2 to bank display memory
+SET80STORE      := $C001        ; (W) restore normal PAGE2 control
 
-CLR80VID        := $C00C        ; Disable 80-column hardware
-SET80VID        := $C00D        ; Enable 80-column hardware
-RDALTZP         := $C016        ; Bit 7 = 1 if slot zp enabled
-RD80STORE       := $C018        ; Bit 7 = 1 if 80-column store
-RDPAGE2         := $C01C
+RAMRDOFF        := $C002        ; (W) Read from main 48K RAM ($200-$BFFF)
+RAMRDON         := $C003        ; (W) Read from auxiliary 48K RAM ($200-$BFFF)
+RAMWRTOFF       := $C004        ; (W) Write to main 48K RAM ($200-$BFFF)
+RAMWRTON        := $C005        ; (W) Write to auxiliary 48K RAM ($200-$BFFF)
+ALTZPOFF        := $C008        ; (W) Use main zero page/stack/LC
+ALTZPON         := $C009        ; (W) Use auxiliary zero page/stack/LC
+
+CLR80VID        := $C00C        ; (W) Disable 80-column hardware
+SET80VID        := $C00D        ; (W) Enable 80-column hardware
+RDBNK2          := $C011        ; (R7) bit 7=1 if LCBANK2 enabled
+RDALTZP         := $C016        ; (R7) bit 7=1 if auxiliary ZP/stack/LC enabled
+RD80STORE       := $C018        ; (R7) bit 7=1 if 80STORE enabled
+RDPAGE2         := $C01C        ; (R7) bit 7=1 if PAGE2 on
+RDALTCHAR       := $C01E        ; (R7) bit 7=1 if ALTCHAR on
+
+MONOCOLOR       := $C021        ; IIgs - bit 7=1 switches composite to mono
 
 KEYMODREG       := $C025        ; IIgs - keyboard modifiers
         ;; bit 7= Open Apple key active
@@ -152,6 +171,11 @@ NEWVIDEO        := $C029        ; IIgs - new video modes
         ;; Bit 6 = 1 = Linearize SHR
         ;; Bit 5 = 0 = Color DHR, 1 = B/W DHR
         ;; Bits 4-0 must be 0
+
+MACIIE          := $C02B        ; Macintosh IIe Option Card
+        ;; Tech Note: Apple IIe #10: The Apple IIe Card for the Macintosh LC
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.10.html
+        ;; Bit 2 = Speed (1.9 MHz if set, 1 MHz if clear)
 
 SPKR            := $C030
 SHADOW          := $C035        ; IIgs - inhibit shadowing
@@ -200,7 +224,8 @@ DESTINATIONHI   := $43
 ;;; Other Locations
 XFERSTARTLO     := $03ED
 XFERSTARTHI     := $03EE
-
+OURCH           := $057B        ; 80 Col horizontal position
+OURCV           := $05FB        ; 80 Col vertical position
 
 ;;; ============================================================
 ;;; Disk II / IWM I/O locations
@@ -275,6 +300,7 @@ CHAR_MASK       = $7F
 CASE_MASK       = $DF
 
 CHAR_CTRL_C     = $03
+CHAR_CTRL_F     = $06
 CHAR_LEFT       = $08
 CHAR_TAB        = $09
 CHAR_DOWN       = $0A
@@ -282,5 +308,6 @@ CHAR_UP         = $0B
 CHAR_RETURN     = $0D
 CHAR_CTRL_O     = $0F
 CHAR_RIGHT      = $15
+CHAR_CLEAR      = $18
 CHAR_ESCAPE     = $1B
 CHAR_DELETE     = $7F

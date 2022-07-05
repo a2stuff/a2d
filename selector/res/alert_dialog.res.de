@@ -1,8 +1,0 @@
-.define res_string_alert_selector_unable_to_run "Kann Programm nicht starten."
-.define res_string_alert_io_error "E/A Fehler."
-.define res_string_alert_no_device "Kein Ger{t angeschlossen."
-.define res_string_alert_pathname_does_not_exist "Pfad existiert nicht."
-.define res_string_alert_insert_source_disk "Originaldiskette einlegen."
-.define res_string_alert_file_not_found "Datei nicht gefunden."
-.define res_string_alert_insert_system_disk "Bitte Systemdiskette einlegen."
-.define res_string_alert_basic_system_not_found "BASIC.SYSTEM nicht gefunden."

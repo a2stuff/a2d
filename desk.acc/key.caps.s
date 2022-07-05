@@ -14,6 +14,8 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 
 kShortcutQuit = res_char_quit_shortcut
@@ -35,7 +37,7 @@ da_start:
         ;; Run the DA from Aux
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
 
         ;; Tear down/exit, back to Main
         sta     RAMRDOFF
@@ -81,7 +83,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   2
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -142,26 +144,12 @@ dragy:          .word   0
 moved:          .byte   0
 .endparams
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   0
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
+grafport:       .tag    MGTK::GrafPort
 
 .params drawtext_params_char
         .addr   char_label
@@ -551,9 +539,18 @@ tmp_poly:
 
 ;;; ============================================================
 
-.proc init
-        jsr     check_extended_layout
-        bcc     continue
+.proc Init
+        jsr     CheckExtendedLayout ; returns C=1 if extended
+
+        ;; Invert Carry if modifier is down
+        lda     BUTN0
+        ora     BUTN1
+        bpl     :+
+        rol
+        eor     #$01
+        ror
+
+:       bcc     continue
 
         ;; Swap in alternate layout
         copy    #$80, extended_layout_flag
@@ -569,30 +566,26 @@ tmp_poly:
 
 continue:
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
         lda     event_params::kind
+
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        bne     :+
-        jmp     handle_down
+        jeq     HandleDown
 
+        cmp     #MGTK::EventKind::key_down  ; any key?
+        jeq     HandleKey
 
-:       cmp     #MGTK::EventKind::key_down  ; any key?
-        bne     :+
-        jmp     handle_key
-
-
-:       jmp     input_loop
+        jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -601,30 +594,40 @@ continue:
         rts
 .endproc
 
-.proc exit
+.proc ClearUpdates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     ClearUpdates
         rts                     ; exits input loop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         ;; Apple-Q to quit
         lda     event_params::modifiers
         beq     start
         lda     event_params::key
         cmp     #kShortcutQuit
-        beq     exit
+        beq     Exit
         cmp     #TO_LOWER(kShortcutQuit)
-        beq     exit
+        beq     Exit
 
 start:  lda     KBD
         and     #CHAR_MASK
         sta     last_char
 
-        jsr     construct_key_poly
+        jsr     ConstructKeyPoly
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         beq     done
 
@@ -645,7 +648,7 @@ start:  lda     KBD
 
 :       MGTK_CALL MGTK::PaintPoly, tmp_poly
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 
 last_char:
         .byte   0
@@ -656,37 +659,35 @@ return_flag:
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bpl     :+
-        jmp     exit
-:       lda     findwindow_params::window_id
+        lda     findwindow_params::window_id
         cmp     winfo::window_id
         bpl     :+
-        jmp     input_loop
+        jmp     InputLoop
 :       lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
-        jmp     input_loop
+        beq     HandleDrag
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
         bne     :+
-        jmp     input_loop
-:       jmp     exit
+        jmp     InputLoop
+:       jmp     Exit
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -695,25 +696,21 @@ return_flag:
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         ptr := $06
 
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
         rts
@@ -800,23 +797,16 @@ char:   .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Returns Carry set if extended (IIgs/IIc+) layout should be used
+;;; Returns Carry set if extended layout should be used.
+;;; This is the layout of the Platinum IIe, IIc+ and IIgs.
 
-.proc check_extended_layout
-
-        ;; Button down? (Hack for testing)
-        lda     BUTN0
-        ora     BUTN1
-        bpl     :+
-        sec
-        rts
-:
+.proc CheckExtendedLayout
 
         ;; Bank in ROM and do check
-        lda     ROMIN2
+        bit     ROMIN2
         jsr     check
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 
         ;; --------------------------------------------------
@@ -855,7 +845,7 @@ check:  sec
 ;;; Construct "inner" polygon for key in A.
 ;;; Output: tmp_poly is populated
 
-.proc construct_key_poly
+.proc ConstructKeyPoly
         ptr := $06
 
         cmp     #CHAR_RETURN
@@ -903,6 +893,6 @@ normal:
 .endproc
 
 da_end  := *
-.assert * < $1B00, error, "DA too big"
+.assert * < WINDOW_ENTRY_TABLES, error, "DA too big"
         ;; I/O Buffer starts at MAIN $1C00
-        ;; ... but icon tables start at AUX $1B00
+        ;; ... but entry tables start at AUX $1B00

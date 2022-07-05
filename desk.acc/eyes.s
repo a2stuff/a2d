@@ -15,6 +15,8 @@
         .include "../desktop/desktop.inc"
         .include "../inc/fp_macros.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 
         .org DA_LOAD_ADDRESS
@@ -34,7 +36,11 @@ da_start:
         ;; Run the DA
         sta     RAMRDON
         sta     RAMWRTON
-        jsr     init
+
+        ;; Mostly use ZP preservation mode, since we use ROM FP routines.
+        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
+        jsr     Init
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
 
         ;; Back to main for exit
         sta     RAMRDOFF
@@ -80,7 +86,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -120,18 +126,9 @@ dragy:          .word   0
 moved:          .byte   0
 .endparams
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
-.endparams
-
-
-.params preserve_zp_params
-flag:   .byte   MGTK::zp_preserve
-.endparams
-
-.params overwrite_zp_params
-flag:   .byte   MGTK::zp_overwrite
 .endparams
 
 .params screentowindow_params
@@ -142,21 +139,7 @@ window_id:      .byte   kDAWindowId
         mx := screentowindow_params::window::xcoord
         my := screentowindow_params::window::ycoord
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   0
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
+grafport:       .tag    MGTK::GrafPort
 
 kGrowBoxWidth = 17
 kGrowBoxHeight = 7
@@ -166,7 +149,7 @@ kGrowBoxHeight = 7
 mapbits:        .addr   grow_box_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 2, 2, 19, 9
+        DEFINE_RECT maprect, 2, 2, 19, 9
 .endparams
 
 grow_box_bitmap:
@@ -182,121 +165,161 @@ grow_box_bitmap:
         .byte   PX(%1000000),PX(%0000000),PX(%0000001)
         .byte   PX(%1111111),PX(%1111111),PX(%1111111)
 
+setzp_params_nopreserve:        ; performance over convenience
+        .byte   MGTK::zp_overwrite
+
+setzp_params_preserve:          ; convenience over performance
+        .byte   MGTK::zp_preserve
+
 ;;; ============================================================
 
-.proc init
+.struct OvalRec
+        top     .word           ; int [16.0]
+        bottom  .word           ; int [16.0]
+        yy      .word           ; int [16.0]
+        rSqYSq  .dword          ; longint [32.0]
+        square  .dword          ; fixed [16.16]
+        oddNum  .dword          ; fixed [16.16]
+        oddBump .dword          ; fixed [16.16]
+        leftEdge .dword         ; fixed [16.16]
+        rightEdge .dword        ; fixed [16.16]
+        oneHalf .dword          ; fixed [16.16]
+.endstruct
+
+;;; Parameters for `InitOval` call
+.params io_params
+.params rect
+left:   .word   0               ; int [16.0]
+top:    .word   0               ; int [16.0]
+right:  .word   0               ; int [16.0]
+bottom: .word   0               ; int [16.0]
+.endparams
+oval:   .addr   0               ; int [16.0]
+width:  .word   0               ; int [16.0]
+height: .word   0               ; int [16.0]
+.endparams
+
+;;; Parameters for `BumpOval` call
+.params bo_params
+oval:   .addr   0
+vert:   .word   0               ; [16.0]
+.endparams
+
+;;; Used by DrawEyeball
+eye_rect:
+        .tag    MGTK::Rect
+
+;;; ============================================================
+
+.proc Init
         lda     #0
         sta     SHIFT_SIGN_EXT  ; Must zero before using FP ops
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        beq     handle_down
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down
-        beq     handle_key
+        beq     HandleKey
         cmp     #MGTK::EventKind::no_event
-        beq     handle_no_event
-        jmp     input_loop
+        beq     HandleNoEvent
+        jmp     InputLoop
 .endproc
 
-.proc yield_loop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_YIELD_LOOP
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-.proc exit
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     ClearUpdates
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     exit
-        bne     input_loop
+        beq     Exit
+        bne     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bne     exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     input_loop
+        bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
+        jeq     HandleDrag
         cmp     #MGTK::Area::content
-        bne     :+
-        jmp     handle_grow
-:       jmp     input_loop
+        jeq     HandleGrow
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     exit
-        jmp     input_loop
+        bne     Exit
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_no_event
+.proc HandleNoEvent
         ;; First time? Need to store last coords
         lda     has_last_coords
         bne     test
         inc     has_last_coords
         bne     moved
 
-        ;; Moved?
 test:
-        lda     event_params::xcoord
-        cmp     screentowindow_params::screen::xcoord
-        bne     moved
-        lda     event_params::xcoord+1
-        cmp     screentowindow_params::screen::xcoord+1
-        bne     moved
-        lda     event_params::ycoord
-        cmp     screentowindow_params::screen::ycoord
-        bne     moved
-        lda     event_params::ycoord+1
-        cmp     screentowindow_params::screen::ycoord+1
-        beq     done
+        ;; Compute absolute X delta
+        sub16   event_params::xcoord, screentowindow_params::screen::xcoord, delta
+        lda     delta+1
+        bpl     :+
+        sub16   #0, delta, delta ; negate
+:       cmp16   delta, #kMoveThresholdX
+        bcs     moved
+
+        ;; Compute absolute Y delta
+        sub16   event_params::ycoord, screentowindow_params::screen::ycoord, delta
+        lda     delta+1
+        bpl     :+
+        sub16   #0, delta, delta ; negate
+:       cmp16   delta, #kMoveThresholdY
+        bcs     moved
+
+        ;; Hasn't moved enough
+        jmp     done
 
 moved:  copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        jsr     draw_window
+        jsr     DrawWindow
 
-done:   jmp     input_loop
+done:   jmp     InputLoop
 
+
+delta:  .word   0
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -305,25 +328,21 @@ common: lda     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     ClearUpdates
 
         ;; Draw DA's window
         lda     #0
         sta     has_last_coords
         sta     has_drawn_outline
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 ;;; ============================================================
 
-.proc handle_grow
+.proc HandleGrow
         ;; Is the hit within the grow box area?
         copy16  event_params::xcoord, screentowindow_params::screen::xcoord
         copy16  event_params::ycoord, screentowindow_params::screen::ycoord
@@ -340,11 +359,31 @@ common: lda     dragwindow_params::moved
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::GrowWindow, dragwindow_params
-        jmp     handle_drag::common
+        jmp     HandleDrag::common
 
-nope:   jmp     input_loop
+nope:   jmp     InputLoop
 
 tmpw:   .word   0
+.endproc
+
+;;; ============================================================
+
+.proc YieldLoop
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_YIELD_LOOP
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+.proc ClearUpdates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
 .endproc
 
 ;;; ============================================================
@@ -356,11 +395,6 @@ kPenW    = 8
 kPenH    = 4
 kPupilW  = kPenW * 2
 kPupilH  = kPenH * 2
-
-.params outline_pensize
-penwidth:       .byte   kPenW
-penheight:      .byte   kPenH
-.endparams
 
 .params pupil_pensize
 penwidth:       .byte   kPupilW
@@ -375,15 +409,19 @@ has_last_coords:
 has_drawn_outline:
         .byte   0
 
+;;; Minimum threshold to move to trigger a redraw, to avoid flicker.
+kMoveThresholdX = 5
+kMoveThresholdY = 5
+
 ;;; Saved coords
         DEFINE_POINT pos_l, 0, 0
         DEFINE_POINT pos_r, 0, 0
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
         rts
@@ -395,40 +433,40 @@ has_drawn_outline:
 :
 
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
 
-        copy16  winfo::maprect::x2, rx ; width / 4
-        inc16 rx
-        inc16 rx
-        lsr16 rx
-        lsr16 rx
-        copy16  winfo::maprect::y2, ry ; height / 2
-        inc16 ry
-        inc16 ry
-        lsr16 ry
+        ;; TODO: Only hide/show cursor if inside the window
+        MGTK_CALL MGTK::HideCursor
 
         lda     has_drawn_outline
         beq     :+
         jmp     erase_pupils
 :       inc     has_drawn_outline
 
-        ;; Draw resize box
         MGTK_CALL MGTK::SetPenMode, notpencopy
+
+        ;; Draw resize box
         sub16   winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
         sub16   winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
         MGTK_CALL MGTK::PaintBits, grow_box_params
 
         ;; Draw outline
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::SetPenSize, outline_pensize
 
-        copy16  rx, cx
-        copy16  ry, cy
-        jsr draw_outline
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
 
-        add16   rx, cx, cx
-        add16   rx, cx, cx
-        jsr draw_outline
+        ;; Left
+        copy16  #0, eye_rect+MGTK::Rect::x1
+        copy16  #0, eye_rect+MGTK::Rect::y1
+        copy16  winfo::maprect::x2, eye_rect+MGTK::Rect::x2
+        lsr16   eye_rect+MGTK::Rect::x2
+        add16   winfo::maprect::y2, #1, eye_rect+MGTK::Rect::y2
+        jsr     DrawEyeball
+
+        ;; Right
+        copy16  eye_rect+MGTK::Rect::x2, eye_rect+MGTK::Rect::x1
+        copy16  winfo::maprect::x2, eye_rect+MGTK::Rect::x2
+        jsr     DrawEyeball
+
+        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
 
         ;; Skip erasing pupils if we're redrawing
         jmp     draw_pupils
@@ -446,9 +484,15 @@ draw_pupils:
         MGTK_CALL MGTK::SetPenMode, penxor
         MGTK_CALL MGTK::SetPenSize, pupil_pensize
 
+        add16 winfo::maprect::x2, #2, rx ; width / 4
+        lsr16 rx
+        lsr16 rx
+        add16 winfo::maprect::y2, #2, ry ; height / 2
+        lsr16 ry
+
         copy16  rx, cx
         copy16  ry, cy
-        jsr     compute_pupil_pos
+        jsr     ComputePupilPos
         sub16  ppx, #kPupilW/2, pos_l::xcoord
         sub16  ppy, #kPupilH/2, pos_l::ycoord
         MGTK_CALL MGTK::MoveTo, pos_l
@@ -456,7 +500,7 @@ draw_pupils:
 
         add16   rx, cx, cx
         add16   rx, cx, cx
-        jsr     compute_pupil_pos
+        jsr     ComputePupilPos
         sub16  ppx, #kPupilW/2, pos_r::xcoord
         sub16  ppy, #kPupilH/2, pos_r::ycoord
         MGTK_CALL MGTK::MoveTo, pos_r
@@ -467,6 +511,79 @@ done:   rts
 
 tmpw:   .word   0
 .endproc
+
+;;; ============================================================
+;;; Assumes the pen is 1px x 1px
+;;; Inputs: `eye_rect` must be set up by the caller
+
+.proc DrawEyeball
+        COPY_STRUCT MGTK::Rect, eye_rect, io_params::rect
+        copy16  #outer_oval, io_params::oval
+        sub16   io_params::rect::right, io_params::rect::left, io_params::width
+        sub16   io_params::rect::bottom, io_params::rect::top, io_params::height
+        jsr     InitOval
+
+        add16   eye_rect+MGTK::Rect::x1, #kPenW, io_params::rect::left
+        add16   eye_rect+MGTK::Rect::y1, #kPenH, io_params::rect::top
+        sub16   eye_rect+MGTK::Rect::x2, #kPenW, io_params::rect::right
+        sub16   eye_rect+MGTK::Rect::y2, #kPenH, io_params::rect::bottom
+        copy16  #inner_oval, io_params::oval
+        sub16   io_params::rect::right, io_params::rect::left, io_params::width
+        sub16   io_params::rect::bottom, io_params::rect::top, io_params::height
+        jsr     InitOval
+
+        copy16  outer_oval+OvalRec::top, yy
+
+loop:
+        copy16  #outer_oval, bo_params::oval
+        copy16  yy, bo_params::vert
+        jsr     BumpOval
+
+        copy16  #inner_oval, bo_params::oval
+        copy16  yy, bo_params::vert
+        jsr     BumpOval
+
+        copy16  yy, rect+MGTK::Rect::y1
+        copy16  yy, rect+MGTK::Rect::y2
+
+        cmp16   yy, inner_oval+OvalRec::top
+        bcc     outer_only
+        cmp16   yy, inner_oval+OvalRec::bottom
+        bcs     outer_only
+
+        ;; Need to draw the left and right edges
+        copy16  outer_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x1
+        copy16  inner_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x2
+        MGTK_CALL MGTK::PaintRect, rect
+
+        copy16  inner_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x1
+        copy16  outer_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x2
+        MGTK_CALL MGTK::PaintRect, rect
+
+        jmp     next
+
+        ;; Only need to draw the outer oval
+outer_only:
+        copy16  outer_oval+OvalRec::leftEdge+2, rect+MGTK::Rect::x1
+        copy16  outer_oval+OvalRec::rightEdge+2, rect+MGTK::Rect::x2
+        MGTK_CALL MGTK::PaintRect, rect
+
+next:
+        inc16   yy
+        cmp16   yy, outer_oval+OvalRec::bottom
+        jcc     loop
+
+        rts
+
+yy:     .word   0
+rect:   .tag    MGTK::Rect
+outer_oval:
+        .tag    OvalRec
+inner_oval:
+        .tag    OvalRec
+
+.endproc
+
 
 ;;; ============================================================
 ;;; Common input params
@@ -486,8 +603,10 @@ cy:     .word   0
 ppx:    .word   0
 ppy:    .word   0
 
-.proc compute_pupil_pos
-        lda     ROMIN2
+.proc ComputePupilPos
+        ;; TODO: Do this with integer math instead.
+
+        bit     ROMIN2
 
         FAC_LOAD_INT    cx
         FAC_STORE       cxf
@@ -573,8 +692,8 @@ skip:
         FAC_ADD         cyf
         FAC_STORE_INT   ppy
 
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         rts
 
@@ -591,98 +710,387 @@ cyf:    DEFINE_FLOAT
 .endproc
 
 ;;; ============================================================
-;;; Draw eye outlines as a 36-sided polygon
-;;; Inputs: cx, cy, rx, ry
+;;; Oval Routines (based on QuickDraw)
+;;; ============================================================
 
-.proc draw_outline
-        kSegments = 36
+.scope oval
 
-        lda     ROMIN2
+;;; Temp Oval
+oval:   .tag    OvalRec
 
-        FAC_LOAD_INT    segw
-        FAC_DIV         CON_TWO_PI
-        FAC_STORE       step
+;;; Set up `io_params` before calling.
+.proc InitOval
+        ovalHeight := io_params::height ; [16.0]
+        ovalWidth  := io_params::width  ; [16.0]
 
-        sub16   cx, #kPenW/2, tmpw
-        FAC_LOAD_INT    tmpw
-        FAC_STORE       cxf
+        ;; --------------------------------------------------
+        ;; Init top/bottom to rect top/bottom
 
-        sub16   cy, #kPenH/2, tmpw
-        FAC_LOAD_INT    tmpw
-        FAC_STORE       cyf
+        ;; oval.top [16.0] = rect.top [16.0]
+        copy16 io_params::rect::top, oval+OvalRec::top
 
-        sub16   rx, #kPenW/2, tmpw
-        FAC_LOAD_INT    tmpw
-        FAC_STORE       rxf
+        ;; oval.bottom [16.0] = rect.bottom [16.0]
+        copy16 io_params::rect::bottom, oval+OvalRec::bottom
 
-        sub16   ry, #kPenH/2, tmpw
-        FAC_LOAD_INT    tmpw
-        FAC_STORE       ryf
+        ;; --------------------------------------------------
+        ;; Check ovalWidth/Height, pin at 0
 
-        lda     #kSegments
-        sta     count
+        ;; if (ovalWidth [16.0] < 0)
+        ;;   ovalWidth [16.0] = 0
+        bit     ovalWidth+1
+        bpl     :+
+        copy16  #0, ovalWidth
+:
+        ;; if (ovalHeight [16.0] < 0)
+        ;;   ovalHeight [16.0] = 0
+        bit     ovalHeight+1
+        bpl     :+
+        copy16  #0, ovalHeight
+:
 
-        jsr     ZERO_FAC
-        FAC_STORE theta
+        ;; --------------------------------------------------
+        ;; Check ovalWidth/Height, trim if bigger than rect
 
-        FAC_LOAD rxf
-        FAC_ADD  cxf
-        FAC_STORE_INT ptx
+        ;; d0 [16.0] = rect.right [16.0] - rect.left [16.0]
+        sub16   io_params::rect::right, io_params::rect::left, d0
 
-        FAC_LOAD cyf
-        FAC_STORE_INT pty
+        ;; if (ovalWidth [16.0] > d0 [16.0])
+        ;;   ovalWidth [16.0] = d0 [16.0]
+        cmp16   ovalWidth, d0
+        bcs     :+
+        copy16  d0, ovalWidth
+:
 
-        lda     LCBANK1
-        lda     LCBANK1
+        ;; d0 [16.0] = rect.bottom [16.0] - rect.top [16.0]
+        sub16   io_params::rect::bottom, io_params::rect::top, d0
 
-        MGTK_CALL MGTK::MoveTo, drawpos
+        ;; if (ovalHeight [16.0] > d0 [16.0])
+        ;;   ovalHeight [16.0] = rect.bottom [16.0] - rect.top [16.0]
+        cmp16   ovalHeight, d0
+        bcs     :+
+        copy16  d0, ovalHeight
+:
 
-loop:
-        lda     ROMIN2
+        ;; --------------------------------------------------
+        ;; Set up left/right edges, numbers
 
-        FAC_LOAD theta
-        FAC_ADD step
-        FAC_STORE theta
+        ;; oval.rightEdge [16.16] = rect.right [16.0]
+        copy16 #0, oval+OvalRec::rightEdge
+        copy16 io_params::rect::right, oval+OvalRec::rightEdge+2
 
-        jsr COS
-        FAC_MUL rxf
-        FAC_ADD cxf
-        FAC_STORE_INT ptx
+        ;; oval.leftEdge [16.16] = rect.left [16.0]
+        copy16 #0, oval+OvalRec::leftEdge
+        copy16 io_params::rect::left, oval+OvalRec::leftEdge+2
 
-        FAC_LOAD theta
-        jsr SIN
-        FAC_MUL ryf
-        FAC_ADD cyf
-        FAC_STORE_INT pty
+        ;; ovalWidthDiv2 [16.16] = ovalWidth [16.0] / 2
+        copy16  #0, ovalWidthDiv2
+        copy16  ovalWidth, ovalWidthDiv2+2
+        lsr32   ovalWidthDiv2
 
-        lda     LCBANK1
-        lda     LCBANK1
+        ;; oval.leftEdge [16.16] = oval.leftEdge [16.16] + ovalWidthDiv2 [16.16]
+        add32   oval+OvalRec::leftEdge, ovalWidthDiv2, oval+OvalRec::leftEdge
 
-        MGTK_CALL MGTK::LineTo, drawpos
+        ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] - ovalWidthDiv2 [16.16]
+        sub32   oval+OvalRec::rightEdge, ovalWidthDiv2, oval+OvalRec::rightEdge
 
-        dec     count
-        bpl     loop
+        ;; oval.oneHalf [16.16] = 0.5
+        copy32  #$00008000, oval+OvalRec::oneHalf
+
+        ;; Bias
+        ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] + oval.oneHalf [16.16]
+        add32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge
+
+        ;; --------------------------------------------------
+        ;; Init y to -height + 1
+
+        ;; oval.y [16.0] = 1 - ovalHeight [16.0]
+        sub16 #1, ovalHeight, oval+OvalRec::yy
+
+        ;; --------------------------------------------------
+        ;; Init rSqYSq to 2*ovalHeight-1
+
+        ;; oval.rSqYSq [32.0] = 2 * ovalHeight [16.0] - 1
+        copy32  ovalHeight, oval+OvalRec::rSqYSq
+        asl32   oval+OvalRec::rSqYSq
+        sub32   oval+OvalRec::rSqYSq, #1, oval+OvalRec::rSqYSq
+
+        ;; --------------------------------------------------
+        ;; Init square to 0
+
+        ;; oval.square [16.16] = 0
+        copy32  #0, oval+OvalRec::square
+
+        ;; --------------------------------------------------
+        ;; oddNum = 1 * aspect ratio squared
+
+        ;; aspect_ratio [16.16] = ovalHeight [16.0] / ovalWidth [16.0];
+.scope fixed_div
+        dividend   := ovalHeight   ; [16.0]
+        divisor    := ovalWidth    ; [16.0]
+        quotient   := aspect_ratio ; [16.16]
+        remainder  := temp         ; [16.0]
+
+        copy16  #0, remainder
+
+        ldy     #32
+
+loop:   asl32   quotient
+        asl     dividend
+        rol     dividend+1
+        rol     remainder
+        rol     remainder+1
+
+        lda     remainder
+        sec
+        sbc     divisor
+        tax
+        lda     remainder+1
+        sbc     divisor+1
+        bcc     :+
+        stx     remainder
+        sta     remainder+1
+        inc     quotient
+:
+        dey
+        bne     loop
+.endscope
+
+
+        ;; oval.oddNum [16.16] = aspect_ratio [16.16] * aspect_ratio [16.16];
+        copy32  aspect_ratio, temp
+
+.scope
+multiplier      := aspect_ratio
+multiplicand    := temp
+
+        ;; This is a 32-bit multiply with a 64-bit product, used for
+        ;; [16.16] * [16.16] => [32.32]
+        ;; Based on: http://www.6502.org/source/integers/32muldiv.htm
+
+        lda     #0              ; Clear upper half of product
+        sta     product+4
+        sta     product+5
+        sta     product+6
+        sta     product+7
+
+        ldx     #32             ; Process 32 bits
+
+        ;; Shift multiplier
+shift:
+        lsr     multiplier+3
+        ror     multiplier+2
+        ror     multiplier+1
+        ror     multiplier
+        bcc     rotate
+
+        lda     product+4
+        clc
+        adc     multiplicand
+        sta     product+4
+        lda     product+5
+        adc     multiplicand+1
+        sta     product+5
+        lda     product+6
+        adc     multiplicand+2
+        sta     product+6
+        lda     product+7
+        adc     multiplicand+3
+
+        ;; Rotate partial product
+rotate:
+        ror     a
+        sta     product+7
+        ror     product+6
+        ror     product+5
+        ror     product+4
+        ror     product+3
+        ror     product+2
+        ror     product+1
+        ror     product
+
+        ;; Loop
+        dex
+        bne     shift
+
+        ;; Only need 16.16 result
+        copy32  product+2, oval+OvalRec::oddNum
+.endscope
+
+        ;; --------------------------------------------------
+        ;; oddBump = 2 * aspect ratio squared
+
+        ;; oval.oddBump [16.16] = 2 * oval.oddNum [16.16];
+        copy32  oval+OvalRec::oddNum, oval+OvalRec::oddBump
+        asl32   oval+OvalRec::oddBump
+
+        ;; --------------------------------------------------
+        ;; Finish
+
+        ptr := $06
+        copy16  io_params::oval, ptr
+        jsr     SaveOval
         rts
 
-count:  .byte   0
-segw:   .word   kSegments
-tmpw:   .word   0
-step:   DEFINE_FLOAT
-theta:  DEFINE_FLOAT
-rxf:    DEFINE_FLOAT
-ryf:    DEFINE_FLOAT
-cxf:    DEFINE_FLOAT
-cyf:    DEFINE_FLOAT
+        ;; --------------------------------------------------
+        ;; Local variables
 
-        DEFINE_POINT drawpos, 0, 0
-        ptx := drawpos::xcoord
-        pty := drawpos::ycoord
+d0:     .word   0               ; [16.0]
+ovalWidthDiv2:
+        .dword  0               ; [16.16]
+aspect_ratio:                   ; [16.16]
+        .dword  0
+temp:   .dword  0
+
+product:                        ; [32.32]
+        .res    8
 .endproc
 
+;;; Set up `bo_params` before calling.
+.proc BumpOval
+
+        ptr := $06
+        vert := bo_params::vert
+
+        ;; --------------------------------------------------
+        ;; Copy to working OvalRec
+
+        copy16  bo_params::oval, ptr
+        jsr     LoadOval
+
+        ;; --------------------------------------------------
+        ;; Algorithm
+
+        ;; if (vert [16.0] < oval.top [16.0])
+        ;;   return;
+        cmp16   vert, oval+OvalRec::top
+        bcs     :+
+        rts
+:
+
+        ;; if (vert [16.0] >= oval.bottom [16.0])
+        ;;   return;
+        cmp16   vert, oval+OvalRec::bottom
+        bcc     :+
+        rts
+:
+
+        ;; d0 [16.0] = oval.y [16.0];
+        copy16  oval+OvalRec::yy, d0
+
+        ;; oval.y [16.0] = oval.y [16.0] + 2;
+        add16   oval+OvalRec::yy, #2, oval+OvalRec::yy
+
+        ;; --------------------------------------------------
+        ;; while square < rSqYSq make oval bigger
+
+loop1:
+        ;; while (oval.square [16.16] < oval.rSqYSq [32.0] ) {
+        cmp16   oval+OvalRec::square+2, oval+OvalRec::rSqYSq
+        jcs     endloop1
+
+        ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] + oval.oneHalf [16.16];
+        add32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge
+
+        ;; oval.leftEdge [16.16] = oval.leftEdge [16.16] - oval.oneHalf [16.16];
+        sub32   oval+OvalRec::leftEdge, oval+OvalRec::oneHalf, oval+OvalRec::leftEdge
+
+        ;; oval.square [16.16] = oval.square [16.16] + oval.oddNum [16.16];
+        add32   oval+OvalRec::square, oval+OvalRec::oddNum, oval+OvalRec::square
+
+        ;; oval.oddNum [16.16] = oval.oddNum [16.16] + oval.oddBump [16.16];
+        add32   oval+OvalRec::oddNum, oval+OvalRec::oddBump, oval+OvalRec::oddNum
+
+        ;; }
+        jmp     loop1
+
+endloop1:
+        ;; --------------------------------------------------
+        ;; while square > rSqYSq make oval smaller
+
+loop2:
+        ;; while (oval.square [16.16] > oval.rSqYSq [32.0]) {
+        cmp16   oval+OvalRec::square+2, oval+OvalRec::rSqYSq
+        jcc     endloop2
+
+        ;; oval.rightEdge [16.16] = oval.rightEdge [16.16] - oval.oneHalf [16.16];
+        sub32   oval+OvalRec::rightEdge, oval+OvalRec::oneHalf, oval+OvalRec::rightEdge
+
+        ;; oval.leftEdge [16.16] = oval.leftEdge [16.16] + oval.oneHalf [16.16];
+        add32   oval+OvalRec::leftEdge, oval+OvalRec::oneHalf, oval+OvalRec::leftEdge
+
+        ;; oval.oddNum [16.16] = oval.oddNum [16.16] - oval.oddBump [16.16];
+        sub32   oval+OvalRec::oddNum, oval+OvalRec::oddBump, oval+OvalRec::oddNum
+
+        ;; oval.square [16.16] = oval.square [16.16] - oval.oddNum [16.16];
+        sub32   oval+OvalRec::square, oval+OvalRec::oddNum, oval+OvalRec::square
+
+        ;; }
+        jmp     loop2
+endloop2:
+
+        ;; oval.rSqYSq [32.0] = oval.rSqYSq [32.0] - (4 * (d0 [16.0] + 1)));
+
+        copy16  d0, temp        ; temp = d0
+        lda     #0
+        bit     temp+1          ; sign-extend
+        bpl     :+
+        lda     #$FF
+:       sta     temp+2
+        sta     temp+3
+
+        add32   temp, #1, temp  ; temp = d0 + 1
+
+        asl32   temp            ; temp = 4 * (d0 + 1)
+        asl32   temp
+
+        sub32   oval+OvalRec::rSqYSq, temp, oval+OvalRec::rSqYSq
+
+        ;; --------------------------------------------------
+        ;; Finish
+
+        jsr     SaveOval
+        rts
+
+        ;; --------------------------------------------------
+        ;; Local variables
+
+d0:     .word   0               ; [16.0]
+temp:   .dword  0
+.endproc
+
+;;; Write `oval` to `OvalRec` addr at $06
+.proc SaveOval
+        ptr := $06
+
+        ldy     #.sizeof(OvalRec)-1
+:       lda     oval,y
+        sta     (ptr),y
+        dey
+        bpl     :-
+
+        rts
+.endproc
+
+;;; Load `oval` from `OvalRec` addr at $06
+.proc LoadOval
+        ptr := $06
+
+        ldy     #.sizeof(OvalRec)-1
+:       lda     (ptr),y
+        sta     oval,y
+        dey
+        bpl     :-
+
+        rts
+.endproc
+
+.endscope ; oval
+InitOval := oval::InitOval
+BumpOval := oval::BumpOval
 
 ;;; ============================================================
 
 da_end := *
-.assert * < $1B00, error, "DA too big"
+.assert * < WINDOW_ENTRY_TABLES, error, "DA too big"
         ;; I/O Buffer starts at MAIN $1C00
-        ;; ... but icon tables start at AUX $1B00
+        ;; ... but entry tables start at AUX $1B00

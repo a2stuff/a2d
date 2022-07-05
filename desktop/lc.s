@@ -8,15 +8,18 @@
 ;;; Segment loaded into AUX $D000-$D1FF
 ;;; ============================================================
 
-        .org $D000
+        .org ::kSegmentDeskTopLC1AAddress
 
 ;;; Various routines callable from MAIN
 
 ;;; ============================================================
 ;;; Common code for main>aux relays with MLI-style params
+;;; Inputs: A,X = target address
+;;; Uses $7E/$7F
 
 .proc ParamsRelayImpl
-        params_src := $80
+        params_src := $7E
+        stax    call_addr
 
         ;; Adjust return address on stack, compute
         ;; original params address.
@@ -51,7 +54,7 @@ params:  .res    3
 ;;; MGTK call from main>aux, MLI-style params
 
 .proc MGTKRelayImpl
-        copy16  #MGTK::MLI, ParamsRelayImpl::call_addr
+        ldax    #MGTKAuxEntry
         jmp     ParamsRelayImpl
 .endproc
 
@@ -59,21 +62,10 @@ params:  .res    3
 ;;; IconTK call from main>aux, MLI-style params
 
 .proc ITKRelayImpl
-        copy16  #IconTK::MLI, ParamsRelayImpl::call_addr
+        ldax    #IconTK::MLI
         jmp     ParamsRelayImpl
 .endproc
 
-
-;;; ============================================================
-;;; SET_POS with params at (X,A) followed by DRAW_TEXT call
-
-.proc SetPosDrawText
-        stax    addr
-        jsr     BankInAux
-        MGTK_CALL MGTK::MoveTo, 0, addr
-        MGTK_CALL MGTK::DrawText, text_buffer2
-        jmp     BankInMain
-.endproc
 
 ;;; ============================================================
 ;;; Used/Free icon map (Aux $1F80 - $1FFF)
@@ -90,7 +82,7 @@ params:  .res    3
 loop:   lda     free_icon_map,x
         beq     :+
         inx
-        cpx     #$7F
+        cpx     #kMaxIconCount  ; allow up to the maximum
         bne     loop
         rts
 
@@ -119,83 +111,80 @@ loop:   lda     free_icon_map,x
 .endproc
 
 ;;; ============================================================
-;;; Copy data to/from buffers (see cached_window_id / cached_window_icon_list / window_icon_count_table/2) ???
+;;; Copy data to/from buffers (see `cached_window_id` /
+;;;  `cached_window_entry_list` / `window_entry_count_table` /2)
 
-.proc XferWindowIconTable
+.proc XferWindowEntryTable
         ptr := $6
 
-from:
-        lda     #$80
-        bne     :+              ; always
-
-to:
-        lda     #$00
-
-:       sta     flag
-        jsr     main__push_pointers
+from:   lda     #$80
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+to:     lda     #$00
+        sta     flag
+        jsr     PushPointers
 
         lda     cached_window_id
         asl     a               ; * 2
         tax
-        copy16  window_icon_count_table,x, ptr
+        copy16  window_entry_count_table,x, ptr
 
         jsr     BankInAux
         bit     flag
         bpl     set_length
 
-        ;; assign length from cached_window_icon_list
-        lda     cached_window_icon_count
+        ;; assign length from `cached_window_entry_list`
+        lda     cached_window_entry_count
         ldy     #0
         sta     (ptr),y
         jmp     set_copy_ptr
 
-        ;; assign length to cached_window_icon_list
+        ;; assign length to `cached_window_entry_list`
 set_length:
         ldy     #0
         lda     (ptr),y
-        sta     cached_window_icon_count
+        sta     cached_window_entry_count
 
 set_copy_ptr:
-        copy16  window_icon_list_table,x, ptr
+        copy16  window_entry_list_table,x, ptr
         bit     flag
         bmi     copy_from
 
-        ;; copy into cached_window_icon_list
+        ;; copy into `cached_window_entry_list`
         ldy     #0              ; flag clear...
-:       cpy     cached_window_icon_count
+:       cpy     cached_window_entry_count
         beq     done
         lda     (ptr),y
-        sta     cached_window_icon_list,y
+        sta     cached_window_entry_list,y
         iny
         jmp     :-
 
-        ;; copy from cached_window_icon_list
+        ;; copy from `cached_window_entry_list`
 copy_from:
         ldy     #0
-:       cpy     cached_window_icon_count
+:       cpy     cached_window_entry_count
         beq     done
-        lda     cached_window_icon_list,y
+        lda     cached_window_entry_list,y
         sta     (ptr),y
         iny
         jmp     :-
 
 done:   jsr     BankInMain
-        jsr     main__pop_pointers
+        jsr     PopPointers
         rts
 
 flag:   .byte   0
 .endproc
-        StoreWindowIconTable := XferWindowIconTable::from
-        LoadWindowIconTable := XferWindowIconTable::to
+        StoreWindowEntryTable := XferWindowEntryTable::from
+        LoadWindowEntryTable := XferWindowEntryTable::to
 
-.proc LoadActiveWindowIconTable
+.proc LoadActiveWindowEntryTable
         copy    active_window_id, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadWindowEntryTable
 .endproc
 
-.proc LoadDesktopIconTable
+.proc LoadDesktopEntryTable
         copy    #0, cached_window_id
-        jmp     LoadWindowIconTable
+        jmp     LoadWindowEntryTable
 .endproc
 
 
@@ -208,6 +197,7 @@ flag:   .byte   0
 
         jsr     BankInAux
 
+        MGTKEntry := aux::MGTKEntry
         MGTK_CALL MGTK::GetPort, src ; grab window state
 
         lda     active_window_id   ; which desktop window?
@@ -246,16 +236,16 @@ op:     lda     SELF_MODIFIED
 ;;; From MAIN, show alert
 ;;; Assert: Main is banked in
 
-;;; ...with prompt #0
+;;; A=alert number, with default options
 .proc ShowAlert
         ldx     #$00
-        ;; fall through
+        FALL_THROUGH_TO ShowAlertOption
 .endproc
 
-;;; ... with prompt # in X
+;;; A=alert number, X=custom options
 .proc ShowAlertOption
         jsr     BankInAux
-        jsr     aux::Alert
+        jsr     aux::AlertById
         jmp     BankInMain
 .endproc
 
@@ -282,32 +272,12 @@ op:     lda     SELF_MODIFIED
 .endproc
 
 ;;; ============================================================
-;;; ButtonEventLoop
-;;; Assert: Main is banked in
-
-.proc ButtonEventLoopRelay
-        jsr     BankInAux
-        jsr     aux::ButtonEventLoop
-        jmp     BankInMain
-.endproc
-
-;;; ============================================================
 ;;; Bell
 ;;; Assert: Main is banked in
 
 .proc Bell
         jsr     BankInAux
         jsr     aux::Bell
-        jmp     BankInMain
-.endproc
-
-;;; ============================================================
-;;; Detect double click
-;;; Assert: Main is banked in
-
-.proc DetectDoubleClick
-        jsr     BankInAux
-        jsr     aux::DetectDoubleClick
         jmp     BankInMain
 .endproc
 
@@ -328,7 +298,7 @@ op:     lda     SELF_MODIFIED
 
 .proc YieldLoopFromAux
         jsr     BankInMain
-        jsr     main__yield_loop
+        jsr     main__YieldLoop
         jmp     BankInAux
 .endproc
 
@@ -345,6 +315,82 @@ op:     lda     SELF_MODIFIED
 .proc BankInMain
         sta     RAMRDOFF
         sta     RAMWRTOFF
+        rts
+.endproc
+
+;;; ============================================================
+;;; Pushes two words from $6/$8 to stack; preserves A,X,Y
+
+.proc PushPointers
+        ;; Stash A,X
+        sta     a_save
+        stx     x_save
+
+        ;; Stash return address
+        pla
+        sta     lo
+        pla
+        sta     hi
+
+        ;; Copy 4 bytes from $8 to stack
+        ldx     #AS_BYTE(-4)
+:       lda     $06 + 4,x
+        pha
+        inx
+        bne     :-
+
+        ;; Restore return address
+        hi := *+1
+        lda     #SELF_MODIFIED_BYTE
+        pha
+        lo := *+1
+        lda     #SELF_MODIFIED_BYTE
+        pha
+
+        ;; Restore A,X
+        x_save := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        a_save := *+1
+        lda     #SELF_MODIFIED_BYTE
+
+        rts
+.endproc
+
+;;; ============================================================
+;;; Pops two words from stack to $6/$8; preserves A,X,Y
+
+.proc PopPointers
+        ;; Stash A,X
+        sta     a_save
+        stx     x_save
+
+        ;; Stash return address
+        pla
+        sta     lo
+        pla
+        sta     hi
+
+        ;; Copy 4 bytes from stack to $6
+        ldx     #3
+:       pla
+        sta     $06,x
+        dex
+        bpl     :-
+
+        ;; Restore return address to stack
+        hi := *+1
+        lda     #SELF_MODIFIED_BYTE
+        pha
+        lo := *+1
+        lda     #SELF_MODIFIED_BYTE
+        pha
+
+        ;; Restore A,X
+        x_save := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        a_save := *+1
+        lda     #SELF_MODIFIED_BYTE
+
         rts
 .endproc
 

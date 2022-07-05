@@ -29,192 +29,146 @@ Call from MAIN (RAMRDOFF/RAMWRTOFF); AUX language card RAM must be banked in. Ca
 ```
    jsr $xxxx
 ```
-Some calls take parameters in registers.
+Some calls take MLI-style parameters, or in registers.
 
-> NOTE: Not all of the calls have been identified.
 > Routines marked with * are used by Desk Accessories.
 
-#### `JUMP_TABLE_MAIN_LOOP` ($4000)
+#### `JUMP_TABLE_MGTK_CALL` *
 
-Enter DeskTop main loop
+MouseGraphics ToolKit call (main>aux).
 
-#### `JUMP_TABLE_MGTK_RELAY` ($4003)
+Input: Follow `JSR` by call (`.byte`) and params (`.addr`), MLI-style.
+Output: A=result
 
-MouseGraphics ToolKit call (main>aux). Follow by call (`.byte`) and params (`.addr`).
+(Param data must reside in aux memory, lower 48k or LC banks.)
 
-(Params must reside in aux memory, lower 48k or LC banks.)
+Use the `JUMP_TABLE_MGTK_CALL` macro (yes, same name) for convenience.
 
-Use the `JUMP_TABLE_MGTK_CALL` macro for convenience.
+#### `JUMP_TABLE_MLI_CALL` *
 
-#### `JUMP_TABLE_SIZE_STRING` ($4006)
+ProDOS MLI call.
 
-Compose "nnn Blocks" string into internal buffer
+Input: Follow `JSR` by call (`.byte`) and params (`.addr`), MLI-style.
+Output: C set on error, A = error code.
 
-Input is block count in (A,X).
-Output string is in `text_buffer2`.
+(Param data must reside in main memory, lower 48k.)
 
-#### `JUMP_TABLE_DATE_STRING` ($4009)
+Use the `JUMP_TABLE_MLI_CALL` macro (yes, same name) for convenience.
 
-Compose date string into internal buffer.
-
-Input date/time must be in `datetime_for_conversion`.
-Output string is in `text_buffer2`.
-
-#### `JUMP_TABLE_SELECT_WINDOW` ($400C)
-
-Select and refresh the specified window (A = window id)
-
-#### `JUMP_TABLE_AUXLOAD` ($400F)
-
-Load (A,X) from Aux memory into A.
-
-#### `JUMP_TABLE_EJECT` ($4012)
-
-Eject selected drive icon.
-
-#### `JUMP_TABLE_CLEAR_UPDATES` ($4015) *
+#### `JUMP_TABLE_CLEAR_UPDATES` *
 
 Clear update events - i.e. redraw windows as needed after move/resize/close.
 
-#### `JUMP_TABLE_ITK_RELAY` ($4018)
-
-Icon ToolKit call (main>aux). Follow by call (`.byte`) and params (`.addr`).
-
-(Params must reside in aux memory, lower 48k or LC banks.)
-
-#### `JUMP_TABLE_LOAD_OVL` ($401B)
-
-Load overlay routine.
-
-Routines are defined in `desktop/desktop.inc`.
-
-#### `JUMP_TABLE_CLEAR_SEL` ($401E) *
-
-Deselect all DeskTop icons (volumes/files).
-
-#### `JUMP_TABLE_MLI_RELAY` ($4021)
-
-ProDOS MLI call. Follow by call (`.byte`) and params (`.addr`). *
-
-(Params must reside in main memory, lower 48k.)
-
-Use the `JUMP_TABLE_MLI_CALL` macro for convenience.
-
-#### `JUMP_TABLE_COPY_TO_BUF` ($4024)
-
-Copy to buffer.
-
-#### `JUMP_TABLE_COPY_FROM_BUF` ($4027)
-
-Copy from buffer.
-
-#### `JUMP_TABLE_NOOP` ($402A)
-
-No-Op command (RTS)
-
-#### `JUMP_TABLE_FILE_TYPE_STRING` ($402D)
-
-Composes file type string.
-
-Input is ProDOS file type in A.
-Output string is in `str_file_type`.
-
-#### `JUMP_TABLE_SHOW_ALERT` ($4030)
-
-Show alert, with default button options for error number
-
-Error number is in A - either a ProDOS error number, or a DeskTop error as defined in `desktop/desktop.inc`.
-
-#### `JUMP_TABLE_SHOW_ALERT_OPTIONS` ($4033)
-
-Show alert, with custom button options.
-
-Error number is in A - either a ProDOS error number, or a DeskTop error as defined in `desktop/desktop.inc`.
-
-Button options are in X per `desktop/desktop.inc`.
-
-#### `JUMP_TABLE_LAUNCH_FILE` ($4036)
-
-Launch file. Equivalent of **File > Open** command.
-
-#### `JUMP_TABLE_CUR_POINTER` ($4039)
-
-Changes mouse cursor to pointer.
-
-#### `JUMP_TABLE_CUR_WATCH` ($403C)
-
-Changes mouse cursor to watch.
-
-#### `JUMP_TABLE_RESTORE_OVL` ($403F)
-
-Restore from overlay routine
-
-Routines are defined in `desktop/desktop.inc`.
-
-#### `JUMP_TABLE_COLOR_MODE` ($4042) *
-#### `JUMP_TABLE_MONO_MODE` ($4045) *
-
-Set DHR color or monochrome mode, respectively. DHR monochrome mode is supported natively on the Apple IIgs, and via the AppleColor card and Le Chat Mauve, and is used by default by DeskTop. Desk Accessories that display images or exit DeskTop can can toggle the mode.
-
-#### `JUMP_TABLE_RESTORE_SYS` ($4048) *
-
-Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores detached devices and reformats /RAM if needed, and banks in ROM and main ZP.
-
-#### `JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS` ($404B) *
-
-Clears update events (redraw windows after move/resize/close) and redraws volume icons. Required after a drag or resize in a DA.
-
-#### `JUMP_TABLE_GET_SEL_COUNT` ($404E) *
-
-Get number of selected icons.
-
-Output: A = count.
-
-#### `JUMP_TABLE_GET_SEL_ICON` ($4051) *
-
-Get selected IconEntry address.
-
-Input: A = index within selection.
-Output: A,X = address of IconEntry.
-
-#### `JUMP_TABLE_GET_SEL_WIN` ($4054) *
-
-Get window containing selection (if any).
-
-Output: A = window_id, or 0 for desktop.
-
-#### `JUMP_TABLE_GET_WIN_PATH` ($4057) *
-
-Get path to window.
-
-Input: A = window_id.
-Output: A,X = address of path (length-prefixed).
-
-#### `JUMP_TABLE_HILITE_MENU` ($405A) *
-
-Toggle hilite on last clicked menu. This should be used by a desk accessory that repaints the entire screen including the menu bar, since when the desk accessory exits the menu used to invoke it (Apple or File) will toggle.
-
-#### `JUMP_TABLE_ADJUST_FILEENTRY` ($405D) *
-
-Adjust case in FileEntry structure. If GS/OS filename bits are set, those are used. If the file type is an AppleWorks file, the auxtype bits are used. Otherwise, case is inferred.
-
-Input: A,X = FileEntry structure.
-
-#### `JUMP_TABLE_CUR_IBEAM` ($4060) *
-
-Changes mouse cursor to I-beam.
-
-#### `JUMP_TABLE_RGB_MODE` ($4063) *
-
-Set DHR color or monochrome mode, based on control panel setting.
-
-#### `JUMP_TABLE_YIELD_LOOP` ($4066) *
+#### `JUMP_TABLE_YIELD_LOOP` *
 
 Yield during an event loop for DeskTop to run tasks. This allows the menu bar clock to be updated and similar infrequent operations.
 
 Desk Accessories should call this (from main!) from their event loop unless they need to have total control of the system (e.g. screen savers). A good place to do this is just before a call to `MGTK::GetEvent`. Note that the current grafport may be modified during this call.
 
 Yielding during further nested loops (e.g. button tracking, etc) can be done but is not worth the effort.
+
+#### `JUMP_TABLE_SELECT_WINDOW` *
+
+Select and refresh the specified window (A = window id)
+
+#### `JUMP_TABLE_SHOW_ALERT` *
+
+Show alert, with default button options for error number
+
+Error number is in A - either a ProDOS error number, or a DeskTop `kErrXXX` error as defined in `desktop/desktop.inc`.
+
+NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
+
+#### `JUMP_TABLE_SHOW_ALERT_OPTIONS`
+
+Show alert, with custom button options.
+
+Error number is in A - either a ProDOS error number, or a DeskTop `kErrXXX` error as defined in `desktop/desktop.inc`.
+
+Button options are in X per `desktop/desktop.inc`.
+
+NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
+
+#### `JUMP_TABLE_LAUNCH_FILE`
+
+Launch file. Equivalent of **File > Open** command.
+
+#### `JUMP_TABLE_CUR_POINTER` *
+
+Changes mouse cursor to pointer.
+
+#### `JUMP_TABLE_CUR_WATCH` *
+
+Changes mouse cursor to watch.
+
+#### `JUMP_TABLE_CUR_IBEAM` *
+
+Changes mouse cursor to I-beam.
+
+#### `JUMP_TABLE_RESTORE_OVL` *
+
+Restore from overlay routine
+
+Routines are defined in `desktop/desktop.inc`.
+
+#### `JUMP_TABLE_COLOR_MODE` *
+#### `JUMP_TABLE_MONO_MODE` *
+
+Set DHR color or monochrome mode, respectively. DHR monochrome mode is supported natively on the Apple IIgs, and via the AppleColor card and Le Chat Mauve, and is used by default by DeskTop. Desk Accessories that display images or exit DeskTop can can toggle the mode.
+
+#### `JUMP_TABLE_RGB_MODE` *
+
+Set DHR color or monochrome mode, based on control panel setting.
+
+#### `JUMP_TABLE_RESTORE_SYS` *
+
+Used when exiting DeskTop; exit DHR mode, restores DHR mode to color, restores detached devices and reformats /RAM if needed, and banks in ROM and main ZP.
+
+#### `JUMP_TABLE_GET_SEL_COUNT` *
+
+Get number of selected icons.
+
+Output: A = count.
+
+#### `JUMP_TABLE_GET_SEL_ICON` *
+
+Get selected IconEntry address.
+
+Input: A = index within selection.
+Output: A,X = address of IconEntry.
+
+#### `JUMP_TABLE_GET_SEL_WIN` *
+
+Get window containing selection (if any).
+
+Output: A = window_id, or 0 for desktop.
+
+#### `JUMP_TABLE_GET_WIN_PATH` *
+
+Get path to window.
+
+Input: A = window_id.
+Output: A,X = address of path (length-prefixed).
+
+#### `JUMP_TABLE_HILITE_MENU` *
+
+Toggle hilite on last clicked menu. This should be used by a desk accessory that repaints the entire screen including the menu bar, since when the desk accessory exits the menu used to invoke it (Apple or File) will toggle.
+
+#### `JUMP_TABLE_ADJUST_FILEENTRY` *
+
+Adjust case in FileEntry structure. If GS/OS filename bits are set, those are used. If the file type is an AppleWorks file, the auxtype bits are used. Otherwise, case is inferred.
+
+Input: A,X = FileEntry structure.
+
+#### `JUMP_TABLE_GET_RAMCARD_FLAG` *
+
+Returns Z=1/N=0 if DeskTop is running from its original location, and Z=0/N=1 if DeskTop was copied to RAMCard.
+
+#### `JUMP_TABLE_GET_ORIG_PREFIX` *
+
+If DeskTop was copied to RAMCard, this populates the passed buffer with the original prefix path (with trailing `/`). Do not call unless DeskTop was copied to RAMCard.
+
+Input: A,X = Path buffer.
 
 <!-- ============================================================ -->
 
@@ -245,17 +199,25 @@ Parameters: address of IconEntry
 
 Inserts an icon record into the table.
 
+Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+
 ### `IconTK::HighlightIcon` ($02)
 
 Parameters: { byte icon }
 
 Highlights (selects) an icon by number.
 
-### `IconTK::RedrawIcon` ($03)
+Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+
+### `IconTK::DrawIcon` ($03)
 
 Parameters: { byte icon }
 
 Redraws an icon by number.
+
+For windowed icons, the appropriate GrafPort must be selected, and the icons must be mapped into appropriate coordinates (i.e. mapped from screen space into window space). Windowed icons are not clipped, so must only be drawn during an update call or into the active window.
+
+For desktop icons, the icon is clipped against any open windows.
 
 ### `IconTK::RemoveIcon` ($04)
 
@@ -263,37 +225,27 @@ Parameters: { byte icon }
 
 Removes an icon by number.
 
-### `IconTK::HighlightAll` ($05)
+Note that it does not paint the icon. Callers must make a previous call to `IconTK::EraseIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
 
-Parameters: { byte window_id }
-
-Highlights (selects) all icons in specified window (0 = desktop).
-
-### `IconTK::RemoveAll` ($06)
+### `IconTK::RemoveAll` ($05)
 
 Parameters: { byte window_id }
 
 Removes all icons from specified window (0 = desktop).
 
-### `IconTK::CloseWindow` ($07)
+### `IconTK::CloseWindow` ($06)
 
 Parameters: { byte window_id }
 
 Remove all icons associated with the specified window. No redrawing is done.
 
-### `IconTK::GetHighlighted` ($08)
-
-Parameters: { .res 127 }
-
-Copies the selected icon numbers to the given buffer.
-
-### `IconTK::FindIcon` ($09)
+### `IconTK::FindIcon` ($07)
 
 Parameters: { word mousex, word mousey, (out) byte result }
 
 Find the icon number at the given coordinates.
 
-### `IconTK::DragHighlighted` ($0A)
+### `IconTK::DragHighlighted` ($08)
 
 Parameters: { byte param, word mousex, word mousey }
 
@@ -303,52 +255,52 @@ drop was on the desktop, high bit clear if the drop target was an icon
 (and the low bits are the icon number), high bit set if the drop
 target was a window (and the low bits are the window number).
 
-### `IconTK::UnhighlightIcon` ($0B)
+### `IconTK::UnhighlightIcon` ($09)
 
 Parameters: { byte icon }
 
 Unhighlights the specified icon.
 
-### `IconTK::RedrawIcons` ($0C)
+Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+
+### `IconTK::RedrawDesktopIcons` ($0A)
 
 Parameters: none (pass $0000 as address)
 
-Redraws the icons on the desktop (mounted volumes, trash). This call
-is required after destroying, moving, or resizing a desk accessory window.
+Redraws the icons on the desktop (mounted volumes, trash). This call should be performed in response to an MGTK `update` event with `window_id` of 0, indicating that the desktop needs to be repainted. It assumes that overlapping windows will be repainted on top so no additional clipping is done beyond the active grafport.
 
-### `IconTK::IconInRect` ($0D)
+### `IconTK::IconInRect` ($0B)
 
 Parameters: { byte icon, rect bounds }
 
 Tests to see if the given icon (by number) overlaps the passed rect.
 
-### `IconTK::EraseIcon` ($0E)
+### `IconTK::EraseIcon` ($0C)
 
 Parameters: { byte icon }
 
-Erases the specified icon by number. No error checking is done.
+Erases the specified icon by number. No error checking is done. If the icon is in a window, it must be in the active window.
+
+Note that unlike `DrawIcon`, this call does _not_ require a GrafPort to be set by the caller. For icons in a window, the active window's GrafPort bounds (including scroll position and subtracting DeskTop's window header) will automatically be taken into account.
+
+For desktop icons, the icon is clipped against any open windows.
 
 ### IconEntry
 
 ```
 .byte icon      icon index
-.byte state     $80 = highlighted, 0 = otherwise
+.byte state     bit 0 = allocated
+                bit 6 = highlighted
 .byte type/window_id
-                (bits 0-3 window_id)
-                (bits 4,5,6)
-                       000 = directory
-                       001 = system
-                       010 = binary (maybe runnable)
-                       011 = basic
-                       100 = (unused)
-                       101 = data (text/generic/...)
-                       110 = (unused)
-                       111 = trash
-                (bit 7 = open flag)
+                bits 0-3 = window_id
+                bits 4,5 = unused
+                bit 6 = drop target flag (trash, folder, dir)
+                bit 7 = open flag
 .word iconx     (pixels)
 .word icony     (pixels)
 .addr iconbits  (addr of {mapbits, mapwidth, reserved, maprect})
 .res  16        (length-prefixed name)
+.byte record_num (index of icon in window)
 ```
 
 <!-- ============================================================ -->

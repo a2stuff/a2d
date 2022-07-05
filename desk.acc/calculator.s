@@ -14,6 +14,8 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 
         .org DA_LOAD_ADDRESS
@@ -21,7 +23,7 @@
 ;;; ============================================================
 ;;; Start of the code
 
-start:  jmp     copy2aux
+start:  jmp     Copy2Aux
 
 save_stack:  .byte   0
 
@@ -29,7 +31,7 @@ save_stack:  .byte   0
 ;;; Duplicate the DA (code and data) to AUX memory,
 ;;; then invoke the code in AUX.
 
-.proc copy2aux
+.proc Copy2Aux
         tsx
         stx     save_stack
 
@@ -40,21 +42,26 @@ save_stack:  .byte   0
         sec                     ; main>aux
         jsr     AUXMOVE
 
-        ;; Fall through
+        FALL_THROUGH_TO InitDA
 .endproc
 
 ;;; ============================================================
 
-.proc init_da
+.proc InitDA
         ;; Run DA from Aux
         sta     RAMRDON
         sta     RAMWRTON
 
-        jmp     init
+        ;; Mostly use ZP preservation mode, since we use ROM FP routines.
+        MGTK_CALL MGTK::SetZP1, setzp_params_preserve
+
+        jmp     Init
 .endproc
 
 
-.proc exit_da
+.proc ExitDA
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
+
         ;; Return to DeskTop running in Main
         sta     RAMRDOFF
         sta     RAMWRTOFF
@@ -62,24 +69,6 @@ save_stack:  .byte   0
         ldx     save_stack
         txs
         rts
-.endproc
-
-;;; ============================================================
-;;; Used after a event_kind_drag is completed; redraws the window.
-
-.proc redraw_screen_and_window
-
-        ;; Redraw DeskTop's windows and icons
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        sta     RAMRDON
-        sta     RAMWRTON
-
-        ;;  Redraw window after event_kind_drag
-        jsr     draw_content
-        rts
-
 .endproc
 
 ;;; ============================================================
@@ -132,13 +121,11 @@ window_id:     .byte   kDAWindowId
 .endparams
         getwinport_params_window_id := getwinport_params::window_id
 
-.params preserve_zp_params
-flag:   .byte   MGTK::zp_preserve
-.endparams
+setzp_params_nopreserve:        ; performance over convenience
+        .byte   MGTK::zp_overwrite
 
-.params overwrite_zp_params
-flag:   .byte   MGTK::zp_overwrite
-.endparams
+setzp_params_preserve:          ; convenience over performance
+        .byte   MGTK::zp_preserve
 
 ;;; ============================================================
 ;;; Button Definitions
@@ -384,7 +371,7 @@ text_buffer2:
         .res    kTextBufferSize+2, 0
 
 spaces_string:
-        PASCAL_STRING "          " ; do not localize
+        PASCAL_STRING "          "
 error_string:
         PASCAL_STRING res_string_error_string
 
@@ -432,24 +419,7 @@ pixels: .byte   PX(%1000001)
         .byte   PX(%1001001)
 .endparams
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   0
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
-        .assert * - grafport = 36, error
-
-        .byte   0               ; ???
+grafport:       .tag    MGTK::GrafPort
 
         ;; params for MGTK::SetPortBits when decorating title bar
 .params screen_port
@@ -467,8 +437,6 @@ height:         .word   kScreenHeight - kMenuBarHeight - 2
 .params penmode_normal
 penmode:   .byte   MGTK::pencopy
 .endparams
-
-        .byte   $01,$02         ; ??
 
 .params penmode_xor
 penmode:   .byte   MGTK::notpenXOR
@@ -500,13 +468,13 @@ top:            .word   kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWindowWidth, kWindowHeight
+        DEFINE_RECT maprect, 0, 0, kWindowWidth, kWindowHeight
 pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7f
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -517,17 +485,25 @@ window_title:
         PASCAL_STRING res_string_window_title
 
 ;;; ==================================================
+
+.macro ROM_CALL addr
+        jsr     ROMCall
+        .addr   addr
+.endmacro
+
+;;; ==================================================
 ;;; DA Init
 
-init:   MGTK_CALL MGTK::OpenWindow, winfo
+.proc Init
+        MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::FlushEvents
 
-        jsr     reset_buffer2
+        jsr     ResetBuffer2
 
-        jsr     draw_content
-        jsr     reset_buffers_and_display
+        jsr     DrawContent
+        jsr     ResetBuffersAndDisplay
 
         lda     #'='            ; last kOperation
         sta     calc_op
@@ -540,63 +516,65 @@ init:   MGTK_CALL MGTK::OpenWindow, winfo
         sta     calc_g
         sta     calc_l
 
-.proc copy_to_b1
+.scope
         ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
 loop:   lda     chrget_routine-1,x
         sta     CHRGET-1,x
         dex
         bne     loop
-.endproc
+.endscope
 
         lda     #0
         sta     ERRFLG          ; Turn off errors
         sta     SHIFT_SIGN_EXT  ; Zero before using FP ops
 
-        copy16  #error_hook, COUT_HOOK ; set up FP error handler
+        copy16  #ErrorHook, COUT_HOOK ; set up FP error handler
 
         lda     #1
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         ldxy    #farg
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
         lda     #0              ; set FAC to 0
-        jsr     CALL_FLOAT
-        jsr     CALL_FADD
-        jsr     CALL_FOUT
+        ROM_CALL FLOAT
+        ROM_CALL FADD
+        ROM_CALL FOUT
         lda     #$07
-        jsr     CALL_FMULT
+        ROM_CALL FMULT
         lda     #$00
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         ldxy    #farg
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
 
         tsx
         stx     saved_stack
 
         lda     #'='
-        jsr     process_key
+        jsr     ProcessKey
         lda     #'C'
-        jsr     process_key
+        jsr     ProcessKey
 
+        FALL_THROUGH_TO InputLoop
+.endproc
 
 ;;; ============================================================
 ;;; Input Loop
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jsr     on_click
-        jmp     input_loop
+        jsr     OnClick
+        jmp     InputLoop
 
 :       cmp     #MGTK::EventKind::key_down
-        bne     input_loop
-        jsr     on_key_press
-        jmp     input_loop
+        bne     InputLoop
+        jsr     OnKeyPress
+        jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -605,10 +583,19 @@ loop:   lda     chrget_routine-1,x
         rts
 .endproc
 
+.proc ClearUpdates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
 ;;; ============================================================
 ;;; On Click
 
-on_click:
+.proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
@@ -624,9 +611,9 @@ ignore_click:
         cmp     #MGTK::Area::content ; Content area?
         bne     :+
 
-        jsr     map_click_to_button ; try to translate click into key
+        jsr     MapClickToButton ; try to translate click into key
         bcc     ignore_click
-        jmp     process_key
+        jmp     ProcessKey
 
 :       cmp     #MGTK::Area::close_box ; Close box?
         bne     :+
@@ -635,37 +622,57 @@ ignore_click:
         beq     ignore_click
 
 exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
-        jmp     exit_da
+        jsr     ClearUpdates
+        jmp     ExitDA
 
 :       cmp     #MGTK::Area::dragbar ; Title bar?
         bne     ignore_click
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        jsr     redraw_screen_and_window
+        jsr     ClearUpdates
+        jsr     DrawContent
         rts
+.endproc
+exit := OnClick::exit
 
 ;;; ============================================================
 ;;; On Key Press
 
-.proc on_key_press
+.proc OnKeyPress
         lda     event_params::modifiers
         bne     bail
+
         lda     event_params::key
-        cmp     #CHAR_ESCAPE
-        bne     trydel
+
+        cmp     #CHAR_RETURN    ; Treat Return as Equals
+        bne     :+
+        lda     #'='
+        bne     process         ; always
+:
+        cmp     #CHAR_CLEAR     ; Treat Control+X as Clear
+        bne     :+
+        lda     #'C'
+        bne     process         ; always
+:
+        cmp     #CHAR_ESCAPE    ; Treat Escape as Clear *or* Close
+        bne     :+
         lda     calc_p
         bne     clear           ; empty state?
         lda     calc_l
         beq     exit            ; if so, exit DA
 clear:  lda     #'C'            ; otherwise turn Escape into Clear
 
-trydel: cmp     #CHAR_DELETE    ; Delete?
-        beq     :+
+:
+        cmp     #CHAR_DELETE    ; Delete?
+        beq     process
+
         cmp     #'`'            ; lowercase range?
-        bcc     :+
+        bcc     process
         and     #$5F            ; convert to uppercase
-:       jmp     process_key
+
+process:
+        jmp     ProcessKey
 bail:
 .endproc
 
@@ -676,7 +683,7 @@ rts1:  rts                     ; used by next proc
 
 ;;; If a button was clicked, carry is set and accum has key char
 
-.proc map_click_to_button
+.proc MapClickToButton
         lda     #kDAWindowId
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -686,12 +693,12 @@ rts1:  rts                     ; used by next proc
         lda     screentowindow_params::windowy
         ldx     screentowindow_params::windowx
 
-.proc find_button_row
+.proc FindButtonRow
         cmp     #kRow1Top+kBorderLeftTop - 1 ; row 1 ? (- 1 is bug in original?)
         bcc     miss
         cmp     #kRow1Bot+kBorderBottomRight + 1 ; (+ 1 is bug in original?)
         bcs     :+
-        jsr     find_button_col
+        jsr     FindButtonCol
         bcc     miss
         lda     row1_lookup,x
         rts
@@ -700,7 +707,7 @@ rts1:  rts                     ; used by next proc
         bcc     miss
         cmp     #kRow2Bot+kBorderBottomRight
         bcs     :+
-        jsr     find_button_col
+        jsr     FindButtonCol
         bcc     miss
         lda     row2_lookup,x
         rts
@@ -709,7 +716,7 @@ rts1:  rts                     ; used by next proc
         bcc     miss
         cmp     #kRow3Bot+kBorderBottomRight
         bcs     :+
-        jsr     find_button_col
+        jsr     FindButtonCol
         bcc     miss
         lda     row3_lookup,x
         rts
@@ -718,7 +725,7 @@ rts1:  rts                     ; used by next proc
         bcc     miss
         cmp     #kRow4Bot+kBorderBottomRight
         bcs     :+
-        jsr     find_button_col
+        jsr     FindButtonCol
         bcc     miss
         sec
         lda     row4_lookup,x
@@ -737,7 +744,7 @@ rts1:  rts                     ; used by next proc
 
 :       cmp     #kRow5Bot+kBorderBottomRight             ; row 5?
         bcs     miss
-        jsr     find_button_col
+        jsr     FindButtonCol
         bcc     :+
         lda     row5_lookup,x
         rts
@@ -766,7 +773,7 @@ miss:   clc
         row5_lookup := *-1
         .byte   '0', '0', '.', '+'
 
-.proc find_button_col
+.proc FindButtonCol
         cpx     #kCol1Left-kBorderLeftTop             ; col 1?
         bcc     miss
         cpx     #kCol1Right+kBorderBottomRight
@@ -811,16 +818,16 @@ miss:   clc
 ;;; click handlers (button is mapped to key char)
 ;;; and during initialization (by sending 'C', etc)
 
-.proc process_key
+.proc ProcessKey
         cmp     #'C'            ; Clear?
         bne     :+
         ldxy    #btn_c::port
         lda     #'c'
-        jsr     depress_button
+        jsr     DepressButton
         lda     #0
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         ldxy    #farg
-        jsr     CALL_ROUND
+        ROM_CALL ROUND
         lda     #'='
         sta     calc_op
         lda     #0
@@ -829,13 +836,13 @@ miss:   clc
         sta     calc_d
         sta     calc_e
         sta     calc_n
-        jmp     reset_buffers_and_display
+        jmp     ResetBuffersAndDisplay
 
 :       cmp     #'E'            ; Exponential?
         bne     try_eq
         ldxy    #btn_e::port
         lda     #'e'
-        jsr     depress_button
+        jsr     DepressButton
         ldy     calc_e
         bne     rts1
         ldy     calc_l
@@ -854,18 +861,18 @@ try_eq: cmp     #'='            ; Equals?
         bne     :+
         pha
         ldxy    #btn_eq::port
-        jmp     do_op_click
+        jmp     DoOpClick
 
 :       cmp     #'*'            ; Multiply?
         bne     :+
         pha
         ldxy    #btn_mul::port
-        jmp     do_op_click
+        jmp     DoOpClick
 
 :       cmp     #'.'            ; Decimal?
         bne     try_add
         ldxy    #btn_dec::port
-        jsr     depress_button
+        jsr     DepressButton
         lda     calc_d
         ora     calc_e
         bne     rts2
@@ -882,7 +889,7 @@ try_add:cmp     #'+'            ; Add?
         bne     :+
         pha
         ldxy    #btn_add::port
-        jmp     do_op_click
+        jmp     DoOpClick
 
 :       cmp     #'-'            ; Subtract?
         bne     trydiv
@@ -900,13 +907,13 @@ try_add:cmp     #'+'            ; Add?
 
 :       pla
         pha
-        jmp     do_op_click
+        jmp     DoOpClick
 
 trydiv: cmp     #'/'            ; Divide?
         bne     :+
         pha
         ldxy    #btn_div::port
-        jmp     do_op_click
+        jmp     DoOpClick
 
 :       cmp     #'0'            ; Digit 0?
         bne     :+
@@ -974,8 +981,8 @@ trydiv: cmp     #'/'            ; Divide?
         beq     end
         cpy     #1
         bne     :+
-        jsr     reset_buffer1_and_state
-        jmp     display_buffer1
+        jsr     ResetBuffer1AndState
+        jmp     DisplayBuffer1
 
 :       dec     calc_l
         ldx     #0
@@ -999,13 +1006,13 @@ loop:   lda     text_buffer1,x
         lda     #' '
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
-        jmp     display_buffer1
+        jmp     DisplayBuffer1
 
 end:    rts
 .endproc
 
 do_digit_click:
-        jsr     depress_button
+        jsr     DepressButton
         bne     :+
         pla
         rts
@@ -1016,11 +1023,11 @@ update: sec
         ldy     calc_l
         bne     :+
         pha
-        jsr     reset_buffer2
+        jsr     ResetBuffer2
         pla
         cmp     #'0'
         bne     :+
-        jmp     display_buffer1
+        jmp     DisplayBuffer1
 
 :       sec
         ror     calc_p
@@ -1043,12 +1050,12 @@ empty:  inc     calc_l
         pla
         sta     text_buffer1 + kTextBufferSize
         sta     text_buffer2 + kTextBufferSize
-        jmp     display_buffer1
+        jmp     DisplayBuffer1
 
 rts3:   rts
 
-.proc do_op_click
-        jsr     depress_button
+.proc DoOpClick
+        jsr     DepressButton
         bne     :+
         pla
         rts
@@ -1059,18 +1066,18 @@ rts3:   rts
         lda     calc_g
         bne     reparse
         lda     #0
-        jsr     CALL_FLOAT
+        ROM_CALL FLOAT
         jmp     do_op
 
 :       lda     calc_g
         bne     reparse
         pla
         sta     calc_op
-        jmp     reset_buffer1_and_state
+        jmp     ResetBuffer1AndState
 
 reparse:copy16  #text_buffer1, TXTPTR
         jsr     CHRGET
-        jsr     CALL_FIN
+        ROM_CALL FIN
 
 do_op:  pla
         ldx     calc_op
@@ -1080,35 +1087,35 @@ do_op:  pla
 
         cpx     #'+'
         bne     :+
-        jsr     CALL_FADD
-        jmp     post_op
+        ROM_CALL FADD
+        jmp     PostOp
 
 :       cpx     #'-'
         bne     :+
-        jsr     CALL_FSUB
-        jmp     post_op
+        ROM_CALL FSUB
+        jmp     PostOp
 
 :       cpx     #'*'
         bne     :+
-        jsr     CALL_FMULT
-        jmp     post_op
+        ROM_CALL FMULT
+        jmp     PostOp
 
 :       cpx     #'/'
         bne     :+
-        jsr     CALL_FDIV
-        jmp     post_op
+        ROM_CALL FDIV
+        jmp     PostOp
 
 :       cpx     #'='
-        bne     post_op
+        bne     PostOp
         ldy     calc_g
-        bne     post_op
-        jmp     reset_buffer1_and_state
+        bne     PostOp
+        jmp     ResetBuffer1AndState
 .endproc
 
-.proc post_op
-        ldxy    #farg          ; after the FP kOperation is done
-        jsr     CALL_ROUND
-        jsr     CALL_FOUT            ; output as null-terminated string to FBUFFR
+.proc PostOp
+        ldxy    #farg           ; after the FP kOperation is done
+        ROM_CALL ROUND
+        ROM_CALL FOUT           ; output as null-terminated string to FBUFFR
 
         ldy     #0              ; count the size
 sloop:  lda     FBUFFR,y
@@ -1131,11 +1138,12 @@ pad:    lda     #' '
         sta     text_buffer2,x
         dex
         bpl     pad
-end:    jsr     display_buffer1
-        ; fall through
+end:    jsr     DisplayBuffer1
+        FALL_THROUGH_TO ResetBuffer1AndState
 .endproc
-.proc reset_buffer1_and_state
-        jsr     reset_buffer1
+
+.proc ResetBuffer1AndState
+        jsr     ResetBuffer1
         lda     #0
         sta     calc_l
         sta     calc_d
@@ -1145,7 +1153,7 @@ end:    jsr     display_buffer1
         rts
 .endproc
 
-.proc depress_button
+.proc DepressButton
         stxy    invert_addr
         stxy    inrect_params
         stxy    restore_addr
@@ -1203,7 +1211,7 @@ done:   lda     button_state                    ; high bit set if button down
 ;;; ============================================================
 ;;; Value Display
 
-.proc reset_buffer1
+.proc ResetBuffer1
         ldy     #kTextBufferSize
 loop:   lda     #' '
         sta     text_buffer1-1,y
@@ -1214,7 +1222,7 @@ loop:   lda     #' '
         rts
 .endproc
 
-.proc reset_buffer2
+.proc ResetBuffer2
         ldy     #kTextBufferSize
 loop:   lda     #' '
         sta     text_buffer2-1,y
@@ -1225,34 +1233,35 @@ loop:   lda     #' '
         rts
 .endproc
 
-.proc reset_buffers_and_display
-        jsr     reset_buffer1
-        jsr     reset_buffer2
-        ; fall through
+.proc ResetBuffersAndDisplay
+        jsr     ResetBuffer1
+        jsr     ResetBuffer2
+        FALL_THROUGH_TO DisplayBuffer1
 .endproc
-.proc display_buffer1
+
+.proc DisplayBuffer1
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         beq     end
         MGTK_CALL MGTK::SetPort, grafport
         ldxy    #text_buffer1
-        jsr     pre_display_buffer
+        jsr     PreDisplayBuffer
         MGTK_CALL MGTK::DrawText, drawtext_params1
 end:    rts
 .endproc
 
-.proc display_buffer2
+.proc DisplayBuffer2
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         beq     end
         MGTK_CALL MGTK::SetPort, grafport
         ldxy    #text_buffer2
-        jsr     pre_display_buffer
+        jsr     PreDisplayBuffer
         MGTK_CALL MGTK::DrawText, drawtext_params2
 end:    rts
 .endproc
 
-.proc pre_display_buffer
+.proc PreDisplayBuffer
         stx     textwidth_params::textptr ; text buffer address in x,y
         sty     textwidth_params::textptr+1
         MGTK_CALL MGTK::TextWidth, textwidth_params
@@ -1269,7 +1278,7 @@ end:    rts
 ;;; ============================================================
 ;;; Draw the window contents (background, buttons)
 
-.proc draw_content
+.proc DrawContent
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
@@ -1292,7 +1301,7 @@ end:    rts
         copy16  #btn_c, ptr
 loop:   ldy     #0
         lda     (ptr),y
-        beq     draw_title_bar  ; done!
+        beq     DrawTitleBar    ; done!
 
         lda     ptr             ; address for shadowed rect params
         sta     bitmap_addr
@@ -1326,7 +1335,7 @@ loop:   ldy     #0
 ;;; ============================================================
 ;;; Draw the title bar decoration
 
-draw_title_bar:
+.proc DrawTitleBar
         kOffsetLeft     = 115  ; pixels from left of client area
         kOffsetTop      = 22   ; pixels from top of client area (up!)
         ldx     winfo::left+1
@@ -1348,15 +1357,18 @@ draw_title_bar:
         MGTK_CALL MGTK::SetPortBits, screen_port ; set clipping rect to whole screen
         MGTK_CALL MGTK::PaintBits, title_bar_bitmap     ; Draws decoration in title bar
         MGTK_CALL MGTK::ShowCursor
-        jsr     display_buffer2
+        jsr     DisplayBuffer2
         rts
+.endproc
 
-        ;; Traps FP error via call to $36 from MON.COUT, resets stack
-        ;; and returns to the input loop.
-.proc error_hook
-        lda     LCBANK1
-        lda     LCBANK1
-        jsr     reset_buffers_and_display
+;;; ============================================================
+;;; Traps FP error via call to $36 from MON.COUT, resets stack
+;;; and returns to the input loop.
+
+.proc ErrorHook
+        bit     LCBANK1
+        bit     LCBANK1
+        jsr     ResetBuffersAndDisplay
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
@@ -1365,12 +1377,12 @@ draw_title_bar:
         MGTK_CALL MGTK::MoveTo, error_pos
         param_call DrawString, error_string
 
-:       jsr     reset_buffer1_and_state
+:       jsr     ResetBuffer1AndState
         lda     #'='
         sta     calc_op
         ldx     saved_stack
         txs
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 PROC_AT chrget_routine, ::CHRGET
@@ -1393,46 +1405,10 @@ end:    rts
 END_PROC_AT
         sizeof_chrget_routine = .sizeof(chrget_routine)
 
-.macro CALL_FP proc
-        pha
-        lda     ROMIN2
-        pla
-        jsr     proc
-        pha
-        lda     LCBANK1
-        lda     LCBANK1
-        pla
-        rts
-.endmacro
-
-
-CALL_FLOAT:
-        CALL_FP FLOAT
-
-CALL_FADD:
-        CALL_FP FADD
-
-CALL_FSUB:
-        CALL_FP FSUB
-
-CALL_FMULT:
-        CALL_FP FMULT
-
-CALL_FDIV:
-        CALL_FP FDIV
-
-CALL_FIN:
-        CALL_FP FIN
-
-CALL_FOUT:
-        CALL_FP FOUT
-
-CALL_ROUND:
-        CALL_FP ROUND
-
 ;;; ============================================================
 
         .include "../lib/drawstring.s"
+        .include "../lib/rom_call.s"
 
 ;;; ============================================================
 

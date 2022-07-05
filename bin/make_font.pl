@@ -9,31 +9,31 @@ use warnings;
 sub from2 { unpack("N", pack("B32", substr("0" x 32 . shift, -32))); }
 
 $_ = <STDIN>; chomp;
-die "expected type\n" unless m/^type: (\d+)$/;
+die "expected type (line $.)\n" unless m/^type: (\d+)$/;
 my $type = $1;
-die "only type 0 supported\n" unless $type == 0;
+die "only type 0 supported (line $.)\n" unless $type == 0;
 
 $_ = <STDIN>; chomp;
-die "expected type\n" unless m/^chars: (\d+)$/;
+die "expected type (line $.)\n" unless m/^chars: (\d+)$/;
 my $chars = $1;
 
 $_ = <STDIN>; chomp;
-die "expected type\n" unless m/^height: (\d+)$/;
+die "expected type (line $.)\n" unless m/^height: (\d+)$/;
 my $height = $1;
 
 my @widths = ();
 my @chars = ();
 for (my $c = 0; $c < $chars; ++$c) {
     $_ = <STDIN>; chomp;
-    die "expected char header, saw $_\n" unless m/^== 0x(\w+) ==$/;
-    die sprintf("expected 0x%02x, saw 0x$1\n", $c) unless hex($1) == $c;
+    die "expected char header, saw $_ (line $.)\n" unless m/^== 0x(\w+) ==$/;
+    die sprintf("expected 0x%02x, saw 0x$1 (line $.)\n", $c) unless hex($1) == $c;
 
     for (my $r = 0; $r < $height; ++$r) {
         $_ = <STDIN>; chomp;
-        die "expected bitmap, saw $_\n" unless m/^[.#]+$/;
+        die "expected bitmap, saw $_ (line $.)\n" unless m/^[.#]+$/;
         my $len = length($_);
         if (defined $widths[$c]) {
-            die "changed width\n" unless $widths[$c] == $len;
+            die sprintf("changed width: 0x%02x (line $.)\n", $c) unless $widths[$c] == $len;
         } else {
             $widths[$c] = $len;
         }

@@ -1,0 +1,3 @@
+.define res_string_window_title "T|ne"
+.define res_string_label_alert "Hinweist|n:"
+.define res_string_name_silent "Leise"

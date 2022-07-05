@@ -6,22 +6,23 @@
 
 ;;; See docs/Selector_List_Format.md for file format
 
-.proc selector_overlay2
-        .org $9000
+.proc SelectorPickOverlay
+        .org ::kOverlayShortcutPickAddress
 
-        MLIRelayImpl := main::MLIRelayImpl
+        MLIEntry := main::MLIRelayImpl
+        MGTKEntry := MGTKRelayImpl
 
 io_buf := $0800
 
 selector_list   := $0C00
 
-exec:
+Exec:
         sta     selector_action
         ldx     #$FF
         stx     clean_flag      ; set "clean"
         cmp     #SelectorAction::add
         beq     L903C
-        jmp     init
+        jmp     Init
 
 L900F:  pha
         lda     clean_flag
@@ -29,28 +30,21 @@ L900F:  pha
 L9015:  pla
 L9016:  rts
 
-L9017:  lda     selector_list + kSelectorListNumRunListOffset
+L9017:  lda     selector_list + kSelectorListNumPrimaryRunListOffset
         clc
-        adc     selector_list + kSelectorListNumOtherListOffset
+        adc     selector_list + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
-        lda     #$00
-        sta     LD344
-        jsr     GetCopiedToRAMCardFlag
+        copy    #0, selector_menu_items_updated_flag
+        jsr     main::GetCopiedToRAMCardFlag
         cmp     #$80
         bne     L9015
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        lda     #kWarningMsgSaveSelectorList
-        jsr     show_warning_dialog
-        bne     L9015
-        jsr     write_file_to_original_prefix
+        jsr     WriteFileToOriginalPrefix
         pla
         rts
 
-L903C:  ldx     #$01
-        copy16  selector_menu_addr, @load
-        @load := *+1
-        lda     SELF_MODIFIED
-        cmp     #$0D
+L903C:  ldx     #1
+        lda     selector_menu
+        cmp     #kSelectorMenuMinItems + 8
         bcc     L9052
         inx
 L9052:  lda     #$00
@@ -58,7 +52,7 @@ L9052:  lda     #$00
         sta     path_buf1
         ldy     #$03
         lda     #$02
-        jsr     file_dialog_L5000
+        jsr     file_dialog__Exec
         pha
         txa
         pha
@@ -66,7 +60,7 @@ L9052:  lda     #$00
         pha
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+        jsr     JUMP_TABLE_CLEAR_UPDATES ; Add File Dialog close
         pla
         tay
         pla
@@ -84,120 +78,113 @@ L9080:  dey
         jmp     L9080
 
 L9088:  sta     copy_when
-        jsr     read_file
+        jsr     ReadFile
         bpl     L9093
         jmp     L9016
 
-L9093:  copy16  selector_list, num_run_list_entries
+L9093:  copy16  selector_list, num_primary_run_list_entries
         lda     which_run_list
-        cmp     #$01
+        cmp     #1
         bne     L90D3
-        lda     num_run_list_entries
-        cmp     #kSelectorListNumRunListEntries
+        lda     num_primary_run_list_entries
+        cmp     #kSelectorListNumPrimaryRunListEntries
         beq     L90F4
         ldy     copy_when       ; Flags
-        lda     num_run_list_entries
-        jsr     assign_entry_data
-        inc     selector_list + kSelectorListNumRunListOffset
-        copy16  selector_menu_addr, @addr
-        @addr := *+1
-        inc     SELF_MODIFIED
-        jsr     write_file
+        lda     num_primary_run_list_entries
+        inc     selector_list + kSelectorListNumPrimaryRunListOffset
+        jsr     AssignEntryData
+        jsr     WriteFile
         bpl     L90D0
         jmp     L9016
 
 L90D0:  jmp     L900F
 
-L90D3:  lda     num_other_run_list_entries
-        cmp     #$10
-        beq     L90FF
+L90D3:  lda     num_secondary_run_list_entries
+        cmp     #kSelectorListNumSecondaryRunListEntries
+        beq     L90F4
         ldy     copy_when       ; Flags
-        lda     num_other_run_list_entries
+        lda     num_secondary_run_list_entries
         clc
-        adc     #kSelectorListNumRunListEntries
-        jsr     assign_other_run_list_entry_data
-        inc     selector_list + kSelectorListNumOtherListOffset
-        jsr     write_file
+        adc     #kSelectorListNumPrimaryRunListEntries
+        jsr     AssignSecondaryRunListEntryData
+        inc     selector_list + kSelectorListNumSecondaryRunListOffset
+        jsr     WriteFile
         bpl     L90F1
         jmp     L9016
 
 L90F1:  jmp     L900F
 
-L90F4:  lda     #kWarningMsgSelectorListFull
-L90F6:  jsr     show_warning_dialog
+L90F4:  lda     #kErrSelectorListFull
+        jsr     ShowAlert
         dec     clean_flag      ; reset to "clean"
         jmp     L9016
 
-L90FF:  lda     #$02
-        bne     L90F6           ; always
-
-
-which_run_list:  .byte   0
+which_run_list:
+        .byte   0
 copy_when:  .byte   0
 
 ;;; ============================================================
 
-.proc init
+.proc Init
         lda     #$00
-        sta     num_run_list_entries
-        sta     num_other_run_list_entries
+        sta     num_primary_run_list_entries
+        sta     num_secondary_run_list_entries
         copy    #$FF, selected_index
-        jsr     open_window
-        jsr     read_file_and_draw_entries
+        jsr     OpenWindow
+        jsr     ReadFileAndDrawEntries
         bpl     :+
-        jmp     close_window
+        jmp     CloseWindow
 
-:       jsr     populate_entries_flag_table
-        ;; Fall through
+:       jsr     PopulateEntriesFlagTable
+        FALL_THROUGH_TO dialog_loop
 .endproc
 
 dialog_loop:
-        jsr     event_loop
+        jsr     EventLoop
         bmi     dialog_loop     ; N set = nothing selected, re-enter loop
 
         beq     :+              ; Z set = OK selected
-        jmp     do_cancel
+        jmp     DoCancel
 
         ;; Which action are we?
 :       lda     selected_index
         bmi     dialog_loop
         lda     selector_action
         cmp     #SelectorAction::edit
-        bne     :+
-        jmp     do_edit
+        jeq     DoEdit
 
-:       cmp     #SelectorAction::delete
+        cmp     #SelectorAction::delete
         bne     :+
-        beq     do_delete       ; always
+        beq     DoDelete       ; always
 
 :       cmp     #SelectorAction::run
         bne     dialog_loop
-        jmp     do_run
+        jmp     DoRun
 
 ;;; ============================================================
 
-.proc do_delete
+.proc DoDelete
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
-        jsr     main::set_cursor_watch
+        jsr     MaybeToggleEntryHilite
+        jsr     main::SetCursorWatch
         lda     selected_index
-        jsr     remove_entry
+        jsr     RemoveEntry
         bne     :+              ; Z set on success
 
         inc     clean_flag      ; mark as "dirty"
 
-:       jsr     main::set_cursor_pointer
-        jmp     do_cancel
+:       jsr     main::SetCursorPointer
+        jmp     DoCancel
 .endproc
 
 ;;; ============================================================
 
-.proc do_edit
+.proc DoEdit
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
-        jsr     close_window
+        jsr     MaybeToggleEntryHilite
+        jsr     CloseWindow
         lda     selected_index
-        jsr     get_file_entry_addr
+        jsr     GetFileEntryAddr
         stax    $06
         ldy     #$00
         lda     ($06),y
@@ -210,7 +197,7 @@ l1:     lda     ($06),y
         lda     ($06),y
         sta     flags
         lda     selected_index
-        jsr     get_file_path_addr
+        jsr     GetFilePathAddr
         stax    $06
         ldy     #0
         lda     ($06),y
@@ -221,7 +208,7 @@ l2:     lda     ($06),y
         bpl     l2
         ldx     #$01
         lda     selected_index
-        cmp     #kSelectorListNumRunListEntries+1
+        cmp     #kSelectorListNumPrimaryRunListEntries+1
         bcc     l3
         inx
 l3:     clc
@@ -231,7 +218,7 @@ l3:     clc
         adc     #$01
         tay
         lda     #$02
-        jsr     file_dialog_L5000
+        jsr     file_dialog__Exec
         pha
         txa
         pha
@@ -239,7 +226,7 @@ l3:     clc
         pha
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+        jsr     JUMP_TABLE_CLEAR_UPDATES ; Edit File Dialog close
         pla
         tay
         pla
@@ -259,64 +246,61 @@ l5:     dey                     ; map 0/1/2 to $00/$80/$C0
         jmp     l5
 
 l6:     sta     copy_when
-        jsr     read_file
+        jsr     ReadFile
         bpl     l7
-        jmp     close_window
+        jmp     CloseWindow
 
 l7:     lda     selected_index
-        cmp     #kSelectorListNumRunListEntries+1
+        cmp     #kSelectorListNumPrimaryRunListEntries+1
         bcc     l10
         lda     which_run_list
-        cmp     #$02
+        cmp     #2
         beq     l13
-        lda     num_run_list_entries
-        cmp     #kSelectorListNumRunListEntries
+        lda     num_primary_run_list_entries
+        cmp     #kSelectorListNumPrimaryRunListEntries
         bne     l8
         jmp     L90F4
 
 l8:     lda     selected_index
-        jsr     remove_entry
+        jsr     RemoveEntry
         beq     l9
-        jmp     close_window
+        jmp     CloseWindow
 
-l9:     ldx     num_run_list_entries
-        inc     num_run_list_entries
-        inc     selector_list + kSelectorListNumRunListOffset
-        copy16  selector_menu_addr, @addr
-        @addr := *+1
-        inc     SELF_MODIFIED
+l9:     ldx     num_primary_run_list_entries
+        inc     num_primary_run_list_entries
+        inc     selector_list + kSelectorListNumPrimaryRunListOffset
         txa
         jmp     l14
 
 l10:    lda     which_run_list
-        cmp     #$01
+        cmp     #1
         beq     l13
-        lda     num_other_run_list_entries
-        cmp     #$10
+        lda     num_secondary_run_list_entries
+        cmp     #kSelectorListNumSecondaryRunListEntries
         bne     l11
-        jmp     init
+        jmp     Init
 
 l11:    lda     selected_index
-        jsr     remove_entry
+        jsr     RemoveEntry
         beq     l12
-        jmp     close_window
+        jmp     CloseWindow
 
-l12:    ldx     num_other_run_list_entries
-        inc     num_other_run_list_entries
-        inc     selector_list + kSelectorListNumOtherListOffset
-        lda     num_other_run_list_entries
+l12:    ldx     num_secondary_run_list_entries
+        inc     num_secondary_run_list_entries
+        inc     selector_list + kSelectorListNumSecondaryRunListOffset
+        lda     num_secondary_run_list_entries
         clc
         adc     #$07
         jmp     l14
 
 l13:    lda     selected_index
 l14:    ldy     copy_when
-        jsr     assign_entry_data
-        jsr     write_file
+        jsr     AssignEntryData
+        jsr     WriteFile
         beq     l15
-        jmp     close_window
+        jmp     CloseWindow
 
-l15:    jsr     main::set_cursor_pointer
+l15:    jsr     main::SetCursorPointer
         jmp     L900F
 
 flags:  .byte   0
@@ -324,27 +308,27 @@ flags:  .byte   0
 
 ;;; ============================================================
 
-.proc do_run
+.proc DoRun
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
-        jsr     main::set_cursor_watch
+        jsr     MaybeToggleEntryHilite
+        jsr     main::SetCursorWatch
         lda     selected_index
-        jsr     get_file_entry_addr
+        jsr     GetFileEntryAddr
         stax    $06
         ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
         cmp     #kSelectorEntryCopyNever
         beq     l5
         sta     L938A
-        jsr     GetCopiedToRAMCardFlag
+        jsr     main::GetCopiedToRAMCardFlag
         beq     l5
         lda     L938A
         beq     l2
         lda     selected_index
-        jsr     get_entry_ramcard_file_info
+        jsr     GetEntryRamcardFileInfo
         beq     l3
         lda     selected_index
-        jsr     get_file_path_addr
+        jsr     GetFilePathAddr
         stax    $06
         ldy     #0
         lda     ($06),y
@@ -354,13 +338,13 @@ l1:     lda     ($06),y
         dey
         bpl     l1
         lda     #$FF
-        jmp     do_cancel
+        jmp     DoCancel
 
 l2:     lda     selected_index
-        jsr     get_entry_ramcard_file_info
+        jsr     GetEntryRamcardFileInfo
         bne     l5
 l3:     lda     selected_index
-        jsr     get_entry_ramcard_path
+        jsr     GetEntryRamcardPath
         stax    $06
         ldy     #0
         lda     ($06),y
@@ -372,7 +356,7 @@ l4:     lda     ($06),y
         jmp     l7
 
 l5:     lda     selected_index
-        jsr     get_file_path_addr
+        jsr     GetFilePathAddr
         stax    $06
         ldy     #0
         lda     ($06),y
@@ -400,35 +384,37 @@ l10:    iny
         stx     buf_filename2
         lda     L938A
         sta     buf_win_path
-        jsr     close_window
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
+        jsr     CloseWindow
+        jsr     JUMP_TABLE_CLEAR_UPDATES ; Run dialog OK
         jsr     JUMP_TABLE_LAUNCH_FILE
-        jsr     main::set_cursor_pointer
+        jsr     main::SetCursorPointer
         copy    #$FF, selected_index
         return  #0
 .endproc
 
 ;;; ============================================================
+;;; Cancel from Edit, Delete, or Run
+;;; Also OK from Delete (since that closes immediately)
 
-.proc do_cancel
+.proc DoCancel
         pha
         lda     selector_action
         cmp     #SelectorAction::edit
         bne     :+
+
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-:       jsr     close_window
+
+:       jsr     CloseWindow
+        jsr     JUMP_TABLE_CLEAR_UPDATES
         pla
         jmp     L900F
 .endproc
 
 ;;; ============================================================
 
-.proc close_window
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_entry_picker
+.proc CloseWindow
+        MGTK_CALL MGTK::CloseWindow, winfo_entry_picker
         rts
 .endproc
 
@@ -436,9 +422,9 @@ l10:    iny
 
 L938A:  .byte   0               ; ???
 
-num_run_list_entries:
+num_primary_run_list_entries:
         .byte   0
-num_other_run_list_entries:
+num_secondary_run_list_entries:
         .byte   0
 
 selected_index:
@@ -452,117 +438,142 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 
 ;;; ============================================================
 
-.proc open_window
-        MGTK_RELAY_CALL MGTK::OpenWindow, winfo_entry_picker
-        lda     winfo_entry_picker::window_id
-        jsr     main::set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_outer_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_inner_rect
-        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line1_start
-        MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line1_end
-        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_line2_start
-        MGTK_RELAY_CALL MGTK::LineTo, entry_picker_line2_end
-        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_ok_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, entry_picker_cancel_rect
-        jsr     draw_ok_label
-        jsr     draw_cancel_label
+.proc OpenWindow
+        MGTK_CALL MGTK::OpenWindow, winfo_entry_picker
+        lda     #winfo_entry_picker::kWindowId
+        jsr     main::SafeSetPortFromWindowId
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, entry_picker_frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+
+        MGTK_CALL MGTK::MoveTo, entry_picker_line1_start
+        MGTK_CALL MGTK::LineTo, entry_picker_line1_end
+        MGTK_CALL MGTK::MoveTo, entry_picker_line2_start
+        MGTK_CALL MGTK::LineTo, entry_picker_line2_end
+
+        MGTK_CALL MGTK::SetPenMode, penXOR
+
+        MGTK_CALL MGTK::FrameRect, entry_picker_ok_button_rect
+        MGTK_CALL MGTK::MoveTo, entry_picker_ok_button_pos
+        param_call main::DrawString, entry_picker_ok_button_label
+
+        MGTK_CALL MGTK::FrameRect, entry_picker_cancel_button_rect
+        MGTK_CALL MGTK::MoveTo, entry_picker_cancel_button_pos
+        param_call main::DrawString, entry_picker_cancel_button_label
+
         lda     selector_action
         cmp     #SelectorAction::edit
-        bne     :+
-        param_call draw_title_centered, label_edit
-        rts
+    IF_EQ
+        param_jump DrawTitleCentered, label_edit
+    END_IF
 
-:       cmp     #SelectorAction::delete
-        bne     :+
-        param_call draw_title_centered, label_del
-        rts
+        cmp     #SelectorAction::delete
+    IF_EQ
+        param_jump DrawTitleCentered, label_del
+    END_IF
 
-:       param_call draw_title_centered, label_run
-        rts
+        param_jump DrawTitleCentered, label_run
 .endproc
 
 ;;; ============================================================
 
-.proc draw_entry
-        stx     $07
-        sta     $06
-        lda     dialog_label_pos::xcoord
-        sta     xcoord
+;;; Inputs: A,X=string, Y=index
+.proc DrawEntry
+        stax    $06
+
         tya
-        pha
-        cmp     #16             ; 3rd column (16-24)
-        bcc     l1
-        sec
-        sbc     #16
-        jmp     l2
+        jsr     GetOptionPos
+        addax   #kShortcutPickerTextHOffset, entry_picker_item_rect::x1
+        tya
+        ldx     #0
+        addax   #kShortcutPickerTextYOffset, entry_picker_item_rect::y1
 
-        ;; 8 rows
-l1:     cmp     #8              ; 2nd column (8-15)
-        bcc     l2
-        sec
-        sbc     #8
-
-        ;; A has row
-l2:     ldx     #0
-        ldy     #kEntryPickerItemHeight
-        jsr     Multiply_16_8_16 ; A,X = A,X * Y
-        clc
-        adc     #32
-        sta     dialog_label_pos::ycoord
-        txa
-        adc     #0
-        sta     dialog_label_pos::ycoord+1
-        pla
-
-        cmp     #8
-        bcs     :+
-        lda     #0              ; col 1
-        tax
-        beq     l3              ; always
-
-:       cmp     #16
-        bcs     :+
-        ldax    #kEntryPickerCol2
-        jmp     l3
-
-:       ldax    #kEntryPickerCol3
-
-l3:     clc
-        adc     #10             ; text starts at +10 offset
-        sta     dialog_label_pos::xcoord
-        txa
-        adc     #0
-        sta     dialog_label_pos::xcoord+1
-        MGTK_RELAY_CALL MGTK::MoveTo, dialog_label_pos
+        MGTK_CALL MGTK::MoveTo, entry_picker_item_rect::topleft
         ldax    $06
-        jsr     draw_string
-        lda     xcoord
-        sta     dialog_label_pos::xcoord
-        lda     #0
-        sta     dialog_label_pos::xcoord+1
-        rts
+        jmp     DrawString
+.endproc
 
-xcoord: .byte   0
+;;; ============================================================
+;;; Get the coordinates of an option by index.
+;;; Input: A = volume index
+;;; Output: A,X = x coordinate, Y = y coordinate
+.proc GetOptionPos
+        sta     index
+        .repeat ::kShortcutPickerRowShift
+        lsr                     ; lo
+        .endrepeat
+        ldx     #0              ; hi
+        ldy     #kShortcutPickerItemWidth
+        jsr     Multiply_16_8_16
+        clc
+        adc     #<kShortcutPickerLeft
+        pha                     ; lo
+        txa
+        adc     #>kShortcutPickerLeft
+        pha                     ; hi
+
+        ;; Y coordinate
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        and     #kShortcutPickerRows-1
+        ldx     #0              ; hi
+        ldy     #kShortcutPickerItemHeight
+        jsr     Multiply_16_8_16
+        clc
+        adc     #kShortcutPickerTop
+
+        tay                     ; Y coord
+        pla
+        tax                     ; X coord hi
+        pla                     ; X coord lo
+
+        rts
 .endproc
 
 ;;; ============================================================
 
-.proc draw_ok_label
-        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_ok_pos
-        param_call main::DrawString, aux::ok_button_label
-        rts
-.endproc
+;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
+;;; Outputs: A=index, N=1 if no match
+.proc GetOptionIndexFromCoords
+        ;; Row
+        sub16   screentowindow_params::windowy, #kShortcutPickerTop, screentowindow_params::windowy
+        bmi     done
 
-.proc draw_cancel_label
-        MGTK_RELAY_CALL MGTK::MoveTo, entry_picker_cancel_pos
-        param_call main::DrawString, aux::cancel_button_label
+        ldax    screentowindow_params::windowy
+        ldy     #kShortcutPickerItemHeight
+        jsr     Divide_16_8_16  ; A = row
+
+        cmp     #kShortcutPickerRows
+        bcs     done
+        sta     row
+
+        ;; Column
+        sub16   screentowindow_params::windowx, #kShortcutPickerLeft, screentowindow_params::windowx
+        bmi     done
+
+        ldax    screentowindow_params::windowx
+        ldy     #kShortcutPickerItemWidth
+        jsr     Divide_16_8_16  ; A = col
+
+        cmp     #kShortcutPickerCols
+        bcs     done
+
+        ;; Index
+        .repeat ::kShortcutPickerRowShift
+        asl
+        .endrepeat
+        row := *+1
+        ora     #SELF_MODIFIED_BYTE
         rts
+
+done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc draw_string
+;;; Copy the string somewhere visible to MGTK in auxmem.
+.proc DrawString
         ptr := $06
 
         stax    ptr
@@ -570,18 +581,17 @@ xcoord: .byte   0
         lda     (ptr),y
         tay
 :       lda     (ptr),y
-        sta     path_buf2+2,y
+        sta     text_buffer2::length,y
         dey
         bpl     :-
 
-        copy16  #path_buf2+3, path_buf2
-        MGTK_RELAY_CALL MGTK::DrawText, path_buf2
+        MGTK_CALL MGTK::DrawText, text_buffer2
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc draw_title_centered
+.proc DrawTitleCentered
         text_params     := $6
         text_addr       := text_params + 0
         text_length     := text_params + 2
@@ -592,14 +602,12 @@ xcoord: .byte   0
         lda     (text_addr),y
         sta     text_length
         inc16   text_addr ; point past length byte
-        MGTK_RELAY_CALL MGTK::TextWidth, text_params
+        MGTK_CALL MGTK::TextWidth, text_params
 
-        kWidth = 350
-
-        sub16   #kWidth, text_width, pos_dialog_title::xcoord
+        sub16   #winfo_entry_picker::kWidth, text_width, pos_dialog_title::xcoord
         lsr16   pos_dialog_title::xcoord ; /= 2
-        MGTK_RELAY_CALL MGTK::MoveTo, pos_dialog_title
-        MGTK_RELAY_CALL MGTK::DrawText, text_params
+        MGTK_CALL MGTK::MoveTo, pos_dialog_title
+        MGTK_CALL MGTK::DrawText, text_params
         rts
 .endproc
 
@@ -609,20 +617,20 @@ xcoord: .byte   0
 ;;; Z = OK selected
 ;;; Otherwise: Cancel selected
 
-.proc event_loop
-        jsr     main::yield_loop
-        MGTK_RELAY_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+.proc EventLoop
+        jsr     main::YieldLoop
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        bne     :+
-        jmp     handle_button
-:       cmp     #MGTK::EventKind::key_down
-        bne     event_loop
-        jmp     handle_key
+        jeq     handle_button
+
+        cmp     #MGTK::EventKind::key_down
+        bne     EventLoop
+        jmp     HandleKey
 
 handle_button:
-        MGTK_RELAY_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_which_area
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
         bne     :+
         return  #$FF
 
@@ -630,95 +638,66 @@ handle_button:
         beq     :+
         return  #$FF
 
-:       lda     findwindow_window_id
+:       lda     findwindow_params::window_id
         cmp     winfo_entry_picker
         beq     :+
         return  #$FF
 
-:       lda     winfo_entry_picker::window_id
-        jsr     main::set_port_from_window_id
-        lda     winfo_entry_picker::window_id
-        sta     screentowindow_window_id
-        MGTK_RELAY_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_RELAY_CALL MGTK::MoveTo, screentowindow_windowx
-        MGTK_RELAY_CALL MGTK::InRect, entry_picker_ok_rect
+:       lda     #winfo_entry_picker::kWindowId
+        sta     screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::InRect, entry_picker_ok_button_rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
-        param_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_ok_rect
+        param_call main::ButtonClick, winfo_entry_picker::kWindowId, entry_picker_ok_button_rect
         bmi     :+              ; nothing selected, re-enter loop
         lda     #$00            ; OK selected
 :       rts
 
-not_ok: MGTK_RELAY_CALL MGTK::InRect, entry_picker_cancel_rect
+not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_button_rect
         cmp     #MGTK::inrect_inside
         bne     not_cancel
-        param_call ButtonEventLoopRelay, kEntryDialogWindowID, entry_picker_cancel_rect
+        param_call main::ButtonClick, winfo_entry_picker::kWindowId, entry_picker_cancel_button_rect
         bmi     :+              ; nothing selected, re-enter loop
         lda     #$01            ; Cancel selected
 :       rts
 
 not_cancel:
-        sub16   screentowindow_windowx, #10, screentowindow_windowx
-        sub16   screentowindow_windowy, #25, screentowindow_windowy
-        bpl     :+
-        return  #$FF            ; nothing selected, re-enter loop
+        jsr     GetOptionIndexFromCoords
+        bmi     done
 
-        ;; Determine column
-:       cmp16   screentowindow_windowx, #110
-        bmi     l2
-        cmp16   screentowindow_windowx, #220
-        bmi     l1
-        lda     #2
-        bne     l3
-l1:     lda     #1
-        bne     l3
-l2:     lda     #0
-
-        ;; Determine row
-l3:     pha
-        ldax    screentowindow_windowy
-        ldy     #kEntryPickerItemHeight
-        jsr     Divide_16_8_16
-        stax    screentowindow_windowy
-        cmp     #8
-        bcc     :+
-        pla
-        return  #$FF            ; nothing selected, re-enter loop
-
-:       pla
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     screentowindow_windowy
+        ;; Is it valid?
         sta     new_selection
         cmp     #8
         bcs     l5
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         bcs     l6
 
 l4:     cmp     selected_index           ; same as previous selection?
         beq     :+
         lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         lda     new_selection
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite
-:       jsr     main::detect_double_click
+        jsr     MaybeToggleEntryHilite
+:       jsr     main::StashCoordsAndDetectDoubleClick
         rts
 
 l5:     sec
-        sbc     #kSelectorListNumRunListEntries
-        cmp     num_other_run_list_entries
+        sbc     #kSelectorListNumPrimaryRunListEntries
+        cmp     num_secondary_run_list_entries
         bcs     l6
         clc
-        adc     #kSelectorListNumRunListEntries
+        adc     #kSelectorListNumPrimaryRunListEntries
         jmp     l4
 
 l6:     lda     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
         copy    #$FF, selected_index ; nothing selected, re-enter loop
-        rts
+
+done:   return  #$FF
+
 
 new_selection:
         .byte   0
@@ -726,118 +705,74 @@ new_selection:
 
 ;;; ============================================================
 
-.proc maybe_toggle_entry_hilite
-        bpl     l1
-        rts
+.proc MaybeToggleEntryHilite
+        bmi     ret
 
-l1:     pha
-        lsr     a
-        lsr     a
-        lsr     a
-        tax
-        beq     l3
-        cmp     #1
-        bne     l2
+        jsr     GetOptionPos
+        stax    entry_picker_item_rect::x1
+        addax   #kShortcutPickerItemWidth-1, entry_picker_item_rect::x2
+        tya                     ; y lo
+        ldx     #0              ; y hi
+        stax    entry_picker_item_rect::y1
+        addax   #kShortcutPickerItemHeight-1, entry_picker_item_rect::y2
 
-        ldax    #kEntryPickerCol2
-        jmp     l3
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, entry_picker_item_rect
+        MGTK_CALL MGTK::SetPenMode, pencopy
 
-l2:     ldax    #kEntryPickerCol3
-
-l3:     clc
-        adc     #8              ; highlight starts at +8 offset
-        sta     entry_picker_item_rect::x1
-        txa
-        adc     #0
-        sta     entry_picker_item_rect::x1+1
-        pla
-        cmp     #8
-        bcc     l5
-        cmp     #16
-        bcs     l4
-        sec
-        sbc     #8
-        jmp     l5
-
-l4:     sec
-        sbc     #16
-l5:     ldx     #0
-        ldy     #kEntryPickerItemHeight
-        jsr     Multiply_16_8_16
-        clc
-        adc     #24
-        sta     entry_picker_item_rect::y1
-        txa
-        adc     #0
-        sta     entry_picker_item_rect::y1+1
-        add16   entry_picker_item_rect::x1, #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
-        add16   entry_picker_item_rect::y1, #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_item_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        rts
+ret:    rts
 .endproc
 
 ;;; ============================================================
 ;;; Key down handler
 
-.proc handle_key
-        lda     event_modifiers
+.proc HandleKey
+        lda     event_params::modifiers
         cmp     #MGTK::event_modifier_solid_apple
         bne     :+
         return  #$FF
-:       lda     event_key
+:       lda     event_params::key
 
         cmp     #CHAR_LEFT
-        bne     :+
-        jmp     handle_key_left
+        jeq     HandleKeyLeft
 
-:       cmp     #CHAR_RIGHT
-        bne     :+
-        jmp     handle_key_right
+        cmp     #CHAR_RIGHT
+        jeq     HandleKeyRight
 
-:       cmp     #CHAR_RETURN
-        bne     :+
-        jmp     handle_key_return
+        cmp     #CHAR_RETURN
+        jeq     HandleKeyReturn
 
-:       cmp     #CHAR_ESCAPE
-        bne     :+
-        jmp     handle_key_escape
+        cmp     #CHAR_ESCAPE
+        jeq     HandleKeyEscape
 
-:       cmp     #CHAR_DOWN
-        bne     :+
-        jmp     handle_key_down
+        cmp     #CHAR_DOWN
+        jeq     HandleKeyDown
 
-:       cmp     #CHAR_UP
-        bne     :+
-        jmp     handle_key_up
+        cmp     #CHAR_UP
+        jeq     HandleKeyUp
 
-:       return  #$FF
+        return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_return
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_ok_rect
+.proc HandleKeyReturn
+        param_call main::ButtonFlash, winfo_entry_picker::kWindowId, entry_picker_ok_button_rect
         return  #0
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_escape
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_cancel_rect
+.proc HandleKeyEscape
+        param_call main::ButtonFlash, winfo_entry_picker::kWindowId, entry_picker_cancel_button_rect
         return  #1
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_right
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+.proc HandleKeyRight
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -858,7 +793,7 @@ l5:     ldx     #0
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         lda     selected_index
 loop:   clc
@@ -877,27 +812,27 @@ loop:   clc
 
 set:    txa
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_left
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+.proc HandleKeyLeft
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
         bpl     move            ; have a selection
 
         ;; No selection - re-use logic to find last item
-        jmp     handle_key_up
+        jmp     HandleKeyUp
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         lda     selected_index
 loop:   sec
@@ -916,16 +851,16 @@ loop:   sec
 
 set:    txa
         sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_up
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+.proc HandleKeyUp
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -940,7 +875,7 @@ done:   return  #$FF
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         ldx     selected_index
 loop:   dex                     ; to previous
@@ -953,16 +888,16 @@ wrap:   ldx     #kSelectorListNumEntries
         jmp     loop
 
 set:    sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key_down
-        lda     num_run_list_entries
-        ora     num_other_run_list_entries
+.proc HandleKeyDown
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
         beq     done
 
         lda     selected_index
@@ -977,7 +912,7 @@ done:   return  #$FF
 
         ;; Change selection
 move:   lda     selected_index  ; unselect current
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
         ldx     selected_index
 loop:   inx                     ; to next
@@ -992,14 +927,14 @@ wrap:   ldx     #AS_BYTE(-1)
 
         ;; Set the selection
 set:    sta     selected_index
-        jsr     maybe_toggle_entry_hilite
+        jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc populate_entries_flag_table
+.proc PopulateEntriesFlagTable
         ldx     #kSelectorListNumEntries - 1
         lda     #$FF
 :       sta     entries_flag_table,x
@@ -1007,7 +942,7 @@ done:   return  #$FF
         bpl     :-
 
         ldx     #0
-:       cpx     num_run_list_entries
+:       cpx     num_primary_run_list_entries
         beq     :+
         txa
         sta     entries_flag_table,x
@@ -1015,7 +950,7 @@ done:   return  #$FF
         bne     :-
 
 :       ldx     #0
-:       cpx     num_other_run_list_entries
+:       cpx     num_secondary_run_list_entries
         beq     :+
         txa
         clc
@@ -1031,78 +966,49 @@ entries_flag_table:
         .res    ::kSelectorListNumEntries, 0
 
 ;;; ============================================================
-
-.proc draw_items_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, entry_picker_all_items_rect
-        rts
-.endproc
-
-;;; ============================================================
-
-        rts                     ; ???
-
-        rts                     ; ???
-
-;;; ============================================================
 ;;; Assigns name, flags, and path to an entry in the file buffer
-;;; and (if it's not in the other run list) also updates the
+;;; and (if it's in the primary run list) also updates the
 ;;; resource data (used for menus, etc).
 ;;; Inputs: A=entry index, Y=new flags
 ;;;         `path_buf1` is name, `path_buf0` is path
 
-.proc assign_entry_data
+.proc AssignEntryData
         cmp     #8
         bcc     :+
-        jmp     assign_other_run_list_entry_data
+        jmp     AssignSecondaryRunListEntryData
 
 :       sta     index
         tya                     ; flags
         pha
 
         ptr_file = $06          ; pointer into file buffer
-        ptr_res = $08           ; pointer into resource data
 
-        ;; Assign name in `path_buf1` to both file and resource
+        ;; Assign name in `path_buf1` to file
         lda     index
-        jsr     get_file_entry_addr
+        jsr     GetFileEntryAddr
         stax    ptr_file
-        lda     index
-        jsr     get_resource_entry_addr
-        stax    ptr_res
         ldy     path_buf1
 :       lda     path_buf1,y
         sta     (ptr_file),y
-        sta     (ptr_res),y
         dey
         bpl     :-
 
-        ;; Assign flags to both file and resource
+        ;; Assign flags to file
         ldy     #kSelectorEntryFlagsOffset
         pla
         sta     (ptr_file),y
-        sta     (ptr_res),y
 
-        ;; Assign path in `path_buf0` to both file and resource
+        ;; Assign path in `path_buf0` to file
         lda     index
-        jsr     get_file_path_addr
+        jsr     GetFilePathAddr
         stax    ptr_file
-        lda     index
-        jsr     get_resource_path_addr
-        stax    ptr_res
         ldy     path_buf0
 :       lda     path_buf0,y
         sta     (ptr_file),y
-        sta     (ptr_res),y
         dey
         bpl     :-
 
-        ;; This will change the menu label, so re-initialize the
-        ;; menu so that the new width can be pre-computed. That
-        ;; will un-hilite the Selector menu, so re-hilite it so
-        ;; it un-hilites correctly when finally dismissed.
-        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
-        jsr     main::toggle_menu_hilite
+        jsr     UpdateMenuResources
 
         rts
 
@@ -1114,7 +1020,7 @@ index:  .byte   0
 ;;; Inputs: A=entry index, Y=new flags
 ;;;         `path_buf1` is name, `path_buf0` is path
 
-.proc assign_other_run_list_entry_data
+.proc AssignSecondaryRunListEntryData
         ptr := $06
 
         sta     index
@@ -1123,7 +1029,7 @@ index:  .byte   0
 
         ;; Compute entry address
         lda     index
-        jsr     get_file_entry_addr
+        jsr     GetFileEntryAddr
         stax    ptr
 
         ;; Assign name
@@ -1140,7 +1046,7 @@ index:  .byte   0
 
         ;; Assign path
         lda     index
-        jsr     get_file_path_addr
+        jsr     GetFilePathAddr
         stax    ptr
         ldy     path_buf0
 :       lda     path_buf0,y
@@ -1155,150 +1061,80 @@ index:  .byte   0
 ;;; ============================================================
 ;;; Removes the specified entry, shifting later entries down as
 ;;; needed. Writes the file when done. Handles both the file
-;;; buffer and resource data (used for menus, etc.
+;;; buffer and resource data (used for menus, etc.)
 ;;; Inputs: Entry in A
 
-.proc remove_entry
+.proc RemoveEntry
         ptr1 := $06
         ptr2 := $08
-
 
         sta     index
         cmp     #8
         bcc     run_list
-        jmp     other_run_list
+        jmp     secondary_run_list
 
         ;; Primary run list
 run_list:
 .scope
         tax
         inx
-        cpx     num_run_list_entries
+        cpx     num_primary_run_list_entries
         bne     loop
 
 finish:
-        dec     selector_list + kSelectorListNumRunListOffset
-        dec     num_run_list_entries
-        copy16  selector_menu_addr, @addr
-        @addr := *+1
-        dec     SELF_MODIFIED
-        jmp     write_file
+        dec     selector_list + kSelectorListNumPrimaryRunListOffset
+        dec     num_primary_run_list_entries
+        jsr     UpdateMenuResources
+        jmp     WriteFile
 
 loop:   lda     index
-        cmp     num_run_list_entries
+        cmp     num_primary_run_list_entries
         beq     finish
 
-        ;; Copy entry (in file buffer) down by one
-        jsr     get_file_entry_addr
-        stax    ptr1
-        add16   ptr1, #kSelectorListNameLength, ptr2
+        jsr     MoveEntryDown
 
-        ldy     #0
-        lda     (ptr2),y
-        tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
-        dey
-        bpl     :-
-
-        ;; And flags
-        ldy     #kSelectorEntryFlagsOffset
-        lda     (ptr2),y
-        sta     (ptr1),y
-
-        ;; Copy entry (in resource data) down by one
-        lda     index
-        jsr     get_resource_entry_addr
-        stax    ptr1
-        add16   ptr1, #kSelectorListNameLength, ptr2
-
-        ldy     #0
-        lda     (ptr2),y
-        tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
-        dey
-        bpl     :-
-
-        ;; And flags
-        ldy     #kSelectorEntryFlagsOffset
-        lda     (ptr2),y
-        sta     (ptr1),y
-
-        ;; Copy path (in file buffer) down by one
-        lda     index
-        jsr     get_file_path_addr
-        stax    ptr1
-        add16   ptr1, #kSelectorListPathLength, ptr2
-
-        ldy     #0
-        lda     (ptr2),y
-        tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
-        dey
-        bpl     :-
-
-        ;; Copy path (in resource data) down by one
-        lda     index
-        jsr     get_resource_path_addr
-        stax    ptr1
-        add16   ptr1, #kSelectorListPathLength, ptr2
-
-        ldy     #0
-        lda     (ptr2),y
-        tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
-        dey
-        bpl     :-
-
-        ;; Next
         inc     index
         jmp     loop
 .endscope
 
         ;; --------------------------------------------------
 
-other_run_list:
+secondary_run_list:
 .scope
         sec
         sbc     #ptr1+1
-        cmp     num_other_run_list_entries
+        cmp     num_secondary_run_list_entries
         bne     loop
-        dec     selector_list + kSelectorListNumOtherListOffset
-        dec     num_other_run_list_entries
-        jmp     write_file
+        dec     selector_list + kSelectorListNumSecondaryRunListOffset
+        dec     num_secondary_run_list_entries
+        jmp     WriteFile
 
 loop:   lda     index
         sec
         sbc     #ptr2
-        cmp     num_other_run_list_entries
-        bne     L9B84
-        dec     selector_list + kSelectorListNumOtherListOffset
-        dec     num_other_run_list_entries
-        jmp     write_file
+        cmp     num_secondary_run_list_entries
+        bne     :+
 
-L9B84:  lda     index
+        dec     selector_list + kSelectorListNumSecondaryRunListOffset
+        dec     num_secondary_run_list_entries
+        jmp     WriteFile
 
+:       lda     index
+        jsr     MoveEntryDown
+
+        inc     index
+        jmp     loop
+.endscope
+
+index:  .byte   0
+
+;;; Move an entry (in the file buffer) down by one.
+;;; A=entry index
+.proc MoveEntryDown
         ;; Copy entry (in file buffer) down by one
-        jsr     get_file_entry_addr
+        jsr     GetFileEntryAddr
         stax    ptr1
         add16   ptr1, #kSelectorListNameLength, ptr2
-
-        ldy     #0
-        lda     (ptr2),y
-        tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
-        dey
-        bpl     :-
-
-        ;; Copy path (in file buffer) down by one
-        lda     index
-        jsr     get_file_path_addr
-        stax    ptr1
-        add16   ptr1, #kSelectorListPathLength, ptr2
 
         ldy     #0
         lda     (ptr2),y
@@ -1313,22 +1149,106 @@ L9B84:  lda     index
         lda     (ptr2),y
         sta     (ptr1),y
 
-        ;; Next
-        inc     index
+        ;; Copy path (in file buffer) down by one
+        lda     index
+        jsr     GetFilePathAddr
+        stax    ptr1
+        add16   ptr1, #kSelectorListPathLength, ptr2
+
+        ldy     #0
+        lda     (ptr2),y
+        tay
+:       lda     (ptr2),y
+        sta     (ptr1),y
+        dey
+        bpl     :-
+
+        rts
+.endproc
+
+.endproc
+
+;;; ============================================================
+;;; Update menu from the file data, following an add/edit/remove.
+
+.proc UpdateMenuResources
+
+        ptr_file = $06          ; pointer into file buffer
+        ptr_res = $08           ; pointer into resource data
+
+        lda     selector_list + kSelectorListNumPrimaryRunListOffset
+        sta     index
+
+loop:   dec     index
+        bmi     finish
+
+        ;; Name
+        lda     index
+        jsr     GetFileEntryAddr
+        stax    ptr_file
+        lda     index
+        jsr     GetResourceEntryAddr
+        stax    ptr_res
+        jsr     CopyString
+
+        ;; Flags
+        ldy     #kSelectorEntryFlagsOffset
+        lda     (ptr_file),y
+        sta     (ptr_res),y
+
+        ;; Path
+        lda     index
+        jsr     GetFilePathAddr
+        stax    ptr_file
+        lda     index
+        jsr     GetResourcePathAddr
+        stax    ptr_res
+        jsr     CopyString
+
         jmp     loop
-.endscope
+
+finish:
+        ;; Menu size
+        lda     selector_list + kSelectorListNumPrimaryRunListOffset
+        clc
+        adc     #kSelectorMenuMinItems
+        sta     selector_menu
+
+        ;; Re-initialize the menu so that new widths can be pre-computed.
+        ;; That will un-hilite the Selector menu, so re-hilite it so
+        ;; it un-hilites correctly when finally dismissed.
+
+        MGTK_CALL MGTK::SetMenu, aux::desktop_menu
+        jsr     main::ToggleMenuHilite
+        jsr     main::ShowClockForceUpdate
+
+        rts
+
+;;; Copy the string at `ptr_file` to `ptr_res`.
+.proc CopyString
+        ldy     #0
+        lda     (ptr_file),y
+        tay
+:       lda     (ptr_file),y
+        sta     (ptr_res),y
+        dey
+        bpl     :-
+
+        rts
+.endproc
 
 index:  .byte   0
 .endproc
+
 
 ;;; ============================================================
 ;;; Entry name address in the file buffer
 ;;; Input: A = Entry
 ;;; Output: A,X = Address
 
-.proc get_file_entry_addr
+.proc GetFileEntryAddr
         addr := selector_list + kSelectorListEntriesOffset
-        jsr     times16
+        jsr     main::ATimes16
         clc
         adc     #<addr
         tay
@@ -1344,10 +1264,10 @@ index:  .byte   0
 ;;; Input: A = Entry
 ;;; Output: A,X = Address
 
-.proc get_file_path_addr
+.proc GetFilePathAddr
         addr := selector_list + kSelectorListPathsOffset
 
-        jsr     times64
+        jsr     main::ATimes64
         clc
         adc     #<addr
         tay
@@ -1363,8 +1283,8 @@ index:  .byte   0
 ;;; Input: A = Entry
 ;;; Output: A,X = Address
 
-.proc get_resource_entry_addr
-        jsr     times16
+.proc GetResourceEntryAddr
+        jsr     main::ATimes16
         clc
         adc     #<run_list_entries
         tay
@@ -1380,8 +1300,8 @@ index:  .byte   0
 ;;; Input: A = Entry
 ;;; Output: A,X = Address
 
-.proc get_resource_path_addr
-        jsr     times64
+.proc GetResourcePathAddr
+        jsr     main::ATimes64
         clc
         adc     #<run_list_paths
         tay
@@ -1393,26 +1313,25 @@ index:  .byte   0
 .endproc
 
 ;;; ============================================================
-
-.proc show_warning_dialog
-        sta     warning_dialog_num
-        param_call main::invoke_dialog_proc, $0C, warning_dialog_num
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Write out SELECTOR.LIST file, using original prefix.
 ;;; Used if DeskTop was copied to RAMCard.
 
 filename_buffer := $1C00
 
         DEFINE_CREATE_PARAMS create_params, filename_buffer, ACCESS_DEFAULT, $F1
-        DEFINE_OPEN_PARAMS open_params, filename_buffer, io_buf
-        DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
-        DEFINE_CLOSE_PARAMS flush_close_params
+        DEFINE_OPEN_PARAMS open_origpfx_params, filename_buffer, io_buf
 
-.proc write_file_to_original_prefix
-        param_call CopyDeskTopOriginalPrefix, filename_buffer
+        DEFINE_OPEN_PARAMS open_curpfx_params, filename, io_buf
+
+filename:
+        PASCAL_STRING kFilenameSelectorList
+
+        DEFINE_READ_PARAMS read_params, selector_list, kSelectorListBufSize
+        DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
+        DEFINE_CLOSE_PARAMS close_params
+
+.proc WriteFileToOriginalPrefix
+        param_call main::CopyDeskTopOriginalPrefix, filename_buffer
         inc     filename_buffer ; Append '/' separator
         ldx     filename_buffer
         lda     #'/'
@@ -1428,108 +1347,118 @@ filename_buffer := $1C00
         bne     :-
         sty     filename_buffer
 
-retry_open:
-        MLI_RELAY_CALL CREATE, create_params
-        MLI_RELAY_CALL OPEN, open_params
+        copy    #0, second_try_flag
+
+@retry: MLI_CALL CREATE, create_params
+        MLI_CALL OPEN, open_origpfx_params
         beq     write
-        lda     #kWarningMsgInsertSystemDisk
-        jsr     show_warning_dialog
-        beq     retry_open
 
-exit:   rts
+        ;; First time - ask if we should even try.
+        lda     second_try_flag
+        bne     :+
+        inc     second_try_flag
+        lda     #kErrSaveChanges
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
+        beq     @retry
+        bne     cancel          ; always
 
-write:  lda     open_params::ref_num
+        ;; Second time - prompt to insert.
+:       lda     #kErrInsertSystemDisk
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
+        beq     @retry
+
+cancel: rts
+
+write:  lda     open_origpfx_params::ref_num
         sta     write_params::ref_num
-        sta     flush_close_params::ref_num
+        sta     close_params::ref_num
 
-retry_write:
-        MLI_RELAY_CALL WRITE, write_params
+@retry: MLI_CALL WRITE, write_params
         beq     close
-        pha
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        pla
         jsr     JUMP_TABLE_SHOW_ALERT
-        beq     retry_write
-        jmp     exit
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        beq     @retry          ; `kAlertResultTryAgain` = 0
 
-close:  MLI_RELAY_CALL FLUSH, flush_close_params ; TODO: is FLUSH necessary?
-        MLI_RELAY_CALL CLOSE, flush_close_params
+close:  MLI_CALL CLOSE, close_params
         rts
+
+second_try_flag:
+        .byte   0
 .endproc
 
 ;;; ============================================================
 ;;; Read SELECTOR.LIST file (using current prefix)
 
-        DEFINE_OPEN_PARAMS open_params2, filename, io_buf
-
-filename:
-        PASCAL_STRING kFilenameSelectorList
-
-        DEFINE_READ_PARAMS read_params2, selector_list, kSelectorListBufSize
-        DEFINE_WRITE_PARAMS write_params2, selector_list, kSelectorListBufSize
-        DEFINE_CLOSE_PARAMS close_params2
-
-.proc read_file
-retry:  MLI_RELAY_CALL OPEN, open_params2
+.proc ReadFile
+@retry: MLI_CALL OPEN, open_curpfx_params
         beq     read
-        lda     #kWarningMsgInsertSystemDisk
-        jsr     show_warning_dialog
-        beq     retry
+        lda     #kErrInsertSystemDisk
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
+        beq     @retry
         return  #$FF
 
-read:   lda     open_params2::ref_num
-        sta     read_params2::ref_num
-        MLI_RELAY_CALL READ, read_params2
-        bne     :+              ; TODO: Close even if read fails?
-        MLI_RELAY_CALL CLOSE, close_params2
-:       rts
+read:   lda     open_curpfx_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL READ, read_params
+        php
+        pha
+        MLI_CALL CLOSE, close_params
+        pla
+        plp
+        rts
 .endproc
 
 ;;; ============================================================
 ;;; Write SELECTOR.LIST file (using current prefix)
 
-.proc write_file
-        MLI_RELAY_CALL OPEN, open_params2
+.proc WriteFile
+@retry: MLI_CALL OPEN, open_curpfx_params
         beq     write
-        lda     #kWarningMsgInsertSystemDisk
-        jsr     show_warning_dialog
-        beq     write_file
+        lda     #kErrInsertSystemDisk
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
+        beq     @retry
         return  #$FF
 
-write:  lda     open_params2::ref_num
-        sta     write_params2::ref_num
-:       MLI_RELAY_CALL WRITE, write_params2
+write:  lda     open_curpfx_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+@retry: MLI_CALL WRITE, write_params
         beq     close
         jsr     JUMP_TABLE_SHOW_ALERT
-        beq     :-
-        jmp     done            ; TODO: Close even if no retry?
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        beq     @retry          ; `kAlertResultTryAgain` = 0
 
-close:  MLI_RELAY_CALL CLOSE, close_params2
-done:   rts
-.endproc
-
-;;; ============================================================
-
-.proc read_file_and_draw_entries
-        jsr     read_file
-        bpl     draw_all_entries
+close:  MLI_CALL CLOSE, close_params
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc draw_all_entries
-        lda     selector_list + kSelectorListNumRunListOffset
-        sta     num_run_list_entries
-        beq     other_run_list
+.proc ReadFileAndDrawEntries
+        jsr     ReadFile
+        bpl     DrawAllEntries
+        rts
+.endproc
 
-        ;; Draw "run list" entries
+;;; ============================================================
+
+.proc DrawAllEntries
+        lda     selector_list + kSelectorListNumPrimaryRunListOffset
+        sta     num_primary_run_list_entries
+        beq     secondary_run_list
+
+        ;; Draw "primary run list" entries
         lda     #0
         sta     index
 loop1:  lda     index
-        cmp     num_run_list_entries
-        beq     other_run_list
-        jsr     times16
+        cmp     num_primary_run_list_entries
+        beq     secondary_run_list
+        jsr     main::ATimes16
         clc
         adc     #kSelectorListEntriesOffset
         pha
@@ -1538,23 +1467,23 @@ loop1:  lda     index
         tax
         pla
         ldy     index
-        jsr     draw_entry
+        jsr     DrawEntry
         inc     index
         jmp     loop1
 
-        ;; Draw "other run list" entries
-other_run_list:
-        lda     selector_list + kSelectorListNumOtherListOffset
-        sta     num_other_run_list_entries
+        ;; Draw "secondary run list" entries
+secondary_run_list:
+        lda     selector_list + kSelectorListNumSecondaryRunListOffset
+        sta     num_secondary_run_list_entries
         beq     done
         lda     #0
         sta     index
 loop2:  lda     index
-        cmp     num_other_run_list_entries
+        cmp     num_secondary_run_list_entries
         beq     done
         clc
         adc     #8
-        jsr     times16
+        jsr     main::ATimes16
         clc
         adc     #kSelectorListEntriesOffset
         pha
@@ -1566,7 +1495,7 @@ loop2:  lda     index
         adc     #8
         tay
         pla
-        jsr     draw_entry
+        jsr     DrawEntry
         inc     index
         jmp     loop2
 
@@ -1576,76 +1505,6 @@ index:  .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Times 16 - for computing entry list offsets
-;;; Input: A = number
-;;; Output: A,X = result
-
-.proc times16
-        ldx     #0
-        stx     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        ldx     hi
-        rts
-
-hi:     .byte   0
-.endproc
-
-;;; ============================================================
-;;; Times 64 - for computing path list offsets
-;;; Input: A = number
-;;; Output: A,X = result
-
-.proc times64
-        ldx     #0
-        stx     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        ldx     hi
-        rts
-
-hi:     .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc MLI_RELAY
-        sty     call
-        stax    params
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
-        sta     ALTZPON
-        tax
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
-        rts
-.endproc
-
-;;; ============================================================
-
-        .include "../lib/ramcard.s"
-
-;;; ============================================================
 ;;; Populate `get_file_info_params` with the info for the entry
 ;;; as copied to RAMCard.
 ;;; Input: A=entry number
@@ -1653,10 +1512,10 @@ params: .addr   0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, 0
 
-.proc get_entry_ramcard_file_info
-        jsr     get_entry_ramcard_path
+.proc GetEntryRamcardFileInfo
+        jsr     GetEntryRamcardPath
         stax    get_file_info_params::pathname
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         rts
 .endproc
 
@@ -1667,13 +1526,13 @@ params: .addr   0
 ;;; Input: A=entry number
 ;;; Output: A,X=path buffer
 
-.proc get_entry_ramcard_path
+.proc GetEntryRamcardPath
         ptr := $06
 
         sta     index
-        param_call CopyRAMCardPrefix, buf
+        param_call main::CopyRAMCardPrefix, buf
         lda     index
-        jsr     get_file_path_addr
+        jsr     GetFilePathAddr
         stax    ptr
 
         ;; Find last / in entry's path
@@ -1682,7 +1541,6 @@ params: .addr   0
         sta     len
         tay
 :       lda     (ptr),y
-        and     #CHAR_MASK      ; TODO: Is this needed?
         cmp     #'/'
         beq     :+
         dey
@@ -1691,7 +1549,6 @@ params: .addr   0
         ;; And find preceding /
 :       dey
 :       lda     (ptr),y
-        and     #CHAR_MASK
         cmp     #'/'
         beq     :+
         dey
@@ -1719,8 +1576,8 @@ buf:    .res    ::kPathBufferSize
 
 ;;; ============================================================
 
-        PAD_TO $A000
+        PAD_TO ::kOverlayShortcutPickAddress + ::kOverlayShortcutPickLength
 
-.endproc ; selector_overlay2
+.endproc ; SelectorPickOverlay
 
-selector_picker_exec    := selector_overlay2::exec
+selector_picker__Exec    := SelectorPickOverlay::Exec

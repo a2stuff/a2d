@@ -12,12 +12,12 @@ OUTDIR = out
 
 # Object files
 $(OUTDIR)/%.o: %.s $(HEADERS)
-	ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+	../bin/warnerr ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Desk Accessory Files .da
 $(OUTDIR)/%.da: $(OUTDIR)/%.o ../res/asm.cfg
-	ld65 $(LDFLAGS) -o '$@' $<
+	../bin/warnerr ld65 $(LDFLAGS) -o '$@' $<
 
 # System Files .SYS
 $(OUTDIR)/%.SYS: $(OUTDIR)/%.o ../res/asm.cfg
-	ld65 $(LDFLAGS) -o '$@' $<
+	../bin/warnerr ld65 $(LDFLAGS) -o '$@' $<

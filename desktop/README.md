@@ -1,32 +1,33 @@
+# DeskTop
 
-# DeskTop diassembly notes - DESKTOP2.$F1
+This is the main application, presenting a desktop and windows with
+icons for volumes and files, commands and gestures for moving and
+copying files and manipulating disks.
 
-This is large - 111k. It includes a loader and the DeskTop app with
-both main memory and aux memory segments, filling everything from
-$4000 to $FFFF (except for I/O space and ProDOS), and still having
-more code segments swapped in dynamically.
+The program file (`DESKTOP2`) is large - 89k. It includes a loader and
+the DeskTop app with both main memory and aux memory segments, filling
+everything from $4000 to $FFFF (except for I/O space and ProDOS), and
+still having more code segments swapped in dynamically.
+
+## File Structure
 
 The file is broken down into multiple segments:
 
 | Purpose       | Bank    | Address | Sources                        |
 |---------------|---------|---------|--------------------------------|
 | Loader        | Main    | A$2000  | `loader.s`                     |
-| MGTK/DeskTop  | Aux     | A$4000  | `mgtk.s`, `aux.s`              |
+| MGTK/DeskTop  | Aux     | A$4000  | `mgtk.s`, `auxmem.s`           |
 | DeskTop       | Aux LC1 | A$D000  | `lc.s`,`res.s`                 |
 | DeskTop       | Aux LC1 | A$FB00  | `res.s`                        |
 | DeskTop       | Main    | A$4000  | `main.s`                       |
 | Initializer   | Main    | A$0800  | `init.s`                       |
-| Invoker       | Main    | A$0290  | `invoker.s`                    |
-| Disk Copy 1/4 | Main    | A$0800  | `../disk_copy/bootstrap.s`     |
-| Disk Copy 2/4 | Main    | A$1800  | `../disk_copy/loader.s`        |
-| Disk Copy 3/4 | Aux LC1 | A$D000  | `../disk_copy/auxlc.s`         |
-| Disk Copy 4/4 | Main    | A$0800  | `../disk_copy/main.s`          |
+| Invoker       | Main    | A$0290  | `../lib/invoker.s`             |
 | Format/Erase  | Main    | A$0800  | `ovl_format_erase.s`           |
-| Selector 1/2  | Main    | A$9000  | `ovl_selector_pick.s`          |
+| Pick Shortcut | Main    | A$9000  | `ovl_selector_pick.s`          |
 | File Dialog   | Main    | A$5000  | `ovl_file_dialog.s`            |
 | File Copy     | Main    | A$7000  | `ovl_file_copy.s`              |
 | File Delete   | Main    | A$7000  | `ovl_file_delete.s`            |
-| Selector 2/2  | Main    | A$7000  | `ovl_selector_edit.s`          |
+| Edit Shortcut | Main    | A$7000  | `ovl_selector_edit.s`          |
 
 Lengths/offsets are defined in `internal.inc`.
 
@@ -38,7 +39,10 @@ A monolithic source file `desktop.s` is used to assemble the entire
 target. It includes other source files for each of the various
 segments.
 
-## Structure
+Note that Disk Copy (see `../disk_copy/`) used to be built into the
+DeskTop binary as well, but has been pulled out.
+
+## Segments and Overlays
 
 ### Loader
 
@@ -56,7 +60,7 @@ moving them to the appropriate destination in aux/banked/main memory.
 
 ### Invoker
 
-`invoker.s`
+`../lib/invoker.s`
 
 Loaded at $290-$03EF, this small routine is used to invoke a target,
 e.g. a double-clicked file. System files are loaded/run at $2000,
@@ -77,7 +81,7 @@ run.
 
 The main application includes:
 * `main.s`
-* `aux.s`
+* `auxmem.s`
 * `lc.s`
 * `res.s`
 
@@ -108,7 +112,7 @@ When running, memory use includes:
  * $1F80-$1FFF is a map of used/free icon numbers, as they are reassigned
      as windows are opened and closed.
  * $2000-$3FFF is the hires graphics page.
- * $4000-$BFFF (`aux.s`) includes these:
+ * $4000-$BFFF (`auxmem.s`) includes these:
  * $4000-$85FF is the [MouseGraphics ToolKit](../mgtk/MGTK.md)
  * $8600-$8DFF - Resources, including icons and font
  * $8E00-$A6xx - [Icon ToolKit](APIs.md)
@@ -126,7 +130,7 @@ main code) are relays, buffers and resources:
 
 `res.s` defines these common resources. It is built as part of
 `desktop.s`. Many additional resources needed for MGTK operations
-exist in `aux.s` as well.
+exist in `auxmem.s` as well.
 
 The Aux memory language card bank 2 ($D000-$DFFF) holds `FileRecord`
 entries, 32-byte structures which hold metadata for files in open
@@ -137,36 +141,24 @@ name) but is used for operations such as alternate view types.
 
 `ovl_*.s`
 
-Interactive commands including disk copy/format/erase, file
-copy/delete, and Selector add/edit/delete/run all dynamically load
+Interactive commands including disk format/erase, file
+copy/delete, and Shortcuts add/edit/delete/run all dynamically load
 main memory code overlays. When complete, any original code above
 $4000 is reloaded (unless a full restart is required.)
 
 Several of the overlays also use a common file selector dialog overlay
 `ovl_file_dialog.s` ($5000-$6FFF).
 
-#### Disk Copy Overlay
-
-The Disk Copy command replaces large chunks of memory and is best
-thought of as a separate application. The sources live in `../disk_copy/`.
-
-The first part (`bootstrap.s`, $800-$9FF) loads into main memory the other
-overlays, but in turn it loads a second short ($200-byte) overlay
-(`loader.s`, $1800-$19FF). This then loads a replacement for the
-resources in the aux language card area (`auxlc.s`, Aux LC
-$D000-$F1FF) and another block of code in main memory (`main.s`, Main
-$0800-$12FF). When exiting, the DeskTop is restarted from the
-beginning.
-
 #### Disk Format/Disk Erase
 
 Simple overlay: `ovl_format_erase.s`, loaded into Main A$0800-$1BFF.
+This re-uses much of DeskTop's dialog framework for prompts and progress.
 
-#### Selector - Delete Entry / Run Entry
+#### Shortcuts - Delete Entry / Run Entry
 
 Simple overlay: `ovl_selector_pick.s` ($9000-$9FFF).
 
-#### Selector - Add Entry / Edit Entry
+#### Shortcuts - Add Entry / Edit Entry
 
 Also uses `ovl_selector_pick.s` ($9000-$9FFF) but additionally uses overlay
 `ovl_selector_edit.s` ($7000-$77FF) and the file selector dialog `ovl_file_dialog.s`
@@ -215,8 +207,9 @@ $9000 |      +------+       |             |
       |             |       |             |
 $8E00 |             |       | ITK Entry   |
       |             |       |             |
-$8800 |             |       | Font        |
       |             |       |             |
+      |             |       |             |
+      |             |       | Font        |
 $8600 |             |       +-------------+
       |             |       | MGTK        |
       |             |       |             |

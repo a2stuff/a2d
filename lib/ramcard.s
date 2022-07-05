@@ -8,14 +8,14 @@
 ;;; Assert: Running with ALTZPON and LCBANK1.
 .proc GetCopiedToRAMCardFlag
         sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
-        tax
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
         rts
 .endproc
 
@@ -25,8 +25,8 @@
 .proc CopyRAMCardPrefix
         stax    @addr
         sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         ldx     RAMCARD_PREFIX
 :       lda     RAMCARD_PREFIX,x
@@ -36,8 +36,8 @@
         bpl     :-
 
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 .endproc
 
@@ -47,8 +47,8 @@
 .proc CopyDeskTopOriginalPrefix
         stax    @addr
         sta     ALTZPOFF
-        lda     LCBANK2
-        lda     LCBANK2
+        bit     LCBANK2
+        bit     LCBANK2
 
         ldx     DESKTOP_ORIG_PREFIX
 :       lda     DESKTOP_ORIG_PREFIX,x
@@ -58,7 +58,7 @@
         bpl     :-
 
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 .endproc

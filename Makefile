@@ -1,6 +1,10 @@
-targets := desktop desktop.system desk.acc selector
+# Enable color output in tput, used in Makefiles and scripts.
+# This is theoretically bad, but in practice it's fine.
+export TERM = xterm-256color
 
-.PHONY: all $(targets) mount install installsel package vercheck
+targets := desktop desktop.system desk.acc disk_copy selector
+
+.PHONY: all $(targets) mount install package shk vercheck
 
 all: vercheck $(targets)
 
@@ -18,10 +22,6 @@ mount:
 # Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
 install:
 	bin/install
-
-# Optional target: run install script. Requires Cadius, and INSTALL_IMG and INSTALL_PATH to be set.
-installsel:
-	bin/install selector
 
 # Optional target: run package script. Requires Cadius.
 package:

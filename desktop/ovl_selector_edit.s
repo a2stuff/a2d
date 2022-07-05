@@ -4,69 +4,65 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc selector_overlay
-        .org $7000
+.proc SelectorEditOverlay
+        .org ::kOverlayShortcutEditAddress
 
-.proc init
+        MGTKEntry := MGTKRelayImpl
+
+;;; Called back from file dialog's `Start`
+.proc Init
         stx     which_run_list
         sty     copy_when
-        jsr     file_dialog::open_window
-        jsr     L7101
-        jsr     L70AD
-        jsr     file_dialog::device_on_line
+        copy    #$80, file_dialog::dual_inputs_flag
+        jsr     file_dialog::OpenWindow
+        jsr     DrawControls
+        jsr     InitControlsAndHooks
+        jsr     file_dialog::DeviceOnLine
+
+        ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
         lda     path_buf0
         beq     finish
-        ldy     path_buf0
-:       lda     path_buf0,y
-        sta     file_dialog::path_buf,y
-        dey
-        bpl     :-
 
-        jsr     file_dialog::strip_path_segment
-        ldy     path_buf0
-:       lda     path_buf0,y
-        cmp     #'/'
-        beq     found_slash
-        dey
-        cpy     #$01
-        bne     :-
+        COPY_STRING path_buf0, file_dialog::path_buf
 
-        lda     #$00
-        sta     path_buf0
-        jmp     finish
+        ;; Was it just a volume name, e.g. "/VOL"?
+        jsr     IsVolPath
+    IF_CS
+        ;; No, strip to parent directory
+        jsr     file_dialog::StripPathBufSegment
 
-found_slash:
-        ldx     #$00
-:       iny
+        ;; And populate `buffer` with filename
+        ldx     file_dialog::path_buf
         inx
-        lda     path_buf0,y
-        sta     buffer,x
-        cpy     path_buf0
+        ldy     #0
+:       inx
+        iny
+        lda     path_buf0,x
+        sta     buffer,y
+        cpx     path_buf0
         bne     :-
-        stx     buffer
+        sty     buffer
+    END_IF
 
-finish: jsr     file_dialog::read_dir
+finish: jsr     file_dialog::ReadDir
         lda     #$00
         bcs     :+
-        param_call file_dialog::L6516, buffer
-        sta     selected_index
-        jsr     file_dialog::calc_top_index
-:       jsr     file_dialog::update_scrollbar2
-        jsr     file_dialog::update_disk_name
-        jsr     file_dialog::draw_list_entries
+        param_call file_dialog::FindFilenameIndex, buffer
+        jsr     file_dialog::SetSelectedIndex
+        jsr     file_dialog::CalcTopIndex
+:       jsr     file_dialog::UpdateScrollbarWithIndex
+        jsr     file_dialog::UpdateDiskName
+        jsr     file_dialog::DrawListEntries
         lda     path_buf0
-        bne     :+
-        jsr     file_dialog::jt_prep_path
-:       copy    #1, path_buf2
-        copy    #' ', path_buf2+1
-        jsr     file_dialog::jt_redraw_input
-        jsr     file_dialog::redraw_f2
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
-        lda     #$FF
-        sta     LD8EC
-        jsr     file_dialog::init_device_number
-        jmp     file_dialog::event_loop
+        bne     :+              ; already populated - preserve it!
+        jsr     file_dialog::PrepPath
+:
+        jsr     file_dialog::f2::Activate ; needed to populate second control
+        jsr     file_dialog::f1::Activate ; sets line_edit_res::ip_pos
+        copy    #$FF, line_edit_res::blink_ip_flag
+        copy    #kMaxPathLength, line_edit_res::max_length
+        jsr     file_dialog::InitDeviceNumber
+        jmp     file_dialog::EventLoop
 
 buffer: .res 16, 0
 
@@ -74,149 +70,132 @@ buffer: .res 16, 0
 
 ;;; ============================================================
 
-.proc L70AD
-        ldx     jt_pathname
-:       lda     jt_pathname+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_pathname+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
+.proc InitControlsAndHooks
+        COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
 
         copy    #0, file_dialog::focus_in_input2_flag
-        copy    #$80, file_dialog::dual_inputs_flag
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
-        lda     winfo_file_dialog::window_id
-        jsr     file_dialog::set_port_for_window
+        lda     file_dialog_res::winfo::window_id
+        jsr     file_dialog::SetPortForWindow
         lda     which_run_list
-        jsr     toggle_run_list_button
+        sec
+        jsr     DrawRunListButton
         lda     copy_when
-        jsr     toggle_copy_when_button
+        sec
+        jsr     DrawCopyWhenButton
         copy    #$80, file_dialog::extra_controls_flag
-        copy16  #handle_click, file_dialog::click_handler_hook+1
-        copy16  #handle_key, file_dialog::handle_key::key_meta_digit+1
+        copy16  #HandleClick, file_dialog::click_handler_hook+1
+        copy16  #HandleKey, file_dialog::HandleKeyEvent::key_meta_digit+1
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc L7101
-        lda     winfo_file_dialog::window_id
-        jsr     file_dialog::set_port_for_window
+.proc DrawControls
+        lda     file_dialog_res::winfo::window_id
+        jsr     file_dialog::SetPortForWindow
         lda     path_buf0
         beq     add
-        param_call file_dialog::draw_title_centered, label_edit
+        param_call file_dialog::DrawTitleCentered, label_edit
         jmp     common
 
-add:    param_call file_dialog::draw_title_centered, label_add
-common: MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input1_rect
-        MGTK_RELAY_CALL MGTK::FrameRect, file_dialog_res::input2_rect
-        param_call file_dialog::draw_input1_label, enter_the_full_pathname_label
-        param_call file_dialog::draw_input2_label, enter_the_name_to_appear_label
+add:    param_call file_dialog::DrawTitleCentered, label_add
+common: param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
+        param_call file_dialog::DrawInput2Label, enter_the_name_to_appear_label
 
-        MGTK_RELAY_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
-        param_call file_dialog::draw_string, add_a_new_entry_to_label_str
-        MGTK_RELAY_CALL MGTK::MoveTo, run_list_label_pos
-        param_call file_dialog::draw_string, run_list_label_str
-        MGTK_RELAY_CALL MGTK::MoveTo, other_run_list_label_pos
-        param_call file_dialog::draw_string, other_run_list_label_str
-        MGTK_RELAY_CALL MGTK::MoveTo, down_load_label_pos
-        param_call file_dialog::draw_string, down_load_label_str
-        MGTK_RELAY_CALL MGTK::MoveTo, at_first_boot_label_pos
-        param_call file_dialog::draw_string, at_first_boot_label_str
-        MGTK_RELAY_CALL MGTK::MoveTo, at_first_use_label_pos
-        param_call file_dialog::draw_string, at_first_use_label_str
-        MGTK_RELAY_CALL MGTK::MoveTo, never_label_pos
-        param_call file_dialog::draw_string, never_label_str
+        MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
+        param_call file_dialog::DrawString, add_a_new_entry_to_label_str
 
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_run_list_radiobtn
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_other_run_list_radiobtn
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_boot_radiobtn
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_at_first_use_radiobtn
-        MGTK_RELAY_CALL MGTK::FrameRect, rect_never_radiobtn
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
+        MGTK_CALL MGTK::MoveTo, primary_run_list_label_pos
+        param_call file_dialog::DrawString, primary_run_list_label_str
+        param_call file_dialog::MeasureString, primary_run_list_label_str
+        addax   rect_primary_run_list_ctrl::x2
+
+        MGTK_CALL MGTK::MoveTo, secondary_run_list_label_pos
+        param_call file_dialog::DrawString, secondary_run_list_label_str
+        param_call file_dialog::MeasureString, secondary_run_list_label_str
+        addax   rect_secondary_run_list_ctrl::x2
+
+        MGTK_CALL MGTK::MoveTo, down_load_label_pos
+        param_call file_dialog::DrawString, down_load_label_str
+
+        MGTK_CALL MGTK::MoveTo, at_first_boot_label_pos
+        param_call file_dialog::DrawString, at_first_boot_label_str
+        param_call file_dialog::MeasureString, at_first_boot_label_str
+        addax   rect_at_first_boot_ctrl::x2
+
+        MGTK_CALL MGTK::MoveTo, at_first_use_label_pos
+        param_call file_dialog::DrawString, at_first_use_label_str
+        param_call file_dialog::MeasureString, at_first_use_label_str
+        addax   rect_at_first_use_ctrl::x2
+
+        MGTK_CALL MGTK::MoveTo, never_label_pos
+        param_call file_dialog::DrawString, never_label_str
+        param_call file_dialog::MeasureString, never_label_str
+        addax   rect_never_ctrl::x2
+
+        lda     #1
+        clc
+        jsr     DrawRunListButton
+        lda     #2
+        clc
+        jsr     DrawRunListButton
+        lda     #1
+        clc
+        jsr     DrawCopyWhenButton
+        lda     #2
+        clc
+        jsr     DrawCopyWhenButton
+        lda     #3
+        clc
+        jsr     DrawCopyWhenButton
+
         rts
 .endproc
 
 ;;; ============================================================
 
-        ;; Unused
-        .byte   0
-
 jt_pathname:
-        .byte file_dialog::kJumpTableSize-1
-        jump_table_entry handle_ok_filename
-        jump_table_entry handle_cancel_filename
-        jump_table_entry file_dialog::blink_f1_ip
-        jump_table_entry file_dialog::redraw_f1
-        jump_table_entry file_dialog::strip_f1_path_segment
-        jump_table_entry file_dialog::handle_f1_selection_change
-        jump_table_entry file_dialog::prep_path_buf0
-        jump_table_entry file_dialog::handle_f1_other_key
-        jump_table_entry file_dialog::handle_f1_delete_key
-        jump_table_entry file_dialog::handle_f1_left_key
-        jump_table_entry file_dialog::handle_f1_right_key
-        jump_table_entry file_dialog::handle_f1_meta_left_key
-        jump_table_entry file_dialog::handle_f1_meta_right_key
-        jump_table_entry file_dialog::handle_f1_click
-        .assert * - jt_pathname = file_dialog::kJumpTableSize+1, error, "Table size error"
+        jmp     HandleOkFilename
+        jmp     HandleCancelFilename
+        .assert * - jt_pathname = file_dialog::kJumpTableSize, error, "Table size error"
 
 jt_entry_name:
-        .byte file_dialog::kJumpTableSize-1
-        jump_table_entry handle_ok_name
-        jump_table_entry handle_cancel_name
-        jump_table_entry file_dialog::blink_f2_ip
-        jump_table_entry file_dialog::redraw_f2
-        jump_table_entry file_dialog::strip_f2_path_segment
-        jump_table_entry file_dialog::handle_f2_selection_change
-        jump_table_entry file_dialog::prep_path_buf1
-        jump_table_entry file_dialog::handle_f2_other_key
-        jump_table_entry file_dialog::handle_f2_delete_key
-        jump_table_entry file_dialog::handle_f2_left_key
-        jump_table_entry file_dialog::handle_f2_right_key
-        jump_table_entry file_dialog::handle_f2_meta_left_key
-        jump_table_entry file_dialog::handle_f2_meta_right_key
-        jump_table_entry file_dialog::handle_f2_click
-        .assert * - jt_entry_name = file_dialog::kJumpTableSize+1, error, "Table size error"
+        jmp     HandleOkName
+        jmp     HandleCancelName
+        .assert * - jt_entry_name = file_dialog::kJumpTableSize, error, "Table size error"
 
 ;;; ============================================================
 
-.proc handle_ok_filename
-        jsr     file_dialog::move_ip_to_end_f1
+.proc HandleOkFilename
+        param_call file_dialog::VerifyValidPath, path_buf0
+    IF_NE
+        lda     #ERR_INVALID_PATHNAME
+        jmp     JUMP_TABLE_SHOW_ALERT
+    END_IF
 
-        copy    #1, path_buf2
-        copy    #' ', path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        jsr     file_dialog::Deactivate
 
-        ldx     jt_entry_name
-:       lda     jt_entry_name+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_entry_name+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
+        ;; Install name field handlers
+        COPY_BYTES file_dialog::kJumpTableSize, jt_entry_name, file_dialog::jump_table
 
         lda     #$80
         sta     file_dialog::focus_in_input2_flag
-        sta     file_dialog::L5105
-        lda     LD8F0
-        sta     LD8F1
+        jsr     file_dialog::SetListBoxDisabled
+
+        lda     line_edit_res::input_dirty_flag
+        sta     input1_dirty_flag
         lda     #$00
-        sta     LD8F0
+        sta     line_edit_res::input_dirty_flag
+
+        ;; Already have a name?
         lda     path_buf1
         bne     finish
-        lda     #$00
+
+        ;; Copy path after slash as name
+        lda     #0
         sta     path_buf1
         ldx     path_buf0
-        beq     finish
+        beq     finish          ; empty!
 :       lda     path_buf0,x
         cmp     #'/'
         beq     found_slash
@@ -232,97 +211,87 @@ found_slash:
         sta     path_buf1,y
         cpx     path_buf0
         bne     :-
+        cpy     #kSelectorMaxNameLength+1 ; make sure it's not too long
+        bcc     :+
+        ldy     #kSelectorMaxNameLength
+:       sty     path_buf1
 
-        sty     path_buf1
-finish: copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+finish: copy    #$80, file_dialog_res::allow_all_chars_flag
+        copy    #kSelectorMaxNameLength, line_edit_res::max_length
+        jsr     file_dialog::Activate
         rts
 .endproc
 
 ;;; ============================================================
 ;;; Close window and finish (via saved_stack) if OK
 ;;; Outputs: A = 0 if OK
-;;;          X = which run list (1=run list, 2=other run list)
+;;;          X = which run list (1=primary, 2=secondary)
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
-.proc handle_ok_name
-        param_call file_dialog::L647C, path_buf0
-        bne     invalid
+.proc HandleOkName
         lda     path_buf1
-        beq     fail
-        cmp     #$0F            ; Max selector name length
-        bcs     too_long
-        jmp     ok
+        jeq     Bell            ; empty - give a subtle error
+        jsr     IsVolPath
+        bcs     ok              ; nope
+        lda     copy_when       ; Disallow copying volume to ramcard
+        cmp     #3
+        beq     ok
+        FALL_THROUGH_TO invalid
 
 invalid:
         lda     #ERR_INVALID_PATHNAME
-        jsr     JUMP_TABLE_SHOW_ALERT
-fail:   rts
+        jmp     JUMP_TABLE_SHOW_ALERT
 
-too_long:
-        lda     #kErrNameTooLong
-        jsr     JUMP_TABLE_SHOW_ALERT
-        rts
-
-ok:     MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
-        sta     LD8EC
-        jsr     file_dialog::set_cursor_pointer
-        copy16  #file_dialog::noop, file_dialog::handle_key::key_meta_digit+1
-
-        ldx     file_dialog::stash_stack
+ok:     jsr     file_dialog::CloseWindow
+        copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
+        ldx     file_dialog::saved_stack
         txs
         ldx     which_run_list
         ldy     copy_when
         return  #0
 .endproc
 
+;;; Returns C=0 if `path_buf0` is a volume path, C=1 otherwise
+;;; Assert: Path is valid
+.proc IsVolPath
+        ldy     path_buf0
+:       lda     path_buf0,y
+        cmp     #'/'
+        beq     found
+        dey
+        bne     :-
+
+found:  cpy     #2
+        rts
+.endproc
+
 ;;; ============================================================
 
-.proc handle_cancel_filename
-        MGTK_RELAY_CALL MGTK::InitPort, main_grafport
-        MGTK_RELAY_CALL MGTK::SetPort, main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog_listbox
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_file_dialog
-        lda     #0
-        sta     LD8EC
-        jsr     file_dialog::set_cursor_pointer
-        copy16  #file_dialog::noop, file_dialog::handle_key::key_meta_digit+1
-        ldx     file_dialog::stash_stack
+.proc HandleCancelFilename
+        jsr     file_dialog::CloseWindow
+        copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
+        ldx     file_dialog::saved_stack
         txs
         return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc handle_cancel_name
-        jsr     file_dialog::move_ip_to_end_f2
+.proc HandleCancelName
+        jsr     file_dialog::Deactivate
 
-        copy    #1, path_buf2
-        copy    #' ', path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        ;; install pathname field handlers
+        COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
 
-        ldx     jt_pathname
-:       lda     jt_pathname+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        lda     jt_pathname+1,x
-        sta     file_dialog::jump_table,x
-        dex
-        dex
-        bpl     :-
-
-        copy    #1, path_buf2
-        copy    #kGlyphInsertionPoint, path_buf2+1
-        jsr     file_dialog::jt_redraw_input
+        copy    #0, file_dialog_res::allow_all_chars_flag
+        copy    #kMaxPathLength, line_edit_res::max_length
         lda     #$00
-        sta     file_dialog::L5105
         sta     file_dialog::focus_in_input2_flag
-        lda     LD8F1
-        sta     LD8F0
+        jsr     file_dialog::SetListBoxDisabled
+        lda     input1_dirty_flag
+        sta     line_edit_res::input_dirty_flag
+
+        jsr     file_dialog::Activate
         rts
 .endproc
 
@@ -335,193 +304,182 @@ copy_when:
 
 ;;; ============================================================
 
-.proc handle_click
-        MGTK_RELAY_CALL MGTK::InRect, rect_run_list_ctrl
+.proc HandleClick
+        MGTK_CALL MGTK::InRect, rect_primary_run_list_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     click_run_list_ctrl
-:       MGTK_RELAY_CALL MGTK::InRect, rect_other_run_list_ctrl
+        jeq     ClickPrimaryRunListCtrl
+
+        MGTK_CALL MGTK::InRect, rect_secondary_run_list_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     click_other_run_list_ctrl
-:       MGTK_RELAY_CALL MGTK::InRect, rect_at_first_boot_ctrl
+        jeq     ClickSecondaryRunListCtrl
+
+        MGTK_CALL MGTK::InRect, rect_at_first_boot_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     click_at_first_boot_ctrl
-:       MGTK_RELAY_CALL MGTK::InRect, rect_at_first_use_ctrl
+        jeq     ClickAtFirstBootCtrl
+
+        MGTK_CALL MGTK::InRect, rect_at_first_use_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     click_at_first_use_ctrl
-:       MGTK_RELAY_CALL MGTK::InRect, rect_never_ctrl
+        jeq     ClickAtFirstUseCtrl
+
+        MGTK_CALL MGTK::InRect, rect_never_ctrl
         cmp     #MGTK::inrect_inside
-        bne     :+
-        jmp     click_never_ctrl
-:       return  #0
+        jeq     ClickNeverCtrl
+
+        return  #0
 .endproc
 
-.proc click_run_list_ctrl
+.proc ClickPrimaryRunListCtrl
         lda     which_run_list
         cmp     #1
         beq     :+
-        jsr     toggle_run_list_button
+        clc
+        jsr     DrawRunListButton
         lda     #1
         sta     which_run_list
-        jsr     toggle_run_list_button
+        sec
+        jsr     DrawRunListButton
 :       return  #$FF
 .endproc
 
-.proc click_other_run_list_ctrl
+.proc ClickSecondaryRunListCtrl
         lda     which_run_list
         cmp     #2
         beq     :+
-        jsr     toggle_run_list_button
+        clc
+        jsr     DrawRunListButton
         lda     #2
         sta     which_run_list
-        jsr     toggle_run_list_button
+        sec
+        jsr     DrawRunListButton
 :       return  #$FF
 .endproc
 
-.proc click_at_first_boot_ctrl
+.proc ClickAtFirstBootCtrl
         lda     copy_when
         cmp     #1
         beq     :+
-        jsr     toggle_copy_when_button
+        clc
+        jsr     DrawCopyWhenButton
         lda     #1
         sta     copy_when
-        jsr     toggle_copy_when_button
+        sec
+        jsr     DrawCopyWhenButton
 :       return  #$FF
 .endproc
 
-.proc click_at_first_use_ctrl
+.proc ClickAtFirstUseCtrl
         lda     copy_when
         cmp     #2
         beq     :+
-        jsr     toggle_copy_when_button
+        clc
+        jsr     DrawCopyWhenButton
         lda     #2
         sta     copy_when
-        jsr     toggle_copy_when_button
+        sec
+        jsr     DrawCopyWhenButton
 :       return  #$FF
 .endproc
 
-.proc click_never_ctrl
+.proc ClickNeverCtrl
         lda     copy_when
         cmp     #3
         beq     :+
-        jsr     toggle_copy_when_button
+        clc
+        jsr     DrawCopyWhenButton
         lda     #3
         sta     copy_when
-        jsr     toggle_copy_when_button
+        sec
+        jsr     DrawCopyWhenButton
 :       return  #$FF
 .endproc
 
 ;;; ============================================================
 
-.proc toggle_run_list_button
+.proc DrawRunListButton
+        pha
+    IF_CC
+        copy16  #unchecked_rb_bitmap, rb_params::mapbits
+    ELSE
+        copy16  #checked_rb_bitmap, rb_params::mapbits
+    END_IF
+
+        pla
         cmp     #1
-        bne     :+
-        param_call draw_inset_rect, rect_run_list_radiobtn
-        rts
+    IF_EQ
+        ldax    #rect_primary_run_list_ctrl
+    ELSE
+        ldax    #rect_secondary_run_list_ctrl
+    END_IF
 
-:       param_call draw_inset_rect, rect_other_run_list_radiobtn
-        rts
-.endproc
-
-.proc toggle_copy_when_button
-        cmp     #1
-        bne     :+
-        param_call draw_inset_rect, rect_at_first_boot_radiobtn
-        rts
-
-:       cmp     #2
-        bne     :+
-        param_call draw_inset_rect, rect_at_first_use_radiobtn
-        rts
-
-:       param_call draw_inset_rect, rect_never_radiobtn
-        rts
-.endproc
-
-;;; ============================================================
-;;; Draw rect inset by 2px. Pointer to Rect in A,X.
-
-.proc draw_inset_rect
         ptr := $06
-
-        ;; Copy to scratch rect
+draw:
         stax    ptr
-        ldy     #.sizeof(MGTK::Rect)-1
+        ldy     #.sizeof(MGTK::Point)-1
 :       lda     (ptr),y
-        sta     rect_scratch,y
+        sta     rb_params::viewloc,y
         dey
         bpl     :-
 
-        lda     rect_scratch::x1
-        clc
-        adc     #2
-        sta     rect_scratch::x1
-        bcc     :+
-        inc     rect_scratch::x1+1
-
-:       lda     rect_scratch::y1
-        clc
-        adc     #2
-        sta     rect_scratch::y1
-        bcc     :+
-        inc     rect_scratch::y1+1
-
-:       lda     rect_scratch::x2
-        sec
-        sbc     #2
-        sta     rect_scratch::x2
-        bcs     :+
-        dec     rect_scratch::x2+1
-
-:       lda     rect_scratch::y2
-        sec
-        sbc     #2
-        sta     rect_scratch::y2
-        bcs     :+
-        dec     rect_scratch::y2+1
-
-:       MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, rect_scratch
+        jsr     file_dialog::SetPortForDialog
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::PaintBits, rb_params
+        MGTK_CALL MGTK::ShowCursor
         rts
+.endproc
+
+.proc DrawCopyWhenButton
+        pha
+    IF_CC
+        copy16  #unchecked_rb_bitmap, rb_params::mapbits
+    ELSE
+        copy16  #checked_rb_bitmap, rb_params::mapbits
+    END_IF
+
+        pla
+        cmp     #1
+        bne     :+
+        ldax    #rect_at_first_boot_ctrl
+        bne     DrawRunListButton::draw ; always
+
+:       cmp     #2
+        bne     :+
+        ldax    #rect_at_first_use_ctrl
+        bne     DrawRunListButton::draw ; always
+
+:       ldax    #rect_never_ctrl
+        bne     DrawRunListButton::draw ; always
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
-        lda     winfo_file_dialog::window_id
-        jsr     file_dialog::set_port_for_window
-        lda     event_modifiers
+.proc HandleKey
+        lda     file_dialog_res::winfo::window_id
+        jsr     file_dialog::SetPortForWindow
+        lda     event_params::modifiers
         bne     :+
         rts
 
-:       lda     event_key
+:       lda     event_params::key
         cmp     #'1'
-        bne     :+
-        jmp     click_run_list_ctrl
+        jeq     ClickPrimaryRunListCtrl
 
-:       cmp     #'2'
-        bne     :+
-        jmp     click_other_run_list_ctrl
+        cmp     #'2'
+        jeq     ClickSecondaryRunListCtrl
 
-:       cmp     #'3'
-        bne     :+
-        jmp     click_at_first_boot_ctrl
+        cmp     #'3'
+        jeq     ClickAtFirstBootCtrl
 
-:       cmp     #'4'
-        bne     :+
-        jmp     click_at_first_use_ctrl
+        cmp     #'4'
+        jeq     ClickAtFirstUseCtrl
 
-:       cmp     #'5'
-        bne     :+
-        jmp     click_never_ctrl
+        cmp     #'5'
+        jeq     ClickNeverCtrl
 
-:       rts
+        rts
 .endproc
 
 ;;; ============================================================
 
-        PAD_TO $7800
-.endproc ; selector_overlay
+        PAD_TO ::kOverlayShortcutEditAddress + ::kOverlayShortcutEditLength
+.endproc ; SelectorOverlay

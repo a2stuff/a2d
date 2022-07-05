@@ -14,6 +14,8 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 
         .org DA_LOAD_ADDRESS
@@ -33,7 +35,7 @@ da_start:
         ;; run the DA
         sta     RAMRDON         ; Run from Aux
         sta     RAMWRTON
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
         sta     RAMRDOFF        ; Back to Main
@@ -80,7 +82,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -92,10 +94,10 @@ nextwinfo:      .addr   0
 
 .params event_params
 kind:  .byte   0
-;;; event_kind_key_down
+;;; EventKind::key_down
 key             := *
 modifiers       := * + 1
-;;; event_kind_update
+;;; EventKind::update
 window_id       := *
 ;;; otherwise
 xcoord          := *
@@ -121,7 +123,7 @@ dragy:          .word   0
 moved:          .byte   0
 .endparams
 
-.params winport_params
+.params getwinport_params
 window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
@@ -135,21 +137,7 @@ window_id:      .byte   kDAWindowId
         mx := screentowindow_params::window::xcoord
         my := screentowindow_params::window::ycoord
 
-.params grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .word   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   0
-textback:       .byte   0
-textfont:       .addr   0
-.endparams
+grafport:       .tag    MGTK::GrafPort
 
 
 ;;; ============================================================
@@ -163,7 +151,7 @@ kRadioButtonHeight      = 7
 mapbits:        .addr   checked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 checked_rb_bitmap:
@@ -181,7 +169,7 @@ checked_rb_bitmap:
 mapbits:        .addr   unchecked_rb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
 .endparams
 
 unchecked_rb_bitmap:
@@ -205,8 +193,8 @@ kJoystickDisplayY = kJoystickCalibrationY - 2
 kJoystickDisplayW = 128
 kJoystickDisplayH = 64
 
-        DEFINE_RECT_SZ joy_disp_frame_rect, kJoystickDisplayX    , kJoystickDisplayY    , kJoystickDisplayW + 7 + 1, kJoystickDisplayH + 4 + 1
-        DEFINE_RECT_SZ joy_disp_rect, kJoystickDisplayX + 1, kJoystickDisplayY + 1, kJoystickDisplayW + 7 - 1, kJoystickDisplayH + 4 - 1
+        DEFINE_RECT_SZ joy_disp_frame_rect, kJoystickDisplayX    , kJoystickDisplayY    , kJoystickDisplayW + 8, kJoystickDisplayH + 5
+        DEFINE_RECT_SZ joy_disp_rect,       kJoystickDisplayX + 1, kJoystickDisplayY + 1, kJoystickDisplayW + 6, kJoystickDisplayH + 3
 
         DEFINE_POINT joy_btn0, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10
         DEFINE_POINT joy_btn1, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30
@@ -225,7 +213,7 @@ joy_btn2_label:   PASCAL_STRING res_string_label_joy_btn2 ; dialog label
 mapbits:        .addr   joy_marker_bitmap
 mapwidth:       .byte   2
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 7, 4
+        DEFINE_RECT maprect, 0, 0, 7, 4
 .endparams
 
 joy_marker_bitmap:
@@ -241,7 +229,7 @@ joy_marker_bitmap:
 mapbits:        .addr   joystick_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 35, 18
+        DEFINE_RECT maprect, 0, 0, 35, 18
 .endparams
 
 joystick_bitmap:
@@ -265,31 +253,62 @@ joystick_bitmap:
         .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000)
 
+        ;; Initialized to $80 if a IIgs, $00 otherwise
+is_iigs_flag:
+        .byte   0
+
+        ;; Initialized to $80 if a Mac IIe Card, $00 otherwise
+is_iiecard_flag:
+        .byte   0
+
 ;;; ============================================================
 
-.proc init
+.proc Init
+        ;; --------------------------------------------------
+        ;; Probe some ROM locations.
+        bit     ROMIN2
+
+        ;; Detect IIgs, save for later
+        sec
+        jsr     IDROUTINE
+        bcs     :+
+        copy    #$80, is_iigs_flag
+:
+        ;; Detect IIe Card, save for later
+        lda     ZIDBYTE
+        cmp     #$E0            ; Is Enhanced IIe?
+        bne     :+
+        lda     IDBYTEMACIIE
+        cmp     #$02            ; IIe Card signature
+        bne     :+
+        copy    #$80, is_iiecard_flag
+:
+        bit     LCBANK1
+        bit     LCBANK1
+
+        ;; --------------------------------------------------
+
         MGTK_CALL MGTK::OpenWindow, winfo
-        jsr     draw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
-        ;; fall through
+        FALL_THROUGH_TO InputLoop
 .endproc
 
-.proc input_loop
-        jsr     yield_loop
+.proc InputLoop
+        jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
-        bne     exit
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        beq     handle_down
+        beq     HandleDown
         cmp     #MGTK::EventKind::key_down
-        beq     handle_key
+        beq     HandleKey
 
-        jsr     do_joystick
+        jsr     DoJoystick
 
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
-.proc yield_loop
+.proc YieldLoop
         sta     RAMRDOFF
         sta     RAMWRTOFF
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -298,52 +317,61 @@ joystick_bitmap:
         rts
 .endproc
 
-.proc exit
+.proc ClearUpdates
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        jsr     JUMP_TABLE_CLEAR_UPDATES
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+.proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
+        jsr     ClearUpdates
         rts
 .endproc
 
 ;;; ============================================================
 
-.proc handle_key
+.proc HandleKey
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     exit
-        bne     input_loop
+        beq     Exit
+        bne     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_down
+.proc HandleDown
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        bne     exit
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     input_loop
+        bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
-        beq     handle_close
+        beq     HandleClose
         cmp     #MGTK::Area::dragbar
-        beq     handle_drag
+        beq     HandleDrag
         cmp     #MGTK::Area::content
-        beq     handle_click
-        jmp     input_loop
+        beq     HandleClick
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_close
+.proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     exit
-        jmp     input_loop
+        bne     Exit
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
-.proc handle_drag
+.proc HandleDrag
         copy    winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
@@ -352,25 +380,21 @@ common: bit     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES_REDRAW_ICONS
-        sta     RAMRDON
-        sta     RAMWRTON
+        jsr     ClearUpdates
 
         ;; Draw DA's window
-        jsr     draw_window
+        jsr     DrawWindow
 
-:       jmp     input_loop
+:       jmp     InputLoop
 
 .endproc
 
 
 ;;; ============================================================
 
-.proc handle_click
+.proc HandleClick
         ;; no-op
-        jmp     input_loop
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================
@@ -383,9 +407,9 @@ notpencopy:     .byte   MGTK::notpencopy
 
 ;;; ============================================================
 
-.proc draw_window
+.proc DrawWindow
         ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         IF_EQ
         rts
@@ -420,7 +444,7 @@ done:   MGTK_CALL MGTK::ShowCursor
 
 
 ;;; A,X = pos ptr, Z = checked
-.proc draw_radio_button
+.proc DrawRadioButton
         ptr := $06
 
         stax    ptr
@@ -461,9 +485,9 @@ checked:
         butn2   .byte
 .endstruct
 
-.proc do_joystick
+.proc DoJoystick
 
-        jsr     read_paddles
+        jsr     ReadPaddles
 
         ;; TODO: Visualize all 4 paddles.
 
@@ -516,7 +540,7 @@ changed:
         add16   joy_y, #kJoystickDisplayY + 1, joy_y
 
         ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, winport_params
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         IF_EQ
         rts
@@ -535,17 +559,17 @@ changed:
         ldax    #joy_btn0
         ldy     curr+InputState::butn0
         cpy     #$80
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         ldax    #joy_btn1
         ldy     curr+InputState::butn1
         cpy     #$80
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         ldax    #joy_btn2
         ldy     curr+InputState::butn2
         cpy     #$80
-        jsr     draw_radio_button
+        jsr     DrawRadioButton
 
         MGTK_CALL MGTK::ShowCursor
 done:   rts
@@ -568,17 +592,50 @@ pdl1:   .byte   0
 pdl2:   .byte   0
 pdl3:   .byte   0
 
-.proc read_paddles
+.proc ReadPaddles
+        ;; Slow down on IIgs
+        bit     is_iigs_flag
+        bpl     :+
+        lda     CYAREG
+        pha
+        and     #%01111111      ; clear bit 7
+        sta     CYAREG
+:
+        ;; Slow down on IIe Card.
+        ;; Per Technical Note: Apple IIe #10: The Apple IIe Card for the Macintosh LC
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.10.html
+
+        bit     is_iiecard_flag
+        bpl     :+
+        lda     MACIIE
+        pha
+        and     #%11111011      ; clear bit 2
+        sta     MACIIE
+:
+
+        ;; Read all paddles
         ldx     #kNumPaddles - 1
-:       jsr     pread
+:       jsr     PRead
         tya
         sta     pdl0,x
         dex
         bpl     :-
 
+        ;; Restore speed on IIgs
+        bit     is_iigs_flag
+        bpl     :+
+        pla
+        sta     CYAREG
+:
+        ;; Restore speed on IIe Card
+        bit     is_iiecard_flag
+        bpl     :+
+        pla
+        sta     MACIIE
+:
         rts
 
-.proc pread
+.proc PRead
         ;; Let any previous timer reset (but don't wait forever)
         ldy     #0
 :       dey
@@ -614,8 +671,8 @@ done:   rts
 ;;; ============================================================
 
 da_end  := *
-.assert * < WINDOW_ICON_TABLES, error, "DA too big"
+.assert * < WINDOW_ENTRY_TABLES, error, "DA too big"
         ;; I/O Buffer starts at MAIN $1C00
-        ;; ... but icon tables start at AUX $1B00
+        ;; ... but entry tables start at AUX $1B00
 
 ;;; ============================================================

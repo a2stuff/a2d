@@ -13,16 +13,18 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
+        MGTKEntry := MGTKAuxEntry
+
 ;;; ============================================================
 
         .org DA_LOAD_ADDRESS
 
 da_start:
-        jmp     start
+        jmp     Start
 
 save_stack:.byte   0
 
-.proc start
+.proc Start
         tsx
         stx     save_stack
 
@@ -38,7 +40,7 @@ save_stack:.byte   0
         sta     RAMRDON
 
         ;; run the DA
-        jsr     init
+        jsr     Init
 
         ;; tear down/exit
         sta     RAMRDOFF
@@ -63,15 +65,15 @@ penxor:         .byte   MGTK::penXOR
 ;;; ============================================================
 ;;; DA Init
 
-.proc init
-        jsr     invert
+.proc Init
+        jsr     Invert
         MGTK_CALL MGTK::FlushEvents
 .endproc
 
 ;;; ============================================================
 ;;; Main Input Loop
 
-.proc input_loop
+.proc InputLoop
 loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
@@ -80,14 +82,14 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         beq     exit
         jmp     loop
 
-exit:   jsr     invert
+exit:   jsr     Invert
         rts
 .endproc
 
 ;;; ============================================================
 ;;; Invert
 
-.proc invert
+.proc Invert
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport

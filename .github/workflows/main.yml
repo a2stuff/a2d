@@ -20,20 +20,23 @@ jobs:
       - uses: a2stuff/build-install-ca65-action@v1
       - uses: a2stuff/build-install-cadius-action@v1
 
-      - name: build a2d
-        env:
-          TERM: xterm-256color
-        run: >
-          bin/setlang en && make && make package &&
-          bin/setlang fr && make && make package &&
-          bin/setlang it && make && make package &&
-          bin/setlang es && make && make package &&
-          bin/setlang de && make && make package
+      - name: build a2d - en
+        run: bin/setlang en && make && make package
+      - name: build a2d - fr
+        run: bin/setlang fr && make && make package
+      - name: build a2d - it
+        run: bin/setlang it && make && make package
+      - name: build a2d - es
+        run: bin/setlang es && make && make package
+      - name: build a2d - pt
+        run: bin/setlang pt && make && make package
+      - name: build a2d - de
+        run: bin/setlang de && make && make package
 
       - name: deploy new version
         if: startsWith(github.ref, 'refs/tags/')
         uses: ncipollo/release-action@v1.8.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: "out/*.2mg,out/*.po,res/README.txt"
+          artifacts: "out/*.zip,res/README.txt"
           prerelease: true

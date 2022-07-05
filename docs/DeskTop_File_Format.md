@@ -2,23 +2,22 @@
 
 DeskTop writes out this file on exit, and reads it back in on load.
 
-The file length is always 587 bytes, although the end of the file
+The file length is always 586 bytes, although the end of the file
 may be padding/garbage.
 
 ## Header
 
-Header is two bytes.
+Header is one byte.
 
-+000: VersionMajor (byte)
-+001: VersionMinor (byte)
++000: FileVersion (byte)
 
-   These are compared against the DeskTop version format on load. If
+   This is compared against `kDeskTopFileVersion` on load. If
    different, the file is ignored. (This is used to handle version
    skew.)
 
 ## Windows
 
-Offset +002. There are a variable number of entries (0-8). Windows are
+Offset +001. There are a variable number of entries (0-8). Windows are
 listed bottom-most to top-most for ease of opening.
 
 Each window entry has this structure:
@@ -26,7 +25,8 @@ Each window entry has this structure:
 +000: PathLength (byte)
 +001: PathName (64 bytes)
 
-   This is the ProDOS path of the window.
+   This is the ProDOS path of the window. The path length is always
+   greater than zero.
 
 +065: Bounds (8 bytes)
 
@@ -34,4 +34,4 @@ Each window entry has this structure:
 
 ## Sentinel
 
-The final window entry is followed by a sentinel byte (0).
+The final window entry is followed by a sentinel byte ($00).

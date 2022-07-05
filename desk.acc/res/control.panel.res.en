@@ -7,6 +7,3 @@
 .define res_string_label_fast "Fast"
 .define res_string_label_ipblink1 "Rate of Insertion"
 .define res_string_label_ipblink2 "Point Blinking"
-.define res_string_label_clock "Clock"
-.define res_string_label_clock_12hour "12hr"
-.define res_string_label_clock_24hour "24hr"

@@ -11,7 +11,7 @@
 .proc Save
         copy16  #SAVE_AREA_BUFFER, addr
         lda     save_y1
-        jsr     set_ptr_for_row
+        jsr     SetPtrForRow
         lda     save_y2
         sec
         sbc     save_y1
@@ -40,7 +40,7 @@ col:    lda     xbyte
         bne     col
 
         ;; next row
-:       jsr     next_ptr_for_row
+:       jsr     NextPtrForRow
         dex
         bne     loop
 
@@ -53,7 +53,7 @@ col:    lda     xbyte
 .proc Restore
         copy16  #SAVE_AREA_BUFFER, addr
         lda     save_y1
-        jsr     set_ptr_for_row
+        jsr     SetPtrForRow
         lda     save_y2
         sec
         sbc     save_y1
@@ -82,7 +82,7 @@ col:    lda     xbyte
         inc     xbyte
         bne     col             ; always
 
-:       jsr     next_ptr_for_row
+:       jsr     NextPtrForRow
         dex
         bne     loop
         rts
@@ -94,25 +94,25 @@ col:    lda     xbyte
 ;;; Input: A=row (0...191)
 ;;; Output: $06 set to base address of row
 
-.proc set_ptr_for_row
+.proc SetPtrForRow
         sta     row_tmp
-        jmp     compute_hbasl
+        jmp     ComputeHBASL
 .endproc
 
 ;;; ============================================================
 ;;; Increment ptr ($06) to next row
 ;;; Output: $06 set to base address of row
 
-.proc next_ptr_for_row
+.proc NextPtrForRow
         inc     row_tmp
         lda     row_tmp
-        jmp     compute_hbasl
+        bne     ComputeHBASL    ; always
 .endproc
 
 ;;; ============================================================
 ;;; Input: A = row
 ;;; Output: $06 points at first byte of row
-.proc compute_hbasl
+.proc ComputeHBASL
         hbasl := $06
 
         pha

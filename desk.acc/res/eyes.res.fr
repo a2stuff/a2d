@@ -1,1 +1,1 @@
-.define res_string_window_title "Eyes"
+.define res_string_window_title "Yeux"

@@ -1,4 +1,4 @@
-HEADERS = $(wildcard ../*.inc) $(wildcard ../*/*.inc) $(wildcard ../lib/*.s) $(wildcard *.inc) $(wildcard res/*.res.??) $(wildcard ../common/res/*.res.??)
+HEADERS = $(wildcard ../*.inc) $(wildcard ../*/*.inc) $(wildcard ../lib/*.s) $(wildcard *.inc) $(wildcard res/*.res.??) $(wildcard ../common/res/*.res.??) $(wildcard ../mgtk/fonts/*)
 
 include ../res/Makefile.common
 

@@ -3,10 +3,11 @@
 ;;; Inputs: A = unit_number
 
 .proc FormatDiskII
+        .assert .lobyte(*) = 0, error, "Must be page aligned"
 
 .macro exit_with_result arg
         lda     #arg
-        jmp     exit
+        jmp     Exit
 .endmacro
 
         php
@@ -43,7 +44,7 @@ L0823:  asl     a
         lsr     a
         tay
         lda     seltrack_track
-        jsr     select_track
+        jsr     SelectTrack
         lsr     current_track
         rts
 
@@ -86,7 +87,7 @@ L0882:  lda     $D1
         ldx     L0C23
         jsr     L0823
         ldx     L0C23
-        lda     TESTWP,x        ; Check write protect???
+        lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
         tay
         lda     RDMODE,x        ; Activate read mode
@@ -102,7 +103,7 @@ L0882:  lda     $D1
         cpy     L0C1F
         bcs     L08B2
         lda     #4
-L08B2:  jmp     exit
+L08B2:  jmp     Exit
 
 L08B5:  ldy     $D4
         cpy     L0C1F
@@ -133,9 +134,9 @@ L08DB:  ldx     L0C23
         bcc     L0882
 
         lda     #0
-        ;; fall through
+        FALL_THROUGH_TO Exit
 
-.proc exit
+.proc Exit
         pha
         ldx     L0C23
         lda     DISABLE,x       ; Turn drive off
@@ -260,7 +261,7 @@ return_with_carry_clear:
 ;;; ============================================================
 ;;; Move head to track - A = track, X = slot * 16
 
-.proc select_track
+.proc SelectTrack
         stx     seltrack_slot
         sta     seltrack_track
         cmp     current_track
@@ -311,9 +312,9 @@ done:   rts
 
 ;;; ============================================================
 
-.proc format_sector
+.proc FormatSector
         jsr     rts2
-        lda     TESTWP,x        ; Check write protect ???
+        lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
 
         lda     #$FF            ; Self-sync data
@@ -326,17 +327,17 @@ done:   rts
 
 sync:   pha
         pla
-        jsr     write2
+        jsr     Write2
         dey
         bne     sync
 
         ;; Address marks
         lda     #$D5
-        jsr     write
+        jsr     Write
         lda     #$AA
-        jsr     write
+        jsr     Write
         lda     #$AD
-        jsr     write
+        jsr     Write
         ldy     #$56
         nop
         nop
@@ -366,22 +367,22 @@ check:  jsr     rts2
         bne     check
 
         ;; Slip marks
-        jsr     write
+        jsr     Write
         lda     #$DE
-        jsr     write
+        jsr     Write
         lda     #$AA
-        jsr     write
+        jsr     Write
         lda     #$EB
-        jsr     write
+        jsr     Write
         lda     #$FF
-        jsr     write
+        jsr     Write
         lda     RDMODE,x        ; Turn off write mode
         lda     XMIT,x
         rts
 
         ;; Write with appropriate cycle counts
-write:  nop
-write2: pha
+Write:  nop
+Write2: pha
         pla
         sta     DATA,x
         cmp     XMIT,x
@@ -495,7 +496,7 @@ L0B73:  ldx     L0C23
         jmp     rts2
 
 L0B7E:  ldx     L0C23
-        jsr     format_sector
+        jsr     FormatSector
         inc     $D2
         lda     $D2
         cmp     #$10

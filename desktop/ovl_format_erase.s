@@ -4,399 +4,462 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc format_erase_overlay
-        .org $800
+.scope format_erase_overlay
+        .org ::kOverlayFormatEraseAddress
 
-        MLIRelayImpl := main::MLIRelayImpl
+        MLIEntry := main::MLIRelayImpl
+        MGTKEntry := MGTKRelayImpl
 
         block_buffer := $1A00
+        read_buffer := $1C00
 
         ovl_string_buf := path_buf0
 
-exec:
+        kDefaultFloppyBlocks = 280
 
-L0800:  pha
-        jsr     main::set_cursor_pointer
+        kMaxVolumesInPicker = 12 ; 3 cols * 4 rows
+
+;;; ============================================================
+
+        ;; This must be page-aligned.
+        .include "../lib/formatdiskii.s"
+
+;;; ============================================================
+
+Exec:
+        pha
+        jsr     main::SetCursorPointer
         pla
         cmp     #$04
-        beq     L080C
-        jmp     L09D9
+        jeq     FormatDisk
+        jmp     EraseDisk
+
+;;; ============================================================
+
+;;; The selected index (0-based), or $FF if no drive is selected
+selected_device_index:
+        .byte   0
+
+;;; Number of volumes; min(DEVCNT+1, kMaxVolumesInPicker)
+num_volumes:
+        .byte   0
+
+;;; ============================================================
+;;; Show the device prompt, name prompt, and confirmation.
+;;; Input: A=operation flag, high bit set=erase, clear=format
+;;; Output: C=0, A=unit_num on success, C=1 if canceled.
+
+.proc PromptForDeviceAndName
+        sta     erase_flag
+
+        ;; --------------------------------------------------
+        ;; Prompt for device
+.scope
+        copy    #$00, has_input_field_flag
+        jsr     main::OpenPromptWindow
+        jsr     main::SetPortForDialogWindow
+        bit     erase_flag
+    IF_NC
+        param_call main::DrawDialogTitle, aux::label_format_disk
+        param_call main::DrawDialogLabel, 1, aux::str_select_format
+    ELSE
+        param_call main::DrawDialogTitle, aux::label_erase_disk
+        param_call main::DrawDialogLabel, 1, aux::str_select_erase
+    END_IF
+
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::MoveTo, vol_picker_line1_start
+        MGTK_CALL MGTK::LineTo, vol_picker_line1_end
+        MGTK_CALL MGTK::MoveTo, vol_picker_line2_start
+        MGTK_CALL MGTK::LineTo, vol_picker_line2_end
+
+        jsr     DrawVolumeLabels
+        copy    #$FF, selected_device_index
+        copy16  #HandleClick, main::jump_relay+1
+        copy    #$80, format_erase_overlay_flag
+
+loop1:
+        jsr     main::PromptInputLoop
+        bmi     loop1           ; not done
+        beq     :+              ; ok
+        jmp     cancel          ; cancel
+:
+        bit     selected_device_index
+        bmi     loop1
+
+        jsr     GetSelectedUnitNum
+        sta     unit_num
+.endscope
+
+        ;; --------------------------------------------------
+        ;; Prompt for name
+.scope
+        copy16  #main::NoOp, main::jump_relay+1
+
+        jsr     main::SetPortForDialogWindow
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, name_input_rect
+        jsr     main::ClearPathBuf1
+        copy    #$80, has_input_field_flag
+        copy    #$00, format_erase_overlay_flag
+        jsr     main::InitNameInput
+        jsr     main::SetPortForDialogWindow
+        param_call main::DrawDialogLabel, 3, aux::str_new_volume
+
+loop2:
+        jsr     main::PromptInputLoop
+        bmi     loop2           ; not done
+        beq     ok2             ; ok
+        jmp     cancel          ; cancel
+
+err2:   jsr     Bell
+        jmp     loop2
+
+ok2:    lda     path_buf1
+        beq     err2            ; name is empty
+        cmp     #kMaxFilenameLength+1
+        bcs     err2            ; name > 15 characters
+        jsr     main::SetCursorPointerWithFlag
+
+        ;; Check for conflicting name
+        ldxy    #path_buf1
+        lda     unit_num
+        jsr     CheckConflictingVolumeName
+        bcc     :+
+        lda     #ERR_DUPLICATE_FILENAME
+        jsr     JUMP_TABLE_SHOW_ALERT
+        jmp     loop2
+:
+.endscope
+
+        ;; --------------------------------------------------
+        ;; Confirm operation
+.scope
+        jsr     main::SetPortForDialogWindow
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+
+        copy    #0, has_input_field_flag
+        bit     erase_flag
+    IF_NC
+        param_call main::DrawDialogLabel, 3, aux::str_confirm_format_prefix
+    ELSE
+        param_call main::DrawDialogLabel, 3, aux::str_confirm_erase_prefix
+    END_IF
+        lda     unit_num
+        jsr     GetVolName
+        param_call main::DrawString, ovl_string_buf
+        bit     erase_flag
+    IF_NC
+        param_call main::DrawString, aux::str_confirm_format_suffix
+    ELSE
+        param_call main::DrawString, aux::str_confirm_erase_suffix
+    END_IF
+:       jsr     main::PromptInputLoop
+        bmi     :-              ; not done
+        beq     :+              ; ok
+        jmp     cancel          ; cancel
+:
+.endscope
+
+        ;; Confirmed!
+        unit_num := *+1
+        lda     #SELF_MODIFIED_BYTE
+        clc
+        rts
+
+cancel:
+        sec
+        rts
+
+;;; High bit set if erase, otherwise format.
+erase_flag:
+        .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Format Disk
 
-L080C:  copy    #$00, has_input_field_flag
-        jsr     main::open_prompt_window
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
-        param_call main::draw_dialog_title, aux::label_format_disk
-        param_call main::draw_dialog_label, 1, aux::str_select_format
-        jsr     draw_volume_labels
-        copy    #$FF, selected_device_index
-L0832:  copy16  #L0B48, main::jump_relay+1
-        copy    #$80, format_erase_overlay_flag
-L0841:  jsr     main::prompt_input_loop
-        bmi     L0841
-        pha
-        copy16  #main::noop, main::jump_relay+1
+.proc FormatDisk
         lda     #$00
-        sta     LD8F3
-        sta     format_erase_overlay_flag
-        pla
-        beq     L085F
-        jmp     L09C2
+        jsr     PromptForDeviceAndName
+        jcs     cancel
+        sta     d2
+        sta     unit_num
 
-L085F:  bit     selected_device_index
-        bmi     L0832
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     main::clear_path_buf1
-        copy    #$80, has_input_field_flag
-        copy    #$00, format_erase_overlay_flag
-        jsr     main::clear_path_buf2
-        param_call main::draw_dialog_label, 3, aux::str_new_volume
-L08A7:  jsr     main::prompt_input_loop
-        bmi     L08A7
-        beq     L08B7
-        jmp     L09C2
+        ;; --------------------------------------------------
+        ;; Proceed with format
+l8:
+        jsr     main::SetPortForDialogWindow
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        param_call main::DrawDialogLabel, 1, aux::str_formatting
 
-L08B1:  jsr     Bell
-        jmp     L08A7
-
-L08B7:  lda     path_buf1
-        beq     L08B1
-        cmp     #$10
-        bcs     L08B1
-        jsr     main::set_cursor_pointer
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-
-        ;; Reverse order, so boot volume is first
-        lda     DEVCNT
-        sec
-        sbc     selected_device_index
-        tax
-        lda     DEVLST,x
-
-        sta     L09D8
-        sta     L09D7
-        lda     #$00
-        sta     has_input_field_flag
-        param_call main::draw_dialog_label, 3, aux::str_confirm_format
-        lda     L09D7
-        jsr     L1A2D
-        param_call main::DrawString, ovl_string_buf
-L0902:  jsr     main::prompt_input_loop
-        bmi     L0902
-        beq     L090C
-        jmp     L09C2
-
-L090C:  lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        param_call main::draw_dialog_label, 1, aux::str_formatting
-        lda     L09D7
-        jsr     L12C1
+        unit_num := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     CheckSupportsFormat
         and     #$FF
-        bne     L0942
-        jsr     main::set_cursor_watch
-        lda     L09D7
-        jsr     L126F
-        bcs     L099B
-L0942:  lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        param_call main::draw_dialog_label, 1, aux::str_erasing
-        param_call upcase_string, path_buf1
+        bne     l9
+        jsr     main::SetCursorWatch
+        lda     unit_num
+        jsr     FormatUnit
+        bcs     l12
+l9:     jsr     main::SetPortForDialogWindow
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        param_call main::DrawDialogLabel, 1, aux::str_erasing
+        param_call UpcaseString, path_buf1
+
         ldxy    #path_buf1
-        lda     L09D7
-        jsr     L1307
+        lda     unit_num
+        jsr     WriteHeaderBlocks
         pha
-        jsr     main::set_cursor_pointer
+        jsr     main::SetCursorPointer
         pla
-        bne     L0980
+        bne     l10
         lda     #$00
-        jmp     L09C2
+        jmp     cancel
 
-L0980:  cmp     #ERR_WRITE_PROTECTED
-        bne     L098C
+l10:    cmp     #ERR_WRITE_PROTECTED
+        bne     l11
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     L09C2
-        jmp     L090C
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        bne     cancel          ; `kAlertResultCancel` = 1
+        jmp     l8              ; `kAlertResultTryAgain` = 0
 
-L098C:  jsr     Bell
-        param_call main::draw_dialog_label, 6, aux::str_erasing_error
-        jmp     L09B8
+l11:    jsr     Bell
+        param_call main::DrawDialogLabel, 6, aux::str_erasing_error
+        jmp     l14
 
-L099B:  pha
-        jsr     main::set_cursor_pointer
+l12:    pha
+        jsr     main::SetCursorPointer
         pla
         cmp     #ERR_WRITE_PROTECTED
-        bne     L09AC
+        bne     l13
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     L09C2
-        jmp     L090C
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        bne     cancel          ; `kAlertResultCancel` = 1
+        jmp     l8              ; `kAlertResultTryAgain` = 0
 
-L09AC:  jsr     Bell
-        param_call main::draw_dialog_label, 6, aux::str_formatting_error
-L09B8:  jsr     main::prompt_input_loop
-        bmi     L09B8
-        bne     L09C2
-        jmp     L090C
+l13:    jsr     Bell
+        param_call main::DrawDialogLabel, 6, aux::str_formatting_error
+l14:    jsr     main::PromptInputLoop
+        bmi     l14             ; not done
+        bne     cancel          ; ok
+        jmp     l8              ; cancel
 
-L09C2:  pha
-        jsr     main::set_cursor_pointer
-        jsr     main::reset_main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        ldx     L09D8
+cancel:
+        pha
+        jsr     main::SetCursorPointer
+        MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
+
+        d2 := *+1               ; ???
+        ldx     #SELF_MODIFIED_BYTE
         pla
         rts
-
-L09D7:  .byte   0
-L09D8:  .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Erase Disk
 
-L09D9:  lda     #$00
-        sta     has_input_field_flag
-        jsr     main::open_prompt_window
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
-        param_call main::draw_dialog_title, aux::label_erase_disk
-        param_call main::draw_dialog_label, 1, aux::str_select_erase
-        jsr     draw_volume_labels
-        copy    #$FF, selected_device_index
-        copy16  #L0B48, main::jump_relay+1
-        copy    #$80, format_erase_overlay_flag
-L0A0E:  jsr     main::prompt_input_loop
-        bmi     L0A0E
-        beq     L0A18
-        jmp     L0B31
+.proc EraseDisk
+        lda     #$80
+        jsr     PromptForDeviceAndName
+        bcs     cancel
+        sta     d2
+        sta     unit_num
 
-L0A18:  bit     selected_device_index
-        bmi     L0A0E
-        copy16  #main::rts1, main::jump_relay+1
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::FrameRect, name_input_rect
-        jsr     main::clear_path_buf1
-        copy    #$80, has_input_field_flag
-        copy    #$00, format_erase_overlay_flag
-        jsr     main::clear_path_buf2
-        param_call main::draw_dialog_label, 3, aux::str_new_volume
-L0A6A:  jsr     main::prompt_input_loop
-        bmi     L0A6A
-        beq     L0A7A
-        jmp     L0B31
+        ;; --------------------------------------------------
+        ;; Proceed with erase
+l7:
+        jsr     main::SetPortForDialogWindow
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        param_call main::DrawDialogLabel, 1, aux::str_erasing
+        param_call UpcaseString, path_buf1
+        jsr     main::SetCursorWatch
 
-L0A74:  jsr     Bell
-        jmp     L0A6A
-
-L0A7A:  lda     path_buf1
-        beq     L0A74
-        cmp     #$10
-        bcs     L0A74
-        jsr     main::set_cursor_pointer
-        lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        copy    #$00, has_input_field_flag
-
-        ;; Reverse order, so boot volume is first
-        lda     DEVCNT
-        sec
-        sbc     selected_device_index
-        tax
-        lda     DEVLST,x
-
-        sta     L0B47
-        sta     L0B46
-        param_call main::draw_dialog_label, 3, aux::str_confirm_erase
-        lda     L0B46
-        and     #$F0
-        jsr     L1A2D
-        param_call main::DrawString, ovl_string_buf
-L0AC7:  jsr     main::prompt_input_loop
-        bmi     L0AC7
-        beq     L0AD1
-        jmp     L0B31
-
-L0AD1:  lda     winfo_prompt_dialog::window_id
-        jsr     main::set_port_from_window_id
-        MGTK_RELAY_CALL MGTK::SetPenMode, pencopy
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        param_call main::draw_dialog_label, 1, aux::str_erasing
-        param_call upcase_string, path_buf1
-        jsr     main::set_cursor_watch
         ldxy    #path_buf1
-        lda     L0B46
-        jsr     L1307
+        unit_num := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     WriteHeaderBlocks
         pha
-        jsr     main::set_cursor_pointer
+        jsr     main::SetCursorPointer
         pla
-        bne     L0B12
+        bne     l8
         lda     #$00
-        jmp     L0B31
+        jmp     cancel
 
-L0B12:  cmp     #ERR_WRITE_PROTECTED
-        bne     L0B1E
+l8:     cmp     #ERR_WRITE_PROTECTED
+        bne     l9
         jsr     JUMP_TABLE_SHOW_ALERT
-        bne     L0B31
-        jmp     L0AD1
+        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        bne     cancel          ; `kAlertResultCancel` = 1
+        jmp     l7              ; `kAlertResultTryAgain` = 0
 
-L0B1E:  jsr     Bell
-        param_call main::draw_dialog_label, 6, aux::str_erasing_error
-L0B2A:  jsr     main::prompt_input_loop
-        bmi     L0B2A
-        beq     L0AD1
-L0B31:  pha
-        jsr     main::set_cursor_pointer
-        jsr     main::reset_main_grafport
-        MGTK_RELAY_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        ldx     L0B47
+l9:     jsr     Bell
+        param_call main::DrawDialogLabel, 6, aux::str_erasing_error
+l10:    jsr     main::PromptInputLoop
+        bmi     l10             ; not done
+        beq     l7              ; ok
+
+cancel:
+        pha                     ; cancel
+        jsr     main::SetCursorPointer
+        MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
+
+        d2 := *+1               ; ???
+        ldx     #SELF_MODIFIED_BYTE
         pla
         rts
-
-L0B46:  .byte   0
-L0B47:  .byte   0
+.endproc
 
 ;;; ============================================================
 
-        kLabelsVOffset = 49
+.proc HandleClick
+        jsr     GetOptionIndexFromCoords
+        bmi     done
 
-L0B48:  cmp16   screentowindow_windowx, #40
-        bpl     :+
-        return  #$FF
-:       cmp16   screentowindow_windowx, #360
-        bcc     :+
-        return  #$FF
-:       lda     screentowindow_windowy
-        sec
-        sbc     #kLabelsVOffset
-        sta     screentowindow_windowy
-        lda     screentowindow_windowy+1
-        sbc     #0
-        bpl     :+
-        return  #$FF
-:       sta     screentowindow_windowy+1
-
-        ;; Divide by aux::kDialogLabelHeight
-        ldax    screentowindow_windowy
-        ldy     #aux::kDialogLabelHeight
-        jsr     Divide_16_8_16
-        stax    screentowindow_windowy
-
-        cmp     #4
-        bcc     L0B98
-        return  #$FF
-
-L0B98:  copy    #$02, L0C1F
-        cmp16   screentowindow_windowx, #280
-        bcs     L0BBB
-        dec     L0C1F
-        cmp16   screentowindow_windowx, #160
-        bcs     L0BBB
-        dec     L0C1F
-L0BBB:  lda     L0C1F
-        asl     a
-        asl     a
-        clc
-        adc     screentowindow_windowy
+        ;; Is it valid?
         cmp     num_volumes
-        bcc     L0BDC
+        bcc     valid
+        lda     selected_device_index ; nope - clear selection if needed
+        bmi     done
         lda     selected_device_index
-        bmi     L0BD9
-        lda     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
         lda     #$FF
         sta     selected_device_index
-L0BD9:  return  #$FF
+done:   return  #$FF
 
-L0BDC:  cmp     selected_device_index
-        bne     L0C04
-        jsr     main::detect_double_click
-        bmi     L0C03
-L0BE6:  MGTK_RELAY_CALL MGTK::SetPenMode, penXOR ; flash the button
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_RELAY_CALL MGTK::PaintRect, aux::ok_button_rect
+        ;; Valid selection - has it changed?
+valid:  cmp     selected_device_index
+        bne     update
+
+        jsr     main::StashCoordsAndDetectDoubleClick
+        bmi     l6
+
+        ;; Activated by double-click
+l5:     param_call main::ButtonFlash, winfo_prompt_dialog::kWindowId, aux::ok_button_rect
         lda     #$00
-L0C03:  rts
+l6:     rts
 
-L0C04:  sta     L0C1E
+        ;; Update selection
+update: pha                     ; A = new selection
         lda     selected_device_index
-        bmi     L0C0F
-        jsr     highlight_volume_label
-L0C0F:  lda     L0C1E
+        bmi     :+
+        jsr     HighlightVolumeLabel ; unhighlight old
+:
+        pla                     ; A = new selection
         sta     selected_device_index
-        jsr     highlight_volume_label
-        jsr     main::detect_double_click
-        beq     L0BE6
+        jsr     HighlightVolumeLabel ; highlight new
+        jsr     main::StashCoordsAndDetectDoubleClick
+        beq     l5
+        rts
+.endproc
+
+;;; ============================================================
+;;; Get the coordinates of an option by index.
+;;; Input: A = volume index
+;;; Output: A,X = x coordinate, Y = y coordinate
+.proc GetOptionPos
+        sta     index
+        .repeat ::kVolPickerRowShift
+        lsr                     ; lo
+        .endrepeat
+        ldx     #0              ; hi
+        ldy     #kVolPickerItemWidth
+        jsr     Multiply_16_8_16
+        clc
+        adc     #<kVolPickerLeft
+        pha                     ; lo
+        txa
+        adc     #>kVolPickerLeft
+        pha                     ; hi
+
+        ;; Y coordinate
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        and     #kVolPickerRows-1
+        ldx     #0              ; hi
+        ldy     #kVolPickerItemHeight
+        jsr     Multiply_16_8_16
+        clc
+        adc     #kVolPickerTop
+
+        tay                     ; Y coord
+        pla
+        tax                     ; X coord hi
+        pla                     ; X coord lo
+
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
+;;; Outputs: A=index, N=1 if no match
+.proc GetOptionIndexFromCoords
+        ;; Row
+        sub16   screentowindow_params::windowy, #kVolPickerTop, screentowindow_params::windowy
+        bmi     done
+
+        ldax    screentowindow_params::windowy
+        ldy     #kVolPickerItemHeight
+        jsr     Divide_16_8_16  ; A = row
+
+        cmp     #kVolPickerRows
+        bcs     done
+        sta     row
+
+        ;; Column
+        sub16   screentowindow_params::windowx, #kVolPickerLeft, screentowindow_params::windowx
+        bmi     done
+
+        ldax    screentowindow_params::windowx
+        ldy     #kVolPickerItemWidth
+        jsr     Divide_16_8_16  ; A = col
+
+        cmp     #kVolPickerCols
+        bcs     done
+
+        ;; Index
+        .repeat ::kVolPickerRowShift
+        asl
+        .endrepeat
+        row := *+1
+        ora     #SELF_MODIFIED_BYTE
         rts
 
-L0C1E:  .byte   0
-L0C1F:  .byte   0
+done:   return  #$FF
+.endproc
 
 ;;; ============================================================
 ;;; Hilight volume label
 ;;; Input: A = volume index
 
-        kLabelWidth = 110
+.proc HighlightVolumeLabel
+        jsr     GetOptionPos
+        stax    vol_picker_item_rect::x1
+        addax   #kVolPickerItemWidth-1, vol_picker_item_rect::x2
 
-.proc highlight_volume_label
-        ldy     #39
-        sty     select_volume_rect::x1
-        ldy     #0
-        sty     select_volume_rect::x1+1
-        tax
-        lsr     a               ; / 4
-        lsr     a
-        sta     L0CA9           ; column (0, 1, or 2)
-        beq     :+
-        add16   select_volume_rect::x1, #kLabelWidth, select_volume_rect::x1
-        lda     L0CA9
-        cmp     #1
-        beq     :+
-        add16   select_volume_rect::x1, #kLabelWidth, select_volume_rect::x1
-:       asl     L0CA9           ; * 4
-        asl     L0CA9
-        txa
-        sec
-        sbc     L0CA9           ; entry % 4
+        tya
         ldx     #0
+        stax    vol_picker_item_rect::y1
+        addax   #kListItemHeight-1, vol_picker_item_rect::y2
 
-        ldy     #aux::kDialogLabelHeight
-        jsr     Multiply_16_8_16
-        stax    select_volume_rect::y1
-        add16_8 select_volume_rect::y1, #kLabelsVOffset, select_volume_rect::y1
-
-        add16   select_volume_rect::x1, #kLabelWidth-1, select_volume_rect::x2
-        add16   select_volume_rect::y1, #aux::kDialogLabelHeight-1, select_volume_rect::y2
-        MGTK_RELAY_CALL MGTK::SetPenMode, penXOR
-        MGTK_RELAY_CALL MGTK::PaintRect, select_volume_rect
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, vol_picker_item_rect
         rts
-
-L0CA9:  .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc maybe_highlight_selected_index
+.proc MaybeHighlightSelectedIndex
         lda     selected_device_index
         bmi     :+
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
         copy    #$FF, selected_device_index
 :       rts
 .endproc
@@ -404,7 +467,7 @@ L0CA9:  .byte   0
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_right
+.proc PromptHandleKeyRight
         lda     selected_device_index
         bpl     :+              ; has selection
 
@@ -424,17 +487,17 @@ L0CA9:  .byte   0
         lda     #0              ; wrap to 0 if needed
 
 :       pha
-        jsr     maybe_highlight_selected_index
+        jsr     MaybeHighlightSelectedIndex
         pla
 set:    sta     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_left
+.proc PromptHandleKeyLeft
         lda     selected_device_index
         bpl     loop            ; has selection
 
@@ -464,18 +527,18 @@ loop:   sec
         bcs     loop
 
         pha
-        jsr     maybe_highlight_selected_index
+        jsr     MaybeHighlightSelectedIndex
         pla
 
 set:    sta     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
 done:   return  #$FF
 .endproc
 
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_down
+.proc PromptHandleKeyDown
         lda     selected_device_index ; $FF if none, would inc to #0
         clc
         adc     #1
@@ -483,17 +546,17 @@ done:   return  #$FF
         bcc     :+
         lda     #0              ; wrap to first
 :       pha
-        jsr     maybe_highlight_selected_index
+        jsr     MaybeHighlightSelectedIndex
         pla
         sta     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
         return  #$FF
 .endproc
 
 ;;; ============================================================
 
         ;; Called from main
-.proc prompt_handle_key_up
+.proc PromptHandleKeyUp
         lda     selected_device_index
         bmi     wrap            ; if no selection, wrap
         sec
@@ -505,278 +568,319 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
         txa
 
 :       pha
-        jsr     maybe_highlight_selected_index
+        jsr     MaybeHighlightSelectedIndex
         pla
         sta     selected_device_index
-        jsr     highlight_volume_label
+        jsr     HighlightVolumeLabel
         return  #$FF
 .endproc
 
 ;;; ============================================================
 ;;; Draw volume labels
 
-.proc draw_volume_labels
-        ldx     DEVCNT
+.proc DrawVolumeLabels
+        ldx     DEVCNT          ; number of volumes - 1
         inx
-        stx     num_volumes
+        cpx     #kMaxVolumesInPicker
+        bcc     :+
+        ldx     #kMaxVolumesInPicker
+:       stx     num_volumes
 
         lda     #0
         sta     vol
-loop:   lda     vol
+
+        vol := *+1
+loop:   lda     #SELF_MODIFIED_BYTE
         cmp     num_volumes
         bne     :+
-        copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
-
-:       cmp     #8              ; third column?
-        bcc     :+
-        ldax    #kDialogLabelDefaultX + kLabelWidth*2
-        jmp     setpos
-
-:       cmp     #4              ; second column?
-        bcc     skip
-        ldax    #kDialogLabelDefaultX + kLabelWidth
-        ;; fall through
-
-setpos: stax    dialog_label_pos::xcoord
-skip:
+:
+        jsr     GetOptionPos
+        addax   #kVolPickerTextHOffset, vol_picker_item_rect::x1
+        tya
+        ldx     #0
+        addax   #kVolPickerTextVOffset, vol_picker_item_rect::y1
+        MGTK_CALL MGTK::MoveTo, vol_picker_item_rect::topleft
 
         ;; Reverse order, so boot volume is first
-        lda     DEVCNT
+        lda     num_volumes
         sec
+        sbc     #1
         sbc     vol
         asl     a
         tay
-
         lda     device_name_table+1,y
         tax
         lda     device_name_table,y ; now A,X has pointer
-        pha                         ; save A
+        jsr     main::DrawString
 
-        ;; Compute label line into Y
-        lda     vol
-        lsr     a
-        lsr     a
-        asl     a
-        asl     a
-        sta     tmp
-        lda     vol
-        sec
-        sbc     tmp
-        tay
-        iny
-        iny
-        iny
-
-        pla                     ; A,X has pointer again
-        jsr     main::draw_dialog_label
         inc     vol
         jmp     loop
-
-vol:    .byte   0               ; volume being drawn
-tmp:    .byte   0
 .endproc
 
-        PAD_TO $E00
+;;; ============================================================
+;;; Gets the selected unit number from `DEVLST`
+;;; Output: A = unit number (with low nibble intact)
+;;; Assert: `selected_device_index` is valid (i.e. not $FF)
+
+.proc GetSelectedUnitNum
+        ;; Reverse order, so boot volume is first
+        lda     num_volumes
+        sec
+        sbc     #1
+        sbc     selected_device_index
+        tax
+        lda     DEVLST,x
+        rts
+.endproc
 
 ;;; ============================================================
+;;; A,X = string
 
-        .include "../lib/formatdiskii.s"
+.proc UpcaseString
+        ptr := $06
+        stx     ptr+1
+        sta     ptr
+        ldy     #0
+        lda     (ptr),y
+        tay
+loop:   lda     (ptr),y
+        cmp     #'a'
+        bcc     :+
+        cmp     #'z'+1
+        bcs     :+
+        and     #CASE_MASK
+        sta     (ptr),y
+:       dey
+        bpl     loop
+        rts
+.endproc
 
 ;;; ============================================================
+;;; Inputs: A = unit number (no need to mask off low nibble), X,Y = name
+;;; Outputs: C=1 if there's a duplicate, C=0 otherwise
 
-        read_buffer := $1C00
+.proc CheckConflictingVolumeName
+        ptr := $06
+        stxy    ptr
+        and     #UNIT_NUM_MASK
+        sta     unit_num
+
+        ;; Copy name, prepending '/'
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     path+1,y
+        dey
+        bpl     :-
+        clc
+        adc     #1
+        sta     path
+        copy    #'/', path+1
+
+        MLI_CALL GET_FILE_INFO, get_file_info_params
+        bne     no_match
+
+        ;; A volume with that name exists... but is it the one
+        ;; we're about to format/erase?
+        lda     DEVNUM
+
+        unit_num := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        beq     no_match
+
+        ;; Not the same device, so a match. Return C=1
+        sec
+        rts
+
+        ;; No match we care about, so return C=0.
+no_match:
+        clc
+        rts
+.endproc
+
+;;; ============================================================
 
         DEFINE_ON_LINE_PARAMS on_line_params,, $1C00
         DEFINE_READ_BLOCK_PARAMS read_block_params, read_buffer, 0
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
 
-L124A:  .byte   $00
+unit_num:
+        .byte   $00
+
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
+path:
+        .res    17,0              ; length + '/' + 15-char name
 
 ;;; ============================================================
+;;; Get driver address
+;;; Input: A = unit number (no need to mask off low nibble)
+;;; Output: A,X = driver address
 
-.proc MLI_RELAY
-        sty     call
-        stax    params
-        sta     ALTZPOFF
-        lda     ROMIN2
-        jsr     MLI
-call:   .byte   0
-params: .addr   0
+.proc GetDriverAddress
+        and     #UNIT_NUM_MASK  ; DSSS0000 after masking
+        lsr                     ; 0DSSS000
+        lsr                     ; 00DSSS00
+        lsr                     ; 000DSSS0
         tax
-        sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
-        txa
+        lda     DEVADR,x        ; low byte of driver address
+        pha
+        inx
+        lda     DEVADR,x        ; high byte of driver address
+        tax
+        pla
         rts
 .endproc
 
 ;;; ============================================================
+;;; Format disk
+;;; Input: A = unit number (with low nibble intact)
 
-L126F:  sta     L12C0
-        and     #$0F
-        beq     L12A6
-        ldx     #$11
-        lda     L12C0
-        and     #$80
-        beq     L1281
-        ldx     #$21
-L1281:  stx     @lsb
-        lda     L12C0
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @lsb
-        sta     @lsb
-        @lsb := *+1
-        lda     MLI
-        sta     $07
-        lda     #$00
-        sta     $06
-        ldy     #$FF
-        lda     ($06),y
-        beq     L12A6
-        cmp     #$FF
-        bne     L12AD
-L12A6:  lda     L12C0
+.proc FormatUnit
+        sta     unit_num
+
+        jsr     main::IsDiskII
+        bne     driver
+
+        ;; Format as Disk II
+        lda     unit_num
         jsr     FormatDiskII
         rts
 
-L12AD:  ldy     #$FF            ; offset to low byte of driver address
-        lda     ($06),y
-        sta     $06
-        lda     #DRIVER_COMMAND_FORMAT
-        sta     DRIVER_COMMAND
-        lda     L12C0
-        and     #$F0
+        ;; Format using driver
+driver: lda     unit_num
+        jsr     GetDriverAddress
+        stax    @driver
+
+        sta     ALTZPOFF        ; Main ZP/LCBANKs
+
+        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
+        lda     unit_num
+        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
-        jmp     ($06)
+
+        @driver := *+1
+        jsr     SELF_MODIFIED
+
+        sta     ALTZPON         ; Aux ZP/LCBANKs
 
         rts
 
-L12C0:  .byte   0
-L12C1:  sta     L1306
-        and     #$0F
-        beq     L1303
-        ldx     #$11
-        lda     L1306
-        and     #$80
-        beq     L12D3
-        ldx     #$21
-L12D3:  stx     @lsb
-        lda     L1306
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @lsb
-        sta     @lsb
-        @lsb := *+1
-        lda     MLI
-        sta     $07
-        lda     #$00
-        sta     $06
-        ldy     #$FF
-        lda     ($06),y
-        beq     L1303
-        cmp     #$FF
-        beq     L1303
-        ldy     #$FE
-        lda     ($06),y
-        and     #$08
-        bne     L1303
-        return  #$FF
-
-L1303:  return  #$00
+unit_num:
+        .byte   0
+.endproc
 
 ;;; ============================================================
+;;; Check if the device supports formatting
+;;; Input: A = unit number (with low nibble intact)
+;;; Output: A=0/Z=1/N=0 if yes, A=$FF/Z=0/N=1 if no
 
-L1306:  .byte   0
-L1307:  sta     L124A
-        and     #$F0
+.proc CheckSupportsFormat
+        sta     unit_num
+
+        jsr     main::IsDiskII
+        beq     supported
+
+        ;; Check if the driver is firmware ($CnXX).
+        ptr := $06
+        lda     unit_num
+        jsr     GetDriverAddress
+        stax    ptr
+        txa                     ; high byte
+        and     #$F0            ; look at high nibble
+        cmp     #$C0            ; firmware? ($Cn)
+        bne     supported       ; TODO: Should we guess yes or no here???
+
+        ;; Check the firmware status byte
+        ldy     #$FE            ; $CnFE
+        lda     (ptr),y
+        and     #%00001000      ; Bit 3 = Supports format
+        bne     supported
+
+        return  #$FF            ; no, does not support format
+
+supported:
+        return  #$00            ; yes, supports format
+
+unit_num:
+        .byte   0
+.endproc
+
+;;; ============================================================
+;;; Write the loader, volume directory, and volume bitmap
+;;; Inputs: A = unit number (with low nibble intact), X,Y = volume name
+
+.proc WriteHeaderBlocks
+        sta     unit_num
+        and     #UNIT_NUM_MASK
         sta     write_block_params::unit_num
-        stx     $06
-        sty     $06+1
+        stxy    $06
+
+        ;; Remove leading '/' from name, if necessary
         ldy     #$01
         lda     ($06),y
-        and     #CHAR_MASK
         cmp     #'/'
-        bne     L132C
+        bne     L132C           ; nope
         dey
-        lda     ($06),y
+        lda     ($06),y         ; shrink string, adjust pointer
         sec
         sbc     #1
         iny
         sta     ($06),y
         inc16   $06
+
+        ;; Copy name into volume directory key block data
 L132C:  ldy     #0
         lda     ($06),y
         tay
 :       lda     ($06),y
-        and     #CHAR_MASK
-        sta     L14E5,y
+        sta     vol_name_buf,y
         dey
         bpl     :-
 
-        lda     L124A
-        and     #$0F
-        beq     L1394
-        ldx     #$11
-        lda     L124A
-        and     #$80
-        beq     L134D
-        ldx     #$21
-L134D:  stx     @lsb
-        lda     L124A
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        clc
-        adc     @lsb
-        sta     @lsb
-        @lsb := *+1
-        lda     MLI
-        sta     $06+1
-        lda     #$00
-        sta     $06
-        ldy     #$FF
-        lda     ($06),y
-        beq     L1394
-        cmp     #$FF
-        beq     L1394
+        ;; --------------------------------------------------
+        ;; Get the block count for the device
 
-        ldy     #$FF            ; offset to low byte of driver address
-        lda     ($06),y
-        sta     $06
-        lda     #DRIVER_COMMAND_STATUS
-        sta     DRIVER_COMMAND
-        lda     L124A
-        and     #$F0
+        ;; Check if it's a Disk II
+        lda     unit_num
+        jsr     main::IsDiskII
+        beq     disk_ii
+
+        ;; Not Disk II - use the driver.
+        lda     unit_num
+        jsr     GetDriverAddress
+        stax    @driver
+
+        sta     ALTZPOFF        ; Main ZP/LCBANKs
+
+        copy    #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
+        lda     unit_num
+        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
         lda     #$00
         sta     DRIVER_BLOCK_NUMBER
         sta     DRIVER_BLOCK_NUMBER+1
-        jsr     L1391
-        bcc     L1398
-        jmp     L1483
 
-L1391:  jmp     ($06)
+        @driver := *+1
+        jsr     SELF_MODIFIED
 
-L1394:  ldx     #$18
-        ldy     #$01
-L1398:  stx     L14E3
-        sty     L14E4
+        sta     ALTZPON         ; Aux ZP/LCBANKs
+
+        bcc     L1398           ; success
+        jmp     L1483           ; failure
+
+disk_ii:
+        ldxy    #kDefaultFloppyBlocks
+L1398:  stxy    total_blocks
+
+        ;; --------------------------------------------------
+        ;; Loader blocks
 
         ;; Write first block of loader
         copy16  #prodos_loader_blocks, write_block_params::data_buffer
-        lda     #0
-        sta     write_block_params::block_num
-        sta     write_block_params::block_num+1
-        MLI_RELAY_CALL WRITE_BLOCK, write_block_params
+        copy16  #0, write_block_params::block_num
+        MLI_CALL WRITE_BLOCK, write_block_params
         beq     :+
         jmp     fail2
 
@@ -784,76 +888,123 @@ L1398:  stx     L14E3
 :       inc     write_block_params::block_num     ; next block needs...
         inc     write_block_params::data_buffer+1 ; next $200 of data
         inc     write_block_params::data_buffer+1
-        jsr     write_block_and_zero
+        jsr     WriteBlockAndZero
 
-        ;; Subsequent blocks...
+        ;; --------------------------------------------------
+        ;; Volume directory key block
+
         copy16  #block_buffer, write_block_params::data_buffer
-        lda     #$03
-        sta     block_buffer+$02
-        ldy     L14E5
+        lda     #3              ; block 2, points at 3
+        sta     block_buffer+2
+
+        ldy     vol_name_buf    ; volume name
         tya
         ora     #$F0
-        sta     block_buffer+$04
-L13E2:  lda     L14E5,y
-        sta     block_buffer+$04,y
+        sta     block_buffer + VolumeDirectoryHeader::storage_type_name_length
+:       lda     vol_name_buf,y
+        sta     block_buffer + VolumeDirectoryHeader::file_name - 1,y
         dey
-        bne     L13E2
-        ldy     #8
-L13ED:  lda     L14DC,y
-        sta     block_buffer+$22,y
+        bne     :-
+
+        ldy     #kNumKeyBlockHeaderBytes-1 ; other header bytes
+:       lda     key_block_header_bytes,y
+        sta     block_buffer+kKeyBlockHeaderOffset,y
         dey
-        bpl     L13ED
-        jsr     write_block_and_zero
+        bpl     :-
 
-        copy    #$02, block_buffer
-        copy    #$04, block_buffer+$02
-        jsr     write_block_and_zero
+        MLI_CALL GET_TIME ; Apply timestamp
+        ldy     #3
+:       lda     DATELO,y
+        sta     block_buffer + VolumeDirectoryHeader::creation_date,y
+        dey
+        bpl     :-
 
-        copy    #$03, block_buffer
-        copy    #$05, block_buffer+$02
-        jsr     write_block_and_zero
+        jsr     WriteBlockAndZero
 
-        copy    #$04, block_buffer
-        jsr     write_block_and_zero
+        ;; Subsequent volume directory blocks (4 total)
+        copy    #2, block_buffer ; block 3, points at 2 and 4
+        copy    #4, block_buffer+2
+        jsr     WriteBlockAndZero
 
-        lsr16   L14E3           ; / 8
-        lsr16   L14E3
-        lsr16   L14E3
-        lda     L14E3
-        bne     :+
-        dec     L14E4
-:       dec     L14E3
-L1438:  jsr     L1485
-        lda     write_block_params::block_num+1
-        bne     L146A
+        copy    #3, block_buffer ; block 4, points at 3 and 5
+        copy    #5, block_buffer+2
+        jsr     WriteBlockAndZero
+
+        copy    #4, block_buffer ; block 4, points back at 4
+        jsr     WriteBlockAndZero
+
+        ;; --------------------------------------------------
+        ;; Bitmap blocks
+
+        ;; Do a bunch of preliminary math to make building the volume bitmap easier
+
+        lda     total_blocks    ; A lot of the math is affected by off-by-one problems that
+        bne     :+              ; vanish if you decrease the blocks by one (go from "how many"
+        dec     total_blocks+1  ; to "last block number")
+:       dec     total_blocks
+
+        lda     total_blocks    ; Take the remainder of the last block number modulo 8
+        and     #$07
+        tax                     ; Convert that remainder to a bitmask of "n+1" set high-endian bits
+        lda     bitmask,x       ; using a lookup table and store it for later
+        sta     last_byte       ; This value will go at the end of the bitmap
+
+        lsr16   total_blocks    ; Divide the last block number by 8 in-place
+        lsr16   total_blocks    ; This will become the in-block offset to the last
+        lsr16   total_blocks    ; byte shortly
+
+        lda     total_blocks+1  ; Divide the last block number again by 512 (high byte/2) in-register to get
+        lsr     a               ; the base number of bitmap blocks needed minus 1
+        clc                     ; Finally, add 6 to account for the 6 blocks used by the boot blocks (2)
+        adc     #6              ; and volume directory (4) to get the block number of the last VBM block
+        sta     lastblock       ; This final result should ONLY fall in the range of 6-21
+
+        lda     total_blocks+1  ; Mask off the last block's "partial" byte count - this is now the offset to the
+        and     #$01            ; last byte in the last VBM block. All other blocks get filled with 512 $FF's
+        sta     total_blocks+1
+
+        ;; Main loop to build the volume bitmap
+bitmaploop:
+        jsr     BuildBlock      ; Build a bitmap for the current block
+
+        lda     write_block_params::block_num+1 ; Are we at a block >255?
+        bne     L1483           ; Then something's gone horribly wrong and we need to stop
         lda     write_block_params::block_num
-        cmp     #$06
-        bne     L146A
-        copy    #$01, block_buffer
-        lda     L14E4
-        cmp     #$02
-        bcc     L146A
-        copy    #$00, block_buffer
-        lda     L14E4
-        lsr     a
-        tax
-        lda     #$FF
-        dex
-        beq     L1467
-L1462:  clc
-        rol     a
-        dex
-        bne     L1462
-L1467:  sta     block_buffer+$01
-L146A:  jsr     write_block_and_zero
-        dec     L14E4
-        dec     L14E4
-        lda     L14E4
-        beq     L147D
-        bmi     L147D
-        jmp     L1438
+        cmp     #6              ; Are we anywhere other than block 6?
+        bne     gowrite         ; Then go ahead and write the bitmap block as-is
 
-L147D:  lda     #$00
+        ;; Block 6 - Set up the volume bitmap to protect the blocks at the beginning of the volume
+        copy    #$01, block_buffer ; Mark blocks 0-6 in use
+        lda     lastblock       ; What's the last block we need to protect?
+        cmp     #7
+        bcc     gowrite         ; If it's less than 7, default to always protecting 0-6
+
+        copy    #$00, block_buffer ; Otherwise (>=7) mark blocks 0-7 as "in use"
+        lda     lastblock       ; and check again
+        cmp     #15
+        bcs     :+              ; Is it 15 or more? Skip ahead.
+        and     #$07            ; Otherwise (7-14) take the low three bits
+        tax
+        lda     freemask,x      ; convert them to the correct VBM value using a lookup table
+        sta     block_buffer+1  ; put it in the bitmap
+        bcc     gowrite         ; and write the block
+
+:       copy    #$00, block_buffer+1 ; (>=15) Mark blocks 8-15 as "in use"
+        lda     lastblock       ; Then finally
+        and     #$07            ; take the low three bits
+        tax
+        lda     freemask,x      ; convert them to the correct VBM value using a lookup table
+        sta     block_buffer+2  ; put it in the bitmap, and fall through to the write
+
+        ;; Call the write/increment/zero routine, and loop back if we're not done
+gowrite:
+        jsr     WriteBlockAndZero
+        lda     lastblock
+        cmp     write_block_params::block_num
+        bcs     bitmaploop
+
+success:
+        lda     #$00
         sta     $08
         clc
         rts
@@ -861,28 +1012,72 @@ L147D:  lda     #$00
 L1483:  sec
         rts
 
-L1485:  ldy     L14E4
-        beq     L148E
-        ldy     #$FF
-        bne     L1491
-L148E:  ldy     L14E3
-L1491:  lda     #$FF
-L1493:  sta     block_buffer,y
-        dey
-        bne     L1493
-        sta     block_buffer
-        ldy     L14E4
-        beq     L14B5
-        cpy     #$02
-        bcc     L14A9
-        ldy     #$FF
-        bne     L14AC
-L14A9:  ldy     L14E3
-L14AC:  sta     block_buffer+$100,y
-        dey
-        bne     L14AC
-        sta     block_buffer+$100
-L14B5:  rts
+;;; Values with "n+1" (1-8) high-endian bits set
+bitmask:
+        .byte   $80,$C0,$E0,$F0,$F8,$FC,$FE,$FF
+
+;;; Special mask values for setting up block 6 /NOTE OFF-BY-ONE/
+freemask:
+        .byte   $7F,$3F,$1F,$0F,$07,$03,$01,$FF
+
+;;; Contents of the last byte of the VBM
+last_byte:
+        .byte   $00
+
+;;; Block number of the last VBM block
+lastblock:
+        .byte   6
+
+;;; ============================================================
+;;; Build a single block of the VBM. These blocks are all filled with
+;;; 512 $FF values, except for the last block in the entire VBM, which
+;;; gets cleared to $00's following the final byte position.
+
+.proc BuildBlock
+        ldy     #$00
+        lda     #$FF
+ffloop: sta     block_buffer,y  ; Fill this entire block
+        sta     block_buffer+$100,y ; with $FF bytes
+        iny
+        bne     ffloop
+
+        lda     write_block_params::block_num
+        cmp     lastblock       ; Is this the last block?
+        bne     builddone       ; No, then just use the full block of $FF's
+
+        ldy     total_blocks    ; Get the offset to the last byte that needs to be updated
+        lda     total_blocks+1
+        bne     secondhalf      ; Is it in the first $100 or the second $100?
+
+        lda     last_byte       ; Updating the first half
+        sta     block_buffer,y  ; Put the last byte in the right location
+        lda     #$00
+        iny
+        beq     zerosecond      ; Was that the end of the first half?
+
+zerofirst:
+        sta     block_buffer,y  ; Clear the remainder of the first half
+        iny
+        bne     zerofirst
+        beq     zerosecond      ; Then go clear ALL of the second half
+
+secondhalf:
+        lda     last_byte       ; Updating the second half
+        sta     block_buffer+$100,y ; Put the last byte in the right location
+        lda     #$00
+        iny
+        beq     builddone       ; Was that the end of the second half?
+
+zerosecond:
+        sta     block_buffer+$100,y ; Clear the remainder of the second half
+        iny
+        bne     zerosecond
+
+builddone:
+        rts                     ; And we're done
+.endproc
+
+.endproc
 
 ;;; ============================================================
 
@@ -893,8 +1088,8 @@ fail2:  sec
 
 ;;; ============================================================
 
-.proc write_block_and_zero
-        MLI_RELAY_CALL WRITE_BLOCK, write_block_params
+.proc WriteBlockAndZero
+        MLI_CALL WRITE_BLOCK, write_block_params
         bne     fail
         jsr     zero_buffers
         inc     write_block_params::block_num
@@ -914,65 +1109,70 @@ zero_buffers:
 
 ;;; ============================================================
 
-L14DC:  .byte   $C3,$27,$0D,$00,$00,$06,$00
-L14E3:  .byte   $18
-L14E4:  .byte   $01
-L14E5:  .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $00,$00,$00
+;;; Part of volume directory block at offset $22
+;;; $22 = access $C3
+;;; $23 = entry_length $27
+;;; $24 = entries_per_block $0D
+;;; $25 = file_count 0
+;;; $27 = bit_map_pointer 6
+;;; $29 = total_blocks
+kNumKeyBlockHeaderBytes = .sizeof(VolumeDirectoryHeader) - VolumeDirectoryHeader::access
+kKeyBlockHeaderOffset = VolumeDirectoryHeader::access
+key_block_header_bytes:
+        .byte   $C3,$27,$0D
+        .word   0
+        .word   6
+total_blocks:
+        .word   kDefaultFloppyBlocks
+        ASSERT_TABLE_SIZE key_block_header_bytes, kNumKeyBlockHeaderBytes
+
+vol_name_buf:
+        .res    27,0
 
 ;;; ============================================================
 ;;; ProDOS Loader
 ;;; ============================================================
 
-.proc prodos_loader_blocks
+prodos_loader_blocks:
         .incbin "../inc/pdload.dat"
-.endproc
-        .assert .sizeof(prodos_loader_blocks) = $400, error, "Bad data"
+        .assert * - prodos_loader_blocks = $400, error, "Bad data"
 
 ;;; ============================================================
 
-.proc upcase_string
-        ptr := $06
-        stx     ptr+1
-        sta     ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-loop:   lda     (ptr),y
-        cmp     #'a'
-        bcc     :+
-        cmp     #'z'+1
-        bcs     :+
-        and     #CASE_MASK
-        sta     (ptr),y
-:       dey
-        bpl     loop
-        rts
-.endproc
+;;; Note that code from around this point is overwritten when
+;;; `block_buffer` is used, so only place routines not used after
+;;; writing starts are placed here. The overlay will be reloaded
+;;; for subsequent format/erase operations.
 
-L192E:  sta     read_block_params::unit_num
-        lda     #0
-        sta     read_block_params::block_num
-        sta     read_block_params::block_num+1
-        MLI_RELAY_CALL READ_BLOCK, read_block_params
-        bne     L1959
+;;; ============================================================
+;;; Get a volume name for a non-ProDOS disk given a unit number.
+;;; Input: A = unit number
+;;; Output: `ovl_string_buf` is populated.
+
+.proc GetNonprodosVolName
+        ;; Read block 0
+        sta     read_block_params::unit_num
+        copy16  #0, read_block_params::block_num
+        MLI_CALL READ_BLOCK, read_block_params
+        bne     unknown         ; failure
         lda     read_buffer + 1
-        cmp     #$E0
-        beq     L194E
-        jmp     L1986
-
-L194E:  lda     read_buffer + 2
+        cmp     #$E0            ; DOS 3.3?
+        beq     :+              ; Maybe...
+        jmp     maybe_dos
+:       lda     read_buffer + 2
         cmp     #$70
-        beq     L197E
+        beq     pascal
         cmp     #$60
-        beq     L197E
-L1959:  lda     read_block_params::unit_num
-        jsr     L19B7
+        beq     pascal
+        FALL_THROUGH_TO unknown
+
+        ;; Unknown, just use slot and drive
+unknown:
+        lda     read_block_params::unit_num
+        jsr     GetSlotChar
         sta     the_disk_in_slot_label + kTheDiskInSlotSlotCharOffset
         lda     read_block_params::unit_num
-        jsr     L19C1
+        jsr     GetDriveChar
         sta     the_disk_in_slot_label + kTheDiskInSlotDriveCharOffset
         ldx     the_disk_in_slot_label
 L1974:  lda     the_disk_in_slot_label,x
@@ -981,80 +1181,85 @@ L1974:  lda     the_disk_in_slot_label,x
         bpl     L1974
         rts
 
-L197E:  param_call L19C8, ovl_string_buf
+        ;; Pascal
+pascal: param_call pascal_disk, ovl_string_buf
         rts
 
-L1986:  cmp     #$A5
-        bne     L1959
+        ;; Maybe DOS 3.3, not sure yet...
+maybe_dos:
+        cmp     #$A5
+        bne     unknown
         lda     read_buffer + 2
         cmp     #$27
-        bne     L1959
+        bne     unknown
+
+        ;; DOS 3.3, use slot and drive
         lda     read_block_params::unit_num
-        jsr     L19B7
+        jsr     GetSlotChar
         sta     the_dos_33_disk_label + kTheDos33DiskSlotCharOffset
         lda     read_block_params::unit_num
-        jsr     L19C1
+        jsr     GetDriveChar
         sta     the_dos_33_disk_label + kTheDos33DiskDriveCharOffset
         COPY_STRING the_dos_33_disk_label, ovl_string_buf
         rts
 
-        .byte   0
-L19B7:  and     #$70
+.proc GetSlotChar
+        and     #$70
         lsr     a
         lsr     a
         lsr     a
         lsr     a
         clc
-        adc     #$30
+        adc     #'0'
         rts
+.endproc
 
-L19C1:  and     #$80
+.proc GetDriveChar
+        and     #$80
         asl     a
         rol     a
-        adc     #$31
+        adc     #'1'
         rts
+.endproc
 
-L19C8:  copy16  #$0002, read_block_params::block_num
-        MLI_RELAY_CALL READ_BLOCK, read_block_params
-        beq     L19F7
-        copy    #4, ovl_string_buf
+;;; Handle Pascal disk - name suffixed with ':'
+pascal_disk:
+        copy16  #$0002, read_block_params::block_num
+        MLI_CALL READ_BLOCK, read_block_params
+        beq     :+
+        ;; Pascal disk, empty name - use " :" (weird, but okay?)
+        copy    #2, ovl_string_buf
         copy    #' ', ovl_string_buf+1
         copy    #':', ovl_string_buf+2
-        copy    #' ', ovl_string_buf+3 ; Overwritten ???
-        copy    #'?', ovl_string_buf+3
         rts
 
-        ;; This straddles $1A00 which is the block buffer ($1A00-$1BFF) ???
-
-L19F7:  lda     read_buffer + 6
+        ;; Pascal disk, use name
+:       lda     read_buffer + 6
         tax
-L19FB:  lda     read_buffer + 6,x
+:       lda     read_buffer + 6,x
         sta     ovl_string_buf,x
         dex
-        bpl     L19FB
+        bpl     :-
         inc     ovl_string_buf
         ldx     ovl_string_buf
         lda     #':'
         sta     ovl_string_buf,x
-        inc     ovl_string_buf
-        ldx     ovl_string_buf
-        lda     #' '
-        sta     ovl_string_buf,x
-        inc     ovl_string_buf
-        ldx     ovl_string_buf
-        lda     #'?'
-L1A22:  sta     ovl_string_buf,x
         rts
+.endproc
 
 ;;; ============================================================
+;;; Get a volume name, for ProDOS or non-ProDOS disk.
+;;; Input: A = unit number (no need to mask off low nibble)
+;;; Output: `ovl_string_buf` is populated
 
-.proc L1A2D
+.proc GetVolName
+        and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
-        MLI_RELAY_CALL ON_LINE, on_line_params
-        bne     L1A6D
+        MLI_CALL ON_LINE, on_line_params
+        bne     non_pro
         lda     read_buffer
         and     #NAME_LENGTH_MASK
-        beq     L1A6D
+        beq     non_pro
         sta     read_buffer
         tax
 :       lda     read_buffer,x
@@ -1062,30 +1267,23 @@ L1A22:  sta     ovl_string_buf,x
         dex
         bpl     :-
 
-        inc     ovl_string_buf
-        ldx     ovl_string_buf
-        lda     #' '
-        sta     ovl_string_buf,x
-        inc     ovl_string_buf
-        ldx     ovl_string_buf
-        lda     #$3F
-        sta     ovl_string_buf,x
         rts
 
-L1A6D:  lda     on_line_params::unit_num
-        jsr     L192E
+non_pro:
+        lda     on_line_params::unit_num
+        jsr     GetNonprodosVolName
         rts
 .endproc
 
 ;;; ============================================================
 
-        PAD_TO $1C00
+        PAD_TO ::kOverlayFormatEraseAddress + ::kOverlayFormatEraseLength
 
-.endproc ; format_erase_overlay
+.endscope ; format_erase_overlay
 
-format_erase_overlay_prompt_handle_key_left     := format_erase_overlay::prompt_handle_key_left
-format_erase_overlay_prompt_handle_key_right    := format_erase_overlay::prompt_handle_key_right
-format_erase_overlay_prompt_handle_key_down     := format_erase_overlay::prompt_handle_key_down
-format_erase_overlay_prompt_handle_key_up       := format_erase_overlay::prompt_handle_key_up
+format_erase_overlay__PromptHandleKeyLeft     := format_erase_overlay::PromptHandleKeyLeft
+format_erase_overlay__PromptHandleKeyRight    := format_erase_overlay::PromptHandleKeyRight
+format_erase_overlay__PromptHandleKeyDown     := format_erase_overlay::PromptHandleKeyDown
+format_erase_overlay__PromptHandleKeyUp       := format_erase_overlay::PromptHandleKeyUp
 
-format_erase_overlay_exec := format_erase_overlay::exec
+format_erase_overlay__Exec := format_erase_overlay::Exec

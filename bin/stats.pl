@@ -4,7 +4,6 @@
 # stats.pl unscoped < source.s   -- list Lxxxx symbols not within 2 scopes
 # stats.pl scoped < source.s     -- list Lxxxx symbols within 2 scopes
 # stats.pl raw < source.s        -- list $xxxx usage
-# stats.pl unrefed < source.s    -- list Lxxxx symbols with no references
 
 use v5.10;
 use strict;
@@ -47,11 +46,6 @@ while (<STDIN>) {
     }
 }
 
-my $unrefed = 0;
-foreach my $def (keys %defs) {
-    ++$unrefed unless defined $refs{$def};
-}
-
 my $defs = scalar(keys %defs);
 my $unscoped = scalar(keys %unscoped);
 my $raws = scalar(keys %raw);
@@ -65,17 +59,13 @@ if ($command eq "unscoped") {
     foreach my $def (sort keys %scoped) {
         print "$def\n";
     }
-} elsif ($command eq "unrefed") {
-    foreach my $def (sort keys %defs) {
-        print "$def\n" unless defined $refs{$def};
-    }
 } elsif ($command eq "raw") {
     foreach my $addr (sort keys %raw) {
         print "$addr\n";
     }
 } elsif ($command eq "") {
-    printf("unscoped: %4d  scoped: %4d  raw: %4d  unrefed: %4d\n",
-           $unscoped, $scoped, $raws, $unrefed);
+    printf("unscoped: %4d  scoped: %4d  raw: %4d\n",
+           $unscoped, $scoped, $raws);
 } else {
     die "Unknown command: $command\n";
 }

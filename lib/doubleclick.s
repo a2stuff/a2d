@@ -21,21 +21,18 @@ loop:   dec16   counter
         MGTK_CALL MGTK::PeekEvent, event_params
 
         ;; Check coords, bail if pixel delta exceeded
-        jsr     check_delta
+        jsr     CheckDelta
         bmi     exit            ; moved past delta; no double-click
 
         lda     event_kind
         cmp     #MGTK::EventKind::no_event
-        beq     loop
+        beq     loop            ; nothing to consume
+
         cmp     #MGTK::EventKind::drag
-        beq     loop
+        beq     consume
         cmp     #MGTK::EventKind::button_up
-        bne     :+
-
-        MGTK_CALL MGTK::GetEvent, event_params
-        jmp     loop
-
-:       cmp     #MGTK::EventKind::button_down
+        beq     consume
+        cmp     #MGTK::EventKind::button_down
         beq     :+
         cmp     #MGTK::EventKind::apple_key ; modified-click
         bne     exit
@@ -45,14 +42,18 @@ loop:   dec16   counter
 
 exit:   return  #$FF            ; not double-click
 
+consume:
+        MGTK_CALL MGTK::GetEvent, event_params
+        jmp     loop
+
         ;; Is the new coord within range of the old coord?
-.proc check_delta
+.proc CheckDelta
         ;; compute x delta
-        lda     event_xcoord
+        lda     event_params + MGTK::Event::xcoord
         sec
         sbc     xcoord
         sta     delta
-        lda     event_xcoord+1
+        lda     event_params + MGTK::Event::xcoord+1
         sbc     xcoord+1
         bpl     :+
 
@@ -69,11 +70,11 @@ fail:   return  #$FF
 
         ;; compute y delta
 check_y:
-        lda     event_ycoord
+        lda     event_params+MGTK::Event::ycoord
         sec
         sbc     ycoord
         sta     delta
-        lda     event_ycoord+1
+        lda     event_params+MGTK::Event::ycoord+1
         sbc     ycoord+1
         bpl     :+
 

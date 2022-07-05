@@ -43,7 +43,7 @@ The naming style is in flux: see https://github.com/a2stuff/a2d/issues/112
 
 * Constants (symbols) should use `kTitleCase`, and are defined with `=`, e.g. `kExample = 1234`
 
-* Callable procedures should use `snake_case` or `TitleCase`, and are defined with `.proc`
+* Callable procedures should use `TitleCase`, and are defined with `.proc`
 
 * Structure definitions (`.struct`) should use `TitleCase`, with member labels in `snake_case`.
 
@@ -117,18 +117,36 @@ xcoord: .word
         jmp     @retry
 ```
 
+* **Do** use tail-call optimization (replacing `JSR label` / `RTS` with `JMP label`) as this pattern is well understood.
+    * As always, add comments if the usage might not be obvious (e.g. not at the end of a proc)
+    * The con of this is the true call stack is obscured, making debugging more difficult, but the pattern is common enough that this can't be relied on.
+
+* **Do** use `IF_xx` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
+
+* Annotate fall-through. A `;; fall through` comment can be used, but the preferred form is with the `FALL_THROUGH_TO` assertion macro to prevent refactoring mistakes.
+
+```asm
+        ...
+        lda     #alert_num
+        FALL_THROUGH_TO ShowAlert
+.endproc
+
+.proc ShowAlert
+        ...
+```
+
 ## Literals
 
 * Use binary `%00110110` for bit patterns
 * Use decimal for numbers (counts, dimensions, etc)
 * Use hex for geeky values, e.g. $7F (bit mask), $80 (high bit),
-   $FF (all bits set) when bits would be less readble.
+   $FF (all bits set) when bits would be less readable.
 * Avoid magic numbers where possible:
-   * Define local variables (e.g. `ptr := $06`)
-   * Define offsets, constants, etc.
-   * Use `.struct` definitions to define offsets into structures
-   * Use math where necessary (e.g. `ldy #offset2 - offset1`)
-   * Use `.sizeof()` (or math if needed) rather than hardcoding sizes
+    * Define local variables (e.g. `ptr := $06`)
+    * Define offsets, constants, etc.
+    * Use `.struct` definitions to define offsets into structures
+    * Use math where necessary (e.g. `ldy #offset2 - offset1`)
+    * Use `.sizeof()` (or math if needed) rather than hardcoding sizes
 
 
 ## Structure
@@ -136,7 +154,7 @@ xcoord: .word
 * Delimit code blocks with `.proc`:
 
 ```asm
-.proc some_routine
+.proc SomeRoutine
         lda     $06
         rol
         rts
@@ -146,7 +164,7 @@ xcoord: .word
 * Try to encapsulate locally used data as much as possible.
 
 ```asm
-.proc some_routine
+.proc SomeRoutine
         ptr := $06
         lda     ptr
         sta     stash
@@ -156,10 +174,10 @@ stash:  .byte   0
 .endproc
 ```
 
-* Use `impl` if the entry point is not at the start:
+* Use `Impl` if the entry point is not at the start:
 
 ```asm
-.proc some_routine_impl
+.proc SomeRoutineImpl
 stash:  .byte   0
 
         ptr := $06
@@ -169,7 +187,7 @@ start:  lda     ptr
         rts
 
 .endproc
-        some_routine := some_routine_impl::start
+SomeRoutine := SomeRoutineImpl::start
 ```
 
 * Delimit procedures with comments and document inputs, outputs, errors, and other assumptions.
@@ -257,14 +275,15 @@ well in the future.
 
 * Add a label for the value being modified (byte or address). Use
    [cheap local labels](https://cc65.github.io/doc/ca65.html#ss6.5) via the
-   `@`-prefix where possible so make self-modification references more
+   `@`-prefix where possible to make self-modification references more
    visible.
+* Use `SELF_MODIFIED` ($1234) or `SELF_MODIFIED_BYTE` ($12) to self-document.
 
 ```asm
         sta     @jump_addr
         stx     @jump_addr+1
         @jump_addr := *+1
-        jmp     $0000
+        jmp     SELF_MODIFIED
 ```
 ```asm
         sty     @count
@@ -272,7 +291,7 @@ well in the future.
 :       sta     table,y
         iny
         @count := *+1
-        cpy     #00
+        cpy     #SELF_MODIFIED_BYTE
         bne     :-
 ```
 

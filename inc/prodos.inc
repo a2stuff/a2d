@@ -9,6 +9,7 @@ MLI             := $BF00        ; Entry point
 DATETIME        := $BF06        ; JMP to clock routine
 DEVADR          := $BF10        ; Device driver addresses ($BF10-$BF2F)
 NODEV           := $BF10        ; "No Device Connected" entry (slot 0)
+RAMSLOT         := $BF26        ; Slot 3, Drive 2 is /RAM's driver vector
 DEVNUM          := $BF30        ; Most recent accessed device
 DEVCNT          := $BF31        ; Number of on-line devices minus 1
 DEVLST          := $BF32        ; Up to 14 units ($BF32-$BF3F)
@@ -28,6 +29,27 @@ KVERSION        := $BFFF        ; ProDOS Kernel Version
 SELECTOR        := $D100
 
 BLOCK_SIZE      = $200
+
+;;; ============================================================
+;;; Unit Numbers
+;;; ============================================================
+
+;;; Mask needed when preparing a `DEVLST` entry for:
+;;; * Filling `DRIVER_UNIT_NUMBER` before a driver call
+;;; * Preparing params for an `ON_LINE` call
+;;; * Comparing against `DEVNUM`
+;;; * Looking up a driver address in `DEVADR` (mask then LSR 3x)
+;;; * Extracting the slot and drive (high bits are DSSS)
+.ifndef PRODOS_2_5
+UNIT_NUM_MASK   = $F0           ; DSSS0000
+.else
+;;; Per https://prodos8.com/releases/prodos-25/
+UNIT_NUM_MASK   = $FF           ; DSSS00XY (but preserve all bits)
+.endif ; PRODOS_2_5
+
+;;; Mask off just the slot bits from a unit number. Used when
+;;; constructing $Cn00 pointer to probe firmware.
+UNIT_NUM_SLOT_MASK      = %01110000 ; 0SSS0000
 
 ;;; ============================================================
 ;;; MLI Calls
@@ -84,6 +106,7 @@ FT_AWP          = $1A           ; AppleWorks Word Processing *
 FT_ASP          = $1B           ; AppleWorks Spreadsheet *
 FT_SRC          = $B0           ; IIgs system type; re-used?
 FT_S16          = $B3           ; IIgs Application Program
+FT_MUSIC        = $D5           ; Music File
 FT_PAS          = $EF           ; Pascal Area *
 FT_CMD          = $F0           ; ProDOS Command File *
 FT_INT          = $FA           ; Integer BASIC Program *
@@ -114,7 +137,11 @@ ACCESS_LOCKED   = %00100001
 ;;; Storage Types
 ;;; ============================================================
 
-ST_STANDARD_FILE        = $01
+ST_SEEDLING_FILE        = $01
+ST_SAPLING_FILE         = $02
+ST_TREE_FILE            = $03
+ST_PASCAL_AREA          = $04   ; not supported by DeskTop
+ST_FORKED_FILE          = $05   ; not supported by DeskTop
 ST_LINKED_DIRECTORY     = $0D
 ST_VOLUME_DIRECTORY     = $0F
 
@@ -125,6 +152,7 @@ ST_VOLUME_DIRECTORY     = $0F
 ERR_IO_ERROR          = $27
 ERR_DEVICE_NOT_CONNECTED = $28
 ERR_WRITE_PROTECTED   = $2B
+ERR_DEVICE_OFFLINE    = $2F     ; Technical Note: ProDOS #21: Identifying ProDOS Devices
 ERR_INVALID_PATHNAME  = $40
 ERR_INVALID_REFERENCE = $43
 ERR_PATH_NOT_FOUND    = $44
@@ -255,11 +283,18 @@ DRIVER_COMMAND_FORMAT  = 3
 ;;; Macros
 ;;; ============================================================
 
-.macro  MLI_CALL    op, addr
-        jsr MLI
-        .byte op
-        .addr addr
+;;; Scopes define their own MLIEntry identifiers (e.g. MLIEntry := MLI)
+;;; This allows for helpers that e.g. bank switch before calling.
+.macro MLI_CALL call, addr
+        jsr     MLIEntry
+        .byte   call
+    .if .paramcount > 1
+        .addr   addr
+    .else
+        .addr   0
+    .endif
 .endmacro
+
 
 .macro DEFINE_OPEN_PARAMS name, pn, io, rn
     .if .xmatch(.string(pn), "pathname")

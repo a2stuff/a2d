@@ -4,8 +4,6 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        RESOURCE_FILE "res.res"
-
 ;;; ============================================================
 ;;; Segment loaded into AUX $D200-$ECFF
 ;;; ============================================================
@@ -24,75 +22,10 @@ notpenBIC:      .byte   7
 ;;; ============================================================
 ;;; Re-used param space for events/queries (10 bytes)
 
-event_params := *
-event_kind := event_params + 0
-        ;; if kind is key_down
-event_key := event_params + 1
-event_modifiers := event_params + 2
-        ;; if kind is no_event, button_down/up, drag, or apple_key:
-event_coords := event_params + 1
-event_xcoord := event_params + 1
-event_ycoord := event_params + 3
-        ;; if kind is update:
-event_window_id := event_params + 1
-
-activatectl_params := *
-activatectl_which_ctl := activatectl_params + 0
-activatectl_activate  := activatectl_params + 1
-
-trackthumb_params := *
-trackthumb_which_ctl := trackthumb_params + 0
-trackthumb_mousex := trackthumb_params + 1
-trackthumb_mousey := trackthumb_params + 3
-trackthumb_thumbpos := trackthumb_params + 5
-trackthumb_thumbmoved := trackthumb_params + 6
-        .assert trackthumb_mousex = event_xcoord, error, "param mismatch"
-        .assert trackthumb_mousey = event_ycoord, error, "param mismatch"
-
-updatethumb_params := *
-updatethumb_which_ctl := updatethumb_params
-updatethumb_thumbpos := updatethumb_params + 1
-updatethumb_stash := updatethumb_params + 5 ; not part of struct
-
-screentowindow_params := *
-screentowindow_window_id := screentowindow_params + 0
-screentowindow_screenx := screentowindow_params + 1
-screentowindow_screeny := screentowindow_params + 3
-screentowindow_windowx := screentowindow_params + 5
-screentowindow_windowy := screentowindow_params + 7
-        .assert screentowindow_screenx = event_xcoord, error, "param mismatch"
-        .assert screentowindow_screeny = event_ycoord, error, "param mismatch"
-
-findwindow_params := * + 1    ; offset to x/y overlap event_params x/y
-findwindow_mousex := findwindow_params + 0
-findwindow_mousey := findwindow_params + 2
-findwindow_which_area := findwindow_params + 4
-findwindow_window_id := findwindow_params + 5
-        .assert findwindow_mousex = event_xcoord, error, "param mismatch"
-        .assert findwindow_mousey = event_ycoord, error, "param mismatch"
-
-findcontrol_params := * + 1   ; offset to x/y overlap event_params x/y
-findcontrol_mousex := findcontrol_params + 0
-findcontrol_mousey := findcontrol_params + 2
-findcontrol_which_ctl := findcontrol_params + 4
-findcontrol_which_part := findcontrol_params + 5
-        .assert findcontrol_mousex = event_xcoord, error, "param mismatch"
-        .assert findcontrol_mousey = event_ycoord, error, "param mismatch"
-
-findicon_params := * + 1      ; offset to x/y overlap event_params x/y
-findicon_mousex := findicon_params + 0
-findicon_mousey := findicon_params + 2
-findicon_which_icon := findicon_params + 4
-findicon_window_id := findicon_params + 5
-        .assert findicon_mousex = event_xcoord, error, "param mismatch"
-        .assert findicon_mousey = event_ycoord, error, "param mismatch"
-
-        ;; Enough space for all the param types, and then some
-        .res    10, 0
-
+        .include "../lib/event_params.s"
 ;;; ============================================================
 
-.params getwinport_params2
+.params getwinport_params
 window_id:     .byte   0
 a_grafport:     .addr   window_grafport
 .endparams
@@ -104,59 +37,26 @@ a_grafport:     .addr   window_grafport
 mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
+        DEFINE_RECT maprect, 0, 0, 0, 0
 penpattern:     .res    8, 0
 colormasks:     .byte   0, 0
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_black
 fontptr:        .addr   0
 .endparams
+        .assert .sizeof(window_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
 
 ;;; GrafPort used for nearly all operations. Usually re-initialized
 ;;; before use.
 
-.params main_grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 0, 0
-penpattern:     .res    8, 0
-colormasks:     .byte   0, 0
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   0
-textbg:         .byte   MGTK::textbg_black
-fontptr:        .addr   0
-.endparams
-        main_grafport_viewloc_xcoord := main_grafport::viewloc::xcoord
-        main_grafport_cliprect_x1 := main_grafport::cliprect::x1
-        main_grafport_cliprect_x2 := main_grafport::cliprect::x2
-        main_grafport_cliprect_y2 := main_grafport::cliprect::y2
+desktop_grafport:        .tag   MGTK::GrafPort
 
-
-;;; GrafPort used specifically when setting/clearing icon highlights,
-;;; since icons are in screen space coordinates.
-
-.params highlight_grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT cliprect, 0, 0, 10, 10
-penpattern:     .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   0
-textbg:         .byte   MGTK::textbg_black
-fontptr:        .addr   DEFAULT_FONT
-.endparams
+;;; GrafPort used for icon operations in inactive windows, to
+;;; prevent any drawing.
+null_grafport:          .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
@@ -172,23 +72,41 @@ savearea:       .addr   SAVE_AREA_BUFFER
 savesize:       .word   kSaveAreaSize
 .endparams
 
+.params machine_config
+;;; ID bytes, copied from ROM
+id_version:     .byte   0       ; ROM FBB3; $06 = IIe or later
+id_idbyte:      .byte   0       ; ROM FBC0; $00 = IIc or later
+id_idbyte2:     .byte   0       ; ROM FBBF; IIc ROM version (IIc+ = $05)
+id_idlaser:     .byte   0       ; ROM FB1E; $AC = Laser 128
+iigs_flag:      .byte   0       ; High bit set if IIgs
+
+;;; High bit set if Le Chat Mauve Eve present
+lcm_eve_flag:
+        .byte   0
+
+;;; Shift key mod sets PB2 if shift is *not* down. Since we can't detect
+;;; the mod, snapshot on init (and assume shift is not down) and XOR.
+pb2_initial_state:
+        .byte   0
+.endparams
+
 .params initmenu_params
-solid_char:     .byte   kGlyphSolidApple
 open_char:      .byte   kGlyphOpenApple
+solid_char:     .byte   kGlyphSolidApple
+        .assert (solid_char - open_char) = 1, error, "solid_char must follow open_char immediately"
 check_char:     .byte   kGlyphCheckmark
 control_char:   .byte   '^'
 .endparams
 
-zp_use_flag0:
-        .byte   0
+setzp_params_nopreserve:           ; performance over convenience
+        .byte   MGTK::zp_overwrite ; set at startup
+
+setzp_params_preserve:            ; convenience over performance
+        .byte   MGTK::zp_preserve ; used while DAs are running
 
 .params trackgoaway_params
 goaway:.byte   0
 .endparams
-
-double_click_flag:
-        .byte   0               ; high bit clear if double-clicked, set otherwise
-
 
 ;;; Every event loop tick, a counter is incremented (by 3); when it passes
 ;;; this value, periodic tasks are run (e.g. drawing the clock, checking
@@ -200,9 +118,6 @@ periodic_task_delay:
 kPeriodicTaskDelayIIe  = $96
 kPeriodicTaskDelayIIc  = $FA
 kPeriodicTaskDelayIIgs = $FD
-
-warning_dialog_num:
-        .byte   $00
 
 ;;; Cursors (bitmap - 2x12 bytes, mask - 2x12 bytes, hotspot - 2 bytes)
 
@@ -299,37 +214,33 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
 num_selector_list_items:
         .byte   0
 
-LD344:  .byte   0
+        ;; Cleared when Selector entries changed, set once
+        ;; the menu state has been updated.
+selector_menu_items_updated_flag:
+        .byte   0
+
 buf_filename2:  .res    16, 0
-buf_win_path:   .res    43, 0
 
-temp_string_buf:
+        ;; Used during launching
+buf_win_path:
         .res    kPathBufferSize, 0
 
-        ;; used when splitting string for text field
-split_buf:
-        .res    kPathBufferSize, 0
-
-;;; In common dialog (copy/edit file, add/edit selector entry):
+;;; In common dialog (copy/edit file, add/edit shortcut):
 ;;; * path_buf0 has the contents of the top input field
 ;;; * path_buf1 has the contents of the bottom input field
-;;; * path_buf2 has the contents of the focused field after insertion point
-;;;   (May have leading caret glyph $06)
 
 path_buf0:  .res    kPathBufferSize, 0
 path_buf1:  .res    kPathBufferSize, 0
-path_buf2:  .res    kPathBufferSize, 0
 
 ;;; ============================================================
 ;;; Dialog used for prompts (yes/no/all) and operation progress
 
-kPromptDialogWindowID = $0F
-
 .params winfo_prompt_dialog
+        kWindowId = $0F
         kWidth = aux::kPromptDialogWidth
         kHeight = aux::kPromptDialogHeight
 
-window_id:      .byte   kPromptDialogWindowID
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -349,150 +260,96 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
+textbg:         .byte   MGTK::textbg_white
+fontptr:        .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+.endparams
+
+        kDialogLabelDefaultX    =  40
+        kDialogLabelRightX      = 160
+        kDialogValueLeft        = 170
+
+        kNameInputLeft = kDialogLabelDefaultX
+        kNameInputTop = 67
+        kNameInputWidth = 320
+
+        DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight
+        DEFINE_RECT_SZ name_input_erase_rect, kNameInputLeft+1, kNameInputTop+1, kNameInputWidth-2, kTextBoxHeight-2
+        DEFINE_POINT name_input_textpos, kNameInputLeft + kTextBoxTextHOffset, kNameInputTop + kTextBoxTextVOffset
+        DEFINE_POINT pos_dialog_title, 0, 18
+
+        DEFINE_POINT dialog_label_base_pos, kDialogLabelDefaultX, 30
+
+        DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
+
+;;; $00 = ok/cancel
+;;; $80 = ok (only)
+;;; $40 = yes/no/all/cancel
+prompt_button_flags:
+        .byte   0
+has_input_field_flag:
+        .byte   0
+
+format_erase_overlay_flag:      ; set when prompt is showing device picker
+        .byte   0
+
+
+;;; ============================================================
+;;; "About Apple II DeskTop" Dialog
+
+.params winfo_about_dialog
+        kWindowId = $18
+        kWidth = aux::kAboutDialogWidth
+        kHeight = aux::kAboutDialogHeight
+
+window_id:      .byte   kWindowId
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontlength:  .word   50
+maxcontwidth:   .word   500
+maxcontlength:  .word   140
+port:
+        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
+penpattern:     .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
 ;;; ============================================================
-;;; Dialog used for Selector > Add/Edit an Entry...
-
-kFilePickerDlgWindowID  = $12
-kFilePickerDlgWidth     = 500
-kFilePickerDlgHeight    = 153
-
-.params winfo_file_dialog
-        kWidth = kFilePickerDlgWidth
-        kHeight = kFilePickerDlgHeight
-
-window_id:      .byte   kFilePickerDlgWindowID
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_none
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   0
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   150
-mincontlength:  .word   50
-maxcontwidth:   .word   500
-maxcontlength:  .word   140
-port:
-        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   0
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-.endparams
-
-;;; File picker within Add/Edit an Entry dialog
-
-kEntryListCtlWindowID = $15
-
-.params winfo_file_dialog_listbox
-        kWidth = 125
-        kHeight = 72
-
-window_id:      .byte   kEntryListCtlWindowID
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_normal
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   3
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   100
-mincontlength:  .word   kHeight
-maxcontwidth:   .word   100
-maxcontlength:  .word   kHeight
-port:
-        DEFINE_POINT viewloc, 53, 48
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   0
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-.endparams
-
-;;; "About Apple II DeskTop" Dialog
-
-.params winfo_about_dialog
-        kWidth = aux::kAboutDialogWidth
-        kHeight = aux::kAboutDialogHeight
-
-window_id:      .byte   $18
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_none
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   0
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   150
-mincontlength:  .word   50
-maxcontwidth:   .word   500
-maxcontlength:  .word   140
-port:
-        DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
-
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   0
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-.endparams
-winfo_about_dialog_port    := winfo_about_dialog::port
-
-;;; Dialog used for Edit/Delete/Run an Entry ...
-
-kEntryDialogWindowID = $1B
+;;; Dialog for Edit/Delete/Run a Shortcut...
 
 .params winfo_entry_picker
+        kWindowId = $1B
         kWidth = 350
-        kHeight = 118
+        kHeight = 126
 
-window_id:      .byte   kEntryDialogWindowID
+window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -512,85 +369,67 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, kWidth, kHeight
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_RECT name_input_rect, 40, 61+6, 360, 71+6
-        DEFINE_POINT name_input_textpos, 45, 70+6
-        DEFINE_POINT pos_dialog_title, 0, 18
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+        DEFINE_RECT_FRAME entry_picker_frame_rect, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
 
-        DEFINE_POINT dialog_label_base_pos, 40, 35-5
-
-        kDialogLabelDefaultX = 40
-        DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
-
-.params name_input_mapinfo
-        DEFINE_POINT viewloc, 80, 35+7
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   0
-        DEFINE_RECT maprect, 0, 0, 358, 100
-.endparams
-
-        kEntryPickerCol2 = 115
-        kEntryPickerCol3 = 220
-        kEntryPickerItemWidth  = 104
-        kEntryPickerItemHeight = 9 ; default font height
-
-        DEFINE_RECT_INSET entry_picker_outer_rect, 4, 2, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
-        DEFINE_RECT_INSET entry_picker_inner_rect, 5, 3, winfo_entry_picker::kWidth, winfo_entry_picker::kHeight
+        ;; Options control metrics
+        kShortcutPickerCols = 3
+        kShortcutPickerRows = 8
+        kShortcutPickerRowShift = 3 ; log2(kShortcutPickerRows)
+        kShortcutPickerLeft = (winfo_entry_picker::kWidth - kShortcutPickerItemWidth * kShortcutPickerCols + 1) / 2
+        kShortcutPickerTop  = 24
+        kShortcutPickerItemWidth  = 104
+        kShortcutPickerItemHeight = kListItemHeight
+        kShortcutPickerTextHOffset = 10
+        kShortcutPickerTextYOffset = kShortcutPickerItemHeight - 1
 
         ;; Line endpoints
-        DEFINE_POINT entry_picker_line1_start, 6, 22
-        DEFINE_POINT entry_picker_line1_end, 344, 22
+        DEFINE_POINT entry_picker_line1_start, kBorderDX*2, 22
+        DEFINE_POINT entry_picker_line1_end, winfo_entry_picker::kWidth - kBorderDX*2, 22
+        DEFINE_POINT entry_picker_line2_start, kBorderDX*2, winfo_entry_picker::kHeight-21
+        DEFINE_POINT entry_picker_line2_end, winfo_entry_picker::kWidth - kBorderDX*2, winfo_entry_picker::kHeight-21
 
-        ;; Line endpoints
-        DEFINE_POINT entry_picker_line2_start, 6, winfo_entry_picker::kHeight-21
-        DEFINE_POINT entry_picker_line2_end, 344, winfo_entry_picker::kHeight-21
-
-        DEFINE_RECT_SZ entry_picker_ok_rect, 210, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
-
-        DEFINE_RECT_SZ entry_picker_cancel_rect, 40, winfo_entry_picker::kHeight-18, kButtonWidth, kButtonHeight
-
-        DEFINE_POINT entry_picker_ok_pos, 215, winfo_entry_picker::kHeight-8
-        DEFINE_POINT entry_picker_cancel_pos, 45, winfo_entry_picker::kHeight-8
-
-enter_the_full_pathname_label:
-        PASCAL_STRING res_string_selector_label_enter_pathname
-enter_the_name_to_appear_label:
-        PASCAL_STRING res_string_selector_label_enter_name
-
-        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,               343-14, 39
-        DEFINE_LABEL run_list,           {kGlyphOpenApple,res_string_selector_label_run_list},       363-14, 48
-        DEFINE_LABEL other_run_list,     {kGlyphOpenApple,res_string_selector_label_other_run_list}, 363-14, 57
-        DEFINE_LABEL down_load,          res_string_selector_label_download,                         343-14, 73
-        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},  363-14, 82
-        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},   363-14, 91
-        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},          363-14,100
-
+        ;; Used when rendering entries
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
-        DEFINE_RECT entry_picker_all_items_rect, 6, 23, 344, winfo_entry_picker::kHeight-23
+        DEFINE_BUTTON entry_picker_ok, res_string_button_ok, 210, winfo_entry_picker::kHeight-18
+        DEFINE_BUTTON entry_picker_cancel, res_string_button_cancel, 40, winfo_entry_picker::kHeight-18
 
-;;; In Format/Erase Disk picker dialog, this is the selected index (0-based),
-;;; or $FF if no drive is selected
-selected_device_index:
-        .byte   0
+;;; ============================================================
+;;; Format/Erase dialogs
 
-        DEFINE_RECT select_volume_rect, 0, 0, 0, 0
+        ;; Options control metrics
+        kVolPickerCols = 3
+        kVolPickerRows = 4
+        kVolPickerRowShift = 2  ; log2(kVolPickerRows)
+        kVolPickerLeft = (winfo_prompt_dialog::kWidth - kVolPickerItemWidth * kVolPickerCols + 1) / 2
+        kVolPickerTop = 44
+        kVolPickerItemWidth = 127
+        kVolPickerItemHeight = kListItemHeight
+        kVolPickerTextHOffset = 1
+        kVolPickerTextVOffset = kVolPickerItemHeight-1
 
-;;; Used in Format/Erase dialogs
-num_volumes:
-        .byte   0
+        ;; Line endpoints
+        DEFINE_POINT vol_picker_line1_start, 7, kVolPickerTop - 2
+        DEFINE_POINT vol_picker_line1_end, winfo_prompt_dialog::kWidth - 8, kVolPickerTop - 2
+        DEFINE_POINT vol_picker_line2_start, 7, winfo_prompt_dialog::kHeight-22
+        DEFINE_POINT vol_picker_line2_end, winfo_prompt_dialog::kWidth - 8, winfo_prompt_dialog::kHeight-22
+
+        ;; Used when rendering entries
+        DEFINE_RECT vol_picker_item_rect, 0, 0, 0, 0
 
 the_dos_33_disk_label:
         PASCAL_STRING res_string_the_dos_33_disk_suffix_pattern
@@ -605,47 +444,14 @@ the_disk_in_slot_label:
 buf_filename:
         .res    16, 0
 
-;;; $00 = ok/cancel
-;;; $80 = ok (only)
-;;; $40 = yes/no/all/cancel
-prompt_button_flags:
-        .byte   0
-has_input_field_flag:
-        .byte   0
+;;; ============================================================
+;;; Resources used for line edit (text input) controls. Used
+;;; by both DeskTop's name prompt dialog (rename, duplicate,
+;;; format, erase, ...) and the common file picker dialog.
 
-prompt_ip_counter:
-        .byte   1               ; immediately decremented to 0 and reset
+        .include "../lib/line_edit_res.s"
 
-prompt_ip_flag:
-        .byte   0
-
-;;; Flag that controls the behavior of the file dialog picker.
-LD8EC:  .byte   0
-
-format_erase_overlay_flag:
-        .byte   0
-
-str_insertion_point:
-        PASCAL_STRING {kGlyphInsertionPoint} ; do not localize
-
-;;; Flags that control the behavior of the file picker dialog.
-
-LD8F0:  .byte   0
-LD8F1:  .byte   0
-LD8F2:  .byte   0
-LD8F3:  .byte   0
-LD8F4:  .byte   0
-LD8F5:  .byte   0
-
-        ;; Used to draw/clear insertion point; overwritten with char
-        ;; to right of insertion point as needed.
-str_1_char:
-        PASCAL_STRING {0}       ; do not localize
-
-        ;; Used as suffix for text being edited to account for insertion
-        ;; point adding extra width.
-str_2_spaces:
-        PASCAL_STRING "  "      ; do not localize
+;;; ============================================================
 
 str_file_suffix:
         PASCAL_STRING res_string_file_suffix
@@ -653,7 +459,7 @@ str_files_suffix:
         PASCAL_STRING res_string_files_suffix
 
 str_file_count:                 ; populated with number of files
-        PASCAL_STRING " ##,### " ; do not localize
+        PASCAL_STRING " ##,### "
 
 str_kb_suffix:
         PASCAL_STRING res_string_kb_suffix       ; suffix for kilobytes
@@ -661,92 +467,96 @@ str_kb_suffix:
 file_count:
         .word   0
 
-        DEFINE_POINT file_dialog_title_pos, 0, 13
+;;; ============================================================
+;;; Resources for Add/Edit a Shortcut dialog
 
-        DEFINE_RECT rect_file_dialog_selection, 0, 0, 125, 0
-
-        DEFINE_POINT picker_entry_pos, 2, 0
-
-        .byte   $00,$00         ; Unused ???
-
-str_folder:
-        PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight} ; do not localize
-
-selected_index:                 ; $FF if none
-        .byte   0
+enter_the_full_pathname_label:
+        PASCAL_STRING res_string_selector_label_enter_pathname
+enter_the_name_to_appear_label:
+        PASCAL_STRING res_string_selector_label_enter_name
 
 
-LD921:  .byte   0
+;;; Padding between radio/checkbox and label
+kLabelPadding = 5
 
+kRadioButtonWidth       = 15
+kRadioButtonHeight      = 7
 
-kRadioButtonWidth = 10
-kRadioButtonHeight = 6
+.params rb_params
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   SELF_MODIFIED
+mapwidth:       .byte   3
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+.endparams
 
-        DEFINE_RECT_SZ rect_run_list_radiobtn,       346-14, 41, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_other_run_list_radiobtn, 346-14, 50, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_boot_radiobtn,  346-14, 75, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_at_first_use_radiobtn,   346-14, 84, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_never_radiobtn,          346-14, 93, kRadioButtonWidth, kRadioButtonHeight
+checked_rb_bitmap:
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
+        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
+        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
+        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
 
-kRadioControlWidth = 134+30
-kRadioControlHeight = 8
+unchecked_rb_bitmap:
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
+        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
+        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
+        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
 
-        DEFINE_RECT_SZ rect_run_list_ctrl,       346-14, 40, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_other_run_list_ctrl, 346-14, 49, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_boot_ctrl,  346-14, 74, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_at_first_use_ctrl,   346-14, 83, kRadioControlWidth, kRadioControlHeight
-        DEFINE_RECT_SZ rect_never_ctrl,          346-14, 92, kRadioControlWidth, kRadioControlHeight
+kRadioButtonLeft  = 332
+kRadioButtonHOffset = kLabelPadding
+kRadioControlHeight = 8         ; system font height - 1
 
-        DEFINE_RECT rect_scratch, 0, 0, 0, 0
+        ;; Rect widths are dynamically computed based on label
+
+        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 37
+
+        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   kRadioButtonLeft, 39, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},   kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 47
+
+        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, kRadioButtonLeft, 48, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 56
+
+        DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 71
+
+        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      kRadioButtonLeft, 73, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},      kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 81
+
+        DEFINE_RECT_SZ rect_at_first_use_ctrl,       kRadioButtonLeft, 82, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},       kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 90
+
+        DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 91, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
+        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},              kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 99
 
 ;;; ============================================================
 
-.scope file_dialog_res
+input1_dirty_flag:              ; stash dirty flag when input2 is active
+        .byte   0
+input2_dirty_flag:              ; stash dirty flag when input1 is active
+        .byte   0
 
-        DEFINE_RECT_INSET dialog_frame_rect, 4, 2, kFilePickerDlgWidth, kFilePickerDlgHeight
+saved_src_index:
+        .byte   0
 
-        DEFINE_RECT rect_D9C8, 27, 16, 174, 26
+        FONT := DEFAULT_FONT
+        .define FD_EXTENDED 1
+        .include "../lib/file_dialog_res.s"
 
-        DEFINE_BUTTON change_drive, res_string_button_change_drive,  193, 28
-        DEFINE_BUTTON open,         res_string_button_open,          193, 42
-        DEFINE_BUTTON close,        res_string_button_close,         193, 56
-        DEFINE_BUTTON cancel,       res_string_button_cancel,        193, 71
-        DEFINE_BUTTON ok,           res_string_button_ok,            193, 87
-
-        DEFINE_POINT dialog_sep_start, 323-8, 28
-        DEFINE_POINT dialog_sep_end, 323-8, 100
-
-        .byte   $81,$D3,$00     ; ???
-
-        DEFINE_LABEL disk, res_string_label_disk, 28,25
-
-        DEFINE_POINT input1_label_pos, 28, 112
-        DEFINE_POINT input2_label_pos, 28, 135
-
-textbg1:
-        .byte   $00
-textbg2:
-        .byte   $7F
+file_to_delete_label:
+        PASCAL_STRING res_string_delete_file_label_file_to_delete
 
 source_filename_label:
         PASCAL_STRING res_string_copy_file_label_source_filename
 
 destination_filename_label:
         PASCAL_STRING res_string_copy_file_label_destination_filename
-
-kCommonInputWidth = 435
-kCommonInputHeight = 11
-
-        DEFINE_RECT_SZ input1_rect, 28, 113, kCommonInputWidth, kCommonInputHeight
-        DEFINE_POINT input1_textpos, 30, 123
-
-        DEFINE_RECT_SZ input2_rect, 28, 136, kCommonInputWidth, kCommonInputHeight
-        DEFINE_POINT input2_textpos, 30, 146
-
-file_to_delete_label:
-        PASCAL_STRING res_string_delete_file_label_file_to_delete
-
-.endscope
 
 ;;; ============================================================
 
@@ -825,12 +635,40 @@ desktop_icon_usage_table:
 
 ;;; ============================================================
 
-        PAD_TO $DB00
+str_jan:PASCAL_STRING res_string_month_name_1
+str_feb:PASCAL_STRING res_string_month_name_2
+str_mar:PASCAL_STRING res_string_month_name_3
+str_apr:PASCAL_STRING res_string_month_name_4
+str_may:PASCAL_STRING res_string_month_name_5
+str_jun:PASCAL_STRING res_string_month_name_6
+str_jul:PASCAL_STRING res_string_month_name_7
+str_aug:PASCAL_STRING res_string_month_name_8
+str_sep:PASCAL_STRING res_string_month_name_9
+str_oct:PASCAL_STRING res_string_month_name_10
+str_nov:PASCAL_STRING res_string_month_name_11
+str_dec:PASCAL_STRING res_string_month_name_12
+
+month_table:
+        .addr   str_no_date
+        .addr   str_jan,str_feb,str_mar,str_apr,str_may,str_jun
+        .addr   str_jul,str_aug,str_sep,str_oct,str_nov,str_dec
+        ASSERT_ADDRESS_TABLE_SIZE month_table, 13
+
+str_no_date:
+        PASCAL_STRING res_string_no_date
+
+str_space:
+        PASCAL_STRING " "
+str_comma:
+        PASCAL_STRING res_string_comma_infix
+str_at:
+        PASCAL_STRING res_string_at_infix
 
 ;;; ============================================================
 
-selector_menu_addr:
-        .addr   selector_menu
+        PAD_TO $DB00
+
+;;; ============================================================
 
         ;; Buffer for Run List entries
         kMaxRunListEntries = 8
@@ -851,19 +689,19 @@ run_list_paths:
 icon_count:
         .byte   0
 
-        ;; Pointers into icon_entries buffer
+        ;; Pointers into icon_entries buffer (index 0 not used)
 icon_entry_address_table:
-        .res    256, 0
+        .res    (kMaxIconCount+1)*2, 0
 
 ;;; Copy from aux memory of icon list for active window (0=desktop)
 
-        ;; which window buffer (see window_icon_count_table, window_icon_list_table) is copied
+        ;; which window buffer is copied
+        ;; (see `window_entry_count_table`, `window_entry_list_table`)
 cached_window_id: .byte   0
-        ;; number of icons in copied window
-cached_window_icon_count:.byte   0
-        ;; list of icons in copied window
-cached_window_icon_list:   .res    127, 0
-
+        ;; number of entries in copied window
+cached_window_entry_count:.byte   0
+        ;; list of entries (icons or file entry numbers) in copied window
+cached_window_entry_list:   .res    kMaxIconCount, 0
 
 ;;; Index of window with selection (0=desktop)
 selected_window_id:
@@ -873,9 +711,9 @@ selected_window_id:
 selected_icon_count:
         .byte   0
 
-;;; Indexes of selected icons (global, not w/in window, up to 127)
+;;; Indexes of selected icons (global, not w/in window)
 selected_icon_list:
-        .res    127, 0
+        .res    kMaxIconCount, 0
 
 kMaxNumWindows = kMaxDeskTopWindows
 
@@ -895,7 +733,7 @@ window_path_addr_table:
 ;;; ============================================================
 
 str_file_type:
-        PASCAL_STRING " $00"    ; do not localize
+        PASCAL_STRING " $00"
 
 ;;; ============================================================
 
@@ -907,9 +745,13 @@ filename_buf:
         .res    16, 0
 
         ;; Set to $80 for Copy, $FF for Run
-LE05B:  .byte   0
+copy_run_flag:
+        .byte   0
 
 delete_skip_decrement_flag:     ; always set to 0 ???
+        .byte   0
+
+op_ref_num:
         .byte   0
 
 process_depth:
@@ -920,17 +762,15 @@ num_entries_per_block:
         .byte   13
 
 entries_read:
-        .byte   0
-op_ref_num:
-        .byte   0
+        .word   0
 entries_to_skip:
-        .byte   0
+        .word   0
 
 ;;; During directory traversal, the number of file entries processed
 ;;; at the current level is pushed here, so that following a descent
 ;;; the previous entries can be skipped.
 entry_count_stack:
-        .res    170, 0
+        .res    kDirStackBufferSize, 0
 
 entry_count_stack_index:
         .byte   0
@@ -940,17 +780,9 @@ entries_read_this_block:
 
 ;;; ============================================================
 
-;;; Backup copy of DEVLST made before detaching ramdisk
-devlst_backup:
-        .res    kMaxVolumes+1, 0 ; TODO: Why +1?
-
         ;; index is device number (in DEVLST), value is icon number
 device_to_icon_map:
-        .res    kMaxVolumes+1, 0 ; TODO: Why +1?
-
-;;; Path buffer for open_directory logic
-open_dir_path_buf:
-        .res    kPathBufferSize, 0
+        .res    kMaxVolumes, 0
 
 ;;; Window to file record mapping list. Each entry is a window
 ;;; id. Position in the list is the same as position in the
@@ -964,19 +796,13 @@ window_id_to_filerecord_list_entries:
 window_filerecord_table:
         .res    kMaxNumWindows*2
 
-        ;; IconTK::HighlightIcon params
-icon_param2:
-        .byte   0
-
-        ;; IconTK::HighlightIcon params
-icon_param3:
-        .byte   0
-
-redraw_icon_param:
-        .byte   0
-
-        ;; IconTK::HighlightIcon params
-        ;; IconTK::Icon params
+;;; Used for multiple IconTK calls:
+;;; * IconTK::EraseIcon
+;;; * IconTK::HighlightIcon
+;;; * IconTK::IconInRect (with following `tmp_rect`)
+;;; * IconTK::DrawIcon
+;;; * IconTK::RemoveIcon
+;;; * IconTK::UnhighlightIcon
 icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
@@ -994,15 +820,11 @@ saved_stack:
         .byte   0
 
 .params menu_click_params       ; used for MGTK::MenuKey as well
-menu_id:.byte   0
-item_num:.byte  0
+menu_id:        .byte   0
+item_num:       .byte   0
 which_key:      .byte   0
 key_mods:       .byte   0
 .endparams
-
-        ;; ???
-        .byte   $00,$00,$00,$00
-        .byte   $00,$04,$00,$00,$00
 
 .params checkitem_params
 menu_id:        .byte   kMenuIdView
@@ -1020,9 +842,6 @@ menu_id:        .byte   0
 menu_item:      .byte   0
 disable:        .byte   0
 .endparams
-
-file_menu_items_enabled_flag:
-        .byte   0
 
 startup_menu:
         DEFINE_MENU kMenuSizeStartup
@@ -1046,7 +865,7 @@ device_name_table:
 
         .repeat kMaxVolumes+1, i
         .ident(.sprintf("dev%ds", i)) := *
-        .res    28, 0
+        .res    28, 0           ; TODO: Only need 24 = 1 (len) + 16 (name) + 7 (prefix)
         .endrepeat
 
 ;;; Startup menu items (populated by slot scan at startup)
@@ -1065,8 +884,10 @@ startup_slot_table:
 
 ;;; ============================================================
 
+kSelectorMenuMinItems = 5
+
 selector_menu:
-        DEFINE_MENU 5
+        DEFINE_MENU kSelectorMenuMinItems
 @items: DEFINE_MENU_ITEM label_add
         DEFINE_MENU_ITEM label_edit
         DEFINE_MENU_ITEM label_del
@@ -1111,53 +932,23 @@ label_about:
 desk_acc_names:
         .res    kMaxDeskAccCount * kDAMenuItemSize, 0
 
-splash_menu:
-        DEFINE_MENU_BAR 1
-        DEFINE_MENU_BAR_ITEM 1, splash_menu_label, dummy_dd_menu
-
-blank_menu:
-        DEFINE_MENU_BAR 1
-        DEFINE_MENU_BAR_ITEM 1, blank_dd_label, dummy_dd_menu
-
-dummy_dd_menu:
-        DEFINE_MENU 1
-        DEFINE_MENU_ITEM dummy_dd_item
-
-splash_menu_label:
-        PASCAL_STRING .sprintf(res_string_splash_menu_label, kDeskTopProductName, kDeskTopVersionMajor, kDeskTopVersionMinor, kDeskTopVersionSuffix)
-
-blank_dd_label:
-        PASCAL_STRING " "       ; do not localize
-dummy_dd_item:
-        PASCAL_STRING "Rien"    ; French for "nothing" - do not localize
-
-        ;; IconTK::UNHIGHLIGHT_ICON params
-icon_params2:
-        .byte   0
-
 window_title_addr_table:
         .addr   0
-        .addr   winfo1title_ptr
-        .addr   winfo2title_ptr
-        .addr   winfo3title_ptr
-        .addr   winfo4title_ptr
-        .addr   winfo5title_ptr
-        .addr   winfo6title_ptr
-        .addr   winfo7title_ptr
-        .addr   winfo8title_ptr
+        .addr   winfo1title
+        .addr   winfo2title
+        .addr   winfo3title
+        .addr   winfo4title
+        .addr   winfo5title
+        .addr   winfo6title
+        .addr   winfo7title
+        .addr   winfo8title
         ASSERT_ADDRESS_TABLE_SIZE window_title_addr_table, kMaxNumWindows + 1
-
-        ;; (low nibble must match menu order)
-        kViewByIcon = $00
-        kViewByName = $81
-        kViewByDate = $82
-        kViewBySize = $83
-        kViewByType = $84
 
 win_view_by_table:
         .res    kMaxNumWindows, 0
 
-        DEFINE_POINT pos_col_name, 0, 0
+        DEFINE_POINT pos_col_icon,   4, 0
+        DEFINE_POINT pos_col_name,  22, 0
         DEFINE_POINT pos_col_type, 128, 0
         DEFINE_POINT pos_col_size, 166, 0
         DEFINE_POINT pos_col_date, 231, 0
@@ -1196,13 +987,13 @@ port:
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
-        DEFINE_RECT cliprect, 0, 0, 440, 120
+        DEFINE_RECT maprect, 0, 0, 440, 120
 penpattern:     .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   0
+penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -1211,14 +1002,14 @@ nextwinfo:      .addr   0
 buflabel:       .res    18, 0
 .endmacro
 
-        WINFO_DEFN 1, winfo1, winfo1title_ptr
-        WINFO_DEFN 2, winfo2, winfo2title_ptr
-        WINFO_DEFN 3, winfo3, winfo3title_ptr
-        WINFO_DEFN 4, winfo4, winfo4title_ptr
-        WINFO_DEFN 5, winfo5, winfo5title_ptr
-        WINFO_DEFN 6, winfo6, winfo6title_ptr
-        WINFO_DEFN 7, winfo7, winfo7title_ptr
-        WINFO_DEFN 8, winfo8, winfo8title_ptr
+        WINFO_DEFN 1, winfo1, winfo1title
+        WINFO_DEFN 2, winfo2, winfo2title
+        WINFO_DEFN 3, winfo3, winfo3title
+        WINFO_DEFN 4, winfo4, winfo4title
+        WINFO_DEFN 5, winfo5, winfo5title
+        WINFO_DEFN 6, winfo6, winfo6title
+        WINFO_DEFN 7, winfo7, winfo7title
+        WINFO_DEFN 8, winfo8, winfo8title
 
 
 ;;; ============================================================
@@ -1256,7 +1047,7 @@ str_k_available:
         PASCAL_STRING res_string_window_header_k_available_suffix ; suffix for disk space available
 
 str_from_int:                   ; populated by IntToString
-        PASCAL_STRING "000,000" ; 6 digits plus thousands separator - do not localize
+        PASCAL_STRING "000,000" ; 6 digits plus thousands separator
 
 ;;; Computed during startup
 width_items_label_padded:
@@ -1287,21 +1078,24 @@ result:  .byte   0
 ;;; ============================================================
 
 ;;; Each buffer is a list of icons in each window (0=desktop)
-;;; window_icon_count_table = start of buffer = icon count
-;;; window_icon_list_table = first entry in buffer (length = 127)
+;;; window_entry_count_table = start of buffer = icon count
+;;; window_entry_list_table = first entry in buffer (length = `kMaxIconCount`)
+;;; (0 is not a valid icon number)
 
-window_icon_count_table:
+kWindowEntryTableSize = kMaxIconCount + 1
+
+window_entry_count_table:
         .repeat kMaxNumWindows+1,i
-        .addr   WINDOW_ICON_TABLES + $80 * i
+        .addr   WINDOW_ENTRY_TABLES + kWindowEntryTableSize * i
         .endrepeat
 
-window_icon_list_table:
+window_entry_list_table:
         .repeat kMaxNumWindows+1,i
-        .addr   WINDOW_ICON_TABLES + $80 * i + 1
+        .addr   WINDOW_ENTRY_TABLES + kWindowEntryTableSize * i + 1
         .endrepeat
 
 active_window_id:
-        .byte   $00
+        .byte   0
 
 ;;; $00 = window not in use
 ;;; $FF = window in use, but dir (vol/folder) icon deleted
@@ -1326,10 +1120,6 @@ datetime_for_conversion := list_view_filerecord + FileRecord::modification_date
 hex_digits:
         .byte   "0123456789ABCDEF"
 
-;;; Parent window to close after an Open action
-window_id_to_close:
-        .byte   0
-
 ;;; High bit set if menu dispatch via keyboard accelerator, clear otherwise.
 menu_kbd_flag:
         .byte   0
@@ -1340,6 +1130,7 @@ menu_kbd_flag:
 icontype_filetype:   .byte   0
 icontype_auxtype:    .word   0
 icontype_blocks:     .word   0
+icontype_filename:   .addr   0
 
 ;;; Mapping from file info to icon type
 ;;;
@@ -1350,23 +1141,34 @@ icontype_blocks:     .word   0
         mask     .byte ; 0     incoming type masked before comparison
         filetype .byte ; 1     file type for the record (must match)
         flags    .byte ; 2     bit 7 = compare aux; 6 = compare blocks
-        aux      .word ; 3     optional aux type
+        aux_suf  .word ; 3     if ICT_FLAGS_AUX: aux type; if ICT_FLAGS_SUFFIX: suffix string
         blocks   .word ; 5     optional block count
         icontype .byte ; 7     IconType
 .endstruct
-.macro DEFINE_ICTRECORD mask, filetype, flags, aux, blocks, icontype
+
+kICTSentinel = $01     ; not $00, because $00 as a mask is useful
+
+.macro DEFINE_ICTRECORD mask, filetype, flags, aux_suf, blocks, icontype
+        .assert mask <> kICTSentinel, error, "Can't use sentinel value as a mask"
         .byte   mask
         .byte   filetype
         .byte   flags
-        .word   aux
+        .word   aux_suf
         .word   blocks
         .byte   icontype
 .endmacro
         ICT_FLAGS_NONE   = %00000000
-        ICT_FLAGS_AUX    = %10000000
+        ICT_FLAGS_AUX    = %10000000 ; exclusive with ICT_FLAGS_SUFFIX
         ICT_FLAGS_BLOCKS = %01000000
+        ICT_FLAGS_SUFFIX = %00100000 ; exclusive with ICT_FLAGS_AUX
 
 icontype_table:
+        ;; Types entirely defined by file suffix
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_shk_suffix, 0, IconType::archive ; NuFX
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bny_suffix, 0, IconType::archive ; Binary II
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bxy_suffix, 0, IconType::archive ; NuFX in Binary II
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fc_suffix, 0, IconType::graphics ; Apple II Full Color
+
         ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 17, IconType::graphics ; HR image as FOT
@@ -1388,7 +1190,11 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_CMD,       ICT_FLAGS_NONE, 0, 0, IconType::command       ; $F0
         DEFINE_ICTRECORD $FF, FT_BASIC,     ICT_FLAGS_NONE, 0, 0, IconType::basic         ; $FC
         DEFINE_ICTRECORD $FF, FT_REL,       ICT_FLAGS_NONE, 0, 0, IconType::relocatable   ; $FE
+        DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_SUFFIX, str_sys_suffix, 0, IconType::application ; $FF
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
+
+        DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_AUX, $D0E7, 0, IconType::music ; Electric Duet
+        DEFINE_ICTRECORD $FF, $E0,          ICT_FLAGS_AUX, $8002, 0, IconType::archive ; NuFX
 
         ;; IIgs-Specific Files (ranges)
         DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
@@ -1400,7 +1206,23 @@ icontype_table:
         ;; Desk Accessories/Applets $F1/$0641 and $F1/$8641
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType, 0, IconType::desk_accessory
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType|$8000, 0, IconType::desk_accessory
-        .byte   0               ; Sentinel - done!
+        .byte   kICTSentinel
+
+;;; Suffixes
+str_sys_suffix:                 ; SYS files with .SYSTEM suffix are given "application" icon
+        PASCAL_STRING ".SYSTEM"
+
+str_shk_suffix:                 ; ShrinkIt NuFX files, that have lost their type info.
+        PASCAL_STRING ".SHK"
+
+str_bny_suffix:                 ; Binary II files, which contain metadata as a header
+        PASCAL_STRING ".BNY"    ; (pronounced "bunny", per A2-Central, Vol 5. No. 7, Aug 1989 )
+
+str_bxy_suffix:                 ; ShrinkIt NuFX files, in a Binary II package
+        PASCAL_STRING ".BXY"    ; (pronounced "boxy", per A2-Central, Vol 5. No. 7, Aug 1989 )
+
+str_a2fc_suffix:                ; Double-hires ("Apple II Full Color")
+        PASCAL_STRING ".A2FC"
 
 ;;; --------------------------------------------------
 
@@ -1417,32 +1239,23 @@ checkerboard_pattern:
 ;;; ============================================================
 ;;; Resources for clock on menu bar
 
-        DEFINE_POINT pos_clock, 475, 10
+        DEFINE_POINT pos_clock, kScreenWidth - 11, 10
 
 str_time:
-        PASCAL_STRING "00:00 XM" ; do not localize
+        PASCAL_STRING "00:00 XM"
 
 str_4_spaces:
-        PASCAL_STRING "    "    ; do not localize
+        PASCAL_STRING "    "
 
 dow_strings:
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_1)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_2)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_3)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_4)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_5)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_6)
-        .byte   .sprintf("%4s", res_string_weekday_abbrev_7)
+        PASCAL_STRING res_string_weekday_abbrev_1, 3
+        PASCAL_STRING res_string_weekday_abbrev_2, 3
+        PASCAL_STRING res_string_weekday_abbrev_3, 3
+        PASCAL_STRING res_string_weekday_abbrev_4, 3
+        PASCAL_STRING res_string_weekday_abbrev_5, 3
+        PASCAL_STRING res_string_weekday_abbrev_6, 3
+        PASCAL_STRING res_string_weekday_abbrev_7, 3
         ASSERT_RECORD_TABLE_SIZE dow_strings, 7, 4
-
-.params dow_str_params
-addr:   .addr   0
-length: .byte   4               ; includes trailing space
-.endparams
-
-month_offset_table:             ; for Day-of-Week calculations
-        .byte   1,5,6,3,1,5,3,0,4,2,6,4
-        ASSERT_TABLE_SIZE month_offset_table, 12
 
 parsed_date:
         .tag ParsedDateTime
@@ -1458,11 +1271,11 @@ portptr:        .addr   0
 
 ;;; ============================================================
 
-        PAD_TO $ED00
+        PAD_TO ::kSegmentDeskTopLC1AAddress + ::kSegmentDeskTopLC1ALength
 
-;;; (there's enough room here for 127 files at 25 bytes each)
+;;; (there's enough room here for 128 files at up to 28 bytes each; index 0 not used)
 icon_entries:
-        .assert ($FB00 - *) >= 127 * .sizeof(IconEntry), error, "Not enough room for icons"
+        .assert ($FB00 - *) >= (kMaxIconCount+1) * .sizeof(IconEntry), error, "Not enough room for icons"
 
 ;;; There's plenty of room after that (~409 bytes) if additional
 ;;; buffer space is needed.
@@ -1471,68 +1284,76 @@ icon_entries:
 ;;; Segment loaded into AUX $FB00-$FFFF
 ;;; ============================================================
 
-        .org $FB00
+        .org ::kSegmentDeskTopLC1BAddress
 
 ;;; Map ProDOS file type to string (for listings/Get Info).
 ;;; If not found, $XX is used (like CATALOG).
 
-        kNumFileTypes = 12
+        kNumFileTypes = 14
 type_table:
-        .byte   FT_REL        ; rel
-        .byte   FT_CMD        ; command
+        .byte   FT_BAD        ; bad block
         .byte   FT_TEXT       ; text
         .byte   FT_BINARY     ; binary
-        .byte   FT_DIRECTORY  ; directory
-        .byte   FT_SYSTEM     ; system
-        .byte   FT_BASIC      ; basic
+        .byte   FT_FONT       ; font
         .byte   FT_GRAPHICS   ; graphics
+        .byte   FT_DIRECTORY  ; directory
         .byte   FT_ADB        ; appleworks db
         .byte   FT_AWP        ; appleworks wp
         .byte   FT_ASP        ; appleworks sp
-        .byte   FT_BAD        ; bad block
+        .byte   FT_MUSIC      ; music
+        .byte   FT_CMD        ; command
+        .byte   FT_BASIC      ; basic
+        .byte   FT_REL        ; rel
+        .byte   FT_SYSTEM     ; system
         ASSERT_TABLE_SIZE type_table, kNumFileTypes
 
 type_names_table:
-        .byte   " REL" ; rel
-        .byte   " CMD" ; rel
-        .byte   " TXT" ; text
-        .byte   " BIN" ; binary
-        .byte   " DIR" ; directory
-        .byte   " SYS" ; system
-        .byte   " BAS" ; basic
-        .byte   " FOT" ; graphics
-        .byte   " ADB" ; appleworks db
-        .byte   " AWP" ; appleworks wp
-        .byte   " ASP" ; appleworks sp
-        .byte   " BAD" ; bad block
+        ;; Types marked with * are known to BASIC.SYSTEM.
+        .byte   "BAD " ; bad block
+        .byte   "TXT " ; text *
+        .byte   "BIN " ; binary *
+        .byte   "FNT " ; font
+        .byte   "FOT " ; graphics
+        .byte   "DIR " ; directory *
+        .byte   "ADB " ; appleworks db *
+        .byte   "AWP " ; appleworks wp *
+        .byte   "ASP " ; appleworks sp *
+        .byte   "MUS " ; music
+        .byte   "CMD " ; command *
+        .byte   "BAS " ; basic *
+        .byte   "REL " ; rel *
+        .byte   "SYS " ; system *
         ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 4
 
 ;;; Map IconType to other icon/details
 
-icontype_iconentrytype_table:
-        .byte   kIconEntryTypeGeneric ; generic
-        .byte   kIconEntryTypeGeneric ; text
-        .byte   kIconEntryTypeBinary  ; binary
-        .byte   kIconEntryTypeGeneric ; graphics
-        .byte   kIconEntryTypeGeneric ; font
-        .byte   kIconEntryTypeGeneric ; relocatable
-        .byte   kIconEntryTypeGeneric ; command
-        .byte   kIconEntryTypeDir     ; folder
-        .byte   kIconEntryTypeGeneric ; iigs
-        .byte   kIconEntryTypeGeneric ; appleworks db
-        .byte   kIconEntryTypeGeneric ; appleworks wp
-        .byte   kIconEntryTypeGeneric ; appleworks sp
-        .byte   kIconEntryTypeGeneric ; desk accessory
-        .byte   kIconEntryTypeBasic   ; basic
-        .byte   kIconEntryTypeSystem  ; system
-        .byte   kIconEntryTypeSystem  ; application
-        ASSERT_TABLE_SIZE icontype_iconentrytype_table, IconType::COUNT
+icontype_iconentryflags_table:
+        .byte   0                    ; generic
+        .byte   0                    ; text
+        .byte   0                    ; binary
+        .byte   0                    ; graphics
+        .byte   0                    ; music
+        .byte   0                    ; font
+        .byte   0                    ; relocatable
+        .byte   0                    ; command
+        .byte   kIconEntryFlagsDropTarget ; folder
+        .byte   0                    ; iigs
+        .byte   0                    ; appleworks db
+        .byte   0                    ; appleworks wp
+        .byte   0                    ; appleworks sp
+        .byte   0                    ; archive
+        .byte   0                    ; desk accessory
+        .byte   0                    ; basic
+        .byte   0                    ; system
+        .byte   0                    ; application
+        ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT
 
 type_icons_table:               ; map into definitions below
         .addr   gen ; generic
         .addr   txt ; text
         .addr   bin ; binary
         .addr   fot ; graphics
+        .addr   mus ; music
         .addr   fnt ; font
         .addr   rel ; relocatable
         .addr   cmd ; command
@@ -1541,6 +1362,7 @@ type_icons_table:               ; map into definitions below
         .addr   adb ; appleworks db
         .addr   awp ; appleworks wp
         .addr   asp ; appleworks sp
+        .addr   arc ; archive
         .addr   a2d ; desk accessory
         .addr   bas ; basic
         .addr   sys ; system
@@ -1557,12 +1379,14 @@ dir:    DEFICON folder_icon, 4, 27, 11, folder_mask
 sys:    DEFICON sys_icon, 4, 27, 17, sys_mask
 bas:    DEFICON aux::basic_icon, 4, 27, 14, aux::basic_mask
 fot:    DEFICON aux::graphics_icon, 4, 27, 12, aux::graphics_mask
+mus:    DEFICON aux::music_icon, 4, 27, 15, generic_mask
 adb:    DEFICON aux::adb_icon, 4, 27, 15, generic_mask
 awp:    DEFICON aux::awp_icon, 4, 27, 15, generic_mask
 asp:    DEFICON aux::asp_icon, 4, 27, 15, generic_mask
+arc:    DEFICON aux::archive_icon, 4, 25, 14, aux::archive_mask
 a2d:    DEFICON aux::a2d_file_icon, 4, 27, 15, generic_mask
 fnt:    DEFICON aux::font_icon, 4, 27, 15, generic_mask
-app:    DEFICON app_icon, 5, 34, 16, app_mask
+app:    DEFICON aux::app_icon, 5, 34, 16, aux::app_mask
 
 ;;; Generic
 
@@ -1732,53 +1556,27 @@ sys_mask:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
 
 
-;;; System (with .SYSTEM suffix)
-
-app_icon:
-        .byte   PX(%0000000),PX(%0000000),PX(%0011000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%1100110),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000011),PX(%0000001),PX(%1000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0001100),PX(%0000000),PX(%0110000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0110000),PX(%0000000),PX(%0001100),PX(%0000000)
-        .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000011),PX(%0000000)
-        .byte   PX(%0000110),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1100000)
-        .byte   PX(%0011000),PX(%0000000),PX(%0000001),PX(%1111100),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0000110),PX(%0000011),PX(%0000110)
-        .byte   PX(%0011000),PX(%0000000),PX(%0011000),PX(%1110000),PX(%1111000)
-        .byte   PX(%0000110),PX(%0000111),PX(%1111111),PX(%1111100),PX(%0011110)
-        .byte   PX(%0000001),PX(%1000000),PX(%0110000),PX(%1100000),PX(%0011110)
-        .byte   PX(%0000000),PX(%0110000),PX(%0001110),PX(%0000000),PX(%0011110)
-        .byte   PX(%0000000),PX(%0001100),PX(%0000001),PX(%1111111),PX(%1111110)
-        .byte   PX(%0000000),PX(%0000011),PX(%0000001),PX(%1000000),PX(%0011110)
-        .byte   PX(%0000000),PX(%0000000),PX(%1100110),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0011000),PX(%0000000),PX(%0000000)
-
-app_mask:
-        .byte   PX(%0000000),PX(%0000000),PX(%0011000),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%1111110),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000011),PX(%1111111),PX(%1000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0001111),PX(%1111111),PX(%1110000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0111111),PX(%1111111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0000001),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1100000)
-        .byte   PX(%0011111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111000)
-        .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111110)
-        .byte   PX(%0011111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111100)
-        .byte   PX(%0000111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111000)
-        .byte   PX(%0000001),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111000)
-        .byte   PX(%0000000),PX(%0111111),PX(%1111111),PX(%1111100),PX(%1111000)
-        .byte   PX(%0000000),PX(%0001111),PX(%1111111),PX(%1111000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000011),PX(%1111111),PX(%1000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%1111110),PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000),PX(%0011000),PX(%0000000),PX(%0000000)
-
-        ;; Reserve $80 bytes for settings
-        PAD_TO $FF80
 
 ;;; ============================================================
-;;; Settings - modified by Control Panel
+;;; Settings - modified by Control Panels
 ;;; ============================================================
 
+        PAD_TO ::BELLDATA
+        .include "../lib/default_sound.s"
+
+        PAD_TO ::SETTINGS
         .include "../lib/default_settings.s"
 
+;;; ============================================================
+
+;;; Reserved space for 6502 vectors
+;;; * NMI is rarely used
+;;; * On RESET, the main page/ROM is banked in (Enh. IIe, IIc, IIgs)
+;;; * IRQ must be preserved; points into firmware
+;;; ... but might as well preserved
+
+        ASSERT_ADDRESS VECTORS
+        .res    kIntVectorsSize, 0
+
+        ASSERT_ADDRESS ::kSegmentDeskTopLC1BAddress + ::kSegmentDeskTopLC1BLength
         ASSERT_ADDRESS $10000

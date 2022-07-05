@@ -17,6 +17,7 @@ sub enquote($$) {
     return "\"$value\"" if $label =~ /^res_string_/;
     return "'$value'" if $label =~ /^res_char_/;
     return $value if $label =~ /^res_const_/;
+    return $value if $label =~ /^res_filename_/;
 
     die "Bad label: \"$label\" at line $.\n";
 }
@@ -45,6 +46,8 @@ sub encode($$) {
         $s =~ tr/£§˚çéùàòèì/#@[\\]`{|}~/;
     } elsif ($lang eq 'es') {
         $s =~ tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/;
+        # unofficial extensions for A2D
+        $s =~ tr/áéíóú/\x10-\x14/;
     } elsif ($lang eq 'da') {
         $s =~ tr/#@ÆØÅ`æøå~/#@[\\]`{|}~/;
     } elsif ($lang eq 'sv') {
@@ -56,6 +59,7 @@ sub encode($$) {
     }
     $s =~ s|\\|\\\\|g; # Escape newly generated \
     $s =~ tr/\xFF/\\/; # Restore the original \ (see above)
+    $s =~ s/([\x10-\x14])/sprintf("\\x%02x",ord($1))/seg; # Escape control chars
 
     die "Unencodable ($lang) in line $.: $s\n" unless $s =~ /^[\x20-\x7e]*$/;
 
@@ -72,8 +76,10 @@ sub check($$$$) {
     return $en unless $t;
 
     # Apply same leading/trailing spaces
-    $t =~ s/^[ ]+|[ ]+$//g;
-    $t = $1 . $t . $2 if $en =~ m/^([ ]*).*?([ ]*)$/;
+    if ($label !~ /^res_char_/) {
+        $t =~ s/^[ ]+|[ ]+$//g;
+        $t = $1 . $t . $2 if $en =~ m/^([ ]*).*?([ ]*)$/;
+    }
 
      # Ensure placeholders are still there
     die "Hashes mismatch at $label, line $.: $en / $t\n"
@@ -83,7 +89,10 @@ sub check($$$$) {
     die "Hexes mismatch at $label, line $.: $en / $t\n"
         unless hexes($en) eq hexes($t);
     die "Punctuation mismatch at $label, line $.: '$en' / '$t'\n"
-        unless punct($en) eq punct($t);
+        unless $label =~ /^res_char_/ || punct($en) eq punct($t);
+
+    die "Bad filename at $label, line $.: '$en' / '$t'\n"
+        if $label =~ /^res_filename/ && not ($t =~ /^[A-Za-z][A-Za-z0-9.]*$/ && length($t) <= 15);
 
     # Language specific checks:
     if ($lang eq 'fr') {
@@ -112,13 +121,13 @@ sub check($$$$) {
 my $header = <STDIN>; # ignore header
 my $last_file = '';
 my %fhs = ();
-my @langs = ('en', 'fr', 'de', 'it', 'es');
+my @langs = ('en', 'fr', 'de', 'it', 'es', 'pt');
 
 my %dupes = ();
 
 while (<STDIN>) {
-    my ($file, $label, $comment, $en, $fr, $de, $it, $es) = split(/\t/);
-    my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es);
+    my ($file, $label, $comment, $en, $fr, $de, $it, $es, $pt) = split(/\t/);
+    my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es, pt => $pt);
 
     next unless $file and $label;
 
@@ -152,13 +161,22 @@ while (<STDIN>) {
         } else {
             check($lang, $label, $en, $en);
         }
-        print {$fhs{$lang}} ".define $label ", enquote($label, $str), "\n";
 
-        if ($label =~ m/^res_string_.*_pattern$/ && $str =~ m/#/) {
-            my $counter = 0;
-            foreach my $index (indexes($str, '#')) {
-                my $l = ($label =~ s/^res_string_/res_const_/r) . "_offset" . (++$counter);
-                print {$fhs{$lang}} ".define $l $index\n";
+        if ($str =~ m/^(.*)##(.*)$/) {
+            # If string has '##', split into prefix/suffix.
+           print {$fhs{$lang}} ".define ${label}_prefix ", enquote($label, $1), "\n";
+            print {$fhs{$lang}} ".define ${label}_suffix ", enquote($label, $2), "\n";
+        } else {
+            # Normal case.
+            print {$fhs{$lang}} ".define $label ", enquote($label, $str), "\n";
+
+            # If string is a pattern, emit constants for the offsets of #.
+            if ($label =~ m/^res_string_.*_pattern$/ && $str =~ m/#/) {
+                my $counter = 0;
+                foreach my $index (indexes($str, '#')) {
+                    my $l = ($label =~ s/^res_string_/res_const_/r) . "_offset" . (++$counter);
+                    print {$fhs{$lang}} ".define $l $index\n";
+                }
             }
         }
     }

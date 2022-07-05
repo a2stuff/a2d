@@ -1,16 +1,14 @@
 ;;; ============================================================
-;;; Overlay for Disk Copy - $1800 - $19FF (file 2/4)
+;;; Disk Copy - $1800 - $19FF
 ;;;
-;;; Compiled as part of desktop.s
+;;; Compiled as part of disk_copy.s
 ;;; ============================================================
 
-;;; Within `disk_copy` scope, settings are an overlay on top of
-;;; the auxlc segment in the aux LC.
 
-SETTINGS := $F180
-
-.proc part2
+.scope part2
         .org $1800
+
+        MLIEntry := MLI
 
         jmp     start
 
@@ -20,20 +18,20 @@ io_buf := $1C00
 load_buf := $4000
 
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
-filename:   PASCAL_STRING kFilenameDeskTop
+filename:   PASCAL_STRING kFilenameDiskCopy
 
         DEFINE_READ_PARAMS read_params, 0, 0
-        DEFINE_SET_MARK_PARAMS set_mark_params, kOverlayDiskCopy3Offset
+        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentAuxLCOffset
         DEFINE_CLOSE_PARAMS close_params
 
         .byte   $00,$00
 
 buf1:   .addr   load_buf
-dest1:  .addr   kOverlayDiskCopy3Address
-len1:   .word   kOverlayDiskCopy3Length
+dest1:  .addr   kSegmentAuxLCAddress
+len1:   .word   kSegmentAuxLCLength
 
-buf2:   .addr   kOverlayDiskCopy4Address
-len2:   .word   kOverlayDiskCopy4Length
+buf2:   .addr   kSegmentMainAddress
+len2:   .word   kSegmentMainLength
 
 ;;; ============================================================
 
@@ -69,7 +67,7 @@ L183F:  sta     BITMAP+1,x
         copy16  len1, read_params::request_count
         MLI_CALL READ, read_params
         bcs     fail
-        jsr     copy_to_lc
+        jsr     CopyToLc
 
         copy16  buf2, read_params::data_buffer
         copy16  len2, read_params::request_count
@@ -78,30 +76,32 @@ L183F:  sta     BITMAP+1,x
         MLI_CALL CLOSE, close_params
         bcs     fail
 
-        jsr     load_settings
+        jsr     LoadSettings
 
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
 
         jmp     auxlc__start
 
 ;;; This mimics the original behavior - just hang if the load fails.
-;;; TODO: Do something better here, e.g. ProDOS QUIT.
+;;; Note that a ProDOS QUIT will likely fail since the installed
+;;; routine will try to reload DeskTop.
 fail:   jmp     fail
 
 ;;; ============================================================
 ;;; Copy first chunk to the Language Card
 
-.proc copy_to_lc
+.proc CopyToLc
         src := $6
         end := $8
         dst := $A
 
         ;; Bank in AUX LC
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
+
         txa
         asl     a
         tax
@@ -140,17 +140,18 @@ loop:   lda     (src),y
 
         ;; Bank in ROM
         sta     ALTZPOFF
-        lda     ROMIN2
+        bit     ROMIN2
         rts
 .endproc
 
 ;;; ============================================================
 
-        ;; Already .included: "../lib/load_settings.s"
-        DEFINEPROC_LOAD_SETTINGS io_buf, load_buf
+        SETTINGS_IO_BUF := io_buf
+        SETTINGS_LOAD_BUF := load_buf
+        .include "../lib/load_settings.s"
 
 ;;; ============================================================
 
         PAD_TO $1A00
 
-.endproc ; part2
+.endscope ; part2

@@ -1,8 +1,0 @@
-.define res_string_label_download "Copying to RAMCard..."
-.define res_string_label_copying "Copying:"
-.define res_string_errmsg_not_enough_room "Not enough room in the RAMCard to copy the application."
-.define res_string_prompt_click_ok "Click OK to continue."
-.define res_string_errmsg_error_download "An error occured during the download."
-.define res_string_errmsg_copy_incomplete "The copy wasn't completed, click OK to continue."
-.define res_string_label_files_to_copy "Files to copy in the RAMCard: "
-.define res_string_label_files_remaining "Files remaining to copy: "

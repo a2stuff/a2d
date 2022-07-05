@@ -2,4 +2,4 @@
 .define res_char_button_norm_shortcut 'N'
 .define res_string_button_fast "Veloce      V"
 .define res_char_button_fast_shortcut 'V'
-.define res_string_dialog_title "Velocit{ Sistema"
+.define res_string_dialog_title "Velocit{ di sistema"

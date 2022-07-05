@@ -22,7 +22,7 @@
         ;; Detection routine
         php
         sei
-        sta     SET80COL        ; 80STORE on - let PAGE2 control banking
+        sta     SET80STORE      ; let PAGE2 control banking
         sta     PAGE2ON         ; access PAGE1X
 
         ldx     $400            ; save PAGE1X value in X
@@ -38,6 +38,7 @@
         sta     TEXT16_OFF      ; TEXT16 off
         sta     PAGE2ON         ; access PAGE1X
 
+        lda     #kSentinelValue
         eor     $400            ; did the value change?
         sta     result          ; if non-zero, Eve was shadowing
 
@@ -45,10 +46,10 @@
         sta     PAGE2OFF        ; access PAGE1
         sty     $400            ; restore PAGE1 from Y
 
-        sta     CLR80COL        ; 80STORE off - restore PAGE2 meaning
+        sta     CLR80STORE      ; restore PAGE2 meaning
         plp
 
         result := *+1
-done:   lda     #0              ; Self-modified
+done:   lda     #0              ; self-modified (but not always)
         rts
 .endproc

@@ -4,8 +4,6 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        RESOURCE_FILE "init.res"
-
 ;;; ============================================================
 ;;; Segment loaded into MAIN $800-$FFF
 ;;; ============================================================
@@ -53,11 +51,13 @@
 ;;; * Configure MGTK
 ;;; * Restore saved windows
 
-.proc init
+.scope init
 
         .org ::kSegmentInitializerAddress
 
-        MLIRelayImpl := main::MLIRelayImpl
+        MLIEntry  := main::MLIRelayImpl
+        MGTKEntry := MGTKRelayImpl
+        ITKEntry  := ITKRelayImpl
 
         data_buf := $1200
         kDataBufferSize = $400
@@ -69,9 +69,9 @@ start:
 .scope hook_reset_vector
 
         ;; Main hook
-        lda     #<main::reset_handler
+        lda     #<main::ResetHandler
         sta     SOFTEV
-        lda     #>main::reset_handler
+        lda     #>main::ResetHandler
         sta     SOFTEV+1
         eor     #$A5
         sta     SOFTEV+2
@@ -81,48 +81,7 @@ start:
 ;;; ============================================================
 ;;; Clear DHR screen to black before it is shown
 
-.scope clear_screen
-        ptr := $6
-        HIRES_ADDR = $2000
-        kHiresSize = $2000
-
-        sta     PAGE2ON         ; Clear aux
-        jsr     clear
-        sta     PAGE2OFF        ; Clear main
-        jsr     clear
-        jmp     done
-
-clear:  copy16  #HIRES_ADDR, ptr
-        lda     #0              ; clear to black
-        ldx     #>kHiresSize    ; number of pages
-        ldy     #0              ; pointer within page
-:       sta     (ptr),y
-        iny
-        bne     :-
-        inc     ptr+1
-        dex
-        bne     :-
-        rts
-
-done:
-.endscope
-
-;;; ============================================================
-;;; Snapshot state of PB2 (shift key mod)
-
-.scope pb2_state
-        copy    BUTN2, main::pb2_initial_state
-.endscope
-
-;;; ============================================================
-;;; Detect Le Chat Mauve Eve RGB card
-
-.scope lcm
-        jsr     DetectLeChatMauveEve
-        bne     :+
-        copy    #$80, main::lcm_eve_flag
-:
-.endscope
+        jsr     ClearDHRToBlack
 
 ;;; ============================================================
 ;;; Detect Machine Type - set flags and periodic task delay
@@ -136,37 +95,54 @@ done:
         sec                     ; Follow detection protocol
         jsr     IDROUTINE       ; RTS on pre-IIgs
         bcs     :+              ; carry clear = IIgs
-        copy    #$80, is_iigs_flag
+        copy    #$80, tmp_iigs_flag
 :
         ;; Now stash the bytes we need
-        copy    VERSION, id_version ; $06 = IIe or later
-        copy    ZIDBYTE, id_idbyte ; $00 = IIc or later
-        copy    ZIDBYTE2, id_idbyte2 ; IIc ROM version (IIc+ = $05)
-        copy    IDBYTELASER128, id_idlaser ; $AC = Laser 128
+        copy    VERSION, tmp_version  ; $06 = IIe or later
+        copy    ZIDBYTE, tmp_idbyte   ; $00 = IIc or later
+        copy    ZIDBYTE2, tmp_idbyte2 ; IIc ROM version (IIc+ = $05)
+        copy    IDBYTELASER128, tmp_idlaser ; $AC = Laser 128
 
         ;; ... and page in LCBANK1
         sta     ALTZPON
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
+
+        ;; Place the version bytes somewhere useful later
+        tmp_version := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::id_version
+        tmp_idbyte := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::id_idbyte
+        tmp_idbyte2 := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::id_idbyte2
+        tmp_idlaser := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::id_idlaser
+        tmp_iigs_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::iigs_flag
 
         ;; Ensure we're on a IIe or later
-        lda     id_version
+        lda     machine_config::id_version
         cmp     #$06            ; Ensure a IIe or later
         beq     :+
         brk                     ; Otherwise (][, ][+, ///), just crash
 
         ;; State needed by MGTK
-:       copy    id_version, startdesktop_params::machine
-        copy    id_idbyte, startdesktop_params::subid
+:       copy    machine_config::id_version, startdesktop_params::machine
+        copy    machine_config::id_idbyte, startdesktop_params::subid
 
         ;; Identify machine type (periodic delays and other flags)
-        lda     id_idbyte
+        lda     machine_config::id_idbyte
         beq     is_iic          ; $FBC0 = $00 -> is IIc or IIc+
-        bit     is_iigs_flag
+        bit     machine_config::iigs_flag
         bmi     is_iigs
 
         ;; Laser 128?
-        lda     id_idlaser           ; Is it a Laser 128?
+        lda     machine_config::id_idlaser ; Is it a Laser 128?
         cmp     #$AC
         bne     is_iie
 
@@ -184,7 +160,7 @@ is_iigs:
         bne     end             ; always
 
         ;; IIc or IIc+
-is_iic: lda     id_idbyte2            ; ROM version
+is_iic: lda     machine_config::id_idbyte2 ; ROM version
         cmp     #$05                  ; IIc Plus = $05
         bne     :+
         copy    #$80, is_iic_plus_flag
@@ -197,49 +173,100 @@ end:
 .endscope
 
 ;;; ============================================================
+;;; Snapshot state of PB2 (shift key mod)
+
+.scope pb2_state
+        copy    BUTN2, machine_config::pb2_initial_state
+.endscope
+
+;;; ============================================================
+;;; Detect Le Chat Mauve Eve RGB card
+
+.scope lcm
+        bit     ROMIN2
+        jsr     DetectLeChatMauveEve
+        pha
+        bit     LCBANK1
+        bit     LCBANK1
+        pla
+        beq     :+              ; Z=1 means no LCMEve
+        copy    #$80, machine_config::lcm_eve_flag
+:
+.endscope
+
+;;; ============================================================
 ;;; Back up DEVLST
 
 .scope
         ;; Make a copy of the original device list
-        ldx     DEVCNT
-        inx
-:       lda     DEVLST-1,x
-        sta     devlst_backup,x
+        .assert DEVLST = DEVCNT+1, error, "DEVCNT must precede DEVLST"
+        ldx     DEVCNT          ; number of devices
+        inx                     ; include DEVCNT itself
+:       copy    DEVLST-1,x, main::devlst_backup,x ; DEVCNT is at DEVLST-1
         dex
         bpl     :-
         ;; fall through
 .endscope
 
 ;;; ============================================================
-;;; Detach aux-memory RAM Disk
+;;; Make startup volume first in list
 
 .scope
-        ;; Look for /RAM
-        ldx     DEVCNT
+        ;; Find the startup volume's unit number
+        copy    DEVNUM, target
+        jsr     main::GetCopiedToRAMCardFlag
+    IF_MINUS
+        param_call main::CopyDeskTopOriginalPrefix, INVOKER_PREFIX
+        MLI_CALL GET_FILE_INFO, main::src_file_info_params
+        bcs     :+
+        copy    DEVNUM, target
+:
+    END_IF
+
+        ;; Find the device's index in the list
+        ldx     #0
 :       lda     DEVLST,x
-        and     #%11110000      ; DSSSnnnn
-        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
-        beq     found_ram
-        dex
-        bpl     :-
-        bmi     end
+        and     #UNIT_NUM_MASK  ; to compare against DEVNUM
+        target := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        beq     found
+        inx
+        cpx     DEVCNT
+        bcc     :-
+        bcs     done            ; last one or not found
 
-found_ram:
-        jsr     remove_device
-        ;; fall through
+        ;; Save it
+found:  ldy     DEVLST,x
 
-end:
+        ;; Move everything up
+:       lda     DEVLST+1,x
+        sta     DEVLST,x
+        inx
+        cpx     DEVCNT
+        bne     :-
+
+        ;; Place it at the end
+        tya
+        sta     DEVLST,x
+
+done:
 .endscope
+
+;;; ============================================================
+
+        jsr     DisconnectRAM
 
 ;;; ============================================================
 ;;; Initialize MGTK
 
 .scope
-        MGTK_RELAY_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
-        MGTK_RELAY_CALL MGTK::StartDeskTop, startdesktop_params
-        MGTK_RELAY_CALL MGTK::InitMenu, initmenu_params
+        MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
+        MGTK_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
+        MGTK_CALL MGTK::StartDeskTop, startdesktop_params
+        MGTK_CALL MGTK::InitMenu, initmenu_params
         jsr     main::SetRGBMode
-        MGTK_RELAY_CALL MGTK::SetMenu, splash_menu
+        MGTK_CALL MGTK::SetMenu, aux::desktop_menu
+        jsr     main::ShowClock
 
         ;; --------------------------------------------------
         ;; Cursor tracking
@@ -251,17 +278,17 @@ end:
         inc     scalemouse_params::y_exponent
         END_IF
         ;; Also doubled if a IIc
-        lda     id_idbyte       ; ZIDBYTE=0 for IIc / IIc+
+        lda     machine_config::id_idbyte ; ZIDBYTE=0 for IIc / IIc+
         IF_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
         END_IF
-        MGTK_RELAY_CALL MGTK::ScaleMouse, scalemouse_params
+        MGTK_CALL MGTK::ScaleMouse, scalemouse_params
 
         ;; --------------------------------------------------
 
-        MGTK_RELAY_CALL MGTK::SetCursor, watch_cursor
-        MGTK_RELAY_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::SetCursor, watch_cursor
+        MGTK_CALL MGTK::ShowCursor
 
         ;; fall through
 .endscope
@@ -272,12 +299,12 @@ end:
 .scope
         ptr := $6
 
-        jsr     main::push_pointers
+        jsr     PushPointers
         copy16  #icon_entries, ptr
         ldx     #1
-loop:   cpx     #kMaxIconCount
+loop:   cpx     #kMaxIconCount+1 ; allow up to the maximum
         bne     :+
-        jsr     main::pop_pointers
+        jsr     PopPointers
         jmp     end
 :       txa
         pha
@@ -310,35 +337,37 @@ end:
         sta     RAMWRTON
         lda     #$00
         tax
-loop:   sta     WINDOW_ICON_TABLES + $400,x         ; window 8, icon use map
-        sta     WINDOW_ICON_TABLES + $300,x         ; window 6, 7
-        sta     WINDOW_ICON_TABLES + $200,x         ; window 4, 5
-        sta     WINDOW_ICON_TABLES + $100,x         ; window 2, 3
-        sta     WINDOW_ICON_TABLES + $000,x         ; window 0, 1 (0=desktop)
+loop:   sta     WINDOW_ENTRY_TABLES + $400,x         ; window 8, icon use map
+        sta     WINDOW_ENTRY_TABLES + $300,x         ; window 6, 7
+        sta     WINDOW_ENTRY_TABLES + $200,x         ; window 4, 5
+        sta     WINDOW_ENTRY_TABLES + $100,x         ; window 2, 3
+        sta     WINDOW_ENTRY_TABLES + $000,x         ; window 0, 1 (0=desktop)
         inx
         bne     loop
         sta     RAMWRTOFF
-        jmp     create_trash_icon
+        jmp     CreateTrashIcon
 .endscope
 
 ;;; ============================================================
 
 trash_name:  PASCAL_STRING res_string_trash_icon_name
 
-.proc create_trash_icon
+.proc CreateTrashIcon
         ptr := $6
 
         copy    #0, cached_window_id
         lda     #1
-        sta     cached_window_icon_count
+        sta     cached_window_entry_count
         sta     icon_count
         jsr     AllocateIcon
         sta     trash_icon_num
-        sta     cached_window_icon_list
-        jsr     main::icon_entry_lookup
+        sta     cached_window_entry_list
+        jsr     main::IconEntryLookup
         stax    ptr
-        ldy     #IconEntry::win_type
-        copy    #kIconEntryTypeTrash, (ptr),y
+
+        ;; Trash is a drop target
+        ldy     #IconEntry::win_flags
+        copy    #kIconEntryFlagsDropTarget, (ptr),y
 
         ldy     #IconEntry::iconx
         copy16in #kTrashIconX, (ptr),y
@@ -365,7 +394,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
 
 ;;; See docs/Selector_List_Format.md for file format
 
-.proc load_selector_list
+.proc LoadSelectorList
         ptr1 := $6
         ptr2 := $8
 
@@ -374,28 +403,28 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         kSelectorListShortSize = $400
         .assert kSelectorListShortSize <= kDataBufferSize, error, "Buffer size error"
 
-        MGTK_RELAY_CALL MGTK::CheckEvents
+        MGTK_CALL MGTK::CheckEvents
 
         copy    #0, L0A92
-        jsr     read_selector_list
+        jsr     ReadSelectorList
         bne     done
 
         lda     selector_list_data_buf
         clc
         adc     selector_list_data_buf+1
         sta     num_selector_list_items
-        lda     #0
-        sta     LD344
+
+        copy    #0, selector_menu_items_updated_flag
 
         lda     selector_list_data_buf
         sta     L0A93
 L0A3B:  lda     L0A92
         cmp     L0A93
         beq     done
-        jsr     calc_data_addr
+        jsr     CalcDataAddr
         stax    ptr1
         lda     L0A92
-        jsr     calc_entry_addr
+        jsr     CalcEntryAddr
         stax    ptr2
         ldy     #0
         lda     (ptr1),y
@@ -408,10 +437,10 @@ L0A59:  lda     (ptr1),y
         lda     (ptr1),y
         sta     (ptr2),y
         lda     L0A92
-        jsr     calc_data_str
+        jsr     CalcDataStr
         stax    ptr1
         lda     L0A92
-        jsr     calc_entry_str
+        jsr     CalcEntryStr
         stax    ptr2
         ldy     #0
         lda     (ptr1),y
@@ -424,7 +453,7 @@ L0A7F:  lda     (ptr1),y
         inc     selector_menu
         jmp     L0A3B
 
-done:   jmp     calc_header_item_widths
+done:   jmp     CalcHeaderItemWidths
 
 L0A92:  .byte   0
 L0A93:  .byte   0
@@ -432,8 +461,8 @@ L0A93:  .byte   0
 
 ;;; --------------------------------------------------
 
-calc_data_addr:
-        jsr     main::a_times_16
+CalcDataAddr:
+        jsr     main::ATimes16
         clc
         adc     #<(selector_list_data_buf+2)
         tay
@@ -443,8 +472,8 @@ calc_data_addr:
         tya
         rts
 
-calc_entry_addr:
-        jsr     main::a_times_16
+CalcEntryAddr:
+        jsr     main::ATimes16
         clc
         adc     #<run_list_entries
         tay
@@ -454,8 +483,8 @@ calc_entry_addr:
         tya
         rts
 
-calc_entry_str:
-        jsr     main::a_times_64
+CalcEntryStr:
+        jsr     main::ATimes64
         clc
         adc     #<run_list_paths
         tay
@@ -465,8 +494,8 @@ calc_entry_str:
         tya
         rts
 
-calc_data_str:
-        jsr     main::a_times_64
+CalcDataStr:
+        jsr     main::ATimes64
         clc
         adc     #<(selector_list_data_buf+2 + $180)
         tay
@@ -486,22 +515,22 @@ str_selector_list:
         DEFINE_READ_PARAMS read_params, selector_list_data_buf, kSelectorListShortSize
         DEFINE_CLOSE_PARAMS close_params
 
-.proc read_selector_list
-        MLI_RELAY_CALL OPEN, open_params
+.proc ReadSelectorList
+        MLI_CALL OPEN, open_params
         ;;         bne     done
-        bne     write_selector_list
+        bne     WriteSelectorList
 
         lda     open_params::ref_num
         sta     read_params::ref_num
-        MLI_RELAY_CALL READ, read_params
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_params
 done:   rts
 .endproc
 
         DEFINE_CREATE_PARAMS create_params, str_selector_list, ACCESS_DEFAULT, $F1
         DEFINE_WRITE_PARAMS write_params, selector_list_data_buf, kSelectorListShortSize
 
-.proc write_selector_list
+.proc WriteSelectorList
         ptr := $06
 
         ;; Clear buffer
@@ -516,15 +545,15 @@ ploop:  ldy     #0
         bne     ploop
 
         ;; Write out file
-        MLI_RELAY_CALL CREATE, create_params
+        MLI_CALL CREATE, create_params
         bne     done
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
-        MLI_RELAY_CALL WRITE, write_params ; two blocks of $400
-        MLI_RELAY_CALL WRITE, write_params
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL WRITE, write_params ; two blocks of $400
+        MLI_CALL WRITE, write_params
+        MLI_CALL CLOSE, close_params
 
 done:   rts
 .endproc
@@ -533,21 +562,21 @@ done:   rts
 
 ;;; ============================================================
 
-.proc calc_header_item_widths
+.proc CalcHeaderItemWidths
         ;; Enough space for "123,456"
-        param_call main::measure_text1, str_from_int
+        param_call main::MeasureLCString, str_from_int
         stax    dx
 
         ;; Width of "123,456 Items"
-        param_call main::measure_text1, str_items_suffix
+        param_call main::MeasureLCString, str_items_suffix
         addax   dx, width_items_label
 
         ;; Width of "123,456K in disk"
-        param_call main::measure_text1, str_k_in_disk
+        param_call main::MeasureLCString, str_k_in_disk
         addax   dx, width_k_in_disk_label
 
         ;; Width of "123,456K available"
-        param_call main::measure_text1, str_k_available
+        param_call main::MeasureLCString, str_k_available
         addax   dx, width_k_available_label
 
         add16   width_k_in_disk_label, width_k_available_label, width_right_labels
@@ -565,12 +594,12 @@ end:
 ;;; Enumerate Desk Accessories
 
 .scope
-        MGTK_RELAY_CALL MGTK::CheckEvents
+        MGTK_CALL MGTK::CheckEvents
 
         read_dir_buffer := data_buf
 
         ;; Does the directory exist?
-        MLI_RELAY_CALL GET_FILE_INFO, get_file_info_params
+        MLI_CALL GET_FILE_INFO, get_file_info_params
         beq     :+
         jmp     end
 
@@ -580,11 +609,11 @@ end:
         jmp     end
 
 open_dir:
-        MLI_RELAY_CALL OPEN, open_params
+        MLI_CALL OPEN, open_params
         lda     open_ref_num
         sta     read_ref_num
         sta     close_ref_num
-        MLI_RELAY_CALL READ, read_params
+        MLI_CALL READ, read_params
 
         lda     #0
         sta     entry_num
@@ -715,7 +744,7 @@ next_entry:
         lda     entry_in_block
         cmp     entries_per_block
         bne     :+
-        MLI_RELAY_CALL READ, read_params
+        MLI_CALL READ, read_params
         copy16  #read_dir_buffer + 4, dir_ptr
 
         lda     #0
@@ -726,7 +755,7 @@ next_entry:
         jmp     process_block
 
 close_dir:
-        MLI_RELAY_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_params
         jmp     end
 
         DEFINE_OPEN_PARAMS open_params, str_desk_acc, IO_BUFFER
@@ -754,10 +783,10 @@ entry_in_block: .byte   0
 
 name_buf:       .res    ::kDAMenuItemSize, 0
 
-        kNumAppleMenuTypes = 7
+        kNumAppleMenuTypes = 8
 apple_menu_type_table:
         .byte   FT_SYSTEM, FT_S16, FT_BINARY, FT_BASIC ; Executable
-        .byte   FT_TEXT, FT_GRAPHICS, FT_FONT          ; Previewable
+        .byte   FT_TEXT, FT_GRAPHICS, FT_FONT, FT_MUSIC ; Previewable
         ASSERT_TABLE_SIZE apple_menu_type_table, kNumAppleMenuTypes
 
 end:
@@ -766,7 +795,7 @@ end:
 ;;; ============================================================
 ;;; Populate volume icons and device names
 
-;;; TODO: Dedupe with cmd_check_drives
+;;; TODO: Dedupe with CmdCheckDrives
 
 .scope
         devname_ptr := $08
@@ -792,12 +821,12 @@ process_volume:
         tya
         pha
 
-        inc     cached_window_icon_count
+        inc     cached_window_entry_count
         inc     icon_count
         lda     DEVLST,y
-        jsr     main::create_volume_icon ; A = unit number, Y = device index
+        jsr     main::CreateVolumeIcon ; A = unit number, Y = device index
         sta     cvi_result
-        MGTK_RELAY_CALL MGTK::CheckEvents
+        MGTK_CALL MGTK::CheckEvents
 
         pla                     ; restore all registers
         tay
@@ -812,13 +841,15 @@ process_volume:
         cmp     #ERR_DEVICE_NOT_CONNECTED
         bne     :+
 
-        ;; TODO: Figure out if this block makes any sense.
-        ldy     device_index    ; BUG? Is there a missing pla instruction in this path?
+        ;; If device is not connected, remove it from DEVLST
+        ;; unless it's a Disk II.
+
+        ldy     device_index
         lda     DEVLST,y
-        and     #$0F            ; BUG: Do not trust low nibble of unit_num
-        beq     select_template ; "0 = Disk II" originally
+        jsr     main::IsDiskII
+        beq     select_template ; skip
         ldx     device_index
-        jsr     remove_device
+        jsr     RemoveDevice
         jmp     next
 
 :       cmp     #ERR_DUPLICATE_VOLUME
@@ -831,29 +862,35 @@ process_volume:
         ;; fills in slot and drive as appropriate. Used in the
         ;; Format/Erase disk dialog.
 
-.proc select_template
+select_template:
         pla                     ; unit number into A
         pha
 
-        jsr     main::get_device_type
-        sta     device_type
-
-        ;; TODO: For SmartPort devices, get actual device name.
-        ;; https://github.com/a2stuff/a2d/issues/325
-
-        ;; Copy template to device name
-        asl                     ; * 2
-        tax
         src := $06
-        copy16  device_template_table,x, src
 
+        jsr     main::GetDeviceType
+        stax    src             ; A,X = device name (may be empty)
+
+        ;; Empty?
         ldy     #0
         lda     (src),y
-        tay
+        bne     :+
+        copy16  #str_volume_type_unknown, src
+:
+
+        ;; Set final length
+        lda     (src),y         ; Y = 0
+        clc
+        adc     #kSDPrefixLength
+        sta     str_sdname_buffer
+
+        ;; Copy string into template, after prefix
+        lda     (src),y         ; Y = 0
+        tay                     ; Y = length
 :       lda     (src),y
-        sta     (devname_ptr),y
+        sta     str_sdname_buffer + kSDPrefixLength,y
         dey
-        bpl     :-
+        bne     :-              ; leave length alone
 
         ;; Insert Slot #
         pla                     ; unit number into A
@@ -865,9 +902,7 @@ process_volume:
         lsr     a
         lsr     a
         ora     #'0'
-
-        ldy     #kDeviceTemplateSlotOffset
-        sta     (devname_ptr),y
+        sta     str_sdname_buffer + kDeviceTemplateSlotOffset
 
         ;; Insert Drive #
         pla                     ; unit number into A
@@ -876,18 +911,21 @@ process_volume:
         rol     a               ; set carry to drive - 1
         lda     #0              ; 0 + carry + '1'
         adc     #'1'            ; convert to '1' or '2'
+        sta     str_sdname_buffer + kDeviceTemplateDriveOffset
 
-        ldy     #kDeviceTemplateDriveOffset
+        ;; Copy name into table
+        ldy     str_sdname_buffer
+:       lda     str_sdname_buffer,y
         sta     (devname_ptr),y
-.endproc
+        dey
+        bpl     :-
 
-done_drive_num:
-        pla
-next:   dec     device_index
+next:   pla
+        dec     device_index
         lda     device_index
 
         bpl     :+
-        bmi     populate_startup_menu
+        bmi     PopulateStartupMenu
 :       jmp     process_volume  ; next!
 
 device_type:
@@ -901,12 +939,11 @@ cvi_result:
 ;;; ============================================================
 
         ;; Remove device num in X from devices list
-.proc remove_device
+.proc RemoveDevice
         dex
 :       inx
         copy    DEVLST+1,x, DEVLST,x
-        lda     device_to_icon_map+1,x
-        sta     device_to_icon_map,x
+        copy    device_to_icon_map+1,x, device_to_icon_map,x
         cpx     DEVCNT
         bne     :-
         dec     DEVCNT
@@ -915,7 +952,7 @@ cvi_result:
 
 ;;; ============================================================
 
-.proc populate_startup_menu
+.proc PopulateStartupMenu
         slot_ptr := $06         ; pointed at $Cn00
         table_ptr := $08        ; points into slot_string_table
 
@@ -969,7 +1006,7 @@ next:   dec     slot
 
         ;; Set number of menu items.
         stx     startup_menu
-        jmp     initialize_disks_in_devices_tables
+        jmp     InitializeDisksInDevicesTables
 
 slot:   .byte   0
 
@@ -988,20 +1025,26 @@ slot_string_table:
 ;;; Enumerate DEVLST and find removable devices; build a list of
 ;;; these, and check to see which have disks in them. The list
 ;;; will be polled periodically to detect changes and refresh.
+;;; List is built in DEVLST order since processing is in
+;;; `CheckDisksInDevices` (etc) is done in reverse order.
 ;;;
 ;;; Some hardware (machine/slot) combinations are filtered out
 ;;; due to known-buggy firmware.
 
-.proc initialize_disks_in_devices_tables
+.proc InitializeDisksInDevicesTables
         slot_ptr := $0A
 
-        copy    #0, count
-        copy    DEVCNT, index
+        lda     #0
+        sta     count
+        sta     index
 
 loop:   ldy     index
         lda     DEVLST,y
+        sta     unit_num
         jsr     main::DeviceDriverAddress
+        bvs     append          ; remapped SmartPort, it's usable
         bne     next            ; if RAM-based driver (not $CnXX), skip
+        stx     slot_ptr+1      ; just need high byte ($Cn)
         copy    #0, slot_ptr    ; make $Cn00
         ldy     #$FF            ; Firmware ID byte
         lda     (slot_ptr),y    ; $CnFF: $00=Disk II, $FF=13-sector, else=block
@@ -1010,13 +1053,15 @@ loop:   ldy     index
         lda     (slot_ptr),y    ; $CnFE: Status Byte
         bmi     append          ; bit 7 - Medium is removable
 
-next:   dec     index
-        bpl     loop
+next:   inc     index
+        lda     DEVCNT          ; continue while index <= DEVCNT
+        cmp     index
+        bcs     loop
 
         lda     count
         sta     main::removable_device_table
         sta     main::disk_in_device_table
-        jsr     main::check_disks_in_devices
+        jsr     main::CheckDisksInDevices
 
         ;; Make copy of table
         ldx     main::disk_in_device_table
@@ -1025,11 +1070,29 @@ next:   dec     index
         dex
         bpl     :-
 
-done:   jmp     final_setup
+done:   jmp     FinalSetup
+
+.params status_params
+param_count:    .byte   3
+unit_num:       .byte   SELF_MODIFIED_BYTE
+list_ptr:       .addr   dib_buffer
+status_code:    .byte   3       ; Return Device Information Block (DIB)
+.endparams
+
+PARAM_BLOCK dib_buffer, ::IO_BUFFER
+Device_Statbyte1        .byte
+Device_Size_Lo          .byte
+Device_Size_Med         .byte
+Device_Size_Hi          .byte
+ID_String_Length        .byte
+Device_Name             .res    16
+Device_Type_Code        .byte
+Device_Subtype_Code     .byte
+Version                 .word
+END_PARAM_BLOCK
 
         ;; Maybe add device to the removable device table
-append: ldy     index
-        lda     DEVLST,y
+append: lda     unit_num
 
         ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
         ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
@@ -1038,49 +1101,71 @@ append: ldy     index
         and     #%01110000      ; mask off slot
         cmp     #$50            ; is it slot 5?
         beq     next            ; if so, ignore
+:
+        ;; Do SmartPort STATUS call to filter out 5.25 devices
+        lda     unit_num
+        jsr     main::FindSmartportDispatchAddress
+        bcs     next            ; can't determine address - skip it!
+        stax    dispatch
+        sty     status_params::unit_num
 
         ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
         ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
-:       bit     is_laser128_flag
-        bpl     :+
-        and     #%01110000      ; mask off slot
-        cmp     #$70            ; is it slot 7?
-        beq     next            ; if so, ignore
+        bit     is_laser128_flag
+    IF_NS
+        lda     dispatch+1      ; $Cs
+        and     #%00001111      ; mask off slot
+        cmp     #$07            ; is it slot 7?
+        beq     next            ; if so, skip it!
+    END_IF
 
-:       lda     DEVLST,y
+        dispatch := *+1
+        jsr     SELF_MODIFIED
+        .byte   SPCall::Status
+        .addr   status_params
+        bcs     next            ; call failed - skip it!
+        lda     dib_buffer::Device_Type_Code
+        cmp     #SPDeviceType::Disk525
+        beq     next            ; is 5.25 - skip it!
 
+        ;; Append the device
         inc     count
         ldx     count
+        lda     unit_num
         sta     main::removable_device_table,x
         bne     next            ; always
 
 index:  .byte   0
 count:  .byte   0
+unit_num:
+        .byte   0
 .endproc
 
 ;;; ============================================================
 
-.proc final_setup
+.proc FinalSetup
         ;; Final MGTK configuration
-        MGTK_RELAY_CALL MGTK::CheckEvents
-        MGTK_RELAY_CALL MGTK::SetMenu, aux::desktop_menu
-        MGTK_RELAY_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::CheckEvents
+        MGTK_CALL MGTK::SetCursor, pointer_cursor
         lda     #0
         sta     active_window_id
-        jsr     main::update_window_menu_items
-        jsr     main::disable_eject_menu_item
-        jsr     main::disable_menu_items_requiring_selection
+        jsr     main::UpdateWindowMenuItems
+        jsr     main::DisableMenuItemsRequiringVolumeSelection
+        jsr     main::DisableMenuItemsRequiringFileSelection
+        jsr     main::DisableMenuItemsRequiringSelection
 
         ;; Add desktop icons
         ldx     #0
-iloop:  cpx     cached_window_icon_count
+iloop:  cpx     cached_window_entry_count
         beq     :+
         txa
         pha
-        lda     cached_window_icon_list,x
-        jsr     main::icon_entry_lookup
+        lda     cached_window_entry_list,x
+        sta     icon_param
+        jsr     main::IconEntryLookup
         stax    @addr
-        ITK_RELAY_CALL IconTK::AddIcon, 0, @addr
+        ITK_CALL IconTK::AddIcon, 0, @addr
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
         pla
         tax
         inx
@@ -1088,15 +1173,10 @@ iloop:  cpx     cached_window_icon_count
 :
         ;; Desktop icons are cached now
         copy    #0, cached_window_id
-        jsr     StoreWindowIconTable
-
-        ;; Clear various flags
-        lda     #0
-        sta     double_click_flag
-        sta     file_menu_items_enabled_flag
+        jsr     StoreWindowEntryTable
 
         ;; Restore state from previous session
-        jsr     restore_windows
+        jsr     RestoreWindows
 
         ;; Display any pending error messages
         lda     main::pending_alert
@@ -1106,36 +1186,36 @@ iloop:  cpx     cached_window_icon_count
 :
 
         ;; And start pumping events
-        jmp     main::main_loop
+        jmp     main::MainLoop
 .endproc
 
 ;;; ============================================================
 
-.proc restore_windows
+.proc RestoreWindows
         data_ptr := $06
 
-        jsr     main::save_restore_windows::open
+        jsr     main::save_restore_windows::Open
         bcs     exit
         lda     main::save_restore_windows::open_params::ref_num
         sta     main::save_restore_windows::read_params::ref_num
         sta     main::save_restore_windows::close_params::ref_num
-        MLI_RELAY_CALL READ, main::save_restore_windows::read_params
-        jsr     main::save_restore_windows::close
+        MLI_CALL READ, main::save_restore_windows::read_params
+        jsr     main::save_restore_windows::Close
 
-        ;; Validate version bytes
+        ;; Validate file format version byte
         lda     main::save_restore_windows::desktop_file_data_buf
         cmp     #kDeskTopFileVersion
         bne     exit
+
         copy16  #main::save_restore_windows::desktop_file_data_buf+1, data_ptr
 
 loop:   ldy     #0
         lda     (data_ptr),y
         beq     exit
 
-        ;; Copy path to `open_dir_path_buf`
         tay
 :       lda     (data_ptr),y
-        sta     open_dir_path_buf,y
+        sta     INVOKER_PREFIX,y
         dey
         bpl     :-
 
@@ -1148,45 +1228,38 @@ loop:   ldy     #0
         dex
         bpl     :-
 
-        jsr     main::push_pointers
+        jsr     PushPointers
 
         lda     #$80
         sta     main::copy_new_window_bounds_flag
-        sta     main::open_directory::suppress_error_on_open_flag
-        jsr     maybe_open_window
+        sta     main::OpenDirectory::suppress_error_on_open_flag
+        jsr     MaybeOpenWindow
         lda     #0
         sta     main::copy_new_window_bounds_flag
-        sta     main::open_directory::suppress_error_on_open_flag
+        sta     main::OpenDirectory::suppress_error_on_open_flag
 
-        jsr     main::pop_pointers
+        jsr     PopPointers
 
         add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
         jmp     loop
 
-exit:   rts
+exit:   jsr     LoadDesktopEntryTable
+        rts
 
-.proc maybe_open_window
+.proc MaybeOpenWindow
         ;; Save stack for restore on error. If the call
         ;; fails, the routine will restore the stack then
         ;; rts, returning to our caller.
         tsx
         stx     saved_stack
-        jmp     main::open_window_for_path
+        jmp     main::OpenWindowForPath
 .endproc
 
 .endproc
 
 ;;; ============================================================
 
-;;; ID bytes, copied from ROM
-id_idlaser:     .byte   0
-id_version:     .byte   0
-id_idbyte:      .byte   0
-id_idbyte2:     .byte   0
-
 ;;; High bits set if specific machine type detected.
-is_iigs_flag:
-        .byte   0
 is_iic_plus_flag:
         .byte   0
 is_laser128_flag:
@@ -1194,47 +1267,28 @@ is_laser128_flag:
 
 ;;; ============================================================
 
-;;; Templates used for device names
-;;; Matches kDevice* constant ordering.
-
-device_template_table:
-        .addr   str_sd_disk_ii
-        .addr   str_sd_ramcard
-        .addr   str_sd_profile
-        .addr   str_sd_unidisk
-        .addr   str_sd_fileshare
-        ASSERT_ADDRESS_TABLE_SIZE device_template_table, ::kNumDeviceTypes
-
 kDeviceTemplateSlotOffset = res_const_sd_prefix_pattern_offset1
 kDeviceTemplateDriveOffset = res_const_sd_prefix_pattern_offset2
 
-;;; Disk II
-str_sd_disk_ii:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_disk_ii)
+kSDPrefixLength = .strlen(res_string_sd_prefix_pattern)
+str_sdname_buffer:
+        PASCAL_STRING res_string_sd_prefix_pattern ; "S#,D#: " prefix
+        .res    16, 0              ; space for actual name
 
-;;; RAM disks
-str_sd_ramcard:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_ramcard)
-
-;;; Fixed drives that aren't RAM disks
-str_sd_profile:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_profile)
-
-;;; Removable drives
-str_sd_unidisk:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_unidisk)
-
-;;; File Share
-str_sd_fileshare:
-        PASCAL_STRING .concat(res_string_sd_prefix_pattern, res_string_volume_type_fileshare)
+str_volume_type_unknown:
+        PASCAL_STRING res_string_volume_type_unknown
 
 ;;; ============================================================
 
         .include "../lib/detect_lcmeve.s"
+        .include "../lib/clear_dhr.s"
+        saved_ram_unitnum := main::saved_ram_unitnum
+        saved_ram_drvec   := main::saved_ram_drvec
+        .include "../lib/disconnect_ram.s"
 
 ;;; ============================================================
 
 
         PAD_TO ::kSegmentInitializerAddress + ::kSegmentInitializerLength
 
-.endproc ; init
+.endscope ; init

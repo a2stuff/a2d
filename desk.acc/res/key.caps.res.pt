@@ -1,0 +1,2 @@
+.define res_string_window_title "Letras do Teclado"
+.define res_char_quit_shortcut 'Q'

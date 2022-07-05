@@ -92,17 +92,24 @@ while (<STDIN>) {
 
             $_ = $opcode . ' ' . $arguments;
 
-        } elsif (m/^(\.(?:if\w*|elseif|else|endif)\b)\s*(.*)$/ ||
-                 m/^(\b(?:IF_\w+|ELSE|END_IF)\b)\s*(.*)$/) {
+        } elsif (m/^(\.(?:if\w*|elseif|else|endif)\b)\s*(.*)$/) {
 
-            # conditional - half indent left
+            # conditional - flush left
+            my ($opcode, $arguments) = ($1 // '', $2 // '');
+            $tabstop = 0;
+
+            $_ = $opcode . ' ' . $arguments;
+
+        } elsif (m/^(\b(?:IF_\w+|ELSE|END_IF)\b)\s*(.*)$/) {
+
+            # conditional macros - half indent left
             my ($opcode, $arguments) = ($1 // '', $2 // '');
             $tabstop = 0;
 
             $_ = ' ' x ($tab/2);
             $_ .= $opcode . ' ' . $arguments;
 
-        } elsif (m/^(\w*:)?\s*(\S+)?\s*(.*?)\s*(;.*)?$/) {
+        } elsif (m/^(@?\w*:)?\s*(\S+)?\s*(.*?)\s*(;.*)?$/) {
 
             # label / opcode / arguments / comment
             my ($label, $opcode, $arguments, $comment) = ($1 // '', $2 // '', $3 // '', $4 // '');

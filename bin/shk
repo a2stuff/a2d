@@ -8,57 +8,58 @@
 set -e
 source "bin/util.sh"
 
-NULIB2=$(command -v nulib2 || echo '')
-NULIB2="${PNULIB2:-$HOME/dev/nulib2/nulib2/nulib2}"
+if ! command -v "nulib2" >/dev/null; then
+    cecho red "NuLib2 not installed."
+    exit 1
+fi
 
 tempdir=$(mktemp -d "${TMPDIR:-/tmp}/shk.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
-rm -f A2D.SHK
+mkdir -p out
+rm -f out/A2D.SHK
 
-# Add file to staging directory
-# Usage: add_file SRC DST TYPEAUXTYPE
-function add_file {
-    src="$1"
-    dst="$2"
-    typeauxtype="$3"
-    cp "$src" "$tempdir/$dst#$typeauxtype" \
-        && (cecho green "staging $dst" ) \
-        || (cecho red "failed to stage $dst" ; return 1)
+# ============================================================
+# Implementations for manifest operations
+
+add_file() {
+    local disposition="$1"
+    local src_file="$2"
+    local folder="$3"
+    local dst_file="$4"
+    local suffix="$5"
+
+    local tmp_file="$tempdir/$folder/$dst_file#$suffix"
+    cp "$src_file" "$tmp_file" \
+        && (cecho green "staging $dst_file" ) \
+        || (cecho red "failed to stage $dst_file" ; return 1)
+
+    if [ "$suffix" = "040000" ]; then
+        perl -p -i -e 's/\r?\n/\r/g' "$tmp_file" # Ensure Apple line endings
+    fi
 }
+
+create_folder() {
+    local disposition="$1"
+    local path="$2"
+
+    mkdir -p "$tempdir/$path"
+}
+
+# ============================================================
+# Populate the images with files and directories
 
 cecho yellow "Copying files..."
 
-perl -p -i -e 's/\r?\n/\r/g' "res/package/READ.ME" # Ensure Apple line endings
-add_file "res/package/READ.ME" "READ.ME" 040000
-perl -p -i -e 's/\r/\n/g' "res/package/READ.ME" # Restore Unix line endings
-
-
-add_file "desktop.system/out/desktop.system.SYS" "DESKTOP.SYSTEM" FF0000
-add_file "desktop/out/desktop.built" "DESKTOP2" F10000
-
-mkdir -p $tempdir/OPTIONAL
-add_file "selector/out/selector.built" "OPTIONAL/SELECTOR" F10000
-
-for path in $(cat desk.acc/TARGETS | bin/targets.pl dirs); do
-    uc=$(echo "$path" | tr /a-z/ /A-Z/)
-    mkdir -p "$tempdir/$uc"
-done
-for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
-    IFS=',' read -ra array <<< "$line"
-    file="${array[0]}"
-    path="${array[1]}"
-    uc_file=$(echo "$file" | tr /a-z/ /A-Z/)
-    uc_path=$(echo "$path" | tr /a-z/ /A-Z/)
-    add_file "desk.acc/out/${file}.da" "${uc_path}/${uc_file}" F10641
-done
+manifest="$(bin/manifest $@)"
+eval "$manifest"
 
 cecho yellow "Creating SHK..."
 
 cdir=`pwd`
 cd "${tempdir}"
-$NULIB2 aer "${cdir}/A2D.SHK" * || (cecho red "failed to write ${cdir}/A2D.SHK" ; return 1)
+nulib2 aer "${cdir}/out/A2D.SHK" * || (cecho red "failed to write ${cdir}/out/A2D.SHK" ; return 1)
 cd "${cdir}"
 rm -rf "${tempdir}"
 
-ls -l A2D.SHK
+ls -l out/A2D.SHK

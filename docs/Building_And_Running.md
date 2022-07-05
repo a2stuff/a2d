@@ -38,7 +38,7 @@ make -C cadius && make -C cadius install
 
 Then run: `make package`
 
-This will generate: `A2DeskTop_800k.2mg` (an 800k image containing the full application) and `A2DeskTop_140k_disk1.po` and `A2DeskTop_140k_disk2.po` (the files split into two 140k images).
+This will generate: `A2DeskTop-..._800k.2mg` and `.hdv` (800k images containing the full application) and `A2DeskTop-..._140k_disk1.po` and `A2DeskTop-..._140k_disk2.po` (the files split into two 140k images). The version (e.g. `alpha30`) and language (e.g. `en`) are defined in `config.inc`.
 
 Mount these disk images in your emulator, or transfer them to real floppies with [ADTPro](http://adtpro.com/), then follow the install instructions below.
 
@@ -57,9 +57,9 @@ INSTALL_PATH=/prodos/directory          # e.g. /HD/A2.DESKTOP
 
 Then run: `make install`
 
-This will create the target ProDOS directory if necessary, then copy the built files in, overwriting an existing files.
+This will create the target ProDOS directory if necessary, then copy the built files in, overwriting any existing files.
 
-Optionally, to have Selector installed, run: `make installsel`
+After building and installing, you can use `bin/setopt sel` and `bin/setopt nosel` to toggle whether Selector starts or not, and `bin/setopt ram` and `bin/setopt noram` to toggle whether DeskTop is copied to a RAMCard or not. These can be controlled within DeskTop using the Startup Options control panel, but being able to toggle these on the command line is useful during development.
 
 ### Option #3: Mount Folder in Virtual ]\[
 
@@ -71,9 +71,13 @@ After building, run: `make mount`
 
 This will copy the built files into the `mount/` directory  with appropriate file types/auxtypes set. Run Virtual ]\[ and use the **Media** > **Mount Folder as ProDOS Disk...** menu item, then select the `mount/` folder. A new ProDOS volume called `/MOUNT` will be available, containing DeskTop.
 
+### Option #4: Build ShrinkIt file
+
+If you have a workflow amenable to ShrinkIt disk images, first install `nulib2`, then run `make shk`. This will create an `A2D.SHK` file.
+
 ### Other
 
-If you need to copy the files some other way (e.g. via [CiderPress](http://a2ciderpress.com/)), it's probably easiest to transfer the files from the disk images created by `bin/package` as they will have the appropriate ProDOS file types and aux types.
+If you need to copy the files some other way (e.g. via [CiderPress](http://a2ciderpress.com/)), it's probably easiest to transfer the files from the disk images created by `make package` as they will have the appropriate ProDOS file types and aux types.
 
 
 ## Install Instructions
@@ -86,8 +90,10 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
    /HD/
      A2.DESKTOP/          DIR
        DESKTOP.SYSTEM     SYS
-       SELECTOR           $F1   $0000     (Optional)
-       DESKTOP2           $F1   $0000
+       MODULES/           DIR
+         DESKTOP2         $F1   $0000
+         DISK.COPY        $F1   $0000
+         SELECTOR         $F1   $0000
        DESK.ACC/          DIR
          CALCULATOR       $F1   $0641
          EYES             $F1   $0641
@@ -100,4 +106,11 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
          SHOW.FONT.FILE   $F1   $0641
          SHOW.IMAGE.FILE  $F1   $0641
          ...
+       EXTRAS/            DIR
+         UNSHRINK         SYS
+         ...
 ```
+
+## Running
+
+Invoke `DESKTOP.SYSTEM` to launch the app. By default, DeskTop will launch. You can use the control panel Startup Options to configure Selector to start instead, which will show a dialog containing any shortcuts you have configued in DeskTop, for faster access to programs.

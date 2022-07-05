@@ -1,5 +1,0 @@
-.define res_string_button_change_drive "Laufwerk"
-.define res_string_button_open "\\ffnen"
-.define res_string_button_close "Schlie~en"
-.define res_string_disk " Laufwerk: "
-.define res_string_label_file_to_run "Starte Datei:"
