@@ -680,8 +680,7 @@ check_title:
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         jsr     ClearUpdates
         lda     #kDAWindowId
-        jsr     redraw_window
-        rts
+        jmp     redraw_window
 
         ;; on key press - exit if Escape
 check_key:
