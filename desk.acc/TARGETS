@@ -1,26 +1,26 @@
-control.panel                   desk.acc/control.panels
-date.and.time                   desk.acc/control.panels
-joystick                        desk.acc/control.panels
-sounds                          desk.acc/control.panels
-startup.options                 desk.acc/control.panels
-system.speed                    desk.acc/control.panels
-flying.toasters                 desk.acc/screen.savers
-invert                          desk.acc/screen.savers
-matrix                          desk.acc/screen.savers
-melt                            desk.acc/screen.savers
-calculator                      desk.acc
-calendar                        desk.acc
-eyes                            desk.acc
-find.files                      desk.acc
-key.caps                        desk.acc
-puzzle                          desk.acc
-run.basic.here                  desk.acc
-screen.dump                     desk.acc
-sort.directory                  desk.acc
-this.apple                      desk.acc
-show.text.file                  preview
-show.image.file                 preview
-show.font.file                  preview
-show.duet.file                  preview
-darkness                        extras
-sci.calc                        extras
+control.panel                   desk.acc/control.panels         optional
+date.and.time                   desk.acc/control.panels         optional
+joystick                        desk.acc/control.panels         optional
+sounds                          desk.acc/control.panels         optional
+startup.options                 desk.acc/control.panels         optional
+system.speed                    desk.acc/control.panels         optional
+flying.toasters                 desk.acc/screen.savers          optional
+invert                          desk.acc/screen.savers          optional
+matrix                          desk.acc/screen.savers          optional
+melt                            desk.acc/screen.savers          optional
+calculator                      desk.acc                        optional
+calendar                        desk.acc                        optional
+eyes                            desk.acc                        optional
+find.files                      desk.acc                        optional
+key.caps                        desk.acc                        optional
+puzzle                          desk.acc                        optional
+run.basic.here                  desk.acc                        optional
+screen.dump                     desk.acc                        optional
+sort.directory                  desk.acc                        optional
+this.apple                      desk.acc                        optional
+show.text.file                  preview                         optional
+show.image.file                 preview                         optional
+show.font.file                  preview                         optional
+show.duet.file                  preview                         optional
+darkness                        extras                          extra
+sci.calc                        extras                          extra
