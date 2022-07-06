@@ -739,8 +739,7 @@ done:   rts
 
 .proc DrawWindowAndEntries
         jsr     DrawWindow
-        jsr     DrawEntries
-        rts
+        jmp     DrawEntries
 .endproc
 
 ;;; ============================================================
@@ -865,8 +864,7 @@ L9436:  tya
         jsr     invoke_entry_ep2
         jsr     file_dialog_loop
         beq     L9436
-L943F:  jsr     LoadSelectorList
-        rts
+L943F:  jmp     LoadSelectorList
 
 L9443:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
@@ -970,8 +968,7 @@ secondary:
         rts
 
 finish: lda     index
-        jsr     HandleEntryClick
-        rts
+        jmp     HandleEntryClick
 
 L959D:  .byte   0
 index:  .byte   0
@@ -1075,8 +1072,7 @@ noop:   rts
 no_cur_sel:
         lda     tentative_selection
         sta     selected_index
-        jsr     MaybeToggleEntryHilite
-        rts
+        jmp     MaybeToggleEntryHilite
 
         ;; --------------------------------------------------
         ;; Control characters - return and arrows
@@ -1087,8 +1083,7 @@ control_char:
         cmp     #CHAR_RETURN
         bne     not_return
         param_call ButtonFlash, winfo::kDialogId, ok_button_rect
-        jsr     TryInvokeSelectedIndex
-        rts
+        jmp     TryInvokeSelectedIndex
 not_return:
 
         ;; --------------------------------------------------
