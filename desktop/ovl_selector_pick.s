@@ -681,8 +681,7 @@ l4:     cmp     selected_index           ; same as previous selection?
         lda     new_selection
         sta     selected_index
         jsr     MaybeToggleEntryHilite
-:       jsr     main::StashCoordsAndDetectDoubleClick
-        rts
+:       jmp     main::StashCoordsAndDetectDoubleClick
 
 l5:     sec
         sbc     #kSelectorListNumPrimaryRunListEntries
