@@ -1,14 +1,14 @@
 #!/usr/bin/env perl
 
 # Process TARGETS file:
-#  targets.pl < TARGETS            -- file,path
+#  targets.pl < TARGETS            -- file,path,disposition
 #  targets.pl targets < TARGETS    -- file
 #  targets.pl dirs < TARGETS       -- path (sorted, unique)
 #
 # TARGETS file structure - lines are whitespace-delimited
 #  # comment
-#  target.name         target/dir/path
-#  target.name         target/dir/path
+#  target.name         target/dir/path        disposition
+#  target.name         target/dir/path        disposition
 
 use v5.10;
 use strict;
@@ -23,14 +23,14 @@ while (<STDIN>) {
     s/#.*$//g;
     next unless $_;
 
-    my ($target, $path) = split();
+    my ($target, $path, $disposition) = split();
 
     if ($command eq "targets") {
         print $target, "\n";
     } elsif ($command eq "dirs") {
         push @dirs, $path;
     } elsif ($command eq "") {
-        print $target, ",", $path, "\n";
+        print $target, ",", $path, ",", $disposition, "\n";
     } else {
         die "Unknown command: $command\n";
     }

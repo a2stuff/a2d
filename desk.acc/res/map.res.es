@@ -1,0 +1,7 @@
+.define res_string_window_title "Mapa"
+.define res_string_latitude "Latitud:"
+.define res_string_longitude "Longitud:"
+.define res_string_dir_n "N"
+.define res_string_dir_s "S"
+.define res_string_dir_e "E"
+.define res_string_dir_w "O"

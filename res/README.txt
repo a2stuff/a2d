@@ -7,9 +7,9 @@ transferred to a 3.5" floppy using ADTPro. The .hdv file has the same
 contents, just a slightly different file format which other
 tools/emulators/solid state drives prefer.
 
-A2DeskTop-1.2-..._140k_disk1.po and A2DeskTop-1.2-..._140k_disk2.po
-are 140k images containing different parts of the application, and can
-be transferred to 5.25" floppies using ADTPro.
+A2DeskTop-1.2-..._140k_disk1.po, ..._disk2.po and ..._disk3.po are
+140k images containing different parts of the application, and can be
+transferred to 5.25" floppies using ADTPro.
 
 
 Documentation
