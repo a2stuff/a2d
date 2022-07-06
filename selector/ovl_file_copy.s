@@ -216,8 +216,7 @@ eof:    return  #$FF
         jsr     DoCloseFile
         jsr     PushIndexToStack
         jsr     LA75D
-        jsr     OpenSrcDir
-        rts
+        jmp     OpenSrcDir
 .endproc
 
 .proc AscendDirectory
@@ -227,8 +226,7 @@ eof:    return  #$FF
         jsr     PopIndexFromStack
         jsr     OpenSrcDir
         jsr     AdvanceToTargetEntry
-        jsr     LA3E6
-        rts
+        jmp     LA3E6
 .endproc
 
 .proc AdvanceToTargetEntry
@@ -272,8 +270,7 @@ l2:     lda     recursion_depth
         dec     recursion_depth
         jmp     l1
 
-l3:     jsr     DoCloseFile
-        rts
+l3:     jmp     DoCloseFile
 .endproc
 
 ;;; ============================================================
@@ -652,8 +649,7 @@ LA728:  rts
         add16   blocks_total, get_file_info_params2::blocks_used, blocks_total
 :       inc16   file_count
         jsr     LA782
-        jsr     UpdateFileCountDisplay
-        rts
+        jmp     UpdateFileCountDisplay
 .endproc
 
 file_count:
@@ -967,8 +963,7 @@ ep2:    dec     file_count
         jsr     app::ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     :+              ; `kAlertResultCancel` = 1
-        jsr     app::SetWatchCursor ; try again
-        rts
+        jmp     app::SetWatchCursor ; try again
 
 :       jmp     RestoreStackAndReturn
 .endproc
@@ -1027,8 +1022,7 @@ event_loop:
         cmp     #CHAR_RETURN
         bne     event_loop
         param_call app::ButtonFlash, winfo::kWindowId, ok_button_rect
-        jsr     app::SetWatchCursor
-        rts
+        jmp     app::SetWatchCursor
 
 HandleButtonDown:
         MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -1050,8 +1044,7 @@ HandleButtonDown:
         bne     event_loop
         param_call app::ButtonClick, winfo::kWindowId, ok_button_rect
         bmi     event_loop
-        jsr     app::SetWatchCursor
-        rts
+        jmp     app::SetWatchCursor
 
 ;;; ============================================================
 
