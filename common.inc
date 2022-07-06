@@ -232,7 +232,7 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 ;;; $03 = hourglass      (MT:C)    $13 = pi           *
 ;;; $04 = I-beam                   $14 = divide       *
 ;;; $05 = pointer        (MT:B)    $15 = rarrow       ! (MT:U)
-;;; $06 = vbar           (MT:_)    $16 = tri
+;;; $06 = vbar           (MT:_)    $16 = degree       !
 ;;; $07 = hbar           (MT:S)    $17 = open circ
 ;;; $08 = larrow       ! (MT:H)    $18 = close          (MT:])
 ;;; $09 = left box                 $19 = gray odd       (MT:W)
@@ -257,6 +257,7 @@ kGlyphRightArrow        = $15
 kGlyphUpArrow           = $0B
 kGlyphDownArrow         = $0A
 kGlyphReturn            = $0D
+kGlyphDegreeSign        = $16
 kGlyphOpenApple         = $1F
 kGlyphSolidApple        = $1E
 kGlyphCheckmark         = $1D

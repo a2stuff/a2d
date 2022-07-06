@@ -23,4 +23,5 @@ show.image.file                 preview                         optional
 show.font.file                  preview                         optional
 show.duet.file                  preview                         optional
 darkness                        extras                          extra
+map                             extras                          extra
 sci.calc                        extras                          extra
