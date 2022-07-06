@@ -169,7 +169,7 @@ copy_from:
         jmp     :-
 
 done:   jsr     BankInMain
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 
 flag:   .byte   0
