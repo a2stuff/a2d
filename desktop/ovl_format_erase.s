@@ -745,8 +745,7 @@ path:
 
         ;; Format as Disk II
         lda     unit_num
-        jsr     FormatDiskII
-        rts
+        jmp     FormatDiskII
 
         ;; Format using driver
 driver: lda     unit_num
@@ -1271,8 +1270,7 @@ pascal_disk:
 
 non_pro:
         lda     on_line_params::unit_num
-        jsr     GetNonprodosVolName
-        rts
+        jmp     GetNonprodosVolName
 .endproc
 
 ;;; ============================================================
