@@ -139,8 +139,7 @@ params:  .res    3
 disk_ii:
         unit_number := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     FormatDiskII
-        rts
+        jmp     FormatDiskII
 .endproc
 
 ;;; ============================================================
@@ -295,8 +294,7 @@ loop:   inc     ptr
 l5:     pla
 
 l6:     lda     ptr
-        jsr     MarkUsedInMemoryBitmap
-        rts
+        jmp     MarkUsedInMemoryBitmap
 .endscope
 
         ;; --------------------------------------------------
