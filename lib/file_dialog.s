@@ -377,8 +377,7 @@ is_apple_click_flag:
 ;;; This vector gets patched by overlays that add controls.
 
 click_handler_hook:
-        jsr     NoOp
-        rts
+        jmp     NoOp
 
 ;;; ============================================================
 
@@ -438,9 +437,7 @@ folder: and     #$7F
         jsr     GetNthFilename
         jsr     AppendToPathBuf
 
-        jsr     UpdateListFromPath
-
-        rts
+        jmp     UpdateListFromPath
 
         ;; --------------------------------------------------
         ;; Click on a different entry
@@ -692,8 +689,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     UpdateListFromPath
 
         jsr     PrepPath
-        jsr     Activate
-        rts
+        jmp     Activate
 .endproc
 
 ;;; ============================================================
@@ -907,16 +903,14 @@ ret:    rts
 :
 .endif
         param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
-        jsr     HandleOk
-        rts
+        jmp     HandleOk
 .endproc
 
 ;;; ============================================================
 
 .proc KeyEscape
         param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
-        jsr     HandleCancel
-        rts
+        jmp     HandleCancel
 .endproc
 
 ;;; ============================================================
@@ -1395,8 +1389,7 @@ ret:    rts
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, file_dialog::only_show_dirs_flag
         copy    #0, line_edit_res::blink_ip_flag
-        jsr     UnsetCursorIBeam
-        rts
+        jmp     UnsetCursorIBeam
 .endproc
 
 ;;; ============================================================
@@ -1479,8 +1472,7 @@ ret:    rts
         stax    $06
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
         ldax    $06
-        jsr     DrawString
-        rts
+        jmp     DrawString
 .endproc
 
 ;;; ============================================================
@@ -1490,8 +1482,7 @@ ret:    rts
         stax    $06
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_label_pos
         ldax    $06
-        jsr     DrawString
-        rts
+        jmp     DrawString
 .endproc
 .endif
 
@@ -1516,8 +1507,7 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         sta     path_buf
         param_call AppendToPathBuf, on_line_buffer
         lda     #$FF
-        jsr     SetSelectedIndex
-        rts
+        jmp     SetSelectedIndex
 .endproc
 
 ;;; ============================================================
