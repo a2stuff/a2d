@@ -29,7 +29,7 @@ tempdir=$(mktemp -d "${TMPDIR:-/tmp}/shk.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
 # ============================================================
-# Implementations for manifest operations
+# Implementation for manifest operations
 
 add_file () {
     local disposition="$1"
@@ -58,17 +58,14 @@ add_file () {
         perl -p -i -e 's/\r?\n/\r/g' "$tmp_file" # Ensure Apple line endings
     fi
 
+    if [ "$folder" != "" ]; then
+        suppress cadius CREATEFOLDER "$INSTALL_IMG" "$dst_dir" --quiet --no-case-bits
+    fi
     cadius DELETEFILE "$INSTALL_IMG" "$dst_dir/$dst_file" > /dev/null || true
     suppress cadius ADDFILE "$INSTALL_IMG" "$dst_dir" "$tmp_file" --quiet --no-case-bits
     rm "$tmp_file"
 }
 
-create_folder() {
-    local disposition="$1"
-    local path="$2"
-
-    suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH/$path" --quiet --no-case-bits
-}
 
 # ============================================================
 # Install

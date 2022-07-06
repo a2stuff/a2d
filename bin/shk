@@ -20,7 +20,7 @@ mkdir -p out
 rm -f out/A2D.SHK
 
 # ============================================================
-# Implementations for manifest operations
+# Implementation for manifest operations
 
 add_file() {
     local disposition="$1"
@@ -30,6 +30,7 @@ add_file() {
     local suffix="$5"
 
     local tmp_file="$tempdir/$folder/$dst_file#$suffix"
+    mkdir -p "$tempdir/$folder"
     cp "$src_file" "$tmp_file" \
         && (cecho green "staging $dst_file" ) \
         || (cecho red "failed to stage $dst_file" ; return 1)
@@ -37,13 +38,6 @@ add_file() {
     if [ "$suffix" = "040000" ]; then
         perl -p -i -e 's/\r?\n/\r/g' "$tmp_file" # Ensure Apple line endings
     fi
-}
-
-create_folder() {
-    local disposition="$1"
-    local path="$2"
-
-    mkdir -p "$tempdir/$path"
 }
 
 # ============================================================

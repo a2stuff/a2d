@@ -16,10 +16,6 @@
 #     folder      = e.g. "desk.acc"
 #     dst_file    = e.g. "calculator"
 #     suffix      = e.g. "F10641"
-#
-#   create_folder disposition path
-#     disposition = "required" | "optional" | "extra"
-#     path        = e.g. "desk.acc"
 
 set -e
 source "bin/util.sh"
@@ -79,15 +75,12 @@ emit add_file $disposition "res/package/READ.ME" "" "Read.Me" 040000
 # Add Launcher, DeskTop, and Disk Copy
 emit add_file $disposition "desktop.system/out/desktop.system.SYS" "" "DeskTop.system" FF0000
 
-emit create_folder $disposition "Modules"
 emit add_file $disposition "desktop/out/desktop.built" "Modules" "DeskTop2" F10000
 emit add_file $disposition "disk_copy/out/disk_copy.built" "Modules" "Disk.Copy" F10000
 
 # --------------------------------------------------
 # Part 2: Optional.
 disposition="optional"
-
-emit create_folder $disposition "Modules"
 
 # Add Selector
 emit add_file $disposition "selector/out/selector.built" "Modules" "Selector" F10000
@@ -98,8 +91,6 @@ emit add_file $disposition "res/package/BASIC.SYSTEM" "" "BASIC.system" FF2000
 # --------------------------------------------------
 # Part 3: Extras.
 disposition="extra"
-
-emit create_folder $disposition "Extras"
 
 # Add UnShrink
 emit add_file $disposition "res/package/UNSHRINK" "Extras" "UnShrink" FF0000
@@ -115,6 +106,5 @@ for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
     path="${array[1]}"
     ploc=$(get_da_loc_path "$path")
     disposition="${array[2]}"
-    emit create_folder $disposition $ploc
     emit add_file $disposition "desk.acc/out/$file.da" "$ploc" "$loc" F10641
 done

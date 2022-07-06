@@ -57,7 +57,7 @@ suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-ca
 suppress cadius CREATEVOLUME $IMGFILE_PART3 $VOLNAME_PART3 140KB --quiet --no-case-bits
 
 # ============================================================
-# Implementations for manifest operations
+# Implementation for manifest operations
 
 add_file () {
     # Add the files into the disk images.
@@ -76,6 +76,9 @@ add_file () {
             perl -p -i -e 's/\r?\n/\r/g' "$tmp_file" # Ensure Apple line endings
         fi
 
+        if [ "$folder" != "" ]; then
+            suppress cadius CREATEFOLDER "$img_file" "$folder" --quiet --no-case-bits
+        fi
         suppress cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits
         rm "$tmp_file"
     }
@@ -94,29 +97,6 @@ add_file () {
         add_file_internal $IMGFILE_PART2 "$src_file" "/$VOLNAME_PART2/$folder" "$dst_file" "$suffix"
     else
         add_file_internal $IMGFILE_PART3 "$src_file" "/$VOLNAME_PART3/$folder" "$dst_file" "$suffix"
-    fi
-}
-
-create_folder() {
-    # Create a folder in the volume
-    # Usage: create_folder_internal IMGFILE PATH
-    create_folder_internal () {
-        local img_file="$1"
-        local path="$2"
-        suppress cadius CREATEFOLDER "$img_file" "$path" --quiet --no-case-bits
-    }
-
-    local disposition="$1"
-    local path="$2"
-
-    create_folder_internal $IMGFILE_COMPLETE_2MG "/$VOLNAME_COMPLETE/$path"
-    create_folder_internal $IMGFILE_COMPLETE_HDV "/$VOLNAME_COMPLETE/$path"
-    if [ "$disposition" = "required" ]; then
-        create_folder_internal $IMGFILE_PART1 "/$VOLNAME_PART1/$path"
-    elif [ "$disposition" = "optional" ]; then
-        create_folder_internal $IMGFILE_PART2 "/$VOLNAME_PART2/$path"
-    else
-        create_folder_internal $IMGFILE_PART3 "/$VOLNAME_PART3/$path"
     fi
 }
 

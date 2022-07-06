@@ -11,7 +11,7 @@ mkdir -p $MOUNT_DIR/test || (cecho red "permission denied"; exit 1)
 rmdir $MOUNT_DIR/test
 
 # ============================================================
-# Implementations for manifest operations
+# Implementation for manifest operations
 
 add_file() {
     local disposition="$1"
@@ -29,6 +29,7 @@ add_file() {
     local auxh="${suffix:2:2}"
     local auxl="${suffix:4:2}"
     local dst="$dst_file.\$$type"
+    mkdir -p "$dst_dir"
     cp "$src_file" "$dst_dir/$dst" \
 	&& xattr -wx prodos.AuxType "$auxl $auxh" "$dst_dir/$dst" \
         && (cecho green "- $dst_dir/$dst" ) \
@@ -37,13 +38,6 @@ add_file() {
     if [ "$suffix" = "040000" ]; then
         perl -p -i -e 's/\r?\n/\r/g' "$dst_dir/$dst" # Ensure Apple line endings
     fi
-}
-
-create_folder() {
-    local disposition="$1"
-    local path="$2"
-
-    mkdir -p "$MOUNT_DIR/$path"
 }
 
 # ============================================================
