@@ -605,8 +605,7 @@ continue:
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     ClearUpdates
-        rts                     ; exits input loop
+        jmp     ClearUpdates    ; exits input loop
 .endproc
 
 ;;; ============================================================

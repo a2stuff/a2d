@@ -2072,8 +2072,7 @@ index:  .byte   0
         jsr     AdjustCase
         lda     $06
         ldx     $07
-        jsr     DrawString
-        rts
+        jmp     DrawString
 
 device_index:
         .byte   0
@@ -2225,8 +2224,7 @@ LE522:  lda     #winfo_dialog::kWindowId
         adc     #$00
         tax
         tya
-        jsr     IntToStringWithSeparators
-        rts
+        jmp     IntToStringWithSeparators
 
 LE550:  .byte   7,6,5,4,3,2,1,0
 

@@ -116,8 +116,7 @@ save_stack:.byte   0
         sta     ALTZPOFF
         MLI_CALL OPEN, open_params
         sta     ALTZPON
-        jsr     CopyParamsMainToAux
-        rts
+        jmp     CopyParamsMainToAux
 .endproc
 
 .proc ReadFile
@@ -125,8 +124,7 @@ save_stack:.byte   0
         sta     ALTZPOFF
         MLI_CALL READ, read_params
         sta     ALTZPON
-        jsr     CopyParamsMainToAux
-        rts
+        jmp     CopyParamsMainToAux
 .endproc
 
 .proc GetFileEof
@@ -134,8 +132,7 @@ save_stack:.byte   0
         sta     ALTZPOFF
         MLI_CALL GET_EOF, get_eof_params
         sta     ALTZPON
-        jsr     CopyParamsMainToAux
-        rts
+        jmp     CopyParamsMainToAux
 .endproc
 
 .proc SetFileMark
@@ -143,8 +140,7 @@ save_stack:.byte   0
         sta     ALTZPOFF
         MLI_CALL SET_MARK, set_mark_params
         sta     ALTZPON
-        jsr     CopyParamsMainToAux
-        rts
+        jmp     CopyParamsMainToAux
 .endproc
 
 .proc CloseFile
@@ -152,8 +148,7 @@ save_stack:.byte   0
         sta     ALTZPOFF
         MLI_CALL CLOSE, close_params
         sta     ALTZPON
-        jsr     CopyParamsMainToAux
-        rts
+        jmp     CopyParamsMainToAux
 .endproc
 
 ;;; ============================================================
@@ -509,8 +504,7 @@ no_mod:
 .proc DoClose
         jsr     CloseFile
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     ClearUpdates
-        rts                     ; exits input loop
+        jmp     ClearUpdates    ; exits input loop
 .endproc
 
 ;;; ============================================================

@@ -38,8 +38,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     ALTZPON
         sta     LCBANK1
         sta     LCBANK1
-        jsr     JUMP_TABLE_RGB_MODE
-        rts
+        jmp     JUMP_TABLE_RGB_MODE
 .endproc
 
 ;;; ============================================================

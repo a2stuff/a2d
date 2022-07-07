@@ -181,8 +181,7 @@ done:   jsr     file_dialog::Activate
         ;; If selection is "dirty", do this...
         jsr     file_dialog::DeviceOnLine
         jsr     file_dialog::UpdateListFromPath
-        jsr     file_dialog::Activate
-        rts
+        jmp     file_dialog::Activate
 
         ;; Otherwise do this...
 L726D:  lda     file_dialog::path_buf
@@ -207,8 +206,7 @@ L7289:
 :       jsr     file_dialog::UpdateScrollbarWithIndex
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
-        jsr     file_dialog::Activate
-        rts
+        jmp     file_dialog::Activate
 .endproc
 
 ;;; ============================================================

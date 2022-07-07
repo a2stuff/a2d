@@ -683,8 +683,7 @@ hit_target_jump_table:
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
         pla
         tax
-        jsr     OnUpOrDown
-        rts
+        jmp     OnUpOrDown
 .endproc
 
 .proc OnDown
@@ -693,8 +692,7 @@ hit_target_jump_table:
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
         pla
         tax
-        jsr     OnUpOrDown
-        rts
+        jmp     OnUpOrDown
 .endproc
 
 .proc OnFieldClick

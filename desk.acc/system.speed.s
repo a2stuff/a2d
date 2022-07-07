@@ -471,8 +471,7 @@ hit:    lda     winfo::window_id
 
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        jsr     ClearUpdates
-        rts
+        jmp     ClearUpdates
 .endproc
 
 ;;; ============================================================

@@ -698,7 +698,7 @@ skip:   lda     win
         lda     icon_param
         jsr     IconWindowToScreen
 :
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
@@ -881,8 +881,7 @@ check_selection:
 
         jsr     DisableMenuItemsRequiringVolumeSelection
         jsr     EnableMenuItemsRequiringFileSelection
-        jsr     EnableMenuItemsRequiringSelection
-        rts
+        jmp     EnableMenuItemsRequiringSelection
 
         ;; --------------------------------------------------
         ;; Volumes selected (not files)
@@ -897,16 +896,14 @@ check_selection:
         ;; At least one real volume
 :       jsr     EnableMenuItemsRequiringVolumeSelection
         jsr     DisableMenuItemsRequiringFileSelection
-        jsr     EnableMenuItemsRequiringSelection
-        rts
+        jmp     EnableMenuItemsRequiringSelection
 
         ;; --------------------------------------------------
         ;; No Selection
 no_selection:
         jsr     DisableMenuItemsRequiringVolumeSelection
         jsr     DisableMenuItemsRequiringFileSelection
-        jsr     DisableMenuItemsRequiringSelection
-        rts
+        jmp     DisableMenuItemsRequiringSelection
 
 .endproc
 
@@ -975,8 +972,7 @@ with_path:
         ;; Get the file info to determine type.
         jsr     GetSrcFileInfo
         beq     :+
-        jsr     ShowAlert
-        rts
+        jmp     ShowAlert
 
         ;; Check file type.
 :       copy    src_file_info_params::file_type, icontype_filetype
@@ -998,8 +994,7 @@ with_path:
         jne     launch
         jsr     ModifierDown ; Otherwise, only launch if a button is down
         jmi     launch
-        jsr     SetCursorPointer ; after not launching BIN
-        rts
+        jmp     SetCursorPointer ; after not launching BIN
 
 :       cmp     #IconType::folder
         jeq     OpenFolder
@@ -1471,8 +1466,7 @@ entry_num:
         copy16  #$800, $06
         copy16  #$840, $08
 
-        jsr     CopyPathsFromPtrsToBufsAndSplitName
-        rts
+        jmp     CopyPathsFromPtrsToBufsAndSplitName
 .endproc
 
 ;;; --------------------------------------------------
@@ -1719,8 +1713,7 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         ;; Restore state
         jsr     InitSetDesktopPort ; DA's port destroyed, set something real as current
         jsr     ShowClockForceUpdate
-done:   jsr     SetCursorPointer ; after invoking DA
-        rts
+done:   jmp     SetCursorPointer ; after invoking DA
 
         DEFINE_OPEN_PARAMS open_params, 0, DA_IO_BUFFER
         open_ref_num := open_params::ref_num
@@ -4204,8 +4197,7 @@ not_in_map:
 err:    pha
         jsr     StoreWindowEntryTable
         pla
-        jsr     ShowAlert
-        rts
+        jmp     ShowAlert
 
 add_icon:
         lda     cached_window_entry_count
@@ -4223,8 +4215,7 @@ add_icon:
         ITK_CALL IconTK::AddIcon, 0, @addr
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
 
-:       jsr     StoreWindowEntryTable
-        rts
+:       jmp     StoreWindowEntryTable
 
 ;;; 0 = command, $80 = format/erase, $C0 = open/eject/rename
 check_drive_flags:
@@ -4631,8 +4622,7 @@ failure:
         copy    active_window_id, selected_window_id
 
         lda     icon_param
-        jsr     DrawIcon
-        rts
+        jmp     DrawIcon
 .endproc
 
 ;;; ============================================================
@@ -4648,8 +4638,7 @@ failure:
         jsr     RemoveFromSelectionList
 
         lda     icon_param
-        jsr     DrawIcon
-        rts
+        jmp     DrawIcon
 .endproc
 
 ;;; ============================================================
@@ -5588,8 +5577,7 @@ size:   .word   0
         tax
         inx
         stx     checkitem_params::menu_item
-        jsr     CheckViewMenuItem
-        rts
+        jmp     CheckViewMenuItem
 .endproc
 
 ;;; ============================================================
@@ -5648,8 +5636,7 @@ disable:
         lda     #aux::kMenuItemIdUnlock
         jsr     DisableMenuItem
         lda     #aux::kMenuItemIdGetSize
-        jsr     DisableMenuItem
-        rts
+        jmp     DisableMenuItem
 .endproc
 EnableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::enable
 DisableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::disable
@@ -5756,8 +5743,7 @@ not_selected:
         lda     selected_window_id ; on desktop?
         beq     :+                 ; if so, retain selection
         jsr     ClearSelection
-:       jsr     SelectVolIcon
-        rts                     ; select, nothing further
+:       jmp     SelectVolIcon      ; select, nothing further
 
         ;; Replace selection with clicked icon
 replace_selection:
@@ -6262,7 +6248,7 @@ done_icons:
 
         ;; --------------------------------------------------
 done:
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 
 ;;; * If $80 N=1 V=?: the caller has offset the winfo's port; the
@@ -6963,7 +6949,7 @@ L7223:  iny
 finish: copy16  record_ptr, filerecords_free_start
         jsr     DoClose
         jsr     SetCursorPointer ; after loading directory
-        jsr     PopPointers
+        jsr     PopPointers      ; do not tail-call optimise!
         rts
 
 free_record_count:
@@ -7233,7 +7219,7 @@ size:   .word   0               ; size of a window's list
         inc     src_path_buf
         copy    #'/', src_path_buf+1
 
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 
         ;; --------------------------------------------------
@@ -7267,7 +7253,7 @@ has_parent:
         ldax    name_ptr
         jsr     AppendFilenameToSrcPath
 
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
@@ -7426,8 +7412,7 @@ volume: ldx     cached_window_id
         copy16  vol_kb_used, window_k_used_table,x
         copy16  vol_kb_free, window_k_free_table,x
         lda     cached_window_id
-        jsr     CreateIconsAndSetWindowSize
-        rts
+        jmp     CreateIconsAndSetWindowSize
 .endproc
 
 copy_new_window_bounds_flag:
@@ -7517,7 +7502,7 @@ common: sta     preserve_window_size_flag
 
 :       bit     preserve_window_size_flag
         bpl     :+
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 
         ;; --------------------------------------------------
@@ -7619,7 +7604,7 @@ assign_height:
         jsr     AnimateWindowOpen
 :
         ;; Finished
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 
         ;; TODO: Make this a constant?
@@ -7798,7 +7783,7 @@ L7870:  lda     cached_window_id
         ldy     #IconDefinition::maprect + MGTK::Rect::y2
         copy16in (ptr),y, icon_height
 
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
@@ -9032,7 +9017,7 @@ file:
         stax    $08
 
 common: jsr     JoinPaths      ; $08 = base, $06 = file
-        jsr     PopPointers
+        jsr     PopPointers    ; do not tail-call optimise!
         rts
 .endproc
 
@@ -9290,7 +9275,7 @@ exit:   rts
         iny
         cpy     #MGTK::Winfo::port+.sizeof(MGTK::GrafPort)
         bne     :-
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 
 saved_portbits:
@@ -9326,7 +9311,7 @@ saved_portbits:
         ;; icony
         sub16in (entry_ptr),y, pos_win+2, (entry_ptr),y
 
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
@@ -9365,7 +9350,7 @@ saved_portbits:
         ;; icony
         add16in (entry_ptr),y, pos_win+2, (entry_ptr),y
 
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
@@ -9877,7 +9862,7 @@ next:   dec     index
         ;; All done, clean up and report no duplicates.
         lda     #0
 
-finish: jsr     PopPointers
+finish: jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
@@ -10145,11 +10130,9 @@ L8D0A:  add16   rect_table,x, L8D54, rect_table+4,x ; right
 
         bit     close_flag
         bmi     :+
-        jsr     AnimateWindowOpenImpl
-        rts
+        jmp     AnimateWindowOpenImpl
 
-:       jsr     AnimateWindowCloseImpl
-        rts
+:       jmp     AnimateWindowCloseImpl
 
 close_flag:
         .byte   0
@@ -10372,8 +10355,7 @@ retry:  MLI_CALL OPEN, open_params
         MLI_CALL SET_MARK, set_mark_params
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
-        jsr     SetCursorPointer ; after loading overlay
-        rts
+        jmp     SetCursorPointer ; after loading overlay
 
 .endproc
 LoadDynamicRoutine      := LoadDynamicRoutineImpl::load

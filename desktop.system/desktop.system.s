@@ -330,8 +330,7 @@ do_file:
 exit:   rts
 
 cleanup:
-        jsr     RemoveFilenameFromPath1
-        rts
+        jmp     RemoveFilenameFromPath1
 .endproc
 
 ;;; ============================================================
@@ -632,8 +631,7 @@ eof:    return  #$FF
         jsr     DoCloseFile
         jsr     PushIndexToStack
         jsr     AppendFilenameToPath2
-        jsr     OpenSrcDir
-        rts
+        jmp     OpenSrcDir
 .endproc
 
 .proc AscendDirectory
@@ -642,8 +640,7 @@ eof:    return  #$FF
         jsr     PopIndexFromStack
         jsr     OpenSrcDir
         jsr     AdvanceToTargetEntry
-        jsr     RemoveFilenameFromPath1
-        rts
+        jmp     RemoveFilenameFromPath1
 .endproc
 
 .proc AdvanceToTargetEntry
@@ -696,8 +693,7 @@ next:   lda     recursion_depth
         dec     recursion_depth
         jmp     loop
 
-done:   jsr     DoCloseFile
-        rts
+done:   jmp     DoCloseFile
 .endproc
 
 ;;; ============================================================
@@ -1900,8 +1896,7 @@ str_not_completed:
         bne     :+
         jmp     FinishAndInvoke
 
-:       jsr     HOME
-        rts
+:       jmp     HOME
 .endproc
 
 ;;; ============================================================

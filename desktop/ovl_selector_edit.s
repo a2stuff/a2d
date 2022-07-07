@@ -218,8 +218,7 @@ found_slash:
 
 finish: copy    #$80, file_dialog_res::allow_all_chars_flag
         copy    #kSelectorMaxNameLength, line_edit_res::max_length
-        jsr     file_dialog::Activate
-        rts
+        jmp     file_dialog::Activate
 .endproc
 
 ;;; ============================================================
@@ -291,8 +290,7 @@ found:  cpy     #2
         lda     input1_dirty_flag
         sta     line_edit_res::input_dirty_flag
 
-        jsr     file_dialog::Activate
-        rts
+        jmp     file_dialog::Activate
 .endproc
 
 ;;; ============================================================
