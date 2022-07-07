@@ -53,8 +53,9 @@ JT_HILITE_MENU:         jmp     ToggleMenuHilite        ; *
 JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
 JT_GET_RAMCARD_FLAG:    jmp     GetCopiedToRAMCardFlag  ; *
 JT_GET_ORIG_PREFIX:     jmp     CopyDeskTopOriginalPrefix ; *
+JT_BELL:                jmp     Bell                    ; *
 
-        .assert JUMP_TABLE_GET_ORIG_PREFIX = JT_GET_ORIG_PREFIX, error, "Jump table mismatch"
+        .assert JUMP_TABLE_LAST = *, error, "Jump table mismatch"
 
         ;; Main Loop
 .proc MainLoop

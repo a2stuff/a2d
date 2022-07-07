@@ -170,6 +170,10 @@ If DeskTop was copied to RAMCard, this populates the passed buffer with the orig
 
 Input: A,X = Path buffer.
 
+#### `JUMP_TABLE_BELL` *
+
+Play the alert sound, as specified in settings.
+
 <!-- ============================================================ -->
 
 ## Icon ToolKit

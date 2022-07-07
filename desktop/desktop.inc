@@ -73,6 +73,8 @@ JT_ENTRY JUMP_TABLE_HILITE_MENU   ; Toggle hilite on last clicked menu *
 JT_ENTRY JUMP_TABLE_ADJUST_FILEENTRY  ; Adjust case in FileEntry structure (in: A,X=FileEntry) *
 JT_ENTRY JUMP_TABLE_GET_RAMCARD_FLAG  ; Returns high bit set if copied to RAMCard *
 JT_ENTRY JUMP_TABLE_GET_ORIG_PREFIX   ; Returns original prefix, if copied (in: A,X=buffer) *
+JT_ENTRY JUMP_TABLE_BELL          ; Play settings-specified alert sound *
+JT_ENTRY JUMP_TABLE_LAST
 
 ;;; ============================================================
 ;;; Call MGTK
