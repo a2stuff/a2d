@@ -1,7 +1,5 @@
 # Desk Accessories
 
-Original desk accessories from MouseDesk:
-
 * [Calculator](calculator.s)
   * A basic four function calculator. Original DA from MouseDesk, with fixes.
 * [Puzzle](puzzle.s)
@@ -44,6 +42,8 @@ Original desk accessories from MouseDesk:
   * A debugging tool that paints the whole screen a dark pattern.
 * [Scientific Calculator](sci.calc.s)
   * Calculator with trigonometry and other additional functions
+* [Map](map.s)
+  * World map with some searchable city locations.
 
 Note that the new desk accessories require an updated version of Apple II DeskTop and **will not work** with DeskTop 1.1 or MouseDesk.
 
