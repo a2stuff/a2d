@@ -759,7 +759,7 @@ ShowPackedDHRFile    := UnpackRead::dhr_file
         sta     PAGE2ON         ; Clear aux
         jsr     clear
         sta     PAGE2OFF        ; Clear main
-        jmp     clear
+        FALL_THROUGH_TO clear
 
 clear:  copy16  #hires, ptr
         lda     #0              ; clear to black
