@@ -285,7 +285,7 @@ char_label:  .byte   0
 .endproc
 
 .proc InputLoop
-        jsr     YieldLoop
+        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
@@ -297,27 +297,9 @@ char_label:  .byte   0
         jmp     InputLoop
 .endproc
 
-.proc YieldLoop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_YIELD_LOOP
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-.proc ClearUpdates
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jmp     ClearUpdates    ; exits input loop
+        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES ; exits input loop
 .endproc
 
 ;;; ============================================================
@@ -369,7 +351,7 @@ char_label:  .byte   0
         bpl     :+
 
         ;; Draw DeskTop's windows and icons (from Main)
-        jsr     ClearUpdates
+        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
@@ -451,6 +433,20 @@ index:  .byte   0
 
 .endproc
 
+;;; ============================================================
+;;; Make call into Main from Aux (for JUMP_TABLE calls)
+;;; Inputs: A,X = address
+
+.proc JTRelay
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        stax    @addr
+        @addr := *+1
+        jsr     SELF_MODIFIED
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
 
 ;;; ============================================================
 

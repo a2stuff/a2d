@@ -278,7 +278,7 @@ frame_counter:
 .proc InputLoop
         jsr     AnimFrame
 
-        jsr     YieldLoop
+        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
 
@@ -332,26 +332,6 @@ frame_counter:
         param_call ButtonFlash, kDAWindowId, fast_button_rect
         jsr     DoFast
         jmp     InputLoop
-.endproc
-
-;;; ============================================================
-
-.proc YieldLoop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_YIELD_LOOP
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-.proc ClearUpdates
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
 .endproc
 
 ;;; ============================================================
@@ -471,7 +451,7 @@ hit:    lda     winfo::window_id
 
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        jmp     ClearUpdates
+        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES
 .endproc
 
 ;;; ============================================================
@@ -542,6 +522,21 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::ShowCursor
 :
 
+        rts
+.endproc
+
+;;; ============================================================
+;;; Make call into Main from Aux (for JUMP_TABLE calls)
+;;; Inputs: A,X = address
+
+.proc JTRelay
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        stax    @addr
+        @addr := *+1
+        jsr     SELF_MODIFIED
+        sta     RAMRDON
+        sta     RAMWRTON
         rts
 .endproc
 

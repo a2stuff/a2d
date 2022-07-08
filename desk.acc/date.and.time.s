@@ -518,7 +518,7 @@ init_window:
 ;;; Input loop
 
 .proc InputLoop
-        jsr     YieldLoop
+        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -611,24 +611,6 @@ init_window:
         jsr     SelectField
         jmp     InputLoop
 .endproc
-.endproc
-
-.proc YieldLoop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_YIELD_LOOP
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-.proc ClearUpdates
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
 .endproc
 
 ;;; ============================================================
@@ -978,7 +960,7 @@ dialog_result:  .byte   0
 
 .proc Destroy
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        jsr     ClearUpdates
+        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
 
         lda     dialog_result
         ;; Actual new date/time set in ProDOS GP
@@ -1415,6 +1397,21 @@ loop:   cmp     #10
         lda     hour
         sta     TIMEHI
 
+        sta     RAMWRTON
+        rts
+.endproc
+
+;;; ============================================================
+;;; Make call into Main from Aux (for JUMP_TABLE calls)
+;;; Inputs: A,X = address
+
+.proc JTRelay
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        stax    @addr
+        @addr := *+1
+        jsr     SELF_MODIFIED
+        sta     RAMRDON
         sta     RAMWRTON
         rts
 .endproc

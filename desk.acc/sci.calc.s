@@ -627,7 +627,7 @@ loop:   lda     chrget_routine-1,x
 ;;; Input Loop
 
 .proc InputLoop
-        jsr     YieldLoop
+        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -639,15 +639,6 @@ loop:   lda     chrget_routine-1,x
         bne     InputLoop
         jsr     OnKeyPress
         jmp     InputLoop
-.endproc
-
-.proc YieldLoop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_YIELD_LOOP
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
 .endproc
 
 ;;; ============================================================
@@ -676,6 +667,7 @@ loop:   lda     chrget_routine-1,x
         lda     trackgoaway_params::goaway
         beq     ret
         MGTK_CALL MGTK::CloseWindow, closewindow_params
+        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
         jmp     ExitDA
     END_IF
 
@@ -685,11 +677,7 @@ loop:   lda     chrget_routine-1,x
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 
         ;; Redraw DeskTop's windows and icons
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
+        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
 
         jsr     DrawContent
     END_IF
@@ -1511,6 +1499,21 @@ loop:   inc16   TXTPTR
 end:    rts
 END_PROC_AT
         sizeof_chrget_routine = .sizeof(chrget_routine)
+
+;;; ============================================================
+;;; Make call into Main from Aux (for JUMP_TABLE calls)
+;;; Inputs: A,X = address
+
+.proc JTRelay
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        stax    @addr
+        @addr := *+1
+        jsr     SELF_MODIFIED
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
 
 ;;; ============================================================
 

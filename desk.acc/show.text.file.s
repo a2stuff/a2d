@@ -367,7 +367,7 @@ reserved:       .byte   0
 ;;; Main Input Loop
 
 .proc InputLoop
-        jsr     YieldLoop
+        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params
         cmp     #MGTK::EventKind::key_down    ; key?
@@ -403,20 +403,15 @@ title:  jsr     OnTitleBarClick
 .endproc
 
 ;;; ============================================================
+;;; Make call into Main from Aux (for JUMP_TABLE calls)
+;;; Inputs: A,X = address
 
-.proc ClearUpdates
+.proc JTRelay
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-.proc YieldLoop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_YIELD_LOOP
+        stax    @addr
+        @addr := *+1
+        jsr     SELF_MODIFIED
         sta     RAMRDON
         sta     RAMWRTON
         rts
@@ -504,7 +499,7 @@ no_mod:
 .proc DoClose
         jsr     CloseFile
         MGTK_CALL MGTK::CloseWindow, winfo
-        jmp     ClearUpdates    ; exits input loop
+        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES ; exits input loop
 .endproc
 
 ;;; ============================================================

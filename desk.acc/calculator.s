@@ -560,7 +560,7 @@ loop:   lda     chrget_routine-1,x
 ;;; Input Loop
 
 .proc InputLoop
-        jsr     YieldLoop
+        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -574,19 +574,16 @@ loop:   lda     chrget_routine-1,x
         jmp     InputLoop
 .endproc
 
-.proc YieldLoop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_YIELD_LOOP
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
+;;; ============================================================
+;;; Make call into Main from Aux (for JUMP_TABLE calls)
+;;; Inputs: A,X = address
 
-.proc ClearUpdates
+.proc JTRelay
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        stax    @addr
+        @addr := *+1
+        jsr     SELF_MODIFIED
         sta     RAMRDON
         sta     RAMWRTON
         rts
@@ -622,7 +619,7 @@ ignore_click:
         beq     ignore_click
 
 exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
-        jsr     ClearUpdates
+        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
         jmp     ExitDA
 
 :       cmp     #MGTK::Area::dragbar ; Title bar?
@@ -630,7 +627,7 @@ exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        jsr     ClearUpdates
+        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawContent
 .endproc
 exit := OnClick::exit
