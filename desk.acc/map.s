@@ -237,6 +237,8 @@ position_marker_bitmap:
 ;;; ============================================================
 ;;; Line Edit
 
+cursor_ibeam_flag: .byte   0
+
 kBufSize = 16                       ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
 
@@ -284,48 +286,23 @@ buf_search:     .res    kBufSize, 0 ; search term
 
 .proc InputLoop
         jsr     line_edit::Idle
-        jsr     YieldLoop
+        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     HandleDown
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey
-        bne     InputLoop       ; always
-
-        ;; TODO: Handle cursor updates
-.endproc
-
-.proc YieldLoop
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_YIELD_LOOP
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-.proc ClearUpdates
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-.proc Bell
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jsr     JUMP_TABLE_BELL
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
+        cmp     #MGTK::EventKind::no_event
+        bne     InputLoop
+        jsr     CheckMouseMoved
+        bcc     InputLoop
+        jmp     HandleMouseMove
 .endproc
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        jmp     ClearUpdates
+        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES
 .endproc
 
 ;;; ============================================================
@@ -397,7 +374,7 @@ buf_search:     .res    kBufSize, 0 ; search term
     END_IF
 
         ;; Draw DeskTop's windows and icons.
-        jsr     ClearUpdates
+        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
@@ -474,7 +451,7 @@ next:   inc     index
 
 
 
-fail:   jsr     Bell
+fail:   param_call JTRelay, JUMP_TABLE_BELL
 
 done:   ;; Update display
         jsr     SetPort
@@ -580,6 +557,54 @@ notpencopy:     .byte   MGTK::notpencopy
         bne     ret
         MGTK_CALL MGTK::SetPort, grafport_win
 ret:    rts
+.endproc
+
+;;; ============================================================
+;;; Determine if mouse moved (returns w/ carry set if moved)
+;;; Used in dialogs to possibly change cursor
+
+.proc CheckMouseMoved
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     event_params::coords,x
+        cmp     coords,x
+        bne     diff
+        dex
+        bpl     :-
+        clc
+        rts
+
+diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
+        sec
+        rts
+
+        DEFINE_POINT coords, 0, 0
+.endproc
+
+;;; ============================================================
+
+.proc HandleMouseMove
+        copy    #kDAWindowId, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::InRect, input_rect
+        cmp     #MGTK::inrect_inside
+        beq     inside
+
+outside:
+        bit     cursor_ibeam_flag
+        bpl     done
+        copy    #0, cursor_ibeam_flag
+        param_call JTRelay, JUMP_TABLE_CUR_POINTER
+        jmp     done
+
+inside:
+        bit     cursor_ibeam_flag
+        bmi     done
+        copy    #$80, cursor_ibeam_flag
+        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
+
+done:   jmp     InputLoop
 .endproc
 
 ;;; ============================================================
@@ -715,6 +740,20 @@ sflag:  .byte   0
         rts
 .endproc
 
+;;; ============================================================
+;;; Make call into Main from Aux (for JUMP_TABLE calls)
+;;; Inputs: A,X = address
+
+.proc JTRelay
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        stax    @addr
+        @addr := *+1
+        jsr     SELF_MODIFIED
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
 
 ;;; ============================================================
 

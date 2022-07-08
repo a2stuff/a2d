@@ -939,7 +939,7 @@ notpencopy:     .byte   MGTK::notpencopy
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
-cursor_ip_flag: .byte   0
+cursor_ibeam_flag: .byte   0
 
 kBufSize = 16                       ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
@@ -1170,7 +1170,7 @@ ignore: sec
         ;;         jsr     UpdateViewport
         ;;         jsr     DrawResults
 
-        bit     cursor_ip_flag
+        bit     cursor_ibeam_flag
     IF_PLUS
         param_call JTRelay, JUMP_TABLE_CUR_POINTER
     ELSE
@@ -1441,16 +1441,16 @@ diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
         beq     inside
 
 outside:
-        bit     cursor_ip_flag
+        bit     cursor_ibeam_flag
         bpl     done
-        copy    #0, cursor_ip_flag
+        copy    #0, cursor_ibeam_flag
         param_call JTRelay, JUMP_TABLE_CUR_POINTER
         jmp     done
 
 inside:
-        bit     cursor_ip_flag
+        bit     cursor_ibeam_flag
         bmi     done
-        copy    #$80, cursor_ip_flag
+        copy    #$80, cursor_ibeam_flag
         param_call JTRelay, JUMP_TABLE_CUR_IBEAM
 
 done:   jmp     InputLoop
