@@ -1,4 +1,5 @@
 .define res_string_window_title "Plan"
+.define res_string_button_find "Recherche"
 .define res_string_latitude "Latitude :"
 .define res_string_longitude "Longitude :"
 .define res_string_dir_n "N"

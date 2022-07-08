@@ -47,17 +47,20 @@ da_start:
 ;;; ============================================================
 ;;; Resources
 
-kMapLeft = 6
-kMapTop = 4
+kMapLeft = 10
+kMapTop = 5
 kMapWidth = 175
 kMapHeight = 46
 
-        DEFINE_RECT_SZ frame_rect, kMapLeft - 2, kMapTop - 2, kMapWidth + 3, kMapHeight + 3
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   2, 1
+
+        DEFINE_RECT_SZ frame_rect, kMapLeft - 4, kMapTop - 2, kMapWidth + 6, kMapHeight + 3
         DEFINE_RECT_SZ map_rect, kMapLeft, kMapTop, kMapWidth, kMapHeight
 
 kControlsLeft = 6
 
-kRow1 = kMapTop + kMapHeight + 4
+kRow1 = kMapTop + kMapHeight + 6
 kRow2 = kRow1 + kTextBoxHeight + 4
 kRow3 = kRow2 + kSystemFontHeight + 4
 
@@ -68,7 +71,7 @@ kTextBoxWidth = 7 * 15 + 2 * kTextBoxTextHOffset
         DEFINE_RECT_SZ input_clear_rect, kTextBoxLeft+1, kTextBoxTop+1, kTextBoxWidth-2, kTextBoxHeight-2
         DEFINE_POINT input_textpos, kTextBoxLeft + kTextBoxTextHOffset, kTextBoxTop + kTextBoxTextVOffset
 
-        DEFINE_BUTTON find, "Find   \x0D", kTextBoxLeft + kTextBoxWidth + 6, kTextBoxTop, 54
+        DEFINE_BUTTON find, res_string_button_find, kTextBoxLeft + kTextBoxWidth + 5, kTextBoxTop, 62
 
 kLabelLeft = kControlsLeft + kTextBoxTextHOffset
 kValueLeft = 80
@@ -150,8 +153,8 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 ;;; ============================================================
 
 kDAWindowId     = 61
-kDAWidth        = kMapWidth + 11
-kDAHeight       = 96
+kDAWidth        = kMapWidth + 19
+kDAHeight       = 97
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
@@ -619,7 +622,9 @@ done:   jmp     InputLoop
         ;; ==============================
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
         MGTK_CALL MGTK::PaintBits, map_params
 
         MGTK_CALL MGTK::MoveTo, lat_label_pos

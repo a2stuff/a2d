@@ -1,4 +1,5 @@
 .define res_string_window_title "Mapa"
+.define res_string_button_find "Buscar"
 .define res_string_latitude "Latitud:"
 .define res_string_longitude "Longitud:"
 .define res_string_dir_n "N"
