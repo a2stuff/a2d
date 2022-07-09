@@ -15879,6 +15879,7 @@ ret:    rts
         .include "../lib/button.s"
         .include "../lib/doubleclick.s"
         .include "../lib/reconnect_ram.s"
+        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 
@@ -15903,3 +15904,9 @@ str_volume:
 
 .endscope ; main
         main__YieldLoop := main::YieldLoop
+
+;;; ============================================================
+;;; "Exports"
+
+        Multiply_16_8_16 := main::Multiply_16_8_16
+        Divide_16_8_16 := main::Divide_16_8_16

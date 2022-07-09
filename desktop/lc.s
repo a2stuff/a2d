@@ -250,28 +250,6 @@ op:     lda     SELF_MODIFIED
 .endproc
 
 ;;; ============================================================
-;;; Input: numbers in A,X, Y (all unsigned)
-;;; Output: number in A,X (unsigned)
-;;; Assert: Main is banked in
-
-.proc Multiply_16_8_16
-        jsr     BankInAux
-        jsr     aux::Multiply_16_8_16
-        jmp     BankInMain
-.endproc
-
-;;; ============================================================
-;;; Input: dividend in A,X, divisor in Y (all unsigned)
-;;; Output: quotient in A,X (unsigned)
-;;; Assert: Main is banked in
-
-.proc Divide_16_8_16
-        jsr     BankInAux
-        jsr     aux::Divide_16_8_16
-        jmp     BankInMain
-.endproc
-
-;;; ============================================================
 ;;; Bell
 ;;; Assert: Main is banked in
 
