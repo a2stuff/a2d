@@ -14,6 +14,7 @@
 
         MLIEntry  := MLIRelayImpl
         MGTKEntry := ::MGTKRelayImpl
+        LETKEntry := LETKRelayImpl
         ITKEntry  := ITKRelayImpl
 
 kShortcutResize = res_char_resize_shortcut
@@ -13872,7 +13873,7 @@ dialog_param_addr:
 .proc PromptInputLoop
         lda     has_input_field_flag
         beq     :+
-        jsr     line_edit__Idle
+        LETK_CALL LETK::Idle, le_params
 :
         ;; Dispatch event types - mouse down, key press
         jsr     YieldLoop
@@ -13998,7 +13999,8 @@ check_button_cancel:
         MGTK_CALL MGTK::InRect, name_input_rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        jsr     line_edit__Click
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
+        LETK_CALL LETK::Click, le_params
 :       return  #$FF
 .endproc
 
@@ -14006,14 +14008,16 @@ check_button_cancel:
 
 .proc PromptKeyHandler
         lda     event_params::key
+        sta     le_params::key
 
         ldx     event_params::modifiers
+        stx     le_params::modifiers
     IF_NOT_ZERO
         ;; Modifiers
 
         bit     has_input_field_flag
       IF_NS
-        jsr     line_edit__Key
+        LETK_CALL LETK::Key, le_params
       END_IF
 
     ELSE
@@ -14068,7 +14072,7 @@ check_button_cancel:
         bcc     allow
         jsr     IsFilenameChar
         bcs     ignore
-allow:  jsr     line_edit__Key
+allow:  LETK_CALL LETK::Key, le_params
 ignore:
       END_IF
 
@@ -14960,7 +14964,7 @@ do_close:
 .proc DrawFileCountWithTrailingSpaces
         jsr     ComposeFileCountString
         param_call DrawString, str_file_count
-        param_jump DrawString, line_edit_res::str_2_spaces
+        param_jump DrawString, str_2_spaces
 .endproc
 
 ;;; ============================================================
@@ -15334,25 +15338,6 @@ done:   rts
 
 ;;; ============================================================
 
-.scope line_edit
-        buf_text := path_buf1
-        textpos := name_input_textpos
-        clear_rect := name_input_erase_rect
-        NotifyTextChanged := NoOp
-        click_coords := screentowindow_params::window
-        SetPort := SetPortForDialogWindow
-
-        .include "../lib/line_edit.s"
-
-.endscope ; line_edit
-line_edit__Init  := line_edit::Init
-line_edit__Idle  := line_edit::Idle
-line_edit__Activate := line_edit::Activate
-line_edit__Click := line_edit::Click
-line_edit__Key  := line_edit::Key
-
-;;; ============================================================
-
 .proc ClearPathBuf1
         copy    #0, path_buf1   ; length
         rts
@@ -15366,10 +15351,9 @@ line_edit__Key  := line_edit::Key
 .proc InitNameInput
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
-        jsr     line_edit__Init
-        copy    #$80, line_edit_res::blink_ip_flag
-        copy    #kMaxFilenameLength, line_edit_res::max_length
-        jmp     line_edit__Activate
+        LETK_CALL LETK::Init, le_params
+        copy    #$80, line_edit_rec::blink_ip_flag
+        LETK_CALL LETK::Activate, le_params
 .endproc
 
 ;;; ============================================================

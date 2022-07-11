@@ -94,10 +94,6 @@ buf_input:         .res    68, 0 ; left of IP
 
 ;;; ============================================================
 
-        .include "../lib/line_edit_res.s"
-
-;;; ============================================================
-
         .define FD_EXTENDED 0
         .include "../lib/file_dialog_res.s"
 
@@ -114,7 +110,7 @@ start:  jsr     OpenWindow
         jsr     InitInput
         jsr     PrepPath
         jsr     Activate
-        copy    #$FF, line_edit_res::blink_ip_flag
+        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
         jmp     EventLoop
 
 ;;; ============================================================
@@ -205,6 +201,9 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
          ADJUSTCASE_IO_BUFFER := $1C00
         .include "../lib/adjustfilecase.s"
         .include "../lib/muldiv.s"
+
+        .include "../letk/letk.s"
+        LETKEntry := letk::LETKEntry
 
 ;;; ============================================================
 

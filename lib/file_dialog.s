@@ -3,7 +3,6 @@
 ;;;
 ;;; Required includes:
 ;;; * lib/file_dialog_res.s
-;;; * lib/line_edit_res.s
 ;;; * lib/event_params.s
 ;;; * lib/muldiv.s
 ;;; Requires the following proc definitions:
@@ -95,7 +94,6 @@ routine_table:
         copy    DEVCNT, device_num
 
         jsr     LineEditInit
-        copy    #kMaxPathLength, line_edit_res::max_length
 
         lda     #0
         sta     file_dialog_res::type_down_buf
@@ -897,7 +895,7 @@ ret:    rts
 .if !FD_EXTENDED
         lda     file_dialog_res::selected_index
         bpl     :+              ; has a selection
-        bit     line_edit_res::input_dirty_flag
+        bit     file_dialog_res::input_dirty_flag
         bmi     :+              ; input is dirty
         rts
 :
@@ -1388,7 +1386,6 @@ ret:    rts
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, file_dialog::only_show_dirs_flag
-        copy    #0, line_edit_res::blink_ip_flag
         jmp     UnsetCursorIBeam
 .endproc
 
@@ -2290,14 +2287,34 @@ no_change:
 ;;; ============================================================
 
 .scope f1
-        buf_text := buf_input1
-        textpos := file_dialog_res::input1_textpos
-        clear_rect := file_dialog_res::input1_clear_rect
-        click_coords := screentowindow_params::window
-        NotifyTextChanged := NotifyTextChangedF1
-        SetPort := SetPortForDialog
-
-        .include "../lib/line_edit.s"
+.proc Idle
+        LETK_CALL LETK::Idle, file_dialog_res::le_params_f1
+        rts
+.endproc
+.proc Activate
+        LETK_CALL LETK::Activate, file_dialog_res::le_params_f1
+        rts
+.endproc
+.proc Deactivate
+        LETK_CALL LETK::Deactivate, file_dialog_res::le_params_f1
+        rts
+.endproc
+.proc Key
+        copy    event_params::key, file_dialog_res::le_params_f1::key
+        copy    event_params::modifiers, file_dialog_res::le_params_f1::modifiers
+        LETK_CALL LETK::Key, file_dialog_res::le_params_f1
+        bit     file_dialog_res::line_edit_f1::dirty_flag
+    IF_NS
+        copy    #0, file_dialog_res::line_edit_f1::dirty_flag
+        jsr     NotifyTextChangedF1
+    END_IF
+        rts
+.endproc
+.proc Click
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params_f1::coords
+        LETK_CALL LETK::Click, file_dialog_res::le_params_f1
+        rts
+.endproc
 
 .endscope ; f1
 
@@ -2316,15 +2333,34 @@ f1__Click := f1::Click
 
 .if FD_EXTENDED
 .scope f2
-
-        buf_text := buf_input2
-        textpos := file_dialog_res::input2_textpos
-        clear_rect := file_dialog_res::input2_clear_rect
-        click_coords := screentowindow_params::window
-        NotifyTextChanged := NotifyTextChangedF2
-        SetPort := SetPortForDialog
-
-        .include "../lib/line_edit.s"
+.proc Idle
+        LETK_CALL LETK::Idle, file_dialog_res::le_params_f2
+        rts
+.endproc
+.proc Activate
+        LETK_CALL LETK::Activate, file_dialog_res::le_params_f2
+        rts
+.endproc
+.proc Deactivate
+        LETK_CALL LETK::Deactivate, file_dialog_res::le_params_f2
+        rts
+.endproc
+.proc Key
+        copy    event_params::key, file_dialog_res::le_params_f2::key
+        copy    event_params::modifiers, file_dialog_res::le_params_f2::modifiers
+        LETK_CALL LETK::Key, file_dialog_res::le_params_f2
+        bit     file_dialog_res::line_edit_f2::dirty_flag
+    IF_NS
+        copy    #0, file_dialog_res::line_edit_f2::dirty_flag
+        jsr     NotifyTextChangedF2
+    END_IF
+        rts
+.endproc
+.proc Click
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params_f2::coords
+        LETK_CALL LETK::Click, file_dialog_res::le_params_f2
+        rts
+.endproc
 
 .endscope ; f2
 
@@ -2335,11 +2371,9 @@ f2__Click := f2::Click
 ;;; ============================================================
 
 .proc LineEditInit
-        ;; These init `line_edit_res` properties; the two
-        ;; calls here are redundant, but future-proof.
-        jsr     f1::Init
+        LETK_CALL LETK::Init, file_dialog_res::le_params_f1
 .if FD_EXTENDED
-        jsr     f2::Init
+        LETK_CALL LETK::Init, file_dialog_res::le_params_f2
 .endif
         rts
 .endproc
@@ -2485,12 +2519,8 @@ finish:
 .endproc
 .endif
 
-
 ;;; ============================================================
-
-
-;;; ============================================================
-;;; Set the `line_edit_res::input_dirty_flag`
+;;; Set the `file_dialog_res::input_dirty_flag`
 ;;; Flag is set if:
 ;;; * Current text in active input field is case-sensitive match
 ;;;   for the current path (if no selection), or current
@@ -2554,7 +2584,7 @@ no_match:
         FALL_THROUGH_TO update_flag
 
 update_flag:
-        sta     line_edit_res::input_dirty_flag
+        sta     file_dialog_res::input_dirty_flag
 
         ;; Restore selection following `AppendToPathBuf` call above.
         pla

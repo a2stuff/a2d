@@ -21,7 +21,11 @@
         jsr     file_dialog::PrepPath
         jsr     file_dialog::Activate
 
-        copy    #$FF, line_edit_res::blink_ip_flag
+        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
+        copy    #$00, file_dialog_res::line_edit_f2::blink_ip_flag
+
+        copy    #kMaxPathLength, file_dialog_res::line_edit_f2::max_length
+
         jmp     file_dialog::EventLoop
 .endproc
 
@@ -114,10 +118,13 @@ jt_destination_filename:
 done:   jsr     file_dialog::Activate
 
         ;; Twiddle flags
-        lda     line_edit_res::input_dirty_flag
+        lda     file_dialog_res::input_dirty_flag
         sta     input1_dirty_flag
         lda     input2_dirty_flag
-        sta     line_edit_res::input_dirty_flag
+        sta     file_dialog_res::input_dirty_flag
+
+        copy    #$00, file_dialog_res::line_edit_f1::blink_ip_flag
+        copy    #$FF, file_dialog_res::line_edit_f2::blink_ip_flag
         rts
 .endproc
 
@@ -166,15 +173,18 @@ done:   jsr     file_dialog::Activate
         jsr     file_dialog::SetSelectedIndex
         copy    #0, file_dialog::focus_in_input2_flag
 
-        lda     line_edit_res::input_dirty_flag
+        lda     file_dialog_res::input_dirty_flag
         sta     input2_dirty_flag
         lda     input1_dirty_flag
-        sta     line_edit_res::input_dirty_flag
+        sta     file_dialog_res::input_dirty_flag
+
+        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
+        copy    #$00, file_dialog_res::line_edit_f2::blink_ip_flag
 
         COPY_STRING path_buf0, file_dialog::path_buf
 
         jsr     file_dialog::StripPathBufSegment
-        bit     line_edit_res::input_dirty_flag
+        bit     file_dialog_res::input_dirty_flag
         bpl     L726D
 
         ;; TODO: Understand how these paths differ.

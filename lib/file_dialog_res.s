@@ -20,6 +20,10 @@ type_down_buf:
 filename_buf:
         .res    17, 0           ; filename + length + slash (for some uses)
 
+;;; Used by some clients.
+input_dirty_flag:
+        .byte   0
+
         DEFINE_POINT pos_title, 0, 14
 
         kListBoxWidth = 125
@@ -80,15 +84,11 @@ kCommonInputHeight = kTextBoxHeight
         kInput1Y = 111
         DEFINE_POINT input1_label_pos, kControlsLeft, kInput1Y-1
         DEFINE_RECT_SZ input1_rect, kControlsLeft, kInput1Y, kCommonInputWidth, kCommonInputHeight
-        DEFINE_RECT_SZ input1_clear_rect, kControlsLeft+1, kInput1Y+1, kCommonInputWidth-2, kCommonInputHeight-2
-        DEFINE_POINT input1_textpos, kControlsLeft + kTextBoxTextHOffset, kInput1Y + kTextBoxTextVOffset
 
 .if FD_EXTENDED
         kInput2Y = 135
         DEFINE_POINT input2_label_pos, kControlsLeft, kInput2Y-1
         DEFINE_RECT_SZ input2_rect, kControlsLeft, kInput2Y, kCommonInputWidth, kCommonInputHeight
-        DEFINE_RECT_SZ input2_clear_rect, kControlsLeft+1, kInput2Y+1, kCommonInputWidth-2, kCommonInputHeight-2
-        DEFINE_POINT input2_textpos, kControlsLeft + kTextBoxTextHOffset, kInput2Y + kTextBoxTextVOffset
 .endif
 
 kFilePickerDlgWindowID  = $3E
@@ -184,5 +184,61 @@ textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   FONT
 nextwinfo:      .addr   0
 .endparams
+
+;;; ============================================================
+
+;;; Pathname field
+.params line_edit_f1
+START:
+window_id:      .byte   kFilePickerDlgWindowID
+a_buf:          .addr   buf_input1
+        DEFINE_RECT_SZ rect, kControlsLeft+1, kInput1Y+1, kCommonInputWidth-2, kCommonInputHeight-2
+        DEFINE_POINT pos, kControlsLeft + kTextBoxTextHOffset, kInput1Y + kTextBoxTextVOffset
+max_length:     .byte   kMaxPathLength
+blink_ip_flag:  .byte   0
+dirty_flag:     .byte   0
+        .res    .sizeof(LETK::LineEditRecord) - (*-START)
+.endparams
+.assert .sizeof(line_edit_f1) = .sizeof(LETK::LineEditRecord), error, "struct size"
+
+.params le_params_f1
+record: .addr   line_edit_f1
+;;; For `LETK::Key` calls:
+key       := * + 0
+modifiers := * + 1
+;;; For `LETK::Click` calls:
+coords  := * + 0
+xcoord  := * + 0
+ycoord  := * + 2
+        .res 4
+.endparams
+
+.if FD_EXTENDED
+;;; Auxiliary field
+.params line_edit_f2
+START:
+window_id:      .byte   kFilePickerDlgWindowID
+a_buf:          .addr   buf_input2
+        DEFINE_RECT_SZ rect, kControlsLeft+1, kInput2Y+1, kCommonInputWidth-2, kCommonInputHeight-2
+        DEFINE_POINT pos, kControlsLeft + kTextBoxTextHOffset, kInput2Y + kTextBoxTextVOffset
+max_length:     .byte   kMaxPathLength
+blink_ip_flag:  .byte   0
+dirty_flag:     .byte   0
+        .res    .sizeof(LETK::LineEditRecord) - (*-START)
+.endparams
+.assert .sizeof(line_edit_f2) = .sizeof(LETK::LineEditRecord), error, "struct size"
+
+.params le_params_f2
+record: .addr   line_edit_f2
+;;; For `LETK::Key` calls:
+key       := * + 0
+modifiers := * + 1
+;;; For `LETK::Click` calls:
+coords  := * + 0
+xcoord  := * + 0
+ycoord  := * + 2
+        .res 4
+.endparams
+.endif ; FD_EXTENDED
 
 .endscope ; file_dialog_res

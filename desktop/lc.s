@@ -66,6 +66,14 @@ params:  .res    3
         jmp     ParamsRelayImpl
 .endproc
 
+;;; ============================================================
+;;; LineEditTK call from main>aux, MLI-style params
+
+.proc LETKRelayImpl
+        ldax    #aux::letk::LETKEntry
+        jmp     ParamsRelayImpl
+.endproc
+
 
 ;;; ============================================================
 ;;; Used/Free icon map (Aux $1F80 - $1FFF)

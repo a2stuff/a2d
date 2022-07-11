@@ -11,10 +11,12 @@
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../letk/letk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
+        LETKEntry := LETKAuxEntry
 
 ;;; ============================================================
 
@@ -68,9 +70,6 @@ kTextBoxLeft = kControlsLeft
 kTextBoxTop = kRow1
 kTextBoxWidth = 7 * 15 + 2 * kTextBoxTextHOffset
         DEFINE_RECT_SZ input_rect, kTextBoxLeft, kTextBoxTop, kTextBoxWidth, kTextBoxHeight
-        DEFINE_RECT_SZ input_clear_rect, kTextBoxLeft+1, kTextBoxTop+1, kTextBoxWidth-2, kTextBoxHeight-2
-        DEFINE_POINT input_textpos, kTextBoxLeft + kTextBoxTextHOffset, kTextBoxTop + kTextBoxTextVOffset
-
         DEFINE_BUTTON find, res_string_button_find, kTextBoxLeft + kTextBoxWidth + 5, kTextBoxTop, 62
 
 kLabelLeft = kControlsLeft + kTextBoxTextHOffset
@@ -245,40 +244,36 @@ cursor_ibeam_flag: .byte   0
 kBufSize = 16                       ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
 
-        .include "../lib/line_edit_res.s"
+.params line_edit_rec
+window_id:      .byte   kDAWindowId
+a_buf:          .addr   buf_search
+        DEFINE_RECT_SZ rect, kTextBoxLeft+1, kTextBoxTop+1, kTextBoxWidth-2, kTextBoxHeight-2
+        DEFINE_POINT pos, kTextBoxLeft + kTextBoxTextHOffset, kTextBoxTop + kTextBoxTextVOffset
+max_length:     .byte   kBufSize - 1
+blink_ip_flag:  .byte   0
+dirty_flag:     .byte   0
+        .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
+.endparams
+.assert .sizeof(line_edit_rec) = .sizeof(LETK::LineEditRecord), error, "struct size"
 
-.scope line_edit
-        buf_text := buf_search
-        textpos := input_textpos
-        clear_rect := input_clear_rect
-        frame_rect := input_rect
-        NotifyTextChanged := NoOp
-        click_coords := screentowindow_params::window
-
-.proc SetPort
-        copy    #kDAWindowId, getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        ;; ASSERT: Result is not MGTK::Error::window_obscured
-        ;; (HandleDrag forces window to be onscreen)
-        MGTK_CALL MGTK::SetPort, grafport_win
-        rts
-.endproc
-
-.proc NoOp
-        rts
-.endproc
-
-        .include "../lib/line_edit.s"
-
-.endscope ; line_edit
+.params le_params
+record: .addr   line_edit_rec
+;;; For `LETK::Key` calls:
+key       := * + 0
+modifiers := * + 1
+;;; For `LETK::Click` calls:
+coords  := * + 0
+xcoord  := * + 0
+ycoord  := * + 2
+        .res 4
+.endparams
 
 ;;; ============================================================
 
 .proc Init
         copy    #0, buf_search
-        jsr     line_edit::Init
-        copy    #$80, line_edit_res::blink_ip_flag
-        copy    #kBufSize-1, line_edit_res::max_length
+        LETK_CALL LETK::Init, le_params
+        copy    #$80, line_edit_rec::blink_ip_flag
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     UpdateCoordsFromLatLong
@@ -288,7 +283,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 .endproc
 
 .proc InputLoop
-        jsr     line_edit::Idle
+        LETK_CALL LETK::Idle, le_params
         param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
@@ -322,7 +317,9 @@ buf_search:     .res    kBufSize, 0 ; search term
         jmp     InputLoop
     END_IF
 
-        jsr     line_edit::Key
+        copy    event_params::key, le_params::key
+        copy    event_params::modifiers, le_params::modifiers
+        LETK_CALL LETK::Key, le_params
         jmp     InputLoop
 .endproc
 
@@ -499,7 +496,8 @@ ret:    rts
         ;; Click in line edit?
         MGTK_CALL MGTK::InRect, input_rect
     IF_NE
-        jsr     line_edit::Click
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
+        LETK_CALL LETK::Click, le_params
         jmp     done
     END_IF
 
@@ -641,7 +639,7 @@ done:   jmp     InputLoop
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, input_rect
-        jsr     line_edit::Activate
+        LETK_CALL LETK::Activate, le_params
 
         ;; ==============================
 

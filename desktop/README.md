@@ -117,6 +117,7 @@ When running, memory use includes:
  * $8600-$BFFF - Resources and tookits, with floating memory layout
    * Resources, including icons, font, menu definitions, etc.
    * [Icon ToolKit](APIs.md)
+   * [LineEdit ToolKit](../letk/LETK.md)
    * Alert dialog resources/code
 
 ...and in the Aux language card area (accessible from both aux and
@@ -195,8 +196,8 @@ $BF00 +-------------+       | Utilities & |
       | DeskTop     |       | Resources   |
       | App Code    |       |             |
       |             |       | * Icon TK   |
+      |             |       | * LE TK     |
       |             |       | * Alerts    |
-      |             |       |             |
       |             |       |             |
       |             |       |             |
 $A000 |      +------+       |             |

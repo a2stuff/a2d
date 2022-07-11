@@ -10,6 +10,7 @@
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
+        LETKEntry := LETKRelayImpl
 
 ;;; ============================================================
 

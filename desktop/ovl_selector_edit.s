@@ -57,10 +57,14 @@ finish: jsr     file_dialog::ReadDir
         bne     :+              ; already populated - preserve it!
         jsr     file_dialog::PrepPath
 :
-        jsr     file_dialog::f2::Activate ; needed to populate second control
-        jsr     file_dialog::f1::Activate ; sets line_edit_res::ip_pos
-        copy    #$FF, line_edit_res::blink_ip_flag
-        copy    #kMaxPathLength, line_edit_res::max_length
+        jsr     file_dialog::f1::Activate ; sets IP position to end
+        jsr     file_dialog::f2::Activate ; needed to render second control
+
+        copy    #kSelectorMaxNameLength, file_dialog_res::line_edit_f2::max_length
+
+        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
+        copy    #$00, file_dialog_res::line_edit_f2::blink_ip_flag
+
         jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
 
@@ -182,10 +186,13 @@ jt_entry_name:
         sta     file_dialog::focus_in_input2_flag
         jsr     file_dialog::SetListBoxDisabled
 
-        lda     line_edit_res::input_dirty_flag
+        lda     file_dialog_res::input_dirty_flag
         sta     input1_dirty_flag
         lda     #$00
-        sta     line_edit_res::input_dirty_flag
+        sta     file_dialog_res::input_dirty_flag
+
+        copy    #$00, file_dialog_res::line_edit_f1::blink_ip_flag
+        copy    #$FF, file_dialog_res::line_edit_f2::blink_ip_flag
 
         ;; Already have a name?
         lda     path_buf1
@@ -217,7 +224,6 @@ found_slash:
 :       sty     path_buf1
 
 finish: copy    #$80, file_dialog_res::allow_all_chars_flag
-        copy    #kSelectorMaxNameLength, line_edit_res::max_length
         jmp     file_dialog::Activate
 .endproc
 
@@ -283,12 +289,15 @@ found:  cpy     #2
         COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
 
         copy    #0, file_dialog_res::allow_all_chars_flag
-        copy    #kMaxPathLength, line_edit_res::max_length
         lda     #$00
         sta     file_dialog::focus_in_input2_flag
         jsr     file_dialog::SetListBoxDisabled
+
         lda     input1_dirty_flag
-        sta     line_edit_res::input_dirty_flag
+        sta     file_dialog_res::input_dirty_flag
+
+        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
+        copy    #$00, file_dialog_res::line_edit_f2::blink_ip_flag
 
         jmp     file_dialog::Activate
 .endproc

@@ -6,6 +6,7 @@
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../letk/letk.inc"
         .include "../common.inc"
 
 SAVE_AREA_BUFFER:= $0800
@@ -56,7 +57,7 @@ _segoffset .set 0
         DEFSEG SegmentAlert,      $D000,        $0800
 
 ;;; Dynamically loaded overlays
-        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1700
+        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1800
         DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0D00
 
 ;;; ============================================================

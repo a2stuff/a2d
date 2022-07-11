@@ -7,6 +7,7 @@
         .include "../inc/prodos.inc"
         .include "../inc/smartport.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../letk/letk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
         .include "../desktop/icontk.inc"

@@ -15,10 +15,12 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../letk/letk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
+        LETKEntry := LETKAuxEntry
 
 ;;; ============================================================
 ;;; Memory map
@@ -927,8 +929,6 @@ grafport_win:   .tag    MGTK::GrafPort
 
         ;; Left edges are adjusted dynamically based on label width
         DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
-        DEFINE_RECT input_clear_rect, kFindLeft + kLabelHOffset+1, kControlsTop+1, kDAWidth-250-1, kControlsTop + kTextBoxHeight-1
-        DEFINE_POINT input_textpos, kTextBoxTextHOffset, kControlsTop + kTextBoxTextVOffset
 
         DEFINE_BUTTON search, res_string_button_search, kDAWidth-235, kControlsTop
         DEFINE_BUTTON cancel, res_string_button_cancel, kDAWidth-120, kControlsTop
@@ -941,12 +941,38 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
 cursor_ibeam_flag: .byte   0
 
-kBufSize = 16                       ; max length = 15, length
+kBufSize = kMaxFilenameLength+1     ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
 
-        .include "../lib/line_edit_res.s"
-
 top_row:        .byte   0
+
+;;; ============================================================
+;;; Search field
+
+.params line_edit_rec
+window_id:      .byte   kDAWindowID
+a_buf:          .addr   buf_search
+        ;; NOTE: Left edges are adjusted dynamically based on label width
+        DEFINE_RECT rect, kFindLeft + kLabelHOffset+1, kControlsTop+1, kDAWidth-250-1, kControlsTop + kTextBoxHeight-1
+        DEFINE_POINT pos, kTextBoxTextHOffset, kControlsTop + kTextBoxTextVOffset
+max_length:     .byte   kMaxFilenameLength
+blink_ip_flag:  .byte   0
+dirty_flag:     .byte   0
+        .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
+.endparams
+.assert .sizeof(line_edit_rec) = .sizeof(LETK::LineEditRecord), error, "struct size"
+
+.params le_params
+record: .addr   line_edit_rec
+;;; For `LETK::Key` calls:
+key       := * + 0
+modifiers := * + 1
+;;; For `LETK::Click` calls:
+coords  := * + 0
+xcoord  := * + 0
+ycoord  := * + 2
+        .res 4
+.endparams
 
 ;;; ============================================================
 
@@ -954,20 +980,19 @@ top_row:        .byte   0
         ;; Prep input string
         copy    #0, buf_search
 
-        jsr     line_edit__Init
-        copy    #$80, line_edit_res::blink_ip_flag
-        copy    #kMaxFilenameLength, line_edit_res::max_length
+        LETK_CALL LETK::Init, le_params
+        copy    #$80, line_edit_rec::blink_ip_flag
 
         param_call MeasureString, find_label_str
         addax   input_rect::x1
-        add16   input_rect::x1, input_textpos::xcoord, input_textpos::xcoord
-        add16_8 input_rect::x1, #1, input_clear_rect::x1
+        add16   input_rect::x1, line_edit_rec::pos::xcoord, line_edit_rec::pos::xcoord
+        add16_8 input_rect::x1, #1, line_edit_rec::rect::x1
 
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::OpenWindow, winfo_results
         MGTK_CALL MGTK::HideCursor
         jsr     DrawWindow
-        jsr     line_edit__Activate
+        LETK_CALL LETK::Activate, le_params
         jsr     DrawResults
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
@@ -975,7 +1000,7 @@ top_row:        .byte   0
 .endproc
 
 .proc InputLoop
-        jsr     line_edit__Idle
+        LETK_CALL LETK::Idle, le_params
         param_call JTRelay, JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
@@ -1000,40 +1025,13 @@ top_row:        .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Line Edit
-
-.scope line_edit
-        buf_text := buf_search
-        textpos := input_textpos
-        clear_rect := input_clear_rect
-        frame_rect := input_rect
-        NotifyTextChanged := NoOp
-        click_coords := screentowindow_params::window
-
-.proc SetPort
-        copy    #kDAWindowID, getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport_win
-        rts
-.endproc
-
-.proc NoOp
-        rts
-.endproc
-
-        .include "../lib/line_edit.s"
-
-.endscope ; line_edit
-line_edit__Init := line_edit::Init
-line_edit__Idle := line_edit::Idle
-line_edit__Activate := line_edit::Activate
-
-;;; ============================================================
 
 .proc HandleKey
         lda     event_params::key
+        sta     le_params::key
 
         ldx     event_params::modifiers
+        stx     le_params::modifiers
     IF_NOT_ZERO
         cpx     #3              ; both?
      IF_EQ
@@ -1064,7 +1062,7 @@ line_edit__Activate := line_edit::Activate
       END_IF
      END_IF
 
-        jsr     line_edit::Key
+        LETK_CALL LETK::Key, le_params
     ELSE
         ;; Not modified
         cmp     #CHAR_ESCAPE
@@ -1095,7 +1093,7 @@ line_edit__Activate := line_edit::Activate
         bcc     allow
         jsr     IsSearchChar
         bcs     ignore
-allow:  jsr     line_edit::Key
+allow:  LETK_CALL LETK::Key, le_params
 ignore:
     END_IF
 
@@ -1234,7 +1232,9 @@ finish: jmp     InputLoop
         MGTK_CALL MGTK::InRect, input_rect
         cmp     #MGTK::inrect_inside
         bne     done
-        jsr     line_edit::Click
+
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
+        LETK_CALL LETK::Click, le_params
 
 done:   jmp     InputLoop
 

@@ -281,8 +281,6 @@ nextwinfo:      .addr   0
         kNameInputWidth = 320
 
         DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight
-        DEFINE_RECT_SZ name_input_erase_rect, kNameInputLeft+1, kNameInputTop+1, kNameInputWidth-2, kTextBoxHeight-2
-        DEFINE_POINT name_input_textpos, kNameInputLeft + kTextBoxTextHOffset, kNameInputTop + kTextBoxTextVOffset
         DEFINE_POINT pos_dialog_title, 0, 18
 
         DEFINE_POINT dialog_label_base_pos, kDialogLabelDefaultX, 30
@@ -445,11 +443,31 @@ buf_filename:
         .res    16, 0
 
 ;;; ============================================================
-;;; Resources used for line edit (text input) controls. Used
-;;; by both DeskTop's name prompt dialog (rename, duplicate,
-;;; format, erase, ...) and the common file picker dialog.
+;;; Name prompt dialog (used for Rename, Duplicate, Format, Erase)
 
-        .include "../lib/line_edit_res.s"
+.params line_edit_rec
+window_id:      .byte   winfo_prompt_dialog::kWindowId
+a_buf:          .addr   path_buf1
+        DEFINE_RECT_SZ rect, kNameInputLeft+1, kNameInputTop+1, kNameInputWidth-2, kTextBoxHeight-2
+        DEFINE_POINT pos, kNameInputLeft + kTextBoxTextHOffset, kNameInputTop + kTextBoxTextVOffset
+max_length:     .byte   kMaxFilenameLength
+blink_ip_flag:  .byte   0
+dirty_flag:     .byte   0
+        .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
+.endparams
+.assert .sizeof(line_edit_rec) = .sizeof(LETK::LineEditRecord), error, "struct size"
+
+.params le_params
+record: .addr   line_edit_rec
+;;; For `LETK::Key` calls:
+key       := * + 0
+modifiers := * + 1
+;;; For `LETK::Click` calls:
+coords  := * + 0
+xcoord  := * + 0
+ycoord  := * + 2
+        .res 4
+.endparams
 
 ;;; ============================================================
 
@@ -460,6 +478,10 @@ str_files_suffix:
 
 str_file_count:                 ; populated with number of files
         PASCAL_STRING " ##,### "
+
+;;; Used as suffix to handle `str_file_count` shrinking
+str_2_spaces:
+        PASCAL_STRING "  "
 
 str_kb_suffix:
         PASCAL_STRING res_string_kb_suffix       ; suffix for kilobytes
@@ -547,6 +569,8 @@ saved_src_index:
 
         FONT := DEFAULT_FONT
         .define FD_EXTENDED 1
+        buf_input1 := path_buf0
+        buf_input2 := path_buf1
         .include "../lib/file_dialog_res.s"
 
 file_to_delete_label:
