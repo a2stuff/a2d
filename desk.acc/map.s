@@ -499,9 +499,8 @@ ret:    rts
         ;; Click in line edit?
         MGTK_CALL MGTK::InRect, input_rect
     IF_NE
-        bmi     :+
         jsr     line_edit::Click
-:       jmp     done
+        jmp     done
     END_IF
 
         ;; Click in map?
