@@ -185,6 +185,39 @@ kDeskTopFileVersion  = $80  ; Increment when format changes
 .endstruct
 
 ;;; ============================================================
+
+
+;;; Mapping from file info to icon type
+;;;
+;;; The incoming type is compared (using a mask) against a type, and
+;;; optionally auxtype and block count. First match wins.
+
+.struct ICTRecord      ; Offset
+        mask     .byte ; 0     incoming type masked before comparison
+        filetype .byte ; 1     file type for the record (must match)
+        flags    .byte ; 2     bit 7 = compare aux; 6 = compare blocks
+        aux_suf  .word ; 3     if ICT_FLAGS_AUX: aux type; if ICT_FLAGS_SUFFIX: suffix string
+        blocks   .word ; 5     optional block count
+        icontype .byte ; 7     IconType
+.endstruct
+
+kICTSentinel = $01     ; not $00, because $00 as a mask is useful
+
+.macro DEFINE_ICTRECORD mask, filetype, flags, aux_suf, blocks, icontype
+        .assert mask <> kICTSentinel, error, "Can't use sentinel value as a mask"
+        .byte   mask
+        .byte   filetype
+        .byte   flags
+        .word   aux_suf
+        .word   blocks
+        .byte   icontype
+.endmacro
+        ICT_FLAGS_NONE   = %00000000
+        ICT_FLAGS_AUX    = %10000000 ; exclusive with ICT_FLAGS_SUFFIX
+        ICT_FLAGS_BLOCKS = %01000000
+        ICT_FLAGS_SUFFIX = %00100000 ; exclusive with ICT_FLAGS_AUX
+
+;;; ============================================================
 ;;; Segments & Overlays
 ;;;
 ;;; DeskTop is broken into various segments plus dynamically

@@ -370,9 +370,9 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         copy    #kIconEntryFlagsDropTarget, (ptr),y
 
         ldy     #IconEntry::iconx
-        copy16in #kTrashIconX, (ptr),y
+        copy16in #main::kTrashIconX, (ptr),y
         ldy     #IconEntry::icony
-        copy16in #kTrashIconY, (ptr),y
+        copy16in #main::kTrashIconY, (ptr),y
         ldy     #IconEntry::iconbits
         copy16in #trash_icon, (ptr),y
 

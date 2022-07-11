@@ -586,54 +586,6 @@ trash_icon:
 
 
 ;;; ============================================================
-;;; DeskTop icon placement
-
-;;;  +-------------------------+
-;;;  |                     1   |
-;;;  |                     2   |
-;;;  |                     3   |
-;;;  |                     4   |
-;;;  |        13  12  11   5   |
-;;;  | 10  9   8   7   6 Trash |
-;;;  +-------------------------+
-
-        kTrashIconX = 506
-        kTrashIconY = 160
-
-        kVolIconDeltaY = 29
-
-        kVolIconCol1 = 490
-        kVolIconCol2 = 400
-        kVolIconCol3 = 310
-        kVolIconCol4 = 220
-        kVolIconCol5 = 130
-        kVolIconCol6 = 40
-
-desktop_icon_coords_table:
-        .word    kVolIconCol1,15 + kVolIconDeltaY*0 ; 1
-        .word    kVolIconCol1,15 + kVolIconDeltaY*1 ; 2
-        .word    kVolIconCol1,15 + kVolIconDeltaY*2 ; 3
-        .word    kVolIconCol1,15 + kVolIconDeltaY*3 ; 4
-        .word    kVolIconCol1,15 + kVolIconDeltaY*4 ; 5
-        .word    kVolIconCol2,kTrashIconY+2         ; 6
-        .word    kVolIconCol3,kTrashIconY+2         ; 7
-        .word    kVolIconCol4,kTrashIconY+2         ; 8
-        .word    kVolIconCol5,kTrashIconY+2         ; 9
-        .word    kVolIconCol6,kTrashIconY+2         ; 10
-        .word    kVolIconCol2,15 + kVolIconDeltaY*4 ; 11
-        .word    kVolIconCol3,15 + kVolIconDeltaY*4 ; 12
-        .word    kVolIconCol4,15 + kVolIconDeltaY*4 ; 13
-        ;; Maximum of 13 devices:
-        ;; 7 slots * 2 drives = 14 (size of DEVLST)
-        ;; ... but RAM in Slot 3 Drive 2 is disconnected.
-        ASSERT_RECORD_TABLE_SIZE desktop_icon_coords_table, kMaxVolumes, .sizeof(MGTK::Point)
-
-
-;;; Which icon positions are in use. 0=free, icon number otherwise
-desktop_icon_usage_table:
-        .res    kMaxVolumes, 0
-
-;;; ============================================================
 
 str_jan:PASCAL_STRING res_string_month_name_1
 str_feb:PASCAL_STRING res_string_month_name_2
@@ -663,10 +615,6 @@ str_comma:
         PASCAL_STRING res_string_comma_infix
 str_at:
         PASCAL_STRING res_string_at_infix
-
-;;; ============================================================
-
-        PAD_TO $DB00
 
 ;;; ============================================================
 
@@ -721,14 +669,6 @@ kMaxNumWindows = kMaxDeskTopWindows
 win_table:
         .addr   0,winfo1,winfo2,winfo3,winfo4,winfo5,winfo6,winfo7,winfo8
         ASSERT_ADDRESS_TABLE_SIZE win_table, kMaxNumWindows + 1
-
-;;; Table of desktop window path addresses
-window_path_addr_table:
-        .addr   $0000
-        .repeat 8,i
-        .addr   window_path_table+i*kPathBufferSize
-        .endrepeat
-        ASSERT_ADDRESS_TABLE_SIZE window_path_addr_table, kMaxNumWindows + 1
 
 ;;; ============================================================
 
@@ -1013,21 +953,6 @@ buflabel:       .res    18, 0
 
 
 ;;; ============================================================
-
-;;; Window paths
-;;; 8 entries; each entry is kPathBufferSize bytes long
-;;; * length-prefixed path string (no trailing /)
-;;; Windows 1...8 (since 0 is desktop)
-window_path_table:
-        .res    (kMaxNumWindows*kPathBufferSize), 0
-
-;;; Window used/free (in kilobytes)
-;;; Two tables, 8 entries each
-;;; Windows 1...8 (since 0 is desktop)
-window_k_used_table:  .res    kMaxNumWindows*2, 0
-window_k_free_table:  .res    kMaxNumWindows*2, 0
-
-;;; ============================================================
 ;;; Resources for window header (Items/K in disk/K available)
 
 str_item_suffix:
@@ -1107,15 +1032,6 @@ num_open_windows:
         .byte   0
 
 ;;; --------------------------------------------------
-;;; FileRecord for list view
-
-list_view_filerecord:
-        .tag FileRecord
-
-;;; Used elsewhere for converting date to string
-datetime_for_conversion := list_view_filerecord + FileRecord::modification_date
-
-;;; --------------------------------------------------
 
 hex_digits:
         .byte   "0123456789ABCDEF"
@@ -1123,106 +1039,6 @@ hex_digits:
 ;;; High bit set if menu dispatch via keyboard accelerator, clear otherwise.
 menu_kbd_flag:
         .byte   0
-
-;;; --------------------------------------------------
-
-;;; Params for icontype_lookup
-icontype_filetype:   .byte   0
-icontype_auxtype:    .word   0
-icontype_blocks:     .word   0
-icontype_filename:   .addr   0
-
-;;; Mapping from file info to icon type
-;;;
-;;; The incoming type is compared (using a mask) against a type, and
-;;; optionally auxtype and block count. First match wins.
-
-.struct ICTRecord      ; Offset
-        mask     .byte ; 0     incoming type masked before comparison
-        filetype .byte ; 1     file type for the record (must match)
-        flags    .byte ; 2     bit 7 = compare aux; 6 = compare blocks
-        aux_suf  .word ; 3     if ICT_FLAGS_AUX: aux type; if ICT_FLAGS_SUFFIX: suffix string
-        blocks   .word ; 5     optional block count
-        icontype .byte ; 7     IconType
-.endstruct
-
-kICTSentinel = $01     ; not $00, because $00 as a mask is useful
-
-.macro DEFINE_ICTRECORD mask, filetype, flags, aux_suf, blocks, icontype
-        .assert mask <> kICTSentinel, error, "Can't use sentinel value as a mask"
-        .byte   mask
-        .byte   filetype
-        .byte   flags
-        .word   aux_suf
-        .word   blocks
-        .byte   icontype
-.endmacro
-        ICT_FLAGS_NONE   = %00000000
-        ICT_FLAGS_AUX    = %10000000 ; exclusive with ICT_FLAGS_SUFFIX
-        ICT_FLAGS_BLOCKS = %01000000
-        ICT_FLAGS_SUFFIX = %00100000 ; exclusive with ICT_FLAGS_AUX
-
-icontype_table:
-        ;; Types entirely defined by file suffix
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_shk_suffix, 0, IconType::archive ; NuFX
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bny_suffix, 0, IconType::archive ; Binary II
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bxy_suffix, 0, IconType::archive ; NuFX in Binary II
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fc_suffix, 0, IconType::graphics ; Apple II Full Color
-
-        ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 17, IconType::graphics ; HR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 33, IconType::graphics ; DHR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $4000, 33, IconType::graphics ; DHR image as FOT
-        DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $5800, 3,  IconType::graphics ; Minipix as FOT
-
-        ;; Simple Mappings
-        DEFINE_ICTRECORD $FF, FT_TEXT,      ICT_FLAGS_NONE, 0, 0, IconType::text          ; $04
-        DEFINE_ICTRECORD $FF, FT_BINARY,    ICT_FLAGS_NONE, 0, 0, IconType::binary        ; $06
-        DEFINE_ICTRECORD $FF, FT_FONT,      ICT_FLAGS_NONE, 0, 0, IconType::font          ; $07
-        DEFINE_ICTRECORD $FF, FT_GRAPHICS,  ICT_FLAGS_NONE, 0, 0, IconType::graphics      ; $08
-
-        DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_NONE, 0, 0, IconType::folder        ; $0F
-        DEFINE_ICTRECORD $FF, FT_ADB,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_db ; $19
-        DEFINE_ICTRECORD $FF, FT_AWP,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_wp ; $1A
-        DEFINE_ICTRECORD $FF, FT_ASP,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_sp ; $1B
-
-        DEFINE_ICTRECORD $FF, FT_CMD,       ICT_FLAGS_NONE, 0, 0, IconType::command       ; $F0
-        DEFINE_ICTRECORD $FF, FT_BASIC,     ICT_FLAGS_NONE, 0, 0, IconType::basic         ; $FC
-        DEFINE_ICTRECORD $FF, FT_REL,       ICT_FLAGS_NONE, 0, 0, IconType::relocatable   ; $FE
-        DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_SUFFIX, str_sys_suffix, 0, IconType::application ; $FF
-        DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
-
-        DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_AUX, $D0E7, 0, IconType::music ; Electric Duet
-        DEFINE_ICTRECORD $FF, $E0,          ICT_FLAGS_AUX, $8002, 0, IconType::archive ; NuFX
-
-        ;; IIgs-Specific Files (ranges)
-        DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
-        DEFINE_ICTRECORD $F0, $A0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs BASIC    $Ax
-        DEFINE_ICTRECORD $FF, FT_S16, ICT_FLAGS_NONE, 0, 0, IconType::application ; IIgs System   $B3
-        DEFINE_ICTRECORD $F0, $B0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs System   $Bx
-        DEFINE_ICTRECORD $F0, $C0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs Graphics $Cx
-
-        ;; Desk Accessories/Applets $F1/$0641 and $F1/$8641
-        DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType, 0, IconType::desk_accessory
-        DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType|$8000, 0, IconType::desk_accessory
-        .byte   kICTSentinel
-
-;;; Suffixes
-str_sys_suffix:                 ; SYS files with .SYSTEM suffix are given "application" icon
-        PASCAL_STRING ".SYSTEM"
-
-str_shk_suffix:                 ; ShrinkIt NuFX files, that have lost their type info.
-        PASCAL_STRING ".SHK"
-
-str_bny_suffix:                 ; Binary II files, which contain metadata as a header
-        PASCAL_STRING ".BNY"    ; (pronounced "bunny", per A2-Central, Vol 5. No. 7, Aug 1989 )
-
-str_bxy_suffix:                 ; ShrinkIt NuFX files, in a Binary II package
-        PASCAL_STRING ".BXY"    ; (pronounced "boxy", per A2-Central, Vol 5. No. 7, Aug 1989 )
-
-str_a2fc_suffix:                ; Double-hires ("Apple II Full Color")
-        PASCAL_STRING ".A2FC"
 
 ;;; --------------------------------------------------
 
@@ -1286,44 +1102,6 @@ icon_entries:
 
         .org ::kSegmentDeskTopLC1BAddress
 
-;;; Map ProDOS file type to string (for listings/Get Info).
-;;; If not found, $XX is used (like CATALOG).
-
-        kNumFileTypes = 14
-type_table:
-        .byte   FT_BAD        ; bad block
-        .byte   FT_TEXT       ; text
-        .byte   FT_BINARY     ; binary
-        .byte   FT_FONT       ; font
-        .byte   FT_GRAPHICS   ; graphics
-        .byte   FT_DIRECTORY  ; directory
-        .byte   FT_ADB        ; appleworks db
-        .byte   FT_AWP        ; appleworks wp
-        .byte   FT_ASP        ; appleworks sp
-        .byte   FT_MUSIC      ; music
-        .byte   FT_CMD        ; command
-        .byte   FT_BASIC      ; basic
-        .byte   FT_REL        ; rel
-        .byte   FT_SYSTEM     ; system
-        ASSERT_TABLE_SIZE type_table, kNumFileTypes
-
-type_names_table:
-        ;; Types marked with * are known to BASIC.SYSTEM.
-        .byte   "BAD " ; bad block
-        .byte   "TXT " ; text *
-        .byte   "BIN " ; binary *
-        .byte   "FNT " ; font
-        .byte   "FOT " ; graphics
-        .byte   "DIR " ; directory *
-        .byte   "ADB " ; appleworks db *
-        .byte   "AWP " ; appleworks wp *
-        .byte   "ASP " ; appleworks sp *
-        .byte   "MUS " ; music
-        .byte   "CMD " ; command *
-        .byte   "BAS " ; basic *
-        .byte   "REL " ; rel *
-        .byte   "SYS " ; system *
-        ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 4
 
 ;;; Map IconType to other icon/details
 
