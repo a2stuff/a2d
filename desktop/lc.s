@@ -62,7 +62,7 @@ params:  .res    3
 ;;; IconTK call from main>aux, MLI-style params
 
 .proc ITKRelayImpl
-        ldax    #IconTK::MLI
+        ldax    #aux::ITKEntry
         jmp     ParamsRelayImpl
 .endproc
 

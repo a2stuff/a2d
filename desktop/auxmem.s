@@ -217,14 +217,11 @@ a2d_file_icon:
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
         ;; shares `generic_mask`
 
-        PAD_TO $8E00
-
 ;;; ============================================================
 ;;; Entry point for "Icon ToolKit"
 ;;; ============================================================
 
         ITKEntry := *
-        ASSERT_ADDRESS IconTK::MLI, "IconTK entry point"
 
 .scope icon_toolkit
 

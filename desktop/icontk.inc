@@ -12,10 +12,6 @@
 
 ;;; * = Used by Desk Accessories
 
-MLI := $8E00
-        ;; MLI-style call (jsr IconTK::MLI ; .byte call ; .addr params)
-        ;; Call from Aux (RAMRDON/RAMWRTON)
-
 AddIcon         = $01   ; param is address of IconEntry
 HighlightIcon   = $02   ; { .byte icon }
 DrawIcon        = $03   ; { .byte icon }

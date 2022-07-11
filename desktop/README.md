@@ -114,10 +114,10 @@ When running, memory use includes:
  * $2000-$3FFF is the hires graphics page.
  * $4000-$BFFF (`auxmem.s`) includes these:
  * $4000-$85FF is the [MouseGraphics ToolKit](../mgtk/MGTK.md)
- * $8600-$8DFF - Resources, including icons and font
- * $8E00-$A6xx - [Icon ToolKit](APIs.md)
- * $A6xx-$ADFF - Resources, including menu definitions
- * $AE00-$BFFF - Alert dialog resources/code
+ * $8600-$BFFF - Resources and tookits, with floating memory layout
+   * Resources, including icons, font, menu definitions, etc.
+   * [Icon ToolKit](APIs.md)
+   * Alert dialog resources/code
 
 ...and in the Aux language card area (accessible from both aux and
 main code) are relays, buffers and resources:
@@ -205,7 +205,6 @@ $A000 |      +------+       |             |
       |      |      |       |             |
 $9000 |      +------+       |             |
       |             |       |             |
-$8E00 |             |       | ITK Entry   |
       |             |       |             |
       |             |       |             |
       |             |       |             |
