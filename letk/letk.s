@@ -662,7 +662,7 @@ width   .word
 .endproc
 
 ;;; ============================================================
-;;; Redraw the contents of the control; used after a window move.
+;;; Redraw the contents of the control; used after a window move or string change.
 
 .proc UpdateImpl
         PARAM_BLOCK params, letk::command_data
@@ -679,6 +679,15 @@ a_record  .addr
         MGTK_CALL MGTK::MoveTo, pos
         ldax    a_buf
         jsr     DrawString
+
+        ;; Fix IP position if string has shrunk
+        ldy     #0
+        lda     (a_buf),y
+        ldy     #LETK::LineEditRecord::ip_pos
+        cmp     (a_record),y    ; len >= ip_pos
+        bcs     :+
+        sta     (a_record),y    ; no, clamp ip_pos
+:
         jmp     _ShowIP
 .endproc ; UpdateImpl
 
