@@ -17,9 +17,9 @@
         jsr     file_dialog::UpdateListFromPath
         jsr     InstallCallbackTable
         jsr     file_dialog::PrepPath
+        jsr     file_dialog::LineEditInit
         jsr     file_dialog::Activate
 
-        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
         jmp     file_dialog::EventLoop
 .endproc
 

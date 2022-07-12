@@ -15352,7 +15352,6 @@ done:   rts
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
         LETK_CALL LETK::Init, le_params
-        copy    #$80, line_edit_rec::blink_ip_flag
         LETK_CALL LETK::Activate, le_params
 .endproc
 

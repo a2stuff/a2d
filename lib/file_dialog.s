@@ -93,8 +93,6 @@ routine_table:
         jsr     SetCursorPointer
         copy    DEVCNT, device_num
 
-        jsr     LineEditInit
-
         lda     #0
         sta     file_dialog_res::type_down_buf
         sta     file_dialog_res::allow_all_chars_flag
@@ -666,8 +664,11 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
         jsr     GetNthFilename
         jsr     AppendToPathBuf
+
+
         jsr     PrepPath
-        jsr     Activate
+        jsr     Update          ; string changed
+        jsr     Activate        ; move IP to end
 
         jmp     UpdateListFromPath
 .endproc
@@ -684,10 +685,11 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     NextDeviceNum
         jsr     DeviceOnLine
 
-        jsr     UpdateListFromPath
-
         jsr     PrepPath
-        jmp     Activate
+        jsr     Update          ; string changed
+        jsr     Activate        ; move IP to end
+
+        jmp     UpdateListFromPath
 .endproc
 
 ;;; ============================================================
@@ -762,10 +764,11 @@ no:     sec
         ;; Remove last segment
         jsr     StripPathBufSegment
 
-        jsr     UpdateListFromPath
-
         jsr     PrepPath
-        jsr     Activate
+        jsr     Update          ; string changed
+        jsr     Activate        ; move IP to end
+
+        jsr     UpdateListFromPath
 
 ret:    rts
 .endproc
@@ -2315,6 +2318,10 @@ no_change:
         LETK_CALL LETK::Click, file_dialog_res::le_params_f1
         rts
 .endproc
+.proc Update
+        LETK_CALL LETK::Update, file_dialog_res::le_params_f1
+        rts
+.endproc
 
 .endscope ; f1
 
@@ -2361,6 +2368,10 @@ f1__Click := f1::Click
         LETK_CALL LETK::Click, file_dialog_res::le_params_f2
         rts
 .endproc
+.proc Update
+        LETK_CALL LETK::Update, file_dialog_res::le_params_f2
+        rts
+.endproc
 
 .endscope ; f2
 
@@ -2391,6 +2402,7 @@ Activate        := f1::Activate
 Deactivate      := f1::Deactivate
 Key             := f1::Key
 Click           := f1::Click
+Update          := f1::Update
 
 .else
 
@@ -2433,6 +2445,11 @@ Click:
         jpl     f1::Click
         jmp     f2::Click
 
+Update:
+        bit     focus_in_input2_flag
+        jpl     f1::Update
+        jmp     f2::Update
+
 .endif
 
 ;;; ============================================================
@@ -2456,7 +2473,8 @@ Click:
         ;; And restore path
         jsr     StripPathBufSegment
 
-        jsr     Activate
+        jsr     Update          ; string changed
+        jsr     Activate        ; move IP to end
 
         rts
 .endproc

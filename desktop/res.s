@@ -451,8 +451,6 @@ a_buf:          .addr   path_buf1
         DEFINE_RECT_SZ rect, kNameInputLeft+1, kNameInputTop+1, kNameInputWidth-2, kTextBoxHeight-2
         DEFINE_POINT pos, kNameInputLeft + kTextBoxTextHOffset, kNameInputTop + kTextBoxTextVOffset
 max_length:     .byte   kMaxFilenameLength
-blink_ip_flag:  .byte   0
-dirty_flag:     .byte   0
         .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
 .endparams
 .assert .sizeof(line_edit_rec) = .sizeof(LETK::LineEditRecord), error, "struct size"

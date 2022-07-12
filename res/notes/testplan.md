@@ -701,7 +701,7 @@ Repeat for each file picker:
 * Click a folder in the list. Click Open. Verify that the selected folder opens and that the path is updated correctly.
 
 * Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, with the IP at the end. Click a folder. Verify that the path updates, with the file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
-* Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, after the insertion point. Edit the file name. Click a folder. Verify that the path updates, with the edited file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the edited file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
+* Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, with the IP at the end. Edit the file name. Click a folder. Verify that the path updates, with the edited file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the edited file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
 
 Repeat for each file picker:
 * Configure a system with only one drive. Verify that the file picker's Change Drive button is dimmed.

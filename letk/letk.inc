@@ -30,17 +30,16 @@ max_length      .byte
 
 ;;; --------------------------------------------------
 
-;;; Set when the IP in the control should blink.
-blink_ip_flag   .byte
-
 ;;; Set when the control's value has changed.
 dirty_flag      .byte
 
 ;;; --------------------------------------------------
 
+;;; Internal: Set when the IP in the control should blink.
+active_flag     .byte
 ;;; Internal: Position of the insertion point
 ip_pos          .byte
-;;; Internal: set during the IP blink cycle while the IP is visible.
+;;; Internal: Set during the IP blink cycle while the IP is visible.
 ip_flag         .byte
 ;;; Internal: counter for the IP blink cycle.
 ip_counter      .word
@@ -55,7 +54,7 @@ Init            = $00           ; Initialize LineEditRecord members
 Idle            = $01           ; Call from event loop; blinks IP
 ;;; .addr       record
 
-Activate        = $02           ; Repaint control, show IP, moves IP to end
+Activate        = $02           ; Move IP to the end and shows it
 ;;; .addr       record
 
 Deactivate      = $03           ; Hide IP
@@ -72,6 +71,9 @@ Key             = $05           ; Handle key press
 ;;; .byte       key             From MGTK::Event::key
 ;;; .byte       modifiers       From MGTK::Event::modifiers
 ;;; NOTE: Caller is responsible for filtering out undesired printables ($20-$7E)
+
+Update          = $06           ; Redraw control, e.g. after control moves or text changes
+;;; .addr       record
 
 .endscope ; LETK
 

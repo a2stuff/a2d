@@ -250,8 +250,6 @@ a_buf:          .addr   buf_search
         DEFINE_RECT_SZ rect, kTextBoxLeft+1, kTextBoxTop+1, kTextBoxWidth-2, kTextBoxHeight-2
         DEFINE_POINT pos, kTextBoxLeft + kTextBoxTextHOffset, kTextBoxTop + kTextBoxTextVOffset
 max_length:     .byte   kBufSize - 1
-blink_ip_flag:  .byte   0
-dirty_flag:     .byte   0
         .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
 .endparams
 .assert .sizeof(line_edit_rec) = .sizeof(LETK::LineEditRecord), error, "struct size"
@@ -272,13 +270,13 @@ ycoord  := * + 2
 
 .proc Init
         copy    #0, buf_search
-        LETK_CALL LETK::Init, le_params
-        copy    #$80, line_edit_rec::blink_ip_flag
 
         MGTK_CALL MGTK::OpenWindow, winfo
+        LETK_CALL LETK::Init, le_params
         jsr     UpdateCoordsFromLatLong
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
+        LETK_CALL LETK::Activate, le_params
         FALL_THROUGH_TO InputLoop
 .endproc
 
@@ -378,6 +376,8 @@ ycoord  := * + 2
 
         ;; Draw DA's window
         jsr     DrawWindow
+
+        LETK_CALL LETK::Update, le_params ; window moved
 
 :       jmp     InputLoop
 
@@ -639,7 +639,6 @@ done:   jmp     InputLoop
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, input_rect
-        LETK_CALL LETK::Activate, le_params
 
         ;; ==============================
 

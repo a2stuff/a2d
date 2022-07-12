@@ -19,11 +19,11 @@ MGTK:Rect   rect            Bounding rect of the control.
 MGTK::Point pos             Text origin within the control.
 .byte       max_length      Set to the maximum allowed length.
 
-.byte       blink_ip_flag   Set when the IP in the control should blink.
 .byte       dirty_flag      Set when the control's value has changed.
 
+.byte       active_flag     Internal: Set when the IP in the control should blink.
 .byte       ip_pos          Internal: Position of the insertion point
-.byte       ip_flag         Internal: set during the IP blink cycle while the IP is visible.
+.byte       ip_flag         Internal: Set during the IP blink cycle while the IP is visible.
 .word       ip_counter      Internal: counter for the IP blink cycle.
 ```
 
@@ -34,7 +34,7 @@ Initialize internal LineEditRecord members.
 
 Parameters:
 ```
-.addr       record          Address of the LineEditRecord
+.addr       a_record        Address of the LineEditRecord
 ```
 
 ### Idle ($01)
@@ -42,23 +42,25 @@ Call from event loop; blinks the insertion point.
 
 Parameters:
 ```
-.addr       record          Address of the LineEditRecord
+.addr       a_record        Address of the LineEditRecord
 ```
 
 ### Activate ($02)
-Repaint control, show IP, moves IP to end.
+Moves IP to end and makes it visible.
 
 Parameters:
 ```
-.addr       record          Address of the LineEditRecord
+.addr       a_record        Address of the LineEditRecord
 ```
+
+NOTE: It is safe to call this more than once without calling `Deactivate`, e.g. to move IP to the end.
 
 ### Deactivate ($03)
 Hide the IP.
 
 Parameters:
 ```
-.addr       record          Address of the LineEditRecord
+.addr       a_record        Address of the LineEditRecord
 ```
 
 ### Click ($04)
@@ -93,4 +95,12 @@ Parameters:
 .addr       record
 .byte       key             From MGTK::Event::key
 .byte       modifiers       From MGTK::Event::modifiers
+```
+
+### Update ($06)
+Redraw the control. Useful after the control moves or the text changes.
+
+Parameters:
+```
+.addr       a_record        Address of the LineEditRecord
 ```

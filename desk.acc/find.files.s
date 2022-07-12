@@ -966,8 +966,6 @@ a_buf:          .addr   buf_search
         DEFINE_RECT rect, kFindLeft + kLabelHOffset+1, kControlsTop+1, kDAWidth-250-1, kControlsTop + kTextBoxHeight-1
         DEFINE_POINT pos, kTextBoxTextHOffset, kControlsTop + kTextBoxTextVOffset
 max_length:     .byte   kMaxFilenameLength
-blink_ip_flag:  .byte   0
-dirty_flag:     .byte   0
         .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
 .endparams
 .assert .sizeof(line_edit_rec) = .sizeof(LETK::LineEditRecord), error, "struct size"
@@ -990,8 +988,6 @@ ycoord  := * + 2
         ;; Prep input string
         copy    #0, buf_search
 
-        LETK_CALL LETK::Init, le_params
-        copy    #$80, line_edit_rec::blink_ip_flag
 
         param_call MeasureString, find_label_str
         addax   input_rect::x1
@@ -1002,6 +998,7 @@ ycoord  := * + 2
         MGTK_CALL MGTK::OpenWindow, winfo_results
         MGTK_CALL MGTK::HideCursor
         jsr     DrawWindow
+        LETK_CALL LETK::Init, le_params
         LETK_CALL LETK::Activate, le_params
         jsr     DrawResults
         MGTK_CALL MGTK::ShowCursor

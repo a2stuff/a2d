@@ -19,12 +19,9 @@
         jsr     file_dialog::UpdateListFromPath
         jsr     InstallSourceCallbackTable
         jsr     file_dialog::PrepPath
-        jsr     file_dialog::Activate
-
-        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
-        copy    #$00, file_dialog_res::line_edit_f2::blink_ip_flag
-
         copy    #kMaxPathLength, file_dialog_res::line_edit_f2::max_length
+        jsr     file_dialog::LineEditInit
+        jsr     file_dialog::Activate
 
         jmp     file_dialog::EventLoop
 .endproc
@@ -115,16 +112,14 @@ jt_destination_filename:
         bne     :-
 :       sty     path_buf1
 
-done:   jsr     file_dialog::Activate
+done:   jsr     file_dialog::Update ; string changed
+        jsr     file_dialog::Activate
 
         ;; Twiddle flags
         lda     file_dialog_res::input_dirty_flag
         sta     input1_dirty_flag
         lda     input2_dirty_flag
         sta     file_dialog_res::input_dirty_flag
-
-        copy    #$00, file_dialog_res::line_edit_f1::blink_ip_flag
-        copy    #$FF, file_dialog_res::line_edit_f2::blink_ip_flag
         rts
 .endproc
 
@@ -177,9 +172,6 @@ done:   jsr     file_dialog::Activate
         sta     input2_dirty_flag
         lda     input1_dirty_flag
         sta     file_dialog_res::input_dirty_flag
-
-        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
-        copy    #$00, file_dialog_res::line_edit_f2::blink_ip_flag
 
         COPY_STRING path_buf0, file_dialog::path_buf
 

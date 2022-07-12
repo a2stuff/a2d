@@ -84,6 +84,7 @@ jump_table:
         .addr   DeactivateImpl
         .addr   ClickImpl
         .addr   KeyImpl
+        .addr   UpdateImpl
 
         ;; Must be non-zero
 length_table:
@@ -93,6 +94,7 @@ length_table:
         .byte   2               ; Deactivate
         .byte   6               ; Click
         .byte   4               ; Key
+        .byte   2               ; Draw
 .endproc
 
 ;;; ============================================================
@@ -104,18 +106,20 @@ a_record  .addr
         .assert a_record = params::a_record, error, "a_record must be first"
 
         lda     #0
-        ldy     #LETK::LineEditRecord::blink_ip_flag
+        ldy     #LETK::LineEditRecord::dirty_flag
         sta     (a_record),y
-        .assert (LETK::LineEditRecord::dirty_flag - LETK::LineEditRecord::blink_ip_flag) = 1, error, "order"
+        .assert (LETK::LineEditRecord::active_flag - LETK::LineEditRecord::dirty_flag) = 1, error, "order"
         iny
         sta     (a_record),y
-        .assert (LETK::LineEditRecord::ip_pos - LETK::LineEditRecord::dirty_flag) = 1, error, "order"
+        .assert (LETK::LineEditRecord::ip_pos - LETK::LineEditRecord::active_flag) = 1, error, "order"
         iny
         sta     (a_record),y
         .assert (LETK::LineEditRecord::ip_flag - LETK::LineEditRecord::ip_pos) = 1, error, "order"
         iny
         sta     (a_record),y
         .assert (LETK::LineEditRecord::ip_counter - LETK::LineEditRecord::ip_flag) = 1, error, "order"
+
+        jsr     UpdateImpl
 
         FALL_THROUGH_TO _ResetIPCounter
 .endproc ; InitImpl
@@ -134,7 +138,7 @@ a_record  .addr
         END_PARAM_BLOCK
         .assert a_record = params::a_record, error, "a_record must be first"
 
-        ldy     #LETK::LineEditRecord::blink_ip_flag
+        ldy     #LETK::LineEditRecord::active_flag
         lda     (a_record),y
         bmi     :+
 ret:    rts
@@ -145,7 +149,7 @@ ret:    rts
 
         lda     (a_record),y  ; Y = LETK::LineEditRecord::ip_counter+1
         dey
-        ora     (a_record),y    ; Y = LETK::LineEditRecord::ip_counter
+        ora     (a_record),y  ; Y = LETK::LineEditRecord::ip_counter
         bne     ret
 
         jsr     _ResetIPCounter
@@ -165,7 +169,6 @@ ret:    rts
 
         jsr     _SetPort
 
-        ;; TODO: Do this with a 1px rect instead of a line
         jsr     _CalcIPPos
         stax    xcoord
         dec16   xcoord          ; between characters
@@ -189,8 +192,6 @@ ret:    rts
         rts
 .endproc
 _ShowIP := _HideIP
-
-DeactivateImpl := _HideIP
 
 ;;; ============================================================
 
@@ -228,18 +229,37 @@ a_record  .addr
         END_PARAM_BLOCK
         .assert a_record = params::a_record, error, "a_record must be first"
 
-        jsr     _SetPort
+        ;; Idempotent, to allow Activate to be used to just move IP
+        jsr     _HideIP
 
-        ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     _HideIP
+        ;; Move IP to end
+        ldy     #0
+        lda     (a_buf),y
+        ldy     #LETK::LineEditRecord::ip_pos
+        sta     (a_record),y
 
-        MGTK_CALL MGTK::PaintRect, rect
-        MGTK_CALL MGTK::MoveTo, pos
-        ldax    a_buf
-        jsr     DrawString
-        jsr     _MoveIPEnd
+        ;; Set active flag
+        ldy     #LETK::LineEditRecord::active_flag
+        lda     #$80
+        sta     (a_record),y
+
         jmp     _ShowIP
 .endproc ; ActivateImpl
+
+;;; ============================================================
+
+.proc DeactivateImpl
+        jsr     _HideIP
+
+        ldy     #LETK::LineEditRecord::active_flag
+        lda     #0
+        sta     (a_record),y
+
+        ldy     #LETK::LineEditRecord::ip_flag
+        sta     (a_record),y
+
+        rts
+.endproc ; DeactivateImpl
 
 ;;; ============================================================
 ;;; Internal proc: used as part of insert/delete procs
@@ -640,6 +660,27 @@ width   .word
         tya
         rts
 .endproc
+
+;;; ============================================================
+;;; Redraw the contents of the control; used after a window move.
+
+.proc UpdateImpl
+        PARAM_BLOCK params, letk::command_data
+a_record  .addr
+        END_PARAM_BLOCK
+        .assert a_record = params::a_record, error, "a_record must be first"
+
+        jsr     _SetPort
+
+        ;; Unnecessary - the entire field will be repainted.
+        ;; jsr     _HideIP
+
+        MGTK_CALL MGTK::PaintRect, rect
+        MGTK_CALL MGTK::MoveTo, pos
+        ldax    a_buf
+        jsr     DrawString
+        jmp     _ShowIP
+.endproc ; UpdateImpl
 
 ;;; ============================================================
 

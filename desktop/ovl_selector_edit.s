@@ -57,13 +57,9 @@ finish: jsr     file_dialog::ReadDir
         bne     :+              ; already populated - preserve it!
         jsr     file_dialog::PrepPath
 :
-        jsr     file_dialog::f1::Activate ; sets IP position to end
-        jsr     file_dialog::f2::Activate ; needed to render second control
-
         copy    #kSelectorMaxNameLength, file_dialog_res::line_edit_f2::max_length
-
-        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
-        copy    #$00, file_dialog_res::line_edit_f2::blink_ip_flag
+        jsr     file_dialog::LineEditInit
+        jsr     file_dialog::Activate
 
         jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
@@ -191,9 +187,6 @@ jt_entry_name:
         lda     #$00
         sta     file_dialog_res::input_dirty_flag
 
-        copy    #$00, file_dialog_res::line_edit_f1::blink_ip_flag
-        copy    #$FF, file_dialog_res::line_edit_f2::blink_ip_flag
-
         ;; Already have a name?
         lda     path_buf1
         bne     finish
@@ -224,6 +217,7 @@ found_slash:
 :       sty     path_buf1
 
 finish: copy    #$80, file_dialog_res::allow_all_chars_flag
+        jsr     file_dialog::Update ; string may have changed
         jmp     file_dialog::Activate
 .endproc
 
@@ -295,9 +289,6 @@ found:  cpy     #2
 
         lda     input1_dirty_flag
         sta     file_dialog_res::input_dirty_flag
-
-        copy    #$FF, file_dialog_res::line_edit_f1::blink_ip_flag
-        copy    #$00, file_dialog_res::line_edit_f2::blink_ip_flag
 
         jmp     file_dialog::Activate
 .endproc
