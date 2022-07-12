@@ -792,6 +792,7 @@ location_table:
         DEFINE_LOCATION "Chennai", 13, 80
         DEFINE_LOCATION "Chicago", 41, -87
         DEFINE_LOCATION "Chongqing", 29, 106
+        DEFINE_LOCATION "Cupertino", 37, -122
         DEFINE_LOCATION "Dar es Salaam", -6, 39
         DEFINE_LOCATION "Delhi", 28, 77
         DEFINE_LOCATION "Dhaka", 23, 90
@@ -805,6 +806,7 @@ location_table:
         DEFINE_LOCATION "Istanbul", 41, 28
         DEFINE_LOCATION "Jakarta", -6, 106
         DEFINE_LOCATION "Johannesburg", -26, 28
+        DEFINE_LOCATION "Kansas City", 39, -94
         DEFINE_LOCATION "Karachi", 24, 67
         DEFINE_LOCATION "Khartoum", 15, 32
         DEFINE_LOCATION "Kinshasa", -4, 15
