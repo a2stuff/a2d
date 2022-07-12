@@ -191,6 +191,7 @@ nameBuffer:     .res    ::kPathBufferSize ; space for directory name
 ;;; * Converted to ca65 syntax
 ;;; * Using A2D headers/macros
 ;;; * Use procs
+;;; * Prevent excessive recursion
 ;;;******************************************************
 
 
@@ -472,9 +473,18 @@ exit:   rts
         ;; Treat directories like files
         jsr     VisitFile
 
+        ;; 6 bytes + 3 return addresses = 12 bytes are pushed to stack on
+        ;; in RecursDir; 12 * 16 = 192 bytes, which leaves enough room
+        ;; on the stack above and below for safety.
+        kMaxRecursionDepth = 16
+
+        lda     Depth
+        cmp     #kMaxRecursionDepth
+        bcs     :+
+
         jsr     RecursDir       ; enumerate all entries in sub-dir.
 
-        rts
+:       rts
 .endproc
 ;;;
 ;;;******************************************************
