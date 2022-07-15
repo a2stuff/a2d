@@ -625,11 +625,9 @@ not_last:
 mask:   and     #$01
 
         ;; Set Y to 0 (if clear) or $FF (if set)
-        bne     set
-        tay                     ; Y=A=0
-        beq     :+              ; always
-set:    ldy     #$FF
-:
+        eor     #$FF
+        tay
+        iny
 
         ;; Now compute block number
         ;; Why do this? Isn't this stashed anywhere else???
