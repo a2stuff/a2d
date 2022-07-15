@@ -612,9 +612,12 @@ ploop:  lda     position_table+1,y
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
+        beq     :+
+        cmp     #MGTK::EventKind::key_down
         bne     Scramble
+:
         jsr     CheckVictory
-        bcs     Scramble
+        bcs     Scramble        ; BUG: This would require a second click!
         jsr     DrawAll
         jsr     FindHole
         FALL_THROUGH_TO InputLoop
