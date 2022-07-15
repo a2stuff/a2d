@@ -21,7 +21,7 @@
 .define res_string_destination "Ziel "
 .define res_string_slot_prefix "Steckplatz "
 .define res_string_drive_infix "  Laufwerk "
-.define res_string_dos33_s_d_pattern "DOS 3,3 P#,L# "
+.define res_string_dos33_s_d_pattern "DOS 3,3 S#,L# "
 .define res_const_dos33_s_d_pattern_offset1 10
 .define res_const_dos33_s_d_pattern_offset2 13
 .define res_string_dos33_disk_copy "DOS 3,3 Diskettenkopierer"
@@ -37,9 +37,9 @@
 .define res_string_errmsg_dest_format_fail "Die Zieldiskette kann nicht formatiert werden!"
 .define res_string_errmsg_format_error "Fehler beim Formatieren."
 .define res_string_errmsg_dest_protected "Die Zieldiskette ist schreibgesch}tzt!"
-.define res_string_prompt_erase_slot_drive_pattern "M|chten Sie die Diskette in Steckplatz# Laufwerk# l|schen?"
-.define res_const_prompt_erase_slot_drive_pattern_offset1 39
-.define res_const_prompt_erase_slot_drive_pattern_offset2 49
+.define res_string_prompt_erase_slot_drive_pattern "M|chten Sie die Diskette in Steckplatz # Laufwerk # l|schen?"
+.define res_const_prompt_erase_slot_drive_pattern_offset1 40
+.define res_const_prompt_erase_slot_drive_pattern_offset2 51
 .define res_string_label_status_copy_success "Kopie erfolgreich."
 .define res_string_label_status_copy_fail "Kopie nicht abgschlossen."
 .define res_string_prompt_insert_source_or_cancel "Lege Quelldiskette ein oder Dr}cke Esc f}r Abbruch."

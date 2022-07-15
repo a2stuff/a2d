@@ -6,7 +6,7 @@
 .define res_char_button_yes_shortcut 'Y'
 .define res_string_button_no "No"
 .define res_char_button_no_shortcut 'N'
-.define res_string_button_change_drive "Cambiar unidad"
+.define res_string_button_change_drive "Cambiar Unidad"
 .define res_string_button_open "Abrir"
 .define res_string_button_close "Cerrar"
 .define res_string_label_disk "Disco: "

@@ -22,6 +22,7 @@ System.de    | MouseDesk 1.0 de | 128      | Single | 9
 System.it    | MouseDesk 1.0 it | 128      | Single | 9
 System.pt    | custom           | 128      | Single | 9
 System.es    | custom           | 128      | Single | 9
+System.sv    | custom           | 128      | Single | 9
 Monaco.*     | custom           | 128      | Single | 9
 MP.FONT      | MousePaint       | 128      | Single | 9
 ATHENS       | MousePaint       | 128      | Double | 12

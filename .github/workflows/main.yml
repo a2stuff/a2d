@@ -32,6 +32,8 @@ jobs:
         run: bin/setlang pt && make && make package
       - name: build a2d - de
         run: bin/setlang de && make && make package
+      - name: build a2d - sv
+        run: bin/setlang sv && make && make package
 
       - name: deploy new version
         if: startsWith(github.ref, 'refs/tags/')

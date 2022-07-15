@@ -21,7 +21,7 @@
 .define res_string_destination "Destino "
 .define res_string_slot_prefix "Ranhura "
 .define res_string_drive_infix "  Unidade "
-.define res_string_dos33_s_d_pattern "DOS 3.3 S#, D# "
+.define res_string_dos33_s_d_pattern "DOS 3.3 R#, U# "
 .define res_const_dos33_s_d_pattern_offset1 10
 .define res_const_dos33_s_d_pattern_offset2 14
 .define res_string_dos33_disk_copy "DOS 3.3 Disk Copy"
@@ -37,9 +37,9 @@
 .define res_string_errmsg_dest_format_fail "O disco de destino n[o pode ser inicializado!"
 .define res_string_errmsg_format_error "erro de inicializa][o."
 .define res_string_errmsg_dest_protected "O volume de destino est@ protegido contra grava][o!"
-.define res_string_prompt_erase_slot_drive_pattern "Voc& deseja apagar o disco no slot # drive #?"
-.define res_const_prompt_erase_slot_drive_pattern_offset1 36
-.define res_const_prompt_erase_slot_drive_pattern_offset2 44
+.define res_string_prompt_erase_slot_drive_pattern "Voc& deseja apagar o disco no ranhura # unidade #?"
+.define res_const_prompt_erase_slot_drive_pattern_offset1 39
+.define res_const_prompt_erase_slot_drive_pattern_offset2 49
 .define res_string_label_status_copy_success "A c~pia foi realizada com sucesso."
 .define res_string_label_status_copy_fail "A c~pia n[o foi conclu{da."
 .define res_string_prompt_insert_source_or_cancel "Insira o disco original ou pressione Esc para cancelar."

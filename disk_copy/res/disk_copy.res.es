@@ -20,8 +20,8 @@
 .define res_string_source "Origen "
 .define res_string_destination "Destino "
 .define res_string_slot_prefix "Ranura "
-.define res_string_drive_infix "  Drive "
-.define res_string_dos33_s_d_pattern "DOS 3.3 S#, D# "
+.define res_string_drive_infix "  Unidad "
+.define res_string_dos33_s_d_pattern "DOS 3.3 R#, U# "
 .define res_const_dos33_s_d_pattern_offset1 10
 .define res_const_dos33_s_d_pattern_offset2 14
 .define res_string_dos33_disk_copy "Copia de Disco DOS 3.3"

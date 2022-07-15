@@ -126,7 +126,7 @@
 .define res_string_errmsg_FD "Insira o disco de destino."
 .define res_string_errmsg_FE "BASIC.SYSTEM n[o pode ser encontrado."
 .define res_string_trash_icon_name "Lixeira"
-.define res_string_sd_prefix_pattern "S#,D#: "
+.define res_string_sd_prefix_pattern "R#,U#: "
 .define res_const_sd_prefix_pattern_offset1 2
 .define res_const_sd_prefix_pattern_offset2 5
 .define res_string_volume_type_unknown "Desconhecido"
@@ -150,12 +150,12 @@
 .define res_string_selector_label_at_first_boot "3 na inicializa][o"
 .define res_string_selector_label_at_first_use "4 pela primeira vez"
 .define res_string_selector_label_never "5 nunca"
-.define res_string_the_dos_33_disk_suffix_pattern "disco DOS 3.3 no slot # drive #"
-.define res_const_the_dos_33_disk_suffix_pattern_offset1 23
-.define res_const_the_dos_33_disk_suffix_pattern_offset2 31
-.define res_string_the_disk_in_slot_suffix_pattern "disco no slot # drive #"
-.define res_const_the_disk_in_slot_suffix_pattern_offset1 15
-.define res_const_the_disk_in_slot_suffix_pattern_offset2 23
+.define res_string_the_dos_33_disk_suffix_pattern "disco DOS 3.3 no ranhura # unidade #"
+.define res_const_the_dos_33_disk_suffix_pattern_offset1 26
+.define res_const_the_dos_33_disk_suffix_pattern_offset2 36
+.define res_string_the_disk_in_slot_suffix_pattern "disco no ranhura # unidade #"
+.define res_const_the_disk_in_slot_suffix_pattern_offset1 18
+.define res_const_the_disk_in_slot_suffix_pattern_offset2 28
 .define res_string_file_suffix "arquivo"
 .define res_string_files_suffix "arquivos"
 .define res_string_kb_suffix "K"

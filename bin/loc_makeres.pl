@@ -121,13 +121,13 @@ sub check($$$$) {
 my $header = <STDIN>; # ignore header
 my $last_file = '';
 my %fhs = ();
-my @langs = ('en', 'fr', 'de', 'it', 'es', 'pt');
+my @langs = ('en', 'fr', 'de', 'it', 'es', 'pt', 'sv');
 
 my %dupes = ();
 
 while (<STDIN>) {
-    my ($file, $label, $comment, $en, $fr, $de, $it, $es, $pt) = split(/\t/);
-    my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es, pt => $pt);
+    my ($file, $label, $comment, $en, $fr, $de, $it, $es, $pt, $sv) = split(/\t/);
+    my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es, pt => $pt, sv => $sv);
 
     next unless $file and $label;
 
@@ -164,7 +164,7 @@ while (<STDIN>) {
 
         if ($str =~ m/^(.*)##(.*)$/) {
             # If string has '##', split into prefix/suffix.
-           print {$fhs{$lang}} ".define ${label}_prefix ", enquote($label, $1), "\n";
+            print {$fhs{$lang}} ".define ${label}_prefix ", enquote($label, $1), "\n";
             print {$fhs{$lang}} ".define ${label}_suffix ", enquote($label, $2), "\n";
         } else {
             # Normal case.

@@ -10,12 +10,14 @@
 .define res_filename_find_files find.files
 .define res_filename_control_panels control.panels
 .define res_filename_control_panel control.panel
-.define res_filename_startup startup.options
+.define res_filename_startup_options startup.options
 .define res_filename_system_speed system.speed
 .define res_filename_joystick joystick
 .define res_filename_screen_savers screen.savers
 .define res_filename_flying_toasters flying.toasters
+.define res_filename_map Map
 .define res_filename_melt melt
+.define res_filename_matrix matrix
 .define res_filename_invert invert
 .define res_filename_calendar Calendar
 .define res_filename_sounds Sounds

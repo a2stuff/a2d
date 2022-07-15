@@ -126,9 +126,9 @@
 .define res_string_errmsg_FD "Zieldiskette einlegen."
 .define res_string_errmsg_FE "BASIC.SYSTEM nicht gefunden."
 .define res_string_trash_icon_name "Papierkorb"
-.define res_string_sd_prefix_pattern "S#,D#: "
+.define res_string_sd_prefix_pattern "S#, L#: "
 .define res_const_sd_prefix_pattern_offset1 2
-.define res_const_sd_prefix_pattern_offset2 5
+.define res_const_sd_prefix_pattern_offset2 6
 .define res_string_volume_type_unknown "Unbekannt"
 .define res_string_splash_string "Lade %s..."
 .define res_string_prompt_insert_system_disk "Lege Systemdiskette ein und Dr}cke Eingabe."
@@ -150,12 +150,12 @@
 .define res_string_selector_label_at_first_boot "3 w{hrend Startvorgang"
 .define res_string_selector_label_at_first_use "4 zur ersten Nutzung"
 .define res_string_selector_label_never "5 nie"
-.define res_string_the_dos_33_disk_suffix_pattern "DOS 3,3 Diskette im Steckplatz# Laufwerk#"
-.define res_const_the_dos_33_disk_suffix_pattern_offset1 31
-.define res_const_the_dos_33_disk_suffix_pattern_offset2 41
-.define res_string_the_disk_in_slot_suffix_pattern "Diskette in Steckplatz# Laufwerk#"
-.define res_const_the_disk_in_slot_suffix_pattern_offset1 23
-.define res_const_the_disk_in_slot_suffix_pattern_offset2 33
+.define res_string_the_dos_33_disk_suffix_pattern "DOS 3,3 Diskette im Steckplatz # Laufwerk #"
+.define res_const_the_dos_33_disk_suffix_pattern_offset1 32
+.define res_const_the_dos_33_disk_suffix_pattern_offset2 43
+.define res_string_the_disk_in_slot_suffix_pattern "Diskette in Steckplatz # Laufwerk #"
+.define res_const_the_disk_in_slot_suffix_pattern_offset1 24
+.define res_const_the_disk_in_slot_suffix_pattern_offset2 35
 .define res_string_file_suffix "Datei"
 .define res_string_files_suffix "Dateien"
 .define res_string_kb_suffix "K"

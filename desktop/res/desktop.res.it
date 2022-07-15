@@ -126,9 +126,9 @@
 .define res_string_errmsg_FD "Inserisci disco destinazione."
 .define res_string_errmsg_FE "BASIC.SYSTEM non trovato."
 .define res_string_trash_icon_name "Cestino"
-.define res_string_sd_prefix_pattern "S#,D#: "
+.define res_string_sd_prefix_pattern "S#, L#: "
 .define res_const_sd_prefix_pattern_offset1 2
-.define res_const_sd_prefix_pattern_offset2 5
+.define res_const_sd_prefix_pattern_offset2 6
 .define res_string_volume_type_unknown "Sconosciuto"
 .define res_string_splash_string "Caricamento di %s..."
 .define res_string_prompt_insert_system_disk "Inserisci il disco di sistema e premi Return."

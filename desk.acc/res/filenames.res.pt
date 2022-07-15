@@ -10,12 +10,14 @@
 .define res_filename_find_files procurar.arquiv
 .define res_filename_control_panels Paineis.control
 .define res_filename_control_panel Painel.Controlo
-.define res_filename_startup comecar
+.define res_filename_startup_options comecar
 .define res_filename_system_speed Rapidez
 .define res_filename_joystick joystick
 .define res_filename_screen_savers Protetor.tela
 .define res_filename_flying_toasters toast.voladoras
+.define res_filename_map Mapa
 .define res_filename_melt fundicao
+.define res_filename_matrix matrix
 .define res_filename_invert marcha.re
 .define res_filename_calendar Calendario
 .define res_filename_sounds Sons
