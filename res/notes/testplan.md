@@ -534,6 +534,9 @@ Image File:
 * Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Change the month and year, and verify that the day range is clamped to 28, 29, 30 or 31 as appropriate, including for leap years.
 * Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Click on the up/down arrows. Verify that they invert correctly when the button is down.
 
+* Configure a system with a realtime clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the current month and year correctly.
+* Configure a system without a realtime clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the build's release month and year correctly.
+
 * Open a folder containing directory. Open a folder by double-clicking. Apple > Sort Directory. Verify that files are sorted by type/name.
 
 * Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.

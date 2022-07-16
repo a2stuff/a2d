@@ -26,9 +26,13 @@ da_start:
 
 .scope
 ;;; Stuff that we need to run from main
+        lda     DATELO
+        ora     DATEHI
+    IF_NOT_ZERO
         copy16  #datetime, $A   ; populate this struct
         ldax    #DATELO         ; use current date
         jsr     ParseDatetime
+    END_IF
 .endscope
 
 ;;; Copy the DA to AUX for easy bank switching
@@ -228,8 +232,14 @@ grafport:       .tag    MGTK::GrafPort
 ;;; ============================================================
 ;;; Common Resources
 
-datetime:
-        .tag    ParsedDateTime
+.params datetime
+year:   .word   kBuildYYYY
+month:  .byte   kBuildMM
+day:    .byte   kBuildDD
+hour:   .byte   0
+minute: .byte   0
+.endparams
+        .assert .sizeof(datetime) = .sizeof(ParsedDateTime), error, "size mismatch"
 
 ;;; ============================================================
 

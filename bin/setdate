@@ -28,6 +28,7 @@ fi
 perl -pni -e "s/define kBuildDate .*/define kBuildDate \"$date\"/" config.inc
 
 # Update default date
+perl -pni -e 's/^(kBuildYYYY \s+ = \s+) \d+ /${1}'"$yyyy"'/x' config.inc
 perl -pni -e 's/^(kBuildYY \s+ = \s+) \d+ /${1}'"$yy"'/x' config.inc
 perl -pni -e 's/^(kBuildMM \s+ = \s+) \d+ /${1}'"$mm"'/x' config.inc
 perl -pni -e 's/^(kBuildDD \s+ = \s+) \d+ /${1}'"$dd"'/x' config.inc

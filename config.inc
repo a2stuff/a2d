@@ -16,6 +16,7 @@ kDeskTopVersionMajor = 1
 kDeskTopVersionMinor = 2
 .define kDeskTopVersionSuffix "-alpha46"
 .define kBuildDate "June 22, 2022"
+kBuildYYYY = 2022
 kBuildYY = 22
 kBuildMM = 6
 kBuildDD = 22
