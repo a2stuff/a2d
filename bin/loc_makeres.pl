@@ -121,13 +121,13 @@ sub check($$$$) {
 my $header = <STDIN>; # ignore header
 my $last_file = '';
 my %fhs = ();
-my @langs = ('en', 'fr', 'de', 'it', 'es', 'pt', 'sv');
+my @langs = ('en', 'fr', 'de', 'it', 'es', 'pt', 'sv', 'da');
 
 my %dupes = ();
 
 while (<STDIN>) {
-    my ($file, $label, $comment, $en, $fr, $de, $it, $es, $pt, $sv) = split(/\t/);
-    my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es, pt => $pt, sv => $sv);
+    my ($file, $label, $comment, $en, $fr, $de, $it, $es, $pt, $sv, $da) = split(/\t/);
+    my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es, pt => $pt, sv => $sv, da => $da);
 
     next unless $file and $label;
 

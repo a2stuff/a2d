@@ -16,6 +16,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Portuguese
   * German
   * Swedish
+  * Danish
 * Mouse Keys mode simplified: ([#185](https://github.com/a2stuff/a2d/issues/185))
   * **Open-Apple+Solid-Apple+Space** to enter Mouse Keys mode. A sound will play.
   * **Solid-Apple** acts as mouse button.

@@ -45,9 +45,10 @@ Issues marked [Good First Bug](https://github.com/a2stuff/a2d/issues?q=is%3Aissu
 
 MouseDesk originally shipped in French, English, German, Italian. The
 project has been structured to allow localization into additional
-languages. Since then, support for Spanish and Portuguese have been
-added. The work involved for most contributions is just to add an
-additional column to a spreadsheet which translations for each string.
+languages. Since then, support for Spanish, Portuguese, Swedish and
+Danish have been added. The work involved for most contributions is
+just to add an additional column to a spreadsheet which translations
+for each string.
 
 [DeskTop Localization Spreadsheet](https://docs.google.com/spreadsheets/d/1NIZQM4ua6ruLJk_P7MfTKN9S5LNwHwYJM_UhvY-ep3A/edit?usp=sharing)
 

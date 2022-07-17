@@ -1,0 +1,3 @@
+.define res_string_window_title "Lyde"
+.define res_string_label_alert "Alarmlyd:"
+.define res_string_name_silent "Stille"
