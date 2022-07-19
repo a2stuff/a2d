@@ -11,12 +11,13 @@
         window_id  := $12
         a_buf      := $13
         rect       := $15
-        pos        := $1D
-        max_length := $21
+        max_length := $1D
         .assert (a_buf - window_id) = (LETK::LineEditRecord::a_buf - LETK::LineEditRecord::window_id), error, "mismatch"
         .assert (rect - window_id) = (LETK::LineEditRecord::rect - LETK::LineEditRecord::window_id), error, "mismatch"
-        .assert (pos - window_id) = (LETK::LineEditRecord::pos - LETK::LineEditRecord::window_id), error, "mismatch"
         .assert (max_length - window_id) = (LETK::LineEditRecord::max_length - LETK::LineEditRecord::window_id), error, "mismatch"
+
+        ;; Calculated from rect
+        pos        := $1E
 
         ;; Call parameters copied here (0...6 bytes)
         command_data = $22
@@ -73,6 +74,9 @@
 :       copy    (a_record),y, window_id,y
         dey
         bpl     :-
+
+        add16_8 rect+MGTK::Rect::x1, #kTextBoxTextHOffset-1, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::y1, #kTextBoxTextVOffset-1, pos+MGTK::Point::ycoord
 
         jump_addr := *+1
         jmp     SELF_MODIFIED

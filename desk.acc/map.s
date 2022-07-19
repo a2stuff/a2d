@@ -248,7 +248,6 @@ buf_search:     .res    kBufSize, 0 ; search term
 window_id:      .byte   kDAWindowId
 a_buf:          .addr   buf_search
         DEFINE_RECT_SZ rect, kTextBoxLeft+1, kTextBoxTop+1, kTextBoxWidth-2, kTextBoxHeight-2
-        DEFINE_POINT pos, kTextBoxLeft + kTextBoxTextHOffset, kTextBoxTop + kTextBoxTextVOffset
 max_length:     .byte   kBufSize - 1
         .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
 .endparams

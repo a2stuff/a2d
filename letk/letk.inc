@@ -22,9 +22,6 @@ a_buf           .addr
 ;;; Bounding rect of the control
 rect            .tag    MGTK::Rect
 
-;;; Text origin within the control
-pos             .tag    MGTK::Point     ; TODO: Derive from rect?
-
 ;;; Set to the maximum length
 max_length      .byte
 

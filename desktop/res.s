@@ -449,7 +449,6 @@ buf_filename:
 window_id:      .byte   winfo_prompt_dialog::kWindowId
 a_buf:          .addr   path_buf1
         DEFINE_RECT_SZ rect, kNameInputLeft+1, kNameInputTop+1, kNameInputWidth-2, kTextBoxHeight-2
-        DEFINE_POINT pos, kNameInputLeft + kTextBoxTextHOffset, kNameInputTop + kTextBoxTextVOffset
 max_length:     .byte   kMaxFilenameLength
         .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
 .endparams

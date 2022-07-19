@@ -964,7 +964,6 @@ window_id:      .byte   kDAWindowID
 a_buf:          .addr   buf_search
         ;; NOTE: Left edges are adjusted dynamically based on label width
         DEFINE_RECT rect, kFindLeft + kLabelHOffset+1, kControlsTop+1, kDAWidth-250-1, kControlsTop + kTextBoxHeight-1
-        DEFINE_POINT pos, kTextBoxTextHOffset, kControlsTop + kTextBoxTextVOffset
 max_length:     .byte   kMaxFilenameLength
         .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
 .endparams
@@ -991,7 +990,6 @@ ycoord  := * + 2
 
         param_call MeasureString, find_label_str
         addax   input_rect::x1
-        add16   input_rect::x1, line_edit_rec::pos::xcoord, line_edit_rec::pos::xcoord
         add16_8 input_rect::x1, #1, line_edit_rec::rect::x1
 
         MGTK_CALL MGTK::OpenWindow, winfo

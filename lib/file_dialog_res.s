@@ -193,7 +193,6 @@ START:
 window_id:      .byte   kFilePickerDlgWindowID
 a_buf:          .addr   buf_input1
         DEFINE_RECT_SZ rect, kControlsLeft+1, kInput1Y+1, kCommonInputWidth-2, kCommonInputHeight-2
-        DEFINE_POINT pos, kControlsLeft + kTextBoxTextHOffset, kInput1Y + kTextBoxTextVOffset
 max_length:     .byte   kMaxPathLength
 dirty_flag:     .byte   0
         .res    .sizeof(LETK::LineEditRecord) - (*-START)
@@ -219,7 +218,6 @@ START:
 window_id:      .byte   kFilePickerDlgWindowID
 a_buf:          .addr   buf_input2
         DEFINE_RECT_SZ rect, kControlsLeft+1, kInput2Y+1, kCommonInputWidth-2, kCommonInputHeight-2
-        DEFINE_POINT pos, kControlsLeft + kTextBoxTextHOffset, kInput2Y + kTextBoxTextVOffset
 max_length:     .byte   kMaxPathLength
 dirty_flag:     .byte   0
         .res    .sizeof(LETK::LineEditRecord) - (*-START)
