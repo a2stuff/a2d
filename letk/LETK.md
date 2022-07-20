@@ -104,3 +104,16 @@ Parameters:
 ```
 .addr       a_record        Address of the LineEditRecord
 ```
+
+## Convenience Macros
+
+* `LETK_CALL` can be used to make calls in the form `LETK_CALL command, params`, if `LETKEntry` is defined.
+* `DEFINE_LINE_EDIT` can be used to instantiate a record. Parameters are:
+  * symbol (name) for the record
+  * window ID
+  * text buffer address
+  * left, top, and width of the frame rect; this will be inset by 1px as a convenience
+  * maximum length of the text
+* `DEFINE_LINE_EDIT_PARAMS` can be used to instantiate a union-style parameter block. Callers can then pass this to LETK calls, populating additional fields for `Click` and `Key` calls. Parameters are:
+  * symbol (name) for the block
+  * symbol (name) of the associated line edit record

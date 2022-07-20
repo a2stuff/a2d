@@ -43,6 +43,19 @@ ip_counter      .word
 
 .endstruct
 
+.macro DEFINE_LINE_EDIT name, winid, buf, left, top, width, maxlen
+.params name
+window_id:      .byte   winid
+a_buf:          .addr   buf
+        DEFINE_RECT_SZ rect, left+1, top+1, width-2, kTextBoxHeight-2
+max_length:     .byte   maxlen
+dirty_flag:     .byte   0
+        .res    .sizeof(LETK::LineEditRecord) - (*-window_id)
+.endparams
+.assert .sizeof(name) = .sizeof(LETK::LineEditRecord), error, "struct size"
+.endmacro
+
+
 ;;; ============================================================
 
 Init            = $00           ; Initialize LineEditRecord members
@@ -73,6 +86,20 @@ Update          = $06           ; Redraw control, e.g. after control moves or te
 ;;; .addr       record
 
 .endscope ; LETK
+
+.macro DEFINE_LINE_EDIT_PARAMS name, rec
+.params name
+record: .addr   rec
+;;; For `LETK::Key` calls:
+key       := * + 0
+modifiers := * + 1
+;;; For `LETK::Click` calls:
+coords  := * + 0
+xcoord  := * + 0
+ycoord  := * + 2
+        .res 4
+.endparams
+.endmacro
 
 ;;; ============================================================
 

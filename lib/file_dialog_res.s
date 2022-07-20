@@ -188,53 +188,14 @@ nextwinfo:      .addr   0
 ;;; ============================================================
 
 ;;; Pathname field
-.params line_edit_f1
-START:
-window_id:      .byte   kFilePickerDlgWindowID
-a_buf:          .addr   buf_input1
-        DEFINE_RECT_SZ rect, kControlsLeft+1, kInput1Y+1, kCommonInputWidth-2, kCommonInputHeight-2
-max_length:     .byte   kMaxPathLength
-dirty_flag:     .byte   0
-        .res    .sizeof(LETK::LineEditRecord) - (*-START)
-.endparams
-.assert .sizeof(line_edit_f1) = .sizeof(LETK::LineEditRecord), error, "struct size"
-
-.params le_params_f1
-record: .addr   line_edit_f1
-;;; For `LETK::Key` calls:
-key       := * + 0
-modifiers := * + 1
-;;; For `LETK::Click` calls:
-coords  := * + 0
-xcoord  := * + 0
-ycoord  := * + 2
-        .res 4
-.endparams
+        DEFINE_LINE_EDIT line_edit_f1, kFilePickerDlgWindowID, buf_input1, kControlsLeft, kInput1Y, kCommonInputWidth, kMaxPathLength
+        DEFINE_LINE_EDIT_PARAMS le_params_f1, line_edit_f1
 
 .if FD_EXTENDED
 ;;; Auxiliary field
-.params line_edit_f2
-START:
-window_id:      .byte   kFilePickerDlgWindowID
-a_buf:          .addr   buf_input2
-        DEFINE_RECT_SZ rect, kControlsLeft+1, kInput2Y+1, kCommonInputWidth-2, kCommonInputHeight-2
-max_length:     .byte   kMaxPathLength
-dirty_flag:     .byte   0
-        .res    .sizeof(LETK::LineEditRecord) - (*-START)
-.endparams
-.assert .sizeof(line_edit_f2) = .sizeof(LETK::LineEditRecord), error, "struct size"
+        DEFINE_LINE_EDIT line_edit_f2, kFilePickerDlgWindowID, buf_input2, kControlsLeft, kInput2Y, kCommonInputWidth, kMaxPathLength
+        DEFINE_LINE_EDIT_PARAMS le_params_f2, line_edit_f2
 
-.params le_params_f2
-record: .addr   line_edit_f2
-;;; For `LETK::Key` calls:
-key       := * + 0
-modifiers := * + 1
-;;; For `LETK::Click` calls:
-coords  := * + 0
-xcoord  := * + 0
-ycoord  := * + 2
-        .res 4
-.endparams
 .endif ; FD_EXTENDED
 
 .endscope ; file_dialog_res

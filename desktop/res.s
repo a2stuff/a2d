@@ -445,26 +445,8 @@ buf_filename:
 ;;; ============================================================
 ;;; Name prompt dialog (used for Rename, Duplicate, Format, Erase)
 
-.params line_edit_rec
-window_id:      .byte   winfo_prompt_dialog::kWindowId
-a_buf:          .addr   path_buf1
-        DEFINE_RECT_SZ rect, kNameInputLeft+1, kNameInputTop+1, kNameInputWidth-2, kTextBoxHeight-2
-max_length:     .byte   kMaxFilenameLength
-        .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
-.endparams
-.assert .sizeof(line_edit_rec) = .sizeof(LETK::LineEditRecord), error, "struct size"
-
-.params le_params
-record: .addr   line_edit_rec
-;;; For `LETK::Key` calls:
-key       := * + 0
-modifiers := * + 1
-;;; For `LETK::Click` calls:
-coords  := * + 0
-xcoord  := * + 0
-ycoord  := * + 2
-        .res 4
-.endparams
+        DEFINE_LINE_EDIT line_edit_rec, winfo_prompt_dialog::kWindowId, path_buf1, kNameInputLeft, kNameInputTop, kNameInputWidth, kMaxFilenameLength
+        DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
 
 ;;; ============================================================
 

@@ -959,27 +959,8 @@ top_row:        .byte   0
 ;;; ============================================================
 ;;; Search field
 
-.params line_edit_rec
-window_id:      .byte   kDAWindowID
-a_buf:          .addr   buf_search
-        ;; NOTE: Left edges are adjusted dynamically based on label width
-        DEFINE_RECT rect, kFindLeft + kLabelHOffset+1, kControlsTop+1, kDAWidth-250-1, kControlsTop + kTextBoxHeight-1
-max_length:     .byte   kMaxFilenameLength
-        .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
-.endparams
-.assert .sizeof(line_edit_rec) = .sizeof(LETK::LineEditRecord), error, "struct size"
-
-.params le_params
-record: .addr   line_edit_rec
-;;; For `LETK::Key` calls:
-key       := * + 0
-modifiers := * + 1
-;;; For `LETK::Click` calls:
-coords  := * + 0
-xcoord  := * + 0
-ycoord  := * + 2
-        .res 4
-.endparams
+        DEFINE_LINE_EDIT line_edit_rec, kDAWindowID, buf_search, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250-(kFindLeft+kLabelHOffset), kMaxFilenameLength
+        DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
 
 ;;; ============================================================
 

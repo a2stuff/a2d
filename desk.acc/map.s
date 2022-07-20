@@ -244,26 +244,8 @@ cursor_ibeam_flag: .byte   0
 kBufSize = 16                       ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
 
-.params line_edit_rec
-window_id:      .byte   kDAWindowId
-a_buf:          .addr   buf_search
-        DEFINE_RECT_SZ rect, kTextBoxLeft+1, kTextBoxTop+1, kTextBoxWidth-2, kTextBoxHeight-2
-max_length:     .byte   kBufSize - 1
-        .res    .sizeof(LETK::LineEditRecord) - (*-::line_edit_rec)
-.endparams
-.assert .sizeof(line_edit_rec) = .sizeof(LETK::LineEditRecord), error, "struct size"
-
-.params le_params
-record: .addr   line_edit_rec
-;;; For `LETK::Key` calls:
-key       := * + 0
-modifiers := * + 1
-;;; For `LETK::Click` calls:
-coords  := * + 0
-xcoord  := * + 0
-ycoord  := * + 2
-        .res 4
-.endparams
+        DEFINE_LINE_EDIT line_edit_rec, kDAWindowId, buf_search, kTextBoxLeft, kTextBoxTop, kTextBoxWidth, kBufSize - 1
+        DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
 
 ;;; ============================================================
 
