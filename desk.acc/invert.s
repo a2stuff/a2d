@@ -58,7 +58,7 @@ save_stack:.byte   0
 
 event_params:   .tag MGTK::Event
 grafport:       .tag MGTK::GrafPort
-penxor:         .byte   MGTK::penXOR
+penXOR:         .byte   MGTK::penXOR
         DEFINE_RECT rect, 0, 0, kScreenWidth-1, kScreenHeight-1
 
 
@@ -92,7 +92,7 @@ exit:   jmp     Invert
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect
         MGTK_CALL MGTK::ShowCursor
         rts

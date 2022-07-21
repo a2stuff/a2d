@@ -2970,10 +2970,11 @@ case2:
 .endscope ; icon_toolkit
 
 ;;; ============================================================
-;;; Line Edit ToolKit
+;;; ToolKits
 ;;; ============================================================
 
-        .include "../letk/letk.s"
+        .include "../toolkits/letk.s"
+        .include "../toolkits/btk.s"
 
 ;;; ============================================================
 ;;; Menus
@@ -3144,11 +3145,17 @@ special_menu:
 
         DEFINE_RECT_FRAME confirm_dialog_frame_rect, kPromptDialogWidth, kPromptDialogHeight
 
-        DEFINE_BUTTON ok,     res_string_button_ok, 260, kPromptDialogHeight-19
-        DEFINE_BUTTON cancel, res_string_button_cancel,   40, kPromptDialogHeight-19
-        DEFINE_BUTTON yes,    res_string_prompt_button_yes, 200, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON no,     res_string_prompt_button_no,  260, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON all,    res_string_prompt_button_all, 320, kPromptDialogHeight-19,40,kButtonHeight
+        kPromptWindowId = $0F
+        DEFINE_BUTTON ok_button_rec, kPromptWindowId, res_string_button_ok, 260, kPromptDialogHeight-19
+        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+        DEFINE_BUTTON cancel_button_rec, kPromptWindowId, res_string_button_cancel,   40, kPromptDialogHeight-19
+        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
+        DEFINE_BUTTON yes_button_rec, kPromptWindowId, res_string_prompt_button_yes, 200, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON_PARAMS yes_button_params, yes_button_rec
+        DEFINE_BUTTON no_button_rec, kPromptWindowId, res_string_prompt_button_no,  260, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON_PARAMS no_button_params, no_button_rec
+        DEFINE_BUTTON all_button_rec, kPromptWindowId, res_string_prompt_button_all, 320, kPromptDialogHeight-19,40,kButtonHeight
+        DEFINE_BUTTON_PARAMS all_button_params, all_button_rec
 
 textbg_black:  .byte   $00
 textbg_white:  .byte   $7F
@@ -3670,6 +3677,8 @@ app_mask:
 ;;; Relay table at fixed memory location (see desktop.s)
 ;;; These are used by DAs calling directly from aux.
 
+        PAD_TO ::BTKAuxEntry
+        jmp     btk::BTKEntry
         PAD_TO ::LETKAuxEntry
         jmp     letk::LETKEntry
 

@@ -13,10 +13,12 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
+        BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
 
@@ -195,8 +197,10 @@ grid_pen:
 
         kArrowDX = 16
         kArrowDY = 10
-        DEFINE_BUTTON left, kGlyphLeftArrow, 40, 2, kArrowDX, kArrowDY
-        DEFINE_BUTTON right, kGlyphRightArrow, kDAWidth - kArrowDX - 40, 2, kArrowDX, kArrowDY
+        DEFINE_BUTTON left_button_rec, kDAWindowId, kGlyphLeftArrow, 40, 2, kArrowDX, kArrowDY
+        DEFINE_BUTTON_PARAMS left_button_params, left_button_rec
+        DEFINE_BUTTON right_button_rec, kDAWindowId, kGlyphRightArrow, kDAWidth - kArrowDX - 40, 2, kArrowDX, kArrowDY
+        DEFINE_BUTTON_PARAMS right_button_params, right_button_rec
 
         DEFINE_RECT rect_month_year, kArrowDX+44, 0, kDAWidth-kArrowDX-44, 11
 
@@ -244,11 +248,6 @@ minute: .byte   0
 ;;; ============================================================
 
 .proc Init
-        ;; Lazy...
-        sub16_8 left_button_pos::ycoord, #1, left_button_pos::ycoord
-        sub16_8 right_button_pos::ycoord, #1, right_button_pos::ycoord
-
-
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
@@ -335,7 +334,7 @@ fin:    jsr     UpdateWindow
     IF_NE
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
-        MGTK_CALL MGTK::PaintRect, left_button_rect
+        MGTK_CALL MGTK::PaintRect, left_button_rec::rect
     END_IF
         rts
 .endproc
@@ -370,7 +369,7 @@ fin:    jsr     UpdateWindow
     IF_NE
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
-        MGTK_CALL MGTK::PaintRect, right_button_rect
+        MGTK_CALL MGTK::PaintRect, right_button_rec::rect
     END_IF
         rts
 .endproc
@@ -411,11 +410,11 @@ common: bit     dragwindow_params::moved
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, left_button_rect
+        MGTK_CALL MGTK::InRect, left_button_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     DecDate
 
-        MGTK_CALL MGTK::InRect, right_button_rect
+        MGTK_CALL MGTK::InRect, right_button_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     IncDate
 
@@ -448,21 +447,6 @@ update: lda     #0
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
-
-        ;; --------------------------------------------------
-        ;; Left/right arrow buttons
-
-        bit     full_flag
-    IF_MINUS
-        MGTK_CALL MGTK::SetPenMode, notpenXOR
-        MGTK_CALL MGTK::MoveTo, left_button_pos
-        param_call DrawString, left_button_label
-        MGTK_CALL MGTK::FrameRect, left_button_rect
-        MGTK_CALL MGTK::MoveTo, right_button_pos
-        param_call DrawString, right_button_label
-        MGTK_CALL MGTK::FrameRect, right_button_rect
-        MGTK_CALL MGTK::SetPenMode, pencopy
-    END_IF
 
         ;; --------------------------------------------------
 
@@ -657,6 +641,15 @@ draw_date:
         lda     date
         cmp     #39             ; extra, to erase previous days
         jne     day_loop
+
+        ;; --------------------------------------------------
+        ;; Left/right arrow buttons
+
+        bit     full_flag
+    IF_MINUS
+        BTK_CALL BTK::Draw, left_button_params
+        BTK_CALL BTK::Draw, right_button_params
+    END_IF
 
         ;; --------------------------------------------------
         ;; Finish up

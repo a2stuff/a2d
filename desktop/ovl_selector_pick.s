@@ -11,6 +11,7 @@
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
+        BTKEntry := BTKRelayImpl
 
 io_buf := $0800
 
@@ -452,15 +453,8 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         MGTK_CALL MGTK::MoveTo, entry_picker_line2_start
         MGTK_CALL MGTK::LineTo, entry_picker_line2_end
 
-        MGTK_CALL MGTK::SetPenMode, penXOR
-
-        MGTK_CALL MGTK::FrameRect, entry_picker_ok_button_rect
-        MGTK_CALL MGTK::MoveTo, entry_picker_ok_button_pos
-        param_call main::DrawString, entry_picker_ok_button_label
-
-        MGTK_CALL MGTK::FrameRect, entry_picker_cancel_button_rect
-        MGTK_CALL MGTK::MoveTo, entry_picker_cancel_button_pos
-        param_call main::DrawString, entry_picker_cancel_button_label
+        BTK_CALL BTK::Draw, entry_picker_ok_button_params
+        BTK_CALL BTK::Draw, entry_picker_cancel_button_params
 
         lda     selector_action
         cmp     #SelectorAction::edit
@@ -647,18 +641,18 @@ handle_button:
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, entry_picker_ok_button_rect
+        MGTK_CALL MGTK::InRect, entry_picker_ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
-        param_call main::ButtonClick, winfo_entry_picker::kWindowId, entry_picker_ok_button_rect
+        BTK_CALL BTK::Track, entry_picker_ok_button_params
         bmi     :+              ; nothing selected, re-enter loop
         lda     #$00            ; OK selected
 :       rts
 
-not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_button_rect
+not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     not_cancel
-        param_call main::ButtonClick, winfo_entry_picker::kWindowId, entry_picker_cancel_button_rect
+        BTK_CALL BTK::Track, entry_picker_cancel_button_params
         bmi     :+              ; nothing selected, re-enter loop
         lda     #$01            ; Cancel selected
 :       rts
@@ -756,14 +750,14 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleKeyReturn
-        param_call main::ButtonFlash, winfo_entry_picker::kWindowId, entry_picker_ok_button_rect
+        BTK_CALL BTK::Flash, entry_picker_ok_button_params
         return  #0
 .endproc
 
 ;;; ============================================================
 
 .proc HandleKeyEscape
-        param_call main::ButtonFlash, winfo_entry_picker::kWindowId, entry_picker_cancel_button_rect
+        BTK_CALL BTK::Flash, entry_picker_cancel_button_params
         return  #1
 .endproc
 

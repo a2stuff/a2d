@@ -380,9 +380,7 @@ common: bit     dragwindow_params::moved
 
 ;;; ============================================================
 
-penXOR:         .byte   MGTK::penXOR
 pencopy:        .byte   MGTK::pencopy
-penBIC:         .byte   MGTK::penBIC
 notpencopy:     .byte   MGTK::notpencopy
 
 

@@ -11,12 +11,14 @@
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../mgtk/mgtk.inc"
-        .include "../letk/letk.inc"
+        .include "../toolkits/letk.inc"
+        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
         LETKEntry := LETKAuxEntry
+        BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
 
@@ -70,7 +72,8 @@ kTextBoxLeft = kControlsLeft
 kTextBoxTop = kRow1
 kTextBoxWidth = 7 * 15 + 2 * kTextBoxTextHOffset
         DEFINE_RECT_SZ input_rect, kTextBoxLeft, kTextBoxTop, kTextBoxWidth, kTextBoxHeight
-        DEFINE_BUTTON find, res_string_button_find, kTextBoxLeft + kTextBoxWidth + 5, kTextBoxTop, 62
+        DEFINE_BUTTON find_button_rec, kDAWindowId, res_string_button_find, kTextBoxLeft + kTextBoxWidth + 5, kTextBoxTop, 62
+        DEFINE_BUTTON_PARAMS btn_params, find_button_rec
 
 kLabelLeft = kControlsLeft + kTextBoxTextHOffset
 kValueLeft = 80
@@ -291,7 +294,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 
         cmp     #CHAR_RETURN
     IF_EQ
-        param_call ButtonFlash, kDAWindowId, find_button_rect
+        BTK_CALL BTK::Flash, btn_params
         jsr     DoFind
         jmp     InputLoop
     END_IF
@@ -466,9 +469,9 @@ ret:    rts
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ;; Click in button?
-        MGTK_CALL MGTK::InRect, find_button_rect
+        MGTK_CALL MGTK::InRect, find_button_rec::rect
     IF_NE
-        param_call ButtonClick, kDAWindowId, find_button_rect
+        BTK_CALL BTK::Track, btn_params
         bmi     :+
         jsr     DoFind
 :       jmp     done
@@ -526,8 +529,6 @@ done:   jmp     InputLoop
 ;;; ============================================================
 
 penXOR:         .byte   MGTK::penXOR
-pencopy:        .byte   MGTK::pencopy
-penBIC:         .byte   MGTK::penBIC
 notpencopy:     .byte   MGTK::notpencopy
 
 ;;; ============================================================
@@ -612,11 +613,7 @@ done:   jmp     InputLoop
 
         jsr     DrawLatLong
 
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, find_button_rect
-        MGTK_CALL MGTK::MoveTo, find_button_pos
-        param_call DrawString, find_button_label
-
+        BTK_CALL BTK::Draw, btn_params
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, input_rect
@@ -742,7 +739,6 @@ sflag:  .byte   0
         .include "../lib/drawstring.s"
         .include "../lib/inttostring.s"
         .include "../lib/muldiv.s"
-        .include "../lib/button.s"
 
 ;;; ============================================================
 

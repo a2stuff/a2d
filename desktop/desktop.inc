@@ -10,8 +10,10 @@
 ;;; MGTK loaded into AUX; to call from MAIN use JUMP_TABLE_MGTK_CALL
 MGTKAuxEntry    := $4000
 
-;;; LETK loaded into AUX; to call from MAIN use JUMP_TABLE_LETK_CALL
-LETKAuxEntry    := $BFFD
+;;; BTK loaded into AUX
+BTKAuxEntry    := $C000-6
+;;; LETK loaded into AUX
+LETKAuxEntry    := $C000-3
 
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) using
 ;;; an I/O buffer (Main $1C00-1FFF). DAs often copy themselves

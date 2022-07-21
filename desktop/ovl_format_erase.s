@@ -9,6 +9,7 @@
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
+        BTKEntry := BTKRelayImpl
 
         block_buffer := $1A00
         read_buffer := $1C00
@@ -341,7 +342,7 @@ valid:  cmp     selected_device_index
         bmi     l6
 
         ;; Activated by double-click
-l5:     param_call main::ButtonFlash, winfo_prompt_dialog::kWindowId, aux::ok_button_rect
+l5:     BTK_CALL BTK::Flash, aux::ok_button_params
         lda     #$00
 l6:     rts
 

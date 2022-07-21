@@ -281,8 +281,10 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok,      res_string_button_ok, winfo::kWidth - kButtonWidth - 60, winfo::kHeight - 18
-        DEFINE_BUTTON desktop, res_string_button_desktop,                           60, winfo::kHeight - 18
+        DEFINE_BUTTON ok_button_rec,      winfo::kDialogId, res_string_button_ok, winfo::kWidth - kButtonWidth - 60, winfo::kHeight - 18
+        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+        DEFINE_BUTTON desktop_button_rec, winfo::kDialogId, res_string_button_desktop,                           60, winfo::kHeight - 18
+        DEFINE_BUTTON_PARAMS desktop_button_params, desktop_button_rec
 
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
@@ -684,7 +686,7 @@ quick_boot_slot:
         cmp     #TO_LOWER(kShortcutRunDeskTop)
         bne     not_desktop
 
-:       param_call ButtonFlash, winfo::kDialogId, desktop_button_rect
+:       BTK_CALL BTK::Flash, desktop_button_params
 @retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
         beq     :+
         lda     #AlertID::insert_system_disk
@@ -907,11 +909,11 @@ L9443:  lda     #AlertID::insert_system_disk
 
         ;; OK button?
 
-        MGTK_CALL MGTK::InRect, ok_button_rect
+        MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     check_desktop_btn
 
-        param_call ButtonClick, winfo::kDialogId, ok_button_rect
+        BTK_CALL BTK::Track, ok_button_params
         bmi     done
         jsr     TryInvokeSelectedIndex
 done:   rts
@@ -921,11 +923,11 @@ done:   rts
 check_desktop_btn:
         bit     desktop_available_flag
         bmi     check_entries
-        MGTK_CALL MGTK::InRect, desktop_button_rect
+        MGTK_CALL MGTK::InRect, desktop_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     check_entries
 
-        param_call ButtonClick, winfo::kDialogId, desktop_button_rect
+        BTK_CALL BTK::Track, desktop_button_params
         bmi     done
 
 @retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
@@ -1082,7 +1084,7 @@ no_cur_sel:
 control_char:
         cmp     #CHAR_RETURN
         bne     not_return
-        param_call ButtonFlash, winfo::kDialogId, ok_button_rect
+        BTK_CALL BTK::Flash, ok_button_params
         jmp     TryInvokeSelectedIndex
 not_return:
 
@@ -1486,38 +1488,20 @@ backup_devlst:
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, rect_frame
 
-        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-
-        bit     desktop_available_flag
-        bmi     :+
-        MGTK_CALL MGTK::FrameRect, desktop_button_rect
-:
         param_call DrawTitleString, str_selector_title
-        jsr     DrawOkLabel
+
+        BTK_CALL BTK::Draw, ok_button_params
         bit     desktop_available_flag
-        bmi     :+
-        jsr     DrawDesktopLabel
-:
+    IF_NC
+        BTK_CALL BTK::Draw, desktop_button_params
+    END_IF
+
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::MoveTo, line1_pt1
         MGTK_CALL MGTK::LineTo, line1_pt2
         MGTK_CALL MGTK::MoveTo, line2_pt1
         MGTK_CALL MGTK::LineTo, line2_pt2
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc DrawOkLabel
-        MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call DrawString, ok_button_label
-        rts
-.endproc
-
-.proc DrawDesktopLabel
-        MGTK_CALL MGTK::MoveTo, desktop_button_pos
-        param_call DrawString, desktop_button_label
         rts
 .endproc
 
@@ -2149,8 +2133,6 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         rts
 .endproc
 
-        .include "../lib/button.s"
-
 ;;; ============================================================
 
 ;;; NOTE: Can't use "../lib/ramcard.s" since the calling code is
@@ -2457,6 +2439,9 @@ pb2_initial_state:
         .include "../lib/clear_dhr.s"
         .include "../lib/disconnect_ram.s"
         .include "../lib/reconnect_ram.s"
+
+        .include "../toolkits/btk.s"
+        BTKEntry := btk::BTKEntry
 
 ;;; ============================================================
 ;;; Settings - modified by Control Panels

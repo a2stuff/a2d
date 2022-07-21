@@ -139,13 +139,25 @@ reserved:       .byte   0
 .endparams
 .endif ; AD_SAVEBG
 
-        DEFINE_BUTTON ok,        res_string_button_ok,          300, 37
-        DEFINE_BUTTON try_again, res_string_button_try_again,   300, 37
-        DEFINE_BUTTON cancel,    res_string_button_cancel,       20, 37
+.macro DEFINE_ALERT_BUTTON ident, label, xpos, ypos, width, height
+        .ident(.sprintf("%s_button_record", .string(ident))) := *
+.if .paramcount = 5
+        DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), (width), kButtonHeight
+.else
+        DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), kButtonWidth, kButtonHeight
+.endif
+        DEFINE_POINT .ident(.sprintf("%s_button_pos", .string(ident))), ((xpos) + kButtonTextHOffset), ((ypos) + kButtonTextVOffset)
+        .ident(.sprintf("%s_button_label", .string(ident))) := *
+        PASCAL_STRING {label}
+.endmacro
+
+        DEFINE_ALERT_BUTTON ok,        res_string_button_ok,          300, 37
+        DEFINE_ALERT_BUTTON try_again, res_string_button_try_again,   300, 37
+        DEFINE_ALERT_BUTTON cancel,    res_string_button_cancel,       20, 37
 
 .if AD_YESNO
-        DEFINE_BUTTON yes, res_string_button_yes, 250, 37, 50, kButtonHeight
-        DEFINE_BUTTON no,  res_string_button_no,  350, 37, 50, kButtonHeight
+        DEFINE_ALERT_BUTTON yes, res_string_button_yes, 250, 37, 50
+        DEFINE_ALERT_BUTTON no,  res_string_button_no,  350, 37, 50
 .endif ; AD_YESNO
 
         kTextLeft = 75

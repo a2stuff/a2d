@@ -8,6 +8,7 @@
         .include "../inc/smartport.inc"
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
+        .include "../toolkits/btk.inc"
         .include "disk_copy.inc"
 
 ;;; ============================================================

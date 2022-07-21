@@ -11,6 +11,7 @@
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
         LETKEntry := LETKRelayImpl
+        BTKEntry := BTKRelayImpl
 
 ;;; ============================================================
 
@@ -24,8 +25,6 @@ MLIRelayImpl            := main::MLIRelayImpl
 CheckMouseMoved         := main::CheckMouseMoved
 YieldLoop               := main::YieldLoop
 DetectDoubleClick       := main::StashCoordsAndDetectDoubleClick
-ButtonClick             := main::ButtonClick
-ButtonFlash             := main::ButtonFlash
 ModifierDown            := main::ModifierDown
 ShiftDown               := main::ShiftDown
 AdjustVolumeNameCase    := main::AdjustVolumeNameCase

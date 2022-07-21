@@ -104,7 +104,7 @@ background_pattern:
 
         DEFINE_RECT background_rect, 0, 0, kDAWidth, kDAHeight
 
-penxor:
+penXOR:
         .byte   MGTK::penXOR
 pencopy:
         .byte   MGTK::pencopy
@@ -628,7 +628,7 @@ start:  lda     KBD
         beq     done
 
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintPoly, tmp_poly
 
 :       bit     KBDSTRB

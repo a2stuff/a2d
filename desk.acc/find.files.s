@@ -15,12 +15,14 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
-        .include "../letk/letk.inc"
+        .include "../toolkits/letk.inc"
+        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
         LETKEntry := LETKAuxEntry
+        BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
 ;;; Memory map
@@ -940,11 +942,12 @@ grafport_win:   .tag    MGTK::GrafPort
         ;; Left edges are adjusted dynamically based on label width
         DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
 
-        DEFINE_BUTTON search, res_string_button_search, kDAWidth-235, kControlsTop
-        DEFINE_BUTTON cancel, res_string_button_cancel, kDAWidth-120, kControlsTop
+        DEFINE_BUTTON search_button_rec, kDAWindowID, res_string_button_search, kDAWidth-235, kControlsTop
+        DEFINE_BUTTON_PARAMS search_button_params, search_button_rec
 
-penXOR:         .byte   MGTK::penXOR
-pencopy:        .byte   MGTK::pencopy
+        DEFINE_BUTTON cancel_button_rec, kDAWindowID, res_string_button_cancel, kDAWidth-120, kControlsTop
+        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
+
 notpencopy:     .byte   MGTK::notpencopy
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
@@ -1053,13 +1056,13 @@ top_row:        .byte   0
         ;; Not modified
         cmp     #CHAR_ESCAPE
       IF_EQ
-        param_call ButtonFlash, kDAWindowID, cancel_button_rect
+        BTK_CALL BTK::Flash, cancel_button_params
         jmp     Exit
       END_IF
 
         cmp     #CHAR_RETURN
       IF_EQ
-        param_call ButtonFlash, kDAWindowID, search_button_rect
+        BTK_CALL BTK::Flash, search_button_params
         jmp     DoSearch
       END_IF
 
@@ -1203,14 +1206,17 @@ finish: jmp     InputLoop
         ;; Click in DA content area
         copy    #kDAWindowID, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        param_call ButtonPress, search_button_rect
+        MGTK_CALL MGTK::InRect, search_button_rec::rect
         beq     :+
+        BTK_CALL BTK::Track, search_button_params
         bmi     done
         jmp     DoSearch
 :
-        param_call ButtonPress, cancel_button_rect
+        MGTK_CALL MGTK::InRect, cancel_button_rec::rect
         beq     :+
+        BTK_CALL BTK::Track, cancel_button_params
         bmi     done
         jmp     Exit
 :
@@ -1369,31 +1375,6 @@ bottom: add16   winfo_results::maprect::y1, #kResultsHeight, winfo_results::mapr
 .endproc
 
 ;;; ============================================================
-;;; Call with rect addr in A,X
-;;; Returns: 0 (beq) if outside, $FF (bmi) if canceled, 1 if clicked
-
-.proc ButtonPress
-        kOutside         = 0
-        kCanceled        = $FF
-        kClicked         = 1
-
-        stax    inrect_addr
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, 0, inrect_addr
-        cmp     #MGTK::inrect_inside
-        beq     :+
-        lda     #kOutside
-        rts
-:
-        ldax    inrect_addr
-        ldy     #kDAWindowID
-        jsr     ButtonClick
-        bmi     :+
-        lda     #kClicked
-:       rts
-.endproc
-
-;;; ============================================================
 ;;; Determine if mouse moved (returns w/ carry set if moved)
 ;;; Used in dialogs to possibly change cursor
 
@@ -1461,14 +1442,8 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::MoveTo, find_label_pos
         param_call DrawString, find_label_str
 
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, search_button_rect
-        MGTK_CALL MGTK::MoveTo, search_button_pos
-        param_call DrawString, search_button_label
-
-        MGTK_CALL MGTK::FrameRect, cancel_button_rect
-        MGTK_CALL MGTK::MoveTo, cancel_button_pos
-        param_call DrawString, cancel_button_label
+        BTK_CALL BTK::Draw, search_button_params
+        BTK_CALL BTK::Draw, cancel_button_params
 
         MGTK_CALL MGTK::ShowCursor
 done:   rts
@@ -1537,7 +1512,6 @@ done:   MGTK_CALL MGTK::ShowCursor
 
 ;;; ============================================================
 
-        .include "../lib/button.s"
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
 

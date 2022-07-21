@@ -367,7 +367,7 @@ tmpw:   .word   0
 
 ;;; ============================================================
 
-penxor: .byte   MGTK::penXOR
+penXOR: .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 
 kPenW    = 8
@@ -451,7 +451,7 @@ kMoveThresholdY = 5
         jmp     draw_pupils
 
 erase_pupils:
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPenSize, pupil_pensize
 
         MGTK_CALL MGTK::MoveTo, pos_l
@@ -460,7 +460,7 @@ erase_pupils:
         MGTK_CALL MGTK::LineTo, pos_r
 
 draw_pupils:
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPenSize, pupil_pensize
 
         add16 winfo::maprect::x2, #2, rx ; width / 4

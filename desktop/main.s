@@ -15,6 +15,7 @@
         MLIEntry  := MLIRelayImpl
         MGTKEntry := ::MGTKRelayImpl
         LETKEntry := LETKRelayImpl
+        BTKEntry := BTKRelayImpl
         ITKEntry  := ITKRelayImpl
 
 kShortcutResize = res_char_resize_shortcut
@@ -13936,40 +13937,40 @@ content:
         bit     prompt_button_flags
         jvs     check_button_yes
 
-        MGTK_CALL MGTK::InRect, aux::ok_button_rect
+        MGTK_CALL MGTK::InRect, aux::ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         beq     check_button_ok
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        param_call ButtonClick, winfo_prompt_dialog::kWindowId, aux::ok_button_rect
+        BTK_CALL BTK::Track, aux::ok_button_params
         bmi     :+
         lda     #PromptResult::ok
 :       rts
 
 check_button_yes:
-        MGTK_CALL MGTK::InRect, aux::yes_button_rect
+        MGTK_CALL MGTK::InRect, aux::yes_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     check_button_no
-        param_call ButtonClick, winfo_prompt_dialog::kWindowId, aux::yes_button_rect
+        BTK_CALL BTK::Track, aux::yes_button_params
         bmi     :+
         lda     #PromptResult::yes
 :       rts
 
 check_button_no:
-        MGTK_CALL MGTK::InRect, aux::no_button_rect
+        MGTK_CALL MGTK::InRect, aux::no_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     check_button_all
-        param_call ButtonClick, winfo_prompt_dialog::kWindowId, aux::no_button_rect
+        BTK_CALL BTK::Track, aux::no_button_params
         bmi     :+
         lda     #PromptResult::no
 :       rts
 
 check_button_all:
-        MGTK_CALL MGTK::InRect, aux::all_button_rect
+        MGTK_CALL MGTK::InRect, aux::all_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     maybe_check_button_cancel
-        param_call ButtonClick, winfo_prompt_dialog::kWindowId, aux::all_button_rect
+        BTK_CALL BTK::Track, aux::all_button_params
         bmi     :+
         lda     #PromptResult::all
 :       rts
@@ -13980,10 +13981,10 @@ maybe_check_button_cancel:
         return  #$FF
 
 check_button_cancel:
-        MGTK_CALL MGTK::InRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::InRect, aux::cancel_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonClick, winfo_prompt_dialog::kWindowId, aux::cancel_button_rect
+        BTK_CALL BTK::Track, aux::cancel_button_params
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
@@ -14081,22 +14082,22 @@ ignore:
 
         ;; --------------------------------------------------
 
-do_yes: param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::yes_button_rect
+do_yes: BTK_CALL BTK::Flash, aux::yes_button_params
         return  #PromptResult::yes
 
-do_no:  param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::no_button_rect
+do_no:  BTK_CALL BTK::Flash, aux::no_button_params
         return  #PromptResult::no
 
-do_all: param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::all_button_rect
+do_all: BTK_CALL BTK::Flash, aux::all_button_params
         return  #PromptResult::all
 
 .proc HandleKeyOk
-        param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::ok_button_rect
+        BTK_CALL BTK::Flash, aux::ok_button_params
         return  #0
 .endproc
 
 .proc HandleKeyCancel
-        param_call ButtonFlash, winfo_prompt_dialog::kWindowId, aux::cancel_button_rect
+        BTK_CALL BTK::Flash, aux::cancel_button_params
         return  #1
 .endproc
 
@@ -15201,34 +15202,20 @@ string: .addr   0
 
 ;;; ============================================================
 
-;;; Caller must set XOR penmode
 .proc DrawOkFrameAndLabel
-        MGTK_CALL MGTK::FrameRect, aux::ok_button_rect
-        MGTK_CALL MGTK::MoveTo, aux::ok_button_pos
-        param_jump DrawString, aux::ok_button_label
+        BTK_CALL BTK::Draw, aux::ok_button_params
+        rts
 .endproc
 
-;;; Caller must set XOR penmode
 .proc DrawCancelFrameAndLabel
-        MGTK_CALL MGTK::FrameRect, aux::cancel_button_rect
-        MGTK_CALL MGTK::MoveTo, aux::cancel_button_pos
-        param_jump DrawString, aux::cancel_button_label
+        BTK_CALL BTK::Draw, aux::cancel_button_params
+        rts
 .endproc
 
 .proc DrawYesNoAllCancelButtons
-        jsr     SetPenModeXOR
-
-        MGTK_CALL MGTK::FrameRect, aux::yes_button_rect
-        MGTK_CALL MGTK::MoveTo, aux::yes_button_pos
-        param_call DrawString, aux::yes_button_label
-
-        MGTK_CALL MGTK::FrameRect, aux::no_button_rect
-        MGTK_CALL MGTK::MoveTo, aux::no_button_pos
-        param_call DrawString, aux::no_button_label
-
-        MGTK_CALL MGTK::FrameRect, aux::all_button_rect
-        MGTK_CALL MGTK::MoveTo, aux::all_button_pos
-        param_call DrawString, aux::all_button_label
+        BTK_CALL BTK::Draw, aux::yes_button_params
+        BTK_CALL BTK::Draw, aux::no_button_params
+        BTK_CALL BTK::Draw, aux::all_button_params
 
         jsr     DrawCancelFrameAndLabel
         copy    #$40, prompt_button_flags
@@ -15237,15 +15224,14 @@ string: .addr   0
 
 .proc EraseYesNoAllCancelButtons
         jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::yes_button_rect
-        MGTK_CALL MGTK::PaintRect, aux::no_button_rect
-        MGTK_CALL MGTK::PaintRect, aux::all_button_rect
-        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::yes_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, aux::no_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, aux::all_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rec::rect
         rts
 .endproc
 
 .proc DrawOkCancelButtons
-        jsr     SetPenModeXOR
         jsr     DrawOkFrameAndLabel
         jsr     DrawCancelFrameAndLabel
         copy    #$00, prompt_button_flags
@@ -15254,13 +15240,12 @@ string: .addr   0
 
 .proc EraseOkCancelButtons
         jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
-        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rec::rect
         rts
 .endproc
 
 .proc DrawOkButton
-        jsr     SetPenModeXOR
         jsr     DrawOkFrameAndLabel
         copy    #$80, prompt_button_flags
         rts
@@ -15268,7 +15253,7 @@ string: .addr   0
 
 .proc EraseOkButton
         jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rect
+        MGTK_CALL MGTK::PaintRect, aux::ok_button_rec::rect
         rts
 .endproc
 
@@ -15859,7 +15844,6 @@ ret:    rts
         .include "../lib/datetime.s"
         .include "../lib/is_diskii.s"
         grafport_win := window_grafport
-        .include "../lib/button.s"
         .include "../lib/doubleclick.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/muldiv.s"

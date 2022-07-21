@@ -13,10 +13,12 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
+        BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
 
@@ -185,7 +187,6 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
 penXOR:         .byte   MGTK::penXOR
 pencopy:        .byte   MGTK::pencopy
-penBIC:         .byte   MGTK::penBIC
 notpencopy:     .byte   MGTK::notpencopy
 
 .params winfo
@@ -230,7 +231,8 @@ nextwinfo:      .addr   0
         kTextHeight = kSystemFontHeight
         kButtonMarginY = 6
 
-        DEFINE_BUTTON ok, res_string_button_ok, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
+        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
+        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
         DEFINE_LABEL alert_sound, res_string_label_alert, kMarginX, kMarginY+kTextHeight
         kLabelWidth = 105
@@ -390,13 +392,13 @@ grafport_win:       .tag    MGTK::GrafPort
         lda     event_params::key
         cmp     #CHAR_ESCAPE
     IF_EQ
-        param_call ButtonFlash, kDAWindowId, ok_button_rect
+        BTK_CALL BTK::Flash, ok_button_params
         jmp     Exit
     END_IF
 
         cmp     #CHAR_RETURN
     IF_EQ
-        param_call ButtonFlash, kDAWindowId, ok_button_rect
+        BTK_CALL BTK::Flash, ok_button_params
         jmp     Exit
     END_IF
 
@@ -530,10 +532,10 @@ modifiers:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, ok_button_rect
+        MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonClick, kDAWindowId, ok_button_rect
+        BTK_CALL BTK::Track, ok_button_params
         jeq     Exit
         jmp     InputLoop
     END_IF
@@ -816,11 +818,7 @@ ret:    rts
         MGTK_CALL MGTK::MoveTo, alert_sound_label_pos
         param_call DrawString, alert_sound_label_str
 
-
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-        MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call DrawString, ok_button_label
+        BTK_CALL BTK::Draw, ok_button_params
 
         ;; ============================================================
         ;; List Box
@@ -1521,7 +1519,6 @@ END_SOUND_PROC
 ;;; ============================================================
 
         .include "../lib/drawstring.s"
-        .include "../lib/button.s"
         .include "../lib/muldiv.s"
 
 ;;; ============================================================

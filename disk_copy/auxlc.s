@@ -52,14 +52,14 @@ start:
 ;;; ============================================================
 ;;; Resources
 
-pencopy:        .byte   0
-penOR:          .byte   1
-penXOR:         .byte   2
-penBIC:         .byte   3
-notpencopy:     .byte   4
-notpenOR:       .byte   5
-notpenXOR:      .byte   6
-notpenBIC:      .byte   7
+pencopy:        .byte   MGTK::pencopy
+penOR:          .byte   MGTK::penOR
+penXOR:         .byte   MGTK::penXOR
+penBIC:         .byte   MGTK::penBIC
+notpencopy:     .byte   MGTK::notpencopy
+notpenOR:       .byte   MGTK::notpenOR
+notpenXOR:      .byte   MGTK::notpenXOR
+notpenBIC:      .byte   MGTK::notpenBIC
 
 stack_stash:  .byte   0
 
@@ -261,7 +261,8 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_SZ rect_erase_dialog_upper, 8, 20, kDialogWidth-16, kListBoxHeight + 11 ; under title to bottom of list
         DEFINE_RECT_SZ rect_erase_dialog_lower, 8, 103, kDialogWidth-16, 42 ; bottom of list to bottom of dialog
 
-        DEFINE_BUTTON ok, res_string_button_ok, 350, 90
+        DEFINE_BUTTON ok_button_rec, winfo_dialog::kWindowId, res_string_button_ok, 350, 90
+        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
         ;; For drawing/updating the dialog title
         DEFINE_POINT point_title, 0, 15
@@ -269,7 +270,8 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
 
-        DEFINE_BUTTON read_drive, res_string_button_read_drive, 210, 90
+        DEFINE_BUTTON read_drive_button_rec, winfo_dialog::kWindowId, res_string_button_read_drive, 210, 90
+        DEFINE_BUTTON_PARAMS read_drive_button_params, read_drive_button_rec
 
         DEFINE_POINT point_slot_drive_name, 20, 28
 str_slot_drive_name:
@@ -1062,19 +1064,19 @@ handle_dialog_button_down:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, ok_button_rect
+        MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonClick, winfo_dialog::kWindowId, ok_button_rect
+        BTK_CALL BTK::Track, ok_button_params
         bmi     :+
         lda     #$00
 :       rts
     END_IF
 
-        MGTK_CALL MGTK::InRect, read_drive_button_rect
+        MGTK_CALL MGTK::InRect, read_drive_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonClick, winfo_dialog::kWindowId, read_drive_button_rect
+        BTK_CALL BTK::Track, read_drive_button_params
         bmi     :+
         lda     #$01
 :
@@ -1113,7 +1115,7 @@ LDB98:  cmp     current_drive_selection
         bne     LDBCD
         bit     LD368
         bpl     LDBC0
-        param_call ButtonFlash, winfo_dialog::kWindowId, ok_button_rect
+        BTK_CALL BTK::Flash, ok_button_params
         return  #$00
 
 LDBC0:  lda     #$FF
@@ -1172,12 +1174,12 @@ dialog_shortcuts:
         beq     LDC09
         cmp     #TO_LOWER(kShortcutReadDisk)
         bne     LDC2D
-LDC09:  param_call ButtonFlash, winfo_dialog::kWindowId, read_drive_button_rect
+LDC09:  BTK_CALL BTK::Flash, read_drive_button_params
         return  #$01
 
 LDC2D:  cmp     #CHAR_RETURN
     IF_EQ
-        param_call ButtonFlash, winfo_dialog::kWindowId, ok_button_rect
+        BTK_CALL BTK::Flash, ok_button_params
         return  #$00
     END_IF
 
@@ -1403,12 +1405,13 @@ l3:     lda     #$3A
 
 ;;; ============================================================
 
-        .include "../lib/button.s"
         .include "../lib/inttostring.s"
         .include "../lib/bell.s"
         saved_ram_unitnum := main__saved_ram_unitnum
         saved_ram_drvec   := main__saved_ram_drvec
         .include "../lib/disconnect_ram.s"
+        .include "../toolkits/btk.s"
+        BTKEntry := btk::BTKEntry
 
 ;;; ============================================================
 
@@ -1438,11 +1441,8 @@ l3:     lda     #$3A
 :       param_call DrawTitleText, label_disk_copy
 
 draw_buttons:
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-        MGTK_CALL MGTK::FrameRect, read_drive_button_rect
-        jsr     DrawOkLabel
-        jsr     DrawReadDriveLabel
+        BTK_CALL BTK::Draw, ok_button_params
+        BTK_CALL BTK::Draw, read_drive_button_params
         MGTK_CALL MGTK::MoveTo, point_slot_drive_name
         param_call DrawString, str_slot_drive_name
         MGTK_CALL MGTK::MoveTo, point_select_source
@@ -1453,18 +1453,6 @@ draw_buttons:
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         rts
-
-.proc DrawOkLabel
-        MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call DrawString, ok_button_label
-        rts
-.endproc
-
-.proc DrawReadDriveLabel
-        MGTK_CALL MGTK::MoveTo, read_drive_button_pos
-        param_call DrawString, read_drive_button_label
-        rts
-.endproc
 
 .endproc
 

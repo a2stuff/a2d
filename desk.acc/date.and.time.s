@@ -313,7 +313,7 @@ str_time_separator:
 window_id:     .byte   kDAWindowId
 .endparams
 
-penxor:         .byte   MGTK::penXOR
+penXOR:         .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 
 .params winfo
@@ -533,7 +533,7 @@ init_window:
 
 .proc OnKey
         MGTK_CALL MGTK::SetPort, winfo::port
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
 
         lda     event_params::modifiers
         bne     InputLoop
@@ -629,7 +629,7 @@ miss:   rts
 hit:
         pha
         MGTK_CALL MGTK::SetPort, winfo::port
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
         pla
 
         cmp     #MGTK::Area::content
@@ -1070,7 +1070,7 @@ label_downarrow:
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
 
         MGTK_CALL MGTK::FrameRect, ok_button_rect
         MGTK_CALL MGTK::MoveTo, label_ok_pos
@@ -1216,7 +1216,7 @@ label_downarrow:
 
 .proc SelectField
         pha
-        MGTK_CALL MGTK::SetPenMode, penxor
+        MGTK_CALL MGTK::SetPenMode, penXOR
 
         lda     selected_field  ; invert old
         jsr     invert

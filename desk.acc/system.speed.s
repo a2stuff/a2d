@@ -21,10 +21,12 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
+        BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
 
@@ -85,9 +87,12 @@ kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeigh
 
 kButtonInsetX   = 25
 
-        DEFINE_BUTTON norm, res_string_button_norm,   kButtonInsetX, 28
-        DEFINE_BUTTON fast, res_string_button_fast,   kDAWidth - kButtonWidth - kButtonInsetX, 28
-        DEFINE_BUTTON ok,   res_string_button_ok, kDAWidth - kButtonWidth - kButtonInsetX, 52
+        DEFINE_BUTTON norm_button_rec, kDAWindowId, res_string_button_norm, kButtonInsetX, 28
+        DEFINE_BUTTON_PARAMS norm_button_params, norm_button_rec
+        DEFINE_BUTTON fast_button_rec, kDAWindowId, res_string_button_fast, kDAWidth - kButtonWidth - kButtonInsetX, 28
+        DEFINE_BUTTON_PARAMS fast_button_params, fast_button_rec
+        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kDAWidth - kButtonWidth - kButtonInsetX, 52
+        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
         DEFINE_LABEL title, res_string_dialog_title, 0, 18
 
@@ -101,14 +106,8 @@ kButtonInsetX   = 25
 window_id:     .byte   kDAWindowId
 .endparams
 
-pencopy:        .byte   0
-penOR:          .byte   1
-penXOR:         .byte   2
-penBIC:         .byte   3
-notpencopy:     .byte   4
-notpenOR:       .byte   5
-notpenXOR:      .byte   6
-notpenBIC:      .byte   7
+penXOR:         .byte   MGTK::penXOR
+notpencopy:     .byte   MGTK::notpencopy
 
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
@@ -250,23 +249,13 @@ frame_counter:
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, frame_rect
-
-        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         param_call DrawTitleString, title_label_str
 
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-        MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call DrawString, ok_button_label
-
-        MGTK_CALL MGTK::FrameRect, norm_button_rect
-        MGTK_CALL MGTK::MoveTo, norm_button_pos
-        param_call DrawString, norm_button_label
-
-        MGTK_CALL MGTK::FrameRect, fast_button_rect
-        MGTK_CALL MGTK::MoveTo, fast_button_pos
-        param_call DrawString, fast_button_label
+        BTK_CALL BTK::Draw, ok_button_params
+        BTK_CALL BTK::Draw, norm_button_params
+        BTK_CALL BTK::Draw, fast_button_params
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -318,18 +307,18 @@ frame_counter:
 .endproc
 
 .proc OnKeyOk
-        param_call ButtonFlash, kDAWindowId, ok_button_rect
+        BTK_CALL BTK::Flash, ok_button_params
         jmp     CloseWindow
 .endproc
 
 .proc OnKeyNorm
-        param_call ButtonFlash, kDAWindowId, norm_button_rect
+        BTK_CALL BTK::Flash, norm_button_params
         jsr     DoNorm
         jmp     InputLoop
 .endproc
 
 .proc OnKeyFast
-        param_call ButtonFlash, kDAWindowId, fast_button_rect
+        BTK_CALL BTK::Flash, fast_button_params
         jsr     DoFast
         jmp     InputLoop
 .endproc
@@ -366,15 +355,15 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, ok_button_rect
+        MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickOk
 
-        MGTK_CALL MGTK::InRect, norm_button_rect
+        MGTK_CALL MGTK::InRect, norm_button_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickNorm
 
-        MGTK_CALL MGTK::InRect, fast_button_rect
+        MGTK_CALL MGTK::InRect, fast_button_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickFast
 
@@ -384,7 +373,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClickOk
-        param_call ButtonClick, kDAWindowId, ok_button_rect
+        BTK_CALL BTK::Track, ok_button_params
         jeq     CloseWindow
         jmp     InputLoop
 .endproc
@@ -392,7 +381,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClickNorm
-        param_call ButtonClick, kDAWindowId, norm_button_rect
+        BTK_CALL BTK::Track, norm_button_params
         bne     :+
         jsr     DoNorm
 :       jmp     InputLoop
@@ -401,7 +390,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClickFast
-        param_call ButtonClick, kDAWindowId, fast_button_rect
+        BTK_CALL BTK::Track, fast_button_params
         bne     :+
         jsr     DoFast
 :       jmp     InputLoop
@@ -542,7 +531,6 @@ hit:    lda     winfo::window_id
 
 ;;; ============================================================
 
-        .include "../lib/button.s"
         .include "../lib/drawstring.s"
         .include "../lib/normfast.s"
 

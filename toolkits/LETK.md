@@ -115,5 +115,13 @@ Parameters:
   * left, top, and width of the frame rect; this will be inset by 1px as a convenience
   * maximum length of the text
 * `DEFINE_LINE_EDIT_PARAMS` can be used to instantiate a union-style parameter block. Callers can then pass this to LETK calls, populating additional fields for `Click` and `Key` calls. Parameters are:
-  * symbol (name) for the block
-  * symbol (name) of the associated line edit record
+  * symbol (name) for the parameter block
+  * symbol (name) of the associated `LineEditRecord`
+
+Example:
+```
+        DEFINE_LINE_EDIT line_edit_rec, kWindowId, buf_text, kLeft, kTop, kWidth, kMaxLength
+        DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
+        ...
+        LETK_CALL LETK::Init, le_params
+```

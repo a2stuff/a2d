@@ -7,6 +7,9 @@
         .org OVERLAY_ADDR
 
 .scope file_copier
+
+        BTKEntry := app::BTKEntry
+
 Exec:
         sta     LA027
         jsr     OpenWindow
@@ -848,7 +851,8 @@ textfont:       .addr   FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_BUTTON ok, res_string_button_ok, winfo::kWidth-20-kButtonWidth, 49
+        DEFINE_BUTTON ok_button_rec, winfo::kWindowId, res_string_button_ok, winfo::kWidth-20-kButtonWidth, 49
+        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
@@ -978,10 +982,7 @@ LAACB:  lda     winfo::window_id
         param_call app::DrawString, str_not_enough_room
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_click_ok
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-        MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call app::DrawString, ok_button_label
+        BTK_CALL BTK::Draw, ok_button_params
         jsr     SetPointerCursor
         jmp     RestoreStackAndReturn
 
@@ -996,10 +997,7 @@ LAACB:  lda     winfo::window_id
         param_call app::DrawString, str_error_download
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_copy_incomplete
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-        MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call app::DrawString, ok_button_label
+        BTK_CALL BTK::Draw, ok_button_params
         jsr     SetPointerCursor
         jmp     RestoreStackAndReturn
 .endproc
@@ -1021,7 +1019,7 @@ event_loop:
         lda     event_params::key
         cmp     #CHAR_RETURN
         bne     event_loop
-        param_call app::ButtonFlash, winfo::kWindowId, ok_button_rect
+        BTK_CALL BTK::Flash, ok_button_params
         jmp     app::SetWatchCursor
 
 HandleButtonDown:
@@ -1039,10 +1037,10 @@ HandleButtonDown:
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, ok_button_rect
+        MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     event_loop
-        param_call app::ButtonClick, winfo::kWindowId, ok_button_rect
+        BTK_CALL BTK::Track, ok_button_params
         bmi     event_loop
         jmp     app::SetWatchCursor
 

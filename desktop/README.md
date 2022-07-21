@@ -117,7 +117,8 @@ When running, memory use includes:
  * $8600-$BFFF - Resources and tookits, with floating memory layout
    * Resources, including icons, font, menu definitions, etc.
    * [Icon ToolKit](APIs.md)
-   * [LineEdit ToolKit](../letk/LETK.md)
+   * [LineEdit ToolKit](../toolkits/LETK.md)
+   * [Button ToolKit](../toolkits/BTK.md)
    * Alert dialog resources/code
 
 ...and in the Aux language card area (accessible from both aux and

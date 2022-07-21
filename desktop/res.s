@@ -10,14 +10,14 @@
 
         ASSERT_ADDRESS $D200
 
-pencopy:        .byte   0
-penOR:          .byte   1
-penXOR:         .byte   2
-penBIC:         .byte   3
-notpencopy:     .byte   4
-notpenOR:       .byte   5
-notpenXOR:      .byte   6
-notpenBIC:      .byte   7
+pencopy:        .byte   MGTK::pencopy
+penOR:          .byte   MGTK::penOR
+penXOR:         .byte   MGTK::penXOR
+penBIC:         .byte   MGTK::penBIC
+notpencopy:     .byte   MGTK::notpencopy
+notpenOR:       .byte   MGTK::notpenOR
+notpenXOR:      .byte   MGTK::notpenXOR
+notpenBIC:      .byte   MGTK::notpenBIC
 
 ;;; ============================================================
 ;;; Re-used param space for events/queries (10 bytes)
@@ -236,7 +236,7 @@ path_buf1:  .res    kPathBufferSize, 0
 ;;; Dialog used for prompts (yes/no/all) and operation progress
 
 .params winfo_prompt_dialog
-        kWindowId = $0F
+        kWindowId = aux::kPromptWindowId
         kWidth = aux::kPromptDialogWidth
         kHeight = aux::kPromptDialogHeight
 
@@ -403,8 +403,10 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         ;; Used when rendering entries
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
-        DEFINE_BUTTON entry_picker_ok, res_string_button_ok, 210, winfo_entry_picker::kHeight-18
-        DEFINE_BUTTON entry_picker_cancel, res_string_button_cancel, 40, winfo_entry_picker::kHeight-18
+        DEFINE_BUTTON entry_picker_ok_button_rec, winfo_entry_picker::kWindowId, res_string_button_ok, 210, winfo_entry_picker::kHeight-18
+        DEFINE_BUTTON_PARAMS entry_picker_ok_button_params, entry_picker_ok_button_rec
+        DEFINE_BUTTON entry_picker_cancel_button_rec, winfo_entry_picker::kWindowId, res_string_button_cancel, 40, winfo_entry_picker::kHeight-18
+        DEFINE_BUTTON_PARAMS entry_picker_cancel_button_params, entry_picker_cancel_button_rec
 
 ;;; ============================================================
 ;;; Format/Erase dialogs

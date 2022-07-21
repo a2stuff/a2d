@@ -8,8 +8,6 @@
 ;;; Requires the following proc definitions:
 ;;; * `AdjustFileEntryCase`
 ;;; * `AdjustVolumeNameCase`
-;;; * `ButtonClick`
-;;; * `ButtonFlash`
 ;;; * `CheckMouseMoved`
 ;;; * `DetectDoubleClick`
 ;;; * `MLIRelayImpl`
@@ -23,6 +21,8 @@
 ;;; * `penXOR`
 ;;; Requires the following macro definitions:
 ;;; * `MGTK_CALL`
+;;; * `LETK_CALL`
+;;; * `BTK_CALL`
 ;;;
 ;;; If `FD_EXTENDED` is defined as 1:
 ;;; * two input fields are supported
@@ -108,10 +108,10 @@ routine_table:
 
         copy    #$FF, file_dialog_res::selected_index
 
-        lda     #$40            ; not $00 or $80
-        sta     open_button_dimmed_flag
-        sta     close_button_dimmed_flag
-        sta     change_drive_button_dimmed_flag
+        lda     #0
+        sta     file_dialog_res::open_button_rec::state
+        sta     file_dialog_res::close_button_rec::state
+        sta     file_dialog_res::change_drive_button_rec::state
 
 .if FD_EXTENDED
         pla
@@ -247,12 +247,12 @@ ret:    rts
         ;; --------------------------------------------------
         ;; Change Drive button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
         jsr     IsChangeDriveAllowed
         bcs     :+
-        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
+        BTK_CALL BTK::Track, file_dialog_res::change_drive_button_params
         bmi     :+
         jsr     DoChangeDrive
 :       rts
@@ -264,12 +264,12 @@ ret:    rts
         ;; --------------------------------------------------
         ;; Open button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rec::rect
         cmp     #MGTK::inrect_inside
      IF_EQ
         jsr     IsOpenAllowed
         bcs     :+
-        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
+        BTK_CALL BTK::Track, file_dialog_res::open_button_params
         bmi     :+
         jsr     DoOpen
 :       rts
@@ -278,12 +278,12 @@ ret:    rts
         ;; --------------------------------------------------
         ;; Close button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
         jsr     IsCloseAllowed
         bcs     :+
-        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
+        BTK_CALL BTK::Track, file_dialog_res::close_button_params
         bmi     :+
         jsr     DoClose
 :       rts
@@ -292,10 +292,10 @@ ret:    rts
         ;; --------------------------------------------------
         ;; OK button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
+        BTK_CALL BTK::Track, file_dialog_res::ok_button_params
         bmi     :+
         jsr     HandleOk
 :       rts
@@ -304,10 +304,10 @@ ret:    rts
         ;; --------------------------------------------------
         ;; Cancel button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        param_call ButtonClick, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
+        BTK_CALL BTK::Track, file_dialog_res::cancel_button_params
         bmi     :+
         jsr     HandleCancel
 :       rts
@@ -421,14 +421,14 @@ open:   ldx     file_dialog_res::selected_index
         bmi     folder
 
         ;; File - select it.
-        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
+        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
         jsr     HandleOk
         jmp     rts1
 
         ;; Folder - open it.
 folder: and     #$7F
         pha                     ; A = index
-        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
+        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
         pla                     ; A = index
         jsr     GetNthFilename
         jsr     AppendToPathBuf
@@ -874,7 +874,7 @@ exit:   rts
         jsr     IsOpenAllowed
         bcs     ret
 
-        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::open_button_rect
+        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
         jsr     DoOpen
 
 ret:    rts
@@ -886,7 +886,7 @@ ret:    rts
         jsr     IsCloseAllowed
         bcs     ret
 
-        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::close_button_rect
+        BTK_CALL BTK::Flash, file_dialog_res::close_button_params
         jsr     DoClose
 
 ret:    rts
@@ -903,14 +903,14 @@ ret:    rts
         rts
 :
 .endif
-        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::ok_button_rect
+        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
         jmp     HandleOk
 .endproc
 
 ;;; ============================================================
 
 .proc KeyEscape
-        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::cancel_button_rect
+        BTK_CALL BTK::Flash, file_dialog_res::cancel_button_params
         jmp     HandleCancel
 .endproc
 
@@ -920,7 +920,7 @@ ret:    rts
         jsr     IsChangeDriveAllowed
         bcs     ret
 
-        param_call ButtonFlash, file_dialog_res::kFilePickerDlgWindowID, file_dialog_res::change_drive_button_rect
+        BTK_CALL BTK::Flash, file_dialog_res::change_drive_button_params
         jsr     DoChangeDrive
 ret:    rts
 .endproc
@@ -1270,20 +1270,23 @@ l1:     ldx     num_file_names
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::ok_button_rect
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::cancel_button_rect
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::change_drive_button_rect
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::open_button_rect
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::close_button_rect
+        BTK_CALL BTK::Draw, file_dialog_res::ok_button_params
+        BTK_CALL BTK::Draw, file_dialog_res::cancel_button_params
 
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::ok_button_pos
-        param_call DrawString, file_dialog_res::ok_button_label
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::cancel_button_pos
-        param_call DrawString, file_dialog_res::cancel_button_label
+        jsr     IsChangeDriveAllowed
+        ror
+        sta     file_dialog_res::change_drive_button_rec::state
+        BTK_CALL BTK::Draw, file_dialog_res::change_drive_button_params
 
-        jsr     DrawChangeDriveLabel
-        jsr     DrawOpenLabel
-        jsr     DrawCloseLabel
+        jsr     IsOpenAllowed
+        ror
+        sta     file_dialog_res::open_button_rec::state
+        BTK_CALL BTK::Draw, file_dialog_res::open_button_params
+
+        jsr     IsCloseAllowed
+        ror
+        sta     file_dialog_res::close_button_rec::state
+        BTK_CALL BTK::Draw, file_dialog_res::close_button_params
 
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::penpattern
@@ -1297,29 +1300,15 @@ l1:     ldx     num_file_names
 
 ;;; ============================================================
 
-;;; bit 7 set = dimmed, $00 = not dimmed, anything else = ???
-open_button_dimmed_flag:
-        .byte   0
-close_button_dimmed_flag:
-        .byte   0
-change_drive_button_dimmed_flag:
-        .byte   0
-
-;;; ============================================================
-
 .proc DrawOpenLabel
         jsr     IsOpenAllowed
         lda     #0
         ror                     ; C into high bit
-        cmp     open_button_dimmed_flag
+        cmp     file_dialog_res::open_button_rec::state
         beq     ret             ; no change
 
-        sta     open_button_dimmed_flag
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::open_button_pos
-        param_call DrawString, file_dialog_res::open_button_label
-        bit     open_button_dimmed_flag
-        bpl     ret
-        param_call DisableButton, file_dialog_res::open_button_rect
+        sta     file_dialog_res::open_button_rec::state
+        BTK_CALL BTK::Hilite, file_dialog_res::open_button_params
 
 ret:    rts
 .endproc
@@ -1330,15 +1319,11 @@ ret:    rts
         jsr     IsCloseAllowed
         lda     #0
         ror                     ; C into high bit
-        cmp     close_button_dimmed_flag
+        cmp     file_dialog_res::close_button_rec::state
         beq     ret             ; no change
 
-        sta     close_button_dimmed_flag
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::close_button_pos
-        param_call DrawString, file_dialog_res::close_button_label
-        bit     close_button_dimmed_flag
-        bpl     ret
-        param_call DisableButton, file_dialog_res::close_button_rect
+        sta     file_dialog_res::close_button_rec::state
+        BTK_CALL BTK::Hilite, file_dialog_res::close_button_params
 
 ret:    rts
 .endproc
@@ -1349,38 +1334,13 @@ ret:    rts
         jsr     IsChangeDriveAllowed
         lda     #0
         ror                     ; C into high bit
-        cmp     change_drive_button_dimmed_flag
+        cmp     file_dialog_res::change_drive_button_rec::state
         beq     ret             ; no change
 
-        sta     change_drive_button_dimmed_flag
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::change_drive_button_pos
-        param_call DrawString, file_dialog_res::change_drive_button_label
-        bit     change_drive_button_dimmed_flag
-        bpl     ret
-        param_call DisableButton, file_dialog_res::change_drive_button_rect
+        sta     file_dialog_res::change_drive_button_rec::state
+        BTK_CALL BTK::Hilite, file_dialog_res::change_drive_button_params
 
 ret:    rts
-.endproc
-
-;;; ============================================================
-
-.proc DisableButton
-        ptr := $06
-        stax    ptr
-
-        ldy     #0
-        add16in (ptr),y, #1, file_dialog_res::tmp_rect::x1
-        iny
-        add16in (ptr),y, #1, file_dialog_res::tmp_rect::y1
-        iny
-        sub16in (ptr),y, #1, file_dialog_res::tmp_rect::x2
-        iny
-        sub16in (ptr),y, #1, file_dialog_res::tmp_rect::y2
-
-        MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penOR
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::tmp_rect
-        rts
 .endproc
 
 ;;; ============================================================

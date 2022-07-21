@@ -76,6 +76,15 @@ params:  .res    3
 
 
 ;;; ============================================================
+;;; ButtonTK call from main>aux, MLI-style params
+
+.proc BTKRelayImpl
+        ldax    #aux::btk::BTKEntry
+        jmp     ParamsRelayImpl
+.endproc
+
+
+;;; ============================================================
 ;;; Used/Free icon map (Aux $1F80 - $1FFF)
 
         free_icon_map := $1F80

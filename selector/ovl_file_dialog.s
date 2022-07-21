@@ -7,6 +7,8 @@
 .scope file_dialog
         .org ::OVERLAY_ADDR
 
+        BTKEntry := app::BTKEntry
+
 ;;; ============================================================
 
 ep_init:
@@ -162,8 +164,6 @@ start:  jsr     OpenWindow
 ;;; Required proc definitions:
 YieldLoop               := app::YieldLoop
 DetectDoubleClick       := app::DetectDoubleClick
-ButtonClick             := app::ButtonClick
-ButtonFlash             := app::ButtonFlash
 ModifierDown            := app::ModifierDown
 ShiftDown               := app::ShiftDown
 
@@ -202,7 +202,7 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
         .include "../lib/adjustfilecase.s"
         .include "../lib/muldiv.s"
 
-        .include "../letk/letk.s"
+        .include "../toolkits/letk.s"
         LETKEntry := letk::LETKEntry
 
 ;;; ============================================================
