@@ -103,8 +103,8 @@ length_table:
 
 ;;; ============================================================
 
-pencopy .byte   MGTK::pencopy
-penXOR: .byte   MGTK::penXOR
+pencopy:        .byte   MGTK::pencopy
+penXOR:         .byte   MGTK::penXOR
 
 .params draw2spaces_params
         .addr   spaces
