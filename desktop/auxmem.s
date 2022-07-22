@@ -889,9 +889,9 @@ deltay: .word   0
         ;; IconTK::HighlightIcon params
 highlight_icon_id:  .byte   $00
 
-window_id:      .byte   0
-window_id2:     .byte   0
-flag:           .byte   0       ; ???
+window_id:              .byte   0
+source_window_id:       .byte   0 ; source window of drag (0=desktop)
+trash_flag:             .byte   0 ; if Trash is included in selection
 
         ;; IconTK::IconInRect params
 .params iconinrect_params
@@ -901,7 +901,7 @@ rect:  .tag     MGTK::Rect
 
 start:  lda     #0
         sta     highlight_icon_id
-        sta     flag
+        sta     trash_flag
 
 ;;; Determine if it's a drag or just a click
 .proc DragDetect
@@ -964,7 +964,7 @@ is_drag:
 
 :       lda     highlight_list  ; first entry
         jsr     GetIconWin
-        sta     window_id2
+        sta     source_window_id
 
         ;; Prepare grafports
         MGTK_CALL MGTK::InitPort, icon_grafport
@@ -990,7 +990,7 @@ L98F2:  lda     highlight_count,x
         cmp     trash_icon_num
         bne     :+
         ldx     #$80
-        stx     flag
+        stx     trash_flag
 :       sta     iconinrect_params::icon
         ITK_DIRECT_CALL IconTK::IconInRect, iconinrect_params::icon
         beq     L9954
@@ -1228,24 +1228,32 @@ L9BA5:  jsr     XdrawOutline
 
 :       MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-        cmp     window_id2
-        beq     L9BE1
-        bit     flag
-        bmi     L9BDC
+        cmp     source_window_id
+        beq     same_window
+
+        bit     trash_flag
+        bmi     includes_trash
+
         lda     findwindow_params::window_id
         bne     L9BD4
-L9BD1:  jmp     DragDetect::ignore_drag
+ignore: jmp     DragDetect::ignore_drag
 
 L9BD4:  ora     #$80
         sta     highlight_icon_id
         bne     L9C63           ; always
 
-L9BDC:  lda     window_id2
-        beq     L9BD1
-L9BE1:  jsr     PushPointers
+        ;; Drop selection including Trash on a window
+includes_trash:
+        lda     source_window_id
+        beq     ignore          ; TODO: always true for Trash?
+
+        ;; Drag within same window (or desktop)
+same_window:
+        jsr     PushPointers
+
         ldx     highlight_count
-L9BF3:  dex
-        bmi     L9C18
+:       dex
+        bmi     :+
         txa
         pha
         ldy     highlight_list,x
@@ -1255,12 +1263,13 @@ L9BF3:  dex
         jsr     erase_icon
         pla
         tax
-        bpl     L9BF3           ; always
+        bpl     :-              ; always
+:
+        jsr     PopPointers
 
-L9C18:  jsr     PopPointers
         ldx     highlight_count
         copy16  #drag_outline_buffer, $08
-L9C29:  dex
+@loop:  dex
         bmi     L9C63
         ldy     highlight_list,x
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, $06
@@ -1281,11 +1290,11 @@ L9C29:  dex
         clc
         adc     #kIconPolySize
         sta     $08
-        bcc     L9C29
+        bcc     @loop
         inc     $08+1
-        bne     L9C29           ; always
+        bne     @loop           ; always
 
-L9C63:  lda     #0
+L9C63:  lda     #0              ; return value
 
 just_select:                    ; ???
         tay
@@ -1491,7 +1500,7 @@ L9D7C:  stx     rect3_y1
 .endproc
 
 .proc FindTargetAndHighlight
-        bit     flag
+        bit     trash_flag      ; Trash is not drop-able, so skip if in selection
         bpl     :+
         rts
 
