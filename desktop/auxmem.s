@@ -21,8 +21,6 @@
         ASSERT_ADDRESS ::DEFAULT_FONT
         .incbin .concat("../mgtk/fonts/System.", kBuildLang)
 
-        font_height     := DEFAULT_FONT+2
-
 ;;; ============================================================
 
 graphics_icon:
@@ -1885,7 +1883,7 @@ common:
         sta     moveto_params2::ycoord + 1
         txa
         clc
-        adc     font_height
+        adc     #kSystemFontHeight
         sta     moveto_params2::ycoord
         bcc     :+
         inc     moveto_params2::ycoord + 1
@@ -2063,7 +2061,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         sta     poly::v7::ycoord+1
 
         ;; Bottom edge of label (v4, v5)
-        lda     font_height
+        lda     #kSystemFontHeight
         ;;clc
         adc     poly::v2::ycoord
         sta     poly::v4::ycoord
