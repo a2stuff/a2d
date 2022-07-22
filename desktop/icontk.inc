@@ -67,7 +67,8 @@ label   := *
 ;;;                      $00 if not allocated
 ;;;      .byte flags/window_id
 ;;;                      bits 0-3 = window_id
-;;;                      bits 4,5 = unused
+;;;                      bit 4 = unused
+;;;                      bit 5 = not valid drop source flag (i.e. trash)
 ;;;                      bit 6 = drop target flag (trash, folder, dir)
 ;;;                      bit 7 = dimmed flag
 ;;;      .word iconx     (pixels)
@@ -98,6 +99,7 @@ kIconEntryStateHighlighted = %01000000
 ;;; Masks for IconEntry::win_flags
 kIconEntryFlagsDimmed           = %10000000
 kIconEntryFlagsDropTarget       = %01000000
+kIconEntryFlagsNotDropSource    = %00100000
 kIconEntryWinIdMask             = %00001111
 
 .struct IconDefinition

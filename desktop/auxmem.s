@@ -987,11 +987,15 @@ L98F2:  lda     highlight_count,x
         stax    $06
         ldy     #IconEntry::id
         lda     ($06),y
-        cmp     trash_icon_num
-        bne     :+
+        sta     iconinrect_params::icon
+
+        ldy     #IconEntry::win_flags
+        lda     ($06),y
+        and     #kIconEntryFlagsNotDropSource
+        beq     :+
         ldx     #$80
         stx     trash_flag
-:       sta     iconinrect_params::icon
+:
         ITK_DIRECT_CALL IconTK::IconInRect, iconinrect_params::icon
         beq     L9954
         jsr     CalcIconPoly

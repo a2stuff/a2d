@@ -367,7 +367,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
 
         ;; Trash is a drop target
         ldy     #IconEntry::win_flags
-        copy    #kIconEntryFlagsDropTarget, (ptr),y
+        copy    #kIconEntryFlagsDropTarget|kIconEntryFlagsNotDropSource, (ptr),y
 
         ldy     #IconEntry::iconx
         copy16in #main::kTrashIconX, (ptr),y

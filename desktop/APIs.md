@@ -297,7 +297,8 @@ For desktop icons, the icon is clipped against any open windows.
                 bit 6 = highlighted
 .byte type/window_id
                 bits 0-3 = window_id
-                bits 4,5 = unused
+                bit 4 = unused
+                bit 5 = not valid drop source flag (i.e. trash)
                 bit 6 = drop target flag (trash, folder, dir)
                 bit 7 = open flag
 .word iconx     (pixels)
