@@ -171,8 +171,18 @@ skip_port:
         sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
 
-        ldax    a_label
-        jsr     DrawString
+        ;; Draw the string
+PARAM_BLOCK dt_params, $6
+textptr .addr
+textlen .byte
+END_PARAM_BLOCK
+        ldy     #0
+        lda     (a_label),y
+        beq     :+
+        sta     dt_params::textlen
+        add16_8 a_label, #1, dt_params::textptr
+        MGTK_CALL MGTK::DrawText, dt_params
+:
 
         bit     state
     IF_NS

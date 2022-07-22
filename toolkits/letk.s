@@ -103,6 +103,17 @@ length_table:
 
 ;;; ============================================================
 
+pencopy .byte   MGTK::pencopy
+penXOR: .byte   MGTK::penXOR
+
+.params draw2spaces_params
+        .addr   spaces
+        .byte   2
+spaces: .byte   "  "
+.endparams
+
+;;; ============================================================
+
 .proc InitImpl
         PARAM_BLOCK params, letk::command_data
 a_record  .addr
@@ -620,7 +631,7 @@ ret:    rts
 :
         ;; Redraw everything to the right of the IP
         jsr     _RedrawRightOfIP
-        param_call DrawString, str_2_spaces
+        MGTK_CALL MGTK::DrawText, draw2spaces_params
 
         FALL_THROUGH_TO _SetDirtyFlag
 .endproc
@@ -681,8 +692,18 @@ a_record  .addr
 
         MGTK_CALL MGTK::PaintRect, rect
         MGTK_CALL MGTK::MoveTo, pos
-        ldax    a_buf
-        jsr     DrawString
+
+PARAM_BLOCK dt_params, $6
+textptr .addr
+textlen .byte
+END_PARAM_BLOCK
+        ldy     #0
+        lda     (a_buf),y
+        beq     :+
+        sta     dt_params::textlen
+        add16_8 a_buf, #1, dt_params::textptr
+        MGTK_CALL MGTK::DrawText, dt_params
+:
 
         ;; Fix IP position if string has shrunk
         ldy     #0
@@ -694,11 +715,6 @@ a_record  .addr
 :
         jmp     _ShowIP
 .endproc ; UpdateImpl
-
-;;; ============================================================
-
-str_2_spaces:
-        PASCAL_STRING "  "
 
 ;;; ============================================================
 

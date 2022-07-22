@@ -602,7 +602,7 @@ finish:
 ;;; ============================================================
 ;;; Event loop during button press - initial invert and
 ;;; inverting as mouse is dragged in/out.
-;;; (The `ButtonClick` proc is not used as these buttons
+;;; (The `BTK::Track` proc is not used as these buttons
 ;;; are not in a window, so ScreenToWindow can not be used.)
 ;;; Inputs: A,X = rect address
 ;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
