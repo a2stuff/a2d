@@ -2579,7 +2579,7 @@ stashed_name:
         lda     (entry_ptr),y
         sta     icondef_ptr+1
 
-        ldy     #IconDefinition::maprect+MGTK::Rect::bottomright+.sizeof(MGTK::Point)-1
+        ldy     #IconResource::maprect+MGTK::Rect::bottomright+.sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     (icondef_ptr),y
         sta     cur_icon_bounds::bottomright,x
@@ -7782,7 +7782,7 @@ L7870:  lda     cached_window_id
 
         ;; Icon height will be needed too
         copy16  iconbits, ptr
-        ldy     #IconDefinition::maprect + MGTK::Rect::y2
+        ldy     #IconResource::maprect + MGTK::Rect::y2
         copy16in (ptr),y, icon_height
 
         jsr     PopPointers     ; do not tail-call optimise!
@@ -9789,14 +9789,14 @@ success:
         bne     :-
 
         ;; Center it horizontally
-        ldy     #IconDefinition::maprect + MGTK::Rect::x2
+        ldy     #IconResource::maprect + MGTK::Rect::x2
         sub16in #kMaxIconWidth, (icon_defn_ptr),y, offset
         lsr16   offset          ; offset = (max_width - icon_width) / 2
         ldy     #IconEntry::iconx
         add16in (icon_ptr),y, offset, (icon_ptr),y
 
         ;; Adjust vertically
-        ldy     #IconDefinition::maprect + MGTK::Rect::y2
+        ldy     #IconResource::maprect + MGTK::Rect::y2
         sub16in #kMaxIconHeight, (icon_defn_ptr),y, offset
         ldy     #IconEntry::icony
         add16in (icon_ptr),y, offset, (icon_ptr),y

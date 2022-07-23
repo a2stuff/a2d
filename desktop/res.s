@@ -566,29 +566,22 @@ destination_filename_label:
 ;;; ============================================================
 
 ;;; 5.25" Floppy Disk
-floppy140_icon:
-        DEFICON floppy140_pixels, 4, 26, 14, floppy140_mask
+        DEFINE_ICON_RESOURCE floppy140_icon, floppy140_pixels, 4, 26, 14, floppy140_mask
 
 ;;; RAM Disk
-ramdisk_icon:
-        DEFICON ramdisk_pixels, 6, 39, 11, ramdisk_mask
+        DEFINE_ICON_RESOURCE ramdisk_icon, ramdisk_pixels, 6, 39, 11, ramdisk_mask
 
 ;;; 3.5" Floppy Disk
-floppy800_icon:
-        DEFICON floppy800_pixels, 3, 20, 11, floppy800_mask
+        DEFINE_ICON_RESOURCE floppy800_icon, floppy800_pixels, 3, 20, 11, floppy800_mask
 
 ;;; Hard Disk
-profile_icon:
-        DEFICON profile_pixels, 8, 52, 9, profile_mask
+        DEFINE_ICON_RESOURCE profile_icon, profile_pixels, 8, 52, 9, profile_mask
 
 ;;; File Share
-fileshare_icon:
-        DEFICON fileshare_pixels, 5, 34, 14, fileshare_mask
+        DEFINE_ICON_RESOURCE fileshare_icon, fileshare_pixels, 5, 34, 14, fileshare_mask
 
 ;;; Trash Can
-trash_icon:
-        DEFICON trash_pixels, 3, 20, 17, trash_mask
-
+        DEFINE_ICON_RESOURCE trash_icon, trash_pixels, 3, 20, 17, trash_mask
 
 ;;; ============================================================
 
@@ -931,6 +924,15 @@ window_id_to_filerecord_list_entries:
 window_filerecord_table:
         .res    kMaxNumWindows*2
 
+;;; ============================================================
+
+;;; IconTK initialization parameters
+.params itkinit_params
+headersize:     .byte   kWindowHeaderHeight
+a_polybuf:      .addr   SAVE_AREA_BUFFER
+bufsize:        .word   kSaveAreaSize
+.endproc
+
 ;;; Used for multiple IconTK calls:
 ;;; * IconTK::EraseIcon
 ;;; * IconTK::HighlightIcon
@@ -947,6 +949,8 @@ icon_param:  .byte   0
         ;; * used for window frame zoom animation
         ASSERT_ADDRESS icon_param+1
         DEFINE_RECT tmp_rect, 0, 0, 0, 0
+
+;;; ============================================================
 
 tmp_mapinfo:
         .tag    MGTK::MapInfo
@@ -1384,24 +1388,24 @@ type_icons_table:               ; map into definitions below
         .addr   app ; application
         ASSERT_ADDRESS_TABLE_SIZE type_icons_table, IconType::COUNT
 
-gen:    DEFICON generic_icon, 4, 27, 15, generic_mask
-src:    DEFICON aux::iigs_file_icon, 4, 27, 15, generic_mask
-rel:    DEFICON aux::rel_file_icon, 4, 27, 14, binary_mask
-cmd:    DEFICON aux::cmd_file_icon, 4, 27, 8, aux::graphics_mask
-txt:    DEFICON text_icon, 4, 27, 15, generic_mask
-bin:    DEFICON binary_icon, 4, 27, 14, binary_mask
-dir:    DEFICON folder_icon, 4, 27, 11, folder_mask
-sys:    DEFICON sys_icon, 4, 27, 17, sys_mask
-bas:    DEFICON aux::basic_icon, 4, 27, 14, aux::basic_mask
-fot:    DEFICON aux::graphics_icon, 4, 27, 12, aux::graphics_mask
-mus:    DEFICON aux::music_icon, 4, 27, 15, generic_mask
-adb:    DEFICON aux::adb_icon, 4, 27, 15, generic_mask
-awp:    DEFICON aux::awp_icon, 4, 27, 15, generic_mask
-asp:    DEFICON aux::asp_icon, 4, 27, 15, generic_mask
-arc:    DEFICON aux::archive_icon, 4, 25, 14, aux::archive_mask
-a2d:    DEFICON aux::a2d_file_icon, 4, 27, 15, generic_mask
-fnt:    DEFICON aux::font_icon, 4, 27, 15, generic_mask
-app:    DEFICON app_icon, 5, 34, 16, app_mask
+        DEFINE_ICON_RESOURCE gen, generic_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE src, aux::iigs_file_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE rel, aux::rel_file_icon, 4, 27, 14, binary_mask
+        DEFINE_ICON_RESOURCE cmd, aux::cmd_file_icon, 4, 27, 8, aux::graphics_mask
+        DEFINE_ICON_RESOURCE txt, text_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE bin, binary_icon, 4, 27, 14, binary_mask
+        DEFINE_ICON_RESOURCE dir, folder_icon, 4, 27, 11, folder_mask
+        DEFINE_ICON_RESOURCE sys, sys_icon, 4, 27, 17, sys_mask
+        DEFINE_ICON_RESOURCE bas, aux::basic_icon, 4, 27, 14, aux::basic_mask
+        DEFINE_ICON_RESOURCE fot, aux::graphics_icon, 4, 27, 12, aux::graphics_mask
+        DEFINE_ICON_RESOURCE mus, aux::music_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE adb, aux::adb_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE awp, aux::awp_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE asp, aux::asp_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE arc, aux::archive_icon, 4, 25, 14, aux::archive_mask
+        DEFINE_ICON_RESOURCE a2d, aux::a2d_file_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE fnt, aux::font_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE app, app_icon, 5, 34, 16, app_mask
 
 ;;; Generic
 

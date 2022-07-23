@@ -16,7 +16,7 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
-        .include "../desktop/icontk.inc"
+        .include "../toolkits/icontk.inc"
 
 ;;; ============================================================
 ;;; Memory map

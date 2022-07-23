@@ -1,17 +1,12 @@
 ;;; ============================================================
 ;;; Icon ToolKit - Public Definitions
 ;;; ============================================================
-;;; Used by:
-;;;  * DeskTop itself
-;;;  * Desk Accessories & Preview Accessories
-;;; ============================================================
 
-;;; Icon ToolKit Calls (from aux memory)
+;;; Icon ToolKit Calls
 
 .scope IconTK
 
-;;; * = Used by Desk Accessories
-
+InitToolKit     = $00   ; { .byte headersize, .addr a_polybuf, .word bufsize }
 AddIcon         = $01   ; param is address of IconEntry
 HighlightIcon   = $02   ; { .byte icon }
 DrawIcon        = $03   ; { .byte icon }
@@ -26,14 +21,15 @@ DragHighlighted = $08   ; { .byte param, .word mousex, .word mousey }
                         ;  hi bit set:   low bits are target window
                         ;  if 0, X = 2 means "file icon dragged to desktop" (???)
 UnhighlightIcon = $09   ; { .byte icon }
-RedrawDesktopIcons = $0A ; Repaints desktop icons *
+RedrawDesktopIcons = $0A ; Repaints desktop icons
 IconInRect      = $0B   ; { .byte icon, rect bounds }
 EraseIcon       = $0C   ; { .byte icon }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
-;;; `icon_index` is the index in the icon table
 
 .endscope ; IconTK
+
+;;; ============================================================
 
 ;;; Call a IconTK entry point:
 ;;;     ITK_CALL n                      - params is $0000
@@ -73,7 +69,7 @@ label   := *
 ;;;                      bit 7 = dimmed flag
 ;;;      .word iconx     (pixels)
 ;;;      .word icony     (pixels)
-;;;      .addr iconbits  (addr of IconDefinition)
+;;;      .addr iconbits  (addr of IconResource)
 ;;;      .byte len       (name length)
 ;;;      .res  15  name  (name)
 ;;;      .byte record_num (index of icon in window)
@@ -102,7 +98,7 @@ kIconEntryFlagsDropTarget       = %01000000
 kIconEntryFlagsNotDropSource    = %00100000
 kIconEntryWinIdMask             = %00001111
 
-.struct IconDefinition
+.struct IconResource
         ;; First part is MGTK::MapInfo without leading viewloc
         mapbits         .addr   ; address of bitmap bits
         mapwidth        .byte   ; stride of bitmap bits
@@ -114,7 +110,8 @@ kIconEntryWinIdMask             = %00001111
         maskbits        .addr
 .endstruct
 
-.macro  DEFICON mapbits, mapwidth, dx, dy, maskbits
+.macro  DEFINE_ICON_RESOURCE name, mapbits, mapwidth, dx, dy, maskbits
+.params name
         ;; First part is MGTK::MapInfo without leading viewloc
         .addr   mapbits
         .byte   mapwidth
@@ -122,4 +119,5 @@ kIconEntryWinIdMask             = %00001111
         .word   0, 0, dx, dy  ; maprect
         ;; Next part is link to mask
         .addr   maskbits
+.endparams
 .endmacro

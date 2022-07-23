@@ -328,6 +328,8 @@ loop:   cpx     #kMaxIconCount+1 ; allow up to the maximum
         inx
         jmp     loop
 end:
+
+        ITK_CALL IconTK::InitToolKit, itkinit_params
 .endscope
 
 ;;; ============================================================
