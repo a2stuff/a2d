@@ -195,6 +195,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc YieldLoop
         inc     loop_counter
         inc     loop_counter
@@ -729,6 +730,7 @@ skip:   lda     win
 .endproc
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SafeSetPortFromWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -1179,6 +1181,7 @@ LaunchFileWithPath := LaunchFileImpl::with_path ; use `INVOKER_PREFIX`
 
 ;;; ============================================================
 
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc UpcaseChar
         cmp     #'a'
         bcc     done
@@ -1563,11 +1566,6 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
         bpl     :-
         rts
 .endproc
-
-;;; ============================================================
-
-        .include "../lib/ramcard.s"
-        .assert * <= $5000, error, "Routine used by overlays in overlay zone"
 
 ;;; ============================================================
 ;;; For entry copied ("down loaded") to RAM card, compose path
@@ -8071,10 +8069,6 @@ xcoord:
 .endproc ; DrawWindowHeader
 
 ;;; ============================================================
-
-        .include "../lib/inttostring.s"
-
-;;; ============================================================
 ;;; Compute bounding box for icons within cached window
 
         DEFINE_RECT iconbb_rect, 0, 0, 0, 0
@@ -8890,6 +8884,8 @@ sense_flag:     .byte   0
 
 
 ;;; ============================================================
+
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 
 ;;; A,X = A * 16
 .proc ATimes16
@@ -10365,10 +10361,6 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
 ;;; ============================================================
 
-        .include "../lib/menuclock.s"
-
-;;; ============================================================
-
 .proc SetRGBMode
         bit     SETTINGS + DeskTopSettings::rgb_color
         bmi     SetColorMode
@@ -11018,9 +11010,6 @@ index:  .byte   0               ; index in selected icon list
         prepare_vol  = $81      ; +2 if multiple
 .endenum
 
-        .define SP_ALTZP 1
-        .define SP_LCBANK1 1
-        .include "../lib/smartport.s"
 
 ;;; ============================================================
 ;;; Get Info
@@ -15040,16 +15029,19 @@ params:  .res    3
 
 ;;; ============================================================
 
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SetCursorWatch
         MGTK_CALL MGTK::SetCursor, watch_cursor
         rts
 .endproc
 
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SetCursorPointer
         MGTK_CALL MGTK::SetCursor, pointer_cursor
         rts
 .endproc
 
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SetCursorIBeam
         MGTK_CALL MGTK::SetCursor, ibeam_cursor
         rts
@@ -15059,6 +15051,7 @@ params:  .res    3
 ;;; Double Click Detection
 ;;; Returns with A=0 if double click, A=$FF otherwise.
 
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc StashCoordsAndDetectDoubleClick
         ;; Stash coords for double-click in windows
         COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
@@ -15308,12 +15301,6 @@ done:   rts
         rts
 .endproc
 
-;;; ============================================================
-
-        ADJUSTCASE_VOLPATH := $810
-        ADJUSTCASE_VOLBUF  := $820
-        ADJUSTCASE_IO_BUFFER := IO_BUFFER
-        .include "../lib/adjustfilecase.s"
 
 ;;; ============================================================
 
@@ -15564,6 +15551,7 @@ done:   rts
 ;;; Determine if mouse moved (returns w/ carry set if moved)
 ;;; Used in dialogs to possibly change cursor
 
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc CheckMouseMoved
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     event_params::coords,x
@@ -15777,6 +15765,7 @@ SaveWindows := save_restore_windows::Save
 ;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
 ;;; Output: A=high bit/N flag set if either is down.
 
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc ModifierDown
         lda     BUTN0
         ora     BUTN1
@@ -15807,6 +15796,7 @@ ret:    rts
 ;;; Test if shift is down (if it can be detected).
 ;;; Output: A=high bit/N flag set if down.
 
+        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc ShiftDown
         bit     machine_config::iigs_flag
         bpl     TestShiftMod    ; no, rely on shift key mod
@@ -15840,10 +15830,26 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Library Routines
+;;; ============================================================
 
+        .assert * >= $A000, error, "Routines used by overlays in overlay zone"
+
+        .include "../lib/ramcard.s"
+
+        ADJUSTCASE_VOLPATH := $810
+        ADJUSTCASE_VOLBUF  := $820
+        ADJUSTCASE_IO_BUFFER := IO_BUFFER
+        .include "../lib/adjustfilecase.s"
+
+        .define SP_ALTZP 1
+        .define SP_LCBANK1 1
+        .include "../lib/smartport.s"
+
+        .include "../lib/menuclock.s"
+        .include "../lib/inttostring.s"
         .include "../lib/datetime.s"
         .include "../lib/is_diskii.s"
-        grafport_win := window_grafport
         .include "../lib/doubleclick.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/muldiv.s"
