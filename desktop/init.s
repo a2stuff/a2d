@@ -362,7 +362,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         sta     cached_window_entry_count
         sta     icon_count
         jsr     AllocateIcon
-        sta     trash_icon_num
+        sta     main::trash_icon_num
         sta     cached_window_entry_list
         jsr     main::IconEntryLookup
         stax    ptr
@@ -571,20 +571,20 @@ done:   rts
 
         ;; Width of "123,456 Items"
         param_call main::MeasureLCString, str_items_suffix
-        addax   dx, width_items_label
+        addax   dx, main::width_items_label
 
         ;; Width of "123,456K in disk"
         param_call main::MeasureLCString, str_k_in_disk
-        addax   dx, width_k_in_disk_label
+        addax   dx, main::width_k_in_disk_label
 
         ;; Width of "123,456K available"
         param_call main::MeasureLCString, str_k_available
-        addax   dx, width_k_available_label
+        addax   dx, main::width_k_available_label
 
-        add16   width_k_in_disk_label, width_k_available_label, width_right_labels
-        add16   width_items_label, #5, width_items_label_padded
-        add16   width_items_label_padded, width_k_in_disk_label, width_left_labels
-        add16   width_left_labels, #3, width_left_labels
+        add16   main::width_k_in_disk_label, main::width_k_available_label, main::width_right_labels
+        add16   main::width_items_label, #5, main::width_items_label_padded
+        add16   main::width_items_label_padded, main::width_k_in_disk_label, main::width_left_labels
+        add16   main::width_left_labels, #3, main::width_left_labels
         jmp     end
 
 dx:     .word   0
@@ -945,7 +945,7 @@ cvi_result:
         dex
 :       inx
         copy    DEVLST+1,x, DEVLST,x
-        copy    device_to_icon_map+1,x, device_to_icon_map,x
+        copy    main::device_to_icon_map+1,x, main::device_to_icon_map,x
         cpx     DEVCNT
         bne     :-
         dec     DEVCNT
@@ -986,7 +986,7 @@ loop:   lda     slot
 
         ;; It is a ProDOS device - prepare menu item.
         lda     slot
-        sta     startup_slot_table,x
+        sta     main::startup_slot_table,x
 
         txa                     ; pointer to nth sNN string
         pha

@@ -268,12 +268,12 @@ op:     lda     SELF_MODIFIED
 
 ;;; ============================================================
 ;;; Bell
-;;; Assert: Main is banked in
+;;; Assert: Aux is banked in
 
-.proc Bell
-        jsr     BankInAux
-        jsr     aux::Bell
-        jmp     BankInMain
+.proc BellFromAux
+        jsr     BankInMain
+        jsr     Bell
+        jmp     BankInAux
 .endproc
 
 ;;; ============================================================
@@ -283,8 +283,23 @@ op:     lda     SELF_MODIFIED
 
 .proc GetPortBits
         jsr     BankInAux
-        jsr     aux::GetPortBits
+
+        port_ptr := $06
+
+        stax    dest_ptr
+
+        MGTKEntry := MGTKAuxEntry
+        MGTK_CALL MGTK::GetPort, port_ptr
+
+        ldy     #.sizeof(MGTK::MapInfo)-1
+:       lda     (port_ptr),y
+        dest_ptr := *+1
+        sta     SELF_MODIFIED,y
+        dey
+        bpl     :-
+
         jmp     BankInMain
+        rts
 .endproc
 
 ;;; ============================================================

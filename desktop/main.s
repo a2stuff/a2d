@@ -15847,6 +15847,7 @@ ret:    rts
         .include "../lib/doubleclick.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/muldiv.s"
+        .include "../lib/bell.s"
 
 ;;; ============================================================
 ;;; Resources (that are only used from Main, i.e. not MGTK)
@@ -16006,6 +16007,101 @@ datetime_for_conversion := list_view_filerecord + FileRecord::modification_date
 
 ;;; ============================================================
 
+
+path_buf4:
+        .res    ::kPathBufferSize, 0
+path_buf3:
+        .res    ::kPathBufferSize, 0
+filename_buf:
+        .res    16, 0
+
+        ;; Set to $80 for Copy, $FF for Run
+copy_run_flag:
+        .byte   0
+
+delete_skip_decrement_flag:     ; always set to 0 ???
+        .byte   0
+
+op_ref_num:
+        .byte   0
+
+process_depth:
+        .byte   0               ; tracks recursion depth
+
+;;; Number of file entries per directory block
+num_entries_per_block:
+        .byte   13
+
+entries_read:
+        .word   0
+entries_to_skip:
+        .word   0
+
+;;; During directory traversal, the number of file entries processed
+;;; at the current level is pushed here, so that following a descent
+;;; the previous entries can be skipped.
+entry_count_stack:
+        .res    ::kDirStackBufferSize, 0
+
+entry_count_stack_index:
+        .byte   0
+
+entries_read_this_block:
+        .byte   0
+
+;;; ============================================================
+
+        ;; index is device number (in DEVLST), value is icon number
+device_to_icon_map:
+        .res    ::kMaxVolumes, 0
+
+;;; Window to file record mapping list. Each entry is a window
+;;; id. Position in the list is the same as position in the
+;;; subsequent file record list.
+window_id_to_filerecord_list_count:
+        .byte   0
+window_id_to_filerecord_list_entries:
+        .res    kMaxNumWindows, 0 ; 8 entries + length
+
+;;; Mapping from position in above table to FileRecord entry
+window_filerecord_table:
+        .res    kMaxNumWindows*2
+
+;;; ============================================================
+
+startup_slot_table:
+        .res    7, 0            ; maps menu item index (0-based) to slot number
+
+;;; ============================================================
+
+;;; Computed during startup
+width_items_label_padded:
+        .word   0
+width_left_labels:
+        .word   0
+
+;;; Computed during startup
+width_items_label:      .word   0
+width_k_in_disk_label:  .word   0
+width_k_available_label:        .word   0
+width_right_labels:     .word   0
+
+;;; Assigned during startup
+trash_icon_num:  .byte   0
+
+;;; ============================================================
+
+hex_digits:
+        .byte   "0123456789ABCDEF"
+
+;;; ============================================================
+
+;;; High bit set if menu dispatch via keyboard accelerator, clear otherwise.
+menu_kbd_flag:
+        .byte   0
+
+;;; ============================================================
+
 ;;; Map ProDOS file type to string (for listings/Get Info).
 ;;; If not found, $XX is used (like CATALOG).
 
@@ -16046,6 +16142,51 @@ type_names_table:
         ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 4
 
 ;;; ============================================================
+;;; Map IconType to other icon/details
+
+icontype_iconentryflags_table:
+        .byte   0                    ; generic
+        .byte   0                    ; text
+        .byte   0                    ; binary
+        .byte   0                    ; graphics
+        .byte   0                    ; music
+        .byte   0                    ; font
+        .byte   0                    ; relocatable
+        .byte   0                    ; command
+        .byte   kIconEntryFlagsDropTarget ; folder
+        .byte   0                    ; iigs
+        .byte   0                    ; appleworks db
+        .byte   0                    ; appleworks wp
+        .byte   0                    ; appleworks sp
+        .byte   0                    ; archive
+        .byte   0                    ; desk accessory
+        .byte   0                    ; basic
+        .byte   0                    ; system
+        .byte   0                    ; application
+        ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT
+
+type_icons_table:               ; map into definitions below
+        .addr   gen ; generic
+        .addr   txt ; text
+        .addr   bin ; binary
+        .addr   fot ; graphics
+        .addr   mus ; music
+        .addr   fnt ; font
+        .addr   rel ; relocatable
+        .addr   cmd ; command
+        .addr   dir ; folder
+        .addr   src ; iigs
+        .addr   adb ; appleworks db
+        .addr   awp ; appleworks wp
+        .addr   asp ; appleworks sp
+        .addr   arc ; archive
+        .addr   a2d ; desk accessory
+        .addr   bas ; basic
+        .addr   sys ; system
+        .addr   app ; application
+        ASSERT_ADDRESS_TABLE_SIZE type_icons_table, IconType::COUNT
+
+;;; ============================================================
 ;;; Localized strings (may change length)
 ;;; ============================================================
 
@@ -16074,5 +16215,6 @@ str_volume:
 ;;; ============================================================
 ;;; "Exports"
 
+        Bell := main::Bell
         Multiply_16_8_16 := main::Multiply_16_8_16
         Divide_16_8_16 := main::Divide_16_8_16

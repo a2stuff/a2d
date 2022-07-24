@@ -123,6 +123,9 @@ done:   jsr     file_dialog::Update ; string changed
         rts
 .endproc
 
+saved_src_index:
+        .byte   0
+
 ;;; ============================================================
 
 .proc HandleOkDestination

@@ -545,9 +545,6 @@ input1_dirty_flag:              ; stash dirty flag when input2 is active
 input2_dirty_flag:              ; stash dirty flag when input1 is active
         .byte   0
 
-saved_src_index:
-        .byte   0
-
         FONT := DEFAULT_FONT
         .define FD_EXTENDED 1
         buf_input1 := path_buf0
@@ -864,66 +861,6 @@ str_file_type:
         PASCAL_STRING " $00"
 
 ;;; ============================================================
-
-path_buf4:
-        .res    kPathBufferSize, 0
-path_buf3:
-        .res    kPathBufferSize, 0
-filename_buf:
-        .res    16, 0
-
-        ;; Set to $80 for Copy, $FF for Run
-copy_run_flag:
-        .byte   0
-
-delete_skip_decrement_flag:     ; always set to 0 ???
-        .byte   0
-
-op_ref_num:
-        .byte   0
-
-process_depth:
-        .byte   0               ; tracks recursion depth
-
-;;; Number of file entries per directory block
-num_entries_per_block:
-        .byte   13
-
-entries_read:
-        .word   0
-entries_to_skip:
-        .word   0
-
-;;; During directory traversal, the number of file entries processed
-;;; at the current level is pushed here, so that following a descent
-;;; the previous entries can be skipped.
-entry_count_stack:
-        .res    kDirStackBufferSize, 0
-
-entry_count_stack_index:
-        .byte   0
-
-entries_read_this_block:
-        .byte   0
-
-;;; ============================================================
-
-        ;; index is device number (in DEVLST), value is icon number
-device_to_icon_map:
-        .res    kMaxVolumes, 0
-
-;;; Window to file record mapping list. Each entry is a window
-;;; id. Position in the list is the same as position in the
-;;; subsequent file record list.
-window_id_to_filerecord_list_count:
-        .byte   0
-window_id_to_filerecord_list_entries:
-        .res    kMaxNumWindows, 0 ; 8 entries + length
-
-;;; Mapping from position in above table to FileRecord entry
-window_filerecord_table:
-        .res    kMaxNumWindows*2
-
 ;;; ============================================================
 
 ;;; IconTK initialization parameters
@@ -1017,9 +954,6 @@ startup_menu_item_5:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu i
 startup_menu_item_6:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
 startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
         kStartupMenuItemSlotOffset = res_const_menu_item_slot_pattern_offset1
-
-startup_slot_table:
-        .res    7, 0            ; maps menu item index (0-based) to slot number
 
 ;;; ============================================================
 
@@ -1173,24 +1107,9 @@ str_k_available:
 str_from_int:                   ; populated by IntToString
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator
 
-;;; Computed during startup
-width_items_label_padded:
-        .word   0
-width_left_labels:
-        .word   0
-
 ;;; Computed when painted
         DEFINE_POINT pos_k_in_disk, 0, 0
         DEFINE_POINT pos_k_available, 0, 0
-
-;;; Computed during startup
-width_items_label:      .word   0
-width_k_in_disk_label:  .word   0
-width_k_available_label:        .word   0
-width_right_labels:     .word   0
-
-;;; Assigned during startup
-trash_icon_num:  .byte   0
 
 ;;; Selection drag/drop icon/result, and coords
 .params drag_drop_params
@@ -1230,16 +1149,7 @@ window_to_dir_icon_table:
 num_open_windows:
         .byte   0
 
-;;; --------------------------------------------------
-
-hex_digits:
-        .byte   "0123456789ABCDEF"
-
-;;; High bit set if menu dispatch via keyboard accelerator, clear otherwise.
-menu_kbd_flag:
-        .byte   0
-
-;;; --------------------------------------------------
+;;; ============================================================
 
 checkerboard_pattern:
         .byte   %01010101
@@ -1342,51 +1252,6 @@ icon_entries:
 ;;; ============================================================
 
         .org ::kSegmentDeskTopLC1BAddress
-
-
-;;; Map IconType to other icon/details
-
-icontype_iconentryflags_table:
-        .byte   0                    ; generic
-        .byte   0                    ; text
-        .byte   0                    ; binary
-        .byte   0                    ; graphics
-        .byte   0                    ; music
-        .byte   0                    ; font
-        .byte   0                    ; relocatable
-        .byte   0                    ; command
-        .byte   kIconEntryFlagsDropTarget ; folder
-        .byte   0                    ; iigs
-        .byte   0                    ; appleworks db
-        .byte   0                    ; appleworks wp
-        .byte   0                    ; appleworks sp
-        .byte   0                    ; archive
-        .byte   0                    ; desk accessory
-        .byte   0                    ; basic
-        .byte   0                    ; system
-        .byte   0                    ; application
-        ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT
-
-type_icons_table:               ; map into definitions below
-        .addr   gen ; generic
-        .addr   txt ; text
-        .addr   bin ; binary
-        .addr   fot ; graphics
-        .addr   mus ; music
-        .addr   fnt ; font
-        .addr   rel ; relocatable
-        .addr   cmd ; command
-        .addr   dir ; folder
-        .addr   src ; iigs
-        .addr   adb ; appleworks db
-        .addr   awp ; appleworks wp
-        .addr   asp ; appleworks sp
-        .addr   arc ; archive
-        .addr   a2d ; desk accessory
-        .addr   bas ; basic
-        .addr   sys ; system
-        .addr   app ; application
-        ASSERT_ADDRESS_TABLE_SIZE type_icons_table, IconType::COUNT
 
         DEFINE_ICON_RESOURCE gen, generic_icon, 4, 27, 15, generic_mask
         DEFINE_ICON_RESOURCE src, aux::iigs_file_icon, 4, 27, 15, generic_mask

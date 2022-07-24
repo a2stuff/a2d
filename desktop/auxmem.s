@@ -382,7 +382,6 @@ special_menu:
 ;;; ============================================================
 
         .include "../lib/drawstring.s"
-        .include "../lib/bell.s"
 
 ;;; ============================================================
 
@@ -787,28 +786,8 @@ start:
         .define AD_WRAP 1
         .define AD_EJECTABLE 0
 
+        Bell := BellFromAux
         .include "../lib/alert_dialog.s"
-
-;;; ============================================================
-;;; Copy current GrafPort MapInfo into target buffer
-;;; Inputs: A,X = mapinfo address
-
-.proc GetPortBits
-        port_ptr := $06
-
-        stax    dest_ptr
-
-        MGTK_CALL MGTK::GetPort, port_ptr
-
-        ldy     #.sizeof(MGTK::MapInfo)-1
-:       lda     (port_ptr),y
-        dest_ptr := *+1
-        sta     SELF_MODIFIED,y
-        dey
-        bpl     :-
-
-        rts
-.endproc
 
 ;;; ============================================================
 
