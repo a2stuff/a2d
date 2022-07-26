@@ -110,7 +110,6 @@ pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME alert_inner_frame_rect, kAlertRectWidth, kAlertRectHeight
 
-.if AD_SAVEBG
 .params screen_portbits
         DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   MGTK::screen_mapbits
@@ -118,7 +117,6 @@ mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
 .endparams
-.endif ; AD_SAVEBG
 
 .params portmap
         DEFINE_POINT viewloc, kAlertRectLeft, kAlertRectTop
@@ -127,17 +125,6 @@ mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
-
-.if !AD_SAVEBG
-;;; TODO: Move out of alert scope
-.params portbits2
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
-.endparams
-.endif ; AD_SAVEBG
 
 .macro DEFINE_ALERT_BUTTON ident, label, xpos, ypos, width, height
         .ident(.sprintf("%s_button_record", .string(ident))) := *
@@ -577,7 +564,7 @@ finish:
     END_IF
 .else
         pha
-        MGTK_CALL MGTK::SetPortBits, portbits2
+        MGTK_CALL MGTK::SetPortBits, screen_portbits
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, alert_rect
         pla
