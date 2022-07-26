@@ -16195,6 +16195,12 @@ type_icons_table:
         ASSERT_ADDRESS_TABLE_SIZE type_icons_table, IconType::COUNT
 
 ;;; ============================================================
+
+;;; Shortcut ("run list") paths
+run_list_paths:
+        .res    ::kMaxRunListEntries * ::kSelectorListPathLength, 0
+
+;;; ============================================================
 ;;; Localized strings (may change length)
 ;;; ============================================================
 

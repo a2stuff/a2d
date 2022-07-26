@@ -1296,10 +1296,10 @@ index:  .byte   0
 .proc GetResourcePathAddr
         jsr     main::ATimes64
         clc
-        adc     #<run_list_paths
+        adc     #<main::run_list_paths
         tay
         txa
-        adc     #>run_list_paths
+        adc     #>main::run_list_paths
         tax
         tya
         rts
