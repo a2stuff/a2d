@@ -838,7 +838,7 @@ entries_buffer := *
 
 kDAWindowID     = 63
 kDAWidth        = 465
-kDAHeight       = 151
+kDAHeight       = 150
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
@@ -1250,16 +1250,15 @@ kPartEnd  = $81
 
 .proc HandleScrollWithPart
         sta     findcontrol_params::which_part
+        FALL_THROUGH_TO HandleScroll
+.endproc
 
+.proc HandleScroll
         ;; Ignore unless vscroll is enabled
         lda     winfo_results::vscroll
         and     #MGTK::Scroll::option_active
         jeq     InputLoop
 
-        FALL_THROUGH_TO HandleScroll
-.endproc
-
-.proc HandleScroll
         lda     num_entries
         sec
         sbc     #kResultsRows
@@ -1358,18 +1357,15 @@ done:   jmp     InputLoop
 max_top:        .byte   0
 .endproc
 
+;;; ============================================================
+
 ;;; Assumes `top_row` is set.
 .proc UpdateViewport
-        ;; Update top of maprect: 1 + top_row * kListItemHeight
-        copy16  #0, winfo_results::maprect::y1
-        ldx     top_row
-        beq     bottom
-:       add16   #kListItemHeight, winfo_results::maprect::y1, winfo_results::maprect::y1
-        dex
-        bne     :-
-
-        ;; Update bottom of maprect
-bottom: add16   winfo_results::maprect::y1, #kResultsHeight, winfo_results::maprect::y2
+        ldax    #kListItemHeight
+        ldy     top_row
+        jsr     Multiply_16_8_16
+        stax    winfo_results::maprect::y1
+        addax   #kResultsHeight, winfo_results::maprect::y2
 
         rts
 .endproc
@@ -1478,13 +1474,13 @@ done:   MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::ShowCursor
 
         copy    #0, cur_line
-        copy16  #0, cur_pos::ycoord
+        copy16  #kListItemTextOffsetY, cur_pos::ycoord
         rts
 .endproc
 
 .proc DrawNextResult
-        add16_8   cur_pos::ycoord, #kListItemHeight, cur_pos::ycoord
         MGTK_CALL MGTK::MoveTo, cur_pos
+        add16_8   cur_pos::ycoord, #kListItemHeight, cur_pos::ycoord
 
         lda     cur_line
         jsr     GetEntry
@@ -1514,6 +1510,7 @@ done:   MGTK_CALL MGTK::ShowCursor
 
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
+        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 

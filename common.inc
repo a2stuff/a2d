@@ -64,6 +64,8 @@ kTextBoxTextVOffset = kSystemFontHeight+1 ; from top edge of rect to text pos
 
 ;;; Standard list box control metrics
 kListItemHeight = kSystemFontHeight+1
+kListItemTextOffsetX = kTextBoxTextHOffset
+kListItemTextOffsetY = kListItemHeight - 1
 
 ;;; Mouse threshold for double click detection.
 kDoubleClickDeltaX      = 5

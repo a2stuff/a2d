@@ -1723,15 +1723,17 @@ d4:     .byte   0
         jsr     SetPortForList
         MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::maprect
         copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
-        copy16  #kListItemHeight-1, file_dialog_res::picker_entry_pos::ycoord
+        copy16  #kListItemTextOffsetY, file_dialog_res::picker_entry_pos::ycoord
         copy    #0, index
 
 loop:   lda     index
         cmp     num_file_names
         bne     :+
         rts
+:
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
+        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListItemHeight
 
-:       MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
         ldx     index
         lda     file_list_index,x
         and     #$7F
@@ -1755,7 +1757,6 @@ loop:   lda     index
         jsr     InvertEntry
 l2:     inc     index
 
-        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListItemHeight, file_dialog_res::picker_entry_pos::ycoord
         jmp     loop
 
 index:  .byte   0

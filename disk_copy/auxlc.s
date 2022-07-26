@@ -1599,6 +1599,7 @@ CheckAlpha:
 
 ;;; Assert: `top_row` is set.
 .proc HandleScroll
+        ;; Ignore unless vscroll is enabled
         lda     winfo_drive_select::vscroll
         and     #MGTK::Scroll::option_active
         bne     :+
@@ -1723,12 +1724,10 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; Assert: `top_row` is set.
+;;; Assumes `top_row` is set.
 .proc UpdateViewport
-        copy16  #0, winfo_drive_select::maprect::y1
-        lda     top_row         ; lo
-        ldx     #0              ; hi
-        ldy     #kListItemHeight
+        ldax    #kListItemHeight
+        ldy     top_row
         jsr     Multiply_16_8_16
         stax    winfo_drive_select::maprect::y1
         addax   #kListBoxHeight, winfo_drive_select::maprect::y2
@@ -1904,13 +1903,12 @@ match:  lda     DEVLST,x
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
 
-        lda     #0
-        sta     index
+        copy    #0, index
+        copy16  #kListItemTextOffsetY, list_entry_pos::ycoord
 
 loop:   lda     index
-        jsr     SetYCoord
-        lda     index
         jsr     DrawDeviceListEntry
+        add16_8 list_entry_pos::ycoord, #kListItemHeight
 
         inc     index
         lda     index
@@ -1987,14 +1985,13 @@ src_block_count:
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
 
-        lda     #0
-        sta     index
+        copy    #0, index
+        copy16  #kListItemTextOffsetY, list_entry_pos::ycoord
 
-loop:   lda     index
-        jsr     SetYCoord
-        ldx     index
+loop:   ldx     index
         lda     destination_index_table,x
         jsr     DrawDeviceListEntry
+        add16_8 list_entry_pos::ycoord, #kListItemHeight
 
         inc     index
         lda     index
@@ -2064,16 +2061,6 @@ index:  .byte   0
 
 device_index:
         .byte   0
-.endproc
-
-;;; ============================================================
-
-.proc SetYCoord
-        ldx     #0              ; hi (A=lo)
-        ldy     #kListItemHeight
-        jsr     Multiply_16_8_16
-        addax   #kListItemHeight-1, list_entry_pos::ycoord
-        rts
 .endproc
 
 ;;; ============================================================

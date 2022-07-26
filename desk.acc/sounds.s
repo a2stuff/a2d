@@ -289,8 +289,6 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        kListItemTextOffsetX = kTextBoxTextHOffset
-        kListItemTextOffsetY = kListItemHeight - 1
         DEFINE_POINT itempos, kListItemTextOffsetX, 0
         DEFINE_RECT itemrect, 0, 0, winfo_listbox::kWidth, 0
 
@@ -683,11 +681,8 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; Assumes `top_row` is set.
+;;; Assert: `top_row` is set.
 .proc UpdateViewport
-        ;; Compute height of line (font height + 1)
-        ;; Update top of maprect: 1 + top_row * line_height
-        copy16  #0, winfo_listbox::maprect::y1
         ldax    #kListItemHeight
         ldy     top_row
         jsr     Multiply_16_8_16
@@ -838,19 +833,17 @@ ret:    rts
 
         lda     #0
         sta     index
+        copy16  #kListItemTextOffsetY, itempos::ycoord
+
+loop:   MGTK_CALL MGTK::MoveTo, itempos
+        add16_8  itempos::ycoord, #kListItemHeight
 
         index := *+1
-loop:   lda     #SELF_MODIFIED_BYTE
-        ldx     #0
-        ldy     #kListItemHeight
-        jsr     Multiply_16_8_16
-        addax   #kListItemTextOffsetY, itempos::ycoord
-        MGTK_CALL MGTK::MoveTo, itempos
-
-        ptr := $06
-        lda     index
+        lda     #SELF_MODIFIED_BYTE
         asl
         tax
+
+        ptr := $06
         copy16  name_table,x, ptr
         param_call_indirect DrawString, ptr
 
