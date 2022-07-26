@@ -399,7 +399,7 @@ done:   rts
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ldy     #IconEntry::state
-        lda     (ptr),y         ; valid icon?
+        lda     (ptr),y         ; highlighted?
         asl
         bmi     :+
 
@@ -502,7 +502,7 @@ done:   rts
 
         jsr     CalcIconPoly
         lda     #$80            ; redraw highlighted
-        jmp     erase_icon
+        jmp     EraseIconCommon
 .endproc
 
 ;;; ============================================================
@@ -564,11 +564,11 @@ count:  .byte   0
         sta     count
 count := * + 1
 loop:   ldx     #SELF_MODIFIED_BYTE
-        bne     L96E5
+        bne     :+
         txa
         rts
 
-L96E5:  dec     count
+:       dec     count
         dex
         ldy     icon_list,x
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
@@ -1079,7 +1079,7 @@ same_window:
         copylohi  icon_ptrs_low,y, icon_ptrs_high,y, $06
         jsr     CalcIconPoly
         lda     #0              ; don't redraw highlighted
-        jsr     erase_icon
+        jsr     EraseIconCommon
         pla
         tax
         bpl     :-              ; always
@@ -2132,7 +2132,7 @@ icon_num:       .byte   0
 ;;; ============================================================
 ;;; Erase an icon; redraws overlapping icons as needed
 
-erase_icon:
+EraseIconCommon:
         sta     redraw_highlighted_flag
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport

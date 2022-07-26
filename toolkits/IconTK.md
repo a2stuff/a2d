@@ -45,10 +45,9 @@ reserved        .byte   ; 0
 maprect         .res 8  ; x1,y1 must be 0,0
 
 ;; Next part is address of mask bits; must be same
-;; dimensions as rect of icon.
+;; dimensions as icon.
 maskbits        .addr
-.endstruct
-
+```
 
 ## Commands
 
@@ -56,9 +55,14 @@ Return value in A, 0=success.
 
 ### `IconTK::InitToolKit` ($00)
 
-Parameters: { byte headersize, addr a_polybuf, word bufsize }
-
 Initializes the tookit with key information about the client.
+
+Parameters:
+```
+.byte       headersize
+.addr       a_polybuf
+.word       bufsize
+```
 
 * `headersize` is how much to vertically offset window ports to account for a header
 * `a_polybuf` points to a scratch buffer safe to use when doing a modal drag operation; this is used to construct the outline polygon
@@ -68,91 +72,171 @@ Since the buffer is only used during modal drag operations, it is safe to use th
 
 ### `IconTK::AddIcon` ($01)
 
-Parameters: address of IconEntry
-
 Inserts an icon record into the table.
+
+Parameters: address of `IconEntry`
 
 Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
 
-### `IconTK::HighlightIcon` ($02)
+Result codes (in A):
+* 0 = success
+* 1 = icon id already in use
 
-Parameters: { byte icon }
+### `IconTK::HighlightIcon` ($02)
 
 Highlights (selects) an icon by number.
 
+Parameters:
+```
+.byte       icon            Icon number
+```
+
 Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+
+Result codes (in A):
+* 0 = success
+* 2 = invalid icon
+* 3 = already highlighted
 
 ### `IconTK::DrawIcon` ($03)
 
-Parameters: { byte icon }
-
 Redraws an icon by number.
+
+Parameters:
+```
+.byte       icon            Icon number
+```
 
 For windowed icons, the appropriate GrafPort must be selected, and the icons must be mapped into appropriate coordinates (i.e. mapped from screen space into window space). Windowed icons are not clipped, so must only be drawn during an update call or into the active window.
 
 For desktop icons, the icon is clipped against any open windows.
 
-### `IconTK::RemoveIcon` ($04)
+Result codes (in A):
+* 0 = success
+* 1 = icon not found
 
-Parameters: { byte icon }
+### `IconTK::RemoveIcon` ($04)
 
 Removes an icon by number.
 
-Note that it does not paint the icon. Callers must make a previous call to `IconTK::EraseIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+Parameters:
+```
+.byte       icon            Icon number
+```
+
+Note that it does not erase the icon. Callers must make a previous call to `IconTK::EraseIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+
+Result codes (in A):
+* 0 = success
+* 1 = icon not found
 
 ### `IconTK::RemoveAll` ($05)
 
-Parameters: { byte window_id }
+Removes all icons from specified window (0 = desktop). No redrawing is done.
 
-Removes all icons from specified window (0 = desktop).
+Parameters:
+```
+.byte       window_id       Window ID, or 0 for desktop
+```
+
+Result codes (in A):
+* 0 = success
 
 ### `IconTK::CloseWindow` ($06)
 
-Parameters: { byte window_id }
+Removes all icons from specified window (0 = desktop). No redrawing is done.
 
-Remove all icons associated with the specified window. No redrawing is done.
+Parameters:
+```
+.byte       window_id       Window ID, or 0 for desktop
+```
+
+Result codes (in A):
+* 0 = success
 
 ### `IconTK::FindIcon` ($07)
 
-Parameters: { word mousex, word mousey, (out) byte result }
-
 Find the icon number at the given coordinates.
+
+Parameters:
+```
+.word       mousex          Click x location (screen coordinates)
+.word       mousey          Click y location (screen coordinates)
+.byte       result          (out) icon number
+```
 
 ### `IconTK::DragHighlighted` ($08)
 
-Parameters: { byte param, word mousex, word mousey }
+Initiates a drag of the highlighted icon(s).
 
-Initiates a drag of the highlighted icon(s). On entry, set param to
-the specific icon being dragged. On return, the param has 0 if the
-drop was on the desktop, high bit clear if the drop target was an icon
-(and the low bits are the icon number), high bit set if the drop
-target was a window (and the low bits are the window number).
+Parameters:
+```
+.byte       param           (in) icon number; (out) result
+.word       mousex          Click x location (screen coordinates)
+.word       mousey          Click y location (screen coordinates)
+```
+
+Call with set `param` to the specific icon being dragged, and the event mouse coordinates.
+
+If successful, the `param` will be:
+
+* 0 if the drop was just a move, i.e. dragging icons within a window or within the desktop.
+* High bit clear if the drop target was an icon, and the low bits are the icon number.
+* High bit set if the drop target was a window, and the low bits are the window number.
+
+Result codes (in A):
+* 0 = success
+* 2 = non-drag event seen
+* 3 = no selection
 
 ### `IconTK::UnhighlightIcon` ($09)
 
-Parameters: { byte icon }
+Unhighlights (deselects) the specified icon.
 
-Unhighlights the specified icon.
+Parameters:
+```
+.byte       icon            Icon number
+```
 
 Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
 
+Result codes (in A):
+* 0 = success
+* 2 = invalid icon
+* 3 = icon not highlighted
+
 ### `IconTK::RedrawDesktopIcons` ($0A)
+
+Redraws the icons on the desktop (mounted volumes, trash).
 
 Parameters: none (pass $0000 as address)
 
-Redraws the icons on the desktop (mounted volumes, trash). This call should be performed in response to an MGTK `update` event with `window_id` of 0, indicating that the desktop needs to be repainted. It assumes that overlapping windows will be repainted on top so no additional clipping is done beyond the active grafport.
+This call should be performed in response to an MGTK `update` event with `window_id` of 0, indicating that the desktop needs to be repainted. It assumes that overlapping windows will be repainted on top so no additional clipping is done beyond the active grafport.
 
 ### `IconTK::IconInRect` ($0B)
 
-Parameters: { byte icon, rect bounds }
-
 Tests to see if the given icon (by number) overlaps the passed rect.
+
+Parameters:
+```
+.byte       icon            Icon number
+MGTK::Rect  bounds          Rect to test against
+```
+
+Result codes (in A):
+* 0 = outside rect
+* 1 = inside rect
 
 ### `IconTK::EraseIcon` ($0C)
 
-Parameters: { byte icon }
+Erases the specified icon by number.
 
-Erases the specified icon by number. No error checking is done. If the icon is in a window, it must be in the active window.
+Parameters:
+```
+.byte       icon            Icon number
+```
+
+No error checking is done. If the icon is in a window, it must be in the active window.
 
 Note that unlike `DrawIcon`, this call does _not_ require a GrafPort to be set by the caller. For icons in a window, the active window's GrafPort bounds (including scroll position and subtracting DeskTop's window header) will automatically be taken into account.
 
