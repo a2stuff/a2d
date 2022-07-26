@@ -16150,6 +16150,7 @@ type_names_table:
 ;;; ============================================================
 ;;; Map IconType to other icon/details
 
+;;; Table mapping IconType to kIconEntryFlags*
 icontype_iconentryflags_table:
         .byte   0                    ; generic
         .byte   0                    ; text
@@ -16171,7 +16172,8 @@ icontype_iconentryflags_table:
         .byte   0                    ; application
         ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT
 
-type_icons_table:               ; map into definitions below
+;;; Table mapping IconType to IconResource
+type_icons_table:
         .addr   gen ; generic
         .addr   txt ; text
         .addr   bin ; binary
