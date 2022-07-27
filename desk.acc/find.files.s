@@ -124,7 +124,7 @@ no_windows:
 :       asl16   offset
         dex
         bne     :-
-        add16_8 offset, num, offset ; offset += num, so * 65
+        add16_8 offset, num ; offset += num, so * 65
         add16   offset, #entries_buffer, offset
 
         ldax    offset
@@ -1480,7 +1480,7 @@ done:   MGTK_CALL MGTK::ShowCursor
 
 .proc DrawNextResult
         MGTK_CALL MGTK::MoveTo, cur_pos
-        add16_8   cur_pos::ycoord, #kListItemHeight, cur_pos::ycoord
+        add16_8   cur_pos::ycoord, #kListItemHeight
 
         lda     cur_line
         jsr     GetEntry

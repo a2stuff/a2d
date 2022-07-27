@@ -753,7 +753,7 @@ next_entry:
         sta     entry_in_block
         jmp     process_block
 
-:       add16_8 dir_ptr, entry_length, dir_ptr
+:       add16_8 dir_ptr, entry_length
         jmp     process_block
 
 close_dir:
@@ -1242,7 +1242,7 @@ loop:   ldy     #0
 
         jsr     PopPointers
 
-        add16_8 data_ptr, #.sizeof(DeskTopFileItem), data_ptr
+        add16_8 data_ptr, #.sizeof(DeskTopFileItem)
         jmp     loop
 
 exit:   jmp     LoadDesktopEntryTable

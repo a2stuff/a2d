@@ -298,17 +298,17 @@ length  .byte
 END_PARAM_BLOCK
 
         jsr     _PrepTextParams
-        sta     @len
+        sta     len
 
         ldy     #LETK::LineEditRecord::ip_pos
         lda     (a_record),y
-        sta     @ip_pos
+        sta     ip_pos
 
-        add16_8 dt_params::data, @ip_pos, dt_params::data
-        @len := *+1
+        add16_8 dt_params::data, ip_pos
+        len := *+1
         lda     #SELF_MODIFIED_BYTE
         sec
-        @ip_pos := *+1
+        ip_pos := *+1
         sbc     #SELF_MODIFIED_BYTE
         beq     :+
         sta     dt_params::length

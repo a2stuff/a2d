@@ -486,13 +486,14 @@ end:
 ;;;    add16_8 $1111, $22               ; absolute, absolute
 .macro add16_8 arg1, arg2, arg3
     .ifblank arg3
+        .local skip
         _op_lo  lda, {arg1}
         clc
         adc     arg2
         sta     arg1
-        bcc     :+
+        bcc     skip
         _op_hi  inc, {arg1}
-:
+skip:
     .else
         _op_lo  lda, {arg1}
         clc

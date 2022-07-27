@@ -1700,7 +1700,7 @@ l9:     clc
 next:   lda     d3
         cmp     d4
         beq     :+
-        add16_8 ptr, entry_length, ptr
+        add16_8 ptr, entry_length
         jmp     l1
 
 :       MLI_CALL READ, read_params

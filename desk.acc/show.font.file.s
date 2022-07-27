@@ -167,16 +167,16 @@ expected_size:
 
         ldx     font_buffer + MGTK::Font::lastchar
         inx                     ; lastchar + 1
-:       add16_8 expected_size, font_buffer + MGTK::Font::height, expected_size
+:       add16_8 expected_size, font_buffer + MGTK::Font::height
         dex
         bne     :-              ; = (lastchar + 1) * height
 
         bit     font_buffer + MGTK::Font::fonttype
         bpl     :+
-        asl16   expected_size            ; *= 2 if double width
+        asl16   expected_size   ; *= 2 if double width
 :
-        add16_8 expected_size, font_buffer + MGTK::Font::lastchar, expected_size ; += lastchar
-        add16_8 expected_size, #4, expected_size  ; += 3 + 1
+        add16_8 expected_size, font_buffer + MGTK::Font::lastchar ; += lastchar
+        add16_8 expected_size, #4 ; += 3 + 1
 
         rts
 .endproc
