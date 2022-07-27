@@ -576,8 +576,7 @@ LD687:  lda     current_drive_selection
         lda     current_drive_selection
         sta     source_drive_index
 
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_select_src
         MGTK_CALL MGTK::MoveTo, point_select_source
@@ -608,8 +607,7 @@ LD6F9:  lda     current_drive_selection
         sta     dest_drive_index
         lda     #$00
         sta     LD44C
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
 
@@ -642,8 +640,7 @@ LD734:  ldx     #0
         jsr     DrawSourceDriveInfo
         jmp     LD7AD
 
-LD763:  lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+LD763:  jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_D42A
         jmp     LD734
@@ -784,8 +781,7 @@ LD89F:  lda     #kAlertMsgDestinationProtected ; no args
         beq     LD852           ; Try Again
         jmp     InitDialog      ; Cancel
 
-LD8A9:  lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+LD8A9:  jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
         lda     source_drive_index
@@ -1010,8 +1006,7 @@ LDA42:  copy    #0, checkitem_params::check
         copy    #1, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    #0, disk_copy_flag
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         param_call DrawTitleText, label_quick_copy
         rts
@@ -1027,8 +1022,7 @@ LDA7D:  copy    #0, checkitem_params::check
         copy    #1, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    #1, disk_copy_flag
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         param_call DrawTitleText, label_disk_copy
         rts
@@ -1058,9 +1052,8 @@ HandleButtonDown:
         ;; --------------------------------------------------
         ;; Dialog window
 handle_dialog_button_down:
-        lda     #winfo_dialog::kWindowId
-        sta     screentowindow_params::window_id
-        jsr     SetWinPort
+        jsr     SetPortForDialog
+        copy    #winfo_dialog::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -1417,8 +1410,7 @@ l3:     lda     #$3A
 
 .proc OpenDialog
         MGTK_CALL MGTK::OpenWindow, winfo_dialog
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, rect_frame
@@ -1429,8 +1421,7 @@ l3:     lda     #$3A
 .endproc
 
 .proc DrawDialog
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
@@ -1534,16 +1525,27 @@ CheckAlpha:
 
 ;;; ============================================================
 
-.proc SetWinPort
+.proc SetPortForList
+        lda     #winfo_drive_select::kWindowId
+        bne     SetPortForWindow ; always
+.endproc
+
+.proc SetPortForDialog
+        lda     #winfo_dialog::kWindowId
+        FALL_THROUGH_TO SetPortForWindow
+.endproc
+
+.proc SetPortForWindow
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
+        ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
 .endproc
 
 ;;; ============================================================
+;;; Input: A = row to highlight
 
-;;; A = row to highlight
 .proc HighlightRow
         ldx     #0              ; hi (A=lo)
         ldy     #kListItemHeight
@@ -1551,8 +1553,7 @@ CheckAlpha:
         stax    rect_highlight_row::y1
         addax   #kListItemHeight-1, rect_highlight_row::y2
 
-        lda     #winfo_drive_select::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_highlight_row
         rts
@@ -1897,8 +1898,7 @@ match:  lda     DEVLST,x
 ;;; ============================================================
 
 .proc DrawDeviceListEntries
-        lda     #winfo_drive_select::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForList
 
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
@@ -1979,8 +1979,7 @@ src_block_count:
 ;;; ============================================================
 
 .proc DrawDestinationListEntries
-        lda     #winfo_drive_select::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForList
 
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
@@ -2140,20 +2139,17 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-LE491:  lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+LE491:  jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_writing
         param_call DrawString, str_writing
         rts
 
-LE4A8:  lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+LE4A8:  jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_reading
         param_call DrawString, str_reading
         rts
 
-LE4BF:  lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+LE4BF:  jsr     SetPortForDialog
         lda     source_drive_index
         asl     a
         tay
@@ -2180,8 +2176,7 @@ LE507:  jsr     LE522
         param_call DrawString, str_2_spaces
         rts
 
-LE522:  lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+LE522:  jsr     SetPortForDialog
         lda     block_num_div8+1
         sta     LE558
         lda     block_num_div8
@@ -2208,8 +2203,7 @@ LE558:  .byte   0
 ;;; ============================================================
 
 .proc DrawSourceDriveInfo
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_source2
         param_call DrawString, str_source
         ldx     source_drive_index
@@ -2252,8 +2246,7 @@ LE5C6:  param_call DrawString, str_2_spaces
 ;;; ============================================================
 
 .proc DrawDestinationDriveInfo
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_destination
         param_call DrawString, str_destination
         ldx     dest_drive_index
@@ -2283,8 +2276,7 @@ LE5C6:  param_call DrawString, str_2_spaces
 
 ;;; ============================================================
 
-LE63F:  lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+LE63F:  jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_disk_copy
         bit     LD44D
         bmi     LE65B
@@ -2304,14 +2296,12 @@ LE673:  rts
 LE674:  lda     LD44D
         cmp     #$C0
         beq     LE693
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_D483
 LE693:  rts
 
-LE694:  lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+LE694:  jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_escape_stop_copy
         param_call DrawString, str_escape_stop_copy
         rts
@@ -2320,8 +2310,7 @@ LE694:  lda     #winfo_dialog::kWindowId
 ;;; Flash the message when escape is pressed
 
 .proc FlashEscapeMessage
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         copy    #10, count
         copy    #$80, flag
 
@@ -2366,8 +2355,7 @@ flag:   .byte   0
         return  #$80
 
 l2:     jsr     Bell
-        lda     #winfo_dialog::kWindowId
-        jsr     SetWinPort
+        jsr     SetPortForDialog
         lda     main__block_params_block_num
         ldx     main__block_params_block_num+1
         jsr     IntToStringWithSeparators

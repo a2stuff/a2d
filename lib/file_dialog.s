@@ -470,7 +470,7 @@ different:
         jsr     ReadDir
         jsr     UpdateScrollbar
         lda     #0
-        jsr     ScrollClipRect
+        jsr     UpdateViewport
         jsr     UpdateDiskName
         jmp     DrawListEntries
 .endproc
@@ -576,7 +576,7 @@ different:
         sta     updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_params::thumbpos
-        jsr     ScrollClipRect
+        jsr     UpdateViewport
         jmp     DrawListEntries
 .endproc
 
@@ -1778,7 +1778,7 @@ UpdateScrollbar:
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         copy    #0, file_dialog_res::winfo_listbox::vthumbmax
         lda     #0
-        jmp     ScrollClipRect
+        jmp     UpdateViewport
 :
         ;; Activate scrollbar
         lda     num_file_names
@@ -1798,7 +1798,7 @@ UpdateScrollbar:
         cmp     file_dialog_res::winfo_listbox::vthumbpos
     IF_NE
         sta     updatethumb_params::thumbpos
-        jsr     ScrollClipRect
+        jsr     UpdateViewport
         lda     #MGTK::Ctl::vertical_scroll_bar
         sta     updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -1839,34 +1839,16 @@ finish: sty     file_dialog_res::filename_buf
 .endproc
 
 ;;; ============================================================
+;;; Input: A = new top row
 
-.proc ScrollClipRect
-        sta     tmp
-        clc
-        adc     #file_dialog_res::kListRows
-        cmp     num_file_names
-        beq     l1
-        bcs     l2
-l1:     lda     tmp
-        jmp     l4
-
-l2:     lda     num_file_names
-        cmp     #file_dialog_res::kListRows+1
-        bcs     l3
-        lda     tmp
-        jmp     l4
-
-l3:     sec
-        sbc     #file_dialog_res::kListRows
-
-l4:     ldx     #$00            ; A,X = line
-        ldy     #kListItemHeight
+.proc UpdateViewport
+        tay
+        ldax    #kListItemHeight
         jsr     Multiply_16_8_16
         stax    file_dialog_res::winfo_listbox::maprect::y1
-        add16_8 file_dialog_res::winfo_listbox::maprect::y1, #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::maprect::y2
-        rts
+        addax   #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::maprect::y2
 
-tmp:    .byte   0
+        rts
 .endproc
 
 ;;; ============================================================
@@ -1887,17 +1869,21 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-.proc SetPortForDialog
-        lda     #file_dialog_res::kFilePickerDlgWindowID
-        bne     SetPortForWindow ; always
-.endproc
+
 .proc SetPortForList
         lda     #file_dialog_res::kEntryListCtlWindowID
+        bne     SetPortForWindow ; always
+.endproc
+
+.proc SetPortForDialog
+        lda     #file_dialog_res::kFilePickerDlgWindowID
         FALL_THROUGH_TO SetPortForWindow
 .endproc
+
 .proc SetPortForWindow
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
+        ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc

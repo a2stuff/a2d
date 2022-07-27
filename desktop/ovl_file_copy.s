@@ -194,7 +194,7 @@ L726D:  lda     file_dialog::path_buf
 
 L7272:  jsr     file_dialog::DeviceOnLine
         lda     #0
-        jsr     file_dialog::ScrollClipRect
+        jsr     file_dialog::UpdateViewport
         jsr     file_dialog::ReadDir
         lda     #$FF            ; clear selection
         bne     L7289           ; always

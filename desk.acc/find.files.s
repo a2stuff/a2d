@@ -1421,11 +1421,28 @@ done:   jmp     InputLoop
 
 ;;; ============================================================
 
-.proc DrawWindow
-        copy    #kDAWindowID, getwinport_params::window_id
+.proc SetPortForList
+        lda     #kResultsWindowID
+        bne     SetPortForWindow ; always
+.endproc
+
+.proc SetPortForDialog
+        lda     #kDAWindowID
+        FALL_THROUGH_TO SetPortForWindow
+.endproc
+
+.proc SetPortForWindow
+        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        ;; No need to check results, since window is always visible.
+        ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, grafport_win
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawWindow
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::HideCursor
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -1465,10 +1482,8 @@ done:   MGTK_CALL MGTK::ShowCursor
 ;;; ============================================================
 
 .proc PrepDrawResults
-        copy    #kResultsWindowID, getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        ;; No need to check results, since window is always visible.
-        MGTK_CALL MGTK::SetPort, grafport_win
+        jsr     SetPortForList
+
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintRect, winfo_results::maprect
         MGTK_CALL MGTK::ShowCursor

@@ -775,8 +775,8 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Input: A = index to toggle highlight
 
-;;; A = index to toggle highlight
 .proc HighlightIndex
         bmi     ret
 
@@ -786,13 +786,30 @@ ret:    rts
         stax    itemrect::y1
         addax   #kListItemHeight-1, itemrect::y2
 
-        copy    #kListBoxWindowId, getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport_win
-
+        jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, itemrect
 ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc SetPortForList
+        lda     #kListBoxWindowId
+        bne     SetPortForWindow ; always
+.endproc
+
+.proc SetPortForDialog
+        lda     #kDAWindowId
+        FALL_THROUGH_TO SetPortForWindow
+.endproc
+
+.proc SetPortForWindow
+        sta     getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        ;; ASSERT: Not obscured.
+        MGTK_CALL MGTK::SetPort, grafport_win
+        rts
 .endproc
 
 
@@ -801,9 +818,7 @@ ret:    rts
 .proc DrawWindow
 
         ;; Dialog Box
-        copy    #kDAWindowId, getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport_win
+        jsr     SetPortForDialog
 
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -824,9 +839,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc DrawListEntries
-        copy    #kListBoxWindowId, getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport_win
+        jsr     SetPortForList
 
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, winfo_listbox::maprect
