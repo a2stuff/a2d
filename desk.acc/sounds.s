@@ -462,9 +462,8 @@ ret:    rts
 SetSelection:
         pha                     ; A = new selection
         lda     selected_index
-        bmi     :+
         jsr     HighlightIndex
-:       pla                     ; A = new selection
+        pla                     ; A = new selection
         sta     selected_index
         jsr     ScrollIntoView
 
@@ -640,6 +639,8 @@ done:   rts
 
 ;;; ============================================================
 
+;;; Input: A = row to ensure visible
+;;; Assert: `winfo_drive_select::vthumbpos` is set.
 .proc ScrollIntoView
         cmp     winfo_listbox::vthumbpos
     IF_LT
@@ -669,6 +670,7 @@ skip:   lda     selected_index
 
 ;;; ============================================================
 
+;;; Assumes `winfo_drive_select::vthumbpos` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
         ldy     winfo_listbox::vthumbpos

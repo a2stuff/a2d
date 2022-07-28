@@ -208,7 +208,7 @@ L7289:
         cmp     #$FF            ; if no selection...
         bne     :+              ; make scroll index 0
         lda     #$00
-:       jsr     file_dialog::UpdateScrollbarWithIndex
+:       jsr     file_dialog::ScrollIntoView
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         jmp     file_dialog::Activate

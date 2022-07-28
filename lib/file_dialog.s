@@ -460,8 +460,7 @@ different:
         lda     #$FF
         jsr     SetSelectedIndex
         jsr     ReadDir
-        jsr     UpdateScrollbar
-        lda     #0
+        jsr     EnableScrollbar
         jsr     UpdateViewport
         jsr     UpdateDiskName
         jmp     DrawListEntries
@@ -543,10 +542,8 @@ update: jmp     UpdateThumbCommon
         copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
-        bne     :+
-        rts
-
-:       lda     trackthumb_params::thumbpos
+        beq     done
+        lda     trackthumb_params::thumbpos
         jmp     UpdateThumbCommon
 
         ;; --------------------------------------------------
@@ -560,7 +557,6 @@ done:   rts
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        lda     updatethumb_params::thumbpos
         jsr     UpdateViewport
         jmp     DrawListEntries
 .endproc
@@ -1221,20 +1217,8 @@ yes:    clc
 ;;; Inputs: A=index
 .proc UpdateListSelection
         jsr     SetSelectedIndex
+        jsr     ScrollIntoView
         jsr     HandleSelectionChange
-
-        lda     file_dialog_res::selected_index
-        jsr     CalcTopIndex
-        cmp     file_dialog_res::winfo_listbox::vthumbpos
-        beq     :+
-
-        ;; View changed - redraw everything
-        jsr     UpdateScrollbarWithIndex
-        jmp     DrawListEntries
-:
-        ;; No change - just adjust highlights
-        lda     file_dialog_res::selected_index
-        jmp     InvertEntry
 .endproc
 
 ;;; ============================================================
@@ -1760,49 +1744,36 @@ index:  .byte   0
 
 ;;; ============================================================
 
-UpdateScrollbar:
-        lda     #$00
+;;; Enable/disable scrollbar as appropriate; resets thumb pos.
+;;; Assert: `num_file_names` is set.
+.proc EnableScrollbar
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
 
-.proc UpdateScrollbarWithIndex
-        sta     index
         lda     num_file_names
         cmp     #file_dialog_res::kListRows + 1
-        bcs     :+
-        ;; Deactivate scrollbar
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+    IF_LT
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
         copy    #MGTK::activatectl_deactivate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        copy    #0, file_dialog_res::winfo_listbox::vthumbmax
-        lda     #0
-        jmp     UpdateViewport
-:
-        ;; Activate scrollbar
+
+        rts
+    END_IF
+
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
         lda     num_file_names
         sec
         sbc     #file_dialog_res::kListRows
-        cmp     file_dialog_res::winfo_listbox::vthumbmax
-        beq     :+
-        sta     file_dialog_res::winfo_listbox::vthumbmax
-        .assert MGTK::Ctl::vertical_scroll_bar = MGTK::activatectl_activate, error, "need to match"
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     activatectl_params::which_ctl
-        sta     activatectl_params::activate
+        sta     setctlmax_params::ctlmax
+        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+
+        copy    #MGTK::activatectl_activate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-:
-        ;; Update position
-        lda     index
-        cmp     file_dialog_res::winfo_listbox::vthumbpos
-    IF_NE
-        sta     updatethumb_params::thumbpos
-        jsr     UpdateViewport
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-    END_IF
 
         rts
-
-index:  .byte   0
 .endproc
 
 ;;; ============================================================
@@ -1835,11 +1806,42 @@ finish: sty     file_dialog_res::filename_buf
 .endproc
 
 ;;; ============================================================
-;;; Input: A = new top row
 
+;;; Input: A = row to ensure visible
+;;; Assert: `file_dialog_res::winfo_listbox::vthumbpos` is set.
+.proc ScrollIntoView
+        cmp     file_dialog_res::winfo_listbox::vthumbpos
+    IF_LT
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+        sec
+        sbc     #file_dialog_res::kListRows-1
+        bmi     skip
+        cmp     file_dialog_res::winfo_listbox::vthumbpos
+        beq     skip
+    IF_GE
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+skip:   lda     file_dialog_res::selected_index
+        jmp     InvertEntry
+.endproc
+
+;;; ============================================================
+
+;;; Assumes `file_dialog_res::winfo_listbox::vthumbpos` is set.
 .proc UpdateViewport
-        tay
         ldax    #kListItemHeight
+        ldy     file_dialog_res::winfo_listbox::vthumbpos
         jsr     Multiply_16_8_16
         stax    file_dialog_res::winfo_listbox::maprect::y1
         addax   #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::maprect::y2

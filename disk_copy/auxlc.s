@@ -1588,6 +1588,7 @@ ret:    rts
 
         copy    #MGTK::activatectl_deactivate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
+
         rts
     END_IF
 
@@ -1709,7 +1710,6 @@ done:   rts
 .proc ScrollIntoView
         cmp     winfo_drive_select::vthumbpos
     IF_LT
-        sta     winfo_drive_select::vthumbpos
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -1723,7 +1723,6 @@ done:   rts
         cmp     winfo_drive_select::vthumbpos
         beq     skip
     IF_GE
-        sta     winfo_drive_select::vthumbpos
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params

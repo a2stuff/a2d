@@ -1161,13 +1161,13 @@ ignore: sec
         param_call JTRelay, JUMP_TABLE_CUR_WATCH
 
         copy    #0, num_entries
-        jsr     UpdateScrollbar
+        jsr     EnableScrollbar
         jsr     UpdateViewport
         jsr     PrepDrawResults
 
         ;; Do the search
         jsr     RecursiveCatalog::Start
-        jsr     UpdateScrollbar
+        jsr     EnableScrollbar
 
         bit     cursor_ibeam_flag
     IF_PLUS
@@ -1181,7 +1181,9 @@ finish: jmp     InputLoop
 
 ;;; ============================================================
 
-.proc UpdateScrollbar
+;;; Enable/disable scrollbar as appropriate; resets thumb pos.
+;;; Assert: `num_entries` is set.
+.proc EnableScrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
 
         lda     num_entries
@@ -1192,6 +1194,7 @@ finish: jmp     InputLoop
 
         copy    #MGTK::activatectl_deactivate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
+
         rts
     END_IF
 
@@ -1386,6 +1389,7 @@ done:   rts
 
 ;;; ============================================================
 
+;;; Assumes `winfo_drive_select::vthumbpos` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
         ldy     winfo_results::vthumbpos
