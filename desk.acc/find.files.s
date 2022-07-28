@@ -1217,9 +1217,14 @@ finish: jmp     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         bne     done
+
         lda     findwindow_params::window_id
         cmp     #kResultsWindowID
-        beq     results
+    IF_EQ
+        jsr     HandleListClick
+        jmp     InputLoop
+    END_IF
+
         cmp     #kDAWindowID
         bne     done
 
@@ -1249,18 +1254,19 @@ finish: jmp     InputLoop
         LETK_CALL LETK::Click, le_params
 
 done:   jmp     InputLoop
+.endproc
 
-        ;; Click in Results content area
-results:
+;;; ============================================================
+
+.proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        bne     done
+        bne     ret
 
         jsr     HandleScroll
-        jmp     InputLoop
+ret:    rts
 .endproc
-
 
 ;;; ============================================================
 ;;; Handle scroll bar

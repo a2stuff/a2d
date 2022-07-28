@@ -237,7 +237,7 @@ ret:    rts
         beq     :+
         bit     is_apple_click_flag
         bmi     ret             ; ignore except for Change Drive
-        jmp     HandleListButtonDown
+        jmp     HandleListClick
 :
         lda     #file_dialog_res::kFilePickerDlgWindowID
         sta     screentowindow_params::window_id
@@ -377,11 +377,12 @@ click_handler_hook:
 
 ;;; ============================================================
 
-.proc HandleListButtonDown
+.proc HandleListClick
         bit     listbox_disabled_flag
         bmi     rts1
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
+        .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
         beq     in_list
 
         cmp     #MGTK::Ctl::vertical_scroll_bar

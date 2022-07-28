@@ -892,7 +892,7 @@ LD998:  bit     LD368
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     LD9BA
-        jmp     HandleButtonDown
+        jmp     HandleClick
 
 LD9BA:  cmp     #MGTK::EventKind::key_down
         bne     LD998
@@ -1093,7 +1093,7 @@ LDA7D:  copy    #0, checkitem_params::check
 
 ;;; ============================================================
 
-HandleButtonDown:
+.proc HandleClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         bne     :+
@@ -1108,14 +1108,15 @@ HandleButtonDown:
 :
         lda     findwindow_params::window_id
         cmp     #winfo_dialog::kWindowId
-        beq     handle_dialog_button_down
+        beq     HandleDialogClick
         cmp     winfo_drive_select
-        jeq     handle_drive_select_button_down
+        jeq     HandleListClick
         rts
+.endproc
 
-        ;; --------------------------------------------------
-        ;; Dialog window
-handle_dialog_button_down:
+;;; ============================================================
+
+.proc HandleDialogClick
         jsr     SetPortForDialog
         copy    #winfo_dialog::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -1139,11 +1140,11 @@ handle_dialog_button_down:
 :
     END_IF
         rts
+.endproc
 
-        ;; --------------------------------------------------
-        ;; Drive select window
+;;; ============================================================
 
-handle_drive_select_button_down:
+.proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
@@ -1189,6 +1190,9 @@ LDBD6:  pla
         sta     current_drive_selection
         jsr     HighlightRow
         jmp     LDBC0
+.endproc
+
+;;; ============================================================
 
 .proc MGTKRelayImpl
         params_src := $7E
@@ -1224,6 +1228,8 @@ params: .res    3
 
         rts
 .endproc
+
+;;; ============================================================
 
 dialog_shortcuts:
         lda     event_params::key
