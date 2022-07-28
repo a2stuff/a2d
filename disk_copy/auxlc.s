@@ -1159,14 +1159,16 @@ LDA7D:  copy    #0, checkitem_params::check
         adc     winfo_drive_select::vthumbpos
 
         cmp     num_drives
-        bcc     LDB98
+        bcc     :+
+
+        ;; Clear selection
         lda     current_drive_selection
         jsr     HighlightRow
         lda     #$FF
-        sta     current_drive_selection           ; $FF if no selection?
+        sta     current_drive_selection
         jmp     ret
 
-LDB98:  cmp     current_drive_selection
+:       cmp     current_drive_selection
         bne     LDBCD
         bit     LD368
         bpl     LDBC0
