@@ -541,7 +541,7 @@ different:
 ;;; ============================================================
 
 .proc HandleLineUp
-        lda     file_dialog_res::winfo_listbox::vthumbpos
+repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
         bne     :+
         rts
 
@@ -549,13 +549,13 @@ different:
         sbc     #file_dialog_res::kLineDelta
         jsr     UpdateThumbCommon
         jsr     CheckArrowRepeat
-        jmp     HandleLineUp
+        jmp     repeat
 .endproc
 
 ;;; ============================================================
 
 .proc HandleLineDown
-        lda     file_dialog_res::winfo_listbox::vthumbpos
+repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
         cmp     file_dialog_res::winfo_listbox::vthumbmax
         bne     :+
         rts
@@ -564,7 +564,7 @@ different:
         adc     #file_dialog_res::kLineDelta
         jsr     UpdateThumbCommon
         jsr     CheckArrowRepeat
-        jmp     HandleLineDown
+        jmp     repeat
 .endproc
 
 ;;; ============================================================
@@ -587,41 +587,30 @@ different:
         cmp     #MGTK::EventKind::button_down
         beq     :+
         cmp     #MGTK::EventKind::drag
-        beq     :+
-        pla
-        pla
-        rts
-
-:       MGTK_CALL MGTK::GetEvent, event_params
+        bne     cancel
+:
+        MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         cmp     #file_dialog_res::kEntryListCtlWindowID
-        beq     :+
-        pla
-        pla
-        rts
+        bne     cancel
 
-:       lda     findwindow_params::which_area
+        lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
-        beq     :+
-        pla
-        pla
-        rts
+        bne     cancel
 
-:       MGTK_CALL MGTK::FindControl, findcontrol_params
+        MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        beq     :+
-        pla
-        pla
-        rts
+        bne     cancel
 
-:       lda     findcontrol_params::which_part
+        lda     findcontrol_params::which_part
         cmp     #MGTK::Part::page_up ; up_arrow or down_arrow ?
-        bcc     :+                   ; Yes, continue
+        bcc     ret                  ; Yes, continue
+
+cancel: pla
         pla
-        pla
-:       rts
+ret:    rts
 .endproc
 
 ;;; ============================================================
