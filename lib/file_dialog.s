@@ -997,10 +997,49 @@ char:   .byte   0
     IF_ZERO
         cmp     #CHAR_UP
       IF_EQ
-        jmp     KeyUp
+        lda     num_file_names
+        beq     ret
+
+        lda     file_dialog_res::selected_index
+       IF_NS
+        ldx     num_file_names
+        dex
+        txa
+        jmp     UpdateListSelection
+       END_IF
+
+       IF_NOT_ZERO
+        jsr     HighlightIndex
+        ldx     file_dialog_res::selected_index
+        dex
+        txa
+        jmp     UpdateListSelection
+       END_IF
+
+ret:    rts
       END_IF
         ;; CHAR_DOWN
-        jmp     KeyDown
+        lda     num_file_names
+        beq     ret
+
+        lda     file_dialog_res::selected_index
+       IF_NS
+        lda     #0
+        jmp     UpdateListSelection
+       END_IF
+
+        tax
+        inx
+        cpx     num_file_names
+       IF_NE
+        jsr     HighlightIndex
+        ldx     file_dialog_res::selected_index
+        inx
+        txa
+        jmp     UpdateListSelection
+       END_IF
+
+ret:    rts
     END_IF
 
         ;; Double modifiers
@@ -1050,51 +1089,6 @@ l1:     ldx     num_file_names
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
         jmp     HandleListScrollWithPart
-.endproc
-
-;;; ============================================================
-
-.proc KeyUp
-        lda     num_file_names
-        beq     l1
-        lda     file_dialog_res::selected_index
-        bmi     l3
-        bne     l2
-l1:     rts
-
-l2:     jsr     HighlightIndex
-        ldx     file_dialog_res::selected_index
-        dex
-        txa
-        jmp     UpdateListSelection
-
-l3:     ldx     num_file_names
-        dex
-        txa
-        jmp     UpdateListSelection
-.endproc
-
-;;; ============================================================
-
-.proc KeyDown
-        lda     num_file_names
-        beq     l1
-        lda     file_dialog_res::selected_index
-        bmi     l3
-        tax
-        inx
-        cpx     num_file_names
-        bcc     l2
-l1:     rts
-
-l2:     jsr     HighlightIndex
-        ldx     file_dialog_res::selected_index
-        inx
-        txa
-        jmp     UpdateListSelection
-
-l3:     lda     #0
-        jmp     UpdateListSelection
 .endproc
 
 ;;; ============================================================
