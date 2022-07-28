@@ -311,10 +311,6 @@ bg_white:
 current_drive_selection:        ; $FF if no selection
         .byte   0
 
-;;; TODO: This can just use vthumbpos
-top_row:                        ; top row visible in list box
-        .byte   0
-
 kListRows = 8                   ; number of visible rows
 
 selection_mode:
@@ -551,9 +547,8 @@ InitDialog:
 
         jsr     EnumerateDevices
         copy    #$00, selection_mode
-        copy    #0, top_row
-        jsr     UpdateViewport
         jsr     EnableScrollbar
+        jsr     UpdateViewport
 
         lda     LD5E0
         bne     :+
@@ -586,9 +581,8 @@ LD687:  lda     current_drive_selection
         ;; Prepare for destination selection
         jsr     EnumerateDestinationDevices
         copy    #$80, selection_mode
-        copy    #0, top_row
-        jsr     UpdateViewport
         jsr     EnableScrollbar
+        jsr     UpdateViewport
 
         jsr     DrawDestinationListEntries
 
@@ -1159,7 +1153,7 @@ LDA7D:  copy    #0, checkitem_params::check
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
         clc
-        adc     top_row
+        adc     winfo_drive_select::vthumbpos
         cmp     num_drives
         bcc     LDB98
         lda     current_drive_selection
@@ -1584,31 +1578,32 @@ CheckAlpha:
 ;;; ============================================================
 
 ;;; Enable/disable scrollbar as appropriate; resets thumb pos.
-;;; Assert: `num_drives` and `top_row` are set.
+;;; Assert: `num_drives` is set.
 .proc EnableScrollbar
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+
         lda     num_drives
         cmp     #kListRows+1
     IF_LT
-        copy    #0, activatectl_params::activate
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
     END_IF
+
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         lda     num_drives
         sec
         sbc     #kListRows
         sta     setctlmax_params::ctlmax
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::SetCtlMax, setctlmax_params
 
-        copy    #1, activatectl_params::activate
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        copy    #MGTK::activatectl_activate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-
-        copy    top_row, updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         rts
 .endproc
@@ -1620,7 +1615,6 @@ CheckAlpha:
         FALL_THROUGH_TO HandleScroll
 .endproc
 
-;;; Assert: `top_row` is set.
 .proc HandleScroll
         ;; Ignore unless vscroll is enabled
         lda     winfo_drive_select::vscroll
@@ -1637,45 +1631,47 @@ CheckAlpha:
 
         cmp     #MGTK::Part::up_arrow
     IF_EQ
-        lda     top_row
+        lda     winfo_drive_select::vthumbpos
         cmp     #0
         jeq     done
 
-        dec     top_row
-        bpl     update
+        sec
+        sbc     #1
+        bpl     update          ; always
     END_IF
 
         cmp     #MGTK::Part::down_arrow
     IF_EQ
-        lda     top_row
+        lda     winfo_drive_select::vthumbpos
         cmp     max_top
         jcs     done
 
-        inc     top_row
-        bpl     update
+        clc
+        adc     #1
+        bpl     update          ; always
     END_IF
 
         cmp     #MGTK::Part::page_up
     IF_EQ
-        lda     top_row
+        lda     winfo_drive_select::vthumbpos
         cmp     #kListRows
         bcs     :+
         lda     #0
-        beq     store
+        beq     update
 :       sec
         sbc     #kListRows
-        jmp     store
+        jmp     update
     END_IF
 
         cmp     #MGTK::Part::page_down
     IF_EQ
-        lda     top_row
+        lda     winfo_drive_select::vthumbpos
         clc
         adc     #kListRows
         cmp     max_top
-        bcc     store
+        bcc     update
         lda     max_top
-        jmp     store
+        jmp     update
     END_IF
 
         cmp     #MGTK::Part::thumb
@@ -1684,12 +1680,10 @@ CheckAlpha:
         lda     trackthumb_params::thumbmoved
         beq     done
         lda     trackthumb_params::thumbpos
-        FALL_THROUGH_TO store
+        FALL_THROUGH_TO update
     END_IF
 
-store:  sta     top_row
-
-update: copy    top_row, updatethumb_params::thumbpos
+update: sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
@@ -1716,11 +1710,11 @@ max_top:
 ;;; ============================================================
 
 ;;; Input: A = row to ensure visible
-;;; Assert: `top_row` is set.
+;;; Assert: `winfo_drive_select::vthumbpos` is set.
 .proc ScrollIntoView
-        cmp     top_row
+        cmp     winfo_drive_select::vthumbpos
     IF_LT
-        sta     top_row
+        sta     winfo_drive_select::vthumbpos
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -1731,10 +1725,10 @@ max_top:
         sec
         sbc     #kListRows-1
         bmi     ret
-        cmp     top_row
+        cmp     winfo_drive_select::vthumbpos
         beq     ret
     IF_GE
-        sta     top_row
+        sta     winfo_drive_select::vthumbpos
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -1747,10 +1741,10 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; Assumes `top_row` is set.
+;;; Assumes `winfo_drive_select::vthumbpos` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
-        ldy     top_row
+        ldy     winfo_drive_select::vthumbpos
         jsr     Multiply_16_8_16
         stax    winfo_drive_select::maprect::y1
         addax   #kListBoxHeight, winfo_drive_select::maprect::y2

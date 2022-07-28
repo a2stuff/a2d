@@ -957,8 +957,6 @@ cursor_ibeam_flag: .byte   0
 kBufSize = kMaxFilenameLength+1     ; max length = 15, length
 buf_search:     .res    kBufSize, 0 ; search term
 
-top_row:        .byte   0
-
 ;;; ============================================================
 ;;; Search field
 
@@ -1162,7 +1160,6 @@ ignore: sec
 .proc DoSearch
         param_call JTRelay, JUMP_TABLE_CUR_WATCH
 
-        copy    #0, top_row
         copy    #0, num_entries
         jsr     UpdateScrollbar
         jsr     UpdateViewport
@@ -1171,11 +1168,6 @@ ignore: sec
         ;; Do the search
         jsr     RecursiveCatalog::Start
         jsr     UpdateScrollbar
-
-        ;;  Update the results display
-        ;;         copy    #0, top_row
-        ;;         jsr     UpdateViewport
-        ;;         jsr     DrawResults
 
         bit     cursor_ibeam_flag
     IF_PLUS
@@ -1191,22 +1183,30 @@ finish: jmp     InputLoop
 
 .proc UpdateScrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+
         lda     num_entries
         cmp     #kResultsRows+1
     IF_LT
-        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-    ELSE
         copy    #0, updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+        rts
+    END_IF
+
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
         lda     num_entries
-        clc
+        sec
         sbc     #kResultsRows
         sta     setctlmax_params::ctlmax
         MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+
         copy    #MGTK::activatectl_activate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-    END_IF
+
         rts
 .endproc
 
@@ -1296,70 +1296,72 @@ kPartEnd  = $81
         ;; scroll to start
         cmp     #kPartHome
     IF_EQ
-        lda     top_row
+        lda     winfo_results::vthumbpos
         cmp     #0
         jeq     done
 
         lda     #0
-        jmp     store
+        jmp     update
     END_IF
 
         ;; scroll to end
         cmp     #kPartEnd
     IF_EQ
-        lda     top_row
+        lda     winfo_results::vthumbpos
         cmp     max_top
         jcs     done
 
         lda     max_top
-        jmp     store
+        jmp     update
     END_IF
 
         ;; scroll up by one line
         cmp     #MGTK::Part::up_arrow
     IF_EQ
-        lda     top_row
+        lda     winfo_results::vthumbpos
         cmp     #0
         jeq     done
 
-        dec     top_row
+        sec
+        sbc     #1
         bpl     update          ; always
     END_IF
 
         ;; scroll down by one line
         cmp     #MGTK::Part::down_arrow
     IF_EQ
-        lda     top_row
+        lda     winfo_results::vthumbpos
         cmp     max_top
         jcs     done
 
-        inc     top_row
+        clc
+        adc     #1
         bpl     update          ; always
     END_IF
 
         ;; scroll up by one page
         cmp     #MGTK::Part::page_up
     IF_EQ
-        lda     top_row
+        lda     winfo_results::vthumbpos
         cmp     #kResultsRows
         bcs     :+
         lda     #0
-        beq     store
+        beq     update          ; always
 :       sec
         sbc     #kResultsRows
-        jmp     store
+        jmp     update
     END_IF
 
         ;; scroll down by one page
         cmp     #MGTK::Part::page_down
     IF_EQ
-        lda     top_row
+        lda     winfo_results::vthumbpos
         clc
         adc     #kResultsRows
         cmp     max_top
-        bcc     store
+        bcc     update
         lda     max_top
-        jmp     store
+        jmp     update
     END_IF
 
         cmp     #MGTK::Part::thumb
@@ -1370,9 +1372,7 @@ kPartEnd  = $81
         beq     done
         lda     trackthumb_params::thumbpos
 
-store:  sta     top_row
-
-update: copy    top_row, updatethumb_params::thumbpos
+update: sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
@@ -1386,10 +1386,9 @@ max_top:        .byte   0
 
 ;;; ============================================================
 
-;;; Assumes `top_row` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
-        ldy     top_row
+        ldy     winfo_results::vthumbpos
         jsr     Multiply_16_8_16
         stax    winfo_results::maprect::y1
         addax   #kResultsHeight, winfo_results::maprect::y2

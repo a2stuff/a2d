@@ -54,6 +54,10 @@ thumbpos := * + 1
 stash := * + 5 ; not part of struct
 .endproc
 
+.assert setctlmax_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
+.assert trackthumb_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
+.assert updatethumb_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
+
 .params screentowindow_params
 window_id := * + 0
 screen  := * + 1

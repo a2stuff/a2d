@@ -292,10 +292,6 @@ nextwinfo:      .addr   0
         DEFINE_POINT itempos, kListItemTextOffsetX, 0
         DEFINE_RECT itemrect, 0, 0, winfo_listbox::kWidth, 0
 
-;;; Current item at the top of the list box
-top_row:
-        .byte   0
-
 ;;; ============================================================
 
 str_buzz:       PASCAL_STRING "ProDOS Buzz"
@@ -580,48 +576,50 @@ tmp:    .word   0
         ;; scroll up by one line
         cmp     #MGTK::Part::up_arrow
     IF_EQ
-        lda     top_row
+        lda     winfo_listbox::vthumbpos
         cmp     #0
         jeq     done
 
-        dec     top_row
-        bpl     update
+        sec
+        sbc     #1
+        bpl     update          ; always
     END_IF
 
         ;; scroll down by one line
         cmp     #MGTK::Part::down_arrow
     IF_EQ
-        lda     top_row
+        lda     winfo_listbox::vthumbpos
         cmp     #kMaxTop
         jcs     done
 
-        inc     top_row
-        bpl     update
+        clc
+        adc     #1
+        bpl     update          ; always
     END_IF
 
         ;; scroll up by one page
         cmp     #MGTK::Part::page_up
     IF_EQ
-        lda     top_row
+        lda     winfo_listbox::vthumbpos
         cmp     #kListRows
         bcs     :+
         lda     #0
-        beq     store
+        beq     update          ; always
 :       sec
         sbc     #kListRows
-        jmp     store
+        jmp     update
     END_IF
 
         ;; scroll down by one page
         cmp     #MGTK::Part::page_down
     IF_EQ
-        lda     top_row
+        lda     winfo_listbox::vthumbpos
         clc
         adc     #kListRows
         cmp     #kMaxTop
-        bcc     store
+        bcc     update
         lda     #kMaxTop
-        jmp     store
+        jmp     update
     END_IF
 
         cmp     #MGTK::Part::thumb
@@ -630,12 +628,10 @@ tmp:    .word   0
         lda     trackthumb_params::thumbmoved
         beq     done
         lda     trackthumb_params::thumbpos
-        FALL_THROUGH_TO store
+        FALL_THROUGH_TO update
     END_IF
 
-store:  sta     top_row
-
-update: copy    top_row, updatethumb_params::thumbpos
+update: sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
@@ -650,9 +646,8 @@ done:   rts
 ;;; ============================================================
 
 .proc ScrollIntoView
-        cmp     top_row
+        cmp     winfo_listbox::vthumbpos
     IF_LT
-        sta     top_row
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -663,10 +658,9 @@ done:   rts
         sec
         sbc     #kListRows-1
         bmi     ret
-        cmp     top_row
+        cmp     winfo_listbox::vthumbpos
         beq     ret
     IF_GE
-        sta     top_row
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -679,10 +673,9 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; Assert: `top_row` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
-        ldy     top_row
+        ldy     winfo_listbox::vthumbpos
         jsr     Multiply_16_8_16
         stax    winfo_listbox::maprect::y1
         addax   #winfo_listbox::kHeight, winfo_listbox::maprect::y2
