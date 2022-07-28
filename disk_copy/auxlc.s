@@ -390,7 +390,7 @@ rect:   .tag    MGTK::Rect
 device_name_buf:
         .res 18, 0
 
-LD44C:  .byte   0
+listbox_enabled_flag:  .byte   0
 LD44D:  .byte   0
 LD44E:  .byte   0
 
@@ -532,7 +532,7 @@ InitDialog:
         lda     #$00
         sta     LD367
         sta     LD368
-        sta     LD44C
+        sta     listbox_enabled_flag
         lda     #$FF
         sta     current_drive_selection
         lda     #$81
@@ -547,7 +547,7 @@ InitDialog:
         lda     #$00
         sta     LD429
         lda     #$FF
-        sta     LD44C
+        sta     listbox_enabled_flag
 
         jsr     EnumerateDevices
         copy    #$00, selection_mode
@@ -606,7 +606,7 @@ LD6F9:  lda     current_drive_selection
         lda     destination_index_table,x
         sta     dest_drive_index
         lda     #$00
-        sta     LD44C
+        sta     listbox_enabled_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
@@ -896,7 +896,7 @@ LD998:  bit     LD368
 
 LD9BA:  cmp     #MGTK::EventKind::key_down
         bne     LD998
-        jmp     LD9D5
+        jmp     HandleKey
 
 ;;; ============================================================
 
@@ -918,7 +918,18 @@ menu_offset_table:
 
 ;;; ============================================================
 
-LD9D5:  lda     event_params::modifiers
+.proc HandleKey
+        bit     listbox_enabled_flag
+    IF_NS
+        lda     event_params::key
+        jsr     IsListKey
+      IF_EQ
+        jsr     HandleListKey
+        return  #$FF
+      END_IF
+    END_IF
+
+        lda     event_params::modifiers
         bne     :+
         lda     event_params::key
         cmp     #CHAR_ESCAPE
@@ -926,37 +937,7 @@ LD9D5:  lda     event_params::modifiers
         jmp     dialog_shortcuts
 
         ;; Modifiers
-:       lda     event_params::key
-        ldx     event_params::modifiers
-        cpx     #3
-    IF_EQ
-        ;; Double modifiers
-        cmp     #CHAR_UP
-      IF_EQ
-        jsr     DoHome
-        return  #$FF
-      END_IF
-        cmp     #CHAR_DOWN
-      IF_EQ
-        jsr     DoEnd
-        return  #$FF
-      END_IF
-    ELSE
-        ;; Single modifier
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     #MGTK::Part::page_up
-        jsr     HandleScrollWithPart
-        return  #$FF
-      END_IF
-        cmp     #CHAR_DOWN
-      IF_EQ
-        lda     #MGTK::Part::page_down
-        jsr     HandleScrollWithPart
-        return  #$FF
-      END_IF
-    END_IF
-
+:
         ;; Keyboard-based menu selection
         lda     event_params::key
         sta     menukey_params::which_key
@@ -965,7 +946,10 @@ LD9D5:  lda     event_params::modifiers
         lda     #1              ; treat Solid-Apple same as Open-Apple
 :       sta     menukey_params::key_mods
         MGTK_CALL MGTK::MenuKey, menukey_params
-handle_menu_selection:
+        FALL_THROUGH_TO HandleMenuSelection
+.endproc
+
+.proc HandleMenuSelection
         ldx     menuselect_params::menu_id
         bne     :+
         return  #$FF
@@ -992,6 +976,86 @@ do_jump:
         stx     stack_stash
         jump_addr := *+1
         jmp     SELF_MODIFIED
+.endproc
+
+;;; ============================================================
+
+.proc IsListKey
+        cmp     #CHAR_UP
+        beq     ret
+        cmp     #CHAR_DOWN
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleListKey
+        lda     event_params::key
+        ldx     event_params::modifiers
+
+        ;; No modifiers
+    IF_ZERO
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     current_drive_selection
+       IF_MINUS
+        ldx     num_drives
+        dex
+        stx     current_drive_selection
+       ELSE
+        bne     :+
+        rts                     ; no-op if first
+:       jsr     HighlightRow
+        dec     current_drive_selection
+       END_IF
+        lda     current_drive_selection
+        pha
+        jsr     ScrollIntoView
+        pla
+        jmp     HighlightRow
+      END_IF
+        ;; CHAR_DOWN
+        lda     current_drive_selection
+      IF_MINUS
+        copy    #0, current_drive_selection
+      ELSE
+        tax
+        inx
+        cpx     num_drives
+        bne     :+
+        rts                     ; no-op if last
+:       jsr     HighlightRow
+        inc     current_drive_selection
+      END_IF
+
+        lda     current_drive_selection
+        pha
+        jsr     ScrollIntoView
+        pla
+        jmp     HighlightRow
+    END_IF
+
+        ;; Double modifiers
+        cpx     #3
+    IF_EQ
+        cmp     #CHAR_UP
+      IF_EQ
+        jmp     DoHome
+      END_IF
+        ;; CHAR_DOWN
+        jmp     DoEnd
+    END_IF
+
+        ;; Single modifier
+        cmp     #CHAR_UP
+    IF_EQ
+        lda     #MGTK::Part::page_up
+        jmp     HandleScrollWithPart
+    END_IF
+        ;; CHAR_DOWN
+        lda     #MGTK::Part::page_down
+        jmp     HandleScrollWithPart
+.endproc
 
 ;;; ============================================================
 
@@ -1037,7 +1101,7 @@ HandleButtonDown:
 :       cmp     #MGTK::Area::menubar
         bne     :+
         MGTK_CALL MGTK::MenuSelect, menuselect_params
-        jmp     handle_menu_selection
+        jmp     HandleMenuSelection
 :       cmp     #MGTK::Area::content
         beq     :+
         return  #$FF
@@ -1175,53 +1239,6 @@ LDC2D:  cmp     #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button_params
         return  #$00
     END_IF
-
-        bit     LD44C
-        jpl     LDCA9
-
-        cmp     #CHAR_DOWN
-    IF_EQ
-        lda     current_drive_selection
-      IF_MINUS
-        copy    #0, current_drive_selection
-      ELSE
-        tax
-        inx
-        cpx     num_drives
-        beq     LDCA9           ; no-op if last
-        jsr     HighlightRow
-        inc     current_drive_selection
-     END_IF
-
-        lda     current_drive_selection
-        pha
-        jsr     ScrollIntoView
-        pla
-        jsr     HighlightRow
-        jmp     LDCA9
-    END_IF
-
-        cmp     #CHAR_UP
-    IF_EQ
-        lda     current_drive_selection
-      IF_MINUS
-        ldx     num_drives
-        dex
-        stx     current_drive_selection
-      ELSE
-        beq     LDCA9           ; no-op if first
-        jsr     HighlightRow
-        dec     current_drive_selection
-      END_IF
-
-        lda     current_drive_selection
-        pha
-        jsr     ScrollIntoView
-        pla
-        jsr     HighlightRow
-    END_IF
-
-        FALL_THROUGH_TO LDCA9
 
 LDCA9:  return  #$FF
 

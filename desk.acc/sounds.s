@@ -381,102 +381,90 @@ grafport_win:       .tag    MGTK::GrafPort
 ;;; ============================================================
 
 .proc HandleKey
-        lda     event_params::modifiers
-        bne     modifiers
-
-        ;; --------------------------------------------------
-        ;; No modifiers
-
         lda     event_params::key
-        cmp     #CHAR_ESCAPE
+        jsr     IsListKey
     IF_EQ
+        jsr     HandleListKey
+        jmp     InputLoop
+    END_IF
+
+        ldx     event_params::modifiers
+    IF_ZERO
+        cmp     #CHAR_ESCAPE
+      IF_EQ
         BTK_CALL BTK::Flash, ok_button_params
         jmp     Exit
-    END_IF
+      END_IF
 
         cmp     #CHAR_RETURN
-    IF_EQ
+      IF_EQ
         BTK_CALL BTK::Flash, ok_button_params
         jmp     Exit
+      END_IF
     END_IF
 
-        ;; Select previous
+        jmp     InputLoop
+.endproc
+
+;;; ============================================================
+
+.proc HandleListKey
+        lda     event_params::key
+        ldx     event_params::modifiers
+
+        ;; No modifiers
+    IF_ZERO
         cmp     #CHAR_UP
-    IF_EQ
+      IF_EQ
         ldx     selected_index
-      IF_MINUS
+       IF_MINUS
         ldx     #kNumSounds-1
-      ELSE
-        jeq     InputLoop
+       ELSE
+        beq     ret
         dex
-      END_IF
+       END_IF
         txa
         jmp     SetSelection
-    END_IF
-
-        ;; Select next
-        cmp     #CHAR_DOWN
-    IF_EQ
+      END_IF
+        ;; CHAR_DOWN
         ldx     selected_index
       IF_MINUS
         ldx     #0
       ELSE
         cpx     #kNumSounds-1
-        jeq     InputLoop
+        beq     ret
         inx
       END_IF
         txa
         jmp     SetSelection
     END_IF
 
-        jmp     InputLoop
-
-        ;; --------------------------------------------------
-        ;; Modifiers
-modifiers:
-        lda     event_params::key
-
-        ldx     event_params::modifiers
+        ;; Double modifiers
         cpx     #3
     IF_EQ
-        ;; Double modifiers
-
-        ;; Select first
         cmp     #CHAR_UP
       IF_EQ
         lda     #0
         jmp     SetSelection
       END_IF
-
-        ;; Select last
-        cmp     #CHAR_DOWN
-      IF_EQ
+        ;; CHAR_DOWN
         lda     #kNumSounds-1
         jmp     SetSelection
-      END_IF
+    END_IF
 
-    ELSE
         ;; Single modifier
-
-        ;; Select first
         cmp     #CHAR_UP
-      IF_EQ
+    IF_EQ
         lda     #MGTK::Part::page_up
         jmp     HandleScrollWithPart
-      END_IF
-
-        ;; Select last
-        cmp     #CHAR_DOWN
-    IF_EQ
+    END_IF
+        ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
         jmp     HandleScrollWithPart
-    END_IF
 
-    END_IF
+ret:    rts
 
-        jmp     InputLoop
-
-.proc SetSelection
+SetSelection:
         pha
         lda     selected_index
         jsr     HighlightIndex
@@ -486,10 +474,17 @@ modifiers:
         lda     selected_index
         jsr     HighlightIndex
         lda     selected_index
-        jsr     PlayIndex
-        jmp     InputLoop
+        jmp     PlayIndex
+
 .endproc
 
+;;; ============================================================
+
+.proc IsListKey
+        cmp     #CHAR_UP
+        beq     ret
+        cmp     #CHAR_DOWN
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -510,8 +505,10 @@ modifiers:
     IF_EQ
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
-        beq     HandleListClick
+      IF_EQ
+        jsr     HandleListClick
         jmp     InputLoop
+      END_IF
     END_IF
 
         jmp     InputLoop
@@ -552,8 +549,9 @@ modifiers:
         jeq     HandleScroll
 
         cmp     #MGTK::Ctl::not_a_control
-        jne     InputLoop
-
+        bne     :+
+        rts
+:
         lda     winfo_listbox::window_id
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -563,8 +561,7 @@ modifiers:
         ldax    tmp
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
-        jsr     SelectIndex
-        jmp     InputLoop
+        jmp     SelectIndex
 
 tmp:    .word   0
 .endproc
@@ -646,7 +643,7 @@ update: copy    top_row, updatethumb_params::thumbpos
         lda     selected_index
         jsr     HighlightIndex
 
-done:   jmp     InputLoop
+done:   rts
 .endproc
 
 ;;; ============================================================

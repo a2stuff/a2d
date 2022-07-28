@@ -1019,40 +1019,19 @@ top_row:        .byte   0
         lda     event_params::key
         sta     le_params::key
 
+        jsr     IsListKey
+    IF_EQ
+        jsr     HandleListKey
+        jmp     InputLoop
+    END_IF
+
         ldx     event_params::modifiers
         stx     le_params::modifiers
     IF_NOT_ZERO
-        cpx     #3              ; both?
-     IF_EQ
-        ;; Double modifier
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     #kPartHome
-        jmp     HandleScrollWithPart
-      END_IF
-
-        cmp     #CHAR_DOWN
-      IF_EQ
-        lda     #kPartEnd
-        jmp     HandleScrollWithPart
-      END_IF
-     ELSE
-        ;; Single modifier
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     #MGTK::Part::page_up
-        jmp     HandleScrollWithPart
-     END_IF
-
-        cmp     #CHAR_DOWN
-      IF_EQ
-        lda     #MGTK::Part::page_down
-        jmp     HandleScrollWithPart
-      END_IF
-     END_IF
-
         LETK_CALL LETK::Key, le_params
-    ELSE
+        jmp     InputLoop
+    END_IF
+
         ;; Not modified
         cmp     #CHAR_ESCAPE
       IF_EQ
@@ -1066,28 +1045,69 @@ top_row:        .byte   0
         jmp     DoSearch
       END_IF
 
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     #MGTK::Part::up_arrow
-        jmp     HandleScrollWithPart
-      END_IF
-
-        cmp     #CHAR_DOWN
-      IF_EQ
-        lda     #MGTK::Part::down_arrow
-        jmp     HandleScrollWithPart
-      END_IF
-
         jsr     IsControlChar
         bcc     allow
         jsr     IsSearchChar
         bcs     ignore
 allow:  LETK_CALL LETK::Key, le_params
 ignore:
-    END_IF
-
         jmp     InputLoop
 .endproc
+
+;;; ============================================================
+
+.proc HandleListKey
+        lda     event_params::key
+        ldx     event_params::modifiers
+
+        ;; No modifiers
+    IF_ZERO
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     #MGTK::Part::up_arrow
+        jmp     HandleScrollWithPart
+      END_IF
+        ;; CHAR_DOWN
+        lda     #MGTK::Part::down_arrow
+        jmp     HandleScrollWithPart
+    END_IF
+
+        ;; Double modifiers
+        cpx     #3
+    IF_EQ
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     #kPartHome
+        jmp     HandleScrollWithPart
+      END_IF
+        ;; CHAR_DOWN
+        lda     #kPartEnd
+        jmp     HandleScrollWithPart
+    END_IF
+
+        ;; Single modifier
+        cmp     #CHAR_UP
+    IF_EQ
+        lda     #MGTK::Part::page_up
+        jmp     HandleScrollWithPart
+    END_IF
+        ;; CHAR_DOWN
+        lda     #MGTK::Part::page_down
+        jmp     HandleScrollWithPart
+
+.endproc
+
+;;; ============================================================
+
+;;; Input: A=character
+;;; Output: Z=1 if up/down, Z=0 if not
+.proc IsListKey
+        cmp     #CHAR_UP
+        beq     ret
+        cmp     #CHAR_DOWN
+ret:    rts
+.endproc
+
 
 ;;; ============================================================
 
@@ -1237,7 +1257,8 @@ results:
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     done
 
-        jmp     HandleScroll
+        jsr     HandleScroll
+        jmp     InputLoop
 .endproc
 
 
@@ -1336,7 +1357,7 @@ kPartEnd  = $81
     END_IF
 
         cmp     #MGTK::Part::thumb
-        jne     done
+        bne     done
 
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
@@ -1352,7 +1373,7 @@ update: copy    top_row, updatethumb_params::thumbpos
         jsr     UpdateViewport
         jsr     DrawResults
 
-done:   jmp     InputLoop
+done:   rts
 
 max_top:        .byte   0
 .endproc

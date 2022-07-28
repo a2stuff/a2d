@@ -779,6 +779,12 @@ ret:    rts
 .proc HandleKeyEvent
         lda     event_params::key
 
+        bit     listbox_disabled_flag
+    IF_NC
+        jsr     IsListKey
+        jeq     HandleListKey
+    END_IF
+
         ldx     event_params::modifiers
     IF_NE
         ;; With modifiers
@@ -789,30 +795,9 @@ ret:    rts
         jsr     CheckTypeDown
         jeq     exit
 :
-        ldx     event_params::modifiers
         lda     event_params::key
         cmp     #CHAR_TAB
         jeq     KeyTab
-
-        bit     listbox_disabled_flag
-      IF_NC
-        cpx     #3
-       IF_EQ
-        ;; Double modifiers
-        cmp     #CHAR_DOWN
-        jeq     ScrollListBottom ; end of list
-
-        cmp     #CHAR_UP
-        jeq     ScrollListTop   ; start of list
-       ELSE
-        ;; Single modifier
-        cmp     #CHAR_DOWN
-        jeq     HandlePageDown
-
-        cmp     #CHAR_UP
-        jeq     HandlePageUp
-       END_IF
-      END_IF
 
         ;; Hook for clients
         cmp     #'0'
@@ -847,12 +832,6 @@ ret:    rts
 
         cmp     #CHAR_CTRL_C    ; Close
         jeq     KeyClose
-
-        cmp     #CHAR_DOWN
-        jeq     KeyDown
-
-        cmp     #CHAR_UP
-        jeq     KeyUp
       END_IF
 
         jsr     IsControlChar ; pass through control characters
@@ -867,6 +846,15 @@ ignore:
     END_IF
 
 exit:   rts
+
+;;; ============================================================
+
+.proc IsListKey
+        cmp     #CHAR_UP
+        beq     ret
+        cmp     #CHAR_DOWN
+ret:    rts
+.endproc
 
 ;;; ============================================================
 
@@ -930,51 +918,6 @@ ret:    rts
 
 key_meta_digit:
         jmp     NoOp
-
-;;; ============================================================
-
-.proc KeyDown
-        lda     num_file_names
-        beq     l1
-        lda     file_dialog_res::selected_index
-        bmi     l3
-        tax
-        inx
-        cpx     num_file_names
-        bcc     l2
-l1:     rts
-
-l2:     jsr     InvertEntry
-        ldx     file_dialog_res::selected_index
-        inx
-        txa
-        jmp     UpdateListSelection
-
-l3:     lda     #0
-        jmp     UpdateListSelection
-.endproc
-
-;;; ============================================================
-
-.proc KeyUp
-        lda     num_file_names
-        beq     l1
-        lda     file_dialog_res::selected_index
-        bmi     l3
-        bne     l2
-l1:     rts
-
-l2:     jsr     InvertEntry
-        ldx     file_dialog_res::selected_index
-        dex
-        txa
-        jmp     UpdateListSelection
-
-l3:     ldx     num_file_names
-        dex
-        txa
-        jmp     UpdateListSelection
-.endproc
 
 ;;; ============================================================
 
@@ -1069,6 +1012,87 @@ char:   .byte   0
 .endproc ; CheckAlpha
 
 .endproc ; HandleKeyEvent
+
+;;; ============================================================
+
+.proc HandleListKey
+        lda     event_params::key
+        ldx     event_params::modifiers
+
+        ;; No modifiers
+    IF_ZERO
+        cmp     #CHAR_UP
+      IF_EQ
+        jmp     KeyUp
+      END_IF
+        ;; CHAR_DOWN
+        jmp     KeyDown
+    END_IF
+
+        ;; Double modifiers
+        cpx     #3
+    IF_EQ
+        cmp     #CHAR_UP
+      IF_EQ
+        jmp     ScrollListTop   ; start of list
+      END_IF
+        ;; CHAR_DOWN
+        jmp     ScrollListBottom ; end of list
+    END_IF
+
+        ;; Single modifier
+        cmp     #CHAR_UP
+    IF_EQ
+        jmp     HandlePageUp
+    END_IF
+        ;; CHAR_DOWN
+        jmp     HandlePageDown
+.endproc
+
+;;; ============================================================
+
+.proc KeyUp
+        lda     num_file_names
+        beq     l1
+        lda     file_dialog_res::selected_index
+        bmi     l3
+        bne     l2
+l1:     rts
+
+l2:     jsr     InvertEntry
+        ldx     file_dialog_res::selected_index
+        dex
+        txa
+        jmp     UpdateListSelection
+
+l3:     ldx     num_file_names
+        dex
+        txa
+        jmp     UpdateListSelection
+.endproc
+
+;;; ============================================================
+
+.proc KeyDown
+        lda     num_file_names
+        beq     l1
+        lda     file_dialog_res::selected_index
+        bmi     l3
+        tax
+        inx
+        cpx     num_file_names
+        bcc     l2
+l1:     rts
+
+l2:     jsr     InvertEntry
+        ldx     file_dialog_res::selected_index
+        inx
+        txa
+        jmp     UpdateListSelection
+
+l3:     lda     #0
+        jmp     UpdateListSelection
+.endproc
 
 ;;; ============================================================
 
