@@ -1759,7 +1759,6 @@ loop:   lda     index
         rts
 :
         MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
-        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListItemHeight
 
         ldx     index
         lda     file_list_index,x
@@ -1784,6 +1783,7 @@ loop:   lda     index
         jsr     InvertEntry
 l2:     inc     index
 
+        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListItemHeight
         jmp     loop
 
 index:  .byte   0
