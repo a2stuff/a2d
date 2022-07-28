@@ -235,6 +235,8 @@ ret:    rts
         lda     findwindow_params::window_id
         cmp     #file_dialog_res::kFilePickerDlgWindowID
         beq     :+
+        bit     listbox_disabled_flag
+        bmi     :+
         bit     is_apple_click_flag
         bmi     ret             ; ignore except for Change Drive
         jmp     HandleListClick
@@ -378,37 +380,27 @@ click_handler_hook:
 ;;; ============================================================
 
 .proc HandleListClick
-        bit     listbox_disabled_flag
-        bmi     rts1
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
-        .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
-        beq     in_list
-
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        bne     rts1
-        lda     file_dialog_res::winfo_listbox::vscroll
-        and     #MGTK::Scroll::option_active
-        beq     rts1
-        jmp     HandleVScrollClick
+        jeq     HandleListScroll
 
-rts1:   rts
-
-in_list:
-        lda     #file_dialog_res::kEntryListCtlWindowID
-        sta     screentowindow_params::window_id
+        cmp     #MGTK::Ctl::not_a_control
+        beq     :+
+        rts
+:
+        copy    #file_dialog_res::kEntryListCtlWindowID, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::maprect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
-        new_index := screentowindow_params::windowy
-        stax    screentowindow_params::windowy
+        clc
+        adc     file_dialog_res::winfo_listbox::vthumbpos
 
-        lda     file_dialog_res::selected_index
-        cmp     new_index
-        beq     same
-        jmp     different
+        sta     new_index
+        cmp     file_dialog_res::selected_index
+        bne     different
+        FALL_THROUGH_TO same
 
         ;; --------------------------------------------------
         ;; Click on the previous entry
@@ -423,8 +415,7 @@ open:   ldx     file_dialog_res::selected_index
 
         ;; File - select it.
         BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
-        jsr     HandleOk
-        jmp     rts1
+        jmp     HandleOk
 
         ;; Folder - open it.
 folder: and     #$7F
@@ -440,7 +431,8 @@ folder: and     #$7F
         ;; Click on a different entry
 
 different:
-        lda     new_index
+        new_index := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     num_file_names
         bcc     :+
         rts
@@ -478,7 +470,13 @@ different:
 
 ;;; ============================================================
 
-.proc HandleVScrollClick
+.proc HandleListScroll
+        ;; Ignore unless vscroll is enabled
+        lda     file_dialog_res::winfo_listbox::vscroll
+        and     #MGTK::Scroll::option_active
+        bne     :+
+        rts
+:
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::up_arrow
         jeq     HandleLineUp

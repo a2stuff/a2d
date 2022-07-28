@@ -453,11 +453,11 @@ grafport_win:       .tag    MGTK::GrafPort
         cmp     #CHAR_UP
     IF_EQ
         lda     #MGTK::Part::page_up
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
     END_IF
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
 
 ret:    rts
 
@@ -494,7 +494,7 @@ ret:    rts
     IF_EQ
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
-        beq     HandleClick
+        beq     HandleDialogClick
         jmp     InputLoop
     END_IF
 
@@ -513,7 +513,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc HandleClick
+.proc HandleDialogClick
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -543,34 +543,31 @@ ret:    rts
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        jeq     HandleScroll
+        jeq     HandleListScroll
 
         cmp     #MGTK::Ctl::not_a_control
-        bne     :+
+        beq     :+
         rts
 :
-        lda     winfo_listbox::window_id
-        sta     screentowindow_params::window_id
+        copy    #kListBoxWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-
-        add16   screentowindow_params::windowy, winfo_listbox::maprect::y1, tmp
-        ldax    tmp
+        ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
-        jmp     SelectIndex
+        clc
+        adc     winfo_listbox::vthumbpos
 
-tmp:    .word   0
+        jmp     SelectIndex
 .endproc
 
 ;;; ============================================================
 
-.proc HandleScrollWithPart
+.proc HandleListScrollWithPart
         sta     findcontrol_params::which_part
-        FALL_THROUGH_TO HandleScroll
+        FALL_THROUGH_TO HandleListScroll
 .endproc
 
-.proc HandleScroll
+.proc HandleListScroll
         lda     findcontrol_params::which_part
 
         ;; scroll up by one line
@@ -589,7 +586,7 @@ tmp:    .word   0
         cmp     #MGTK::Part::down_arrow
     IF_EQ
         lda     winfo_listbox::vthumbpos
-        cmp     #kMaxTop
+        cmp     winfo_listbox::vthumbmax
         jcs     done
 
         clc
@@ -616,9 +613,9 @@ tmp:    .word   0
         lda     winfo_listbox::vthumbpos
         clc
         adc     #kListRows
-        cmp     #kMaxTop
+        cmp     winfo_listbox::vthumbmax
         bcc     update
-        lda     #kMaxTop
+        lda     winfo_listbox::vthumbmax
         jmp     update
     END_IF
 

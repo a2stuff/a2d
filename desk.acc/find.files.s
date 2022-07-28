@@ -1063,11 +1063,11 @@ ignore:
         cmp     #CHAR_UP
       IF_EQ
         lda     #MGTK::Part::up_arrow
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
       END_IF
         ;; CHAR_DOWN
         lda     #MGTK::Part::down_arrow
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
     END_IF
 
         ;; Double modifiers
@@ -1076,22 +1076,22 @@ ignore:
         cmp     #CHAR_UP
       IF_EQ
         lda     #kPartHome
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
       END_IF
         ;; CHAR_DOWN
         lda     #kPartEnd
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
     END_IF
 
         ;; Single modifier
         cmp     #CHAR_UP
     IF_EQ
         lda     #MGTK::Part::page_up
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
     END_IF
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
 
 .endproc
 
@@ -1262,10 +1262,9 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        bne     ret
+        jeq     HandleListScroll
 
-        jsr     HandleScroll
-ret:    rts
+        rts
 .endproc
 
 ;;; ============================================================
@@ -1275,22 +1274,18 @@ ret:    rts
 kPartHome = $80
 kPartEnd  = $81
 
-.proc HandleScrollWithPart
+.proc HandleListScrollWithPart
         sta     findcontrol_params::which_part
-        FALL_THROUGH_TO HandleScroll
+        FALL_THROUGH_TO HandleListScroll
 .endproc
 
-.proc HandleScroll
+.proc HandleListScroll
         ;; Ignore unless vscroll is enabled
         lda     winfo_results::vscroll
         and     #MGTK::Scroll::option_active
-        jeq     InputLoop
-
-        lda     num_entries
-        sec
-        sbc     #kResultsRows
-        sta     max_top
-
+        bne     :+
+        rts
+:
         lda     findcontrol_params::which_part
 
         ;; scroll to start
@@ -1308,10 +1303,10 @@ kPartEnd  = $81
         cmp     #kPartEnd
     IF_EQ
         lda     winfo_results::vthumbpos
-        cmp     max_top
+        cmp     winfo_results::vthumbmax
         jcs     done
 
-        lda     max_top
+        lda     winfo_results::vthumbmax
         jmp     update
     END_IF
 
@@ -1331,7 +1326,7 @@ kPartEnd  = $81
         cmp     #MGTK::Part::down_arrow
     IF_EQ
         lda     winfo_results::vthumbpos
-        cmp     max_top
+        cmp     winfo_results::vthumbmax
         jcs     done
 
         clc
@@ -1358,9 +1353,9 @@ kPartEnd  = $81
         lda     winfo_results::vthumbpos
         clc
         adc     #kResultsRows
-        cmp     max_top
+        cmp     winfo_results::vthumbmax
         bcc     update
-        lda     max_top
+        lda     winfo_results::vthumbmax
         jmp     update
     END_IF
 
@@ -1380,8 +1375,6 @@ update: sta     updatethumb_params::thumbpos
         jsr     DrawResults
 
 done:   rts
-
-max_top:        .byte   0
 .endproc
 
 ;;; ============================================================

@@ -1030,11 +1030,11 @@ ret:    rts
         cmp     #CHAR_UP
     IF_EQ
         lda     #MGTK::Part::page_up
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
     END_IF
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
-        jmp     HandleScrollWithPart
+        jmp     HandleListScrollWithPart
 
 ret:    rts
 
@@ -1103,7 +1103,10 @@ LDA7D:  copy    #0, checkitem_params::check
         cmp     #winfo_dialog::kWindowId
         beq     HandleDialogClick
         cmp     winfo_drive_select
-        jeq     HandleListClick
+    IF_EQ
+        jsr     HandleListClick
+        return  #$FF
+    END_IF
         rts
 .endproc
 
@@ -1141,26 +1144,27 @@ LDA7D:  copy    #0, checkitem_params::check
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        jeq     HandleScroll
+        jeq     HandleListScroll
 
         cmp     #MGTK::Ctl::not_a_control
-        jne     LDBCA
-
+        beq     :+
+        rts
+:
         copy    #winfo_drive_select::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
         clc
         adc     winfo_drive_select::vthumbpos
+
         cmp     num_drives
         bcc     LDB98
         lda     current_drive_selection
         jsr     HighlightRow
         lda     #$FF
         sta     current_drive_selection           ; $FF if no selection?
-        jmp     LDBCA
+        jmp     ret
 
 LDB98:  cmp     current_drive_selection
         bne     LDBCD
@@ -1173,7 +1177,7 @@ LDBC0:  lda     #$FF
         sta     LD368
         lda     #$64
         sta     LD367
-LDBCA:  return  #$FF
+ret:    rts
 
 LDBCD:  pha
         lda     current_drive_selection
@@ -1610,23 +1614,18 @@ CheckAlpha:
 
 ;;; ============================================================
 
-.proc HandleScrollWithPart
+.proc HandleListScrollWithPart
         sta     findcontrol_params::which_part
-        FALL_THROUGH_TO HandleScroll
+        FALL_THROUGH_TO HandleListScroll
 .endproc
 
-.proc HandleScroll
+.proc HandleListScroll
         ;; Ignore unless vscroll is enabled
         lda     winfo_drive_select::vscroll
         and     #MGTK::Scroll::option_active
         bne     :+
         rts
 :
-        lda     num_drives
-        sec
-        sbc     #kListRows
-        sta     max_top
-
         lda     findcontrol_params::which_part
 
         cmp     #MGTK::Part::up_arrow
@@ -1643,7 +1642,7 @@ CheckAlpha:
         cmp     #MGTK::Part::down_arrow
     IF_EQ
         lda     winfo_drive_select::vthumbpos
-        cmp     max_top
+        cmp     winfo_drive_select::vthumbmax
         jcs     done
 
         clc
@@ -1668,9 +1667,9 @@ CheckAlpha:
         lda     winfo_drive_select::vthumbpos
         clc
         adc     #kListRows
-        cmp     max_top
+        cmp     winfo_drive_select::vthumbmax
         bcc     update
-        lda     max_top
+        lda     winfo_drive_select::vthumbmax
         jmp     update
     END_IF
 
@@ -1693,10 +1692,7 @@ update: sta     updatethumb_params::thumbpos
         bmi     :+
         jsr     HighlightRow
 :
-done:   return  #$FF
-
-max_top:
-        .byte   0
+done:   rts
 .endproc
 
 ;;; ============================================================
