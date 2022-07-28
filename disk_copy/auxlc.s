@@ -1149,11 +1149,10 @@ LDA7D:  copy    #0, checkitem_params::check
 :
         copy    #winfo_drive_select::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        add16   screentowindow_params::windowy, winfo_drive_select::maprect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
-        clc
-        adc     winfo_drive_select::vthumbpos
 
         cmp     num_drives
         bcc     :+

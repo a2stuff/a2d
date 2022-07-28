@@ -391,11 +391,10 @@ click_handler_hook:
 :
         copy    #file_dialog_res::kEntryListCtlWindowID, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::maprect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
-        clc
-        adc     file_dialog_res::winfo_listbox::vthumbpos
 
         sta     new_index
         cmp     file_dialog_res::selected_index

@@ -548,11 +548,10 @@ ret:    rts
 :
         copy    #kListBoxWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        add16   screentowindow_params::windowy, winfo_listbox::maprect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
-        clc
-        adc     winfo_listbox::vthumbpos
 
         jmp     SelectIndex
 .endproc
