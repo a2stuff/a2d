@@ -783,7 +783,10 @@ ret:    rts
         bit     listbox_disabled_flag
     IF_NC
         jsr     IsListKey
-        jeq     HandleListKey
+      IF_EQ
+        copy    #0, file_dialog_res::type_down_buf
+        jmp     HandleListKey
+      END_IF
     END_IF
 
         ldx     event_params::modifiers
@@ -796,6 +799,7 @@ ret:    rts
         jsr     CheckTypeDown
         jeq     exit
 :
+        copy    #0, file_dialog_res::type_down_buf
         lda     event_params::key
         cmp     #CHAR_TAB
         jeq     KeyTab
