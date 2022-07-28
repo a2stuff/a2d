@@ -348,8 +348,6 @@ grafport_win:       .tag    MGTK::GrafPort
         sta     selected_index
     IF_POS
         jsr     ScrollIntoView
-        lda     selected_index
-        jsr     HighlightIndex
     END_IF
 
         MGTK_CALL MGTK::FlushEvents
@@ -469,8 +467,7 @@ SetSelection:
 :       pla                     ; A = new selection
         sta     selected_index
         jsr     ScrollIntoView
-        lda     selected_index
-        jsr     HighlightIndex
+
         lda     selected_index
         jmp     PlayIndex
 .endproc
@@ -570,31 +567,33 @@ ret:    rts
 .proc HandleListScroll
         lda     findcontrol_params::which_part
 
-        ;; scroll up by one line
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::up_arrow
     IF_EQ
         lda     winfo_listbox::vthumbpos
-        cmp     #0
-        jeq     done
+        beq     done
 
         sec
         sbc     #1
         bpl     update          ; always
     END_IF
 
-        ;; scroll down by one line
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::down_arrow
     IF_EQ
         lda     winfo_listbox::vthumbpos
         cmp     winfo_listbox::vthumbmax
-        jcs     done
+        beq     done
 
         clc
         adc     #1
         bpl     update          ; always
     END_IF
 
-        ;; scroll up by one page
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::page_up
     IF_EQ
         lda     winfo_listbox::vthumbpos
@@ -602,12 +601,12 @@ ret:    rts
         bcs     :+
         lda     #0
         beq     update          ; always
-:       sec
-        sbc     #kListRows
+:       sbc     #kListRows
         jmp     update
     END_IF
 
-        ;; scroll down by one page
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::page_down
     IF_EQ
         lda     winfo_listbox::vthumbpos
@@ -619,14 +618,16 @@ ret:    rts
         jmp     update
     END_IF
 
-        cmp     #MGTK::Part::thumb
-    IF_EQ
+        ;; --------------------------------------------------
+
+        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     done
         lda     trackthumb_params::thumbpos
         FALL_THROUGH_TO update
-    END_IF
+
+        ;; --------------------------------------------------
 
 update: sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
@@ -634,8 +635,6 @@ update: sta     updatethumb_params::thumbpos
 
         jsr     UpdateViewport
         jsr     DrawListEntries
-        lda     selected_index
-        jsr     HighlightIndex
 
 done:   rts
 .endproc
@@ -654,9 +653,9 @@ done:   rts
 
         sec
         sbc     #kListRows-1
-        bmi     ret
+        bmi     skip
         cmp     winfo_listbox::vthumbpos
-        beq     ret
+        beq     skip
     IF_GE
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
@@ -665,7 +664,8 @@ done:   rts
         jmp     DrawListEntries
     END_IF
 
-ret:    rts
+skip:   lda     selected_index
+        jmp     HighlightIndex
 .endproc
 
 ;;; ============================================================
@@ -847,6 +847,12 @@ loop:   MGTK_CALL MGTK::MoveTo, itempos
         ptr := $06
         copy16  name_table,x, ptr
         param_call_indirect DrawString, ptr
+
+        lda     index
+        cmp     selected_index
+    IF_EQ
+        jsr     HighlightIndex
+    END_IF
 
         inc     index
         lda     index

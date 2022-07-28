@@ -470,6 +470,11 @@ different:
 
 ;;; ============================================================
 
+.proc HandleListScrollWithPart
+        sta     findcontrol_params::which_part
+        FALL_THROUGH_TO HandleListScroll
+.endproc
+
 .proc HandleListScroll
         ;; Ignore unless vscroll is enabled
         lda     file_dialog_res::winfo_listbox::vscroll
@@ -478,21 +483,65 @@ different:
         rts
 :
         lda     findcontrol_params::which_part
+
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::up_arrow
-        jeq     HandleLineUp
+    IF_EQ
+repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
+        beq     done
+
+        sec
+        sbc     #file_dialog_res::kLineDelta
+        jsr     UpdateThumbCommon
+        jsr     CheckArrowRepeat
+        jmp     repeat
+    END_IF
+
+        ;; --------------------------------------------------
 
         cmp     #MGTK::Part::down_arrow
-        jeq     HandleLineDown
+    IF_EQ
+repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
+        cmp     file_dialog_res::winfo_listbox::vthumbmax
+        beq     done
+
+        clc
+        adc     #file_dialog_res::kLineDelta
+        jsr     UpdateThumbCommon
+        jsr     CheckArrowRepeat
+        jmp     repeat
+    END_IF
+
+        ;; --------------------------------------------------
 
         cmp     #MGTK::Part::page_up
-        jeq     HandlePageUp
+    IF_EQ
+        lda     file_dialog_res::winfo_listbox::vthumbpos
+        cmp     #file_dialog_res::kListRows
+        bcs     :+
+        lda     #0
+        beq     update          ; always
+:       sbc     #file_dialog_res::kListRows
+update: jmp     UpdateThumbCommon
+    END_IF
+
+        ;; --------------------------------------------------
 
         cmp     #MGTK::Part::page_down
-        jeq     HandlePageDown
+    IF_EQ
+        lda     file_dialog_res::winfo_listbox::vthumbpos
+        clc
+        adc     #file_dialog_res::kListRows
+        cmp     file_dialog_res::winfo_listbox::vthumbmax
+        bcc     update
+        lda     file_dialog_res::winfo_listbox::vthumbmax
+update: jmp     UpdateThumbCommon
+    END_IF
 
-        ;; Track thumb
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     trackthumb_params::which_ctl
+        ;; --------------------------------------------------
+
+        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         bne     :+
@@ -500,79 +549,17 @@ different:
 
 :       lda     trackthumb_params::thumbpos
         jmp     UpdateThumbCommon
-.endproc
 
-;;; ============================================================
+        ;; --------------------------------------------------
 
-.proc HandlePageUp
-        lda     file_dialog_res::winfo_listbox::vscroll
-        and     #MGTK::Scroll::option_active
-        bne     :+
-        rts
-:
-        lda     file_dialog_res::winfo_listbox::vthumbpos
-        sec
-        sbc     #file_dialog_res::kListRows
-        bpl     :+
-        lda     #0
-:
-        jmp     UpdateThumbCommon
-.endproc
-
-;;; ============================================================
-
-.proc HandlePageDown
-        lda     file_dialog_res::winfo_listbox::vscroll
-        and     #MGTK::Scroll::option_active
-        bne     :+
-        rts
-:
-        lda     file_dialog_res::winfo_listbox::vthumbpos
-        clc
-        adc     #file_dialog_res::kListRows
-        cmp     file_dialog_res::winfo_listbox::vthumbmax
-        beq     :+
-        bcc     :+
-        lda     file_dialog_res::winfo_listbox::vthumbmax
-:
-        jmp     UpdateThumbCommon
-.endproc
-
-;;; ============================================================
-
-.proc HandleLineUp
-repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
-        bne     :+
-        rts
-
-:       sec
-        sbc     #file_dialog_res::kLineDelta
-        jsr     UpdateThumbCommon
-        jsr     CheckArrowRepeat
-        jmp     repeat
-.endproc
-
-;;; ============================================================
-
-.proc HandleLineDown
-repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
-        cmp     file_dialog_res::winfo_listbox::vthumbmax
-        bne     :+
-        rts
-
-:       clc
-        adc     #file_dialog_res::kLineDelta
-        jsr     UpdateThumbCommon
-        jsr     CheckArrowRepeat
-        jmp     repeat
+done:   rts
 .endproc
 
 ;;; ============================================================
 
 .proc UpdateThumbCommon
         sta     updatethumb_params::thumbpos
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_params::which_ctl
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         lda     updatethumb_params::thumbpos
         jsr     UpdateViewport
@@ -1026,19 +1013,48 @@ char:   .byte   0
     IF_EQ
         cmp     #CHAR_UP
       IF_EQ
-        jmp     ScrollListTop   ; start of list
+        lda     num_file_names
+        beq     done
+        lda     file_dialog_res::selected_index
+        bmi     select
+        bne     deselect
+done:   rts
+
+deselect:
+        jsr     InvertEntry
+
+select:
+        lda     #$00
+        jmp     UpdateListSelection
       END_IF
         ;; CHAR_DOWN
-        jmp     ScrollListBottom ; end of list
+        lda     num_file_names
+        beq     done
+        ldx     file_dialog_res::selected_index
+        bmi     l1
+        inx
+        cpx     num_file_names
+        bne     :+
+done:   rts
+
+:       dex
+        txa
+        jsr     InvertEntry
+l1:     ldx     num_file_names
+        dex
+        txa
+        jmp     UpdateListSelection
     END_IF
 
         ;; Single modifier
         cmp     #CHAR_UP
     IF_EQ
-        jmp     HandlePageUp
+        lda     #MGTK::Part::page_up
+        jmp     HandleListScrollWithPart
     END_IF
         ;; CHAR_DOWN
-        jmp     HandlePageDown
+        lda     #MGTK::Part::page_down
+        jmp     HandleListScrollWithPart
 .endproc
 
 ;;; ============================================================
@@ -1174,45 +1190,6 @@ yes:    clc                     ; C=0
 
 yes:    clc
         rts
-.endproc
-
-;;; ============================================================
-
-.proc ScrollListTop
-        lda     num_file_names
-        beq     done
-        lda     file_dialog_res::selected_index
-        bmi     select
-        bne     deselect
-done:   rts
-
-deselect:
-        jsr     InvertEntry
-
-select:
-        lda     #$00
-        jmp     UpdateListSelection
-.endproc
-
-;;; ============================================================
-
-.proc ScrollListBottom
-        lda     num_file_names
-        beq     done
-        ldx     file_dialog_res::selected_index
-        bmi     l1
-        inx
-        cpx     num_file_names
-        bne     :+
-done:   rts
-
-:       dex
-        txa
-        jsr     InvertEntry
-l1:     ldx     num_file_names
-        dex
-        txa
-        jmp     UpdateListSelection
 .endproc
 
 ;;; ============================================================
@@ -1756,21 +1733,25 @@ loop:   lda     index
         jsr     GetNthFilename
         jsr     CopyFilenameToBuf
         param_call DrawString, file_dialog_res::filename_buf
+
+        ;; Folder glyph?
         ldx     index
         lda     file_list_index,x
-        bpl     :+
-
-        ;; Folder glyph
+    IF_NS
         copy    #file_dialog_res::kListEntryGlyphX, file_dialog_res::picker_entry_pos::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
         param_call DrawString, file_dialog_res::str_folder
         copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord
+    END_IF
 
-:       lda     index
+        ;; Highlight?
+        lda     index
         cmp     file_dialog_res::selected_index
-        bne     l2
+    IF_EQ
         jsr     InvertEntry
-l2:     inc     index
+    END_IF
+
+        inc     index
 
         add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListItemHeight
         jmp     loop

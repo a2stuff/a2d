@@ -1288,7 +1288,8 @@ kPartEnd  = $81
 :
         lda     findcontrol_params::which_part
 
-        ;; scroll to start
+        ;; --------------------------------------------------
+
         cmp     #kPartHome
     IF_EQ
         lda     winfo_results::vthumbpos
@@ -1299,7 +1300,8 @@ kPartEnd  = $81
         jmp     update
     END_IF
 
-        ;; scroll to end
+        ;; --------------------------------------------------
+
         cmp     #kPartEnd
     IF_EQ
         lda     winfo_results::vthumbpos
@@ -1310,31 +1312,33 @@ kPartEnd  = $81
         jmp     update
     END_IF
 
-        ;; scroll up by one line
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::up_arrow
     IF_EQ
         lda     winfo_results::vthumbpos
-        cmp     #0
-        jeq     done
+        beq     done
 
         sec
         sbc     #1
         bpl     update          ; always
     END_IF
 
-        ;; scroll down by one line
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::down_arrow
     IF_EQ
         lda     winfo_results::vthumbpos
         cmp     winfo_results::vthumbmax
-        jcs     done
+        beq     done
 
         clc
         adc     #1
         bpl     update          ; always
     END_IF
 
-        ;; scroll up by one page
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::page_up
     IF_EQ
         lda     winfo_results::vthumbpos
@@ -1342,12 +1346,12 @@ kPartEnd  = $81
         bcs     :+
         lda     #0
         beq     update          ; always
-:       sec
-        sbc     #kResultsRows
+:       sbc     #kResultsRows
         jmp     update
     END_IF
 
-        ;; scroll down by one page
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::page_down
     IF_EQ
         lda     winfo_results::vthumbpos
@@ -1359,16 +1363,19 @@ kPartEnd  = $81
         jmp     update
     END_IF
 
-        cmp     #MGTK::Part::thumb
-        bne     done
+        ;; --------------------------------------------------
 
+        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     done
         lda     trackthumb_params::thumbpos
+        FALL_THROUGH_TO update
+
+        ;; --------------------------------------------------
 
 update: sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         jsr     UpdateViewport

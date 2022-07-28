@@ -1041,13 +1041,10 @@ ret:    rts
 SetSelection:
         pha                     ; A = new selection
         lda     current_drive_selection
-        bmi     :+
         jsr     HighlightRow
-:       pla                     ; A = new selection
+        pla                     ; A = new selection
         sta     current_drive_selection
-        jsr     ScrollIntoView
-        lda     current_drive_selection
-        jmp     HighlightRow
+        jmp     ScrollIntoView
 .endproc
 
 ;;; ============================================================
@@ -1183,9 +1180,8 @@ ret:    rts
 
 LDBCD:  pha
         lda     current_drive_selection
-        bmi     LDBD6
         jsr     HighlightRow
-LDBD6:  pla
+        pla
         sta     current_drive_selection
         jsr     HighlightRow
         jmp     LDBC0
@@ -1257,10 +1253,7 @@ LDCA9:  return  #$FF
 :
         lda     #0
         sta     current_drive_selection
-        pha
         jsr     ScrollIntoView
-        pla
-        jsr     HighlightRow
 
 ret:    rts
 .endproc
@@ -1269,7 +1262,7 @@ ret:    rts
         lda     current_drive_selection
         bmi     :+
         tax
-        dex
+        inx
         cpx     num_drives
         beq     ret
         jsr     HighlightRow
@@ -1278,10 +1271,7 @@ ret:    rts
         dex
         stx     current_drive_selection
         txa
-        pha
         jsr     ScrollIntoView
-        pla
-        jsr     HighlightRow
 
 ret:    rts
 .endproc
@@ -1569,6 +1559,8 @@ CheckAlpha:
 ;;; Input: A = row to highlight
 
 .proc HighlightRow
+        bmi     ret
+
         ldx     #0              ; hi (A=lo)
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
@@ -1578,7 +1570,8 @@ CheckAlpha:
         jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_highlight_row
-        rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -1630,27 +1623,32 @@ CheckAlpha:
 :
         lda     findcontrol_params::which_part
 
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::up_arrow
     IF_EQ
         lda     winfo_drive_select::vthumbpos
-        cmp     #0
-        jeq     done
+        beq     done
 
         sec
         sbc     #1
         bpl     update          ; always
     END_IF
 
+        ;; --------------------------------------------------
+
         cmp     #MGTK::Part::down_arrow
     IF_EQ
         lda     winfo_drive_select::vthumbpos
         cmp     winfo_drive_select::vthumbmax
-        jcs     done
+        beq     done
 
         clc
         adc     #1
         bpl     update          ; always
     END_IF
+
+        ;; --------------------------------------------------
 
         cmp     #MGTK::Part::page_up
     IF_EQ
@@ -1658,11 +1656,12 @@ CheckAlpha:
         cmp     #kListRows
         bcs     :+
         lda     #0
-        beq     update
-:       sec
-        sbc     #kListRows
+        beq     update          ; always
+:       sbc     #kListRows
         jmp     update
     END_IF
+
+        ;; --------------------------------------------------
 
         cmp     #MGTK::Part::page_down
     IF_EQ
@@ -1675,14 +1674,16 @@ CheckAlpha:
         jmp     update
     END_IF
 
-        cmp     #MGTK::Part::thumb
-    IF_EQ
+        ;; --------------------------------------------------
+
+        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     done
         lda     trackthumb_params::thumbpos
         FALL_THROUGH_TO update
-    END_IF
+
+        ;; --------------------------------------------------
 
 update: sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
@@ -1690,10 +1691,7 @@ update: sta     updatethumb_params::thumbpos
 
         jsr     UpdateViewport
         jsr     DrawListEntries
-        lda     current_drive_selection
-        bmi     :+
-        jsr     HighlightRow
-:
+
 done:   rts
 .endproc
 
@@ -1722,9 +1720,9 @@ done:   rts
 
         sec
         sbc     #kListRows-1
-        bmi     ret
+        bmi     skip
         cmp     winfo_drive_select::vthumbpos
-        beq     ret
+        beq     skip
     IF_GE
         sta     winfo_drive_select::vthumbpos
         sta     updatethumb_params::thumbpos
@@ -1734,7 +1732,8 @@ done:   rts
         jmp     DrawListEntries
     END_IF
 
-ret:    rts
+skip:   lda     current_drive_selection
+        jmp     HighlightRow
 .endproc
 
 ;;; ============================================================
@@ -1924,6 +1923,12 @@ loop:   lda     index
         jsr     DrawDeviceListEntry
         add16_8 list_entry_pos::ycoord, #kListItemHeight
 
+        lda     index
+        cmp     current_drive_selection
+    IF_EQ
+        jsr     HighlightRow
+    END_IF
+
         inc     index
         lda     index
         cmp     num_drives
@@ -2005,6 +2010,12 @@ loop:   ldx     index
         lda     destination_index_table,x
         jsr     DrawDeviceListEntry
         add16_8 list_entry_pos::ycoord, #kListItemHeight
+
+        lda     index
+        cmp     current_drive_selection
+    IF_EQ
+        jsr     HighlightRow
+    END_IF
 
         inc     index
         lda     index
