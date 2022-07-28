@@ -1041,7 +1041,7 @@ ret:    rts
 SetSelection:
         pha                     ; A = new selection
         lda     current_drive_selection
-        jsr     HighlightRow
+        jsr     HighlightIndex
         pla                     ; A = new selection
         sta     current_drive_selection
         jmp     ScrollIntoView
@@ -1159,7 +1159,7 @@ LDA7D:  copy    #0, checkitem_params::check
 
         ;; Clear selection
         lda     current_drive_selection
-        jsr     HighlightRow
+        jsr     HighlightIndex
         lda     #$FF
         sta     current_drive_selection
         jmp     ret
@@ -1179,10 +1179,10 @@ ret:    rts
 
 LDBCD:  pha
         lda     current_drive_selection
-        jsr     HighlightRow
+        jsr     HighlightIndex
         pla
         sta     current_drive_selection
-        jsr     HighlightRow
+        jsr     HighlightIndex
         jmp     LDBC0
 .endproc
 
@@ -1248,7 +1248,7 @@ LDCA9:  return  #$FF
         lda     current_drive_selection
         bmi     :+
         beq     ret
-        jsr     HighlightRow
+        jsr     HighlightIndex
 :
         lda     #0
         sta     current_drive_selection
@@ -1264,7 +1264,7 @@ ret:    rts
         inx
         cpx     num_drives
         beq     ret
-        jsr     HighlightRow
+        jsr     HighlightIndex
 :
         ldx     num_drives
         dex
@@ -1557,7 +1557,7 @@ CheckAlpha:
 ;;; ============================================================
 ;;; Input: A = row to highlight
 
-.proc HighlightRow
+.proc HighlightIndex
         bmi     ret
 
         ldx     #0              ; hi (A=lo)
@@ -1731,7 +1731,7 @@ done:   rts
     END_IF
 
 skip:   lda     current_drive_selection
-        jmp     HighlightRow
+        jmp     HighlightIndex
 .endproc
 
 ;;; ============================================================
@@ -1924,7 +1924,7 @@ loop:   lda     index
         lda     index
         cmp     current_drive_selection
     IF_EQ
-        jsr     HighlightRow
+        jsr     HighlightIndex
     END_IF
 
         inc     index
@@ -2012,7 +2012,7 @@ loop:   ldx     index
         lda     index
         cmp     current_drive_selection
     IF_EQ
-        jsr     HighlightRow
+        jsr     HighlightIndex
     END_IF
 
         inc     index

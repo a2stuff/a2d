@@ -439,10 +439,10 @@ different:
 :       lda     file_dialog_res::selected_index
         bmi     :+
         lda     file_dialog_res::selected_index
-        jsr     InvertEntry
+        jsr     HighlightIndex
 :       lda     new_index
         jsr     SetSelectedIndex
-        jsr     InvertEntry
+        jsr     HighlightIndex
         jsr     HandleSelectionChange
 
         jsr     DetectDoubleClick
@@ -932,7 +932,7 @@ file_char:
         pha
         lda     file_dialog_res::selected_index
         bmi     :+
-        jsr     InvertEntry
+        jsr     HighlightIndex
 :       pla
         jmp     UpdateListSelection
 
@@ -1016,7 +1016,7 @@ char:   .byte   0
 done:   rts
 
 deselect:
-        jsr     InvertEntry
+        jsr     HighlightIndex
 
 select:
         lda     #$00
@@ -1034,7 +1034,7 @@ done:   rts
 
 :       dex
         txa
-        jsr     InvertEntry
+        jsr     HighlightIndex
 l1:     ldx     num_file_names
         dex
         txa
@@ -1062,7 +1062,7 @@ l1:     ldx     num_file_names
         bne     l2
 l1:     rts
 
-l2:     jsr     InvertEntry
+l2:     jsr     HighlightIndex
         ldx     file_dialog_res::selected_index
         dex
         txa
@@ -1087,7 +1087,7 @@ l3:     ldx     num_file_names
         bcc     l2
 l1:     rts
 
-l2:     jsr     InvertEntry
+l2:     jsr     HighlightIndex
         ldx     file_dialog_res::selected_index
         inx
         txa
@@ -1731,7 +1731,7 @@ loop:   lda     index
         lda     index
         cmp     file_dialog_res::selected_index
     IF_EQ
-        jsr     InvertEntry
+        jsr     HighlightIndex
     END_IF
 
         inc     index
@@ -1833,7 +1833,7 @@ finish: sty     file_dialog_res::filename_buf
     END_IF
 
 skip:   lda     file_dialog_res::selected_index
-        jmp     InvertEntry
+        jmp     HighlightIndex
 .endproc
 
 ;;; ============================================================
@@ -1852,7 +1852,7 @@ skip:   lda     file_dialog_res::selected_index
 ;;; ============================================================
 ;;; Inputs: A = entry index
 
-.proc InvertEntry
+.proc HighlightIndex
         ldx     #0              ; A,X = entry
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
