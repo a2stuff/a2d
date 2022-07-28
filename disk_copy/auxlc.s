@@ -997,42 +997,28 @@ ret:    rts
     IF_ZERO
         cmp     #CHAR_UP
       IF_EQ
-        lda     current_drive_selection
+        ldx     current_drive_selection
        IF_MINUS
         ldx     num_drives
         dex
-        stx     current_drive_selection
        ELSE
-        bne     :+
-        rts                     ; no-op if first
-:       jsr     HighlightRow
-        dec     current_drive_selection
+        beq     ret
+        dex
        END_IF
-        lda     current_drive_selection
-        pha
-        jsr     ScrollIntoView
-        pla
-        jmp     HighlightRow
+        txa
+        jmp     SetSelection
       END_IF
         ;; CHAR_DOWN
-        lda     current_drive_selection
+        ldx     current_drive_selection
       IF_MINUS
-        copy    #0, current_drive_selection
+        ldx     #0
       ELSE
-        tax
         inx
         cpx     num_drives
-        bne     :+
-        rts                     ; no-op if last
-:       jsr     HighlightRow
-        inc     current_drive_selection
+        beq     ret
       END_IF
-
-        lda     current_drive_selection
-        pha
-        jsr     ScrollIntoView
-        pla
-        jmp     HighlightRow
+        txa
+        jmp     SetSelection
     END_IF
 
         ;; Double modifiers
@@ -1055,6 +1041,19 @@ ret:    rts
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
         jmp     HandleScrollWithPart
+
+ret:    rts
+
+SetSelection:
+        pha                     ; A = new selection
+        lda     current_drive_selection
+        bmi     :+
+        jsr     HighlightRow
+:       pla                     ; A = new selection
+        sta     current_drive_selection
+        jsr     ScrollIntoView
+        lda     current_drive_selection
+        jmp     HighlightRow
 .endproc
 
 ;;; ============================================================

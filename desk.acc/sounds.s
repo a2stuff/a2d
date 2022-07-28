@@ -418,7 +418,8 @@ grafport_win:       .tag    MGTK::GrafPort
       IF_EQ
         ldx     selected_index
        IF_MINUS
-        ldx     #kNumSounds-1
+        ldx     #kNumSounds
+        dex
        ELSE
         beq     ret
         dex
@@ -431,9 +432,9 @@ grafport_win:       .tag    MGTK::GrafPort
       IF_MINUS
         ldx     #0
       ELSE
-        cpx     #kNumSounds-1
-        beq     ret
         inx
+        cpx     #kNumSounds
+        beq     ret
       END_IF
         txa
         jmp     SetSelection
@@ -465,17 +466,17 @@ grafport_win:       .tag    MGTK::GrafPort
 ret:    rts
 
 SetSelection:
-        pha
+        pha                     ; A = new selection
         lda     selected_index
+        bmi     :+
         jsr     HighlightIndex
-        pla
+:       pla                     ; A = new selection
         sta     selected_index
         jsr     ScrollIntoView
         lda     selected_index
         jsr     HighlightIndex
         lda     selected_index
         jmp     PlayIndex
-
 .endproc
 
 ;;; ============================================================
