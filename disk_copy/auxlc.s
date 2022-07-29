@@ -984,6 +984,10 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleListKey
+        lda     num_drives
+        bne     :+
+        rts
+:
         lda     event_params::key
         ldx     event_params::modifiers
 
@@ -1558,6 +1562,7 @@ CheckAlpha:
 ;;; Input: A = row to highlight
 
 .proc HighlightIndex
+        cmp     #0              ; don't assume caller has flags set
         bmi     ret
 
         ldx     #0              ; hi (A=lo)
@@ -1569,7 +1574,6 @@ CheckAlpha:
         jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect_highlight_row
-
 ret:    rts
 .endproc
 

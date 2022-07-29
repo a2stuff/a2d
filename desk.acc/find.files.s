@@ -1055,6 +1055,10 @@ ignore:
 ;;; ============================================================
 
 .proc HandleListKey
+        lda     num_entries
+        bne     :+
+        rts
+:
         lda     event_params::key
         ldx     event_params::modifiers
 

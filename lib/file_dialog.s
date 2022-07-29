@@ -437,10 +437,8 @@ different:
         rts
 
 :       lda     file_dialog_res::selected_index
-        bmi     :+
-        lda     file_dialog_res::selected_index
         jsr     HighlightIndex
-:       lda     new_index
+        lda     new_index
         jsr     SetSelectedIndex
         jsr     HighlightIndex
         jsr     HandleSelectionChange
@@ -931,9 +929,8 @@ file_char:
         beq     done
         pha
         lda     file_dialog_res::selected_index
-        bmi     :+
         jsr     HighlightIndex
-:       pla
+        pla
         jmp     UpdateListSelection
 
 done:   return  #0
@@ -990,6 +987,10 @@ char:   .byte   0
 ;;; ============================================================
 
 .proc HandleListKey
+        lda     num_file_names
+        bne     :+
+        rts
+:
         lda     event_params::key
         ldx     event_params::modifiers
 
@@ -997,9 +998,6 @@ char:   .byte   0
     IF_ZERO
         cmp     #CHAR_UP
       IF_EQ
-        lda     num_file_names
-        beq     ret
-
         lda     file_dialog_res::selected_index
        IF_NS
         ldx     num_file_names
@@ -1016,12 +1014,9 @@ char:   .byte   0
         jmp     UpdateListSelection
        END_IF
 
-ret:    rts
+        rts
       END_IF
         ;; CHAR_DOWN
-        lda     num_file_names
-        beq     ret
-
         lda     file_dialog_res::selected_index
        IF_NS
         lda     #0
@@ -1039,7 +1034,7 @@ ret:    rts
         jmp     UpdateListSelection
        END_IF
 
-ret:    rts
+        rts
     END_IF
 
         ;; Double modifiers
@@ -1047,12 +1042,10 @@ ret:    rts
     IF_EQ
         cmp     #CHAR_UP
       IF_EQ
-        lda     num_file_names
-        beq     done
         lda     file_dialog_res::selected_index
         bmi     select
         bne     deselect
-done:   rts
+        rts
 
 deselect:
         jsr     HighlightIndex
@@ -1062,14 +1055,12 @@ select:
         jmp     UpdateListSelection
       END_IF
         ;; CHAR_DOWN
-        lda     num_file_names
-        beq     done
         ldx     file_dialog_res::selected_index
         bmi     l1
         inx
         cpx     num_file_names
         bne     :+
-done:   rts
+        rts
 
 :       dex
         txa
@@ -1847,6 +1838,9 @@ skip:   lda     file_dialog_res::selected_index
 ;;; Inputs: A = entry index
 
 .proc HighlightIndex
+        cmp     #0              ; don't assume caller has flags set
+        bmi     ret
+
         ldx     #0              ; A,X = entry
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
@@ -1856,7 +1850,7 @@ skip:   lda     file_dialog_res::selected_index
         jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
-        rts
+ret:    rts
 .endproc
 
 ;;; ============================================================

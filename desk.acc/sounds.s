@@ -767,6 +767,7 @@ ret:    rts
 ;;; Input: A = index to toggle highlight
 
 .proc HighlightIndex
+        cmp     #0              ; don't assume caller has flags set
         bmi     ret
 
         ldx     #0
