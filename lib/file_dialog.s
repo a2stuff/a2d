@@ -1153,7 +1153,6 @@ yes:    clc
 .endproc
 
 .proc UpdateDynamicButtons
-        jsr     SetPortForDialog
         jsr     DrawChangeDriveLabel
         jsr     DrawOpenLabel
         jmp     DrawCloseLabel
