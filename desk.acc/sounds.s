@@ -308,6 +308,11 @@ str_aal_bell:   PASCAL_STRING "Assembly Line Bell"
 str_aal_klaxon: PASCAL_STRING "Assembly Line Klaxon"
         kNumSounds = 12
 
+;;; This is in anticipation of factoring out ListBox code, and/or
+;;; dynamically populating the list of sounds from files, etc.
+num_sounds:
+        .byte   kNumSounds
+
 name_table:
         .addr   str_buzz, str_bonk, str_bell, str_silent
         .addr   str_awbeep, str_dazzledraw, str_koala, str_816paint
@@ -403,6 +408,10 @@ grafport_win:       .tag    MGTK::GrafPort
 ;;; ============================================================
 
 .proc HandleListKey
+        lda     num_sounds
+        bne     :+
+ret:    rts
+:
         lda     event_params::key
         ldx     event_params::modifiers
 
@@ -411,27 +420,25 @@ grafport_win:       .tag    MGTK::GrafPort
         cmp     #CHAR_UP
       IF_EQ
         ldx     selected_index
-       IF_MINUS
-        ldx     #kNumSounds
-        dex
-       ELSE
         beq     ret
-        dex
+       IF_NS
+        ldx     num_sounds
        END_IF
+        dex
         txa
-        jmp     SetSelection
+        bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
         ldx     selected_index
-      IF_MINUS
+      IF_NS
         ldx     #0
       ELSE
         inx
-        cpx     #kNumSounds
+        cpx     num_sounds
         beq     ret
       END_IF
         txa
-        jmp     SetSelection
+        bpl     SetSelection    ; always
     END_IF
 
         ;; Double modifiers
@@ -439,12 +446,22 @@ grafport_win:       .tag    MGTK::GrafPort
     IF_EQ
         cmp     #CHAR_UP
       IF_EQ
+        lda     selected_index
+        beq     ret
         lda     #0
-        jmp     SetSelection
+        bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        lda     #kNumSounds-1
-        jmp     SetSelection
+        ldx     selected_index
+      IF_NC
+        inx
+        cpx     num_sounds
+        beq     ret
+      END_IF
+        ldx     num_sounds
+        dex
+        txa
+        bpl     SetSelection    ; always
     END_IF
 
         ;; Single modifier
@@ -456,8 +473,6 @@ grafport_win:       .tag    MGTK::GrafPort
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
         jmp     HandleListScrollWithPart
-
-ret:    rts
 
 SetSelection:
         pha                     ; A = new selection
@@ -684,7 +699,7 @@ skip:   lda     selected_index
 ;;; ============================================================
 
 .proc SelectIndex
-        cmp     #kNumSounds
+        cmp     num_sounds
         bcs     ret
 
         pha
@@ -858,7 +873,7 @@ loop:   MGTK_CALL MGTK::MoveTo, itempos
 
         inc     index
         lda     index
-        cmp     #kNumSounds
+        cmp     num_sounds
         bne     loop
 
         rts
@@ -899,7 +914,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
 next:   inc     index
         lda     index
-        cmp     #kNumSounds
+        cmp     num_sounds
         bne     loop
 
         ;; Not Found

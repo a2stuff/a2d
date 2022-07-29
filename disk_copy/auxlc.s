@@ -986,7 +986,7 @@ ret:    rts
 .proc HandleListKey
         lda     num_drives
         bne     :+
-        rts
+ret:    rts
 :
         lda     event_params::key
         ldx     event_params::modifiers
@@ -996,19 +996,17 @@ ret:    rts
         cmp     #CHAR_UP
       IF_EQ
         ldx     current_drive_selection
-       IF_MINUS
-        ldx     num_drives
-        dex
-       ELSE
         beq     ret
-        dex
+       IF_NS
+        ldx     num_drives
        END_IF
+        dex
         txa
-        jmp     SetSelection
+        bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
         ldx     current_drive_selection
-      IF_MINUS
+      IF_NS
         ldx     #0
       ELSE
         inx
@@ -1016,7 +1014,7 @@ ret:    rts
         beq     ret
       END_IF
         txa
-        jmp     SetSelection
+        bpl     SetSelection    ; always
     END_IF
 
         ;; Double modifiers
@@ -1024,10 +1022,22 @@ ret:    rts
     IF_EQ
         cmp     #CHAR_UP
       IF_EQ
-        jmp     DoHome
+        lda     current_drive_selection
+        beq     ret
+        lda     #0
+        bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        jmp     DoEnd
+        ldx     current_drive_selection
+      IF_NC
+        inx
+        cpx     num_drives
+        beq     ret
+      END_IF
+        ldx     num_drives
+        dex
+        txa
+        bpl     SetSelection    ; always
     END_IF
 
         ;; Single modifier
@@ -1039,8 +1049,6 @@ ret:    rts
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
         jmp     HandleListScrollWithPart
-
-ret:    rts
 
 SetSelection:
         pha                     ; A = new selection
@@ -1245,39 +1253,6 @@ LDC2D:  cmp     #CHAR_RETURN
     END_IF
 
 LDCA9:  return  #$FF
-
-;;; ============================================================
-
-.proc DoHome
-        lda     current_drive_selection
-        bmi     :+
-        beq     ret
-        jsr     HighlightIndex
-:
-        lda     #0
-        sta     current_drive_selection
-        jsr     ScrollIntoView
-
-ret:    rts
-.endproc
-
-.proc DoEnd
-        lda     current_drive_selection
-        bmi     :+
-        tax
-        inx
-        cpx     num_drives
-        beq     ret
-        jsr     HighlightIndex
-:
-        ldx     num_drives
-        dex
-        stx     current_drive_selection
-        txa
-        jsr     ScrollIntoView
-
-ret:    rts
-.endproc
 
 ;;; ============================================================
 

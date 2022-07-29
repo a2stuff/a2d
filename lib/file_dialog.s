@@ -989,7 +989,7 @@ char:   .byte   0
 .proc HandleListKey
         lda     num_file_names
         bne     :+
-        rts
+ret:    rts
 :
         lda     event_params::key
         ldx     event_params::modifiers
@@ -998,43 +998,26 @@ char:   .byte   0
     IF_ZERO
         cmp     #CHAR_UP
       IF_EQ
-        lda     file_dialog_res::selected_index
+        ldx     file_dialog_res::selected_index
+        beq     ret
        IF_NS
         ldx     num_file_names
+       END_IF
         dex
         txa
-        jmp     UpdateListSelection
-       END_IF
-
-       IF_NOT_ZERO
-        jsr     HighlightIndex
-        ldx     file_dialog_res::selected_index
-        dex
-        txa
-        jmp     UpdateListSelection
-       END_IF
-
-        rts
+        bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        lda     file_dialog_res::selected_index
-       IF_NS
-        lda     #0
-        jmp     UpdateListSelection
-       END_IF
-
-        tax
+        ldx     file_dialog_res::selected_index
+      IF_NS
+        ldx     #0
+      ELSE
         inx
         cpx     num_file_names
-       IF_NE
-        jsr     HighlightIndex
-        ldx     file_dialog_res::selected_index
-        inx
+        beq     ret
+      END_IF
         txa
-        jmp     UpdateListSelection
-       END_IF
-
-        rts
+        bpl     SetSelection    ; always
     END_IF
 
         ;; Double modifiers
@@ -1043,32 +1026,21 @@ char:   .byte   0
         cmp     #CHAR_UP
       IF_EQ
         lda     file_dialog_res::selected_index
-        bmi     select
-        bne     deselect
-        rts
-
-deselect:
-        jsr     HighlightIndex
-
-select:
-        lda     #$00
-        jmp     UpdateListSelection
+        beq     ret
+        lda     #0
+        bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
         ldx     file_dialog_res::selected_index
-        bmi     l1
+      IF_NC
         inx
         cpx     num_file_names
-        bne     :+
-        rts
-
-:       dex
-        txa
-        jsr     HighlightIndex
-l1:     ldx     num_file_names
+        beq     ret
+      END_IF
+        ldx     num_file_names
         dex
         txa
-        jmp     UpdateListSelection
+        bpl     SetSelection    ; always
     END_IF
 
         ;; Single modifier
@@ -1080,6 +1052,13 @@ l1:     ldx     num_file_names
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
         jmp     HandleListScrollWithPart
+
+SetSelection:
+        pha                     ; A = new selection
+        lda     file_dialog_res::selected_index
+        jsr     HighlightIndex
+        pla                     ; A = new selection
+        jmp     UpdateListSelection
 .endproc
 
 ;;; ============================================================
