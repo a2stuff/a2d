@@ -1291,7 +1291,7 @@ kPartEnd  = $81
         lda     winfo_results::vscroll
         and     #MGTK::Scroll::option_active
         bne     :+
-        rts
+ret:    rts
 :
         lda     findcontrol_params::which_part
 
@@ -1300,8 +1300,7 @@ kPartEnd  = $81
         cmp     #kPartHome
     IF_EQ
         lda     winfo_results::vthumbpos
-        cmp     #0
-        jeq     done
+        beq     ret
 
         lda     #0
         jmp     update
@@ -1313,7 +1312,7 @@ kPartEnd  = $81
     IF_EQ
         lda     winfo_results::vthumbpos
         cmp     winfo_results::vthumbmax
-        jcs     done
+        bcs     ret
 
         lda     winfo_results::vthumbmax
         jmp     update
@@ -1324,7 +1323,7 @@ kPartEnd  = $81
         cmp     #MGTK::Part::up_arrow
     IF_EQ
         lda     winfo_results::vthumbpos
-        beq     done
+        beq     ret
 
         sec
         sbc     #1
@@ -1337,7 +1336,7 @@ kPartEnd  = $81
     IF_EQ
         lda     winfo_results::vthumbpos
         cmp     winfo_results::vthumbmax
-        beq     done
+        beq     ret
 
         clc
         adc     #1
@@ -1375,7 +1374,7 @@ kPartEnd  = $81
         copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
-        beq     done
+        beq     ret
         lda     trackthumb_params::thumbpos
         FALL_THROUGH_TO update
 
@@ -1386,9 +1385,7 @@ update: sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         jsr     UpdateViewport
-        jsr     DrawResults
-
-done:   rts
+        jmp     DrawResults
 .endproc
 
 ;;; ============================================================

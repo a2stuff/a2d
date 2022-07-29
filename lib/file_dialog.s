@@ -476,7 +476,7 @@ different:
         lda     file_dialog_res::winfo_listbox::vscroll
         and     #MGTK::Scroll::option_active
         bne     :+
-        rts
+ret:    rts
 :
         lda     findcontrol_params::which_part
 
@@ -485,11 +485,11 @@ different:
         cmp     #MGTK::Part::up_arrow
     IF_EQ
 repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
-        beq     done
+        beq     ret
 
         sec
         sbc     #file_dialog_res::kLineDelta
-        jsr     UpdateThumbCommon
+        jsr     update
         jsr     CheckArrowRepeat
         jmp     repeat
     END_IF
@@ -500,11 +500,11 @@ repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
     IF_EQ
 repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
         cmp     file_dialog_res::winfo_listbox::vthumbmax
-        beq     done
+        beq     ret
 
         clc
         adc     #file_dialog_res::kLineDelta
-        jsr     UpdateThumbCommon
+        jsr     update
         jsr     CheckArrowRepeat
         jmp     repeat
     END_IF
@@ -519,7 +519,7 @@ repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
         lda     #0
         beq     update          ; always
 :       sbc     #file_dialog_res::kListRows
-update: jmp     UpdateThumbCommon
+        jmp     update
     END_IF
 
         ;; --------------------------------------------------
@@ -532,7 +532,7 @@ update: jmp     UpdateThumbCommon
         cmp     file_dialog_res::winfo_listbox::vthumbmax
         bcc     update
         lda     file_dialog_res::winfo_listbox::vthumbmax
-update: jmp     UpdateThumbCommon
+        jmp     update
     END_IF
 
         ;; --------------------------------------------------
@@ -540,21 +540,16 @@ update: jmp     UpdateThumbCommon
         copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
-        beq     done
+        beq     ret
         lda     trackthumb_params::thumbpos
-        jmp     UpdateThumbCommon
+        FALL_THROUGH_TO update
 
         ;; --------------------------------------------------
 
-done:   rts
-.endproc
-
-;;; ============================================================
-
-.proc UpdateThumbCommon
-        sta     updatethumb_params::thumbpos
+update: sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
         jsr     UpdateViewport
         jmp     DrawListEntries
 .endproc

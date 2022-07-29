@@ -1598,7 +1598,7 @@ ret:    rts
         lda     winfo_drive_select::vscroll
         and     #MGTK::Scroll::option_active
         bne     :+
-        rts
+ret:    rts
 :
         lda     findcontrol_params::which_part
 
@@ -1607,7 +1607,7 @@ ret:    rts
         cmp     #MGTK::Part::up_arrow
     IF_EQ
         lda     winfo_drive_select::vthumbpos
-        beq     done
+        beq     ret
 
         sec
         sbc     #1
@@ -1620,7 +1620,7 @@ ret:    rts
     IF_EQ
         lda     winfo_drive_select::vthumbpos
         cmp     winfo_drive_select::vthumbmax
-        beq     done
+        beq     ret
 
         clc
         adc     #1
@@ -1658,7 +1658,7 @@ ret:    rts
         copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
-        beq     done
+        beq     ret
         lda     trackthumb_params::thumbpos
         FALL_THROUGH_TO update
 
@@ -1669,9 +1669,7 @@ update: sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         jsr     UpdateViewport
-        jsr     DrawListEntries
-
-done:   rts
+        jmp     DrawListEntries
 .endproc
 
 ;;; ============================================================
