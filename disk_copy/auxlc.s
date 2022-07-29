@@ -974,93 +974,6 @@ do_jump:
 
 ;;; ============================================================
 
-.proc IsListKey
-        cmp     #CHAR_UP
-        beq     ret
-        cmp     #CHAR_DOWN
-ret:    rts
-.endproc
-
-;;; ============================================================
-
-.proc HandleListKey
-        lda     num_drives
-        bne     :+
-ret:    rts
-:
-        lda     event_params::key
-        ldx     event_params::modifiers
-
-        ;; No modifiers
-    IF_ZERO
-        cmp     #CHAR_UP
-      IF_EQ
-        ldx     current_drive_selection
-        beq     ret
-       IF_NS
-        ldx     num_drives
-       END_IF
-        dex
-        txa
-        bpl     SetSelection    ; always
-      END_IF
-        ;; CHAR_DOWN
-        ldx     current_drive_selection
-      IF_NS
-        ldx     #0
-      ELSE
-        inx
-        cpx     num_drives
-        beq     ret
-      END_IF
-        txa
-        bpl     SetSelection    ; always
-    END_IF
-
-        ;; Double modifiers
-        cpx     #3
-    IF_EQ
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     current_drive_selection
-        beq     ret
-        lda     #0
-        bpl     SetSelection    ; always
-      END_IF
-        ;; CHAR_DOWN
-        ldx     current_drive_selection
-      IF_NC
-        inx
-        cpx     num_drives
-        beq     ret
-      END_IF
-        ldx     num_drives
-        dex
-        txa
-        bpl     SetSelection    ; always
-    END_IF
-
-        ;; Single modifier
-        cmp     #CHAR_UP
-    IF_EQ
-        lda     #MGTK::Part::page_up
-        jmp     HandleListScrollWithPart
-    END_IF
-        ;; CHAR_DOWN
-        lda     #MGTK::Part::page_down
-        jmp     HandleListScrollWithPart
-
-SetSelection:
-        pha                     ; A = new selection
-        lda     current_drive_selection
-        jsr     HighlightIndex
-        pla                     ; A = new selection
-        sta     current_drive_selection
-        jmp     ScrollIntoView
-.endproc
-
-;;; ============================================================
-
 cmd_quick_copy:
         lda     disk_copy_flag
         bne     LDA42
@@ -1145,62 +1058,6 @@ LDA7D:  copy    #0, checkitem_params::check
 :
     END_IF
         rts
-.endproc
-
-;;; ============================================================
-
-.proc HandleListClick
-        MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar
-        jeq     HandleListScroll
-
-        cmp     #MGTK::Ctl::not_a_control
-        beq     :+
-        rts
-:
-        copy    #winfo_drive_select::kWindowId, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_params::windowy, winfo_drive_select::maprect::y1, screentowindow_params::windowy
-        ldax    screentowindow_params::windowy
-        ldy     #kListItemHeight
-        jsr     Divide_16_8_16
-
-        ;; Validate
-        cmp     num_drives
-    IF_GE
-        lda     current_drive_selection
-        jsr     HighlightIndex
-        lda     #$FF
-        sta     current_drive_selection
-        rts
-    END_IF
-
-        ;; Different?
-        cmp     current_drive_selection
-    IF_NE
-        pha
-        lda     current_drive_selection
-        jsr     HighlightIndex
-        pla
-        sta     current_drive_selection
-        jsr     HighlightIndex
-        jmp     LDBC0
-    END_IF
-
-        ;; Same???
-        bit     LD368
-        bpl     LDBC0
-        BTK_CALL BTK::Flash, ok_button_params
-        return  #$00
-
-        ;; Common???
-LDBC0:  lda     #$FF
-        sta     LD368
-        lda     #$64
-        sta     LD367
-ret:    rts
-
 .endproc
 
 ;;; ============================================================
@@ -1539,56 +1396,61 @@ CheckAlpha:
 .endproc
 
 ;;; ============================================================
-;;; Input: A = row to highlight
-
-.proc HighlightIndex
-        cmp     #0              ; don't assume caller has flags set
-        bmi     ret
-
-        ldx     #0              ; hi (A=lo)
-        ldy     #kListItemHeight
-        jsr     Multiply_16_8_16
-        stax    rect_highlight_row::y1
-        addax   #kListItemHeight-1, rect_highlight_row::y2
-
-        jsr     SetPortForList
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_highlight_row
-ret:    rts
-.endproc
-
+;;; List Box
 ;;; ============================================================
 
-;;; Enable/disable scrollbar as appropriate; resets thumb pos.
-;;; Assert: `num_drives` is set.
-.proc EnableScrollbar
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+.proc HandleListClick
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        jeq     HandleListScroll
 
-        lda     num_drives
-        cmp     #kListRows+1
-    IF_LT
-        copy    #0, updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        cmp     #MGTK::Ctl::not_a_control
+        beq     :+
+        rts
+:
+        copy    #winfo_drive_select::kWindowId, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        add16   screentowindow_params::windowy, winfo_drive_select::maprect::y1, screentowindow_params::windowy
+        ldax    screentowindow_params::windowy
+        ldy     #kListItemHeight
+        jsr     Divide_16_8_16
 
-        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-
+        ;; Validate
+        cmp     num_drives
+    IF_GE
+        lda     current_drive_selection
+        jsr     HighlightIndex
+        lda     #$FF
+        sta     current_drive_selection
         rts
     END_IF
 
-        copy    #0, updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        ;; Different?
+        cmp     current_drive_selection
+    IF_NE
+        pha
+        lda     current_drive_selection
+        jsr     HighlightIndex
+        pla
+        sta     current_drive_selection
+        jsr     HighlightIndex
+        jmp     LDBC0
+    END_IF
 
-        lda     num_drives
-        sec
-        sbc     #kListRows
-        sta     setctlmax_params::ctlmax
-        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+        ;; Same???
+        bit     LD368
+        bpl     LDBC0
+        BTK_CALL BTK::Flash, ok_button_params
+        return  #$00
 
-        copy    #MGTK::activatectl_activate, activatectl_params::activate
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+        ;; Common???
+LDBC0:  lda     #$FF
+        sta     LD368
+        lda     #$64
+        sta     LD367
+ret:    rts
 
-        rts
 .endproc
 
 ;;; ============================================================
@@ -1679,16 +1541,148 @@ update: sta     updatethumb_params::thumbpos
 
 ;;; ============================================================
 
-.proc DrawListEntries
-        bit     selection_mode  ; source or destination?
-        jpl     DrawDeviceListEntries
-        jmp     DrawDestinationListEntries
+.proc IsListKey
+        cmp     #CHAR_UP
+        beq     ret
+        cmp     #CHAR_DOWN
+ret:    rts
 .endproc
 
 ;;; ============================================================
 
+.proc HandleListKey
+        lda     num_drives
+        bne     :+
+ret:    rts
+:
+        lda     event_params::key
+        ldx     event_params::modifiers
+
+        ;; No modifiers
+    IF_ZERO
+        cmp     #CHAR_UP
+      IF_EQ
+        ldx     current_drive_selection
+        beq     ret
+       IF_NS
+        ldx     num_drives
+       END_IF
+        dex
+        txa
+        bpl     SetSelection    ; always
+      END_IF
+        ;; CHAR_DOWN
+        ldx     current_drive_selection
+      IF_NS
+        ldx     #0
+      ELSE
+        inx
+        cpx     num_drives
+        beq     ret
+      END_IF
+        txa
+        bpl     SetSelection    ; always
+    END_IF
+
+        ;; Double modifiers
+        cpx     #3
+    IF_EQ
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     current_drive_selection
+        beq     ret
+        lda     #0
+        bpl     SetSelection    ; always
+      END_IF
+        ;; CHAR_DOWN
+        ldx     current_drive_selection
+      IF_NC
+        inx
+        cpx     num_drives
+        beq     ret
+      END_IF
+        ldx     num_drives
+        dex
+        txa
+        bpl     SetSelection    ; always
+    END_IF
+
+        ;; Single modifier
+        cmp     #CHAR_UP
+    IF_EQ
+        lda     #MGTK::Part::page_up
+        jmp     HandleListScrollWithPart
+    END_IF
+        ;; CHAR_DOWN
+        lda     #MGTK::Part::page_down
+        jmp     HandleListScrollWithPart
+
+SetSelection:
+        pha                     ; A = new selection
+        lda     current_drive_selection
+        jsr     HighlightIndex
+        pla                     ; A = new selection
+        sta     current_drive_selection
+        jmp     ScrollIntoView
+.endproc
+
+;;; ============================================================
+;;; Input: A = row to highlight
+
+.proc HighlightIndex
+        cmp     #0              ; don't assume caller has flags set
+        bmi     ret
+
+        ldx     #0              ; hi (A=lo)
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        stax    rect_highlight_row::y1
+        addax   #kListItemHeight-1, rect_highlight_row::y2
+
+        jsr     SetPortForList
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect_highlight_row
+ret:    rts
+.endproc
+
+;;; ============================================================
+;;; Enable/disable scrollbar as appropriate; resets thumb pos.
+;;; Assert: `num_drives` is set.
+
+.proc EnableScrollbar
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+
+        lda     num_drives
+        cmp     #kListRows+1
+    IF_LT
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+
+        rts
+    END_IF
+
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        lda     num_drives
+        sec
+        sbc     #kListRows
+        sta     setctlmax_params::ctlmax
+        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+
+        copy    #MGTK::activatectl_activate, activatectl_params::activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Input: A = row to ensure visible
 ;;; Assert: `winfo_drive_select::vthumbpos` is set.
+
 .proc ScrollIntoView
         cmp     winfo_drive_select::vthumbpos
     IF_LT
@@ -1727,6 +1721,14 @@ skip:   lda     current_drive_selection
         addax   #kListBoxHeight, winfo_drive_select::maprect::y2
 
         rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawListEntries
+        bit     selection_mode  ; source or destination?
+        jpl     DrawDeviceListEntries
+        jmp     DrawDestinationListEntries
 .endproc
 
 ;;; ============================================================

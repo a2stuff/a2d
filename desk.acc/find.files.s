@@ -1054,65 +1054,6 @@ ignore:
 
 ;;; ============================================================
 
-.proc HandleListKey
-        lda     num_entries
-        bne     :+
-        rts
-:
-        lda     event_params::key
-        ldx     event_params::modifiers
-
-        ;; No modifiers
-    IF_ZERO
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     #MGTK::Part::up_arrow
-        jmp     HandleListScrollWithPart
-      END_IF
-        ;; CHAR_DOWN
-        lda     #MGTK::Part::down_arrow
-        jmp     HandleListScrollWithPart
-    END_IF
-
-        ;; Double modifiers
-        cpx     #3
-    IF_EQ
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     #kPartHome
-        jmp     HandleListScrollWithPart
-      END_IF
-        ;; CHAR_DOWN
-        lda     #kPartEnd
-        jmp     HandleListScrollWithPart
-    END_IF
-
-        ;; Single modifier
-        cmp     #CHAR_UP
-    IF_EQ
-        lda     #MGTK::Part::page_up
-        jmp     HandleListScrollWithPart
-    END_IF
-        ;; CHAR_DOWN
-        lda     #MGTK::Part::page_down
-        jmp     HandleListScrollWithPart
-
-.endproc
-
-;;; ============================================================
-
-;;; Input: A=character
-;;; Output: Z=1 if up/down, Z=0 if not
-.proc IsListKey
-        cmp     #CHAR_UP
-        beq     ret
-        cmp     #CHAR_DOWN
-ret:    rts
-.endproc
-
-
-;;; ============================================================
-
 ;;; Input: A=character
 ;;; Output: C=0 if control, C=1 if not
 .proc IsControlChar
@@ -1185,40 +1126,6 @@ finish: jmp     InputLoop
 
 ;;; ============================================================
 
-;;; Enable/disable scrollbar as appropriate; resets thumb pos.
-;;; Assert: `num_entries` is set.
-.proc EnableScrollbar
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
-
-        lda     num_entries
-        cmp     #kResultsRows+1
-    IF_LT
-        copy    #0, updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-
-        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-
-        rts
-    END_IF
-
-        copy    #0, updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-
-        lda     num_entries
-        sec
-        sbc     #kResultsRows
-        sta     setctlmax_params::ctlmax
-        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
-
-        copy    #MGTK::activatectl_activate, activatectl_params::activate
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-
-        rts
-.endproc
-
-;;; ============================================================
-
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
@@ -1263,6 +1170,116 @@ finish: jmp     InputLoop
 done:   jmp     InputLoop
 .endproc
 
+;;; ============================================================
+;;; Determine if mouse moved (returns w/ carry set if moved)
+;;; Used in dialogs to possibly change cursor
+
+.proc CheckMouseMoved
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     event_params::coords,x
+        cmp     coords,x
+        bne     diff
+        dex
+        bpl     :-
+        clc
+        rts
+
+diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
+        sec
+        rts
+
+        DEFINE_POINT coords, 0, 0
+
+.endproc
+
+;;; ============================================================
+
+.proc HandleMouseMove
+        copy    #kDAWindowID, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::InRect, input_rect
+        cmp     #MGTK::inrect_inside
+        beq     inside
+
+outside:
+        bit     cursor_ibeam_flag
+        bpl     done
+        copy    #0, cursor_ibeam_flag
+        param_call JTRelay, JUMP_TABLE_CUR_POINTER
+        jmp     done
+
+inside:
+        bit     cursor_ibeam_flag
+        bmi     done
+        copy    #$80, cursor_ibeam_flag
+        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
+
+done:   jmp     InputLoop
+.endproc
+
+;;; ============================================================
+
+.proc SetPortForList
+        lda     #kResultsWindowID
+        bne     SetPortForWindow ; always
+.endproc
+
+.proc SetPortForDialog
+        lda     #kDAWindowID
+        FALL_THROUGH_TO SetPortForWindow
+.endproc
+
+.proc SetPortForWindow
+        sta     getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        ;; ASSERT: Not obscured.
+        MGTK_CALL MGTK::SetPort, grafport_win
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawWindow
+        jsr     SetPortForDialog
+        MGTK_CALL MGTK::HideCursor
+
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, input_rect
+
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+
+        MGTK_CALL MGTK::MoveTo, find_label_pos
+        param_call DrawString, find_label_str
+
+        BTK_CALL BTK::Draw, search_button_params
+        BTK_CALL BTK::Draw, cancel_button_params
+
+        MGTK_CALL MGTK::ShowCursor
+done:   rts
+.endproc
+
+;;; ============================================================
+;;; Populate entry_buf with entry in A
+
+.proc GetEntry
+        jsr     GetEntryAddr
+        stax    STARTLO
+
+        add16   STARTLO, #64, ENDLO
+        copy16  #entry_buf, DESTINATIONLO
+
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        rts
+.endproc
+
+;;; ============================================================
+;;; List Box
 ;;; ============================================================
 
 .proc HandleListClick
@@ -1390,6 +1407,98 @@ update: sta     updatethumb_params::thumbpos
 
 ;;; ============================================================
 
+;;; Input: A=character
+;;; Output: Z=1 if up/down, Z=0 if not
+.proc IsListKey
+        cmp     #CHAR_UP
+        beq     ret
+        cmp     #CHAR_DOWN
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleListKey
+        lda     num_entries
+        bne     :+
+        rts
+:
+        lda     event_params::key
+        ldx     event_params::modifiers
+
+        ;; No modifiers
+    IF_ZERO
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     #MGTK::Part::up_arrow
+        jmp     HandleListScrollWithPart
+      END_IF
+        ;; CHAR_DOWN
+        lda     #MGTK::Part::down_arrow
+        jmp     HandleListScrollWithPart
+    END_IF
+
+        ;; Double modifiers
+        cpx     #3
+    IF_EQ
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     #kPartHome
+        jmp     HandleListScrollWithPart
+      END_IF
+        ;; CHAR_DOWN
+        lda     #kPartEnd
+        jmp     HandleListScrollWithPart
+    END_IF
+
+        ;; Single modifier
+        cmp     #CHAR_UP
+    IF_EQ
+        lda     #MGTK::Part::page_up
+        jmp     HandleListScrollWithPart
+    END_IF
+        ;; CHAR_DOWN
+        lda     #MGTK::Part::page_down
+        jmp     HandleListScrollWithPart
+
+.endproc
+
+;;; ============================================================
+;;; Enable/disable scrollbar as appropriate; resets thumb pos.
+;;; Assert: `num_entries` is set.
+
+.proc EnableScrollbar
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+
+        lda     num_entries
+        cmp     #kResultsRows+1
+    IF_LT
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+
+        rts
+    END_IF
+
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        lda     num_entries
+        sec
+        sbc     #kResultsRows
+        sta     setctlmax_params::ctlmax
+        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+
+        copy    #MGTK::activatectl_activate, activatectl_params::activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+
+        rts
+.endproc
+
+;;; ============================================================
+
 ;;; Assumes `winfo_drive_select::vthumbpos` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
@@ -1399,98 +1508,6 @@ update: sta     updatethumb_params::thumbpos
         addax   #kResultsHeight, winfo_results::maprect::y2
 
         rts
-.endproc
-
-;;; ============================================================
-;;; Determine if mouse moved (returns w/ carry set if moved)
-;;; Used in dialogs to possibly change cursor
-
-.proc CheckMouseMoved
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_params::coords,x
-        cmp     coords,x
-        bne     diff
-        dex
-        bpl     :-
-        clc
-        rts
-
-diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
-        sec
-        rts
-
-        DEFINE_POINT coords, 0, 0
-
-.endproc
-
-;;; ============================================================
-
-.proc HandleMouseMove
-        copy    #kDAWindowID, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, input_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-
-outside:
-        bit     cursor_ibeam_flag
-        bpl     done
-        copy    #0, cursor_ibeam_flag
-        param_call JTRelay, JUMP_TABLE_CUR_POINTER
-        jmp     done
-
-inside:
-        bit     cursor_ibeam_flag
-        bmi     done
-        copy    #$80, cursor_ibeam_flag
-        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
-
-done:   jmp     InputLoop
-.endproc
-
-;;; ============================================================
-
-.proc SetPortForList
-        lda     #kResultsWindowID
-        bne     SetPortForWindow ; always
-.endproc
-
-.proc SetPortForDialog
-        lda     #kDAWindowID
-        FALL_THROUGH_TO SetPortForWindow
-.endproc
-
-.proc SetPortForWindow
-        sta     getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        ;; ASSERT: Not obscured.
-        MGTK_CALL MGTK::SetPort, grafport_win
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc DrawWindow
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::HideCursor
-
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, input_rect
-
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, frame_rect
-        MGTK_CALL MGTK::SetPenSize, pensize_normal
-
-        MGTK_CALL MGTK::MoveTo, find_label_pos
-        param_call DrawString, find_label_str
-
-        BTK_CALL BTK::Draw, search_button_params
-        BTK_CALL BTK::Draw, cancel_button_params
-
-        MGTK_CALL MGTK::ShowCursor
-done:   rts
 .endproc
 
 ;;; ============================================================
@@ -1533,22 +1550,6 @@ done:   MGTK_CALL MGTK::ShowCursor
         param_call DrawString, entry_buf
 
         inc     cur_line
-        rts
-.endproc
-
-;;; ============================================================
-;;; Populate entry_buf with entry in A
-
-.proc GetEntry
-        jsr     GetEntryAddr
-        stax    STARTLO
-
-        add16   STARTLO, #64, ENDLO
-        copy16  #entry_buf, DESTINATIONLO
-
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
         rts
 .endproc
 

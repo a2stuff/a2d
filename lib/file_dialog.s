@@ -386,59 +386,6 @@ click_handler_hook:
         jmp     NoOp
 
 ;;; ============================================================
-
-.proc HandleListClick
-        MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar
-        jeq     HandleListScroll
-
-        cmp     #MGTK::Ctl::not_a_control
-        beq     :+
-        rts
-:
-        copy    #file_dialog_res::kEntryListCtlWindowID, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::maprect::y1, screentowindow_params::windowy
-        ldax    screentowindow_params::windowy
-        ldy     #kListItemHeight
-        jsr     Divide_16_8_16
-
-        ;; Validate
-        cmp     num_file_names
-        bcs     ret             ; TODO: Clear selection/update path
-
-        ;; Update selection (if different)
-        cmp     selected_index
-    IF_NE
-        pha
-        lda     selected_index
-        jsr     HighlightIndex
-        pla
-        jsr     SetSelectedIndex
-        jsr     HighlightIndex
-        jsr     HandleSelectionChange
-    END_IF
-
-        ;; If double-click, open/accept it
-        jsr     DetectDoubleClick
-        bne     ret
-
-        ldx     selected_index
-        lda     file_list_index,x
-    IF_NC
-        ;; File - accept it.
-        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
-        jmp     HandleOk
-    END_IF
-        ;; Folder - open it.
-        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
-        jmp     DoOpen
-
-ret:    rts
-.endproc
-
-;;; ============================================================
 ;;; Refresh the list view from the current path
 ;;; Clears selection.
 
@@ -450,130 +397,6 @@ ret:    rts
         jsr     UpdateViewport
         jsr     UpdateDiskName
         jmp     DrawListEntries
-.endproc
-
-;;; ============================================================
-
-.proc HandleListScrollWithPart
-        sta     findcontrol_params::which_part
-        FALL_THROUGH_TO HandleListScroll
-.endproc
-
-.proc HandleListScroll
-        ;; Ignore unless vscroll is enabled
-        lda     file_dialog_res::winfo_listbox::vscroll
-        and     #MGTK::Scroll::option_active
-        bne     :+
-ret:    rts
-:
-        lda     findcontrol_params::which_part
-
-        ;; --------------------------------------------------
-
-        cmp     #MGTK::Part::up_arrow
-    IF_EQ
-repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
-        beq     ret
-
-        sec
-        sbc     #file_dialog_res::kLineDelta
-        jsr     update
-        jsr     CheckArrowRepeat
-        jmp     repeat
-    END_IF
-
-        ;; --------------------------------------------------
-
-        cmp     #MGTK::Part::down_arrow
-    IF_EQ
-repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
-        cmp     file_dialog_res::winfo_listbox::vthumbmax
-        beq     ret
-
-        clc
-        adc     #file_dialog_res::kLineDelta
-        jsr     update
-        jsr     CheckArrowRepeat
-        jmp     repeat
-    END_IF
-
-        ;; --------------------------------------------------
-
-        cmp     #MGTK::Part::page_up
-    IF_EQ
-        lda     file_dialog_res::winfo_listbox::vthumbpos
-        cmp     #file_dialog_res::kListRows
-        bcs     :+
-        lda     #0
-        beq     update          ; always
-:       sbc     #file_dialog_res::kListRows
-        jmp     update
-    END_IF
-
-        ;; --------------------------------------------------
-
-        cmp     #MGTK::Part::page_down
-    IF_EQ
-        lda     file_dialog_res::winfo_listbox::vthumbpos
-        clc
-        adc     #file_dialog_res::kListRows
-        cmp     file_dialog_res::winfo_listbox::vthumbmax
-        bcc     update
-        lda     file_dialog_res::winfo_listbox::vthumbmax
-        jmp     update
-    END_IF
-
-        ;; --------------------------------------------------
-
-        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
-        MGTK_CALL MGTK::TrackThumb, trackthumb_params
-        lda     trackthumb_params::thumbmoved
-        beq     ret
-        lda     trackthumb_params::thumbpos
-        FALL_THROUGH_TO update
-
-        ;; --------------------------------------------------
-
-update: sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-
-        jsr     UpdateViewport
-        jmp     DrawListEntries
-.endproc
-
-;;; ============================================================
-
-.proc CheckArrowRepeat
-        MGTK_CALL MGTK::PeekEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     :+
-        cmp     #MGTK::EventKind::drag
-        bne     cancel
-:
-        MGTK_CALL MGTK::GetEvent, event_params
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
-        cmp     #file_dialog_res::kEntryListCtlWindowID
-        bne     cancel
-
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
-        bne     cancel
-
-        MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar
-        bne     cancel
-
-        lda     findcontrol_params::which_part
-        cmp     #MGTK::Part::page_up ; up_arrow or down_arrow ?
-        bcc     ret                  ; Yes, continue
-
-cancel: pla
-        pla
-ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -804,15 +627,6 @@ exit:   rts
 
 ;;; ============================================================
 
-.proc IsListKey
-        cmp     #CHAR_UP
-        beq     ret
-        cmp     #CHAR_DOWN
-ret:    rts
-.endproc
-
-;;; ============================================================
-
 .proc KeyOpen
         jsr     IsOpenAllowed
         bcs     ret
@@ -968,81 +782,6 @@ char:   .byte   0
 .endproc ; HandleKeyEvent
 
 ;;; ============================================================
-
-.proc HandleListKey
-        lda     num_file_names
-        bne     :+
-ret:    rts
-:
-        lda     event_params::key
-        ldx     event_params::modifiers
-
-        ;; No modifiers
-    IF_ZERO
-        cmp     #CHAR_UP
-      IF_EQ
-        ldx     selected_index
-        beq     ret
-       IF_NS
-        ldx     num_file_names
-       END_IF
-        dex
-        txa
-        bpl     SetSelection    ; always
-      END_IF
-        ;; CHAR_DOWN
-        ldx     selected_index
-      IF_NS
-        ldx     #0
-      ELSE
-        inx
-        cpx     num_file_names
-        beq     ret
-      END_IF
-        txa
-        bpl     SetSelection    ; always
-    END_IF
-
-        ;; Double modifiers
-        cpx     #3
-    IF_EQ
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     selected_index
-        beq     ret
-        lda     #0
-        bpl     SetSelection    ; always
-      END_IF
-        ;; CHAR_DOWN
-        ldx     selected_index
-      IF_NC
-        inx
-        cpx     num_file_names
-        beq     ret
-      END_IF
-        ldx     num_file_names
-        dex
-        txa
-        bpl     SetSelection    ; always
-    END_IF
-
-        ;; Single modifier
-        cmp     #CHAR_UP
-    IF_EQ
-        lda     #MGTK::Part::page_up
-        jmp     HandleListScrollWithPart
-    END_IF
-        ;; CHAR_DOWN
-        lda     #MGTK::Part::page_down
-        jmp     HandleListScrollWithPart
-
-SetSelection:
-        pha                     ; A = new selection
-        lda     selected_index
-        jsr     HighlightIndex
-        pla                     ; A = new selection
-        jmp     UpdateListSelection
-.endproc
 
 ;;; ============================================================
 
@@ -1639,88 +1378,6 @@ entry_length:
 d4:     .byte   0
 .endproc
 
-;;; ============================================================
-
-.proc DrawListEntries
-        jsr     SetPortForList
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::maprect
-        copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
-        copy16  #kListItemTextOffsetY, file_dialog_res::picker_entry_pos::ycoord
-        copy    #0, index
-
-loop:   lda     index
-        cmp     num_file_names
-        bne     :+
-        rts
-:
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
-
-        ldx     index
-        lda     file_list_index,x
-        and     #$7F
-
-        jsr     GetNthFilename
-        jsr     CopyFilenameToBuf
-        param_call DrawString, file_dialog_res::filename_buf
-
-        ;; Folder glyph?
-        ldx     index
-        lda     file_list_index,x
-    IF_NS
-        copy    #file_dialog_res::kListEntryGlyphX, file_dialog_res::picker_entry_pos::xcoord
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
-        param_call DrawString, file_dialog_res::str_folder
-        copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord
-    END_IF
-
-        ;; Highlight?
-        lda     index
-        cmp     selected_index
-    IF_EQ
-        jsr     HighlightIndex
-    END_IF
-
-        inc     index
-
-        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListItemHeight
-        jmp     loop
-
-index:  .byte   0
-.endproc
-
-;;; ============================================================
-
-;;; Enable/disable scrollbar as appropriate; resets thumb pos.
-;;; Assert: `num_file_names` is set.
-.proc EnableScrollbar
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
-
-        lda     num_file_names
-        cmp     #file_dialog_res::kListRows + 1
-    IF_LT
-        copy    #0, updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-
-        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-
-        rts
-    END_IF
-
-        copy    #0, updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-
-        lda     num_file_names
-        sec
-        sbc     #file_dialog_res::kListRows
-        sta     setctlmax_params::ctlmax
-        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
-
-        copy    #MGTK::activatectl_activate, activatectl_params::activate
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-
-        rts
-.endproc
 
 ;;; ============================================================
 
@@ -1752,70 +1409,6 @@ finish: sty     file_dialog_res::filename_buf
 .endproc
 
 ;;; ============================================================
-
-;;; Input: A = row to ensure visible
-;;; Assert: `file_dialog_res::winfo_listbox::vthumbpos` is set.
-.proc ScrollIntoView
-        cmp     file_dialog_res::winfo_listbox::vthumbpos
-    IF_LT
-        sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        jsr     UpdateViewport
-        jmp     DrawListEntries
-    END_IF
-
-        sec
-        sbc     #file_dialog_res::kListRows-1
-        bmi     skip
-        cmp     file_dialog_res::winfo_listbox::vthumbpos
-        beq     skip
-    IF_GE
-        sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        jsr     UpdateViewport
-        jmp     DrawListEntries
-    END_IF
-
-skip:   lda     selected_index
-        jmp     HighlightIndex
-.endproc
-
-;;; ============================================================
-
-;;; Assumes `file_dialog_res::winfo_listbox::vthumbpos` is set.
-.proc UpdateViewport
-        ldax    #kListItemHeight
-        ldy     file_dialog_res::winfo_listbox::vthumbpos
-        jsr     Multiply_16_8_16
-        stax    file_dialog_res::winfo_listbox::maprect::y1
-        addax   #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::maprect::y2
-
-        rts
-.endproc
-
-;;; ============================================================
-;;; Inputs: A = entry index
-
-.proc HighlightIndex
-        cmp     #0              ; don't assume caller has flags set
-        bmi     ret
-
-        ldx     #0              ; A,X = entry
-        ldy     #kListItemHeight
-        jsr     Multiply_16_8_16
-        stax    file_dialog_res::rect_selection::y1
-        addax   #kListItemHeight-1, file_dialog_res::rect_selection::y2
-
-        jsr     SetPortForList
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
-ret:    rts
-.endproc
-
-;;; ============================================================
-
 
 .proc SetPortForList
         lda     #file_dialog_res::kEntryListCtlWindowID
@@ -2509,5 +2102,416 @@ update_flag:
 NotifyTextChangedF1 := NotifyTextChanged::f1
 NotifyTextChangedF2 := NotifyTextChanged::f2
 .endif
+
+;;; ============================================================
+;;; List Box
+;;; ============================================================
+
+.proc HandleListClick
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        jeq     HandleListScroll
+
+        cmp     #MGTK::Ctl::not_a_control
+        beq     :+
+        rts
+:
+        copy    #file_dialog_res::kEntryListCtlWindowID, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::maprect::y1, screentowindow_params::windowy
+        ldax    screentowindow_params::windowy
+        ldy     #kListItemHeight
+        jsr     Divide_16_8_16
+
+        ;; Validate
+        cmp     num_file_names
+        bcs     ret             ; TODO: Clear selection/update path
+
+        ;; Update selection (if different)
+        cmp     selected_index
+    IF_NE
+        pha
+        lda     selected_index
+        jsr     HighlightIndex
+        pla
+        jsr     SetSelectedIndex
+        jsr     HighlightIndex
+        jsr     HandleSelectionChange
+    END_IF
+
+        ;; If double-click, open/accept it
+        jsr     DetectDoubleClick
+        bne     ret
+
+        ldx     selected_index
+        lda     file_list_index,x
+    IF_NC
+        ;; File - accept it.
+        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
+        jmp     HandleOk
+    END_IF
+        ;; Folder - open it.
+        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
+        jmp     DoOpen
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleListScrollWithPart
+        sta     findcontrol_params::which_part
+        FALL_THROUGH_TO HandleListScroll
+.endproc
+
+.proc HandleListScroll
+        ;; Ignore unless vscroll is enabled
+        lda     file_dialog_res::winfo_listbox::vscroll
+        and     #MGTK::Scroll::option_active
+        bne     :+
+ret:    rts
+:
+        lda     findcontrol_params::which_part
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::up_arrow
+    IF_EQ
+repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
+        beq     ret
+
+        sec
+        sbc     #file_dialog_res::kLineDelta
+        jsr     update
+        jsr     CheckArrowRepeat
+        jmp     repeat
+    END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::down_arrow
+    IF_EQ
+repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
+        cmp     file_dialog_res::winfo_listbox::vthumbmax
+        beq     ret
+
+        clc
+        adc     #file_dialog_res::kLineDelta
+        jsr     update
+        jsr     CheckArrowRepeat
+        jmp     repeat
+    END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::page_up
+    IF_EQ
+        lda     file_dialog_res::winfo_listbox::vthumbpos
+        cmp     #file_dialog_res::kListRows
+        bcs     :+
+        lda     #0
+        beq     update          ; always
+:       sbc     #file_dialog_res::kListRows
+        jmp     update
+    END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::page_down
+    IF_EQ
+        lda     file_dialog_res::winfo_listbox::vthumbpos
+        clc
+        adc     #file_dialog_res::kListRows
+        cmp     file_dialog_res::winfo_listbox::vthumbmax
+        bcc     update
+        lda     file_dialog_res::winfo_listbox::vthumbmax
+        jmp     update
+    END_IF
+
+        ;; --------------------------------------------------
+
+        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_params::thumbmoved
+        beq     ret
+        lda     trackthumb_params::thumbpos
+        FALL_THROUGH_TO update
+
+        ;; --------------------------------------------------
+
+update: sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+.endproc
+
+;;; ============================================================
+
+.proc CheckArrowRepeat
+        MGTK_CALL MGTK::PeekEvent, event_params
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::button_down
+        beq     :+
+        cmp     #MGTK::EventKind::drag
+        bne     cancel
+:
+        MGTK_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::window_id
+        cmp     #file_dialog_res::kEntryListCtlWindowID
+        bne     cancel
+
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+        bne     cancel
+
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        bne     cancel
+
+        lda     findcontrol_params::which_part
+        cmp     #MGTK::Part::page_up ; up_arrow or down_arrow ?
+        bcc     ret                  ; Yes, continue
+
+cancel: pla
+        pla
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc IsListKey
+        cmp     #CHAR_UP
+        beq     ret
+        cmp     #CHAR_DOWN
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleListKey
+        lda     num_file_names
+        bne     :+
+ret:    rts
+:
+        lda     event_params::key
+        ldx     event_params::modifiers
+
+        ;; No modifiers
+    IF_ZERO
+        cmp     #CHAR_UP
+      IF_EQ
+        ldx     selected_index
+        beq     ret
+       IF_NS
+        ldx     num_file_names
+       END_IF
+        dex
+        txa
+        bpl     SetSelection    ; always
+      END_IF
+        ;; CHAR_DOWN
+        ldx     selected_index
+      IF_NS
+        ldx     #0
+      ELSE
+        inx
+        cpx     num_file_names
+        beq     ret
+      END_IF
+        txa
+        bpl     SetSelection    ; always
+    END_IF
+
+        ;; Double modifiers
+        cpx     #3
+    IF_EQ
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     selected_index
+        beq     ret
+        lda     #0
+        bpl     SetSelection    ; always
+      END_IF
+        ;; CHAR_DOWN
+        ldx     selected_index
+      IF_NC
+        inx
+        cpx     num_file_names
+        beq     ret
+      END_IF
+        ldx     num_file_names
+        dex
+        txa
+        bpl     SetSelection    ; always
+    END_IF
+
+        ;; Single modifier
+        cmp     #CHAR_UP
+    IF_EQ
+        lda     #MGTK::Part::page_up
+        jmp     HandleListScrollWithPart
+    END_IF
+        ;; CHAR_DOWN
+        lda     #MGTK::Part::page_down
+        jmp     HandleListScrollWithPart
+
+SetSelection:
+        pha                     ; A = new selection
+        lda     selected_index
+        jsr     HighlightIndex
+        pla                     ; A = new selection
+        jmp     UpdateListSelection
+.endproc
+
+;;; ============================================================
+;;; Inputs: A = entry index
+
+.proc HighlightIndex
+        cmp     #0              ; don't assume caller has flags set
+        bmi     ret
+
+        ldx     #0              ; A,X = entry
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        stax    file_dialog_res::rect_selection::y1
+        addax   #kListItemHeight-1, file_dialog_res::rect_selection::y2
+
+        jsr     SetPortForList
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
+ret:    rts
+.endproc
+
+;;; ============================================================
+;;; Enable/disable scrollbar as appropriate; resets thumb pos.
+;;; Assert: `num_file_names` is set.
+
+.proc EnableScrollbar
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+
+        lda     num_file_names
+        cmp     #file_dialog_res::kListRows + 1
+    IF_LT
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+
+        rts
+    END_IF
+
+        copy    #0, updatethumb_params::thumbpos
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        lda     num_file_names
+        sec
+        sbc     #file_dialog_res::kListRows
+        sta     setctlmax_params::ctlmax
+        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+
+        copy    #MGTK::activatectl_activate, activatectl_params::activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+
+        rts
+.endproc
+
+;;; ============================================================
+;;; Input: A = row to ensure visible
+;;; Assert: `file_dialog_res::winfo_listbox::vthumbpos` is set.
+
+.proc ScrollIntoView
+        cmp     file_dialog_res::winfo_listbox::vthumbpos
+    IF_LT
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+        sec
+        sbc     #file_dialog_res::kListRows-1
+        bmi     skip
+        cmp     file_dialog_res::winfo_listbox::vthumbpos
+        beq     skip
+    IF_GE
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+skip:   lda     selected_index
+        jmp     HighlightIndex
+.endproc
+
+;;; ============================================================
+
+;;; Assumes `file_dialog_res::winfo_listbox::vthumbpos` is set.
+.proc UpdateViewport
+        ldax    #kListItemHeight
+        ldy     file_dialog_res::winfo_listbox::vthumbpos
+        jsr     Multiply_16_8_16
+        stax    file_dialog_res::winfo_listbox::maprect::y1
+        addax   #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::maprect::y2
+
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawListEntries
+        jsr     SetPortForList
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::maprect
+        copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
+        copy16  #kListItemTextOffsetY, file_dialog_res::picker_entry_pos::ycoord
+        copy    #0, index
+
+loop:   lda     index
+        cmp     num_file_names
+        bne     :+
+        rts
+:
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
+
+        ldx     index
+        lda     file_list_index,x
+        and     #$7F
+
+        jsr     GetNthFilename
+        jsr     CopyFilenameToBuf
+        param_call DrawString, file_dialog_res::filename_buf
+
+        ;; Folder glyph?
+        ldx     index
+        lda     file_list_index,x
+    IF_NS
+        copy    #file_dialog_res::kListEntryGlyphX, file_dialog_res::picker_entry_pos::xcoord
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
+        param_call DrawString, file_dialog_res::str_folder
+        copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord
+    END_IF
+
+        ;; Highlight?
+        lda     index
+        cmp     selected_index
+    IF_EQ
+        jsr     HighlightIndex
+    END_IF
+
+        inc     index
+
+        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListItemHeight
+        jmp     loop
+
+index:  .byte   0
+.endproc
 
 ;;; ============================================================

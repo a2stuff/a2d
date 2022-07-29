@@ -407,96 +407,6 @@ grafport_win:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
-.proc HandleListKey
-        lda     num_sounds
-        bne     :+
-ret:    rts
-:
-        lda     event_params::key
-        ldx     event_params::modifiers
-
-        ;; No modifiers
-    IF_ZERO
-        cmp     #CHAR_UP
-      IF_EQ
-        ldx     selected_index
-        beq     ret
-       IF_NS
-        ldx     num_sounds
-       END_IF
-        dex
-        txa
-        bpl     SetSelection    ; always
-      END_IF
-        ;; CHAR_DOWN
-        ldx     selected_index
-      IF_NS
-        ldx     #0
-      ELSE
-        inx
-        cpx     num_sounds
-        beq     ret
-      END_IF
-        txa
-        bpl     SetSelection    ; always
-    END_IF
-
-        ;; Double modifiers
-        cpx     #3
-    IF_EQ
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     selected_index
-        beq     ret
-        lda     #0
-        bpl     SetSelection    ; always
-      END_IF
-        ;; CHAR_DOWN
-        ldx     selected_index
-      IF_NC
-        inx
-        cpx     num_sounds
-        beq     ret
-      END_IF
-        ldx     num_sounds
-        dex
-        txa
-        bpl     SetSelection    ; always
-    END_IF
-
-        ;; Single modifier
-        cmp     #CHAR_UP
-    IF_EQ
-        lda     #MGTK::Part::page_up
-        jmp     HandleListScrollWithPart
-    END_IF
-        ;; CHAR_DOWN
-        lda     #MGTK::Part::page_down
-        jmp     HandleListScrollWithPart
-
-SetSelection:
-        pha                     ; A = new selection
-        lda     selected_index
-        jsr     HighlightIndex
-        pla                     ; A = new selection
-        sta     selected_index
-        jsr     ScrollIntoView
-
-        lda     selected_index
-        jmp     PlayIndex
-.endproc
-
-;;; ============================================================
-
-.proc IsListKey
-        cmp     #CHAR_UP
-        beq     ret
-        cmp     #CHAR_DOWN
-ret:    rts
-.endproc
-
-;;; ============================================================
-
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
@@ -546,177 +456,6 @@ ret:    rts
         ;; ----------------------------------------
 
         jmp     InputLoop
-.endproc
-
-;;; ============================================================
-
-.proc HandleListClick
-        MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar
-        jeq     HandleListScroll
-
-        cmp     #MGTK::Ctl::not_a_control
-        beq     :+
-        rts
-:
-        copy    #kListBoxWindowId, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_params::windowy, winfo_listbox::maprect::y1, screentowindow_params::windowy
-        ldax    screentowindow_params::windowy
-        ldy     #kListItemHeight
-        jsr     Divide_16_8_16
-
-        ;; Validate
-        cmp     num_sounds
-        bcs     ret
-
-        ;; Update selection (if different)
-        cmp     selected_index
-    IF_NE
-        pha
-        lda     selected_index
-        jsr     HighlightIndex
-        pla
-        sta     selected_index
-        jsr     HighlightIndex
-    END_IF
-
-        ;; Preview it
-        lda     selected_index
-        jmp     PlayIndex
-
-ret:    rts
-.endproc
-
-;;; ============================================================
-
-.proc HandleListScrollWithPart
-        sta     findcontrol_params::which_part
-        FALL_THROUGH_TO HandleListScroll
-.endproc
-
-.proc HandleListScroll
-        ;; Ignore unless vscroll is enabled
-        lda     winfo_listbox::vscroll
-        and     #MGTK::Scroll::option_active
-        bne     :+
-ret:    rts
-:
-        lda     findcontrol_params::which_part
-
-        ;; --------------------------------------------------
-
-        cmp     #MGTK::Part::up_arrow
-    IF_EQ
-        lda     winfo_listbox::vthumbpos
-        beq     ret
-
-        sec
-        sbc     #1
-        bpl     update          ; always
-    END_IF
-
-        ;; --------------------------------------------------
-
-        cmp     #MGTK::Part::down_arrow
-    IF_EQ
-        lda     winfo_listbox::vthumbpos
-        cmp     winfo_listbox::vthumbmax
-        beq     ret
-
-        clc
-        adc     #1
-        bpl     update          ; always
-    END_IF
-
-        ;; --------------------------------------------------
-
-        cmp     #MGTK::Part::page_up
-    IF_EQ
-        lda     winfo_listbox::vthumbpos
-        cmp     #kListRows
-        bcs     :+
-        lda     #0
-        beq     update          ; always
-:       sbc     #kListRows
-        jmp     update
-    END_IF
-
-        ;; --------------------------------------------------
-
-        cmp     #MGTK::Part::page_down
-    IF_EQ
-        lda     winfo_listbox::vthumbpos
-        clc
-        adc     #kListRows
-        cmp     winfo_listbox::vthumbmax
-        bcc     update
-        lda     winfo_listbox::vthumbmax
-        jmp     update
-    END_IF
-
-        ;; --------------------------------------------------
-
-        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
-        MGTK_CALL MGTK::TrackThumb, trackthumb_params
-        lda     trackthumb_params::thumbmoved
-        beq     ret
-        lda     trackthumb_params::thumbpos
-        FALL_THROUGH_TO update
-
-        ;; --------------------------------------------------
-
-update: sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-
-        jsr     UpdateViewport
-        jmp     DrawListEntries
-.endproc
-
-;;; ============================================================
-
-;;; Input: A = row to ensure visible
-;;; Assert: `winfo_drive_select::vthumbpos` is set.
-.proc ScrollIntoView
-        cmp     winfo_listbox::vthumbpos
-    IF_LT
-        sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        jsr     UpdateViewport
-        jmp     DrawListEntries
-    END_IF
-
-        sec
-        sbc     #kListRows-1
-        bmi     skip
-        cmp     winfo_listbox::vthumbpos
-        beq     skip
-    IF_GE
-        sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        jsr     UpdateViewport
-        jmp     DrawListEntries
-    END_IF
-
-skip:   lda     selected_index
-        jmp     HighlightIndex
-.endproc
-
-;;; ============================================================
-
-;;; Assumes `winfo_drive_select::vthumbpos` is set.
-.proc UpdateViewport
-        ldax    #kListItemHeight
-        ldy     winfo_listbox::vthumbpos
-        jsr     Multiply_16_8_16
-        stax    winfo_listbox::maprect::y1
-        addax   #winfo_listbox::kHeight, winfo_listbox::maprect::y2
-
-        rts
 .endproc
 
 ;;; ============================================================
@@ -783,25 +522,6 @@ skip:   lda     selected_index
 .endproc
 
 ;;; ============================================================
-;;; Input: A = index to toggle highlight
-
-.proc HighlightIndex
-        cmp     #0              ; don't assume caller has flags set
-        bmi     ret
-
-        ldx     #0
-        ldy     #kListItemHeight
-        jsr     Multiply_16_8_16
-        stax    itemrect::y1
-        addax   #kListItemHeight-1, itemrect::y2
-
-        jsr     SetPortForList
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, itemrect
-ret:    rts
-.endproc
-
-;;; ============================================================
 
 .proc SetPortForList
         lda     #kListBoxWindowId
@@ -843,44 +563,6 @@ ret:    rts
         ;; List Box
 
         jmp     DrawListEntries
-.endproc
-
-;;; ============================================================
-
-.proc DrawListEntries
-        jsr     SetPortForList
-
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, winfo_listbox::maprect
-
-        lda     #0
-        sta     index
-        copy16  #kListItemTextOffsetY, itempos::ycoord
-
-loop:   MGTK_CALL MGTK::MoveTo, itempos
-        add16_8  itempos::ycoord, #kListItemHeight
-
-        index := *+1
-        lda     #SELF_MODIFIED_BYTE
-        asl
-        tax
-
-        ptr := $06
-        copy16  name_table,x, ptr
-        param_call_indirect DrawString, ptr
-
-        lda     index
-        cmp     selected_index
-    IF_EQ
-        jsr     HighlightIndex
-    END_IF
-
-        inc     index
-        lda     index
-        cmp     num_sounds
-        bne     loop
-
-        rts
 .endproc
 
 ;;; ============================================================
@@ -1534,6 +1216,327 @@ END_SOUND_PROC
         jsr     SELF_MODIFIED
         sta     RAMRDON
         sta     RAMWRTON
+        rts
+.endproc
+
+;;; ============================================================
+;;; List Box
+;;; ============================================================
+
+.proc HandleListClick
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        jeq     HandleListScroll
+
+        cmp     #MGTK::Ctl::not_a_control
+        beq     :+
+        rts
+:
+        copy    #kListBoxWindowId, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        add16   screentowindow_params::windowy, winfo_listbox::maprect::y1, screentowindow_params::windowy
+        ldax    screentowindow_params::windowy
+        ldy     #kListItemHeight
+        jsr     Divide_16_8_16
+
+        ;; Validate
+        cmp     num_sounds
+        bcs     ret
+
+        ;; Update selection (if different)
+        cmp     selected_index
+    IF_NE
+        pha
+        lda     selected_index
+        jsr     HighlightIndex
+        pla
+        sta     selected_index
+        jsr     HighlightIndex
+    END_IF
+
+        ;; Preview it
+        lda     selected_index
+        jmp     PlayIndex
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleListScrollWithPart
+        sta     findcontrol_params::which_part
+        FALL_THROUGH_TO HandleListScroll
+.endproc
+
+.proc HandleListScroll
+        ;; Ignore unless vscroll is enabled
+        lda     winfo_listbox::vscroll
+        and     #MGTK::Scroll::option_active
+        bne     :+
+ret:    rts
+:
+        lda     findcontrol_params::which_part
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::up_arrow
+    IF_EQ
+        lda     winfo_listbox::vthumbpos
+        beq     ret
+
+        sec
+        sbc     #1
+        bpl     update          ; always
+    END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::down_arrow
+    IF_EQ
+        lda     winfo_listbox::vthumbpos
+        cmp     winfo_listbox::vthumbmax
+        beq     ret
+
+        clc
+        adc     #1
+        bpl     update          ; always
+    END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::page_up
+    IF_EQ
+        lda     winfo_listbox::vthumbpos
+        cmp     #kListRows
+        bcs     :+
+        lda     #0
+        beq     update          ; always
+:       sbc     #kListRows
+        jmp     update
+    END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::page_down
+    IF_EQ
+        lda     winfo_listbox::vthumbpos
+        clc
+        adc     #kListRows
+        cmp     winfo_listbox::vthumbmax
+        bcc     update
+        lda     winfo_listbox::vthumbmax
+        jmp     update
+    END_IF
+
+        ;; --------------------------------------------------
+
+        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_params::thumbmoved
+        beq     ret
+        lda     trackthumb_params::thumbpos
+        FALL_THROUGH_TO update
+
+        ;; --------------------------------------------------
+
+update: sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+.endproc
+
+;;; ============================================================
+
+.proc IsListKey
+        cmp     #CHAR_UP
+        beq     ret
+        cmp     #CHAR_DOWN
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleListKey
+        lda     num_sounds
+        bne     :+
+ret:    rts
+:
+        lda     event_params::key
+        ldx     event_params::modifiers
+
+        ;; No modifiers
+    IF_ZERO
+        cmp     #CHAR_UP
+      IF_EQ
+        ldx     selected_index
+        beq     ret
+       IF_NS
+        ldx     num_sounds
+       END_IF
+        dex
+        txa
+        bpl     SetSelection    ; always
+      END_IF
+        ;; CHAR_DOWN
+        ldx     selected_index
+      IF_NS
+        ldx     #0
+      ELSE
+        inx
+        cpx     num_sounds
+        beq     ret
+      END_IF
+        txa
+        bpl     SetSelection    ; always
+    END_IF
+
+        ;; Double modifiers
+        cpx     #3
+    IF_EQ
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     selected_index
+        beq     ret
+        lda     #0
+        bpl     SetSelection    ; always
+      END_IF
+        ;; CHAR_DOWN
+        ldx     selected_index
+      IF_NC
+        inx
+        cpx     num_sounds
+        beq     ret
+      END_IF
+        ldx     num_sounds
+        dex
+        txa
+        bpl     SetSelection    ; always
+    END_IF
+
+        ;; Single modifier
+        cmp     #CHAR_UP
+    IF_EQ
+        lda     #MGTK::Part::page_up
+        jmp     HandleListScrollWithPart
+    END_IF
+        ;; CHAR_DOWN
+        lda     #MGTK::Part::page_down
+        jmp     HandleListScrollWithPart
+
+SetSelection:
+        pha                     ; A = new selection
+        lda     selected_index
+        jsr     HighlightIndex
+        pla                     ; A = new selection
+        sta     selected_index
+        jsr     ScrollIntoView
+
+        lda     selected_index
+        jmp     PlayIndex
+.endproc
+
+;;; ============================================================
+;;; Input: A = index to toggle highlight
+
+.proc HighlightIndex
+        cmp     #0              ; don't assume caller has flags set
+        bmi     ret
+
+        ldx     #0
+        ldy     #kListItemHeight
+        jsr     Multiply_16_8_16
+        stax    itemrect::y1
+        addax   #kListItemHeight-1, itemrect::y2
+
+        jsr     SetPortForList
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, itemrect
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+;;; Input: A = row to ensure visible
+;;; Assert: `winfo_drive_select::vthumbpos` is set.
+.proc ScrollIntoView
+        cmp     winfo_listbox::vthumbpos
+    IF_LT
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+        sec
+        sbc     #kListRows-1
+        bmi     skip
+        cmp     winfo_listbox::vthumbpos
+        beq     skip
+    IF_GE
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        jsr     UpdateViewport
+        jmp     DrawListEntries
+    END_IF
+
+skip:   lda     selected_index
+        jmp     HighlightIndex
+.endproc
+
+
+;;; ============================================================
+
+;;; Assumes `winfo_drive_select::vthumbpos` is set.
+.proc UpdateViewport
+        ldax    #kListItemHeight
+        ldy     winfo_listbox::vthumbpos
+        jsr     Multiply_16_8_16
+        stax    winfo_listbox::maprect::y1
+        addax   #winfo_listbox::kHeight, winfo_listbox::maprect::y2
+
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawListEntries
+        jsr     SetPortForList
+
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, winfo_listbox::maprect
+
+        lda     #0
+        sta     index
+        copy16  #kListItemTextOffsetY, itempos::ycoord
+
+loop:   MGTK_CALL MGTK::MoveTo, itempos
+        add16_8  itempos::ycoord, #kListItemHeight
+
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        asl
+        tax
+
+        ptr := $06
+        copy16  name_table,x, ptr
+        param_call_indirect DrawString, ptr
+
+        lda     index
+        cmp     selected_index
+    IF_EQ
+        jsr     HighlightIndex
+    END_IF
+
+        inc     index
+        lda     index
+        cmp     num_sounds
+        bne     loop
+
         rts
 .endproc
 
