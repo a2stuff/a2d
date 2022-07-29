@@ -1166,36 +1166,41 @@ LDA7D:  copy    #0, checkitem_params::check
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
 
+        ;; Validate
         cmp     num_drives
-        bcc     :+
-
-        ;; Clear selection
+    IF_GE
         lda     current_drive_selection
         jsr     HighlightIndex
         lda     #$FF
         sta     current_drive_selection
-        jmp     ret
+        rts
+    END_IF
 
-:       cmp     current_drive_selection
-        bne     LDBCD
-        bit     LD368
-        bpl     LDBC0
-        BTK_CALL BTK::Flash, ok_button_params
-        return  #$00
-
-LDBC0:  lda     #$FF
-        sta     LD368
-        lda     #$64
-        sta     LD367
-ret:    rts
-
-LDBCD:  pha
+        ;; Different?
+        cmp     current_drive_selection
+    IF_NE
+        pha
         lda     current_drive_selection
         jsr     HighlightIndex
         pla
         sta     current_drive_selection
         jsr     HighlightIndex
         jmp     LDBC0
+    END_IF
+
+        ;; Same???
+        bit     LD368
+        bpl     LDBC0
+        BTK_CALL BTK::Flash, ok_button_params
+        return  #$00
+
+        ;; Common???
+LDBC0:  lda     #$FF
+        sta     LD368
+        lda     #$64
+        sta     LD367
+ret:    rts
+
 .endproc
 
 ;;; ============================================================

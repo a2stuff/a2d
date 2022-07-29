@@ -567,7 +567,26 @@ ret:    rts
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
 
-        jmp     SelectIndex
+        ;; Validate
+        cmp     num_sounds
+        bcs     ret
+
+        ;; Update selection (if different)
+        cmp     selected_index
+    IF_NE
+        pha
+        lda     selected_index
+        jsr     HighlightIndex
+        pla
+        sta     selected_index
+        jsr     HighlightIndex
+    END_IF
+
+        ;; Preview it
+        lda     selected_index
+        jmp     PlayIndex
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -698,25 +717,6 @@ skip:   lda     selected_index
         addax   #winfo_listbox::kHeight, winfo_listbox::maprect::y2
 
         rts
-.endproc
-
-;;; ============================================================
-
-.proc SelectIndex
-        cmp     num_sounds
-        bcs     ret
-
-        pha
-        lda     selected_index
-        jsr     HighlightIndex
-        pla
-        pha
-        sta     selected_index
-        jsr     HighlightIndex
-        pla
-
-        jmp     PlayIndex
-ret:    rts
 .endproc
 
 ;;; ============================================================

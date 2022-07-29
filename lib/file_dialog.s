@@ -404,58 +404,38 @@ click_handler_hook:
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
 
-        sta     new_index
-        cmp     selected_index
-        bne     different
-        FALL_THROUGH_TO same
-
-        ;; --------------------------------------------------
-        ;; Click on the previous entry
-
-same:   jsr     DetectDoubleClick
-        beq     open
-        rts
-
-open:   ldx     selected_index
-        lda     file_list_index,x
-        bmi     folder
-
-        ;; File - select it.
-        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
-        jmp     HandleOk
-
-        ;; Folder - open it.
-folder: and     #$7F
-        pha                     ; A = index
-        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
-        pla                     ; A = index
-        jsr     GetNthFilename
-        jsr     AppendToPathBuf
-
-        jmp     UpdateListFromPath
-
-        ;; --------------------------------------------------
-        ;; Click on a different entry
-
-different:
-        new_index := *+1
-        lda     #SELF_MODIFIED_BYTE
+        ;; Validate
         cmp     num_file_names
-        bcc     :+
-        rts
+        bcs     ret             ; TODO: Clear selection/update path
 
-:       lda     selected_index
+        ;; Update selection (if different)
+        cmp     selected_index
+    IF_NE
+        pha
+        lda     selected_index
         jsr     HighlightIndex
-        lda     new_index
+        pla
         jsr     SetSelectedIndex
         jsr     HighlightIndex
         jsr     HandleSelectionChange
+    END_IF
 
+        ;; If double-click, open/accept it
         jsr     DetectDoubleClick
-        bmi     :+
-        jmp     open
+        bne     ret
 
-:       rts
+        ldx     selected_index
+        lda     file_list_index,x
+    IF_NC
+        ;; File - accept it.
+        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
+        jmp     HandleOk
+    END_IF
+        ;; Folder - open it.
+        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
+        jmp     DoOpen
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
