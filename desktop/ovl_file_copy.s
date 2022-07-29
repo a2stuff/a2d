@@ -72,7 +72,7 @@ jt_destination_filename:
         lda     #$80
         sta     file_dialog::only_show_dirs_flag
         sta     file_dialog::focus_in_input2_flag
-        lda     file_dialog_res::selected_index
+        lda     file_dialog::selected_index
         sta     saved_src_index
         lda     #$FF
         jsr     file_dialog::SetSelectedIndex

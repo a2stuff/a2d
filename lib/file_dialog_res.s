@@ -12,11 +12,6 @@
 allow_all_chars_flag:
         .byte   0
 
-;;; Buffer used when selecting filename by holding Apple key and typing name.
-;;; Length-prefixed string, initialized to 0 when the dialog is shown.
-type_down_buf:
-        .res    16, 0
-
 filename_buf:
         .res    17, 0           ; filename + length + slash (for some uses)
 
@@ -35,9 +30,6 @@ input_dirty_flag:
 
 str_folder:
         PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
-
-selected_index:                 ; $FF if none
-        .byte   0
 
         kControlsLeft = 28
         kControlsTop  = 26

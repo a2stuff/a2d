@@ -66,6 +66,14 @@ dir_count:
 saved_stack:
         .byte   0
 
+;;; Buffer used when selecting filename by holding Apple key and typing name.
+;;; Length-prefixed string, initialized to 0 when the dialog is shown.
+type_down_buf:
+        .res    16, 0
+
+selected_index:                 ; $FF if none
+        .byte   0
+
 ;;; ============================================================
 
 .if FD_EXTENDED
@@ -94,7 +102,7 @@ routine_table:
         copy    DEVCNT, device_num
 
         lda     #0
-        sta     file_dialog_res::type_down_buf
+        sta     type_down_buf
         sta     file_dialog_res::allow_all_chars_flag
         sta     only_show_dirs_flag
         sta     cursor_ibeam_flag
@@ -106,7 +114,7 @@ routine_table:
         sta     dual_inputs_flag
 .endif
 
-        copy    #$FF, file_dialog_res::selected_index
+        copy    #$FF, selected_index
 
         lda     #0
         sta     file_dialog_res::open_button_rec::state
@@ -156,7 +164,7 @@ listbox_disabled_flag:  ; Set when the listbox is not active
         beq     is_btn
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        copy    #0, file_dialog_res::type_down_buf
+        copy    #0, type_down_buf
 is_btn: jsr     HandleButtonDown
         jmp     EventLoop
 
@@ -168,7 +176,7 @@ is_btn: jsr     HandleButtonDown
 :       jsr     CheckMouseMoved
         bcc     EventLoop
 
-        copy    #0, file_dialog_res::type_down_buf
+        copy    #0, type_down_buf
 
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
@@ -397,7 +405,7 @@ click_handler_hook:
         jsr     Divide_16_8_16
 
         sta     new_index
-        cmp     file_dialog_res::selected_index
+        cmp     selected_index
         bne     different
         FALL_THROUGH_TO same
 
@@ -408,7 +416,7 @@ same:   jsr     DetectDoubleClick
         beq     open
         rts
 
-open:   ldx     file_dialog_res::selected_index
+open:   ldx     selected_index
         lda     file_list_index,x
         bmi     folder
 
@@ -436,7 +444,7 @@ different:
         bcc     :+
         rts
 
-:       lda     file_dialog_res::selected_index
+:       lda     selected_index
         jsr     HighlightIndex
         lda     new_index
         jsr     SetSelectedIndex
@@ -621,7 +629,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 ;;; ============================================================
 
 .proc DoOpen
-        ldx     file_dialog_res::selected_index
+        ldx     selected_index
         lda     file_list_index,x
         and     #$7F
 
@@ -677,7 +685,7 @@ no:     sec
 .proc IsOpenAllowed
         bit     listbox_disabled_flag
         bmi     no
-        lda     file_dialog_res::selected_index
+        lda     selected_index
         bmi     no              ; no selection
         tax
         lda     file_list_index,x
@@ -746,7 +754,7 @@ ret:    rts
     IF_NC
         jsr     IsListKey
       IF_EQ
-        copy    #0, file_dialog_res::type_down_buf
+        copy    #0, type_down_buf
         jmp     HandleListKey
       END_IF
     END_IF
@@ -761,7 +769,7 @@ ret:    rts
         jsr     CheckTypeDown
         jeq     exit
 :
-        copy    #0, file_dialog_res::type_down_buf
+        copy    #0, type_down_buf
         lda     event_params::key
         cmp     #CHAR_TAB
         jeq     KeyTab
@@ -780,7 +788,7 @@ ret:    rts
         ;; No modifiers
 
         pha
-        copy    #0, file_dialog_res::type_down_buf
+        copy    #0, type_down_buf
         pla
 
         cmp     #CHAR_RETURN
@@ -851,7 +859,7 @@ ret:    rts
 
 .proc KeyReturn
 .if !FD_EXTENDED
-        lda     file_dialog_res::selected_index
+        lda     selected_index
         bpl     :+              ; has a selection
         bit     file_dialog_res::input_dirty_flag
         bmi     :+              ; input is dirty
@@ -895,7 +903,7 @@ key_meta_digit:
         cmp     #'Z'+1
         bcc     file_char
 
-:       ldx     file_dialog_res::type_down_buf
+:       ldx     type_down_buf
         beq     not_file_char
 
         cmp     #'.'
@@ -909,21 +917,21 @@ not_file_char:
         return  #$FF
 
 file_char:
-        ldx     file_dialog_res::type_down_buf
+        ldx     type_down_buf
         cpx     #15
         bne     :+
         rts                     ; Z=1 to consume
 :
         inx
-        stx     file_dialog_res::type_down_buf
-        sta     file_dialog_res::type_down_buf,x
+        stx     type_down_buf
+        sta     type_down_buf,x
 
         jsr     FindMatch
         bmi     done
-        cmp     file_dialog_res::selected_index
+        cmp     selected_index
         beq     done
         pha
-        lda     file_dialog_res::selected_index
+        lda     selected_index
         jsr     HighlightIndex
         pla
         jmp     UpdateListSelection
@@ -949,12 +957,12 @@ loop:   ldx     index
         ldy     #1              ; compare strings (length >= 1)
 cloop:  lda     ($06),y
         jsr     UpcaseChar
-        cmp     file_dialog_res::type_down_buf,y
+        cmp     type_down_buf,y
         bcc     next
         beq     :+
         bcs     found
 :
-        cpy     file_dialog_res::type_down_buf
+        cpy     type_down_buf
         beq     found
 
         iny
@@ -993,7 +1001,7 @@ ret:    rts
     IF_ZERO
         cmp     #CHAR_UP
       IF_EQ
-        ldx     file_dialog_res::selected_index
+        ldx     selected_index
         beq     ret
        IF_NS
         ldx     num_file_names
@@ -1003,7 +1011,7 @@ ret:    rts
         bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     file_dialog_res::selected_index
+        ldx     selected_index
       IF_NS
         ldx     #0
       ELSE
@@ -1020,13 +1028,13 @@ ret:    rts
     IF_EQ
         cmp     #CHAR_UP
       IF_EQ
-        lda     file_dialog_res::selected_index
+        lda     selected_index
         beq     ret
         lda     #0
         bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     file_dialog_res::selected_index
+        ldx     selected_index
       IF_NC
         inx
         cpx     num_file_names
@@ -1050,7 +1058,7 @@ ret:    rts
 
 SetSelection:
         pha                     ; A = new selection
-        lda     file_dialog_res::selected_index
+        lda     selected_index
         jsr     HighlightIndex
         pla                     ; A = new selection
         jmp     UpdateListSelection
@@ -1152,7 +1160,7 @@ yes:    clc
 ;;; Outputs: A=index
 .proc SetSelectedIndex
         pha
-        sta     file_dialog_res::selected_index
+        sta     selected_index
         jsr     UpdateDynamicButtons
         pla
         rts
@@ -1688,7 +1696,7 @@ loop:   lda     index
 
         ;; Highlight?
         lda     index
-        cmp     file_dialog_res::selected_index
+        cmp     selected_index
     IF_EQ
         jsr     HighlightIndex
     END_IF
@@ -1791,7 +1799,7 @@ finish: sty     file_dialog_res::filename_buf
         jmp     DrawListEntries
     END_IF
 
-skip:   lda     file_dialog_res::selected_index
+skip:   lda     selected_index
         jmp     HighlightIndex
 .endproc
 
@@ -2366,7 +2374,7 @@ Update:
 
         ;; Find name of selected item
         copy16  #file_names, ptr
-        ldx     file_dialog_res::selected_index
+        ldx     selected_index
         lda     file_list_index,x
         and     #$7F
         jsr     GetNthFilename
@@ -2474,7 +2482,7 @@ common:
         stax    ptr
 
         ;; Build full path (with seleciton or not) into `path_buf`
-        lda     file_dialog_res::selected_index
+        lda     selected_index
         pha
         bmi     compare_paths   ; no selection
 
@@ -2483,7 +2491,7 @@ common:
         and     #$7F            ; mask off "is folder?" bit
         jsr     GetNthFilename
         jsr     AppendToPathBuf
-        copy    #$FF, file_dialog_res::selected_index ; TODO: Remove?
+        copy    #$FF, selected_index ; TODO: Remove?
 
         ;; Compare with path buf
         ;; NOTE: Case sensitive, since we're always comparing adjusted paths.
@@ -2513,7 +2521,7 @@ update_flag:
 
         ;; Restore selection following `AppendToPathBuf` call above.
         pla
-        sta     file_dialog_res::selected_index
+        sta     selected_index
         bmi     :+
         jsr     StripPathBufSegment
 :       rts
