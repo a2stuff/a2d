@@ -1282,6 +1282,19 @@ done:   rts
 ;;; List Box
 ;;; ============================================================
 
+.scope listbox
+        ;;         kWindowId =
+        winfo = winfo_results
+        kHeight = kResultsHeight
+        kRows = kResultsRows
+        num_items = num_entries
+        ;;         highlight_rect =
+        ;;         item_pos =
+        ;;         selected_index =
+.endscope
+
+;;; ============================================================
+
 .proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
@@ -1305,7 +1318,7 @@ kPartEnd  = $81
 
 .proc HandleListScroll
         ;; Ignore unless vscroll is enabled
-        lda     winfo_results::vscroll
+        lda     listbox::winfo+MGTK::Winfo::vscroll
         and     #MGTK::Scroll::option_active
         bne     :+
 ret:    rts
@@ -1316,7 +1329,7 @@ ret:    rts
 
         cmp     #kPartHome
     IF_EQ
-        lda     winfo_results::vthumbpos
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
         beq     ret
 
         lda     #0
@@ -1327,11 +1340,11 @@ ret:    rts
 
         cmp     #kPartEnd
     IF_EQ
-        lda     winfo_results::vthumbpos
-        cmp     winfo_results::vthumbmax
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
         bcs     ret
 
-        lda     winfo_results::vthumbmax
+        lda     listbox::winfo+MGTK::Winfo::vthumbmax
         jmp     update
     END_IF
 
@@ -1339,7 +1352,7 @@ ret:    rts
 
         cmp     #MGTK::Part::up_arrow
     IF_EQ
-        lda     winfo_results::vthumbpos
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
         beq     ret
 
         sec
@@ -1351,8 +1364,8 @@ ret:    rts
 
         cmp     #MGTK::Part::down_arrow
     IF_EQ
-        lda     winfo_results::vthumbpos
-        cmp     winfo_results::vthumbmax
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
         beq     ret
 
         clc
@@ -1364,12 +1377,12 @@ ret:    rts
 
         cmp     #MGTK::Part::page_up
     IF_EQ
-        lda     winfo_results::vthumbpos
-        cmp     #kResultsRows
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
+        cmp     #listbox::kRows
         bcs     :+
         lda     #0
         beq     update          ; always
-:       sbc     #kResultsRows
+:       sbc     #listbox::kRows
         jmp     update
     END_IF
 
@@ -1377,12 +1390,12 @@ ret:    rts
 
         cmp     #MGTK::Part::page_down
     IF_EQ
-        lda     winfo_results::vthumbpos
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
         clc
-        adc     #kResultsRows
-        cmp     winfo_results::vthumbmax
+        adc     #listbox::kRows
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
         bcc     update
-        lda     winfo_results::vthumbmax
+        lda     listbox::winfo+MGTK::Winfo::vthumbmax
         jmp     update
     END_IF
 
@@ -1406,9 +1419,9 @@ update: sta     updatethumb_params::thumbpos
 .endproc
 
 ;;; ============================================================
-
 ;;; Input: A=character
 ;;; Output: Z=1 if up/down, Z=0 if not
+
 .proc IsListKey
         cmp     #CHAR_UP
         beq     ret
@@ -1419,7 +1432,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleListKey
-        lda     num_entries
+        lda     listbox::num_items
         bne     :+
         rts
 :
@@ -1465,13 +1478,13 @@ ret:    rts
 
 ;;; ============================================================
 ;;; Enable/disable scrollbar as appropriate; resets thumb pos.
-;;; Assert: `num_entries` is set.
+;;; Assert: `listbox::num_items` is set.
 
 .proc EnableScrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
 
-        lda     num_entries
-        cmp     #kResultsRows+1
+        lda     listbox::num_items
+        cmp     #listbox::kRows+1
     IF_LT
         copy    #0, updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -1485,9 +1498,9 @@ ret:    rts
         copy    #0, updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
-        lda     num_entries
+        lda     listbox::num_items
         sec
-        sbc     #kResultsRows
+        sbc     #listbox::kRows
         sta     setctlmax_params::ctlmax
         MGTK_CALL MGTK::SetCtlMax, setctlmax_params
 
@@ -1499,13 +1512,12 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; Assumes `winfo_drive_select::vthumbpos` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
-        ldy     winfo_results::vthumbpos
+        ldy     listbox::winfo+MGTK::Winfo::vthumbpos
         jsr     Multiply_16_8_16
-        stax    winfo_results::maprect::y1
-        addax   #kResultsHeight, winfo_results::maprect::y2
+        stax    listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
+        addax   #listbox::kHeight, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y2
 
         rts
 .endproc
@@ -1517,7 +1529,7 @@ ret:    rts
         jsr     PrepDrawResults
 
 loop:   lda     cur_line
-        cmp     num_entries
+        cmp     listbox::num_items
         beq     done
 
         jsr     DrawNextResult
@@ -1533,7 +1545,7 @@ done:   MGTK_CALL MGTK::ShowCursor
         jsr     SetPortForList
 
         MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::PaintRect, winfo_results::maprect
+        MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
         MGTK_CALL MGTK::ShowCursor
 
         copy    #0, cur_line

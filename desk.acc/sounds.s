@@ -559,9 +559,7 @@ grafport_win:       .tag    MGTK::GrafPort
 
         BTK_CALL BTK::Draw, ok_button_params
 
-        ;; ============================================================
         ;; List Box
-
         jmp     DrawListEntries
 .endproc
 
@@ -1223,6 +1221,19 @@ END_SOUND_PROC
 ;;; List Box
 ;;; ============================================================
 
+.scope listbox
+        ;;         kWindowId =
+        winfo = winfo_listbox
+        kHeight = winfo_listbox::kHeight
+        kRows = kListRows
+        num_items = num_sounds
+        highlight_rect = itemrect
+        item_pos = itempos
+        selected_index = ::selected_index
+.endscope
+
+;;; ============================================================
+
 .proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
@@ -1235,28 +1246,28 @@ END_SOUND_PROC
 :
         copy    #kListBoxWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_params::windowy, winfo_listbox::maprect::y1, screentowindow_params::windowy
+        add16   screentowindow_params::windowy, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
 
         ;; Validate
-        cmp     num_sounds
+        cmp     listbox::num_items
         bcs     ret
 
         ;; Update selection (if different)
-        cmp     selected_index
+        cmp     listbox::selected_index
     IF_NE
         pha
-        lda     selected_index
+        lda     listbox::selected_index
         jsr     HighlightIndex
         pla
-        sta     selected_index
+        sta     listbox::selected_index
         jsr     HighlightIndex
     END_IF
 
         ;; Preview it
-        lda     selected_index
+        lda     listbox::selected_index
         jmp     PlayIndex
 
 ret:    rts
@@ -1271,7 +1282,7 @@ ret:    rts
 
 .proc HandleListScroll
         ;; Ignore unless vscroll is enabled
-        lda     winfo_listbox::vscroll
+        lda     listbox::winfo+MGTK::Winfo::vscroll
         and     #MGTK::Scroll::option_active
         bne     :+
 ret:    rts
@@ -1282,7 +1293,7 @@ ret:    rts
 
         cmp     #MGTK::Part::up_arrow
     IF_EQ
-        lda     winfo_listbox::vthumbpos
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
         beq     ret
 
         sec
@@ -1294,8 +1305,8 @@ ret:    rts
 
         cmp     #MGTK::Part::down_arrow
     IF_EQ
-        lda     winfo_listbox::vthumbpos
-        cmp     winfo_listbox::vthumbmax
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
         beq     ret
 
         clc
@@ -1307,12 +1318,12 @@ ret:    rts
 
         cmp     #MGTK::Part::page_up
     IF_EQ
-        lda     winfo_listbox::vthumbpos
-        cmp     #kListRows
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
+        cmp     #listbox::kRows
         bcs     :+
         lda     #0
         beq     update          ; always
-:       sbc     #kListRows
+:       sbc     #listbox::kRows
         jmp     update
     END_IF
 
@@ -1320,12 +1331,12 @@ ret:    rts
 
         cmp     #MGTK::Part::page_down
     IF_EQ
-        lda     winfo_listbox::vthumbpos
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
         clc
-        adc     #kListRows
-        cmp     winfo_listbox::vthumbmax
+        adc     #listbox::kRows
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
         bcc     update
-        lda     winfo_listbox::vthumbmax
+        lda     listbox::winfo+MGTK::Winfo::vthumbmax
         jmp     update
     END_IF
 
@@ -1349,6 +1360,8 @@ update: sta     updatethumb_params::thumbpos
 .endproc
 
 ;;; ============================================================
+;;; Input: A=character
+;;; Output: Z=1 if up/down, Z=0 if not
 
 .proc IsListKey
         cmp     #CHAR_UP
@@ -1360,7 +1373,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleListKey
-        lda     num_sounds
+        lda     listbox::num_items
         bne     :+
 ret:    rts
 :
@@ -1371,22 +1384,22 @@ ret:    rts
     IF_ZERO
         cmp     #CHAR_UP
       IF_EQ
-        ldx     selected_index
+        ldx     listbox::selected_index
         beq     ret
        IF_NS
-        ldx     num_sounds
+        ldx     listbox::num_items
        END_IF
         dex
         txa
         bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     selected_index
+        ldx     listbox::selected_index
       IF_NS
         ldx     #0
       ELSE
         inx
-        cpx     num_sounds
+        cpx     listbox::num_items
         beq     ret
       END_IF
         txa
@@ -1398,19 +1411,19 @@ ret:    rts
     IF_EQ
         cmp     #CHAR_UP
       IF_EQ
-        lda     selected_index
+        lda     listbox::selected_index
         beq     ret
         lda     #0
         bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     selected_index
+        ldx     listbox::selected_index
       IF_NC
         inx
-        cpx     num_sounds
+        cpx     listbox::num_items
         beq     ret
       END_IF
-        ldx     num_sounds
+        ldx     listbox::num_items
         dex
         txa
         bpl     SetSelection    ; always
@@ -1428,13 +1441,13 @@ ret:    rts
 
 SetSelection:
         pha                     ; A = new selection
-        lda     selected_index
+        lda     listbox::selected_index
         jsr     HighlightIndex
         pla                     ; A = new selection
-        sta     selected_index
+        sta     listbox::selected_index
         jsr     ScrollIntoView
 
-        lda     selected_index
+        lda     listbox::selected_index
         jmp     PlayIndex
 .endproc
 
@@ -1448,8 +1461,8 @@ SetSelection:
         ldx     #0
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
-        stax    itemrect::y1
-        addax   #kListItemHeight-1, itemrect::y2
+        stax    listbox::highlight_rect+MGTK::Rect::y1
+        addax   #kListItemHeight-1, listbox::highlight_rect+MGTK::Rect::y2
 
         jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -1462,7 +1475,7 @@ ret:    rts
 ;;; Input: A = row to ensure visible
 ;;; Assert: `winfo_drive_select::vthumbpos` is set.
 .proc ScrollIntoView
-        cmp     winfo_listbox::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbpos
     IF_LT
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
@@ -1472,9 +1485,9 @@ ret:    rts
     END_IF
 
         sec
-        sbc     #kListRows-1
+        sbc     #listbox::kRows-1
         bmi     skip
-        cmp     winfo_listbox::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbpos
         beq     skip
     IF_GE
         sta     updatethumb_params::thumbpos
@@ -1484,20 +1497,18 @@ ret:    rts
         jmp     DrawListEntries
     END_IF
 
-skip:   lda     selected_index
+skip:   lda     listbox::selected_index
         jmp     HighlightIndex
 .endproc
 
-
 ;;; ============================================================
 
-;;; Assumes `winfo_drive_select::vthumbpos` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
-        ldy     winfo_listbox::vthumbpos
+        ldy     listbox::winfo+MGTK::Winfo::vthumbpos
         jsr     Multiply_16_8_16
-        stax    winfo_listbox::maprect::y1
-        addax   #winfo_listbox::kHeight, winfo_listbox::maprect::y2
+        stax    listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
+        addax   #listbox::kHeight, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y2
 
         rts
 .endproc
@@ -1508,14 +1519,14 @@ skip:   lda     selected_index
         jsr     SetPortForList
 
         MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, winfo_listbox::maprect
+        MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
 
         lda     #0
         sta     index
-        copy16  #kListItemTextOffsetY, itempos::ycoord
+        copy16  #kListItemTextOffsetY, listbox::item_pos+MGTK::Point::ycoord
 
-loop:   MGTK_CALL MGTK::MoveTo, itempos
-        add16_8  itempos::ycoord, #kListItemHeight
+loop:   MGTK_CALL MGTK::MoveTo, listbox::item_pos
+        add16_8  listbox::item_pos+MGTK::Point::ycoord, #kListItemHeight
 
         index := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -1527,14 +1538,14 @@ loop:   MGTK_CALL MGTK::MoveTo, itempos
         param_call_indirect DrawString, ptr
 
         lda     index
-        cmp     selected_index
+        cmp     listbox::selected_index
     IF_EQ
         jsr     HighlightIndex
     END_IF
 
         inc     index
         lda     index
-        cmp     num_sounds
+        cmp     listbox::num_items
         bne     loop
 
         rts

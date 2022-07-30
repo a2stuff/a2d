@@ -1399,6 +1399,19 @@ CheckAlpha:
 ;;; List Box
 ;;; ============================================================
 
+.scope listbox
+        kWindowId = winfo_drive_select::kWindowId
+        winfo = winfo_drive_select
+        kHeight = kListBoxHeight
+        kRows = kListRows
+        num_items = num_drives
+        highlight_rect = rect_highlight_row
+        ;;         item_pos =
+        selected_index = current_drive_selection
+.endscope
+
+;;; ============================================================
+
 .proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
@@ -1409,31 +1422,31 @@ CheckAlpha:
         beq     :+
         rts
 :
-        copy    #winfo_drive_select::kWindowId, screentowindow_params::window_id
+        copy    #listbox::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_params::windowy, winfo_drive_select::maprect::y1, screentowindow_params::windowy
+        add16   screentowindow_params::windowy, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
 
         ;; Validate
-        cmp     num_drives
+        cmp     listbox::num_items
     IF_GE
-        lda     current_drive_selection
+        lda     listbox::selected_index
         jsr     HighlightIndex
         lda     #$FF
-        sta     current_drive_selection
+        sta     listbox::selected_index
         rts
     END_IF
 
         ;; Different?
-        cmp     current_drive_selection
+        cmp     listbox::selected_index
     IF_NE
         pha
-        lda     current_drive_selection
+        lda     listbox::selected_index
         jsr     HighlightIndex
         pla
-        sta     current_drive_selection
+        sta     listbox::selected_index
         jsr     HighlightIndex
         jmp     LDBC0
     END_IF
@@ -1462,7 +1475,7 @@ ret:    rts
 
 .proc HandleListScroll
         ;; Ignore unless vscroll is enabled
-        lda     winfo_drive_select::vscroll
+        lda     listbox::winfo+MGTK::Winfo::vscroll
         and     #MGTK::Scroll::option_active
         bne     :+
 ret:    rts
@@ -1473,7 +1486,7 @@ ret:    rts
 
         cmp     #MGTK::Part::up_arrow
     IF_EQ
-        lda     winfo_drive_select::vthumbpos
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
         beq     ret
 
         sec
@@ -1485,8 +1498,8 @@ ret:    rts
 
         cmp     #MGTK::Part::down_arrow
     IF_EQ
-        lda     winfo_drive_select::vthumbpos
-        cmp     winfo_drive_select::vthumbmax
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
         beq     ret
 
         clc
@@ -1498,12 +1511,12 @@ ret:    rts
 
         cmp     #MGTK::Part::page_up
     IF_EQ
-        lda     winfo_drive_select::vthumbpos
-        cmp     #kListRows
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
+        cmp     #listbox::kRows
         bcs     :+
         lda     #0
         beq     update          ; always
-:       sbc     #kListRows
+:       sbc     #listbox::kRows
         jmp     update
     END_IF
 
@@ -1511,12 +1524,12 @@ ret:    rts
 
         cmp     #MGTK::Part::page_down
     IF_EQ
-        lda     winfo_drive_select::vthumbpos
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
         clc
-        adc     #kListRows
-        cmp     winfo_drive_select::vthumbmax
+        adc     #listbox::kRows
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
         bcc     update
-        lda     winfo_drive_select::vthumbmax
+        lda     listbox::winfo+MGTK::Winfo::vthumbmax
         jmp     update
     END_IF
 
@@ -1540,6 +1553,8 @@ update: sta     updatethumb_params::thumbpos
 .endproc
 
 ;;; ============================================================
+;;; Input: A=character
+;;; Output: Z=1 if up/down, Z=0 if not
 
 .proc IsListKey
         cmp     #CHAR_UP
@@ -1551,7 +1566,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleListKey
-        lda     num_drives
+        lda     listbox::num_items
         bne     :+
 ret:    rts
 :
@@ -1562,22 +1577,22 @@ ret:    rts
     IF_ZERO
         cmp     #CHAR_UP
       IF_EQ
-        ldx     current_drive_selection
+        ldx     listbox::selected_index
         beq     ret
        IF_NS
-        ldx     num_drives
+        ldx     listbox::num_items
        END_IF
         dex
         txa
         bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     current_drive_selection
+        ldx     listbox::selected_index
       IF_NS
         ldx     #0
       ELSE
         inx
-        cpx     num_drives
+        cpx     listbox::num_items
         beq     ret
       END_IF
         txa
@@ -1589,19 +1604,19 @@ ret:    rts
     IF_EQ
         cmp     #CHAR_UP
       IF_EQ
-        lda     current_drive_selection
+        lda     listbox::selected_index
         beq     ret
         lda     #0
         bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     current_drive_selection
+        ldx     listbox::selected_index
       IF_NC
         inx
-        cpx     num_drives
+        cpx     listbox::num_items
         beq     ret
       END_IF
-        ldx     num_drives
+        ldx     listbox::num_items
         dex
         txa
         bpl     SetSelection    ; always
@@ -1619,10 +1634,10 @@ ret:    rts
 
 SetSelection:
         pha                     ; A = new selection
-        lda     current_drive_selection
+        lda     listbox::selected_index
         jsr     HighlightIndex
         pla                     ; A = new selection
-        sta     current_drive_selection
+        sta     listbox::selected_index
         jmp     ScrollIntoView
 .endproc
 
@@ -1636,24 +1651,24 @@ SetSelection:
         ldx     #0              ; hi (A=lo)
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
-        stax    rect_highlight_row::y1
-        addax   #kListItemHeight-1, rect_highlight_row::y2
+        stax    listbox::highlight_rect+MGTK::Rect::y1
+        addax   #kListItemHeight-1, listbox::highlight_rect+MGTK::Rect::y2
 
         jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_highlight_row
+        MGTK_CALL MGTK::PaintRect, listbox::highlight_rect
 ret:    rts
 .endproc
 
 ;;; ============================================================
 ;;; Enable/disable scrollbar as appropriate; resets thumb pos.
-;;; Assert: `num_drives` is set.
+;;; Assert: `listbox::num_items` is set.
 
 .proc EnableScrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
 
-        lda     num_drives
-        cmp     #kListRows+1
+        lda     listbox::num_items
+        cmp     #listbox::kRows+1
     IF_LT
         copy    #0, updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -1667,9 +1682,9 @@ ret:    rts
         copy    #0, updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
-        lda     num_drives
+        lda     listbox::num_items
         sec
-        sbc     #kListRows
+        sbc     #listbox::kRows
         sta     setctlmax_params::ctlmax
         MGTK_CALL MGTK::SetCtlMax, setctlmax_params
 
@@ -1681,10 +1696,10 @@ ret:    rts
 
 ;;; ============================================================
 ;;; Input: A = row to ensure visible
-;;; Assert: `winfo_drive_select::vthumbpos` is set.
+;;; Assert: `listbox::winfo+MGTK::Winfo::vthumbpos` is set.
 
 .proc ScrollIntoView
-        cmp     winfo_drive_select::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbpos
     IF_LT
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
@@ -1694,9 +1709,9 @@ ret:    rts
     END_IF
 
         sec
-        sbc     #kListRows-1
+        sbc     #listbox::kRows-1
         bmi     skip
-        cmp     winfo_drive_select::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbpos
         beq     skip
     IF_GE
         sta     updatethumb_params::thumbpos
@@ -1706,19 +1721,18 @@ ret:    rts
         jmp     DrawListEntries
     END_IF
 
-skip:   lda     current_drive_selection
+skip:   lda     listbox::selected_index
         jmp     HighlightIndex
 .endproc
 
 ;;; ============================================================
 
-;;; Assumes `winfo_drive_select::vthumbpos` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
-        ldy     winfo_drive_select::vthumbpos
+        ldy     listbox::winfo+MGTK::Winfo::vthumbpos
         jsr     Multiply_16_8_16
-        stax    winfo_drive_select::maprect::y1
-        addax   #kListBoxHeight, winfo_drive_select::maprect::y2
+        stax    listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
+        addax   #listbox::kHeight, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y2
 
         rts
 .endproc

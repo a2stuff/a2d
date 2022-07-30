@@ -2107,6 +2107,19 @@ NotifyTextChangedF2 := NotifyTextChanged::f2
 ;;; List Box
 ;;; ============================================================
 
+.scope listbox
+        kWindowId = file_dialog_res::kEntryListCtlWindowID
+        winfo = file_dialog_res::winfo_listbox
+        kHeight = file_dialog_res::winfo_listbox::kHeight
+        kRows = file_dialog_res::kListRows
+        num_items = num_file_names
+        highlight_rect = file_dialog_res::rect_selection
+        item_pos = file_dialog_res::picker_entry_pos
+.endscope
+listbox::selected_index = selected_index
+
+;;; ============================================================
+
 .proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
@@ -2117,22 +2130,22 @@ NotifyTextChangedF2 := NotifyTextChanged::f2
         beq     :+
         rts
 :
-        copy    #file_dialog_res::kEntryListCtlWindowID, screentowindow_params::window_id
+        copy    #listbox::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        add16   screentowindow_params::windowy, file_dialog_res::winfo_listbox::maprect::y1, screentowindow_params::windowy
+        add16   screentowindow_params::windowy, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
         ldy     #kListItemHeight
         jsr     Divide_16_8_16
 
         ;; Validate
-        cmp     num_file_names
+        cmp     listbox::num_items
         bcs     ret             ; TODO: Clear selection/update path
 
         ;; Update selection (if different)
-        cmp     selected_index
+        cmp     listbox::selected_index
     IF_NE
         pha
-        lda     selected_index
+        lda     listbox::selected_index
         jsr     HighlightIndex
         pla
         jsr     SetSelectedIndex
@@ -2144,7 +2157,7 @@ NotifyTextChangedF2 := NotifyTextChanged::f2
         jsr     DetectDoubleClick
         bne     ret
 
-        ldx     selected_index
+        ldx     listbox::selected_index
         lda     file_list_index,x
     IF_NC
         ;; File - accept it.
@@ -2167,7 +2180,7 @@ ret:    rts
 
 .proc HandleListScroll
         ;; Ignore unless vscroll is enabled
-        lda     file_dialog_res::winfo_listbox::vscroll
+        lda     listbox::winfo+MGTK::Winfo::vscroll
         and     #MGTK::Scroll::option_active
         bne     :+
 ret:    rts
@@ -2178,11 +2191,11 @@ ret:    rts
 
         cmp     #MGTK::Part::up_arrow
     IF_EQ
-repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
+repeat: lda     listbox::winfo+MGTK::Winfo::vthumbpos
         beq     ret
 
         sec
-        sbc     #file_dialog_res::kLineDelta
+        sbc     #1
         jsr     update
         jsr     CheckArrowRepeat
         jmp     repeat
@@ -2192,12 +2205,12 @@ repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
 
         cmp     #MGTK::Part::down_arrow
     IF_EQ
-repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
-        cmp     file_dialog_res::winfo_listbox::vthumbmax
+repeat: lda     listbox::winfo+MGTK::Winfo::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
         beq     ret
 
         clc
-        adc     #file_dialog_res::kLineDelta
+        adc     #1
         jsr     update
         jsr     CheckArrowRepeat
         jmp     repeat
@@ -2207,12 +2220,12 @@ repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
 
         cmp     #MGTK::Part::page_up
     IF_EQ
-        lda     file_dialog_res::winfo_listbox::vthumbpos
-        cmp     #file_dialog_res::kListRows
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
+        cmp     #listbox::kRows
         bcs     :+
         lda     #0
         beq     update          ; always
-:       sbc     #file_dialog_res::kListRows
+:       sbc     #listbox::kRows
         jmp     update
     END_IF
 
@@ -2220,12 +2233,12 @@ repeat: lda     file_dialog_res::winfo_listbox::vthumbpos
 
         cmp     #MGTK::Part::page_down
     IF_EQ
-        lda     file_dialog_res::winfo_listbox::vthumbpos
+        lda     listbox::winfo+MGTK::Winfo::vthumbpos
         clc
-        adc     #file_dialog_res::kListRows
-        cmp     file_dialog_res::winfo_listbox::vthumbmax
+        adc     #listbox::kRows
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
         bcc     update
-        lda     file_dialog_res::winfo_listbox::vthumbmax
+        lda     listbox::winfo+MGTK::Winfo::vthumbmax
         jmp     update
     END_IF
 
@@ -2261,7 +2274,7 @@ update: sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-        cmp     #file_dialog_res::kEntryListCtlWindowID
+        cmp     #listbox::kWindowId
         bne     cancel
 
         lda     findwindow_params::which_area
@@ -2283,6 +2296,8 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Input: A=character
+;;; Output: Z=1 if up/down, Z=0 if not
 
 .proc IsListKey
         cmp     #CHAR_UP
@@ -2294,7 +2309,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleListKey
-        lda     num_file_names
+        lda     listbox::num_items
         bne     :+
 ret:    rts
 :
@@ -2305,22 +2320,22 @@ ret:    rts
     IF_ZERO
         cmp     #CHAR_UP
       IF_EQ
-        ldx     selected_index
+        ldx     listbox::selected_index
         beq     ret
        IF_NS
-        ldx     num_file_names
+        ldx     listbox::num_items
        END_IF
         dex
         txa
         bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     selected_index
+        ldx     listbox::selected_index
       IF_NS
         ldx     #0
       ELSE
         inx
-        cpx     num_file_names
+        cpx     listbox::num_items
         beq     ret
       END_IF
         txa
@@ -2332,19 +2347,19 @@ ret:    rts
     IF_EQ
         cmp     #CHAR_UP
       IF_EQ
-        lda     selected_index
+        lda     listbox::selected_index
         beq     ret
         lda     #0
         bpl     SetSelection    ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     selected_index
+        ldx     listbox::selected_index
       IF_NC
         inx
-        cpx     num_file_names
+        cpx     listbox::num_items
         beq     ret
       END_IF
-        ldx     num_file_names
+        ldx     listbox::num_items
         dex
         txa
         bpl     SetSelection    ; always
@@ -2362,7 +2377,7 @@ ret:    rts
 
 SetSelection:
         pha                     ; A = new selection
-        lda     selected_index
+        lda     listbox::selected_index
         jsr     HighlightIndex
         pla                     ; A = new selection
         jmp     UpdateListSelection
@@ -2378,24 +2393,24 @@ SetSelection:
         ldx     #0              ; A,X = entry
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
-        stax    file_dialog_res::rect_selection::y1
-        addax   #kListItemHeight-1, file_dialog_res::rect_selection::y2
+        stax    listbox::highlight_rect+MGTK::Rect::y1
+        addax   #kListItemHeight-1, listbox::highlight_rect+MGTK::Rect::y2
 
         jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::rect_selection
+        MGTK_CALL MGTK::PaintRect, listbox::highlight_rect
 ret:    rts
 .endproc
 
 ;;; ============================================================
 ;;; Enable/disable scrollbar as appropriate; resets thumb pos.
-;;; Assert: `num_file_names` is set.
+;;; Assert: `listbox::num_items` is set.
 
 .proc EnableScrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
 
-        lda     num_file_names
-        cmp     #file_dialog_res::kListRows + 1
+        lda     listbox::num_items
+        cmp     #listbox::kRows + 1
     IF_LT
         copy    #0, updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
@@ -2409,9 +2424,9 @@ ret:    rts
         copy    #0, updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
-        lda     num_file_names
+        lda     listbox::num_items
         sec
-        sbc     #file_dialog_res::kListRows
+        sbc     #listbox::kRows
         sta     setctlmax_params::ctlmax
         MGTK_CALL MGTK::SetCtlMax, setctlmax_params
 
@@ -2423,10 +2438,10 @@ ret:    rts
 
 ;;; ============================================================
 ;;; Input: A = row to ensure visible
-;;; Assert: `file_dialog_res::winfo_listbox::vthumbpos` is set.
+;;; Assert: `listbox::winfo+MGTK::Winfo::vthumbpos` is set.
 
 .proc ScrollIntoView
-        cmp     file_dialog_res::winfo_listbox::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbpos
     IF_LT
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
@@ -2436,9 +2451,9 @@ ret:    rts
     END_IF
 
         sec
-        sbc     #file_dialog_res::kListRows-1
+        sbc     #listbox::kRows-1
         bmi     skip
-        cmp     file_dialog_res::winfo_listbox::vthumbpos
+        cmp     listbox::winfo+MGTK::Winfo::vthumbpos
         beq     skip
     IF_GE
         sta     updatethumb_params::thumbpos
@@ -2448,19 +2463,18 @@ ret:    rts
         jmp     DrawListEntries
     END_IF
 
-skip:   lda     selected_index
+skip:   lda     listbox::selected_index
         jmp     HighlightIndex
 .endproc
 
 ;;; ============================================================
 
-;;; Assumes `file_dialog_res::winfo_listbox::vthumbpos` is set.
 .proc UpdateViewport
         ldax    #kListItemHeight
-        ldy     file_dialog_res::winfo_listbox::vthumbpos
+        ldy     listbox::winfo+MGTK::Winfo::vthumbpos
         jsr     Multiply_16_8_16
-        stax    file_dialog_res::winfo_listbox::maprect::y1
-        addax   #file_dialog_res::winfo_listbox::kHeight, file_dialog_res::winfo_listbox::maprect::y2
+        stax    listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
+        addax   #listbox::kHeight, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y2
 
         rts
 .endproc
@@ -2469,17 +2483,17 @@ skip:   lda     selected_index
 
 .proc DrawListEntries
         jsr     SetPortForList
-        MGTK_CALL MGTK::PaintRect, file_dialog_res::winfo_listbox::maprect
-        copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord ; high byte always 0
-        copy16  #kListItemTextOffsetY, file_dialog_res::picker_entry_pos::ycoord
+        MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
+        copy    #file_dialog_res::kListEntryNameX, listbox::item_pos+MGTK::Point::xcoord ; high byte always 0
+        copy16  #kListItemTextOffsetY, listbox::item_pos+MGTK::Point::ycoord
         copy    #0, index
 
 loop:   lda     index
-        cmp     num_file_names
+        cmp     listbox::num_items
         bne     :+
         rts
 :
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
+        MGTK_CALL MGTK::MoveTo, listbox::item_pos
 
         ldx     index
         lda     file_list_index,x
@@ -2493,22 +2507,22 @@ loop:   lda     index
         ldx     index
         lda     file_list_index,x
     IF_NS
-        copy    #file_dialog_res::kListEntryGlyphX, file_dialog_res::picker_entry_pos::xcoord
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::picker_entry_pos
+        copy    #file_dialog_res::kListEntryGlyphX, listbox::item_pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, listbox::item_pos
         param_call DrawString, file_dialog_res::str_folder
-        copy    #file_dialog_res::kListEntryNameX, file_dialog_res::picker_entry_pos::xcoord
+        copy    #file_dialog_res::kListEntryNameX, listbox::item_pos+MGTK::Point::xcoord
     END_IF
 
         ;; Highlight?
         lda     index
-        cmp     selected_index
+        cmp     listbox::selected_index
     IF_EQ
         jsr     HighlightIndex
     END_IF
 
         inc     index
 
-        add16_8 file_dialog_res::picker_entry_pos::ycoord, #kListItemHeight
+        add16_8 listbox::item_pos+MGTK::Point::ycoord, #kListItemHeight
         jmp     loop
 
 index:  .byte   0
