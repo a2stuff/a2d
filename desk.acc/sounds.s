@@ -1218,11 +1218,18 @@ END_SOUND_PROC
 .endproc
 
 ;;; ============================================================
+
+.proc OnListSelectionChange
+        lda     selected_index
+        jmp     PlayIndex
+.endproc
+
+;;; ============================================================
 ;;; List Box
 ;;; ============================================================
 
 .scope listbox
-        ;;         kWindowId =
+        kWindowId = kListBoxWindowId
         winfo = winfo_listbox
         kHeight = winfo_listbox::kHeight
         kRows = kListRows
@@ -1244,7 +1251,7 @@ END_SOUND_PROC
         beq     :+
         rts
 :
-        copy    #kListBoxWindowId, screentowindow_params::window_id
+        copy    #listbox::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_params::windowy, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
@@ -1447,8 +1454,7 @@ SetSelection:
         sta     listbox::selected_index
         jsr     ScrollIntoView
 
-        lda     listbox::selected_index
-        jmp     PlayIndex
+        jmp     OnListSelectionChange
 .endproc
 
 ;;; ============================================================
@@ -1466,7 +1472,7 @@ SetSelection:
 
         jsr     SetPortForList
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, itemrect
+        MGTK_CALL MGTK::PaintRect, listbox::highlight_rect
 ret:    rts
 .endproc
 

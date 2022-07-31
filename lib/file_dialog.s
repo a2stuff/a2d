@@ -2104,6 +2104,13 @@ NotifyTextChangedF2 := NotifyTextChanged::f2
 .endif
 
 ;;; ============================================================
+
+.proc OnListSelectionChange
+        jsr     UpdateDynamicButtons
+        jmp     HandleSelectionChange
+.endproc
+
+;;; ============================================================
 ;;; List Box
 ;;; ============================================================
 
@@ -2380,7 +2387,10 @@ SetSelection:
         lda     listbox::selected_index
         jsr     HighlightIndex
         pla                     ; A = new selection
-        jmp     UpdateListSelection
+        sta     listbox::selected_index
+        jsr     ScrollIntoView
+
+        jmp     OnListSelectionChange
 .endproc
 
 ;;; ============================================================

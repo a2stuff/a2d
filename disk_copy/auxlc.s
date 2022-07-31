@@ -317,8 +317,10 @@ selection_mode:
         .byte   0               ; high bit clear = source; set = desination
 
 
-LD367:  .byte   0
-LD368:  .byte   0
+doubleclick_timer:
+        .byte   0
+doubleclick_timer_flag:
+        .byte   0
 
 kListEntrySlotOffset    = 8
 kListEntryDriveOffset   = 40
@@ -526,8 +528,8 @@ init:   jsr     DisconnectRAM
 
 InitDialog:
         lda     #$00
-        sta     LD367
-        sta     LD368
+        sta     doubleclick_timer
+        sta     doubleclick_timer_flag
         sta     listbox_enabled_flag
         lda     #$FF
         sta     current_drive_selection
@@ -875,12 +877,12 @@ LD97A:  jsr     main__FreeVolBitmapPages
 
 LD986:  MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
-LD998:  bit     LD368
+LD998:  bit     doubleclick_timer_flag
         bpl     :+
-        dec     LD367
+        dec     doubleclick_timer
         bne     :+
         lda     #$00
-        sta     LD368
+        sta     doubleclick_timer_flag
 :       jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
@@ -1396,6 +1398,12 @@ CheckAlpha:
 .endproc
 
 ;;; ============================================================
+
+.proc OnListSelectionChange
+        rts                     ; no-op
+.endproc
+
+;;; ============================================================
 ;;; List Box
 ;;; ============================================================
 
@@ -1448,21 +1456,21 @@ CheckAlpha:
         pla
         sta     listbox::selected_index
         jsr     HighlightIndex
-        jmp     LDBC0
+        jmp     init_timer
     END_IF
 
-        ;; Same???
-        bit     LD368
-        bpl     LDBC0
+        ;; Double-click?
+        bit     doubleclick_timer_flag
+        bpl     init_timer      ; nope
         BTK_CALL BTK::Flash, ok_button_params
-        return  #$00
+        return  #$00            ; yes!
 
-        ;; Common???
-LDBC0:  lda     #$FF
-        sta     LD368
-        lda     #$64
-        sta     LD367
-ret:    rts
+init_timer:
+        lda     #$FF
+        sta     doubleclick_timer_flag
+        lda     #$64            ; initialize timer
+        sta     doubleclick_timer
+        rts
 
 .endproc
 
@@ -1638,7 +1646,9 @@ SetSelection:
         jsr     HighlightIndex
         pla                     ; A = new selection
         sta     listbox::selected_index
-        jmp     ScrollIntoView
+        jsr     ScrollIntoView
+
+        jmp     OnListSelectionChange
 .endproc
 
 ;;; ============================================================
