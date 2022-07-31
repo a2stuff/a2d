@@ -620,6 +620,8 @@ Image File:
 * Launch DeskTop. Special > Disk Copy.... Copy a 32MB disk image using Disk Copy (the other mode). Verify that the screen is not garbled, and that the copy is successful.
 
 * Launch DeskTop. Special > Disk Copy.... Make a device selection (using mouse or keyboard) but don't click OK. Open the menu (using mouse or keyboard) but dismiss it. Verify that source device wasn't accepted.
+* Launch DeskTop. Special > Disk Copy.... Select a drive using the mouse or keyboard, but don't click OK. Double-click the same drive. Verify that it was accepted, and that a prompt for an appropriate destination drive was shown.
+* Launch DeskTop. Special > Disk Copy.... Select a drive using the mouse or keyboard, but don't click OK. Double-click a different drive. Verify that it was accepted, and that a prompt for an appropriate destination drive was shown.
 
 * Rename the DISK.COPY file to something else. Launch DeskTop. Special > Disk Copy.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
 * Launch DeskTop. Eject the boot volume. Special > Disk Copy.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.

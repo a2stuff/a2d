@@ -317,11 +317,6 @@ selection_mode:
         .byte   0               ; high bit clear = source; set = desination
 
 
-doubleclick_timer:
-        .byte   0
-doubleclick_timer_flag:
-        .byte   0
-
 kListEntrySlotOffset    = 8
 kListEntryDriveOffset   = 40
 kListEntryNameOffset    = 65
@@ -528,8 +523,6 @@ init:   jsr     DisconnectRAM
 
 InitDialog:
         lda     #$00
-        sta     doubleclick_timer
-        sta     doubleclick_timer_flag
         sta     listbox_enabled_flag
         lda     #$FF
         sta     current_drive_selection
@@ -874,16 +867,14 @@ LD97A:  jsr     main__FreeVolBitmapPages
         jmp     InitDialog
 
 ;;; ============================================================
+;;; Wait for and process event
+;;; Output: N=1 if should be called again
+;;;         Z=1 if OK selected, should proceed
+;;;         Otherwise: Cancel selected (close/re-init dialog)
 
 LD986:  MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
-LD998:  bit     doubleclick_timer_flag
-        bpl     :+
-        dec     doubleclick_timer
-        bne     :+
-        lda     #$00
-        sta     doubleclick_timer_flag
-:       jsr     YieldLoop
+LD998:  jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -1028,8 +1019,7 @@ LDA7D:  copy    #0, checkitem_params::check
         beq     HandleDialogClick
         cmp     winfo_drive_select
     IF_EQ
-        jsr     HandleListClick
-        return  #$FF
+        jmp     HandleListClick
     END_IF
         rts
 .endproc
@@ -1419,6 +1409,8 @@ CheckAlpha:
 .endscope
 
 ;;; ============================================================
+;;; Output: Z=1/A=$00 on double-click of selected item
+;;;         N=1/A=$FF otherwise
 
 .proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
@@ -1447,7 +1439,7 @@ CheckAlpha:
         rts
     END_IF
 
-        ;; Different?
+        ;; Update selection (if different)
         cmp     listbox::selected_index
     IF_NE
         pha
@@ -1456,22 +1448,9 @@ CheckAlpha:
         pla
         sta     listbox::selected_index
         jsr     HighlightIndex
-        jmp     init_timer
     END_IF
 
-        ;; Double-click?
-        bit     doubleclick_timer_flag
-        bpl     init_timer      ; nope
-        BTK_CALL BTK::Flash, ok_button_params
-        return  #$00            ; yes!
-
-init_timer:
-        lda     #$FF
-        sta     doubleclick_timer_flag
-        lda     #$64            ; initialize timer
-        sta     doubleclick_timer
-        rts
-
+        jmp     DetectDoubleClick
 .endproc
 
 ;;; ============================================================
@@ -2807,6 +2786,7 @@ Alert := alert_dialog::Alert
 
         .include "../lib/is_diskii.s"
         .include "../lib/muldiv.s"
+        .include "../lib/doubleclick.s"
 
 ;;; ============================================================
 ;;; Settings - modified by Control Panels

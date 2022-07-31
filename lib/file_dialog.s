@@ -242,13 +242,27 @@ ret:    rts
 :
         lda     findwindow_params::window_id
         cmp     #file_dialog_res::kFilePickerDlgWindowID
-        beq     :+
+        beq     not_list
         bit     listbox_disabled_flag
-        bmi     :+
+        bmi     not_list
         bit     is_apple_click_flag
         bmi     ret             ; ignore except for Change Drive
-        jmp     HandleListClick
-:
+        jsr     HandleListClick
+    IF_NS
+        rts
+    END_IF
+        ldx     selected_index
+        lda     file_list_index,x
+    IF_NC
+        ;; File - accept it.
+        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
+        jmp     HandleOk
+    END_IF
+        ;; Folder - open it.
+        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
+        jmp     DoOpen
+
+not_list:
         lda     #file_dialog_res::kFilePickerDlgWindowID
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -2126,6 +2140,8 @@ NotifyTextChangedF2 := NotifyTextChanged::f2
 listbox::selected_index = selected_index
 
 ;;; ============================================================
+;;; Output: Z=1/A=$00 on double-click of selected item
+;;;         N=1/A=$FF otherwise
 
 .proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
@@ -2146,7 +2162,9 @@ listbox::selected_index = selected_index
 
         ;; Validate
         cmp     listbox::num_items
-        bcs     ret             ; TODO: Clear selection/update path
+        bcc     :+             ; TODO: Clear selection/update path
+        rts
+:
 
         ;; Update selection (if different)
         cmp     listbox::selected_index
@@ -2160,22 +2178,7 @@ listbox::selected_index = selected_index
         jsr     HandleSelectionChange
     END_IF
 
-        ;; If double-click, open/accept it
-        jsr     DetectDoubleClick
-        bne     ret
-
-        ldx     listbox::selected_index
-        lda     file_list_index,x
-    IF_NC
-        ;; File - accept it.
-        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
-        jmp     HandleOk
-    END_IF
-        ;; Folder - open it.
-        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
-        jmp     DoOpen
-
-ret:    rts
+        jmp     DetectDoubleClick
 .endproc
 
 ;;; ============================================================
