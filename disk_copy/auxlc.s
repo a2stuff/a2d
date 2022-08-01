@@ -1448,6 +1448,8 @@ CheckAlpha:
         pla
         sta     listbox::selected_index
         jsr     HighlightIndex
+
+        jsr     OnListSelectionChange
     END_IF
 
         jmp     DetectDoubleClick

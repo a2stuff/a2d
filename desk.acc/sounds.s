@@ -1260,8 +1260,9 @@ END_SOUND_PROC
 
         ;; Validate
         cmp     listbox::num_items
-        bcs     ret
-
+        bcc     :+
+        rts
+:
         ;; Update selection (if different)
         cmp     listbox::selected_index
     IF_NE
@@ -1271,13 +1272,11 @@ END_SOUND_PROC
         pla
         sta     listbox::selected_index
         jsr     HighlightIndex
+
+        jsr     OnListSelectionChange
     END_IF
 
-        ;; Preview it
-        lda     listbox::selected_index
-        jmp     PlayIndex
-
-ret:    rts
+        rts
 .endproc
 
 ;;; ============================================================

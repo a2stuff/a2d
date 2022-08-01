@@ -2165,7 +2165,6 @@ listbox::selected_index = selected_index
         bcc     :+             ; TODO: Clear selection/update path
         rts
 :
-
         ;; Update selection (if different)
         cmp     listbox::selected_index
     IF_NE
@@ -2173,9 +2172,10 @@ listbox::selected_index = selected_index
         lda     listbox::selected_index
         jsr     HighlightIndex
         pla
-        jsr     SetSelectedIndex
+        sta     listbox::selected_index
         jsr     HighlightIndex
-        jsr     HandleSelectionChange
+
+        jsr     OnListSelectionChange
     END_IF
 
         jmp     DetectDoubleClick
