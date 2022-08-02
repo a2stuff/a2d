@@ -1240,17 +1240,23 @@ END_SOUND_PROC
 .endscope
 
 ;;; ============================================================
+;;; Output: Z=1/A=$00 on click on an item
+;;;         N=1/A=$FF otherwise
 
 .proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        jeq     HandleListScroll
+    IF_EQ
+        jsr     HandleListScroll
+        return  #$FF            ; not an item
+    END_IF
 
         cmp     #MGTK::Ctl::not_a_control
-        beq     :+
-        rts
-:
+    IF_NE
+        return  #$FF            ; not an item
+    END_IF
+
         copy    #listbox::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_params::windowy, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, screentowindow_params::windowy
@@ -1260,9 +1266,10 @@ END_SOUND_PROC
 
         ;; Validate
         cmp     listbox::num_items
-        bcc     :+
-        rts
-:
+    IF_GE
+        return  #$FF            ; not an item
+    END_IF
+
         ;; Update selection (if different)
         cmp     listbox::selected_index
     IF_NE
@@ -1276,7 +1283,7 @@ END_SOUND_PROC
         jsr     OnListSelectionChange
     END_IF
 
-        rts
+        return  #0              ; an item
 .endproc
 
 ;;; ============================================================

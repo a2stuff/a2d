@@ -1017,10 +1017,10 @@ LDA7D:  copy    #0, checkitem_params::check
         cmp     #winfo_dialog::kWindowId
         beq     HandleDialogClick
         cmp     winfo_drive_select
-    IF_EQ
-        jmp     HandleListClick
-    END_IF
-        rts
+        jsr     HandleListClick
+        bmi     :+
+        jsr     DetectDoubleClick
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -1408,19 +1408,23 @@ CheckAlpha:
 .endscope
 
 ;;; ============================================================
-;;; Output: Z=1/A=$00 on double-click of selected item
+;;; Output: Z=1/A=$00 on click on an item
 ;;;         N=1/A=$FF otherwise
 
 .proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        jeq     HandleListScroll
+    IF_EQ
+        jsr     HandleListScroll
+        return  #$FF            ; not an item
+    END_IF
 
         cmp     #MGTK::Ctl::not_a_control
-        beq     :+
-        rts
-:
+    IF_NE
+        return  #$FF            ; not an item
+    END_IF
+
         copy    #listbox::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_params::windowy, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, screentowindow_params::windowy
@@ -1435,7 +1439,7 @@ CheckAlpha:
         jsr     HighlightIndex
         lda     #$FF
         sta     listbox::selected_index
-        rts
+        rts                     ; not an item
     END_IF
 
         ;; Update selection (if different)
@@ -1451,7 +1455,7 @@ CheckAlpha:
         jsr     OnListSelectionChange
     END_IF
 
-        jmp     DetectDoubleClick
+        return  #0              ; an item
 .endproc
 
 ;;; ============================================================

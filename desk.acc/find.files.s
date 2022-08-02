@@ -1294,14 +1294,19 @@ done:   rts
 .endscope
 
 ;;; ============================================================
+;;; Output: Z=1/A=$00 on click on an item
+;;;         N=1/A=$FF otherwise
 
 .proc HandleListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        jeq     HandleListScroll
+    IF_EQ
+        jsr     HandleListScroll
+        return  #$FF            ; not an item
+    END_IF
 
-        rts
+        return  #$FF            ; not an item
 .endproc
 
 ;;; ============================================================
