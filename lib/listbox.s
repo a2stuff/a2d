@@ -20,7 +20,6 @@
 ;;; * `DrawListEntryProc` - called to draw an item (A=index)
 ;;; * `SetPortForList` - called to set the port for the window
 ;;; Requires the following data definitions:
-;;; * `LB_CONDITIONALLY_ENABLED` if the listbox may be disabled
 ;;; * `LB_SELECTION_ENABLED` if selection is supported
 ;;; * `LB_CLEAR_SEL_ON_CLICK` if selection should be cleared when whitespace is clicked
 ;;; ============================================================
@@ -390,7 +389,6 @@ ret:    rts
 ;;; Enable/disable scrollbar as appropriate; resets thumb pos.
 ;;; Assert: `listbox::num_items` is set.
 
-.if LB_CONDITIONALLY_ENABLED
 .proc EnableScrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
 
@@ -420,7 +418,6 @@ ret:    rts
 
         rts
 .endproc
-.endif
 
 ;;; ============================================================
 ;;; Input: A = row to ensure visible
