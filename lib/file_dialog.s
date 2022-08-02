@@ -2128,7 +2128,6 @@ NotifyTextChangedF2 := NotifyTextChanged::f2
 ;;; ============================================================
 
 .scope listbox
-        kWindowId = file_dialog_res::kEntryListCtlWindowID
         winfo = file_dialog_res::winfo_listbox
         kHeight = file_dialog_res::winfo_listbox::kHeight
         kRows = file_dialog_res::kListRows

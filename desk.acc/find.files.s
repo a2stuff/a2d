@@ -1283,7 +1283,6 @@ done:   rts
 ;;; ============================================================
 
 .scope listbox
-        kWindowId = kResultsWindowID
         winfo = winfo_results
         kHeight = kResultsHeight
         kRows = kResultsRows

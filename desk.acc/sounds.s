@@ -1229,7 +1229,6 @@ END_SOUND_PROC
 ;;; ============================================================
 
 .scope listbox
-        kWindowId = kListBoxWindowId
         winfo = winfo_listbox
         kHeight = winfo_listbox::kHeight
         kRows = kListRows

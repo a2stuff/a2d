@@ -8,7 +8,6 @@
 ;;; Requires `MGTK_CALL` macro to be functional.
 ;;;
 ;;; Requires `listbox` scope with:
-;;; * `kWindowId` - window id of the list control
 ;;; * `winfo` - winfo of the list control
 ;;; * `kHeight` - height of the list in pixels
 ;;; * `kRows` - number of visible rows in the list
@@ -48,7 +47,7 @@
         return  #$FF            ; not an item
     END_IF
 
-        copy    #listbox::kWindowId, screentowindow_params::window_id
+        copy    listbox::winfo+MGTK::Winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_params::windowy, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, screentowindow_params::windowy
         ldax    screentowindow_params::windowy
@@ -228,7 +227,7 @@ update: sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-        cmp     #listbox::kWindowId
+        cmp     listbox::winfo+MGTK::Winfo::window_id
         bne     cancel
 
         lda     findwindow_params::which_area

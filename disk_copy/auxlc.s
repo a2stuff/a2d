@@ -1397,7 +1397,6 @@ CheckAlpha:
 ;;; ============================================================
 
 .scope listbox
-        kWindowId = winfo_drive_select::kWindowId
         winfo = winfo_drive_select
         kHeight = kListBoxHeight
         kRows = kListRows
