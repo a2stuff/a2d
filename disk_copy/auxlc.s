@@ -548,7 +548,7 @@ InitDialog:
         lda     LD5E0
         bne     :+
         jsr     GetAllBlockCounts
-:       jsr     DrawDeviceListEntries
+:       jsr     DrawListEntries
         inc     LD5E0
 
         ;; Loop until there's a selection (or drive check)
@@ -578,8 +578,7 @@ LD687:  lda     current_drive_selection
         copy    #$80, selection_mode
         jsr     EnableScrollbar
         jsr     UpdateViewport
-
-        jsr     DrawDestinationListEntries
+        jsr     DrawListEntries
 
         ;; Loop until there's a selection (or drive check)
 LD6E6:  jsr     LD986
@@ -1404,7 +1403,7 @@ CheckAlpha:
         kRows = kListRows
         num_items = num_drives
         highlight_rect = rect_highlight_row
-        ;;         item_pos =
+        item_pos = list_entry_pos
         selected_index = current_drive_selection
 .endscope
 
@@ -1730,10 +1729,57 @@ skip:   lda     listbox::selected_index
 
 ;;; ============================================================
 
+;;; Calls `DrawListEntryProc` for each entry.
 .proc DrawListEntries
+        jsr     SetPortForList
+
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
+
+        lda     listbox::num_items
+        beq     ret
+
+        lda     #0
+        sta     index
+        copy16  #kListItemTextOffsetY, listbox::item_pos+MGTK::Point::ycoord
+
+loop:   copy16  #kListItemTextOffsetX, listbox::item_pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, listbox::item_pos
+
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     DrawListEntryProc
+
+        add16_8  listbox::item_pos+MGTK::Point::ycoord, #kListItemHeight
+
+.if 1
+        lda     index
+        cmp     listbox::selected_index
+    IF_EQ
+        jsr     HighlightIndex
+    END_IF
+.endif
+
+        inc     index
+        lda     index
+        cmp     listbox::num_items
+        bne     loop
+
+        MGTK_CALL MGTK::ShowCursor
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+;;; Called with A = index
+.proc DrawListEntryProc
         bit     selection_mode  ; source or destination?
-        jpl     DrawDeviceListEntries
-        jmp     DrawDestinationListEntries
+        bpl     draw
+
+        tax                     ; indirection for destination
+        lda     destination_index_table,x
+
+draw:   jmp     DrawDeviceListEntry
 .endproc
 
 ;;; ============================================================
@@ -1897,37 +1943,6 @@ match:  lda     DEVLST,x
 
 ;;; ============================================================
 
-.proc DrawDeviceListEntries
-        jsr     SetPortForList
-
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
-
-        copy    #0, index
-        copy16  #kListItemTextOffsetY, list_entry_pos::ycoord
-
-loop:   lda     index
-        jsr     DrawDeviceListEntry
-        add16_8 list_entry_pos::ycoord, #kListItemHeight
-
-        lda     index
-        cmp     current_drive_selection
-    IF_EQ
-        jsr     HighlightIndex
-    END_IF
-
-        inc     index
-        lda     index
-        cmp     num_drives
-        bne     loop
-
-        rts
-
-index:  .byte   0
-.endproc
-
-;;; ============================================================
-
 ;;; Sets `num_drives` to the number of plausible destination devices,
 ;;; and populates `destination_index_table`. Also clears selection.
 .proc EnumerateDestinationDevices
@@ -1980,38 +1995,6 @@ index:  .byte   0
 
 src_block_count:
         .word   0
-.endproc
-
-;;; ============================================================
-
-.proc DrawDestinationListEntries
-        jsr     SetPortForList
-
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, winfo_drive_select::maprect
-
-        copy    #0, index
-        copy16  #kListItemTextOffsetY, list_entry_pos::ycoord
-
-loop:   ldx     index
-        lda     destination_index_table,x
-        jsr     DrawDeviceListEntry
-        add16_8 list_entry_pos::ycoord, #kListItemHeight
-
-        lda     index
-        cmp     current_drive_selection
-    IF_EQ
-        jsr     HighlightIndex
-    END_IF
-
-        inc     index
-        lda     index
-        cmp     num_drives
-        bne     loop
-
-        rts
-
-index:  .byte   0
 .endproc
 
 ;;; ============================================================

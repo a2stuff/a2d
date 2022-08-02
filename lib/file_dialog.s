@@ -2494,51 +2494,70 @@ skip:   lda     listbox::selected_index
 
 ;;; ============================================================
 
+;;; Calls `DrawListEntryProc` for each entry.
 .proc DrawListEntries
         jsr     SetPortForList
+
+        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
-        copy    #file_dialog_res::kListEntryNameX, listbox::item_pos+MGTK::Point::xcoord ; high byte always 0
+
+        lda     listbox::num_items
+        beq     ret
+
+        lda     #0
+        sta     index
         copy16  #kListItemTextOffsetY, listbox::item_pos+MGTK::Point::ycoord
-        copy    #0, index
 
-loop:   lda     index
-        cmp     listbox::num_items
-        bne     :+
-        rts
-:
+loop:   copy16  #kListItemTextOffsetX, listbox::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, listbox::item_pos
 
-        ldx     index
-        lda     file_list_index,x
-        and     #$7F
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     DrawListEntryProc
 
-        jsr     GetNthFilename
-        jsr     CopyFilenameToBuf
-        param_call DrawString, file_dialog_res::filename_buf
+        add16_8  listbox::item_pos+MGTK::Point::ycoord, #kListItemHeight
 
-        ;; Folder glyph?
-        ldx     index
-        lda     file_list_index,x
-    IF_NS
-        copy    #file_dialog_res::kListEntryGlyphX, listbox::item_pos+MGTK::Point::xcoord
-        MGTK_CALL MGTK::MoveTo, listbox::item_pos
-        param_call DrawString, file_dialog_res::str_folder
-        copy    #file_dialog_res::kListEntryNameX, listbox::item_pos+MGTK::Point::xcoord
-    END_IF
-
-        ;; Highlight?
+.if 1
         lda     index
         cmp     listbox::selected_index
     IF_EQ
         jsr     HighlightIndex
     END_IF
+.endif
 
         inc     index
+        lda     index
+        cmp     listbox::num_items
+        bne     loop
 
-        add16_8 listbox::item_pos+MGTK::Point::ycoord, #kListItemHeight
-        jmp     loop
+        MGTK_CALL MGTK::ShowCursor
+ret:    rts
+.endproc
 
-index:  .byte   0
+;;; ============================================================
+
+;;; Called with A = index
+.proc DrawListEntryProc
+        tax
+        lda     file_list_index,x
+        pha
+        and     #$7F
+
+        jsr     GetNthFilename
+        jsr     CopyFilenameToBuf
+        copy16  #file_dialog_res::kListEntryNameX, listbox::item_pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, listbox::item_pos
+        param_call DrawString, file_dialog_res::filename_buf
+
+        ;; Folder glyph?
+        pla
+    IF_NS
+        copy16  #file_dialog_res::kListEntryGlyphX, listbox::item_pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, listbox::item_pos
+        param_call DrawString, file_dialog_res::str_folder
+    END_IF
+
+        rts
 .endproc
 
 ;;; ============================================================

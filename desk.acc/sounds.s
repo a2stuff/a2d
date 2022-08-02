@@ -1520,40 +1520,59 @@ skip:   lda     listbox::selected_index
 
 ;;; ============================================================
 
+;;; Calls `DrawListEntryProc` for each entry.
 .proc DrawListEntries
         jsr     SetPortForList
 
-        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
+
+        lda     listbox::num_items
+        beq     ret
 
         lda     #0
         sta     index
         copy16  #kListItemTextOffsetY, listbox::item_pos+MGTK::Point::ycoord
 
-loop:   MGTK_CALL MGTK::MoveTo, listbox::item_pos
-        add16_8  listbox::item_pos+MGTK::Point::ycoord, #kListItemHeight
+loop:   copy16  #kListItemTextOffsetX, listbox::item_pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, listbox::item_pos
 
         index := *+1
         lda     #SELF_MODIFIED_BYTE
-        asl
-        tax
+        jsr     DrawListEntryProc
 
-        ptr := $06
-        copy16  name_table,x, ptr
-        param_call_indirect DrawString, ptr
+        add16_8  listbox::item_pos+MGTK::Point::ycoord, #kListItemHeight
 
+.if 1
         lda     index
         cmp     listbox::selected_index
     IF_EQ
         jsr     HighlightIndex
     END_IF
+.endif
 
         inc     index
         lda     index
         cmp     listbox::num_items
         bne     loop
 
-        rts
+        MGTK_CALL MGTK::ShowCursor
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+;;; Called with A = index
+.proc DrawListEntryProc
+        asl
+        tax
+
+        lda     name_table,x
+        pha
+        lda     name_table+1,x
+        tax
+        pla
+        jmp     DrawString
 .endproc
 
 ;;; ============================================================

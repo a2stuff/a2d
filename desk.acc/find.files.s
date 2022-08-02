@@ -917,7 +917,7 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_POINT cur_pos, 5, 0
+        DEFINE_POINT cur_pos, 0, 0
 cur_line:       .byte   0
 
 ;;; ============================================================
@@ -980,7 +980,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         jsr     DrawWindow
         LETK_CALL LETK::Init, le_params
         LETK_CALL LETK::Activate, le_params
-        jsr     DrawResults
+        jsr     DrawListEntries
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -1108,7 +1108,7 @@ ignore: sec
         copy    #0, num_entries
         jsr     EnableScrollbar
         jsr     UpdateViewport
-        jsr     PrepDrawResults
+        jsr     PrepDrawIncrementalResults
 
         ;; Do the search
         jsr     RecursiveCatalog::Start
@@ -1289,7 +1289,7 @@ done:   rts
         kRows = kResultsRows
         num_items = num_entries
         ;;         highlight_rect =
-        ;;         item_pos =
+        item_pos = cur_pos
         ;;         selected_index =
 .endscope
 
@@ -1415,7 +1415,7 @@ update: sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         jsr     UpdateViewport
-        jmp     DrawResults
+        jmp     DrawListEntries
 .endproc
 
 ;;; ============================================================
@@ -1524,24 +1524,57 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc DrawResults
+;;; Calls `DrawListEntryProc` for each entry.
+.proc DrawListEntries
+        jsr     SetPortForList
+
         MGTK_CALL MGTK::HideCursor
-        jsr     PrepDrawResults
+        MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
 
-loop:   lda     cur_line
+        lda     listbox::num_items
+        beq     ret
+
+        lda     #0
+        sta     index
+        copy16  #kListItemTextOffsetY, listbox::item_pos+MGTK::Point::ycoord
+
+loop:   copy16  #kListItemTextOffsetX, listbox::item_pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, listbox::item_pos
+
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     DrawListEntryProc
+
+        add16_8  listbox::item_pos+MGTK::Point::ycoord, #kListItemHeight
+
+.if 0
+        lda     index
+        cmp     listbox::selected_index
+    IF_EQ
+        jsr     HighlightIndex
+    END_IF
+.endif
+
+        inc     index
+        lda     index
         cmp     listbox::num_items
-        beq     done
+        bne     loop
 
-        jsr     DrawNextResult
-        jmp     loop
-
-done:   MGTK_CALL MGTK::ShowCursor
-        rts
+        MGTK_CALL MGTK::ShowCursor
+ret:    rts
 .endproc
 
 ;;; ============================================================
 
-.proc PrepDrawResults
+;;; Called with A = index
+.proc DrawListEntryProc
+        jsr     GetEntry
+        param_jump DrawString, entry_buf
+.endproc
+
+;;; ============================================================
+
+.proc PrepDrawIncrementalResults
         jsr     SetPortForList
 
         MGTK_CALL MGTK::HideCursor
@@ -1549,18 +1582,18 @@ done:   MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::ShowCursor
 
         copy    #0, cur_line
+        copy16  #kListItemTextOffsetX, cur_pos::xcoord
         copy16  #kListItemTextOffsetY, cur_pos::ycoord
         rts
 .endproc
 
 .proc DrawNextResult
         MGTK_CALL MGTK::MoveTo, cur_pos
-        add16_8   cur_pos::ycoord, #kListItemHeight
 
         lda     cur_line
-        jsr     GetEntry
-        param_call DrawString, entry_buf
+        jsr     DrawListEntryProc
 
+        add16_8 cur_pos::ycoord, #kListItemHeight
         inc     cur_line
         rts
 .endproc
