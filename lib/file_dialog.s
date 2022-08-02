@@ -2138,7 +2138,6 @@ NotifyTextChangedF2 := NotifyTextChanged::f2
 .endscope
 listbox::selected_index = selected_index
 
-        .define LB_ARROW_REPEAT 1
         .define LB_CONDITIONALLY_ENABLED 1
         .define LB_SELECTION_ENABLED 1
         .define LB_CLEAR_SEL_ON_CLICK 0

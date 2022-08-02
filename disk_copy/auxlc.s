@@ -1407,7 +1407,6 @@ CheckAlpha:
         highlight_rect = rect_highlight_row
 .endscope
 
-        .define LB_ARROW_REPEAT 0
         .define LB_CONDITIONALLY_ENABLED 1
         .define LB_SELECTION_ENABLED 1
         .define LB_CLEAR_SEL_ON_CLICK 1

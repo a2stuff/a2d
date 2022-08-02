@@ -1293,7 +1293,6 @@ done:   rts
         ;;         highlight_rect =
 .endscope
 
-        .define LB_ARROW_REPEAT 0
         .define LB_CONDITIONALLY_ENABLED 1
         .define LB_SELECTION_ENABLED 0
         .include "../lib/listbox.s"

@@ -833,6 +833,7 @@ Repeat for each list box:
   * Open-Apple+Solid-Apple+Down Arrow
     * Scrolls the view so that the last item is visible.
     * If the control supports selection, selects the last item.
+* Hold down the mouse button on the scrollbar's up arrow or down arrow; verify that the scrolling continues as long as the button is held down.
 
 Repeat for each list boxes where the contents are dynamic:
 * Populate the list so that the scrollbar is active. Scroll down by one row. Repopulate the list box so that the scrollbar is inactive. Verify that all expected items are shown, and hitting the Up Arrow key does nothing.

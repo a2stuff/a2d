@@ -20,7 +20,6 @@
 ;;; * `DrawListEntryProc` - called to draw an item (A=index)
 ;;; * `SetPortForList` - called to set the port for the window
 ;;; Requires the following data definitions:
-;;; * `LB_ARROW_REPEAT` if arrows should auto-repeat
 ;;; * `LB_CONDITIONALLY_ENABLED` if the listbox may be disabled
 ;;; * `LB_SELECTION_ENABLED` if selection is supported
 ;;; * `LB_CLEAR_SEL_ON_CLICK` if selection should be cleared when whitespace is clicked
@@ -140,13 +139,9 @@ repeat: lda     listbox::winfo+MGTK::Winfo::vthumbpos
 
         sec
         sbc     #1
-.if LB_ARROW_REPEAT
         jsr     update
         jsr     CheckArrowRepeat
         jmp     repeat
-.else
-        bpl     update          ; always
-.endif
     END_IF
 
         ;; --------------------------------------------------
@@ -159,13 +154,9 @@ repeat: lda     listbox::winfo+MGTK::Winfo::vthumbpos
 
         clc
         adc     #1
-.if LB_ARROW_REPEAT
         jsr     update
         jsr     CheckArrowRepeat
         jmp     repeat
-.else
-        bpl     update          ; always
-.endif
     END_IF
 
         ;; --------------------------------------------------
@@ -199,7 +190,7 @@ repeat: lda     listbox::winfo+MGTK::Winfo::vthumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
-        beq     ret
+        jeq     ret
         lda     trackthumb_params::thumbpos
         FALL_THROUGH_TO update
 
@@ -215,7 +206,6 @@ update: sta     updatethumb_params::thumbpos
 
 ;;; ============================================================
 
-.if LB_ARROW_REPEAT
 .proc CheckArrowRepeat
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
@@ -247,7 +237,6 @@ cancel: pla
         pla
 ret:    rts
 .endproc
-.endif
 
 ;;; ============================================================
 ;;; Input: A=character
