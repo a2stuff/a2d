@@ -350,10 +350,7 @@ grafport_win:       .tag    MGTK::GrafPort
         jsr     DrawWindow
 
         jsr     SearchForCurrent
-        sta     selected_index
-    IF_POS
-        jsr     ScrollIntoView
-    END_IF
+        jsr     SetListSelection
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop

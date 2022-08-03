@@ -49,9 +49,9 @@ finish: jsr     file_dialog::ReadDir
         bcs     :+              ; no files
         param_call file_dialog::FindFilenameIndex, buffer
         jsr     file_dialog::SetSelectedIndex
-        bpl     :+              ; no match
-        lda     #$00
-:       jsr     file_dialog::ScrollIntoView
+    IF_NS
+        jsr     file_dialog::ResetListScroll
+    END_IF
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         lda     path_buf0

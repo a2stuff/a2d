@@ -892,7 +892,7 @@ yes:    clc
 ;;; Outputs: A=index
 .proc SetSelectedIndex
         pha
-        sta     selected_index
+        jsr     SetListSelection
         jsr     UpdateDynamicButtons
         pla
         rts
@@ -915,7 +915,6 @@ yes:    clc
 ;;; Inputs: A=index
 .proc UpdateListSelection
         jsr     SetSelectedIndex
-        jsr     ScrollIntoView
         jsr     HandleSelectionChange
 .endproc
 

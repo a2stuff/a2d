@@ -56,26 +56,16 @@
         cmp     listbox::num_items
     IF_GE
 .if LB_CLEAR_SEL_ON_CLICK
-        lda     listbox::selected_index
-        jsr     HighlightIndex
         lda     #$FF
-        sta     listbox::selected_index
-        rts                     ; not an item
-.else
-        return  #$FF            ; not an item
+        jsr     SetListSelection
 .endif
+        return  #$FF            ; not an item
     END_IF
 
         ;; Update selection (if different)
         cmp     listbox::selected_index
     IF_NE
-        pha
-        lda     listbox::selected_index
-        jsr     HighlightIndex
-        pla
-        sta     listbox::selected_index
-        jsr     HighlightIndex
-
+        jsr     SetListSelection
         jsr     OnListSelectionChange
     END_IF
 
@@ -353,16 +343,36 @@ ret:    rts
 
 .if LB_SELECTION_ENABLED
 SetSelection:
+        jsr     SetListSelection
+        jmp     OnListSelectionChange
+.endif
+.endproc
+
+;;; ============================================================
+;;; Input: A = new selection (negative if none)
+;;; Note: Does not call `OnListSelectionChange`
+
+.if LB_SELECTION_ENABLED
+.proc SetListSelection
         pha                     ; A = new selection
         lda     listbox::selected_index
         jsr     HighlightIndex
         pla                     ; A = new selection
         sta     listbox::selected_index
-        jsr     ScrollIntoView
-
-        jmp     OnListSelectionChange
-.endif
+        bmi     :+
+        jmp     _ScrollIntoView
+:       rts
 .endproc
+.endif
+
+;;; ============================================================
+
+.if LB_SELECTION_ENABLED
+.proc ResetListScroll
+        lda     #0
+        jmp     _ScrollIntoView
+.endproc
+.endif
 
 ;;; ============================================================
 ;;; Input: A = row to highlight
@@ -427,7 +437,7 @@ ret:    rts
 
 ;;; TODO: make internal only
 .if LB_SELECTION_ENABLED
-.proc ScrollIntoView
+.proc _ScrollIntoView
         cmp     listbox::winfo+MGTK::Winfo::vthumbpos
     IF_LT
         sta     updatethumb_params::thumbpos

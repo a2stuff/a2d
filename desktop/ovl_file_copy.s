@@ -205,10 +205,9 @@ L7281:  jsr     file_dialog::ReadDir
 
 L7289:
         jsr     file_dialog::SetSelectedIndex
-        cmp     #$FF            ; if no selection...
-        bne     :+              ; make scroll index 0
-        lda     #$00
-:       jsr     file_dialog::ScrollIntoView
+    IF_NS
+        jsr     file_dialog::ResetListScroll
+    END_IF
         jsr     file_dialog::UpdateDiskName
         jsr     file_dialog::DrawListEntries
         jmp     file_dialog::Activate
