@@ -980,8 +980,11 @@ buf_search:     .res    kBufSize, 0 ; search term
         jsr     DrawWindow
         LETK_CALL LETK::Init, le_params
         LETK_CALL LETK::Activate, le_params
-        jsr     DrawListEntries
         MGTK_CALL MGTK::ShowCursor
+
+        copy    #0, num_entries
+        jsr     InitList
+
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
 .endproc
@@ -1106,13 +1109,13 @@ ignore: sec
         param_call JTRelay, JUMP_TABLE_CUR_WATCH
 
         copy    #0, num_entries
-        jsr     EnableScrollbar
-        jsr     UpdateViewport
+        jsr     InitList
         jsr     PrepDrawIncrementalResults
 
         ;; Do the search
         jsr     RecursiveCatalog::Start
-        jsr     EnableScrollbar
+        lda     num_entries
+        jsr     SetListSize     ; update scrollbar
 
         bit     cursor_ibeam_flag
     IF_PLUS
@@ -1308,11 +1311,6 @@ done:   rts
 
 .proc PrepDrawIncrementalResults
         jsr     SetPortForList
-
-        MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
-        MGTK_CALL MGTK::ShowCursor
-
         copy    #0, cur_line
         copy16  #kListItemTextOffsetX, cur_pos::xcoord
         copy16  #kListItemTextOffsetY, cur_pos::ycoord

@@ -542,13 +542,11 @@ InitDialog:
 
         jsr     EnumerateDevices
         copy    #$00, selection_mode
-        jsr     EnableScrollbar
-        jsr     UpdateViewport
 
         lda     LD5E0
         bne     :+
         jsr     GetAllBlockCounts
-:       jsr     DrawListEntries
+:       jsr     InitList
         inc     LD5E0
 
         ;; Loop until there's a selection (or drive check)
@@ -576,9 +574,7 @@ LD687:  lda     current_drive_selection
         ;; Prepare for destination selection
         jsr     EnumerateDestinationDevices
         copy    #$80, selection_mode
-        jsr     EnableScrollbar
-        jsr     UpdateViewport
-        jsr     DrawListEntries
+        jsr     InitList
 
         ;; Loop until there's a selection (or drive check)
 LD6E6:  jsr     LD986

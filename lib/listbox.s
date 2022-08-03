@@ -25,6 +25,30 @@
 ;;; ============================================================
 
 ;;; ============================================================
+;;; Call to initialize (or reset) the list. The caller must set
+;;; `listbox::num_items` and `listbox::selected_index` first.
+;;; This procedure will:
+;;; * Update the scrollbar, based on `listbox::num_items`
+;;; * Draw the list items
+;;; * If `listbox::selected_index` is not none, that item will
+;;;   be scrolled into view and highlighted.
+
+.proc InitList
+        jsr     _EnableScrollbar
+.if LB_SELECTION_ENABLED
+        lda     listbox::selected_index
+        bpl     :+
+        lda     #0
+:       ora     #$80            ; high bit = force draw
+        jmp     _ScrollIntoView
+.else
+        jmp     _Draw
+.endif
+.endproc
+
+;;; ============================================================
+;;; Call when a button down event occurs on the list Winfo.
+;;;
 ;;; Output: Z=1/A=$00 on click on an item
 ;;;         N=1/A=$FF otherwise
 
@@ -189,8 +213,7 @@ update: sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
-        jsr     UpdateViewport
-        jmp     DrawListEntries
+        jmp     _Draw
 .endproc
 
 ;;; ============================================================
@@ -228,6 +251,8 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Call with a key code to determine if the list can handle it.
+;;;
 ;;; Input: A=character
 ;;; Output: Z=1 if up/down, Z=0 if not
 
@@ -239,6 +264,9 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
+;;; Call when a key event occurs, if `IsListKey` indicates it
+;;; will be handled. This handles scrolling and/or updating
+;;; the selection.
 
 .proc HandleListKey
         lda     listbox::num_items
@@ -349,6 +377,8 @@ SetSelection:
 .endproc
 
 ;;; ============================================================
+;;; Sets the selected item index. If not none, it is scrolled
+;;; into view.
 ;;; Input: A = new selection (negative if none)
 ;;; Note: Does not call `OnListSelectionChange`
 
@@ -366,15 +396,6 @@ SetSelection:
 .endif
 
 ;;; ============================================================
-
-.if LB_SELECTION_ENABLED
-.proc ResetListScroll
-        lda     #0
-        jmp     _ScrollIntoView
-.endproc
-.endif
-
-;;; ============================================================
 ;;; Input: A = row to highlight
 
 .if LB_SELECTION_ENABLED
@@ -388,7 +409,7 @@ SetSelection:
         stax    listbox::highlight_rect+MGTK::Rect::y1
         addax   #kListItemHeight-1, listbox::highlight_rect+MGTK::Rect::y2
 
-        jsr     SetPortForList
+        jsr     _SetPort
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, listbox::highlight_rect
 ret:    rts
@@ -396,11 +417,20 @@ ret:    rts
 .endif
 
 ;;; ============================================================
+;;; Call to update `listbox::num_items` after `InitList` is called,
+;;; to update the scrollbar alone. The list items will not be redrawn.
+;;; This is useful if the list is populated asynchronously.
+
+.proc SetListSize
+        sta     listbox::num_items
+        FALL_THROUGH_TO _EnableScrollbar
+.endproc
+
+;;; ============================================================
 ;;; Enable/disable scrollbar as appropriate; resets thumb pos.
 ;;; Assert: `listbox::num_items` is set.
 
-;;; TODO: make internal only
-.proc EnableScrollbar
+.proc _EnableScrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
 
         lda     listbox::num_items
@@ -431,18 +461,21 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
-;;; Input: A = row to ensure visible
+;;; Input: A = row to ensure visible; high bit = force redraw,
+;;;   even if no scrolling occured.
 ;;; Assert: `listbox::winfo+MGTK::Winfo::vthumbpos` is set.
 
 .if LB_SELECTION_ENABLED
 .proc _ScrollIntoView
+        sta     force_draw_flag
+        and     #$7F            ; A = index
+
         cmp     listbox::winfo+MGTK::Winfo::vthumbpos
     IF_LT
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        jsr     UpdateViewport
-        jmp     DrawListEntries
+        jmp     _Draw
     END_IF
 
         sec
@@ -454,33 +487,37 @@ ret:    rts
         sta     updatethumb_params::thumbpos
         copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        jsr     UpdateViewport
-        jmp     DrawListEntries
+        jmp     _Draw
     END_IF
 
-skip:   lda     listbox::selected_index
+        force_draw_flag := *+1
+skip:   lda     #SELF_MODIFIED_BYTE
+        bmi     _Draw ; will highlight selection
+
+        lda     listbox::selected_index
         jmp     _HighlightIndex
 .endproc
 .endif
 
 ;;; ============================================================
+;;; Adjusts the viewport given the scroll position, and selects
+;;; the GrafPort using the client's `SetPortForList`.
 
-;;; TODO: make internal only
-.proc UpdateViewport
+.proc _SetPort
         ldax    #kListItemHeight
         ldy     listbox::winfo+MGTK::Winfo::vthumbpos
         jsr     Multiply_16_8_16
         stax    listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
         addax   #listbox::kHeight, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y2
 
-        rts
+        jmp     SetPortForList
 .endproc
 
 ;;; ============================================================
 
 ;;; Calls `DrawListEntryProc` for each entry.
-.proc DrawListEntries
-        jsr     SetPortForList
+.proc _Draw
+        jsr     _SetPort
 
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect

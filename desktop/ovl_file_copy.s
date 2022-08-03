@@ -74,8 +74,6 @@ jt_destination_filename:
         sta     file_dialog::focus_in_input2_flag
         lda     file_dialog::selected_index
         sta     saved_src_index
-        lda     #$FF
-        jsr     file_dialog::SetSelectedIndex
         jsr     file_dialog::DeviceOnLine
         jsr     file_dialog::UpdateListFromPath
 
@@ -167,8 +165,6 @@ saved_src_index:
         COPY_BYTES file_dialog::kJumpTableSize, jt_source_filename, file_dialog::jump_table
 
         copy    #0, file_dialog::only_show_dirs_flag
-        lda     #$FF
-        jsr     file_dialog::SetSelectedIndex
         copy    #0, file_dialog::focus_in_input2_flag
 
         lda     file_dialog_res::input_dirty_flag
@@ -194,7 +190,6 @@ L726D:  lda     file_dialog::path_buf
 
 L7272:  jsr     file_dialog::DeviceOnLine
         lda     #0
-        jsr     file_dialog::UpdateViewport
         jsr     file_dialog::ReadDir
         lda     #$FF            ; clear selection
         bne     L7289           ; always
@@ -203,13 +198,8 @@ L7281:  jsr     file_dialog::ReadDir
         bcs     L7272
         lda     saved_src_index
 
-L7289:
-        jsr     file_dialog::SetSelectedIndex
-    IF_NS
-        jsr     file_dialog::ResetListScroll
-    END_IF
+L7289:  jsr     file_dialog::SetSelectionAndUpdateList ; A = selection
         jsr     file_dialog::UpdateDiskName
-        jsr     file_dialog::DrawListEntries
         jmp     file_dialog::Activate
 .endproc
 

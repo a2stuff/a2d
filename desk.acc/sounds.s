@@ -557,7 +557,7 @@ grafport_win:       .tag    MGTK::GrafPort
         BTK_CALL BTK::Draw, ok_button_params
 
         ;; List Box
-        jmp     DrawListEntries
+        jmp     InitList
 .endproc
 
 ;;; ============================================================

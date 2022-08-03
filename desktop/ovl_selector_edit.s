@@ -48,12 +48,8 @@ finish: jsr     file_dialog::ReadDir
         lda     #$00
         bcs     :+              ; no files
         param_call file_dialog::FindFilenameIndex, buffer
-        jsr     file_dialog::SetSelectedIndex
-    IF_NS
-        jsr     file_dialog::ResetListScroll
-    END_IF
+        jsr     file_dialog::SetSelectionAndUpdateList
         jsr     file_dialog::UpdateDiskName
-        jsr     file_dialog::DrawListEntries
         lda     path_buf0
         bne     :+              ; already populated - preserve it!
         jsr     file_dialog::PrepPath

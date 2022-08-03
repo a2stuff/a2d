@@ -403,13 +403,17 @@ click_handler_hook:
 ;;; Clears selection.
 
 .proc UpdateListFromPath
-        lda     #$FF
-        jsr     SetSelectedIndex
         jsr     ReadDir
-        jsr     EnableScrollbar
-        jsr     UpdateViewport
         jsr     UpdateDiskName
-        jmp     DrawListEntries
+        lda     #$FF
+        FALL_THROUGH_TO SetSelectionAndUpdateList
+.endproc
+
+;;; Inputs: A=index ($FF if none)
+.proc SetSelectionAndUpdateList
+        sta     selected_index
+        jsr     InitList
+        jmp     UpdateDynamicButtons
 .endproc
 
 ;;; ============================================================
@@ -737,7 +741,9 @@ file_char:
         bmi     done
         cmp     selected_index
         beq     done
-        jmp     UpdateListSelection
+        jsr     SetListSelection
+        jsr     UpdateDynamicButtons
+        jmp     HandleSelectionChange
 
 done:   return  #0
 
@@ -884,14 +890,10 @@ yes:    clc
 
 ;;; ============================================================
 
-;;; Inputs: A=index
-;;; Outputs: A=index
-.proc SetSelectedIndex
-        pha
+.proc ClearSelection
+        lda     #$FF
         jsr     SetListSelection
-        jsr     UpdateDynamicButtons
-        pla
-        rts
+        jmp     UpdateDynamicButtons
 .endproc
 
 ;;; Inputs: A=flag (high bit = listbox disabled)
@@ -904,14 +906,6 @@ yes:    clc
         jsr     DrawChangeDriveLabel
         jsr     DrawOpenLabel
         jmp     DrawCloseLabel
-.endproc
-
-;;; ============================================================
-
-;;; Inputs: A=index
-.proc UpdateListSelection
-        jsr     SetSelectedIndex
-        jsr     HandleSelectionChange
 .endproc
 
 ;;; ============================================================
@@ -1135,8 +1129,7 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         lda     #0
         sta     path_buf
         param_call AppendToPathBuf, on_line_buffer
-        lda     #$FF
-        jmp     SetSelectedIndex
+        jmp     ClearSelection
 .endproc
 
 ;;; ============================================================
@@ -1202,8 +1195,7 @@ retry:
         MLI_CALL OPEN, open_params
         beq     :+
         jsr     DeviceOnLine
-        lda     #$FF
-        jsr     SetSelectedIndex
+        jmp     ClearSelection
 .if !FD_EXTENDED
         lda     #$FF
 .endif
@@ -1216,9 +1208,9 @@ retry:
         MLI_CALL READ, read_params
         beq     :+
         jsr     DeviceOnLine
-        lda     #$FF
-        jsr     SetSelectedIndex
+        jsr     ClearSelection
 .if FD_EXTENDED
+        lda     #$FF
         sta     open_dir_flag
 .endif
         jmp     retry
