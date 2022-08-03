@@ -33,7 +33,7 @@
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
     IF_EQ
-        jsr     HandleListScroll
+        jsr     _HandleListScroll
         return  #$FF            ; not an item
     END_IF
 
@@ -90,12 +90,12 @@
 kPartHome = $80
 kPartEnd  = $81
 
-.proc HandleListScrollWithPart
+.proc _HandleListScrollWithPart
         sta     findcontrol_params::which_part
-        FALL_THROUGH_TO HandleListScroll
+        FALL_THROUGH_TO _HandleListScroll
 .endproc
 
-.proc HandleListScroll
+.proc _HandleListScroll
         ;; Ignore unless vscroll is enabled
         lda     listbox::winfo+MGTK::Winfo::vscroll
         and     #MGTK::Scroll::option_active
@@ -139,7 +139,7 @@ repeat: lda     listbox::winfo+MGTK::Winfo::vthumbpos
         sec
         sbc     #1
         jsr     update
-        jsr     CheckArrowRepeat
+        jsr     _CheckArrowRepeat
         jmp     repeat
     END_IF
 
@@ -154,7 +154,7 @@ repeat: lda     listbox::winfo+MGTK::Winfo::vthumbpos
         clc
         adc     #1
         jsr     update
-        jsr     CheckArrowRepeat
+        jsr     _CheckArrowRepeat
         jmp     repeat
     END_IF
 
@@ -205,7 +205,7 @@ update: sta     updatethumb_params::thumbpos
 
 ;;; ============================================================
 
-.proc CheckArrowRepeat
+.proc _CheckArrowRepeat
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -292,11 +292,11 @@ ret:    rts
         cmp     #CHAR_UP
       IF_EQ
         lda     #MGTK::Part::up_arrow
-        jmp     HandleListScrollWithPart
+        jmp     _HandleListScrollWithPart
       END_IF
         ;; CHAR_DOWN
         lda     #MGTK::Part::down_arrow
-        jmp     HandleListScrollWithPart
+        jmp     _HandleListScrollWithPart
     END_IF
 .endif
 
@@ -332,11 +332,11 @@ ret:    rts
         cmp     #CHAR_UP
       IF_EQ
         lda     #kPartHome
-        jmp     HandleListScrollWithPart
+        jmp     _HandleListScrollWithPart
       END_IF
         ;; CHAR_DOWN
         lda     #kPartEnd
-        jmp     HandleListScrollWithPart
+        jmp     _HandleListScrollWithPart
     END_IF
 .endif
 
@@ -345,11 +345,11 @@ ret:    rts
         cmp     #CHAR_UP
     IF_EQ
         lda     #MGTK::Part::page_up
-        jmp     HandleListScrollWithPart
+        jmp     _HandleListScrollWithPart
     END_IF
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
-        jmp     HandleListScrollWithPart
+        jmp     _HandleListScrollWithPart
 
 .if LB_SELECTION_ENABLED
 SetSelection:
@@ -367,6 +367,7 @@ SetSelection:
 ;;; ============================================================
 ;;; Input: A = row to highlight
 
+;;; TODO: make internal only
 .if LB_SELECTION_ENABLED
 .proc HighlightIndex
         cmp     #0              ; don't assume caller has flags set
@@ -389,6 +390,7 @@ ret:    rts
 ;;; Enable/disable scrollbar as appropriate; resets thumb pos.
 ;;; Assert: `listbox::num_items` is set.
 
+;;; TODO: make internal only
 .proc EnableScrollbar
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
 
@@ -423,6 +425,7 @@ ret:    rts
 ;;; Input: A = row to ensure visible
 ;;; Assert: `listbox::winfo+MGTK::Winfo::vthumbpos` is set.
 
+;;; TODO: make internal only
 .if LB_SELECTION_ENABLED
 .proc ScrollIntoView
         cmp     listbox::winfo+MGTK::Winfo::vthumbpos
@@ -454,6 +457,7 @@ skip:   lda     listbox::selected_index
 
 ;;; ============================================================
 
+;;; TODO: make internal only
 .proc UpdateViewport
         ldax    #kListItemHeight
         ldy     listbox::winfo+MGTK::Winfo::vthumbpos
@@ -476,9 +480,9 @@ skip:   lda     listbox::selected_index
         lda     listbox::num_items
         beq     ret
 
-        lda     #0
-        sta     index
-        copy16  #kListItemTextOffsetY, listbox::item_pos+MGTK::Point::ycoord
+        copy    #listbox::kRows, rows
+        copy    listbox::winfo+MGTK::Winfo::vthumbpos, index
+        add16   listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kListItemTextOffsetY, listbox::item_pos+MGTK::Point::ycoord
 
 loop:   copy16  #kListItemTextOffsetX, listbox::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, listbox::item_pos
@@ -500,10 +504,14 @@ loop:   copy16  #kListItemTextOffsetX, listbox::item_pos+MGTK::Point::xcoord
         inc     index
         lda     index
         cmp     listbox::num_items
+        beq     :+
+        dec     rows
         bne     loop
-
+:
         MGTK_CALL MGTK::ShowCursor
 ret:    rts
+
+rows:   .byte   0
 .endproc
 
 ;;; ============================================================
