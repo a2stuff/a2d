@@ -68,10 +68,10 @@ label_close_all:
         PASCAL_STRING res_string_menu_item_close_all ; menu item
 label_select_all:
         PASCAL_STRING res_string_menu_item_select_all ; menu item
-label_copy_file:
-        PASCAL_STRING res_string_menu_item_copy_file ; menu item
-label_delete_file:
-        PASCAL_STRING res_string_menu_item_delete_file ; menu item
+label_copy_selection:
+        PASCAL_STRING res_string_menu_item_copy_selection ; menu item
+label_delete_selection:
+        PASCAL_STRING res_string_menu_item_delete_selection ; menu item
 label_eject:
         PASCAL_STRING res_string_menu_item_eject ; menu item
 label_quit:
@@ -133,8 +133,8 @@ file_menu:
         DEFINE_MENU_ITEM_NOMOD label_rename_icon, CHAR_RETURN, CHAR_RETURN
         DEFINE_MENU_ITEM label_duplicate_icon, 'D'
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM label_copy_file
-        DEFINE_MENU_ITEM label_delete_file
+        DEFINE_MENU_ITEM label_copy_selection
+        DEFINE_MENU_ITEM label_delete_selection
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_quit, res_char_menu_item_quit_shortcut
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeFile, .sizeof(MGTK::MenuItem)
@@ -311,8 +311,6 @@ str_delete_title:
         PASCAL_STRING res_string_delete_dialog_title ; dialog title
 str_delete_ok:
         PASCAL_STRING res_string_prompt_delete_ok
-str_ok_empty:
-        PASCAL_STRING res_string_prompt_ok_empty_trash
 str_file_colon:
         PASCAL_STRING res_string_label_file
 str_delete_remaining:

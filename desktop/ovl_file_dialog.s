@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; Overlay for File Dialog (used by Copy/Delete/Add/Edit)
+;;; Overlay for File Dialog (used by Copy/Add/Edit)
 ;;;
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
@@ -31,8 +31,7 @@ AdjustVolumeNameCase    := main::AdjustVolumeNameCase
 AdjustFileEntryCase     := main::AdjustFileEntryCase
 
 ;;; Required data definitions
-buf_input1 := path_buf0
-buf_input2 := path_buf1
+buf_text := path_buf1
 
 ;;; Required macro definitions
         .include "../lib/file_dialog.s"

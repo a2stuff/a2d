@@ -121,9 +121,8 @@ a_record  .addr
         .assert a_record = params::a_record, error, "a_record must be first"
 
         lda     #0
-        ldy     #LETK::LineEditRecord::dirty_flag
+        ldy     #LETK::LineEditRecord::active_flag
         sta     (a_record),y
-        .assert (LETK::LineEditRecord::active_flag - LETK::LineEditRecord::dirty_flag) = 1, error, "order"
         iny
         sta     (a_record),y
         .assert (LETK::LineEditRecord::ip_pos - LETK::LineEditRecord::active_flag) = 1, error, "order"
@@ -560,8 +559,6 @@ modified:
         adc     #1
         sta     (a_record),y
 
-        jsr     _SetDirtyFlag
-
 ret:    rts
 .endproc
 
@@ -580,8 +577,6 @@ ret:    rts
 
         jsr     _SetPort
         MGTK_CALL MGTK::PaintRect, rect
-
-        jsr     _SetDirtyFlag
 
 ret:    rts
 .endproc
@@ -637,15 +632,6 @@ ret:    rts
         jsr     _RedrawRightOfIP
         MGTK_CALL MGTK::DrawText, draw2spaces_params
 
-        FALL_THROUGH_TO _SetDirtyFlag
-.endproc
-
-;;; ============================================================
-
-.proc _SetDirtyFlag
-        ldy     #LETK::LineEditRecord::dirty_flag
-        lda     #$80
-        sta     (a_record),y
         rts
 .endproc
 

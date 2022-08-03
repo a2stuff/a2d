@@ -13,21 +13,39 @@
 .proc Init
         stx     which_run_list
         sty     copy_when
-        copy    #$80, file_dialog::dual_inputs_flag
+
+
+        copy    #$80, file_dialog::extra_controls_flag
+
         jsr     file_dialog::OpenWindow
         jsr     DrawControls
-        jsr     InitControlsAndHooks
+
+        COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
+
+        jsr     file_dialog::SetPortForDialog
+        lda     which_run_list
+        sec
+        jsr     DrawRunListButton
+        lda     copy_when
+        sec
+        jsr     DrawCopyWhenButton
+
+        copy16  #HandleClick, file_dialog::click_handler_hook+1
+        copy16  #HandleKey, file_dialog::HandleKeyEvent::key_meta_digit+1
+        copy    #kSelectorMaxNameLength, file_dialog_res::line_edit_f1::max_length
+
         jsr     file_dialog::DeviceOnLine
 
+        ;; TODO: Move all of this into file dialog itself?
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
         lda     path_buf0
-        beq     finish
+    IF_NE
 
         COPY_STRING path_buf0, file_dialog::path_buf
 
         ;; Was it just a volume name, e.g. "/VOL"?
         jsr     IsVolPath
-    IF_CS
+      IF_CS
         ;; No, strip to parent directory
         jsr     file_dialog::StripPathBufSegment
 
@@ -42,22 +60,17 @@
         cpx     path_buf0
         bne     :-
         sty     buffer
+      END_IF
     END_IF
-
-finish: jsr     file_dialog::ReadDir
+        jsr     file_dialog::ReadDir
+        jsr     file_dialog::UpdateDiskName
+        jsr     file_dialog::UpdateDirName
         lda     #$00
         bcs     :+              ; no files
         param_call file_dialog::FindFilenameIndex, buffer
-        jsr     file_dialog::SetSelectionAndUpdateList
-        jsr     file_dialog::UpdateDiskName
-        lda     path_buf0
-        bne     :+              ; already populated - preserve it!
-        jsr     file_dialog::PrepPath
-:
-        copy    #kSelectorMaxNameLength, file_dialog_res::line_edit_f2::max_length
+:       jsr     file_dialog::SetSelectionAndUpdateList
         jsr     file_dialog::LineEditInit
         jsr     file_dialog::LineEditActivate
-
         jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
 
@@ -67,37 +80,17 @@ buffer: .res 16, 0
 
 ;;; ============================================================
 
-.proc InitControlsAndHooks
-        COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
-
-        copy    #0, file_dialog::focus_in_input2_flag
-        lda     file_dialog_res::winfo::window_id
-        jsr     file_dialog::SetPortForWindow
-        lda     which_run_list
-        sec
-        jsr     DrawRunListButton
-        lda     copy_when
-        sec
-        jsr     DrawCopyWhenButton
-        copy    #$80, file_dialog::extra_controls_flag
-        copy16  #HandleClick, file_dialog::click_handler_hook+1
-        copy16  #HandleKey, file_dialog::HandleKeyEvent::key_meta_digit+1
-        rts
-.endproc
-
-;;; ============================================================
-
 .proc DrawControls
-        lda     file_dialog_res::winfo::window_id
-        jsr     file_dialog::SetPortForWindow
         lda     path_buf0
-        beq     add
-        param_call file_dialog::DrawTitleCentered, label_edit
-        jmp     common
+    IF_EQ
+        ldax    #label_add
+    ELSE
+        ldax    #label_edit
+    END_IF
+        jsr     file_dialog::DrawTitleCentered
 
-add:    param_call file_dialog::DrawTitleCentered, label_add
-common: param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
-        param_call file_dialog::DrawInput2Label, enter_the_name_to_appear_label
+        jsr     file_dialog::SetPortForDialog
+        param_call file_dialog::DrawInput1Label, enter_the_name_to_appear_label
 
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         param_call file_dialog::DrawString, add_a_new_entry_to_label_str
@@ -151,72 +144,10 @@ common: param_call file_dialog::DrawInput1Label, enter_the_full_pathname_label
 
 ;;; ============================================================
 
-jt_pathname:
-        jmp     HandleOkFilename
-        jmp     HandleCancelFilename
-        .assert * - jt_pathname = file_dialog::kJumpTableSize, error, "Table size error"
-
-jt_entry_name:
-        jmp     HandleOkName
-        jmp     HandleCancelName
-        .assert * - jt_entry_name = file_dialog::kJumpTableSize, error, "Table size error"
-
-;;; ============================================================
-
-.proc HandleOkFilename
-        param_call file_dialog::VerifyValidPath, path_buf0
-    IF_NE
-        lda     #ERR_INVALID_PATHNAME
-        jmp     JUMP_TABLE_SHOW_ALERT
-    END_IF
-
-        jsr     file_dialog::LineEditDeactivate
-
-        ;; Install name field handlers
-        COPY_BYTES file_dialog::kJumpTableSize, jt_entry_name, file_dialog::jump_table
-
-        lda     #$80
-        sta     file_dialog::focus_in_input2_flag
-        jsr     file_dialog::SetListBoxDisabled
-
-        lda     file_dialog_res::input_dirty_flag
-        sta     input1_dirty_flag
-        lda     #$00
-        sta     file_dialog_res::input_dirty_flag
-
-        ;; Already have a name?
-        lda     path_buf1
-        bne     finish
-
-        ;; Copy path after slash as name
-        lda     #0
-        sta     path_buf1
-        ldx     path_buf0
-        beq     finish          ; empty!
-:       lda     path_buf0,x
-        cmp     #'/'
-        beq     found_slash
-        dex
-        bne     :-
-        jmp     finish
-
-found_slash:
-        ldy     #0
-:       iny
-        inx
-        lda     path_buf0,x
-        sta     path_buf1,y
-        cpx     path_buf0
-        bne     :-
-        cpy     #kSelectorMaxNameLength+1 ; make sure it's not too long
-        bcc     :+
-        ldy     #kSelectorMaxNameLength
-:       sty     path_buf1
-
-finish: copy    #$80, file_dialog_res::allow_all_chars_flag
-        jsr     file_dialog::LineEditUpdate ; string may have changed
-        jmp     file_dialog::LineEditActivate
-.endproc
+jt_callbacks:
+        jmp     HandleOk
+        jmp     HandleCancel
+        .assert * - jt_callbacks = file_dialog::kJumpTableSize, error, "Table size error"
 
 ;;; ============================================================
 ;;; Close window and finish (via saved_stack) if OK
@@ -224,9 +155,37 @@ finish: copy    #$80, file_dialog_res::allow_all_chars_flag
 ;;;          X = which run list (1=primary, 2=secondary)
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
-.proc HandleOkName
+.proc HandleOk
+        param_call file_dialog::GetPath, path_buf0
+
+        ;; If name is empty, use last path segment
         lda     path_buf1
-        jeq     Bell            ; empty - give a subtle error
+    IF_ZERO
+        ldx     path_buf0
+:       lda     path_buf0,x
+        cmp     #'/'
+        beq     :+
+        dex
+        bne     :-              ; always, since path is valid
+:       inx
+
+        ldy     #1
+:       lda     path_buf0,x
+        sta     path_buf1,y
+        cpx     path_buf0
+        beq     :+
+        inx
+        iny
+        bne     :-              ; always
+
+:
+        ;; Truncate if necessary
+        cpy     #kSelectorMaxNameLength+1
+        bcc     :+
+        ldy     #kSelectorMaxNameLength
+:       sty     path_buf1
+    END_IF
+
         jsr     IsVolPath
         bcs     ok              ; nope
         lda     copy_when       ; Disallow copying volume to ramcard
@@ -263,31 +222,12 @@ found:  cpy     #2
 
 ;;; ============================================================
 
-.proc HandleCancelFilename
+.proc HandleCancel
         jsr     file_dialog::CloseWindow
         copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
         ldx     file_dialog::saved_stack
         txs
         return  #$FF
-.endproc
-
-;;; ============================================================
-
-.proc HandleCancelName
-        jsr     file_dialog::LineEditDeactivate
-
-        ;; install pathname field handlers
-        COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
-
-        copy    #0, file_dialog_res::allow_all_chars_flag
-        lda     #$00
-        sta     file_dialog::focus_in_input2_flag
-        jsr     file_dialog::SetListBoxDisabled
-
-        lda     input1_dirty_flag
-        sta     file_dialog_res::input_dirty_flag
-
-        jmp     file_dialog::LineEditActivate
 .endproc
 
 ;;; ============================================================
@@ -449,8 +389,7 @@ draw:
 ;;; ============================================================
 
 .proc HandleKey
-        lda     file_dialog_res::winfo::window_id
-        jsr     file_dialog::SetPortForWindow
+        jsr     file_dialog::SetPortForDialog
         lda     event_params::modifiers
         bne     :+
         rts

@@ -26,7 +26,6 @@ The file is broken down into multiple segments:
 | Pick Shortcut | Main    | A$9000  | `ovl_selector_pick.s`          |
 | File Dialog   | Main    | A$5000  | `ovl_file_dialog.s`            |
 | File Copy     | Main    | A$7000  | `ovl_file_copy.s`              |
-| File Delete   | Main    | A$7000  | `ovl_file_delete.s`            |
 | Edit Shortcut | Main    | A$7000  | `ovl_selector_edit.s`          |
 
 Lengths/offsets are defined in `internal.inc`.
@@ -170,12 +169,6 @@ Also uses `ovl_selector_pick.s` ($9000-$9FFF) but additionally uses overlay
 
 Overlay `ovl_file_copy.s` ($7000-$77FF), uses file selector dialog `ovl_file_dialog.s`
 ($5000-$6FFF).
-
-#### File Delete
-
-Overlay `ovl_file_delete.s` ($7000-$77FF), uses file selector dialog `ovl_file_dialog.s`
-($5000-$6FFF).
-
 
 ## Memory Map
 

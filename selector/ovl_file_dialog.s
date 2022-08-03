@@ -27,69 +27,33 @@ a_grafport:    .addr   window_grafport
 window_grafport:
         .tag    MGTK::GrafPort
 
-;;; Text Input Field
-buf_text:       .res    68, 0
-
-;;; String being edited
-buf_input:         .res    68, 0 ; left of IP
+buf_path:
+        .res    ::kPathBufferSize, 0
 
 ;;; ============================================================
 ;;; File Picker Dialog
 
-
-;;; ============================================================
-
         .define FD_EXTENDED 0
         .include "../lib/file_dialog_res.s"
-
-str_file_to_run:
-        PASCAL_STRING res_string_label_file_to_run
 
 ;;; ============================================================
 
 ;;; Called back from file dialog's `Start`
 start:  jsr     OpenWindow
-        jsr     DrawWindow
+        param_call DrawTitleCentered, app::str_run_a_program
         jsr     DeviceOnLine
         jsr     UpdateListFromPath
-        jsr     InitInput
-        jsr     PrepPath
-        jsr     LineEditInit
-        jsr     LineEditActivate
         jmp     EventLoop
 
 ;;; ============================================================
 
-.proc InitInput
-        lda     #$00
-        sta     buf_input1
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc DrawWindow
-        lda     file_dialog_res::winfo::window_id
-        jsr     SetPortForWindow
-        param_call DrawTitleCentered, app::str_run_a_program
-        param_call DrawInput1Label, str_file_to_run
-        rts
-.endproc
-
-;;; ============================================================
-
 .proc HandleOk
-        param_call VerifyValidNonVolumePath, buf_input1
-    IF_NE
-        lda     #AlertID::selector_unable_to_run
-        jmp     app::ShowAlert
-    END_IF
+        param_call GetPath, buf_path
 
         ldx     saved_stack
         txs
-        ldy     #<buf_input1
-        ldx     #>buf_input1
-        sta     $07
+        ldy     #<buf_path
+        ldx     #>buf_path
         return  #$00
 .endproc
 
@@ -109,9 +73,6 @@ YieldLoop               := app::YieldLoop
 DetectDoubleClick       := app::DetectDoubleClick
 ModifierDown            := app::ModifierDown
 ShiftDown               := app::ShiftDown
-
-;;; Required data definitions:
-buf_input1 := buf_input
 
 ;;; Required macro definitions:
         .include "../lib/file_dialog.s"

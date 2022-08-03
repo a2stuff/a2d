@@ -19,16 +19,53 @@
 ;;; * `ShiftDown`
 ;;; * `YieldLoop`
 ;;; Requires the following data definitions:
-;;; * `buf_text`
-;;; * `buf_input1`
+;;; * `getwinport_params`
 ;;; * `window_grafport`
-;;; * `penXOR`
+;;;
 ;;; If `FD_EXTENDED` is defined as 1:
-;;; * two input fields are supported
+;;; * lib/line_edit_res.s is required to be previously included
+;;; * `buf_text` must be defined
+;;; * name field at bottom and extra clickable controls on right are supported
 ;;; * title passed to `DrawTitleCentered` in aux, `AuxLoad` is used
-;;; * `buf_input2` must be defined
 
 ;;; ============================================================
+;;; Memory map
+;;;
+;;;              Main
+;;;          :           :
+;;;          |           |
+;;;          | DHR       |
+;;;  $2000   +-----------+
+;;;          |           |
+;;;          |           |
+;;;          |           |
+;;;          |           |
+;;;          | filenames | 128 x 16-byte filenames
+;;;  $1800   +-----------+
+;;;          | index     | position in list to filename
+;;;  $1780   +-----------+
+;;;          | (unused)  |
+;;;  $1600   +-----------+
+;;;          |           |
+;;;          | dir buf   | current directory block
+;;;  $1400   +-----------+
+;;;          |           |
+;;;          |           |
+;;;          |           |
+;;;          | IO Buffer | for reading directory
+;;;  $1000   +-----------+
+;;;          |           |
+;;;          |           |
+;;;          |           |
+;;;          |           |
+;;;          | (unused)  |
+;;;   $800   +-----------+
+;;;          |           |
+;;;          :           :
+;;;
+;;; ============================================================
+
+
 
 ;;; Map from index in file_names to list entry; high bit is
 ;;; set for directories.
@@ -38,8 +75,6 @@ num_file_names  := $177F
 
 ;;; Sequence of 16-byte records, filenames in current directory.
 file_names      := $1800
-
-kMaxInputLength = $3F
 
 ;;; ============================================================
 
@@ -55,10 +90,11 @@ kMaxInputLength = $3F
 
 on_line_buffer: .res    16, 0
 device_num:     .byte   0       ; current drive, index in DEVLST
-path_buf:       .res    128, 0
+path_buf:       .res    ::kPathBufferSize, 0  ; used in MLI calls, so must be in main memory
 
 only_show_dirs_flag:            ; set when selecting copy destination
         .byte   0
+
 dir_count:
         .byte   0
 
@@ -78,7 +114,7 @@ selected_index:                 ; $FF if none
 .if FD_EXTENDED
 routine_table:
         .addr   kOverlayFileCopyAddress
-        .addr   kOverlayFileDeleteAddress
+        .addr   0               ; TODO: Remove this entire table
         .addr   kOverlayShortcutEditAddress
 .endif
 
@@ -102,15 +138,10 @@ routine_table:
 
         lda     #0
         sta     type_down_buf
-        sta     file_dialog_res::allow_all_chars_flag
         sta     only_show_dirs_flag
+.if FD_EXTENDED
         sta     cursor_ibeam_flag
         sta     extra_controls_flag
-        sta     listbox_disabled_flag
-.if FD_EXTENDED
-        sta     input1_dirty_flag
-        sta     input2_dirty_flag
-        sta     dual_inputs_flag
 .endif
 
         copy    #$FF, selected_index
@@ -142,19 +173,20 @@ stash_y:        .byte   0
 ;;; ============================================================
 ;;; Flags set by invoker to alter behavior
 
-extra_controls_flag:    ; Set when `click_handler_hook` should be called
-        .byte   0
+;;; Set when `click_handler_hook` should be called and name input present.
 
-dual_inputs_flag:       ; Set when there are two text input fields
-        .byte   0
-
-listbox_disabled_flag:  ; Set when the listbox is not active
+extra_controls_flag:
         .byte   0
 
 ;;; ============================================================
 
 .proc EventLoop
+.if FD_EXTENDED
+        bit     extra_controls_flag
+    IF_NS
         jsr     LineEditIdle
+    END_IF
+.endif
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
 
@@ -177,6 +209,7 @@ is_btn: jsr     HandleButtonDown
 
         copy    #0, type_down_buf
 
+.if FD_EXTENDED
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         jeq     EventLoop
@@ -193,31 +226,20 @@ l1:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
+        bit     extra_controls_flag
+    IF_NS
         MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         .assert MGTK::inrect_inside <> 0, error, "enum mismatch"
-        bne     ibeam
-
-.if FD_EXTENDED
-        bit     dual_inputs_flag
-    IF_NS
-        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
-        .assert MGTK::inrect_inside <> 0, error, "enum mismatch"
-        bne     ibeam
+      IF_NE
+        jsr     SetCursorIBeam
+      ELSE
+        jsr     UnsetCursorIBeam
+      END_IF
     END_IF
 .endif
 
-        jsr     UnsetCursorIBeam
-        jmp     EventLoop
-
-ibeam:
-        jsr     SetCursorIBeam
         jmp     EventLoop
 .endproc
-
-.if FD_EXTENDED
-focus_in_input2_flag:
-        .byte   0
-.endif
 
 ;;; ============================================================
 
@@ -239,8 +261,6 @@ ret:    rts
         lda     findwindow_params::window_id
         cmp     #file_dialog_res::kFilePickerDlgWindowID
         beq     not_list
-        bit     listbox_disabled_flag
-        bmi     not_list
         bit     is_apple_click_flag
         bmi     ret             ; ignore except for Change Drive
         jsr     ListClick
@@ -333,55 +353,23 @@ not_list:
 :       rts
     END_IF
 
+
         ;; --------------------------------------------------
         ;; Extra controls
-
+.if FD_EXTENDED
         bit     extra_controls_flag
     IF_NS
-        jsr     click_handler_hook
-        bpl     :+
-        rts
-:
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; Text entry controls
-
-.if !FD_EXTENDED
-        ;; Single field only
+        ;; Text Edit
         MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
-        bne     done_click
-        jsr     f1__Click
-.else
-        ;; Maybe dual fields
-        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
-        bit     focus_in_input2_flag
-      IF_NS
-        jsr     HandleCancel ; Move focus to input1
-        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
+      IF_EQ
+        jmp     LineEditClick
       END_IF
-        jsr     f1__Click
-        jmp     done_click
-    END_IF
 
-        ;; Does the second field exist?
-        bit     dual_inputs_flag
-        bpl     done_click
-        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
-        bit     focus_in_input2_flag
-      IF_NC
-        jsr     HandleOk    ; move focus to input2
-        ;; NOTE: Assumes screentowindow_params::window* has not been changed.
-      END_IF
-        jsr     f2__Click
+        ;; Additional controls
+        jmp     click_handler_hook
     END_IF
 .endif
-done_click:
 
         rts
 
@@ -402,11 +390,15 @@ click_handler_hook:
 .proc UpdateListFromPath
         jsr     ReadDir
         jsr     UpdateDiskName
-        lda     #$FF
-        FALL_THROUGH_TO SetSelectionAndUpdateList
+        jsr     UpdateDirName
+        copy    #$FF, selected_index
+        jsr     ListInit
+        jmp     UpdateDynamicButtons
 .endproc
 
-;;; Inputs: A=index ($FF if none)
+;;; ============================================================
+
+;;;  Inputs: A=index ($FF if none)
 .proc SetSelectionAndUpdateList
         sta     selected_index
         jsr     ListInit
@@ -415,6 +407,7 @@ click_handler_hook:
 
 ;;; ============================================================
 
+.if FD_EXTENDED
 .proc UnsetCursorIBeam
         bit     cursor_ibeam_flag
         bpl     :+
@@ -422,6 +415,7 @@ click_handler_hook:
         copy    #0, cursor_ibeam_flag
 :       rts
 .endproc
+.endif
 
 ;;; ============================================================
 
@@ -432,6 +426,7 @@ click_handler_hook:
 
 ;;; ============================================================
 
+.if FD_EXTENDED
 .proc SetCursorIBeam
         bit     cursor_ibeam_flag
         bmi     :+
@@ -442,6 +437,39 @@ click_handler_hook:
 
 cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         .byte   0
+.endif
+
+;;; ============================================================
+;;; Get the current path, including the selection (if any)
+
+;;; Inputs: A,X = buffer to copy path into
+.proc GetPath
+        stax    ptr
+
+        ;; Any selection?
+        ldx     selected_index
+    IF_NC
+        ;; Append filename temporarily
+        lda     file_list_index,x
+        and     #$7F
+        jsr     GetNthFilename
+        jsr     AppendToPathBuf
+    END_IF
+
+        ldy     path_buf
+:       lda     path_buf,y
+        ptr := *+1
+        sta     SELF_MODIFIED,y
+        dey
+        bpl     :-
+
+        bit     selected_index
+    IF_NC
+        jsr     StripPathBufSegment
+    END_IF
+
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -452,11 +480,6 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
         jsr     GetNthFilename
         jsr     AppendToPathBuf
-
-
-        jsr     PrepPath
-        jsr     LineEditUpdate   ; string changed
-        jsr     LineEditActivate ; move IP to end
 
         jmp     UpdateListFromPath
 .endproc
@@ -473,10 +496,6 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     NextDeviceNum
         jsr     DeviceOnLine
 
-        jsr     PrepPath
-        jsr     LineEditUpdate   ; string changed
-        jsr     LineEditActivate ; move IP to end
-
         jmp     UpdateListFromPath
 .endproc
 
@@ -484,8 +503,6 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 ;;; Output: C=0 if allowed, C=1 if not.
 .proc IsChangeDriveAllowed
-        bit     listbox_disabled_flag
-        bmi     no
         lda     DEVCNT
         beq     no
 
@@ -500,8 +517,6 @@ no:     sec
 
 ;;; Output: C=0 if allowed, C=1 if not.
 .proc IsOpenAllowed
-        bit     listbox_disabled_flag
-        bmi     no
         lda     selected_index
         bmi     no              ; no selection
         tax
@@ -519,9 +534,6 @@ no:     sec
 
 ;;; Output: C=0 if allowed, C=1 if not.
 .proc IsCloseAllowed
-        bit     listbox_disabled_flag
-        bmi     no
-
         ;; Walk back looking for last '/'
         ldx     path_buf
         beq     no
@@ -552,10 +564,6 @@ no:     sec
         ;; Remove last segment
         jsr     StripPathBufSegment
 
-        jsr     PrepPath
-        jsr     LineEditUpdate   ; string changed
-        jsr     LineEditActivate ; move IP to end
-
         jsr     UpdateListFromPath
 
 ret:    rts
@@ -566,14 +574,10 @@ ret:    rts
 
 .proc HandleKeyEvent
         lda     event_params::key
-
-        bit     listbox_disabled_flag
-    IF_NC
         jsr     IsListKey
-      IF_EQ
+    IF_EQ
         copy    #0, type_down_buf
         jmp     ListKey
-      END_IF
     END_IF
 
         ldx     event_params::modifiers
@@ -581,32 +585,48 @@ ret:    rts
         ;; With modifiers
         lda     event_params::key
 
-        bit     listbox_disabled_flag
-        bmi     :+
         jsr     CheckTypeDown
         jeq     exit
-:
+
         copy    #0, type_down_buf
+        ldx     event_params::modifiers
         lda     event_params::key
         cmp     #CHAR_TAB
         jeq     KeyTab
 
+.if FD_EXTENDED
+        bit     extra_controls_flag
+      IF_NS
         ;; Hook for clients
         cmp     #'0'
         bcc     :+
         cmp     #'9'+1
         jcc     key_meta_digit
 :
-        ;; Delegate to active line edit
-        jsr     LineEditKey
+        ;; Edit control
+        jmp     LineEditKey
+      END_IF
+.endif
 
     ELSE
         ;; --------------------------------------------------
         ;; No modifiers
 
-        pha
+.if !FD_EXTENDED
+        lda     event_params::key
+        jsr     CheckTypeDown
+        jeq     exit
+.else
+        bit     extra_controls_flag
+      IF_NC
+        lda     event_params::key
+        jsr     CheckTypeDown
+        jeq     exit
+      END_IF
+.endif
+
         copy    #0, type_down_buf
-        pla
+        lda     event_params::key
 
         cmp     #CHAR_RETURN
         jeq     KeyReturn
@@ -614,27 +634,22 @@ ret:    rts
         cmp     #CHAR_ESCAPE
         jeq     KeyEscape
 
-        bit     listbox_disabled_flag
-      IF_NC
         cmp     #CHAR_TAB
         jeq     KeyTab
 
-        cmp     #CHAR_CTRL_O    ; Open
+        cmp     #CHAR_CTRL_O
         jeq     KeyOpen
 
-        cmp     #CHAR_CTRL_C    ; Close
+        cmp     #CHAR_CTRL_C
         jeq     KeyClose
-      END_IF
 
-        jsr     IsControlChar ; pass through control characters
-        bcc     allow
-        bit     file_dialog_res::allow_all_chars_flag
-      IF_NC
-        jsr     IsPathChar
-        bcs     ignore
+.if FD_EXTENDED
+        bit     extra_controls_flag
+      IF_NS
+        ;; Edit control
+        jmp     LineEditKey
       END_IF
-allow:  jsr     LineEditKey
-ignore:
+.endif
     END_IF
 
 exit:   rts
@@ -666,14 +681,6 @@ ret:    rts
 ;;; ============================================================
 
 .proc KeyReturn
-.if !FD_EXTENDED
-        lda     selected_index
-        bpl     :+              ; has a selection
-        bit     file_dialog_res::input_dirty_flag
-        bmi     :+              ; input is dirty
-        rts
-:
-.endif
         BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
         jmp     HandleOk
 .endproc
@@ -739,8 +746,7 @@ file_char:
         cmp     selected_index
         beq     done
         jsr     ListSetSelection
-        jsr     UpdateDynamicButtons
-        jmp     HandleSelectionChange
+        jmp     UpdateDynamicButtons
 
 done:   return  #0
 
@@ -792,8 +798,6 @@ char:   .byte   0
 .endproc ; CheckAlpha
 
 .endproc ; HandleKeyEvent
-
-;;; ============================================================
 
 ;;; ============================================================
 
@@ -893,11 +897,7 @@ yes:    clc
         jmp     UpdateDynamicButtons
 .endproc
 
-;;; Inputs: A=flag (high bit = listbox disabled)
-.proc SetListBoxDisabled
-        sta     listbox_disabled_flag
-        FALL_THROUGH_TO UpdateDynamicButtons
-.endproc
+;;; ============================================================
 
 .proc UpdateDynamicButtons
         jsr     DrawChangeDriveLabel
@@ -914,21 +914,51 @@ yes:    clc
 ;;; ============================================================
 
 .proc OpenWindow
+.if FD_EXTENDED
+        bit     extra_controls_flag
+    IF_NS
+        copy16  #file_dialog_res::kFilePickerDlgExLeft,  file_dialog_res::winfo::viewloc::xcoord
+        copy16  #file_dialog_res::kFilePickerDlgExTop,   file_dialog_res::winfo::viewloc::ycoord
+        copy16  #file_dialog_res::kFilePickerDlgExWidth, file_dialog_res::winfo::maprect::x2
+        copy16  #file_dialog_res::kFilePickerDlgExHeight,file_dialog_res::winfo::maprect::y2
+
+        copy16  #file_dialog_res::winfo_listbox::kExLeft, file_dialog_res::winfo_listbox::viewloc::xcoord
+        copy16  #file_dialog_res::winfo_listbox::kExTop,  file_dialog_res::winfo_listbox::viewloc::ycoord
+    ELSE
+        copy16  #file_dialog_res::kFilePickerDlgLeft,  file_dialog_res::winfo::viewloc::xcoord
+        copy16  #file_dialog_res::kFilePickerDlgTop,   file_dialog_res::winfo::viewloc::ycoord
+        copy16  #file_dialog_res::kFilePickerDlgWidth, file_dialog_res::winfo::maprect::x2
+        copy16  #file_dialog_res::kFilePickerDlgHeight,file_dialog_res::winfo::maprect::y2
+
+        copy16  #file_dialog_res::winfo_listbox::kLeft, file_dialog_res::winfo_listbox::viewloc::xcoord
+        copy16  #file_dialog_res::winfo_listbox::kTop,  file_dialog_res::winfo_listbox::viewloc::ycoord
+    END_IF
+.endif
+
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
         jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::SetPenMode, file_dialog_res::notpencopy
+
 .if FD_EXTENDED
-        bit     dual_inputs_flag
+        bit     extra_controls_flag
     IF_NS
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input2_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
     END_IF
 .endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_frame
+.if !FD_EXTENDED
         MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
+.else
+        bit     extra_controls_flag
+    IF_NS
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_ex_frame_rect
+    ELSE
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
+    END_IF
+.endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
-        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenMode, file_dialog_res::penXOR
 
         BTK_CALL BTK::Draw, file_dialog_res::ok_button_params
         BTK_CALL BTK::Draw, file_dialog_res::cancel_button_params
@@ -948,13 +978,19 @@ yes:    clc
         sta     file_dialog_res::close_button_rec::state
         BTK_CALL BTK::Draw, file_dialog_res::close_button_params
 
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::penpattern
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
-        MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
+        MGTK_CALL MGTK::SetPenMode, file_dialog_res::penXOR
         MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern
         MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
+
+.if FD_EXTENDED
+        bit     extra_controls_flag
+    IF_NS
+        MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::penpattern
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
+        MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
+    END_IF
+.endif
         rts
 .endproc
 
@@ -1009,7 +1045,10 @@ ret:    rts
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, file_dialog::only_show_dirs_flag
-        jmp     UnsetCursorIBeam
+.if FD_EXTENDED
+        jsr     UnsetCursorIBeam
+.endif
+        rts
 .endproc
 
 ;;; ============================================================
@@ -1069,7 +1108,11 @@ ret:    rts
         text_width      := text_params + 3
 
         stax    text_addr       ; input is length-prefixed string
+
+        jsr     SetPortForDialog
+
 .if FD_EXTENDED
+        ldax    text_addr
         jsr     AuxLoad
 .else
         ldy     #0
@@ -1079,7 +1122,16 @@ ret:    rts
         inc16   text_addr ; point past length byte
         MGTK_CALL MGTK::TextWidth, text_params
 
+.if !FD_EXTENDED
         sub16   #file_dialog_res::kFilePickerDlgWidth, text_width, file_dialog_res::pos_title::xcoord
+.else
+        bit     extra_controls_flag
+    IF_NS
+        sub16   #file_dialog_res::kFilePickerDlgExWidth, text_width, file_dialog_res::pos_title::xcoord
+    ELSE
+        sub16   #file_dialog_res::kFilePickerDlgWidth, text_width, file_dialog_res::pos_title::xcoord
+    END_IF
+.endif
         lsr16   file_dialog_res::pos_title::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
         MGTK_CALL MGTK::DrawText, text_params
@@ -1088,19 +1140,10 @@ ret:    rts
 
 ;;; ============================================================
 
+.if FD_EXTENDED
 .proc DrawInput1Label
         stax    $06
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
-        ldax    $06
-        jmp     DrawString
-.endproc
-
-;;; ============================================================
-
-.if FD_EXTENDED
-.proc DrawInput2Label
-        stax    $06
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::input2_label_pos
         ldax    $06
         jmp     DrawString
 .endproc
@@ -1354,7 +1397,6 @@ entry_length:
 d4:     .byte   0
 .endproc
 
-
 ;;; ============================================================
 
 .proc UpdateDiskName
@@ -1373,18 +1415,70 @@ d4:     .byte   0
         cpx     path_buf
         beq     finish
         inx
-        bne     :-
+        bne     :-              ; always
 
 finish: sty     file_dialog_res::filename_buf
 
+        param_call MeasureString, file_dialog_res::filename_buf
+        text_width := $06
+        stax    text_width
+        lsr16   text_width
+        sub16   #file_dialog_res::kDiskLabelCenterX, text_width, file_dialog_res::disk_label_pos::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
-        param_call DrawString, file_dialog_res::disk_label_str
         param_call DrawString, file_dialog_res::filename_buf
 
         rts
 .endproc
 
 ;;; ============================================================
+
+.proc UpdateDirName
+        jsr     SetPortForDialog
+        MGTK_CALL MGTK::PaintRect, file_dialog_res::dir_name_rect
+        copy16  #path_buf, $06
+
+        ;; Copy last segment
+        ldx     path_buf
+:       lda     path_buf,x
+        cmp     #'/'
+        beq     :+
+        dex
+        bne     :-              ; always
+:       inx
+
+        ldy     #1
+        cpx     #2
+    IF_NE
+        copy    #kGlyphFolderLeft, file_dialog_res::filename_buf+1
+        copy    #kGlyphFolderRight, file_dialog_res::filename_buf+2
+        copy    #kGlyphSpacer, file_dialog_res::filename_buf+3
+        iny
+        iny
+        iny
+    END_IF
+
+:       lda     path_buf,x
+        sta     file_dialog_res::filename_buf,y
+        cpx     path_buf
+        beq     :+
+        iny
+        inx
+        bne     :-              ; always
+:       sty     file_dialog_res::filename_buf
+
+        param_call MeasureString, file_dialog_res::filename_buf
+        text_width := $06
+        stax    text_width
+        lsr16   text_width
+        sub16   #file_dialog_res::kDirLabelCenterX, text_width, file_dialog_res::dir_label_pos::xcoord
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
+        param_call DrawString, file_dialog_res::filename_buf
+
+        rts
+.endproc
+
+;;; ============================================================
+
 
 .proc SetPortForList
         lda     #file_dialog_res::kEntryListCtlWindowID
@@ -1541,99 +1635,6 @@ d2:     .res    127, 0
 
 ;;; ============================================================
 
-
-.proc VerifyValidPath
-        ptr := $06
-
-        stax    ptr
-        ldy     #$01
-        lda     (ptr),y
-        cmp     #'/'            ; must be a full path
-        bne     fail
-        dey
-        lda     (ptr),y
-        cmp     #2              ; must include vol name
-        bcc     fail
-        tay
-        lda     (ptr),y
-        cmp     #'/'
-        beq     fail            ; can't end in '/'
-
-        ldx     #0
-        stx     index
-l1:     lda     (ptr),y
-        cmp     #'/'
-        beq     l2
-        inx
-        cpx     #16
-        beq     fail
-        dey
-        bne     l1
-        beq     l3
-l2:     inc     index
-        ldx     #0
-        dey
-        bne     l1
-
-l3:
-.if !FD_EXTENDED
-        lda     index
-        cmp     #2
-        bcc     fail
-.endif
-
-        ldy     #0
-        lda     (ptr),y
-        tay
-l4:     lda     (ptr),y
-        cmp     #'.'
-        beq     l5
-        cmp     #'/'
-        bcc     fail
-        cmp     #'9'+1
-        bcc     l5
-        cmp     #'A'
-        bcc     fail
-        cmp     #'Z'+1
-        bcc     l5
-        cmp     #'a'
-        bcc     fail
-        cmp     #'z'+1
-        bcs     fail
-l5:     dey
-        bne     l4
-        return  #$00
-
-fail:   return  #$FF
-
-index:  .byte   0
-.endproc
-
-.proc VerifyValidNonVolumePath
-        ptr := $06
-        jsr     VerifyValidPath ; stores A,X to $06
-        bne     ret
-
-        ;; Valid, so make sure it's not a volume - find last '/'
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        cmp     #'/'
-        beq     :+
-        dey
-        bpl     :-
-
-:       cpy     #1
-        beq     fail
-        lda     #0
-        rts
-fail:   lda     #$FF
-ret:    rts
-.endproc
-
-;;; ============================================================
-
 .proc SetPtrAfterFilenames
         ptr := $06
 
@@ -1749,10 +1750,17 @@ no_change:
 .endproc
 
 ;;; ============================================================
-;;; Text Input Field 1
+;;; Text Edit Control
 ;;; ============================================================
 
+.if FD_EXTENDED
+
 .scope f1
+
+.proc Init
+        LETK_CALL LETK::Init, file_dialog_res::le_params_f1
+        rts
+.endproc
 .proc Idle
         LETK_CALL LETK::Idle, file_dialog_res::le_params_f1
         rts
@@ -1769,11 +1777,6 @@ no_change:
         copy    event_params::key, file_dialog_res::le_params_f1::key
         copy    event_params::modifiers, file_dialog_res::le_params_f1::modifiers
         LETK_CALL LETK::Key, file_dialog_res::le_params_f1
-        bit     file_dialog_res::line_edit_f1::dirty_flag
-    IF_NS
-        copy    #0, file_dialog_res::line_edit_f1::dirty_flag
-        jsr     NotifyTextChangedF1
-    END_IF
         rts
 .endproc
 .proc Click
@@ -1788,81 +1791,7 @@ no_change:
 
 .endscope ; f1
 
-f1__Click := f1::Click
-
-;;; ============================================================
-
-.proc PrepPathF1
-        COPY_STRING path_buf, buf_input1
-        rts
-.endproc
-
-;;; ============================================================
-;;; Text Input Field 2
-;;; ============================================================
-
-.if FD_EXTENDED
-.scope f2
-.proc Idle
-        LETK_CALL LETK::Idle, file_dialog_res::le_params_f2
-        rts
-.endproc
-.proc Activate
-        LETK_CALL LETK::Activate, file_dialog_res::le_params_f2
-        rts
-.endproc
-.proc Deactivate
-        LETK_CALL LETK::Deactivate, file_dialog_res::le_params_f2
-        rts
-.endproc
-.proc Key
-        copy    event_params::key, file_dialog_res::le_params_f2::key
-        copy    event_params::modifiers, file_dialog_res::le_params_f2::modifiers
-        LETK_CALL LETK::Key, file_dialog_res::le_params_f2
-        bit     file_dialog_res::line_edit_f2::dirty_flag
-    IF_NS
-        copy    #0, file_dialog_res::line_edit_f2::dirty_flag
-        jsr     NotifyTextChangedF2
-    END_IF
-        rts
-.endproc
-.proc Click
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params_f2::coords
-        LETK_CALL LETK::Click, file_dialog_res::le_params_f2
-        rts
-.endproc
-.proc Update
-        LETK_CALL LETK::Update, file_dialog_res::le_params_f2
-        rts
-.endproc
-
-.endscope ; f2
-
-f2__Click := f2::Click
-
-.endif ; FD_EXTENDED
-
-;;; ============================================================
-
-.proc LineEditInit
-        LETK_CALL LETK::Init, file_dialog_res::le_params_f1
-.if FD_EXTENDED
-        bit     dual_inputs_flag
-    IF_NS
-        LETK_CALL LETK::Init, file_dialog_res::le_params_f2
-    END_IF
-.endif
-        rts
-.endproc
-
-;;; ============================================================
-
-
-.if !FD_EXTENDED
-
-;;; Alias table - replaces jump table in hookable version
-
-PrepPath        := PrepPathF1
+LineEditInit            := f1::Init
 LineEditIdle            := f1::Idle
 LineEditActivate        := f1::Activate
 LineEditDeactivate      := f1::Deactivate
@@ -1870,227 +1799,24 @@ LineEditKey             := f1::Key
 LineEditClick           := f1::Click
 LineEditUpdate          := f1::Update
 
-.else
 
-;;; Dynamically altered table of handlers for focused
-;;; input field (e.g. source/destination filename, etc)
+;;; Dynamically altered table of handlers.
 
 kJumpTableSize = 6
 jump_table:
-HandleOk:             jmp     0
-HandleCancel:         jmp     0
+HandleOk:       jmp     0
+HandleCancel:   jmp     0
         .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
 
-LineEditIdle:
-        bit     focus_in_input2_flag
-        jpl     f1::Idle
-        jmp     f2::Idle
-
-LineEditActivate:
-        bit     focus_in_input2_flag
-        jpl     f1::Activate
-        jmp     f2::Activate
-
-LineEditDeactivate:
-        bit     focus_in_input2_flag
-        jpl     f1::Deactivate
-        jmp     f2::Deactivate
-
-PrepPath:
-        bit     focus_in_input2_flag
-        jpl     PrepPathF1
-        jmp     PrepPathF2
-
-LineEditKey:
-        bit     focus_in_input2_flag
-        jpl     f1::Key
-        jmp     f2::Key
-
-LineEditClick:
-        bit     focus_in_input2_flag
-        jpl     f1::Click
-        jmp     f2::Click
-
-LineEditUpdate:
-        bit     focus_in_input2_flag
-        jpl     f1::Update
-        jmp     f2::Update
-
-.endif
-
 ;;; ============================================================
 
-.proc HandleSelectionChange
-        ptr := $06
-
-        ldx     selected_index
-    IF_NS
-        ;; No selection - use path as-is.
-        jsr     PrepPath
-    ELSE
-        ;; Find name of selected item
-        lda     file_list_index,x
-        and     #$7F
-        jsr     GetNthFilename
-
-        ;; Append selected name to path temporarily
-        jsr     AppendToPathBuf
-
-        ;; Copy it into appropriate text buf
-        jsr     PrepPath
-
-        ;; And restore path
-        jsr     StripPathBufSegment
-    END_IF
-
-        jsr     LineEditUpdate   ; string changed
-        jsr     LineEditActivate ; move IP to end
-
-        rts
-.endproc
-
-;;; ============================================================
-
-.if FD_EXTENDED
-.proc PrepPathF2
-        buf_text := buf_input2
-
-        ;; Whenever the path is updated, preserve last segment of
-        ;; the path (the filename) as a suffix. This is fairly
-        ;; specific to "Copy a File".
-
-        copy    #0, buf_filename
-
-        ;; Search for last '/'
-        ldx     buf_text
-        beq     do_copy
-:       lda     buf_text,x
-        cmp     #'/'
-        beq     :+
-        dex
-        beq     do_copy
-        bne     :-              ; always
-:
-        ;; Copy slash and last segment to filename
-        ldy     #1
-:       lda     buf_text,x
-        sta     buf_filename,y
-        cpx     buf_text
-        beq     :+
-        iny
-        inx
-        bne     :-              ; always
-
-:       sty     buf_filename
-
-do_copy:
-        ;; Update the text with the new path
-        COPY_STRING path_buf, buf_text
-
-        ;; Append filename if not blank
-        lda     buf_filename
-        beq     finish
-        ldx     buf_text
-        inx
-        ldy     #1
-:       lda     buf_filename,y
-        sta     buf_text,x
-        cpy     buf_filename
-        beq     :+
-        iny
-        inx
-        bne     :-              ; always
-:       stx     buf_text
-
-finish:
-        rts
-.endproc
-.endif
-
-;;; ============================================================
-;;; Set the `file_dialog_res::input_dirty_flag`
-;;; Flag is set if:
-;;; * Current text in active input field is case-sensitive match
-;;;   for the current path (if no selection), or current
-;;;   path+selected filename (if there is a selection).
-;;; The flag is used to control:
-;;; * Destination Cancel in file copy (alters how state is reset)
-;;; * How Return is handled in Selector (if set and no sel, ignore)
-
-.if !FD_EXTENDED
-
-.proc NotifyTextChangedF1
-        ldax    #buf_input1
-
-.else
-
-.proc NotifyTextChanged
-f2:     ldax    #buf_input2
-        jmp     common
-
-f1:     ldax    #buf_input1
-
-common:
-
-.endif
-        ptr := $08
-        stax    ptr
-
-        ;; Build full path (with seleciton or not) into `path_buf`
-        lda     selected_index
-        pha
-        bmi     compare_paths   ; no selection
-
-        tax
-        lda     file_list_index,x
-        and     #$7F            ; mask off "is folder?" bit
-        jsr     GetNthFilename
-        jsr     AppendToPathBuf
-        copy    #$FF, selected_index ; TODO: Remove?
-
-        ;; Compare with path buf
-        ;; NOTE: Case sensitive, since we're always comparing adjusted paths.
-compare_paths:
-        ldy     #0
-        lda     (ptr),y
-        cmp     path_buf
-        bne     no_match
-        tay
-:       lda     (ptr),y
-        cmp     path_buf,y
-        bne     no_match
-        dey
-        bne     :-
-
-        ;; Matched
-        lda     #0
-        beq     update_flag     ; always
-
-        ;; Did not match
-no_match:
-        lda     #$FF
-        FALL_THROUGH_TO update_flag
-
-update_flag:
-        sta     file_dialog_res::input_dirty_flag
-
-        ;; Restore selection following `AppendToPathBuf` call above.
-        pla
-        sta     selected_index
-        bmi     :+
-        jsr     StripPathBufSegment
-:       rts
-.endproc
-.if FD_EXTENDED
-NotifyTextChangedF1 := NotifyTextChanged::f1
-NotifyTextChangedF2 := NotifyTextChanged::f2
-.endif
+.endif ; FD_EXTENDED
 
 ;;; ============================================================
 
 .proc OnListSelectionChange
         jsr     UpdateDynamicButtons
-        jmp     HandleSelectionChange
+        rts
 .endproc
 
 ;;; ============================================================

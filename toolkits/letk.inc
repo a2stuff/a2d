@@ -27,11 +27,6 @@ max_length      .byte
 
 ;;; --------------------------------------------------
 
-;;; Set when the control's value has changed.
-dirty_flag      .byte
-
-;;; --------------------------------------------------
-
 ;;; Internal: Set when the IP in the control should blink.
 active_flag     .byte
 ;;; Internal: Position of the insertion point

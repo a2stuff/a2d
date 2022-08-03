@@ -314,8 +314,8 @@ dispatch_table:
         .addr   CmdRename
         .addr   CmdDuplicate
         .addr   CmdNoOp         ; --------
-        .addr   CmdCopyFile
-        .addr   CmdDeleteFile
+        .addr   CmdCopySelection
+        .addr   CmdDeleteSelection
         .addr   CmdNoOp         ; --------
         .addr   CmdQuit
         ASSERT_ADDRESS_TABLE_SIZE menu2_start, ::kMenuSizeFile
@@ -1799,7 +1799,7 @@ END_PROC_AT
 
 ;;; ============================================================
 
-.proc CmdCopyFile
+.proc CmdCopySelection
         lda     #kDynamicRoutineFileDialog
         jsr     LoadDynamicRoutine
         bpl     :+
@@ -1815,9 +1815,9 @@ END_PROC_AT
         pha                     ; A = dialog result
         lda     #kDynamicRoutineRestore5000
         jsr     RestoreDynamicRoutine
-        jsr     PushPointers   ; $06 = src / $08 = dst
-        jsr     ClearUpdates ; following picker dialog close
-        jsr     PopPointers    ; $06 = src / $08 = dst
+        jsr     PushPointers    ; $06 = dst
+        jsr     ClearUpdates    ; following picker dialog close
+        jsr     PopPointers     ; $06 = dst
         pla                     ; A = dialog result
         bpl     :+
         rts
@@ -1825,24 +1825,8 @@ END_PROC_AT
         ;; --------------------------------------------------
         ;; Try the copy
 
-        ;; Validate
-        src := $06
-        ldax    src
-        jsr     CopyToSrcPath
-
-        dst := $08
-        ldax    dst
-        jsr     CopyToDstPath
-
-        jsr     CheckRecursion
-        jne     ShowAlert
-        jsr     CheckBadReplacement
-        jne     ShowAlert
-
-        ;; Copy
-        jsr     CopyPathsFromPtrsToBufsAndSplitName
-        jsr     DoCopyFile
-        ;; result is ignored; update regardless
+        param_call CopyPtr1ToBuf, path_buf3
+        jsr     DoCopySelection
 
         ;; --------------------------------------------------
         ;; Update windows with results
@@ -1900,65 +1884,6 @@ END_PROC_AT
         sbc     filename_buf
         sta     path_buf4
         dec     path_buf4
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc CmdDeleteFile
-        lda     #kDynamicRoutineFileDialog
-        jsr     LoadDynamicRoutine
-        bpl     :+
-        rts
-:
-        lda     #kDynamicRoutineFileDelete
-        jsr     LoadDynamicRoutine
-        bpl     :+
-        rts
-:
-        lda     #$01
-        jsr     file_dialog__Exec
-        pha                     ; A = dialog result
-        lda     #kDynamicRoutineRestore5000
-        jsr     RestoreDynamicRoutine
-        jsr     PushPointers   ; $06 is path
-        jsr     ClearUpdates ; following picker dialog close
-        jsr     PopPointers    ; $06 is path
-        pla                     ; A = dialog result
-        bpl     :+
-        rts
-:
-        ;; --------------------------------------------------
-        ;; Try the delete
-
-        param_call CopyPtr1ToBuf, path_buf3
-
-        jsr     DoDeleteFile
-        cmp     #kOperationCanceled
-        bne     :+
-        rts
-:
-
-        ;; --------------------------------------------------
-        ;; Update windows with results
-
-        copy    #$80, validate_windows_flag
-
-        ;; Strip filename, so it's just the containing path.
-        param_call FindLastPathSegment, path_buf3
-        sty     path_buf3
-
-        ;; See if there's a window we should activate later.
-        param_call FindWindowForPath, path_buf3
-        pha                     ; save for later
-
-        ;; Update cached used/free for all same-volume windows
-        param_call UpdateUsedFreeViaPath, path_buf3
-
-        ;; Select/refresh window if there was one
-        pla
-        jne     SelectAndRefreshWindowOrClose
-
         rts
 .endproc
 
@@ -3134,6 +3059,8 @@ CmdLock         := DoLock
 ;;; ============================================================
 
 .proc CmdDeleteSelection
+        ;; Re-uses 'drop on trash' logic which handles updating
+        ;; the source window.
         copy    trash_icon_num, drag_drop_params::icon
         jmp     process_drop
 .endproc
@@ -5656,6 +5583,10 @@ disable:lda     #MGTK::disableitem_disable
 
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdDuplicate
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdCopyFile
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdDeleteFile
         jsr     DisableMenuItem
 
         rts
@@ -10264,21 +10195,20 @@ next:   dec     step
 ;;;  1 = selector actions (all)   - A$9000,L$1000
 ;;;  2 = common file dialog       - A$5000,L$2000
 ;;;  3 = part of copy file        - A$7000,L$ 800
-;;;  4 = part of delete file      - A$7000,L$ 800
-;;;  5 = selector add/edit        - L$7000,L$ 800
-;;;  6 = restore 1                - A$5000,L$2800 (restore $5000...$77FF)
-;;;  7 = restore 2                - A$9000,L$1000 (restore $9000...$9FFF)
+;;;  4 = selector add/edit        - L$7000,L$ 800
+;;;  5 = restore 1                - A$5000,L$2800 (restore $5000...$77FF)
+;;;  6 = restore 2                - A$9000,L$1000 (restore $9000...$9FFF)
 ;;;
 ;;; Routines 1-5 need appropriate "restore routines" applied when complete.
 
 .proc LoadDynamicRoutineImpl
 
-kNumOverlays = 8
+kNumOverlays = 7
 
 pos_table:
         .dword  kOverlayFormatEraseOffset
         .dword  kOverlayShortcutPickOffset, kOverlayFileDialogOffset
-        .dword  kOverlayFileCopyOffset, kOverlayFileDeleteOffset
+        .dword  kOverlayFileCopyOffset
         .dword  kOverlayShortcutEditOffset, kOverlayDeskTopRestore1Offset
         .dword  kOverlayDeskTopRestore2Offset
         ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
@@ -10286,7 +10216,7 @@ pos_table:
 len_table:
         .word   kOverlayFormatEraseLength
         .word   kOverlayShortcutPickLength, kOverlayFileDialogLength
-        .word   kOverlayFileCopyLength, kOverlayFileDeleteLength
+        .word   kOverlayFileCopyLength
         .word   kOverlayShortcutEditLength, kOverlayDeskTopRestore1Length
         .word   kOverlayDeskTopRestore2Length
         ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
@@ -10294,7 +10224,7 @@ len_table:
 addr_table:
         .word   kOverlayFormatEraseAddress
         .word   kOverlayShortcutPickAddress, kOverlayFileDialogAddress
-        .word   kOverlayFileCopyAddress, kOverlayFileDeleteAddress
+        .word   kOverlayFileCopyAddress
         .word   kOverlayShortcutEditAddress, kOverlayDeskTopRestore1Address
         .word   kOverlayDeskTopRestore2Address
         ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
@@ -10473,7 +10403,6 @@ done:   rts
         show            = 3
         locked          = 4     ; confirm deletion of locked file
         close           = 5
-        trash           = 6     ; open, but from trash path ???
 .endenum
 
 ;;; --------------------------------------------------
@@ -10503,20 +10432,6 @@ DoCopyToRAM2:
 .proc FinishOperation
         return  #kOperationSucceeded
 .endproc
-
-DoDeleteFile:
-        copy    #0, operation_flags ; copy/delete
-        tsx
-        stx     stack_stash
-        jsr     PrepCallbacksForSizeOrCount
-        lda     #DeleteDialogLifecycle::open
-        jsr     DoDeleteDialogPhase
-        jsr     SizeOrCountProcessSelectedFile
-        jsr     InvokeOperationConfirmCallback
-        jsr     PrepCallbacksForDelete
-        jsr     DeleteProcessSelectedFile
-        jsr     InvokeOperationCompleteCallback
-        jmp     FinishOperation
 
 DoCopyToRAM:
         copy    #$80, run_flag
@@ -10557,6 +10472,14 @@ DoUnlock:
         jmp     L8FEB
 .endproc
 
+.proc DoCopySelection
+        copy    #0, operation_flags ; copy/delete
+        copy    #$40, copy_delete_flags ; target is `path_buf3`
+        jmp     L8FEB
+.endproc
+
+;;; Used for drag/drop copy as well as deleting selection
+;;; (if `drag_drop_params::result` equals `trash_icon_num`)
 .proc DoDrop
         lda     drag_drop_params::result
         cmp     trash_icon_num
@@ -10564,7 +10487,7 @@ DoUnlock:
         lda     #$80
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 :       lda     #$00
-        sta     delete_flag
+        sta     copy_delete_flags
         copy    #0, operation_flags ; copy/delete
         jmp     L8FEB
 .endproc
@@ -10584,8 +10507,9 @@ L8FEB:  tsx
         jne     BeginOperation  ; copy/delete
 
         ;; Copy or delete
-        bit     delete_flag
-        bpl     compute_target_prefix ; copy
+        bit     copy_delete_flags
+        bvs     common                ; path target
+        bpl     compute_target_prefix ; drop target
 
         ;; --------------------------------------------------
         ;; Delete - are selected icons volumes?
@@ -10637,20 +10561,24 @@ common:
         bit     operation_flags
         bvs     @size
         bmi     @lock
-        bit     delete_flag
+        bit     copy_delete_flags
         bmi     @trash
 
-        ;; Copy or Move - compare src/dst paths (etc)
-        lda     selected_window_id
+        ;; Copy or Move?
+        bvc     @drop
+        ;; Target is path - always a copy
+        lda     #0
+        beq     @store      ; always
+        ;; Drag/drop - compare src/dst paths (etc)
+@drop:  lda     selected_window_id
         jsr     GetWindowPath
         stax    $08
         jsr     CheckMoveOrCopy
-        sta     move_flag
+@store: sta     move_flag
         jsr     DoCopyDialogPhase
         jmp     iterate_selection
 
-@trash: lda     #DeleteDialogLifecycle::trash
-        jsr     DoDeleteDialogPhase
+@trash: jsr     DoDeleteDialogPhase
         jmp     iterate_selection
 
 @lock:  jsr     DoLockDialogPhase
@@ -10665,7 +10593,7 @@ perform:
         bit     operation_flags
         bvs     @size
         bmi     @lock
-        bit     delete_flag
+        bit     copy_delete_flags
         bmi     @trash
         jsr     PrepCallbacksForCopy
         jmp     iterate_selection
@@ -10697,7 +10625,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         bit     operation_flags
         bmi     @lock_or_size
-        bit     delete_flag
+        bit     copy_delete_flags
         bmi     :+
 
         jsr     CopyProcessSelectedFile
@@ -10722,7 +10650,7 @@ just_size_and_count:
         ;; Just enumerate files...
         bit     operation_flags
         bmi     :+
-        bit     delete_flag
+        bit     copy_delete_flags
         bmi     :+
 
         ;; But if copying, validate the target.
@@ -10746,7 +10674,7 @@ next_icon:
         inc     do_op_flag
         bit     operation_flags
         bmi     @lock_or_size
-        bit     delete_flag
+        bit     copy_delete_flags
         bpl     not_trash
 
 @lock_or_size:
@@ -10761,7 +10689,7 @@ finish: jsr     InvokeOperationCompleteCallback
 .endproc
 
 .endscope ; operations
-        DoDeleteFile := operations::DoDeleteFile
+        DoCopySelection := operations::DoCopySelection
         DoCopyToRAM := operations::DoCopyToRAM
         DoCopyFile := operations::DoCopyFile
         DoLock := operations::DoLock
@@ -10800,8 +10728,10 @@ stack_stash:
 operation_flags:
         .byte   0
 
-        ;; high bit set = delete, clear = copy
-delete_flag:
+        ;; bit 7 set = delete, clear = copy
+        ;; bit 6 set = target is `drag_drop_params::result`
+        ;;       clear = target is `path_buf3`
+copy_delete_flags:
         .byte   0
 
         ;; high bit set = move, clear = copy
@@ -11906,16 +11836,16 @@ file_entry_buf          .res    .sizeof(FileEntry)
 
 ;;; ============================================================
 
+op_jt1: jmp     (op_jt_addr1)
+op_jt2: jmp     (op_jt_addr2)
+op_jt3: jmp     (op_jt_addr3)
+
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
 op_jt_addrs:
 op_jt_addr1:  .addr   CopyProcessDirectoryEntry     ; defaults are for copy
 op_jt_addr2:  .addr   copy_pop_directory
 op_jt_addr3:  .addr   DoNothing
-
-op_jt1: jmp     (op_jt_addr1)
-op_jt2: jmp     (op_jt_addr2)
-op_jt3: jmp     (op_jt_addr3)
 
         ;; overlayed indirect jump table
         kOpJTAddrsSize = 6
@@ -12779,7 +12709,7 @@ a_path: .addr   src_path_buf
 .endparams
 
 .proc DoDeleteDialogPhase
-        sta     delete_dialog_params::phase
+        copy    #DeleteDialogLifecycle::open, delete_dialog_params::phase
         copy16  #DeleteDialogConfirmCallback, operation_confirm_callback
         copy16  #DeleteDialogEnumerationCallback, operation_enumeration_callback
         jsr     RunDeleteDialogProc
@@ -13846,8 +13776,6 @@ dialog_param_addr:
         copy16  dialog_proc_table,x, @jump_addr
 
         lda     #0
-        sta     input1_dirty_flag
-        sta     input2_dirty_flag
         sta     has_input_field_flag
         sta     format_erase_overlay_flag
         sta     cursor_ibeam_flag
@@ -14449,14 +14377,9 @@ GetSizeDialogProc::do_count := *
         ldy     #delete_dialog_params::phase - delete_dialog_params
         lda     (ptr),y         ; phase
 
-        cmp     #DeleteDialogLifecycle::trash
-        beq     do_open
-
         ;; --------------------------------------------------
         cmp     #DeleteDialogLifecycle::open
     IF_EQ
-DeleteDialogProc::do_open := *
-        sta     delete_flag     ; non-zero if trash (vs. delete)
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_jump DrawDialogTitle, aux::str_delete_title
@@ -14469,12 +14392,7 @@ DeleteDialogProc::do_open := *
         copy16in (ptr),y, file_count
         jsr     SetPortForDialogWindow
 
-        lda     delete_flag
-      IF_NE
-        param_call DrawDialogLabel, 4, aux::str_ok_empty
-      ELSE
         param_call DrawDialogLabel, 4, aux::str_delete_ok
-      END_IF
         jmp     DrawFileCountWithSuffix
     END_IF
 
@@ -14531,9 +14449,6 @@ DeleteDialogProc::do_open := *
         ;; DeleteDialogLifecycle::close
         jsr     ClosePromptDialog
         jmp     SetCursorPointer ; when closing dialog
-
-delete_flag:                    ; set if trash, clear if delete
-        .byte   0
 .endproc
 
 ;;; ============================================================

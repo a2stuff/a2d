@@ -247,10 +247,9 @@ _segoffset .set 0
 ;;; Dynamically loaded overlays
         DEFSEG OverlayFormatErase,  $0800, $1100
         DEFSEG OverlayShortcutPick, $9000, $0B00
-        DEFSEG OverlayFileDialog,   $5000, $1200
-        DEFSEG OverlayFileCopy,     $7000, $0200
-        DEFSEG OverlayFileDelete,   $7000, $0100
-        DEFSEG OverlayShortcutEdit, $7000, $0500
+        DEFSEG OverlayFileDialog,   $5000, $1100
+        DEFSEG OverlayFileCopy,     $7000, $0100
+        DEFSEG OverlayShortcutEdit, $7000, $0400
 
 ;;; These pseudo-overlays restore DeskTop after overlays are used
 

@@ -123,10 +123,9 @@ kDynamicRoutineFormatErase      = 0
 kDynamicRoutineSelector1        = 1
 kDynamicRoutineFileDialog       = 2
 kDynamicRoutineFileCopy         = 3
-kDynamicRoutineFileDelete       = 4
-kDynamicRoutineSelector2        = 5
-kDynamicRoutineRestore5000      = 6
-kDynamicRoutineRestore9000      = 7
+kDynamicRoutineSelector2        = 4
+kDynamicRoutineRestore5000      = 5
+kDynamicRoutineRestore9000      = 6
 
 ;;; ============================================================
 ;;; Results from JUMP_TABLE_SHOW_ALERT / JUMP_TABLE_SHOW_ALERT_OPTIONS

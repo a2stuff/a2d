@@ -48,5 +48,4 @@
         .include "ovl_selector_pick.s" ; Selector (1/2) @ $9000-$9FFF
         .include "ovl_file_dialog.s"   ; File Dialog    @ $5000-$6FFF
         .include "ovl_file_copy.s"     ; File Copy      @ $7000-$77FF
-        .include "ovl_file_delete.s"   ; File Delete    @ $7000-$77FF
         .include "ovl_selector_edit.s" ; Selector (2/2) @ $7000-$77FF
