@@ -56,7 +56,7 @@ finish: jsr     file_dialog::ReadDir
 :
         copy    #kSelectorMaxNameLength, file_dialog_res::line_edit_f2::max_length
         jsr     file_dialog::LineEditInit
-        jsr     file_dialog::Activate
+        jsr     file_dialog::LineEditActivate
 
         jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
@@ -170,7 +170,7 @@ jt_entry_name:
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
 
-        jsr     file_dialog::Deactivate
+        jsr     file_dialog::LineEditDeactivate
 
         ;; Install name field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_entry_name, file_dialog::jump_table
@@ -214,8 +214,8 @@ found_slash:
 :       sty     path_buf1
 
 finish: copy    #$80, file_dialog_res::allow_all_chars_flag
-        jsr     file_dialog::Update ; string may have changed
-        jmp     file_dialog::Activate
+        jsr     file_dialog::LineEditUpdate ; string may have changed
+        jmp     file_dialog::LineEditActivate
 .endproc
 
 ;;; ============================================================
@@ -274,7 +274,7 @@ found:  cpy     #2
 ;;; ============================================================
 
 .proc HandleCancelName
-        jsr     file_dialog::Deactivate
+        jsr     file_dialog::LineEditDeactivate
 
         ;; install pathname field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_pathname, file_dialog::jump_table
@@ -287,7 +287,7 @@ found:  cpy     #2
         lda     input1_dirty_flag
         sta     file_dialog_res::input_dirty_flag
 
-        jmp     file_dialog::Activate
+        jmp     file_dialog::LineEditActivate
 .endproc
 
 ;;; ============================================================

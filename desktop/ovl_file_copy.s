@@ -21,7 +21,7 @@
         jsr     file_dialog::PrepPath
         copy    #kMaxPathLength, file_dialog_res::line_edit_f2::max_length
         jsr     file_dialog::LineEditInit
-        jsr     file_dialog::Activate
+        jsr     file_dialog::LineEditActivate
 
         jmp     file_dialog::EventLoop
 .endproc
@@ -63,7 +63,7 @@ jt_destination_filename:
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
 
-        jsr     file_dialog::Deactivate
+        jsr     file_dialog::LineEditDeactivate
 
         ;; install destination field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_destination_filename, file_dialog::jump_table
@@ -110,8 +110,8 @@ jt_destination_filename:
         bne     :-
 :       sty     path_buf1
 
-done:   jsr     file_dialog::Update ; string changed
-        jsr     file_dialog::Activate
+done:   jsr     file_dialog::LineEditUpdate ; string changed
+        jsr     file_dialog::LineEditActivate
 
         ;; Twiddle flags
         lda     file_dialog_res::input_dirty_flag
@@ -159,7 +159,7 @@ saved_src_index:
 ;;; ============================================================
 
 .proc HandleCancelDestination
-        jsr     file_dialog::Deactivate
+        jsr     file_dialog::LineEditDeactivate
 
         ;; install source field handlers
         COPY_BYTES file_dialog::kJumpTableSize, jt_source_filename, file_dialog::jump_table
@@ -182,7 +182,7 @@ saved_src_index:
         ;; If selection is "dirty", do this...
         jsr     file_dialog::DeviceOnLine
         jsr     file_dialog::UpdateListFromPath
-        jmp     file_dialog::Activate
+        jmp     file_dialog::LineEditActivate
 
         ;; Otherwise do this...
 L726D:  lda     file_dialog::path_buf
@@ -200,7 +200,7 @@ L7281:  jsr     file_dialog::ReadDir
 
 L7289:  jsr     file_dialog::SetSelectionAndUpdateList ; A = selection
         jsr     file_dialog::UpdateDiskName
-        jmp     file_dialog::Activate
+        jmp     file_dialog::LineEditActivate
 .endproc
 
 ;;; ============================================================

@@ -154,7 +154,7 @@ listbox_disabled_flag:  ; Set when the listbox is not active
 ;;; ============================================================
 
 .proc EventLoop
-        jsr     Idle
+        jsr     LineEditIdle
         jsr     YieldLoop
         MGTK_CALL MGTK::GetEvent, event_params
 
@@ -458,8 +458,8 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 
         jsr     PrepPath
-        jsr     Update          ; string changed
-        jsr     Activate        ; move IP to end
+        jsr     LineEditUpdate   ; string changed
+        jsr     LineEditActivate ; move IP to end
 
         jmp     UpdateListFromPath
 .endproc
@@ -477,8 +477,8 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         jsr     DeviceOnLine
 
         jsr     PrepPath
-        jsr     Update          ; string changed
-        jsr     Activate        ; move IP to end
+        jsr     LineEditUpdate   ; string changed
+        jsr     LineEditActivate ; move IP to end
 
         jmp     UpdateListFromPath
 .endproc
@@ -556,8 +556,8 @@ no:     sec
         jsr     StripPathBufSegment
 
         jsr     PrepPath
-        jsr     Update          ; string changed
-        jsr     Activate        ; move IP to end
+        jsr     LineEditUpdate   ; string changed
+        jsr     LineEditActivate ; move IP to end
 
         jsr     UpdateListFromPath
 
@@ -601,7 +601,7 @@ ret:    rts
         jcc     key_meta_digit
 :
         ;; Delegate to active line edit
-        jsr     Key
+        jsr     LineEditKey
 
     ELSE
         ;; --------------------------------------------------
@@ -636,7 +636,7 @@ ret:    rts
         jsr     IsPathChar
         bcs     ignore
       END_IF
-allow:  jsr     Key
+allow:  jsr     LineEditKey
 ignore:
     END_IF
 
@@ -1884,12 +1884,12 @@ f2__Click := f2::Click
 ;;; Alias table - replaces jump table in hookable version
 
 PrepPath        := PrepPathF1
-Idle            := f1::Idle
-Activate        := f1::Activate
-Deactivate      := f1::Deactivate
-Key             := f1::Key
-Click           := f1::Click
-Update          := f1::Update
+LineEditIdle            := f1::Idle
+LineEditActivate        := f1::Activate
+LineEditDeactivate      := f1::Deactivate
+LineEditKey             := f1::Key
+LineEditClick           := f1::Click
+LineEditUpdate          := f1::Update
 
 .else
 
@@ -1902,17 +1902,17 @@ HandleOk:             jmp     0
 HandleCancel:         jmp     0
         .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
 
-Idle:
+LineEditIdle:
         bit     focus_in_input2_flag
         jpl     f1::Idle
         jmp     f2::Idle
 
-Activate:
+LineEditActivate:
         bit     focus_in_input2_flag
         jpl     f1::Activate
         jmp     f2::Activate
 
-Deactivate:
+LineEditDeactivate:
         bit     focus_in_input2_flag
         jpl     f1::Deactivate
         jmp     f2::Deactivate
@@ -1922,17 +1922,17 @@ PrepPath:
         jpl     PrepPathF1
         jmp     PrepPathF2
 
-Key:
+LineEditKey:
         bit     focus_in_input2_flag
         jpl     f1::Key
         jmp     f2::Key
 
-Click:
+LineEditClick:
         bit     focus_in_input2_flag
         jpl     f1::Click
         jmp     f2::Click
 
-Update:
+LineEditUpdate:
         bit     focus_in_input2_flag
         jpl     f1::Update
         jmp     f2::Update
@@ -1960,8 +1960,8 @@ Update:
         ;; And restore path
         jsr     StripPathBufSegment
 
-        jsr     Update          ; string changed
-        jsr     Activate        ; move IP to end
+        jsr     LineEditUpdate   ; string changed
+        jsr     LineEditActivate ; move IP to end
 
         rts
 .endproc

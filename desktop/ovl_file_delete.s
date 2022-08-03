@@ -18,7 +18,7 @@
         jsr     InstallCallbackTable
         jsr     file_dialog::PrepPath
         jsr     file_dialog::LineEditInit
-        jsr     file_dialog::Activate
+        jsr     file_dialog::LineEditActivate
 
         jmp     file_dialog::EventLoop
 .endproc

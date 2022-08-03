@@ -112,7 +112,7 @@ start:  jsr     OpenWindow
         jsr     InitInput
         jsr     PrepPath
         jsr     LineEditInit
-        jsr     Activate
+        jsr     LineEditActivate
         jmp     EventLoop
 
 ;;; ============================================================
