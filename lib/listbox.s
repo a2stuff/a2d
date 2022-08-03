@@ -486,7 +486,7 @@ skip:   lda     listbox::selected_index
         MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
 
         lda     listbox::num_items
-        beq     ret
+        beq     finish
 
         copy    #listbox::kRows, rows
         copy    listbox::winfo+MGTK::Winfo::vthumbpos, index
@@ -516,8 +516,9 @@ loop:   copy16  #kListItemTextOffsetX, listbox::item_pos+MGTK::Point::xcoord
         dec     rows
         bne     loop
 :
-        MGTK_CALL MGTK::ShowCursor
-ret:    rts
+
+finish: MGTK_CALL MGTK::ShowCursor
+        rts
 
 rows:   .byte   0
 .endproc
