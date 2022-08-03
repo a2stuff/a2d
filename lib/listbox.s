@@ -356,7 +356,7 @@ SetSelection:
 .proc SetListSelection
         pha                     ; A = new selection
         lda     listbox::selected_index
-        jsr     HighlightIndex
+        jsr     _HighlightIndex
         pla                     ; A = new selection
         sta     listbox::selected_index
         bmi     :+
@@ -377,9 +377,8 @@ SetSelection:
 ;;; ============================================================
 ;;; Input: A = row to highlight
 
-;;; TODO: make internal only
 .if LB_SELECTION_ENABLED
-.proc HighlightIndex
+.proc _HighlightIndex
         cmp     #0              ; don't assume caller has flags set
         bmi     ret
 
@@ -435,7 +434,6 @@ ret:    rts
 ;;; Input: A = row to ensure visible
 ;;; Assert: `listbox::winfo+MGTK::Winfo::vthumbpos` is set.
 
-;;; TODO: make internal only
 .if LB_SELECTION_ENABLED
 .proc _ScrollIntoView
         cmp     listbox::winfo+MGTK::Winfo::vthumbpos
@@ -461,7 +459,7 @@ ret:    rts
     END_IF
 
 skip:   lda     listbox::selected_index
-        jmp     HighlightIndex
+        jmp     _HighlightIndex
 .endproc
 .endif
 
@@ -507,7 +505,7 @@ loop:   copy16  #kListItemTextOffsetX, listbox::item_pos+MGTK::Point::xcoord
         lda     index
         cmp     listbox::selected_index
     IF_EQ
-        jsr     HighlightIndex
+        jsr     _HighlightIndex
     END_IF
 .endif
 

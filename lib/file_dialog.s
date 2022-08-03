@@ -737,10 +737,6 @@ file_char:
         bmi     done
         cmp     selected_index
         beq     done
-        pha
-        lda     selected_index
-        jsr     HighlightIndex
-        pla
         jmp     UpdateListSelection
 
 done:   return  #0
