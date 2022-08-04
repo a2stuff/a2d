@@ -1218,7 +1218,9 @@ END_SOUND_PROC
 
 .proc OnListSelectionChange
         lda     selected_index
-        jmp     PlayIndex
+        bpl     :+
+        rts
+:       jmp     PlayIndex
 .endproc
 
 ;;; ============================================================

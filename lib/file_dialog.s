@@ -1944,9 +1944,12 @@ LineEditUpdate:
 .proc HandleSelectionChange
         ptr := $06
 
-        ;; Find name of selected item
-        copy16  #file_names, ptr
         ldx     selected_index
+    IF_NS
+        ;; No selection - use path as-is.
+        jsr     PrepPath
+    ELSE
+        ;; Find name of selected item
         lda     file_list_index,x
         and     #$7F
         jsr     GetNthFilename
@@ -1959,6 +1962,7 @@ LineEditUpdate:
 
         ;; And restore path
         jsr     StripPathBufSegment
+    END_IF
 
         jsr     LineEditUpdate   ; string changed
         jsr     LineEditActivate ; move IP to end
@@ -2126,7 +2130,6 @@ NotifyTextChangedF2 := NotifyTextChanged::f2
 listbox::selected_index = selected_index
 
         .define LB_SELECTION_ENABLED 1
-        .define LB_CLEAR_SEL_ON_CLICK 0
         .include "../lib/listbox.s"
 
 ;;; ============================================================

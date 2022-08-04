@@ -1404,7 +1404,6 @@ CheckAlpha:
 .endscope
 
         .define LB_SELECTION_ENABLED 1
-        .define LB_CLEAR_SEL_ON_CLICK 1
         .include "../lib/listbox.s"
 
 ;;; ============================================================

@@ -835,5 +835,8 @@ Repeat for each list box:
     * If the control supports selection, selects the last item.
 * Hold down the mouse button on the scrollbar's up arrow or down arrow; verify that the scrolling continues as long as the button is held down.
 
-Repeat for each list boxes where the contents are dynamic:
+Repeat for each list box that supports selection:
+* Click on an item. Verify it is selected. Click on white space below the items (if possible). Verify that selection is cleared.
+
+Repeat for each list box where the contents are dynamic:
 * Populate the list so that the scrollbar is active. Scroll down by one row. Repopulate the list box so that the scrollbar is inactive. Verify that all expected items are shown, and hitting the Up Arrow key does nothing.

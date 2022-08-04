@@ -27,7 +27,6 @@
 ;;; * `SetPortForList` - called to set the port for the window
 ;;; Requires the following data definitions:
 ;;; * `LB_SELECTION_ENABLED` if selection is supported
-;;; * `LB_CLEAR_SEL_ON_CLICK` if selection should be cleared when whitespace is clicked
 ;;; ============================================================
 
 ;;; ============================================================
@@ -89,10 +88,9 @@
         ;; Validate
         cmp     listbox::num_items
     IF_GE
-.if LB_CLEAR_SEL_ON_CLICK
         lda     #$FF
         jsr     ListSetSelection
-.endif
+        jsr     OnListSelectionChange
         return  #$FF            ; not an item
     END_IF
 
