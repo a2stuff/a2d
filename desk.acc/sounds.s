@@ -350,7 +350,7 @@ grafport_win:       .tag    MGTK::GrafPort
         jsr     DrawWindow
 
         jsr     SearchForCurrent
-        jsr     SetListSelection
+        jsr     ListSetSelection
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -380,7 +380,7 @@ grafport_win:       .tag    MGTK::GrafPort
         lda     event_params::key
         jsr     IsListKey
     IF_EQ
-        jsr     HandleListKey
+        jsr     ListKey
         jmp     InputLoop
     END_IF
 
@@ -421,7 +421,7 @@ grafport_win:       .tag    MGTK::GrafPort
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
       IF_EQ
-        jsr     HandleListClick
+        jsr     ListClick
         jmp     InputLoop
       END_IF
     END_IF
@@ -557,7 +557,7 @@ grafport_win:       .tag    MGTK::GrafPort
         BTK_CALL BTK::Draw, ok_button_params
 
         ;; List Box
-        jmp     InitList
+        jmp     ListInit
 .endproc
 
 ;;; ============================================================

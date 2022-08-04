@@ -246,7 +246,7 @@ ret:    rts
         bmi     not_list
         bit     is_apple_click_flag
         bmi     ret             ; ignore except for Change Drive
-        jsr     HandleListClick
+        jsr     ListClick
         bmi     ret
         jsr     DetectDoubleClick
         bmi     ret
@@ -412,7 +412,7 @@ click_handler_hook:
 ;;; Inputs: A=index ($FF if none)
 .proc SetSelectionAndUpdateList
         sta     selected_index
-        jsr     InitList
+        jsr     ListInit
         jmp     UpdateDynamicButtons
 .endproc
 
@@ -575,7 +575,7 @@ ret:    rts
         jsr     IsListKey
       IF_EQ
         copy    #0, type_down_buf
-        jmp     HandleListKey
+        jmp     ListKey
       END_IF
     END_IF
 
@@ -741,7 +741,7 @@ file_char:
         bmi     done
         cmp     selected_index
         beq     done
-        jsr     SetListSelection
+        jsr     ListSetSelection
         jsr     UpdateDynamicButtons
         jmp     HandleSelectionChange
 
@@ -892,7 +892,7 @@ yes:    clc
 
 .proc ClearSelection
         lda     #$FF
-        jsr     SetListSelection
+        jsr     ListSetSelection
         jmp     UpdateDynamicButtons
 .endproc
 

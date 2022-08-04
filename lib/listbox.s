@@ -1,6 +1,12 @@
 ;;; ============================================================
 ;;; List Box Control
 ;;;
+;;; API:
+;;; * InitList - called to show the list
+;;; * HandleListClick, IsListKey, HandleListKey - handle events
+;;; * SetListSelection - update the selection
+;;; * SetListSize - update the scrollbar
+;;;
 ;;; Required includes:
 ;;; * lib/event_params.s
 ;;; * lib/drawstring.s
@@ -33,7 +39,11 @@
 ;;; * If `listbox::selected_index` is not none, that item will
 ;;;   be scrolled into view and highlighted.
 
-.proc InitList
+.scope listbox_impl
+
+;;; ============================================================
+
+.proc ListInit
         jsr     _EnableScrollbar
 .if LB_SELECTION_ENABLED
         lda     listbox::selected_index
@@ -52,7 +62,7 @@
 ;;; Output: Z=1/A=$00 on click on an item
 ;;;         N=1/A=$FF otherwise
 
-.proc HandleListClick
+.proc ListClick
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
@@ -81,7 +91,7 @@
     IF_GE
 .if LB_CLEAR_SEL_ON_CLICK
         lda     #$FF
-        jsr     SetListSelection
+        jsr     ListSetSelection
 .endif
         return  #$FF            ; not an item
     END_IF
@@ -89,7 +99,7 @@
         ;; Update selection (if different)
         cmp     listbox::selected_index
     IF_NE
-        jsr     SetListSelection
+        jsr     ListSetSelection
         jsr     OnListSelectionChange
     END_IF
 
@@ -268,7 +278,7 @@ ret:    rts
 ;;; will be handled. This handles scrolling and/or updating
 ;;; the selection.
 
-.proc HandleListKey
+.proc ListKey
         lda     listbox::num_items
         bne     :+
 ret:    rts
@@ -371,7 +381,7 @@ ret:    rts
 
 .if LB_SELECTION_ENABLED
 SetSelection:
-        jsr     SetListSelection
+        jsr     ListSetSelection
         jmp     OnListSelectionChange
 .endif
 .endproc
@@ -383,7 +393,7 @@ SetSelection:
 ;;; Note: Does not call `OnListSelectionChange`
 
 .if LB_SELECTION_ENABLED
-.proc SetListSelection
+.proc ListSetSelection
         pha                     ; A = new selection
         lda     listbox::selected_index
         jsr     _HighlightIndex
@@ -417,11 +427,11 @@ ret:    rts
 .endif
 
 ;;; ============================================================
-;;; Call to update `listbox::num_items` after `InitList` is called,
+;;; Call to update `listbox::num_items` after `ListInit` is called,
 ;;; to update the scrollbar alone. The list items will not be redrawn.
 ;;; This is useful if the list is populated asynchronously.
 
-.proc SetListSize
+.proc ListSetSize
         sta     listbox::num_items
         FALL_THROUGH_TO _EnableScrollbar
 .endproc
@@ -561,3 +571,15 @@ rows:   .byte   0
 .endproc
 
 ;;; ============================================================
+
+.endscope ; listbox_impl
+
+;;; "Exports"
+ListInit := listbox_impl::ListInit
+ListClick := listbox_impl::ListClick
+IsListKey := listbox_impl::IsListKey
+ListKey := listbox_impl::ListKey
+.if LB_SELECTION_ENABLED
+ListSetSelection := listbox_impl::ListSetSelection
+.endif
+ListSetSize := listbox_impl::ListSetSize

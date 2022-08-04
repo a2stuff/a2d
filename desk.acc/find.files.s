@@ -983,7 +983,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         MGTK_CALL MGTK::ShowCursor
 
         copy    #0, num_entries
-        jsr     InitList
+        jsr     ListInit
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -1022,7 +1022,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 
         jsr     IsListKey
     IF_EQ
-        jsr     HandleListKey
+        jsr     ListKey
         jmp     InputLoop
     END_IF
 
@@ -1109,13 +1109,13 @@ ignore: sec
         param_call JTRelay, JUMP_TABLE_CUR_WATCH
 
         copy    #0, num_entries
-        jsr     InitList
+        jsr     ListInit
         jsr     PrepDrawIncrementalResults
 
         ;; Do the search
         jsr     RecursiveCatalog::Start
         lda     num_entries
-        jsr     SetListSize     ; update scrollbar
+        jsr     ListSetSize     ; update scrollbar
 
         bit     cursor_ibeam_flag
     IF_PLUS
@@ -1138,7 +1138,7 @@ finish: jmp     InputLoop
         lda     findwindow_params::window_id
         cmp     #kResultsWindowID
     IF_EQ
-        jsr     HandleListClick
+        jsr     ListClick
         jmp     InputLoop
     END_IF
 

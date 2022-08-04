@@ -546,7 +546,7 @@ InitDialog:
         lda     LD5E0
         bne     :+
         jsr     GetAllBlockCounts
-:       jsr     InitList
+:       jsr     ListInit
         inc     LD5E0
 
         ;; Loop until there's a selection (or drive check)
@@ -574,7 +574,7 @@ LD687:  lda     current_drive_selection
         ;; Prepare for destination selection
         jsr     EnumerateDestinationDevices
         copy    #$80, selection_mode
-        jsr     InitList
+        jsr     ListInit
 
         ;; Loop until there's a selection (or drive check)
 LD6E6:  jsr     LD986
@@ -906,7 +906,7 @@ menu_offset_table:
         lda     event_params::key
         jsr     IsListKey
       IF_EQ
-        jsr     HandleListKey
+        jsr     ListKey
         return  #$FF
       END_IF
     END_IF
@@ -1013,7 +1013,7 @@ LDA7D:  copy    #0, checkitem_params::check
         cmp     #winfo_dialog::kWindowId
         beq     HandleDialogClick
         cmp     winfo_drive_select
-        jsr     HandleListClick
+        jsr     ListClick
         bmi     :+
         jsr     DetectDoubleClick
 :       rts
