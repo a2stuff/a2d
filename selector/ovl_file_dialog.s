@@ -43,6 +43,7 @@ pointer_cursor:
         .byte   PX(%0000110),PX(%0000000)
         .byte   PX(%0000011),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000)
+
         .byte   PX(%1100000),PX(%0000000)
         .byte   PX(%1110000),PX(%0000000)
         .byte   PX(%1111000),PX(%0000000)
@@ -50,11 +51,12 @@ pointer_cursor:
         .byte   PX(%1111110),PX(%0000000)
         .byte   PX(%1111111),PX(%0000000)
         .byte   PX(%1111111),PX(%1000000)
+        .byte   PX(%1111111),PX(%1000000)
         .byte   PX(%1111111),PX(%0000000)
         .byte   PX(%0001111),PX(%0000000)
-        .byte   PX(%0001111),PX(%0000000)
         .byte   PX(%0000111),PX(%1000000)
         .byte   PX(%0000111),PX(%1000000)
+
         .byte   1,1
 
 ibeam_cursor:
@@ -70,6 +72,7 @@ ibeam_cursor:
         .byte   PX(%0110001),PX(%1000000)
         .byte   PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000)
+
         .byte   PX(%0110001),PX(%1000000)
         .byte   PX(%1111011),PX(%1100000)
         .byte   PX(%0111111),PX(%1000000)
@@ -82,7 +85,8 @@ ibeam_cursor:
         .byte   PX(%1111011),PX(%1100000)
         .byte   PX(%0110001),PX(%1000000)
         .byte   PX(%0000000),PX(%0000000)
-        .byte   4, 5
+
+        .byte   4,5
 
 ;;; Text Input Field
 buf_text:       .res    68, 0

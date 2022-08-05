@@ -136,6 +136,7 @@ pointer_cursor:
         .byte   PX(%0000110),PX(%0000000)
         .byte   PX(%0000011),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000)
+
         .byte   PX(%1100000),PX(%0000000)
         .byte   PX(%1110000),PX(%0000000)
         .byte   PX(%1111000),PX(%0000000)
@@ -143,11 +144,12 @@ pointer_cursor:
         .byte   PX(%1111110),PX(%0000000)
         .byte   PX(%1111111),PX(%0000000)
         .byte   PX(%1111111),PX(%1000000)
+        .byte   PX(%1111111),PX(%1000000)
         .byte   PX(%1111111),PX(%0000000)
         .byte   PX(%0001111),PX(%0000000)
-        .byte   PX(%0001111),PX(%0000000)
         .byte   PX(%0000111),PX(%1000000)
         .byte   PX(%0000111),PX(%1000000)
+
         .byte   1,1
 
 ;;; Insertion Point
@@ -164,6 +166,7 @@ ibeam_cursor:
         .byte   PX(%0110001),PX(%1000000)
         .byte   PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000)
+
         .byte   PX(%0110001),PX(%1000000)
         .byte   PX(%1111011),PX(%1100000)
         .byte   PX(%0111111),PX(%1000000)
@@ -176,7 +179,8 @@ ibeam_cursor:
         .byte   PX(%1111011),PX(%1100000)
         .byte   PX(%0110001),PX(%1000000)
         .byte   PX(%0000000),PX(%0000000)
-        .byte   4, 5
+
+        .byte   4,5
 
 ;;; Watch
 watch_cursor:
@@ -192,6 +196,7 @@ watch_cursor:
         .byte   PX(%0011111),PX(%1100000)
         .byte   PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000)
+
         .byte   PX(%0011111),PX(%1100000)
         .byte   PX(%0111111),PX(%1110000)
         .byte   PX(%0111111),PX(%1110000)
@@ -204,7 +209,8 @@ watch_cursor:
         .byte   PX(%0111111),PX(%1110000)
         .byte   PX(%0011111),PX(%1100000)
         .byte   PX(%0000000),PX(%0000000)
-        .byte   5, 5
+
+        .byte   5,5
 
 .params scalemouse_params
 x_exponent:     .byte   1       ; MGTK default is x 2:1 and y 1:1
