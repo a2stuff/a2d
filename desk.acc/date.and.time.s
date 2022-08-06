@@ -66,8 +66,6 @@ stash_stack:  .byte   $00
 .proc SaveAndExit
         bit     dialog_result
     IF_NS
-        ;; ProDOS GP has the updated data, copy somewhere usable.
-        COPY_STRUCT DateTime, DATELO, write_buffer
         jsr     SaveDate
     END_IF
 
@@ -100,6 +98,9 @@ write_buffer:
         sizeof_write_buffer = * - write_buffer
 
 .proc SaveSettings
+        ;; ProDOS GP has the updated data, copy somewhere usable.
+        COPY_STRUCT DateTime, DATELO, write_buffer
+
         ;; Write to desktop current prefix
         ldax    #filename
         stax    open_params::pathname
