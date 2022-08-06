@@ -355,6 +355,10 @@ width   .word
         sta     len
 
         sub16   params::xcoord, pos + MGTK::Point::xcoord, params::xcoord
+    IF_MINUS
+        lda     #0
+        beq     set             ; always
+    END_IF
 
         ;; Iterate to find the position
         lda     #0
@@ -372,7 +376,7 @@ loop:   cmp16   tw_params::width, params::xcoord
         beq     loop            ; always
 :
         lda     tw_params::length
-        pha
+set:    pha
         jsr     _HideIP
         pla
         ldy     #LETK::LineEditRecord::ip_pos
