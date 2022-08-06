@@ -376,6 +376,7 @@
   * Launch DeskTop. Run the command. For the new name, enter the name of a volume in a different slot/drive. Verify that an alert shows, indicating that the name is in use.
   * Launch DeskTop. Run the command. For the new name, enter the name of the current disk in that slot/drive. Verify that you are not prompted for a new name.
   * Launch DeskTop. Run the command. Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
+  * Launch DeskTop. Run the command. Select an empty drive. Let the operation continue until it fails. Verify that an error message is shown.
   * Configure a system with at least 9 volumes. Launch DeskTop. Run the command. Select a volume in the third column. Click OK. Verify that the selection rect is fully erased.
   * Configure a system with 13 volumes, not counting /RAM. Launch DeskTop. Run the command. Verify that the boot device is excluded from the list so that only 12 devices are shown. Verify using the arrow keys that there aren't any overlapping volume entries.
 

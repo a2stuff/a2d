@@ -231,6 +231,7 @@ l10:    cmp     #ERR_WRITE_PROTECTED
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l11:    jsr     Bell
+        jsr     main::SetPortForDialogWindow
         param_call main::DrawDialogLabel, 6, aux::str_erasing_error
         jmp     l14
 
@@ -245,6 +246,7 @@ l12:    pha
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l13:    jsr     Bell
+        jsr     main::SetPortForDialogWindow
         param_call main::DrawDialogLabel, 6, aux::str_formatting_error
 l14:    jsr     main::PromptInputLoop
         bmi     l14             ; not done
@@ -301,6 +303,7 @@ l8:     cmp     #ERR_WRITE_PROTECTED
         jmp     l7              ; `kAlertResultTryAgain` = 0
 
 l9:     jsr     Bell
+        jsr     main::SetPortForDialogWindow
         param_call main::DrawDialogLabel, 6, aux::str_erasing_error
 l10:    jsr     main::PromptInputLoop
         bmi     l10             ; not done
