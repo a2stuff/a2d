@@ -11200,10 +11200,10 @@ append_size:
         bne     :-
 :       stx     buf
 
-        ;; TODO: Compose directly into `path_buf4`.
-        COPY_STRING buf, path_buf4
+        ;; TODO: Compose directly into `path_buf1`.
+        COPY_STRING buf, path_buf1
 
-        copy16  #path_buf4, get_info_dialog_params::a_str
+        copy16  #path_buf1, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
