@@ -11645,6 +11645,7 @@ assign: ldy     tmp_path_buf
         cpy     src_path_buf
         bcc     no_change       ; string is shorter, can't be a prefix
         beq     :+              ; same length, maybe a prefix
+        ldy     src_path_buf
         iny                     ; string is longer, but still need to ensure
         lda     (ptr),y         ; that the next path char is a '/'
         cmp     #'/'
