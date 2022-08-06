@@ -258,8 +258,8 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME rect_frame, kDialogWidth, kDialogHeight
 
         ;; For erasing parts of the window
-        DEFINE_RECT_SZ rect_erase_dialog_upper, 8, 20, kDialogWidth-16, kListBoxHeight + 11 ; under title to bottom of list
-        DEFINE_RECT_SZ rect_erase_dialog_lower, 8, 103, kDialogWidth-16, 42 ; bottom of list to bottom of dialog
+        DEFINE_RECT rect_erase_dialog_upper, 8, 20, kDialogWidth-8, 103 ; under title to bottom of buttons
+        DEFINE_RECT rect_erase_dialog_lower, 8, 103, kDialogWidth-8, kDialogHeight-8 ; top of buttons to bottom of dialog
 
         DEFINE_BUTTON ok_button_rec, winfo_dialog::kWindowId, res_string_button_ok, 350, 90
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
