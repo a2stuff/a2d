@@ -54,7 +54,10 @@
 * Run on system with realtime clock; verify that time shows in top-right of menu.
 
 * Open folder with new files. Use File > Get Info; verify dates after 1999 show correctly.
-* Open folder with new files. Use View > By Date; verify dates after 1999 show correctly.
+* Open folder with new files. Use View > by Date; verify dates after 1999 show correctly.
+
+* Open folder with zero files. Use View > by Name. Verify that there is no crash.
+* Open folder with one files. Use View > by Name. Verify that the entry paints correctly.
 
 * Open a window for a volume; open a window for a folder; close volume window; close folder window. Repeat 10 times to verify that the volume table doesn't have leaks.
 

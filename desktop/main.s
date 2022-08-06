@@ -8261,6 +8261,7 @@ ComputeIconsBBox        := ComputeIconsBBoxImpl::start
 .endproc
 
 ;;; ============================================================
+;;; Populates and sorts `cached_window_entry_list`.
 
 .proc SortRecords
         ptr := $06
@@ -8299,11 +8300,18 @@ scratch_space   := $804         ; can be used by comparison funcs
         bit     LCBANK1
         bit     LCBANK1
 
+        ;; This populates `cached_window_entry_list`, and is needed
+        ;; even if there is only one entry.
         ldx     num_records
+        beq     ret             ; skip if empty
 :       txa
         sta     cached_window_entry_list-1,x ; entries are 1-based
         dex
         bne     :-
+
+        lda     num_records
+        cmp     #2              ; can't sort < 2 records
+        bcc     ret
 
         ;; --------------------------------------------------
         ;; Selection sort
@@ -8359,7 +8367,7 @@ next:   inc     inner
         dec     outer
         bne     oloop
 
-        rts
+ret:    rts
 
 ;;; --------------------------------------------------
 ;;; Input: A = index in list being sorted
