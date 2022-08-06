@@ -200,6 +200,7 @@
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that LOCAL/DESKTOP.CONFIG is written to the startup disk.
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Shortcuts > Add a Shortcut, and create a new shortcut. When prompted to save to the system disk, select OK. Verify that LOCAL/SELECTOR.LIST is written to the startup disk.
 
+* Load DeskTop. Create a folder e.g. /RAM/F. File > Copy a File. Verify that the destination path is empty.
 * Load DeskTop. Create a folder e.g. /RAM/F. Try to copy the folder into itself using File > Copy a File. Verify that an error is shown.
 * Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to move it into itself by dragging. Verify that an error is shown.
 * Load DeskTop. Create a folder e.g. /RAM/F, and a sibling folder e.g. /RAM/B. Open the containing window, and the first folder itself. Select both folders, and try to move both into the first folder's window by dragging. Verify that an error is shown before any moves occur.

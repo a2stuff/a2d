@@ -13,6 +13,8 @@
 .proc Init
         copy    #$80, file_dialog::dual_inputs_flag
 
+        copy    #0, path_buf1
+
         jsr     file_dialog::OpenWindow
         jsr     DrawControls
         jsr     file_dialog::DeviceOnLine
