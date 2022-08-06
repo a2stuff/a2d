@@ -730,6 +730,10 @@ For DeskTop's Shortcuts > Add/Edit a Shortcut... file picker:
 * Select a file and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close are dimmed. Click Cancel. Verify that the buttons return to their previous state.
 * Select a folder and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close are dimmed. Click Cancel. Verify that the buttons return to their previous state.
 
+For DeskTop's Shortcut > Edit a Shortcut... file picker:
+* Create a shortcut not on the startup volume. Edit the shortcut. Verify that the file picker shows the shortcut target volume and file selected.
+* Create a shortcut on a removable volume. Eject the volume. Edit the shortcut. Verify that the file picker initializes to any available volume, and does not crash or show corrupted results.
+
 For DeskTop's File > Copy a File... file picker:
 * Select a file and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close remain active and initialize to the correct state based on the selection. Click Cancel. Verify that the buttons return to their previous state when selection is restored.
 

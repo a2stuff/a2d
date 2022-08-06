@@ -1184,22 +1184,12 @@ last:   .byte   0
 ;;; ============================================================
 
 .proc OpenDir
-.if !FD_EXTENDED
 retry:
-.endif
-        lda     #$00
-        sta     open_dir_flag
-.if FD_EXTENDED
-retry:
-.endif
         MLI_CALL OPEN, open_params
         beq     :+
+
         jsr     DeviceOnLine
-        jmp     ClearSelection
-.if !FD_EXTENDED
-        lda     #$FF
-.endif
-        sta     open_dir_flag
+        jsr     ClearSelection
         jmp     retry
 
 :       lda     open_params::ref_num
@@ -1207,19 +1197,13 @@ retry:
         sta     close_params::ref_num
         MLI_CALL READ, read_params
         beq     :+
+
         jsr     DeviceOnLine
         jsr     ClearSelection
-.if FD_EXTENDED
-        lda     #$FF
-        sta     open_dir_flag
-.endif
         jmp     retry
 
 :       rts
 .endproc
-
-open_dir_flag:
-        .byte   0
 
 ;;; ============================================================
 
@@ -1350,12 +1334,7 @@ close:  MLI_CALL CLOSE, close_params
         sta     num_file_names
 :       jsr     SortFileNames
         jsr     SetPtrAfterFilenames
-        lda     open_dir_flag
-        bpl     l9
-        sec
-        rts
-
-l9:     clc
+        clc
         rts
 
 next:   lda     d3
