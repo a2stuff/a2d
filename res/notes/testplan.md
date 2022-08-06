@@ -47,8 +47,6 @@
 
 * File > Quit - verify that there is no crash under ProDOS 8.
 
-* Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons.
-* Run on Laser 128, with a Floppy Emu. Select a volume icon. Special > Eject Disk. Verify that the Floppy Emu does not crash.
 * Run on system with realtime clock; verify that time shows in top-right of menu.
 
 * Open folder with new files. Use File > Get Info; verify dates after 1999 show correctly.
@@ -59,10 +57,6 @@
 
 * Open a window for a volume; open a window for a folder; close volume window; close folder window. Repeat 10 times to verify that the volume table doesn't have leaks.
 
-* Run DeskTop on a IIc+ from a 3.5" floppy on internal drive. Verify that the disk doesn't spin constantly.
-
-* Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, Floppy Emu); verify that all show up.
-
 * Verify that GS/OS volume name cases show correctly (e.g. ProDOS 2.5 disk).
 * Verify that GS/OS file name cases show correctly (e.g. ProDOS 2.5 disk).
 
@@ -71,22 +65,8 @@
   * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
 * Open two windows. Press Open-Apple+Solid-Apple+W. Verify that all windows close.
 
-* Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under DESK.ACC are copied to /RAM/DESKTOP/DESK.ACC.
-* Run DeskTop on a system with Slinky Ramdisk. Verify that subdirectories under DESK.ACC are copied to /RAM5/DESKTOP/DESK.ACC (or appropriate volume path).
 
 * Start DeskTop with a hard disk and a 5.25" floppy mounted. Remove the floppy, and double-click the floppy icon, and dismiss the "The volume cannot be found." dialog. Verify that the floppy icon disappears, and that no additional icons are added.
-
-* On an RGB system (IIgs, etc), go to Control Panel, check RGB Color. Verify that the display shows in color. Preview an image, and verify that the image shows in color and the DeskTop remains in color after exiting.
-* On an RGB system (IIgs, etc), go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Preview an image, and verify that the image shows in color and the DeskTop returns to monochrome after exiting.
-* On an IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop remains in color.
-* On an IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop resets to monochrome.
-
-* Put image file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify image is shown.
-* Put text file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify text is shown.
-* Put font file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify font is shown.
-
-* Put BASIC program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
-* Put System program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
 
 * Open a folder with no items. Verify window header says "0 Items"
 * Open a folder with only one item. Verify window header says "1 Item"
@@ -119,7 +99,6 @@
 
 * Launch DeskTop. Click on a volume icon. Hold Solid-Apple and click on a different volume icon. Verify that selection changes to the second icon.
 * Launch DeskTop. Open a volume containing files. Click on a file icon. Hold Solid-Apple and click on a different file icon. Verify that selection changes to the second icon.
-* Run on Laser 128. Launch DeskTop. Open a volume. Click on icons one by one. Verify selection changes from icon to icon, and isn't extended as if a Open-Apple key/button or Shift is down.
 
 * Launch DeskTop. Select two volume icons. Double-click one of the volume icons. Verify that two windows open.
 * Launch DeskTop. Open a window. Select two folder icons. Double-click one of the folder icons. Verify that two windows open.
@@ -130,12 +109,6 @@
 * Launch DeskTop. Open a window. Select a folder icon. Press Open-Apple+Solid-Apple+Down. Verify that the folder opens, and that the original window closes.
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+O. Verify that nothing happens.
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+Down. Verify that nothing happens.
-
-* Launch DeskTop. Open a window. Locate an executable BIN file icon. Double-click it. Verify that nothing happens.
-* Launch DeskTop. Open a window. Locate an executable BIN file icon. Hold Solid-Apple and double-click it. Verify that it executes.
-* Launch DeskTop. Open a window. Locate an executable BIN file icon. Select File > Open. Verify that it executes.
-* Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Open-Apple+O. Verify that it executes.
-* Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Solid-Apple+O. Verify that it executes.
 
 * Launch DeskTop. Try to move a file (drag on same volume) where there is not enough space to make a temporary copy. Verify that the error message says that the file is too large to move.
 * Launch DeskTop. Try to copy a file (drag to different volume) where there is not enough space to make the copy. Verify that the error message says that the file is too large to copy.
@@ -175,8 +148,6 @@
 * Launch DeskTop. Open a window containing folders and files. Open another window, for an empty volume. Drag an icon from the first to the second. Ensure no scrollbars activate in the target window.
 * Launch DeskTop. Open a window containing folders and files, with no scrollbars active. Open another window. Drag an icon from the first to the second. Ensure no scrollbars activate in the source window.
 
-* Set up multiple volumes (e.g. V1, V2, V3). Launch DeskTop. Use Shortcuts > Add a Shortcut... to add an shortcut on V2. Run Shortcuts > Edit a Shortcut... and select the added shortcut to edit it, which should init the dialog showing V2. Click Change Drive. Verify that the picker now shows V3.
-
 * Launch DeskTop. Open some windows. Special > Disk Copy. Quit back to DeskTop. Verify that the windows are restored.
 * Launch DeskTop. Close all windows. Special > Disk Copy. Quit back to DeskTop. Verify that no windows are restored.
 
@@ -196,8 +167,6 @@
 
 * Launch DeskTop. Create a sequence of nested folders approaching maximum path length, e.g. /RAM/ABCDEF123456789/ABCDEF123456789/ABCDEF123456789/ABCDEF12345. Try to copy a file into the folder. Verify that stray pixels do not appear in the top line of the screen.
 
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that LOCAL/DESKTOP.CONFIG is written to the startup disk.
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Shortcuts > Add a Shortcut, and create a new shortcut. When prompted to save to the system disk, select OK. Verify that LOCAL/SELECTOR.LIST is written to the startup disk.
 
 * Load DeskTop. Create a folder e.g. /RAM/F. File > Copy a File. Verify that the destination path is empty.
 * Load DeskTop. Create a folder e.g. /RAM/F. Try to copy the folder into itself using File > Copy a File. Verify that an error is shown.
@@ -221,11 +190,8 @@
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Drag a file from another volume (to copy it) into an open window. Verify that after a copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Drag a volume icon into an open window. Verify that after the copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
 
-* Load Selector. Put a disk in Slot 6, Drive 1. Startup > Slot 6. Verify that the system boots the disk. Repeat for all other slots with drives.
-
 * Launch DeskTop. Copy multiple selected files to another volume. Repeat the copy. When prompted to overwrite, alternate clicking Yes and No. Verify that the "Files remaining" count decreases to zero.
 * Launch DeskTop. Copy a folder containing multiple files to another volume. Repeat the copy. When prompted to overwrite, alternate clicking Yes and No. Verify that the "Files remaining" count decreases to zero.
-* Configure a IIgs system with ejectable disks. Launch DeskTop. Select the ejectable volume. Special > Eject Disk. Verify that an alert is not shown.
 
 * Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Insert disks A, B, C, D in drives starting at the highest slot first, e.g. S7D1, S7D2, S5D1, S5D2. Launch DeskTop. Verify that the disks appear in order A, B, C, D. Eject the disks, and wait for DeskTop to remove the icons. Pause the emulator, and reinsert the disks in the same drives. Un-pause the emulator. Verify that the disks appear on the DeskTop in the same order. Eject the disks again, pause, and insert the disks into the drives in reverse order (A in S5D2, etc). Un-pause the emulator. Verify that the disks appear in reverse order on the DeskTop.
 
@@ -239,9 +205,6 @@
 * Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. Special > Get Size. Verify that a "The specified path name is invalid." alert is not shown.
 
 * Launch DeskTop. Select a volume with more than 255 files in a folder (e.g. Total Replay). Special > Get Size. Verify that the count finishes.
-* Configure a system with a RAMCard of at least 1MB. On a physical volume, create a directory with a system file (e.g. BASIC.SYSTEM) and a subdirectory. In the subdirectory, create 256 normal files followed by a subdirectory (with some files) followed by more files. Then run the following tests:
-  * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at boot. Ensure DeskTop is set to copy to RAMCard on startup. Restart DeskTop. Verify that the directory is successfully copied.
-  * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at first use. Ensure DeskTop is set to copy to RAMCard on startup. Ensure DeskTop is set to launch Selector. Quit DeskTop. Launch Selector. Select the shortcut. Verify that the directory is successfully copied.
 
 * Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is dimmed but still selected.
 * Launch DeskTop. Double-click a volume. Verify that the volume icon is still selected.
@@ -296,11 +259,7 @@
   * File > Open, File > Get Info, File > Rename..., Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
 * Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
 * Launch DeskTop. Open a window. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
-* Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
 
-* Launch DeskTop. Create a shortcut, "menu and list" / "at boot". Create a second shortcut, "menu and list", "at first use". Create a third shortcut, "menu and list", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
-* Launch DeskTop. Create a shortcut, "list only" / "at boot". Create a second shortcut, "list only", "at first use". Create a third shortcut, "list only", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
-* Launch DeskTop. Delete all shortcuts. Create a shortcut, "list only" / "never". Edit the shortcut. Verify that it is still "list only" / "never". Change it to "menu and list", and click OK. Verify that it appears in the Shortcuts menu.
 
 * Launch DeskTop. Open 3 windows. Close the top one. Verify that the repaint is correct.
 * Launch DeskTop. Close all windows. Press an arrow key multiple times. Verify that only one volume icon is highlighted at a time.
@@ -329,40 +288,19 @@
 * Launch DeskTop. Open a window for a volume icon. Special > Check All Drives. Verify that all windows close, and that volume icons are correctly updated.
 
 * Launch DeskTop. Drag a file to a same-volume window so it is moved, not copied. Use File > Copy a File... to copy a file. Verify that the file is indeed copied, not moved.
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Drag a file to a same-volume window so it is moved. Configure a shortcut to copy to RAMCard "at first use". Invoke the shortcut. Verify that the shortcut's files were indeed copied, not moved.
 
 * Launch DeskTop. Open a window. Select a file icon. Apple > Control Panels. Verify that the previously selected file is no longer selected.
-* Launch DeskTop. Configure a shortcut with the target being a directory. Open a window. Select a file icon. Invoke the shortcut. Verify that the previously selected file is no longer selected.
-
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Selector. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in a directory, not the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Selector. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut set to Copy to RAMCard at first use. Invoke the shortcut. Verify that it correctly copies to the RAMCard and runs.
 
 * Launch DeskTop. Open a window containing many folders. Select up to 7 folders. File > Open. Verify that as windows continue to open, the originally selected folders don't mispaint on top of them. (This will be easier to observe in emulators with acceleration disabled.)
 
 * Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click in the window to clear selection. Click on a volume icon. Click elsewhere on the desktop. Verify the icon isn't mispainted.
 * Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click in the window to clear selection. Click on a volume icon. File > Rename.... Enter a new valid name, and click OK. Verify that no alert is shown.
 
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Modify a shortcut. Verify that no prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
-
-* Repeat the following cases with the Startup Options and Control Panel DAs, and the Date and Time DA (on a system without a real-time clock):
-  * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Launch the DA and modify a setting. Verify that no prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
-  * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and Modify a setting. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
-  * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and modify a setting. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
-
 * Launch DeskTop. Select a volume icon. File > Rename.... Enter the name of another volume. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Rename dialog is still showing.
 * Launch DeskTop. Open a window. Select a file icon. File > Rename.... Enter the name of file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Rename dialog is still showing.
 * Launch DeskTop. File > Copy a File.... Select a file, and click OK. Click OK without changing the destination name. Verify that an alert is shown. Click OK. Verify that the Copy a File dialog is still showing.
 * Launch DeskTop. File > Copy a File.... Replace the text of the first field with "ABC". Click OK. Verify that an alert is shown.
 * Launch DeskTop. Open a volume window. Open a folder window. Select the volume icon and rename it. Verify that neither window is closed, and volume window is renamed.
-
-* Launch DeskTop. Select a SYS file. Rename it to have a .SYSTEM suffix. Verify that it has an application (diamond and hand) icon, without moving.
-* Launch DeskTop. Select a SYS file. Rename it to not have a .SYSTEM suffix. Verify that it has a system (computer) icon, without moving.
-* Launch DeskTop. Select a TXT file. Rename it to have a .SHK suffix. Verify that it has an archive icon, without moving.
-* Launch DeskTop. Select a TXT file. Rename it to have a .BXY suffix. Verify that it has an archive icon, without moving.
-* Launch DeskTop. Select a TXT file. Rename it to have a .BNY suffix. Verify that it has an archive icon, without moving.
 
 * Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double click on B. Verify that the existing B window activates.
 
@@ -379,16 +317,11 @@
   * Configure a system with at least 9 volumes. Launch DeskTop. Run the command. Select a volume in the third column. Click OK. Verify that the selection rect is fully erased.
   * Configure a system with 13 volumes, not counting /RAM. Launch DeskTop. Run the command. Verify that the boot device is excluded from the list so that only 12 devices are shown. Verify using the arrow keys that there aren't any overlapping volume entries.
 
-* Configure a system with more than 2 drives on a SmartPort controller. Boot ProDOS 2.4 (any patch version). Launch DeskTop. Special > Format a Disk. Verify that correct device names are shown for the mirrored drives.
-* Configure a system with more than 2 drives on a SmartPort controller. Boot into ProDOS 2.0.1, 2.0.2, or 2.0.3. Launch DeskTop. Special > Format a Disk. Verify that correct device names are shown for the mirrored drives.
-
 * Launch DeskTop. Open a window. File > New Folder..., enter a unique name, OK. File > New Folder..., enter the same name, OK. Verify that an alert is shown. Dismiss the alert. Verify that the input field still has the previously typed name.
 
 * Launch DeskTop. Clear selection by closing all windows and clicking on the desktop. Press Apple+Down. Verify that nothing happens.
 
 * Launch DeskTop. Open a volume window. View > by Name. Open a separate volume window. Open a folder window. Open a sub-folder window. View > by Name. Close the window. Verify DeskTop doesn't crash.
-
-* Launch DeskTop. Create 8 shortcuts. Shortcuts > Add a Shortcut.... Check the first radio button. Pick a file, OK. Enter a name, OK. Verify that a relevant alert is shown.
 
 * Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
   * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Tab repeatedly. Verify that windows are activated and cycle in forward order (A, B, C, A, B, C, ...).
@@ -401,11 +334,6 @@
 * Launch DeskTop. Open a volume window. In the volume window, create a new folder F1 and open it. Note that the F1 icon is dimmed. In the volume window, create a new folder F2. Verify that the F1 icon is still dimmed.
 * Launch DeskTop. Open a volume window containing a file and a folder. Open the folder window. Drag the file to the folder icon (not the window). Verify that the folder window activates and updates to show the file.
 
-* Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume directory that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that file picker shows both the correct disk name and the correct full path.
-* Launch DeskTop. Shortcuts > Add a Shortcut.... Verify that if the pathname is a volume directory (e.g. "/VOL") and either "at boot" or "at first use" is selected, then an alert is shown when trying to commit the dialog.
-
-* Configure a system with a RAMCard, and ensure DeskTop is configured to copy itself to RAMCard on start. Launch DeskTop. Open the RAM Disk volume. Open the Desktop folder. Apple > Control Panels. Drag Desk.Acc from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.
-
 * Launch DeskTop. Open a volume window. Select two files. File > Duplicate.... Leave the filename unchanged and click OK. Verify that an alert is shown, but the dialog is not dismissed. Change the name and click OK. Verify that a prompt is shown for the second file.
 * Launch DeskTop. Open a volume window. Select two files. File > Duplicate.... Change the filename to the name of another file in the directory and click OK. Verify that an alert is shown, but the dialog is not dismissed. Change the name and click OK. Verify that a prompt is shown for the second file.
 
@@ -415,20 +343,6 @@
   * Use keys to click on a menu. Without holding the button down, move over the menu items. Verify that the menu does not spontaneously close.
   * Use keys to double-click on an icon. Verify it opens.
 
-* Configure a IIgs via the system control panel to have a RAM disk:
-  * Launch DeskTop. Verify that the Ram5 volume is shown with a RAMDisk icon.
-  * Configure DeskTop to copy to RAMCard on startup, and restart. Verify it is copied to /RAM5.
-
-* Launch DeskTop. Try to copy files including a GS/OS forked file in the selection. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
-* Launch DeskTop. Try to copy files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
-* Launch DeskTop. Try to delete files including a GS/OS forked file in the selection. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
-* Launch DeskTop. Try to delete files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted. Note that non-empty directories will fail to be deleted.
-* Launch DeskTop. Using drag/drop, try to copy or move a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
-* Launch DeskTop. Using drag/drop, try to copy a volume containing a GS/OS forked file and other files, where the destination window is visible. When an alert is shown, click OK. Verify that the destination window are updated.
-* Launch DeskTop. Using File > Copy a File..., try to copy a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
-* Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click Cancel. Verify that the source window is not updated.
-* Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the source window is updated.
-* Launch DeskTop. Using File > Delete a File..., try to delete a GS/OS forked file, where the containing window is visible. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the containing window is updated.
 
 * Repeat the following:
   * For these permutations:
@@ -492,6 +406,126 @@
 * Launch DeskTop. Open two volume windows. Click in the inactive window without selecting any icons. Verify that the window activates and the volume icon is selected.
 * Launch DeskTop. Open a volume window. Click on the desktop to clear selection. Click in an empty area within the window. Verify that the volume icon is selected.
 * Launch DeskTop. Open a volume window. Select a file icon. Click in an empty area within the window. Verify that the volume icon is selected.
+
+## Shortcuts
+
+* Set up multiple volumes (e.g. V1, V2, V3). Launch DeskTop. Use Shortcuts > Add a Shortcut... to add an shortcut on V2. Run Shortcuts > Edit a Shortcut... and select the added shortcut to edit it, which should init the dialog showing V2. Click Change Drive. Verify that the picker now shows V3.
+
+* Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
+
+* Launch DeskTop. Create a shortcut, "menu and list" / "at boot". Create a second shortcut, "menu and list", "at first use". Create a third shortcut, "menu and list", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
+* Launch DeskTop. Create a shortcut, "list only" / "at boot". Create a second shortcut, "list only", "at first use". Create a third shortcut, "list only", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
+* Launch DeskTop. Delete all shortcuts. Create a shortcut, "list only" / "never". Edit the shortcut. Verify that it is still "list only" / "never". Change it to "menu and list", and click OK. Verify that it appears in the Shortcuts menu.
+
+* Launch DeskTop. Configure a shortcut with the target being a directory. Open a window. Select a file icon. Invoke the shortcut. Verify that the previously selected file is no longer selected.
+
+* Launch DeskTop. Create 8 shortcuts. Shortcuts > Add a Shortcut.... Check the first radio button. Pick a file, OK. Enter a name, OK. Verify that a relevant alert is shown.
+
+* Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume directory that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that file picker shows both the correct disk name and the correct full path.
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Verify that if the pathname is a volume directory (e.g. "/VOL") and either "at boot" or "at first use" is selected, then an alert is shown when trying to commit the dialog.
+
+
+
+## File Types
+
+* Put image file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify image is shown.
+* Put text file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify text is shown.
+* Put font file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify font is shown.
+
+* Put BASIC program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
+* Put System program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
+
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Double-click it. Verify that nothing happens.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Hold Solid-Apple and double-click it. Verify that it executes.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Select File > Open. Verify that it executes.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Open-Apple+O. Verify that it executes.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Solid-Apple+O. Verify that it executes.
+
+* Launch DeskTop. Select a SYS file. Rename it to have a .SYSTEM suffix. Verify that it has an application (diamond and hand) icon, without moving.
+* Launch DeskTop. Select a SYS file. Rename it to not have a .SYSTEM suffix. Verify that it has a system (computer) icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to have a .SHK suffix. Verify that it has an archive icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to have a .BXY suffix. Verify that it has an archive icon, without moving.
+* Launch DeskTop. Select a TXT file. Rename it to have a .BNY suffix. Verify that it has an archive icon, without moving.
+
+* Launch DeskTop. Try to copy files including a GS/OS forked file in the selection. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
+* Launch DeskTop. Try to copy files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
+* Launch DeskTop. Try to delete files including a GS/OS forked file in the selection. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
+* Launch DeskTop. Try to delete files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted. Note that non-empty directories will fail to be deleted.
+* Launch DeskTop. Using drag/drop, try to copy or move a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
+* Launch DeskTop. Using drag/drop, try to copy a volume containing a GS/OS forked file and other files, where the destination window is visible. When an alert is shown, click OK. Verify that the destination window are updated.
+* Launch DeskTop. Using File > Copy a File..., try to copy a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
+* Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click Cancel. Verify that the source window is not updated.
+* Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the source window is updated.
+* Launch DeskTop. Using File > Delete a File..., try to delete a GS/OS forked file, where the containing window is visible. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the containing window is updated.
+
+
+## Hardware Configurations
+
+### RAM Expansions
+
+The following tests all require:
+* A RAM disk such as RAMWorks (and a ProDOS driver) or a "Slinky" memory expansion card.
+* Configuring DeskTop to install itself to the RAMCard on boot. This is the default but can be controlled using the Startup Options control panel.
+
+* Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under DESK.ACC are copied to /RAM/DESKTOP/DESK.ACC.
+* Run DeskTop on a system with Slinky Ramdisk. Verify that subdirectories under DESK.ACC are copied to /RAM5/DESKTOP/DESK.ACC (or appropriate volume path).
+
+* Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that LOCAL/DESKTOP.CONFIG is written to the startup disk.
+* Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Shortcuts > Add a Shortcut, and create a new shortcut. When prompted to save to the system disk, select OK. Verify that LOCAL/SELECTOR.LIST is written to the startup disk.
+
+* Configure a system with a RAMCard of at least 1MB. On a physical volume, create a directory with a system file (e.g. BASIC.SYSTEM) and a subdirectory. In the subdirectory, create 256 normal files followed by a subdirectory (with some files) followed by more files. Then run the following tests:
+  * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at boot. Ensure DeskTop is set to copy to RAMCard on startup. Restart DeskTop. Verify that the directory is successfully copied.
+  * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at first use. Ensure DeskTop is set to copy to RAMCard on startup. Ensure DeskTop is set to launch Selector. Quit DeskTop. Launch Selector. Select the shortcut. Verify that the directory is successfully copied.
+
+* Launch DeskTop, ensure it copies itself to RAMCard. Drag a file to a same-volume window so it is moved. Configure a shortcut to copy to RAMCard "at first use". Invoke the shortcut. Verify that the shortcut's files were indeed copied, not moved.
+
+* Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Selector. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
+* Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in a directory, not the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Selector. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
+* Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut set to Copy to RAMCard at first use. Invoke the shortcut. Verify that it correctly copies to the RAMCard and runs.
+
+* Launch DeskTop, ensure it copies itself to RAMCard. Modify a shortcut. Verify that no prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
+* Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
+* Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
+
+* Repeat the following cases with the Startup Options and Control Panel DAs, and the Date and Time DA (on a system without a real-time clock):
+  * Launch DeskTop, ensure it copies itself to RAMCard. Launch the DA and modify a setting. Verify that no prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
+  * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and Modify a setting. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
+  * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and modify a setting. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
+
+* Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple > Control Panels. Drag Desk.Acc from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.
+
+### SmartPort
+
+* Configure a system with more than 2 drives on a SmartPort controller. Boot ProDOS 2.4 (any patch version). Launch DeskTop. Special > Format a Disk. Verify that correct device names are shown for the mirrored drives.
+* Configure a system with more than 2 drives on a SmartPort controller. Boot into ProDOS 2.0.1, 2.0.2, or 2.0.3. Launch DeskTop. Special > Format a Disk. Verify that correct device names are shown for the mirrored drives.
+* Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, Floppy Emu); verify that all show up.
+
+### RGB Display
+
+* On an RGB system (IIgs, etc), go to Control Panel, check RGB Color. Verify that the display shows in color. Preview an image, and verify that the image shows in color and the DeskTop remains in color after exiting.
+* On an RGB system (IIgs, etc), go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Preview an image, and verify that the image shows in color and the DeskTop returns to monochrome after exiting.
+
+### Apple IIgs
+
+* On an IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop remains in color.
+* On an IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop resets to monochrome.
+
+* Configure a IIgs system with ejectable disks. Launch DeskTop. Select the ejectable volume. Special > Eject Disk. Verify that an alert is not shown.
+
+* Configure a IIgs via the system control panel to have a RAM disk:
+  * Launch DeskTop. Verify that the Ram5 volume is shown with a RAMDisk icon.
+  * Configure DeskTop to copy to RAMCard on startup, and restart. Verify it is copied to /RAM5.
+
+### Apple IIc+
+
+* Run DeskTop on a IIc+ from a 3.5" floppy on internal drive. Verify that the disk doesn't spin constantly.
+
+### Laser 128
+
+* Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons.
+* Run on Laser 128, with a Floppy Emu. Select a volume icon. Special > Eject Disk. Verify that the Floppy Emu does not crash.
+* Run on Laser 128. Launch DeskTop. Open a volume. Click on icons one by one. Verify selection changes from icon to icon, and isn't extended as if a Open-Apple key/button or Shift is down.
+
 
 # Preview
 
@@ -598,6 +632,8 @@ Image File:
 * Create a set of nested directories, 21 levels deep or more (e.g. `/VOL/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D`). Launch DeskTop and open the volume. Apple > Find Files. Enter a search term (e.g. `*`) and click Search. Verify that the DA doesn't crash. (Not all files will be found, though.)
 
 # Selector
+
+* Load Selector. Put a disk in Slot 6, Drive 1. Startup > Slot 6. Verify that the system boots the disk. Repeat for all other slots with drives.
 
 * Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.
 * Launch Selector, invoke DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
