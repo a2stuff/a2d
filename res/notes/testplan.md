@@ -18,14 +18,12 @@
 * Move a file by dragging - same volume - target is volume icon.
 * Move a file by dragging - same volume - target is folder icon.
 
-* Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
-  * Copy a file by dragging - same volume - target is window, using modifier.
-  * Copy a file by dragging - same volume - target is volume icon, using modifier.
-  * Copy a file by dragging - same volume - target is folder icon, using modifier.
+* Copy a file by dragging - same volume - target is window, holding Solid-Apple.
+* Copy a file by dragging - same volume - target is volume icon, holding Solid-Apple.
+* Copy a file by dragging - same volume - target is folder icon, holding Solid-Apple.
 
 * Copy a file by dragging - different volume - target is window.
 * Copy a file by dragging - different volume - target is volume icon.
-* Copy a file by dragging - different volume - target is folder icon.
 
 * Open a volume, open a folder, close the just volume window; re-open the volume, re-open the folder, ensure the previous window is activated.
 
@@ -65,7 +63,8 @@
 
 * Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, Floppy Emu); verify that all show up.
 
-* Verify that GS/OS filename cases show correctly (e.g. ProDOS 2.5 disk).
+* Verify that GS/OS volume name cases show correctly (e.g. ProDOS 2.5 disk).
+* Verify that GS/OS file name cases show correctly (e.g. ProDOS 2.5 disk).
 
 * Open two windows. Click the close box on the active window. Verify that only the active window closes.
 * Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
@@ -103,7 +102,7 @@
 * Repeat the following cases with these modifiers: Open-Apple, Shift (on a IIgs), Shift (on a Platinum IIe):
   * Launch DeskTop. Click on a volume icon. Hold modifier and click a different volume icon. Verify that selection is extended.
   * Launch DeskTop. Select two volume icons. Hold modifier and click on the desktop, not on an icon. Verify that selection is not cleared.
-  * Launch DeskTop. Select one or more volume icons. Hold modifier and click a volume icon. Verify that it is deselected.
+  * Launch DeskTop. Select one or more volume icons. Hold modifier and click a selected volume icon. Verify that it is deselected.
   * Launch DeskTop. Hold modifier and double-click on a non-selected volume icon. Verify that it highlights then unhighlights, and does not open.
   * Launch DeskTop. Select a volume icon. Hold modifier and double-click the selected volume icon. Verify that it unhighlights then highlights, and does not open.
   * Launch DeskTop. Select a volume icon. Hold modifier down and drag a selection rectangle around another volume icon. Verify that both are selected.
@@ -111,10 +110,10 @@
   * Launch DeskTop. Open a volume containing files. Select two file icons. Hold modifier and click on the window, not on an icon. Verify that selection is not cleared.
   * Launch DeskTop. Open a window. Select an icon. Hold modifier and double-click an empty spot in the window (not on an icon). Verify that the selection is not cleared.
   * Launch DeskTop. Open a window. Select an icon. Hold modifier down and drag a selection rectangle around another icon. Verify that both are selected.
-  * Launch DeskTop. Open a window. Select one or more file icons. Hold modifier and click a file icon. Verify that it is deselected.
+  * Launch DeskTop. Open a window. Select one or more file icons. Hold modifier and click a selected file icon. Verify that it is deselected.
   * Launch DeskTop. Open a window. Hold modifier and double-click on a non-selected file icon. Verify that it highlights then unhighlights, and does not open.
   * Launch DeskTop. Open a window. Select a file icon. Hold modifier and double-click the selected file icon. Verify that it unhighlights then highlights, and does not open.
-  * Launch DeskTop. Open a volume window. Hold modifier, and drag-select icons in the window. Release the modifier. Verify that the volume icon is no longer selected. Click an empty area in the window to clear selection. Verify that the selection clears.
+  * Launch DeskTop. Open a volume window. Hold modifier, and drag-select icons in the window. Release the modifier. Verify that the volume icon is no longer selected. Click an empty area in the window to clear selection. Verify that the selection in the window clears, and that the volume icon becomes selected.
   * Launch DeskTop. Open a volume window with many icons. Click on a file icon to select it. Modifier-click the icon to deselect it. Drag-select on the desktop covering a large area. Verify that no file icons are erroneously painted.
   * Launch DeskTop. Open a volume window with many icons. Modifier-click on a file icon to select it. Drag-select on the desktop covering a large area. Verify that no file icons are erroneously painted.
 
@@ -133,7 +132,7 @@
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+Down. Verify that nothing happens.
 
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Double-click it. Verify that nothing happens.
-* Launch DeskTop. Open a window. Locate an executable BIN file icon. Hold Solid-Apple and double-click it. Verify that nothing happens.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Hold Solid-Apple and double-click it. Verify that it executes.
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Select File > Open. Verify that it executes.
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Open-Apple+O. Verify that it executes.
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Solid-Apple+O. Verify that it executes.
@@ -166,7 +165,7 @@
 * Launch DeskTop. Open a folder using Apple menu (e.g. Control Panels) or a shortcut. Verify that the used/free numbers are non-zero.
 * Launch DeskTop. Open a subdirectory folder. Quit and relaunch DeskTop. Verify that the used/free numbers in the restored window are non-zero.
 
-* Launch DeskTop. Open a folder containing subfolders. Select all the icons in the folder. Double-click one of the subfolders. Verify that the selection is retained in the parent window. Position the child window over top of the parent so it overlaps some of the icons. Close the child window. Verify that the parent window correctly shows only the previously opened folder as highlighted.
+* Launch DeskTop. Open a folder containing subfolders. Select all the icons in the folder. Double-click one of the subfolders. Verify that the selection is not retained in the parent window. Position the child window over top of the parent so it overlaps some of the icons. Close the child window. Verify that the parent window correctly shows only the previously opened folder as highlighted.
 
 * Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the obscured part of the folder. Verify the folder doesn't highlight.
 * Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the visible part of the folder. Verify the folder highlights but doesn't render past window bounds.
@@ -211,18 +210,16 @@
 * Load DeskTop. Create a folder, and a file within the folder with the same name as the folder, and another file (e.g. /RAM/F and /RAM/F/F and /RAM/F/B). Select both files and try to move them into the parent folder using drag and drop. Verify that an error is shown before any files are moved.
 
 * Load DeskTop. Open a volume. Adjust the window size so that horizontal and vertical scrolling is required. Scroll to the bottom-right. Quit DeskTop, reload. Verify that the window size was restored correctly.
-* Load DeskTop. Open a volume. Quit DeskTop, reload. Verify that the volume window was restored, and that the volume icon is marked open. Close the volume window. Verify that the volume icon is no longer marked open.
-
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Shortcuts > Add a Shortcut.... Create a shortcut, click OK. Verify that when the "Do you want to save the new list on the system disk?" warning appears that the desktop volume icons repaint.
+* Load DeskTop. Open a volume. Quit DeskTop, reload. Verify that the volume window was restored, and that the volume icon is dimmed. Close the volume window. Verify that the volume icon is no longer dimmed.
 
 * Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. /HD. Launch DeskTop. Open the startup volume. Apple > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
 
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Try opening volumes/folders until there are less than 8 windows but more than 127 icons. Verify that the "A window must be closed..." dialog has no Cancel button.
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Verify that 127 icons can be shown.
-* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. File > New Folder. Verify that a warning is shown and the window is closed. Repeat, with multiple windows open. Verify that everything repaints correctly, and that no volume or folder icon incorrectly displays as opened.
-* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Use File > Copy a File to copy a file into a directory represented by an open window. Verify that after the copy, a warning is shown, the window is closed, and that no volume or folder icon incorrectly displays as opened.
-* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Drag a file from another volume (to copy it) into an open window. Verify that after a copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as opened.
-* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Drag a volume icon into an open window. Verify that after the copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as opened.
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. File > New Folder. Verify that a warning is shown and the window is closed. Repeat, with multiple windows open. Verify that everything repaints correctly, and that no volume or folder icon incorrectly displays as dimmed.
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Use File > Copy a File to copy a file into a directory represented by an open window. Verify that after the copy, a warning is shown, the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Drag a file from another volume (to copy it) into an open window. Verify that after a copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Drag a volume icon into an open window. Verify that after the copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
 
 * Load Selector. Put a disk in Slot 6, Drive 1. Startup > Slot 6. Verify that the system boots the disk. Repeat for all other slots with drives.
 
@@ -237,7 +234,7 @@
 
 * Launch DeskTop. Open a window. File > Quit. Launch DeskTop again. Ensure the window is restored. Try to drag-select volume icons. Verify that they are selected.
 
-* Launch DeskTop. Select a volume icon, where the volume contains no files. Special > Get Size. Verify that numbers are shown (0) for number of files and size used.
+* Launch DeskTop. Select a volume icon, where the volume contains no files. Special > Get Size. Verify that numbers are shown (0) for number of files and space used.
 * Launch DeskTop. Select a file icon. Special > Get Size. Verify that the size shown is correct. Select a directory. Special > Get Size, and dismiss. Now select the original file icon again, and Special > Get Size. Verify that the size shown is still correct.
 * Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. Special > Get Size. Verify that a "The specified path name is invalid." alert is not shown.
 
@@ -246,9 +243,9 @@
   * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at boot. Ensure DeskTop is set to copy to RAMCard on startup. Restart DeskTop. Verify that the directory is successfully copied.
   * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at first use. Ensure DeskTop is set to copy to RAMCard on startup. Ensure DeskTop is set to launch Selector. Quit DeskTop. Launch Selector. Select the shortcut. Verify that the directory is successfully copied.
 
-* Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is still selected.
+* Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is dimmed but still selected.
 * Launch DeskTop. Double-click a volume. Verify that the volume icon is still selected.
-* Launch DeskTop. Select a folder. File > Open. Verify that the folder icon is no longer selected.
+* Launch DeskTop. Select a folder. File > Open. Verify that the folder icon is dimmed but no longer selected.
 * Launch DeskTop. Double-click a folder. Verify that the folder icon is no longer selected.
 * Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Select the folder. File > Open. Verify that the folder icon is no longer selected.
 * Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Double-click the folder. Verify that the folder icon is no longer selected.
@@ -298,7 +295,7 @@
   * File > Duplicate... is enabled.
   * File > Open, File > Get Info, File > Rename..., Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
 * Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
-* Launch DeskTop. Open a windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
+* Launch DeskTop. Open a window. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
 
 * Launch DeskTop. Create a shortcut, "menu and list" / "at boot". Create a second shortcut, "menu and list", "at first use". Create a third shortcut, "menu and list", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
@@ -314,7 +311,7 @@
   * Launch DeskTop. Open a window with at least two icons. Select the first icon. Obscure the window. Press the right arrow key. Verify that the icons don't appear on the desktop.
   * Launch DeskTop. Open a window with icons. Obscure the window. File > Select All icon. Verify that the icons don't appear on the desktop.
   * Launch DeskTop. Open a window with icons. File > Select All icon. Obscure the window. Click on the desktop to clear selection. Verify that the icons don't appear on the desktop.
-  * Launch DeskTop. Open a window with folder icons. Open a second window from one of the folders. Verify that the folder icon in the first window is shaded. Obscure the first window. Close the second window. Verify that the folder icon doesn't appear on the desktop.
+  * Launch DeskTop. Open a window with folder icons. Open a second window from one of the folders. Verify that the folder icon in the first window is dimmed. Obscure the first window. Close the second window. Verify that the folder icon doesn't appear on the desktop.
   * Launch DeskTop. Open a window with icons. Select (but don't open) a folder. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
   * Launch DeskTop. Open a window with icons. Select (but don't open) a folder containing 127 icons. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
   * Launch DeskTop. Open a window. Obscure the window. File > New Folder, enter a name, OK. Verify that the folder icon doesn't appear on the desktop.
@@ -322,6 +319,7 @@
   * Launch DeskTop. Open two windows with icons. Obscure one window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
   * Launch DeskTop. Open two windows with icons. Activate a window, View > by Name, and then obscure the window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
   * Launch DeskTop. Open a window with icons. Select an icon. Obscure the window. File > Rename..., enter a new name, OK. Verify that the icon does not paint on the desktop.
+
 * Launch DeskTop. Open a window. Try to drag the window so that the title bar is behind the menu bar. Verify that the window ends up positioned partially behind the menu bar.
 * Launch DeskTop. Open two windows. Drag them both so their title bars are partially behind the menu bar. Apple+Tab between the windows. Verify that the title bars do not mispaint on top of the menu bar.
 
@@ -356,8 +354,8 @@
 
 * Launch DeskTop. Select a volume icon. File > Rename.... Enter the name of another volume. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Rename dialog is still showing.
 * Launch DeskTop. Open a window. Select a file icon. File > Rename.... Enter the name of file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Rename dialog is still showing.
-* Launch DeskTop. File > Copy a File.... Select a file, and click OK. Click OK without changing the destination name. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Copy a File dialog is still showing.
-* Launch DeskTop. File > Copy a File.... Replace the text of the first field with "ABC". Click OK. Verify that the second field is initialized to a valid path.
+* Launch DeskTop. File > Copy a File.... Select a file, and click OK. Click OK without changing the destination name. Verify that an alert is shown. Click OK. Verify that the Copy a File dialog is still showing.
+* Launch DeskTop. File > Copy a File.... Replace the text of the first field with "ABC". Click OK. Verify that an alert is shown.
 * Launch DeskTop. Open a volume window. Open a folder window. Select the volume icon and rename it. Verify that neither window is closed, and volume window is renamed.
 
 * Launch DeskTop. Select a SYS file. Rename it to have a .SYSTEM suffix. Verify that it has an application (diamond and hand) icon, without moving.
@@ -399,8 +397,8 @@
   * On a IIgs: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Shift+Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
   * On a Platinum IIe: Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Shift+Tab repeatedly. Verify that windows are activated cycle in reverse order (B, A, C, B, A, C, ...).
 
-* Launch DeskTop. Open a volume window containing a folder. Open the folder window. Note that the folder icon is shaded. Close the volume window. Open the volume window again. Verify that the folder icon is shaded.
-* Launch DeskTop. Open a volume window. In the volume window, create a new folder F1 and open it. Note that the F1 icon is shaded. In the volume window, create a new folder F2. Verify that the F1 icon is still shaded.
+* Launch DeskTop. Open a volume window containing a folder. Open the folder window. Note that the folder icon is dimmed. Close the volume window. Open the volume window again. Verify that the folder icon is dimmed.
+* Launch DeskTop. Open a volume window. In the volume window, create a new folder F1 and open it. Note that the F1 icon is dimmed. In the volume window, create a new folder F2. Verify that the F1 icon is still dimmed.
 * Launch DeskTop. Open a volume window containing a file and a folder. Open the folder window. Drag the file to the folder icon (not the window). Verify that the folder window activates and updates to show the file.
 
 * Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume directory that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that file picker shows both the correct disk name and the correct full path.
@@ -448,8 +446,6 @@
 
 * Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. Go back to the volume window, and drag the folder icon to the trash. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
 * Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. File > Delete a File.... Select the folder and click OK. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
-
-* Launch DeskTop. Open the Control Panel DA. Use the pattern editor to create a custom pattern, then click the desktop preview to apply it. Close the DA. Open the Control Panel DA. Click the right arrow above the desktop preview. Verify that the default checkerboard pattern is shown.
 
 * Close all windows. Start typing a volume name. Verify that a prefix-matching volume, or the subsequent volume (in lexicographic order) is selected, or the last volume (in lexicographic order).
 * Close all windows. Start typing a volume name. Move the moouse. Start typing another filename. Verify that the matching is reset.
@@ -521,6 +517,8 @@ Image File:
 
 # Desk Accessories
 
+* Launch DeskTop. Open the Control Panel DA. Use the pattern editor to create a custom pattern, then click the desktop preview to apply it. Close the DA. Open the Control Panel DA. Click the right arrow above the desktop preview. Verify that the default checkerboard pattern is shown.
+
 * Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
 
 * Run Apple > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen. Drag window back up. Verify the typed numbers were input.
@@ -543,7 +541,7 @@ Image File:
 * Configure a system with a realtime clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the current month and year correctly.
 * Configure a system without a realtime clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the build's release month and year correctly.
 
-* Open a folder containing directory. Open a folder by double-clicking. Apple > Sort Directory. Verify that files are sorted by type/name.
+* Open a folder containing a folder. Open the folder by double-clicking. Apple > Sort Directory. Verify that files are sorted by type/name.
 
 * Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
 
@@ -573,6 +571,10 @@ Image File:
     * Select no icon, select DA from Apple menu. Verify nothing happens.
     * Select volume icon, select DA from Apple menu. Verify nothing happens.
     * Select font file icon, select DA from Apple menu. Verify font is shown.
+* Put `SHOW.DUET.FILE` in `DESK.ACC`, start DeskTop.
+    * Select no icon, select DA from Apple menu. Verify nothing happens.
+    * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select Electric Duet file icon, select DA from Apple menu. Verify music is played.
 
 * Configure a device multiple drives connected to a Smartport controller on a higher slot, a single drive connected to a Smartport controller in a lower slot. Launch DeskTop, run the This Apple DA. Verify that the name on the lower slot doesn't have an extra character at the end.
 
@@ -638,8 +640,8 @@ Image File:
 * On a IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Special > Disk Copy.... Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that the display resets to monochrome.
 
 * Configure a system with a RAMDisk in Slot 3, e.g. using RAM.DRV.SYSTEM or RAMAUX.SYSTEM. Launch DeskTop. Special > Disk Copy.... Verify that the RAMDisk appears.
-* Configure a system with 9 or fewer drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is inactive.
-* Configure a system with 10 or more drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is active.
+* Configure a system with 8 or fewer drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is inactive.
+* Configure a system with 9 or more drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is active.
 
 # Alerts
 
@@ -669,8 +671,8 @@ Test the following in all of the above, except where called out specifically:
 * Verify that the device order (via clicking Change Drive or pressing Tab) matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
   * On a IIgs: Hold the Shift key when clicking Change Drive, or press Shift+Tab, and verify that the order is reversed.
   * On a Platinum IIe: Hold the Shift key when clicking Change Drive, or press Shift+Tab, and verify that the order is reversed.
-* Browse to a directory containing 8 files. Verify that the scrollbar is inactive.
-* Browse to a directory containing 9 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
+* Browse to a directory containing 7 files. Verify that the scrollbar is inactive.
+* Browse to a directory containing 8 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
 
 * Launch DeskTop. File > Copy a File.... Enter text in the first field. Enter text in the second field. Click in the middle of the text in the first field. Verify that the IP is positioned near the click. Click in the middle of the text in the second field. Verify that the IP is positioned near the click.
 
@@ -720,7 +722,7 @@ Repeat for each file picker:
 * Select a folder in the list box. Verify that the Open button is not dimmed.
 * Select a non-folder in the list box. Verify that the Open button is dimmed.
 * Navigate to the root directory of a disk. Verify that the Close button is dimmed.
-* Open a folder. Verify that the Close button is dimmed, that there is no selection, and that Open is dimmed. Hit Close until at the root. Verify that Close is dimmed.
+* Open a folder. Verify that the Close button is not dimmed, that there is no selection, and that Open is dimmed. Hit Close until at the root. Verify that Close is dimmed.
 * Verify that dimmed buttons don't respond to clicks.
 * Verify that dimmed buttons don't respond to keyboard shortcuts (Tab for Change Drive, Control+O for Open, Control+C for Close).
 
