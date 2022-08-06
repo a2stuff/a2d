@@ -517,7 +517,7 @@ Image File:
 
 * Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
 
-* Run Apple > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen.
+* Run Apple > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen. Drag window back up. Verify the typed numbers were input.
 
 * Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
 

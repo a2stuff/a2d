@@ -1157,6 +1157,7 @@ end:    jsr     DisplayBuffer1
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
+        lda     #$80            ; key was pressed
         rts
 :       MGTK_CALL MGTK::SetPort, grafport
 
