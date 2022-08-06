@@ -745,6 +745,9 @@ For Selector's File > Run a Program... file picker:
 * Move the mouse cursor over a folder in the list, and click to select it. Move the mouse cursor away from the click location but over the same item. Double-click. Verify that the folder opens with only the two clicks.
 * Move the mouse cursor over a folder in the list that is not selected. Double-click. Verify that the folder opens with only the two clicks.
 
+In DeskTop:
+* File > Copy a File..., pick a source and destination, let the copy complete. File > Delete a File... Verify that no second pathname is shown in the dialog under the first text field control.
+
 
 # Text Input Fields
 

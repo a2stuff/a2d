@@ -1850,7 +1850,10 @@ f2__Click := f2::Click
 .proc LineEditInit
         LETK_CALL LETK::Init, file_dialog_res::le_params_f1
 .if FD_EXTENDED
+        bit     dual_inputs_flag
+    IF_NS
         LETK_CALL LETK::Init, file_dialog_res::le_params_f2
+    END_IF
 .endif
         rts
 .endproc
