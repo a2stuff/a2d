@@ -567,7 +567,8 @@ entry_index_in_block:   .byte   0
 
         ;; Header size is next/prev blocks + a file entry
         .assert .sizeof(SubdirectoryHeader) = .sizeof(FileEntry) + 4, error, "incorrect struct size"
-:       jsr     ReadFileEntry   ; read the rest of the header
+:       copy    #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
+        jsr     ReadFileEntry          ; read the rest of the header
 
         copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
 

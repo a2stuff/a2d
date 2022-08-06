@@ -157,7 +157,8 @@ l1:     lda     open_params::ref_num
         beq     l2
         jmp     HandleErrorCode
 
-l2:     jsr     ReadFileEntry
+l2:     copy    #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
+        jsr     ReadFileEntry          ; read the rest of the header
 
         copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
 
