@@ -303,6 +303,7 @@
 
 * Launch DeskTop. Create a shortcut, "menu and list" / "at boot". Create a second shortcut, "menu and list", "at first use". Create a third shortcut, "menu and list", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
 * Launch DeskTop. Create a shortcut, "list only" / "at boot". Create a second shortcut, "list only", "at first use". Create a third shortcut, "list only", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
+* Launch DeskTop. Delete all shortcuts. Create a shortcut, "list only" / "never". Edit the shortcut. Verify that it is still "list only" / "never". Change it to "menu and list", and click OK. Verify that it appears in the Shortcuts menu.
 
 * Launch DeskTop. Open 3 windows. Close the top one. Verify that the repaint is correct.
 * Launch DeskTop. Close all windows. Press an arrow key multiple times. Verify that only one volume icon is highlighted at a time.

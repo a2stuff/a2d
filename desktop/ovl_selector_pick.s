@@ -209,7 +209,7 @@ l2:     lda     ($06),y
         bpl     l2
         ldx     #$01
         lda     selected_index
-        cmp     #kSelectorListNumPrimaryRunListEntries+1
+        cmp     #kSelectorListNumPrimaryRunListEntries
         bcc     l3
         inx
 l3:     clc
@@ -252,7 +252,7 @@ l6:     sta     copy_when
         jmp     CloseWindow
 
 l7:     lda     selected_index
-        cmp     #kSelectorListNumPrimaryRunListEntries+1
+        cmp     #kSelectorListNumPrimaryRunListEntries
         bcc     l10
         lda     which_run_list
         cmp     #2
