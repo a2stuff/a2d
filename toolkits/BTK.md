@@ -27,7 +27,13 @@ Draw the button, including frame and label, considering the disable state.
 Parameters:
 ```
 .addr       a_record        Address of the ButtonRecord
+.byte       update          If high bit is set, do not set port.
 ```
+
+The `update` flag is used as follows:
+* If not set, the control's window GrafPort is selected before any drawing is performed.
+* If set, the current GrafPort is used. This is useful when processing update events and the clipping rectangle should be maintained.
+
 
 ### Flash ($01)
 Flash the button label. Used after a keypress.

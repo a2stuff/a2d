@@ -737,7 +737,13 @@ ClearUpdates:
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
         bne     done            ; obscured
+        lda     #$80
+        sta     ok_button_params::update
+        sta     desktop_button_params::update
         jsr     DrawWindowAndEntries
+        lda     #$00
+        sta     ok_button_params::update
+        sta     desktop_button_params::update
         MGTK_CALL MGTK::EndUpdate
 done:   rts
 

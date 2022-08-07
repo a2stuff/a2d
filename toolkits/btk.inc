@@ -63,6 +63,7 @@ Track           = $03           ; Handle click within control bounds
 .macro DEFINE_BUTTON_PARAMS name, rec
 .params name
 record: .addr   rec
+update: .byte   0
 .endparams
 .endmacro
 

@@ -19,6 +19,7 @@
 
         ;; ButtonRecord address, in all param blocks
         a_record = command_data
+        update_flag = command_data + 2
 
 .proc Dispatch
 
@@ -53,6 +54,9 @@
         pla
         sta     params_addr
 
+        lda     #0
+        sta     update_flag     ; default for most commands
+
         ;; Copy param data to `command_data`
         pla                       ; A = command number
         tay
@@ -80,7 +84,7 @@ jump_table:
 
         ;; Must be non-zero
 length_table:
-        .byte   2               ; Draw
+        .byte   3               ; Draw
         .byte   2               ; Flash
         .byte   2               ; Hilite
         .byte   2               ; Track
@@ -105,12 +109,15 @@ port:           .addr   grafport_win
 grafport_win:   .tag    MGTK::GrafPort
 
 .proc _SetPort
+        bit     update_flag
+        bmi     ret
+
         ;; Set the port
         copy    window_id, getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; ASSERT: Not obscured
         MGTK_CALL MGTK::SetPort, grafport_win
-        rts
+ret:    rts
 .endproc
 
 
@@ -119,8 +126,10 @@ grafport_win:   .tag    MGTK::GrafPort
 .proc DrawImpl
         PARAM_BLOCK params, btk::command_data
 a_record  .addr
+update    .byte
         END_PARAM_BLOCK
         .assert a_record = params::a_record, error, "a_record must be first"
+        .assert update_flag = params::update, error, "param mismatch"
 
         jsr     _SetPort
 
