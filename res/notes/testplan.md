@@ -748,6 +748,9 @@ Repeat for each file picker:
 * Click a file in the list. Move the IP into an earlier part of the filename (e.g. "/VO|L/FILE"). Click on another file. Verify that the path is updated correctly. Repeat with other mean of changing the selected file: Up, Down, Apple+Up, Apple+Down, and holding Apple while typing a filename.
 * Click a folder in the list. Edit the path shown. Click Open. Verify that the selected folder opens and that the path is updated correctly.
 * Click a folder in the list. Click Open. Verify that the selected folder opens and that the path is updated correctly.
+* Repeat for each text field:
+  * Move the cursor over the text field. Verify that the cursor changes to an I-beam.
+  * Move the cursor off the text field. Verify that the cursor changes to a pointer.
 
 * Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, with the IP at the end. Click a folder. Verify that the path updates, with the file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
 * Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, with the IP at the end. Edit the file name. Click a folder. Verify that the path updates, with the edited file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the edited file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.

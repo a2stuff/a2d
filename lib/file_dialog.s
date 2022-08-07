@@ -193,28 +193,25 @@ l1:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-.if FD_EXTENDED
-        bit     focus_in_input2_flag
-        bmi     l2
-.endif
-
         MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
-        cmp     #MGTK::inrect_inside
-        bne     l4
+        .assert MGTK::inrect_inside <> 0, error, "enum mismatch"
+        bne     ibeam
 
 .if FD_EXTENDED
-        beq     l3
-l2:     MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
-        cmp     #MGTK::inrect_inside
-        bne     l4
-l3:
+        bit     dual_inputs_flag
+    IF_NS
+        MGTK_CALL MGTK::InRect, file_dialog_res::input2_rect
+        .assert MGTK::inrect_inside <> 0, error, "enum mismatch"
+        bne     ibeam
+    END_IF
 .endif
 
-        jsr     SetCursorIBeam
-        jmp     l5
-l4:
         jsr     UnsetCursorIBeam
-l5:     jmp     EventLoop
+        jmp     EventLoop
+
+ibeam:
+        jsr     SetCursorIBeam
+        jmp     EventLoop
 .endproc
 
 .if FD_EXTENDED
