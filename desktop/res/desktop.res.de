@@ -111,7 +111,7 @@
 .define res_string_errmsg_46 "Datei nicht gefunden."
 .define res_string_errmsg_47 "Datei schon vorhanden."
 .define res_string_errmsg_48 "Diskette voll."
-.define res_string_errmsg_49 "Ung}ltige Anzahl Dateien."
+.define res_string_errmsg_49 "Das Datentr{gerverzeichnis ist voll."
 .define res_string_errmsg_4E "Datei ist schreibgesch}tzt."
 .define res_string_errmsg_52 "Keine ProDOS-Diskette."
 .define res_string_errmsg_57 "Volumen schon vorhanden."

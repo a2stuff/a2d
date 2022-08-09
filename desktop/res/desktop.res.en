@@ -111,7 +111,7 @@
 .define res_string_errmsg_46 "The file cannot be found."
 .define res_string_errmsg_47 "That name already exists. Please use another name."
 .define res_string_errmsg_48 "The disk is full."
-.define res_string_errmsg_49 "The volume directory cannot hold more than 51 files."
+.define res_string_errmsg_49 "The volume directory is full."
 .define res_string_errmsg_4E "The file is locked."
 .define res_string_errmsg_52 "This is not a ProDOS disk."
 .define res_string_errmsg_57 "There is another volume with that name on the desktop."

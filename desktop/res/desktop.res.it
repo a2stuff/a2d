@@ -111,7 +111,7 @@
 .define res_string_errmsg_46 "File non trovato."
 .define res_string_errmsg_47 "Nome file duplicato."
 .define res_string_errmsg_48 "Disco pieno."
-.define res_string_errmsg_49 "Il volume non pu| contenere pi` di 51 files."
+.define res_string_errmsg_49 "La directory del volume } piena."
 .define res_string_errmsg_4E "Fine del file."
 .define res_string_errmsg_52 "Non } un disco ProDOS."
 .define res_string_errmsg_57 "Volume duplicato."

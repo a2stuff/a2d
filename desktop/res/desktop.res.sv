@@ -111,7 +111,7 @@
 .define res_string_errmsg_46 "Filen kan inte hittas."
 .define res_string_errmsg_47 "Det namnet finns redan. V{nligen anv{nd ett annat namn."
 .define res_string_errmsg_48 "Skivan {r full."
-.define res_string_errmsg_49 "Volymkatalogen kan inte inneh}lla mer {n 51 filer."
+.define res_string_errmsg_49 "Volymkatalogen {r full."
 .define res_string_errmsg_4E "Filen {r l}st."
 .define res_string_errmsg_52 "Detta {r inte en ProDOS-disk."
 .define res_string_errmsg_57 "Det finns en annan volym med det namnet p} skrivbordet."

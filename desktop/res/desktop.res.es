@@ -111,7 +111,7 @@
 .define res_string_errmsg_46 "El archivo no se encuentra."
 .define res_string_errmsg_47 "Ese nombre ya existe. Por favor use otro nombre."
 .define res_string_errmsg_48 "El disco est\x10 lleno."
-.define res_string_errmsg_49 "El directorio del volumen no soporta m\x10s de 51 archivos."
+.define res_string_errmsg_49 "El directorio de vol\x14menes est\x10 lleno."
 .define res_string_errmsg_4E "El archivo est\x10 bloqueado."
 .define res_string_errmsg_52 "Este no es un disco ProDOS."
 .define res_string_errmsg_57 "Hay otro volumen con el mismo nombre en el escritorio."

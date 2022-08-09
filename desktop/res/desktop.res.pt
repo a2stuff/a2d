@@ -111,7 +111,7 @@
 .define res_string_errmsg_46 "O arquivo n[o pode ser encontrado."
 .define res_string_errmsg_47 "Esse nome j@ existe. Use outro nome."
 .define res_string_errmsg_48 "Disco estiver cheio."
-.define res_string_errmsg_49 "O diret~rio de volume n[o suporta mais de 51 arquivos."
+.define res_string_errmsg_49 "O diret~rio de volume est@ cheio."
 .define res_string_errmsg_4E "O arquivo est@ bloqueado."
 .define res_string_errmsg_52 "Este n[o ` um disco ProDOS."
 .define res_string_errmsg_57 "H@ outro volume com o mesmo nome na @rea de trabalho."

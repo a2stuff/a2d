@@ -111,7 +111,7 @@
 .define res_string_errmsg_46 "Arkivet blev ikke fundet."
 .define res_string_errmsg_47 "Det navn findes allerede. Brug venligst et andet navn."
 .define res_string_errmsg_48 "Disken er fuld."
-.define res_string_errmsg_49 "Volumenbiblioteket kan ikke indeholde mere end 51 filer."
+.define res_string_errmsg_49 "Volumenkataloget er fyldt."
 .define res_string_errmsg_4E "Arkivet er l}st."
 .define res_string_errmsg_52 "Dette er ikke en ProDOS-disk."
 .define res_string_errmsg_57 "Der er en anden diskenhed med det navn p} skrivebordet."

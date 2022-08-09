@@ -111,7 +111,7 @@
 .define res_string_errmsg_46 "Fichier inconnu."
 .define res_string_errmsg_47 "Ce nom de fichier existe d{j@."
 .define res_string_errmsg_48 "Volume plein."
-.define res_string_errmsg_49 "Catalogue plein."
+.define res_string_errmsg_49 "Le catalogue des volumes est plein."
 .define res_string_errmsg_4E "Fichier verrouill{."
 .define res_string_errmsg_52 "Disque non ProDOS."
 .define res_string_errmsg_57 "Volume d{j@ pr{sent sur le bureau."
