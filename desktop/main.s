@@ -15040,19 +15040,19 @@ params:  .res    3
 
         .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SetCursorWatch
-        MGTK_CALL MGTK::SetCursor, watch_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         rts
 .endproc
 
         .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SetCursorPointer
-        MGTK_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 .endproc
 
         .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SetCursorIBeam
-        MGTK_CALL MGTK::SetCursor, ibeam_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
 .endproc
 

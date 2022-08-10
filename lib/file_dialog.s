@@ -426,7 +426,7 @@ click_handler_hook:
 ;;; ============================================================
 
 .proc SetCursorPointer
-        MGTK_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 .endproc
 
@@ -435,7 +435,7 @@ click_handler_hook:
 .proc SetCursorIBeam
         bit     cursor_ibeam_flag
         bmi     :+
-        MGTK_CALL MGTK::SetCursor, ibeam_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         copy    #$80, cursor_ibeam_flag
 :       rts
 .endproc

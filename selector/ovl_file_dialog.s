@@ -27,67 +27,6 @@ a_grafport:    .addr   window_grafport
 window_grafport:
         .tag    MGTK::GrafPort
 
-double_click_counter_init:
-        .byte   $FF
-
-pointer_cursor:
-        .byte   PX(%0000000),PX(%0000000)
-        .byte   PX(%0100000),PX(%0000000)
-        .byte   PX(%0110000),PX(%0000000)
-        .byte   PX(%0111000),PX(%0000000)
-        .byte   PX(%0111100),PX(%0000000)
-        .byte   PX(%0111110),PX(%0000000)
-        .byte   PX(%0111111),PX(%0000000)
-        .byte   PX(%0101100),PX(%0000000)
-        .byte   PX(%0000110),PX(%0000000)
-        .byte   PX(%0000110),PX(%0000000)
-        .byte   PX(%0000011),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000)
-
-        .byte   PX(%1100000),PX(%0000000)
-        .byte   PX(%1110000),PX(%0000000)
-        .byte   PX(%1111000),PX(%0000000)
-        .byte   PX(%1111100),PX(%0000000)
-        .byte   PX(%1111110),PX(%0000000)
-        .byte   PX(%1111111),PX(%0000000)
-        .byte   PX(%1111111),PX(%1000000)
-        .byte   PX(%1111111),PX(%1000000)
-        .byte   PX(%1111111),PX(%0000000)
-        .byte   PX(%0001111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1000000)
-        .byte   PX(%0000111),PX(%1000000)
-
-        .byte   1,1
-
-ibeam_cursor:
-        .byte   PX(%0000000),PX(%0000000)
-        .byte   PX(%0110001),PX(%1000000)
-        .byte   PX(%0001010),PX(%0000000)
-        .byte   PX(%0000100),PX(%0000000)
-        .byte   PX(%0000100),PX(%0000000)
-        .byte   PX(%0000100),PX(%0000000)
-        .byte   PX(%0000100),PX(%0000000)
-        .byte   PX(%0000100),PX(%0000000)
-        .byte   PX(%0001010),PX(%0000000)
-        .byte   PX(%0110001),PX(%1000000)
-        .byte   PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000)
-
-        .byte   PX(%0110001),PX(%1000000)
-        .byte   PX(%1111011),PX(%1100000)
-        .byte   PX(%0111111),PX(%1000000)
-        .byte   PX(%0001110),PX(%0000000)
-        .byte   PX(%0001110),PX(%0000000)
-        .byte   PX(%0001110),PX(%0000000)
-        .byte   PX(%0001110),PX(%0000000)
-        .byte   PX(%0001110),PX(%0000000)
-        .byte   PX(%0111111),PX(%1000000)
-        .byte   PX(%1111011),PX(%1100000)
-        .byte   PX(%0110001),PX(%1000000)
-        .byte   PX(%0000000),PX(%0000000)
-
-        .byte   4,5
-
 ;;; Text Input Field
 buf_text:       .res    68, 0
 

@@ -250,6 +250,14 @@ cursor_width                    = 2
         hotspot .byte   2       ; x, y - hotspot coords (pixels)
 .endstruct
 
+;;; A SystemCursor can be passed instead of an address to use
+;;; one of the standard system cursors.
+.enum SystemCursor
+        pointer         = 1
+        ibeam           = 2
+        watch           = 3
+.endenum
+
 SetCursor       = $24           ; Set cursor definition
 ;;; (input is address of Cursor record)
 

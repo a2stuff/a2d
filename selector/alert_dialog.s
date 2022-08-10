@@ -114,7 +114,6 @@ start:  pha                     ; alert number
 ;;; Inputs: A,X=alert_params structure
 ;;;    { .addr text, .byte AlertButtonOptions, .byte AlertOptions }
 
-        pointer_cursor = app::pointer_cursor
         Bell = app::Bell
         DrawString = app::DrawString
         AlertYieldLoop = app::AlertYieldLoopRelay

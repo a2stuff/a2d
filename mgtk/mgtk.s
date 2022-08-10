@@ -4067,17 +4067,75 @@ pointer_cursor:
 
         .byte   1,1
 
-pointer_cursor_addr:
-        .addr   pointer_cursor
+ibeam_cursor:
+        .byte   PX(%0000000),PX(%0000000)
+        .byte   PX(%0110001),PX(%1000000)
+        .byte   PX(%0001010),PX(%0000000)
+        .byte   PX(%0000100),PX(%0000000)
+        .byte   PX(%0000100),PX(%0000000)
+        .byte   PX(%0000100),PX(%0000000)
+        .byte   PX(%0000100),PX(%0000000)
+        .byte   PX(%0000100),PX(%0000000)
+        .byte   PX(%0001010),PX(%0000000)
+        .byte   PX(%0110001),PX(%1000000)
+        .byte   PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000)
+
+        .byte   PX(%0110001),PX(%1000000)
+        .byte   PX(%1111011),PX(%1100000)
+        .byte   PX(%0111111),PX(%1000000)
+        .byte   PX(%0001110),PX(%0000000)
+        .byte   PX(%0001110),PX(%0000000)
+        .byte   PX(%0001110),PX(%0000000)
+        .byte   PX(%0001110),PX(%0000000)
+        .byte   PX(%0001110),PX(%0000000)
+        .byte   PX(%0111111),PX(%1000000)
+        .byte   PX(%1111011),PX(%1100000)
+        .byte   PX(%0110001),PX(%1000000)
+        .byte   PX(%0000000),PX(%0000000)
+
+        .byte   4,5
+
+watch_cursor:
+        .byte   PX(%0000000),PX(%0000000)
+        .byte   PX(%0011111),PX(%1100000)
+        .byte   PX(%0011111),PX(%1100000)
+        .byte   PX(%0100000),PX(%0010000)
+        .byte   PX(%0100001),PX(%0010000)
+        .byte   PX(%0100110),PX(%0011000)
+        .byte   PX(%0100000),PX(%0010000)
+        .byte   PX(%0100000),PX(%0010000)
+        .byte   PX(%0011111),PX(%1100000)
+        .byte   PX(%0011111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000)
+
+        .byte   PX(%0011111),PX(%1100000)
+        .byte   PX(%0111111),PX(%1110000)
+        .byte   PX(%0111111),PX(%1110000)
+        .byte   PX(%1111111),PX(%1111000)
+        .byte   PX(%1111111),PX(%1111000)
+        .byte   PX(%1111111),PX(%1111100)
+        .byte   PX(%1111111),PX(%1111000)
+        .byte   PX(%1111111),PX(%1111000)
+        .byte   PX(%0111111),PX(%1110000)
+        .byte   PX(%0111111),PX(%1110000)
+        .byte   PX(%0011111),PX(%1100000)
+        .byte   PX(%0000000),PX(%0000000)
+
+        .byte   5,5
+
+system_cursor_table_lo: .byte   <pointer_cursor, <ibeam_cursor, <watch_cursor
+system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
 
 .proc SetPointerCursor
         ldx     #$FF
         stx     cursor_count
         inx
         stx     cursor_flag
-        lda     pointer_cursor_addr
+        lda     #<pointer_cursor
         sta     params_addr
-        lda     pointer_cursor_addr+1
+        lda     #>pointer_cursor
         sta     params_addr+1
         FALL_THROUGH_TO SetCursorImpl
 .endproc
@@ -4089,6 +4147,16 @@ pointer_cursor_addr:
 .proc SetCursorImpl
         php
         sei
+
+        ;; SystemCursor?
+        lda     params_addr+1
+        bne     :+
+        ldx     params_addr
+        lda     system_cursor_table_lo-1,x
+        sta     params_addr
+        lda     system_cursor_table_hi-1,x
+        sta     params_addr+1
+:
         ldax    params_addr
         stax    active_cursor
         clc
@@ -9414,7 +9482,7 @@ no_modifiers:
 .proc StashCursor
         jsr     stash_addr
         copy16  active_cursor, kbd_mouse_cursor_stash
-        copy16  pointer_cursor_addr, params_addr
+        copy16  #pointer_cursor, params_addr
         jsr     SetCursorImpl
         jmp     restore_addr
 .endproc

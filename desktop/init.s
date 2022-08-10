@@ -287,7 +287,7 @@ done:
 
         ;; --------------------------------------------------
 
-        MGTK_CALL MGTK::SetCursor, watch_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         MGTK_CALL MGTK::ShowCursor
 
         ;; fall through
@@ -1148,7 +1148,7 @@ unit_num:
 .proc FinalSetup
         ;; Final MGTK configuration
         MGTK_CALL MGTK::CheckEvents
-        MGTK_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         lda     #0
         sta     active_window_id
         jsr     main::UpdateWindowMenuItems

@@ -598,6 +598,10 @@ Parameters:
 (input is address of Cursor record)
 ```
 
+Instead of an address, one of the `MGTK::SystemCursor::*` enum values can be passed instead: `pointer`, `ibeam`, or `watch`.
+
+> The SystemCursor enum support is a modern addition, so is not present in the 1985 APDA documentation.
+
 #### ShowCursor ($25)
 Return cursor to visibility.
 

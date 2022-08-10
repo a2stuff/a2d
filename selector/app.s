@@ -151,66 +151,6 @@ slot_x7:        .byte   0
 ;;; ============================================================
 ;;; More Resources
 
-pointer_cursor:
-        .byte   PX(%0000000),PX(%0000000)
-        .byte   PX(%0100000),PX(%0000000)
-        .byte   PX(%0110000),PX(%0000000)
-        .byte   PX(%0111000),PX(%0000000)
-        .byte   PX(%0111100),PX(%0000000)
-        .byte   PX(%0111110),PX(%0000000)
-        .byte   PX(%0111111),PX(%0000000)
-        .byte   PX(%0101100),PX(%0000000)
-        .byte   PX(%0000110),PX(%0000000)
-        .byte   PX(%0000110),PX(%0000000)
-        .byte   PX(%0000011),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000)
-
-        .byte   PX(%1100000),PX(%0000000)
-        .byte   PX(%1110000),PX(%0000000)
-        .byte   PX(%1111000),PX(%0000000)
-        .byte   PX(%1111100),PX(%0000000)
-        .byte   PX(%1111110),PX(%0000000)
-        .byte   PX(%1111111),PX(%0000000)
-        .byte   PX(%1111111),PX(%1000000)
-        .byte   PX(%1111111),PX(%1000000)
-        .byte   PX(%1111111),PX(%0000000)
-        .byte   PX(%0001111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1000000)
-        .byte   PX(%0000111),PX(%1000000)
-
-        .byte   1,1
-
-watch_cursor:
-        .byte   PX(%0000000),PX(%0000000)
-        .byte   PX(%0011111),PX(%1100000)
-        .byte   PX(%0011111),PX(%1100000)
-        .byte   PX(%0100000),PX(%0010000)
-        .byte   PX(%0100001),PX(%0010000)
-        .byte   PX(%0100110),PX(%0011000)
-        .byte   PX(%0100000),PX(%0010000)
-        .byte   PX(%0100000),PX(%0010000)
-        .byte   PX(%0011111),PX(%1100000)
-        .byte   PX(%0011111),PX(%1100000)
-        .byte   PX(%0000000),PX(%0000000)
-        .byte   PX(%0000000),PX(%0000000)
-
-        .byte   PX(%0011111),PX(%1100000)
-        .byte   PX(%0111111),PX(%1110000)
-        .byte   PX(%0111111),PX(%1110000)
-        .byte   PX(%1111111),PX(%1111000)
-        .byte   PX(%1111111),PX(%1111000)
-        .byte   PX(%1111111),PX(%1111100)
-        .byte   PX(%1111111),PX(%1111000)
-        .byte   PX(%1111111),PX(%1111000)
-        .byte   PX(%0111111),PX(%1110000)
-        .byte   PX(%0111111),PX(%1110000)
-        .byte   PX(%0011111),PX(%1100000)
-        .byte   PX(%0000000),PX(%0000000)
-
-        .byte   5,5
-
-;;; ============================================================
-
 grafport2:
         .tag    MGTK::GrafPort
 
@@ -1407,12 +1347,12 @@ error:  lda     #AlertID::insert_system_disk
 ;;; ============================================================
 
 .proc SetWatchCursor
-        MGTK_CALL MGTK::SetCursor, watch_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         rts
 .endproc
 
 .proc SetPointerCursor
-        MGTK_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 .endproc
 

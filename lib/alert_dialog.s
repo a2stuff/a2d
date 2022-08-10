@@ -184,7 +184,7 @@ start:
         dex
         bpl     :-
 
-        MGTK_CALL MGTK::SetCursor, pointer_cursor
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
 
         ;; --------------------------------------------------
         ;; Draw alert
