@@ -968,7 +968,7 @@ ep2:    dec     file_count
         jsr     app::ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     :+              ; `kAlertResultCancel` = 1
-        jmp     app::SetWatchCursor ; try again
+        jmp     app::SetCursorWatch ; try again
 
 :       jmp     RestoreStackAndReturn
 .endproc
@@ -984,7 +984,7 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_click_ok
         BTK_CALL BTK::Draw, ok_button_params
-        jsr     SetPointerCursor
+        jsr     RunEventLoop
         jmp     RestoreStackAndReturn
 
 ;;; ============================================================
@@ -999,16 +999,15 @@ LAACB:  lda     winfo::window_id
         MGTK_CALL MGTK::MoveTo, pt2
         param_call app::DrawString, str_copy_incomplete
         BTK_CALL BTK::Draw, ok_button_params
-        jsr     SetPointerCursor
+        jsr     RunEventLoop
         jmp     RestoreStackAndReturn
 .endproc
 
 ;;; ============================================================
 
-SetPointerCursor:
-        jsr     app::SetPointerCursor
-
-;;; ============================================================
+RunEventLoop:
+        jsr     app::SetCursorPointer
+        FALL_THROUGH_TO event_loop
 
 event_loop:
         MGTK_CALL MGTK::GetEvent, event_params
@@ -1021,7 +1020,7 @@ event_loop:
         cmp     #CHAR_RETURN
         bne     event_loop
         BTK_CALL BTK::Flash, ok_button_params
-        jmp     app::SetWatchCursor
+        jmp     app::SetCursorWatch
 
 HandleButtonDown:
         MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -1043,7 +1042,7 @@ HandleButtonDown:
         bne     event_loop
         BTK_CALL BTK::Track, ok_button_params
         bmi     event_loop
-        jmp     app::SetWatchCursor
+        jmp     app::SetCursorWatch
 
 ;;; ============================================================
 

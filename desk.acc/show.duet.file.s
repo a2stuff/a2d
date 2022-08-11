@@ -113,17 +113,18 @@ pathbuf:        .res    kPathBufferSize, 0
         ;; --------------------------------------------------
         ;; Load the file
 
-        jsr     JUMP_TABLE_CUR_WATCH
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         JUMP_TABLE_MLI_CALL OPEN, open_params
         bcc     :+
-        jmp     JUMP_TABLE_CUR_POINTER
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        rts
 :       lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         JUMP_TABLE_MLI_CALL READ, read_params
         php                     ; preserve error
         JUMP_TABLE_MLI_CALL CLOSE, close_params
-        jsr     JUMP_TABLE_CUR_POINTER
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         plp
         bcs     exit
 

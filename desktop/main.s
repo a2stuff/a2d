@@ -39,9 +39,6 @@ JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
 JT_LAUNCH_FILE:         jmp     LaunchFile
-JT_CUR_POINTER:         jmp     SetCursorPointer        ; *
-JT_CUR_WATCH:           jmp     SetCursorWatch          ; *
-JT_CUR_IBEAM:           jmp     SetCursorIBeam          ; *
 JT_RESTORE_OVL:         jmp     RestoreDynamicRoutine   ; *
 JT_COLOR_MODE:          jmp     SetColorMode            ; *
 JT_MONO_MODE:           jmp     SetMonoMode             ; *
@@ -14704,7 +14701,7 @@ do_close:
 
         pha
         jsr     ClosePromptDialog
-        jsr     SetCursorPointerWithFlag ; when closing dialog with prompt
+        jsr     SetCursorPointer ; when closing dialog
         pla
         rts
 .endproc

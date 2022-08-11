@@ -482,7 +482,9 @@ InitDialog:
         lda     #$FF
         sta     listbox_enabled_flag
 
+        jsr     SetCursorWatch
         jsr     EnumerateDevices
+        jsr     SetCursorPointer
         copy    #$00, selection_mode
 
         lda     LD5E0

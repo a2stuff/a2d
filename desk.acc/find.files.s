@@ -1006,7 +1006,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 .endproc
 
 .proc Exit
-        param_call JTRelay, JUMP_TABLE_CUR_POINTER
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
 
         MGTK_CALL MGTK::CloseWindow, winfo_results
         MGTK_CALL MGTK::CloseWindow, winfo
@@ -1106,7 +1106,7 @@ ignore: sec
 ;;; ============================================================
 
 .proc DoSearch
-        param_call JTRelay, JUMP_TABLE_CUR_WATCH
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
 
         copy    #0, num_entries
         jsr     ListInit
@@ -1119,9 +1119,9 @@ ignore: sec
 
         bit     cursor_ibeam_flag
     IF_PLUS
-        param_call JTRelay, JUMP_TABLE_CUR_POINTER
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
     ELSE
-        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
     END_IF
 
 finish: jmp     InputLoop
@@ -1210,14 +1210,14 @@ outside:
         bit     cursor_ibeam_flag
         bpl     done
         copy    #0, cursor_ibeam_flag
-        param_call JTRelay, JUMP_TABLE_CUR_POINTER
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jmp     done
 
 inside:
         bit     cursor_ibeam_flag
         bmi     done
         copy    #$80, cursor_ibeam_flag
-        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
 
 done:   jmp     InputLoop
 .endproc

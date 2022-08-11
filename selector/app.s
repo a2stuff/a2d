@@ -801,7 +801,7 @@ L93EB:  tsx
         jsr     MaybeToggleEntryHilite
         lda     #$FF
         sta     selected_index
-L93FF:  jsr     SetWatchCursor
+L93FF:  jsr     SetCursorWatch
         MLI_CALL OPEN, open_selector_params
         bne     L9443
         lda     open_selector_params::ref_num
@@ -822,7 +822,7 @@ L9443:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     :+           ; `kAlertResultCancel` = 1
-        jsr     SetWatchCursor
+        jsr     SetCursorWatch
         jmp     L93FF
 
 :       rts
@@ -1346,12 +1346,12 @@ error:  lda     #AlertID::insert_system_disk
 
 ;;; ============================================================
 
-.proc SetWatchCursor
+.proc SetCursorWatch
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         rts
 .endproc
 
-.proc SetPointerCursor
+.proc SetCursorPointer
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 .endproc
@@ -1792,7 +1792,7 @@ ret:    rts
 .proc InvokeEntry
         lda     L9129
         bne     :+
-        jsr     SetWatchCursor
+        jsr     SetCursorWatch
         lda     selected_index
         bmi     :+
         jsr     MaybeToggleEntryHilite
@@ -1831,7 +1831,7 @@ L9C32:  lda     selected_index
         jsr     CheckAndClearUpdates
         pla
         beq     L9C6F
-        jsr     SetPointerCursor
+        jsr     SetCursorPointer
         jmp     ClearSelectedIndex
 
 L9C65:  lda     L9129
@@ -1870,7 +1870,7 @@ L9C87:  lda     ($06),y
         txa
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     fail            ; `kAlertResultCancel` = 1
-        jsr     SetWatchCursor
+        jsr     SetCursorWatch
         jmp     L9C78
 
 fail:   jmp     ClearSelectedIndex

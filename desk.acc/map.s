@@ -577,14 +577,14 @@ outside:
         bit     cursor_ibeam_flag
         bpl     done
         copy    #0, cursor_ibeam_flag
-        param_call JTRelay, JUMP_TABLE_CUR_POINTER
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jmp     done
 
 inside:
         bit     cursor_ibeam_flag
         bmi     done
         copy    #$80, cursor_ibeam_flag
-        param_call JTRelay, JUMP_TABLE_CUR_IBEAM
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
 
 done:   jmp     InputLoop
 .endproc

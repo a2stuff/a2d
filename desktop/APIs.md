@@ -83,18 +83,6 @@ NOTE: This will use Aux $800...$1AFF to save the alert background; be careful wh
 
 Launch file. Equivalent of **File > Open** command.
 
-#### `JUMP_TABLE_CUR_POINTER` *
-
-Changes mouse cursor to pointer.
-
-#### `JUMP_TABLE_CUR_WATCH` *
-
-Changes mouse cursor to watch.
-
-#### `JUMP_TABLE_CUR_IBEAM` *
-
-Changes mouse cursor to I-beam.
-
 #### `JUMP_TABLE_RESTORE_OVL` *
 
 Restore from overlay routine

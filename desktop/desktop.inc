@@ -62,9 +62,6 @@ JT_ENTRY JUMP_TABLE_SELECT_WINDOW ; Select and refresh given window *
 JT_ENTRY JUMP_TABLE_SHOW_ALERT    ; Show alert (A=kErrXXX or ProDOS error code, default options)
 JT_ENTRY JUMP_TABLE_SHOW_ALERT_OPTIONS       ; Show alert X (A=err code, X=options)
 JT_ENTRY JUMP_TABLE_LAUNCH_FILE   ; Launch file
-JT_ENTRY JUMP_TABLE_CUR_POINTER   ; Changes mouse cursor to pointer *
-JT_ENTRY JUMP_TABLE_CUR_WATCH     ; Changes mouse cursor to watch *
-JT_ENTRY JUMP_TABLE_CUR_IBEAM     ; Changes mouse cursor to I-beam *
 JT_ENTRY JUMP_TABLE_RESTORE_OVL   ; Restore from overlay routine
 JT_ENTRY JUMP_TABLE_COLOR_MODE    ; Set DHR color mode (IIgs, AppleColor, Le Chat Mauve) *
 JT_ENTRY JUMP_TABLE_MONO_MODE     ; Set DHR mono mode (IIgs, AppleColor, Le Chat Mauve) *
