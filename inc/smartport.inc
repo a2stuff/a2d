@@ -23,6 +23,27 @@
         Write           = $09
 .endenum
 
+.struct SPDIB
+Device_Statbyte1        .byte
+        ;;  bit 7:  0 = character device, 1 = block device
+        ;;  bit 6:  1 = write allowed
+        ;;  bit 5:  1 = read allowed
+        ;;  bit 4:  1 = device on line or disk in drive
+        ;;  bit 3:  0 = format allowed
+        ;;  bit 2:  0 = medium write protected (block devices only)
+        ;;  bit 1:  1 = device currently interrupting
+        ;;  bit 0:  1 = device currently open (character devices only)
+Device_Size_Lo          .byte
+Device_Size_Med         .byte
+Device_Size_Hi          .byte
+ID_String_Length        .byte
+Device_Name             .res    16
+Device_Type_Code        .byte
+        ;; SPDeviceType
+Device_Subtype_Code     .byte
+Version                 .word
+.endstruct
+
 .enum SPDeviceType
         MemoryExpansionCard     = $00
         Disk35                  = $01
