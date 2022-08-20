@@ -15,7 +15,7 @@ find.files                      desk.acc                        optional
 key.caps                        desk.acc                        optional
 puzzle                          desk.acc                        optional
 run.basic.here                  desk.acc                        optional
-screen.dump                     desk.acc                        optional
+screen.dump                     extras                          extras
 sort.directory                  desk.acc                        optional
 this.apple                      desk.acc                        optional
 show.text.file                  preview                         optional

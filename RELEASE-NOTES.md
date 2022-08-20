@@ -118,8 +118,6 @@ Project Page: https://github.com/a2stuff/a2d
   * Launch **BASIC.SYSTEM** with `PREFIX` set to the current window's pathname. ([#42](https://github.com/a2stuff/a2d/issues/42))
 * **Key Caps**
   * Shows an on-screen keyboard map and indicates which key is pressed.
-* **Screen Dump**
-  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in slot 1. ([#46](https://github.com/a2stuff/a2d/issues/46))
 * **Calendar**
   * Displays any month, from 1901 through 2155. ([#231](https://github.com/a2stuff/a2d/issues/231))
 * **Eyes**
@@ -127,6 +125,8 @@ Project Page: https://github.com/a2stuff/a2d
 * **Find Files**
   * Search a directory and descendants for filenames. Use ? and * as wildcards. ([#21](https://github.com/a2stuff/a2d/issues/21))
 * **Extras** (optional)
+  * **Screen Dump**
+    * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in slot 1. ([#46](https://github.com/a2stuff/a2d/issues/46))
   * **Scientific Calculator**
     * Calculator with trigonometry and other additional functions. ([#211](https://github.com/a2stuff/a2d/issues/211))
   * **Darkness**
