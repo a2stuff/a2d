@@ -335,6 +335,11 @@ grafport:       .tag    MGTK::GrafPort
 .endproc
 
 ;;; ============================================================
+;;; Handle `EventKind::button_down`.
+;;; Output: N=1 if event was not a button click
+;;;         N=0 if event was a button click; in this case,
+;;;         `event_params::key` and `event_params::modifier` will
+;;;         be set to the keyboard equivalent.
 
 .proc HandleDown
         JUMP_TABLE_MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -352,7 +357,8 @@ grafport:       .tag    MGTK::GrafPort
         cmp     #MGTK::Area::content
         beq     HandleClick
 
-ret:    rts
+ret:    lda     #$FF            ; not a button
+        rts
 .endproc
 
 ;;; ============================================================
@@ -363,10 +369,12 @@ ret:    rts
 
         lda     trackgoaway_params::clicked
     IF_NE
-        pla
+        pla                     ; not returning to the caller
         pla
         jmp     Exit
     END_IF
+
+        lda     #$FF            ; not a button
         rts
 .endproc
 
@@ -377,8 +385,8 @@ ret:    rts
         jsr     CopyEventDataToAux
         JUMP_TABLE_MGTK_CALL MGTK::DragWindow, dragwindow_params
         jsr     CopyEventDataToMain
-common: bit     dragwindow_params::moved
-        bpl     ret
+        bit     dragwindow_params::moved
+        bpl     skip
 
         ;; Draw DeskTop's windows and icons.
         jsr     JUMP_TABLE_CLEAR_UPDATES
@@ -386,7 +394,8 @@ common: bit     dragwindow_params::moved
         ;; Draw DA's window
         jsr     DrawWindow
 
-ret:    rts
+skip:   lda     #$FF            ; not a button
+        rts
 .endproc
 
 ;;; ============================================================
@@ -398,32 +407,76 @@ ret:    rts
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ;; ----------------------------------------
-.if 0
-        ;; TODO: Incorporate into MainLoop
-.macro CLICK_BUTTON name, proc
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, .ident(.sprintf("%s_button_rec", .string(name)))::rect
-    IF_NE
-        BTK_CALL BTK::Track, .ident(.sprintf("%s_button_params", .string(name)))
-        bne     :+
-        jsr     proc
-:       jmp     done
+
+        copy    #0, event_params::modifiers
+
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, play_button_rect
+    IF_NOT_ZERO
+        lda     #'P'
+        bne     set_key         ; always
     END_IF
-.endmacro
 
-        CLICK_BUTTON play, DoPlay
-        CLICK_BUTTON stop, DoStop
-        CLICK_BUTTON pause, DoPause
-        CLICK_BUTTON eject, DoEject
-        CLICK_BUTTON prev, DoPrev
-        CLICK_BUTTON next, DoNext
-        CLICK_BUTTON back, DoBack
-        CLICK_BUTTON fwd, DoFwd
-        CLICK_BUTTON loop, DoLoop
-        CLICK_BUTTON shuffle, DoShuffle
-.endif
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, stop_button_rect
+    IF_NOT_ZERO
+        lda     #'S'
+        bne     set_key         ; always
+    END_IF
 
-        ;; ----------------------------------------
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, pause_button_rect
+    IF_NOT_ZERO
+        lda     #' '
+        bne     set_key         ; always
+    END_IF
 
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, eject_button_rect
+    IF_NOT_ZERO
+        lda     #'E'
+        bne     set_key         ; always
+    END_IF
+
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, loop_button_rect
+    IF_NOT_ZERO
+        lda     #'L'
+        bne     set_key         ; always
+    END_IF
+
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, shuffle_button_rect
+    IF_NOT_ZERO
+        lda     #'R'
+        bne     set_key         ; always
+    END_IF
+
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, prev_button_rect
+    IF_NOT_ZERO
+        lda     #CHAR_LEFT
+        bne     set_key         ; always
+    END_IF
+
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, next_button_rect
+    IF_NOT_ZERO
+        lda     #CHAR_RIGHT
+        bne     set_key         ; always
+    END_IF
+
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, back_button_rect
+    IF_NOT_ZERO
+        copy    #1, event_params::modifiers
+        lda     #CHAR_LEFT
+        bne     set_key         ; always
+    END_IF
+
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, fwd_button_rect
+    IF_NOT_ZERO
+        copy    #1, event_params::modifiers
+        lda     #CHAR_RIGHT
+        bne     set_key         ; always
+    END_IF
+
+        lda     #$FF            ; not a button
+        rts
+
+set_key:
+        sta     event_params::key
         rts
 .endproc
 
@@ -699,11 +752,13 @@ NoFurtherBGAction:
         cmp     #MGTK::EventKind::button_down
     IF_EQ
         jsr     ::HandleDown
+        bpl     HandleKey       ; was a button, mapped to key event
         jmp     MainLoop
     END_IF
         cmp     #MGTK::EventKind::key_down
         bne     MainLoop
 
+HandleKey:
         lda     event_params::key
 
                     ; $51 = Q (Quit)
