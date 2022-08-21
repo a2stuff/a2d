@@ -1002,11 +1002,6 @@ ReReadTOC:          lda #$00
                     jsr RandomModeInit
 ExitReReadTOC:      rts
 
-                    ; Function to wait until an existing keypress is released
-KeyReleaseWait:     lda KbdStrobe
-                    bmi KeyReleaseWait
-                    rts
-
 DoPlayAction:       lda PauseButtonState
                     ; Pause button is inactive - nothing to do yet
                     beq DPAPauseIsInactive
@@ -1120,15 +1115,12 @@ DoPauseAction:      lda StopButtonState
                     ; Execute pause action (pause or resume) based on new button state
                     jsr C22AudioPause
 
-                    ; Wait for key to be released and exit
-                    jsr KeyReleaseWait
 ExitPauseAction:    rts
 
 ToggleLoopMode:     lda #$ff
                     eor LoopButtonState
                     sta LoopButtonState
                     jsr ToggleUILoopButton
-                    jsr KeyReleaseWait
                     rts
 
 ToggleRandomMode:   lda #$ff
@@ -1149,7 +1141,6 @@ TRMRandomIsInactive:lda BCDLastTrackTOC
 
                     ; Update UI, wait for key release, and exit
 TRMUpdateButton:    jsr ToggleUIRandButton
-                    jsr KeyReleaseWait
                     rts
 
                     ; Zero the Played Track Counter
@@ -1371,7 +1362,6 @@ C26Eject:           jsr ToggleUIEjectButton
                     sta SPCommandType
                     jsr SPCallVector
 
-                    jsr KeyReleaseWait
                     jsr ToggleUIEjectButton
 
                     lda StopButtonState
