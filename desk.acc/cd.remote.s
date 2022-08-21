@@ -578,17 +578,6 @@ ZP2                 := $1B
 ZP3                 := $1D
 PlayedListPtr       := $1F
 
-Kbd                 := $C000
-KbdStrobe           := $C010
-SetGraphics         := $C050
-SetFullScreen       := $C052
-SetPage1            := $C054
-SetHiRes            := $C057
-OpenApple           := $C061
-
-CardROMByte         := $C5FF
-
-
 MAIN:               ; "Null" out T/M/S values
                     lda #$aa
                     sta BCDRelTrack
@@ -772,8 +761,8 @@ NotS:               cmp #$20
                     ; $08 = ^H, LA (Previous Track, Scan Backward)
 NotSpace:           cmp #$08
                     bne NotCtrlH
-                    lda OpenApple
-                    bpl JustLeftArrow
+                    lda event_params::modifiers
+                    beq JustLeftArrow
 OA_LeftArrow:       jsr DoScanBackAction
                     jmp MainLoop
 
@@ -783,8 +772,8 @@ JustLeftArrow:      jsr DoPrevTrackAction
                     ; $15 = ^U, RA (Next Track/Scan Forward)
 NotCtrlH:           cmp #$15
                     bne NotCtrlU
-                    lda OpenApple
-                    bpl JustRightArrow
+                    lda event_params::modifiers
+                    beq JustRightArrow
 OA_RightArrow:      jsr DoScanFwdAction
                     jmp MainLoop
 
@@ -1002,6 +991,32 @@ ReReadTOC:          lda #$00
                     jsr RandomModeInit
 ExitReReadTOC:      rts
 
+
+;;; ============================================================
+
+;;; Returns N=0 if the gesture has ended, N=1 otherwise
+;;; * If the last event was `MGTK::EventKind::key_down`, assume it has ended
+;;; * Otherwise, sample until `MGTK::EventKind::button_up`
+
+CheckGestureEnded:
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::key_down
+        beq     ended
+
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
+        jsr     CopyEventDataToMain
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::button_up
+        beq     ended
+
+        lda     #$FF            ; N=1
+        rts
+
+ended:  lda     #$00            ; N=0
+        rts
+
+;;; ============================================================
+
 DoPlayAction:       lda PauseButtonState
                     ; Pause button is inactive - nothing to do yet
                     beq DPAPauseIsInactive
@@ -1205,7 +1220,7 @@ DSBALoop:           jsr C28ReadQSubcode
                     jsr DrawTime
 
                     ; Keep scanning as long as the key is held down
-DSBAQSubReadErr:    lda KbdStrobe
+DSBAQSubReadErr:    jsr CheckGestureEnded
                     bmi DSBALoop
 
                     ; Key released - dim the Scan Back button, and resume playing from where we are
@@ -1232,7 +1247,7 @@ DSFALoop:           jsr C28ReadQSubcode
                     jsr DrawTime
 
                     ; Keep scanning as long as the key is held down
-DSFAQSubReadErr:    lda KbdStrobe
+DSFAQSubReadErr:    jsr CheckGestureEnded
                     bmi DSFALoop
 
                     ; Key released - dim the Scan Forward button, and resume playing from where we are
@@ -1280,21 +1295,21 @@ DPTACheckRandom:    lda RandomButtonState
 DPTARandomInactive: jsr C20AudioSearch
                     jsr DrawTrack
 
-                    ; Wait a comparatively long time for key release
-                    ldx #$ff
-DPTAHeldKeyCheck:   lda KbdStrobe
-                    bpl DPTAKeyReleased
-                    dex
-                    bne DPTAHeldKeyCheck
-
-DPTAKeyWasHeld:     lda Kbd
-                    ; If key is held long enough, loop all the way back to DPTAWrapCheck and go back another track
-                    bpl DPTAWrapCheck
-                    bit KbdStrobe
-                    bra DPTAKeyWasHeld
+        lda     #$FF            ; TODO: Does this need to be a word?
+        sta     DPTACounter
+DPTAHeldKeyCheck:
+        jsr     CheckGestureEnded
+        bpl     DPTAKeyReleased
+        dec     DPTACounter
+        beq     DPTAWrapCheck    ; Repeat the action
+        bne     DPTAHeldKeyCheck ; always
 
 DPTAKeyReleased:    jsr ToggleUIPrevButton
                     rts
+
+DPTACounter:    .byte   0
+
+;;; ============================================================
 
 DoNextTrackAction:  jsr ToggleUINextButton
 
@@ -1336,21 +1351,21 @@ DNTACheckRandom:    lda RandomButtonState
 DNTARandomInactive: jsr C20AudioSearch
                     jsr DrawTrack
 
-                    ; Wait a comparatively long time for key release
-                    ldx #$ff
-DNTAHeldKeyCheck:   lda KbdStrobe
-                    bpl DNTAKeyReleased
-                    dex
-                    bne DNTAHeldKeyCheck
-
-DNTAKeyWasHeld:     lda Kbd
-                    ; If key is held long enough, loop all the way back to DPTAWrapCheck and go forward another track
-                    bpl DNTAWrapCheck
-                    bit KbdStrobe
-                    bra DNTAKeyWasHeld
+        lda     #$FF            ; TODO: Does this need to be a word?
+        sta     DNTACounter
+DNTAHeldKeyCheck:
+        jsr     CheckGestureEnded
+        bpl     DNTAKeyReleased
+        dec     DNTACounter
+        beq     DNTAWrapCheck    ; Repeat the action
+        bne     DNTAHeldKeyCheck ; always
 
 DNTAKeyReleased:    jsr ToggleUINextButton
                     rts
+
+DNTACounter:    .byte   0
+
+;;; ============================================================
 
 C26Eject:           jsr ToggleUIEjectButton
 
@@ -1778,7 +1793,7 @@ SmartPortCallSetup: pha
                     ora #$c0
                     sta SPCallVector + 2
                     sta SelfModLDA + 2
-SelfModLDA:         lda CardROMByte
+SelfModLDA:         lda $C0FF   ; high byte is modified
                     clc
                     adc #$03
                     sta SPCallVector + 1
