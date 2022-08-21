@@ -1002,27 +1002,6 @@ ReReadTOC:          lda #$00
                     jsr RandomModeInit
 ExitReReadTOC:      rts
 
-                    ; Read a keypress if there is one
-GetKeypress:        inc RandomSeed
-                    lda Kbd
-                    bpl GKNoKeyPressed
-                    bit KbdStrobe
-
-                    ; Strip the high bit
-                    and #$7f
-                    cmp #$61
-                    bmi GKNotLowerCase
-                    cmp #$7a
-                    bpl GKNotLowerCase
-                    ; Force it to upper-case
-                    and #$5f
-
-                    ; Set carry flag to indicate keypress or not, and exit
-GKNotLowerCase:     clc
-                    bra ExitGetKeypress
-GKNoKeyPressed:     sec
-ExitGetKeypress:    rts
-
                     ; Function to wait until an existing keypress is released
 KeyReleaseWait:     lda KbdStrobe
                     bmi KeyReleaseWait
