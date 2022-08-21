@@ -1306,10 +1306,6 @@ DPTACheckRandom:    lda RandomButtonState
                     sta BCDRandomPickedTrk
                     jsr SetStopToEoBCDLTN
 
-                    ; TODO: Remove - This check/branch does ABSOLUTELY NOTHING. Pointless code, remove these two lines
-                    lda PlayButtonState
-                    beq DPTARandomInactive
-
                     ; Seek to new Track and update Track display
 DPTARandomInactive: jsr C20AudioSearch
                     jsr DrawTrack
@@ -1365,10 +1361,6 @@ DNTACheckRandom:    lda RandomButtonState
                     sta BCDLastTrackNow
                     sta BCDRandomPickedTrk
                     jsr SetStopToEoBCDLTN
-
-                    ; TODO: Remove - This check/branch does ABSOLUTELY NOTHING. Pointless code, remove these two lines
-                    lda PlayButtonState
-                    beq DNTARandomInactive
 
                     ; Seek to new Track and update Track display
 DNTARandomInactive: jsr C20AudioSearch
@@ -1525,19 +1517,6 @@ ASExecuteSearch:    sta SPBuffer
                     lda #$02
                     sta SPBuffer + 6
                     jsr SPCallVector
-
-                    ; TODO: Remove - This whole block of code is dead/unbranched - remove all of it up through DeadCodeExit
-                    bra ASSkipDeadCode
-DeadCode:           phx
-                    ldx #$03
-DeadCodeLoop:       jsr C24AudioStatus
-                    lda SPBuffer
-                    cmp #$03
-                    beq DeadCodeExit
-                    dex
-                    bne DeadCodeLoop
-                    .byte   $00, $00
-DeadCodeExit:       plx
 
 ASSkipDeadCode:     lda PauseButtonState
                     ; Pause button is inactive (already) - nothing to do
