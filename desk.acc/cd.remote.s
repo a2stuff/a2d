@@ -622,8 +622,6 @@ rect:   .tag    MGTK::Rect
 ;;; ============================================================
 
 .scope cdremote
-.pushcpu
-.setcpu "65c02"
 
 
 ZP1                 := $19
@@ -683,12 +681,13 @@ InitDriveAndDisc:   jsr StatusDrive
                     lda SPBuffer
                     ; Audio Status = $00 (currently playing)
                     beq IDDPlaying
-                    dec a
+                    sec
+                    sbc #1
                     ; Audio status = $01 (currently paused)
                     beq IDDPaused
                     ; Audio status = anything else - stop operation explicitly
                     jsr DoStopAction
-                    bra ExitInitDriveDisc
+                    jmp ExitInitDriveDisc
 
                     ; Set Pause button to active
 IDDPaused:          dec PauseButtonState
@@ -703,7 +702,7 @@ IDDPlaying:         dec PlayButtonState
                     ; Set drive playing flag to true
                     dec DrivePlayingFlag
                     jsr ToggleUIPlayButton
-                    bra ExitInitDriveDisc
+                    jmp ExitInitDriveDisc
 ExitInitDriveDisc:  rts
 
                     ; This is the start of where all the real action takes place
@@ -879,7 +878,7 @@ PlayBackComplete:   lda RandomButtonState
                     lda BCDLastTrackTOC
                     sta BCDLastTrackNow
                     jsr DoStopAction
-                    bra ExitPBCHandler
+                    jmp ExitPBCHandler
 
 PBCPlayARandomTrack:jsr PickARandomTrack
                     lda BCDRandomPickedTrk
@@ -897,7 +896,7 @@ PBCPlayARandomTrack:jsr PickARandomTrack
 
                     ; Call AudioPlay function and exit
                     jsr C21AudioPlay
-                    bra ExitPBCHandler
+                    jmp ExitPBCHandler
 
                     ; Entire disc has been played to the end, do we need to loop?
 PBCRandomIsInactive:lda LoopButtonState
@@ -917,7 +916,7 @@ PBCRandomIsInactive:lda LoopButtonState
                     dec TrackOrMSFFlag
                     ; Call AudioPlay function and exit
                     jsr C21AudioPlay
-                    bra ExitPBCHandler
+                    jmp ExitPBCHandler
 
                     ; Stop, because Loop is inactive
 PBCLoopIsInactive:  lda PlayButtonState
@@ -946,7 +945,7 @@ RetryLoop:          lda #$00
                     bne RetryLoop
                     sec
                     ; Failed Status call three times - exit with carry set
-                    bra ExitStatusDrive
+                    bcs ExitStatusDrive ; always
 
                     ; First byte is general status byte
 GotStatus:          lda SPBuffer
@@ -966,7 +965,7 @@ GotStatus:          lda SPBuffer
 
                     ; Exit with carry set
 StatusDriveFail:    sec
-                    bra ExitStatusDrive
+                    bcs ExitStatusDrive ; always
 
                     ; Exit with carry clear
 StatusDriveSuccess: clc
@@ -1082,7 +1081,7 @@ DoPlayAction:       lda PauseButtonState
                     jsr ToggleUIPauseButton
                     ; call AudioPause to release Pause (resume playing) and exit
                     jsr C22AudioPause
-                    bra ExitPlayAction
+                    jmp ExitPlayAction
 
 DPAPauseIsInactive: lda PlayButtonState
                     ; Play button is active (already) - bail out, there's nothing to do
@@ -1200,7 +1199,7 @@ ToggleRandomMode:   lda #$ff
 
                     ; Random button is now active - re-initialize random mode and exit
                     jsr RandomModeInit
-                    bra TRMUpdateButton
+                    jmp TRMUpdateButton
 
                     ; Random button is now inactive - reset First/Last to TOC values and update stop point to EoT last Track
 TRMRandomIsInactive:lda BCDLastTrackTOC
@@ -1248,11 +1247,13 @@ RandomModeInit:     lda #$00
                     jsr SetStopToEoBCDLTN
 
                     ; Mark the current Track's element of the Played List as $FF ("played")
-                    phy
+                    tya
+                    pha
                     ldy BCDRelTrack
                     lda #$ff
                     sta (PlayedListPtr),y
-                    ply
+                    pla
+                    tay
 
 ExitRandomInit:     rts
 
@@ -1326,7 +1327,7 @@ DPTAWrapCheck:      lda BCDRelTrack
                     ; Otherwise, wrap to the "last" track instead
                     lda BCDLastTrackTOC
                     sta BCDRelTrack
-                    bra DPTACheckRandom
+                    jmp DPTACheckRandom
 
                     ; BCD decrement
 DPTAJustPrev:       sed
@@ -1382,7 +1383,7 @@ DNTAWrapCheck:      lda BCDRelTrack
                     ; Otherwise, wrap to the "first" track instead
                     lda BCDFirstTrackTOC
                     sta BCDRelTrack
-                    bra DNTACheckRandom
+                    jmp DNTACheckRandom
 
                     ; BCD increment
 DNTAJustNext:       sed
@@ -1461,7 +1462,8 @@ EjPlayIsInactive:   lda #$00
                     sta DrivePlayingFlag
 
                     ; Set Stop button to active
-                    dec a
+                    sec
+                    sbc #1
                     sta StopButtonState
                     jsr ToggleUIStopButton
 
@@ -1508,7 +1510,7 @@ APStopAtTrack:      lda BCDFirstTrackNow
                     sta SPBuffer + 6
                     lda #$00
                     sta TrackOrMSFFlag
-                    bra CallAudioPlay
+                    beq CallAudioPlay ; always
 
 APStopAtMSF:        lda BCDAbsMinutes
                     sta SPBuffer + 4
@@ -1541,7 +1543,7 @@ ASPlayAfterSearch:  lda #$ff
 
                     ; $01 = Play after search
                     lda #$01
-                    bra ASExecuteSearch
+                    bne ASExecuteSearch ; always
 
                     ; $00 = Hold after search
 ASHoldAfterSearch:  lda #$00
@@ -1606,7 +1608,7 @@ ReadTOCRetry:       jsr SPCallVector
                     dec RetryCount
                     bne ReadTOCRetry
                     sec
-                    bra ExitReadTOC
+                    bcs ExitReadTOC ; always
 
                     ; First Track #
 ReadTOCSuccess:     lda SPBuffer
@@ -1633,7 +1635,7 @@ RetryReadQSubcode:  jsr SPCallVector
                     bcc ReadQSubcodeSuccess
                     dec RetryCount
                     bne RetryReadQSubcode
-                    bra ExitReadQSubcode
+                    beq ExitReadQSubcode ; always
 
                     ; TODO: Analysis - What do these returned values actually represent?  Are the variable names being used here appropriate?
 ReadQSubcodeSuccess:lda SPBuffer + 1
@@ -1654,7 +1656,7 @@ ReadQSubcodeSuccess:lda SPBuffer + 1
 
                     ; Clear carry on success
                     clc
-                    bra ExitReadQSubcode
+                    bcc ExitReadQSubcode ; always
 
                     ; Set carry on failure
 ReadQSubcodeFail:   sec
@@ -1783,16 +1785,18 @@ CheckSlot:          sta CardSlot
                     sta ZP1 + 1
                     lda #$fb
                     sta ZP1
-                    lda (ZP1)
+                    ldy #0      ; TODO: Preserve Y?
+                    lda (ZP1),y
                     ; $82 = SCSI card, extended SP calls
                     cmp #$82
                     beq YesFound
                     lda CardSlot
-                    dec a
+                    sec
+                    sbc #1
                     bne CheckSlot
                     ; Set carry on error
                     sec
-                    bra ExitFindSCSICard
+                    bcs ExitFindSCSICard ; always
                     ; Clear carry on success
 YesFound:           clc
 ExitFindSCSICard:   rts
@@ -1837,7 +1841,7 @@ NextDevice:         stx CD_SPDevNum
                     bne NextDevice
                     ; Set carry on failure
                     sec
-                    bra ExitFindCDROM
+                    bcs ExitFindCDROM ; always
                     ; Clear carry on success
 CDROMFound:         clc
 ExitFindCDROM:      rts
@@ -1873,8 +1877,10 @@ SPBuffer            := DA_IO_BUFFER ; 1K free to use in Main after loading
 
 DrawTrack:
         pha
-        phx
-        phy
+        txa
+        pha
+        tya
+        pha
         lda     BCDRelTrack
         jsr     HighBCDDigitToASCII
         sta     str_track_num+1 ; "0_"
@@ -1882,15 +1888,19 @@ DrawTrack:
         jsr     LowBCDDigitToASCII
         sta     str_track_num+2 ; "_0"
         jsr     ::DrawTrack
-        ply
-        plx
+        pla
+        tay
+        pla
+        tax
         pla
         rts
 
 DrawTime:
         pha
-        phx
-        phy
+        txa
+        pha
+        tya
+        pha
         lda     BCDRelMinutes
         jsr     HighBCDDigitToASCII
         sta     str_time+1      ; "0_:__"
@@ -1907,8 +1917,10 @@ DrawTime:
 
         jsr     ::DrawTime
 
-        ply
-        plx
+        pla
+        tay
+        pla
+        tax
         pla
         rts
 
@@ -1968,8 +1980,10 @@ ToggleUIRandButton:
 
 PickARandomTrack:   pha
                     ; Pick a random, unplayed track
-                    phx
-                    phy
+                    txa
+                    pha
+                    tya
+                    pha
 
                     ; Try five times to find a Played List element that is $00
                     ldx #$05
@@ -1992,7 +2006,7 @@ FallbackTrackSelect:tya
                     tay
                     bne OffsetNotZero
                     ldy HexTrackCount0Base
-                    bra TryThisTrack
+                    jmp TryThisTrack
 
 OffsetNotZero:      cpy HexTrackCount0Base
                     beq TryThisTrack
@@ -2009,23 +2023,28 @@ FoundUnplayedTrack: lda #$ff
                     jsr Hex2BCDSorta
                     sta BCDRandomPickedTrk
 
-                    ply
-                    plx
+                    pla
+                    tay
+                    pla
+                    tax
                     pla
                     rts
 
 PlayedListDirection:.byte   $00
 
+;;; ============================================================
+
                     ; TODO: Analysis - Understand the operation of this subroutine better, improve comments
-TrackPseudoRNGSub:  phx
+TrackPseudoRNGSub:  stx PRNGSaveX
                     ; Return A as (Seed * 253) mod HexMaxTrackOffset
-                    phy
+                    sty PRNGSaveY
 
                     ; 253 - not sure why?
                     ldx #$fd
                     lda RandomSeed
                     bne PRNGSeedIsValid
-                    inc a
+                    clc
+                    adc #1
 
                     ; A = RandFuncTempStorage = Seed (adjusted to 1-255)
 PRNGSeedIsValid:    sta RandFuncTempStorage
@@ -2041,19 +2060,25 @@ PRNGMathLoop1:      clc
                     adc #$01
                     and #$7f
                     bne PRNGMathLoop2
-                    inc a
+                    clc
+                    adc #1
 
 PRNGMathLoop2:      cmp HexTrackCount0Base
                     bmi ExitMathLoop2
                     clc
                     sbc HexTrackCount0Base
-                    bra PRNGMathLoop2
+                    jmp PRNGMathLoop2
 
-ExitMathLoop2:      inc a
+ExitMathLoop2:      clc
+                    adc #1
 
-                    ply
-                    plx
+                    PRNGSaveY := *+1
+                    ldy #SELF_MODIFIED_BYTE
+                    PRNGSaveX := *+1
+                    ldx #SELF_MODIFIED_BYTE
                     rts
+
+;;; ============================================================
 
                     ; This just zeroes all 99 elements in the Played List
 ClearPlayedList:    lda #$00
@@ -2082,10 +2107,12 @@ InitPlayedList:     lda PlayedListAddr
                     sta PlayedListDirection
                     rts
 
+;;; ============================================================
+
                     ; TODO: Analysis - WTF is going on here?? This *seems* like an attempt to convert from BCD to binary, but it's... not.  It's kinda wonky.
-Hex2BCDSorta:       phx
+Hex2BCDSorta:       stx Hex2BCDSaveX
                     ; TODO: Analysis - The return values from this function seem bizarre and inexplicable.  Better analysis needs to be done on this code.
-                    phy
+                    sty Hex2BCDSaveY
 
                     ldx #$00
 DivideBy10:         cmp #$0a
@@ -2093,7 +2120,7 @@ DivideBy10:         cmp #$0a
                     inx
                     clc
                     sbc #$0a
-                    bra DivideBy10
+                    jmp DivideBy10
 
 TenOrLess:          sta Hex2BCDTemp
                     txa
@@ -2105,11 +2132,15 @@ TenOrLess:          sta Hex2BCDTemp
                     clc
                     adc Hex2BCDTemp
 
-                    ply
-                    plx
+                    Hex2BCDSaveY := *+1
+                    ldy #SELF_MODIFIED_BYTE
+                    Hex2BCDSaveX := *+1
+                    ldx #SELF_MODIFIED_BYTE
                     rts
 
 Hex2BCDTemp:        .byte   $00
+
+;;; ============================================================
 
                     ; UI Button Flags: $00 = "Inactive" button and dim in UI, $FF = "Active" button and highlighted in UI
 PlayButtonState:    .byte   $00
@@ -2173,7 +2204,6 @@ PlayedList:         .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
                     .byte   $00, $00, $00, $00, $00, $00, $00, $00, $00, $00
 PlayedListAddr:     .addr   PlayedList
 
-.popcpu
 .endscope
 
 ;;; Exports
