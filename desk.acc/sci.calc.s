@@ -1476,8 +1476,8 @@ label:  .addr   0
         ;; Traps FP error via call to $36 from MON.COUT, resets stack
         ;; and returns to the input loop.
 .proc ErrorHook
-        lda     LCBANK1
-        lda     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         jsr     ResetBuffersAndDisplay
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params

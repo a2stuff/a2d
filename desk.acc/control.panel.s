@@ -956,10 +956,10 @@ next:   dex
         END_IF
 
         ;; Also doubled if a IIc
-        ldx     ROMIN
+        bit     ROMIN
         lda     ZIDBYTE
-        ldx     LCBANK1
-        ldx     LCBANK1
+        bit     LCBANK1
+        bit     LCBANK1
         cmp     #0              ; ZIDBYTE=0 for IIc / IIc+
         IF_ZERO
         inc     scalemouse_params::x_exponent
