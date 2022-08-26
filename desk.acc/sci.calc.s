@@ -195,7 +195,7 @@ port:           .word   left, top, left+kSciButtonWidth-3, top+kCalcButtonHeight
         digit7 = '7'
         digit8 = '8'
         digit9 = '9'
-        decimal = '.'
+        decimal = res_char_decimal_separator
 
         ;; Operations
         op_multiply = '*'
@@ -272,7 +272,7 @@ port:           .word   left, top, left+kWideButtonWidth-3, top+kCalcButtonHeigh
 
 .params btn_dec
 function:       .byte   Function::decimal
-key:            .byte   '.'
+key:            .byte   res_char_decimal_separator
         DEFINE_POINT viewloc, kCol3Left - kBorderLeftTop, kRow5Top - kBorderLeftTop
 mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
@@ -393,7 +393,7 @@ saved_stack:
         .byte   $00             ; restored after error
 calc_p: .byte   $00             ; high bit set if pending op?
 calc_op:.byte   $00
-calc_d: .byte   $00             ; '.' if decimal present, 0 otherwise
+calc_d: .byte   $00             ; `res_char_decimal_separator` if present, 0 otherwise
 calc_e: .byte   $00             ; exponential?
 calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
@@ -702,7 +702,10 @@ ret:    rts
         bcs     :+
         ora     #AS_BYTE(~CASE_MASK)
 :
-
+        cmp     #'.'            ; allow either
+        bne     :+
+        lda     #res_char_decimal_separator
+:
         cmp     #CHAR_ESCAPE
     IF_EQ
         lda     calc_p
@@ -728,7 +731,7 @@ ret:    rts
 :       dec     calc_l
         ldx     #0
         lda     text_buffer1 + kTextBufferSize
-        cmp     #'.'
+        cmp     #res_char_decimal_separator
         bne     :+
         stx     calc_d
 :       cmp     #'E'
@@ -905,7 +908,7 @@ ret:    rts
         lda     calc_l
         bne     :+
         inc     calc_l
-:       lda     #'.'
+:       lda     #res_char_decimal_separator
         sta     calc_d
         jmp     Insert
 
@@ -965,7 +968,16 @@ ret:   rts
         lda     calc_g
     IF_NOT_ZERO
         ;; Parse `text_buffer1` into FAC.
-        copy16  #text_buffer1, TXTPTR
+        ;; Copy string to `FBUFFR`, mapping decimal char.
+        ldx     #kTextBufferSize
+cloop:  lda     text_buffer1,x
+        cmp     #res_char_decimal_separator
+        bne     :+
+        lda     #'.'
+:       sta     FBUFFR,x
+        dex
+        bpl     cloop
+        copy16  #FBUFFR, TXTPTR
         jsr     CHRGET
         ROM_CALL FIN
     END_IF
@@ -1148,7 +1160,10 @@ sloop:  lda     FBUFFR,y
 
 :       ldx     #kTextBufferSize ; copy to text buffers
 cloop:  lda     FBUFFR-1,y
-        sta     text_buffer1,x
+        cmp     #'.'            ; map decimal character
+        bne     :+
+        lda     #res_char_decimal_separator
+:       sta     text_buffer1,x
         sta     text_buffer2,x
         dex
         dey

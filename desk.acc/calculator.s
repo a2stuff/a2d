@@ -206,7 +206,7 @@ mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
-label:          .byte   '.'
+label:          .byte   res_char_decimal_separator
 pos:            .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
 port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
 .endparams
@@ -297,7 +297,7 @@ saved_stack:
         .byte   $00             ; restored after error
 calc_p: .byte   $00             ; high bit set if pending op?
 calc_op:.byte   $00
-calc_d: .byte   $00             ; '.' if decimal present, 0 otherwise
+calc_d: .byte   $00             ; `res_char_decimal_separator` if present, 0 otherwise
 calc_e: .byte   $00             ; exponential?
 calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
@@ -767,7 +767,7 @@ miss:   clc
         row4_lookup := *-1
         .byte   '1', '2', '3', '+'
         row5_lookup := *-1
-        .byte   '0', '0', '.', '+'
+        .byte   '0', '0', res_char_decimal_separator, '+'
 
 .proc FindButtonCol
         cpx     #kCol1Left-kBorderLeftTop             ; col 1?
@@ -865,9 +865,11 @@ try_eq: cmp     #'='            ; Equals?
         ldxy    #btn_mul::port
         jmp     DoOpClick
 
-:       cmp     #'.'            ; Decimal?
+:       cmp     #res_char_decimal_separator ; Decimal?
+        beq     dsep
+        cmp     #'.'            ; allow either
         bne     try_add
-        ldxy    #btn_dec::port
+dsep:   ldxy    #btn_dec::port
         jsr     DepressButton
         lda     calc_d
         ora     calc_e
@@ -875,7 +877,7 @@ try_eq: cmp     #'='            ; Equals?
         lda     calc_l
         bne     :+
         inc     calc_l
-:       lda     #'.'
+:       lda     #res_char_decimal_separator
         sta     calc_d
         jmp     update
 
@@ -983,7 +985,7 @@ trydiv: cmp     #'/'            ; Divide?
 :       dec     calc_l
         ldx     #0
         lda     text_buffer1 + kTextBufferSize
-        cmp     #'.'
+        cmp     #res_char_decimal_separator
         bne     :+
         stx     calc_d
 :       cmp     #'E'
@@ -1071,7 +1073,17 @@ rts3:   rts
         sta     calc_op
         jmp     ResetBuffer1AndState
 
-reparse:copy16  #text_buffer1, TXTPTR
+reparse:
+        ;; Copy string to `FBUFFR`, mapping decimal char.
+        ldx     #kTextBufferSize
+cloop:  lda     text_buffer1,x
+        cmp     #res_char_decimal_separator
+        bne     :+
+        lda     #'.'
+:       sta     FBUFFR,x
+        dex
+        bpl     cloop
+        copy16  #FBUFFR, TXTPTR
         jsr     CHRGET
         ROM_CALL FIN
 
@@ -1121,7 +1133,10 @@ sloop:  lda     FBUFFR,y
 
 :       ldx     #kTextBufferSize ; copy to text buffers
 cloop:  lda     FBUFFR-1,y
-        sta     text_buffer1,x
+        cmp     #'.'            ; map decimal character
+        bne     :+
+        lda     #res_char_decimal_separator
+:       sta     text_buffer1,x
         sta     text_buffer2,x
         dex
         dey

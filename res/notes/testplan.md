@@ -631,6 +631,11 @@ Image File:
 
 * Create a set of nested directories, 21 levels deep or more (e.g. `/VOL/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D`). Launch DeskTop and open the volume. Apple > Find Files. Enter a search term (e.g. `*`) and click Search. Verify that the DA doesn't crash. (Not all files will be found, though.)
 
+Repeat for Calculator and Sci.Calc:
+* With an English build, run the DA. Verify that '.' appears as the decimal separator in calculation results and that '.' when typed functions as a decimal separator.
+* With an Italian build, run the DA. Verify that ',' appears as the decimal separator in calculation result and that ',' when typed functions as a decimal separator. Verify that when '.' is typed, ',' appears.
+
+
 # Selector
 
 * Load Selector. Put a disk in Slot 6, Drive 1. Startup > Slot 6. Verify that the system boots the disk. Repeat for all other slots with drives.
