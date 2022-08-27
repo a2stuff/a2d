@@ -15331,6 +15331,7 @@ done:   rts
         MGTK_CALL MGTK::FrameRect, name_input_rect
         LETK_CALL LETK::Init, le_params
         LETK_CALL LETK::Activate, le_params
+        rts
 .endproc
 
 ;;; ============================================================
