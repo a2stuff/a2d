@@ -52,7 +52,7 @@
 .define res_string_move_dialog_title "D{placer..."
 .define res_string_move_label_status "D{placement en cours de "
 .define res_string_move_status_files_remaining "Fichiers restant @ d{placer : "
-.define res_string_prompt_overwrite "Le fichier existe d{j@.  Voulez-vous le remplacer ?"
+.define res_string_prompt_overwrite "Le fichier existe d{j@. Voulez-vous le remplacer ?"
 .define res_string_errmsg_too_large_to_copy "Fichier trop grand."
 .define res_string_errmsg_too_large_to_move "Fichier trop large."
 .define res_string_delete_dialog_title "Supprimer..."

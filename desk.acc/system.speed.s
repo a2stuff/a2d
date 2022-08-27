@@ -87,11 +87,11 @@ kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeigh
 
 kButtonInsetX   = 25
 
-        DEFINE_BUTTON norm_button_rec, kDAWindowId, res_string_button_norm, kButtonInsetX, 28
+        DEFINE_BUTTON norm_button_rec, kDAWindowId, res_string_button_norm, res_char_button_norm_shortcut, kButtonInsetX, 28
         DEFINE_BUTTON_PARAMS norm_button_params, norm_button_rec
-        DEFINE_BUTTON fast_button_rec, kDAWindowId, res_string_button_fast, kDAWidth - kButtonWidth - kButtonInsetX, 28
+        DEFINE_BUTTON fast_button_rec, kDAWindowId, res_string_button_fast, res_char_button_fast_shortcut, kDAWidth - kButtonWidth - kButtonInsetX, 28
         DEFINE_BUTTON_PARAMS fast_button_params, fast_button_rec
-        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kDAWidth - kButtonWidth - kButtonInsetX, 52
+        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kButtonWidth - kButtonInsetX, 52
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
         DEFINE_LABEL title, res_string_dialog_title, 0, 18

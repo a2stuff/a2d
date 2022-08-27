@@ -261,7 +261,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT rect_erase_dialog_upper, 8, 20, kDialogWidth-8, 103 ; under title to bottom of buttons
         DEFINE_RECT rect_erase_dialog_lower, 8, 103, kDialogWidth-8, kDialogHeight-8 ; top of buttons to bottom of dialog
 
-        DEFINE_BUTTON ok_button_rec, winfo_dialog::kWindowId, res_string_button_ok, 350, 90
+        DEFINE_BUTTON ok_button_rec, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
         ;; For drawing/updating the dialog title
@@ -270,7 +270,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
 
-        DEFINE_BUTTON read_drive_button_rec, winfo_dialog::kWindowId, res_string_button_read_drive, 210, 90
+        DEFINE_BUTTON read_drive_button_rec, winfo_dialog::kWindowId, res_string_button_read_drive, res_char_button_read_drive_shortcut, 210, 90
         DEFINE_BUTTON_PARAMS read_drive_button_params, read_drive_button_rec
 
         DEFINE_POINT point_slot_drive_name, 20, 28

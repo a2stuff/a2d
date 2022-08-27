@@ -316,9 +316,9 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         ;; Used when rendering entries
         DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
 
-        DEFINE_BUTTON entry_picker_ok_button_rec, winfo_entry_picker::kWindowId, res_string_button_ok, 210, winfo_entry_picker::kHeight-18
+        DEFINE_BUTTON entry_picker_ok_button_rec, winfo_entry_picker::kWindowId, res_string_button_ok, kGlyphReturn, 210, winfo_entry_picker::kHeight-18
         DEFINE_BUTTON_PARAMS entry_picker_ok_button_params, entry_picker_ok_button_rec
-        DEFINE_BUTTON entry_picker_cancel_button_rec, winfo_entry_picker::kWindowId, res_string_button_cancel, 40, winfo_entry_picker::kHeight-18
+        DEFINE_BUTTON entry_picker_cancel_button_rec, winfo_entry_picker::kWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, winfo_entry_picker::kHeight-18
         DEFINE_BUTTON_PARAMS entry_picker_cancel_button_params, entry_picker_cancel_button_rec
 
 ;;; ============================================================

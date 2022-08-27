@@ -225,9 +225,9 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok_button_rec,      winfo::kDialogId, res_string_button_ok, winfo::kWidth - kButtonWidth - 60, winfo::kHeight - 18
+        DEFINE_BUTTON ok_button_rec,      winfo::kDialogId, res_string_button_ok, kGlyphReturn, winfo::kWidth - kButtonWidth - 60, winfo::kHeight - 18
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
-        DEFINE_BUTTON desktop_button_rec, winfo::kDialogId, res_string_button_desktop,                           60, winfo::kHeight - 18
+        DEFINE_BUTTON desktop_button_rec, winfo::kDialogId, res_string_button_desktop, res_char_button_desktop_shortcut,       60, winfo::kHeight - 18
         DEFINE_BUTTON_PARAMS desktop_button_params, desktop_button_rec
 
 pensize_normal: .byte   1, 1

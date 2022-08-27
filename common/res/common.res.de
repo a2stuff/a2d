@@ -1,6 +1,7 @@
-.define res_string_button_ok "OK              \x0D"
-.define res_string_button_cancel "Abbrechen   Esc"
-.define res_string_button_try_again "Wiederholen    W"
+.define res_string_button_ok "OK"
+.define res_string_button_cancel "Abbrechen"
+.define res_string_button_cancel_shortcut "Esc"
+.define res_string_button_try_again "Wiederholen"
 .define res_char_button_try_again_shortcut 'W'
 .define res_string_button_yes "Ja"
 .define res_char_button_yes_shortcut 'J'

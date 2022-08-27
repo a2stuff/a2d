@@ -852,7 +852,7 @@ textfont:       .addr   FONT
 nextwinfo:      .addr   0
 .endparams
 
-        DEFINE_BUTTON ok_button_rec, winfo::kWindowId, res_string_button_ok, winfo::kWidth-20-kButtonWidth, 49
+        DEFINE_BUTTON ok_button_rec, winfo::kWindowId, res_string_button_ok, kGlyphReturn, winfo::kWidth-20-kButtonWidth, 49
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight

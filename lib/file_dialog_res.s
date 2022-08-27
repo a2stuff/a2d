@@ -43,15 +43,15 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         DEFINE_RECT disk_name_rect, kControlsLeft, 16, 174, 26
 
-        DEFINE_BUTTON change_drive_button_rec, kFilePickerDlgWindowID, res_string_button_change_drive, 195, kControlsTop + 0 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON change_drive_button_rec, kFilePickerDlgWindowID, res_string_button_change_drive,,    195, kControlsTop + 0 * (kButtonHeight + kButtonGap)
         DEFINE_BUTTON_PARAMS change_drive_button_params, change_drive_button_rec
-        DEFINE_BUTTON open_button_rec, kFilePickerDlgWindowID,         res_string_button_open,         195, kControlsTop + 1 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON open_button_rec, kFilePickerDlgWindowID,         res_string_button_open,,            195, kControlsTop + 1 * (kButtonHeight + kButtonGap)
         DEFINE_BUTTON_PARAMS open_button_params, open_button_rec
-        DEFINE_BUTTON close_button_rec, kFilePickerDlgWindowID,        res_string_button_close,        195, kControlsTop + 2 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON close_button_rec, kFilePickerDlgWindowID,        res_string_button_close,,           195, kControlsTop + 2 * (kButtonHeight + kButtonGap)
         DEFINE_BUTTON_PARAMS close_button_params, close_button_rec
-        DEFINE_BUTTON cancel_button_rec, kFilePickerDlgWindowID,       res_string_button_cancel,       195, kControlsTop + 3 * (kButtonHeight + kButtonGap) + kSep
+        DEFINE_BUTTON cancel_button_rec, kFilePickerDlgWindowID,       res_string_button_cancel, res_string_button_cancel_shortcut,    195, kControlsTop + 3 * (kButtonHeight + kButtonGap) + kSep
         DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
-        DEFINE_BUTTON ok_button_rec, kFilePickerDlgWindowID,           res_string_button_ok,           195, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
+        DEFINE_BUTTON ok_button_rec, kFilePickerDlgWindowID,           res_string_button_ok, kGlyphReturn, 195, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
 ;;; Dividing line

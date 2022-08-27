@@ -11,6 +11,7 @@
         cache       := $12
         window_id   := cache + BTK::ButtonRecord::window_id
         a_label     := cache + BTK::ButtonRecord::a_label
+        a_shortcut  := cache + BTK::ButtonRecord::a_shortcut
         rect        := cache + BTK::ButtonRecord::rect
         state       := cache + BTK::ButtonRecord::state
 
@@ -173,14 +174,14 @@ a_record  .addr
         jsr     _SetPort
 skip_port:
 
-        pos := $06
+        pos := $0B
 
         add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
         ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
         sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
 
-        ;; Draw the string
+        ;; Draw the string (left aligned)
 PARAM_BLOCK dt_params, $6
 textptr .addr
 textlen .byte
@@ -191,6 +192,28 @@ END_PARAM_BLOCK
         sta     dt_params::textlen
         add16_8 a_label, #1, dt_params::textptr
         MGTK_CALL MGTK::DrawText, dt_params
+:
+
+        ;; Draw the shortcut (if present, right aligned)
+PARAM_BLOCK tw_params, $6
+textptr .addr
+textlen .byte
+width   .word
+END_PARAM_BLOCK
+        lda     a_shortcut
+        ora     a_shortcut+1
+        beq     :+
+        ldy     #0
+        lda     (a_shortcut),y
+        beq     :+
+        sta     tw_params::textlen
+        add16_8 a_shortcut, #1, tw_params::textptr
+        MGTK_CALL MGTK::TextWidth, tw_params
+
+        sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
+        sub16   pos+MGTK::Point::xcoord, tw_params::width, pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, pos
+        MGTK_CALL MGTK::DrawText, tw_params
 :
 
         bit     state

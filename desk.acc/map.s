@@ -72,7 +72,7 @@ kTextBoxLeft = kControlsLeft
 kTextBoxTop = kRow1
 kTextBoxWidth = 7 * 15 + 2 * kTextBoxTextHOffset
         DEFINE_RECT_SZ input_rect, kTextBoxLeft, kTextBoxTop, kTextBoxWidth, kTextBoxHeight
-        DEFINE_BUTTON find_button_rec, kDAWindowId, res_string_button_find, kTextBoxLeft + kTextBoxWidth + 5, kTextBoxTop, 62
+        DEFINE_BUTTON find_button_rec, kDAWindowId, res_string_button_find,, kTextBoxLeft + kTextBoxWidth + 5, kTextBoxTop, 62
         DEFINE_BUTTON_PARAMS btn_params, find_button_rec
 
 kLabelLeft = kControlsLeft + kTextBoxTextHOffset

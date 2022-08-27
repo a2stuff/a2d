@@ -4,7 +4,7 @@
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "C~pia R@pida"
 .define res_string_dc_menu_item_disk_copy "C~pia do Disco"
-.define res_string_button_read_drive "Leia a Unidade D"
+.define res_string_button_read_drive "Leia a Unidade"
 .define res_char_button_read_drive_shortcut 'D'
 .define res_string_label_slot_drive_name "Ranhura, Unidade, Nome"
 .define res_string_prompt_select_source "Selecione o disco de origem"

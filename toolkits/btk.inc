@@ -18,6 +18,9 @@ window_id       .byte
 ;;; Address of the label string
 a_label         .addr
 
+;;; Address of the shortcut string (null if none)
+a_shortcut      .addr
+
 ;;; Bounding rect of the control
 rect            .tag    MGTK::Rect
 
@@ -26,21 +29,35 @@ state           .byte
 
 .endstruct
 
-.macro DEFINE_BUTTON name, winid, label, left, top, width, height
+.macro DEFINE_BUTTON name, winid, label, shortcut, left, top, width, height
 .params name
 window_id:      .byte   winid
 a_label:        .addr   str_label
-.if     .paramcount = 7
+
+.ifnblank shortcut
+a_shortcut:     .addr   str_shortcut
+.else
+a_shortcut:     .addr   0
+.endif
+
+
+.if     .paramcount = 8
         DEFINE_RECT_SZ rect, (left), (top), (width), (height)
-.elseif .paramcount = 6
+.elseif .paramcount = 7
         DEFINE_RECT_SZ rect, (left), (top), (width), kButtonHeight
 .else
         DEFINE_RECT_SZ rect, (left), (top), kButtonWidth, kButtonHeight
 .endif
+
 state:          .byte   0
         .res    .sizeof(BTK::ButtonRecord) - (*-window_id)
         ;; TODO: Use a string pool for these, somehow
 str_label:      PASCAL_STRING label
+
+.ifnblank shortcut
+str_shortcut:   PASCAL_STRING shortcut
+.endif
+
 .endparams
 .endmacro
 

@@ -231,7 +231,7 @@ nextwinfo:      .addr   0
         kTextHeight = kSystemFontHeight
         kButtonMarginY = 6
 
-        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
+        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
         DEFINE_LABEL alert_sound, res_string_label_alert, kMarginX, kMarginY+kTextHeight

@@ -126,25 +126,53 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
 .endparams
 
-.macro DEFINE_ALERT_BUTTON ident, label, xpos, ypos, width, height
-        .ident(.sprintf("%s_button_record", .string(ident))) := *
-.if .paramcount = 5
-        DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), (width), kButtonHeight
+;;; --------------------------------------------------
+
+.struct AlertButtonRecord
+;;; Address of the label string
+a_label         .addr
+
+;;; Address of the shortcut string (null if none)
+a_shortcut      .addr
+
+;;; Bounding rect of the control
+rect            .tag    MGTK::Rect
+.endstruct
+
+.macro DEFINE_ALERT_BUTTON ident, label, shortcut, xpos, ypos, width, height
+.params .ident(.sprintf("%s_button_record", .string(ident)))
+
+a_label:        .addr   str_label
+
+.ifnblank shortcut
+a_shortcut:     .addr   str_shortcut
 .else
-        DEFINE_RECT_SZ .ident(.sprintf("%s_button_rect", .string(ident))), (xpos), (ypos), kButtonWidth, kButtonHeight
+a_shortcut:     .addr   0
 .endif
-        DEFINE_POINT .ident(.sprintf("%s_button_pos", .string(ident))), ((xpos) + kButtonTextHOffset), ((ypos) + kButtonTextVOffset)
-        .ident(.sprintf("%s_button_label", .string(ident))) := *
-        PASCAL_STRING {label}
+
+.if .paramcount = 6
+        DEFINE_RECT_SZ rect, (xpos), (ypos), (width), kButtonHeight
+.else
+        DEFINE_RECT_SZ rect, (xpos), (ypos), kButtonWidth, kButtonHeight
+.endif
+
+str_label:      PASCAL_STRING {label}
+
+.ifnblank shortcut
+str_shortcut:   PASCAL_STRING {shortcut}
+.endif
+.endparams
 .endmacro
 
-        DEFINE_ALERT_BUTTON ok,        res_string_button_ok,          300, 37
-        DEFINE_ALERT_BUTTON try_again, res_string_button_try_again,   300, 37
-        DEFINE_ALERT_BUTTON cancel,    res_string_button_cancel,       20, 37
+;;; --------------------------------------------------
+
+        DEFINE_ALERT_BUTTON ok,        res_string_button_ok, kGlyphReturn, 300, 37
+        DEFINE_ALERT_BUTTON try_again, res_string_button_try_again, res_char_button_try_again_shortcut, 300, 37
+        DEFINE_ALERT_BUTTON cancel,    res_string_button_cancel, res_string_button_cancel_shortcut, 20, 37
 
 .if AD_YESNO
-        DEFINE_ALERT_BUTTON yes, res_string_button_yes, 250, 37, 50
-        DEFINE_ALERT_BUTTON no,  res_string_button_no,  350, 37, 50
+        DEFINE_ALERT_BUTTON yes, res_string_button_yes,, 250, 37, 50
+        DEFINE_ALERT_BUTTON no,  res_string_button_no,,  350, 37, 50
 .endif ; AD_YESNO
 
         kTextLeft = 75
@@ -251,16 +279,14 @@ start:
         jmi     done_buttons
 .endif
 
-        jsr     SetPenXOR
+        MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         bit     alert_params::buttons ; high bit clear = Cancel
         bpl     draw_ok_btn
 
         ;; Cancel button
-        MGTK_CALL MGTK::FrameRect, cancel_button_rect
-        MGTK_CALL MGTK::MoveTo, cancel_button_pos
-        param_call DrawString, cancel_button_label
+        param_call DrawButton, cancel_button_record
 
         bit     alert_params::buttons
         bvs     draw_ok_btn
@@ -272,30 +298,22 @@ start:
         beq     draw_try_again_btn
 
         ;; Yes button
-        MGTK_CALL MGTK::FrameRect, yes_button_rect
-        MGTK_CALL MGTK::MoveTo, yes_button_pos
-        param_call DrawString, yes_button_label
+        param_call DrawButton, yes_button_record
 
         ;; No button
-        MGTK_CALL MGTK::FrameRect, no_button_rect
-        MGTK_CALL MGTK::MoveTo, no_button_pos
-        param_call DrawString, no_button_label
+        param_call DrawButton, no_button_record
         jmp     done_buttons
 draw_try_again_btn:
 .endif
 
         ;; Try Again button
-        MGTK_CALL MGTK::FrameRect, try_again_button_rect
-        MGTK_CALL MGTK::MoveTo, try_again_button_pos
-        param_call DrawString, try_again_button_label
+        param_call DrawButton, try_again_button_record
 
         jmp     done_buttons
 
         ;; OK button
 draw_ok_btn:
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-        MGTK_CALL MGTK::MoveTo, ok_button_pos
-        param_call DrawString, ok_button_label
+        param_call DrawButton, ok_button_record
 
 done_buttons:
 
@@ -412,8 +430,7 @@ event_loop:
         bne     :+
 
         ;; Cancel
-        jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, cancel_button_rect
+        param_call InvertButton, cancel_button_record
 finish_cancel:
         lda     #kAlertResultCancel
         jmp     finish
@@ -438,13 +455,11 @@ finish_cancel:
         beq     do_yes
         jmp     event_loop
 
-do_no:  jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, no_button_rect
+do_no:  param_call InvertButton, no_button_record
         lda     #kAlertResultNo
         jmp     finish
 
-do_yes: jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, yes_button_rect
+do_yes: param_call InvertButton, yes_button_record
         lda     #kAlertResultYes
         jmp     finish
 
@@ -456,8 +471,7 @@ check_try_again:
         bne     :+
 
 do_try_again:
-        jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, try_again_button_rect
+        param_call InvertButton, try_again_button_record
         lda     #kAlertResultTryAgain
         jmp     finish
 
@@ -474,8 +488,7 @@ check_ok:
         cmp     #CHAR_RETURN
         jne     event_loop
 
-do_ok:  jsr     SetPenXOR
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
+do_ok:  param_call InvertButton, ok_button_record
 finish_ok:
         lda     #kAlertResultOK
         jmp     finish          ; not a fixed value, cannot BNE/BEQ
@@ -491,10 +504,10 @@ HandleButtonDown:
         bpl     check_ok_rect   ; nope
 
         ;; Cancel
-        MGTK_CALL MGTK::InRect, cancel_button_rect
+        MGTK_CALL MGTK::InRect, cancel_button_record+AlertButtonRecord::rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        param_call AlertButtonEventLoop, cancel_button_rect
+        param_call TrackButton, cancel_button_record
         bne     no_button
         lda     #kAlertResultCancel
         .assert kAlertResultCancel <> 0, error, "kAlertResultCancel must be non-zero"
@@ -509,18 +522,18 @@ HandleButtonDown:
         beq     LEE47           ; Just Cancel/Try Again
 
         ;; Yes & No
-        MGTK_CALL MGTK::InRect, no_button_rect
+        MGTK_CALL MGTK::InRect, no_button_record+AlertButtonRecord::rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        param_call AlertButtonEventLoop, no_button_rect
+        param_call TrackButton, no_button_record
         bne     no_button
         lda     #kAlertResultNo
         jmp     finish
 
-:       MGTK_CALL MGTK::InRect, yes_button_rect
+:       MGTK_CALL MGTK::InRect, yes_button_record+AlertButtonRecord::rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        param_call AlertButtonEventLoop, yes_button_rect
+        param_call TrackButton, yes_button_record
         bne     no_button
         lda     #kAlertResultYes
         jmp     finish
@@ -528,10 +541,10 @@ LEE47:
 .endif
 
         ;; Try Again
-        MGTK_CALL MGTK::InRect, try_again_button_rect
+        MGTK_CALL MGTK::InRect, try_again_button_record+AlertButtonRecord::rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        param_call AlertButtonEventLoop, try_again_button_rect
+        param_call TrackButton, try_again_button_record
         bne     no_button
         lda     #kAlertResultTryAgain
         .assert kAlertResultTryAgain = 0, error, "kAlertResultTryAgain must be non-zero"
@@ -539,10 +552,10 @@ LEE47:
 
         ;; OK
 check_ok_rect:
-        MGTK_CALL MGTK::InRect, ok_button_rect
+        MGTK_CALL MGTK::InRect, ok_button_record+AlertButtonRecord::rect
         cmp     #MGTK::inrect_inside
         bne     no_button
-        param_call AlertButtonEventLoop, ok_button_rect
+        param_call TrackButton, ok_button_record
         bne     no_button
         lda     #kAlertResultOK
         jmp     finish          ; not a fixed value, cannot BNE/BEQ
@@ -580,9 +593,79 @@ finish:
 .endproc
 
 ;;; ============================================================
+;;; Input: A,X = AlertButtonRecord
+;;; Output: copied to $10
+;;; Trashes $06
 
-.proc SetPenXOR
+.proc StashButton
+        ptr := $06
+        rec := $10
+
+        stax    ptr
+        ldy     #.sizeof(AlertButtonRecord)-1
+:       copy    (ptr),y, rec,y
+        dey
+        bpl     :-
+        rts
+.endproc
+
+
+;;; ============================================================
+;;; Input: A,X = AlertButtonRecord
+
+.proc InvertButton
+        jsr     StashButton     ; copy AlertButtonRecord to $10
+        rect := $10 + AlertButtonRecord::rect
+
         MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, rect
+        rts
+.endproc
+
+;;; ============================================================
+;;; Input: A,X = AlertButtonRecord
+
+.proc DrawButton
+        ;; Won't be trashed by DrawString
+        pos := $0B
+        rec := $10
+
+        jsr     StashButton     ; copy AlertButtonRecord to $10
+
+        a_label    := rec + AlertButtonRecord::a_label
+        a_shortcut := rec + AlertButtonRecord::a_shortcut
+        rect       := rec + AlertButtonRecord::rect
+
+        ;; Frame it
+        MGTK_CALL MGTK::FrameRect, rect
+
+        ;; Draw the label (left aligned)
+        add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
+        sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
+        MGTK_CALL MGTK::MoveTo, pos
+
+        param_call_indirect DrawString, a_label
+
+        ;; Draw the shortcut (if present, right aligned)
+PARAM_BLOCK tw_params, $6
+textptr .addr
+textlen .byte
+width   .word
+END_PARAM_BLOCK
+        lda     a_shortcut
+        ora     a_shortcut+1
+        beq     :+
+        ldy     #0
+        lda     (a_shortcut),y
+        sta     tw_params::textlen
+        add16_8 a_shortcut, #1, tw_params::textptr
+        MGTK_CALL MGTK::TextWidth, tw_params
+
+        sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
+        sub16   pos+MGTK::Point::xcoord, tw_params::width, pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, pos
+        MGTK_CALL MGTK::DrawText, tw_params
+:
         rts
 .endproc
 
@@ -591,12 +674,13 @@ finish:
 ;;; inverting as mouse is dragged in/out.
 ;;; (The `BTK::Track` proc is not used as these buttons
 ;;; are not in a window, so ScreenToWindow can not be used.)
-;;; Inputs: A,X = rect address
+;;; Inputs: A,X = AlertButtonRecord
 ;;; Output: A=0/N=0/Z=1 = click, A=$80/N=1/Z=0 = cancel
 
-.proc AlertButtonEventLoop
-        stax    rect_addr1
-        stax    rect_addr2
+.proc TrackButton
+        jsr     StashButton   ; copy AlertButtonRecord to $10
+        rect := $10 + AlertButtonRecord::rect
+
         lda     #0
         sta     flag
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -608,7 +692,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         beq     button_up
         jsr     MapEventCoords
         MGTK_CALL MGTK::MoveTo, event_coords
-        MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr1
+        MGTK_CALL MGTK::InRect, rect
         cmp     #MGTK::inrect_inside
         beq     inside
         lda     flag
@@ -629,7 +713,7 @@ button_up:
         rts
 
 Invert:
-        MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr2
+        MGTK_CALL MGTK::PaintRect, rect
         rts
 
         ;; High bit clear if button is depressed

@@ -1,6 +1,7 @@
-.define res_string_button_ok "OK              \x0D"
-.define res_string_button_cancel "Cancelar     Esc"
-.define res_string_button_try_again "Reintentar     R"
+.define res_string_button_ok "OK"
+.define res_string_button_cancel "Cancelar"
+.define res_string_button_cancel_shortcut "Esc"
+.define res_string_button_try_again "Reintentar"
 .define res_char_button_try_again_shortcut 'R'
 .define res_string_button_yes "Si"
 .define res_char_button_yes_shortcut 'Y'

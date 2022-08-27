@@ -942,10 +942,10 @@ grafport_win:   .tag    MGTK::GrafPort
         ;; Left edges are adjusted dynamically based on label width
         DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
 
-        DEFINE_BUTTON search_button_rec, kDAWindowID, res_string_button_search, kDAWidth-235, kControlsTop
+        DEFINE_BUTTON search_button_rec, kDAWindowID, res_string_button_search, kGlyphReturn, kDAWidth-235, kControlsTop
         DEFINE_BUTTON_PARAMS search_button_params, search_button_rec
 
-        DEFINE_BUTTON cancel_button_rec, kDAWindowID, res_string_button_cancel, kDAWidth-120, kControlsTop
+        DEFINE_BUTTON cancel_button_rec, kDAWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
         DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
 
 notpencopy:     .byte   MGTK::notpencopy

@@ -1,5 +1,5 @@
-.define res_string_button_norm "Normale   N"
+.define res_string_button_norm "Normale"
 .define res_char_button_norm_shortcut 'N'
-.define res_string_button_fast "Veloce      V"
+.define res_string_button_fast "Veloce"
 .define res_char_button_fast_shortcut 'V'
 .define res_string_dialog_title "Velocit{ di sistema"

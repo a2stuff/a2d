@@ -15,8 +15,9 @@ This defines the state of a control instance.
 ```
 .byte       window_id       ID of the Winfo containing the control.
 .addr       a_label         Address of the button label.
+.addr       a_shortcut      Address of the button shortcut label, null if none).
 MGTK:Rect   rect            Bounding rect of the control.
-.byte       state           Button state. High bit is disabled.
+.byte       state           Button state. bit7 = disabled.
 ```
 
 ## Commands
@@ -66,6 +67,7 @@ Parameters:
   * symbol (name) for the record
   * window ID
   * label string
+  * shortcut string (blank if none)
   * left, top, width (optional), and height (optional)
 * `DEFINE_BUTTON_PARAMS` can be used to instantiate a union-style parameter block. Callers can then pass this to BTK calls.
   * symbol (name) for the parameter block

@@ -4,7 +4,7 @@
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Copie rapide"
 .define res_string_dc_menu_item_disk_copy "Copie volume"
-.define res_string_button_read_drive "Volume en ligne V"
+.define res_string_button_read_drive "Volume en ligne"
 .define res_char_button_read_drive_shortcut 'V'
 .define res_string_label_slot_drive_name "Port, Lecteur, Nom"
 .define res_string_prompt_select_source "S{lectionnez le disque source"

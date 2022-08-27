@@ -4,7 +4,7 @@
 .define res_char_dc_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_quick_copy "Schnellkopieren"
 .define res_string_dc_menu_item_disk_copy "Kopiere Diskette"
-.define res_string_button_read_drive "Lese Laufwerk D"
+.define res_string_button_read_drive "Lese Laufwerk"
 .define res_char_button_read_drive_shortcut 'D'
 .define res_string_label_slot_drive_name "Steckplatz, Laufwerk, Name"
 .define res_string_prompt_select_source "W{hle Quelldiskette"

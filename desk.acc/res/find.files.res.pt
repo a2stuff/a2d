@@ -1,2 +1,2 @@
 .define res_string_label_find "Achar:"
-.define res_string_button_search "Procurar     \x0D"
+.define res_string_button_search "Procurar"

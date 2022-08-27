@@ -197,9 +197,9 @@ grid_pen:
 
         kArrowDX = 16
         kArrowDY = 10
-        DEFINE_BUTTON left_button_rec, kDAWindowId, kGlyphLeftArrow, 40, 2, kArrowDX, kArrowDY
+        DEFINE_BUTTON left_button_rec, kDAWindowId, kGlyphLeftArrow,, 40, 2, kArrowDX, kArrowDY
         DEFINE_BUTTON_PARAMS left_button_params, left_button_rec
-        DEFINE_BUTTON right_button_rec, kDAWindowId, kGlyphRightArrow, kDAWidth - kArrowDX - 40, 2, kArrowDX, kArrowDY
+        DEFINE_BUTTON right_button_rec, kDAWindowId, kGlyphRightArrow,, kDAWidth - kArrowDX - 40, 2, kArrowDX, kArrowDY
         DEFINE_BUTTON_PARAMS right_button_params, right_button_rec
 
         DEFINE_RECT rect_month_year, kArrowDX+44, 0, kDAWidth-kArrowDX-44, 11
