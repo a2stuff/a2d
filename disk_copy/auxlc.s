@@ -1286,6 +1286,7 @@ draw_buttons:
         sta     ptr
         ldy     #0
         lda     (ptr),y
+        and     #$0F            ; handle ON_LINE results, etc
         tay
         bne     next
         rts
@@ -1473,6 +1474,8 @@ LE20D:  ldx     num_drives
         jsr     FindUnitNum
         ldx     num_drives
         sta     drive_unitnum_table,x
+        ldax    $06
+        jsr     AdjustCase
         lda     num_drives
         asl     a
         asl     a
@@ -1641,10 +1644,6 @@ src_block_count:
         lda     #>drive_name_table
         adc     #$00
         sta     $07
-
-        lda     $06
-        ldx     $07
-        jsr     AdjustCase
 
         lda     $06
         ldx     $07

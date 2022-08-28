@@ -684,6 +684,11 @@ Repeat for Calculator and Sci.Calc:
 * Configure a system with 8 or fewer drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is inactive.
 * Configure a system with 9 or more drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is active.
 
+* Launch DeskTop. Special > Disk Copy.... Verify that ProDOS disk names in the device list have adjusted case (e.g. "Volume" not "VOLUME").
+* Launch DeskTop. Special > Disk Copy.... Verify that DOS 3.3 disk names in the device list appear as "DOS 3.3 Sn, Dn" and do not have adjusted case.
+* Launch DeskTop. Special > Disk Copy.... Select a ProDOS disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name has adjusted case (e.g. "Volume" not "VOLUME").
+* Launch DeskTop. Special > Disk Copy.... Select a ProDOS disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME").
+
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.
