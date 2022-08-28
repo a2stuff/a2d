@@ -1062,8 +1062,12 @@ LDCA9:  return  #$FF
 .endproc
 
 ;;; ============================================================
+;;; Populate `drive_name_table` for a non-ProDOS volume
+;;; Input: A=unit number
+;;; Output: Z=1 if successful
 
-LDDFC:  sta     main__block_params_unit_num
+.proc NameNonProDOSVolume
+        sta     main__block_params_unit_num
         lda     #$00
         sta     main__block_params_block_num
         sta     main__block_params_block_num+1
@@ -1082,7 +1086,7 @@ LDE23:  lda     $1C02
         beq     LDE31
         cmp     #$60
         beq     LDE31
-LDE2E:  return  #$FF
+fail:   return  #$FF
 
 LDE31:  lda     num_drives
         asl     a
@@ -1102,10 +1106,12 @@ LDE31:  lda     num_drives
         return  #$00
 
 LDE4D:  cmp     #$A5
-        bne     LDE2E
+        bne     fail
         lda     $1C02
         cmp     #ERR_IO_ERROR
-        bne     LDE2E
+        bne     fail
+
+        ;; DOS 3.3
         lda     main__block_params_unit_num
         and     #$70
         lsr     a
@@ -1126,19 +1132,24 @@ LDE4D:  cmp     #$A5
         asl     a
         asl     a
         tay
+
         ldx     #$00
-LDE83:  lda     str_dos33_s_d,x
+:       lda     str_dos33_s_d,x
         sta     drive_name_table,y
         iny
         inx
         cpx     str_dos33_s_d
-        bne     LDE83
+        bne     :-
+
         lda     str_dos33_s_d,x
         sta     drive_name_table,y
+
         lda     #$43
         sta     $0300
         return  #$00
+.endproc
 
+;;; Pascal?
 .proc LDE9F
         ptr := $06
 
@@ -1432,8 +1443,10 @@ LE1CD:  pha
         bne     LE1EA
         lda     drive_unitnum_table,x
         and     #UNIT_NUM_MASK
-        jsr     LDDFC
+        jsr     NameNonProDOSVolume
         beq     LE207
+
+        ;; Unknown
 LE1EA:  lda     num_drives
         asl     a
         asl     a
@@ -1441,14 +1454,15 @@ LE1EA:  lda     num_drives
         asl     a
         tay
         ldx     #$00
-LE1F4:  lda     str_unknown,x
+:       lda     str_unknown,x
         sta     drive_name_table,y
         iny
         inx
         cpx     str_unknown
-        bne     LE1F4
+        bne     :-
         lda     str_unknown,x
         sta     drive_name_table,y
+
 LE207:  inc     num_drives
         jmp     next_device
 
@@ -1470,13 +1484,13 @@ LE20D:  ldx     num_drives
         and     #$0F
         sta     drive_name_table,x
         sta     LE264
-LE23E:  inx
+:       inx
         iny
         cpy     LE264
         beq     LE24D
         lda     ($06),y
         sta     drive_name_table,x
-        jmp     LE23E
+        jmp     :-
 
 LE24D:  lda     ($06),y
         sta     drive_name_table,x
@@ -1627,9 +1641,11 @@ src_block_count:
         lda     #>drive_name_table
         adc     #$00
         sta     $07
+
         lda     $06
         ldx     $07
         jsr     AdjustCase
+
         lda     $06
         ldx     $07
         jmp     DrawString
