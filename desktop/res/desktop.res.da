@@ -117,6 +117,7 @@
 .define res_string_errmsg_4E "Arkivet er l}st."
 .define res_string_errmsg_52 "Dette er ikke en ProDOS-disk."
 .define res_string_errmsg_57 "Der er en anden diskenhed med det navn p} skrivebordet."
+.define res_string_errmsg_F4 "K|rsel af en bin{r fil kan computeren g} ned. Er du sikker p}, at du vil k|re det?"
 .define res_string_errmsg_F5 "En vare kan ikke erstattes af sig selv eller en vare den indeholder."
 .define res_string_errmsg_F6 "Ikke-underst|ttet filtype."
 .define res_string_errmsg_F7 "Der er ingen vinduer }bne."

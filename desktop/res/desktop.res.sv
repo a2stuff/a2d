@@ -117,6 +117,7 @@
 .define res_string_errmsg_4E "Filen {r l}st."
 .define res_string_errmsg_52 "Detta {r inte en ProDOS-disk."
 .define res_string_errmsg_57 "Det finns en annan volym med det namnet p} skrivbordet."
+.define res_string_errmsg_F4 "Att k|ra en bin{r fil kan krascha datorn. [r du s{ker p} att du vill k|ra den?"
 .define res_string_errmsg_F5 "En vara kan inte ers{ttas av sig sj{lv eller en vara som den inneh}ller."
 .define res_string_errmsg_F6 "Filtyp som inte st|ds."
 .define res_string_errmsg_F7 "Det finns inga f|nster |ppna."

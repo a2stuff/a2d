@@ -37,6 +37,7 @@ sub indexes($$) {
 # Encodes into source strings (with escaping)
 sub encode($$) {
     my ($lang, $s) = @_;
+    $s =~ tr/\xA0/ /; # NBSP to regular space
     $s =~ tr/\\/\xFF/; # Protect \ temporarily, for \xNN sequences (etc)
     if ($lang eq 'fr') {
         $s =~ tr/£à˚ç§`éùè¨/#@[\\]`{|}~/;

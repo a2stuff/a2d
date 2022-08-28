@@ -117,6 +117,7 @@
 .define res_string_errmsg_4E "Fichier verrouill{."
 .define res_string_errmsg_52 "Disque non ProDOS."
 .define res_string_errmsg_57 "Volume d{j@ pr{sent sur le bureau."
+.define res_string_errmsg_F4 "L'ex{cution d'un fichier binaire peut planter l'ordinateur. Voulez-vous vraiment l'ex{cuter ?"
 .define res_string_errmsg_F5 "Un {l{ment ne peut pas etre remplac{ par lui-meme ou un {l{ment qu'il contient."
 .define res_string_errmsg_F6 "Type de fichier non pris en charge."
 .define res_string_errmsg_F7 "Il n'y a pas de fenetres ouvertes."

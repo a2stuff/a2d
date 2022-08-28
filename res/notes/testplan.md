@@ -435,7 +435,7 @@
 * Put BASIC program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
 * Put System program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
 
-* Launch DeskTop. Open a window. Locate an executable BIN file icon. Double-click it. Verify that nothing happens.
+* Launch DeskTop. Open a window. Locate an executable BIN file icon. Double-click it. Verify that an alert is shown. Click Cancel. Verify the alert closes but nothing else happens. Repeat, but click OK. Verify that it executes.
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Hold Solid-Apple and double-click it. Verify that it executes.
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Select File > Open. Verify that it executes.
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Press Open-Apple+O. Verify that it executes.

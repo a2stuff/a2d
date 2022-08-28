@@ -117,6 +117,7 @@
 .define res_string_errmsg_4E "Datei ist schreibgesch}tzt."
 .define res_string_errmsg_52 "Keine ProDOS-Diskette."
 .define res_string_errmsg_57 "Volumen schon vorhanden."
+.define res_string_errmsg_F4 "Das Ausf}hren einer Bin{rdatei kann den Computer zum Absturz bringen. Bist du dir sicher?"
 .define res_string_errmsg_F5 "Ein Gegenstand kann nicht durch sich selbst oder einen darin enthaltenen Gegenstand ersetzt werden."
 .define res_string_errmsg_F6 "Nicht unterst}tztes Dateiformat."
 .define res_string_errmsg_F7 "Es sind keine Fenster ge|ffnet."

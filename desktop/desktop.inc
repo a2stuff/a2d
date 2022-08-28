@@ -150,6 +150,7 @@ kErrTooManyFiles        = $E3
 kErrTooManyWindows      = $E4
 kErrSaveChanges         = $E5
 
+kErrConfirmRunning      = $F4
 kErrBadReplacement      = $F5
 kErrUnsupportedFileType = $F6
 kErrNoWindowsOpen       = $F7

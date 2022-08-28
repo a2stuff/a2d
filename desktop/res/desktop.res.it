@@ -117,6 +117,7 @@
 .define res_string_errmsg_4E "Fine del file."
 .define res_string_errmsg_52 "Non } un disco ProDOS."
 .define res_string_errmsg_57 "Volume duplicato."
+.define res_string_errmsg_F4 "L'esecuzione di un file binario potrebbe causare il crash del computer. Sei sicuro di volerlo eseguire?"
 .define res_string_errmsg_F5 "Un articolo non pu| essere sostituito da solo o da un articolo che contiene."
 .define res_string_errmsg_F6 "Tipo di file non supportato."
 .define res_string_errmsg_F7 "Non ci sono finestre aperte."

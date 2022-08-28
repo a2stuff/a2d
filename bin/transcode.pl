@@ -19,6 +19,8 @@ my $lang = shift || die "Usage: $0 dir encoding\n";
 die "$0: dir must be 'to' or 'from'\n" unless $dir eq 'to' ||  $dir eq 'from';
 
 while (<>) {
+    tr/\xA0/ / if $dir eq 'to'; # NBSP to regular space
+
     # Based on Apple IIgs Hardware Reference Table C-1 (with " incorrectly showing for ˚)
     if      ($lang eq 'fr') {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/£à˚ç§`éùè¨/; } else { tr/£à˚ç§`éùè¨/#@[\\]`{|}~/; }

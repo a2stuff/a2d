@@ -117,6 +117,7 @@
 .define res_string_errmsg_4E "The file is locked."
 .define res_string_errmsg_52 "This is not a ProDOS disk."
 .define res_string_errmsg_57 "There is another volume with that name on the desktop."
+.define res_string_errmsg_F4 "Running a binary file may crash the computer. Are you sure you want to run it?"
 .define res_string_errmsg_F5 "An item cannot be replaced by itself or an item it contains."
 .define res_string_errmsg_F6 "Unsupported file type."
 .define res_string_errmsg_F7 "There are no windows open."

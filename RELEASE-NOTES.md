@@ -51,7 +51,7 @@ Project Page: https://github.com/a2stuff/a2d
 * **File > Get Info** shows used/total for volumes, rather than free/total.
 * **File > Get Info** command shows aux type for files. ([#148](https://github.com/a2stuff/a2d/issues/148))
 * Use commas as a numeric separator. ([#270](https://github.com/a2stuff/a2d/issues/270), [#377](https://github.com/a2stuff/a2d/issues/377))
-* BIN files can be opened with menu items without a modifier key. ([#530](https://github.com/a2stuff/a2d/issues/530), [#531](https://github.com/a2stuff/a2d/issues/531))
+* BIN files can be opened with menu items without a modifier key; double-clicking without a modifier now shows a confirmation prompt. ([#530](https://github.com/a2stuff/a2d/issues/530), [#531](https://github.com/a2stuff/a2d/issues/531))
 * Double-clicking opens all selected folders/volumes. ([#363](https://github.com/a2stuff/a2d/issues/363))
 * Renaming volumes/folders doesn't close affected windows. ([#469](https://github.com/a2stuff/a2d/issues/469))
 * Show appropriate error when trying to replace an item with itself or an item it contains. ([#630](https://github.com/a2stuff/a2d/issues/630), [#634](https://github.com/a2stuff/a2d/issues/634), [#635](https://github.com/a2stuff/a2d/issues/635), [#636](https://github.com/a2stuff/a2d/issues/636))

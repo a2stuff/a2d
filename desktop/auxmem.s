@@ -455,6 +455,7 @@ err_E3:  PASCAL_STRING res_string_warning_window_must_be_closed
 err_E4:  PASCAL_STRING res_string_warning_too_many_windows
 err_E5:  PASCAL_STRING res_string_warning_save_changes
 
+err_F4:  PASCAL_STRING res_string_errmsg_F4
 err_F5:  PASCAL_STRING res_string_errmsg_F5
 err_F6:  PASCAL_STRING res_string_errmsg_F6
 err_F7:  PASCAL_STRING res_string_errmsg_F7
@@ -467,7 +468,7 @@ err_FD:  PASCAL_STRING res_string_errmsg_FD
 err_FE:  PASCAL_STRING res_string_errmsg_FE
 
         ;; number of alert messages
-        kNumAlerts = 30
+        kNumAlerts = 31
 
         ;; message number-to-index table
         ;; (look up by scan to determine index)
@@ -482,6 +483,7 @@ alert_table:
         ;; Internal error codes:
         .byte   kErrInsertSystemDisk, kErrSelectorListFull, kErrWindowMustBeClosed
         .byte   kErrTooManyFiles, kErrTooManyWindows, kErrSaveChanges
+        .byte   kErrConfirmRunning
         .byte   kErrBadReplacement, kErrUnsupportedFileType, kErrNoWindowsOpen
         .byte   kErrMoveCopyIntoSelf
         .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
@@ -493,7 +495,7 @@ message_table_low:
         .byte   <err_00,<err_27,<err_28,<err_2B,<err_40,<err_44,<err_45,<err_46
         .byte   <err_47,<err_48,<err_49,<err_4E,<err_52,<err_57
         .byte   <err_E0, <err_E1, <err_E2, <err_E3, <err_E4, <err_E5
-        .byte   <err_F5,<err_F6,<err_F7,<err_F8,<err_F9,<err_FA
+        .byte   <err_F4,<err_F5,<err_F6,<err_F7,<err_F8,<err_F9,<err_FA
         .byte   <err_FB,<err_FC,<err_FD,<err_FE
         ASSERT_TABLE_SIZE message_table_low, kNumAlerts
 
@@ -501,7 +503,7 @@ message_table_high:
         .byte   >err_00,>err_27,>err_28,>err_2B,>err_40,>err_44,>err_45,>err_46
         .byte   >err_47,>err_48,>err_49,>err_4E,>err_52,>err_57
         .byte   >err_E0, >err_E1, >err_E2, >err_E3, >err_E4, >err_E5
-        .byte   >err_F5,>err_F6,>err_F7,>err_F8,>err_F9,>err_FA
+        .byte   >err_F4,>err_F5,>err_F6,>err_F7,>err_F8,>err_F9,>err_FA
         .byte   >err_FB,>err_FC,>err_FD,>err_FE
         ASSERT_TABLE_SIZE message_table_high, kNumAlerts
 
@@ -528,6 +530,7 @@ alert_options_table:
         .byte   AlertButtonOptions::Ok             ; kErrTooManyWindows
         .byte   AlertButtonOptions::OkCancel       ; kErrSaveChanges
 
+        .byte   AlertButtonOptions::OkCancel       ; kErrConfirmRunning
         .byte   AlertButtonOptions::Ok             ; kErrBadReplacement
         .byte   AlertButtonOptions::OkCancel       ; kErrUnsupportedFileType
         .byte   AlertButtonOptions::Ok             ; kErrNoWindowsOpen

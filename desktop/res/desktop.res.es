@@ -117,6 +117,7 @@
 .define res_string_errmsg_4E "El archivo est\x10 bloqueado."
 .define res_string_errmsg_52 "Este no es un disco ProDOS."
 .define res_string_errmsg_57 "Hay otro volumen con el mismo nombre en el escritorio."
+.define res_string_errmsg_F4 "Ejecutar un archivo binario puede bloquear la computadora. ]Est\x10s seguro de que quieres ejecutarlo?"
 .define res_string_errmsg_F5 "Un art\x12culo no puede ser reemplazado por s\x12 mismo o por un art\x12culo que contiene."
 .define res_string_errmsg_F6 "Tipo de archivo no soportado."
 .define res_string_errmsg_F7 "No hay ventanas abiertas."

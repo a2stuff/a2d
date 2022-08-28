@@ -988,6 +988,10 @@ with_path:
         jne     launch
         jsr     ModifierDown ; Otherwise, only launch if a button is down
         jmi     launch
+        lda     #kErrConfirmRunning
+        jsr     ShowAlert       ; show a prompt otherwise
+        cmp     #kAlertResultOK
+        jeq     launch
         jmp     SetCursorPointer ; after not launching BIN
 
 :       cmp     #IconType::folder
