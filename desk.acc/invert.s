@@ -68,6 +68,7 @@ penXOR:         .byte   MGTK::penXOR
 .proc Init
         jsr     Invert
         MGTK_CALL MGTK::FlushEvents
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 ;;; ============================================================

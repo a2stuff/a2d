@@ -996,7 +996,7 @@ done:   rts
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
         beq     InputLoop
-        bne     Exit
+        bne     Exit            ; always
 .endproc
 
 ;;; ============================================================

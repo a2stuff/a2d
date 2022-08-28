@@ -606,7 +606,7 @@ ipblink_ip_bitmap:
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     Exit
-        bne     InputLoop
+        bne     InputLoop       ; always
 .endproc
 
 ;;; ============================================================

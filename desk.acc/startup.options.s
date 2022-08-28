@@ -264,7 +264,7 @@ kCheckboxLabelOffsetY = kCheckboxHeight + 1
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     Exit
-        bne     InputLoop
+        bne     InputLoop       ; always
 .endproc
 
 ;;; ============================================================

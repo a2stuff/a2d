@@ -65,6 +65,7 @@ event_params:   .tag MGTK::Event
 .proc Init
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::FlushEvents
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 ;;; ============================================================

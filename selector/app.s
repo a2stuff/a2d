@@ -2211,8 +2211,8 @@ len:    .byte   0
 
 .proc SetRGBMode
         bit     SETTINGS + DeskTopSettings::rgb_color
-        bmi     SetColorMode
         bpl     SetMonoMode
+        FALL_THROUGH_TO SetColorMode
 .endproc
 
 .proc SetColorMode

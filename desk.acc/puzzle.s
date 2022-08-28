@@ -824,7 +824,7 @@ aloop:  lda     position_table+1,y
         iny
         dex
         bne     aloop
-        beq     row
+        beq     row             ; always
 .endproc
 
 .proc ClickInCol
@@ -917,7 +917,7 @@ DrawWindow:
         dey
         lda     #16
         sta     draw_end
-        bne     DrawSelected
+        bne     DrawSelected    ; always
 .endproc
 
 .proc DrawRow                   ; row specified in draw_rc
@@ -928,7 +928,7 @@ DrawWindow:
         clc
         adc     #4
         sta     draw_end
-        bne     DrawSelected
+        bne     DrawSelected    ; always
 .endproc
 
 .proc DrawCol                   ; col specified in draw_rc

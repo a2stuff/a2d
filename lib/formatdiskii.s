@@ -200,6 +200,7 @@ L093C:  sty     $D5
         bpl     :-
         cmp     #$AA
         beq     return_with_carry_clear
+        FALL_THROUGH_TO return_with_carry_set
 .endproc
 return_with_carry_set:
         sec
@@ -253,6 +254,7 @@ L0995:  sta     $DB
         bpl     :-
         cmp     #$AA
         bne     return_with_carry_set
+        FALL_THROUGH_TO return_with_carry_clear
 .endproc
 return_with_carry_clear:
         clc

@@ -106,6 +106,7 @@ grafport:       .tag MGTK::GrafPort
         MGTK_CALL MGTK::PaintRect, grafport + MGTK::GrafPort::maprect
 
         MGTK_CALL MGTK::FlushEvents
+        FALL_THROUGH_TO InputLoop
 .endproc
 
 ;;; ============================================================

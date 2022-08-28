@@ -286,7 +286,7 @@ minute: .byte   0
 
         cmp     #CHAR_ESCAPE
         beq     Exit
-        bne     InputLoop
+        bne     InputLoop       ; always
 .endproc
 
 ;;; ============================================================

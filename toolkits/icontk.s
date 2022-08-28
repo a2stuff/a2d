@@ -755,6 +755,7 @@ check_deltay:
         bcs     peek
 y_lo:   cpx     #kDragDelta
         bcc     peek
+        FALL_THROUGH_TO is_drag
 .endproc
 
         ;; Meets the threshold - it is a drag, not just a click.
@@ -1287,7 +1288,7 @@ L9D7C:  stx     rect3_y1
 
 .proc SetRect1ToRect2AndZeroRect3X
         ldx     #0
-        beq     SetRectCommon
+        beq     SetRectCommon   ; always
 .endproc
 
 .proc SetRect1ToRect2AndZeroRect3Y
@@ -2292,7 +2293,7 @@ LA466:  txa
 
 next:   pla
         tax
-        bpl     loop
+        bpl     loop            ; always
 .endproc
 
 ;;; ============================================================

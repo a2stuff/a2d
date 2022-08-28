@@ -670,6 +670,7 @@ clear:  lda     #'C'            ; otherwise turn Escape into Clear
 process:
         jmp     ProcessKey
 bail:
+        FALL_THROUGH_TO rts1
 .endproc
 
 rts1:  rts                     ; used by next proc

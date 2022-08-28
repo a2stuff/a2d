@@ -574,13 +574,6 @@ dispatch_click:
 .endproc
 
 ;;; ============================================================
-;;; Inputs: MGTK::Area pushed to stack
-
-.proc HandleActiveWindowClick
-        pla
-.endproc
-
-;;; ============================================================
 ;;; Activate the window, and sets selection to its parent icon
 ;;; Inputs: window id to activate in `findwindow_params::window_id`
 
@@ -10368,8 +10361,8 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
 .proc SetRGBMode
         bit     SETTINGS + DeskTopSettings::rgb_color
-        bmi     SetColorMode
         bpl     SetMonoMode
+        FALL_THROUGH_TO SetColorMode
 .endproc
 
 .proc SetColorMode
