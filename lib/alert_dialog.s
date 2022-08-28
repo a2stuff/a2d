@@ -11,7 +11,6 @@
 ;;; Requires the following macro definitions:
 ;;; * `MGTK_CALL`
 ;;; Requires the following defines:
-;;; * AD_YESNO (if true, yes/no buttons supported)
 ;;; * AD_SAVEBG (if true, background saved/restored)
 ;;; * AD_WRAP (if true, message is wrapped)
 ;;; * AD_EJECTABLE (if true, polls for certain messages)
@@ -170,11 +169,6 @@ str_shortcut:   PASCAL_STRING {shortcut}
         DEFINE_ALERT_BUTTON try_again, res_string_button_try_again, res_char_button_try_again_shortcut, 300, 37
         DEFINE_ALERT_BUTTON cancel,    res_string_button_cancel, res_string_button_cancel_shortcut, 20, 37
 
-.if AD_YESNO
-        DEFINE_ALERT_BUTTON yes, res_string_button_yes,, 250, 37, 50
-        DEFINE_ALERT_BUTTON no,  res_string_button_no,,  350, 37, 50
-.endif ; AD_YESNO
-
         kTextLeft = 75
         kTextRight = kAlertRectWidth - kAlertXMargin
         kWrapWidth = kTextRight - kTextLeft
@@ -200,6 +194,8 @@ text:           .addr   0
 buttons:        .byte   0       ; AlertButtonOptions
 options:        .byte   0       ; AlertOptions flags
 .endparams
+
+       kShortcutTryAgain = res_char_button_try_again_shortcut
 
         ;; Actual entry point
 start:
@@ -290,21 +286,6 @@ start:
 
         bit     alert_params::buttons
         bvs     draw_ok_btn
-
-.if AD_YESNO
-        ;; Yes/No or Try Again?
-        lda     alert_params::buttons
-        and     #$0F
-        beq     draw_try_again_btn
-
-        ;; Yes button
-        param_call DrawButton, yes_button_record
-
-        ;; No button
-        param_call DrawButton, no_button_record
-        jmp     done_buttons
-draw_try_again_btn:
-.endif
 
         ;; Try Again button
         param_call DrawButton, try_again_button_record
@@ -438,35 +419,6 @@ finish_cancel:
 :       bit     alert_params::buttons ; has Try Again?
         bvs     check_ok        ; nope
 
-.if AD_YESNO
-        pha
-        lda     alert_params::buttons
-        and     #$0F
-        beq     check_try_again
-
-        pla
-        cmp     #kShortcutNo
-        beq     do_no
-        cmp     #TO_LOWER(kShortcutNo)
-        beq     do_no
-        cmp     #kShortcutYes
-        beq     do_yes
-        cmp     #TO_LOWER(kShortcutYes)
-        beq     do_yes
-        jmp     event_loop
-
-do_no:  param_call InvertButton, no_button_record
-        lda     #kAlertResultNo
-        jmp     finish
-
-do_yes: param_call InvertButton, yes_button_record
-        lda     #kAlertResultYes
-        jmp     finish
-
-check_try_again:
-        pla
-.endif ; AD_YESNO
-
         cmp     #TO_LOWER(kShortcutTryAgain)
         bne     :+
 
@@ -515,30 +467,6 @@ HandleButtonDown:
 
 :       bit     alert_params::buttons ; any other buttons?
         bvs     check_ok_rect   ; nope
-
-.if AD_YESNO
-        lda     alert_params::buttons
-        and     #$0F            ;
-        beq     LEE47           ; Just Cancel/Try Again
-
-        ;; Yes & No
-        MGTK_CALL MGTK::InRect, no_button_record+AlertButtonRecord::rect
-        cmp     #MGTK::inrect_inside
-        bne     :+
-        param_call TrackButton, no_button_record
-        bne     no_button
-        lda     #kAlertResultNo
-        jmp     finish
-
-:       MGTK_CALL MGTK::InRect, yes_button_record+AlertButtonRecord::rect
-        cmp     #MGTK::inrect_inside
-        bne     no_button
-        param_call TrackButton, yes_button_record
-        bne     no_button
-        lda     #kAlertResultYes
-        jmp     finish
-LEE47:
-.endif
 
         ;; Try Again
         MGTK_CALL MGTK::InRect, try_again_button_record+AlertButtonRecord::rect

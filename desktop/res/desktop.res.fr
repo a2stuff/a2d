@@ -1,4 +1,3 @@
-.define res_char_button_all_shortcut 'A'
 .define res_string_menu_bar_item_file "Fichier"
 .define res_string_menu_bar_item_view "Pr{sentation"
 .define res_string_menu_bar_item_special "Sp{cial"
@@ -39,8 +38,11 @@
 .define res_string_menu_item_rename_icon "Renommer..."
 .define res_string_menu_item_duplicate "Dupliquer..."
 .define res_string_prompt_button_yes " Oui"
+.define res_char_button_yes_shortcut 'O'
 .define res_string_prompt_button_no " Non"
+.define res_char_button_no_shortcut 'N'
 .define res_string_prompt_button_all " Tout"
+.define res_char_button_all_shortcut 'T'
 .define res_string_about_text_line5 "Auteurs : St{phane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais et Luc Barthelet"
 .define res_string_about_text_line7 "Remerciements @ : A. Gerard, J. Gerber, P. Pahl, J. Bernard"

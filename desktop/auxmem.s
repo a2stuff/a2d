@@ -594,7 +594,6 @@ start:
         AlertYieldLoop = YieldLoopFromAux
         alert_grafport = desktop_grafport
 
-        .define AD_YESNO 0
         .define AD_SAVEBG 1
         .define AD_WRAP 1
         .define AD_EJECTABLE 0

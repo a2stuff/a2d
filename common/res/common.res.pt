@@ -3,10 +3,6 @@
 .define res_string_button_cancel_shortcut "Esc"
 .define res_string_button_try_again "Repetir"
 .define res_char_button_try_again_shortcut 'R'
-.define res_string_button_yes "Sim"
-.define res_char_button_yes_shortcut 'S'
-.define res_string_button_no "N[o"
-.define res_char_button_no_shortcut 'N'
 .define res_string_button_change_drive "Mudar Unidade"
 .define res_string_button_open "Abrir"
 .define res_string_button_close "Fechar"

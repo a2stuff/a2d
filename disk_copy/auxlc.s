@@ -9,9 +9,6 @@
 
         MGTKEntry := MGTKRelayImpl
 
-kShortcutYes      = res_char_button_yes_shortcut
-kShortcutNo       = res_char_button_no_shortcut
-kShortcutTryAgain = res_char_button_try_again_shortcut
 kShortcutReadDisk = res_char_button_read_drive_shortcut
 
 ;;; ============================================================
@@ -39,8 +36,6 @@ kAlertMsgInsertDestionationOrCancel = 10 ; No bell, *
 kAlertResultTryAgain    = 0
 kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 kAlertResultCancel      = 1
-kAlertResultYes         = 2
-kAlertResultNo          = 3
 
 ;;; ============================================================
 
@@ -658,11 +653,9 @@ LD82C:  sta     main__on_line_buffer2
         ldxy    #main__on_line_buffer2
         lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
 show:   jsr     ShowAlertDialog
-        cmp     #kAlertResultCancel
-        beq     :+              ; Cancel
-        cmp     #kAlertResultYes
-        beq     LD84A           ; Yes
-:       jmp     InitDialog      ; No
+        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
+        beq     LD84A           ; Ok
+        jmp     InitDialog      ; Cancel
 
 LD84A:  lda     disk_copy_flag
         bne     LD852
@@ -2124,11 +2117,11 @@ message_table:
 alert_button_options_table:
         .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertSource
         .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertDestination
-        .byte   AlertButtonOptions::YesNoCancel ; kAlertMsgConfirmErase
+        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgConfirmErase
         .byte   AlertButtonOptions::Ok          ; kAlertMsgDestinationFormatFail
         .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgFormatError
         .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgDestinationProtected
-        .byte   AlertButtonOptions::YesNoCancel ; kAlertMsgConfirmEraseSlotDrive
+        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgConfirmEraseSlotDrive
         .byte   AlertButtonOptions::Ok          ; kAlertMsgCopySuccessful
         .byte   AlertButtonOptions::Ok          ; kAlertMsgCopyFailure
         .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertSourceOrCancel
@@ -2297,7 +2290,6 @@ find_in_alert_table:
         alert_grafport := grafport
         AlertYieldLoop := YieldLoop
 
-        .define AD_YESNO 1
         .define AD_SAVEBG 0
         .define AD_WRAP 0
         .define AD_EJECTABLE 1

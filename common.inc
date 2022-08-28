@@ -134,14 +134,12 @@ BELLPROC   := $300
 
 ;;; Button options
 ;;; $C0 (%11xxxxxx) = Cancel + Ok
-;;; $81 (%10xxxxx1) = Cancel + Yes + No
 ;;; $80 (%10xx0000) = Cancel + Try Again
 ;;; $00 (%0xxxxxxx) = Ok
 ;;; Note: Wrapper APIs that take A=id, X=options use X=0 to mean
 ;;; "use default options for that id", otherwise X & %00000001.
 .enum AlertButtonOptions
         OkCancel       = $C0
-        YesNoCancel    = $81
         TryAgainCancel = $80
         Ok             = $00
 .endenum

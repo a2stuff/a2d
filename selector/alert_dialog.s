@@ -6,8 +6,6 @@
 
         .org kSegmentAlertAddress
 
-kShortcutTryAgain = res_char_button_try_again_shortcut
-
 .proc AlertById
         jmp     start
 
@@ -119,7 +117,6 @@ start:  pha                     ; alert number
         AlertYieldLoop = app::AlertYieldLoopRelay
         alert_grafport = app::grafport2
 
-        .define AD_YESNO 0
         .define AD_SAVEBG 1
         .define AD_WRAP 1
         .define AD_EJECTABLE 0

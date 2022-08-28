@@ -3,10 +3,6 @@
 .define res_string_button_cancel_shortcut "Esc"
 .define res_string_button_try_again "F|rs|k igen"
 .define res_char_button_try_again_shortcut 'F'
-.define res_string_button_yes "Ja"
-.define res_char_button_yes_shortcut 'J'
-.define res_string_button_no "Nej"
-.define res_char_button_no_shortcut 'N'
 .define res_string_button_change_drive "Byt Enhet"
 .define res_string_button_open "\\ppna"
 .define res_string_button_close "St{ng"

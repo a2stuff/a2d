@@ -99,7 +99,6 @@ kIconBBoxOffsetRight    = 37 + kIconWidth ; accommodate icon + label
 
 kShortcutYes      = res_char_button_yes_shortcut
 kShortcutNo       = res_char_button_no_shortcut
-kShortcutTryAgain = res_char_button_try_again_shortcut
 kShortcutAll      = res_char_button_all_shortcut
 
 ;;; ============================================================

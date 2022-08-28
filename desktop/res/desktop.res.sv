@@ -1,4 +1,3 @@
-.define res_char_button_all_shortcut 'A'
 .define res_string_menu_bar_item_file "Arkiv"
 .define res_string_menu_bar_item_view "Inneh}ll"
 .define res_string_menu_bar_item_special "Speciell"
@@ -39,8 +38,11 @@
 .define res_string_menu_item_rename_icon "Byt namn..."
 .define res_string_menu_item_duplicate "Duplicera..."
 .define res_string_prompt_button_yes " Ja"
+.define res_char_button_yes_shortcut 'J'
 .define res_string_prompt_button_no " Nej"
+.define res_char_button_no_shortcut 'N'
 .define res_string_prompt_button_all " Alla"
+.define res_char_button_all_shortcut 'A'
 .define res_string_about_text_line5 "F|rfattare: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais och Luc Barthelet"
 .define res_string_about_text_line7 "Med tack till: A. Gerard, J. Gerber, P. Pahl, J. Bernard"

@@ -1,4 +1,3 @@
-.define res_char_button_all_shortcut 'A'
 .define res_string_menu_bar_item_file "Archivo"
 .define res_string_menu_bar_item_view "Listado"
 .define res_string_menu_bar_item_special "Especial"
@@ -39,8 +38,11 @@
 .define res_string_menu_item_rename_icon "Renombrar..."
 .define res_string_menu_item_duplicate "Duplicar..."
 .define res_string_prompt_button_yes " Si"
+.define res_char_button_yes_shortcut 'S'
 .define res_string_prompt_button_no " No"
+.define res_char_button_no_shortcut 'N'
 .define res_string_prompt_button_all " Todo"
+.define res_char_button_all_shortcut 'T'
 .define res_string_about_text_line5 "Autores: St\x11phane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais y Luc Barthelet"
 .define res_string_about_text_line7 "Con agradecimiento a: A. Gerard, J. Gerber, P. Pahl, J. Bernard"

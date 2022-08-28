@@ -3,10 +3,6 @@
 .define res_string_button_cancel_shortcut "Esc"
 .define res_string_button_try_again "Try Again"
 .define res_char_button_try_again_shortcut 'A'
-.define res_string_button_yes "Yes"
-.define res_char_button_yes_shortcut 'Y'
-.define res_string_button_no "No"
-.define res_char_button_no_shortcut 'N'
 .define res_string_button_change_drive "Change Drive"
 .define res_string_button_open "Open"
 .define res_string_button_close "Close"
