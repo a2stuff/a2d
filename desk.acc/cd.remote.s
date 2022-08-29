@@ -487,9 +487,9 @@ set_key:
         ;; Defer if content area is not visible
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
-        IF_EQ
+    IF_EQ
         rts
-        END_IF
+    END_IF
 
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
@@ -543,12 +543,14 @@ set_key:
 
 ;;; ============================================================
 
+;;; Caller is responsible for setting port.
 .proc DrawTrack
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, pos_track
         param_call DrawString, str_track
         param_jump DrawString, str_track_num
 .endproc
 
+;;; Caller is responsible for setting port.
 .proc DrawTime
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, pos_time
         param_jump DrawString, str_time
@@ -589,6 +591,11 @@ done:   rts
         ptr := $06
         stax    ptr
 
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, getwinport_params
+        cmp     #MGTK::Error::window_obscured
+        beq     ret
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
+
         ;; Run from Aux
         sta     RAMRDON
         sta     RAMWRTON
@@ -612,7 +619,7 @@ done:   rts
         ;; Invert it
         JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, penXOR
         JUMP_TABLE_MGTK_CALL MGTK::PaintRect, rect
-        rts
+ret:    rts
 
 rect:   .tag    MGTK::Rect
 
@@ -2082,32 +2089,57 @@ SPBuffer        := DA_IO_BUFFER  ; 1K free to use in Main after loading
 
 .proc DrawTrack
         pha
+
+        ;; Only update/draw if changed
+        lda     BCDRelTrack
+        cmp     last_track
+        beq     skip
+
         txa
         pha
         tya
         pha
         lda     BCDRelTrack
+        sta     last_track
         jsr     HighBCDDigitToASCII
         sta     str_track_num+1 ; "0_"
         lda     BCDRelTrack
         jsr     LowBCDDigitToASCII
         sta     str_track_num+2 ; "_0"
+
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, getwinport_params
+        cmp     #MGTK::Error::window_obscured
+    IF_NE
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
         jsr     ::DrawTrack
+    END_IF
+
         pla
         tay
         pla
         tax
+skip:
         pla
         rts
 .endproc
 
 .proc DrawTime
         pha
+
+        ;; Only update/draw if changed
+        lda     BCDRelMinutes
+        cmp     last_min
+        bne     :+
+        lda     BCDRelSeconds
+        cmp     last_sec
+        beq     skip
+:
         txa
         pha
         tya
         pha
         lda     BCDRelMinutes
+        sta     last_min
         jsr     HighBCDDigitToASCII
         sta     str_time+1      ; "0_:__"
         lda     BCDRelMinutes
@@ -2115,21 +2147,35 @@ SPBuffer        := DA_IO_BUFFER  ; 1K free to use in Main after loading
         sta     str_time+2      ; "_0:__"
 
         lda     BCDRelSeconds
+        sta     last_sec
         jsr     HighBCDDigitToASCII
         sta     str_time+4      ; "__:0_"
         lda     BCDRelSeconds
         jsr     LowBCDDigitToASCII
         sta     str_time+5      ; "__:_0"
 
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, getwinport_params
+        cmp     #MGTK::Error::window_obscured
+    IF_NE
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
         jsr     ::DrawTime
+    END_IF
 
         pla
         tay
         pla
         tax
+skip:
         pla
         rts
 .endproc
+
+last_track:
+        .byte   $FF
+last_min:
+        .byte   $FF
+last_sec:
+        .byte   $FF
 
 .proc HighBCDDigitToASCII
         and     #$F0

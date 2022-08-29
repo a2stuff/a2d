@@ -133,6 +133,8 @@ Project Page: https://github.com/a2stuff/a2d
     * A debugging tool that paints the whole screen a dark pattern.
   * **Map**
     * A tiny world map with searchable city locations.
+  * **CD Remote**
+    * Control music playback on an AppleCD SC via Apple SCSI card.
 * **Screen Savers**
   * **Flying Toasters**
     * Homage to the classic After Dark screen saver by Jack Eastman. ([#27](https://github.com/a2stuff/a2d/issues/27))
