@@ -778,6 +778,14 @@ NoFurtherBGAction:
 HandleKey:
         lda     event_params::key
 
+        ;; Map lowercase to uppercase
+        cmp     #'a'
+        bcc     :+
+        cmp     #'z'
+        bcs     :+
+        and     #CASE_MASK
+:
+
         ;; $51 = Q (Quit)
         cmp     #$51
         bne     NotQ
