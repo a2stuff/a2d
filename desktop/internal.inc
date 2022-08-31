@@ -27,7 +27,7 @@ kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
         COUNT                   ; last
 .endenum
 
-kMaxDeskAccCount        = 12
+kMaxDeskAccCount        = MGTK::max_menu_items - 2
 
 ;;; Maximum number of ProDOS devices (2 per slot 1-7). This is the
 ;;; maximum size of DEVLST not counting DEVCNT itself.

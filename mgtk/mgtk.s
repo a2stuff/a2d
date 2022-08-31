@@ -4683,7 +4683,7 @@ savesize        .word
         adc     menu_item_y_table,y
         iny
         sta     menu_item_y_table,y
-        cpy     #kMaxMenuItems
+        cpy     #MGTK::max_menu_items
         bcc     :-
 
         ldx     #0
@@ -5463,10 +5463,8 @@ bottom: .word   0
 .endparams
         fill_rect_params4_top := fill_rect_params4::top
 
-kMaxMenuItems   = 14
-
 menu_item_y_table:
-        .res    kMaxMenuItems+1 ; last entry represents height of menu
+        .res    MGTK::max_menu_items+1 ; last entry represents height of menu
 
 menu_glyphs:
 open_apple_glyph:
