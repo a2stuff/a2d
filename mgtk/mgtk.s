@@ -4683,7 +4683,7 @@ savesize        .word
         adc     menu_item_y_table,y
         iny
         sta     menu_item_y_table,y
-        cpy     #menu_item_y_table_end - menu_item_y_table-1
+        cpy     #kMaxMenuItems
         bcc     :-
 
         ldx     #0
@@ -5463,14 +5463,10 @@ bottom: .word   0
 .endparams
         fill_rect_params4_top := fill_rect_params4::top
 
-kMaxMenuItems   = 15
-kMenuItemHeight = 12
+kMaxMenuItems   = 14
 
 menu_item_y_table:
-        .repeat kMaxMenuItems, i
-        .byte   kMenuItemHeight + kMenuItemHeight * i
-        .endrepeat
-menu_item_y_table_end:
+        .res    kMaxMenuItems+1 ; last entry represents height of menu
 
 menu_glyphs:
 open_apple_glyph:
@@ -6316,7 +6312,7 @@ in_menu_item:
         copy16  savebehind_buffer, savebehind_buf_addr
 
         ldy     menu_item_count
-        ldx     menu_item_y_table,y ; ???
+        ldx     menu_item_y_table,y ; height of menu
         inx
         stx     savebehind_bottom
         stx     fill_rect_params4::bottom
@@ -6575,9 +6571,10 @@ ep2:    jsr     SetFillMode
 
 .proc DrawFiller
         ldx     menu_item_index
-        lda     menu_item_y_table,x
+        lda     sysfont_height
+        lsr
         clc
-        adc     #kMenuItemHeight/2
+        adc     menu_item_y_table,x
         sta     fill_rect_params3_top
         sta     fill_rect_params3_bottom
 
