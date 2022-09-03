@@ -97,13 +97,17 @@ emit add_file $disposition "res/package/UNSHRINK" "Extras" "UnShrink" FF0000
 
 # Media
 mediadir="Sample.Media"
-emit add_file $disposition "res/package/LOREM.IPSUM"   $mediadir "lorem.ipsum"   040000
-emit add_file $disposition "res/package/MONARCH"       $mediadir "monarch"       062000
-emit add_file $disposition "res/package/BBROS.MINI"    $mediadir "bbros.mini"    065800
-emit add_file $disposition "res/package/JESU.JOY"      $mediadir "jesu.joy"      D5D0E7
-emit add_file $disposition "mgtk/fonts/System.en"      $mediadir "system.en"     070000
-emit add_file $disposition "res/package/HELLO.WORLD"   $mediadir "hello.world"   FC0801
-emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell" 060800
+
+emit add_file $disposition "res/package/ROOM"          $mediadir "room"           062000 # BIN
+emit add_file $disposition "res/package/MONARCH"       $mediadir "monarch"        084001 # FOT dhr-packed
+emit add_file $disposition "res/package/COLOR.CHART"   $mediadir "hr.color.chart" 084000 # FOT hr-packed
+emit add_file $disposition "res/package/BBROS.LOGO"    $mediadir "bbros.logo"     082000 # FOT bw280
+emit add_file $disposition "res/package/BBROS.MINI"    $mediadir "bbros.mini"     065800 # BIN minipix
+emit add_file $disposition "res/package/LOREM.IPSUM"   $mediadir "lorem.ipsum"    040000
+emit add_file $disposition "res/package/JESU.JOY"      $mediadir "jesu.joy"       D5D0E7
+emit add_file $disposition "mgtk/fonts/System.en"      $mediadir "system.en"      070000
+emit add_file $disposition "res/package/HELLO.WORLD"   $mediadir "hello.world"    FC0801
+emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell"  060800
 
 # --------------------------------------------------
 # Part 4: Desk Accessories (optional and extra)
