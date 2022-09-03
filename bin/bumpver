@@ -6,19 +6,19 @@
 # * Update config.inc release date
 
 # Assumes:
-# * Tag is of the form: v1.2-alpha20
+# * Tag is of the form: v1.2-beta0
 
 
 # Most recent tag
 OLDTAG=`git describe --tags --abbrev=0`
 OLDVER=$(echo "$OLDTAG" | sed -E 's/^v[0-9]+\.[0-9]+-[a-z]+//')
 NEWVER=`expr $OLDVER + 1`
-NEWTAG="v1.2-alpha$NEWVER"
+NEWTAG="v1.2-beta$NEWVER"
 DATE=`date '+%B %d, %Y'`
 
 echo "Bumping to $NEWTAG..."
 
-perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-alpha$NEWVER\"/" config.inc
+perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-beta$NEWVER\"/" config.inc
 
 bin/setlang "en"
 
