@@ -33,9 +33,10 @@ kMaxDeskAccCount        = MGTK::max_menu_items - 2
 ;;; maximum size of DEVLST not counting DEVCNT itself.
 kMaxDevListSize = 14
 
-;;; Maximum number of volumes displayed/tracked. This is two per slot,
-;;; except S3,D2 is assumed to be /RAM which is disconnected.
-kMaxVolumes     = kMaxDevListSize - 1
+;;; Maximum number of volumes displayed/tracked. It is possible
+;;; that /RAM was previously disconnected and another drive mapped
+;;; to $Bx so we need to support the maximum number of devices.
+kMaxVolumes     = kMaxDevListSize
 
 ;;; ============================================================
 ;;; View types

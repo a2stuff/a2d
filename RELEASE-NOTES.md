@@ -10,6 +10,14 @@ Project Page: https://github.com/a2stuff/a2d
 
 * File picker dialogs simplified. ([#699](https://github.com/a2stuff/a2d/issues/699))
 
+### DeskTop
+
+* Support up to 14 devices. ([#712](https://github.com/a2stuff/a2d/issues/712))
+
+### Disk Copy
+
+* Support up to 14 devices. ([#712](https://github.com/a2stuff/a2d/issues/712))
+
 ## 1.2
 
 An unofficial release with bug fixes and enhancements. See the release notes at:

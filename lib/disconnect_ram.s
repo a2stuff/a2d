@@ -9,8 +9,12 @@
         ;; Find Slot 3 Drive 2 /RAM device
         ldx     DEVCNT
 :       lda     DEVLST,x
-        and     #UNIT_NUM_MASK  ; DSSSnnnn
-        cmp     #$B0            ; Slot 3, Drive 2 = /RAM
+.ifndef PRODOS_2_5
+        and     #$F3            ; per ProDOS 8 Technical Reference Manual
+        cmp     #$B3            ; 5.2.2.3 - one of $BF, $BB, $B7, $B3
+.else
+        cmp     #$B0            ; ProDOS 2.5 uses $B0
+.endif ; PRODOS_2_5
         beq     remove
         dex
         bpl     :-

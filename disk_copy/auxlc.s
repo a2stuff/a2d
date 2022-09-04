@@ -323,8 +323,8 @@ num_drives:
 num_src_drives:
         .byte   0
 
-;;; 13 devices = 7 slots * 2 devices/slot - 1 device for S3D2 /RAM
-kMaxNumDrives = 13
+;;; 14 devices = 7 slots * 2 devices/slot (unit $Bx might not be /RAM)
+kMaxNumDrives = 15
 
 drive_name_table:
         .res    kMaxNumDrives * 16, 0

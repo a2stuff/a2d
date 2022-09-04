@@ -15911,9 +15911,7 @@ desktop_icon_coords_table:
         .word    kVolIconCol2,15 + kVolIconDeltaY*4 ; 11
         .word    kVolIconCol3,15 + kVolIconDeltaY*4 ; 12
         .word    kVolIconCol4,15 + kVolIconDeltaY*4 ; 13
-        ;; Maximum of 13 devices:
-        ;; 7 slots * 2 drives = 14 (size of DEVLST)
-        ;; ... but RAM in Slot 3 Drive 2 is disconnected.
+        .word    kVolIconCol5,15 + kVolIconDeltaY*4 ; 14
         ASSERT_RECORD_TABLE_SIZE desktop_icon_coords_table, ::kMaxVolumes, .sizeof(MGTK::Point)
 
 
