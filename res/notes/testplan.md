@@ -174,7 +174,7 @@
 * Load DeskTop. Create a folder e.g. /RAM/F, and a sibling folder e.g. /RAM/B. Open the containing window, and the first folder itself. Select both folders, and try to move both into the first folder's window by dragging. Verify that an error is shown before any moves occur.
 * Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to copy it into itself by dragging with an Apple key depressed. Verify that an error is shown.
 * Load DeskTop. Open a volume window. Drag a file from the volume window to the volume icon. Verify that an error is shown.
-* Load DeskTop. Create a folder, and a file within the folder with the same name as the folder (e.g. /RAM/F and /RAM/F/F). Try to copy the file over the folder using File > Copy a File.... Verify that an error is shown.
+* Load DeskTop. Create a folder, and a file within the folder with the same name as the folder (e.g. /RAM/F and /RAM/F/F). Try to copy the file over the folder using File > Copy To.... Verify that an error is shown.
 * Load DeskTop. Create a folder, and a file within the folder with the same name as the folder (e.g. /RAM/F and /RAM/F/F). Try to move the file over the folder using drag and drop. Verify that an error is shown.
 * Load DeskTop. Create a folder, and a file within the folder with the same name as the folder, and another file (e.g. /RAM/F and /RAM/F/F and /RAM/F/B). Select both files and try to move them into the parent folder using drag and drop. Verify that an error is shown before any files are moved.
 
@@ -287,7 +287,7 @@
 * Launch DeskTop. Open a window for a volume icon. Open a folder within the window. Select the volume icon. Special > Check Drive. Verify that both windows are closed.
 * Launch DeskTop. Open a window for a volume icon. Special > Check All Drives. Verify that all windows close, and that volume icons are correctly updated.
 
-* Launch DeskTop. Drag a file to a same-volume window so it is moved, not copied. Use File > Copy a File... to copy a file. Verify that the file is indeed copied, not moved.
+* Launch DeskTop. Drag a file to a same-volume window so it is moved, not copied. Use File > Copy To... to copy a file. Verify that the file is indeed copied, not moved.
 
 * Launch DeskTop. Open a window. Select a file icon. Apple > Control Panels. Verify that the previously selected file is no longer selected.
 
@@ -298,8 +298,6 @@
 
 * Launch DeskTop. Select a volume icon. File > Rename.... Enter the name of another volume. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Rename dialog is still showing.
 * Launch DeskTop. Open a window. Select a file icon. File > Rename.... Enter the name of file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Rename dialog is still showing.
-* Launch DeskTop. File > Copy a File.... Select a file, and click OK. Click OK without changing the destination name. Verify that an alert is shown. Click OK. Verify that the Copy a File dialog is still showing.
-* Launch DeskTop. File > Copy a File.... Replace the text of the first field with "ABC". Click OK. Verify that an alert is shown.
 * Launch DeskTop. Open a volume window. Open a folder window. Select the volume icon and rename it. Verify that neither window is closed, and volume window is renamed.
 
 * Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double click on B. Verify that the existing B window activates.
@@ -349,7 +347,7 @@
     * DeskTop (1) copied to RAMCard and (2) not copied to RAMCard.
     * Renaming (1) the volume that DeskTop loaded from, and renaming (2) the DeskTop folder itself.
   * Verify that the following still function:
-    * File > Copy a File... (overlays)
+    * File > Copy To... (overlays)
     * Special > Disk Copy (and that File > Quit returns to DeskTop) (overlay + quit handler)
     * Apple > Calculator (desk accessories)
     * Apple > Control Panels (relative folders)
@@ -359,7 +357,7 @@
     * Modifying shortcuts (selector)
 
 * Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. Go back to the volume window, and drag the folder icon to the trash. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
-* Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. File > Delete a File.... Select the folder and click OK. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
+* Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. Activate the folder's parent window and select the folder icon. File > Delete. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
 
 * Close all windows. Start typing a volume name. Verify that a prefix-matching volume, or the subsequent volume (in lexicographic order) is selected, or the last volume (in lexicographic order).
 * Close all windows. Start typing a volume name. Move the moouse. Start typing another filename. Verify that the matching is reset.
@@ -387,13 +385,13 @@
 * Repeat the following, with a volume icon (A), an open volume window (B) with a folder icon (C), and a window for that folder (D).
   * Drag a file from another volume onto A. Verify that B activates and refreshes, and that B's used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Drag a file from another volume onto B. Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
-  * Copy a file from another volume onto B using File > Copy a File.... Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Copy a file from another volume onto B using File > Copy To.... Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Drag a file from another volume onto D. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Copy file from another volume onto D using File > Copy File.... Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Drag a file from B to the trash. Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
-  * Delete a file from B using File > Delete a File.... Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Delete a file from B using File > Delete. Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Drag a file from D to the trash. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
-  * Delete a file from D using File > Delete a File.... Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Delete a file from D using File > Delete. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Duplicate a file in D using File > Duplicate.... Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Drag a file in B onto C while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Drag a file in B onto D while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
@@ -453,10 +451,10 @@
 * Launch DeskTop. Try to delete files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted. Note that non-empty directories will fail to be deleted.
 * Launch DeskTop. Using drag/drop, try to copy or move a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
 * Launch DeskTop. Using drag/drop, try to copy a volume containing a GS/OS forked file and other files, where the destination window is visible. When an alert is shown, click OK. Verify that the destination window are updated.
-* Launch DeskTop. Using File > Copy a File..., try to copy a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
+* Launch DeskTop. Using File > Copy To..., try to copy a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
 * Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click Cancel. Verify that the source window is not updated.
 * Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the source window is updated.
-* Launch DeskTop. Using File > Delete a File..., try to delete a GS/OS forked file, where the containing window is visible. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the containing window is updated.
+* Launch DeskTop. Using File > Delete try to delete a GS/OS forked file, where the containing window is visible. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the containing window is updated.
 
 
 ## Hardware Configurations
@@ -618,9 +616,9 @@ Image File:
 
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure BASIC.SYSTEM is present on the boot volume. Launch DeskTop. Open a window. Apple > Run Basic Here. Verify that BASIC.SYSTEM starts.
 
-* Configure a system without a RAMCard. Launch DeskTop. Verify that the volume containing DeskTop appears in the top right corner of the desktop. File > Copy a File.... Verify that the volume containing DeskTop is the first disk shown.
-* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. File > Copy a File.... Verify that the non-RAMCard volume containing DeskTop is the first disk shown. From within DeskTop, launch another app e.g. Basic.system. Eject the DeskTop volume. Exit the app back to DeskTop. Verify that the remaining volumes appear in default order.
-* Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. File > Copy a File.... Verify that the non-RAMCard volume containing DeskTop is the first disk shown.
+* Configure a system without a RAMCard. Launch DeskTop. Verify that the volume containing DeskTop appears in the top right corner of the desktop. File > Copy To.... Verify that the volume containing DeskTop is the first disk shown.
+* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. File > Copy To.... Verify that the non-RAMCard volume containing DeskTop is the first disk shown. From within DeskTop, launch another app e.g. Basic.system. Eject the DeskTop volume. Exit the app back to DeskTop. Verify that the remaining volumes appear in default order.
+* Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. File > Copy To.... Verify that the non-RAMCard volume containing DeskTop is the first disk shown.
 
 * Open the Control Panel DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
 * Open the Control Panel DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
@@ -700,8 +698,7 @@ Repeat for Calculator and Sci.Calc:
 This covers:
 
 * Selector: File > Run a Program...
-* DeskTop: File > Copy a File...
-* DeskTop: File > Delete a File...
+* DeskTop: File > Copy To...
 * DeskTop: Shortcuts > Add a Shortcut...
 * DeskTop: Shortcuts > Edit a Shortcut...
 
@@ -720,50 +717,25 @@ Test the following in all of the above, except where called out specifically:
 * Browse to a directory containing 7 files. Verify that the scrollbar is inactive.
 * Browse to a directory containing 8 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
 
-* Launch DeskTop. File > Copy a File.... Enter text in the first field. Enter text in the second field. Click in the middle of the text in the first field. Verify that the IP is positioned near the click. Click in the middle of the text in the second field. Verify that the IP is positioned near the click.
-
 * Ensure the default drive has 10 or more files. Verify that an active scrollbar appears in the file list. Click OK. Click Cancel. Verify that the scrollbar is scrolled to the top.
 
-* Launch DeskTop. Special > Format a Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy a File.... Verify that the file list is populated.
+* Launch DeskTop. Special > Format a Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy To.... Verify that the file list is populated.
 
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Enter text in the first field. Move the IP into the middle of the text. Click in the second field. Verify that the first field is not truncated.
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Enter a name in the first field. Move the IP into the middle of the text. Click OK. Verify that the first field is not truncated.
-* Launch DeskTop. File > Copy a File.... Enter text in the first field. Move the IP into the middle of the text. Click in the second field. Verify that the first field is not truncated.
-* Launch DeskTop. File > Copy a File.... Enter a name in the first field. Move the IP into the middle of the text. Click OK. Verify that the first field is not truncated.
 
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
-* Launch DeskTop. File > Copy a File.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
-* Launch DeskTop. File > Copy a File.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
 
 * Create a directory, and in the directory create a file named "A.B" then a file named "A". Browse to the directory. Verify "A" sorts before "A.B".
 
 * Browse to a directory with more than 8 files, with at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
 
-* Browse to a directory with files. Select a file. Click in the middle of the pathname. Click Change Drive. Verify that the entire path is replaced with the new volume name. (This does not apply to the second field in DeskTop: File > Copy a File...)
-
-Repeat for each file picker:
-* In each pathname field, type in an invalid path name. Click OK (multiple times if needed to commit the dialog). Verify that an alert is shown.
-* In each pathname field, type in a volume path (e.g. "/VOL"). Click OK (multiple times if needed to commit dialog).
-  * Selector: File > Run a Program... - nothing should happen, and the dialog should remain open.
-  * DeskTop: File > Copy a File... - an alert should show.
-  * DeskTop: File > Delete a File... - an alert should show.
-  * DeskTop: Shortcuts > Add a Shortcut... - the dialog should close.
-  * DeskTop: Shortcuts > Edit a Shortcut... - the dialog should close.
-
-Repeat for each file picker:
-* In each field, type a control character that is not an alias for an arrow/Tab/Return/Escape, e.g. Control+D. Verify that it is ignored.
-* In each pathname field, type a non-path character (i.e. anything other A-Za-z0-9/.). Verify that it is ignored.
-* In the Shortcuts > Add/Edit a Shortcut... name field, type a non-path, non-control character. Verify that it is accepted.
-* Click a file in the list. Move the IP into an earlier part of the filename (e.g. "/VO|L/FILE"). Click on another file. Verify that the path is updated correctly. Repeat with other mean of changing the selected file: Up, Down, Apple+Up, Apple+Down, and holding Apple while typing a filename.
-* Click a folder in the list. Edit the path shown. Click Open. Verify that the selected folder opens and that the path is updated correctly.
-* Click a folder in the list. Click Open. Verify that the selected folder opens and that the path is updated correctly.
-* Repeat for each text field:
+* In Shortcuts > Add/Edit a Shortcut... name field:
+  * Type a non-path, non-control character. Verify that it is accepted.
+  * Type a control character that is not an alias for an arrow/Tab/Return/Escape, e.g. Control+D. Verify that it is ignored.
   * Move the cursor over the text field. Verify that the cursor changes to an I-beam.
   * Move the cursor off the text field. Verify that the cursor changes to a pointer.
-
-* Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, with the IP at the end. Click a folder. Verify that the path updates, with the file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
-* Launch DeskTop. File > Copy a File.... Select a file. Click OK. Verify that the name of the file appears in the second field, with the IP at the end. Edit the file name. Click a folder. Verify that the path updates, with the edited file name appended, with the IP at the end. Click Change Drive. Verify that the new path still has the edited file name appended, with the IP at the end. Repeat the above, but move the insertion point before clicking.
 
 Repeat for each file picker:
 * Configure a system with only one drive. Verify that the file picker's Change Drive button is dimmed.
@@ -783,20 +755,10 @@ For DeskTop's Shortcut > Edit a Shortcut... file picker:
 * Create a shortcut not on the startup volume. Edit the shortcut. Verify that the file picker shows the shortcut target volume and file selected.
 * Create a shortcut on a removable volume. Eject the volume. Edit the shortcut. Verify that the file picker initializes to any available volume, and does not crash or show corrupted results.
 
-For DeskTop's File > Copy a File... file picker:
-* Select a file and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close remain active and initialize to the correct state based on the selection. Click Cancel. Verify that the buttons return to their previous state when selection is restored.
-
-For DeskTop's File > Delete a File... file picker:
-* Navigate to an empty volume and don't select anything. Click OK. Verify that an alert is shown.
-
 For Selector's File > Run a Program... file picker:
 * Navigate to an empty volume and don't select anything. Click OK. Verify that an alert is shown.
 * Move the mouse cursor over a folder in the list, and click to select it. Move the mouse cursor away from the click location but over the same item. Double-click. Verify that the folder opens with only the two clicks.
 * Move the mouse cursor over a folder in the list that is not selected. Double-click. Verify that the folder opens with only the two clicks.
-
-In DeskTop:
-* File > Copy a File..., pick a source and destination, let the copy complete. File > Delete a File... Verify that no second pathname is shown in the dialog under the first text field control.
-
 
 # Text Input Fields
 
