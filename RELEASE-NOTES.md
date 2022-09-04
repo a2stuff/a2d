@@ -12,6 +12,8 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### DeskTop
 
+* File > Copy a File... is now File > Copy To... and operates on current selection.
+* File > Delete a File... is now File > Delete and operates on current selection.
 * Support up to 14 devices. ([#712](https://github.com/a2stuff/a2d/issues/712))
 
 ### Disk Copy
