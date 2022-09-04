@@ -6,11 +6,15 @@ Project Page: https://github.com/a2stuff/a2d
 
 ## 1.3 Alpha
 
-Changes incorporated into 1.3 will be listed here.
+### General
+
+* File picker dialogs simplified. ([#699](https://github.com/a2stuff/a2d/issues/699))
 
 ## 1.2
 
 An unofficial release with bug fixes and enhancements. See the release notes at:
+
+https://github.com/a2stuff/a2d/blob/release-1.2/RELEASE-NOTES.md
 
 ## 1.1
 
