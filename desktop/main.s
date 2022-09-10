@@ -2590,8 +2590,9 @@ doney:
         lda     #SELF_MODIFIED_BYTE
         beq     done
 
-        jsr     CachedIconsScreenToWindow ; assumed by...
-        jsr     FinishScrollAdjustAndRedraw
+        jsr     AssignActiveWindowCliprectAndUpdateCachedIcons
+        jsr     ScrollUpdate
+        jsr     RedrawAfterScroll
 
 done:   rts
 
@@ -2840,9 +2841,7 @@ entry:
 :       jsr     CachedIconsWindowToScreen
         jsr     StoreWindowEntryTable
 
-        jsr     CachedIconsScreenToWindow
-        jsr     UpdateScrollbars
-        jsr     CachedIconsWindowToScreen
+        jsr     ScrollUpdate
 
 finish: rts
 
@@ -2891,6 +2890,9 @@ sort:   jsr     LoadActiveWindowEntryTable
         jsr     SortRecords
         jsr     StoreWindowEntryTable
 
+        ;; Reset the viewport
+        jsr     ResetActiveWindowViewport
+
         ;; Draw the records
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
@@ -2899,7 +2901,7 @@ sort:   jsr     LoadActiveWindowEntryTable
         lda     #kDrawWindowEntriesContentOnly
         jsr     DrawWindowEntries
 
-        jsr     UpdateScrollbars
+        jsr     ScrollUpdate
 
 ret:    rts
 .endproc
@@ -3666,7 +3668,6 @@ done:   rts
 ;;; Keyboard-based scrolling of window contents
 
 .proc CmdScroll
-        jsr     GetActiveWindowScrollInfo
 loop:   jsr     GetEvent
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -3681,181 +3682,449 @@ loop:   jsr     GetEvent
 
 done:   rts
 
-        ;; Horizontal ok?
-:       bit     horiz_scroll_flag
-        jpl     vertical
-
+:
         cmp     #CHAR_RIGHT
         bne     :+
         jsr     ScrollRight
         jmp     loop
-
-:       cmp     #CHAR_LEFT
-        bne     vertical
+:
+        cmp     #CHAR_LEFT
+        bne     :+
         jsr     ScrollLeft
         jmp     loop
-
-        ;; Vertical ok?
-vertical:
-        bit     vert_scroll_flag
-        jpl     loop
-
+:
         cmp     #CHAR_DOWN
         bne     :+
         jsr     ScrollDown
         jmp     loop
-
-:       cmp     #CHAR_UP
+:
+        cmp     #CHAR_UP
         bne     loop
         jsr     ScrollUp
         jmp     loop
 .endproc
 
 ;;; ============================================================
+;;; Centralized logic for scrolling directory windows
 
-.proc GetActiveWindowScrollInfo
+.scope ScrollManager
+
+        .include "../lib/muldiv32.s"
+
+;;; Terminology:
+;;; * "offset" - When the icons would fit entirely within the viewport
+;;;   (for a given dimension) but the viewport is offset so a scrollbar
+;;;   must still be shown.
+
+
+;;; Effective viewport  ("Effective" discounts the window header.)
+viewport := window_grafport::maprect
+
+;;; `ubox` is a union of the effective viewport and icon bounding box
+        DEFINE_RECT ubox, 0, 0, 0, 0
+
+;;; Effective dimensions of the viewport
+width:          .word   0
+height:         .word   0
+
+;;; Initial effective viewport top/left
+        DEFINE_POINT old, 0, 0
+
+;;; Increment/decrement sizes (depends on view type)
+tick_h: .byte   0
+tick_v: .byte   0
+
+;;; --------------------------------------------------
+;;; Compute the necessary data for scroll operations:
+;;; * `viewport` - effective viewport of active window
+;;; * `ubox` - union of icon bounding box and viewport
+;;; * `tick_h` and `tick_v` sizes (based on view type)
+;;; * `width` and `height` of the effective viewport
+;;; * `old` - initial top/left of viewport (to detect changes)
+
+_Preamble:
         jsr     LoadActiveWindowEntryTable
         jsr     GetActiveWindowViewBy
-        sta     active_window_view_by
-        jsr     GetActiveWindowHScrollInfo
-        sta     horiz_scroll_pos
-        stx     horiz_scroll_max
-        sty     horiz_scroll_flag
-        jsr     GetActiveWindowVScrollInfo
-        sta     vert_scroll_pos
-        stx     vert_scroll_max
-        sty     vert_scroll_flag
+    IF_POS
+        ;; Icon view
+        jsr     CachedIconsScreenToWindow
+        jsr     ComputeIconsBBox
+        jsr     CachedIconsWindowToScreen
+
+        copy    #kIconViewScrollTickH, tick_h
+        copy    #kIconViewScrollTickV, tick_v
+    ELSE
+        ;; List view
+        jsr     ComputeIconsBBox
+
+        copy    #kListViewScrollTickH, tick_h
+        copy    #kListViewScrollTickV, tick_v
+    END_IF
+
+        add16_8 iconbb_rect+MGTK::Rect::y1, #kWindowHeaderHeight ; bbox includes header height
+
+        ;; Compute effective viewport
+        jsr     ApplyActiveWinfoToWindowGrafport
+        add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight
+        COPY_STRUCT MGTK::Point, viewport+MGTK::Rect::topleft, old
+        sub16   viewport+MGTK::Rect::x2, viewport+MGTK::Rect::x1, width
+        sub16   viewport+MGTK::Rect::y2, viewport+MGTK::Rect::y1, height
+
+        ;; Make `ubox` bound both viewport and icons; needed to ensure
+        ;; offset cases are handled.
+        COPY_STRUCT MGTK::Rect, iconbb_rect, ubox
+        scmp16  viewport+MGTK::Rect::x1, ubox::x1
+    IF_NEG
+        copy16  viewport+MGTK::Rect::x1, ubox::x1
+    END_IF
+        scmp16  viewport+MGTK::Rect::x2, ubox::x2
+    IF_POS
+        copy16  viewport+MGTK::Rect::x2, ubox::x2
+    END_IF
+        scmp16  viewport+MGTK::Rect::y1, ubox::y1
+    IF_NEG
+        copy16  viewport+MGTK::Rect::y1, ubox::y1
+    END_IF
+        scmp16  viewport+MGTK::Rect::y2, ubox::y2
+    IF_POS
+        copy16  viewport+MGTK::Rect::y2, ubox::y2
+    END_IF
+
+        rts
+
+;;; --------------------------------------------------
+;;; When arrow increment is clicked:
+;;;   1. vp.hi += tick
+;;;   2. goto _Clamp_hi
+
+.proc ArrowRight
+        jsr     _Preamble
+        add16_8 viewport+MGTK::Rect::x2, tick_h
+        jmp     _Clamp_x2
+.endproc
+
+.proc ArrowDown
+        jsr     _Preamble
+        add16_8 viewport+MGTK::Rect::y2, tick_v
+        jmp     _Clamp_y2
+.endproc
+
+;;; --------------------------------------------------
+;;; When arrow decrement is clicked:
+;;;   1. vp.lo -= tick
+;;;   2. goto _Clamp_lo
+
+.proc ArrowLeft
+        jsr     _Preamble
+        sub16_8 viewport+MGTK::Rect::x1, tick_h, viewport+MGTK::Rect::x1
+        jmp     _Clamp_x1
+.endproc
+
+.proc ArrowUp
+        jsr     _Preamble
+        sub16_8 viewport+MGTK::Rect::y1, tick_v, viewport+MGTK::Rect::y1
+        jmp     _Clamp_y1
+.endproc
+
+;;; --------------------------------------------------
+;;; When page increment area is clicked:
+;;;   1. vp.hi += size
+;;;   2. goto _Clamp_hi
+
+.proc PageRight
+        jsr     _Preamble
+        add16   viewport+MGTK::Rect::x2, width, viewport+MGTK::Rect::x2
+        jmp     _Clamp_x2
+.endproc
+
+.proc PageDown
+        jsr     _Preamble
+        add16_8 viewport+MGTK::Rect::y2, height, viewport+MGTK::Rect::y2
+        jmp     _Clamp_y2
+.endproc
+
+;;; --------------------------------------------------
+;;; When page decrement area is clicked:
+;;;   1. vp.lo -= size
+;;;   2. goto _Clamp_lo
+
+.proc PageLeft
+        jsr     _Preamble
+        sub16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x1
+        jmp     _Clamp_x1
+.endproc
+
+.proc PageUp
+        jsr     _Preamble
+        sub16_8 viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y1
+        jmp     _Clamp_y1
+.endproc
+
+;;; --------------------------------------------------
+;;; When thumb is moved by user:
+;;;   1. vp.lo = ubox.lo + (ubox.hi - ubox.lo - size) * (newpos / thumb.max)
+;;;   2. vp.hi = vp.lo + size
+;;;   3. goto update
+
+.proc TrackHThumb
+        jsr     _Preamble
+        sub16   ubox::x2, ubox::x1, multiplier
+        sub16   multiplier, width, multiplier
+        jsr     _TrackMulDiv
+        add16   quotient, ubox::x1, viewport+MGTK::Rect::x1
+        add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
+        jmp     _MaybeUpdateHThumb
+.endproc
+
+.proc TrackVThumb
+        jsr     _Preamble
+        sub16   ubox::y2, ubox::y1, multiplier
+        sub16   multiplier, height, multiplier
+        jsr     _TrackMulDiv
+        add16   quotient, ubox::y1, viewport+MGTK::Rect::y1
+        add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
+        jmp     _MaybeUpdateVThumb
+.endproc
+
+.proc _TrackMulDiv
+        copy    trackthumb_params::thumbpos, multiplicand
+        copy    #0, multiplicand+1
+        jsr     Mul_16_16
+        copy32  product, numerator
+        copy32  #kScrollThumbMax, denominator
+        jmp     Div_32_32
+.endproc
+
+;;; --------------------------------------------------
+;;; _Clamp_hi:
+;;;   1. if vp.hi > ubox.hi: vp.hi = ubox.hi
+;;;   2. vp.lo = vp.hi - size
+;;;   3. goto update
+
+.proc _Clamp_x2
+        scmp16  viewport+MGTK::Rect::x2, ubox::x2
+    IF_POS
+        copy16  ubox::x2, viewport+MGTK::Rect::x2
+    END_IF
+        sub16   viewport+MGTK::Rect::x2, width, viewport+MGTK::Rect::x1
+        jmp     _MaybeUpdateHThumb
+.endproc
+
+.proc _Clamp_y2
+        scmp16  viewport+MGTK::Rect::y2, ubox::y2
+    IF_POS
+        copy16  ubox::y2, viewport+MGTK::Rect::y2
+    END_IF
+        sub16   viewport+MGTK::Rect::y2, height, viewport+MGTK::Rect::y1
+        jmp     _MaybeUpdateVThumb
+.endproc
+
+;;; --------------------------------------------------
+;;; _Clamp_lo:
+;;;   1. if vp.lo < ubox.lo: vp.lo = ubox.lo
+;;;   2. vp.hi = vp.lo + size
+;;;   3. goto update
+
+.proc _Clamp_x1
+        scmp16  viewport+MGTK::Rect::x1, ubox::x1
+    IF_NEG
+        copy16  ubox::x1, viewport+MGTK::Rect::x1
+    END_IF
+        add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
+        jmp     _MaybeUpdateHThumb
+.endproc
+
+.proc _Clamp_y1
+        scmp16  viewport+MGTK::Rect::y1, ubox::y1
+    IF_NEG
+        copy16  ubox::y1, viewport+MGTK::Rect::y1
+    END_IF
+        add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
+        jmp     _MaybeUpdateVThumb
+.endproc
+
+;;; --------------------------------------------------
+;;; Following above gestures, determine if the viewport
+;;; has changed and if so update the thumb.
+;;;
+;;;   1. if vp.lo != old:
+;;;     1. newpos = (vp.lo - ubox.lo) / (ubox.hi - ubox.lo - size) * thumb.max
+;;;     2. if newpos != thumb.pos: update thumb
+;;;     3. redraw
+
+.proc _MaybeUpdateHThumb
+        ecmp16  viewport+MGTK::Rect::x1, old::xcoord
+    IF_NE
+        jsr     _SetHThumbFromViewport
+        jsr     _UpdateViewport
+        jsr     RedrawAfterScroll
+
+        ;; Handle offset case - may be able to deactivate scrollbar now
+        jsr     _Preamble       ; Need updated `ubox` and `maprect`
+        scmp16  ubox::x1, viewport+MGTK::Rect::x1
+        bmi     :+
+        scmp16  viewport+MGTK::Rect::x2, ubox::x2
+        bmi     :+
+        ldx     #MGTK::Ctl::horizontal_scroll_bar
+        lda     #MGTK::activatectl_deactivate
+        jsr     _ActivateCtl
+:
+    END_IF
         rts
 .endproc
 
-;;; ============================================================
+.proc _MaybeUpdateVThumb
+        ecmp16  viewport+MGTK::Rect::y1, old::ycoord
+    IF_NE
+        jsr     _SetVThumbFromViewport
+        jsr     _UpdateViewport
+        jsr     RedrawAfterScroll
 
-ScrollRight:                   ; elevator right / contents left
-        lda     horiz_scroll_pos
-        ldx     horiz_scroll_max
-        jsr     DoScrollRight
-        sta     horiz_scroll_pos
+        ;; Handle offset case - may be able to deactivate scrollbar now
+        jsr     _Preamble       ; Need updated `ubox` and `maprect`
+        scmp16  ubox::y1, viewport+MGTK::Rect::y1
+        bmi     :+
+        scmp16  viewport+MGTK::Rect::y2, ubox::y2
+        bmi     :+
+        ldx     #MGTK::Ctl::vertical_scroll_bar
+        lda     #MGTK::activatectl_deactivate
+        jsr     _ActivateCtl
+:
+    END_IF
         rts
-
-ScrollLeft:                    ; elevator left / contents right
-        lda     horiz_scroll_pos
-        jsr     DoScrollLeft
-        sta     horiz_scroll_pos
-        rts
-
-ScrollDown:                    ; elevator down / contents up
-        lda     vert_scroll_pos
-        ldx     vert_scroll_max
-        jsr     DoScrollDown
-        sta     vert_scroll_pos
-        rts
-
-ScrollUp:                      ; elevator up / contents down
-        lda     vert_scroll_pos
-        jsr     DoScrollUp
-        sta     vert_scroll_pos
-        rts
-
-horiz_scroll_flag:      .byte   0 ; can scroll horiz?
-vert_scroll_flag:       .byte   0 ; can scroll vert?
-horiz_scroll_pos:       .byte   0
-horiz_scroll_max:       .byte   0
-vert_scroll_pos:        .byte   0
-vert_scroll_max:        .byte   0
-
-.proc DoScrollRight
-        stx     max
-        max := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        beq     :+
-        sta     updatethumb_params::stash
-        inc     updatethumb_params::stash
-        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_params::which_ctl
-        jsr     UpdateScrollThumb
-        lda     updatethumb_params::stash
-:       rts
 .endproc
 
-.proc DoScrollLeft
-        beq     :+
-        sta     updatethumb_params::stash
-        dec     updatethumb_params::stash
-        copy    #MGTK::Ctl::horizontal_scroll_bar, updatethumb_params::which_ctl
-        jsr     UpdateScrollThumb
-        lda     updatethumb_params::stash
-:       rts
+;;; Set hthumb position relative to `maprect` and `ubox`.
+.proc _SetHThumbFromViewport
+        sub16   viewport+MGTK::Rect::x1, ubox::x1, multiplier
+        copy16  #kScrollThumbMax, multiplicand
+        jsr     Mul_16_16
+        copy32  product, numerator
+        sub16   ubox::x2, ubox::x1, denominator
+        sub16   denominator, width, denominator
+        copy16  #0, denominator+2 ; 16->32 bits
+        jsr     Div_32_32
+        lda     quotient
+        ldx     #MGTK::Ctl::horizontal_scroll_bar
+        jmp     _UpdateThumb
 .endproc
 
-.proc DoScrollDown
-        stx     max
-        max := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        beq     :+
-        sta     updatethumb_params::stash
-        inc     updatethumb_params::stash
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        jsr     UpdateScrollThumb
-        lda     updatethumb_params::stash
-:       rts
+;;; Set vthumb position relative to `maprect` and `ubox`.
+.proc _SetVThumbFromViewport
+        sub16   viewport+MGTK::Rect::y1, ubox::y1, multiplier
+        copy16  #kScrollThumbMax, multiplicand
+        jsr     Mul_16_16
+        copy32  product, numerator
+        sub16   ubox::y2, ubox::y1, denominator
+        sub16   denominator, height, denominator
+        copy16  #0, denominator+2 ; 16->32 bits
+        jsr     Div_32_32
+        lda     quotient
+        ldx     #MGTK::Ctl::vertical_scroll_bar
+        jmp     _UpdateThumb
 .endproc
 
-.proc DoScrollUp
-        beq     :+
-        sta     updatethumb_params::stash
-        dec     updatethumb_params::stash
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        jsr     UpdateScrollThumb
-        lda     updatethumb_params::stash
-:       rts
-.endproc
+;;; --------------------------------------------------
+;;; Apply `maprect` back to active window's GrafPort
 
-;;; Output: A = hscroll pos, X = hscroll max, Y = hscroll active flag (high bit)
-.proc GetActiveWindowHScrollInfo
+.proc _UpdateViewport
         ptr := $06
 
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    ptr
-        ldy     #MGTK::Winfo::hthumbmax
-        lda     (ptr),y
-        tax
-        iny                     ; hthumbpos
-        lda     (ptr),y
-        pha
-        ldy     #MGTK::Winfo::hscroll
-        lda     (ptr),y
-        and     #MGTK::Scroll::option_active ; low bit
-        clc
-        ror     a
-        ror     a               ; shift to high bit
-        tay
-        pla
+        ;; Restore header to viewport
+        sub16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight, viewport+MGTK::Rect::y1
+
+        jmp     AssignActiveWindowCliprectAndUpdateCachedIcons
+.endproc
+
+;;; --------------------------------------------------
+;;; Check contents against window size, and activate/deactivate
+;;; horizontal and vertical scrollbars as needed.
+
+.proc ActivateCtlsSetThumbs
+        jsr     _Preamble
+
+        scmp16  ubox::x1, viewport+MGTK::Rect::x1
+        bmi     activate_hscroll
+        scmp16  viewport+MGTK::Rect::x2, ubox::x2
+        bmi     activate_hscroll
+
+        ;; deactivate horizontal scrollbar
+        ldx     #MGTK::Ctl::horizontal_scroll_bar
+        lda     #MGTK::activatectl_deactivate
+        jsr     _ActivateCtl
+
+        jmp     check_vscroll
+
+activate_hscroll:
+        ;; activate horizontal scrollbar
+        ldx     #MGTK::Ctl::horizontal_scroll_bar
+        lda     #MGTK::activatectl_activate
+        jsr     _ActivateCtl
+
+        jsr     _SetHThumbFromViewport
+        FALL_THROUGH_TO check_vscroll
+
+        ;; --------------------------------------------------
+
+check_vscroll:
+        scmp16  ubox::y1, viewport+MGTK::Rect::y1
+        bmi     activate_vscroll
+        scmp16  viewport+MGTK::Rect::y2, ubox::y2
+        bmi     activate_vscroll
+
+        ;; deactivate vertical scrollbar
+        ldx     #MGTK::Ctl::vertical_scroll_bar
+        lda     #MGTK::activatectl_deactivate
+        jmp     _ActivateCtl
+
+activate_vscroll:
+        ;; activate vertical scrollbar
+        ldx     #MGTK::Ctl::vertical_scroll_bar
+        lda     #MGTK::activatectl_activate
+        jsr     _ActivateCtl
+
+        jmp     _SetVThumbFromViewport
+.endproc
+
+;;; --------------------------------------------------
+;;; Inputs: A=activate/deactivate, X=which_ctl
+
+.proc _ActivateCtl
+        stx     activatectl_params::which_ctl
+        sta     activatectl_params::activate
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
 .endproc
 
-;;; Output: A = vscroll pos, X = vscroll max, Y = vscroll active flag (high bit)
-.proc GetActiveWindowVScrollInfo
-        ptr := $06
+;;; --------------------------------------------------
+;;; Inputs: A=thumbpos, X=which_ctl
 
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    ptr
-        ldy     #MGTK::Winfo::vthumbmax
-        lda     (ptr),y
-        tax
-        iny
-        lda     (ptr),y
-        pha
-        ldy     #MGTK::Winfo::vscroll
-        lda     (ptr),y
-        and     #MGTK::Scroll::option_active ; low bit
-        clc
-        ror     a
-        ror     a               ; shift to high bit
-        tay
-        pla
+.proc _UpdateThumb
+        sta     updatethumb_params::thumbpos
+        stx     updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 .endproc
+
+.endscope
+
+;;; Handle scroll gestures
+ScrollLeft      := ScrollManager::ArrowLeft
+ScrollUp        := ScrollManager::ArrowUp
+ScrollRight     := ScrollManager::ArrowRight
+ScrollDown      := ScrollManager::ArrowDown
+ScrollPageLeft  := ScrollManager::PageLeft
+ScrollPageUp    := ScrollManager::PageUp
+ScrollPageRight := ScrollManager::PageRight
+ScrollPageDown  := ScrollManager::PageDown
+ScrollTrackHThumb := ScrollManager::TrackHThumb
+ScrollTrackVThumb := ScrollManager::TrackVThumb
+
+;;; Update the scrollbar activation state and thumb positions for
+;;; both horizontal and vertical scrollbars, based on the window's
+;;; viewport and contents.
+ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
+
 
 ;;; ============================================================
 
@@ -4176,13 +4445,8 @@ check_drive_flags:
 
 ;;; ============================================================
 
-active_window_view_by:
-        .byte   0
-
 .proc HandleClientClick
         jsr     LoadActiveWindowEntryTable
-        jsr     GetActiveWindowViewBy
-        sta     active_window_view_by
 
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
@@ -4207,7 +4471,6 @@ active_window_view_by:
         bne     :+
         rts
 :
-        jsr     GetActiveWindowScrollInfo
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
         jeq     DoTrackThumb
@@ -4256,7 +4519,6 @@ active_window_view_by:
         bne     :+
         rts
 :
-        jsr     GetActiveWindowScrollInfo
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
         jeq     DoTrackThumb
@@ -4305,25 +4567,11 @@ active_window_view_by:
         bne     :+
         rts
 :
-        FALL_THROUGH_TO UpdateScrollThumb
-.endproc
-
-;;; ============================================================
-;;; Called when the scroll thumb has been moved by the user.
-
-.proc UpdateScrollThumb
-        copy    updatethumb_params::stash, updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        jsr     ApplyActiveWinfoToWindowGrafport
-
-        bit     active_window_view_by
-        bmi     :+              ; list view, no icons
-        jsr     CachedIconsScreenToWindow
-:
-
-        jsr     UpdateCliprectAfterScroll
-        jsr     UpdateScrollbarsLeaveThumbs
-        jmp     RedrawAfterScroll
+        lda     trackthumb_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        bne     :+
+        jmp     ScrollTrackVThumb
+:       jmp     ScrollTrackHThumb
 .endproc
 
 ;;; ============================================================
@@ -4360,9 +4608,8 @@ bail:   return  #$FF            ; high bit set = not repeating
         bcs     :+
         rts
 :
-
-        bit     active_window_view_by
-        jmi     ClearSelection
+        jsr     GetActiveWindowViewBy
+        jmi     ClearSelection  ; not icons
 
         copy    active_window_id, findicon_params::window_id
         ITK_CALL IconTK::FindIcon, findicon_params
@@ -4505,8 +4752,8 @@ same_or_desktop:
         dex
         bpl     :-
 
-        jsr     UpdateScrollbars
         jsr     CachedIconsWindowToScreen
+        jsr     ScrollUpdate
 
 ignore: rts
 
@@ -4921,10 +5168,8 @@ last_pos:
 .proc HandleResizeClick
         copy    active_window_id, event_params
         MGTK_CALL MGTK::GrowWindow, event_params
-        jsr     LoadActiveWindowEntryTable
-        jsr     CachedIconsScreenToWindow
-        jsr     UpdateScrollbars
-        jmp     CachedIconsWindowToScreen
+        jsr     ScrollUpdate
+        rts
 .endproc
 
 ;;; ============================================================
@@ -5098,218 +5343,6 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Scaling function for scroll calculations
-;;;
-;;; Used for both computing new thumb position given range/offset/max,
-;;; and new offset given range/position/max.
-;;;
-;;; Inputs:
-;;;   A = numerator 1 ---- e.g. scroll position (window edge - content edge)
-;;;   X = denominator 1 -- e.g. scroll range (content size - window size)
-;;;   Y = denominator 2 -- e.g. thumbmax
-;;; Outputs:
-;;;   A = numerator 2 ---- e.g. new thumbpos
-;;;    where:
-;;;      A(in):X = A(out):Y
-;;;    or:
-;;;      R = A * Y / X
-
-.proc CalculateThumbPos
-        cmp     #1
-        bcc     :+
-        bne     start
-:       return  #0
-
-start:  sta     aa
-        stx     xx+1
-        sty     yy+1
-        cmp     xx+1            ; A >= X ?
-        bcc     :+
-        tya                     ; return Y
-        rts
-
-:       lda     #0
-        sta     xx
-        sta     yy
-        lsr16   xx              ; xx /= 2
-        lsr16   yy              ; yy /= 2
-
-        lda     #0
-        sta     mm
-        sta     nn
-        sta     mm+1
-        sta     nn+1
-
-        ;; while mm != aa
-        ;;   if (mm > aa)
-        ;;     sub
-        ;;   else
-        ;;     add
-loop:   lda     mm+1
-        cmp     aa
-        beq     finish          ; if mm == aa, done
-        bcc     :+              ; less?
-        jsr     do_sub
-        jmp     loop
-:       jsr     do_add
-        jmp     loop
-
-        ;; return nn (minimum 1)
-finish: lda     nn+1
-        cmp     #1              ; why not bne ???
-        bcs     :+
-        lda     #1
-:       rts
-
-        ;; mm -= xx; nn -= yy; xx /= 2; yy /= 2
-do_sub: sub16   mm, xx, mm
-        sub16   nn, yy, nn
-        lsr16   xx
-        lsr16   yy
-        rts
-
-        ;; mm += xx; nn += yy; xx /= 2; yy /= 2
-do_add: add16   mm, xx, mm
-        add16   nn, yy, nn
-        lsr16   xx
-        lsr16   yy
-        rts
-
-        ;; 8.8 fixed point numbers
-mm:     .word   0
-xx:     .word   0               ; X.0
-nn:     .word   0
-yy:     .word   0               ; Y.0
-
-        ;; except aa, which is just positive
-aa:     .byte   0               ; A
-
-.endproc
-
-;;; ============================================================
-
-.proc ScrollPageUp
-        jsr     ComputeActiveWindowDimensions
-        sty     height
-        jsr     CalcHeightMinusHeader
-        sta     useful_height
-
-        sub16_8 window_grafport::maprect::y1, useful_height, delta
-        scmp16  delta, iconbb_rect+MGTK::Rect::y1
-        bmi     clamp
-        ldax    delta
-        jmp     adjust
-
-clamp:  ldax    iconbb_rect+MGTK::Rect::y1
-
-adjust: stax    window_grafport::maprect::y1
-        add16_8 window_grafport::maprect::y1, height, window_grafport::maprect::y2
-        jmp     FinishScrollAdjustAndRedraw
-
-useful_height:
-        .byte   0               ; without header
-height: .byte   0               ; of window's port
-delta:  .word   0
-.endproc
-
-;;; ============================================================
-
-.proc ScrollPageDown
-        jsr     ComputeActiveWindowDimensions
-        sty     height
-        jsr     CalcHeightMinusHeader
-        sta     useful_height
-
-        add16_8 window_grafport::maprect::y2, useful_height, delta
-        scmp16  delta, iconbb_rect+MGTK::Rect::y2
-        bpl     clamp
-        ldax    delta
-        jmp     adjust
-
-clamp:  ldax    iconbb_rect+MGTK::Rect::y2
-
-adjust: stax    window_grafport::maprect::y2
-        sub16_8 window_grafport::maprect::y2, height, window_grafport::maprect::y1
-        jmp     FinishScrollAdjustAndRedraw
-
-useful_height:
-        .byte   0               ; without header
-height: .byte   0               ; of window's port
-delta:  .word   0
-.endproc
-
-;;; ============================================================
-;;; Input: Y = window height
-;;; Output: A = Window height without items/used/free header
-
-.proc CalcHeightMinusHeader
-        tya
-        sec
-        sbc     #kWindowHeaderHeight
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc ScrollPageLeft
-        jsr     ComputeActiveWindowDimensions
-        stax    width
-
-        sub16   window_grafport::maprect::x1, width, delta
-        scmp16  delta, iconbb_rect+MGTK::Rect::x1
-        bmi     clamp
-
-        ldax    delta
-        jmp     adjust
-
-clamp:  ldax    iconbb_rect+MGTK::Rect::x1
-
-adjust: stax    window_grafport::maprect::x1
-        add16   window_grafport::maprect::x1, width, window_grafport::maprect::x2
-        jmp     FinishScrollAdjustAndRedraw
-
-width:  .word   0               ; of window's port
-delta:  .word   0
-.endproc
-
-;;; ============================================================
-
-.proc ScrollPageRight
-        jsr     ComputeActiveWindowDimensions
-        stax    width
-
-        add16   window_grafport::maprect::x2, width, delta
-        scmp16  delta, iconbb_rect+MGTK::Rect::x2
-        bpl     clamp
-        ldax    delta
-        jmp     adjust
-
-clamp:  ldax    iconbb_rect+MGTK::Rect::x2
-
-adjust: stax    window_grafport::maprect::x2
-        sub16   window_grafport::maprect::x2, width, window_grafport::maprect::x1
-        jmp     FinishScrollAdjustAndRedraw
-
-width:  .word   0               ; of window's port
-delta:  .word   0
-.endproc
-
-;;; ============================================================
-;;; Computes dimensions of active window.
-;;; If icon view, leaves icons mapped to window coords.
-;;; Returns: Width in A,X, height in Y
-
-.proc ComputeActiveWindowDimensions
-        bit     active_window_view_by
-        bmi     :+              ; list view, not icons
-        jsr     CachedIconsScreenToWindow
-:       jsr     ApplyActiveWinfoToWindowGrafport
-        jsr     ComputeIconsBBox
-        lda     active_window_id
-        jmp     ComputeWindowDimensions
-.endproc
-
-;;; ============================================================
 
 .proc ApplyActiveWinfoToWindowGrafport
         ptr := $06
@@ -5323,6 +5356,16 @@ delta:  .word   0
         dey
         bpl     :-
         rts
+.endproc
+
+;;; NOTE: Does not update icon positions, so only use in empty windows.
+.proc ResetActiveWindowViewport
+        jsr     ApplyActiveWinfoToWindowGrafport
+        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, window_grafport::maprect::x2
+        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, window_grafport::maprect::y2
+        copy16  #0, window_grafport::maprect::x1
+        copy16  #0, window_grafport::maprect::y1
+        FALL_THROUGH_TO AssignActiveWindowCliprect
 .endproc
 
 .proc AssignActiveWindowCliprect
@@ -5341,22 +5384,31 @@ delta:  .word   0
         rts
 .endproc
 
-;;; ============================================================
-;;; After scrolling which adjusts maprect, update the window,
-;;; scrollbars, and redraw the window contents.
-;;; If icon view, restores icons mapped to screen coords.
+;;; Safe to call even if not an icon view
+.proc AssignActiveWindowCliprectAndUpdateCachedIcons
 
-.proc FinishScrollAdjustAndRedraw
+        jsr     GetActiveWindowViewBy
+        pha
+    IF_POS
+        jsr     CachedIconsScreenToWindow
+    END_IF
+
         jsr     AssignActiveWindowCliprect
-        jsr     UpdateScrollbars
-        FALL_THROUGH_TO RedrawAfterScroll
+
+        pla
+    IF_POS
+        jsr     CachedIconsWindowToScreen
+    END_IF
+
+        rts
 .endproc
 
+
+;;; ============================================================
+;;; After scrolling which adjusts maprect, redraw the contents.
+;;; The header is not redrawn.
+
 .proc RedrawAfterScroll
-        bit     active_window_view_by
-        bmi     :+
-        jsr     CachedIconsWindowToScreen
-:
         ;; Clear content background, not header
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
@@ -5365,122 +5417,6 @@ delta:  .word   0
         ;; Only draw content, not header
         lda     #kDrawWindowEntriesContentOnly
         jmp     DrawWindowEntries
-.endproc
-
-;;; ============================================================
-;;; Assert: scroll bar is active; content is wider than window.
-
-.proc UpdateHThumb
-        winfo_ptr := $06
-
-        ;; Compute window size
-        lda     active_window_id
-        jsr     ComputeWindowDimensions
-        stax    win_width
-
-        ;; Look up thumbmax
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    winfo_ptr
-        ldy     #MGTK::Winfo::hthumbmax
-        lda     (winfo_ptr),y
-        tay                     ; Y = thumbmax
-
-        ;; Compute size delta (content vs. window)
-        sub16   iconbb_rect+MGTK::Rect::x2, iconbb_rect+MGTK::Rect::x1, size
-        sub16   size, win_width, size
-        lsr16   size            ; / 2
-        ldx     size            ; X = (content size - window size)/2
-
-        ;; Compute offset
-        sub16   window_grafport::maprect::x1, iconbb_rect+MGTK::Rect::x1, size
-        bpl     :+
-        lda     #0              ; content near edge within window; clamp
-        beq     calc            ; always
-
-:       scmp16  window_grafport::maprect::x2, iconbb_rect+MGTK::Rect::x2
-        bmi     :+              ; content far edge within window? no
-        tya                     ; yes; skip calculation
-        jmp     skip
-
-:       lsr16   size            ; / 2
-        lda     size            ; A = (window left - content left) / 2
-
-        ;; A:X = R:Y
-        ;; A = scroll position / 2
-        ;; X = scroll range / 2
-        ;; Y = thumbmax
-        ;; R = thumbpos
-calc:   jsr     CalculateThumbPos
-
-skip:   sta     updatethumb_params::thumbpos
-        lda     #MGTK::Ctl::horizontal_scroll_bar
-        sta     updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        rts
-
-win_width:
-        .word   0
-size:   .word   0
-.endproc
-
-;;; ============================================================
-;;; Assert: scroll bar is active; content is taller than window.
-
-.proc UpdateVThumb
-        winfo_ptr := $06
-
-        ;; Compute window size
-        lda     active_window_id
-        jsr     ComputeWindowDimensions
-        sty     win_height
-
-        ;; Look up thumbmax
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    winfo_ptr
-        ldy     #MGTK::Winfo::vthumbmax
-        lda     (winfo_ptr),y
-        tay                     ; Y = thumbmax
-
-        ;; Compute size delta (content vs. window)
-        sub16   iconbb_rect+MGTK::Rect::y2, iconbb_rect+MGTK::Rect::y1, size
-        sub16_8 size, win_height, size
-        lsr16   size            ; / 4
-        lsr16   size
-        ldx     size            ; X = (content size - window size)/4
-
-        ;; Compute offset
-        sub16   window_grafport::maprect::y1, iconbb_rect+MGTK::Rect::y1, size
-        bpl     :+
-        lda     #0              ; content near edge within window; clamp
-        beq     calc            ; always
-
-:       scmp16  window_grafport::maprect::y2, iconbb_rect+MGTK::Rect::y2
-        bmi     neg             ; content far edge within window? no
-        tya                     ; yes; skip calculation
-        jmp     skip
-
-neg:    lsr16   size            ; / 4
-        lsr16   size
-        lda     size            ; A = (window top - content top) / 4
-
-        ;; A:X = R:Y
-        ;; A = scroll position / 4
-        ;; X = scroll range / 4
-        ;; Y = thumbmax
-        ;; R = thumbpos
-calc:   jsr     CalculateThumbPos
-
-skip:   sta     updatethumb_params::thumbpos
-        lda     #MGTK::Ctl::vertical_scroll_bar
-        sta     updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        rts
-
-win_height:
-        .byte   0
-size:   .word   0
 .endproc
 
 ;;; ============================================================
@@ -5920,9 +5856,10 @@ update_view:
 
         ;; Finish up
 done:   copy    cached_window_id, active_window_id
-        jsr     UpdateScrollbars
         jsr     CachedIconsWindowToScreen
-        jmp     StoreWindowEntryTable
+        jsr     StoreWindowEntryTable
+        jsr     ScrollUpdate
+        rts
 
 ;;; Common code to update the dir (vol/folder) icon.
 ;;; * If `icon_param` is valid:
@@ -6066,9 +6003,7 @@ UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 ;;; * `UpdateWindow` flag=$80
 ;;; * `ActivateWindow`; flag=$00
 ;;; * `ViewByNoniconCommon`; flag=$40
-;;; * `UpdateScrollThumb`; flag=$40
-;;; * `FinishScrollAdjustAndRedraw`; flag=$40
-;;; * `OpenWindowForIcon`; flag=$00
+;;; * `RedrawAfterScroll`; flag=$40
 kDrawWindowEntriesHeaderAndContent        = $00
 kDrawWindowEntriesContentOnly             = $40
 kDrawWindowEntriesContentOnlyPortAdjusted = $80
@@ -6247,93 +6182,6 @@ finish: lda     #0
         rts
 .endproc
 
-;;; ============================================================
-;;; Check contents against window size, and activate/deactivate
-;;; horizontal and vertical scrollbars as needed. The
-;;; `UpdateScrollbars` entry point will update the thumbs; the
-;;; `UpdateScrollbarsLeaveThumbs` entry point will not.
-;;;
-;;; Assert: cached icons mapped to window space (if in icon view)
-
-.proc UpdateScrollbarsImpl
-update_thumbs:
-        lda     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-leave_thumbs:
-        lda     #$00
-        sta     update_thumbs_flag
-
-        jsr     GetActiveWindowViewBy
-    IF_POS
-        ;; List view
-        jsr     ComputeIconsBBox
-    ELSE
-        ;; Icon view
-        jsr     CachedIconsScreenToWindow
-        jsr     ComputeIconsBBox
-        jsr     CachedIconsWindowToScreen
-    END_IF
-
-config_port:
-        jsr     ApplyActiveWinfoToWindowGrafport
-
-        ;; check horizontal bounds
-        scmp16  iconbb_rect+MGTK::Rect::x1, window_grafport::maprect::x1
-        bmi     activate_hscroll
-        scmp16  window_grafport::maprect::x2, iconbb_rect+MGTK::Rect::x2
-        bmi     activate_hscroll
-
-        ;; deactivate horizontal scrollbar
-        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_params::which_ctl
-        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
-        jsr     ActivateCtl
-
-        jmp     check_vscroll
-
-activate_hscroll:
-        ;; activate horizontal scrollbar
-        copy    #MGTK::Ctl::horizontal_scroll_bar, activatectl_params::which_ctl
-        copy    #MGTK::activatectl_activate, activatectl_params::activate
-        jsr     ActivateCtl
-
-        bit     update_thumbs_flag
-        bpl     :+
-        jsr     UpdateHThumb
-:
-
-check_vscroll:
-        ;; check vertical bounds
-        scmp16  iconbb_rect+MGTK::Rect::y1, window_grafport::maprect::y1
-        bmi     activate_vscroll
-        scmp16  window_grafport::maprect::y2, iconbb_rect+MGTK::Rect::y2
-        bmi     activate_vscroll
-
-        ;; deactivate vertical scrollbar
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
-        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
-        jsr     ActivateCtl
-
-        rts
-
-activate_vscroll:
-        ;; activate vertical scrollbar
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
-        copy    #MGTK::activatectl_activate, activatectl_params::activate
-        jsr     ActivateCtl
-
-        bit     update_thumbs_flag
-        jmi     UpdateVThumb
-
-.proc ActivateCtl
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        rts
-.endproc
-
-update_thumbs_flag:
-        .byte   0
-.endproc
-UpdateScrollbars        := UpdateScrollbarsImpl::update_thumbs
-UpdateScrollbarsLeaveThumbs     := UpdateScrollbarsImpl::leave_thumbs
 
 ;;; ============================================================
 
@@ -7289,6 +7137,7 @@ has_parent:
 
         ;; --------------------------------------------------
         ;; Scrollbars
+
         ldy     #MGTK::Winfo::hscroll
         lda     (winfo_ptr),y
         and     #AS_BYTE(~MGTK::Scroll::option_active)
@@ -7302,6 +7151,12 @@ has_parent:
         ldy     #MGTK::Winfo::hthumbpos
         sta     (winfo_ptr),y
         ldy     #MGTK::Winfo::vthumbpos
+        sta     (winfo_ptr),y
+
+        lda     #kScrollThumbMax
+        ldy     #MGTK::Winfo::hthumbmax
+        sta     (winfo_ptr),y
+        ldy     #MGTK::Winfo::vthumbmax
         sta     (winfo_ptr),y
 
         ;; --------------------------------------------------
@@ -7515,13 +7370,6 @@ assign_height:
 
         ;; --------------------------------------------------
 
-        ;; Update scrollbars
-        lda     thumbmax
-        ldy     #MGTK::Winfo::hthumbmax
-        sta     (winfo_ptr),y
-        ldy     #MGTK::Winfo::vthumbmax
-        sta     (winfo_ptr),y
-
         ;; Animate the window being opened
         lda     icon_param
         bmi     :+              ; TODO: Find some plausible source icon
@@ -7531,11 +7379,6 @@ assign_height:
         ;; Finished
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-
-        ;; TODO: Make this a constant?
-thumbmax:
-        .byte   20
-
 .endproc
 
 ;;; ============================================================
@@ -7998,7 +7841,7 @@ xcoord:
 
         DEFINE_RECT iconbb_rect, 0, 0, 0, 0
 
-.proc ComputeIconsBBoxImpl
+.proc ComputeIconsBBox
 
         entry_ptr := $06
 
@@ -8047,13 +7890,12 @@ zero_min:
         rts
 
         ;; min.x = kListViewWidth
-        ;; min.y = A * kRowHeight + kWindowHeaderHeight+1
+        ;; min.y = A * kListViewRowHeight + kWindowHeaderHeight+1
 list_view_non_empty:
-        kRowHeight = kSystemFontHeight
         ldx     #0              ; A,X = count + 2
-        ldy     #kRowHeight
+        ldy     #kListViewRowHeight
         jsr     Multiply_16_8_16
-        addax   #kWindowHeaderHeight+1, iconbb_rect::y2
+        addax   #kWindowHeaderHeight+2, iconbb_rect::y2
 
         copy16  #kListViewWidth, iconbb_rect::x2
 
@@ -8133,7 +7975,6 @@ adjust_min_y:
 next:   inc     icon_num
         jmp     check_icon
 .endproc
-ComputeIconsBBox        := ComputeIconsBBoxImpl::start
 
 ;;; ============================================================
 ;;; Compute dimensions of window
@@ -8450,8 +8291,6 @@ found:  txa
 
 .proc DrawListViewRow
 
-        kRowHeight = kSystemFontHeight
-
         ptr := $06
 
         ;; Compute address of (A-1)th file record
@@ -8477,11 +8316,11 @@ found:  txa
         scmp16  pos_col_name::ycoord, window_grafport::maprect::y2
         bpl     ret
 
-        add16_8 pos_col_icon::ycoord, #kRowHeight
-        add16_8 pos_col_name::ycoord, #kRowHeight
-        add16_8 pos_col_type::ycoord, #kRowHeight
-        add16_8 pos_col_size::ycoord, #kRowHeight
-        add16_8 pos_col_date::ycoord, #kRowHeight
+        add16_8 pos_col_icon::ycoord, #kListViewRowHeight
+        add16_8 pos_col_name::ycoord, #kListViewRowHeight
+        add16_8 pos_col_type::ycoord, #kListViewRowHeight
+        add16_8 pos_col_size::ycoord, #kListViewRowHeight
+        add16_8 pos_col_date::ycoord, #kListViewRowHeight
 
         ;; Above top?
         scmp16  pos_col_name::ycoord, window_grafport::maprect::y1
@@ -8691,128 +8530,6 @@ min     := parsed_date + ParsedDateTime::minute
         rts
 .endproc
 
-.endproc
-
-;;; ============================================================
-;;; After a scroll, update window clipping region
-;;;
-;;; Inputs are thumbpos, thumbmax, icon bbox, window maprect.
-;;; Output is an updated maprect.
-;;;
-;;; Assert: cached icons mapped to window space
-;;; Assert: window_grafport reflects active window
-
-.proc UpdateCliprectAfterScroll
-        copy    #0, sense_flag
-
-        ;; Compute window size
-        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, win_width
-        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, win_height
-
-        ;; Set `dir` to be an offset to either 0 (if horiz) or 2 (if vert)
-        ;; Used for both an offset to Point::xcoord or Point::ycoord
-        ;; and an offset to Winfo::hthumbmax or Winfo::vthumbmax
-        .assert MGTK::Point::xcoord - MGTK::Point::ycoord = MGTK::Winfo::hthumbmax - MGTK::Winfo::vthumbmax, error, "Offsets should match"
-
-        lda     updatethumb_params::which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar ; vertical?
-        bne     horiz
-        asl     a               ; == Point::ycoord
-        bne     :+              ; always
-horiz:  lda     #0              ; == Point::xcoord
-:       sta     dir
-
-        ptr := $06
-
-        ;; Look up thumbmax
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    ptr
-        lda     #MGTK::Winfo::hthumbmax
-        clc
-        adc     dir
-        tay
-        lda     (ptr),y
-        pha                     ; thumbmax
-
-        ;; Compute size delta (content vs. window)
-        jsr     ComputeIconsBBox
-
-        ldx     dir
-        sub16   iconbb_rect::bottomright,x, iconbb_rect::topleft,x, delta ; delta = bb size
-        sub16   delta, win_size,x, delta ; delta -= window size
-
-        ;; If content is smaller than window, edge cases.
-        ;; NOTE: Icons are in window space!
-    IF_NEG
-        ;; If content to left of window, delta is distance to left edge
-        sub16   window_grafport::maprect::topleft,x, iconbb_rect::topleft,x, delta
-      IF_NEG
-        ;; Else, to the right, delta is distance to right edge
-        copy    #$80, sense_flag
-        sub16   iconbb_rect::bottomright,x, window_grafport::maprect::bottomright,x, delta
-      END_IF
-    END_IF
-
-        ;; Scale delta down to fit in single byte
-        lsr16   delta     ; / 4
-        lsr16   delta     ; which should bring it into single byte range
-
-        ldy     delta           ; scroll range / 4
-        pla                     ; thumbmax
-        tax
-        lda     updatethumb_params::thumbpos ; thumbpos
-
-        ;; A:X = R:Y
-        ;; A = thumbpos
-        ;; X = thumbmax
-        ;; Y = scroll range / 4
-        ;; R = scroll position / 4
-        jsr     CalculateThumbPos
-
-        ;; Scale new delta up again
-        sta     delta
-        copy    #0, delta+1
-        asl16   delta           ; * 4
-        asl16   delta
-
-        ;; Apply to the window port
-        ldx     dir
-        bit     sense_flag
-    IF_POS
-        ;; win min = content min + delta
-        add16   delta, iconbb_rect::topleft,x, window_grafport::maprect::topleft,x
-    ELSE
-        ;; win near += delta, which derives from:
-        ;; new win min = content min + content size - orig delta + new delta - window size
-        add16   window_grafport::maprect::topleft,x, delta, window_grafport::maprect::topleft,x
-    END_IF
-        add16   window_grafport::maprect::topleft,x, win_size,x, window_grafport::maprect::bottomright,x
-
-        ;; Update window's port
-update_port:
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    ptr
-
-        ldy     #.sizeof(MGTK::GrafPort)-1
-        ldx     #.sizeof(MGTK::Rect)-1
-:       lda     window_grafport::maprect,x
-        sta     (ptr),y
-        dey
-        dex
-        bpl     :-
-
-        rts
-
-dir:    .byte   0               ; 0 if horizontal, 2 if vertical (word offset)
-delta:  .word   0               ; offset between content and maprect
-
-win_size:
-win_width:      .word   0
-win_height:     .word   0
-
-sense_flag:     .byte   0
 .endproc
 
 

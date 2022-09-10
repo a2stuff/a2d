@@ -675,7 +675,7 @@ skip:
 
 
 
-;;; Compare 16-bit values
+;;; Unsigned compare 16-bit values - test C (BCC/BCS) for result
 ;;;    cmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
 ;;;    cmp16 #$1111, $2222     ; immediate, absolute
 ;;;    cmp16 $1111, #$2222     ; absolute, immediate
@@ -728,6 +728,51 @@ skip:
         eor     #$80
 skip:
 .endmacro
+
+;;; Equality compare 16-bit values - test Z (BEQ/BNE) for result
+;;;    ecmp16 #$1111, #$2222   ; immediate, immediate (silly, but supported)
+;;;    ecmp16 #$1111, $2222    ; immediate, absolute
+;;;    ecmp16 $1111, #$2222    ; absolute, immediate
+;;;    ecmp16 $1111, $2222     ; absolute, absolute
+;;;    ecmp16 $1111,x, $2222   ; indexed, absolute
+;;;    ecmp16 $1111, $2222,x   ; absolute, indexed
+;;;    ecmp16 $1111,x, #$2222  ; indexed, immediate
+;;;    ecmp16 #$1111, $2222,x  ; immediate, indexed
+;;;    ecmp16 $1111,x, $2222,x ; indexed, indexed
+.macro ecmp16 arg1, arg2, arg3, arg4
+    .local skip
+    .if _is_register {arg2} && _is_register {arg4}
+        ;; indexed variant (arg2+arg4 is x or y)
+        lda     arg1,arg2
+        cmp     arg3,arg4
+        bne     skip
+        lda     arg1+1,arg2
+        cmp     arg3+1,arg4
+    .elseif _is_register {arg2}
+        ;; indexed variant (arg2 is x or y)
+        lda     arg1,arg2
+        _op_lo  cmp, {arg3}
+        bne     skip
+        lda     arg1+1,arg2
+        _op_hi  cmp, {arg3}
+    .elseif _is_register {arg3}
+        ;; indexed variant (arg3 is x or y)
+        _op_lo  lda, {arg1}
+        cmp     arg2,arg3
+        bne     skip
+        _op_hi  lda, {arg1}
+        cmp     arg2+1,arg3
+    .else
+        _op_lo  lda, {arg1}
+        _op_lo  cmp, {arg2}
+        bne     skip
+        _op_hi  lda, {arg1}
+        _op_hi  cmp, {arg2}
+    .endif
+skip:
+.endmacro
+
+
 
 ;;; Shift 16-bit values
 ;;;    lsr16 $1111      ; absolute

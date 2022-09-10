@@ -71,6 +71,7 @@ kWindowHeaderHeight     = 14
 
 kFirstRowBaseline       = 16
 kListViewWidth          = 410
+kListViewRowHeight      = kSystemFontHeight + 1
 
 ;;; --------------------------------------------------
 ;;; Icon views
@@ -85,15 +86,27 @@ kIconSpacingY   = 32
 
 ;;; Bounding box padding, which defines icon placing, window sizing and
 ;;; scrollbars. This does not take into account the icon's actual width
-;;; (bitmap or label size). The header is included to simplify
-;;; calculations.
+;;; (bitmap or label size).
 
+;;; TODO: Rework callers to remove need for kWindowHeaderHeight.
 kIconBBoxOffsetTop      = kWindowHeaderHeight + 4
 kIconBBoxOffsetLeft     = 45
 kIconBBoxOffsetBottom   = kIconLabelHeight + 4
 kIconBBoxOffsetRight    = 37 + kIconWidth ; accommodate icon + label
-;;; NOTE: kIconBBoxOffsetRight should probably be se to
+;;; NOTE: kIconBBoxOffsetRight should probably be set to
 ;;; kIconBBoxOffsetLeft + kIconWidth but aesthetically that looks bad.
+
+;;; --------------------------------------------------
+;;; Scrolling
+
+;;; Allow maximum fidelity
+kScrollThumbMax = $FF
+
+;;; Arbitrary - these feel good, but can be tweaked
+kIconViewScrollTickH = kIconSpacingY
+kIconViewScrollTickV = kIconSpacingY / 2
+kListViewScrollTickH = kListViewRowHeight * 2
+kListViewScrollTickV = kListViewRowHeight
 
 ;;; ============================================================
 ;;; Common Shortcuts
