@@ -215,16 +215,12 @@ get_eof:
 
         ;; If bigger than 576, assume HR
 
-:       lda     get_eof_params::eof
-        cmp     #<(kMinipixSrcSize+1)
-        lda     get_eof_params::eof+1
-        sbc     #>(kMinipixSrcSize+1)
-        bcc     :+
-        jmp     ShowHRFile
+:       cmp16   get_eof_params::eof, #kMinipixSrcSize+1
+        jcs     ShowHRFile
 
         ;; Otherwise, assume Minipix
 
-:       jmp     ShowMinipixFile
+        jmp     ShowMinipixFile
 .endproc
 
 .proc ShowFOTFile

@@ -1557,11 +1557,7 @@ loop:   lda     index
         ;; Compare block counts
         asl     a
         tax
-        lda     block_count_table,x
-        cmp     src_block_count
-        bne     next
-        lda     block_count_table+1,x
-        cmp     src_block_count+1
+        ecmp16  block_count_table,x, src_block_count
         bne     next
 
         ;; Same - add it

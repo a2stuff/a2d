@@ -6919,11 +6919,7 @@ loop:   bit     LCBANK2
         inc16   ptr_src
 
         ;; All the way to top of used space
-        lda     ptr_src+1
-        cmp     filerecords_free_start+1
-        bne     loop
-        lda     ptr_src
-        cmp     filerecords_free_start
+        ecmp16  ptr_src, filerecords_free_start
         bne     loop
 
         jsr     PopPointers
@@ -8214,11 +8210,7 @@ END_PARAM_BLOCK
         ;; Compare member-wise (just year/month/day)
         year_a  := scratch::parsed_a + ParsedDateTime::year
         year_b  := scratch::parsed_b + ParsedDateTime::year
-        lda     year_a+1
-        cmp     year_b+1
-        bne     done
-        lda     year_a
-        cmp     year_b
+        ecmp16  year_a, year_b
         bne     done
 
         month_a := scratch::parsed_a + ParsedDateTime::month

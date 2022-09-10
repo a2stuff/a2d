@@ -896,11 +896,7 @@ lasty:  .byte   0
 .proc InitDblclick
         ;; Find matching index in word table, or 0
         ldx     #kDblClickSpeedTableSize * 2
-loop:   lda     SETTINGS + DeskTopSettings::dblclick_speed
-        cmp     dblclick_speed_table-2,x
-        bne     next
-        lda     SETTINGS + DeskTopSettings::dblclick_speed+1
-        cmp     dblclick_speed_table-2+1,x
+loop:   ecmp16  SETTINGS + DeskTopSettings::dblclick_speed, dblclick_speed_table-2,x
         bne     next
         ;; Found a match
         txa
@@ -1642,11 +1638,7 @@ ipblink_counter:
 .proc InitIpblink
         ;; Find matching index in word table, or 0
         ldx     #kIPBlinkSpeedTableSize * 2
-loop:   lda     SETTINGS + DeskTopSettings::ip_blink_speed
-        cmp     ipblink_speed_table-2,x
-        bne     next
-        lda     SETTINGS + DeskTopSettings::ip_blink_speed+1
-        cmp     ipblink_speed_table-2+1,x
+loop:   ecmp16  SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_speed_table-2,x
         bne     next
         ;; Found a match
         txa

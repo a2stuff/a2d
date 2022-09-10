@@ -131,11 +131,7 @@ loop:   lda     (src),y
         bne     :+
         inc     src+1
         inc     dst+1
-:       lda     src+1
-        cmp     end+1
-        bne     loop
-        lda     src
-        cmp     end
+:       ecmp16  src, end
         bne     loop
 
         ;; Bank in ROM

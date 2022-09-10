@@ -584,11 +584,7 @@ not_last:
 :       lda     #$07
         sta     auxlc::block_num_shift
         inc16   auxlc::block_num_div8
-        lda     auxlc::block_num_div8+1
-        cmp     auxlc::block_count_div8+1
-        bne     not_last
-        lda     auxlc::block_num_div8
-        cmp     auxlc::block_count_div8
+        ecmp16  auxlc::block_num_div8, auxlc::block_count_div8
         bne     not_last
 
         sec

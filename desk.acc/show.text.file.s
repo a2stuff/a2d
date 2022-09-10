@@ -592,12 +592,8 @@ ret:    rts
 
 ;;; Returns Z=1 if at bottom, Z=0 otherwise
 .proc IsAtBottom
-        lda     first_visible_line
-        cmp     max_visible_line
-        bne     ret
-        lda     first_visible_line+1
-        cmp     max_visible_line+1
-ret:    rts
+        ecmp16  first_visible_line, max_visible_line
+        rts
 .endproc
 
 ;;; ============================================================
@@ -773,11 +769,7 @@ end:    rts
         jsr     ResetLine
 
 do_line:
-        lda     current_line+1
-        cmp     first_visible_line+1
-        bne     :+
-        lda     current_line
-        cmp     first_visible_line
+        ecmp16  current_line, first_visible_line
         bne     :+
         jsr     ClearWindow
         inc     visible_flag
@@ -818,13 +810,9 @@ moveto: MGTK_CALL MGTK::MoveTo, line_pos
 :       jsr     ResetLine
 
         ;; Have we drawn all visible lines?
-        lda     current_line
-        cmp     last_visible_line
-        bne     :+
-        lda     current_line+1
-        cmp     last_visible_line+1
+        ecmp16  current_line, last_visible_line
         beq     done
-:
+
         ;; Nope - continue on next line
         inc     current_line
         bne     :+
@@ -923,12 +911,8 @@ more:   ldy     drawtext_params::textlen
         inc     run_width+1
 :
         ;; Is there room?
-        lda     remaining_width+1
-        cmp     run_width+1
-        bne     :+
-        lda     remaining_width
-        cmp     run_width
-:       bcc     :+
+        cmp16   remaining_width, run_width
+        bcc     :+
         inc     drawtext_params::textlen
         jmp     loop
 
@@ -969,12 +953,8 @@ run_width:  .word   0
         sta     tab_flag
         add16   run_width, line_pos::left, line_pos::left
         ldx     #0
-loop:   lda     times70+1,x
-        cmp     line_pos::left+1
-        bne     :+
-        lda     times70,x
-        cmp     line_pos::left
-:       bcs     :+
+loop:   cmp16   times70,x, line_pos::left
+        bcs     :+
         inx
         inx
         cpx     #14
@@ -1141,12 +1121,8 @@ end:    rts
 ;;; Title Bar (Proportional/Fixed mode button)
 
 .proc OnTitleBarClick
-        lda     event_params::xcoord+1           ; mouse x high byte?
-        cmp     mode_mapinfo_viewloc_xcoord+1
-        bne     :+
-        lda     event_params::xcoord
-        cmp     mode_mapinfo_viewloc_xcoord
-:       bcs     ToggleMode
+        cmp16   event_params::xcoord, mode_mapinfo_viewloc_xcoord
+        bcs     ToggleMode
         clc                     ; Click ignored
         rts
 .endproc
