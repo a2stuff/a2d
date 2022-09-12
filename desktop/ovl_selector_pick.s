@@ -22,7 +22,7 @@ Exec:
         ldx     #$FF
         stx     clean_flag      ; set "clean"
         cmp     #SelectorAction::add
-        beq     L903C
+        beq     DoAdd
         jmp     Init
 
 L900F:  pha
@@ -43,14 +43,15 @@ L9017:  lda     selector_list + kSelectorListNumPrimaryRunListOffset
         pla
         rts
 
-L903C:  ldx     #1
+;;; ============================================================
+
+DoAdd:  ldx     #1
         lda     selector_menu
         cmp     #kSelectorMenuMinItems + 8
         bcc     L9052
         inx
 L9052:  lda     #$00
-        sta     path_buf0
-        sta     path_buf1
+        sta     path_buf1       ; clear name, but leave path alone
         ldy     #$03
         lda     #$02
         jsr     file_dialog__Exec

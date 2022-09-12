@@ -1145,7 +1145,11 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         jmp     SetCursorPointer ; after opening folder
 .endproc
 
-;;; --------------------------------------------------
+.endproc
+LaunchFile         := LaunchFileImpl::compose_path ; use `buf_win_path` + `buf_filename2`
+LaunchFileWithPath := LaunchFileImpl::with_path ; use `INVOKER_PREFIX`
+
+;;; ============================================================
 
 .proc ComposeWinFilePaths
         ;; Compose window path plus icon path
@@ -1168,10 +1172,6 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
 
         rts
 .endproc
-
-.endproc
-LaunchFile         := LaunchFileImpl::compose_path ; use `buf_win_path` + `buf_filename2`
-LaunchFileWithPath := LaunchFileImpl::with_path ; use `INVOKER_PREFIX`
 
 ;;; ============================================================
 
@@ -1284,7 +1284,7 @@ devlst_backup:
 
         lda     menu_click_params::item_num
         cmp     #SelectorAction::delete
-        bcs     :+              ; delete or run (no need for more overlays)
+        bcs     invoke     ; delete or run (no need for more overlays)
 
         lda     #kDynamicRoutineSelector2 ; file dialog driver
         jsr     LoadDynamicRoutine
@@ -1293,7 +1293,26 @@ devlst_backup:
         jsr     LoadDynamicRoutine
         bmi     done
 
+        ;; If adding, try to default to the current selection.
+        lda     menu_click_params::item_num
+        cmp     #kMenuItemIdSelectorAdd
+    IF_EQ
+        lda     #0
+        sta     path_buf0
+
+        ;; If there's a selection, put it in `path_buf0`
+        lda     selected_window_id
+        beq     :+
+        lda     selected_icon_count
+        beq     :+
+
+        jsr     CopyWinIconPaths
+        jsr     ComposeWinFilePaths
+        COPY_STRING src_path_buf, path_buf0
 :
+    END_IF
+
+invoke:
         ;; Invoke routine
         lda     menu_click_params::item_num
         jsr     selector_picker__Exec
