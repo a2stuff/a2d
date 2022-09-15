@@ -58,10 +58,13 @@ kWindowYOffset = 27
 
 ;;; Min/Max window dimensions
 kMinWindowWidth = 170
-kMaxWindowWidth = 430
+kMaxWindowWidth = kIconBBoxOffsetLeft + (kIconsPerRow - 1) * kIconSpacingX + kIconBBoxOffsetRight
+
 
 kMinWindowHeight = 50
-kMaxWindowHeight = 115
+kMaxWindowHeight = kIconSpacingY * 3 + kWindowHeaderHeight
+;;; NOTE: `kMaxWindowHeight` is an integral number of icons so that
+;;; each vertical scroll tick leaves the icons nicely aligned.
 
 ;;; Height of items/used/free header
 kWindowHeaderHeight     = 14
@@ -89,12 +92,15 @@ kIconSpacingY   = 32
 ;;; (bitmap or label size).
 
 ;;; TODO: Rework callers to remove need for kWindowHeaderHeight.
-kIconBBoxOffsetTop      = kWindowHeaderHeight + 4
+
+kIconBBoxOffsetTop      = kWindowHeaderHeight + 2
 kIconBBoxOffsetLeft     = 45
 kIconBBoxOffsetBottom   = kIconLabelHeight + 4
-kIconBBoxOffsetRight    = 37 + kIconWidth ; accommodate icon + label
-;;; NOTE: kIconBBoxOffsetRight should probably be set to
-;;; kIconBBoxOffsetLeft + kIconWidth but aesthetically that looks bad.
+kIconBBoxOffsetRight    = 45 + kIconWidth ; accommodate icon + label
+
+;;; NOTE: Offsets are selected in conjunction with icon spacing
+;;; and maximum window sizing so that scrolling all the way down
+;;; using the pagers leaves icons aligned.
 
 ;;; --------------------------------------------------
 ;;; Scrolling
@@ -103,8 +109,8 @@ kIconBBoxOffsetRight    = 37 + kIconWidth ; accommodate icon + label
 kScrollThumbMax = $FF
 
 ;;; Arbitrary - these feel good, but can be tweaked
-kIconViewScrollTickH = kIconSpacingY
-kIconViewScrollTickV = kIconSpacingY / 2
+kIconViewScrollTickH = kIconSpacingY * 2
+kIconViewScrollTickV = kIconSpacingY
 kListViewScrollTickH = kListViewRowHeight * 2
 kListViewScrollTickV = kListViewRowHeight
 

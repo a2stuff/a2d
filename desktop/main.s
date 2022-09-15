@@ -7948,6 +7948,9 @@ more:   tax
         lda     cached_window_entry_list,x
         jsr     CacheIconBounds
 
+        ;; Pretend icon is max height
+        sub16   cur_icon_bounds::y2, #kMaxIconHeight, cur_icon_bounds::y1
+
         ;; First icon (index 0) - just use its coordinates as min/max
         lda     icon_num
         bne     compare_x

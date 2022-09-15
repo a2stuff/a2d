@@ -734,6 +734,8 @@ Test the following in all of the above, except where called out specifically:
 
 * Browse to a directory with more than 8 files, with at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
 
+* Open a directory with more than 30 files, without resizing the window. Scroll up and down by one tick, by one page, and to the top/bottom. Verify that such operations scroll by an integral number of icons, i.e. the last row of labels are always the same distance from the bottom of the window.
+
 * In Shortcuts > Add/Edit a Shortcut... name field:
   * Type a non-path, non-control character. Verify that it is accepted.
   * Type a control character that is not an alias for an arrow/Tab/Return/Escape, e.g. Control+D. Verify that it is ignored.
