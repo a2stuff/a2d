@@ -8377,6 +8377,16 @@ draw_text:
 .endproc
 
 .proc PrepareColSize
+        file_type := list_view_filerecord + FileRecord::file_type
+
+        lda     file_type
+        cmp     #FT_DIRECTORY
+    IF_EQ
+        copy    #1, text_buffer2::length
+        copy    #'-', text_buffer2::data
+        rts
+    END_IF
+
         blocks := list_view_filerecord + FileRecord::blocks
 
         ldax    blocks

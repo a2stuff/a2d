@@ -17,6 +17,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Support up to 14 devices. ([#712](https://github.com/a2stuff/a2d/issues/712))
 * Improve scrolling in directory windows. ([#711](https://github.com/a2stuff/a2d/issues/711))
 * Shortcut > Add a Shortcut... defaults to currently selected file.
+* Simplify list views by omitting directory file sizes.
 
 ### Disk Copy
 
