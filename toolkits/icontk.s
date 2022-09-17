@@ -91,6 +91,12 @@ jump_table_high:
 
 ;;; ============================================================
 
+;;; Set by CalcIconXXXX methods
+
+        DEFINE_RECT bitmap_rect, 0,0,0,0 ; bitmap portion of icon
+        DEFINE_RECT label_rect, 0,0,0,0  ; label portion of icon
+        DEFINE_RECT bounding_rect, 0,0,0,0 ; overall bounding box of above
+
 kPolySize = 8
 
 .params poly
@@ -107,6 +113,8 @@ vertices:
         DEFINE_POINT v7, 0, 0
 .endparams
 
+;;; ============================================================
+
 .params icon_paintbits_params
         DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   0
@@ -122,8 +130,6 @@ mapwidth:       .byte   0
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 0, 0
 .endparams
-
-        DEFINE_RECT rect_dimmed, 0, 0, 0, 0
 
 .params textwidth_params
 textptr:        .addr   text_buffer
@@ -397,6 +403,8 @@ done:   rts
         lda     (params),y
         tax
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
+
+        jsr     CalcIconRects
 
         ldy     #IconEntry::state
         lda     (ptr),y         ; highlighted?
@@ -1554,45 +1562,41 @@ start:  ldy     #IconInRectParams::icon
 
         ldx     icon
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
-        jsr     CalcIconPoly
+        jsr     CalcIconRects
 
-        ;; Compare the rect against both the bitmap bbox and text bbox
-        ;; See vertex diagram in CalcIconPoly
-
-        ;; Bitmap's bbox: v0-v1-v2-v7
+        ;; Compare the rect against both the bitmap and label rects
 
         ;; top of bitmap > bottom of rect --> outside
-        scmp16  rect::y2, poly::v0::ycoord
+        scmp16  rect::y2, bitmap_rect::y1
         bmi     :+
 
         ;; left of bitmap > right of rect --> outside
-        scmp16  rect::x2, poly::v0::xcoord
+        scmp16  rect::x2, bitmap_rect::x1
         bmi     :+
 
         ;; bottom of bitmap < top of rect --> outside
-        scmp16  poly::v2::ycoord, rect::y1
+        scmp16  bitmap_rect::y2, rect::y1
         bmi     :+
 
         ;; right of bitmap < left of rect --> outside
-        scmp16  poly::v1::xcoord, rect::x1
+        scmp16  bitmap_rect::x2, rect::x1
         bpl     inside
 
-        ;; Text's bbox: v6-v3-v4-v5
 :
         ;; top of text > bottom of rect --> outside
-        scmp16  rect::y2, poly::v6::ycoord
+        scmp16  rect::y2, label_rect::y1
         bmi     outside
 
         ;; left of text > right of rect --> outside
-        scmp16  rect::x2, poly::v6::xcoord
+        scmp16  rect::x2, label_rect::x1
         bmi     outside
 
         ;; bottom of text < top of rect --> outside
-        scmp16  poly::v4::ycoord, rect::y1
+        scmp16  label_rect::y2, rect::y1
         bmi     outside
 
         ;; right of text < left of rect --> outside
-        scmp16  poly::v3::xcoord, rect::x1
+        scmp16  label_rect::x2, rect::x1
         bpl     inside
 
 outside:
@@ -1610,7 +1614,7 @@ inside:
 icon_flags: ; bit 7 = highlighted, bit 6 = volume icon
         .byte   0
 
-dimmed_flag:  ; non-zero if dimmed volume/dir
+win_flags:  ; copy of IconEntry::win_flags
         .byte   0
 
 more_drawing_needed_flag:
@@ -1635,8 +1639,7 @@ common:
         ;; Test if icon is dimmed volume/folder
         ldy     #IconEntry::win_flags
         lda     ($06),y
-        and     #kIconEntryFlagsDimmed
-        sta     dimmed_flag
+        sta     win_flags
 
         lda     ($06),y
         and     #kIconEntryWinIdMask
@@ -1676,50 +1679,8 @@ common:
         ;; Copy, pad, and measure name
         jsr     PrepareName
 
-        ;; Center horizontally
-        ;;  text_left = icon_left + icon_width/2 - text_width/2
-        ;;            = (icon_left*2 + icon_width - text_width) / 2
-        lda     icon_paintbits_params::viewloc::xcoord ; = icon_left
-        asl ; *= 2
-        tax
-        lda     icon_paintbits_params::viewloc::xcoord + 1
-        rol
-        tay
-        txa
-        clc
-        adc     icon_paintbits_params::maprect::x2 ; += icon_width
-        tax
-        tya
-        adc     icon_paintbits_params::maprect::x2 + 1
-        tay
-        txa
-        sec
-        sbc     textwidth_params::result ; -= text_width
-        sta     moveto_params2::xcoord
-        tya
-        sbc     textwidth_params::result + 1
-        sta     moveto_params2::xcoord + 1
-        rol
-        ror     moveto_params2::xcoord + 1 ; /= 2 - signed!
-        ror     moveto_params2::xcoord
-
-        ;; Align vertically
-        lda     icon_paintbits_params::viewloc::ycoord
-        sec ; + 1
-        adc     icon_paintbits_params::maprect::y2
-        tax
-        lda     icon_paintbits_params::viewloc::ycoord + 1
-        adc     icon_paintbits_params::maprect::y2 + 1
-        sta     moveto_params2::ycoord + 1
-        txa
-        clc
-        adc     #kSystemFontHeight
-        sta     moveto_params2::ycoord
-        bcc     :+
-        inc     moveto_params2::ycoord + 1
-:
-
-        COPY_STRUCT MGTK::Point, moveto_params2, label_pos
+        copy16  label_rect+MGTK::Rect::x1, label_pos+MGTK::Point::xcoord
+        add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight-1, label_pos+MGTK::Point::ycoord
 
         bit     icon_flags      ; volume icon (on desktop) ?
         bvc     DoPaint         ; nope
@@ -1745,9 +1706,9 @@ common:
         ;; Icon
 
         ;; Shade (XORs background)
-        lda     dimmed_flag
-        beq     :+
-        jsr     CalcDimmedRect
+        .assert kIconEntryFlagsDimmed = $80, error, "flag mismatch"
+        bit     win_flags
+        bpl     :+
         jsr     Shade
 
         ;; Mask (cleared to white or black)
@@ -1758,8 +1719,9 @@ common:
 :       MGTK_CALL MGTK::PaintBits, mask_paintbits_params
 
         ;; Shade again (restores background)
-        lda     dimmed_flag
-        beq     :+
+        .assert kIconEntryFlagsDimmed = $80, error, "flag mismatch"
+        bit     win_flags
+        bpl     :+
         jsr     Shade
 
         ;; Icon (drawn in black or white)
@@ -1793,7 +1755,7 @@ setbg:  sta     settextbg_params
 .proc Shade
         MGTK_CALL MGTK::SetPattern, dark_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, rect_dimmed
+        MGTK_CALL MGTK::PaintRect, bitmap_rect
 
 done:   rts
 .endproc
@@ -1802,23 +1764,103 @@ done:   rts
 
 ;;; ============================================================
 
-.proc CalcDimmedRect
-        ldx     #0
-:       add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::topleft,x, rect_dimmed::topleft,x
-        add16   icon_paintbits_params::viewloc,x, icon_paintbits_params::maprect::bottomright,x, rect_dimmed::bottomright,x
-        inx
-        inx
-        cpx     #.sizeof(MGTK::Point)
-        bne     :-
-        rts
-.endproc
-
 .endproc ; PaintIcon
         paint_icon_unhighlighted := PaintIcon::unhighlighted
         paint_icon_highlighted := PaintIcon::highlighted
 
 
 ;;; ============================================================
+
+kIconLabelGapV = 2
+
+;;; Input: $06 points at icon
+;;; Output: Populates `bitmap_rect` and `label_rect`
+;;; Preserves $06/$08
+.proc CalcIconRects
+        entry_ptr := $6
+        bitmap_ptr := $8
+
+        jsr     PushPointers
+
+        ldy     #IconEntry::iconbits
+        copy16in (entry_ptr),y, bitmap_ptr
+
+        ;; Bitmap top/left - copy from icon entry
+        ldy     #IconEntry::iconx+3
+        ldx     #3
+:       lda     (entry_ptr),y
+        sta     bitmap_rect::topleft,x
+        dey
+        dex
+        bpl     :-
+
+        ;; Bitmap bottom/right
+        ldy     #IconResource::maprect + MGTK::Rect::x2
+        add16in bitmap_rect::x1, (bitmap_ptr),y, bitmap_rect::x2
+        .assert (MGTK::Rect::y2 - MGTK::Rect::x2) = 2, error, "y2 must be 2 more than x2"
+        iny
+        add16in bitmap_rect::y1, (bitmap_ptr),y, bitmap_rect::y2
+
+        ;; Label top
+        add16_8 bitmap_rect::y2, #kIconLabelGapV, label_rect::y1
+
+        ;; Label bottom
+        add16_8 label_rect::y1, #kSystemFontHeight, label_rect::y2
+
+        ;; Copy, pad, and measure name
+        jsr     PrepareName
+
+        ;; Center horizontally
+
+        ;; Left edge of label
+        ;;  text_left = icon_left + icon_width/2 - text_width/2
+        ;;            = (icon_left*2 + icon_width - text_width) / 2
+        ;; NOTE: Left is computed before right to match rendering code
+        copy16  bitmap_rect::x1, label_rect::x1
+        asl16   label_rect::x1
+        ldy     #IconResource::maprect + MGTK::Rect::x2
+        add16in label_rect::x1, (bitmap_ptr),y, label_rect::x1
+        sub16   label_rect::x1, textwidth_params::result, label_rect::x1
+        asr16   label_rect::x1 ; signed
+
+        ;; Label right
+        add16   label_rect::x1, textwidth_params::result, label_rect::x2
+
+        jsr     PopPointers     ; do not tail-call optimise!
+        rts
+.endproc
+
+;;; Input: $06 points at icon
+;;; Output: Populates `bitmap_rect` and `label_rect` and `bounding_rect`
+;;; Preserves $06/$08
+.proc CalcIconBoundingRect
+        jsr     PushPointers
+
+        jsr     CalcIconRects
+
+        COPY_STRUCT MGTK::Rect, bitmap_rect, bounding_rect
+
+        scmp16  label_rect::x1, bounding_rect::x1
+    IF_NEG
+        copy16  label_rect::x1, bounding_rect::x1
+    END_IF
+        scmp16  label_rect::y1, bounding_rect::y1
+    IF_NEG
+        copy16  label_rect::y1, bounding_rect::y1
+    END_IF
+
+        scmp16  bounding_rect::x2, label_rect::x2
+    IF_NEG
+        copy16  label_rect::x2, bounding_rect::x2
+    END_IF
+        scmp16  bounding_rect::y2, label_rect::y2
+    IF_NEG
+        copy16  label_rect::y2, bounding_rect::y2
+    END_IF
+
+        jsr     PopPointers     ; do not tail-call optimise!
+        rts
+.endproc
 
 ;;;              v0          v1
 ;;;               +----------+
@@ -1833,104 +1875,48 @@ done:   rts
 
 kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
+;;; Input: $06 points at icon
+;;; Output: Populates `bitmap_rect` and `label_rect` and `bounding_rect`
+;;;         and (of course) `poly`
+;;; Preserves $06/$08
 .proc CalcIconPoly
         entry_ptr := $6
-        bitmap_ptr := $8
 
         jsr     PushPointers
 
-        ;; v0 - copy from icon entry
-        ldy     #IconEntry::iconx+3
-        ldx     #3
-:       lda     (entry_ptr),y
-        sta     poly::v0,x
-        dey
-        dex
-        bpl     :-
+        jsr     CalcIconBoundingRect
 
-        ;; Top edge (v0, v1)
+        ;; Even vertexes are (mostly) direct copies from rects
+
+        ;; v0/v2 (and extend bitmap rect down to top of text)
+        COPY_STRUCT MGTK::Point, bitmap_rect::topleft, poly::v0
+        copy16  bitmap_rect::x2, poly::v2::xcoord
+        copy16  label_rect::y1, poly::v2::ycoord
+
+        ;; v6/v4
+        COPY_STRUCT MGTK::Point, label_rect::topleft, poly::v6
+        COPY_STRUCT MGTK::Point, label_rect::bottomright, poly::v4
+
+        ;; Odd vertexes are combinations
+
+        ;; v1
+        copy16  poly::v2::xcoord, poly::v1::xcoord
         copy16  poly::v0::ycoord, poly::v1::ycoord
 
-        ;; Left edge of icon (v0, v7)
+        ;; v7
         copy16  poly::v0::xcoord, poly::v7::xcoord
+        copy16  poly::v2::ycoord, poly::v7::ycoord
 
-        ldy     #IconEntry::iconbits
-        copy16in (entry_ptr),y, bitmap_ptr
+        ;; v3
+        copy16  poly::v4::xcoord, poly::v3::xcoord
+        copy16  poly::v6::ycoord, poly::v3::ycoord
 
-        ;; Right edge of icon (v1, v2)
-        ldy     #IconResource::maprect + MGTK::Rect::x2
-        lda     (bitmap_ptr),y
-        clc
-        adc     poly::v0::xcoord
-        sta     poly::v1::xcoord
-        sta     poly::v2::xcoord
-        iny
-        lda     (bitmap_ptr),y
-        adc     poly::v0::xcoord+1
-        sta     poly::v1::xcoord+1
-        sta     poly::v2::xcoord+1
-
-        ;; Bottom edge of icon (v2, v7)
-        ;;ldy     #IconResource::maprect + MGTK::Rect::y2
-        .assert (MGTK::Rect::y2 - MGTK::Rect::x2) = 2, error, "y2 must be 2 more than x2"
-        iny
-        add16in (bitmap_ptr),y, poly::v0::ycoord, poly::v2::ycoord
-;;xxx
-        lda     poly::v2::ycoord ; 2px down
-        clc
-        adc     #2
-        sta     poly::v2::ycoord
-        sta     poly::v3::ycoord
-        sta     poly::v6::ycoord
-        sta     poly::v7::ycoord
-        lda     poly::v2::ycoord+1
-        adc     #0
-        sta     poly::v2::ycoord+1
-        sta     poly::v3::ycoord+1
-        sta     poly::v6::ycoord+1
-        sta     poly::v7::ycoord+1
-
-        ;; Bottom edge of label (v4, v5)
-        lda     #kSystemFontHeight
-        ;;clc
-        adc     poly::v2::ycoord
-        sta     poly::v4::ycoord
-        sta     poly::v5::ycoord
-        lda     poly::v2::ycoord+1
-        adc     #0
-        sta     poly::v4::ycoord+1
-        sta     poly::v5::ycoord+1
-
-        ;; Copy, pad, and measure name
-        jsr     PrepareName
-
-        ;; Center horizontally
-
-        ldy     #IconResource::maprect + MGTK::Rect::x2
-        copy16in (bitmap_ptr),y, icon_width
-
-        ;; Left edge of label (v5, v6)
-        ;;  text_left = icon_left + icon_width/2 - text_width/2
-        ;;            = (icon_left*2 + icon_width - text_width) / 2
-        ;; NOTE: Left is computed before right to match rendering code
-;;xxx
-        copy16  poly::v0::xcoord, poly::v5::xcoord
-        asl16   poly::v5::xcoord
-        add16   poly::v5::xcoord, icon_width, poly::v5::xcoord
-        sub16   poly::v5::xcoord, textwidth_params::result, poly::v5::xcoord
-        asr16   poly::v5::xcoord ; signed
-        copy16  poly::v5::xcoord, poly::v6::xcoord
-
-        ;; Right edge of label (v3, v4)
-        add16   poly::v5::xcoord, textwidth_params::result, poly::v3::xcoord
-        copy16  poly::v3::xcoord, poly::v4::xcoord
+        ;; v5
+        copy16  poly::v6::xcoord, poly::v5::xcoord
+        copy16  poly::v4::ycoord, poly::v5::ycoord
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-
-icon_width:  .word   0
-text_width:  .word   0
-
 .endproc
 
 ;;; Copy name from IconEntry (ptr $06) to text_buffer,
@@ -2177,7 +2163,7 @@ window_id:      .byte   0
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         bne     ret             ; obscured!
-        jsr     offset_icon_poly
+        jsr     offset_icon_poly_and_rect
         jsr     ShiftPortDown ; Further offset by window's items/used/free bar
         jsr     EraseWindowIcon
         jmp     RedrawIconsAfterErase
@@ -2206,27 +2192,11 @@ volume:
         FALL_THROUGH_TO EraseWindowIcon
 .endproc
 
+;;; Inputs: `bounding_rect` and `poly` must be populated
 .proc EraseWindowIcon
         ;; Construct a bounding rect from the icon's polygon.
         ;; Used in `RedrawIconsAfterErase`
-        copy16  poly::v0::ycoord, icon_rect + MGTK::Rect::y1
-        copy16  poly::v5::ycoord, icon_rect + MGTK::Rect::y2
-
-        ;; Use lower of v6, v0
-        scmp16  poly::v6::xcoord, poly::v0::xcoord
-    IF_NEG
-        copy16  poly::v6::xcoord, icon_rect + MGTK::Rect::x1
-    ELSE
-        copy16  poly::v0::xcoord, icon_rect + MGTK::Rect::x1
-    END_IF
-
-        ;; Use higher of v1, v3
-        scmp16  poly::v3::xcoord, poly::v1::xcoord
-    IF_POS
-        copy16  poly::v3::xcoord, icon_rect + MGTK::Rect::x2
-    ELSE
-        copy16  poly::v1::xcoord, icon_rect + MGTK::Rect::x2
-    END_IF
+        COPY_STRUCT MGTK::Rect, bounding_rect, icon_rect
 
         MGTK_CALL MGTK::PaintPoly, poly
         rts
@@ -2303,63 +2273,51 @@ next:   pla
 
 offset_flags:  .byte   0        ; bit 7 = offset poly, bit 6 = undo offset, otherwise do offset
 
-        DEFINE_POINT vl_offset, 0, 0
-        DEFINE_POINT mr_offset, 0, 0
+dx:     .word   0
+dy:     .word   0
 
-entry_poly:
+entry_poly_and_rect:
         copy    #$80, offset_flags
-        bmi     LA4E2           ; always
+        bmi     common          ; always
 
 entry_do:
         pha
         lda     #$40
         sta     offset_flags
-        jmp     LA4E2
+        jmp     common
 
-entry_undo:  pha
+entry_undo:
+        pha
         lda     #0
         sta     offset_flags
 
-LA4E2:  ldy     #MGTK::GrafPort::viewloc
-:       lda     icon_grafport,y
-        sta     vl_offset,y
-        iny
-        cpy     #MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)
-        bne     :-
-
-        ldy     #MGTK::GrafPort::maprect
-:       lda     icon_grafport,y
-        sta     mr_offset - MGTK::GrafPort::maprect,y
-        iny
-        cpy     #MGTK::GrafPort::maprect + .sizeof(MGTK::Point)
-        bne     :-
+common:
+        sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Point::xcoord, icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, dx
+        sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Point::ycoord, icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, dy
 
         bit     offset_flags
         bmi     OffsetPoly
-        bvc     DoOffset
+        jvc     DoOffset
         jmp     UndoOffset
 
 .proc OffsetPoly
+        add16   bounding_rect::x1, dx, bounding_rect::x1
+        add16   bounding_rect::y1, dy, bounding_rect::y1
+        add16   bounding_rect::x2, dx, bounding_rect::x2
+        add16   bounding_rect::y2, dy, bounding_rect::y2
+
         ldx     #0
-loop1:  sub16   poly::vertices+0,x, vl_offset::xcoord, poly::vertices+0,x
-        sub16   poly::vertices+2,x, vl_offset::ycoord, poly::vertices+2,x
+loop1:  add16   poly::vertices+0,x, dx, poly::vertices+0,x
+        add16   poly::vertices+2,x, dy, poly::vertices+2,x
         inx
         inx
         inx
         inx
         cpx     #kPolySize * .sizeof(MGTK::Point)
         bne     loop1
-        ldx     #0
 
-loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
-        add16   poly::vertices+2,x, mr_offset::ycoord, poly::vertices+2,x
-        inx
-        inx
-        inx
-        inx
-        cpx     #kPolySize * .sizeof(MGTK::Point)
-        bne     loop2
         rts
+
 .endproc
 
 .proc DoOffset
@@ -2370,13 +2328,9 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         jsr     PushPointers
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::iconx
-        add16in (ptr),y, vl_offset::xcoord, (ptr),y ; iconx += viewloc::xcoord
+        sub16in (ptr),y, dx, (ptr),y ; icony += viewloc::xcoord - maprect::left
         iny
-        add16in (ptr),y, vl_offset::ycoord, (ptr),y ; icony += viewloc::xcoord
-        ldy     #IconEntry::iconx
-        sub16in (ptr),y, mr_offset::xcoord, (ptr),y ; icony -= maprect::left
-        iny
-        sub16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony -= maprect::top
+        sub16in (ptr),y, dy, (ptr),y ; icony += viewloc::ycoord - maprect::top
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
@@ -2389,19 +2343,15 @@ loop2:  add16   poly::vertices+0,x, mr_offset::xcoord, poly::vertices+0,x
         jsr     PushPointers
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::iconx
-        sub16in (ptr),y, vl_offset::xcoord, (ptr),y ; iconx -= viewloc::xcoord
+        add16in (ptr),y, dx, (ptr),y ; iconx += maprect::left - viewloc::xcoord
         iny
-        sub16in (ptr),y, vl_offset::ycoord, (ptr),y ; icony -= viewloc::xcoord
-        ldy     #IconEntry::iconx
-        add16in (ptr),y, mr_offset::xcoord, (ptr),y ; iconx += maprect::left
-        iny
-        add16in (ptr),y, mr_offset::ycoord, (ptr),y ; icony += maprect::top
+        add16in (ptr),y, dy, (ptr),y ; icony += maprect::top - viewloc::xcoord
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
 .endproc
-        offset_icon_poly := OffsetIcon::entry_poly
+        offset_icon_poly_and_rect := OffsetIcon::entry_poly_and_rect
         offset_icon_do := OffsetIcon::entry_do
         offset_icon_undo := OffsetIcon::entry_undo
 
@@ -2446,50 +2396,27 @@ reserved:       .byte   0
 .endparams
 
 .proc SetPortForVolIcon
-        jsr     CalcIconPoly
+        jsr     CalcIconPoly    ; also populates `bounding_rect`
 
         ;; Set up bounds_t
-        lda     poly::v0::ycoord
-        sta     bounds_t
-        sta     portbits::maprect::y1
-        sta     portbits::viewloc::ycoord
-        lda     poly::v0::ycoord+1
-        sta     bounds_t+1
-        sta     portbits::maprect::y1+1
-        sta     portbits::viewloc::ycoord+1
+        ldax    bounding_rect::y1
+        stax    bounds_t
+        stax    portbits::maprect::y1
+        stax    portbits::viewloc::ycoord
 
         ;; Set up bounds_l
-        ldx     poly::v0::xcoord
-        ldy     poly::v0::xcoord + 1
-        cpx     poly::v5::xcoord
-        tya
-        sbc     poly::v5::xcoord + 1
-        bcc     :+
-        ldx     poly::v5::xcoord
-        ldy     poly::v5::xcoord + 1
-:       stx     portbits::maprect::x1
-        stx     portbits::viewloc::xcoord
-        sty     portbits::maprect::x1+1
-        sty     portbits::viewloc::xcoord+1
+        ldax    bounding_rect::x1
+        stax    portbits::maprect::x1
+        stax    portbits::viewloc::xcoord
 
         ;; Set up bounds_b
-        lda     poly::v4::ycoord
-        sta     bounds_b
-        sta     portbits::maprect::y2
-        lda     poly::v4::ycoord+1
-        sta     bounds_b+1
-        sta     portbits::maprect::y2+1
+        ldax    bounding_rect::y2
+        stax    bounds_b
+        stax    portbits::maprect::y2
 
         ;; Set up bounds_r
-        ldx     poly::v1::xcoord
-        ldy     poly::v1::xcoord + 1
-        cpx     poly::v3::xcoord
-        tya
-        sbc     poly::v3::xcoord + 1
-        bcs     :+
-        ldx     poly::v3::xcoord
-        ldy     poly::v3::xcoord + 1
-:
+        ldxy    bounding_rect::x2
+
         ;; if (bounds_r > kScreenWidth - 1) bounds_r = kScreenWidth - 1
         cpx     #<(kScreenWidth - 1)
         tya
@@ -2498,10 +2425,8 @@ reserved:       .byte   0
         ldx     #<(kScreenWidth - 1)
         ldy     #>(kScreenWidth - 1)
 
-done:   stx     bounds_r
-        sty     bounds_r+1
-        stx     portbits::maprect::x2
-        sty     portbits::maprect::x2+1
+done:   stxy    bounds_r
+        stxy    portbits::maprect::x2
         MGTK_CALL MGTK::SetPortBits, portbits
         rts
 .endproc
