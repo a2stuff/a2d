@@ -2774,18 +2774,24 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 ;;; ============================================================
 
 .proc CmdViewByIcon
+        ;; Valid?
         lda     active_window_id
         bne     :+
         rts
-
-:       jsr     GetActiveWindowViewBy
+:
+        ;; Is this a change?
+        jsr     GetActiveWindowViewBy
         bne     :+              ; not by icon
         rts
+:
+
+;;; Entry point when refreshing window contents
+entry:
 
         ;; View by icon
-entry:
-:       jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable
 
+        ;; Zero the table
         ldx     #$00
         txa
 :       cpx     cached_window_entry_count
@@ -2795,49 +2801,27 @@ entry:
         jmp     :-
 :       sta     cached_window_entry_count
 
-        lda     #0
+        ;; Update view menu/table
+        lda     #kViewByIcon
         ldx     active_window_id
         sta     win_view_by_table-1,x
         jsr     UpdateViewMenuCheck
 
-        lda     active_window_id
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        jsr     ClearWindowBackgroundIfNotObscured
+        ;; Reset the viewport
+        jsr     ResetActiveWindowViewport ; Must precede icon creation
 
-        lda     active_window_id
-        jsr     ComputeWindowDimensions
-        stax    win_width
-        sty     win_height
-
-        ptr = $06
-
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    ptr
-
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Point) - 1
-        lda     #0
-:       sta     (ptr),y
-        dey
-        cpy     #MGTK::Winfo::port + MGTK::GrafPort::maprect - 1
-        bne     :-
-
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     win_width,x
-        sta     (ptr),y
-        dey
-        dex
-        bpl     :-
-
+        ;; Create the icons
         lda     active_window_id
         jsr     CreateIconsAndPreserveWindowSize
+        jsr     StoreWindowEntryTable
+        jsr     AddIconsForCachedWindow
 
-        lda     active_window_id
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        sta     err
+        jmp     RedrawAfterContentChange
+.endproc
 
-        jsr     CachedIconsScreenToWindow
+;;; ============================================================
+
+.proc AddIconsForCachedWindow
         copy    #0, index
         index := *+1
 :       lda     #SELF_MODIFIED_BYTE
@@ -2849,25 +2833,10 @@ entry:
         jsr     IconEntryLookup
         stax    @addr
         ITK_CALL IconTK::AddIcon, 0, @addr
-        err := *+1
-        lda     #SELF_MODIFIED_BYTE
-    IF_ZERO                     ; Skip drawing if obscured
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
-    END_IF
         inc     index
         jmp     :-
-
-:       jsr     CachedIconsWindowToScreen
-        jsr     StoreWindowEntryTable
-
-        jsr     ScrollUpdate
-
-finish: rts
-
-win_width:
-        .word   0
-win_height:
-        .word   0
+:
+        rts
 .endproc
 
 ;;; ============================================================
@@ -2877,24 +2846,26 @@ win_height:
 
         ;; Valid?
         lda     active_window_id
-        beq     ret
-
+        bne     :+
+        rts
+:
         ;; Is this a change?
         jsr     GetActiveWindowViewBy
         view := *+1
         cmp     #SELF_MODIFIED_BYTE
-        beq     ret
-
+        bne     :+
+        rts
+:
         ;; Destroy existing icons
         cmp     #kViewByIcon
         bne     :+
         jsr     DestroyIconsInActiveWindow
 :
         ;; Update view menu/table
-        jsr     UpdateViewMenuCheck
         lda     view
         ldx     active_window_id
         sta     win_view_by_table-1,x
+        jsr     UpdateViewMenuCheck
 
         ;; Clear selection if in the window
         lda     selected_window_id
@@ -2912,7 +2883,13 @@ sort:   jsr     LoadActiveWindowEntryTable
         ;; Reset the viewport
         jsr     ResetActiveWindowViewport
 
-        ;; Draw the records
+        FALL_THROUGH_TO RedrawAfterContentChange
+.endproc
+
+;;; ============================================================
+
+.proc RedrawAfterContentChange
+        ;; Draw the contents
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         jsr     ClearWindowBackgroundIfNotObscured
@@ -2920,10 +2897,10 @@ sort:   jsr     LoadActiveWindowEntryTable
         lda     #kDrawWindowEntriesContentOnly
         jsr     DrawWindowEntries
 
-        jsr     ScrollUpdate
-
-ret:    rts
+        ;; Update scrollbars based on contents/viewport
+        jmp     ScrollUpdate
 .endproc
+
 
 ;;; ============================================================
 
@@ -5847,38 +5824,13 @@ update_view:
 
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
-        sta     err
-
         bne     :+              ; Skip drawing if obscured
         jsr     DrawWindowHeader
 :
-
-        ;; Restore and add the icons
-        jsr     CachedIconsScreenToWindow
-        copy    #0, num
-:       lda     num
-        cmp     cached_window_entry_count
-        beq     done
-        tax
-        lda     cached_window_entry_list,x
-        sta     icon_param
-        jsr     IconEntryLookup ; A,X points at IconEntry
-        stax    @addr2
-        ITK_CALL IconTK::AddIcon, 0, @addr2
-        err := *+1
-        lda     #SELF_MODIFIED_BYTE
-    IF_ZERO                     ; Skip drawing if obscured
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
-    END_IF
-        inc     num
-        jmp     :-
-
-        ;; Finish up
-done:   copy    cached_window_id, active_window_id
-        jsr     CachedIconsWindowToScreen
         jsr     StoreWindowEntryTable
-        jsr     ScrollUpdate
-        rts
+        jsr     AddIconsForCachedWindow
+        jmp     RedrawAfterContentChange
+
 
 ;;; Common code to update the dir (vol/folder) icon.
 ;;; * If `icon_param` is valid:
@@ -7175,9 +7127,13 @@ has_parent:
         sta     (winfo_ptr),y
 
         ;; --------------------------------------------------
+        ;; Read FileRecords
 
         lda     cached_window_id
         jsr     OpenDirectory
+
+        ;; --------------------------------------------------
+        ;; Update used/free table
 
         lda     icon_param      ; set to $FF if opening via path
         bmi     volume
@@ -7206,8 +7162,22 @@ volume: ldx     cached_window_id
         tax
         copy16  vol_kb_used, window_k_used_table,x
         copy16  vol_kb_free, window_k_free_table,x
+
+        ;; --------------------------------------------------
+        ;; Create window and icons
+
         lda     cached_window_id
-        jmp     CreateIconsAndSetWindowSize
+        jsr     CreateIconsAndSetWindowSize
+
+        ;; --------------------------------------------------
+        ;; Animate the window being opened (if needed)
+
+        lda     icon_param
+        bmi     :+              ; TODO: Find some plausible source icon
+        ldx     cached_window_id
+        jsr     AnimateWindowOpen
+:
+        rts
 .endproc
 
 copy_new_window_bounds_flag:
@@ -7383,14 +7353,6 @@ assign_height:
         iny
         sta     (winfo_ptr),y
 
-        ;; --------------------------------------------------
-
-        ;; Animate the window being opened
-        lda     icon_param
-        bmi     :+              ; TODO: Find some plausible source icon
-        ldx     window_id
-        jsr     AnimateWindowOpen
-:
         ;; Finished
         jsr     PopPointers     ; do not tail-call optimise!
         rts
