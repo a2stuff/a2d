@@ -8338,14 +8338,15 @@ draw_text:
         lda     file_type
         cmp     #FT_DIRECTORY
     IF_EQ
-        copy    #kGlyphFolderLeft, text_buffer2::data
-        copy    #kGlyphFolderRight, text_buffer2::data+1
-        lda     #2
+        lda     #kGlyphFolderLeft
+        ldx     #kGlyphFolderRight
     ELSE
-        copy    #' ', text_buffer2::data
-        lda     #1
+        lda     #kGlyphFileLeft
+        ldx     #kGlyphFileRight
     END_IF
-        sta     text_buffer2::length
+        sta     text_buffer2::data
+        stx     text_buffer2::data+1
+        copy    #2, text_buffer2::length
 
         rts
 .endproc

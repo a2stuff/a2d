@@ -67,6 +67,13 @@ kListItemHeight = kSystemFontHeight+1
 kListItemTextOffsetX = kTextBoxTextHOffset
 kListItemTextOffsetY = kListItemHeight - 1
 
+;;; File lists
+kListViewIconWidth = 14
+kListViewIconGap = 4
+kListViewIconX = 4
+kListViewNameX = kListViewIconX + kListViewIconWidth + kListViewIconGap
+
+
 ;;; Mouse threshold for double click detection.
 kDoubleClickDeltaX      = 5
 kDoubleClickDeltaY      = 4
@@ -229,8 +236,8 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 ;;; $00 = spacer       !           $10 = TM left      *
 ;;; $01 = folder left  ! (MT:X)    $11 = TM right     *
 ;;; $02 = folder right ! (MT:Y)    $12 = pound        *
-;;; $03 = hourglass      (MT:C)    $13 = pi           *
-;;; $04 = I-beam                   $14 = divide       *
+;;; $03 = file left    !           $13 = pi           *
+;;; $04 = file right   !           $14 = divide       *
 ;;; $05 = pointer        (MT:B)    $15 = rarrow       ! (MT:U)
 ;;; $06 = vbar           (MT:_)    $16 = degree       !
 ;;; $07 = hbar           (MT:S)    $17 = open circ
@@ -251,6 +258,8 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 kGlyphSpacer            = $00
 kGlyphFolderLeft        = $01
 kGlyphFolderRight       = $02
+kGlyphFileLeft          = $03
+kGlyphFileRight         = $04
 
 kGlyphLeftArrow         = $08
 kGlyphRightArrow        = $15

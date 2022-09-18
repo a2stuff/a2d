@@ -1848,19 +1848,20 @@ listbox::selected_index = selected_index
 
         jsr     GetNthFilename
         jsr     CopyFilenameToBuf
-        copy16  #file_dialog_res::kListEntryNameX, listbox::item_pos+MGTK::Point::xcoord
+        copy16  #kListViewNameX, listbox::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, listbox::item_pos
         param_call DrawString, file_dialog_res::filename_buf
 
         ;; Folder glyph?
+        copy16  #kListViewIconX, listbox::item_pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, listbox::item_pos
         pla
     IF_NS
-        copy16  #file_dialog_res::kListEntryGlyphX, listbox::item_pos+MGTK::Point::xcoord
-        MGTK_CALL MGTK::MoveTo, listbox::item_pos
-        param_call DrawString, file_dialog_res::str_folder
+        ldax    #file_dialog_res::str_folder
+    ELSE
+        ldax    #file_dialog_res::str_file
     END_IF
-
-        rts
+        jmp     DrawString
 .endproc
 
 ;;; ============================================================

@@ -23,6 +23,8 @@ filename_buf:
 
 str_folder:
         PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
+str_file:
+        PASCAL_STRING {kGlyphFileLeft, kGlyphFileRight}
 
         kControlsLeft = 28
         kControlsTop  = 27
@@ -145,9 +147,6 @@ nextwinfo:      .addr   0
 ;;; Listbox within File Picker Dialog
 
 kEntryListCtlWindowID = $3F
-
-kListEntryGlyphX = 1
-kListEntryNameX  = 16
 
 kLineDelta = 1
 
