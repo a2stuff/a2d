@@ -557,7 +557,7 @@ not_menu:
         ;; for volume icons, otherwise it would put selection
         ;; in an inactive window.)
         lda     active_window_id
-        jmp     SelectIconForWindow
+        jne     SelectIconForWindow
     END_IF
         rts
 
