@@ -404,6 +404,7 @@
 * Launch DeskTop. Open two volume windows. Click in the inactive window without selecting any icons. Verify that the window activates and the volume icon is selected.
 * Launch DeskTop. Open a volume window. Click on the desktop to clear selection. Click in an empty area within the window. Verify that the volume icon is selected.
 * Launch DeskTop. Open a volume window. Select a file icon. Click in an empty area within the window. Verify that the volume icon is selected.
+* Launch DeskTop. Apple > Control Panels. Close the window by clicking on the close box. Verify nothing mis-paints.
 
 ## Shortcuts
 
