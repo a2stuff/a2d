@@ -9066,6 +9066,7 @@ device_type_to_icon_address_table:
         .addr profile_icon
         .addr floppy800_icon
         .addr fileshare_icon
+        .addr cdrom_icon
         ASSERT_ADDRESS_TABLE_SIZE device_type_to_icon_address_table, ::kNumDeviceTypes
 
 .params status_params
@@ -9197,15 +9198,21 @@ done:
         ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer::Device_Type_Code
         .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
-        bne     test_size     ; $00 = Memory Expansion Card (RAM Disk)
+        bne     :+            ; $00 = Memory Expansion Card (RAM Disk)
+        ldax    #dib_buffer::ID_String_Length
+        ldy     #kDeviceTypeRAMDisk
+        rts
+:
+        cmp     #SPDeviceType::SCSICDROM
+        bne     test_size
+        ldax    #dib_buffer::ID_String_Length
+        ldy     #kDeviceTypeCDROM
+        rts
+
         ;; NOTE: Codes for 3.5" disk ($01) and 5-1/4" disk ($0A) are not trusted
         ;; since emulators do weird things.
         ;; TODO: Is that comment about false positives or false negatives?
         ;; i.e. if $01 or $0A is seen, can that be trusted?
-
-        ldax    #dib_buffer::ID_String_Length
-        ldy     #kDeviceTypeRAMDisk
-        rts
 
 not_sp:
         ;; Not SmartPort - try AppleTalk

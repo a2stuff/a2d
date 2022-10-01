@@ -19,6 +19,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Shortcut > Add a Shortcut... defaults to currently selected file.
 * Simplify list views by omitting directory file sizes.
 * Fix corruption/crash after closing a window.
+* CD-ROM drives now shown with a CD icon.
 
 ### Disk Copy
 

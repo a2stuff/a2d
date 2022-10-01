@@ -172,13 +172,14 @@ kMenuSizeSelector = 13
 ;;; ============================================================
 ;;; Device types
 
-kNumDeviceTypes = 5
+kNumDeviceTypes = 6
 
 kDeviceTypeDiskII       = 0
 kDeviceTypeRAMDisk      = 1
 kDeviceTypeFixed        = 2
 kDeviceTypeRemovable    = 3
 kDeviceTypeFileShare    = 4
+kDeviceTypeCDROM        = 5
 
 ;;; ============================================================
 ;;; Internals - miscellaneous structures
