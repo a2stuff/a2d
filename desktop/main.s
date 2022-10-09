@@ -2791,15 +2791,7 @@ entry:
         ;; View by icon
         jsr     LoadActiveWindowEntryTable
 
-        ;; Zero the table
-        ldx     #$00
-        txa
-:       cpx     cached_window_entry_count
-        beq     :+
-        sta     cached_window_entry_list,x
-        inx
-        jmp     :-
-:       sta     cached_window_entry_count
+        copy    #0, cached_window_entry_count
 
         ;; Update view menu/table
         lda     #kViewByIcon
@@ -5213,15 +5205,7 @@ last_pos:
     END_IF
 
         dec     num_open_windows
-        ldx     #0
-        txa
-:       sta     cached_window_entry_list,x
-        cpx     cached_window_entry_count
-        beq     cont
-        inx
-        jmp     :-
-
-cont:   sta     cached_window_entry_count
+        copy    #0, cached_window_entry_count
         jsr     StoreWindowEntryTable
 
         MGTK_CALL MGTK::CloseWindow, cached_window_id
