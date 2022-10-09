@@ -163,7 +163,10 @@ Parameters:
 .word       mousex          Click x location (screen coordinates)
 .word       mousey          Click y location (screen coordinates)
 .byte       result          (out) icon number
+.byte       window_id       Window (only matches icons in this window)
 ```
+
+The `result` is set to 0 if no icon is found.
 
 ### `IconTK::DragHighlighted` ($08)
 

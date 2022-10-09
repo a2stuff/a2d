@@ -223,6 +223,7 @@ which_area:     .byte   0
 window_id:      .byte   0
 .endparams
 window_ptr:  .word   0          ; do not move this; see above
+        .assert window_ptr = findwindow_params::window_id + 1, error, "struct moved"
 
 .params findcontrol_params
 mousex: .word   0
@@ -962,9 +963,7 @@ moved:  COPY_STRUCT MGTK::Point, findwindow_params, coords2
         ;; Still over the highlighted icon?
         lda     highlight_icon_id
         beq     :+
-        copy    window_id, findwindow_params::window_id
-        ITK_CALL IconTK::FindIcon, findwindow_params
-        lda     findwindow_params::which_area ; Icon ID
+        jsr     FindIconValidateWindow
         cmp     highlight_icon_id             ; already over it?
         beq     :+
 
@@ -1329,50 +1328,72 @@ L9D7C:  stx     rect3_y1
         rts
 .endproc
 
-.proc FindTargetAndHighlight
-        bit     trash_flag      ; Trash is not drop-able, so skip if in selection
-        bpl     :+
-        rts
+;;; Like `FindIcon`, but validates that the passed coordinates are
+;;; in the true content area of the window (not scrollbars/grow box/header)
+;;;
+;;; Inputs: `findwindow_params` mouse coords populated
+;;; Outputs: A = icon (0 if none found), `findwindow_params::window_id` populated
+;;; Trashes $06
 
-:       jsr     PushPointers
+.proc FindIconValidateWindow
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
+        .assert MGTK::Area::desktop = 0, error, "enum mismatch"
         beq     desktop
 
         ;; --------------------------------------------------
         ;; In a window - ensure it's in the content area
         cmp     #MGTK::Area::content
-        beq     :+
-        jmp     done            ; menubar, titlebar, etc
-:       COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
+        bne     fail            ; menubar, titlebar, etc
+        COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
-        bne     done            ; scrollbar, etc.
-                                ; else 0 = MGTK::Ctl::not_a_control
+        .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
+        bne     fail            ; scrollbar, etc.
+
+        ;; TODO: Use `header_height`
         ;; Ignore if y coord < window's header height
         MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
         win_ptr := $06
         copy16  window_ptr, win_ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        lda     (win_ptr),y
         add16in (win_ptr),y, #kWindowHeaderHeight + 1, headery
         cmp16   findwindow_params::mousey, headery
-        bcc     done
-        bcs     find_icon       ; always
+        bcs     find_icon
+
+fail:   return  #0              ; no icon
 
         ;; --------------------------------------------------
         ;; On desktop - A=0, note that as window_id
 desktop:
         sta     findwindow_params::window_id
 
+        ;; --------------------------------------------------
+        ;; Is there an icon there?
 find_icon:
         ITK_CALL IconTK::FindIcon, findwindow_params
-        ldx     findwindow_params::which_area ; Icon ID
+        lda     findwindow_params::which_area ; Icon ID
+        rts
+
+headery:
+        .word   0
+.endproc
+
+
+.proc FindTargetAndHighlight
+        bit     trash_flag      ; Trash is not drop-able, so skip if in selection
+        bpl     :+
+        rts
+:
+        jsr     PushPointers
+        jsr     FindIconValidateWindow
         beq     done
 
         ;; Over an icon
-        stx     icon_num
-
+        sta     icon_num
         ptr := $06
+        tax
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ;; Highlighted?
@@ -1410,9 +1431,6 @@ done:   jsr     PopPointers     ; do not tail-call optimise!
 
 icon_num:
         .byte   0
-
-headery:
-        .word   0
 .endproc
 
 ;;; Input: A = icon number
