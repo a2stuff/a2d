@@ -1776,8 +1776,7 @@ setbg:  sta     settextbg_params
         MGTK_CALL MGTK::SetPattern, dark_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, bitmap_rect
-
-done:   rts
+        rts
 .endproc
 
 .endproc
