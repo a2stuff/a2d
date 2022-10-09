@@ -683,7 +683,7 @@ inside: pla
         tya
         sta     ($06),y
 
-        ;; Copy coords (at params+1) to
+        ;; Copy initial coords to `coords1` and `coords2`
         ldy     #DragHighlightedParams::coords + .sizeof(MGTK::Point)-1
 :       lda     ($06),y
         sta     coords1-1,y
@@ -944,19 +944,20 @@ L99FC:  jsr     XdrawOutline
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
         cmp     #MGTK::EventKind::drag
-        beq     L9A1E
-        jmp     L9BA5
+        jne     not_drag
 
-L9A1E:  ldx     #3
-L9A20:  lda     findwindow_params,x
+        ;; Coords changed?
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     findwindow_params,x
         cmp     coords2,x
-        bne     L9A31
+        bne     moved
         dex
-        bpl     L9A20
+        bpl     :-
+
         jsr     FindTargetAndHighlight
         jmp     peek
 
-L9A31:  COPY_BYTES 4, findwindow_params, coords2
+moved:  COPY_STRUCT MGTK::Point, findwindow_params, coords2
 
         ;; Still over the highlighted icon?
         lda     highlight_icon_id
@@ -1048,7 +1049,8 @@ L9B62:  add16in ($08),y, rect3_x1, ($08),y
 L9B9C:  jsr     XdrawOutline
         jmp     peek
 
-L9BA5:  jsr     XdrawOutline
+not_drag:
+        jsr     XdrawOutline
         lda     highlight_icon_id
         beq     :+
         jsr     UnhighlightIcon
