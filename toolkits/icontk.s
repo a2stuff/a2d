@@ -1102,7 +1102,7 @@ same_window:
         bmi     L9C63
         ldy     highlight_list,x
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, $06
-        ldy     #IconEntry::win_flags
+        ldy     #2              ; offset in poly to first vertex
         lda     ($08),y
         iny
         sta     ($06),y
