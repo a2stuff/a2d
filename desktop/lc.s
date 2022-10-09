@@ -163,27 +163,24 @@ set_length:
 
 set_copy_ptr:
         copy16  window_entry_list_table,x, ptr
+        ldy     cached_window_entry_count
+        dey
         bit     flag
         bmi     copy_from
 
         ;; copy into `cached_window_entry_list`
-        ldy     #0              ; flag clear...
-:       cpy     cached_window_entry_count
-        beq     done
-        lda     (ptr),y
+:       lda     (ptr),y
         sta     cached_window_entry_list,y
-        iny
-        jmp     :-
+        dey
+        bpl     :-
+        bmi     done            ; always
 
         ;; copy from `cached_window_entry_list`
 copy_from:
-        ldy     #0
-:       cpy     cached_window_entry_count
-        beq     done
-        lda     cached_window_entry_list,y
+:       lda     cached_window_entry_list,y
         sta     (ptr),y
-        iny
-        jmp     :-
+        dey
+        bpl     :-
 
 done:   jsr     BankInMain
         jsr     PopPointers     ; do not tail-call optimise!
