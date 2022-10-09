@@ -2717,9 +2717,10 @@ case2:
 .proc ShiftPortDown
         ;; For window's items/used/free space bar
         kOffset = kWindowHeaderHeight + 1
+        ;; TODO: Use `header_height`
 
-        add16   icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kOffset, icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
-        add16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kOffset, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
+        add16_8 icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kOffset
+        add16_8 icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kOffset
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc
