@@ -2389,7 +2389,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         ;; Compare characters (case insensitive)
         tay
-        add16   ptr_icon, #IconEntry::name, ptr_icon
+        add16_8 ptr_icon, #IconEntry::name
 cloop:  lda     (ptr_icon),y
         jsr     UpcaseChar
         sta     @char
@@ -6183,8 +6183,8 @@ noset:  lda     #$80
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 set:    lda     #0
         sta     flag
-        add16   window_grafport::viewloc::ycoord, #kOffset, window_grafport::viewloc::ycoord
-        add16   window_grafport::maprect::y1, #kOffset, window_grafport::maprect::y1
+        add16_8 window_grafport::viewloc::ycoord, #kOffset
+        add16_8 window_grafport::maprect::y1, #kOffset
         bit     flag
         bmi     :+
         MGTK_CALL MGTK::SetPort, window_grafport
@@ -6928,7 +6928,7 @@ size:   .word   0               ; size of a window's list
         ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         pha
-        add16   icon_ptr, #IconEntry::name, name_ptr
+        add16_8 icon_ptr, #IconEntry::name, name_ptr
         pla
         and     #kIconEntryWinIdMask
         bne     has_parent      ; A = window_id
@@ -7001,7 +7001,7 @@ has_parent:
         jsr     GetWindowTitlePath
         stax    title_ptr
 
-        add16   icon_ptr, #IconEntry::name, name_ptr
+        add16_8 icon_ptr, #IconEntry::name, name_ptr
 
         ldy     #0
         lda     (name_ptr),y
@@ -7437,7 +7437,7 @@ L7826:  copy16  row_coords::ycoord, icon_coords::ycoord
         bne     L7862
 
         ;; Next row (and initial column) if necessary
-        add16   row_coords::ycoord, #kIconSpacingY, row_coords::ycoord
+        add16_8 row_coords::ycoord, #kIconSpacingY
         copy16  initial_coords::xcoord, row_coords::xcoord
         lda     #0
         sta     icons_this_row
@@ -7483,7 +7483,7 @@ L7870:  lda     cached_window_id
         ora     #kIconEntryFlagsDimmed
         sta     (icon_entry),y
 :
-        add16   file_record, #.sizeof(FileRecord), file_record
+        add16_8 file_record, #.sizeof(FileRecord)
         rts
 .endproc
 
@@ -7626,7 +7626,7 @@ match:  ldy     #ICTRecord::icontype
         rts
 
         ;; Next entry
-next:   add16   ptr, #.sizeof(ICTRecord), ptr
+next:   add16_8 ptr, #.sizeof(ICTRecord)
         jmp     loop
 
 flags:  .byte   0
@@ -7685,7 +7685,7 @@ flags:  .byte   0
         MGTK_CALL MGTK::LineTo, header_line_right
 
         ;; Baseline for header text
-        add16 window_grafport::maprect::y1, #kWindowHeaderHeight-4, items_label_pos::ycoord
+        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight-4, items_label_pos::ycoord
 
         ;; Draw "XXX Items"
         lda     cached_window_entry_count
@@ -8622,7 +8622,7 @@ min     := parsed_date + ParsedDateTime::minute
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
         pha                     ; A = window id
-        add16   icon_ptr, #IconEntry::name, icon_ptr
+        add16_8 icon_ptr, #IconEntry::name
         pla
         bne     file            ; A = window id
 
@@ -14746,7 +14746,7 @@ done:   rts
 
         ;; Compute text width
         pha                     ; A = flags
-        add16   ptr, #1, textptr
+        add16_8 ptr, #1, textptr
         ldax    ptr
         jsr     AuxLoad
         sta     textlen
