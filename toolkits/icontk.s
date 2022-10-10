@@ -73,6 +73,7 @@ jump_table_low:
         .byte   <RedrawDesktopIconsImpl
         .byte   <IconInRectImpl
         .byte   <EraseIconImpl
+        .byte   <GetIconBoundsImpl
 
 jump_table_high:
         .byte   >InitToolKitImpl
@@ -88,6 +89,7 @@ jump_table_high:
         .byte   >RedrawDesktopIconsImpl
         .byte   >IconInRectImpl
         .byte   >EraseIconImpl
+        .byte   >GetIconBoundsImpl
 
 ;;; ============================================================
 
@@ -1096,6 +1098,7 @@ same_window:
 :
         jsr     PopPointers
 
+        ;; Update icons with new positions (based on poly)
         ldx     highlight_count
         copy16  polybuf_addr, $08
 @loop:  dex
@@ -1624,6 +1627,38 @@ outside:
 
 inside:
         return  #1
+.endproc
+
+;;; ============================================================
+;;; GetIconBounds
+
+.proc GetIconBoundsImpl
+        params := $06
+.struct GetIconBoundsParams
+        icon    .byte
+        rect    .tag    MGTK::Rect ; out
+.endstruct
+
+        ;; Calc icon bounds
+        jsr     PushPointers
+        ptr := $06
+        ldy     #GetIconBoundsParams::icon
+        lda     (params),y
+        tay
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
+        jsr     CalcIconBoundingRect
+        jsr     PopPointers
+
+        ;; Copy rect into out params
+        ldx     #.sizeof(MGTK::Rect)-1
+        ldy     #GetIconBoundsParams::rect + .sizeof(MGTK::Rect)-1
+:       lda     bounding_rect,x
+        sta     (params),y
+        dey
+        dex
+        bpl     :-
+
+        rts
 .endproc
 
 ;;; ============================================================

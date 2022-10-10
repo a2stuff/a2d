@@ -24,6 +24,7 @@ UnhighlightIcon = $09   ; { .byte icon }
 RedrawDesktopIcons = $0A ; Repaints desktop icons
 IconInRect      = $0B   ; { .byte icon, rect bounds }
 EraseIcon       = $0C   ; { .byte icon }
+GetIconBounds   = $0D   ; { .byte icon, rect bounds out }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 

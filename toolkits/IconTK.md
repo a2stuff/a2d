@@ -245,6 +245,16 @@ Note that unlike `DrawIcon`, this call does _not_ require a GrafPort to be set b
 
 For desktop icons, the icon is clipped against any open windows.
 
+### `IconTK::GetIconBounds` ($0D)
+
+Populates the `bounds` rectangle with a bounding rect surrounding the icon bitmap and label.
+
+Parameters:
+```
+.byte       icon            Icon number
+MGTK::Rect  bounds          (out) Bounding rectangle
+```
+
 ## Convenience Macros
 
 * `ITK_CALL` can be used to make calls in the form `ITK_CALL command, params`, if `ITKEntry` is defined.
