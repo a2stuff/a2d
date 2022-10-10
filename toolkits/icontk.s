@@ -1080,8 +1080,6 @@ includes_trash:
 
         ;; Drag within same window (or desktop)
 same_window:
-        jsr     PushPointers
-
         ldx     highlight_count
 :       dex
         bmi     :+
@@ -1096,8 +1094,6 @@ same_window:
         tax
         bpl     :-              ; always
 :
-        jsr     PopPointers
-
         ;; Update icons with new positions (based on poly)
         ldx     highlight_count
         copy16  polybuf_addr, $08
@@ -1755,6 +1751,14 @@ common:
         rts
 
 .proc DoPaint
+        ;; Set text background color
+        lda     #MGTK::textbg_white
+        bit     icon_flags      ; highlighted?
+        bpl     :+
+        lda     #MGTK::textbg_black
+:       sta     settextbg_params
+        MGTK_CALL MGTK::SetTextBG, settextbg_params
+
         MGTK_CALL MGTK::HideCursor
 
         ;; --------------------------------------------------
@@ -1787,23 +1791,13 @@ common:
 :       MGTK_CALL MGTK::PaintBits, icon_paintbits_params
 
         ;; --------------------------------------------------
-
         ;; Label
+
         COPY_STRUCT MGTK::Point, label_pos, moveto_params2
         MGTK_CALL MGTK::MoveTo, moveto_params2
-        bit     icon_flags      ; highlighted?
-        bmi     :+
-        lda     #MGTK::textbg_white
-        bne     setbg
-:       lda     #MGTK::textbg_black
-setbg:  sta     settextbg_params
-        MGTK_CALL MGTK::SetTextBG, settextbg_params
+
         MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
-
-        copy    #MGTK::textbg_white, settextbg_params
-        MGTK_CALL MGTK::SetTextBG, settextbg_params
-        MGTK_CALL MGTK::SetPattern, white_pattern
 
         rts
 
@@ -1836,6 +1830,9 @@ kIconLabelGapV = 2
 
         jsr     PushPointers
 
+        ;; Copy, pad, and measure name
+        jsr     PrepareName
+
         ldy     #IconEntry::iconbits
         copy16in (entry_ptr),y, bitmap_ptr
 
@@ -1847,6 +1844,9 @@ kIconLabelGapV = 2
         dey
         dex
         bpl     :-
+
+        ;; ----------------------------------------
+        ;; Regular icon
 
         ;; Bitmap bottom/right
         ldy     #IconResource::maprect + MGTK::Rect::x2
@@ -1860,9 +1860,6 @@ kIconLabelGapV = 2
 
         ;; Label bottom
         add16_8 label_rect::y1, #kSystemFontHeight, label_rect::y2
-
-        ;; Copy, pad, and measure name
-        jsr     PrepareName
 
         ;; Center horizontally
 
@@ -1916,17 +1913,6 @@ kIconLabelGapV = 2
         rts
 .endproc
 
-;;;              v0          v1
-;;;               +----------+
-;;;               |          |
-;;;               |          |
-;;;               |          |
-;;;            v7 |          | v2
-;;;      v6 +-----+          +-----+ v3
-;;;         |                      |
-;;;      v5 +----------------------+ v4
-;;;
-
 kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
 ;;; Input: $06 points at icon
@@ -1939,6 +1925,16 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         jsr     PushPointers
 
         jsr     CalcIconBoundingRect
+
+        ;;              v0          v1
+        ;;               +----------+
+        ;;               |          |
+        ;;               |          |
+        ;;               |          |
+        ;;            v7 |          | v2
+        ;;      v6 +-----+          +-----+ v3
+        ;;         |                      |
+        ;;      v5 +----------------------+ v4
 
         ;; Even vertexes are (mostly) direct copies from rects
 
@@ -1968,6 +1964,8 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         ;; v5
         copy16  poly::v6::xcoord, poly::v5::xcoord
         copy16  poly::v4::ycoord, poly::v5::ycoord
+
+        ;; ----------------------------------------
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts

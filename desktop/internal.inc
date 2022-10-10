@@ -58,11 +58,10 @@ kWindowYOffset = 27
 
 ;;; Min/Max window dimensions
 kMinWindowWidth = 170
-kMaxWindowWidth = kIconBBoxOffsetLeft + (kIconsPerRow - 1) * kIconSpacingX + kIconBBoxOffsetRight
-
+kMaxWindowWidth = kIconBBoxPaddingLeft + (kMaxIconTotalWidth - kIconBitmapWidth) / 2 + (kIconViewIconsPerRow - 1) * kIconViewSpacingX + (kMaxIconTotalWidth + kIconBitmapWidth) / 2 + kIconBBoxPaddingRight
 
 kMinWindowHeight = 50
-kMaxWindowHeight = kIconSpacingY * 3 + kWindowHeaderHeight
+kMaxWindowHeight = kIconViewSpacingY * 3 + kWindowHeaderHeight
 ;;; NOTE: `kMaxWindowHeight` is an integral number of icons so that
 ;;; each vertical scroll tick leaves the icons nicely aligned.
 
@@ -79,24 +78,28 @@ kListViewRowHeight      = kSystemFontHeight + 1
 ;;; --------------------------------------------------
 ;;; Icon views
 
-kMaxIconHeight          = 17
-kIconWidth              = 28
+kMaxIconBitmapHeight    = 17    ; actual height varies
+kIconBitmapWidth        = 28
 kIconLabelHeight        = kSystemFontHeight
+kIconLabelGap           = 2
+kMaxIconTotalHeight     = kMaxIconBitmapHeight + kIconLabelGap + kIconLabelHeight
+kMaxIconTotalWidth      = 115   ; width of " MMMMMMMMMMMMMMM "
 
-kIconsPerRow    = 5
-kIconSpacingX   = 80
-kIconSpacingY   = 32
+kIconViewInitialLeft = kIconBBoxPaddingLeft + (kMaxIconTotalWidth - kIconBitmapWidth) / 2
+kIconViewInitialTop  = kWindowHeaderHeight + kIconBBoxPaddingTop + kMaxIconBitmapHeight
+kIconViewIconsPerRow = 5
+
+kIconViewSpacingX    = 80
+kIconViewSpacingY    = 32
 
 ;;; Bounding box padding, which defines icon placing, window sizing and
 ;;; scrollbars. This does not take into account the icon's actual width
 ;;; (bitmap or label size).
 
-;;; TODO: Rework callers to remove need for kWindowHeaderHeight.
-
-kIconBBoxOffsetTop      = kWindowHeaderHeight + 2
-kIconBBoxOffsetLeft     = 45
-kIconBBoxOffsetBottom   = kIconLabelHeight + 4
-kIconBBoxOffsetRight    = 45 + kIconWidth ; accommodate icon + label
+kIconBBoxPaddingTop      = 2
+kIconBBoxPaddingLeft     = 4
+kIconBBoxPaddingBottom   = 2
+kIconBBoxPaddingRight    = 4
 
 ;;; NOTE: Offsets are selected in conjunction with icon spacing
 ;;; and maximum window sizing so that scrolling all the way down
@@ -109,8 +112,8 @@ kIconBBoxOffsetRight    = 45 + kIconWidth ; accommodate icon + label
 kScrollThumbMax = $FF
 
 ;;; Arbitrary - these feel good, but can be tweaked
-kIconViewScrollTickH = kIconSpacingY * 2
-kIconViewScrollTickV = kIconSpacingY
+kIconViewScrollTickH = kIconViewSpacingY * 2
+kIconViewScrollTickV = kIconViewSpacingY
 kListViewScrollTickH = kListViewRowHeight * 2
 kListViewScrollTickV = kListViewRowHeight
 

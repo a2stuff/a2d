@@ -2484,53 +2484,6 @@ stashed_name:
         .res    16, 0
 
 ;;; ============================================================
-;;; Grab the bounds (MGTK::Rect) of an icon. Just the graphic,
-;;; not the label.
-;;; Inputs: A = icon number
-;;; Outputs: `cur_icon_bounds` is filled, $06 points at icon entry
-
-        DEFINE_RECT cur_icon_bounds, 0, 0, 0, 0
-
-.proc CacheIconBounds
-        entry_ptr := $06
-        icondef_ptr := $08
-
-        jsr     IconEntryLookup
-        stax    entry_ptr
-
-        ;; Position
-        ldy     #IconEntry::iconx+.sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     (entry_ptr),y
-        sta     cur_icon_bounds::topleft,x
-        dey
-        dex
-        bpl     :-
-
-        ;; Size
-        ldy     #IconEntry::iconbits
-        lda     (entry_ptr),y
-        sta     icondef_ptr
-        iny
-        lda     (entry_ptr),y
-        sta     icondef_ptr+1
-
-        ldy     #IconResource::maprect+MGTK::Rect::bottomright+.sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     (icondef_ptr),y
-        sta     cur_icon_bounds::bottomright,x
-        dey
-        dex
-        bpl     :-
-
-        ;; Turn size into bounds
-        add16   cur_icon_bounds::x1, cur_icon_bounds::x2, cur_icon_bounds::x2
-        add16   cur_icon_bounds::y1, cur_icon_bounds::y2, cur_icon_bounds::y2
-
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Input: Icon number in A.
 ;;; Assert: Icon in active window.
 
@@ -2540,35 +2493,39 @@ stashed_name:
         pha
         jsr     LoadActiveWindowEntryTable
         pla
-        sta     icon_num
+        sta     icon_param
 
         ;; Map coordinates to window
         jsr     IconScreenToWindow
 
-        ;; Grab the icon coords
-        icon_num := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     CacheIconBounds
+        ;; Grab the icon bounds
+        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
 
         ;; Restore coordinates
-        lda     icon_num
+        lda     icon_param
         jsr     IconWindowToScreen
 
+        ;; Get the viewport, and adjust for header
         jsr     ApplyActiveWinfoToWindowGrafport
+        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight
 
         copy    #0, dirty
+
+        ;; Padding
+        sub16_8 tmp_rect::x1, #kIconBBoxPaddingLeft, tmp_rect::x1
+        add16_8 tmp_rect::x2, #kIconBBoxPaddingRight
+        sub16_8 tmp_rect::y1, #kIconBBoxPaddingTop, tmp_rect::y1
+        add16_8 tmp_rect::y2, #kIconBBoxPaddingBottom
 
         ;; --------------------------------------------------
         ;; X adjustment
 
         ;; Is left of icon beyond window? If so, adjust by delta (negative)
-        sub16_8 cur_icon_bounds::x1, #kIconBBoxOffsetLeft, delta
-        sub16   delta, window_grafport::maprect::x1, delta
+        sub16   tmp_rect::x1, window_grafport::maprect::x1, delta
         bmi     adjustx
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
-        add16_8 cur_icon_bounds::x1, #kIconBBoxOffsetRight
-        sub16   cur_icon_bounds::x1, window_grafport::maprect::x2, delta
+        sub16   tmp_rect::x2, window_grafport::maprect::x2, delta
         bmi     donex
 
 adjustx:
@@ -2586,13 +2543,11 @@ donex:
         ;; Y adjustment
 
         ;; Is top of icon beyond window? If so, adjust by delta (negative)
-        sub16_8 cur_icon_bounds::y1, #kIconBBoxOffsetTop, delta
-        sub16   delta, window_grafport::maprect::y1, delta
+        sub16   tmp_rect::y1, window_grafport::maprect::y1, delta
         bmi     adjusty
 
         ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
-        add16_8 cur_icon_bounds::y2, #kIconBBoxOffsetBottom
-        sub16   cur_icon_bounds::y2, window_grafport::maprect::y2, delta
+        sub16   tmp_rect::y2, window_grafport::maprect::y2, delta
         bmi     doney
 
 adjusty:
@@ -2609,6 +2564,8 @@ doney:
         lda     #SELF_MODIFIED_BYTE
         beq     done
 
+        ;; Apply the viewport (accounting for header)
+        sub16_8 window_grafport::maprect::y1, #kWindowHeaderHeight, window_grafport::maprect::y1
         jsr     AssignActiveWindowCliprectAndUpdateCachedIcons
         jsr     ScrollUpdate
         jsr     RedrawAfterScroll
@@ -2787,12 +2744,6 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 
 ;;; Entry point when refreshing window contents
 entry:
-
-        ;; View by icon
-        jsr     LoadActiveWindowEntryTable
-
-        copy    #0, cached_window_entry_count
-
         ;; Update view menu/table
         lda     #kViewByIcon
         ldx     active_window_id
@@ -2803,8 +2754,12 @@ entry:
         jsr     ResetActiveWindowViewport ; Must precede icon creation
 
         ;; Create the icons
-        lda     active_window_id
-        jsr     CreateIconsAndPreserveWindowSize
+        jsr     LoadActiveWindowEntryTable
+        jsr     InitCachedWindowEntries
+        ;; NOTE: Could call `SortRecords` here with A=kViewBy*
+
+        lda     cached_window_id
+        jsr     CreateIconsForWindow
         jsr     StoreWindowEntryTable
         jsr     AddIconsForCachedWindow
 
@@ -2843,8 +2798,7 @@ entry:
 :
         ;; Is this a change?
         jsr     GetActiveWindowViewBy
-        view := *+1
-        cmp     #SELF_MODIFIED_BYTE
+        cmp     view
         bne     :+
         rts
 :
@@ -2854,7 +2808,8 @@ entry:
         jsr     DestroyIconsInActiveWindow
 :
         ;; Update view menu/table
-        lda     view
+        view := *+1
+        lda     #SELF_MODIFIED_BYTE
         ldx     active_window_id
         sta     win_view_by_table-1,x
         jsr     UpdateViewMenuCheck
@@ -2869,6 +2824,8 @@ entry:
 
         ;; Sort the records
 sort:   jsr     LoadActiveWindowEntryTable
+        jsr     InitCachedWindowEntries
+        jsr     GetCachedWindowViewBy
         jsr     SortRecords
         jsr     StoreWindowEntryTable
 
@@ -3748,8 +3705,6 @@ _Preamble:
         copy    #kListViewScrollTickH, tick_h
         copy    #kListViewScrollTickV, tick_v
     END_IF
-
-        add16_8 iconbb_rect+MGTK::Rect::y1, #kWindowHeaderHeight ; bbox includes header height
 
         ;; Compute effective viewport
         jsr     ApplyActiveWinfoToWindowGrafport
@@ -5811,8 +5766,6 @@ update_view:
         bne     :+              ; Skip drawing if obscured
         jsr     DrawWindowHeader
 :
-        jsr     StoreWindowEntryTable
-        jsr     AddIconsForCachedWindow
         jmp     RedrawAfterContentChange
 
 
@@ -5957,7 +5910,7 @@ UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 ;;; Called from:
 ;;; * `UpdateWindow` flag=$80
 ;;; * `ActivateWindow`; flag=$00
-;;; * `ViewByNoniconCommon`; flag=$40
+;;; * `RedrawAfterContentChange`; flag=$40
 ;;; * `RedrawAfterScroll`; flag=$40
 kDrawWindowEntriesHeaderAndContent        = $00
 kDrawWindowEntriesContentOnly             = $40
@@ -7065,7 +7018,7 @@ has_parent:
         lda     #0
         sta     (winfo_ptr),y
 
-        ;; Map rect (initially empty, size assigned in `CreateIconsForWindow`)
+        ;; Map rect (initially empty, size assigned in `ComputeInitialWindowSize`)
         lda     #0
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
@@ -7150,8 +7103,14 @@ volume: ldx     cached_window_id
         ;; --------------------------------------------------
         ;; Create window and icons
 
+        jsr     InitCachedWindowEntries
+        ;; NOTE: Could call `SortRecords` here with A=kViewBy*
+
         lda     cached_window_id
-        jsr     CreateIconsAndSetWindowSize
+        jsr     CreateIconsForWindow
+        jsr     StoreWindowEntryTable
+        jsr     AddIconsForCachedWindow
+        jsr     ComputeInitialWindowSize
 
         ;; --------------------------------------------------
         ;; Animate the window being opened (if needed)
@@ -7171,17 +7130,18 @@ copy_new_window_bounds_flag:
 ;;; File Icon Entry Construction
 ;;; Inputs: A = window_id
 
-.proc CreateIconsForWindow
+.proc CreateIconsForWindowImpl
 
 window_id:      .byte   0
 iconbits:       .addr   0
 iconentry_flags: .byte   0
 icon_height:    .word   0
 
-        ;; first icon in window
-        DEFINE_POINT initial_coords, kIconBBoxOffsetLeft, kMaxIconHeight + kIconBBoxOffsetTop
-
-        ;; first icon in current row
+        ;; Updated based on view type
+initial_xcoord:     .word   0
+icons_per_row:      .byte   0
+col_spacing:        .byte   0
+row_spacing:        .byte   0
         DEFINE_POINT row_coords, 0, 0
 
 icons_this_row:
@@ -7189,29 +7149,17 @@ icons_this_row:
 
         DEFINE_POINT icon_coords, 0, 0
 
-preserve_window_size_flag:
-        .byte   0
-
-.proc Impl
-ep_set_window_size:
-        pha
-        lda     #0
-        beq     common
-
-ep_preserve_window_size:
-        pha
-        ldx     cached_window_id
-        lda     window_to_dir_icon_table-1,x
-        sta     icon_param      ; Guaranteed to exist, since window just created
-        lda     #$80
-        FALL_THROUGH_TO common
-
-common: sta     preserve_window_size_flag
-        pla
+.proc Start
         sta     window_id
         jsr     PushPointers
 
-        COPY_STRUCT MGTK::Point, initial_coords, row_coords
+        ;; Icon View
+        copy16  #kIconViewInitialLeft, row_coords::xcoord
+        copy16  #kIconViewInitialTop, row_coords::ycoord
+        copy16  #kIconViewInitialLeft, initial_xcoord
+        copy    #kIconViewIconsPerRow, icons_per_row
+        copy    #kIconViewSpacingX, col_spacing
+        copy    #kIconViewSpacingY, row_spacing
 
         lda     #0
         sta     icons_this_row
@@ -7222,124 +7170,55 @@ common: sta     preserve_window_size_flag
         dex
         bpl     :-
 
-        ;; Pointer to file records
-        records_ptr := $06
+        ;; Copy `cached_window_entry_list` to temp location
+        record_order_list := $800
+        ldx     cached_window_entry_count
+        stx     num_files
+        dex
+:       lda     cached_window_entry_list,x
+        sta     record_order_list,x
+        dex
+        bpl     :-
 
+        copy    #0, cached_window_entry_count
+
+        ;; Get base pointer to records
         lda     cached_window_id
         jsr     GetFileRecordListForWindow
-        stax    records_ptr
-        bit     LCBANK2         ; get file count (resides in LC2)
-        bit     LCBANK2
-        ldy     #0              ; first byte in list is the list size
-        lda     (records_ptr),y
-        sta     num_files
-        bit     LCBANK1
-        bit     LCBANK1
-        inc16   records_ptr
+        addax   #1, records_base_ptr ; first byte in list is the list size
+
         lda     cached_window_id
         sta     active_window_id
 
         ;; Loop over files, creating icon for each
         index := *+1
-:       lda     #SELF_MODIFIED_BYTE
+:       ldx     #SELF_MODIFIED_BYTE
         num_files := *+1
-        cmp     #SELF_MODIFIED_BYTE
+        cpx     #SELF_MODIFIED_BYTE
         beq     :+
+
+        ;; Get record from ordered list
+        lda     record_order_list,x
+        tax                     ; 1-based to 0-based
+        dex
+        txa
+        pha                     ; A = record_num-1
+        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        jsr     ATimes32        ; A,X = A * 32
+        record_ptr := $06
+        addax   records_base_ptr, record_ptr
+        pla                     ; A = record_num-1
         jsr     AllocAndPopulateFileIcon
+
         inc     index
-        jmp     :-
-
-:       bit     preserve_window_size_flag
-        bpl     :+
+        bne     :-              ; always
+:
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 
-        ;; --------------------------------------------------
-        ;; Compute the window initial size, based on icons bounding box
+records_base_ptr:
+        .word   0
 
-:       jsr     ComputeIconsBBox
-
-        winfo_ptr := $06
-
-        lda     window_id
-        jsr     WindowLookup
-        stax    winfo_ptr
-
-        ;; convert right/bottom to width/height
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
-        sub16in iconbb_rect+MGTK::Rect::x2, (winfo_ptr),y, iconbb_rect+MGTK::Rect::x2
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
-        sub16in iconbb_rect+MGTK::Rect::y2, (winfo_ptr),y, iconbb_rect+MGTK::Rect::y2
-
-        ;; --------------------------------------------------
-        ;; Width
-
-        lda     cached_window_entry_count
-        beq     use_minw        ; `iconbb_rect` is bogus if there are no icons
-
-        ;; Check if width is < min or > max
-        cmp16   iconbb_rect+MGTK::Rect::x2, #kMinWindowWidth
-        bcc     use_minw
-        cmp16   iconbb_rect+MGTK::Rect::x2, #kMaxWindowWidth
-        bcs     use_maxw
-        ldax    iconbb_rect+MGTK::Rect::x2
-        jmp     assign_width
-
-use_minw:
-        ldax    #kMinWindowWidth
-        jmp     assign_width
-
-use_maxw:
-        ldax    #kMaxWindowWidth
-
-assign_width:
-        bit     copy_new_window_bounds_flag
-    IF_MINUS
-        ldax    new_window_bounds::x2
-    END_IF
-
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
-        sta     (winfo_ptr),y
-        txa
-        iny
-        sta     (winfo_ptr),y
-
-        ;; --------------------------------------------------
-        ;; Height
-
-        lda     cached_window_entry_count
-        beq     use_minh        ; `iconbb_rect` is bogus if there are no icons
-
-        ;; Check if height is < min or > max
-        cmp16   iconbb_rect+MGTK::Rect::y2, #kMinWindowHeight
-        bcc     use_minh
-        cmp16   iconbb_rect+MGTK::Rect::y2, #kMaxWindowHeight
-        bcs     use_maxh
-        ldax    iconbb_rect+MGTK::Rect::y2
-        jmp     assign_height
-
-use_minh:
-        ldax    #kMinWindowHeight
-        jmp     assign_height
-
-use_maxh:
-        ldax    #kMaxWindowHeight
-
-assign_height:
-        bit     copy_new_window_bounds_flag
-    IF_MINUS
-        ldax    new_window_bounds::y2
-    END_IF
-
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2
-        sta     (winfo_ptr),y
-        txa
-        iny
-        sta     (winfo_ptr),y
-
-        ;; Finished
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
 .endproc
 
 ;;; ============================================================
@@ -7426,30 +7305,25 @@ L77F0:  lda     name_tmp,x
         sub16in (icon_entry),y, icon_height, (icon_entry),y
 
         lda     cached_window_entry_count
-        cmp     #kIconsPerRow
+        cmp     icons_per_row
         beq     L781A
         bcs     L7826
 L781A:  copy16  row_coords::xcoord, icon_coords::xcoord
 L7826:  copy16  row_coords::ycoord, icon_coords::ycoord
         inc     icons_this_row
         lda     icons_this_row
-        cmp     #kIconsPerRow
+        cmp     icons_per_row
         bne     L7862
 
         ;; Next row (and initial column) if necessary
-        add16_8 row_coords::ycoord, #kIconSpacingY
-        copy16  initial_coords::xcoord, row_coords::xcoord
+        add16_8 row_coords::ycoord, row_spacing, row_coords::ycoord
+        copy16  initial_xcoord, row_coords::xcoord
         lda     #0
         sta     icons_this_row
         jmp     L7870
 
         ;; Next column otherwise
-L7862:  lda     row_coords::xcoord
-        clc
-        adc     #kIconSpacingX
-        sta     row_coords::xcoord
-        bcc     L7870
-        inc     row_coords::xcoord+1
+L7862:  add16_8 row_coords::xcoord, col_spacing
 
 L7870:  lda     cached_window_id
         ora     iconentry_flags
@@ -7483,7 +7357,6 @@ L7870:  lda     cached_window_id
         ora     #kIconEntryFlagsDimmed
         sta     (icon_entry),y
 :
-        add16_8 file_record, #.sizeof(FileRecord)
         rts
 .endproc
 
@@ -7517,8 +7390,106 @@ L7870:  lda     cached_window_id
 .endproc
 
 .endproc
-CreateIconsAndPreserveWindowSize        := CreateIconsForWindow::Impl::ep_preserve_window_size
-CreateIconsAndSetWindowSize             := CreateIconsForWindow::Impl::ep_set_window_size
+CreateIconsForWindow := CreateIconsForWindowImpl::Start
+
+;;; ============================================================
+;;; Compute the window initial size for `cached_window_id`,
+;;; based on icons bounding box.
+;;; Output: Updates the Winfo record's maprect right/bottom.
+
+.proc ComputeInitialWindowSize
+
+        jsr     PushPointers
+
+        ;; NOTE: Coordinates (screen vs. window) doesn't matter
+        jsr     ComputeIconsBBox
+
+        winfo_ptr := $06
+
+        lda     cached_window_id
+        jsr     WindowLookup
+        stax    winfo_ptr
+
+        ;; convert right/bottom to width/height
+        bbox_dx := iconbb_rect+MGTK::Rect::x2
+        bbox_dy := iconbb_rect+MGTK::Rect::y2
+
+        ;; Include offset on left/top
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
+        sub16in bbox_dx, (winfo_ptr),y, bbox_dx
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        sub16in bbox_dy, (winfo_ptr),y, bbox_dy
+
+        ;; --------------------------------------------------
+        ;; Width
+
+        lda     cached_window_entry_count
+        beq     use_minw        ; `iconbb_rect` is bogus if there are no icons
+
+        ;; Check if width is < min or > max
+        cmp16   bbox_dx, #kMinWindowWidth
+        bcc     use_minw
+        cmp16   bbox_dx, #kMaxWindowWidth
+        bcs     use_maxw
+        ldax    bbox_dx
+        jmp     assign_width
+
+use_minw:
+        ldax    #kMinWindowWidth
+        jmp     assign_width
+
+use_maxw:
+        ldax    #kMaxWindowWidth
+
+assign_width:
+        bit     copy_new_window_bounds_flag
+    IF_MINUS
+        ldax    new_window_bounds::x2
+    END_IF
+
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
+        sta     (winfo_ptr),y
+        txa
+        iny
+        sta     (winfo_ptr),y
+
+        ;; --------------------------------------------------
+        ;; Height
+
+        lda     cached_window_entry_count
+        beq     use_minh        ; `iconbb_rect` is bogus if there are no icons
+
+        ;; Check if height is < min or > max
+        cmp16   bbox_dy, #kMinWindowHeight
+        bcc     use_minh
+        cmp16   bbox_dy, #kMaxWindowHeight
+        bcs     use_maxh
+        ldax    bbox_dy
+        jmp     assign_height
+
+use_minh:
+        ldax    #kMinWindowHeight
+        jmp     assign_height
+
+use_maxh:
+        ldax    #kMaxWindowHeight
+
+assign_height:
+        bit     copy_new_window_bounds_flag
+    IF_MINUS
+        ldax    new_window_bounds::y2
+    END_IF
+
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2
+        sta     (winfo_ptr),y
+        txa
+        iny
+        sta     (winfo_ptr),y
+
+        ;; Finished
+        jsr     PopPointers     ; do not tail-call optimise!
+        rts
+.endproc
 
 
 ;;; ============================================================
@@ -7809,23 +7780,15 @@ xcoord:
         kIntMax = $7FFF
 
 start:
-        ;; max.x = max.y = 0
-        ldx     #.sizeof(MGTK::Point)-1
+        ;; min.x = min.y = max.x = max.y = 0
+        ldx     #.sizeof(MGTK::Rect)-1
         lda     #0
-:       sta     iconbb_rect::bottomright,x
+:       sta     iconbb_rect,x
         dex
         bpl     :-
 
         ;; icon_num = 0
         sta     icon_num
-
-        ;; min.x = min.y = kIntMax
-        lda     #<kIntMax
-        sta     iconbb_rect::x1
-        sta     iconbb_rect+MGTK::Rect::y1
-        lda     #>kIntMax
-        sta     iconbb_rect::x1+1
-        sta     iconbb_rect+MGTK::Rect::y1+1
 
         ;; Icon view?
         jsr     GetCachedWindowViewBy
@@ -7834,107 +7797,90 @@ start:
         ;; --------------------------------------------------
         ;; List view
 
-        ;; If no items, simply zero out min and done. Otherwise,
-        ;; do an actual calculation.
-
+        ;; max.y = A * kListViewRowHeight + kWindowHeaderHeight+2
         lda     cached_window_entry_count
-        bne     list_view_non_empty
-        ;; Just fall through if no items (min = max = 0)
-
-        ;; min.x = min.y = 0
-zero_min:
-        lda     #0
-        ldx     #.sizeof(MGTK::Point)-1
-:       sta     iconbb_rect::topleft,x
-        dex
-        bpl     :-
-        rts
-
-        ;; min.x = kListViewWidth
-        ;; min.y = A * kListViewRowHeight + kWindowHeaderHeight+1
-list_view_non_empty:
+        pha                     ; A = count
         ldx     #0              ; A,X = count + 2
         ldy     #kListViewRowHeight
         jsr     Multiply_16_8_16
         addax   #kWindowHeaderHeight+2, iconbb_rect::y2
 
+        ;; max.x = count > 0 ? kListViewWidth  : 0
+        pla                     ; A = count
+    IF_NOT_ZERO
         copy16  #kListViewWidth, iconbb_rect::x2
+    END_IF
 
-        ;; Now zero out min (and done
-        jmp     zero_min
+        ;; min.y = kWindowHeaderHeight
+        copy16  #kWindowHeaderHeight, iconbb_rect::y1
+
+        ;; min.x = 0 (initialized above)
+        rts
+
 
         ;; --------------------------------------------------
         ;; Icon view
 icon_view:
+        ;; min.x = min.y = kIntMax
+        lda     #<kIntMax
+        sta     iconbb_rect::x1
+        sta     iconbb_rect+MGTK::Rect::y1
+        lda     #>kIntMax
+        sta     iconbb_rect::x1+1
+        sta     iconbb_rect+MGTK::Rect::y1+1
 
 check_icon:
         icon_num := *+1
-        lda     #SELF_MODIFIED_BYTE
-        cmp     cached_window_entry_count
+        ldx     #SELF_MODIFIED_BYTE
+        cpx     cached_window_entry_count
         bne     more
 
+finish:
         ;; Add padding around bbox
-finish: lda     iconbb_rect::x2
-        clc
-        adc     #kIconBBoxOffsetRight
-        sta     iconbb_rect::x2
-        bcc     :+
-        inc     iconbb_rect::x2+1
-:       lda     iconbb_rect::y2
-        clc
-        adc     #kIconBBoxOffsetBottom
-        sta     iconbb_rect::y2
-        bcc     :+
-        inc     iconbb_rect::y2+1
-:       sub16   iconbb_rect::x1, #kIconBBoxOffsetLeft, iconbb_rect::x1
-        sub16   iconbb_rect::y1, #kIconBBoxOffsetTop, iconbb_rect::y1
+        sub16_8 iconbb_rect::x1, #kIconBBoxPaddingLeft, iconbb_rect::x1
+        add16_8 iconbb_rect::x2, #kIconBBoxPaddingRight
+        sub16_8 iconbb_rect::y1, #kIconBBoxPaddingTop, iconbb_rect::y1
+        add16_8 iconbb_rect::y2, #kIconBBoxPaddingBottom
+
         rts
 
-more:   tax
-        lda     cached_window_entry_list,x
-        jsr     CacheIconBounds
+more:   lda     cached_window_entry_list,x
+        sta     icon_param
+        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
 
         ;; Pretend icon is max height
-        sub16   cur_icon_bounds::y2, #kMaxIconHeight, cur_icon_bounds::y1
+        sub16   tmp_rect::y2, #kMaxIconTotalHeight, tmp_rect::y1
 
         ;; First icon (index 0) - just use its coordinates as min/max
         lda     icon_num
-        bne     compare_x
+        bne     compare
 
-        COPY_STRUCT MGTK::Rect, cur_icon_bounds, iconbb_rect
+        COPY_STRUCT MGTK::Rect, tmp_rect, iconbb_rect
         jmp     next
 
         ;; --------------------------------------------------
         ;; Compare X coords
 
-compare_x:
-        scmp16  cur_icon_bounds::x1, iconbb_rect::x1
-        bmi     adjust_min_x
-        scmp16  cur_icon_bounds::x1, iconbb_rect::x2
-        jmi     compare_y
-
-adjust_max_x:
-        copy16  cur_icon_bounds::x1, iconbb_rect::x2
-        jmp     compare_y
-
-adjust_min_x:
-        copy16  cur_icon_bounds::x1, iconbb_rect::x1
+compare:
+        scmp16  tmp_rect::x1, iconbb_rect::x1
+        bpl     :+
+        copy16  tmp_rect::x1, iconbb_rect::x1
+:       scmp16  tmp_rect::x2, iconbb_rect::x2
+        bmi     :+
+        copy16  tmp_rect::x2, iconbb_rect::x2
+:
 
         ;; --------------------------------------------------
         ;; Compare Y coords
 
-compare_y:
-        scmp16  cur_icon_bounds::y1, iconbb_rect::y1
-        bmi     adjust_min_y
-        scmp16  cur_icon_bounds::y2, iconbb_rect::y2
-        jmi     next
-
-adjust_max_y:
-        copy16  cur_icon_bounds::y2, iconbb_rect::y2
-        jmp     next
-
-adjust_min_y:
-        copy16  cur_icon_bounds::y1, iconbb_rect::y1
+        scmp16  tmp_rect::y1, iconbb_rect::y1
+        bpl     :+
+        copy16  tmp_rect::y1, iconbb_rect::y1
+:       scmp16  tmp_rect::y2, iconbb_rect::y2
+        bmi     :+
+        copy16  tmp_rect::y2, iconbb_rect::y2
+:
+        ;; --------------------------------------------------
 
 next:   inc     icon_num
         jmp     check_icon
@@ -7991,7 +7937,59 @@ next:   inc     icon_num
 .endproc
 
 ;;; ============================================================
+;;; Prepares a window's set of entries - before icon creation
+;;; (or in views without icons) these are `FileRecord` indexes.
+;;; In list views these are subsequently sorted. When icons are
+;;; created, this order is used but the list is re-populated
+;;; with icon numbers.
+;;;
+;;; icons, these are replaced by icon numbers.
+;;; Inputs: `cached_window_id` is set
+;;; Outputs: Populates `cached_window_entry_count` with count and
+;;;          `cached_window_entry_list` with indexes 1...N
+;;; Assert: LCBANK1 is active
+
+.proc InitCachedWindowEntries
+        jsr     PushPointers
+
+        ptr := $06
+
+        ;; Get the entry count via FileRecord list
+        lda     cached_window_id
+        jsr     GetFileRecordListForWindow
+        stax    ptr
+
+        bit     LCBANK2
+        bit     LCBANK2
+
+        ldy     #0
+        lda     (ptr),y         ; count (at head of list)
+
+        bit     LCBANK1
+        bit     LCBANK1
+
+        ;; Store the count
+        sta     cached_window_entry_count
+
+        ;; Init the entries, monotonically increasing
+        tax
+    IF_NOT_ZERO
+:       txa
+        sta     cached_window_entry_list-1,x ; entries are 1-based
+        dex
+        bne     :-
+    END_IF
+
+        jsr     PopPointers     ; do not tail-call optimize!
+        rts
+.endproc
+
+
+;;; ============================================================
 ;;; Populates and sorts `cached_window_entry_list`.
+;;; Assumes `InitCachedWindowEntries` has been invoked
+;;; (`cached_window_entry_count` is valid, etc)
+;;; Inputs: A=kViewBy* for `cached_window_id`
 
 .proc SortRecords
         ptr := $06
@@ -8001,51 +7999,24 @@ list_start_ptr  := $801
 num_records     := $803
 scratch_space   := $804         ; can be used by comparison funcs
 
-
-        jsr     GetCachedWindowViewBy
         sta     CompareFileRecords_sort_by
+
+        lda     cached_window_entry_count
+        cmp     #2
+        bcs     :+              ; can't sort < 2 records
+        rts
+:       sta     num_records
 
         lda     cached_window_id
         jsr     GetFileRecordListForWindow
-        stax    ptr
+        stax    ptr             ; point past the count
         stax    list_start_ptr
-
-        bit     LCBANK2         ; Start copying records
-        bit     LCBANK2
-
-        ldy     #0
-        lda     (ptr),y         ; Number to sort
-        sta     num_records
-
-        inc     ptr             ; Point past number
-        inc     list_start_ptr
-        bne     :+
-        inc     ptr+1
-        inc     list_start_ptr+1
-:
-
-        ;; --------------------------------------------------
-        ;; Init the list to actually sort
-
-        bit     LCBANK1
-        bit     LCBANK1
-
-        ;; This populates `cached_window_entry_list`, and is needed
-        ;; even if there is only one entry.
-        ldx     num_records
-        beq     ret             ; skip if empty
-:       txa
-        sta     cached_window_entry_list-1,x ; entries are 1-based
-        dex
-        bne     :-
-
-        lda     num_records
-        cmp     #2              ; can't sort < 2 records
-        bcc     ret
+        inc16   ptr
+        inc16   list_start_ptr
 
         ;; --------------------------------------------------
         ;; Selection sort
-label:
+
         ptr1 := $06
         ptr2 := $08
 
@@ -11044,7 +11015,12 @@ finish: lda     #RenameDialogState::close
         ;; Dig up the index of the icon within the window.
         icon_ptr := $06
         lda     icon_param
-        jsr     CacheIconBounds ; inits `icon_ptr` and `cur_icon_bounds`
+        jsr     IconEntryLookup
+        stax    icon_ptr
+
+        ;; Compute bounds of icon bitmap
+        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
+        sub16_8 tmp_rect::y2, #kIconLabelHeight + kIconLabelGap, tmp_rect::y2
 
         ldy     #IconEntry::record_num
         lda     (icon_ptr),y
@@ -11088,15 +11064,15 @@ finish: lda     #RenameDialogState::close
         bit     LCBANK1
 
         jsr     GetIconType
-        jsr     CreateIconsForWindow::FindIconDetailsForIconType
+        jsr     CreateIconsForWindowImpl::FindIconDetailsForIconType
 
         ;; Use new `icon_height` to offset vertically.
         ;; Add old icon height to make icony top of text
         ldy     #IconEntry::icony
-        sub16in cur_icon_bounds::y2, CreateIconsForWindow::icon_height, (icon_ptr),y
+        sub16in tmp_rect::y2, CreateIconsForWindowImpl::icon_height, (icon_ptr),y
         ;; Use `iconbits` to populate IconEntry::iconbits
         ldy     #IconEntry::iconbits
-        copy16in CreateIconsForWindow::iconbits, (icon_ptr),y
+        copy16in CreateIconsForWindowImpl::iconbits, (icon_ptr),y
         ;; Assumes `iconentry_flags` will not change, regardless of icon.
 end_filerecord_and_icon_update:
 

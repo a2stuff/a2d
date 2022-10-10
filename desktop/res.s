@@ -563,6 +563,7 @@ bufsize:        .word   kSaveAreaSize
 ;;; * IconTK::DrawIcon
 ;;; * IconTK::RemoveIcon
 ;;; * IconTK::UnhighlightIcon
+;;; * IconTK::GetIconBounds (with following `tmp_rect`)
 icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
