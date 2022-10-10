@@ -7079,7 +7079,7 @@ has_parent:
     IF_MINUS
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     tmp_rect,x
+:       lda     new_window_bounds,x
         sta     (winfo_ptr),y
         dey
         dex
@@ -7295,7 +7295,7 @@ use_maxw:
 assign_width:
         bit     copy_new_window_bounds_flag
     IF_MINUS
-        ldax    tmp_rect::x2
+        ldax    new_window_bounds::x2
     END_IF
 
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
@@ -7328,7 +7328,7 @@ use_maxh:
 assign_height:
         bit     copy_new_window_bounds_flag
     IF_MINUS
-        ldax    tmp_rect::y2
+        ldax    new_window_bounds::y2
     END_IF
 
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2

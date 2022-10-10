@@ -502,6 +502,9 @@ run_list_entries:
 ;;; Window & Icon State
 ;;; ============================================================
 
+        ;; Used when restoring windows
+        DEFINE_RECT new_window_bounds, 0,0,0,0
+
         ;; Total number of icons
 icon_count:
         .byte   0

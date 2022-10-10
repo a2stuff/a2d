@@ -1221,11 +1221,11 @@ loop:   ldy     #0
         dey
         bpl     :-
 
-        ;; Copy bounds to `tmp_rect`
+        ;; Copy bounds to `new_window_bounds`
         ldy     #DeskTopFileItem::rect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
 :       lda     (data_ptr),y
-        sta     tmp_rect,x
+        sta     new_window_bounds,x
         dey
         dex
         bpl     :-
