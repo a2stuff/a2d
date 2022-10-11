@@ -455,8 +455,6 @@ modifiers:
         jeq     CmdMove
         cmp     #kShortcutScroll ; Apple-X (Scroll)
         jeq     CmdScroll
-        cmp     #CHAR_DELETE    ; Apple-Delete (Delete)
-        jeq     CmdDeleteSelection
         cmp     #'`'            ; Apple-` (Cycle Windows)
         beq     cycle
         cmp     #'~'            ; Shift-Apple-` (Cycle Windows)

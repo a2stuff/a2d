@@ -134,7 +134,7 @@ file_menu:
         DEFINE_MENU_ITEM label_duplicate_icon, 'D'
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_copy_selection
-        DEFINE_MENU_ITEM label_delete_selection
+        DEFINE_MENU_ITEM label_delete_selection, $7F
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_quit, res_char_menu_item_quit_shortcut
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeFile, .sizeof(MGTK::MenuItem)
