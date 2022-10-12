@@ -142,19 +142,7 @@ Parameters:
 Result codes (in A):
 * 0 = success
 
-### `IconTK::CloseWindow` ($06)
-
-Removes all icons from specified window (0 = desktop). No redrawing is done.
-
-Parameters:
-```
-.byte       window_id       Window ID, or 0 for desktop
-```
-
-Result codes (in A):
-* 0 = success
-
-### `IconTK::FindIcon` ($07)
+### `IconTK::FindIcon` ($06)
 
 Find the icon number at the given coordinates.
 
@@ -168,7 +156,7 @@ Parameters:
 
 The `result` is set to 0 if no icon is found.
 
-### `IconTK::DragHighlighted` ($08)
+### `IconTK::DragHighlighted` ($07)
 
 Initiates a drag of the highlighted icon(s).
 
@@ -192,7 +180,7 @@ Result codes (in A):
 * 2 = non-drag event seen
 * 3 = no selection
 
-### `IconTK::UnhighlightIcon` ($09)
+### `IconTK::UnhighlightIcon` ($08)
 
 Unhighlights (deselects) the specified icon.
 
@@ -208,7 +196,7 @@ Result codes (in A):
 * 2 = invalid icon
 * 3 = icon not highlighted
 
-### `IconTK::RedrawDesktopIcons` ($0A)
+### `IconTK::RedrawDesktopIcons` ($09)
 
 Redraws the icons on the desktop (mounted volumes, trash).
 
@@ -216,7 +204,7 @@ Parameters: none (pass $0000 as address)
 
 This call should be performed in response to an MGTK `update` event with `window_id` of 0, indicating that the desktop needs to be repainted. It assumes that overlapping windows will be repainted on top so no additional clipping is done beyond the active grafport.
 
-### `IconTK::IconInRect` ($0B)
+### `IconTK::IconInRect` ($0A)
 
 Tests to see if the given icon (by number) overlaps the passed rect.
 
@@ -230,7 +218,7 @@ Result codes (in A):
 * 0 = outside rect
 * 1 = inside rect
 
-### `IconTK::EraseIcon` ($0C)
+### `IconTK::EraseIcon` ($0B)
 
 Erases the specified icon by number.
 
@@ -245,7 +233,7 @@ Note that unlike `DrawIcon`, this call does _not_ require a GrafPort to be set b
 
 For desktop icons, the icon is clipped against any open windows.
 
-### `IconTK::GetIconBounds` ($0D)
+### `IconTK::GetIconBounds` ($0C)
 
 Populates the `bounds` rectangle with a bounding rect surrounding the icon bitmap and label.
 

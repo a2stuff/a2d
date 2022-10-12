@@ -66,7 +66,6 @@ jump_table_low:
         .byte   <DrawIconImpl
         .byte   <RemoveIconImpl
         .byte   <RemoveAllImpl
-        .byte   <CloseWindowImpl
         .byte   <FindIconImpl
         .byte   <DragHighlightedImpl
         .byte   <UnhighlightIconImpl
@@ -82,7 +81,6 @@ jump_table_high:
         .byte   >DrawIconImpl
         .byte   >RemoveIconImpl
         .byte   >RemoveAllImpl
-        .byte   >CloseWindowImpl
         .byte   >FindIconImpl
         .byte   >DragHighlightedImpl
         .byte   >UnhighlightIconImpl
@@ -527,48 +525,6 @@ done:   rts
         window_id       .byte
 .endstruct
 
-        icon_ptr := $08
-
-        lda     num_icons
-        sta     count
-
-loop:   ldx     count
-        beq     done
-        dec     count
-        dex
-
-        ldy     icon_list,x
-        sty     icon
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, icon_ptr
-        ldy     #IconEntry::win_flags
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
-        ldy     #RemoveAllParams::window_id
-        cmp     (params),y
-        bne     loop
-        ITK_CALL IconTK::RemoveIcon, icon
-
-        jmp     loop
-
-done:   return  #0
-
-        ;; IconTK::RemoveIcon params
-icon:   .byte   0
-
-count:  .byte   0
-.endproc
-
-;;; ============================================================
-;;; CloseWindow
-
-;;; param is window id
-
-.proc CloseWindowImpl
-        params := $06
-.struct CloseWindowParams
-        window_id       .byte
-.endstruct
-
         ptr := $08
 
         lda     num_icons
@@ -586,7 +542,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask ; check window
-        ldy     #CloseWindowParams::window_id
+        ldy     #RemoveAllParams::window_id
         cmp     (params),y ; match?
         bne     loop                 ; nope
 

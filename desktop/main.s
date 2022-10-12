@@ -2892,7 +2892,7 @@ sort:   jsr     LoadActiveWindowEntryTable
 ;;; Destroy all of the icons in the active window.
 
 .proc DestroyIconsInActiveWindow
-        ITK_CALL IconTK::CloseWindow, active_window_id
+        ITK_CALL IconTK::RemoveAll, active_window_id
         jsr     LoadActiveWindowEntryTable ; restored below
         lda     icon_count
         sec
@@ -5152,7 +5152,7 @@ last_pos:
         sbc     cached_window_entry_count
         sta     icon_count
 
-        ITK_CALL IconTK::CloseWindow, cached_window_id
+        ITK_CALL IconTK::RemoveAll, cached_window_id
 
         jsr     FreeCachedWindowIcons
     END_IF

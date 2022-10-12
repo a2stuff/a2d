@@ -12,19 +12,18 @@ HighlightIcon   = $02   ; { .byte icon }
 DrawIcon        = $03   ; { .byte icon }
 RemoveIcon      = $04   ; { .byte icon }
 RemoveAll       = $05   ; { .byte window_id }
-CloseWindow     = $06   ; { .byte window_id }
-FindIcon        = $07   ; { .word mousex, .word mousey, .byte result, .byte window_id }
-DragHighlighted = $08   ; { .byte param, .word mousex, .word mousey }
+FindIcon        = $06   ; { .word mousex, .word mousey, .byte result, .byte window_id }
+DragHighlighted = $07   ; { .byte param, .word mousex, .word mousey }
                         ; Input: specific icon being dragged, mouse coords
                         ; Output: 0 = onto desktop or same window (no-op)
                         ;  hi bit clear: low bits are target icon
                         ;  hi bit set:   low bits are target window
                         ;  if 0, X = 2 means "file icon dragged to desktop" (???)
-UnhighlightIcon = $09   ; { .byte icon }
-RedrawDesktopIcons = $0A ; Repaints desktop icons
-IconInRect      = $0B   ; { .byte icon, rect bounds }
-EraseIcon       = $0C   ; { .byte icon }
-GetIconBounds   = $0D   ; { .byte icon, rect bounds out }
+UnhighlightIcon = $08   ; { .byte icon }
+RedrawDesktopIcons = $09 ; Repaints desktop icons
+IconInRect      = $0A   ; { .byte icon, rect bounds }
+EraseIcon       = $0B   ; { .byte icon }
+GetIconBounds   = $0C   ; { .byte icon, rect bounds out }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 
