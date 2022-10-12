@@ -756,10 +756,14 @@ is_drag:
 
         COPY_STRUCT MGTK::Rect, drag_outline_grafport+MGTK::GrafPort::maprect, iconinrect_params::rect
 
-        ldx     highlight_count
-        stx     L9C74
+        ;; --------------------------------------------------
+        ;; Build drag polygon
 
-L98F2:  lda     highlight_count,x
+        ldx     highlight_count
+        stx     index
+
+next_icon:
+        lda     highlight_count,x
         jsr     GetIconPtr
         stax    $06
         ldy     #IconEntry::id
@@ -774,78 +778,84 @@ L98F2:  lda     highlight_count,x
         stx     trash_flag
 :
         ITK_CALL IconTK::IconInRect, iconinrect_params::icon
-        beq     L9954
+        beq     skip_icon
         jsr     CalcIconPoly
-        lda     L9C74
+
+        ;; Last icon?
+        lda     index
         cmp     highlight_count
-        beq     L9936
-        jsr     PushPointers
-
-        lda     $08
-        sec
-        sbc     #kIconPolySize
-        sta     $08
-        bcs     :+
-        dec     $08+1
-
-:       ldy     #1              ; MGTK Polygon "not last" flag
+        beq     :+
+        jsr     PushPointers    ; if so set flag
+        sub16_8 $08, #kIconPolySize
+        ldy     #1              ; MGTK Polygon "not last" flag
         lda     #$80            ; more polygons to follow
         sta     ($08),y
         jsr     PopPointers
-
-L9936:  ldy     #kIconPolySize-1
-
+:
+        ;; Copy poly into place
+        ldy     #kIconPolySize-1
 :       lda     poly,y
         sta     ($08),y
         dey
         bpl     :-
 
-        lda     #8
+        ;; Set number of vertices (for next one)
+        lda     #kPolySize
         iny
         sta     ($08),y
-        lda     $08
-        clc
-        adc     #kIconPolySize
-        sta     $08
-        bcc     L9954
-        inc     $08+1
-L9954:  dec     L9C74
-        ldx     L9C74
-        bne     L98F2
+        add16_8 $08, #kIconPolySize
+
+        ;; More?
+skip_icon:
+        dec     index
+        ldx     index
+        bne     next_icon
+
+        ;; --------------------------------------------------
+        ;; Compute `rect1` as bounding rect ???
 
         copy16  polybuf_addr, $08
-        ;; Copy 8 bytes from poly+2 to rect1
-        ldx     #8-1
-        ldy     #2+8-1
+
+        ;; Init rect with first 2 vertices of first poly - it's
+        ;; better than nothing!
+        ldx     #.sizeof(MGTK::Rect)-1
+        ldy     #2+.sizeof(MGTK::Rect)-1
 :       lda     ($08),y
         sta     rect1,x
         dey
         dex
         bpl     :-
 
-L9972:  ldy     #2
+        ;; Loop over all polys
+bounding_rect_poly_loop:
+        ldy     #2
 
-L9974:  lda     ($08),y
+        ;; Loop over all vertices
+bounding_rect_vertex_loop:
+
+        ;; Compare against `rect1`, expand if needed
+        lda     ($08),y
         cmp     rect1_x1
         iny
         lda     ($08),y
         sbc     rect1_x1+1
-        bcs     L9990
+        bcs     check_x2
         lda     ($08),y
         sta     rect1_x1+1
         dey
         lda     ($08),y
         sta     rect1_x1
         iny
-        bne     L99AA           ; always
+        bne     check_y1        ; always
 
-L9990:  dey
+check_x2:
+        dey
         lda     ($08),y
         cmp     rect1_x2
         iny
         lda     ($08),y
         sbc     rect1_x2+1
-        bcc     L99AA
+        bcc     check_y1
 
         lda     ($08),y
         sta     rect1_x2+1
@@ -854,13 +864,14 @@ L9990:  dey
         sta     rect1_x2
         iny
 
-L99AA:  iny
+check_y1:
+        iny
         lda     ($08),y
         cmp     rect1_y1
         iny
         lda     ($08),y
         sbc     rect1_y1+1
-        bcs     L99C7
+        bcs     check_y2
 
         lda     ($08),y
         sta     rect1_y1+1
@@ -868,15 +879,16 @@ L99AA:  iny
         lda     ($08),y
         sta     rect1_y1
         iny
-        bne     L99E1           ; always
+        bne     next_poly       ; always
 
-L99C7:  dey
+check_y2:
+        dey
         lda     ($08),y
         cmp     rect1_y2
         iny
         lda     ($08),y
         sbc     rect1_y2+1
-        bcc     L99E1
+        bcc     next_poly
 
         lda     ($08),y
         sta     rect1_y2+1
@@ -885,20 +897,26 @@ L99C7:  dey
         sta     rect1_y2
         iny
 
-L99E1:  iny
+next_poly:
+        iny
         cpy     #kIconPolySize
-        bne     L9974
+        bne     bounding_rect_vertex_loop
+
+        ;; More polys?
         ldy     #1              ; MGTK Polygon "not last" flag
         lda     ($08),y
-        beq     L99FC
-        lda     $08             ; missing CLC???
-        adc     #kIconPolySize - 1 ; why -1 ???
-        sta     $08
-        bcc     L9972
-        inc     $09
-        jmp     L9972
+        beq     :+                 ; done
 
-L99FC:  jsr     XdrawOutline
+        lda     $08                ; C=1 implied by CPY above
+        adc     #kIconPolySize - 1 ; so -1 here
+        sta     $08
+        bcc     bounding_rect_poly_loop
+        inc     $09
+        jmp     bounding_rect_poly_loop
+
+        ;; --------------------------------------------------
+
+:       jsr     XdrawOutline
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
@@ -1091,7 +1109,7 @@ just_select:                    ; ???
         txa
         rts
 
-L9C74:  .byte   $00
+index:  .byte   $00
 L9C75:  .byte   $00
 
 rect1:

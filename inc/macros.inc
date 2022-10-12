@@ -552,7 +552,20 @@ skip:
 ;;;    sub16_8 #$1111, $22, $3333       ; immediate, absolute, absolute
 ;;;    sub16_8 $1111, #$22, $3333       ; absolute, immediate, absolute
 ;;;    sub16_8 $1111, $22, $3333        ; absolute, absolute, absolute
+;;; Subtract arg2 (absolute) from arg1 (8-bit absolute/immediate), store to arg1
+;;;    add16_8 $1111, #$22              ; absolute, immediate
+;;;    add16_8 $1111, $22               ; absolute, absolute
 .macro sub16_8 arg1, arg2, arg3
+    .ifblank arg3
+        .local skip
+        _op_lo  lda, {arg1}
+        sec
+        sbc     arg2
+        sta     arg1
+        bcs     skip
+        _op_hi  dec, {arg1}
+skip:
+    .else
         _op_lo  lda, {arg1}
         sec
         sbc     arg2
@@ -560,6 +573,7 @@ skip:
         _op_hi  lda, {arg1}
         sbc     #0
         sta     arg3+1
+    .endif
 .endmacro
 
 ;;; Copy 16-bit value
