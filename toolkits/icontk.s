@@ -271,7 +271,7 @@ bufsize         .word
         ;; MaxDraggableItems = BufferSize / kIconPolySize
 
         ldy     #0
-:       sub16_8 bufsize, #kIconPolySize, bufsize
+:       sub16_8 bufsize, #kIconPolySize
         bit     bufsize+1
         bmi     :+
         iny

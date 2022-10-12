@@ -2510,9 +2510,9 @@ stashed_name:
         copy    #0, dirty
 
         ;; Padding
-        sub16_8 tmp_rect::x1, #kIconBBoxPaddingLeft, tmp_rect::x1
+        sub16_8 tmp_rect::x1, #kIconBBoxPaddingLeft
         add16_8 tmp_rect::x2, #kIconBBoxPaddingRight
-        sub16_8 tmp_rect::y1, #kIconBBoxPaddingTop, tmp_rect::y1
+        sub16_8 tmp_rect::y1, #kIconBBoxPaddingTop
         add16_8 tmp_rect::y2, #kIconBBoxPaddingBottom
 
         ;; --------------------------------------------------
@@ -2563,7 +2563,7 @@ doney:
         beq     done
 
         ;; Apply the viewport (accounting for header)
-        sub16_8 window_grafport::maprect::y1, #kWindowHeaderHeight, window_grafport::maprect::y1
+        sub16_8 window_grafport::maprect::y1, #kWindowHeaderHeight
         jsr     AssignActiveWindowCliprectAndUpdateCachedIcons
         jsr     ScrollUpdate
         jsr     RedrawAfterScroll
@@ -3757,13 +3757,13 @@ _Preamble:
 
 .proc ArrowLeft
         jsr     _Preamble
-        sub16_8 viewport+MGTK::Rect::x1, tick_h, viewport+MGTK::Rect::x1
+        sub16_8 viewport+MGTK::Rect::x1, tick_h
         jmp     _Clamp_x1
 .endproc
 
 .proc ArrowUp
         jsr     _Preamble
-        sub16_8 viewport+MGTK::Rect::y1, tick_v, viewport+MGTK::Rect::y1
+        sub16_8 viewport+MGTK::Rect::y1, tick_v
         jmp     _Clamp_y1
 .endproc
 
@@ -3780,7 +3780,7 @@ _Preamble:
 
 .proc PageDown
         jsr     _Preamble
-        add16_8 viewport+MGTK::Rect::y2, height, viewport+MGTK::Rect::y2
+        add16_8 viewport+MGTK::Rect::y2, height
         jmp     _Clamp_y2
 .endproc
 
@@ -3797,7 +3797,7 @@ _Preamble:
 
 .proc PageUp
         jsr     _Preamble
-        sub16_8 viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y1
+        sub16_8 viewport+MGTK::Rect::y1, height
         jmp     _Clamp_y1
 .endproc
 
@@ -3972,7 +3972,7 @@ _Preamble:
         ptr := $06
 
         ;; Restore header to viewport
-        sub16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight, viewport+MGTK::Rect::y1
+        sub16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight
 
         jmp     AssignActiveWindowCliprectAndUpdateCachedIcons
 .endproc
@@ -6445,7 +6445,7 @@ index_in_dir:           .byte   0
         inx                     ; DEVCNT is one less than number of devices
         inx                     ; And one more for Trash
         stx     reserved_desktop_icons
-        sub16_8 free_record_count, reserved_desktop_icons, free_record_count ; -= # possible volume icons
+        sub16_8 free_record_count, reserved_desktop_icons ; -= # possible volume icons
         cmp16   free_record_count, dir_header::file_count ; would the files fit?
         bcs     enough_room
 
@@ -7314,7 +7314,7 @@ L7826:  copy16  row_coords::ycoord, icon_coords::ycoord
         bne     L7862
 
         ;; Next row (and initial column) if necessary
-        add16_8 row_coords::ycoord, row_spacing, row_coords::ycoord
+        add16_8 row_coords::ycoord, row_spacing
         copy16  initial_xcoord, row_coords::xcoord
         lda     #0
         sta     icons_this_row
@@ -7835,9 +7835,9 @@ check_icon:
 
 finish:
         ;; Add padding around bbox
-        sub16_8 iconbb_rect::x1, #kIconBBoxPaddingLeft, iconbb_rect::x1
+        sub16_8 iconbb_rect::x1, #kIconBBoxPaddingLeft
         add16_8 iconbb_rect::x2, #kIconBBoxPaddingRight
-        sub16_8 iconbb_rect::y1, #kIconBBoxPaddingTop, iconbb_rect::y1
+        sub16_8 iconbb_rect::y1, #kIconBBoxPaddingTop
         add16_8 iconbb_rect::y2, #kIconBBoxPaddingBottom
 
         rts
