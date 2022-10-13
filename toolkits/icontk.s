@@ -232,9 +232,6 @@ which_ctl:      .byte   0
 which_part:     .byte   0
 .endparams
 
-;;; GrafPort used to restore port after clipping for volume
-grafport:       .tag    MGTK::GrafPort
-
 ;;; GrafPort used to draw icon outlines during drag
 drag_outline_grafport:  .tag    MGTK::GrafPort
 
@@ -1440,7 +1437,6 @@ icon_num:
         jsr SetPortForHighlightIcon
         ITK_CALL IconTK::HighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
-        MGTK_CALL MGTK::InitPort, icon_grafport
         rts
 .endproc
 
@@ -1448,7 +1444,6 @@ icon_num:
         jsr SetPortForHighlightIcon
         ITK_CALL IconTK::UnhighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
-        MGTK_CALL MGTK::InitPort, icon_grafport
         rts
 .endproc
 
@@ -1715,13 +1710,11 @@ common:
         ;; the grafport (for window maprect and window's items/used/free bar)
 
         ;; Volume (i.e. icon on desktop)
-        MGTK_CALL MGTK::InitPort, grafport
         jsr     SetPortForVolIcon
 :       jsr     CalcWindowIntersections
         jsr     DoPaint
         lda     more_drawing_needed_flag
         bne     :-
-        MGTK_CALL MGTK::SetPortBits, grafport ; default maprect
         rts
 
 .proc DoPaint
@@ -2197,13 +2190,11 @@ ret:    rts
 
         ;; Volume (i.e. icon on desktop)
 volume:
-        MGTK_CALL MGTK::InitPort, grafport
         jsr     SetPortForVolIcon
 :       jsr     CalcWindowIntersections
         jsr     EraseDesktopIcon
         lda     more_drawing_needed_flag
         bne     :-
-        MGTK_CALL MGTK::SetPortBits, grafport ; default maprect
         jmp     RedrawIconsAfterErase
 .endproc
 
@@ -2237,18 +2228,12 @@ volume:
         jsr     PushPointers
         ldx     num_icons
 loop:   dex                     ; any icons to draw?
-
-        bpl     LA466
-
-        bit     icon_in_window_flag
         bpl     :+
-        ;; TODO: Is this restoration necessary?
-        MGTK_CALL MGTK::InitPort, icon_grafport
-        MGTK_CALL MGTK::SetPort, icon_grafport
-:       jsr     PopPointers     ; do not tail-call optimise!
+
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 
-LA466:  txa
+:       txa
         pha
         ldy     icon_list,x
         cpy     LA3AC
