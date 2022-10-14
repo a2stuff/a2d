@@ -69,7 +69,7 @@ jump_table_low:
         .byte   <FindIconImpl
         .byte   <DragHighlightedImpl
         .byte   <UnhighlightIconImpl
-        .byte   <RedrawDesktopIconsImpl
+        .byte   <DrawAllImpl
         .byte   <IconInRectImpl
         .byte   <EraseIconImpl
         .byte   <GetIconBoundsImpl
@@ -84,7 +84,7 @@ jump_table_high:
         .byte   >FindIconImpl
         .byte   >DragHighlightedImpl
         .byte   >UnhighlightIconImpl
-        .byte   >RedrawDesktopIconsImpl
+        .byte   >DrawAllImpl
         .byte   >IconInRectImpl
         .byte   >EraseIconImpl
         .byte   >GetIconBoundsImpl
@@ -1971,10 +1971,17 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 .endproc
 
 ;;; ============================================================
-;;; RedrawDesktopIcons
+;;; DrawAll
 
-.proc RedrawDesktopIconsImpl
-        ;; No params
+.proc DrawAllImpl
+        params := $06
+.struct DrawAllParams
+        window_id       .byte
+.endstruct
+
+        ldy     #DrawAllParams::window_id
+        lda     (params),y
+        sta     window_id
 
         ptr := $06
 
@@ -1999,11 +2006,13 @@ loop:   dex
         ldy     icon_list,x
         sty     icon
 
-        ;; Is it an icon on the desktop?
+        ;; Is it in the target window?
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::win_flags
         lda     (ptr),y
-        and     #kIconEntryWinIdMask ; desktop icon
+        and     #kIconEntryWinIdMask
+        window_id := *+1
+        cmp     #SELF_MODIFIED_BYTE
         bne     next                 ; no, skip it
 
         ;; In maprect?

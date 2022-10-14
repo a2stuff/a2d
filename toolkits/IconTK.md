@@ -196,13 +196,18 @@ Result codes (in A):
 * 2 = invalid icon
 * 3 = icon not highlighted
 
-### `IconTK::RedrawDesktopIcons` ($09)
+### `IconTK::DrawAll` ($09)
 
-Redraws the icons on the desktop (mounted volumes, trash).
+Redraws the icons in the selected window. No clipping is done.
 
-Parameters: none (pass $0000 as address)
+Parameters:
+```
+.byte       window_id       Window ID, or 0 for desktop
+```
 
-This call should be performed in response to an MGTK `update` event with `window_id` of 0, indicating that the desktop needs to be repainted. It assumes that overlapping windows will be repainted on top so no additional clipping is done beyond the active grafport.
+For the desktop, this call should only be performed in response to an MGTK `update` event with `window_id` of 0, indicating that the desktop needs to be repainted. It assumes that overlapping windows will be repainted on top so no additional clipping is done beyond the active grafport.
+
+For overlapping windows, the active grafport must be set up correctly to clip to the window's content area, excluding the header, scrollbars and grow box.
 
 ### `IconTK::IconInRect` ($0A)
 

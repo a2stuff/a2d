@@ -168,7 +168,7 @@ handle_update:
 
         ;; Desktop
         MGTK_CALL MGTK::BeginUpdate, event_params::window_id
-        ITK_CALL IconTK::RedrawDesktopIcons
+        ITK_CALL IconTK::DrawAll, event_params::window_id
         MGTK_CALL MGTK::EndUpdate
         jmp     loop
 
@@ -5989,25 +5989,8 @@ icon_view:
         ;; Map icons to window space
         jsr     CachedIconsScreenToWindow
 
-        ;; Set up test rect for quick exclusion
-        COPY_BLOCK window_grafport::maprect, tmp_rect
+        ITK_CALL IconTK::DrawAll, cached_window_id
 
-        ;; Loop over all icons
-        copy    #0, index
-        index := *+1
-loop:   lda     #SELF_MODIFIED_BYTE
-        cmp     cached_window_entry_count
-        beq     done_icons
-        tax
-        lda     cached_window_entry_list,x
-        sta     icon_param
-        ITK_CALL IconTK::IconInRect, icon_param
-        beq     :+
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
-:       inc     index
-        jmp     loop
-
-done_icons:
         ;; Map icons back to screen space
         jsr     CachedIconsWindowToScreen
         jmp     done
