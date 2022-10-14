@@ -2146,18 +2146,15 @@ icon_num:       .byte   0
 
 ;;; ============================================================
 ;;; Erase an icon; redraws overlapping icons as needed
-
-EraseIconCommon:
-        sta     redraw_highlighted_flag
-        MGTK_CALL MGTK::InitPort, icon_grafport
-        MGTK_CALL MGTK::SetPort, icon_grafport
-        jmp     LA3B9
+;;; Inputs: A = high bit set to redraw selected icons, clear to skip
 
         ;; For `RedrawIconsAfterErase`
 redraw_highlighted_flag:
         .byte   0
-LA3AC:  .byte   0
-window_id:  .byte   0
+erase_icon_id:
+        .byte   0
+window_id:
+        .byte   0
 
         ;; IconTK::DrawIcon params
         ;; IconTK::IconInRect params (in `RedrawIconsAfterErase`)
@@ -2172,12 +2169,17 @@ icon_in_window_flag:
 window_id:      .byte   0
 .endparams
 
-.proc LA3B9
-        ldy     #0
+.proc EraseIconCommon
+        sta     redraw_highlighted_flag
+        MGTK_CALL MGTK::InitPort, icon_grafport
+        MGTK_CALL MGTK::SetPort, icon_grafport
+
+        ldy     #IconEntry::id
         lda     ($06),y
-        sta     LA3AC
+        sta     erase_icon_id
         iny
         iny
+        .assert IconEntry::win_flags - IconEntry::id = 2, error, "enum mismatch"
         lda     ($06),y
         and     #kIconEntryWinIdMask
         sta     window_id
@@ -2245,7 +2247,7 @@ loop:   dex                     ; any icons to draw?
 :       txa
         pha
         ldy     icon_list,x
-        cpy     LA3AC
+        cpy     erase_icon_id
         beq     next
 
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
