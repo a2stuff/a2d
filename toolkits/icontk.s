@@ -1414,14 +1414,16 @@ icon_num:
 .endproc
 
 ;;; Set maprect to `highlight_icon_id`'s window's content area, in screen
-;;; space, using `icon_grafport`.
+;;; space, using `icon_grafport`. No-op for volume icons on the desktop.
 .proc SetPortForHighlightIcon
         ptr := $06
 
         lda     highlight_icon_id
         jsr     GetIconWin
-        sta     getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params ; into icon_grafport
+        bne     :+
+        rts                     ; Unnecessary for volume icons; DrawIconImpl takes care of it
+:       sta     getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params ; into `icon_grafport`
 
         sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x2, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x1, width
         sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, height
@@ -1431,7 +1433,7 @@ icon_num:
         add16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x1, width, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x2
         add16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, height, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2
 
-        ;; Account for window header, and set port to icon_grafport
+        ;; Account for window header, and set port to `icon_grafport`
         jmp     ShiftPortDown
 
 width:  .word   0
