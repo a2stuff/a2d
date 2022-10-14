@@ -383,40 +383,6 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; DrawIcon
-
-;;; * Assumes correct grafport already selected/maprect specified
-;;; * Does not erase background
-
-.proc DrawIconImpl
-        params := $06
-.struct DrawIconParams
-        icon    .byte
-.endstruct
-
-        ptr := $06              ; Overwrites params
-
-        ;; Pointer to IconEntry
-        ldy     #DrawIconParams::icon
-        lda     (params),y
-        tax
-        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
-
-        jsr     CalcIconRects
-
-        ldy     #IconEntry::state
-        lda     (ptr),y         ; highlighted?
-        asl
-        bmi     :+
-
-        jsr     paint_icon_unhighlighted
-        return  #0
-
-:       jsr     paint_icon_highlighted
-        return  #0
-.endproc
-
-;;; ============================================================
 ;;; RemoveIcon
 
 ;;; param is pointer to icon number
@@ -1627,40 +1593,49 @@ inside:
 .endproc
 
 ;;; ============================================================
-;;; Paint icon
-;;; * Assumes grafport selected and maprect configured
-;;; * Does not erase background
 
-icon_flags: ; bit 7 = highlighted, bit 6 = volume icon
-        .byte   0
-
-win_flags:  ; copy of IconEntry::win_flags
-        .byte   0
-
+;;; Used by DrawIcon and EraseIcon
 more_drawing_needed_flag:
         .byte   0
 
-        DEFINE_POINT label_pos, 0, 0
-
+;;; Set by some callers of DrawIcon
 no_clip_vol_icons_flag:
         .byte   0
 
-.proc PaintIcon
+;;; ============================================================
+;;; DrawIcon
 
-unhighlighted:
-        lda     #0
+;;; * Assumes correct grafport already selected/maprect specified
+;;; * Does not erase background
+
+.proc DrawIconImpl
+        params := $06
+.struct DrawIconParams
+        icon    .byte
+.endstruct
+
+        ptr := $06              ; Overwrites params
+
+        ;; Pointer to IconEntry
+        ldy     #DrawIconParams::icon
+        lda     (params),y
+        tax
+        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
+
+        jsr     CalcIconRects
+
+        ;; Stash some flags
+        ldy     #IconEntry::state
+        lda     (ptr),y         ; highlighted?
+        asl                     ; high bit = highlighted
+        and     #$80
         sta     icon_flags
-        beq     common          ; always
-
-highlighted:
-        copy    #$80, icon_flags ; is highlighted
-
-common:
-        ;; Test if icon is dimmed volume/folder
-        ldy     #IconEntry::win_flags
+        .assert IconEntry::win_flags = IconEntry::state + 1, error, "enum mismatch"
+        iny
         lda     ($06),y
         sta     win_flags
 
+        ;; Is on desktop?
         lda     ($06),y
         and     #kIconEntryWinIdMask
         bne     :+
@@ -1766,7 +1741,7 @@ common:
         MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
 
-        rts
+        return #0
 
 .proc Shade
         MGTK_CALL MGTK::SetPattern, dark_pattern
@@ -1777,12 +1752,15 @@ common:
 
 .endproc
 
-;;; ============================================================
+icon_flags: ; bit 7 = highlighted, bit 6 = volume icon
+        .byte   0
 
-.endproc ; PaintIcon
-        paint_icon_unhighlighted := PaintIcon::unhighlighted
-        paint_icon_highlighted := PaintIcon::highlighted
+win_flags:  ; copy of IconEntry::win_flags
+        .byte   0
 
+        DEFINE_POINT label_pos, 0, 0
+
+.endproc ; DrawIcon
 
 ;;; ============================================================
 
