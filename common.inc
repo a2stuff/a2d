@@ -2,6 +2,8 @@
 ;;; Definitions that apply to DeskTop and Selector
 ;;; ============================================================
 
+.define DEBUG 0
+
         .include .concat("common/res/common.res.", kBuildLang)
 
 ;;; ============================================================

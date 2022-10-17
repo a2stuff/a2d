@@ -80,7 +80,7 @@ Note that it does not paint the icon. Callers must make a subsequent call to `Ic
 
 Result codes (in A):
 * 0 = success
-* 1 = icon id already in use
+* 1 = icon id already in use (`DEBUG` only)
 
 ### `IconTK::HighlightIcon` ($02)
 
@@ -95,8 +95,8 @@ Note that it does not repaint the icon. Callers must make a subsequent call to `
 
 Result codes (in A):
 * 0 = success
-* 2 = invalid icon
-* 3 = already highlighted
+* 2 = invalid icon (`DEBUG` only)
+* 3 = already highlighted (`DEBUG` only)
 
 ### `IconTK::DrawIcon` ($03)
 
@@ -128,7 +128,8 @@ Note that it does not erase the icon. Callers must make a previous call to `Icon
 
 Result codes (in A):
 * 0 = success
-* 1 = icon not found
+* 1 = icon not found (`DEBUG` only)
+* 2 = icon not in use (`DEBUG` only)
 
 ### `IconTK::RemoveAll` ($05)
 
@@ -193,8 +194,8 @@ Note that it does not repaint the icon. Callers must make a subsequent call to `
 
 Result codes (in A):
 * 0 = success
-* 2 = invalid icon
-* 3 = icon not highlighted
+* 2 = invalid icon (`DEBUG` only)
+* 3 = icon not highlighted (`DEBUG` only)
 
 ### `IconTK::DrawAll` ($09)
 

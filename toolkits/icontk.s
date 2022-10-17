@@ -206,7 +206,7 @@ header_height:  .byte   0
 ;;; Re-use the "save area" ($800-$1AFF) since menus won't show during
 ;;; this kOperation.
 polybuf_addr:           .addr   0
-max_draggable_icons:    .byte  0
+max_draggable_icons:    .byte   0
 
 ;;; ============================================================
 
@@ -288,15 +288,19 @@ bufsize:
         ;; Parameter is an IconEntry
         ptr_icon := $06
 
-        ;; Check if passed ID is already in the icon list
         ldy     #IconEntry::id
         lda     (ptr_icon),y ; A = icon id
+
+.if DEBUG
+        ;; Check if passed ID is already in the icon list
         jsr     IsInIconList
         bne     :+
         return  #1              ; That icon id is already in use
+:
+.endif ; DEBUG
 
         ;; Add it to `icon_list`
-:       ldx     num_icons
+        ldx     num_icons
         sta     icon_list,x
         inc     num_icons
 
@@ -344,12 +348,17 @@ done:   rts
         ;; Pointer to IconEntry
         ldy     #HighlightIconParams::icon
         lda     (params),y
+        sta     icon_id
         tax
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
-        ldy     #IconEntry::state
-        lda     (ptr),y         ; valid icon?
-        bne     :+
+        ;;ldy     #IconEntry::state
+        .assert (IconEntry::state - HighlightIconParams::icon) = 1, error, "state must be 1 more than icon"
+        iny
+        lda     (ptr),y         ; A = state
+.if DEBUG
+        ;; A = state; 0 = not valid
+        bne     :+              ; 0 = not valid
         return  #2              ; Invalid icon
 :
         ;;and     #kIconEntryStateHighlighted
@@ -357,17 +366,16 @@ done:   rts
         asl
         bpl     :+
         return  #3              ; Already highlighted
-:
+:       ror
+.endif ; DEBUG
+
         ;; Mark highlighted
-        ror
         ora     #kIconEntryStateHighlighted
         sta     (ptr),y
 
         ;; Append to highlight list
-        ;;ldy     #IconEntry::id
-        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
-        dey
-        lda     (ptr),y         ; A = icon id
+        icon_id := *+1
+        lda     #SELF_MODIFIED_BYTE
         ldx     highlight_count
         sta     highlight_list,x
         inc     highlight_count
@@ -376,8 +384,7 @@ done:   rts
         ldx     #1              ; new position
         jsr     ChangeHighlightIndex
 
-        ldy     #IconEntry::id
-        lda     (ptr),y         ; A = icon id
+        lda     icon_id
         ldx     #1              ; new position
         jmp     ChangeIconIndex
 .endproc
@@ -393,24 +400,30 @@ done:   rts
         icon    .byte
 .endstruct
 
-        ptr := $08
-
-        ;; Is it in `icon_list`?
         ldy     #RemoveIconParams::icon
         lda     (params),y
+
+.if DEBUG
+        ;; Is it in `icon_list`?
         jsr     IsInIconList
         beq     :+
         return  #1              ; Not found
+:
+.endif ; DEBUG
 
         ;; Pointer to IconEntry
-:       tax
+        ptr := $08
+        tax
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
+.if DEBUG
         ldy     #IconEntry::state ; valid icon?
         lda     (ptr),y
         bne     :+
         return  #2
 :
+.endif ; DEBUG
+
         jsr     RemoveIconCommon
         return  #0
 .endproc
@@ -424,6 +437,7 @@ done:   rts
         ;; Move it to the end of `icon_list`
         ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
+        sta     icon_id
         ldx     num_icons       ; new position
         jsr     ChangeIconIndex
 
@@ -446,10 +460,8 @@ done:   rts
 
         bcc     :+              ; not highlighted
 
-        ;;ldy     #IconEntry::id
-        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
-        dey
-        lda     (ptr),y         ; A = icon id
+        icon_id := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     RemoveFromHighlightList
 
 :       rts
@@ -1460,14 +1472,16 @@ height: .word   0
         ;; Pointer to IconEntry
         ldy     #UnhighlightIconParams::icon
         lda     (params),y
+        sta     icon_id
         tax
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ;;ldy     #IconEntry::state
         .assert (IconEntry::state - UnhighlightIconParams::icon) = 1, error, "state must be 1 more than icon"
         iny
-        lda     (ptr),y         ; valid icon?
-        bne     :+
+        lda     (ptr),y         ; A = state
+.if DEBUG
+        bne     :+              ; 0 = not valid
         return  #2              ; Invalid icon
 :
         ;;and     #kIconEntryStateHighlighted
@@ -1475,16 +1489,15 @@ height: .word   0
         asl
         bmi     :+
         return  #3              ; Not highlighted
-:
+:       ror
+.endif ; DEBUG
+
         ;; Mark not highlighted
-        ror
         eor     #kIconEntryStateHighlighted
         sta     (ptr),y
 
-        ;;ldy     #IconEntry::id
-        .assert (IconEntry::state - IconEntry::id) = 1, error, "id must be 1 less than state"
-        dey
-        lda     (ptr),y
+        icon_id := *+1
+        lda     #SELF_MODIFIED_BYTE
         jmp     RemoveFromHighlightList
 .endproc
 
@@ -1743,7 +1756,7 @@ no_clip_vol_icons_flag:
         MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
 
-        return #0
+        return  #0
 
 .proc Shade
         MGTK_CALL MGTK::SetPattern, dark_pattern
