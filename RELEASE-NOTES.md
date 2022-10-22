@@ -22,6 +22,7 @@ Project Page: https://github.com/a2stuff/a2d
 * CD-ROM drives now shown with a CD icon.
 * Unhighlight more correctly when dragging icons over folders.
 * Show keyboard shortcut for File > Delete in menu.
+* Support selection in list views. ([#28](https://github.com/a2stuff/a2d/issues/28))
 
 ### Disk Copy
 

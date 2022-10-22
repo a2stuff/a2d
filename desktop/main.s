@@ -2346,16 +2346,7 @@ ret:    rts
 
         stax    tmp             ; name
 
-        ;; Icon view?
-        tya                     ; window id
-        beq     :+              ; 0=desktop (so yes)
-        tax
-        lda     win_view_by_table-1,x
-        bpl     :+
-        lda     #0              ; list view = not found
-        rts
-
-:       jsr     PushPointers
+        jsr     PushPointers
 
         copy16  tmp, ptr_name
         sty     cached_window_id
@@ -2729,7 +2720,9 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 
 ;;; ============================================================
 
-.proc CmdViewByIcon
+.proc ViewByCommon
+        sta     view
+
         ;; Valid?
         lda     active_window_id
         bne     :+
@@ -2737,27 +2730,41 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 :
         ;; Is this a change?
         jsr     GetActiveWindowViewBy
+        cmp     view
         bne     :+              ; not by icon
         rts
 :
-
-;;; Entry point when refreshing window contents
-entry:
         ;; Update view menu/table
-        lda     #kViewByIcon
+        view := *+1
+        lda     #SELF_MODIFIED_BYTE
         ldx     active_window_id
         sta     win_view_by_table-1,x
         jsr     UpdateViewMenuCheck
 
+        ;; Destroy existing icons
+entry2:
+        jsr     DestroyIconsInActiveWindow
+
+;;; Entry point when refreshing window contents
+entry3:
+        ;; Clear selection if in the window
+        lda     selected_window_id
+        cmp     active_window_id
+        bne     :+
+        lda     #0
+        sta     selected_icon_count
+        sta     selected_window_id
+:
         ;; Reset the viewport
         jsr     ResetActiveWindowViewport ; Must precede icon creation
 
         ;; Create the icons
         jsr     LoadActiveWindowEntryTable
         jsr     InitCachedWindowEntries
-        ;; NOTE: Could call `SortRecords` here with A=kViewBy*
-
-        lda     cached_window_id
+        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+    IF_NEG
+        jsr     SortRecords
+    END_IF
         jsr     CreateIconsForWindow
         jsr     StoreWindowEntryTable
         jsr     AddIconsForCachedWindow
@@ -2787,55 +2794,6 @@ entry:
 
 ;;; ============================================================
 
-.proc ViewByNoniconCommon
-        sta     view
-
-        ;; Valid?
-        lda     active_window_id
-        bne     :+
-        rts
-:
-        ;; Is this a change?
-        jsr     GetActiveWindowViewBy
-        cmp     view
-        bne     :+
-        rts
-:
-        ;; Destroy existing icons
-        cmp     #kViewByIcon
-        bne     :+
-        jsr     DestroyIconsInActiveWindow
-:
-        ;; Update view menu/table
-        view := *+1
-        lda     #SELF_MODIFIED_BYTE
-        ldx     active_window_id
-        sta     win_view_by_table-1,x
-        jsr     UpdateViewMenuCheck
-
-        ;; Clear selection if in the window
-        lda     selected_window_id
-        cmp     active_window_id
-        bne     sort
-        lda     #0
-        sta     selected_icon_count
-        sta     selected_window_id
-
-        ;; Sort the records
-sort:   jsr     LoadActiveWindowEntryTable
-        jsr     InitCachedWindowEntries
-        jsr     GetCachedWindowViewBy
-        jsr     SortRecords
-        jsr     StoreWindowEntryTable
-
-        ;; Reset the viewport
-        jsr     ResetActiveWindowViewport
-
-        FALL_THROUGH_TO RedrawAfterContentChange
-.endproc
-
-;;; ============================================================
-
 .proc RedrawAfterContentChange
         ;; Draw the contents
         lda     active_window_id
@@ -2852,30 +2810,37 @@ sort:   jsr     LoadActiveWindowEntryTable
 
 ;;; ============================================================
 
+.proc CmdViewByIcon
+        lda     #kViewByIcon
+        jmp     ViewByCommon
+.endproc
+
+;;; ============================================================
+
 .proc CmdViewByName
         lda     #kViewByName
-        jmp     ViewByNoniconCommon
+        jmp     ViewByCommon
 .endproc
 
 ;;; ============================================================
 
 .proc CmdViewByDate
         lda     #kViewByDate
-        jmp     ViewByNoniconCommon
+        jmp     ViewByCommon
 .endproc
 
 ;;; ============================================================
 
 .proc CmdViewBySize
         lda     #kViewBySize
-        jmp     ViewByNoniconCommon
+        jmp     ViewByCommon
 .endproc
 
 ;;; ============================================================
 
 .proc CmdViewByType
         lda     #kViewByType
-        jmp     ViewByNoniconCommon
+        jmp     ViewByCommon
 .endproc
 
 ;;; ============================================================
@@ -3019,6 +2984,14 @@ CmdLock         := DoLock
 
         jsr     DoRename
         sta     result
+
+        ;; If selection is in a window with View > by Name, refresh
+        jsr     GetSelectionViewBy
+        cmp     #kViewByName
+        bne     :+
+        txa
+        jmp     ViewByCommon::entry2
+:
 
         bit     result
         bpl     :+              ; N = window renamed
@@ -3277,9 +3250,6 @@ typedown_buf:
         lda     active_window_id
         beq     volumes         ; no active window
 
-        jsr     GetActiveWindowViewBy
-        bmi     volumes         ; not icon view
-
         ;; --------------------------------------------------
         ;; Icons in active window
 
@@ -3481,13 +3451,7 @@ ret:    rts
         beq     :+
         jsr     ClearSelection
 
-:       lda     active_window_id
-        beq     :+              ; desktop is okay
-        jsr     GetActiveWindowViewBy
-        bpl     :+              ; view by icons
-        rts
-
-:       jsr     LoadActiveWindowEntryTable
+        jsr     LoadActiveWindowEntryTable
         lda     cached_window_entry_count
         jeq     finish          ; nothing to select!
 
@@ -3688,19 +3652,18 @@ tick_v: .byte   0
 
 _Preamble:
         jsr     LoadActiveWindowEntryTable
-        jsr     GetActiveWindowViewBy
-    IF_POS
-        ;; Icon view
+
         jsr     CachedIconsScreenToWindow
         jsr     ComputeIconsBBox
         jsr     CachedIconsWindowToScreen
 
+        jsr     GetActiveWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+    IF_POS
+        ;; Icon view
         copy    #kIconViewScrollTickH, tick_h
         copy    #kIconViewScrollTickV, tick_v
     ELSE
         ;; List view
-        jsr     ComputeIconsBBox
-
         copy    #kListViewScrollTickH, tick_h
         copy    #kListViewScrollTickV, tick_v
     END_IF
@@ -4550,9 +4513,6 @@ bail:   return  #$FF            ; high bit set = not repeating
         bcs     :+
         rts
 :
-        jsr     GetActiveWindowViewBy
-        jmi     ClearSelection  ; not icons
-
         copy    active_window_id, findicon_params::window_id
         ITK_CALL IconTK::FindIcon, findicon_params
         lda     findicon_params::which_icon
@@ -4835,13 +4795,11 @@ exception_flag:
         jsr     RemoveWindowFilerecordEntries
 
         ;; Remove old icons
-        jsr     GetActiveWindowViewBy
-        bmi     :+              ; list view, not icons
         jsr     DestroyIconsInActiveWindow
         jsr     ClearActiveWindowEntryCount
 
         ;; Copy window path to `src_path_buf`
-:       lda     active_window_id
+        lda     active_window_id
         jsr     GetWindowPath
         jsr     CopyToSrcPath
 
@@ -4850,7 +4808,7 @@ exception_flag:
         jsr     OpenDirectory
 
         ;; Create icons and draw contents
-        jsr     CmdViewByIcon::entry
+        jsr     ViewByCommon::entry3
 
         ;; Draw header
         lda     active_window_id
@@ -4859,14 +4817,6 @@ exception_flag:
         jsr     LoadActiveWindowEntryTable
         jsr     DrawWindowHeader
     END_IF
-
-        ;; Set view state and update menu
-        lda     #0
-        ldx     active_window_id
-        sta     win_view_by_table-1,x
-
-        copy    #1, menu_click_params::item_num
-        jsr     UpdateViewMenuCheck
 
         rts
 .endproc
@@ -5088,19 +5038,15 @@ last_pos:
 
         copy    active_window_id, dragwindow_params::window_id
 
-        jsr     GetActiveWindowViewBy
-        bmi     :+
         jsr     LoadActiveWindowEntryTable
         jsr     CachedIconsScreenToWindow
-:
+
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         ;; `dragwindow_params::moved` is not checked; harmless if it didn't.
 
-        jsr     GetActiveWindowViewBy
-        bmi     :+
         jsr     CachedIconsWindowToScreen
         jsr     StoreWindowEntryTable
-:
+
         rts
 
 .endproc
@@ -5145,9 +5091,6 @@ last_pos:
 
         jsr     ClearSelection
 
-        jsr     GetCachedWindowViewBy
-    IF_NC
-        ;; Icon view
         lda     icon_count
         sec
         sbc     cached_window_entry_count
@@ -5156,7 +5099,6 @@ last_pos:
         ITK_CALL IconTK::RemoveAll, cached_window_id
 
         jsr     FreeCachedWindowIcons
-    END_IF
 
         dec     num_open_windows
         copy    #0, cached_window_entry_count
@@ -5318,23 +5260,10 @@ done:   rts
         rts
 .endproc
 
-;;; Safe to call even if not an icon view
 .proc AssignActiveWindowCliprectAndUpdateCachedIcons
-
-        jsr     GetActiveWindowViewBy
-        pha
-    IF_POS
         jsr     CachedIconsScreenToWindow
-    END_IF
-
         jsr     AssignActiveWindowCliprect
-
-        pla
-    IF_POS
-        jsr     CachedIconsWindowToScreen
-    END_IF
-
-        rts
+        jmp     CachedIconsWindowToScreen
 .endproc
 
 
@@ -5916,7 +5845,6 @@ kDrawWindowEntriesContentOnly             = $40
 kDrawWindowEntriesContentOnlyPortAdjusted = $80
 
 .proc DrawWindowEntries
-        ptr := $06
         sta     header_and_offset_flag
 
         jsr     PushPointers
@@ -5940,14 +5868,28 @@ kDrawWindowEntriesContentOnlyPortAdjusted = $80
     END_IF
     END_IF
 
-        ;; List or Icon view?
+        ;; --------------------------------------------------
+        ;; Icons
 
-        jsr     GetCachedWindowViewBy
-        jpl     icon_view
+        ;; Map icons to window space
+        jsr     CachedIconsScreenToWindow
+
+        ITK_CALL IconTK::DrawAll, cached_window_id
+
+.if DEBUG
+        jsr     ComputeIconsBBox
+        COPY_STRUCT MGTK::Rect, iconbb_rect, tmp_rect
+        jsr     FrameTmpRect
+.endif
+
+        ;; Map icons back to screen space
+        jsr     CachedIconsWindowToScreen
 
         ;; --------------------------------------------------
-        ;; List view
-list_view:
+        ;; List View Columns
+
+        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+        bpl     done
 
         ;; Find FileRecord list
         lda     cached_window_id
@@ -5956,19 +5898,10 @@ list_view:
         inc16   file_record_ptr ; now points at first entry in list
 
         ;; First row
-
-        lda     #kFirstRowBaseline
-        sta     pos_col_icon::ycoord
-        sta     pos_col_name::ycoord
-        sta     pos_col_type::ycoord
-        sta     pos_col_size::ycoord
-        sta     pos_col_date::ycoord
-        lda     #0
-        sta     pos_col_icon::ycoord+1
-        sta     pos_col_name::ycoord+1
-        sta     pos_col_type::ycoord+1
-        sta     pos_col_size::ycoord+1
-        sta     pos_col_date::ycoord+1
+        ldax    #kListViewFirstBaseline
+        stax    pos_col_type::ycoord
+        stax    pos_col_size::ycoord
+        stax    pos_col_date::ycoord
 
         ;; Draw each list view row
         lda     #0
@@ -5979,22 +5912,17 @@ rloop:  lda     #SELF_MODIFIED_BYTE
         beq     done
         tax
         lda     cached_window_entry_list,x
-        jsr     DrawListViewRow
+
+        ;; Look up file record number
+        ptr := $06
+        jsr     IconEntryLookup
+        stax    ptr
+        ldy     #IconEntry::record_num
+        lda     (ptr),y
+
+        jsr     DrawListViewRowZeroBased
         inc     rows_done
         jmp     rloop
-
-        ;; --------------------------------------------------
-        ;; Icon view
-icon_view:
-
-        ;; Map icons to window space
-        jsr     CachedIconsScreenToWindow
-
-        ITK_CALL IconTK::DrawAll, cached_window_id
-
-        ;; Map icons back to screen space
-        jsr     CachedIconsWindowToScreen
-        jmp     done
 
         ;; --------------------------------------------------
 done:
@@ -7088,7 +7016,6 @@ volume: ldx     cached_window_id
         jsr     InitCachedWindowEntries
         ;; NOTE: Could call `SortRecords` here with A=kViewBy*
 
-        lda     cached_window_id
         jsr     CreateIconsForWindow
         jsr     StoreWindowEntryTable
         jsr     AddIconsForCachedWindow
@@ -7110,11 +7037,10 @@ copy_new_window_bounds_flag:
 
 ;;; ============================================================
 ;;; File Icon Entry Construction
-;;; Inputs: A = window_id
+;;; Inputs: `cached_window_id` must be set
 
 .proc CreateIconsForWindowImpl
 
-window_id:      .byte   0
 iconbits:       .addr   0
 iconentry_flags: .byte   0
 icon_height:    .word   0
@@ -7132,9 +7058,18 @@ icons_this_row:
         DEFINE_POINT icon_coords, 0, 0
 
 .proc Start
-        sta     window_id
         jsr     PushPointers
 
+        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+    IF_NEG
+        ;; List View
+        copy16  #kListViewInitialLeft, row_coords::xcoord
+        copy16  #kListViewInitialTop, row_coords::ycoord
+        copy16  #kListViewInitialLeft, initial_xcoord
+        copy    #1, icons_per_row ; by definition
+        copy    #0, col_spacing   ; N/A
+        copy    #kListItemHeight, row_spacing
+    ELSE
         ;; Icon View
         copy16  #kIconViewInitialLeft, row_coords::xcoord
         copy16  #kIconViewInitialTop, row_coords::ycoord
@@ -7142,6 +7077,7 @@ icons_this_row:
         copy    #kIconViewIconsPerRow, icons_per_row
         copy    #kIconViewSpacingX, col_spacing
         copy    #kIconViewSpacingY, row_spacing
+    END_IF
 
         lda     #0
         sta     icons_this_row
@@ -7259,8 +7195,13 @@ records_base_ptr:
         bit     LCBANK1
         bit     LCBANK1
 
+        jsr     GetCachedWindowViewBy
+        sta     view_by
         jsr     GetIconType
+        view_by := *+1
+        ldy     #SELF_MODIFIED_BYTE
         jsr     FindIconDetailsForIconType
+
         ldy     #IconEntry::name
         ldx     #0
 L77F0:  lda     name_tmp,x
@@ -7282,9 +7223,12 @@ L77F0:  lda     name_tmp,x
         cpx     #.sizeof(MGTK::Point)
         bne     :-
 
-        ;; Include y-offset
+        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+    IF_POS
+        ;; Icon view: include y-offset
         ldy     #IconEntry::icony
         sub16in (icon_entry),y, icon_height, (icon_entry),y
+    END_IF
 
         lda     cached_window_entry_count
         cmp     icons_per_row
@@ -7343,27 +7287,50 @@ L7870:  lda     cached_window_id
 .endproc
 
 ;;; ============================================================
-;;; Inputs: A = `IconType` member
+;;; Inputs: A = `IconType` member, Y = `kViewByXXX` value
 ;;; Outputs: Populates `iconentry_flags`, `iconbits`, `icon_height`
 
 .proc FindIconDetailsForIconType
         ptr := $6
 
+        sty     view_by
         jsr     PushPointers
 
-        ;; For populating IconEntry::win_flags
-        tay
-        lda     icontype_iconentryflags_table, y
+        ;; For populating `IconEntry::win_flags`
+        tay                     ; Y = `IconType`
+        lda     icontype_iconentryflags_table,y
         sta     iconentry_flags
 
-        ;; For populating IconEntry::iconbits
-        tya
+        ;; Load up A,X with pointer to `IconResource`
+        view_by := *+1
+        lda     #SELF_MODIFIED_BYTE
+        cmp     #kViewByIcon
+    IF_NE
+        ;; List View
+        lda     iconentry_flags
+        ora     #kIconEntryFlagsSmall
+        sta     iconentry_flags
+
+        ldax    #sm_gen
+        cpy     #IconType::folder
+      IF_EQ
+        ldax    #sm_dir
+      END_IF
+   ELSE
+        ;; Icon View
+        tya                     ; Y = `IconType`
         asl     a
         tay
-        copy16  type_icons_table,y, iconbits
+        lda     type_icons_table,y
+        ldx     type_icons_table+1,y
+   END_IF
+
+        ;; For populating IconEntry::iconbits
+        stax    iconbits
 
         ;; Icon height will be needed too
-        copy16  iconbits, ptr
+        stax    ptr
+set_height:
         ldy     #IconResource::maprect + MGTK::Rect::y2
         copy16in (ptr),y, icon_height
 
@@ -7752,6 +7719,7 @@ xcoord:
 
 ;;; ============================================================
 ;;; Compute bounding box for icons within cached window
+;;; Inputs: `cached_window_id` is set
 
         DEFINE_RECT iconbb_rect, 0, 0, 0, 0
 
@@ -7772,44 +7740,10 @@ start:
         ;; icon_num = 0
         sta     icon_num
 
-        ;; Icon view?
-        jsr     GetCachedWindowViewBy
-        bpl     icon_view           ; icon view
-
-        ;; --------------------------------------------------
-        ;; List view
-
-        ;; max.y = A * kListViewRowHeight + kWindowHeaderHeight+2
-        lda     cached_window_entry_count
-        pha                     ; A = count
-        ldx     #0              ; A,X = count + 2
-        ldy     #kListViewRowHeight
-        jsr     Multiply_16_8_16
-        addax   #kWindowHeaderHeight+2, iconbb_rect::y2
-
-        ;; max.x = count > 0 ? kListViewWidth  : 0
-        pla                     ; A = count
-    IF_NOT_ZERO
-        copy16  #kListViewWidth, iconbb_rect::x2
-    END_IF
-
-        ;; min.y = kWindowHeaderHeight
-        copy16  #kWindowHeaderHeight, iconbb_rect::y1
-
-        ;; min.x = 0 (initialized above)
-        rts
-
-
-        ;; --------------------------------------------------
-        ;; Icon view
-icon_view:
         ;; min.x = min.y = kIntMax
-        lda     #<kIntMax
-        sta     iconbb_rect::x1
-        sta     iconbb_rect+MGTK::Rect::y1
-        lda     #>kIntMax
-        sta     iconbb_rect::x1+1
-        sta     iconbb_rect+MGTK::Rect::y1+1
+        ldax    #kIntMax
+        stax    iconbb_rect::x1
+        stax    iconbb_rect+MGTK::Rect::y1
 
 check_icon:
         icon_num := *+1
@@ -7818,11 +7752,22 @@ check_icon:
         bne     more
 
 finish:
+        ;; If there are any entries...
+        lda     cached_window_entry_count
+    IF_NOT_ZERO
         ;; Add padding around bbox
         sub16_8 iconbb_rect::x1, #kIconBBoxPaddingLeft
         add16_8 iconbb_rect::x2, #kIconBBoxPaddingRight
         sub16_8 iconbb_rect::y1, #kIconBBoxPaddingTop
         add16_8 iconbb_rect::y2, #kIconBBoxPaddingBottom
+
+        ;; List view?
+        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+      IF_NEG
+        ;; max.x = kListViewWidth
+        copy16  #kListViewWidth, iconbb_rect::x2
+      END_IF
+    END_IF
 
         rts
 
@@ -7830,8 +7775,11 @@ more:   lda     cached_window_entry_list,x
         sta     icon_param
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
 
+        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+    IF_POS
         ;; Pretend icon is max height
         sub16   tmp_rect::y2, #kMaxIconTotalHeight, tmp_rect::y1
+    END_IF
 
         ;; First icon (index 0) - just use its coordinates as min/max
         lda     icon_num
@@ -8210,6 +8158,8 @@ found:  txa
         tax                     ; 1-based to 0-based
         dex
         txa
+
+ep_zero_based:
         .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
         jsr     ATimes32      ; A,X = A * 32
         addax   file_record_ptr, ptr
@@ -8226,30 +8176,20 @@ found:  txa
         bit     LCBANK1
 
         ;; Below bottom?
-        scmp16  pos_col_name::ycoord, window_grafport::maprect::y2
+        scmp16  pos_col_type::ycoord, window_grafport::maprect::y2
         bpl     ret
 
-        add16_8 pos_col_icon::ycoord, #kListViewRowHeight
-        add16_8 pos_col_name::ycoord, #kListViewRowHeight
         add16_8 pos_col_type::ycoord, #kListViewRowHeight
         add16_8 pos_col_size::ycoord, #kListViewRowHeight
         add16_8 pos_col_date::ycoord, #kListViewRowHeight
 
         ;; Above top?
-        scmp16  pos_col_name::ycoord, window_grafport::maprect::y1
+        scmp16  pos_col_type::ycoord, window_grafport::maprect::y1
         bpl     in_range
 ret:    rts
 
         ;; Draw it!
 in_range:
-        MGTK_CALL MGTK::MoveTo, pos_col_icon
-        jsr     PrepareColGlyph
-        jsr     draw_text
-
-        MGTK_CALL MGTK::MoveTo, pos_col_name
-        jsr     PrepareColName
-        jsr     draw_text
-
         MGTK_CALL MGTK::MoveTo, pos_col_type
         jsr     PrepareColType
         jsr     draw_text
@@ -8266,6 +8206,7 @@ draw_text:
         MGTK_CALL MGTK::DrawText, text_buffer2
         rts
 .endproc
+DrawListViewRowZeroBased := DrawListViewRow::ep_zero_based
 
 ;;; ============================================================
 
@@ -11001,8 +10942,11 @@ finish: lda     #RenameDialogState::close
         stax    icon_ptr
 
         ;; Compute bounds of icon bitmap
+        jsr     GetSelectionViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+    IF_POS
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
         sub16_8 tmp_rect::y2, #kIconLabelHeight + kIconLabelGap, tmp_rect::y2
+    END_IF
 
         ldy     #IconEntry::record_num
         lda     (icon_ptr),y
@@ -11045,7 +10989,12 @@ finish: lda     #RenameDialogState::close
         bit     LCBANK1
         bit     LCBANK1
 
+        jsr     GetSelectionViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+    IF_POS
+        sta     view_by
         jsr     GetIconType
+        view_by := *+1
+        ldy     #SELF_MODIFIED_BYTE
         jsr     CreateIconsForWindowImpl::FindIconDetailsForIconType
 
         ;; Use new `icon_height` to offset vertically.
@@ -11056,6 +11005,8 @@ finish: lda     #RenameDialogState::close
         ldy     #IconEntry::iconbits
         copy16in CreateIconsForWindowImpl::iconbits, (icon_ptr),y
         ;; Assumes `iconentry_flags` will not change, regardless of icon.
+    END_IF
+
 end_filerecord_and_icon_update:
 
         ;; Draw the (maybe new) icon
@@ -15096,16 +15047,25 @@ done:   rts
 ;;; ============================================================
 ;;; Outputs: A = kViewBy* value for active window
 ;;; If kViewByIcon, Z=1 and N=0; otherwise Z=0 and N=1
-;;; Assert: There is an active/cached window
 
+;;; Assert: There is an active window
 .proc GetActiveWindowViewBy
         ldx     active_window_id
         lda     win_view_by_table-1,x
         rts
 .endproc
 
+;;; Assert: There is a cached window
 .proc GetCachedWindowViewBy
         ldx     cached_window_id
+        lda     win_view_by_table-1,x
+        rts
+.endproc
+
+;;; Assert: There is a selection.
+;;; NOTE: This variant works even if selection is on desktop
+.proc GetSelectionViewBy
+        ldx     selected_window_id
         lda     win_view_by_table-1,x
         rts
 .endproc

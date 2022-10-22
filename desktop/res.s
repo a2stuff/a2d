@@ -704,11 +704,12 @@ window_title_addr_table:
         .addr   winfo8title
         ASSERT_ADDRESS_TABLE_SIZE window_title_addr_table, kMaxNumWindows + 1
 
+;;; `win_view_by_table` is indexed by window id - 1; allow referencing
+;;; the desktop (window id 0), which is always icon view.
+        .byte   kViewByIcon
 win_view_by_table:
         .res    kMaxNumWindows, 0
 
-        DEFINE_POINT pos_col_icon, kListViewIconX, 0
-        DEFINE_POINT pos_col_name, kListViewNameX, 0
         DEFINE_POINT pos_col_type, 128, 0
         DEFINE_POINT pos_col_size, 166, 0
         DEFINE_POINT pos_col_date, 231, 0
@@ -1365,6 +1366,47 @@ app_mask:
         .byte   PX(%0000000),PX(%0000011),PX(%1111111),PX(%1000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%1111110),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0011000),PX(%0000000),PX(%0000000)
+
+;;; Small Icons - use for "View > by XXXX"
+;;; Same visibility rules as above.
+;;; NOTE: Keep in sync with kGlyphFile* and kGlyphFolder* in the system fonts.
+
+        DEFINE_ICON_RESOURCE sm_gen, generic_sm_icon, 2, 13, 7, generic_sm_mask
+        DEFINE_ICON_RESOURCE sm_dir, folder_sm_icon, 2, 13, 6, folder_sm_mask
+generic_sm_icon:
+        .byte   PX(%0011111),PX(%1000000)
+        .byte   PX(%0010000),PX(%1110000)
+        .byte   PX(%0010000),PX(%1111100)
+        .byte   PX(%0010000),PX(%0000100)
+        .byte   PX(%0010000),PX(%0000100)
+        .byte   PX(%0010000),PX(%0000100)
+        .byte   PX(%0010000),PX(%0000100)
+        .byte   PX(%0011111),PX(%1111100)
+generic_sm_mask:
+        .byte   PX(%0011111),PX(%1000000)
+        .byte   PX(%0011111),PX(%1110000)
+        .byte   PX(%0011111),PX(%1111100)
+        .byte   PX(%0011111),PX(%1111100)
+        .byte   PX(%0011111),PX(%1111100)
+        .byte   PX(%0011111),PX(%1111100)
+        .byte   PX(%0011111),PX(%1111100)
+        .byte   PX(%0011111),PX(%1111100)
+folder_sm_icon:
+        .byte   PX(%0111110),PX(%0000000)
+        .byte   PX(%1000001),PX(%1111110)
+        .byte   PX(%1000000),PX(%0000001)
+        .byte   PX(%1000000),PX(%0000001)
+        .byte   PX(%1000000),PX(%0000001)
+        .byte   PX(%1000000),PX(%0000001)
+        .byte   PX(%1111111),PX(%1111111)
+folder_sm_mask:
+        .byte   PX(%0111110),PX(%0000000)
+        .byte   PX(%1111111),PX(%1111110)
+        .byte   PX(%1111111),PX(%1111111)
+        .byte   PX(%1111111),PX(%1111111)
+        .byte   PX(%1111111),PX(%1111111)
+        .byte   PX(%1111111),PX(%1111111)
+        .byte   PX(%1111111),PX(%1111111)
 
 ;;; ============================================================
 

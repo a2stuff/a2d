@@ -24,7 +24,7 @@ This defines an icon instance.
                 bit 6 = highlighted
 .byte type/window_id
                 bits 0-3 = window_id
-                bit 4 = unused
+                bit 4 = small icon (for list views)
                 bit 5 = not valid drop source flag (i.e. trash)
                 bit 6 = drop target flag (trash, folder, dir)
                 bit 7 = open flag

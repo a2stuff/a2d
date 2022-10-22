@@ -408,6 +408,16 @@
 
 * Launch DeskTop. On a volume, create folders named "A1", "B1", "A", and "B". View > by Name. Verify that the order is: "A", "A1", "B", "B1".
 
+* Launch DeskTop. Open window containing icons. View > by Name. Verify that selection is supported:
+  * The icon bitmap and name can be clicked on.
+  * Drag-selecting the icon bitmap and/or name selects.
+  * Selected icons can be dragged to other windows or volume icons to initiate a move or copy.
+  * Dragging a selected icon over a non-selected folder icon in the same window causes it to highlight, and initiates a move or copy (depending on modifier keys).
+* Launch DeskTop. Open window containing icons. View > by Name. Select one or more icons. Drag them within the window but not over any other icons. Release the mouse button. Verify that the icons do not move.
+* Launch DeskTop. Open window containing icons. View > by Name. Rename an icon, picking a name that would change the ordering. Verify that the window is refreshed and the icons are correctly sorted by name.
+* Launch DeskTop. Open a window containing a folder. Open a folder. Activate the parent window and verify that the folder's icon is dimmed. View > by Name. Verify that the folder's icon is still dimmed. View > as Icons. Verify that the folder's icon is still dimmed.
+* Launch DeskTop. Open a window containing a folder. View > by Name. Verify that the folder's icon is dimmed. View > as Icon. Verify that the folder's icon is still dimmed.
+
 ## Shortcuts
 
 * Set up multiple volumes (e.g. V1, V2, V3). Launch DeskTop. Use Shortcuts > Add a Shortcut... to add an shortcut on V2. Run Shortcuts > Edit a Shortcut... and select the added shortcut to edit it, which should init the dialog showing V2. Click Change Drive. Verify that the picker now shows V3.

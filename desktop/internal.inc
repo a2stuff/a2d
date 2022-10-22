@@ -71,9 +71,12 @@ kWindowHeaderHeight     = 14
 ;;; --------------------------------------------------
 ;;; List views
 
-kFirstRowBaseline       = 16
+kListViewInitialTop     = kWindowHeaderHeight + kIconBBoxPaddingTop
+kListViewInitialLeft    = 4
+
+kListViewFirstBaseline  = kListViewInitialTop - 2
 kListViewWidth          = 410
-kListViewRowHeight      = kSystemFontHeight + 1
+kListViewRowHeight      = kListItemHeight
 
 ;;; --------------------------------------------------
 ;;; Icon views

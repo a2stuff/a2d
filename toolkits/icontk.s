@@ -138,6 +138,9 @@ result: .word   0
 .endparams
 settextbg_params    := textwidth_params::result + 1  ; re-used
 
+settextbg_white:
+        .byte   MGTK::textbg_white
+
 .params drawtext_params
 textptr:        .addr   text_buffer
 textlen:        .byte   0
@@ -1029,6 +1032,15 @@ includes_trash:
 
         ;; Drag within same window (or desktop)
 same_window:
+
+        ;; Small icons have a fixed layout
+        ldy     highlight_list
+        copylohi icon_ptrs_low,y, icon_ptrs_high,y, $06
+        ldy     #IconEntry::win_flags
+        lda     ($06),y
+        and     #kIconEntryFlagsSmall
+        bne     L9C63           ; don't move
+
         ldx     highlight_count
 :       dex
         bmi     :+
@@ -1756,6 +1768,8 @@ no_clip_vol_icons_flag:
         MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
 
+        MGTK_CALL MGTK::SetTextBG, settextbg_white
+
         return  #0
 
 .proc Shade
@@ -1805,15 +1819,36 @@ kIconLabelGapV = 2
         dex
         bpl     :-
 
-        ;; ----------------------------------------
-        ;; Regular icon
-
         ;; Bitmap bottom/right
         ldy     #IconResource::maprect + MGTK::Rect::x2
         add16in bitmap_rect::x1, (bitmap_ptr),y, bitmap_rect::x2
-        .assert (MGTK::Rect::y2 - MGTK::Rect::x2) = 2, error, "y2 must be 2 more than x2"
         iny
         add16in bitmap_rect::y1, (bitmap_ptr),y, bitmap_rect::y2
+
+        ldy     #IconEntry::win_flags
+        lda     (entry_ptr),y
+        and     #kIconEntryFlagsSmall
+    IF_NOT_ZERO
+        ;; ----------------------------------------
+        ;; Small icon
+
+        ;; Label top
+        copy16  bitmap_rect::y1, label_rect::y1
+
+        ;; Label bottom
+        add16_8 label_rect::y1, #kSystemFontHeight+1, label_rect::y2
+
+        ;; Left edge of label
+        add16_8 bitmap_rect::x2, #kListViewIconGap-2, label_rect::x1
+
+        ;; Label right
+        add16   label_rect::x1, textwidth_params::result, label_rect::x2
+
+        ;; Force bitmap bottom to same height
+        copy16  label_rect::y2, bitmap_rect::y2
+    ELSE
+        ;; ----------------------------------------
+        ;; Regular icon
 
         ;; Label top
         add16_8 bitmap_rect::y2, #kIconLabelGapV, label_rect::y1
@@ -1836,6 +1871,8 @@ kIconLabelGapV = 2
 
         ;; Label right
         add16   label_rect::x1, textwidth_params::result, label_rect::x2
+
+    END_IF
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
@@ -1886,6 +1923,47 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
         jsr     CalcIconBoundingRect
 
+        ldy     #IconEntry::win_flags
+        lda     (entry_ptr),y
+        and     #kIconEntryFlagsSmall
+    IF_NOT_ZERO
+        ;; ----------------------------------------
+        ;; Small icon
+
+        ;;      v0/v1/v2/v3/v4             v5
+        ;;        +-----------------------+
+        ;;        |                       |
+        ;;        |                       |
+        ;;        +-----------------------+
+        ;;      v7                         v6
+
+        ;; Start off making all (except v6) the same
+        ldy     #.sizeof(MGTK::Point)-1
+:       lda     bitmap_rect::topleft,y
+        sta     poly::v0,y
+        sta     poly::v1,y
+        sta     poly::v2,y
+        sta     poly::v3,y
+        sta     poly::v4,y
+        sta     poly::v5,y
+        sta     poly::v7,y
+        dey
+        bpl     :-
+
+        ;; Then tweak remaining vertices on right/bottom
+        ldax    label_rect::x2
+        stax    poly::v5::xcoord
+        stax    poly::v6::xcoord
+
+        ldax    bitmap_rect::y2
+        stax    poly::v6::ycoord
+        stax    poly::v7::ycoord
+
+    ELSE
+
+        ;; ----------------------------------------
+        ;; Normal icon
+
         ;;              v0          v1
         ;;               +----------+
         ;;               |          |
@@ -1926,6 +2004,8 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         copy16  poly::v4::ycoord, poly::v5::ycoord
 
         ;; ----------------------------------------
+
+    END_IF
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
