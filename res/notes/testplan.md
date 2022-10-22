@@ -408,6 +408,8 @@
 * Launch DeskTop. Open a volume window. Select a file icon. Click in an empty area within the window. Verify that the volume icon is selected.
 * Launch DeskTop. Apple > Control Panels. Close the window by clicking on the close box. Verify nothing mis-paints.
 
+* Launch DeskTop. On a volume, create folders named "A1", "B1", "A", and "B". View > by Name. Verify that the order is: "A", "A1", "B", "B1".
+
 ## Shortcuts
 
 * Set up multiple volumes (e.g. V1, V2, V3). Launch DeskTop. Use Shortcuts > Add a Shortcut... to add an shortcut on V2. Run Shortcuts > Edit a Shortcut... and select the added shortcut to edit it, which should init the dialog showing V2. Click Change Drive. Verify that the picker now shows V3.
