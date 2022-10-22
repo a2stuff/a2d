@@ -418,6 +418,8 @@
 * Launch DeskTop. Open a window containing a folder. Open a folder. Activate the parent window and verify that the folder's icon is dimmed. View > by Name. Verify that the folder's icon is still dimmed. View > as Icons. Verify that the folder's icon is still dimmed.
 * Launch DeskTop. Open a window containing a folder. View > by Name. Verify that the folder's icon is dimmed. View > as Icon. Verify that the folder's icon is still dimmed.
 
+* Launch DeskTop. Select a volume icon. Open it. Verify that the open animation starts at the icon location. (This will be easier to observe in emulators with acceleration disabled.)
+
 ## Shortcuts
 
 * Set up multiple volumes (e.g. V1, V2, V3). Launch DeskTop. Use Shortcuts > Add a Shortcut... to add an shortcut on V2. Run Shortcuts > Edit a Shortcut... and select the added shortcut to edit it, which should init the dialog showing V2. Click Change Drive. Verify that the picker now shows V3.

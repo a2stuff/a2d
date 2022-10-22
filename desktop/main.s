@@ -6983,6 +6983,7 @@ has_parent:
         ;; Update used/free table
 
         lda     icon_param      ; set to $FF if opening via path
+        pha
         bmi     volume
 
         jsr     IconEntryLookup
@@ -7024,8 +7025,8 @@ volume: ldx     cached_window_id
         ;; --------------------------------------------------
         ;; Animate the window being opened (if needed)
 
-        lda     icon_param
-        bmi     :+              ; TODO: Find some plausible source icon
+        pla                    ; A = source icon ($FF if from path)
+        bmi     :+             ; TODO: Find some plausible source icon
         ldx     cached_window_id
         jsr     AnimateWindowOpen
 :
