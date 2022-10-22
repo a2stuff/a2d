@@ -2467,6 +2467,7 @@ done:   rts
 
         prev_cached_window_id := *+1
         lda     #SELF_MODIFIED_BYTE
+        sta     cached_window_id
         jsr     LoadWindowEntryTable ; restore previous state
 
         pla                          ; A = `FindIconByName` result
