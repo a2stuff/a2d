@@ -6950,27 +6950,13 @@ has_parent:
     END_IF
 
         ;; --------------------------------------------------
-        ;; Scrollbars
+        ;; Scrollbars - start off inactive but ready to go
 
+        lda     #MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
         ldy     #MGTK::Winfo::hscroll
-        lda     (winfo_ptr),y
-        and     #AS_BYTE(~MGTK::Scroll::option_active)
         sta     (winfo_ptr),y
-        iny                     ; vscroll
-        lda     (winfo_ptr),y
-        and     #AS_BYTE(~MGTK::Scroll::option_active)
-        sta     (winfo_ptr),y
-
-        lda     #0
-        ldy     #MGTK::Winfo::hthumbpos
-        sta     (winfo_ptr),y
-        ldy     #MGTK::Winfo::vthumbpos
-        sta     (winfo_ptr),y
-
-        lda     #kScrollThumbMax
-        ldy     #MGTK::Winfo::hthumbmax
-        sta     (winfo_ptr),y
-        ldy     #MGTK::Winfo::vthumbmax
+        .assert MGTK::Winfo::vscroll = MGTK::Winfo::hscroll + 1, error, "enum mismatch"
+        iny
         sta     (winfo_ptr),y
 
         ;; --------------------------------------------------

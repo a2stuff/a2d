@@ -733,9 +733,9 @@ options:        .byte   MGTK::Option::go_away_box | MGTK::Option::grow_box
 title:          .addr   buflabel
 hscroll:        .byte   MGTK::Scroll::option_normal
 vscroll:        .byte   MGTK::Scroll::option_normal
-hthumbmax:      .byte   3
+hthumbmax:      .byte   kScrollThumbMax
 hthumbpos:      .byte   0
-vthumbmax:      .byte   3
+vthumbmax:      .byte   kScrollThumbMax
 vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
