@@ -2,7 +2,7 @@
 
 DeskTop writes out this file on exit, and reads it back in on load.
 
-The file length is always 586 bytes, although the end of the file
+The file length is always 594 bytes, although the end of the file
 may be padding/garbage.
 
 ## Header
@@ -14,6 +14,8 @@ Header is one byte.
    This is compared against `kDeskTopFileVersion` on load. If
    different, the file is ignored. (This is used to handle version
    skew.)
+
+   The current version documented here is $81.
 
 ## Windows
 
@@ -28,7 +30,17 @@ Each window entry has this structure:
    This is the ProDOS path of the window. The path length is always
    greater than zero.
 
-+065: Bounds (8 bytes)
++065: View Type (1 byte)
+
+   This defines the view style of the window:
+
+   As Icon     = $00
+   By Name     = $81
+   By Date     = $82
+   By Size     = $83
+   By Type     = $84
+
++066: Bounds (8 bytes)
 
    This is a rect (4 words) defining the window bounds.
 

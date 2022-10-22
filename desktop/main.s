@@ -600,6 +600,10 @@ dispatch_click:
 
         ;; Update menu items
         jsr     UncheckViewMenuItem
+        FALL_THROUGH_TO CheckViewMenuItemForActiveWindow
+.endproc
+
+.proc CheckViewMenuItemForActiveWindow
         jsr     GetActiveWindowViewBy
         and     #kViewByMenuMask
         sta     checkitem_params::menu_item
@@ -5663,19 +5667,17 @@ no_win:
         ;; Update View and other menus
         inc     num_open_windows
         ldx     cached_window_id
-        copy    #0, win_view_by_table-1,x
+        ;; TODO: Will need update here
+        copy    #kViewByIcon, win_view_by_table-1,x
 
         lda     num_open_windows ; Was there already a window open?
         cmp     #2
-        bcs     :+              ; yes, no need to enable file menu
+    IF_LT
         jsr     EnableMenuItemsRequiringWindow
-        jmp     update_view
-
-:       jsr     UncheckViewMenuItem
-
-update_view:
-        copy    #aux::kMenuItemIdViewByIcon, checkitem_params::menu_item
-        jsr     CheckViewMenuItem
+    ELSE
+        jsr     UncheckViewMenuItem
+        ;; Correct item will be checked below after window opens
+    END_IF
 
         ;; This ensures `ptr` points at IconEntry (real or virtual)
         jsr     UpdateIcon
@@ -5688,6 +5690,8 @@ update_view:
         jsr     WindowLookup   ; A,X points at Winfo
         stax    @addr
         MGTK_CALL MGTK::OpenWindow, 0, @addr
+
+        jsr     CheckViewMenuItemForActiveWindow
 
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
@@ -7000,12 +7004,21 @@ volume: ldx     cached_window_id
         ;; --------------------------------------------------
         ;; Create window and icons
 
-        jsr     InitCachedWindowEntries
-        ;; NOTE: Could call `SortRecords` here with A=kViewBy*
+        bit     copy_new_window_bounds_flag
+    IF_NS
+        ldx     cached_window_id
+        copy    new_window_view_by, win_view_by_table-1,x
+    END_IF
 
+        jsr     InitCachedWindowEntries
+        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+    IF_NEG
+        jsr     SortRecords
+    END_IF
         jsr     CreateIconsForWindow
         jsr     StoreWindowEntryTable
         jsr     AddIconsForCachedWindow
+
         jsr     ComputeInitialWindowSize
 
         ;; --------------------------------------------------
@@ -15204,15 +15217,24 @@ exit:   rts
         ;; Find name
         ldy     #MGTK::Winfo::window_id
         lda     (winfo_ptr),y
+        pha                     ; A = window_id
         jsr     GetWindowPath
         stax    path_ptr
 
-        ;; Copy name in
+        ;; Copy path in
+        .assert DeskTopFileItem::window_path = 0, error, "struct layout"
         ldy     #::kPathBufferSize-1
 :       lda     (path_ptr),y
         sta     (data_ptr),y
         dey
         bpl     :-
+
+        ;; Copy view_by in
+        pla                     ; A = window_id
+        tax
+        lda     win_view_by_table-1,x
+        ldy     #DeskTopFileItem::view_by
+        sta     (data_ptr),y
 
         ;; Assemble rect
         ;; Compute width/height from port's maprect

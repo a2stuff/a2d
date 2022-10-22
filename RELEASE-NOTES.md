@@ -23,6 +23,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Unhighlight more correctly when dragging icons over folders.
 * Show keyboard shortcut for File > Delete in menu.
 * Support selection in list views. ([#28](https://github.com/a2stuff/a2d/issues/28))
+* View style for windows is saved/restored across restarts.
 
 ### Disk Copy
 

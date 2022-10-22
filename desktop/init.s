@@ -1221,6 +1221,11 @@ loop:   ldy     #0
         dey
         bpl     :-
 
+        ;; Copy view type to `new_window_view_by`
+        ldy     #DeskTopFileItem::view_by
+        lda     (data_ptr),y
+        sta     new_window_view_by
+
         ;; Copy bounds to `new_window_bounds`
         ldy     #DeskTopFileItem::rect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
