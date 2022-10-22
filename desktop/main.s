@@ -3403,7 +3403,7 @@ loop:   lda     (ptr2),y
 
         ;; End of string 2?
         len2 := *+1
-:       cpy     SELF_MODIFIED_BYTE
+:       cpy     #SELF_MODIFIED_BYTE
         beq     gt              ; 1>2
         iny
         bne     loop            ; always
