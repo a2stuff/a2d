@@ -1778,7 +1778,7 @@ loop:   lda     slot
         add16   memory, dib_buffer::Device_Size_Lo, memory
 
 next:   dec     slot
-        bpl     loop
+        bne     loop
         rts
 
 sig_offsets:
