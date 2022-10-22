@@ -533,6 +533,8 @@ The following tests all require:
   * Launch DeskTop. Verify that the Ram5 volume is shown with a RAMDisk icon.
   * Configure DeskTop to copy to RAMCard on startup, and restart. Verify it is copied to /RAM5.
 
+* On a IIgs, go to Apple > This Apple. Verify the memory count is not "000,000".
+
 ### Apple IIc+
 
 * Run DeskTop on a IIc+ from a 3.5" floppy on internal drive. Verify that the disk doesn't spin constantly.
