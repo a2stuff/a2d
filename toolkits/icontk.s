@@ -1990,9 +1990,10 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         bpl     :-
 
         ;; Loop over all icons
-        ldx     num_icons
-loop:   dex
-        bmi     done
+        ldx     #AS_BYTE(-1)
+loop:   inx
+        cpx     num_icons
+        beq     done
         txa
         pha
 
