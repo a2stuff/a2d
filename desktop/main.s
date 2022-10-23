@@ -6941,18 +6941,6 @@ has_parent:
         dex
         bpl     :-
 
-        ;; Assign saved left/top?
-        bit     copy_new_window_bounds_flag
-    IF_MINUS
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     new_window_bounds,x
-        sta     (winfo_ptr),y
-        dey
-        dex
-        bpl     :-
-    END_IF
-
         ;; --------------------------------------------------
         ;; Scrollbars - start off inactive but ready to go
 
@@ -7006,8 +6994,27 @@ volume: ldx     cached_window_id
 
         bit     copy_new_window_bounds_flag
     IF_NS
+        ;; kViewByXXX
         ldx     cached_window_id
         copy    new_window_view_by, win_view_by_table-1,x
+
+        ;; viewloc
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     new_window_viewloc,x
+        sta     (winfo_ptr),y
+        dey
+        dex
+        bpl     :-
+
+        ;; maprect
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     new_window_maprect,x
+        sta     (winfo_ptr),y
+        dey
+        dex
+        bpl     :-
     END_IF
 
         jsr     InitCachedWindowEntries
@@ -7019,7 +7026,10 @@ volume: ldx     cached_window_id
         jsr     StoreWindowEntryTable
         jsr     AddIconsForCachedWindow
 
+        bit     copy_new_window_bounds_flag
+    IF_NC
         jsr     ComputeInitialWindowSize
+    END_IF
 
         ;; --------------------------------------------------
         ;; Animate the window being opened (if needed)
@@ -7391,11 +7401,6 @@ use_maxw:
         ldax    #kMaxWindowWidth
 
 assign_width:
-        bit     copy_new_window_bounds_flag
-    IF_MINUS
-        ldax    new_window_bounds::x2
-    END_IF
-
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
         sta     (winfo_ptr),y
         txa
@@ -7424,11 +7429,6 @@ use_maxh:
         ldax    #kMaxWindowHeight
 
 assign_height:
-        bit     copy_new_window_bounds_flag
-    IF_MINUS
-        ldax    new_window_bounds::y2
-    END_IF
-
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::y2
         sta     (winfo_ptr),y
         txa
@@ -15236,31 +15236,33 @@ exit:   rts
         ldy     #DeskTopFileItem::view_by
         sta     (data_ptr),y
 
-        ;; Assemble rect
-        ;; Compute width/height from port's maprect
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
-        ldx     #.sizeof(MGTK::Rect)-1
-:       lda     (winfo_ptr),y
-        sta     bounds,x
-        dey
-        dex
-        bpl     :-
-        sub16   bounds + MGTK::Rect::x2, bounds + MGTK::Rect::x1, bounds + MGTK::Rect::x2
-        sub16   bounds + MGTK::Rect::y2, bounds + MGTK::Rect::y1, bounds + MGTK::Rect::y2
-
-        ;; Now top/left from port's viewloc
+        ;; Location - copy to `new_window_viewloc` as a temp location, then into data
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     (winfo_ptr),y
-        sta     bounds,x
+        sta     new_window_viewloc,x
+        dey
+        dex
+        bpl     :-
+        ldy     #DeskTopFileItem::viewloc+.sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     new_window_viewloc,x
+        sta     (data_ptr),y
         dey
         dex
         bpl     :-
 
-        ;; Copy bounds in
-        ldy     #DeskTopFileItem::rect+.sizeof(MGTK::Rect)-1
+        ;; Bounds - copy to `new_window_maprect` as a temp location, then into data
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     bounds,x
+:       lda     (winfo_ptr),y
+        sta     new_window_maprect,x
+        dey
+        dex
+        bpl     :-
+        ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     new_window_maprect,x
         sta     (data_ptr),y
         dey
         dex

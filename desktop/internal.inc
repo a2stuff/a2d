@@ -203,12 +203,13 @@ kDeviceTypeCDROM        = 5
         aux_type                .word ; 30 $1E
 .endstruct
 
-kDeskTopFileVersion  = $81  ; Increment when format changes
+kDeskTopFileVersion  = $82  ; Increment when format changes
 
 .struct DeskTopFileItem
         window_path     .res ::kPathBufferSize
         view_by         .byte
-        rect            .tag MGTK::Rect
+        viewloc         .tag MGTK::Point
+        maprect         .tag MGTK::Rect
 .endstruct
 
 ;;; ============================================================

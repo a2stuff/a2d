@@ -1226,11 +1226,20 @@ loop:   ldy     #0
         lda     (data_ptr),y
         sta     new_window_view_by
 
-        ;; Copy bounds to `new_window_bounds`
-        ldy     #DeskTopFileItem::rect+.sizeof(MGTK::Rect)-1
+        ;; Copy loc to `new_window_viewloc`
+        ldy     #DeskTopFileItem::viewloc+.sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (data_ptr),y
+        sta     new_window_viewloc,x
+        dey
+        dex
+        bpl     :-
+
+        ;; Copy bounds to `new_window_maprect`
+        ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
 :       lda     (data_ptr),y
-        sta     new_window_bounds,x
+        sta     new_window_maprect,x
         dey
         dex
         bpl     :-

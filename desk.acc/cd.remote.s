@@ -764,7 +764,6 @@ NoFurtherBGAction:
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
         jsr     CopyEventDataToMain
 
-        ;; TODO: Handle mouse
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
     IF_EQ

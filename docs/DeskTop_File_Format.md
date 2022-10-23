@@ -2,7 +2,7 @@
 
 DeskTop writes out this file on exit, and reads it back in on load.
 
-The file length is always 594 bytes, although the end of the file
+The file length is always 626 bytes, although the end of the file
 may be padding/garbage.
 
 ## Header
@@ -15,7 +15,7 @@ Header is one byte.
    different, the file is ignored. (This is used to handle version
    skew.)
 
-   The current version documented here is $81.
+   The current version documented here is $82.
 
 ## Windows
 
@@ -40,9 +40,15 @@ Each window entry has this structure:
    By Size     = $83
    By Type     = $84
 
-+066: Bounds (8 bytes)
++066: Position (4 bytes)
 
-   This is a rect (4 words) defining the window bounds.
+   This is a point (2 words) defining the window position. This
+   corresponds to the Winfo::GrafPort::viewloc member.
+
++070: Viewport (8 bytes)
+
+   This is a rect (4 words) defining the window viewport. This
+   corresponds to the Winfo::GrafPort::maprect member.
 
 ## Sentinel
 

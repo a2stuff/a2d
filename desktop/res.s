@@ -503,7 +503,8 @@ run_list_entries:
 ;;; ============================================================
 
         ;; Used when restoring windows
-        DEFINE_RECT new_window_bounds, 0,0,0,0
+        DEFINE_POINT new_window_viewloc, 0,0
+        DEFINE_RECT new_window_maprect, 0,0,0,0
 new_window_view_by:     .byte   0
 
         ;; Total number of icons
