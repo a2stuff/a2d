@@ -420,6 +420,7 @@
 * Launch DeskTop. Open a window containing a folder. View > by Name. Verify that the folder's icon is dimmed. View > as Icon. Verify that the folder's icon is still dimmed.
 
 * Launch DeskTop. Select a volume icon. Open it. Verify that the open animation starts at the icon location. (This will be easier to observe in emulators with acceleration disabled.)
+* Launch DeskTop, ensuring no windows are open. File > Select All. Verify that the volume icons are selected.
 
 ## Shortcuts
 

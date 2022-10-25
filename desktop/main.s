@@ -3454,7 +3454,7 @@ ret:    rts
         lda     selected_icon_count
         beq     :+
         jsr     ClearSelection
-
+:
         jsr     LoadActiveWindowEntryTable
         lda     cached_window_entry_count
         jeq     finish          ; nothing to select!
