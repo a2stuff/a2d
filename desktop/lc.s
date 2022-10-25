@@ -164,6 +164,7 @@ set_length:
 set_copy_ptr:
         copy16  window_entry_list_table,x, ptr
         ldy     cached_window_entry_count
+        beq     done
         dey
         bit     flag
         bmi     copy_from
