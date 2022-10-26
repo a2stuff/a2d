@@ -616,7 +616,7 @@ dispatch_click:
 ;;; Selection should be cleared before calling
 
 .proc SelectIconForWindow
-        ptr := $06
+        icon_ptr := $06
 
         ;; Select window's corresponding volume icon.
         ;; (Doesn't work for folder icons as only the active
@@ -626,24 +626,17 @@ dispatch_click:
         bmi     done            ; $FF = dir icon freed
 
         sta     icon_param
-        lda     icon_param
         jsr     IconEntryLookup
-        stax    ptr
+        stax    icon_ptr
 
-        ldy     #IconEntry::state ; set state to dimmed
-        lda     (ptr),y
-        beq     done
-        ora     #kIconEntryFlagsDimmed
-        sta     (ptr),y
-
-        iny                     ; IconEntry::win_flags
-        lda     (ptr),y
+        ldy     #IconEntry::win_flags
+        lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
         beq     :+
         cmp     active_window_id ; This should never be true
         bne     done
-
-:       sta     selected_window_id
+:
+        sta     selected_window_id
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
         ITK_CALL IconTK::HighlightIcon, icon_param
@@ -2331,7 +2324,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
         beq     ret             ; not found
 
         pha
-        jsr     SelectFileIcon
+        jsr     HighlightAndSelectIcon
         pla
         jsr     ScrollIconIntoView
 
@@ -3457,7 +3450,7 @@ ret:    rts
 :
         jsr     LoadActiveWindowEntryTable
         lda     cached_window_entry_count
-        jeq     finish          ; nothing to select!
+        beq     finish          ; nothing to select!
 
         ldx     cached_window_entry_count
         dex
@@ -3472,33 +3465,35 @@ ret:    rts
         beq     :+
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         sta     err
-
-:       lda     selected_icon_count
-        sta     index
-        dec     index
-        index := *+1
-loop:   ldx     #SELF_MODIFIED_BYTE
+:
+        ;; --------------------------------------------------
+        ;; Mark all icons as highlighted
+        ldx     #0
+:       txa
+        pha
         copy    selected_icon_list,x, icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
+        pla
+        tax
+        inx
+        cpx     selected_icon_count
+        bne     :-
 
+        ;; --------------------------------------------------
+        ;; Repaint the icons
         err := *+1
         lda     #SELF_MODIFIED_BYTE
     IF_ZERO                     ; Skip drawing if obscured
-        ;; TODO: Find common pattern for redrawing multiple icons
-        lda     selected_window_id
+        lda     cached_window_id
         beq     :+
-        lda     icon_param
-        jsr     IconScreenToWindow
-:       ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
-        lda     selected_window_id
+        jsr     CachedIconsScreenToWindow
+:
+        ITK_CALL IconTK::DrawAll, cached_window_id ; CHECKED
+        lda     cached_window_id
         beq     :+
-        lda     icon_param
-        jsr     IconWindowToScreen
+        jsr     CachedIconsWindowToScreen
 :
     END_IF
-
-        dec     index
-        bpl     loop
 
 finish: rts
 .endproc
@@ -4542,7 +4537,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         ;; Modifier down - remove from selection
         icon_num := *+1
         lda     #SELF_MODIFIED_BYTE
-        jmp     DeselectFileIcon ; deselect, nothing further
+        jmp     UnhighlightAndDeselectIcon ; deselect, nothing further
 
         ;; Double click or drag?
 :       jmp     check_double_click
@@ -4559,12 +4554,12 @@ not_selected:
         beq     :+               ; if so, retain selection
         jsr     ClearSelection
 :       lda     icon_num
-        jmp     SelectFileIcon ; select, nothing further
+        jmp     HighlightAndSelectIcon ; select, nothing further
 
 replace_selection:
         jsr     ClearSelection
         lda     icon_num
-        jsr     SelectFileIcon
+        jsr     HighlightAndSelectIcon
         FALL_THROUGH_TO check_double_click
 
         ;; --------------------------------------------------
@@ -4646,8 +4641,7 @@ same_or_desktop:
         ;; Adjust grafport for header.
         jsr     OffsetWindowGrafportAndSet
 
-        ldx     selected_icon_count
-        dex
+        ldx     #0
 :       txa
         pha
         lda     selected_icon_list,x
@@ -4655,8 +4649,9 @@ same_or_desktop:
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag)
         pla
         tax
-        dex
-        bpl     :-
+        inx
+        cpx     selected_icon_count
+        bne     :-
 
         jsr     CachedIconsWindowToScreen
         jsr     ScrollUpdate
@@ -4686,17 +4681,18 @@ failure:
 ;;; Input: A = icon number
 ;;; Assert: Icon is in active window.
 
-.proc SelectFileIcon
+.proc HighlightAndSelectIcon
         sta     icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
+        lda     icon_param
+        jsr     DrawIcon
 
         ldx     selected_icon_count
         copy    icon_param, selected_icon_list,x
         inc     selected_icon_count
         copy    active_window_id, selected_window_id
 
-        lda     icon_param
-        jmp     DrawIcon
+        rts
 .endproc
 
 ;;; ============================================================
@@ -4704,15 +4700,14 @@ failure:
 ;;; Input: A = icon number
 ;;; Assert: Must be in selection list and active window.
 
-.proc DeselectFileIcon
+.proc UnhighlightAndDeselectIcon
         sta     icon_param
         ITK_CALL IconTK::UnhighlightIcon, icon_param
+        lda     icon_param
+        jsr     DrawIcon
 
         lda     icon_param
-        jsr     RemoveFromSelectionList
-
-        lda     icon_param
-        jmp     DrawIcon
+        jmp     RemoveFromSelectionList
 .endproc
 
 ;;; ============================================================
@@ -5167,10 +5162,9 @@ last_pos:
         beq     :+              ; desktop, can draw/select
         cmp     active_window_id
         bne     finish          ; not top window, skip draw/select
-
+:
         ;; Set selection and redraw
-
-:       sta     selected_window_id
+        sta     selected_window_id
         copy    #1, selected_icon_count
         copy    icon, selected_icon_list
         ITK_CALL IconTK::HighlightIcon, icon_param
@@ -5456,7 +5450,8 @@ DisableSelectorMenuItems := ToggleSelectorMenuItems::disable
         bpl     :+
 
         ;; Modifier down - remove from selection
-        jmp     DeselectVolIcon ; deselect, nothing further
+        lda     findicon_params::which_icon
+        jmp     UnhighlightAndDeselectIcon ; deselect, nothing further
 
         ;; Double click or drag?
 :       jmp     check_double_click
@@ -5471,12 +5466,14 @@ not_selected:
         lda     selected_window_id ; on desktop?
         beq     :+                 ; if so, retain selection
         jsr     ClearSelection
-:       jmp     SelectVolIcon      ; select, nothing further
+:       lda     findicon_params::which_icon
+        jmp     HighlightAndSelectIcon ; select, nothing further
 
         ;; Replace selection with clicked icon
 replace_selection:
         jsr     ClearSelection
-        jsr     SelectVolIcon
+        lda     findicon_params::which_icon
+        jsr     HighlightAndSelectIcon
         FALL_THROUGH_TO check_double_click
 
         ;; --------------------------------------------------
@@ -5537,36 +5534,20 @@ same_or_desktop:
         cmp     #2              ; TODO: What is this case???
         bne     :+
         rts
-
+:
         ;; Icons moved on desktop - update and redraw
-:       ldx     selected_icon_count
-        dex
+        ldx     #0
 :       txa
         pha
         copy    selected_icon_list,x, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
         pla
         tax
-        dex
-        bpl     :-
+        inx
+        cpx     selected_icon_count
+        bne     :-
 
 ret:    rts
-
-.proc SelectVolIcon
-        ITK_CALL IconTK::HighlightIcon, findicon_params::which_icon
-        ITK_CALL IconTK::DrawIcon, findicon_params::which_icon ; CHECKED (desktop)
-        ldx     selected_icon_count
-        copy    findicon_params::which_icon, selected_icon_list,x
-        inc     selected_icon_count
-        rts
-.endproc
-
-.proc DeselectVolIcon
-        ITK_CALL IconTK::UnhighlightIcon, findicon_params::which_icon
-        ITK_CALL IconTK::DrawIcon, findicon_params::which_icon ; CHECKED (desktop)
-        lda     findicon_params::which_icon
-        jmp     RemoveFromSelectionList
-.endproc
 
 .endproc
 
@@ -5949,52 +5930,59 @@ header_and_offset_flag:
         lda     selected_icon_count
         bne     :+
         rts
-
-:       lda     #0
-        sta     index
-        sta     err
-        lda     selected_window_id
-        beq     loop
-
-        cmp     active_window_id ; in the active window?
-        beq     use_win_port
-
-        ;; Selection is in a non-active window
-        ;; TODO: Is this still possible?
-        jsr     PrepareNullGrafPort
-        jmp     loop
-
-        ;; Selection is in the active window
-use_win_port:
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        sta     err
-
-        index := *+1
-loop:   lda     #SELF_MODIFIED_BYTE
-        cmp     selected_icon_count
-        beq     finish
-        tax
+:
+        ;; --------------------------------------------------
+        ;; Mark the icons as not highlighted
+        ldx     #0
+:       txa
+        pha
         copy    selected_icon_list,x, icon_param
         ITK_CALL IconTK::UnhighlightIcon, icon_param
+        pla
+        tax
+        inx
+        cpx     selected_icon_count
+        bne     :-
 
-        err := *+1
-        lda     #SELF_MODIFIED_BYTE
-    IF_ZERO                     ; Skip drawing if obscured
-        ;; TODO: Find common pattern for redrawing multiple icons
+        ;; --------------------------------------------------
+        ;; Repaint the icons
         lda     selected_window_id
-        beq     :+
-        lda     icon_param
+    IF_ZERO
+        ;; Desktop
+        ldx     #0
+:       txa
+        pha
+        copy    selected_icon_list,x, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
+        pla
+        tax
+        inx
+        cpx     selected_icon_count
+        bne     :-
+    ELSE
+        ;; Windowed - use a clipped port for the window
+        cmp     active_window_id ; in the active window?
+        bne     skip             ; TODO: This should not be possible
+
+        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
+        bne     skip             ; obscured
+
+        ldx     #0
+:       txa
+        pha
+        copy    selected_icon_list,x, icon_param
+        pha                     ; A = icon
         jsr     IconScreenToWindow
-:       ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
-        lda     selected_window_id
-        beq     :+
-        lda     icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
+        pla                     ; A = icon
         jsr     IconWindowToScreen
-:
+        pla
+        tax
+        inx
+        cpx     selected_icon_count
+        bne     :-
+skip:
     END_IF
-
-        inc     index
-        jmp     loop
 
         ;; --------------------------------------------------
         ;; Clear selection list
@@ -6003,7 +5991,6 @@ finish: lda     #0
         sta     selected_window_id
         rts
 .endproc
-
 
 ;;; ============================================================
 
@@ -9498,6 +9485,7 @@ start:  lda     icon_param
         lda     icon_param
         jsr     IconEntryLookup
         stax    ptr
+
         ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #AS_BYTE(~kIconEntryFlagsDimmed)

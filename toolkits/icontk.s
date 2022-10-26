@@ -385,11 +385,7 @@ done:   rts
 
         ;; Move it to the head of the highlight list
         ldx     #1              ; new position
-        jsr     ChangeHighlightIndex
-
-        lda     icon_id
-        ldx     #1              ; new position
-        jmp     ChangeIconIndex
+        jmp     ChangeHighlightIndex
 .endproc
 
 ;;; ============================================================
