@@ -383,9 +383,7 @@ done:   rts
         sta     highlight_list,x
         inc     highlight_count
 
-        ;; Move it to the head of the highlight list
-        ldx     #1              ; new position
-        jmp     ChangeHighlightIndex
+        rts
 .endproc
 
 ;;; ============================================================
@@ -433,18 +431,27 @@ done:   rts
 .proc RemoveIconCommon
         ptr := $08
 
-        ;; Move it to the end of `icon_list`
+        ;; Dig out id
         ldy     #IconEntry::id
         lda     (ptr),y         ; icon num
         sta     icon_id
-        ldx     num_icons       ; new position
-        jsr     ChangeIconIndex
+
+        ;; Find index
+        ldx     #0
+:       cmp     icon_list,x
+        beq     :+
+        inx
+        bne     :-              ; always
+
+        ;; Shift items down
+:       lda     icon_list+1,x
+        sta     icon_list,x
+        inx
+        cpx     num_icons
+        bne     :-
 
         ;; Remove it
         dec     num_icons
-        lda     #0
-        ldx     num_icons
-        sta     icon_list,x
 
         ;; Mark it as free
         ldy     #IconEntry::state
@@ -2109,66 +2116,15 @@ rect    := mapinfo + MGTK::MapInfo::maprect
 .endproc
 
 ;;; ============================================================
-;;; A = icon number to move
-;;; X = position in highlight list
-
-.proc ChangeIconIndex
-        stx     new_pos
-        sta     icon_num
-
-        ;; Find position of icon in icon table
+;;; Remove icon from highlight list. Does not update icon's state.
+;;; Inputs: A=icon id
+.proc RemoveFromHighlightList
+        ;; Find index
         ldx     #0
-:       lda     icon_list,x
-        cmp     icon_num
+:       cmp     highlight_list,x
         beq     :+
         inx
-        cpx     num_icons
-        bne     :-
-        rts
-
-        ;; Shift items down
-:       lda     icon_list+1,x
-        sta     icon_list,x
-        inx
-        cpx     num_icons
-        bne     :-
-
-        ;; Shift items up
-        ldx     num_icons
-:       cpx     new_pos
-        beq     place
-        lda     icon_list-2,x
-        sta     icon_list-1,x
-        dex
-        jmp     :-
-
-        ;; Place at new position
-place:  ldx     new_pos
-        lda     icon_num
-        sta     icon_list-1,x
-        rts
-
-new_pos:        .byte   0
-icon_num:       .byte   0
-.endproc
-
-;;; ============================================================
-;;; A = icon number to move
-;;; X = new position in highlight list
-
-.proc ChangeHighlightIndex
-        stx     new_pos
-        sta     icon_num
-
-        ;; Find position of icon in highlight list
-        ldx     #0
-:       lda     highlight_list,x
-        cmp     icon_num
-        beq     :+
-        inx
-        cpx     highlight_count
-        bne     :-
-        rts
+        bne     :-              ; always
 
         ;; Shift items down
 :       lda     highlight_list+1,x
@@ -2177,40 +2133,8 @@ icon_num:       .byte   0
         cpx     highlight_count
         bne     :-
 
-        ;; Shift items up
-        ldx     highlight_count
-:       cpx     new_pos
-        beq     place
-        lda     highlight_list-2,x
-        sta     highlight_list-1,x
-        dex
-        jmp     :-
-
-        ;; Place at new position
-place:  ldx     new_pos
-        lda     icon_num
-        sta     highlight_list-1,x
-        rts
-
-new_pos:        .byte   0
-icon_num:       .byte   0
-.endproc
-
-;;; ============================================================
-;;; Remove icon from highlight list. Does not update icon's state.
-;;; Inputs: A=icon id
-.proc RemoveFromHighlightList
-
-        ;; Move it to the end of the highlight list
-        ldx     highlight_count ; new position
-        jsr     ChangeHighlightIndex
-
-        ;; Remove it from the highlight list
+        ;; Remove it
         dec     highlight_count
-        lda     #0
-        ldx     highlight_count
-        sta     highlight_list,x
-
         rts
 .endproc
 
