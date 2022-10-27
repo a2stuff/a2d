@@ -623,11 +623,10 @@ inside: pla
         tya
         sta     ($06),y
 
-        ;; Copy initial coords to `coords1` and `coords2`
+        ;; Copy initial coords to `coords1`
         ldy     #DragHighlightedParams::coords + .sizeof(MGTK::Point)-1
 :       lda     ($06),y
         sta     coords1-1,y
-        sta     coords2-1,y
         dey
         ;;cpy     #DragHighlightedParams::coords-1
         .assert DragHighlightedParams::coords = 1, error, "coords must be 1"
@@ -793,111 +792,8 @@ skip_icon:
         bne     next_icon
 
         ;; --------------------------------------------------
-        ;; Compute `rect1` as bounding rect ???
 
-        copy16  polybuf_addr, $08
-
-        ;; Init rect with first 2 vertices of first poly - it's
-        ;; better than nothing!
-        ldx     #.sizeof(MGTK::Rect)-1
-        ldy     #2+.sizeof(MGTK::Rect)-1
-:       lda     ($08),y
-        sta     rect1,x
-        dey
-        dex
-        bpl     :-
-
-        ;; Loop over all polys
-bounding_rect_poly_loop:
-        ldy     #2
-
-        ;; Loop over all vertices
-bounding_rect_vertex_loop:
-
-        ;; Compare against `rect1`, expand if needed
-        lda     ($08),y
-        cmp     rect1_x1
-        iny
-        lda     ($08),y
-        sbc     rect1_x1+1
-        bcs     check_x2
-        lda     ($08),y
-        sta     rect1_x1+1
-        dey
-        lda     ($08),y
-        sta     rect1_x1
-        iny
-        bne     check_y1        ; always
-
-check_x2:
-        dey
-        lda     ($08),y
-        cmp     rect1_x2
-        iny
-        lda     ($08),y
-        sbc     rect1_x2+1
-        bcc     check_y1
-
-        lda     ($08),y
-        sta     rect1_x2+1
-        dey
-        lda     ($08),y
-        sta     rect1_x2
-        iny
-
-check_y1:
-        iny
-        lda     ($08),y
-        cmp     rect1_y1
-        iny
-        lda     ($08),y
-        sbc     rect1_y1+1
-        bcs     check_y2
-
-        lda     ($08),y
-        sta     rect1_y1+1
-        dey
-        lda     ($08),y
-        sta     rect1_y1
-        iny
-        bne     next_poly       ; always
-
-check_y2:
-        dey
-        lda     ($08),y
-        cmp     rect1_y2
-        iny
-        lda     ($08),y
-        sbc     rect1_y2+1
-        bcc     next_poly
-
-        lda     ($08),y
-        sta     rect1_y2+1
-        dey
-        lda     ($08),y
-        sta     rect1_y2
-        iny
-
-next_poly:
-        iny
-        cpy     #kIconPolySize
-        bne     bounding_rect_vertex_loop
-
-        ;; More polys?
-        ldy     #1              ; MGTK Polygon "not last" flag
-        lda     ($08),y
-        beq     :+                 ; done
-
-        lda     $08                ; C=1 implied by CPY above
-        adc     #kIconPolySize - 1 ; so -1 here
-        sta     $08
-        bcc     bounding_rect_poly_loop
-        inc     $09
-        jmp     bounding_rect_poly_loop
-
-        ;; --------------------------------------------------
-
-:       jsr     XdrawOutline
+        jsr     XdrawOutline
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
@@ -907,7 +803,7 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         ;; Coords changed?
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     findwindow_params,x
-        cmp     coords2,x
+        cmp     coords1,x
         bne     moved
         dex
         bpl     :-
@@ -915,8 +811,7 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         jsr     FindTargetAndHighlight
         jmp     peek
 
-moved:  COPY_STRUCT MGTK::Point, findwindow_params, coords2
-
+moved:
         ;; Still over the highlighted icon?
         lda     highlight_icon_id
         beq     :+
@@ -931,63 +826,16 @@ moved:  COPY_STRUCT MGTK::Point, findwindow_params, coords2
         lda     #0
         sta     highlight_icon_id
 
-:       sub16   findwindow_params::mousex, coords1x, rect3_x1
-        sub16   findwindow_params::mousey, coords1y, rect3_y1
-        jsr     SetRect2ToRect1
-
-        ldx     #0
-        stx     L9C75
-:       add16   rect1_x2,x, rect3_x1,x, rect1_x2,x
-        add16   rect1_x1,x, rect3_x1,x, rect1_x1,x
-        inx
-        inx
-        cpx     #4
-        bne     :-
-
-        lda     rect1_x1+1
-        bmi     L9AF7
-        cmp16   rect1_x2, #kScreenWidth
-        bcs     L9AFE
-        jsr     SetCoords1xToMousex
-        bcc     L9B0E           ; always
-
-L9AF7:  jsr     L9CAA
-        bmi     L9B0E
-        bpl     L9B03
-L9AFE:  jsr     L9CD1
-        bmi     L9B0E
-L9B03:  jsr     SetRect1ToRect2AndZeroRect3X
-        sec
-        ror     L9C75
-L9B0E:  lda     rect1_y1+1
-        bmi     L9B31
-        cmp16   rect1_y1, #kMenuBarHeight
-        bcc     L9B31
-        cmp16   rect1_y2, #kScreenHeight
-        bcs     L9B38
-        jsr     SetCoords1yToMousey
-        bcc     L9B48           ; always
-
-L9B31:  jsr     L9D31
-        bmi     L9B48
-        bpl     L9B3D
-L9B38:  jsr     L9D58
-        bmi     L9B48
-L9B3D:  jsr     SetRect1ToRect2AndZeroRect3Y
-        lda     L9C75
-        ora     #$40
-        sta     L9C75
-L9B48:  bit     L9C75
-        bpl     L9B52
-        bvc     L9B52
-        jmp     peek
+:       sub16   findwindow_params::mousex, coords1x, poly_dx
+        sub16   findwindow_params::mousey, coords1y, poly_dy
+        COPY_STRUCT MGTK::Point, findwindow_params, coords1
 
 L9B52:  jsr     XdrawOutline
         copy16  polybuf_addr, $08
 L9B60:  ldy     #2
-L9B62:  add16in ($08),y, rect3_x1, ($08),y
+L9B62:  add16in ($08),y, poly_dx, ($08),y
         iny
-        add16in ($08),y, rect3_y1, ($08),y
+        add16in ($08),y, poly_dy, ($08),y
         iny
         cpy     #kIconPolySize
         bne     L9B62
@@ -1100,196 +948,14 @@ just_select:                    ; ???
         rts
 
 index:  .byte   $00
-L9C75:  .byte   $00
-
-rect1:
-rect1_x1:       .word   0
-rect1_y1:       .word   0
-rect1_x2:       .word   0
-rect1_y2:       .word   0
-
-L9C7E:  .word   0
-L9C80:  .word   kMenuBarHeight
-const_screen_width:     .word   kScreenWidth
-const_screen_height:    .word   kScreenHeight
-
-rect2:
-rect2_x1:       .word   0
-rect2_y1:       .word   0
-rect2_x2:       .word   0
-rect2_y2:       .word   0
 
 coords1:
 coords1x:       .word   0
 coords1y:       .word   0
 
-coords2:        .tag MGTK::Point
+poly_dx:        .word   0
+poly_dy:        .word   0
 
-rect3:
-rect3_x1:       .word   0
-rect3_y1:       .word   0
-rect3_x2:       .word   0       ; Unused???
-rect3_y2:       .word   0       ; Unused???
-
-.proc SetRect2ToRect1
-        COPY_STRUCT MGTK::Rect, rect1, rect2
-        rts
-.endproc
-
-.proc L9CAA
-        lda     rect1_x1
-        cmp     L9C7E
-        bne     :+
-        lda     rect1_x1+1
-        eor     L9C7E+1
-        bne     :+
-        rts
-
-:       lda     #0
-        sec
-        sbc     rect2_x1
-        tax
-        lda     #0
-        sbc     rect2_x1 + 1
-        tay
-        jmp     L9CF5
-.endproc
-
-.proc L9CD1
-        lda     rect1_x2
-        cmp     const_screen_width
-        bne     L9CE4
-        lda     rect1_x2+1
-        eor     const_screen_width+1
-        bne     L9CE4
-        rts
-.endproc
-
-L9CE4:  lda     #<kScreenWidth
-        sec
-        sbc     rect2_x2
-        tax
-        lda     #>kScreenWidth
-        sbc     rect2_x2 + 1
-        tay
-L9CF5:  stx     rect3_x1
-        sty     rect3_x1 + 1
-        txa
-        clc
-        adc     rect2_x1
-        sta     rect1_x1
-        tya
-        adc     rect2_x1 + 1
-        sta     rect1_x1 + 1
-        txa
-        clc
-        adc     rect2_x2
-        sta     rect1_x2
-        tya
-        adc     rect2_x2 + 1
-        sta     rect1_x2 + 1
-        txa
-        clc
-        adc     coords1x
-        sta     coords1x
-        tya
-        adc     coords1x + 1
-        sta     coords1x + 1
-        return  #$FF
-
-.proc L9D31
-        lda     rect1_y1
-        cmp     L9C80
-        bne     :+
-        lda     rect1_y1+1
-        eor     L9C80+1
-        bne     :+
-        rts
-
-:       lda     #<kMenuBarHeight
-        sec
-        sbc     rect2_y1
-        tax
-        lda     #>kMenuBarHeight
-        sbc     rect2_y1 + 1
-        tay
-        jmp     L9D7C
-.endproc
-
-.proc L9D58
-        lda     rect1_y2
-        cmp     const_screen_height
-        bne     L9D6B
-        lda     rect1_y2+1
-        eor     const_screen_height+1
-        bne     L9D6B
-        rts
-.endproc
-
-L9D6B:  lda     #<(kScreenHeight-1)
-        sec
-        sbc     rect2_y2
-        tax
-        lda     #>(kScreenHeight-1)
-        sbc     rect2_y2 + 1
-        tay
-L9D7C:  stx     rect3_y1
-        sty     rect3_y1 + 1
-        txa
-        clc
-        adc     rect2_y1
-        sta     rect1_y1
-        tya
-        adc     rect2_y1 + 1
-        sta     rect1_y1 + 1
-        txa
-        clc
-        adc     rect2_y2
-        sta     rect1_y2
-        tya
-        adc     rect2_y2 + 1
-        sta     rect1_y2 + 1
-        txa
-        clc
-        adc     coords1y
-        sta     coords1y
-        tya
-        adc     coords1y + 1
-        sta     coords1y + 1
-        return  #$FF
-
-.proc SetRect1ToRect2AndZeroRect3X
-        ldx     #0
-        beq     SetRectCommon   ; always
-.endproc
-
-.proc SetRect1ToRect2AndZeroRect3Y
-        ldx     #rect2_y1 - rect2_x1
-        FALL_THROUGH_TO SetRectCommon
-.endproc
-
-.proc SetRectCommon
-        copy16  rect2_y1,x, rect1_y1,x
-        copy16  rect2_y2,x, rect1_y2,x
-        copy16  #0, rect3_y1,x
-        rts
-.endproc
-
-.proc SetCoords1xToMousex
-        lda     findwindow_params::mousex+1
-        sta     coords1x+1
-        lda     findwindow_params::mousex
-        sta     coords1x
-        rts
-.endproc
-
-.proc SetCoords1yToMousey
-        lda     findwindow_params::mousey+1
-        sta     coords1y+1
-        lda     findwindow_params::mousey
-        sta     coords1y
-        rts
-.endproc
 
 ;;; Like `FindIcon`, but validates that the passed coordinates are
 ;;; in the true content area of the window (not scrollbars/grow box/header)
