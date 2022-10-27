@@ -527,6 +527,30 @@ skip:
      .endif
 .endmacro
 
+;;; Add X,Y into arg1 (X,Y remain unchanged)
+;;;    addxy #$1111, $3333       ; immediate, absolute
+;;;    addxy $1111, $3333        ; absolute, absolute
+;;;    addxy $1111               ; absolute
+.macro addxy arg1, arg2
+    .ifblank arg2
+        clc
+        txa
+        adc     arg1
+        sta     arg1
+        tya
+        adc     arg1+1
+        sta     arg1+1
+    .else
+        clc
+        txa
+        _op_lo adc, {arg1}
+        sta     arg2
+        tya
+        _op_hi adc, {arg1}
+        sta     arg2+1
+     .endif
+.endmacro
+
 ;;; Subtract arg2 from arg1, store to arg3
 ;;;    sub16 #$1111, #$2222, $3333      ; immediate, immediate, absolute
 ;;;    sub16 #$1111, $2222, $3333       ; immediate, absolute, absolute

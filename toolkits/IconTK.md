@@ -76,7 +76,7 @@ Inserts an icon record into the table.
 
 Parameters: address of `IconEntry`
 
-Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc.
 
 Result codes (in A):
 * 0 = success
@@ -91,29 +91,28 @@ Parameters:
 .byte       icon            Icon number
 ```
 
-Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc.
 
 Result codes (in A):
 * 0 = success
 * 2 = invalid icon (`DEBUG` only)
 * 3 = already highlighted (`DEBUG` only)
 
-### `IconTK::DrawIcon` ($03)
+### `IconTK::DrawIconRaw` ($03)
 
-Redraws an icon by number.
+Draws an icon by number. No clipping is done.
 
 Parameters:
 ```
 .byte       icon            Icon number
 ```
 
-For windowed icons, the appropriate GrafPort must be selected, and the icons must be mapped into appropriate coordinates (i.e. mapped from screen space into window space). Windowed icons are not clipped, so must only be drawn during an update call or into the active window.
+No error checking is done, no result codes.
 
-For desktop icons, the icon is clipped against any open windows.
+The appropriate GrafPort must be selected, and the icons must be mapped into appropriate coordinates (i.e. mapped from screen space into window space). Icons are not clipped against overlapping windows. (See `IconTK::DrawIcon`)
 
-Result codes (in A):
-* 0 = success
-* 1 = icon not found
+Due to the lack clipping, this call is faster than `IconTK::DrawIcon`, and should be used if possible when multiple icons are being updated.
+
 
 ### `IconTK::RemoveIcon` ($04)
 
@@ -124,7 +123,7 @@ Parameters:
 .byte       icon            Icon number
 ```
 
-Note that it does not erase the icon. Callers must make a previous call to `IconTK::EraseIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+Note that it does not erase the icon. Callers must make a previous call to `IconTK::EraseIcon`.
 
 Result codes (in A):
 * 0 = success
@@ -190,7 +189,7 @@ Parameters:
 .byte       icon            Icon number
 ```
 
-Note that it does not repaint the icon. Callers must make a subsequent call to `IconTK::DrawIcon` with an appropriate GrafPort selected. This is because the window may be obscured, so the state change can occur but the paint can not.
+Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc.
 
 Result codes (in A):
 * 0 = success
@@ -199,7 +198,7 @@ Result codes (in A):
 
 ### `IconTK::DrawAll` ($09)
 
-Redraws the icons in the selected window. No clipping is done.
+Draws the icons in the selected window. No clipping is done.
 
 Parameters:
 ```
@@ -233,11 +232,11 @@ Parameters:
 .byte       icon            Icon number
 ```
 
-No error checking is done. If the icon is in a window, it must be in the active window.
+No error checking is done, no result codes. If the icon is in a window, it must be in the active window.
 
-Note that unlike `DrawIcon`, this call does _not_ require a GrafPort to be set by the caller. For icons in a window, the active window's GrafPort bounds (including scroll position and subtracting DeskTop's window header) will automatically be taken into account.
+Note that unlike `IconTK::DrawIconRaw`, this call does _not_ require a GrafPort to be set by the caller.
 
-For desktop icons, the icon is clipped against any open windows.
+Icons on the desktop are clipped against overlapping windows.
 
 ### `IconTK::GetIconBounds` ($0C)
 
@@ -248,6 +247,22 @@ Parameters:
 .byte       icon            Icon number
 MGTK::Rect  bounds          (out) Bounding rectangle
 ```
+
+### `IconTK::DrawIcon` ($03)
+
+Redraws an icon by number, into any window (or the desktop), with appropriate clipping.
+
+Parameters:
+```
+.byte       icon            Icon number
+```
+
+No error checking is done, no result codes.
+
+Note that unlike `IconTK::DrawIconRaw`, this call does _not_ require a GrafPort to be set by the caller. Icons in windows are clipped to the visible portion of the window (including overlapping windows). Icons on the desktop are clipped against overlapping windows.
+
+Due to the clipping, this call is slower than `IconTK::DrawIconRaw`, and should be avoided if possible when multiple icons are being updated.
+
 
 ## Convenience Macros
 

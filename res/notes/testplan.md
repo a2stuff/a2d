@@ -333,6 +333,9 @@
 * Launch DeskTop. Open a volume window. In the volume window, create a new folder F1 and open it. Note that the F1 icon is dimmed. In the volume window, create a new folder F2. Verify that the F1 icon is still dimmed.
 * Launch DeskTop. Open a volume window containing a file and a folder. Open the folder window. Drag the file to the folder icon (not the window). Verify that the folder window activates and updates to show the file.
 
+* Launch DeskTop. Open a volume window containing a folder. Open the folder. Verify that the folder appears as dimmed. Position the window partially over the dimmed folder. Move the window to reveal the whole folder. Verify that the folder is repainted cleanly (no visual glitches).
+* Launch DeskTop. Open a volume window containing two folders (1 and 2). Open both folder windows, and verify that both folder icons are dimmed. Position folder 1's window partially covering folder 2's icon. Activate folder 1's window, and close it. Verify that the visible portions of folder 2 repaint, not dimmed.
+
 * Launch DeskTop. Open a volume window. Select two files. File > Duplicate.... Leave the filename unchanged and click OK. Verify that an alert is shown, but the dialog is not dismissed. Change the name and click OK. Verify that a prompt is shown for the second file.
 * Launch DeskTop. Open a volume window. Select two files. File > Duplicate.... Change the filename to the name of another file in the directory and click OK. Verify that an alert is shown, but the dialog is not dismissed. Change the name and click OK. Verify that a prompt is shown for the second file.
 

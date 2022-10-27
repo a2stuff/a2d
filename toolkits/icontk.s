@@ -63,7 +63,7 @@ jump_table_low:
         .byte   <InitToolKitImpl
         .byte   <AddIconImpl
         .byte   <HighlightIconImpl
-        .byte   <DrawIconImpl
+        .byte   <DrawIconRawImpl
         .byte   <RemoveIconImpl
         .byte   <RemoveAllImpl
         .byte   <FindIconImpl
@@ -73,12 +73,13 @@ jump_table_low:
         .byte   <IconInRectImpl
         .byte   <EraseIconImpl
         .byte   <GetIconBoundsImpl
+        .byte   <DrawIconImpl
 
 jump_table_high:
         .byte   >InitToolKitImpl
         .byte   >AddIconImpl
         .byte   >HighlightIconImpl
-        .byte   >DrawIconImpl
+        .byte   >DrawIconRawImpl
         .byte   >RemoveIconImpl
         .byte   >RemoveAllImpl
         .byte   >FindIconImpl
@@ -88,6 +89,7 @@ jump_table_high:
         .byte   >IconInRectImpl
         .byte   >EraseIconImpl
         .byte   >GetIconBoundsImpl
+        .byte   >DrawIconImpl
 
 ;;; ============================================================
 
@@ -245,11 +247,6 @@ a_grafport:     .addr   icon_grafport
 
 icon_grafport:  .tag    MGTK::GrafPort
 
-.params moveto_params2
-xcoord: .word   0
-ycoord: .word   0
-.endparams
-
 ;;; ============================================================
 ;;; InitToolKit
 
@@ -324,7 +321,7 @@ bufsize:
 ;;; Inputs: A = icon id
 ;;; Outputs: Z=1 if found (and X = index), Z=0 otherwise
 ;;; A is unmodified, X is trashed
-
+.if DEBUG
 .proc IsInIconList
         ldx     num_icons
 :       dex
@@ -334,6 +331,7 @@ bufsize:
 
 done:   rts
 .endproc
+.endif
 
 ;;; ============================================================
 ;;; HighlightIcon
@@ -546,21 +544,16 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         icon_ptr   := $06       ; for `CalcIconPoly` call
         out_params := $08
 
-        ;; Copy coords at $6 to param block
-        .assert FindIconParams::coords = 0, error, "coords must come first"
-        ldy     #.sizeof(MGTK::Point)-1
-:       lda     (params),y
-        sta     moveto_params2,y
-        dey
-        bpl     :-
-
-        copy16  params, out_params
+        ldax    params
+        stax    out_params
+        .assert FindIconParams::coords = 0, error, "coords must be first"
+        stax    moveto_params_addr
 
         ldy     #FindIconParams::window_id
         lda     (params),y
         sta     window_id
 
-        MGTK_CALL MGTK::MoveTo, moveto_params2
+        MGTK_CALL MGTK::MoveTo, SELF_MODIFIED, moveto_params_addr
 
         ldx     #0
 loop:   cpx     num_icons
@@ -637,9 +630,6 @@ inside: pla
 
 icon_id:
         .byte   $00
-
-deltax: .word   0
-deltay: .word   0
 
         ;; IconTK::HighlightIcon params
 highlight_icon_id:  .byte   $00
@@ -1093,47 +1083,16 @@ icon_num:
 .endproc
 
 .proc HighlightIcon
-        jsr SetPortForHighlightIcon
         ITK_CALL IconTK::HighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
 .endproc
 
 .proc UnhighlightIcon
-        jsr SetPortForHighlightIcon
         ITK_CALL IconTK::UnhighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
 .endproc
-
-;;; Set maprect to `highlight_icon_id`'s window's content area, in screen
-;;; space, using `icon_grafport`. No-op for volume icons on the desktop.
-.proc SetPortForHighlightIcon
-        ptr := $06
-
-        lda     highlight_icon_id
-        jsr     GetIconWin
-        bne     :+
-        rts                     ; Unnecessary for volume icons; DrawIconImpl takes care of it
-:       sta     getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params ; into `icon_grafport`
-
-        sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x2, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x1, width
-        sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, height
-
-        COPY_STRUCT MGTK::Point, icon_grafport+MGTK::GrafPort::viewloc, icon_grafport+MGTK::GrafPort::maprect
-
-        add16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x1, width, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::x2
-        add16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, height, icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y2
-
-        ;; Account for window header, and set port to `icon_grafport`
-        jmp     ShiftPortDown
-
-width:  .word   0
-height: .word   0
-
-.endproc
-
 
 .endproc
 
@@ -1295,20 +1254,49 @@ more_drawing_needed_flag:
         .byte   0
 
 ;;; Set by some callers of DrawIcon
-no_clip_vol_icons_flag:
+clip_icons_flag:
         .byte   0
 
+;;; Window containing the icon, used during clipping/redrawing
+clip_window_id:
+        .byte   0
+
+;;; Deltas mapping screen to window coordinates
+clip_dx:
+        .word   0
+clip_dy:
+        .word   0
+
 ;;; ============================================================
-;;; DrawIcon
+;;; DrawIconRaw
 
 ;;; * Assumes correct grafport already selected/maprect specified
 ;;; * Does not erase background
 
+.proc DrawIconRawImpl
+        lda     #0              ; `clip_icons_flag`
+        jmp     DrawIconCommon
+.endproc
+
+;;; ============================================================
+;;; DrawIcon
+
+;;; * Draws icon clipping against any overlapping windows.
+;;; * Does not erase background
+
 .proc DrawIconImpl
+        lda     #$80            ; `clip_icons_flag`
+        jmp     DrawIconCommon
+.endproc
+
+;;; ============================================================
+
+.proc DrawIconCommon
         params := $06
 .struct DrawIconParams
         icon    .byte
 .endstruct
+        sta     clip_icons_flag
 
         ptr := $06              ; Overwrites params
 
@@ -1332,29 +1320,20 @@ no_clip_vol_icons_flag:
         sta     win_flags
 
         ;; Is on desktop?
-        lda     ($06),y
         and     #kIconEntryWinIdMask
-        bne     :+
-
+        sta     clip_window_id
+    IF_ZERO
         ;;  Mark as "volume icon" on desktop (needs background)
         lda     icon_flags
         ora     #$40
         sta     icon_flags
-
-        ;; copy icon entry coords and bits
-        ;;ldy     #IconEntry::iconx
-        .assert (IconEntry::iconx - IconEntry::win_flags) = 1, error, "iconx must be 1 more than win_flags"
-:       iny
-        lda     ($06),y
-        sta     icon_paintbits_params::viewloc-IconEntry::iconx,y
-        sta     mask_paintbits_params::viewloc-IconEntry::iconx,y
-        cpy     #IconEntry::iconx + 5 ; x/y/bits
-        bne     :-
+    END_IF
 
         jsr     PushPointers
 
         ;; copy icon definition bits
-        copy16  icon_paintbits_params::mapbits, $08
+        ldy     #IconEntry::iconbits
+        copy16in ($06),y, $08
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point) - 1
 :       lda     ($08),y
         sta     icon_paintbits_params::mapbits,y
@@ -1370,25 +1349,45 @@ no_clip_vol_icons_flag:
         ;; Copy, pad, and measure name
         jsr     PrepareName
 
+        ;; Determine if we want clipping, based on icon type and flags.
+
+        bit     clip_icons_flag
+        jpl     DoPaint         ; no clipping, just paint
+
+        ;; Set up clipping structs and port
+        bit     icon_flags      ; volume icon (on desktop) ?
+    IF_VS
+        jsr     SetPortForVolIcon
+    ELSE
+        jsr     SetPortForWinIcon
+        bne     ret             ; obscured
+    END_IF
+
+        ;; Paint icon iteratively, handling overlapping windows
+:       jsr     CalcWindowIntersections
+
+        jsr     OffsetPortAndIcon
+        jsr     DoPaint
+        jsr     OffsetPortAndIcon
+
+        lda     more_drawing_needed_flag
+        bne     :-
+
+ret:    rts
+
+
+.proc DoPaint
+        ;; Prep coords
         copy16  label_rect+MGTK::Rect::x1, label_pos+MGTK::Point::xcoord
         add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight-1, label_pos+MGTK::Point::ycoord
 
-        bit     icon_flags      ; volume icon (on desktop) ?
-        bvc     DoPaint         ; nope
-        bit     no_clip_vol_icons_flag
-        bmi     DoPaint
-        ;; TODO: This depends on a previous proc having adjusted
-        ;; the grafport (for window maprect and window's items/used/free bar)
+        ldax    bitmap_rect+MGTK::Rect::x1
+        stax    icon_paintbits_params::viewloc::xcoord
+        stax    mask_paintbits_params::viewloc::xcoord
+        ldax    bitmap_rect+MGTK::Rect::y1
+        stax    icon_paintbits_params::viewloc::ycoord
+        stax    mask_paintbits_params::viewloc::ycoord
 
-        ;; Volume (i.e. icon on desktop)
-        jsr     SetPortForVolIcon
-:       jsr     CalcWindowIntersections
-        jsr     DoPaint
-        lda     more_drawing_needed_flag
-        bne     :-
-        rts
-
-.proc DoPaint
         ;; Set text background color
         lda     #MGTK::textbg_white
         bit     icon_flags      ; highlighted?
@@ -1431,8 +1430,7 @@ no_clip_vol_icons_flag:
         ;; --------------------------------------------------
         ;; Label
 
-        COPY_STRUCT MGTK::Point, label_pos, moveto_params2
-        MGTK_CALL MGTK::MoveTo, moveto_params2
+        MGTK_CALL MGTK::MoveTo, label_pos
 
         MGTK_CALL MGTK::DrawText, drawtext_params
         MGTK_CALL MGTK::ShowCursor
@@ -1727,8 +1725,6 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
         ptr := $06
 
-        copy    #$80, no_clip_vol_icons_flag
-
         ;; Get current clip rect
         port_ptr := $06
         MGTK_CALL MGTK::GetPort, port_ptr
@@ -1756,26 +1752,25 @@ loop:   inx
         and     #kIconEntryWinIdMask
         window_id := *+1
         cmp     #SELF_MODIFIED_BYTE
-        bne     next                 ; no, skip it
+        bne     next            ; no, skip it
 
         ;; In maprect?
         ITK_CALL IconTK::IconInRect, icon
         beq     next            ; no, skip it
 
-        ITK_CALL IconTK::DrawIcon, icon
+        ITK_CALL IconTK::DrawIconRaw, icon
 
 next:   pla
         tax
         bpl     loop            ; always
 
-done:   copy    #0, no_clip_vol_icons_flag
-        rts
+done:   rts
 
         ;; GetPortBits params
 mapinfo:
         .tag    MGTK::MapInfo
 
-        ;; IconTK::DrawIcon and IconTK::IconInRect params
+        ;; IconTK::DrawIconRaw and IconTK::IconInRect params
 icon    := mapinfo + MGTK::MapInfo::maprect - 1
 rect    := mapinfo + MGTK::MapInfo::maprect
 
@@ -1813,10 +1808,8 @@ redraw_highlighted_flag:
         .byte   0
 erase_icon_id:
         .byte   0
-window_id:
-        .byte   0
 
-        ;; IconTK::DrawIcon params
+        ;; IconTK::DrawIconXXX params
         ;; IconTK::IconInRect params (in `RedrawIconsAfterErase`)
 icon:   .byte   0
 icon_rect:
@@ -1842,7 +1835,7 @@ window_id:      .byte   0
         .assert IconEntry::win_flags - IconEntry::id = 2, error, "enum mismatch"
         lda     ($06),y
         and     #kIconEntryWinIdMask
-        sta     window_id
+        sta     clip_window_id
         beq     volume
 
         ;; File (i.e. icon in window)
@@ -1916,7 +1909,7 @@ loop:   dex                     ; any icons to draw?
         ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask
-        cmp     window_id
+        cmp     clip_window_id
         bne     next
 
         bit     redraw_highlighted_flag
@@ -1936,7 +1929,12 @@ loop:   dex                     ; any icons to draw?
 :       ITK_CALL IconTK::IconInRect, icon
         beq     :+
 
+        bit     icon_in_window_flag
+    IF_NC
         ITK_CALL IconTK::DrawIcon, icon
+    ELSE
+        ITK_CALL IconTK::DrawIconRaw, icon
+    END_IF
 
 :       bit     icon_in_window_flag
         bpl     next
@@ -1955,9 +1953,6 @@ next:   pla
 
 offset_flags:  .byte   0        ; bit 7 = offset poly, bit 6 = undo offset, otherwise do offset
 
-dx:     .word   0
-dy:     .word   0
-
 entry_poly_and_rect:
         copy    #$80, offset_flags
         bmi     common          ; always
@@ -1974,8 +1969,7 @@ entry_undo:
         sta     offset_flags
 
 common:
-        sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Point::xcoord, icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::xcoord, dx
-        sub16   icon_grafport+MGTK::GrafPort::maprect+MGTK::Point::ycoord, icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, dy
+        jsr     CalcClipDeltas
 
         bit     offset_flags
         bmi     OffsetPoly
@@ -1983,14 +1977,16 @@ common:
         jmp     UndoOffset
 
 .proc OffsetPoly
-        add16   bounding_rect::x1, dx, bounding_rect::x1
-        add16   bounding_rect::y1, dy, bounding_rect::y1
-        add16   bounding_rect::x2, dx, bounding_rect::x2
-        add16   bounding_rect::y2, dy, bounding_rect::y2
+        ldxy    clip_dx
+        addxy   bounding_rect::x1
+        addxy   bounding_rect::x2
+        ldxy    clip_dy
+        addxy   bounding_rect::y1
+        addxy   bounding_rect::y2
 
         ldx     #0
-loop1:  add16   poly::vertices+0,x, dx, poly::vertices+0,x
-        add16   poly::vertices+2,x, dy, poly::vertices+2,x
+loop1:  add16   poly::vertices+0,x, clip_dx, poly::vertices+0,x
+        add16   poly::vertices+2,x, clip_dy, poly::vertices+2,x
         inx
         inx
         inx
@@ -2010,9 +2006,9 @@ loop1:  add16   poly::vertices+0,x, dx, poly::vertices+0,x
         jsr     PushPointers
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::iconx
-        sub16in (ptr),y, dx, (ptr),y ; icony += viewloc::xcoord - maprect::left
+        sub16in (ptr),y, clip_dx, (ptr),y ; icony += viewloc::xcoord - maprect::left
         iny
-        sub16in (ptr),y, dy, (ptr),y ; icony += viewloc::ycoord - maprect::top
+        sub16in (ptr),y, clip_dy, (ptr),y ; icony += viewloc::ycoord - maprect::top
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
@@ -2025,9 +2021,9 @@ loop1:  add16   poly::vertices+0,x, dx, poly::vertices+0,x
         jsr     PushPointers
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::iconx
-        add16in (ptr),y, dx, (ptr),y ; iconx += maprect::left - viewloc::xcoord
+        add16in (ptr),y, clip_dx, (ptr),y ; iconx += maprect::left - viewloc::xcoord
         iny
-        add16in (ptr),y, dy, (ptr),y ; icony += maprect::top - viewloc::xcoord
+        add16in (ptr),y, clip_dy, (ptr),y ; icony += maprect::top - viewloc::xcoord
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
@@ -2065,6 +2061,7 @@ loop1:  add16   poly::vertices+0,x, dx, poly::vertices+0,x
 ;;; ============================================================
 
 ;;; Initial bounds, saved for re-entry.
+bounds_l:  .word   0            ; unused, but makes a complete MGTK::Rect
 bounds_t:  .word   0
 bounds_r:  .word   0
 bounds_b:  .word   0
@@ -2077,39 +2074,97 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 0, 0
 .endparams
 
+        DEFINE_RECT screen_bounds, 0, 0, kScreenWidth-1, kScreenHeight-1
+
 .proc SetPortForVolIcon
-        jsr     CalcIconPoly    ; also populates `bounding_rect`
+        jsr     CalcIconPoly    ; also populates `bounding_rect` (needed in erase case)
 
-        ;; Set up bounds_t
-        ldax    bounding_rect::y1
-        stax    bounds_t
-        stax    portbits::maprect::y1
-        stax    portbits::viewloc::ycoord
+        ;; Will need to clip to screen bounds
+        COPY_STRUCT MGTK::Rect, screen_bounds, portbits::maprect
 
-        ;; Set up bounds_l
-        ldax    bounding_rect::x1
-        stax    portbits::maprect::x1
-        stax    portbits::viewloc::xcoord
+        jmp     DuplicateClipStructsAndSetPortBits
+.endproc
 
-        ;; Set up bounds_b
-        ldax    bounding_rect::y2
-        stax    bounds_b
-        stax    portbits::maprect::y2
+;;; ============================================================
 
-        ;; Set up bounds_r
-        ldxy    bounding_rect::x2
+.proc SetPortForWinIcon
+        jsr     CalcIconBoundingRect
 
-        ;; if (bounds_r > kScreenWidth - 1) bounds_r = kScreenWidth - 1
-        cpx     #<(kScreenWidth - 1)
-        tya
-        sbc     #>(kScreenWidth - 1)
-        bmi     done
-        ldx     #<(kScreenWidth - 1)
-        ldy     #>(kScreenWidth - 1)
+        ;; Get window clip rect (in screen space)
+        lda     clip_window_id
+        sta     getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params ; into `icon_grafport`
+        beq     :+
+        rts                     ; obscured
+:
+        ;; Stash, needed to offset port when drawing to get correct patterns
+        jsr     CalcClipDeltas
 
-done:   stxy    bounds_r
-        stxy    portbits::maprect::x2
+        ;; Adjust `icon_grafport` so that `viewloc` and `maprect` are just
+        ;; a clipping rectangle in screen coords.
+        viewloc := icon_grafport+MGTK::GrafPort::viewloc
+        maprect := icon_grafport+MGTK::GrafPort::maprect
+        sub16   maprect+MGTK::Rect::x2, maprect+MGTK::Rect::x1, portbits::maprect+MGTK::Rect::x2
+        sub16   maprect+MGTK::Rect::y2, maprect+MGTK::Rect::y1, portbits::maprect+MGTK::Rect::y2
+        COPY_STRUCT MGTK::Point, icon_grafport+MGTK::GrafPort::viewloc, portbits::maprect
+        add16   portbits::maprect+MGTK::Rect::x1, portbits::maprect+MGTK::Rect::x2, portbits::maprect+MGTK::Rect::x2
+        add16   portbits::maprect+MGTK::Rect::y1, portbits::maprect+MGTK::Rect::y2, portbits::maprect+MGTK::Rect::y2
+
+        ;; For window's items/used/free space bar
+        kOffset = kWindowHeaderHeight + 1
+        ;; TODO: Use `header_height`
+        add16_8 portbits::maprect+MGTK::Rect::y1, #kOffset
+
+        FALL_THROUGH_TO DuplicateClipStructsAndSetPortBits
+.endproc
+
+;;; Call with these populated:
+;;; * `portbits::maprect` - screen space clip rect
+;;; * `bounding_rect` - screen space icon bounds
+;;; Output: Z=1 if ready to paint, Z=0 if nothing to draw
+
+.proc DuplicateClipStructsAndSetPortBits
+        ;; Union `portbits::maprect` with `bounding_rect`
+        scmp16  portbits::maprect::x1, bounding_rect::x1
+        bpl     :+
+        copy16  bounding_rect::x1, portbits::maprect::x1
+:       scmp16  portbits::maprect::y1, bounding_rect::y1
+        bpl     :+
+        copy16  bounding_rect::y1, portbits::maprect::y1
+:       scmp16  bounding_rect::y2, portbits::maprect::y2
+        bpl     :+
+        copy16  bounding_rect::y2, portbits::maprect::y2
+:       scmp16  bounding_rect::x2, portbits::maprect::x2
+        bpl     :+
+        copy16  bounding_rect::x2, portbits::maprect::x2
+:
+        ;; Is there anything left?
+        scmp16  portbits::maprect::x2, portbits::maprect::x1
+        bmi     empty
+        scmp16  portbits::maprect::y2, portbits::maprect::y1
+        bmi     empty
+
+        ;; Duplicate structs needed for clipping
+        COPY_STRUCT MGTK::Rect, portbits::maprect, bounds_l
+        COPY_STRUCT MGTK::Point, portbits::maprect::topleft, portbits::viewloc
+
         MGTK_CALL MGTK::SetPortBits, portbits
+        rts
+
+empty:  return #$FF
+.endproc
+
+;;; ============================================================
+
+;;; Computes delta between screen and viewport coodinates
+;;; Inputs: `icon_grafport` has viewport
+;;; Output: `clip_dx` and `clip_dy` initialized
+.proc CalcClipDeltas
+        viewloc := icon_grafport+MGTK::GrafPort::viewloc
+        maprect := icon_grafport+MGTK::GrafPort::maprect
+
+        sub16   maprect+MGTK::Rect::x1, viewloc+MGTK::Point::xcoord, clip_dx
+        sub16   maprect+MGTK::Rect::y1, viewloc+MGTK::Point::ycoord, clip_dy
         rts
 .endproc
 
@@ -2128,11 +2183,6 @@ window_id:      .byte   0
 .endparams
 
 pt_num: .byte   0
-
-scrollbar_flags:
-        .byte   0               ; bit 7 = hscroll present; bit 6 = vscroll present
-dialogbox_flag:
-        .byte   0               ; bit 7 = dialog box
 
 ;;; Points at corners of icon's bounding rect
 ;;; pt1 +----+ pt2
@@ -2265,6 +2315,7 @@ do_pt:  lda     pt_num
         inc     pt_num
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
+        cmp     clip_window_id
         beq     next_pt
 
         ;; --------------------------------------------------
@@ -2392,6 +2443,38 @@ case2:
 :       stx     cr_l
         sty     cr_l + 1
         jmp     set_bits
+.endproc
+
+;;; ============================================================
+;;; Used when doing clipped drawing to map viewport and icon
+;;; being drawn back to window coordinates, so that shade
+;;; patterns are correct.
+
+.proc OffsetPortAndIcon
+        lda     clip_window_id
+        bne     :+
+        rts
+:
+        ldxy    clip_dx
+        addxy   portbits::maprect::x1
+        addxy   portbits::maprect::x2
+        addxy   bitmap_rect::x1
+        addxy   bitmap_rect::x2
+        addxy   label_rect::x1  ; x2 not used
+
+        ldxy    clip_dy
+        addxy   portbits::maprect::y1
+        addxy   portbits::maprect::y2
+        addxy   bitmap_rect::y1
+        addxy   bitmap_rect::y2
+        addxy   label_rect::y1  ; y2 not used
+
+        MGTK_CALL MGTK::SetPortBits, portbits
+
+        ;; Invert for the next call
+        sub16   #0, clip_dx, clip_dx
+        sub16   #0, clip_dy, clip_dy
+        rts
 .endproc
 
 ;;; ============================================================

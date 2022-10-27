@@ -632,7 +632,7 @@ dispatch_click:
         ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        beq     :+
+        beq     :+               ; desktop - selection ok
         cmp     active_window_id ; This should never be true
         bne     done
 :
@@ -640,54 +640,9 @@ dispatch_click:
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
         ITK_CALL IconTK::HighlightIcon, icon_param
-
-        lda     icon_param
-        jsr     DrawIcon
+        ITK_CALL IconTK::DrawIcon, icon_param
 
 done:   rts
-.endproc
-
-;;; ============================================================
-;;; Draw an icon in its window/on the desktop.
-;;; This handles skipping if the window is obscured.
-;;;
-;;; Inputs: A = icon id
-;;; Outputs: sets `icon_param` to the icon id
-;;; Assert: `InitSetDesktopPort` state is in effect
-;;; Assert: If windowed, the icon is in the active window.
-
-.proc DrawIcon
-        sta     icon_param
-        jsr     PushPointers
-
-        ;; Look up the icon
-        icon_ptr := $06
-        lda     icon_param
-        jsr     IconEntryLookup
-        stax    icon_ptr
-
-        ;; Get the window id
-        ldy     #IconEntry::win_flags
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
-        sta     win
-
-        ;; Set up the port and draw the icon
-        beq     :+
-        lda     icon_param
-        jsr     IconScreenToWindow
-        win := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        bne     skip            ; MGTK::Error::window_obscured
-:       ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
-skip:   lda     win
-        beq     :+
-        lda     icon_param
-        jsr     IconWindowToScreen
-:
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
 .endproc
 
 ;;; ============================================================
@@ -3436,8 +3391,7 @@ ret:    rts
         jsr     ScrollIconIntoView
 :
 
-        lda     selected_icon_list
-        jsr     DrawIcon
+        ITK_CALL IconTK::DrawIcon, selected_icon_list
 
         rts
 .endproc
@@ -3461,12 +3415,16 @@ ret:    rts
 
         copy    cached_window_entry_count, selected_icon_count
         copy    active_window_id, selected_window_id
+
         lda     selected_window_id
+    IF_ZERO
         sta     err             ; zero if desktop; will overwrite if windowed
-        beq     :+
+        jsr     InitSetDesktopPort
+    ELSE
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         sta     err
-:
+    END_IF
+
         ;; --------------------------------------------------
         ;; Mark all icons as highlighted
         ldx     #0
@@ -4649,7 +4607,7 @@ same_or_desktop:
         pha
         lda     selected_icon_list,x
         sta     icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag)
+        ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag)
         pla
         tax
         inx
@@ -4687,8 +4645,7 @@ failure:
 .proc HighlightAndSelectIcon
         sta     icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
-        lda     icon_param
-        jsr     DrawIcon
+        ITK_CALL IconTK::DrawIcon, icon_param
 
         ldx     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -4700,13 +4657,12 @@ failure:
 ;;; ============================================================
 ;;; Remove specified icon from selection list, and redraw.
 ;;; Input: A = icon number
-;;; Assert: Must be in selection list and active window.
+;;; Assert: Must be in selection list.
 
 .proc UnhighlightAndDeselectIcon
         sta     icon_param
         ITK_CALL IconTK::UnhighlightIcon, icon_param
-        lda     icon_param
-        jsr     DrawIcon
+        ITK_CALL IconTK::DrawIcon, icon_param
 
         lda     icon_param
         jmp     RemoveFromSelectionList
@@ -4930,7 +4886,6 @@ iloop:  cpx     cached_window_entry_count
     IF_NE
         ;; Highlight and add to selection
         ITK_CALL IconTK::HighlightIcon, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
         ldx     selected_icon_count
         inc     selected_icon_count
         copy    icon_param, selected_icon_list,x
@@ -4938,9 +4893,15 @@ iloop:  cpx     cached_window_entry_count
     ELSE
         ;; Unhighlight and remove from selection
         ITK_CALL IconTK::UnhighlightIcon, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
         lda     icon_param
         jsr     RemoveFromSelectionList
+    END_IF
+
+        lda     window_id
+    IF_ZERO
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
+    ELSE
+        ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag select)
     END_IF
 
 done_icon:
@@ -5163,7 +5124,7 @@ last_pos:
         and     #kIconEntryWinIdMask ; which window?
         beq     :+              ; desktop, can draw/select
         cmp     active_window_id
-        bne     finish          ; not top window, skip draw/select
+        bne     redraw          ; not top window, skip select
 :
         ;; Set selection and redraw
         sta     selected_window_id
@@ -5171,9 +5132,7 @@ last_pos:
         copy    icon, selected_icon_list
         ITK_CALL IconTK::HighlightIcon, icon_param
 
-        lda     icon_param
-        jsr     DrawIcon
-
+redraw: ITK_CALL IconTK::DrawIcon, icon_param
 finish: rts
 .endproc
 
@@ -5542,7 +5501,7 @@ same_or_desktop:
 :       txa
         pha
         copy    selected_icon_list,x, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::DrawIcon, icon_param
         pla
         tax
         inx
@@ -5728,7 +5687,7 @@ num:    .byte   0
 
 .proc MarkIconOpen
         ptr := $06
-        sta     icon
+        sta     icon_param
         jsr     IconEntryLookup
         stax    ptr
 
@@ -5738,19 +5697,8 @@ num:    .byte   0
         ora     #kIconEntryFlagsDimmed
         sta     (ptr),y
 
-        ;; Only draw to desktop or active window
-        ldy     #IconEntry::win_flags
-        lda     (ptr),y
-        and     #kIconEntryWinIdMask
-        beq     :+
-        cmp     active_window_id
-        bne     done
-
-        icon := *+1
-:       lda     #SELF_MODIFIED_BYTE
-        jsr     DrawIcon
-
-done:   rts
+        ITK_CALL IconTK::DrawIcon, icon_param
+        rts
 .endproc
 
 ;;; ============================================================
@@ -5975,7 +5923,7 @@ header_and_offset_flag:
         copy    selected_icon_list,x, icon_param
         pha                     ; A = icon
         jsr     IconScreenToWindow
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
+        ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED
         pla                     ; A = icon
         jsr     IconWindowToScreen
         pla
@@ -9492,9 +9440,7 @@ start:  lda     icon_param
         lda     (ptr),y
         and     #AS_BYTE(~kIconEntryFlagsDimmed)
         sta     (ptr),y
-
-        lda     icon_param
-        jsr     DrawIcon
+        ITK_CALL IconTK::DrawIcon, icon_param
 
         jsr     PopPointers
 
@@ -11000,8 +10946,7 @@ finish: lda     #RenameDialogState::close
 end_filerecord_and_icon_update:
 
         ;; Draw the (maybe new) icon
-        lda     icon_param
-        jsr     DrawIcon
+        ITK_CALL IconTK::DrawIcon, icon_param
 
         ;; Is there a window for the folder/volume?
         jsr     FindWindowForSrcPath

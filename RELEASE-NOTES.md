@@ -25,6 +25,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Support selection in list views. ([#28](https://github.com/a2stuff/a2d/issues/28))
 * View style for windows is saved/restored across restarts.
 * Scroll position for windows is saved/restored across restarts.
+* Dimmed icons in inactive windows now render correctly.
 
 ### Disk Copy
 

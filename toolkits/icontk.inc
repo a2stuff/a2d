@@ -9,7 +9,7 @@
 InitToolKit     = $00   ; { .byte headersize, .addr a_polybuf, .word bufsize }
 AddIcon         = $01   ; param is address of IconEntry
 HighlightIcon   = $02   ; { .byte icon }
-DrawIcon        = $03   ; { .byte icon }
+DrawIconRaw     = $03   ; { .byte icon }
 RemoveIcon      = $04   ; { .byte icon }
 RemoveAll       = $05   ; { .byte window_id }
 FindIcon        = $06   ; { .word mousex, .word mousey, .byte result, .byte window_id }
@@ -24,6 +24,7 @@ DrawAll         = $09   ; { .byte window_id }
 IconInRect      = $0A   ; { .byte icon, rect bounds }
 EraseIcon       = $0B   ; { .byte icon }
 GetIconBounds   = $0C   ; { .byte icon, rect bounds out }
+DrawIcon        = $0D   ; { .byte icon }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 
