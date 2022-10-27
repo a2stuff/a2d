@@ -4554,13 +4554,13 @@ not_selected:
         cmp     active_window_id ; same window?
         beq     :+               ; if so, retain selection
         jsr     ClearSelection
-        copy    selected_window_id, active_window_id
+        copy    active_window_id, selected_window_id
 :       lda     icon_num
         jmp     HighlightAndSelectIcon ; select, nothing further
 
 replace_selection:
         jsr     ClearSelection
-        copy    selected_window_id, active_window_id
+        copy    active_window_id, selected_window_id
         lda     icon_num
         jsr     HighlightAndSelectIcon
         FALL_THROUGH_TO check_double_click
