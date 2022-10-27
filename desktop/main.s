@@ -2325,6 +2325,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
 
         pha
         jsr     HighlightAndSelectIcon
+        copy    active_window_id, selected_window_id
         pla
         jsr     ScrollIconIntoView
 
@@ -4553,11 +4554,13 @@ not_selected:
         cmp     active_window_id ; same window?
         beq     :+               ; if so, retain selection
         jsr     ClearSelection
+        copy    selected_window_id, active_window_id
 :       lda     icon_num
         jmp     HighlightAndSelectIcon ; select, nothing further
 
 replace_selection:
         jsr     ClearSelection
+        copy    selected_window_id, active_window_id
         lda     icon_num
         jsr     HighlightAndSelectIcon
         FALL_THROUGH_TO check_double_click
@@ -4679,7 +4682,7 @@ failure:
 ;;; ============================================================
 ;;; Add specified icon to selection list, and redraw.
 ;;; Input: A = icon number
-;;; Assert: Icon is in active window.
+;;; Assert: Icon is in active window/desktop, `selected_window_id` is set.
 
 .proc HighlightAndSelectIcon
         sta     icon_param
@@ -4690,7 +4693,6 @@ failure:
         ldx     selected_icon_count
         copy    icon_param, selected_icon_list,x
         inc     selected_icon_count
-        copy    active_window_id, selected_window_id
 
         rts
 .endproc
