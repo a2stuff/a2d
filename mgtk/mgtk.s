@@ -372,6 +372,7 @@ jump_table:
         .addr   DrawMenuImpl        ; $51 DrawMenu
         .addr   GetWinFrameRectImpl ; $52 GetWinFrameRect
         .addr   RedrawDeskTopImpl   ; $53 RedrawDeskTop
+        .addr   FindControlExImpl   ; $54 FindControlEx
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -493,6 +494,8 @@ param_lengths:
         PARAM_DEFN  0, $00, 0                ; $50 SetDeskPat
         PARAM_DEFN  0, $00, 0                ; $51 DrawMenu
         PARAM_DEFN  5, $82, 0                ; $52 GetWinFrameRect
+        PARAM_DEFN  0, $00, 0                ; $53 RedrawDeskTop
+        PARAM_DEFN  7, $82, 0                ; $54 FindControlEx
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -8756,8 +8759,10 @@ return_winrect_jmp:
         jsr     TopWindow
         bne     :+
         EXIT_CALL MGTK::Error::no_active_window
+:
 
-:       bit     current_winfo::vscroll
+ep:
+        bit     current_winfo::vscroll
         bpl     no_vscroll
 
         jsr     GetWinVertScrollRect
@@ -8867,6 +8872,26 @@ return_result:
         jmp     FindWindowImpl::return_result
 .endproc
 
+.proc FindControlExImpl
+        PARAM_BLOCK params, $82
+mousex          .word
+mousey          .word
+which_ctl       .byte
+which_part      .byte
+window_id       .byte
+        END_PARAM_BLOCK
+
+        jsr     SaveParamsAndStack
+
+        ;; Needed for FindControl
+        COPY_STRUCT MGTK::Point, params::mousex, current_penloc
+
+        ;; Needed for WindowByIdOrExit
+        copy    params::window_id, $82
+
+        jsr     WindowByIdOrExit
+        jmp     FindControlImpl::ep
+.endproc
 
 ;;; ============================================================
 ;;; SetCtlMax

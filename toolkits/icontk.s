@@ -235,6 +235,7 @@ mousex: .word   0
 mousey: .word   0
 which_ctl:      .byte   0
 which_part:     .byte   0
+window_id:      .byte   0       ; For FindControlEx
 .endparams
 
 ;;; GrafPort used to draw icon outlines during drag
@@ -965,7 +966,9 @@ poly_dy:        .word   0
         cmp     #MGTK::Area::content
         bne     fail            ; menubar, titlebar, etc
         COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
-        MGTK_CALL MGTK::FindControl, findcontrol_params
+        copy    findwindow_params::window_id, findcontrol_params::window_id
+        MGTK_CALL MGTK::FindControlEx, findcontrol_params
+        bne     fail
         lda     findcontrol_params::which_ctl
         .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
         bne     fail            ; scrollbar, etc.

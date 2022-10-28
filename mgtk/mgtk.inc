@@ -483,8 +483,8 @@ WindowToScreen  = $47           ; Map content coords to screen coords
 FindControl     = $48
 ;;; .word       mousex
 ;;; .word       mousey
-;;; .byte       which_ctl       Ctl::*
-;;; .byte       which_part      Part::*
+;;; .byte       which_ctl       (out) Ctl::*
+;;; .byte       which_part      (out) Part::*
 
 SetCtlMax       = $49
 ;;; .byte       which_ctl       Ctl::*_scroll_bar
@@ -529,6 +529,14 @@ GetWinFrameRect = $52           ; Get outer frame rect of window
 
 RedrawDeskTop   = $53           ; Redraw desktop, post updates for desktop and all windows
 ;;; (no parameters)
+
+FindControlEx   = $54           ; Like FindControl, but works on non-topmost windows
+;;; .word       mousex
+;;; .word       mousey
+;;; .byte       which_ctl       (out) Ctl::*
+;;; .byte       which_part      (out) Part::*
+;;; .byte       window_id
+
 
 ;;; ============================================================
 ;;; Graphics Primitives Constants

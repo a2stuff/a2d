@@ -936,8 +936,8 @@ Parameters:
 ```
 .word       mousex
 .word       mousey
-.byte       which_ctl       MGTK::Ctl::*
-.byte       which_part      MGTK::Part::*
+.byte       which_ctl       (out) MGTK::Ctl::*
+.byte       which_part      (out) MGTK::Part::*
 ```
 
 #### SetCtlMax ($49)
@@ -1056,6 +1056,20 @@ Redraws the desktop background, and posts update events for the desktop and all
 windows.
 
 No parameters.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### FindControlEx ($48)
+Like `FindControl`, but works on all windows, not just the topmost window.
+
+Parameters:
+```
+.word       mousex
+.word       mousey
+.byte       which_ctl       (out) MGTK::Ctl::*
+.byte       which_part      (out) MGTK::Part::*
+.byte       window_id
+```
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
