@@ -14,10 +14,12 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
+        BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
 
@@ -197,14 +199,11 @@ start_da:
         ;; The following rects are iterated over to identify
         ;; a hit target for a click.
 
-        kNumHitRects = 9
+        kNumHitRects = 8
         kUpRectIndex = 2
         kDownRectIndex = 3
 
         kControlMarginX = 16
-
-        kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
-        kOKButtonTop = kDialogHeight - kButtonHeight - 7
 
         kFieldTop = 20
         kField1Left = 22
@@ -223,7 +222,6 @@ start_da:
         kUpDownButtonLeft = kDialogWidth - kUpDownButtonWidth - kControlMarginX
 
         first_hit_rect := *
-        DEFINE_RECT_SZ ok_button_rect, kOKButtonLeft, kOKButtonTop, kButtonWidth, kButtonHeight
         DEFINE_RECT_SZ up_arrow_rect, kUpDownButtonLeft, 14, kUpDownButtonWidth, kUpDownButtonHeight
         DEFINE_RECT_SZ down_arrow_rect, kUpDownButtonLeft, 26, kUpDownButtonWidth, kUpDownButtonHeight
         DEFINE_RECT_SZ day_rect, kField1Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
@@ -250,6 +248,11 @@ start_da:
 
         DEFINE_RECT_SZ date_rect, kControlMarginX, kFieldTop-kFieldPaddingY, 122, kFieldHeight+kFieldPaddingY*2
         DEFINE_RECT_SZ time_rect, 150, kFieldTop-kFieldPaddingY, 102, kFieldHeight+kFieldPaddingY*2
+
+        kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
+        kOKButtonTop = kDialogHeight - kButtonHeight - 7
+        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kOKButtonTop
+        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
 .params settextbg_black_params
 backcolor:   .byte   0          ; black
@@ -541,9 +544,9 @@ init_window:
         lda     event_params::key
 
         cmp     #CHAR_RETURN
-        jeq     OnOk
+        jeq     OnKeyOk
         cmp     #CHAR_ESCAPE
-        jeq     OnOk
+        jeq     OnKeyOk
 
         ;; If there is a system clock, fields are read-only
         ldx     clock_flag
@@ -622,19 +625,41 @@ init_window:
         cmp     #kDAWindowId
         bne     miss
         lda     findwindow_params::which_area
-        bne     hit
+        cmp     #MGTK::Area::content
+        beq     hit
 miss:   rts
+hit:
+        ;; ----------------------------------------
+
+        MGTK_CALL MGTK::SetPort, winfo::port
+        MGTK_CALL MGTK::SetPenMode, penXOR
+
+        copy    #kDAWindowId, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ;; ----------------------------------------
 
-hit:
-        pha
-        MGTK_CALL MGTK::SetPort, winfo::port
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        pla
+        MGTK_CALL MGTK::InRect, ok_button_rec::rect
+        cmp     #MGTK::inrect_inside
+        jeq     OnClickOk
 
-        cmp     #MGTK::Area::content
-        bne     miss
+        MGTK_CALL MGTK::InRect, rect_12hour
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        lda     #$00
+        jmp     HandleOptionClick
+        END_IF
+
+        MGTK_CALL MGTK::InRect, rect_24hour
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        lda     #$80
+        jmp     HandleOptionClick
+        END_IF
+
+        ;; ----------------------------------------
+
         jsr     FindHitTarget
         cpx     #0
         beq     miss
@@ -647,18 +672,30 @@ hit:
 jump:   jmp     SELF_MODIFIED
 
 hit_target_jump_table:
-        .addr   OnOk, OnUp, OnDown
+        .addr   OnUp, OnDown
         .addr   OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick
         ASSERT_ADDRESS_TABLE_SIZE hit_target_jump_table, ::kNumHitRects
 .endproc
 
 ;;; ============================================================
 
+.proc OnClickOk
+        BTK_CALL BTK::Track, ok_button_params
+        beq     OnOk
+        rts
+.endproc
+
+.proc OnKeyOk
+        BTK_CALL BTK::Flash, ok_button_params
+        FALL_THROUGH_TO OnOk
+.endproc
+
 .proc OnOk
-        MGTK_CALL MGTK::PaintRect, ok_button_rect
         jsr     UpdateProDOS
         jmp     Destroy
 .endproc
+
+;;; ============================================================
 
 .proc OnUp
         txa
@@ -980,28 +1017,6 @@ dialog_result:  .byte   0
 ;;; Index returned in X.
 
 .proc FindHitTarget
-        copy    #kDAWindowId, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-
-        ;; ----------------------------------------
-
-        MGTK_CALL MGTK::InRect, rect_12hour
-        cmp     #MGTK::inrect_inside
-        IF_EQ
-        lda     #$00
-        jmp     HandleOptionClick
-        END_IF
-
-        MGTK_CALL MGTK::InRect, rect_24hour
-        cmp     #MGTK::inrect_inside
-        IF_EQ
-        lda     #$80
-        jmp     HandleOptionClick
-        END_IF
-
-        ;; ----------------------------------------
-
         ldx     #1
         copy16  #first_hit_rect, test_addr
 
@@ -1073,10 +1088,6 @@ label_downarrow:
 
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        MGTK_CALL MGTK::FrameRect, ok_button_rect
-        MGTK_CALL MGTK::MoveTo, label_ok_pos
-        param_call DrawString, label_ok
-
         ;; If there is a system clock, only draw the OK button.
         ldx     clock_flag
     IF_EQ
@@ -1121,6 +1132,8 @@ label_downarrow:
         param_call DrawString, clock_12hour_label_str
         MGTK_CALL MGTK::MoveTo, clock_24hour_label_pos
         param_call DrawString, clock_24hour_label_str
+
+        BTK_CALL BTK::Draw, ok_button_params
 
         FALL_THROUGH_TO DrawOptionButtons
 .endproc

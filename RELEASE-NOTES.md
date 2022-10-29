@@ -26,7 +26,7 @@ Project Page: https://github.com/a2stuff/a2d
 * View style for windows is saved/restored across restarts.
 * Scroll position for windows is saved/restored across restarts.
 * Don't clamp drag highlight to screen bounds.
-* Dimmed icons in inactive windows now render correctly.
+* Dimmed icons in inactive windows now render correctly. ([#613]https://github.com/a2stuff/a2d/issues/613)
 * Enable dropping files onto folders in inactive windows.
 
 ### Disk Copy
