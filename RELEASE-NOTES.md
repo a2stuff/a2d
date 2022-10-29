@@ -33,6 +33,11 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Support up to 14 devices. ([#712](https://github.com/a2stuff/a2d/issues/712))
 
+### Desk Accessories
+
+* Date & Time: Show shortcut key for OK button.
+
+
 ## 1.2
 
 An unofficial release with bug fixes and enhancements. See the release notes at:
