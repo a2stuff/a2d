@@ -1051,7 +1051,7 @@ Rect        rect            (out)
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### RedrawDeskTop ($51)
+#### RedrawDeskTop ($53)
 Redraws the desktop background, and posts update events for the desktop and all
 windows.
 
@@ -1059,7 +1059,7 @@ No parameters.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### FindControlEx ($48)
+#### FindControlEx ($54)
 Like `FindControl`, but works on all windows, not just the topmost window.
 
 Parameters:
