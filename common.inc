@@ -240,8 +240,8 @@ INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 ;;; $02 = folder right ! (MT:Y)    $12 = pound        *
 ;;; $03 = file left    !           $13 = pi           *
 ;;; $04 = file right   !           $14 = divide       *
-;;; $05 = pointer        (MT:B)    $15 = rarrow       ! (MT:U)
-;;; $06 = vbar           (MT:_)    $16 = degree       !
+;;; $05 = disk left    !           $15 = rarrow       ! (MT:U)
+;;; $06 = disk right   !           $16 = degree       !
 ;;; $07 = hbar           (MT:S)    $17 = open circ
 ;;; $08 = larrow       ! (MT:H)    $18 = close          (MT:])
 ;;; $09 = left box                 $19 = gray odd       (MT:W)
@@ -262,6 +262,8 @@ kGlyphFolderLeft        = $01
 kGlyphFolderRight       = $02
 kGlyphFileLeft          = $03
 kGlyphFileRight         = $04
+kGlyphDiskLeft          = $05
+kGlyphDiskRight         = $06
 
 kGlyphLeftArrow         = $08
 kGlyphRightArrow        = $15

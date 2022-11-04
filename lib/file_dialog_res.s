@@ -25,6 +25,8 @@ str_folder:
         PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
 str_file:
         PASCAL_STRING {kGlyphFileLeft, kGlyphFileRight}
+str_vol:
+        PASCAL_STRING {kGlyphDiskLeft, kGlyphDiskRight}
 
         kControlsLeft = 28
         kControlsTop  = 27
@@ -50,8 +52,8 @@ kMaxNameWidth = 140
         DEFINE_POINT disk_label_pos, 0, 16 + kSystemFontHeight
         DEFINE_RECT_SZ disk_name_rect, kDiskLabelCenterX - kMaxNameWidth/2, 16, kMaxNameWidth, kSystemFontHeight
 
-        DEFINE_BUTTON change_drive_button_rec, kFilePickerDlgWindowID, res_string_button_change_drive,, kButtonsLeft, kControlsTop + 0 * (kButtonHeight + kButtonGap)
-        DEFINE_BUTTON_PARAMS change_drive_button_params, change_drive_button_rec
+        DEFINE_BUTTON drives_button_rec, kFilePickerDlgWindowID, res_string_button_drives,, kButtonsLeft, kControlsTop + 0 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON_PARAMS drives_button_params, drives_button_rec
         DEFINE_BUTTON open_button_rec, kFilePickerDlgWindowID,         res_string_button_open,,         kButtonsLeft, kControlsTop + 1 * (kButtonHeight + kButtonGap)
         DEFINE_BUTTON_PARAMS open_button_params, open_button_rec
         DEFINE_BUTTON close_button_rec, kFilePickerDlgWindowID,        res_string_button_close,,        kButtonsLeft, kControlsTop + 2 * (kButtonHeight + kButtonGap)

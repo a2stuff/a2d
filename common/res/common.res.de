@@ -4,6 +4,7 @@
 .define res_string_button_try_again "Wiederholen"
 .define res_char_button_try_again_shortcut 'W'
 .define res_string_button_change_drive "Laufwerk"
+.define res_string_button_drives "Laufwerke"
 .define res_string_button_open "\\ffnen"
 .define res_string_button_close "Schlie~en"
 .define res_string_label_disk "Laufwerk: "

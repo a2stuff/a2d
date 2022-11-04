@@ -149,7 +149,7 @@ routine_table:
         lda     #0
         sta     file_dialog_res::open_button_rec::state
         sta     file_dialog_res::close_button_rec::state
-        sta     file_dialog_res::change_drive_button_rec::state
+        sta     file_dialog_res::drives_button_rec::state
 
 .if FD_EXTENDED
         pla
@@ -191,8 +191,6 @@ extra_controls_flag:
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-        cmp     #MGTK::EventKind::apple_key
-        beq     is_btn
         cmp     #MGTK::EventKind::button_down
         bne     :+
         copy    #0, type_down_buf
@@ -244,14 +242,6 @@ l1:
 ;;; ============================================================
 
 .proc HandleButtonDown
-        ;; We allow Apple+Click just for Change Drive button
-        ldx     #0
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::apple_key
-        bne     :+
-        ldx     #$80
-:       stx     is_apple_click_flag
-
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
@@ -261,8 +251,6 @@ ret:    rts
         lda     findwindow_params::window_id
         cmp     #file_dialog_res::kFilePickerDlgWindowID
         beq     not_list
-        bit     is_apple_click_flag
-        bmi     ret             ; ignore except for Change Drive
         jsr     ListClick
         bmi     ret
         jsr     DetectDoubleClick
@@ -285,21 +273,16 @@ not_list:
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ;; --------------------------------------------------
-        ;; Change Drive button
+        ;; Drives button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::change_drive_button_rec::rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::drives_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        jsr     IsChangeDriveAllowed
-        bcs     :+
-        BTK_CALL BTK::Track, file_dialog_res::change_drive_button_params
+        BTK_CALL BTK::Track, file_dialog_res::drives_button_params
         bmi     :+
-        jsr     DoChangeDrive
+        jsr     DoDrives
 :       rts
     END_IF
-
-        bit     is_apple_click_flag
-        bmi     ret             ; ignore except for Change Drive
 
         ;; --------------------------------------------------
         ;; Open button
@@ -335,6 +318,8 @@ not_list:
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
+        jsr     IsOkAllowed
+        bcs     :+
         BTK_CALL BTK::Track, file_dialog_res::ok_button_params
         bmi     :+
         jsr     HandleOk
@@ -372,9 +357,6 @@ not_list:
 .endif
 
         rts
-
-is_apple_click_flag:
-        .byte   0
 .endproc
 
 ;;; ============================================================
@@ -486,30 +468,17 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 ;;; ============================================================
 
-.proc DoChangeDrive
-        jsr     ModifierDown
-        sta     drive_dir_flag
-        jsr     ShiftDown
-        ora     drive_dir_flag
-        sta     drive_dir_flag
-
-        jsr     NextDeviceNum
-        jsr     DeviceOnLine
-
+.proc DoDrives
+        jsr     SetRootPath
         jmp     UpdateListFromPath
 .endproc
 
 ;;; ============================================================
+;;; Set `path_buf` to "/"
 
-;;; Output: C=0 if allowed, C=1 if not.
-.proc IsChangeDriveAllowed
-        lda     DEVCNT
-        beq     no
-
-        clc
-        rts
-
-no:     sec
+.proc SetRootPath
+        copy    #1, path_buf
+        copy    #'/', path_buf+1
         rts
 .endproc
 
@@ -534,18 +503,8 @@ no:     sec
 
 ;;; Output: C=0 if allowed, C=1 if not.
 .proc IsCloseAllowed
-        ;; Walk back looking for last '/'
-        ldx     path_buf
-        beq     no
-:       lda     path_buf,x
-        cmp     #'/'
-        beq     :+
-        dex
-        bpl     :-
-        bmi     no
-
-        ;; Volume?
-:       cpx     #1
+        lda     path_buf
+        cmp     #1
         beq     no
 
         clc
@@ -557,12 +516,21 @@ no:     sec
 
 ;;; ============================================================
 
+IsOkAllowed := IsCloseAllowed
+
+;;; ============================================================
+
 .proc DoClose
         jsr     IsCloseAllowed
         bcs     ret
 
         ;; Remove last segment
         jsr     StripPathBufSegment
+
+        lda     path_buf
+        bne     :+
+        jsr     SetRootPath
+:
 
         jsr     UpdateListFromPath
 
@@ -591,8 +559,6 @@ ret:    rts
         copy    #0, type_down_buf
         ldx     event_params::modifiers
         lda     event_params::key
-        cmp     #CHAR_TAB
-        jeq     KeyTab
 
 .if FD_EXTENDED
         bit     extra_controls_flag
@@ -634,11 +600,11 @@ ret:    rts
         cmp     #CHAR_ESCAPE
         jeq     KeyEscape
 
-        cmp     #CHAR_TAB
-        jeq     KeyTab
-
         cmp     #CHAR_CTRL_O
         jeq     KeyOpen
+
+        cmp     #CHAR_CTRL_D
+        jeq     KeyDrives
 
         cmp     #CHAR_CTRL_C
         jeq     KeyClose
@@ -680,9 +646,20 @@ ret:    rts
 
 ;;; ============================================================
 
+.proc KeyDrives
+        BTK_CALL BTK::Flash, file_dialog_res::drives_button_params
+        jmp     DoDrives
+.endproc
+
+;;; ============================================================
+
 .proc KeyReturn
+        jsr     IsOkAllowed
+        bcs     ret
         BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
         jmp     HandleOk
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -690,17 +667,6 @@ ret:    rts
 .proc KeyEscape
         BTK_CALL BTK::Flash, file_dialog_res::cancel_button_params
         jmp     HandleCancel
-.endproc
-
-;;; ============================================================
-
-.proc KeyTab
-        jsr     IsChangeDriveAllowed
-        bcs     ret
-
-        BTK_CALL BTK::Flash, file_dialog_res::change_drive_button_params
-        jsr     DoChangeDrive
-ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -900,7 +866,7 @@ yes:    clc
 ;;; ============================================================
 
 .proc UpdateDynamicButtons
-        jsr     DrawChangeDriveLabel
+        jsr     DrawOkLabel
         jsr     DrawOpenLabel
         jmp     DrawCloseLabel
 .endproc
@@ -960,13 +926,13 @@ yes:    clc
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::penXOR
 
-        BTK_CALL BTK::Draw, file_dialog_res::ok_button_params
-        BTK_CALL BTK::Draw, file_dialog_res::cancel_button_params
-
-        jsr     IsChangeDriveAllowed
+        jsr     IsOkAllowed
         ror
-        sta     file_dialog_res::change_drive_button_rec::state
-        BTK_CALL BTK::Draw, file_dialog_res::change_drive_button_params
+        sta     file_dialog_res::ok_button_rec::state
+        BTK_CALL BTK::Draw, file_dialog_res::ok_button_params
+
+        BTK_CALL BTK::Draw, file_dialog_res::cancel_button_params
+        BTK_CALL BTK::Draw, file_dialog_res::drives_button_params
 
         jsr     IsOpenAllowed
         ror
@@ -1011,6 +977,21 @@ ret:    rts
 
 ;;; ============================================================
 
+.proc DrawOkLabel
+        jsr     IsOkAllowed
+        lda     #0
+        ror                     ; C into high bit
+        cmp     file_dialog_res::ok_button_rec::state
+        beq     ret             ; no change
+
+        sta     file_dialog_res::ok_button_rec::state
+        BTK_CALL BTK::Hilite, file_dialog_res::ok_button_params
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+
 .proc DrawCloseLabel
         jsr     IsCloseAllowed
         lda     #0
@@ -1020,21 +1001,6 @@ ret:    rts
 
         sta     file_dialog_res::close_button_rec::state
         BTK_CALL BTK::Hilite, file_dialog_res::close_button_params
-
-ret:    rts
-.endproc
-
-;;; ============================================================
-
-.proc DrawChangeDriveLabel
-        jsr     IsChangeDriveAllowed
-        lda     #0
-        ror                     ; C into high bit
-        cmp     file_dialog_res::change_drive_button_rec::state
-        beq     ret             ; no change
-
-        sta     file_dialog_res::change_drive_button_rec::state
-        BTK_CALL BTK::Hilite, file_dialog_res::change_drive_button_params
 
 ret:    rts
 .endproc
@@ -1174,27 +1140,11 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
 
 ;;; ============================================================
 
-drive_dir_flag:
-        .byte   0
-
 .proc NextDeviceNum
-        bit     drive_dir_flag
-        bmi     incr
-
-        ;; Decrement
         dec     device_num
         bpl     :+
         copy    DEVCNT, device_num
 :       rts
-
-        ;; Increment
-incr:   ldx     device_num
-        cpx     DEVCNT
-        bne     :+
-        ldx     #AS_BYTE(-1)
-:       inx
-        stx     device_num
-        rts
 .endproc
 
 ;;; ============================================================
@@ -1222,27 +1172,17 @@ last:   .byte   0
 .endif
 
 ;;; ============================================================
+;;; Output: Z=1 on success, Z=1 on failure
 
 .proc OpenDir
 retry:
         MLI_CALL OPEN, open_params
-        beq     :+
-
-        jsr     DeviceOnLine
-        jsr     ClearSelection
-        jmp     retry
-
-:       lda     open_params::ref_num
+        bne     ret
+        lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         MLI_CALL READ, read_params
-        beq     :+
-
-        jsr     DeviceOnLine
-        jsr     ClearSelection
-        jmp     retry
-
-:       rts
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -1251,10 +1191,12 @@ retry:
         ptr := $06
         stax    ptr
         ldx     path_buf
+        cpx     #1
+        beq     :+
         lda     #'/'
         sta     path_buf+1,x
         inc     path_buf
-        ldy     #0
+:       ldy     #0
         lda     (ptr),y
         tay
         clc
@@ -1300,7 +1242,16 @@ retry:
 ;;; ============================================================
 
 .proc ReadDir
+        lda     path_buf
+        cmp     #1
+        jeq     ReadDrives
+
         jsr     OpenDir
+        beq     :+
+        copy    #1, path_buf
+        jmp     ReadDrives
+
+:
         lda     #0
         sta     d1
         sta     d2
@@ -1347,18 +1298,8 @@ l4:     ldy     #$00
         and     #NAME_LENGTH_MASK
         sta     (ptr),y
 
-        dst_ptr := $08
         lda     d1
-        jsr     GetNthFilename
-        stax    dst_ptr
-
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     (dst_ptr),y
-        dey
-        bpl     :-
+        jsr     CopyIntoNthFilename
 
         inc     d1
         inc     d2
@@ -1399,25 +1340,100 @@ d4:     .byte   0
 
 ;;; ============================================================
 
+        DEFINE_ON_LINE_PARAMS on_line_params_drives, 0, dir_read_buf
+
+.proc ReadDrives
+        MLI_CALL ON_LINE, on_line_params_drives
+
+        ptr := $06
+        copy16  #dir_read_buf, ptr
+
+        copy    #0, num_file_names
+
+loop:   ldy     #0
+        lda     (ptr),y         ; A = unit_num | name_len
+        and     #NAME_LENGTH_MASK
+        bne     :+
+        iny                     ; 0 signals error or complete
+        lda     (ptr),y
+        bne     next            ; error, so skip
+        beq     finish          ; always
+:
+        sta     (ptr),y         ; A = name_len
+
+        param_call_indirect AdjustVolumeNameCase, ptr
+
+        lda     num_file_names
+        jsr     CopyIntoNthFilename
+
+
+        ldx     num_file_names
+        txa
+        ora     #$80            ; treat as folder
+        sta     file_list_index,x
+
+        inc     num_file_names
+
+next:   add16_8 ptr, #16        ; advance to next
+        jmp     loop
+
+finish:
+        jsr     SortFileNames
+        jsr     SetPtrAfterFilenames
+        clc
+        rts
+.endproc
+
+;;; ============================================================
+;;; Inputs: A = dst filename index; $06 = src ptr
+;;; Trashes $08
+
+.proc CopyIntoNthFilename
+        src_ptr := $06
+        dst_ptr := $08
+        jsr     GetNthFilename
+        stax    dst_ptr
+
+        ldy     #0
+        lda     (src_ptr),y
+        tay
+:       lda     (src_ptr),y
+        sta     (dst_ptr),y
+        dey
+        bpl     :-
+
+        rts
+.endproc
+
+;;; ============================================================
+
 .proc UpdateDiskName
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
+
+        lda     path_buf
+        cmp     #1
+        beq     ret
+
         copy16  #path_buf, $06
 
+        copy    #kGlyphDiskLeft, file_dialog_res::filename_buf+1
+        copy    #kGlyphDiskRight, file_dialog_res::filename_buf+2
+        copy    #kGlyphSpacer, file_dialog_res::filename_buf+3
+        ldy     #3
+
         ;; Copy first segment
-        ldy     #0
         ldx     #2              ; skip leading slash
 :       lda     path_buf,x
         cmp     #'/'
-        beq     finish
+        beq     :+
         iny
         sta     file_dialog_res::filename_buf,y
         cpx     path_buf
-        beq     finish
+        beq     :+
         inx
         bne     :-              ; always
-
-finish: sty     file_dialog_res::filename_buf
+:       sty     file_dialog_res::filename_buf
 
         param_call MeasureString, file_dialog_res::filename_buf
         text_width := $06
@@ -1427,7 +1443,8 @@ finish: sty     file_dialog_res::filename_buf
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         param_call DrawString, file_dialog_res::filename_buf
 
-        rts
+ret:    rts
+
 .endproc
 
 ;;; ============================================================
@@ -1436,6 +1453,10 @@ finish: sty     file_dialog_res::filename_buf
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, file_dialog_res::dir_name_rect
         copy16  #path_buf, $06
+
+        lda     path_buf
+        cmp     #1
+        beq     ret
 
         ;; Copy last segment
         ldx     path_buf
@@ -1451,11 +1472,12 @@ finish: sty     file_dialog_res::filename_buf
     IF_NE
         copy    #kGlyphFolderLeft, file_dialog_res::filename_buf+1
         copy    #kGlyphFolderRight, file_dialog_res::filename_buf+2
-        copy    #kGlyphSpacer, file_dialog_res::filename_buf+3
-        iny
-        iny
-        iny
+    ELSE
+        copy    #kGlyphDiskLeft, file_dialog_res::filename_buf+1
+        copy    #kGlyphDiskRight, file_dialog_res::filename_buf+2
     END_IF
+        copy    #kGlyphSpacer, file_dialog_res::filename_buf+3
+        ldy     #4
 
 :       lda     path_buf,x
         sta     file_dialog_res::filename_buf,y
@@ -1474,7 +1496,7 @@ finish: sty     file_dialog_res::filename_buf
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
         param_call DrawString, file_dialog_res::filename_buf
 
-        rts
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -1858,6 +1880,13 @@ listbox::selected_index = selected_index
         pla
     IF_NS
         ldax    #file_dialog_res::str_folder
+
+        ldy     path_buf
+        cpy     #1
+      IF_EQ
+        ldax    #file_dialog_res::str_vol
+      END_IF
+
     ELSE
         ldax    #file_dialog_res::str_file
     END_IF

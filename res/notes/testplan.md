@@ -431,8 +431,6 @@
 
 ## Shortcuts
 
-* Set up multiple volumes (e.g. V1, V2, V3). Launch DeskTop. Use Shortcuts > Add a Shortcut... to add an shortcut on V2. Run Shortcuts > Edit a Shortcut... and select the added shortcut to edit it, which should init the dialog showing V2. Click Change Drive. Verify that the picker now shows V3.
-
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
 
 * Launch DeskTop. Create a shortcut, "menu and list" / "at boot". Create a second shortcut, "menu and list", "at first use". Create a third shortcut, "menu and list", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
@@ -740,9 +738,6 @@ Test the following in all of the above, except where called out specifically:
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Press Apple+1 through Apple+5. Verify that the radio buttons on the right are selected.
 
 * Browse to a directory containing one or more files with starting with mixed case (AppleWorks or GS/OS). Verify the filenames appear with correct case.
-* Verify that the device order (via clicking Change Drive or pressing Tab) matches the order of volumes shown on the DeskTop (boot device first, etc). Hold either Apple key when clicking Change Drive or pressing Tab, and verify that the order is reversed.
-  * On a IIgs: Hold the Shift key when clicking Change Drive, or press Shift+Tab, and verify that the order is reversed.
-  * On a Platinum IIe: Hold the Shift key when clicking Change Drive, or press Shift+Tab, and verify that the order is reversed.
 * Browse to a directory containing 7 files. Verify that the scrollbar is inactive.
 * Browse to a directory containing 8 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
 
@@ -768,19 +763,19 @@ Test the following in all of the above, except where called out specifically:
   * Move the cursor over the text field. Verify that the cursor changes to an I-beam.
   * Move the cursor off the text field. Verify that the cursor changes to a pointer.
 
+* Click the Drives button. Verify that on-line volumes are listed in alphabetical order.
+* Click the Drives button. Manually eject a disk. Click the Drives button again. Verify that the ejected disk is removed from the list.
+
 Repeat for each file picker:
-* Configure a system with only one drive. Verify that the file picker's Change Drive button is dimmed.
 * While there is no selection in the list box, verify that the Open button is dimmed.
 * Select a folder in the list box. Verify that the Open button is not dimmed.
 * Select a non-folder in the list box. Verify that the Open button is dimmed.
-* Navigate to the root directory of a disk. Verify that the Close button is dimmed.
+* Navigate to the root directory of a disk. Verify that the Close button is not dimmed.
 * Open a folder. Verify that the Close button is not dimmed, that there is no selection, and that Open is dimmed. Hit Close until at the root. Verify that Close is dimmed.
+* Click Drives. Verify that the Close button is dimmed.
+* Click Drives. Verify that the OK button is dimmed. Click a volume name and click Open. Verify that the OK button is no longer dimmed.
 * Verify that dimmed buttons don't respond to clicks.
-* Verify that dimmed buttons don't respond to keyboard shortcuts (Tab for Change Drive, Control+O for Open, Control+C for Close).
-
-For DeskTop's Shortcuts > Add/Edit a Shortcut... file picker:
-* Select a file and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close are dimmed. Click Cancel. Verify that the buttons return to their previous state.
-* Select a folder and click OK. Verify that when focus is in the second input, that all of Change Drive, Open and Close are dimmed. Click Cancel. Verify that the buttons return to their previous state.
+* Verify that dimmed buttons don't respond to keyboard shortcuts (Return for OK, Control+O for Open, Control+C for Close).
 
 For DeskTop's Shortcut > Edit a Shortcut... file picker:
 * Create a shortcut not on the startup volume. Edit the shortcut. Verify that the file picker shows the shortcut target volume and file selected.

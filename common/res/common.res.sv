@@ -4,6 +4,7 @@
 .define res_string_button_try_again "F|rs|k igen"
 .define res_char_button_try_again_shortcut 'F'
 .define res_string_button_change_drive "Byt Enhet"
+.define res_string_button_drives "Enheter"
 .define res_string_button_open "\\ppna"
 .define res_string_button_close "St{ng"
 .define res_string_label_disk "Skiva: "

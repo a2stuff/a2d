@@ -8,7 +8,8 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### General
 
-* File picker dialogs simplified. ([#699](https://github.com/a2stuff/a2d/issues/699))
+* File picker dialogs no longer show paths. ([#699](https://github.com/a2stuff/a2d/issues/699))
+* File picker dialogs show drives list. ([#599](https://github.com/a2stuff/a2d/issues/599))
 
 ### DeskTop
 

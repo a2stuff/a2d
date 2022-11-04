@@ -4,6 +4,7 @@
 .define res_string_button_try_again "Reintentar"
 .define res_char_button_try_again_shortcut 'R'
 .define res_string_button_change_drive "Cambiar Unidad"
+.define res_string_button_drives "Unidades"
 .define res_string_button_open "Abrir"
 .define res_string_button_close "Cerrar"
 .define res_string_label_disk "Disco: "
