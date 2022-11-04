@@ -8147,40 +8147,6 @@ DrawListViewRowZeroBased := DrawListViewRow::ep_zero_based
 
 ;;; ============================================================
 
-.proc PrepareColGlyph
-        file_type := list_view_filerecord + FileRecord::file_type
-
-        lda     file_type
-        cmp     #FT_DIRECTORY
-    IF_EQ
-        lda     #kGlyphFolderLeft
-        ldx     #kGlyphFolderRight
-    ELSE
-        lda     #kGlyphFileLeft
-        ldx     #kGlyphFileRight
-    END_IF
-        sta     text_buffer2::data
-        stx     text_buffer2::data+1
-        copy    #2, text_buffer2::length
-
-        rts
-.endproc
-
-.proc PrepareColName
-        name := list_view_filerecord + FileRecord::name
-
-        lda     name
-        and     #NAME_LENGTH_MASK
-        sta     text_buffer2::length
-        tax
-:       lda     name,x
-        sta     text_buffer2::data-1,x
-        dex
-        bne     :-
-
-        rts
-.endproc
-
 .proc PrepareColType
         file_type := list_view_filerecord + FileRecord::file_type
 
