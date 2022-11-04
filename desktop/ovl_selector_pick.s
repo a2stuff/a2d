@@ -52,7 +52,7 @@ DoAdd:  ldx     #1
         inx
 L9052:  lda     #$00
         sta     path_buf1       ; clear name, but leave path alone
-        ldy     #$03
+        ldy     #$03 | $80      ; high bit set = Add
         lda     #$02
         jsr     file_dialog__Exec
         pha

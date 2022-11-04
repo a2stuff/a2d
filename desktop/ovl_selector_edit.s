@@ -12,8 +12,10 @@
 ;;; Called back from file dialog's `Start`
 .proc Init
         stx     which_run_list
-        sty     copy_when
-
+        sty     is_add_flag
+        tya
+        and     #$7F
+        sta     copy_when
 
         copy    #$80, file_dialog::extra_controls_flag
 
@@ -81,8 +83,8 @@ buffer: .res 16, 0
 ;;; ============================================================
 
 .proc DrawControls
-        lda     path_buf0
-    IF_EQ
+        bit     is_add_flag
+    IF_NS
         ldax    #label_add
     ELSE
         ldax    #label_edit
@@ -235,6 +237,8 @@ found:  cpy     #2
 which_run_list:
         .byte   0
 copy_when:
+        .byte   0
+is_add_flag:                    ; high bit set = Add, clear = Edit
         .byte   0
 
 ;;; ============================================================
