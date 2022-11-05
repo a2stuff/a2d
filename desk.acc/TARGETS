@@ -4,6 +4,7 @@ joystick                        desk.acc/control.panels         optional
 sounds                          desk.acc/control.panels         optional
 startup.options                 desk.acc/control.panels         optional
 system.speed                    desk.acc/control.panels         optional
+analog.clock                    desk.acc/screen.savers          optional
 digital.clock                   desk.acc/screen.savers          optional
 flying.toasters                 desk.acc/screen.savers          optional
 invert                          desk.acc/screen.savers          optional
