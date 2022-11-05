@@ -37,6 +37,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Desk Accessories
 
 * Date & Time: Show shortcut key for OK button.
+* Digital Clock: A new DA that shows the current time. ([#590](https://github.com/a2stuff/a2d/issues/590))
 
 
 ## 1.2
