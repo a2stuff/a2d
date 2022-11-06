@@ -11,7 +11,6 @@
         .include "apple2.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
-        .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
@@ -34,12 +33,12 @@
 
         key       :=   $C000
         strobe    :=   $C010
+        fullscr   :=   $C052
 
         pread     :=   $FB1E
         settx     :=   $FB39
         setgr     :=   $FB40
         vtab      :=   $FB5B
-        clear     :=   $FC58
         wait      :=   $FCA8
         cout1     :=   $FDF0
 
@@ -52,10 +51,10 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
 .proc Start
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
-
+        JUMP_TABLE_MGTK_CALL MGTK::HideCursor
+ 
         bit     ROMIN2
         sta     ALTZPOFF
-        jsr     SaveText
         sta     TXTSET
         sta     CLR80VID
 
@@ -63,93 +62,12 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         sta     TXTCLR
         sta     SET80VID
-        jsr     RestoreText
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
+        JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         jmp     JUMP_TABLE_RGB_MODE
-.endproc
-
-;;; ============================================================
-
-;;; Save and clear main/aux text page 1 (preserving screen holes)
-.proc SaveText
-        sta     SET80STORE      ; let PAGE2 control banking
-        lda     #0
-        sta     CV
-
-        ptr1 := $06
-        ptr2 := $08
-
-        ;; Set BASL/H
-rloop:  jsr     VTAB
-        add16   BASL, #save_buffer-$400, ptr1
-        add16   ptr1, #$400, ptr2
-        ldy     #39
-
-cloop:
-        ;; Main
-        lda     (BASL),y
-        sta     (ptr1),y
-        lda     #kMainPageClearByte
-        sta     (BASL),y
-
-        ;; Aux
-        sta     PAGE2ON
-        lda     (BASL),y
-        sta     (ptr2),y
-        lda     #kAuxPageClearByte
-        sta     (BASL),y
-        sta     PAGE2OFF
-
-        dey
-        bpl     cloop
-
-        inc     CV
-        lda     CV
-        cmp     #24
-        bne     rloop
-
-        sta     CLR80STORE
-        rts
-.endproc
-
-;;; Restore main/aux text page 1 (preserving screen holes)
-.proc RestoreText
-        sta     SET80STORE      ; let PAGE2 control banking
-        lda     #0
-        sta     CV
-
-        ptr1 := $06
-        ptr2 := $08
-
-        ;; Set BASL/H
-rloop:  jsr     VTAB
-        add16   BASL, #save_buffer-$400, ptr1
-        add16   ptr1, #$400, ptr2
-        ldy     #39
-
-cloop:
-        ;; Main
-        lda     (ptr1),y
-        sta     (BASL),y
-
-        ;; Aux
-        sta     PAGE2ON
-        lda     (ptr2),y
-        sta     (BASL),y
-        sta     PAGE2OFF
-
-        dey
-        bpl     cloop
-
-        inc     CV
-        lda     CV
-        cmp     #24
-        bne     rloop
-
-        sta     CLR80STORE
-        rts
+        
 .endproc
 
 ;;; ============================================================
@@ -166,13 +84,12 @@ event_params:   .tag MGTK::Event
         jmp     AUXMOVE
 .endproc
 
-
 ;;; ============================================================
 ;;; DA Guts of the screen saver
 
 .proc Run
 
-        lda     $C056  ;force lores
+        lda     HIRESON
         jsr     setgr
         jsr     HOME
         lda     #$16
@@ -250,15 +167,28 @@ delay:  ldx     #$00
         lsr
         beq     del1
         jsr     wait
-del1:   bit     key             ;key pressed
-        bmi     exit
+
+del1:   ;; See if there's an event that should make us exit.
+        bit     LCBANK1
+        bit     LCBANK1
+        sta     ALTZPON
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
+        sta     ALTZPOFF
+        bit     ROMIN2
+        jsr     CopyEventAuxToMain
+
+        lda     event_params + MGTK::Event::kind
+        cmp     #MGTK::EventKind::button_down
+        beq     exit
+        cmp     #MGTK::EventKind::key_down
+        beq     exit
         rts
+
 exit:   pla                     ;pop stack
         pla
-        bit     strobe          ;clear keyboard strobe
         jsr     settx
-        lda     $C052           ;full screen
-        lda     $C057           ;hires
+        lda     fullscr
+        lda     HIRESOFF
         rts                     ;return to A2D
 ;
 ; Plot via table lookup
@@ -271,7 +201,7 @@ plot:   lsr
         sta     gbasl
         lda     bash,x
         sta     gbasl+1
-        jmp     $F805           ;undocumented entry point
+        jmp     $F805           ;undocumented entry to ROM PLOT routine
 basl:   .byte   $00,$80,$00,$80,$00,$80,$00,$80
         .byte   $28,$A8,$28,$A8,$28,$A8,$28,$A8
         .byte   $50,$D0,$50,$D0,$50,$D0,$50,$D0
