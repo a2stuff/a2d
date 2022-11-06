@@ -21,3 +21,5 @@
 .define res_filename_invert negativ
 .define res_filename_calendar Kalender
 .define res_filename_sounds Ljud
+.define res_filename_analog_clock analog.klocka
+.define res_filename_digital_clock digital.klocka

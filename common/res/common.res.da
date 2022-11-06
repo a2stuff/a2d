@@ -3,7 +3,6 @@
 .define res_string_button_cancel_shortcut "Esc"
 .define res_string_button_try_again "Pr|v igen"
 .define res_char_button_try_again_shortcut 'A'
-.define res_string_button_change_drive "Skift drev"
 .define res_string_button_drives "Drev"
 .define res_string_button_open "]bn"
 .define res_string_button_close "Luk"

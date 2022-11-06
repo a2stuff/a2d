@@ -21,3 +21,5 @@
 .define res_filename_invert marcha.re
 .define res_filename_calendar Calendario
 .define res_filename_sounds Sons
+.define res_filename_analog_clock relogio.analog
+.define res_filename_digital_clock relogio.digital
