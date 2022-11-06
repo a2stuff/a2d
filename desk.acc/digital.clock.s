@@ -110,7 +110,7 @@ parsed: .tag    ParsedDateTime
 ;;; DA Init
 
 .proc Init
-        MGTK_CALL MGTK::ObscureCursor
+        MGTK_CALL MGTK::HideCursor
 
         ;; Clear screen to black
         MGTK_CALL MGTK::InitPort, grafport

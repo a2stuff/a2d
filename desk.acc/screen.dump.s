@@ -21,11 +21,11 @@
 
 ;;; ============================================================
 
-        JUMP_TABLE_MGTK_CALL MGTK::HideCursor, 0
+        JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         jsr     JUMP_TABLE_HILITE_MENU
         jsr     DumpScreen
         jsr     JUMP_TABLE_HILITE_MENU
-        JUMP_TABLE_MGTK_CALL MGTK::ShowCursor, 0
+        JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts
 
 ;;; ============================================================
