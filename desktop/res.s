@@ -758,7 +758,7 @@ fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 
-buflabel:       .res    18, 0
+buflabel:       .res    16, 0
 .endmacro
 
         .repeat ::kMaxDeskTopWindows,i
