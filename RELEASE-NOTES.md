@@ -40,6 +40,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Digital Clock: A new DA that shows the current time. ([#590](https://github.com/a2stuff/a2d/issues/590))
 * Analog Clock: A new DA that shows the current time. ([#590](https://github.com/a2stuff/a2d/issues/590))
 * Rod's Color Pattern: A new DA based on the classic demo. c/o @frankmilliron
+* Sounds: New option: "Gorgon" c/o @frankmilliron
 
 
 ## 1.2
