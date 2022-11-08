@@ -1023,6 +1023,7 @@ END_SOUND_PROC
 SOUND_PROC Bombdrop
         ;; From ftp.apple.asimov.net/images/sound/ripped_off_routines.zip
         ;; BRUN BOMBDROP(CALL3091)
+        ;; Adapted for A2D by Frank Milliron
 
         LDA     #$00
         STA     $FF
