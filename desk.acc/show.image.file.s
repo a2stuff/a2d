@@ -19,9 +19,9 @@
 ;;;          |           | |           |
 ;;;          | DHR       | | DHR       |
 ;;;  $2000   +-----------+ +-----------+
-;;;          | IO Buffer | |Win Tables |
+;;;          | IO Buffer | |           |
 ;;;  $1C00   +-----------+ |           |
-;;;  $1B00   |           | +-----------+
+;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          | MP Src    | | MP Dst    |
@@ -44,7 +44,7 @@
         kMinipixDstSize = 26*52
 
         .assert (minipix_src_buf + kMinipixSrcSize) < DA_IO_BUFFER, error, "Not enough room for Minipix load buffer"
-        .assert (minipix_dst_buf + kMinipixDstSize) < WINDOW_ENTRY_TABLES, error, "Not enough room for Minipix convert buffer"
+        .assert (minipix_dst_buf + kMinipixDstSize) < DA_IO_BUFFER, error, "Not enough room for Minipix convert buffer"
 
 ;;; ============================================================
 

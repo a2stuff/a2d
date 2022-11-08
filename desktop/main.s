@@ -2302,7 +2302,7 @@ ret:    rts
         jsr     PushPointers
 
         copy16  tmp, ptr_name
-        sty     cached_window_id
+        tya
         jsr     LoadWindowEntryTable
 
         ;; Iterate icons
@@ -2411,7 +2411,6 @@ done:   rts
 
         prev_cached_window_id := *+1
         lda     #SELF_MODIFIED_BYTE
-        sta     cached_window_id
         jsr     LoadWindowEntryTable ; restore previous state
 
         pla                          ; A = `FindIconByName` result
@@ -5048,7 +5047,6 @@ last_pos:
 .proc CloseSpecifiedWindow
         icon_ptr := $06
 
-        sta     cached_window_id
         jsr     LoadWindowEntryTable
 
         jsr     ClearSelection
@@ -5603,7 +5601,7 @@ no_win:
         sta     window_to_dir_icon_table,x
         inx                     ; 0-based to 1-based
 
-        stx     cached_window_id
+        txa
         jsr     LoadWindowEntryTable
 
         ;; Update View and other menus
@@ -15272,6 +15270,181 @@ ret:    rts
 
 :       rts
 .endproc
+
+;;; ============================================================
+;;; Window Entry Tables
+;;; ============================================================
+
+
+;;; Input: A = window_id (0=desktop)
+.proc LoadWindowEntryTable
+        sta     cached_window_id ; TODO: Want this?
+
+        ;; Load count & entries
+        tax
+        lda     window_entry_count_table,x
+        sta     cached_window_entry_count
+        beq     done_load       ; no entries, done
+        sta     count
+
+        lda     window_entry_offset_table,x
+        tax                     ; X = offset in table
+        ldy     #0              ; Y = index in win
+:       lda     window_entry_table,x
+        sta     cached_window_entry_list,y
+        inx
+        iny
+        count := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :-
+done_load:
+
+        rts
+.endproc
+
+;;; Assert: `cached_window_id` and `icon_count` is up-to-date
+.proc StoreWindowEntryTable
+        lda     cached_window_id
+        cmp     #kMaxDeskTopWindows ; last window?
+        beq     done_shift       ; yes, no need to shift
+
+        ;; Compute delta to shift up (or down)
+        tax                     ; X = window_id
+        lda     cached_window_entry_count
+        sec
+        sbc     window_entry_count_table,x ; A = amount to shift up (may be <0)
+        beq     done_shift
+        sta     delta
+
+        ;; Offset entries by delta
+        bmi     shift_down
+
+        ;; Shift up
+        inx                     ; X = next window_id
+        lda     window_entry_offset_table,x
+        sta     last
+        ldy     icon_count      ; Y = new offset
+        tya
+        sec
+        sbc     delta
+        tax                     ; X = old offset
+
+:       lda     window_entry_table,x
+        sta     window_entry_table,y
+        last := *+1
+        cpx     #SELF_MODIFIED_BYTE
+        beq     shift_offsets
+        dex
+        dey
+        jmp     :-
+
+shift_down:
+        ;; Shift down
+        inx                     ; X = next window_id
+        lda     window_entry_offset_table,x
+        tax                     ; X = old offset
+        clc
+        adc     delta
+        tay                     ; Y = new offset
+
+:       lda     window_entry_table,x
+        sta     window_entry_table,y
+        cpy     icon_count
+        beq     shift_offsets
+        inx
+        iny
+        jmp     :-
+
+shift_offsets:
+        ;; Update offsets table by delta
+        ldx     cached_window_id
+        inx
+:       lda     window_entry_offset_table,x
+        clc
+        delta := *+1
+        adc     #SELF_MODIFIED_BYTE
+        sta     window_entry_offset_table,x
+        inx
+        cpx     #kMaxDeskTopWindows+1
+        bne     :-
+done_shift:
+
+        ;; Store count & entries
+        ldx     cached_window_id
+        lda     cached_window_entry_count
+        sta     window_entry_count_table,x
+        beq     done_store      ; no entries, done
+        sta     count
+
+        lda     window_entry_offset_table,x
+        tax                     ; X = offset in table
+        ldy     #0              ; Y = index in win
+:       lda     cached_window_entry_list,y
+        sta     window_entry_table,x
+        inx
+        iny
+        count := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :-
+done_store:
+
+        rts
+.endproc
+
+window_entry_count_table:       .res    ::kMaxDeskTopWindows+1, 0
+window_entry_offset_table:      .res    ::kMaxDeskTopWindows+1, 0
+window_entry_table:             .res    ::kMaxIconCount, 0
+
+.proc LoadActiveWindowEntryTable
+        lda     active_window_id
+        jmp     LoadWindowEntryTable
+.endproc
+
+.proc LoadDesktopEntryTable
+        lda     #0
+        jmp     LoadWindowEntryTable
+.endproc
+
+;;; ============================================================
+;;; Used/Free icon map
+;;; ============================================================
+
+;;; Find first available free icon in the map; if
+;;; available, mark it and return index+1.
+
+.proc AllocateIcon
+        ldx     #0
+loop:   lda     free_icon_map,x
+        beq     :+
+        inx
+        cpx     #kMaxIconCount  ; allow up to the maximum
+        bne     loop
+        rts
+
+:       inx                     ; 0-based to 1-based
+        txa
+        dex
+        tay
+        lda     #1
+        sta     free_icon_map,x
+        tya
+
+        rts
+.endproc
+
+;;; Mark the specified icon as free
+
+.proc FreeIcon
+        tay
+        dey                     ; 1-based to 0-based
+        lda     #0
+        sta     free_icon_map,y
+
+        rts
+.endproc
+
+;;; 0-based (0th entry represents icon_id=1)
+free_icon_map:  .res    ::kMaxIconCount, 0
 
 ;;; ============================================================
 ;;; Library Routines

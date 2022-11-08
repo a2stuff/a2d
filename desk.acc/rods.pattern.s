@@ -52,7 +52,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 .proc Start
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
- 
+
         bit     ROMIN2
         sta     ALTZPOFF
         sta     TXTSET
@@ -67,7 +67,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         bit     LCBANK1
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         jmp     JUMP_TABLE_RGB_MODE
-        
+
 .endproc
 
 ;;; ============================================================
@@ -102,7 +102,7 @@ event_params:   .tag MGTK::Event
         .byte   $00
 
 begin:  lda     #$03            ;init loop counters
-        sta     w 
+        sta     w
 nxtw:   lda     #$01
         sta     i
 nxti:   lda     #$00
@@ -162,7 +162,7 @@ nxtj:   clc
 ;
 delay:  ldx     #$00
         jsr     pread           ;read pdl(o)
-        tya 
+        tya
         lsr                     ;divide by 4
         lsr
         beq     del1
@@ -230,7 +230,7 @@ prt3:   lda     textpt+1
         pha
         rts
 ;
-; Color = j*3/(i+3)+i*w/12 
+; Color = j*3/(i+3)+i*w/12
 ;
 colsel: clc                     ;A5 = j*3
         lda     j
@@ -296,12 +296,10 @@ bcnt:   dex
 
 ;;; ============================================================
 
-da_end:
-
+da_end  := *
 .assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
 
 save_buffer := *
 
 ;;; Ensure there's enough room for both main and aux text page
 .assert * + $800 < $2000, error, .sprintf("Not enough room for save buffers")
-

@@ -40,9 +40,9 @@
 ;;;          |           | |           |
 ;;;          | DHR       | | DHR       |
 ;;;  $2000   +-----------+ +-----------+
-;;;          | IO Buffer | |Win Tables |
+;;;          | IO Buffer | |           |
 ;;;  $1C00   +-----------+ |           |
-;;;  $1B00   |           | +-----------+
+;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
@@ -615,7 +615,7 @@ L6726:  dec     Z41
 
 ;;; ============================================================
 
-da_end:
-.assert * < WINDOW_ENTRY_TABLES, error, .sprintf("DA too big (at $%X)", *)
-        ;; I/O Buffer starts at MAIN 7168
-        ;; ... but entry tables start at AUX 6912
+da_end  := *
+.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+
+;;; ============================================================

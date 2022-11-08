@@ -10,10 +10,7 @@ filename:
 filename_buffer:
         .res kPathBufferSize
 
-;;; The space between `WINDOW_ENTRY_TABLES` and `DA_IO_BUFFER` is usable in
-;;; Main memory only.
-        write_buffer := WINDOW_ENTRY_TABLES
-        .assert DA_IO_BUFFER - write_buffer >= kDeskTopSettingsFileSize, error, "Not enough room"
+        write_buffer := DA_IO_BUFFER - kDeskTopSettingsFileSize
 
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER

@@ -7,8 +7,8 @@ DAs are documented here.
 ### Desk Accessory Lifecycle
 
 * DAs are loaded/invoked at $800 Main
-  * Up to $1C00 Main is available
-  * But Aux $1B00 and on must be preserved.
+  * Up to $1C00 Main is available ($1C00-$2000 is I/O buffer for load)
+  * Up to $2000 Aux is available
 * Save stack pointer (if needed)
 * Copy DA code from Main to Aux (e.g. using `AUXMOVE`) at same address.
   * Needed if any MGTK resources will be used (bitmaps, etc)

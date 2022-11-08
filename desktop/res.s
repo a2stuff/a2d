@@ -800,23 +800,6 @@ result:  .byte   0
 
 ;;; ============================================================
 
-;;; Each buffer is a list of icons in each window (0=desktop)
-;;; window_entry_count_table = start of buffer = icon count
-;;; window_entry_list_table = first entry in buffer (length = `kMaxIconCount`)
-;;; (0 is not a valid icon number)
-
-kWindowEntryTableSize = kMaxIconCount + 1
-
-window_entry_count_table:
-        .repeat kMaxDeskTopWindows+1,i
-        .addr   WINDOW_ENTRY_TABLES + kWindowEntryTableSize * i
-        .endrepeat
-
-window_entry_list_table:
-        .repeat kMaxDeskTopWindows+1,i
-        .addr   WINDOW_ENTRY_TABLES + kWindowEntryTableSize * i + 1
-        .endrepeat
-
 active_window_id:
         .byte   0
 
@@ -1404,12 +1387,9 @@ folder_sm_mask:
 
         PAD_TO ::kSegmentDeskTopLC1AAddress + ::kSegmentDeskTopLC1ALength
 
-;;; (there's enough room here for 128 files at up to 28 bytes each; index 0 not used)
+;;; (there's enough room here for 128 files at up to 26 bytes each; index 0 not used)
 icon_entries:
         .assert ($FB00 - *) >= (kMaxIconCount+1) * .sizeof(IconEntry), error, "Not enough room for icons"
-
-;;; There's plenty of room after that (~409 bytes) if additional
-;;; buffer space is needed.
 
 ;;; ============================================================
 ;;; Segment loaded into AUX $FB00-$FFFF

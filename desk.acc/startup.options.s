@@ -20,6 +20,28 @@
         MGTKEntry := MGTKAuxEntry
 
 ;;; ============================================================
+;;; Memory map
+;;;
+;;;               Main            Aux
+;;;          :             : :             :
+;;;          |             | |             |
+;;;          | DHR         | | DHR         |
+;;;  $2000   +-------------+ +-------------+
+;;;          | IO Buffer   | |             |
+;;;  $1C00   +-------------+ |             |
+;;;          | write_buffer| |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          | DA          | | DA (copy)   |
+;;;   $800   +-------------+ +-------------+
+;;;          :             : :             :
+;;;
+;;; ============================================================
 
         .org DA_LOAD_ADDRESS
 
@@ -495,8 +517,7 @@ finish: MGTK_CALL MGTK::ShowCursor
 ;;; ============================================================
 
 da_end  := *
-.assert * < WINDOW_ENTRY_TABLES, error, .sprintf("DA too big (at $%X)", *)
-        ;; I/O Buffer starts at MAIN $1C00
-        ;; ... but entry tables start at AUX $1B00
+.assert * < write_buffer, error, .sprintf("DA too big (at $%X)", *)
+.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
 
 ;;; ============================================================

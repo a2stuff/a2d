@@ -21,6 +21,28 @@
         BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
+;;; Memory map
+;;;
+;;;               Main            Aux
+;;;          :             : :             :
+;;;          |             | |             |
+;;;          | DHR         | | DHR         |
+;;;  $2000   +-------------+ +-------------+
+;;;          | IO Buffer   | |             |
+;;;  $1C00   +-------------+ |             |
+;;;          | write_buffer| |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          | DA          | | DA (copy)   |
+;;;   $800   +-------------+ +-------------+
+;;;          :             : :             :
+;;;
+;;; ============================================================
 
         .org DA_LOAD_ADDRESS
 
@@ -60,10 +82,7 @@ filename:
 filename_buffer:
         .res kPathBufferSize
 
-;;; The space between `WINDOW_ENTRY_TABLES` and `DA_IO_BUFFER` is usable in
-;;; Main memory only.
-        write_buffer := WINDOW_ENTRY_TABLES
-        .assert DA_IO_BUFFER - write_buffer >= kBellProcLength, error, "Not enough room"
+        write_buffer := DA_IO_BUFFER - kBellProcLength
 
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
@@ -1368,8 +1387,6 @@ END_SOUND_PROC
 ;;; ============================================================
 
 da_end  := *
-.assert * < WINDOW_ENTRY_TABLES, error, .sprintf("DA too big (at $%X)", *)
-        ;; I/O Buffer starts at MAIN $1C00
-        ;; ... but entry tables start at AUX $1B00
+.assert * < write_buffer, error, .sprintf("DA too big (at $%X)", *)
 
 ;;; ============================================================

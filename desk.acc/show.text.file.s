@@ -19,9 +19,9 @@
 ;;;          |           | |           |
 ;;;          | DHR       | | DHR       |
 ;;;  $2000   +-----------+ +-----------+
-;;;          | IO Buffer | |Win Tables |
+;;;          | IO Buffer | |           |
 ;;;  $1C00   +-----------+ |           |
-;;;  $1B00   |           | +-----------+
+;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          | (unused)  | | (unused)  |
 ;;;          |           | |           |
@@ -192,9 +192,7 @@ params_start:
 default_buffer  := $1700
 kReadLength      = $0100
 
-        .assert default_buffer + $200 < WINDOW_ENTRY_TABLES, error, "DA too big"
-        ;;  I/O Buffer starts at MAIN $1C00
-        ;;  ... but entry tables start at AUX $1B00
+        .assert default_buffer + $200 < DA_IO_BUFFER, error, "DA too big"
 
         DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, default_buffer, kReadLength

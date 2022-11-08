@@ -24,11 +24,6 @@ DA_LOAD_ADDRESS := $800         ; Loaded into Main
 DA_IO_BUFFER    := $1C00        ; ...through $1FFF
 kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS
 
-;;; Memory in Aux - $80 bytes for desktop and 8 windows. First byte is a
-;;; count, up to 127 entries. Entries are icon numbers if in icon view.
-;;; $1F80-$1FFF is a map of used/free icon numbers.
-WINDOW_ENTRY_TABLES      := $1B00
-
 ;;; Used by DAs for window definitions
 DEFAULT_FONT    := $8600
 

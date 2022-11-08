@@ -14,9 +14,9 @@
 ;;;       |.............|       |.............|
 ;;;       |.Graphics....|       |.Graphics....|
 ;;; $2000 +-------------+       +-------------+
-;;;       | I/O Buffer  |       | Win/Icn Map | <- initialized
+;;;       | I/O Buffer  |       |             |
 ;;; $1C00 +-------------+       |             |
-;;; $1B00 |             |       +-------------+
+;;;       |             |       |             |
 ;;;       |             |       |             |
 ;;;       |             |       |             |
 ;;;       |             |       |             |
@@ -41,7 +41,6 @@
 ;;; * Detect machine type
 ;;; * Preserve DEVLST, remove /RAM
 ;;; * Initialize MGTK, with saved settings
-;;; * Initialize icon entry map in LC and window/icon maps in Aux
 ;;; * Load selector list, populate Selector menu
 ;;; * Enumerate desk accessories, populate Apple menu
 ;;; * Compute label widths
@@ -333,26 +332,6 @@ end:
 .endscope
 
 ;;; ============================================================
-;;; Zero the window icon tables
-
-.scope
-        sta     RAMWRTON
-        lda     #$00
-        tax
-loop:   sta     WINDOW_ENTRY_TABLES + $400,x         ; window 8, icon use map
-        sta     WINDOW_ENTRY_TABLES + $300,x         ; window 6, 7
-        sta     WINDOW_ENTRY_TABLES + $200,x         ; window 4, 5
-        sta     WINDOW_ENTRY_TABLES + $100,x         ; window 2, 3
-        sta     WINDOW_ENTRY_TABLES + $000,x         ; window 0, 1 (0=desktop)
-        inx
-        bne     loop
-        sta     RAMWRTOFF
-        jmp     CreateTrashIcon
-.endscope
-
-;;; ============================================================
-
-trash_name:  PASCAL_STRING res_string_trash_icon_name
 
 .proc CreateTrashIcon
         ptr := $6
@@ -361,7 +340,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         lda     #1
         sta     cached_window_entry_count
         sta     icon_count
-        jsr     AllocateIcon
+        jsr     main::AllocateIcon
         sta     main::trash_icon_num
         sta     cached_window_entry_list
         jsr     main::IconEntryLookup
@@ -1175,7 +1154,7 @@ iloop:  cpx     cached_window_entry_count
 :
         ;; Desktop icons are cached now
         copy    #0, cached_window_id
-        jsr     StoreWindowEntryTable
+        jsr     main::StoreWindowEntryTable
 
         ;; Restore state from previous session
         jsr     RestoreWindows
@@ -1259,7 +1238,7 @@ loop:   ldy     #0
         add16_8 data_ptr, #.sizeof(DeskTopFileItem)
         jmp     loop
 
-exit:   jmp     LoadDesktopEntryTable
+exit:   jmp     main::LoadDesktopEntryTable
 
 .proc MaybeOpenWindow
         ;; Save stack for restore on error. If the call
@@ -1292,6 +1271,8 @@ str_sdname_buffer:
 
 str_volume_type_unknown:
         PASCAL_STRING res_string_volume_type_unknown
+
+trash_name:  PASCAL_STRING res_string_trash_icon_name
 
 ;;; ============================================================
 

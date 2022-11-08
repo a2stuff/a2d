@@ -93,6 +93,7 @@ When running, memory use includes:
 
 * Main
  * $800-$1BFF is used as scratch space for a variety of routines.
+   * Desk Accessories load into this space.
  * $1C00-$1FFF is used as a 1k ProDOS I/O buffer.
  * $2000-$3FFF is the hires graphics page.
  * $4000-$BEFF (`main.s`) is the main app logic.
@@ -100,16 +101,12 @@ When running, memory use includes:
 ($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
 
 * Aux
- * $0800-$1AFF is a "save area"; used by MGTK to store the background
+ * $0800-$1FFF is a "save area"; used by MGTK to store the background
      when menus are drawn so it can be restored without redrawing. The
      save area is also used by DeskTop to save the background for
      alert dialogs, and icon outlines when dragging - basically, any
      modal operation.
- * $1B00-$1F7F holds lists of icons, one for the desktop then one for up
-     to 8 windows. First byte is a count, up to 127 icon entries. Icon numbers
-     map indirectly into a table at $ED00 that holds the type, coordinates, etc.
- * $1F80-$1FFF is a map of used/free icon numbers, as they are reassigned
-     as windows are opened and closed.
+   * Desk Accessories can use this space.
  * $2000-$3FFF is the hires graphics page.
  * $4000-$BFFF (`auxmem.s`) includes these:
  * $4000-$85FF is the [MouseGraphics ToolKit](../mgtk/MGTK.md)
@@ -235,10 +232,10 @@ $4000 +-------------+       +-------------+
       |.............|       |.............|
       |.............|       |.............|
 $2000 +-------------+       +-------------+
-      | Initializer |       | Win/Icn Map |
-$1B00 | & Desk Acc  |       +-------------+
-      | & Overlays  |       | Desk Acc &  |
-      | & I/O       |       | Save Area   |
+      | Initializer |       | Desk Acc &  |
+      | & Desk Acc  |       | Save Area   |
+      | & Overlays  |       |             |
+      | & I/O       |       |             |
       |             |       |             |
 $0800 +-------------+       +-------------+
       | Drawing     |       | Drawing     |
