@@ -296,17 +296,18 @@ nextwinfo:      .addr   0
 
 str_buzz:       PASCAL_STRING "ProDOS Buzz"
 str_bonk:       PASCAL_STRING "IIgs Bonk"
-str_bell:       PASCAL_STRING "Control-G"
+str_bell:       PASCAL_STRING "Control-G Bell"
 str_silent:     PASCAL_STRING res_string_name_silent
 str_awbeep:     PASCAL_STRING "Apple Writer II"
 str_dazzledraw: PASCAL_STRING "Dazzle Draw"
 str_koala:      PASCAL_STRING "Koala Illustrator"
 str_816paint:   PASCAL_STRING "816/Paint"
+str_gorgon:     PASCAL_STRING "Gorgon"
 str_aal_swoop:  PASCAL_STRING "Assembly Line Swoop"
 str_aal_blast:  PASCAL_STRING "Assembly Line Laser"
 str_aal_bell:   PASCAL_STRING "Assembly Line Bell"
 str_aal_klaxon: PASCAL_STRING "Assembly Line Klaxon"
-        kNumSounds = 12
+        kNumSounds = 13
 
 ;;; This is in anticipation of factoring out ListBox code, and/or
 ;;; dynamically populating the list of sounds from files, etc.
@@ -314,14 +315,14 @@ num_sounds:
         .byte   kNumSounds
 
 name_table:
-        .addr   str_buzz, str_bonk, str_bell, str_silent
-        .addr   str_awbeep, str_dazzledraw, str_koala, str_816paint
+        .addr   str_buzz, str_bonk, str_bell, str_silent, str_awbeep
+        .addr   str_dazzledraw, str_koala, str_816paint, str_gorgon
         .addr   str_aal_swoop, str_aal_blast, str_aal_bell, str_aal_klaxon
         ASSERT_ADDRESS_TABLE_SIZE name_table, kNumSounds
 
 proc_table:
         .addr   Buzz, Bonk, ClassicBeep, Silent
-        .addr   AwBeep, DazzleDraw, Koala, Paint816
+        .addr   AwBeep, DazzleDraw, Koala, Paint816, Gorgon
         .addr   AALLaserSwoop, AALLaserBlast, AALSCBell, AALKlaxon
         ASSERT_ADDRESS_TABLE_SIZE proc_table, kNumSounds
 
@@ -662,7 +663,7 @@ Buzz := *
         .include "../lib/default_sound.s"
 
 ;;; ============================================================
-;;; Sound Routine: Control-G
+;;; Sound Routine: Control-G Bell
 
 SOUND_PROC ClassicBeep
         ;; Based on Apple II Monitor ROMs
@@ -685,6 +686,7 @@ wait3:  sbc     #1
         sbc     #1
         bne     wait2
         rts
+
 END_SOUND_PROC
 
 
@@ -928,6 +930,43 @@ LE614:  sbc     #$01
         pla
         sbc     #$01
         bne     LE613
+        rts
+END_SOUND_PROC
+
+;;; ============================================================
+;;; Sound Routine: Gorgon
+
+SOUND_PROC Gorgon
+        ;; Played during intro to 'Gorgon' by Nasir Gabelli
+        ;; Adapted for A2D by Frank Milliron
+
+        lda     #0
+        jsr     wait
+        nop
+        ldx     #0
+loop1:  lda     SPKR
+        txa
+loop2:  clc
+        adc     #1
+        bne     loop2
+        lda     SPKR
+        txa
+loop3:  nop
+        sec
+        sbc     #1
+        bne     loop3
+        inx
+        cpx     #$C0
+        bne     loop1
+        rts
+
+wait:   sec
+wait2:  pha
+wait3:  sbc     #1
+        bne     wait3
+        pla
+        sbc     #1
+        bne     wait2
         rts
 END_SOUND_PROC
 
