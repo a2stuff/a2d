@@ -15313,7 +15313,7 @@ window_path_table:
 ;;; Table of desktop window path addresses
 window_path_addr_table:
         .addr   $0000
-        .repeat 8,i
+        .repeat ::kMaxDeskTopWindows,i
         .addr   window_path_table+i*kPathBufferSize
         .endrepeat
         ASSERT_ADDRESS_TABLE_SIZE window_path_addr_table, ::kMaxDeskTopWindows + 1

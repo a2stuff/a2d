@@ -539,7 +539,10 @@ selected_icon_list:
 
 ;;; Table of desktop window winfo addresses
 win_table:
-        .addr   0,winfo1,winfo2,winfo3,winfo4,winfo5,winfo6,winfo7,winfo8
+        .addr   0
+        .repeat ::kMaxDeskTopWindows,i
+        .addr   .ident(.sprintf("winfo%d",i+1))
+        .endrepeat
         ASSERT_ADDRESS_TABLE_SIZE win_table, kMaxDeskTopWindows + 1
 
 ;;; ============================================================
@@ -694,14 +697,9 @@ desk_acc_names:
 
 window_title_addr_table:
         .addr   0
-        .addr   winfo1title
-        .addr   winfo2title
-        .addr   winfo3title
-        .addr   winfo4title
-        .addr   winfo5title
-        .addr   winfo6title
-        .addr   winfo7title
-        .addr   winfo8title
+        .repeat ::kMaxDeskTopWindows,i
+        .addr   .ident(.sprintf("winfo%dtitle",i+1))
+        .endrepeat
         ASSERT_ADDRESS_TABLE_SIZE window_title_addr_table, kMaxDeskTopWindows + 1
 
 ;;; `win_view_by_table` is indexed by window id - 1; allow referencing
@@ -763,15 +761,9 @@ nextwinfo:      .addr   0
 buflabel:       .res    18, 0
 .endmacro
 
-        WINFO_DEFN 1, winfo1, winfo1title
-        WINFO_DEFN 2, winfo2, winfo2title
-        WINFO_DEFN 3, winfo3, winfo3title
-        WINFO_DEFN 4, winfo4, winfo4title
-        WINFO_DEFN 5, winfo5, winfo5title
-        WINFO_DEFN 6, winfo6, winfo6title
-        WINFO_DEFN 7, winfo7, winfo7title
-        WINFO_DEFN 8, winfo8, winfo8title
-
+        .repeat ::kMaxDeskTopWindows,i
+        WINFO_DEFN i+1, .ident(.sprintf("winfo%d",i+1)), .ident(.sprintf("winfo%dtitle",i+1))
+        .endrepeat
 
 ;;; ============================================================
 ;;; Resources for window header (Items/K in disk/K available)
