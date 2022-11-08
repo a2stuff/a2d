@@ -1023,7 +1023,6 @@ END_SOUND_PROC
 SOUND_PROC Bombdrop
         ;; From ftp.apple.asimov.net/images/sound/ripped_off_routines.zip
         ;; BRUN BOMBDROP(CALL3091)
-        ;; This routine is not relocatable & must be run from $0300(!)
 
         LDA     #$00
         STA     $FF
@@ -1039,11 +1038,11 @@ loop3:  DEX
         BNE     loop3
         DEY
         BEQ     loop4
-        JMP     $0315      ;loop2
+        JMP     loop2
 loop4:  DEC     $FE
         BEQ     exit
         INC     $FF
-        JMP     $0308      ;loop1
+        JMP     loop1
 exit:   RTS
 END_SOUND_PROC
 
