@@ -302,12 +302,14 @@ str_awbeep:     PASCAL_STRING "Apple Writer II"
 str_dazzledraw: PASCAL_STRING "Dazzle Draw"
 str_koala:      PASCAL_STRING "Koala Illustrator"
 str_816paint:   PASCAL_STRING "816/Paint"
+str_panic1:     PASCAL_STRING "Apple Panic 1"
+str_panic2:     PASCAL_STRING "Apple Panic 2"
 str_gorgon:     PASCAL_STRING "Gorgon"
 str_aal_swoop:  PASCAL_STRING "Assembly Line Swoop"
 str_aal_blast:  PASCAL_STRING "Assembly Line Laser"
 str_aal_bell:   PASCAL_STRING "Assembly Line Bell"
 str_aal_klaxon: PASCAL_STRING "Assembly Line Klaxon"
-        kNumSounds = 13
+        kNumSounds = 15
 
 ;;; This is in anticipation of factoring out ListBox code, and/or
 ;;; dynamically populating the list of sounds from files, etc.
@@ -315,14 +317,14 @@ num_sounds:
         .byte   kNumSounds
 
 name_table:
-        .addr   str_buzz, str_bonk, str_bell, str_silent, str_awbeep
-        .addr   str_dazzledraw, str_koala, str_816paint, str_gorgon
+        .addr   str_buzz, str_bonk, str_bell, str_silent, str_awbeep, str_dazzledraw
+        .addr   str_koala, str_816paint, str_panic1, str_panic2, str_gorgon
         .addr   str_aal_swoop, str_aal_blast, str_aal_bell, str_aal_klaxon
         ASSERT_ADDRESS_TABLE_SIZE name_table, kNumSounds
 
 proc_table:
-        .addr   Buzz, Bonk, ClassicBeep, Silent
-        .addr   AwBeep, DazzleDraw, Koala, Paint816, Gorgon
+        .addr   Buzz, Bonk, ClassicBeep, Silent, AwBeep
+        .addr   DazzleDraw, Koala, Paint816, Panic1, Panic2, Gorgon
         .addr   AALLaserSwoop, AALLaserBlast, AALSCBell, AALKlaxon
         ASSERT_ADDRESS_TABLE_SIZE proc_table, kNumSounds
 
@@ -930,6 +932,68 @@ LE614:  sbc     #$01
         pla
         sbc     #$01
         bne     LE613
+        rts
+END_SOUND_PROC
+
+;;; ============================================================
+;;; Sound Routine: Apple Panic 1
+
+SOUND_PROC Panic1
+        ;; Played during intro to 'Apple Panic'
+        ;; Adapted for A2D by Frank Milliron
+
+        lda     #$C0
+        sta     $14
+        lda     #$01
+        sta     $15
+core:   jsr     part2
+        inc     $14
+        bne     core
+        rts
+part2:  lda     $14
+        eor     #$FF
+        sta     $12
+loop1:  ldx     $15
+loop2:  ldy     $14
+        lda     SPKR
+loop3:  iny
+        bne     loop3
+        dex
+        bne     loop2
+        dec     $12
+        bne     loop1
+        rts
+END_SOUND_PROC
+
+;;; ============================================================
+;;; Sound Routine: Apple Panic 2
+
+SOUND_PROC Panic2
+        ;; Played during intro to 'Apple Panic'
+        ;; Adapted for A2D by Frank Milliron
+
+        ldx     #$06
+loop1:  lda     #$60
+        sta     $14
+loop2:  ldy     $14
+        lda     SPKR
+loop3:  dey
+        bne     loop3
+        dec     $14
+        bne     loop2
+        lda     #$40
+        sta     $14
+        eor     #$FF
+        sta     $15
+loop4:  ldy     $15
+        lda     SPKR
+loop5:  iny
+        bne     loop5
+        dec     $15
+        dec     $14
+        bne     loop4
+        dex
+        bne     loop1
         rts
 END_SOUND_PROC
 
