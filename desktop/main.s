@@ -213,7 +213,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 
 .proc UpdateWindow
         lda     event_params::window_id
-        cmp     #kMaxNumWindows+1 ; directory windows are 1-8
+        cmp     #kMaxDeskTopWindows+1 ; directory windows are 1-8
         bcc     :+
         rts
 
@@ -3502,7 +3502,7 @@ finish: rts
         ;; ID is 1-based, table is 0-based, so don't need to start
         ;; with an increment
         ldx     active_window_id
-@loop:  cpx     #kMaxNumWindows
+@loop:  cpx     #kMaxDeskTopWindows
         bne     :+
         ldx     #0
 :       lda     window_to_dir_icon_table,x
@@ -3518,7 +3518,7 @@ reverse:
         dex
 @loop:  dex
         bpl     :+
-        ldx     #kMaxNumWindows-1
+        ldx     #kMaxDeskTopWindows-1
 :       lda     window_to_dir_icon_table,x
         beq     @loop           ; 0 = window free
         FALL_THROUGH_TO found
@@ -5149,7 +5149,7 @@ validate_windows_flag:
         bpl     done
         copy    #0, validate_windows_flag
 
-        copy    #kMaxNumWindows, window_id
+        copy    #kMaxDeskTopWindows, window_id
 
 loop:
         ;; Check if the window is in use
@@ -5523,7 +5523,7 @@ ret:    rts
         sta     icon_param
 
         ;; Already an open window for the icon?
-        ldx     #kMaxNumWindows-1
+        ldx     #kMaxDeskTopWindows-1
 :       cmp     window_to_dir_icon_table,x
         beq     found_win
         dex
@@ -5581,7 +5581,7 @@ check_path:
 no_win:
         ;; Is there a free window?
         lda     num_open_windows
-        cmp     #kMaxNumWindows
+        cmp     #kMaxDeskTopWindows
         bcc     :+
 
         ;; Nope, show error.
@@ -6159,7 +6159,7 @@ loop:   inc     window_num
 
         window_num := *+1
         lda     #SELF_MODIFIED_BYTE
-        cmp     #kMaxNumWindows+1 ; directory windows are 1-8
+        cmp     #kMaxDeskTopWindows+1 ; directory windows are 1-8
         bcc     check_window
         bit     exact_match_flag
         bpl     :+
@@ -9353,7 +9353,7 @@ remove: lda     cached_window_entry_list+1,x
 ;;; Outputs: Z=1 && N=0 if found, X = index (0-7), A unchanged
 
 .proc FindWindowIndexForDirIcon
-        ldx     #kMaxNumWindows-1
+        ldx     #kMaxDeskTopWindows-1
 :       cmp     window_to_dir_icon_table,x
         beq     done
         dex
@@ -15303,14 +15303,12 @@ ret:    rts
 ;;; Resources (that are only used from Main, i.e. not MGTK)
 ;;; ============================================================
 
-kMaxNumWindows = ::kMaxDeskTopWindows
-
 ;;; Window paths
 ;;; 8 entries; each entry is kPathBufferSize bytes long
 ;;; * length-prefixed path string (no trailing /)
 ;;; Windows 1...8 (since 0 is desktop)
 window_path_table:
-        .res    (kMaxNumWindows * ::kPathBufferSize), 0
+        .res    (::kMaxDeskTopWindows * ::kPathBufferSize), 0
 
 ;;; Table of desktop window path addresses
 window_path_addr_table:
@@ -15318,15 +15316,15 @@ window_path_addr_table:
         .repeat 8,i
         .addr   window_path_table+i*kPathBufferSize
         .endrepeat
-        ASSERT_ADDRESS_TABLE_SIZE window_path_addr_table, kMaxNumWindows + 1
+        ASSERT_ADDRESS_TABLE_SIZE window_path_addr_table, ::kMaxDeskTopWindows + 1
 
 ;;; ============================================================
 
 ;;; Window used/free (in kilobytes)
 ;;; Two tables, 8 entries each
 ;;; Windows 1...8 (since 0 is desktop)
-window_k_used_table:  .res    kMaxNumWindows*2, 0
-window_k_free_table:  .res    kMaxNumWindows*2, 0
+window_k_used_table:  .res    ::kMaxDeskTopWindows*2, 0
+window_k_free_table:  .res    ::kMaxDeskTopWindows*2, 0
 
 ;;; ============================================================
 
@@ -15509,11 +15507,11 @@ device_to_icon_map:
 window_id_to_filerecord_list_count:
         .byte   0
 window_id_to_filerecord_list_entries:
-        .res    kMaxNumWindows, 0 ; 8 entries + length
+        .res    ::kMaxDeskTopWindows, 0 ; 8 entries + length
 
 ;;; Mapping from position in above table to FileRecord entry
 window_filerecord_table:
-        .res    kMaxNumWindows*2
+        .res    ::kMaxDeskTopWindows*2
 
 ;;; ============================================================
 

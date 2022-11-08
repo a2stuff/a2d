@@ -537,12 +537,10 @@ selected_icon_count:
 selected_icon_list:
         .res    kMaxIconCount, 0
 
-kMaxNumWindows = kMaxDeskTopWindows
-
 ;;; Table of desktop window winfo addresses
 win_table:
         .addr   0,winfo1,winfo2,winfo3,winfo4,winfo5,winfo6,winfo7,winfo8
-        ASSERT_ADDRESS_TABLE_SIZE win_table, kMaxNumWindows + 1
+        ASSERT_ADDRESS_TABLE_SIZE win_table, kMaxDeskTopWindows + 1
 
 ;;; ============================================================
 
@@ -704,13 +702,13 @@ window_title_addr_table:
         .addr   winfo6title
         .addr   winfo7title
         .addr   winfo8title
-        ASSERT_ADDRESS_TABLE_SIZE window_title_addr_table, kMaxNumWindows + 1
+        ASSERT_ADDRESS_TABLE_SIZE window_title_addr_table, kMaxDeskTopWindows + 1
 
 ;;; `win_view_by_table` is indexed by window id - 1; allow referencing
 ;;; the desktop (window id 0), which is always icon view.
         .byte   kViewByIcon
 win_view_by_table:
-        .res    kMaxNumWindows, 0
+        .res    kMaxDeskTopWindows, 0
 
         DEFINE_POINT pos_col_type, 128, 0
         DEFINE_POINT pos_col_size, 166, 0
@@ -818,12 +816,12 @@ result:  .byte   0
 kWindowEntryTableSize = kMaxIconCount + 1
 
 window_entry_count_table:
-        .repeat kMaxNumWindows+1,i
+        .repeat kMaxDeskTopWindows+1,i
         .addr   WINDOW_ENTRY_TABLES + kWindowEntryTableSize * i
         .endrepeat
 
 window_entry_list_table:
-        .repeat kMaxNumWindows+1,i
+        .repeat kMaxDeskTopWindows+1,i
         .addr   WINDOW_ENTRY_TABLES + kWindowEntryTableSize * i + 1
         .endrepeat
 
@@ -834,7 +832,7 @@ active_window_id:
 ;;; $FF = window in use, but dir (vol/folder) icon deleted
 ;;; Otherwise, dir (vol/folder) icon associated with window.
 window_to_dir_icon_table:
-        .res    kMaxNumWindows, 0
+        .res    kMaxDeskTopWindows, 0
 
 num_open_windows:
         .byte   0
