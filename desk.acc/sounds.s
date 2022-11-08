@@ -323,12 +323,13 @@ str_koala:      PASCAL_STRING "Koala Illustrator"
 str_816paint:   PASCAL_STRING "816/Paint"
 str_panic1:     PASCAL_STRING "Apple Panic 1"
 str_panic2:     PASCAL_STRING "Apple Panic 2"
+str_bombdrop:   PASCAL_STRING "Bombdrop"
 str_gorgon:     PASCAL_STRING "Gorgon"
 str_aal_swoop:  PASCAL_STRING "Assembly Line Swoop"
 str_aal_blast:  PASCAL_STRING "Assembly Line Laser"
 str_aal_bell:   PASCAL_STRING "Assembly Line Bell"
 str_aal_klaxon: PASCAL_STRING "Assembly Line Klaxon"
-        kNumSounds = 15
+        kNumSounds = 16
 
 ;;; This is in anticipation of factoring out ListBox code, and/or
 ;;; dynamically populating the list of sounds from files, etc.
@@ -337,13 +338,13 @@ num_sounds:
 
 name_table:
         .addr   str_buzz, str_bonk, str_bell, str_silent, str_awbeep, str_dazzledraw
-        .addr   str_koala, str_816paint, str_panic1, str_panic2, str_gorgon
+        .addr   str_koala, str_816paint, str_panic1, str_panic2, str_bombdrop, str_gorgon
         .addr   str_aal_swoop, str_aal_blast, str_aal_bell, str_aal_klaxon
         ASSERT_ADDRESS_TABLE_SIZE name_table, kNumSounds
 
 proc_table:
-        .addr   Buzz, Bonk, ClassicBeep, Silent, AwBeep
-        .addr   DazzleDraw, Koala, Paint816, Panic1, Panic2, Gorgon
+        .addr   Buzz, Bonk, ClassicBeep, Silent, AwBeep, DazzleDraw
+        .addr   Koala, Paint816, Panic1, Panic2, Bombdrop, Gorgon
         .addr   AALLaserSwoop, AALLaserBlast, AALSCBell, AALKlaxon
         ASSERT_ADDRESS_TABLE_SIZE proc_table, kNumSounds
 
@@ -1014,6 +1015,36 @@ loop5:  iny
         dex
         bne     loop1
         rts
+END_SOUND_PROC
+
+;;; ============================================================
+;;; Sound Routine: Bombdrop
+
+SOUND_PROC Bombdrop
+        ;; From ftp.apple.asimov.net/images/sound/ripped_off_routines.zip
+        ;; BRUN BOMBDROP(CALL3091)
+        ;; This routine is not relocatable & must be run from $0300(!)
+
+        LDA     #$00
+        STA     $FF
+        LDA     #$FF
+        STA     $FE
+loop1:  LDA     #$00
+        STA     SPKR
+        INC     SPKR
+        DEC     SPKR
+        LDY     #$05
+loop2:  LDX     $FF
+loop3:  DEX
+        BNE     loop3
+        DEY
+        BEQ     loop4
+        JMP     $0315      ;loop2
+loop4:  DEC     $FE
+        BEQ     exit
+        INC     $FF
+        JMP     $0308      ;loop1
+exit:   RTS
 END_SOUND_PROC
 
 ;;; ============================================================
