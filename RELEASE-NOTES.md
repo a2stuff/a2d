@@ -30,6 +30,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Dimmed icons in inactive windows now render correctly. ([#613](https://github.com/a2stuff/a2d/issues/613)
 * Enable dropping files onto folders in inactive windows.
 * Pressing the Esc key cancels an in-progress drag. ([#719](https://github.com/a2stuff/a2d/issues/719))
+* Don't move icons when dragged over source window's non-content area.
 
 ### Disk Copy
 

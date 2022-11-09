@@ -882,7 +882,7 @@ ignore: jmp     DragDetect::ignore_drag
 
 L9BD4:  ora     #$80
         sta     highlight_icon_id
-        bne     L9C63           ; always
+        jne     L9C63           ; always
 
         ;; Drop selection including Trash on a window
 includes_trash:
@@ -891,6 +891,12 @@ includes_trash:
 
         ;; Drag within same window (or desktop)
 same_window:
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+        bne     L9C63           ; don't move
+
+        jsr     CheckRealContentArea
+        bne     L9C63           ; don't move
 
         ;; Small icons have a fixed layout
         ldy     highlight_list
@@ -982,6 +988,30 @@ poly_dy:        .word   0
         ;; In a window - ensure it's in the content area
         cmp     #MGTK::Area::content
         bne     fail            ; menubar, titlebar, etc
+
+        jsr     CheckRealContentArea
+        beq     find_icon
+
+fail:   return  #0              ; no icon
+
+        ;; --------------------------------------------------
+        ;; On desktop - A=0, note that as window_id
+desktop:
+        sta     findwindow_params::window_id
+
+        ;; --------------------------------------------------
+        ;; Is there an icon there?
+find_icon:
+        ITK_CALL IconTK::FindIcon, findwindow_params
+        lda     findwindow_params::which_area ; Icon ID
+        rts
+.endproc
+
+;;; Dig deeper into FindWindow results to ensure it's really content.
+;;; Input: `findwindow_params` populated
+;;; Output:
+;;; Assert: `FindWindow` was called and returned `Area::content`
+.proc CheckRealContentArea
         COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
         copy    findwindow_params::window_id, findcontrol_params::window_id
         MGTK_CALL MGTK::FindControlEx, findcontrol_params
@@ -999,20 +1029,12 @@ poly_dy:        .word   0
         lda     (win_ptr),y
         add16in (win_ptr),y, #kWindowHeaderHeight + 1, headery
         cmp16   findwindow_params::mousey, headery
-        bcs     find_icon
+        bcc     fail
 
-fail:   return  #0              ; no icon
+        lda     #0
+        rts
 
-        ;; --------------------------------------------------
-        ;; On desktop - A=0, note that as window_id
-desktop:
-        sta     findwindow_params::window_id
-
-        ;; --------------------------------------------------
-        ;; Is there an icon there?
-find_icon:
-        ITK_CALL IconTK::FindIcon, findwindow_params
-        lda     findwindow_params::which_area ; Icon ID
+fail:   lda     #$FF
         rts
 
 headery:
