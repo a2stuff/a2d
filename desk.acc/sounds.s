@@ -324,12 +324,13 @@ str_816paint:   PASCAL_STRING "816/Paint"
 str_panic1:     PASCAL_STRING "Apple Panic 1"
 str_panic2:     PASCAL_STRING "Apple Panic 2"
 str_bombdrop:   PASCAL_STRING "Bombdrop"
+str_detonate:   PASCAL_STRING "Detonate"
 str_gorgon:     PASCAL_STRING "Gorgon"
 str_aal_swoop:  PASCAL_STRING "Assembly Line Swoop"
 str_aal_blast:  PASCAL_STRING "Assembly Line Laser"
 str_aal_bell:   PASCAL_STRING "Assembly Line Bell"
 str_aal_klaxon: PASCAL_STRING "Assembly Line Klaxon"
-        kNumSounds = 16
+        kNumSounds = 17
 
 ;;; This is in anticipation of factoring out ListBox code, and/or
 ;;; dynamically populating the list of sounds from files, etc.
@@ -337,14 +338,15 @@ num_sounds:
         .byte   kNumSounds
 
 name_table:
-        .addr   str_buzz, str_bonk, str_bell, str_silent, str_awbeep, str_dazzledraw
-        .addr   str_koala, str_816paint, str_panic1, str_panic2, str_bombdrop, str_gorgon
+        .addr   str_buzz, str_bonk, str_bell, str_silent, str_awbeep
+        .addr   str_dazzledraw, str_koala, str_816paint, str_panic1
+        .addr   str_panic2, str_bombdrop, str_detonate, str_gorgon
         .addr   str_aal_swoop, str_aal_blast, str_aal_bell, str_aal_klaxon
         ASSERT_ADDRESS_TABLE_SIZE name_table, kNumSounds
 
 proc_table:
         .addr   Buzz, Bonk, ClassicBeep, Silent, AwBeep, DazzleDraw
-        .addr   Koala, Paint816, Panic1, Panic2, Bombdrop, Gorgon
+        .addr   Koala, Paint816, Panic1, Panic2, Bombdrop, Detonate, Gorgon
         .addr   AALLaserSwoop, AALLaserBlast, AALSCBell, AALKlaxon
         ASSERT_ADDRESS_TABLE_SIZE proc_table, kNumSounds
 
@@ -1045,6 +1047,64 @@ loop4:  DEC     $FE
         INC     $FF
         JMP     loop1
 exit:   RTS
+END_SOUND_PROC
+
+;;; ============================================================
+;;; Sound Routine: Detonate
+
+SOUND_PROC Detonate
+        ;; Played during intro to 'Short Circuit' by David H. Schroeder
+        ;; Adapted for A2D by Frank Milliron
+
+        ldx     #6-1
+move:   lda     patch, x
+        sta     $00, x
+        dex
+        bne     move       ; setup initial conditions
+
+        SEC
+        INC     $03
+        LDX     $04
+L9483:  ROL     $00
+        ROL     $01
+        TXA
+        BEQ     L948B
+        DEX
+L948B:  BNE     L9497
+        BCC     L9497
+        LDX     thirty
+        LDA     $C000,X
+        LDX     $04
+L9497:  ROR     A
+        ROR     A
+        ROR     A
+        EOR     $01
+        ASL     A
+        ASL     A
+        ASL     A
+        PHP
+        LDA     $05
+        BEQ     L94B8
+        DEY
+        BNE     L94B8
+        TAY
+        BMI     L94B3
+        LDA     $04
+        BEQ     L94B8
+        DEC     $04
+        TYA
+        BNE     L94B8
+L94B3:  INC     $04
+        AND     #$7F
+        TAY
+L94B8:  PLP
+        DEC     $02
+        BNE     L9483
+        DEC     $03
+        BNE     L9483
+        RTS
+thirty: .byte   $30
+patch:  .byte   $00,$08,$00,$50,$FF,$FF
 END_SOUND_PROC
 
 ;;; ============================================================
