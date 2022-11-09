@@ -791,6 +791,14 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         cmp     #MGTK::EventKind::drag
         jne     not_drag
 
+        ;; Escape key?
+        lda     KBD             ; MGTK doesn't process keys during drag
+        cmp     #CHAR_ESCAPE | $80
+        bne     :+
+        bit     KBDSTRB         ; consume the keypress
+        copy    #MGTK::EventKind::key_down, peekevent_params::kind
+        jmp     not_drag
+:
         ;; Coords changed?
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     findwindow_params,x
@@ -849,6 +857,15 @@ not_drag:
         lda     highlight_icon_id
         beq     :+
         jsr     UnhighlightIcon
+:
+        lda     peekevent_params::kind
+        cmp     #MGTK::EventKind::key_down ; cancel?
+        bne     :+
+        copy    #0, highlight_icon_id
+        jmp     L9C63
+:
+        lda     highlight_icon_id
+        beq     :+
         jmp     L9C63
 
 :       MGTK_CALL MGTK::FindWindow, findwindow_params
