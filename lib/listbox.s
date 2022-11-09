@@ -22,9 +22,11 @@
 ;;; * `highlight_rect` - a scratch MGTK::Rect
 ;;; * `selected_index` - updated to be the selection or $FF if none
 ;;; Requires the following proc definitions:
-;;; * `OnListSelectionChange` - called when `selected_index` has changed
 ;;; * `DrawListEntryProc` - called to draw an item (A=index)
 ;;; * `SetPortForList` - called to set the port for the window
+;;; Optionally:
+;;; * `OnListSelectionChange` - called when `selected_index` has changed
+;;; * `OnListSelectionNoChange` - called on click when `selected_index` has not changed
 ;;; Requires the following data definitions:
 ;;; * `LB_SELECTION_ENABLED` if selection is supported
 ;;; ============================================================
@@ -90,7 +92,9 @@
     IF_GE
         lda     #$FF
         jsr     ListSetSelection
+.ifdef OnListSelectionChange
         jsr     OnListSelectionChange
+.endif
         return  #$FF            ; not an item
     END_IF
 
@@ -98,7 +102,13 @@
         cmp     listbox::selected_index
     IF_NE
         jsr     ListSetSelection
+.ifdef OnListSelectionChange
         jsr     OnListSelectionChange
+.endif
+.ifdef OnListSelectionNoChange
+    ELSE
+        jsr     OnListSelectionNoChange
+.endif
     END_IF
 
         return  #0              ; an item
@@ -380,7 +390,10 @@ ret:    rts
 .if LB_SELECTION_ENABLED
 SetSelection:
         jsr     ListSetSelection
-        jmp     OnListSelectionChange
+.ifdef OnListSelectionChange
+        jsr     OnListSelectionChange
+.endif
+        rts
 .endif
 .endproc
 

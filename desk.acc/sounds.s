@@ -1345,6 +1345,9 @@ END_SOUND_PROC
 :       jmp     PlayIndex
 .endproc
 
+;;; Play sound if same item is re-clicked.
+OnListSelectionNoChange := OnListSelectionChange
+
 ;;; ============================================================
 ;;; List Box
 ;;; ============================================================

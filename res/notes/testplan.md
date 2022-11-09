@@ -890,5 +890,8 @@ Repeat for each list box:
 Repeat for each list box that supports selection:
 * Click on an item. Verify it is selected. Click on white space below the items (if possible). Verify that selection is cleared.
 
+For the Sounds DA:
+* Click on an item. Verify it is selected, and plays the sound. Click on the same selected item. Verity if plays the sound again.
+
 Repeat for each list box where the contents are dynamic:
 * Populate the list so that the scrollbar is active. Scroll down by one row. Repopulate the list box so that the scrollbar is inactive. Verify that all expected items are shown, and hitting the Up Arrow key does nothing.

@@ -41,6 +41,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Analog Clock: A new DA that shows the current time. ([#590](https://github.com/a2stuff/a2d/issues/590))
 * Rod's Color Pattern: A new DA based on the classic demo. c/o @frankmilliron
 * Sounds: New sounds from Gorgon and Apple Panic, c/o @frankmilliron
+* Sounds: Play current selection if clicked again. ([#715](https://github.com/a2stuff/a2d/issues/715))
 
 
 ## 1.2
