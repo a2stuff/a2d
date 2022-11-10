@@ -32,7 +32,12 @@ state           .byte
 .macro DEFINE_BUTTON name, winid, label, shortcut, left, top, width, height
 .params name
 window_id:      .byte   winid
+
+.ifnblank label
 a_label:        .addr   str_label
+.else
+a_label:        .addr   0
+.endif
 
 .ifnblank shortcut
 a_shortcut:     .addr   str_shortcut
@@ -51,9 +56,11 @@ a_shortcut:     .addr   0
 
 state:          .byte   0
         .res    .sizeof(BTK::ButtonRecord) - (*-window_id)
-        ;; TODO: Use a string pool for these, somehow
-str_label:      PASCAL_STRING label
 
+        ;; TODO: Use a string pool for these, somehow
+.ifnblank label
+str_label:      PASCAL_STRING {label}
+.endif
 .ifnblank shortcut
 str_shortcut:   PASCAL_STRING shortcut
 .endif
@@ -65,6 +72,7 @@ str_shortcut:   PASCAL_STRING shortcut
 
 Draw            = $00           ; Draw button
 ;;; .addr       record
+;;; .byte       update_flag
 
 Flash           = $01           ; Flash button
 ;;; .addr       record
@@ -74,6 +82,13 @@ Hilite          = $02           ; Redraw label (after state change)
 
 Track           = $03           ; Handle click within control bounds
 ;;; .addr       record
+
+RadioDraw       = $04           ; Draw a radio button (and update hit rect)
+;;; .addr       record
+
+RadioUpdate     = $05           ; Update a radio button after a click
+;;; .addr       record
+
 
 .endscope ; BTK
 

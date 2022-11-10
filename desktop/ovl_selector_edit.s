@@ -8,6 +8,7 @@
         .org ::kOverlayShortcutEditAddress
 
         MGTKEntry := MGTKRelayImpl
+        BTKEntry := BTKRelayImpl
 
 ;;; Called back from file dialog's `Start`
 .proc Init
@@ -27,7 +28,7 @@
         jsr     file_dialog::SetPortForDialog
         lda     which_run_list
         sec
-        jsr     DrawRunListButton
+        jsr     UpdateRunListButton
         lda     copy_when
         sec
         jsr     DrawCopyWhenButton
@@ -97,40 +98,22 @@ buffer: .res 16, 0
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         param_call file_dialog::DrawString, add_a_new_entry_to_label_str
 
-        MGTK_CALL MGTK::MoveTo, primary_run_list_label_pos
-        param_call file_dialog::DrawString, primary_run_list_label_str
-        param_call file_dialog::MeasureString, primary_run_list_label_str
-        addax   rect_primary_run_list_ctrl::x2
-
-        MGTK_CALL MGTK::MoveTo, secondary_run_list_label_pos
-        param_call file_dialog::DrawString, secondary_run_list_label_str
-        param_call file_dialog::MeasureString, secondary_run_list_label_str
-        addax   rect_secondary_run_list_ctrl::x2
+        BTK_CALL BTK::RadioDraw, primary_run_list_params
+        BTK_CALL BTK::RadioDraw, secondary_run_list_params
 
         MGTK_CALL MGTK::MoveTo, down_load_label_pos
         param_call file_dialog::DrawString, down_load_label_str
 
-        MGTK_CALL MGTK::MoveTo, at_first_boot_label_pos
-        param_call file_dialog::DrawString, at_first_boot_label_str
-        param_call file_dialog::MeasureString, at_first_boot_label_str
-        addax   rect_at_first_boot_ctrl::x2
-
-        MGTK_CALL MGTK::MoveTo, at_first_use_label_pos
-        param_call file_dialog::DrawString, at_first_use_label_str
-        param_call file_dialog::MeasureString, at_first_use_label_str
-        addax   rect_at_first_use_ctrl::x2
-
-        MGTK_CALL MGTK::MoveTo, never_label_pos
-        param_call file_dialog::DrawString, never_label_str
-        param_call file_dialog::MeasureString, never_label_str
-        addax   rect_never_ctrl::x2
+        BTK_CALL BTK::RadioDraw, at_first_boot_params
+        BTK_CALL BTK::RadioDraw, at_first_use_params
+        BTK_CALL BTK::RadioDraw, never_params
 
         lda     #1
         clc
-        jsr     DrawRunListButton
+        jsr     UpdateRunListButton
         lda     #2
         clc
-        jsr     DrawRunListButton
+        jsr     UpdateRunListButton
         lda     #1
         clc
         jsr     DrawCopyWhenButton
@@ -244,23 +227,23 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 ;;; ============================================================
 
 .proc HandleClick
-        MGTK_CALL MGTK::InRect, rect_primary_run_list_ctrl
+        MGTK_CALL MGTK::InRect, primary_run_list_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickPrimaryRunListCtrl
 
-        MGTK_CALL MGTK::InRect, rect_secondary_run_list_ctrl
+        MGTK_CALL MGTK::InRect, secondary_run_list_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickSecondaryRunListCtrl
 
-        MGTK_CALL MGTK::InRect, rect_at_first_boot_ctrl
+        MGTK_CALL MGTK::InRect, at_first_boot_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickAtFirstBootCtrl
 
-        MGTK_CALL MGTK::InRect, rect_at_first_use_ctrl
+        MGTK_CALL MGTK::InRect, at_first_use_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickAtFirstUseCtrl
 
-        MGTK_CALL MGTK::InRect, rect_never_ctrl
+        MGTK_CALL MGTK::InRect, never_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickNeverCtrl
 
@@ -272,11 +255,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         cmp     #1
         beq     :+
         clc
-        jsr     DrawRunListButton
+        jsr     UpdateRunListButton
         lda     #1
         sta     which_run_list
         sec
-        jsr     DrawRunListButton
+        jsr     UpdateRunListButton
 :       return  #$FF
 .endproc
 
@@ -285,11 +268,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         cmp     #2
         beq     :+
         clc
-        jsr     DrawRunListButton
+        jsr     UpdateRunListButton
         lda     #2
         sta     which_run_list
         sec
-        jsr     DrawRunListButton
+        jsr     UpdateRunListButton
 :       return  #$FF
 .endproc
 
@@ -334,60 +317,43 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 ;;; ============================================================
 
-.proc DrawRunListButton
-        pha
-    IF_CC
-        copy16  #unchecked_rb_bitmap, rb_params::mapbits
-    ELSE
-        copy16  #checked_rb_bitmap, rb_params::mapbits
-    END_IF
-
-        pla
+.proc UpdateRunListButton
+        ldx     #0
+        bcc     :+
+        ldx     #$80
+:
         cmp     #1
     IF_EQ
-        ldax    #rect_primary_run_list_ctrl
+        stx     primary_run_list_rec::state
+        BTK_CALL BTK::RadioUpdate, primary_run_list_params
     ELSE
-        ldax    #rect_secondary_run_list_ctrl
+        stx     secondary_run_list_rec::state
+        BTK_CALL BTK::RadioUpdate, secondary_run_list_params
     END_IF
 
-        ptr := $06
-draw:
-        stax    ptr
-        ldy     #.sizeof(MGTK::Point)-1
-:       lda     (ptr),y
-        sta     rb_params::viewloc,y
-        dey
-        bpl     :-
-
-        jsr     file_dialog::SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::PaintBits, rb_params
-        MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
 .proc DrawCopyWhenButton
-        pha
-    IF_CC
-        copy16  #unchecked_rb_bitmap, rb_params::mapbits
-    ELSE
-        copy16  #checked_rb_bitmap, rb_params::mapbits
-    END_IF
-
-        pla
+        ldx     #0
+        bcc     :+
+        ldx     #$80
+:
         cmp     #1
         bne     :+
-        ldax    #rect_at_first_boot_ctrl
-        bne     DrawRunListButton::draw ; always
-
-:       cmp     #2
+        stx     at_first_boot_rec::state
+        BTK_CALL BTK::RadioUpdate, at_first_boot_params
+        rts
+:
+        cmp     #2
         bne     :+
-        ldax    #rect_at_first_use_ctrl
-        bne     DrawRunListButton::draw ; always
-
-:       ldax    #rect_never_ctrl
-        bne     DrawRunListButton::draw ; always
+        stx     at_first_use_rec::state
+        BTK_CALL BTK::RadioUpdate, at_first_use_params
+        rts
+:
+        stx     never_rec::state
+        BTK_CALL BTK::RadioUpdate, never_params
+        rts
 .endproc
 
 ;;; ============================================================

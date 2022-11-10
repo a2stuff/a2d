@@ -17,7 +17,7 @@ This defines the state of a control instance.
 .addr       a_label         Address of the button label.
 .addr       a_shortcut      Address of the button shortcut label, null if none).
 MGTK:Rect   rect            Bounding rect of the control.
-.byte       state           Button state. bit7 = disabled.
+.byte       state           Button state. bit7 = disabled (or checked, if radio).
 ```
 
 ## Commands
@@ -44,6 +44,7 @@ Parameters:
 .addr       a_record        Address of the ButtonRecord
 ```
 
+
 ### Hilite ($02)
 Redraw the control label, considering the disable state.
 
@@ -52,6 +53,7 @@ Parameters:
 .addr       a_record        Address of the ButtonRecord
 ```
 
+
 ### Track ($03)
 Start a nested event loop tracking after a click is initiated in the control. Returns with N=0/Z=1 if clicked, N=1/Z=0 if cancelled.
 
@@ -59,6 +61,31 @@ Parameters:
 ```
 .addr       a_record        Address of the ButtonRecord
 ```
+
+
+### RadioDraw ($04)
+Draw a radio button.
+
+Parameters:
+```
+.addr       a_record        Address of the ButtonRecord
+```
+
+The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
+
+The shortcut is ignored. After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
+
+
+### RadioUpdate ($03)
+Update the bitmap of a radio button.
+
+Parameters:
+```
+.addr       a_record        Address of the ButtonRecord
+```
+
+The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
+
 
 ## Convenience Macros
 

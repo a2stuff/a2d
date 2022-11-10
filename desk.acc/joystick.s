@@ -11,10 +11,12 @@
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
+        BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
 
@@ -139,49 +141,6 @@ window_id:      .byte   kDAWindowId
 
 grafport:       .tag    MGTK::GrafPort
 
-
-;;; ============================================================
-;;; Common Resources
-
-kRadioButtonWidth       = 15
-kRadioButtonHeight      = 7
-
-.params checked_rb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   checked_rb_bitmap
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
-.endparams
-
-checked_rb_bitmap:
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
-        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
-        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
-        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-
-.params unchecked_rb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   unchecked_rb_bitmap
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
-.endparams
-
-unchecked_rb_bitmap:
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
-        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
-        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
-        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-
 ;;; ============================================================
 ;;; Joystick Calibration Resources
 
@@ -196,17 +155,12 @@ kJoystickDisplayH = 64
         DEFINE_RECT_SZ joy_disp_frame_rect, kJoystickDisplayX    , kJoystickDisplayY    , kJoystickDisplayW + 8, kJoystickDisplayH + 5
         DEFINE_RECT_SZ joy_disp_rect,       kJoystickDisplayX + 1, kJoystickDisplayY + 1, kJoystickDisplayW + 6, kJoystickDisplayH + 3
 
-        DEFINE_POINT joy_btn0, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10
-        DEFINE_POINT joy_btn1, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30
-        DEFINE_POINT joy_btn2, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 50
-
-        DEFINE_POINT joy_btn0_lpos, kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 10 + 8
-        DEFINE_POINT joy_btn1_lpos, kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 30 + 8
-        DEFINE_POINT joy_btn2_lpos, kJoystickDisplayX + kJoystickDisplayW + kRadioButtonWidth + 30, kJoystickDisplayY + 50 + 8
-
-joy_btn0_label:   PASCAL_STRING res_string_label_joy_btn0 ; dialog label
-joy_btn1_label:   PASCAL_STRING res_string_label_joy_btn1 ; dialog label
-joy_btn2_label:   PASCAL_STRING res_string_label_joy_btn2 ; dialog label
+        DEFINE_BUTTON joy_btn0_rec, kDAWindowId, res_string_label_joy_btn0,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10
+        DEFINE_BUTTON joy_btn1_rec, kDAWindowId, res_string_label_joy_btn1,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30
+        DEFINE_BUTTON joy_btn2_rec, kDAWindowId, res_string_label_joy_btn2,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 50
+        DEFINE_BUTTON_PARAMS joy_btn0_params, joy_btn0_rec
+        DEFINE_BUTTON_PARAMS joy_btn1_params, joy_btn1_rec
+        DEFINE_BUTTON_PARAMS joy_btn2_params, joy_btn2_rec
 
 .params joy_marker
         DEFINE_POINT viewloc, 0, 0
@@ -405,12 +359,9 @@ notpencopy:     .byte   MGTK::notpencopy
 
         MGTK_CALL MGTK::FrameRect, joy_disp_frame_rect
 
-        MGTK_CALL MGTK::MoveTo, joy_btn0_lpos
-        param_call DrawString, joy_btn0_label
-        MGTK_CALL MGTK::MoveTo, joy_btn1_lpos
-        param_call DrawString, joy_btn1_label
-        MGTK_CALL MGTK::MoveTo, joy_btn2_lpos
-        param_call DrawString, joy_btn2_label
+        BTK_CALL BTK::RadioDraw, joy_btn0_params
+        BTK_CALL BTK::RadioDraw, joy_btn1_params
+        BTK_CALL BTK::RadioDraw, joy_btn2_params
 
         copy    #0, last_joy_valid_flag
 
@@ -419,33 +370,6 @@ notpencopy:     .byte   MGTK::notpencopy
 done:   MGTK_CALL MGTK::ShowCursor
         rts
 
-.endproc
-
-
-;;; A,X = pos ptr, Z = checked
-.proc DrawRadioButton
-        ptr := $06
-
-        stax    ptr
-        beq     checked
-
-unchecked:
-        ldy     #3
-:       lda     (ptr),y
-        sta     unchecked_rb_params::viewloc,y
-        dey
-        bpl     :-
-        MGTK_CALL MGTK::PaintBits, unchecked_rb_params
-        rts
-
-checked:
-        ldy     #3
-:       lda     (ptr),y
-        sta     checked_rb_params::viewloc,y
-        dey
-        bpl     :-
-        MGTK_CALL MGTK::PaintBits, checked_rb_params
-        rts
 .endproc
 
 ;;; ============================================================
@@ -535,20 +459,20 @@ changed:
 
         MGTK_CALL MGTK::PaintBits, joy_marker
 
-        ldax    #joy_btn0
-        ldy     curr+InputState::butn0
-        cpy     #$80
-        jsr     DrawRadioButton
+        lda     curr+InputState::butn0
+        and     #$80
+        sta     joy_btn0_rec::state
+        BTK_CALL BTK::RadioDraw, joy_btn0_params
 
-        ldax    #joy_btn1
-        ldy     curr+InputState::butn1
-        cpy     #$80
-        jsr     DrawRadioButton
+        lda     curr+InputState::butn1
+        and     #$80
+        sta     joy_btn1_rec::state
+        BTK_CALL BTK::RadioDraw, joy_btn1_params
 
-        ldax    #joy_btn2
-        ldy     curr+InputState::butn2
-        cpy     #$80
-        jsr     DrawRadioButton
+        lda     curr+InputState::butn2
+        and     #$80
+        sta     joy_btn2_rec::state
+        BTK_CALL BTK::RadioDraw, joy_btn2_params
 
         MGTK_CALL MGTK::ShowCursor
 done:   rts

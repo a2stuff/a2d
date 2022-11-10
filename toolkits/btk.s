@@ -82,6 +82,8 @@ jump_table:
         .addr   FlashImpl
         .addr   HiliteImpl
         .addr   TrackImpl
+        .addr   RadioDrawImpl
+        .addr   RadioUpdateImpl
 
         ;; Must be non-zero
 length_table:
@@ -89,6 +91,8 @@ length_table:
         .byte   2               ; Flash
         .byte   2               ; Hilite
         .byte   2               ; Track
+        .byte   2               ; RadioDraw
+        .byte   2               ; RadioUpdate
 .endproc
 
 ;;; ============================================================
@@ -182,17 +186,7 @@ skip_port:
         MGTK_CALL MGTK::MoveTo, pos
 
         ;; Draw the string (left aligned)
-PARAM_BLOCK dt_params, $6
-textptr .addr
-textlen .byte
-END_PARAM_BLOCK
-        ldy     #0
-        lda     (a_label),y
-        beq     :+
-        sta     dt_params::textlen
-        add16_8 a_label, #1, dt_params::textptr
-        MGTK_CALL MGTK::DrawText, dt_params
-:
+        jsr     _DrawLabel
 
         ;; Draw the shortcut (if present, right aligned)
 PARAM_BLOCK tw_params, $6
@@ -231,6 +225,47 @@ END_PARAM_BLOCK
         rts
 .endproc ; HiliteImpl
 HiliteImpl__skip_port := HiliteImpl::skip_port
+
+;;; ============================================================
+
+;;; Input: `a_label` points at string
+;;; Trashes $06..$08
+.proc _DrawLabel
+PARAM_BLOCK dt_params, $6
+textptr .addr
+textlen .byte
+END_PARAM_BLOCK
+        ldy     #0
+        lda     (a_label),y
+        beq     :+
+        sta     dt_params::textlen
+        add16_8 a_label, #1, dt_params::textptr
+        MGTK_CALL MGTK::DrawText, dt_params
+:       rts
+.endproc
+
+;;; Inputs: `a_label` points at string
+;;; Output: A,X = width
+;;; Trashes: $06..$0A
+.proc _MeasureLabel
+PARAM_BLOCK tw_params, $6
+textptr .addr
+textlen .byte
+width   .word
+END_PARAM_BLOCK
+        ldy     #0
+        lda     (a_label),y
+        bne     :+
+        lda     #0
+        tax
+        rts
+:
+        sta     tw_params::textlen
+        add16_8 a_label, #1, tw_params::textptr
+        MGTK_CALL MGTK::TextWidth, tw_params
+        ldax    tw_params::width
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -311,6 +346,113 @@ down_flag:
 
 .endproc ; TrackImpl
 
+;;; ============================================================
+
+;;; Padding between radio/checkbox and label
+kLabelPadding = 5
+
+kRadioButtonWidth       = 15
+kRadioButtonHeight      = 7
+
+.params rb_params
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   SELF_MODIFIED
+mapwidth:       .byte   3
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+.endparams
+
+checked_rb_bitmap:
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
+        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
+        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
+        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+
+unchecked_rb_bitmap:
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
+        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
+        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
+        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
+        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
+        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
+
+;;; ============================================================
+
+.proc RadioDrawImpl
+        PARAM_BLOCK params, btk::command_data
+a_record  .addr
+        END_PARAM_BLOCK
+        .assert a_record = params::a_record, error, "a_record must be first"
+
+        jsr     _SetPort
+
+        ;; Initial size is just the button
+        add16_8 rect+MGTK::Rect::x1, #kRadioButtonWidth, rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::y1, #kRadioButtonHeight, rect+MGTK::Rect::y2
+
+        ;; No label? skip
+        lda     a_label
+        ora     a_label+1
+        beq     update_rect
+
+        ;; Draw the label
+        pos := $B
+        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + kRadioButtonWidth, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight - 1, pos+MGTK::Point::ycoord
+        MGTK_CALL MGTK::MoveTo, pos
+        jsr     _DrawLabel
+
+        ;; And measure it for hit testing
+        jsr     _MeasureLabel
+        addax   rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
+        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kRadioButtonHeight
+
+        ;; Write rect back to button record
+update_rect:
+        ldx     #.sizeof(MGTK::Rect)-1
+        ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
+:       lda     rect,x
+        sta     (a_record),y
+        dey
+        dex
+        bpl     :-
+
+        jmp     _DrawRadioBitmap
+.endproc ; RadioDrawImpl
+
+;;; ============================================================
+
+.proc RadioUpdateImpl
+        PARAM_BLOCK params, btk::command_data
+a_record  .addr
+        END_PARAM_BLOCK
+        .assert a_record = params::a_record, error, "a_record must be first"
+
+        jsr     _SetPort
+
+        FALL_THROUGH_TO _DrawRadioBitmap
+.endproc ; RadioUpdateImpl
+
+.proc _DrawRadioBitmap
+        COPY_STRUCT MGTK::Point, rect+MGTK::Rect::topleft, rb_params::viewloc
+        ldax    #unchecked_rb_bitmap
+        bit     state
+    IF_NS
+        ldax    #checked_rb_bitmap
+    END_IF
+        stax    rb_params::mapbits
+
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::PaintBits, rb_params
+        rts
+.endproc
 
 ;;; ============================================================
 

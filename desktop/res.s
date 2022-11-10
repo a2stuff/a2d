@@ -384,78 +384,38 @@ file_count:
         .word   0
 
 ;;; ============================================================
-;;; Resources for Add/Edit a Shortcut dialog
-
-enter_the_name_to_appear_label:
-        PASCAL_STRING res_string_selector_label_enter_name
-
-
-;;; Padding between radio/checkbox and label
-kLabelPadding = 5
-
-kRadioButtonWidth       = 15
-kRadioButtonHeight      = 7
-
-.params rb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   SELF_MODIFIED
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
-.endparams
-
-checked_rb_bitmap:
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
-        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
-        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
-        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-
-unchecked_rb_bitmap:
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
-        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
-        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
-        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-
-kRadioButtonLeft  = 332
-kRadioButtonHOffset = kLabelPadding
-kRadioControlHeight = 8         ; system font height - 1
-
-        ;; Rect widths are dynamically computed based on label
-
-        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 37
-
-        DEFINE_RECT_SZ rect_primary_run_list_ctrl,   kRadioButtonLeft, 39, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
-        DEFINE_LABEL primary_run_list,   {kGlyphOpenApple,res_string_selector_label_primary_run_list},   kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 47
-
-        DEFINE_RECT_SZ rect_secondary_run_list_ctrl, kRadioButtonLeft, 48, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
-        DEFINE_LABEL secondary_run_list, {kGlyphOpenApple,res_string_selector_label_secondary_run_list}, kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 56
-
-        DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 71
-
-        DEFINE_RECT_SZ rect_at_first_boot_ctrl,      kRadioButtonLeft, 73, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
-        DEFINE_LABEL at_first_boot,      {kGlyphOpenApple,res_string_selector_label_at_first_boot},      kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 81
-
-        DEFINE_RECT_SZ rect_at_first_use_ctrl,       kRadioButtonLeft, 82, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
-        DEFINE_LABEL at_first_use,       {kGlyphOpenApple,res_string_selector_label_at_first_use},       kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 90
-
-        DEFINE_RECT_SZ rect_never_ctrl,              kRadioButtonLeft, 91, kRadioButtonWidth + kRadioButtonHOffset, kRadioControlHeight
-        DEFINE_LABEL never,              {kGlyphOpenApple,res_string_selector_label_never},              kRadioButtonLeft + kRadioButtonWidth + kRadioButtonHOffset, 99
-
-;;; ============================================================
 
         FONT := DEFAULT_FONT
         .define FD_EXTENDED 1
         buf_input1 := path_buf0
         buf_input2 := path_buf1
         .include "../lib/file_dialog_res.s"
+
+;;; ============================================================
+;;; Resources for Add/Edit a Shortcut dialog
+
+enter_the_name_to_appear_label:
+        PASCAL_STRING res_string_selector_label_enter_name
+
+kRadioButtonLeft  = 332
+
+        kFDWinId = file_dialog_res::kFilePickerDlgWindowID
+
+        DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 37
+
+        DEFINE_BUTTON primary_run_list_rec,   kFDWinId, {kGlyphOpenApple,res_string_selector_label_primary_run_list},, kRadioButtonLeft, 39
+        DEFINE_BUTTON_PARAMS primary_run_list_params, primary_run_list_rec
+        DEFINE_BUTTON secondary_run_list_rec, kFDWinId, {kGlyphOpenApple,res_string_selector_label_secondary_run_list},, kRadioButtonLeft, 48
+        DEFINE_BUTTON_PARAMS secondary_run_list_params, secondary_run_list_rec
+
+        DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 71
+
+        DEFINE_BUTTON at_first_boot_rec,      kFDWinId, {kGlyphOpenApple,res_string_selector_label_at_first_boot},, kRadioButtonLeft, 73
+        DEFINE_BUTTON_PARAMS at_first_boot_params, at_first_boot_rec
+        DEFINE_BUTTON at_first_use_rec,       kFDWinId, {kGlyphOpenApple,res_string_selector_label_at_first_use},, kRadioButtonLeft, 82
+        DEFINE_BUTTON_PARAMS at_first_use_params, at_first_use_rec
+        DEFINE_BUTTON never_rec,              kFDWinId, {kGlyphOpenApple,res_string_selector_label_never},, kRadioButtonLeft, 91
+        DEFINE_BUTTON_PARAMS never_params, never_rec
 
 ;;; ============================================================
 

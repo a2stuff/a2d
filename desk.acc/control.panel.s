@@ -16,10 +16,12 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
+        BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
 ;;; Memory map
@@ -169,37 +171,6 @@ grafport:       .tag    MGTK::GrafPort
 ;;; Padding between radio/checkbox and label
 kLabelPadding = 5
 
-kRadioButtonWidth       = 15
-kRadioButtonHeight      = 7
-
-.params rb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   SELF_MODIFIED
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
-.endparams
-
-checked_rb_bitmap:
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
-        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
-        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
-        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-
-unchecked_rb_bitmap:
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
-        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
-        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
-        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-
 kCheckboxWidth       = 17
 kCheckboxHeight      = 8
 
@@ -346,10 +317,12 @@ arrows_table:
         DEFINE_POINT dblclick_arrow_pos6, kDblClickX + 155, kDblClickY + 23
         ASSERT_RECORD_TABLE_SIZE arrows_table, kNumArrows, .sizeof(MGTK::Point)
 
-        ;; for hit testing
-        DEFINE_RECT_SZ dblclick_button_rect1, kDblClickX + 175, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ dblclick_button_rect2, kDblClickX + 130, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ dblclick_button_rect3, kDblClickX +  85, kDblClickY + 25, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_BUTTON dblclick_button1_rec, kDAWindowId,,, kDblClickX + 175, kDblClickY + 25
+        DEFINE_BUTTON dblclick_button2_rec, kDAWindowId,,, kDblClickX + 130, kDblClickY + 25
+        DEFINE_BUTTON dblclick_button3_rec, kDAWindowId,,, kDblClickX +  85, kDblClickY + 25
+        DEFINE_BUTTON_PARAMS dblclick_button1_params, dblclick_button1_rec
+        DEFINE_BUTTON_PARAMS dblclick_button2_params, dblclick_button2_rec
+        DEFINE_BUTTON_PARAMS dblclick_button3_params, dblclick_button3_rec
 
 dblclick_bitmap:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000011),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -414,11 +387,10 @@ kMouseTrackingY = 78
 
         DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + 30, kMouseTrackingY + 45
 
-        DEFINE_LABEL tracking_slow, res_string_label_slow, kMouseTrackingX + 84 + kRadioButtonWidth + kLabelPadding, kMouseTrackingY + 16
-        DEFINE_LABEL tracking_fast, res_string_label_fast, kMouseTrackingX + 84 + kRadioButtonWidth + kLabelPadding, kMouseTrackingY + 29
-        ;; for hit testing; label width is added dynamically
-        DEFINE_RECT_SZ tracking_button_rect1, kMouseTrackingX + 84, kMouseTrackingY + 8, kRadioButtonWidth + kLabelPadding, kRadioButtonHeight
-        DEFINE_RECT_SZ tracking_button_rect2, kMouseTrackingX + 84, kMouseTrackingY + 21, kRadioButtonWidth + kLabelPadding, kRadioButtonHeight
+        DEFINE_BUTTON tracking_slow_rec, kDAWindowId, res_string_label_slow,, kMouseTrackingX + 84, kMouseTrackingY + 8
+        DEFINE_BUTTON tracking_fast_rec, kDAWindowId, res_string_label_fast,, kMouseTrackingX + 84, kMouseTrackingY + 21
+        DEFINE_BUTTON_PARAMS tracking_slow_params, tracking_slow_rec
+        DEFINE_BUTTON_PARAMS tracking_fast_params, tracking_fast_rec
 
 .params mouse_tracking_params
         DEFINE_POINT viewloc, kMouseTrackingX + 5, kMouseTrackingY
@@ -481,10 +453,13 @@ ipblink_selection:
         DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 21
         DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 100, kIPBlinkDisplayY + 34
         DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 150, kIPBlinkDisplayY + 34
-        ;; for hit testing
-        DEFINE_RECT_SZ ipblink_btn1_rect, kIPBlinkDisplayX + 116, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ ipblink_btn2_rect, kIPBlinkDisplayX + 136, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
-        DEFINE_RECT_SZ ipblink_btn3_rect, kIPBlinkDisplayX + 156, kIPBlinkDisplayY + 16, kRadioButtonWidth, kRadioButtonHeight
+
+        DEFINE_BUTTON ipblink_btn1_rec, kDAWindowId,,, kIPBlinkDisplayX + 116, kIPBlinkDisplayY + 16
+        DEFINE_BUTTON ipblink_btn2_rec, kDAWindowId,,, kIPBlinkDisplayX + 136, kIPBlinkDisplayY + 16
+        DEFINE_BUTTON ipblink_btn3_rec, kDAWindowId,,, kIPBlinkDisplayX + 156, kIPBlinkDisplayY + 16
+        DEFINE_BUTTON_PARAMS ipblink_btn1_params, ipblink_btn1_rec
+        DEFINE_BUTTON_PARAMS ipblink_btn2_params, ipblink_btn2_rec
+        DEFINE_BUTTON_PARAMS ipblink_btn3_params, ipblink_btn3_rec
 
 .params ipblink_bitmap_params
         DEFINE_POINT viewloc, kIPBlinkDisplayX + 123, kIPBlinkDisplayY
@@ -558,10 +533,6 @@ ipblink_ip_bitmap:
 
         param_call MeasureString, rgb_color_label_str
         addax   rect_rgb::x2
-        param_call MeasureString, tracking_slow_label_str
-        addax   tracking_button_rect1::x2
-        param_call MeasureString, tracking_fast_label_str
-        addax   tracking_button_rect2::x2
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
@@ -685,21 +656,21 @@ ipblink_ip_bitmap:
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, dblclick_button_rect1
+        MGTK_CALL MGTK::InRect, dblclick_button1_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
         jmp     HandleDblclickClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, dblclick_button_rect2
+        MGTK_CALL MGTK::InRect, dblclick_button2_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #2
         jmp     HandleDblclickClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, dblclick_button_rect3
+        MGTK_CALL MGTK::InRect, dblclick_button3_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #3
@@ -708,14 +679,14 @@ ipblink_ip_bitmap:
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, tracking_button_rect1
+        MGTK_CALL MGTK::InRect, tracking_slow_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #0
         jmp     HandleTrackingClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, tracking_button_rect2
+        MGTK_CALL MGTK::InRect, tracking_fast_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
@@ -724,21 +695,21 @@ ipblink_ip_bitmap:
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, ipblink_btn1_rect
+        MGTK_CALL MGTK::InRect, ipblink_btn1_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
         jmp     HandleIpblinkClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, ipblink_btn2_rect
+        MGTK_CALL MGTK::InRect, ipblink_btn2_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #2
         jmp     HandleIpblinkClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, ipblink_btn3_rect
+        MGTK_CALL MGTK::InRect, ipblink_btn3_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #3
@@ -924,7 +895,7 @@ next:   dex
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
-        jsr     DrawDblclickButtons
+        jsr     UpdateDblclickButtons
         MGTK_CALL MGTK::ShowCursor
         jmp     InputLoop
 .endproc
@@ -975,7 +946,7 @@ next:   dex
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
-        jsr     DrawTrackingButtons
+        jsr     UpdateTrackingButtons
         MGTK_CALL MGTK::ShowCursor
 
         jmp     InputLoop
@@ -1087,8 +1058,11 @@ loop:   ldy     #3
         bne     loop
 .endscope
 
+        BTK_CALL BTK::RadioDraw, dblclick_button1_params
+        BTK_CALL BTK::RadioDraw, dblclick_button2_params
+        BTK_CALL BTK::RadioDraw, dblclick_button3_params
 
-        jsr     DrawDblclickButtons
+        jsr     UpdateDblclickButtons
 
         MGTK_CALL MGTK::PaintBits, dblclick_params
 
@@ -1098,13 +1072,9 @@ loop:   ldy     #3
         MGTK_CALL MGTK::MoveTo, mouse_tracking_label_pos
         param_call DrawString, mouse_tracking_label_str
 
-        MGTK_CALL MGTK::MoveTo, tracking_slow_label_pos
-        param_call DrawString, tracking_slow_label_str
-
-        MGTK_CALL MGTK::MoveTo, tracking_fast_label_pos
-        param_call DrawString, tracking_fast_label_str
-
-        jsr     DrawTrackingButtons
+        BTK_CALL BTK::RadioDraw, tracking_slow_params
+        BTK_CALL BTK::RadioDraw, tracking_fast_params
+        jsr     UpdateTrackingButtons
 
         MGTK_CALL MGTK::PaintBits, mouse_tracking_params
 
@@ -1125,7 +1095,10 @@ loop:   ldy     #3
         MGTK_CALL MGTK::MoveTo, ipblink_fast_label_pos
         param_call DrawString, ipblink_fast_label_str
 
-        jsr     DrawIpblinkButtons
+        BTK_CALL BTK::RadioDraw, ipblink_btn1_params
+        BTK_CALL BTK::RadioDraw, ipblink_btn2_params
+        BTK_CALL BTK::RadioDraw, ipblink_btn3_params
+        jsr     UpdateIpblinkButtons
 
         ;; ==============================
         ;; Frame
@@ -1148,58 +1121,77 @@ arrow_num:
 
 .endproc
 
-.proc DrawDblclickButtons
+.proc ZToN
+        beq     :+
+        lda     #0
+        rts
+:       lda     #$80
+        rts
+.endproc
+
+.proc UpdateDblclickButtons
+        lda     dblclick_selection
+        cmp     #1
+        jsr     ZToN
+        sta     dblclick_button1_rec::state
+        BTK_CALL BTK::RadioUpdate, dblclick_button1_params
+
+        lda     dblclick_selection
+        cmp     #2
+        jsr     ZToN
+        sta     dblclick_button2_rec::state
+        BTK_CALL BTK::RadioUpdate, dblclick_button2_params
+
+        lda     dblclick_selection
+        cmp     #3
+        jsr     ZToN
+        sta     dblclick_button3_rec::state
+        BTK_CALL BTK::RadioUpdate, dblclick_button3_params
+
+        rts
+.endproc
+
+.proc UpdateTrackingButtons
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
-        ldax    #dblclick_button_rect1
-        ldy     dblclick_selection
-        cpy     #1
-        jsr     DrawRadioButton
+        lda     SETTINGS + DeskTopSettings::mouse_tracking
+        cmp     #0
+        jsr     ZToN
+        sta     tracking_slow_rec::state
+        BTK_CALL BTK::RadioUpdate, tracking_slow_params
 
-        ldax    #dblclick_button_rect2
-        ldy     dblclick_selection
-        cpy     #2
-        jsr     DrawRadioButton
+        lda     SETTINGS + DeskTopSettings::mouse_tracking
+        cmp     #1
+        jsr     ZToN
+        sta     tracking_fast_rec::state
+        BTK_CALL BTK::RadioUpdate, tracking_fast_params
 
-        ldax    #dblclick_button_rect3
-        ldy     dblclick_selection
-        cpy     #3
-        jmp     DrawRadioButton
+        rts
 .endproc
 
 
-.proc DrawTrackingButtons
+.proc UpdateIpblinkButtons
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
-        ldax    #tracking_button_rect1
-        ldy     SETTINGS + DeskTopSettings::mouse_tracking
-        cpy     #0
-        jsr     DrawRadioButton
+        lda     ipblink_selection
+        cmp     #1
+        jsr     ZToN
+        sta     ipblink_btn1_rec::state
+        BTK_CALL BTK::RadioUpdate, ipblink_btn1_params
 
-        ldax    #tracking_button_rect2
-        ldy     SETTINGS + DeskTopSettings::mouse_tracking
-        cpy     #1
-        jmp     DrawRadioButton
-.endproc
+        lda     ipblink_selection
+        cmp     #2
+        jsr     ZToN
+        sta     ipblink_btn2_rec::state
+        BTK_CALL BTK::RadioUpdate, ipblink_btn2_params
 
+        lda     ipblink_selection
+        cmp     #3
+        jsr     ZToN
+        sta     ipblink_btn3_rec::state
+        BTK_CALL BTK::RadioUpdate, ipblink_btn3_params
 
-.proc DrawIpblinkButtons
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-
-        ldax    #ipblink_btn1_rect
-        ldy     ipblink_selection
-        cpy     #1
-        jsr     DrawRadioButton
-
-        ldax    #ipblink_btn2_rect
-        ldy     ipblink_selection
-        cpy     #2
-        jsr     DrawRadioButton
-
-        ldax    #ipblink_btn3_rect
-        ldy     ipblink_selection
-        cpy     #3
-        jmp     DrawRadioButton
+        rts
 .endproc
 
 .proc DrawRGBCheckbox
@@ -1211,28 +1203,6 @@ arrow_num:
         jmp     DrawCheckbox
 .endproc
 
-
-;;; A,X = pos ptr, Z = checked
-.proc DrawRadioButton
-        ptr := $06
-
-        stax    ptr
-
-    IF_EQ
-        copy16  #checked_rb_bitmap, rb_params::mapbits
-    ELSE
-        copy16  #unchecked_rb_bitmap, rb_params::mapbits
-    END_IF
-
-        ldy     #3
-:       lda     (ptr),y
-        sta     rb_params::viewloc,y
-        dey
-        bpl     :-
-
-        MGTK_CALL MGTK::PaintBits, rb_params
-        rts
-.endproc
 
 ;;; A,X = pos ptr, Z = checked
 .proc DrawCheckbox
@@ -1667,7 +1637,7 @@ next:   dex
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
-        jsr     DrawIpblinkButtons
+        jsr     UpdateIpblinkButtons
         MGTK_CALL MGTK::ShowCursor
         jmp     InputLoop
 .endproc

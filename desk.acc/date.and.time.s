@@ -378,48 +378,14 @@ nextwinfo:      .addr   0
 ;;; ============================================================
 ;;; 12/24 Hour Resources
 
-;;; Padding between radio/checkbox and label
-kLabelPadding = 5
-
-kRadioButtonWidth       = 15
-kRadioButtonHeight      = 7
-
-.params rb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   SELF_MODIFIED
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
-.endparams
-
-checked_rb_bitmap:
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
-        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
-        .byte   PX(%1100111),PX(%1111100),PX(%1100000)
-        .byte   PX(%1110001),PX(%1110001),PX(%1100000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-
-unchecked_rb_bitmap:
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
-        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
-        .byte   PX(%1100000),PX(%0000000),PX(%1100000)
-        .byte   PX(%1110000),PX(%0000001),PX(%1100000)
-        .byte   PX(%0011100),PX(%0000111),PX(%0000000)
-        .byte   PX(%0000111),PX(%1111100),PX(%0000000)
 
 kOptionDisplayX = 30
 kOptionDisplayY = 44
 
-        DEFINE_LABEL clock_12hour, res_string_label_clock_12hour, kOptionDisplayX+60+kRadioButtonWidth+kLabelPadding-10, kOptionDisplayY+8
-        DEFINE_LABEL clock_24hour, res_string_label_clock_24hour, kOptionDisplayX+120+kRadioButtonWidth+kLabelPadding, kOptionDisplayY+8
-        ;; for hit testing; label width is added dynamically
-        DEFINE_RECT_SZ rect_12hour, kOptionDisplayX+60-10, kOptionDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
-        DEFINE_RECT_SZ rect_24hour, kOptionDisplayX+120, kOptionDisplayY, kRadioButtonWidth+kLabelPadding, kRadioButtonHeight
+        DEFINE_BUTTON clock_12hour_rec, kDAWindowId, res_string_label_clock_12hour,, kOptionDisplayX+60-10, kOptionDisplayY
+        DEFINE_BUTTON clock_24hour_rec, kDAWindowId, res_string_label_clock_24hour,, kOptionDisplayX+120, kOptionDisplayY
+        DEFINE_BUTTON_PARAMS clock_12hour_params, clock_12hour_rec
+        DEFINE_BUTTON_PARAMS clock_24hour_params, clock_24hour_rec
 
 .params date_bitmap_params
         DEFINE_POINT viewloc, 14, 40
@@ -527,11 +493,6 @@ init_window:
         sta     minute
 
 :       sta     RAMRDON
-
-        param_call MeasureString, clock_12hour_label_str
-        addax   rect_12hour::x2
-        param_call MeasureString, clock_24hour_label_str
-        addax   rect_24hour::x2
 
         MGTK_CALL MGTK::OpenWindow, winfo
         lda     #0
@@ -666,14 +627,14 @@ hit:
         cmp     #MGTK::inrect_inside
         jeq     OnClickOk
 
-        MGTK_CALL MGTK::InRect, rect_12hour
+        MGTK_CALL MGTK::InRect, clock_12hour_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #$00
         jmp     HandleOptionClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, rect_24hour
+        MGTK_CALL MGTK::InRect, clock_24hour_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #$80
@@ -1150,29 +1111,36 @@ label_downarrow:
 
         ;; --------------------------------------------------
 
-        MGTK_CALL MGTK::MoveTo, clock_12hour_label_pos
-        param_call DrawString, clock_12hour_label_str
-        MGTK_CALL MGTK::MoveTo, clock_24hour_label_pos
-        param_call DrawString, clock_24hour_label_str
-
         BTK_CALL BTK::Draw, ok_button_params
+        BTK_CALL BTK::RadioDraw, clock_12hour_params
+        BTK_CALL BTK::RadioDraw, clock_24hour_params
 
-        FALL_THROUGH_TO DrawOptionButtons
+        FALL_THROUGH_TO UpdateOptionButtons
 .endproc
 
-.proc DrawOptionButtons
+.proc UpdateOptionButtons
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
-        ldax    #rect_12hour
-        ldy     SETTINGS + DeskTopSettings::clock_24hours
-        cpy     #0
-        jsr     DrawRadioButton
+        lda     SETTINGS + DeskTopSettings::clock_24hours
+        cmp     #0
+        jsr     ZToN
+        sta     clock_12hour_rec::state
+        BTK_CALL BTK::RadioUpdate, clock_12hour_params
 
-        ldax    #rect_24hour
-        ldy     SETTINGS + DeskTopSettings::clock_24hours
-        cpy     #$80
-        jsr     DrawRadioButton
+        lda     SETTINGS + DeskTopSettings::clock_24hours
+        cmp     #$80
+        jsr     ZToN
+        sta     clock_24hour_rec::state
+        BTK_CALL BTK::RadioUpdate, clock_24hour_params
 
+        rts
+.endproc
+
+.proc ZToN
+        beq     :+
+        lda     #0
+        rts
+:       lda     #$80
         rts
 .endproc
 
@@ -1360,7 +1328,7 @@ loop:   cmp     #10
 .proc HandleOptionClick
         sta     SETTINGS + DeskTopSettings::clock_24hours
         MGTK_CALL MGTK::HideCursor
-        jsr     DrawOptionButtons
+        jsr     UpdateOptionButtons
         MGTK_CALL MGTK::ShowCursor
 
         ;; Set dirty bit
@@ -1383,30 +1351,6 @@ loop:   cmp     #10
         jsr     DrawField
 
         jmp     InputLoop
-.endproc
-
-;;; ============================================================
-
-;;; A,X = pos ptr, Z = checked
-.proc DrawRadioButton
-        ptr := $06
-
-        stax    ptr
-
-    IF_EQ
-        copy16  #checked_rb_bitmap, rb_params::mapbits
-    ELSE
-        copy16  #unchecked_rb_bitmap, rb_params::mapbits
-    END_IF
-
-        ldy     #3
-:       lda     (ptr),y
-        sta     rb_params::viewloc,y
-        dey
-        bpl     :-
-
-        MGTK_CALL MGTK::PaintBits, rb_params
-        rts
 .endproc
 
 ;;; ============================================================
