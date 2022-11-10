@@ -14,10 +14,12 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
+        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
         MGTKEntry := MGTKAuxEntry
+        BTKEntry := BTKAuxEntry
 
 ;;; ============================================================
 ;;; Memory map
@@ -183,80 +185,24 @@ grafport:       .tag    MGTK::GrafPort
 
 
 ;;; ============================================================
-;;; Common Resources
-
-kCheckboxWidth       = 17
-kCheckboxHeight      = 8
-
-.params checked_cb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   checked_cb_bitmap
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
-.endparams
-
-checked_cb_bitmap:
-        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-        .byte   PX(%1111000),PX(%0000000),PX(%1111000)
-        .byte   PX(%1100110),PX(%0000011),PX(%0011000)
-        .byte   PX(%1100001),PX(%1001100),PX(%0011000)
-        .byte   PX(%1100000),PX(%0110000),PX(%0011000)
-        .byte   PX(%1100001),PX(%1001100),PX(%0011000)
-        .byte   PX(%1100110),PX(%0000011),PX(%0011000)
-        .byte   PX(%1111000),PX(%0000000),PX(%1111000)
-        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-
-.params unchecked_cb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   unchecked_cb_bitmap
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
-.endparams
-
-unchecked_cb_bitmap:
-        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-
-kCheckboxLabelOffsetX = kCheckboxWidth + 5
-kCheckboxLabelOffsetY = kCheckboxHeight + 1
-
-;;; ============================================================
-
 
         kRamCardX = 10
         kRamCardY = 10
 
-        DEFINE_LABEL ramcard, res_string_label_ramcard, kRamCardX + kCheckboxLabelOffsetX, kRamCardY + kCheckboxLabelOffsetY
-        DEFINE_RECT_SZ rect_ramcard, kRamCardX, kRamCardY, kCheckboxWidth, kCheckboxHeight
-        DEFINE_RECT_SZ rect_ramcard_click, kRamCardX, kRamCardY, kCheckboxLabelOffsetX, kCheckboxHeight
+        DEFINE_BUTTON ramcard_rec, kDAWindowId, res_string_label_ramcard,, kRamCardX, kRamCardY
+        DEFINE_BUTTON_PARAMS ramcard_params, ramcard_rec
 
 ;;; ============================================================
-
 
         kSelectorX = 10
         kSelectorY = 21
 
-        DEFINE_LABEL selector, res_string_label_selector, kSelectorX + kCheckboxLabelOffsetX, kSelectorY + kCheckboxLabelOffsetY
-        DEFINE_RECT_SZ rect_selector, kSelectorX, kSelectorY, kCheckboxWidth, kCheckboxHeight
-        DEFINE_RECT_SZ rect_selector_click, kSelectorX, kSelectorY, kCheckboxLabelOffsetX, kCheckboxHeight
+        DEFINE_BUTTON selector_rec, kDAWindowId, res_string_label_selector,, kSelectorX, kSelectorY
+        DEFINE_BUTTON_PARAMS selector_params, selector_rec
 
 ;;; ============================================================
 
 .proc Init
-        param_call MeasureString, ramcard_label_str
-        addax   rect_ramcard_click::x2
-        param_call MeasureString, selector_label_str
-        addax   rect_selector_click::x2
-
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
@@ -348,13 +294,13 @@ common: bit     dragwindow_params::moved
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, rect_ramcard_click
+        MGTK_CALL MGTK::InRect, ramcard_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         jmp     HandleRamcardClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, rect_selector_click
+        MGTK_CALL MGTK::InRect, selector_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         jmp     HandleSelectorClick
@@ -386,23 +332,17 @@ notpencopy:     .byte   MGTK::notpencopy
 
         ;; --------------------------------------------------
 
-        MGTK_CALL MGTK::MoveTo, ramcard_label_pos
-        param_call DrawString, ramcard_label_str
-
-        ldax    #rect_ramcard
-        ldy     #DeskTopSettings::kStartupSkipRAMCard
+        lda     #DeskTopSettings::kStartupSkipRAMCard
         jsr     GetBit
-        jsr     DrawCheckbox
+        sta     ramcard_rec::state
+        BTK_CALL BTK::CheckboxDraw, ramcard_params
 
         ;; --------------------------------------------------
 
-        MGTK_CALL MGTK::MoveTo, selector_label_pos
-        param_call DrawString, selector_label_str
-
-        ldax    #rect_selector
-        ldy     #DeskTopSettings::kStartupSkipSelector
+        lda     #DeskTopSettings::kStartupSkipSelector
         jsr     GetBit
-        jsr     DrawCheckbox
+        sta     selector_rec::state
+        BTK_CALL BTK::CheckboxDraw, selector_params
 
         ;; --------------------------------------------------
 
@@ -410,52 +350,15 @@ notpencopy:     .byte   MGTK::notpencopy
         rts
 .endproc
 
-;;; Inputs: Y = bit to read from DeskTopSettings::startup
-;;; Outputs: Z = bit set
-;;; Note: A,X untouched
+;;; Inputs: A = bit to read from DeskTopSettings::startup
+;;; Outputs: A = $80 if set, $00 if unset
 .proc GetBit
-        pha
-        tya
         and     SETTINGS + DeskTopSettings::startup
-        tay
-        pla
-        sty     tmp
-        ldy     tmp
+        beq     set
+        lda     #0
         rts
 
-tmp:    .byte   0
-.endproc
-
-;;; A,X = pos ptr, Z = checked
-.proc DrawCheckbox
-        ptr := $06
-
-        stax    ptr
-        php
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::HideCursor
-        plp
-        beq     checked
-
-unchecked:
-        ldy     #3
-:       lda     (ptr),y
-        sta     unchecked_cb_params::viewloc,y
-        dey
-        bpl     :-
-        MGTK_CALL MGTK::PaintBits, unchecked_cb_params
-        jmp     finish
-
-checked:
-        ldy     #3
-:       lda     (ptr),y
-        sta     checked_cb_params::viewloc,y
-        dey
-        bpl     :-
-        MGTK_CALL MGTK::PaintBits, checked_cb_params
-
-
-finish: MGTK_CALL MGTK::ShowCursor
+set:    lda     #$80
         rts
 .endproc
 
@@ -466,11 +369,10 @@ finish: MGTK_CALL MGTK::ShowCursor
         eor     #DeskTopSettings::kStartupSkipRAMCard
         sta     SETTINGS + DeskTopSettings::startup
 
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        ldax    #rect_ramcard
-        ldy     #DeskTopSettings::kStartupSkipRAMCard
+        lda     #DeskTopSettings::kStartupSkipRAMCard
         jsr     GetBit
-        jsr     DrawCheckbox
+        sta     ramcard_rec::state
+        BTK_CALL BTK::CheckboxUpdate, ramcard_params
 
         jsr     MarkDirty
         jmp     InputLoop
@@ -483,11 +385,10 @@ finish: MGTK_CALL MGTK::ShowCursor
         eor     #DeskTopSettings::kStartupSkipSelector
         sta     SETTINGS + DeskTopSettings::startup
 
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        ldax    #rect_selector
-        ldy     #DeskTopSettings::kStartupSkipSelector
+        lda     #DeskTopSettings::kStartupSkipSelector
         jsr     GetBit
-        jsr     DrawCheckbox
+        sta     selector_rec::state
+        BTK_CALL BTK::CheckboxUpdate, selector_params
 
         jsr     MarkDirty
         jmp     InputLoop

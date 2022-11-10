@@ -82,8 +82,12 @@ jump_table:
         .addr   FlashImpl
         .addr   HiliteImpl
         .addr   TrackImpl
+.ifndef BTK_SHORT
         .addr   RadioDrawImpl
         .addr   RadioUpdateImpl
+        .addr   CheckboxDrawImpl
+        .addr   CheckboxUpdateImpl
+.endif ; BTK_SHORT
 
         ;; Must be non-zero
 length_table:
@@ -91,8 +95,12 @@ length_table:
         .byte   2               ; Flash
         .byte   2               ; Hilite
         .byte   2               ; Track
+.ifndef BTK_SHORT
         .byte   2               ; RadioDraw
         .byte   2               ; RadioUpdate
+        .byte   2               ; CheckboxDraw
+        .byte   2               ; CheckboxUpdate
+.endif ; BTK_SHORT
 .endproc
 
 ;;; ============================================================
@@ -346,6 +354,7 @@ down_flag:
 
 .endproc ; TrackImpl
 
+.ifndef BTK_SHORT
 ;;; ============================================================
 
 ;;; Padding between radio/checkbox and label
@@ -449,11 +458,131 @@ a_record  .addr
     END_IF
         stax    rb_params::mapbits
 
+        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBits, rb_params
+        MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
 ;;; ============================================================
+
+kCheckboxWidth       = 17
+kCheckboxHeight      = 8
+
+.params cb_params
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   SELF_MODIFIED
+mapwidth:       .byte   3
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
+.endparams
+
+checked_cb_bitmap:
+        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
+        .byte   PX(%1111000),PX(%0000000),PX(%1111000)
+        .byte   PX(%1100110),PX(%0000011),PX(%0011000)
+        .byte   PX(%1100001),PX(%1001100),PX(%0011000)
+        .byte   PX(%1100000),PX(%0110000),PX(%0011000)
+        .byte   PX(%1100001),PX(%1001100),PX(%0011000)
+        .byte   PX(%1100110),PX(%0000011),PX(%0011000)
+        .byte   PX(%1111000),PX(%0000000),PX(%1111000)
+        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
+
+.params unchecked_cb_params
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   unchecked_cb_bitmap
+mapwidth:       .byte   3
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
+.endparams
+
+unchecked_cb_bitmap:
+        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
+
+;;; ============================================================
+
+.proc CheckboxDrawImpl
+        PARAM_BLOCK params, btk::command_data
+a_record  .addr
+        END_PARAM_BLOCK
+        .assert a_record = params::a_record, error, "a_record must be first"
+
+        jsr     _SetPort
+
+        ;; Initial size is just the button
+        add16_8 rect+MGTK::Rect::x1, #kCheckboxWidth, rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::y1, #kCheckboxHeight, rect+MGTK::Rect::y2
+
+        ;; No label? skip
+        lda     a_label
+        ora     a_label+1
+        beq     update_rect
+
+        ;; Draw the label
+        pos := $B
+        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + kCheckboxWidth, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight, pos+MGTK::Point::ycoord
+        MGTK_CALL MGTK::MoveTo, pos
+        jsr     _DrawLabel
+
+        ;; And measure it for hit testing
+        jsr     _MeasureLabel
+        addax   rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
+        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kCheckboxHeight
+
+        ;; Write rect back to button record
+update_rect:
+        ldx     #.sizeof(MGTK::Rect)-1
+        ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
+:       lda     rect,x
+        sta     (a_record),y
+        dey
+        dex
+        bpl     :-
+
+        jmp     _DrawCheckboxBitmap
+.endproc ; CheckboxDrawImpl
+
+;;; ============================================================
+
+.proc CheckboxUpdateImpl
+        PARAM_BLOCK params, btk::command_data
+a_record  .addr
+        END_PARAM_BLOCK
+        .assert a_record = params::a_record, error, "a_record must be first"
+
+        jsr     _SetPort
+
+        FALL_THROUGH_TO _DrawCheckboxBitmap
+.endproc ; CheckboxUpdateImpl
+
+.proc _DrawCheckboxBitmap
+        COPY_STRUCT MGTK::Point, rect+MGTK::Rect::topleft, cb_params::viewloc
+        ldax    #unchecked_cb_bitmap
+        bit     state
+    IF_NS
+        ldax    #checked_cb_bitmap
+    END_IF
+        stax    cb_params::mapbits
+
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::PaintBits, cb_params
+        MGTK_CALL MGTK::ShowCursor
+        rts
+.endproc
+
+;;; ============================================================
+.endif ; BTK_SHORT
 
 .endscope

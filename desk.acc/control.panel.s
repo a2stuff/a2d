@@ -166,45 +166,6 @@ port:           .addr   grafport
 grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
-;;; Common Resources
-
-;;; Padding between radio/checkbox and label
-kLabelPadding = 5
-
-kCheckboxWidth       = 17
-kCheckboxHeight      = 8
-
-.params cb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   SELF_MODIFIED
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
-.endparams
-
-checked_cb_bitmap:
-        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-        .byte   PX(%1111000),PX(%0000000),PX(%1111000)
-        .byte   PX(%1100110),PX(%0000011),PX(%0011000)
-        .byte   PX(%1100001),PX(%1001100),PX(%0011000)
-        .byte   PX(%1100000),PX(%0110000),PX(%0011000)
-        .byte   PX(%1100001),PX(%1001100),PX(%0011000)
-        .byte   PX(%1100110),PX(%0000011),PX(%0011000)
-        .byte   PX(%1111000),PX(%0000000),PX(%1111000)
-        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-
-unchecked_cb_bitmap:
-        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1100000),PX(%0000000),PX(%0011000)
-        .byte   PX(%1111111),PX(%1111111),PX(%1111000)
-
-;;; ============================================================
 ;;; Desktop Pattern Editor Resources
 
 kPatternEditX   = 12
@@ -276,9 +237,8 @@ rarr_bitmap:
         .byte   PX(%1111000)
         .byte   PX(%1100000)
 
-        DEFINE_LABEL rgb_color, res_string_label_rgb_color, kPatternEditX + kCheckboxWidth + 46 + kLabelPadding, kPatternEditY + 59
-        ;; for hit testing; label width is added dynamically
-        DEFINE_RECT_SZ rect_rgb, kPatternEditX + 46, kPatternEditY + 50, kCheckboxWidth + kLabelPadding, kCheckboxHeight
+        DEFINE_BUTTON rgb_color_rec, kDAWindowId, res_string_label_rgb_color,, kPatternEditX + 46, kPatternEditY + 50
+        DEFINE_BUTTON_PARAMS rgb_color_params, rgb_color_rec
 
 ;;; ============================================================
 ;;; Double-Click Speed Resources
@@ -531,9 +491,6 @@ ipblink_ip_bitmap:
         jsr     InitIpblink
         jsr     InitDblclick
 
-        param_call MeasureString, rgb_color_label_str
-        addax   rect_rgb::x2
-
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
@@ -650,7 +607,7 @@ ipblink_ip_bitmap:
         cmp     #MGTK::inrect_inside
         jeq     HandlePatternClick
 
-        MGTK_CALL MGTK::InRect, rect_rgb
+        MGTK_CALL MGTK::InRect, rgb_color_rec::rect
         cmp     #MGTK::inrect_inside
         jeq     HandleRGBClick
 
@@ -1026,10 +983,8 @@ notpencopy:     .byte   MGTK::notpencopy
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
-        MGTK_CALL MGTK::MoveTo, rgb_color_label_pos
-        param_call DrawString, rgb_color_label_str
-
-        jsr     DrawRGBCheckbox
+        BTK_CALL BTK::CheckboxDraw, rgb_color_params
+        jsr     UpdateRGBCheckbox
 
         ;; ==============================
         ;; Double-Click Speed
@@ -1194,35 +1149,11 @@ arrow_num:
         rts
 .endproc
 
-.proc DrawRGBCheckbox
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-
-        ldax    #rect_rgb
-        ldy     SETTINGS + DeskTopSettings::rgb_color
-        cpy     #$80
-        jmp     DrawCheckbox
-.endproc
-
-
-;;; A,X = pos ptr, Z = checked
-.proc DrawCheckbox
-        ptr := $06
-
-        stax    ptr
-
-    IF_EQ
-        copy16  #checked_cb_bitmap, cb_params::mapbits
-    ELSE
-        copy16  #unchecked_cb_bitmap, cb_params::mapbits
-    END_IF
-
-        ldy     #3
-:       lda     (ptr),y
-        sta     cb_params::viewloc,y
-        dey
-        bpl     :-
-
-        MGTK_CALL MGTK::PaintBits, cb_params
+.proc UpdateRGBCheckbox
+        lda     SETTINGS + DeskTopSettings::rgb_color
+        and     #$80
+        sta     rgb_color_rec::state
+        BTK_CALL BTK::CheckboxUpdate, rgb_color_params
         rts
 .endproc
 
@@ -1689,7 +1620,7 @@ done:   rts
         jsr     MarkDirty
 
         MGTK_CALL MGTK::HideCursor
-        jsr     DrawRGBCheckbox
+        jsr     UpdateRGBCheckbox
         MGTK_CALL MGTK::ShowCursor
 
         sta     RAMRDOFF

@@ -54,7 +54,7 @@ _segoffset .set 0
         _segoffset .set kLoaderOffset
         DEFSEG SegmentLoader,     $2000,        $0300
         DEFSEG SegmentInvoker,    INVOKER,      $0160
-        DEFSEG SegmentApp,        $4000,        $6600
+        DEFSEG SegmentApp,        $4000,        $6500
         DEFSEG SegmentAlert,      $D000,        $0800
 
 ;;; Dynamically loaded overlays

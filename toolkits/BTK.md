@@ -8,6 +8,8 @@ Client code must define `BTKEntry` (referencing the instance's `btk::BTKEntry`) 
 
 > Desk Accessories running from Aux can define `BTKEntry := BTKAuxEntry` defined in desktop/desktop.inc.
 
+NOTE: Define `BTK_SHORT = 1` before including the toolkit to omit support for Radio and Checkbox controls, which reduces the binary size.
+
 ## Concepts
 
 ### ButtonRecord
@@ -17,7 +19,7 @@ This defines the state of a control instance.
 .addr       a_label         Address of the button label.
 .addr       a_shortcut      Address of the button shortcut label, null if none).
 MGTK:Rect   rect            Bounding rect of the control.
-.byte       state           Button state. bit7 = disabled (or checked, if radio).
+.byte       state           Button state. bit7 = disabled (or checked, if radio/checkbox).
 ```
 
 ## Commands
@@ -76,8 +78,32 @@ The high bit of the `ButtonRecord::state` signifies whether or not the button is
 The shortcut is ignored. After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
 
 
-### RadioUpdate ($03)
+### RadioUpdate ($05)
 Update the bitmap of a radio button.
+
+Parameters:
+```
+.addr       a_record        Address of the ButtonRecord
+```
+
+The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
+
+
+### CheckboxDraw ($06)
+Draw a checkbox button.
+
+Parameters:
+```
+.addr       a_record        Address of the ButtonRecord
+```
+
+The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
+
+The shortcut is ignored. After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
+
+
+### CheckboxUpdate ($07)
+Update the bitmap of a checkbox button.
 
 Parameters:
 ```

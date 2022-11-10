@@ -2390,6 +2390,7 @@ pb2_initial_state:
         .include "../lib/disconnect_ram.s"
         .include "../lib/reconnect_ram.s"
 
+        BTK_SHORT = 1
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry
 

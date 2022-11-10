@@ -89,6 +89,12 @@ RadioDraw       = $04           ; Draw a radio button (and update hit rect)
 RadioUpdate     = $05           ; Update a radio button after a click
 ;;; .addr       record
 
+CheckboxDraw    = $06           ; Draw a checkbox button (and update hit rect)
+;;; .addr       record
+
+CheckboxUpdate  = $07           ; Update a checkbox button after a click
+;;; .addr       record
+
 
 .endscope ; BTK
 

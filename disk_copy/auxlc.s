@@ -1190,6 +1190,8 @@ l3:     lda     #$3A
         saved_ram_unitnum := main__saved_ram_unitnum
         saved_ram_drvec   := main__saved_ram_drvec
         .include "../lib/disconnect_ram.s"
+
+        BTK_SHORT = 1
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry
 
