@@ -48,7 +48,7 @@ ones:   pla                     ; ones
         sta     str_time,y
 
         ;; Separator
-        lda     #':'
+        lda     #res_char_time_separator
         iny
         sta     str_time,y
 

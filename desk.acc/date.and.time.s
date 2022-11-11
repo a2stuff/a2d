@@ -329,7 +329,7 @@ str_date_separator:
         PASCAL_STRING "/"
 
 str_time_separator:
-        PASCAL_STRING ":"
+        PASCAL_STRING {res_char_time_separator}
 
         .include "../lib/event_params.s"
 
