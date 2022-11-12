@@ -2,3 +2,7 @@
 .define res_string_label_time_separator "Tidsavgr{nsare:"
 .define res_string_label_decimal_separator "Decimalavgr{nsare:"
 .define res_string_label_thousands_separator "Tusentalsavgr{nsare:"
+.define res_string_label_mdy "M}nad Dag ]r"
+.define res_string_label_dmy "Dag M}nad ]r"
+.define res_string_label_clock_12hour "12 tim"
+.define res_string_label_clock_24hour "24 tim"

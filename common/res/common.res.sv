@@ -45,6 +45,8 @@
 .define res_char_thousands_separator ' '
 .define res_char_date_separator '-'
 .define res_char_time_separator '.'
+.define res_const_date_order 1
+.define res_const_clock_format 128
 .define res_string_version_format_short "%s Version %d.%d"
 .define res_string_version_format_long "%s Version %d.%d%s"
 .define res_string_noprod_version_format_long "Version %d.%d%s"

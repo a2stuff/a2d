@@ -23,7 +23,7 @@
         .word   kDefaultIPBlinkSpeed ; * 0.5, * 1, or * 2
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::clock_24hours
-        .byte   0
+        .byte   res_const_clock_format ; $80 = 24-hour
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::rgb_color
         .byte   0
@@ -45,6 +45,9 @@
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::intl_deci_sep
         .byte   res_char_decimal_separator
+
+        ASSERT_ADDRESS settings_start + DeskTopSettings::intl_date_order
+        .byte   res_const_date_order
 
         ;; Reserved for future use...
 

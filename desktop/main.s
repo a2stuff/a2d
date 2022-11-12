@@ -8229,10 +8229,21 @@ append_date_strings:
         ldax    #datetime_for_conversion
         jsr     ParseDatetime
 
+        lda     SETTINGS+DeskTopSettings::intl_date_order
+        .assert DeskTopSettings::kDateOrderMDY = 0, error, "enum mismatch"
+    IF_EQ
+        ;; Month Day, Year
         jsr     AppendMonthString
         param_call ConcatenateDatePart, str_space
         jsr     AppendDayString
         param_call ConcatenateDatePart, str_comma
+    ELSE
+        ;; Day Month Year
+        jsr     AppendDayString
+        param_call ConcatenateDatePart, str_space
+        jsr     AppendMonthString
+        param_call ConcatenateDatePart, str_space
+    END_IF
         jsr     AppendYearString
 
         param_call ConcatenateDatePart, str_at

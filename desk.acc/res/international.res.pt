@@ -2,3 +2,7 @@
 .define res_string_label_time_separator "Separador de tempo:"
 .define res_string_label_decimal_separator "Separador decimal:"
 .define res_string_label_thousands_separator "Separador de milhares:"
+.define res_string_label_mdy "M&s Dia Ano"
+.define res_string_label_dmy "Dia M&s Ano"
+.define res_string_label_clock_12hour "12hr"
+.define res_string_label_clock_24hour "24hr"

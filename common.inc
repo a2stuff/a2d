@@ -125,11 +125,14 @@ kDefaultIPBlinkSpeed    =  500
         intl_time_sep   .byte   ; time separator
         intl_thou_sep   .byte   ; thousands separator
         intl_deci_sep   .byte   ; decimal separator
+        intl_date_order .byte   ; kDateOrderXYZ
 
-        reserved        .res 108
+        reserved        .res 107
 .endstruct
         .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
 
+DeskTopSettings::kDateOrderMDY = 0
+DeskTopSettings::kDateOrderDMY = 1
 DeskTopSettings::kStartupSkipRAMCard  = %00000001 ; skip copy to RAMCard, if set
 DeskTopSettings::kStartupSkipSelector = %00000010 ; skip starting Selector, if set
 

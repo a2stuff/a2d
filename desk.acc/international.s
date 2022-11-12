@@ -103,7 +103,7 @@ start_da:
 ;;; ============================================================
 ;;; Param blocks
 
-        kDialogWidth = 265
+        kDialogWidth = 400
         kDialogHeight = 90
 
         kControlMarginX = 16
@@ -135,6 +135,17 @@ start_da:
         kDeciSampleOffset = 2
         DEFINE_FIELD thou, res_string_label_thousands_separator, "12,345", kRow4
         kThouSampleOffset = 3
+
+        kOptionDisplayX = 260
+        DEFINE_BUTTON date_mdy_rec, kDAWindowId, res_string_label_mdy,, kOptionDisplayX, 16
+        DEFINE_BUTTON date_dmy_rec, kDAWindowId, res_string_label_dmy,, kOptionDisplayX, 27
+        DEFINE_BUTTON_PARAMS date_mdy_params, date_mdy_rec
+        DEFINE_BUTTON_PARAMS date_dmy_params, date_dmy_rec
+
+        DEFINE_BUTTON clock_12hour_rec, kDAWindowId, res_string_label_clock_12hour,, kOptionDisplayX, 45
+        DEFINE_BUTTON clock_24hour_rec, kDAWindowId, res_string_label_clock_24hour,, kOptionDisplayX, 56
+        DEFINE_BUTTON_PARAMS clock_12hour_params, clock_12hour_rec
+        DEFINE_BUTTON_PARAMS clock_24hour_params, clock_24hour_rec
 
         kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
         kOKButtonTop = kDialogHeight - kButtonHeight - 7
@@ -355,6 +366,42 @@ hit:
         cmp     #MGTK::inrect_inside
         jeq     OnClickOk
 
+        ;; --------------------------------------------------
+
+        MGTK_CALL MGTK::InRect, clock_12hour_rec::rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        copy    #0, SETTINGS+DeskTopSettings::clock_24hours
+        copy    #$80, dialog_result
+        jmp     UpdateClockOptionButtons
+    END_IF
+
+        MGTK_CALL MGTK::InRect, clock_24hour_rec::rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        copy    #$80, SETTINGS+DeskTopSettings::clock_24hours
+        copy    #$80, dialog_result
+        jmp     UpdateClockOptionButtons
+    END_IF
+
+        MGTK_CALL MGTK::InRect, date_mdy_rec::rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        copy    #DeskTopSettings::kDateOrderMDY, SETTINGS+DeskTopSettings::intl_date_order
+        copy    #$80, dialog_result
+        jmp     UpdateDateOptionButtons
+    END_IF
+
+        MGTK_CALL MGTK::InRect, date_dmy_rec::rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        copy    #DeskTopSettings::kDateOrderDMY, SETTINGS+DeskTopSettings::intl_date_order
+        copy    #$80, dialog_result
+        jmp     UpdateDateOptionButtons
+    END_IF
+
+        ;; --------------------------------------------------
+
         MGTK_CALL MGTK::InRect, date_rect
         cmp     #MGTK::inrect_inside
     IF_EQ
@@ -451,8 +498,6 @@ dialog_result:  .byte   0
         param_call DrawString, thou_label_str
         MGTK_CALL MGTK::FrameRect, thou_rect
 
-        BTK_CALL BTK::Draw, ok_button_params
-
         lda     #Field::date
         jsr     DrawField
         lda     #Field::time
@@ -462,6 +507,57 @@ dialog_result:  .byte   0
         lda     #Field::thou
         jsr     DrawField
 
+        BTK_CALL BTK::Draw, ok_button_params
+        BTK_CALL BTK::RadioDraw, date_mdy_params
+        BTK_CALL BTK::RadioDraw, date_dmy_params
+        BTK_CALL BTK::RadioDraw, clock_12hour_params
+        BTK_CALL BTK::RadioDraw, clock_24hour_params
+
+        FALL_THROUGH_TO UpdateOptionButtons
+.endproc
+
+.proc UpdateOptionButtons
+        jsr     UpdateDateOptionButtons
+        FALL_THROUGH_TO UpdateClockOptionButtons
+.endproc
+
+.proc UpdateClockOptionButtons
+        lda     SETTINGS + DeskTopSettings::clock_24hours
+        cmp     #0
+        jsr     ZToN
+        sta     clock_12hour_rec::state
+        BTK_CALL BTK::RadioUpdate, clock_12hour_params
+
+        lda     SETTINGS + DeskTopSettings::clock_24hours
+        cmp     #$80
+        jsr     ZToN
+        sta     clock_24hour_rec::state
+        BTK_CALL BTK::RadioUpdate, clock_24hour_params
+
+        rts
+.endproc
+
+.proc UpdateDateOptionButtons
+        lda     SETTINGS + DeskTopSettings::intl_date_order
+        cmp     #DeskTopSettings::kDateOrderMDY
+        jsr     ZToN
+        sta     date_mdy_rec::state
+        BTK_CALL BTK::RadioUpdate, date_mdy_params
+
+        lda     SETTINGS + DeskTopSettings::intl_date_order
+        cmp     #DeskTopSettings::kDateOrderDMY
+        jsr     ZToN
+        sta     date_dmy_rec::state
+        BTK_CALL BTK::RadioUpdate, date_dmy_params
+
+        rts
+.endproc
+
+.proc ZToN
+        beq     :+
+        lda     #0
+        rts
+:       lda     #$80
         rts
 .endproc
 

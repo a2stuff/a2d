@@ -2,3 +2,7 @@
 .define res_string_label_time_separator "Tidsadskiller:"
 .define res_string_label_decimal_separator "Decimalseparator:"
 .define res_string_label_thousands_separator "Tusinder separator:"
+.define res_string_label_mdy "M}ned Dag ]r"
+.define res_string_label_dmy "Dag M}ned ]r"
+.define res_string_label_clock_12hour "12 timer"
+.define res_string_label_clock_24hour "24 timer"

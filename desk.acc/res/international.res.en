@@ -2,3 +2,7 @@
 .define res_string_label_time_separator "Time separator:"
 .define res_string_label_decimal_separator "Decimal separator:"
 .define res_string_label_thousands_separator "Thousands separator:"
+.define res_string_label_mdy "Month Day Year"
+.define res_string_label_dmy "Day Month Year"
+.define res_string_label_clock_12hour "12 hour"
+.define res_string_label_clock_24hour "24 hour"

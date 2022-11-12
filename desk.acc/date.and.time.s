@@ -1119,8 +1119,6 @@ label_downarrow:
 .endproc
 
 .proc UpdateOptionButtons
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-
         lda     SETTINGS + DeskTopSettings::clock_24hours
         cmp     #0
         jsr     ZToN
