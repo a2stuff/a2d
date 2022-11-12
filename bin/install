@@ -72,7 +72,7 @@ add_file () {
 
 suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bits
 
-manifest="$(bin/manifest $@)"
+manifest="$(no_loc_da_names="$INSTALL_NOLOCDA" bin/manifest $@)"
 eval "$manifest"
 
 rm -rf "${tempdir}"

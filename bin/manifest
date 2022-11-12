@@ -33,21 +33,27 @@ version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
 # Utility functions
 
 get_da_loc_name() {
-    local res="res_filename_${1//./_}"
+    local name="$1"
+    local res="res_filename_${name//./_}"
     local filename="desk.acc/res/filenames.res.${lang}"
     local match=$(egrep -i "^\.define ${res} " "${filename}" | cut -d' ' -f3)
-    test -n "$match" && echo "$match" # else returns false
+    if [[ -z "$no_loc_da_names" && -n "$match" ]]; then
+        echo "$match"
+    else
+        echo "$name"
+    fi
 }
 
 get_da_loc_path() {
     local path="$1"
-    if [[ "$path" == */* ]]; then
+    if [[ -z "$no_loc_da_names" && "$path" == */* ]]; then
         head=$(expr "$path" : '\(.*\)/')
         tail=$(expr "$path" : '.*/\(.*\)')
         tail=$(get_da_loc_name "$tail" || echo "$tail")
-        path="$head/$tail"
+        echo "$head/$tail"
+    else
+        echo "$path"
     fi
-    echo $path
 }
 
 emit() {
@@ -116,7 +122,7 @@ emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell"
 for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
     IFS=',' read -ra array <<< "$line"
     file="${array[0]}"
-    loc=$(get_da_loc_name "$file" || echo "$file")
+    loc=$(get_da_loc_name "$file")
     path="${array[1]}"
     ploc=$(get_da_loc_path "$path")
     disposition="${array[2]}"

@@ -63,6 +63,8 @@ After building and installing, you can use `bin/setopt sel` and `bin/setopt nose
 
 If DeskTop hasn't created `LOCAL/DESKTOP.CONFIG` yet, run `bin/defopt` first to create a default options file.
 
+Optional: Define `INSTALL_NOLOCDA=1` to skip localizing DA filenames; useful if you switch languages during development and don't want to clutter your install.
+
 ### Option #3: Mount Folder in Virtual ]\[
 
 > Useful with the Virtual ]\[ emulator
