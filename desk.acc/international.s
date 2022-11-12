@@ -82,7 +82,7 @@ stash_stack:  .byte   $00
 
 .proc SaveAndExit
         bit     dialog_result
-    IF_VS
+    IF_NS
         jsr     SaveSettings
     END_IF
 
@@ -321,6 +321,7 @@ init_window:
         jmp     InputLoop
 
 update:
+        copy    #$80, dialog_result
         txa
         jsr     DrawField
         jmp     InputLoop
