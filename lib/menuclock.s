@@ -36,12 +36,16 @@ common: lda     MACHID
         dex
         bpl     :-
         lda     SETTINGS + DeskTopSettings::clock_24hours
-        cmp     last_s
+        cmp     last_s1
+        bne     update
+        lda     SETTINGS + DeskTopSettings::intl_time_sep
+        cmp     last_s2
         bne     update
         rts
 
 update: COPY_STRUCT DateTime, DATELO, last_dt
-        copy    SETTINGS + DeskTopSettings::clock_24hours, last_s
+        copy    SETTINGS + DeskTopSettings::clock_24hours, last_s1
+        copy    SETTINGS + DeskTopSettings::intl_time_sep, last_s2
 
         ;; --------------------------------------------------
         ;; Save the current GrafPort and use a custom one for drawing
@@ -125,7 +129,8 @@ done:   rts
 
 last_dt:
         .tag    DateTime        ; previous date/time
-last_s: .byte   0               ; previous settings
+last_s1:.byte   0               ; previous settings
+last_s2:.byte   0               ; previous settings
 
 force_flag:
         .byte   0               ; force update if high bit set

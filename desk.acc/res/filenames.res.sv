@@ -13,6 +13,7 @@
 .define res_filename_startup_options startalternativ
 .define res_filename_system_speed systemhastighet
 .define res_filename_joystick styrspak
+.define res_filename_international Internationellt
 .define res_filename_screen_savers skarmslackare
 .define res_filename_flying_toasters brodrostar
 .define res_filename_map Karta

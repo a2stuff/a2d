@@ -1,0 +1,4 @@
+.define res_string_label_date_separator "Datoadskiller:"
+.define res_string_label_time_separator "Tidsadskiller:"
+.define res_string_label_decimal_separator "Decimalseparator:"
+.define res_string_label_thousands_separator "Tusinder separator:"

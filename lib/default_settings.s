@@ -34,6 +34,18 @@
         ASSERT_ADDRESS settings_start + DeskTopSettings::startup
         .byte   DeskTopSettings::kStartupSkipSelector
 
+        ASSERT_ADDRESS settings_start + DeskTopSettings::intl_date_sep
+        .byte   res_char_date_separator
+
+        ASSERT_ADDRESS settings_start + DeskTopSettings::intl_time_sep
+        .byte   res_char_time_separator
+
+        ASSERT_ADDRESS settings_start + DeskTopSettings::intl_thou_sep
+        .byte   res_char_thousands_separator
+
+        ASSERT_ADDRESS settings_start + DeskTopSettings::intl_deci_sep
+        .byte   res_char_decimal_separator
+
         ;; Reserved for future use...
 
         PAD_TO settings_start + .sizeof(DeskTopSettings)

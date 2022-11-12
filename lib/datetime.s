@@ -48,7 +48,7 @@ ones:   pla                     ; ones
         sta     str_time,y
 
         ;; Separator
-        lda     #res_char_time_separator
+        lda     SETTINGS + DeskTopSettings::intl_time_sep
         iny
         sta     str_time,y
 

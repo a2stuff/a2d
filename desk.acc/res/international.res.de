@@ -1,0 +1,4 @@
+.define res_string_label_date_separator "Datumstrennzeichen:"
+.define res_string_label_time_separator "Zeittrennzeichen:"
+.define res_string_label_decimal_separator "Dezimaltrennzeichen:"
+.define res_string_label_thousands_separator "Tausendertrennzeichen:"

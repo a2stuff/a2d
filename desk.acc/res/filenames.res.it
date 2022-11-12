@@ -13,6 +13,7 @@
 .define res_filename_startup_options avviare
 .define res_filename_system_speed velocita
 .define res_filename_joystick joystick
+.define res_filename_international Internazionale
 .define res_filename_screen_savers salvaschermo
 .define res_filename_flying_toasters tostap.volanti
 .define res_filename_map Mappa

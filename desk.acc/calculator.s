@@ -32,6 +32,10 @@ save_stack:  .byte   0
 ;;; then invoke the code in AUX.
 
 .proc Copy2Aux
+        lda     SETTINGS + DeskTopSettings::intl_deci_sep
+        sta     decimal_label
+        sta     decimal_lookup
+
         tsx
         stx     save_stack
 
@@ -206,10 +210,11 @@ mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
-label:          .byte   res_char_decimal_separator
+label:          .byte   SELF_MODIFIED_BYTE          ; populated at runtime
 pos:            .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
 port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
 .endparams
+decimal_label := btn_dec::label
 
 .params btn_add
         DEFINE_POINT viewloc, kCol4Left - kBorderLeftTop, kRow4Top - kBorderLeftTop
@@ -297,7 +302,7 @@ saved_stack:
         .byte   $00             ; restored after error
 calc_p: .byte   $00             ; high bit set if pending op?
 calc_op:.byte   $00
-calc_d: .byte   $00             ; `res_char_decimal_separator` if present, 0 otherwise
+calc_d: .byte   $00             ; decimal separator if present, 0 otherwise
 calc_e: .byte   $00             ; exponential?
 calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
@@ -768,7 +773,8 @@ miss:   clc
         row4_lookup := *-1
         .byte   '1', '2', '3', '+'
         row5_lookup := *-1
-        .byte   '0', '0', res_char_decimal_separator, '+'
+        .byte   '0', '0', SELF_MODIFIED_BYTE, '+'
+        ::decimal_lookup := *-2
 
 .proc FindButtonCol
         cpx     #kCol1Left-kBorderLeftTop             ; col 1?
@@ -866,7 +872,7 @@ try_eq: cmp     #'='            ; Equals?
         ldxy    #btn_mul::port
         jmp     DoOpClick
 
-:       cmp     #res_char_decimal_separator ; Decimal?
+:       cmp     SETTINGS + DeskTopSettings::intl_deci_sep ; Decimal?
         beq     dsep
         cmp     #'.'            ; allow either
         bne     try_add
@@ -878,7 +884,7 @@ dsep:   ldxy    #btn_dec::port
         lda     calc_l
         bne     :+
         inc     calc_l
-:       lda     #res_char_decimal_separator
+:       lda     SETTINGS + DeskTopSettings::intl_deci_sep
         sta     calc_d
         jmp     update
 
@@ -986,7 +992,7 @@ trydiv: cmp     #'/'            ; Divide?
 :       dec     calc_l
         ldx     #0
         lda     text_buffer1 + kTextBufferSize
-        cmp     #res_char_decimal_separator
+        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
         bne     :+
         stx     calc_d
 :       cmp     #'E'
@@ -1078,7 +1084,7 @@ reparse:
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
 cloop:  lda     text_buffer1,x
-        cmp     #res_char_decimal_separator
+        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
         bne     :+
         lda     #'.'
 :       sta     FBUFFR,x
@@ -1136,7 +1142,7 @@ sloop:  lda     FBUFFR,y
 cloop:  lda     FBUFFR-1,y
         cmp     #'.'            ; map decimal character
         bne     :+
-        lda     #res_char_decimal_separator
+        lda     SETTINGS + DeskTopSettings::intl_deci_sep
 :       sta     text_buffer1,x
         sta     text_buffer2,x
         dex

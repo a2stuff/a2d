@@ -1,5 +1,6 @@
 control.panel                   desk.acc/control.panels         optional
 date.and.time                   desk.acc/control.panels         optional
+international                   desk.acc/control.panels         optional
 joystick                        desk.acc/control.panels         optional
 sounds                          desk.acc/control.panels         optional
 startup.options                 desk.acc/control.panels         optional

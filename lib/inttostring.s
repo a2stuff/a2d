@@ -7,8 +7,6 @@
 
 .scope IntToStringImpl
 
-kThousandsSeparatorChar = res_char_thousands_separator
-
 ;;; Entry point: with thousands separators
 sep:    sec
         bcs     common
@@ -59,7 +57,7 @@ not_pad:
         cpx     #2
         bne     next
         iny
-        lda     #kThousandsSeparatorChar
+        lda     SETTINGS + DeskTopSettings::intl_thou_sep
         sta     str_from_int,y
 
 next:   inx

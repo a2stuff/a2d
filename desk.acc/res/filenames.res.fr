@@ -13,6 +13,7 @@
 .define res_filename_startup_options demarrage
 .define res_filename_system_speed vitesse.systeme
 .define res_filename_joystick joystick
+.define res_filename_international International
 .define res_filename_screen_savers amusements
 .define res_filename_flying_toasters gril.volant
 .define res_filename_map Plan

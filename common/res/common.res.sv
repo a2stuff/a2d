@@ -43,6 +43,7 @@
 .define res_string_month_abbrev_12 "Dec"
 .define res_char_decimal_separator ','
 .define res_char_thousands_separator ' '
+.define res_char_date_separator '-'
 .define res_char_time_separator '.'
 .define res_string_version_format_short "%s Version %d.%d"
 .define res_string_version_format_long "%s Version %d.%d%s"

@@ -13,6 +13,7 @@
 .define res_filename_startup_options startoptionen
 .define res_filename_system_speed geschwindigkeit
 .define res_filename_joystick joystick
+.define res_filename_international International
 .define res_filename_screen_savers bildschirmschon
 .define res_filename_flying_toasters fliegende.toast
 .define res_filename_map Karte

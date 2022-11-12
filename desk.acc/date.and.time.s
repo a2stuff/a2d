@@ -254,7 +254,6 @@ start_da:
         DEFINE_RECT_SZ period_rect, kField6Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
         ASSERT_RECORD_TABLE_SIZE first_hit_rect, kNumHitRects, .sizeof(MGTK::Rect)
 
-        DEFINE_POINT label_ok_pos, kOKButtonLeft + 5, kOKButtonTop + 10
         DEFINE_POINT label_uparrow_pos, kUpDownButtonLeft + 2, 23
         DEFINE_POINT label_downarrow_pos, kUpDownButtonLeft + 2, 35
         DEFINE_POINT day_pos, kField1Left + 6, kFieldTop + 10
@@ -325,11 +324,11 @@ hour_string:
 minute_string:
         PASCAL_STRING "  "
 
-str_date_separator:
-        PASCAL_STRING "/"
+str_date_separator:             ; populated from SETTINGS at runtime
+        PASCAL_STRING {SELF_MODIFIED_BYTE}
 
-str_time_separator:
-        PASCAL_STRING {res_char_time_separator}
+str_time_separator:             ; populated from SETTINGS at runtime
+        PASCAL_STRING {SELF_MODIFIED_BYTE}
 
         .include "../lib/event_params.s"
 
@@ -443,6 +442,11 @@ time_bitmap:
 ;;; Initialize window, unpack the date.
 
 init_window:
+        lda     SETTINGS + DeskTopSettings::intl_date_sep
+        sta     str_date_separator+1
+        lda     SETTINGS + DeskTopSettings::intl_time_sep
+        sta     str_time_separator+1
+
         ;; Read from ProDOS GP in Main
         sta     RAMRDOFF
 
@@ -452,13 +456,11 @@ init_window:
         beq     :+
 
         ;; Crack the date bytes. Format is:
-        ;; |    DATEHI   |      DATELO       |
+        ;; |     DATEHI    | |    DATELO     |
         ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
         ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
         ;; |    Year     |  Month  |   Day   |
         ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
-        ;;   |7 6 5 4 3 2 1 0 7 6 5 4 3 2 1 0|
-        ;;   |    year     | month |  day    |
 
         lda     DATEHI
         lsr     a
@@ -539,6 +541,8 @@ init_window:
         cmp     #CHAR_LEFT
         beq     OnKeyLeft
         cmp     #CHAR_RIGHT
+        beq     OnKeyRight
+        cmp     #CHAR_TAB
         beq     OnKeyRight
         cmp     #CHAR_DOWN
         beq     OnKeyDown
@@ -1038,10 +1042,6 @@ pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME frame_rect, kDialogWidth, kDialogHeight
 
-label_ok:
-        PASCAL_STRING res_string_button_ok ; button label
-label_cancel:
-        PASCAL_STRING res_string_button_cancel ; button label
 label_uparrow:
         PASCAL_STRING kGlyphUpArrow
 label_downarrow:

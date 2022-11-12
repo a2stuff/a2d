@@ -121,14 +121,19 @@ kDefaultIPBlinkSpeed    =  500
 
         startup         .byte   ; kStartupXYZ options
 
-        reserved        .res 112
+        intl_date_sep   .byte   ; date separator
+        intl_time_sep   .byte   ; time separator
+        intl_thou_sep   .byte   ; thousands separator
+        intl_deci_sep   .byte   ; decimal separator
+
+        reserved        .res 108
 .endstruct
         .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
 
 DeskTopSettings::kStartupSkipRAMCard  = %00000001 ; skip copy to RAMCard, if set
 DeskTopSettings::kStartupSkipSelector = %00000010 ; skip starting Selector, if set
 
-kDeskTopSettingsFileVersion = 2
+kDeskTopSettingsFileVersion = 3
 kDeskTopSettingsFileSize = 1 + .sizeof(DeskTopSettings)
 kDeskTopSettingsFileOffset = 1  ; offset into file of settings (first byte is version)
 

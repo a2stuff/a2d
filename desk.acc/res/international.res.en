@@ -1,0 +1,4 @@
+.define res_string_label_date_separator "Date separator:"
+.define res_string_label_time_separator "Time separator:"
+.define res_string_label_decimal_separator "Decimal separator:"
+.define res_string_label_thousands_separator "Thousands separator:"

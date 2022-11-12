@@ -32,6 +32,10 @@ save_stack:  .byte   0
 ;;; then invoke the code in AUX.
 
 .proc Copy2Aux
+        lda     SETTINGS + DeskTopSettings::intl_deci_sep
+        sta     btn_dec_key
+        sta     btn_dec_label
+
         tsx
         stx     save_stack
 
@@ -195,7 +199,7 @@ port:           .word   left, top, left+kSciButtonWidth-3, top+kCalcButtonHeight
         digit7 = '7'
         digit8 = '8'
         digit9 = '9'
-        decimal = res_char_decimal_separator
+        decimal = '.'
 
         ;; Operations
         op_multiply = '*'
@@ -272,7 +276,7 @@ port:           .word   left, top, left+kWideButtonWidth-3, top+kCalcButtonHeigh
 
 .params btn_dec
 function:       .byte   Function::decimal
-key:            .byte   res_char_decimal_separator
+key:            .byte   SELF_MODIFIED_BYTE
         DEFINE_POINT viewloc, kCol3Left - kBorderLeftTop, kRow5Top - kBorderLeftTop
 mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
@@ -282,6 +286,9 @@ label:          PASCAL_STRING ".", ::kLabelStrSize
 pos:            .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
 port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
 .endparams
+btn_dec_key   := btn_dec::key
+btn_dec_label := btn_dec::label+1
+
 
 .params btn_add
 function:       .byte   Function::op_add
@@ -393,7 +400,7 @@ saved_stack:
         .byte   $00             ; restored after error
 calc_p: .byte   $00             ; high bit set if pending op?
 calc_op:.byte   $00
-calc_d: .byte   $00             ; `res_char_decimal_separator` if present, 0 otherwise
+calc_d: .byte   $00             ; decimal separator if present, 0 otherwise
 calc_e: .byte   $00             ; exponential?
 calc_n: .byte   $00             ; negative?
 calc_g: .byte   $00             ; high bit set if last input digit
@@ -704,7 +711,7 @@ ret:    rts
 :
         cmp     #'.'            ; allow either
         bne     :+
-        lda     #res_char_decimal_separator
+        lda     SETTINGS + DeskTopSettings::intl_deci_sep
 :
         cmp     #CHAR_ESCAPE
     IF_EQ
@@ -731,7 +738,7 @@ ret:    rts
 :       dec     calc_l
         ldx     #0
         lda     text_buffer1 + kTextBufferSize
-        cmp     #res_char_decimal_separator
+        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
         bne     :+
         stx     calc_d
 :       cmp     #'E'
@@ -908,7 +915,7 @@ ret:    rts
         lda     calc_l
         bne     :+
         inc     calc_l
-:       lda     #res_char_decimal_separator
+:       lda     SETTINGS + DeskTopSettings::intl_deci_sep
         sta     calc_d
         jmp     Insert
 
@@ -971,7 +978,7 @@ ret:   rts
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
 cloop:  lda     text_buffer1,x
-        cmp     #res_char_decimal_separator
+        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
         bne     :+
         lda     #'.'
 :       sta     FBUFFR,x
@@ -1162,7 +1169,7 @@ sloop:  lda     FBUFFR,y
 cloop:  lda     FBUFFR-1,y
         cmp     #'.'            ; map decimal character
         bne     :+
-        lda     #res_char_decimal_separator
+        lda     SETTINGS + DeskTopSettings::intl_deci_sep
 :       sta     text_buffer1,x
         sta     text_buffer2,x
         dex
