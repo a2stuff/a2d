@@ -1710,6 +1710,7 @@ rect_coords:
         beq     prts
         dex
         txa
+        clc
         adc     bottom
         sta     bottom
         bcc     PaintRectImpl
