@@ -23,6 +23,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
 .proc Start
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
+        JUMP_TABLE_MGTK_CALL MGTK::HideCursor
 
         bit     ROMIN2
         sta     ALTZPOFF
@@ -38,6 +39,8 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
+
+        JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         jmp     JUMP_TABLE_RGB_MODE
 .endproc
 
