@@ -47,7 +47,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Rod's Color Pattern: A new DA based on the classic demo. c/o @frankmilliron
 * Sounds: New sounds from Gorgon, Apple Panic, and more, c/o @frankmilliron
 * Sounds: Play current selection if clicked again. ([#715](https://github.com/a2stuff/a2d/issues/715))
-* International: A new control panel DA for setting international options - date/time/number separators.
+* International: A new control panel DA for setting international options - date/time/number separators, date format and clock style.
 
 ## 1.2
 
