@@ -892,6 +892,9 @@ includes_trash:
         ;; Drag within same window (or desktop)
 same_window:
         lda     findwindow_params::which_area
+        .assert MGTK::Area::desktop = 0, error, "enum mismatch"
+        beq     move_ok
+
         cmp     #MGTK::Area::content
         bne     L9C63           ; don't move
 
@@ -906,6 +909,7 @@ same_window:
         and     #kIconEntryFlagsSmall
         bne     L9C63           ; don't move
 
+move_ok:
         ldx     highlight_count
 :       dex
         bmi     :+

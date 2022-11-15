@@ -429,6 +429,7 @@
 * Launch DeskTop. Select a volume icon. Open it. Verify that the open animation starts at the icon location. (This will be easier to observe in emulators with acceleration disabled.)
 * Launch DeskTop, ensuring no windows are open. File > Select All. Verify that the volume icons are selected.
 
+* Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Release the mouse button. Verify that the icon is moved.
 * Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Without releasing the mouse button, press the Escape key. Verify that the drag is cancelled and the icon does not move.
 * Launch DeskTop. Select a volume icon. Drag it over another icon on the desktop, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is cancelled, the target icon is unhiglighted, and the dragged icon does not move.
 * Launch DeskTop. Select a file icon. Drag it over an empty space in the window. Without releasing the mouse button, press the Escape key. Verify that the drag is cancelled and the icon does not move.
