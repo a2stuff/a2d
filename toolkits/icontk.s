@@ -583,6 +583,9 @@ window_id := * + 1
 
         ;; In poly?
         jsr     CalcIconPoly    ; requires `icon_ptr` set
+        MGTK_CALL MGTK::InRect, bounding_rect
+        beq     :+              ; nope, skip poly test
+
         MGTK_CALL MGTK::InPoly, poly
         bne     inside          ; yes!
 

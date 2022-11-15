@@ -12,7 +12,7 @@
 
 SAVE_AREA_BUFFER:= $0800
 MGTKEntry       := $4000
-FONT            := $8600
+FONT            := $8680
 START           := $8E00
 
 OVERLAY_ADDR    := MGTKEntry + kSegmentAppLength

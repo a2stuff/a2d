@@ -7557,7 +7557,12 @@ return_result:
         pha
         txa
         pha
-        jsr     RestoreParamsActivePort
+
+        ;; `RestoreParamsActivePort` isn't needed, and is
+        ;; very slow, so do the minimum here.
+        asl     preserve_zp_flag
+        copy16  params_addr_save, params_addr
+
         pla
         tax
         pla
@@ -10549,4 +10554,4 @@ rect       .tag MGTK::Rect
 .endscope  ; mgtk
 
         ;; Room for future expansion
-        PAD_TO $8600
+        PAD_TO $8680

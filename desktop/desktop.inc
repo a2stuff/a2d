@@ -25,7 +25,7 @@ DA_IO_BUFFER    := $1C00        ; ...through $1FFF
 kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS
 
 ;;; Used by DAs for window definitions
-DEFAULT_FONT    := $8600
+DEFAULT_FONT    := $8680
 
 ;;; Settings loaded from disk on startup.
 SETTINGS        := $FF80 - kIntVectorsSize
