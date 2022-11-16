@@ -1395,9 +1395,6 @@ clip_dy:
         copy16in ($08),y, mask_paintbits_params::mapbits
         jsr     PopPointers
 
-        ;; Copy, pad, and measure name
-        jsr     PrepareName
-
         ;; Determine if we want clipping, based on icon type and flags.
 
         bit     clip_icons_flag
@@ -1453,28 +1450,36 @@ ret:    rts
         ;; Shade (XORs background)
         .assert kIconEntryFlagsDimmed = $80, error, "flag mismatch"
         bit     win_flags
-        bpl     :+
+    IF_NS
+        MGTK_CALL MGTK::SetPattern, dark_pattern
         jsr     Shade
+    END_IF
 
         ;; Mask (cleared to white or black)
-:       MGTK_CALL MGTK::SetPenMode, penOR
+
         bit     icon_flags
-        bpl     :+
+    IF_NS
         MGTK_CALL MGTK::SetPenMode, penBIC
-:       MGTK_CALL MGTK::PaintBits, mask_paintbits_params
+    ELSE
+        MGTK_CALL MGTK::SetPenMode, penOR
+    END_IF
+        MGTK_CALL MGTK::PaintBits, mask_paintbits_params
 
         ;; Shade again (restores background)
         .assert kIconEntryFlagsDimmed = $80, error, "flag mismatch"
         bit     win_flags
-        bpl     :+
+    IF_NS
         jsr     Shade
+    END_IF
 
         ;; Icon (drawn in black or white)
-:       MGTK_CALL MGTK::SetPenMode, penBIC
         bit     icon_flags
-        bpl     :+
+    IF_NS
         MGTK_CALL MGTK::SetPenMode, penOR
-:       MGTK_CALL MGTK::PaintBits, icon_paintbits_params
+    ELSE
+        MGTK_CALL MGTK::SetPenMode, penBIC
+    END_IF
+        MGTK_CALL MGTK::PaintBits, icon_paintbits_params
 
         ;; --------------------------------------------------
         ;; Label
@@ -1489,7 +1494,6 @@ ret:    rts
         return  #0
 
 .proc Shade
-        MGTK_CALL MGTK::SetPattern, dark_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, bitmap_rect
         rts
@@ -1512,7 +1516,7 @@ win_flags:  ; copy of IconEntry::win_flags
 kIconLabelGapV = 2
 
 ;;; Input: $06 points at icon
-;;; Output: Populates `bitmap_rect` and `label_rect`
+;;; Output: Populates `bitmap_rect` and `label_rect` and `text_buffer`
 ;;; Preserves $06/$08
 .proc CalcIconRects
         entry_ptr := $6
