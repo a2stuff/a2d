@@ -786,18 +786,17 @@ unit_num:
         beq     supported
 
         ;; Check if the driver is firmware ($CnXX).
-        ptr := $06
         lda     unit_num
         jsr     GetDriverAddress
-        stax    ptr
+        stx     addr+1          ; self-modify address below
         txa                     ; high byte
         and     #$F0            ; look at high nibble
         cmp     #$C0            ; firmware? ($Cn)
         bne     supported       ; TODO: Should we guess yes or no here???
 
         ;; Check the firmware status byte
-        ldy     #$FE            ; $CnFE
-        lda     (ptr),y
+        addr := *+1
+        lda     $C0FE           ; $CnFE, high byte is self-modified above
         and     #%00001000      ; Bit 3 = Supports format
         bne     supported
 

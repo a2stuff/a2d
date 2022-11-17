@@ -502,6 +502,7 @@ The following tests all require:
 * Configure a system with more than 2 drives on a SmartPort controller. Boot ProDOS 2.4 (any patch version). Launch DeskTop. Special > Format a Disk. Verify that correct device names are shown for the mirrored drives.
 * Configure a system with more than 2 drives on a SmartPort controller. Boot into ProDOS 2.0.1, 2.0.2, or 2.0.3. Launch DeskTop. Special > Format a Disk. Verify that correct device names are shown for the mirrored drives.
 * Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, Floppy Emu); verify that all show up.
+* Configure a system with a SmartPort controller in slot 1 and one drive. Launch DeskTop. Special > Format a Disk. Select the drive in slot 1. Verify that the format succeeds. Repeat for slots 2, 4, 5, 6 and 7.
 
 ### RGB Display
 
