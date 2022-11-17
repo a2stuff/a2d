@@ -1608,8 +1608,8 @@ MultXY := NDBMCalcDest::MultXY
         bpl     :-
         rts                     ; yes, skip!
 
-expand:
 :       lda     current_penpattern,x
+expand:
         sta     expanded_pattern,x
         dex
         bpl     :-
