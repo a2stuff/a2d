@@ -1597,6 +1597,24 @@ MultXY := NDBMCalcDest::MultXY
 ;; (using both main and aux mem.)
 
 .proc SetPatternImpl
+        ;; Since expanding the pattern takes ~16000 cycles,
+        ;; make sure it is necessary - compare to what we
+        ;; already have expanded and expand if different.
+        ldx     #7
+:       lda     current_penpattern,x
+        cmp     expanded_pattern,x
+        bne     expand          ; no, expand it
+        dex
+        bpl     :-
+        rts                     ; yes, skip!
+
+expand:
+        ldx     #7
+:       lda     current_penpattern,x
+        sta     expanded_pattern,x
+        dex
+        bpl     :-
+
         lda     #<pattern_buffer
         sta     bits_addr
 
@@ -1654,6 +1672,12 @@ next:   dex
         bpl     loop
         sta     LOWSCR
         rts
+
+
+expanded_pattern:
+        ;; Randomly selected; just needs to not match any initial pattern.
+        .byte   19, 121, 11, 204, 183, 106, 212, 5
+        .assert * - expanded_pattern = 8, error, "pattern size"
 .endproc
 
 
