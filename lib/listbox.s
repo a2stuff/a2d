@@ -457,27 +457,45 @@ ret:    rts
         lda     listbox::num_items
         cmp     #listbox::kRows + 1
     IF_LT
-        copy    #0, updatethumb_params::thumbpos
+        lda     #0
+        cmp     listbox::winfo+MGTK::Winfo::vthumbpos
+      IF_NE
+        sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+      END_IF
 
+        lda     listbox::winfo+MGTK::Winfo::vscroll
+        and     #MGTK::Scroll::option_active
+      IF_NE
         copy    #MGTK::activatectl_deactivate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
+      END_IF
 
         rts
     END_IF
 
-        copy    #0, updatethumb_params::thumbpos
+        lda     #0
+        cmp     listbox::winfo+MGTK::Winfo::vthumbpos
+    IF_NE
+        sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+    END_IF
 
         lda     listbox::num_items
         sec
         sbc     #listbox::kRows
+        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
+    IF_NE
         sta     setctlmax_params::ctlmax
         MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+    END_IF
 
+        lda     listbox::winfo+MGTK::Winfo::vscroll
+        and     #MGTK::Scroll::option_active
+    IF_EQ
         copy    #MGTK::activatectl_activate, activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
-
+    END_IF
         rts
 .endproc
 
