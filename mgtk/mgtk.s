@@ -1627,7 +1627,10 @@ expand:
         sta     bits_addr+1
 
         ldx     #7
-loop:   lda     x_offset
+loop:   txa
+        pha
+
+        lda     x_offset
         and     #7
         tay
 
@@ -1639,17 +1642,17 @@ loop:   lda     x_offset
         bne     :-
 
 :       ldy     #$27
-:       pha
+:       tax
         lsr     a
         sta     LOWSCR
         sta     (bits_addr),y
-        pla
+        txa
         ror     a
-        pha
+        tax
         lsr     a
         sta     HISCR
         sta     (bits_addr),y
-        pla
+        txa
         ror     a
         dey
         bpl     :-
@@ -1667,7 +1670,9 @@ loop:   lda     x_offset
         ldy     #>pattern_buffer+1
 :       sty     bits_addr+1
 
-next:   dex
+next:   pla
+        tax
+        dex
         bpl     loop
         sta     LOWSCR
         rts
