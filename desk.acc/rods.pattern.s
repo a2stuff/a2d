@@ -55,6 +55,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         bit     ROMIN2
         sta     ALTZPOFF
+        jsr     SaveText
         sta     TXTSET
         sta     CLR80VID
 
@@ -62,12 +63,95 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         sta     TXTCLR
         sta     SET80VID
+        jsr     RestoreText
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         jmp     JUMP_TABLE_RGB_MODE
 
+.endproc
+
+;;; ============================================================
+
+;;; Save and clear main/aux text page 1 (preserving screen holes)
+.proc SaveText
+        sta     SET80STORE      ; let PAGE2 control banking
+        lda     #0
+        sta     CV
+
+        ptr1 := $06
+        ptr2 := $08
+
+        ;; Set BASL/H
+rloop:  jsr     VTAB
+        add16   BASL, #save_buffer-$400, ptr1
+        add16   ptr1, #$400, ptr2
+        ldy     #39
+
+cloop:
+        ;; Main
+        lda     (BASL),y
+        sta     (ptr1),y
+        lda     #kMainPageClearByte
+        sta     (BASL),y
+
+        ;; Aux
+        sta     PAGE2ON
+        lda     (BASL),y
+        sta     (ptr2),y
+        lda     #kAuxPageClearByte
+        sta     (BASL),y
+        sta     PAGE2OFF
+
+        dey
+        bpl     cloop
+
+        inc     CV
+        lda     CV
+        cmp     #24
+        bne     rloop
+
+        sta     CLR80STORE
+        rts
+.endproc
+
+;;; Restore main/aux text page 1 (preserving screen holes)
+.proc RestoreText
+        sta     SET80STORE      ; let PAGE2 control banking
+        lda     #0
+        sta     CV
+
+        ptr1 := $06
+        ptr2 := $08
+
+        ;; Set BASL/H
+rloop:  jsr     VTAB
+        add16   BASL, #save_buffer-$400, ptr1
+        add16   ptr1, #$400, ptr2
+        ldy     #39
+
+cloop:
+        ;; Main
+        lda     (ptr1),y
+        sta     (BASL),y
+
+        ;; Aux
+        sta     PAGE2ON
+        lda     (ptr2),y
+        sta     (BASL),y
+        sta     PAGE2OFF
+
+        dey
+        bpl     cloop
+
+        inc     CV
+        lda     CV
+        cmp     #24
+        bne     rloop
+
+        sta     CLR80STORE
+        rts
 .endproc
 
 ;;; ============================================================
