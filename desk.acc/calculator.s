@@ -1149,6 +1149,20 @@ cloop:  lda     FBUFFR-1,y
         dey
         bne     cloop
 
+        ;; Add leading zero if starting with decimal
+        cmp     #'-'
+    IF_EQ
+        ;; skip leading '-' temporarily
+        inx
+        jsr     MaybeAddLeadingZero
+        lda     #'-'
+        sta     text_buffer1,x
+        sta     text_buffer2,x
+        dex
+    ELSE
+        jsr     MaybeAddLeadingZero
+    END_IF
+
         cpx     #0              ; pad out with spaces if needed
         bmi     end
 pad:    lda     #' '
@@ -1168,6 +1182,18 @@ end:    jsr     DisplayBuffer1
         sta     calc_e
         sta     calc_n
         sta     calc_g
+        rts
+.endproc
+
+.proc MaybeAddLeadingZero
+        lda     text_buffer1+1,x
+        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
+        bne     :+
+        lda     #'0'
+        sta     text_buffer1,x
+        sta     text_buffer2,x
+        dex
+:
         rts
 .endproc
 
