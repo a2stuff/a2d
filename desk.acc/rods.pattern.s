@@ -58,11 +58,13 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         jsr     SaveText
         sta     TXTSET
         sta     CLR80VID
+        sta     DHIRESOFF
 
         jsr     Run
 
         sta     TXTCLR
         sta     SET80VID
+        sta     DHIRESON
         jsr     RestoreText
         sta     ALTZPON
         bit     LCBANK1
