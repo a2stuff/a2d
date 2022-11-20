@@ -1152,9 +1152,6 @@ SOUND_PROC VersionTel
         ;; Alert sound from VersionSoft's VersionTel
         ;; Adapted for A2D by @frankmilliron
 
-        pha
-        pha
-        pha
         ldy     #$5A
 l9632:  tya
         jsr     l964c
@@ -1169,10 +1166,6 @@ l9632:  tya
         jsr     l964c
         dey
         bne     l9632
-        pla
-        pla
-        pla
-        cli
         rts
 
 l964c:  tax
