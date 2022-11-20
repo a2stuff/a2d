@@ -268,20 +268,40 @@ str_instruct:   PASCAL_STRING res_string_instructions
         jsr     NORMFAST_norm
 
         bit     KBDSTRB         ; player will stop on keypress
+        jmp     p1              ; start with default player
 
-        lda     BUTN0
-        ora     BUTN1
-    IF_POS
-        ldax    #data_buf
-        jsr     Player
-    ELSE
-        ldax    #data_buf
-        jsr     Player2
-    END_IF
-
+redo:
+        ;; If a key was pressed, maybe restart with alt player
+        lda     KBD
+        bpl     done
         bit     KBDSTRB         ; swallow the keypress
 
-        jsr     NORMFAST_fast
+        cmp     #'1'|$80
+        bne     :+
+p1:     ldax    #data_buf
+        jsr     Player
+        jmp     redo
+:
+        cmp     #'2'|$80
+        bne     :+
+        ldax    #data_buf
+        jsr     Player2
+        jmp     redo
+:
+        cmp     #'3'|$80
+        bne     :+
+        ldax    #data_buf
+        jsr     Player3
+        jmp     redo
+:
+        cmp     #'4'|$80
+        bne     :+
+        ldax    #data_buf
+        jsr     Player4
+        jmp     redo
+:
+
+done:   jsr     NORMFAST_fast
 
         sta     RAMRDON
         sta     RAMWRTON
@@ -291,7 +311,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
 .endproc
 
 ;;; ============================================================
-;;; Player
+;;; Player - uses built-in speaker
 
 ;;; Electric Duet player by Alex Patalenski
 ;;; https://www.reddit.com/r/apple2/comments/pue775/improved_electric_duet_player_by_alex_patalenski/
@@ -431,10 +451,12 @@ l79:    lda     ptr
 
 .endproc
 
+;;; ============================================================
+;;; Alt. Player - uses built-in speaker
+
 ;;; "I found yet another version of Alex's player, this was included in
 ;;; a game I had written. I don't know if this is older or newer
 ;;; than the other one I posted..." - Emil Dotchevski
-
 
 .proc Player2
 
@@ -584,6 +606,301 @@ L6726:  dec     Z41
         jmp     L66F9
 .endproc
 
+;;; ============================================================
+;;; Mockingboard Player - assumes Slot 4
+;;; By @cybernesto
+;;; Used with permission
+
+;;; https://github.com/cybernesto/electric-mock/blob/master/src/MOCKINGDUET.S
+
+.proc Player3
+;;; *ELECTRIC DUET MUSIC PLAYER FOR THE MOCKINGBOARD
+;;; *COPYRIGHT 2014 CYBERNESTO
+
+CHN             := $1D
+SONG            := $1E
+
+LEFTCHN         = $00
+RIGHTCHN        = $02
+ENAREG          = $07
+VOL_A           = $08
+VOL_B           = $09
+TONE            = $06
+DURATION        = $08
+
+        stax    SONG
+
+        ;;         ORG $300
+
+        JSR INIT
+        JSR RESET
+        JSR ENACHN
+        JMP LOOP
+
+SETVOL:
+NEXT:   LDA SONG
+        CLC
+        ADC #$03
+        STA SONG
+        BCC LOOP
+        INC SONG+1
+LOOP:   LDY #$00
+        LDA (SONG),Y
+        CMP #$01
+        BEQ SETVOL
+        BPL SETNOTE             ;SET DURATION
+END:    JSR RESET
+        RTS
+
+SETNOTE:
+        STA DURATION
+        LDA #LEFTCHN
+SEND:   STA CHN
+        STA $C401
+        JSR SETREG1
+        INY
+        LDA (SONG),Y
+        BEQ SKIP                ;IF 0 KEEP LTTSA
+        JSR CONVFREQ
+SKIP:   LDA TONE
+        STA $C401
+        JSR WRDATA1
+        INC CHN
+        LDA CHN
+        STA $C401
+        JSR SETREG1
+        LDA TONE+1
+        STA $C401
+        JSR WRDATA1
+        LDA #RIGHTCHN
+        STA CHN
+        CPY #$02
+        BNE SEND
+        LDX DURATION
+W1:     LDY TEMPO
+W2:     DEC TEMP
+        BNE W2
+        DEY
+        BNE W2
+        DEX
+        BNE W1
+        BIT $C000
+        BMI END
+        JMP NEXT
+
+CONVFREQ:
+        LDX OCTAVE
+        INX
+        PHA
+        LDA #$00
+        STA TONE+1
+        PLA
+DECOCT: DEX
+        BMI LOBYTE
+        ASL
+        ROL TONE+1
+        JMP DECOCT
+LOBYTE: STA TONE
+        RTS
+
+
+RESET:  LDA #$00
+        STA $C400
+        STA $C480
+        LDA #$04
+        STA $C400
+        STA $C480
+        RTS
+
+INIT:   LDA #$FF
+        STA $C403
+        STA $C483
+        LDA #$07
+        STA $C402
+        STA $C482
+        RTS
+
+SETREG1:
+        LDA #$07
+        STA $C400
+        LDA #$04
+        STA $C400
+        RTS
+
+WRDATA1:
+        LDA #$06
+        STA $C400
+        LDA #$04
+        STA $C400
+        RTS
+
+ENACHN: LDA #ENAREG
+        STA $C401
+        JSR SETREG1
+        LDA #%00111100
+        STA $C401
+        JSR WRDATA1
+        LDA #VOL_A
+        STA $C401
+        JSR SETREG1
+        LDA #$0F
+        STA $C401
+        JSR WRDATA1
+        LDA #VOL_B
+        STA $C401
+        JSR SETREG1
+        LDA #$0F
+        STA $C401
+        JSR WRDATA1
+        RTS
+
+OCTAVE: .byte 1
+TEMPO:  .byte 8
+TEMP:   .byte 0
+.endproc
+
+;;; ============================================================
+;;; The Cricket! Player
+;;; By @cybernesto
+;;; Used with permission
+
+;;; https://github.com/cybernesto/electric-mock/blob/master/src/CRICKETDUET.S
+
+.proc Player4
+;;; *ELECTRIC DUET MUSIC PLAYER FOR THE CRICKET
+
+CHN             := $1D
+SONG            := $1E
+
+LEFTCHN         = $10
+RIGHTCHN        = $20
+ENAREG          = $07
+VOL_A           = $08
+TONE            = $06
+DURATION        = $08
+
+ACIACMD2        := $C0AA
+ACIACTL2        := $C0AB
+ACIAST2         := $C0A9
+ACIARXTX2       := $C0A8
+
+        stax    SONG
+
+        ;; ORG $300
+
+        JSR INIT
+        JSR RESET
+        LDA #LEFTCHN
+        STA CHN
+        JSR ENACHN
+        LDA #RIGHTCHN
+        STA CHN
+        JSR ENACHN
+        JMP LOOP
+
+SETVOL: NOP
+NEXT:   LDA SONG
+        CLC
+        ADC #$03
+        STA SONG
+        BCC LOOP
+        INC SONG+1
+LOOP:   LDY #$00
+        LDA (SONG),Y
+        CMP #$01
+        BEQ SETVOL
+        BPL SETNOTE             ;SET DURATION
+END:    JSR RESET
+        RTS
+
+SETNOTE:
+        STA DURATION
+        LDA #LEFTCHN
+SEND:   STA CHN
+        JSR OUT
+        INY
+        LDA (SONG),Y
+        BEQ SKIP                ;IF 0 KEEP LTTSA
+        JSR CONVFREQ
+SKIP:   LDA TONE
+        JSR OUT
+        INC CHN
+        LDA CHN
+        JSR OUT
+        LDA TONE+1
+        JSR OUT
+        LDA #RIGHTCHN
+        STA CHN
+        CPY #$02
+        BNE SEND
+        LDX DURATION
+W1:     LDY TEMPO
+W2:     DEC TEMP
+        BNE W2
+        DEY
+        BNE W2
+        DEX
+        BNE W1
+        BIT $C000
+        BMI END
+        JMP NEXT
+
+CONVFREQ:
+        LDX OCTAVE
+        INX
+        PHA
+        LDA #$00
+        STA TONE+1
+        PLA
+DECOCT: DEX
+        BMI LOBYTE
+        ASL
+        ROL TONE+1
+        JMP DECOCT
+LOBYTE: STA TONE
+        RTS
+
+
+INIT:   LDA #$0B
+        STA ACIACMD2
+        LDA #$9E
+        STA ACIACTL2
+        RTS
+
+OUT:    PHA                     ;SAVE BYTE TO SEND OUT
+WT:     LDA ACIAST2             ;READ STATUS OF SERIAL PORT
+        AND #$10                ;SEE IF IT'S READY TO RECEIVE A BYTE
+        BEQ WT                  ;NOT READY, WAIT
+        PLA                     ;REGET BYTE TO SEND OUT
+        STA ACIARXTX2           ;SEND IT
+        RTS
+
+IN:     LDA ACIAST2             ;IS THERE A BYTE TO GET YET?
+        AND #$08
+        BEQ IN                  ;NOPE, WAIT FOR IT
+        LDA ACIARXTX2           ;GET INCOMING BYTE
+        RTS
+
+RESET:  LDA #$A1
+        JSR OUT
+        RTS
+
+ENACHN: LDA #ENAREG
+        ORA CHN
+        JSR OUT
+        LDA #%00111110
+        JSR OUT
+        LDA #VOL_A
+        ORA CHN
+        JSR OUT
+        LDA #$0F
+        JSR OUT
+        RTS
+
+OCTAVE: .byte   1
+TEMPO:  .byte   8
+TEMP:   .byte   0
+.endproc
 
 ;;; ============================================================
 ;;; Draw centered string
