@@ -1152,28 +1152,25 @@ SOUND_PROC VersionTel
         ;; Alert sound from VersionSoft's VersionTel
         ;; Adapted for A2D by @frankmilliron
 
-.PUSHCPU
-.SETCPU "65C02"
-        sei
         pha
-        phx
-        phy
+        pha
+        pha
         ldy     #$5A
 l9632:  tya
         jsr     l964c
         pha
-        phx
-        phy
+        pha
+        pha
         jsr     l0815
-        ply
-        plx
+        pla
+        pla
         pla
         eor     #$FF
         jsr     l964c
         dey
         bne     l9632
-        ply
-        plx
+        pla
+        pla
         pla
         cli
         rts
@@ -1186,7 +1183,6 @@ l964d:  dex
 
 l0815:  jmp     l0818
 l0818:  rts
-.POPCPU
 END_SOUND_PROC
 
 ;;; ============================================================
