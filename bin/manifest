@@ -103,17 +103,42 @@ emit add_file $disposition "res/package/UNSHRINK" "Extras" "UnShrink" FF0000
 
 # Media
 mediadir="Sample.Media"
+mediafnt="Sample.Media/Fonts"
 
 emit add_file $disposition "res/package/ROOM"          $mediadir "room"           062000 # BIN
 emit add_file $disposition "res/package/MONARCH"       $mediadir "monarch"        084001 # FOT dhr-packed
 emit add_file $disposition "res/package/COLOR.CHART"   $mediadir "hr.color.chart" 084000 # FOT hr-packed
 emit add_file $disposition "res/package/BBROS.LOGO"    $mediadir "bbros.logo"     082000 # FOT bw280
 emit add_file $disposition "res/package/BBROS.MINI"    $mediadir "bbros.mini"     065800 # BIN minipix
+
 emit add_file $disposition "res/package/LOREM.IPSUM"   $mediadir "lorem.ipsum"    040000
+emit add_file $disposition "res/package/SHAKESPEARE"   $mediadir "shakespeare"    040000
 emit add_file $disposition "res/package/JESU.JOY"      $mediadir "jesu.joy"       D5D0E7
-emit add_file $disposition "mgtk/fonts/System.en"      $mediadir "system.en"      070000
 emit add_file $disposition "res/package/HELLO.WORLD"   $mediadir "hello.world"    FC0801
 emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell"  060800
+
+emit add_file $disposition "mgtk/fonts/ASCII"          $mediafnt "ASCII"          070000
+emit add_file $disposition "mgtk/fonts/ATHENS"         $mediafnt "ATHENS"         070000
+emit add_file $disposition "mgtk/fonts/BLIPPO.BLACK"   $mediafnt "BLIPPO.BLACK"   070000
+emit add_file $disposition "mgtk/fonts/BYTE"           $mediafnt "BYTE"           070000
+emit add_file $disposition "mgtk/fonts/COLLOSAL"       $mediafnt "COLLOSAL"       070000
+
+emit add_file $disposition "mgtk/fonts/FLOW"           $mediafnt "FLOW"           070000
+emit add_file $disposition "mgtk/fonts/GOTHIC"         $mediafnt "GOTHIC"         070000
+emit add_file $disposition "mgtk/fonts/MIRROR"         $mediafnt "MIRROR"         070000
+emit add_file $disposition "mgtk/fonts/Monaco.en"      $mediafnt "Monaco"         070000
+emit add_file $disposition "mgtk/fonts/MP.FONT"        $mediafnt "MP.FONT"        070000
+
+emit add_file $disposition "mgtk/fonts/NEW.YORK"       $mediafnt "NEW.YORK"       070000
+emit add_file $disposition "mgtk/fonts/OUTLINE"        $mediafnt "OUTLINE"        070000
+emit add_file $disposition "mgtk/fonts/PUDGY"          $mediafnt "PUDGY"          070000
+emit add_file $disposition "mgtk/fonts/ROMAN"          $mediafnt "ROMAN"          070000
+emit add_file $disposition "mgtk/fonts/SLANT"          $mediafnt "SLANT"          070000
+
+emit add_file $disposition "mgtk/fonts/STOP"           $mediafnt "STOP"           070000
+emit add_file $disposition "mgtk/fonts/TORONTO"        $mediafnt "TORONTO"        070000
+emit add_file $disposition "mgtk/fonts/UPSIDE.DOWN"    $mediafnt "UPSIDE.DOWN"    070000
+emit add_file $disposition "mgtk/fonts/VENICE"         $mediafnt "VENICE"         070000
 
 # --------------------------------------------------
 # Part 4: Desk Accessories (optional and extra)
