@@ -676,6 +676,8 @@ Image File:
 Repeat for Calculator and Sci.Calc:
 * With an English build, run the DA. Verify that '.' appears as the decimal separator in calculation results and that '.' when typed functions as a decimal separator.
 * With an Italian build, run the DA. Verify that ',' appears as the decimal separator in calculation result and that ',' when typed functions as a decimal separator. Verify that when '.' is typed, ',' appears.
+* Enter '1' '/' '2' '='. Verify that the result has a 0 before the decimal (i.e. "0.5").
+* Enter '0' '-' '.' '5' '='. Verify that the result has a 0 before the decimal (i.e. "-0.5").
 
 
 # Selector
