@@ -326,11 +326,12 @@ str_panic2:     PASCAL_STRING "Apple Panic 2"
 str_bombdrop:   PASCAL_STRING "Bombdrop"
 str_detonate:   PASCAL_STRING "Detonate"
 str_gorgon:     PASCAL_STRING "Gorgon"
+str_versiontel: PASCAL_STRING "VersionTel"
 str_aal_swoop:  PASCAL_STRING "Assembly Line Swoop"
 str_aal_blast:  PASCAL_STRING "Assembly Line Laser"
 str_aal_bell:   PASCAL_STRING "Assembly Line Bell"
 str_aal_klaxon: PASCAL_STRING "Assembly Line Klaxon"
-        kNumSounds = 17
+        kNumSounds = 18
 
 ;;; This is in anticipation of factoring out ListBox code, and/or
 ;;; dynamically populating the list of sounds from files, etc.
@@ -340,13 +341,13 @@ num_sounds:
 name_table:
         .addr   str_buzz, str_bonk, str_bell, str_silent, str_awbeep
         .addr   str_dazzledraw, str_koala, str_816paint, str_panic1
-        .addr   str_panic2, str_bombdrop, str_detonate, str_gorgon
+        .addr   str_panic2, str_bombdrop, str_detonate, str_gorgon, str_versiontel
         .addr   str_aal_swoop, str_aal_blast, str_aal_bell, str_aal_klaxon
         ASSERT_ADDRESS_TABLE_SIZE name_table, kNumSounds
 
 proc_table:
         .addr   Buzz, Bonk, ClassicBeep, Silent, AwBeep, DazzleDraw
-        .addr   Koala, Paint816, Panic1, Panic2, Bombdrop, Detonate, Gorgon
+        .addr   Koala, Paint816, Panic1, Panic2, Bombdrop, Detonate, Gorgon, VersionTel
         .addr   AALLaserSwoop, AALLaserBlast, AALSCBell, AALKlaxon
         ASSERT_ADDRESS_TABLE_SIZE proc_table, kNumSounds
 
@@ -1142,6 +1143,39 @@ wait3:  sbc     #1
         sbc     #1
         bne     wait2
         rts
+END_SOUND_PROC
+
+;;; ============================================================
+;;; Sound Routine: VersionTel
+
+SOUND_PROC VersionTel
+        ;; Alert sound from VersionSoft's VersionTel
+        ;; Adapted for A2D by @frankmilliron
+
+        ldy     #$5A
+l9632:  tya
+        jsr     l964c
+        pha
+        pha
+        pha
+        jsr     l0815
+        pla
+        pla
+        pla
+        eor     #$FF
+        jsr     l964c
+        dey
+        bne     l9632
+        rts
+
+l964c:  tax
+l964d:  dex
+        bne     l964d
+        bit     SPKR
+        rts
+
+l0815:  jmp     l0818
+l0818:  rts
 END_SOUND_PROC
 
 ;;; ============================================================
