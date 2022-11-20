@@ -49,6 +49,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Sounds: Play current selection if clicked again. ([#715](https://github.com/a2stuff/a2d/issues/715))
 * International: A new control panel DA for setting international options - date/time/number separators, date format and clock style.
 * Calc/Sci.Calc: Show leading zero before decimal in results.
+* Show.Duet.File: Add alternate players: during playback, press 3 for Mockingboard, 4 for Cricket!
 
 ## 1.2
 
