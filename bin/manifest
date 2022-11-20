@@ -103,7 +103,7 @@ emit add_file $disposition "res/package/UNSHRINK" "Extras" "UnShrink" FF0000
 
 # Media
 mediadir="Sample.Media"
-mediafnt="Sample.Media/Fonts"
+mediafnt="$mediadir/Fonts"
 
 emit add_file $disposition "res/package/ROOM"          $mediadir "room"           062000 # BIN
 emit add_file $disposition "res/package/MONARCH"       $mediadir "monarch"        084001 # FOT dhr-packed
@@ -127,7 +127,7 @@ emit add_file $disposition "mgtk/fonts/COLLOSAL"       $mediafnt "COLLOSAL"     
 emit add_file $disposition "mgtk/fonts/FLOW"           $mediafnt "FLOW"           070000
 emit add_file $disposition "mgtk/fonts/GOTHIC"         $mediafnt "GOTHIC"         070000
 emit add_file $disposition "mgtk/fonts/MIRROR"         $mediafnt "MIRROR"         070000
-emit add_file $disposition "mgtk/fonts/Monaco.en"      $mediafnt "Monaco"         070000
+emit add_file $disposition "mgtk/fonts/Monaco.en"      $mediafnt "Monaco.en"      070000
 
 emit add_file $disposition "mgtk/fonts/MP.FONT"        $mediafnt "MP.FONT"        070000
 emit add_file $disposition "mgtk/fonts/NEW.YORK"       $mediafnt "NEW.YORK"       070000
