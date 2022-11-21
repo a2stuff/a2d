@@ -7334,12 +7334,8 @@ CreateIconsForWindow := CreateIconsForWindowImpl::Start
         ;; convert right/bottom to width/height
         bbox_dx := iconbb_rect+MGTK::Rect::x2
         bbox_dy := iconbb_rect+MGTK::Rect::y2
-
-        ;; Include offset on left/top
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
-        sub16in bbox_dx, (winfo_ptr),y, bbox_dx
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
-        sub16in bbox_dy, (winfo_ptr),y, bbox_dy
+        sub16   bbox_dx, iconbb_rect+MGTK::Rect::x1, bbox_dx
+        sub16   bbox_dy, iconbb_rect+MGTK::Rect::y1, bbox_dy
 
         ;; --------------------------------------------------
         ;; Width
@@ -7368,6 +7364,20 @@ assign_width:
         txa
         iny
         sta     (winfo_ptr),y
+
+        ;; Adjust view bounds of new window so it matches icon bounding box.
+        ;; (Only done for width because height is treated as fixed.)
+        lda     cached_window_entry_count
+    IF_NE
+        jsr     CachedIconsScreenToWindow
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
+        sub16in iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y, tmpw
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x1
+        add16in (winfo_ptr),y, tmpw, (winfo_ptr),y
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
+        add16in (winfo_ptr),y, tmpw, (winfo_ptr),y
+        jsr     CachedIconsWindowToScreen
+    END_IF
 
         ;; --------------------------------------------------
         ;; Height
@@ -7400,6 +7410,8 @@ assign_height:
         ;; Finished
         jsr     PopPointers     ; do not tail-call optimise!
         rts
+
+tmpw:   .word   0
 .endproc
 
 

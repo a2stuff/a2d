@@ -88,7 +88,7 @@ kIconLabelGap           = 2
 kMaxIconTotalHeight     = kMaxIconBitmapHeight + kIconLabelGap + kIconLabelHeight
 kMaxIconTotalWidth      = 115   ; width of " MMMMMMMMMMMMMMM "
 
-kIconViewInitialLeft = kIconBBoxPaddingLeft + (kMaxIconTotalWidth - kIconBitmapWidth) / 2
+kIconViewInitialLeft = kIconBBoxPaddingLeft
 kIconViewInitialTop  = kWindowHeaderHeight + kIconBBoxPaddingTop + kMaxIconBitmapHeight
 kIconViewIconsPerRow = 5
 
