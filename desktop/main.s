@@ -7335,7 +7335,9 @@ CreateIconsForWindow := CreateIconsForWindowImpl::Start
         bbox_dx := iconbb_rect+MGTK::Rect::x2
         bbox_dy := iconbb_rect+MGTK::Rect::y2
         sub16   bbox_dx, iconbb_rect+MGTK::Rect::x1, bbox_dx
-        sub16   bbox_dy, iconbb_rect+MGTK::Rect::y1, bbox_dy
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        sub16in bbox_dy, (winfo_ptr),y, bbox_dy
+
 
         ;; --------------------------------------------------
         ;; Width
