@@ -1189,6 +1189,7 @@ l3:     lda     #$3A
 ;;; ============================================================
 
         .include "../lib/inttostring.s"
+        .include "../lib/speed.s"
         .include "../lib/bell.s"
         saved_ram_unitnum := main__saved_ram_unitnum
         saved_ram_drvec   := main__saved_ram_drvec

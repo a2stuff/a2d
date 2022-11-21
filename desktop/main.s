@@ -53,6 +53,8 @@ JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
 JT_GET_RAMCARD_FLAG:    jmp     GetCopiedToRAMCardFlag  ; *
 JT_GET_ORIG_PREFIX:     jmp     CopyDeskTopOriginalPrefix ; *
 JT_BELL:                jmp     Bell                    ; *
+JT_SLOW_SPEED:          jmp     SlowSpeed               ; *
+JT_RESUME_SPEED:        jmp     ResumeSpeed             ; *
 
         .assert JUMP_TABLE_LAST = *, error, "Jump table mismatch"
 
@@ -15534,6 +15536,7 @@ free_icon_map:  .res    ::kMaxIconCount, 0
         .include "../lib/muldiv.s"
 
         is_iigs_flag := machine_config::iigs_flag
+        .include "../lib/speed.s"
         .include "../lib/bell.s"
 
 ;;; ============================================================

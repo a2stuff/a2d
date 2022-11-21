@@ -71,6 +71,8 @@ JT_ENTRY JUMP_TABLE_ADJUST_FILEENTRY  ; Adjust case in FileEntry structure (in: 
 JT_ENTRY JUMP_TABLE_GET_RAMCARD_FLAG  ; Returns high bit set if copied to RAMCard *
 JT_ENTRY JUMP_TABLE_GET_ORIG_PREFIX   ; Returns original prefix, if copied (in: A,X=buffer) *
 JT_ENTRY JUMP_TABLE_BELL          ; Play settings-specified alert sound *
+JT_ENTRY JUMP_TABLE_SLOW_SPEED    ; Disable accelerator *
+JT_ENTRY JUMP_TABLE_RESUME_SPEED  ; Resume accelerator *
 JT_ENTRY JUMP_TABLE_LAST
 
 ;;; ============================================================

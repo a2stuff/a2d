@@ -5,7 +5,8 @@
 ;;; * `kBellProcLength` - size of sound procs
 ;;; * `BELLPROC` - runtime location of sound procs
 ;;; * `BELLDATA` - storage location for sound procs (app specific)
-;;; * `is_iigs_flag` - high bit set if on IIgs
+;;; * `SlowSpeed` - slow accelerator, if needed
+;;; * `ResumeSpeed` - resume accelerator, if needed
 
 .proc Bell
         .assert .lobyte(::BELLPROC) = 0, error, "Must be page-aligned"
@@ -17,25 +18,11 @@
         php
         sei
 
-        ;; Slow down on IIgs
-        bit     is_iigs_flag
-    IF_NS
-        lda     CYAREG
-        pha
-        and     #%01111111      ; clear bit 7
-        sta     CYAREG
-    END_IF
-
         ;; Play it
+        jsr     SlowSpeed
         proc := *+1
         jsr     BELLPROC
-
-        ;; Restore speed on IIgs
-        bit     is_iigs_flag
-    IF_NS
-        pla
-        sta     CYAREG
-    END_IF
+        jsr     ResumeSpeed
 
         ;; Restore interrupt state
         plp

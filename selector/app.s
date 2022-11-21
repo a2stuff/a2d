@@ -2386,6 +2386,7 @@ pb2_initial_state:
         .include "../lib/doubleclick.s"
         .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"
+        .include "../lib/speed.s"
         .include "../lib/bell.s"
         .include "../lib/detect_lcmeve.s"
         .include "../lib/clear_dhr.s"

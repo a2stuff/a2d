@@ -365,31 +365,11 @@ port:           .addr   grafport_win
 
 grafport_win:       .tag    MGTK::GrafPort
 
-        ;; Initialized to $80 if a IIgs, $00 otherwise
-is_iigs_flag:
-        .byte   0
-
 ;;; ============================================================
 ;;; Dialog Logic
 ;;; ============================================================
 
 .proc Init
-        ;; --------------------------------------------------
-        ;; Probe some ROM locations.
-        bit     ROMIN2
-
-        ;; Detect IIgs, save for later
-        sec
-        jsr     IDROUTINE
-    IF_CC
-        copy    #$80, is_iigs_flag
-    END_IF
-
-        bit     LCBANK1
-        bit     LCBANK1
-
-        ;; --------------------------------------------------
-
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::OpenWindow, winfo_listbox
 
@@ -524,25 +504,11 @@ is_iigs_flag:
         php
         sei
 
-        ;; Slow down on IIgs
-        bit     is_iigs_flag
-    IF_NS
-        lda     CYAREG
-        pha
-        and     #%01111111      ; clear bit 7
-        sta     CYAREG
-    END_IF
-
         ;; Play it
+        param_call JTRelay, JUMP_TABLE_SLOW_SPEED
         proc := *+1
         jsr     BELLPROC
-
-        ;; Restore speed on IIgs
-        bit     is_iigs_flag
-    IF_NS
-        pla
-        sta     CYAREG
-    END_IF
+        param_call JTRelay, JUMP_TABLE_RESUME_SPEED
 
         ;; Restore interrupt state
         plp
