@@ -311,7 +311,7 @@ num_secondary_run_list_entries:
 
 L9129:  .byte   0
 
-not_iigs_flag:                  ; high bit set unless IIgs
+is_iigs_flag:                   ; high bit set if IIgs
         .byte   0
 
 lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
@@ -364,7 +364,9 @@ entry:
 
         sec
         jsr     IDROUTINE       ; clear C if IIgs
-        ror     not_iigs_flag   ; rotate C into high bit
+    IF_CC
+        copy    #$80, is_iigs_flag
+    END_IF
 
         jsr     DetectLeChatMauveEve
         beq     :+              ; Z=1 means no LCMEve
@@ -2293,8 +2295,8 @@ done:   rts
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 
 .proc ResetIIgsRGB
-        bit     not_iigs_flag
-        bmi     SetMonoMode::done
+        bit     is_iigs_flag
+        bpl     SetMonoMode::done
 
         bit     SETTINGS + DeskTopSettings::rgb_color
         bmi     SetColorMode::iigs
@@ -2339,8 +2341,8 @@ loop_counter:
 ;;; Output: A=high bit/N flag set if down.
 
 .proc ShiftDown
-        bit     not_iigs_flag
-        bmi     TestShiftMod    ; no, rely on shift key mod
+        bit     is_iigs_flag
+        bpl     TestShiftMod    ; no, rely on shift key mod
 
         lda     KEYMODREG       ; On IIgs, use register instead
         and     #%00000001      ; bit 7 = Command (OA), bit 0 = Shift

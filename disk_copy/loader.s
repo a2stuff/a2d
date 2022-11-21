@@ -6,7 +6,7 @@
 
 
 .scope part2
-        .org $1800
+        .org ::DISK_COPY_BOOTSTRAP
 
         MLIEntry := MLI
 
@@ -78,9 +78,19 @@ L183F:  sta     BITMAP+1,x
 
         jsr     LoadSettings
 
+        ;; Detect IIgs, save for later
+        lda     #0
+        sec
+        jsr     IDROUTINE
+    IF_CC
+        lda     #$80
+    END_IF
+
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
+
+        sta     auxlc__is_iigs_flag
 
         jmp     auxlc__start
 
@@ -148,6 +158,6 @@ loop:   lda     (src),y
 
 ;;; ============================================================
 
-        PAD_TO $1A00
+        PAD_TO ::DISK_COPY_BOOTSTRAP + ::kDiskCopyBootstrapLength
 
 .endscope ; part2

@@ -15532,6 +15532,8 @@ free_icon_map:  .res    ::kMaxIconCount, 0
         .include "../lib/doubleclick.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/muldiv.s"
+
+        is_iigs_flag := machine_config::iigs_flag
         .include "../lib/bell.s"
 
 ;;; ============================================================
