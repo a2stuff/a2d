@@ -4988,7 +4988,10 @@ last_pos:
 
 .proc CoordsScreenToWindow
         jsr     PushPointers
-        jmp     IconPtrScreenToWindow
+        jsr     PrepActiveWindowScreenMapping
+        jsr     IconPtrScreenToWindow
+        jsr     PopPointers     ; do not tail-call optimise!
+        rts
 .endproc
 .endproc
 
@@ -5915,20 +5918,25 @@ header_and_offset_flag:
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         bne     skip             ; obscured
 
+        jsr     PushPointers
+        jsr     PrepActiveWindowScreenMapping
+
         ldx     #0
 :       txa
-        pha
+        pha                     ; A = index
         copy    selected_icon_list,x, icon_param
-        pha                     ; A = icon
-        jsr     IconScreenToWindow
+        jsr     IconEntryLookup
+        stax    $06
+        jsr     IconPtrScreenToWindow
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED
-        pla                     ; A = icon
-        jsr     IconWindowToScreen
-        pla
+        jsr     IconPtrWindowToScreen
+        pla                     ; A = index
         tax
         inx
         cpx     selected_icon_count
         bne     :-
+        jsr     PopPointers     ; do not tail-call optimize!
+
 skip:
     END_IF
 
@@ -5943,36 +5951,55 @@ finish: lda     #0
 ;;; ============================================================
 
 .proc CachedIconsScreenToWindow
-        copy    #0, count
-        count := *+1
+        entry_ptr := $6
+
+        jsr     PushPointers
+        jsr     PrepActiveWindowScreenMapping
+
+        copy    #0, index
+        index := *+1
 loop:   lda     #SELF_MODIFIED_BYTE
         cmp     cached_window_entry_count
         beq     done
+
         tax
         lda     cached_window_entry_list,x
-        jsr     IconScreenToWindow
-        inc     count
+        jsr     IconEntryLookup
+        stax    entry_ptr
+        jsr     IconPtrScreenToWindow
+
+        inc     index
         jmp     loop
 
-done:   rts
+done:   jsr     PopPointers     ; do not tail-call optimize!
+        rts
 .endproc
 
 ;;; ============================================================
 
 .proc CachedIconsWindowToScreen
-        lda     #0
-        sta     index
+        entry_ptr := $6
+
+        jsr     PushPointers
+        jsr     PrepActiveWindowScreenMapping
+
+        copy    #0, index
         index := *+1
 loop:   lda     #SELF_MODIFIED_BYTE
         cmp     cached_window_entry_count
         beq     done
+
         tax
         lda     cached_window_entry_list,x
-        jsr     IconWindowToScreen
+        jsr     IconEntryLookup
+        stax    entry_ptr
+        jsr     IconPtrWindowToScreen
+
         inc     index
         jmp     loop
 
-done:   rts
+done:   jsr     PopPointers     ; do not tail-call optimize!
+        rts
 .endproc
 
 ;;; ============================================================
@@ -8710,6 +8737,7 @@ saved_portbits:
 ;;; ============================================================
 ;;; Convert icon's coordinates from window to screen
 ;;; (icon index in A, active window)
+;;; NOTE: Avoid calling in a loop; factor out `PrepActiveWindowScreenMapping`
 
 .proc IconWindowToScreen
         entry_ptr := $6
@@ -8717,8 +8745,16 @@ saved_portbits:
         jsr     PushPointers
         jsr     IconEntryLookup
         stax    entry_ptr
-
         jsr     PrepActiveWindowScreenMapping
+        jsr     IconPtrWindowToScreen
+        jsr     PopPointers     ; do not tail-call optimise!
+        rts
+.endproc
+
+;;; Convert icon's coordinates from window to screen
+;;; Inputs: icon entry pointer in $6, `PrepActiveWindowScreenMapping` called
+.proc IconPtrWindowToScreen
+        entry_ptr := $6
 
         ;; iconx
         ldy     #IconEntry::iconx
@@ -8736,28 +8772,30 @@ saved_portbits:
         ;; icony
         sub16in (entry_ptr),y, pos_win+2, (entry_ptr),y
 
-        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
 ;;; ============================================================
 ;;; Convert icon's coordinates from screen to window
 ;;; (icon index in A, active window)
+;;; NOTE: Avoid calling in a loop; factor out `PrepActiveWindowScreenMapping`
 
 .proc IconScreenToWindow
+        entry_ptr := $6
+
         jsr     PushPointers
         jsr     IconEntryLookup
-        stax    $06
-        FALL_THROUGH_TO IconPtrScreenToWindow
+        stax    entry_ptr
+        jsr     PrepActiveWindowScreenMapping
+        jsr     IconPtrScreenToWindow
+        jsr     PopPointers     ; do not tail-call optimise!
+        rts
 .endproc
 
 ;;; Convert icon's coordinates from screen to window
-;;; (icon entry pointer in $6, active window)
-;;; NOTE: does `PopPointers` before exiting
+;;; Inputs: icon entry pointer in $6, `PrepActiveWindowScreenMapping` called
 .proc IconPtrScreenToWindow
         entry_ptr := $6
-
-        jsr     PrepActiveWindowScreenMapping
 
         ;; iconx
         ldy     #IconEntry::iconx
@@ -8775,7 +8813,6 @@ saved_portbits:
         ;; icony
         add16in (entry_ptr),y, pos_win+2, (entry_ptr),y
 
-        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc
 
