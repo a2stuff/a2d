@@ -1453,6 +1453,12 @@ hires_table_hi:
 END_SOUND_PROC
 
 ;;; ============================================================
+
+        ;; Since we swap the proc into place, need to ensure last proc
+        ;; has sufficient padding before routines we actually use
+        .res    kBellProcLength
+
+;;; ============================================================
 ;;; Make call into Main from Aux (for JUMP_TABLE calls)
 ;;; Inputs: A,X = address
 
