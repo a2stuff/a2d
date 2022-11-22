@@ -314,6 +314,9 @@ L9129:  .byte   0
 is_iigs_flag:                   ; high bit set if IIgs
         .byte   0
 
+is_iiecard_flag:                ; high bit set if Mac IIe Option Card
+        .byte   0
+
 lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
         .byte   0
 
@@ -367,6 +370,16 @@ entry:
     IF_CC
         copy    #$80, is_iigs_flag
     END_IF
+
+        ;; Detect Mac IIe Option Card, save for later
+        lda     ZIDBYTE
+        cmp     #$E0            ; Is Enhanced IIe?
+        bne     :+
+        lda     IDBYTEMACIIE
+        cmp     #$02            ; Mac IIe Option Card signature
+        bne     :+
+        copy    #$80, is_iiecard_flag
+:
 
         jsr     DetectLeChatMauveEve
         beq     :+              ; Z=1 means no LCMEve

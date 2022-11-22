@@ -15536,6 +15536,7 @@ free_icon_map:  .res    ::kMaxIconCount, 0
         .include "../lib/muldiv.s"
 
         is_iigs_flag := machine_config::iigs_flag
+        is_iiecard_flag := machine_config::iiecard_flag
         .include "../lib/speed.s"
         .include "../lib/bell.s"
 

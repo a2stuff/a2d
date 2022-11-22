@@ -100,6 +100,7 @@ start:
         copy    VERSION, tmp_version  ; $06 = IIe or later
         copy    ZIDBYTE, tmp_idbyte   ; $00 = IIc or later
         copy    ZIDBYTE2, tmp_idbyte2 ; IIc ROM version (IIc+ = $05)
+        copy    IDBYTEMACIIE, tmp_idmaciie ; $02 = Mac IIe Option Card
         copy    IDBYTELASER128, tmp_idlaser ; $AC = Laser 128
 
         ;; ... and page in LCBANK1
@@ -117,6 +118,9 @@ start:
         tmp_idbyte2 := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     machine_config::id_idbyte2
+        tmp_idmaciie := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     machine_config::id_idmaciie
         tmp_idlaser := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     machine_config::id_idlaser
@@ -149,8 +153,16 @@ start:
         lda     #kPeriodicTaskDelayIIgs ; Assume accelerated???
         bne     end                     ; always
 
-        ;; IIe (or IIe Option Card)
-is_iie: lda     #kPeriodicTaskDelayIIe
+        ;; IIe (or Mac IIe Option Card)
+is_iie: lda     machine_config::id_idbyte
+        cmp     #$E0            ; Is Enhanced IIe?
+        bne     :+
+        lda     machine_config::id_idmaciie
+        cmp     #$02            ; Mac IIe Option Card signature
+        bne     :+
+        copy    #$80, machine_config::iiecard_flag
+:
+        lda     #kPeriodicTaskDelayIIe
         bne     end             ; always
 
         ;; IIgs

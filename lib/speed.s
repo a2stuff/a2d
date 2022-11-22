@@ -6,6 +6,7 @@
 ;;;
 ;;; Currently handles:
 ;;; * IIgs built-in accelerator
+;;; * Mac IIe Option Card built-in accelerator
 ;;; ============================================================
 ;;; Exposes two procs:
 ;;; * `SlowSpeed` - slows system down to 1MHz
@@ -13,6 +14,7 @@
 ;;; ============================================================
 ;;; Required definitions:
 ;;; * `is_iigs_flag` - high bit set if on IIgs
+;;; * `is_iiecard_flag` - high bit set if on Mac IIe Option Card
 ;;; ============================================================
 
 ;;; Assert: Aux LC is banked in; interrupts are inhibited
@@ -25,6 +27,15 @@
         lda     #SELF_MODIFIED_BYTE
         sta     CYAREG
     END_IF
+
+        ;; Restore speed on Mac IIe Option Card
+        bit     is_iiecard_flag
+    IF_NS
+        ResumeSpeed::saved_maciie := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     MACIIE
+    END_IF
+
         rts
 .endproc
 
@@ -39,5 +50,17 @@
         and     #%01111111      ; clear bit 7
         sta     CYAREG
     END_IF
+
+        ;; Slow down on Mac IIe Option Card
+        ;; Per Technical Note: Apple IIe #10: The Apple IIe Card for the Macintosh LC
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.10.html
+        bit     is_iiecard_flag
+    IF_NS
+        lda     MACIIE
+        sta     ResumeSpeed::saved_maciie
+        and     #%11111011      ; clear bit 2
+        sta     MACIIE
+    END_IF
+
         rts
 .endproc

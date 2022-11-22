@@ -387,6 +387,8 @@ disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
 
 is_iigs_flag:                   ; high bit set if IIgs
         .byte   0
+is_iiecard_flag:                ; high bit set if Mac IIe Option Card
+        .byte   0
 
 str_2_spaces:   PASCAL_STRING "  "
 str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
@@ -2374,3 +2376,4 @@ Alert := alert_dialog::Alert
 .endscope
         auxlc__start := auxlc::start
         auxlc__is_iigs_flag := auxlc::is_iigs_flag
+        auxlc__is_iiecard_flag := auxlc::is_iiecard_flag

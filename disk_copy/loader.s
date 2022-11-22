@@ -56,13 +56,13 @@ L183F:  sta     BITMAP+1,x
         bpl     L183F
 
         MLI_CALL OPEN, open_params
-        bcs     fail
+        jcs     fail
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
 
         MLI_CALL SET_MARK, set_mark_params
-        bcs     fail
+        jcs     fail
         copy16  buf1, read_params::data_buffer
         copy16  len1, read_params::request_count
         MLI_CALL READ, read_params
@@ -79,18 +79,33 @@ L183F:  sta     BITMAP+1,x
         jsr     LoadSettings
 
         ;; Detect IIgs, save for later
-        lda     #0
         sec
         jsr     IDROUTINE
     IF_CC
-        lda     #$80
+        copy    #$80, is_iigs_flag
     END_IF
+
+        ;; Detect Mac IIe Option Card, save for later
+        lda     ZIDBYTE
+        cmp     #$E0            ; Is Enhanced IIe?
+        bne     :+
+        lda     IDBYTEMACIIE
+        cmp     #$02            ; Mac IIe Option Card signature
+        bne     :+
+        copy    #$80, is_iiecard_flag
+:
 
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
 
+        is_iigs_flag := *+1
+        lda     #$00            ; self-modified, but initially 0
         sta     auxlc__is_iigs_flag
+
+        is_iiecard_flag := *+1
+        lda     #$00            ; self-modified, but initially 0
+        sta     auxlc__is_iiecard_flag
 
         jmp     auxlc__start
 
