@@ -1112,12 +1112,8 @@ memory_bitmap:
 ;;; Assert: LCBANK1 is banked in
 
 .proc ResetIIgsRGB
-        bit     ROMIN2
-        sec
-        jsr     IDROUTINE
-        bit     LCBANK1
-        bit     LCBANK1
-        bcs     done
+        bit     auxlc::is_iigs_flag
+        bpl     done
 
         bit     SETTINGS + DeskTopSettings::rgb_color
         bmi     color
