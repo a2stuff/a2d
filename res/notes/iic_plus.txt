@@ -1,0 +1,76 @@
+# Apple IIc Plus Notes
+
+## Accelerator
+
+On some systems (IIgs, Mac IIe Card, Laser 128), the accelerator is temporarily turned off when performing paddle reads or playing sounds. This is not done on the Apple IIc Plus. For one thing, it's not necessary - the IIc Plus accelerator is already configured to slow for paddle and speaker accesses. For another, accessing the Cache Glue Gate Array (CGGA) to control the accelerator kicks the system out of double hires mode. Even if it is turned back on immediately, a visual glitch can occur for a few scan lines.
+
+See Apple IIc Technical Reference Manual 2nd Ed. for more details.
+
+For posterity, here's code that does disable and conditionally re-enable the accelerator.
+
+Requires a 2-byte `cgga_buffer`.
+
+;;; Disable accelerator on Apple IIc Plus
+        lda     $0              ; Work around CGGA bug
+        pha
+        bit     ROMIN2          ; CGGA requires ROM
+
+        lda     #$04            ; Unlock Accelerator
+        pha
+        jsr     ACCEL_ENTRY
+        sta     DHIRESON        ; CGGA turns DHires off; turn it back on
+
+        lda     #<cgga_buffer
+        pha
+        lda     #>cgga_buffer
+        pha
+        lda     #$05            ; Read Accelerator
+        pha
+        jsr     ACCEL_ENTRY
+        sta     DHIRESON        ; CGGA turns DHires off; turn it back on
+
+        lda     #$02            ; Disable Accelerator
+        pha
+        jsr     ACCEL_ENTRY
+        sta     DHIRESON        ; CGGA turns DHires off; turn it back on
+
+        lda     #$03            ; Lock Accelerator
+        pha
+        jsr     ACCEL_ENTRY
+        sta     DHIRESON        ; CGGA turns DHires off; turn it back on
+
+        bit     LCBANK1         ; Restore banks
+        bit     LCBANK1
+        pla
+        sta     $0              ; Work around CGGA bug
+        sta     DHIRESON        ; CGGA turns DHires off; turn it back on
+
+;;; Re-enable accelerator on IIc Plus
+        lda     cgga_buffer+1   ; previous state
+        and     #%00001000      ; bit 3: CGGA enable (1=disabled)
+        bne     skip            ; was previously disabled, so leave it off
+
+        lda     $0              ; Work around CGGA bug
+        pha
+        bit     ROMIN2          ; CGGA requires ROM
+
+        lda     #$04            ; Unlock Accelerator
+        pha
+        jsr     ACCEL_ENTRY
+        sta     DHIRESON        ; CGGA turns DHires off; turn it back on
+
+        lda     #$01            ; Enable Accelerator
+        pha
+        jsr     ACCEL_ENTRY
+        sta     DHIRESON        ; CGGA turns DHires off; turn it back on
+
+        lda     #$03            ; Lock Accelerator
+        pha
+        jsr     ACCEL_ENTRY
+        sta     DHIRESON        ; CGGA turns DHires off; turn it back on
+
+        bit     LCBANK1         ; Restore banks
+        bit     LCBANK1
+        pla
+        sta     $0              ; Work around CGGA bug
+    skip:
