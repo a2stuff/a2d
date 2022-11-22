@@ -15537,6 +15537,7 @@ free_icon_map:  .res    ::kMaxIconCount, 0
 
         is_iigs_flag := machine_config::iigs_flag
         is_iiecard_flag := machine_config::iiecard_flag
+        is_laser128_flag := machine_config::laser128_flag
         .include "../lib/speed.s"
         .include "../lib/bell.s"
 

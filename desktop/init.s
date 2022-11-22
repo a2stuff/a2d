@@ -149,7 +149,7 @@ start:
         cmp     #$AC
         bne     is_iie
 
-        copy    #$80, is_laser128_flag
+        copy    #$80, machine_config::laser128_flag
         lda     #kPeriodicTaskDelayIIgs ; Assume accelerated???
         bne     end                     ; always
 
@@ -174,7 +174,7 @@ is_iigs:
 is_iic: lda     machine_config::id_idbyte2 ; ROM version
         cmp     #$05                  ; IIc Plus = $05
         bne     :+
-        copy    #$80, is_iic_plus_flag
+        copy    #$80, machine_config::iic_plus_flag
 :       lda     #kPeriodicTaskDelayIIc
 
 end:
@@ -1089,7 +1089,7 @@ append: lda     unit_num
 
         ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
         ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
-        bit     is_iic_plus_flag
+        bit     machine_config::iic_plus_flag
         bpl     :+
         and     #%01110000      ; mask off slot
         cmp     #$50            ; is it slot 5?
@@ -1104,7 +1104,7 @@ append: lda     unit_num
 
         ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
         ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
-        bit     is_laser128_flag
+        bit     machine_config::laser128_flag
     IF_NS
         lda     dispatch+1      ; $Cs
         and     #%00001111      ; mask off slot
@@ -1262,14 +1262,6 @@ exit:   jmp     main::LoadDesktopEntryTable
 .endproc
 
 .endproc
-
-;;; ============================================================
-
-;;; High bits set if specific machine type detected.
-is_iic_plus_flag:
-        .byte   0
-is_laser128_flag:
-        .byte   0
 
 ;;; ============================================================
 

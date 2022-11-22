@@ -78,14 +78,14 @@ L183F:  sta     BITMAP+1,x
 
         jsr     LoadSettings
 
-        ;; Detect IIgs, save for later
+        ;; Detect IIgs
         sec
         jsr     IDROUTINE
     IF_CC
         copy    #$80, is_iigs_flag
     END_IF
 
-        ;; Detect Mac IIe Option Card, save for later
+        ;; Detect Mac IIe Option Card
         lda     ZIDBYTE
         cmp     #$E0            ; Is Enhanced IIe?
         bne     :+
@@ -94,6 +94,14 @@ L183F:  sta     BITMAP+1,x
         bne     :+
         copy    #$80, is_iiecard_flag
 :
+        ;; Detect Laser 128
+        lda     IDBYTELASER128
+        cmp     #$AC
+    IF_EQ
+        copy    #$80, is_laser128_flag
+    END_IF
+
+
 
         sta     ALTZPON
         bit     LCBANK1
@@ -106,6 +114,10 @@ L183F:  sta     BITMAP+1,x
         is_iiecard_flag := *+1
         lda     #$00            ; self-modified, but initially 0
         sta     auxlc__is_iiecard_flag
+
+        is_laser128_flag := *+1
+        lda     #$00            ; self-modified, but initially 0
+        sta     auxlc__is_laser128_flag
 
         jmp     auxlc__start
 

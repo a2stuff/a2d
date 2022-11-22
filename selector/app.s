@@ -317,6 +317,9 @@ is_iigs_flag:                   ; high bit set if IIgs
 is_iiecard_flag:                ; high bit set if Mac IIe Option Card
         .byte   0
 
+is_laser128_flag:               ; high bit set if Laser 128
+        .byte   0
+
 lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
         .byte   0
 
@@ -365,13 +368,14 @@ entry:
 
         copy    BUTN2, pb2_initial_state
 
+        ;; Detect IIgs
         sec
         jsr     IDROUTINE       ; clear C if IIgs
     IF_CC
         copy    #$80, is_iigs_flag
     END_IF
 
-        ;; Detect Mac IIe Option Card, save for later
+        ;; Detect Mac IIe Option Card
         lda     ZIDBYTE
         cmp     #$E0            ; Is Enhanced IIe?
         bne     :+
@@ -380,6 +384,12 @@ entry:
         bne     :+
         copy    #$80, is_iiecard_flag
 :
+        ;; Detect Laser 128
+        lda     IDBYTELASER128
+        cmp     #$AC
+    IF_EQ
+        copy    #$80, is_laser128_flag
+    END_IF
 
         jsr     DetectLeChatMauveEve
         beq     :+              ; Z=1 means no LCMEve

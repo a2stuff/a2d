@@ -190,6 +190,7 @@ AN3_OFF         := $C05E
 AN3_ON          := $C05F
 
 RAMWORKS_BANK   := $C073
+LASER128EX_CFG  := $C074        ; high two bits control speed
 
 ROMIN2          := $C082
 

@@ -36,6 +36,14 @@
         sta     MACIIE
     END_IF
 
+        ;; Restore speed on Laser 128
+        bit     is_laser128_flag
+    IF_NS
+        ResumeSpeed::saved_laserreg := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     LASER128EX_CFG
+    END_IF
+
         rts
 .endproc
 
@@ -60,6 +68,18 @@
         sta     ResumeSpeed::saved_maciie
         and     #%11111011      ; clear bit 2
         sta     MACIIE
+    END_IF
+
+        ;; Slow down on Laser 128 (EX or EX/2)
+        bit     is_laser128_flag
+    IF_NS
+        lda     LASER128EX_CFG
+        sta     ResumeSpeed::saved_laserreg
+        and     #$3F            ; mask off
+        sta     LASER128EX_CFG
+        ;; NOTE: The Laser 128's screen hole location $7FE which is used for
+        ;; persistence speed (e.g. to restore speed after disk access) is not
+        ;; touched, as we don't want this to persist.
     END_IF
 
         rts
