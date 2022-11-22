@@ -166,6 +166,15 @@ fast:   lda     #0
 
         ; a Laser 128, hopefully harmless on a non EX
 
+        ;; Need to store $56 (slow) or $D6 (fast) to $7FE
+        ;; for speed change to persist.
+        pha                     ; A=1 for slow
+        lsr                     ; C=1 for slow
+        ror                     ; A=$80 for slow
+        eor     #$D6            ; $56 for slow
+        sta     $7FE            ; modify screen hole
+        pla                     ; A=1 for slow
+
         ldy     #EX_3MHZMASK ; phew, all needed bits set
         ldx     #<ex_cfg
 
@@ -180,16 +189,13 @@ setspeed:
         tya
         bcs     setnorm
         ora     iobase,x
-        ldy     #$d6            ; for Laser
         bne     setsta  ; always
 
 setnorm:
         eor     #$FF
         and     iobase,x
-        ldy     #$56            ; for Laser
 setsta:
         sta     iobase,x
-        sty     $7fe            ; for Laser
         rts
 
 gscheck:
