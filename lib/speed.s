@@ -7,6 +7,14 @@
 ;;; Currently handles:
 ;;; * IIgs built-in accelerator
 ;;; * Mac IIe Option Card built-in accelerator
+;;; * Laser 128 EX and EX/2 built-in accelerator
+;;;
+;;; The Apple IIc Plus is explicitly *not* handled. Speed
+;;; adjustments using the CGGA kick the machine out of
+;;; DHIRES mode. This can be restored, but even if done
+;;; immediately after a call there are still unacceptable
+;;; visual glitches for several scan lines after each call.
+;;; (See Apple IIc Technical Reference Manual 2nd Ed.)
 ;;; ============================================================
 ;;; Exposes two procs:
 ;;; * `SlowSpeed` - slows system down to 1MHz
