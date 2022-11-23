@@ -1379,6 +1379,7 @@ SOUND_PROC Silent
         ;;      temporarily slow accelerators; this is inaudible on real
         ;;      hardware.
         ;;
+        ;;   * This causes Virtual ][ to stop playing sounds for a bit.
         ;;   * This has an audible click in MAME.
         ;;
         ;; 1c: Hit slot 6 (e.g. BIT $C0EC) to temporarily slow accelerator.
@@ -1391,7 +1392,11 @@ SOUND_PROC Silent
         ;; The assumption is that users will adjust the setting based on
         ;; factors such as acceleration/emulation speed, so use it as
         ;; the basis of a timing loop.
-        copy16  SETTINGS + DeskTopSettings::dblclick_speed, ptr
+        ;;
+        ;;  * Since we slow the machine to 1MHz while playing sound,
+        ;;    this ends up being unacceptably slow.
+
+        copy16  #kDefaultDblClickSpeed, ptr
 loop:   ldx     #48
 :       dex
         bne     :-
