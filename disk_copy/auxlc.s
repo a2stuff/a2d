@@ -26,7 +26,7 @@ kAlertMsgConfirmEraseSlotDrive  = 6 ; No bell, X = unit number
 kAlertMsgCopySuccessful         = 7 ; No bell
 kAlertMsgCopyFailure            = 8 ; No bell
 kAlertMsgInsertSourceOrCancel   = 9 ; No bell, *
-kAlertMsgInsertDestionationOrCancel = 10 ; No bell, *
+kAlertMsgInsertDestinationOrCancel = 10 ; No bell, *
 ;;; "Bell" or "No bell" determined by the `MaybeBell` proc.
 ;;; * = the 'InsertXOrCancel' variants are selected automatically when
 ;;; InsertX is specified if X flag is non-zero, and the unit number in
@@ -2097,7 +2097,7 @@ alert_table:
         .byte   kAlertMsgCopySuccessful
         .byte   kAlertMsgCopyFailure
         .byte   kAlertMsgInsertSourceOrCancel
-        .byte   kAlertMsgInsertDestionationOrCancel
+        .byte   kAlertMsgInsertDestinationOrCancel
         ASSERT_TABLE_SIZE alert_table, auxlc::kNumAlertMessages
 
 message_table:
@@ -2125,7 +2125,7 @@ alert_button_options_table:
         .byte   AlertButtonOptions::Ok          ; kAlertMsgCopySuccessful
         .byte   AlertButtonOptions::Ok          ; kAlertMsgCopyFailure
         .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertSourceOrCancel
-        .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertDestionationOrCancel
+        .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertDestinationOrCancel
         ASSERT_TABLE_SIZE alert_button_options_table, auxlc::kNumAlertMessages
 
 alert_options_table:
@@ -2139,7 +2139,7 @@ alert_options_table:
         .byte   0                       ; kAlertMsgCopySuccessful
         .byte   0                       ; kAlertMsgCopyFailure
         .byte   0                       ; kAlertMsgInsertSourceOrCancel
-        .byte   0                       ; kAlertMsgInsertDestionationOrCancel
+        .byte   0                       ; kAlertMsgInsertDestinationOrCancel
         ASSERT_TABLE_SIZE alert_options_table, auxlc::kNumAlertMessages
 
 .params alert_params
@@ -2172,7 +2172,7 @@ start:
         beq     find_in_alert_table
         jsr     IsDriveEjectable
         beq     :+              ; nope
-        lda     #kAlertMsgInsertDestionationOrCancel
+        lda     #kAlertMsgInsertDestinationOrCancel
         bne     find_in_alert_table ; always
 :       lda     #kAlertMsgInsertDestination
         bne     find_in_alert_table ; always

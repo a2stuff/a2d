@@ -532,7 +532,7 @@ penXOR:         .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 
 ;;; ============================================================
-;;; Output: Z=1 if ok, Z=0 / A = MGTK::Error on errr
+;;; Output: Z=1 if ok, Z=0 / A = MGTK::Error on error
 
 .proc SetPort
         MGTK_CALL MGTK::GetWinPort, getwinport_params

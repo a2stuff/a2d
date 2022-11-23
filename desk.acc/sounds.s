@@ -1371,14 +1371,15 @@ SOUND_PROC Silent
         ;;     hardware (IIgs, Mac IIe Card, IIc+, Laser, add-ons, ...)
         ;;     like NORMFAST does it.
         ;;
-        ;;   * This is overkill, and doesn't slow emulators.
+        ;;   * This now happens by default on some systems, c/o
+        ;;     general beep slowdown. See `lib/sounds.s`
+        ;;   * This doesn't slow emulators.
         ;;
         ;; 1b: Touching the speaker quickly (i.e. STA SPKR twice), to
-        ;;      temporarily slow accelerators; this is inadible on real
+        ;;      temporarily slow accelerators; this is inaudible on real
         ;;      hardware.
         ;;
-        ;;   * This causes Virtual ][ to stop playing sounds for a bit (!)
-        ;;   * (2) This has an audible click in MAME (!)
+        ;;   * This has an audible click in MAME.
         ;;
         ;; 1c: Hit slot 6 (e.g. BIT $C0EC) to temporarily slow accelerator.
         ;; 1d: Hit PTRIG to temporarily slow accelerator.
