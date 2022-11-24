@@ -2942,10 +2942,13 @@ CmdLock         := DoLock
         ;; If selection is in a window with View > by Name, refresh
         jsr     GetSelectionViewBy
         cmp     #kViewByName
-        bne     :+
-        txa
-        jmp     ViewByCommon::entry2
-:
+    IF_EQ
+        txa                     ; X = window id
+        jsr     ViewByCommon::entry2
+    ELSE
+        ;; Scrollbars may need adjusting
+        jsr     ScrollUpdate
+    END_IF
 
         bit     result
         bpl     :+              ; N = window renamed
@@ -15008,7 +15011,7 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Outputs: A = kViewBy* value for active window
+;;; Outputs: A = kViewBy* value for active window, X = window id
 ;;; If kViewByIcon, Z=1 and N=0; otherwise Z=0 and N=1
 
 ;;; Assert: There is an active window

@@ -33,6 +33,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Enable dropping files onto folders in inactive windows. ([#418](https://github.com/a2stuff/a2d/issues/418))
 * Pressing the Esc key cancels an in-progress drag. ([#719](https://github.com/a2stuff/a2d/issues/719))
 * Don't move icons when dragged over source window's non-content area.
+* Make sure scrollbars activate/deactivate if needed when an icon is renamed.
 
 ### Disk Copy
 
