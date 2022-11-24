@@ -2722,6 +2722,7 @@ entry3:
         jsr     CreateIconsForWindow
         jsr     StoreWindowEntryTable
         jsr     AddIconsForCachedWindow
+        jsr     AdjustViewportForNewIcons
 
         jmp     RedrawAfterContentChange
 .endproc
@@ -6996,6 +6997,7 @@ volume: ldx     cached_window_id
         bit     copy_new_window_bounds_flag
     IF_NC
         jsr     ComputeInitialWindowSize
+        jsr     AdjustViewportForNewIcons
     END_IF
 
         ;; --------------------------------------------------
@@ -7372,20 +7374,6 @@ assign_width:
         iny
         sta     (winfo_ptr),y
 
-        ;; Adjust view bounds of new window so it matches icon bounding box.
-        ;; (Only done for width because height is treated as fixed.)
-        lda     cached_window_entry_count
-    IF_NE
-        jsr     CachedIconsScreenToWindow
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
-        sub16in iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y, tmpw
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x1
-        add16in (winfo_ptr),y, tmpw, (winfo_ptr),y
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
-        add16in (winfo_ptr),y, tmpw, (winfo_ptr),y
-        jsr     CachedIconsWindowToScreen
-    END_IF
-
         ;; --------------------------------------------------
         ;; Height
 
@@ -7417,6 +7405,40 @@ assign_height:
         ;; Finished
         jsr     PopPointers     ; do not tail-call optimise!
         rts
+.endproc
+
+;;; ============================================================
+;;; For a newly populated window (new or refreshed), adjust the
+;;; viewport so that the icon bbox is in the top-left, rather
+;;; than being offset arbitrarily.
+
+;;; Inputs: `cached_window_id` is accurate
+.proc AdjustViewportForNewIcons
+        ;; Screen space
+        jsr     ComputeIconsBBox
+
+        winfo_ptr := $06
+
+        ;; No-op if window is empty
+        lda     cached_window_entry_count
+        beq     ret
+
+        lda     cached_window_id
+        jsr     WindowLookup
+        stax    winfo_ptr
+
+        ;; Adjust view bounds of new window so it matches icon bounding box.
+        ;; (Only done for width because height is treated as fixed.)
+        jsr     CachedIconsScreenToWindow
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::xcoord
+        sub16in iconbb_rect+MGTK::Rect::x1, (winfo_ptr),y, tmpw
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x1
+        add16in (winfo_ptr),y, tmpw, (winfo_ptr),y
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Rect::x2
+        add16in (winfo_ptr),y, tmpw, (winfo_ptr),y
+        jsr     CachedIconsWindowToScreen
+
+ret:    rts
 
 tmpw:   .word   0
 .endproc

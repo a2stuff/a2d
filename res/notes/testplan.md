@@ -156,7 +156,7 @@
 * Launch DeskTop. Close all windows. Special > Disk Copy. Quit back to DeskTop. Verify that no windows are restored.
 
 * Repeat the following cases for File > New Folder, File > Rename, and File > Duplicate:
-  * Launch DeskTop. Open a window (if needed) select a file. Run the command. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
+  * Launch DeskTop. Open a window and (if needed) select a file. Run the command. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
 
 * Configure a system with removable disks. (e.g. Virtual II OmniDisks) Launch DeskTop. Verify that volume icons are positioned without gaps (down from the top-right, then across the bottom right to left). Eject one of the middle volumes. Verify icon disappears. Insert a new volume. Verify icon takes up the vacated spot. Repeat test, ejecting multiple volumes verify that positions are filled in order (down from the top-right, etc).
 
@@ -447,6 +447,9 @@
   * Verify:
     * Launch DeskTop. Open a window with a file icon. Drag the icon so that the mouse pointer is over the same window's specified area. Release the mouse button. Verify that the icon does not move.
     * Launch DeskTop. Open two windows for different volumes. Drag an icon from one window over the specified area of the other window. Release the mouse button. Verify that the file is copied to the target volume.
+
+* Repeat the following cases for File > New Folder, File > Duplicate, and File > Delete:
+  * Launch DeskTop. Open a window and (if needed) select a file. Run the command. Verify that when the window is refreshed, the scrollbars are inactive or at the top/left positions.
 
 ## Shortcuts
 
