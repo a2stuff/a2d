@@ -154,7 +154,7 @@ exit:   rts
 ;;; ============================================================
 
 kDAWindowId     = 61
-kDAWidth        = 310
+kDAWidth        = 340
 kDAHeight       = 70
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kDAHeight)/2

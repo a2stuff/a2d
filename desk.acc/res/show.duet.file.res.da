@@ -1,4 +1,4 @@
 .define res_string_playing "Spiller: "
 .define res_string_credit1 "Electric Duet af Paul Lutus"
-.define res_string_credit2 "Spiller af Alexander Patalenski"
+.define res_string_credit2 "Musikafspillere af Alexander Patalenski og Cybernesto"
 .define res_string_instructions "Tryk p} en vilk}rlig tast for at stoppe afspilningen"

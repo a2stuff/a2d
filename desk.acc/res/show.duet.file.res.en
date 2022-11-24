@@ -1,4 +1,4 @@
 .define res_string_playing "Playing: "
 .define res_string_credit1 "Electric Duet by Paul Lutus"
-.define res_string_credit2 "Player by Alexander Patalenski"
+.define res_string_credit2 "Players by Alexander Patalenski and Cybernesto"
 .define res_string_instructions "Press any key to stop playing"
