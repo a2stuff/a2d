@@ -877,21 +877,40 @@ ycoord: .word   top
         .refto status
         .refto reserved
         .refto mincontwidth
-        .refto mincontlength
+        .refto mincontheight
         .refto maxcontwidth
-        .refto maxcontlength
+        .refto maxcontheight
         .refto port
+        .refto viewloc
         .refto mapbits
         .refto mapwidth
         .refto reserved2
-        .refto penpattern
+        .refto maprect
+        .refto pattern
         .refto colormasks
+        .refto penloc
         .refto penwidth
         .refto penheight
         .refto penmode
-        .refto textbg
-        .refto fontptr
+        .refto textback
+        .refto textfont
         .refto nextwinfo
+.endmacro
+
+.macro REF_GRAFPORT_MEMBERS
+        .refto viewloc
+        .refto mapbits
+        .refto mapwidth
+        .refto reserved
+        .refto maprect
+        .refto pattern
+        .refto colormasks
+        .refto penloc
+        .refto penwidth
+        .refto penheight
+        .refto penmode
+        .refto textback
+        .refto textfont
 .endmacro
 
 ;;; ------------------------------------

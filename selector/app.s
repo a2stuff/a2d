@@ -203,9 +203,9 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-mincontlength:  .word   50
+mincontheight:  .word   50
 maxcontwidth:   .word   500
-maxcontlength:  .word   140
+maxcontheight:  .word   140
 port:
         DEFINE_POINT viewloc, (::kScreenWidth - kWidth)/2, (::kScreenHeight - kHeight)/2
 mapbits:        .word   MGTK::screen_mapbits
@@ -221,6 +221,8 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .word   FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight

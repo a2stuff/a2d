@@ -544,9 +544,9 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   kDefaultWidth
-mincontlength:  .word   kDefaultHeight
+mincontheight:  .word   kDefaultHeight
 maxcontwidth:   .word   kDefaultWidth
-maxcontlength:  .word   kDefaultHeight
+maxcontheight:  .word   kDefaultHeight
 port:
         DEFINE_POINT viewloc, kDefaultLeft, kDefaultTop
 mapbits:        .addr   MGTK::screen_mapbits
@@ -562,6 +562,8 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
         winfo_viewloc_ycoord := winfo::viewloc::ycoord
 

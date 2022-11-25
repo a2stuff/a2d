@@ -221,9 +221,9 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   kDAWidth
-mincontlength:  .word   kDAHeight
+mincontheight:  .word   kDAHeight
 maxcontwidth:   .word   kDAWidth
-maxcontlength:  .word   kDAHeight
+maxcontheight:  .word   kDAHeight
 port:
         DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
@@ -239,6 +239,8 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
         DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
@@ -288,24 +290,26 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   100
-mincontlength:  .word   kHeight
+mincontheight:  .word   kHeight
 maxcontwidth:   .word   100
-maxcontlength:  .word   kHeight
+maxcontheight:  .word   kHeight
 port:
         DEFINE_POINT viewloc, kLeft, kTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
         DEFINE_POINT itempos, kListItemTextOffsetX, 0

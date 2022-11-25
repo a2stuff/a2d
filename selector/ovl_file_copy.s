@@ -850,6 +850,8 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
         DEFINE_BUTTON ok_button_rec, winfo::kWindowId, res_string_button_ok, kGlyphReturn, winfo::kWidth-20-kButtonWidth, 49
@@ -875,13 +877,15 @@ mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 340, 66
 pattern:        .res    8, $FF
-masks:          .byte   $FF, $00
+colormasks:     .byte   $FF, $00
 penloc:         .word   0, 0
-pensize:        .byte   1, 1
+penwidth:       .byte   1
+penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   FONT
-next:           .addr   0
+
+        REF_GRAFPORT_MEMBERS
 .endparams
 
 str_not_enough_room:

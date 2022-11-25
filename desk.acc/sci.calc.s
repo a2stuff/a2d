@@ -536,11 +536,12 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   kDAWidth
-mincontlength:  .word   kDAHeight
+mincontheight:  .word   kDAHeight
 maxcontwidth:   .word   kDAWidth
-maxcontlength:  .word   kDAHeight
-left:           .word   kDALeft
-top:            .word   kDATop
+maxcontheight:  .word   kDAHeight
+port:
+        DEFINE_POINT viewloc, kDALeft, kDATop
+        top := viewloc::ycoord
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
@@ -554,6 +555,8 @@ penmode:        .byte   0
 textback:       .byte   $7f
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 openwindow_params_top := winfo::top
 

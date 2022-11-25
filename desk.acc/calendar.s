@@ -86,9 +86,9 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   kDAWidth
-mincontlength:  .word   kDAHeight
+mincontheight:  .word   kDAHeight
 maxcontwidth:   .word   kDAWidth
-maxcontlength:  .word   kDAHeight
+maxcontheight:  .word   kDAHeight
 port:
         DEFINE_POINT viewloc, kDALeft, kDATop
 mapbits:        .addr   MGTK::screen_mapbits
@@ -104,6 +104,8 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
 ;;; ============================================================

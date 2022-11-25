@@ -911,7 +911,7 @@ done:   rts
 .if FD_EXTENDED
         bit     extra_controls_flag
     IF_NS
-        MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::penpattern
+        MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::pattern
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
     END_IF

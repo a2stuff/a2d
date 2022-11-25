@@ -354,9 +354,9 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   100
-mincontlength:  .word   100
+mincontheight:  .word   100
 maxcontwidth:   .word   500
-maxcontlength:  .word   500
+maxcontheight:  .word   500
 port:
         DEFINE_POINT viewloc, (kScreenWidth-kDialogWidth)/2, (kScreenHeight-kDialogHeight)/2
 mapbits:        .addr   MGTK::screen_mapbits
@@ -372,6 +372,8 @@ penmode:        .byte   MGTK::notpencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
 ;;; ============================================================

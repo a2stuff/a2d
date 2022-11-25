@@ -187,24 +187,26 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-mincontlength:  .word   50
+mincontheight:  .word   50
 maxcontwidth:   .word   500
-maxcontlength:  .word   140
+maxcontheight:  .word   140
 port:
         DEFINE_POINT viewloc, kDialogLeft, kDialogTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kDialogWidth, kDialogHeight
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
 kListBoxOffsetLeft = 20
@@ -228,23 +230,23 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   100
-mincontlength:  .word   50
+mincontheight:  .word   50
 maxcontwidth:   .word   150
-maxcontlength:  .word   150
+maxcontheight:  .word   150
 port:
         DEFINE_POINT viewloc, kListBoxLeft, kListBoxTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kListBoxWidth, kListBoxHeight
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 .endparams
 

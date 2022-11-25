@@ -38,14 +38,16 @@ mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 0, 0
-penpattern:     .res    8, 0
+pattern:        .res    8, 0
 colormasks:     .byte   0, 0
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_black
-fontptr:        .addr   0
+textback:       .byte   MGTK::textbg_black
+textfont:       .addr   0
+
+        REF_GRAFPORT_MEMBERS
 .endparams
         .assert .sizeof(window_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
 
@@ -63,7 +65,7 @@ subid:          .byte   $EA     ; ROM FBC0 ($EA = IIe, $E0 = IIe enh/IIgs, $00 =
 op_sys:         .byte   0       ; 0=ProDOS
 slot_num:       .byte   0       ; Mouse slot, 0 = search
 use_interrupts: .byte   0       ; 0=passive
-sysfontptr:     .addr   DEFAULT_FONT
+systextfont:    .addr   DEFAULT_FONT
 savearea:       .addr   SAVE_AREA_BUFFER
 savesize:       .word   kSaveAreaSize
 .endparams
@@ -169,23 +171,23 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-mincontlength:  .word   50
+mincontheight:  .word   50
 maxcontwidth:   .word   500
-maxcontlength:  .word   140
+maxcontheight:  .word   140
 port:
         DEFINE_POINT viewloc, aux::kPromptDialogLeft, aux::kPromptDialogTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 
         REF_WINFO_MEMBERS
@@ -238,23 +240,23 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-mincontlength:  .word   50
+mincontheight:  .word   50
 maxcontwidth:   .word   500
-maxcontlength:  .word   140
+maxcontheight:  .word   140
 port:
         DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 
         REF_WINFO_MEMBERS
@@ -280,23 +282,23 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-mincontlength:  .word   50
+mincontheight:  .word   50
 maxcontwidth:   .word   500
-maxcontlength:  .word   140
+maxcontheight:  .word   140
 port:
         DEFINE_POINT viewloc, (kScreenWidth - kWidth) / 2, (kScreenHeight - kHeight) / 2
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 
         REF_WINFO_MEMBERS
@@ -708,23 +710,23 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   170
-mincontlength:  .word   50
+mincontheight:  .word   50
 maxcontwidth:   .word   545
-maxcontlength:  .word   175
+maxcontheight:  .word   175
 port:
         DEFINE_POINT viewloc, 20, 27
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, 440, 120
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   DEFAULT_FONT
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
 
         REF_WINFO_MEMBERS

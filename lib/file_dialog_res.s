@@ -117,23 +117,23 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   150
-mincontlength:  .word   50
+mincontheight:  .word   50
 maxcontwidth:   .word   500
-maxcontlength:  .word   140
+maxcontheight:  .word   140
 port:
         DEFINE_POINT viewloc, kFilePickerDlgLeft, kFilePickerDlgTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kFilePickerDlgWidth, kFilePickerDlgHeight
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   FONT
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   FONT
 nextwinfo:      .addr   0
 
         REF_WINFO_MEMBERS
@@ -166,23 +166,23 @@ vthumbpos:      .byte   0
 status:         .byte   0
 reserved:       .byte   0
 mincontwidth:   .word   100
-mincontlength:  .word   kHeight
+mincontheight:  .word   kHeight
 maxcontwidth:   .word   100
-maxcontlength:  .word   kHeight
+maxcontheight:  .word   kHeight
 port:
         DEFINE_POINT viewloc, kLeft, kTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kWidth, kHeight
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textbg:         .byte   MGTK::textbg_white
-fontptr:        .addr   FONT
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   FONT
 nextwinfo:      .addr   0
 
         REF_WINFO_MEMBERS
