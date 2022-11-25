@@ -313,6 +313,10 @@ ref_num:        .byte   rn
     .else
 ref_num:        .byte   0
     .endif
+        .refto param_count
+        .refto pathname
+        .refto io_buffer
+        .refto ref_num
 .endparams
 .endmacro
 
@@ -323,6 +327,11 @@ ref_num:        .byte   0
 data_buffer:    .addr   db
 request_count:  .word   rc
 trans_count:    .word   0
+        .refto param_count
+        .refto ref_num
+        .refto data_buffer
+        .refto request_count
+        .refto trans_count
 .endparams
 .endmacro
 
@@ -333,6 +342,11 @@ ref_num:        .byte   0
 data_buffer:    .addr   db
 request_count:  .word   rc
 trans_count:    .word   0
+        .refto param_count
+        .refto ref_num
+        .refto request_count
+        .refto data_buffer
+        .refto trans_count
 .endparams
 .endmacro
 
@@ -340,6 +354,8 @@ trans_count:    .word   0
 .params name
 param_count:    .byte   1
 ref_num:        .byte   0
+        .refto param_count
+        .refto ref_num
 .endparams
 .endmacro
 
@@ -347,6 +363,8 @@ ref_num:        .byte   0
 .params name
 param_count:    .byte   1
 ref_num:        .byte   0
+        .refto param_count
+        .refto ref_num
 .endparams
 .endmacro
 
@@ -367,6 +385,17 @@ mod_date:       .word   0
 mod_time:       .word   0
 create_date:    .word   0
 create_time:    .word   0
+        .refto param_count
+        .refto pathname
+        .refto access
+        .refto file_type
+        .refto aux_type
+        .refto storage_type
+        .refto blocks_used
+        .refto mod_date
+        .refto mod_time
+        .refto create_date
+        .refto create_time
 .endparams
 .endmacro
 
@@ -375,6 +404,9 @@ create_time:    .word   0
 param_count:    .byte   2
 ref_num:        .byte   0
 position:       .faraddr pos
+        .refto param_count
+        .refto ref_num
+        .refto position
 .endparams
 .endmacro
 
@@ -389,6 +421,9 @@ unit_num:       .byte   0
     .endif
 
 data_buffer:    .addr   db
+        .refto param_count
+        .refto unit_num
+        .refto data_buffer
 .endparams
 .endmacro
 
@@ -398,6 +433,10 @@ param_count:    .byte   3
 unit_num:       .byte   0
 data_buffer:    .addr   db
 block_num:      .word   bn
+        .refto param_count
+        .refto unit_num
+        .refto data_buffer
+        .refto block_num
 .endparams
 .endmacro
 
@@ -408,6 +447,10 @@ param_count:    .byte   3
 unit_num:       .byte   0
 data_buffer:    .addr   db
 block_num:      .word   bn
+        .refto param_count
+        .refto unit_num
+        .refto data_buffer
+        .refto block_num
 .endparams
 .endmacro
 
@@ -416,6 +459,9 @@ block_num:      .word   bn
 param_count:    .byte   2
 int_num:        .byte   0
 int_code:       .addr   ic
+        .refto param_count
+        .refto int_num
+        .refto int_code
 .endparams
 .endmacro
 
@@ -423,6 +469,8 @@ int_code:       .addr   ic
 .params dealloc_interrupt_params
 param_count:    .byte   1
 int_num:        .byte   0
+        .refto param_count
+        .refto int_num
 .endparams
 .endmacro
 
@@ -441,6 +489,7 @@ param_count:    .byte   4
     .endif
         .byte   0
         .word   0
+        .refto param_count
 .endparams
 .endmacro
 
@@ -452,6 +501,8 @@ param_count:    .byte   4
 .params name
 param_count:    .byte   1
 pathname:       .addr   pn
+        .refto param_count
+        .refto pathname
 .endparams
 .endmacro
 
@@ -463,6 +514,8 @@ pathname:       .addr   pn
 .params name
 param_count:    .byte   1
 pathname:       .addr   pn
+        .refto param_count
+        .refto pathname
 .endparams
 .endmacro
 
@@ -474,6 +527,8 @@ pathname:       .addr   pn
 .params name
 param_count:    .byte   1
 pathname:       .addr   pn
+        .refto param_count
+        .refto pathname
 .endparams
 .endmacro
 
@@ -512,6 +567,14 @@ storage_type:   .byte   0
 
 create_date:    .word   0
 create_time:    .word   0
+        .refto param_count
+        .refto pathname
+        .refto access
+        .refto file_type
+        .refto aux_type
+        .refto storage_type
+        .refto create_date
+        .refto create_time
 .endparams
 .endmacro
 
@@ -520,6 +583,9 @@ create_time:    .word   0
 param_count:    .byte   2
 ref_num:        .byte   0
 eof:            .faraddr eo
+        .refto param_count
+        .refto ref_num
+        .refto eof
 .endparams
 .endmacro
 
@@ -528,6 +594,9 @@ eof:            .faraddr eo
 param_count:    .byte   2
 ref_num:        .byte   0
 eof:            .faraddr 0
+        .refto param_count
+        .refto ref_num
+        .refto eof
 .endparams
 .endmacro
 
@@ -540,5 +609,8 @@ eof:            .faraddr 0
 param_count:    .byte   2
 pathname:       .addr   pn
 new_pathname:   .addr   np
+        .refto param_count
+        .refto pathname
+        .refto new_pathname
 .endparams
 .endmacro

@@ -46,6 +46,12 @@ a_buf:          .addr   buf
 max_length:     .byte   maxlen
 dirty_flag:     .byte   0
         .res    .sizeof(LETK::LineEditRecord) - (*-window_id)
+
+        .refto window_id
+        .refto a_buf
+        .refto max_length
+        .refto dirty_flag
+
 .endparams
 .assert .sizeof(name) = .sizeof(LETK::LineEditRecord), error, "struct size"
 .endmacro
@@ -93,6 +99,13 @@ coords  := * + 0
 xcoord  := * + 0
 ycoord  := * + 2
         .res 4
+
+        .refto record
+        .refto key
+        .refto modifiers
+        .refto coords
+        .refto xcoord
+        .refto ycoord
 .endparams
 .endmacro
 

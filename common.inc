@@ -311,5 +311,10 @@ x1:     .word   kBorderDX
 y1:     .word   kBorderDY
 x2:     .word   ((width) - kBorderDX*2 + 1)
 y2:     .word   ((height) - kBorderDY*2 + 1)
+
+        .refto x1
+        .refto y1
+        .refto x2
+        .refto y2
 .endscope
 .endmacro

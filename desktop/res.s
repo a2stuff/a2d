@@ -187,6 +187,8 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
         kDialogLabelDefaultX    =  40
@@ -254,6 +256,8 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
 ;;; ============================================================
@@ -294,6 +298,8 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
 pensize_normal: .byte   1, 1
@@ -720,6 +726,8 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
 buflabel:       .res    16, 0

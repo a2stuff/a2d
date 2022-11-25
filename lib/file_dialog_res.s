@@ -142,6 +142,8 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
 ;;; Listbox within File Picker Dialog
@@ -189,6 +191,8 @@ penmode:        .byte   MGTK::pencopy
 textbg:         .byte   MGTK::textbg_white
 fontptr:        .addr   FONT
 nextwinfo:      .addr   0
+
+        REF_WINFO_MEMBERS
 .endparams
 
 ;;; ============================================================

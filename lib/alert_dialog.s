@@ -160,6 +160,10 @@ str_label:      PASCAL_STRING {label}
 .ifnblank shortcut
 str_shortcut:   PASCAL_STRING {shortcut}
 .endif
+
+        .refto a_label
+        .refto a_shortcut
+        .refto rect
 .endparams
 .endmacro
 

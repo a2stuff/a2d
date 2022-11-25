@@ -57,6 +57,12 @@ a_shortcut:     .addr   0
 state:          .byte   0
         .res    .sizeof(BTK::ButtonRecord) - (*-window_id)
 
+        .refto window_id
+        .refto a_label
+        .refto a_shortcut
+        .refto rect
+        .refto state
+
         ;; TODO: Use a string pool for these, somehow
 .ifnblank label
 str_label:      PASCAL_STRING {label}
@@ -64,7 +70,6 @@ str_label:      PASCAL_STRING {label}
 .ifnblank shortcut
 str_shortcut:   PASCAL_STRING shortcut
 .endif
-
 .endparams
 .endmacro
 
@@ -103,6 +108,8 @@ CheckboxUpdate  = $07           ; Update a checkbox button after a click
 .params name
 record: .addr   rec
 update: .byte   0
+        .refto record
+        .refto update
 .endparams
 .endmacro
 

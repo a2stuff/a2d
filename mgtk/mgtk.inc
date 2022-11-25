@@ -732,6 +732,13 @@ y1:     .word   top
 bottomright:
 x2:     .word   right
 y2:     .word   bottom
+        .refto ident
+        .refto topleft
+        .refto x1
+        .refto y1
+        .refto bottomright
+        .refto x2
+        .refto y2
 .endscope
 .endmacro
 
@@ -745,6 +752,13 @@ y1:     .word   top
 bottomright:
 x2:     .word   ((left) + (width))
 y2:     .word   ((top) + (height))
+        .refto ident
+        .refto topleft
+        .refto x1
+        .refto y1
+        .refto bottomright
+        .refto x2
+        .refto y2
 .endscope
 .endmacro
 
@@ -758,6 +772,13 @@ y1:     .word   top
 bottomright:
 x2:     .word   ((width) - (left))
 y2:     .word   ((height) - (top))
+        .refto ident
+        .refto topleft
+        .refto x1
+        .refto y1
+        .refto bottomright
+        .refto x2
+        .refto y2
 .endscope
 .endmacro
 
@@ -768,6 +789,9 @@ y2:     .word   ((height) - (top))
 .scope ident
 xcoord: .word   left
 ycoord: .word   top
+        .refto ident
+        .refto xcoord
+        .refto ycoord
 .endscope
 .endmacro
 
@@ -833,6 +857,41 @@ ycoord: .word   top
         .byte   19                      ; char1 - Ctrl+S for separator ???
         .byte   0                       ; char2
         .addr   0                       ; item_str_pointer
+.endmacro
+
+;;; ------------------------------------
+
+;;; Suppress "Warning: Sumbol 'xxx' is defined but never used"
+;;; when using a param block to define a Winfo structure.
+;;; (Note: Not seen in the default warning level for builds.)
+.macro REF_WINFO_MEMBERS
+        .refto window_id
+        .refto options
+        .refto title
+        .refto hscroll
+        .refto vscroll
+        .refto hthumbpos
+        .refto vthumbpos
+        .refto hthumbmax
+        .refto vthumbmax
+        .refto status
+        .refto reserved
+        .refto mincontwidth
+        .refto mincontlength
+        .refto maxcontwidth
+        .refto maxcontlength
+        .refto port
+        .refto mapbits
+        .refto mapwidth
+        .refto reserved2
+        .refto penpattern
+        .refto colormasks
+        .refto penwidth
+        .refto penheight
+        .refto penmode
+        .refto textbg
+        .refto fontptr
+        .refto nextwinfo
 .endmacro
 
 ;;; ------------------------------------

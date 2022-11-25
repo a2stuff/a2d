@@ -1184,6 +1184,7 @@ __depth__ .set 0
         .ident(.sprintf("__else__%d", ::__depth__)) := *
     .endif
         .ident(.sprintf("__endif__%d", ::__depth__)) := *
+        .refto .ident(.sprintf("__endif__%d", ::__depth__))
 .endscope
         ::__depth__ .set ::__depth__ - 1
 .endmacro
@@ -1202,5 +1203,6 @@ __depth__ .set 0
 
 .macro JT_ENTRY name
         name := __jt_addr__
+        .refto name
         __jt_addr__ .set __jt_addr__ + 3
 .endmacro

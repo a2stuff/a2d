@@ -2125,8 +2125,6 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 ;;; ============================================================
 
 .proc CmdClose
-        icon_ptr := $06
-
         lda     active_window_id
         bne     :+
         rts
@@ -2212,8 +2210,6 @@ a_path: .addr   0
 .endparams
 
 .proc CmdNewFolderImpl
-
-        ptr := $06
 
         ;; access = destroy/rename/write/read
         DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
@@ -3135,7 +3131,7 @@ update: jsr     ClearSelection
         jsr     SelectIcon
 
 done:   lda     #0
-ret:    rts
+        rts
 
         num_filenames := $1800
         table := $1801
@@ -10426,8 +10422,6 @@ index:  .byte   0               ; index in selected icon list
 ;;; Get Info
 
 .proc DoGetInfo
-        ptr := $6
-
         lda     selected_icon_count
         bne     :+
         rts
