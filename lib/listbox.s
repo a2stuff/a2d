@@ -118,9 +118,11 @@
 ;;; ============================================================
 ;;; Handle scroll bar
 
+.if !LB_SELECTION_ENABLED
 ;;; Values not part of MGTK::Part enum, but used for keyboard shortcuts
 kPartHome = $80
 kPartEnd  = $81
+.endif
 
 .proc _HandleListScrollWithPart
         sta     findcontrol_params::which_part

@@ -218,9 +218,6 @@ special_menu:
         DEFINE_BUTTON all_button_rec, kPromptWindowId, res_string_prompt_button_all,, 320, kPromptDialogHeight-19,40,kButtonHeight
         DEFINE_BUTTON_PARAMS all_button_params, all_button_rec
 
-textbg_black:  .byte   $00
-textbg_white:  .byte   $7F
-
 ;;; ============================================================
 
 kDialogLabelHeight      = kSystemFontHeight

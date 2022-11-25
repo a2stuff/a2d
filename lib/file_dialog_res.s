@@ -72,14 +72,7 @@ kMaxNameWidth = 140
         DEFINE_POINT button_sep_end,   kButtonsLeft + kButtonWidth, kButtonSepY
 
 penXOR:         .byte   MGTK::penXOR
-penOR:          .byte   MGTK::penOR
-pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
-
-textbg1:
-        .byte   0
-textbg2:
-        .byte   $7F
 
 checkerboard_pattern:
         .byte   $55, $AA, $55, $AA, $55, $AA, $55, $AA

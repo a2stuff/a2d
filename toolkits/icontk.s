@@ -1781,10 +1781,12 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         ;; Get current clip rect
         port_ptr := $06
         MGTK_CALL MGTK::GetPort, port_ptr
-        ldy     #.sizeof(MGTK::MapInfo)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+        ldy     #MGTK::MapInfo::maprect + .sizeof(MGTK::Rect)-1
 :       lda     (port_ptr),y
-        sta     mapinfo,y
+        sta     rect,x
         dey
+        dex
         bpl     :-
 
         ;; Loop over all icons
@@ -1819,13 +1821,9 @@ next:   pla
 
 done:   rts
 
-        ;; GetPortBits params
-mapinfo:
-        .tag    MGTK::MapInfo
-
         ;; IconTK::DrawIconRaw and IconTK::IconInRect params
-icon    := mapinfo + MGTK::MapInfo::maprect - 1
-rect    := mapinfo + MGTK::MapInfo::maprect
+icon:   .byte   0
+rect:   .tag    MGTK::Rect
 
 .endproc
 

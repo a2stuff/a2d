@@ -69,9 +69,6 @@ windowy := * + 7
         .assert screenx = event_params::xcoord, error, "param mismatch"
         .assert screeny = event_params::ycoord, error, "param mismatch"
 .endproc
-;;; Needed for case where this file appears after code:
-screentowindow_window_id := screentowindow_params::window_id
-screentowindow_window := screentowindow_params::window
 
 .params dragwindow_params
 window_id      := *
