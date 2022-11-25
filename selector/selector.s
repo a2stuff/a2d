@@ -1,12 +1,13 @@
         .include "../config.inc"
 
+        BTK_SHORT = 1
+
         .include "apple2.inc"
         .include "opcodes.inc"
         .include "../inc/macros.inc"
         .include "../inc/apple2.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
-        .include "../toolkits/letk.inc"
         .include "../toolkits/btk.inc"
         .include "../common.inc"
 
@@ -58,7 +59,7 @@ _segoffset .set 0
         DEFSEG SegmentAlert,      $D000,        $0800
 
 ;;; Dynamically loaded overlays
-        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1500
+        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1100
         DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0C00
 
 ;;; ============================================================

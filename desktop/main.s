@@ -5862,7 +5862,7 @@ rloop:  lda     #SELF_MODIFIED_BYTE
         ldy     #IconEntry::record_num
         lda     (ptr),y
 
-        jsr     DrawListViewRowZeroBased
+        jsr     DrawListViewRow
         inc     rows_done
         jmp     rloop
 
@@ -7820,56 +7820,6 @@ next:   inc     icon_num
 .endproc
 
 ;;; ============================================================
-;;; Compute dimensions of window
-;;; Input: A = window
-;;; Output: A,X = width, Y = height
-
-.proc ComputeWindowDimensions
-        ptr := $06
-
-        jsr     WindowLookup
-        stax    ptr
-
-        ;; Copy window's maprect
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
-        ldx     #.sizeof(MGTK::Rect)-1
-:       lda     (ptr),y
-        sta     rect,x
-        dey
-        dex
-        bpl     :-
-
-        ;; Push delta-X
-        lda     rect+MGTK::Rect::x2
-        sec
-        sbc     rect+MGTK::Rect::x1
-        pha
-        lda     rect+MGTK::Rect::x2+1
-        sbc     rect+MGTK::Rect::x1+1
-        pha
-
-        ;; Push delta-Y
-        lda     rect+MGTK::Rect::y2
-        sec
-        sbc     rect+MGTK::Rect::y1
-        pha
-        lda     rect+MGTK::Rect::y2+1
-        sbc     rect+MGTK::Rect::y1+1
-        ;; high byte is discarded
-
-        pla
-        tay
-        pla
-        tax
-        pla
-
-        rts
-
-        DEFINE_RECT rect, 0, 0, 0, 0
-
-.endproc
-
-;;; ============================================================
 ;;; Prepares a window's set of entries - before icon creation
 ;;; (or in views without icons) these are `FileRecord` indexes.
 ;;; In list views these are subsequently sorted. When icons are
@@ -8157,12 +8107,6 @@ found:  txa
 
         ptr := $06
 
-        ;; Compute address of (A-1)th file record
-        tax                     ; 1-based to 0-based
-        dex
-        txa
-
-ep_zero_based:
         .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
         jsr     ATimes32      ; A,X = A * 32
         addax   file_record_ptr, ptr
@@ -8209,7 +8153,6 @@ draw_text:
         MGTK_CALL MGTK::DrawText, text_buffer2
         rts
 .endproc
-DrawListViewRowZeroBased := DrawListViewRow::ep_zero_based
 
 ;;; ============================================================
 
@@ -8892,23 +8835,6 @@ saved_portbits:
         dex
         bpl     :-
 
-        rts
-.endproc
-
-;;; ============================================================
-;;; Zero out and then select `null_grafport`.
-
-.proc PrepareNullGrafPort
-        MGTK_CALL MGTK::InitPort, null_grafport
-        lda     #0
-        tax
-:       sta     null_grafport+MGTK::GrafPort::maprect+MGTK::Rect::topleft,x
-        sta     null_grafport+MGTK::GrafPort::viewloc+MGTK::Point::xcoord,x
-        sta     null_grafport+MGTK::GrafPort::maprect+MGTK::Rect::bottomright,x
-        inx
-        cpx     #.sizeof(MGTK::Point)
-        bne     :-
-        MGTK_CALL MGTK::SetPort, null_grafport
         rts
 .endproc
 
@@ -14048,8 +13974,6 @@ GetSizeDialogProc::do_count := *
 
 .proc NewFolderDialogProc
 
-        kParentPathLeft = 55
-
         jsr     CopyDialogParamAddrToPtr
         ldy     #new_folder_dialog_params::phase - new_folder_dialog_params
         lda     ($06),y
@@ -15200,7 +15124,6 @@ exit:   rts
 
 .proc WriteWindowInfo
         path_ptr := $0A
-        bounds := tmp_rect
 
         ;; Find name
         ldy     #MGTK::Winfo::window_id

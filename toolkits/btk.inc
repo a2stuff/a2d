@@ -83,6 +83,7 @@ Hilite          = $02           ; Redraw label (after state change)
 Track           = $03           ; Handle click within control bounds
 ;;; .addr       record
 
+.ifndef BTK_SHORT
 RadioDraw       = $04           ; Draw a radio button (and update hit rect)
 ;;; .addr       record
 
@@ -94,7 +95,7 @@ CheckboxDraw    = $06           ; Draw a checkbox button (and update hit rect)
 
 CheckboxUpdate  = $07           ; Update a checkbox button after a click
 ;;; .addr       record
-
+.endif
 
 .endscope ; BTK
 

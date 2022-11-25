@@ -341,6 +341,8 @@ loop:   cpx     #kMaxIconCount+1 ; allow up to the maximum
 end:
 
         ITK_CALL IconTK::InitToolKit, itkinit_params
+
+        FALL_THROUGH_TO CreateTrashIcon
 .endscope
 
 ;;; ============================================================
@@ -379,7 +381,8 @@ end:
         bne     :-
         lda     trash_name,x
         sta     (ptr),y
-        ;; fall through
+
+        FALL_THROUGH_TO LoadSelectorList
 .endproc
 
 ;;; ============================================================

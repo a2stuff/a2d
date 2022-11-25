@@ -71,8 +71,6 @@ start:  jsr     OpenWindow
 ;;; Required proc definitions:
 YieldLoop               := app::YieldLoop
 DetectDoubleClick       := app::DetectDoubleClick
-ModifierDown            := app::ModifierDown
-ShiftDown               := app::ShiftDown
 
 ;;; Required macro definitions:
         .include "../lib/file_dialog.s"
@@ -105,9 +103,6 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
          ADJUSTCASE_IO_BUFFER := $1C00
         .include "../lib/adjustfilecase.s"
         .include "../lib/muldiv.s"
-
-        .include "../toolkits/letk.s"
-        LETKEntry := letk::LETKEntry
 
 ;;; ============================================================
 

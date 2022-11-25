@@ -1,5 +1,7 @@
         .include "../config.inc"
 
+        BTK_SHORT = 1
+
         .include "apple2.inc"
         .include "opcodes.inc"
         .include "../inc/apple2.inc"

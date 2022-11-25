@@ -1030,7 +1030,7 @@ params: .res    3
 
 ;;; ============================================================
 
-dialog_shortcuts:
+.proc dialog_shortcuts
         lda     event_params::key
         cmp     #kShortcutReadDisk
         beq     LDC09
@@ -1045,7 +1045,8 @@ LDC2D:  cmp     #CHAR_RETURN
         return  #$00
     END_IF
 
-LDCA9:  return  #$FF
+        return  #$FF
+.endproc
 
 ;;; ============================================================
 
@@ -1199,7 +1200,6 @@ l3:     lda     #$3A
         saved_ram_drvec   := main__saved_ram_drvec
         .include "../lib/disconnect_ram.s"
 
-        BTK_SHORT = 1
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry
 

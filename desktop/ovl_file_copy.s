@@ -7,8 +7,6 @@
 .proc FileCopyOverlay
         .org ::kOverlayFileCopyAddress
 
-        MGTKEntry := MGTKRelayImpl
-
 ;;; Called back from file dialog's `Start`
 .proc Init
         copy    #0, file_dialog::extra_controls_flag

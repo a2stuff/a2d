@@ -5092,7 +5092,6 @@ fail:   EXIT_CALL MGTK::Error::desktop_already_initialized
 
 .proc GetEventImpl
         sec
-peek_entry:
         php
         bit     use_interrupts
         bpl     :+
@@ -5131,9 +5130,6 @@ ret:    plp
         cli
 :       rts
 .endproc
-
-GetEventImpl_peek_entry := GetEventImpl::peek_entry
-
 
 ;;; ============================================================
 

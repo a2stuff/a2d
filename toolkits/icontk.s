@@ -832,7 +832,7 @@ moved:
         sub16   findwindow_params::mousey, coords1y, poly_dy
         COPY_STRUCT MGTK::Point, findwindow_params, coords1
 
-L9B52:  jsr     XdrawOutline
+        jsr     XdrawOutline
         copy16  polybuf_addr, $08
 L9B60:  ldy     #2
 L9B62:  add16in ($08),y, poly_dx, ($08),y

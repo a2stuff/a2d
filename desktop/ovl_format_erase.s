@@ -495,7 +495,7 @@ done:   return  #$FF
         pla
 set:    sta     selected_device_index
         jsr     HighlightVolumeLabel
-done:   return  #$FF
+        return  #$FF
 .endproc
 
 ;;; ============================================================
@@ -536,7 +536,7 @@ loop:   sec
 
 set:    sta     selected_device_index
         jsr     HighlightVolumeLabel
-done:   return  #$FF
+        return  #$FF
 .endproc
 
 ;;; ============================================================
@@ -1005,7 +1005,7 @@ gowrite:
         cmp     write_block_params::block_num
         bcs     bitmaploop
 
-success:
+        ;; Success
         lda     #$00
         sta     $08
         clc

@@ -16,7 +16,6 @@
 ;;; Requires the following proc definitions:
 ;;; * `CheckMouseMoved`
 ;;; * `ModifierDown`
-;;; * `ShiftDown`
 ;;; * `YieldLoop`
 ;;; Requires the following data definitions:
 ;;; * `getwinport_params`
@@ -24,7 +23,6 @@
 ;;;
 ;;; If `FD_EXTENDED` is defined as 1:
 ;;; * lib/line_edit_res.s is required to be previously included
-;;; * `buf_text` must be defined
 ;;; * name field at bottom and extra clickable controls on right are supported
 ;;; * title passed to `DrawTitleCentered` in aux, `AuxLoad` is used
 
@@ -194,7 +192,7 @@ extra_controls_flag:
         cmp     #MGTK::EventKind::button_down
         bne     :+
         copy    #0, type_down_buf
-is_btn: jsr     HandleButtonDown
+        jsr     HandleButtonDown
         jmp     EventLoop
 
 :       cmp     #MGTK::EventKind::key_down
@@ -759,7 +757,6 @@ len:    .byte   0
 .endproc
 
 index:  .byte   0
-char:   .byte   0
 
 .endproc ; CheckAlpha
 
@@ -811,48 +808,6 @@ char:   .byte   0
         bcs     done
         and     #(CASE_MASK & $7F) ; convert lowercase to uppercase
 done:   rts
-.endproc
-
-;;; ============================================================
-
-;;; Input: A=character
-;;; Output: C=0 if control, C=1 if not
-.proc IsControlChar
-        cmp     #CHAR_DELETE
-        bcs     yes
-
-        cmp     #' '
-        bcc     yes
-        rts                     ; C=1
-
-yes:    clc                     ; C=0
-        rts
-.endproc
-
-;;; ============================================================
-
-;;; Input: A=character
-;;; Output: C=0 if valid path character, C=1 otherwise
-.proc IsPathChar
-        jsr     UpcaseChar
-        cmp     #'A'
-        bcc     :+
-        cmp     #'Z'+1
-        bcc     yes
-:       cmp     #'0'
-        bcc     :+
-        cmp     #'9'+1
-        bcc     yes
-:       cmp     #'.'
-        beq     yes
-        cmp     #'/'
-        beq     yes
-
-        sec
-        rts
-
-yes:    clc
-        rts
 .endproc
 
 ;;; ============================================================
@@ -1179,7 +1134,6 @@ last:   .byte   0
 ;;; Output: Z=1 on success, Z=1 on failure
 
 .proc OpenDir
-retry:
         MLI_CALL OPEN, open_params
         bne     ret
         lda     open_params::ref_num
@@ -1746,34 +1700,6 @@ d1:     .byte   0
 d2:     .res    16, 0
 .endproc
 .endif
-
-;;; ============================================================
-;;; Input: A = Selection, or $FF if none
-;;; Output: top index to show so selection is in view
-
-.proc CalcTopIndex
-        bpl     has_sel
-        return  #0
-
-has_sel:
-        cmp     file_dialog_res::winfo_listbox::vthumbpos
-    IF_LT
-        rts
-    END_IF
-
-        sec
-        sbc     #file_dialog_res::kListRows-1
-        bmi     no_change
-        cmp     file_dialog_res::winfo_listbox::vthumbpos
-        beq     no_change
-    IF_GE
-        rts
-    END_IF
-
-no_change:
-        lda     file_dialog_res::winfo_listbox::vthumbpos
-        rts
-.endproc
 
 ;;; ============================================================
 ;;; Text Edit Control

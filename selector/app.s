@@ -366,8 +366,6 @@ entry:
 .proc AppInit
         cli
 
-        copy    BUTN2, pb2_initial_state
-
         ;; Detect IIgs
         sec
         jsr     IDROUTINE       ; clear C if IIgs
@@ -947,9 +945,7 @@ secondary:
 finish: lda     index
         jmp     HandleEntryClick
 
-L959D:  .byte   0
 index:  .byte   0
-L959F:  .byte   0
 
 .endproc
 
@@ -2351,58 +2347,6 @@ loop_counter:
 .endproc
 
 ;;; ============================================================
-;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
-;;; Output: A=high bit/N flag set if either is down.
-
-.proc ModifierDown
-        lda     BUTN0
-        ora     BUTN1
-        rts
-.endproc
-
-;;; Test if shift is down (if it can be detected).
-;;; Output: A=high bit/N flag set if down.
-
-.proc ShiftDown
-        bit     is_iigs_flag
-        bpl     TestShiftMod    ; no, rely on shift key mod
-
-        lda     KEYMODREG       ; On IIgs, use register instead
-        and     #%00000001      ; bit 7 = Command (OA), bit 0 = Shift
-        bne     :+
-        rts
-
-:       lda     #$80
-        rts
-.endproc
-
-;;; Compare the shift key mod state. Returns high bit set if
-;;; not the initial state (i.e. Shift key is likely down), if
-;;; detectable.
-
-.proc TestShiftMod
-        ;; If a IIe, maybe use shift key mod
-        ldx     ZIDBYTE         ; $00 = IIc/IIc+
-        ldy     IDBYTELASER128  ; $AC = Laser 128
-        lda     #0
-        cpx     #0              ; ZIDBYTE = $00 == IIc/IIc+
-        beq     :+
-        cpy     #$AC            ; IDBYTELASER128 = $AC = Laser 128
-        beq     :+              ; On Laser, BUTN2 set when mouse button clicked
-
-        ;; It's a IIe, compare shift key state
-        lda     pb2_initial_state ; if shift key mod installed, %1xxxxxxx
-        eor     BUTN2             ; ... and if shift is down, %0xxxxxxx
-
-:       rts
-.endproc
-
-;;; Shift key mod sets PB2 if shift is *not* down. Since we can't detect
-;;; the mod, snapshot on init (and assume shift is not down) and XOR.
-pb2_initial_state:
-        .byte   0
-
-;;; ============================================================
 
         .include "../lib/menuclock.s"
         .include "../lib/datetime.s"
@@ -2416,7 +2360,6 @@ pb2_initial_state:
         .include "../lib/disconnect_ram.s"
         .include "../lib/reconnect_ram.s"
 
-        BTK_SHORT = 1
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry
 

@@ -54,10 +54,6 @@ fontptr:        .addr   0
 
 desktop_grafport:        .tag   MGTK::GrafPort
 
-;;; GrafPort used for icon operations in inactive windows, to
-;;; prevent any drawing.
-null_grafport:          .tag    MGTK::GrafPort
-
 ;;; ============================================================
 
         ;; Copies of ROM bytes used for machine identification

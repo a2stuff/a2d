@@ -25,13 +25,8 @@ MLIRelayImpl            := main::MLIRelayImpl
 CheckMouseMoved         := main::CheckMouseMoved
 YieldLoop               := main::YieldLoop
 DetectDoubleClick       := main::StashCoordsAndDetectDoubleClick
-ModifierDown            := main::ModifierDown
-ShiftDown               := main::ShiftDown
 AdjustVolumeNameCase    := main::AdjustVolumeNameCase
 AdjustFileEntryCase     := main::AdjustFileEntryCase
-
-;;; Required data definitions
-buf_text := path_buf1
 
 ;;; Required macro definitions
         .include "../lib/file_dialog.s"
