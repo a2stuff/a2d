@@ -21,7 +21,6 @@ Exec:
 ;;; ============================================================
 
 ;;; Required proc definitions
-MLIRelayImpl            := main::MLIRelayImpl
 CheckMouseMoved         := main::CheckMouseMoved
 YieldLoop               := main::YieldLoop
 DetectDoubleClick       := main::StashCoordsAndDetectDoubleClick

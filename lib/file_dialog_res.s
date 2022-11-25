@@ -81,18 +81,16 @@ textbg1:
 textbg2:
         .byte   $7F
 
-        DEFINE_RECT tmp_rect, 0, 0, 0, 0
-
 checkerboard_pattern:
         .byte   $55, $AA, $55, $AA, $55, $AA, $55, $AA
 
-kCommonInputWidth = 435
-kCommonInputHeight = kTextBoxHeight
-
 .if FD_EXTENDED
+        kInputWidth = 435
+        kInputHeight = kTextBoxHeight
+
         kInput1Y = 114
         DEFINE_POINT input1_label_pos, kControlsLeft, kInput1Y-1
-        DEFINE_RECT_SZ input1_rect, kControlsLeft, kInput1Y, kCommonInputWidth, kCommonInputHeight
+        DEFINE_RECT_SZ input1_rect, kControlsLeft, kInput1Y, kInputWidth, kInputHeight
 .endif
 
 kFilePickerDlgWindowID  = $3E
@@ -150,8 +148,6 @@ nextwinfo:      .addr   0
 
 kEntryListCtlWindowID = $3F
 
-kLineDelta = 1
-
 .params winfo_listbox
         kWidth = kListBoxWidth
         kHeight = kListItemHeight * kListRows - 1
@@ -199,7 +195,7 @@ nextwinfo:      .addr   0
 
 .if FD_EXTENDED
 ;;; Auxiliary field
-        DEFINE_LINE_EDIT line_edit_f1, kFilePickerDlgWindowID, buf_input2, kControlsLeft, kInput1Y, kCommonInputWidth, kMaxPathLength
+        DEFINE_LINE_EDIT line_edit_f1, kFilePickerDlgWindowID, buf_input2, kControlsLeft, kInput1Y, kInputWidth, kMaxPathLength
         DEFINE_LINE_EDIT_PARAMS le_params_f1, line_edit_f1
 .endif ; FD_EXTENDED
 

@@ -736,7 +736,6 @@ last_disk_in_devices_table:
 ;;; ============================================================
 
 .proc CheckDisksInDevices
-        ptr := $6
         status_buffer := $800
 
         ldx     removable_device_table
@@ -1678,7 +1677,7 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         ;; Restore state
         jsr     InitSetDesktopPort ; DA's port destroyed, set something real as current
         jsr     ShowClockForceUpdate
-done:   jmp     SetCursorPointer ; after invoking DA
+        jmp     SetCursorPointer ; after invoking DA
 
         DEFINE_OPEN_PARAMS open_params, 0, DA_IO_BUFFER
         open_ref_num := open_params::ref_num
@@ -2272,7 +2271,6 @@ CmdNewFolder    := CmdNewFolderImpl::start
 ;;; Trashes $06
 
 .proc SelectFileIconByName
-        ptr_icon := $6
         ptr_name := $8          ; Input
 
         ldax    ptr_name
@@ -2432,8 +2430,6 @@ stashed_name:
 ;;; Assert: Icon in active window.
 
 .proc ScrollIconIntoView
-        icon_ptr := $06
-
         pha
         jsr     LoadActiveWindowEntryTable
         pla
@@ -3143,8 +3139,6 @@ ret:    rts
 
         num_filenames := $1800
         table := $1801
-        ptr1 := $06
-        ptr2 := $08
 
 ;;; Find the substring match for `typedown_buf`, or the next
 ;;; match in lexicographic order, or the last item in the table.
@@ -3304,7 +3298,7 @@ next:   inc     inner
         dec     outer
         bne     oloop
 
-ret:    rts
+        rts
 
 ;;; Compare strings at $06 (1) and $08 (2).
 ;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
@@ -4175,7 +4169,6 @@ common:
         ;; A = icon number
         jsr     IconEntryNameLookup
 
-        ptr := $06
         path_buf := $1F00
 
         ;; Copy volume path to $1F00
@@ -5004,8 +4997,6 @@ last_pos:
 ;;; ============================================================
 
 .proc HandleTitleClick
-        ptr := $06
-
         copy    active_window_id, dragwindow_params::window_id
 
         jsr     LoadActiveWindowEntryTable
@@ -5018,7 +5009,6 @@ last_pos:
         jsr     StoreWindowEntryTable
 
         rts
-
 .endproc
 
 ;;; ============================================================
@@ -5515,8 +5505,7 @@ same_or_desktop:
         cpx     selected_icon_count
         bne     :-
 
-ret:    rts
-
+        rts
 .endproc
 
 ;;; ============================================================
@@ -5683,8 +5672,6 @@ no_win:
         copy16  #buf_filename2 - IconEntry::name, ptr
         rts
 .endproc
-
-num:    .byte   0
 .endproc
 
 ;;; ============================================================
@@ -5948,7 +5935,7 @@ skip:
 
         ;; --------------------------------------------------
         ;; Clear selection list
-finish: lda     #0
+        lda     #0
         sta     selected_icon_count
         sta     selected_window_id
         rts
@@ -6097,8 +6084,6 @@ loop:   lda     found_windows_list,y
         bpl     loop
 
 done:   rts
-
-pathptr:        .addr   0
 .endproc
 
 ;;; ============================================================
@@ -7309,7 +7294,6 @@ L7870:  lda     cached_window_id
 
         ;; Icon height will be needed too
         stax    ptr
-set_height:
         ldy     #IconResource::maprect + MGTK::Rect::y2
         copy16in (ptr),y, icon_height
 
@@ -7489,7 +7473,7 @@ loop:   ldy     #0              ; type_mask, or $00 if done
     END_IF
 
         ;; Does Block Count matter, and if so does it match?
-blocks: bit     flags
+        bit     flags
     IF_VS                       ; bit 6 = compare blocks
         ldy     #ICTRecord::blocks
         lda     icontype_blocks
@@ -7502,7 +7486,7 @@ blocks: bit     flags
     END_IF
 
         ;; Filename suffix?
-suffix: lda     flags
+        lda     flags
         and     #ICT_FLAGS_SUFFIX
     IF_NOT_ZERO
         ;; Set up pointers to suffix and filename
@@ -7540,7 +7524,7 @@ suffix: lda     flags
     END_IF
 
         ;; Have a match
-match:  ldy     #ICTRecord::icontype
+        ldy     #ICTRecord::icontype
         lda     (ptr),y
         sta     tmp
         jsr     PopPointers
@@ -7877,7 +7861,6 @@ next:   inc     icon_num
 .proc SortRecords
         ptr := $06
 
-record_num      := $800
 list_start_ptr  := $801
 num_records     := $803
 scratch_space   := $804         ; can be used by comparison funcs
@@ -7958,8 +7941,6 @@ ret:    rts
 ;;; Output: A,X = pointer to FileRecord
 
 .proc CalcPtr
-        ptr := $6
-
         ;; Map from sorting list index to FileRecord index
         tax
         ldy     cached_window_entry_list,x
@@ -9587,9 +9568,6 @@ AnimateWindowOpen       := AnimateWindow::open
 kMaxAnimationStep = 11
 
 .proc AnimateWindowOpenImpl
-
-        rect_table := $800
-
         ;; Loop N = 0 to 13
         ;; If N in 0..11, draw N
         ;; If N in 2..13, erase N-2 (i.e. 0..11, 2 behind)
@@ -9622,9 +9600,6 @@ next:   inc     step
 ;;; ============================================================
 
 .proc AnimateWindowCloseImpl
-
-        rect_table := $800
-
         ;; Loop N = 11 to -2
         ;; If N in 0..11, draw N
         ;; If N in -2..9, erase N+2 (0..11, i.e. 2 behind)

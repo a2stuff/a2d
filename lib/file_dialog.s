@@ -1721,10 +1721,6 @@ d2:     .res    16, 0
         LETK_CALL LETK::Activate, file_dialog_res::le_params_f1
         rts
 .endproc
-.proc Deactivate
-        LETK_CALL LETK::Deactivate, file_dialog_res::le_params_f1
-        rts
-.endproc
 .proc Key
         copy    event_params::key, file_dialog_res::le_params_f1::key
         copy    event_params::modifiers, file_dialog_res::le_params_f1::modifiers
@@ -1736,20 +1732,14 @@ d2:     .res    16, 0
         LETK_CALL LETK::Click, file_dialog_res::le_params_f1
         rts
 .endproc
-.proc Update
-        LETK_CALL LETK::Update, file_dialog_res::le_params_f1
-        rts
-.endproc
 
 .endscope ; f1
 
 LineEditInit            := f1::Init
 LineEditIdle            := f1::Idle
 LineEditActivate        := f1::Activate
-LineEditDeactivate      := f1::Deactivate
 LineEditKey             := f1::Key
 LineEditClick           := f1::Click
-LineEditUpdate          := f1::Update
 
 
 ;;; Dynamically altered table of handlers.

@@ -513,14 +513,13 @@ str_selector_list:
 
 .proc ReadSelectorList
         MLI_CALL OPEN, open_params
-        ;;         bne     done
         bne     WriteSelectorList
 
         lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
-done:   rts
+        rts
 .endproc
 
         DEFINE_CREATE_PARAMS create_params, str_selector_list, ACCESS_DEFAULT, $F1
