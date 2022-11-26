@@ -144,6 +144,7 @@ mapbits:        .addr   .ident(.sprintf("%s_bitmap", .string(name)))
 mapwidth:       .byte   3
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 17, 6
+        REF_MAPINFO_MEMBERS
 .endparams
 .endmacro
 
@@ -272,6 +273,7 @@ mapbits:        .addr   logo_bitmap
 mapwidth:       .byte   7
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 44, 17
+        REF_MAPINFO_MEMBERS
 .endparams
 
 ;;; ============================================================

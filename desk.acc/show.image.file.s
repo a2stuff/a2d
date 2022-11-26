@@ -356,6 +356,7 @@ mapbits:        .addr   minipix_dst_buf
 mapwidth:       .byte   26
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kMinipixWidth-1, kMinipixHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .endproc

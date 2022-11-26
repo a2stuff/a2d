@@ -133,7 +133,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -213,6 +212,7 @@ mapbits:        .addr   larr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kArrowWidth-1, kArrowHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params rarr_params
@@ -221,6 +221,7 @@ mapbits:        .addr   rarr_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kArrowWidth-1, kArrowHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
         DEFINE_RECT larr_rect, kLeftArrowLeft-2, kLeftArrowTop, kLeftArrowRight+2, kLeftArrowBottom
@@ -267,6 +268,7 @@ mapbits:        .addr   dblclick_bitmap
 mapwidth:       .byte   8
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 53, 33
+        REF_MAPINFO_MEMBERS
 .endparams
 
         kNumArrows = 6
@@ -329,6 +331,7 @@ mapbits:        .addr   darr_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 16, 7
+        REF_MAPINFO_MEMBERS
 .endparams
 
 darr_bitmap:
@@ -360,6 +363,7 @@ mapbits:        .addr   mouse_tracking_bitmap
 mapwidth:       .byte   9
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 62, 31
+        REF_MAPINFO_MEMBERS
 .endparams
 
 mouse_tracking_bitmap:
@@ -429,6 +433,7 @@ mapbits:        .addr   ipblink_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 37, 12
+        REF_MAPINFO_MEMBERS
 .endparams
 
 ipblink_bitmap:
@@ -457,6 +462,7 @@ mapbits:        .addr   ipblink_ip_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kIPBmpWidth - 1, kIPBmpHeight - 1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 kCursorWidth    = 8

@@ -46,7 +46,6 @@ penheight:      .byte   0
 penmode:        .byte   MGTK::pencopy
 textback:       .byte   MGTK::textbg_black
 textfont:       .addr   0
-
         REF_GRAFPORT_MEMBERS
 .endparams
         .assert .sizeof(window_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
@@ -189,7 +188,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   MGTK::textbg_white
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -258,7 +256,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   MGTK::textbg_white
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -300,7 +297,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   MGTK::textbg_white
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -728,7 +724,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   MGTK::textbg_white
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 

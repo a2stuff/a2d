@@ -205,7 +205,6 @@ pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
 penXOR:         .byte   MGTK::penXOR
-pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 
 .params winfo
@@ -239,7 +238,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -250,7 +248,6 @@ nextwinfo:      .addr   0
         kMarginX = 18
         kMarginY = 10
         kTextHeight = kSystemFontHeight
-        kButtonMarginY = 6
 
         DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
@@ -308,7 +305,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   MGTK::textbg_white
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 

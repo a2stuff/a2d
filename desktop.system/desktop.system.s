@@ -41,7 +41,7 @@
 ;;;          |             |    * reading copied files, SELECTOR.LIST
 ;;;          | Src I/O Buf |
 ;;;    $E00  +-------------+
-;;;          | Dir Rd Buf  |    * holds "block" read from directory
+;;;          |.(unused)....|
 ;;;    $C00  +-------------+
 ;;;          |             |
 ;;;          | Dir I/O Buf |
@@ -51,8 +51,6 @@
 MLIEntry        := MLI
 
 dir_io_buffer   := $800         ; 1024 bytes for I/O
-dir_buffer      := $C00         ; 512 bytes (BLOCK_SIZE)
-kDirBufSize     = BLOCK_SIZE
 
 src_io_buffer   := $E00         ; 1024 bytes for I/O
 dst_io_buffer   := $1200        ; 1024 bytes for I/O
@@ -1404,7 +1402,7 @@ cleanup:
         jsr     RemoveFilenameFromDstPath
 
 noop:
-done:   rts
+        rts
 .endproc
 
 ;;; ============================================================

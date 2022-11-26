@@ -339,7 +339,6 @@ window_id:     .byte   kDAWindowId
 .endparams
 
 penXOR:         .byte   MGTK::penXOR
-notpencopy:     .byte   MGTK::notpencopy
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -372,7 +371,6 @@ penmode:        .byte   MGTK::notpencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -394,6 +392,7 @@ mapbits:        .addr   date_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 39, 17
+        REF_MAPINFO_MEMBERS
 .endparams
 date_bitmap:
         .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000000),PX(%0000000)
@@ -421,6 +420,7 @@ mapbits:        .addr   time_bitmap
 mapwidth:       .byte   5
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 31, 14
+        REF_MAPINFO_MEMBERS
 .endparams
 time_bitmap:
         .byte   PX(%0000000),PX(%0001111),PX(%1111111),PX(%1000000),PX(%0000000)
@@ -779,7 +779,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         cmp     #kUpRectIndex
         beq     incr
 
-decr:
+        ;; Decrement
         cpx     min
         bne     :+
         ldx     max
@@ -787,6 +787,7 @@ decr:
 :       dex
         jmp     finish
 
+        ;; Increment
 incr:
         cpx     max
         bne     :+

@@ -850,7 +850,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -884,7 +883,6 @@ penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   FONT
-
         REF_GRAFPORT_MEMBERS
 .endparams
 

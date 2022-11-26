@@ -913,6 +913,14 @@ ycoord: .word   top
         .refto textfont
 .endmacro
 
+.macro REF_MAPINFO_MEMBERS
+        .refto viewloc
+        .refto mapbits
+        .refto mapwidth
+        .refto reserved
+        .refto maprect
+.endmacro
+
 ;;; ------------------------------------
 
 ;;; Define pattern for PaintBits - low 7 bits are reversed

@@ -143,14 +143,21 @@ key:
 .else
                 .byte   0
 .endif
+        .refto function
+        .refto key
         DEFINE_POINT viewloc, left - kBorderLeftTop, top - kBorderLeftTop
 mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
+        REF_MAPINFO_MEMBERS
+
 label:          PASCAL_STRING labelstr, ::kLabelStrSize
 pos:            .word   left + 6, top+kCalcButtonHeight
 port:           .word   left, top, left+kCalcButtonWidth, top+kCalcButtonHeight
+        .refto label
+        .refto pos
+        .refto port
 .endparams
 .endmacro
 
@@ -167,6 +174,8 @@ key:
 .else
         .byte   0
 .endif
+        .refto function
+        .refto key
         ;; Cheap centering
         kLabelOff = (kSciButtonWidth - (6 * .strlen(labelstr))) / 2
         DEFINE_POINT viewloc, left - kBorderLeftTop, top - kBorderLeftTop
@@ -174,9 +183,14 @@ mapbits:        .addr   sci_button_bitmap
 mapwidth:       .byte   kSciBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kSciButtonWidth, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
+        REF_MAPINFO_MEMBERS
+
 label:          PASCAL_STRING labelstr, ::kLabelStrSize
 pos:            .word   left + kLabelOff, top+kCalcButtonHeight
 port:           .word   left, top, left+kSciButtonWidth-3, top+kCalcButtonHeight
+        .refto label
+        .refto pos
+        .refto port
 .endparams
 .endmacro
 
@@ -282,9 +296,13 @@ mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
+        REF_MAPINFO_MEMBERS
 label:          PASCAL_STRING ".", ::kLabelStrSize
 pos:            .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
 port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
+        .refto label
+        .refto pos
+        .refto port
 .endparams
 btn_dec_key   := btn_dec::key
 btn_dec_label := btn_dec::label+1
@@ -298,9 +316,14 @@ mapbits:        .addr   tall_button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, 27 ; + is extra tall
+        REF_MAPINFO_MEMBERS
+
 label:          PASCAL_STRING '+', ::kLabelStrSize
 pos:            .word   kCol4Left + 6, kRow5Bot
 port:           .word   kCol4Left,kRow4Top,kCol4Right,kRow5Bot
+        .refto label
+        .refto pos
+        .refto port
 .endparams
         .byte   0               ; sentinel
 
@@ -510,13 +533,8 @@ farg:   .byte   $00,$00,$00,$00,$00,$00
 
 grafport:       .tag    MGTK::GrafPort
 
-.params penmode_normal
-penmode:   .byte   MGTK::pencopy
-.endparams
-
-.params penmode_xor
-penmode:   .byte   MGTK::notpenXOR
-.endparams
+penmode_normal: .byte   MGTK::pencopy
+penmode_xor:    .byte   MGTK::notpenXOR
 
         kDAWidth = 130 + kBasicOffset
         kDAHeight = 96
@@ -555,7 +573,6 @@ penmode:        .byte   0
 textback:       .byte   $7f
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 openwindow_params_top := winfo::top

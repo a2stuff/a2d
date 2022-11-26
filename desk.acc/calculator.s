@@ -167,9 +167,13 @@ mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
+        REF_MAPINFO_MEMBERS
 label:          .byte   labelchar
 pos:            .word   left + 6, top+kCalcButtonHeight
 port:           .word   left, top, left+kCalcButtonWidth, top+kCalcButtonHeight
+        .refto label
+        .refto pos
+        .refto port
 .endparams
 .endmacro
 
@@ -199,9 +203,14 @@ mapbits:        .addr   wide_button_bitmap
 mapwidth:       .byte   8       ; kBitmapStride (bytes)
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 49, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight ; 0 is extra wide
+        REF_MAPINFO_MEMBERS
+
 label:          .byte   '0'
 pos:            .word   kCol1Left + 6, kRow5Bot
 port:           .word   kCol1Left,kRow5Top,kCol2Right,kRow5Bot
+        .refto label
+        .refto pos
+        .refto port
 .endparams
 
 .params btn_dec
@@ -210,9 +219,14 @@ mapbits:        .addr   button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
+        REF_MAPINFO_MEMBERS
+
 label:          .byte   SELF_MODIFIED_BYTE          ; populated at runtime
 pos:            .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
 port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
+        .refto label
+        .refto pos
+        .refto port
 .endparams
 decimal_label := btn_dec::label
 
@@ -222,9 +236,14 @@ mapbits:        .addr   tall_button_bitmap
 mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, 27 ; + is extra tall
+        REF_MAPINFO_MEMBERS
+
 label:          .byte   '+'
 pos:            .word   kCol4Left + 6, kRow5Bot
 port:           .word   kCol4Left,kRow4Top,kCol4Right,kRow5Bot
+        .refto label
+        .refto pos
+        .refto port
 .endparams
         .byte   0               ; sentinel
 
@@ -415,6 +434,8 @@ mapbits:        .addr   pixels
 mapwidth:       .byte   1
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 6, 5
+        REF_MAPINFO_MEMBERS
+
         ;;  (not part of struct, but not referenced outside)
 pixels: .byte   PX(%1000001)
         .byte   PX(%1010110)
@@ -439,13 +460,8 @@ width:          .word   kScreenWidth - 1
 height:         .word   kScreenHeight - kMenuBarHeight - 2
 .endparams
 
-.params penmode_normal
-penmode:   .byte   MGTK::pencopy
-.endparams
-
-.params penmode_xor
-penmode:   .byte   MGTK::notpenXOR
-.endparams
+penmode_normal: .byte   MGTK::pencopy
+penmode_xor:    .byte   MGTK::notpenXOR
 
         kWindowWidth = 130
         kWindowHeight = 96
@@ -697,6 +713,7 @@ rts1:  rts                     ; used by next proc
         bne     rts1
         lda     screentowindow_params::windowy
         ldx     screentowindow_params::windowx
+        FALL_THROUGH_TO FindButtonRow
 
 .proc FindButtonRow
         cmp     #kRow1Top+kBorderLeftTop - 1 ; row 1 ? (- 1 is bug in original?)

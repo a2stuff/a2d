@@ -143,7 +143,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -186,6 +185,7 @@ mapbits:        .addr   frame1
 mapwidth:       .byte   3
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 20, 10
+        REF_MAPINFO_MEMBERS
 .endparams
 
 frame1:

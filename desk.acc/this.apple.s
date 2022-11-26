@@ -103,7 +103,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -119,6 +118,7 @@ mapbits:        .addr   ii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 50, 18
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params iii_bitmap
@@ -127,6 +127,7 @@ mapbits:        .addr   iii_bits
 mapwidth:       .byte   8
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 54, 24
+        REF_MAPINFO_MEMBERS
 .endparams
 .endif
 
@@ -136,6 +137,7 @@ mapbits:        .addr   iie_bits
 mapwidth:       .byte   8
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 50, 25
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params iic_bitmap
@@ -144,6 +146,7 @@ mapbits:        .addr   iic_bits
 mapwidth:       .byte   7
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 45, 27
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params iigs_bitmap
@@ -152,6 +155,7 @@ mapbits:        .addr   iigs_bits
 mapwidth:       .byte   6
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 38, 25
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params iie_card_bitmap
@@ -160,6 +164,7 @@ mapbits:        .addr   iie_card_bits
 mapwidth:       .byte   8
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 55, 21
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params laser128_bitmap
@@ -168,6 +173,7 @@ mapbits:        .addr   laser128_bits
 mapwidth:       .byte   7
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 47, 29
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params ace500_bitmap
@@ -176,6 +182,7 @@ mapbits:        .addr   ace500_bits
 mapwidth:       .byte   7
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 48, 29
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params ace2000_bitmap
@@ -184,6 +191,7 @@ mapbits:        .addr   ace2000_bits
 mapwidth:       .byte   7
 reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 48, 23
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .if INCLUDE_UNSUPPORTED_MACHINES

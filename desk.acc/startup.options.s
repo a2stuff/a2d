@@ -130,7 +130,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -174,14 +173,11 @@ window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
 
-
 .params screentowindow_params
 window_id:      .byte   kDAWindowId
         DEFINE_POINT screen, 0, 0
         DEFINE_POINT window, 0, 0
 .endparams
-        mx := screentowindow_params::window::xcoord
-        my := screentowindow_params::window::ycoord
 
 grafport:       .tag    MGTK::GrafPort
 
@@ -312,12 +308,6 @@ common: bit     dragwindow_params::moved
 
         jmp     InputLoop
 .endproc
-
-
-;;; ============================================================
-
-notpencopy:     .byte   MGTK::notpencopy
-
 
 ;;; ============================================================
 

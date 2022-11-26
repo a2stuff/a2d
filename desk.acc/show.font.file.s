@@ -217,7 +217,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   font_buffer
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 

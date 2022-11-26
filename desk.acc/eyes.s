@@ -90,7 +90,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -152,6 +151,7 @@ mapbits:        .addr   grow_box_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
         DEFINE_RECT maprect, 2, 2, 19, 9
+        REF_MAPINFO_MEMBERS
 .endparams
 
 grow_box_bitmap:
@@ -488,9 +488,7 @@ draw_pupils:
         MGTK_CALL MGTK::LineTo, pos_r
 
         MGTK_CALL MGTK::ShowCursor
-done:   rts
-
-tmpw:   .word   0
+        rts
 .endproc
 
 ;;; ============================================================

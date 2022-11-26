@@ -135,7 +135,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   MGTK::textbg_white
 textfont:       .addr   FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -184,7 +183,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   MGTK::textbg_white
 textfont:       .addr   FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 

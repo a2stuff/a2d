@@ -87,6 +87,7 @@ mapbits:        .addr   0
 mapwidth:       .byte   10
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kToasterWidth-1, kToasterHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 notpencopy:     .byte   MGTK::notpencopy

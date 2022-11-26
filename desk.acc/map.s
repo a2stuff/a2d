@@ -98,6 +98,7 @@ mapbits:        .addr   map_bitmap
 mapwidth:       .byte   25
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kMapWidth-1, kMapHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 map_bitmap:
@@ -226,6 +227,7 @@ mapbits:        .addr   position_marker_bitmap
 mapwidth:       .byte   2
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kPositionMarkerWidth-1, kPositionMarkerHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 xcoord := position_marker_params::viewloc::xcoord

@@ -320,7 +320,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -332,6 +331,7 @@ mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
+        REF_MAPINFO_MEMBERS
 .endparams
 
 ;;; ============================================================
@@ -1153,6 +1153,7 @@ mapbits:        .word   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kLabelWidth, kLabelHeight
+        REF_MAPINFO_MEMBERS
 .endparams
 mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 

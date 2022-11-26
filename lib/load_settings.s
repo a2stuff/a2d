@@ -25,8 +25,11 @@
 
 str_config:
         PASCAL_STRING kFilenameDeskTopConfig
+
+.if .defined(::BELLDATA)
 str_sound:
         PASCAL_STRING kFilenameBellProc
+.endif
 
 start:
         ;; --------------------------------------------------

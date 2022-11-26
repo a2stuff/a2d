@@ -88,7 +88,6 @@ penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
-
         REF_WINFO_MEMBERS
 .endparams
 
@@ -132,15 +131,6 @@ window_id:      .byte   kDAWindowId
 port:           .addr   grafport
 .endparams
 
-
-.params screentowindow_params
-window_id:      .byte   kDAWindowId
-        DEFINE_POINT screen, 0, 0
-        DEFINE_POINT window, 0, 0
-.endparams
-        mx := screentowindow_params::window::xcoord
-        my := screentowindow_params::window::ycoord
-
 grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
@@ -170,6 +160,7 @@ mapbits:        .addr   joy_marker_bitmap
 mapwidth:       .byte   2
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 7, 4
+        REF_MAPINFO_MEMBERS
 .endparams
 
 joy_marker_bitmap:
@@ -186,6 +177,7 @@ mapbits:        .addr   joystick_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 35, 18
+        REF_MAPINFO_MEMBERS
 .endparams
 
 joystick_bitmap:
@@ -281,7 +273,7 @@ joystick_bitmap:
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-common: bit     dragwindow_params::moved
+        bit     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
@@ -304,7 +296,6 @@ common: bit     dragwindow_params::moved
 
 ;;; ============================================================
 
-pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 
 
@@ -337,7 +328,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
         ;; ==============================
 
-done:   MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::ShowCursor
         rts
 
 .endproc
