@@ -328,7 +328,7 @@ num_src_drives:
         .byte   0
 
 ;;; 14 devices = 7 slots * 2 devices/slot (unit $Bx might not be /RAM)
-kMaxNumDrives = 15
+kMaxNumDrives = 14
 
 drive_name_table:
         .res    kMaxNumDrives * 16, 0
