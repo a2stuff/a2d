@@ -4,8 +4,8 @@
 CAFLAGS = --target apple2enh --list-bytes 0
 LDFLAGS = --config ../res/asm.cfg
 
-# Each directory builds into an 'out' subdir:
-OUTDIR = out
+# Each directory builds into an 'out' sibling dir:
+OUTDIR = ../out
 
 
 ### Build Rules
