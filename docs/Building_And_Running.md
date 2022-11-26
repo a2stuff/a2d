@@ -100,7 +100,7 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
          DESKTOP2         $F1   $0000
          DISK.COPY        $F1   $0000
          SELECTOR         $F1   $0000
-       DESK.ACC/          DIR
+       APPLE.MENU/        DIR
          CALCULATOR       $F1   $0641
          EYES             $F1   $0641
          CONTROL.PANELS/  DIR

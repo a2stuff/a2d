@@ -13,7 +13,7 @@
 #   add_file disposition src_file folder dst_file suffix
 #     disposition = "required" | "optional" | "extra"
 #     src_file    = e.g. "out/calculator.da"
-#     folder      = e.g. "desk.acc"
+#     folder      = e.g. "apple.menu"
 #     dst_file    = e.g. "calculator"
 #     suffix      = e.g. "F10641"
 

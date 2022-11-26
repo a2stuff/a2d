@@ -52,7 +52,7 @@ See [API.md](API.md) for programming details
 # Preview Accessories
 
 These files are a special class of Desk Accessory which reside in
-the `PREVIEW` subdirectory relative to `DESKTOP2` (next to `DESK.ACC`).
+the `PREVIEW` subdirectory relative to `DESKTOP2` (next to `APPLE.MENU`).
 These DAs will be invoked automatically for certain file types when
 File > Open is run or the files are double-clicked.
 
@@ -67,7 +67,7 @@ File > Open is run or the files are double-clicked.
 * [Show Font File](show.font.file.s)
    * Handles MGTK font files (FNT $07)
 
-The files can optionally be copied into the `DESK.ACC` directory to
+The files can optionally be copied into the `APPLE.MENU` directory to
 allow direct invocation from the Apple menu. This can be useful to
 preview files of different file types e.g. image files saved as BIN
 $06.

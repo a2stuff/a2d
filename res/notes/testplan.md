@@ -473,12 +473,12 @@
 
 ## File Types
 
-* Put image file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify image is shown.
-* Put text file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify text is shown.
-* Put font file in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify font is shown.
+* Put image file in `APPLE.MENU`, start DeskTop. Select it from the Apple menu. Verify image is shown.
+* Put text file in `APPLE.MENU`, start DeskTop. Select it from the Apple menu. Verify text is shown.
+* Put font file in `APPLE.MENU`, start DeskTop. Select it from the Apple menu. Verify font is shown.
 
-* Put BASIC program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
-* Put System program in `DESK.ACC`, start DeskTop. Select it from the Apple menu. Verify it runs.
+* Put BASIC program in `APPLE.MENU`, start DeskTop. Select it from the Apple menu. Verify it runs.
+* Put System program in `APPLE.MENU`, start DeskTop. Select it from the Apple menu. Verify it runs.
 
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Double-click it. Verify that an alert is shown. Click Cancel. Verify the alert closes but nothing else happens. Repeat, but click OK. Verify that it executes.
 * Launch DeskTop. Open a window. Locate an executable BIN file icon. Hold Solid-Apple and double-click it. Verify that it executes.
@@ -512,8 +512,8 @@ The following tests all require:
 * A RAM disk such as RAMWorks (and a ProDOS driver) or a "Slinky" memory expansion card.
 * Configuring DeskTop to install itself to the RAMCard on boot. This is the default but can be controlled using the Startup Options control panel.
 
-* Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under DESK.ACC are copied to /RAM/DESKTOP/DESK.ACC.
-* Run DeskTop on a system with Slinky Ramdisk. Verify that subdirectories under DESK.ACC are copied to /RAM5/DESKTOP/DESK.ACC (or appropriate volume path).
+* Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under APPLE.MENU are copied to /RAM/DESKTOP/APPLE.MENU.
+* Run DeskTop on a system with Slinky Ramdisk. Verify that subdirectories under APPLE.MENU are copied to /RAM5/DESKTOP/APPLE.MENU (or appropriate volume path).
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that LOCAL/DESKTOP.CONFIG is written to the startup disk.
 * Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Shortcuts > Add a Shortcut, and create a new shortcut. When prompted to save to the system disk, select OK. Verify that LOCAL/SELECTOR.LIST is written to the startup disk.
@@ -537,7 +537,7 @@ The following tests all require:
   * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and Modify a setting. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
   * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and modify a setting. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
 
-* Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple > Control Panels. Drag Desk.Acc from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.
+* Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple > Control Panels. Drag Apple.Menu from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.
 
 ### SmartPort
 
@@ -641,19 +641,19 @@ Image File:
 * Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.
 * Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that display does not switch from DHR to HR.
 
-* Put `SHOW.IMAGE.FILE` in `DESK.ACC`, start DeskTop.
+* Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
     * Select volume icon, select DA from Apple menu. Verify nothing happens.
     * Select image file icon, select DA from Apple menu. Verify image is shown.
-* Put `SHOW.TEXT.FILE` in `DESK.ACC`, start DeskTop.
+* Put `SHOW.TEXT.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
     * Select volume icon, select DA from Apple menu. Verify nothing happens.
     * Select text file icon, select DA from Apple menu. Verify text is shown.
-* Put `SHOW.FONT.FILE` in `DESK.ACC`, start DeskTop.
+* Put `SHOW.FONT.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
     * Select volume icon, select DA from Apple menu. Verify nothing happens.
     * Select font file icon, select DA from Apple menu. Verify font is shown.
-* Put `SHOW.DUET.FILE` in `DESK.ACC`, start DeskTop.
+* Put `SHOW.DUET.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
     * Select volume icon, select DA from Apple menu. Verify nothing happens.
     * Select Electric Duet file icon, select DA from Apple menu. Verify music is played.

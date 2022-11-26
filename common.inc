@@ -18,9 +18,9 @@
 .define kFilenameSelectorList  .concat(kFilenameLocalDir, "/Selector.List")
 .define kFilenameDeskTopConfig .concat(kFilenameLocalDir, "/DeskTop.config")
 .define kFilenameDeskTopState  .concat(kFilenameLocalDir, "/DeskTop.file")
-.define kFilenameBellProc     .concat(kFilenameLocalDir, "/Bell.proc")
+.define kFilenameBellProc      .concat(kFilenameLocalDir, "/Bell.proc")
 .define kFilenameQuitSave      .concat(kFilenameLocalDir, "/Quit.tmp")
-.define kFilenameDADir         "Desk.Acc"
+.define kFilenameDADir         "Apple.Menu"
 .define kFilenamePreviewDir    "Preview"
 .define kFilenameExtrasDir     "Extras"
 .define kFilenameRAMCardDir    "DeskTop"
