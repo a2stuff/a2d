@@ -12,6 +12,7 @@ Project Page: https://github.com/a2stuff/a2d
 * File picker dialogs show drives list. ([#599](https://github.com/a2stuff/a2d/issues/599))
 * Language-specific time separators added.
 * IIgs and Laser 128: Fix alert sound playback speed.
+* A generic ProDOS clock driver is included in disk images.
 
 ### DeskTop
 

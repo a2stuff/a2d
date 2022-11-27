@@ -69,11 +69,18 @@ emit() {
 # Output instructions for installation onto media
 
 # --------------------------------------------------
-# Part 1: The bare minimum for a bootable disk.
-disposition="required"
+# Part 1: The prerequisites for a bootable disk.
+disposition="boot"
 
 # Add ProDOS
 emit add_file $disposition "res/package/PRODOS" "" "ProDOS" FF0000
+
+# Add clock driver
+emit add_file $disposition "res/package/CLOCK.SYSTEM" "" "Clock.system" FF0000
+
+# --------------------------------------------------
+# Part 2: The bare minimum for a DeskTop.
+disposition="required"
 
 # Add READ.ME
 emit add_file $disposition "res/package/READ.ME" "" "Read.Me" 040000
@@ -85,7 +92,7 @@ emit add_file $disposition "out/desktop.built" "Modules" "DeskTop2" F10000
 emit add_file $disposition "out/disk_copy.built" "Modules" "Disk.Copy" F10000
 
 # --------------------------------------------------
-# Part 2: Optional.
+# Part 3: Optional.
 disposition="optional"
 
 # Add Selector
@@ -95,7 +102,7 @@ emit add_file $disposition "out/selector.built" "Modules" "Selector" F10000
 emit add_file $disposition "res/package/BASIC.SYSTEM" "" "BASIC.system" FF2000
 
 # --------------------------------------------------
-# Part 3: Extras.
+# Part 4: Extras.
 disposition="extra"
 
 # Add UnShrink
@@ -144,7 +151,7 @@ if [[ -z "$no_sample_media" ]]; then
 fi
 
 # --------------------------------------------------
-# Part 4: Desk Accessories (optional and extra)
+# Part 5: Desk Accessories (optional and extra)
 
 # Add Desk Accessories
 for line in $(cat desk.acc/TARGETS | bin/targets.pl); do

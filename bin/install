@@ -38,10 +38,8 @@ add_file () {
     local dst_file="$4"
     local suffix="$5"
 
-    # Skip these two files when installing to existing image.
-    # TODO: Make this data-driven.
-    local fn_upper="$(echo $dst_file | tr 'a-z' 'A-Z')"
-    if [ "$fn_upper" = "PRODOS" ] || [ "$fn_upper" = "BASIC.SYSTEM" ]; then
+    # Skip "boot" files when installing to existing image.
+    if [ "$disposition" = "boot" ]; then
         return
     fi
 

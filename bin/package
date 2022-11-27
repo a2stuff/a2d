@@ -91,7 +91,7 @@ add_file () {
 
     add_file_internal $IMGFILE_COMPLETE_2MG "$src_file" "/$VOLNAME_COMPLETE/$folder" "$dst_file" "$suffix"
     add_file_internal $IMGFILE_COMPLETE_HDV "$src_file" "/$VOLNAME_COMPLETE/$folder" "$dst_file" "$suffix"
-    if [ "$disposition" = "required" ]; then
+    if [ "$disposition" = "required" -o "$disposition" = "boot" ]; then
         add_file_internal $IMGFILE_PART1 "$src_file" "/$VOLNAME_PART1/$folder" "$dst_file" "$suffix"
     elif [ "$disposition" = "optional" ]; then
         add_file_internal $IMGFILE_PART2 "$src_file" "/$VOLNAME_PART2/$folder" "$dst_file" "$suffix"
