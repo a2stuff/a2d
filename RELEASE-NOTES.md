@@ -41,6 +41,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Desk Accessories
 
+* The `DESK.ACC` folder has been renamed to `APPLE.MENU`.
 * Date & Time: Show shortcut key for OK button.
 * Date & Time: Better translations for 12/24-hour buttons.
 * Date & Time: Support Tab key for changing fields.
