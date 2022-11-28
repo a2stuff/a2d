@@ -41,7 +41,7 @@ jobs:
 
       - name: deploy new version
         if: startsWith(github.ref, 'refs/tags/')
-        uses: ncipollo/release-action@v1.8.6
+        uses: ncipollo/release-action@v1.11.2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "out/*.zip,res/README.txt"
