@@ -672,8 +672,10 @@ Version:                .word   0
 ;;; (Values in [] are for reference, not needed for compatibility check)
 ;;;
 ;;; * = $FBBE is the version byte for the Apple IIe Card.
-;;;   $00 = first release
-;;;   $03 = latest Apple release of IIe Startup (c/o MG)
+;;;   $00 = v1.0 - first release, requires an original LC, doesn't support hard drives
+;;;   $01 = v2.0 - (pic of install disk on vectronics apple world)
+;;;   $02 = v2.1
+;;;   $03 = v2.2.x - latest Apple release of IIe Startup (c/o MG & Frank M.)
 ;;;
 ;;; ** = $FBBF is the version byte for the Apple IIc family:
 ;;;   $FF = Original
@@ -1704,18 +1706,32 @@ next:   inx                     ; next bank
         bit     LCBANK1
         bit     LCBANK1
         bcs     done
+        cpy     #0              ; Y = IIgs ROM revision
+        beq     rom0
 
         .pushcpu
         .setcpu "65816"
 
         ;; From the IIgs Memory Manager tool set source
-        ;; c/o Antoine Vignau and Dagen Brock
+        ;; c/o Antoine Vignau and Dagen Brock (ROM 1 & ROM 3)
         NumBanks := $E11624
 
         lda     NumBanks
         sta     memory
         lda     NumBanks+1
         sta     memory+1
+        rts
+
+        ;; ROM0 location is slightly different
+        ;; c/o Frank Milliron
+rom0:
+        NumBanks0 := $E1161A
+
+        lda     NumBanks0
+        sta     memory
+        lda     NumBanks0+1
+        sta     memory+1
+
         .popcpu
 
 done:   rts
