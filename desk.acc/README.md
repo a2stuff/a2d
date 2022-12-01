@@ -52,7 +52,7 @@ See [API.md](API.md) for programming details
 # Preview Accessories
 
 These files are a special class of Desk Accessory which reside in
-the `PREVIEW` subdirectory relative to `DESKTOP2` (next to `APPLE.MENU`).
+the `PREVIEW` subdirectory relative to `DESKTOP` (next to `APPLE.MENU`).
 These DAs will be invoked automatically for certain file types when
 File > Open is run or the files are double-clicked.
 

@@ -31,7 +31,7 @@
 ;;;       :.............:       :.............:
 
 
-;;; NOTE: if DeskTop2 file is extended in length, there is room for
+;;; NOTE: if DeskTop file is extended in length, there is room for
 ;;; this segment to grow by moving buffers up by a few pages.
 
 ;;; Init sequence - machine identification, etc

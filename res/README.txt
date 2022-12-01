@@ -33,7 +33,7 @@ storage device:
 * `A2.DESKTOP/` - any name is allowed, can be in any subdirectory
   * `DESKTOP.SYSTEM` - run this to launch DeskTop
   * `MODULES/` - contains parts of the application
-    * `DESKTOP2` - application file
+    * `DESKTOP` - application file
     * `DISK.COPY` - application file
     * `SELECTOR` - application file
   * `APPLE.MENU/` - contains Desk Accessories (DAs)

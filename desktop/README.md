@@ -4,7 +4,7 @@ This is the main application, presenting a desktop and windows with
 icons for volumes and files, commands and gestures for moving and
 copying files and manipulating disks.
 
-The program file (`DESKTOP2`) is large - 89k. It includes a loader and
+The program file (`DESKTOP`) is large - 89k. It includes a loader and
 the DeskTop app with both main memory and aux memory segments, filling
 everything from $4000 to $FFFF (except for I/O space and ProDOS), and
 still having more code segments swapped in dynamically.
@@ -52,7 +52,7 @@ invokes it. That gets copied to $1000-$11FF and run by ProDOS.
 
 The invoked code stashes the current prefix and re-patches ProDOS with
 itself. It then (in a convoluted way) loads in the second $200 bytes
-of `DESKTOP2` at $2000 and invokes that.
+of `DESKTOP` at $2000 and invokes that.
 
 This code then loads the rest of the file as a sequence of segments,
 moving them to the appropriate destination in aux/banked/main memory.

@@ -9658,11 +9658,11 @@ next:   dec     step
 .endproc
 
 ;;; ============================================================
-;;; Dynamically load parts of Desktop2
+;;; Dynamically load parts of Desktop
 
 ;;; Call `LoadDynamicRoutine` or `RestoreDynamicRoutine`
 ;;; with A set to routine number (0-8); routine is loaded
-;;; from DeskTop2 file to target address. Returns with
+;;; from DeskTop file to target address. Returns with
 ;;; minus flag set on failure.
 
 ;;; Routines are:
@@ -9704,9 +9704,9 @@ addr_table:
         .word   kOverlayDeskTopRestore2Address
         ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
 
-        DEFINE_OPEN_PARAMS open_params, str_desktop2, IO_BUFFER
+        DEFINE_OPEN_PARAMS open_params, str_desktop, IO_BUFFER
 
-str_desktop2:
+str_desktop:
         PASCAL_STRING kFilenameDeskTop
 
         DEFINE_SET_MARK_PARAMS set_mark_params, 0

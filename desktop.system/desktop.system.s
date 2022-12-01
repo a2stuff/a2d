@@ -803,7 +803,7 @@ done:   dex
 ;;; ============================================================
 ;;; Data buffers and param blocks
 
-        ;; Used in CheckDesktop2OnDevice
+        ;; Used in CheckDesktopOnDevice
         path_buf := $D00
         DEFINE_GET_PREFIX_PARAMS get_prefix_params2, path_buf
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buf
@@ -1065,7 +1065,7 @@ test_unit_num:
 
         ;; Already installed?
         param_call SetRamcardPrefix, dst_path
-        jsr     CheckDesktop2OnDevice
+        jsr     CheckDesktopOnDevice
         bcs     StartCopy       ; No, start copy.
 
         ;; Already copied - record that it was installed and grab path.
@@ -1407,7 +1407,7 @@ noop:
 
 ;;; ============================================================
 
-.proc CheckDesktop2OnDevice
+.proc CheckDesktopOnDevice
         slot_ptr = $8
 
         lda     active_device
@@ -1445,14 +1445,14 @@ error:  sec
 next:   MLI_CALL GET_PREFIX, get_prefix_params2
         bne     error
 
-        ;; Append "DeskTop2" to path
+        ;; Append "DeskTop" to path
         ldx     path_buf
         ldy     #0
 loop:   inx
         iny
-        lda     str_desktop2,y
+        lda     str_desktop,y
         sta     path_buf,x
-        cpy     str_desktop2
+        cpy     str_desktop
         bne     loop
         stx     path_buf
 
@@ -1462,7 +1462,7 @@ loop:   inx
         clc                     ; ok
         rts
 
-str_desktop2:
+str_desktop:
         PASCAL_STRING kFilenameDeskTop
 .endproc
 
@@ -2027,14 +2027,14 @@ done:   rts
 
         .assert * >= app_bootstrap_start + kAppBootstrapSize, error, "overlapping addresses"
 
-        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, src_io_buffer
+        DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, src_io_buffer
         DEFINE_OPEN_PARAMS open_selector_params, str_selector, src_io_buffer
         DEFINE_READ_PARAMS read_params, app_bootstrap_start, kAppBootstrapSize
         DEFINE_CLOSE_PARAMS close_everything_params
 
 str_selector:
         PASCAL_STRING kFilenameSelector
-str_desktop2:
+str_desktop:
         PASCAL_STRING kFilenameDeskTop
 
 
@@ -2048,18 +2048,18 @@ start:  MLI_CALL CLOSE, close_everything_params
         MLI_CALL OPEN, open_selector_params
         beq     selector
 
-:       MLI_CALL OPEN, open_desktop2_params
-        beq     desktop2
+:       MLI_CALL OPEN, open_desktop_params
+        beq     desktop
 
-        ;; But if DeskTop2 wasn't present, ignore options and try Selector.
+        ;; But if DeskTop wasn't present, ignore options and try Selector.
         ;; This supports a Selector-only install without config, e.g. by admins.
         MLI_CALL OPEN, open_selector_params
         beq     selector
 
         brk                     ; just crash
 
-desktop2:
-        lda     open_desktop2_params::ref_num
+desktop:
+        lda     open_desktop_params::ref_num
         jmp     read
 
 selector:
@@ -2075,7 +2075,7 @@ InvokeSelectorOrDesktop := InvokeSelectorOrDesktopImpl::start
 
 
 ;;; ============================================================
-;;; Loaded at $1000 by DeskTop2 on Quit, and copies $1100-$13FF
+;;; Loaded at $1000 by DeskTop on Quit, and copies $1100-$13FF
 ;;; to Language Card Bank 2 $D100-$D3FF, to restore saved quit
 ;;; (selector/dispatch) handler, then does ProDOS QUIT.
 

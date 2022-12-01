@@ -88,7 +88,7 @@ emit add_file $disposition "res/package/READ.ME" "" "Read.Me" 040000
 # Add Launcher, DeskTop, and Disk Copy
 emit add_file $disposition "out/desktop.system.SYS" "" "DeskTop.system" FF0000
 
-emit add_file $disposition "out/desktop.built" "Modules" "DeskTop2" F10000
+emit add_file $disposition "out/desktop.built" "Modules" "DeskTop" F10000
 emit add_file $disposition "out/disk_copy.built" "Modules" "Disk.Copy" F10000
 
 # --------------------------------------------------

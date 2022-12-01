@@ -268,13 +268,13 @@ str_selector_title:
         desktop_load_addr = $2000
         kDeskTopLoadSize = $400
 
-        DEFINE_OPEN_PARAMS open_desktop2_params, str_desktop2, io_buf_desktop
-        DEFINE_READ_PARAMS read_desktop2_params, desktop_load_addr, kDeskTopLoadSize
+        DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, io_buf_desktop
+        DEFINE_READ_PARAMS read_desktop_params, desktop_load_addr, kDeskTopLoadSize
 
 str_selector_list:
         PASCAL_STRING kFilenameSelectorList
 
-str_desktop2:
+str_desktop:
         PASCAL_STRING kFilenameDeskTop
 
         DEFINE_CLOSE_PARAMS close_params
@@ -290,8 +290,8 @@ str_selector:
         DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogLength
         DEFINE_CLOSE_PARAMS close_params2
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_desktop2_params, str_desktop2_2
-str_desktop2_2:
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_desktop_params, str_desktop_2
+str_desktop_2:
         PASCAL_STRING kFilenameDeskTop
 
 desktop_available_flag:
@@ -403,7 +403,7 @@ entry:
         bne     check_key_down
 
 quick_run_desktop:
-        MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+        MLI_CALL GET_FILE_INFO, get_file_info_desktop_params
         beq     :+
         jmp     done_keys
 :       jmp     RunDesktop
@@ -608,7 +608,7 @@ set_startup_menu_items:
         ;; --------------------------------------------------
 
         ;; Is DeskTop available?
-        MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+        MLI_CALL GET_FILE_INFO, get_file_info_desktop_params
         beq     :+
         lda     #$80
 :       sta     desktop_available_flag
@@ -655,7 +655,7 @@ quick_boot_slot:
         bne     not_desktop
 
 :       BTK_CALL BTK::Flash, desktop_button_params
-@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop_params
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
@@ -904,7 +904,7 @@ check_desktop_btn:
         BTK_CALL BTK::Track, desktop_button_params
         bmi     done
 
-@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop2_params
+@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop_params
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
@@ -961,10 +961,10 @@ noop:   rts
         bit     ROMIN2
         jsr     RestoreSystem
 
-        MLI_CALL OPEN, open_desktop2_params
-        lda     open_desktop2_params::ref_num
-        sta     read_desktop2_params::ref_num
-        MLI_CALL READ, read_desktop2_params
+        MLI_CALL OPEN, open_desktop_params
+        lda     open_desktop_params::ref_num
+        sta     read_desktop_params::ref_num
+        MLI_CALL READ, read_desktop_params
         MLI_CALL CLOSE, close_params
         jmp     desktop_load_addr
 .endproc

@@ -11,7 +11,7 @@
 
 .define kFilenameLauncher      "DeskTop.system"
 .define kFilenameModulesDir    "Modules"
-.define kFilenameDeskTop       .concat(kFilenameModulesDir, "/DeskTop2")
+.define kFilenameDeskTop       .concat(kFilenameModulesDir, "/DeskTop")
 .define kFilenameDiskCopy      .concat(kFilenameModulesDir, "/Disk.Copy")
 .define kFilenameSelector      .concat(kFilenameModulesDir, "/Selector")
 .define kFilenameLocalDir      "Local"
