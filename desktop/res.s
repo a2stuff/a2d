@@ -200,9 +200,9 @@ nextwinfo:      .addr   0
         kNameInputWidth = 320
 
         DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight
-        DEFINE_POINT pos_dialog_title, 0, 18
+        DEFINE_POINT pos_dialog_title, 0, aux::kDialogTitleY
 
-        DEFINE_POINT dialog_label_base_pos, kDialogLabelDefaultX, 30
+        DEFINE_POINT dialog_label_base_pos, kDialogLabelDefaultX, aux::kDialogLabelBaseY
 
         DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
 

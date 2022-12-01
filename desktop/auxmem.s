@@ -220,8 +220,9 @@ special_menu:
 
 ;;; ============================================================
 
-kDialogLabelHeight      = kSystemFontHeight
-kDialogLabelBaseY       = 30
+kDialogLabelHeight      = kSystemFontHeight+1
+kDialogTitleY           = 17
+kDialogLabelBaseY       = 23
 kDialogLabelRow1        = kDialogLabelBaseY + kDialogLabelHeight * 1
 kDialogLabelRow2        = kDialogLabelBaseY + kDialogLabelHeight * 2
 kDialogLabelRow3        = kDialogLabelBaseY + kDialogLabelHeight * 3
