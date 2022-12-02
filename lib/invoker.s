@@ -134,6 +134,7 @@ do_read:
         ;; If interpreter, copy filename to interpreter buffer.
         lda     INVOKER_INTERPRETER
     IF_NE
+        jsr     SetPrefix       ; A second call is necessary here!
         ldy     INVOKER_FILENAME
 :       lda     INVOKER_FILENAME,y
         sta     PRODOS_INTERPRETER_BUF,y         ; ProDOS interpreter protocol
