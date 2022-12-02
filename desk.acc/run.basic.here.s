@@ -105,29 +105,40 @@ quit:   MLI_CALL QUIT, quit_params
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, bs_path
 
+
 .proc CheckBasicSystem
-        ;; Was DeskTop copied to a RAM Card?
-        jsr     JUMP_TABLE_GET_RAMCARD_FLAG
-        bpl     get_current_prefix ; nope
-
-        ;; Use original location, since BASIC.SYSTEM was unlikely
-        ;; to be copied.
-        param_call JUMP_TABLE_GET_ORIG_PREFIX, bs_path
-        inc     bs_path         ; Append trailing '/'
-        ldx     bs_path
-        copy    #'/', bs_path,x
-        jmp     got_prefix
-
-get_current_prefix:
+        ;; Check well known location first
         JUMP_TABLE_MLI_CALL GET_PREFIX, get_prefix_params
         bne     no_bs
 
-got_prefix:
-        lda     bs_path
-        sta     path_length
+        ldy     #0
+        ldx     bs_path
+:       iny
+        inx
+        lda     str_extras_basic,y
+        sta     bs_path,x
+        cpy     str_extras_basic
+        bne     :-
+        stx     bs_path
 
+        JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
+        bne     :+
+        rts                     ; zero is success
+:
+
+        ;; Not there - search from `prefix_path` upwards
+        ldx     prefix_path
+        stx     path_length
+:       copy    prefix_path,x, bs_path,x
+        dex
+        bpl     :-
+
+        inc     bs_path
+        ldx     bs_path
+        copy    #'/', bs_path,x
+loop:
         ;; Append BASIC.SYSTEM to path and check for file.
-loop:   ldx     path_length
+        ldx     bs_path
         ldy     #0
 :       inx
         iny
@@ -135,33 +146,35 @@ loop:   ldx     path_length
         cpy     str_basic_system
         bne     :-
         stx     bs_path
-
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
         bne     not_found
-        rts
+        rts                     ; zero is success
 
         ;; Pop off a path segment and try again.
 not_found:
         ldx     path_length
-        dex
 :       lda     bs_path,x
         cmp     #'/'
         beq     found_slash
         dex
         bne     :-
 
+no_bs:  return  #$FF            ; non-zero is failure
+
 found_slash:
         cpx     #1
         beq     no_bs
+        stx     bs_path
+        dex
         stx     path_length
         jmp     loop
-
-no_bs:  return  #1
 
         ;; length of directory path e.g. "/VOL/DIR/"
 path_length:
         .byte   0
 
+str_extras_basic:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/BASIC.SYSTEM")
 str_basic_system:
         PASCAL_STRING "BASIC.SYSTEM"
 .endproc

@@ -1084,8 +1084,27 @@ found_slash:
         stx     path_length
         jmp     loop
 .endproc
-CheckBasicSystem        := CheckBasixSystemImpl::basic
 CheckBasisSystem        := CheckBasixSystemImpl::basis
+
+.proc CheckBasicSystem
+        MLI_CALL GET_PREFIX, get_prefix_params
+
+        ldy     #0
+        ldx     INVOKER_INTERPRETER
+:       iny
+        inx
+        lda     str_extras_basic,y
+        sta     INVOKER_INTERPRETER,x
+        cpy     str_extras_basic
+        bne     :-
+        stx     INVOKER_INTERPRETER
+        param_call GetFileInfo, INVOKER_INTERPRETER
+        jne     CheckBasixSystemImpl::basic ; nope, look relative to launch path
+        rts
+
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
+.endproc
+
 
 ;;; --------------------------------------------------
 
@@ -1164,6 +1183,9 @@ nope:   lda     #$FF
 kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
 str_basix_system:
         PASCAL_STRING "BASIx.SYSTEM"
+
+str_extras_basic:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/BASIC.system")
 
 str_unshrink:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/UnShrink")

@@ -99,7 +99,7 @@ disposition="optional"
 emit add_file $disposition "out/selector.built" "Modules" "Selector" F10000
 
 # Add BASIC.SYSTEM
-emit add_file $disposition "res/package/BASIC.SYSTEM" "" "BASIC.system" FF2000
+emit add_file $disposition "res/package/BASIC.SYSTEM" "Extras" "BASIC.system" FF2000
 
 # --------------------------------------------------
 # Part 4: Extras.

@@ -2073,8 +2073,31 @@ found_slash:
 len:    .byte   0
 
 .endproc
-CheckBasicSystem        := CheckBasixSystemImpl::basic
 CheckBasisSystem        := CheckBasixSystemImpl::basis
+
+str_extras_basic:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/BASIC.system")
+
+.proc CheckBasicSystem
+        MLI_CALL GET_PREFIX, get_prefix_params
+
+        ldy     #0
+        ldx     INVOKER_INTERPRETER
+:       iny
+        inx
+        lda     str_extras_basic,y
+        sta     INVOKER_INTERPRETER,x
+        cpy     str_extras_basic
+        bne     :-
+        stx     INVOKER_INTERPRETER
+        MLI_CALL GET_FILE_INFO, file_info_params
+        jne     CheckBasixSystemImpl::basic ; nope, look relative to launch path
+        rts
+
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
+        DEFINE_GET_FILE_INFO_PARAMS file_info_params, INVOKER_INTERPRETER
+.endproc
+
 
 ;;; ============================================================
 ;;; Uppercase a string
