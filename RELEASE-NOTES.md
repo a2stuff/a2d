@@ -37,6 +37,10 @@ Project Page: https://github.com/a2stuff/a2d
 * Make sure scrollbars activate/deactivate if needed when an icon is renamed.
 * Improve label spacing in several dialogs.
 
+### Selector
+
+* Fix clearing the text screen when launching programs.
+
 ### Disk Copy
 
 * Support up to 14 devices. ([#712](https://github.com/a2stuff/a2d/issues/712))

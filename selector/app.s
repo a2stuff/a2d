@@ -984,13 +984,20 @@ noop:   rts
 ;;; Assert: ROM is banked in, ALTZP/LC is off
 
 .proc RestoreTextMode
+        lda     #0              ; INIT is not used as that briefly
+        sta     WNDLFT          ; displays the dirty text page
+        sta     WNDTOP
+        lda     #80
+        sta     WNDWDTH
+        lda     #24
+        sta     WNDBTM
         jsr     HOME            ; Clear 80-col screen
+
         lda     #$11            ; Ctrl-Q - disable 80-col firmware
         jsr     COUT
 
         jsr     SETVID
         jsr     SETKBD
-        jsr     INIT
 
         sta     DHIRESOFF
         sta     TXTSET

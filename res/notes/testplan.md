@@ -692,6 +692,7 @@ Repeat for Calculator and Sci.Calc:
 
 * Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.
 * Launch Selector, invoke DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
+* Launch Selector. Invoke a BIN program file. Verify that during launch the screen goes completely black before the program starts, with no text characters present.
 
 * Launch Selector. Type Open-Apple and R. Ensure "Run a Program..." dialog appears
 * Launch Selector. Type Solid-Apple and R. Ensure "Run a Program..." dialog appears
@@ -705,6 +706,7 @@ Repeat for Calculator and Sci.Calc:
 * Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch Selector. File > Run a Program.... Verify that the non-RAMCard volume containing Selector is the first disk shown.
 
 * Using DeskTop, either delete LOCAL/SELECTOR.LIST or just delete all shortcuts. Configure Selector to start. Launch Selector. Ensure DeskTop is automatically invoked and starts correctly.
+
 
 # Disk Copy
 
