@@ -2015,54 +2015,60 @@ basic:  lda     #'C'            ; "BASI?" -> "BASIC"
 basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         sta     str_basix_system + kBSOffset
 
+        ;; Verify `launch_path` contains at least one '/'
         ldx     launch_path
 :       lda     launch_path,x
         cmp     #'/'
         beq     :+
         dex
         bne     :-
-        jmp     L9DBA
+        jmp     no_bs
 
+        ;; Start off with `interp_path` = `launch_path` except last segment
 :       dex
         stx     len
         stx     interp_path
-L9D78:  lda     launch_path,x
-        sta     interp_path,x
+:       copy    launch_path,x, interp_path,x
         dex
-        bne     L9D78
+        bne     :-
+
         inc     interp_path
         ldx     interp_path
-        lda     #'/'
-        sta     interp_path,x
-L9D8C:  ldx     interp_path
-        ldy     #$00
-L9D91:  inx
+        copy    #'/', interp_path,x
+loop:
+        ;; Append BASI?.SYSTEM to path and check for file
+        ldx     interp_path
+        ldy     #0
+:       inx
         iny
         lda     str_basix_system,y
         sta     interp_path,x
         cpy     str_basix_system
-        bne     L9D91
+        bne     :-
         stx     interp_path
         MLI_CALL GET_FILE_INFO, get_file_info_bs_params
-        bne     L9DAD
-        rts
+        bne     not_found
+        rts                     ; zero is success
 
-L9DAD:  ldx     len
-L9DB0:  lda     interp_path,x
+        ;; Pop off a path segment and try again
+not_found:
+        ldx     len
+:       lda     interp_path,x
         cmp     #'/'
-        beq     L9DC8
+        beq     found_slash
         dex
-        bne     L9DB0
+        bne     :-
 
-L9DBA:  copy    #0, interp_path ; null out the path
+no_bs:  copy    #0, interp_path ; null out the path
         return  #$FF            ; non-zero is failure
 
-L9DC8:  cpx     #$01
-        beq     L9DBA
+found_slash:
+        cpx     #1
+        beq     no_bs
         stx     interp_path
         dex
         stx     len
-        jmp     L9D8C
+        jmp     loop
 
 len:    .byte   0
 

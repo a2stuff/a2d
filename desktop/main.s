@@ -1039,6 +1039,7 @@ basic:  lda     #'C'            ; "BASI?" -> "BASIC"
 basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         sta     str_basix_system + kBSOffset
 
+        ;; Start off with `interp_path` = `launch_path`
         ldx     launch_path
         stx     path_length
 :       copy    launch_path,x, interp_path,x
