@@ -1032,7 +1032,7 @@ launch:
 
 .proc CheckBasixSystemImpl
         launch_path := INVOKER_PREFIX
-        tmp_path := $1800
+        interp_path := INVOKER_INTERPRETER
 
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
@@ -1041,24 +1041,24 @@ basis:  lda     #'S'            ; "BASI?" -> "BASIS"
 
         ldx     launch_path
         stx     path_length
-:       copy    launch_path,x, tmp_path,x
+:       copy    launch_path,x, interp_path,x
         dex
         bpl     :-
 
-        inc     tmp_path
-        ldx     tmp_path
-        copy    #'/', tmp_path,x
+        inc     interp_path
+        ldx     interp_path
+        copy    #'/', interp_path,x
 loop:
         ;; Append BASI?.SYSTEM to path and check for file.
-        ldx     tmp_path
+        ldx     interp_path
         ldy     #0
 :       inx
         iny
-        copy    str_basix_system,y, tmp_path,x
+        copy    str_basix_system,y, interp_path,x
         cpy     str_basix_system
         bne     :-
-        stx     tmp_path
-        param_call GetFileInfo, tmp_path
+        stx     interp_path
+        param_call GetFileInfo, interp_path
         bne     not_found
         rts                     ; zero is success
 
@@ -1066,18 +1066,19 @@ loop:
 not_found:
         path_length := *+1
         ldx     #SELF_MODIFIED_BYTE
-:       lda     tmp_path,x
+:       lda     interp_path,x
         cmp     #'/'
         beq     found_slash
         dex
         bne     :-
 
-no_bs:  return  #$FF            ; non-zero is failure
+no_bs:  copy    #0, interp_path ; null out the path
+        return  #$FF            ; non-zero is failure
 
 found_slash:
         cpx     #1
         beq     no_bs
-        stx     tmp_path
+        stx     interp_path
         dex
         stx     path_length
         jmp     loop

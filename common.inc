@@ -234,6 +234,7 @@ COPIED_TO_RAMCARD_FLAG  := $D3FF
 INVOKER_PREFIX          := $220 ; Prefix to set
 INVOKER                 := $290 ; Invoke other programs
 INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
+INVOKER_INTERPRETER     := $380 ; If non-empty, use path as interpreter.
 
 ;;; ============================================================
 ;;; Default Font

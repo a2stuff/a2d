@@ -2000,8 +2000,7 @@ check_path:
 
 ;;; ============================================================
 
-        scratch_buf := $1C00
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_bs_params, scratch_buf
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_bs_params, INVOKER_INTERPRETER
 
 kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
 str_basix_system:
@@ -2009,7 +2008,7 @@ str_basix_system:
 
 .proc CheckBasixSystemImpl
         launch_path := INVOKER_PREFIX
-        path_buf := $1C00
+        interp_path := INVOKER_INTERPRETER
 
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
@@ -2026,40 +2025,41 @@ basis:  lda     #'S'            ; "BASI?" -> "BASIS"
 
 :       dex
         stx     len
-        stx     path_buf
+        stx     interp_path
 L9D78:  lda     launch_path,x
-        sta     path_buf,x
+        sta     interp_path,x
         dex
         bne     L9D78
-        inc     path_buf
-        ldx     path_buf
+        inc     interp_path
+        ldx     interp_path
         lda     #'/'
-        sta     path_buf,x
-L9D8C:  ldx     path_buf
+        sta     interp_path,x
+L9D8C:  ldx     interp_path
         ldy     #$00
 L9D91:  inx
         iny
         lda     str_basix_system,y
-        sta     path_buf,x
+        sta     interp_path,x
         cpy     str_basix_system
         bne     L9D91
-        stx     path_buf
+        stx     interp_path
         MLI_CALL GET_FILE_INFO, get_file_info_bs_params
         bne     L9DAD
         rts
 
 L9DAD:  ldx     len
-L9DB0:  lda     path_buf,x
+L9DB0:  lda     interp_path,x
         cmp     #'/'
         beq     L9DC8
         dex
         bne     L9DB0
 
-L9DBA:  return  #$FF            ; non-zero is failure
+L9DBA:  copy    #0, interp_path ; null out the path
+        return  #$FF            ; non-zero is failure
 
 L9DC8:  cpx     #$01
         beq     L9DBA
-        stx     path_buf
+        stx     interp_path
         dex
         stx     len
         jmp     L9D8C

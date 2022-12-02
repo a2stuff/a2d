@@ -21,19 +21,10 @@ start:
 prefix_length:
         .byte   0
 
-;;; High bit set if an interpreter is being invoked, and
-;;; the start protocol must be followed.
-interpreter_flag:
-        .byte   0
-
         DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
         DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
-
-kBSOffset       = 5             ; Offset of 'C' in BASIC.SYSTEM
-str_basic_system:
-        PASCAL_STRING "BASIC.SYSTEM"
 
         ;; $EE = extended call signature for IIgs/GS/OS variation.
         DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME
@@ -46,13 +37,6 @@ str_basic_system:
         pla
         pla
 :       rts
-.endproc
-
-;;; ============================================================
-
-.proc Open
-        MLI_CALL OPEN, open_params
-        rts
 .endproc
 
 ;;; ============================================================
@@ -72,8 +56,14 @@ begin:  bit     ROMIN2
         lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     BITMAP
 
-        ;; Set prefix and check file type
+        ;; Set prefix
         jsr     SetPrefix
+
+        ;; Interpreter?
+        lda     INVOKER_INTERPRETER
+        bne     use_interpreter ; Yes, load it
+
+        ;; Check file type
         lda     INVOKER_PREFIX
         sta     prefix_length
         MLI_CALL GET_FILE_INFO, get_info_params
@@ -109,56 +99,29 @@ begin:  bit     ROMIN2
         cmp     #FT_S16
         beq     quit_call
 
-;;; BASIC file (BAS) - invoke interpreter as path instead.
-;;; (If not found, ProDOS QUIT will be invoked.)
-        cmp     #FT_BASIC       ; BASIC?
-        beq     use_interpreter
+        ;; Failure
+        rts
 
-;;; Use BASIS.SYSTEM as fallback if present.
-;;; (If not found, ProDOS QUIT will be invoked.)
-        copy    #'S', str_basic_system + kBSOffset ; "BASIC" -> "BASIS"
+;;; ============================================================
+;;; Interpreter - `INVOKER_INTERPRETER` populated by caller
 
 ;;; TODO: ProDOS 2.4's Bitsy Bye invokes BASIS.SYSTEM with:
 ;;; * [x] ProDOS prefix set to directory containing file.
 ;;; * [x] Path buffer in BASIS.SYSTEM set to filename.
 ;;; * [ ] $280 set to name of root volume
-;;; * [ ] $380 set to path of launched SYS (i.e. path to BASIS.SYSTEM)
+;;; * [X] $380 set to path of launched SYS (i.e. path to BASIS.SYSTEM)
 ;;; Not all should be necessary, but not doing so may lead to future
 ;;; compatibility issues. Those addresses conflict with this code.
 
 use_interpreter:
-        copy16  #str_basic_system, open_params::pathname
-
-        ;; Try opening interpreter with current prefix.
-test:   jsr     Open
-        beq     found_interpreter
-        ldy     INVOKER_PREFIX   ; Pop a path segment to try
-:       lda     INVOKER_PREFIX,y ; parent directory.
-        cmp     #'/'
-        beq     :+
-        dey
-        cpy     #1
-        bne     :-
-        rts
-
-        ;; Update prefix and try again.
-:       dey
-        sty     INVOKER_PREFIX
-        jsr     SetPrefix
-        jmp     test
-
-found_interpreter:
-        sec                     ; set flag
-        ror     interpreter_flag
-        lda     prefix_length
-        sta     INVOKER_PREFIX
-        jmp     do_read
+        copy16  #INVOKER_INTERPRETER, open_params::pathname
+        FALL_THROUGH_TO load_target
 
 ;;; ============================================================
 ;;; Load target at given address
 
 load_target:
-        jsr     Open
+        MLI_CALL OPEN, open_params
         bne     exit
 do_read:
         lda     open_params::ref_num
@@ -168,10 +131,9 @@ do_read:
         MLI_CALL CLOSE, close_params
         bne     exit
 
-        ;; If interpreter, set prefix and copy filename to interpreter buffer.
-        bit     interpreter_flag
-    IF_NS
-        jsr     SetPrefix
+        ;; If interpreter, copy filename to interpreter buffer.
+        lda     INVOKER_INTERPRETER
+    IF_NE
         ldy     INVOKER_FILENAME
 :       lda     INVOKER_FILENAME,y
         sta     PRODOS_INTERPRETER_BUF,y         ; ProDOS interpreter protocol
@@ -194,6 +156,9 @@ quit_call:
 exit:   rts
 
 .endscope ; invoker
+
+        PAD_TO INVOKER_INTERPRETER
+        .res    kPathBufferSize, 0
 
         ;; Pad to $160 bytes
         PAD_TO $3F0
