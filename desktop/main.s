@@ -1612,7 +1612,7 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 ;;; ============================================================
 
 .proc CmdAbout
-        param_jump invoke_dialog_proc, kIndexAboutDialog, $0000
+        param_jump InvokeDialogProc, kIndexAboutDialog, $0000
 .endproc
 
 ;;; ============================================================
@@ -2239,7 +2239,7 @@ a_path: .addr   0
         DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
 start:  copy    #NewFolderDialogState::open, new_folder_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
+        param_call InvokeDialogProc, kIndexNewFolderDialog, new_folder_dialog_params
 
 L4FC6:  lda     active_window_id
         beq     done            ; command should not be active without a window
@@ -2247,7 +2247,7 @@ L4FC6:  lda     active_window_id
         stax    new_folder_dialog_params::a_path
 
         copy    #NewFolderDialogState::run, new_folder_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
+        param_call InvokeDialogProc, kIndexNewFolderDialog, new_folder_dialog_params
         jne     done            ; Canceled
 
         ;; Copy path
@@ -2267,7 +2267,7 @@ L4FC6:  lda     active_window_id
 
 success:
         copy    #NewFolderDialogState::close, new_folder_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexNewFolderDialog, new_folder_dialog_params
+        param_call InvokeDialogProc, kIndexNewFolderDialog, new_folder_dialog_params
         param_call FindLastPathSegment, src_path_buf
         sty     src_path_buf
         jsr     FindWindowForSrcPath
@@ -10691,7 +10691,7 @@ write_protected_flag:
         .byte   0
 
 .proc RunGetInfoDialogProc
-        param_jump invoke_dialog_proc, kIndexGetInfoDialog, get_info_dialog_params
+        param_jump InvokeDialogProc, kIndexGetInfoDialog, get_info_dialog_params
 .endproc
 .endproc
 
@@ -10956,7 +10956,7 @@ end_filerecord_and_icon_update:
 
 .proc RunDialogProc
         sta     rename_dialog_params
-        param_jump invoke_dialog_proc, kIndexRenameDialog, rename_dialog_params
+        param_jump InvokeDialogProc, kIndexRenameDialog, rename_dialog_params
 .endproc
 
 ;;; N bit ($80) set if a window title was changed
@@ -11286,7 +11286,7 @@ success:
 
 .proc RunDialogProc
         sta     duplicate_dialog_params
-        param_jump invoke_dialog_proc, kIndexDuplicateDialog, duplicate_dialog_params
+        param_jump InvokeDialogProc, kIndexDuplicateDialog, duplicate_dialog_params
 .endproc
 
 ;;; N bit ($80) set if anything succeeded (and window needs refreshing)
@@ -11636,13 +11636,13 @@ a_dst:  .addr   dst_path_buf
         copy    #DownloadDialogLifecycle::open, copy_dialog_params::phase
         copy16  #DownloadDialogEnumerationCallback, operation_enumeration_callback
         copy16  #DownloadDialogCompleteCallback, operation_complete_callback
-        param_jump invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
+        param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
 .endproc
 
 .proc DownloadDialogEnumerationCallback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
-        param_jump invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
+        param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
 .endproc
 
 .proc PrepCallbacksForDownload
@@ -11659,12 +11659,12 @@ a_dst:  .addr   dst_path_buf
 
 .proc DownloadDialogCompleteCallback
         copy    #DownloadDialogLifecycle::close, copy_dialog_params::phase
-        param_jump invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
+        param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
 .endproc
 
 .proc DownloadDialogTooLargeCallback
         copy    #DownloadDialogLifecycle::too_large, copy_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexDownloadDialog, copy_dialog_params
+        param_call InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
         ;; TODO: The dialog (in `DownloadDialogProc`) only has an OK button,
         ;; so the result is never yes.
         cmp     #PromptResult::yes
@@ -11912,7 +11912,7 @@ done:   rts
 ;;; ============================================================
 
 .proc RunCopyDialogProc
-        param_jump invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
+        param_jump InvokeDialogProc, kIndexCopyDialog, copy_dialog_params
 .endproc
 
 ;;; ============================================================
@@ -12175,7 +12175,7 @@ retry:  MLI_CALL CREATE, create_params3
         bit     all_flag
         bmi     yes
         copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
+        param_call InvokeDialogProc, kIndexCopyDialog, copy_dialog_params
         pha
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         pla
@@ -12406,7 +12406,7 @@ loop:   MLI_CALL DESTROY, destroy_params
         bit     all_flag
         bmi     unlock
         copy    #DeleteDialogLifecycle::locked, delete_dialog_params::phase
-        param_call invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
+        param_call InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
         pha
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         pla
@@ -12446,7 +12446,7 @@ done:   rts
 .endproc
 
 .proc RunDeleteDialogProc
-        param_jump invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
+        param_jump InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
 .endproc
 
 ;;; ============================================================
@@ -12546,11 +12546,11 @@ a_path: .addr   src_path_buf
 .endproc
 
 .proc RunLockDialogProc
-        param_jump invoke_dialog_proc, kIndexLockDialog, lock_unlock_dialog_params
+        param_jump InvokeDialogProc, kIndexLockDialog, lock_unlock_dialog_params
 .endproc
 
 .proc RunUnlockDialogProc
-        param_jump invoke_dialog_proc, kIndexUnlockDialog, lock_unlock_dialog_params
+        param_jump InvokeDialogProc, kIndexUnlockDialog, lock_unlock_dialog_params
 .endproc
 
 ;;; ============================================================
@@ -12664,24 +12664,24 @@ a_blocks:       .addr  op_block_count
         copy    #0, get_size_dialog_params::phase
         copy16  #GetSizeDialogConfirmCallback, operation_confirm_callback
         copy16  #GetSizeDialogEnumerationCallback, operation_enumeration_callback
-        param_call invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+        param_call InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
         copy16  #GetSizeDialogCompleteCallback, operation_complete_callback
         rts
 .endproc
 
 .proc GetSizeDialogEnumerationCallback
         copy    #GetSizeDialogLifecycle::count, get_size_dialog_params::phase
-        param_jump invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+        param_jump InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
 .endproc
 
 .proc GetSizeDialogConfirmCallback
         copy    #GetSizeDialogLifecycle::prompt, get_size_dialog_params::phase
-        param_jump invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+        param_jump InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
 .endproc
 
 .proc GetSizeDialogCompleteCallback
         copy    #GetSizeDialogLifecycle::close, get_size_dialog_params::phase
-        param_jump invoke_dialog_proc, kIndexGetSizeDialog, get_size_dialog_params
+        param_jump InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
 
 .endproc
 
@@ -13097,12 +13097,12 @@ done:   rts
 
 .proc DecFileCountAndRunDeleteDialogProc
         sub16   op_file_count, #1, delete_dialog_params::count
-        param_jump invoke_dialog_proc, kIndexDeleteDialog, delete_dialog_params
+        param_jump InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
 .endproc
 
 .proc DecFileCountAndRunCopyDialogProc
         sub16   op_file_count, #1, copy_dialog_params::count
-        param_jump invoke_dialog_proc, kIndexCopyDialog, copy_dialog_params
+        param_jump InvokeDialogProc, kIndexCopyDialog, copy_dialog_params
 .endproc
 
 ;;; ============================================================
@@ -13266,9 +13266,6 @@ kIndexDownloadDialog    = 8
 kIndexGetSizeDialog     = 9
 kIndexDuplicateDialog   = 10
 
-invoke_dialog_proc:
-        jmp     InvokeDialogProcImpl
-
 dialog_proc_table:
         .addr   AboutDialogProc
         .addr   CopyDialogProc
@@ -13286,7 +13283,7 @@ dialog_proc_table:
 dialog_param_addr:
         .addr   0
 
-.proc InvokeDialogProcImpl
+.proc InvokeDialogProc
         stax    dialog_param_addr
         tya
         asl     a
