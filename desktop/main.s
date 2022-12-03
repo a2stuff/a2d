@@ -38,7 +38,7 @@ JT_YIELD_LOOP:          jmp     YieldLoop               ; *
 JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
-JT_LAUNCH_FILE:         jmp     LaunchFile
+JT_LAUNCH_FILE:         jmp     LaunchFileWithPath
 JT_RESTORE_OVL:         jmp     RestoreDynamicRoutine   ; *
 JT_COLOR_MODE:          jmp     SetColorMode            ; *
 JT_MONO_MODE:           jmp     SetMonoMode             ; *

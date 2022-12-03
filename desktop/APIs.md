@@ -81,7 +81,7 @@ NOTE: This will use Aux $800...$1AFF to save the alert background; be careful wh
 
 #### `JUMP_TABLE_LAUNCH_FILE`
 
-Launch file. Equivalent of **File > Open** command.
+Launch file. Equivalent of **File > Open** command. Path in `INVOKER_PREFIX`.
 
 #### `JUMP_TABLE_RESTORE_OVL` *
 
