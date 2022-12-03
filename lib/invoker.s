@@ -18,9 +18,6 @@ start:
 
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
 
-prefix_length:
-        .byte   0
-
         DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
         DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
         DEFINE_CLOSE_PARAMS close_params
@@ -64,8 +61,6 @@ begin:  bit     ROMIN2
         bne     use_interpreter ; Yes, load it
 
         ;; Check file type
-        lda     INVOKER_PREFIX
-        sta     prefix_length
         MLI_CALL GET_FILE_INFO, get_info_params
         beq     :+
         rts
