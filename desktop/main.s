@@ -1320,15 +1320,15 @@ done:   rts
 
 .proc L4968
         jsr     MakeRamcardPrefixedPath
-        COPY_STRING $840, buf_win_path
-        jmp     LaunchBufWinPath
+        COPY_STRING $840, INVOKER_PREFIX
+        jmp     LaunchFileWithPath
 .endproc
 
         ;; Was already copied to RAMCard, so update path then run.
 run_from_ramcard:
         jsr     MakeRamcardPrefixedPath
-        COPY_STRING $800, buf_win_path
-        jsr     LaunchBufWinPath
+        COPY_STRING $800, INVOKER_PREFIX
+        jsr     LaunchFileWithPath
         jmp     done
 .endproc
 
@@ -1379,40 +1379,8 @@ not_downloaded:
         jsr     ATimes64
         addax   #run_list_paths, $06
 
-L4A0A:  param_call CopyPtr1ToBuf, buf_win_path
-        FALL_THROUGH_TO LaunchBufWinPath
-
-.proc LaunchBufWinPath
-        ;; Find last '/'
-        ldy     buf_win_path
-:       lda     buf_win_path,y
-        cmp     #'/'
-        beq     :+
-        dey
-        bpl     :-
-
-:       dey
-        tya
-        pha                     ; A = slash index
-
-        ;; Copy filename to buf_filename2
-        ldx     #0
-        iny
-:       iny
-        inx
-        lda     buf_win_path,y
-        sta     buf_filename2,x
-        cpy     buf_win_path
-        bne     :-
-        stx     buf_filename2
-
-        ;; Truncate path
-        pla                     ; A = slash index
-        sta     buf_win_path
-        lda     #0
-
-        jmp     LaunchFile
-.endproc
+L4A0A:  param_call CopyPtr1ToBuf, INVOKER_PREFIX
+        jmp     LaunchFileWithPath
 
 entry_num:
         .byte   0
@@ -1513,7 +1481,6 @@ entry_num:
 
 .endproc
 
-LaunchBufWinPath        := CmdSelectorItem::LaunchBufWinPath
 StripPathSegments       := CmdSelectorItem::StripPathSegments
 MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 
