@@ -2675,6 +2675,9 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         lda     #$11            ; Ctrl-Q - disable 80-col firmware
         jsr     COUT
 
+        ;; Switch back to color DHR mode
+        jsr     SetColorMode
+
         jsr     SETVID
         jsr     SETKBD
 
@@ -2687,9 +2690,6 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         sta     CLRALTCHAR
         sta     CLR80VID
         sta     CLR80STORE
-
-        ;; Switch back to color DHR mode
-        jsr     SetColorMode
 
         jsr     ReconnectRAM
         jmp     RestoreDeviceList
