@@ -61,8 +61,8 @@ L9052:  lda     #$00
         tya
         pha
         lda     #kDynamicRoutineRestore5000
-        jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES ; Add File Dialog close
+        jsr     main::RestoreDynamicRoutine
+        jsr     main::ClearUpdates ; Add File Dialog close
         pla
         tay
         pla
@@ -227,8 +227,8 @@ l3:     clc
         tya
         pha
         lda     #kDynamicRoutineRestore5000
-        jsr     JUMP_TABLE_RESTORE_OVL
-        jsr     JUMP_TABLE_CLEAR_UPDATES ; Edit File Dialog close
+        jsr     main::RestoreDynamicRoutine
+        jsr     main::ClearUpdates ; Edit File Dialog close
         pla
         tay
         pla
@@ -380,7 +380,7 @@ launch:
         bpl     :-
 
         jsr     CloseWindow
-        jsr     JUMP_TABLE_CLEAR_UPDATES ; Run dialog OK
+        jsr     main::ClearUpdates       ; Run dialog OK
         jsr     main::LaunchFileWithPath ; uses `INVOKER_PREFIX`
         jsr     main::SetCursorPointer
         copy    #$FF, selected_index
@@ -398,10 +398,10 @@ launch:
         bne     :+
 
         lda     #kDynamicRoutineRestore5000
-        jsr     JUMP_TABLE_RESTORE_OVL
+        jsr     main::RestoreDynamicRoutine
 
 :       jsr     CloseWindow
-        jsr     JUMP_TABLE_CLEAR_UPDATES
+        jsr     main::ClearUpdates
         pla
         jmp     L900F
 .endproc
@@ -1364,7 +1364,7 @@ write:  lda     open_origpfx_params::ref_num
 
 @retry: MLI_CALL WRITE, write_params
         beq     close
-        jsr     JUMP_TABLE_SHOW_ALERT
+        jsr     ShowAlert
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
 
@@ -1416,7 +1416,7 @@ write:  lda     open_curpfx_params::ref_num
         sta     close_params::ref_num
 @retry: MLI_CALL WRITE, write_params
         beq     close
-        jsr     JUMP_TABLE_SHOW_ALERT
+        jsr     ShowAlert
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
 

@@ -180,7 +180,7 @@ jt_callbacks:
 
 invalid:
         lda     #ERR_INVALID_PATHNAME
-        jmp     JUMP_TABLE_SHOW_ALERT
+        jmp     ShowAlert
 
 ok:     jsr     file_dialog::CloseWindow
         copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
