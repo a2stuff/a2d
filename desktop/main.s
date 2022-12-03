@@ -906,12 +906,9 @@ tmp_path_buf:
 
 ;;; ============================================================
 ;;; Launch file (File > Open, Selector menu, or double-click)
+;;; Inputs: Path in `src_path_buf` (a.k.a. `INVOKER_PREFIX`)
 
-.proc LaunchFileImpl
-compose_path:
-        jsr     ComposeWinFilePaths
-
-with_path:
+.proc LaunchFileWithPath
         jsr     SetCursorWatch ; before invoking
 
         ;; Get the file info to determine type.
@@ -986,8 +983,7 @@ with_path:
         lda     selected_icon_count
         beq     no_file_sel
 
-        jsr     CopyWinIconPaths
-        jsr     ComposeWinFilePaths
+        jsr     CopyAndComposeWinIconPaths
         jmp     :+
 
 no_file_sel:
@@ -1117,32 +1113,6 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         jmp     SetCursorPointer ; after opening folder
 .endproc
 
-.endproc
-LaunchFile         := LaunchFileImpl::compose_path ; use `buf_win_path` + `buf_filename2`
-LaunchFileWithPath := LaunchFileImpl::with_path ; use `INVOKER_PREFIX`
-
-;;; ============================================================
-
-.proc ComposeWinFilePaths
-        ;; Compose window path plus icon path
-        ldx     #$FF
-:       inx
-        copy    buf_win_path,x, src_path_buf,x
-        cpx     buf_win_path
-        bne     :-
-
-        inx
-        copy    #'/', src_path_buf,x
-
-        ldy     #0
-:       iny
-        inx
-        copy    buf_filename2,y, src_path_buf,x
-        cpy     buf_filename2
-        bne     :-
-        stx     src_path_buf
-
-        rts
 .endproc
 
 ;;; ============================================================
@@ -1281,8 +1251,7 @@ devlst_backup:
         lda     selected_icon_count
         beq     :+
 
-        jsr     CopyWinIconPaths
-        jsr     ComposeWinFilePaths
+        jsr     CopyAndComposeWinIconPaths
         COPY_STRING src_path_buf, path_buf0
 :
     END_IF
@@ -1320,14 +1289,14 @@ done:   rts
 
 .proc L4968
         jsr     MakeRamcardPrefixedPath
-        COPY_STRING $840, INVOKER_PREFIX
+        param_call CopyToSrcPath, $840
         jmp     LaunchFileWithPath
 .endproc
 
         ;; Was already copied to RAMCard, so update path then run.
 run_from_ramcard:
         jsr     MakeRamcardPrefixedPath
-        COPY_STRING $800, INVOKER_PREFIX
+        param_call CopyToSrcPath, $800
         jsr     LaunchFileWithPath
         jmp     done
 .endproc
@@ -1980,8 +1949,8 @@ maybe_open_file:
 
         pla
 
-        jsr     CopyWinIconPaths
-        jmp     LaunchFile
+        jsr     CopyAndComposeWinIconPaths
+        jmp     LaunchFileWithPath
 .endproc
 CmdOpenThenCloseCurrent := CmdOpen::open_then_close_current
 CmdOpenFromDoubleClick := CmdOpen::from_double_click
@@ -2007,9 +1976,10 @@ window_id_to_close:
 
 ;;; ============================================================
 ;;; Copy selection window and first selected icon paths to
-;;; `buf_win_path` and `buf_filename2` respectively.
+;;; `buf_win_path` and `buf_filename2` respectively, and
+;;; compose into `src_path_buf`.
 
-.proc CopyWinIconPaths
+.proc CopyAndComposeWinIconPaths
         ;; Copy window path to buf_win_path
         win_path_ptr := $06
 
@@ -2035,6 +2005,24 @@ window_id_to_close:
         dey
         dex
         bpl     :-
+
+        ;; Compose window path plus icon path
+        ldx     #$FF
+:       inx
+        copy    buf_win_path,x, src_path_buf,x
+        cpx     buf_win_path
+        bne     :-
+
+        inx
+        copy    #'/', src_path_buf,x
+
+        ldy     #0
+:       iny
+        inx
+        copy    buf_filename2,y, src_path_buf,x
+        cpy     buf_filename2
+        bne     :-
+        stx     src_path_buf
 
         rts
 .endproc
@@ -10700,8 +10688,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 :
         jsr     GetIconPath
 
-        ldax    #path_buf3
-        jsr     CopyToSrcPath
+        param_call CopyToSrcPath, path_buf3
 
         ldx     index
         lda     selected_icon_list,x
@@ -11175,8 +11162,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         lda     selected_icon_list,x
         jsr     GetIconPath   ; populates `path_buf3`
 
-        ldax    #path_buf3
-        jsr     CopyToSrcPath
+        param_call CopyToSrcPath, path_buf3
 
         ldx     index
         lda     selected_icon_list,x
