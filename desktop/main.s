@@ -1306,8 +1306,8 @@ invoke:
         result := *+1
         lda     #SELF_MODIFIED_BYTE
         bpl     done
-        jsr     MakeRamcardPrefixedPath
-        jsr     StripPathSegments
+        jsr     MakeRamcardPrefixedPath ; negative = copy to RAMCard
+        jsr     StripPathSegments       ; dialog populates `buf_win_path`
         jsr     GetCopiedToRAMCardFlag
         bpl     run_from_ramcard
 

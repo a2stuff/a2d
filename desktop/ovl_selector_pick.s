@@ -314,78 +314,99 @@ flags:  .byte   0
         lda     selected_index
         jsr     MaybeToggleEntryHilite
         jsr     main::SetCursorWatch
+
         lda     selected_index
         jsr     GetFileEntryAddr
         stax    $06
         ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
         cmp     #kSelectorEntryCopyNever
-        beq     l5
-        sta     L938A
+        beq     use_entry_path  ; not copied
+
+        sta     L938A           ; A = kSelectorEntryCopyXXX flag
         jsr     main::GetCopiedToRAMCardFlag
-        beq     l5
-        lda     L938A
-        beq     l2
+        beq     use_entry_path  ; no RAMCard, skip
+        lda     L938A           ; A = kSelectorEntryCopyXXX flag
+        .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
+        beq     check_copied    ; maybe copied?
+
+        ;; In the `kSelectorEntryCopyOnUse` case...
         lda     selected_index
         jsr     GetEntryRamcardFileInfo
-        beq     l3
+        beq     use_ramcard_path ; already copied!
+
+        ;; Need to copy to RAMCard
         lda     selected_index
         jsr     GetFilePathAddr
-        stax    $06
+        stax    $06             ; copy path into `buf_win_path`
         ldy     #0
         lda     ($06),y
         tay
-l1:     lda     ($06),y
+:       lda     ($06),y
         sta     buf_win_path,y
         dey
-        bpl     l1
-        lda     #$FF
+        bpl     :-
+        lda     #$FF            ; negative = copy to RAMCard
         jmp     DoCancel
 
-l2:     lda     selected_index
+        ;; Was it copied to RAMCard?
+check_copied:
+        lda     selected_index
         jsr     GetEntryRamcardFileInfo
-        bne     l5
-l3:     lda     selected_index
-        jsr     GetEntryRamcardPath
-        stax    $06
-        ldy     #0
-        lda     ($06),y
-        tay
-l4:     lda     ($06),y
-        sta     buf_win_path,y
-        dey
-        bpl     l4
-        jmp     l7
+        bne     use_entry_path
 
-l5:     lda     selected_index
-        jsr     GetFilePathAddr
-        stax    $06
+        ;; Copied to RAMCard - use copied path
+use_ramcard_path:
+        lda     selected_index
+        jsr     GetEntryRamcardPath
+        stax    $06             ; Copy path to `buf_win_path`
         ldy     #0
         lda     ($06),y
         tay
-l6:     lda     ($06),y
+:       lda     ($06),y
         sta     buf_win_path,y
         dey
-        bpl     l6
-l7:     ldy     buf_win_path
-l8:     lda     buf_win_path,y
-        cmp     #$2F
-        beq     l9
+        bpl     :-
+        jmp     split
+
+        ;; Not copied to RAMCard - just use entry's path
+use_entry_path:
+        lda     selected_index
+        jsr     GetFilePathAddr
+        stax    $06             ; Copy path to `buf_win_path`
+        ldy     #0
+        lda     ($06),y
+        tay
+:       lda     ($06),y
+        sta     buf_win_path,y
         dey
-        bne     l8
-l9:     dey
-        sty     L938A
+        bpl     :-
+        FALL_THROUGH_TO split
+
+        ;; Split filename off `buf_win_path` into `buf_filename2`
+split:
+        ldy     buf_win_path    ; Search for '/'
+:       lda     buf_win_path,y
+        cmp     #'/'
+        beq     :+
+        dey
+        bne     :-
+:       dey
+        sty     L938A           ; Y = split position
         iny
-        ldx     #$00
-l10:    iny
+
+        ldx     #0              ; Copy filename to `buf_filename2`
+:       iny
         inx
         lda     buf_win_path,y
         sta     buf_filename2,x
         cpy     buf_win_path
-        bne     l10
+        bne     :-
         stx     buf_filename2
-        lda     L938A
+
+        lda     L938A           ; A = split position
         sta     buf_win_path
+
         jsr     CloseWindow
         jsr     JUMP_TABLE_CLEAR_UPDATES ; Run dialog OK
         jsr     JUMP_TABLE_LAUNCH_FILE
@@ -422,7 +443,7 @@ l10:    iny
 
 ;;; ============================================================
 
-L938A:  .byte   0               ; ???
+L938A:  .byte   0               ; temp, used for a couple purposes
 
 num_primary_run_list_entries:
         .byte   0
