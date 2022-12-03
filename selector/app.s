@@ -974,7 +974,6 @@ noop:   rts
 
 .proc RestoreSystem
         jsr     RestoreTextMode
-        jsr     SetColorMode
         jsr     ReconnectRAM
         jmp     RestoreDeviceList
 .endproc
@@ -995,6 +994,9 @@ noop:   rts
 
         lda     #$11            ; Ctrl-Q - disable 80-col firmware
         jsr     COUT
+
+        ;; Switch back to color DHR mode
+        jsr     SetColorMode
 
         jsr     SETVID
         jsr     SETKBD

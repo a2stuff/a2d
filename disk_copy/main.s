@@ -102,6 +102,9 @@ params:  .res    3
         lda     #$11            ; Ctrl-Q - disable 80-col firmware
         jsr     COUT
 
+        ;; We'd switch back to color mode here, but since we're
+        ;; launching DeskTop there's no point.
+
         jsr     SETVID
         jsr     SETKBD
 
