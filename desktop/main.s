@@ -13703,7 +13703,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
     IF_EQ
         jsr     SetPortForDialogWindow
         param_call DrawDialogLabel, 6, aux::str_exists_prompt
-        jsr     DrawYesNoAllCancelButtons
+        jsr     AddYesNoAllCancelButtons
         jsr     Bell
 :       jsr     PromptInputLoop
         bmi     :-
@@ -13724,7 +13724,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
       ELSE
         param_call DrawDialogLabel, 6, aux::str_large_copy_prompt
       END_IF
-        jsr     DrawOkCancelButtons
+        jsr     AddOkCancelButtons
         jsr     Bell
 :       jsr     PromptInputLoop
         bmi     :-
@@ -13795,7 +13795,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
     IF_EQ
         jsr     SetPortForDialogWindow
         param_call DrawDialogLabel, 6, aux::str_ramcard_full
-        jsr     DrawOkButton
+        jsr     AddOkButton
         jsr     Bell
 :       jsr     PromptInputLoop
         bmi     :-
@@ -13868,7 +13868,7 @@ GetSizeDialogProc::do_count := *
         jsr     do_count
 
         jsr     SetPortForDialogWindow
-        jsr     DrawOkButton
+        jsr     AddOkButton
 :       jsr     PromptInputLoop
         bmi     :-
         jsr     EraseDialogLabels
@@ -13932,7 +13932,7 @@ GetSizeDialogProc::do_count := *
         cmp     #DeleteDialogLifecycle::confirm
     IF_EQ
         jsr     SetPortForDialogWindow
-        jsr     DrawOkCancelButtons
+        jsr     AddOkCancelButtons
         jsr     Bell
 :       jsr     PromptInputLoop
         bmi     :-
@@ -13950,7 +13950,7 @@ GetSizeDialogProc::do_count := *
     IF_EQ
         jsr     SetPortForDialogWindow
         param_call DrawDialogLabel, 6, aux::str_delete_locked_file
-        jsr     DrawYesNoAllCancelButtons
+        jsr     AddYesNoAllCancelButtons
 :       jsr     PromptInputLoop
         bmi     :-
         pha
@@ -14195,7 +14195,7 @@ do_close:
         cmp     #LockDialogLifecycle::confirm
     IF_EQ
         jsr     SetPortForDialogWindow
-        jsr     DrawOkCancelButtons
+        jsr     AddOkCancelButtons
 :       jsr     PromptInputLoop
         bmi     :-
         bne     :+
@@ -14497,13 +14497,13 @@ params:  .res    3
         jsr     OpenDialogWindow
         bit     prompt_button_flags
         bvc     :+
-        jsr     DrawYesNoAllCancelButtons
+        jsr     AddYesNoAllCancelButtons
         jmp     no_ok
 
-:       jsr     DrawOkFrameAndLabel
+:       jsr     DrawOkButton
 no_ok:  bit     prompt_button_flags
         bmi     done
-        jsr     DrawCancelFrameAndLabel
+        jsr     DrawCancelButton
 done:   rts
 .endproc
 
@@ -14626,22 +14626,22 @@ string: .addr   0
 
 ;;; ============================================================
 
-.proc DrawOkFrameAndLabel
+.proc DrawOkButton
         BTK_CALL BTK::Draw, aux::ok_button_params
         rts
 .endproc
 
-.proc DrawCancelFrameAndLabel
+.proc DrawCancelButton
         BTK_CALL BTK::Draw, aux::cancel_button_params
         rts
 .endproc
 
-.proc DrawYesNoAllCancelButtons
+.proc AddYesNoAllCancelButtons
         BTK_CALL BTK::Draw, aux::yes_button_params
         BTK_CALL BTK::Draw, aux::no_button_params
         BTK_CALL BTK::Draw, aux::all_button_params
 
-        jsr     DrawCancelFrameAndLabel
+        jsr     DrawCancelButton
         copy    #$40, prompt_button_flags
         rts
 .endproc
@@ -14655,9 +14655,9 @@ string: .addr   0
         rts
 .endproc
 
-.proc DrawOkCancelButtons
-        jsr     DrawOkFrameAndLabel
-        jsr     DrawCancelFrameAndLabel
+.proc AddOkCancelButtons
+        jsr     DrawOkButton
+        jsr     DrawCancelButton
         copy    #$00, prompt_button_flags
         rts
 .endproc
@@ -14669,8 +14669,8 @@ string: .addr   0
         rts
 .endproc
 
-.proc DrawOkButton
-        jsr     DrawOkFrameAndLabel
+.proc AddOkButton
+        jsr     DrawOkButton
         copy    #$80, prompt_button_flags
         rts
 .endproc
