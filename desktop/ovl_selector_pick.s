@@ -311,15 +311,17 @@ flags:  .byte   0
 ;;; ============================================================
 
 .proc DoRun
+        ptr := $06
+
         lda     selected_index
         jsr     MaybeToggleEntryHilite
         jsr     main::SetCursorWatch
 
         lda     selected_index
         jsr     GetFileEntryAddr
-        stax    $06
+        stax    ptr
         ldy     #kSelectorEntryFlagsOffset
-        lda     ($06),y
+        lda     (ptr),y
         cmp     #kSelectorEntryCopyNever
         beq     use_entry_path  ; not copied
 
@@ -338,11 +340,11 @@ flags:  .byte   0
         ;; Need to copy to RAMCard
         lda     selected_index
         jsr     GetFilePathAddr
-        stax    $06             ; copy path into `buf_win_path`
+        stax    ptr             ; copy path into `buf_win_path`
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         tay
-:       lda     ($06),y
+:       lda     (ptr),y
         sta     buf_win_path,y
         dey
         bpl     :-
@@ -359,57 +361,27 @@ check_copied:
 use_ramcard_path:
         lda     selected_index
         jsr     GetEntryRamcardPath
-        stax    $06             ; Copy path to `buf_win_path`
-        ldy     #0
-        lda     ($06),y
-        tay
-:       lda     ($06),y
-        sta     buf_win_path,y
-        dey
-        bpl     :-
-        jmp     split
+        jmp     launch
 
         ;; Not copied to RAMCard - just use entry's path
 use_entry_path:
         lda     selected_index
         jsr     GetFilePathAddr
-        stax    $06             ; Copy path to `buf_win_path`
+        FALL_THROUGH_TO launch
+
+launch:
+        stax    ptr             ; copy path to `INVOKER_PREFIX`
         ldy     #0
-        lda     ($06),y
+        lda     (ptr),y
         tay
-:       lda     ($06),y
-        sta     buf_win_path,y
+:       lda     (ptr),y
+        sta     INVOKER_PREFIX,y
         dey
         bpl     :-
-        FALL_THROUGH_TO split
-
-        ;; Split filename off `buf_win_path` into `buf_filename2`
-split:
-        ldy     buf_win_path    ; Search for '/'
-:       lda     buf_win_path,y
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-:       dey
-        sty     L938A           ; Y = split position
-        iny
-
-        ldx     #0              ; Copy filename to `buf_filename2`
-:       iny
-        inx
-        lda     buf_win_path,y
-        sta     buf_filename2,x
-        cpy     buf_win_path
-        bne     :-
-        stx     buf_filename2
-
-        lda     L938A           ; A = split position
-        sta     buf_win_path
 
         jsr     CloseWindow
         jsr     JUMP_TABLE_CLEAR_UPDATES ; Run dialog OK
-        jsr     JUMP_TABLE_LAUNCH_FILE
+        jsr     main::LaunchFileWithPath ; uses `INVOKER_PREFIX`
         jsr     main::SetCursorPointer
         copy    #$FF, selected_index
         return  #0
