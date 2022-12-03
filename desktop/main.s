@@ -10599,14 +10599,11 @@ volume:
 
         ;; Append " / " to buf
         inx
-        lda     #' '
-        sta     buf,x
+        copy    #' ', buf,x
         inx
-        lda     #'/'
-        sta     buf,x
+        copy    #'/', buf,x
         inx
-        lda     #' '
-        sta     buf,x
+        copy    #' ', buf,x
         stx     buf
 
         ;; Load up the total volume size...
@@ -13849,15 +13846,9 @@ GetSizeDialogProc::do_count := *
         jsr     DereferencePtrToAddr
         copy16in (ptr),y, file_count
 
-        lsr16   file_count      ; Convert blocks to K, rounding up
-        bcc     :+              ; NOTE: divide then maybe inc, rather than
-        inc16   file_count      ; always inc then divide, to handle $FFFF
-:
-
-        jsr     ComposeFileCountString
-        dec     str_file_count  ; remove trailing space
-        param_call DrawDialogLabel, 2 | DDL_VALUE, str_file_count
-        param_jump DrawString, str_kb_suffix
+        ldax    file_count
+        jsr     ComposeSizeString
+        param_jump DrawDialogLabel, 2 | DDL_VALUE, text_buffer2::length
     END_IF
 
         ;; --------------------------------------------------
@@ -14775,9 +14766,7 @@ ptr_str_files_suffix:
         ldax    file_count
         jsr     IntToStringWithSeparators
 
-        ldy     #1
-        copy    #' ', str_file_count,y
-
+        ldy     #0
         ldx     #0
 :       cpx     str_from_int
         beq     :+
