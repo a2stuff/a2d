@@ -2630,8 +2630,13 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         lda     #$11            ; Ctrl-Q - disable 80-col firmware
         jsr     COUT
 
-        ;; Switch back to color DHR mode
-        jsr     SetColorMode
+        ;; Switch back to color DHR mode now that screen is blank
+        bit     LCBANK1
+        bit     LCBANK1
+        sta     ALTZPON
+        jsr     SetColorMode    ; depends on state in Aux LC
+        sta     ALTZPOFF
+        bit     ROMIN2
 
         jsr     SETVID
         jsr     SETKBD
