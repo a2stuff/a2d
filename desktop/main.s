@@ -2651,9 +2651,6 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 .proc RestoreSystem
         jsr     SaveWindows
 
-        ;; Switch back to color DHR mode
-        jsr     SetColorMode
-
         ;; Switch back to main ZP/LC, preserving return address.
         pla
         tax
@@ -2677,6 +2674,9 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 
         lda     #$11            ; Ctrl-Q - disable 80-col firmware
         jsr     COUT
+
+        ;; Switch back to color DHR mode
+        jsr     SetColorMode
 
         jsr     SETVID
         jsr     SETKBD

@@ -973,8 +973,8 @@ noop:   rts
 ;;; Assert: ROM banked in, ALTZP/LC is OFF
 
 .proc RestoreSystem
-        jsr     SetColorMode
         jsr     RestoreTextMode
+        jsr     SetColorMode
         jsr     ReconnectRAM
         jmp     RestoreDeviceList
 .endproc
