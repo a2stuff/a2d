@@ -930,6 +930,18 @@ str_slash_desktop:
         DEFINE_QUIT_PARAMS quit_params
 
 have128k:
+        ;; Clear AUX text screen memory so junk doesn't show
+        sta     RAMWRTON
+        lda     #$A0
+        ldx     #0
+:       sta     $400,x
+        sta     $500,x
+        sta     $600,x
+        sta     $700,x
+        inx
+        bne     :-
+        sta     RAMWRTOFF
+
         ;; Turn on 80-column mode
         jsr     SLOT3ENTRY
         jsr     HOME
