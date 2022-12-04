@@ -185,6 +185,7 @@
 * Load DeskTop. Open a volume. Adjust the window size so that horizontal and vertical scrolling is required. Scroll to the bottom-right. Quit DeskTop, reload. Verify that the window size and scroll position was restored correctly.
 * Load DeskTop. Open a volume. Quit DeskTop, reload. Verify that the volume window was restored, and that the volume icon is dimmed. Close the volume window. Verify that the volume icon is no longer dimmed.
 * Load DeskTop. Open a window containing icons. View > by Name. Quit DeskTop, reload. Verify that the window is restored, and that it shows the icons in a list sorted by name, and that View > by Name is checked. Repeat for other View menu options.
+* Load DeskTop. Open a window for a volume in a Disk II drive. Quit DeskTop. Remove the disk from the Disk II drive. Load DeskTop. Verify that the Disk II drive is only polled once on startup, not twice.
 
 * Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. /HD. Launch DeskTop. Open the startup volume. Apple > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
 

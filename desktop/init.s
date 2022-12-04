@@ -1190,7 +1190,7 @@ iloop:  cpx     cached_window_entry_count
         data_ptr := $06
 
         jsr     main::save_restore_windows::Open
-        bcs     exit
+        jcs     exit
         lda     main::save_restore_windows::open_params::ref_num
         sta     main::save_restore_windows::read_params::ref_num
         sta     main::save_restore_windows::close_params::ref_num
@@ -1200,7 +1200,7 @@ iloop:  cpx     cached_window_entry_count
         ;; Validate file format version byte
         lda     main::save_restore_windows::desktop_file_data_buf
         cmp     #kDeskTopFileVersion
-        bne     exit
+        jne     exit
 
         copy16  #main::save_restore_windows::desktop_file_data_buf+1, data_ptr
 
@@ -1213,6 +1213,22 @@ loop:   ldy     #0
         sta     INVOKER_PREFIX,y
         dey
         bpl     :-
+
+        jsr     PushPointers
+
+        ;; Is there a matching volume icon? (If not, skip)
+        ldx     #1              ; past leading '/'
+:       lda     INVOKER_PREFIX+1,x
+        cmp     #'/'            ; look for next '/'
+        beq     :+
+        inx
+        cpx     INVOKER_PREFIX
+        bne     :-
+:       dex
+        stx     INVOKER_PREFIX+1 ; overwrite leading '/' with length
+        param_call main::FindIconByName, 0, INVOKER_PREFIX+1 ; 0=desktop
+        beq     next
+        copy    #'/', INVOKER_PREFIX+1 ; restore leading '/'
 
         ;; Copy view type to `new_window_view_by`
         ldy     #DeskTopFileItem::view_by
@@ -1237,8 +1253,6 @@ loop:   ldy     #0
         dex
         bpl     :-
 
-        jsr     PushPointers
-
         lda     #$80
         sta     main::copy_new_window_bounds_flag
         sta     main::OpenDirectory::suppress_error_on_open_flag
@@ -1247,7 +1261,7 @@ loop:   ldy     #0
         sta     main::copy_new_window_bounds_flag
         sta     main::OpenDirectory::suppress_error_on_open_flag
 
-        jsr     PopPointers
+next:   jsr     PopPointers
 
         add16_8 data_ptr, #.sizeof(DeskTopFileItem)
         jmp     loop

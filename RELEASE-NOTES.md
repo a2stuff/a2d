@@ -36,6 +36,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Don't move icons when dragged over source window's non-content area.
 * Make sure scrollbars activate/deactivate if needed when an icon is renamed.
 * Improve label spacing in several dialogs.
+* Don't poll drives multiple times on startup when restoring windows.
 
 ### Selector
 
