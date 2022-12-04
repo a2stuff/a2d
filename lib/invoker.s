@@ -53,12 +53,12 @@ begin:  bit     ROMIN2
         lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     BITMAP
 
-        ;; Set prefix
-        jsr     SetPrefix
-
         ;; Interpreter?
         lda     INVOKER_INTERPRETER
         bne     use_interpreter ; Yes, load it
+
+        ;; Set prefix
+        jsr     SetPrefix
 
         ;; Check file type
         MLI_CALL GET_FILE_INFO, get_info_params
