@@ -16,7 +16,7 @@
 .define res_char_button_desktop_shortcut 'S'
 .define res_string_selector_dialog_title "Selector"
 .define res_string_label_download "Copio sull'espansione RAM..."
-.define res_string_label_copying "Sto copiando:"
+.define res_string_label_copying "Sto copiando: "
 .define res_string_errmsg_not_enough_room "Non c'} spazio sufficiente nell'espansione RAM per copiare."
 .define res_string_prompt_click_ok "Clicca OK per continuare."
 .define res_string_errmsg_error_download "Si } verificato un errore durante il download."

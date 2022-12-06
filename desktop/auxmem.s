@@ -301,9 +301,6 @@ str_large_copy_prompt:
 str_large_move_prompt:
         PASCAL_STRING res_string_errmsg_too_large_to_move
 
-        DEFINE_POINT copy_file_count_pos, 110, kDialogLabelRow1
-        DEFINE_POINT copy_file_count_pos2, 175, kDialogLabelRow4
-
         ;; "Delete" dialog strings
 str_delete_title:
         PASCAL_STRING res_string_delete_dialog_title ; dialog title
@@ -315,8 +312,6 @@ str_delete_remaining:
         PASCAL_STRING res_string_delete_remaining
 str_delete_locked_file:
         PASCAL_STRING res_string_delete_prompt_locked_file
-
-        DEFINE_POINT delete_remaining_count_pos, 204, kDialogLabelRow4
 
         ;; "New Folder" dialog strings
 str_in:
@@ -355,9 +350,6 @@ str_info_yes:
         PASCAL_STRING res_string_get_info_label_yes
 str_info_no:
         PASCAL_STRING res_string_get_info_label_no
-
-        DEFINE_POINT unlock_remaining_count_pos, 205, kDialogLabelRow4
-        DEFINE_POINT lock_remaining_count_pos, 195, kDialogLabelRow4
 
 str_select_format:
         PASCAL_STRING res_string_format_disk_label_select

@@ -16,7 +16,7 @@
 .define res_char_button_desktop_shortcut 'Q'
 .define res_string_selector_dialog_title "Seletor"
 .define res_string_label_download "Copiando para RAMDisk..."
-.define res_string_label_copying "Copiar:"
+.define res_string_label_copying "Copiar: "
 .define res_string_errmsg_not_enough_room "N[o h@ espa]o suficiente no RAMDisk para copiar o aplicativo."
 .define res_string_prompt_click_ok "Clique em OK para continuar."
 .define res_string_errmsg_error_download "Ocorreu um erro durante o download."

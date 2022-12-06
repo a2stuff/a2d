@@ -391,6 +391,9 @@ str_kb_suffix:
 file_count:
         .word   0
 
+        DEFINE_POINT copy_file_count_pos, 0, aux::kDialogLabelRow1
+        DEFINE_POINT remaining_count_pos, 0, aux::kDialogLabelRow4
+
 ;;; ============================================================
 
         FONT := DEFAULT_FONT

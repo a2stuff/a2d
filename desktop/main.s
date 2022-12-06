@@ -13608,12 +13608,17 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         bit     move_flag
         bmi     :+
         param_call DrawDialogTitle, aux::str_copy_title
-        param_call DrawDialogLabel, 1, aux::str_copy_copying
-        param_jump DrawDialogLabel, 4, aux::str_copy_remaining
+        param_call DrawAndMeasureDialogLabel, 1, aux::str_copy_copying
+        addax   #kDialogLabelDefaultX, copy_file_count_pos::xcoord
+        param_call DrawAndMeasureDialogLabel, 4, aux::str_copy_remaining
+        jmp     setx
 
 :       param_call DrawDialogTitle, aux::str_move_title
-        param_call DrawDialogLabel, 1, aux::str_move_moving
-        param_jump DrawDialogLabel, 4, aux::str_move_remaining
+        param_call DrawAndMeasureDialogLabel, 1, aux::str_move_moving
+        addax   #kDialogLabelDefaultX, copy_file_count_pos::xcoord
+        param_call DrawAndMeasureDialogLabel, 4, aux::str_move_remaining
+setx:   addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
+        rts
     END_IF
 
         ;; --------------------------------------------------
@@ -13622,7 +13627,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
         jsr     SetPortForDialogWindow
-        MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos
+        MGTK_CALL MGTK::MoveTo, copy_file_count_pos
         jmp     DrawFileCountWithSuffix
     END_IF
 
@@ -13649,7 +13654,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         MGTK_CALL MGTK::MoveTo, aux::current_dest_file_pos
         param_call DrawDialogPath, path_buf1
 
-        MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos2
+        MGTK_CALL MGTK::MoveTo, remaining_count_pos
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -13712,10 +13717,13 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::str_download
-        param_call DrawDialogLabel, 1, aux::str_copy_copying
+        param_call DrawAndMeasureDialogLabel, 1, aux::str_copy_copying
+        addax   #kDialogLabelDefaultX, copy_file_count_pos::xcoord
         param_call DrawDialogLabel, 2, aux::str_copy_from
         param_call DrawDialogLabel, 3, aux::str_copy_to
-        param_jump DrawDialogLabel, 4, aux::str_copy_remaining
+        param_call DrawAndMeasureDialogLabel, 4, aux::str_copy_remaining
+        addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
+        rts
     END_IF
 
         ;; --------------------------------------------------
@@ -13724,7 +13732,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
         jsr     SetPortForDialogWindow
-        MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos
+        MGTK_CALL MGTK::MoveTo, copy_file_count_pos
         jmp     DrawFileCountWithSuffix
     END_IF
 
@@ -13743,7 +13751,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
 
-        MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos2
+        MGTK_CALL MGTK::MoveTo, remaining_count_pos
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -13875,7 +13883,7 @@ GetSizeDialogProc::do_count := *
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
-        MGTK_CALL MGTK::MoveTo, aux::delete_remaining_count_pos
+        MGTK_CALL MGTK::MoveTo, remaining_count_pos
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -13891,7 +13899,9 @@ GetSizeDialogProc::do_count := *
         jsr     EraseDialogLabels
         jsr     EraseOkCancelButtons
         param_call DrawDialogLabel, 2, aux::str_file_colon
-        param_call DrawDialogLabel, 4, aux::str_delete_remaining
+        param_call DrawAndMeasureDialogLabel, 4, aux::str_delete_remaining
+        addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
+
         lda     #$00
 :       rts
     END_IF
@@ -14134,11 +14144,7 @@ do_close:
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
         bit     unlock_flag
-      IF_NS
-        MGTK_CALL MGTK::MoveTo, aux::unlock_remaining_count_pos
-      ELSE
-        MGTK_CALL MGTK::MoveTo, aux::lock_remaining_count_pos
-      END_IF
+        MGTK_CALL MGTK::MoveTo, remaining_count_pos
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -14155,10 +14161,12 @@ do_close:
         param_call DrawDialogLabel, 2, aux::str_file_colon
         bit     unlock_flag
       IF_NS
-        param_call DrawDialogLabel, 4, aux::str_unlock_remaining
+        param_call DrawAndMeasureDialogLabel, 4, aux::str_unlock_remaining
       ELSE
-        param_call DrawDialogLabel, 4, aux::str_lock_remaining
+        param_call DrawAndMeasureDialogLabel, 4, aux::str_lock_remaining
       END_IF
+        addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
+
         lda     #$00
 :       rts
     END_IF
@@ -14550,6 +14558,17 @@ calc_y:
 
         ;; Restore default X position
         copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
+        rts
+.endproc
+
+;;; Takes advantage of `DrawDialogLabel` leaving $06 all set up for
+;;; a call to `TextWidth`.
+.proc DrawAndMeasureDialogLabel
+        jsr     DrawDialogLabel
+        params := $6
+        result := $9
+        MGTK_CALL MGTK::TextWidth, params
+        ldax    result
         rts
 .endproc
 

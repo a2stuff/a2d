@@ -16,7 +16,7 @@
 .define res_char_button_desktop_shortcut 'S'
 .define res_string_selector_dialog_title "Selektor"
 .define res_string_label_download "Kopierar till RAMCard..."
-.define res_string_label_copying "Kopierar:"
+.define res_string_label_copying "Kopierar: "
 .define res_string_errmsg_not_enough_room "Inte tillr{ckligt med utrymme i RAMCard f|r att kopiera programmet."
 .define res_string_prompt_click_ok "Klicka p} OK f|r att forts{tta."
 .define res_string_errmsg_error_download "Ett fel uppstod under nedladdningen."
