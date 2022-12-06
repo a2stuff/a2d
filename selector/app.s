@@ -104,7 +104,7 @@ str_startup:
         PASCAL_STRING res_string_menu_bar_item_startup ; menu bar item
 
 str_a2desktop:
-        PASCAL_STRING .sprintf(res_string_version_format_short, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor)
+        PASCAL_STRING .sprintf(res_string_version_format_long, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor, kDeskTopVersionSuffix)
 
 str_blank:
         PASCAL_STRING " "
