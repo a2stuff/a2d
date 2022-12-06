@@ -302,7 +302,7 @@ str_large_move_prompt:
         PASCAL_STRING res_string_errmsg_too_large_to_move
 
         DEFINE_POINT copy_file_count_pos, 110, kDialogLabelRow1
-        DEFINE_POINT copy_file_count_pos2, 170, kDialogLabelRow4
+        DEFINE_POINT copy_file_count_pos2, 175, kDialogLabelRow4
 
         ;; "Delete" dialog strings
 str_delete_title:

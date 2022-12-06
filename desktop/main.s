@@ -13735,12 +13735,14 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         copy16in (ptr),y, file_count
         jsr     SetPortForDialogWindow
         jsr     ClearTargetFileRect
+
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_src - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
+
         MGTK_CALL MGTK::MoveTo, aux::copy_file_count_pos2
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
