@@ -13603,22 +13603,14 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
 
-        param_call DrawDialogLabel, 2, aux::str_copy_from
-        param_call DrawDialogLabel, 3, aux::str_copy_to
         bit     move_flag
-        bmi     :+
+      IF_NC
         param_call DrawDialogTitle, aux::str_copy_title
-        param_call DrawAndMeasureDialogLabel, 1, aux::str_copy_copying
-        addax   #kDialogLabelDefaultX, copy_file_count_pos::xcoord
-        param_call DrawAndMeasureDialogLabel, 4, aux::str_copy_remaining
-        jmp     setx
-
-:       param_call DrawDialogTitle, aux::str_move_title
-        param_call DrawAndMeasureDialogLabel, 1, aux::str_move_moving
-        addax   #kDialogLabelDefaultX, copy_file_count_pos::xcoord
-        param_call DrawAndMeasureDialogLabel, 4, aux::str_move_remaining
-setx:   addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
-        rts
+      ELSE
+        param_call DrawDialogTitle, aux::str_move_title
+      END_IF
+        param_call DrawDialogLabel, 2, aux::str_copy_from
+        param_jump DrawDialogLabel, 3, aux::str_copy_to
     END_IF
 
         ;; --------------------------------------------------
@@ -13627,7 +13619,12 @@ setx:   addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
         ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
         jsr     SetPortForDialogWindow
-        MGTK_CALL MGTK::MoveTo, copy_file_count_pos
+        bit     move_flag
+      IF_NC
+        param_call DrawDialogLabel, 1, aux::str_copy_copying
+      ELSE
+        param_call DrawDialogLabel, 1, aux::str_move_moving
+      END_IF
         jmp     DrawFileCountWithSuffix
     END_IF
 
@@ -13654,7 +13651,12 @@ setx:   addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
         MGTK_CALL MGTK::MoveTo, aux::current_dest_file_pos
         param_call DrawDialogPath, path_buf1
 
-        MGTK_CALL MGTK::MoveTo, remaining_count_pos
+        bit     move_flag
+      IF_NC
+        param_call DrawDialogLabel, 4, aux::str_copy_remaining
+      ELSE
+        param_call DrawDialogLabel, 4, aux::str_move_remaining
+      END_IF
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -13679,7 +13681,7 @@ setx:   addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
     IF_EQ
         jsr     SetPortForDialogWindow
         bit     move_flag
-      IF_MINUS
+      IF_NS
         param_call DrawDialogLabel, 6, aux::str_large_move_prompt
       ELSE
         param_call DrawDialogLabel, 6, aux::str_large_copy_prompt
@@ -13717,12 +13719,8 @@ setx:   addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
         copy    #0, has_input_field_flag
         jsr     OpenDialogWindow
         param_call DrawDialogTitle, aux::str_download
-        param_call DrawAndMeasureDialogLabel, 1, aux::str_copy_copying
-        addax   #kDialogLabelDefaultX, copy_file_count_pos::xcoord
         param_call DrawDialogLabel, 2, aux::str_copy_from
         param_call DrawDialogLabel, 3, aux::str_copy_to
-        param_call DrawAndMeasureDialogLabel, 4, aux::str_copy_remaining
-        addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
         rts
     END_IF
 
@@ -13732,7 +13730,8 @@ setx:   addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
         ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
         jsr     SetPortForDialogWindow
-        MGTK_CALL MGTK::MoveTo, copy_file_count_pos
+
+        param_call DrawDialogLabel, 1, aux::str_copy_copying
         jmp     DrawFileCountWithSuffix
     END_IF
 
@@ -13751,7 +13750,7 @@ setx:   addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
 
-        MGTK_CALL MGTK::MoveTo, remaining_count_pos
+        param_call DrawDialogLabel, 4, aux::str_copy_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -13883,7 +13882,8 @@ GetSizeDialogProc::do_count := *
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
-        MGTK_CALL MGTK::MoveTo, remaining_count_pos
+
+        param_call DrawDialogLabel, 4, aux::str_delete_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -13899,8 +13899,6 @@ GetSizeDialogProc::do_count := *
         jsr     EraseDialogLabels
         jsr     EraseOkCancelButtons
         param_call DrawDialogLabel, 2, aux::str_file_colon
-        param_call DrawAndMeasureDialogLabel, 4, aux::str_delete_remaining
-        addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
 
         lda     #$00
 :       rts
@@ -14143,8 +14141,13 @@ do_close:
         jsr     CopyNameToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
+
         bit     unlock_flag
-        MGTK_CALL MGTK::MoveTo, remaining_count_pos
+      IF_NS
+        param_call DrawDialogLabel, 4, aux::str_unlock_remaining
+      ELSE
+        param_call DrawDialogLabel, 4, aux::str_lock_remaining
+      END_IF
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -14159,13 +14162,6 @@ do_close:
         jsr     EraseDialogLabels
         jsr     EraseOkCancelButtons
         param_call DrawDialogLabel, 2, aux::str_file_colon
-        bit     unlock_flag
-      IF_NS
-        param_call DrawAndMeasureDialogLabel, 4, aux::str_unlock_remaining
-      ELSE
-        param_call DrawAndMeasureDialogLabel, 4, aux::str_lock_remaining
-      END_IF
-        addax   #kDialogLabelDefaultX, remaining_count_pos::xcoord
 
         lda     #$00
 :       rts
@@ -14558,17 +14554,6 @@ calc_y:
 
         ;; Restore default X position
         copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
-        rts
-.endproc
-
-;;; Takes advantage of `DrawDialogLabel` leaving $06 all set up for
-;;; a call to `TextWidth`.
-.proc DrawAndMeasureDialogLabel
-        jsr     DrawDialogLabel
-        params := $6
-        result := $9
-        MGTK_CALL MGTK::TextWidth, params
-        ldax    result
         rts
 .endproc
 
