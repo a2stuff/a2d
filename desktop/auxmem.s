@@ -305,6 +305,8 @@ str_delete_title:
         PASCAL_STRING res_string_delete_dialog_title ; dialog title
 str_delete_ok:
         PASCAL_STRING res_string_prompt_delete_ok
+str_delete_count:
+        PASCAL_STRING res_string_label_delete_count
 str_file_colon:
         PASCAL_STRING res_string_label_file
 str_delete_locked_file:
@@ -373,12 +375,12 @@ str_erasing_error:
         PASCAL_STRING res_string_erase_disk_error
 
         ;; "Unlock File" dialog strings
-str_unlock_ok:
-        PASCAL_STRING res_string_unlock_prompt
+str_unlock_count:
+        PASCAL_STRING res_string_unlock_status_count
 
         ;; "Lock File" dialog strings
-str_lock_ok:
-        PASCAL_STRING res_string_lock_prompt
+str_lock_count:
+        PASCAL_STRING res_string_lock_status_count
 
         ;; "Get Size" dialog strings
 str_size_number:

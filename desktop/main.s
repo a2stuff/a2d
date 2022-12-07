@@ -10138,16 +10138,23 @@ next_icon:
         lda     do_op_flag
         bne     finish
         inc     do_op_flag
+
         bit     operation_flags
         bmi     @lock_or_size
+
         bit     copy_delete_flags
-        bpl     not_trash
+        bpl     no_confirm
+        bmi     confirm
 
 @lock_or_size:
+        bvc     no_confirm      ; lock/unlock
+
+confirm:
         jsr     InvokeOperationConfirmCallback
         bit     operation_flags
         bvs     finish
-not_trash:
+
+no_confirm:
         jmp     perform
 
 finish: jsr     InvokeOperationCompleteCallback
@@ -12422,9 +12429,8 @@ callbacks_for_lock:
 .enum LockDialogLifecycle
         open            = 0 ; opening window, initial label
         count           = 1 ; show operation details (e.g. file count)
-        confirm         = 2 ; draw buttons, input loop
-        operation       = 3 ; performing operation
-        close           = 4 ; destroy window
+        operation       = 2 ; performing operation
+        close           = 3 ; destroy window
 .endenum
 
 .params lock_unlock_dialog_params
@@ -12439,15 +12445,13 @@ a_path: .addr   src_path_buf
         bpl     :+
 
         ;; Unlock
-        copy16  #UnlockDialogConfirmCallback, operation_confirm_callback
         copy16  #UnlockDialogEnumerationCallback, operation_enumeration_callback
         jsr     RunUnlockDialogProc
         copy16  #UnlockDialogCompleteCallback, operation_complete_callback
         rts
 
         ;; Lock
-:       copy16  #LockDialogConfirmCallback, operation_confirm_callback
-        copy16  #LockDialogEnumerationCallback, operation_enumeration_callback
+:       copy16  #LockDialogEnumerationCallback, operation_enumeration_callback
         jsr     RunLockDialogProc
         copy16  #LockDialogCompleteCallback, operation_complete_callback
         rts
@@ -12463,22 +12467,6 @@ a_path: .addr   src_path_buf
         stax    lock_unlock_dialog_params::count
         copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
         jmp     RunUnlockDialogProc
-.endproc
-
-.proc LockDialogConfirmCallback
-        copy    #LockDialogLifecycle::confirm, lock_unlock_dialog_params::phase
-        jsr     RunLockDialogProc
-        jne     CloseFilesCancelDialog
-
-        rts
-.endproc
-
-.proc UnlockDialogConfirmCallback
-        copy    #LockDialogLifecycle::confirm, lock_unlock_dialog_params::phase
-        jsr     RunUnlockDialogProc
-        jne     CloseFilesCancelDialog
-
-        rts
 .endproc
 
 .proc PrepCallbacksForLock
@@ -13893,6 +13881,9 @@ GetSizeDialogProc::do_count := *
         bne     :+
         jsr     EraseDialogLabels
         jsr     EraseOkCancelButtons
+
+        param_call DrawDialogLabel, 1, aux::str_delete_count
+        jsr     DrawFileCountWithSuffix
         param_call DrawDialogLabel, 2, aux::str_file_colon
 
         lda     #$00
@@ -14102,10 +14093,11 @@ do_close:
         jsr     OpenDialogWindow
         bit     unlock_flag
       IF_NS
-        param_jump DrawDialogTitle, aux::label_unlock
+        param_call DrawDialogTitle, aux::label_unlock
       ELSE
-        param_jump DrawDialogTitle, aux::label_lock
+        param_call DrawDialogTitle, aux::label_lock
       END_IF
+        param_jump DrawDialogLabel, 2, aux::str_file_colon
     END_IF
 
         ;; --------------------------------------------------
@@ -14116,9 +14108,9 @@ do_close:
         jsr     SetPortForDialogWindow
         bit     unlock_flag
       IF_NS
-        param_call DrawDialogLabel, 4, aux::str_unlock_ok
+        param_call DrawDialogLabel, 1, aux::str_unlock_count
       ELSE
-        param_call DrawDialogLabel, 4, aux::str_lock_ok
+        param_call DrawDialogLabel, 1, aux::str_lock_count
       END_IF
         jmp     DrawFileCountWithSuffix
     END_IF
@@ -14139,22 +14131,6 @@ do_close:
 
         param_call DrawDialogLabel, 4, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #LockDialogLifecycle::confirm
-    IF_EQ
-        jsr     SetPortForDialogWindow
-        jsr     AddOkCancelButtons
-:       jsr     PromptInputLoop
-        bmi     :-
-        bne     :+
-        jsr     EraseDialogLabels
-        jsr     EraseOkCancelButtons
-        param_call DrawDialogLabel, 2, aux::str_file_colon
-
-        lda     #$00
-:       rts
     END_IF
 
         ;; --------------------------------------------------
