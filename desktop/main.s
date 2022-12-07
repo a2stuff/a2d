@@ -14530,19 +14530,72 @@ calc_y:
         FALL_THROUGH_TO DrawDialogPath
 .endproc
 
-;;; Set up clipping to draw a path (long string) in a dialog
-;;; without intruding into the border.
+;;; Draw a path (long string) in the prompt dialog by without intruding
+;;; into the border. If the string is too long, it is shrunk from the
+;;; center with "..." inserted.
 ;;; Inputs: A,X = string address
+;;; Trashes $06...$0C
 .proc DrawDialogPath
-        stax    string
-        param_call GetPortBits, tmp_mapinfo
-        MGTK_CALL MGTK::SetPortBits, aux::prompt_dialog_labels_mapinfo
-        ldax    string
-        jsr     DrawString
-        MGTK_CALL MGTK::SetPortBits, tmp_mapinfo
+        ptr := $6
+        stax    ptr
+
+loop:   jsr     measure
+        bcc     draw            ; already short enough
+
+        jsr     ellipsify
+        jmp     loop
+
+        ;; Draw
+draw:   MGTK_CALL MGTK::DrawText, txt
         rts
 
-string: .addr   0
+        ;; Measure
+measure:
+        txt := $8
+        len := $A
+        result := $B
+
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        add16   ptr, #1, txt
+        MGTK_CALL MGTK::TextWidth, txt
+        cmp16   result, #aux::kPromptDialogPathWidth
+        rts
+
+ellipsify:
+        ldy     #0
+        lda     (ptr),y         ; length
+        sta     length
+        pha
+        sec                     ; shrink length by one
+        sbc     #1
+        sta     (ptr),y
+        pla
+        lsr                     ; /= 2
+
+        pha                     ; A = length/2
+
+        tay
+:       iny                     ; shift chars from midpoint to
+        lda     (ptr),y         ; end of string down by one
+        dey
+        sta     (ptr),y
+        iny
+        length := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :-
+
+        pla                     ; A = length/2
+
+        tay                     ; overwrite midpoint with
+        lda     #'.'            ; "..."
+        sta     (ptr),y
+        iny
+        sta     (ptr),y
+        iny
+        sta     (ptr),y
+        rts
 .endproc
 
 ;;; ============================================================

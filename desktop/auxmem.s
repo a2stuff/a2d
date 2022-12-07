@@ -239,22 +239,14 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
         kPromptDialogInsetBottom = 20
         DEFINE_RECT clear_dialog_labels_rect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom
 
-        ;; Offset maprect for drawing labels within dialog
-        ;; Coordinates are unchanged, but clipping rect is set
-        ;; to `clear_dialog_labels_rect` so labels don't overflow.
-.params prompt_dialog_labels_mapinfo
-        DEFINE_POINT viewloc, kPromptDialogLeft+kPromptDialogInsetLeft, kPromptDialogTop+kPromptDialogInsetTop
-        .addr   MGTK::screen_mapbits
-        .byte   MGTK::screen_mapwidth
-        .byte   0
-        DEFINE_RECT maprect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom
-.endparams
+        kPromptDialogPathLeft = 75
+        kPromptDialogPathWidth = kPromptDialogWidth - kPromptDialogPathLeft - kDialogLabelDefaultX
 
         DEFINE_RECT prompt_rect, 40, kDialogLabelRow5+1, 360, kDialogLabelRow6
-        DEFINE_POINT current_target_file_pos, 75, kDialogLabelRow2
-        DEFINE_POINT current_dest_file_pos, 75, kDialogLabelRow3
-        DEFINE_RECT current_target_file_rect, 75, kDialogLabelRow1+1, kPromptDialogWidth - kPromptDialogInsetRight, kDialogLabelRow2
-        DEFINE_RECT current_dest_file_rect, 75, kDialogLabelRow2+1, kPromptDialogWidth - kPromptDialogInsetRight, kDialogLabelRow3
+        DEFINE_POINT current_target_file_pos, kPromptDialogPathLeft, kDialogLabelRow2
+        DEFINE_POINT current_dest_file_pos, kPromptDialogPathLeft, kDialogLabelRow3
+        DEFINE_RECT current_target_file_rect, kPromptDialogPathLeft, kDialogLabelRow1+1, kPromptDialogWidth - kPromptDialogInsetRight, kDialogLabelRow2
+        DEFINE_RECT current_dest_file_rect, kPromptDialogPathLeft, kDialogLabelRow2+1, kPromptDialogWidth - kPromptDialogInsetRight, kDialogLabelRow3
 
 ;;; ============================================================
 ;;; "About" dialog resources
