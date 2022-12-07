@@ -274,6 +274,9 @@ str_about7:  PASCAL_STRING res_string_about_text_line7
 str_about8:  PASCAL_STRING kBuildDate
 str_about9:  PASCAL_STRING .sprintf(res_string_noprod_version_format_long,::kDeskTopVersionMajor,::kDeskTopVersionMinor,kDeskTopVersionSuffix)
 
+str_files_remaining:
+        PASCAL_STRING res_string_label_files_remaining
+
         ;; "Copy File" dialog strings
 str_copy_title:
         PASCAL_STRING res_string_copy_dialog_title ; dialog title
@@ -283,16 +286,12 @@ str_copy_from:
         PASCAL_STRING res_string_copy_label_from
 str_copy_to:
         PASCAL_STRING res_string_copy_label_to
-str_copy_remaining:
-        PASCAL_STRING res_string_copy_status_files_remaining
 
         ;; "Move File" dialog strings
 str_move_title:
         PASCAL_STRING res_string_move_dialog_title ; dialog title
 str_move_moving:
         PASCAL_STRING res_string_move_label_status
-str_move_remaining:
-        PASCAL_STRING res_string_move_status_files_remaining
 
 str_exists_prompt:
         PASCAL_STRING res_string_prompt_overwrite
@@ -308,8 +307,6 @@ str_delete_ok:
         PASCAL_STRING res_string_prompt_delete_ok
 str_file_colon:
         PASCAL_STRING res_string_label_file
-str_delete_remaining:
-        PASCAL_STRING res_string_delete_remaining
 str_delete_locked_file:
         PASCAL_STRING res_string_delete_prompt_locked_file
 
@@ -378,14 +375,10 @@ str_erasing_error:
         ;; "Unlock File" dialog strings
 str_unlock_ok:
         PASCAL_STRING res_string_unlock_prompt
-str_unlock_remaining:
-        PASCAL_STRING res_string_unlock_status_remaining
 
         ;; "Lock File" dialog strings
 str_lock_ok:
         PASCAL_STRING res_string_lock_prompt
-str_lock_remaining:
-        PASCAL_STRING res_string_lock_status_remaining
 
         ;; "Get Size" dialog strings
 str_size_number:

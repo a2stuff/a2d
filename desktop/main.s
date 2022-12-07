@@ -13651,12 +13651,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         MGTK_CALL MGTK::MoveTo, aux::current_dest_file_pos
         param_call DrawDialogPath, path_buf1
 
-        bit     move_flag
-      IF_NC
-        param_call DrawDialogLabel, 4, aux::str_copy_remaining
-      ELSE
-        param_call DrawDialogLabel, 4, aux::str_move_remaining
-      END_IF
+        param_call DrawDialogLabel, 4, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -13750,7 +13745,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
 
-        param_call DrawDialogLabel, 4, aux::str_copy_remaining
+        param_call DrawDialogLabel, 4, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -13883,7 +13878,7 @@ GetSizeDialogProc::do_count := *
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
 
-        param_call DrawDialogLabel, 4, aux::str_delete_remaining
+        param_call DrawDialogLabel, 4, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
@@ -14142,12 +14137,7 @@ do_close:
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
 
-        bit     unlock_flag
-      IF_NS
-        param_call DrawDialogLabel, 4, aux::str_unlock_remaining
-      ELSE
-        param_call DrawDialogLabel, 4, aux::str_lock_remaining
-      END_IF
+        param_call DrawDialogLabel, 4, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
