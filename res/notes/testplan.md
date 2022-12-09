@@ -691,6 +691,13 @@ Repeat for Calculator and Sci.Calc:
 * Enter '1' '/' '2' '='. Verify that the result has a 0 before the decimal (i.e. "0.5").
 * Enter '0' '-' '.' '5' '='. Verify that the result has a 0 before the decimal (i.e. "-0.5").
 
+## Find Files
+
+* Launch DeskTop. Close all windows. Apple Menu > Find Files. Verify that an alert is shown.
+* Launch DeskTop. Open a window. Apple Menu > Find Files. Type "*" and click Search. Select a file in the list. Press Open-Apple+O. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
+* Launch DeskTop. Open a window. Apple Menu > Find Files. Type "*" and click Search. Select a file in the list. Press Solid-Apple+O. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
+* Launch DeskTop. Open a window. Apple Menu > Find Files. Type "*" and click Search. Double-click a file in the list. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
+
 
 # Selector
 
@@ -890,37 +897,33 @@ Watch out for:
 # List Boxes Controls
 
 This covers:
-* File Pickers (which support selection)
-* Disk Copy (which supports selection)
-* Sounds DA (which supports selection)
-* Find Files DA (which does not support selection)
+* File Pickers
+* Disk Copy
+* Sounds DA
+* Find Files DA
 
 Repeat for each list box:
 * Verify the following keyboard shortcuts:
   * If the scrollbar is not enabled, the view should not scroll.
   * Up Arrow
-    * If the control does not support selection, scrolls the view up by one line.
-    * Otherwise, if there is no selection, selects the last item and scrolls it into view.
+    * If there is no selection, selects the last item and scrolls it into view.
     * Otherwise, selects the previous item and scrolls it into view.
   * Down Arrow
-    * If the control does not support selection, scrolls the view down by one line.
-    * Otherwise, if there is no selection, selects the first item and scrolls it into view.
+    * If there is no selection, selects the first item and scrolls it into view.
     * Otherwise, selects the next item and scrolls it into view.
   * Apple+Up Arrow
     * Scrolls one page up.
-    * If the control supports selection, selection is not changed.
+    * Selection is not changed.
   * Apple+Down Arrow
     * Scrolls one down up.
-    * If the control supports selection, selection is not changed.
+    * Selection is not changed.
   * Open-Apple+Solid-Apple+Up Arrow
     * Scrolls the view so that the first item is visible.
-    * If the control supports selection, selects the first item.
+    * Selects the first item.
   * Open-Apple+Solid-Apple+Down Arrow
     * Scrolls the view so that the last item is visible.
-    * If the control supports selection, selects the last item.
+    * Selects the last item.
 * Hold down the mouse button on the scrollbar's up arrow or down arrow; verify that the scrolling continues as long as the button is held down.
-
-Repeat for each list box that supports selection:
 * Click on an item. Verify it is selected. Click on white space below the items (if possible). Verify that selection is cleared.
 
 For the Sounds DA:

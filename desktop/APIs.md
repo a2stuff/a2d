@@ -83,6 +83,10 @@ NOTE: This will use Aux $800...$1AFF to save the alert background; be careful wh
 
 Launch file. Equivalent of **File > Open** command. Path in `INVOKER_PREFIX`.
 
+#### `JUMP_TABLE_SHOW_FILE` *
+
+Open the containing window for the specified file and select the file icon. Path in `INVOKER_PREFIX`.
+
 #### `JUMP_TABLE_RESTORE_OVL` *
 
 Restore from overlay routine

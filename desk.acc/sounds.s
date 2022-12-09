@@ -1506,8 +1506,6 @@ OnListSelectionNoChange := OnListSelectionChange
         highlight_rect = itemrect
 .endscope
 
-        .define LB_SELECTION_ENABLED 1
-        .define LB_CLEAR_SEL_ON_CLICK 0
         .include "../lib/listbox.s"
 
 ;;; ============================================================

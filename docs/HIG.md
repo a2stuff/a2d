@@ -57,9 +57,9 @@ Note that these are for inspiration, not to be dutifully followed.
 * Item height is 10 pixels.
   * This gives 1px margin above the text, 0px below (counting descenders).
 * The following keyboard shortcuts are supported:
-  * Up/Down Arrow - move selection or scroll by one line.
+  * Up/Down Arrow - move selection by one line.
   * Apple+Up/Down Arrow - scroll by one page.
-  * Open-Apple+Solid-Apple+Up/Down Arrow - move selection or scroll to start/end.
+  * Open-Apple+Solid-Apple+Up/Down Arrow - move selection to start/end.
 
 ## Choice Dialogs
 

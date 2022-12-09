@@ -100,11 +100,43 @@ entry:
         sta     RAMWRTON
 
         jsr     Init
+        lda     show_index
 
         ;; Back to main for exit
         sta     RAMRDOFF
         sta     RAMWRTOFF
-exit:   rts
+
+        ;; Show an entry?
+    IF_POS
+        ;; Copy entry path to `INVOKER_PREFIX`
+        jsr     GetEntryAddr
+        stax    $06
+        ldy     #0
+        lda     ($06),y
+        tay
+:       lda     ($06),y
+        sta     INVOKER_PREFIX,y
+        dey
+        bpl     :-
+
+        ;; Inject JT call to stack
+        pla
+        tax
+        pla
+        tay
+
+        lda     #>(JUMP_TABLE_SHOW_FILE-1)
+        pha
+        lda     #<(JUMP_TABLE_SHOW_FILE-1)
+        pha
+
+        tya
+        pha
+        txa
+        pha
+    END_IF
+
+        rts
 
 no_windows:
         lda     #kErrNoWindowsOpen
@@ -838,14 +870,14 @@ entries_buffer := *
 
 kDAWindowID     = 63
 kDAWidth        = 465
-kDAHeight       = 150
+kDAHeight       = kResultsHeight + 40
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 kResultsWindowID        = kDAWindowID+1
 kResultsWidth           = kDAWidth - 60
 kResultsWidthSB         = kResultsWidth + 20
-kResultsHeight          = kDAHeight - 40
+kResultsHeight          = kResultsRows * kListItemHeight - 1
 kResultsLeft            = kDALeft + (kDAWidth - kResultsWidthSB) / 2
 kResultsTop             = kDATop + 30
 
@@ -919,6 +951,7 @@ nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
+        DEFINE_RECT highlight_rect, 0,0,kResultsWidth,0
         DEFINE_POINT cur_pos, 0, 0
 cur_line:       .byte   0
 
@@ -950,6 +983,7 @@ grafport_win:   .tag    MGTK::GrafPort
         DEFINE_BUTTON cancel_button_rec, kDAWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
         DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
 
+penXOR:         .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
@@ -1031,6 +1065,16 @@ buf_search:     .res    kBufSize, 0 ; search term
         ldx     event_params::modifiers
         stx     le_params::modifiers
     IF_NOT_ZERO
+        ;; Modified
+        lda     event_params::key
+        cmp     #'O'
+      IF_EQ
+        lda     selected_index
+        bmi     InputLoop
+        sta     show_index
+        jmp     Exit
+      END_IF
+
         LETK_CALL LETK::Key, le_params
         jmp     InputLoop
     END_IF
@@ -1141,7 +1185,13 @@ finish: jmp     InputLoop
         cmp     #kResultsWindowID
     IF_EQ
         jsr     ListClick
-        jmp     InputLoop
+        bmi     :+
+        jsr     DetectDoubleClick
+        bmi     :+
+        copy    selected_index, show_index
+        jmp     Exit
+
+:       jmp     InputLoop
     END_IF
 
         cmp     #kDAWindowID
@@ -1268,7 +1318,7 @@ done:   rts
 .endproc
 
 ;;; ============================================================
-;;; Populate entry_buf with entry in A
+;;; Populate `entry_buf` with entry in A
 
 .proc GetEntry
         jsr     GetEntryAddr
@@ -1287,18 +1337,22 @@ done:   rts
 ;;; List Box
 ;;; ============================================================
 
+selected_index: .byte   $FF
+
+;;; Set to the selected index to should show the result on exit.
+show_index:     .byte   $FF
+
 .scope listbox
         winfo = winfo_results
         kHeight = kResultsHeight
         kRows = kResultsRows
         num_items = num_entries
         item_pos = cur_pos
+        selected_index = ::selected_index
+        highlight_rect = ::highlight_rect
 
-        ;;         selected_index =
-        ;;         highlight_rect =
 .endscope
 
-        .define LB_SELECTION_ENABLED 0
         .include "../lib/listbox.s"
 
 ;;; ============================================================
@@ -1335,6 +1389,7 @@ done:   rts
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
         .include "../lib/muldiv.s"
+        .include "../lib/doubleclick.s"
 
 ;;; ============================================================
 

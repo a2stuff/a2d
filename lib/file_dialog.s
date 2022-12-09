@@ -1776,7 +1776,6 @@ HandleCancel:   jmp     0
 .endscope
 listbox::selected_index = selected_index
 
-        .define LB_SELECTION_ENABLED 1
         .include "../lib/listbox.s"
 
 ;;; ============================================================

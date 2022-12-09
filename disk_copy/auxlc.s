@@ -1358,7 +1358,6 @@ CheckAlpha:
         highlight_rect = rect_highlight_row
 .endscope
 
-        .define LB_SELECTION_ENABLED 1
         .include "../lib/listbox.s"
 
 ;;; ============================================================

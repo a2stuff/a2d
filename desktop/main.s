@@ -39,6 +39,7 @@ JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
 JT_LAUNCH_FILE:         jmp     LaunchFileWithPath
+JT_SHOW_FILE:           jmp     ShowFileWithPath        ; *
 JT_RESTORE_OVL:         jmp     RestoreDynamicRoutine   ; *
 JT_COLOR_MODE:          jmp     SetColorMode            ; *
 JT_MONO_MODE:           jmp     SetMonoMode             ; *
@@ -1000,22 +1001,7 @@ no_file_sel:
         jmp     ShowAlert
 
 launch:
-        ;; Copy/split path into prefix and filename
-        param_call FindLastPathSegment, INVOKER_PREFIX ; point Y at last '/'
-        tya
-        pha
-        ldx     #1
-        iny                     ; +1 for length byte
-        iny                     ; +1 to skip past '/'
-:       copy    INVOKER_PREFIX,y, INVOKER_FILENAME,x
-        cpy     INVOKER_PREFIX
-        beq     :+
-        iny
-        inx
-        bne     :-              ; always
-:       stx     INVOKER_FILENAME
-        pla
-        sta     INVOKER_PREFIX
+        jsr     SplitInvokerPath
 
         copy16  #INVOKER, reset_and_invoke_target
         jmp     ResetAndInvoke
@@ -1814,6 +1800,29 @@ END_PROC_AT
         sbc     filename_buf
         sta     path_buf4
         dec     path_buf4
+        rts
+.endproc
+
+;;; ============================================================
+;;; Split filename off `INVOKER_PREFIX` into `INVOKER_FILENAME`
+
+.proc SplitInvokerPath
+        param_call FindLastPathSegment, INVOKER_PREFIX ; point Y at last '/'
+        tya
+        pha
+        ldx     #1
+        iny                     ; +1 for length byte
+        iny                     ; +1 to skip past '/'
+:       copy    INVOKER_PREFIX,y, INVOKER_FILENAME,x
+        cpy     INVOKER_PREFIX
+        beq     :+
+        iny
+        inx
+        bne     :-              ; always
+:       stx     INVOKER_FILENAME
+        pla
+        sta     INVOKER_PREFIX
+
         rts
 .endproc
 
@@ -5682,6 +5691,23 @@ no_win:
 
         ITK_CALL IconTK::DrawIcon, icon_param
         rts
+.endproc
+
+;;; ============================================================
+;;; Give a file path, tries to open/show a window for the containing
+;;; directory, and if successful select/show the file.
+;;; Input: `INVOKER_PREFIX` has full path to file
+;;; Assert: Path is not a volume path
+
+.proc ShowFileWithPath
+        jsr     SplitInvokerPath
+
+        tsx
+        stx     saved_stack
+        jsr     OpenWindowForPath
+
+        copy16  #INVOKER_FILENAME, $08
+        jmp     SelectFileIconByName
 .endproc
 
 ;;; ============================================================

@@ -27,8 +27,6 @@
 ;;; Optionally:
 ;;; * `OnListSelectionChange` - called when `selected_index` has changed
 ;;; * `OnListSelectionNoChange` - called on click when `selected_index` has not changed
-;;; Requires the following data definitions:
-;;; * `LB_SELECTION_ENABLED` if selection is supported
 ;;; ============================================================
 
 ;;; ============================================================
@@ -46,15 +44,11 @@
 
 .proc ListInit
         jsr     _EnableScrollbar
-.if LB_SELECTION_ENABLED
         lda     listbox::selected_index
         bpl     :+
         lda     #0
 :       ora     #$80            ; high bit = force draw
         jmp     _ScrollIntoView
-.else
-        jmp     _Draw
-.endif
 .endproc
 
 ;;; ============================================================
@@ -72,9 +66,6 @@
         return  #$FF            ; not an item
     END_IF
 
-.if !LB_SELECTION_ENABLED
-        return  #$FF
-.else
         cmp     #MGTK::Ctl::not_a_control
     IF_NE
         return  #$FF            ; not an item
@@ -112,17 +103,10 @@
     END_IF
 
         return  #0              ; an item
-.endif
 .endproc
 
 ;;; ============================================================
 ;;; Handle scroll bar
-
-.if !LB_SELECTION_ENABLED
-;;; Values not part of MGTK::Part enum, but used for keyboard shortcuts
-kPartHome = $80
-kPartEnd  = $81
-.endif
 
 .proc _HandleListScrollWithPart
         sta     findcontrol_params::which_part
@@ -137,31 +121,6 @@ kPartEnd  = $81
 ret:    rts
 :
         lda     findcontrol_params::which_part
-
-        ;; --------------------------------------------------
-
-.if !LB_SELECTION_ENABLED
-        cmp     #kPartHome
-    IF_EQ
-        lda     listbox::winfo+MGTK::Winfo::vthumbpos
-        beq     ret
-
-        lda     #0
-        jmp     update
-    END_IF
-
-        ;; --------------------------------------------------
-
-        cmp     #kPartEnd
-    IF_EQ
-        lda     listbox::winfo+MGTK::Winfo::vthumbpos
-        cmp     listbox::winfo+MGTK::Winfo::vthumbmax
-        bcs     ret
-
-        lda     listbox::winfo+MGTK::Winfo::vthumbmax
-        jmp     update
-    END_IF
-.endif
 
         ;; --------------------------------------------------
 
@@ -298,7 +257,7 @@ ret:    rts
 
         ;; --------------------------------------------------
         ;; No modifiers
-.if LB_SELECTION_ENABLED
+
         ;; Up/Down move selection
     IF_ZERO
         cmp     #CHAR_UP
@@ -324,23 +283,10 @@ ret:    rts
         txa
         bpl     SetSelection    ; always
     END_IF
-.else
-        ;; Up/Down just scroll
-    IF_ZERO
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     #MGTK::Part::up_arrow
-        jmp     _HandleListScrollWithPart
-      END_IF
-        ;; CHAR_DOWN
-        lda     #MGTK::Part::down_arrow
-        jmp     _HandleListScrollWithPart
-    END_IF
-.endif
 
         ;; --------------------------------------------------
         ;; Double modifiers
-.if LB_SELECTION_ENABLED
+
         ;; Home/End move selection to first/last
         cpx     #3
     IF_EQ
@@ -363,20 +309,6 @@ ret:    rts
         txa
         bpl     SetSelection    ; always
     END_IF
-.else
-        ;; Home/End just scroll
-        cpx     #3
-    IF_EQ
-        cmp     #CHAR_UP
-      IF_EQ
-        lda     #kPartHome
-        jmp     _HandleListScrollWithPart
-      END_IF
-        ;; CHAR_DOWN
-        lda     #kPartEnd
-        jmp     _HandleListScrollWithPart
-    END_IF
-.endif
 
         ;; --------------------------------------------------
         ;; Single modifier
@@ -389,14 +321,12 @@ ret:    rts
         lda     #MGTK::Part::page_down
         jmp     _HandleListScrollWithPart
 
-.if LB_SELECTION_ENABLED
 SetSelection:
         jsr     ListSetSelection
 .ifdef OnListSelectionChange
         jsr     OnListSelectionChange
 .endif
         rts
-.endif
 .endproc
 
 ;;; ============================================================
@@ -405,7 +335,6 @@ SetSelection:
 ;;; Input: A = new selection (negative if none)
 ;;; Note: Does not call `OnListSelectionChange`
 
-.if LB_SELECTION_ENABLED
 .proc ListSetSelection
         pha                     ; A = new selection
         lda     listbox::selected_index
@@ -416,12 +345,10 @@ SetSelection:
         jmp     _ScrollIntoView
 :       rts
 .endproc
-.endif
 
 ;;; ============================================================
 ;;; Input: A = row to highlight
 
-.if LB_SELECTION_ENABLED
 .proc _HighlightIndex
         cmp     #0              ; don't assume caller has flags set
         bmi     ret
@@ -437,7 +364,6 @@ SetSelection:
         MGTK_CALL MGTK::PaintRect, listbox::highlight_rect
 ret:    rts
 .endproc
-.endif
 
 ;;; ============================================================
 ;;; Call to update `listbox::num_items` after `ListInit` is called,
@@ -506,7 +432,6 @@ ret:    rts
 ;;;   even if no scrolling occured.
 ;;; Assert: `listbox::winfo+MGTK::Winfo::vthumbpos` is set.
 
-.if LB_SELECTION_ENABLED
 .proc _ScrollIntoView
         sta     force_draw_flag
         and     #$7F            ; A = index
@@ -538,7 +463,6 @@ skip:   lda     #SELF_MODIFIED_BYTE
         lda     listbox::selected_index
         jmp     _HighlightIndex
 .endproc
-.endif
 
 ;;; ============================================================
 ;;; Adjusts the viewport given the scroll position, and selects
@@ -579,13 +503,11 @@ loop:   copy16  #kListItemTextOffsetX, listbox::item_pos+MGTK::Point::xcoord
 
         add16_8  listbox::item_pos+MGTK::Point::ycoord, #kListItemHeight
 
-.if LB_SELECTION_ENABLED
         lda     index
         cmp     listbox::selected_index
     IF_EQ
         jsr     _HighlightIndex
     END_IF
-.endif
 
         inc     index
         lda     index
@@ -610,7 +532,5 @@ ListInit := listbox_impl::ListInit
 ListClick := listbox_impl::ListClick
 IsListKey := listbox_impl::IsListKey
 ListKey := listbox_impl::ListKey
-.if LB_SELECTION_ENABLED
 ListSetSelection := listbox_impl::ListSetSelection
-.endif
 ListSetSize := listbox_impl::ListSetSize
