@@ -931,6 +931,7 @@ str_slash_desktop:
 
 have128k:
         ;; Clear AUX text screen memory so junk doesn't show
+        jsr     HOME
         sta     RAMWRTON
         lda     #$A0
         ldx     #0
