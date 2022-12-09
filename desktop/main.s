@@ -2076,8 +2076,11 @@ normal: lda     #0
         jsr     MaybeCloseWindowAfterOpen
         jsr     PopPointers
 
-        ;; Select by name
+        ;; Select by name (if not already done via close)
+        lda     selected_icon_count
+    IF_ZERO
         jsr     SelectFileIconByName ; $08 = name
+    END_IF
 
 done:   rts
 
@@ -2241,7 +2244,6 @@ CmdNewFolder    := CmdNewFolderImpl::start
 
 ;;; ============================================================
 ;;; Select and scroll into view an icon in the active window.
-;;; No-op if the active window is a list view.
 ;;; Inputs: $08 = name
 ;;; Trashes $06
 
