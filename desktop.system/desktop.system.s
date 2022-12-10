@@ -930,22 +930,23 @@ str_slash_desktop:
         DEFINE_QUIT_PARAMS quit_params
 
 have128k:
-        ;; Clear AUX text screen memory so junk doesn't show
-        ;; while protecting 'screen holes' for //c
+        ;; Clear Main & AUX text screen memory so
+        ;; junk doesn't show on switch to 80-column,
+        ;; while protecting 'screen holes' for //c & //c+
         jsr     HOME
         sta     RAMWRTON
         lda     #$A0
-        ldx     #$78
-:       sta     $400-1,x
-        sta     $480-1,x
-        sta     $500-1,x
-        sta     $580-1,x
-        sta     $600-1,x
-        sta     $680-1,x
-        sta     $700-1,x
-        sta     $780-1,x
+        ldx     #$77
+:       sta     $400,x
+        sta     $480,x
+        sta     $500,x
+        sta     $580,x
+        sta     $600,x
+        sta     $680,x
+        sta     $700,x
+        sta     $780,x
         dex
-        bne     :-
+        bpl     :-
         sta     RAMWRTOFF
 
         ;; Turn on 80-column mode
