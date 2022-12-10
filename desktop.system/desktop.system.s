@@ -931,15 +931,20 @@ str_slash_desktop:
 
 have128k:
         ;; Clear AUX text screen memory so junk doesn't show
+        ;; while protecting 'screen holes' for //c
         jsr     HOME
         sta     RAMWRTON
         lda     #$A0
-        ldx     #0
-:       sta     $400,x
-        sta     $500,x
-        sta     $600,x
-        sta     $700,x
-        inx
+        ldx     #$78
+:       sta     $400-1,x
+        sta     $480-1,x
+        sta     $500-1,x
+        sta     $580-1,x
+        sta     $600-1,x
+        sta     $680-1,x
+        sta     $700-1,x
+        sta     $780-1,x
+        dex
         bne     :-
         sta     RAMWRTOFF
 
