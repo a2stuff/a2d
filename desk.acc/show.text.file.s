@@ -209,8 +209,6 @@ read_flag:                      ; set when the file is successfully read
         .byte   0
 visible_flag:                   ; clear until text that should be visible is in view
         .byte   0
-view_dirty_flag:                ; clear until text is drawn
-        .byte   0
 
 params_end := * + 4       ; bug in original? (harmless as this is static)
 ;;; ----------------------------------------
@@ -736,8 +734,6 @@ end:    rts
         ptr := $06
 
         lda     #0
-        sta     view_dirty_flag
-
         sta     buf_mark
         sta     buf_mark+1
 
@@ -984,8 +980,6 @@ times70:.word   70
         lda     drawtext_params::textlen
         beq     end
         MGTK_CALL MGTK::DrawText, drawtext_params
-        lda     #1
-        sta     view_dirty_flag
 end:    rts
 .endproc
 
