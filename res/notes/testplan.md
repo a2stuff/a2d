@@ -597,6 +597,8 @@ Text File:
   * Click the Proportional/Fixed button on the title bar. Verify that the view is scrolled to the top.
 * Preview a long text file, e.g. 2000 lines. Verify that dragging the scroll thumb to the middle shows approximately the middle of the file.
 * Preview a text file with a tab character in the first line. Verify that the file displays all lines correctly.
+* Preview a long text file. Verify that the first page of content appears immediately, and that the watch cursor is shown while the rest of the file is parsed. With any acceleration disabled, use Open-Apple+Solid-Apple+Down to jump to the bottom of the file. Verify that the view is displayed without undue delay.
+
 
 Image File:
 * Verify that Escape key exits.

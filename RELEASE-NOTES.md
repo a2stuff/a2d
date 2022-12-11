@@ -61,6 +61,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Calc/Sci.Calc: Show leading zero before decimal in results.
 * Show.Duet.File: Add alternate players: during playback, press 3 for Mockingboard, 4 for Cricket!
 * Find Files: Double-click a result to open the containing widow and select the file icon. ([#255](https://github.com/a2stuff/a2d/issues/255))
+* Text Preview: Handle rendering long text files more intelligently.
 
 ## 1.2
 

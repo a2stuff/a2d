@@ -22,9 +22,9 @@
 ;;;          | IO Buffer | |           |
 ;;;  $1C00   +-----------+ |           |
 ;;;          |           | |           |
-;;;          |           | |           |
-;;;          | (unused)  | | (unused)  |
-;;;          |           | |           |
+;;;          |           | |           | Records offsets into the file
+;;;          | (unused)  | | line      | every Nth line so scrolling
+;;;          |           | | offsets   | is fast.
 ;;;  $1900   +-----------+ +-----------+
 ;;;          | buf2      | | buf2 copy | These buffers hold 2 pages of the
 ;;;  $1800   +-----------+ +-----------+ text file, and are loaded/swapped
@@ -46,27 +46,27 @@
 
         MLIEntry := MLI
 
-.proc Start
         INVOKE_PATH := $220
+
+.proc Start
         lda     INVOKE_PATH
     IF_EQ
         rts
     END_IF
-        COPY_STRING INVOKE_PATH, pathbuf
 
         ;; Set window title to filename
-        ldy     pathbuf
-:       lda     pathbuf,y       ; find last '/'
+        ldy     INVOKE_PATH
+:       lda     INVOKE_PATH,y       ; find last '/'
         cmp     #'/'
         beq     :+
         dey
         bne     :-
 :       ldx     #0
-:       lda     pathbuf+1,y     ; copy filename
+:       lda     INVOKE_PATH+1,y     ; copy filename
         sta     titlebuf+1,x
         inx
         iny
-        cpy     pathbuf
+        cpy     INVOKE_PATH
         bne     :-
         stx     titlebuf
 
@@ -75,8 +75,6 @@
 
 ;;; Copy the DA to aux
 .proc Copy2Aux
-        tsx
-        stx     save_stack
         sta     RAMWRTON
         ldy     #0
 src:    lda     Start,y         ; self-modified
@@ -101,12 +99,8 @@ dst:    sta     Start,y         ; self-modified
         ;; tear down/exit
         sta     RAMRDOFF
         sta     RAMWRTOFF
-        ldx     save_stack
-        txs
         rts
 .endproc
-
-save_stack:.byte   0
 
 ;;; ============================================================
 ;;; ProDOS MLI calls
@@ -192,15 +186,17 @@ params_start:
 default_buffer  := $1700
 kReadLength      = $0100
 
+line_offsets    := $1900
+kLineOffsetShift = 4            ; every 16th
+kLineOffsetDelta = 1 << kLineOffsetShift
+
         .assert default_buffer + $200 < DA_IO_BUFFER, error, "DA too big"
 
-        DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
+        DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, default_buffer, kReadLength
         DEFINE_GET_EOF_PARAMS get_eof_params
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
         DEFINE_CLOSE_PARAMS close_params
-
-pathbuf:        .res    kPathBufferSize, 0
 
 L0945:  .byte   $00
 L0946:  .byte   $00
@@ -213,12 +209,6 @@ visible_flag:                   ; clear until text that should be visible is in 
 params_end := * + 4       ; bug in original? (harmless as this is static)
 ;;; ----------------------------------------
 
-black_pattern:
-        .res    8, $00
-
-white_pattern:
-        .res    $8, $FF
-
         kDAWindowId = 100
 
         kLineSpacing = 10
@@ -229,6 +219,7 @@ tab_flag:                       ; set if last character seen was a tab
 remaining_width:
         .word   kWrapWidth
 
+kLinePosLeft = 3
 .params line_pos
 left:   .word   0
 base:   .word   0
@@ -248,12 +239,16 @@ kLineScrollDelta = 1
 ;;; Scroll by this number of lines when doing page up/down
 kPageScrollDelta = kLinesPerPage - 1
 
+;;; When set, the whole file is rendered, and line offsets are recorded.
+;;; When clear, line offsets are used to accelerate rendering.
+record_offsets_flag:
+        .byte   0
+
 ;;; Farthest offset into the file that `DrawContent` made it
 buf_mark:
         .word   0
 
-;;; Approximated on load: max = (LinesPerPage * EOF / BytesShown) - LinesPerPage
-;;; Assert: max_visible_line + kPageScrollDelta <= $FFFF
+;;; Calculated on initial load
 max_visible_line:
         .word   0
 
@@ -309,7 +304,7 @@ mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
         DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
-pattern:        .res    8, $00
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
@@ -355,7 +350,11 @@ reserved:       .byte   0
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::SetPort, winfo::port
         jsr     CalcAndDrawMode
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        copy    #$80, record_offsets_flag
         jsr     DrawContent
+        copy    #$00, record_offsets_flag
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jsr     InitScrollBar
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -721,9 +720,7 @@ end:    rts
 ;;; UI Helpers
 
 .proc ClearWindow
-        MGTK_CALL MGTK::SetPattern, white_pattern
         MGTK_CALL MGTK::PaintRect, winfo::maprect::x1
-        MGTK_CALL MGTK::SetPattern, black_pattern
         rts
 .endproc
 
@@ -733,10 +730,50 @@ end:    rts
 .proc DrawContent
         ptr := $06
 
-        lda     #0
-        sta     buf_mark
-        sta     buf_mark+1
+        offset_ptr := $08
 
+        bit     record_offsets_flag
+    IF_NS
+        ;; Render the whole file (visible and invisible), and record
+        ;; offsets for every Nth line as we go.
+        copy16  #0, line_offsets
+        copy16  #line_offsets+2, offset_ptr
+        copy    #kLineOffsetDelta, offset_counter
+
+        ;; Start off on 0th line, start of file, and top of window
+        copy16  #0, current_line
+        copy16  #0, set_mark_params::position
+        jsr     SetFileMark
+        copy16  #0, line_pos::base
+    ELSE
+        ;; Start off at first offset before `first_visible_line`
+        ;; using floor(`first_visible_line` / `kLineOffsetDelta`) * `kLineOffsetDelta`
+        copy16  first_visible_line, current_line
+        ldx     #kLineOffsetShift
+:       lsr16   current_line        ; /= `kLineOffsetDelta`
+        dex
+        bne     :-
+        copy16  current_line, offset_ptr
+        ldx     #kLineOffsetShift
+:       asl16   current_line        ; *= `kLineOffsetDelta`
+        dex
+        bne     :-
+
+        ;; Use previously recorded offset into file.
+        asl16   offset_ptr
+        add16   offset_ptr, #line_offsets, offset_ptr
+        ldy     #0
+        copy16in (offset_ptr),y, set_mark_params::position
+        jsr     SetFileMark
+
+        ;; And adjust to the appropriate offset for that line in the viewport.
+        copy16  current_line, multiplier
+        copy16  #kLineHeight, multiplicand
+        jsr     Mul_16_16
+        copy16  product, line_pos::base
+    END_IF
+
+        ;; Select appropriate font
         lda     fixed_mode_flag
     IF_ZERO
         MGTK_CALL MGTK::SetFont, DEFAULT_FONT
@@ -744,92 +781,122 @@ end:    rts
         MGTK_CALL MGTK::SetFont, fixed_font
     END_IF
 
-        jsr     SetFileMark
-        lda     #<default_buffer
-        sta     read_params::data_buffer
-        sta     ptr
-        lda     #>default_buffer
-        sta     read_params::data_buffer+1
-        sta     ptr+1
+        ;; Calc last visible line, so we can optimize some operations
+        add16   first_visible_line, #kLinesPerPage - 1, last_visible_line
+
+        copy16  #default_buffer, read_params::data_buffer
+        copy16  #default_buffer, ptr
+        copy16  #0, buf_mark
+
+        ;; Populate buffer pages
+        jsr     ReadFilePage               ; first page
+        inc     read_params::data_buffer+1 ; subsequent reads go to second page
+        jsr     ReadFilePage               ; second page
+
         lda     #0
-        sta     L0945
-        sta     L0946
+        sta     L0945           ; ???
+        sta     L0946           ; ???
         sta     read_flag
-        sta     line_pos::base+1
-        sta     current_line
-        sta     current_line+1
         sta     visible_flag
 
-        add16   first_visible_line, #kLinesPerPage - 1, last_visible_line
-        copy    #kLineSpacing, line_pos::base
-        jsr     ResetLine
+
+
+        jsr     ClearWindow
+
+        ;; --------------------------------------------------
+        ;; Loop over lines
 
 do_line:
-        ecmp16  current_line, first_visible_line
-        bne     :+
-        jsr     ClearWindow
+        ;; Reset state / flags
+        add16_8 line_pos::base, #kLineSpacing
+        copy16  #kWrapWidth, remaining_width
+        copy16  #kLinePosLeft, line_pos::left
+        copy    #0, tab_flag
+
+        copy    #0, visible_flag
+        cmp16   current_line, first_visible_line
+        bcc     :+
+        cmp16   last_visible_line, current_line
+        bcc     :+
         inc     visible_flag
 :
+
         ;; Position cursor, update remaining width
 moveto: MGTK_CALL MGTK::MoveTo, line_pos
-        sec
-        lda     #<kWrapWidth
-        sbc     line_pos::left
-        sta     remaining_width
-        lda     #>kWrapWidth
-        sbc     line_pos::left+1
-        sta     remaining_width+1
+        sub16   #kWrapWidth, line_pos::left, remaining_width
 
         ;; Identify next run of characters
         jsr     FindTextRun
-        bcs     done
+        jcs     done
 
         ;; Update pointer into buffer for next time
-        clc
-        lda     drawtext_params::textlen
-        adc     ptr
-        sta     ptr
-        bcc     :+
-        inc     ptr+1
-:
+        add16_8 ptr, drawtext_params::textlen
+
         ;; Did the run end due to a tab?
         lda     tab_flag
         bne     moveto          ; yes, keep going
 
-        ;; Nope - wrap to next line!
-        clc
-        lda     line_pos::base
-        adc     #kLineSpacing
-        sta     line_pos::base
-        bcc     :+
-        inc     line_pos::base+1
-:       jsr     ResetLine
+        ;; --------------------------------------------------
+        ;; End of line
 
-        ;; Have we drawn all visible lines?
+        bit     record_offsets_flag
+    IF_NS
+        ;; Doing a full pass. Determine current file offset.
+        sub16   ptr, #default_buffer, cur_offset
+        add16   cur_offset, buf_mark, cur_offset
+
+        ;; Maybe record it
+        dec     offset_counter
+      IF_ZERO
+        ldy     #0
+        copy16in cur_offset, (offset_ptr),y
+        add16_8 offset_ptr, #2
+        copy    #kLineOffsetDelta, offset_counter ; reset
+
+        ;; Keep mouse cursor somewhat responsive
+        MGTK_CALL MGTK::CheckEvents
+      END_IF
+
+        ;; EOF? If so, stop!
+        cmp16   cur_offset, get_eof_params::eof
+        bcs     done
+    ELSE
+        ;; Just rendering what's visible. Are we done?
         ecmp16  current_line, last_visible_line
         beq     done
+    END_IF
 
         ;; Nope - continue on next line
-        inc     current_line
-        bne     :+
-        inc     current_line+1
-:       jmp     do_line
+        inc16   current_line
+        jmp     do_line
+
+        ;; --------------------------------------------------
 
 done:   MGTK_CALL MGTK::SetFont, DEFAULT_FONT
-        lda     visible_flag
-        bne     :+
-        jsr     ClearWindow
-:
-        sub16   ptr, #default_buffer, ptr
-        add16   ptr, buf_mark, buf_mark
-        rts
 
+        bit     record_offsets_flag
+    IF_NS
+        sub16   current_line, #kLinesPerPage - 1, max_visible_line
+      IF_NEG
+        copy16  #0, max_visible_line
+      END_IF
+    END_IF
+
+        rts
 
 ;;; `first_visible_line` + `kLinesPerPage`
 last_visible_line:
         .word   0
 
 current_line:
+        .word   0
+
+;;; Counts down to 0; when 0, an offset is recorded in `line_offsets`
+;;; and `offset_ptr` is incremented.
+offset_counter:
+        .byte   0
+
+cur_offset:
         .word   0
 .endproc
 
@@ -845,15 +912,6 @@ current_line:
     ELSE
         lda     fixed_font + MGTK::Font::charwidth,y
     END_IF
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc ResetLine
-        copy16  #kWrapWidth, remaining_width
-        copy16  #3, line_pos::left
-        sta     tab_flag        ; reset
         rts
 .endproc
 
@@ -988,31 +1046,30 @@ end:    rts
 .proc EnsurePageBuffered
         ptr := $06
 
+        lda     #0
+        sta     L0945           ; ???
+
         ;; Pointing at second page already?
         lda     drawtext_params::textptr+1
         cmp     #>default_buffer
-        beq     read
-
-        ;; No, shift second page down.
+    IF_NE
+        ;; Yes, shift second page down.
         ldy     #0
-loop:   lda     default_buffer+$100,y
+:       lda     default_buffer+$100,y
         sta     default_buffer,y
         iny
-        bne     loop
+        bne     :-
 
+        ;; Adjust pointers down a page too.
         dec     drawtext_params::textptr+1
         copy16  drawtext_params::textptr, ptr
         inc     buf_mark+1
 
-        ;; Read into second page.
-read:   lda     #0
-        sta     L0945
+        ;; And re-populate second page.
         jsr     ReadFilePage
-        lda     read_params::data_buffer+1
-        cmp     #>default_buffer
-        bne     :+
-        inc     read_params::data_buffer+1
-:       rts
+    END_IF
+
+        rts
 .endproc
 
 ;;; ============================================================
@@ -1059,53 +1116,17 @@ end:    rts
 
 ;;; ============================================================
 
-;;; Assumes `buf_mark` represents the amount of file read for
-;;; filling the first screen, and `get_eof_params::eof` is the
-;;; file size.
+;;; Assumes `max_visible_line` is set.
 
 .proc InitScrollBar
-        lda     get_eof_params::eof+2
-    IF_NE
-        ;; File is > 64k, cap to 64k (and ignore bankbyte)
-        lda     #$FF
-        sta     get_eof_params::eof
-        sta     get_eof_params::eof+1
+        ldx     #MGTK::activatectl_activate
+        lda     max_visible_line
+        ora     max_visible_line+1
+    IF_ZERO
+        ;; File entirely fits; deactivate scrollbar
+        ldx     #MGTK::activatectl_deactivate
     END_IF
-        ;; Treat get_eof_params::eof as 16 bit from here.
-
-        cmp16   buf_mark, get_eof_params::eof
-    IF_GE
-        ;; File entirely fit; deactivate scrollbar
-        copy    #0, activatectl_params::activate
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-        rts
-    END_IF
-
-        ;; Use fraction of document shown (`buf_mark` / `eof`) and
-        ;; the number of lines on a page (`kLinesPerPage`)
-        ;; to guestimate the number of lines in the file.
-        ;; num_lines = `kFudgePercent` * `kLinesPerPage` * ( `eof` / `buf_mark` )
-        ;; `max_visible_line` = num_lines - `kLinesPerPage`
-        kFudgePercent = 15      ; over-estimate by 15%
-        copy16  #(kLinesPerPage * (kFudgePercent+100) / 100), multiplier
-        copy16  get_eof_params::eof, multiplicand
-        jsr     Mul_16_16
-        copy32  product, numerator
-        copy16  buf_mark, denominator
-        copy16  #0, denominator+2
-        jsr     Div_32_32
-
-        lda     quotient+2
-        ora     quotient+3
-    IF_NOT_ZERO
-        ;; Maxed out
-        copy16  #($FFFF - kLinesPerPage), max_visible_line
-    ELSE
-        sub16   quotient, #kLinesPerPage, max_visible_line
-    END_IF
-
-        copy    #1, activatectl_params::activate
+        stx     activatectl_params::activate
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
@@ -1128,7 +1149,11 @@ end:    rts
         sta     fixed_mode_flag
 
         jsr     DrawMode
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        copy    #$80, record_offsets_flag
         jsr     ForceScrollTop
+        copy    #$00, record_offsets_flag
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jsr     InitScrollBar
         sec                     ; Click consumed
         rts
@@ -1175,7 +1200,6 @@ window_id:      .byte   kDAWindowId
         MGTK_CALL MGTK::SetPortBits, mode_mapinfo
 
         ;; Clear background
-        MGTK_CALL MGTK::SetPattern, white_pattern
         MGTK_CALL MGTK::PaintRect, mode_mapinfo::maprect
 
         ;; Center string
