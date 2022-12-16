@@ -55,8 +55,8 @@ save_stack:.byte   0
 ;;; ============================================================
 ;;; Animation Resources
 
-        kToasterHeight = 32
-        kToasterWidth  = 64
+        kToasterHeight = 33
+        kToasterWidth  = 70
 
         kToasterCount = 4
 
@@ -91,7 +91,7 @@ reserved:       .byte   0
 .endparams
 
 notpencopy:     .byte   MGTK::notpencopy
-penXOR:         .byte   MGTK::penXOR
+pencopy:        .byte   MGTK::pencopy
 
 grafport:       .tag MGTK::GrafPort
 
@@ -143,7 +143,7 @@ exit:
 
 .proc Animate
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::SetPenMode, pencopy
 
         ;; For each toaster...
         copy    #kToasterCount-1, index
@@ -157,17 +157,6 @@ loop:
         tax
         copy16  xpos_table,x, xpos
         copy16  ypos_table,x, ypos
-
-        ;; Erase previous pos
-        copy16  xpos, paintbits_params::viewloc::xcoord
-        copy16  ypos, paintbits_params::viewloc::ycoord
-        lda     frame
-        asl                     ; *2
-        tax
-        copy16  toaster_frames,x, paintbits_params::mapbits
-
-
-        MGTK_CALL MGTK::PaintBits, paintbits_params
 
         ;; Move
         add16   ypos, #1, ypos
@@ -239,7 +228,7 @@ toaster_frames:
         .addr   toaster_bits2
 
 toaster_bits1:
-        .byte   PX(%0000000),PX(%0000000),PX(%0000001),PX(%1110000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0011111),PX(%1001100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%1111110),PX(%0111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000011),PX(%1100111),PX(%1110011),PX(%0000111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -276,6 +265,7 @@ toaster_bits2:
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000001),PX(%1110000),PX(%0000111),PX(%1111100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0011111),PX(%1110011),PX(%1111111),PX(%1111111),PX(%1111000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%1111001),PX(%1111111),PX(%0000000),PX(%0000000),PX(%1111111),PX(%1000000),PX(%0000000),PX(%0000000)
@@ -307,6 +297,7 @@ toaster_bits2:
         .byte   PX(%0000000),PX(%0000000),PX(%1111111),PX(%1110000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
 
 toaster_bits3:
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)

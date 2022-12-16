@@ -62,6 +62,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Show.Duet.File: Add alternate players: during playback, press 3 for Mockingboard, 4 for Cricket!
 * Find Files: Double-click a result to open the containing widow and select the file icon. ([#255](https://github.com/a2stuff/a2d/issues/255))
 * Text Preview: Handle rendering long text files more intelligently.
+* Flying Toasters: Improve animation speed and reduce flicker.
 
 ## 1.2
 
