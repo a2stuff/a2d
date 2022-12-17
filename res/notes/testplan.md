@@ -603,6 +603,8 @@ Text File:
 Image File:
 * Verify that Escape key exits.
 * On a IIgs or with RGB card; verify that space bar toggles color/mono.
+* On a IIgs or with RGB card: name a hires image file with a ".A2HR" suffix. Verify it displays as mono by default.
+* On a IIgs or with RGB card: name a hires image file with a ".A2LC" suffix. Verify it displays as color by default.
 * Configure a system with a realtime clock. Launch DeskTop. Preview an image file. Exit the preview. Verify that the menu bar clock reappears immediately.
 
 # Desk Accessories

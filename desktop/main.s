@@ -15527,6 +15527,8 @@ icontype_table:
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bny_suffix, 0, IconType::archive ; Binary II
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bxy_suffix, 0, IconType::archive ; NuFX in Binary II
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fc_suffix, 0, IconType::graphics ; Apple II Full Color
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2lc_suffix, 0, IconType::graphics ; Apple II Low Color
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2hr_suffix, 0, IconType::graphics ; Apple II High Resolution
 
         ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
@@ -15582,6 +15584,12 @@ str_bxy_suffix:                 ; ShrinkIt NuFX files, in a Binary II package
 
 str_a2fc_suffix:                ; Double-hires ("Apple II Full Color")
         PASCAL_STRING ".A2FC"
+
+str_a2lc_suffix:                ; Single-hires ("Apple II Low Color")
+        PASCAL_STRING ".A2LC"
+
+str_a2hr_suffix:                ; Singl-hires B&W ("Apple II High Resolution")
+        PASCAL_STRING ".A2HR"
 
 ;;; ============================================================
 ;;; DeskTop icon placement

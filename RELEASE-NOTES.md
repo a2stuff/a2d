@@ -37,6 +37,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Make sure scrollbars activate/deactivate if needed when an icon is renamed.
 * Improve label spacing in several dialogs.
 * Don't poll drives multiple times on startup when restoring windows.
+* Treat files with .A2LC and .A2HR suffixes as images.
 
 ### Selector
 
@@ -63,6 +64,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Find Files: Double-click a result to open the containing widow and select the file icon. ([#255](https://github.com/a2stuff/a2d/issues/255))
 * Text Preview: Handle rendering long text files more intelligently.
 * Flying Toasters: Improve animation speed and reduce flicker.
+* Image Preview: Show .A2HR files in B&W
 
 ## 1.2
 

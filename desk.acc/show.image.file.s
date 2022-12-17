@@ -79,8 +79,10 @@ save_stack:
 ;;; ============================================================
 ;;; ProDOS MLI param blocks
 
-        DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, pathbuf
+        INVOKE_PATH := $220
+
+        DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, INVOKE_PATH
         DEFINE_GET_EOF_PARAMS get_eof_params
 
         DEFINE_READ_PARAMS read_params, hires, kHiresSize
@@ -88,12 +90,9 @@ save_stack:
 
         DEFINE_CLOSE_PARAMS close_params
 
-pathbuf:        .res    kPathBufferSize, 0
-
 ;;; ============================================================
 
 event_params:   .tag MGTK::Event
-
 
 ;;; ============================================================
 
@@ -110,13 +109,6 @@ event_params:   .tag MGTK::Event
 
 .proc Init
         copy    #0, mode
-
-        INVOKE_PATH := $220
-        lda     INVOKE_PATH
-    IF_EQ
-        rts
-    END_IF
-        COPY_STRING     INVOKE_PATH, pathbuf
 
         JUMP_TABLE_MLI_CALL OPEN, open_params
         lda     open_params::ref_num
@@ -277,7 +269,29 @@ signature:
         JUMP_TABLE_MLI_CALL READ, read_params
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
-        jmp     HRToDHR
+        jsr     HRToDHR
+
+        ;; Check filename suffix - show ".A2HR" as B&W
+        ldy     str_a2hr_suffix
+        ldx     INVOKE_PATH
+:       lda     str_a2hr_suffix,y
+        jsr     ToUppercase
+        sta     @char
+        lda     INVOKE_PATH,x
+        jsr     ToUppercase
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     ret             ; different - not a match
+        dex
+        beq     ret             ; ran out of filename - not a suffix
+        dey
+        bne     :-              ; keep going
+        jsr     SetBWMode
+
+ret:    rts
+
+str_a2hr_suffix:
+        PASCAL_STRING ".A2HR"
 .endproc
 
 .proc ShowDHRFile
@@ -771,6 +785,15 @@ clear:  copy16  #hires, ptr
         rts
 
 done:
+.endproc
+
+;;; ============================================================
+
+.proc ToUppercase
+        cmp     #'a' ; Assumes valid filename character
+        bcc     :+
+        and     #CASE_MASK ; Make upper-case
+:       rts
 .endproc
 
 ;;; ============================================================
