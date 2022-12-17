@@ -819,6 +819,17 @@ check_selection:
         ;; --------------------------------------------------
         ;; Selected Icons
 
+        ;; Single?
+        cmp     #1
+        bne     multi
+        lda     selected_icon_list
+        cmp     trash_icon_num
+        beq     no_selection    ; trash only - treat as no selection
+        jsr     EnableMenuItemsRequiringSingleSelection
+        jmp     :+
+multi:  jsr     DisableMenuItemsRequiringSingleSelection
+:
+        ;; Files or Volumes?
         lda     selected_window_id ; In a window?
         beq     :+
 
@@ -832,14 +843,6 @@ check_selection:
         ;; --------------------------------------------------
         ;; Volumes selected (not files)
 
-:       lda     selected_icon_count
-        cmp     #1
-        bne     :+
-        lda     selected_icon_list
-        cmp     trash_icon_num
-        beq     no_selection    ; trash only - treat as no selection
-
-        ;; At least one real volume
 :       jsr     EnableMenuItemsRequiringVolumeSelection
         jsr     DisableMenuItemsRequiringFileSelection
         jmp     EnableMenuItemsRequiringSelection
@@ -849,7 +852,8 @@ check_selection:
 no_selection:
         jsr     DisableMenuItemsRequiringVolumeSelection
         jsr     DisableMenuItemsRequiringFileSelection
-        jmp     DisableMenuItemsRequiringSelection
+        jsr     DisableMenuItemsRequiringSelection
+        jmp     DisableMenuItemsRequiringSingleSelection
 
 .endproc
 
@@ -2927,10 +2931,8 @@ CmdLock         := DoLock
 
 ;;; ============================================================
 
+;;; Assert: Single icon selected, and it's not trash
 .proc CmdRename
-        lda     selected_icon_count
-        beq     ret
-
         jsr     DoRename
         sta     result
 
@@ -2958,10 +2960,8 @@ result: .byte   0
 
 ;;; ============================================================
 
+;;; Assert: One or more file icons selected
 .proc CmdDuplicate
-        lda     selected_icon_count
-        beq     ret
-
         jsr     DoDuplicate
         beq     ret             ; flag set if window needs refreshing
 
@@ -5288,19 +5288,17 @@ DisableMenuItemsRequiringWindow := ToggleMenuItemsRequiringWindow::disable
 ;;; Disable menu items for operating on a selection
 
 .proc ToggleMenuItemsRequiringSelection
-enable:
-        copy    #MGTK::disableitem_enable, disableitem_params::disable
-        jmp     :+
-disable:
-        copy    #MGTK::disableitem_disable, disableitem_params::disable
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
 
         ;; File
-:       copy    #kMenuIdFile, disableitem_params::menu_id
+        copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdOpen
         jsr     DisableMenuItem
         lda     #aux::kMenuItemIdGetInfo
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdRenameIcon
         jsr     DisableMenuItem
 
         ;; Special
@@ -5314,6 +5312,24 @@ disable:
 .endproc
 EnableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::enable
 DisableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::disable
+
+;;; ============================================================
+;;; Disable menu items for operating on a single selection
+
+.proc ToggleMenuItemsRequiringSingleSelection
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
+
+        ;; File
+        copy    #kMenuIdFile, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdRenameIcon
+        jmp     DisableMenuItem
+.endproc
+EnableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::enable
+DisableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::disable
 
 ;;; ============================================================
 ;;; Calls DisableItem menu_item in A (to enable or disable).
@@ -10447,6 +10463,7 @@ index:  .byte   0               ; index in selected icon list
 ;;; ============================================================
 ;;; Get Info
 
+;;; Assert: At least one icon is selected
 .proc DoGetInfo
         lda     selected_icon_count
         bne     :+
@@ -10705,33 +10722,19 @@ state:  .byte   0
 a_path: .addr   old_name_buf
 .endparams
 
+;;; Assert: Single icon selected, and it's not Trash.
 .proc DoRenameImpl
 
 start:
         lda     #0
-        sta     index
         sta     result_flags
 
-        ;; Loop over all selected icons
-        index := *+1
-loop:   lda     #SELF_MODIFIED_BYTE
-        cmp     selected_icon_count
-        bne     :+
-        return  result_flags
-
-:       ldx     index
-        lda     selected_icon_list,x
-        cmp     trash_icon_num  ; Skip trash
-        bne     :+
-        inc     index
-        jmp     loop
-:
+        lda     selected_icon_list
         jsr     GetIconPath
 
         param_call CopyToSrcPath, path_buf3
 
-        ldx     index
-        lda     selected_icon_list,x
+        lda     selected_icon_list
         jsr     IconEntryNameLookup
 
         param_call CopyPtr1ToBuf, old_name_buf
@@ -10819,8 +10822,7 @@ no_change:
 finish: lda     #RenameDialogState::close
         jsr     RunDialogProc
 
-        ldx     index
-        lda     selected_icon_list,x
+        lda     selected_icon_list
         sta     icon_param
 
         ;; Erase the icon, in case new name is shorter
@@ -10828,8 +10830,7 @@ finish: lda     #RenameDialogState::close
 
         ;; Copy new string in
         icon_name_ptr := $06
-        ldx     index
-        lda     selected_icon_list,x
+        lda     selected_icon_list
         jsr     IconEntryNameLookup ; $06 = icon name ptr
         ldy     new_name_buf
 :       lda     new_name_buf,y
@@ -10941,9 +10942,9 @@ end_filerecord_and_icon_update:
         jsr     UpdatePrefix
 
         ;; --------------------------------------------------
-        ;; Totally done - advance to next selected icon
-        inc     index
-        jmp     loop
+        ;; Totally done
+
+        return result_flags
 
 .proc RunDialogProc
         sta     rename_dialog_params

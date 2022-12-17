@@ -38,6 +38,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve label spacing in several dialogs.
 * Don't poll drives multiple times on startup when restoring windows.
 * Treat files with .A2LC and .A2HR suffixes as images.
+* File > Rename... is now disabled if multiple icons are selected.
 
 ### Selector
 
