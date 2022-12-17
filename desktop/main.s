@@ -921,7 +921,7 @@ tmp_path_buf:
 :       copy    src_file_info_params::file_type, icontype_filetype
         copy16  src_file_info_params::aux_type, icontype_auxtype
         copy16  src_file_info_params::blocks_used, icontype_blocks
-        copy16  #buf_filename2, icontype_filename
+        copy16  #src_path_buf, icontype_filename
         jsr     GetIconType
 
         cmp     #IconType::basic
