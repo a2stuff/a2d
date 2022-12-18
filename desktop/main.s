@@ -1989,7 +1989,7 @@ window_id_to_close:
 
 ;;; ============================================================
 ;;; Copy selection window and first selected icon paths to
-;;; `buf_win_path` and `buf_filename2` respectively, and
+;;; `buf_win_path` and `buf_filename` respectively, and
 ;;; compose into `src_path_buf`.
 
 .proc CopyAndComposeWinIconPaths
@@ -2001,7 +2001,7 @@ window_id_to_close:
         stax    win_path_ptr
         param_call CopyPtr1ToBuf, buf_win_path
 
-        ;; Copy file path to buf_filename2
+        ;; Copy file path to buf_filename
         icon_ptr := $06
 
         lda     selected_icon_list
@@ -2014,7 +2014,7 @@ window_id_to_close:
         adc     #IconEntry::name
         tay
 :       lda     (icon_ptr),y
-        sta     buf_filename2,x
+        sta     buf_filename,x
         dey
         dex
         bpl     :-
@@ -2032,8 +2032,8 @@ window_id_to_close:
         ldy     #0
 :       iny
         inx
-        copy    buf_filename2,y, src_path_buf,x
-        cpy     buf_filename2
+        copy    buf_filename,y, src_path_buf,x
+        cpy     buf_filename
         bne     :-
         stx     src_path_buf
 
@@ -5676,14 +5676,14 @@ no_win:
 :       iny
         inx
         lda     src_path_buf,y
-        sta     buf_filename2,x
+        sta     buf_filename,x
         cpy     src_path_buf
         bne     :-
 
-        stx     buf_filename2
+        stx     buf_filename
 
         ;; Adjust ptr as if it's pointing at an IconEntry
-        copy16  #buf_filename2 - IconEntry::name, ptr
+        copy16  #buf_filename - IconEntry::name, ptr
         rts
 .endproc
 .endproc

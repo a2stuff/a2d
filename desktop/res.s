@@ -137,7 +137,7 @@ num_selector_list_items:
 selector_menu_items_updated_flag:
         .byte   0
 
-buf_filename2:  .res    16, 0
+buf_filename:  .res    16, 0
 
         ;; Used during launching
 buf_win_path:
@@ -361,9 +361,6 @@ the_disk_in_slot_label:
         PASCAL_STRING res_string_the_disk_in_slot_suffix_pattern
         kTheDiskInSlotSlotCharOffset = res_const_the_disk_in_slot_suffix_pattern_offset1
         kTheDiskInSlotDriveCharOffset = res_const_the_disk_in_slot_suffix_pattern_offset2
-
-buf_filename:
-        .res    16, 0
 
 ;;; ============================================================
 ;;; Name prompt dialog (used for Rename, Duplicate, Format, Erase)
