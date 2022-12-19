@@ -862,6 +862,9 @@ fail:   clc                     ; Yes, no match found, return with C=0
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 
+on_line_buffer:
+        .res    16, 0
+
 devidx: .byte   0
 
 ;;; Call before calling `NextVolume` to begin enumeration.
@@ -894,15 +897,14 @@ repeat: ldx     devidx
         lda     on_line_buffer
         and     #$0F            ; mask off name_length
         beq     repeat          ; error - try next one
-        sta     len
+        sta     on_line_buffer
 
-        param_call JUMP_TABLE_ADJUST_FILEENTRY, on_line_buffer
+        param_call JUMP_TABLE_ADJUST_VOLNAME, on_line_buffer
 
         ldx     #0
 :       copy    on_line_buffer+1,x, searchPath+2,x
         inx
-        len := *+1
-        cpx     #SELF_MODIFIED_BYTE
+        cpx     on_line_buffer
         bne     :-
         copy    #'/', searchPath+2,x ; add trailing '/'
         inx
@@ -1488,11 +1490,6 @@ show_index:     .byte   $FF
         .include "../lib/measurestring.s"
         .include "../lib/muldiv.s"
         .include "../lib/doubleclick.s"
-
-;;; ============================================================
-
-on_line_buffer:
-        .res    16, 0
 
 ;;; ============================================================
 
