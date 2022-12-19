@@ -15529,6 +15529,7 @@ icontype_table:
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bny_suffix, 0, IconType::archive ; Binary II
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bxy_suffix, 0, IconType::archive ; NuFX in Binary II
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fc_suffix, 0, IconType::graphics ; Apple II Full Color
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fm_suffix, 0, IconType::graphics ; Apple II Full Monochrome
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2lc_suffix, 0, IconType::graphics ; Apple II Low Color
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2hr_suffix, 0, IconType::graphics ; Apple II High Resolution
 
@@ -15586,6 +15587,9 @@ str_bxy_suffix:                 ; ShrinkIt NuFX files, in a Binary II package
 
 str_a2fc_suffix:                ; Double-hires ("Apple II Full Color")
         PASCAL_STRING ".A2FC"
+
+str_a2fm_suffix:                ; Double-hires ("Apple II Full Mono") - Bmp2DHR uses this
+        PASCAL_STRING ".A2FM"
 
 str_a2lc_suffix:                ; Single-hires ("Apple II Low Color")
         PASCAL_STRING ".A2LC"

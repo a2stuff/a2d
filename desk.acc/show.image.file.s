@@ -265,30 +265,19 @@ signature:
 
 
 .proc ShowHRFile
+        ;; If suffix is ".A2HR" show in mono mode
+        param_call CheckSuffix, str_a2hr_suffix
+    IF_CC
+        jsr     SetBWMode
+    END_IF
+
         sta     PAGE2OFF
         JUMP_TABLE_MLI_CALL READ, read_params
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         jsr     HRToDHR
 
-        ;; Check filename suffix - show ".A2HR" as B&W
-        ldy     str_a2hr_suffix
-        ldx     INVOKE_PATH
-:       lda     str_a2hr_suffix,y
-        jsr     ToUppercase
-        sta     @char
-        lda     INVOKE_PATH,x
-        jsr     ToUppercase
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     ret             ; different - not a match
-        dex
-        beq     ret             ; ran out of filename - not a suffix
-        dey
-        bne     :-              ; keep going
-        jsr     SetBWMode
-
-ret:    rts
+        rts
 
 str_a2hr_suffix:
         PASCAL_STRING ".A2HR"
@@ -296,6 +285,12 @@ str_a2hr_suffix:
 
 .proc ShowDHRFile
         ptr := $06
+
+        ;; If suffix is ".A2FM" show in mono mode
+        param_call CheckSuffix, str_a2fm_suffix
+    IF_CC
+        jsr     SetBWMode
+    END_IF
 
         ;; AUX memory half
         sta     PAGE2OFF
@@ -314,6 +309,9 @@ str_a2hr_suffix:
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         rts
+
+str_a2fm_suffix:
+        PASCAL_STRING ".A2FM"
 .endproc
 
 .proc CopyHiresToAux
@@ -785,6 +783,42 @@ clear:  copy16  #hires, ptr
         rts
 
 done:
+.endproc
+
+;;; ============================================================
+;;; Check suffix on `INVOKE_PATH` to see if it matches passed string
+;;; Inputs: A,X = pointer to suffix
+;;; Outputs: C=0 on match, C=1 otherwise
+;;; Trashes $06
+
+.proc CheckSuffix
+        ptr := $06
+
+        stax    ptr
+
+        ldy     #0
+        lda     (ptr),y
+        tay
+        ldx     INVOKE_PATH
+:       lda     (ptr),y
+        jsr     ToUppercase
+        sta     @char
+        lda     INVOKE_PATH,x
+        jsr     ToUppercase
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     no              ; different - not a match
+        dey
+        beq     yes             ; out of suffix - it's a match
+        dex
+        bne     :-
+
+no:     sec                     ; no match
+        rts
+
+yes:    clc                     ; match!
+        rts
+
 .endproc
 
 ;;; ============================================================
