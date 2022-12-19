@@ -51,6 +51,7 @@ JT_GET_SEL_WIN:         jmp     GetSelectionWindow      ; *
 JT_GET_WIN_PATH:        jmp     GetWindowPath           ; *
 JT_HILITE_MENU:         jmp     ToggleMenuHilite        ; *
 JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
+JT_ADJUST_VOLNAME:      jmp     AdjustVolumeNameCase    ; *
 JT_GET_RAMCARD_FLAG:    jmp     GetCopiedToRAMCardFlag  ; *
 JT_GET_ORIG_PREFIX:     jmp     CopyDeskTopOriginalPrefix ; *
 JT_BELL:                jmp     Bell                    ; *

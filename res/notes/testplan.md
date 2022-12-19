@@ -714,10 +714,13 @@ Repeat for Calculator and Sci.Calc:
 
 ## Find Files
 
-* Launch DeskTop. Close all windows. Apple Menu > Find Files. Verify that an alert is shown.
+* Launch DeskTop. Close all windows. Apple Menu > Find Files. Type "PRODOS" and click Search. Verify that all volumes are searched recursively.
+* Launch DeskTop. Open a volume window. Apple Menu > Find Files. Type "PRODOS" and click Search. Verify that only that volume's contents are searched recursively.
+* Launch DeskTop. Open a volume window. Open a folder window. Apple Menu > Find Files. Type "PRODOS" and click Search. Verify that only that folder's contents are searched recursively.
 * Launch DeskTop. Open a window. Apple Menu > Find Files. Type "*" and click Search. Select a file in the list. Press Open-Apple+O. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
 * Launch DeskTop. Open a window. Apple Menu > Find Files. Type "*" and click Search. Select a file in the list. Press Solid-Apple+O. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
 * Launch DeskTop. Open a window. Apple Menu > Find Files. Type "*" and click Search. Double-click a file in the list. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
+* Launch DeskTop. Open a volume window. Open a folder window. Activate the volume window. Apple Menu > Find Files. Type "*" and click Search. Double-click a file in the list that's inside the folder. Verify that the Find Files window closes, that a folder window is brought to the foreground, and that the file icon is selected.
 
 * Create a set of nested directories, 21 levels deep or more (e.g. `/VOL/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D`). Launch DeskTop and open the volume. Apple > Find Files. Enter a search term (e.g. `*`) and click Search. Verify that the DA doesn't crash. (Not all files will be found, though.)
 

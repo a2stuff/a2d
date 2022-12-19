@@ -142,6 +142,12 @@ Adjust case in FileEntry structure. If GS/OS filename bits are set, those are us
 
 Input: A,X = FileEntry structure.
 
+#### `JUMP_TABLE_ADJUST_VOLNAME` *
+
+Adjust case in volume name. If GS/OS filename bits are set, those are used. Otherwise, case is inferred.
+
+Input: A,X = volume name.
+
 #### `JUMP_TABLE_GET_RAMCARD_FLAG` *
 
 Returns Z=1/N=0 if DeskTop is running from its original location, and Z=0/N=1 if DeskTop was copied to RAMCard.

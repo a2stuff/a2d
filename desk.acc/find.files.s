@@ -58,15 +58,6 @@
 
 entry:
 
-;;; Copy the DA to AUX for easy bank switching
-.scope
-        copy16  #entry, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #entry, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-.endscope
-
 .scope
         ptr := $06
 
@@ -76,6 +67,10 @@ entry:
         beq     no_windows
         cmp     #kMaxDeskTopWindows+1
         bcs     no_windows
+
+        ;; --------------------------------------------------
+        ;; Get path for window
+
         jsr     JUMP_TABLE_GET_WIN_PATH
         stax    ptr
 
@@ -94,6 +89,27 @@ entry:
         lda     #'/'
         sta     searchPath,y
         sty     searchPath
+
+        jmp     continue
+
+        ;; --------------------------------------------------
+        ;; Search all volumes
+
+no_windows:
+        ;; Signal this mode with a path of just "/"
+        copy    #1, searchPath
+        copy    #'/', searchPath+1
+
+        ;; --------------------------------------------------
+
+continue:
+
+        ;; Copy the DA to AUX for easy bank switching
+        copy16  #entry, STARTLO
+        copy16  #da_end, ENDLO
+        copy16  #entry, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
 
         ;; Run the DA
         sta     RAMRDON
@@ -137,10 +153,6 @@ entry:
     END_IF
 
         rts
-
-no_windows:
-        lda     #kErrNoWindowsOpen
-        jmp     JUMP_TABLE_SHOW_ALERT ; NOTE: Trashes AUX $800-$1AFF
 .endscope
 
 ;;; ============================================================
@@ -273,13 +285,15 @@ dirName := $06                  ; pointer to directory name
 entPtr  := $08                  ; ptr to current entry
 
 ;;;******************************************************
-;;; Call with A,X pointing at dir name
 saved_stack:
         .byte   0
 
 .proc Start
         ;; Copy pattern in Aux > Main (source is length-prefixed, dest is null terminated)
         sta     RAMWRTOFF       ; read aux, write main
+
+        lda     num_entries     ; copy aux > main
+        sta     num_entries
 
         ldy     buf_search
         copy    #0, pattern,y   ; null-terminate
@@ -307,7 +321,6 @@ endloop:
 
         lda     #0              ; reset recursion/results state
         sta     Depth
-        sta     num_entries
 
         jsr     Relay           ; for stack restore
         ldy     num_entries
@@ -846,6 +859,70 @@ fail:   clc                     ; Yes, no match found, return with C=0
 .endproc
 
 ;;; ============================================================
+
+        DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
+
+devidx: .byte   0
+
+;;; Call before calling `NextVolume` to begin enumeration.
+;;; Assert: Called from Aux
+.proc InitVolumes
+        sta     RAMRDOFF
+        sta     RAMWRTOFF
+        copy    DEVCNT, devidx
+        sta     RAMRDON
+        sta     RAMWRTON
+        rts
+.endproc
+
+;;; Appends next volume name to `searchPath`. Call `InitVolumes` first.
+;;; Output: C=0 on success, C=1 on failure
+;;; Assert: Called from Aux
+.proc NextVolume
+        sta     RAMRDOFF        ; Run from Main
+        sta     RAMWRTOFF
+
+repeat: ldx     devidx
+        bmi     fail
+        dec     devidx
+
+        lda     DEVLST,x
+        and     #UNIT_NUM_MASK
+        sta     on_line_params::unit_num
+        JUMP_TABLE_MLI_CALL ON_LINE, on_line_params
+        bcs     repeat
+        lda     on_line_buffer
+        and     #$0F            ; mask off name_length
+        beq     repeat          ; error - try next one
+        sta     len
+
+        param_call JUMP_TABLE_ADJUST_FILEENTRY, on_line_buffer
+
+        ldx     #0
+:       copy    on_line_buffer+1,x, searchPath+2,x
+        inx
+        len := *+1
+        cpx     #SELF_MODIFIED_BYTE
+        bne     :-
+        copy    #'/', searchPath+2,x ; add trailing '/'
+        inx
+        inx
+        stx     searchPath
+
+        ;; Success!
+        sta     RAMRDON         ; Back to Aux
+        sta     RAMWRTON
+        clc
+        rts
+
+fail:
+        sta     RAMRDON         ; Back to Aux
+        sta     RAMWRTON
+        sec
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Used in both Main and Aux
 
 kMaxFilePaths       = (block_buffer - entries_buffer) / kPathBufferSize
@@ -1159,11 +1236,30 @@ ignore: sec
         jsr     ListInit
         jsr     PrepDrawIncrementalResults
 
+        lda     searchPath
+        cmp     #1
+    IF_EQ
+        jsr     InitVolumes
+        jsr     NextVolume
+        bcs     finish
+    END_IF
+
         ;; Do the search
-        jsr     RecursiveCatalog::Start
+search: jsr     RecursiveCatalog::Start
         lda     num_entries
         jsr     ListSetSize     ; update scrollbar
 
+        lda     searchPath
+        cmp     #1
+    IF_EQ
+        lda     num_entries
+        cmp     #kMaxFilePaths
+        beq     finish
+        jsr     NextVolume
+        bcc     search
+    END_IF
+
+finish:
         bit     cursor_ibeam_flag
     IF_PLUS
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
@@ -1171,7 +1267,8 @@ ignore: sec
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
     END_IF
 
-finish: jmp     InputLoop
+        jmp     InputLoop
+
 .endproc
 
 ;;; ============================================================
@@ -1391,6 +1488,11 @@ show_index:     .byte   $FF
         .include "../lib/measurestring.s"
         .include "../lib/muldiv.s"
         .include "../lib/doubleclick.s"
+
+;;; ============================================================
+
+on_line_buffer:
+        .res    16, 0
 
 ;;; ============================================================
 
