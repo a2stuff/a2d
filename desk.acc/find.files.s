@@ -1155,6 +1155,7 @@ ignore: sec
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
 
         copy    #0, num_entries
+        copy    #$ff, selected_index
         jsr     ListInit
         jsr     PrepDrawIncrementalResults
 
