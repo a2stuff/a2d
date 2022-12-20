@@ -712,6 +712,11 @@ Repeat for Calculator and Sci.Calc:
 * Enter '1' '/' '2' '='. Verify that the result has a 0 before the decimal (i.e. "0.5").
 * Enter '0' '-' '.' '5' '='. Verify that the result has a 0 before the decimal (i.e. "-0.5").
 
+## Joystick
+
+* Configure a system with only a single joystick (or paddles 0 and 1). Run the DA. Verify that only a single indicator is shown.
+* Configure a system with only a two joysticks (or paddles 2 and 3). Run the DA. Verify that after the second joystick is moved, a second indicator is shown.
+
 ## Find Files
 
 * Launch DeskTop. Close all windows. Apple Menu > Find Files. Type "PRODOS" and click Search. Verify that all volumes are searched recursively.

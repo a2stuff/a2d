@@ -155,8 +155,17 @@ kJoystickDisplayH = 64
         DEFINE_BUTTON_PARAMS joy_btn2_params, joy_btn2_rec
 
 .params joy_marker
-        DEFINE_POINT viewloc, 0, 0
+        DEFINE_POINT viewloc, kJoystickDisplayX+1, kJoystickDisplayY+1
 mapbits:        .addr   joy_marker_bitmap
+mapwidth:       .byte   2
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, 7, 4
+        REF_MAPINFO_MEMBERS
+.endparams
+
+.params joy_marker2
+        DEFINE_POINT viewloc, kJoystickDisplayX+1, kJoystickDisplayY+1
+mapbits:        .addr   joy_marker_bitmap2
 mapwidth:       .byte   2
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 7, 4
@@ -170,6 +179,12 @@ joy_marker_bitmap:
         .byte   PX(%0111111),PX(%0000000)
         .byte   PX(%0011110),PX(%0000000)
 
+joy_marker_bitmap2:
+        .byte   PX(%0011110),PX(%0000000)
+        .byte   PX(%0110011),PX(%0000000)
+        .byte   PX(%1100001),PX(%1000000)
+        .byte   PX(%0110011),PX(%0000000)
+        .byte   PX(%0011110),PX(%0000000)
 
 .params joystick_params
         DEFINE_POINT viewloc, kJoystickCalibrationX+1, kJoystickCalibrationY + 6
@@ -312,9 +327,6 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
-        ;; ==============================
-        ;; Joystick Calibration
-
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBits, joystick_params
 
@@ -324,9 +336,7 @@ notpencopy:     .byte   MGTK::notpencopy
         BTK_CALL BTK::RadioDraw, joy_btn1_params
         BTK_CALL BTK::RadioDraw, joy_btn2_params
 
-        copy    #0, last_joy_valid_flag
-
-        ;; ==============================
+        copy    #$80, force_draw_flag
 
         MGTK_CALL MGTK::ShowCursor
         rts
@@ -335,10 +345,11 @@ notpencopy:     .byte   MGTK::notpencopy
 
 ;;; ============================================================
 
-        ;; TODO: Read and visualize all 4 paddles.
-        kNumPaddles = 2
+        kNumPaddles = 4
 
 .struct InputState
+        valid   .byte
+
         pdl0    .byte
         pdl1    .byte
         pdl2    .byte
@@ -350,11 +361,8 @@ notpencopy:     .byte   MGTK::notpencopy
 .endstruct
 
 .proc DoJoystick
-
+        ;; Read paddles, copy into our current state
         jsr     ReadPaddles
-
-        ;; TODO: Visualize all 4 paddles.
-
         ldx     #kNumPaddles-1
 :       lda     pdl0,x
         lsr                     ; clamp range to 0...127
@@ -363,7 +371,9 @@ notpencopy:     .byte   MGTK::notpencopy
         bpl     :-
 
         lsr     curr+InputState::pdl1 ; clamp Y to 0...63 (due to pixel aspect ratio)
+        lsr     curr+InputState::pdl3 ; clamp Y to 0...63 (due to pixel aspect ratio)
 
+        ;; Read buttons, copy into our current state
         lda     BUTN0
         and     #$80            ; only care about msb
         sta     curr+InputState::butn0
@@ -376,23 +386,65 @@ notpencopy:     .byte   MGTK::notpencopy
         and     #$80            ; only care about msb
         sta     curr+InputState::butn2
 
-        ;; Changed? (or first time through)
-        lda     last_joy_valid_flag
-        beq     changed
+        ;; Mark current state as valid
+        copy    #$80, curr+InputState::valid
 
+        ;; --------------------------------------------------
+
+        ;; If last state was valid, see if joystick 2 registered
+        ;; a change; if so, set a flag.
+        bit     last+InputState::valid
+    IF_NS
+        lda     curr+InputState::pdl2
+        cmp     last+InputState::pdl2
+        bne     set
+        lda     curr+InputState::pdl3
+        cmp     last+InputState::pdl3
+        beq     :+
+set:    copy    #$80, joy2_valid_flag
+:
+    END_IF
+
+        ;; Changed? (or first time through)
+        bit     force_draw_flag
+    IF_NC
         ldx     #.sizeof(InputState)-1
 :       lda     curr,x
         cmp     last,x
-        bne     changed
+        bne     :+              ; changed - draw
         dex
         bpl     :-
+        rts                     ; no change - skip
+:
+    END_IF
 
-        rts
+        ;; --------------------------------------------------
 
-changed:
         COPY_STRUCT InputState, curr, last
-        copy    #$80, last_joy_valid_flag
+        copy    #0, force_draw_flag
 
+        ;; Defer if content area is not visible
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        cmp     #MGTK::Error::window_obscured
+    IF_EQ
+        rts
+    END_IF
+
+        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::HideCursor
+
+        ;; --------------------------------------------------
+        ;; Joystick Position
+
+        ;; Erase old
+        MGTK_CALL MGTK::SetPenMode, penOR
+        bit     joy2_valid_flag
+    IF_NS
+        MGTK_CALL MGTK::PaintBits, joy_marker2
+    END_IF
+        MGTK_CALL MGTK::PaintBits, joy_marker
+
+.scope joy1
         joy_x := joy_marker::viewloc::xcoord
         copy    curr+InputState::pdl0, joy_x
         copy    #0, joy_x+1
@@ -402,23 +454,29 @@ changed:
         copy    curr+InputState::pdl1, joy_y
         copy    #0, joy_y+1
         add16   joy_y, #kJoystickDisplayY + 1, joy_y
+.endscope
+.scope joy2
+        joy_x := joy_marker2::viewloc::xcoord
+        copy    curr+InputState::pdl2, joy_x
+        copy    #0, joy_x+1
+        add16   joy_x, #kJoystickDisplayX + 1, joy_x
 
-        ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        IF_EQ
-        rts
-        END_IF
+        joy_y := joy_marker2::viewloc::ycoord
+        copy    curr+InputState::pdl3, joy_y
+        copy    #0, joy_y+1
+        add16   joy_y, #kJoystickDisplayY + 1, joy_y
+.endscope
 
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
-
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, joy_disp_rect
-
+        ;; Draw new
         MGTK_CALL MGTK::SetPenMode, notpencopy
-
+        bit     joy2_valid_flag
+    IF_NS
+        MGTK_CALL MGTK::PaintBits, joy_marker2
+    END_IF
         MGTK_CALL MGTK::PaintBits, joy_marker
+
+        ;; --------------------------------------------------
+        ;; Button States
 
         lda     curr+InputState::butn0
         and     #$80
@@ -435,18 +493,22 @@ changed:
         sta     joy_btn2_rec::state
         BTK_CALL BTK::RadioDraw, joy_btn2_params
 
+        ;; --------------------------------------------------
+
         MGTK_CALL MGTK::ShowCursor
 done:   rts
 
 curr:   .tag InputState
 last:   .tag InputState
 
-pencopy:        .byte   MGTK::pencopy
+penOR:          .byte   MGTK::penOR
 notpencopy:     .byte   MGTK::notpencopy
 
+joy2_valid_flag:
+        .byte   0
 .endproc
 
-last_joy_valid_flag:
+force_draw_flag:
         .byte   0
 
 ;;; ============================================================
