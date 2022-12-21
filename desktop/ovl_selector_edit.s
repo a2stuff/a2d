@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc SelectorEditOverlay
+.scope SelectorEditOverlay
         .org ::kOverlayShortcutEditAddress
 
         MGTKEntry := MGTKRelayImpl
@@ -386,4 +386,4 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 ;;; ============================================================
 
         PAD_TO ::kOverlayShortcutEditAddress + ::kOverlayShortcutEditLength
-.endproc ; SelectorOverlay
+.endscope ; SelectorOverlay

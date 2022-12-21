@@ -25,6 +25,7 @@
         ;; LineEditRecord address, in all param blocks
         a_record = command_data
 
+        .assert LETKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
 
         ;; Adjust stack/stash at `params_addr`

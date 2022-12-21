@@ -4,7 +4,7 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-.proc FileCopyOverlay
+.scope FileCopyOverlay
         .org ::kOverlayFileCopyAddress
 
 ;;; Called back from file dialog's `Start`
@@ -53,4 +53,4 @@ jt_callbacks:
 
         PAD_TO ::kOverlayFileCopyAddress + ::kOverlayFileCopyLength
 
-.endproc ; FileCopyOverlay
+.endscope ; FileCopyOverlay

@@ -24,6 +24,8 @@
 .endenum
 
 .struct SPDIB
+        .union
+Number_Devices          .byte   ; if unit_num == 0 && status_code == 0
 Device_Statbyte1        .byte
         ;;  bit 7:  0 = character device, 1 = block device
         ;;  bit 6:  1 = write allowed
@@ -33,7 +35,11 @@ Device_Statbyte1        .byte
         ;;  bit 2:  0 = medium write protected (block devices only)
         ;;  bit 1:  1 = device currently interrupting
         ;;  bit 0:  1 = device currently open (character devices only)
+        .endunion
+        .union
+Interrupt_Status        .byte   ; if unit_num == 0 && status_code == 0
 Device_Size_Lo          .byte
+        .endunion
 Device_Size_Med         .byte
 Device_Size_Hi          .byte
 ID_String_Length        .byte

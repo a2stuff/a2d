@@ -9,7 +9,7 @@
 ;;; DeskTop application into various parts of main, aux, and bank-switched
 ;;; memory, then invokes the DeskTop initialization routine.
 
-.proc InstallSegments
+.scope InstallSegments
         MLIEntry := MLI
 
         .org ::kSegmentLoaderAddress
@@ -201,6 +201,6 @@ loop:   lda     (src),y
 ;;; ============================================================
 
         PAD_TO ::kSegmentLoaderAddress + ::kSegmentLoaderLength
-.endproc ; InstallSegments
+.endscope ; InstallSegments
 
 ;;; ============================================================

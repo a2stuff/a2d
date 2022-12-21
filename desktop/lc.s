@@ -156,32 +156,6 @@ op:     lda     SELF_MODIFIED
 .endproc
 
 ;;; ============================================================
-;;; Copy current GrafPort MapInfo into target buffer
-;;; Inputs: A,X = mapinfo address
-;;; Assert: Main is banked in
-
-.proc GetPortBits
-        jsr     BankInAux
-
-        port_ptr := $06
-
-        stax    dest_ptr
-
-        MGTKEntry := MGTKAuxEntry
-        MGTK_CALL MGTK::GetPort, port_ptr
-
-        ldy     #.sizeof(MGTK::MapInfo)-1
-:       lda     (port_ptr),y
-        dest_ptr := *+1
-        sta     SELF_MODIFIED,y
-        dey
-        bpl     :-
-
-        jmp     BankInMain
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Yield from a nested event loop, for periodic tasks.
 ;;; Assert: Aux is banked in
 

@@ -2509,7 +2509,7 @@ delta:  .word   0
 
 ;;; ============================================================
 
-.proc CmdCheckOrEject
+.proc CmdCheckOrEjectImpl
         buffer := $1800
 
 eject:  lda     #$80
@@ -2566,8 +2566,8 @@ loop2:  ldx     #SELF_MODIFIED_BYTE
 eject_flag:
         .byte   0
 .endproc
-        CmdEject        := CmdCheckOrEject::eject
-        CmdCheckDrive   := CmdCheckOrEject::check
+        CmdEject        := CmdCheckOrEjectImpl::eject
+        CmdCheckDrive   := CmdCheckOrEjectImpl::check
 
 ;;; ============================================================
 
@@ -2943,7 +2943,7 @@ CmdLock         := DoLock
 ;;; Assert: Single icon selected, and it's not trash
 .proc CmdRename
         jsr     DoRename
-        sta     result
+        pha                     ; A = result
 
         ;; If selection is in a window with View > by Name, refresh
         jsr     GetSelectionViewBy
@@ -2956,15 +2956,12 @@ CmdLock         := DoLock
         jsr     ScrollUpdate
     END_IF
 
-        bit     result
+        pla                     ; A = result
         bpl     :+              ; N = window renamed
         ;; TODO: Avoid repainting everything
         MGTK_CALL MGTK::RedrawDeskTop
 :
-
-ret:    rts
-
-result: .byte   0
+        rts
 .endproc
 
 ;;; ============================================================
@@ -2987,7 +2984,7 @@ ret:    rts
 ;;; ============================================================
 ;;; Handle keyboard-based icon selection ("highlighting")
 
-.proc CmdHighlight
+.proc CmdHighlightImpl
 
         ;; Next/prev in sorted order
 a_prev: lda     #$80
@@ -3070,11 +3067,11 @@ HighlightIcon:
         lda     buffer+1,x
         jmp     SelectIcon
 .endproc
-CmdHighlightPrev := CmdHighlight::prev
-CmdHighlightNext := CmdHighlight::next
-CmdHighlightAlpha := CmdHighlight::alpha
-CmdHighlightAlphaPrev := CmdHighlight::a_prev
-CmdHighlightAlphaNext := CmdHighlight::a_next
+CmdHighlightPrev := CmdHighlightImpl::prev
+CmdHighlightNext := CmdHighlightImpl::next
+CmdHighlightAlpha := CmdHighlightImpl::alpha
+CmdHighlightAlphaPrev := CmdHighlightImpl::a_prev
+CmdHighlightAlphaNext := CmdHighlightImpl::a_next
 
 ;;; ============================================================
 ;;; Type Down Selection
@@ -6183,7 +6180,7 @@ slash:  cpy     #1
 ;;; Outputs: `found_windows_count` and `found_windows_list` are updated
 
         ;; If 'prefix' version called, length in Y; otherwise use str len
-.proc FindWindows
+.proc FindWindowsImpl
         ptr := $6
 
         ;; NOTE: Not used for MLI calls, so another buffer could be used.
@@ -6276,8 +6273,8 @@ done:   return  window_num
 exact_match_flag:
         .byte   0
 .endproc
-        FindWindowForPath := FindWindows::exact
-        FindWindowsForPrefix := FindWindows::prefix
+        FindWindowForPath := FindWindowsImpl::exact
+        FindWindowsForPrefix := FindWindowsImpl::prefix
 
 found_windows_count:
         .byte   0
@@ -8905,24 +8902,13 @@ device_type_to_icon_address_table:
         .addr cdrom_icon
         ASSERT_ADDRESS_TABLE_SIZE device_type_to_icon_address_table, ::kNumDeviceTypes
 
+dib_buffer := $800
 .params status_params
 param_count:    .byte   3
 unit_num:       .byte   1
 list_ptr:       .addr   dib_buffer
 status_code:    .byte   3       ; Return Device Information Block (DIB)
 .endparams
-
-PARAM_BLOCK dib_buffer, $800
-Device_Statbyte1        .byte
-Device_Size_Lo          .byte
-Device_Size_Med         .byte
-Device_Size_Hi          .byte
-ID_String_Length        .byte
-Device_Name             .res    16
-Device_Type_Code        .byte
-Device_Subtype_Code     .byte
-Version                 .word
-END_PARAM_BLOCK
 
 ;;; Roughly follows:
 ;;; Technical Note: ProDOS #21: Identifying ProDOS Devices
@@ -8995,34 +8981,34 @@ is_sp:  lda     unit_number
 
         ;; Trim trailing whitespace (seen in CFFA)
 .scope
-        ldy     dib_buffer::ID_String_Length
+        ldy     dib_buffer+SPDIB::ID_String_Length
         beq     done
-:       lda     dib_buffer::Device_Name-1,y
+:       lda     dib_buffer+SPDIB::Device_Name-1,y
         cmp     #' '
         bne     done
         dey
         bne     :-
-done:   sty     dib_buffer::ID_String_Length
+done:   sty     dib_buffer+SPDIB::ID_String_Length
 .endscope
 
         ;; Case-adjust
 .scope
-        ldy     dib_buffer::ID_String_Length
+        ldy     dib_buffer+SPDIB::ID_String_Length
         beq     done
         dey
         beq     done
 
         ;; Look at prior and current character; if both are alpha,
         ;; lowercase current.
-loop:   lda     dib_buffer::Device_Name-1,y ; Test previous character
+loop:   lda     dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
         jsr     IsAlpha
         bne     next
-        lda     dib_buffer::Device_Name,y ; Adjust this one if also alpha
+        lda     dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
         jsr     IsAlpha
         bne     next
-        lda     dib_buffer::Device_Name,y
+        lda     dib_buffer+SPDIB::Device_Name,y
         ora     #AS_BYTE(~CASE_MASK)
-        sta     dib_buffer::Device_Name,y
+        sta     dib_buffer+SPDIB::Device_Name,y
 
 next:   dey
         bne     loop
@@ -9032,16 +9018,16 @@ done:
         ;; Check device type
         ;; Technical Note: SmartPort #4: SmartPort Device Types
         ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
-        lda     dib_buffer::Device_Type_Code
+        lda     dib_buffer+SPDIB::Device_Type_Code
         .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
         bne     :+            ; $00 = Memory Expansion Card (RAM Disk)
-        ldax    #dib_buffer::ID_String_Length
+        ldax    #dib_buffer+SPDIB::ID_String_Length
         ldy     #kDeviceTypeRAMDisk
         rts
 :
         cmp     #SPDeviceType::SCSICDROM
         bne     test_size
-        ldax    #dib_buffer::ID_String_Length
+        ldax    #dib_buffer+SPDIB::ID_String_Length
         ldy     #kDeviceTypeCDROM
         rts
 
@@ -9063,7 +9049,7 @@ not_sp:
 
         ;; RAM-based driver or not SmartPort
 generic:
-        copy    #0, dib_buffer::ID_String_Length
+        copy    #0, dib_buffer+SPDIB::ID_String_Length
 
 test_size:
 
@@ -9093,15 +9079,15 @@ test_size:
         cmp16   blocks, #kMax35FloppyBlocks+1
         bcc     f35
 
-:       ldax    #dib_buffer::ID_String_Length
+:       ldax    #dib_buffer+SPDIB::ID_String_Length
         ldy     #kDeviceTypeFixed
         rts
 
-f525:   ldax    #dib_buffer::ID_String_Length
+f525:   ldax    #dib_buffer+SPDIB::ID_String_Length
         ldy     #kDeviceTypeDiskII
         rts
 
-f35:    ldax    #dib_buffer::ID_String_Length
+f35:    ldax    #dib_buffer+SPDIB::ID_String_Length
         ldy     #kDeviceTypeRemovable
         rts
 
@@ -9471,7 +9457,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc AnimateWindow
+.proc AnimateWindowImpl
         ptr := $06
         rect_table := $800
 
@@ -9621,8 +9607,8 @@ L8D52:  .word   0
 L8D54:  .word   0
 L8D56:  .word   0
 .endproc
-AnimateWindowClose      := AnimateWindow::close
-AnimateWindowOpen       := AnimateWindow::open
+AnimateWindowClose      := AnimateWindowImpl::close
+AnimateWindowOpen       := AnimateWindowImpl::open
 
 ;;; ============================================================
 
@@ -9994,15 +9980,6 @@ DoLock:
 DoUnlock:
         jsr     L8FE1
         jmp     FinishOperation
-
-.proc GetIconEntryWinFlags
-        asl     a
-        tay
-        copy16  icon_entry_address_table,y, $06
-        ldy     #IconEntry::win_flags
-        lda     ($06),y
-        rts
-.endproc
 
 ;;; --------------------------------------------------
 
@@ -10398,17 +10375,7 @@ ret:    rts
 .proc SmartportEject
         ptr := $6
 
-PARAM_BLOCK dib_buffer, ::IO_BUFFER
-Device_Statbyte1        .byte
-Device_Size_Lo          .byte
-Device_Size_Med         .byte
-Device_Size_Hi          .byte
-ID_String_Length        .byte
-Device_Name             .res    16
-Device_Type_Code        .byte
-Device_Subtype_Code     .byte
-Version                 .word
-END_PARAM_BLOCK
+        dib_buffer := ::IO_BUFFER
 
         ;; Look up device index by icon number
         ldy     #kMaxVolumes-1
@@ -10433,7 +10400,7 @@ END_PARAM_BLOCK
         .byte   SPCall::Status
         .addr   status_params
         bcs     done            ; failure
-        lda     dib_buffer::Device_Type_Code
+        lda     dib_buffer+SPDIB::Device_Type_Code
         cmp     #SPDeviceType::Disk35
         bne     done            ; not 3.5, don't issue command
 

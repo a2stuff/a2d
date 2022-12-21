@@ -5,6 +5,7 @@
 .scope icon_toolkit
         ITKEntry := *
 
+        .assert ITKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
         ;; Stash return value from stack, adjust by 3
         ;; (command byte, params addr)
@@ -1995,7 +1996,7 @@ next:   pla
 ;;; ============================================================
 ;;; Offset coordinates for windowed icons
 
-.proc OffsetIcon
+.proc OffsetIconImpl
 
 offset_flags:  .byte   0        ; bit 7 = offset poly, bit 6 = undo offset, otherwise do offset
 
@@ -2075,9 +2076,9 @@ loop1:  add16   poly::vertices+0,x, clip_dx, poly::vertices+0,x
 .endproc
 
 .endproc
-        offset_icon_poly_and_rect := OffsetIcon::entry_poly_and_rect
-        offset_icon_do := OffsetIcon::entry_do
-        offset_icon_undo := OffsetIcon::entry_undo
+        offset_icon_poly_and_rect := OffsetIconImpl::entry_poly_and_rect
+        offset_icon_do := OffsetIconImpl::entry_do
+        offset_icon_undo := OffsetIconImpl::entry_undo
 
 ;;; ============================================================
 ;;; This handles drawing volume icons "behind" windows. It is

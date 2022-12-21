@@ -22,6 +22,7 @@
         a_record = command_data
         update_flag = command_data + 2
 
+        .assert BTKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
 
         ;; Adjust stack/stash at `params_addr`

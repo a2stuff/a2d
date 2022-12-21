@@ -1074,17 +1074,7 @@ list_ptr:       .addr   dib_buffer
 status_code:    .byte   3       ; Return Device Information Block (DIB)
 .endparams
 
-PARAM_BLOCK dib_buffer, ::IO_BUFFER
-Device_Statbyte1        .byte
-Device_Size_Lo          .byte
-Device_Size_Med         .byte
-Device_Size_Hi          .byte
-ID_String_Length        .byte
-Device_Name             .res    16
-Device_Type_Code        .byte
-Device_Subtype_Code     .byte
-Version                 .word
-END_PARAM_BLOCK
+dib_buffer := ::IO_BUFFER
 
         ;; Maybe add device to the removable device table
 append: lda     unit_num
@@ -1119,7 +1109,7 @@ append: lda     unit_num
         .byte   SPCall::Status
         .addr   status_params
         bcs     next            ; call failed - skip it!
-        lda     dib_buffer::Device_Type_Code
+        lda     dib_buffer+SPDIB::Device_Type_Code
         cmp     #SPDeviceType::Disk525
         beq     next            ; is 5.25 - skip it!
 

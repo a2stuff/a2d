@@ -641,19 +641,7 @@ grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
-.params dib_buffer
-Number_Devices:                 ; if unit_num == 0 && status_code == 0
-Device_Statbyte1:       .byte   0
-Interrupt_Status:               ; if unit_num == 0 && status_code == 0
-Device_Size_Lo:         .byte   0
-Device_Size_Med:        .byte   0
-Device_Size_Hi:         .byte   0
-ID_String_Length:       .byte   0
-Device_Name:            .res    16
-Device_Type_Code:       .byte   0
-Device_Subtype_Code:    .byte   0
-Version:                .word   0
-.endparams
+dib_buffer:     .tag    SPDIB
 
 ;;; ============================================================
 ;;; Per Technical Note: Apple II Miscellaneous #7: Apple II Family Identification
@@ -1795,13 +1783,13 @@ loop:   lda     slot
 
         ;; Convert blocks (0.5k) to banks (64k)
         ldx     #7
-:       lsr     dib_buffer::Device_Size_Hi
-        ror     dib_buffer::Device_Size_Med
-        ror     dib_buffer::Device_Size_Lo
+:       lsr     dib_buffer+SPDIB::Device_Size_Hi
+        ror     dib_buffer+SPDIB::Device_Size_Med
+        ror     dib_buffer+SPDIB::Device_Size_Lo
         dex
         bne     :-
 
-        add16   memory, dib_buffer::Device_Size_Lo, memory
+        add16   memory, dib_buffer+SPDIB::Device_Size_Lo, memory
 
 next:   dec     slot
         bne     loop
@@ -1902,7 +1890,7 @@ start:  ;; Most SmartPort logic needs to run from Main
         copy    #0, status_params::unit_num ; SmartPort status itself
         copy    #0, status_params::status_code
         jsr     SmartPortCall
-        lda     dib_buffer::Number_Devices
+        lda     dib_buffer+SPDIB::Number_Devices
         cmp     #kMaxSmartportDevices
         bcc     :+
         lda     #kMaxSmartportDevices
@@ -1921,34 +1909,34 @@ device_loop:
 
         ;; Trim trailing whitespace (seen in CFFA)
 .scope
-        ldy     dib_buffer::ID_String_Length
+        ldy     dib_buffer+SPDIB::ID_String_Length
         beq     done
-:       lda     dib_buffer::Device_Name-1,y
+:       lda     dib_buffer+SPDIB::Device_Name-1,y
         cmp     #' '
         bne     done
         dey
         bne     :-
-done:   sty     dib_buffer::ID_String_Length
+done:   sty     dib_buffer+SPDIB::ID_String_Length
 .endscope
 
         ;; Case-adjust
 .scope
-        ldy     dib_buffer::ID_String_Length
+        ldy     dib_buffer+SPDIB::ID_String_Length
         beq     done
         dey
         beq     done
 
         ;; Look at prior and current character; if both are alpha,
         ;; lowercase current.
-loop:   lda     dib_buffer::Device_Name-1,y ; Test previous character
+loop:   lda     dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
         jsr     IsAlpha
         bne     next
-        lda     dib_buffer::Device_Name,y ; Adjust this one if also alpha
+        lda     dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
         jsr     IsAlpha
         bne     next
-        lda     dib_buffer::Device_Name,y
+        lda     dib_buffer+SPDIB::Device_Name,y
         ora     #AS_BYTE(~CASE_MASK)
-        sta     dib_buffer::Device_Name,y
+        sta     dib_buffer+SPDIB::Device_Name,y
 
 next:   dey
         cpy     #0
@@ -1965,11 +1953,11 @@ done:
 
         ;; Draw the device name
         copy    #0, empty_flag  ; saw a unit!
-        lda     dib_buffer::ID_String_Length
+        lda     dib_buffer+SPDIB::ID_String_Length
     IF_ZERO
         ldax    #str_unknown
     ELSE
-        ldax    #dib_buffer::ID_String_Length
+        ldax    #dib_buffer+SPDIB::ID_String_Length
     END_IF
         jsr     DrawStringFromMain
 

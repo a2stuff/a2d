@@ -392,7 +392,6 @@ file_count:
 
         FONT := DEFAULT_FONT
         .define FD_EXTENDED 1
-        buf_input1 := path_buf0
         buf_input2 := path_buf1
         .include "../lib/file_dialog_res.s"
 
@@ -543,9 +542,6 @@ icon_param:  .byte   0
         DEFINE_RECT tmp_rect, 0, 0, 0, 0
 
 ;;; ============================================================
-
-tmp_mapinfo:
-        .tag    MGTK::MapInfo
 
 saved_stack:
         .byte   0

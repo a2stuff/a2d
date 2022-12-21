@@ -6,7 +6,7 @@
 
 ;;; See docs/Selector_List_Format.md for file format
 
-.proc SelectorPickOverlay
+.scope SelectorPickOverlay
         .org ::kOverlayShortcutPickAddress
 
         MLIEntry := main::MLIRelayImpl
@@ -1565,6 +1565,6 @@ buf:    .res    ::kPathBufferSize
 
         PAD_TO ::kOverlayShortcutPickAddress + ::kOverlayShortcutPickLength
 
-.endproc ; SelectorPickOverlay
+.endscope ; SelectorPickOverlay
 
 selector_picker__Exec    := SelectorPickOverlay::Exec
