@@ -706,14 +706,19 @@ no_match:
 
 ;;; ============================================================
 
-        DEFINE_ON_LINE_PARAMS on_line_params,, $1C00
+        ;; Used to get current volume name (if a ProDOS volume)
+        DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
+
         DEFINE_READ_BLOCK_PARAMS read_block_params, read_buffer, 0
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
 
 unit_num:
         .byte   $00
 
+        ;; Used to check for existing volume with same name
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
+
+on_line_buffer:
 path:
         .res    17,0              ; length + '/' + 15-char name
 
@@ -1259,12 +1264,12 @@ pascal_disk:
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
         bne     non_pro
-        lda     read_buffer
+        lda     on_line_buffer
         and     #NAME_LENGTH_MASK
         beq     non_pro
-        sta     read_buffer
+        sta     on_line_buffer
         tax
-:       lda     read_buffer,x
+:       lda     on_line_buffer,x
         sta     ovl_string_buf,x
         dex
         bpl     :-
