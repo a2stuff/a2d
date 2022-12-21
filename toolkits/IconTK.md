@@ -26,10 +26,10 @@ This defines an icon instance.
                 bit 7 = dimmed
 .byte type/window_id
                 bits 0-3 = window_id
-                bit 4 = small icon (for list views)
+                bit 4 = small icon
                 bit 5 = not valid drop source flag (i.e. trash)
                 bit 6 = drop target flag (trash, folder, dir)
-                bit 7 = (unused)
+                bit 7 = fixed location
 .word iconx     (pixels)
 .word icony     (pixels)
 .addr iconbits  (addr of IconResource)

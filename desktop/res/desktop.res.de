@@ -20,7 +20,8 @@
 .define res_char_menu_item_eject_shortcut 'E'
 .define res_string_menu_item_quit "Beenden"
 .define res_char_menu_item_quit_shortcut 'Q'
-.define res_string_menu_item_by_icon "Nach Symbol"
+.define res_string_menu_item_by_icon "Als Symbol"
+.define res_string_menu_item_by_small_icon "Als kleines Symbol"
 .define res_string_menu_item_by_name "Nach Name"
 .define res_string_menu_item_by_date "Nach Datum"
 .define res_string_menu_item_by_size "Nach Gr|~e"

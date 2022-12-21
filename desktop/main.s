@@ -327,6 +327,7 @@ dispatch_table:
         ;; View menu (3)
         menu3_start := *
         .addr   CmdViewByIcon
+        .addr   CmdViewBySmallIcon
         .addr   CmdViewByName
         .addr   CmdViewByDate
         .addr   CmdViewBySize
@@ -2714,7 +2715,7 @@ entry3:
         ;; Create the icons
         jsr     LoadActiveWindowEntryTable
         jsr     InitCachedWindowEntries
-        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF_NEG
         jsr     SortRecords
     END_IF
@@ -2766,6 +2767,13 @@ entry3:
 
 .proc CmdViewByIcon
         lda     #kViewByIcon
+        jmp     ViewByCommon
+.endproc
+
+;;; ============================================================
+
+.proc CmdViewBySmallIcon
+        lda     #kViewBySmallIcon
         jmp     ViewByCommon
 .endproc
 
@@ -3613,7 +3621,7 @@ _Preamble:
         jsr     ComputeIconsBBox
         jsr     CachedIconsWindowToScreen
 
-        jsr     GetActiveWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+        jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
     IF_POS
         ;; Icon view
         copy    #kIconViewScrollTickH, tick_h
@@ -5853,7 +5861,7 @@ kDrawWindowEntriesContentOnlyPortAdjusted = $80
         ;; --------------------------------------------------
         ;; List View Columns
 
-        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
         bpl     done
 
         ;; Find FileRecord list
@@ -7008,7 +7016,7 @@ volume: ldx     cached_window_id
     END_IF
 
         jsr     InitCachedWindowEntries
-        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF_NEG
         jsr     SortRecords
     END_IF
@@ -7061,24 +7069,34 @@ icons_this_row:
 .proc Start
         jsr     PushPointers
 
-        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF_NEG
         ;; List View
         copy16  #kListViewInitialLeft, row_coords::xcoord
         copy16  #kListViewInitialTop, row_coords::ycoord
-        copy16  #kListViewInitialLeft, initial_xcoord
         copy    #1, icons_per_row ; by definition
         copy    #0, col_spacing   ; N/A
         copy    #kListItemHeight, row_spacing
     ELSE
+        .assert kViewByIcon = 0, error, "enum mismatch"
+      IF_ZERO
         ;; Icon View
         copy16  #kIconViewInitialLeft, row_coords::xcoord
         copy16  #kIconViewInitialTop, row_coords::ycoord
-        copy16  #kIconViewInitialLeft, initial_xcoord
         copy    #kIconViewIconsPerRow, icons_per_row
         copy    #kIconViewSpacingX, col_spacing
         copy    #kIconViewSpacingY, row_spacing
+      ELSE
+        ;; Small Icon View
+        copy16  #kSmallIconViewInitialLeft, row_coords::xcoord
+        copy16  #kSmallIconViewInitialTop, row_coords::ycoord
+        copy    #kSmallIconViewIconsPerRow, icons_per_row
+        copy    #kSmallIconViewSpacingX, col_spacing
+        copy    #kSmallIconViewSpacingY, row_spacing
+      END_IF
     END_IF
+
+        copy16  row_coords::xcoord, initial_xcoord
 
         lda     #0
         sta     icons_this_row
@@ -7224,8 +7242,9 @@ L77F0:  lda     name_tmp,x
         cpx     #.sizeof(MGTK::Point)
         bne     :-
 
-        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
-    IF_POS
+        jsr     GetCachedWindowViewBy
+        .assert kViewByIcon = 0, error, "enum mismatch"
+    IF_ZERO
         ;; Icon view: include y-offset
         ldy     #IconEntry::icony
         sub16in (icon_entry),y, icon_height, (icon_entry),y
@@ -7305,11 +7324,15 @@ L7870:  lda     cached_window_id
         ;; Load up A,X with pointer to `IconResource`
         view_by := *+1
         lda     #SELF_MODIFIED_BYTE
-        cmp     #kViewByIcon
     IF_NE
-        ;; List View
+        ;; List View / Small Icon View
+        php
         lda     iconentry_flags
         ora     #kIconEntryFlagsSmall
+        plp
+     IF_NEG
+        ora     #kIconEntryFlagsFixed
+     END_IF
         sta     iconentry_flags
 
         ldax    #sm_gen
@@ -7786,7 +7809,7 @@ finish:
         add16_8 iconbb_rect::y2, #kIconBBoxPaddingBottom
 
         ;; List view?
-        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
+        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
       IF_NEG
         ;; max.x = kListViewWidth
         copy16  #kListViewWidth, iconbb_rect::x2
@@ -7799,8 +7822,9 @@ more:   lda     cached_window_entry_list,x
         sta     icon_param
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
 
-        jsr     GetCachedWindowViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
-    IF_POS
+        jsr     GetCachedWindowViewBy
+        .assert kViewByIcon = 0, error, "enum mismatch"
+    IF_ZERO
         ;; Pretend icon is max height
         sub16   tmp_rect::y2, #kMaxIconTotalHeight, tmp_rect::y1
     END_IF
@@ -10855,8 +10879,9 @@ finish: lda     #RenameDialogState::close
         stax    icon_ptr
 
         ;; Compute bounds of icon bitmap
-        jsr     GetSelectionViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
-    IF_POS
+        jsr     GetSelectionViewBy
+        .assert kViewByIcon = 0, error, "enum mismatch"
+    IF_ZERO
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
         sub16_8 tmp_rect::y2, #kIconLabelHeight + kIconLabelGap, tmp_rect::y2
     END_IF
@@ -10902,8 +10927,9 @@ finish: lda     #RenameDialogState::close
         bit     LCBANK1
         bit     LCBANK1
 
-        jsr     GetSelectionViewBy ; N=0/Z=1 is icon view, N=1/Z=0 is list view
-    IF_POS
+        jsr     GetSelectionViewBy
+        .assert kViewByIcon = 0, error, "enum mismatch"
+    IF_ZERO
         sta     view_by
         jsr     GetIconType
         view_by := *+1

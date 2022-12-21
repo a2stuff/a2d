@@ -65,10 +65,10 @@ label   := *
 ;;;                      $00 if not allocated
 ;;;      .byte flags/window_id
 ;;;                      bits 0-3 = window_id
-;;;                      bit 4 = small icon (list view)
+;;;                      bit 4 = small icon
 ;;;                      bit 5 = not valid drop source flag (i.e. trash)
 ;;;                      bit 6 = drop target flag (trash, folder, dir)
-;;;                      bit 7 = (unused)
+;;;                      bit 7 = fixed location
 ;;;      .word iconx     (pixels)
 ;;;      .word icony     (pixels)
 ;;;      .addr iconbits  (addr of IconResource)
@@ -97,6 +97,7 @@ kIconEntryStateHighlighted = %01000000
 kIconEntryStateAllocated   = %00000001
 
 ;;; Masks for IconEntry::win_flags
+kIconEntryFlagsFixed            = %10000000
 kIconEntryFlagsDropTarget       = %01000000
 kIconEntryFlagsNotDropSource    = %00100000
 kIconEntryFlagsSmall            = %00010000

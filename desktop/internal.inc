@@ -42,12 +42,13 @@ kMaxVolumes     = kMaxDevListSize
 ;;; View types
 
 ;;; (low nibble must match menu order)
-kViewByIcon     = $00
-kViewByName     = $81
-kViewByDate     = $82
-kViewBySize     = $83
-kViewByType     = $84
-kViewByMenuMask = $0F           ; Convert kViewByXYZ to menu index
+kViewByIcon      = $00
+kViewBySmallIcon = $01
+kViewByName      = $82
+kViewByDate      = $83
+kViewBySize      = $84
+kViewByType      = $85
+kViewByMenuMask  = $0F          ; Convert kViewByXYZ to menu index
 
 ;;; ============================================================
 ;;; Window/Icon Metrics
@@ -79,7 +80,7 @@ kListViewWidth          = 410
 kListViewRowHeight      = kListItemHeight
 
 ;;; --------------------------------------------------
-;;; Icon views
+;;; Icon view
 
 kMaxIconBitmapHeight    = 17    ; actual height varies
 kIconBitmapWidth        = 28
@@ -95,9 +96,17 @@ kIconViewIconsPerRow = 5
 kIconViewSpacingX    = 80
 kIconViewSpacingY    = 32
 
-;;; Bounding box padding, which defines icon placing, window sizing and
-;;; scrollbars. This does not take into account the icon's actual width
-;;; (bitmap or label size).
+;;; --------------------------------------------------
+;;; Small Icon view
+
+kSmallIconViewInitialTop     = kWindowHeaderHeight + kIconBBoxPaddingTop
+kSmallIconViewInitialLeft    = 4
+kSmallIconViewIconsPerRow    = 3
+kSmallIconViewSpacingX       = 130
+kSmallIconViewSpacingY       = kListItemHeight+2
+
+;;; --------------------------------------------------
+;;; Bounding box padding (all view types)
 
 kIconBBoxPaddingTop      = 2
 kIconBBoxPaddingLeft     = 4
@@ -162,7 +171,7 @@ kMenuIdSelector = 6
 
 kMenuSizeApple    = kMaxDeskAccCount + 2 ; About + filler
 kMenuSizeFile     = 14
-kMenuSizeView     = 5
+kMenuSizeView     = 6
 kMenuSizeSpecial  = 11
 kMenuSizeStartup  = 7
 kMenuSizeSelector = 13

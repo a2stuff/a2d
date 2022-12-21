@@ -21,6 +21,7 @@
 .define res_string_menu_item_quit "Quitter"
 .define res_char_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_by_icon "Par icone"
+.define res_string_menu_item_by_small_icon "Par petite icone"
 .define res_string_menu_item_by_name "Par nom"
 .define res_string_menu_item_by_date "Par date"
 .define res_string_menu_item_by_size "Par taille"

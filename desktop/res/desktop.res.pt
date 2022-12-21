@@ -21,6 +21,7 @@
 .define res_string_menu_item_quit "Sair"
 .define res_char_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_by_icon "como Icones"
+.define res_string_menu_item_by_small_icon "como Icones Pequenos"
 .define res_string_menu_item_by_name "por Nome"
 .define res_string_menu_item_by_date "por Data"
 .define res_string_menu_item_by_size "por Tamanho"

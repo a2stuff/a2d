@@ -40,6 +40,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Treat files with .A2LC and .A2HR suffixes as images.
 * File > Rename... is now disabled if multiple icons are selected.
 * The default double-click speed is now the middle setting.
+* View > as Small Icons added.
 
 ### Selector
 

@@ -907,12 +907,11 @@ same_window:
         jsr     CheckRealContentArea
         bne     L9C63           ; don't move
 
-        ;; Small icons have a fixed layout
         ldy     highlight_list
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, $06
         ldy     #IconEntry::win_flags
         lda     ($06),y
-        and     #kIconEntryFlagsSmall
+        and     #kIconEntryFlagsFixed
         bne     L9C63           ; don't move
 
 move_ok:

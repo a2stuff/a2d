@@ -79,6 +79,8 @@ label_quit:
 
 label_by_icon:
         PASCAL_STRING res_string_menu_item_by_icon ; menu item
+label_by_small_icon:
+        PASCAL_STRING res_string_menu_item_by_small_icon ; menu item
 label_by_name:
         PASCAL_STRING res_string_menu_item_by_name ; menu item
 label_by_date:
@@ -157,17 +159,19 @@ file_menu:
 view_menu:
         DEFINE_MENU kMenuSizeView
 @items: DEFINE_MENU_ITEM label_by_icon
+        DEFINE_MENU_ITEM label_by_small_icon
         DEFINE_MENU_ITEM label_by_name
         DEFINE_MENU_ITEM label_by_date
         DEFINE_MENU_ITEM label_by_size
         DEFINE_MENU_ITEM label_by_type
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeView, .sizeof(MGTK::MenuItem)
 
-        kMenuItemIdViewByIcon = 1
-        kMenuItemIdViewByName = 2
-        kMenuItemIdViewByDate = 3
-        kMenuItemIdViewBySize = 4
-        kMenuItemIdViewByType = 5
+        kMenuItemIdViewByIcon      = 1
+        kMenuItemIdViewBySmallIcon = 2
+        kMenuItemIdViewByName      = 3
+        kMenuItemIdViewByDate      = 4
+        kMenuItemIdViewBySize      = 5
+        kMenuItemIdViewByType      = 6
 
 special_menu:
         DEFINE_MENU kMenuSizeSpecial

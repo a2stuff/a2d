@@ -21,6 +21,7 @@
 .define res_string_menu_item_quit "Avsluta"
 .define res_char_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_by_icon "Som symboler"
+.define res_string_menu_item_by_small_icon "Som sm} symboler"
 .define res_string_menu_item_by_name "vid Namn"
 .define res_string_menu_item_by_date "efter Datum"
 .define res_string_menu_item_by_size "efter Storlek"

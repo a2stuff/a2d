@@ -21,6 +21,7 @@
 .define res_string_menu_item_quit "Esci"
 .define res_char_menu_item_quit_shortcut 'Q'
 .define res_string_menu_item_by_icon "per Icone"
+.define res_string_menu_item_by_small_icon "per Icone Piccole"
 .define res_string_menu_item_by_name "per Nome"
 .define res_string_menu_item_by_date "per Data"
 .define res_string_menu_item_by_size "per Dimensione"
