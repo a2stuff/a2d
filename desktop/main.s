@@ -5113,10 +5113,14 @@ last_pos:
         jsr     IconEntryLookup
         stax    icon_ptr
 
-        ldy     #IconEntry::win_flags ; clear dimmed state
+        ldy     #IconEntry::state ; clear dimmed state
         lda     (icon_ptr),y
-        and     #AS_BYTE(~kIconEntryFlagsDimmed)
+        and     #AS_BYTE(~kIconEntryStateDimmed)
         sta     (icon_ptr),y
+
+        .assert IconEntry::win_flags = IconEntry::state + 1, error, "enum mismatch"
+        iny
+        lda     (icon_ptr),y
         and     #kIconEntryWinIdMask ; which window?
         beq     :+              ; desktop, can draw/select
         cmp     active_window_id
@@ -5701,9 +5705,9 @@ no_win:
         stax    ptr
 
         ;; Set dimmed flag
-        ldy     #IconEntry::win_flags
+        ldy     #IconEntry::state
         lda     (ptr),y
-        ora     #kIconEntryFlagsDimmed
+        ora     #kIconEntryStateDimmed
         sta     (ptr),y
 
         ITK_CALL IconTK::DrawIcon, icon_param
@@ -6342,6 +6346,7 @@ index_in_dir:           .byte   0
         ;; `free_record_count` - `reserved_desktop_icons`
         ;; This should be equivalent to:
         ;; `kMaxIconCount` - (`icon_count` - # actual vol icons) - (# possible vol icons)
+        ;; TODO: Simplify now that all files get icons regardless of view.
         ldx     DEVCNT
         inx                     ; DEVCNT is one less than number of devices
         inx                     ; And one more for Trash
@@ -7274,9 +7279,9 @@ L7870:  lda     cached_window_id
         lda     icon_num
         sta     window_to_dir_icon_table-1,x
 
-        ldy     #IconEntry::win_flags ; mark as dimmed
+        ldy     #IconEntry::state ; mark as dimmed
         lda     (icon_entry),y
-        ora     #kIconEntryFlagsDimmed
+        ora     #kIconEntryStateDimmed
         sta     (icon_entry),y
 :
         rts
@@ -9428,9 +9433,9 @@ start:  lda     icon_param
         jsr     IconEntryLookup
         stax    ptr
 
-        ldy     #IconEntry::win_flags
+        ldy     #IconEntry::state
         lda     (ptr),y
-        and     #AS_BYTE(~kIconEntryFlagsDimmed)
+        and     #AS_BYTE(~kIconEntryStateDimmed)
         sta     (ptr),y
         ITK_CALL IconTK::DrawIcon, icon_param
 

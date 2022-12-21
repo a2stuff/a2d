@@ -309,8 +309,11 @@ bufsize:
         tax
         copylohi  ptr_icon, icon_ptrs_low,x, icon_ptrs_high,x
 
-        lda     #1              ; $01 = allocated
-        tay                     ; And IconEntry::state
+        ;; Update IconEntry::state
+        lda     #kIconEntryStateAllocated
+        .assert kIconEntryStateAllocated = IconEntry::state, error, "flag mismatch"
+        tay
+        ora     (ptr_icon),y    ; caller may have set state e.g. dimmed
         sta     (ptr_icon),y
         lsr
 
@@ -1359,24 +1362,16 @@ clip_dy:
 
         ;; Stash some flags
         ldy     #IconEntry::state
-        lda     (ptr),y         ; highlighted?
-        asl                     ; high bit = highlighted
-        and     #$80
-        sta     icon_flags
+        lda     (ptr),y
+        sta     state
         .assert IconEntry::win_flags = IconEntry::state + 1, error, "enum mismatch"
         iny
         lda     ($06),y
         sta     win_flags
 
-        ;; Is on desktop?
+        ;; For quick access
         and     #kIconEntryWinIdMask
         sta     clip_window_id
-    IF_ZERO
-        ;;  Mark as "volume icon" on desktop (needs background)
-        lda     icon_flags
-        ora     #$40
-        sta     icon_flags
-    END_IF
 
         jsr     PushPointers
 
@@ -1401,8 +1396,8 @@ clip_dy:
         jpl     DoPaint         ; no clipping, just paint
 
         ;; Set up clipping structs and port
-        bit     icon_flags      ; volume icon (on desktop) ?
-    IF_VS
+        lda     clip_window_id
+    IF_ZERO
         jsr     SetPortForVolIcon
     ELSE
         jsr     SetPortForWinIcon
@@ -1436,8 +1431,9 @@ ret:    rts
 
         ;; Set text background color
         lda     #MGTK::textbg_white
-        bit     icon_flags      ; highlighted?
-        bpl     :+
+        .assert kIconEntryStateHighlighted = $40, error, "flag mismatch"
+        bit     state           ; highlighted?
+        bvc     :+
         lda     #MGTK::textbg_black
 :       sta     settextbg_params
         MGTK_CALL MGTK::SetTextBG, settextbg_params
@@ -1448,17 +1444,17 @@ ret:    rts
         ;; Icon
 
         ;; Shade (XORs background)
-        .assert kIconEntryFlagsDimmed = $80, error, "flag mismatch"
-        bit     win_flags
+        .assert kIconEntryStateDimmed = $80, error, "flag mismatch"
+        bit     state
     IF_NS
         MGTK_CALL MGTK::SetPattern, dark_pattern
         jsr     Shade
     END_IF
 
         ;; Mask (cleared to white or black)
-
-        bit     icon_flags
-    IF_NS
+        .assert kIconEntryStateHighlighted = $40, error, "flag mismatch"
+        bit     state
+    IF_VS
         MGTK_CALL MGTK::SetPenMode, penBIC
     ELSE
         MGTK_CALL MGTK::SetPenMode, penOR
@@ -1466,15 +1462,16 @@ ret:    rts
         MGTK_CALL MGTK::PaintBits, mask_paintbits_params
 
         ;; Shade again (restores background)
-        .assert kIconEntryFlagsDimmed = $80, error, "flag mismatch"
-        bit     win_flags
+        .assert kIconEntryStateDimmed = $80, error, "flag mismatch"
+        bit     state
     IF_NS
         jsr     Shade
     END_IF
 
         ;; Icon (drawn in black or white)
-        bit     icon_flags
-    IF_NS
+        .assert kIconEntryStateHighlighted = $40, error, "flag mismatch"
+        bit     state
+    IF_VS
         MGTK_CALL MGTK::SetPenMode, penOR
     ELSE
         MGTK_CALL MGTK::SetPenMode, penBIC
@@ -1501,10 +1498,9 @@ ret:    rts
 
 .endproc
 
-icon_flags: ; bit 7 = highlighted, bit 6 = volume icon
+state:                          ; copy of IconEntry::state
         .byte   0
-
-win_flags:  ; copy of IconEntry::win_flags
+win_flags:                      ; copy of IconEntry::win_flags
         .byte   0
 
         DEFINE_POINT label_pos, 0, 0

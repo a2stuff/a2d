@@ -58,16 +58,17 @@ label   := *
 
 ;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
 ;;;      .byte icon      icon index
-;;;      .byte state     bit 7 (N) = unused
-;;;                      bit 6 (V) = highlighted
-;;;                      bit 0     = set to 1 when allocated
+;;;      .byte state     bit 0   = allocated
+;;;                      bit 1-5 = (unused)
+;;;                      bit 6   = highlighted
+;;;                      bit 7   = dimmed
 ;;;                      $00 if not allocated
 ;;;      .byte flags/window_id
 ;;;                      bits 0-3 = window_id
 ;;;                      bit 4 = small icon (list view)
 ;;;                      bit 5 = not valid drop source flag (i.e. trash)
 ;;;                      bit 6 = drop target flag (trash, folder, dir)
-;;;                      bit 7 = dimmed flag
+;;;                      bit 7 = (unused)
 ;;;      .word iconx     (pixels)
 ;;;      .word icony     (pixels)
 ;;;      .addr iconbits  (addr of IconResource)
@@ -91,10 +92,11 @@ label   := *
 kMaxIconCount   = 127
 
 ;;; Masks for IconEntry::state
+kIconEntryStateDimmed      = %10000000
 kIconEntryStateHighlighted = %01000000
+kIconEntryStateAllocated   = %00000001
 
 ;;; Masks for IconEntry::win_flags
-kIconEntryFlagsDimmed           = %10000000
 kIconEntryFlagsDropTarget       = %01000000
 kIconEntryFlagsNotDropSource    = %00100000
 kIconEntryFlagsSmall            = %00010000

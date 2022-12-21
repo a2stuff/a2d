@@ -21,13 +21,15 @@ This defines an icon instance.
 ```
 .byte icon      icon index
 .byte state     bit 0 = allocated
+                bits 1-5 = (unused)
                 bit 6 = highlighted
+                bit 7 = dimmed
 .byte type/window_id
                 bits 0-3 = window_id
                 bit 4 = small icon (for list views)
                 bit 5 = not valid drop source flag (i.e. trash)
                 bit 6 = drop target flag (trash, folder, dir)
-                bit 7 = open flag
+                bit 7 = (unused)
 .word iconx     (pixels)
 .word icony     (pixels)
 .addr iconbits  (addr of IconResource)
