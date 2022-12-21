@@ -8,6 +8,7 @@ Note that these are for inspiration, not to be dutifully followed.
 * [Apple Human Interface Guidelines](https://www.brutaldeluxe.fr/documentation/cortland/v1_06_HumanInterfaceGuidelines.pdf), Second Beta Draft, July 1986.
 * [Human Interface Guidelines: the Apple Desktop Interface](https://archive.org/details/human-interface-guidelines), Final Draft, December 1986.
 * [Human Interface Guidelines: The Apple Desktop Interface _For any Macintosh or Apple II computer_](https://archive.org/details/applehumaninterf00appl), 1987.
+* [Cortland (IIgs) Finder Specification](http://www.brutaldeluxe.fr/documentation/cortland/v2_08_FinderIconsAndDisksOhMy.pdf), July 1986.
 
 ## Font
 
