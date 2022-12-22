@@ -15463,8 +15463,9 @@ free_icon_map:  .res    ::kMaxIconCount, 0
 
         .include "../lib/ramcard.s"
 
-        ADJUSTCASE_VOLPATH := $810
-        ADJUSTCASE_VOLBUF  := $820
+        ;; Place buffers here so they're safe to call from DAs/Overlays
+ADJUSTCASE_VOLPATH:     .res    17 ; Room for len+'/'+name
+ADJUSTCASE_VOLBUF:      .tag    VolumeDirectoryHeader
         ADJUSTCASE_IO_BUFFER := IO_BUFFER
         .include "../lib/adjustfilecase.s"
 
