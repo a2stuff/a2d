@@ -1268,6 +1268,9 @@ pascal_disk:
         and     #NAME_LENGTH_MASK
         beq     non_pro
         sta     on_line_buffer
+        pha
+        param_call main::AdjustVolumeNameCase, on_line_buffer
+        pla
         tax
 :       lda     on_line_buffer,x
         sta     ovl_string_buf,x

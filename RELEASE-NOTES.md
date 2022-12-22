@@ -41,6 +41,7 @@ Project Page: https://github.com/a2stuff/a2d
 * File > Rename... is now disabled if multiple icons are selected.
 * The default double-click speed is now the middle setting.
 * View > as Small Icons added.
+* Format/Erase: Show volume's previous name with adjusted case. ([#426](https://github.com/a2stuff/a2d/issues/426), [#427](https://github.com/a2stuff/a2d/issues/427))
 
 ### Selector
 
