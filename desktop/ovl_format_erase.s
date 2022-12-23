@@ -1190,7 +1190,7 @@ L1974:  lda     the_disk_in_slot_label,x
 
         ;; Pascal
 pascal: param_call pascal_disk, ovl_string_buf
-        rts
+        jmp     EnquoteStringBuf
 
         ;; Maybe DOS 3.3, not sure yet...
 maybe_dos:
@@ -1277,11 +1277,29 @@ pascal_disk:
         dex
         bpl     :-
 
-        rts
+        jmp     EnquoteStringBuf
 
 non_pro:
         lda     on_line_params::unit_num
         jmp     GetNonprodosVolName
+.endproc
+
+;;; ============================================================
+
+.proc EnquoteStringBuf
+        ldx     ovl_string_buf
+:       lda     ovl_string_buf,x
+        sta     ovl_string_buf+1,x
+        dex
+        bne     :-
+        ldx     ovl_string_buf
+        inx
+        inx
+        lda     #'"'            ; " (balance quotes for some text editors)
+        sta     ovl_string_buf,x
+        sta     ovl_string_buf+1
+        stx     ovl_string_buf
+        rts
 .endproc
 
 ;;; ============================================================
