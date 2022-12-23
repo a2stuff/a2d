@@ -647,21 +647,22 @@ LD7F2:
 :       jmp     LD8A9
 
 LD817:  lda     main__on_line_buffer2
-        and     #$0F            ; mask off name length
-        bne     LD82C           ; have a name to show; otherwise, use S,D
+        and     #NAME_LENGTH_MASK
+    IF_ZERO
+        ;; No name, use slot/drive
+        ;; TODO: If get/use Pascal volume name here
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         and     #UNIT_NUM_MASK
         tax                     ; slot/drive
         lda     #kAlertMsgConfirmEraseSlotDrive ; X = unit number
-        jmp     show
-
-LD82C:  sta     main__on_line_buffer2
+    ELSE
+        sta     main__on_line_buffer2
         param_call AdjustCase, main__on_line_buffer2
-
         ldxy    #main__on_line_buffer2
         lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
-show:   jsr     ShowAlertDialog
+    END_IF
+        jsr     ShowAlertDialog
         .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     LD84A           ; Ok
         jmp     InitDialog      ; Cancel
@@ -1069,22 +1070,24 @@ LDC2D:  cmp     #CHAR_RETURN
 ;;; Input: A=unit number
 ;;; Output: Z=1 if successful
 
+default_block_buffer := main__default_block_buffer
+
 .proc NameNonProDOSVolume
         sta     main__block_params_unit_num
         lda     #$00
         sta     main__block_params_block_num
         sta     main__block_params_block_num+1
-        copy16  #$1C00, main__block_params_data_buffer
+        copy16  #default_block_buffer, main__block_params_data_buffer
         jsr     main__ReadBlock
-        beq     LDE19
+        beq     :+
         return  #$FF
 
-LDE19:  lda     $1C01
+:       lda     default_block_buffer+1
         cmp     #$E0
         beq     LDE23
         jmp     LDE4D
 
-LDE23:  lda     $1C02
+LDE23:  lda     default_block_buffer+2
         cmp     #$70
         beq     LDE31
         cmp     #$60
@@ -1103,18 +1106,27 @@ LDE31:  lda     num_drives
         adc     #0
         tax
         tya
-        jsr     LDE9F
+        jsr     TryGetPascalVolName
         lda     #$80
         sta     LD44E
         return  #$00
 
 LDE4D:  cmp     #$A5
         bne     fail
-        lda     $1C02
+        lda     default_block_buffer+2
         cmp     #ERR_IO_ERROR
         bne     fail
+        FALL_THROUGH_TO GetDos33VolName
+.endproc
 
-        ;; DOS 3.3
+;;; ============================================================
+;;; Construct DOS 3.3 volume name (referencing slot/drive)
+;;; Uses `str_dos33_s_d` template to construct volume name
+;;; Inputs: `num_drives` and `main__block_params_unit_num` are set
+;;; Outputs: Nth `drive_name_table` entry is populated
+
+.proc GetDos33VolName
+        ;; Mask off slot and drive, inject into template
         lda     main__block_params_unit_num
         and     #$70
         lsr     a
@@ -1129,6 +1141,8 @@ LDE4D:  cmp     #$A5
         rol     a
         adc     #'1'
         sta     str_dos33_s_d + kStrDOS33DriveOffset
+
+        ;; Find slot for string in table
         lda     num_drives
         asl     a
         asl     a
@@ -1136,7 +1150,8 @@ LDE4D:  cmp     #$A5
         asl     a
         tay
 
-        ldx     #$00
+        ;; Copy the string in
+        ldx     #0
 :       lda     str_dos33_s_d,x
         sta     drive_name_table,y
         iny
@@ -1147,48 +1162,64 @@ LDE4D:  cmp     #$A5
         lda     str_dos33_s_d,x
         sta     drive_name_table,y
 
-        lda     #$43
-        sta     $0300
-        return  #$00
+        lda     #$43            ; ???
+        sta     $0300           ; ???
+        return  #0
 .endproc
 
-;;; Pascal?
-.proc LDE9F
+
+;;; ============================================================
+;;; Get Pascal volume name if possible
+;;; Inputs: A,X=destination buffer (16 bytes)
+;;; Output: Pascal name, with ':' suffix, or " " if that fails
+
+.proc TryGetPascalVolName
         ptr := $06
 
         stax    ptr
-        copy16  #$0002, main__block_params_block_num
+        copy16  #2, main__block_params_block_num
         jsr     main__ReadBlock
-        beq     l1
-        ldy     #$00
-        lda     #$01
+    IF_NOT_ZERO
+        ;; Just use a single space as the name
+        ldy     #0
+        lda     #1
         sta     (ptr),y
         iny
-        lda     #$20
+        lda     #' '
         sta     (ptr),y
         rts
+    END_IF
 
-l1:     ldy     #$00
-        ldx     #$00
-l2:     lda     $1C06,x
+        ;; Copy the name out of the block
+        str_name := default_block_buffer+6
+
+l1:     ldy     #0
+        ldx     #0              ; TODO: Just use Y too
+:       lda     str_name,x
         sta     (ptr),y
         inx
         iny
-        cpx     $1C06
-        bne     l2
-        lda     $1C06,x
+        cpx     str_name
+        bne     :-
+        lda     str_name,x
         sta     (ptr),y
-        lda     $1C06
-        cmp     #$0F
-        bcs     l3
-        ldy     #$00
+
+        ;; If less than 15 characters, increase len by one
+        ;;
+        lda     str_name        ; TODO: just CPY?
+        cmp     #15
+    IF_LT
+        ldy     #$00            ; TODO: just INY / TYA ?
         lda     (ptr),y
         clc
         adc     #$01
         sta     (ptr),y
-        lda     (ptr),y
+        lda     (ptr),y         ; TODO: WTF?
         tay
-l3:     lda     #$3A
+    END_IF
+
+        ;; Replace last char with ':'
+        lda     #':'
         sta     (ptr),y
         rts
 .endproc
@@ -1291,7 +1322,7 @@ draw_buttons:
         sta     ptr
         ldy     #0
         lda     (ptr),y
-        and     #$0F            ; handle ON_LINE results, etc
+        and     #NAME_LENGTH_MASK ; handle ON_LINE results, etc
         tay
         bne     next
         rts
@@ -1412,7 +1443,7 @@ LE182:  lda     #>main__on_line_buffer2
         ;; Check first byte of record
         ldy     #0
         lda     ($06),y
-        and     #$0F            ; name_len
+        and     #NAME_LENGTH_MASK
         bne     LE20D
 
         lda     ($06),y         ; 0?
@@ -1482,7 +1513,7 @@ LE20D:  ldx     num_drives
         tax
         ldy     #$00
         lda     ($06),y
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         sta     drive_name_table,x
         sta     LE264
 :       inx
@@ -1977,7 +2008,7 @@ err_writing_flag:
         inc     ptr2+1
 
         ;; Read block
-        copy16  #$1C00, main__block_params_data_buffer
+        copy16  #default_block_buffer, main__block_params_data_buffer
 retry:  jsr     main__ReadBlock
         beq     move
         ldx     #0              ; reading
@@ -1991,9 +2022,9 @@ move:   sta     RAMRDOFF
         sta     RAMWRTON
         ldy     #$FF
         iny
-:       lda     $1C00,y
+:       lda     default_block_buffer,y
         sta     (ptr1),y
-        lda     $1D00,y
+        lda     default_block_buffer+$100,y
         sta     (ptr2),y
         iny
         bne     :-
@@ -2020,15 +2051,15 @@ move:   sta     RAMRDOFF
         inc     ptr2+1
 
         ;; Copy block aux to main
-        copy16  #$1C00, main__block_params_data_buffer
+        copy16  #default_block_buffer, main__block_params_data_buffer
         sta     RAMRDON
         sta     RAMWRTOFF
         ldy     #$FF
         iny
 :       lda     (ptr1),y
-        sta     $1C00,y
+        sta     default_block_buffer,y
         lda     (ptr2),y
-        sta     $1D00,y
+        sta     default_block_buffer+$100,y
         iny
         bne     :-
         sta     RAMRDOFF
@@ -2313,7 +2344,7 @@ find_in_alert_table:
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
         lda     main__on_line_buffer
-        and     #$0F
+        and     #NAME_LENGTH_MASK
         bne     done
         lda     main__on_line_buffer+1
         cmp     #ERR_NOT_PRODOS_VOLUME

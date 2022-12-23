@@ -217,7 +217,7 @@ fail:   lda     #$81
         sta     auxlc::LD44D
         rts
 
-l2:     param_call auxlc::LDE9F, on_line_buffer2
+l2:     param_call auxlc::TryGetPascalVolName, on_line_buffer2
         param_call auxlc::AdjustCase, on_line_buffer2
         lda     #$C0
         sta     auxlc::LD44D
@@ -1166,6 +1166,7 @@ main__CallOnLine2               := main::CallOnLine2
 main__CallOnLine                := main::CallOnLine
 main__WriteBlock                := main::WriteBlock
 main__ReadBlock                 := main::ReadBlock
+main__default_block_buffer      := main::default_block_buffer
 main__block_params_block_num    := main::block_params::block_num
 main__block_params_data_buffer  := main::block_params::data_buffer
 main__block_params_unit_num     := main::block_params::unit_num
