@@ -609,29 +609,34 @@ LD7AD:  lda     source_drive_index
         .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     :+              ; OK
         jmp     InitDialog      ; Cancel
+:
 
-:       ldx     dest_drive_index
+        ;; --------------------------------------------------
+        ;; Check destination disk
+
+        ldx     dest_drive_index
         lda     drive_unitnum_table,x
         sta     main__on_line_params2_unit_num
         jsr     main__CallOnLine2
-        beq     LD7E1
+        beq     is_pro
         cmp     #ERR_NOT_PRODOS_VOLUME
-        beq     LD7F2
-        jmp     LD852
+        beq     dest_ok
+        jmp     try_format      ; Can't even read drive - try formatting
 
-LD7E1:  lda     main__on_line_buffer2
-        and     #$0F            ; mask off name length
-        bne     LD7F2           ; 0 signals error
+is_pro: lda     main__on_line_buffer2
+        and     #NAME_LENGTH_MASK
+        bne     dest_ok         ; 0 signals error
         lda     main__on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
-        beq     LD7F2
-        jmp     LD852
+        beq     dest_ok
+        jmp     try_format      ; Some other error - proceed with format
 
-LD7F2:
+        ;; Destination is already formatted - get more details
+dest_ok:
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         jsr     IsDiskII
-        beq     LD817
+        beq     confirm_erase
 
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
@@ -644,10 +649,15 @@ LD7F2:
         ldy     #$FE            ; $CnFE
         lda     ($06),y
         and     #$08            ; bit 3 = The device supports formatting.
-        bne     LD817
-:       jmp     LD8A9
+        bne     confirm_erase
 
-LD817:  lda     main__on_line_buffer2
+:       jmp     do_copy         ; BUG: No confirmation if not Disk II !!!!!!
+
+        ;; --------------------------------------------------
+        ;; Confirm erasure of the destination disk
+
+confirm_erase:
+        lda     main__on_line_buffer2
         and     #NAME_LENGTH_MASK
     IF_ZERO
         ;; Not ProDOS - try to read Pascal name
@@ -681,14 +691,19 @@ use_sd:
     END_IF
 show:   jsr     ShowAlertDialog
         .assert kAlertResultOK = 0, error, "Branch assumes enum value"
-        beq     LD84A           ; Ok
+        beq     maybe_format    ; Ok
         jmp     InitDialog      ; Cancel
 
-LD84A:  lda     disk_copy_flag
-        bne     LD852
-        jmp     LD8A9
+        ;; --------------------------------------------------
+        ;; Format if necessary (and supported)
 
-LD852:  ldx     dest_drive_index
+maybe_format:
+        lda     disk_copy_flag
+        bne     try_format
+        jmp     do_copy
+
+try_format:
+        ldx     dest_drive_index
         lda     drive_unitnum_table,x
         jsr     IsDiskII
         beq     format
@@ -713,23 +728,27 @@ LD852:  ldx     dest_drive_index
 format: MGTK_CALL MGTK::MoveTo, point_formatting
         param_call DrawString, str_formatting
         jsr     main__FormatDevice
-        bcc     LD8A9
+        bcc     do_copy
         cmp     #ERR_WRITE_PROTECTED
-        beq     LD89F
+        beq     :+
 
         lda     #kAlertMsgFormatError ; no args
         jsr     ShowAlertDialog
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
-        beq     LD852           ; Try Again
+        beq     try_format      ; Try Again
         jmp     InitDialog      ; Cancel
 
-LD89F:  lda     #kAlertMsgDestinationProtected ; no args
+:       lda     #kAlertMsgDestinationProtected ; no args
         jsr     ShowAlertDialog
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
-        beq     LD852           ; Try Again
+        beq     try_format      ; Try Again
         jmp     InitDialog      ; Cancel
 
-LD8A9:  jsr     SetPortForDialog
+        ;; --------------------------------------------------
+        ;; Perform the copy
+
+do_copy:
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
         lda     source_drive_index
