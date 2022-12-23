@@ -14,6 +14,10 @@ sub trim($) {
 sub enquote($$) {
     my ($label, $value) = @_;
 
+    if ($label =~ /^res_string_/) {
+        $value =~ s/"/\\x22/g; # Escape double quotes
+        return "\"$value\"";
+    }
     return "\"$value\"" if $label =~ /^res_string_/;
     return "'$value'" if $label =~ /^res_char_/;
     return $value if $label =~ /^res_const_/;
