@@ -192,7 +192,7 @@ EjectDisk := EjectDiskImpl::start
 ;;;            $81 = unknown/failure
 ;;;            $C0 = Pascal
 ;;;            $80 = DOS 3.3
-.proc IdentifyNonprodosDiskType
+.proc IdentifySourceNonProDOSDiskType
         ldx     auxlc::source_drive_index
         lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
@@ -217,8 +217,7 @@ fail:   lda     #$81
         sta     auxlc::LD44D
         rts
 
-l2:     param_call auxlc::TryGetPascalVolName, on_line_buffer2
-        param_call auxlc::AdjustCase, on_line_buffer2
+l2:     param_call auxlc::GetPascalVolName, on_line_buffer2
         lda     #$C0
         sta     auxlc::LD44D
         rts
@@ -1157,7 +1156,7 @@ done:   rts
 .endscope
 
 main__FormatDevice              := main::FormatDevice
-main__IdentifyNonprodosDiskType := main::IdentifyNonprodosDiskType
+main__IdentifySourceNonProDOSDiskType := main::IdentifySourceNonProDOSDiskType
 main__ReadVolumeBitmap          := main::ReadVolumeBitmap
 main__IsDriveEjectable          := main::IsDriveEjectable
 main__CopyBlocks                := main::CopyBlocks

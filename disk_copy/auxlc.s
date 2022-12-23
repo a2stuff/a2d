@@ -567,7 +567,7 @@ LD734:  ldx     #0
         beq     LD77E
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
-        jsr     main__IdentifyNonprodosDiskType
+        jsr     main__IdentifySourceNonProDOSDiskType
         jsr     LE674
         jsr     DrawSourceDriveInfo
         jmp     LD7AD
@@ -583,7 +583,7 @@ LD77E:  lda     main__on_line_buffer2
         lda     main__on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
-        jsr     main__IdentifyNonprodosDiskType
+        jsr     main__IdentifySourceNonProDOSDiskType
         jsr     LE674
         jsr     DrawSourceDriveInfo
         jmp     LD7AD
@@ -594,6 +594,7 @@ LD798:  lda     main__on_line_buffer2
         param_call AdjustCase, main__on_line_buffer2
         jsr     LE674
         jsr     DrawSourceDriveInfo
+
 LD7AD:  lda     source_drive_index
         jsr     GetBlockCount
         jsr     DrawDestinationDriveInfo
@@ -649,8 +650,24 @@ LD7F2:
 LD817:  lda     main__on_line_buffer2
         and     #NAME_LENGTH_MASK
     IF_ZERO
+        ;; Not ProDOS - try to read Pascal name
+        ldx     dest_drive_index
+        lda     drive_unitnum_table,x
+        sta     main__block_params_unit_num
+        copy16  #0, main__block_params_block_num
+        copy16  #default_block_buffer, main__block_params_data_buffer
+        jsr     main__ReadBlock
+        bne     use_sd
+        jsr     IsPascalBootBlock
+        bcs     use_sd
+
+        param_call GetPascalVolName, main__on_line_buffer2
+        ldxy    #main__on_line_buffer2
+        lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
+        jmp     show
+
+use_sd:
         ;; No name, use slot/drive
-        ;; TODO: If get/use Pascal volume name here
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         and     #UNIT_NUM_MASK
@@ -662,7 +679,7 @@ LD817:  lda     main__on_line_buffer2
         ldxy    #main__on_line_buffer2
         lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
     END_IF
-        jsr     ShowAlertDialog
+show:   jsr     ShowAlertDialog
         .assert kAlertResultOK = 0, error, "Branch assumes enum value"
         beq     LD84A           ; Ok
         jmp     InitDialog      ; Cancel
@@ -1074,27 +1091,16 @@ default_block_buffer := main__default_block_buffer
 
 .proc NameNonProDOSVolume
         sta     main__block_params_unit_num
-        lda     #$00
-        sta     main__block_params_block_num
-        sta     main__block_params_block_num+1
+        copy16  #0, main__block_params_block_num
         copy16  #default_block_buffer, main__block_params_data_buffer
         jsr     main__ReadBlock
-        beq     :+
-        return  #$FF
+        bne     fail
 
-:       lda     default_block_buffer+1
-        cmp     #$E0
-        beq     LDE23
-        jmp     LDE4D
+        jsr     IsPascalBootBlock
+        bne     try_dos33
 
-LDE23:  lda     default_block_buffer+2
-        cmp     #$70
-        beq     LDE31
-        cmp     #$60
-        beq     LDE31
-fail:   return  #$FF
-
-LDE31:  lda     num_drives
+        ;; Find slot for string in table
+        lda     num_drives
         asl     a
         asl     a
         asl     a
@@ -1106,15 +1112,19 @@ LDE31:  lda     num_drives
         adc     #0
         tax
         tya
-        jsr     TryGetPascalVolName
+        jsr     GetPascalVolName
         lda     #$80
         sta     LD44E
         return  #$00
 
-LDE4D:  cmp     #$A5
+fail:   return  #$FF
+
+try_dos33:
+        lda     default_block_buffer+1
+        cmp     #$A5
         bne     fail
         lda     default_block_buffer+2
-        cmp     #ERR_IO_ERROR
+        cmp     #$27
         bne     fail
         FALL_THROUGH_TO GetDos33VolName
 .endproc
@@ -1167,13 +1177,36 @@ LDE4D:  cmp     #$A5
         return  #0
 .endproc
 
+;;; ============================================================
+;;; Check block at `default_block_buffer` for Pascal signature
+;;; Output: C=0 if Pascal volume, C=0 otherwise
+
+.proc IsPascalBootBlock
+        lda     default_block_buffer+1
+        cmp     #$E0
+        bne     fail
+
+        lda     default_block_buffer+2
+        cmp     #$70
+        beq     match
+        cmp     #$60
+        beq     match
+
+fail:   sec
+        rts
+
+match:  clc
+        rts
+.endproc
+
 
 ;;; ============================================================
-;;; Get Pascal volume name if possible
+;;; Get Pascal volume name
 ;;; Inputs: A,X=destination buffer (16 bytes)
-;;; Output: Pascal name, with ':' suffix, or " " if that fails
+;;; Output: Pascal name, with ':' suffix.
+;;;         If reading second block fails, just uses " ".
 
-.proc TryGetPascalVolName
+.proc GetPascalVolName
         ptr := $06
 
         stax    ptr
@@ -1194,27 +1227,21 @@ LDE4D:  cmp     #$A5
         str_name := default_block_buffer+6
 
 l1:     ldy     #0
-        ldx     #0              ; TODO: Just use Y too
-:       lda     str_name,x
+:       lda     str_name,y
         sta     (ptr),y
-        inx
         iny
-        cpx     str_name
+        cpy     str_name
         bne     :-
-        lda     str_name,x
+        lda     str_name,y
         sta     (ptr),y
 
         ;; If less than 15 characters, increase len by one
-        ;;
-        lda     str_name        ; TODO: just CPY?
-        cmp     #15
+        cpy     #15
     IF_LT
-        ldy     #$00            ; TODO: just INY / TYA ?
-        lda     (ptr),y
-        clc
-        adc     #$01
+        iny
+        tya
+        ldy     #0
         sta     (ptr),y
-        lda     (ptr),y         ; TODO: WTF?
         tay
     END_IF
 

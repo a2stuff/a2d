@@ -816,9 +816,16 @@ Repeat for Calculator and Sci.Calc:
 * Configure a system with 9 or more drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is active.
 
 * Launch DeskTop. Special > Disk Copy.... Verify that ProDOS disk names in the device list have adjusted case (e.g. "Volume" not "VOLUME").
+* Launch DeskTop. Special > Disk Copy.... Verify that Pascal disk names in the device list do not have adjusted case (e.g. "TGP:" not "Tgp:").
 * Launch DeskTop. Special > Disk Copy.... Verify that DOS 3.3 disk names in the device list appear as "DOS 3.3 Sn, Dn" and do not have adjusted case.
+
 * Launch DeskTop. Special > Disk Copy.... Select a ProDOS disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name has adjusted case (e.g. "Volume" not "VOLUME").
-* Launch DeskTop. Special > Disk Copy.... Select a ProDOS disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME").
+* Launch DeskTop. Special > Disk Copy.... Select a Pascal disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name does not have adjusted case (e.g. "TGP:" not "Tgp:").
+* Launch DeskTop. Special > Disk Copy.... Select a DOS 3.3 disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, no volume name appears on the "Source" line.
+
+* Launch DeskTop. Special > Disk Copy.... Select a ProDOS disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME"), and the name is quoted.
+* Launch DeskTop. Special > Disk Copy.... Select a Pascal disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
+* Launch DeskTop. Special > Disk Copy.... Select a DOS 3.3 disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
 
 # Alerts
 

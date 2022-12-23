@@ -37,7 +37,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Make sure scrollbars activate/deactivate if needed when an icon is renamed.
 * Improve label spacing in several dialogs.
 * Don't poll drives multiple times on startup when restoring windows.
-* Treat files with .A2LC and .A2HR suffixes as images.
+* Treat files with .A2LC, .A2HR, and .A2FM extensions as images.
 * File > Rename... is now disabled if multiple icons are selected.
 * The default double-click speed is now the middle setting.
 * View > as Small Icons added.
@@ -51,6 +51,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Disk Copy
 
 * Support up to 14 devices. ([#712](https://github.com/a2stuff/a2d/issues/712))
+* Show Pascal volume names more consistently.
 
 ### Desk Accessories
 
