@@ -350,6 +350,10 @@
   * Launch DeskTop. Run the command. Select a slot/drive containing a Pascal disk. Enter a new name and click OK. Verify that the confirmation prompt shows the Pascal volume name (e.g. "TGP:"), with quotes around the name.
   * Launch DeskTop. Run the command. Select a slot/drive containing a DOS 3.3 disk. Enter a new name and click OK. Verify that the confirmation prompt shows "the DOS 3.3 disk in slot # drive #", without quotes.
   * Launch DeskTop. Run the command. Select a slot/drive containing an unformatted disk. Enter a new name and click OK. Verify that the confirmation prompt shows "the disk in slot # drive #", without quotes.
+  * Launch DeskTop. Select a volume icon. Run the command. Verify that the device selector is skipped. Enter a new volume name. Verify that the confirmation prompt refers to the selected volume.
+  * Repeat the following case with: no selection, multiple volume icons selected, a single file selected, and multiple files selected:
+    * Launch DeskTop. Set selection as specified. Run the command. Verify that the device selector is not skipped.
+
 
 * Launch DeskTop. Open a window. File > New Folder..., enter a unique name, OK. File > New Folder..., enter the same name, OK. Verify that an alert is shown. Dismiss the alert. Verify that the input field still has the previously typed name.
 

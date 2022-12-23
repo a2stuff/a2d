@@ -27,9 +27,14 @@
 
 ;;; ============================================================
 
+;;; A = operation (Format/Erase); X = unit num (or 0)
 Exec:
         pha
+        txa
+        pha
         jsr     main::SetCursorPointer
+        pla
+        tax
         pla
         cmp     #$04
         jeq     FormatDisk
@@ -48,10 +53,12 @@ num_volumes:
 ;;; ============================================================
 ;;; Show the device prompt, name prompt, and confirmation.
 ;;; Input: A=operation flag, high bit set=erase, clear=format
+;;;        X=unit num, or 0 to prompt for device
 ;;; Output: C=0, A=unit_num on success, C=1 if canceled.
 
 .proc PromptForDeviceAndName
         sta     erase_flag
+        stx     unit_num
 
         ;; --------------------------------------------------
         ;; Prompt for device
@@ -62,9 +69,17 @@ num_volumes:
         bit     erase_flag
     IF_NC
         param_call main::DrawDialogTitle, aux::label_format_disk
-        param_call main::DrawDialogLabel, 1, aux::str_select_format
     ELSE
         param_call main::DrawDialogTitle, aux::label_erase_disk
+    END_IF
+
+        lda     unit_num
+        bne     skip_select
+
+        bit     erase_flag
+    IF_NC
+        param_call main::DrawDialogLabel, 1, aux::str_select_format
+    ELSE
         param_call main::DrawDialogLabel, 1, aux::str_select_erase
     END_IF
 
@@ -91,6 +106,8 @@ loop1:
         jsr     GetSelectedUnitNum
         sta     unit_num
 .endscope
+
+skip_select:
 
         ;; --------------------------------------------------
         ;; Prompt for name

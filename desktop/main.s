@@ -2888,6 +2888,8 @@ drive_to_refresh:
         bpl     :+
         rts
 :
+        jsr     GetSelectedUnitNum
+        tax
         lda     #4
         jsr     format_erase_overlay__Exec
         stx     drive_to_refresh ; X = unit number
@@ -2908,6 +2910,8 @@ drive_to_refresh:
         bpl     :+
         rts
 :
+        jsr     GetSelectedUnitNum
+        tax
         lda     #5
         jsr     format_erase_overlay__Exec
         stx     drive_to_refresh ; X = unit number
@@ -2918,6 +2922,34 @@ drive_to_refresh:
         rts
 :
         jmp     CmdCheckSingleDriveByUnitNumber
+.endproc
+
+;;; ============================================================
+
+;;; Inputs: A=unit number if a single volume is selected, 0 otherwise
+
+.proc GetSelectedUnitNum
+        ;; Get single selected volume icon (or fail)
+        lda     selected_window_id
+        bne     fail            ; not the desktop
+        lda     selected_icon_count
+        cmp     #1
+        bne     fail            ; more/less than one selected
+        lda     selected_icon_list
+
+        ;; Look up device index by icon number
+        ldx     #kMaxVolumes-1
+:       cmp     device_to_icon_map,x
+        beq     found
+        dex
+        bpl     :-
+
+fail:   lda     #0
+        rts
+
+found:  lda     DEVLST,x
+        and     #UNIT_NUM_MASK
+        rts
 .endproc
 
 ;;; ============================================================
@@ -11344,16 +11376,16 @@ file_entry_buf          .res    .sizeof(FileEntry)
 
 ;;; ============================================================
 
-op_jt1: jmp     (op_jt_addr1)
-op_jt2: jmp     (op_jt_addr2)
-op_jt3: jmp     (op_jt_addr3)
-
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
 op_jt_addrs:
 op_jt_addr1:  .addr   CopyProcessDirectoryEntry     ; defaults are for copy
 op_jt_addr2:  .addr   copy_pop_directory
 op_jt_addr3:  .addr   DoNothing
+
+op_jt1: jmp     (op_jt_addr1)
+op_jt2: jmp     (op_jt_addr2)
+op_jt3: jmp     (op_jt_addr3)
 
         ;; overlayed indirect jump table
         kOpJTAddrsSize = 6
