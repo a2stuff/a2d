@@ -256,7 +256,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         ;; For erasing parts of the window
         DEFINE_RECT rect_erase_dialog_upper, 8, 20, kDialogWidth-8, 103 ; under title to bottom of buttons
-        DEFINE_RECT rect_erase_dialog_lower, 8, 103, kDialogWidth-8, kDialogHeight-8 ; top of buttons to bottom of dialog
+        DEFINE_RECT rect_erase_dialog_lower, 8, 103, kDialogWidth-8, kDialogHeight-4 ; top of buttons to bottom of dialog
 
         DEFINE_BUTTON ok_button_rec, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
@@ -407,7 +407,7 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
         DEFINE_POINT point_slot_drive2, 110, 135
         DEFINE_POINT point_disk_copy, 40, 115
         DEFINE_POINT point_select_quit, 20, 145
-        DEFINE_RECT rect_D483, 20, 136, 400, 145
+        DEFINE_RECT rect_select_quit, 20, 136, 400, 145
         DEFINE_POINT point_escape_stop_copy, 300, 145
         DEFINE_POINT point_error_writing, 40, 100
         DEFINE_POINT point_error_reading, 40, 90
@@ -568,13 +568,13 @@ LD734:  ldx     #0
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
         jsr     main__IdentifySourceNonProDOSDiskType
-        jsr     LE674
+        jsr     MaybeEraseSelectQuitTip
         jsr     DrawSourceDriveInfo
         jmp     LD7AD
 
 LD763:  jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, rect_D42A
+        MGTK_CALL MGTK::PaintRect, rect_D42A ; TODO: What is this?
         jmp     LD734
 
 LD77E:  lda     main__on_line_buffer2
@@ -584,7 +584,7 @@ LD77E:  lda     main__on_line_buffer2
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     LD763
         jsr     main__IdentifySourceNonProDOSDiskType
-        jsr     LE674
+        jsr     MaybeEraseSelectQuitTip
         jsr     DrawSourceDriveInfo
         jmp     LD7AD
 
@@ -592,13 +592,13 @@ LD798:  lda     main__on_line_buffer2
         and     #$0F            ; mask off name length
         sta     main__on_line_buffer2
         param_call AdjustCase, main__on_line_buffer2
-        jsr     LE674
+        jsr     MaybeEraseSelectQuitTip
         jsr     DrawSourceDriveInfo
 
 LD7AD:  lda     source_drive_index
         jsr     GetBlockCount
         jsr     DrawDestinationDriveInfo
-        jsr     LE63F
+        jsr     DrawCopyFormatType
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         tay
@@ -753,7 +753,7 @@ LD8DF:  jsr     main__ReadVolumeBitmap
         jsr     LE4BF
         jsr     LE4EC
         jsr     LE507
-        jsr     LE694
+        jsr     DrawEscToStopCopyHint
 LD8FB:  jsr     LE4A8
         lda     #$00
         jsr     main__CopyBlocks
@@ -1913,35 +1913,41 @@ LE5C6:  param_call DrawString, str_2_spaces
 
 ;;; ============================================================
 
-LE63F:  jsr     SetPortForDialog
+.proc DrawCopyFormatType
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_disk_copy
         bit     LD44D
-        bmi     LE65B
+        bmi     :+
         param_call DrawString, str_prodos_disk_copy
         rts
 
-LE65B:  bvs     LE665
+:       bvs     :+
         param_call DrawString, str_dos33_disk_copy
         rts
 
-LE665:  lda     LD44D
+:       lda     LD44D
         and     #$0F
-        bne     LE673
+        bne     :+
         param_call DrawString, str_pascal_disk_copy
-LE673:  rts
+:       rts
+.endproc
 
-LE674:  lda     LD44D
+.proc MaybeEraseSelectQuitTip
+        lda     LD44D
         cmp     #$C0
-        beq     LE693
+        beq     :+
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, rect_D483
-LE693:  rts
+        MGTK_CALL MGTK::PaintRect, rect_select_quit
+:       rts
+.endproc
 
-LE694:  jsr     SetPortForDialog
+.proc DrawEscToStopCopyHint
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_escape_stop_copy
         param_call DrawString, str_escape_stop_copy
         rts
+.endproc
 
 ;;; ============================================================
 ;;; Flash the message when escape is pressed
