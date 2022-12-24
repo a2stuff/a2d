@@ -827,6 +827,8 @@ Repeat for Calculator and Sci.Calc:
 * Launch DeskTop. Special > Disk Copy.... Select a Pascal disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
 * Launch DeskTop. Special > Disk Copy.... Select a DOS 3.3 disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
 
+* Configure Virtual II with two Omnidisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Disk Copy.... Select the Omnidisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Do you want to erase ...?" confirmation prompt is shown.
+
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.

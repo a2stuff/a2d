@@ -631,32 +631,11 @@ is_pro: lda     main__on_line_buffer2
         beq     dest_ok
         jmp     try_format      ; Some other error - proceed with format
 
-        ;; Destination is already formatted - get more details
 dest_ok:
-        ldx     dest_drive_index
-        lda     drive_unitnum_table,x
-        jsr     IsDiskII
-        beq     confirm_erase
-
-        ldx     dest_drive_index
-        lda     drive_unitnum_table,x
-        jsr     main__DeviceDriverAddress ; Z=1 if firmware
-        stax    $06
-        bne     :+              ; if not firmware, skip these checks
-
-        lda     #$00            ; point at $Cn00
-        sta     $06
-        ldy     #$FE            ; $CnFE
-        lda     ($06),y
-        and     #$08            ; bit 3 = The device supports formatting.
-        bne     confirm_erase
-
-:       jmp     do_copy         ; BUG: No confirmation if not Disk II !!!!!!
 
         ;; --------------------------------------------------
         ;; Confirm erasure of the destination disk
 
-confirm_erase:
         lda     main__on_line_buffer2
         and     #NAME_LENGTH_MASK
     IF_ZERO
@@ -712,18 +691,14 @@ try_format:
         lda     drive_unitnum_table,x
         jsr     main__DeviceDriverAddress ; Z=1 if firmware
         stax    $06
-        bne     :+              ; if not firmware, skip these checks
+        bne     do_copy         ; if not firmware, skip these checks
 
         lda     #$00            ; point at $Cn00
         sta     $06
         ldy     #$FE            ; $CnFE
         lda     ($06),y
         and     #$08            ; bit 3 = The device supports formatting.
-        bne     format
-
-:       lda     #kAlertMsgDestinationFormatFail ; no args
-        jsr     ShowAlertDialog
-        jmp     InitDialog
+        beq     do_copy
 
 format: MGTK_CALL MGTK::MoveTo, point_formatting
         param_call DrawString, str_formatting

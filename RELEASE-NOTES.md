@@ -52,6 +52,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Support up to 14 devices. ([#712](https://github.com/a2stuff/a2d/issues/712))
 * Show Pascal volume names more consistently.
+* Ensure a confirmation prompt is shown before overwriting, unless destination is not formatted.
 
 ### Desk Accessories
 
