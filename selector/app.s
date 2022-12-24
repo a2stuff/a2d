@@ -1970,6 +1970,7 @@ check_path:
         sta     INVOKER_PREFIX
         param_call UpcaseString, INVOKER_PREFIX
         param_call UpcaseString, INVOKER_FILENAME
+        param_call UpcaseString, INVOKER_INTERPRETER
 
         ;; --------------------------------------------------
         ;; Invoke
@@ -2111,6 +2112,7 @@ str_extras_basic:
         stax    ptr
         ldy     #$00
         lda     (ptr),y
+        beq     ret
         tay
 @loop:  lda     (ptr),y
         cmp     #'a'
@@ -2121,7 +2123,7 @@ str_extras_basic:
         sta     (ptr),y
 :       dey
         bne     @loop
-        rts
+ret:    rts
 .endproc
 
 ;;; ============================================================

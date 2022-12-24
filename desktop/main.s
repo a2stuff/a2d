@@ -1007,6 +1007,8 @@ no_file_sel:
         jmp     ShowAlert
 
 launch:
+        param_call UpcaseString, INVOKER_PREFIX
+        param_call UpcaseString, INVOKER_INTERPRETER
         jsr     SplitInvokerPath
 
         copy16  #INVOKER, reset_and_invoke_target
@@ -1118,6 +1120,28 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         and     #CASE_MASK
 done:   rts
 .endproc
+
+;;; ============================================================
+;;; Uppercase a string
+;;; Input: A,X = Address
+;;; Trashes $06
+
+.proc UpcaseString
+        ptr := $06
+
+        stax    ptr
+        ldy     #$00
+        lda     (ptr),y
+        beq     ret
+        tay
+@loop:  lda     (ptr),y
+        jsr     UpcaseChar
+        sta     (ptr),y
+        dey
+        bne     @loop
+ret:    rts
+.endproc
+
 
 ;;; ============================================================
 ;;; Inputs: Character in A
