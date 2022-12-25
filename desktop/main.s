@@ -15617,6 +15617,7 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_SUFFIX, str_sys_suffix, 0, IconType::application ; $FF
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
 
+        DEFINE_ICTRECORD $FF, FT_ANIMATION, ICT_FLAGS_NONE, 0, 0, IconType::animation     ; $5B ANM
         DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_AUX, $D0E7, 0, IconType::music ; Electric Duet
         DEFINE_ICTRECORD $FF, $E0,          ICT_FLAGS_AUX, $8002, 0, IconType::archive ; NuFX
 
@@ -15863,6 +15864,7 @@ icontype_iconentryflags_table:
         .byte   0                    ; text
         .byte   0                    ; binary
         .byte   0                    ; graphics
+        .byte   0                    ; animation/video
         .byte   0                    ; music
         .byte   0                    ; audio
         .byte   0                    ; font
@@ -15886,6 +15888,7 @@ type_icons_table:
         .addr   txt ; text
         .addr   bin ; binary
         .addr   fot ; graphics
+        .addr   anm ; animation/video
         .addr   mus ; music
         .addr   snd ; audio
         .addr   fnt ; font

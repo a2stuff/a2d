@@ -837,6 +837,7 @@ portptr:        .addr   0
         DEFINE_ICON_RESOURCE sys, sys_icon, 4, 27, 17, sys_mask
         DEFINE_ICON_RESOURCE bas, basic_icon, 4, 27, 14, basic_mask
         DEFINE_ICON_RESOURCE fot, graphics_icon, 4, 27, 12, graphics_mask
+        DEFINE_ICON_RESOURCE anm, video_icon, 4, 26, 12, graphics_mask
         DEFINE_ICON_RESOURCE mus, music_icon, 4, 27, 15, generic_mask
         DEFINE_ICON_RESOURCE snd, audio_icon, 4, 27, 15, generic_mask
         DEFINE_ICON_RESOURCE adb, adb_icon, 4, 27, 15, generic_mask
@@ -1119,6 +1120,22 @@ graphics_mask:
         .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
         .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
         .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
+
+video_icon:
+        .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111110)
+        .byte   PX(%1100011),PX(%0001100),PX(%0110001),PX(%1000110)
+        .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111110)
+        .byte   PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000010)
+        .byte   PX(%1000000),PX(%0001100),PX(%0000000),PX(%0000010)
+        .byte   PX(%1000000),PX(%0001111),PX(%1000000),PX(%0000010)
+        .byte   PX(%1000000),PX(%0001111),PX(%1110000),PX(%0000010)
+        .byte   PX(%1000000),PX(%0001111),PX(%1000000),PX(%0000010)
+        .byte   PX(%1000000),PX(%0001100),PX(%0000000),PX(%0000010)
+        .byte   PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000010)
+        .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111110)
+        .byte   PX(%1100011),PX(%0001100),PX(%0110001),PX(%1000110)
+        .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111110)
+        ;; shares left part of graphics_mask
 
 music_icon:                     ; Music
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%0000000)

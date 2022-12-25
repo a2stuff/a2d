@@ -104,6 +104,7 @@ FT_DIRECTORY    = $0F           ; Directory *
 FT_ADB          = $19           ; AppleWorks Database *
 FT_AWP          = $1A           ; AppleWorks Word Processing *
 FT_ASP          = $1B           ; AppleWorks Spreadsheet *
+FT_ANIMATION    = $5B           ; Animation/Video file
 FT_SRC          = $B0           ; IIgs system type; re-used?
 FT_S16          = $B3           ; IIgs Application Program
 FT_MUSIC        = $D5           ; Music File

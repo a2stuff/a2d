@@ -43,7 +43,7 @@ Project Page: https://github.com/a2stuff/a2d
 * View > as Small Icons added.
 * Format/Erase: Show volume's previous name with adjusted case. ([#426](https://github.com/a2stuff/a2d/issues/426), [#427](https://github.com/a2stuff/a2d/issues/427))
 * Format/Erase: Default device to selected volume.
-* Icon for audio files (BTC and ZC).
+* Icon for audio files (.BTC and .ZC), video files ($5B/ANM)
 
 ### Selector
 
