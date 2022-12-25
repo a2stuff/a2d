@@ -11,6 +11,7 @@ kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
         binary
         graphics
         music
+        audio
         font
         relocatable
         command

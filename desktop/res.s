@@ -838,6 +838,7 @@ portptr:        .addr   0
         DEFINE_ICON_RESOURCE bas, basic_icon, 4, 27, 14, basic_mask
         DEFINE_ICON_RESOURCE fot, graphics_icon, 4, 27, 12, graphics_mask
         DEFINE_ICON_RESOURCE mus, music_icon, 4, 27, 15, generic_mask
+        DEFINE_ICON_RESOURCE snd, audio_icon, 4, 27, 15, generic_mask
         DEFINE_ICON_RESOURCE adb, adb_icon, 4, 27, 15, generic_mask
         DEFINE_ICON_RESOURCE awp, awp_icon, 4, 27, 15, generic_mask
         DEFINE_ICON_RESOURCE asp, asp_icon, 4, 27, 15, generic_mask
@@ -1134,6 +1135,24 @@ music_icon:                     ; Music
         .byte   PX(%0100001),PX(%1110000),PX(%1111100),PX(%0000010)
         .byte   PX(%0100011),PX(%1110000),PX(%0111000),PX(%0000010)
         .byte   PX(%0100001),PX(%1100000),PX(%0000000),PX(%0000010)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
+
+audio_icon:
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%0000000)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000100),PX(%1100000)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000100),PX(%0011000)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000100),PX(%0000110)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000111),PX(%1111110)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
+        .byte   PX(%0100000),PX(%0001100),PX(%0000001),PX(%0000010)
+        .byte   PX(%0100000),PX(%0110100),PX(%0001000),PX(%1000010)
+        .byte   PX(%0100111),PX(%1000100),PX(%1000100),PX(%0100010)
+        .byte   PX(%0100100),PX(%0000100),PX(%0100100),PX(%0100010)
+        .byte   PX(%0100100),PX(%0000100),PX(%0100100),PX(%0100010)
+        .byte   PX(%0100111),PX(%1000100),PX(%1000100),PX(%0100010)
+        .byte   PX(%0100000),PX(%0110100),PX(%0001000),PX(%1000010)
+        .byte   PX(%0100000),PX(%0001100),PX(%0000001),PX(%0000010)
         .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
 

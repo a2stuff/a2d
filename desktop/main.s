@@ -15590,6 +15590,8 @@ icontype_table:
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fm_suffix, 0, IconType::graphics ; Apple II Full Monochrome
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2lc_suffix, 0, IconType::graphics ; Apple II Low Color
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2hr_suffix, 0, IconType::graphics ; Apple II High Resolution
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_btc_suffix, 0, IconType::audio ; Zero-Crossing Audio
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_zc_suffix, 0, IconType::audio ; Binary Time Constant Audio
 
         ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
@@ -15652,8 +15654,14 @@ str_a2fm_suffix:                ; Double-hires ("Apple II Full Mono") - Bmp2DHR 
 str_a2lc_suffix:                ; Single-hires ("Apple II Low Color")
         PASCAL_STRING ".A2LC"
 
-str_a2hr_suffix:                ; Singl-hires B&W ("Apple II High Resolution")
+str_a2hr_suffix:                ; Single-hires B&W ("Apple II High Resolution")
         PASCAL_STRING ".A2HR"
+
+str_zc_suffix:                  ; "Zero-Crossing" Audio
+        PASCAL_STRING ".ZC"
+
+str_btc_suffix:                 ; "Binary Time Constant" Audio
+        PASCAL_STRING ".BTC"
 
 ;;; ============================================================
 ;;; DeskTop icon placement
@@ -15856,6 +15864,7 @@ icontype_iconentryflags_table:
         .byte   0                    ; binary
         .byte   0                    ; graphics
         .byte   0                    ; music
+        .byte   0                    ; audio
         .byte   0                    ; font
         .byte   0                    ; relocatable
         .byte   0                    ; command
@@ -15878,6 +15887,7 @@ type_icons_table:
         .addr   bin ; binary
         .addr   fot ; graphics
         .addr   mus ; music
+        .addr   snd ; audio
         .addr   fnt ; font
         .addr   rel ; relocatable
         .addr   cmd ; command
