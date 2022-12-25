@@ -330,6 +330,7 @@
 * Launch DeskTop. Open a volume window. Open a folder window. Activate the volume window. View > By Name. Select the folder icon. Rename it. Verify that the folder window is renamed.
 * Launch DeskTop. Open a volume window. Position an file icon with a short name near the left edge of the window, but far enough away that the scrollbars are not active. Rename the file icon with a long name. Verify that the window's scrollbars activate.
 * Launch DeskTop. Open a volume window. Position an file icon with a long name near the left edge of the window, so that the name is partially cut off and the scrollbars activate. Rename the file icon with a short name. Verify that the window's scrollbars deactivate.
+* Launch DeskTop. Close all windows. Select a volume icon. File > Rename..., enter a new name, and click OK. Verify that after the dialog closes there is no mis-painting of a scrollbar on the desktop.
 
 * Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double click on B. Verify that the existing B window activates.
 

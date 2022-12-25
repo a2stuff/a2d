@@ -3002,14 +3002,17 @@ CmdLock         := DoLock
         pha                     ; A = result
 
         ;; If selection is in a window with View > by Name, refresh
+        lda     selected_window_id
+    IF_NE
         jsr     GetSelectionViewBy
         cmp     #kViewByName
-    IF_EQ
+      IF_EQ
         txa                     ; X = window id
         jsr     ViewByCommon::entry2
-    ELSE
+      ELSE
         ;; Scrollbars may need adjusting
         jsr     ScrollUpdate
+      END_IF
     END_IF
 
         pla                     ; A = result
