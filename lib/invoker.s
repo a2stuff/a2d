@@ -26,21 +26,10 @@ start:
         ;; $EE = extended call signature for IIgs/GS/OS variation.
         DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME
 
-;;; ============================================================
-
-.proc SetPrefix
-        MLI_CALL SET_PREFIX, set_prefix_params
-        beq     :+
-        pla
-        pla
-:       rts
-.endproc
 
 ;;; ============================================================
 
-begin:  bit     ROMIN2
-
-        copy16  #PRODOS_SYS_START, jmp_addr
+begin:  copy16  #PRODOS_SYS_START, jmp_addr
 
         ;; Clear system memory bitmap
         ldx     #BITMAP_SIZE-2
@@ -58,13 +47,13 @@ begin:  bit     ROMIN2
         bne     use_interpreter ; Yes, load it
 
         ;; Set prefix
-        jsr     SetPrefix
+        MLI_CALL SET_PREFIX, set_prefix_params
+        bcs     ret
 
         ;; Check file type
         MLI_CALL GET_FILE_INFO, get_info_params
-        beq     :+
-        rts
-:       lda     get_info_params::file_type
+        bcs     ret
+        lda     get_info_params::file_type
 
 ;;; Binary file (BIN) - load and invoke at A$=AuxType
         cmp     #FT_BINARY
@@ -77,11 +66,11 @@ begin:  bit     ROMIN2
         sta     jmp_addr+1
         sta     read_params::data_buffer+1
 
-        cmp     #$0C            ; If loading at page < $0C
+        cmp     #$0C            ; If loading at page < $0C00
         bcs     :+
-        lda     #$BB            ; ... use a high address buffer ($BB)
+        lda     #$BB            ; ... use a high address buffer ($BB00)
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-:       lda     #$08            ; ... otherwise a low address buffer ($08)
+:       lda     #$08            ; ... otherwise a low address buffer ($0800)
         sta     open_params::io_buffer+1
         jmp     load_target
     END_IF
@@ -95,7 +84,7 @@ begin:  bit     ROMIN2
         beq     quit_call
 
         ;; Failure
-        rts
+ret:    rts
 
 ;;; ============================================================
 ;;; Interpreter - `INVOKER_INTERPRETER` populated by caller
@@ -117,19 +106,20 @@ use_interpreter:
 
 load_target:
         MLI_CALL OPEN, open_params
-        bne     exit
+        bcs     exit
 do_read:
         lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
-        bne     exit
+        bcs     exit
         MLI_CALL CLOSE, close_params
-        bne     exit
+        bcs     exit
 
         ;; If interpreter, copy filename to interpreter buffer.
         lda     INVOKER_INTERPRETER
     IF_NE
-        jsr     SetPrefix       ; A second call is necessary here!
+        MLI_CALL SET_PREFIX, set_prefix_params
+        bcs     exit
         ldy     INVOKER_FILENAME
 :       lda     INVOKER_FILENAME,y
         sta     PRODOS_INTERPRETER_BUF,y         ; ProDOS interpreter protocol
