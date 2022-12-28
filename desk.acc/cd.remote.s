@@ -514,7 +514,7 @@ set_key:
 
 .macro DRAW_CD_BUTTON name, flag
         JUMP_TABLE_MGTK_CALL MGTK::FrameRect, .ident(.sprintf("%s_button_rect", .string(name)))
-        JUMP_TABLE_MGTK_CALL MGTK::PaintBits, .ident(.sprintf("%s_bitmap_params", .string(name)))
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, .ident(.sprintf("%s_bitmap_params", .string(name)))
   .if .paramcount > 1
         bit     .ident(.sprintf("cdremote__%s", .string(flag)))
     IF_NS
@@ -536,7 +536,7 @@ set_key:
 
         ;; --------------------------------------------------
 
-        JUMP_TABLE_MGTK_CALL MGTK::PaintBits, logo_bitmap_params
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, logo_bitmap_params
 
         ;; --------------------------------------------------
 

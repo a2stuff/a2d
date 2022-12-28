@@ -859,9 +859,7 @@ next:   dex
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
         jsr     UpdateDblclickButtons
-        MGTK_CALL MGTK::ShowCursor
         jmp     InputLoop
 .endproc
 
@@ -910,9 +908,7 @@ next:   dex
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
         jsr     UpdateTrackingButtons
-        MGTK_CALL MGTK::ShowCursor
 
         jmp     InputLoop
 .endproc
@@ -977,8 +973,8 @@ notpencopy:     .byte   MGTK::notpencopy
 
         MGTK_CALL MGTK::SetPenMode, penBIC
         MGTK_CALL MGTK::FrameRect, fatbits_frame
-        MGTK_CALL MGTK::PaintBits, larr_params
-        MGTK_CALL MGTK::PaintBits, rarr_params
+        MGTK_CALL MGTK::PaintBitsHC, larr_params
+        MGTK_CALL MGTK::PaintBitsHC, rarr_params
 
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, preview_frame
@@ -1013,7 +1009,7 @@ loop:   ldy     #3
         dey
         bpl     :-
 
-        MGTK_CALL MGTK::PaintBits, darrow_params
+        MGTK_CALL MGTK::PaintBitsHC, darrow_params
         add16_8 addr, #.sizeof(MGTK::Point)
         inc     arrow_num
         lda     arrow_num
@@ -1027,7 +1023,7 @@ loop:   ldy     #3
 
         jsr     UpdateDblclickButtons
 
-        MGTK_CALL MGTK::PaintBits, dblclick_params
+        MGTK_CALL MGTK::PaintBitsHC, dblclick_params
 
         ;; ==============================
         ;; Mouse Tracking Speed
@@ -1039,7 +1035,7 @@ loop:   ldy     #3
         BTK_CALL BTK::RadioDraw, tracking_fast_params
         jsr     UpdateTrackingButtons
 
-        MGTK_CALL MGTK::PaintBits, mouse_tracking_params
+        MGTK_CALL MGTK::PaintBitsHC, mouse_tracking_params
 
         ;; ==============================
         ;; IP Blinking
@@ -1050,7 +1046,7 @@ loop:   ldy     #3
         MGTK_CALL MGTK::MoveTo, ipblink2_label_pos
         param_call DrawString, ipblink2_label_str
 
-        MGTK_CALL MGTK::PaintBits, ipblink_bitmap_params
+        MGTK_CALL MGTK::PaintBitsHC, ipblink_bitmap_params
 
         MGTK_CALL MGTK::MoveTo, ipblink_slow_label_pos
         param_call DrawString, ipblink_slow_label_str
@@ -1244,7 +1240,7 @@ xloop:  ror     row
 zero:   lda     #MGTK::notpencopy
 store:  sta     mode
 
-        MGTK_CALL MGTK::SetPenMode, mode
+        MGTK_CALL MGTK::SetPenMode, mode ; TODO: Avoid call if unchanged
         MGTK_CALL MGTK::PaintRect, bitrect
 
         ;; next x
@@ -1575,9 +1571,7 @@ next:   dex
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
         jsr     UpdateIpblinkButtons
-        MGTK_CALL MGTK::ShowCursor
         jmp     InputLoop
 .endproc
 
@@ -1608,7 +1602,7 @@ next:   dex
         MGTK_CALL MGTK::HideCursor
 :
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintBits, ipblink_bitmap_ip_params
+        MGTK_CALL MGTK::PaintBitsHC, ipblink_bitmap_ip_params
 
         bit     cursor_flag
         bpl     :+
@@ -1627,9 +1621,7 @@ done:   rts
         sta     SETTINGS + DeskTopSettings::rgb_color
         jsr     MarkDirty
 
-        MGTK_CALL MGTK::HideCursor
         jsr     UpdateRGBCheckbox
-        MGTK_CALL MGTK::ShowCursor
 
         sta     RAMRDOFF
         sta     RAMWRTOFF

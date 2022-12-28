@@ -351,7 +351,7 @@ str_a2fm_suffix:
         JUMP_TABLE_MGTK_CALL MGTK::InitPort, grafport
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
         JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, notpencopy
-        JUMP_TABLE_MGTK_CALL MGTK::PaintBits, paintbits_params
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, paintbits_params
 
         rts
 

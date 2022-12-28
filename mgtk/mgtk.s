@@ -373,6 +373,7 @@ jump_table:
         .addr   GetWinFrameRectImpl ; $52 GetWinFrameRect
         .addr   RedrawDeskTopImpl   ; $53 RedrawDeskTop
         .addr   FindControlExImpl   ; $54 FindControlEx
+        .addr   PaintBitsImpl       ; $55 PaintBitsHC
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -496,6 +497,7 @@ param_lengths:
         PARAM_DEFN  5, $82, 0                ; $52 GetWinFrameRect
         PARAM_DEFN  0, $00, 0                ; $53 RedrawDeskTop
         PARAM_DEFN  7, $82, 0                ; $54 FindControlEx
+        PARAM_DEFN 16, $8A, 1                ; $55 PaintBitsHC
 
 ;;; ============================================================
 ;;; Pre-Shift Tables

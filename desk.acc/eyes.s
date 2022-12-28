@@ -414,8 +414,6 @@ kMoveThresholdY = 5
 :
 
         MGTK_CALL MGTK::SetPort, grafport
-
-        ;; TODO: Only hide/show cursor if inside the window
         MGTK_CALL MGTK::HideCursor
 
         lda     has_drawn_outline
@@ -428,7 +426,7 @@ kMoveThresholdY = 5
         ;; Draw resize box
         sub16   winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
         sub16   winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
-        MGTK_CALL MGTK::PaintBits, grow_box_params
+        MGTK_CALL MGTK::PaintBitsHC, grow_box_params
 
         ;; Draw outline
 

@@ -607,7 +607,7 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        MGTK_CALL MGTK::PaintBits, map_params
+        MGTK_CALL MGTK::PaintBitsHC, map_params
 
         MGTK_CALL MGTK::MoveTo, lat_label_pos
         param_call DrawString, lat_label_str
@@ -690,9 +690,7 @@ sflag:  .byte   0
 
 .proc DrawPositionIndicator
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::PaintBits, position_marker_params
-        MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::PaintBitsHC, position_marker_params
         rts
 .endproc
 

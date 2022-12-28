@@ -537,6 +537,9 @@ FindControlEx   = $54           ; Like FindControl, but works on non-topmost win
 ;;; .byte       which_part      (out) Part::*
 ;;; .byte       window_id
 
+PaintBitsHC     = $55           ; Like PaintBits, but hides the cursor
+;;; (input is address of MapInfo record)
+
 
 ;;; ============================================================
 ;;; Graphics Primitives Constants

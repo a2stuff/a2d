@@ -319,16 +319,13 @@ notpencopy:     .byte   MGTK::notpencopy
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        IF_EQ
-        rts
-        END_IF
+        bne     ret             ; obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::PaintBits, joystick_params
+        MGTK_CALL MGTK::PaintBitsHC, joystick_params
 
         MGTK_CALL MGTK::FrameRect, joy_disp_frame_rect
 
@@ -337,10 +334,9 @@ notpencopy:     .byte   MGTK::notpencopy
         BTK_CALL BTK::RadioDraw, joy_btn2_params
 
         copy    #$80, force_draw_flag
-
         MGTK_CALL MGTK::ShowCursor
-        rts
 
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -440,9 +436,9 @@ set:    copy    #$80, joy2_valid_flag
         MGTK_CALL MGTK::SetPenMode, penOR
         bit     joy2_valid_flag
     IF_NS
-        MGTK_CALL MGTK::PaintBits, joy_marker2
+        MGTK_CALL MGTK::PaintBitsHC, joy_marker2
     END_IF
-        MGTK_CALL MGTK::PaintBits, joy_marker
+        MGTK_CALL MGTK::PaintBitsHC, joy_marker
 
 .scope joy1
         joy_x := joy_marker::viewloc::xcoord
@@ -471,9 +467,9 @@ set:    copy    #$80, joy2_valid_flag
         MGTK_CALL MGTK::SetPenMode, notpencopy
         bit     joy2_valid_flag
     IF_NS
-        MGTK_CALL MGTK::PaintBits, joy_marker2
+        MGTK_CALL MGTK::PaintBitsHC, joy_marker2
     END_IF
-        MGTK_CALL MGTK::PaintBits, joy_marker
+        MGTK_CALL MGTK::PaintBitsHC, joy_marker
 
         ;; --------------------------------------------------
         ;; Button States

@@ -1058,8 +1058,8 @@ label_downarrow:
         MGTK_CALL MGTK::FrameRect, date_rect
         MGTK_CALL MGTK::FrameRect, time_rect
 
-        MGTK_CALL MGTK::PaintBits, date_bitmap_params
-        MGTK_CALL MGTK::PaintBits, time_bitmap_params
+        MGTK_CALL MGTK::PaintBitsHC, date_bitmap_params
+        MGTK_CALL MGTK::PaintBitsHC, time_bitmap_params
 
         MGTK_CALL MGTK::MoveTo, date_sep1_pos
         param_call DrawString, str_date_separator
@@ -1328,9 +1328,7 @@ loop:   cmp     #10
 
 .proc HandleOptionClick
         sta     SETTINGS + DeskTopSettings::clock_24hours
-        MGTK_CALL MGTK::HideCursor
         jsr     UpdateOptionButtons
-        MGTK_CALL MGTK::ShowCursor
 
         ;; Set dirty bit
         lda     #$40

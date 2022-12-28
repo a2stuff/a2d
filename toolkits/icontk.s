@@ -1459,7 +1459,7 @@ ret:    rts
     ELSE
         MGTK_CALL MGTK::SetPenMode, penOR
     END_IF
-        MGTK_CALL MGTK::PaintBits, mask_paintbits_params
+        MGTK_CALL MGTK::PaintBitsHC, mask_paintbits_params
 
         ;; Shade again (restores background)
         .assert kIconEntryStateDimmed = $80, error, "flag mismatch"
@@ -1476,7 +1476,7 @@ ret:    rts
     ELSE
         MGTK_CALL MGTK::SetPenMode, penBIC
     END_IF
-        MGTK_CALL MGTK::PaintBits, icon_paintbits_params
+        MGTK_CALL MGTK::PaintBitsHC, icon_paintbits_params
 
         ;; --------------------------------------------------
         ;; Label

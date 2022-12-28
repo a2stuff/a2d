@@ -311,6 +311,18 @@ Parameters:
 (input is address of MapInfo record)
 ```
 
+Note that the cursor is not hidden automatically for this operation.
+See `PaintBitsHC`.
+
+If `PaintBits` is used the cursor is not hidden, then the caller must
+assure that the cursor save/restore area and the bitmap do not
+intersect, or when the cursor moves the display will be distorted.
+
+In general, `PaintBitsHC` should be preferred except for truly
+performance-sensitive operations (e.g. animations) where the cursor
+remains visible but is hidden conditionally.
+
+
 #### PaintPoly ($15)
 Fill multiple closed polygons with the pattern of the current grafport.
 
@@ -1070,6 +1082,23 @@ Parameters:
 .byte       which_part      (out) MGTK::Part::*
 .byte       window_id
 ```
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### PaintBitsHC ($56)
+Like `PaintBits`, but hides/restores the cursor for the operation.
+
+Parameters:
+```
+(input is address of MapInfo record)
+```
+
+If the cursor is already hidden (via a call to `ShowCursor` or
+`ObscureCursor`) then this is the same as `PaintBits`, with no
+performance penalty. If the cursor is not already hidden, then
+this is equivalent in behavior but faster than surrounding
+a `PaintBits` call with `ShowCursor`/`HideCursor` because the
+extra dispatch is avoided.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 

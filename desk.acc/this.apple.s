@@ -1067,7 +1067,7 @@ egg:    .byte   0
 
         copy16  model_pix_ptr, bits_addr
         MGTK_CALL MGTK::SetPenMode, penmode
-        MGTK_CALL MGTK::PaintBits, SELF_MODIFIED, bits_addr
+        MGTK_CALL MGTK::PaintBitsHC, SELF_MODIFIED, bits_addr
 
         MGTK_CALL MGTK::MoveTo, model_pos
         ldax    model_str_ptr

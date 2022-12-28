@@ -489,7 +489,7 @@ hit:    lda     winfo::window_id
 
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::PaintBits, frame_params
+        MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden
 
         inc     frame_counter
         lda     frame_counter
@@ -504,7 +504,7 @@ hit:    lda     winfo::window_id
         copy    #0, run_pos
 
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintBits, frame_params
+        MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden
 
 :
 

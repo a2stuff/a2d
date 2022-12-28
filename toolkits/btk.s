@@ -459,10 +459,8 @@ a_record  .addr
     END_IF
         stax    rb_params::mapbits
 
-        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::PaintBits, rb_params
-        MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::PaintBitsHC, rb_params
         rts
 .endproc
 
@@ -576,10 +574,8 @@ a_record  .addr
     END_IF
         stax    cb_params::mapbits
 
-        MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::PaintBits, cb_params
-        MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::PaintBitsHC, cb_params
         rts
 .endproc
 
