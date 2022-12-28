@@ -11,7 +11,7 @@
 # Will output:
 #
 #   add_file disposition src_file folder dst_file suffix
-#     disposition = "required" | "optional" | "extra"
+#     disposition = "required" | "optional" | "extra" | "sample"
 #     src_file    = e.g. "out/calculator.da"
 #     folder      = e.g. "apple.menu"
 #     dst_file    = e.g. "calculator"
@@ -98,9 +98,6 @@ disposition="optional"
 # Add Selector
 emit add_file $disposition "out/selector.built" "Modules" "Selector" F10000
 
-# Add BASIC.SYSTEM
-emit add_file $disposition "res/package/BASIC.SYSTEM" "Extras" "BASIC.system" FF2000
-
 # --------------------------------------------------
 # Part 4: Extras.
 disposition="extra"
@@ -108,7 +105,27 @@ disposition="extra"
 # Add UnShrink
 emit add_file $disposition "res/package/UNSHRINK" "Extras" "UnShrink" FF0000
 
-# Sample Media
+# Add BASIC.SYSTEM
+emit add_file $disposition "res/package/BASIC.SYSTEM" "Extras" "BASIC.system" FF2000
+
+# --------------------------------------------------
+# Part 5: Desk Accessories (optional and extra)
+
+# Add Desk Accessories
+for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
+    IFS=',' read -ra array <<< "$line"
+    file="${array[0]}"
+    loc=$(get_da_loc_name "$file")
+    path="${array[1]}"
+    ploc=$(get_da_loc_path "$path")
+    disposition="${array[2]}"
+    emit add_file $disposition "out/$file.da" "$ploc" "$loc" F10641
+done
+
+# --------------------------------------------------
+# Part 6: Sample Media.
+disposition="sample"
+
 if [[ -z "$no_sample_media" ]]; then
     mediadir="Sample.Media"
     mediafnt="$mediadir/Fonts"
@@ -149,17 +166,3 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "mgtk/fonts/UPSIDE.DOWN"    $mediafnt "UPSIDE.DOWN"    070000
     emit add_file $disposition "mgtk/fonts/VENICE"         $mediafnt "VENICE"         070000
 fi
-
-# --------------------------------------------------
-# Part 5: Desk Accessories (optional and extra)
-
-# Add Desk Accessories
-for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
-    IFS=',' read -ra array <<< "$line"
-    file="${array[0]}"
-    loc=$(get_da_loc_name "$file")
-    path="${array[1]}"
-    ploc=$(get_da_loc_path "$path")
-    disposition="${array[2]}"
-    emit add_file $disposition "out/$file.da" "$ploc" "$loc" F10641
-done
