@@ -75,6 +75,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Flying Toasters: Improve animation speed and reduce flicker.
 * Image Preview: Show .A2HR files in B&W
 * Joystick: Visualize second joystick (paddles 2/3) if active.
+* Neko: A new DA which provides a playful cat desk toy.
 
 ## 1.2
 
