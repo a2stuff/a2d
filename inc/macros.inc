@@ -95,8 +95,8 @@ end:
 ;;; ============================================================
 ;;; Common patterns
 
-.define AS_BYTE(arg)        arg & $FF
-.define AS_WORD(arg)        arg & $FFFF
+.define AS_BYTE(arg)        (arg) & $FF
+.define AS_WORD(arg)        (arg) & $FFFF
 
 ;;; Return a value in A - immediate or absolute
 .macro return arg

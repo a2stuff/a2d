@@ -168,7 +168,7 @@ kRunHeight = 11
 run_pos:
         .byte   0
 
-kCursorWidth  = 8
+kCursorWidth  = 14
 kCursorHeight = 12
 
         ;; Bounding rect for where the animation and cursor could overlap.

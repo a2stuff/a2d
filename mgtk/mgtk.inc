@@ -730,11 +730,11 @@ event_size                      = 5        ; any kind of event
         ident := *
 .scope ident
 topleft:
-x1:     .word   left
-y1:     .word   top
+x1:     .word   AS_WORD(left)
+y1:     .word   AS_WORD(top)
 bottomright:
-x2:     .word   right
-y2:     .word   bottom
+x2:     .word   AS_WORD(right)
+y2:     .word   AS_WORD(bottom)
         .refto ident
         .refto topleft
         .refto x1
@@ -750,11 +750,11 @@ y2:     .word   bottom
         ident := *
 .scope ident
 topleft:
-x1:     .word   left
-y1:     .word   top
+x1:     .word   AS_WORD(left)
+y1:     .word   AS_WORD(top)
 bottomright:
-x2:     .word   ((left) + (width))
-y2:     .word   ((top) + (height))
+x2:     .word   AS_WORD((left) + (width))
+y2:     .word   AS_WORD((top) + (height))
         .refto ident
         .refto topleft
         .refto x1
@@ -770,11 +770,11 @@ y2:     .word   ((top) + (height))
         ident := *
 .scope ident
 topleft:
-x1:     .word   left
-y1:     .word   top
+x1:     .word   AS_WORD(left)
+y1:     .word   AS_WORD(top)
 bottomright:
-x2:     .word   ((width) - (left))
-y2:     .word   ((height) - (top))
+x2:     .word   AS_WORD((width) - (left))
+y2:     .word   AS_WORD((height) - (top))
         .refto ident
         .refto topleft
         .refto x1

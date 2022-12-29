@@ -738,6 +738,7 @@ Repeat for Calculator and Sci.Calc:
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
 * Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.
 * Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that display does not switch from DHR to HR.
+* Run System Speed DA. Position the cursor to the left of the animation, where it is not flickering, and move it up and down. Verify that stray pixels are not left behind by the animation.
 
 ## Puzzle
 
