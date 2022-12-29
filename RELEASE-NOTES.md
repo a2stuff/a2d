@@ -4,7 +4,9 @@ Home Page: https://a2desktop.com
 
 Project Page: https://github.com/a2stuff/a2d
 
-## 1.2 Beta
+## 1.2
+
+Unofficial release by the community. December 28, 2022.
 
 ### General Enhancements
 
