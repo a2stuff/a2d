@@ -11,25 +11,10 @@
 
         MLIEntry := MLI
 
+;;; ============================================================
+
 start:
-        jmp     begin
-
-;;; ============================================================
-
-        DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
-
-        DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
-        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
-        DEFINE_CLOSE_PARAMS close_params
-        DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
-
-        ;; $EE = extended call signature for IIgs/GS/OS variation.
-        DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME
-
-
-;;; ============================================================
-
-begin:  copy16  #PRODOS_SYS_START, jmp_addr
+        copy16  #PRODOS_SYS_START, jmp_addr
 
         ;; Clear system memory bitmap
         ldx     #BITMAP_SIZE-2
@@ -53,25 +38,25 @@ begin:  copy16  #PRODOS_SYS_START, jmp_addr
         ;; Check file type
         MLI_CALL GET_FILE_INFO, get_info_params
         bcs     ret
-        lda     get_info_params::file_type
+        lda     get_info_params__file_type
 
 ;;; Binary file (BIN) - load and invoke at A$=AuxType
         cmp     #FT_BINARY
     IF_EQ
 
-        lda     get_info_params::aux_type
+        lda     get_info_params__aux_type
         sta     jmp_addr
-        sta     read_params::data_buffer
-        lda     get_info_params::aux_type+1
+        sta     read_params__data_buffer
+        lda     get_info_params__aux_type+1
         sta     jmp_addr+1
-        sta     read_params::data_buffer+1
+        sta     read_params__data_buffer+1
 
         cmp     #$0C            ; If loading at page < $0C00
         bcs     :+
         lda     #$BB            ; ... use a high address buffer ($BB00)
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 :       lda     #$08            ; ... otherwise a low address buffer ($0800)
-        sta     open_params::io_buffer+1
+        sta     open_params__io_buffer+1
         jmp     load_target
     END_IF
 
@@ -98,7 +83,7 @@ ret:    rts
 ;;; compatibility issues. Those addresses conflict with this code.
 
 use_interpreter:
-        copy16  #INVOKER_INTERPRETER, open_params::pathname
+        copy16  #INVOKER_INTERPRETER, open_params__pathname
         FALL_THROUGH_TO load_target
 
 ;;; ============================================================
@@ -108,8 +93,8 @@ load_target:
         MLI_CALL OPEN, open_params
         bcs     exit
 do_read:
-        lda     open_params::ref_num
-        sta     read_params::ref_num
+        lda     open_params__ref_num
+        sta     read_params__ref_num
         MLI_CALL READ, read_params
         bcs     exit
         MLI_CALL CLOSE, close_params
@@ -141,10 +126,35 @@ quit_call:
 
 exit:   rts
 
-.endscope ; invoker
+;;; ============================================================
 
-        PAD_TO INVOKER_INTERPRETER
-        .res    kPathBufferSize, 0
+        PAD_TO ::INVOKER_INTERPRETER
+        .res    ::kPathBufferSize, 0
+
+;;; ============================================================
+
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
+
+        DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
+        open_params__ref_num := open_params::ref_num
+        open_params__io_buffer := open_params::io_buffer
+        open_params__pathname := open_params::pathname
+
+        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
+        read_params__ref_num := read_params::ref_num
+        read_params__data_buffer := read_params::data_buffer
+
+        DEFINE_CLOSE_PARAMS close_params
+
+        DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKER_FILENAME
+        get_info_params__file_type := get_info_params::file_type
+        get_info_params__aux_type := get_info_params::aux_type
+
+        ;; $EE = extended call signature for IIgs/GS/OS variation.
+        DEFINE_QUIT_PARAMS quit_params, $EE, INVOKER_FILENAME
+
+
+.endscope ; invoker
 
         ;; Pad to $160 bytes
         PAD_TO $3F0
