@@ -11349,7 +11349,8 @@ DoDuplicate     := DoDuplicateImpl::start
 ;;; Memory Map
 ;;; ...
 ;;; $1F80 - $1FFF   - dst path buffer
-;;; $1500 - $1F7F   - file data buffer
+;;; $1F00 - $1F7F   - unused
+;;; $1500 - $1EFF   - file data buffer
 ;;; $1100 - $14FF   - dst file I/O buffer
 ;;; $0D00 - $10FF   - src file I/O buffer
 ;;; $0C00 - $0CFF   - dir data buffer
@@ -11382,8 +11383,9 @@ file_entry_buf          .res    .sizeof(FileEntry)
         DEFINE_READ_PARAMS read_padding_bytes_params, dir_data::buf_padding_bytes, kMaxPaddingBytes
 
         file_data_buffer := $1500
-        kBufSize = $A80
+        kBufSize = $A00
         .assert file_data_buffer + kBufSize <= dst_path_buf, error, "Buffer overlap"
+        .assert (kBufSize - ((kBufSize/$200)*$200)) = 0, error, "better performance for an integral number of blocks"
 
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
