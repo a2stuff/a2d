@@ -1349,7 +1349,7 @@ loop:   cmp     #10
         lda     #Field::hour
         jsr     DrawField
 
-        jmp     InputLoop
+        rts                     ; back to `InputLoop`
 .endproc
 
 ;;; ============================================================
