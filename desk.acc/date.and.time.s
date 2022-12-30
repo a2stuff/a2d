@@ -1399,7 +1399,6 @@ loop:   cmp     #10
 
         .include "../lib/save_settings.s"
         .include "../lib/drawstring.s"
-        .include "../lib/measurestring.s"
 
 ;;; ============================================================
 

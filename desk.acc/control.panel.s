@@ -1651,7 +1651,6 @@ done:   rts
 
         .include "../lib/save_settings.s"
         .include "../lib/drawstring.s"
-        .include "../lib/measurestring.s"
 
 ;;; ============================================================
 
