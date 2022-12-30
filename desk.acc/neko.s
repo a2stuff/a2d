@@ -35,40 +35,19 @@
 ;;;          |             | |             |
 ;;;          |             | |             |
 ;;;          |             | |             |
-;;;          | DA          | | DA (copy)   |
+;;;          | stub        | | DA          |
 ;;;   $800   +-------------+ +-------------+
 ;;;          :             : :             :
 ;;;
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
+        DA_HEADER
+        DA_START_AUX_SEGMENT
+
+;;; ============================================================
 
         SCRATCH := $1C00
-
-da_start:
-
-;;; Copy the DA to AUX for easy bank switching
-.scope
-        copy16  #da_start, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #da_start, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-.endscope
-
-.scope
-        ;; Run the DA
-        sta     RAMRDON
-        sta     RAMWRTON
-
-        jsr     Init
-
-        ;; Back to main for exit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
-.endscope
 
 ;;; ============================================================
 
@@ -178,7 +157,7 @@ grow_box_bitmap:
 .endproc
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -201,7 +180,8 @@ grow_box_bitmap:
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
 .endproc
 
 ;;; ============================================================
@@ -239,7 +219,7 @@ common: lda     dragwindow_params::moved
         bpl     finish
 
         ;; Draw DeskTop's windows and icons
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
@@ -872,28 +852,19 @@ bit_loop:
 .endproc
 
 ;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
-
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-;;; ============================================================
 
         .include "../lib/lzsa.s"
         .include "../lib/muldiv.s"
 
 ;;; ============================================================
 
-da_end  := *
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+        JSR_TO_AUX Init
+        rts
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

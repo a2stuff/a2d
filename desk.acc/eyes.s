@@ -19,34 +19,18 @@
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
-da_start:
+;;; ============================================================
 
-;;; Copy the DA to AUX for easy bank switching
-.scope
-        copy16  #da_start, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #da_start, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-.endscope
-
-.scope
-        ;; Run the DA
-        sta     RAMRDON
-        sta     RAMWRTON
-
+.proc AuxStart
         ;; Mostly use ZP preservation mode, since we use ROM FP routines.
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve
         jsr     Init
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
-
-        ;; Back to main for exit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
         rts
-.endscope
+.endproc
 
 ;;; ============================================================
 
@@ -224,7 +208,7 @@ eye_rect:
 .endproc
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -238,7 +222,8 @@ eye_rect:
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
 .endproc
 
 ;;; ============================================================
@@ -329,7 +314,7 @@ common: lda     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         lda     #0
@@ -1064,23 +1049,16 @@ InitOval := oval::InitOval
 BumpOval := oval::BumpOval
 
 ;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
 
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
+        DA_END_AUX_SEGMENT
 
 ;;; ============================================================
 
-da_end  := *
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+        DA_START_MAIN_SEGMENT
+
+        JSR_TO_AUX AuxStart
+        rts
+
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

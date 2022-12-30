@@ -15,7 +15,7 @@
 #     src_file    = e.g. "out/calculator.da"
 #     folder      = e.g. "apple.menu"
 #     dst_file    = e.g. "calculator"
-#     suffix      = e.g. "F10641"
+#     suffix      = e.g. "F10642"
 
 set -e
 source "bin/util.sh"
@@ -119,7 +119,7 @@ for line in $(cat desk.acc/TARGETS | bin/targets.pl); do
     path="${array[1]}"
     ploc=$(get_da_loc_path "$path")
     disposition="${array[2]}"
-    emit add_file $disposition "out/$file.da" "$ploc" "$loc" F10641
+    emit add_file $disposition "out/$file.da" "$ploc" "$loc" F10642
 done
 
 # --------------------------------------------------

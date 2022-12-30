@@ -24,159 +24,22 @@
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | | Font      |
-;;;          | Font      | | (Copy)    |
-;;;   $D00   +-----------+ +-----------+
-;;;          |           | |           |
-;;;          |           | |           |
-;;;          | DA        | | DA (Copy) |
+;;;          | Font      | |           |
+;;;          |           | +-----------+
+;;;          +-----------+ |           |
+;;;          | font      | | UI code & |
+;;;          | loader    | | resources |
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
 ;;;
 
-        .org DA_LOAD_ADDRESS
+;;; ============================================================
 
-        jmp     Entry
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
 
-pathbuf:        .res    kPathBufferSize, 0
-
-font_buffer     := $D00
-kReadLength      = DA_IO_BUFFER-font_buffer
-
-;;; Maximum font size is $E00 = 3584 bytes
-;;; (largest known is Athens, 3203 bytes)
-
-        DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
-        DEFINE_READ_PARAMS read_params, font_buffer, kReadLength
-        DEFINE_CLOSE_PARAMS close_params
-
-;;; ============================================================
-;;; Get filename from DeskTop
-
-.proc Entry
-        INVOKE_PATH := $220
-        lda     INVOKE_PATH
-    IF_EQ
-        rts
-    END_IF
-        COPY_STRING INVOKE_PATH, pathbuf
-
-        ;; Set window title to filename
-        ldy     pathbuf
-:       lda     pathbuf,y       ; find last '/'
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-:       ldx     #0
-:       lda     pathbuf+1,y     ; copy filename
-        sta     titlebuf+1,x
-        inx
-        iny
-        cpy     pathbuf
-        bne     :-
-        stx     titlebuf
-
-        jmp     LoadFileAndRunDA
-.endproc
-
-;;; ============================================================
-;;; Load the file
-
-.proc LoadFileAndRunDA
-
-        ;; TODO: Ensure there's enough room, fail if not
-
-        ;; --------------------------------------------------
-        ;; Load the file
-
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-        JUMP_TABLE_MLI_CALL OPEN, open_params
-        bcc     :+
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        rts
-:       lda     open_params::ref_num
-        sta     read_params::ref_num
-        sta     close_params::ref_num
-        JUMP_TABLE_MLI_CALL READ, read_params
-        php                     ; preserve error
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        plp
-        bcs     exit
-
-        ;; --------------------------------------------------
-        ;; Try to verify that this is a font file
-
-        lda     font_buffer + MGTK::Font::fonttype ; $00 or $80
-        cmp     #$00            ; regular?
-        beq     :+
-        cmp     #$80            ; double-width?
-        bne     exit
-
-:       lda     font_buffer + MGTK::Font::lastchar ; usually $7F
-        beq     exit
-        bmi     exit
-
-        lda     font_buffer + MGTK::Font::height ; 1-16
-        beq     exit
-        cmp     #16+1
-        bcs     exit
-
-        jsr     CalcFontSize
-        ecmp16  expected_size, read_params::trans_count
-        bne     exit
-
-        ;; --------------------------------------------------
-        ;; Copy the DA code and loaded data to AUX
-
-        copy16  #DA_LOAD_ADDRESS, STARTLO
-        copy16  #DA_IO_BUFFER-1, ENDLO
-        copy16  #DA_LOAD_ADDRESS, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
-        ;; --------------------------------------------------
-        ;; Run the DA from Aux, back to Main when done
-
-        sta     RAMRDON
-        sta     RAMWRTON
-        jsr     Init
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
-exit:   rts
-
-.endproc
-
-;;; ============================================================
-;;; Calculate expected font file size, given font header
-;;; Populates `expected_size`
-
-expected_size:
-        .word   0
-
-.proc CalcFontSize
-        copy    #0, expected_size
-
-        ;; File size should be 3 + (lastchar + 1) + ((lastchar + 1) * height) * (double?2:1)
-
-        ldx     font_buffer + MGTK::Font::lastchar
-        inx                     ; lastchar + 1
-:       add16_8 expected_size, font_buffer + MGTK::Font::height
-        dex
-        bne     :-              ; = (lastchar + 1) * height
-
-        bit     font_buffer + MGTK::Font::fonttype
-        bpl     :+
-        asl16   expected_size   ; *= 2 if double width
-:
-        add16_8 expected_size, font_buffer + MGTK::Font::lastchar ; += lastchar
-        add16_8 expected_size, #4 ; += 3 + 1
-
-        rts
-.endproc
 
 ;;; ============================================================
 
@@ -215,14 +78,13 @@ penwidth:       .byte   2
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
-textfont:       .addr   font_buffer
+textfont:       .addr   aux_font_buffer
 nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
 titlebuf:
         .res    16, 0
-
 
 ;;; ============================================================
 
@@ -272,9 +134,6 @@ char_label:  .byte   0
 
 ;;; ============================================================
 
-
-;;; ============================================================
-
 .proc Init
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
@@ -283,7 +142,7 @@ char_label:  .byte   0
 .endproc
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
@@ -297,7 +156,8 @@ char_label:  .byte   0
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES ; exits input loop
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
 .endproc
 
 ;;; ============================================================
@@ -349,7 +209,7 @@ char_label:  .byte   0
         bpl     :+
 
         ;; Draw DeskTop's windows and icons (from Main)
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
@@ -431,21 +291,152 @@ index:  .byte   0
 
 .endproc
 
-;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
+        aux_font_buffer := *
 
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
+;;; ============================================================
+
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+        jmp     Entry
+
+        INVOKE_PATH := $220
+
+filename:       .res    16
+
+        DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
+        DEFINE_READ_PARAMS read_params, font_buffer, kReadLength
+        DEFINE_CLOSE_PARAMS close_params
+
+;;; ============================================================
+;;; Get filename from DeskTop
+
+.proc Entry
+        ;; Set window title to filename
+        ldy     INVOKE_PATH
+:       lda     INVOKE_PATH,y       ; find last '/'
+        cmp     #'/'
+        beq     :+
+        dey
+        bne     :-
+:       ldx     #0
+:       lda     INVOKE_PATH+1,y     ; copy filename
+        sta     filename+1,x
+        inx
+        iny
+        cpy     INVOKE_PATH
+        bne     :-
+        stx     filename
+
+        copy16  #filename, STARTLO
+        copy16  #filename+kMaxFilenameLength, ENDLO
+        copy16  #titlebuf, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        FALL_THROUGH_TO LoadFileAndRunDA
+.endproc
+
+;;; ============================================================
+;;; Load the file
+
+.proc LoadFileAndRunDA
+
+        ;; TODO: Ensure there's enough room, fail if not
+
+        ;; --------------------------------------------------
+        ;; Load the file
+
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        bcc     :+
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        rts
+:       lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        JUMP_TABLE_MLI_CALL READ, read_params
+        php                     ; preserve error
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        plp
+        bcs     exit
+
+        ;; --------------------------------------------------
+        ;; Try to verify that this is a font file
+
+        lda     font_buffer + MGTK::Font::fonttype ; $00 or $80
+        cmp     #$00            ; regular?
+        beq     :+
+        cmp     #$80            ; double-width?
+        bne     exit
+
+:       lda     font_buffer + MGTK::Font::lastchar ; usually $7F
+        beq     exit
+        bmi     exit
+
+        lda     font_buffer + MGTK::Font::height ; 1-16
+        beq     exit
+        cmp     #16+1
+        bcs     exit
+
+        jsr     CalcFontSize
+        ecmp16  expected_size, read_params::trans_count
+        bne     exit
+
+        ;; --------------------------------------------------
+        ;; Copy the loaded data to AUX
+
+        copy16  #font_buffer, STARTLO
+        add16   #font_buffer-1, read_params::trans_count, ENDLO
+        copy16  #aux_font_buffer, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        ;; --------------------------------------------------
+        ;; Run the DA from Aux, back to Main when done
+
+        JSR_TO_AUX Init
+
+exit:   rts
+
+.endproc
+
+;;; ============================================================
+;;; Calculate expected font file size, given font header
+;;; Populates `expected_size`
+
+expected_size:
+        .word   0
+
+.proc CalcFontSize
+        copy    #0, expected_size
+
+        ;; File size should be 3 + (lastchar + 1) + ((lastchar + 1) * height) * (double?2:1)
+
+        ldx     font_buffer + MGTK::Font::lastchar
+        inx                     ; lastchar + 1
+:       add16_8 expected_size, font_buffer + MGTK::Font::height
+        dex
+        bne     :-              ; = (lastchar + 1) * height
+
+        bit     font_buffer + MGTK::Font::fonttype
+        bpl     :+
+        asl16   expected_size   ; *= 2 if double width
+:
+        add16_8 expected_size, font_buffer + MGTK::Font::lastchar ; += lastchar
+        add16_8 expected_size, #4 ; += 3 + 1
+
         rts
 .endproc
 
 ;;; ============================================================
 
-.assert * < font_buffer, error, "DA too big"
+font_buffer     := *
+kReadLength     = DA_IO_BUFFER-font_buffer
+
+        DA_END_MAIN_SEGMENT
+
+;;; ============================================================

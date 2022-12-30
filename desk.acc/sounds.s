@@ -37,145 +37,23 @@
 ;;;          |             | |             |
 ;;;          |             | |             |
 ;;;          |             | |             |
-;;;          |             | |             |
-;;;          | DA          | | DA (copy)   |
+;;;          | stub & save | | GUI code &  |
+;;;          | settings    | | resource    |
 ;;;   $800   +-------------+ +-------------+
 ;;;          :             : :             :
 ;;;
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
-da_start:
+;;; ============================================================
 
-;;; Copy the DA to AUX for easy bank switching
-.scope
-        copy16  #da_start, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #da_start, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-.endscope
-
-.scope
-        ;; run the DA
-        sta     RAMRDON         ; Run from Aux
-        sta     RAMWRTON
+.proc AuxEntry
         jsr     Init
-
-        ;; tear down/exit
         lda     dialog_result
-        sta     RAMRDOFF        ; Back to Main
-        sta     RAMWRTOFF
-
-        ;; Save settings if dirty
-        jmi     SaveSettings
-        rts
-
-.endscope
-
-;;; ============================================================
-
-filename:
-        PASCAL_STRING kFilenameBellProc
-
-filename_buffer:
-        .res kPathBufferSize
-
-        write_buffer := DA_IO_BUFFER - kBellProcLength
-
-        DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
-        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_WRITE_PARAMS write_params, write_buffer, kBellProcLength
-        DEFINE_CLOSE_PARAMS close_params
-
-.proc SaveSettings
-        ;; Run from Main, but with LCBANK1 in
-
-        ;; Copy from LCBANK to somewhere ProDOS can read.
-        COPY_BYTES kBellProcLength, BELLDATA, write_buffer
-
-        ;; Write to desktop current prefix
-        ldax    #filename
-        stax    create_params::pathname
-        stax    open_params::pathname
-        jsr     DoWrite
-        bcs     done            ; failed and canceled
-
-        ;; Write to the original file location, if necessary
-        jsr     JUMP_TABLE_GET_RAMCARD_FLAG
-        beq     done
-        ldax    #filename_buffer
-        stax    create_params::pathname
-        stax    open_params::pathname
-        jsr     JUMP_TABLE_GET_ORIG_PREFIX
-        jsr     AppendFilename
-        jsr     DoWrite
-
-done:   rts
-
-.proc AppendFilename
-        ;; Append filename to buffer
-        inc     filename_buffer ; Add '/' separator
-        ldx     filename_buffer
-        lda     #'/'
-        sta     filename_buffer,x
-
-        ldx     #0              ; Append filename
-        ldy     filename_buffer
-:       inx
-        iny
-        lda     filename,x
-        sta     filename_buffer,y
-        cpx     filename
-        bne     :-
-        sty     filename_buffer
         rts
 .endproc
-
-.proc DoWrite
-        ;; First time - ask if we should even try.
-        copy    #kErrSaveChanges, message
-
-retry:
-        ;; Create if necessary
-        copy16  DATELO, create_params::create_date
-        copy16  TIMELO, create_params::create_time
-        JUMP_TABLE_MLI_CALL CREATE, create_params
-
-        JUMP_TABLE_MLI_CALL OPEN, open_params
-        bcs     error
-        lda     open_params::ref_num
-        sta     write_params::ref_num
-        sta     close_params::ref_num
-        JUMP_TABLE_MLI_CALL WRITE, write_params
-        php                     ; preserve result
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
-        plp
-        bcc     ret             ; succeeded
-
-error:
-        message := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     JUMP_TABLE_SHOW_ALERT
-
-        ;; Second time - prompt to insert.
-        ldx     #kErrInsertSystemDisk
-        stx     message
-
-        cmp     #kAlertResultOK
-        beq     retry
-
-        sec                     ; failed
-ret:    rts
-
-second_try_flag:
-        .byte   0
-.endproc
-
-.endproc
-
-;;; ============================================================
 
 ;;; High bit set when anything changes.
 dialog_result:
@@ -383,7 +261,7 @@ grafport_win:       .tag    MGTK::GrafPort
 .endproc
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -397,7 +275,8 @@ grafport_win:       .tag    MGTK::GrafPort
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo_listbox
         MGTK_CALL MGTK::CloseWindow, winfo
-        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
 .endproc
 
 ;;; ============================================================
@@ -505,10 +384,10 @@ grafport_win:       .tag    MGTK::GrafPort
         sei
 
         ;; Play it
-        param_call JTRelay, JUMP_TABLE_SLOW_SPEED
+        JSR_TO_MAIN JUMP_TABLE_SLOW_SPEED
         proc := *+1
         jsr     BELLPROC
-        param_call JTRelay, JUMP_TABLE_RESUME_SPEED
+        JSR_TO_MAIN JUMP_TABLE_RESUME_SPEED
 
         ;; Restore interrupt state
         plp
@@ -1465,21 +1344,6 @@ END_SOUND_PROC
         .res    kBellProcLength
 
 ;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
-
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-;;; ============================================================
 
 .proc OnListSelectionChange
         lda     selected_index
@@ -1530,7 +1394,123 @@ OnListSelectionNoChange := OnListSelectionChange
 
 ;;; ============================================================
 
-da_end  := *
-.assert * < write_buffer, error, .sprintf("DA too big (at $%X)", *)
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+;;; ============================================================
+
+        JSR_TO_AUX AuxEntry
+        bmi     SaveSettings
+        rts
+
+;;; ============================================================
+
+filename:
+        PASCAL_STRING kFilenameBellProc
+
+filename_buffer:
+        .res kPathBufferSize
+
+        write_buffer := DA_IO_BUFFER - kBellProcLength
+
+        DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
+        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
+        DEFINE_WRITE_PARAMS write_params, write_buffer, kBellProcLength
+        DEFINE_CLOSE_PARAMS close_params
+
+;;; ============================================================
+
+.proc SaveSettings
+        ;; Run from Main, but with LCBANK1 in
+
+        ;; Copy from LCBANK to somewhere ProDOS can read.
+        COPY_BYTES kBellProcLength, BELLDATA, write_buffer
+
+        ;; Write to desktop current prefix
+        ldax    #filename
+        stax    create_params::pathname
+        stax    open_params::pathname
+        jsr     DoWrite
+        bcs     done            ; failed and canceled
+
+        ;; Write to the original file location, if necessary
+        jsr     JUMP_TABLE_GET_RAMCARD_FLAG
+        beq     done
+        ldax    #filename_buffer
+        stax    create_params::pathname
+        stax    open_params::pathname
+        jsr     JUMP_TABLE_GET_ORIG_PREFIX
+        jsr     AppendFilename
+        jsr     DoWrite
+
+done:   rts
+
+.proc AppendFilename
+        ;; Append filename to buffer
+        inc     filename_buffer ; Add '/' separator
+        ldx     filename_buffer
+        lda     #'/'
+        sta     filename_buffer,x
+
+        ldx     #0              ; Append filename
+        ldy     filename_buffer
+:       inx
+        iny
+        lda     filename,x
+        sta     filename_buffer,y
+        cpx     filename
+        bne     :-
+        sty     filename_buffer
+        rts
+.endproc
+
+.proc DoWrite
+        ;; First time - ask if we should even try.
+        copy    #kErrSaveChanges, message
+
+retry:
+        ;; Create if necessary
+        copy16  DATELO, create_params::create_date
+        copy16  TIMELO, create_params::create_time
+        JUMP_TABLE_MLI_CALL CREATE, create_params
+
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        bcs     error
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+        JUMP_TABLE_MLI_CALL WRITE, write_params
+        php                     ; preserve result
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        plp
+        bcc     ret             ; succeeded
+
+error:
+        message := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     JUMP_TABLE_SHOW_ALERT
+
+        ;; Second time - prompt to insert.
+        ldx     #kErrInsertSystemDisk
+        stx     message
+
+        cmp     #kAlertResultOK
+        beq     retry
+
+        sec                     ; failed
+ret:    rts
+
+second_try_flag:
+        .byte   0
+.endproc
+
+.endproc
+
+;;; ============================================================
+
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

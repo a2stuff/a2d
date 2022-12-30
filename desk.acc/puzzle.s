@@ -18,53 +18,10 @@
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-        jmp     Copy2Aux
-
-        .res    36, 0
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
-;;; Copy the DA to AUX and invoke it
-
-stash_stack:  .byte   0
-.proc Copy2Aux
-        tsx
-        stx     stash_stack
-
-        start := EnterDA
-        end := last
-
-        copy16  #start, STARTLO
-        copy16  #end, ENDLO
-        copy16  #start, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
-        copy16  #EnterDA, XFERSTARTLO
-        php
-        pla
-        ora     #$40            ; set overflow: use aux zp/stack
-        pha
-        plp
-        sec                     ; control main>aux
-        jmp     XFER
-.endproc
-
-;;; ============================================================
-;;; Set up / tear down
-
-.proc ExitDA
-        ldx     stash_stack
-        txs
-        rts
-.endproc
-
-.proc EnterDA
-        lda     #0
-        sta     $08
-        jmp     CreateWindow
-.endproc
 
         kDAWindowId = 51
 
@@ -609,7 +566,7 @@ ploop:  lda     position_table+1,y
         stx     position_table+1
 .endproc
 
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -628,22 +585,23 @@ ploop:  lda     position_table+1,y
 ;;; Input loop and processing
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
-        jsr     on_click
+        jsr     OnClick
         jmp     InputLoop
 
         ;; key?
 :       cmp     #MGTK::EventKind::key_down
         bne     InputLoop
-        jsr     check_key
+        jsr     CheckKey
         jmp     InputLoop
+.endproc
 
         ;; click - where?
-on_click:
+.proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         cmp     #kDAWindowId
@@ -666,13 +624,11 @@ bail:   rts
         lda     trackgoaway_params::goaway
         beq     bail
 destroy:
+        pla                     ; bust out of OnXXX proc
+        pla
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
-
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        jmp     ExitDA
-
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
 
 
         ;; title bar?
@@ -682,17 +638,18 @@ check_title:
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         lda     #kDAWindowId
         jmp     redraw_window
+.endproc
 
         ;; on key press - exit if Escape
-check_key:
+.proc CheckKey
         lda     event_params::modifiers
         bne     :+
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     destroy
+        beq     OnClick::destroy
 :       rts
 .endproc
 
@@ -1095,20 +1052,14 @@ done:   sta     hole_x
 .endproc
 
 ;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
 
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
+        DA_END_AUX_SEGMENT
 
 ;;; ============================================================
 
-last := *
+        DA_START_MAIN_SEGMENT
+        JSR_TO_AUX CreateWindow
+        rts
+        DA_END_MAIN_SEGMENT
+
+;;; ============================================================

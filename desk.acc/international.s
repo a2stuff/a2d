@@ -36,69 +36,23 @@
 ;;;          |             | |             |
 ;;;          |             | |             |
 ;;;          |             | |             |
-;;;          |             | |             |
-;;;          | DA          | | DA (copy)   |
+;;;          | stub & save | | GUI code &  |
+;;;          | settings    | | resource    |
 ;;;   $800   +-------------+ +-------------+
 ;;;          :             : :             :
 ;;;
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
 
-        jmp     Copy2Aux
-
-stash_stack:  .byte   $00
-
-;;; ============================================================
-
-.proc Copy2Aux
-
-        start := start_da
-        end   := end_da
-
-        tsx
-        stx     stash_stack
-
-        copy16  #start, STARTLO
-        copy16  #end, ENDLO
-        copy16  #start, DESTINATIONLO
-        sec
-        jsr     AUXMOVE
-
-        copy16  #start, XFERSTARTLO
-        php
-        pla
-        ora     #$40            ; set overflow: aux zp/stack
-        pha
-        plp
-        sec                     ; control main>aux
-        jmp     XFER
-.endproc
-
-;;; ============================================================
-;;; Assert: Running from Main
-
-.proc SaveAndExit
-        bit     dialog_result
-    IF_NS
-        jsr     SaveSettings
-    END_IF
-
-        ldx     stash_stack     ; exit the DA
-        txs
+.proc RunDA
+        jsr     init_window
+        lda     dialog_result
         rts
 .endproc
-
-;;; ============================================================
-;;;
-;;; Everything from here on is copied to Aux
-;;;
-;;; ============================================================
-
-start_da:
-        jmp     init_window
 
 ;;; ============================================================
 ;;; Param blocks
@@ -238,7 +192,7 @@ init_window:
 ;;; Input loop
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -459,18 +413,12 @@ hit:
 dialog_result:  .byte   0
 
 .proc Destroy
+        pla                     ; Exit `InputLoop`
+        pla
+
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
-
-        lda     dialog_result
-
-        ;; Back to Main
-        sta     RAMWRTOFF
-        sta     RAMRDOFF
-
-        sta     dialog_result
-
-        jmp     SaveAndExit
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
 .endproc
 
 ;;; ============================================================
@@ -655,29 +603,24 @@ char:   .byte   SELF_MODIFIED_BYTE
 .endproc
 
 ;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
 
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-;;; ============================================================
-
-        .include "../lib/save_settings.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================
 
-end_da  := *
-.assert * < write_buffer, error, .sprintf("DA too big (at $%X)", *)
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+        JSR_TO_AUX RunDA
+        bmi     SaveSettings
+        rts
+
+        .include "../lib/save_settings.s"
+        .assert * < write_buffer, error, .sprintf("DA too big (at $%X)", *)
+
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

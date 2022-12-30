@@ -18,60 +18,20 @@
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-;;; ============================================================
-;;; Start of the code
-
-start:  jmp     Copy2Aux
-
-save_stack:  .byte   0
-
-;;; ============================================================
-;;; Duplicate the DA (code and data) to AUX memory,
-;;; then invoke the code in AUX.
-
-.proc Copy2Aux
-        lda     SETTINGS + DeskTopSettings::intl_deci_sep
-        sta     decimal_label
-        sta     decimal_lookup
-
-        tsx
-        stx     save_stack
-
-        ;; Copy the DA to AUX memory.
-        copy16  #start, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #start, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
-        FALL_THROUGH_TO InitDA
-.endproc
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
 
 .proc InitDA
-        ;; Run DA from Aux
-        sta     RAMRDON
-        sta     RAMWRTON
-
         ;; Mostly use ZP preservation mode, since we use ROM FP routines.
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve
-
         jmp     Init
 .endproc
 
 
 .proc ExitDA
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
-
-        ;; Return to DeskTop running in Main
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
-        ldx     save_stack
-        txs
         rts
 .endproc
 
@@ -584,7 +544,7 @@ loop:   lda     chrget_routine-1,x
 ;;; Input Loop
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -596,21 +556,6 @@ loop:   lda     chrget_routine-1,x
         bne     InputLoop
         jsr     OnKeyPress
         jmp     InputLoop
-.endproc
-
-;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
-
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
 .endproc
 
 ;;; ============================================================
@@ -642,8 +587,10 @@ ignore_click:
         lda     trackgoaway_params::goaway
         beq     ignore_click
 
-exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
+exit:   pla                     ; pop OnClick / OnKeyPress
+        pla
+        MGTK_CALL MGTK::CloseWindow, closewindow_params
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     ExitDA
 
 :       cmp     #MGTK::Area::dragbar ; Title bar?
@@ -651,7 +598,7 @@ exit:   MGTK_CALL MGTK::CloseWindow, closewindow_params
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawContent
 .endproc
 exit := OnClick::exit
@@ -1476,4 +1423,15 @@ END_PROC_AT
 
 ;;; ============================================================
 
-da_end := *
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+        JSR_TO_AUX InitDA
+        rts
+
+        DA_END_MAIN_SEGMENT
+
+;;; ============================================================

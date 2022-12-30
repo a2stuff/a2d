@@ -36,32 +36,18 @@
 ;;; ~$1800   +-------------+ +-------------+
 ;;;          |             | |             |
 ;;;          |             | |             |
-;;;          |             | |             |
-;;;          | DA          | | DA (copy)   |
+;;;          | app logic   | |             |
+;;;          | cd control  | | bitmaps     |
 ;;;   $800   +-------------+ +-------------+
 ;;;          :             : :             :
 ;;;
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-da_start:
-
-;;; Copy the DA to AUX for MGTK resources
-.scope
-        copy16  #da_start, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #da_start, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-.endscope
-
-.scope
-        jmp     cdremote__MAIN
-.endscope
+        DA_HEADER
+        DA_START_AUX_SEGMENT
+.scope aux
 
 ;;; ============================================================
-
 
 kDAWindowId     = 63
 kDAWidth        = 271
@@ -278,23 +264,22 @@ reserved:       .byte   0
 
 ;;; ============================================================
 
-str_track:
-        PASCAL_STRING "Track: "
-str_track_num:
-        PASCAL_STRING "##  "
         DEFINE_POINT pos_track, kCol1 + 20, kRow1 + 13
 
-str_time:
-        PASCAL_STRING "##:##  "
         DEFINE_POINT pos_time, kCol4-8, kRow1 + 13
 
 ;;; ============================================================
 
+ep_start := *
         .include        "../lib/event_params.s"
 
 .params trackgoaway_params
 clicked:        .byte   0
 .endparams
+
+ep_size = * - ep_start
+
+;;; ============================================================
 
 .params getwinport_params
 window_id:      .byte   kDAWindowId
@@ -303,38 +288,63 @@ port:           .addr   grafport
 
 grafport:       .tag    MGTK::GrafPort
 
+tmp_rect:       .tag    MGTK::Rect
+
+;;; ============================================================
+
+buf_string := *
+.assert buf_string + 256 < $2000, error, "DA too large"
+
+;;; ============================================================
+
+.endscope ; aux
+        DA_END_AUX_SEGMENT
+        DA_START_MAIN_SEGMENT
+
+;;; ============================================================
+
+        jmp     cdremote__MAIN
+
 ;;; ============================================================
 
 .proc Init
-        JUMP_TABLE_MGTK_CALL MGTK::OpenWindow, winfo
+        JUMP_TABLE_MGTK_CALL MGTK::OpenWindow, aux::winfo
         jsr     DrawWindow
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         rts
 .endproc
 
 .proc Exit
-        JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, winfo
+        JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, aux::winfo
         jmp     JUMP_TABLE_CLEAR_UPDATES
 .endproc
 
 ;;; ============================================================
 
+ep_start := *
+        .include        "../lib/event_params.s"
+
+.params trackgoaway_params
+clicked:        .byte   0
+.endparams
+
+ep_size = * - ep_start
+.assert aux::ep_size = ep_size, error, "event params main/aux mismatch"
+
 .proc CopyEventDataToMain
-        copy16  #event_params, STARTLO
-        copy16  #event_params+10, ENDLO
+        copy16  #aux::event_params, STARTLO
+        copy16  #aux::event_params+ep_size-1, ENDLO
         copy16  #event_params, DESTINATIONLO
         clc                     ; aux>main
-        jsr     AUXMOVE
-        rts
+        jmp     AUXMOVE
 .endproc
 
 .proc CopyEventDataToAux
         copy16  #event_params, STARTLO
-        copy16  #event_params+10, ENDLO
-        copy16  #event_params, DESTINATIONLO
+        copy16  #event_params+ep_size-1, ENDLO
+        copy16  #aux::event_params, DESTINATIONLO
         sec                     ; main>aux
-        jsr     AUXMOVE
-        rts
+        jmp     AUXMOVE
 .endproc
 
 ;;; ============================================================
@@ -345,11 +355,11 @@ grafport:       .tag    MGTK::GrafPort
 ;;;         be set to the keyboard equivalent.
 
 .proc HandleDown
-        JUMP_TABLE_MGTK_CALL MGTK::FindWindow, findwindow_params
+        JUMP_TABLE_MGTK_CALL MGTK::FindWindow, aux::findwindow_params
         jsr     CopyEventDataToMain
 
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
+        cmp     #aux::kDAWindowId
         bne     ret
 
         lda     findwindow_params::which_area
@@ -367,7 +377,7 @@ ret:    lda     #$FF            ; not a button
 ;;; ============================================================
 
 .proc HandleClose
-        JUMP_TABLE_MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
+        JUMP_TABLE_MGTK_CALL MGTK::TrackGoAway, aux::trackgoaway_params
         jsr     CopyEventDataToMain
 
         lda     trackgoaway_params::clicked
@@ -384,9 +394,9 @@ ret:    lda     #$FF            ; not a button
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
+        copy    #aux::kDAWindowId, dragwindow_params::window_id
         jsr     CopyEventDataToAux
-        JUMP_TABLE_MGTK_CALL MGTK::DragWindow, dragwindow_params
+        JUMP_TABLE_MGTK_CALL MGTK::DragWindow, aux::dragwindow_params
         jsr     CopyEventDataToMain
         bit     dragwindow_params::moved
         bpl     skip
@@ -404,71 +414,71 @@ skip:   lda     #$FF            ; not a button
 ;;; ============================================================
 
 .proc HandleClick
-        copy    winfo::window_id, screentowindow_params::window_id
+        copy    #aux::kDAWindowId, screentowindow_params::window_id
         jsr     CopyEventDataToAux
-        JUMP_TABLE_MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        JUMP_TABLE_MGTK_CALL MGTK::ScreenToWindow, aux::screentowindow_params
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::screentowindow_params::window
 
         ;; ----------------------------------------
 
         copy    #0, event_params::modifiers
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, play_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::play_button_rect
     IF_NOT_ZERO
         lda     #'P'
         bne     set_key         ; always
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, stop_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::stop_button_rect
     IF_NOT_ZERO
         lda     #'S'
         bne     set_key         ; always
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, pause_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::pause_button_rect
     IF_NOT_ZERO
         lda     #' '
         bne     set_key         ; always
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, eject_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::eject_button_rect
     IF_NOT_ZERO
         lda     #'E'
         bne     set_key         ; always
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, loop_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::loop_button_rect
     IF_NOT_ZERO
         lda     #'L'
         bne     set_key         ; always
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, shuffle_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::shuffle_button_rect
     IF_NOT_ZERO
         lda     #'R'
         bne     set_key         ; always
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, prev_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::prev_button_rect
     IF_NOT_ZERO
         lda     #CHAR_LEFT
         bne     set_key         ; always
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, next_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::next_button_rect
     IF_NOT_ZERO
         lda     #CHAR_RIGHT
         bne     set_key         ; always
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, back_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::back_button_rect
     IF_NOT_ZERO
         copy    #1, event_params::modifiers
         lda     #CHAR_LEFT
         bne     set_key         ; always
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::InRect, fwd_button_rect
+        JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::fwd_button_rect
     IF_NOT_ZERO
         copy    #1, event_params::modifiers
         lda     #CHAR_RIGHT
@@ -488,20 +498,19 @@ set_key:
 
 .proc DrawWindow
         ;; Defer if content area is not visible
-        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-    IF_EQ
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
+    IF_NOT_ZERO
         rts
     END_IF
 
-        JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
 
-        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, notpencopy
-        JUMP_TABLE_MGTK_CALL MGTK::PaintRect, winfo::maprect
+        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::notpencopy
+        JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::winfo::maprect
 
-        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, pencopy
-        JUMP_TABLE_MGTK_CALL MGTK::FrameRect, display_rect
+        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::pencopy
+        JUMP_TABLE_MGTK_CALL MGTK::FrameRect, aux::display_rect
 
         ;; --------------------------------------------------
 
@@ -510,15 +519,15 @@ set_key:
 
         ;; --------------------------------------------------
 
-        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, penXOR
+        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::penXOR
 
 .macro DRAW_CD_BUTTON name, flag
-        JUMP_TABLE_MGTK_CALL MGTK::FrameRect, .ident(.sprintf("%s_button_rect", .string(name)))
-        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, .ident(.sprintf("%s_bitmap_params", .string(name)))
+        JUMP_TABLE_MGTK_CALL MGTK::FrameRect, aux::.ident(.sprintf("%s_button_rect", .string(name)))
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, aux::.ident(.sprintf("%s_bitmap_params", .string(name)))
   .if .paramcount > 1
         bit     .ident(.sprintf("cdremote__%s", .string(flag)))
     IF_NS
-        param_call InvertButton, .ident(.sprintf("%s_button_rect", .string(name)))
+        param_call InvertButton, aux::.ident(.sprintf("%s_button_rect", .string(name)))
     END_IF
   .endif
 .endmacro
@@ -536,7 +545,7 @@ set_key:
 
         ;; --------------------------------------------------
 
-        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, logo_bitmap_params
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, aux::logo_bitmap_params
 
         ;; --------------------------------------------------
 
@@ -546,16 +555,23 @@ set_key:
 
 ;;; ============================================================
 
+str_track:
+        PASCAL_STRING "Track: "
+str_track_num:
+        PASCAL_STRING "##  "
+str_time:
+        PASCAL_STRING "##:##  "
+
 ;;; Caller is responsible for setting port.
 .proc DrawTrack
-        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, pos_track
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_track
         param_call DrawString, str_track
         param_jump DrawString, str_track_num
 .endproc
 
 ;;; Caller is responsible for setting port.
 .proc DrawTime
-        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, pos_time
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_time
         param_jump DrawString, str_time
 .endproc
 
@@ -569,15 +585,15 @@ set_key:
         textlen := $08
 
         stax    textptr
+        stax    STARTLO
         ldy     #0
         lda     (textptr),y
         beq     done
         sta     textlen
-        inc16   textptr
+        copy16  #aux::buf_string+1, textptr
 
-        copy16  textptr, STARTLO
-        copy16  textptr, DESTINATIONLO
-        add16_8 textptr, textlen, ENDLO
+        copy16  #aux::buf_string, DESTINATIONLO
+        add16_8 STARTLO, textlen, ENDLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
@@ -594,20 +610,16 @@ done:   rts
         ptr := $06
         stax    ptr
 
-        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        beq     ret
-        JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
-
-        ;; Run from Aux
-        sta     RAMRDON
-        sta     RAMWRTON
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
+        bne     ret
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
 
         ;; Copy rectangle
-        ldy     #.sizeof(MGTK::Rect)-1
-:       copy    (ptr),y, rect,y
-        dey
-        bpl     :-
+        copy16  ptr, STARTLO
+        add16_8 STARTLO, #.sizeof(MGTK::Rect)-1, ENDLO
+        copy16  #rect, DESTINATIONLO
+        clc                     ; aux>main
+        jsr     AUXMOVE
 
         ;; Deflate
         inc16   rect+MGTK::Rect::x1
@@ -615,13 +627,16 @@ done:   rts
         dec16   rect+MGTK::Rect::x2
         dec16   rect+MGTK::Rect::y2
 
-        ;; Back to Main
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
+        ;; Copy rectangle back to aux
+        copy16  #rect, STARTLO
+        copy16  #rect+.sizeof(MGTK::Rect)-1, ENDLO
+        copy16  #aux::tmp_rect, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
 
         ;; Invert it
-        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, penXOR
-        JUMP_TABLE_MGTK_CALL MGTK::PaintRect, rect
+        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::penXOR
+        JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::tmp_rect
 ret:    rts
 
 rect:   .tag    MGTK::Rect
@@ -764,7 +779,7 @@ StillPlaying:
         ;; Read and process any Keyboard inputs from the user
 NoFurtherBGAction:
         jsr     JUMP_TABLE_YIELD_LOOP
-        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
 
         lda     event_params::kind
@@ -1127,7 +1142,7 @@ ExitReReadTOC:
         cmp     #MGTK::EventKind::key_down
         beq     ended
 
-        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_up
@@ -2117,10 +2132,9 @@ SPBuffer        := DA_IO_BUFFER  ; 1K free to use in Main after loading
         jsr     LowBCDDigitToASCII
         sta     str_track_num+2 ; "_0"
 
-        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-    IF_NE
-        JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
+    IF_ZERO
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         jsr     ::DrawTrack
     END_IF
 
@@ -2164,10 +2178,9 @@ skip:
         jsr     LowBCDDigitToASCII
         sta     str_time+5      ; "__:_0"
 
-        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-    IF_NE
-        JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
+    IF_ZERO
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         jsr     ::DrawTime
     END_IF
 
@@ -2215,34 +2228,34 @@ last_sec:
 ;;; ============================================================
 
 ToggleUIStopButton:
-        param_jump      ::InvertButton, stop_button_rect
+        param_jump      ::InvertButton, aux::stop_button_rect
 
 ToggleUIPlayButton:
-        param_jump      ::InvertButton, play_button_rect
+        param_jump      ::InvertButton, aux::play_button_rect
 
 ToggleUIEjectButton:
-        param_jump      ::InvertButton, eject_button_rect
+        param_jump      ::InvertButton, aux::eject_button_rect
 
 ToggleUIPauseButton:
-        param_jump      ::InvertButton, pause_button_rect
+        param_jump      ::InvertButton, aux::pause_button_rect
 
 ToggleUINextButton:
-        param_jump      ::InvertButton, next_button_rect
+        param_jump      ::InvertButton, aux::next_button_rect
 
 ToggleUIPrevButton:
-        param_jump      ::InvertButton, prev_button_rect
+        param_jump      ::InvertButton, aux::prev_button_rect
 
 ToggleUIScanBackButton:
-        param_jump      ::InvertButton, back_button_rect
+        param_jump      ::InvertButton, aux::back_button_rect
 
 ToggleUIScanFwdButton:
-        param_jump      ::InvertButton, fwd_button_rect
+        param_jump      ::InvertButton, aux::fwd_button_rect
 
 ToggleUILoopButton:
-        param_jump      ::InvertButton, loop_button_rect
+        param_jump      ::InvertButton, aux::loop_button_rect
 
 ToggleUIRandButton:
-        param_jump      ::InvertButton, shuffle_button_rect
+        param_jump      ::InvertButton, aux::shuffle_button_rect
 
 ;;; ============================================================
 
@@ -2512,7 +2525,6 @@ cdremote__RandomButtonState     := cdremote::RandomButtonState
 
 ;;; ============================================================
 
-da_end  := *
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

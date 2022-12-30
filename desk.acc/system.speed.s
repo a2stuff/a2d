@@ -35,46 +35,8 @@ kShortcutFast = res_char_button_fast_shortcut
 
 ;;; ============================================================
 
-
-        .org DA_LOAD_ADDRESS
-
-start:
-;;; ============================================================
-
-        jmp     Copy2Aux
-
-
-stash_stack:  .byte   $00
-
-;;; ============================================================
-
-.proc Copy2Aux
-
-        end   := last
-
-        tsx
-        stx     stash_stack
-
-        copy16  #start, STARTLO
-        copy16  #end, ENDLO
-        copy16  #start, DESTINATIONLO
-        sec
-        jsr     AUXMOVE
-
-        ;; Run from Aux
-        sta     RAMRDON
-        sta     RAMWRTON
-
-        jsr     RunDA
-
-        ;; Back to main
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
-        ldx     stash_stack
-        txs
-        rts
-.endproc
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
 ;;; Param blocks
@@ -269,7 +231,7 @@ frame_counter:
 .proc InputLoop
         jsr     AnimFrame
 
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
 
@@ -315,13 +277,13 @@ frame_counter:
 
 .proc OnKeyNorm
         BTK_CALL BTK::Flash, norm_button_params
-        jsr     DoNorm
+        JSR_TO_MAIN DoNorm
         jmp     InputLoop
 .endproc
 
 .proc OnKeyFast
         BTK_CALL BTK::Flash, fast_button_params
-        jsr     DoFast
+        JSR_TO_MAIN DoFast
         jmp     InputLoop
 .endproc
 
@@ -385,7 +347,7 @@ hit:    lda     winfo::window_id
 .proc OnClickNorm
         BTK_CALL BTK::Track, norm_button_params
         bne     :+
-        jsr     DoNorm
+        JSR_TO_MAIN DoNorm
 :       jmp     InputLoop
 .endproc
 
@@ -394,55 +356,16 @@ hit:    lda     winfo::window_id
 .proc OnClickFast
         BTK_CALL BTK::Track, fast_button_params
         bne     :+
-        jsr     DoFast
+        JSR_TO_MAIN DoFast
 :       jmp     InputLoop
-.endproc
-
-;;; ============================================================
-
-.proc DoNorm
-        ;; Run NORMFAST with "normal" banks
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        sta     ALTZPOFF
-        bit     ROMIN2
-
-        jsr     NORMFAST_norm
-
-        sta     RAMRDON
-        sta     RAMWRTON
-        sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
-
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc DoFast
-        ;; Run NORMFAST with "normal" banks
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        sta     ALTZPOFF
-        bit     ROMIN2
-
-        jsr     NORMFAST_fast
-
-        sta     RAMRDON
-        sta     RAMWRTON
-        sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
-
-        rts
 .endproc
 
 ;;; ============================================================
 
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
 .endproc
 
 ;;; ============================================================
@@ -517,26 +440,60 @@ hit:    lda     winfo::window_id
 .endproc
 
 ;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
 
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
+        .include "../lib/drawstring.s"
+
+;;; ============================================================
+
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+        JSR_TO_AUX RunDA
+        rts
+
+;;; ============================================================
+
+;;; Called from Aux via relay
+.proc DoNorm
+        ;; Run NORMFAST with "normal" banks
+        sta     ALTZPOFF
+        bit     ROMIN2
+
+        jsr     NORMFAST_norm
+
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+
         rts
 .endproc
 
 ;;; ============================================================
 
-        .include "../lib/drawstring.s"
+;;; Called from Aux via relay
+.proc DoFast
+        ;; Run NORMFAST with "normal" banks
+        sta     ALTZPOFF
+        bit     ROMIN2
+
+        jsr     NORMFAST_fast
+
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+
+        rts
+.endproc
+
+;;; ============================================================
+
         .include "../lib/normfast.s"
 
 ;;; ============================================================
 
+        DA_END_MAIN_SEGMENT
 
-last := *
+;;; ============================================================

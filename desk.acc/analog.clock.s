@@ -18,43 +18,10 @@
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-da_start:
-        jmp     Start
-
-save_stack:.byte   0
-
-.proc Start
-        tsx
-        stx     save_stack
-
-        ;; Copy DA to AUX
-        copy16  #da_start, STARTLO
-        copy16  #da_start, DESTINATIONLO
-        copy16  #da_end, ENDLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
-        ;; Transfer control to aux
-        sta     RAMWRTON
-        sta     RAMRDON
-
-        ;; run the DA
-        jsr     Init
-
-        ;; tear down/exit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
-        ldx     save_stack
-        txs
-
-        rts
-.endproc
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
-;;; Main Memory Relay
 
 ;;; Copy of DATELO/HI and TIMELO/HI
 datetime:
@@ -62,18 +29,13 @@ datetime:
 
 ;;; Assert: Called from Aux
 .proc GetDateTime
-        ;; Back to Main, temporarily
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
+        JSR_TO_MAIN DoMLIGetTime
 
-        ;; Poke ProDOS to get the latest from clock driver
-        JUMP_TABLE_MLI_CALL GET_TIME, 0
-
-        ;; Copy from ProDOS global page to Aux
-        sta     RAMWRTON
-        COPY_BYTES 4, DATELO, datetime
-        sta     RAMRDON
-        rts
+        copy16  #DATELO, STARTLO
+        copy16  #DATELO+.sizeof(DateTime)-1, ENDLO
+        copy16  #datetime, DESTINATIONLO
+        sec                     ; main>aux
+        jmp     AUXMOVE
 .endproc
 
 ;;; ============================================================
@@ -135,11 +97,7 @@ exit:
         MGTK_CALL MGTK::RedrawDeskTop
 
         MGTK_CALL MGTK::DrawMenu
-        sta     RAMWRTOFF
-        sta     RAMRDOFF
-        jsr     JUMP_TABLE_HILITE_MENU
-        sta     RAMWRTON
-        sta     RAMRDON
+        JSR_TO_MAIN JUMP_TABLE_HILITE_MENU
 
         MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop
@@ -286,4 +244,20 @@ min_offset:
 
 ;;; ============================================================
 
-da_end:
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+        JSR_TO_AUX Init
+        rts
+
+.proc DoMLIGetTime
+        JUMP_TABLE_MLI_CALL GET_TIME
+        rts
+.endproc
+
+        DA_END_MAIN_SEGMENT
+
+;;; ============================================================

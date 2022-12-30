@@ -22,42 +22,8 @@
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-da_start:
-
-.scope
-;;; Stuff that we need to run from main
-        lda     DATELO
-        ora     DATEHI
-    IF_NOT_ZERO
-        copy16  #datetime, $A   ; populate this struct
-        ldax    #DATELO         ; use current date
-        jsr     ParseDatetime
-    END_IF
-.endscope
-
-;;; Copy the DA to AUX for easy bank switching
-.scope
-        copy16  #da_start, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #da_start, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-.endscope
-
-.scope
-        ;; run the DA
-        sta     RAMRDON         ; Run from Aux
-        sta     RAMWRTON
-        jsr     Init
-
-        ;; tear down/exit
-        sta     RAMRDOFF        ; Back to Main
-        sta     RAMWRTOFF
-
-        rts
-.endscope
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
 
@@ -237,6 +203,15 @@ grafport:       .tag    MGTK::GrafPort
 ;;; ============================================================
 ;;; Common Resources
 
+;;; Copied from ProDOS
+.params auxdt
+DATELO: .byte   0
+DATEHI: .byte   0
+TIMELO: .byte   0
+TIMEHI: .byte   0
+.endparams
+
+;;; Parsed
 .params datetime
 year:   .word   kBuildYYYY
 month:  .byte   kBuildMM
@@ -249,6 +224,22 @@ minute: .byte   0
 ;;; ============================================================
 
 .proc Init
+        ;; Grab current ProDOS date/time
+        copy16  #DATELO, STARTLO
+        copy16  #DATELO+.sizeof(DateTime)-1, ENDLO
+        copy16  #auxdt, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        ;; If it is valid, parse it
+        lda     auxdt::DATELO
+        ora     auxdt::DATEHI
+    IF_NOT_ZERO
+        copy16  #datetime, $A   ; populate this struct
+        ldax    #auxdt          ; use current date
+        jsr     ParseDatetime
+    END_IF
+
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
@@ -256,7 +247,7 @@ minute: .byte   0
 .endproc
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -269,7 +260,8 @@ minute: .byte   0
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
-        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
 .endproc
 
 ;;; ============================================================
@@ -394,7 +386,7 @@ common: bit     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
@@ -736,21 +728,6 @@ tmp:    .word   0
 .endproc
 
 ;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
-
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-;;; ============================================================
 
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
@@ -760,7 +737,15 @@ tmp:    .word   0
 
 ;;; ============================================================
 
-da_end  := *
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+        JSR_TO_AUX Init
+        rts
+
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

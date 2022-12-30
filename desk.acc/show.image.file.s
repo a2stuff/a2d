@@ -28,8 +28,8 @@
 ;;;  $1580   +-----------+ +-----------+
 ;;;          |           | |           |
 ;;;          |           | |           |
-;;;          |           | |           | DA is copied to AUX for MGTK param blocks
-;;;          | DA        | | DA (Copy) |
+;;;          |           | |           |
+;;;          | DA        | | resources |
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
 ;;;
@@ -44,37 +44,43 @@
         kMinipixDstSize = 26*52
 
         .assert (minipix_src_buf + kMinipixSrcSize) < DA_IO_BUFFER, error, "Not enough room for Minipix load buffer"
-        .assert (minipix_dst_buf + kMinipixDstSize) < DA_IO_BUFFER, error, "Not enough room for Minipix convert buffer"
+        .assert (minipix_dst_buf + kMinipixDstSize) < $2000, error, "Not enough room for Minipix convert buffer"
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
+        DA_HEADER
+        DA_START_AUX_SEGMENT
+.scope aux
 
-da_start:
-        jmp     Start
+;;; ============================================================
 
-save_stack:
-        .byte   0
+event_params:   .tag MGTK::Event
 
-.proc Start
-        tsx
-        stx     save_stack
+        kMinipixWidth = 88 * 2
+        kMinipixHeight = 52
 
-        ;; Copy DA to AUX (for resources)
-        copy16  #da_start, STARTLO
-        copy16  #da_start, DESTINATIONLO
-        copy16  #da_end, ENDLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
+grafport:       .tag    MGTK::GrafPort
 
-        ;; run the DA
-        jsr     Init
+notpencopy:     .byte   MGTK::notpencopy
 
-        ldx     save_stack
-        txs
+.params paintbits_params
+        DEFINE_POINT viewloc, (kScreenWidth - kMinipixWidth)/2, (kScreenHeight - kMinipixHeight)/2
+mapbits:        .addr   minipix_dst_buf
+mapwidth:       .byte   26
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, kMinipixWidth-1, kMinipixHeight-1
+        REF_MAPINFO_MEMBERS
+.endparams
 
-        rts
-.endproc
+;;; ============================================================
+
+.endscope ; aux
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+        jmp     Init
 
 ;;; ============================================================
 ;;; ProDOS MLI param blocks
@@ -97,15 +103,14 @@ event_params:   .tag MGTK::Event
 ;;; ============================================================
 
 .proc CopyEventAuxToMain
-        copy16  #event_params, STARTLO
-        copy16  #event_params + .sizeof(MGTK::Event) - 1, ENDLO
+        copy16  #aux::event_params, STARTLO
+        copy16  #aux::event_params + .sizeof(MGTK::Event) - 1, ENDLO
         copy16  #event_params, DESTINATIONLO
         clc                     ; aux > main
         jmp     AUXMOVE
 .endproc
 
 ;;; ============================================================
-
 
 .proc Init
         copy    #0, mode
@@ -133,7 +138,7 @@ event_params:   .tag MGTK::Event
 ;;; Main Input Loop
 
 .proc InputLoop
-        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventAuxToMain
 
         lda     event_params + MGTK::Event::kind
@@ -348,32 +353,13 @@ str_a2fm_suffix:
         jsr     ConvertMinipixToBitmap
 
         ;; Draw
-        JUMP_TABLE_MGTK_CALL MGTK::InitPort, grafport
-        JUMP_TABLE_MGTK_CALL MGTK::SetPort, grafport
-        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, notpencopy
-        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, paintbits_params
+        JUMP_TABLE_MGTK_CALL MGTK::InitPort, aux::grafport
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
+        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::notpencopy
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, aux::paintbits_params
 
         rts
-
-        kMinipixWidth = 88 * 2
-        kMinipixHeight = 52
-
-grafport:       .tag    MGTK::GrafPort
-
-notpencopy:     .byte   MGTK::notpencopy
-
-.params paintbits_params
-        DEFINE_POINT viewloc, (kScreenWidth - kMinipixWidth)/2, (kScreenHeight - kMinipixHeight)/2
-mapbits:        .addr   minipix_dst_buf
-mapwidth:       .byte   26
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kMinipixWidth-1, kMinipixHeight-1
-        REF_MAPINFO_MEMBERS
-.endparams
-
 .endproc
-
-
 
 ;;; ============================================================
 ;;; Convert single hires to double hires
@@ -458,6 +444,9 @@ done:   rts
         dstbit := $0B
         row    := $0C
 
+        ;; Copy the writing code to the ZP
+        COPY_BYTES sizeof_PutBitProc, PutBitProc, PutBitProcTarget
+
         copy16  #minipix_src_buf, src
         copy16  #minipix_dst_buf, dst
 
@@ -511,6 +500,8 @@ dorow:  ldx     #8
 done:   rts
 .endproc
 
+PutBitProcTarget = $10
+PROC_AT PutBitProc, $10
 .proc PutBit2
         php
         jsr     PutBit1
@@ -540,7 +531,10 @@ done:
         sta     RAMWRTOFF
         rts
 .endproc
-
+END_PROC_AT
+        PutBit1 := PutBitProc::PutBit1
+        PutBit2 := PutBitProc::PutBit2
+        sizeof_PutBitProc = .sizeof(PutBitProc)
 .endproc
 
 ;;; ============================================================
@@ -837,4 +831,6 @@ yes:    clc                     ; match!
 
 ;;; ============================================================
 
-da_end:
+        DA_END_MAIN_SEGMENT
+
+;;; ============================================================

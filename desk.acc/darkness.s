@@ -19,40 +19,9 @@
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-da_start:
-        jmp     Start
-
-save_stack:.byte   0
-
-.proc Start
-        tsx
-        stx     save_stack
-
-        ;; Copy DA to AUX
-        copy16  #da_start, STARTLO
-        copy16  #da_start, DESTINATIONLO
-        copy16  #da_end, ENDLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
-        ;; Transfer control to aux
-        sta     RAMWRTON
-        sta     RAMRDON
-
-        ;; run the DA
-        jsr     Init
-
-        ;; tear down/exit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
-        ldx     save_stack
-        txs
-
-        rts
-.endproc
+        DA_HEADER
+        DA_START_AUX_SEGMENT
+.scope aux
 
 ;;; ============================================================
 
@@ -76,27 +45,31 @@ grafport:
 
 ;;; ============================================================
 
+.endscope ; aux
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+;;; ============================================================
+
 .proc Init
-        MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::SetPattern, pattern
-        MGTK_CALL MGTK::PaintRect, rect
+        JUMP_TABLE_MGTK_CALL MGTK::InitPort, aux::grafport
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
+        JUMP_TABLE_MGTK_CALL MGTK::HideCursor
+        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::pencopy
+        JUMP_TABLE_MGTK_CALL MGTK::SetPattern, aux::pattern
+        JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::rect
 
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
         jsr     JUMP_TABLE_HILITE_MENU
-        sta     RAMWRTON
-        sta     RAMRDON
 
-        MGTK_CALL MGTK::ShowCursor
+        JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
 ;;; ============================================================
 
-da_end  := *
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

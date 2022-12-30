@@ -16,7 +16,23 @@
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
+        DA_HEADER
+        DA_START_AUX_SEGMENT
+
+;;; ============================================================
+
+.scope aux
+
+event_params:   .tag MGTK::Event
+
+.endscope ; aux
+
+;;; ============================================================
+
+        DA_END_AUX_SEGMENT
+        DA_START_MAIN_SEGMENT
+
+;;; ============================================================
 
 kMainPageClearByte = ' '|$80    ; space
 kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
@@ -133,8 +149,8 @@ event_params:   .tag MGTK::Event
 ;;; ============================================================
 
 .proc CopyEventAuxToMain
-        copy16  #event_params, STARTLO
-        copy16  #event_params + .sizeof(MGTK::Event) - 1, ENDLO
+        copy16  #aux::event_params, STARTLO
+        copy16  #aux::event_params + .sizeof(MGTK::Event) - 1, ENDLO
         copy16  #event_params, DESTINATIONLO
         clc                     ; aux > main
         jmp     AUXMOVE
@@ -176,7 +192,7 @@ MainLoop:
         bit     LCBANK1
         bit     LCBANK1
         sta     ALTZPON
-        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, event_params
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         sta     ALTZPOFF
         bit     ROMIN2
         jsr     CopyEventAuxToMain
@@ -370,9 +386,11 @@ InitLoop:
 
 ;;; ============================================================
 
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
-
 save_buffer := *
 
 ;;; Ensure there's enough room for both main and aux text page
 .assert * + $800 < $2000, error, .sprintf("Not enough room for save buffers")
+
+        DA_END_MAIN_SEGMENT
+
+;;; ============================================================

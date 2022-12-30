@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# Does a build, then shows the sizes of the Main and Aux segments
+# for all of the desk accessories.
+
+max_seg_size=$(( 0x1C00 - 0x800 ))
+
+make
+printf "                       Main    Aux  Main%%  Aux%% \n"
+for file in $(cat desk.acc/TARGETS | bin/targets.pl targets | sort); do
+    aux_lo=$(xxd -p -l1 -s0 "out/${file}.da")
+    aux_hi=$(xxd -p -l1 -s1 "out/${file}.da")
+    aux=$(( 0x${aux_hi}${aux_lo} ))
+    main_lo=$(xxd -p -l1 -s2 "out/${file}.da")
+    main_hi=$(xxd -p -l1 -s3 "out/${file}.da")
+    main=$(( 0x${main_hi}${main_lo} ))
+
+    aux_p=$(( $aux * 100 / $max_seg_size ))
+    main_p=$(( $main * 100 / $max_seg_size ))
+
+    printf "%-20s  $%04X  $%04X   %3d%%  %3d%%\n" $file $main $aux $main_p $aux_p
+done

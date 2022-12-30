@@ -22,8 +22,26 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
-        MGTKEntry := MGTKAuxEntry
-
+;;; ============================================================
+;;; Memory map
+;;;
+;;;               Main            Aux
+;;;          :             : :             :
+;;;          |             | |             |
+;;;          | DHR         | | DHR         |
+;;;  $2000   +-------------+ +-------------+
+;;;          | IO Buffer   | |             |
+;;;  $1C00   +-------------+ |             |
+;;;          | write_buffer| |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          |             | |             |
+;;;          | strings     | |             |
+;;;          | app code    | | resources   |
+;;;   $800   +-------------+ +-------------+
+;;;          :             : :             :
+;;;
 ;;; ============================================================
 
 ;;; Currently there's not enough room for these.
@@ -33,40 +51,15 @@ kShortcutEasterEgg = res_char_easter_egg_shortcut
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-da_start:
-;;; Some static checks where we can cache the results.
-.scope
-        jsr     IdentifyModel
-        jsr     IdentifyProDOSVersion
-        jsr     IdentifyMemory
-.endscope
-
-;;; Copy the DA to AUX for easy bank switching
-.scope
-        copy16  #da_start, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #da_start, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-.endscope
-
-.scope
-        ;; run the DA (from Aux)
-        sta     RAMRDON
-        sta     RAMWRTON
-        jsr     Init
-
-        ;; tear down/exit (back to Main)
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
-.endscope
+        DA_HEADER
+        DA_START_AUX_SEGMENT
+.scope aux
 
 ;;; ============================================================
 
-kDAWindowId    = 60
+        MGTKEntry := MGTKAuxEntry
+
+kDAWindowId     = 60
 kDAWidth        = 400
 kDAHeight       = 118
 kDALeft         = (kScreenWidth - kDAWidth)/2
@@ -109,9 +102,18 @@ nextwinfo:      .addr   0
 str_title:
         PASCAL_STRING res_string_window_title ; dialog title
 
+notpencopy:     .byte   MGTK::notpencopy
+
+
+.params getwinport_params
+window_id:      .byte   kDAWindowId
+port:           .addr   grafport
+.endparams
+
+grafport:       .tag    MGTK::GrafPort
+
 ;;; ============================================================
 
-.if INCLUDE_UNSUPPORTED_MACHINES
 .params ii_bitmap
         DEFINE_POINT viewloc, 59, 8
 mapbits:        .addr   ii_bits
@@ -129,7 +131,6 @@ reserved:       .res    1
         DEFINE_RECT maprect, 0, 0, 54, 24
         REF_MAPINFO_MEMBERS
 .endparams
-.endif
 
 .params iie_bitmap
         DEFINE_POINT viewloc, 59, 5
@@ -194,7 +195,6 @@ reserved:       .res    1
         REF_MAPINFO_MEMBERS
 .endparams
 
-.if INCLUDE_UNSUPPORTED_MACHINES
 ii_bits:
         .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -242,7 +242,6 @@ iii_bits:
         .byte   PX(%1100001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0011001),PX(%1000000),PX(%1100110),PX(%0001100)
         .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0001100)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111000)
-.endif
 
 iie_bits:
         .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000000)
@@ -444,10 +443,85 @@ ace2000_bits:
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
 
+;;; ============================================================
+
+        DEFINE_POINT model_pos, 150, 12
+        DEFINE_POINT pdver_pos, 150, 23
+        DEFINE_POINT mem_pos, 150, 34
+
+        DEFINE_POINT line1, 0, 37
+        DEFINE_POINT line2, kDAWidth, 37
+
+        DEFINE_POINT pos_slot1, 45, 50
+        DEFINE_POINT pos_slot2, 45, 61
+        DEFINE_POINT pos_slot3, 45, 72
+        DEFINE_POINT pos_slot4, 45, 83
+        DEFINE_POINT pos_slot5, 45, 94
+        DEFINE_POINT pos_slot6, 45, 105
+        DEFINE_POINT pos_slot7, 45, 116
 
 ;;; ============================================================
 
-.if INCLUDE_UNSUPPORTED_MACHINES
+ep_start:
+        .include "../lib/event_params.s"
+
+.params trackgoaway_params
+clicked:        .byte   0
+.endparams
+
+ep_size := * - ep_start
+
+;;; ============================================================
+
+buf_string := *
+.assert buf_string + 256 < $2000, error, "DA too large"
+
+;;; ============================================================
+
+.endscope ; aux
+        DA_END_AUX_SEGMENT
+        DA_START_MAIN_SEGMENT
+
+;;; ============================================================
+
+        ;; Some static checks where we can cache the results.
+        jsr     IdentifyModel
+        jsr     IdentifyProDOSVersion
+        jsr     IdentifyMemory
+
+        ;; And run from main
+        jmp     Init
+
+;;; ============================================================
+
+ep_start:
+        .include "../lib/event_params.s"
+
+.params trackgoaway_params
+clicked:        .byte   0
+.endparams
+
+ep_size := * - ep_start
+        .assert ep_size = aux::ep_size, error, "param mismatch aux vs. main"
+
+.proc CopyEventDataToMain
+        copy16  #aux::event_params, STARTLO
+        copy16  #aux::event_params+ep_size-1, ENDLO
+        copy16  #event_params, DESTINATIONLO
+        clc                     ; aux>main
+        jmp     AUXMOVE
+.endproc
+
+.proc CopyEventDataToAux
+        copy16  #event_params, STARTLO
+        copy16  #event_params+ep_size-1, ENDLO
+        copy16  #aux::event_params, DESTINATIONLO
+        sec                     ; main>aux
+        jmp     AUXMOVE
+.endproc
+
+;;; ============================================================
+
 str_ii:
         PASCAL_STRING res_string_model_ii
 
@@ -456,7 +530,6 @@ str_iiplus:
 
 str_iii:
         PASCAL_STRING res_string_model_iii
-.endif
 
 str_iie_original:
         PASCAL_STRING res_string_model_iie_original
@@ -534,34 +607,9 @@ str_65816:      PASCAL_STRING res_string_cpu_type_65816
 model_str_ptr:        .addr   0
 model_pix_ptr:        .addr   0
 
-        DEFINE_POINT line1, 0, 37
-        DEFINE_POINT line2, kDAWidth, 37
-
-        DEFINE_POINT pos_slot1, 45, 50
-        DEFINE_POINT pos_slot2, 45, 61
-        DEFINE_POINT pos_slot3, 45, 72
-        DEFINE_POINT pos_slot4, 45, 83
-        DEFINE_POINT pos_slot5, 45, 94
-        DEFINE_POINT pos_slot6, 45, 105
-        DEFINE_POINT pos_slot7, 45, 116
 
 slot_pos_table:
-        .addr 0, pos_slot1, pos_slot2, pos_slot3, pos_slot4, pos_slot5, pos_slot6, pos_slot7
-
-;;; ============================================================
-
-        PAD_TO $0FFD
-.proc Z80Routine
-        .assert * = $0FFD, error, "Must be at $0FFD / FFFDH"
-        ;; .org $FFFD
-        patch := *+2
-        .byte   $32, $00, $e0   ; ld ($Es00),a   ; s=slot being probed turn off Z80, next PC is $0000
-        .byte   $3e, $01        ; ld a,$01
-        .byte   $32, $08, $00   ; ld (flag),a
-        .byte   $c3, $fd, $ff   ; jp $FFFD
-        flag := *
-        .byte   $00             ; flag: .db $00
-.endproc
+        .addr 0, aux::pos_slot1, aux::pos_slot2, aux::pos_slot3, aux::pos_slot4, aux::pos_slot5, aux::pos_slot6, aux::pos_slot7
 
 ;;; ============================================================
 
@@ -594,50 +642,6 @@ str_vidhd:      PASCAL_STRING res_string_card_type_vidhd
 str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
 str_none:       PASCAL_STRING res_string_none
-
-;;; ============================================================
-
-        DEFINE_POINT model_pos, 150, 12
-        DEFINE_POINT pdver_pos, 150, 23
-        DEFINE_POINT mem_pos, 150, 34
-
-.params event_params
-kind:  .byte   0
-;;; EventKind::key_down
-key             := *
-modifiers       := * + 1
-;;; EventKind::update
-window_id       := *
-;;; otherwise
-xcoord          := *
-ycoord          := * + 2
-        .res    4
-.endparams
-
-.params findwindow_params
-mousex:         .word   0
-mousey:         .word   0
-which_area:     .byte   0
-window_id:      .byte   0
-.endparams
-
-.params trackgoaway_params
-clicked:        .byte   0
-.endparams
-
-.params dragwindow_params
-window_id:      .byte   0
-dragx:          .word   0
-dragy:          .word   0
-moved:          .byte   0
-.endparams
-
-.params getwinport_params
-window_id:      .byte   kDAWindowId
-port:           .addr   grafport
-.endparams
-
-grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
@@ -691,11 +695,9 @@ dib_buffer:     .tag    SPDIB
 ;;;   v6.0 - has $FBC0=$E0 (like an enhanced IIe), and has $FE1F=$60
 
 .enum model
-.if ::INCLUDE_UNSUPPORTED_MACHINES
         ii                      ; Apple ][
         iiplus                  ; Apple ][+
         iii                     ; Apple /// (emulation)
-.endif
         iie_original            ; Apple IIe (original)
         iie_enhanced            ; Apple IIe (enhanced)
         iie_edm                 ; Apple IIe (Extended Debugging Monitor)
@@ -714,11 +716,9 @@ dib_buffer:     .tag    SPDIB
 kNumModels = model::LAST
 
 model_str_table:
-.if INCLUDE_UNSUPPORTED_MACHINES
         .addr   str_ii           ; Apple ][
         .addr   str_iiplus       ; Apple ][+
         .addr   str_iii          ; Apple /// (emulation)
-.endif
         .addr   str_iie_original ; Apple IIe (original)
         .addr   str_iie_enhanced ; Apple IIe (enhanced)
         .addr   str_iie_edm      ; Apple IIe (Extended Debugging Monitor)
@@ -735,24 +735,22 @@ model_str_table:
         ASSERT_ADDRESS_TABLE_SIZE model_str_table, kNumModels
 
 model_pix_table:
-.if INCLUDE_UNSUPPORTED_MACHINES
-        .addr   ii_bitmap       ; Apple ][
-        .addr   ii_bitmap       ; Apple ][+
-        .addr   iii_bitmap      ; Apple /// (emulation)
-.endif
-        .addr   iie_bitmap      ; Apple IIe (original)
-        .addr   iie_bitmap      ; Apple IIe (enhanced)
-        .addr   iie_bitmap      ; Apple IIe (Extended Debugging Monitor)
-        .addr   iic_bitmap      ; Apple IIc
-        .addr   iic_bitmap      ; Apple IIc (3.5 ROM)
-        .addr   iic_bitmap      ; Apple IIc (Org. Mem. Exp.)
-        .addr   iic_bitmap      ; Apple IIc (Rev. Mem. Exp.)
-        .addr   iic_bitmap      ; Apple IIc Plus
-        .addr   iigs_bitmap     ; Apple IIgs
-        .addr   iie_card_bitmap ; Apple IIe Option Card
-        .addr   laser128_bitmap ; Laser 128
-        .addr   ace500_bitmap   ; Franklin ACE 500
-        .addr   ace2000_bitmap  ; Franklin ACE 2000
+        .addr   aux::ii_bitmap       ; Apple ][
+        .addr   aux::ii_bitmap       ; Apple ][+
+        .addr   aux::iii_bitmap      ; Apple /// (emulation)
+        .addr   aux::iie_bitmap      ; Apple IIe (original)
+        .addr   aux::iie_bitmap      ; Apple IIe (enhanced)
+        .addr   aux::iie_bitmap      ; Apple IIe (Extended Debugging Monitor)
+        .addr   aux::iic_bitmap      ; Apple IIc
+        .addr   aux::iic_bitmap      ; Apple IIc (3.5 ROM)
+        .addr   aux::iic_bitmap      ; Apple IIc (Org. Mem. Exp.)
+        .addr   aux::iic_bitmap      ; Apple IIc (Rev. Mem. Exp.)
+        .addr   aux::iic_bitmap      ; Apple IIc Plus
+        .addr   aux::iigs_bitmap     ; Apple IIgs
+        .addr   aux::iie_card_bitmap ; Apple IIe Option Card
+        .addr   aux::laser128_bitmap ; Laser 128
+        .addr   aux::ace500_bitmap   ; Franklin ACE 500
+        .addr   aux::ace2000_bitmap  ; Franklin ACE 2000
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
@@ -764,7 +762,6 @@ model_pix_table:
 MODEL_ID_PAGE := $FB00
 
 model_lookup_table:
-.if INCLUDE_UNSUPPORTED_MACHINES
         .byte   model::ii
         .byte   $B3, $38, 0
 
@@ -773,7 +770,6 @@ model_lookup_table:
 
         .byte   model::iii
         .byte   $B3, $EA, $1E, $8A, 0
-.endif
 
         .byte   model::laser128
         .byte   $B3, $06, $1E, $AC, 0
@@ -938,15 +934,16 @@ done:   rts
 ;;; ============================================================
 
 .proc Init
-        MGTK_CALL MGTK::OpenWindow, winfo
+        JUMP_TABLE_MGTK_CALL MGTK::OpenWindow, aux::winfo
         jsr     DrawWindow
-        MGTK_CALL MGTK::FlushEvents
+        JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
 .endproc
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
-        MGTK_CALL MGTK::GetEvent, event_params
+        jsr     JUMP_TABLE_YIELD_LOOP
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
+        jsr     CopyEventDataToMain
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
         beq     HandleDown
@@ -956,8 +953,8 @@ done:   rts
 .endproc
 
 .proc Exit
-        MGTK_CALL MGTK::CloseWindow, winfo
-        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES ; exits input loop
+        JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, aux::winfo
+        jmp     JUMP_TABLE_CLEAR_UPDATES ; exits input loop
 .endproc
 
 ;;; ============================================================
@@ -976,11 +973,10 @@ done:   rts
 ;;; ============================================================
 
 .proc HandleDown
-        copy16  event_params::xcoord, findwindow_params::mousex
-        copy16  event_params::ycoord, findwindow_params::mousey
-        MGTK_CALL MGTK::FindWindow, findwindow_params
+        JUMP_TABLE_MGTK_CALL MGTK::FindWindow, aux::findwindow_params
+        jsr     CopyEventDataToMain
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
+        cmp     #aux::kDAWindowId
         bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
@@ -993,7 +989,8 @@ done:   rts
 ;;; ============================================================
 
 .proc HandleClose
-        MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
+        JUMP_TABLE_MGTK_CALL MGTK::TrackGoAway, aux::trackgoaway_params
+        jsr     CopyEventDataToMain
         lda     trackgoaway_params::clicked
         beq     InputLoop
         bne     Exit            ; always
@@ -1002,15 +999,15 @@ done:   rts
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
-        copy16  event_params::xcoord, dragwindow_params::dragx
-        copy16  event_params::ycoord, dragwindow_params::dragy
-        MGTK_CALL MGTK::DragWindow, dragwindow_params
+        copy    #aux::kDAWindowId, dragwindow_params::window_id
+        jsr     CopyEventDataToAux
+        JUMP_TABLE_MGTK_CALL MGTK::DragWindow, aux::dragwindow_params
+        jsr     CopyEventDataToMain
         lda     dragwindow_params::moved
         bpl     :+
 
         ;; Draw DeskTop's windows and icons.
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
@@ -1042,13 +1039,13 @@ egg:    .byte   0
 ;;; ============================================================
 
 .proc ClearWindow
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
         rts
 
-:       MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::PaintRect, grafport + MGTK::GrafPort::maprect
+:       JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
+        JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::grafport + MGTK::GrafPort::maprect
         rts
 .endproc
 
@@ -1057,29 +1054,28 @@ egg:    .byte   0
 .proc DrawWindow
         ptr := $06
 
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
         cmp     #MGTK::Error::window_obscured
         bne     :+
         rts
 
-:       MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
+:       JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
+        JUMP_TABLE_MGTK_CALL MGTK::HideCursor
 
         copy16  model_pix_ptr, bits_addr
-        MGTK_CALL MGTK::SetPenMode, penmode
-        MGTK_CALL MGTK::PaintBitsHC, SELF_MODIFIED, bits_addr
+        JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::notpencopy
+        JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, SELF_MODIFIED, bits_addr
 
-        MGTK_CALL MGTK::MoveTo, model_pos
-        ldax    model_str_ptr
-        jsr     DrawString
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::model_pos
+        param_call_indirect DrawString, model_str_ptr
 
-        MGTK_CALL MGTK::MoveTo, pdver_pos
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pdver_pos
         param_call DrawString, str_prodos_version
 
-        MGTK_CALL MGTK::MoveTo, line1
-        MGTK_CALL MGTK::LineTo, line2
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::line1
+        JUMP_TABLE_MGTK_CALL MGTK::LineTo, aux::line2
 
-        MGTK_CALL MGTK::MoveTo, mem_pos
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::mem_pos
         param_call DrawString, str_memory_prefix
         param_call DrawString, str_from_int
         param_call DrawString, str_memory_suffix
@@ -1096,7 +1092,7 @@ loop:   lda     slot
         asl
         tax
         copy16  slot_pos_table,x, slot_pos
-        MGTK_CALL MGTK::MoveTo, 0, slot_pos
+        JUMP_TABLE_MGTK_CALL MGTK::MoveTo, 0, slot_pos
         lda     slot
         ora     #'0'
         sta     str_slot_n + kStrSlotNOffset
@@ -1108,9 +1104,7 @@ loop:   lda     slot
         ;; * ProDOS thinks there's no card, because it's empty
 
         ;; Check ProDOS slot bit mask
-        sta     RAMRDOFF
         lda     SLTBYT
-        sta     RAMRDON
         and     mask
         beq     pro_no
 
@@ -1170,12 +1164,11 @@ draw:   php
         dec     slot
         jne     loop
 
-        MGTK_CALL MGTK::ShowCursor
+        JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts
 
 slot:   .byte   0
 mask:   .byte   0
-penmode:.byte   MGTK::notpencopy
 .endproc
 
 ;;; ============================================================
@@ -1424,6 +1417,8 @@ sigtable_parallel:      .byte   2, $05, $48, $07, $48
         rts
 .endproc
 
+;;; ============================================================
+
 ;;; Wrapper for calling procs with interrupts disabled.
 ;;; Inputs: A,X = proc to call
 ;;; Outputs: A,X,Y registers and C flag return from proc unscathed.
@@ -1448,9 +1443,25 @@ sigtable_parallel:      .byte   2, $05, $48, $07, $48
 tmp:    .byte   0
 .endproc
 
-
+;;; ============================================================
 ;;; Detect Z80
 ;;; Assumes $06 points at $Cn00, returns carry set if found
+
+;;; This routine gets swapped into $0FFD for execution
+.assert * > $0FFD + sizeof_Z80Routine, error, "Z80 collision"
+
+.proc Z80Routine
+        target := $0FFD
+        ;; .org $FFFD
+        patch := *+2
+        .byte   $32, $00, $e0   ; ld ($Es00),a   ; s=slot being probed turn off Z80, next PC is $0000
+        .byte   $3e, $01        ; ld a,$01
+        .byte   $32, $08, $00   ; ld (flag),a
+        .byte   $c3, $fd, $ff   ; jp $FFFD
+        flag := *
+        .byte   $00             ; flag: .db $00
+.endproc
+        sizeof_Z80Routine = .sizeof(Z80Routine)
 
 .proc DetectZ80
         ;; Convert $Cn to $En, update Z80 code
@@ -1461,14 +1472,32 @@ tmp:    .byte   0
         ;; Clear detection flag
         copy    #0, Z80Routine::flag
 
+        ;; Put routine in place
+        jsr     SwapRoutine
+
         ;; Try to invoke Z80
         ldy     #0
         sta     ($06),y
+
+        ;; Restore memory
+        jsr     SwapRoutine
 
         ;; Flag will be set to 1 by routine if Z80 was present.
         lda     Z80Routine::flag
         ror                     ; move flag into carry
         rts
+
+.proc SwapRoutine
+        ldx     #.sizeof(Z80Routine)-1
+:       ldy     Z80Routine::target,x
+        lda     Z80Routine,x
+        sta     Z80Routine::target,x
+        tya
+        sta     Z80Routine,x
+        dex
+        bpl     :-
+        rts
+.endproc
 .endproc
 
 ;;; Detect Uthernet II
@@ -1819,7 +1848,6 @@ status_code:    .byte   3       ; Return Device Information Block (DIB)
 str_from_int:
         PASCAL_STRING "000,000"
 
-        .include "../lib/inttostring.s"
 
 ;;; ============================================================
 ;;; Identify CPU - string pointer returned in A,X
@@ -1870,10 +1898,7 @@ status_code:    .byte   3       ; Return Device Information Block (DIB)
 
         slot_ptr := $06
 
-start:  ;; Most SmartPort logic needs to run from Main
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
+start:
         copy    #$80, empty_flag
         copy    #kStrSmartportLength, str_smartport
 
@@ -1947,8 +1972,7 @@ done:
         ;; Need a comma?
         bit     empty_flag
     IF_PLUS
-        ldax    #str_list_separator
-        jsr     DrawStringFromMain
+        param_call DrawString, str_list_separator
     END_IF
 
         ;; Draw the device name
@@ -1959,7 +1983,7 @@ done:
     ELSE
         ldax    #dib_buffer+SPDIB::ID_String_Length
     END_IF
-        jsr     DrawStringFromMain
+        jsr     DrawString
 
         ;; Next!
 next:   lda     status_params::unit_num
@@ -1973,11 +1997,10 @@ finish:
         bit     empty_flag
     IF_MINUS
         ldax    #str_none
-        jsr     DrawStringFromMain
+        jsr     DrawString
     END_IF
 
-exit:   sta     RAMWRTON
-        sta     RAMRDON
+exit:
         rts
 
 empty_flag:
@@ -1996,32 +2019,6 @@ num_devices:
 .endproc
         sp_addr = SmartPortCall::sp_addr
 
-;;; Inputs: A,X = string to draw
-;;; Assert: Called from Main
-.proc DrawStringFromMain
-        ptr := $06
-        stax    ptr
-
-        ;; Copy the string Main>Aux
-        sta     RAMWRTON
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     (ptr),y
-        dey
-        bpl     :-
-
-        ;; Draw it from Aux
-        sta     RAMRDON
-        ldax    ptr
-        jsr     DrawString
-
-        ;; Return to Main
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
-.endproc
 
 .endproc
 ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
@@ -2049,28 +2046,38 @@ nope:   lda     #$FF
 .endproc
 
 ;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
+;;; Copies string main>aux before drawing
+;;; Input: A,X = address of length-prefixed string
 
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
+.proc DrawString
+        params  := $06
+        textptr := $06
+        textlen := $08
+
+        stax    textptr
+        stax    STARTLO
+        ldy     #0
+        lda     (textptr),y
+        beq     done
+        sta     textlen
+        copy16  #aux::buf_string+1, textptr
+
+        copy16  #aux::buf_string, DESTINATIONLO
+        add16_8 STARTLO, textlen, ENDLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
+done:   rts
 .endproc
 
 ;;; ============================================================
 
         .include  "../lib/detect_lcmeve.s"
-        .include  "../lib/drawstring.s"
+        .include "../lib/inttostring.s"
 
 ;;; ============================================================
 
-da_end  := *
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

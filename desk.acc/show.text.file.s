@@ -33,170 +33,29 @@
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
-;;;          |           | |           | This DA runs primarily out of the
-;;;          |           | |           | copy in Aux. The upper bytes of
-;;;          | DA        | | DA (Copy) | the code in main are overwritten.
+;;;          |           | |           |
+;;;          |           | | UI code & |
+;;;          | file I/O  | | resources |
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
 ;;;
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-        MLIEntry := MLI
-
-        INVOKE_PATH := $220
-
-.proc Start
-        lda     INVOKE_PATH
-    IF_EQ
-        rts
-    END_IF
-
-        ;; Set window title to filename
-        ldy     INVOKE_PATH
-:       lda     INVOKE_PATH,y       ; find last '/'
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-:       ldx     #0
-:       lda     INVOKE_PATH+1,y     ; copy filename
-        sta     titlebuf+1,x
-        inx
-        iny
-        cpy     INVOKE_PATH
-        bne     :-
-        stx     titlebuf
-
-        FALL_THROUGH_TO Copy2Aux
-.endproc
-
-;;; Copy the DA to aux
-.proc Copy2Aux
-        sta     RAMWRTON
-        ldy     #0
-src:    lda     Start,y         ; self-modified
-dst:    sta     Start,y         ; self-modified
-        dey
-        bne     src
-        sta     RAMWRTOFF
-        inc     src+2
-        inc     dst+2
-        sta     RAMWRTON
-        lda     dst+2
-        cmp     #.hibyte(da_end)+1
-        bne     src
-
-        FALL_THROUGH_TO CallInit
-.endproc
-
-.proc CallInit
-        ;; run the DA
-        jsr     Init
-
-        ;; tear down/exit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        rts
-.endproc
-
-;;; ============================================================
-;;; ProDOS MLI calls
-
-.proc OpenFile
-        jsr     CopyParamsAuxToMain
-        sta     ALTZPOFF
-        MLI_CALL OPEN, open_params
-        sta     ALTZPON
-        jmp     CopyParamsMainToAux
-.endproc
-
-.proc ReadFile
-        jsr     CopyParamsAuxToMain
-        sta     ALTZPOFF
-        MLI_CALL READ, read_params
-        sta     ALTZPON
-        jmp     CopyParamsMainToAux
-.endproc
-
-.proc GetFileEof
-        jsr     CopyParamsAuxToMain
-        sta     ALTZPOFF
-        MLI_CALL GET_EOF, get_eof_params
-        sta     ALTZPON
-        jmp     CopyParamsMainToAux
-.endproc
-
-.proc SetFileMark
-        jsr     CopyParamsAuxToMain
-        sta     ALTZPOFF
-        MLI_CALL SET_MARK, set_mark_params
-        sta     ALTZPON
-        jmp     CopyParamsMainToAux
-.endproc
-
-.proc CloseFile
-        jsr     CopyParamsAuxToMain
-        sta     ALTZPOFF
-        MLI_CALL CLOSE, close_params
-        sta     ALTZPON
-        jmp     CopyParamsMainToAux
-.endproc
+        DA_HEADER
+        DA_START_AUX_SEGMENT
+.scope aux
 
 ;;; ============================================================
 
-;;; Copies param blocks from Aux to Main
-.proc CopyParamsAuxToMain
-        ldy     #(params_end - params_start + 1)
-        sta     RAMWRTOFF
-loop:   lda     params_start - 1,y
-        sta     params_start - 1,y
-        dey
-        bne     loop
-        sta     RAMRDOFF
-        rts
-.endproc
-
-;;; Copies param blocks from Main to Aux
-.proc CopyParamsMainToAux
-        php
-        pha
-        sta     RAMWRTON
-        ldy     #(params_end - params_start + 1)
-loop:   lda     params_start - 1,y
-        sta     params_start - 1,y
-        dey
-        bne     loop
-        sta     RAMRDON
-        pla
-        plp
-        rts
-.endproc
-
-;;; ----------------------------------------
-
-params_start:
-;;; This block gets copied between main/aux
-
-;;; ProDOS MLI param blocks
-
-;;; Two pages of data are read, but separately.
-default_buffer  := $1700
-kReadLength      = $0100
-
-line_offsets    := $1900
-kLineOffsetShift = 4            ; every 16th
-kLineOffsetDelta = 1 << kLineOffsetShift
-
-        .assert default_buffer + $200 < DA_IO_BUFFER, error, "DA too big"
-
+;;; Keep in sync with main copy!
+mli_params:
         DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, default_buffer, kReadLength
         DEFINE_GET_EOF_PARAMS get_eof_params
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
         DEFINE_CLOSE_PARAMS close_params
+sizeof_mli_params = * - mli_params
 
 L0945:  .byte   $00
 L0946:  .byte   $00
@@ -335,7 +194,7 @@ reserved:       .byte   0
         sta     fixed_mode_flag
 
         ;; open file, get length
-        jsr     OpenFile
+        JSR_TO_MAIN OpenFile
         beq     :+
         rts
 
@@ -344,7 +203,7 @@ reserved:       .byte   0
         sta     set_mark_params::ref_num
         sta     get_eof_params::ref_num
         sta     close_params::ref_num
-        jsr     GetFileEof
+        JSR_TO_MAIN GetFileEof
 
         ;; create window
         MGTK_CALL MGTK::OpenWindow, winfo
@@ -364,7 +223,7 @@ reserved:       .byte   0
 ;;; Main Input Loop
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params
         cmp     #MGTK::EventKind::key_down    ; key?
@@ -397,21 +256,6 @@ reserved:       .byte   0
 
 title:  jsr     OnTitleBarClick
         jmp     InputLoop
-.endproc
-
-;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
-
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
 .endproc
 
 ;;; ============================================================
@@ -494,9 +338,10 @@ no_mod:
 .endproc
 
 .proc DoClose
-        jsr     CloseFile
+        JSR_TO_MAIN CloseFile
         MGTK_CALL MGTK::CloseWindow, winfo
-        param_jump JTRelay, JUMP_TABLE_CLEAR_UPDATES ; exits input loop
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts                     ; exits input loop
 .endproc
 
 ;;; ============================================================
@@ -743,7 +588,7 @@ end:    rts
         ;; Start off on 0th line, start of file, and top of window
         copy16  #0, current_line
         copy16  #0, set_mark_params::position
-        jsr     SetFileMark
+        JSR_TO_MAIN SetFileMark
         copy16  #0, line_pos::base
     ELSE
         ;; Start off at first offset before `first_visible_line`
@@ -764,7 +609,7 @@ end:    rts
         add16   offset_ptr, #line_offsets, offset_ptr
         ldy     #0
         copy16in (offset_ptr),y, set_mark_params::position
-        jsr     SetFileMark
+        JSR_TO_MAIN SetFileMark
 
         ;; And adjust to the appropriate offset for that line in the viewport.
         copy16  current_line, multiplier
@@ -1079,28 +924,21 @@ end:    rts
 
         lda     #' '            ; fill buffer with spaces
         ldx     #0
-        sta     RAMWRTOFF
-
         @store_addr := *+1
 store:  sta     default_buffer,x         ; self-modified
         inx
         bne     store
 
-        sta     RAMWRTON        ; read file chunk
+        jsr     prep
+        clc                     ; aux>main
+        jsr     AUXMOVE
+
         lda     #0
         sta     read_flag
-        jsr     ReadFile
+        JSR_TO_MAIN ReadFile
 
         pha                     ; copy read buffer main>aux
-        lda     #$00
-        sta     STARTLO
-        sta     DESTINATIONLO
-        lda     #$FF
-        sta     ENDLO
-        lda     read_params::data_buffer+1
-        sta     DESTINATIONHI
-        sta     STARTHI
-        sta     ENDHI
+        jsr     prep
         sec                     ; main>aux
         jsr     AUXMOVE
         pla
@@ -1112,6 +950,19 @@ store:  sta     default_buffer,x         ; self-modified
 done:   lda     #1
         sta     read_flag
 end:    rts
+
+
+prep:   lda     #$00
+        sta     STARTLO
+        sta     DESTINATIONLO
+        lda     #$FF
+        sta     ENDLO
+        lda     read_params::data_buffer+1
+        sta     DESTINATIONHI
+        sta     STARTHI
+        sta     ENDHI
+        rts
+
 .endproc
 
 ;;; ============================================================
@@ -1244,6 +1095,153 @@ fixed_font:
 
 ;;; ============================================================
 
-da_end:
+.endscope ; aux
+        DA_END_AUX_SEGMENT
 
-        .assert * <= default_buffer, error, .sprintf("DA overlaps with read buffer: $%04x", *)
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+        jmp     Start
+;;; ============================================================
+
+        MLIEntry := MLI
+
+        INVOKE_PATH := $220
+
+filename:       .res    16
+
+.proc Start
+        lda     INVOKE_PATH
+    IF_EQ
+        rts
+    END_IF
+
+        ;; Set window title to filename
+        ldy     INVOKE_PATH
+:       lda     INVOKE_PATH,y       ; find last '/'
+        cmp     #'/'
+        beq     :+
+        dey
+        bne     :-
+:       ldx     #0
+:       lda     INVOKE_PATH+1,y     ; copy filename
+        sta     filename+1,x
+        inx
+        iny
+        cpy     INVOKE_PATH
+        bne     :-
+        stx     filename
+
+        copy16  #filename, STARTLO
+        copy16  #filename+kMaxFilenameLength, ENDLO
+        copy16  #aux::titlebuf, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        ;; Run the DA
+        JSR_TO_AUX aux::Init
+
+        rts
+.endproc
+
+;;; ============================================================
+;;; ProDOS MLI calls
+
+.proc OpenFile
+        jsr     CopyParamsAuxToMain
+        sta     ALTZPOFF
+        MLI_CALL OPEN, open_params
+        sta     ALTZPON
+        jmp     CopyParamsMainToAux
+.endproc
+
+.proc ReadFile
+        jsr     CopyParamsAuxToMain
+        sta     ALTZPOFF
+        MLI_CALL READ, read_params
+        sta     ALTZPON
+        jmp     CopyParamsMainToAux
+.endproc
+
+.proc GetFileEof
+        jsr     CopyParamsAuxToMain
+        sta     ALTZPOFF
+        MLI_CALL GET_EOF, get_eof_params
+        sta     ALTZPON
+        jmp     CopyParamsMainToAux
+.endproc
+
+.proc SetFileMark
+        jsr     CopyParamsAuxToMain
+        sta     ALTZPOFF
+        MLI_CALL SET_MARK, set_mark_params
+        sta     ALTZPON
+        jmp     CopyParamsMainToAux
+.endproc
+
+.proc CloseFile
+        jsr     CopyParamsAuxToMain
+        sta     ALTZPOFF
+        MLI_CALL CLOSE, close_params
+        sta     ALTZPON
+        jmp     CopyParamsMainToAux
+.endproc
+
+;;; ============================================================
+
+;;; Copies param blocks from Aux to Main
+.proc CopyParamsAuxToMain
+        copy16  #aux::mli_params, STARTLO
+        copy16  #aux::mli_params + aux::sizeof_mli_params - 1, ENDLO
+        copy16  #mli_params, DESTINATIONLO
+        clc                     ; aux>main
+        jmp     AUXMOVE
+.endproc
+
+;;; Copies param blocks from Main to Aux
+;;; Preserves A and P
+.proc CopyParamsMainToAux
+        php
+        pha
+
+        copy16  #mli_params, STARTLO
+        copy16  #mli_params + sizeof_mli_params - 1, ENDLO
+        copy16  #aux::mli_params, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        pla
+        plp
+        rts
+.endproc
+
+
+
+;;; Two pages of data are read, but separately.
+default_buffer  := $1700
+kReadLength      = $0100
+        .assert default_buffer + $200 < DA_IO_BUFFER, error, "DA too big"
+
+line_offsets    := $1900
+kLineOffsetShift = 4            ; every 16th
+kLineOffsetDelta = 1 << kLineOffsetShift
+
+
+;;; ProDOS MLI param blocks
+;;; This block gets copied between main/aux
+
+;;; Keep in sync with aux copy!
+mli_params:
+        DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
+        DEFINE_READ_PARAMS read_params, default_buffer, kReadLength
+        DEFINE_GET_EOF_PARAMS get_eof_params
+        DEFINE_SET_MARK_PARAMS set_mark_params, 0
+        DEFINE_CLOSE_PARAMS close_params
+sizeof_mli_params = * - mli_params
+.assert sizeof_mli_params = aux::sizeof_mli_params, error, "size mismatch"
+
+;;; ============================================================
+
+        DA_END_MAIN_SEGMENT
+
+;;; ============================================================

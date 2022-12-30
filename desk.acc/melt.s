@@ -17,42 +17,8 @@
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-
-da_start:
-        jmp     Start
-
-save_stack:.byte   0
-
-.proc Start
-        tsx
-        stx     save_stack
-
-        ;; Copy DA to AUX
-        copy16  #da_start, STARTLO
-        copy16  #da_start, DESTINATIONLO
-        copy16  #da_end, ENDLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
-        ;; Transfer control to aux
-        sta     RAMWRTON
-        sta     RAMRDON
-
-        ;; run the DA
-        jsr     Init
-
-        ;; tear down/exit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
-        ldx     save_stack
-        txs
-
-        rts
-.endproc
-
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
 ;;; Graphics Resources
@@ -108,11 +74,7 @@ exit:
         MGTK_CALL MGTK::RedrawDeskTop
 
         MGTK_CALL MGTK::DrawMenu
-        sta     RAMWRTOFF
-        sta     RAMRDOFF
-        jsr     JUMP_TABLE_HILITE_MENU
-        sta     RAMWRTON
-        sta     RAMRDON
+        JSR_TO_MAIN JUMP_TABLE_HILITE_MENU
 
         MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop
@@ -189,4 +151,13 @@ row:    .byte   0
 
 ;;; ============================================================
 
-da_end:
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+        JSR_TO_AUX Init
+        rts
+        DA_END_MAIN_SEGMENT
+
+;;; ============================================================

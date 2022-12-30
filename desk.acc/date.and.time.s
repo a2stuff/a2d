@@ -38,179 +38,24 @@
 ;;;          |             | |             |
 ;;;          |             | |             |
 ;;;          |             | |             |
-;;;          |             | |             |
-;;;          | DA          | | DA (copy)   |
+;;;          | stub & save | | GUI code &  |
+;;;          | settings    | | resource    |
 ;;;   $800   +-------------+ +-------------+
 ;;;          :             : :             :
 ;;;
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
 
-        jmp     Copy2Aux
-
-stash_stack:  .byte   $00
-
-;;; ============================================================
-
-.proc Copy2Aux
-
-        start := start_da
-        end   := end_da
-
-        tsx
-        stx     stash_stack
-
-        lda     MACHID
-        and     #%00000001      ; bit 0 = clock card
-        sta     clock_flag
-
-        copy16  #start, STARTLO
-        copy16  #end, ENDLO
-        copy16  #start, DESTINATIONLO
-        sec
-        jsr     AUXMOVE
-
-        copy16  #start, XFERSTARTLO
-        php
-        pla
-        ora     #$40            ; set overflow: aux zp/stack
-        pha
-        plp
-        sec                     ; control main>aux
-        jmp     XFER
-.endproc
-
-;;; ============================================================
-;;; Maybe write the date into DESKTOP.SYSTEM file and exit the DA
-;;; Assert: Running from Main
-
-.proc SaveAndExit
-        bit     dialog_result
-    IF_NS
-        jsr     SaveDate
-    END_IF
-
-        bit     dialog_result
-    IF_VS
-        jsr     SaveSettings
-    END_IF
-
-        ldx     stash_stack     ; exit the DA
-        txs
+.proc RunDA
+        sty     clock_flag
+        jsr     init_window
+        lda     dialog_result
         rts
 .endproc
-
-;;; ============================================================
-
-.proc save_date
-filename:
-        PASCAL_STRING kFilenameLauncher
-
-filename_buffer:
-        .res ::kPathBufferSize
-
-        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_SET_MARK_PARAMS set_mark_params, kLauncherDateOffset
-        DEFINE_WRITE_PARAMS write_params, write_buffer, sizeof_write_buffer
-        DEFINE_CLOSE_PARAMS close_params
-
-write_buffer:
-        .res    .sizeof(DateTime), 0
-        sizeof_write_buffer = * - write_buffer
-
-.proc SaveSettings
-        ;; ProDOS GP has the updated data, copy somewhere usable.
-        COPY_STRUCT DateTime, DATELO, write_buffer
-
-        ;; Write to desktop current prefix
-        ldax    #filename
-        stax    open_params::pathname
-        jsr     DoWrite
-        bcs     done            ; failed and canceled
-
-        ;; Write to the original file location, if necessary
-        jsr     JUMP_TABLE_GET_RAMCARD_FLAG
-        beq     done
-        ldax    #filename_buffer
-        stax    open_params::pathname
-        jsr     JUMP_TABLE_GET_ORIG_PREFIX
-        jsr     AppendFilename
-        jsr     DoWrite
-
-done:   rts
-.endproc
-
-.proc AppendFilename
-        ;; Append filename to buffer
-        inc     filename_buffer ; Add '/' separator
-        ldx     filename_buffer
-        lda     #'/'
-        sta     filename_buffer,x
-
-        ldx     #0              ; Append filename
-        ldy     filename_buffer
-:       inx
-        iny
-        lda     filename,x
-        sta     filename_buffer,y
-        cpx     filename
-        bne     :-
-        sty     filename_buffer
-        rts
-.endproc
-
-.proc DoWrite
-        ;; First time - ask if we should even try.
-        copy    #kErrSaveChanges, message
-
-retry:
-        JUMP_TABLE_MLI_CALL OPEN, open_params
-        bcs     error
-        lda     open_params::ref_num
-        sta     set_mark_params::ref_num
-        sta     write_params::ref_num
-        sta     close_params::ref_num
-
-        JUMP_TABLE_MLI_CALL SET_MARK, set_mark_params ; seek
-        bcs     close
-        JUMP_TABLE_MLI_CALL WRITE, write_params
-close:  php                     ; preserve result
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
-        plp
-        bcc     ret             ; succeeded
-
-error:
-        message := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     JUMP_TABLE_SHOW_ALERT
-
-        ;; Second time - prompt to insert.
-        ldx     #kErrInsertSystemDisk
-        stx     message
-
-        cmp     #kAlertResultOK
-        beq     retry
-
-        sec                     ; failed
-ret:    rts
-
-second_try_flag:
-        .byte   0
-.endproc
-.endproc ; save_date
-SaveDate := save_date::SaveSettings
-
-;;; ============================================================
-;;;
-;;; Everything from here on is copied to Aux
-;;;
-;;; ============================================================
-
-start_da:
-        jmp     init_window
 
 ;;; ============================================================
 ;;; Param blocks
@@ -439,6 +284,15 @@ time_bitmap:
         .byte   PX(%0000001),PX(%1110000),PX(%0000000),PX(%0111100),PX(%0000000)
         .byte   PX(%0000000),PX(%0001111),PX(%1111111),PX(%1000000),PX(%0000000)
 
+;;; ============================================================
+;;; Copy of ProDOS DATE/TIME
+
+.params auxdt
+DATELO: .byte   0
+DATEHI: .byte   0
+TIMELO: .byte   0
+TIMEHI: .byte   0
+.endparams
 
 ;;; ============================================================
 ;;; Initialize window, unpack the date.
@@ -449,13 +303,12 @@ init_window:
         lda     SETTINGS + DeskTopSettings::intl_time_sep
         sta     str_time_separator+1
 
-        ;; Read from ProDOS GP in Main
-        sta     RAMRDOFF
+        jsr     GetDateFromProDOS
 
         ;; If null date, just leave the baked in default
-        lda     DATELO
-        ora     DATEHI
-        beq     :+
+        lda     auxdt::DATELO
+        ora     auxdt::DATEHI
+    IF_NOT_ZERO
 
         ;; Crack the date bytes. Format is:
         ;; |     DATEHI    | |    DATELO     |
@@ -464,17 +317,17 @@ init_window:
         ;; |    Year     |  Month  |   Day   |
         ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
 
-        lda     DATEHI
+        lda     auxdt::DATEHI
         lsr     a
         sta     year
 
-        lda     DATELO
+        lda     auxdt::DATELO
         and     #%11111
         sta     day
 
-        lda     DATEHI
+        lda     auxdt::DATEHI
         ror     a
-        lda     DATELO
+        lda     auxdt::DATELO
         ror     a
         lsr     a
         lsr     a
@@ -488,15 +341,15 @@ init_window:
         ;; |0 0 0|  Hour   | |0 0|  Minute   |
         ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
 
-        lda     TIMEHI
+        lda     auxdt::TIMEHI
         and     #%00011111
         sta     hour
 
-        lda     TIMELO
+        lda     auxdt::TIMELO
         and     #%00111111
         sta     minute
 
-:       sta     RAMRDON
+    END_IF
 
         MGTK_CALL MGTK::OpenWindow, winfo
         lda     #0
@@ -509,7 +362,7 @@ init_window:
 ;;; Input loop
 
 .proc InputLoop
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -670,7 +523,11 @@ hit_target_jump_table:
 
 .proc OnClickOk
         BTK_CALL BTK::Track, ok_button_params
-        beq     OnOk
+    IF_ZERO
+        pla                     ; pop OnClick
+        pla
+        jmp     OnOk
+    END_IF
         rts
 .endproc
 
@@ -680,7 +537,10 @@ hit_target_jump_table:
 .endproc
 
 .proc OnOk
+        lda     clock_flag
+    IF_ZERO
         jsr     UpdateProDOS
+    END_IF
         jmp     Destroy
 .endproc
 
@@ -988,18 +848,8 @@ dialog_result:  .byte   0
 
 .proc Destroy
         MGTK_CALL MGTK::CloseWindow, closewindow_params
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
-
-        lda     dialog_result
-        ;; Actual new date/time set in ProDOS GP
-
-        ;; Back to Main
-        sta     RAMWRTOFF
-        sta     RAMRDOFF
-
-        sta     dialog_result
-
-        jmp     SaveAndExit
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
 .endproc
 
 ;;; ============================================================
@@ -1355,10 +1205,19 @@ loop:   cmp     #10
 ;;; ============================================================
 ;;; Assert: Called from Aux
 
+.proc GetDateFromProDOS
+        copy16  #DATELO, STARTLO
+        copy16  #DATELO+.sizeof(DateTime)-1, ENDLO
+        copy16  #auxdt, DESTINATIONLO
+        sec                     ; main>aux
+        jmp     AUXMOVE
+.endproc
+
+;;; ============================================================
+;;; Assert: Called from Aux
+
 .proc UpdateProDOS
         ;; Pack the date bytes and store in ProDOS GP
-        sta     RAMWRTOFF
-
         lda     month
         asl     a
         asl     a
@@ -1366,44 +1225,166 @@ loop:   cmp     #10
         asl     a
         asl     a
         ora     day
-        sta     DATELO
+        sta     auxdt::DATELO
         lda     year
         rol     a
-        sta     DATEHI
+        sta     auxdt::DATEHI
 
         lda     minute
-        sta     TIMELO
+        sta     auxdt::TIMELO
         lda     hour
-        sta     TIMEHI
+        sta     auxdt::TIMEHI
 
-        sta     RAMWRTON
-        rts
-.endproc
-
-;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
-
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
+        copy16  #auxdt, STARTLO
+        copy16  #auxdt+.sizeof(DateTime)-1, ENDLO
+        copy16  #DATELO, DESTINATIONLO
+        clc                     ; aux>main
+        jmp     AUXMOVE
 .endproc
 
 ;;; ============================================================
 
-        .include "../lib/save_settings.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================
 
-end_da  := *
-.assert * < write_buffer, error, .sprintf("DA too big (at $%X)", *)
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+;;; ============================================================
+
+.scope main
+        lda     MACHID
+        and     #%00000001
+        tay                     ; A,X are trashed by macro
+        JSR_TO_AUX RunDA
+        sta     result
+
+        bit     result
+    IF_NS
+        jsr     SaveDate
+    END_IF
+
+        bit     result
+    IF_VS
+        jsr     SaveSettings
+    END_IF
+
+        rts
+
+result: .byte   0
+.endscope
+
+;;; ============================================================
+
+.proc save_date
+filename:
+        PASCAL_STRING kFilenameLauncher
+
+filename_buffer:
+        .res ::kPathBufferSize
+
+        DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
+        DEFINE_SET_MARK_PARAMS set_mark_params, kLauncherDateOffset
+        DEFINE_WRITE_PARAMS write_params, write_buffer, sizeof_write_buffer
+        DEFINE_CLOSE_PARAMS close_params
+
+write_buffer:
+        .res    .sizeof(DateTime), 0
+        sizeof_write_buffer = * - write_buffer
+
+.proc SaveSettings
+        ;; ProDOS GP has the updated data, copy somewhere usable.
+        COPY_STRUCT DateTime, DATELO, write_buffer
+
+        ;; Write to desktop current prefix
+        ldax    #filename
+        stax    open_params::pathname
+        jsr     DoWrite
+        bcs     done            ; failed and canceled
+
+        ;; Write to the original file location, if necessary
+        jsr     JUMP_TABLE_GET_RAMCARD_FLAG
+        beq     done
+        ldax    #filename_buffer
+        stax    open_params::pathname
+        jsr     JUMP_TABLE_GET_ORIG_PREFIX
+        jsr     AppendFilename
+        jsr     DoWrite
+
+done:   rts
+.endproc
+
+.proc AppendFilename
+        ;; Append filename to buffer
+        inc     filename_buffer ; Add '/' separator
+        ldx     filename_buffer
+        lda     #'/'
+        sta     filename_buffer,x
+
+        ldx     #0              ; Append filename
+        ldy     filename_buffer
+:       inx
+        iny
+        lda     filename,x
+        sta     filename_buffer,y
+        cpx     filename
+        bne     :-
+        sty     filename_buffer
+        rts
+.endproc
+
+.proc DoWrite
+        ;; First time - ask if we should even try.
+        copy    #kErrSaveChanges, message
+
+retry:
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        bcs     error
+        lda     open_params::ref_num
+        sta     set_mark_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+
+        JUMP_TABLE_MLI_CALL SET_MARK, set_mark_params ; seek
+        bcs     close
+        JUMP_TABLE_MLI_CALL WRITE, write_params
+close:  php                     ; preserve result
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        plp
+        bcc     ret             ; succeeded
+
+error:
+        message := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     JUMP_TABLE_SHOW_ALERT
+
+        ;; Second time - prompt to insert.
+        ldx     #kErrInsertSystemDisk
+        stx     message
+
+        cmp     #kAlertResultOK
+        beq     retry
+
+        sec                     ; failed
+ret:    rts
+
+second_try_flag:
+        .byte   0
+.endproc
+.endproc ; save_date
+SaveDate := save_date::SaveSettings
+
+;;; ============================================================
+
+        .include "../lib/save_settings.s"
+        .assert * < write_buffer, error, .sprintf("DA too big (at $%X)", *)
+
+;;; ============================================================
+
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

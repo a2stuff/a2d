@@ -37,6 +37,31 @@ BELLDATA        := SETTINGS - kBellProcLength
 OVERLAY_10K_BUFFER      := $5000
 kOverlay10KBufferSize   = $2800
 
+;;; DAs must start with a header declaring sizes of the two
+;;; segments (aux and main).
+.macro DA_HEADER
+        .word   __da_aux_segment_end__ - DA_LOAD_ADDRESS
+        .word   __da_main_segment_end__ - DA_LOAD_ADDRESS
+.endmacro
+.macro DA_START_AUX_SEGMENT
+        .org DA_LOAD_ADDRESS
+.endmacro
+.macro DA_END_AUX_SEGMENT
+        __da_aux_segment_end__ := *
+        .assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+.endmacro
+.macro DA_START_MAIN_SEGMENT
+    .ifndef __da_aux_segment_end__
+        __da_aux_segment_end__ := DA_LOAD_ADDRESS
+    .endif
+        .org DA_LOAD_ADDRESS
+.endmacro
+.macro DA_END_MAIN_SEGMENT
+        __da_main_segment_end__ := *
+        .assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+.endmacro
+
+
 ;;; ============================================================
 ;;; Constants
 
@@ -164,3 +189,19 @@ kErrBasicSysNotFound    = $FE
 ;;; Warning messages (JUMP_TABLE_SHOW_WARNING)
 
 kNumWarningTypes = 6
+
+;;; ============================================================
+;;; Control Transfer
+;;; ============================================================
+
+;;; Main>Aux and Aux>Main relays
+CallMainToAux := $D000          ; A,X = target address in Aux
+CallAuxToMain := $D000+15       ; A,X = target address in Main
+
+.macro JSR_TO_AUX addr
+        param_call CallMainToAux, addr
+.endmacro
+
+.macro JSR_TO_MAIN addr
+        param_call CallAuxToMain, addr
+.endmacro

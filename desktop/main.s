@@ -1641,8 +1641,26 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         rts                     ; cancel, so fail
 :
         lda     open_ref_num
+        sta     read_header_ref_num
         sta     read_ref_num
         sta     close_ref_num
+        MLI_CALL READ, read_header_params
+
+        lda     DAHeader__aux_length
+        ora     DAHeader__aux_length+1
+        beq     main
+
+        ;; Aux memory segment
+        copy16  DAHeader__aux_length, read_request_count
+        MLI_CALL READ, read_params
+        copy16  #DA_LOAD_ADDRESS, STARTLO
+        copy16  #DA_LOAD_ADDRESS, DESTINATIONLO
+        add16   #DA_LOAD_ADDRESS-1, DAHeader__aux_length, ENDLO
+        sec ; main>aux
+        jsr     AUXMOVE
+
+        ;; Main memory segment
+main:   copy16  DAHeader__main_length, read_request_count
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
 
@@ -1655,12 +1673,23 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         jsr     ShowClockForceUpdate
         jmp     SetCursorPointer ; after invoking DA
 
+.params DAHeader
+aux_length:     .word   0
+main_length:    .word   0
+.endparams
+        DAHeader__aux_length := DAHeader::aux_length
+        DAHeader__main_length := DAHeader::main_length
+
         DEFINE_OPEN_PARAMS open_params, 0, DA_IO_BUFFER
         open_ref_num := open_params::ref_num
         open_pathname := open_params::pathname
 
+        DEFINE_READ_PARAMS read_header_params, DAHeader, .sizeof(DAHeader)
+        read_header_ref_num := read_header_params::ref_num
+
         DEFINE_READ_PARAMS read_params, DA_LOAD_ADDRESS, kDAMaxSize
         read_ref_num := read_params::ref_num
+        read_request_count := read_params::request_count
 
         DEFINE_CLOSE_PARAMS close_params
         close_ref_num := close_params::ref_num
@@ -15631,7 +15660,7 @@ icontype_table:
         DEFINE_ICTRECORD $F0, $B0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs System   $Bx
         DEFINE_ICTRECORD $F0, $C0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs Graphics $Cx
 
-        ;; Desk Accessories/Applets $F1/$0641 and $F1/$8641
+        ;; Desk Accessories/Applets $F1/$0642 and $F1/$8642
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType, 0, IconType::desk_accessory
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType|$8000, 0, IconType::desk_accessory
         .byte   kICTSentinel

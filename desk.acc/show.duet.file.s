@@ -45,8 +45,8 @@
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
-;;;          |           | |           |
-;;;          | DA        | | DA (Copy) |
+;;;          | loader &  | |           |
+;;;          | player    | | GUI       |
 ;;;   $800   +-----------+ +-----------+
 ;;;          :           : :           :
 ;;;
@@ -57,99 +57,10 @@
 data_buf        := OVERLAY_10K_BUFFER
 kReadLength      = kOverlay10KBufferSize
 
-        .org DA_LOAD_ADDRESS
-
-da_start:
-        jmp     Entry
-
 ;;; ============================================================
 
-pathbuf:        .res    kPathBufferSize, 0
-
-        DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
-        DEFINE_READ_PARAMS read_params, data_buf, kReadLength
-        DEFINE_CLOSE_PARAMS close_params
-
-;;; ============================================================
-;;; Get filename from DeskTop
-
-.proc Entry
-        INVOKE_PATH := $220
-        lda     INVOKE_PATH
-    IF_EQ
-        rts
-    END_IF
-        COPY_STRING INVOKE_PATH, pathbuf
-
-        ;; Extract filename
-        ldy     pathbuf
-:       lda     pathbuf,y       ; find last '/'
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-:       ldx     #0
-:       lda     pathbuf+1,y     ; copy filename
-        sta     name_buf,x
-        inx
-        iny
-        cpy     pathbuf
-        bne     :-
-        txa
-        clc
-        adc     str_playing
-        sta     str_playing
-
-        jmp     LoadFileAndRunDA
-.endproc
-
-;;; ============================================================
-;;; Load the file
-
-.proc LoadFileAndRunDA
-
-        ;; TODO: Ensure there's enough room, fail if not
-
-        ;; --------------------------------------------------
-        ;; Load the file
-
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-        JUMP_TABLE_MLI_CALL OPEN, open_params
-        bcc     :+
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        rts
-:       lda     open_params::ref_num
-        sta     read_params::ref_num
-        sta     close_params::ref_num
-        JUMP_TABLE_MLI_CALL READ, read_params
-        php                     ; preserve error
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        plp
-        bcs     exit
-
-        ;; TODO: Try to verify that this is a duet file
-
-        ;; --------------------------------------------------
-        ;; Copy the DA code and loaded data to AUX
-
-        copy16  #da_start, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #da_start, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
-        ;; --------------------------------------------------
-        ;; Run the DA from Aux, back to Main when done
-
-        sta     RAMRDON
-        sta     RAMWRTON
-        jsr     Init
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
-exit:   rts
-.endproc
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
 
@@ -211,6 +122,20 @@ str_instruct:   PASCAL_STRING res_string_instructions
 ;;; ============================================================
 
 .proc Init
+        ;; Combine strings
+        lda     str_playing
+        clc
+        adc     name_buf
+        sta     str_playing
+        ;; Shift it down
+        ldx     #0
+        ldy     name_buf
+:       lda     name_buf+1,x
+        sta     name_buf,x
+        inx
+        dey
+        bpl    :-
+
         MGTK_CALL MGTK::OpenWindow, winfo
 
         ;; --------------------------------------------------
@@ -235,36 +160,139 @@ str_instruct:   PASCAL_STRING res_string_instructions
         ;; --------------------------------------------------
         ;; Play the music
 
-        jsr     PlayFile
+        JSR_TO_MAIN PlayFile
 
         ;; --------------------------------------------------
         ;; Close the window
 
         MGTK_CALL MGTK::CloseWindow, winfo
-        jsr     ClearUpdates
-
         MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
-.proc ClearUpdates
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
+;;; ============================================================
+;;; Draw centered string
+;;; Input: A,X = string address, `pos` used, has ycoord
+;;; Trashes $6...$A
+.proc DrawCenteredString
+        text_params     := $6
+        text_addr       := text_params + 0
+        text_length     := text_params + 2
+        text_width      := text_params + 3
+
+        stax    text_addr       ; input is length-prefixed string
+        ldy     #0
+        lda     (text_addr),y
+        sta     text_length
+        inc16   text_addr       ; point past length
+        MGTK_CALL MGTK::TextWidth, text_params
+
+        sub16   #kDAWidth, text_width, pos::xcoord
+        lsr16   pos::xcoord ; /= 2
+        MGTK_CALL MGTK::MoveTo, pos
+        MGTK_CALL MGTK::DrawText, text_params
+        rts
+.endproc
+
+;;; ============================================================
+
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+        jmp     Entry
+
+;;; ============================================================
+
+pathbuf:        .res    kPathBufferSize, 0
+filename:       .res    16, 0
+
+        DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
+        DEFINE_READ_PARAMS read_params, data_buf, kReadLength
+        DEFINE_CLOSE_PARAMS close_params
+
+;;; ============================================================
+;;; Get filename from DeskTop
+
+.proc Entry
+        INVOKE_PATH := $220
+        lda     INVOKE_PATH
+    IF_EQ
+        rts
+    END_IF
+        COPY_STRING INVOKE_PATH, pathbuf
+
+        ;; Extract filename
+        ldy     pathbuf
+:       lda     pathbuf,y       ; find last '/'
+        cmp     #'/'
+        beq     :+
+        dey
+        bne     :-
+:       ldx     #0
+:       lda     pathbuf+1,y     ; copy filename
+        sta     filename+1,x
+        inx
+        iny
+        cpy     pathbuf
+        bne     :-
+        stx     filename
+
+        FALL_THROUGH_TO LoadFileAndRunDA
+.endproc
+
+;;; ============================================================
+;;; Load the file
+
+.proc LoadFileAndRunDA
+
+        ;; TODO: Ensure there's enough room, fail if not
+
+        ;; --------------------------------------------------
+        ;; Load the file
+
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        bcc     :+
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        rts
+:       lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        JUMP_TABLE_MLI_CALL READ, read_params
+        php                     ; preserve error
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        plp
+        bcs     exit
+
+        ;; TODO: Try to verify that this is a duet file
+
+        ;; Copy filename
+        copy16  #filename, STARTLO
+        copy16  #filename+kMaxFilenameLength, ENDLO
+        copy16  #name_buf, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        ;; Show the UI
+        JSR_TO_AUX Init
 
         ;; Page DeskTop's code back in.
         lda     #kDynamicRoutineRestore5000
         jsr     JUMP_TABLE_RESTORE_OVL
 
         jsr     JUMP_TABLE_CLEAR_UPDATES
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
+
+exit:   rts
 .endproc
+
+;;; ============================================================
 
 .proc PlayFile
         bit     ROMIN2
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
 
         jsr     NORMFAST_norm
 
@@ -304,8 +332,6 @@ p1:     ldax    #data_buf
 
 done:   jsr     NORMFAST_fast
 
-        sta     RAMRDON
-        sta     RAMWRTON
         bit     LCBANK1
         bit     LCBANK1
         rts
@@ -904,36 +930,11 @@ TEMP:   .byte   0
 .endproc
 
 ;;; ============================================================
-;;; Draw centered string
-;;; Input: A,X = string address, `pos` used, has ycoord
-;;; Trashes $6...$A
-.proc DrawCenteredString
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
-
-        stax    text_addr       ; input is length-prefixed string
-        ldy     #0
-        lda     (text_addr),y
-        sta     text_length
-        inc16   text_addr       ; point past length
-        MGTK_CALL MGTK::TextWidth, text_params
-
-        sub16   #kDAWidth, text_width, pos::xcoord
-        lsr16   pos::xcoord ; /= 2
-        MGTK_CALL MGTK::MoveTo, pos
-        MGTK_CALL MGTK::DrawText, text_params
-        rts
-.endproc
-
-;;; ============================================================
 
         .include "../lib/normfast.s"
 
 ;;; ============================================================
 
-da_end  := *
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+        DA_END_MAIN_SEGMENT
 
 ;;; ============================================================

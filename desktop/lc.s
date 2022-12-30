@@ -10,7 +10,26 @@
 
         .org ::kSegmentDeskTopLC1AAddress
 
-;;; Various routines callable from MAIN
+;;; ============================================================
+;;; Exported entry points for main>aux and aux>main calls
+
+.assert * = CallMainToAux, error, "entry point mismatch"
+.proc CallMainToAuxImpl
+        stax    call_addr
+        jsr     BankInAux
+        call_addr := *+1
+        jsr     SELF_MODIFIED
+        jmp     BankInMain
+.endproc
+
+.assert * = CallAuxToMain, error, "entry point mismatch"
+.proc CallAuxToMainImpl
+        stax    call_addr
+        jsr     BankInMain
+        call_addr := *+1
+        jsr     SELF_MODIFIED
+        jmp     BankInAux
+.endproc
 
 ;;; ============================================================
 ;;; Common code for main>aux relays with MLI-style params

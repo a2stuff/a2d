@@ -3,7 +3,7 @@
 ;;; ============================================================
 
 kDAFileType     = $F1
-kDAFileAuxType  = $641           ; High bit set = don't show in Apple menu
+kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
 
 .enum IconType
         generic

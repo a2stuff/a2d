@@ -41,20 +41,650 @@
 ;;;          | File Names  | |             |
 ;;;          + - - - - - - + |             |
 ;;;          |             | |             |
-;;;          |             | |             |
-;;;          | DA          | | DA (copy)   |
+;;;          |             | | GUI code &  |
+;;;          | search code | | resources   |
 ;;;   $800   +-------------+ +-------------+
 ;;;          :             : :             :
 ;;;
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
+        DA_HEADER
+        DA_START_AUX_SEGMENT
+.scope aux
+
+;;; ============================================================
+
+.proc RunDA
+        sty     path_length
+        jsr     Init
+        lda     show_index
+        rts
+.endproc
+
+;;; ============================================================
+
+kDAWindowID     = 63
+kDAWidth        = 465
+kDAHeight       = kResultsHeight + 40
+kDALeft         = (kScreenWidth - kDAWidth)/2
+kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
+
+kResultsWindowID        = kDAWindowID+1
+kResultsWidth           = kDAWidth - 60
+kResultsWidthSB         = kResultsWidth + 20
+kResultsHeight          = kResultsRows * kListItemHeight - 1
+kResultsLeft            = kDALeft + (kDAWidth - kResultsWidthSB) / 2
+kResultsTop             = kDATop + 30
+
+kResultsRows    = 11                ; line height is 10
+
+.params winfo
+window_id:      .byte   kDAWindowID
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   kDAWidth
+mincontheight:  .word   kDAHeight
+maxcontwidth:   .word   kDAWidth
+maxcontheight:  .word   kDAHeight
+port:
+        DEFINE_POINT viewloc, kDALeft, kDATop
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textback:       .byte   $7F
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+        REF_WINFO_MEMBERS
+.endparams
+
+.params winfo_results
+window_id:      .byte   kResultsWindowID
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   kMaxFilePaths - kResultsRows
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   kResultsWidth
+mincontheight:  .word   kResultsHeight
+maxcontwidth:   .word   kResultsWidth
+maxcontheight:  .word   kResultsHeight
+port:
+        DEFINE_POINT viewloc, kResultsLeft, kResultsTop
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kResultsWidth, kResultsHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+        REF_WINFO_MEMBERS
+.endparams
+
+        DEFINE_RECT highlight_rect, 0,0,kResultsWidth,0
+        DEFINE_POINT cur_pos, 0, 0
+cur_line:       .byte   0
+
+entry_buf:
+        .res    ::kPathBufferSize
+
+;;; ============================================================
+
+        .include "../lib/event_params.s"
+
+.params getwinport_params
+window_id:      .byte   0
+port:           .addr   grafport_win
+.endparams
+
+grafport_win:   .tag    MGTK::GrafPort
+
+;;; ============================================================
+
+        DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
+
+        kControlsTop = 10
+        kFindLeft = 20
+        DEFINE_LABEL find, res_string_label_find, kFindLeft, 20
+
+        ;; Left edges are adjusted dynamically based on label width
+        DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
+
+        DEFINE_BUTTON search_button_rec, kDAWindowID, res_string_button_search, kGlyphReturn, kDAWidth-235, kControlsTop
+        DEFINE_BUTTON_PARAMS search_button_params, search_button_rec
+
+        DEFINE_BUTTON cancel_button_rec, kDAWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
+        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
+
+penXOR:         .byte   MGTK::penXOR
+notpencopy:     .byte   MGTK::notpencopy
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+
+cursor_ibeam_flag: .byte   0
+
+kBufSize = ::kMaxFilenameLength+1     ; max length = 15, length
+buf_search:     .res    kBufSize, 0 ; search term
+
+pattern:        .res    16      ; null-terminated/upcased version
+
+;;; ============================================================
+;;; Search field
+
+        DEFINE_LINE_EDIT line_edit_rec, kDAWindowID, buf_search, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250-(kFindLeft+kLabelHOffset), kMaxFilenameLength
+        DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
+
+;;; ============================================================
+
+.proc Init
+        ;; Prep input string
+        copy    #0, buf_search
+
+
+        param_call MeasureString, find_label_str
+        addax   input_rect::x1
+        add16_8 input_rect::x1, #1, line_edit_rec::rect::x1
+
+        MGTK_CALL MGTK::OpenWindow, winfo
+        MGTK_CALL MGTK::OpenWindow, winfo_results
+        MGTK_CALL MGTK::HideCursor
+        jsr     DrawWindow
+        LETK_CALL LETK::Init, le_params
+        LETK_CALL LETK::Activate, le_params
+        MGTK_CALL MGTK::ShowCursor
+
+        copy    #0, num_entries
+        jsr     ListInit
+
+        MGTK_CALL MGTK::FlushEvents
+        FALL_THROUGH_TO InputLoop
+.endproc
+
+.proc InputLoop
+        LETK_CALL LETK::Idle, le_params
+        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::button_down
+        jeq     HandleDown
+        cmp     #MGTK::EventKind::key_down
+        jeq     HandleKey
+        cmp     #MGTK::EventKind::no_event
+        bne     InputLoop
+        jsr     CheckMouseMoved
+        bcc     InputLoop
+        jmp     HandleMouseMove
+.endproc
+
+.proc Exit
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+
+        MGTK_CALL MGTK::CloseWindow, winfo_results
+        MGTK_CALL MGTK::CloseWindow, winfo
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleKey
+        lda     event_params::key
+        sta     le_params::key
+
+        jsr     IsListKey
+    IF_EQ
+        jsr     ListKey
+        jmp     InputLoop
+    END_IF
+
+        ldx     event_params::modifiers
+        stx     le_params::modifiers
+    IF_NOT_ZERO
+        ;; Modified
+        lda     event_params::key
+        cmp     #'O'
+      IF_EQ
+        lda     selected_index
+        bmi     InputLoop
+        sta     show_index
+        jmp     Exit
+      END_IF
+
+        LETK_CALL LETK::Key, le_params
+        jmp     InputLoop
+    END_IF
+
+        ;; Not modified
+        cmp     #CHAR_ESCAPE
+      IF_EQ
+        BTK_CALL BTK::Flash, cancel_button_params
+        jmp     Exit
+      END_IF
+
+        cmp     #CHAR_RETURN
+      IF_EQ
+        BTK_CALL BTK::Flash, search_button_params
+        jmp     DoSearch
+      END_IF
+
+        jsr     IsControlChar
+        bcc     allow
+        jsr     IsSearchChar
+        bcs     ignore
+allow:  LETK_CALL LETK::Key, le_params
+ignore:
+        jmp     InputLoop
+.endproc
+
+;;; ============================================================
+
+;;; Input: A=character
+;;; Output: C=0 if control, C=1 if not
+.proc IsControlChar
+        cmp     #CHAR_DELETE
+        bcs     yes
+
+        cmp     #' '
+        bcc     yes
+        rts                     ; C=1
+
+yes:    clc                     ; C=0
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Input: A=character
+;;; Output: C=0 if valid, C=1 otherwise
+.proc IsSearchChar
+        ;; Valid characters are . 0-9 A-Z a-z ? *
+        cmp     #'*'            ; Wildcard
+        beq     insert
+        cmp     #'?'            ; Wildcard
+        beq     insert
+        cmp     #'.'            ; Filename char (here and below)
+        beq     insert
+        cmp     #'0'
+        bcc     ignore
+        cmp     #'9'+1
+        bcc     insert
+        cmp     #'A'
+        bcc     ignore
+        cmp     #'Z'+1
+        bcc     insert
+        cmp     #'a'
+        bcc     ignore
+        cmp     #'z'+1
+        bcs     ignore
+
+insert: clc
+        rts
+
+ignore: sec
+        rts
+.endproc
+
+;;; ============================================================
+
+path_length:
+        .byte   0
+
+.proc DoSearch
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+
+        copy    #0, num_entries
+        copy    #$ff, selected_index
+        jsr     ListInit
+        jsr     PrepDrawIncrementalResults
+
+        lda     path_length
+        cmp     #1
+    IF_EQ
+        JSR_TO_MAIN main__InitVolumes
+        JSR_TO_MAIN main__NextVolume
+        bcs     finish
+    END_IF
+
+        ;; Do the search
+search:
+        ;; Convert `buf_search` to a null-terminated uppercase string
+        ;; and copy to main
+        ldy     buf_search
+        copy    #0, pattern,y   ; null-terminate
+        cpy     #0
+        beq     endloop
+loop:   lda     buf_search,y    ; copy characters
+        jsr     UpcasePathChar
+        sta     pattern-1,y
+        dey
+        bne     loop
+endloop:
+        copy16  #pattern, STARTLO
+        copy16  #pattern+kMaxFilenameLength, ENDLO
+        copy16  #main__RecursiveCatalog__pattern, DESTINATIONLO
+        clc                     ; aux>main
+        jsr     AUXMOVE
+
+        ;; And invoke it!
+        ldy     num_entries     ; A,X are trashed by macro
+        JSR_TO_MAIN  main__RecursiveCatalog__Start
+        sty     num_entries
+        tya
+        jsr     ListSetSize     ; update scrollbar
+
+        lda     path_length
+        cmp     #1
+    IF_EQ
+        lda     num_entries
+        cmp     #kMaxFilePaths
+        beq     finish
+        JSR_TO_MAIN main__NextVolume
+        bcc     search
+    END_IF
+
+finish:
+        bit     cursor_ibeam_flag
+    IF_PLUS
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+    ELSE
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
+    END_IF
+
+        jmp     InputLoop
+
+.endproc
+
+;;; ============================================================
+;;; Make a path character uppercase; assumes no char >'z' is
+;;; a valid path character.
+
+.proc UpcasePathChar
+        cmp     #'a'
+        bcc     :+
+        and     #CASE_MASK
+:       rts
+.endproc
+
+;;; ============================================================
+
+.proc HandleDown
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+        bne     done
+
+        lda     findwindow_params::window_id
+        cmp     #kResultsWindowID
+    IF_EQ
+        jsr     ListClick
+        bmi     :+
+        jsr     DetectDoubleClick
+        bmi     :+
+        copy    selected_index, show_index
+        jmp     Exit
+
+:       jmp     InputLoop
+    END_IF
+
+        cmp     #kDAWindowID
+        bne     done
+
+        ;; Click in DA content area
+        copy    #kDAWindowID, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+
+        MGTK_CALL MGTK::InRect, search_button_rec::rect
+        beq     :+
+        BTK_CALL BTK::Track, search_button_params
+        bmi     done
+        jmp     DoSearch
+:
+        MGTK_CALL MGTK::InRect, cancel_button_rec::rect
+        beq     :+
+        BTK_CALL BTK::Track, cancel_button_params
+        bmi     done
+        jmp     Exit
+:
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::InRect, input_rect
+        cmp     #MGTK::inrect_inside
+        bne     done
+
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
+        LETK_CALL LETK::Click, le_params
+
+done:   jmp     InputLoop
+.endproc
+
+;;; ============================================================
+;;; Determine if mouse moved (returns w/ carry set if moved)
+;;; Used in dialogs to possibly change cursor
+
+.proc CheckMouseMoved
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     event_params::coords,x
+        cmp     coords,x
+        bne     diff
+        dex
+        bpl     :-
+        clc
+        rts
+
+diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
+        sec
+        rts
+
+        DEFINE_POINT coords, 0, 0
+
+.endproc
+
+;;; ============================================================
+
+.proc HandleMouseMove
+        copy    #kDAWindowID, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::InRect, input_rect
+        cmp     #MGTK::inrect_inside
+        beq     inside
+
+outside:
+        bit     cursor_ibeam_flag
+        bpl     done
+        copy    #0, cursor_ibeam_flag
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        jmp     done
+
+inside:
+        bit     cursor_ibeam_flag
+        bmi     done
+        copy    #$80, cursor_ibeam_flag
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
+
+done:   jmp     InputLoop
+.endproc
+
+;;; ============================================================
+
+.proc SetPortForList
+        lda     #kResultsWindowID
+        bne     SetPortForWindow ; always
+.endproc
+
+.proc SetPortForDialog
+        lda     #kDAWindowID
+        FALL_THROUGH_TO SetPortForWindow
+.endproc
+
+.proc SetPortForWindow
+        sta     getwinport_params::window_id
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        ;; ASSERT: Not obscured.
+        MGTK_CALL MGTK::SetPort, grafport_win
+        rts
+.endproc
+
+;;; ============================================================
+
+.proc DrawWindow
+        jsr     SetPortForDialog
+        MGTK_CALL MGTK::HideCursor
+
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, input_rect
+
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+
+        MGTK_CALL MGTK::MoveTo, find_label_pos
+        param_call DrawString, find_label_str
+
+        BTK_CALL BTK::Draw, search_button_params
+        BTK_CALL BTK::Draw, cancel_button_params
+
+        MGTK_CALL MGTK::ShowCursor
+done:   rts
+.endproc
+
+;;; ============================================================
+;;; Populate `entry_buf` with entry in A
+
+.proc GetEntry
+        jsr     GetEntryAddr
+        stax    STARTLO
+
+        add16   STARTLO, #kPathBufferSize-1, ENDLO
+        copy16  #entry_buf, DESTINATIONLO
+
+        sec                     ; main>aux
+        jmp     AUXMOVE
+.endproc
+
+;;; ============================================================
+;;; List Box
+;;; ============================================================
+
+num_entries:    .byte   0
+selected_index: .byte   $FF
+
+;;; Set to the selected index to should show the result on exit.
+show_index:     .byte   $FF
+
+.scope listbox
+        winfo = winfo_results
+        kHeight = kResultsHeight
+        kRows = kResultsRows
+        num_items = num_entries
+        item_pos = cur_pos
+        selected_index = aux::selected_index
+        highlight_rect = aux::highlight_rect
+
+.endscope
+
+        .include "../lib/listbox.s"
+
+;;; ============================================================
+
+;;; Called with A = index
+.proc DrawListEntryProc
+        jsr     GetEntry
+        param_jump DrawString, entry_buf
+.endproc
+
+;;; ============================================================
+
+.proc PrepDrawIncrementalResults
+        jsr     SetPortForList
+        copy    #0, cur_line
+        copy16  #kListItemTextOffsetX, cur_pos::xcoord
+        copy16  #kListItemTextOffsetY, cur_pos::ycoord
+        rts
+.endproc
+
+.proc DrawNextResult
+        MGTK_CALL MGTK::MoveTo, cur_pos
+
+        lda     cur_line
+        jsr     DrawListEntryProc
+
+        add16_8 cur_pos::ycoord, #kListItemHeight
+        inc     cur_line
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; Keep in sync with the copy of this in main!
+.proc GetEntryAddr
+        sta     num
+        sta     offset
+        lda     #0
+        sta     offset+1
+
+        ;; Compute num * 65
+        ldx     #6              ; offset = num * 64
+:       asl16   offset
+        dex
+        bne     :-
+        add16_8 offset, num ; offset += num, so * 65
+        add16   offset, #main__entries_buffer, offset
+
+        ldax    offset
+        rts
+
+num:    .byte   0
+offset: .addr   0
+.endproc
+
+;;; ============================================================
+
+        .include "../lib/drawstring.s"
+        .include "../lib/measurestring.s"
+        .include "../lib/muldiv.s"
+        .include "../lib/doubleclick.s"
+
+;;; ============================================================
+.endscope ; aux
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+.scope main
+
+;;; ============================================================
 
         MLIEntry := MLI
-
         block_buffer := $1A00
-
 
 entry:
 
@@ -104,23 +734,9 @@ no_windows:
 
 continue:
 
-        ;; Copy the DA to AUX for easy bank switching
-        copy16  #entry, STARTLO
-        copy16  #da_end, ENDLO
-        copy16  #entry, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
         ;; Run the DA
-        sta     RAMRDON
-        sta     RAMWRTON
-
-        jsr     Init
-        lda     show_index
-
-        ;; Back to main for exit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
+        ldy     searchPath      ; A,X are trashed by macro
+        JSR_TO_AUX aux::RunDA
 
         ;; Show an entry?
     IF_POS
@@ -157,6 +773,7 @@ continue:
 
 ;;; ============================================================
 
+;;; Keep in sync with the copy of this in main!
 .proc GetEntryAddr
         sta     num
         sta     offset
@@ -179,22 +796,6 @@ offset: .addr   0
 .endproc
 
 ;;; ============================================================
-;;; Make call into Main from Aux (for JUMP_TABLE calls)
-;;; Inputs: A,X = address
-
-.proc JTRelay
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-        stax    @addr
-        @addr := *+1
-        jsr     SELF_MODIFIED
-        sta     RAMRDON
-        sta     RAMWRTON
-        rts
-.endproc
-
-;;; ============================================================
-
 ;;; Make a path character uppercase; assumes no char >'z' is
 ;;; a valid path character.
 
@@ -288,27 +889,13 @@ entPtr  := $08                  ; ptr to current entry
 saved_stack:
         .byte   0
 
+num_entries:
+        .byte   0
+
 .proc Start
-        ;; Copy pattern in Aux > Main (source is length-prefixed, dest is null terminated)
-        sta     RAMWRTOFF       ; read aux, write main
+        sty     num_entries     ; copy in main
 
-        lda     num_entries     ; copy aux > main
-        sta     num_entries
-
-        ldy     buf_search
-        copy    #0, pattern,y   ; null-terminate
-        cpy     #0
-        beq     endloop
-loop:   lda     buf_search,y    ; copy characters
-        jsr     UpcasePathChar
-        sta     pattern-1,y
-        dey
-        bne     loop
-endloop:
-
-        ;; Run from Main, with normal ZP and ROM
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
+        ;; Run with normal ZP and ROM
         sta     ALTZPOFF
         bit     ROMIN2
 
@@ -325,14 +912,10 @@ endloop:
         jsr     Relay           ; for stack restore
         ldy     num_entries
 
-        ;; DA runs out of Aux with aux ZP and LC
-        sta     RAMRDON
-        sta     RAMWRTON
+        ;; DA runs with aux ZP and LC
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
-
-        sty     num_entries
 
         rts
 
@@ -842,18 +1425,14 @@ fail:   clc                     ; Yes, no match found, return with C=0
 ;;; needed for MGTK, draw the latest result, and restore banks.
 
 .proc DrawNextResultFromMain
-        sta     RAMRDON
-        sta     RAMWRTON
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
 
-        jsr     DrawNextResult
+        JSR_TO_AUX aux::DrawNextResult
 
         sta     ALTZPOFF
         bit     ROMIN2
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
 
         rts
 .endproc
@@ -868,23 +1447,14 @@ on_line_buffer:
 devidx: .byte   0
 
 ;;; Call before calling `NextVolume` to begin enumeration.
-;;; Assert: Called from Aux
 .proc InitVolumes
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
         copy    DEVCNT, devidx
-        sta     RAMRDON
-        sta     RAMWRTON
         rts
 .endproc
 
 ;;; Appends next volume name to `searchPath`. Call `InitVolumes` first.
 ;;; Output: C=0 on success, C=1 on failure
-;;; Assert: Called from Aux
 .proc NextVolume
-        sta     RAMRDOFF        ; Run from Main
-        sta     RAMWRTOFF
-
 repeat: ldx     devidx
         bmi     fail
         dec     devidx
@@ -912,588 +1482,29 @@ repeat: ldx     devidx
         stx     searchPath
 
         ;; Success!
-        sta     RAMRDON         ; Back to Aux
-        sta     RAMWRTON
         clc
         rts
 
 fail:
-        sta     RAMRDON         ; Back to Aux
-        sta     RAMWRTON
         sec
         rts
 .endproc
 
 ;;; ============================================================
-;;; Used in both Main and Aux
-
-kMaxFilePaths       = (block_buffer - entries_buffer) / kPathBufferSize
-
-entry_buf:
-        .res    kPathBufferSize
-
-num_entries:
-        .byte   0
 
 entries_buffer := *
 
-
-        .assert * < $1000, error, "Try to keep Main code size down"
-
 ;;; ============================================================
+.endscope ; main
+        main__entries_buffer := main::entries_buffer
+        main__RecursiveCatalog__Start := main::RecursiveCatalog::Start
+        main__RecursiveCatalog__pattern := main::RecursiveCatalog::pattern
+        main__InitVolumes := main::InitVolumes
+        main__NextVolume := main::NextVolume
 
-;;; From this point on gets overwritten in main
+        DA_END_MAIN_SEGMENT
 
-;;; ============================================================
 
-
-kDAWindowID     = 63
-kDAWidth        = 465
-kDAHeight       = kResultsHeight + 40
-kDALeft         = (kScreenWidth - kDAWidth)/2
-kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
-
-kResultsWindowID        = kDAWindowID+1
-kResultsWidth           = kDAWidth - 60
-kResultsWidthSB         = kResultsWidth + 20
-kResultsHeight          = kResultsRows * kListItemHeight - 1
-kResultsLeft            = kDALeft + (kDAWidth - kResultsWidthSB) / 2
-kResultsTop             = kDATop + 30
-
-kResultsRows    = 11                ; line height is 10
-
-.params winfo
-window_id:      .byte   kDAWindowID
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_none
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   0
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   kDAWidth
-mincontheight:  .word   kDAHeight
-maxcontwidth:   .word   kDAWidth
-maxcontheight:  .word   kDAHeight
-port:
-        DEFINE_POINT viewloc, kDALeft, kDATop
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
-pattern:        .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   $7F
-textfont:       .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-        REF_WINFO_MEMBERS
-.endparams
-
-.params winfo_results
-window_id:      .byte   kResultsWindowID
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   kMaxFilePaths - kResultsRows
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   kResultsWidth
-mincontheight:  .word   kResultsHeight
-maxcontwidth:   .word   kResultsWidth
-maxcontheight:  .word   kResultsHeight
-port:
-        DEFINE_POINT viewloc, kResultsLeft, kResultsTop
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT maprect, 0, 0, kResultsWidth, kResultsHeight
-pattern:        .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   MGTK::textbg_white
-textfont:       .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-        REF_WINFO_MEMBERS
-.endparams
-
-        DEFINE_RECT highlight_rect, 0,0,kResultsWidth,0
-        DEFINE_POINT cur_pos, 0, 0
-cur_line:       .byte   0
-
-;;; ============================================================
-
-        .include "../lib/event_params.s"
-
-.params getwinport_params
-window_id:      .byte   0
-port:           .addr   grafport_win
-.endparams
-
-grafport_win:   .tag    MGTK::GrafPort
-
-;;; ============================================================
-
-        DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
-
-        kControlsTop = 10
-        kFindLeft = 20
-        DEFINE_LABEL find, res_string_label_find, kFindLeft, 20
-
-        ;; Left edges are adjusted dynamically based on label width
-        DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
-
-        DEFINE_BUTTON search_button_rec, kDAWindowID, res_string_button_search, kGlyphReturn, kDAWidth-235, kControlsTop
-        DEFINE_BUTTON_PARAMS search_button_params, search_button_rec
-
-        DEFINE_BUTTON cancel_button_rec, kDAWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
-        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
-
-penXOR:         .byte   MGTK::penXOR
-notpencopy:     .byte   MGTK::notpencopy
-pensize_normal: .byte   1, 1
-pensize_frame:  .byte   kBorderDX, kBorderDY
-
-cursor_ibeam_flag: .byte   0
-
-kBufSize = kMaxFilenameLength+1     ; max length = 15, length
-buf_search:     .res    kBufSize, 0 ; search term
-
-;;; ============================================================
-;;; Search field
-
-        DEFINE_LINE_EDIT line_edit_rec, kDAWindowID, buf_search, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250-(kFindLeft+kLabelHOffset), kMaxFilenameLength
-        DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
-
-;;; ============================================================
-
-.proc Init
-        ;; Prep input string
-        copy    #0, buf_search
-
-
-        param_call MeasureString, find_label_str
-        addax   input_rect::x1
-        add16_8 input_rect::x1, #1, line_edit_rec::rect::x1
-
-        MGTK_CALL MGTK::OpenWindow, winfo
-        MGTK_CALL MGTK::OpenWindow, winfo_results
-        MGTK_CALL MGTK::HideCursor
-        jsr     DrawWindow
-        LETK_CALL LETK::Init, le_params
-        LETK_CALL LETK::Activate, le_params
-        MGTK_CALL MGTK::ShowCursor
-
-        copy    #0, num_entries
-        jsr     ListInit
-
-        MGTK_CALL MGTK::FlushEvents
-        FALL_THROUGH_TO InputLoop
-.endproc
-
-.proc InputLoop
-        LETK_CALL LETK::Idle, le_params
-        param_call JTRelay, JUMP_TABLE_YIELD_LOOP
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        jeq     HandleDown
-        cmp     #MGTK::EventKind::key_down
-        jeq     HandleKey
-        cmp     #MGTK::EventKind::no_event
-        bne     InputLoop
-        jsr     CheckMouseMoved
-        bcc     InputLoop
-        jmp     HandleMouseMove
-.endproc
-
-.proc Exit
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-
-        MGTK_CALL MGTK::CloseWindow, winfo_results
-        MGTK_CALL MGTK::CloseWindow, winfo
-        param_call JTRelay, JUMP_TABLE_CLEAR_UPDATES
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc HandleKey
-        lda     event_params::key
-        sta     le_params::key
-
-        jsr     IsListKey
-    IF_EQ
-        jsr     ListKey
-        jmp     InputLoop
-    END_IF
-
-        ldx     event_params::modifiers
-        stx     le_params::modifiers
-    IF_NOT_ZERO
-        ;; Modified
-        lda     event_params::key
-        cmp     #'O'
-      IF_EQ
-        lda     selected_index
-        bmi     InputLoop
-        sta     show_index
-        jmp     Exit
-      END_IF
-
-        LETK_CALL LETK::Key, le_params
-        jmp     InputLoop
-    END_IF
-
-        ;; Not modified
-        cmp     #CHAR_ESCAPE
-      IF_EQ
-        BTK_CALL BTK::Flash, cancel_button_params
-        jmp     Exit
-      END_IF
-
-        cmp     #CHAR_RETURN
-      IF_EQ
-        BTK_CALL BTK::Flash, search_button_params
-        jmp     DoSearch
-      END_IF
-
-        jsr     IsControlChar
-        bcc     allow
-        jsr     IsSearchChar
-        bcs     ignore
-allow:  LETK_CALL LETK::Key, le_params
-ignore:
-        jmp     InputLoop
-.endproc
-
-;;; ============================================================
-
-;;; Input: A=character
-;;; Output: C=0 if control, C=1 if not
-.proc IsControlChar
-        cmp     #CHAR_DELETE
-        bcs     yes
-
-        cmp     #' '
-        bcc     yes
-        rts                     ; C=1
-
-yes:    clc                     ; C=0
-        rts
-.endproc
-
-;;; ============================================================
-
-;;; Input: A=character
-;;; Output: C=0 if valid, C=1 otherwise
-.proc IsSearchChar
-        ;; Valid characters are . 0-9 A-Z a-z ? *
-        cmp     #'*'            ; Wildcard
-        beq     insert
-        cmp     #'?'            ; Wildcard
-        beq     insert
-        cmp     #'.'            ; Filename char (here and below)
-        beq     insert
-        cmp     #'0'
-        bcc     ignore
-        cmp     #'9'+1
-        bcc     insert
-        cmp     #'A'
-        bcc     ignore
-        cmp     #'Z'+1
-        bcc     insert
-        cmp     #'a'
-        bcc     ignore
-        cmp     #'z'+1
-        bcs     ignore
-
-insert: clc
-        rts
-
-ignore: sec
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc DoSearch
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-
-        copy    #0, num_entries
-        copy    #$ff, selected_index
-        jsr     ListInit
-        jsr     PrepDrawIncrementalResults
-
-        lda     searchPath
-        cmp     #1
-    IF_EQ
-        jsr     InitVolumes
-        jsr     NextVolume
-        bcs     finish
-    END_IF
-
-        ;; Do the search
-search: jsr     RecursiveCatalog::Start
-        lda     num_entries
-        jsr     ListSetSize     ; update scrollbar
-
-        lda     searchPath
-        cmp     #1
-    IF_EQ
-        lda     num_entries
-        cmp     #kMaxFilePaths
-        beq     finish
-        jsr     NextVolume
-        bcc     search
-    END_IF
-
-finish:
-        bit     cursor_ibeam_flag
-    IF_PLUS
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-    ELSE
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-    END_IF
-
-        jmp     InputLoop
-
-.endproc
-
-;;; ============================================================
-
-.proc HandleDown
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
-        bne     done
-
-        lda     findwindow_params::window_id
-        cmp     #kResultsWindowID
-    IF_EQ
-        jsr     ListClick
-        bmi     :+
-        jsr     DetectDoubleClick
-        bmi     :+
-        copy    selected_index, show_index
-        jmp     Exit
-
-:       jmp     InputLoop
-    END_IF
-
-        cmp     #kDAWindowID
-        bne     done
-
-        ;; Click in DA content area
-        copy    #kDAWindowID, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-
-        MGTK_CALL MGTK::InRect, search_button_rec::rect
-        beq     :+
-        BTK_CALL BTK::Track, search_button_params
-        bmi     done
-        jmp     DoSearch
-:
-        MGTK_CALL MGTK::InRect, cancel_button_rec::rect
-        beq     :+
-        BTK_CALL BTK::Track, cancel_button_params
-        bmi     done
-        jmp     Exit
-:
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, input_rect
-        cmp     #MGTK::inrect_inside
-        bne     done
-
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
-        LETK_CALL LETK::Click, le_params
-
-done:   jmp     InputLoop
-.endproc
-
-;;; ============================================================
-;;; Determine if mouse moved (returns w/ carry set if moved)
-;;; Used in dialogs to possibly change cursor
-
-.proc CheckMouseMoved
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_params::coords,x
-        cmp     coords,x
-        bne     diff
-        dex
-        bpl     :-
-        clc
-        rts
-
-diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
-        sec
-        rts
-
-        DEFINE_POINT coords, 0, 0
-
-.endproc
-
-;;; ============================================================
-
-.proc HandleMouseMove
-        copy    #kDAWindowID, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, input_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
-
-outside:
-        bit     cursor_ibeam_flag
-        bpl     done
-        copy    #0, cursor_ibeam_flag
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        jmp     done
-
-inside:
-        bit     cursor_ibeam_flag
-        bmi     done
-        copy    #$80, cursor_ibeam_flag
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-
-done:   jmp     InputLoop
-.endproc
-
-;;; ============================================================
-
-.proc SetPortForList
-        lda     #kResultsWindowID
-        bne     SetPortForWindow ; always
-.endproc
-
-.proc SetPortForDialog
-        lda     #kDAWindowID
-        FALL_THROUGH_TO SetPortForWindow
-.endproc
-
-.proc SetPortForWindow
-        sta     getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        ;; ASSERT: Not obscured.
-        MGTK_CALL MGTK::SetPort, grafport_win
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc DrawWindow
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::HideCursor
-
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::FrameRect, input_rect
-
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, frame_rect
-        MGTK_CALL MGTK::SetPenSize, pensize_normal
-
-        MGTK_CALL MGTK::MoveTo, find_label_pos
-        param_call DrawString, find_label_str
-
-        BTK_CALL BTK::Draw, search_button_params
-        BTK_CALL BTK::Draw, cancel_button_params
-
-        MGTK_CALL MGTK::ShowCursor
-done:   rts
-.endproc
-
-;;; ============================================================
-;;; Populate `entry_buf` with entry in A
-
-.proc GetEntry
-        jsr     GetEntryAddr
-        stax    STARTLO
-
-        add16   STARTLO, #64, ENDLO
-        copy16  #entry_buf, DESTINATIONLO
-
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
-        rts
-.endproc
-
-;;; ============================================================
-;;; List Box
-;;; ============================================================
-
-selected_index: .byte   $FF
-
-;;; Set to the selected index to should show the result on exit.
-show_index:     .byte   $FF
-
-.scope listbox
-        winfo = winfo_results
-        kHeight = kResultsHeight
-        kRows = kResultsRows
-        num_items = num_entries
-        item_pos = cur_pos
-        selected_index = ::selected_index
-        highlight_rect = ::highlight_rect
-
-.endscope
-
-        .include "../lib/listbox.s"
-
-;;; ============================================================
-
-;;; Called with A = index
-.proc DrawListEntryProc
-        jsr     GetEntry
-        param_jump DrawString, entry_buf
-.endproc
-
-;;; ============================================================
-
-.proc PrepDrawIncrementalResults
-        jsr     SetPortForList
-        copy    #0, cur_line
-        copy16  #kListItemTextOffsetX, cur_pos::xcoord
-        copy16  #kListItemTextOffsetY, cur_pos::ycoord
-        rts
-.endproc
-
-.proc DrawNextResult
-        MGTK_CALL MGTK::MoveTo, cur_pos
-
-        lda     cur_line
-        jsr     DrawListEntryProc
-
-        add16_8 cur_pos::ycoord, #kListItemHeight
-        inc     cur_line
-        rts
-.endproc
-
-;;; ============================================================
-
-        .include "../lib/drawstring.s"
-        .include "../lib/measurestring.s"
-        .include "../lib/muldiv.s"
-        .include "../lib/doubleclick.s"
-
-;;; ============================================================
-
-da_end  := *
-.assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
+kMaxFilePaths = (main::block_buffer - main::entries_buffer) / kPathBufferSize
 
 ;;; ============================================================

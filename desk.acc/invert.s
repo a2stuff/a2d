@@ -17,41 +17,8 @@
 
 ;;; ============================================================
 
-        .org DA_LOAD_ADDRESS
-
-da_start:
-        jmp     Start
-
-save_stack:.byte   0
-
-.proc Start
-        tsx
-        stx     save_stack
-
-        ;; Copy DA to AUX
-        copy16  #da_start, STARTLO
-        copy16  #da_start, DESTINATIONLO
-        copy16  #da_end, ENDLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
-        ;; Transfer control to aux
-        sta     RAMWRTON
-        sta     RAMRDON
-
-        ;; run the DA
-        jsr     Init
-
-        ;; tear down/exit
-        sta     RAMRDOFF
-        sta     RAMWRTOFF
-
-        ldx     save_stack
-        txs
-
-        rts
-.endproc
-
+        DA_HEADER
+        DA_START_AUX_SEGMENT
 
 ;;; ============================================================
 ;;; Graphics Resources
@@ -60,7 +27,6 @@ event_params:   .tag MGTK::Event
 grafport:       .tag MGTK::GrafPort
 penXOR:         .byte   MGTK::penXOR
         DEFINE_RECT rect, 0, 0, kScreenWidth-1, kScreenHeight-1
-
 
 ;;; ============================================================
 ;;; DA Init
@@ -75,6 +41,7 @@ penXOR:         .byte   MGTK::penXOR
 ;;; Main Input Loop
 
 .proc InputLoop
+        ;; No yielding as we don't want the clock to refresh.
 loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
@@ -101,4 +68,12 @@ exit:   jmp     Invert
 
 ;;; ============================================================
 
-da_end:
+        DA_END_AUX_SEGMENT
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+        JSR_TO_AUX Init
+        rts
+        DA_END_MAIN_SEGMENT
+
+;;; ============================================================
