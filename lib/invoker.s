@@ -82,7 +82,7 @@ ret:    rts
 ;;; Not all should be necessary, but not doing so may lead to future
 ;;; compatibility issues.
 
-BITSY_ROOT = $280
+BITSY_VOL  = $280
 BITSY_PATH = $380
 .assert INVOKER_INTERPRETER = BITSY_PATH, error, "location mismatch"
 
