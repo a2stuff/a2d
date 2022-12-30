@@ -1,0 +1,31 @@
+Apple File Type Notes:
+
+* http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ft.about.html
+
+Modern registry:
+
+* https://github.com/a2infinitum/apple2-filetypes
+
+Other listings:
+
+* https://www.kreativekorp.com/miscpages/a2info/filetypes.shtml
+* https://macgui.com/kb/article/116
+
+DeskTop-internal types:
+
+* $F1 / $0000 - Desktop Module (not really used though)
+* $F1 / $0642 - Desk Accessory
+
+Proposed types:
+
+* $5B ANM / $10xx - Animation / Video stream - https://github.com/frankmilliron/play.vids.system
+  * $1001 - GR - sequence of $400-byte frames
+  * $1002 - DGR - sequence of $800-byte frames (aux first)
+  * $1003 - HGR - sequence of $2000-byte frames
+  * $1004 - DHGR - sequence of $4000-byte frames (aux first)
+* $D5 MUS / $D0E7 - Music Sequence / Electric Duet - https://github.com/a2infinitum/apple2-filetypes/issues
+* $D8 SND / $10xx - Sampled Sound - Zero-Crossing (ZC) - https://github.com/frankmilliron/play.zc.system
+* $D8 SND / $330x - Sampled Sound - Binary Time constant (BTC) - https://github.com/frankmilliron/play.zc.system
+  * $3300 - includes cover art
+  * $3301 - no cover art
+* $D9 TTS / ???? - Text-to-Speech
