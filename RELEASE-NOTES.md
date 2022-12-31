@@ -90,8 +90,9 @@ Project Page: https://github.com/a2stuff/a2d
 * Joystick: Visualize second joystick (paddles 2/3) if active.
 * Flying Toasters: Improve animation speed and reduce flicker.
 * Text Preview: Handle rendering long text files more intelligently.
-* Image Preview: Show .A2HR and .A2FM files in B&W
+* Image Preview: Show .A2HR and .A2FM files in B&W.
 * Electric Duet Preview: Add alternate players: during playback, press 3 for Mockingboard, 4 for Cricket!
+* Puzzle: Added keyboard support - arrow keys move a tile into the hole.
 
 ## 1.2
 

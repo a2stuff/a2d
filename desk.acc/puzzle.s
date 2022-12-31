@@ -646,11 +646,50 @@ check_title:
         ;; on key press - exit if Escape
 .proc CheckKey
         lda     event_params::modifiers
-        bne     :+
+        bne     ret
+
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     OnClick::destroy
-:       rts
+
+        ldx     hole_x
+        ldy     hole_y
+
+        cmp     #CHAR_DOWN
+    IF_EQ
+        dey
+        bmi     ret
+        bpl     move            ; always
+    END_IF
+
+        cmp     #CHAR_UP
+    IF_EQ
+        iny
+        cpy     #4
+        bcs     ret
+        bcc     move            ; always
+    END_IF
+
+        cmp     #CHAR_RIGHT
+    IF_EQ
+        dex
+        bmi     ret
+        bpl     move            ; always
+    END_IF
+
+        cmp     #CHAR_LEFT
+    IF_EQ
+        inx
+        cpx     #4
+        bcs     ret
+        bcc     move            ; always
+    END_IF
+
+ret:    rts
+
+move:   stx     click_x
+        sty     click_y
+        jmp     ProcessClick
 .endproc
 
 ;;; ============================================================
