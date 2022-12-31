@@ -2,6 +2,7 @@ control.panel                   apple.menu/control.panels       optional
 date.and.time                   apple.menu/control.panels       optional
 international                   apple.menu/control.panels       optional
 joystick                        apple.menu/control.panels       optional
+map                             apple.menu/control.panels       optional
 sounds                          apple.menu/control.panels       optional
 startup.options                 apple.menu/control.panels       optional
 system.speed                    apple.menu/control.panels       optional
@@ -27,7 +28,6 @@ show.font.file                  preview                         optional
 show.duet.file                  preview                         optional
 cd.remote                       extras                          extra
 darkness                        extras                          extra
-map                             extras                          extra
 neko                            extras                          extra
 sci.calc                        extras                          extra
 screen.dump                     extras                          extra
