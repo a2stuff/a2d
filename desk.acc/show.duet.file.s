@@ -206,37 +206,43 @@ str_instruct:   PASCAL_STRING res_string_instructions
 
 ;;; ============================================================
 
-pathbuf:        .res    kPathBufferSize, 0
 filename:       .res    16, 0
 
-        DEFINE_OPEN_PARAMS open_params, pathbuf, DA_IO_BUFFER
+        INVOKE_PATH := $220
+
+        DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKE_PATH
+        DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
         DEFINE_READ_PARAMS read_params, data_buf, kReadLength
         DEFINE_CLOSE_PARAMS close_params
 
 ;;; ============================================================
 ;;; Get filename from DeskTop
 
+ret:    rts
+
 .proc Entry
-        INVOKE_PATH := $220
-        lda     INVOKE_PATH
-    IF_EQ
-        rts
-    END_IF
-        COPY_STRING INVOKE_PATH, pathbuf
+        ;; Verify type/auxtype
+        JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_info_params
+        bcs     ret
+        lda     get_info_params::file_type
+        cmp     #FT_MUSIC
+        bne     ret
+        ecmp16  get_info_params::aux_type, #$D0E7
+        bne     ret
 
         ;; Extract filename
-        ldy     pathbuf
-:       lda     pathbuf,y       ; find last '/'
+        ldy     INVOKE_PATH
+:       lda     INVOKE_PATH,y   ; find last '/'
         cmp     #'/'
         beq     :+
         dey
         bne     :-
 :       ldx     #0
-:       lda     pathbuf+1,y     ; copy filename
+:       lda     INVOKE_PATH+1,y ; copy filename
         sta     filename+1,x
         inx
         iny
-        cpy     pathbuf
+        cpy     INVOKE_PATH
         bne     :-
         stx     filename
 

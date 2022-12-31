@@ -15650,7 +15650,7 @@ icontype_table:
 
         DEFINE_ICTRECORD $FF, FT_ANIMATION, ICT_FLAGS_NONE, 0, 0, IconType::animation     ; $5B ANM
         DEFINE_ICTRECORD $FF, FT_SOUND,     ICT_FLAGS_NONE, 0, 0, IconType::audio         ; $D8 SND
-        DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_AUX, $D0E7, 0, IconType::music ; Electric Duet
+        DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_NONE, 0, 0, IconType::music         ; $D5 MUS
         DEFINE_ICTRECORD $FF, $E0,          ICT_FLAGS_AUX, $8002, 0, IconType::archive ; NuFX
 
         ;; IIgs-Specific Files (ranges)
