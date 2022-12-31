@@ -17,8 +17,6 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
-        MGTKEntry := MGTKAuxEntry
-
 ;;; ============================================================
 ;;; Memory map
 ;;;
@@ -40,16 +38,56 @@
 ;;;          :             : :             :
 ;;;
 
+kNekoHeight     = 32      ; full height is 32
+kNekoWidth      = 64      ; full width is 32, but aspect ratio needs to be doubled
+kNumFrames      = 32
+
+.enum NekoFrame
+        runUp1          = 0
+        runUp2          = 1
+        runUpRight1     = 2
+        runUpRight2     = 3
+        runRight1       = 4
+        runRight2       = 5
+        runDownRight1   = 6
+        runDownRight2   = 7
+        runDown1        = 8
+        runDown2        = 9
+        runDownLeft1    = 10
+        runDownLeft2    = 11
+        runLeft1        = 12
+        runLeft2        = 13
+        runUpLeft1      = 14
+        runUpLeft2      = 15
+
+        scratchUp1      = 16
+        scratchUp2      = 17
+        scratchRight1   = 18
+        scratchRight2   = 19
+        scratchDown1    = 20
+        scratchDown2    = 21
+        scratchLeft1    = 22
+        scratchLeft2    = 23
+
+        sitting         = 24
+        yawning         = 25
+        itch1           = 26
+        itch2           = 27
+        sleep1          = 28
+        sleep2          = 29
+        lick            = 30
+        surprise        = 31
+.endenum
+
 ;;; ============================================================
 
         DA_HEADER
         DA_START_AUX_SEGMENT
+.scope aux
 
 ;;; ============================================================
 
-        SCRATCH := $1C00
-
-;;; ============================================================
+        MGTKEntry := MGTKAuxEntry
 
 kDAWindowId    = 60
 kDAWidth        = kScreenWidth / 2
@@ -96,13 +134,16 @@ nextwinfo:      .addr   0
 
 ;;; ============================================================
 
+ep_start:
         .include "../lib/event_params.s"
-        mx := screentowindow_params::windowx
-        my := screentowindow_params::windowy
 
 .params trackgoaway_params
 clicked:        .byte   0
 .endparams
+
+ep_size := * - ep_start
+
+;;; ============================================================
 
 .params getwinport_params
 window_id:      .byte   kDAWindowId
@@ -110,7 +151,7 @@ port:           .addr   grafport
 .endparams
 
 .struct scratch
-        .org    ::SCRATCH
+        .org    $1C00
         framebuffer     .res    10*32; kNekoHeight * kNekoStride
         grafport        .tag    MGTK::GrafPort
 .endstruct
@@ -148,17 +189,222 @@ grow_box_bitmap:
         .byte   PX(%1111111),PX(%1111111),PX(%1111111)
 
 ;;; ============================================================
+;;; Draw resize box
+;;; Assert: An appropriate GrafPort is selected.
+
+.proc DrawGrowBox
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        sub16_8 winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
+        sub16_8 winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
+        MGTK_CALL MGTK::PaintBitsHC, grow_box_params
+        rts
+.endproc
+
+;;; ============================================================
+;;; Animation Resources
+
+.ifdef CURSORS
+        kCursorHeight = 16
+        kCursorWidth  = 16
+
+        kNekoCount    = 32
+        kNekoCursor   = 3
+.endif
+
+frame_addr_table_lo:
+.repeat ::kNumFrames,i
+        .byte <.ident(.sprintf("neko_frame_%02d", i+1))
+.endrepeat
+frame_addr_table_hi:
+.repeat ::kNumFrames,i
+        .byte >.ident(.sprintf("neko_frame_%02d", i+1))
+.endrepeat
+
+;;; The compressed frames are used as a (poor) source of pseudo-random bytes.
+noise:
+
+.repeat ::kNumFrames, i
+        .ident(.sprintf("neko_frame_%02d", i+1)) := *
+        .incbin .sprintf("neko_frames/neko_frame_%02d.bin.lzsa", i+1)
+.endrepeat
+
+
+.ifdef CURSORS
+        .addr   neko_bird_cursor   ; CURS -16000, "bardCurs" (bird?)
+        .addr   neko_bird_mask     ; CURS -16000, "bardCurs" (bird?)
+
+        .addr   neko_fish_cursor   ; CURS -15998, "fishCurs"
+        .addr   neko_fish_mask     ; CURS -15998, "fishCurs"
+
+        .addr   neko_mouse_cursor  ; CURS -15999, "mouseCurs"
+        .addr   neko_mouse_mask    ; CURS -15999, "mouseCurs"
+.endif
+
+
+;;; ============================================================
+
+kNekoStride = 10                ; in bytes; width / 7 rounded up
+
+.params frame_params
+        DEFINE_POINT viewloc, 0, 0
+mapbits:        .addr   FRAMEBUFFER
+mapwidth:       .byte   kNekoStride
+reserved:       .byte   0
+        DEFINE_RECT maprect, 0, 0, kNekoWidth-1, kNekoHeight-1
+        REF_MAPINFO_MEMBERS
+.endparams
+
+        DEFINE_RECT erase_rect, 0, 0, 0, 0
+
+;;; ============================================================
+
+;;; Inputs: Y = frame
+
+.proc DrawFrame
+        sty     frame
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        ldx     frame
+        copy    frame_addr_table_lo,x, LZSA_SRC_LO
+        copy    frame_addr_table_hi,x, LZSA_SRC_LO+1
+        copy16  #FRAMEBUFFER, LZSA_DST_LO
+        jsr     decompress_lzsa2_fast
+        jsr     FrameDouble
+        MGTK_CALL MGTK::PaintBitsHC, frame_params
+
+        ;; Stash rect of this frame so we can optionally erase it next time
+        COPY_STRUCT MGTK::Point, frame_params::viewloc, erase_rect::topleft
+        add16_8 frame_params::viewloc::xcoord, #kNekoWidth-1, erase_rect::x2
+        add16_8 frame_params::viewloc::ycoord, #kNekoHeight-1, erase_rect::y2
+
+        rts
+
+frame:  .byte   0
+.endproc
+
+.proc EraseFrame
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, erase_rect
+        rts
+.endproc
+
+;;; ============================================================
+
+
+.proc FrameDouble
+        src := $06
+        dst := $08
+        tmp := $0A
+        count := $0C
+
+        kFrameSizeUndoubled = 160
+        copy    #kFrameSizeUndoubled, count
+        copy16  #FRAMEBUFFER+kFrameSizeUndoubled, src
+        copy16  #FRAMEBUFFER+kFrameSizeUndoubled*2, dst
+        ldy     #0
+
+byte_loop:
+        dec16   src
+        lda     (src),y
+
+        ldx     #8
+bit_loop:
+        ror
+        php
+        ror     tmp+1
+        ror     tmp
+        plp
+        ror     tmp+1
+        ror     tmp
+        dex
+        bne     bit_loop
+
+        rol     tmp
+        rol     tmp+1
+        ror     tmp
+
+        dec16   dst
+        lda     tmp+1
+        sta     (dst),y
+        dec16   dst
+        lda     tmp
+        sta     (dst),y
+
+        dec     count
+        bne     byte_loop
+        rts
+.endproc
+
+;;; ============================================================
+
+        .include "../lib/lzsa.s"
+
+;;; ============================================================
+
+.endscope ; aux
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+
+;;; ============================================================
+
+        jmp     Init
+
+;;; ============================================================
+
+
+ep_start:
+        .include "../lib/event_params.s"
+
+.params trackgoaway_params
+clicked:        .byte   0
+.endparams
+
+ep_size := * - ep_start
+        .assert ep_size = aux::ep_size, error, "param mismatch aux vs. main"
+
+.proc CopyEventDataToMain
+        copy16  #aux::event_params, STARTLO
+        copy16  #aux::event_params+ep_size-1, ENDLO
+        copy16  #event_params, DESTINATIONLO
+        clc                     ; aux>main
+        jmp     AUXMOVE
+.endproc
+
+.proc CopyEventDataToAux
+        copy16  #event_params, STARTLO
+        copy16  #event_params+ep_size-1, ENDLO
+        copy16  #aux::event_params, DESTINATIONLO
+        sec                     ; main>aux
+        jmp     AUXMOVE
+.endproc
+
+;;; ============================================================
+
+        DEFINE_RECT win_rect, 0,0,0,0
+
+.proc GetWindowRect
+        copy16  #aux::winfo::maprect, STARTLO
+        copy16  #aux::winfo::maprect+.sizeof(MGTK::Rect)-1, ENDLO
+        copy16  #win_rect, DESTINATIONLO
+        clc                     ; aux>main
+        jmp     AUXMOVE
+.endproc
+
+;;; ============================================================
 
 .proc Init
-        MGTK_CALL MGTK::OpenWindow, winfo
+        JUMP_TABLE_MGTK_CALL MGTK::OpenWindow, aux::winfo
         jsr     DrawWindow
-        MGTK_CALL MGTK::FlushEvents
+        JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
 .endproc
 
 .proc InputLoop
-        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
-        MGTK_CALL MGTK::GetEvent, event_params
+        jsr JUMP_TABLE_YIELD_LOOP
+        JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
+        jsr     CopyEventDataToMain
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         beq     HandleDown
@@ -179,17 +425,17 @@ grow_box_bitmap:
 .endproc
 
 .proc Exit
-        MGTK_CALL MGTK::CloseWindow, winfo
-        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
-        rts
+        JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, aux::winfo
+        jmp JUMP_TABLE_CLEAR_UPDATES
 .endproc
 
 ;;; ============================================================
 
 .proc HandleDown
-        MGTK_CALL MGTK::FindWindow, findwindow_params
+        JUMP_TABLE_MGTK_CALL MGTK::FindWindow, aux::findwindow_params
+        jsr     CopyEventDataToMain
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
+        cmp     #aux::kDAWindowId
         bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
@@ -204,7 +450,8 @@ grow_box_bitmap:
 ;;; ============================================================
 
 .proc HandleClose
-        MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
+        JUMP_TABLE_MGTK_CALL MGTK::TrackGoAway, aux::trackgoaway_params
+        jsr     CopyEventDataToMain
         lda     trackgoaway_params::clicked
         bne     Exit
         beq     InputLoop       ; always
@@ -213,13 +460,15 @@ grow_box_bitmap:
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
-        MGTK_CALL MGTK::DragWindow, dragwindow_params
-common: lda     dragwindow_params::moved
+        copy    #aux::kDAWindowId, dragwindow_params::window_id
+        jsr     CopyEventDataToAux
+        JUMP_TABLE_MGTK_CALL MGTK::DragWindow, aux::dragwindow_params
+common: jsr     CopyEventDataToMain
+        lda     dragwindow_params::moved
         bpl     finish
 
         ;; Draw DeskTop's windows and icons
-        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        jsr     JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
@@ -235,61 +484,28 @@ finish: jmp     InputLoop
         tmpw := $06
 
         ;; Is the hit within the grow box area?
-        copy    #kDAWindowId, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        sub16   winfo::maprect::x2, mx, tmpw
-        cmp16   #kGrowBoxWidth, tmpw
+        copy    #aux::kDAWindowId, screentowindow_params::window_id
+        jsr     CopyEventDataToAux
+        JUMP_TABLE_MGTK_CALL MGTK::ScreenToWindow, aux::screentowindow_params
+        jsr     CopyEventDataToMain
+        jsr     GetWindowRect
+        sub16   win_rect::x2, screentowindow_params::windowx, tmpw
+        cmp16   #aux::kGrowBoxWidth, tmpw
         bcc     HandleDrag::finish
-        sub16   winfo::maprect::y2, my, tmpw
-        cmp16   #kGrowBoxHeight, tmpw
+        sub16   win_rect::y2, screentowindow_params::windowy, tmpw
+        cmp16   #aux::kGrowBoxHeight, tmpw
         bcc     HandleDrag::finish
 
         ;; Initiate the grow... re-using the drag logic
-        copy    winfo::window_id, dragwindow_params::window_id
-        MGTK_CALL MGTK::GrowWindow, dragwindow_params
+        copy    #aux::kDAWindowId, dragwindow_params::window_id
+        jsr     CopyEventDataToAux
+        JUMP_TABLE_MGTK_CALL MGTK::GrowWindow, aux::dragwindow_params
         jmp     HandleDrag::common
 .endproc
 
 ;;; ============================================================
 ;;; Behavior State Machine
 ;;; ============================================================
-
-.enum NekoFrame
-        runUp1          = 0
-        runUp2          = 1
-        runUpRight1     = 2
-        runUpRight2     = 3
-        runRight1       = 4
-        runRight2       = 5
-        runDownRight1   = 6
-        runDownRight2   = 7
-        runDown1        = 8
-        runDown2        = 9
-        runDownLeft1    = 10
-        runDownLeft2    = 11
-        runLeft1        = 12
-        runLeft2        = 13
-        runUpLeft1      = 14
-        runUpLeft2      = 15
-
-        scratchUp1      = 16
-        scratchUp2      = 17
-        scratchRight1   = 18
-        scratchRight2   = 19
-        scratchDown1    = 20
-        scratchDown2    = 21
-        scratchLeft1    = 22
-        scratchLeft2    = 23
-
-        sitting         = 24
-        yawning         = 25
-        itch1           = 26
-        itch2           = 27
-        sleep1          = 28
-        sleep2          = 29
-        lick            = 30
-        surprise        = 31
-.endenum
 
 .enum NekoState
         rest    = 0
@@ -331,8 +547,13 @@ skip:   .word   0
         tmp16   := $0C
         dir     := $0E
 
-        copy    #kDAWindowId, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        copy    #aux::kDAWindowId, screentowindow_params::window_id
+        jsr     CopyEventDataToAux
+        JUMP_TABLE_MGTK_CALL MGTK::ScreenToWindow, aux::screentowindow_params
+        jsr     CopyEventDataToMain
+        jsr     CopyPosToMain
+        x_pos := pos+MGTK::Point::xcoord
+        y_pos := pos+MGTK::Point::ycoord
 
         sub16   screentowindow_params::windowx, x_pos, x_delta
         sub16   x_delta, #kNekoWidth / 2, x_delta
@@ -434,9 +655,11 @@ skip_encode:
 new_state:
         sta     state           ; for states that swap
 
-        ;; really bad random number generator
-        ldx     tick
-        ldy     noise,x            ; Y = random
+        pha
+        lda     tick
+        jsr     GetRandom
+        tay
+        pla
 
         ;; ------------------------------
         cmp     #NekoState::rest
@@ -611,7 +834,9 @@ set_frame:
         iny
     END_IF
 
-        sub16   winfo::maprect::x2, winfo::maprect::x1, tmp16
+        jsr     GetWindowRect
+
+        sub16   win_rect::x2, win_rect::x1, tmp16
         sub16_8 tmp16, #kNekoWidth-1, tmp16
         cmp16   x_pos, tmp16
     IF_CS
@@ -619,14 +844,20 @@ set_frame:
         iny
     END_IF
 
-        sub16   winfo::maprect::y2, winfo::maprect::y1, tmp16
-        sub16_8 tmp16, #kNekoHeight + kGrowBoxHeight, tmp16
+        sub16   win_rect::y2, win_rect::y1, tmp16
+        sub16_8 tmp16, #kNekoHeight + aux::kGrowBoxHeight, tmp16
         cmp16   y_pos, tmp16
     IF_CS
         copy16  tmp16, y_pos
         iny
     END_IF
 
+        tya
+        pha
+        jsr     CopyPosToAux
+        pla
+        tay
+
         rts
 .endproc
 
@@ -634,138 +865,25 @@ set_frame:
 
 ;;; ============================================================
 
-.proc DrawWindow
-        jsr     GetSetPort
-        bne     HandyRTS ; obscured
-        FALL_THROUGH_TO DrawGrowBox
+        DEFINE_POINT pos, 0,0
+
+.proc CopyPosToMain
+        copy16  #aux::frame_params::viewloc, STARTLO
+        copy16  #aux::frame_params::viewloc+.sizeof(MGTK::Point)-1, ENDLO
+        copy16  #pos, DESTINATIONLO
+        clc                     ; aux>main
+        jmp     AUXMOVE
+.endproc
+
+.proc CopyPosToAux
+        copy16  #pos, STARTLO
+        copy16  #pos+.sizeof(MGTK::Point)-1, ENDLO
+        copy16  #aux::frame_params::viewloc, DESTINATIONLO
+        sec                     ; main>aux
+        jmp     AUXMOVE
 .endproc
 
 ;;; ============================================================
-;;; Draw resize box
-;;; Assert: An appropriate GrafPort is selected.
-
-.proc DrawGrowBox
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        sub16_8 winfo::maprect::x2, #kGrowBoxWidth, grow_box_params::viewloc::xcoord
-        sub16_8 winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
-        MGTK_CALL MGTK::PaintBitsHC, grow_box_params
-        FALL_THROUGH_TO HandyRTS
-.endproc
-
-HandyRTS:
-        rts
-
-;;; ============================================================
-
-;;; Output: Z=0 on success, Z=1 on failure (e.g. obscured)
-.proc GetSetPort
-        ;; Defer if content area is not visible
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        bne     ret
-        MGTK_CALL MGTK::SetPort, grafport
-ret:    rts
-.endproc
-
-;;; ============================================================
-
-tick:   .byte   0               ; incremented every event
-state:  .byte   NekoState::rest ; NekoState::XXX
-scratch_dir:
-        .byte   0               ; last scratch direction
-moved_flag:
-        .byte   0               ; high bit set if moved
-
-cur_frame:                      ; NekoFrame::XXX
-        .byte   NekoFrame::sitting
-
-kNekoStride = 10                ; in bytes; width / 7 rounded up
-
-.params frame_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   FRAMEBUFFER
-mapwidth:       .byte   kNekoStride
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kNekoWidth-1, kNekoHeight-1
-        REF_MAPINFO_MEMBERS
-.endparams
-x_pos := frame_params::viewloc::xcoord
-y_pos := frame_params::viewloc::ycoord
-
-.proc DrawCurrentFrame
-        jsr     GetSetPort
-        bne     ret
-
-        ;; Erase if needed
-        bit     moved_flag
-    IF_NS
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, winfo::maprect
-        jsr     DrawGrowBox
-    END_IF
-
-        ;; Draw frame
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        ldx     cur_frame
-        copy    frame_addr_table_lo,x, LZSA_SRC_LO
-        copy    frame_addr_table_hi,x, LZSA_SRC_LO+1
-        copy16  #FRAMEBUFFER, LZSA_DST_LO
-        jsr     decompress_lzsa2_fast
-        jsr     FrameDouble
-        MGTK_CALL MGTK::PaintBitsHC, frame_params
-
-.ifdef SLOW_EMULATORS
-        ;; Experimental - slows emulators like Virtual II
-        sta     SPKR
-        sta     SPKR
-.endif
-
-ret:    rts
-.endproc
-
-;;; ============================================================
-;;; Animation Resources
-
-        kNekoHeight   = 32      ; full height is 32
-        kNekoWidth    = 64      ; full width is 32, but aspect ratio needs to be doubled
-
-.ifdef CURSORS
-        kCursorHeight = 16
-        kCursorWidth  = 16
-
-        kNekoCount    = 32
-        kNekoCursor   = 3
-.endif
-
-kNumFrames = 32
-
-frame_addr_table_lo:
-.repeat kNumFrames,i
-        .byte <.ident(.sprintf("neko_frame_%02d", i+1))
-.endrepeat
-frame_addr_table_hi:
-.repeat kNumFrames,i
-        .byte >.ident(.sprintf("neko_frame_%02d", i+1))
-.endrepeat
-
-;;; The compressed frames are used as a (poor) source of pseudo-random bytes.
-noise:
-
-.repeat kNumFrames, i
-        .ident(.sprintf("neko_frame_%02d", i+1)) := *
-        .incbin .sprintf("neko_frames/neko_frame_%02d.bin.lzsa", i+1)
-.endrepeat
-
-
-.ifdef CURSORS
-        .addr   neko_bird_cursor   ; CURS -16000, "bardCurs" (bird?)
-        .addr   neko_bird_mask     ; CURS -16000, "bardCurs" (bird?)
-
-        .addr   neko_fish_cursor   ; CURS -15998, "fishCurs"
-        .addr   neko_fish_mask     ; CURS -15998, "fishCurs"
-
-        .addr   neko_mouse_cursor  ; CURS -15999, "mouseCurs"
-        .addr   neko_mouse_mask    ; CURS -15999, "mouseCurs"
-.endif
 
         ;; Frame tables, index is direction encoded as:
         ;; 0000 = no move       (not in table, to save a byte)
@@ -804,67 +922,93 @@ scratch_frame_table:
         .byte   NekoFrame::scratchLeft1
         .byte   NekoFrame::scratchLeft1
 
-
 ;;; ============================================================
 
-.proc FrameDouble
-        src := $06
-        dst := $08
-        tmp := $0A
-        count := $0C
-
-        kFrameSizeUndoubled = 160
-        copy    #kFrameSizeUndoubled, count
-        copy16  #FRAMEBUFFER+kFrameSizeUndoubled, src
-        copy16  #FRAMEBUFFER+kFrameSizeUndoubled*2, dst
-        ldy     #0
-
-byte_loop:
-        dec16   src
-        lda     (src),y
-
-        ldx     #8
-bit_loop:
-        ror
-        php
-        ror     tmp+1
-        ror     tmp
-        plp
-        ror     tmp+1
-        ror     tmp
-        dex
-        bne     bit_loop
-
-        rol     tmp
-        rol     tmp+1
-        ror     tmp
-
-        dec16   dst
-        lda     tmp+1
-        sta     (dst),y
-        dec16   dst
-        lda     tmp
-        sta     (dst),y
-
-        dec     count
-        bne     byte_loop
-        rts
+.proc DrawWindow
+        jsr     GetSetPort
+        bne     ret             ; obscured
+        JSR_TO_AUX aux::DrawGrowBox
+ret:    rts
 .endproc
 
 ;;; ============================================================
 
-        .include "../lib/lzsa.s"
+;;; Output: Z=0 on success, Z=1 on failure (e.g. obscured)
+.proc GetSetPort
+        ;; Defer if content area is not visible
+        JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
+        bne     ret
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+tick:   .byte   0               ; incremented every event
+state:  .byte   NekoState::rest ; NekoState::XXX
+scratch_dir:
+        .byte   0               ; last scratch direction
+moved_flag:
+        .byte   0               ; high bit set if moved
+
+cur_frame:                      ; NekoFrame::XXX
+        .byte   NekoFrame::sitting
+
+.proc DrawCurrentFrame
+        jsr     GetSetPort
+        bne     ret
+
+        ;; Erase if needed
+        bit     moved_flag
+    IF_NS
+        JSR_TO_AUX aux::EraseFrame
+    END_IF
+
+        ;; Draw frame
+        ldy     cur_frame       ; A,X are trashed by macro
+        JSR_TO_AUX aux::DrawFrame
+
+.ifdef SLOW_EMULATORS
+        ;; Experimental - slows emulators like Virtual II
+        sta     SPKR
+        sta     SPKR
+.endif
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+
+;;; A really bad random number generator; this uses the
+;;; compressed data over in Aux as the entropy.
+
+;;; Input: A = seed
+;;; Output: A = "random" value
+.proc GetRandom
+        clc
+        adc     #<aux::noise
+        sta     STARTLO
+        sta     ENDLO
+        lda     #>aux::noise
+        adc     #0
+        sta     STARTHI
+        sta     ENDHI
+        copy16  #result, DESTINATIONLO
+        clc                     ; aux>main
+        jsr     AUXMOVE
+
+        lda     result
+        rts
+
+result: .byte   1
+.endproc
+
+;;; ============================================================
+
         .include "../lib/muldiv.s"
 
 ;;; ============================================================
 
-        DA_END_AUX_SEGMENT
-
-;;; ============================================================
-
-        DA_START_MAIN_SEGMENT
-        JSR_TO_AUX Init
-        rts
         DA_END_MAIN_SEGMENT
 
 ;;; ============================================================
