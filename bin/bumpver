@@ -12,8 +12,9 @@
 # Most recent tag
 OLDTAG=`git describe --tags --abbrev=0`
 OLDVER=$(echo "$OLDTAG" | sed -E 's/^v[0-9]+\.[0-9]+-[a-z]+//')
+OLDPRE=$(echo "$OLDTAG" | sed -E 's/[0-9]+$//')
 NEWVER=`expr $OLDVER + 1`
-NEWTAG="v1.2-alpha$NEWVER"
+NEWTAG="$OLDPRE$NEWVER"
 DATE=`date '+%B %d, %Y'`
 
 echo "Bumping to $NEWTAG..."
