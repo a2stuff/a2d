@@ -14,7 +14,7 @@
 .define kDeskTopProductName "Apple II DeskTop"
 kDeskTopVersionMajor = 1
 kDeskTopVersionMinor = 3
-.define kDeskTopVersionSuffix "-alpha50"
+.define kDeskTopVersionSuffix "-alpha1"
 .define kBuildDate "January 1, 2023"
 kBuildYYYY = 2023
 kBuildYY = 23
