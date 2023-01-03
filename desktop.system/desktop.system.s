@@ -1167,15 +1167,17 @@ file_loop:
         bne     file_loop
 
         jsr     UpdateProgress
-        FALL_THROUGH_TO FinishDtCopy
+        FALL_THROUGH_TO FinishDeskTopCopy
 .endproc
 
-.proc FinishDtCopy
+.proc FinishDeskTopCopy
         lda     copied_flag
-        beq     :+
+    IF_NOT_ZERO
         sta     dst_path
         MLI_CALL SET_PREFIX, set_prefix_params
-:       jsr     UpdateSelfFile
+    END_IF
+
+        jsr     UpdateSelfFile
         jsr     CopyOrigPrefixToDesktopOrigPrefix
 
         lda     #0
@@ -1200,7 +1202,7 @@ file_loop:
 
 .proc DidNotCopy
         copy    #0, copied_flag
-        jmp     FinishDtCopy
+        jmp     FinishDeskTopCopy
 .endproc
 
 ;;; ============================================================
@@ -1496,12 +1498,10 @@ str_desktop:
 ;;; original prefix.
 
 .proc UpdateSelfFileImpl
-        dt1_addr := $2000
-
-        DEFINE_OPEN_PARAMS open_params, str_desktop1_path, dst_io_buffer
-str_desktop1_path:
-        PASCAL_STRING .concat(kFilenameRAMCardDir, "/", kFilenameLauncher)
-        DEFINE_WRITE_PARAMS write_params, dt1_addr, kWriteBackSize
+        DEFINE_OPEN_PARAMS open_params, str_self_filename, dst_io_buffer
+str_self_filename:
+        PASCAL_STRING kFilenameLauncher
+        DEFINE_WRITE_PARAMS write_params, PRODOS_SYS_START, kWriteBackSize
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params
