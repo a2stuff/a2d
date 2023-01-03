@@ -28,11 +28,11 @@ version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
 
 cecho yellow "Building disk images: $version"
 
-# One 800k image (complete), and two 140k images (two parts).
+# One 800k image (complete), 32MB image (complete) and two 140k images (multiple parts).
 
 mkdir -p out
 IMGFILE_COMPLETE_2MG="out/A2DeskTop-${version}_800k.2mg"
-IMGFILE_COMPLETE_HDV="out/A2DeskTop-${version}_800k.hdv"
+IMGFILE_COMPLETE_HDV="out/A2DeskTop-${version}_32MB.hdv"
 IMGFILE_PART1="out/A2DeskTop-${version}_140k_disk1.po"
 IMGFILE_PART2="out/A2DeskTop-${version}_140k_disk2.po"
 IMGFILE_PART3="out/A2DeskTop-${version}_140k_disk3.po"
@@ -53,7 +53,7 @@ for img in $IMAGES; do
 done
 
 suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_2MG $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
-suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_HDV $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
+suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_HDV $VOLNAME_COMPLETE 32MB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART3 $VOLNAME_PART3 140KB --quiet --no-case-bits
