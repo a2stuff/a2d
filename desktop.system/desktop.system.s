@@ -205,6 +205,7 @@ filename:
         beq     okerr
         cmp     #ERR_PATH_NOT_FOUND
         beq     okerr
+        jmp     fail
         rts                     ; Otherwise, fail the copy
 
         ;; Get source dir info
@@ -1099,7 +1100,7 @@ test_unit_num:
 .proc StartCopy
         ptr := $06
 
-        jsr     ShowCopyingScreen
+        jsr     ShowCopyingDeskTopScreen
         jsr     InitProgress
 
         MLI_CALL GET_PREFIX, get_prefix_params
@@ -1334,7 +1335,7 @@ done:   dex
 
 ;;; ============================================================
 
-.proc ShowCopyingScreen
+.proc ShowCopyingDeskTopScreen
 
         ;; Message
         lda     #80
@@ -1414,7 +1415,6 @@ done:   rts
         copy16  #noop, GenericCopy::hook_show_file
 
         jsr     GenericCopy::DoCopy
-        ;; TODO: Handle error.
 
 cleanup:
         jsr     RemoveFilenameFromSrcPath
@@ -1575,7 +1575,11 @@ CopyDesktopToRamcard := CopyDesktopToRamcardImpl::Start
         jsr     ReadSelectorList
         beq     :+
         jmp     bail
-:       lda     #0
+:
+
+        ;; Process "primary list" entries (first 8)
+.scope
+        lda     #0
         sta     entry_num
 entry_loop:
         lda     entry_num
@@ -1586,13 +1590,13 @@ entry_loop:
 
         ldy     #kSelectorEntryFlagsOffset ; Check Copy-to-RamCARD flags
         lda     (ptr),y
-        bne     next_entry      ; not "On first use"
+        .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
+        bne     next_entry
         lda     entry_num
         jsr     ComputePathAddr
 
         jsr     PrepareEntryPaths
         jsr     CopyUsingEntryPaths
-        ;; TODO: Handle error.
 
         bit     LCBANK2         ; Mark copied
         bit     LCBANK2
@@ -1605,23 +1609,25 @@ next_entry:
         inc     entry_num
         jmp     entry_loop
 done_entries:
+.endscope
 
-        ;; Process entries again ???
+        ;; Process "secondary run list" entries (final 16)
+.scope
         lda     #0
         sta     entry_num
-
-entry_loop2:
+entry_loop:
         lda     entry_num
         cmp     selector_buffer + kSelectorListNumSecondaryRunListOffset
-        beq     bail
+        beq     done_entries
         clc
-        adc     #8              ; offset by 8 ???
+        adc     #8
         jsr     ComputeLabelAddr
         stax    ptr
 
-        ldy     #$0F
-        lda     (ptr),y         ; check active flag
-        bne     next_entry2
+        ldy     #kSelectorEntryFlagsOffset ; Check Copy-to-RamCARD flags
+        lda     (ptr),y
+        .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
+        bne     next_entry
         lda     entry_num
         clc
         adc     #8
@@ -1629,7 +1635,6 @@ entry_loop2:
 
         jsr     PrepareEntryPaths
         jsr     CopyUsingEntryPaths
-        ;; TODO: Handle error.
 
         bit     LCBANK2
         bit     LCBANK2
@@ -1640,11 +1645,14 @@ entry_loop2:
         lda     #$FF
         sta     ENTRY_COPIED_FLAGS,x
         bit     ROMIN2
-next_entry2:
+next_entry:
         inc     entry_num
-        jmp     entry_loop2
+        jmp     entry_loop
+done_entries:
+.endscope
 
-bail:   jmp     InvokeSelectorOrDesktop
+bail:
+        jmp     InvokeSelectorOrDesktop
 
 entry_num:
         .byte   0
@@ -1684,7 +1692,7 @@ entry_dir_name:
         copy16  #HandleErrorCode, GenericCopy::hook_handle_error_code
         copy16  #ShowNoSpacePrompt, GenericCopy::hook_handle_no_space
         copy16  #ShowInsertPrompt, GenericCopy::hook_insert_source
-        copy16  #ShowCopyingScreen, GenericCopy::hook_show_file
+        copy16  #ShowCopyingEntryScreen, GenericCopy::hook_show_file
         jmp     GenericCopy::DoCopy
 .endproc
 
@@ -1889,7 +1897,7 @@ str_not_completed:
 ;;; ============================================================
 
 ;;; Callback; used for GenericCopy::hook_show_file
-.proc ShowCopyingScreen
+.proc ShowCopyingEntryScreen
         jsr     HOME
         lda     #0
         jsr     VTABZ
