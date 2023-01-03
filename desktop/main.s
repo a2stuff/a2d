@@ -2229,12 +2229,16 @@ start:
         MGTK_CALL MGTK::CloseAll
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve
 
-        ;; Clear most of the system bitmap
-        ldx     #BITMAP_SIZE - 3
+        ;; Initialize system bitmap
+        ldx     #BITMAP_SIZE-1
         lda     #0
-:       sta     BITMAP+1,x
+:       sta     BITMAP,x
         dex
         bpl     :-
+        lda     #%00000001      ; ProDOS global page
+        sta     BITMAP+BITMAP_SIZE-1
+        lda     #%11001111      ; ZP, Stack, Text Page 1
+        sta     BITMAP
 
         ;; Restore modified ProDOS state
         jsr     RestoreDeviceList

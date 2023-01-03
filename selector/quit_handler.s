@@ -59,8 +59,7 @@ start:
 
         ;; Display the loading string
         lda     #kSplashVtab
-        sta     CV
-        jsr     VTAB
+        jsr     VTABZ
 
         lda     #80             ; HTAB (80-width)/2
         sec                     ; to center
@@ -81,14 +80,13 @@ start:
 
         ;; Initialize system bitmap
         ldx     #BITMAP_SIZE-1
-        lda     #$01            ; Protect ProDOS global page
-        sta     BITMAP,x
-        dex
-        lda     #$00
+        lda     #0
 :       sta     BITMAP,x
         dex
         bpl     :-
-        lda     #%11001111      ; Protect ZP, Stack, Text Page 1
+        lda     #%00000001      ; ProDOS global page
+        sta     BITMAP+BITMAP_SIZE-1
+        lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     BITMAP
 
         lda     reinstall_flag
@@ -154,8 +152,7 @@ prompt_for_system_disk:
         jsr     SLOT3ENTRY      ; 80 column mode
         jsr     HOME            ; clear screen
         lda     #kSplashVtab    ; VTAB 12
-        sta     CV
-        jsr     VTAB
+        jsr     VTABZ
 
         lda     #80             ; HTAB (80-width)/2
         sec                     ; to center the string

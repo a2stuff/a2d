@@ -1181,10 +1181,16 @@ file_loop:
         lda     #0
         sta     RAMWORKS_BANK   ; Just in case???
 
-        ldy     #BITMAP_SIZE-1
-:       sta     BITMAP,y
-        dey
+        ;; Initialize system bitmap
+        ldx     #BITMAP_SIZE-1
+        lda     #0
+:       sta     BITMAP,x
+        dex
         bpl     :-
+        lda     #%00000001      ; ProDOS global page
+        sta     BITMAP+BITMAP_SIZE-1
+        lda     #%11001111      ; ZP, Stack, Text Page 1
+        sta     BITMAP
 
         ;; Done! Move on to Part 2.
         jmp     CopySelectorEntriesToRamcard

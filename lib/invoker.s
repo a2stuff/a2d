@@ -16,12 +16,12 @@
 start:
         copy16  #PRODOS_SYS_START, jmp_addr
 
-        ;; Clear system memory bitmap
-        ldx     #BITMAP_SIZE-2
+        ;; Initialize system bitmap
+        ldx     #BITMAP_SIZE-1
         lda     #0
 :       sta     BITMAP,x
         dex
-        bne     :-
+        bpl     :-
         lda     #%00000001      ; ProDOS global page
         sta     BITMAP+BITMAP_SIZE-1
         lda     #%11001111      ; ZP, Stack, Text Page 1

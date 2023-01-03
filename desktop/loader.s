@@ -69,12 +69,16 @@ segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (aux)
         ASSERT_TABLE_SIZE segment_type_table, kNumSegments
 
 start:
-        ;; Configure system bitmap - everything is available
+        ;; Initialize system bitmap
         ldx     #BITMAP_SIZE-1
         lda     #0
-:       sta     BITMAP+1,x
+:       sta     BITMAP,x
         dex
         bpl     :-
+        lda     #%00000001      ; ProDOS global page
+        sta     BITMAP+BITMAP_SIZE-1
+        lda     #%11001111      ; ZP, Stack, Text Page 1
+        sta     BITMAP
 
         jsr     DetectMousetext
         jsr     InitProgress

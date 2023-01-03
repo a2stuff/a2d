@@ -93,14 +93,13 @@ start:
 
         ;; Initialize system bitmap
         ldx     #BITMAP_SIZE-1
-        lda     #$01            ; Protect ProDOS global page
-        sta     BITMAP,x
-        dex
-        lsr
+        lda     #0
 :       sta     BITMAP,x
         dex
-        bne     :-
-        lda     #%11001111      ; Protect ZP, Stack, Text Page 1
+        bpl     :-
+        lda     #%00000001      ; ProDOS global page
+        sta     BITMAP+BITMAP_SIZE-1
+        lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     BITMAP
 
         lda     reinstall_flag

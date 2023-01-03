@@ -589,11 +589,18 @@ LA6B7:  .addr   LA729
         sta     file_count+1
         sta     blocks_total
         sta     blocks_total+1
-        ldy     #BITMAP_SIZE-1
-        lda     #$00
-LA6DA:  sta     BITMAP,y
-        dey
-        bpl     LA6DA
+
+        ;; Initialize system bitmap
+        ldx     #BITMAP_SIZE-1
+        lda     #0
+:       sta     BITMAP,x
+        dex
+        bpl     :-
+        lda     #%00000001      ; ProDOS global page
+        sta     BITMAP+BITMAP_SIZE-1
+        lda     #%11001111      ; ZP, Stack, Text Page 1
+        sta     BITMAP
+
         jsr     LA7D9
 LA6E3:  MLI_CALL GET_FILE_INFO, get_file_info_params2
         beq     LA6FF
