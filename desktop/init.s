@@ -536,6 +536,7 @@ ploop:  ldy     #0
 :       sta     (ptr),y
         dey
         bne     :-
+        inc     ptr+1
         dex
         bne     ploop
 
