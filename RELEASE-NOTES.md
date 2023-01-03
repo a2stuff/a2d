@@ -52,6 +52,8 @@ Project Page: https://github.com/a2stuff/a2d
 * Don't poll drives multiple times on startup when restoring windows.
 * File > Rename... is now disabled if multiple icons are selected.
 * Improve label spacing in several dialogs.
+* Ensure newly created SELECTOR.LIST file is completely empty.
+* Draw header before entries when refreshing window contents.
 
 ### Selector
 

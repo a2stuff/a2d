@@ -4854,9 +4854,6 @@ exception_flag:
         pla                     ; window id
         jsr     OpenDirectory
 
-        ;; Create icons and draw contents
-        jsr     ViewByCommon::entry3
-
         ;; Draw header
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
@@ -4865,7 +4862,8 @@ exception_flag:
         jsr     DrawWindowHeader
     END_IF
 
-        rts
+        ;; Create icons and draw contents
+        jmp     ViewByCommon::entry3
 .endproc
 
 ;;; ============================================================
@@ -7687,7 +7685,6 @@ flags:  .byte   0
 
 ;;; ============================================================
 ;;; Draw header (items/K in disk/K available/lines) for active window
-;;; Assert: `cached_window_entry_count` is set (i.e. active window cached)
 
 .proc DrawWindowHeader
 
@@ -7740,7 +7737,8 @@ flags:  .byte   0
         add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight-4, items_label_pos::ycoord
 
         ;; Draw "XXX Items"
-        lda     cached_window_entry_count
+        lda     active_window_id
+        jsr     GetFileRecordCountForWindow
         ldx     #0
         jsr     IntToStringWithSeparators
         lda     cached_window_entry_count
@@ -7965,21 +7963,9 @@ next:   inc     icon_num
 .proc InitCachedWindowEntries
         jsr     PushPointers
 
-        ptr := $06
-
         ;; Get the entry count via FileRecord list
         lda     cached_window_id
-        jsr     GetFileRecordListForWindow
-        stax    ptr
-
-        bit     LCBANK2
-        bit     LCBANK2
-
-        ldy     #0
-        lda     (ptr),y         ; count (at head of list)
-
-        bit     LCBANK1
-        bit     LCBANK1
+        jsr     GetFileRecordCountForWindow
 
         ;; Store the count
         sta     cached_window_entry_count
@@ -7997,6 +7983,29 @@ next:   inc     icon_num
         rts
 .endproc
 
+;;; ============================================================
+;;; Fetch the entry count for a window; valid after `OpenDirectory`,
+;;; does not depend on icon creation state.
+;;; Input: A = window_od
+;;; Output: A = entry count
+;;; Trashes $06
+.proc GetFileRecordCountForWindow
+        ptr := $06
+
+        jsr     GetFileRecordListForWindow
+        stax    ptr
+
+        bit     LCBANK2
+        bit     LCBANK2
+
+        ldy     #0
+        lda     (ptr),y         ; count (at head of list)
+
+        bit     LCBANK1
+        bit     LCBANK1
+
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Populates and sorts `cached_window_entry_list`.
