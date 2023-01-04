@@ -1058,15 +1058,14 @@ test_unit_num:
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
         bne     next_unit
-
-        ldax    #on_line_buffer
-        jsr     AdjustVolumeNameCase
-
-        ;; Copy the path
         lda     on_line_buffer
-        and     #$0F            ; mask off name length
-        tay
+        and     #NAME_LENGTH_MASK
+        beq     next_unit
+        sta     on_line_buffer
+        param_call AdjustVolumeNameCase, on_line_buffer
 
+        ;; Copy the name prepended with '/' to `dst_path`
+        ldy     on_line_buffer
         iny
         sty     dst_path
         lda     #'/'

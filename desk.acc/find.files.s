@@ -1465,7 +1465,7 @@ repeat: ldx     devidx
         JUMP_TABLE_MLI_CALL ON_LINE, on_line_params
         bcs     repeat
         lda     on_line_buffer
-        and     #$0F            ; mask off name_length
+        and     #NAME_LENGTH_MASK
         beq     repeat          ; error - try next one
         sta     on_line_buffer
 
