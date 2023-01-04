@@ -807,7 +807,6 @@ done:   dex
 
         ;; Used in CheckDesktopOnDevice
         path_buf := $D00
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params2, path_buf
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buf
 
 unit_num:
@@ -870,18 +869,6 @@ str_copying_to_ramcard:
         kVtabCopyingTip = 23
 str_tip_skip_copying:
         PASCAL_STRING res_string_label_tip_skip_copying
-
-;;; Signature of block storage devices ($Cn0x)
-kNumSigBytes = 4
-sig_bytes:
-        .byte   $20,$00,$03,$00
-        ASSERT_TABLE_SIZE sig_bytes, kNumSigBytes
-sig_offsets:
-        .byte   $01,$03,$05,$07
-        ASSERT_TABLE_SIZE sig_offsets, kNumSigBytes
-
-active_device:
-        .byte   0
 
         ;; Selector signature (65816 opcodes used)
 selector_signature:
@@ -965,12 +952,10 @@ resume:
         copy    #0, SHADOW
 :
 
-        lda     DEVNUM          ; Most recent device
-        sta     active_device
+        ;; Check quit routine
         bit     LCBANK2
         bit     LCBANK2
 
-        ;; Check quit routine
         ldx     #$08
 :       lda     SELECTOR,x         ; Quit routine?
         cmp     selector_signature,x
@@ -1080,8 +1065,21 @@ test_unit_num:
         ldx     #$C0
         jsr     SetCopiedToRamcardFlag
 
-        ;; Already installed?
+        ;; Keep root path (e.g. "/RAM5") for selector entry copies
         param_call SetRamcardPrefix, dst_path
+
+        ;; Append app dir name, e.g. "/RAM5/DESKTOP"
+        ldy     dst_path
+        ldx     #0
+:       iny
+        inx
+        lda     str_slash_desktop,x
+        sta     dst_path,y
+        cpx     str_slash_desktop
+        bne     :-
+        sty     dst_path
+
+        ;; Is it already present?
         jsr     CheckDesktopOnDevice
         bcs     StartCopy       ; No, start copy.
 
@@ -1089,8 +1087,8 @@ test_unit_num:
         ldx     #$80
         jsr     SetCopiedToRamcardFlag
         jsr     CopyOrigPrefixToDesktopOrigPrefix
-        jmp     DidNotCopy
-
+        copy    dst_path, copied_flag
+        jmp     FinishDeskTopCopy ; sets prefix, etc.
 .endproc
 .endproc
 
@@ -1117,15 +1115,6 @@ test_unit_num:
 
         ;; --------------------------------------------------
         ;; Create desktop directory, e.g. "/RAM/DESKTOP"
-        ldy     dst_path
-        ldx     #0
-:       iny
-        inx
-        lda     str_slash_desktop,x
-        sta     dst_path,y
-        cpx     str_slash_desktop
-        bne     :-
-        sty     dst_path
 
         MLI_CALL CREATE, create_dt_dir_params
         beq     :+
@@ -1430,64 +1419,30 @@ noop:
 .endproc
 
 ;;; ============================================================
+;;; Input: `dst_path` set to RAMCard app dir (e.g. "/RAM5/DESKTOP")
 
 .proc CheckDesktopOnDevice
-        slot_ptr = $8
+        ;; `path_buf` = `dst_path`
+        COPY_STRING dst_path, path_buf
 
-        lda     active_device
-        cmp     #kRamDrvSystemUnitNum
-        beq     next
-        cmp     #kRamAuxSystemUnitNum
-        beq     next
-
-        ;; Check slot for signature bytes
-        and     #$70            ; Compute $Cn00
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #$C0
-        sta     slot_ptr+1
-        lda     #0
-        sta     slot_ptr
-        ldx     #0              ; Compare signature bytes
-bloop:  lda     sig_offsets,x
-        tay
-        lda     (slot_ptr),y
-        cmp     sig_bytes,x
-        bne     error
-        inx
-        cpx     #4              ; Number of signature bytes
-        bcc     bloop
-        ldy     #$FB            ; Also check $CnFB
-        lda     (slot_ptr),y
-        and     #$01
-        bne     next
-error:  sec
-        rts
-
-next:   MLI_CALL GET_PREFIX, get_prefix_params2
-        bne     error
-
-        ;; Append "DeskTop" to path
+        ;; `path_buf` += "/Modules/DeskTop"
         ldx     path_buf
         ldy     #0
 loop:   inx
         iny
-        lda     str_desktop,y
+        lda     str_desktop_path,y
         sta     path_buf,x
-        cpy     str_desktop
+        cpy     str_desktop_path
         bne     loop
         stx     path_buf
 
         ;; ... and get info
         MLI_CALL GET_FILE_INFO, get_file_info_params4
-        beq     error
-        clc                     ; ok
         rts
 
-str_desktop:
-        PASCAL_STRING kFilenameDeskTop
+        ;; Appended to RAMCard root path e.g. "/RAM5"
+str_desktop_path:
+        PASCAL_STRING .concat("/", kFilenameDeskTop)
 .endproc
 
 ;;; ============================================================
