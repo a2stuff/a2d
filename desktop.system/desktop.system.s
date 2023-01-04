@@ -903,9 +903,6 @@ filename_buf:
 filenum:
         .byte   0               ; index of file being copied
 
-        DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
-        DEFINE_WRITE_BLOCK_PARAMS write_block2_params, prodos_loader_blocks + BLOCK_SIZE, 1
-
 str_slash_desktop:
         PASCAL_STRING .concat("/", kFilenameRAMCardDir)
 
@@ -1523,12 +1520,7 @@ UpdateSelfFile  := UpdateSelfFileImpl::start
         rts
 .endproc
 
-
-
 ;;; ============================================================
-
-prodos_loader_blocks:
-        .incbin "../inc/pdload.dat"
 
 .endproc ; CopyDesktopToRamcardImpl
 
