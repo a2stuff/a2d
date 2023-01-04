@@ -21,9 +21,9 @@
 ;;;          :.............:
 ;;;          |.............|
 ;;;          |.(buffer)....|    * data buffer for copies to RAMCard
-;;;   $3A00  +-------------+
+;;;   $3700  +-------------+
 ;;;          | Settings    |
-;;;   $3980  +-------------+
+;;;   $3680  +-------------+
 ;;;          |             |
 ;;;          |             |
 ;;;          |             |
@@ -56,8 +56,9 @@ src_io_buffer   := $E00         ; 1024 bytes for I/O
 dst_io_buffer   := $1200        ; 1024 bytes for I/O
 selector_buffer := $1600        ; Room for kSelectorListBufSize
 
-copy_buffer     := $3A00
+copy_buffer     := $3700
 kCopyBufferSize = MLI - copy_buffer
+        .assert (kCopyBufferSize - ((kCopyBufferSize/$200)*$200)) = 0, error, "better performance for an integral number of blocks"
 
 SETTINGS        := copy_buffer - .sizeof(DeskTopSettings)
 
