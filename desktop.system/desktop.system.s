@@ -870,10 +870,6 @@ str_copying_to_ramcard:
 str_tip_skip_copying:
         PASCAL_STRING res_string_label_tip_skip_copying
 
-        ;; Selector signature (65816 opcodes used)
-selector_signature:
-        .byte   $AD,$8B,$C0,$18,$FB,$5C,$04,$D0,$E0
-
 ;;; Save stack to restore on error during copy.
 saved_stack:
         .byte   0
@@ -951,25 +947,6 @@ resume:
         bcs     :+
         copy    #0, SHADOW
 :
-
-        ;; Check quit routine
-        bit     LCBANK2
-        bit     LCBANK2
-
-        ldx     #$08
-:       lda     SELECTOR,x         ; Quit routine?
-        cmp     selector_signature,x
-        bne     nomatch
-        dex
-        bpl     :-
-
-        lda     #0
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-nomatch:
-        lda     #$80
-        sta     $D3AC           ; ??? Last entry in ENTRY_COPIED_FLAGS ?
-
-        bit     ROMIN2
 
         ;; Clear flag - ramcard not found or unknown state.
         ldx     #0
