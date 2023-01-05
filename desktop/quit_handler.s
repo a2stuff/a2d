@@ -8,7 +8,7 @@
 ;;; being executed.
 
 .proc QuitRoutine
-        .org $1000
+        .org ::SELECTOR_ORG
 
         MLIEntry := MLI
 

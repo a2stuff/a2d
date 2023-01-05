@@ -4,7 +4,7 @@
 ;;; Compiled as part of DeskTop and Selector
 ;;; ============================================================
 
-        .org $2000
+        .org MODULE_BOOTSTRAP
 
 ;;; Install QuitRoutine to the ProDOS QUIT routine
 ;;; (Main, LCBANK2) and invoke it.
@@ -32,3 +32,4 @@
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params
 .endproc ; InstallAsQuit
+.assert sizeof_QuitRoutine + .sizeof(InstallAsQuit) <= kModuleBootstrapSize, error, "too large"

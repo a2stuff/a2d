@@ -26,6 +26,12 @@
 .define kFilenameRAMCardDir    "DeskTop"
 
 ;;; ============================================================
+;;; DeskTop Modules
+
+MODULE_BOOTSTRAP        := $2000
+kModuleBootstrapSize    = $400
+
+;;; ============================================================
 
 ;;; For addresses/values that will be filled in at runtime.
 

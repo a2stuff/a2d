@@ -26,7 +26,9 @@ IVERSION        := $BFFD        ; Interpreter Version
 KVERSION        := $BFFF        ; ProDOS Kernel Version
 
 ;;; Patch Locations
-SELECTOR        := $D100
+SELECTOR        := $D100        ; QUIT handler address in LCBANK2
+SELECTOR_ORG    := $1000        ; QUIT handler execution load address
+
 
 BLOCK_SIZE      = $200
 

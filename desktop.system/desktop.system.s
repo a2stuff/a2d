@@ -1996,14 +1996,12 @@ CopySelectorEntriesToRamcard := CopySelectorEntriesToRamcardImpl::Start
 ;;; ============================================================
 
 .proc InvokeSelectorOrDesktopImpl
-        app_bootstrap_start := $2000
-        kAppBootstrapSize = $400
 
-        .assert * >= app_bootstrap_start + kAppBootstrapSize, error, "overlapping addresses"
+        .assert * >= MODULE_BOOTSTRAP + kModuleBootstrapSize, error, "overlapping addresses"
 
         DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, src_io_buffer
         DEFINE_OPEN_PARAMS open_selector_params, str_selector, src_io_buffer
-        DEFINE_READ_PARAMS read_params, app_bootstrap_start, kAppBootstrapSize
+        DEFINE_READ_PARAMS read_params, MODULE_BOOTSTRAP, kModuleBootstrapSize
         DEFINE_CLOSE_PARAMS close_everything_params
 
 str_selector:
@@ -2049,7 +2047,7 @@ read:   sta     read_params::ref_num
         ;; better to just crash.
         bne     crash
 
-        jmp     app_bootstrap_start
+        jmp     MODULE_BOOTSTRAP
 .endproc
 InvokeSelectorOrDesktop := InvokeSelectorOrDesktopImpl::start
 

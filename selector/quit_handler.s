@@ -8,7 +8,7 @@
 ;;; $1000 Main.
 
 .proc QuitRoutine
-        .org $1000
+        .org ::SELECTOR_ORG
 
         MLIEntry := MLI
 
