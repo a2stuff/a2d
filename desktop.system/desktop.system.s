@@ -1415,7 +1415,13 @@ loop:   inx
 
         ;; ... and get info
         MLI_CALL GET_FILE_INFO, get_file_info_params4
-        rts
+        bcs     ret
+
+        cmp16   #2, get_file_info_params4::blocks_used
+        ;; Ensure at least something was written to the file
+        ;; (uses 1 block at creation)
+
+ret:    rts
 
         ;; Appended to RAMCard root path e.g. "/RAM5"
 str_desktop_path:

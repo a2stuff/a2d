@@ -583,6 +583,8 @@ The following tests all require:
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Preview an image file. Quit DeskTop. Restart DeskTop from the original startup disk. Eject the startup disk. Preview an image file. Verify that the file can be previewed, and no prompt for the startup disk is shown.
 
+* Boot to BASIC.SYSTEM (without going through DESKTOP.SYSTEM first). Run the following commands: `CREATE /RAM5/DESKTOP`, `CREATE /RAM5/DESKTOP/MODULES`, `BSAVE /RAM5/DESKTOP/MODULES/DESKTOP,A0,L0` (substituting the RAM disks's name for `RAM5`). Launch `DESKTOP.SYSTEM`. Verify the install doesn't hang silently or loop endlessly.
+
 ### SmartPort
 
 * Configure a system with more than 2 drives on a SmartPort controller. Boot ProDOS 2.4 (any patch version). Launch DeskTop. Special > Format a Disk. Verify that correct device names are shown for the mirrored drives.
