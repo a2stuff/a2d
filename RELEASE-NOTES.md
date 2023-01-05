@@ -14,7 +14,11 @@ Project Page: https://github.com/a2stuff/a2d
 * IIgs and Laser 128: Fix alert sound playback speed.
 * A generic ProDOS clock driver is included in disk images.
 * The default double-click speed is now the middle setting.
+
+### Launcher
+
 * Ensure DeskTop is correctly detected on RAMCard when re-launched.
+* Allow pressing Escape to cancel copy to RAMCard.
 
 ### DeskTop
 

@@ -581,7 +581,8 @@ The following tests all require:
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple > Control Panels. Drag Apple.Menu from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.
 
-* Launch DeskTop, ensure it copies itself to RAMCard. Preview an image file. Quit DeskTop. Restart DeskTop from the original startup disk. Eject the startup disk. Preview an image file. Verify that the file can be previewed, and no prompt for the startup disk is shown.
+* Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Eject the startup disk. Special > Format a Disk. Verify that no prompt for the startup disk is shown.
+* Invoke DESKTOP.SYSTEM, and hit Escape when copying to RAMCard. Once DeskTop has started, eject the startup disk. Special > Format a Disk. Verify that a prompt to insert the system disk is shown.
 
 * Boot to BASIC.SYSTEM (without going through DESKTOP.SYSTEM first). Run the following commands: `CREATE /RAM5/DESKTOP`, `CREATE /RAM5/DESKTOP/MODULES`, `BSAVE /RAM5/DESKTOP/MODULES/DESKTOP,A0,L0` (substituting the RAM disks's name for `RAM5`). Launch `DESKTOP.SYSTEM`. Verify the install doesn't hang silently or loop endlessly.
 

@@ -145,10 +145,12 @@ path1:  .res    ::kPathBufferSize, 0
 path2:  .res    ::kPathBufferSize, 0
 
 ;;; Callbacks - caller must initialize these
-hook_handle_error_code:   .addr   0 ; fatal; A = ProDOS error code
+hook_handle_error_code:   .addr   0 ; fatal; A = ProDOS error code or kErrCancel
 hook_handle_no_space:     .addr   0 ; fatal
 hook_insert_source:       .addr   0 ; if this returns, copy is retried
 hook_show_file:           .addr   0 ; called when `path2` updated
+
+kErrCancel = $FF
 
 ;;; ============================================================
 
@@ -432,6 +434,7 @@ dst_size:       .word   0
 
         ;; Read a chunk
 loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
+        jsr     CheckCancel
         MLI_CALL READ, read_srcfile_params
         beq     :+
         cmp     #ERR_END_OF_FILE
@@ -442,6 +445,7 @@ loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
 :       copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
         ora     read_srcfile_params::trans_count
         beq     close
+        jsr     CheckCancel
         MLI_CALL WRITE, write_dstfile_params
         beq     :+
         jmp     (hook_handle_error_code)
@@ -469,6 +473,19 @@ close:  MLI_CALL CLOSE, close_dstfile_params
         copy    #10, get_path1_info_params ; GET_FILE_INFO param_count
 
         rts
+.endproc
+
+;;; ============================================================
+
+.proc CheckCancel
+        lda     KBD
+        bpl     ret
+        cmp     #$80|CHAR_ESCAPE
+        beq     cancel
+ret:    rts
+
+cancel: lda     #kErrCancel
+        jmp     (hook_handle_error_code)
 .endproc
 
 ;;; ============================================================
@@ -860,12 +877,18 @@ filename_table:
         .addr str_f1,str_f2,str_f3,str_f4,str_f5,str_f6
         ASSERT_ADDRESS_TABLE_SIZE filename_table, kNumFilenames
 
+        kHtabCopyingMsg = (80 - .strlen(.sprintf(res_string_copying_to_ramcard, kDeskTopProductName))) / 2
         kVtabCopyingMsg = 12
 str_copying_to_ramcard:
         PASCAL_STRING .sprintf(res_string_copying_to_ramcard, kDeskTopProductName)
 
+        kHtabCancelMsg = (80 - .strlen(res_string_esc_to_cancel)) / 2
+        kVtabCancelMsg = 16
+str_esc_to_cancel:
+        PASCAL_STRING res_string_esc_to_cancel
+
         ;; String contains four control characters to toggle MouseText charset
-        kLengthCopyingTip = .strlen(res_string_label_tip_skip_copying) - 4
+        kHtabCopyingTip = (80 - (.strlen(res_string_label_tip_skip_copying) - 4)) / 2
         kVtabCopyingTip = 23
 str_tip_skip_copying:
         PASCAL_STRING res_string_label_tip_skip_copying
@@ -893,6 +916,7 @@ str_slash_desktop:
 ;;; ============================================================
 
 .proc Start
+        sta     KBDSTRB
         sta     TXTSET
 
         lda     MACHID
@@ -1309,36 +1333,28 @@ done:   dex
 .proc ShowCopyingDeskTopScreen
 
         ;; Message
-        lda     #80
-        sec
-        sbc     str_copying_to_ramcard
-        lsr     a               ; / 2 to center
+        lda     #kHtabCopyingMsg
         sta     OURCH
         lda     #kVtabCopyingMsg
         jsr     VTABZ
-        ldy     #0
-:       iny
-        lda     str_copying_to_ramcard,y
-        ora     #$80
-        jsr     COUT
-        cpy     str_copying_to_ramcard
-        bne     :-
+        param_call CoutString, str_copying_to_ramcard
+
+        ;; Esc to Cancel
+        lda     #kHtabCancelMsg
+        sta     OURCH
+        lda     #kVtabCancelMsg
+        jsr     VTABZ
+        param_call CoutString, str_esc_to_cancel
 
         ;; Tip
         bit     supports_mousetext
         bpl     done
 
-        lda     #(80 - kLengthCopyingTip) / 2
+        lda     #kHtabCopyingTip
         sta     OURCH
         lda     #kVtabCopyingTip
         jsr     VTABZ
-        ldy     #0
-:       iny
-        lda     str_tip_skip_copying,y
-        ora     #$80
-        jsr     COUT
-        cpy     str_tip_skip_copying
-        bne     :-
+        param_call CoutString, str_tip_skip_copying
 
 done:   rts
 .endproc
@@ -1475,17 +1491,26 @@ CopyDesktopToRamcard := CopyDesktopToRamcardImpl::Start
 ;;;
 ;;; ============================================================
 
-.proc CopySelectorEntriesToRamcard
+.proc CopySelectorEntriesToRamcardImpl
 
+;;; Save stack to restore on error during copy.
+saved_stack:
+        .byte   0
+
+.proc Start
+        sta     KBDSTRB
+
+        ;; Clear screen
+        jsr     SLOT3ENTRY
+        jsr     HOME
+
+        FALL_THROUGH_TO ProcessSelectorList
+.endproc
 
 ;;; See docs/Selector_List_Format.md for file format
 
 .proc ProcessSelectorList
         ptr := $6
-
-        ;; Clear screen
-        jsr     SLOT3ENTRY
-        jsr     HOME
 
         ;; Is there a RAMCard?
         bit     LCBANK2
@@ -1512,6 +1537,9 @@ CopyDesktopToRamcard := CopyDesktopToRamcardImpl::Start
         beq     :+
         jmp     bail
 :
+
+        tsx                     ; in case of error
+        stx     saved_stack
 
         ;; Process "primary list" entries (first 8)
 .scope
@@ -1856,16 +1884,20 @@ str_not_completed:
         jsr     WaitEnterEscape
         cmp     #CHAR_ESCAPE
         bne     :+
+
+        ldx     saved_stack
+        txs
         jmp     FinishAndInvoke
 
-:       jmp     HOME
+:       jmp     HOME            ; and implicitly continue
 .endproc
 
 ;;; ============================================================
 
 ;;; Callback; used for GenericCopy::hook_handle_no_space
 .proc ShowNoSpacePrompt
-        ;; TODO: Reset stack?
+        ldx     saved_stack
+        txs
 
         lda     #0
         jsr     VTABZ
@@ -1873,8 +1905,8 @@ str_not_completed:
         sta     OURCH
         param_call CoutString, str_not_enough
         jsr     WaitEnterEscape
-        jsr     HOME
-        jmp     InvokeSelectorOrDesktop
+
+        jmp     FinishAndInvoke
 .endproc
 
 ;;; ============================================================
@@ -1883,17 +1915,20 @@ str_not_completed:
 
 ;;; Callback; used for GenericCopy::hook_handle_error_code
 .proc HandleErrorCode
-        ;; TODO: Reset stack?
+        ldx     saved_stack
+        txs
 
+        cmp     #GenericCopy::kErrCancel
+        bne     :+
+        jmp     FinishAndInvoke
+:
         cmp     #ERR_OVERRUN_ERROR
         bne     :+
-        jsr     ShowNoSpacePrompt
-        jmp     FinishAndInvoke
+        jmp     ShowNoSpacePrompt
 
 :       cmp     #ERR_VOLUME_DIR_FULL
         bne     :+
-        jsr     ShowNoSpacePrompt
-        jmp     FinishAndInvoke
+        jmp     ShowNoSpacePrompt
 
         ;; Show generic error
 :       pha
@@ -1918,8 +1953,8 @@ loop:   lda     KBD
 
         cmp     #CHAR_RETURN
         bne     loop
-        jsr     HOME
-        jmp     InvokeSelectorOrDesktop
+
+        jmp     FinishAndInvoke
 .endproc
 
 monitor:
@@ -1927,42 +1962,16 @@ monitor:
 
 ;;; ============================================================
 
-.proc CoutStringNewline
-        jsr     CoutString
-        lda     #$80|CHAR_RETURN
-        jmp     COUT
-        FALL_THROUGH_TO CoutString
-.endproc
-
-.proc CoutString
-        ptr := $6
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     @len
-        beq     done
-:       iny
-        lda     ($06),y
-        ora     #$80
-        jsr     COUT
-        @len := *+1
-        cpy     #SELF_MODIFIED_BYTE
-        bne     :-
-done:   rts
-.endproc
-
-;;; ============================================================
-
 .proc WaitEnterEscape
-        lda     KBD
-        bpl     WaitEnterEscape
+        sta     KBDSTRB
+:       lda     KBD
+        bpl     :-
         sta     KBDSTRB
         and     #CHAR_MASK
         cmp     #CHAR_ESCAPE
         beq     done
         cmp     #CHAR_RETURN
-        bne     WaitEnterEscape
+        bne     :-
 done:   rts
 .endproc
 
@@ -1975,7 +1984,8 @@ done:   rts
 
 ;;; ============================================================
 
-.endproc ; CopySelectorEntriesToRamcard
+.endproc ; CopySelectorEntriesToRamcardImpl
+CopySelectorEntriesToRamcard := CopySelectorEntriesToRamcardImpl::Start
 
 
 ;;; ============================================================
@@ -2111,6 +2121,33 @@ done:   rts
 
 .endproc
 PreserveQuitCode        := PreserveQuitCodeImpl::start
+
+
+;;; ============================================================
+
+.proc CoutStringNewline
+        jsr     CoutString
+        lda     #$80|CHAR_RETURN
+        jmp     COUT
+.endproc
+
+.proc CoutString
+        ptr := $6
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     @len
+        beq     done
+:       iny
+        lda     ($06),y
+        ora     #$80
+        jsr     COUT
+        @len := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :-
+done:   rts
+.endproc
 
 ;;; ============================================================
 

@@ -18,6 +18,9 @@
         kProgressWidth = kProgressStops * kProgressTick
 
 .proc InitProgress
+        lda     #0
+        sta     UpdateProgress__count
+
         bit     supports_mousetext
         bpl     done
 
@@ -72,6 +75,7 @@ done:   rts
 
         rts
 .endproc
+UpdateProgress__count := UpdateProgress::count
 
 ;;; ============================================================
 ;;; Try to detect an Enhanced IIe or later (IIc, IIgs, etc),
