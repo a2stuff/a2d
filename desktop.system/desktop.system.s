@@ -1732,8 +1732,9 @@ start:  MLI_CALL OPEN, open_params
         lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
+        php
         MLI_CALL CLOSE, close_params
-        lda     #0
+        plp
 :       rts
 .endproc
 ReadSelectorList        := ReadSelectorListImpl::start
@@ -2029,7 +2030,7 @@ start:  MLI_CALL CLOSE, close_everything_params
         MLI_CALL OPEN, open_selector_params
         beq     selector
 
-        brk                     ; just crash
+crash:  brk                     ; just crash
 
 desktop:
         lda     open_desktop_params::ref_num
@@ -2041,7 +2042,13 @@ selector:
 
 read:   sta     read_params::ref_num
         MLI_CALL READ, read_params
+        php
         MLI_CALL CLOSE, close_everything_params
+        plp
+        ;; If the load failed, this would re-enter this code at $2000;
+        ;; better to just crash.
+        bne     crash
+
         jmp     app_bootstrap_start
 .endproc
 InvokeSelectorOrDesktop := InvokeSelectorOrDesktopImpl::start
