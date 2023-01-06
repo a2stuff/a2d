@@ -313,78 +313,10 @@ flags:  .byte   0
 .proc DoRun
         ptr := $06
 
-        lda     selected_index
-        jsr     MaybeToggleEntryHilite
-        jsr     main::SetCursorWatch
-
-        lda     selected_index
-        jsr     GetFileEntryAddr
-        stax    ptr
-        ldy     #kSelectorEntryFlagsOffset
-        lda     (ptr),y
-        cmp     #kSelectorEntryCopyNever
-        beq     use_entry_path  ; not copied
-
-        sta     L938A           ; A = kSelectorEntryCopyXXX flag
-        jsr     main::GetCopiedToRAMCardFlag
-        beq     use_entry_path  ; no RAMCard, skip
-        lda     L938A           ; A = kSelectorEntryCopyXXX flag
-        .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
-        beq     check_copied    ; maybe copied?
-
-        ;; In the `kSelectorEntryCopyOnUse` case...
-        lda     selected_index
-        jsr     GetEntryRamcardFileInfo
-        beq     use_ramcard_path ; already copied!
-
-        ;; Need to copy to RAMCard
-        lda     selected_index
-        jsr     GetFilePathAddr
-        stax    ptr             ; copy path into `buf_win_path`
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     buf_win_path,y
-        dey
-        bpl     :-
-        lda     #$FF            ; negative = copy to RAMCard
-        jmp     DoCancel
-
-        ;; Was it copied to RAMCard?
-check_copied:
-        lda     selected_index
-        jsr     GetEntryRamcardFileInfo
-        bne     use_entry_path
-
-        ;; Copied to RAMCard - use copied path
-use_ramcard_path:
-        lda     selected_index
-        jsr     GetEntryRamcardPath
-        jmp     launch
-
-        ;; Not copied to RAMCard - just use entry's path
-use_entry_path:
-        lda     selected_index
-        jsr     GetFilePathAddr
-        FALL_THROUGH_TO launch
-
-launch:
-        stax    ptr             ; copy path to `INVOKER_PREFIX`
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     INVOKER_PREFIX,y
-        dey
-        bpl     :-
-
         jsr     CloseWindow
         jsr     main::ClearUpdates       ; Run dialog OK
-        jsr     main::LaunchFileWithPath ; uses `INVOKER_PREFIX`
-        jsr     main::SetCursorPointer
-        copy    #$FF, selected_index
-        return  #0
+        lda     selected_index
+        rts
 .endproc
 
 ;;; ============================================================
@@ -392,7 +324,6 @@ launch:
 ;;; Also OK from Delete (since that closes immediately)
 
 .proc DoCancel
-        pha
         lda     selector_action
         cmp     #SelectorAction::edit
         bne     :+
@@ -402,7 +333,8 @@ launch:
 
 :       jsr     CloseWindow
         jsr     main::ClearUpdates
-        pla
+
+        lda     #$FF
         jmp     L900F
 .endproc
 
@@ -414,8 +346,6 @@ launch:
 .endproc
 
 ;;; ============================================================
-
-L938A:  .byte   0               ; temp, used for a couple purposes
 
 num_primary_run_list_entries:
         .byte   0
@@ -1489,76 +1419,6 @@ loop2:  lda     index
 done:   return  #0
 
 index:  .byte   0
-.endproc
-
-;;; ============================================================
-;;; Populate `get_file_info_params` with the info for the entry
-;;; as copied to RAMCard.
-;;; Input: A=entry number
-;;; Output: `get_file_info_params` populated.
-
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, 0
-
-.proc GetEntryRamcardFileInfo
-        jsr     GetEntryRamcardPath
-        stax    get_file_info_params::pathname
-        MLI_CALL GET_FILE_INFO, get_file_info_params
-        rts
-.endproc
-
-;;; ============================================================
-;;; Get the path for an entry as it would be on a RAMCard.
-;;; e.g. if the path was "/APPS/MOUSEPAINT/MP.SYSTEM" this would
-;;; return the address of a buffer with "/RAM/MOUSEPAINT/MP.SYSTEM"
-;;; Input: A=entry number
-;;; Output: A,X=path buffer
-
-.proc GetEntryRamcardPath
-        ptr := $06
-
-        sta     index
-        param_call main::CopyRAMCardPrefix, buf
-        lda     index
-        jsr     GetFilePathAddr
-        stax    ptr
-
-        ;; Find last / in entry's path
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        tay
-:       lda     (ptr),y
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-
-        ;; And find preceding /
-:       dey
-:       lda     (ptr),y
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-
-        ;; Append everything after this to the buffer
-:       dey
-        ldx     buf
-:       inx
-        iny
-        lda     (ptr),y
-        sta     buf,x
-        cpy     len
-        bne     :-
-        stx     buf
-
-        ;; Return the buffer's address
-        ldax    #buf
-        rts
-
-index:  .byte   0
-len:    .byte   0
-buf:    .res    ::kPathBufferSize
 .endproc
 
 ;;; ============================================================

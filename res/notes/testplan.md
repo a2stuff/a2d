@@ -512,6 +512,13 @@
 * Launch DeskTop. Select a volume icon. Shortcuts > Add a Shortcut... Verify that the file dialog is initialized to the boot volume and no file is selected.
 * Launch DeskTop. Clear selection. Shortcuts > Add a Shortcut... Verify that the file dialog is initialized to the boot volume and no file is selected.
 
+* Configure a shortcut for a program with many associated files to copy to RAMCard "at boot". Reboot, and launch DESKTOP.SYSTEM. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Once DeskTop starts, invoke the shortcut. Verify that the program starts correctly.
+* Configure a shortcut for a program with many associated files to copy to RAMCard "at boot". Reboot, and launch DESKTOP.SYSTEM. Verify that all of the files were copied to the RAMCard. Once DeskTop starts, eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
+* Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. Verify that the files are copied to the RAMCard, and that the program starts correctly. Return to DeskTop by quitting the program. Eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
+* Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Invoke the shortcut again. Verify that the files are copied to the RAMCard and that the program starts correctly.
+
+* Configure at least two shortcuts. Launch DeskTop. Shortcuts > Run a Shortcut.... Cancel. Verify that neither shortcut is invoked.
+
 
 ## File Types
 

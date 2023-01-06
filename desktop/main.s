@@ -1283,6 +1283,9 @@ invoke:
         lda     #kDynamicRoutineRestore9000 ; restore from picker dialog
         jsr     RestoreDynamicRoutine
 
+        bit     result
+        bmi     done            ; N=1 for Cancel
+
         lda     menu_click_params::item_num
         cmp     #SelectorAction::run
         bne     done
@@ -1290,33 +1293,10 @@ invoke:
         ;; "Run" command
         result := *+1
         lda     #SELF_MODIFIED_BYTE
-        bpl     done
-        jsr     MakeRamcardPrefixedPath ; negative = copy to RAMCard
-        jsr     StripPathSegments       ; dialog populates `buf_win_path`
-        jsr     GetCopiedToRAMCardFlag
-        bpl     run_from_ramcard
-
-        ;; Need to copy to RAMCard
-        jsr     DoCopyToRAM
-        bmi     done
-        jsr     L4968
+        jmp     InvokeSelectorEntry
 
 done:   rts
-
-.proc L4968
-        jsr     MakeRamcardPrefixedPath
-        param_call CopyToSrcPath, $840
-        jmp     LaunchFileWithPath
 .endproc
-
-        ;; Was already copied to RAMCard, so update path then run.
-run_from_ramcard:
-        jsr     MakeRamcardPrefixedPath
-        param_call CopyToSrcPath, $800
-        jsr     LaunchFileWithPath
-        jmp     done
-.endproc
-
 
 ;;; ============================================================
 
@@ -1324,150 +1304,219 @@ run_from_ramcard:
         lda     menu_click_params::item_num
         sec
         sbc     #6              ; 4 items + separator (and make 0 based)
-        sta     entry_num
 
+        FALL_THROUGH_TO InvokeSelectorEntry
+.endproc
+
+;;; ============================================================
+
+;;; A = `entry_num`
+.proc InvokeSelectorEntry
+        ptr := $06
+
+        sta     entry_num
         jsr     ATimes16
-        addax   #run_list_entries, $06
+        addax   #run_list_entries, ptr
 
         ldy     #kSelectorEntryFlagsOffset ; flag byte following name
-        lda     ($06),y
-        asl     a
-        bmi     not_downloaded  ; bit 6
-        bcc     L49E0           ; bit 7
+        lda     (ptr),y
+        sta     entry_flag
+        cmp     #kSelectorEntryCopyNever
+        beq     use_entry_path  ; not copied
+
+        ;; --------------------------------------------------
+        ;; Either copy on boot or copy on use
 
         jsr     GetCopiedToRAMCardFlag
-        beq     not_downloaded
-        lda     entry_num
-        jsr     CheckDownloadedPath
-        beq     L49ED
+        beq     use_entry_path  ; no RAMCard, skip
 
+        lda     entry_flag
+        .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
+        beq     on_boot
+
+        ;; --------------------------------------------------
+        ;; `kSelectorEntryCopyOnUse`
+        ldx     entry_num
+        jsr     GetEntryCopiedToRAMCardFlag
+        bmi     use_ramcard_path ; already copied!
+
+        ;; Need to copy to RAMCard
         lda     entry_num
-        jsr     L4A47
+        jsr     PrepEntryCopyPaths
         jsr     DoCopyToRAM
-        bpl     L49ED
-        rts
+        bne     ret             ; canceled!
 
-L49E0:  jsr     GetCopiedToRAMCardFlag
-        beq     not_downloaded
+        ldx     entry_num
+        lda     #$FF
+        jsr     SetEntryCopiedToRAMCardFlag
+        jmp     use_ramcard_path
 
+        ;; --------------------------------------------------
+        ;; `kSelectorEntryCopyOnBoot`
+        ;; Was it copied to RAMCard?
+on_boot:
+        ldx     entry_num
+        jsr     GetEntryCopiedToRAMCardFlag
+        bpl     use_entry_path  ; wasn't copied!
+        FALL_THROUGH_TO use_ramcard_path
+
+        ;; --------------------------------------------------
+        ;; Copied to RAMCard - use copied path
+use_ramcard_path:
         lda     entry_num
-        jsr     CheckDownloadedPath           ; was-downloaded flag check?
-        bne     not_downloaded
+        jsr     ComposeRAMCardEntryPath
+        stax    ptr
+        jmp     launch
 
-L49ED:  lda     entry_num
-        jsr     ComposeDownloadedEntryPath
-        stax    $06
-        jmp     L4A0A
-
-not_downloaded:
+        ;; --------------------------------------------------
+        ;; Not copied to RAMCard - just use entry's path
+use_entry_path:
         lda     entry_num
         jsr     ATimes64
-        addax   #run_list_paths, $06
+        addax   #run_list_paths, ptr
+        FALL_THROUGH_TO launch
 
-L4A0A:  param_call CopyPtr1ToBuf, INVOKER_PREFIX
+launch: param_call CopyPtr1ToBuf, INVOKER_PREFIX
         jmp     LaunchFileWithPath
+
+ret:    rts
 
 entry_num:
         .byte   0
 
-;;; --------------------------------------------------
+entry_flag:
+        .byte   0
 
-        ;; Copy entry path to $800
-.proc L4A47
+;;; --------------------------------------------------
+;;; Input: A = `entry_num`
+;;; Output: paths prepared for `DoCopyToRAM`
+.proc PrepEntryCopyPaths
+        entry_original_path := $800
+        entry_ramcard_path := $840
+
         pha
         jsr     ATimes64
         addax   #run_list_paths, $06
-        param_call CopyPtr1ToBuf, $800
+        param_call CopyPtr1ToBuf, entry_original_path
 
-        ;; Copy "down loaded" path to $840
+        ;; Copy "down loaded" path to `entry_ramcard_path`
         pla
-        jsr     ComposeDownloadedEntryPath
-        param_call CopyPtr2ToBuf, $840
-        FALL_THROUGH_TO StripPathSegments
-.endproc
+        jsr     ComposeRAMCardEntryPath
+        stax    ptr
+        param_call CopyPtr1ToBuf, entry_ramcard_path
 
-        ;; Strip segment off path at $800
-.proc StripPathSegments
-        ldy     $800
-:       lda     $800,y
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
+        ;; Strip segment off path at `entry_original_path`
+        ;; e.g. "/VOL/MOUSEPAINT/MP.SYSTEM" -> "/VOL/MOUSEPAINT"
 
-:       dey
-        sty     $800
-
-        ;; Strip segment off path at $840
-        ldy     $840
-:       lda     $840,y
+        ldy     entry_original_path
+:       lda     entry_original_path,y
         cmp     #'/'
         beq     :+
         dey
         bne     :-
 :       dey
-        sty     $840
+        sty     entry_original_path
 
-        ;; Return addresses in $6 and $8
-        copy16  #$800, $06
-        copy16  #$840, $08
+        ;; Strip segment off path at `entry_ramcard_path`
+        ;; e.g. "/RAM/MOUSEPAINT/MP.SYSTEM" -> "/RAM/MOUSEPAINT"
+        ldy     entry_ramcard_path
+:       lda     entry_ramcard_path,y
+        cmp     #'/'
+        beq     :+
+        dey
+        bne     :-
+:       dey
+        sty     entry_ramcard_path
 
+        ;; Further prepare paths for copy
+        copy16  #entry_original_path, $06
+        copy16  #entry_ramcard_path, $08
         jmp     CopyPathsFromPtrsToBufsAndSplitName
 .endproc
 
 ;;; --------------------------------------------------
-;;; Append last two path segments of `buf_win_path` to
-;;; `ramcard_prefix`, result left at $840
+;;; Compose path using RAM card prefix plus last two segments of path
+;;; (e.g. "/RAM" + "/MOUSEPAINT/MP.SYSTEM") into `src_path_buf`
+;;; Output: A,X = `src_path_buf`
+.proc ComposeRAMCardEntryPath
+        ptr := $06
 
-.proc MakeRamcardPrefixedPath
-        ;; Copy window path to $800
-        ldy     buf_win_path
-:       lda     buf_win_path,y
-        sta     $800,y
-        dey
-        bpl     :-
+        sta     entry_num
 
-        param_call CopyRAMCardPrefix, $840
+        ;; Initialize buffer
+        param_call CopyRAMCardPrefix, src_path_buf
 
-        ;; Find last '/' in path...
-        ldy     $800
-:       lda     $800,y
+        ;; Find entry path
+        entry_num := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     ATimes64
+        addax   #run_list_paths, ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     @prefix_length
+        tay
+
+        ;; Walk back one segment
+:       lda     (ptr),y
         cmp     #'/'
         beq     :+
         dey
         bne     :-
-
-        ;; And back up one more path segment...
 :       dey
-:       lda     $800,y
+
+        ;; Walk back a second segment
+:       lda     (ptr),y
         cmp     #'/'
         beq     :+
         dey
         bne     :-
-
 :       dey
-        ldx     $840
-:       iny
-        inx
-        lda     $800,y
-        sta     $840,x
-        cpy     $800
+
+        ;; Append last two segments to `src_path_buf`
+        ldx     src_path_buf
+:       inx
+        iny
+        lda     (ptr),y
+        sta     src_path_buf,x
+        @prefix_length := *+1
+        cpy     #SELF_MODIFIED_BYTE
         bne     :-
 
-        stx     $840
-
+        stx     src_path_buf
+        ldax    #src_path_buf
         rts
 .endproc
 
-.proc CheckDownloadedPath
-        jsr     ComposeDownloadedEntryPath
-        jmp     GetFileInfo
+;;; --------------------------------------------------
+;;; Input: X = `entry_num`
+;;; Output: A = flag, and Z/N set appropriately
+.proc GetEntryCopiedToRAMCardFlag
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+        lda     ENTRY_COPIED_FLAGS,x
+        sta     ALTZPON
+        php
+        bit     LCBANK1
+        bit     LCBANK1
+        plp
+        rts
+.endproc
+
+;;; --------------------------------------------------
+;;; Input: A = flag, X = `entry_num`
+.proc SetEntryCopiedToRAMCardFlag
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+        sta     ENTRY_COPIED_FLAGS,x
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+        rts
 .endproc
 
 .endproc
-
-StripPathSegments       := CmdSelectorItem::StripPathSegments
-MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
 
 ;;; ============================================================
 ;;; Copy the string at $06 to target at A,X
@@ -1504,60 +1553,6 @@ MakeRamcardPrefixedPath := CmdSelectorItem::MakeRamcardPrefixedPath
         sta     SELF_MODIFIED,y
         dey
         bpl     :-
-        rts
-.endproc
-
-;;; ============================================================
-;;; For entry copied ("down loaded") to RAM card, compose path
-;;; using RAM card prefix plus last two segments of path
-;;; (e.g. "/RAM" + "/" + "MOUSEPAINT/MP.SYSTEM") into `src_path_buf`
-
-.proc ComposeDownloadedEntryPath
-        sta     entry_num
-
-        ;; Initialize buffer
-        param_call CopyRAMCardPrefix, src_path_buf
-
-        ;; Find entry path
-        entry_num := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     ATimes64
-        addax   #run_list_paths, $06
-        ldy     #0
-        lda     ($06),y
-        sta     @prefix_length
-
-        ;; Walk back one segment
-        tay
-:       lda     ($06),y
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-
-:       dey
-
-        ;; Walk back a second segment
-:       lda     ($06),y
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-
-:       dey
-
-        ;; Append last two segments to path
-        ldx     src_path_buf
-:       inx
-        iny
-        lda     ($06),y
-        sta     src_path_buf,x
-        @prefix_length := *+1
-        cpy     #SELF_MODIFIED_BYTE
-        bne     :-
-
-        stx     src_path_buf
-        ldax    #src_path_buf
         rts
 .endproc
 
