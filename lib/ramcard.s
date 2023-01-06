@@ -8,7 +8,6 @@
 ;;; Define `RC_LCBANK` if caller is running with `LCBANK1` (vs. `ROMIN2`)
 
 ;;; Return the `COPIED_TO_RAMCARD_FLAG`.
-;;; Assert: Running with ALTZPON and LCBANK1.
 .proc GetCopiedToRAMCardFlag
 
 .ifdef RC_AUXMEM
@@ -36,7 +35,6 @@
 
 ;;; Copy the RAMCard prefix (e.g. "/RAM") to the passed buffer.
 ;;; Input: A,X=destination buffer
-;;; Assert: Running with ALTZPON and LCBANK1.
 .proc CopyRAMCardPrefix
         stax    @addr
 
@@ -70,7 +68,6 @@
 
 ;;; Copy the original DeskTop prefix (e.g. "/HD/A2D") to the passed buffer.
 ;;; Input: A,X=destination buffer
-;;; Assert: Running with ALTZPON and LCBANK1.
 .proc CopyDeskTopOriginalPrefix
         stax    @addr
 
@@ -87,6 +84,60 @@
         sta     SELF_MODIFIED,x
         dex
         bpl     :-
+
+.ifdef RC_AUXMEM
+        sta     ALTZPON
+.endif ; RC_AUXMEM
+
+.ifdef RC_LCBANK
+        bit     LCBANK1
+        bit     LCBANK1
+.else ; !RC_LCBANK
+        bit     ROMIN2
+.endif ; RC_LCBANK
+
+        rts
+.endproc
+
+;;; Get the "was it copied to RAMCard?" flag for the specified entry
+;;; Input: X = `entry_num`
+;;; Output: A = flag, and Z/N set appropriately
+.proc GetEntryCopiedToRAMCardFlag
+
+.ifdef RC_AUXMEM
+        sta     ALTZPOFF
+.endif ; RC_AUXMEM
+
+        bit     LCBANK2
+        bit     LCBANK2
+        lda     ENTRY_COPIED_FLAGS,x
+
+.ifdef RC_AUXMEM
+        sta     ALTZPON
+.endif ; RC_AUXMEM
+
+        php
+.ifdef RC_LCBANK
+        bit     LCBANK1
+        bit     LCBANK1
+.else ; !RC_LCBANK
+        bit     ROMIN2
+.endif ; RC_LCBANK
+        plp
+        rts
+.endproc
+
+;;; Set the "was it copied to RAMCard?" flag for the specified entry
+;;; Input: A = flag, X = `entry_num`
+.proc SetEntryCopiedToRAMCardFlag
+
+.ifdef RC_AUXMEM
+        sta     ALTZPOFF
+.endif ; RC_AUXMEM
+
+        bit     LCBANK2
+        bit     LCBANK2
+        sta     ENTRY_COPIED_FLAGS,x
 
 .ifdef RC_AUXMEM
         sta     ALTZPON

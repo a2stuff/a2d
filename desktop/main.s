@@ -1315,24 +1315,22 @@ done:   rts
         ptr := $06
 
         sta     entry_num
+
+        ;; Is there a RAMCard at all?
+        jsr     GetCopiedToRAMCardFlag
+        beq     use_entry_path  ; no RAMCard, skip
+
+        ;; Look at the entry's flags
+        lda     entry_num
         jsr     ATimes16
         addax   #run_list_entries, ptr
 
         ldy     #kSelectorEntryFlagsOffset ; flag byte following name
         lda     (ptr),y
-        sta     entry_flag
-        cmp     #kSelectorEntryCopyNever
-        beq     use_entry_path  ; not copied
-
-        ;; --------------------------------------------------
-        ;; Either copy on boot or copy on use
-
-        jsr     GetCopiedToRAMCardFlag
-        beq     use_entry_path  ; no RAMCard, skip
-
-        lda     entry_flag
         .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
         beq     on_boot
+        cmp     #kSelectorEntryCopyNever
+        beq     use_entry_path  ; not copied
 
         ;; --------------------------------------------------
         ;; `kSelectorEntryCopyOnUse`
@@ -1353,7 +1351,6 @@ done:   rts
 
         ;; --------------------------------------------------
         ;; `kSelectorEntryCopyOnBoot`
-        ;; Was it copied to RAMCard?
 on_boot:
         ldx     entry_num
         jsr     GetEntryCopiedToRAMCardFlag
@@ -1382,9 +1379,6 @@ launch: param_call CopyPtr1ToBuf, INVOKER_PREFIX
 ret:    rts
 
 entry_num:
-        .byte   0
-
-entry_flag:
         .byte   0
 
 ;;; --------------------------------------------------
@@ -1484,35 +1478,6 @@ entry_flag:
 
         stx     src_path_buf
         ldax    #src_path_buf
-        rts
-.endproc
-
-;;; --------------------------------------------------
-;;; Input: X = `entry_num`
-;;; Output: A = flag, and Z/N set appropriately
-.proc GetEntryCopiedToRAMCardFlag
-        sta     ALTZPOFF
-        bit     LCBANK2
-        bit     LCBANK2
-        lda     ENTRY_COPIED_FLAGS,x
-        sta     ALTZPON
-        php
-        bit     LCBANK1
-        bit     LCBANK1
-        plp
-        rts
-.endproc
-
-;;; --------------------------------------------------
-;;; Input: A = flag, X = `entry_num`
-.proc SetEntryCopiedToRAMCardFlag
-        sta     ALTZPOFF
-        bit     LCBANK2
-        bit     LCBANK2
-        sta     ENTRY_COPIED_FLAGS,x
-        sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
         rts
 .endproc
 
