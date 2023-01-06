@@ -2172,50 +2172,7 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; NOTE: Can't use "../lib/ramcard.s" since the calling code is
-;;; not running w/ AUXZP and LCBANK1.
-
-.proc GetCopiedToRAMCardFlag
-        bit     LCBANK2
-        bit     LCBANK2
-        lda     COPIED_TO_RAMCARD_FLAG
-        tax
-        bit     ROMIN2
-        txa
-        rts
-.endproc
-
-.proc CopyRAMCardPrefix
-        stax    @addr
-        bit     LCBANK2
-        bit     LCBANK2
-        ldx     RAMCARD_PREFIX
-:       lda     RAMCARD_PREFIX,x
-        @addr := * + 1
-        sta     SELF_MODIFIED,x
-        dex
-        bpl     :-
-        bit     ROMIN2
-        rts
-.endproc
-
-;;; Copy the original DeskTop prefix (e.g. "/HD/A2D") to the passed buffer.
-;;; Input: A,X=destination buffer
-.proc CopyDeskTopOriginalPrefix
-        stax    @addr
-        bit     LCBANK2
-        bit     LCBANK2
-
-        ldx     DESKTOP_ORIG_PREFIX
-:       lda     DESKTOP_ORIG_PREFIX,x
-        @addr := *+1
-        sta     SELF_MODIFIED,x
-        dex
-        bpl     :-
-
-        bit     ROMIN2
-        rts
-.endproc
+        .include "../lib/ramcard.s"
 
 ;;; ============================================================
 

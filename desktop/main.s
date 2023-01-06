@@ -15564,6 +15564,8 @@ free_icon_map:  .res    ::kMaxIconCount, 0
 
         .assert * >= $A000, error, "Routines used by overlays in overlay zone"
 
+        RC_AUXMEM = 1
+        RC_LCBANK = 1
         .include "../lib/ramcard.s"
 
         ;; Place buffers here so they're safe to call from DAs/Overlays
