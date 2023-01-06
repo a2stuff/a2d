@@ -449,18 +449,19 @@ check_key:
 
         entry_ptr := $06
 
+        ;; TODO: See if we can skip this and just `InvokeEntry`
         stax    entry_ptr
         ldy     #kSelectorEntryFlagsOffset
         lda     (entry_ptr),y
         cmp     #kSelectorEntryCopyNever
-        beq     :+
+    IF_NE
         jsr     GetCopiedToRAMCardFlag
-        beq     done_keys
-        jsr     GetSelectedIndexFileInfo
-        beq     :+
-        jmp     done_keys
-
-:       lda     selected_index
+        beq     done_keys       ; no RAMCard, skip
+        ldx     selected_index
+        jsr     GetEntryCopiedToRAMCardFlag
+        bpl     done_keys       ; wasn't copied!
+    END_IF
+        lda     selected_index
         jsr     InvokeEntry
 
         ;; --------------------------------------------------
@@ -1840,27 +1841,30 @@ try:    lda     invoked_during_boot_flag
         bpl     :+
         jmp     use_entry_path
 :
+        ;; Is there a RAMCard at all?
         jsr     GetCopiedToRAMCardFlag
-        bne     check_entry_flags
-        jmp     use_entry_path  ; no RAMCard, skip
+        beq     use_entry_path  ; no RAMCard, skip
 
+        ;; Look at the entry's flags
 check_entry_flags:
         lda     selected_index
         jsr     GetSelectorListEntryAddr
         stax    ptr
         ldy     #kSelectorEntryFlagsOffset
         lda     (ptr),y
-        asl     a
-        bmi     use_entry_path  ; bit 7 (now 6) = never copy
-        bcc     on_boot         ; bit 8 (now C) = copy on boot
+        .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
+        beq     on_boot
+        cmp     #kSelectorEntryCopyNever
+        beq     use_entry_path  ; not copied
 
         ;; --------------------------------------------------
         ;; `kSelectorEntryCopyOnUse`
         lda     invoked_during_boot_flag
         bne     use_ramcard_path ; skip if no UI
 
-        jsr     GetSelectedIndexFileInfo ; check if exists on RAMCard
-        beq     use_ramcard_path         ; yes, use it!
+        ldx     selected_index
+        jsr     GetEntryCopiedToRAMCardFlag
+        bmi     use_ramcard_path ; already copied
 
         ;; Need to copy to RAMCard
         jsr     LoadOverlayCopyDialog
@@ -1869,24 +1873,32 @@ check_entry_flags:
         pha
         jsr     CheckAndClearUpdates
         pla
-        beq     use_ramcard_path ; success!
-
+    IF_NOT_ZERO
         jsr     SetCursorPointer
         jmp     ClearSelectedIndex ; canceled!
+    END_IF
+
+        ldx     selected_index
+        lda     #$FF
+        jsr     SetEntryCopiedToRAMCardFlag
+        jmp     use_ramcard_path
 
         ;; --------------------------------------------------
         ;; `kSelectorEntryCopyOnBoot`
 on_boot:
         lda     invoked_during_boot_flag
         bne     use_ramcard_path         ; skip if no UI
-        jsr     GetSelectedIndexFileInfo ; check if exists on RAMCard
-        bne     use_entry_path
+
+        ldx     selected_index
+        jsr     GetEntryCopiedToRAMCardFlag
+        bpl     use_entry_path  ; wasn't copied!
+        FALL_THROUGH_TO use_ramcard_path
 
         ;; --------------------------------------------------
         ;; Copied to RAMCard - use copied path
 use_ramcard_path:
         lda     selected_index
-        jsr     ComposeDstPath
+        jsr     ComposeRAMCardEntryPath
         jmp     launch
 
         ;; --------------------------------------------------
@@ -2153,30 +2165,11 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc GetSelectedIndexFileInfo
-        ptr := $06
-
-        lda     selected_index
-        jsr     ComposeDstPath
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     INVOKER_PREFIX,y
-        dey
-        bpl     :-
-        MLI_CALL GET_FILE_INFO, get_file_info_invoke_params
-        rts
-.endproc
-
-;;; ============================================================
-
         .include "../lib/ramcard.s"
 
 ;;; ============================================================
 
-.proc ComposeDstPath
+.proc ComposeRAMCardEntryPath
         buf := $800
 
         sta     tmp
