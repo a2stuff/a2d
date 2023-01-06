@@ -71,7 +71,7 @@ options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
 .endparams
 
 start:  pha                     ; alert number
-        lda     app::L9129      ; if non-zero, just return cancel
+        lda     app::invoked_during_boot_flag ; if no UI, just return cancel
         beq     :+
         pla
         return  #kAlertResultCancel

@@ -310,7 +310,8 @@ num_primary_run_list_entries:
 num_secondary_run_list_entries:
         .byte   0
 
-L9129:  .byte   0
+invoked_during_boot_flag:       ; set to 1 during key checks during boot, 0 otherwise
+        .byte   0
 
 is_iigs_flag:                   ; high bit set if IIgs
         .byte   0
@@ -397,7 +398,7 @@ entry:
 
         copy    #$FF, selected_index
         jsr     LoadSelectorList
-        copy    #1, L9129
+        copy    #1, invoked_during_boot_flag
         lda     num_secondary_run_list_entries
         ora     num_primary_run_list_entries
         bne     check_key_down
@@ -466,7 +467,7 @@ check_key:
 
 done_keys:
         sta     KBDSTRB
-        copy    #0, L9129
+        copy    #0, invoked_during_boot_flag
 
         ;; --------------------------------------------------
 
@@ -1821,75 +1822,99 @@ ret:    rts
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_invoke_params, INVOKER_PREFIX
 
 .proc InvokeEntry
-        lda     L9129
-        bne     :+
+        ptr := $06
+
+        lda     invoked_during_boot_flag
+        bne     :+              ; skip if there's no UI yet
         jsr     SetCursorWatch
         lda     selected_index
         bmi     :+
         jsr     MaybeToggleEntryHilite
 :       jmp     try
 
-ep2:    jmp     L9C7E
+ep2:    jmp     launch
 
-try:    lda     L9129
-        bne     L9C32
-        bit     BUTN0
-        bpl     L9C2A
-        jmp     L9C78
+try:    lda     invoked_during_boot_flag
+        bne     check_entry_flags
+        bit     BUTN0           ; if Open-Apple is down, skip RAMCard copy
+        bpl     :+
+        jmp     use_entry_path
+:
+        jsr     GetCopiedToRAMCardFlag
+        bne     check_entry_flags
+        jmp     use_entry_path  ; no RAMCard, skip
 
-L9C2A:  jsr     GetCopiedToRAMCardFlag
-        bne     L9C32
-        jmp     L9C78
-
-L9C32:  lda     selected_index
+check_entry_flags:
+        lda     selected_index
         jsr     GetSelectorListEntryAddr
-        stax    $06
+        stax    ptr
         ldy     #kSelectorEntryFlagsOffset
-        lda     ($06),y
+        lda     (ptr),y
         asl     a
-        bmi     L9C78           ; bit 6 (now 7) = never copy
-        bcc     L9C65           ; bit 8 (now C) = copy on boot
+        bmi     use_entry_path  ; bit 7 (now 6) = never copy
+        bcc     on_boot         ; bit 8 (now C) = copy on boot
 
-        ;; Copy on boot
-        lda     L9129
-        bne     L9C6F
-        jsr     GetSelectedIndexFileInfo
-        beq     L9C6F
+        ;; --------------------------------------------------
+        ;; `kSelectorEntryCopyOnUse`
+        lda     invoked_during_boot_flag
+        bne     use_ramcard_path ; skip if no UI
+
+        jsr     GetSelectedIndexFileInfo ; check if exists on RAMCard
+        beq     use_ramcard_path         ; yes, use it!
+
+        ;; Need to copy to RAMCard
         jsr     LoadOverlayCopyDialog
         lda     selected_index
         jsr     file_copier__Exec
         pha
         jsr     CheckAndClearUpdates
         pla
-        beq     L9C6F
-        jsr     SetCursorPointer
-        jmp     ClearSelectedIndex
+        beq     use_ramcard_path ; success!
 
-L9C65:  lda     L9129
-        bne     L9C6F
-        jsr     GetSelectedIndexFileInfo
-        bne     L9C78
-L9C6F:  lda     selected_index
-        jsr     ComposeDstPath
-        jmp     L9C7E
+        jsr     SetCursorPointer
+        jmp     ClearSelectedIndex ; canceled!
 
         ;; --------------------------------------------------
+        ;; `kSelectorEntryCopyOnBoot`
+on_boot:
+        lda     invoked_during_boot_flag
+        bne     use_ramcard_path         ; skip if no UI
+        jsr     GetSelectedIndexFileInfo ; check if exists on RAMCard
+        bne     use_entry_path
 
-L9C78:  lda     selected_index
+        ;; --------------------------------------------------
+        ;; Copied to RAMCard - use copied path
+use_ramcard_path:
+        lda     selected_index
+        jsr     ComposeDstPath
+        jmp     launch
+
+        ;; --------------------------------------------------
+        ;; Not copied to RAMCard - just use entry's path
+use_entry_path:
+        lda     selected_index
         jsr     GetSelectorListPathAddr
-L9C7E:  stax    $06
+
+
+        ;; --------------------------------------------------
+        ;; Launch specified path (A,X = path)
+launch:
+
+        ;; Copy path to INVOKER_PREFIX
+        stax    ptr
         ldy     #$00
-        lda     ($06),y
+        lda     (ptr),y
         tay
-L9C87:  lda     ($06),y
+:       lda     (ptr),y
         sta     INVOKER_PREFIX,y
         dey
-        bpl     L9C87
+        bpl     :-
         MLI_CALL GET_FILE_INFO, get_file_info_invoke_params
         beq     check_type
 
+        ;; Not present; maybe show a retry prompt
         tax
-        lda     L9129
+        lda     invoked_during_boot_flag
         bne     fail
         txa
         pha
@@ -1902,7 +1927,7 @@ L9C87:  lda     ($06),y
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     fail            ; `kAlertResultCancel` = 1
         jsr     SetCursorWatch
-        jmp     L9C78
+        jmp     use_entry_path
 
 fail:   jmp     ClearSelectedIndex
 
@@ -1994,7 +2019,7 @@ check_path:
         DEFINE_QUIT_PARAMS quit_params
 
 .proc ClearSelectedIndex
-        lda     L9129
+        lda     invoked_during_boot_flag
         bne     :+
         lda     #$FF
         sta     selected_index
