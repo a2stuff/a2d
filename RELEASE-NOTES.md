@@ -63,6 +63,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Selector
 
 * Fix clearing the text screen when launching programs.
+* Allow pressing Escape to cancel copy to RAMCard.
 
 ### Disk Copy
 

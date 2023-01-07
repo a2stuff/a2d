@@ -16,6 +16,7 @@
         jsr     app::GetSelectorListPathAddr
         jsr     PrepSrcAndDstPaths
         jsr     EnumerateFiles
+        bne     skip
 
         jsr     DrawWindowContent
 
@@ -24,6 +25,7 @@
         jsr     PrepSrcAndDstPaths
         jsr     CopyFiles
 
+skip:
         pha
         jsr     CloseWindow
         pla
@@ -48,6 +50,7 @@ buf_block_pointers:
         .res    kBlockPointersSize, 0
 
         DEFINE_CLOSE_PARAMS close_params
+        DEFINE_CLOSE_PARAMS close_everything_params ; used in case of error
 
         DEFINE_READ_PARAMS read_fileentry_params, file_entry, .sizeof(FileEntry)
 
@@ -263,8 +266,6 @@ l1:     jsr     ReadFileEntry
 
         lda     file_entry+FileEntry::storage_type_name_length
         beq     l1
-        lda     file_entry+FileEntry::storage_type_name_length
-        sta     LA3EC
         and     #NAME_LENGTH_MASK
         sta     file_entry+FileEntry::storage_type_name_length
         lda     #$00
@@ -297,12 +298,6 @@ copy_err_flag:  .byte   0
 op_jt1: jmp     (op_jt_addr1)
 op_jt2: jmp     (op_jt_addr2)
 op_jt3: jmp     (op_jt_addr3)
-
-LA3EC:  .byte   0               ; TODO: Written but never read?
-
-        .byte   0               ; TODO: Unused???
-        .byte   0
-        .byte   0
 
 ;;; ============================================================
 
@@ -354,24 +349,26 @@ copy_jt:
         stx     pathname_dst
 
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
+        beq     check_src
         cmp     #ERR_FILE_NOT_FOUND
-        beq     LA475
+        beq     check_src
         cmp     #ERR_VOL_NOT_FOUND
-        beq     LA475
+        beq     check_src
         cmp     #ERR_PATH_NOT_FOUND
-        beq     LA475
-        rts
+        beq     check_src
+        bne     error           ; always
 
-LA475:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
+check_src:
+        MLI_CALL GET_FILE_INFO, get_src_file_info_params
         beq     LA491
         cmp     #ERR_VOL_NOT_FOUND
         beq     LA488
         cmp     #ERR_FILE_NOT_FOUND
-        bne     LA48E
+        bne     error
 LA488:  jsr     ShowInsertSourceDiskAlert
-        jmp     LA475           ; retry
+        jmp     check_src       ; retry
 
-LA48E:  jmp     HandleErrorCode
+error:  jmp     HandleErrorCode
 
 LA491:  lda     get_src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
@@ -413,14 +410,13 @@ LA4BF:  ldy     #(get_src_file_info_params::create_time+1 - get_src_file_info_pa
         sta     create_params::storage_type
 :       MLI_CALL CREATE, create_params
         beq     :+
+        cmp     #ERR_DUPLICATE_FILENAME
+        beq     :+
         jmp     HandleErrorCode
 :
         lda     is_dir_flag
         beq     do_file
         jmp     HandleDirectory
-
-        .byte   0               ; TODO: Unused; remove
-        rts
 
 blocks: .word   0
 
@@ -447,7 +443,8 @@ PopDstSegment:
 ;;; ============================================================
 
 .proc CopyVisitFile
-        ;; TODO: Check for Escape here
+        jsr     CheckEscapeKeyDown
+        jne     RestoreStackAndReturn
 
         lda     file_entry+FileEntry::file_type
         cmp     #FT_DIRECTORY
@@ -465,13 +462,12 @@ err:    jsr     RemoveSegmentFromDstPathname
         jsr     RemoveSegmentFromSrcPathname
         lda     #$FF
         sta     copy_err_flag
-        jmp     ret             ; TODO: Just RTS
+        rts
 
 LA528:  jsr     AppendFilenameToDstPathname
         jsr     CreateDstFile
         bcs     err
-        jsr     RemoveSegmentFromSrcPathname
-        jmp     ret             ; TODO: Just RTS
+        jmp     RemoveSegmentFromSrcPathname
 
         ;; --------------------------------------------------
         ;; Regular File
@@ -527,7 +523,6 @@ LA5A1:  copy    pathname_dst, saved_length
         bne     :-
         tya
         sta     pathname_dst
-        sta     LA60D           ; TODO: Remove?
 
         ;; Total blocks/used blocks on destination volume
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
@@ -536,7 +531,7 @@ LA5A1:  copy    pathname_dst, saved_length
 :
         ;; aux = total blocks
         sub16   get_dst_file_info_params::aux_type, get_dst_file_info_params::blocks_used, blocks_free
-        sub16   blocks_free, existing_blocks, blocks_free ; BUG: Should be add16 !
+        add16   blocks_free, existing_blocks, blocks_free
         cmp16   blocks_free, get_src_file_info_params::blocks_used
         bcs     has_room
 
@@ -554,7 +549,6 @@ blocks_free:              ; Blocks free on volume
         .word   0
 saved_length:
         .byte   0
-LA60D:  .byte   0         ; TODO: Unused?
 existing_blocks:          ; Blocks taken by file that will be replaced
         .word   0
 .endproc
@@ -618,10 +612,10 @@ done:
         bne     :-
 
         MLI_CALL CREATE, create_params2
-        clc                     ; TODO: ???
         beq     :+
-        jmp     HandleErrorCode
-:
+        cmp     #ERR_DUPLICATE_FILENAME
+        jne     HandleErrorCode
+:       clc                     ; treate as success
         rts
 .endproc
 
@@ -642,6 +636,9 @@ enum_jt:
         sta     addr_table,y
         dey
         bpl     :-
+
+        tsx
+        stx     saved_stack
 
         lda     #$00
         sta     file_count
@@ -675,13 +672,13 @@ LA6FC:  jmp     HandleErrorCode
 LA6FF:  lda     get_src_file_info_params::storage_type
         sta     storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        beq     LA711
+        beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
-        beq     LA711
+        beq     is_dir
         lda     #$00
-        beq     LA713
-LA711:  lda     #$FF
-LA713:  sta     is_dir_flag
+        beq     set
+is_dir: lda     #$FF
+set:    sta     is_dir_flag
         beq     visit
         jsr     HandleDirectory
         lda     storage_type
@@ -695,15 +692,15 @@ LA713:  sta     is_dir_flag
         ;; https://github.com/a2stuff/a2d/issues/564
         inc16   file_count
         jsr     UpdateFileCountDisplay
-
-        rts
+        return  #0
 
 is_dir_flag:
         .byte   0
 storage_type:
         .byte   0
 
-visit:  jmp     EnumerateVisitFile
+visit:  jsr     EnumerateVisitFile
+        return  #0
 .endproc
 
 ;;; ============================================================
@@ -715,6 +712,9 @@ visit:  jmp     EnumerateVisitFile
 ;;; ============================================================
 
 .proc EnumerateVisitFile
+        jsr     CheckEscapeKeyDown
+        jne     RestoreStackAndReturn
+
         jsr     AppendFilenameToSrcPathname
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
         bne     :+
@@ -1145,6 +1145,7 @@ HandleButtonDown:
 ;;; ============================================================
 
 .proc RestoreStackAndReturn
+        MLI_CALL CLOSE, close_everything_params
         ldx     saved_stack
         txs
         return  #$FF
@@ -1155,6 +1156,22 @@ HandleButtonDown:
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, winfo
         rts
+.endproc
+
+;;; ============================================================
+
+.proc CheckEscapeKeyDown
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::key_down
+        bne     nope
+        lda     event_params::key
+        cmp     #CHAR_ESCAPE
+        bne     nope
+        lda     #$FF
+        bne     done
+nope:   lda     #$00
+done:   rts
 .endproc
 
 ;;; ============================================================
