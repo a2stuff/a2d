@@ -1206,3 +1206,18 @@ __depth__ .set 0
         .refto name
         __jt_addr__ .set __jt_addr__ + 3
 .endmacro
+
+;;; ============================================================
+;;; File Segments
+;;; ============================================================
+
+.macro INITSEG offset
+        _segoffset .set offset
+.endmacro
+
+.macro DEFSEG name, addr, len
+        .ident(.sprintf("k%sAddress", .string(name))) = addr
+        .ident(.sprintf("k%sLength", .string(name))) = len
+        .ident(.sprintf("k%sOffset", .string(name))) = _segoffset
+        _segoffset .set _segoffset + len
+.endmacro

@@ -266,16 +266,8 @@ kICTSentinel = $01     ; not $00, because $00 as a mask is useful
 
 kLoaderOffset = $200
 
-_segoffset .set 0
-.macro DEFSEG name, addr, len
-        .ident(.sprintf("k%sAddress", .string(name))) = addr
-        .ident(.sprintf("k%sLength", .string(name))) = len
-        .ident(.sprintf("k%sOffset", .string(name))) = _segoffset
-        _segoffset .set _segoffset + len
-.endmacro
-
 ;;; Segments
-        _segoffset .set kLoaderOffset
+        INITSEG kLoaderOffset
         DEFSEG SegmentLoader,      $2000, $0300
         DEFSEG SegmentDeskTopAux,  $4000, $8000
         DEFSEG SegmentDeskTopLC1A, $D000, $1D00

@@ -31,15 +31,7 @@ BELLDATA        := SETTINGS - kBellProcLength
 ;;; ============================================================
 ;;; File Segments
 
-_segoffset .set 0
-.macro DEFSEG name, addr, len
-        .ident(.sprintf("k%sAddress", .string(name))) = addr
-        .ident(.sprintf("k%sLength", .string(name))) = len
-        .ident(.sprintf("k%sOffset", .string(name))) = _segoffset
-        _segoffset .set _segoffset + len
-.endmacro
-
-;;; Segments
+        INITSEG 0
         DEFSEG Loader,          DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
         DEFSEG SegmentAuxLC,    $D000, $2400
         DEFSEG SegmentMain,     $0800, $0C00
