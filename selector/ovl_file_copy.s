@@ -1000,7 +1000,7 @@ str_space:
 
 .proc OpenWindow
         MGTK_CALL MGTK::OpenWindow, winfo
-        lda     winfo::window_id
+        lda     #winfo::kWindowId
         jsr     app::GetWindowPort
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -1016,7 +1016,7 @@ str_space:
 ;;; ============================================================
 
 .proc DrawWindowContent
-        lda     winfo::window_id
+        lda     #winfo::kWindowId
         jsr     app::GetWindowPort
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
@@ -1072,7 +1072,7 @@ ep2:    dec     file_count
 ;;; ============================================================
 
 .proc ShowDiskFullError
-        lda     winfo::window_id
+        lda     #winfo::kWindowId
         jsr     app::GetWindowPort
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
@@ -1088,7 +1088,7 @@ ep2:    dec     file_count
 ;;; ============================================================
 
 .proc HandleErrorCode
-        lda     winfo::window_id
+        lda     #winfo::kWindowId
         jsr     app::GetWindowPort
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
@@ -1127,11 +1127,11 @@ HandleButtonDown:
         cmp     #MGTK::Area::content
         bne     event_loop
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
+        cmp     #winfo::kWindowId
         bne     event_loop
-        lda     winfo::window_id
+        lda     #winfo::kWindowId
         jsr     app::GetWindowPort
-        lda     winfo::window_id
+        lda     #winfo::kWindowId
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
