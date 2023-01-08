@@ -135,8 +135,6 @@
 .define res_const_sd_prefix_pattern_offset1 2
 .define res_const_sd_prefix_pattern_offset2 6
 .define res_string_volume_type_unknown "Ok{nt"
-.define res_string_splash_string "Laddar %s..."
-.define res_string_prompt_insert_system_disk "S{tt i systemdisken och tryck p} Retur."
 .define res_char_resize_shortcut 'G'
 .define res_char_move_shortcut 'M'
 .define res_char_scroll_shortcut 'X'

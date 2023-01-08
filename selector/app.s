@@ -237,7 +237,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_POINT pos_title_string, 0, 16
 
 str_selector_title:
-        PASCAL_STRING res_string_selector_dialog_title ; dialog title
+        PASCAL_STRING res_string_selector_name
 
         ;; Options control metrics
         kEntryPickerCols = 3

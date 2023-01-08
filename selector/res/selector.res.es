@@ -14,7 +14,7 @@
 .define res_const_menu_item_slot_pattern_offset1 8
 .define res_string_button_desktop "Escritorio"
 .define res_char_button_desktop_shortcut 'Q'
-.define res_string_selector_dialog_title "Selector"
+.define res_string_selector_name "Selector"
 .define res_string_label_download "Copiando a RAMDisk..."
 .define res_string_label_copying "Copiando: "
 .define res_string_errmsg_not_enough_room "No hay sitio suficiente en la RAMDisk para copiar la aplicaci\x13n."
@@ -24,5 +24,3 @@
 .define res_string_label_files_to_copy "Archivos por copiar a la RAMDisk: "
 .define res_string_label_files_remaining "Archivos que quedan por copiar: "
 .define res_string_label_file_to_run "Archivo a ejecutar:"
-.define res_string_status_loading "Cargando Selector..."
-.define res_string_prompt_insert_system_disk "Inserte el disco de sistema y presione Return."

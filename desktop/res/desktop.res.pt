@@ -135,8 +135,6 @@
 .define res_const_sd_prefix_pattern_offset1 2
 .define res_const_sd_prefix_pattern_offset2 5
 .define res_string_volume_type_unknown "Desconhecido"
-.define res_string_splash_string "Carregando %s..."
-.define res_string_prompt_insert_system_disk "Insira o disco do sistema e pressione Return."
 .define res_char_resize_shortcut 'G'
 .define res_char_move_shortcut 'M'
 .define res_char_scroll_shortcut 'X'

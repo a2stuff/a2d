@@ -10,6 +10,8 @@
 .define res_string_copyright_line1 "Copyright Apple Computer Inc., 1986"
 .define res_string_copyright_line2 "Copyright Version Soft, 1985 - 1986"
 .define res_string_copyright_line3 "Alla r{ttigheter f|rbeh}lls"
+.define res_string_status_loading "Laddar %s..."
+.define res_string_prompt_insert_system_disk "S{tt i systemdisken och tryck p} Retur."
 .define res_string_weekday_abbrev_1 "Sol"
 .define res_string_weekday_abbrev_2 "M}n"
 .define res_string_weekday_abbrev_3 "Tis"

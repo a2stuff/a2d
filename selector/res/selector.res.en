@@ -14,7 +14,7 @@
 .define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_button_desktop "DeskTop"
 .define res_char_button_desktop_shortcut 'Q'
-.define res_string_selector_dialog_title "Selector"
+.define res_string_selector_name "Selector"
 .define res_string_label_download "Copying to RAMCard..."
 .define res_string_label_copying "Copying: "
 .define res_string_errmsg_not_enough_room "Not enough room in the RAMCard to copy the application."
@@ -24,5 +24,3 @@
 .define res_string_label_files_to_copy "Files to copy in the RAMCard: "
 .define res_string_label_files_remaining "Files remaining to copy: "
 .define res_string_label_file_to_run "File to run:"
-.define res_string_status_loading "Loading Selector..."
-.define res_string_prompt_insert_system_disk "Insert the system disk and press Return."

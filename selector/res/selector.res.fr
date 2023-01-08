@@ -14,7 +14,7 @@
 .define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_button_desktop "DeskTop"
 .define res_char_button_desktop_shortcut 'Q'
-.define res_string_selector_dialog_title "S{lecteur"
+.define res_string_selector_name "S{lecteur"
 .define res_string_label_download "En cours de copie vers la carte RAM..."
 .define res_string_label_copying "Copie : "
 .define res_string_errmsg_not_enough_room "M{moire insuffisante en carte RAM pour copier l'application."
@@ -24,5 +24,3 @@
 .define res_string_label_files_to_copy "Fichiers @ copier dans la carte RAM : "
 .define res_string_label_files_remaining "Fichiers restant @ copier : "
 .define res_string_label_file_to_run "Fichier @ ex{cuter :"
-.define res_string_status_loading "Chargement du S{lecteur..."
-.define res_string_prompt_insert_system_disk "Ins{rez le disque syst}me et pressez Return."

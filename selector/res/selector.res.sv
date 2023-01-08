@@ -14,7 +14,7 @@
 .define res_const_menu_item_slot_pattern_offset1 11
 .define res_string_button_desktop "Skrivbord"
 .define res_char_button_desktop_shortcut 'S'
-.define res_string_selector_dialog_title "Selektor"
+.define res_string_selector_name "Selektor"
 .define res_string_label_download "Kopierar till RAMCard..."
 .define res_string_label_copying "Kopierar: "
 .define res_string_errmsg_not_enough_room "Inte tillr{ckligt med utrymme i RAMCard f|r att kopiera programmet."
@@ -24,5 +24,3 @@
 .define res_string_label_files_to_copy "Filer att kopiera i RAMCard: "
 .define res_string_label_files_remaining "Filer som }terst}r att kopiera: "
 .define res_string_label_file_to_run "Fil att k|ra:"
-.define res_string_status_loading "Laddar Selektor..."
-.define res_string_prompt_insert_system_disk "S{tt i systemdisken och tryck p} Retur."
