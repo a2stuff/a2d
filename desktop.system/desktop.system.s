@@ -1441,7 +1441,7 @@ ret:    rts
 
         ;; Appended to RAMCard root path e.g. "/RAM5"
 str_desktop_path:
-        PASCAL_STRING .concat("/", kFilenameDeskTop)
+        PASCAL_STRING .concat("/", kPathnameDeskTop)
 .endproc
 
 ;;; ============================================================
@@ -1723,7 +1723,7 @@ loop2:  lda     entry_path1,y
 .proc ReadSelectorListImpl
         DEFINE_OPEN_PARAMS open_params, str_selector_list, src_io_buffer
 str_selector_list:
-        PASCAL_STRING kFilenameSelectorList
+        PASCAL_STRING kPathnameSelectorList
         DEFINE_READ_PARAMS read_params, selector_buffer, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS close_params
 
@@ -2005,9 +2005,9 @@ CopySelectorEntriesToRamcard := CopySelectorEntriesToRamcardImpl::Start
         DEFINE_CLOSE_PARAMS close_everything_params
 
 str_selector:
-        PASCAL_STRING kFilenameSelector
+        PASCAL_STRING kPathnameSelector
 str_desktop:
-        PASCAL_STRING kFilenameDeskTop
+        PASCAL_STRING kPathnameDeskTop
 
 
 start:  MLI_CALL CLOSE, close_everything_params
@@ -2060,7 +2060,7 @@ InvokeSelectorOrDesktop := InvokeSelectorOrDesktopImpl::start
 quit_code_addr := $1000
 quit_code_save := $1100
 
-str_quit_code:  PASCAL_STRING kFilenameQuitSave
+str_quit_code:  PASCAL_STRING kPathnameQuitSave
 PROC_AT quit_restore_proc, ::quit_code_addr
 
         bit     LCBANK2

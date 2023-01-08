@@ -1242,7 +1242,7 @@ filename_buffer := $1C00
         DEFINE_OPEN_PARAMS open_curpfx_params, filename, io_buf
 
 filename:
-        PASCAL_STRING kFilenameSelectorList
+        PASCAL_STRING kPathnameSelectorList
 
         DEFINE_READ_PARAMS read_params, selector_list, kSelectorListBufSize
         DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize

@@ -24,11 +24,11 @@
         DEFINE_CLOSE_PARAMS close_params
 
 str_config:
-        PASCAL_STRING kFilenameDeskTopConfig
+        PASCAL_STRING kPathnameDeskTopConfig
 
 .if .defined(::BELLDATA)
 str_sound:
-        PASCAL_STRING kFilenameBellProc
+        PASCAL_STRING kPathnameBellProc
 .endif
 
 start:

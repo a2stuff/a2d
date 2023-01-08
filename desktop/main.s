@@ -2162,7 +2162,7 @@ done:   rts
         DEFINE_CLOSE_PARAMS close_params
 
 str_disk_copy:
-        PASCAL_STRING kFilenameDiskCopy
+        PASCAL_STRING kPathnameDiskCopy
 
 start:
 @retry:
@@ -2604,7 +2604,7 @@ eject_flag:
         DEFINE_QUIT_PARAMS quit_params
 
 str_quit_code:
-        PASCAL_STRING kFilenameQuitSave
+        PASCAL_STRING kPathnameQuitSave
 
 ResetHandler:
         ;; Restore DeskTop Main expected state...
@@ -9819,7 +9819,7 @@ addr_table:
         DEFINE_OPEN_PARAMS open_params, str_desktop, IO_BUFFER
 
 str_desktop:
-        PASCAL_STRING kFilenameDeskTop
+        PASCAL_STRING kPathnameDeskTop
 
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
 
@@ -15090,7 +15090,7 @@ diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
         DEFINE_READ_PARAMS write_params, desktop_file_data_buf, kFileSize
         DEFINE_CLOSE_PARAMS close_params
 str_desktop_file:
-        PASCAL_STRING kFilenameDeskTopState
+        PASCAL_STRING kPathnameDeskTopState
 
 .proc Save
         data_ptr := $06

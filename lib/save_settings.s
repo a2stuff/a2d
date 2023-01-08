@@ -5,7 +5,7 @@
 ;;; ============================================================
 
 filename:
-        PASCAL_STRING kFilenameDeskTopConfig
+        PASCAL_STRING kPathnameDeskTopConfig
 
 filename_buffer:
         .res kPathBufferSize

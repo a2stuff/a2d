@@ -25,7 +25,7 @@
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
 
 filename:
-        PASCAL_STRING kFilenameDeskTop
+        PASCAL_STRING kPathnameDeskTop
 
 ;;; Consecutive segments are loaded, `size` bytes are loaded at `addr`
 ;;; then relocated to `dest` according to `type`.

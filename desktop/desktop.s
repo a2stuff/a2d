@@ -60,7 +60,7 @@ kOverlayDeskTopRestore2Offset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRest
         .include "internal.inc"
 
         .define QR_LOADSTRING .sprintf(res_string_splash_string, kDeskTopProductName)
-        .define QR_FILENAME kFilenameDeskTop
+        .define QR_FILENAME kPathnameDeskTop
         .include "../lib/bootstrap.s"
 
         ;; Ensure loader.starts at correct offset from start of file.

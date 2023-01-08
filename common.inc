@@ -11,15 +11,15 @@
 
 .define kFilenameLauncher      "DeskTop.system"
 .define kFilenameModulesDir    "Modules"
-.define kFilenameDeskTop       .concat(kFilenameModulesDir, "/DeskTop")
-.define kFilenameDiskCopy      .concat(kFilenameModulesDir, "/Disk.Copy")
-.define kFilenameSelector      .concat(kFilenameModulesDir, "/Selector")
+.define kPathnameDeskTop       .concat(kFilenameModulesDir, "/DeskTop")
+.define kPathnameDiskCopy      .concat(kFilenameModulesDir, "/Disk.Copy")
+.define kPathnameSelector      .concat(kFilenameModulesDir, "/Selector")
 .define kFilenameLocalDir      "Local"
-.define kFilenameSelectorList  .concat(kFilenameLocalDir, "/Selector.List")
-.define kFilenameDeskTopConfig .concat(kFilenameLocalDir, "/DeskTop.config")
-.define kFilenameDeskTopState  .concat(kFilenameLocalDir, "/DeskTop.file")
-.define kFilenameBellProc      .concat(kFilenameLocalDir, "/Bell.proc")
-.define kFilenameQuitSave      .concat(kFilenameLocalDir, "/Quit.tmp")
+.define kPathnameSelectorList  .concat(kFilenameLocalDir, "/Selector.List")
+.define kPathnameDeskTopConfig .concat(kFilenameLocalDir, "/DeskTop.config")
+.define kPathnameDeskTopState  .concat(kFilenameLocalDir, "/DeskTop.file")
+.define kPathnameBellProc      .concat(kFilenameLocalDir, "/Bell.proc")
+.define kPathnameQuitSave      .concat(kFilenameLocalDir, "/Quit.tmp")
 .define kFilenameDADir         "Apple.Menu"
 .define kFilenamePreviewDir    "Preview"
 .define kFilenameExtrasDir     "Extras"

@@ -272,17 +272,17 @@ str_selector_title:
         DEFINE_READ_PARAMS read_desktop_params, desktop_load_addr, kDeskTopLoadSize
 
 str_selector_list:
-        PASCAL_STRING kFilenameSelectorList
+        PASCAL_STRING kPathnameSelectorList
 
 str_desktop:
-        PASCAL_STRING kFilenameDeskTop
+        PASCAL_STRING kPathnameDeskTop
 
         DEFINE_CLOSE_PARAMS close_params
 
         DEFINE_OPEN_PARAMS open_selector_params, str_selector, $800
 
 str_selector:
-        PASCAL_STRING kFilenameSelector
+        PASCAL_STRING kPathnameSelector
 
         DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, kOverlayFileDialogOffset
         DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, kOverlayCopyDialogOffset
@@ -292,7 +292,7 @@ str_selector:
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_desktop_params, str_desktop_2
 str_desktop_2:
-        PASCAL_STRING kFilenameDeskTop
+        PASCAL_STRING kPathnameDeskTop
 
 desktop_available_flag:
         .byte   0

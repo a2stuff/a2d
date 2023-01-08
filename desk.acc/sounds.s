@@ -1409,7 +1409,7 @@ OnListSelectionNoChange := OnListSelectionChange
 ;;; ============================================================
 
 filename:
-        PASCAL_STRING kFilenameBellProc
+        PASCAL_STRING kPathnameBellProc
 
 filename_buffer:
         .res kPathBufferSize

@@ -66,7 +66,7 @@ kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
         RESOURCE_FILE "selector.res"
 
         .define QR_LOADSTRING res_string_status_loading
-        .define QR_FILENAME kFilenameSelector
+        .define QR_FILENAME kPathnameSelector
         .include "../lib/bootstrap.s"
 
         ;; Ensure loader.starts at correct offset from start of file.

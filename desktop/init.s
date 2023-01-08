@@ -507,7 +507,7 @@ CalcDataStr:
         DEFINE_OPEN_PARAMS open_params, str_selector_list, selector_list_io_buf
 
 str_selector_list:
-        PASCAL_STRING kFilenameSelectorList
+        PASCAL_STRING kPathnameSelectorList
 
         DEFINE_READ_PARAMS read_params, selector_list_data_buf, kSelectorListShortSize
         DEFINE_CLOSE_PARAMS close_params

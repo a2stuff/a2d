@@ -30,7 +30,7 @@
         DEFINE_CLOSE_PARAMS close_params
 
 str_selector:
-        PASCAL_STRING kFilenameSelector
+        PASCAL_STRING kPathnameSelector
 
 ;;; ============================================================
 
