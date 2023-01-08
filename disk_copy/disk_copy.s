@@ -29,7 +29,8 @@ SETTINGS        := kSegmentAuxLCAddress + kSegmentAuxLCLength - .sizeof(DeskTopS
 BELLDATA        := SETTINGS - kBellProcLength
 
 ;;; ============================================================
-;;; File Segments
+;;; File Structure
+;;; ============================================================
 
         INITSEG 0
         DEFSEG Loader,          DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
@@ -37,7 +38,8 @@ BELLDATA        := SETTINGS - kBellProcLength
         DEFSEG SegmentMain,     $0800, $0C00
 
 ;;; ============================================================
-;;; Disk Copy application
+;;; Disk Copy module
+;;; ============================================================
 
         RESOURCE_FILE "disk_copy.res"
 

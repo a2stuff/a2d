@@ -4,11 +4,10 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-;;; ============================================================
-;;; Segment loaded into AUX $D200-$ECFF
-;;; ============================================================
-
+        ;; SegmentDeskTopLC1A begins in lc.s
         ASSERT_ADDRESS $D200
+
+;;; ============================================================
 
 pencopy:        .byte   MGTK::pencopy
 penOR:          .byte   MGTK::penOR

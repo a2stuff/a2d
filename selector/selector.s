@@ -38,24 +38,29 @@ kAlertResultCancel      = 1
 kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
 
 ;;; ============================================================
-;;; SELECTOR file structure
+;;; File Structure
 ;;; ============================================================
+;;; Selector is broken into various segments plus dynamically
+;;; loaded overlays, all stored in one file. This section
+;;; defines the file offsets, load addresses and lengths of each
+;;; segment and offset
 
-kLoaderOffset = $200
+        ;; Bootstrap is at $0-$200 in file
+        kLoaderOffset = $200
 
-;;; Segments
+        ;; Segments
         INITSEG kLoaderOffset
         DEFSEG SegmentLoader,     $2000,        $0300
         DEFSEG SegmentInvoker,    INVOKER,      $0160
         DEFSEG SegmentApp,        $4000,        $6600
         DEFSEG SegmentAlert,      $D000,        $0800
 
-;;; Dynamically loaded overlays
+        ;; Dynamically loaded overlays
         DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1100
         DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0C00
 
 ;;; ============================================================
-;;; Selector application
+;;; Selector module
 ;;; ============================================================
 
         RESOURCE_FILE "selector.res"
@@ -66,10 +71,12 @@ kLoaderOffset = $200
         ;; Ensure loader.starts at correct offset from start of file.
         .res    kSegmentLoaderOffset - (.sizeof(InstallAsQuit) + .sizeof(QuitRoutine))
 
+        ;; Segments
         .include "loader.s"
         .include "../lib/invoker.s"
-
         .include "app.s"
         .include "alert_dialog.s"
+
+        ;; Overlays
         .include "ovl_file_dialog.s"
         .include "ovl_file_copy.s"
