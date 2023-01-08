@@ -41,8 +41,6 @@ BELLDATA        := SETTINGS - kBellProcLength
 
         RESOURCE_FILE "disk_copy.res"
 
-.scope disk_copy
         .include "loader.s"
         .include "auxlc.s"
         .include "main.s"
-.endscope

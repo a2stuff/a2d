@@ -9,10 +9,11 @@
 ;;; DeskTop application into various parts of main, aux, and bank-switched
 ;;; memory, then invokes the DeskTop initialization routine.
 
+
+        BEGINSEG SegmentLoader
+
 .scope InstallSegments
         MLIEntry := MLI
-
-        .org ::kSegmentLoaderAddress
 
         jmp     start
 
@@ -21,7 +22,7 @@
         DEFINE_READ_PARAMS read_params, 0, 0
 
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentDeskTopAuxOffset ; This many bytes before the good stuff.
+        DEFINE_SET_MARK_PARAMS set_mark_params, 0
 
 filename:
         PASCAL_STRING kFilenameDeskTop
@@ -64,6 +65,21 @@ segment_size_table_high:
         .byte   >kSegmentDeskTopMainLength,>kSegmentInitializerLength,>kSegmentInvokerLength
         ASSERT_TABLE_SIZE segment_size_table_high, kNumSegments
 
+segment_offset_table_low:
+        .byte   <kSegmentDeskTopAuxOffset,<kSegmentDeskTopLC1AOffset,<kSegmentDeskTopLC1BOffset
+        .byte   <kSegmentDeskTopMainOffset,<kSegmentInitializerOffset,<kSegmentInvokerOffset
+        ASSERT_TABLE_SIZE segment_offset_table_low, kNumSegments
+
+segment_offset_table_high:
+        .byte   >kSegmentDeskTopAuxOffset,>kSegmentDeskTopLC1AOffset,>kSegmentDeskTopLC1BOffset
+        .byte   >kSegmentDeskTopMainOffset,>kSegmentInitializerOffset,>kSegmentInvokerOffset
+        ASSERT_TABLE_SIZE segment_offset_table_high, kNumSegments
+
+segment_offset_table_bank:
+        .byte   ^kSegmentDeskTopAuxOffset,^kSegmentDeskTopLC1AOffset,^kSegmentDeskTopLC1BOffset
+        .byte   ^kSegmentDeskTopMainOffset,^kSegmentInitializerOffset,^kSegmentInvokerOffset
+        ASSERT_TABLE_SIZE segment_offset_table_bank, kNumSegments
+
 segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (aux)
         .byte   1,2,2,0,0,0
         ASSERT_TABLE_SIZE segment_type_table, kNumSegments
@@ -90,10 +106,8 @@ start:
 :       lda     open_params::ref_num
         sta     set_mark_params::ref_num
         sta     read_params::ref_num
-        MLI_CALL SET_MARK, set_mark_params
-        beq     :+
-        brk                     ; crash
-:       sta     segment_num
+
+        copy    #0, segment_num
 
 loop:   jsr     UpdateProgress
 segment_num := * + 1
@@ -110,12 +124,20 @@ segment_num := * + 1
         jmp     kSegmentInitializerAddress
 
 continue:
+        copy    segment_offset_table_low,x,  set_mark_params::position+0
+        copy    segment_offset_table_high,x, set_mark_params::position+1
+        copy    segment_offset_table_bank,x, set_mark_params::position+2
+        MLI_CALL SET_MARK, set_mark_params
+        beq     :+
+        brk                     ; crash
+:
         copylohi segment_addr_table_low,x, segment_addr_table_high,x, read_params::data_buffer
         copylohi segment_size_table_low,x, segment_size_table_high,x, read_params::request_count
         MLI_CALL READ, read_params
         beq     :+
         brk                     ; crash
-:       ldx     segment_num
+:
+        ldx     segment_num
         inc     segment_num
         lda     segment_type_table,x
         beq     loop            ; type 0 = main, so done
@@ -204,7 +226,9 @@ loop:   lda     (src),y
 
 ;;; ============================================================
 
-        PAD_TO ::kSegmentLoaderAddress + ::kSegmentLoaderLength
+
 .endscope ; InstallSegments
 
 ;;; ============================================================
+
+        ENDSEG SegmentLoader

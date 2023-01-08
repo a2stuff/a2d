@@ -4,8 +4,9 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+        BEGINSEG OverlayShortcutEdit
+
 .scope SelectorEditOverlay
-        .org ::kOverlayShortcutEditAddress
 
         MGTKEntry := MGTKRelayImpl
         BTKEntry := BTKRelayImpl
@@ -385,5 +386,6 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 ;;; ============================================================
 
-        PAD_TO ::kOverlayShortcutEditAddress + ::kOverlayShortcutEditLength
 .endscope ; SelectorOverlay
+
+        ENDSEG OverlayShortcutEdit

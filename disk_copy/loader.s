@@ -5,9 +5,8 @@
 ;;; ============================================================
 
 
+        BEGINSEG Loader
 .scope part2
-        .org ::DISK_COPY_BOOTSTRAP
-
         MLIEntry := MLI
 
         jmp     start
@@ -21,17 +20,10 @@ load_buf := $4000
 filename:   PASCAL_STRING kFilenameDiskCopy
 
         DEFINE_READ_PARAMS read_params, 0, 0
-        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentAuxLCOffset
+        DEFINE_SET_MARK_PARAMS set_mark_params, 0
         DEFINE_CLOSE_PARAMS close_params
 
         .byte   $00,$00
-
-buf1:   .addr   load_buf
-dest1:  .addr   kSegmentAuxLCAddress
-len1:   .word   kSegmentAuxLCLength
-
-buf2:   .addr   kSegmentMainAddress
-len2:   .word   kSegmentMainLength
 
 ;;; ============================================================
 
@@ -65,16 +57,18 @@ start:
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
 
+        copy16  #kSegmentAuxLCOffset, set_mark_params::position
         MLI_CALL SET_MARK, set_mark_params
         jcs     fail
-        copy16  buf1, read_params::data_buffer
-        copy16  len1, read_params::request_count
+        copy16  #load_buf, read_params::data_buffer ; loads to temp address
+        copy16  #kSegmentAuxLCLength, read_params::request_count
         MLI_CALL READ, read_params
         bcs     fail
         jsr     CopyToLc
 
-        copy16  buf2, read_params::data_buffer
-        copy16  len2, read_params::request_count
+        copy16  #kSegmentMainOffset, set_mark_params::position
+        copy16  #kSegmentMainAddress, read_params::data_buffer
+        copy16  #kSegmentMainLength, read_params::request_count
         MLI_CALL READ, read_params
         bcs     fail
         MLI_CALL CLOSE, close_params
@@ -148,19 +142,9 @@ fail:   jmp     fail
         tax
 
         ;; Set up pointers
-        lda     buf1
-        sta     src
-        clc
-        adc     len1
-        sta     end
-        lda     buf1+1
-        sta     src+1
-        adc     len1+1
-        sta     end+1
-        lda     dest1
-        sta     dst
-        lda     dest1+1
-        sta     dst+1
+        copy16  #load_buf, src
+        add16   src, #kSegmentAuxLCLength, end
+        copy16  #kSegmentAuxLCAddress, dst
 
         ;; Do the copy
         ldy     #0
@@ -189,6 +173,5 @@ loop:   lda     (src),y
 
 ;;; ============================================================
 
-        PAD_TO ::DISK_COPY_BOOTSTRAP + ::kDiskCopyBootstrapLength
-
 .endscope ; part2
+        ENDSEG Loader

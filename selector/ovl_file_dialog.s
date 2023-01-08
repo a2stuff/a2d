@@ -4,6 +4,8 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
+        BEGINSEG OverlayFileDialog
+
 .scope file_dialog
         .org ::OVERLAY_ADDR
 
@@ -111,5 +113,5 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
 file_dialog_init   := file_dialog::ep_init
 file_dialog_loop   := file_dialog::ep_loop
 
-        PAD_TO OVERLAY_ADDR + kOverlayFileDialogLength
+        ENDSEG OverlayFileDialog
         .assert * <= $BF00, error, "Overwrites ProDOS Global Page"

@@ -8,7 +8,7 @@
 ;;; Segment loaded into AUX $D000-$D1FF
 ;;; ============================================================
 
-        .org ::kSegmentDeskTopLC1AAddress
+        BEGINSEG SegmentDeskTopLC1A
 
 ;;; ============================================================
 ;;; Exported entry points for main>aux and aux>main calls

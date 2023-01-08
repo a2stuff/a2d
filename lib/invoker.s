@@ -6,8 +6,9 @@
 
 ;;; Used to invoke other programs (system, binary, BASIC)
 
+        BEGINSEG SegmentInvoker
+
 .scope invoker
-        .org ::INVOKER
 
         MLIEntry := MLI
 
@@ -175,5 +176,4 @@ exit:   rts
 
 .endscope ; invoker
 
-        ;; Pad to $160 bytes
-        PAD_TO $3F0
+        ENDSEG SegmentInvoker

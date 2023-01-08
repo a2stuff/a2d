@@ -4,9 +4,9 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+        BEGINSEG OverlayFileDialog
 
 .scope file_dialog
-        .org ::kOverlayFileDialogAddress
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
@@ -33,8 +33,8 @@ AdjustFileEntryCase     := main::AdjustFileEntryCase
 
 ;;; ============================================================
 
-        PAD_TO ::kOverlayFileDialogAddress + ::kOverlayFileDialogLength
-
 .endscope ; file_dialog
 
 file_dialog__Exec := file_dialog::Exec
+
+        ENDSEG OverlayFileDialog

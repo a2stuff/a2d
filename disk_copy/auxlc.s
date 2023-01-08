@@ -4,8 +4,8 @@
 ;;; Compiled as part of disk_copy.s
 ;;; ============================================================
 
+        BEGINSEG SegmentAuxLC
 .scope auxlc
-        .org ::kSegmentAuxLCAddress
 
         MGTKEntry := MGTKRelayImpl
 
@@ -2432,10 +2432,11 @@ Alert := alert_dialog::Alert
 
 ;;; ============================================================
 
-        ASSERT_ADDRESS ::kSegmentAuxLCAddress + ::kSegmentAuxLCLength
         .assert * <= $F400, error, "Update memory_bitmap if code extends past $F400"
 .endscope
         auxlc__start := auxlc::start
         auxlc__is_iigs_flag := auxlc::is_iigs_flag
         auxlc__is_iiecard_flag := auxlc::is_iiecard_flag
         auxlc__is_laser128_flag := auxlc::is_laser128_flag
+
+        ENDSEG SegmentAuxLC

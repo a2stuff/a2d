@@ -50,9 +50,10 @@
 ;;; * Configure MGTK
 ;;; * Restore saved windows
 
-.scope init
 
-        .org ::kSegmentInitializerAddress
+        BEGINSEG SegmentInitializer
+
+.scope init
 
         MLIEntry  := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
@@ -1296,6 +1297,6 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
 ;;; ============================================================
 
 
-        PAD_TO ::kSegmentInitializerAddress + ::kSegmentInitializerLength
-
 .endscope ; init
+
+        ENDSEG SegmentInitializer

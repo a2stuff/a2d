@@ -4,8 +4,9 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
+        BEGINSEG OverlayFormatErase
+
 .scope format_erase_overlay
-        .org ::kOverlayFormatEraseAddress
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
@@ -1321,8 +1322,6 @@ non_pro:
 
 ;;; ============================================================
 
-        PAD_TO ::kOverlayFormatEraseAddress + ::kOverlayFormatEraseLength
-
 .endscope ; format_erase_overlay
 
 format_erase_overlay__PromptHandleKeyLeft     := format_erase_overlay::PromptHandleKeyLeft
@@ -1331,3 +1330,5 @@ format_erase_overlay__PromptHandleKeyDown     := format_erase_overlay::PromptHan
 format_erase_overlay__PromptHandleKeyUp       := format_erase_overlay::PromptHandleKeyUp
 
 format_erase_overlay__Exec := format_erase_overlay::Exec
+
+        ENDSEG OverlayFormatErase

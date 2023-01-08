@@ -4,7 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .org kSegmentAppAddress
+        BEGINSEG SegmentApp
 
 ;;; ============================================================
 ;;; MGTK library
@@ -2393,5 +2393,5 @@ loop_counter:
 
 .endscope
 
-        PAD_TO kSegmentAppAddress + kSegmentAppLength
+        ENDSEG SegmentApp
         ASSERT_ADDRESS OVERLAY_ADDR

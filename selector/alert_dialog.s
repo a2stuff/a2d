@@ -4,7 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .org kSegmentAlertAddress
+        BEGINSEG SegmentAlert
 
 .proc AlertById
         jmp     start
@@ -125,4 +125,4 @@ start:  pha                     ; alert number
 
 ;;; ============================================================
 
-        PAD_TO kSegmentAlertAddress + kSegmentAlertLength
+        ENDSEG SegmentAlert

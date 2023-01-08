@@ -85,7 +85,10 @@ end:
 ;;; Pad with zeros to the given address
 
 .macro PAD_TO addr
-    .if (addr - *) >= 0
+    .if ((addr) - *) = 0
+        ;; no-op
+    .elseif (addr - *) > 0
+        ;; .out .sprintf("Padding: $%04X bytes ($%04X - $%04X)", ((addr) - *), *, (addr))
         .res    addr - *
     .else
         .error .sprintf("Padding offset %d", addr - *)
@@ -1212,12 +1215,35 @@ __depth__ .set 0
 ;;; ============================================================
 
 .macro INITSEG offset
-        _segoffset .set offset
+        .assert ((offset / BLOCK_SIZE) * BLOCK_SIZE) = offset, error, "Offset must be block aligned"
+
+        __segoffset__ .set offset
+        __nextsegpad__ .set 0
 .endmacro
 
 .macro DEFSEG name, addr, len
+        .assert ((__segoffset__ / BLOCK_SIZE) * BLOCK_SIZE) = __segoffset__, error, "Offset must be block aligned"
+
         .ident(.sprintf("k%sAddress", .string(name))) = addr
         .ident(.sprintf("k%sLength", .string(name))) = len
-        .ident(.sprintf("k%sOffset", .string(name))) = _segoffset
-        _segoffset .set _segoffset + len
+        .ident(.sprintf("k%sOffset", .string(name))) = __segoffset__
+        .ident(.sprintf("k%sAlignmentPadding", .string(name))) = __nextsegpad__
+
+        .out .sprintf("Segment: %20s  addr: $%04X  len: $%04X  offset: $%06X", .string(name), (addr), (len), (__segoffset__))
+
+        ;; Align file segments to block boundaries
+        __curoffset__ .set __segoffset__ + len
+        __segoffset__ .set ((((__segoffset__ + len) + BLOCK_SIZE - 1) / BLOCK_SIZE) * BLOCK_SIZE)
+        __nextsegpad__ .set __segoffset__ - __curoffset__
+.endmacro
+
+.macro BEGINSEG name
+        ;; Padding to block-align this segment in the file
+        .res .ident(.sprintf("k%sAlignmentPadding", .string(name)))
+
+        .org .ident(.sprintf("k%sAddress", .string(name)))
+.endmacro
+
+.macro ENDSEG name
+        PAD_TO .ident(.sprintf("k%sAddress", .string(name))) + .ident(.sprintf("k%sLength", .string(name)))
 .endmacro

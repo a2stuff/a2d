@@ -8,9 +8,9 @@
 ;;; Segment loaded into AUX $4000-$BFFF
 ;;; ============================================================
 
-.scope aux
+        BEGINSEG SegmentDeskTopAux
 
-        .org ::kSegmentDeskTopAuxAddress
+.scope aux
 
 ;;; ============================================================
 ;;; MouseGraphics ToolKit - fixed location for DAs to reference
@@ -595,6 +595,6 @@ start:
 
 ;;; ============================================================
 
-        PAD_TO ::kSegmentDeskTopAuxAddress + ::kSegmentDeskTopAuxLength
-
 .endscope ; aux
+
+        ENDSEG SegmentDeskTopAux

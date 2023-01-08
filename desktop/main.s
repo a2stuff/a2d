@@ -10,6 +10,8 @@
 ;;; Segment loaded into MAIN $4000-$BEFF
 ;;; ============================================================
 
+        BEGINSEG SegmentDeskTopMain
+
 .scope main
 
         MLIEntry  := MLIRelayImpl
@@ -24,8 +26,6 @@ kShortcutScroll = res_char_scroll_shortcut
 
 src_path_buf    := INVOKER_PREFIX
 dst_path_buf    := $1F80
-
-        .org ::kSegmentDeskTopMainAddress
 
         ;; Jump table
         ;; Entries marked with * are used by DAs
@@ -15940,8 +15940,6 @@ str_volume:
 
 ;;; ============================================================
 
-        PAD_TO ::kSegmentDeskTopMainAddress + ::kSegmentDeskTopMainLength
-
 .endscope ; main
         main__YieldLoop := main::YieldLoop
 
@@ -15951,3 +15949,7 @@ str_volume:
         Bell := main::Bell
         Multiply_16_8_16 := main::Multiply_16_8_16
         Divide_16_8_16 := main::Divide_16_8_16
+
+;;; ============================================================
+
+        ENDSEG SegmentDeskTopMain

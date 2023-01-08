@@ -4,7 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .org kSegmentLoaderAddress
+        BEGINSEG SegmentLoader
 
 ;;; Loads the Invoker (page 2/3), Selector App (at $4000...$A1FF),
 ;;; and Resources (Aux LC), then invokes the app.
@@ -20,11 +20,13 @@
         io_buf := $3000
 
         DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
-        DEFINE_READ_PARAMS read_params1, INVOKER, kSegmentInvokerLength
+        DEFINE_READ_PARAMS read_params1, kSegmentInvokerAddress, kSegmentInvokerLength
         DEFINE_READ_PARAMS read_params2, kSegmentAppAddress, kSegmentAppLength
         DEFINE_READ_PARAMS read_params3, alert_load_addr, kSegmentAlertLength
 
-        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentInvokerOffset
+        DEFINE_SET_MARK_PARAMS set_mark_params1, kSegmentInvokerOffset
+        DEFINE_SET_MARK_PARAMS set_mark_params2, kSegmentAppOffset
+        DEFINE_SET_MARK_PARAMS set_mark_params3, kSegmentAlertOffset
         DEFINE_CLOSE_PARAMS close_params
 
 str_selector:
@@ -53,7 +55,9 @@ start:
         brk
 
 L2049:  lda     open_params::ref_num
-        sta     set_mark_params::ref_num
+        sta     set_mark_params1::ref_num
+        sta     set_mark_params2::ref_num
+        sta     set_mark_params3::ref_num
         sta     read_params1::ref_num
         sta     read_params2::ref_num
         sta     read_params3::ref_num
@@ -61,22 +65,25 @@ L2049:  lda     open_params::ref_num
         kNumSegments = 3
 
         ;; Read various segments into final or temp locations
-        MLI_CALL SET_MARK, set_mark_params
-        beq     :+
-        brk
-:       jsr     UpdateProgress
+        jsr     UpdateProgress
+
+        MLI_CALL SET_MARK, set_mark_params1
+        jne     crash
         MLI_CALL READ, read_params1
-        beq     :+
-        brk
-:       jsr     UpdateProgress
+        jne     crash
+        jsr     UpdateProgress
+
+        MLI_CALL SET_MARK, set_mark_params2
+        jne     crash
         MLI_CALL READ, read_params2
-        beq     :+
-        brk
-:       jsr     UpdateProgress
+        jne     crash
+        jsr     UpdateProgress
+
+        MLI_CALL SET_MARK, set_mark_params3
+        jne     crash
         MLI_CALL READ, read_params3
-        beq     :+
-        brk
-:       jsr     UpdateProgress
+        jne     crash
+        jsr     UpdateProgress
 
         ;; Copy Alert segment to Aux LC1
         sta     ALTZPON
@@ -112,6 +119,8 @@ L2049:  lda     open_params::ref_num
         ;; Invoke the Selector application
         jmp     START
 
+crash:  brk
+
 ;;; ============================================================
 
         SETTINGS_IO_BUF := io_buf
@@ -127,4 +136,4 @@ L2049:  lda     open_params::ref_num
 
 .endproc ; InstallSegments
 
-        PAD_TO kSegmentLoaderAddress + kSegmentLoaderLength
+        ENDSEG SegmentLoader

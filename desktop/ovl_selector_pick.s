@@ -6,8 +6,9 @@
 
 ;;; See docs/Selector_List_Format.md for file format
 
+        BEGINSEG OverlayShortcutPick
+
 .scope SelectorPickOverlay
-        .org ::kOverlayShortcutPickAddress
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
@@ -1423,8 +1424,8 @@ index:  .byte   0
 
 ;;; ============================================================
 
-        PAD_TO ::kOverlayShortcutPickAddress + ::kOverlayShortcutPickLength
-
 .endscope ; SelectorPickOverlay
 
 selector_picker__Exec    := SelectorPickOverlay::Exec
+
+        ENDSEG OverlayShortcutPick

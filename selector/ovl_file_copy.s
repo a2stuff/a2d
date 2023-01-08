@@ -4,7 +4,7 @@
 ;;; Compiled as part of selector.s
 ;;; ============================================================
 
-        .org OVERLAY_ADDR
+        BEGINSEG OverlayCopyDialog
 
 .scope file_copier
 
@@ -1244,4 +1244,4 @@ str_count:
 
 file_copier__Exec   := file_copier::Exec
 
-        PAD_TO OVERLAY_ADDR + kOverlayCopyDialogLength
+        ENDSEG OverlayCopyDialog

@@ -1383,7 +1383,7 @@ folder_sm_mask:
 
 ;;; ============================================================
 
-        PAD_TO ::kSegmentDeskTopLC1AAddress + ::kSegmentDeskTopLC1ALength
+        ENDSEG SegmentDeskTopLC1A
 
 ;;; (there's enough room here for 128 files at up to 26 bytes each; index 0 not used)
 icon_entries:
@@ -1393,7 +1393,7 @@ icon_entries:
 ;;; Segment loaded into AUX $FB00-$FFFF
 ;;; ============================================================
 
-        .org ::kSegmentDeskTopLC1BAddress
+        BEGINSEG SegmentDeskTopLC1B
 
 ;;; ============================================================
 ;;; Icon Resources - Volume Type Icons
@@ -1670,5 +1670,5 @@ trash_mask:
         ASSERT_ADDRESS VECTORS
         .res    kIntVectorsSize, 0
 
-        ASSERT_ADDRESS ::kSegmentDeskTopLC1BAddress + ::kSegmentDeskTopLC1BLength
         ASSERT_ADDRESS $10000
+        ENDSEG SegmentDeskTopLC1B

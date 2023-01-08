@@ -4,8 +4,9 @@
 ;;; Compiled as part of disk_copy.s
 ;;; ============================================================
 
+        BEGINSEG SegmentMain
+
 .scope main
-        .org ::kSegmentMainAddress
 
         MLIEntry := MLIRelayImpl
 
@@ -1151,7 +1152,6 @@ done:   rts
 
 ;;; ============================================================
 
-        PAD_TO ::kSegmentMainAddress + ::kSegmentMainLength
         .assert * <= $1400, error, "Update memory_bitmap if code extends past $1400"
 .endscope
 
@@ -1181,3 +1181,5 @@ main__on_line_buffer2           := main::on_line_buffer2
 main__ResetIIgsRGB              := main::ResetIIgsRGB
 main__saved_ram_unitnum         := main::saved_ram_unitnum
 main__saved_ram_drvec           := main::saved_ram_drvec
+
+        ENDSEG SegmentMain
