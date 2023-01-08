@@ -43,16 +43,22 @@ DeskTop binary as well, but has been pulled out.
 
 ## Segments and Overlays
 
+### Bootstrap
+
+`../lib/bootstrap.s`
+
+The first $300 bytes are loaded at $2000 by `DESKTOP.SYSTEM`.
+
+Invoked at $2000; patches the ProDOS QUIT routine (at LC2 $D100) then
+invokes it. That gets copied to $1000-$11FF and run by ProDOS. This
+stays resident so quitting from subsequent programs will re-run it.
+
+The quit handler stashes the current prefix and re-patches ProDOS with
+itself. It then loads in Loader segment of DeskTop and invokes it.
+
 ### Loader
 
 `loader.s`
-
-Invoked at $2000; patches the ProDOS QUIT routine (at LC2 $D100) then
-invokes it. That gets copied to $1000-$11FF and run by ProDOS.
-
-The invoked code stashes the current prefix and re-patches ProDOS with
-itself. It then (in a convoluted way) loads in the second $200 bytes
-of `DESKTOP` at $2000 and invokes that.
 
 This code then loads the rest of the file as a sequence of segments,
 moving them to the appropriate destination in aux/banked/main memory.

@@ -15,7 +15,7 @@ clean:
 	rm -f $(OUTDIR)/*.list
 	rm -f $(TARGETS)
 
-$(OUTDIR)/selector.o: selector.s $(HEADERS) quit_handler.s loader.s app.s alert_dialog.s ovl_*.s ../mgtk/mgtk.s ../toolkits/letk.s ../toolkits/btk.s
+$(OUTDIR)/selector.o: selector.s $(HEADERS) loader.s app.s alert_dialog.s ovl_*.s ../mgtk/mgtk.s ../toolkits/letk.s ../toolkits/btk.s
 	../bin/warnerr ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Built segments

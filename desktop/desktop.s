@@ -59,8 +59,9 @@ kOverlayDeskTopRestore2Offset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRest
         .include "../desktop/desktop.inc"
         .include "internal.inc"
 
+        .define QR_LOADSTRING .sprintf(res_string_splash_string, kDeskTopProductName)
+        .define QR_FILENAME kFilenameDeskTop
         .include "../lib/bootstrap.s"
-        .include "quit_handler.s"
 
         ;; Ensure loader.starts at correct offset from start of file.
         .res    kSegmentLoaderOffset - (.sizeof(InstallAsQuit) + .sizeof(QuitRoutine))
