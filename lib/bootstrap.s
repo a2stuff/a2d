@@ -57,15 +57,11 @@ filename:
 
         ;; ProDOS MLI call param blocks
 
-        ;; TODO: Do a SET_MARK to avoid extra loading
+        io_buf := $1C00
+        .assert io_buf + $400 <= kSegmentLoaderAddress, error, "memory overlap"
 
-        ;; Arrange these so loader is placed at target address
-        load_target := kSegmentLoaderAddress - kSegmentLoaderOffset
-        kLoadSize = kSegmentLoaderOffset + kSegmentLoaderLength
-        io_buf := $1A00
-        .assert io_buf + $400 <= load_target, error, "memory overlap"
-
-        DEFINE_READ_PARAMS read_params, load_target, kLoadSize
+        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentLoaderOffset
+        DEFINE_READ_PARAMS read_params, kSegmentLoaderAddress, kSegmentLoaderLength
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_GET_PREFIX_PARAMS prefix_params, prefix_buffer
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
@@ -161,9 +157,12 @@ load_loader:
         MLI_CALL SET_PREFIX, prefix_params
         bne     prompt_for_system_disk
         MLI_CALL OPEN, open_params
-        bne     ErrorHandler
+        jne     ErrorHandler
         lda     open_params::ref_num
+        sta     set_mark_params::ref_num
         sta     read_params::ref_num
+        MLI_CALL SET_MARK, set_mark_params
+        bne     ErrorHandler
         MLI_CALL READ, read_params
         bne     ErrorHandler
         MLI_CALL CLOSE, close_params
