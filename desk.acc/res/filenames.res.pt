@@ -16,6 +16,7 @@
 .define res_filename_international Internacional
 .define res_filename_screen_savers Protetor.tela
 .define res_filename_flying_toasters toast.voladoras
+.define res_filename_neko Neko
 .define res_filename_map Mapa
 .define res_filename_melt fundicao
 .define res_filename_matrix matrix

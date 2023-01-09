@@ -16,6 +16,7 @@
 .define res_filename_international Internacional
 .define res_filename_screen_savers Salvapantallas
 .define res_filename_flying_toasters tosta.voladoras
+.define res_filename_neko Neko
 .define res_filename_map Mapa
 .define res_filename_melt derretir
 .define res_filename_matrix matrix

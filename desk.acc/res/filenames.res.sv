@@ -16,6 +16,7 @@
 .define res_filename_international Internationellt
 .define res_filename_screen_savers skarmslackare
 .define res_filename_flying_toasters brodrostar
+.define res_filename_neko Neko
 .define res_filename_map Karta
 .define res_filename_melt smalta
 .define res_filename_matrix matrix

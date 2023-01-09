@@ -16,6 +16,7 @@
 .define res_filename_international International
 .define res_filename_screen_savers amusements
 .define res_filename_flying_toasters gril.volant
+.define res_filename_neko Neko
 .define res_filename_map Plan
 .define res_filename_melt fondre
 .define res_filename_matrix matrix
