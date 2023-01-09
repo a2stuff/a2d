@@ -888,17 +888,7 @@ l6:     iny
         bne     l6
         stx     filename
 
-        ;; TODO: Replace with: param_call app::CopyRAMCardPrefix, dst_path
-        bit     LCBANK2
-        bit     LCBANK2
-
-        ldy     RAMCARD_PREFIX
-:       lda     RAMCARD_PREFIX,y
-        sta     dst_path,y
-        dey
-        bpl     :-
-
-        bit     ROMIN2
+        param_call app::CopyRAMCardPrefix, dst_path
 
         rts
 .endproc
