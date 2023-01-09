@@ -699,14 +699,23 @@ ipblink_ip_bitmap:
         dey
         bpl     :-
 
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        bne     :+              ; obscured
+        MGTK_CALL MGTK::SetPort, grafport
+
+        MGTK_CALL MGTK::HideCursor
         jsr     DrawPreview
-        jsr     UpdateBits
-        jmp     InputLoop
+        jsr     DrawBits
+        MGTK_CALL MGTK::ShowCursor
+
+:       jmp     InputLoop
 .endproc
 
 ;;; ============================================================
 
 .proc HandleBitsClick
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        MGTK_CALL MGTK::SetPort, grafport
 
         ;; Determine sense flag (0=clear, $FF=set)
         jsr     MapCoords
@@ -794,15 +803,6 @@ lasty:  .byte   0
         dey
         bne     :-
 
-        rts
-.endproc
-
-.proc UpdateBits
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport
-        MGTK_CALL MGTK::HideCursor
-        jsr     DrawBits
-        MGTK_CALL MGTK::ShowCursor
         rts
 .endproc
 
@@ -1142,11 +1142,8 @@ arrow_num:
 
 ;;; ============================================================
 
-;;; Assert: called from a routine that ensures window is onscreen
+;;; Assert: called with GrafPort already selected
 .proc DrawPreview
-
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport
 
         ;; Shift the pattern so that when interpreted as NTSC color it
         ;; displays the same as it would when applied to the desktop.
@@ -1194,13 +1191,14 @@ rotated_pattern:
 
         DEFINE_RECT bitrect, 0, 0, 0, 0
 
-;;; Assert: called from a routine that ensures window is onscreen
+;;; Assert: called with GrafPort already selected
 .proc DrawBits
 
         ;; Perf: Filling rects is slightly faster than using large pens,
         ;; but 64 draw calls is still slow, ~1s to update fully at 1MHz
 
         MGTK_CALL MGTK::SetPattern, winfo::pattern
+        copy    #$FF, mode
 
         copy    #0, ypos
         copy16  fatbits_rect::y1, bitrect::y1
@@ -1215,11 +1213,13 @@ yloop:  copy    #0, xpos
 xloop:  ror     row
         bcc     zero
         lda     #MGTK::pencopy
-        bpl     store
+        bpl     store           ; always
 zero:   lda     #MGTK::notpencopy
-store:  sta     mode
-
-        MGTK_CALL MGTK::SetPenMode, mode ; TODO: Avoid call if unchanged
+store:  cmp     mode
+        beq     :+
+        sta     mode
+        MGTK_CALL MGTK::SetPenMode, mode
+:
         MGTK_CALL MGTK::PaintRect, bitrect
 
         ;; next x
@@ -1254,7 +1254,7 @@ mode:   .byte   0
 
 
 ;;; Input: A = set/clear X = x coord, Y = y coord
-;;; Assert: called from a routine that ensures window is onscreen
+;;; Assert: called with GrafPort already selected
 .proc DrawBit
         sta     mode
 
@@ -1284,9 +1284,6 @@ mode:   .byte   0
         bmi     :+
         lda     #MGTK::notpencopy
 :       sta     mode
-
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::SetPattern, winfo::pattern
         MGTK_CALL MGTK::SetPenMode, mode
@@ -1573,8 +1570,8 @@ next:   dex
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        beq     done
+        bne     done            ; obscured
+        MGTK_CALL MGTK::SetPort, grafport
 
         bit     cursor_flag
         bpl     :+
