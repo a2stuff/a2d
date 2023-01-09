@@ -1145,8 +1145,8 @@ done:   rts
 
 ;;; ============================================================
 
-        .define SP_ALTZP 1
-        .define SP_LCBANK1 1
+        SP_ALTZP = 1
+        SP_LCBANK1 = 1
         .include "../lib/smartport.s"
         .include "../lib/reconnect_ram.s"
 

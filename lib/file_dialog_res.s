@@ -38,7 +38,7 @@ pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME dialog_frame_rect, kFilePickerDlgWidth, kFilePickerDlgHeight
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         DEFINE_RECT_FRAME dialog_ex_frame_rect, kFilePickerDlgExWidth, kFilePickerDlgExHeight
 .endif
 
@@ -77,7 +77,7 @@ notpencopy:     .byte   MGTK::notpencopy
 checkerboard_pattern:
         .byte   $55, $AA, $55, $AA, $55, $AA, $55, $AA
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         kInputWidth = 435
         kInputHeight = kTextBoxHeight
 
@@ -95,7 +95,7 @@ kFilePickerDlgLeft      = (kScreenWidth - kFilePickerDlgWidth) / 2
 kFilePickerDlgTop       = (kScreenHeight - kFilePickerDlgHeight) / 2
 
 ;;; Advanced; can have name and custom controls
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
 kFilePickerDlgExWidth   = 500
 kFilePickerDlgExHeight  = 132
 kFilePickerDlgExLeft    = (kScreenWidth - kFilePickerDlgExWidth) / 2
@@ -148,7 +148,7 @@ kEntryListCtlWindowID = $3F
         kLeft =   kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
 
         kTop =    kFilePickerDlgTop + kControlsTop + 1
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         kExLeft =   kFilePickerDlgExLeft + kControlsLeft + 1 ; +1 for external border
         kExTop =    kFilePickerDlgExTop + 28
 .endif
@@ -188,7 +188,7 @@ nextwinfo:      .addr   0
 
 ;;; ============================================================
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
 ;;; Auxiliary field
         DEFINE_LINE_EDIT line_edit_f1, kFilePickerDlgWindowID, buf_input2, kControlsLeft, kInput1Y, kInputWidth, kMaxPathLength
         DEFINE_LINE_EDIT_PARAMS le_params_f1, line_edit_f1

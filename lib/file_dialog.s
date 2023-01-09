@@ -21,7 +21,7 @@
 ;;; * `getwinport_params`
 ;;; * `window_grafport`
 ;;;
-;;; If `FD_EXTENDED` is defined as 1:
+;;; If `FD_EXTENDED` is defined:
 ;;; * lib/line_edit_res.s is required to be previously included
 ;;; * name field at bottom and extra clickable controls on right are supported
 ;;; * title passed to `DrawTitleCentered` in aux, `AuxLoad` is used
@@ -109,7 +109,7 @@ selected_index:                 ; $FF if none
 
 ;;; ============================================================
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
 routine_table:
         .addr   kOverlayFileCopyAddress
         .addr   0               ; TODO: Remove this entire table
@@ -122,13 +122,13 @@ routine_table:
 ;;; Otherwise, jumps to label `start`.
 
 .proc Start
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         sty     stash_y
         stx     stash_x
 .endif
         tsx
         stx     saved_stack
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         pha
 .endif
         jsr     SetCursorPointer
@@ -137,7 +137,7 @@ routine_table:
         lda     #0
         sta     type_down_buf
         sta     only_show_dirs_flag
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         sta     cursor_ibeam_flag
         sta     extra_controls_flag
 .endif
@@ -149,7 +149,7 @@ routine_table:
         sta     file_dialog_res::close_button_rec::state
         sta     file_dialog_res::drives_button_rec::state
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         pla
         asl     a
         tax
@@ -179,7 +179,7 @@ extra_controls_flag:
 ;;; ============================================================
 
 .proc EventLoop
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         bit     extra_controls_flag
     IF_NS
         jsr     LineEditIdle
@@ -205,7 +205,7 @@ extra_controls_flag:
 
         copy    #0, type_down_buf
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         jeq     EventLoop
@@ -339,7 +339,7 @@ not_list:
 
         ;; --------------------------------------------------
         ;; Extra controls
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         bit     extra_controls_flag
     IF_NS
         ;; Text Edit
@@ -387,7 +387,7 @@ click_handler_hook:
 
 ;;; ============================================================
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
 .proc UnsetCursorIBeam
         bit     cursor_ibeam_flag
         bpl     :+
@@ -406,7 +406,7 @@ click_handler_hook:
 
 ;;; ============================================================
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
 .proc SetCursorIBeam
         bit     cursor_ibeam_flag
         bmi     :+
@@ -558,7 +558,7 @@ ret:    rts
         ldx     event_params::modifiers
         lda     event_params::key
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         bit     extra_controls_flag
       IF_NS
         ;; Hook for clients
@@ -576,7 +576,7 @@ ret:    rts
         ;; --------------------------------------------------
         ;; No modifiers
 
-.if !FD_EXTENDED
+.ifndef FD_EXTENDED
         lda     event_params::key
         jsr     CheckTypeDown
         jeq     exit
@@ -607,7 +607,7 @@ ret:    rts
         cmp     #CHAR_CTRL_C
         jeq     KeyClose
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         bit     extra_controls_flag
       IF_NS
         ;; Edit control
@@ -835,7 +835,7 @@ done:   rts
 ;;; ============================================================
 
 .proc OpenWindow
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         bit     extra_controls_flag
     IF_NS
         copy16  #file_dialog_res::kFilePickerDlgExLeft,  file_dialog_res::winfo::viewloc::xcoord
@@ -865,14 +865,14 @@ done:   rts
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::notpencopy
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         bit     extra_controls_flag
     IF_NS
         MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
     END_IF
 .endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_frame
-.if !FD_EXTENDED
+.ifndef FD_EXTENDED
         MGTK_CALL MGTK::FrameRect, file_dialog_res::dialog_frame_rect
 .else
         bit     extra_controls_flag
@@ -908,7 +908,7 @@ done:   rts
         MGTK_CALL MGTK::MoveTo, file_dialog_res::button_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::button_sep_end
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         bit     extra_controls_flag
     IF_NS
         MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::pattern
@@ -970,7 +970,7 @@ ret:    rts
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, file_dialog::only_show_dirs_flag
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         jsr     UnsetCursorIBeam
 .endif
         rts
@@ -1036,7 +1036,7 @@ ret:    rts
 
         jsr     SetPortForDialog
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         ldax    text_addr
         jsr     AuxLoad
 .else
@@ -1047,7 +1047,7 @@ ret:    rts
         inc16   text_addr ; point past length byte
         MGTK_CALL MGTK::TextWidth, text_params
 
-.if !FD_EXTENDED
+.ifndef FD_EXTENDED
         sub16   #file_dialog_res::kFilePickerDlgWidth, text_width, file_dialog_res::pos_title::xcoord
 .else
         bit     extra_controls_flag
@@ -1065,7 +1065,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
 .proc DrawInput1Label
         stax    $06
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
@@ -1111,7 +1111,7 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
 ;;; device via ProDOS Global Page `DEVNUM`. Used when the dialog
 ;;; is initialized with a specific path.
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
 .proc InitDeviceNumber
         lda     DEVNUM
         sta     last
@@ -1159,7 +1159,7 @@ ret:    rts
         tay
         clc
         adc     path_buf
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         ;; Enough room?
         cmp     #kPathBufferSize
         bcc     :+
@@ -1178,7 +1178,7 @@ ret:    rts
         pla
         sta     path_buf
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
         lda     #0
 .endif
         rts
@@ -1648,7 +1648,7 @@ index:  .byte   0
 ;;; Input: $06 = ptr to filename
 ;;; Output: A = index, or $FF if not found
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
 .proc FindFilenameIndex
         stax    $06
         ldy     #$00
@@ -1705,7 +1705,7 @@ d2:     .res    16, 0
 ;;; Text Edit Control
 ;;; ============================================================
 
-.if FD_EXTENDED
+.ifdef FD_EXTENDED
 
 .scope f1
 

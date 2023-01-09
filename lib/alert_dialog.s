@@ -10,11 +10,11 @@
 ;;; * `alert_grafport`
 ;;; Requires the following macro definitions:
 ;;; * `MGTK_CALL`
-;;; Requires the following defines:
-;;; * AD_SAVEBG (if true, background saved/restored)
-;;; * AD_WRAP (if true, message is wrapped)
-;;; * AD_EJECTABLE (if true, polls for certain messages)
-;;; If AD_EJECTABLE. requires `WaitForDiskOrEsc` and `ejectable_flag`
+;;; Optionally define:
+;;; * `AD_SAVEBG` (if defined, background saved/restored)
+;;; * `AD_WRAP` (if defined, message is wrapped)
+;;; * `AD_EJECTABLE` (if defined, polls for certain messages)
+;;; If `AD_EJECTABLE`. requires `WaitForDiskOrEsc` and `ejectable_flag`
 ;;; ============================================================
 
 .proc Alert
@@ -177,7 +177,7 @@ str_shortcut:   PASCAL_STRING {shortcut}
         kTextRight = kAlertRectWidth - kAlertXMargin
         kWrapWidth = kTextRight - kTextLeft
 
-.if AD_WRAP
+.ifdef AD_WRAP
         DEFINE_POINT pos_prompt1, kTextLeft, 29-11
         DEFINE_POINT pos_prompt2, kTextLeft, 29
 
@@ -219,7 +219,7 @@ start:
 
         MGTK_CALL MGTK::HideCursor
 
-.if AD_SAVEBG
+.ifdef AD_SAVEBG
         bit     alert_params::options
     IF_VS                       ; V = use save area
         ;; Compute save bounds
@@ -246,7 +246,7 @@ start:
         MGTK_CALL MGTK::InitPort, alert_grafport
         MGTK_CALL MGTK::SetPort, alert_grafport
 
-.if AD_SAVEBG
+.ifdef AD_SAVEBG
         ;; TODO: Is this needed?
         MGTK_CALL MGTK::SetPortBits, screen_portbits ; viewport for screen
 .endif
@@ -274,7 +274,7 @@ start:
         MGTK_CALL MGTK::PaintBitsHC, alert_bitmap_params
 
         ;; Draw appropriate buttons
-.if AD_EJECTABLE
+.ifdef AD_EJECTABLE
         bit     ejectable_flag
         jmi     done_buttons
 .endif
@@ -303,7 +303,7 @@ draw_ok_btn:
 done_buttons:
 
         ;; Prompt string
-.if AD_WRAP
+.ifdef AD_WRAP
 .scope
         ;; Measure for splitting
         ldx     alert_params::text
@@ -386,7 +386,7 @@ done:
         ;; Event Loop
 
 event_loop:
-.if AD_EJECTABLE
+.ifdef AD_EJECTABLE
         bit     ejectable_flag
     IF_NS
         jsr     WaitForDiskOrEsc
@@ -498,7 +498,7 @@ no_button:
 ;;; ============================================================
 
 finish:
-.if AD_SAVEBG
+.ifdef AD_SAVEBG
         bit     alert_params::options
     IF_VS                       ; V = use save area
         pha
@@ -654,7 +654,7 @@ flag:   .byte   0
 
 ;;; ============================================================
 
-.if AD_SAVEBG
+.ifdef AD_SAVEBG
         .include "savedialogbackground.s"
         DialogBackgroundSave := dialog_background::Save
         DialogBackgroundRestore := dialog_background::Restore

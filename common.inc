@@ -2,7 +2,8 @@
 ;;; Definitions that apply to DeskTop and Selector
 ;;; ============================================================
 
-.define DEBUG 0
+;;; Uncomment to enable limited runtime error checking.
+;;; DEBUG = 1
 
         .include .concat("common/res/common.res.", kBuildLang)
 

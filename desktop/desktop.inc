@@ -174,11 +174,6 @@ kErrInsertDstDisk       = $FD
 kErrBasicSysNotFound    = $FE
 
 ;;; ============================================================
-;;; Warning messages (JUMP_TABLE_SHOW_WARNING)
-
-kNumWarningTypes = 6
-
-;;; ============================================================
 ;;; Control Transfer
 ;;; ============================================================
 

@@ -1,5 +1,5 @@
-;;; .define SP_ALTZP as 1 if called with ALTZPON active, 0 if ALTZPOFF
-;;; .define SP_LCBANK1 as 1 if called with LCBANK1 active, 0 if ROMIN2
+;;; define `SP_ALTZP` if called with ALTZPON active, don't if ALTZPOFF
+;;; define `SP_LCBANK1` if called with LCBANK1 active, don't if ROMIN2
 
 
 ;;; Internal ProDOS tables are used to handle mirrored drives. The
@@ -113,10 +113,10 @@ mirrored:
         lsr
         tay                     ; Y = offset
 
-.if SP_ALTZP
+.ifdef SP_ALTZP
         sta     ALTZPOFF
 .endif
-.if !SP_LCBANK1
+.ifndef SP_LCBANK1
         bit     LCBANK1
         bit     LCBANK1
 .endif
@@ -138,10 +138,10 @@ mirrored:
         tay                     ; Y = sp unit
         pla                     ; A = sp vec lo
 
-.if SP_ALTZP
+.ifdef SP_ALTZP
         sta     ALTZPON
 .endif
-.if !SP_LCBANK1
+.ifndef SP_LCBANK1
         bit     ROMIN2
 .endif
 

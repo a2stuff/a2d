@@ -5896,7 +5896,7 @@ kDrawWindowEntriesContentOnlyPortAdjusted = $80
 
         ITK_CALL IconTK::DrawAll, cached_window_id
 
-.if DEBUG
+.ifdef DEBUG
         jsr     ComputeIconsBBox
         COPY_STRUCT MGTK::Rect, iconbb_rect, tmp_rect
         jsr     FrameTmpRect
@@ -15534,8 +15534,8 @@ ADJUSTCASE_VOLBUF:      .tag    VolumeDirectoryHeader
         ADJUSTCASE_IO_BUFFER := IO_BUFFER
         .include "../lib/adjustfilecase.s"
 
-        .define SP_ALTZP 1
-        .define SP_LCBANK1 1
+        SP_ALTZP = 1
+        SP_LCBANK1 = 1
         .include "../lib/smartport.s"
 
         .include "../lib/menuclock.s"

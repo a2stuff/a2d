@@ -2156,8 +2156,6 @@ done:   rts
 
 ;;; ============================================================
 
-        .define SP_ALTZP 0
-        .define SP_LCBANK1 0
         .include "../lib/smartport.s"
         ADJUSTCASE_VOLPATH := $810
         ADJUSTCASE_VOLBUF  := $820

@@ -2345,10 +2345,7 @@ find_in_alert_table:
         alert_grafport := grafport
         AlertYieldLoop := YieldLoop
 
-        .define AD_SAVEBG 0
-        .define AD_WRAP 0
-        .define AD_EJECTABLE 1
-
+        AD_EJECTABLE = 1
         .include "../lib/alert_dialog.s"
 
 ;;; ============================================================

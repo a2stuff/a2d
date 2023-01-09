@@ -576,10 +576,8 @@ start:
         AlertYieldLoop = YieldLoopFromAux
         alert_grafport = desktop_grafport
 
-        .define AD_SAVEBG 1
-        .define AD_WRAP 1
-        .define AD_EJECTABLE 0
-
+        AD_SAVEBG = 1
+        AD_WRAP = 1
         Bell := BellFromAux
         .include "../lib/alert_dialog.s"
         .include "../lib/drawstring.s"

@@ -293,7 +293,7 @@ bufsize:
         ldy     #IconEntry::id
         lda     (ptr_icon),y ; A = icon id
 
-.if DEBUG
+.ifdef DEBUG
         ;; Check if passed ID is already in the icon list
         jsr     IsInIconList
         bne     :+
@@ -326,7 +326,7 @@ bufsize:
 ;;; Inputs: A = icon id
 ;;; Outputs: Z=1 if found (and X = index), Z=0 otherwise
 ;;; A is unmodified, X is trashed
-.if DEBUG
+.ifdef DEBUG
 .proc IsInIconList
         ldx     num_icons
 :       dex
@@ -362,7 +362,7 @@ done:   rts
         .assert (IconEntry::state - HighlightIconParams::icon) = 1, error, "state must be 1 more than icon"
         iny
         lda     (ptr),y         ; A = state
-.if DEBUG
+.ifdef DEBUG
         ;; A = state; 0 = not valid
         bne     :+              ; 0 = not valid
         return  #2              ; Invalid icon
@@ -403,7 +403,7 @@ done:   rts
         ldy     #RemoveIconParams::icon
         lda     (params),y
 
-.if DEBUG
+.ifdef DEBUG
         ;; Is it in `icon_list`?
         jsr     IsInIconList
         beq     :+
@@ -416,7 +416,7 @@ done:   rts
         tax
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
-.if DEBUG
+.ifdef DEBUG
         ldy     #IconEntry::state ; valid icon?
         lda     (ptr),y
         bne     :+
@@ -1172,7 +1172,7 @@ icon_num:
         .assert (IconEntry::state - UnhighlightIconParams::icon) = 1, error, "state must be 1 more than icon"
         iny
         lda     (ptr),y         ; A = state
-.if DEBUG
+.ifdef DEBUG
         bne     :+              ; 0 = not valid
         return  #2              ; Invalid icon
 :

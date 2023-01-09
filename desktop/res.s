@@ -390,7 +390,7 @@ file_count:
 ;;; ============================================================
 
         FONT := DEFAULT_FONT
-        .define FD_EXTENDED 1
+        FD_EXTENDED = 1
         buf_input2 := path_buf1
         .include "../lib/file_dialog_res.s"
 
