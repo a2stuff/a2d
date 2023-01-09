@@ -81,10 +81,21 @@ kListViewIconGap = 4
 kListViewIconX = 4
 kListViewNameX = kListViewIconX + kListViewIconWidth + kListViewIconGap
 
-
 ;;; Mouse threshold for double click detection.
 kDoubleClickDeltaX      = 5
 kDoubleClickDeltaY      = 4
+
+;;; ============================================================
+;;; Alerts
+
+kAlertResultTryAgain    = 0
+kAlertResultCancel      = 1
+kAlertResultOK          = 2
+
+;;; NOTE: See the Rename code in DeskTop for a use case for having
+;;; TryAgain and OK differ. In that example, the error code determines
+;;; the options (OK vs. Try Again / Cancel), and OK after a failure is
+;;; the same as Cancel (give up), not Try Again.
 
 ;;; ============================================================
 ;;; Selector List file

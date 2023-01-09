@@ -152,18 +152,6 @@ kDynamicRoutineRestore5000      = 5
 kDynamicRoutineRestore9000      = 6
 
 ;;; ============================================================
-;;; Results from JUMP_TABLE_SHOW_ALERT / JUMP_TABLE_SHOW_ALERT_OPTIONS
-
-kAlertResultTryAgain    = 0
-kAlertResultCancel      = 1
-kAlertResultOK          = 2
-;;; NOTE: Selector and Disk Copy have OK = 0 (same as Try Again) and
-;;; therefore only distinguish Cancel. See the Rename code in DeskTop
-;;; for a use case for having them differ, namely where the error code
-;;; determines the options (OK vs. Try Again / Cancel), and OK after a
-;;; failure is the same as Cancel (give up), not Try Again.
-
-;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors
 
 kErrInsertSystemDisk    = $E0

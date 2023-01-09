@@ -33,10 +33,6 @@ kAlertMsgInsertDestinationOrCancel = 10 ; No bell, *
 ;;; Y identifies a removable volume. In that case, the alert will
 ;;; automatically be dismissed when a disk is inserted.
 
-kAlertResultTryAgain    = 0
-kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
-kAlertResultCancel      = 1
-
 ;;; ============================================================
 
         ASSERT_ADDRESS ::kSegmentAuxLCAddress, "Entry point"
@@ -554,7 +550,7 @@ LD6F9:  lda     current_drive_selection
 LD734:  ldx     #0
         lda     #kAlertMsgInsertSource ; X=0 means just show alert
         jsr     ShowAlertDialog
-        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
+        cmp     #kAlertResultOK
         beq     :+              ; OK
         jmp     InitDialog      ; Cancel
 
@@ -606,7 +602,7 @@ LD7AD:  lda     source_drive_index
         ldx     #0
         lda     #kAlertMsgInsertDestination ; X=0 means just show alert
         jsr     ShowAlertDialog
-        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
+        cmp     #kAlertResultOK
         beq     :+              ; OK
         jmp     InitDialog      ; Cancel
 :
@@ -669,7 +665,7 @@ use_sd:
         lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
     END_IF
 show:   jsr     ShowAlertDialog
-        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
+        cmp     #kAlertResultOK
         beq     maybe_format    ; Ok
         jmp     InitDialog      ; Cancel
 
@@ -740,7 +736,7 @@ do_copy:
         ldx     #$80
         lda     #kAlertMsgInsertSource ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
-        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
+        cmp     #kAlertResultOK
         beq     LD8DF           ; OK
         jmp     InitDialog      ; Cancel
 
@@ -772,7 +768,7 @@ LD8FB:  jsr     LE4A8
         ldx     #$80
         lda     #kAlertMsgInsertDestination ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
-        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
+        cmp     #kAlertResultOK
         beq     LD928           ; OK
         jmp     InitDialog      ; Cancel
 
@@ -796,7 +792,7 @@ LD928:  jsr     LE491
         ldx     #$80
         lda     #kAlertMsgInsertSource ; X !=0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
-        .assert kAlertResultOK = 0, error, "Branch assumes enum value"
+        cmp     #kAlertResultOK
         beq     LD8FB           ; OK
         jmp     InitDialog      ; Cancel
 

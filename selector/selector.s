@@ -33,10 +33,6 @@ insert_system_disk      = $FE
 basic_system_not_found  = $FF
 .endenum
 
-kAlertResultTryAgain    = 0
-kAlertResultCancel      = 1
-kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
-
 ;;; ============================================================
 ;;; File Structure
 ;;; ============================================================
