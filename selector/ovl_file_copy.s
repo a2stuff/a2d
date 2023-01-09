@@ -262,7 +262,7 @@ eof:    return  #$FF
 l1:     jsr     ReadFileEntry
         bne     l2
 
-        ;; TODO: AdjustFileEntryCase here
+        param_call app::AdjustFileEntryCase, file_entry
 
         lda     file_entry+FileEntry::storage_type_name_length
         beq     l1
@@ -1032,8 +1032,6 @@ ep2:    dec     file_count
         MGTK_CALL MGTK::SetPortBits, setportbits_params
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_count
-        ;; TODO: Remove, AdjustFileEntryCase earlier instead
-        param_call app::AdjustPathCase, pathname_src
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_copying
         param_call app::DrawString, str_space

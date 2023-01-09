@@ -1513,50 +1513,6 @@ backup_devlst:
 .endproc
 
 ;;; ============================================================
-;;; Inputs: A,X = Address
-
-.proc AdjustPathCase
-        ptr := $0A
-
-        stx     ptr+1
-        sta     ptr
-        ldy     #$00
-        lda     (ptr),y
-        tay
-        bne     loop
-        rts
-
-loop:   dey
-        beq     done
-        bpl     :+
-done:   rts
-
-        ;; Seek to next boundary
-:       lda     (ptr),y
-        cmp     #'/'
-        beq     L99FA
-        cmp     #'.'
-        bne     L99FE
-L99FA:  dey
-        jmp     loop
-
-        ;; Adjust case
-L99FE:  iny
-        lda     (ptr),y
-        cmp     #'A'
-        bcc     L9A10
-        cmp     #'Z'+1
-        bcs     L9A10
-        clc
-        adc     #$20            ; to lower case
-        sta     (ptr),y
-L9A10:  dey
-        jmp     loop
-
-        .byte   0
-.endproc
-
-;;; ============================================================
 ;;; Set the active GrafPort to the selected window's port
 ;;; Input: A = window id
 
@@ -2375,6 +2331,11 @@ loop_counter:
         .include "../lib/clear_dhr.s"
         .include "../lib/disconnect_ram.s"
         .include "../lib/reconnect_ram.s"
+
+         ADJUSTCASE_VOLPATH := $810
+         ADJUSTCASE_VOLBUF  := $820
+         ADJUSTCASE_IO_BUFFER := $1C00
+        .include "../lib/adjustfilecase.s"
 
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry

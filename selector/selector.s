@@ -52,11 +52,11 @@ kAlertResultOK          = 0     ; NOTE: Different than DeskTop (=2)
         INITSEG kLoaderOffset
         DEFSEG SegmentLoader,     $2000,        $0300
         DEFSEG SegmentInvoker,    INVOKER,      $0160
-        DEFSEG SegmentApp,        $4000,        $6600
+        DEFSEG SegmentApp,        $4000,        $6700
         DEFSEG SegmentAlert,      $D000,        $0800
 
         ;; Dynamically loaded overlays
-        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1100
+        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $1000
         DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0C00
 
 ;;; ============================================================

@@ -73,6 +73,8 @@ start:  jsr     OpenWindow
 ;;; Required proc definitions:
 YieldLoop               := app::YieldLoop
 DetectDoubleClick       := app::DetectDoubleClick
+AdjustVolumeNameCase    := app::AdjustVolumeNameCase
+AdjustFileEntryCase     := app::AdjustFileEntryCase
 
 ;;; Required macro definitions:
         .include "../lib/file_dialog.s"
@@ -100,10 +102,6 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
 
 ;;; ============================================================
 
-         ADJUSTCASE_VOLPATH := $810
-         ADJUSTCASE_VOLBUF  := $820
-         ADJUSTCASE_IO_BUFFER := $1C00
-        .include "../lib/adjustfilecase.s"
         .include "../lib/muldiv.s"
 
 ;;; ============================================================
