@@ -35,6 +35,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Show keyboard shortcut for File > Delete in menu.
 * View style for windows is saved/restored across restarts.
 * Scroll position for windows is saved/restored across restarts.
+* Show NON, ANM, S16, and SND type names in list views.
 
 #### Disks & Files
 

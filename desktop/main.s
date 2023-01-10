@@ -15826,8 +15826,9 @@ menu_kbd_flag:
 ;;; Map ProDOS file type to string (for listings/Get Info).
 ;;; If not found, $XX is used (like CATALOG).
 
-        kNumFileTypes = 14
+        kNumFileTypes = 18
 type_table:
+        .byte   FT_TYPELESS   ; unknown
         .byte   FT_BAD        ; bad block
         .byte   FT_TEXT       ; text
         .byte   FT_BINARY     ; binary
@@ -15837,7 +15838,10 @@ type_table:
         .byte   FT_ADB        ; appleworks db
         .byte   FT_AWP        ; appleworks wp
         .byte   FT_ASP        ; appleworks sp
+        .byte   FT_ANIMATION  ; animation
+        .byte   FT_S16        ; IIgs application
         .byte   FT_MUSIC      ; music
+        .byte   FT_SOUND      ; sampled sound
         .byte   FT_CMD        ; command
         .byte   FT_BASIC      ; basic
         .byte   FT_REL        ; rel
@@ -15846,6 +15850,7 @@ type_table:
 
 type_names_table:
         ;; Types marked with * are known to BASIC.SYSTEM.
+        .byte   "NON " ; unknown
         .byte   "BAD " ; bad block
         .byte   "TXT " ; text *
         .byte   "BIN " ; binary *
@@ -15855,7 +15860,10 @@ type_names_table:
         .byte   "ADB " ; appleworks db *
         .byte   "AWP " ; appleworks wp *
         .byte   "ASP " ; appleworks sp *
+        .byte   "ANM " ; animation
+        .byte   "S16 " ; IIgs application
         .byte   "MUS " ; music
+        .byte   "SND " ; sampled sound
         .byte   "CMD " ; command *
         .byte   "BAS " ; basic *
         .byte   "REL " ; rel *
