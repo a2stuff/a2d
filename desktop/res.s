@@ -510,11 +510,6 @@ win_table:
 
 ;;; ============================================================
 
-str_file_type:
-        PASCAL_STRING " $00"
-
-;;; ============================================================
-
 ;;; IconTK initialization parameters
 .params itkinit_params
 headersize:     .byte   kWindowHeaderHeight

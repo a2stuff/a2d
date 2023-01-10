@@ -27,6 +27,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Support selection in list views. ([#28](https://github.com/a2stuff/a2d/issues/28))
 * Simplify list views by omitting directory file sizes.
 * View > as Small Icons added.
+* View > by Type sort order improved.
 * File > Copy a File... is now File > Copy To... and operates on current selection.
 * File > Delete a File... is now File > Delete and operates on current selection.
 * Shortcut > Add a Shortcut... defaults to currently selected file.

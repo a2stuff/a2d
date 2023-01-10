@@ -8160,41 +8160,38 @@ done:   rts
     END_IF
 
         ;; Assert: kViewByType
+        scratch := $804
         ldy     #FileRecord::file_type
         lda     (ptr1),y
-        jsr     GetTypeIndex
-        sta     index1
+        jsr     ComposeFileTypeStringForSorting
+        COPY_STRING str_file_type, scratch
+        ldy     #FileRecord::file_type
         lda     (ptr2),y
-        jsr     GetTypeIndex
-        index1 := *+1
-        cmp     #SELF_MODIFIED_BYTE
+        jsr     ComposeFileTypeStringForSorting
+
+        bit     LCBANK1
+        bit     LCBANK1
+        jsr     PushPointers
+        copy16  #scratch, $06
+        copy16  #str_file_type, $08
+        jsr     GetSelectableIconsSorted::CompareStrings
+        jsr     PopPointers
+        bit     LCBANK2
+        bit     LCBANK2
+
         rts
 
 .endproc
 CompareFileRecords_sort_by := CompareFileRecords::sort_by
 
-;;; --------------------------------------------------
-;;; Input: A = file type
-;;; Output: A = sorting weight
-;;; Assert: LCBANK2 is active
-.proc GetTypeIndex
-        bit     LCBANK1
-        bit     LCBANK1
-
-        ldx     #kNumFileTypes-1
-:       cmp     type_table,x
-        beq     found
-        dex
-        bpl     :-
-
-        ;; Not found
-        ldx     #0
-
-found:  txa
-
-        bit     LCBANK2
-        bit     LCBANK2
-        rts
+.proc ComposeFileTypeStringForSorting
+        jsr     ComposeFileTypeString
+        lda     str_file_type+1
+        cmp     #'$'
+        bne     :+
+        lda     #$FF
+        sta     str_file_type+1
+:       rts
 .endproc
 
 .endproc
@@ -8682,12 +8679,10 @@ found:  tya
         cpx     #3
         bne     :-
 
-        stx     str_file_type
         rts
 
         ;; Type not found - use generic " $xx"
 not_found:
-        copy    #3, str_file_type
         copy    #'$', str_file_type+1
 
         lda     file_type
@@ -8706,6 +8701,9 @@ not_found:
 
         rts
 .endproc
+
+str_file_type:
+        PASCAL_STRING "$00"
 
 ;;; ============================================================
 ;;; Append aux type (in A,X) to text_buffer2
