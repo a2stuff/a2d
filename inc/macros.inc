@@ -1215,14 +1215,14 @@ __depth__ .set 0
 ;;; ============================================================
 
 .macro INITSEG offset
-        .assert ((offset / BLOCK_SIZE) * BLOCK_SIZE) = offset, error, "Offset must be block aligned"
+        .assert (offset .mod BLOCK_SIZE) = 0, error, "Offset must be block aligned"
 
         __segoffset__ .set offset
         __nextsegpad__ .set 0
 .endmacro
 
 .macro DEFSEG name, addr, len
-        .assert ((__segoffset__ / BLOCK_SIZE) * BLOCK_SIZE) = __segoffset__, error, "Offset must be block aligned"
+        .assert (__segoffset__ .mod BLOCK_SIZE) = 0, error, "Offset must be block aligned"
 
         .ident(.sprintf("k%sAddress", .string(name))) = addr
         .ident(.sprintf("k%sLength", .string(name))) = len
@@ -1231,8 +1231,12 @@ __depth__ .set 0
 
         ;; Align file segments to block boundaries
         __curoffset__ .set __segoffset__ + len
-        __segoffset__ .set ((((__segoffset__ + len) + BLOCK_SIZE - 1) / BLOCK_SIZE) * BLOCK_SIZE)
-        __nextsegpad__ .set __segoffset__ - __curoffset__
+        .if __curoffset__ .mod BLOCK_SIZE
+            __nextsegpad__ .set BLOCK_SIZE - (__curoffset__ .mod BLOCK_SIZE)
+        .else
+            __nextsegpad__ .set 0
+        .endif
+        __segoffset__ .set __curoffset__ + __nextsegpad__
 .endmacro
 
 .macro BEGINSEG name

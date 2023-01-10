@@ -58,7 +58,7 @@ selector_buffer := $1600        ; Room for kSelectorListBufSize
 
 copy_buffer     := $3700
 kCopyBufferSize = MLI - copy_buffer
-        .assert (kCopyBufferSize - ((kCopyBufferSize/$200)*$200)) = 0, error, "better performance for an integral number of blocks"
+        .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "better performance for an integral number of blocks"
 
 SETTINGS        := copy_buffer - .sizeof(DeskTopSettings)
 

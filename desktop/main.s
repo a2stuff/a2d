@@ -11387,7 +11387,7 @@ file_entry_buf          .res    .sizeof(FileEntry)
         file_data_buffer := $1500
         kBufSize = $A00
         .assert file_data_buffer + kBufSize <= dst_path_buf, error, "Buffer overlap"
-        .assert (kBufSize - ((kBufSize/$200)*$200)) = 0, error, "better performance for an integral number of blocks"
+        .assert (kBufSize .mod BLOCK_SIZE) = 0, error, "better performance for an integral number of blocks"
 
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
