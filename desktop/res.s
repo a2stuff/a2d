@@ -667,12 +667,9 @@ win_view_by_table:
         DEFINE_POINT pos_col_size, 166, 0
         DEFINE_POINT pos_col_date, 231, 0
 
+;;; Scratch buffer visible to MGTK, primarily used for list view columns.
 kTextBuffer2Len = 49
-.params text_buffer2
-        .addr   data
-length: .byte   0
-data:   .res    ::kTextBuffer2Len, 0
-.endparams
+text_buffer2:    .res   kTextBuffer2Len, 0
 
 file_record_ptr:
         .addr   0

@@ -500,12 +500,11 @@ done:   return  #$FF
         lda     (ptr),y
         tay
 :       lda     (ptr),y
-        sta     text_buffer2::length,y
+        sta     text_buffer2,y
         dey
         bpl     :-
 
-        MGTK_CALL MGTK::DrawText, text_buffer2
-        rts
+        param_jump main::DrawLCString, text_buffer2
 .endproc
 
 ;;; ============================================================

@@ -8236,19 +8236,15 @@ ret:    rts
 in_range:
         MGTK_CALL MGTK::MoveTo, pos_col_type
         jsr     PrepareColType
-        jsr     draw_text
+        param_call DrawLCString, text_buffer2
 
         MGTK_CALL MGTK::MoveTo, pos_col_size
         jsr     PrepareColSize
-        jsr     draw_text
+        param_call DrawLCString, text_buffer2
 
         MGTK_CALL MGTK::MoveTo, pos_col_date
         jsr     ComposeDateString
-        FALL_THROUGH_TO draw_text
-
-draw_text:
-        MGTK_CALL MGTK::DrawText, text_buffer2
-        rts
+        param_jump DrawLCString, text_buffer2
 .endproc
 
 ;;; ============================================================
@@ -8259,7 +8255,7 @@ draw_text:
         lda     file_type
         jsr     ComposeFileTypeString
 
-        COPY_BYTES 4, str_file_type, text_buffer2::length ; 3 characters + length
+        COPY_BYTES 4, str_file_type, text_buffer2 ; 3 characters + length
 
         rts
 .endproc
@@ -8270,8 +8266,8 @@ draw_text:
         lda     file_type
         cmp     #FT_DIRECTORY
     IF_EQ
-        copy    #1, text_buffer2::length
-        copy    #'-', text_buffer2::data
+        copy    #1, text_buffer2
+        copy    #'-', text_buffer2+1
         rts
     END_IF
 
@@ -8299,7 +8295,7 @@ draw_text:
         ;; Append number
         ldy     #0
 :       lda     str_from_int+1,y
-        sta     text_buffer2::data,x ; data follows length
+        sta     text_buffer2+1,x
         iny
         inx
         cpy     str_from_int
@@ -8308,13 +8304,13 @@ draw_text:
         ;; Append suffix
         ldy     #0
 :       lda     str_kb_suffix+1, y
-        sta     text_buffer2::data,x
+        sta     text_buffer2+1,x
         iny
         inx
         cpy     str_kb_suffix
         bne     :-
 
-        stx     text_buffer2::length
+        stx     text_buffer2
         rts
 
 value:  .word   0
@@ -8324,8 +8320,8 @@ value:  .word   0
 ;;; ============================================================
 
 .proc ComposeDateString
-        copy    #0, text_buffer2::length
-        copy16  #text_buffer2::length, $8
+        copy    #0, text_buffer2
+        copy16  #text_buffer2, $8
         lda     datetime_for_conversion ; any bits set?
         ora     datetime_for_conversion+1
         bne     append_date_strings
@@ -8710,12 +8706,12 @@ str_file_type:
 
 .proc AppendAuxType
         stax    auxtype
-        ldy     text_buffer2::length
+        ldy     text_buffer2
 
         ;; Append prefix
         ldx     #0
 :       lda     str_auxtype_prefix+1,x
-        sta     text_buffer2::data,y
+        sta     text_buffer2+1,y
         inx
         iny
         cpx     str_auxtype_prefix
@@ -8727,7 +8723,7 @@ str_file_type:
         lda     auxtype
         jsr     DoByte
 
-        sty     text_buffer2::length
+        sty     text_buffer2
         rts
 
 DoByte:
@@ -8738,13 +8734,13 @@ DoByte:
         lsr
         tax
         lda     hex_digits,x
-        sta     text_buffer2::data,y
+        sta     text_buffer2+1,y
         iny
         pla
         and     #%00001111
         tax
         lda     hex_digits,x
-        sta     text_buffer2::data,y
+        sta     text_buffer2+1,y
         iny
         rts
 
@@ -10611,13 +10607,13 @@ common2:
         lda     selected_window_id
     IF_ZERO
         ;; Volume
-        COPY_STRING str_volume, text_buffer2::length
+        COPY_STRING str_volume, text_buffer2
     ELSE
         ;; File
         lda     src_file_info_params::file_type
         pha
         jsr     ComposeFileTypeString
-        COPY_STRING str_file_type, text_buffer2::length
+        COPY_STRING str_file_type, text_buffer2
         pla                     ; A = file type
         cmp     #FT_DIRECTORY
       IF_NE
@@ -10625,7 +10621,7 @@ common2:
         jsr     AppendAuxType
       END_IF
     END_IF
-        copy16  #text_buffer2::length, get_info_dialog_params::a_str
+        copy16  #text_buffer2, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -10659,10 +10655,10 @@ volume:
         ldx     buf
         ldy     #0
 :       inx
-        lda     text_buffer2::data,y
+        lda     text_buffer2+1,y
         sta     buf,x
         iny
-        cpy     text_buffer2::length
+        cpy     text_buffer2
         bne     :-
 
         ;; Append " / " to buf
@@ -10685,9 +10681,9 @@ append_size:
         ldx     buf
         ldy     #1
 :       inx
-        lda     text_buffer2::data-1,y
+        lda     text_buffer2,y
         sta     buf,x
-        cpy     text_buffer2::length
+        cpy     text_buffer2
         beq     :+
         iny
         bne     :-
@@ -10704,7 +10700,7 @@ append_size:
         copy    #GetInfoDialogState::created, get_info_dialog_params::state
         COPY_STRUCT DateTime, src_file_info_params::create_date, datetime_for_conversion
         jsr     ComposeDateString
-        copy16  #text_buffer2::length, get_info_dialog_params::a_str
+        copy16  #text_buffer2, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -10712,7 +10708,7 @@ append_size:
         copy    #GetInfoDialogState::modified, get_info_dialog_params::state
         COPY_STRUCT DateTime, src_file_info_params::mod_date, datetime_for_conversion
         jsr     ComposeDateString
-        copy16  #text_buffer2::length, get_info_dialog_params::a_str
+        copy16  #text_buffer2, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -13887,7 +13883,7 @@ GetSizeDialogProc::do_count := *
 
         ldax    file_count
         jsr     ComposeSizeString
-        param_jump DrawDialogLabel, 2 | DDL_VALUE, text_buffer2::length
+        param_jump DrawDialogLabel, 2 | DDL_VALUE, text_buffer2
     END_IF
 
         ;; --------------------------------------------------
