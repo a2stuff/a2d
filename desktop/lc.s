@@ -278,9 +278,34 @@ op:     lda     SELF_MODIFIED
 
 ;;; ============================================================
 
-        PAD_TO $D200
+        .include "res.s"
+
+        ENDSEG SegmentDeskTopLC1A
+
+;;; ============================================================
+;;; Segment loaded into AUX $FEFA-$FFFF
+;;; ============================================================
+
+        BEGINSEG SegmentDeskTopLC1B
+
+;;; ============================================================
+;;; Settings - modified by Control Panels
+;;; ============================================================
+
+        ASSERT_ADDRESS BELLDATA
+        .include "../lib/default_sound.s"
+
+        PAD_TO ::SETTINGS
+        .include "../lib/default_settings.s"
 
 ;;; ============================================================
 
-        ;; SegmentDeskTopLC1A spans into res.s
-        .include "res.s"
+;;; Reserved space for 6502 vectors
+;;; * NMI is rarely used
+;;; * On RESET, the main page/ROM is banked in (Enh. IIe, IIc, IIgs)
+;;; * IRQ must be preserved; points into firmware
+;;; ... but might as well preserved
+
+        ASSERT_ADDRESS VECTORS
+
+        ENDSEG SegmentDeskTopLC1B

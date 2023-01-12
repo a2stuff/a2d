@@ -129,6 +129,8 @@ kSelectorListBufSize = $800
 kDefaultDblClickSpeed   = 1200
 kDefaultIPBlinkSpeed    =  500
 
+kDeskTopSettingsSize    = $80
+
 .struct DeskTopSettings
         pattern         .res 8
         dblclick_speed  .word
@@ -147,7 +149,8 @@ kDefaultIPBlinkSpeed    =  500
 
         reserved        .res 107
 .endstruct
-        .assert .sizeof(DeskTopSettings) = $80, error, .sprintf("Expected $80, was $%0X", .sizeof(DeskTopSettings))
+        .assert .sizeof(DeskTopSettings) = kDeskTopSettingsSize, error, .sprintf("Expected $%02X, was $%0X", kDeskTopSettingsSize, .sizeof(DeskTopSettings))
+
 
 DeskTopSettings::kDateOrderMDY = 0
 DeskTopSettings::kDateOrderDMY = 1

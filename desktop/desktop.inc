@@ -28,7 +28,7 @@ kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS
 DEFAULT_FONT    := $8680
 
 ;;; Settings loaded from disk on startup.
-SETTINGS        := $FF80 - kIntVectorsSize
+SETTINGS        := $10000 - kIntVectorsSize - kDeskTopSettingsSize
 BELLDATA        := SETTINGS - kBellProcLength
 
 ;;; A 10k buffer that can be restored using overlays; load

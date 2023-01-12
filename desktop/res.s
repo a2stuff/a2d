@@ -4,11 +4,6 @@
 ;;; Compiled as part of desktop.s
 ;;; ============================================================
 
-        ;; SegmentDeskTopLC1A begins in lc.s
-        ASSERT_ADDRESS $D200
-
-;;; ============================================================
-
 pencopy:        .byte   MGTK::pencopy
 penOR:          .byte   MGTK::penOR
 penXOR:         .byte   MGTK::penXOR
@@ -1373,20 +1368,6 @@ folder_sm_mask:
         .byte   PX(%1111111),PX(%1111111)
 
 ;;; ============================================================
-
-        ENDSEG SegmentDeskTopLC1A
-
-;;; (there's enough room here for 128 files at up to 26 bytes each; index 0 not used)
-icon_entries:
-        .assert ($FB00 - *) >= (kMaxIconCount+1) * .sizeof(IconEntry), error, "Not enough room for icons"
-
-;;; ============================================================
-;;; Segment loaded into AUX $FB00-$FFFF
-;;; ============================================================
-
-        BEGINSEG SegmentDeskTopLC1B
-
-;;; ============================================================
 ;;; Icon Resources - Volume Type Icons
 ;;; ============================================================
 
@@ -1639,27 +1620,8 @@ trash_mask:
         .byte   PX(%1111111),PX(%1111111),PX(%1111111)
         .byte   PX(%1111111),PX(%1111111),PX(%1111111)
 
-
-;;; ============================================================
-;;; Settings - modified by Control Panels
 ;;; ============================================================
 
-        PAD_TO ::BELLDATA
-        .include "../lib/default_sound.s"
-
-        PAD_TO ::SETTINGS
-        .include "../lib/default_settings.s"
-
-;;; ============================================================
-
-;;; Reserved space for 6502 vectors
-;;; * NMI is rarely used
-;;; * On RESET, the main page/ROM is banked in (Enh. IIe, IIc, IIgs)
-;;; * IRQ must be preserved; points into firmware
-;;; ... but might as well preserved
-
-        ASSERT_ADDRESS VECTORS
-        .res    kIntVectorsSize, 0
-
-        ASSERT_ADDRESS $10000
-        ENDSEG SegmentDeskTopLC1B
+;;; (there's enough room here for 128 files at up to 26 bytes each; index 0 not used)
+icon_entries:
+        .assert (BELLDATA - *) >= (kMaxIconCount+1) * .sizeof(IconEntry), error, "Not enough room for icons"
