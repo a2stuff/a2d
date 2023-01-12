@@ -8240,7 +8240,7 @@ in_range:
 
         MGTK_CALL MGTK::MoveTo, pos_col_size
         jsr     PrepareColSize
-        param_call DrawLCString, text_buffer2
+        param_call DrawLCStringRight, text_buffer2
 
         MGTK_CALL MGTK::MoveTo, pos_col_date
         jsr     ComposeDateString
@@ -8746,6 +8746,32 @@ DoByte:
 
 auxtype:
         .word 0
+.endproc
+
+;;; ============================================================
+;;; Draw text right aligned, pascal string address in A,X
+;;; String must be in LC area (visible to both main and aux code)
+
+.proc DrawLCStringRight
+        params  := $6
+        textptr := $6
+        textlen := $8
+        width   := $9
+        dy      := $B
+
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        beq     ret
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::TextWidth, params
+        sub16   #0, width, width
+        copy16  #0, dy
+        MGTK_CALL MGTK::Move, width
+        MGTK_CALL MGTK::DrawText, params
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
