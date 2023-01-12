@@ -453,6 +453,7 @@
 * Launch DeskTop. On a volume, create folders named "A1", "B1", "A", and "B". View > by Name. Verify that the order is: "A", "A1", "B", "B1".
 
 * Launch DeskTop. Open a window containing multiple file types. View > by Type. Verify that the files are sorted by type name, first alphabetically followed by $XX types in numeric order.
+* Launch DeskTop. Open a window containing multiple files. View > by Size. Verify that the files are sorted by size in descending order, with directories at the end.
 
 * Launch DeskTop. Open window containing icons. View > by Name. Verify that selection is supported:
   * The icon bitmap and name can be clicked on.

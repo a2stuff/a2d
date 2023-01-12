@@ -8150,12 +8150,31 @@ done:   rts
 
         cmp     #kViewBySize
     IF_EQ
+        ;; Copy sizes somewhere convenient
+        size1 := $804
+        size2 := $806
         ldy     #FileRecord::blocks
-        lda     (ptr2),y        ; order descending
-        cmp     (ptr1),y
+        copy    (ptr1),y, size1
+        copy    (ptr2),y, size2
         iny
+        copy    (ptr1),y, size1+1
+        copy    (ptr2),y, size2+1
+
+        ;; Treat directories as 0
+        ldy     #FileRecord::file_type
+        lda     (ptr1),y
+        cmp     #FT_DIRECTORY
+      IF_EQ
+        copy16  #0, size1
+      END_IF
         lda     (ptr2),y
-        sbc     (ptr1),y
+        cmp     #FT_DIRECTORY
+      IF_EQ
+        copy16  #0, size2
+      END_IF
+
+        ;; Compare!
+        cmp16   size2, size1 ; order descending
         rts
     END_IF
 

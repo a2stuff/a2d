@@ -29,6 +29,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Show file sizes right aligned in list views.
 * View > as Small Icons added.
 * View > by Type sort order improved.
+* View > by Size sort order improved.
 * File > Copy a File... is now File > Copy To... and operates on current selection.
 * File > Delete a File... is now File > Delete and operates on current selection.
 * Shortcut > Add a Shortcut... defaults to currently selected file.
