@@ -6372,42 +6372,21 @@ index_in_dir:           .byte   0
         cpx     #.sizeof(dir_header)
         bne     :-
 
-        ;; Compute the number of free file records. This is used as a proxy
-        ;; for "number of non-volume icons" below. Each record is 32 bytes;
-        ;; each directory takes one length byte, so the maximum number of
-        ;; records (128) can never be used, which (uncoincidentally) equals
-        ;; kMaxIconCount.
-        sub16   filerecords_free_end, filerecords_free_start, free_record_count
-        dec16   free_record_count ; ensure this is never 128 even when totally empty
-        ldx     #5              ; /= 32 .sizeof(FileRecord)
-:       lsr16   free_record_count
-        dex
-        bne     :-
-
         ;; Is there room for the files?
         lda     dir_header::file_count+1 ; > 255?
         bne     too_many_files  ; yep, definitely not enough room
 
-        lda     icon_count      ; are there enough icons free
-        clc                     ; to fit all of the files?
-        adc     dir_header::file_count
-        bcs     too_many_files  ; overflow, definitely not enough room
+        ;; How many more icons can we allocate?
+        lda     #kMaxIconCount - 2 ; -1 for `DEVCNT` off-by-one, -1 for Trash
+        sec
+        sbc     icon_count      ; actual number in use
+        clc
+        adc     window_entry_count_table ; but don't count desktop icons...
+        sec
+        sbc     DEVCNT   ; count _potential_ number of desktop icons
 
-        cmp     #kMaxIconCount+1 ; allow up to the maximum
-        bcs     too_many_files   ; more than we can handle
-
-        ;; This computes "how many icons would be free if all volumes had an icon",
-        ;; and then checks to see if we have room.
-        ;; `free_record_count` - `reserved_desktop_icons`
-        ;; This should be equivalent to:
-        ;; `kMaxIconCount` - (`icon_count` - # actual vol icons) - (# possible vol icons)
-        ;; TODO: Simplify now that all files get icons regardless of view.
-        ldx     DEVCNT
-        inx                     ; DEVCNT is one less than number of devices
-        inx                     ; And one more for Trash
-        stx     reserved_desktop_icons
-        sub16_8 free_record_count, reserved_desktop_icons ; -= # possible volume icons
-        cmp16   free_record_count, dir_header::file_count ; would the files fit?
+        ;; Can we fit them all?
+        cmp     dir_header::file_count
         bcs     enough_room
 
 too_many_files:
@@ -6591,12 +6570,6 @@ finish: copy16  record_ptr, filerecords_free_start
         jsr     SetCursorPointer ; after loading directory
         jsr     PopPointers      ; do not tail-call optimise!
         rts
-
-free_record_count:
-        .word   0
-
-reserved_desktop_icons:
-        .byte   0
 .endproc
 
 ;;; --------------------------------------------------
