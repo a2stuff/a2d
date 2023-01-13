@@ -7691,12 +7691,9 @@ flags:  .byte   0
         dex                     ; index 0 is window 1
         txa
         asl     a
-        tax
-        lda     window_k_used_table,x
         tay
-        lda     window_k_used_table+1,x
-        tax
-        tya
+        lda     window_k_used_table,y
+        ldx     window_k_used_table+1,y
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, pos_k_in_disk
         jsr     DrawIntString
@@ -7707,12 +7704,9 @@ flags:  .byte   0
         dex                     ; index 0 is window 1
         txa
         asl     a
-        tax
-        lda     window_k_free_table,x
         tay
-        lda     window_k_free_table+1,x
-        tax
-        tya
+        lda     window_k_free_table,y
+        ldx     window_k_free_table+1,y
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, pos_k_available
         jsr     DrawIntString
