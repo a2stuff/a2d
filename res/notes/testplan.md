@@ -697,6 +697,11 @@ Image File:
 * Open the Startup Options DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
 * Open the Startup Options DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
 
+## International
+
+* Open the Control Panels folder. View > by Name. Open International. Change the date format from M/D/Y to D/M/Y or vice versa. CLick OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.
+* Open the Control Panels folder. View > by Name. Open International. Close without changing anything. Verify that only a minimal repaint happens.
+
 ## Calculator
 
 * Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
