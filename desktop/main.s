@@ -599,6 +599,7 @@ dispatch_click:
         ;; Make the window active.
         MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
         copy    findwindow_params::window_id, active_window_id
+        jsr     UpdateWindowUsedFreeDisplayValues
         jsr     LoadActiveWindowEntryTable
         lda     #kDrawWindowEntriesHeaderAndContent
         jsr     DrawWindowEntries
@@ -4819,6 +4820,7 @@ exception_flag:
         jsr     OpenDirectory
 
         ;; Draw header
+        jsr     UpdateWindowUsedFreeDisplayValues
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
     IF_ZERO                     ; Skip drawing if obscured
@@ -6109,6 +6111,17 @@ OffsetWindowGrafport    := OffsetWindowGrafportImpl::noset
 OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
 
 ;;; ============================================================
+
+.proc UpdateWindowUsedFreeDisplayValues
+        lda     active_window_id
+        asl
+        tax
+        copy16  window_k_used_table-2,x, window_draw_k_used_table-2,x ; 1-based to 0-based
+        copy16  window_k_free_table-2,x, window_draw_k_free_table-2,x
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Update used/free values for windows related to volume icon
 ;;; Input: A = icon number
 
@@ -6990,22 +7003,22 @@ has_parent:
         beq     volume
 
         ;; Windowed (folder) icon
-        tax
-        dex
-        txa
         asl     a
         tax
-        copy16  window_k_used_table,x, vol_kb_used
-        copy16  window_k_free_table,x, vol_kb_free
+        copy16  window_k_used_table-2,x, vol_kb_used ; 1-based to 0-based
+        copy16  window_k_free_table-2,x, vol_kb_free
+
+        ;; TODO: Missing branch here?
 
         ;; Desktop (volume) icon
-volume: ldx     cached_window_id
-        dex
-        txa
+volume: lda     cached_window_id
         asl     a
         tax
-        copy16  vol_kb_used, window_k_used_table,x
-        copy16  vol_kb_free, window_k_free_table,x
+        copy16  vol_kb_used, window_k_used_table-2,x ; 1-based to 0-based
+        copy16  vol_kb_free, window_k_free_table-2,x
+
+        copy16  window_k_used_table-2,x, window_draw_k_used_table-2,x ; 1-based to 0-based
+        copy16  window_k_free_table-2,x, window_draw_k_free_table-2,x
 
         ;; --------------------------------------------------
         ;; Create window and icons
@@ -7692,8 +7705,8 @@ flags:  .byte   0
         txa
         asl     a
         tay
-        lda     window_k_used_table,y
-        ldx     window_k_used_table+1,y
+        lda     window_draw_k_used_table,y
+        ldx     window_draw_k_used_table+1,y
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, pos_k_in_disk
         jsr     DrawIntString
@@ -7705,8 +7718,8 @@ flags:  .byte   0
         txa
         asl     a
         tay
-        lda     window_k_free_table,y
-        ldx     window_k_free_table+1,y
+        lda     window_draw_k_free_table,y
+        ldx     window_draw_k_free_table+1,y
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, pos_k_available
         jsr     DrawIntString
@@ -15584,6 +15597,11 @@ window_path_addr_table:
 ;;; Windows 1...8 (since 0 is desktop)
 window_k_used_table:  .res    ::kMaxDeskTopWindows*2, 0
 window_k_free_table:  .res    ::kMaxDeskTopWindows*2, 0
+
+;;; To avoid artifacts, the values drawn are only updated when
+;;; a window becomes active.
+window_draw_k_used_table:  .res    ::kMaxDeskTopWindows*2, 0
+window_draw_k_free_table:  .res    ::kMaxDeskTopWindows*2, 0
 
 ;;; ============================================================
 

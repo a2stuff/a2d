@@ -63,6 +63,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve label spacing in several dialogs.
 * Ensure newly created SELECTOR.LIST file is completely empty.
 * Draw header before entries when refreshing window contents.
+* Update header values only when window is activated to avoid visual artifacts.
 
 ### Selector
 
