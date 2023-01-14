@@ -524,13 +524,13 @@ kMove      = 8                   ; scaled 2x in x dimension
 skip:   .word   0
 
 .proc HandleNoEvent
-        ;; Throttle animation - use IP blink speed as good basis
+        ;; Throttle animation
         lda     skip
         ora     skip+1
         beq     :+
         dec16   skip
         jmp     InputLoop
-:       copy16  #kDefaultIPBlinkSpeed/2, skip
+:       copy16  #175, skip
 
         ;; --------------------------------------------------
         ;; Tick once per frame; used to alternate frames
