@@ -2425,7 +2425,7 @@ Alert := alert_dialog::Alert
 
 ;;; ============================================================
 
-        .assert * <= $F400, error, "Update memory_bitmap if code extends past $F400"
+        .assert * <= $F600, error, "Update memory_bitmap if code extends past $F600"
 .endscope
         auxlc__start := auxlc::start
         auxlc__is_iigs_flag := auxlc::is_iigs_flag

@@ -139,7 +139,7 @@ kDeskTopSettingsSize    = $80
         rgb_color       .byte   ; $00 = B&W, $80 = Color
         mouse_tracking  .byte   ; 0 = normal, 1 = 2x speed
 
-        startup         .byte   ; kStartupXYZ options
+        options         .byte   ; kOptionsXYZ options
 
         intl_date_sep   .byte   ; date separator
         intl_time_sep   .byte   ; time separator
@@ -154,8 +154,9 @@ kDeskTopSettingsSize    = $80
 
 DeskTopSettings::kDateOrderMDY = 0
 DeskTopSettings::kDateOrderDMY = 1
-DeskTopSettings::kStartupSkipRAMCard  = %00000001 ; skip copy to RAMCard, if set
-DeskTopSettings::kStartupSkipSelector = %00000010 ; skip starting Selector, if set
+DeskTopSettings::kOptionsSkipRAMCard   = %00000001 ; skip copy to RAMCard, if set
+DeskTopSettings::kOptionsSkipSelector  = %00000010 ; skip starting Selector, if set
+DeskTopSettings::kOptionsShowShortcuts = %00000100 ; show button shortcuts, if set
 
 kDeskTopSettingsFileVersion = 3
 kDeskTopSettingsFileSize = 1 + .sizeof(DeskTopSettings)

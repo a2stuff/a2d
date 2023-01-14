@@ -189,6 +189,9 @@ skip_port:
 
         pos := $0B
 
+        lda     SETTINGS+DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsShowShortcuts
+    IF_NOT_ZERO
         ;; Draw the string (left aligned)
         add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
         ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
@@ -199,7 +202,7 @@ skip_port:
         ;; Draw the shortcut (if present, right aligned)
         lda     a_shortcut
         ora     a_shortcut+1
-    IF_NOT_ZERO
+      IF_NOT_ZERO
         width := $9
         jsr     _MeasureShortcut
         stax    width
@@ -207,6 +210,20 @@ skip_port:
         sub16   pos+MGTK::Point::xcoord, width, pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawShortcut
+      END_IF
+    ELSE
+        ;; Draw the label (centered)
+        width := $9
+        jsr     _MeasureLabel
+        stax    width
+
+        add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
+        sub16   pos+MGTK::Point::xcoord, width, pos+MGTK::Point::xcoord
+        asr16   pos+MGTK::Point::xcoord
+        ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
+        sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
+        MGTK_CALL MGTK::MoveTo, pos
+        jsr     _DrawLabel
     END_IF
 
         bit     state
@@ -452,9 +469,12 @@ a_record  .addr
         add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kRadioButtonHeight
     END_IF
 
+        lda     SETTINGS+DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsShowShortcuts
+    IF_NOT_ZERO
         lda     a_shortcut
         ora     a_shortcut+1
-    IF_NOT_ZERO
+      IF_NOT_ZERO
         ;; Draw the shortcut
         jsr     _DrawShortcut
 
@@ -462,6 +482,7 @@ a_record  .addr
         width := $9
         jsr     _MeasureShortcut
         addax   rect+MGTK::Rect::x2
+      END_IF
     END_IF
 
         ;; Write rect back to button record
@@ -577,9 +598,12 @@ a_record  .addr
         add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kCheckboxHeight
     END_IF
 
+        lda     SETTINGS+DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsShowShortcuts
+    IF_NOT_ZERO
         lda     a_shortcut
         ora     a_shortcut+1
-    IF_NOT_ZERO
+      IF_NOT_ZERO
         ;; Draw the shortcut
         jsr     _DrawShortcut
 
@@ -587,6 +611,7 @@ a_record  .addr
         width := $9
         jsr     _MeasureShortcut
         addax   rect+MGTK::Rect::x2
+      END_IF
     END_IF
 
         ;; Write rect back to button record

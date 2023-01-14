@@ -977,8 +977,8 @@ resume:
         jsr     SetCopiedToRamcardFlag
 
         ;; Skip RAMCard install if flag is set
-        lda     SETTINGS + DeskTopSettings::startup
-        and     #DeskTopSettings::kStartupSkipRAMCard
+        lda     SETTINGS + DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsSkipRAMCard
         beq     :+
         jmp     DidNotCopy
 
@@ -2013,8 +2013,8 @@ str_desktop:
 start:  MLI_CALL CLOSE, close_everything_params
 
         ;; Don't try selector if flag is set
-        lda     SETTINGS + DeskTopSettings::startup
-        and     #DeskTopSettings::kStartupSkipSelector
+        lda     SETTINGS + DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsSkipSelector
         bne     :+
 
         MLI_CALL OPEN, open_selector_params

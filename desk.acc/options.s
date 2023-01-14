@@ -7,7 +7,7 @@
 ;;; ============================================================
 
         .include "../config.inc"
-        RESOURCE_FILE "startup.res"
+        RESOURCE_FILE "options.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -163,19 +163,14 @@ grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
-        kRamCardX = 10
-        kRamCardY = 10
-
-        DEFINE_BUTTON ramcard_rec, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, kRamCardX, kRamCardY
+        DEFINE_BUTTON ramcard_rec, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, 10, 10
         DEFINE_BUTTON_PARAMS ramcard_params, ramcard_rec
 
-;;; ============================================================
-
-        kSelectorX = 10
-        kSelectorY = 21
-
-        DEFINE_BUTTON selector_rec, kDAWindowId, res_string_label_selector, res_string_shortcut_apple_2, kSelectorX, kSelectorY
+        DEFINE_BUTTON selector_rec, kDAWindowId, res_string_label_selector, res_string_shortcut_apple_2, 10, 21
         DEFINE_BUTTON_PARAMS selector_params, selector_rec
+
+        DEFINE_BUTTON shortcuts_rec, kDAWindowId, res_string_label_shortcuts, res_string_shortcut_apple_3, 10, 32
+        DEFINE_BUTTON_PARAMS shortcuts_params, shortcuts_rec
 
 ;;; ============================================================
 
@@ -222,6 +217,8 @@ grafport:       .tag    MGTK::GrafPort
         jeq     HandleRamcardClick
         cmp     #'2'
         jeq     HandleSelectorClick
+        cmp     #'3'
+        jeq     HandleShortcutsClick
         jmp     InputLoop
 .endproc
 
@@ -296,6 +293,12 @@ common: bit     dragwindow_params::moved
         jmp     HandleSelectorClick
         END_IF
 
+        MGTK_CALL MGTK::InRect, shortcuts_rec::rect
+        cmp     #MGTK::inrect_inside
+        IF_EQ
+        jmp     HandleShortcutsClick
+        END_IF
+
         ;; ----------------------------------------
 
         jmp     InputLoop
@@ -316,17 +319,25 @@ common: bit     dragwindow_params::moved
 
         ;; --------------------------------------------------
 
-        lda     #DeskTopSettings::kStartupSkipRAMCard
+        lda     #DeskTopSettings::kOptionsSkipRAMCard
         jsr     GetBit
         sta     ramcard_rec::state
         BTK_CALL BTK::CheckboxDraw, ramcard_params
 
         ;; --------------------------------------------------
 
-        lda     #DeskTopSettings::kStartupSkipSelector
+        lda     #DeskTopSettings::kOptionsSkipSelector
         jsr     GetBit
         sta     selector_rec::state
         BTK_CALL BTK::CheckboxDraw, selector_params
+
+        ;; --------------------------------------------------
+
+        lda     #DeskTopSettings::kOptionsShowShortcuts
+        jsr     GetBit
+        eor     #$80            ; invert
+        sta     shortcuts_rec::state
+        BTK_CALL BTK::CheckboxDraw, shortcuts_params
 
         ;; --------------------------------------------------
 
@@ -334,10 +345,10 @@ common: bit     dragwindow_params::moved
         rts
 .endproc
 
-;;; Inputs: A = bit to read from DeskTopSettings::startup
+;;; Inputs: A = bit to read from DeskTopSettings::options
 ;;; Outputs: A = $80 if set, $00 if unset
 .proc GetBit
-        and     SETTINGS + DeskTopSettings::startup
+        and     SETTINGS + DeskTopSettings::options
         beq     set
         lda     #0
         rts
@@ -349,11 +360,11 @@ set:    lda     #$80
 ;;; ============================================================
 
 .proc HandleRamcardClick
-        lda     SETTINGS + DeskTopSettings::startup
-        eor     #DeskTopSettings::kStartupSkipRAMCard
-        sta     SETTINGS + DeskTopSettings::startup
+        lda     SETTINGS + DeskTopSettings::options
+        eor     #DeskTopSettings::kOptionsSkipRAMCard
+        sta     SETTINGS + DeskTopSettings::options
 
-        lda     #DeskTopSettings::kStartupSkipRAMCard
+        lda     #DeskTopSettings::kOptionsSkipRAMCard
         jsr     GetBit
         sta     ramcard_rec::state
         BTK_CALL BTK::CheckboxUpdate, ramcard_params
@@ -365,14 +376,31 @@ set:    lda     #$80
 ;;; ============================================================
 
 .proc HandleSelectorClick
-        lda     SETTINGS + DeskTopSettings::startup
-        eor     #DeskTopSettings::kStartupSkipSelector
-        sta     SETTINGS + DeskTopSettings::startup
+        lda     SETTINGS + DeskTopSettings::options
+        eor     #DeskTopSettings::kOptionsSkipSelector
+        sta     SETTINGS + DeskTopSettings::options
 
-        lda     #DeskTopSettings::kStartupSkipSelector
+        lda     #DeskTopSettings::kOptionsSkipSelector
         jsr     GetBit
         sta     selector_rec::state
         BTK_CALL BTK::CheckboxUpdate, selector_params
+
+        jsr     MarkDirty
+        jmp     InputLoop
+.endproc
+
+;;; ============================================================
+
+.proc HandleShortcutsClick
+        lda     SETTINGS + DeskTopSettings::options
+        eor     #DeskTopSettings::kOptionsShowShortcuts
+        sta     SETTINGS + DeskTopSettings::options
+
+        lda     #DeskTopSettings::kOptionsShowShortcuts
+        jsr     GetBit
+        eor     #$80            ; invert sense
+        sta     shortcuts_rec::state
+        BTK_CALL BTK::CheckboxUpdate, shortcuts_params
 
         jsr     MarkDirty
         jmp     InputLoop

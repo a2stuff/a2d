@@ -31,8 +31,8 @@
         ASSERT_ADDRESS settings_start + DeskTopSettings::mouse_tracking
         .byte   0
 
-        ASSERT_ADDRESS settings_start + DeskTopSettings::startup
-        .byte   DeskTopSettings::kStartupSkipSelector
+        ASSERT_ADDRESS settings_start + DeskTopSettings::options
+        .byte   DeskTopSettings::kOptionsSkipSelector
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::intl_date_sep
         .byte   res_char_date_separator
