@@ -189,35 +189,25 @@ skip_port:
 
         pos := $0B
 
+        ;; Draw the string (left aligned)
         add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
         ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
         sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
-
-        ;; Draw the string (left aligned)
         jsr     _DrawLabel
 
         ;; Draw the shortcut (if present, right aligned)
-PARAM_BLOCK tw_params, $6
-textptr .addr
-textlen .byte
-width   .word
-END_PARAM_BLOCK
         lda     a_shortcut
         ora     a_shortcut+1
-        beq     :+
-        ldy     #0
-        lda     (a_shortcut),y
-        beq     :+
-        sta     tw_params::textlen
-        add16_8 a_shortcut, #1, tw_params::textptr
-        MGTK_CALL MGTK::TextWidth, tw_params
-
+    IF_NOT_ZERO
+        width := $9
+        jsr     _MeasureShortcut
+        stax    width
         sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
-        sub16   pos+MGTK::Point::xcoord, tw_params::width, pos+MGTK::Point::xcoord
+        sub16   pos+MGTK::Point::xcoord, width, pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
-        MGTK_CALL MGTK::DrawText, tw_params
-:
+        jsr     _DrawShortcut
+    END_IF
 
         bit     state
     IF_NS
@@ -271,6 +261,45 @@ END_PARAM_BLOCK
 :
         sta     tw_params::textlen
         add16_8 a_label, #1, tw_params::textptr
+        MGTK_CALL MGTK::TextWidth, tw_params
+        ldax    tw_params::width
+        rts
+.endproc
+
+;;; Input: `a_shortcut` points at string
+;;; Trashes $06..$08
+.proc _DrawShortcut
+PARAM_BLOCK dt_params, $6
+textptr .addr
+textlen .byte
+END_PARAM_BLOCK
+        ldy     #0
+        lda     (a_shortcut),y
+        beq     :+
+        sta     dt_params::textlen
+        add16_8 a_shortcut, #1, dt_params::textptr
+        MGTK_CALL MGTK::DrawText, dt_params
+:       rts
+.endproc
+
+;;; Inputs: `a_shortcut` points at string
+;;; Output: A,X = width
+;;; Trashes: $06..$0A
+.proc _MeasureShortcut
+PARAM_BLOCK tw_params, $6
+textptr .addr
+textlen .byte
+width   .word
+END_PARAM_BLOCK
+        ldy     #0
+        lda     (a_shortcut),y
+        bne     :+
+        lda     #0
+        tax
+        rts
+:
+        sta     tw_params::textlen
+        add16_8 a_shortcut, #1, tw_params::textptr
         MGTK_CALL MGTK::TextWidth, tw_params
         ldax    tw_params::width
         rts
@@ -406,11 +435,9 @@ a_record  .addr
         add16_8 rect+MGTK::Rect::x1, #kRadioButtonWidth, rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::y1, #kRadioButtonHeight, rect+MGTK::Rect::y2
 
-        ;; No label? skip
         lda     a_label
         ora     a_label+1
-        beq     update_rect
-
+    IF_NOT_ZERO
         ;; Draw the label
         pos := $B
         add16_8 rect+MGTK::Rect::x1, #kLabelPadding + kRadioButtonWidth, pos+MGTK::Point::xcoord
@@ -423,9 +450,21 @@ a_record  .addr
         addax   rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::x2, #kLabelPadding
         add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kRadioButtonHeight
+    END_IF
+
+        lda     a_shortcut
+        ora     a_shortcut+1
+    IF_NOT_ZERO
+        ;; Draw the shortcut
+        jsr     _DrawShortcut
+
+        ;; And measure it for hit testing
+        width := $9
+        jsr     _MeasureShortcut
+        addax   rect+MGTK::Rect::x2
+    END_IF
 
         ;; Write rect back to button record
-update_rect:
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
 :       lda     rect,x
@@ -521,11 +560,9 @@ a_record  .addr
         add16_8 rect+MGTK::Rect::x1, #kCheckboxWidth, rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::y1, #kCheckboxHeight, rect+MGTK::Rect::y2
 
-        ;; No label? skip
         lda     a_label
         ora     a_label+1
-        beq     update_rect
-
+    IF_NOT_ZERO
         ;; Draw the label
         pos := $B
         add16_8 rect+MGTK::Rect::x1, #kLabelPadding + kCheckboxWidth, pos+MGTK::Point::xcoord
@@ -538,9 +575,21 @@ a_record  .addr
         addax   rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::x2, #kLabelPadding
         add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kCheckboxHeight
+    END_IF
+
+        lda     a_shortcut
+        ora     a_shortcut+1
+    IF_NOT_ZERO
+        ;; Draw the shortcut
+        jsr     _DrawShortcut
+
+        ;; And measure it for hit testing
+        width := $9
+        jsr     _MeasureShortcut
+        addax   rect+MGTK::Rect::x2
+    END_IF
 
         ;; Write rect back to button record
-update_rect:
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
 :       lda     rect,x
