@@ -401,18 +401,18 @@ kRadioButtonLeft  = 332
 
         DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 37
 
-        DEFINE_BUTTON primary_run_list_rec,   kFDWinId, {kGlyphOpenApple,res_string_selector_label_primary_run_list},, kRadioButtonLeft, 39
+        DEFINE_BUTTON primary_run_list_rec,   kFDWinId, res_string_selector_label_primary_run_list, res_string_selector_shortcut_primary_run_list, kRadioButtonLeft, 39
         DEFINE_BUTTON_PARAMS primary_run_list_params, primary_run_list_rec
-        DEFINE_BUTTON secondary_run_list_rec, kFDWinId, {kGlyphOpenApple,res_string_selector_label_secondary_run_list},, kRadioButtonLeft, 48
+        DEFINE_BUTTON secondary_run_list_rec, kFDWinId, res_string_selector_label_secondary_run_list, res_string_selector_shortcut_secondary_run_list, kRadioButtonLeft, 48
         DEFINE_BUTTON_PARAMS secondary_run_list_params, secondary_run_list_rec
 
         DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 71
 
-        DEFINE_BUTTON at_first_boot_rec,      kFDWinId, {kGlyphOpenApple,res_string_selector_label_at_first_boot},, kRadioButtonLeft, 73
+        DEFINE_BUTTON at_first_boot_rec,      kFDWinId, res_string_selector_label_at_first_boot, res_string_selector_shortcut_at_first_boot, kRadioButtonLeft, 73
         DEFINE_BUTTON_PARAMS at_first_boot_params, at_first_boot_rec
-        DEFINE_BUTTON at_first_use_rec,       kFDWinId, {kGlyphOpenApple,res_string_selector_label_at_first_use},, kRadioButtonLeft, 82
+        DEFINE_BUTTON at_first_use_rec,       kFDWinId, res_string_selector_label_at_first_use, res_string_selector_shortcut_at_first_use, kRadioButtonLeft, 82
         DEFINE_BUTTON_PARAMS at_first_use_params, at_first_use_rec
-        DEFINE_BUTTON never_rec,              kFDWinId, {kGlyphOpenApple,res_string_selector_label_never},, kRadioButtonLeft, 91
+        DEFINE_BUTTON never_rec,              kFDWinId, res_string_selector_label_never, res_string_selector_shortcut_never, kRadioButtonLeft, 91
         DEFINE_BUTTON_PARAMS never_params, never_rec
 
 ;;; ============================================================

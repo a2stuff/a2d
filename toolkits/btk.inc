@@ -68,7 +68,7 @@ state:          .byte   0
 str_label:      PASCAL_STRING {label}
 .endif
 .ifnblank shortcut
-str_shortcut:   PASCAL_STRING shortcut
+str_shortcut:   PASCAL_STRING {shortcut}
 .endif
 .endparams
 .endmacro
