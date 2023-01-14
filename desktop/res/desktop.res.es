@@ -147,16 +147,11 @@
 .define res_string_selector_label_enter_name "Nombre del atajo:"
 .define res_string_selector_label_add_a_new_entry_to "A|adir atajo a la:"
 .define res_string_selector_label_primary_run_list "men\x14 y lista"
-.define res_string_selector_shortcut_primary_run_list " (\x1F1)"
 .define res_string_selector_label_secondary_run_list "solo la lista"
-.define res_string_selector_shortcut_secondary_run_list " (\x1F2)"
 .define res_string_selector_label_download "Copiar a RAMDisk:"
 .define res_string_selector_label_at_first_boot "en el arranque"
-.define res_string_selector_shortcut_at_first_boot " (\x1F3)"
 .define res_string_selector_label_at_first_use "por primera vez"
-.define res_string_selector_shortcut_at_first_use " (\x1F4)"
 .define res_string_selector_label_never "nunca"
-.define res_string_selector_shortcut_never " (\x1F5)"
 .define res_string_the_dos_33_disk_suffix_pattern "el disco DOS 3.3 en la ranura # unidad #"
 .define res_const_the_dos_33_disk_suffix_pattern_offset1 31
 .define res_const_the_dos_33_disk_suffix_pattern_offset2 40

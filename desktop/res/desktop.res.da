@@ -147,16 +147,11 @@
 .define res_string_selector_label_enter_name "Genvejsnavn:"
 .define res_string_selector_label_add_a_new_entry_to "Tilf|j en genvej til:"
 .define res_string_selector_label_primary_run_list "menu og liste"
-.define res_string_selector_shortcut_primary_run_list " (\x1F1)"
 .define res_string_selector_label_secondary_run_list "kun liste"
-.define res_string_selector_shortcut_secondary_run_list " (\x1F2)"
 .define res_string_selector_label_download "Kopier til RAMCard:"
 .define res_string_selector_label_at_first_boot "ved st|vlen"
-.define res_string_selector_shortcut_at_first_boot " (\x1F3)"
 .define res_string_selector_label_at_first_use "ved f|rste brug"
-.define res_string_selector_shortcut_at_first_use " (\x1F4)"
 .define res_string_selector_label_never "aldrig"
-.define res_string_selector_shortcut_never " (\x1F5)"
 .define res_string_the_dos_33_disk_suffix_pattern "DOS 3.3-disken i kortplads # drev #"
 .define res_const_the_dos_33_disk_suffix_pattern_offset1 28
 .define res_const_the_dos_33_disk_suffix_pattern_offset2 35

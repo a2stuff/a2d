@@ -3,6 +3,11 @@
 .define res_string_button_cancel_shortcut "Esc"
 .define res_string_button_try_again "F|rs|k igen"
 .define res_char_button_try_again_shortcut 'F'
+.define res_string_shortcut_apple_1 " (\x1F1)"
+.define res_string_shortcut_apple_2 " (\x1F2)"
+.define res_string_shortcut_apple_3 " (\x1F3)"
+.define res_string_shortcut_apple_4 " (\x1F4)"
+.define res_string_shortcut_apple_5 " (\x1F5)"
 .define res_string_button_drives "Enheter"
 .define res_string_button_open "\\ppna"
 .define res_string_button_close "St{ng"

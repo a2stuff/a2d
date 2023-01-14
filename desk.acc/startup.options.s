@@ -166,7 +166,7 @@ grafport:       .tag    MGTK::GrafPort
         kRamCardX = 10
         kRamCardY = 10
 
-        DEFINE_BUTTON ramcard_rec, kDAWindowId, res_string_label_ramcard,, kRamCardX, kRamCardY
+        DEFINE_BUTTON ramcard_rec, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, kRamCardX, kRamCardY
         DEFINE_BUTTON_PARAMS ramcard_params, ramcard_rec
 
 ;;; ============================================================
@@ -174,7 +174,7 @@ grafport:       .tag    MGTK::GrafPort
         kSelectorX = 10
         kSelectorY = 21
 
-        DEFINE_BUTTON selector_rec, kDAWindowId, res_string_label_selector,, kSelectorX, kSelectorY
+        DEFINE_BUTTON selector_rec, kDAWindowId, res_string_label_selector, res_string_shortcut_apple_2, kSelectorX, kSelectorY
         DEFINE_BUTTON_PARAMS selector_params, selector_rec
 
 ;;; ============================================================
@@ -207,10 +207,22 @@ grafport:       .tag    MGTK::GrafPort
 ;;; ============================================================
 
 .proc HandleKey
+        lda     event_params::modifiers
+    IF_ZERO
+        ;; no modifiers
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     Exit
         bne     InputLoop       ; always
+    END_IF
+
+        ;; modifiers
+        lda     event_params::key
+        cmp     #'1'
+        jeq     HandleRamcardClick
+        cmp     #'2'
+        jeq     HandleSelectorClick
+        jmp     InputLoop
 .endproc
 
 ;;; ============================================================

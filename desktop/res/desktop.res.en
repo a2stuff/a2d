@@ -147,16 +147,11 @@
 .define res_string_selector_label_enter_name "Shortcut name:"
 .define res_string_selector_label_add_a_new_entry_to "Add a shortcut to the:"
 .define res_string_selector_label_primary_run_list "menu and list"
-.define res_string_selector_shortcut_primary_run_list " (\x1F1)"
 .define res_string_selector_label_secondary_run_list "list only"
-.define res_string_selector_shortcut_secondary_run_list " (\x1F2)"
 .define res_string_selector_label_download "Copy to RAMCard:"
 .define res_string_selector_label_at_first_boot "at boot"
-.define res_string_selector_shortcut_at_first_boot " (\x1F3)"
 .define res_string_selector_label_at_first_use "at first use"
-.define res_string_selector_shortcut_at_first_use " (\x1F4)"
 .define res_string_selector_label_never "never"
-.define res_string_selector_shortcut_never " (\x1F5)"
 .define res_string_the_dos_33_disk_suffix_pattern "the DOS 3.3 disk in slot # drive #"
 .define res_const_the_dos_33_disk_suffix_pattern_offset1 26
 .define res_const_the_dos_33_disk_suffix_pattern_offset2 34

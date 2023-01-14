@@ -3,6 +3,11 @@
 .define res_string_button_cancel_shortcut "Esc"
 .define res_string_button_try_again "Recommencer"
 .define res_char_button_try_again_shortcut 'R'
+.define res_string_shortcut_apple_1 " (\x1F1)"
+.define res_string_shortcut_apple_2 " (\x1F2)"
+.define res_string_shortcut_apple_3 " (\x1F3)"
+.define res_string_shortcut_apple_4 " (\x1F4)"
+.define res_string_shortcut_apple_5 " (\x1F5)"
 .define res_string_button_drives "Lecteurs"
 .define res_string_button_open "Ouvrir"
 .define res_string_button_close "Fermer"
