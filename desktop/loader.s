@@ -50,6 +50,11 @@ segment_addr_table_high:        ; Temporary load addresses
         .byte   >kSegmentDeskTopMainAddress,>kSegmentInitializerAddress,>kSegmentInvokerAddress ; "moved" in place
         ASSERT_TABLE_SIZE segment_addr_table_high, kNumSegments
 
+segment_dest_table_low:         ; Runtime addresses (moved here)
+        .byte   <kSegmentDeskTopAuxAddress,<kSegmentDeskTopLC1AAddress,<kSegmentDeskTopLC1BAddress
+        .byte   <kSegmentDeskTopMainAddress,<kSegmentInitializerAddress,<kSegmentInvokerAddress
+        ASSERT_TABLE_SIZE segment_dest_table_low, kNumSegments
+
 segment_dest_table_high:        ; Runtime addresses (moved here)
         .byte   >kSegmentDeskTopAuxAddress,>kSegmentDeskTopLC1AAddress,>kSegmentDeskTopLC1BAddress
         .byte   >kSegmentDeskTopMainAddress,>kSegmentInitializerAddress,>kSegmentInvokerAddress
@@ -170,6 +175,7 @@ continue:
         dst := $8
 :       ldy     #0
         sty     src
+        ldy     segment_dest_table_low,x
         sty     dst
         ldy     segment_dest_table_high,x
         sty     dst+1
