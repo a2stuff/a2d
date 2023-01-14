@@ -10,7 +10,7 @@
 .define res_filename_find_files cerca.file
 .define res_filename_control_panels preferenze
 .define res_filename_control_panel preferenze
-.define res_filename_startup_options avviare
+.define res_filename_options opzioni
 .define res_filename_system_speed velocita
 .define res_filename_joystick joystick
 .define res_filename_international Internazionale

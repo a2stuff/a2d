@@ -10,7 +10,7 @@
 .define res_filename_find_files finde.filer
 .define res_filename_control_panels kontrolpaneler
 .define res_filename_control_panel kontrolpanel
-.define res_filename_startup_options startmuligheder
+.define res_filename_options muligheder
 .define res_filename_system_speed Systemhastighed
 .define res_filename_joystick joystick
 .define res_filename_international International

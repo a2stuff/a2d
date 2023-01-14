@@ -57,7 +57,7 @@
 ;;; ============================================================
 ;;; Param blocks
 
-        kDialogWidth = 400
+        kDialogWidth = 420
         kDialogHeight = 90
 
         kControlMarginX = 16
@@ -91,13 +91,13 @@
         kThouSampleOffset = 3
 
         kOptionDisplayX = 260
-        DEFINE_BUTTON date_mdy_rec, kDAWindowId, res_string_label_mdy,, kOptionDisplayX, 16
-        DEFINE_BUTTON date_dmy_rec, kDAWindowId, res_string_label_dmy,, kOptionDisplayX, 27
+        DEFINE_BUTTON date_mdy_rec, kDAWindowId, res_string_label_mdy, res_string_shortcut_apple_1, kOptionDisplayX, 16
+        DEFINE_BUTTON date_dmy_rec, kDAWindowId, res_string_label_dmy, res_string_shortcut_apple_2, kOptionDisplayX, 27
         DEFINE_BUTTON_PARAMS date_mdy_params, date_mdy_rec
         DEFINE_BUTTON_PARAMS date_dmy_params, date_dmy_rec
 
-        DEFINE_BUTTON clock_12hour_rec, kDAWindowId, res_string_label_clock_12hour,, kOptionDisplayX, 45
-        DEFINE_BUTTON clock_24hour_rec, kDAWindowId, res_string_label_clock_24hour,, kOptionDisplayX, 56
+        DEFINE_BUTTON clock_12hour_rec, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_3, kOptionDisplayX, 45
+        DEFINE_BUTTON clock_24hour_rec, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_4, kOptionDisplayX, 56
         DEFINE_BUTTON_PARAMS clock_12hour_params, clock_12hour_rec
         DEFINE_BUTTON_PARAMS clock_24hour_params, clock_24hour_rec
 
@@ -202,16 +202,30 @@ init_window:
 
 :       cmp     #MGTK::EventKind::key_down
         bne     InputLoop
-        FALL_THROUGH_TO OnKey
+        jsr     OnKey
+        jmp     InputLoop
 .endproc
+
+;;; ============================================================
 
 .proc OnKey
         MGTK_CALL MGTK::SetPort, winfo::port
 
         lda     event_params::modifiers
-        bne     InputLoop
+    IF_NOT_ZERO
         lda     event_params::key
+        cmp     #'1'
+        jeq     OnClickMDY
+        cmp     #'2'
+        jeq     OnClickDMY
+        cmp     #'3'
+        jeq     OnClick12Hour
+        cmp     #'4'
+        jeq     OnClick24Hour
+        rts
+    END_IF
 
+        lda     event_params::key
         cmp     #CHAR_RETURN
         jeq     OnKeyOk
         cmp     #CHAR_ESCAPE
@@ -228,10 +242,12 @@ init_window:
         cmp     #CHAR_DOWN
         beq     OnKeyNext
         cmp     #' '
-        bcc     InputLoop
+        bcc     ret
         cmp     #CHAR_DELETE
-        bcs     InputLoop
+        bcs     ret
         jmp     OnKeyChar
+
+ret:    rts
 
 .proc OnKeyPrev
         sec
@@ -253,8 +269,7 @@ init_window:
 .endproc
 
 .proc UpdateSelection
-        jsr     SelectField
-        jmp     InputLoop
+        jmp     SelectField
 .endproc
 
 .proc OnKeyChar
@@ -284,13 +299,12 @@ init_window:
         beq     update          ; always
     END_IF
 
-        jmp     InputLoop
+        rts
 
 update:
         copy    #$80, dialog_result
         txa
-        jsr     DrawField
-        jmp     InputLoop
+        jmp     DrawField
 .endproc
 
 .endproc
@@ -325,35 +339,19 @@ hit:
 
         MGTK_CALL MGTK::InRect, clock_12hour_rec::rect
         cmp     #MGTK::inrect_inside
-    IF_EQ
-        copy    #0, SETTINGS+DeskTopSettings::clock_24hours
-        copy    #$80, dialog_result
-        jmp     UpdateClockOptionButtons
-    END_IF
+        jeq     OnClick12Hour
 
         MGTK_CALL MGTK::InRect, clock_24hour_rec::rect
         cmp     #MGTK::inrect_inside
-    IF_EQ
-        copy    #$80, SETTINGS+DeskTopSettings::clock_24hours
-        copy    #$80, dialog_result
-        jmp     UpdateClockOptionButtons
-    END_IF
+        jeq     OnClick24Hour
 
         MGTK_CALL MGTK::InRect, date_mdy_rec::rect
         cmp     #MGTK::inrect_inside
-    IF_EQ
-        copy    #DeskTopSettings::kDateOrderMDY, SETTINGS+DeskTopSettings::intl_date_order
-        copy    #$80, dialog_result
-        jmp     UpdateDateOptionButtons
-    END_IF
+        jeq     OnClickMDY
 
         MGTK_CALL MGTK::InRect, date_dmy_rec::rect
         cmp     #MGTK::inrect_inside
-    IF_EQ
-        copy    #DeskTopSettings::kDateOrderDMY, SETTINGS+DeskTopSettings::intl_date_order
-        copy    #$80, dialog_result
-        jmp     UpdateDateOptionButtons
-    END_IF
+        jeq     OnClickDMY
 
         ;; --------------------------------------------------
 
@@ -403,6 +401,32 @@ hit:
 
 .proc OnOk
         jmp     Destroy
+.endproc
+
+;;; ============================================================
+
+.proc OnClick12Hour
+        copy    #0, SETTINGS+DeskTopSettings::clock_24hours
+        copy    #$80, dialog_result
+        jmp     UpdateClockOptionButtons
+.endproc
+
+.proc OnClick24Hour
+        copy    #$80, SETTINGS+DeskTopSettings::clock_24hours
+        copy    #$80, dialog_result
+        jmp     UpdateClockOptionButtons
+.endproc
+
+.proc OnClickMDY
+        copy    #DeskTopSettings::kDateOrderMDY, SETTINGS+DeskTopSettings::intl_date_order
+        copy    #$80, dialog_result
+        jmp     UpdateDateOptionButtons
+.endproc
+
+.proc OnClickDMY
+        copy    #DeskTopSettings::kDateOrderDMY, SETTINGS+DeskTopSettings::intl_date_order
+        copy    #$80, dialog_result
+        jmp     UpdateDateOptionButtons
 .endproc
 
 ;;; ============================================================

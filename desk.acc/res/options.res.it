@@ -1,4 +1,4 @@
 .define res_string_window_title "Opzioni"
-.define res_string_label_ramcard "Copia su scheda di espansione RAM(se presente)"
+.define res_string_label_ramcard "Copia su scheda di espansione RAM (se presente)"
 .define res_string_label_selector "Selettore di avvio all'avvio"
 .define res_string_label_shortcuts "Mostra scorciatoie nelle finestre di dialogo"

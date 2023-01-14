@@ -10,7 +10,7 @@
 .define res_filename_find_files hitta.filer
 .define res_filename_control_panels kontrollpaneler
 .define res_filename_control_panel kontrollpanel
-.define res_filename_startup_options startalternativ
+.define res_filename_options alternativ
 .define res_filename_system_speed systemhastighet
 .define res_filename_joystick styrspak
 .define res_filename_international Internationellt

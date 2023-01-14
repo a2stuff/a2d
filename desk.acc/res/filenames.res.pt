@@ -10,7 +10,7 @@
 .define res_filename_find_files procurar.arquiv
 .define res_filename_control_panels Paineis.control
 .define res_filename_control_panel Painel.Controlo
-.define res_filename_startup_options comecar
+.define res_filename_options opcoes
 .define res_filename_system_speed Rapidez
 .define res_filename_joystick joystick
 .define res_filename_international Internacional
