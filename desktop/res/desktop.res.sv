@@ -65,7 +65,7 @@
 .define res_string_label_file "Arkiv:"
 .define res_string_delete_remaining "Filer som }terst}r att radera: "
 .define res_string_delete_prompt_locked_file "Den h{r filen {r l}st, vill du ta bort den {nd}?"
-.define res_string_new_folder_label_in "i: "
+.define res_string_new_folder_label_in "I: "
 .define res_string_new_folder_label_name "Nytt mappnamn:"
 .define res_string_rename_label_old "Byt namn: "
 .define res_string_rename_label_new "Nytt namn:"

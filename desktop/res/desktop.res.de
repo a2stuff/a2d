@@ -65,7 +65,7 @@
 .define res_string_label_file "Datei:"
 .define res_string_delete_remaining "Zu L|schen: "
 .define res_string_delete_prompt_locked_file "Datei schreibgesch}tzt, dennoch L|schen?"
-.define res_string_new_folder_label_in "in: "
+.define res_string_new_folder_label_in "In: "
 .define res_string_new_folder_label_name "Neuer Ordnername:"
 .define res_string_rename_label_old "Umbenennen: "
 .define res_string_rename_label_new "Neuer Name:"

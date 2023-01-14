@@ -1797,8 +1797,11 @@ END_PROC_AT
 .endproc
 
 ;;; Split filename off `path_buf4` and store in `filename_buf`
+;;; If a volume name, splits off leading "/" (e.g. "/VOL" to "/" and "VOL")
 .proc SplitPathBuf4
         param_call FindLastPathSegment, path_buf4
+        cpy     path_buf4
+        beq     volume
 
         ;; Copy filename part to buf
         ldx     #1
@@ -1820,6 +1823,17 @@ END_PROC_AT
         sbc     filename_buf
         sta     path_buf4
         dec     path_buf4
+        rts
+
+        ;; Y = path length
+volume:
+        dey
+        sty     filename_buf
+:       lda     path_buf4+1,y
+        sta     filename_buf,y
+        dey
+        bne     :-
+        copy    #1, path_buf4
         rts
 .endproc
 
@@ -14051,10 +14065,13 @@ GetSizeDialogProc::do_count := *
         ldy     #new_folder_dialog_params::a_path - new_folder_dialog_params
         copy16in ($06),y, $08
         param_call CopyPtr2ToBuf, path_buf0
+        param_call CopyPtr2ToBuf, path_buf4
+        jsr     SplitPathBuf4
+        COPY_STRING filename_buf, buf_filename ; for display
 
         jsr     SetPortForDialogWindow
         param_call DrawDialogLabel, 2, aux::str_in
-        jsr     DrawDialogPathBuf0
+        param_call DrawString, buf_filename
         param_call DrawDialogLabel, 4, aux::str_enter_folder_name
         jsr     InitNameInput
 

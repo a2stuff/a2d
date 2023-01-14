@@ -65,7 +65,7 @@
 .define res_string_label_file "Arquivo:"
 .define res_string_delete_remaining "Arquivos ausentes para excluir: "
 .define res_string_delete_prompt_locked_file "Este arquivo est@ bloqueado, deseja exclu{-lo mesmo assim?"
-.define res_string_new_folder_label_in "dentro: "
+.define res_string_new_folder_label_in "Dentro: "
 .define res_string_new_folder_label_name "Nome da nova pasta:"
 .define res_string_rename_label_old "Renomear: "
 .define res_string_rename_label_new "Novo nome:"
