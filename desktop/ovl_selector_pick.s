@@ -504,7 +504,7 @@ done:   return  #$FF
         dey
         bpl     :-
 
-        param_jump main::DrawLCString, text_buffer2
+        param_jump main::DrawString, text_buffer2
 .endproc
 
 ;;; ============================================================

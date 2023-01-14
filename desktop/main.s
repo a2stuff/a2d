@@ -7710,7 +7710,7 @@ flags:  .byte   0
 
         MGTK_CALL MGTK::MoveTo, items_label_pos
         jsr     DrawIntString
-        param_call_indirect DrawLCString, ptr_str_items_suffix
+        param_call_indirect DrawString, ptr_str_items_suffix
 
         ;; Draw "XXXK in disk"
         jsr     CalcHeaderCoords
@@ -7724,7 +7724,7 @@ flags:  .byte   0
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, pos_k_in_disk
         jsr     DrawIntString
-        param_call DrawLCString, str_k_in_disk
+        param_call DrawString, str_k_in_disk
 
         ;; Draw "XXXK available"
         ldx     active_window_id
@@ -7737,7 +7737,7 @@ flags:  .byte   0
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, pos_k_available
         jsr     DrawIntString
-        param_jump DrawLCString, str_k_available
+        param_jump DrawString, str_k_available
 
 .proc  adjust_item_suffix
         cmp     #1
@@ -7798,7 +7798,7 @@ finish:
 .endproc ; CalcHeaderCoords
 
 .proc DrawIntString
-        param_jump DrawLCString, str_from_int
+        param_jump DrawString, str_from_int
 .endproc
 
 xcoord:
@@ -8249,15 +8249,15 @@ ret:    rts
 in_range:
         MGTK_CALL MGTK::MoveTo, pos_col_type
         jsr     PrepareColType
-        param_call DrawLCString, text_buffer2
+        param_call DrawString, text_buffer2
 
         MGTK_CALL MGTK::MoveTo, pos_col_size
         jsr     PrepareColSize
-        param_call DrawLCStringRight, text_buffer2
+        param_call DrawStringRight, text_buffer2
 
         MGTK_CALL MGTK::MoveTo, pos_col_date
         jsr     ComposeDateString
-        param_jump DrawLCString, text_buffer2
+        param_jump DrawString, text_buffer2
 .endproc
 
 ;;; ============================================================
@@ -8763,9 +8763,9 @@ auxtype:
 
 ;;; ============================================================
 ;;; Draw text right aligned, pascal string address in A,X
-;;; String must be in LC area (visible to both main and aux code)
+;;; String must be in aux or LC memory.
 
-.proc DrawLCStringRight
+.proc DrawStringRight
         params  := $6
         textptr := $6
         textlen := $8
@@ -8773,8 +8773,7 @@ auxtype:
         dy      := $B
 
         stax    textptr
-        ldy     #0
-        lda     (textptr),y
+        jsr     AuxLoad
         beq     ret
         sta     textlen
         inc16   textptr
@@ -8785,25 +8784,6 @@ auxtype:
         MGTK_CALL MGTK::DrawText, params
 
 ret:    rts
-.endproc
-
-;;; ============================================================
-;;; Draw text, pascal string address in A,X
-;;; String must be in LC area (visible to both main and aux code)
-
-.proc DrawLCString
-        params := $6
-        textptr := $6
-        textlen := $8
-
-        stax    textptr
-        ldy     #0
-        lda     (textptr),y
-        beq     exit
-        sta     textlen
-        inc16   textptr
-        MGTK_CALL MGTK::DrawText, params
-exit:   rts
 .endproc
 
 ;;; ============================================================
@@ -14796,7 +14776,7 @@ ellipsify:
 
 ;;; ============================================================
 ;;; Draw text, pascal string address in A,X
-;;; String must be in aux memory.
+;;; String must be in aux or LC memory.
 
 .proc DrawString
         params := $6
