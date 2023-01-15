@@ -1352,6 +1352,10 @@ clip_dy:
 
         ptr := $06              ; Overwrites params
 
+        ;; Slow enough that events should be checked; this allows
+        ;; double-clicks during icon repaints (e.g. deselects)
+        MGTK_CALL MGTK::CheckEvents
+
         ;; Pointer to IconEntry
         ldy     #DrawIconParams::icon
         lda     (params),y

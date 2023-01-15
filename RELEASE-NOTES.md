@@ -41,6 +41,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Scroll position for windows is saved/restored across restarts.
 * Show NON, ANM, S16, and SND type names in list views.
 * Simplify New Folder dialog by not showing full path. ([#466](https://github.com/a2stuff/a2d/issues/466))
+* Improve double-click responsiveness when updating icons.
 
 #### Disks & Files
 
