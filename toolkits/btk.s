@@ -469,30 +469,8 @@ a_record  .addr
         add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kRadioButtonHeight
     END_IF
 
-        lda     SETTINGS+DeskTopSettings::options
-        and     #DeskTopSettings::kOptionsShowShortcuts
-    IF_NOT_ZERO
-        lda     a_shortcut
-        ora     a_shortcut+1
-      IF_NOT_ZERO
-        ;; Draw the shortcut
-        jsr     _DrawShortcut
-
-        ;; And measure it for hit testing
-        width := $9
-        jsr     _MeasureShortcut
-        addax   rect+MGTK::Rect::x2
-      END_IF
-    END_IF
-
-        ;; Write rect back to button record
-        ldx     #.sizeof(MGTK::Rect)-1
-        ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
-:       lda     rect,x
-        sta     (a_record),y
-        dey
-        dex
-        bpl     :-
+        jsr     _MaybeDrawAndMeasureShortcut
+        jsr     _WriteRectBackToButtonRecord
 
         jmp     _DrawRadioBitmap
 .endproc ; RadioDrawImpl
@@ -598,30 +576,8 @@ a_record  .addr
         add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kCheckboxHeight
     END_IF
 
-        lda     SETTINGS+DeskTopSettings::options
-        and     #DeskTopSettings::kOptionsShowShortcuts
-    IF_NOT_ZERO
-        lda     a_shortcut
-        ora     a_shortcut+1
-      IF_NOT_ZERO
-        ;; Draw the shortcut
-        jsr     _DrawShortcut
-
-        ;; And measure it for hit testing
-        width := $9
-        jsr     _MeasureShortcut
-        addax   rect+MGTK::Rect::x2
-      END_IF
-    END_IF
-
-        ;; Write rect back to button record
-        ldx     #.sizeof(MGTK::Rect)-1
-        ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
-:       lda     rect,x
-        sta     (a_record),y
-        dey
-        dex
-        bpl     :-
+        jsr     _MaybeDrawAndMeasureShortcut
+        jsr     _WriteRectBackToButtonRecord
 
         jmp     _DrawCheckboxBitmap
 .endproc ; CheckboxDrawImpl
@@ -650,6 +606,41 @@ a_record  .addr
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBitsHC, cb_params
+        rts
+.endproc
+
+;;; ============================================================
+
+;;; If option is enabled, and if `a_shortcut` is not null,
+;;; draw it and add the width to `rect`.
+.proc _MaybeDrawAndMeasureShortcut
+        lda     SETTINGS+DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsShowShortcuts
+    IF_NOT_ZERO
+        lda     a_shortcut
+        ora     a_shortcut+1
+      IF_NOT_ZERO
+        jsr     _DrawShortcut
+
+        width := $9
+        jsr     _MeasureShortcut
+        addax   rect+MGTK::Rect::x2
+      END_IF
+    END_IF
+
+        rts
+.endproc
+
+;;; Copies `rect` back into `a_record`
+.proc _WriteRectBackToButtonRecord
+        ;; Write rect back to button record
+        ldx     #.sizeof(MGTK::Rect)-1
+        ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
+:       lda     rect,x
+        sta     (a_record),y
+        dey
+        dex
+        bpl     :-
         rts
 .endproc
 
