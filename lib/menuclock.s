@@ -4,7 +4,6 @@
 ;;;    `SETTINGS` defined
 ;;;    `MGTK_CALL` defined
 ;;;    lib/datetime.s for parsing functions
-;;;    lib/drawstring.s for string drawing
 ;;;    `dow_strings` table
 ;;;    `str_time` to populate
 ;;;    `str_4_spaces`

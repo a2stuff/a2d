@@ -396,7 +396,7 @@ ipblink_selection:
         DEFINE_LABEL ipblink1, res_string_label_ipblink1, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 11
         DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 21
         DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 100, kIPBlinkDisplayY + 34
-        DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 150, kIPBlinkDisplayY + 34
+        DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 189, kIPBlinkDisplayY + 34
 
         DEFINE_BUTTON ipblink_btn1_rec, kDAWindowId,,, kIPBlinkDisplayX + 116, kIPBlinkDisplayY + 16
         DEFINE_BUTTON ipblink_btn2_rec, kDAWindowId,,, kIPBlinkDisplayX + 136, kIPBlinkDisplayY + 16
@@ -1031,7 +1031,7 @@ loop:   ldy     #3
         param_call DrawString, ipblink_slow_label_str
 
         MGTK_CALL MGTK::MoveTo, ipblink_fast_label_pos
-        param_call DrawString, ipblink_fast_label_str
+        param_call DrawStringRight, ipblink_fast_label_str
 
         BTK_CALL BTK::RadioDraw, ipblink_btn1_params
         BTK_CALL BTK::RadioDraw, ipblink_btn2_params
@@ -1607,6 +1607,28 @@ done:   rts
 ;;; ============================================================
 
         .include "../lib/drawstring.s"
+
+.proc DrawStringRight
+        params := $6
+        textptr := $6
+        textlen := $8
+        result := $9
+
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::TextWidth, params
+        sub16   #0, result, result
+        lda     #0
+        sta     result+2
+        sta     result+3
+        MGTK_CALL MGTK::Move, result
+        MGTK_CALL MGTK::DrawText, params
+        rts
+.endproc
+
 
 ;;; ============================================================
 
