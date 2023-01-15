@@ -122,6 +122,7 @@ port:           .addr   grafport_win
 
 grafport_win:   .tag    MGTK::GrafPort
 
+;;; If obscured, execution will not return to the caller.
 .proc _SetPort
         bit     update_flag
         bmi     ret
@@ -129,9 +130,15 @@ grafport_win:   .tag    MGTK::GrafPort
         ;; Set the port
         copy    window_id, getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        ;; ASSERT: Not obscured
+        bne     obscured
         MGTK_CALL MGTK::SetPort, grafport_win
-ret:    rts
+        beq     ret
+
+obscured:
+        pla
+        pla
+ret:
+        rts
 .endproc
 
 

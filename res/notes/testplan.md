@@ -564,7 +564,7 @@
 
 The following tests all require:
 * A RAM disk such as RAMWorks (and a ProDOS driver) or a "Slinky" memory expansion card.
-* Configuring DeskTop to install itself to the RAMCard on boot. This is the default but can be controlled using the Startup Options control panel.
+* Configuring DeskTop to install itself to the RAMCard on boot. This is the default but can be controlled using the Options control panel.
 
 * Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under APPLE.MENU are copied to /RAM/DESKTOP/APPLE.MENU.
 * Run DeskTop on a system with Slinky Ramdisk. Verify that subdirectories under APPLE.MENU are copied to /RAM5/DESKTOP/APPLE.MENU (or appropriate volume path).
@@ -586,7 +586,7 @@ The following tests all require:
 * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
 * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
 
-* Repeat the following cases with the Startup Options and Control Panel DAs, and the Date and Time DA (on a system without a real-time clock):
+* Repeat the following cases with the Options and Control Panel DAs, and the Date and Time DA (on a system without a real-time clock):
   * Launch DeskTop, ensure it copies itself to RAMCard. Launch the DA and modify a setting. Verify that no prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
   * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and Modify a setting. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
   * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and modify a setting. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
@@ -694,10 +694,11 @@ Image File:
 * Open the Control Panel DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
 * Open the Control Panel DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
 
-## Startup Options
+## Options
 
-* Open the Startup Options DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
-* Open the Startup Options DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
+* Open the Options DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
+* Open the Options DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
+* Open the Options DA. Move the window to the bottom of the screen so only the title bar is visible. Press Apple-1, Apple-2, Apple-3. Verify that checkboxes don't mis-paint on the screen. Move the window back up. Verify that the state of the checkboxes has toggled.
 
 ## International
 

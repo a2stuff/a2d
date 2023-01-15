@@ -59,7 +59,7 @@ Then run: `make install`
 
 This will create the target ProDOS directory if necessary, then copy the built files in, overwriting any existing files.
 
-After building and installing, you can use `bin/setopt sel` and `bin/setopt nosel` to toggle whether Selector starts or not, and `bin/setopt ram` and `bin/setopt noram` to toggle whether DeskTop is copied to a RAMCard or not. These can be controlled within DeskTop using the Startup Options control panel, but being able to toggle these on the command line is useful during development.
+After building and installing, you can use `bin/setopt sel` and `bin/setopt nosel` to toggle whether Selector starts or not, and `bin/setopt ram` and `bin/setopt noram` to toggle whether DeskTop is copied to a RAMCard or not. These can be controlled within DeskTop using the Options control panel, but being able to toggle these on the command line is useful during development.
 
 If DeskTop hasn't created `LOCAL/DESKTOP.CONFIG` yet, run `bin/defopt` first to create a default options file.
 
@@ -119,4 +119,4 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
 
 ## Running
 
-Invoke `DESKTOP.SYSTEM` to launch the app. By default, DeskTop will launch. You can use the control panel Startup Options to configure Selector to start instead, which will show a dialog containing any shortcuts you have configued in DeskTop, for faster access to programs.
+Invoke `DESKTOP.SYSTEM` to launch the app. By default, DeskTop will launch. You can use the control panel Options to configure Selector to start instead, which will show a dialog containing any shortcuts you have configued in DeskTop, for faster access to programs.
