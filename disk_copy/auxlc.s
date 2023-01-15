@@ -1128,18 +1128,11 @@ try_dos33:
 .proc GetDos33VolName
         ;; Mask off slot and drive, inject into template
         lda     main__block_params_unit_num
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #'0'
+        pha
+        jsr     UnitNumToSlotDigit
         sta     str_dos33_s_d + kStrDOS33SlotOffset
-        lda     main__block_params_unit_num
-        and     #$80
-        asl     a
-        rol     a
-        adc     #'1'
+        pla
+        jsr     UnitNumToDriveDigit
         sta     str_dos33_s_d + kStrDOS33DriveOffset
 
         ;; Find slot for string in table
@@ -1642,33 +1635,20 @@ src_block_count:
 .proc DrawDeviceListEntry
         sta     device_index
 
+        ldx     device_index
+        lda     drive_unitnum_table,x
+        jsr     PrepSDStrings
+
         ;; Slot
         lda     #kListEntrySlotOffset
         sta     list_entry_pos::xcoord
         MGTK_CALL MGTK::MoveTo, list_entry_pos
-        ldx     device_index
-        lda     drive_unitnum_table,x
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #'0'
-        sta     str_s + 1
         param_call DrawString, str_s
 
         ;; Drive
         lda     #kListEntryDriveOffset
         sta     list_entry_pos::xcoord
         MGTK_CALL MGTK::MoveTo, list_entry_pos
-        ldx     device_index
-        lda     drive_unitnum_table,x
-        and     #$80
-        asl     a
-        rol     a
-        clc
-        adc     #'1'
-        sta     str_d + 1
         param_call DrawString, str_d
 
         ;; Name
@@ -1841,22 +1821,7 @@ LE558:  .byte   0
         param_call DrawString, str_source
         ldx     source_drive_index
         lda     drive_unitnum_table,x
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #'0'
-        sta     str_s + 1
-        ldx     source_drive_index
-        lda     drive_unitnum_table,x
-        and     #$80
-        clc
-        rol     a
-        rol     a
-        clc
-        adc     #'1'
-        sta     str_d + 1
+        jsr     PrepSDStrings
         MGTK_CALL MGTK::MoveTo, point_slot_drive
         param_call DrawString, str_slot
         param_call DrawString, str_s
@@ -1884,21 +1849,7 @@ LE5C6:  param_call DrawString, str_2_spaces
         param_call DrawString, str_destination
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #$70
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #'0'
-        sta     str_s + 1
-        ldx     dest_drive_index
-        lda     drive_unitnum_table,x
-        and     #$80
-        asl     a
-        rol     a
-        clc
-        adc     #'1'
-        sta     str_d + 1
+        jsr     PrepSDStrings
         MGTK_CALL MGTK::MoveTo, point_slot_drive2
         param_call DrawString, str_slot
         param_call DrawString, str_s
@@ -2096,6 +2047,43 @@ retry:  jsr     main__WriteBlock
         beq     done
         bpl     retry
 done:   rts
+.endproc
+
+;;; ============================================================
+
+;;; Input: A = unit number (i.e. %DSSSxxxx)
+;;; Output: `str_s` and `str_d` populated with digits
+.proc PrepSDStrings
+        pha
+        jsr     UnitNumToSlotDigit
+        sta     str_s + 1
+        pla
+        jsr     UnitNumToDriveDigit
+        sta     str_d + 1
+        rts
+.endproc
+
+
+;;; Input: A = unit number (i.e. %DSSSxxxx)
+;;; Output: A = ASCII digit '0' ... '7'
+.proc UnitNumToSlotDigit
+        and     #$70            ; A = %0SSS0000
+        lsr     a               ; A = %00SSS000
+        lsr     a               ; A = %000SSS00
+        lsr     a               ; A = %0000SSS0
+        lsr     a               ; A = %00000SSS
+        ora     #'0'
+        rts
+.endproc
+
+;;; Input: A = unit number (i.e. %DSSSxxxx)
+;;; Output: A = ASCII digit '1' or '2'
+.proc UnitNumToDriveDigit
+        and     #$80            ; A = %D0000000
+        asl     a               ; A = %00000000, C = D
+        rol     a               ; A = %0000000D, C = 0
+        adc     #'1'            ; no need to CLC
+        rts
 .endproc
 
 ;;; ============================================================
@@ -2307,18 +2295,10 @@ find_in_alert_table:
 
 .proc SetConfirmEraseSdSlotDrive
         txa
-        and     #$70            ; Mask off slot
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #'0'
+        jsr     UnitNumToSlotDigit
         sta     str_confirm_erase_sd  + kStrConfirmEraseSDSlotOffset
         txa
-        and     #$80            ; Mask off drive
-        asl     a               ; Shift to low bit
-        rol     a
-        adc     #'1'            ; Drive 1 or 2
+        jsr     UnitNumToDriveDigit
         sta     str_confirm_erase_sd + kStrConfirmEraseSDDriveOffset
         rts
 .endproc
@@ -2425,7 +2405,7 @@ Alert := alert_dialog::Alert
 
 ;;; ============================================================
 
-        .assert * <= $F600, error, "Update memory_bitmap if code extends past $F600"
+        .assert * <= $F400, error, "Update memory_bitmap if code extends past $F400"
 .endscope
         auxlc__start := auxlc::start
         auxlc__is_iigs_flag := auxlc::is_iigs_flag
