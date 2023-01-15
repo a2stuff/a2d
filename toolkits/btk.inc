@@ -117,9 +117,14 @@ update: .byte   0
 
 ;;; Scopes define their own BTKEntry identifiers
 ;;; This allows for helpers that e.g. bank switch before calling.
-.macro BTK_CALL call, addr
+.macro BTK_CALL call, addr, label
         jsr     BTKEntry
         .byte   call
+
+    .if .paramcount > 2
+        label := *
+    .endif
+
     .if .paramcount > 1
         .addr   addr
     .else

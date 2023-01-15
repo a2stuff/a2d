@@ -1,9 +1,10 @@
 ;;; ============================================================
-;;; STARTUP - Desk Accessory
+;;; OPTIONS - Desk Accessory
 ;;;
-;;; A control panel offering startup settings:
+;;; A control panel offering option settings:
 ;;;   * Copy to RAMCard on startup
 ;;;   * Start Selector if present
+;;;   * Show shortcuts for buttons
 ;;; ============================================================
 
         .include "../config.inc"
@@ -163,14 +164,38 @@ grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
-        DEFINE_BUTTON ramcard_rec, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, 10, 10
+kNumButtons     = 3
+kButtonLeft     = 10
+kButtonTop      = 10
+kButtonSpacing  = kSystemFontHeight + 2
+
+        DEFINE_BUTTON ramcard_rec, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, kButtonLeft, kButtonTop + kButtonSpacing * 0
         DEFINE_BUTTON_PARAMS ramcard_params, ramcard_rec
 
-        DEFINE_BUTTON selector_rec, kDAWindowId, res_string_label_selector, res_string_shortcut_apple_2, 10, 21
+        DEFINE_BUTTON selector_rec, kDAWindowId, res_string_label_selector, res_string_shortcut_apple_2, kButtonLeft, kButtonTop + kButtonSpacing * 1
         DEFINE_BUTTON_PARAMS selector_params, selector_rec
 
-        DEFINE_BUTTON shortcuts_rec, kDAWindowId, res_string_label_shortcuts, res_string_shortcut_apple_3, 10, 32
+        DEFINE_BUTTON shortcuts_rec, kDAWindowId, res_string_label_shortcuts, res_string_shortcut_apple_3, kButtonLeft, kButtonTop + kButtonSpacing * 2
         DEFINE_BUTTON_PARAMS shortcuts_params, shortcuts_rec
+
+button_rec_table:
+        .addr   ramcard_rec, selector_rec, shortcuts_rec
+        ASSERT_ADDRESS_TABLE_SIZE button_rec_table, kNumButtons
+
+button_params_table:
+        .addr   ramcard_params, selector_params, shortcuts_params
+        ASSERT_ADDRESS_TABLE_SIZE button_params_table, kNumButtons
+
+;;; Which bit in DeskTopSettings::options this checkbox corresponds to
+button_mask_table:
+        .byte   DeskTopSettings::kOptionsSkipRAMCard, DeskTopSettings::kOptionsSkipSelector, DeskTopSettings::kOptionsShowShortcuts
+        ASSERT_TABLE_SIZE button_mask_table, kNumButtons
+
+;;; For inverting the sense of a bit vs. its checkbox; high bit set to invert
+button_eor_table:
+        .byte   0, 0, $80
+        ASSERT_TABLE_SIZE button_eor_table, kNumButtons
+
 
 ;;; ============================================================
 
@@ -214,12 +239,14 @@ grafport:       .tag    MGTK::GrafPort
         ;; modifiers
         lda     event_params::key
         cmp     #'1'
-        jeq     HandleRamcardClick
-        cmp     #'2'
-        jeq     HandleSelectorClick
-        cmp     #'3'
-        jeq     HandleShortcutsClick
-        jmp     InputLoop
+        bcc     InputLoop
+        cmp     #'1'+kNumButtons
+        bcs     InputLoop
+
+        sec
+        sbc     #'1'            ; ASCII -> index
+
+        jmp     ToggleButton
 .endproc
 
 ;;; ============================================================
@@ -281,23 +308,25 @@ common: bit     dragwindow_params::moved
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, ramcard_rec::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     HandleRamcardClick
-        END_IF
+        ;; Check all the button rects
+        copy    #kNumButtons-1, index
+loop:
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        asl
+        tax
+        copy16  button_rec_table,x, rect_addr
+        add16_8 rect_addr, #BTK::ButtonRecord::rect
 
-        MGTK_CALL MGTK::InRect, selector_rec::rect
+        MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr
         cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     HandleSelectorClick
-        END_IF
+        bne     next
 
-        MGTK_CALL MGTK::InRect, shortcuts_rec::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
-        jmp     HandleShortcutsClick
-        END_IF
+        lda     index
+        jmp     ToggleButton
+
+next:   dec     index
+        bpl     loop
 
         ;; ----------------------------------------
 
@@ -319,25 +348,29 @@ common: bit     dragwindow_params::moved
 
         ;; --------------------------------------------------
 
-        lda     #DeskTopSettings::kOptionsSkipRAMCard
+        copy    #kNumButtons, index
+loop:
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        asl
+        tax
+        copy16  button_rec_table,x, rec_addr
+        copy16  button_params_table,x, params_addr
+
+        ldx     index
+        lda     button_mask_table,x
         jsr     GetBit
-        sta     ramcard_rec::state
-        BTK_CALL BTK::CheckboxDraw, ramcard_params
+        ldx     index
+        eor     button_eor_table,x
 
-        ;; --------------------------------------------------
+        ldy     #BTK::ButtonRecord::state
+        rec_addr := *+1
+        sta     SELF_MODIFIED,y
 
-        lda     #DeskTopSettings::kOptionsSkipSelector
-        jsr     GetBit
-        sta     selector_rec::state
-        BTK_CALL BTK::CheckboxDraw, selector_params
+        BTK_CALL BTK::CheckboxDraw, SELF_MODIFIED, params_addr
 
-        ;; --------------------------------------------------
-
-        lda     #DeskTopSettings::kOptionsShowShortcuts
-        jsr     GetBit
-        eor     #$80            ; invert
-        sta     shortcuts_rec::state
-        BTK_CALL BTK::CheckboxDraw, shortcuts_params
+        dec     index
+        bpl     loop
 
         ;; --------------------------------------------------
 
@@ -359,51 +392,34 @@ set:    lda     #$80
 
 ;;; ============================================================
 
-.proc HandleRamcardClick
+.proc ToggleButton
+        sta     index
+
+        asl
+        tax
+        copy16  button_rec_table,x, rec_addr
+        copy16  button_params_table,x, params_addr
+
+        ldx     index
         lda     SETTINGS + DeskTopSettings::options
-        eor     #DeskTopSettings::kOptionsSkipRAMCard
+        eor     button_mask_table,x
         sta     SETTINGS + DeskTopSettings::options
 
-        lda     #DeskTopSettings::kOptionsSkipRAMCard
+        lda     button_mask_table,x
         jsr     GetBit
-        sta     ramcard_rec::state
-        BTK_CALL BTK::CheckboxUpdate, ramcard_params
+        ldx     index
+        eor     button_eor_table,x
+
+        ldy     #BTK::ButtonRecord::state
+        rec_addr := *+1
+        sta     SELF_MODIFIED,y
+
+        BTK_CALL BTK::CheckboxUpdate, SELF_MODIFIED, params_addr
 
         jsr     MarkDirty
         jmp     InputLoop
-.endproc
 
-;;; ============================================================
-
-.proc HandleSelectorClick
-        lda     SETTINGS + DeskTopSettings::options
-        eor     #DeskTopSettings::kOptionsSkipSelector
-        sta     SETTINGS + DeskTopSettings::options
-
-        lda     #DeskTopSettings::kOptionsSkipSelector
-        jsr     GetBit
-        sta     selector_rec::state
-        BTK_CALL BTK::CheckboxUpdate, selector_params
-
-        jsr     MarkDirty
-        jmp     InputLoop
-.endproc
-
-;;; ============================================================
-
-.proc HandleShortcutsClick
-        lda     SETTINGS + DeskTopSettings::options
-        eor     #DeskTopSettings::kOptionsShowShortcuts
-        sta     SETTINGS + DeskTopSettings::options
-
-        lda     #DeskTopSettings::kOptionsShowShortcuts
-        jsr     GetBit
-        eor     #$80            ; invert sense
-        sta     shortcuts_rec::state
-        BTK_CALL BTK::CheckboxUpdate, shortcuts_params
-
-        jsr     MarkDirty
-        jmp     InputLoop
+index:  .byte   0
 .endproc
 
 ;;; ============================================================
