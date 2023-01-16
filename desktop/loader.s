@@ -52,12 +52,12 @@ segment_addr_table_high:        ; Temporary load addresses
 
 segment_dest_table_low:         ; Runtime addresses (moved here)
         .byte   <kSegmentDeskTopAuxAddress,<kSegmentDeskTopLC1AAddress,<kSegmentDeskTopLC1BAddress
-        .byte   <kSegmentDeskTopMainAddress,<kSegmentInitializerAddress,<kSegmentInvokerAddress
+        .byte   0,0,0           ; loaded directly into final address, no need to move
         ASSERT_TABLE_SIZE segment_dest_table_low, kNumSegments
 
 segment_dest_table_high:        ; Runtime addresses (moved here)
         .byte   >kSegmentDeskTopAuxAddress,>kSegmentDeskTopLC1AAddress,>kSegmentDeskTopLC1BAddress
-        .byte   >kSegmentDeskTopMainAddress,>kSegmentInitializerAddress,>kSegmentInvokerAddress
+        .byte   0,0,0           ; loaded directly into final address, no need to move
         ASSERT_TABLE_SIZE segment_dest_table_high, kNumSegments
 
 segment_size_table_low:
@@ -182,13 +182,12 @@ continue:
         ldy     read_params::data_buffer+1
         sty     src+1
 
-        ldy     segment_size_table_high,x
-        lda     segment_size_table_low,x
+        ldy     segment_size_table_high,x ; Y = number of pages
+        lda     segment_size_table_low,x  ; fractional?
         beq     :+
-        iny
+        iny                     ; if so, round up
 :       tya
-        tax
-        ldy     #0
+        tax                     ; X = number of pages to copy
         sta     RAMWRTON
         jsr     CopySegment
         sta     RAMWRTOFF
@@ -208,6 +207,7 @@ vector_buf:
         ;; Handle banked/aux memory segment
         ;; Corresponding vectors are set before call
 .proc CopySegment
+        ldy     #0
 loop:   lda     (src),y
         sta     (dst),y
         iny
