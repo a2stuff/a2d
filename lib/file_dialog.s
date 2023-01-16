@@ -1015,8 +1015,12 @@ ret:    rts
         params := $06
 
         stax    ptr
+.ifdef FD_EXTENDED
+        jsr     AuxLoad
+.else
         ldy     #0
         lda     (ptr),y
+.endif
         beq     ret
         sta     params+2
         inc16   params
@@ -1032,40 +1036,21 @@ ret:    rts
 ;;; ============================================================
 
 .proc DrawTitleCentered
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
-
-        stax    text_addr       ; input is length-prefixed string
+        pha
+        txa
+        pha
 
         jsr     SetPortForDialog
 
-.ifdef FD_EXTENDED
-        ldax    text_addr
-        jsr     AuxLoad
-.else
-        ldy     #0
-        lda     (text_addr),y
-.endif
-        sta     text_length
-        inc16   text_addr ; point past length byte
-        MGTK_CALL MGTK::TextWidth, text_params
-
-.ifndef FD_EXTENDED
-        sub16   #file_dialog_res::kFilePickerDlgWidth, text_width, file_dialog_res::pos_title::xcoord
-.else
-        bit     extra_controls_flag
-    IF_NS
-        sub16   #file_dialog_res::kFilePickerDlgExWidth, text_width, file_dialog_res::pos_title::xcoord
-    ELSE
-        sub16   #file_dialog_res::kFilePickerDlgWidth, text_width, file_dialog_res::pos_title::xcoord
-    END_IF
-.endif
+        copy16  file_dialog_res::winfo::maprect::x2, file_dialog_res::pos_title::xcoord
         lsr16   file_dialog_res::pos_title::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
-        MGTK_CALL MGTK::DrawText, text_params
-        rts
+
+        pla
+        tax
+        pla
+
+        jmp     DrawStringCentered
 .endproc
 
 ;;; ============================================================
