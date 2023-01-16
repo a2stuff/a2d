@@ -46,10 +46,10 @@ kButtonsLeft = 195
 kMaxNameWidth = 140
 
         kDirLabelCenterX = kControlsLeft + kListBoxWidth/2
-        DEFINE_POINT dir_label_pos, 0, 16 + kSystemFontHeight
+        DEFINE_POINT dir_label_pos, kDirLabelCenterX, 16 + kSystemFontHeight
         DEFINE_RECT_SZ dir_name_rect, kDirLabelCenterX - kMaxNameWidth/2, 16, kMaxNameWidth, kSystemFontHeight
         kDiskLabelCenterX = kButtonsLeft + kButtonWidth/2
-        DEFINE_POINT disk_label_pos, 0, 16 + kSystemFontHeight
+        DEFINE_POINT disk_label_pos, kDiskLabelCenterX, 16 + kSystemFontHeight
         DEFINE_RECT_SZ disk_name_rect, kDiskLabelCenterX - kMaxNameWidth/2, 16, kMaxNameWidth, kSystemFontHeight
 
         DEFINE_BUTTON drives_button_rec, kFilePickerDlgWindowID, res_string_button_drives, "^D", kButtonsLeft, kControlsTop + 0 * (kButtonHeight + kButtonGap)

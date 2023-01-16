@@ -1010,18 +1010,23 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc MeasureString
+.proc DrawStringCentered
         ptr := $06
         params := $06
 
         stax    ptr
         ldy     #0
         lda     (ptr),y
+        beq     ret
         sta     params+2
         inc16   params
         MGTK_CALL MGTK::TextWidth, params
-        ldax    params+3
-        rts
+        lsr16   params+3               ; width
+        sub16   #0, params+3, params+3 ; deltax
+        copy16  #0, params+5           ; deltay
+        MGTK_CALL MGTK::Move, params+3
+        MGTK_CALL MGTK::DrawText, params
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -1393,13 +1398,8 @@ finish:
         bne     :-              ; always
 :       sty     file_dialog_res::filename_buf
 
-        param_call MeasureString, file_dialog_res::filename_buf
-        text_width := $06
-        stax    text_width
-        lsr16   text_width
-        sub16   #file_dialog_res::kDiskLabelCenterX, text_width, file_dialog_res::disk_label_pos::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
-        param_call DrawString, file_dialog_res::filename_buf
+        param_call DrawStringCentered, file_dialog_res::filename_buf
 
 ret:    rts
 
@@ -1446,13 +1446,8 @@ ret:    rts
         bne     :-              ; always
 :       sty     file_dialog_res::filename_buf
 
-        param_call MeasureString, file_dialog_res::filename_buf
-        text_width := $06
-        stax    text_width
-        lsr16   text_width
-        sub16   #file_dialog_res::kDirLabelCenterX, text_width, file_dialog_res::dir_label_pos::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
-        param_call DrawString, file_dialog_res::filename_buf
+        param_call DrawStringCentered, file_dialog_res::filename_buf
 
 ret:    rts
 .endproc
