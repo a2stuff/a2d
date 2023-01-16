@@ -13757,14 +13757,14 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_src - copy_dialog_params
         jsr     DereferencePtrToAddr
-        jsr     CopyNameToBuf0
+        jsr     CopyPtr1ToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_dst - copy_dialog_params
         jsr     DereferencePtrToAddr
-        jsr     CopyNameToBuf1
+        jsr     CopyPtr1ToBuf1
         MGTK_CALL MGTK::MoveTo, aux::current_dest_file_pos
         param_call DrawDialogPath, path_buf1
 
@@ -13858,7 +13858,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_src - copy_dialog_params
         jsr     DereferencePtrToAddr
-        jsr     CopyNameToBuf0
+        jsr     CopyPtr1ToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
 
@@ -13991,7 +13991,7 @@ GetSizeDialogProc::do_count := *
         jsr     CopyDialogParamAddrToPtr
         ldy     #delete_dialog_params::a_path - delete_dialog_params
         jsr     DereferencePtrToAddr
-        jsr     CopyNameToBuf0
+        jsr     CopyPtr1ToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
 
@@ -14257,7 +14257,7 @@ do_close:
         jsr     CopyDialogParamAddrToPtr
         ldy     #lock_unlock_dialog_params::a_path - lock_unlock_dialog_params
         jsr     DereferencePtrToAddr
-        jsr     CopyNameToBuf0
+        jsr     CopyPtr1ToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
         jsr     DrawDialogPathBuf0
 
@@ -14296,14 +14296,8 @@ UnlockDialogProc := LockDialogProc
         copy16in (params_ptr),y, $08
 
         ;; Populate filename field and input
-        ldy     #0
-        lda     ($08),y
-        tay
-:       lda     ($08),y
-        sta     buf_filename,y
-        sta     path_buf1,y
-        dey
-        bpl     :-
+        param_call CopyPtr2ToBuf, buf_filename
+        param_call CopyPtr2ToBuf, path_buf1
 
         param_call DrawDialogLabel, 2, aux::str_rename_old
         param_call DrawString, buf_filename
@@ -14360,14 +14354,8 @@ do_close:
         copy16in (params_ptr),y, $08
 
         ;; Populate filename field and input
-        ldy     #0
-        lda     ($08),y
-        tay
-:       lda     ($08),y
-        sta     buf_filename,y
-        sta     path_buf1,y
-        dey
-        bpl     :-
+        param_call CopyPtr2ToBuf, buf_filename
+        param_call CopyPtr2ToBuf, path_buf1
 
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
         param_call DrawString, buf_filename
@@ -14910,11 +14898,11 @@ ptr_str_files_suffix:
 
 ;;; ============================================================
 
-.proc CopyNameToBuf0
+.proc CopyPtr1ToBuf0
         param_jump CopyPtr1ToBuf, path_buf0
 .endproc
 
-.proc CopyNameToBuf1
+.proc CopyPtr1ToBuf1
         param_jump CopyPtr1ToBuf, path_buf1
 .endproc
 

@@ -186,29 +186,21 @@ dialog_loop:
         lda     selected_index
         jsr     MaybeToggleEntryHilite
         jsr     CloseWindow
+
         lda     selected_index
         jsr     GetFileEntryAddr
         stax    $06
-        ldy     #$00
-        lda     ($06),y
-        tay
-l1:     lda     ($06),y
-        sta     path_buf1,y
-        dey
-        bpl     l1
+        jsr     main::CopyPtr1ToBuf1
+
         ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
         sta     flags
+
         lda     selected_index
         jsr     GetFilePathAddr
         stax    $06
-        ldy     #0
-        lda     ($06),y
-        tay
-l2:     lda     ($06),y
-        sta     path_buf0,y
-        dey
-        bpl     l2
+        jsr     main::CopyPtr1ToBuf0
+
         ldx     #$01
         lda     selected_index
         cmp     #kSelectorListNumPrimaryRunListEntries
@@ -492,18 +484,12 @@ done:   return  #$FF
 ;;; ============================================================
 
 ;;; Copy the string somewhere visible to MGTK in auxmem.
+;;; Input: A,X = string
 .proc DrawString
         ptr := $06
 
         stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     text_buffer2,y
-        dey
-        bpl     :-
-
+        param_call main::CopyPtr1ToBuf, text_buffer2
         param_jump main::DrawString, text_buffer2
 .endproc
 

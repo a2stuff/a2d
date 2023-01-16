@@ -229,7 +229,7 @@ l9:     jsr     main::SetPortForDialogWindow
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
-        param_call UpcaseString, path_buf1
+        param_call main::UpcaseString, path_buf1
 
         ldxy    #path_buf1
         lda     unit_num
@@ -299,7 +299,7 @@ l7:
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
-        param_call UpcaseString, path_buf1
+        param_call main::UpcaseString, path_buf1
         jsr     main::SetCursorWatch
 
         ldxy    #path_buf1
@@ -657,28 +657,6 @@ loop:   lda     #SELF_MODIFIED_BYTE
 .endproc
 
 ;;; ============================================================
-;;; A,X = string
-
-.proc UpcaseString
-        ptr := $06
-        stx     ptr+1
-        sta     ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-loop:   lda     (ptr),y
-        cmp     #'a'
-        bcc     :+
-        cmp     #'z'+1
-        bcs     :+
-        and     #CASE_MASK
-        sta     (ptr),y
-:       dey
-        bpl     loop
-        rts
-.endproc
-
-;;; ============================================================
 ;;; Inputs: A = unit number (no need to mask off low nibble), X,Y = name
 ;;; Outputs: C=1 if there's a duplicate, C=0 otherwise
 
@@ -843,7 +821,7 @@ unit_num:
         stxy    $06
 
         ;; Remove leading '/' from name, if necessary
-        ldy     #$01
+        ldy     #1
         lda     ($06),y
         cmp     #'/'
         bne     L132C           ; nope
@@ -856,13 +834,7 @@ unit_num:
         inc16   $06
 
         ;; Copy name into volume directory key block data
-L132C:  ldy     #0
-        lda     ($06),y
-        tay
-:       lda     ($06),y
-        sta     vol_name_buf,y
-        dey
-        bpl     :-
+L132C:  param_call main::CopyPtr1ToBuf, vol_name_buf
 
         ;; --------------------------------------------------
         ;; Get the block count for the device
