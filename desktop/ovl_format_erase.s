@@ -120,8 +120,8 @@ skip_select:
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
-        jsr     main::ClearPathBuf1
         copy    #$80, has_input_field_flag
+        copy    #0, path_buf1
         copy    #$00, format_erase_overlay_flag
         jsr     main::InitNameInput
         jsr     main::SetPortForDialogWindow

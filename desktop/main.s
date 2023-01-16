@@ -14034,7 +14034,7 @@ GetSizeDialogProc::do_count := *
         cmp     #NewFolderDialogState::open
     IF_EQ
         copy    #$80, has_input_field_flag
-        jsr     ClearPathBuf1
+        copy    #0, path_buf1
         lda     #$00
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
@@ -14811,13 +14811,6 @@ done:   rts
 ;;; ============================================================
 
 .proc NoOp
-        rts
-.endproc
-
-;;; ============================================================
-
-.proc ClearPathBuf1
-        copy    #0, path_buf1   ; length
         rts
 .endproc
 
