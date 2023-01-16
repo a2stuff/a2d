@@ -1310,8 +1310,15 @@ done:   rts
 ;;; A = `entry_num`
 .proc InvokeSelectorEntry
         ptr := $06
+        entry_path := tmp_path_buf
 
         sta     entry_num
+
+        ;; Stash path, which may be from the picker (if not in the
+        ;; primary list) and may be trashed (if the entry is copied
+        ;; to RAMCard later.
+        jsr     SetEntryPathPtr
+        param_call CopyPtr1ToBuf, entry_path
 
         ;; Is there a RAMCard at all?
         jsr     GetCopiedToRAMCardFlag
@@ -1319,8 +1326,7 @@ done:   rts
 
         ;; Look at the entry's flags
         lda     entry_num
-        jsr     ATimes16
-        addax   #run_list_entries, ptr
+        jsr     SetEntryPtr
 
         ldy     #kSelectorEntryFlagsOffset ; flag byte following name
         lda     (ptr),y
@@ -1336,7 +1342,6 @@ done:   rts
         bmi     use_ramcard_path ; already copied!
 
         ;; Need to copy to RAMCard
-        lda     entry_num
         jsr     PrepEntryCopyPaths
         jsr     DoCopyToRAM
         bne     ret             ; canceled!
@@ -1357,7 +1362,6 @@ on_boot:
         ;; --------------------------------------------------
         ;; Copied to RAMCard - use copied path
 use_ramcard_path:
-        lda     entry_num
         jsr     ComposeRAMCardEntryPath
         stax    ptr
         jmp     launch
@@ -1365,9 +1369,7 @@ use_ramcard_path:
         ;; --------------------------------------------------
         ;; Not copied to RAMCard - just use entry's path
 use_entry_path:
-        lda     entry_num
-        jsr     ATimes64
-        addax   #run_list_paths, ptr
+        copy16  #entry_path, ptr
         FALL_THROUGH_TO launch
 
 launch: param_call CopyPtr1ToBuf, INVOKER_PREFIX
@@ -1379,19 +1381,15 @@ entry_num:
         .byte   0
 
 ;;; --------------------------------------------------
-;;; Input: A = `entry_num`
+;;; Input: `entry_path` is populated
 ;;; Output: paths prepared for `DoCopyToRAM`
 .proc PrepEntryCopyPaths
         entry_original_path := $800
         entry_ramcard_path := $840
 
-        pha
-        jsr     ATimes64
-        addax   #run_list_paths, $06
-        param_call CopyPtr1ToBuf, entry_original_path
+        COPY_STRING entry_path, entry_original_path
 
         ;; Copy "down loaded" path to `entry_ramcard_path`
-        pla
         jsr     ComposeRAMCardEntryPath
         stax    ptr
         param_call CopyPtr1ToBuf, entry_ramcard_path
@@ -1428,27 +1426,17 @@ entry_num:
 ;;; --------------------------------------------------
 ;;; Compose path using RAM card prefix plus last two segments of path
 ;;; (e.g. "/RAM" + "/MOUSEPAINT/MP.SYSTEM") into `src_path_buf`
+;;; Input: `entry_path` is populated
 ;;; Output: A,X = `src_path_buf`
 .proc ComposeRAMCardEntryPath
         ptr := $06
 
-        sta     entry_num
-
         ;; Initialize buffer
         param_call CopyRAMCardPrefix, src_path_buf
-
-        ;; Find entry path
-        entry_num := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     ATimes64
-        addax   #run_list_paths, ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     @prefix_length
-        tay
+        ldy     entry_path
 
         ;; Walk back one segment
-:       lda     (ptr),y
+:       lda     entry_path,y
         cmp     #'/'
         beq     :+
         dey
@@ -1456,7 +1444,7 @@ entry_num:
 :       dey
 
         ;; Walk back a second segment
-:       lda     (ptr),y
+:       lda     entry_path,y
         cmp     #'/'
         beq     :+
         dey
@@ -1467,14 +1455,55 @@ entry_num:
         ldx     src_path_buf
 :       inx
         iny
-        lda     (ptr),y
+        lda     entry_path,y
         sta     src_path_buf,x
-        @prefix_length := *+1
-        cpy     #SELF_MODIFIED_BYTE
+        cpy     entry_path
         bne     :-
 
         stx     src_path_buf
         ldax    #src_path_buf
+        rts
+.endproc
+
+;;; --------------------------------------------------
+;;; Input: A = entry num
+;;; Output: $06 points at entry
+;;; NOTE: If in the "primary" list, points at the permanently loaded
+;;; copy. Otherwise, assumes the picker just ran and points at the
+;;; temporarily loaded copy.
+.proc SetEntryPtr
+        ptr := $06
+
+        cmp     #kSelectorListNumPrimaryRunListEntries
+        bcs     secondary
+        jsr     ATimes16
+        addax   #run_list_entries, ptr
+        rts
+
+secondary:
+        jsr     ATimes16
+        addax   #SELECTOR_FILE_BUF + kSelectorListEntriesOffset, ptr
+        rts
+.endproc
+
+;;; --------------------------------------------------
+;;; Input: A = entry num
+;;; Output: $06 points at entry path
+;;; NOTE: If in the "primary" list, points at the permanently loaded
+;;; copy. Otherwise, assumes the picker just ran and points at the
+;;; temporarily loaded copy.
+.proc SetEntryPathPtr
+        ptr := $06
+
+        cmp     #kSelectorListNumPrimaryRunListEntries
+        bcs     secondary
+        jsr     ATimes64
+        addax   #run_list_paths, ptr
+        rts
+
+secondary:
+        jsr     ATimes64
+        addax   #SELECTOR_FILE_BUF + kSelectorListPathsOffset, ptr
         rts
 .endproc
 

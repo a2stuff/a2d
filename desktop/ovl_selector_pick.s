@@ -16,7 +16,7 @@
 
 io_buf := $0800
 
-selector_list   := $0C00
+selector_list := SELECTOR_FILE_BUF
 
 Exec:
         sta     selector_action

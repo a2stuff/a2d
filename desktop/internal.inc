@@ -161,6 +161,11 @@ kSaveAreaSize   = $1800
 
 IO_BUFFER := $1C00
 
+;;; Selector entries (shortcuts) file is temporarily loaded here
+;;; by the picker dialog.
+
+SELECTOR_FILE_BUF := $0C00
+
 ;;; ============================================================
 ;;; Menu Constants
 

@@ -522,6 +522,13 @@
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. Verify that the files are copied to the RAMCard, and that the program starts correctly. Return to DeskTop by quitting the program. Eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Invoke the shortcut again. Verify that the files are copied to the RAMCard and that the program starts correctly.
 
+* Repeat the following:
+  * For these permutations:
+    * Shortcut in (1) menu and list, and (2) list only.
+    * Shortcut set to copy to RAMCard (1) on boot, (2) on first use, (3) never.
+    * DeskTop set to (1) Copy to RAMCard, (2) not copying to RAMCard.
+  * Launch DeskTop. Configure the shortcut. Restart. Launch DeskTop. Run the shortcut. Verify that it executes correctly.
+
 * Configure at least two shortcuts. Launch DeskTop. Shortcuts > Run a Shortcut.... Cancel. Verify that neither shortcut is invoked.
 
 
