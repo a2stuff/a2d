@@ -1016,9 +1016,9 @@ launch:
         jmp     ResetAndInvoke
 
 ;;; --------------------------------------------------
-;;; Check `buf_win_path` and ancestors to see if the desired interpreter
+;;; Check `src_path_buf`'s ancestors to see if the desired interpreter
 ;;; (BASIC.SYSTEM or BASIS.SYSTEM) is present.
-;;; Input: `buf_win_path` set to initial search path
+;;; Input: `src_path_buf` set to target path
 ;;; Output: zero if found, non-zero if not found
 
 .proc CheckBasixSystemImpl
@@ -1037,25 +1037,8 @@ basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         dex
         bpl     :-
 
-        inc     interp_path
-        ldx     interp_path
-        copy    #'/', interp_path,x
-loop:
-        ;; Append BASI?.SYSTEM to path and check for file.
-        ldx     interp_path
-        ldy     #0
-:       inx
-        iny
-        copy    str_basix_system,y, interp_path,x
-        cpy     str_basix_system
-        bne     :-
-        stx     interp_path
-        param_call GetFileInfo, interp_path
-        bne     not_found
-        rts                     ; zero is success
-
-        ;; Pop off a path segment and try again.
-not_found:
+        ;; Pop off a path segment.
+pop_segment:
         path_length := *+1
         ldx     #SELF_MODIFIED_BYTE
 :       lda     interp_path,x
@@ -1073,7 +1056,20 @@ found_slash:
         stx     interp_path
         dex
         stx     path_length
-        jmp     loop
+
+        ;; Append BASI?.SYSTEM to path and check for file.
+        ldx     interp_path
+        ldy     #0
+:       inx
+        iny
+        copy    str_basix_system,y, interp_path,x
+        cpy     str_basix_system
+        bne     :-
+        stx     interp_path
+        param_call GetFileInfo, interp_path
+        bne     pop_segment
+
+        rts                     ; zero is success
 .endproc
 CheckBasisSystem        := CheckBasixSystemImpl::basis
 

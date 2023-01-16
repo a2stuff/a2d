@@ -290,13 +290,13 @@ str_selector:
         DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogLength
         DEFINE_CLOSE_PARAMS close_params2
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_desktop_params, str_desktop_2
 str_desktop_2:
         PASCAL_STRING kPathnameDeskTop
 
 desktop_available_flag:
         .byte   0
 
+        DEFINE_GET_FILE_INFO_PARAMS file_info_params, SELF_MODIFIED
 
 ;;; Index of selected entry, or $FF if none
 selected_index:
@@ -404,7 +404,7 @@ entry:
         bne     check_key_down
 
 quick_run_desktop:
-        MLI_CALL GET_FILE_INFO, get_file_info_desktop_params
+        param_call GetFileInfo, str_desktop_2
         beq     :+
         jmp     done_keys
 :       jmp     RunDesktop
@@ -610,7 +610,7 @@ set_startup_menu_items:
         ;; --------------------------------------------------
 
         ;; Is DeskTop available?
-        MLI_CALL GET_FILE_INFO, get_file_info_desktop_params
+        param_call GetFileInfo, str_desktop_2
         beq     :+
         lda     #$80
 :       sta     desktop_available_flag
@@ -657,12 +657,12 @@ quick_boot_slot:
         bne     not_desktop
 
 :       BTK_CALL BTK::Flash, desktop_button_params
-@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop_params
+@retry: param_call GetFileInfo, str_desktop_2
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
-        bne     EventLoop      ; `kAlertResultCancel` = 1
+        bne     EventLoop       ; `kAlertResultCancel` = 1
         beq     @retry          ; `kAlertResultTryAgain` = 0
 :       jmp     RunDesktop
 
@@ -906,7 +906,7 @@ check_desktop_btn:
         BTK_CALL BTK::Track, desktop_button_params
         bmi     done
 
-@retry: MLI_CALL GET_FILE_INFO, get_file_info_desktop_params
+@retry: param_call GetFileInfo, str_desktop_2
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
@@ -1405,7 +1405,7 @@ error:  lda     #AlertID::insert_system_disk
         jsr     GetCopiedToRAMCardFlag
     IF_MINUS
         param_call CopyDeskTopOriginalPrefix, INVOKER_PREFIX
-        MLI_CALL GET_FILE_INFO, get_file_info_invoke_params
+        param_call GetFileInfo, INVOKER_PREFIX
         bcs     :+
         copy    DEVNUM, target
 :
@@ -1776,8 +1776,6 @@ ret:    rts
 
 ;;; ============================================================
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_invoke_params, INVOKER_PREFIX
-
 .proc InvokeEntry
         ptr := $06
 
@@ -1877,7 +1875,7 @@ launch:
         sta     INVOKER_PREFIX,y
         dey
         bpl     :-
-        MLI_CALL GET_FILE_INFO, get_file_info_invoke_params
+        param_call GetFileInfo, INVOKER_PREFIX
         beq     check_type
 
         ;; Not present; maybe show a retry prompt
@@ -1905,7 +1903,7 @@ fail:   jmp     ClearSelectedIndex
         ;; Ensure it's BIN, SYS, S16 or BAS (if BS is present)
 
 check_type:
-        lda     get_file_info_invoke_params::file_type
+        lda     file_info_params::file_type
         cmp     #FT_BASIC
         bne     not_basic
         jsr     CheckBasicSystem
@@ -1996,11 +1994,15 @@ check_path:
 
 ;;; ============================================================
 
-        DEFINE_GET_FILE_INFO_PARAMS get_file_info_bs_params, INVOKER_INTERPRETER
-
 kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
 str_basix_system:
         PASCAL_STRING "BASIx.SYSTEM"
+
+;;; --------------------------------------------------
+;;; Check `src_path_buf`'s ancestors to see if the desired interpreter
+;;; (BASIC.SYSTEM or BASIS.SYSTEM) is present.
+;;; Input: `src_path_buf` set to target path
+;;; Output: zero if found, non-zero if not found
 
 .proc CheckBasixSystemImpl
         launch_path := INVOKER_PREFIX
@@ -2011,44 +2013,17 @@ basic:  lda     #'C'            ; "BASI?" -> "BASIC"
 basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         sta     str_basix_system + kBSOffset
 
-        ;; Verify `launch_path` contains at least one '/'
+        ;; Start off with `interp_path` = `launch_path`
         ldx     launch_path
-:       lda     launch_path,x
-        cmp     #'/'
-        beq     :+
-        dex
-        bne     :-
-        jmp     no_bs
-
-        ;; Start off with `interp_path` = `launch_path` except last segment
-:       dex
-        stx     len
-        stx     interp_path
+        stx     path_length
 :       copy    launch_path,x, interp_path,x
         dex
-        bne     :-
+        bpl     :-
 
-        inc     interp_path
-        ldx     interp_path
-        copy    #'/', interp_path,x
-loop:
-        ;; Append BASI?.SYSTEM to path and check for file
-        ldx     interp_path
-        ldy     #0
-:       inx
-        iny
-        lda     str_basix_system,y
-        sta     interp_path,x
-        cpy     str_basix_system
-        bne     :-
-        stx     interp_path
-        MLI_CALL GET_FILE_INFO, get_file_info_bs_params
-        bne     not_found
-        rts                     ; zero is success
-
-        ;; Pop off a path segment and try again
-not_found:
-        ldx     len
+        ;; Pop off a path segment.
+pop_segment:
+        path_length := *+1
+        ldx     #SELF_MODIFIED_BYTE
 :       lda     interp_path,x
         cmp     #'/'
         beq     found_slash
@@ -2063,11 +2038,21 @@ found_slash:
         beq     no_bs
         stx     interp_path
         dex
-        stx     len
-        jmp     loop
+        stx     path_length
 
-len:    .byte   0
+        ;; Append BASI?.SYSTEM to path and check for file.
+        ldx     interp_path
+        ldy     #0
+:       inx
+        iny
+        copy    str_basix_system,y, interp_path,x
+        cpy     str_basix_system
+        bne     :-
+        stx     interp_path
+        param_call GetFileInfo, interp_path
+        bne     pop_segment
 
+        rts                     ; zero is success
 .endproc
 CheckBasisSystem        := CheckBasixSystemImpl::basis
 
@@ -2086,7 +2071,7 @@ str_extras_basic:
         cpy     str_extras_basic
         bne     :-
         stx     INVOKER_INTERPRETER
-        MLI_CALL GET_FILE_INFO, file_info_params
+        param_call GetFileInfo, INVOKER_INTERPRETER
         jne     CheckBasixSystemImpl::basic ; nope, look relative to launch path
         rts
 
@@ -2094,6 +2079,15 @@ str_extras_basic:
         DEFINE_GET_FILE_INFO_PARAMS file_info_params, INVOKER_INTERPRETER
 .endproc
 
+;;; ============================================================
+
+;;; Call GET_FILE_INFO on path at A,X; results are in `file_info_params`
+;;; Output: MLI result (carry/zero flag, etc)
+.proc GetFileInfo
+        stax    file_info_params::pathname
+        MLI_CALL GET_FILE_INFO, file_info_params
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Uppercase a string
