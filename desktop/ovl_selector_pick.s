@@ -190,7 +190,7 @@ dialog_loop:
         lda     selected_index
         jsr     GetFileEntryAddr
         stax    $06
-        jsr     main::CopyPtr1ToTextInputBuf
+        param_call main::CopyPtr1ToBuf, text_input_buf
 
         ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y

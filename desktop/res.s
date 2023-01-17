@@ -387,7 +387,6 @@ file_count:
 
         FONT := DEFAULT_FONT
         FD_EXTENDED = 1
-        buf_input2 := text_input_buf
         .include "../lib/file_dialog_res.s"
 
 ;;; ============================================================

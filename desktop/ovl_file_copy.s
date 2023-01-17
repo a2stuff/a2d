@@ -13,8 +13,6 @@
         copy    #0, file_dialog::extra_controls_flag
         copy    #$80, file_dialog::only_show_dirs_flag
 
-        copy    #0, text_input_buf
-
         jsr     file_dialog::OpenWindow
         param_call file_dialog::DrawTitleCentered, aux::label_copy_selection
         jsr     file_dialog::DeviceOnLine
@@ -32,10 +30,10 @@ jt_callbacks:
 ;;; ============================================================
 
 .proc HandleOk
-        param_call file_dialog::GetPath, text_input_buf
+        param_call file_dialog::GetPath, path_buf0
 
         jsr     file_dialog::CloseWindow
-        copy16  #text_input_buf, $6
+        copy16  #path_buf0, $6
         ldx     file_dialog::saved_stack
         txs
         return  #$00

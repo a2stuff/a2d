@@ -10674,9 +10674,9 @@ volume:
         ldax    src_file_info_params::blocks_used
         jsr     ComposeSizeString
 
-        ;; text_buffer2 now has "12345K"
+        ;; `text_buffer2` now has "12345K"
 
-        ;; Copy into buf
+        ;; Copy into `buf`
         ldx     buf
         ldy     #0
 :       inx
@@ -10686,7 +10686,7 @@ volume:
         cpy     text_buffer2
         bne     :-
 
-        ;; Append " / " to buf
+        ;; Append " / " to `buf`
         inx
         copy    #' ', buf,x
         inx
@@ -10714,10 +10714,8 @@ append_size:
         bne     :-
 :       stx     buf
 
-        ;; TODO: Compose directly into `text_input_buf`.
-        COPY_STRING buf, text_input_buf
-
-        copy16  #text_input_buf, get_info_dialog_params::a_str
+        COPY_STRING buf, text_buffer2
+        copy16  #text_buffer2, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -11094,33 +11092,36 @@ wloop:  ldx     found_windows_count
 .proc UpdateTargetPath
         dst := $06
 
-        ;; Set `text_input_buf` to the old path (should be `src_path_buf` + suffix)
-        param_call CopyPtr1ToBuf, text_input_buf
+        old_path := text_input_buf ; arbitrary usage of this buffer
+        new_path := tmp_path_buf   ; arbitrary usage of this buffer
 
-        ;; Set `tmp_path_buf` to the new prefix
+        ;; Set `old_path` to the old path (should be `src_path_buf` + suffix)
+        param_call CopyPtr1ToBuf, old_path
+
+        ;; Set `new_path` to the new prefix
         ldy     dst_path_buf
 :       lda     dst_path_buf,y
-        sta     tmp_path_buf,y
+        sta     new_path,y
         dey
         bpl     :-
 
-        ;; Copy the suffix from `text_input_buf` to `tmp_path_buf`
+        ;; Copy the suffix from `old_path` to `new_path`
         ldx     src_path_buf
-        cpx     text_input_buf
+        cpx     old_path
         beq     assign          ; paths are equal, no copying needed
 
         ldy     dst_path_buf
 :       inx                     ; advance into suffix
         iny
-        lda     text_input_buf,x
-        sta     tmp_path_buf,y
-        cpx     text_input_buf
+        lda     old_path,x
+        sta     new_path,y
+        cpx     old_path
         bne     :-
-        sty     tmp_path_buf
+        sty     new_path
 
         ;; Assign the new window path
-assign: ldy     tmp_path_buf
-:       lda     tmp_path_buf,y
+assign: ldy     new_path
+:       lda     new_path,y
         sta     (dst),y
         dey
         bpl     :-
@@ -13745,7 +13746,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_dst - copy_dialog_params
         jsr     DereferencePtrToAddr
-        jsr     CopyPtr1ToTextInputBuf
+        param_call CopyPtr1ToBuf, text_input_buf ; arbitrary usage of this buffer
         MGTK_CALL MGTK::MoveTo, aux::current_dest_file_pos
         param_call DrawDialogPath, text_input_buf
 
@@ -14071,9 +14072,7 @@ loop:   jsr     PromptInputLoop
         lda     path_buf0       ; full path okay?
         clc
         adc     text_input_buf
-        clc
-        adc     #1
-        cmp     #::kPathBufferSize
+        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
         bcs     too_long
 
         inc     path_buf0
@@ -14081,11 +14080,11 @@ loop:   jsr     PromptInputLoop
         copy    #'/', path_buf0,x
         ldx     path_buf0
         ldy     #0
-LAEFF:  inx
+:       inx
         iny
         copy    text_input_buf,y, path_buf0,x
         cpy     text_input_buf
-        bne     LAEFF
+        bne     :-
         stx     path_buf0
         ldy     #<path_buf0
         ldx     #>path_buf0
@@ -14275,13 +14274,9 @@ UnlockDialogProc := LockDialogProc
         jsr     CopyDialogParamAddrToPtr
         ldy     #rename_dialog_params::a_path - rename_dialog_params
         copy16in (params_ptr),y, $08
-
-        ;; Populate filename field and input
-        param_call CopyPtr2ToBuf, buf_filename
         param_call CopyPtr2ToBuf, text_input_buf
-
         param_call DrawDialogLabel, 2, aux::str_rename_old
-        param_call DrawString, buf_filename
+        param_call DrawString, text_input_buf
         param_call DrawDialogLabel, 4, aux::str_rename_new
         jmp     InitNameInput
     END_IF
@@ -14333,13 +14328,9 @@ do_close:
         jsr     CopyDialogParamAddrToPtr
         ldy     #duplicate_dialog_params::a_path - duplicate_dialog_params
         copy16in (params_ptr),y, $08
-
-        ;; Populate filename field and input
-        param_call CopyPtr2ToBuf, buf_filename
         param_call CopyPtr2ToBuf, text_input_buf
-
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
-        param_call DrawString, buf_filename
+        param_call DrawString, text_input_buf
         param_call DrawDialogLabel, 4, aux::str_rename_new
         jmp     InitNameInput
     END_IF
@@ -14874,10 +14865,6 @@ ptr_str_files_suffix:
 
 .proc CopyPtr1ToBuf0
         param_jump CopyPtr1ToBuf, path_buf0
-.endproc
-
-.proc CopyPtr1ToTextInputBuf
-        param_jump CopyPtr1ToBuf, text_input_buf
 .endproc
 
 ;;; ============================================================
