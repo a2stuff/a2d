@@ -52,7 +52,7 @@ DoAdd:  ldx     #1
         bcc     L9052
         inx
 L9052:  lda     #$00
-        sta     path_buf1       ; clear name, but leave path alone
+        sta     text_input_buf       ; clear name, but leave path alone
         ldy     #$03 | $80      ; high bit set = Add
         lda     #$02
         jsr     file_dialog__Exec
@@ -190,7 +190,7 @@ dialog_loop:
         lda     selected_index
         jsr     GetFileEntryAddr
         stax    $06
-        jsr     main::CopyPtr1ToBuf1
+        jsr     main::CopyPtr1ToTextInputBuf
 
         ldy     #kSelectorEntryFlagsOffset
         lda     ($06),y
@@ -873,7 +873,7 @@ entries_flag_table:
 ;;; and (if it's in the primary run list) also updates the
 ;;; resource data (used for menus, etc).
 ;;; Inputs: A=entry index, Y=new flags
-;;;         `path_buf1` is name, `path_buf0` is path
+;;;         `text_input_buf` is name, `path_buf0` is path
 
 .proc AssignEntryData
         cmp     #8
@@ -886,12 +886,12 @@ entries_flag_table:
 
         ptr_file = $06          ; pointer into file buffer
 
-        ;; Assign name in `path_buf1` to file
+        ;; Assign name in `text_input_buf` to file
         lda     index
         jsr     GetFileEntryAddr
         stax    ptr_file
-        ldy     path_buf1
-:       lda     path_buf1,y
+        ldy     text_input_buf
+:       lda     text_input_buf,y
         sta     (ptr_file),y
         dey
         bpl     :-
@@ -921,7 +921,7 @@ index:  .byte   0
 ;;; ============================================================
 ;;; Assigns name, flags, and path to an entry in the file buffer.
 ;;; Inputs: A=entry index, Y=new flags
-;;;         `path_buf1` is name, `path_buf0` is path
+;;;         `text_input_buf` is name, `path_buf0` is path
 
 .proc AssignSecondaryRunListEntryData
         ptr := $06
@@ -936,8 +936,8 @@ index:  .byte   0
         stax    ptr
 
         ;; Assign name
-        ldy     path_buf1
-:       lda     path_buf1,y
+        ldy     text_input_buf
+:       lda     text_input_buf,y
         sta     (ptr),y
         dey
         bpl     :-

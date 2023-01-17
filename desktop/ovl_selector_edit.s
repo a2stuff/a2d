@@ -145,7 +145,7 @@ jt_callbacks:
         param_call file_dialog::GetPath, path_buf0
 
         ;; If name is empty, use last path segment
-        lda     path_buf1
+        lda     text_input_buf
     IF_ZERO
         ldx     path_buf0
 :       lda     path_buf0,x
@@ -157,7 +157,7 @@ jt_callbacks:
 
         ldy     #1
 :       lda     path_buf0,x
-        sta     path_buf1,y
+        sta     text_input_buf,y
         cpx     path_buf0
         beq     :+
         inx
@@ -169,7 +169,7 @@ jt_callbacks:
         cpy     #kSelectorMaxNameLength+1
         bcc     :+
         ldy     #kSelectorMaxNameLength
-:       sty     path_buf1
+:       sty     text_input_buf
     END_IF
 
         jsr     IsVolPath

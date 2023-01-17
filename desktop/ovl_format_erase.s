@@ -121,7 +121,7 @@ skip_select:
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
         copy    #$80, has_input_field_flag
-        copy    #0, path_buf1
+        copy    #0, text_input_buf
         copy    #$00, format_erase_overlay_flag
         jsr     main::InitNameInput
         jsr     main::SetPortForDialogWindow
@@ -136,14 +136,14 @@ loop2:
 err2:   jsr     Bell
         jmp     loop2
 
-ok2:    lda     path_buf1
+ok2:    lda     text_input_buf
         beq     err2            ; name is empty
         cmp     #kMaxFilenameLength+1
         bcs     err2            ; name > 15 characters
         jsr     main::SetCursorPointerWithFlag
 
         ;; Check for conflicting name
-        ldxy    #path_buf1
+        ldxy    #text_input_buf
         lda     unit_num
         jsr     CheckConflictingVolumeName
         bcc     :+
@@ -229,9 +229,9 @@ l9:     jsr     main::SetPortForDialogWindow
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
-        param_call main::UpcaseString, path_buf1
+        param_call main::UpcaseString, text_input_buf
 
-        ldxy    #path_buf1
+        ldxy    #text_input_buf
         lda     unit_num
         jsr     WriteHeaderBlocks
         pha
@@ -299,10 +299,10 @@ l7:
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
-        param_call main::UpcaseString, path_buf1
+        param_call main::UpcaseString, text_input_buf
         jsr     main::SetCursorWatch
 
-        ldxy    #path_buf1
+        ldxy    #text_input_buf
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     WriteHeaderBlocks

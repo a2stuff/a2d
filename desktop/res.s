@@ -137,12 +137,13 @@ buf_filename:  .res    16, 0
 buf_win_path:
         .res    kPathBufferSize, 0
 
-;;; In common dialog (copy/edit file, add/edit shortcut):
-;;; * path_buf0 has the contents of the top input field
-;;; * path_buf1 has the contents of the bottom input field
+;;; Generic path buffer. In file dialog, used as current path.
+path_buf0:
+        .res    kPathBufferSize, 0
 
-path_buf0:  .res    kPathBufferSize, 0
-path_buf1:  .res    kPathBufferSize, 0
+;;; Generic path buffer. Used primarily as line edit text content.
+text_input_buf:
+        .res    kPathBufferSize, 0
 
 ;;; ============================================================
 ;;; Dialog used for prompts (yes/no/all) and operation progress
@@ -359,7 +360,7 @@ the_disk_in_slot_label:
 ;;; ============================================================
 ;;; Name prompt dialog (used for Rename, Duplicate, Format, Erase)
 
-        DEFINE_LINE_EDIT line_edit_rec, winfo_prompt_dialog::kWindowId, path_buf1, kNameInputLeft, kNameInputTop, kNameInputWidth, kMaxFilenameLength
+        DEFINE_LINE_EDIT line_edit_rec, winfo_prompt_dialog::kWindowId, text_input_buf, kNameInputLeft, kNameInputTop, kNameInputWidth, kMaxFilenameLength
         DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
 
 ;;; ============================================================
@@ -386,7 +387,7 @@ file_count:
 
         FONT := DEFAULT_FONT
         FD_EXTENDED = 1
-        buf_input2 := path_buf1
+        buf_input2 := text_input_buf
         .include "../lib/file_dialog_res.s"
 
 ;;; ============================================================
