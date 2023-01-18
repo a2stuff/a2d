@@ -3443,15 +3443,7 @@ ret:    rts
 
         tax
         lda     buffer+1,x         ; A = icon num
-        jsr     GetIconEntry    ; A,X = IconEntry
-        clc
-        adc     #IconEntry::name
-        pha
-        txa
-        adc     #0
-        tax
-        pla
-        rts
+        jmp     GetIconName
 .endproc
 
 
@@ -4261,7 +4253,8 @@ common:
         ;; Close any associated windows.
 
         ;; A = icon number
-        jsr     IconEntryNameLookup
+        jsr     GetIconName
+        stax    $06
 
         path_buf := $1F00
 
@@ -5660,7 +5653,6 @@ no_linked_win:
         ;; Compute the path (will be needed anyway).
         lda     icon_param
         jsr     GetIconEntry
-        stax    ptr
         jsr     ComposeIconFullPath ; may fail
 
         ;; Alternate entry point, called by:
@@ -6849,7 +6841,7 @@ size:   .word   0               ; size of a window's list
 
 ;;; ============================================================
 ;;; Compute full path for icon
-;;; Inputs: IconEntry pointer in $06
+;;; Inputs: A,X = IconEntry
 ;;; Outputs: `src_path_buf` has full path
 ;;; Exceptions: if path too long, shows error and restores `saved_stack`
 ;;; See `GetIconPath` for a variant that doesn't length check.
@@ -6859,6 +6851,7 @@ size:   .word   0               ; size of a window's list
         name_ptr := $06
 
         jsr     PushPointers
+        stax    icon_ptr
 
         ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
@@ -9368,9 +9361,8 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         lda     cached_window_entry_list,x
         cmp     trash_icon_num
         beq     next
-        jsr     GetIconEntry
+        jsr     GetIconName
         stax    icon_ptr
-        add16_8 icon_ptr, #IconEntry::name
 
         ;; Lengths match?
         ldy     #0
@@ -10351,12 +10343,15 @@ all_flag:
 
 ;;; ============================================================
 ;;; Input: A = icon
-;;; Output: $06 = icon name ptr
+;;; Output: A,X = icon name ptr
 
-.proc IconEntryNameLookup
+.proc GetIconName
         jsr     GetIconEntry
-        addax   #IconEntry::name, $06
-        rts
+        clc
+        adc     #IconEntry::name
+        bcc     :+
+        inx
+:       rts
 .endproc
 
 ;;; ============================================================
@@ -10616,8 +10611,8 @@ common2:
         copy    #GetInfoDialogState::name, get_info_dialog_params::state
         ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
-        jsr     IconEntryNameLookup
-        copy16  $06, get_info_dialog_params::a_str
+        jsr     GetIconName
+        stax    get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -10804,7 +10799,8 @@ start:
         param_call CopyToSrcPath, path_buf3
 
         lda     selected_icon_list
-        jsr     IconEntryNameLookup
+        jsr     GetIconName
+        stax    $06
 
         param_call CopyPtr1ToBuf, old_name_buf
 
@@ -10900,7 +10896,9 @@ finish: lda     #RenameDialogState::close
         ;; Copy new string in
         icon_name_ptr := $06
         lda     selected_icon_list
-        jsr     IconEntryNameLookup ; $06 = icon name ptr
+        jsr     GetIconName
+        stax    icon_name_ptr
+
         ldy     new_name_buf
 :       lda     new_name_buf,y
         sta     (icon_name_ptr),y
@@ -11281,7 +11279,8 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
         ldx     index
         lda     selected_icon_list,x
-        jsr     IconEntryNameLookup
+        jsr     GetIconName
+        stax    $06
 
         ;; Copy name for display/default
         param_call CopyPtr1ToBuf, old_name_buf
