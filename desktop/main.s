@@ -992,6 +992,11 @@ tmp_path_buf:
         beq     no_file_sel
 
         jsr     CopyAndComposeWinIconPaths
+    IF_NE
+        jsr     ShowAlert
+        rts
+    END_IF
+
         jmp     :+
 
 no_file_sel:
@@ -1236,21 +1241,6 @@ devlst_backup:
 ;;; ============================================================
 
 .proc CmdSelectorAction
-        lda     #kDynamicRoutineSelector1 ; selector picker dialog
-        jsr     LoadDynamicRoutine
-        bmi     done
-
-        lda     menu_click_params::item_num
-        cmp     #SelectorAction::delete
-        bcs     invoke     ; delete or run (no need for more overlays)
-
-        lda     #kDynamicRoutineSelector2 ; file dialog driver
-        jsr     LoadDynamicRoutine
-        bmi     done
-        lda     #kDynamicRoutineFileDialog ; file dialog
-        jsr     LoadDynamicRoutine
-        bmi     done
-
         ;; If adding, try to default to the current selection.
         lda     menu_click_params::item_num
         cmp     #kMenuItemIdSelectorAdd
@@ -1265,9 +1255,29 @@ devlst_backup:
         beq     :+
 
         jsr     CopyAndComposeWinIconPaths
+      IF_NE
+        jsr     ShowAlert
+        rts
+      END_IF
+
         COPY_STRING src_path_buf, path_buf0
 :
     END_IF
+
+        lda     #kDynamicRoutineSelector1 ; selector picker dialog
+        jsr     LoadDynamicRoutine
+        bmi     done
+
+        lda     menu_click_params::item_num
+        cmp     #SelectorAction::delete
+        bcs     invoke     ; delete or run (no need for more overlays)
+
+        lda     #kDynamicRoutineSelector2 ; file dialog driver
+        jsr     LoadDynamicRoutine
+        bmi     done
+        lda     #kDynamicRoutineFileDialog ; file dialog
+        jsr     LoadDynamicRoutine
+        bmi     done
 
 invoke:
         ;; Invoke routine
@@ -2018,6 +2028,11 @@ maybe_open_file:
         pla
 
         jsr     CopyAndComposeWinIconPaths
+    IF_NE
+        jsr     ShowAlert
+        rts
+    END_IF
+
         jmp     LaunchFileWithPath
 .endproc
 CmdOpenThenCloseCurrent := CmdOpen::open_then_close_current
@@ -2046,6 +2061,7 @@ window_id_to_close:
 ;;; Copy selection window and first selected icon paths to
 ;;; `buf_win_path` and `buf_filename` respectively, and
 ;;; compose into `src_path_buf`.
+;;; Output: Z=1/A=0 on success, Z=0/A=error if path too long
 
 .proc CopyAndComposeWinIconPaths
         ;; Copy window path to buf_win_path
@@ -2063,6 +2079,15 @@ window_id_to_close:
         jsr     GetIconEntry
         stax    icon_ptr
         ldy     #IconEntry::name
+
+        lda     (icon_ptr),y    ; check length
+        clc
+        adc     buf_win_path
+        cmp     #kMaxPathLength ; not +1 because we'll add '/'
+        bcc     :+
+        lda     #ERR_INVALID_PATHNAME
+        rts
+:
         lda     (icon_ptr),y
         tax
         clc
@@ -2092,6 +2117,7 @@ window_id_to_close:
         bne     :-
         stx     src_path_buf
 
+        lda     #0              ; success
         rts
 .endproc
 

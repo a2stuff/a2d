@@ -506,9 +506,13 @@
   * Select the innermost folder. Special > Lock...
   * Select the innermost folder. Special > Unlock...
   * Select the innermost folder. Special > Get Size
+  * Select the innermost folder. Shortcuts > Add a Shortcut...
   * Drag a file onto the innermost folder.
   * Drag the innermost folder to another volume.
   * Drag the innermost folder to the Trash.
+* Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. File > Open. Verify that an alert is shown.
+* Copy PREVIEW/SHOW.IMAGE.FILE to the APPLE.MENU folder. Restart. Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. Apple > Show Image File. Verify that an alert is shown.
+* Repeat the previous case, but with a Desk Accessory file as the innermost file instead of a folder. File > Open. Verify that an alert is shown.
 
 ## Shortcuts
 
