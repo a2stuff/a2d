@@ -313,33 +313,28 @@ done:
 
         jsr     PushPointers
         copy16  #icon_entries, ptr
+
         ldx     #1
-loop:   cpx     #kMaxIconCount+1 ; allow up to the maximum
-        bne     :+
-        jsr     PopPointers
-        jmp     end
-:       txa
-        pha
+loop:
+        ;; Populate table entry
+        txa                     ; A = icon id
         asl     a
-        tax
-        copy16  ptr, icon_entry_address_table,x
-        pla
-        pha
-        ldy     #0
+        tay
+        copy16  ptr, icon_entry_address_table,y
+
+        ;; Initialize IconEntry
+        txa                     ; A = icon id
+        ldy     #IconEntry::id
         sta     (ptr),y
-        iny
-        copy    #0, (ptr),y
-        lda     ptr
-        clc
-        adc     #.sizeof(IconEntry)
-        sta     ptr
-        bcc     :+
-        inc     ptr+1
-:       pla
-        tax
+        iny                     ; Y = IconEntry::state
+        copy    #0, (ptr),y     ; mark not allocated
+
+        ;; Next entry
+        add16_8 ptr, #.sizeof(IconEntry)
         inx
-        jmp     loop
-end:
+        cpx     #kMaxIconCount+1 ; allow up to the maximum
+        bne     loop
+        jsr     PopPointers
 
         ITK_CALL IconTK::InitToolKit, itkinit_params
 
@@ -358,7 +353,7 @@ end:
         jsr     main::AllocateIcon
         sta     main::trash_icon_num
         sta     cached_window_entry_list
-        jsr     main::IconEntryLookup
+        jsr     main::GetIconEntry
         stax    ptr
 
         ;; Trash is a drop target
@@ -1166,7 +1161,7 @@ iloop:  cpx     cached_window_entry_count
         pha
         lda     cached_window_entry_list,x
         sta     icon_param
-        jsr     main::IconEntryLookup
+        jsr     main::GetIconEntry
         stax    @addr
         ITK_CALL IconTK::AddIcon, 0, @addr
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)

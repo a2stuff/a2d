@@ -632,7 +632,7 @@ dispatch_click:
         bmi     done            ; $FF = dir icon freed
 
         sta     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
 
         ldy     #IconEntry::win_flags
@@ -1977,7 +1977,7 @@ next:   txa
         beq     next_icon
 
         ;; Look at flags...
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    ptr
 
         ldy     #IconEntry::win_flags
@@ -2060,7 +2060,7 @@ window_id_to_close:
         icon_ptr := $06
 
         lda     selected_icon_list
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
         ldy     #IconEntry::name
         lda     (icon_ptr),y
@@ -2368,7 +2368,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         ;; Compare with name from dialog
 :       lda     cached_window_entry_list,x
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    ptr_icon
 
         ;; Lengths match?
@@ -2424,7 +2424,7 @@ tmp:    .addr   0
         lda     drag_drop_params::result
         bmi     done            ; high bit set = window
 
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
 
         ldy     #IconEntry::win_flags ; file icon?
@@ -2795,7 +2795,7 @@ entry3:
         tax
         lda     cached_window_entry_list,x
         sta     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    @addr
         ITK_CALL IconTK::AddIcon, 0, @addr
         inc     index
@@ -3443,13 +3443,11 @@ ret:    rts
 
         tax
         lda     buffer+1,x         ; A = icon num
-        asl     a
-        tay
-        lda     icon_entry_address_table,y
+        jsr     GetIconEntry    ; A,X = IconEntry
         clc
         adc     #IconEntry::name
         pha
-        lda     icon_entry_address_table+1,y
+        txa
         adc     #0
         tax
         pla
@@ -3469,7 +3467,7 @@ ret:    rts
         ;; Find icon's window, and set selection
         icon_ptr := $06
         lda     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
         ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
@@ -4165,7 +4163,7 @@ cont:   txa
         beq     next
 
         sta     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    @addr
         ITK_CALL IconTK::AddIcon, 0, @addr
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
@@ -4357,7 +4355,7 @@ add_icon:
         dex
         lda     cached_window_entry_list,x
         sta     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    @addr
         ITK_CALL IconTK::AddIcon, 0, @addr
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
@@ -5206,7 +5204,7 @@ last_pos:
         beq     finish          ; none
 
         sta     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
 
         ldy     #IconEntry::state ; clear dimmed state
@@ -5661,7 +5659,7 @@ found_win:                    ; X = window id - 1
 no_linked_win:
         ;; Compute the path (will be needed anyway).
         lda     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    ptr
         jsr     ComposeIconFullPath ; may fail
 
@@ -5797,7 +5795,7 @@ no_win:
 .proc MarkIconOpen
         ptr := $06
         sta     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    ptr
 
         ;; Set dimmed flag
@@ -5976,7 +5974,7 @@ rloop:  lda     #SELF_MODIFIED_BYTE
 
         ;; Look up file record number
         ptr := $06
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    ptr
         ldy     #IconEntry::record_num
         lda     (ptr),y
@@ -6050,7 +6048,7 @@ header_and_offset_flag:
 :       txa
         pha                     ; A = index
         copy    selected_icon_list,x, icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    $06
         jsr     IconPtrScreenToWindow
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED
@@ -6089,7 +6087,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
         tax
         lda     cached_window_entry_list,x
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    entry_ptr
         jsr     IconPtrScreenToWindow
 
@@ -6116,7 +6114,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
         tax
         lda     cached_window_entry_list,x
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    entry_ptr
         jsr     IconPtrWindowToScreen
 
@@ -7034,7 +7032,7 @@ has_parent:
         pha
         bmi     volume
 
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
         ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
@@ -7247,7 +7245,7 @@ records_base_ptr:
         ldx     cached_window_entry_count
         inc     cached_window_entry_count
         sta     cached_window_entry_list,x
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_entry
 
         ;; Assign record number
@@ -8494,14 +8492,11 @@ min     := parsed_date + ParsedDateTime::minute
 ;;; Inputs: A = icon number
 ;;; Output: A,X = IconEntry address
 
-.proc IconEntryLookup
+.proc GetIconEntry
         asl     a
-        tax
-        lda     icon_entry_address_table,x
-        pha
-        lda     icon_entry_address_table+1,x
-        tax
-        pla
+        tay
+        lda     icon_entry_address_table,y
+        ldx     icon_entry_address_table+1,y
         rts
 .endproc
 
@@ -8563,7 +8558,7 @@ min     := parsed_date + ParsedDateTime::minute
         jsr     PushPointers
 
         icon_ptr := $06
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
 
         ldy     #IconEntry::win_flags
@@ -8846,7 +8841,7 @@ saved_portbits:
         entry_ptr := $6
 
         jsr     PushPointers
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    entry_ptr
         jsr     PrepActiveWindowScreenMapping
         jsr     IconPtrWindowToScreen
@@ -8887,7 +8882,7 @@ saved_portbits:
         entry_ptr := $6
 
         jsr     PushPointers
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    entry_ptr
         jsr     PrepActiveWindowScreenMapping
         jsr     IconPtrScreenToWindow
@@ -9260,7 +9255,7 @@ success:
         jsr     AllocateIcon
         ldy     devlst_index
         sta     device_to_icon_map,y
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
 
         ;; Copy name
@@ -9373,7 +9368,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         lda     cached_window_entry_list,x
         cmp     trash_icon_num
         beq     next
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
         add16_8 icon_ptr, #IconEntry::name
 
@@ -9520,7 +9515,7 @@ start:  lda     icon_param
     END_IF
         ;; Update the icon and redraw
         lda     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    ptr
 
         ldy     #IconEntry::state
@@ -9563,7 +9558,7 @@ open:   ldy     #$00
         ;; Get icon position
         icon_id := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    ptr
         ldy     #IconEntry::iconx
         lda     (ptr),y         ; x lo
@@ -10359,9 +10354,8 @@ all_flag:
 ;;; Output: $06 = icon name ptr
 
 .proc IconEntryNameLookup
-        asl     a
-        tay
-        add16   icon_entry_address_table,y, #IconEntry::name, $06
+        jsr     GetIconEntry
+        addax   #IconEntry::name, $06
         rts
 .endproc
 
@@ -10920,7 +10914,7 @@ finish: lda     #RenameDialogState::close
         ;; Dig up the index of the icon within the window.
         icon_ptr := $06
         lda     icon_param
-        jsr     IconEntryLookup
+        jsr     GetIconEntry
         stax    icon_ptr
 
         ;; Compute bounds of icon bitmap
@@ -14938,11 +14932,7 @@ ptr_str_files_suffix:
 .proc GetSelectedIcon
         tax
         lda     selected_icon_list,x
-        asl     a
-        tay
-        lda     icon_entry_address_table,y
-        ldx     icon_entry_address_table+1,y
-        rts
+        jmp     GetIconEntry
 .endproc
 
 ;;; ============================================================
