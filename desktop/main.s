@@ -6441,6 +6441,7 @@ too_many_files:
 no_win: lda     #kErrTooManyFiles ; too many files to show
 show:   jsr     ShowAlert
 
+        ;; Records not created, no need for `RemoveFileRecordsForIcon`
         jsr     MarkIconNotDimmed
         dec     num_open_windows
 
@@ -6631,7 +6632,9 @@ finish: copy16  record_ptr, filerecords_free_start
 :       bit     icon_param      ; Were we opening a path?
         bmi     :+              ; Yes, no icons to twiddle.
 
-        jsr     remove_filerecords_and_mark_icon_not_dimmed
+        jsr     RemoveFileRecordsForIcon ; TODO: Is this needed?
+        jsr     MarkIconNotDimmed
+
         lda     selected_window_id
         bne     :+
 
@@ -6892,7 +6895,10 @@ has_parent:
     IF_GE
         lda     #ERR_INVALID_PATHNAME
         jsr     ShowAlert
-        jsr     remove_filerecords_and_mark_icon_not_dimmed
+
+        jsr     RemoveFileRecordsForIcon ; TODO: Is this needed?
+        jsr     MarkIconNotDimmed
+
         dec     num_open_windows
         ldx     saved_stack
         txs
@@ -9472,32 +9478,32 @@ done:   rts
 ;;; ============================================================
 ;;; Used when recovering from a failed open (bad path, too many icons, etc)
 ;;; Inputs: `icon_param` points at icon
-;;; Assert: If windowed, icon is in the active window.
 
-.proc MarkIconNotDimmed
-        ptr := $6
-
-        ;; Primary entry point.
-        jsr     PushPointers
-        jmp     start
-
-        ;; This entry point removes filerecords associated with window
-remove_filerecords:
+.proc RemoveFileRecordsForIcon
         lda     icon_param
         beq     ret
 
-        jsr     PushPointers
-        lda     icon_param
         jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
     IF_EQ
         inx
         txa
         jsr     RemoveWindowFilerecordEntries
     END_IF
-        FALL_THROUGH_TO start
+
+ret:    rts
+.endproc
+
+;;; ============================================================
+;;; Used when recovering from a failed open (bad path, too many icons, etc)
+;;; Inputs: `icon_param` points at icon
+
+.proc MarkIconNotDimmed
+        icon_ptr := $6
 
         ;; Find open window for the icon
-start:  lda     icon_param
+        lda     icon_param
+        beq     ret
+
         jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
     IF_EQ
         ;; If found, remove from the table.
@@ -9505,22 +9511,19 @@ start:  lda     icon_param
         ;; any more.
         copy    #0, window_to_dir_icon_table,x
     END_IF
+
         ;; Update the icon and redraw
         lda     icon_param
         jsr     GetIconEntry
-        stax    ptr
-
+        stax    icon_ptr
         ldy     #IconEntry::state
-        lda     (ptr),y
+        lda     (icon_ptr),y
         and     #AS_BYTE(~kIconEntryStateDimmed)
-        sta     (ptr),y
+        sta     (icon_ptr),y
         ITK_CALL IconTK::DrawIcon, icon_param
-
-        jsr     PopPointers
 
 ret:    rts
 .endproc
-        remove_filerecords_and_mark_icon_not_dimmed := MarkIconNotDimmed::remove_filerecords
 
 ;;; ============================================================
 
