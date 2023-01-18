@@ -498,6 +498,18 @@
 
 * Launch DeskTop. Open a window containing a folder. Open the folder window. Position the folder window so that it partially covers the "in disk" and "available" entries in the lower window. Drag a large file into the folder window. Verify that the "in disk" and "available" values update in the folder window. Drag the folder window away. Verify that the parent window "in disk" and "available" values repaint with the old values, and without visual artifacts. Activate the parent window. Verify that the "in disk" and "available" values now update.
 
+* Launch DeskTop. Create a set of nested folders with a total path length just under the 64-character limit (e.g. "/RAMA/AAAAAAAAAAAAAAA/BBBBBBBBBBBBBBB/CCCCCCCCCCCCCCC/DDDDDDDDDD"). Rename the volume so that the total path length of the innermost folder would be longer than 64 characters (e.g. "RAMAXXXXXXXXXXX"). Repeat the following operations, and verify that an error is shown and DeskTop doesn't crash or hang:
+  * Select the innermost folder. File > Get Info.
+  * Select the innermost folder. File > Rename...
+  * Select the innermost folder. File > Duplicate...
+  * Select the innermost folder. File > Copy To... (and pick a target)
+  * Select the innermost folder. Special > Lock...
+  * Select the innermost folder. Special > Unlock...
+  * Select the innermost folder. Special > Get Size
+  * Drag a file onto the innermost folder.
+  * Drag the innermost folder to another volume.
+  * Drag the innermost folder to the Trash.
+
 ## Shortcuts
 
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.

@@ -6155,7 +6155,10 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
 ;;; Input: A = icon number
 
 .proc UpdateUsedFreeViaIcon
-        jsr     GetIconPath   ; `path_buf3` set to path
+        jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
+    IF_NE
+        rts                     ; too long
+    END_IF
         param_jump UpdateUsedFreeViaPath, path_buf3
 .endproc
 
@@ -6847,7 +6850,7 @@ size:   .word   0               ; size of a window's list
 ;;; Inputs: A,X = IconEntry
 ;;; Outputs: `src_path_buf` has full path
 ;;; Exceptions: if path too long, shows error and restores `saved_stack`
-;;; See `GetIconPath` for a variant that doesn't length check.
+;;; See `GetIconPath` for a variant that returns success/error instead.
 
 .proc ComposeIconFullPath
         icon_ptr := $06
@@ -7357,7 +7360,9 @@ L7870:  lda     cached_window_id
         bne     :+
         icon_num := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     GetIconPath     ; `path_buf3` set to path
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        bne     :+              ; too long
+
         jsr     PushPointers
         param_call FindWindowForPath, path_buf3
         jsr     PopPointers
@@ -8549,14 +8554,15 @@ min     := parsed_date + ParsedDateTime::minute
 
 ;;; ============================================================
 ;;; Inputs: A = icon id (volume or file)
-;;; Outputs: `path_buf3` populated with full path
-;;; NOTE: Does not do length checks.
-;;; See `ComposeIconFullPath` for a variant that length checks.
+;;; Outputs: Z=1/A=0/`path_buf3` populated with full path on success
+;;;          Z=0/A=`ERR_INVALID_PATHNAME` if too long
 
 .proc GetIconPath
         jsr     PushPointers
 
         icon_ptr := $06
+        win_path_ptr := $08
+
         jsr     GetIconEntry
         stax    icon_ptr
 
@@ -8575,10 +8581,28 @@ min     := parsed_date + ParsedDateTime::minute
         ;; File - window path is base path
 file:
         jsr     GetWindowPath
-        stax    $08
+        stax    win_path_ptr
 
-common: jsr     JoinPaths      ; $08 = base, $06 = file
-        jsr     PopPointers    ; do not tail-call optimise!
+common:
+        ;; Is there room?
+        ldy     #0
+        lda     (icon_ptr),y
+        clc
+        adc     (win_path_ptr),y
+        cmp     #kMaxPathLength ; not +1 because we'll add '/'
+        bcs     too_long
+
+        ;; Yes, concatenate
+        jsr     JoinPaths       ; $08 = base, $06 = file
+        lda     #0
+        beq     finish          ; always
+
+        ;; No, report error
+too_long:
+        lda     #ERR_INVALID_PATHNAME
+
+finish:
+        jsr     PopPointers
         rts
 .endproc
 
@@ -10129,7 +10153,11 @@ compute_target_prefix:
 
         ;; Drop is on an icon.
 target_is_icon:
-        jsr     GetIconPath   ; `path_buf3` set to path
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+    IF_NE
+        jsr     ShowAlert
+        return  #kOperationCanceled
+    END_IF
 
 common:
         ldy     path_buf3
@@ -10205,7 +10233,8 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         lda     selected_icon_list,x
         cmp     trash_icon_num
         beq     next_icon
-        jsr     GetIconPath
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jne     ShowErrorAlert  ; too long
 
         lda     do_op_flag
         beq     just_size_and_count
@@ -10548,7 +10577,11 @@ loop:   ldx     get_info_dialog_params::index
         cmp     trash_icon_num
         jeq     next
 
-        jsr     GetIconPath   ; `path_buf3` is full path
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+    IF_NE
+        jsr     ShowAlert
+        jmp     next
+    END_IF
 
         ldy     path_buf3       ; Copy to `src_path_buf`
 :       copy    path_buf3,y, src_path_buf,y
@@ -10558,6 +10591,7 @@ loop:   ldx     get_info_dialog_params::index
         ;; Try to get file info
 common: jsr     GetSrcFileInfo
         beq     :+
+        ;; TODO: Is this valid? Dialog may not be showing
         jsr     ShowErrorAlert
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     common
@@ -10797,7 +10831,11 @@ start:
         sta     result_flags
 
         lda     selected_icon_list
-        jsr     GetIconPath
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+    IF_NE
+        jsr     ShowAlert
+        return  result_flags
+    END_IF
 
         param_call CopyToSrcPath, path_buf3
 
@@ -11276,7 +11314,11 @@ loop:   lda     #SELF_MODIFIED_BYTE
         ;; Compose full path
         ldx     index
         lda     selected_icon_list,x
-        jsr     GetIconPath   ; populates `path_buf3`
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+    IF_NE
+        jsr     ShowAlert
+        return  result_flag
+    END_IF
 
         param_call CopyToSrcPath, path_buf3
 
