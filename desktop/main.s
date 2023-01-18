@@ -5678,8 +5678,19 @@ found_win:                    ; X = window id - 1
 no_linked_win:
         ;; Compute the path (will be needed anyway).
         lda     icon_param
-        jsr     GetIconEntry
-        jsr     ComposeIconFullPath ; may fail
+        jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
+    IF_NE
+        jsr     ShowAlert       ; A has error if `GetIconPath` fails
+
+        jsr     RemoveFileRecordsForIcon ; TODO: Is this needed?
+        jsr     MarkIconNotDimmed
+
+        dec     num_open_windows
+        ldx     saved_stack
+        txs
+        rts
+    END_IF
+        param_call CopyToSrcPath, path_buf3
 
         ;; Alternate entry point, called by:
         ;; `OpenWindowForPath` with `icon_param` = $FF
@@ -6869,79 +6880,6 @@ finish:
 
 deltam: .word   0               ; memory delta
 size:   .word   0               ; size of a window's list
-.endproc
-
-;;; ============================================================
-;;; Compute full path for icon
-;;; Inputs: A,X = IconEntry
-;;; Outputs: `src_path_buf` has full path
-;;; Exceptions: if path too long, shows error and restores `saved_stack`
-;;; See `GetIconPath` for a variant that returns success/error instead.
-
-.proc ComposeIconFullPath
-        icon_ptr := $06
-        name_ptr := $06
-
-        jsr     PushPointers
-        stax    icon_ptr
-
-        ldy     #IconEntry::win_flags
-        lda     (icon_ptr),y
-        pha
-        add16_8 icon_ptr, #IconEntry::name, name_ptr
-        pla
-        and     #kIconEntryWinIdMask
-        bne     has_parent      ; A = window_id
-
-        ;; --------------------------------------------------
-        ;; Desktop (volume) icon - no parent path
-
-        ;; Copy name
-        param_call CopyPtr1ToBuf, src_path_buf+1 ; Leave room for leading '/'
-        ;; Add leading '/' and adjust length
-        sta     src_path_buf
-        inc     src_path_buf
-        copy    #'/', src_path_buf+1
-
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
-
-        ;; --------------------------------------------------
-        ;; Windowed (folder) icon - has parent path
-has_parent:
-
-        parent_path_ptr := $08
-
-        jsr     GetWindowPath
-        stax    parent_path_ptr
-
-        ldy     #0
-        lda     (parent_path_ptr),y
-        clc
-        adc     (name_ptr),y
-        cmp     #kPathBufferSize
-
-    IF_GE
-        lda     #ERR_INVALID_PATHNAME
-        jsr     ShowAlert
-
-        jsr     RemoveFileRecordsForIcon ; TODO: Is this needed?
-        jsr     MarkIconNotDimmed
-
-        dec     num_open_windows
-        ldx     saved_stack
-        txs
-        rts
-    END_IF
-
-        ;; Copy parent path to src_path_buf
-        ldax    parent_path_ptr
-        jsr     CopyToSrcPath
-        ldax    name_ptr
-        jsr     AppendFilenameToSrcPath
-
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
 .endproc
 
 ;;; ============================================================
