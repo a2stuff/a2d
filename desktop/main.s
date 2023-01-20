@@ -2233,7 +2233,6 @@ str_disk_copy:
 start:
 @retry:
         ;; Do this now since we'll use up the space later.
-        ;; TODO: See if we can rearrange the memory map to preserve this.
         jsr     SaveWindows
 
         MLI_CALL OPEN, open_params
@@ -2657,8 +2656,6 @@ eject_flag:
 .proc CmdQuitImpl
         ;; Override within this scope
         MLIEntry := MLI
-
-        ;; TODO: Assumes prefix is retained. Compose correct path.
 
         quit_code_io := $800
         quit_code_addr := $1000
@@ -10554,12 +10551,13 @@ loop:   ldx     get_info_dialog_params::index
 
         ;; Try to get file info
 common: jsr     GetSrcFileInfo
-        beq     :+
-        ;; TODO: Is this valid? Dialog may not be showing
-        jsr     ShowErrorAlert
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+    IF_NE
+        jsr     ShowAlert
+        cmp     #kAlertResultTryAgain
         beq     common
-:
+        jmp     next
+    END_IF
+
         lda     selected_window_id
         beq     vol_icon2
 
@@ -12013,7 +12011,7 @@ blocks_free:
 .proc CheckSpaceAndShowPrompt
         jsr     CheckSpace
         bcc     done
-        ;; TODO: Convert this to an alert
+
         copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
         jsr     RunCopyDialogProc
         jne     CloseFilesCancelDialog
@@ -15338,7 +15336,7 @@ ret:    rts
 
 ;;; Input: A = window_id (0=desktop)
 .proc LoadWindowEntryTable
-        sta     cached_window_id ; TODO: Want this?
+        sta     cached_window_id
 
         ;; Load count & entries
         tax
