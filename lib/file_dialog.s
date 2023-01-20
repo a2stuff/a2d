@@ -1262,7 +1262,6 @@ close:  MLI_CALL CLOSE, close_params
         lda     dir_count
         sta     num_file_names
 :       jsr     SortFileNames
-        jsr     SetPtrAfterFilenames
         clc
         rts
 
@@ -1327,7 +1326,6 @@ next:   add16_8 ptr, #16        ; advance to next
 
 finish:
         jsr     SortFileNames
-        jsr     SetPtrAfterFilenames
         clc
         rts
 .endproc
@@ -1592,36 +1590,6 @@ name_buf:
 d2:     .res    127, 0
 
 .endproc ; SortFileNames
-
-;;; ============================================================
-
-.proc SetPtrAfterFilenames
-        ptr := $06
-
-        lda     num_file_names
-        bne     iter
-done:   rts
-
-iter:   lda     #0
-        sta     index
-        copy16  #file_names, ptr
-loop:   lda     index
-        cmp     num_file_names
-        beq     done
-        inc     index
-
-        ;; TODO: Replace this with <<4
-        lda     ptr
-        clc
-        adc     #16
-        sta     ptr
-        bcc     loop
-        inc     ptr+1
-
-        jmp     loop
-
-index:  .byte   0
-.endproc
 
 ;;; ============================================================
 ;;; Find index to filename in file_list_index.
