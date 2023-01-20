@@ -13,12 +13,12 @@ DrawIconRaw     = $03   ; { .byte icon }
 RemoveIcon      = $04   ; { .byte icon }
 RemoveAll       = $05   ; { .byte window_id }
 FindIcon        = $06   ; { .word mousex, .word mousey, .byte result, .byte window_id }
-DragHighlighted = $07   ; { .byte param, .word mousex, .word mousey }
+DragHighlighted = $07   ; { .byte icon/result, .word mousex, .word mousey }
                         ; Input: specific icon being dragged, mouse coords
-                        ; Output: 0 = onto desktop or same window (no-op)
-                        ;  hi bit clear: low bits are target icon
-                        ;  hi bit set:   low bits are target window
-                        ;  if 0, X = 2 means "file icon dragged to desktop" (???)
+                        ; Output: result byte is:
+                        ;  * 0: A = 0 = icon move, 2 = not a drag, 3 = no selection
+                        ;  * hi bit clear: low bits are target icon
+                        ;  * hi bit set:   low bits are target window
 UnhighlightIcon = $08   ; { .byte icon }
 DrawAll         = $09   ; { .byte window_id }
 IconInRect      = $0A   ; { .byte icon, rect bounds }

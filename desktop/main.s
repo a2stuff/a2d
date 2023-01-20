@@ -5618,7 +5618,7 @@ check_double_click:
 
 same_or_desktop:
         txa
-        cmp     #2              ; TODO: What is this case???
+        cmp     #2              ; not a drag
         bne     :+
         rts
 :

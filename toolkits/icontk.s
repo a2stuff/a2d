@@ -665,7 +665,7 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         beq     drag
 
 ignore_drag:
-        lda     #2              ; return value
+        lda     #2              ; return value - not a drag
         jmp     just_select
 
         ;; Compute mouse delta
@@ -714,7 +714,7 @@ is_drag:
         copy16  polybuf_addr, $08
         lda     highlight_count
         bne     :+
-        lda     #3              ; return value
+        lda     #3              ; return value - nothing highlighted
         jmp     just_select
 
 :       lda     highlight_list  ; first entry
