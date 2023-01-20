@@ -579,9 +579,10 @@ device_name_table:
         .endrepeat
         ASSERT_ADDRESS_TABLE_SIZE device_name_table, kMaxVolumes + 1
 
+        kDeviceNameLength = 1 + 16 + .strlen(res_string_sd_prefix_pattern)
         .repeat kMaxVolumes+1, i
         .ident(.sprintf("dev%ds", i)) := *
-        .res    28, 0           ; TODO: Only need 24 = 1 (len) + 16 (name) + 7 (prefix)
+        .res    kDeviceNameLength, 0
         .endrepeat
 
 ;;; Startup menu items (populated by slot scan at startup)
