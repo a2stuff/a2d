@@ -835,25 +835,22 @@ done:   rts
 ;;; ============================================================
 
 .proc OpenWindow
+
 .ifdef FD_EXTENDED
-        bit     extra_controls_flag
+        ;; Set correct sizes for the windows (dialog and listbox) based on options.
+        ldx     #.sizeof(MGTK::Point)-1
+:       bit     extra_controls_flag
     IF_NS
-        copy16  #file_dialog_res::kFilePickerDlgExLeft,  file_dialog_res::winfo::viewloc::xcoord
-        copy16  #file_dialog_res::kFilePickerDlgExTop,   file_dialog_res::winfo::viewloc::ycoord
-        copy16  #file_dialog_res::kFilePickerDlgExWidth, file_dialog_res::winfo::maprect::x2
-        copy16  #file_dialog_res::kFilePickerDlgExHeight,file_dialog_res::winfo::maprect::y2
-
-        copy16  #file_dialog_res::winfo_listbox::kExLeft, file_dialog_res::winfo_listbox::viewloc::xcoord
-        copy16  #file_dialog_res::winfo_listbox::kExTop,  file_dialog_res::winfo_listbox::viewloc::ycoord
+        copy    file_dialog_res::extra_viewloc,x, file_dialog_res::winfo::viewloc,x
+        copy    file_dialog_res::extra_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
+        copy    file_dialog_res::extra_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
     ELSE
-        copy16  #file_dialog_res::kFilePickerDlgLeft,  file_dialog_res::winfo::viewloc::xcoord
-        copy16  #file_dialog_res::kFilePickerDlgTop,   file_dialog_res::winfo::viewloc::ycoord
-        copy16  #file_dialog_res::kFilePickerDlgWidth, file_dialog_res::winfo::maprect::x2
-        copy16  #file_dialog_res::kFilePickerDlgHeight,file_dialog_res::winfo::maprect::y2
-
-        copy16  #file_dialog_res::winfo_listbox::kLeft, file_dialog_res::winfo_listbox::viewloc::xcoord
-        copy16  #file_dialog_res::winfo_listbox::kTop,  file_dialog_res::winfo_listbox::viewloc::ycoord
+        copy    file_dialog_res::normal_viewloc,x, file_dialog_res::winfo::viewloc,x
+        copy    file_dialog_res::normal_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
+        copy    file_dialog_res::normal_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
     END_IF
+        dex
+        bpl     :-
 .endif
 
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo

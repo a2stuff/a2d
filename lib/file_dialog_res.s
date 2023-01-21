@@ -146,7 +146,6 @@ kEntryListCtlWindowID = $3F
         kWidth = kListBoxWidth
         kHeight = kListItemHeight * kListRows - 1
         kLeft =   kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
-
         kTop =    kFilePickerDlgTop + kControlsTop + 1
 .ifdef FD_EXTENDED
         kExLeft =   kFilePickerDlgExLeft + kControlsLeft + 1 ; +1 for external border
@@ -185,6 +184,16 @@ textfont:       .addr   FONT
 nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
+
+.ifdef FD_EXTENDED
+        DEFINE_POINT extra_viewloc, kFilePickerDlgExLeft, kFilePickerDlgExTop
+        DEFINE_POINT extra_size, kFilePickerDlgExWidth, kFilePickerDlgExHeight
+        DEFINE_POINT extra_listloc, winfo_listbox::kExLeft, winfo_listbox::kExTop
+
+        DEFINE_POINT normal_viewloc, kFilePickerDlgLeft, kFilePickerDlgTop
+        DEFINE_POINT normal_size, kFilePickerDlgWidth, kFilePickerDlgHeight
+        DEFINE_POINT normal_listloc, winfo_listbox::kLeft, winfo_listbox::kTop
+.endif
 
 ;;; ============================================================
 
