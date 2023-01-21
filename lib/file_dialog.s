@@ -1448,137 +1448,108 @@ ret:    rts
 .endproc
 
 ;;; ============================================================
-;;; Sorting
+;;; Sorts `file_list_index` so names are in ascending order
+;;; Assert: On entry, `file_list_index` table is populated 0...`num_file_names`-1
 
 .proc SortFileNames
-        lda     #$7F            ; beyond last possible name char
-        ldx     #15
-:       sta     name_buf+1,x
-        dex
-        bpl     :-
+        lda     num_file_names
+        cmp     #2
+        bcs     :+              ; can't sort < 2 records
+        rts
+:
+        ;; --------------------------------------------------
+        ;; Selection sort
 
-        lda     #0
-        sta     outer_index
-        sta     inner_index
+        ptr1 := $06
+        ptr2 := $08
 
-loop:   lda     outer_index     ; outer loop
-        cmp     num_file_names
-        bne     loop2
-        jmp     finish
-
-loop2:  lda     inner_index     ; inner loop
-        jsr     SetPtrToNthFilename
-        ldy     #0
-        lda     ($06),y
-        bmi     next_inner
-        and     #NAME_LENGTH_MASK
-        sta     name_buf        ; length
-
-        ldy     #1
-l3:     lda     ($06),y
-        jsr     UpcaseChar
-        cmp     name_buf,y
-        beq     :+
-        bcs     next_inner
-        jmp     l5
-
-:       cpy     name_buf
-        beq     l5
-        iny
-        cpy     #16
-        bne     l3
-        jmp     next_inner
-
-l5:     lda     inner_index
-        sta     d1
-
-        ldx     #15
-        lda     #' '            ; before first possible name char
-:       sta     name_buf+1,x
-        dex
-        bpl     :-
-
-        ldy     name_buf
-:       lda     ($06),y
-        jsr     UpcaseChar
-        sta     name_buf,y
-        dey
-        bne     :-
-
-next_inner:
-        inc     inner_index
-        lda     inner_index
-        cmp     num_file_names
-        beq     :+
-        jmp     loop2
-
-:       lda     d1
-        jsr     SetPtrToNthFilename
-        ldy     #0              ; mark as done
-        lda     ($06),y
-        ora     #$80
-        sta     ($06),y
-
-        lda     #$7F            ; beyond last possible name char
-        ldx     #15             ; max length
-:       sta     name_buf+1,x
-        dex
-        bpl     :-
-
-        ldx     outer_index
-        lda     d1
-        sta     d2,x
-        lda     #0
-        sta     inner_index
-        inc     outer_index
-        jmp     loop
-
-        ;; Finish up
-finish: ldx     num_file_names
-        dex
-        stx     outer_index
-l10:    lda     outer_index
-        bpl     l14
         ldx     num_file_names
-        beq     done
         dex
-l11:    lda     d2,x
-        tay
+        stx     outer
+
+        outer := *+1
+oloop:  lda     #SELF_MODIFIED_BYTE
+        jsr     CalcPtr
+        stax    ptr2
+
+        lda     #0
+        sta     inner
+
+        inner := *+1
+iloop:  lda     #SELF_MODIFIED_BYTE
+        jsr     CalcPtr
+        stax    ptr1
+
+        jsr     CompareStrings
+        bcc     next
+
+        ;; Swap
+        ldx     inner
+        ldy     outer
+        lda     file_list_index,x
+        pha
         lda     file_list_index,y
-        bpl     l12
-        lda     d2,x
-        ora     #$80
-        sta     d2,x
-l12:    dex
-        bpl     l11
-
-        ldx     num_file_names
-        beq     done
-        dex
-:       lda     d2,x
         sta     file_list_index,x
-        dex
-        bpl     :-
+        pla
+        sta     file_list_index,y
 
-done:   rts
+        lda     outer
+        jsr     CalcPtr
+        stax    ptr2
 
-l14:    jsr     SetPtrToNthFilename
-        ldy     #0
-        lda     ($06),y
+next:   inc     inner
+        lda     inner
+        cmp     outer
+        bne     iloop
+
+        dec     outer
+        bne     oloop
+
+ret:    rts
+
+.proc CalcPtr
+        tax
+        lda     file_list_index,x
         and     #$7F
-        sta     ($06),y
-        dec     outer_index
-        jmp     l10
+        jmp     GetNthFilename
+.endproc
 
-inner_index:
-        .byte   0
-outer_index:
-        .byte   0
-d1:     .byte   0
-name_buf:
-        .res    17, 0
+;;; Inputs: $06, $08 are pts to strings
+;;; Compare strings at $06 (1) and $08 (2).
+;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
+.proc CompareStrings
+        ldy     #0
+        copy    (ptr1),y, len1
+        copy    (ptr2),y, len2
+        iny
 
-d2:     .res    127, 0          ; TODO: Rework sorting to eliminate this!
+loop:   lda     (ptr2),y
+        jsr     UpcaseChar
+        sta     char
+        lda     (ptr1),y
+        jsr     UpcaseChar
+        char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     ret             ; differ at Yth character
+
+        ;; End of string 1?
+        len1 := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :+
+        cpy     len2            ; 1<2 or 1=2 ?
+        rts
+
+        ;; End of string 2?
+        len2 := *+1
+:       cpy     #SELF_MODIFIED_BYTE
+        beq     gt              ; 1>2
+        iny
+        bne     loop            ; always
+
+gt:     lda     #$FF            ; Z=0
+        sec
+ret:    rts
+.endproc
 
 .endproc ; SortFileNames
 
@@ -1605,27 +1576,11 @@ loop:
         beq     failed
 
         ;; Check length
-        ldy     #0
-        lda     (curr_ptr),y
-        cmp     (name_ptr),y
-        bne     next
-        tay
-
-        ;; Check each character
-:       lda     (curr_ptr),y
-        jsr     UpcaseChar
-        sta     @char
-        lda     (name_ptr),y
-        jsr     UpcaseChar
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     next
-        dey
-        bne     :-
-        jmp     found
+        jsr     SortFileNames::CompareStrings
+        beq     found
 
         ;; No match - next!
-next:   inc     index
+        inc     index
         add16_8 curr_ptr, #16
         jmp     loop
 
