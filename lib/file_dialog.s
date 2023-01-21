@@ -1578,65 +1578,68 @@ d1:     .byte   0
 name_buf:
         .res    17, 0
 
-d2:     .res    127, 0
+d2:     .res    127, 0          ; TODO: Rework sorting to eliminate this!
 
 .endproc ; SortFileNames
 
 ;;; ============================================================
 ;;; Find index to filename in file_list_index.
-;;; Input: $06 = ptr to filename
+;;; Input: A,X = ptr to filename
 ;;; Output: A = index, or $FF if not found
 
 .ifdef FD_EXTENDED
 .proc FindFilenameIndex
-        stax    $06
-        ldy     #$00
-        lda     ($06),y
-        tay
-:       lda     ($06),y
-        sta     d2,y
-        dey
-        bpl     :-
-        lda     #$00
-        sta     d1
-        copy16  #file_names, $06
-l1:     lda     d1
+        name_ptr := $08
+        curr_ptr := $06
+
+        stax    name_ptr
+
+        ;; Compare against each filename
+        lda     #0
+        sta     index
+        copy16  #file_names, curr_ptr
+loop:
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
         cmp     num_file_names
-        beq     l4
-        ldy     #$00
-        lda     ($06),y
-        cmp     d2
-        bne     l3
+        beq     failed
+
+        ;; Check length
+        ldy     #0
+        lda     (curr_ptr),y
+        cmp     (name_ptr),y
+        bne     next
         tay
-l2:     lda     ($06),y
-        cmp     d2,y
-        bne     l3
+
+        ;; Check each character
+:       lda     (curr_ptr),y
+        jsr     UpcaseChar
+        sta     @char
+        lda     (name_ptr),y
+        jsr     UpcaseChar
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     next
         dey
-        bne     l2
-        jmp     l5
+        bne     :-
+        jmp     found
 
-l3:     inc     d1
-        lda     $06
-        clc
-        adc     #$10
-        sta     $06
-        bcc     l1
-        inc     $07
-        jmp     l1
+        ;; No match - next!
+next:   inc     index
+        add16_8 curr_ptr, #16
+        jmp     loop
 
-l4:     return  #$FF
+failed: return  #$FF
 
-l5:     ldx     num_file_names
-l6:     dex
+        ;; Now find index
+found:  ldx     num_file_names
+:       dex
         lda     file_list_index,x
         and     #$7F
-        cmp     d1
-        bne     l6
+        cmp     index
+        bne     :-
         txa
         rts
-
-d1:     .byte   0
-d2:     .res    16, 0
 .endproc
 .endif
 
