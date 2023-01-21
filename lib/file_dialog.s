@@ -1077,7 +1077,10 @@ retry:  ldx     device_num
         and     #NAME_LENGTH_MASK
         sta     on_line_buffer
         bne     found
-        jsr     NextDeviceNum
+
+        dec     device_num
+        bpl     retry
+        copy    DEVCNT, device_num
         jmp     retry
 
 found:  param_call AdjustVolumeNameCase, on_line_buffer
@@ -1085,15 +1088,6 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         sta     path_buf
         param_call AppendToPathBuf, on_line_buffer
         jmp     ClearSelection
-.endproc
-
-;;; ============================================================
-
-.proc NextDeviceNum
-        dec     device_num
-        bpl     :+
-        copy    DEVCNT, device_num
-:       rts
 .endproc
 
 ;;; ============================================================
