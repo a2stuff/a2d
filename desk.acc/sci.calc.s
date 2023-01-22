@@ -27,13 +27,13 @@
         ;; Mostly use ZP preservation mode, since we use ROM FP routines.
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve
         jmp     init
-.endproc
+.endproc ; InitDA
 
 
 .proc ExitDA
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
         rts
-.endproc
+.endproc ; ExitDA
 
 ;;; ============================================================
 ;;; Call Params (and other data)
@@ -578,7 +578,7 @@ loop:   lda     chrget_routine-1,x
         sta     CHRGET-1,x
         dex
         bne     loop
-.endproc
+.endproc ; CopyToB1
 
         lda     #0
         sta     ERRFLG          ; Turn off errors
@@ -626,7 +626,7 @@ loop:   lda     chrget_routine-1,x
         bne     InputLoop
         jsr     OnKeyPress
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 ;;; ============================================================
 ;;; On Click
@@ -672,7 +672,7 @@ loop:   lda     chrget_routine-1,x
     END_IF
 
 ret:    rts
-.endproc
+.endproc ; OnClick
 
 ;;; ============================================================
 ;;; On Key Press
@@ -761,7 +761,7 @@ loop:   lda     text_buffer1,x
         jne     ProcessFunction
 
 ret:    rts
-.endproc
+.endproc ; OnKeyPress
 
 ;;; ============================================================
 ;;; Try to map a click to a button
@@ -802,7 +802,7 @@ ignore: pla
 
 next:   add16_8 ptr, #.sizeof(btn_c)
         jmp     loop
-.endproc
+.endproc ; MapClickToFunction
 
 ;;; ============================================================
 
@@ -837,7 +837,7 @@ ret:    rts
 
 next:   add16_8 ptr, #.sizeof(btn_c)
         jmp     loop
-.endproc
+.endproc ; MapKeyToFunction
 
 
 ;;; ============================================================
@@ -949,7 +949,7 @@ empty:  inc     calc_l
         jmp     DisplayBuffer1
 
 ret:   rts
-.endproc
+.endproc ; ProcessFunction
 
 ;;; ============================================================
 
@@ -1132,7 +1132,7 @@ do_op:
         jmp     ResetBuffer1AndState
 :
         FALL_THROUGH_TO PostOp
-.endproc
+.endproc ; DoOp
 
 ;;; ============================================================
 
@@ -1184,7 +1184,7 @@ pad:    lda     #' '
         bpl     pad
 end:    jsr     DisplayBuffer1
         FALL_THROUGH_TO ResetBuffer1AndState
-.endproc
+.endproc ; PostOp
 
 .proc ResetBuffer1AndState
         jsr     ResetBuffer1
@@ -1196,7 +1196,7 @@ end:    jsr     DisplayBuffer1
         sta     calc_g
         sta     calc_f
         rts
-.endproc
+.endproc ; ResetBuffer1AndState
 
 .proc MaybeAddLeadingZero
         lda     text_buffer1+1,x
@@ -1208,7 +1208,7 @@ end:    jsr     DisplayBuffer1
         dex
 :
         rts
-.endproc
+.endproc ; MaybeAddLeadingZero
 
 ;;; After a function (e.g. SIN, COS, etc) is done, we must leave
 ;;; the FAC alone but we do need to update the display and set
@@ -1218,7 +1218,7 @@ end:    jsr     DisplayBuffer1
         sec
         ror     calc_f
         rts
-.endproc
+.endproc ; PostFunc
 
 ;;; ============================================================
 
@@ -1244,7 +1244,7 @@ kRegSize = 6
         pha
 
         rts
-.endproc
+.endproc ; PushFAC
 
 .proc PopFAC
         pla
@@ -1266,7 +1266,7 @@ kRegSize = 6
         pha
 
         rts
-.endproc
+.endproc ; PopFAC
 
 .proc PushARG
         pla
@@ -1288,7 +1288,7 @@ kRegSize = 6
         pha
 
         rts
-.endproc
+.endproc ; PushARG
 
 .proc PopARG
         pla
@@ -1310,7 +1310,7 @@ kRegSize = 6
         pha
 
         rts
-.endproc
+.endproc ; PopARG
 
 ;;; ============================================================
 
@@ -1371,7 +1371,7 @@ done:   lda     button_state                    ; high bit set if button down
 invert_rect:
         MGTK_CALL MGTK::PaintRect, 0, invert_addr
         rts
-.endproc
+.endproc ; DepressButton
 
 ;;; ============================================================
 ;;; Value Display
@@ -1385,7 +1385,7 @@ loop:   lda     #' '
         lda     #'0'
         sta     text_buffer1 + kTextBufferSize
         rts
-.endproc
+.endproc ; ResetBuffer1
 
 .proc ResetBuffer2
         ldy     #kTextBufferSize
@@ -1396,13 +1396,13 @@ loop:   lda     #' '
         lda     #'0'
         sta     text_buffer2 + kTextBufferSize
         rts
-.endproc
+.endproc ; ResetBuffer2
 
 .proc ResetBuffersAndDisplay
         jsr     ResetBuffer1
         jsr     ResetBuffer2
         FALL_THROUGH_TO DisplayBuffer1
-.endproc
+.endproc ; ResetBuffersAndDisplay
 
 .proc DisplayBuffer1
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -1413,7 +1413,7 @@ loop:   lda     #' '
         jsr     PreDisplayBuffer
         MGTK_CALL MGTK::DrawText, drawtext_params1
 end:    rts
-.endproc
+.endproc ; DisplayBuffer1
 
 .proc DisplayBuffer2
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -1424,7 +1424,7 @@ end:    rts
         jsr     PreDisplayBuffer
         MGTK_CALL MGTK::DrawText, drawtext_params2
 end:    rts
-.endproc
+.endproc ; DisplayBuffer2
 
 .proc PreDisplayBuffer
         stx     textwidth_params::textptr ; text buffer address in x,y
@@ -1438,7 +1438,7 @@ end:    rts
         param_call DrawString, spaces_string
         MGTK_CALL MGTK::MoveTo, text_pos_params3 ; set up for display
         rts
-.endproc
+.endproc ; PreDisplayBuffer
 
 ;;; ============================================================
 ;;; Draw the window contents (background, buttons)
@@ -1487,7 +1487,7 @@ finish: jsr     DisplayBuffer2
 
 label:  .addr   0
 
-.endproc
+.endproc ; DrawContent
 
 ;;; ============================================================
 
@@ -1511,7 +1511,7 @@ label:  .addr   0
         ldx     saved_stack
         txs
         jmp     InputLoop
-.endproc
+.endproc ; ErrorHook
 
 PROC_AT chrget_routine, ::CHRGET
         dummy_addr := $EA60

@@ -83,4 +83,4 @@ finish: tay
         sta     ptr
         tya
         rts
-.endproc
+.endproc ; IsDiskII

@@ -170,7 +170,7 @@ file_name:
 
 version_bytes:
         .word   0
-.endproc
+.endproc ; AdjustCaseImpl
 
 AdjustFileNameCase      := AdjustCaseImpl::file_name
 AdjustFileEntryCase     := AdjustCaseImpl::file_entry

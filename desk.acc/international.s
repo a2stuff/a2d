@@ -52,7 +52,7 @@
         jsr     init_window
         lda     dialog_result
         rts
-.endproc
+.endproc ; RunDA
 
 ;;; ============================================================
 ;;; Param blocks
@@ -204,7 +204,7 @@ init_window:
         bne     InputLoop
         jsr     OnKey
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 ;;; ============================================================
 
@@ -256,7 +256,7 @@ ret:    rts
         bne     UpdateSelection
         lda     #Field::LAST
         bne     UpdateSelection ; always
-.endproc
+.endproc ; OnKeyPrev
 
 .proc OnKeyNext
         clc
@@ -266,11 +266,11 @@ ret:    rts
         bcc     UpdateSelection
         lda     #Field::FIRST
         FALL_THROUGH_TO UpdateSelection
-.endproc
+.endproc ; OnKeyNext
 
 .proc UpdateSelection
         jmp     SelectField
-.endproc
+.endproc ; UpdateSelection
 
 .proc OnKeyChar
         ldx     selected_field
@@ -305,9 +305,9 @@ update:
         copy    #$80, dialog_result
         txa
         jmp     DrawField
-.endproc
+.endproc ; OnKeyChar
 
-.endproc
+.endproc ; OnKey
 
 ;;; ============================================================
 
@@ -384,7 +384,7 @@ hit:
     END_IF
 
         rts
-.endproc
+.endproc ; OnClick
 
 ;;; ============================================================
 
@@ -392,16 +392,16 @@ hit:
         BTK_CALL BTK::Track, ok_button_params
         beq     OnOk
         rts
-.endproc
+.endproc ; OnClickOk
 
 .proc OnKeyOk
         BTK_CALL BTK::Flash, ok_button_params
         FALL_THROUGH_TO OnOk
-.endproc
+.endproc ; OnKeyOk
 
 .proc OnOk
         jmp     Destroy
-.endproc
+.endproc ; OnOk
 
 ;;; ============================================================
 
@@ -409,25 +409,25 @@ hit:
         copy    #0, SETTINGS+DeskTopSettings::clock_24hours
         copy    #$80, dialog_result
         jmp     UpdateClockOptionButtons
-.endproc
+.endproc ; OnClick12Hour
 
 .proc OnClick24Hour
         copy    #$80, SETTINGS+DeskTopSettings::clock_24hours
         copy    #$80, dialog_result
         jmp     UpdateClockOptionButtons
-.endproc
+.endproc ; OnClick24Hour
 
 .proc OnClickMDY
         copy    #DeskTopSettings::kDateOrderMDY, SETTINGS+DeskTopSettings::intl_date_order
         copy    #$80, dialog_result
         jmp     UpdateDateOptionButtons
-.endproc
+.endproc ; OnClickMDY
 
 .proc OnClickDMY
         copy    #DeskTopSettings::kDateOrderDMY, SETTINGS+DeskTopSettings::intl_date_order
         copy    #$80, dialog_result
         jmp     UpdateDateOptionButtons
-.endproc
+.endproc ; OnClickDMY
 
 ;;; ============================================================
 ;;; Tear down the window and exit
@@ -451,7 +451,7 @@ dialog_result:  .byte   0
 
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Destroy
 
 ;;; ============================================================
 ;;; Render the window contents
@@ -495,12 +495,12 @@ dialog_result:  .byte   0
         BTK_CALL BTK::RadioDraw, clock_24hour_params
 
         FALL_THROUGH_TO UpdateOptionButtons
-.endproc
+.endproc ; DrawWindow
 
 .proc UpdateOptionButtons
         jsr     UpdateDateOptionButtons
         FALL_THROUGH_TO UpdateClockOptionButtons
-.endproc
+.endproc ; UpdateOptionButtons
 
 .proc UpdateClockOptionButtons
         lda     SETTINGS + DeskTopSettings::clock_24hours
@@ -516,7 +516,7 @@ dialog_result:  .byte   0
         BTK_CALL BTK::RadioUpdate, clock_24hour_params
 
         rts
-.endproc
+.endproc ; UpdateClockOptionButtons
 
 .proc UpdateDateOptionButtons
         lda     SETTINGS + DeskTopSettings::intl_date_order
@@ -532,7 +532,7 @@ dialog_result:  .byte   0
         BTK_CALL BTK::RadioUpdate, date_dmy_params
 
         rts
-.endproc
+.endproc ; UpdateDateOptionButtons
 
 .proc ZToN
         beq     :+
@@ -540,7 +540,7 @@ dialog_result:  .byte   0
         rts
 :       lda     #$80
         rts
-.endproc
+.endproc ; ZToN
 
 ;;; ============================================================
 
@@ -617,7 +617,7 @@ char:   .byte   SELF_MODIFIED_BYTE
     END_IF
 
         rts
-.endproc
+.endproc ; DrawField
 
 ;;; ============================================================
 ;;; Selected a field (dehighlight the old one, highlight the new one)
@@ -632,7 +632,7 @@ char:   .byte   SELF_MODIFIED_BYTE
 
         lda     selected_field
         jmp     DrawField
-.endproc
+.endproc ; SelectField
 
 ;;; ============================================================
 

@@ -14,4 +14,4 @@
         MGTK_CALL MGTK::TextWidth, ptr
         ldax    result
         rts
-.endproc
+.endproc ; MeasureString

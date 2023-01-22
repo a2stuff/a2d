@@ -58,7 +58,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
 
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         jmp     JUMP_TABLE_RGB_MODE
-.endproc
+.endproc ; Start
 
 ;;; ============================================================
 
@@ -102,7 +102,7 @@ cloop:
 
         sta     CLR80STORE
         rts
-.endproc
+.endproc ; SaveText
 
 ;;; Restore main/aux text page 1 (preserving screen holes)
 .proc RestoreText
@@ -140,7 +140,7 @@ cloop:
 
         sta     CLR80STORE
         rts
-.endproc
+.endproc ; RestoreText
 
 ;;; ============================================================
 
@@ -154,7 +154,7 @@ event_params:   .tag MGTK::Event
         copy16  #event_params, DESTINATIONLO
         clc                     ; aux > main
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyEventAuxToMain
 
 ;;; ============================================================
 ;;; Guts of the screen saver
@@ -268,7 +268,7 @@ exit:   rts
         sta     (ptr),y
 
         rts
-.endproc
+.endproc ; AdvanceCursor
 
         ;; --------------------------------------------------
 
@@ -286,7 +286,7 @@ exit:   rts
         sta     (ptr),y
 
         rts
-.endproc
+.endproc ; ResetCursor
 
         ;; --------------------------------------------------
 
@@ -297,7 +297,7 @@ exit:   rts
         cmp     #40
         bcs     :-              ; retry if >= 40
         rts
-.endproc
+.endproc ; GetRandomH
 
         ;; --------------------------------------------------
 
@@ -308,7 +308,7 @@ exit:   rts
         cmp     #' '+1
         bcc     :-              ; retry if control or space
         rts
-.endproc
+.endproc ; GetRandomChar
 
         ;; --------------------------------------------------
 
@@ -321,7 +321,7 @@ wait3:  sbc     #1
         sbc     #1
         bne     wait2
         rts
-.endproc
+.endproc ; Wait
 
         ;; --------------------------------------------------
 
@@ -334,7 +334,7 @@ c4:     .tag    Cursor
 
 list:   .addr   c1, c2, c3, c4
         ASSERT_ADDRESS_TABLE_SIZE list, kNumCursors
-.endproc
+.endproc ; Run
 
 ;;; ============================================================
 ;;; Pseudorandom Number Generation
@@ -367,7 +367,7 @@ R4:     .byte  0
         ror
         sta R1
         rts
-.endproc
+.endproc ; Random
 
 .proc InitRand
         lda $4E                 ; Seed the random number generator
@@ -382,7 +382,7 @@ InitLoop:
         dex
         bne InitLoop
         rts
-.endproc
+.endproc ; InitRand
 
 ;;; ============================================================
 

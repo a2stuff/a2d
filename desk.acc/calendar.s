@@ -244,7 +244,7 @@ minute: .byte   0
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
@@ -256,13 +256,13 @@ minute: .byte   0
         beq     HandleKey
 
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -280,7 +280,7 @@ minute: .byte   0
         cmp     #CHAR_ESCAPE
         beq     Exit
         bne     InputLoop       ; always
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -297,7 +297,7 @@ minute: .byte   0
         cmp     #MGTK::Area::content
         jeq     HandleClick
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -330,9 +330,9 @@ fin:    jsr     UpdateWindow
         MGTK_CALL MGTK::PaintRect, left_button_rec::rect
     END_IF
         rts
-.endproc
+.endproc ; InvertDec
 
-.endproc
+.endproc ; DecDate
 
 .proc IncDate
         jsr     InvertInc
@@ -365,8 +365,8 @@ fin:    jsr     UpdateWindow
         MGTK_CALL MGTK::PaintRect, right_button_rec::rect
     END_IF
         rts
-.endproc
-.endproc
+.endproc ; InvertInc
+.endproc ; IncDate
 
 ;;; ============================================================
 
@@ -375,7 +375,7 @@ fin:    jsr     UpdateWindow
         lda     trackgoaway_params::clicked
         jne     Exit
         jmp     InputLoop
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -393,7 +393,7 @@ common: bit     dragwindow_params::moved
 
 :       jmp     InputLoop
 
-.endproc
+.endproc ; HandleDrag
 
 
 ;;; ============================================================
@@ -412,7 +412,7 @@ common: bit     dragwindow_params::moved
         jeq     IncDate
 
         jmp     InputLoop
-.endproc
+.endproc ; HandleClick
 
 ;;; ============================================================
 
@@ -673,7 +673,7 @@ date:   .byte   0
 mlen:   .byte   0               ; month length + 1
 row:    .byte   0
 col:    .byte   0               ; sun=0, etc
-.endproc
+.endproc ; PaintWindow
 DrawWindow := PaintWindow::draw
 UpdateWindow := PaintWindow::update
 
@@ -725,7 +725,7 @@ UpdateWindow := PaintWindow::update
         rts
 
 tmp:    .word   0
-.endproc
+.endproc ; MakeYearString
 
 ;;; ============================================================
 

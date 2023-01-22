@@ -20,7 +20,7 @@
         COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
 
         jmp     file_dialog::EventLoop
-.endproc
+.endproc ; Init
 
 jt_callbacks:
         jmp     HandleOk
@@ -37,7 +37,7 @@ jt_callbacks:
         ldx     file_dialog::saved_stack
         txs
         return  #$00
-.endproc
+.endproc ; HandleOk
 
 ;;; ============================================================
 
@@ -46,7 +46,7 @@ jt_callbacks:
         ldx     file_dialog::saved_stack
         txs
         return  #$FF
-.endproc
+.endproc ; HandleCancel
 
 ;;; ============================================================
 

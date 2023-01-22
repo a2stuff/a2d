@@ -147,7 +147,7 @@ mirrored:
 
         clc
         rts
-.endproc
+.endproc ; FindSmartportDispatchAddress
 
 ;;; ============================================================
 ;;; Get driver address for unit number
@@ -193,4 +193,4 @@ mirrored:
 mirrored:
         bit     ret             ; set V
 ret:    rts
-.endproc
+.endproc ; DeviceDriverAddress

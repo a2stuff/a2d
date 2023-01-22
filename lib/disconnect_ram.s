@@ -40,4 +40,4 @@ shift:  lda     DEVLST+1,x
         ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.08.html
 
         rts
-.endproc
+.endproc ; DisconnectRAM

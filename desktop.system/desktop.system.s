@@ -117,7 +117,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 .proc CreateLocalDir
         MLI_CALL CREATE, create_params
         rts
-.endproc
+.endproc ; CreateLocalDir
 
 ;;; ============================================================
 
@@ -268,7 +268,7 @@ is_dir: lda     #$FF
 
 is_dir_flag:
         .byte   0
-.endproc
+.endproc ; DoCopy
 
 ;;; ============================================================
 ;;; Copy an entry in a directory. For files, the content is copied.
@@ -333,7 +333,7 @@ exit:   rts
 
 cleanup:
         jmp     RemoveFilenameFromPath1
-.endproc
+.endproc ; CopyEntry
 
 ;;; ============================================================
 ;;; Check that there is room to copy a file. Handles overwrites.
@@ -405,7 +405,7 @@ have_space:
 vol_free:       .word   0
 path1_length:   .byte   0       ; save full length of path
 dst_size:       .word   0
-.endproc
+.endproc ; CheckSpaceAvailable
 
 
 ;;; ============================================================
@@ -473,7 +473,7 @@ close:  MLI_CALL CLOSE, close_dstfile_params
         copy    #10, get_path1_info_params ; GET_FILE_INFO param_count
 
         rts
-.endproc
+.endproc ; CopyNormalFile
 
 ;;; ============================================================
 
@@ -486,7 +486,7 @@ ret:    rts
 
 cancel: lda     #kErrCancel
         jmp     (hook_handle_error_code)
-.endproc
+.endproc ; CheckCancel
 
 ;;; ============================================================
 
@@ -515,7 +515,7 @@ cancel: lda     #kErrCancel
         beq     :+
         jmp     (hook_handle_error_code)
 :       rts
-.endproc
+.endproc ; CreateDir
 
 ;;; ============================================================
 
@@ -544,7 +544,7 @@ entry_index_in_block:   .byte   0
         inx
         stx     stack_index
         rts
-.endproc
+.endproc ; PushIndexToStack
 
 ;;; ============================================================
 
@@ -558,7 +558,7 @@ entry_index_in_block:   .byte   0
         sta     target_index
         stx     stack_index
         rts
-.endproc
+.endproc ; PopIndexFromStack
 
 ;;; ============================================================
 ;;; Open the source directory for reading, skipping header.
@@ -590,7 +590,7 @@ entry_index_in_block:   .byte   0
         copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
 
         rts
-.endproc
+.endproc ; OpenSrcDir
 
 ;;; ============================================================
 
@@ -601,7 +601,7 @@ entry_index_in_block:   .byte   0
         beq     :+
         jmp     (hook_handle_error_code)
 :       rts
-.endproc
+.endproc ; DoCloseFile
 
 ;;; ============================================================
 ;;; Read the next file entry in the directory into `file_entry`
@@ -640,7 +640,7 @@ entry_index_in_block:   .byte   0
 done:   return  #0
 
 eof:    return  #$FF
-.endproc
+.endproc ; ReadFileEntry
 
 ;;; ============================================================
 
@@ -650,7 +650,7 @@ eof:    return  #$FF
         jsr     PushIndexToStack
         jsr     AppendFilenameToPath2
         jmp     OpenSrcDir
-.endproc
+.endproc ; DescendDirectory
 
 .proc AscendDirectory
         jsr     DoCloseFile
@@ -659,7 +659,7 @@ eof:    return  #$FF
         jsr     OpenSrcDir
         jsr     AdvanceToTargetEntry
         jmp     RemoveFilenameFromPath1
-.endproc
+.endproc ; AscendDirectory
 
 .proc AdvanceToTargetEntry
 :       cmp16   entry_index_in_dir, target_index
@@ -668,7 +668,7 @@ eof:    return  #$FF
         jmp     :-
 
 :       rts
-.endproc
+.endproc ; AdvanceToTargetEntry
 
 ;;; ============================================================
 ;;; Recursively copy
@@ -712,7 +712,7 @@ next:   lda     recursion_depth
         jmp     loop
 
 done:   jmp     DoCloseFile
-.endproc
+.endproc ; CopyDirectory
 
 ;;; ============================================================
 
@@ -743,7 +743,7 @@ loop:   cpx     filename
 
 done:   sty     path2
         rts
-.endproc
+.endproc ; AppendFilenameToPath2
 
 ;;; ============================================================
 
@@ -763,7 +763,7 @@ loop:   lda     path2,x
 done:   dex
         stx     path2
         rts
-.endproc
+.endproc ; RemoveFilenameFromPath2
 
 ;;; ============================================================
 
@@ -787,7 +787,7 @@ loop:   cpx     filename
 
 done:   sty     path1
         rts
-.endproc
+.endproc ; AppendFilenameToPath1
 
 ;;; ============================================================
 
@@ -807,9 +807,9 @@ loop:   lda     path1,x
 done:   dex
         stx     path1
         rts
-.endproc
+.endproc ; RemoveFilenameFromPath1
 
-.endproc
+.endproc ; GenericCopy
 
 ;;; ============================================================
 ;;;
@@ -1090,8 +1090,8 @@ test_unit_num:
         jsr     CopyOrigPrefixToDesktopOrigPrefix
         copy    dst_path, copied_flag
         jmp     FinishDeskTopCopy ; sets prefix, etc.
-.endproc
-.endproc
+.endproc ; SearchDevices
+.endproc ; Start
 
 .proc StartCopy
         ptr := $06
@@ -1155,7 +1155,7 @@ file_loop:
 
         jsr     UpdateProgress
         FALL_THROUGH_TO FinishDeskTopCopy
-.endproc
+.endproc ; StartCopy
 
 .proc FinishDeskTopCopy
         lda     copied_flag
@@ -1183,14 +1183,14 @@ file_loop:
 
         ;; Done! Move on to Part 2.
         jmp     CopySelectorEntriesToRamcard
-.endproc
+.endproc ; FinishDeskTopCopy
 
 ;;; ============================================================
 
 .proc DidNotCopy
         copy    #0, copied_flag
         jmp     FinishDeskTopCopy
-.endproc
+.endproc ; DidNotCopy
 
 ;;; ============================================================
 
@@ -1200,7 +1200,7 @@ file_loop:
         stx     COPIED_TO_RAMCARD_FLAG
         bit     ROMIN2
         rts
-.endproc
+.endproc ; SetCopiedToRamcardFlag
 
 .proc SetRamcardPrefix
         ptr := $6
@@ -1218,7 +1218,7 @@ file_loop:
         bpl     :-
         bit     ROMIN2
         rts
-.endproc
+.endproc ; SetRamcardPrefix
 
 .proc SetDesktopOrigPrefix
         ptr := $6
@@ -1238,7 +1238,7 @@ file_loop:
 
         bit     ROMIN2
         rts
-.endproc
+.endproc ; SetDesktopOrigPrefix
 
 ;;; ============================================================
 
@@ -1262,7 +1262,7 @@ loop:   cpx     filename_buf
 
 done:   sty     src_path
         rts
-.endproc
+.endproc ; AppendFilenameToSrcPath
 
 ;;; ============================================================
 
@@ -1282,7 +1282,7 @@ done:   sty     src_path
 done:   dex
         stx     src_path
         rts
-.endproc
+.endproc ; RemoveFilenameFromSrcPath
 
 ;;; ============================================================
 
@@ -1306,7 +1306,7 @@ loop:   cpx     filename_buf
 
 done:   sty     dst_path
         rts
-.endproc
+.endproc ; AppendFilenameToDstPath
 
 ;;; ============================================================
 
@@ -1326,7 +1326,7 @@ done:   sty     dst_path
 done:   dex
         stx     dst_path
         rts
-.endproc
+.endproc ; RemoveFilenameFromDstPath
 
 ;;; ============================================================
 
@@ -1357,7 +1357,7 @@ done:   dex
         param_call CoutString, str_tip_skip_copying
 
 done:   rts
-.endproc
+.endproc ; ShowCopyingDeskTopScreen
 
 ;;; ============================================================
 ;;; Callback from copy failure; restores stack and proceeds.
@@ -1367,7 +1367,7 @@ done:   rts
         txs
 
         jmp     DidNotCopy
-.endproc
+.endproc ; FailCopy
 
 ;;; ============================================================
 ;;; Copy `filename` from `src_path` to `dst_path`
@@ -1409,7 +1409,7 @@ cleanup:
 
 noop:
         rts
-.endproc
+.endproc ; CopyFile
 
 ;;; ============================================================
 ;;; Input: `dst_path` set to RAMCard app dir (e.g. "/RAM5/DESKTOP")
@@ -1442,7 +1442,7 @@ ret:    rts
         ;; Appended to RAMCard root path e.g. "/RAM5"
 str_desktop_path:
         PASCAL_STRING .concat("/", kPathnameDeskTop)
-.endproc
+.endproc ; CheckDesktopOnDevice
 
 ;;; ============================================================
 ;;; Update the live (RAM or disk) copy of this file with the
@@ -1464,7 +1464,7 @@ start:  MLI_CALL OPEN, open_params
         bne     :+
         MLI_CALL CLOSE, close_params
 :       rts
-.endproc
+.endproc ; UpdateSelfFileImpl
 UpdateSelfFile  := UpdateSelfFileImpl::start
 
 ;;; ============================================================
@@ -1472,7 +1472,7 @@ UpdateSelfFile  := UpdateSelfFileImpl::start
 .proc CopyOrigPrefixToDesktopOrigPrefix
         param_call SetDesktopOrigPrefix, header_orig_prefix
         rts
-.endproc
+.endproc ; CopyOrigPrefixToDesktopOrigPrefix
 
 ;;; ============================================================
 
@@ -1505,7 +1505,7 @@ saved_stack:
         jsr     HOME
 
         FALL_THROUGH_TO ProcessSelectorList
-.endproc
+.endproc ; Start
 
 ;;; See docs/Selector_List_Format.md for file format
 
@@ -1620,7 +1620,7 @@ bail:
 
 entry_num:
         .byte   0
-.endproc
+.endproc ; ProcessSelectorList
 
 ;;; ============================================================
 
@@ -1658,7 +1658,7 @@ entry_dir_name:
         copy16  #ShowInsertPrompt, GenericCopy::hook_insert_source
         copy16  #ShowCopyingEntryScreen, GenericCopy::hook_show_file
         jmp     GenericCopy::DoCopy
-.endproc
+.endproc ; CopyUsingEntryPaths
 
 ;;; ============================================================
 ;;; Copy entry_path1/2 to path1/2
@@ -1681,7 +1681,7 @@ loop2:  lda     entry_path1,y
         bpl     loop2
 
         rts
-.endproc
+.endproc ; PreparePathsFromEntryPaths
 
 
 ;;; ============================================================
@@ -1699,7 +1699,7 @@ loop2:  lda     entry_path1,y
         tax
         tya
         rts
-.endproc
+.endproc ; ComputeLabelAddr
 
 ;;; ============================================================
 ;;; Compute second offset into selector file - A*64 + $182
@@ -1716,7 +1716,7 @@ loop2:  lda     entry_path1,y
         tax
         tya
         rts
-.endproc
+.endproc ; ComputePathAddr
 
 ;;; ============================================================
 
@@ -1736,7 +1736,7 @@ start:  MLI_CALL OPEN, open_params
         MLI_CALL CLOSE, close_params
         plp
 :       rts
-.endproc
+.endproc ; ReadSelectorListImpl
 ReadSelectorList        := ReadSelectorListImpl::start
 
 ;;; ============================================================
@@ -1754,7 +1754,7 @@ ReadSelectorList        := ReadSelectorListImpl::start
         rts
 
 bits:   .byte   0
-.endproc
+.endproc ; AxTimes16
 
 ;;; ============================================================
 
@@ -1771,7 +1771,7 @@ bits:   .byte   0
         rts
 
 bits:   .byte   $00
-.endproc
+.endproc ; AxTimes64
 
 ;;; ============================================================
 ;;; Prepare entry paths
@@ -1837,7 +1837,7 @@ bits:   .byte   $00
         bit     ROMIN2
 
         rts
-.endproc
+.endproc ; PrepareEntryPaths
 
 ;;; ============================================================
 
@@ -1871,7 +1871,7 @@ str_not_completed:
         param_call CoutString, str_copying
         param_call CoutStringNewline, GenericCopy::path2
         rts
-.endproc
+.endproc ; ShowCopyingEntryScreen
 
 ;;; ============================================================
 
@@ -1891,7 +1891,7 @@ str_not_completed:
         jmp     FinishAndInvoke
 
 :       jmp     HOME            ; and implicitly continue
-.endproc
+.endproc ; ShowInsertPrompt
 
 ;;; ============================================================
 
@@ -1908,7 +1908,7 @@ str_not_completed:
         jsr     WaitEnterEscape
 
         jmp     FinishAndInvoke
-.endproc
+.endproc ; ShowNoSpacePrompt
 
 ;;; ============================================================
 ;;; On copy failure, show an appropriate error; wait for key
@@ -1956,7 +1956,7 @@ loop:   lda     KBD
         bne     loop
 
         jmp     FinishAndInvoke
-.endproc
+.endproc ; HandleErrorCode
 
 monitor:
         jmp     MONZ
@@ -1974,14 +1974,14 @@ monitor:
         cmp     #CHAR_RETURN
         bne     :-
 done:   rts
-.endproc
+.endproc ; WaitEnterEscape
 
 ;;; ============================================================
 
 .proc FinishAndInvoke
         jsr     HOME
         jmp     InvokeSelectorOrDesktop
-.endproc
+.endproc ; FinishAndInvoke
 
 ;;; ============================================================
 
@@ -2048,7 +2048,7 @@ read:   sta     read_params::ref_num
         bne     crash
 
         jmp     MODULE_BOOTSTRAP
-.endproc
+.endproc ; InvokeSelectorOrDesktopImpl
 InvokeSelectorOrDesktop := InvokeSelectorOrDesktopImpl::start
 
 
@@ -2124,7 +2124,7 @@ start:  bit     LCBANK2
 
 done:   rts
 
-.endproc
+.endproc ; PreserveQuitCodeImpl
 PreserveQuitCode        := PreserveQuitCodeImpl::start
 
 
@@ -2134,7 +2134,7 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
         jsr     CoutString
         lda     #$80|CHAR_RETURN
         jmp     COUT
-.endproc
+.endproc ; CoutStringNewline
 
 .proc CoutString
         ptr := $6
@@ -2152,7 +2152,7 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
         cpy     #SELF_MODIFIED_BYTE
         bne     :-
 done:   rts
-.endproc
+.endproc ; CoutString
 
 ;;; ============================================================
 

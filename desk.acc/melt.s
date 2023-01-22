@@ -32,7 +32,7 @@ event_params:   .tag MGTK::Event
         MGTK_CALL MGTK::HideCursor
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 ;;; ============================================================
 ;;; Main Input Loop
@@ -78,7 +78,7 @@ exit:
 
         MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop
-.endproc
+.endproc ; InputLoop
 
 ;;; ============================================================
 ;;; Animate
@@ -145,7 +145,7 @@ yloop2: lda     hires_table_lo,x
 
 row:    .byte   0
 
-.endproc
+.endproc ; Animate
 
         .include "../inc/hires_table.inc"
 

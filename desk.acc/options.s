@@ -55,7 +55,7 @@
         jsr     Init
         lda     dialog_result
         rts
-.endproc
+.endproc ; RunDA
 
 ;;; High bit set when anything changes.
 dialog_result:
@@ -66,7 +66,7 @@ dialog_result:
         ora     dialog_result
         sta     dialog_result
         rts
-.endproc
+.endproc ; MarkDirty
 
 ;;; ============================================================
 
@@ -204,7 +204,7 @@ button_eor_table:
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
@@ -216,13 +216,13 @@ button_eor_table:
         beq     HandleKey
 
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -247,7 +247,7 @@ button_eor_table:
         sbc     #'1'            ; ASCII -> index
 
         jmp     ToggleButton
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -266,7 +266,7 @@ button_eor_table:
         cmp     #MGTK::Area::content
         beq     HandleClick
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -275,7 +275,7 @@ button_eor_table:
         lda     trackgoaway_params::clicked
         bne     Exit
         jmp     InputLoop
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -295,7 +295,7 @@ common: bit     dragwindow_params::moved
 
 :       jmp     InputLoop
 
-.endproc
+.endproc ; HandleDrag
 
 ;;; ============================================================
 
@@ -331,7 +331,7 @@ next:   dec     index
         ;; ----------------------------------------
 
         jmp     InputLoop
-.endproc
+.endproc ; HandleClick
 
 ;;; ============================================================
 
@@ -376,7 +376,7 @@ loop:
 
         MGTK_CALL MGTK::ShowCursor
         rts
-.endproc
+.endproc ; DrawWindow
 
 ;;; Inputs: A = bit to read from DeskTopSettings::options
 ;;; Outputs: A = $80 if set, $00 if unset
@@ -388,7 +388,7 @@ loop:
 
 set:    lda     #$80
         rts
-.endproc
+.endproc ; GetBit
 
 ;;; ============================================================
 
@@ -420,7 +420,7 @@ set:    lda     #$80
         jmp     InputLoop
 
 index:  .byte   0
-.endproc
+.endproc ; ToggleButton
 
 ;;; ============================================================
 

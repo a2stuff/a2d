@@ -311,12 +311,12 @@ buf_string := *
         jsr     DrawWindow
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         rts
-.endproc
+.endproc ; Init
 
 .proc Exit
         JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, aux::winfo
         jmp     JUMP_TABLE_CLEAR_UPDATES
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -336,7 +336,7 @@ ep_size = * - ep_start
         copy16  #event_params, DESTINATIONLO
         clc                     ; aux>main
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyEventDataToMain
 
 .proc CopyEventDataToAux
         copy16  #event_params, STARTLO
@@ -344,7 +344,7 @@ ep_size = * - ep_start
         copy16  #aux::event_params, DESTINATIONLO
         sec                     ; main>aux
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyEventDataToAux
 
 ;;; ============================================================
 ;;; Handle `EventKind::button_down`.
@@ -371,7 +371,7 @@ ep_size = * - ep_start
 
 ret:    lda     #$FF            ; not a button
         rts
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -388,7 +388,7 @@ ret:    lda     #$FF            ; not a button
 
         lda     #$FF            ; not a button
         rts
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -408,7 +408,7 @@ ret:    lda     #$FF            ; not a button
 
 skip:   lda     #$FF            ; not a button
         rts
-.endproc
+.endproc ; HandleDrag
 
 ;;; ============================================================
 
@@ -490,7 +490,7 @@ skip:   lda     #$FF            ; not a button
 set_key:
         sta     event_params::key
         rts
-.endproc
+.endproc ; HandleClick
 
 
 ;;; ============================================================
@@ -550,7 +550,7 @@ set_key:
 
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 
@@ -566,13 +566,13 @@ str_time:
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_track
         param_call DrawString, str_track
         param_jump DrawString, str_track_num
-.endproc
+.endproc ; DrawTrack
 
 ;;; Caller is responsible for setting port.
 .proc DrawTime
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::pos_time
         param_jump DrawString, str_time
-.endproc
+.endproc ; DrawTime
 
 ;;; ============================================================
 ;;; Copies string main>aux before drawing
@@ -598,7 +598,7 @@ str_time:
 
         JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
 done:   rts
-.endproc
+.endproc ; DrawString
 
 ;;; ============================================================
 ;;; Inputs: A,X = rect address
@@ -640,7 +640,7 @@ ret:    rts
 
 rect:   .tag    MGTK::Rect
 
-.endproc
+.endproc ; InvertButton
 
 
 ;;; ============================================================
@@ -734,7 +734,7 @@ IDDPlaying:
         jmp     ExitInitDriveDisc
 ExitInitDriveDisc:
         rts
-.endproc
+.endproc ; InitDriveAndDisc
 
 ;;; ============================================================
 
@@ -890,13 +890,13 @@ NotCtrlU:
         jsr     C26Eject
 UnsupportedKeypress:
         jmp     MainLoop
-.endproc
+.endproc ; MainLoop
 
 ;;; ============================================================
 
 .proc DoQuitAction
                     rts
-.endproc
+.endproc ; DoQuitAction
 
 ;;; ============================================================
 
@@ -990,7 +990,7 @@ PBCLoopIsInactive:
 
 ExitPBCHandler:
         rts
-.endproc
+.endproc ; PlayBackComplete
 
 ;;; ============================================================
 
@@ -1043,7 +1043,7 @@ StatusDriveSuccess:
 ExitStatusDrive:
         pla
         rts
-.endproc
+.endproc ; StatusDrive
 
 ;;; ============================================================
 
@@ -1090,7 +1090,7 @@ ClearTrackAndTime:
         jsr     DrawTime
 
         rts
-.endproc
+.endproc ; HardShutdown
 
 ;;; ============================================================
 
@@ -1128,7 +1128,7 @@ ClearTrackAndTime:
         jsr     RandomModeInit
 ExitReReadTOC:
         rts
-.endproc
+.endproc ; ReReadTOC
 
 ;;; ============================================================
 
@@ -1152,7 +1152,7 @@ ExitReReadTOC:
 
 ended:  lda     #$00            ; N=0
         rts
-.endproc
+.endproc ; CheckGestureEnded
 
 ;;; ============================================================
 
@@ -1210,7 +1210,7 @@ DPAStopIsInactive:
         jsr     C21AudioPlay
 ExitPlayAction:
         rts
-.endproc
+.endproc ; DoPlayAction
 
 ;;; ============================================================
 
@@ -1267,7 +1267,7 @@ DSAPauseIsInactive:
 
 ExitStopAction:
         rts
-.endproc
+.endproc ; DoStopAction
 
 ;;; ============================================================
 
@@ -1287,7 +1287,7 @@ ExitStopAction:
 
 ExitPauseAction:
         rts
-.endproc
+.endproc ; DoPauseAction
 
 ;;; ============================================================
 
@@ -1297,7 +1297,7 @@ ExitPauseAction:
         sta     LoopButtonState
         jsr     ToggleUILoopButton
         rts
-.endproc
+.endproc ; ToggleLoopMode
 
 ;;; ============================================================
 
@@ -1323,7 +1323,7 @@ TRMRandomIsInactive:
 TRMUpdateButton:
         jsr     ToggleUIRandButton
         rts
-.endproc
+.endproc ; ToggleRandomMode
 
 ;;; ============================================================
 
@@ -1373,7 +1373,7 @@ TRMUpdateButton:
 
 ExitRandomInit:
         rts
-.endproc
+.endproc ; RandomModeInit
 
 ;;; ============================================================
 
@@ -1407,7 +1407,7 @@ DSBAQSubReadErr:
         jsr     C22AudioPause
 ExitScanBackAction:
         rts
-.endproc
+.endproc ; DoScanBackAction
 
 ;;; ============================================================
 
@@ -1441,7 +1441,7 @@ DSFAQSubReadErr:
         jsr     C22AudioPause
 ExitScanFwdAction:
         rts
-.endproc
+.endproc ; DoScanFwdAction
 
 ;;; ============================================================
 
@@ -1505,7 +1505,7 @@ DPTAKeyReleased:
 
 DPTACounter:
         .byte   0
-.endproc
+.endproc ; DoPrevTrackAction
 
 ;;; ============================================================
 
@@ -1569,7 +1569,7 @@ DNTAKeyReleased:
 
 DNTACounter:
         .byte   0
-.endproc
+.endproc ; DoNextTrackAction
 
 ;;; ============================================================
 
@@ -1634,7 +1634,7 @@ ClearTrackTime_TOC:
         sta     TOCInvalidFlag
 
         rts
-.endproc
+.endproc ; C26Eject
 
 ;;; ============================================================
 
@@ -1685,7 +1685,7 @@ APStopAtMSF:
 CallAudioPlay:
         jsr     SPCallVector
         rts
-.endproc
+.endproc ; C21AudioPlay
 
 ;;; ============================================================
 
@@ -1741,7 +1741,7 @@ ASPauseIsInactive:
         lda     BCDRelTrack
         sta     BCDFirstTrackNow
         rts
-.endproc
+.endproc ; C20AudioSearch
 
 ;;; ============================================================
 
@@ -1764,7 +1764,7 @@ AudioStatusRetry:
 
 ExitAudioStatus:
         rts
-.endproc
+.endproc ; C24AudioStatus
 
 ;;; ============================================================
 
@@ -1804,7 +1804,7 @@ ReadTOCSuccess:
         clc
 ExitReadTOC:
         rts
-.endproc
+.endproc ; C27ReadTOC
 
 ;;; ============================================================
 
@@ -1853,7 +1853,7 @@ ReadQSubcodeFail:
         sec
 ExitReadQSubcode:
         rts
-.endproc
+.endproc ; C28ReadQSubcode
 
 ;;; ============================================================
 
@@ -1872,7 +1872,7 @@ ExitReadQSubcode:
         ;; TODO: Analysis - What does an all-zeroes AudioStop call actually do?  Just clear any existing set stop point?  Explicitly stop playback now?  Something else?
         jsr     SPCallVector
         FALL_THROUGH_TO SetStopToEoBCDLTN
-.endproc
+.endproc ; C23AudioStop
 
 ;;; ============================================================
 
@@ -1893,7 +1893,7 @@ ExitReadQSubcode:
         ;; Set a stop point at EoT, last Track
         jsr     SPCallVector
         rts
-.endproc
+.endproc ; SetStopToEoBCDLTN
 
 ;;; ============================================================
 
@@ -1917,7 +1917,7 @@ ExitReadQSubcode:
         sta     SPBuffer
         jsr     SPCallVector
         rts
-.endproc
+.endproc ; C22AudioPause
 
 ;;; ============================================================
 
@@ -1945,7 +1945,7 @@ ExitReadQSubcode:
         sta     SPBuffer + 6
         jsr     SPCallVector
         rts
-.endproc
+.endproc ; C25AudioScanFwd
 
 ;;; ============================================================
 
@@ -1973,7 +1973,7 @@ ExitReadQSubcode:
         sta     SPBuffer + 6
         jsr     SPCallVector
         rts
-.endproc
+.endproc ; C25AudioScanBack
 
 ;;; ============================================================
 
@@ -1985,7 +1985,7 @@ SPZeroLoop:
         dex
         bpl     SPZeroLoop
         rts
-.endproc
+.endproc ; ZeroOutSPBuffer
 
 ;;; ============================================================
 
@@ -2088,7 +2088,7 @@ SelfModLDA:
         sta     SPCallVector + 1
         pla
         rts
-.endproc
+.endproc ; FindHardware
 
 ;;; ============================================================
 
@@ -2144,7 +2144,7 @@ SPBuffer        := DA_IO_BUFFER  ; 1K free to use in Main after loading
 skip:
         pla
         rts
-.endproc
+.endproc ; DrawTrack
 
 .proc DrawTime
         pha
@@ -2190,7 +2190,7 @@ skip:
 skip:
         pla
         rts
-.endproc
+.endproc ; DrawTime
 
 last_track:
         .byte   $FF
@@ -2212,7 +2212,7 @@ last_sec:
         rts
 :       lda     #' '
         rts
-.endproc
+.endproc ; HighBCDDigitToASCII
 
 .proc LowBCDDigitToASCII
         and     #$0F
@@ -2222,7 +2222,7 @@ last_sec:
         rts
 :       lda     #' '
         rts
-.endproc
+.endproc ; LowBCDDigitToASCII
 
 ;;; ============================================================
 
@@ -2315,7 +2315,7 @@ FoundUnplayedTrack:
         tax
         pla
         rts
-.endproc
+.endproc ; PickARandomTrack
 
 PlayedListDirection:
         .byte   $00
@@ -2370,7 +2370,7 @@ PRNGSaveY       := *+1
 PRNGSaveX       := *+1
         ldx     #SELF_MODIFIED_BYTE
         rts
-.endproc
+.endproc ; TrackPseudoRNGSub
 
 ;;; ============================================================
 
@@ -2385,7 +2385,7 @@ CPLLoop:
         bpl     CPLLoop
 
         rts
-.endproc
+.endproc ; ClearPlayedList
 
 ;;; ============================================================
 
@@ -2406,7 +2406,7 @@ CPLLoop:
         lda     #$01
         sta     PlayedListDirection
         rts
-.endproc
+.endproc ; InitPlayedList
 
 ;;; ============================================================
 
@@ -2444,7 +2444,7 @@ Hex2BCDSaveX    := *+1
 
 Hex2BCDTemp:
         .byte   $00
-.endproc
+.endproc ; Hex2BCDSorta
 
 ;;; ============================================================
 
@@ -2512,7 +2512,7 @@ PlayedList:
 PlayedListAddr:
         .addr   PlayedList
 
-.endscope
+.endscope ; cdremote
 
 ;;; Exports
 cdremote__MAIN  := cdremote::MAIN

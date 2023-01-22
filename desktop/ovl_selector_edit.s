@@ -80,7 +80,7 @@
 
 buffer: .res 16, 0
 
-.endproc
+.endproc ; Init
 
 ;;; ============================================================
 
@@ -126,7 +126,7 @@ buffer: .res 16, 0
         jsr     DrawCopyWhenButton
 
         rts
-.endproc
+.endproc ; DrawControls
 
 ;;; ============================================================
 
@@ -190,7 +190,7 @@ ok:     jsr     file_dialog::CloseWindow
         ldx     which_run_list
         ldy     copy_when
         return  #0
-.endproc
+.endproc ; HandleOk
 
 ;;; Returns C=0 if `path_buf0` is a volume path, C=1 otherwise
 ;;; Assert: Path is valid
@@ -204,7 +204,7 @@ ok:     jsr     file_dialog::CloseWindow
 
 found:  cpy     #2
         rts
-.endproc
+.endproc ; IsVolPath
 
 ;;; ============================================================
 
@@ -214,7 +214,7 @@ found:  cpy     #2
         ldx     file_dialog::saved_stack
         txs
         return  #$FF
-.endproc
+.endproc ; HandleCancel
 
 ;;; ============================================================
 
@@ -249,7 +249,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         jeq     ClickNeverCtrl
 
         return  #0
-.endproc
+.endproc ; HandleClick
 
 .proc ClickPrimaryRunListCtrl
         lda     which_run_list
@@ -262,7 +262,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     UpdateRunListButton
 :       return  #$FF
-.endproc
+.endproc ; ClickPrimaryRunListCtrl
 
 .proc ClickSecondaryRunListCtrl
         lda     which_run_list
@@ -275,7 +275,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     UpdateRunListButton
 :       return  #$FF
-.endproc
+.endproc ; ClickSecondaryRunListCtrl
 
 .proc ClickAtFirstBootCtrl
         lda     copy_when
@@ -288,7 +288,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     DrawCopyWhenButton
 :       return  #$FF
-.endproc
+.endproc ; ClickAtFirstBootCtrl
 
 .proc ClickAtFirstUseCtrl
         lda     copy_when
@@ -301,7 +301,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     DrawCopyWhenButton
 :       return  #$FF
-.endproc
+.endproc ; ClickAtFirstUseCtrl
 
 .proc ClickNeverCtrl
         lda     copy_when
@@ -314,7 +314,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         sec
         jsr     DrawCopyWhenButton
 :       return  #$FF
-.endproc
+.endproc ; ClickNeverCtrl
 
 ;;; ============================================================
 
@@ -333,7 +333,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
     END_IF
 
         rts
-.endproc
+.endproc ; UpdateRunListButton
 
 .proc DrawCopyWhenButton
         ldx     #0
@@ -355,7 +355,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         stx     never_rec::state
         BTK_CALL BTK::RadioUpdate, never_params
         rts
-.endproc
+.endproc ; DrawCopyWhenButton
 
 ;;; ============================================================
 
@@ -382,10 +382,10 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         jeq     ClickNeverCtrl
 
         rts
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
-.endscope ; SelectorOverlay
+.endscope ; SelectorEditOverlay
 
         ENDSEG OverlayShortcutEdit

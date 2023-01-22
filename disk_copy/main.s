@@ -73,13 +73,13 @@ params:  .res    3
         bit     LCBANK1
         plp
         rts
-.endproc
+.endproc ; MLIRelayImpl
 
 ;;; ============================================================
 
 .proc NoOp
         rts
-.endproc
+.endproc ; NoOp
 
 ;;; ============================================================
 ;;; Quit back to ProDOS (which will launch DeskTop)
@@ -123,7 +123,7 @@ params:  .res    3
 
         MLI_CALL QUIT, quit_params
         rts
-.endproc
+.endproc ; Quit
 
 ;;; ============================================================
 
@@ -151,7 +151,7 @@ disk_ii:
         unit_number := *+1
         lda     #SELF_MODIFIED_BYTE
         jmp     FormatDiskII
-.endproc
+.endproc ; FormatDevice
 
 ;;; ============================================================
 ;;; Eject Disk via SmartPort
@@ -182,7 +182,7 @@ start:
 
 done:   rts
 
-.endproc
+.endproc ; EjectDiskImpl
 EjectDisk := EjectDiskImpl::start
 
 ;;; ============================================================
@@ -231,7 +231,7 @@ l3:     cmp     #$A5
         lda     #$80
         sta     auxlc::LD44D
         rts
-.endproc
+.endproc ; IdentifySourceNonProDOSDiskType
 
 ;;; ============================================================
 ;;; Reads the volume bitmap (blocks 6 through ...)
@@ -341,12 +341,12 @@ loop:   sub16   block_count_div8, #$200, block_count_div8
         brk                     ; rude!
 
 :       jmp     loop
-.endproc
+.endproc ; QuickCopy
 
         ;; Number of blocks to copy, divided by 8
 block_count_div8:
         .word   0
-.endproc
+.endproc ; ReadVolumeBitmap
 
 ;;; ============================================================
 ;;; Check if device is removable.
@@ -399,7 +399,7 @@ start:
 not_removable:
         return  #0
 
-.endproc
+.endproc ; IsDriveEjectableImpl
 
 IsDriveEjectable := IsDriveEjectableImpl::start
 
@@ -547,7 +547,7 @@ use_lcbank2:
         jmp     loop
 
 l4:     jmp     error
-.endproc
+.endproc ; ReadOrWriteBlock
 
 L0FE4:  .byte   0
 L0FE5:  .byte   0
@@ -557,7 +557,7 @@ write_flag:                     ; high bit set if writing
 
 mem_block_addr:
         .word   0
-.endproc
+.endproc ; CopyBlocks
 
 ;;; ============================================================
 ;;; Advance `block_num_div8` and `block_num_shift` to next used
@@ -599,8 +599,8 @@ not_last:
 
         sec
         rts
-.endproc
-.endproc
+.endproc ; Next
+.endproc ; AdvanceToNextBlock
 
 ;;; ============================================================
 ;;; Look up block in volume bitmap
@@ -662,7 +662,7 @@ mask:   and     #$01
         rts
 
 table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
-.endproc
+.endproc ; LookupInVolumeBitmap
 
 ;;; ============================================================
 
@@ -699,8 +699,8 @@ ok:     clc
 
         sec
         rts
-.endproc
-.endproc
+.endproc ; Next
+.endproc ; AdvanceToNextBlockIndex
 
 ;;; ============================================================
 ;;; Compute memory page signature; low nibble is high nibble of
@@ -757,7 +757,7 @@ calc:   asl     a               ; *= 16
         jmp     calc
 
 table:  .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
-.endproc
+.endproc ; ComputeMemoryPageSignature
 
 ;;; ============================================================
 
@@ -796,8 +796,8 @@ loop:   lda     page_num
 mask:   ora     memory_bitmap,y
         sta     memory_bitmap,y
         rts
-.endproc
-.endproc
+.endproc ; MarkFreeInMemoryBitmap
+.endproc ; FreeVolBitmapPages
 
 ;;; ============================================================
 
@@ -816,7 +816,7 @@ mask:   eor     #$FF
         and     memory_bitmap,y
         sta     memory_bitmap,y
         rts
-.endproc
+.endproc ; MarkUsedInMemoryBitmap
 
 ;;; ============================================================
 ;;; Sets X to 7 - (low nibble of A / 2) -- bit shift
@@ -839,7 +839,7 @@ mask:   eor     #$FF
         rts
 
 table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
-.endproc
+.endproc ; GetBitmapOffsetShift
 
 ;;; ============================================================
 ;;; Read block (w/ retries) to main memory
@@ -855,7 +855,7 @@ retry:  jsr     ReadBlock
         bmi     done
         bne     retry
 done:   rts
-.endproc
+.endproc ; ReadBlockToMain
 
 ;;; ============================================================
 ;;; Read block (w/ retries) to aux LCBANK1 memory
@@ -891,7 +891,7 @@ loop:   lda     default_block_buffer,y
         bne     loop
 
         return  #0
-.endproc
+.endproc ; ReadBlockToLcbank1
 
 ;;; ============================================================
 ;;; Read block (w/ retries) to aux LCBANK2 memory
@@ -932,7 +932,7 @@ loop:   lda     default_block_buffer,y
         bit     LCBANK1
         bit     LCBANK1
         return  #$00
-.endproc
+.endproc ; ReadBlockToLcbank2
 
 ;;; ============================================================
 ;;; Write block (w/ retries) from main memory
@@ -948,7 +948,7 @@ retry:  jsr     WriteBlock
         beq     done
         bpl     retry
 done:   rts
-.endproc
+.endproc ; WriteBlockFromMain
 
 ;;; ============================================================
 ;;; Write block (w/ retries) from aux LCBANK1 memory
@@ -982,7 +982,7 @@ retry:  jsr     WriteBlock
         beq     done
         bpl     retry
 done:   rts
-.endproc
+.endproc ; WriteBlockFromLcbank1
 
 ;;; ============================================================
 ;;; Write block (w/ retries) from aux LCBANK2 memory
@@ -1021,29 +1021,29 @@ retry:  jsr     WriteBlock
         beq     done
         bpl     retry
 done:   rts
-.endproc
+.endproc ; WriteBlockFromLcbank2
 
 ;;; ============================================================
 
 .proc CallOnLine2
         MLI_CALL ON_LINE, on_line_params2
         rts
-.endproc
+.endproc ; CallOnLine2
 
 .proc CallOnLine
         MLI_CALL ON_LINE, on_line_params
         rts
-.endproc
+.endproc ; CallOnLine
 
 .proc WriteBlock
         MLI_CALL WRITE_BLOCK, block_params
         rts
-.endproc
+.endproc ; WriteBlock
 
 .proc ReadBlock
         MLI_CALL READ_BLOCK, block_params
         rts
-.endproc
+.endproc ; ReadBlock
 
 ;;; ============================================================
 
@@ -1115,7 +1115,7 @@ memory_bitmap:
 
         sta     ALTZPON
         rts
-.endproc
+.endproc ; GetDeviceBlocksUsingDriver
 
 ;;; ============================================================
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
@@ -1141,7 +1141,7 @@ store:  sta     NEWVIDEO
         sty     MONOCOLOR
 
 done:   rts
-.endproc
+.endproc ; ResetIIgsRGB
 
 ;;; ============================================================
 
@@ -1153,7 +1153,7 @@ done:   rts
 ;;; ============================================================
 
         .assert * <= $1400, error, "Update memory_bitmap if code extends past $1400"
-.endscope
+.endscope ; main
 
 main__FormatDevice              := main::FormatDevice
 main__IdentifySourceNonProDOSDiskType := main::IdentifySourceNonProDOSDiskType

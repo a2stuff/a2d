@@ -566,7 +566,7 @@ start:
 
         ldax    #alert_params
         FALL_THROUGH_TO Alert
-.endproc
+.endproc ; AlertById
 
 ;;; ============================================================
 ;;; Display alert

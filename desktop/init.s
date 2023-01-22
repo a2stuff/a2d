@@ -76,7 +76,7 @@ start:
         eor     #$A5
         sta     SOFTEV+2
 
-.endscope
+.endscope ; hook_reset_vector
 
 ;;; ============================================================
 ;;; Clear DHR screen to black before it is shown
@@ -182,14 +182,14 @@ end:
         sta     periodic_task_delay
 
         ;; Fall through
-.endscope
+.endscope ; machine_type
 
 ;;; ============================================================
 ;;; Snapshot state of PB2 (shift key mod)
 
 .scope pb2_state
         copy    BUTN2, machine_config::pb2_initial_state
-.endscope
+.endscope ; pb2_state
 
 ;;; ============================================================
 ;;; Detect Le Chat Mauve Eve RGB card
@@ -204,7 +204,7 @@ end:
         beq     :+              ; Z=1 means no LCMEve
         copy    #$80, machine_config::lcm_eve_flag
 :
-.endscope
+.endscope ; lcm
 
 ;;; ============================================================
 ;;; Back up DEVLST
@@ -379,7 +379,7 @@ loop:
         sta     (ptr),y
 
         FALL_THROUGH_TO LoadSelectorList
-.endproc
+.endproc ; CreateTrashIcon
 
 ;;; ============================================================
 
@@ -516,7 +516,7 @@ str_selector_list:
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
         rts
-.endproc
+.endproc ; ReadSelectorList
 
         DEFINE_CREATE_PARAMS create_params, str_selector_list, ACCESS_DEFAULT, $F1
         DEFINE_WRITE_PARAMS write_params, selector_list_data_buf, kSelectorListShortSize
@@ -548,9 +548,9 @@ ploop:  ldy     #0
         MLI_CALL CLOSE, close_params
 
 done:   rts
-.endproc
+.endproc ; WriteSelectorList
 
-.endproc
+.endproc ; LoadSelectorList
 
 ;;; ============================================================
 
@@ -594,10 +594,10 @@ dx:     .word   0
         MGTK_CALL MGTK::TextWidth, ptr
         ldax    result
         rts
-.endproc
+.endproc ; measure
 
 end:
-.endproc
+.endproc ; CalcHeaderItemWidths
 
 ;;; ============================================================
 ;;; Enumerate Desk Accessories
@@ -957,7 +957,7 @@ cvi_result:
         bne     :-
         dec     DEVCNT
         rts
-.endproc
+.endproc ; RemoveDevice
 
 ;;; ============================================================
 
@@ -1028,7 +1028,7 @@ slot_string_table:
         .addr   startup_menu_item_6
         .addr   startup_menu_item_7
         ASSERT_ADDRESS_TABLE_SIZE slot_string_table, ::kMenuSizeStartup
-.endproc
+.endproc ; PopulateStartupMenu
 
 ;;; ============================================================
 ;;; Enumerate DEVLST and find removable devices; build a list of
@@ -1138,7 +1138,7 @@ index:  .byte   0
 count:  .byte   0
 unit_num:
         .byte   0
-.endproc
+.endproc ; InitializeDisksInDevicesTables
 
 ;;; ============================================================
 
@@ -1186,7 +1186,7 @@ iloop:  cpx     cached_window_entry_count
 
         ;; And start pumping events
         jmp     main::MainLoop
-.endproc
+.endproc ; FinalSetup
 
 ;;; ============================================================
 
@@ -1279,9 +1279,9 @@ exit:   jmp     main::LoadDesktopEntryTable
         tsx
         stx     saved_stack
         jmp     main::OpenWindowForPath
-.endproc
+.endproc ; MaybeOpenWindow
 
-.endproc
+.endproc ; RestoreWindows
 
 ;;; ============================================================
 

@@ -883,7 +883,7 @@ menu_offset_table:
 :       sta     menukey_params::key_mods
         MGTK_CALL MGTK::MenuKey, menukey_params
         FALL_THROUGH_TO HandleMenuSelection
-.endproc
+.endproc ; HandleKey
 
 .proc HandleMenuSelection
         ldx     menuselect_params::menu_id
@@ -912,7 +912,7 @@ do_jump:
         stx     stack_stash
         jump_addr := *+1
         jmp     SELF_MODIFIED
-.endproc
+.endproc ; HandleMenuSelection
 
 ;;; ============================================================
 
@@ -971,7 +971,7 @@ LDA7D:  copy    #0, checkitem_params::check
         bmi     :+
         jsr     DetectDoubleClick
 :       rts
-.endproc
+.endproc ; HandleClick
 
 ;;; ============================================================
 
@@ -999,7 +999,7 @@ LDA7D:  copy    #0, checkitem_params::check
 :
     END_IF
         rts
-.endproc
+.endproc ; HandleDialogClick
 
 ;;; ============================================================
 
@@ -1036,7 +1036,7 @@ params: .res    3
         sta     RAMWRTOFF
 
         rts
-.endproc
+.endproc ; MGTKRelayImpl
 
 ;;; ============================================================
 
@@ -1056,21 +1056,21 @@ LDC2D:  cmp     #CHAR_RETURN
     END_IF
 
         return  #$FF
-.endproc
+.endproc ; dialog_shortcuts
 
 ;;; ============================================================
 
 .proc SetCursorWatch
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         rts
-.endproc
+.endproc ; SetCursorWatch
 
 ;;; ============================================================
 
 .proc SetCursorPointer
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
-.endproc
+.endproc ; SetCursorPointer
 
 ;;; ============================================================
 ;;; Populate `drive_name_table` for a non-ProDOS volume
@@ -1117,7 +1117,7 @@ try_dos33:
         cmp     #$27
         bne     fail
         FALL_THROUGH_TO GetDos33VolName
-.endproc
+.endproc ; NameNonProDOSVolume
 
 ;;; ============================================================
 ;;; Construct DOS 3.3 volume name (referencing slot/drive)
@@ -1158,7 +1158,7 @@ try_dos33:
         lda     #$43            ; ???
         sta     $0300           ; ???
         return  #0
-.endproc
+.endproc ; GetDos33VolName
 
 ;;; ============================================================
 ;;; Check block at `default_block_buffer` for Pascal signature
@@ -1180,7 +1180,7 @@ fail:   sec
 
 match:  clc
         rts
-.endproc
+.endproc ; IsPascalBootBlock
 
 
 ;;; ============================================================
@@ -1232,7 +1232,7 @@ l1:     ldy     #0
         lda     #':'
         sta     (ptr),y
         rts
-.endproc
+.endproc ; GetPascalVolName
 
 ;;; ============================================================
 
@@ -1258,7 +1258,7 @@ l1:     ldy     #0
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         rts
-.endproc
+.endproc ; OpenDialog
 
 .proc DrawDialog
         jsr     SetPortForDialog
@@ -1285,7 +1285,7 @@ draw_buttons:
         MGTK_CALL MGTK::SetPort, grafport
         rts
 
-.endproc
+.endproc ; DrawDialog
 
 ;;; ============================================================
 
@@ -1299,7 +1299,7 @@ draw_buttons:
         inc16   ptr
         MGTK_CALL MGTK::DrawText, ptr
         rts
-.endproc
+.endproc ; DrawString
 
 ;;; ============================================================
 
@@ -1321,7 +1321,7 @@ draw_buttons:
         MGTK_CALL MGTK::MoveTo, point_title
         MGTK_CALL MGTK::DrawText, text_params
         rts
-.endproc
+.endproc ; DrawTitleText
 
 ;;; ============================================================
 
@@ -1362,19 +1362,19 @@ CheckAlpha:
         sta     (ptr),y
 :       dey
         jmp     next
-.endproc
+.endproc ; AdjustCase
 
 ;;; ============================================================
 
 .proc SetPortForList
         lda     #winfo_drive_select::kWindowId
         bne     SetPortForWindow ; always
-.endproc
+.endproc ; SetPortForList
 
 .proc SetPortForDialog
         lda     #winfo_dialog::kWindowId
         FALL_THROUGH_TO SetPortForWindow
-.endproc
+.endproc ; SetPortForDialog
 
 .proc SetPortForWindow
         sta     getwinport_params::window_id
@@ -1382,7 +1382,7 @@ CheckAlpha:
         ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
-.endproc
+.endproc ; SetPortForWindow
 
 ;;; ============================================================
 ;;; List Box
@@ -1397,7 +1397,7 @@ CheckAlpha:
 
         selected_index = current_drive_selection
         highlight_rect = rect_highlight_row
-.endscope
+.endscope ; listbox
 
         .include "../lib/listbox.s"
 
@@ -1412,7 +1412,7 @@ CheckAlpha:
         lda     destination_index_table,x
 
 draw:   jmp     DrawDeviceListEntry
-.endproc
+.endproc ; DrawListEntryProc
 
 ;;; ============================================================
 
@@ -1574,9 +1574,9 @@ loop:   lda     DEVLST,x
 
 match:  lda     DEVLST,x
         rts
-.endproc
+.endproc ; FindUnitNum
 
-.endproc
+.endproc ; EnumerateDevices
 
 ;;; ============================================================
 
@@ -1628,7 +1628,7 @@ index:  .byte   0
 
 src_block_count:
         .word   0
-.endproc
+.endproc ; EnumerateDestinationDevices
 
 ;;; ============================================================
 
@@ -1673,7 +1673,7 @@ src_block_count:
 
 device_index:
         .byte   0
-.endproc
+.endproc ; DrawDeviceListEntry
 
 ;;; ============================================================
 ;;; Populate block_count_table across all devices
@@ -1690,7 +1690,7 @@ device_index:
         rts
 
 index:  .byte   0
-.endproc
+.endproc ; GetAllBlockCounts
 
 ;;; ============================================================
 ;;; Inputs: A = device index
@@ -1748,7 +1748,7 @@ use_driver:
 
 tmp:    .byte   0
 
-.endproc
+.endproc ; GetBlockCount
 
 ;;; ============================================================
 
@@ -1839,7 +1839,7 @@ LE5C6:  param_call DrawString, str_2_spaces
         COPY_STRING main__on_line_buffer2, device_name_buf
         param_call DrawString, device_name_buf
         rts
-.endproc
+.endproc ; DrawSourceDriveInfo
 
 ;;; ============================================================
 
@@ -1856,7 +1856,7 @@ LE5C6:  param_call DrawString, str_2_spaces
         param_call DrawString, str_drive
         param_call DrawString, str_d
         rts
-.endproc
+.endproc ; DrawDestinationDriveInfo
 
 ;;; ============================================================
 
@@ -1877,7 +1877,7 @@ LE5C6:  param_call DrawString, str_2_spaces
         bne     :+
         param_call DrawString, str_pascal_disk_copy
 :       rts
-.endproc
+.endproc ; DrawCopyFormatType
 
 .proc MaybeEraseSelectQuitTip
         lda     LD44D
@@ -1887,14 +1887,14 @@ LE5C6:  param_call DrawString, str_2_spaces
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_select_quit
 :       rts
-.endproc
+.endproc ; MaybeEraseSelectQuitTip
 
 .proc DrawEscToStopCopyHint
         jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_escape_stop_copy
         param_call DrawString, str_escape_stop_copy
         rts
-.endproc
+.endproc ; DrawEscToStopCopyHint
 
 ;;; ============================================================
 ;;; Flash the message when escape is pressed
@@ -1923,7 +1923,7 @@ finish: MGTK_CALL MGTK::SetTextBG, bg_white
 
 count:  .byte   0
 flag:   .byte   0
-.endproc
+.endproc ; FlashEscapeMessage
 
 ;;; ============================================================
 ;;; Inputs: A = error code, X = writing flag
@@ -1964,7 +1964,7 @@ l2:     jsr     Bell
 
 err_writing_flag:
         .byte   0
-.endproc
+.endproc ; ShowBlockError
 
 ;;; ============================================================
 ;;; Read block (w/ retries) to aux memory
@@ -2007,7 +2007,7 @@ move:   sta     RAMRDOFF
 
         lda     #0
         rts
-.endproc
+.endproc ; ReadBlockToAuxmem
 
 ;;; ============================================================
 ;;; Write block (w/ retries) from aux memory
@@ -2047,7 +2047,7 @@ retry:  jsr     main__WriteBlock
         beq     done
         bpl     retry
 done:   rts
-.endproc
+.endproc ; WriteBlockFromAuxmem
 
 ;;; ============================================================
 
@@ -2061,7 +2061,7 @@ done:   rts
         jsr     UnitNumToDriveDigit
         sta     str_d + 1
         rts
-.endproc
+.endproc ; PrepSDStrings
 
 
 ;;; Input: A = unit number (i.e. %DSSSxxxx)
@@ -2074,7 +2074,7 @@ done:   rts
         lsr     a               ; A = %00000SSS
         ora     #'0'
         rts
-.endproc
+.endproc ; UnitNumToSlotDigit
 
 ;;; Input: A = unit number (i.e. %DSSSxxxx)
 ;;; Output: A = ASCII digit '1' or '2'
@@ -2084,7 +2084,7 @@ done:   rts
         rol     a               ; A = %0000000D, C = 0
         adc     #'1'            ; no need to CLC
         rts
-.endproc
+.endproc ; UnitNumToDriveDigit
 
 ;;; ============================================================
 
@@ -2288,7 +2288,7 @@ find_in_alert_table:
 
         sty     str_confirm_erase
         rts
-.endproc
+.endproc ; AppendToConfirmErase
 
 ;;; --------------------------------------------------
 ;;; Inputs: X = %DSSSxxxx
@@ -2301,7 +2301,7 @@ find_in_alert_table:
         jsr     UnitNumToDriveDigit
         sta     str_confirm_erase_sd + kStrConfirmEraseSDDriveOffset
         rts
-.endproc
+.endproc ; SetConfirmEraseSdSlotDrive
 
 ;;; --------------------------------------------------
 
@@ -2314,9 +2314,9 @@ find_in_alert_table:
         beq     :+
         sta     ejectable_flag
 :       rts
-.endproc
+.endproc ; IsDriveEjectable
 
-.endproc
+.endproc ; ShowAlertDialog
 
 ;;; ============================================================
 
@@ -2362,7 +2362,7 @@ find_in_alert_table:
         return  #$80
 
 done:   return  #$00
-.endproc
+.endproc ; WaitForDiskOrEsc
 
 .endscope ; alert_dialog
 Alert := alert_dialog::Alert
@@ -2387,7 +2387,7 @@ Alert := alert_dialog::Alert
 
 :       lda     loop_counter
         rts
-.endproc
+.endproc ; YieldLoop
 
         .include "../lib/is_diskii.s"
         .include "../lib/muldiv.s"
@@ -2406,7 +2406,7 @@ Alert := alert_dialog::Alert
 ;;; ============================================================
 
         .assert * <= $F400, error, "Update memory_bitmap if code extends past $F400"
-.endscope
+.endscope ; auxlc
         auxlc__start := auxlc::start
         auxlc__is_iigs_flag := auxlc::is_iigs_flag
         auxlc__is_iiecard_flag := auxlc::is_iiecard_flag

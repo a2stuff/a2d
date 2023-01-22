@@ -628,7 +628,7 @@ set_startup_menu_items:
 
 quick_boot_slot:
         .byte   0
-.endproc
+.endproc ; AppInit
 
 ;;; ============================================================
 ;;; Event Loop
@@ -679,7 +679,7 @@ not_key:
 
 not_update:
         jmp     EventLoop
-.endproc
+.endproc ; EventLoop
 
 ;;; ============================================================
 ;;; Handle update events
@@ -718,7 +718,7 @@ done:   rts
 .proc DrawWindowAndEntries
         jsr     DrawWindow
         jmp     DrawEntries
-.endproc
+.endproc ; DrawWindowAndEntries
 
 ;;; ============================================================
 ;;; Menu dispatch tables
@@ -784,7 +784,7 @@ menukey:
 :       sta     menu_params::key_mods
         MGTK_CALL MGTK::MenuKey, menu_params::menu_id
         FALL_THROUGH_TO HandleMenu
-.endproc
+.endproc ; HandleKey
 
 ;;; ==================================================
 
@@ -817,7 +817,7 @@ L93EB:  tsx
 
         addr := *+1
         jmp     SELF_MODIFIED
-.endproc
+.endproc ; HandleMenu
 
 ;;; ============================================================
 
@@ -852,7 +852,7 @@ L9443:  lda     #AlertID::insert_system_disk
         jmp     L93FF
 
 :       rts
-.endproc
+.endproc ; CmdRunAProgram
 
 ;;; ============================================================
 
@@ -950,7 +950,7 @@ finish: lda     index
 
 index:  .byte   0
 
-.endproc
+.endproc ; HandleButtonDown
 
 ;;; ============================================================
 
@@ -969,7 +969,7 @@ noop:   rts
         MLI_CALL READ, read_desktop_params
         MLI_CALL CLOSE, close_params
         jmp     desktop_load_addr
-.endproc
+.endproc ; RunDesktop
 
 ;;; ============================================================
 ;;; Assert: ROM banked in, ALTZP/LC is OFF
@@ -978,7 +978,7 @@ noop:   rts
         jsr     RestoreTextMode
         jsr     ReconnectRAM
         jmp     RestoreDeviceList
-.endproc
+.endproc ; RestoreSystem
 
 ;;; ============================================================
 ;;; Disable 80-col firmware, clear and show the text screen.
@@ -1014,7 +1014,7 @@ noop:   rts
         sta     CLR80STORE
 
         rts
-.endproc
+.endproc ; RestoreTextMode
 
 ;;; ============================================================
 
@@ -1142,7 +1142,7 @@ set:    txa
         jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
-.endproc
+.endproc ; HandleKeyRight
 
 ;;; ============================================================
 
@@ -1181,7 +1181,7 @@ set:    txa
         jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
-.endproc
+.endproc ; HandleKeyLeft
 
 ;;; ============================================================
 
@@ -1218,7 +1218,7 @@ set:    sta     selected_index
         jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
-.endproc
+.endproc ; HandleKeyUp
 
 ;;; ============================================================
 
@@ -1257,11 +1257,11 @@ set:    sta     selected_index
         jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
-.endproc
+.endproc ; HandleKeyDown
 
 ;;; ============================================================
 
-.endproc
+.endproc ; HandleNonmenuKey
 
 ;;; ============================================================
 
@@ -1290,7 +1290,7 @@ done:   return  #$FF
         inx
         bne     :-
 :       rts
-.endproc
+.endproc ; PopulateEntriesFlagTable
 
 ;;; Table for 24 entries; index (0...23) if in use, $FF if empty
 entries_flag_table:
@@ -1303,7 +1303,7 @@ entries_flag_table:
         bmi     :+
         jsr     InvokeEntry
 :       rts
-.endproc
+.endproc ; TryInvokeSelectedIndex
 
 ;;; ============================================================
 
@@ -1334,7 +1334,7 @@ entries_flag_table:
 done:   rts
 
 count:  .byte   0
-.endproc
+.endproc ; DrawEntries
 
 ;;; ============================================================
 
@@ -1355,7 +1355,7 @@ count:  .byte   0
 cache:  copy    selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
         copy    selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
         rts
-.endproc
+.endproc ; LoadSelectorList
 
 ;;; ============================================================
 
@@ -1375,19 +1375,19 @@ error:  lda     #AlertID::insert_system_disk
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     start           ; `kAlertResultTryAgain` = 0
         rts
-.endproc
+.endproc ; LoadOverlayCopyDialog
 
 ;;; ============================================================
 
 .proc SetCursorWatch
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         rts
-.endproc
+.endproc ; SetCursorWatch
 
 .proc SetCursorPointer
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
-.endproc
+.endproc ; SetCursorPointer
 
 ;;; ============================================================
 
@@ -1438,7 +1438,7 @@ found:  ldy     DEVLST,x
         sta     DEVLST,x
 
 done:   rts
-.endproc
+.endproc ; SaveAndAdjustDeviceList
 
 .proc RestoreDeviceList
         ;; Verify that a backup was done. Note that DEVCNT can be
@@ -1452,7 +1452,7 @@ done:   rts
         bpl     :-
 
 ret:    rts
-.endproc
+.endproc ; RestoreDeviceList
 
 backup_devlst:
         .byte   $FF             ; backup for DEVCNT (w/ high bit set)
@@ -1464,7 +1464,7 @@ backup_devlst:
         lda     #winfo::kDialogId
         jsr     GetWindowPort
         FALL_THROUGH_TO DrawWindow
-.endproc
+.endproc ; GetPortAndDrawWindow
 
 .proc DrawWindow
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -1486,7 +1486,7 @@ backup_devlst:
         MGTK_CALL MGTK::MoveTo, line2_pt1
         MGTK_CALL MGTK::LineTo, line2_pt2
         rts
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 ;;; Draw Title String (centered at top of port)
@@ -1510,7 +1510,7 @@ backup_devlst:
         MGTK_CALL MGTK::MoveTo, pos_title_string
         MGTK_CALL MGTK::DrawText, text_params
         rts
-.endproc
+.endproc ; DrawTitleString
 
 ;;; ============================================================
 ;;; Set the active GrafPort to the selected window's port
@@ -1521,7 +1521,7 @@ backup_devlst:
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
-.endproc
+.endproc ; GetWindowPort
 
 ;;; ============================================================
 ;;; Input: A = Entry number
@@ -1550,7 +1550,7 @@ backup_devlst:
         rts
 
 hi:     .byte   0
-.endproc
+.endproc ; GetSelectorListEntryAddr
 
 ;;; ============================================================
 
@@ -1574,7 +1574,7 @@ hi:     .byte   0
         rts
 
 hi:    .byte   0
-.endproc
+.endproc ; GetSelectorListPathAddr
 
 ;;; ============================================================
 ;;; Get the coordinates of an option by index.
@@ -1611,7 +1611,7 @@ hi:    .byte   0
         pla                     ; X coord lo
 
         rts
-.endproc
+.endproc ; GetOptionPos
 
 ;;; ============================================================
 
@@ -1650,7 +1650,7 @@ hi:    .byte   0
         rts
 
 done:   return  #$FF
-.endproc
+.endproc ; GetOptionIndexFromCoords
 
 ;;; ============================================================
 ;;; Input: A = entry number
@@ -1712,7 +1712,7 @@ common: lda     #winfo::kDialogId
         MGTK_CALL MGTK::MoveTo, entry_picker_item_rect::topleft
         param_call DrawString, entry_string_buf
         rts
-.endproc
+.endproc ; DrawListEntry
 
 ;;; ============================================================
 ;;; Input: A = clicked entry
@@ -1733,7 +1733,7 @@ common: lda     #winfo::kDialogId
 
         rts
 
-.endproc
+.endproc ; HandleEntryClick
 
 ;;; ============================================================
 ;;; Toggle the highlight on an entry in the list
@@ -1754,7 +1754,7 @@ common: lda     #winfo::kDialogId
         MGTK_CALL MGTK::PaintRect, entry_picker_item_rect
 
 ret:    rts
-.endproc
+.endproc ; MaybeToggleEntryHilite
 
 ;;; ============================================================
 
@@ -1772,7 +1772,7 @@ ret:    rts
 
         @addr := * + 1
         jmp     SELF_MODIFIED
-.endproc
+.endproc ; CmdStartup
 
 ;;; ============================================================
 
@@ -1979,7 +1979,7 @@ check_path:
         MLI_CALL QUIT, quit_params
         brk
 
-.endproc
+.endproc ; InvokeEntry
         invoke_entry_ep2 := InvokeEntry::ep2
 
         DEFINE_QUIT_PARAMS quit_params
@@ -1990,7 +1990,7 @@ check_path:
         lda     #$FF
         sta     selected_index
 :       rts
-.endproc
+.endproc ; ClearSelectedIndex
 
 ;;; ============================================================
 
@@ -2053,7 +2053,7 @@ found_slash:
         bne     pop_segment
 
         rts                     ; zero is success
-.endproc
+.endproc ; CheckBasixSystemImpl
 CheckBasisSystem        := CheckBasixSystemImpl::basis
 
 str_extras_basic:
@@ -2077,7 +2077,7 @@ str_extras_basic:
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
         DEFINE_GET_FILE_INFO_PARAMS file_info_params, INVOKER_INTERPRETER
-.endproc
+.endproc ; CheckBasicSystem
 
 ;;; ============================================================
 
@@ -2087,7 +2087,7 @@ str_extras_basic:
         stax    file_info_params::pathname
         MLI_CALL GET_FILE_INFO, file_info_params
         rts
-.endproc
+.endproc ; GetFileInfo
 
 ;;; ============================================================
 ;;; Uppercase a string
@@ -2111,7 +2111,7 @@ str_extras_basic:
 :       dey
         bne     @loop
 ret:    rts
-.endproc
+.endproc ; UpcaseString
 
 ;;; ============================================================
 
@@ -2161,7 +2161,7 @@ ret:    rts
 
 tmp:    .byte   0
 len:    .byte   0
-.endproc
+.endproc ; ComposeRAMCardEntryPath
 
 ;;; ============================================================
 ;;; Show Alert Message
@@ -2179,7 +2179,7 @@ len:    .byte   0
         bit     ROMIN2
         txa
         rts
-.endproc
+.endproc ; ShowAlert
 
 ;;; Alert code calls here to yield; swaps memory banks back in
 ;;; to do things like read the ProDOS clock.
@@ -2191,7 +2191,7 @@ len:    .byte   0
         bit     LCBANK1
         bit     LCBANK1
         rts
-.endproc
+.endproc ; AlertYieldLoopRelay
 
 ;;; ============================================================
 ;;; Assert: ROM is banked in
@@ -2200,7 +2200,7 @@ len:    .byte   0
         bit     SETTINGS + DeskTopSettings::rgb_color
         bpl     SetMonoMode
         FALL_THROUGH_TO SetColorMode
-.endproc
+.endproc ; SetRGBMode
 
 .proc SetColorMode
         ;; IIgs?
@@ -2236,7 +2236,7 @@ iigs:   lda     NEWVIDEO
         lda     #$00            ; Color
         sta     MONOCOLOR
         rts
-.endproc
+.endproc ; SetColorMode
 
 .proc SetMonoMode
         sec
@@ -2273,7 +2273,7 @@ iigs:   lda     NEWVIDEO
         sta     MONOCOLOR
 
 done:   rts
-.endproc
+.endproc ; SetMonoMode
 
 
 ;;; ============================================================
@@ -2286,7 +2286,7 @@ done:   rts
         bit     SETTINGS + DeskTopSettings::rgb_color
         bmi     SetColorMode::iigs
         bpl     SetMonoMode::iigs ; always
-.endproc
+.endproc ; ResetIIgsRGB
 
 ;;; ============================================================
 ;;; Called by main and nested event loops to do periodic tasks.
@@ -2310,7 +2310,7 @@ done:   rts
 
 loop_counter:
         .byte   0
-.endproc
+.endproc ; YieldLoop
 
 ;;; ============================================================
 
@@ -2346,7 +2346,7 @@ loop_counter:
 
 ;;; ============================================================
 
-.endscope
+.endscope ; app
 
         ENDSEG SegmentApp
         ASSERT_ADDRESS OVERLAY_ADDR

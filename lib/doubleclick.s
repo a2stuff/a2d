@@ -88,7 +88,7 @@ check_y:
         cmp     #kDoubleClickDeltaY
         bcs     fail
 ok:     return  #0
-.endproc
+.endproc ; CheckDelta
 
 counter:
         .word   0
@@ -96,4 +96,4 @@ coords:
 xcoord: .word   0
 ycoord: .word   0
 delta:  .byte   0
-.endproc
+.endproc ; DetectDoubleClick

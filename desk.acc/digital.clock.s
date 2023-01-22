@@ -36,7 +36,7 @@ datetime:
         copy16  #datetime, DESTINATIONLO
         sec                     ; main>aux
         jmp     AUXMOVE
-.endproc
+.endproc ; GetDateTime
 
 ;;; ============================================================
 ;;; Graphics Resources
@@ -82,7 +82,7 @@ parsed: .tag    ParsedDateTime
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 ;;; ============================================================
 ;;; Main Input Loop
@@ -107,7 +107,7 @@ exit:
 
         MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop
-.endproc
+.endproc ; InputLoop
 
 ;;; ============================================================
 ;;; Update
@@ -130,7 +130,7 @@ diff:   COPY_STRUCT DateTime, datetime, last
         jmp     Update
 
 last:   .tag    DateTime
-.endproc
+.endproc ; MaybeUpdate
 
 .proc Update
         copy16  #parsed, $A
@@ -179,7 +179,7 @@ last:   .tag    DateTime
 
 done:
         rts
-.endproc
+.endproc ; Update
 
 ;;; ============================================================
 
@@ -257,7 +257,7 @@ vindex:         .byte   0
 num_verts:      .byte   0
 more_flag:      .byte   0
 
-.endproc
+.endproc ; DrawVectorChar
 
 
 ;;; ============================================================
@@ -283,7 +283,7 @@ more_flag:      .byte   0
         pla
 
         rts
-.endproc
+.endproc ; GetPoly
 
 ;;; ============================================================
 
@@ -389,7 +389,7 @@ poly_colon:
 .proc DoMLIGetTime
         JUMP_TABLE_MLI_CALL GET_TIME
         rts
-.endproc
+.endproc ; DoMLIGetTime
 
         DA_END_MAIN_SEGMENT
 

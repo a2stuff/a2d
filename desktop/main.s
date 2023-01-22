@@ -124,9 +124,9 @@ click:  jsr     HandleClick
         jsr     CmdCheckSingleDriveByMenu
         copy    #0, menu_click_params::item_num
         rts
-.endproc
+.endproc ; CheckDrive
 
-.endproc
+.endproc ; MainLoop
 
 ;;; ============================================================
 ;;; Clear Updates
@@ -188,7 +188,7 @@ finish:
         lda     #SELF_MODIFIED_BYTE
         sta     active_window_id
         rts
-.endproc
+.endproc ; ClearUpdatesImpl
 ClearUpdatesNoPeek := ClearUpdatesImpl::clear_no_peek
 ClearUpdates := ClearUpdatesImpl::clear
 
@@ -211,7 +211,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 
 :       lda     loop_counter
         rts
-.endproc
+.endproc ; YieldLoop
 
 ;;; ============================================================
 
@@ -286,7 +286,7 @@ done:
         jmp     SwapWindowPortbits
 
 yoff:   .word   0
-.endproc
+.endproc ; UpdateWindow
 
 ;;; ============================================================
 ;;; Menu Dispatch
@@ -507,7 +507,7 @@ call_proc:
         stx     saved_stack
         proc_addr := *+1
         jmp     SELF_MODIFIED
-.endproc
+.endproc ; HandleKeydownImpl
 
 HandleKeydown   := HandleKeydownImpl::HandleKeydown
 MenuDispatch2   := HandleKeydownImpl::MenuDispatch2
@@ -574,7 +574,7 @@ dispatch_click:
         cmp     #MGTK::Area::close_box
         jeq     HandleCloseClick
         rts
-.endproc
+.endproc ; HandleClick
 
 ;;; ============================================================
 ;;; Activate the window, and sets selection to its parent icon
@@ -589,7 +589,7 @@ dispatch_click:
         ;; in an inactive window.)
         lda     active_window_id
         jmp     SelectIconForWindow
-.endproc
+.endproc ; ActivateWindowAndSelectIcon
 
 ;;; ============================================================
 ;;; Activate the window, draw contents, and update menu items
@@ -607,7 +607,7 @@ dispatch_click:
         ;; Update menu items
         jsr     UncheckViewMenuItem
         FALL_THROUGH_TO CheckViewMenuItemForActiveWindow
-.endproc
+.endproc ; ActivateWindow
 
 .proc CheckViewMenuItemForActiveWindow
         jsr     GetActiveWindowViewBy
@@ -615,7 +615,7 @@ dispatch_click:
         sta     checkitem_params::menu_item
         inc     checkitem_params::menu_item
         jmp     CheckViewMenuItem
-.endproc
+.endproc ; CheckViewMenuItemForActiveWindow
 
 ;;; ============================================================
 ;;; Inputs: A = window_id
@@ -649,7 +649,7 @@ dispatch_click:
         ITK_CALL IconTK::DrawIcon, icon_param
 
 done:   rts
-.endproc
+.endproc ; SelectIconForWindow
 
 ;;; ============================================================
 
@@ -662,7 +662,7 @@ done:   rts
         jsr     OffsetWindowGrafportAndSet
         lda     #0
 :       rts
-.endproc
+.endproc ; UnsafeOffsetAndSetPortFromWindowId
 
 ;;; Used for all sorts of windows, not just file windows.
 ;;; For file windows, used for drawing headers (sometimes);
@@ -673,7 +673,7 @@ done:   rts
         bne     :+              ; MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, window_grafport
 :       rts
-.endproc
+.endproc ; UnsafeSetPortFromWindowId
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
         .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
@@ -683,7 +683,7 @@ done:   rts
         ;; ASSERT: Result is not MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, window_grafport
         rts
-.endproc
+.endproc ; SafeSetPortFromWindowId
 
 ;;; ============================================================
 ;;; Update table tracking disk-in-device status, determine if
@@ -717,7 +717,7 @@ changed:
         clc
         adc     #$03
         rts
-.endproc
+.endproc ; CheckDiskInsertedEjected
 
 ;;; ============================================================
 
@@ -797,7 +797,7 @@ list_ptr:       .addr   status_buffer
 status_code:    .byte   0
 .endparams
 status_unit_num := status_params::unit_num
-.endproc
+.endproc ; CheckDisksInDevices
 
 ;;; ============================================================
 
@@ -858,7 +858,7 @@ no_selection:
         jsr     DisableMenuItemsRequiringSelection
         jmp     DisableMenuItemsRequiringSingleSelection
 
-.endproc
+.endproc ; UpdateMenuItemStates
 
 ;;; ============================================================
 ;;; Common re-used param blocks
@@ -875,14 +875,14 @@ no_selection:
         stax    file_info_params::pathname
         MLI_CALL GET_FILE_INFO, file_info_params
         rts
-.endproc
+.endproc ; GetFileInfo
 
 ;;; Call GET_FILE_INFO on file at `src_path_buf` a.k.a. `INVOKER_PREFIX`
 ;;; Output: MLI result (carry/zero flag, etc), `src_file_info_params` populated
 .proc GetSrcFileInfo
         MLI_CALL GET_FILE_INFO, src_file_info_params
         rts
-.endproc
+.endproc ; GetSrcFileInfo
 
 ;;; Call SET_FILE_INFO on file at `src_path_buf` a.k.a. `INVOKER_PREFIX`
 ;;; Input: `src_file_info_params` used
@@ -894,14 +894,14 @@ no_selection:
         copy    #$A, src_file_info_params::param_count ; GET_FILE_INFO
         pla
         rts
-.endproc
+.endproc ; SetSrcFileInfo
 
 ;;; Call GET_FILE_INFO on file at `dst_path_buf`
 ;;; Output: MLI result (carry/zero flag, etc), `dst_file_info_params` populated
 .proc GetDstFileInfo
         MLI_CALL GET_FILE_INFO, dst_file_info_params
         rts
-.endproc
+.endproc ; GetDstFileInfo
 
 ;;; ============================================================
 
@@ -1075,7 +1075,7 @@ found_slash:
         bne     pop_segment
 
         rts                     ; zero is success
-.endproc
+.endproc ; CheckBasixSystemImpl
 CheckBasisSystem        := CheckBasixSystemImpl::basis
 
 .proc CheckBasicSystem
@@ -1095,7 +1095,7 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         rts
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
-.endproc
+.endproc ; CheckBasicSystem
 
 
 ;;; --------------------------------------------------
@@ -1107,9 +1107,9 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         jsr     OpenWindowForPath
 
         jmp     SetCursorPointer ; after opening folder
-.endproc
+.endproc ; OpenFolder
 
-.endproc
+.endproc ; LaunchFileWithPath
 
 ;;; ============================================================
 
@@ -1121,7 +1121,7 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         bcs     done
         and     #CASE_MASK
 done:   rts
-.endproc
+.endproc ; UpcaseChar
 
 ;;; ============================================================
 ;;; Uppercase a string
@@ -1142,7 +1142,7 @@ done:   rts
         dey
         bne     @loop
 ret:    rts
-.endproc
+.endproc ; UpcaseString
 
 
 ;;; ============================================================
@@ -1164,7 +1164,7 @@ ret:    rts
 
 nope:   lda     #$FF
         rts
-.endproc
+.endproc ; IsAlpha
 
 ;;; ============================================================
 
@@ -1226,7 +1226,7 @@ filerecords_free_start:
         dex
         bpl     :-
         rts
-.endproc
+.endproc ; RestoreDeviceList
 
 ;;; Backup copy of DEVLST made before reordering and detaching offline devices
 devlst_backup:
@@ -1236,7 +1236,7 @@ devlst_backup:
 
 .proc CmdNoOp
         rts
-.endproc
+.endproc ; CmdNoOp
 
 ;;; ============================================================
 
@@ -1303,7 +1303,7 @@ invoke:
         jmp     InvokeSelectorEntry
 
 done:   rts
-.endproc
+.endproc ; CmdSelectorAction
 
 ;;; ============================================================
 
@@ -1313,7 +1313,7 @@ done:   rts
         sbc     #6              ; 4 items + separator (and make 0 based)
 
         FALL_THROUGH_TO InvokeSelectorEntry
-.endproc
+.endproc ; CmdSelectorItem
 
 ;;; ============================================================
 
@@ -1431,7 +1431,7 @@ entry_num:
         copy16  #entry_original_path, $06
         copy16  #entry_ramcard_path, $08
         jmp     CopyPathsFromPtrsToBufsAndSplitName
-.endproc
+.endproc ; PrepEntryCopyPaths
 
 ;;; --------------------------------------------------
 ;;; Compose path using RAM card prefix plus last two segments of path
@@ -1473,7 +1473,7 @@ entry_num:
         stx     src_path_buf
         ldax    #src_path_buf
         rts
-.endproc
+.endproc ; ComposeRAMCardEntryPath
 
 ;;; --------------------------------------------------
 ;;; Input: A = entry num
@@ -1494,7 +1494,7 @@ secondary:
         jsr     ATimes16
         addax   #SELECTOR_FILE_BUF + kSelectorListEntriesOffset, ptr
         rts
-.endproc
+.endproc ; SetEntryPtr
 
 ;;; --------------------------------------------------
 ;;; Input: A = entry num
@@ -1515,9 +1515,9 @@ secondary:
         jsr     ATimes64
         addax   #SELECTOR_FILE_BUF + kSelectorListPathsOffset, ptr
         rts
-.endproc
+.endproc ; SetEntryPathPtr
 
-.endproc
+.endproc ; InvokeSelectorEntry
 
 ;;; ============================================================
 ;;; Copy the string at $06 to target at A,X
@@ -1537,7 +1537,7 @@ secondary:
         dey
         bpl     :-
         rts
-.endproc
+.endproc ; CopyPtr1ToBuf
 
 ;;; Copy the string at $08 to target at A,X
 ;;; Inputs: Source string at $08, target buffer at A,X
@@ -1555,13 +1555,13 @@ secondary:
         dey
         bpl     :-
         rts
-.endproc
+.endproc ; CopyPtr2ToBuf
 
 ;;; ============================================================
 
 .proc CmdAbout
         param_jump InvokeDialogProc, kIndexAboutDialog, $0000
-.endproc
+.endproc ; CmdAbout
 
 ;;; ============================================================
 
@@ -1617,7 +1617,7 @@ skip:   iny
 
         ;; Allow arbitrary types in menu (e.g. folders)
         jmp     LaunchFileWithPath
-.endproc
+.endproc ; CmdDeskaccImpl
 CmdDeskAcc      := CmdDeskaccImpl::start
 
 ;;; ============================================================
@@ -1690,7 +1690,7 @@ main_length:    .word   0
         DEFINE_CLOSE_PARAMS close_params
         close_ref_num := close_params::ref_num
 
-.endproc
+.endproc ; InvokeDeskAcc
 
 ;;; ============================================================
 ;;; Launch interpreter (system file that accepts path).
@@ -1766,7 +1766,7 @@ fail:   MLI_CALL CLOSE, close_params
 
 END_PROC_AT
         .assert .sizeof(routine) < $100, error, "Routine too large"
-.endproc
+.endproc ; InvokeInterpreter
 
 ;;; ============================================================
 
@@ -1815,7 +1815,7 @@ END_PROC_AT
 
         rts
 
-.endproc
+.endproc ; CmdCopySelection
 
 ;;; ============================================================
 ;;; Copy string at ($6) to `path_buf3`, string at ($8) to `path_buf4`,
@@ -1829,7 +1829,7 @@ END_PROC_AT
         ;; Copy string at $8 to `path_buf4`
         param_call CopyPtr2ToBuf, path_buf4
         FALL_THROUGH_TO SplitPathBuf4
-.endproc
+.endproc ; CopyPathsFromPtrsToBufsAndSplitName
 
 ;;; Split filename off `path_buf4` and store in `filename_buf`
 ;;; If a volume name, splits off leading "/" (e.g. "/VOL" to "/" and "VOL")
@@ -1870,7 +1870,7 @@ volume:
         bne     :-
         copy    #1, path_buf4
         rts
-.endproc
+.endproc ; SplitPathBuf4
 
 ;;; ============================================================
 ;;; Split filename off `INVOKER_PREFIX` into `INVOKER_FILENAME`
@@ -1893,7 +1893,7 @@ volume:
         sta     INVOKER_PREFIX
 
         rts
-.endproc
+.endproc ; SplitInvokerPath
 
 ;;; ============================================================
 
@@ -2034,7 +2034,7 @@ maybe_open_file:
     END_IF
 
         jmp     LaunchFileWithPath
-.endproc
+.endproc ; CmdOpen
 CmdOpenThenCloseCurrent := CmdOpen::open_then_close_current
 CmdOpenFromDoubleClick := CmdOpen::from_double_click
 CmdOpenFromKeyboard := CmdOpen::from_keyboard
@@ -2051,7 +2051,7 @@ CmdOpenFromKeyboard := CmdOpen::from_keyboard
         jsr     CloseSpecifiedWindow
 
 done:   rts
-.endproc
+.endproc ; MaybeCloseWindowAfterOpen
 
 ;;; Parent window to close
 window_id_to_close:
@@ -2119,7 +2119,7 @@ window_id_to_close:
 
         lda     #0              ; success
         rts
-.endproc
+.endproc ; CopyAndComposeWinIconPaths
 
 
 ;;; ============================================================
@@ -2194,7 +2194,7 @@ volume: lda     window_id_to_close
         beq     :+
         jsr     SelectIcon
 :       rts
-.endproc
+.endproc ; CmdOpenParentImpl
 CmdOpenParent := CmdOpenParentImpl::normal
 CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 
@@ -2206,7 +2206,7 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
         rts
 
 :       jmp     CloseActiveWindow
-.endproc
+.endproc ; CmdClose
 
 ;;; ============================================================
 
@@ -2216,7 +2216,7 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
         jsr     CloseActiveWindow ; close it...
         jmp     CmdCloseAll       ; and try again
 done:   rts
-.endproc
+.endproc ; CmdCloseAll
 
 ;;; ============================================================
 
@@ -2273,7 +2273,7 @@ start:
         bit     ROMIN2
 
         jmp     DISK_COPY_BOOTSTRAP
-.endproc
+.endproc ; CmdDiskCopy
 
 ;;; ============================================================
 
@@ -2336,7 +2336,7 @@ success:
 
 done:   rts
 
-.endproc
+.endproc ; CmdNewFolderImpl
 CmdNewFolder    := CmdNewFolderImpl::start
 
 ;;; ============================================================
@@ -2359,7 +2359,7 @@ CmdNewFolder    := CmdNewFolderImpl::start
         jsr     ScrollIconIntoView
 
 ret:    rts
-.endproc
+.endproc ; SelectFileIconByName
 
 ;;; ============================================================
 ;;; Find an icon by name in the given window.
@@ -2430,7 +2430,7 @@ next:   inc     icon
         bne     loop
 
 tmp:    .addr   0
-.endproc
+.endproc ; FindIconByName
 
 ;;; ============================================================
 ;;; Save/Restore drop target icon ID in case the window was rebuilt.
@@ -2462,7 +2462,7 @@ tmp:    .addr   0
         param_call CopyPtr1ToBuf, stashed_name
 
 done:   rts
-.endproc
+.endproc ; MaybeStashDropTargetName
 
 ;;; Outputs: `drag_drop_params::result` updated if needed
 ;;; Assert: `MaybeStashDropTargetName` was previously called
@@ -2494,7 +2494,7 @@ done:   rts
         sta     drag_drop_params::result
 
 done:   rts
-.endproc
+.endproc ; MaybeUpdateDropTargetFromName
 
 stashed_name:
         .res    16, 0
@@ -2587,7 +2587,7 @@ doney:
 done:   rts
 
 delta:  .word   0
-.endproc
+.endproc ; ScrollIconIntoView
 
 ;;; ============================================================
 
@@ -2647,7 +2647,7 @@ loop2:  ldx     #SELF_MODIFIED_BYTE
 
 eject_flag:
         .byte   0
-.endproc
+.endproc ; CmdCheckOrEjectImpl
         CmdEject        := CmdCheckOrEjectImpl::eject
         CmdCheckDrive   := CmdCheckOrEjectImpl::check
 
@@ -2692,7 +2692,7 @@ start:
 fail:   MLI_CALL QUIT, quit_params
         brk
 
-.endproc
+.endproc ; CmdQuitImpl
 CmdQuit := CmdQuitImpl::start
 ResetHandler    := CmdQuitImpl::ResetHandler
 
@@ -2750,7 +2750,7 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 
         jsr     ReconnectRAM
         jmp     RestoreDeviceList
-.endproc
+.endproc ; RestoreSystem
 
 ;;; ============================================================
 
@@ -2805,7 +2805,7 @@ entry3:
         jsr     AdjustViewportForNewIcons
 
         jmp     RedrawAfterContentChange
-.endproc
+.endproc ; ViewByCommon
 
 ;;; ============================================================
 
@@ -2825,7 +2825,7 @@ entry3:
         jmp     :-
 :
         rts
-.endproc
+.endproc ; AddIconsForCachedWindow
 
 ;;; ============================================================
 
@@ -2840,7 +2840,7 @@ entry3:
 
         ;; Update scrollbars based on contents/viewport
         jmp     ScrollUpdate
-.endproc
+.endproc ; RedrawAfterContentChange
 
 
 ;;; ============================================================
@@ -2848,42 +2848,42 @@ entry3:
 .proc CmdViewByIcon
         lda     #kViewByIcon
         jmp     ViewByCommon
-.endproc
+.endproc ; CmdViewByIcon
 
 ;;; ============================================================
 
 .proc CmdViewBySmallIcon
         lda     #kViewBySmallIcon
         jmp     ViewByCommon
-.endproc
+.endproc ; CmdViewBySmallIcon
 
 ;;; ============================================================
 
 .proc CmdViewByName
         lda     #kViewByName
         jmp     ViewByCommon
-.endproc
+.endproc ; CmdViewByName
 
 ;;; ============================================================
 
 .proc CmdViewByDate
         lda     #kViewByDate
         jmp     ViewByCommon
-.endproc
+.endproc ; CmdViewByDate
 
 ;;; ============================================================
 
 .proc CmdViewBySize
         lda     #kViewBySize
         jmp     ViewByCommon
-.endproc
+.endproc ; CmdViewBySize
 
 ;;; ============================================================
 
 .proc CmdViewByType
         lda     #kViewByType
         jmp     ViewByCommon
-.endproc
+.endproc ; CmdViewByType
 
 ;;; ============================================================
 
@@ -2894,7 +2894,7 @@ entry3:
         ;; Check the new one
         copy    menu_click_params::item_num, checkitem_params::menu_item
         jmp     CheckViewMenuItem
-.endproc
+.endproc ; UpdateViewMenuCheck
 
 ;;; ============================================================
 ;;; Destroy all of the icons in the active window.
@@ -2910,7 +2910,7 @@ entry3:
         jsr     FreeCachedWindowIcons
 
         jmp     StoreWindowEntryTable
-.endproc
+.endproc ; DestroyIconsInActiveWindow
 
 ;;; ============================================================
 
@@ -2939,7 +2939,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         bne     loop
 
 done:   rts
-.endproc
+.endproc ; FreeCachedWindowIcons
 
 ;;; ============================================================
 ;;; Clear active window entry count
@@ -2950,7 +2950,7 @@ done:   rts
         copy    #0, cached_window_entry_count
 
         jmp     StoreWindowEntryTable
-.endproc
+.endproc ; ClearActiveWindowEntryCount
 
 ;;; ============================================================
 
@@ -2980,7 +2980,7 @@ drive_to_refresh:
         rts
 :
         jmp     CmdCheckSingleDriveByUnitNumber
-.endproc
+.endproc ; CmdFormatDisk
 
 ;;; ============================================================
 
@@ -3002,7 +3002,7 @@ drive_to_refresh:
         rts
 :
         jmp     CmdCheckSingleDriveByUnitNumber
-.endproc
+.endproc ; CmdEraseDisk
 
 ;;; ============================================================
 
@@ -3030,7 +3030,7 @@ fail:   lda     #0
 found:  lda     DEVLST,x
         and     #UNIT_NUM_MASK
         rts
-.endproc
+.endproc ; GetSelectedUnitNum
 
 ;;; ============================================================
 
@@ -3048,7 +3048,7 @@ CmdLock         := DoLock
         ;; the source window.
         copy    trash_icon_num, drag_drop_params::icon
         jmp     process_drop
-.endproc
+.endproc ; CmdDeleteSelection
 
 ;;; ============================================================
 
@@ -3077,7 +3077,7 @@ CmdLock         := DoLock
         MGTK_CALL MGTK::RedrawDeskTop
 :
         rts
-.endproc
+.endproc ; CmdRename
 
 ;;; ============================================================
 
@@ -3094,7 +3094,7 @@ CmdLock         := DoLock
         jne     SelectAndRefreshWindowOrClose
 
 ret:    rts
-.endproc
+.endproc ; CmdDuplicate
 
 ;;; ============================================================
 ;;; Handle keyboard-based icon selection ("highlighting")
@@ -3181,7 +3181,7 @@ HighlightIcon:
         ldx     selected_index
         lda     buffer+1,x
         jmp     SelectIcon
-.endproc
+.endproc ; CmdHighlightImpl
 CmdHighlightPrev := CmdHighlightImpl::prev
 CmdHighlightNext := CmdHighlightImpl::next
 CmdHighlightAlpha := CmdHighlightImpl::alpha
@@ -3194,7 +3194,7 @@ CmdHighlightAlphaNext := CmdHighlightImpl::a_next
 .proc ClearTypeDown
         copy    #0, typedown_buf
         rts
-.endproc
+.endproc ; ClearTypeDown
 
 ;;; Returns Z=1 if consumed, Z=0 otherwise.
 .proc CheckTypeDown
@@ -3300,9 +3300,9 @@ next:   inc     index
         bne     loop
         dec     index
 found:  return  index
-.endproc
+.endproc ; FindMatch
 
-.endproc
+.endproc ; CheckTypeDown
 
 ;;; Length plus filename
 typedown_buf:
@@ -3359,7 +3359,7 @@ vol_loop:
         sta     buffer
 
         rts
-.endproc
+.endproc ; GetSelectableIcons
 
 ;;; Gather the selectable icons (in active window plus desktop) into
 ;;; buffer at $1800, as above, but also sort them by name.
@@ -3453,9 +3453,9 @@ loop:   lda     (ptr2),y
 gt:     lda     #$FF            ; Z=0
         sec
 ret:    rts
-.endproc
+.endproc ; CompareStrings
 
-.endproc
+.endproc ; GetSelectableIconsSorted
 
 ;;; Assuming selectable icon buffer at $1800 is populated by the
 ;;; above functions, return ptr to nth icon's name in A,X
@@ -3467,7 +3467,7 @@ ret:    rts
         tax
         lda     buffer+1,x         ; A = icon num
         jmp     GetIconName
-.endproc
+.endproc ; GetNthSelectableIconName
 
 
 ;;; ============================================================
@@ -3502,7 +3502,7 @@ ret:    rts
         ITK_CALL IconTK::DrawIcon, selected_icon_list
 
         rts
-.endproc
+.endproc ; SelectIcon
 
 ;;; ============================================================
 
@@ -3563,7 +3563,7 @@ ret:    rts
     END_IF
 
 finish: rts
-.endproc
+.endproc ; CmdSelectAll
 
 
 ;;; ============================================================
@@ -3572,7 +3572,7 @@ finish: rts
 .proc CmdResize
         MGTK_CALL MGTK::KeyboardMouse
         jmp     HandleResizeClick
-.endproc
+.endproc ; CmdResize
 
 ;;; ============================================================
 ;;; Initiate keyboard-based window moving
@@ -3580,7 +3580,7 @@ finish: rts
 .proc CmdMove
         MGTK_CALL MGTK::KeyboardMouse
         jmp     HandleTitleClick
-.endproc
+.endproc ; CmdMove
 
 ;;; ============================================================
 ;;; Cycle Through Windows
@@ -3636,7 +3636,7 @@ found:  inx
         jmp     ActivateWindowAndSelectIcon
 
 done:   rts
-.endproc
+.endproc ; CmdCycleWindows
 
 ;;; ============================================================
 ;;; Keyboard-based scrolling of window contents
@@ -3676,7 +3676,7 @@ done:   rts
         bne     loop
         jsr     ScrollUp
         jmp     loop
-.endproc
+.endproc ; CmdScroll
 
 ;;; ============================================================
 ;;; Centralized logic for scrolling directory windows
@@ -3772,13 +3772,13 @@ _Preamble:
         jsr     _Preamble
         add16_8 viewport+MGTK::Rect::x2, tick_h
         jmp     _Clamp_x2
-.endproc
+.endproc ; ArrowRight
 
 .proc ArrowDown
         jsr     _Preamble
         add16_8 viewport+MGTK::Rect::y2, tick_v
         jmp     _Clamp_y2
-.endproc
+.endproc ; ArrowDown
 
 ;;; --------------------------------------------------
 ;;; When arrow decrement is clicked:
@@ -3789,13 +3789,13 @@ _Preamble:
         jsr     _Preamble
         sub16_8 viewport+MGTK::Rect::x1, tick_h
         jmp     _Clamp_x1
-.endproc
+.endproc ; ArrowLeft
 
 .proc ArrowUp
         jsr     _Preamble
         sub16_8 viewport+MGTK::Rect::y1, tick_v
         jmp     _Clamp_y1
-.endproc
+.endproc ; ArrowUp
 
 ;;; --------------------------------------------------
 ;;; When page increment area is clicked:
@@ -3806,13 +3806,13 @@ _Preamble:
         jsr     _Preamble
         add16   viewport+MGTK::Rect::x2, width, viewport+MGTK::Rect::x2
         jmp     _Clamp_x2
-.endproc
+.endproc ; PageRight
 
 .proc PageDown
         jsr     _Preamble
         add16_8 viewport+MGTK::Rect::y2, height
         jmp     _Clamp_y2
-.endproc
+.endproc ; PageDown
 
 ;;; --------------------------------------------------
 ;;; When page decrement area is clicked:
@@ -3823,13 +3823,13 @@ _Preamble:
         jsr     _Preamble
         sub16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x1
         jmp     _Clamp_x1
-.endproc
+.endproc ; PageLeft
 
 .proc PageUp
         jsr     _Preamble
         sub16_8 viewport+MGTK::Rect::y1, height
         jmp     _Clamp_y1
-.endproc
+.endproc ; PageUp
 
 ;;; --------------------------------------------------
 ;;; When thumb is moved by user:
@@ -3845,7 +3845,7 @@ _Preamble:
         add16   quotient, ubox::x1, viewport+MGTK::Rect::x1
         add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
         jmp     _MaybeUpdateHThumb
-.endproc
+.endproc ; TrackHThumb
 
 .proc TrackVThumb
         jsr     _Preamble
@@ -3855,7 +3855,7 @@ _Preamble:
         add16   quotient, ubox::y1, viewport+MGTK::Rect::y1
         add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
         jmp     _MaybeUpdateVThumb
-.endproc
+.endproc ; TrackVThumb
 
 .proc _TrackMulDiv
         copy    trackthumb_params::thumbpos, multiplicand
@@ -3864,7 +3864,7 @@ _Preamble:
         copy32  product, numerator
         copy32  #kScrollThumbMax, denominator
         jmp     Div_32_32
-.endproc
+.endproc ; _TrackMulDiv
 
 ;;; --------------------------------------------------
 ;;; _Clamp_hi:
@@ -3879,7 +3879,7 @@ _Preamble:
     END_IF
         sub16   viewport+MGTK::Rect::x2, width, viewport+MGTK::Rect::x1
         jmp     _MaybeUpdateHThumb
-.endproc
+.endproc ; _Clamp_x2
 
 .proc _Clamp_y2
         scmp16  viewport+MGTK::Rect::y2, ubox::y2
@@ -3888,7 +3888,7 @@ _Preamble:
     END_IF
         sub16   viewport+MGTK::Rect::y2, height, viewport+MGTK::Rect::y1
         jmp     _MaybeUpdateVThumb
-.endproc
+.endproc ; _Clamp_y2
 
 ;;; --------------------------------------------------
 ;;; _Clamp_lo:
@@ -3903,7 +3903,7 @@ _Preamble:
     END_IF
         add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
         jmp     _MaybeUpdateHThumb
-.endproc
+.endproc ; _Clamp_x1
 
 .proc _Clamp_y1
         scmp16  viewport+MGTK::Rect::y1, ubox::y1
@@ -3912,7 +3912,7 @@ _Preamble:
     END_IF
         add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
         jmp     _MaybeUpdateVThumb
-.endproc
+.endproc ; _Clamp_y1
 
 ;;; --------------------------------------------------
 ;;; Following above gestures, determine if the viewport
@@ -3942,7 +3942,7 @@ _Preamble:
 :
     END_IF
         rts
-.endproc
+.endproc ; _MaybeUpdateHThumb
 
 .proc _MaybeUpdateVThumb
         ecmp16  viewport+MGTK::Rect::y1, old::ycoord
@@ -3963,7 +3963,7 @@ _Preamble:
 :
     END_IF
         rts
-.endproc
+.endproc ; _MaybeUpdateVThumb
 
 ;;; Set hthumb position relative to `maprect` and `ubox`.
 .proc _SetHThumbFromViewport
@@ -3978,7 +3978,7 @@ _Preamble:
         lda     quotient
         ldx     #MGTK::Ctl::horizontal_scroll_bar
         jmp     _UpdateThumb
-.endproc
+.endproc ; _SetHThumbFromViewport
 
 ;;; Set vthumb position relative to `maprect` and `ubox`.
 .proc _SetVThumbFromViewport
@@ -3993,7 +3993,7 @@ _Preamble:
         lda     quotient
         ldx     #MGTK::Ctl::vertical_scroll_bar
         jmp     _UpdateThumb
-.endproc
+.endproc ; _SetVThumbFromViewport
 
 ;;; --------------------------------------------------
 ;;; Apply `maprect` back to active window's GrafPort
@@ -4005,7 +4005,7 @@ _Preamble:
         sub16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight
 
         jmp     AssignActiveWindowCliprectAndUpdateCachedIcons
-.endproc
+.endproc ; _UpdateViewport
 
 ;;; --------------------------------------------------
 ;;; Check contents against window size, and activate/deactivate
@@ -4055,7 +4055,7 @@ activate_vscroll:
         jsr     _ActivateCtl
 
         jmp     _SetVThumbFromViewport
-.endproc
+.endproc ; ActivateCtlsSetThumbs
 
 ;;; --------------------------------------------------
 ;;; Inputs: A=activate/deactivate, X=which_ctl
@@ -4065,7 +4065,7 @@ activate_vscroll:
         sta     activatectl_params::activate
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
-.endproc
+.endproc ; _ActivateCtl
 
 ;;; --------------------------------------------------
 ;;; Inputs: A=thumbpos, X=which_ctl
@@ -4075,9 +4075,9 @@ activate_vscroll:
         stx     updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
-.endproc
+.endproc ; _UpdateThumb
 
-.endscope
+.endscope ; ScrollManager
 
 ;;; Handle scroll gestures
 ScrollLeft      := ScrollManager::ArrowLeft
@@ -4189,7 +4189,7 @@ next:   pla
         jmp     loop
 .endscope
 
-.endproc
+.endproc ; CmdCheckDrives
 
 ;;; ============================================================
 
@@ -4382,7 +4382,7 @@ add_icon:
 check_drive_flags:
         .byte   0
 
-.endproc
+.endproc ; CmdCheckSingleDriveImpl
 
         CmdCheckSingleDriveByMenu := CmdCheckSingleDriveImpl::by_menu
         CmdCheckSingleDriveByUnitNumber := CmdCheckSingleDriveImpl::by_unit_number
@@ -4401,7 +4401,7 @@ check_drive_flags:
         lda     #<$C000
         sta     reset_and_invoke_target
         FALL_THROUGH_TO ResetAndInvoke
-.endproc
+.endproc ; CmdStartupItem
 
         ;; also invoked by launcher code
 .proc ResetAndInvoke
@@ -4411,7 +4411,7 @@ check_drive_flags:
         ;; also used by launcher code
         target := *+1
         jmp     SELF_MODIFIED
-.endproc
+.endproc ; ResetAndInvoke
         reset_and_invoke_target := ResetAndInvoke::target
 
 ;;; ============================================================
@@ -4526,7 +4526,7 @@ check_drive_flags:
         jsr     CheckControlRepeat
         bpl     :-
         rts
-.endproc
+.endproc ; HandleClientClick
 
 ;;; ============================================================
 
@@ -4543,7 +4543,7 @@ check_drive_flags:
         bne     :+
         jmp     ScrollTrackVThumb
 :       jmp     ScrollTrackHThumb
-.endproc
+.endproc ; DoTrackThumb
 
 ;;; ============================================================
 ;;; Handle mouse held down on scroll arrow/pager
@@ -4566,7 +4566,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         cmp     #SELF_MODIFIED_BYTE
         bne     bail
         return  #0              ; high bit set = repeating
-.endproc
+.endproc ; CheckControlRepeat
 
 ;;; ============================================================
 
@@ -4587,7 +4587,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         ;; Not an icon - maybe a drag?
         lda     active_window_id
         jmp     DragSelect
-.endproc
+.endproc ; HandleContentClick
 
 ;;; ============================================================
 
@@ -4739,9 +4739,9 @@ failure:
         jsr     UpdateUsedFreeViaWindow
         lda     active_window_id
         jmp     SelectAndRefreshWindowOrClose
-.endproc
+.endproc ; UpdateActiveWindow
 
-.endproc
+.endproc ; HandleFileIconClick
         ;; Used for delete shortcut; set `drag_drop_params::icon` first
         process_drop := HandleFileIconClick::process_drop
 
@@ -4760,7 +4760,7 @@ failure:
         inc     selected_icon_count
 
         rts
-.endproc
+.endproc ; HighlightAndSelectIcon
 
 ;;; ============================================================
 ;;; Remove specified icon from selection list, and redraw.
@@ -4774,7 +4774,7 @@ failure:
 
         lda     icon_param
         jmp     RemoveFromSelectionList
-.endproc
+.endproc ; UnhighlightAndDeselectIcon
 
 ;;; ============================================================
 ;;; Remove specified icon from `selected_icon_list`
@@ -4797,7 +4797,7 @@ failure:
 
         dec     selected_icon_count
         rts
-.endproc
+.endproc ; RemoveFromSelectionList
 
 ;;; ============================================================
 
@@ -4828,11 +4828,11 @@ failure:
         ldx     #0
         stx     exception_flag
         rts
-.endproc
+.endproc ; TrySelectAndRefreshWindow
 
 exception_flag:
         .byte   0
-.endproc
+.endproc ; SelectAndRefreshWindowOrClose
 
 ;;; ============================================================
 
@@ -4883,7 +4883,7 @@ exception_flag:
 
         ;; Create icons and draw contents
         jmp     ViewByCommon::entry3
-.endproc
+.endproc ; SelectAndRefreshWindow
 
 ;;; ============================================================
 ;;; Clear the window background, following a call to either
@@ -4895,7 +4895,7 @@ exception_flag:
         MGTK_CALL MGTK::PaintRect, window_grafport::maprect
     END_IF
         rts
-.endproc
+.endproc ; ClearWindowBackgroundIfNotObscured
 
 ;;; ============================================================
 ;;; Drag Selection
@@ -5100,8 +5100,8 @@ last_pos:
         jsr     IconPtrScreenToWindow
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
-.endproc
+.endproc ; CoordsScreenToWindow
+.endproc ; DragSelect
 
 ;;; ============================================================
 
@@ -5118,7 +5118,7 @@ last_pos:
         jsr     StoreWindowEntryTable
 
         rts
-.endproc
+.endproc ; HandleTitleClick
 
 ;;; ============================================================
 
@@ -5127,7 +5127,7 @@ last_pos:
         MGTK_CALL MGTK::GrowWindow, event_params
         jsr     ScrollUpdate
         rts
-.endproc
+.endproc ; HandleResizeClick
 
 ;;; ============================================================
 
@@ -5143,13 +5143,13 @@ last_pos:
         jmi     CmdCloseAll
 
         FALL_THROUGH_TO CloseActiveWindow
-.endproc
+.endproc ; HandleCloseClick
 
 ;;; Close the active window
 .proc CloseActiveWindow
         lda     active_window_id
         FALL_THROUGH_TO CloseSpecifiedWindow
-.endproc
+.endproc ; CloseActiveWindow
 
 ;;; Inputs: A = window_id
 .proc CloseSpecifiedWindow
@@ -5244,7 +5244,7 @@ last_pos:
 
 redraw: ITK_CALL IconTK::DrawIcon, icon_param
 finish: rts
-.endproc
+.endproc ; CloseSpecifiedWindow
 
 ;;; ============================================================
 ;;; Check windows and close any where the backing volume/file no
@@ -5285,7 +5285,7 @@ next:   dec     window_id
         bne     loop
 
 done:   rts
-.endproc
+.endproc ; ValidateWindows
 
 ;;; ============================================================
 
@@ -5301,7 +5301,7 @@ done:   rts
         dey
         bpl     :-
         rts
-.endproc
+.endproc ; ApplyActiveWinfoToWindowGrafport
 
 ;;; NOTE: Does not update icon positions, so only use in empty windows.
 .proc ResetActiveWindowViewport
@@ -5311,7 +5311,7 @@ done:   rts
         copy16  #0, window_grafport::maprect::x1
         copy16  #0, window_grafport::maprect::y1
         FALL_THROUGH_TO AssignActiveWindowCliprect
-.endproc
+.endproc ; ResetActiveWindowViewport
 
 .proc AssignActiveWindowCliprect
         ptr := $6
@@ -5327,13 +5327,13 @@ done:   rts
         dex
         bpl     :-
         rts
-.endproc
+.endproc ; AssignActiveWindowCliprect
 
 .proc AssignActiveWindowCliprectAndUpdateCachedIcons
         jsr     CachedIconsScreenToWindow
         jsr     AssignActiveWindowCliprect
         jmp     CachedIconsWindowToScreen
-.endproc
+.endproc ; AssignActiveWindowCliprectAndUpdateCachedIcons
 
 
 ;;; ============================================================
@@ -5349,7 +5349,7 @@ done:   rts
         ;; Only draw content, not header
         lda     #kDrawWindowEntriesContentOnly
         jmp     DrawWindowEntries
-.endproc
+.endproc ; RedrawAfterScroll
 
 ;;; ============================================================
 ;;; If a window is open, ensure the right view item is checked,.
@@ -5367,7 +5367,7 @@ done:   rts
         inx
         stx     checkitem_params::menu_item
         jmp     CheckViewMenuItem
-.endproc
+.endproc ; UpdateWindowMenuItems
 
 ;;; ============================================================
 
@@ -5394,7 +5394,7 @@ disable:
         jsr     DisableMenuItem
 
         rts
-.endproc
+.endproc ; ToggleMenuItemsRequiringWindow
 EnableMenuItemsRequiringWindow := ToggleMenuItemsRequiringWindow::enable
 DisableMenuItemsRequiringWindow := ToggleMenuItemsRequiringWindow::disable
 
@@ -5424,7 +5424,7 @@ disable:lda     #MGTK::disableitem_disable
         jsr     DisableMenuItem
         lda     #aux::kMenuItemIdGetSize
         jmp     DisableMenuItem
-.endproc
+.endproc ; ToggleMenuItemsRequiringSelection
 EnableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::enable
 DisableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::disable
 
@@ -5442,7 +5442,7 @@ disable:lda     #MGTK::disableitem_disable
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdRenameIcon
         jmp     DisableMenuItem
-.endproc
+.endproc ; ToggleMenuItemsRequiringSingleSelection
 EnableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::enable
 DisableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::disable
 
@@ -5454,7 +5454,7 @@ DisableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelect
         sta     disableitem_params::menu_item
         MGTK_CALL MGTK::DisableItem, disableitem_params
         rts
-.endproc
+.endproc ; DisableMenuItem
 
 ;;; ============================================================
 
@@ -5475,7 +5475,7 @@ disable:lda     #MGTK::disableitem_disable
 
         rts
 
-.endproc
+.endproc ; ToggleMenuItemsRequiringFileSelection
 EnableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::enable
 DisableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::disable
 
@@ -5498,7 +5498,7 @@ disable:lda     #MGTK::disableitem_disable
 
         rts
 
-.endproc
+.endproc ; ToggleMenuItemsRequiringVolumeSelection
 EnableMenuItemsRequiringVolumeSelection := ToggleMenuItemsRequiringVolumeSelection::enable
 DisableMenuItemsRequiringVolumeSelection := ToggleMenuItemsRequiringVolumeSelection::disable
 
@@ -5520,7 +5520,7 @@ disable:lda     #MGTK::disableitem_disable
         jsr     DisableMenuItem
         copy    #$80, selector_menu_items_updated_flag
         rts
-.endproc
+.endproc ; ToggleSelectorMenuItems
 EnableSelectorMenuItems := ToggleSelectorMenuItems::enable
 DisableSelectorMenuItems := ToggleSelectorMenuItems::disable
 
@@ -5635,7 +5635,7 @@ same_or_desktop:
         bne     :-
 
         rts
-.endproc
+.endproc ; HandleVolumeIconClick
 
 ;;; ============================================================
 ;;; Open a folder/volume icon
@@ -5810,8 +5810,8 @@ no_win:
         ;; Adjust ptr as if it's pointing at an IconEntry
         copy16  #buf_filename - IconEntry::name, ptr
         rts
-.endproc
-.endproc
+.endproc ; UpdateIcon
+.endproc ; OpenWindowForIcon
 
 ;;; ============================================================
 ;;; Marks icon as open and repaints it.
@@ -5832,7 +5832,7 @@ no_win:
 
         ITK_CALL IconTK::DrawIcon, icon_param
         rts
-.endproc
+.endproc ; MarkIconOpen
 
 ;;; ============================================================
 ;;; Give a file path, tries to open/show a window for the containing
@@ -5849,7 +5849,7 @@ no_win:
 
         copy16  #INVOKER_FILENAME, $08
         jmp     SelectFileIconByName
-.endproc
+.endproc ; ShowFileWithPath
 
 ;;; ============================================================
 ;;; Open a folder/volume icon
@@ -5897,7 +5897,7 @@ no_win:
         jsr     MarkIconOpen
 
 ret:    rts
-.endproc
+.endproc ; OpenWindowForPath
 
 ;;; ============================================================
 
@@ -5912,7 +5912,7 @@ uncheck:lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
         rts
-.endproc
+.endproc ; CheckViewMenuItemImpl
 CheckViewMenuItem := CheckViewMenuItemImpl::check
 UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 
@@ -6022,7 +6022,7 @@ done:
 ;;;   draws the content.
 header_and_offset_flag:
         .byte   0
-.endproc
+.endproc ; DrawWindowEntries
 
 ;;; ============================================================
 
@@ -6095,7 +6095,7 @@ skip:
         sta     selected_icon_count
         sta     selected_window_id
         rts
-.endproc
+.endproc ; ClearSelection
 
 ;;; ============================================================
 
@@ -6122,7 +6122,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
 done:   jsr     PopPointers     ; do not tail-call optimize!
         rts
-.endproc
+.endproc ; CachedIconsScreenToWindow
 
 ;;; ============================================================
 
@@ -6149,7 +6149,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
 done:   jsr     PopPointers     ; do not tail-call optimize!
         rts
-.endproc
+.endproc ; CachedIconsWindowToScreen
 
 ;;; ============================================================
 ;;; Adjust grafport for header.
@@ -6169,7 +6169,7 @@ set:    lda     #0
 :       rts
 
 flag:   .byte   0
-.endproc
+.endproc ; OffsetWindowGrafportImpl
 OffsetWindowGrafport    := OffsetWindowGrafportImpl::noset
 OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
 
@@ -6182,7 +6182,7 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
         copy16  window_k_used_table-2,x, window_draw_k_used_table-2,x ; 1-based to 0-based
         copy16  window_k_free_table-2,x, window_draw_k_free_table-2,x
         rts
-.endproc
+.endproc ; UpdateWindowUsedFreeDisplayValues
 
 ;;; ============================================================
 ;;; Update used/free values for windows related to volume icon
@@ -6194,7 +6194,7 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
         rts                     ; too long
     END_IF
         param_jump UpdateUsedFreeViaPath, path_buf3
-.endproc
+.endproc ; UpdateUsedFreeViaIcon
 
 ;;; ============================================================
 ;;; Refresh vol used/free for windows of same volume as win in A.
@@ -6203,7 +6203,7 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
 .proc UpdateUsedFreeViaWindow
         jsr     GetWindowPath   ; into A,X
         jmp     UpdateUsedFreeViaPath
-.endproc
+.endproc ; UpdateUsedFreeViaWindow
 
 ;;; ============================================================
 ;;; Refresh vol used/free for windows of same volume as path in A,X.
@@ -6254,7 +6254,7 @@ loop:   lda     found_windows_list,y
         bpl     loop
 
 done:   rts
-.endproc
+.endproc ; UpdateUsedFreeViaPath
 
 ;;; ============================================================
 ;;; Find position of last segment of path at (A,X), return in Y.
@@ -6290,14 +6290,14 @@ slash:  cpy     #1
         beq     restore
         dey
         rts
-.endproc
+.endproc ; FindLastPathSegment
 
 ;;; ============================================================
 
 .proc FindWindowForSrcPath
         ldax    #src_path_buf
         FALL_THROUGH_TO FindWindowForPath
-.endproc
+.endproc ; FindWindowForSrcPath
 
 ;;; ============================================================
 ;;; `FindWindowForPath`
@@ -6401,7 +6401,7 @@ done:   return  window_num
 
 exact_match_flag:
         .byte   0
-.endproc
+.endproc ; FindWindowsImpl
         FindWindowForPath := FindWindowsImpl::exact
         FindWindowsForPrefix := FindWindowsImpl::prefix
 
@@ -6650,7 +6650,7 @@ finish: copy16  record_ptr, filerecords_free_start
         jsr     SetCursorPointer ; after loading directory
         jsr     PopPointers      ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; Start
 
 ;;; --------------------------------------------------
 
@@ -6701,7 +6701,7 @@ finish: copy16  record_ptr, filerecords_free_start
         txs
 
 done:   rts
-.endproc
+.endproc ; DoOpen
 
 suppress_error_on_open_flag:
         .byte   0
@@ -6717,7 +6717,7 @@ DoClose:
         rts
 
 ;;; --------------------------------------------------
-.endproc
+.endproc ; OpenDirectory
 
 ;;; ============================================================
 ;;; Inputs: `src_path_buf` set to full path (not modified)
@@ -6765,7 +6765,7 @@ finish: php
 
         plp
         rts
-.endproc
+.endproc ; GetVolUsedFreeViaPath
 
 vol_kb_free:  .word   0
 vol_kb_used:  .word   0
@@ -6877,7 +6877,7 @@ finish:
 
 deltam: .word   0               ; memory delta
 size:   .word   0               ; size of a window's list
-.endproc
+.endproc ; RemoveWindowFilerecordEntries
 
 ;;; ============================================================
 ;;; Set up path and coords for new window, contents and free/used.
@@ -7072,7 +7072,7 @@ volume: lda     cached_window_id
         jsr     AnimateWindowOpen
 :
         rts
-.endproc
+.endproc ; PrepareNewWindow
 
 copy_new_window_bounds_flag:
         .byte   0
@@ -7189,7 +7189,7 @@ icons_this_row:
 records_base_ptr:
         .word   0
 
-.endproc
+.endproc ; Start
 
 ;;; ============================================================
 ;;; Create icon
@@ -7339,7 +7339,7 @@ L7870:  lda     cached_window_id
         sta     (icon_entry),y
 :
         rts
-.endproc
+.endproc ; AllocAndPopulateFileIcon
 
 ;;; ============================================================
 ;;; Inputs: A = `IconType` member, Y = `kViewByXXX` value
@@ -7394,9 +7394,9 @@ L7870:  lda     cached_window_id
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; FindIconDetailsForIconType
 
-.endproc
+.endproc ; CreateIconsForWindowImpl
 CreateIconsForWindow := CreateIconsForWindowImpl::Start
 
 ;;; ============================================================
@@ -7484,7 +7484,7 @@ assign_height:
         ;; Finished
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; ComputeInitialWindowSize
 
 ;;; ============================================================
 ;;; For a newly populated window (new or refreshed), adjust the
@@ -7520,7 +7520,7 @@ assign_height:
 ret:    rts
 
 tmpw:   .word   0
-.endproc
+.endproc ; AdjustViewportForNewIcons
 
 
 ;;; ============================================================
@@ -7632,7 +7632,7 @@ next:   add16_8 ptr, #.sizeof(ICTRecord)
         jmp     loop
 
 flags:  .byte   0
-.endproc
+.endproc ; GetIconType
 
 
 ;;; ============================================================
@@ -7735,7 +7735,7 @@ flags:  .byte   0
 
 :       copy16  #str_items_suffix, ptr_str_items_suffix
         rts
-.endproc
+.endproc ; adjust_item_suffix
 
 
 ptr_str_items_suffix:
@@ -7787,7 +7787,7 @@ finish:
 
 .proc DrawIntString
         param_jump DrawString, str_from_int
-.endproc
+.endproc ; DrawIntString
 
 xcoord:
         .word   0
@@ -7891,7 +7891,7 @@ compare:
 
 next:   inc     icon_num
         jmp     check_icon
-.endproc
+.endproc ; ComputeIconsBBox
 
 ;;; ============================================================
 ;;; Prepares a window's set of entries - before icon creation
@@ -7927,7 +7927,7 @@ next:   inc     icon_num
 
         jsr     PopPointers     ; do not tail-call optimize!
         rts
-.endproc
+.endproc ; InitCachedWindowEntries
 
 ;;; ============================================================
 ;;; Fetch the entry count for a window; valid after `OpenDirectory`,
@@ -7951,7 +7951,7 @@ next:   inc     icon_num
         bit     LCBANK1
 
         rts
-.endproc
+.endproc ; GetFileRecordCountForWindow
 
 ;;; ============================================================
 ;;; Populates and sorts `cached_window_entry_list`.
@@ -8061,7 +8061,7 @@ ret:    rts
         pla
 
         rts
-.endproc
+.endproc ; CalcPtr
 
 ;;; --------------------------------------------------
 
@@ -8182,7 +8182,7 @@ done:   rts
 
         rts
 
-.endproc
+.endproc ; CompareFileRecords
 CompareFileRecords_sort_by := CompareFileRecords::sort_by
 
 .proc ComposeFileTypeStringForSorting
@@ -8193,9 +8193,9 @@ CompareFileRecords_sort_by := CompareFileRecords::sort_by
         lda     #$FF
         sta     str_file_type+1
 :       rts
-.endproc
+.endproc ; ComposeFileTypeStringForSorting
 
-.endproc
+.endproc ; SortRecords
 
 
 ;;; ============================================================
@@ -8246,7 +8246,7 @@ in_range:
         MGTK_CALL MGTK::MoveTo, pos_col_date
         jsr     ComposeDateString
         param_jump DrawString, text_buffer2
-.endproc
+.endproc ; DrawListViewRow
 
 ;;; ============================================================
 
@@ -8259,7 +8259,7 @@ in_range:
         COPY_BYTES 4, str_file_type, text_buffer2 ; 3 characters + length
 
         rts
-.endproc
+.endproc ; PrepareColType
 
 .proc PrepareColSize
         file_type := list_view_filerecord + FileRecord::file_type
@@ -8276,7 +8276,7 @@ in_range:
 
         ldax    blocks
         FALL_THROUGH_TO ComposeSizeString
-.endproc
+.endproc ; PrepareColSize
 
 ;;; ============================================================
 ;;; Populate `text_buffer2` with "12,345K"
@@ -8316,7 +8316,7 @@ in_range:
 
 value:  .word   0
 
-.endproc
+.endproc ; ComposeSizeString
 
 ;;; ============================================================
 
@@ -8362,7 +8362,7 @@ append_date_strings:
         jsr     IntToString
 
         param_jump ConcatenateDatePart, str_from_int
-.endproc
+.endproc ; AppendDayString
 
 .proc AppendMonthString
         lda     month
@@ -8373,13 +8373,13 @@ append_date_strings:
         lda     month_table,y
 
         jmp     ConcatenateDatePart
-.endproc
+.endproc ; AppendMonthString
 
 .proc AppendYearString
         ldax    year
         jsr     IntToString
         param_jump ConcatenateDatePart, str_from_int
-.endproc
+.endproc ; AppendYearString
 
 year    := parsed_date + ParsedDateTime::year
 month   := parsed_date + ParsedDateTime::month
@@ -8410,9 +8410,9 @@ min     := parsed_date + ParsedDateTime::minute
         cpy     #SELF_MODIFIED_BYTE
         bcc     :-
         rts
-.endproc
+.endproc ; ConcatenateDatePart
 
-.endproc
+.endproc ; ComposeDateString
 
 
 ;;; ============================================================
@@ -8423,19 +8423,19 @@ min     := parsed_date + ParsedDateTime::minute
 .proc ATimes16
         ldx     #4
         bne     AShiftX       ; always
-.endproc
+.endproc ; ATimes16
 
 ;;; A,X = A * 32
 .proc ATimes32
         ldx     #5
         bne     AShiftX       ; always
-.endproc
+.endproc ; ATimes32
 
 ;;; A,X = A * 64
 .proc ATimes64
         ldx     #6
         bne     AShiftX       ; always
-.endproc
+.endproc ; ATimes64
 
 ;;; A,X = A << X
 .proc AShiftX
@@ -8450,7 +8450,7 @@ min     := parsed_date + ParsedDateTime::minute
         hi := *+1
         ldx     #SELF_MODIFIED_BYTE
         rts
-.endproc
+.endproc ; AShiftX
 
 ;;; ============================================================
 ;;; Look up an icon address.
@@ -8463,7 +8463,7 @@ min     := parsed_date + ParsedDateTime::minute
         lda     icon_entry_address_table,y
         ldx     icon_entry_address_table+1,y
         rts
-.endproc
+.endproc ; GetIconEntry
 
 ;;; ============================================================
 ;;; Look up window.
@@ -8479,7 +8479,7 @@ min     := parsed_date + ParsedDateTime::minute
         tax
         pla
         rts
-.endproc
+.endproc ; WindowLookup
 
 ;;; ============================================================
 ;;; Look up window path.
@@ -8495,7 +8495,7 @@ min     := parsed_date + ParsedDateTime::minute
         tax
         pla
         rts
-.endproc
+.endproc ; GetWindowPath
 
 ;;; ============================================================
 ;;; Look up window title path.
@@ -8511,7 +8511,7 @@ min     := parsed_date + ParsedDateTime::minute
         tax
         pla
         rts
-.endproc
+.endproc ; GetWindowTitlePath
 
 ;;; ============================================================
 ;;; Inputs: A = icon id (volume or file)
@@ -8565,7 +8565,7 @@ too_long:
 finish:
         jsr     PopPointers
         rts
-.endproc
+.endproc ; GetIconPath
 
 ;;; ============================================================
 ;;; Input: A,X = path to copy
@@ -8584,7 +8584,7 @@ finish:
         dey
         bpl     :-
         rts
-.endproc
+.endproc ; CopyToSrcPath
 
 ;;; ============================================================
 ;;; Input: A,X = path to copy
@@ -8603,7 +8603,7 @@ finish:
         dey
         bpl     :-
         rts
-.endproc
+.endproc ; CopyToDstPath
 
 ;;; ============================================================
 ;;; Input: A,X = path to append
@@ -8632,7 +8632,7 @@ finish:
         stx     src_path_buf
 
         rts
-.endproc
+.endproc ; AppendFilenameToSrcPath
 
 ;;; ============================================================
 ;;; Input: A,X = path to append
@@ -8661,7 +8661,7 @@ finish:
         stx     dst_path_buf
 
         rts
-.endproc
+.endproc ; AppendFilenameToDstPath
 
 ;;; ============================================================
 
@@ -8713,7 +8713,7 @@ not_found:
         copy    hex_digits,x, str_file_type+3
 
         rts
-.endproc
+.endproc ; ComposeFileTypeString
 
 str_file_type:
         PASCAL_STRING "$00"
@@ -8763,7 +8763,7 @@ DoByte:
 
 auxtype:
         .word 0
-.endproc
+.endproc ; AppendAuxType
 
 ;;; ============================================================
 ;;; Draw text right aligned, pascal string address in A,X
@@ -8788,7 +8788,7 @@ auxtype:
         MGTK_CALL MGTK::DrawText, params
 
 ret:    rts
-.endproc
+.endproc ; DrawStringRight
 
 ;;; ============================================================
 
@@ -8814,7 +8814,7 @@ ret:    rts
 
 saved_portbits:
         .res    .sizeof(MGTK::GrafPort)+1, 0
-.endproc
+.endproc ; SwapWindowPortbits
 
 ;;; ============================================================
 ;;; Convert icon's coordinates from window to screen
@@ -8831,7 +8831,7 @@ saved_portbits:
         jsr     IconPtrWindowToScreen
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; IconWindowToScreen
 
 ;;; Convert icon's coordinates from window to screen
 ;;; Inputs: icon entry pointer in $6, `PrepActiveWindowScreenMapping` called
@@ -8855,7 +8855,7 @@ saved_portbits:
         sub16in (entry_ptr),y, pos_win+2, (entry_ptr),y
 
         rts
-.endproc
+.endproc ; IconPtrWindowToScreen
 
 ;;; ============================================================
 ;;; Convert icon's coordinates from screen to window
@@ -8872,7 +8872,7 @@ saved_portbits:
         jsr     IconPtrScreenToWindow
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; IconScreenToWindow
 
 ;;; Convert icon's coordinates from screen to window
 ;;; Inputs: icon entry pointer in $6, `PrepActiveWindowScreenMapping` called
@@ -8896,7 +8896,7 @@ saved_portbits:
         add16in (entry_ptr),y, pos_win+2, (entry_ptr),y
 
         rts
-.endproc
+.endproc ; IconPtrScreenToWindow
 
 ;;; ============================================================
 
@@ -8934,7 +8934,7 @@ saved_portbits:
         bpl     :-
 
         rts
-.endproc
+.endproc ; PrepActiveWindowScreenMapping
 
 ;;; ============================================================
 ;;; Input: A = unit_number
@@ -9155,7 +9155,7 @@ f35:    ldax    #dib_buffer+SPDIB::ID_String_Length
 
 blocks: .word   0
 
-.endproc
+.endproc ; GetDeviceType
 
 ;;; ============================================================
 ;;; Get the block count for a given unit number.
@@ -9185,7 +9185,7 @@ start:  sta     on_line_params::unit_num
         ldax    file_info_params::aux_type
 
 ret:    rts
-.endproc
+.endproc ; GetBlockCountImpl
 GetBlockCount   := GetBlockCountImpl::start
 
 ;;; ============================================================
@@ -9386,10 +9386,10 @@ next:   dec     index
 
 finish: jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; CompareNames
 
 
-.endproc
+.endproc ; CreateVolumeIcon
 
 ;;; ============================================================
 ;;; Allocate/Free an icon position on the DeskTop. The position
@@ -9410,7 +9410,7 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
 :       pla
         sta     desktop_icon_usage_table,x
         rts
-.endproc
+.endproc ; AllocDesktopIconPosition
 
 ;;; Input: A = icon num
 .proc FreeDesktopIconPosition
@@ -9421,7 +9421,7 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
         lda     #0
         sta     desktop_icon_usage_table,x
         rts
-.endproc
+.endproc ; FreeDesktopIconPosition
 
 ;;; ============================================================
 
@@ -9444,7 +9444,7 @@ remove: lda     cached_window_entry_list+1,x
         lda     #0
         sta     cached_window_entry_list,x
         rts
-.endproc
+.endproc ; RemoveIconFromWindow
 
 ;;; ============================================================
 ;;; Search the window->dir_icon mapping table.
@@ -9458,7 +9458,7 @@ remove: lda     cached_window_entry_list+1,x
         dex
         bpl     :-
 done:   rts
-.endproc
+.endproc ; FindWindowIndexForDirIcon
 
 ;;; ============================================================
 ;;; Used when recovering from a failed open (bad path, too many icons, etc)
@@ -9476,7 +9476,7 @@ done:   rts
     END_IF
 
 ret:    rts
-.endproc
+.endproc ; RemoveFileRecordsForIcon
 
 ;;; ============================================================
 ;;; Used when recovering from a failed open (bad path, too many icons, etc)
@@ -9508,7 +9508,7 @@ ret:    rts
         ITK_CALL IconTK::DrawIcon, icon_param
 
 ret:    rts
-.endproc
+.endproc ; MarkIconNotDimmed
 
 ;;; ============================================================
 
@@ -9661,7 +9661,7 @@ L8D50:  .word   0
 L8D52:  .word   0
 L8D54:  .word   0
 L8D56:  .word   0
-.endproc
+.endproc ; AnimateWindowImpl
 AnimateWindowClose      := AnimateWindowImpl::close
 AnimateWindowOpen       := AnimateWindowImpl::open
 
@@ -9697,7 +9697,7 @@ next:   inc     step
         cmp     #kMaxAnimationStep+3
         bne     loop
         rts
-.endproc
+.endproc ; AnimateWindowOpenImpl
 
 ;;; ============================================================
 
@@ -9729,7 +9729,7 @@ next:   dec     step
         cmp     #AS_BYTE(-3)
         bne     loop
         rts
-.endproc
+.endproc ; AnimateWindowCloseImpl
 
 ;;; ============================================================
 
@@ -9754,14 +9754,14 @@ next:   dec     step
         bpl     :-
 
         FALL_THROUGH_TO FrameTmpRect
-.endproc
+.endproc ; FrameTableRect
 
 .proc FrameTmpRect
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         jsr     SetPenModeXOR
         MGTK_CALL MGTK::FrameRect, tmp_rect
         rts
-.endproc
+.endproc ; FrameTmpRect
 
 ;;; ============================================================
 ;;; Dynamically load parts of Desktop
@@ -9868,7 +9868,7 @@ retry:  MLI_CALL OPEN, open_params
         MLI_CALL CLOSE, close_params
         jmp     SetCursorPointer ; after loading overlay
 
-.endproc
+.endproc ; LoadDynamicRoutineImpl
 LoadDynamicRoutine      := LoadDynamicRoutineImpl::load
 RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
@@ -9878,7 +9878,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         bit     SETTINGS + DeskTopSettings::rgb_color
         bpl     SetMonoMode
         FALL_THROUGH_TO SetColorMode
-.endproc
+.endproc ; SetRGBMode
 
 .proc SetColorMode
         bit     machine_config::iigs_flag
@@ -9912,7 +9912,7 @@ iigs:   lda     NEWVIDEO
         lda     #$00            ; Color
         sta     MONOCOLOR
         rts
-.endproc
+.endproc ; SetColorMode
 
 .proc SetMonoMode
         bit     machine_config::iigs_flag
@@ -9948,7 +9948,7 @@ iigs:   lda     NEWVIDEO
         sta     MONOCOLOR
 
 done:   rts
-.endproc
+.endproc ; SetMonoMode
 
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 .proc ResetIIgsRGB
@@ -9958,7 +9958,7 @@ done:   rts
         bit     SETTINGS + DeskTopSettings::rgb_color
         bmi     SetColorMode::iigs
         bpl     SetMonoMode::iigs ; always
-.endproc
+.endproc ; ResetIIgsRGB
 
 ;;; ============================================================
 ;;; Operations performed on selection
@@ -10012,7 +10012,7 @@ DoCopyToRAM2:
 
 .proc FinishOperation
         return  #kOperationSucceeded
-.endproc
+.endproc ; FinishOperation
 
 DoCopyToRAM:
         copy    #$80, run_flag
@@ -10042,13 +10042,13 @@ DoUnlock:
         copy    #0, run_flag
         copy    #%11000000, operation_flags ; get size
         jmp     L8FEB
-.endproc
+.endproc ; DoGetSize
 
 .proc DoCopySelection
         copy    #0, operation_flags ; copy/delete
         copy    #$40, copy_delete_flags ; target is `path_buf3`
         jmp     L8FEB
-.endproc
+.endproc ; DoCopySelection
 
 ;;; Used for drag/drop copy as well as deleting selection
 ;;; (if `drag_drop_params::result` equals `trash_icon_num`)
@@ -10062,7 +10062,7 @@ DoUnlock:
         sta     copy_delete_flags
         copy    #0, operation_flags ; copy/delete
         jmp     L8FEB
-.endproc
+.endproc ; DoDrop
 
         ;; common for lock/unlock
 L8FDD:  lda     #$00            ; unlock
@@ -10270,7 +10270,7 @@ no_confirm:
 
 finish: jsr     InvokeOperationCompleteCallback
         return  #0
-.endproc
+.endproc ; BeginOperation
 
 .endscope ; operations
         DoCopySelection := operations::DoCopySelection
@@ -10345,7 +10345,7 @@ all_flag:
         bcc     :+
         inx
 :       rts
-.endproc
+.endproc ; GetIconName
 
 ;;; ============================================================
 ;;; Concatenate paths.
@@ -10398,7 +10398,7 @@ do_str2:
 
 done:   stx     buf
         rts
-.endproc
+.endproc ; JoinPaths
 
 ;;; ============================================================
 
@@ -10429,7 +10429,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         bne     loop
 
 ret:    rts
-.endproc
+.endproc ; DoEject
 
 ;;; ============================================================
 ;;; Inputs: A = icon number
@@ -10490,7 +10490,7 @@ control_code:   .byte   $04     ; For Apple/UniDisk 3.3: Eject disk
 .endparams
         control_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list
-.endproc
+.endproc ; SmartportEject
 
 ;;; ============================================================
 ;;; "Get Info" dialog state and logic
@@ -10764,8 +10764,8 @@ write_protected_flag:
 
 .proc RunGetInfoDialogProc
         param_jump InvokeDialogProc, kIndexGetInfoDialog, get_info_dialog_params
-.endproc
-.endproc
+.endproc ; RunGetInfoDialogProc
+.endproc ; DoGetInfo
 
 ;;; ============================================================
 
@@ -11021,14 +11021,14 @@ end_filerecord_and_icon_update:
 .proc RunDialogProc
         sta     rename_dialog_params
         param_jump InvokeDialogProc, kIndexRenameDialog, rename_dialog_params
-.endproc
+.endproc ; RunDialogProc
 
 ;;; N bit ($80) set if a window title was changed
 result_flags:
         .byte   0
 
 icony:  .word   0
-.endproc
+.endproc ; DoRenameImpl
 DoRename        := DoRenameImpl::start
 
 ;;; ============================================================
@@ -11075,7 +11075,7 @@ wloop:  ldx     found_windows_count
     END_IF
 
         rts
-.endproc
+.endproc ; UpdateWindowPaths
 
 ;;; ============================================================
 ;;; Replace `src_path_buf` as the prefix of path at $06 with `dst_path_buf`.
@@ -11122,7 +11122,7 @@ assign: ldy     new_path
         bpl     :-
 
         rts
-.endproc
+.endproc ; UpdateTargetPath
 
 ;;; ============================================================
 ;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
@@ -11193,7 +11193,7 @@ assign: ldy     new_path
 
 no_change:
         return  #$FF
-.endproc
+.endproc ; MaybeUpdateTargetPath
 
 ;;; ============================================================
 
@@ -11239,7 +11239,7 @@ no_change:
         rts
 
         DEFINE_GET_PREFIX_PARAMS get_set_prefix_params, path
-.endproc
+.endproc ; UpdatePrefix
 
 ;;; ============================================================
 
@@ -11358,12 +11358,12 @@ success:
 .proc RunDialogProc
         sta     duplicate_dialog_params
         param_jump InvokeDialogProc, kIndexDuplicateDialog, duplicate_dialog_params
-.endproc
+.endproc ; RunDialogProc
 
 ;;; N bit ($80) set if anything succeeded (and window needs refreshing)
 result_flag:
         .byte   0
-.endproc
+.endproc ; DoDuplicateImpl
 DoDuplicate     := DoDuplicateImpl::start
 
 ;;; ============================================================
@@ -11457,7 +11457,7 @@ do_op_flag:
         inx
         stx     entry_count_stack_index
         rts
-.endproc
+.endproc ; PushEntryCount
 
 .proc PopEntryCount
         ldx     entry_count_stack_index
@@ -11469,7 +11469,7 @@ do_op_flag:
         sta     entries_to_skip
         stx     entry_count_stack_index
         rts
-.endproc
+.endproc ; PopEntryCount
 
 .proc OpenSrcDir
         lda     #0
@@ -11498,7 +11498,7 @@ do_op_flag:
         jmp     CloseFilesCancelDialog
 
 :       jmp     ReadFileEntry
-.endproc
+.endproc ; OpenSrcDir
 
 .proc CloseSrcDir
         lda     op_ref_num
@@ -11512,7 +11512,7 @@ do_op_flag:
         jmp     CloseFilesCancelDialog
 
 :       rts
-.endproc
+.endproc ; CloseSrcDir
 
 .proc ReadFileEntry
         inc16   entries_read
@@ -11538,7 +11538,7 @@ do_op_flag:
 :       return  #0
 
 eof:    return  #$FF
-.endproc
+.endproc ; ReadFileEntry
 
 ;;; ============================================================
 
@@ -11548,7 +11548,7 @@ eof:    return  #$FF
         jsr     PushEntryCount
         jsr     AppendFileEntryToSrcPath
         jmp     OpenSrcDir
-.endproc
+.endproc ; PrepToOpenDir
 
 ;;; Given this tree with b,c,e selected:
 ;;;        b
@@ -11590,7 +11590,7 @@ sub:    cmp16   entries_read, entries_to_skip
         jsr     ReadFileEntry
         jmp     sub
 done:   rts
-.endproc
+.endproc ; FinishDir
 
 .proc ProcessDir
         copy    #0, process_depth
@@ -11626,7 +11626,7 @@ end_dir:
         jmp     loop
 
 :       jmp     CloseSrcDir
-.endproc
+.endproc ; ProcessDir
 
 cancel_descent_flag:  .byte   0
 
@@ -11671,13 +11671,13 @@ a_dst:  .addr   dst_path_buf
         copy16  #CopyDialogEnumerationCallback, operation_enumeration_callback
         copy16  #CopyDialogCompleteCallback, operation_complete_callback
         jmp     RunCopyDialogProc
-.endproc
+.endproc ; DoCopyDialogPhase
 
 .proc CopyDialogEnumerationCallback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
         jmp     RunCopyDialogProc
-.endproc
+.endproc ; CopyDialogEnumerationCallback
 
 .proc PrepCallbacksForCopy
         ldy     #kOpJTAddrsSize-1
@@ -11687,12 +11687,12 @@ a_dst:  .addr   dst_path_buf
 
         copy    #0, all_flag
         rts
-.endproc
+.endproc ; PrepCallbacksForCopy
 
 .proc CopyDialogCompleteCallback
         copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
         jmp     RunCopyDialogProc
-.endproc
+.endproc ; CopyDialogCompleteCallback
 
 ;;; ============================================================
 ;;; "Download" - shares heavily with Copy
@@ -11710,13 +11710,13 @@ a_dst:  .addr   dst_path_buf
         copy16  #DownloadDialogEnumerationCallback, operation_enumeration_callback
         copy16  #DownloadDialogCompleteCallback, operation_complete_callback
         param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
-.endproc
+.endproc ; DoDownloadDialogPhase
 
 .proc DownloadDialogEnumerationCallback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
         param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
-.endproc
+.endproc ; DownloadDialogEnumerationCallback
 
 .proc PrepCallbacksForDownload
         copy    #$80, all_flag
@@ -11728,12 +11728,12 @@ a_dst:  .addr   dst_path_buf
 
         copy16  #DownloadDialogTooLargeCallback, operation_toolarge_callback
         rts
-.endproc
+.endproc ; PrepCallbacksForDownload
 
 .proc DownloadDialogCompleteCallback
         copy    #DownloadDialogLifecycle::close, copy_dialog_params::phase
         param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
-.endproc
+.endproc ; DownloadDialogCompleteCallback
 
 .proc DownloadDialogTooLargeCallback
         copy    #DownloadDialogLifecycle::too_large, copy_dialog_params::phase
@@ -11744,7 +11744,7 @@ a_dst:  .addr   dst_path_buf
         bne     :+
         rts
 :       jmp     CloseFilesCancelDialog
-.endproc
+.endproc ; DownloadDialogTooLargeCallback
 
 ;;; ============================================================
 ;;; Handle copying of a selected file.
@@ -11882,7 +11882,7 @@ CopyFile:
 
 failure:
         rts
-.endproc
+.endproc ; CopyProcessSelectedFile
         copy_file_for_run := CopyProcessSelectedFile::for_run
 
 ;;; ============================================================
@@ -11915,7 +11915,7 @@ copy_pop_directory:
 :       jsr     ShowErrorAlert
         jmp     @retry
 done:   rts
-.endproc
+.endproc ; MaybeFinishFileMove
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
@@ -11980,13 +11980,13 @@ regular_file:
 skip:   jsr     RemoveSrcPathSegment
 :       jsr     RemoveDstPathSegment
 done:   rts
-.endproc
+.endproc ; CopyProcessDirectoryEntry
 
 ;;; ============================================================
 
 .proc RunCopyDialogProc
         param_jump InvokeDialogProc, kIndexCopyDialog, copy_dialog_params
-.endproc
+.endproc ; RunCopyDialogProc
 
 ;;; ============================================================
 
@@ -12004,7 +12004,7 @@ done:   rts
 
 blocks_free:
         .word   0
-.endproc
+.endproc ; CheckVolBlocksFree
 
 ;;; ============================================================
 
@@ -12084,8 +12084,8 @@ blocks_free:
         .word   0
 existing_size:
         .word   0
-.endproc
-.endproc
+.endproc ; CheckSpace
+.endproc ; CheckSpaceAndShowPrompt
 
 ;;; ============================================================
 ;;; Actual byte-for-byte file copy routine
@@ -12150,7 +12150,7 @@ eof:    jsr     CloseDst
         jsr     ShowErrorAlert
         jmp     @retry
 :       rts
-.endproc
+.endproc ; OpenSrc
 
 .proc CopySrcRefNum
         lda     open_src_params::ref_num
@@ -12158,7 +12158,7 @@ eof:    jsr     CloseDst
         sta     close_src_params::ref_num
         sta     mark_src_params::ref_num
         rts
-.endproc
+.endproc ; CopySrcRefNum
 
 .proc OpenDst
 @retry: MLI_CALL OPEN, open_dst_params
@@ -12173,7 +12173,7 @@ not_found:
         lda     #ERR_VOL_NOT_FOUND
 
 done:   rts
-.endproc
+.endproc ; OpenDst
 
 .proc CopyDstRefNum
         lda     open_dst_params::ref_num
@@ -12181,7 +12181,7 @@ done:   rts
         sta     close_dst_params::ref_num
         sta     mark_dst_params::ref_num
         rts
-.endproc
+.endproc ; CopyDstRefNum
 
 .proc ReadSrc
         copy16  #kBufSize, read_src_params::request_count
@@ -12198,7 +12198,7 @@ done:   rts
 eof:    copy    #$FF, src_eof_flag
 :       MLI_CALL GET_MARK, mark_src_params
         rts
-.endproc
+.endproc ; ReadSrc
 
 .proc WriteDst
 @retry: MLI_CALL WRITE, write_dst_params
@@ -12207,17 +12207,17 @@ eof:    copy    #$FF, src_eof_flag
         jmp     @retry
 :       MLI_CALL GET_MARK, mark_dst_params
         rts
-.endproc
+.endproc ; WriteDst
 
 .proc CloseDst
         MLI_CALL CLOSE, close_dst_params
         rts
-.endproc
+.endproc ; CloseDst
 
 .proc CloseSrc
         MLI_CALL CLOSE, close_src_params
         rts
-.endproc
+.endproc ; CloseSrc
 
         ;; Set if src/dst can't be open simultaneously.
 src_dst_exclusive_flag:
@@ -12226,7 +12226,7 @@ src_dst_exclusive_flag:
 src_eof_flag:
         .byte   0
 
-.endproc
+.endproc ; DoFileCopy
 
 ;;; ============================================================
 
@@ -12274,7 +12274,7 @@ success:
 failure:
         sec
         rts
-.endproc
+.endproc ; TryCreateDst
 
 ;;; ============================================================
 ;;; Delete/Trash files dialog state and logic
@@ -12311,7 +12311,7 @@ a_path: .addr   src_path_buf
         stax    delete_dialog_params::count
         copy    #DeleteDialogLifecycle::count, delete_dialog_params::phase
         jmp     RunDeleteDialogProc
-.endproc
+.endproc ; DeleteDialogEnumerationCallback
 
 .proc DeleteDialogConfirmCallback
         copy    #DeleteDialogLifecycle::confirm, delete_dialog_params::phase
@@ -12320,9 +12320,9 @@ a_path: .addr   src_path_buf
         lda     #kOperationCanceled
         jmp     CloseFilesCancelDialogWithResult
 :       rts
-.endproc
+.endproc ; DeleteDialogConfirmCallback
 
-.endproc
+.endproc ; DoDeleteDialogPhase
 
 ;;; ============================================================
 
@@ -12334,12 +12334,12 @@ a_path: .addr   src_path_buf
 
         copy    #0, all_flag
         rts
-.endproc
+.endproc ; PrepCallbacksForDelete
 
 .proc DeleteDialogCompleteCallback
         copy    #DeleteDialogLifecycle::close, delete_dialog_params::phase
         jmp     RunDeleteDialogProc
-.endproc
+.endproc ; DeleteDialogCompleteCallback
 
 ;;; ============================================================
 ;;; Handle deletion of a selected file.
@@ -12424,7 +12424,7 @@ done:   rts
 
 error:  jsr     ShowErrorAlert
         jmp     retry
-.endproc
+.endproc ; DeleteProcessSelectedFile
 
 .proc UnlockSrcFile
         jsr     GetSrcFileInfo
@@ -12437,7 +12437,7 @@ error:  jsr     ShowErrorAlert
         jsr     SetSrcFileInfo
 
 done:   rts
-.endproc
+.endproc ; UnlockSrcFile
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
@@ -12503,7 +12503,7 @@ err:    jsr     ShowErrorAlert
 
 next_file:
         jmp     RemoveSrcPathSegment
-.endproc
+.endproc ; DeleteProcessDirectoryEntry
 
 ;;; ============================================================
 ;;; Delete directory when exiting via traversal
@@ -12516,11 +12516,11 @@ next_file:
         jsr     ShowErrorAlert
         jmp     @retry
 done:   rts
-.endproc
+.endproc ; DeleteFinishDirectory
 
 .proc RunDeleteDialogProc
         param_jump InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
-.endproc
+.endproc ; RunDeleteDialogProc
 
 ;;; ============================================================
 ;;; "Lock"/"Unlock" dialog state and logic
@@ -12566,19 +12566,19 @@ a_path: .addr   src_path_buf
         jsr     RunLockDialogProc
         copy16  #LockDialogCompleteCallback, operation_complete_callback
         rts
-.endproc
+.endproc ; DoLockDialogPhase
 
 .proc LockDialogEnumerationCallback
         stax    lock_unlock_dialog_params::count
         copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
         jmp     RunLockDialogProc
-.endproc
+.endproc ; LockDialogEnumerationCallback
 
 .proc UnlockDialogEnumerationCallback
         stax    lock_unlock_dialog_params::count
         copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
         jmp     RunUnlockDialogProc
-.endproc
+.endproc ; UnlockDialogEnumerationCallback
 
 .proc PrepCallbacksForLock
         ldy     #kOpJTAddrsSize-1
@@ -12587,25 +12587,25 @@ a_path: .addr   src_path_buf
         bpl     :-
 
         rts
-.endproc
+.endproc ; PrepCallbacksForLock
 
 .proc LockDialogCompleteCallback
         copy    #LockDialogLifecycle::close, lock_unlock_dialog_params::phase
         jmp     RunLockDialogProc
-.endproc
+.endproc ; LockDialogCompleteCallback
 
 .proc UnlockDialogCompleteCallback
         copy    #LockDialogLifecycle::close, lock_unlock_dialog_params::phase
         jmp     RunUnlockDialogProc
-.endproc
+.endproc ; UnlockDialogCompleteCallback
 
 .proc RunLockDialogProc
         param_jump InvokeDialogProc, kIndexLockDialog, lock_unlock_dialog_params
-.endproc
+.endproc ; RunLockDialogProc
 
 .proc RunUnlockDialogProc
         param_jump InvokeDialogProc, kIndexUnlockDialog, lock_unlock_dialog_params
-.endproc
+.endproc ; RunUnlockDialogProc
 
 ;;; ============================================================
 ;;; Handle locking of a selected file.
@@ -12646,7 +12646,7 @@ store:  ;; sta     is_dir_flag - unused
 do_lock:
         jsr     LockFileCommon
         jmp     AppendFileEntryToSrcPath
-.endproc
+.endproc ; LockProcessSelectedFile
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
@@ -12691,7 +12691,7 @@ update_dialog:
         jmp     RunUnlockDialogProc
 
 :       jmp     RunLockDialogProc
-.endproc
+.endproc ; LockFileCommon
 
 ;;; ============================================================
 ;;; "Get Size" dialog state and logic
@@ -12721,23 +12721,23 @@ a_blocks:       .addr  op_block_count
         param_call InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
         copy16  #GetSizeDialogCompleteCallback, operation_complete_callback
         rts
-.endproc
+.endproc ; DoGetSizeDialogPhase
 
 .proc GetSizeDialogEnumerationCallback
         copy    #GetSizeDialogLifecycle::count, get_size_dialog_params::phase
         param_jump InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
-.endproc
+.endproc ; GetSizeDialogEnumerationCallback
 
 .proc GetSizeDialogConfirmCallback
         copy    #GetSizeDialogLifecycle::prompt, get_size_dialog_params::phase
         param_jump InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
-.endproc
+.endproc ; GetSizeDialogConfirmCallback
 
 .proc GetSizeDialogCompleteCallback
         copy    #GetSizeDialogLifecycle::close, get_size_dialog_params::phase
         param_jump InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
 
-.endproc
+.endproc ; GetSizeDialogCompleteCallback
 
 ;;; ============================================================
 ;;; Most operations start by doing a traversal to just count
@@ -12762,7 +12762,7 @@ callbacks_for_size_or_count:
         sta     op_block_count+1
 
         rts
-.endproc
+.endproc ; PrepCallbacksForSizeOrCount
 
 ;;; ============================================================
 ;;; Handle sizing (or just counting) of a selected file.
@@ -12808,7 +12808,7 @@ do_sum_file_size:
         ;; Make subsequent call to `AppendFileEntryToSrcPath` a no-op
         copy    #0, file_entry_buf + FileEntry::storage_type_name_length
         FALL_THROUGH_TO SizeOrCountProcessDirectoryEntry
-.endproc
+.endproc ; SizeOrCountProcessSelectedFile
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
@@ -12834,7 +12834,7 @@ do_sum_file_size:
 
 :       ldax    op_file_count
         jmp     InvokeOperationEnumerationCallback
-.endproc
+.endproc ; SizeOrCountProcessDirectoryEntry
 
 op_file_count:
         .word   0
@@ -12847,7 +12847,7 @@ op_block_count:
 .proc DecrementOpFileCount
         dec16   op_file_count
         rts
-.endproc
+.endproc ; DecrementOpFileCount
 
 ;;; ============================================================
 ;;; Append name at `file_entry_buf` to path at `src_path_buf`
@@ -12855,7 +12855,7 @@ op_block_count:
 .proc AppendFileEntryToSrcPath
         ldax    #file_entry_buf
         jmp     AppendFilenameToSrcPath
-.endproc
+.endproc ; AppendFileEntryToSrcPath
 
 ;;; ============================================================
 ;;; Remove segment from path at `src_path_buf`
@@ -12878,7 +12878,7 @@ found:  dex
         stx     path
 
 ret:    rts
-.endproc
+.endproc ; RemoveSrcPathSegment
 
 ;;; ============================================================
 ;;; Append name at `file_entry_buf` to path at `dst_path_buf`
@@ -12886,7 +12886,7 @@ ret:    rts
 .proc AppendFileEntryToDstPath
         ldax    #file_entry_buf
         jmp     AppendFilenameToDstPath
-.endproc
+.endproc ; AppendFileEntryToDstPath
 
 ;;; ============================================================
 ;;; Remove segment from path at `dst_path_buf`
@@ -12909,7 +12909,7 @@ found:  dex
         stx     path
 
 ret:    rts
-.endproc
+.endproc ; RemoveDstPathSegment
 
 ;;; ============================================================
 ;;; Check if `src_path_buf` is inside `dst_path_buf`.
@@ -12949,7 +12949,7 @@ compare:
 
 ok:     return  #0
 
-.endproc
+.endproc ; CheckRecursion
 
 ;;; ============================================================
 ;;; Check for replacing an item with itself or a descendant.
@@ -12997,7 +12997,7 @@ compare:
 
 ok:     return  #0
 
-.endproc
+.endproc ; CheckBadReplacement
 
 ;;; ============================================================
 ;;; Copy `path_buf3` to `src_path_buf`, `path_buf4` to `dst_path_buf`
@@ -13022,7 +13022,7 @@ loop:   iny
         ;; Copy `path_buf4` to `dst_path_buf`
         ldax    #path_buf4
         jmp     CopyToDstPath
-.endproc
+.endproc ; CopyPathsFromBufsToSrcAndDst
 
 ;;; ============================================================
 ;;; Assuming CopyPathsFromBufsToSrcAndDst has been called, append
@@ -13042,7 +13042,7 @@ loop:   iny
 
         stx     dst_path_buf
         rts
-.endproc
+.endproc ; AppendSrcPathLastSegmentToDstPath
 
 ;;; ============================================================
 ;;; Closes dialog, closes all open files, and restores stack.
@@ -13063,7 +13063,7 @@ ep2:    sta     @result
         rts
 
         DEFINE_CLOSE_PARAMS close_params
-.endproc
+.endproc ; CloseFilesCancelDialog
 CloseFilesCancelDialogWithResult := CloseFilesCancelDialog::ep2
 
 ;;; ============================================================
@@ -13129,7 +13129,7 @@ no_match:
 match:  lda     flag
         eor     #$80
         rts
-.endproc
+.endproc ; CheckMoveOrCopy
 
 ;;; ============================================================
 
@@ -13145,19 +13145,19 @@ match:  lda     flag
         bne     done
 nope:   lda     #$00
 done:   rts
-.endproc
+.endproc ; CheckEscapeKeyDown
 
 ;;; ============================================================
 
 .proc DecFileCountAndRunDeleteDialogProc
         sub16   op_file_count, #1, delete_dialog_params::count
         param_jump InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
-.endproc
+.endproc ; DecFileCountAndRunDeleteDialogProc
 
 .proc DecFileCountAndRunCopyDialogProc
         sub16   op_file_count, #1, copy_dialog_params::count
         param_jump InvokeDialogProc, kIndexCopyDialog, copy_dialog_params
-.endproc
+.endproc ; DecFileCountAndRunCopyDialogProc
 
 ;;; ============================================================
 
@@ -13185,12 +13185,12 @@ done:   rts
 
 close:  MLI_CALL CLOSE, close_dst_params
 done:   rts
-.endproc
+.endproc ; ApplyFileInfoAndSize
 
 .proc CopyFileInfo
         COPY_BYTES 11, src_file_info_params::access, dst_file_info_params::access
         rts
-.endproc
+.endproc ; CopyFileInfo
 
 .proc SetDstFileInfo
 :       copy    #7, dst_file_info_params::param_count ; SET_FILE_INFO
@@ -13203,7 +13203,7 @@ done:   rts
         jmp     :-
 
 done:   rts
-.endproc
+.endproc ; SetDstFileInfo
 
 ;;; ============================================================
 ;;; Show Alert Dialog
@@ -13249,7 +13249,7 @@ do_on_line:
         MLI_CALL ON_LINE, on_line_params2
         rts
 
-.endproc
+.endproc ; ShowErrorAlertImpl
 ShowErrorAlert  := ShowErrorAlertImpl::flag_clear
 ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 
@@ -13301,7 +13301,7 @@ appleworks:
         bpl     :-
 
         jmp     SetSrcFileInfo
-.endproc
+.endproc ; ApplyCaseBits
 
 ;;; ============================================================
 ;;; Dialog Proc Invocation
@@ -13354,7 +13354,7 @@ dialog_param_addr:
 
         @jump_addr := *+1
         jmp     SELF_MODIFIED
-.endproc
+.endproc ; InvokeDialogProc
 
 
 ;;; ============================================================
@@ -13402,7 +13402,7 @@ dialog_param_addr:
         jmp     done
 out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
 done:   jmp     PromptInputLoop
-.endproc
+.endproc ; PromptInputLoop
 
 ;;; Click handler for prompt dialog
 
@@ -13492,7 +13492,7 @@ check_button_cancel:
         COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
         LETK_CALL LETK::Click, le_params
 :       return  #$FF
-.endproc
+.endproc ; PromptClickHandler
 
 ;;; Key handler for prompt dialog
 
@@ -13583,14 +13583,14 @@ do_all: BTK_CALL BTK::Flash, aux::all_button_params
 .proc HandleKeyOk
         BTK_CALL BTK::Flash, aux::ok_button_params
         return  #0
-.endproc
+.endproc ; HandleKeyOk
 
 .proc HandleKeyCancel
         BTK_CALL BTK::Flash, aux::cancel_button_params
         return  #1
-.endproc
+.endproc ; HandleKeyCancel
 
-.endproc
+.endproc ; PromptKeyHandler
 
 rts1:
         rts
@@ -13609,7 +13609,7 @@ rts1:
 
 yes:    clc                     ; C=0
         rts
-.endproc
+.endproc ; IsControlChar
 
 ;;; ============================================================
 
@@ -13644,7 +13644,7 @@ allow:  clc
 
 ignore: sec
         rts
-.endproc
+.endproc ; IsFilenameChar
 
 ;;; ============================================================
 
@@ -13685,7 +13685,7 @@ jump_relay:
 
 close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         jmp     ClearUpdates ; following CloseWindow
-.endproc
+.endproc ; AboutDialogProc
 
 ;;; ============================================================
 
@@ -13795,7 +13795,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ;; CopyDialogLifecycle::close
         jsr     ClosePromptDialog
         jmp     SetCursorPointer ; when closing dialog
-.endproc
+.endproc ; CopyDialogProc
 
 ;;; ============================================================
 ;;; "DownLoad" dialog
@@ -13868,7 +13868,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ;; DownloadDialogLifecycle::close
         jsr     ClosePromptDialog
         jmp     SetCursorPointer ; when closing dialog
-.endproc
+.endproc ; DownloadDialogProc
 
 ;;; ============================================================
 ;;; "Get Size" dialog
@@ -13932,7 +13932,7 @@ GetSizeDialogProc::do_count := *
         ;; GetSizeDialogLifecycle::close
         jsr     ClosePromptDialog
         jmp     SetCursorPointer ; when closing dialog
-.endproc
+.endproc ; GetSizeDialogProc
 
 ;;; ============================================================
 ;;; "Delete File" dialog
@@ -14020,7 +14020,7 @@ GetSizeDialogProc::do_count := *
         ;; DeleteDialogLifecycle::close
         jsr     ClosePromptDialog
         jmp     SetCursorPointer ; when closing dialog
-.endproc
+.endproc ; DeleteDialogProc
 
 ;;; ============================================================
 ;;; "New Folder" dialog
@@ -14103,7 +14103,7 @@ do_close:
         jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         return  #1
-.endproc
+.endproc ; NewFolderDialogProc
 
 ;;; ============================================================
 ;;; "Get Info" dialog
@@ -14186,7 +14186,7 @@ do_close:
         jsr     SetCursorPointer ; when closing dialog
         pla
         rts
-.endproc
+.endproc ; GetInfoDialogProc
 
 ;;; ============================================================
 ;;; "Lock"/"Unlock" dialog
@@ -14250,7 +14250,7 @@ do_close:
 do_close:
         jsr     ClosePromptDialog
         jmp     SetCursorPointer ; when closing dialog
-.endproc
+.endproc ; LockDialogProc
 UnlockDialogProc := LockDialogProc
 
 ;;; ============================================================
@@ -14305,7 +14305,7 @@ do_close:
         jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         return  #1
-.endproc
+.endproc ; RenameDialogProc
 
 ;;; ============================================================
 ;;; "Duplicate" dialog
@@ -14359,14 +14359,14 @@ do_close:
         jsr     ClosePromptDialog
         jsr     SetCursorPointer ; when closing dialog
         return  #1
-.endproc
+.endproc ; DuplicateDialogProc
 
 ;;; ============================================================
 
 .proc CopyDialogParamAddrToPtr
         copy16  dialog_param_addr, $06
         rts
-.endproc
+.endproc ; CopyDialogParamAddrToPtr
 
 ;;; ============================================================
 ;;; Convert a pointer-to-pointer to just a pointer.
@@ -14383,7 +14383,7 @@ do_close:
         stx     ptr
         ldy     #0
         rts
-.endproc
+.endproc ; DereferencePtrToAddr
 
 ;;; ============================================================
 
@@ -14392,14 +14392,14 @@ do_close:
         jsr     ComposeFileCountString
         param_call DrawString, str_file_count
         param_jump_indirect DrawString, ptr_str_files_suffix
-.endproc
+.endproc ; DrawFileCountWithSuffix
 
 ;;; `file_count` must be populated
 .proc DrawFileCountWithTrailingSpaces
         jsr     ComposeFileCountString
         param_call DrawString, str_file_count
         param_jump DrawString, str_2_spaces
-.endproc
+.endproc ; DrawFileCountWithTrailingSpaces
 
 ;;; ============================================================
 
@@ -14409,7 +14409,7 @@ do_close:
         jsr     SetCursorPointer ; toggle routine
         copy    #0, cursor_ibeam_flag
 :       rts
-.endproc
+.endproc ; SetCursorPointerWithFlag
 
 .proc SetCursorIBeamWithFlag
         bit     cursor_ibeam_flag
@@ -14417,7 +14417,7 @@ do_close:
         jsr     SetCursorIBeam ; toggle routine
         copy    #$80, cursor_ibeam_flag
 :       rts
-.endproc
+.endproc ; SetCursorIBeamWithFlag
 
 cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
         .byte   0
@@ -14469,7 +14469,7 @@ params:  .res    3
         bit     LCBANK1
         plp
         rts
-.endproc
+.endproc ; MLIRelayImpl
 
 ;;; ============================================================
 
@@ -14477,19 +14477,19 @@ params:  .res    3
 .proc SetCursorWatch
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         rts
-.endproc
+.endproc ; SetCursorWatch
 
         .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SetCursorPointer
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
-.endproc
+.endproc ; SetCursorPointer
 
         .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SetCursorIBeam
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
-.endproc
+.endproc ; SetCursorIBeam
 
 ;;; ============================================================
 ;;; Double Click Detection
@@ -14501,7 +14501,7 @@ params:  .res    3
         COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
 
         jmp     DetectDoubleClick
-.endproc
+.endproc ; StashCoordsAndDetectDoubleClick
 
 ;;; ============================================================
 
@@ -14518,7 +14518,7 @@ no_ok:  bit     prompt_button_flags
         bmi     done
         jsr     DrawCancelButton
 done:   rts
-.endproc
+.endproc ; OpenPromptWindow
 
 ;;; ============================================================
 
@@ -14531,14 +14531,14 @@ done:   rts
         MGTK_CALL MGTK::SetPenSize, pensize_normal
         MGTK_CALL MGTK::SetPenMode, penXOR
         rts
-.endproc
+.endproc ; OpenDialogWindow
 
 ;;; ============================================================
 
 .proc SetPortForDialogWindow
         lda     #winfo_prompt_dialog::kWindowId
         jmp     SafeSetPortFromWindowId
-.endproc
+.endproc ; SetPortForDialogWindow
 
 ;;; ============================================================
 
@@ -14613,14 +14613,14 @@ calc_y:
         ;; Restore default X position
         copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
-.endproc
+.endproc ; DrawDialogLabel
 
 ;;; ============================================================
 
 .proc DrawDialogPathBuf0
         ldax    #path_buf0
         FALL_THROUGH_TO DrawDialogPath
-.endproc
+.endproc ; DrawDialogPathBuf0
 
 ;;; Draw a path (long string) in the prompt dialog by without intruding
 ;;; into the border. If the string is too long, it is shrunk from the
@@ -14688,19 +14688,19 @@ ellipsify:
         iny
         sta     (ptr),y
         rts
-.endproc
+.endproc ; DrawDialogPath
 
 ;;; ============================================================
 
 .proc DrawOkButton
         BTK_CALL BTK::Draw, aux::ok_button_params
         rts
-.endproc
+.endproc ; DrawOkButton
 
 .proc DrawCancelButton
         BTK_CALL BTK::Draw, aux::cancel_button_params
         rts
-.endproc
+.endproc ; DrawCancelButton
 
 .proc AddYesNoAllCancelButtons
         BTK_CALL BTK::Draw, aux::yes_button_params
@@ -14710,7 +14710,7 @@ ellipsify:
         jsr     DrawCancelButton
         copy    #$40, prompt_button_flags
         rts
-.endproc
+.endproc ; AddYesNoAllCancelButtons
 
 .proc EraseYesNoAllCancelButtons
         jsr     SetPenModeCopy
@@ -14719,45 +14719,45 @@ ellipsify:
         MGTK_CALL MGTK::PaintRect, aux::all_button_rec::rect
         MGTK_CALL MGTK::PaintRect, aux::cancel_button_rec::rect
         rts
-.endproc
+.endproc ; EraseYesNoAllCancelButtons
 
 .proc AddOkCancelButtons
         jsr     DrawOkButton
         jsr     DrawCancelButton
         copy    #$00, prompt_button_flags
         rts
-.endproc
+.endproc ; AddOkCancelButtons
 
 .proc EraseOkCancelButtons
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::ok_button_rec::rect
         MGTK_CALL MGTK::PaintRect, aux::cancel_button_rec::rect
         rts
-.endproc
+.endproc ; EraseOkCancelButtons
 
 .proc AddOkButton
         jsr     DrawOkButton
         copy    #$80, prompt_button_flags
         rts
-.endproc
+.endproc ; AddOkButton
 
 .proc EraseOkButton
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::ok_button_rec::rect
         rts
-.endproc
+.endproc ; EraseOkButton
 
 .proc EraseDialogLabels
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         rts
-.endproc
+.endproc ; EraseDialogLabels
 
 .proc ErasePrompt
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::prompt_rect
         rts
-.endproc
+.endproc ; ErasePrompt
 
 ;;; ============================================================
 ;;; Draw text, pascal string address in A,X
@@ -14775,7 +14775,7 @@ ellipsify:
         inc16   textptr
         MGTK_CALL MGTK::DrawText, params
 done:   rts
-.endproc
+.endproc ; DrawString
 
 ;;; ============================================================
 
@@ -14796,14 +14796,14 @@ done:   rts
         MGTK_CALL MGTK::MoveTo, pos_dialog_title
         MGTK_CALL MGTK::DrawText, text_params
         rts
-.endproc
+.endproc ; DrawDialogTitle
 
 
 ;;; ============================================================
 
 .proc NoOp
         rts
-.endproc
+.endproc ; NoOp
 
 ;;; ============================================================
 ;;; Frames and initializes the line edit control in the prompt
@@ -14816,7 +14816,7 @@ done:   rts
         LETK_CALL LETK::Init, le_params
         LETK_CALL LETK::Activate, le_params
         rts
-.endproc
+.endproc ; InitNameInput
 
 ;;; ============================================================
 
@@ -14859,13 +14859,13 @@ ptr_str_files_suffix:
 
 :       copy16  #str_files_suffix, ptr_str_files_suffix ; plural
         rts
-.endproc
+.endproc ; ComposeFileCountString
 
 ;;; ============================================================
 
 .proc CopyPtr1ToBuf0
         param_jump CopyPtr1ToBuf, path_buf0
-.endproc
+.endproc ; CopyPtr1ToBuf0
 
 ;;; ============================================================
 
@@ -14873,40 +14873,40 @@ ptr_str_files_suffix:
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::current_target_file_rect
         rts
-.endproc
+.endproc ; ClearTargetFileRect
 
 .proc ClearDestFileRect
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::current_dest_file_rect
         rts
-.endproc
+.endproc ; ClearDestFileRect
 
 ;;; ============================================================
 
 .proc GetEvent
         MGTK_CALL MGTK::GetEvent, event_params
         rts
-.endproc
+.endproc ; GetEvent
 
 .proc PeekEvent
         MGTK_CALL MGTK::PeekEvent, event_params
         rts
-.endproc
+.endproc ; PeekEvent
 
 .proc SetPenModeXOR
         MGTK_CALL MGTK::SetPenMode, penXOR
         rts
-.endproc
+.endproc ; SetPenModeXOR
 
 .proc SetPenModeCopy
         MGTK_CALL MGTK::SetPenMode, pencopy
         rts
-.endproc
+.endproc ; SetPenModeCopy
 
 .proc SetPenModeNotCopy
         MGTK_CALL MGTK::SetPenMode, notpencopy
         rts
-.endproc
+.endproc ; SetPenModeNotCopy
 
 ;;; ============================================================
 
@@ -14914,14 +14914,14 @@ ptr_str_files_suffix:
         MGTK_CALL MGTK::InitPort, desktop_grafport
         MGTK_CALL MGTK::SetPort, desktop_grafport
         rts
-.endproc
+.endproc ; InitSetDesktopPort
 
 ;;; ============================================================
 
 .proc ClosePromptDialog
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
         jmp     ClearUpdates ; following CloseWindow
-.endproc
+.endproc ; ClosePromptDialog
 
 ;;; ============================================================
 ;;; Output: A = number of selected icons
@@ -14929,7 +14929,7 @@ ptr_str_files_suffix:
 .proc GetSelectionCount
         lda     selected_icon_count
         rts
-.endproc
+.endproc ; GetSelectionCount
 
 ;;; ============================================================
 ;;; Input: A = index in selection
@@ -14939,7 +14939,7 @@ ptr_str_files_suffix:
         tax
         lda     selected_icon_list,x
         jmp     GetIconEntry
-.endproc
+.endproc ; GetSelectedIcon
 
 ;;; ============================================================
 ;;; Output: A = window with selection, 0 if desktop
@@ -14947,7 +14947,7 @@ ptr_str_files_suffix:
 .proc GetSelectionWindow
         lda     selected_window_id
         rts
-.endproc
+.endproc ; GetSelectionWindow
 
 ;;; ============================================================
 ;;; Determine if an icon is in the current selection.
@@ -14970,7 +14970,7 @@ ptr_str_files_suffix:
 nope:   ldx     #$FF            ; clear Z = failure
 
 done:   rts
-.endproc
+.endproc ; IsIconSelected
 
 ;;; ============================================================
 ;;; Inputs: A = window id
@@ -14984,7 +14984,7 @@ done:   rts
         dex
         bpl     :-
 :       rts
-.endproc
+.endproc ; FindIndexInFilerecordListEntries
 
 ;;; Input: A = window_id
 ;;; Output: A,X = address of FileRecord list (first entry is length)
@@ -15000,7 +15000,7 @@ done:   rts
         tax
         pla
         rts
-.endproc
+.endproc ; GetFileRecordListForWindow
 
 ;;; ============================================================
 ;;; Outputs: A = kViewBy* value for active window, X = window id
@@ -15011,14 +15011,14 @@ done:   rts
         ldx     active_window_id
         lda     win_view_by_table-1,x
         rts
-.endproc
+.endproc ; GetActiveWindowViewBy
 
 ;;; Assert: There is a cached window
 .proc GetCachedWindowViewBy
         ldx     cached_window_id
         lda     win_view_by_table-1,x
         rts
-.endproc
+.endproc ; GetCachedWindowViewBy
 
 ;;; Assert: There is a selection.
 ;;; NOTE: This variant works even if selection is on desktop
@@ -15026,7 +15026,7 @@ done:   rts
         ldx     selected_window_id
         lda     win_view_by_table-1,x
         rts
-.endproc
+.endproc ; GetSelectionViewBy
 
 ;;; ============================================================
 
@@ -15035,7 +15035,7 @@ done:   rts
         beq     :+
         MGTK_CALL MGTK::HiliteMenu, menu_click_params
 :       rts
-.endproc
+.endproc ; ToggleMenuHilite
 
 ;;; ============================================================
 ;;; Determine if mouse moved (returns w/ carry set if moved)
@@ -15058,7 +15058,7 @@ diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
 
         DEFINE_POINT coords, 0, 0
 
-.endproc
+.endproc ; CheckMouseMoved
 
 ;;; ============================================================
 
@@ -15229,21 +15229,21 @@ exit:   rts
         add16_8 data_ptr, #.sizeof(DeskTopFileItem)
         rts
 
-.endproc                        ; WriteWindowInfo
+.endproc ; WriteWindowInfo
 
 window_id := findwindow_params::window_id
 
-.endproc                        ; save
+.endproc ; Save
 
 .proc Open
         MLI_CALL OPEN, open_params
         rts
-.endproc
+.endproc ; Open
 
 .proc Close
         MLI_CALL CLOSE, close_params
         rts
-.endproc
+.endproc ; Close
 
 .proc WriteOutFile
         MLI_CALL CREATE, create_params
@@ -15255,7 +15255,7 @@ window_id := findwindow_params::window_id
         MLI_CALL WRITE, write_params
         jsr     Close
 :       rts
-.endproc
+.endproc ; WriteOutFile
 
 .endscope ; save_restore_windows
 SaveWindows := save_restore_windows::Save
@@ -15270,7 +15270,7 @@ SaveWindows := save_restore_windows::Save
         lda     BUTN0
         ora     BUTN1
         rts
-.endproc
+.endproc ; ModifierDown
 
 ;;; Test if either primary modifier (Open-Apple) or shift is down,
 ;;; (if shift key can be detected).
@@ -15291,7 +15291,7 @@ iigs:   lda     KEYMODREG
         beq     ret
         lda     #$80
 ret:    rts
-.endproc
+.endproc ; ExtendSelectionModifierDown
 
 ;;; Test if shift is down (if it can be detected).
 ;;; Output: A=high bit/N flag set if down.
@@ -15306,7 +15306,7 @@ ret:    rts
         beq     ret
         lda     #$80
 ret:    rts
-.endproc
+.endproc ; ShiftDown
 
 ;;; Compare the shift key mod state. Returns high bit set if
 ;;; not the initial state (i.e. Shift key is likely down), if
@@ -15327,7 +15327,7 @@ ret:    rts
         eor     BUTN2             ; ... and if shift is down, %0xxxxxxx
 
 :       rts
-.endproc
+.endproc ; TestShiftMod
 
 ;;; ============================================================
 ;;; Window Entry Tables
@@ -15358,7 +15358,7 @@ ret:    rts
 done_load:
 
         rts
-.endproc
+.endproc ; LoadWindowEntryTable
 
 ;;; Assert: `cached_window_id` and `icon_count` is up-to-date
 .proc StoreWindowEntryTable
@@ -15447,7 +15447,7 @@ done_shift:
 done_store:
 
         rts
-.endproc
+.endproc ; StoreWindowEntryTable
 
 window_entry_count_table:       .res    ::kMaxDeskTopWindows+1, 0
 window_entry_offset_table:      .res    ::kMaxDeskTopWindows+1, 0
@@ -15456,12 +15456,12 @@ window_entry_table:             .res    ::kMaxIconCount, 0
 .proc LoadActiveWindowEntryTable
         lda     active_window_id
         jmp     LoadWindowEntryTable
-.endproc
+.endproc ; LoadActiveWindowEntryTable
 
 .proc LoadDesktopEntryTable
         lda     #0
         jmp     LoadWindowEntryTable
-.endproc
+.endproc ; LoadDesktopEntryTable
 
 ;;; ============================================================
 ;;; Used/Free icon map
@@ -15488,7 +15488,7 @@ loop:   lda     free_icon_map,x
         tya
 
         rts
-.endproc
+.endproc ; AllocateIcon
 
 ;;; Mark the specified icon as free
 
@@ -15499,7 +15499,7 @@ loop:   lda     free_icon_map,x
         sta     free_icon_map,y
 
         rts
-.endproc
+.endproc ; FreeIcon
 
 ;;; 0-based (0th entry represents icon_id=1)
 free_icon_map:  .res    ::kMaxIconCount, 0

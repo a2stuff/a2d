@@ -59,7 +59,7 @@ next:   dex
         bne     divloop
 
         rts
-.endproc
+.endproc ; Div_32_32
 
 ;;; ============================================================
 ;;; 16 bit by 16 bit multiply with 32 bit product
@@ -94,4 +94,4 @@ rotate:
         bne     shift
 
         rts
-.endproc
+.endproc ; Mul_16_16

@@ -43,6 +43,6 @@
         bpl     :-
 
         rts
-.endproc
+.endproc ; Swap
 
-.endproc
+.endproc ; Bell

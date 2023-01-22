@@ -56,7 +56,7 @@ start:  jsr     OpenWindow
         ldy     #<buf_path
         ldx     #>buf_path
         return  #$00
-.endproc
+.endproc ; HandleOk
 
 ;;; ============================================================
 
@@ -65,7 +65,7 @@ start:  jsr     OpenWindow
         ldx     saved_stack
         txs
         return  #$FF
-.endproc
+.endproc ; HandleCancel
 
 ;;; ============================================================
 
@@ -97,7 +97,7 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
         rts
 
         DEFINE_POINT coords, 0, 0
-.endproc
+.endproc ; CheckMouseMoved
 
 ;;; ============================================================
 
@@ -105,7 +105,7 @@ diff:   COPY_STRUCT MGTK::Point, event_coords, coords
 
 ;;; ============================================================
 
-.endscope
+.endscope ; file_dialog
 
 file_dialog_init   := file_dialog::ep_init
 file_dialog_loop   := file_dialog::ep_loop

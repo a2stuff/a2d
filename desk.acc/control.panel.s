@@ -56,7 +56,7 @@
         jsr     Init
         lda     dialog_result
         rts
-.endproc
+.endproc ; RunDA
 
 ;;; High bit set when anything changes.
 dialog_result:
@@ -67,7 +67,7 @@ dialog_result:
         ora     dialog_result
         sta     dialog_result
         rts
-.endproc
+.endproc ; MarkDirty
 
 ;;; ============================================================
 
@@ -481,7 +481,7 @@ ipblink_ip_bitmap:
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         jsr     DoIPBlink
@@ -496,13 +496,13 @@ ipblink_ip_bitmap:
         beq     HandleKey
 
         bne     InputLoop       ; always
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -513,7 +513,7 @@ ipblink_ip_bitmap:
         MGTK_CALL MGTK::InRect, anim_cursor_rect
         sta     cursor_flag
         jmp     InputLoop
-.endproc
+.endproc ; HandleMove
 
 ;;; ============================================================
 
@@ -522,7 +522,7 @@ ipblink_ip_bitmap:
         cmp     #CHAR_ESCAPE
         beq     Exit
         bne     InputLoop       ; always
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -539,7 +539,7 @@ ipblink_ip_bitmap:
         cmp     #MGTK::Area::content
         beq     HandleClick
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -548,7 +548,7 @@ ipblink_ip_bitmap:
         lda     trackgoaway_params::clicked
         bne     Exit
         jmp     InputLoop
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -566,7 +566,7 @@ ipblink_ip_bitmap:
 
 :       jmp     InputLoop
 
-.endproc
+.endproc ; HandleDrag
 
 
 ;;; ============================================================
@@ -661,7 +661,7 @@ ipblink_ip_bitmap:
         END_IF
 
         jmp     InputLoop
-.endproc
+.endproc ; HandleClick
 
 ;;; ============================================================
 
@@ -675,7 +675,7 @@ ipblink_ip_bitmap:
         END_IF
 
         jmp     UpdatePattern
-.endproc
+.endproc ; HandleRArrClick
 
 .proc HandleLArrClick
         dec     pattern_index
@@ -685,7 +685,7 @@ ipblink_ip_bitmap:
         END_IF
 
         jmp     UpdatePattern
-.endproc
+.endproc ; HandleLArrClick
 
 .proc UpdatePattern
         ptr := $06
@@ -709,7 +709,7 @@ ipblink_ip_bitmap:
         MGTK_CALL MGTK::ShowCursor
 
 :       jmp     InputLoop
-.endproc
+.endproc ; UpdatePattern
 
 ;;; ============================================================
 
@@ -786,7 +786,7 @@ flag:   .byte   0
 
 lastx:  .byte   0
 lasty:  .byte   0
-.endproc
+.endproc ; HandleBitsClick
 
 ;;; Assumes click is within fatbits_rect
 .proc MapCoords
@@ -804,7 +804,7 @@ lasty:  .byte   0
         bne     :-
 
         rts
-.endproc
+.endproc ; MapCoords
 
 ;;; ============================================================
 
@@ -824,7 +824,7 @@ next:   dex
         bpl     loop
         copy    #0, dblclick_selection ; not found
         rts
-.endproc
+.endproc ; InitDblclick
 
 .proc HandleDblclickClick
         sta     dblclick_selection ; 1, 2 or 3
@@ -840,7 +840,7 @@ next:   dex
         MGTK_CALL MGTK::SetPort, grafport
         jsr     UpdateDblclickButtons
         jmp     InputLoop
-.endproc
+.endproc ; HandleDblclickClick
 
 ;;; ============================================================
 
@@ -890,7 +890,7 @@ next:   dex
         jsr     UpdateTrackingButtons
 
         jmp     InputLoop
-.endproc
+.endproc ; HandleTrackingClick
 
 ;;; ============================================================
 
@@ -905,7 +905,7 @@ next:   dex
         dey
         bpl     :-
         rts
-.endproc
+.endproc ; InitPattern
 
 .proc HandlePatternClick
         MGTK_CALL MGTK::SetDeskPat, pattern
@@ -921,7 +921,7 @@ next:   dex
         jsr     DrawWindow
 
         jmp     InputLoop
-.endproc
+.endproc ; HandlePatternClick
 
 ;;; ============================================================
 
@@ -1057,7 +1057,7 @@ done:   MGTK_CALL MGTK::ShowCursor
 arrow_num:
         .byte   0
 
-.endproc
+.endproc ; DrawWindow
 
 .proc ZToN
         beq     :+
@@ -1065,7 +1065,7 @@ arrow_num:
         rts
 :       lda     #$80
         rts
-.endproc
+.endproc ; ZToN
 
 .proc UpdateDblclickButtons
         lda     dblclick_selection
@@ -1087,7 +1087,7 @@ arrow_num:
         BTK_CALL BTK::RadioUpdate, dblclick_button3_params
 
         rts
-.endproc
+.endproc ; UpdateDblclickButtons
 
 .proc UpdateTrackingButtons
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -1105,7 +1105,7 @@ arrow_num:
         BTK_CALL BTK::RadioUpdate, tracking_fast_params
 
         rts
-.endproc
+.endproc ; UpdateTrackingButtons
 
 
 .proc UpdateIpblinkButtons
@@ -1130,7 +1130,7 @@ arrow_num:
         BTK_CALL BTK::RadioUpdate, ipblink_btn3_params
 
         rts
-.endproc
+.endproc ; UpdateIpblinkButtons
 
 .proc UpdateRGBCheckbox
         lda     SETTINGS + DeskTopSettings::rgb_color
@@ -1138,7 +1138,7 @@ arrow_num:
         sta     rgb_color_rec::state
         BTK_CALL BTK::CheckboxUpdate, rgb_color_params
         rts
-.endproc
+.endproc ; UpdateRGBCheckbox
 
 ;;; ============================================================
 
@@ -1185,7 +1185,7 @@ offset: .word   0
 
 rotated_pattern:
         .res    8
-.endproc
+.endproc ; DrawPreview
 
 ;;; ============================================================
 
@@ -1250,7 +1250,7 @@ row:    .byte   0
 
 mode:   .byte   0
 
-.endproc
+.endproc ; DrawBits
 
 
 ;;; Input: A = set/clear X = x coord, Y = y coord
@@ -1292,7 +1292,7 @@ mode:   .byte   0
         rts
 
 mode:   .byte   0
-.endproc
+.endproc ; DrawBit
 
 
 ;;; ============================================================
@@ -1532,7 +1532,7 @@ next:   dex
         bpl     loop
         copy    #0, ipblink_selection ; not found
         rts
-.endproc
+.endproc ; InitIpblink
 
 .proc HandleIpblinkClick
         sta     ipblink_selection ; 1, 2 or 3
@@ -1549,7 +1549,7 @@ next:   dex
         MGTK_CALL MGTK::SetPort, grafport
         jsr     UpdateIpblinkButtons
         jmp     InputLoop
-.endproc
+.endproc ; HandleIpblinkClick
 
 .proc ResetIPBlinkCounter
         copy16  SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
@@ -1557,7 +1557,7 @@ next:   dex
         ;; prompts, due to more hit testing, etc.  1/2 speed seems okay.
         lsr16   ipblink_counter
         rts
-.endproc
+.endproc ; ResetIPBlinkCounter
 
 
 .proc DoIPBlink
@@ -1587,7 +1587,7 @@ next:   dex
 
 done:   rts
 
-.endproc
+.endproc ; DoIPBlink
 
 ;;; ============================================================
 
@@ -1602,7 +1602,7 @@ done:   rts
         JSR_TO_MAIN JUMP_TABLE_RGB_MODE
 
         jmp     InputLoop
-.endproc
+.endproc ; HandleRGBClick
 
 ;;; ============================================================
 
@@ -1627,7 +1627,7 @@ done:   rts
         MGTK_CALL MGTK::Move, result
         MGTK_CALL MGTK::DrawText, params
         rts
-.endproc
+.endproc ; DrawStringRight
 
 
 ;;; ============================================================

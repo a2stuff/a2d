@@ -242,7 +242,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         MGTK_CALL MGTK::FlushEvents
         LETK_CALL LETK::Activate, le_params
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         LETK_CALL LETK::Idle, le_params
@@ -258,13 +258,13 @@ buf_search:     .res    kBufSize, 0 ; search term
         jsr     CheckMouseMoved
         bcc     InputLoop
         jmp     HandleMouseMove
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -284,7 +284,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         copy    event_params::modifiers, le_params::modifiers
         LETK_CALL LETK::Key, le_params
         jmp     InputLoop
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -301,7 +301,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         cmp     #MGTK::Area::content
         jeq     HandleClick
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -310,7 +310,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         lda     trackgoaway_params::clicked
         bne     Exit
         jmp     InputLoop
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -346,7 +346,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 
 :       jmp     InputLoop
 
-.endproc
+.endproc ; HandleDrag
 
 ;;; ============================================================
 
@@ -427,7 +427,7 @@ done:   ;; Update display
 
 
 index:  .byte   0
-.endproc
+.endproc ; DoFind
 
 ;;; ============================================================
 
@@ -438,7 +438,7 @@ index:  .byte   0
         bcs     ret
         and     #CASE_MASK
 ret:    rts
-.endproc
+.endproc ; ToUpperCase
 
 
 
@@ -505,7 +505,7 @@ ret:    rts
     END_IF
 
 done:   jmp     InputLoop
-.endproc
+.endproc ; HandleClick
 
 ;;; ============================================================
 
@@ -520,7 +520,7 @@ notpencopy:     .byte   MGTK::notpencopy
         bne     ret
         MGTK_CALL MGTK::SetPort, grafport_win
 ret:    rts
-.endproc
+.endproc ; SetPort
 
 ;;; ============================================================
 ;;; Determine if mouse moved (returns w/ carry set if moved)
@@ -541,7 +541,7 @@ diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
         rts
 
         DEFINE_POINT coords, 0, 0
-.endproc
+.endproc ; CheckMouseMoved
 
 ;;; ============================================================
 
@@ -568,7 +568,7 @@ inside:
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
 
 done:   jmp     InputLoop
-.endproc
+.endproc ; HandleMouseMove
 
 ;;; ============================================================
 
@@ -605,7 +605,7 @@ done:   jmp     InputLoop
 
 ret:    rts
 
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 ;;; Assert: Correct GrafPort selected
@@ -660,7 +660,7 @@ ret:    rts
 
 tmp:    .word   0
 sflag:  .byte   0
-.endproc
+.endproc ; DrawLatLong
 
 ;;; ============================================================
 ;;; Assert: Correct GrafPort selected
@@ -670,7 +670,7 @@ sflag:  .byte   0
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintBitsHC, position_marker_params
         rts
-.endproc
+.endproc ; DrawPositionIndicator
 
 ;;; ============================================================
 
@@ -696,7 +696,7 @@ sflag:  .byte   0
         add16   xcoord, #kMapLeft+1 - (kPositionMarkerWidth/2), xcoord
         add16   ycoord, #kMapTop    - (kPositionMarkerHeight/2), ycoord
         rts
-.endproc
+.endproc ; UpdateCoordsFromLatLong
 
 ;;; ============================================================
 

@@ -34,7 +34,7 @@ skip:
 
 selected_index:
         .byte   $00
-.endproc
+.endproc ; Exec
 
 ;;; ============================================================
 ;;; Recursive Enumerate & Copy Logic
@@ -136,7 +136,7 @@ entry_index_in_block:   .byte   0
         inx
         stx     stack_index
         rts
-.endproc
+.endproc ; PushIndexToStack
 
 ;;; ============================================================
 
@@ -150,7 +150,7 @@ entry_index_in_block:   .byte   0
         sta     target_index
         stx     stack_index
         rts
-.endproc
+.endproc ; PopIndexFromStack
 
 ;;; ============================================================
 
@@ -176,7 +176,7 @@ entry_index_in_block:   .byte   0
         copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
 
         rts
-.endproc
+.endproc ; OpenSrcDir
 
 ;;; ============================================================
 
@@ -188,7 +188,7 @@ entry_index_in_block:   .byte   0
         jmp     HandleErrorCode
 :
         rts
-.endproc
+.endproc ; DoCloseFile
 
 ;;; ============================================================
 
@@ -222,7 +222,7 @@ entry_index_in_block:   .byte   0
 done:   return  #0
 
 eof:    return  #$FF
-.endproc
+.endproc ; ReadFileEntry
 
 ;;; ============================================================
 
@@ -232,7 +232,7 @@ eof:    return  #$FF
         jsr     PushIndexToStack
         jsr     AppendFilenameToSrcPathname
         jmp     OpenSrcDir
-.endproc
+.endproc ; DescendDirectory
 
 .proc AscendDirectory
         jsr     DoCloseFile
@@ -242,7 +242,7 @@ eof:    return  #$FF
         jsr     OpenSrcDir
         jsr     AdvanceToTargetEntry
         jmp     op_jt2
-.endproc
+.endproc ; AscendDirectory
 
 .proc AdvanceToTargetEntry
 :       cmp16   entry_index_in_dir, target_index
@@ -251,7 +251,7 @@ eof:    return  #$FF
         jmp     :-
 
 :       rts
-.endproc
+.endproc ; AdvanceToTargetEntry
 
 ;;; ============================================================
 
@@ -287,7 +287,7 @@ l2:     lda     recursion_depth
         jmp     l1
 
 l3:     jmp     DoCloseFile
-.endproc
+.endproc ; HandleDirectory
 
 ;;; ============================================================
 
@@ -427,7 +427,7 @@ is_dir_flag:
         .byte   0
 
 LA4F9:  .byte   0
-.endproc
+.endproc ; CopyFiles
 
 ;;; ============================================================
 
@@ -492,7 +492,7 @@ is_file:
         jsr     RemoveSegmentFromDstPathname
 ret:    rts
 
-.endproc
+.endproc ; CopyVisitFile
 
 ;;; ============================================================
 
@@ -551,7 +551,7 @@ saved_length:
         .byte   0
 existing_blocks:          ; Blocks taken by file that will be replaced
         .word   0
-.endproc
+.endproc ; CheckSpace
 CheckSpace2 := CheckSpace::ep2
 
 ;;; ============================================================
@@ -598,7 +598,7 @@ done:
         MLI_CALL CLOSE, close_params_dst
         MLI_CALL CLOSE, close_params_src
         rts
-.endproc
+.endproc ; CopyFile
 
 ;;; ============================================================
 
@@ -617,7 +617,7 @@ done:
         jne     HandleErrorCode
 :       clc                     ; treate as success
         rts
-.endproc
+.endproc ; CreateDstFile
 
 ;;; ============================================================
 
@@ -701,13 +701,13 @@ storage_type:
 
 visit:  jsr     EnumerateVisitFile
         return  #0
-.endproc
+.endproc ; EnumerateFiles
 
 ;;; ============================================================
 
 .proc NoOp
         rts
-.endproc
+.endproc ; NoOp
 
 ;;; ============================================================
 
@@ -722,7 +722,7 @@ visit:  jsr     EnumerateVisitFile
 :       inc16   file_count
         jsr     RemoveSegmentFromSrcPathname
         jmp     UpdateFileCountDisplay
-.endproc
+.endproc ; EnumerateVisitFile
 
 ;;; ============================================================
 
@@ -753,7 +753,7 @@ l2:     cpx     file_entry+FileEntry::storage_type_name_length
 
 l3:     sty     pathname_src
         rts
-.endproc
+.endproc ; AppendFilenameToSrcPathname
 
 ;;; ============================================================
 
@@ -773,7 +773,7 @@ l3:     sty     pathname_src
 :       dex
         stx     pathname_src
         rts
-.endproc
+.endproc ; RemoveSegmentFromSrcPathname
 
 ;;; ============================================================
 
@@ -797,7 +797,7 @@ l2:     cpx     file_entry+FileEntry::storage_type_name_length
 
 l3:     sty     pathname_dst
         rts
-.endproc
+.endproc ; AppendFilenameToDstPathname
 
 ;;; ============================================================
 
@@ -817,7 +817,7 @@ l1:     lda     pathname_dst,x
 l2:     dex
         stx     pathname_dst
         rts
-.endproc
+.endproc ; RemoveSegmentFromDstPathname
 
 ;;; ============================================================
 ;;; Copy `src_path` to `pathname_src` and `dst_path` to `pathname_dst`
@@ -847,7 +847,7 @@ loop:   iny
         bpl     :-
 
         rts
-.endproc
+.endproc ; CopyPathsFromBufsToSrcAndDst
 
 ;;; ============================================================
 ;;; Input: A,X = pointer to entry path to copy
@@ -891,7 +891,7 @@ l6:     iny
         param_call app::CopyRAMCardPrefix, dst_path
 
         rts
-.endproc
+.endproc ; PrepSrcAndDstPaths
 
 ;;; ============================================================
 ;;; Copy Progress UI
@@ -1001,7 +1001,7 @@ str_space:
         MGTK_CALL MGTK::MoveTo, download_label_pos
         param_call app::DrawString, download_label_str
         rts
-.endproc
+.endproc ; OpenWindow
 
 ;;; ============================================================
 
@@ -1031,7 +1031,7 @@ ep2:    dec     file_count
         param_call app::DrawString, str_count
         param_call app::DrawString, str_spaces
         rts
-.endproc
+.endproc ; DrawWindowContent
         draw_window_content_ep2 := DrawWindowContent::ep2
 ;;; ============================================================
 
@@ -1043,7 +1043,7 @@ ep2:    dec     file_count
         param_call app::DrawString, str_count
         param_call app::DrawString, str_spaces
         rts
-.endproc
+.endproc ; UpdateFileCountDisplay
 
 ;;; ============================================================
 
@@ -1055,7 +1055,7 @@ ep2:    dec     file_count
         jmp     app::SetCursorWatch ; try again
 
 :       jmp     RestoreStackAndReturn
-.endproc
+.endproc ; ShowInsertSourceDiskAlert
 
 ;;; ============================================================
 
@@ -1071,7 +1071,7 @@ ep2:    dec     file_count
         BTK_CALL BTK::Draw, ok_button_params
         jsr     RunEventLoop
         jmp     RestoreStackAndReturn
-.endproc
+.endproc ; ShowDiskFullError
 
 ;;; ============================================================
 
@@ -1087,7 +1087,7 @@ ep2:    dec     file_count
         BTK_CALL BTK::Draw, ok_button_params
         jsr     RunEventLoop
         jmp     RestoreStackAndReturn
-.endproc
+.endproc ; HandleErrorCode
 
 ;;; ============================================================
 
@@ -1137,14 +1137,14 @@ HandleButtonDown:
         ldx     saved_stack
         txs
         return  #$FF
-.endproc
+.endproc ; RestoreStackAndReturn
 
 ;;; ============================================================
 
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, winfo
         rts
-.endproc
+.endproc ; CloseWindow
 
 ;;; ============================================================
 
@@ -1160,7 +1160,7 @@ HandleButtonDown:
         bne     done
 nope:   lda     #$00
 done:   rts
-.endproc
+.endproc ; CheckEscapeKeyDown
 
 ;;; ============================================================
 
@@ -1221,14 +1221,14 @@ value:  .word   0
 digit:  .byte   0
 nonzero_flag:
         .byte   0
-.endproc
+.endproc ; PopulateCount
 
 str_count:
         PASCAL_STRING "       "
 
 ;;; ============================================================
 
-.endscope
+.endscope ; file_copier
 
 file_copier__Exec   := file_copier::Exec
 

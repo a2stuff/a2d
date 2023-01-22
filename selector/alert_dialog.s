@@ -105,7 +105,7 @@ start:  pha                     ; alert number
 
         ldax    #alert_params
         jmp     Alert
-.endproc
+.endproc ; AlertById
 
 ;;; ============================================================
 ;;; Display alert

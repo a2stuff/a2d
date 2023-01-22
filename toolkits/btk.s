@@ -102,7 +102,7 @@ length_table:
         .byte   2               ; CheckboxDraw
         .byte   2               ; CheckboxUpdate
 .endif ; BTK_SHORT
-.endproc
+.endproc ; Dispatch
 
 ;;; ============================================================
 
@@ -139,7 +139,7 @@ obscured:
         pla
 ret:
         rts
-.endproc
+.endproc ; _SetPort
 
 
 ;;; ============================================================
@@ -181,7 +181,7 @@ a_record  .addr
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect
         rts
-.endproc
+.endproc ; _Invert
 
 ;;; ============================================================
 
@@ -265,7 +265,7 @@ END_PARAM_BLOCK
         add16_8 a_label, #1, dt_params::textptr
         MGTK_CALL MGTK::DrawText, dt_params
 :       rts
-.endproc
+.endproc ; _DrawLabel
 
 ;;; Inputs: `a_label` points at string
 ;;; Output: A,X = width
@@ -288,7 +288,7 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::TextWidth, tw_params
         ldax    tw_params::width
         rts
-.endproc
+.endproc ; _MeasureLabel
 
 ;;; Input: `a_shortcut` points at string
 ;;; Trashes $06..$08
@@ -304,7 +304,7 @@ END_PARAM_BLOCK
         add16_8 a_shortcut, #1, dt_params::textptr
         MGTK_CALL MGTK::DrawText, dt_params
 :       rts
-.endproc
+.endproc ; _DrawShortcut
 
 ;;; Inputs: `a_shortcut` points at string
 ;;; Output: A,X = width
@@ -327,7 +327,7 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::TextWidth, tw_params
         ldax    tw_params::width
         rts
-.endproc
+.endproc ; _MeasureShortcut
 
 ;;; ============================================================
 
@@ -353,7 +353,7 @@ windowx := * + 5
 windowy := * + 7
         .assert screenx = event_params::xcoord, error, "param mismatch"
         .assert screeny = event_params::ycoord, error, "param mismatch"
-.endproc
+.endproc ; btk
         .res    9
 
 .proc TrackImpl
@@ -507,7 +507,7 @@ a_record  .addr
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBitsHC, rb_params
         rts
-.endproc
+.endproc ; _DrawRadioBitmap
 
 ;;; ============================================================
 
@@ -614,7 +614,7 @@ a_record  .addr
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBitsHC, cb_params
         rts
-.endproc
+.endproc ; _DrawCheckboxBitmap
 
 ;;; ============================================================
 
@@ -636,7 +636,7 @@ a_record  .addr
     END_IF
 
         rts
-.endproc
+.endproc ; _MaybeDrawAndMeasureShortcut
 
 ;;; Copies `rect` back into `a_record`
 .proc _WriteRectBackToButtonRecord
@@ -649,7 +649,7 @@ a_record  .addr
         dex
         bpl     :-
         rts
-.endproc
+.endproc ; _WriteRectBackToButtonRecord
 
 ;;; ============================================================
 .endif ; BTK_SHORT

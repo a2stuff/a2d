@@ -510,7 +510,7 @@ ep_size := * - ep_start
         copy16  #event_params, DESTINATIONLO
         clc                     ; aux>main
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyEventDataToMain
 
 .proc CopyEventDataToAux
         copy16  #event_params, STARTLO
@@ -518,7 +518,7 @@ ep_size := * - ep_start
         copy16  #aux::event_params, DESTINATIONLO
         sec                     ; main>aux
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyEventDataToAux
 
 ;;; ============================================================
 
@@ -863,7 +863,7 @@ match:  tya
         bit     LCBANK1
         bit     LCBANK1
         rts
-.endproc
+.endproc ; IdentifyModel
 
 ;;; ============================================================
 
@@ -875,7 +875,7 @@ match:  tya
         copy16  model_str_table,x, model_str_ptr
         copy16  model_pix_table,x, model_pix_ptr
         rts
-.endproc
+.endproc ; SetModelPtrs
 
 ;;; ============================================================
 
@@ -929,7 +929,7 @@ v_2x:   and     #$0F
         bne     done
 
 done:   rts
-.endproc
+.endproc ; IdentifyProDOSVersion
 
 ;;; ============================================================
 
@@ -938,7 +938,7 @@ done:   rts
         jsr     DrawWindow
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         jsr     JUMP_TABLE_YIELD_LOOP
@@ -950,12 +950,12 @@ done:   rts
         cmp     #MGTK::EventKind::key_down  ; any key?
         beq     HandleKey
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, aux::winfo
         jmp     JUMP_TABLE_CLEAR_UPDATES ; exits input loop
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -968,7 +968,7 @@ done:   rts
         cmp     #TO_LOWER(kShortcutEasterEgg)
         bne     InputLoop
 :       jmp     HandleEgg
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -984,7 +984,7 @@ done:   rts
         cmp     #MGTK::Area::dragbar
         beq     HandleDrag
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -994,7 +994,7 @@ done:   rts
         lda     trackgoaway_params::clicked
         beq     InputLoop
         bne     Exit            ; always
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -1014,7 +1014,7 @@ done:   rts
 
 :       jmp     InputLoop
 
-.endproc
+.endproc ; HandleDrag
 
 ;;; ============================================================
 
@@ -1034,7 +1034,7 @@ done:   rts
         jmp     InputLoop
 
 egg:    .byte   0
-.endproc
+.endproc ; HandleEgg
 
 ;;; ============================================================
 
@@ -1047,7 +1047,7 @@ egg:    .byte   0
 :       JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::grafport + MGTK::GrafPort::maprect
         rts
-.endproc
+.endproc ; ClearWindow
 
 ;;; ============================================================
 
@@ -1169,7 +1169,7 @@ draw:   php
 
 slot:   .byte   0
 mask:   .byte   0
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 ;;; Point $06/$07 at $Cn00
@@ -1182,7 +1182,7 @@ mask:   .byte   0
         lda     #0
         sta     ptr
         rts
-.endproc
+.endproc ; SetSlotPtr
 
 ;;; ============================================================
 ;;; Firmware Detector:
@@ -1374,7 +1374,7 @@ get_next:
         table_ptr := *+1
         lda     SELF_MODIFIED,x
         rts
-.endproc
+.endproc ; SigCheck
 
 ;;; Format is: num, offset, value, offset, value, ...
 sigtable_prodos_device: .byte   3, $01, $20, $03, $00, $05, $03
@@ -1386,7 +1386,7 @@ sigtable_comm:          .byte   2, $05, $18, $07, $38
 sigtable_serial:        .byte   2, $05, $38, $07, $18
 sigtable_parallel:      .byte   2, $05, $48, $07, $48
 
-.endproc
+.endproc ; ProbeSlot
 
 ;;; ============================================================
 ;;; Check for cards without firmware.
@@ -1415,7 +1415,7 @@ sigtable_parallel:      .byte   2, $05, $48, $07, $48
 :
         clc
         rts
-.endproc
+.endproc ; ProbeSlotNoFirmware
 
 ;;; ============================================================
 
@@ -1441,7 +1441,7 @@ sigtable_parallel:      .byte   2, $05, $48, $07, $48
         rts
 
 tmp:    .byte   0
-.endproc
+.endproc ; WithInterruptsDisabled
 
 ;;; ============================================================
 ;;; Detect Z80
@@ -1460,7 +1460,7 @@ tmp:    .byte   0
         .byte   $c3, $fd, $ff   ; jp $FFFD
         flag := *
         .byte   $00             ; flag: .db $00
-.endproc
+.endproc ; Z80Routine
         sizeof_Z80Routine = .sizeof(Z80Routine)
 
 .proc DetectZ80
@@ -1497,8 +1497,8 @@ tmp:    .byte   0
         dex
         bpl     :-
         rts
-.endproc
-.endproc
+.endproc ; SwapRoutine
+.endproc ; DetectZ80
 
 ;;; Detect Uthernet II
 ;;; Assumes $06 points at $Cn00, returns carry set if found
@@ -1570,7 +1570,7 @@ success:
 
 fail:   clc
         rts
-.endproc
+.endproc ; DetectUthernet2
 
 ;;; Detect Mockingboard
 ;;; Assumes $06 points at $Cn00, returns carry set if found
@@ -1604,7 +1604,7 @@ found:  sec
 
 fail:   clc
         rts
-.endproc
+.endproc ; DetectMockingboard
 
 ;;; ============================================================
 ;;; Update `str_memory` with memory count in kilobytes
@@ -1628,7 +1628,7 @@ fail:   clc
         bne     :-
         ldax    memory
         jmp     IntToStringWithSeparators
-.endproc
+.endproc ; IdentifyMemory
 
 ;;; ============================================================
 ;;; Calculate RamWorks memory; returns number of banks in Y
@@ -1722,7 +1722,7 @@ next:   inx                     ; next bank
 
         plp                     ; restore interrupt state
         rts
-.endproc
+.endproc ; CheckRamworksMemory
 
 ;;; ============================================================
 
@@ -1762,7 +1762,7 @@ rom0:
         .popcpu
 
 done:   rts
-.endproc
+.endproc ; CheckIIgsMemory
 
 ;;; ============================================================
 
@@ -1838,7 +1838,7 @@ list_ptr:       .addr   dib_buffer
 status_code:    .byte   3       ; Return Device Information Block (DIB)
 .endparams
 
-.endproc
+.endproc ; CheckSlinkyMemory
 
 
 ;;; ============================================================
@@ -1878,7 +1878,7 @@ p658xx: bit     ROMIN2
         bcs     p65802
         return16 #str_65816     ; Only IIgs supports 65816
 p65802: return16 #str_65802     ; Other boards support 65802
-.endproc
+.endproc ; CPUId
 
 ;;; ============================================================
 ;;; Look up and print SmartPort device names to current GrafPort.
@@ -2016,11 +2016,11 @@ num_devices:
         .byte   SPCall::Status
         .addr   status_params
         rts
-.endproc
+.endproc ; SmartPortCall
         sp_addr = SmartPortCall::sp_addr
 
 
-.endproc
+.endproc ; ShowSmartPortDeviceNamesImpl
 ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 
 
@@ -2043,7 +2043,7 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 
 nope:   lda     #$FF
         rts
-.endproc
+.endproc ; IsAlpha
 
 ;;; ============================================================
 ;;; Copies string main>aux before drawing
@@ -2069,7 +2069,7 @@ nope:   lda     #$FF
 
         JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
 done:   rts
-.endproc
+.endproc ; DrawString
 
 ;;; ============================================================
 

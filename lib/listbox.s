@@ -49,7 +49,7 @@
         lda     #0
 :       ora     #$80            ; high bit = force draw
         jmp     _ScrollIntoView
-.endproc
+.endproc ; ListInit
 
 ;;; ============================================================
 ;;; Call when a button down event occurs on the list Winfo.
@@ -103,7 +103,7 @@
     END_IF
 
         return  #0              ; an item
-.endproc
+.endproc ; ListClick
 
 ;;; ============================================================
 ;;; Handle scroll bar
@@ -111,7 +111,7 @@
 .proc _HandleListScrollWithPart
         sta     findcontrol_params::which_part
         FALL_THROUGH_TO _HandleListScroll
-.endproc
+.endproc ; _HandleListScrollWithPart
 
 .proc _HandleListScroll
         ;; Ignore unless vscroll is enabled
@@ -193,7 +193,7 @@ update: sta     updatethumb_params::thumbpos
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         jmp     _Draw
-.endproc
+.endproc ; _HandleListScroll
 
 ;;; ============================================================
 
@@ -227,7 +227,7 @@ update: sta     updatethumb_params::thumbpos
 cancel: pla
         pla
 ret:    rts
-.endproc
+.endproc ; _CheckArrowRepeat
 
 ;;; ============================================================
 ;;; Call with a key code to determine if the list can handle it.
@@ -240,7 +240,7 @@ ret:    rts
         beq     ret
         cmp     #CHAR_DOWN
 ret:    rts
-.endproc
+.endproc ; IsListKey
 
 ;;; ============================================================
 ;;; Call when a key event occurs, if `IsListKey` indicates it
@@ -327,7 +327,7 @@ SetSelection:
         jsr     OnListSelectionChange
 .endif
         rts
-.endproc
+.endproc ; ListKey
 
 ;;; ============================================================
 ;;; Sets the selected item index. If not none, it is scrolled
@@ -344,7 +344,7 @@ SetSelection:
         bmi     :+
         jmp     _ScrollIntoView
 :       rts
-.endproc
+.endproc ; ListSetSelection
 
 ;;; ============================================================
 ;;; Input: A = row to highlight
@@ -363,7 +363,7 @@ SetSelection:
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, listbox::highlight_rect
 ret:    rts
-.endproc
+.endproc ; _HighlightIndex
 
 ;;; ============================================================
 ;;; Call to update `listbox::num_items` after `ListInit` is called,
@@ -373,7 +373,7 @@ ret:    rts
 .proc ListSetSize
         sta     listbox::num_items
         FALL_THROUGH_TO _EnableScrollbar
-.endproc
+.endproc ; ListSetSize
 
 ;;; ============================================================
 ;;; Enable/disable scrollbar as appropriate; resets thumb pos.
@@ -425,7 +425,7 @@ ret:    rts
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
     END_IF
         rts
-.endproc
+.endproc ; _EnableScrollbar
 
 ;;; ============================================================
 ;;; Input: A = row to ensure visible; high bit = force redraw,
@@ -462,7 +462,7 @@ skip:   lda     #SELF_MODIFIED_BYTE
 
         lda     listbox::selected_index
         jmp     _HighlightIndex
-.endproc
+.endproc ; _ScrollIntoView
 
 ;;; ============================================================
 ;;; Adjusts the viewport given the scroll position, and selects
@@ -476,7 +476,7 @@ skip:   lda     #SELF_MODIFIED_BYTE
         addax   #listbox::kHeight, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y2
 
         jmp     SetPortForList
-.endproc
+.endproc ; _SetPort
 
 ;;; ============================================================
 
@@ -521,7 +521,7 @@ finish: MGTK_CALL MGTK::ShowCursor
         rts
 
 rows:   .byte   0
-.endproc
+.endproc ; _Draw
 
 ;;; ============================================================
 

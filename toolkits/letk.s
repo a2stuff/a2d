@@ -100,7 +100,7 @@ length_table:
         .byte   6               ; Click
         .byte   4               ; Key
         .byte   2               ; Draw
-.endproc
+.endproc ; Dispatch
 
 ;;; ============================================================
 
@@ -143,7 +143,7 @@ a_record  .addr
         ldy     #LETK::LineEditRecord::ip_counter
         copy16in SETTINGS + DeskTopSettings::ip_blink_speed, (a_record),y
         rts
-.endproc
+.endproc ; _ResetIPCounter
 
 ;;; ============================================================
 
@@ -195,7 +195,7 @@ ret:    rts
         MGTK_CALL MGTK::SetPenMode, pencopy
 
         rts
-.endproc
+.endproc ; _XDrawIP
 
         ;; Delta from text baseline to top of text, for drawing IP
         DEFINE_POINT ip_move, 0, AS_WORD(-kSystemFontHeight)
@@ -205,7 +205,7 @@ ret:    rts
         lda     (a_record),y
         bmi     _XDrawIP
         rts
-.endproc
+.endproc ; _HideIP
 _ShowIP := _HideIP
 
 ;;; ============================================================
@@ -234,7 +234,7 @@ grafport_win:   .tag    MGTK::GrafPort
 
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
-.endproc
+.endproc ; _SetPort
 
 ;;; ============================================================
 
@@ -315,7 +315,7 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::DrawText, dt_params
 :
         rts
-.endproc
+.endproc ; _RedrawRightOfIP
 
 ;;; ============================================================
 ;;; Prepare params for a TextWidth or DrawText call
@@ -332,7 +332,7 @@ END_PARAM_BLOCK
         lda     (a_buf),y
         sta     text_params::length
         rts
-.endproc
+.endproc ; _PrepTextParams
 
 ;;; ============================================================
 
@@ -401,7 +401,7 @@ ret:    rts
         sta     (a_record),y
 
 ret:    rts
-.endproc
+.endproc ; _MoveIPLeft
 
 ;;; ============================================================
 ;;; Move IP one character right.
@@ -420,7 +420,7 @@ ret:    rts
         sta     (a_record),y
 
 ret:    rts
-.endproc
+.endproc ; _MoveIPRight
 
 ;;; ============================================================
 ;;; When delete (backspace) is hit
@@ -438,7 +438,7 @@ ret:    rts
         jsr     _DeleteCharCommon
 
 ret:    rts
-.endproc
+.endproc ; _DeleteLeft
 
 ;;; ============================================================
 ;;; Forward-delete
@@ -455,7 +455,7 @@ ret:    rts
         jsr     _DeleteCharCommon
 
 ret:    rts
-.endproc
+.endproc ; _DeleteRight
 
 ;;; ============================================================
 ;;; Handle a key.
@@ -561,7 +561,7 @@ modified:
         sta     (a_record),y
 
 ret:    rts
-.endproc
+.endproc ; _InsertChar
 
 ;;; ============================================================
 
@@ -580,7 +580,7 @@ ret:    rts
         MGTK_CALL MGTK::PaintRect, rect
 
 ret:    rts
-.endproc
+.endproc ; _DeleteLine
 
 ;;; ============================================================
 ;;; Move IP to start of input field.
@@ -590,7 +590,7 @@ ret:    rts
         ldy     #LETK::LineEditRecord::ip_pos
         sta     (a_record),y
         rts
-.endproc
+.endproc ; _MoveIPStart
 
 ;;; ============================================================
 ;;; Move IP to end of input field.
@@ -601,7 +601,7 @@ ret:    rts
         ldy     #LETK::LineEditRecord::ip_pos
         sta     (a_record),y
         rts
-.endproc
+.endproc ; _MoveIPEnd
 
 ;;; ============================================================
 ;;; Common logic for DeleteLeft/DeleteRight
@@ -634,7 +634,7 @@ ret:    rts
         MGTK_CALL MGTK::DrawText, draw2spaces_params
 
         rts
-.endproc
+.endproc ; _DeleteCharCommon
 
 ;;; ============================================================
 ;;; Output: A,X = X coordinate of insertion point
@@ -665,7 +665,7 @@ width   .word
         tax
         tya
         rts
-.endproc
+.endproc ; _CalcIPPos
 
 ;;; ============================================================
 ;;; Redraw the contents of the control; used after a window move or string change.
@@ -709,4 +709,4 @@ END_PARAM_BLOCK
 
 ;;; ============================================================
 
-.endscope
+.endscope ; letk

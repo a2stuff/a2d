@@ -215,7 +215,7 @@ irq_vector_stash:
 .proc ErrorHandler
         sta     $06             ; Crash?
         jmp     MONZ
-.endproc
+.endproc ; ErrorHandler
 
 prefix_buffer:
         .res    64, 0

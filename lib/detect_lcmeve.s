@@ -52,4 +52,4 @@
         result := *+1
 done:   lda     #0              ; self-modified (but not always)
         rts
-.endproc
+.endproc ; DetectLeChatMauveEve

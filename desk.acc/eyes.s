@@ -30,7 +30,7 @@
         jsr     Init
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
         rts
-.endproc
+.endproc ; AuxStart
 
 ;;; ============================================================
 
@@ -205,7 +205,7 @@ eye_rect:
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
@@ -218,13 +218,13 @@ eye_rect:
         cmp     #MGTK::EventKind::no_event
         beq     HandleNoEvent
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -233,7 +233,7 @@ eye_rect:
         cmp     #CHAR_ESCAPE
         beq     Exit
         bne     InputLoop       ; always
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -252,7 +252,7 @@ eye_rect:
         cmp     #MGTK::Area::content
         jeq     HandleGrow
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -261,7 +261,7 @@ eye_rect:
         lda     trackgoaway_params::clicked
         bne     Exit
         jmp     InputLoop
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -301,7 +301,7 @@ done:   jmp     InputLoop
 
 
 delta:  .word   0
-.endproc
+.endproc ; HandleNoEvent
 
 ;;; ============================================================
 
@@ -324,7 +324,7 @@ common: lda     dragwindow_params::moved
 
 :       jmp     InputLoop
 
-.endproc
+.endproc ; HandleDrag
 
 ;;; ============================================================
 
@@ -350,7 +350,7 @@ common: lda     dragwindow_params::moved
 nope:   jmp     InputLoop
 
 tmpw:   .word   0
-.endproc
+.endproc ; HandleGrow
 
 ;;; ============================================================
 
@@ -472,7 +472,7 @@ draw_pupils:
 
         MGTK_CALL MGTK::ShowCursor
         rts
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 ;;; Assumes the pen is 1px x 1px
@@ -544,7 +544,7 @@ outer_oval:
 inner_oval:
         .tag    OvalRec
 
-.endproc
+.endproc ; DrawEyeball
 
 
 ;;; ============================================================
@@ -669,7 +669,7 @@ pry:    DEFINE_FLOAT
 prx:    DEFINE_FLOAT
 cxf:    DEFINE_FLOAT
 cyf:    DEFINE_FLOAT
-.endproc
+.endproc ; ComputePupilPos
 
 ;;; ============================================================
 ;;; Oval Routines (based on QuickDraw)
@@ -815,7 +815,7 @@ loop:   asl32   quotient
 :
         dey
         bne     loop
-.endscope
+.endscope ; fixed_div
 
 
         ;; oval.oddNum [16.16] = aspect_ratio [16.16] * aspect_ratio [16.16];
@@ -904,7 +904,7 @@ temp:   .dword  0
 
 product:                        ; [32.32]
         .res    8
-.endproc
+.endproc ; InitOval
 
 ;;; Set up `bo_params` before calling.
 .proc BumpOval
@@ -1016,7 +1016,7 @@ endloop2:
 
 d0:     .word   0               ; [16.0]
 temp:   .dword  0
-.endproc
+.endproc ; BumpOval
 
 ;;; Write `oval` to `OvalRec` addr at $06
 .proc SaveOval
@@ -1029,7 +1029,7 @@ temp:   .dword  0
         bpl     :-
 
         rts
-.endproc
+.endproc ; SaveOval
 
 ;;; Load `oval` from `OvalRec` addr at $06
 .proc LoadOval
@@ -1042,7 +1042,7 @@ temp:   .dword  0
         bpl     :-
 
         rts
-.endproc
+.endproc ; LoadOval
 
 .endscope ; oval
 InitOval := oval::InitOval

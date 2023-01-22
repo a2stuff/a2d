@@ -46,7 +46,7 @@ col:    lda     xbyte
 
         ldax    addr
         rts
-.endproc
+.endproc ; Save
 
 ;;; Restore
 
@@ -86,7 +86,7 @@ col:    lda     xbyte
         dex
         bne     loop
         rts
-.endproc
+.endproc ; Restore
 
 ;;; Address calculations for dialog background display buffer.
 
@@ -97,7 +97,7 @@ col:    lda     xbyte
 .proc SetPtrForRow
         sta     row_tmp
         jmp     ComputeHBASL
-.endproc
+.endproc ; SetPtrForRow
 
 ;;; ============================================================
 ;;; Increment ptr ($06) to next row
@@ -107,7 +107,7 @@ col:    lda     xbyte
         inc     row_tmp
         lda     row_tmp
         bne     ComputeHBASL    ; always
-.endproc
+.endproc ; NextPtrForRow
 
 ;;; ============================================================
 ;;; Input: A = row
@@ -136,7 +136,7 @@ col:    lda     xbyte
         eor     hbasl
         sta     hbasl
         rts
-.endproc
+.endproc ; ComputeHBASL
 
 ;;; Coordinates when looping save/restore
 row_tmp:
@@ -172,7 +172,7 @@ xbyte:  .byte   0
         bne     :-
 
 :       rts
-.endproc
+.endproc ; CalcXSaveBounds
 
 ;;; ============================================================
 ;;; Dialog bound coordinates (input to dialog_background)

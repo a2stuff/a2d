@@ -60,7 +60,7 @@ done:   rts
         bne     :-
         sty     filename_buffer
         rts
-.endproc
+.endproc ; AppendFilename
 
 .proc DoWrite
         ;; First time - ask if we should even try.
@@ -100,6 +100,6 @@ ret:    rts
 
 second_try_flag:
         .byte   0
-.endproc
+.endproc ; DoWrite
 
-.endproc
+.endproc ; SaveSettings

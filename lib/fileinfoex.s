@@ -144,7 +144,7 @@ close:  php
         plp
 exit:   rts
 
-.endproc
+.endproc ; Start
 
 ;;; ============================================================
 ;;; ProDOS MLI param blocks

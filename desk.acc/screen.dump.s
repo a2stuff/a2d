@@ -53,7 +53,7 @@
         iny
         jmp     :-
 done:   rts
-.endproc
+.endproc ; SendSpacing
 
 .proc SendRestoreState
         ldy     #$00
@@ -63,7 +63,7 @@ done:   rts
         iny
         jmp     :-
 done:   rts
-.endproc
+.endproc ; SendRestoreState
 
 .proc SendInitGraphics
         ldx     #0
@@ -75,7 +75,7 @@ done:   rts
         rts
 init_graphics:
         .byte   CHAR_ESCAPE,"G0560"     ; Graphics, 560 data bytes
-.endproc
+.endproc ; SendInitGraphics
 
 .proc SendRow
         ;; Tell printer to expect graphics
@@ -139,7 +139,7 @@ y_loop: lda     y_coord
 
 done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
         rts
-.endproc
+.endproc ; SendRow
 
 .proc PrintScreen
         ;; Init printer
@@ -169,7 +169,7 @@ loop:   jsr     SendRow
         jsr     SendRestoreState
 
         rts
-.endproc
+.endproc ; PrintScreen
 
         ;; Given y-coordinate in A, compute HBASL-equivalent
 .proc ComputeHBASL
@@ -194,7 +194,7 @@ loop:   jsr     SendRow
         eor     hbasl
         sta     hbasl
         rts
-.endproc
+.endproc ; ComputeHBASL
 
 .proc PRNum1
         lda     #>SLOT1
@@ -203,12 +203,12 @@ loop:   jsr     SendRow
         sta     COUT_HOOK
         lda     #(CHAR_RETURN | $80)
         jmp     invoke_slot1
-.endproc
+.endproc ; PRNum1
 
 .proc COut
         jsr     COUT
         rts
-.endproc
+.endproc ; COut
 
 y_row:  .byte   0              ; y-coordinate of row start (0, 8, ...)
 x_coord:.word   0              ; x-coordinate of pixels being accumulated

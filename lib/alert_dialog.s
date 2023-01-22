@@ -522,7 +522,7 @@ finish:
         sub16   event_xcoord, portmap::viewloc::xcoord, event_xcoord
         sub16   event_ycoord, portmap::viewloc::ycoord, event_ycoord
         rts
-.endproc
+.endproc ; MapEventCoords
 
 ;;; ============================================================
 ;;; Input: A,X = AlertButtonRecord
@@ -539,7 +539,7 @@ finish:
         dey
         bpl     :-
         rts
-.endproc
+.endproc ; StashButton
 
 
 ;;; ============================================================
@@ -552,7 +552,7 @@ finish:
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, rect
         rts
-.endproc
+.endproc ; InvertButton
 
 ;;; ============================================================
 ;;; Input: A,X = AlertButtonRecord
@@ -599,7 +599,7 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::DrawText, tw_params
 :
         rts
-.endproc
+.endproc ; DrawButton
 
 ;;; ============================================================
 ;;; Event loop during button press - initial invert and
@@ -650,7 +650,7 @@ Invert:
 
         ;; High bit clear if button is depressed
 flag:   .byte   0
-.endproc
+.endproc ; TrackButton
 
 ;;; ============================================================
 
@@ -660,4 +660,4 @@ flag:   .byte   0
         DialogBackgroundRestore := dialog_background::Restore
 .endif ; AD_SAVEBG
 
-.endproc
+.endproc ; Alert

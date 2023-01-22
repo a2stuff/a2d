@@ -124,7 +124,7 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         MGTK_CALL MGTK::DrawText, params
         MGTK_CALL MGTK::Move, result
 done:   rts
-.endproc
+.endproc ; DrawStringRight
 
 last_dt:
         .tag    DateTime        ; previous date/time
@@ -133,6 +133,6 @@ last_s2:.byte   0               ; previous settings
 
 force_flag:
         .byte   0               ; force update if high bit set
-.endproc
+.endproc ; ShowClockImpl
 ShowClock := ShowClockImpl::normal
 ShowClockForceUpdate := ShowClockImpl::force_update

@@ -103,7 +103,7 @@ start:  tsx
 
         lda     window_id
         jmp     JUMP_TABLE_SELECT_WINDOW
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 ;;; ProDOS Relays
@@ -113,35 +113,35 @@ start:  tsx
         MLI_CALL OPEN, open_params
         sta     ALTZPON
         rts
-.endproc
+.endproc ; Open
 
 .proc Read
         sta     ALTZPOFF
         MLI_CALL READ, read_params
         sta     ALTZPON
         rts
-.endproc
+.endproc ; Read
 
 .proc WriteBlock
         sta     ALTZPOFF
         MLI_CALL WRITE_BLOCK, block_params
         sta     ALTZPON
         rts
-.endproc
+.endproc ; WriteBlock
 
 .proc ReadBlock
         sta     ALTZPOFF
         MLI_CALL READ_BLOCK, block_params
         sta     ALTZPON
         rts
-.endproc
+.endproc ; ReadBlock
 
 .proc Close
         sta     ALTZPOFF
         MLI_CALL CLOSE, close_params
         sta     ALTZPON
         rts
-.endproc
+.endproc ; Close
 
 ;;; ============================================================
 ;;; ProDOS call parameter blocks
@@ -194,7 +194,7 @@ exit1:  jmp     Exit
         bpl     :-
 
         FALL_THROUGH_TO ReadSortWrite
-.endproc
+.endproc ; Start2
 
 .proc ReadSortWrite
 
@@ -260,7 +260,7 @@ loop:
         beq     :-
         ldy     #FileEntry::header_pointer
         copy16in (ptr),y, block_num_table
-.endscope
+.endscope ; read
 
         ;; --------------------------------------------------
         ;; Sort the directory entries
@@ -332,10 +332,10 @@ loop2:  jsr     SetPtrToNextEntry
 
 done:   jmp     Exit
 
-.endscope
+.endscope ; write
         jmp_exit := write::jmp_exit
 
-.endproc
+.endproc ; ReadSortWrite
 
 ;;; ============================================================
 
@@ -388,7 +388,7 @@ done:   lda     flag
         rts
 
 flag:   .byte   0
-.endproc
+.endproc ; BubbleSort
 
 ;;; ============================================================
 
@@ -420,7 +420,7 @@ rtcc:   clc
 
 rtcs:   sec
         rts
-.endproc
+.endproc ; SetPtrToNextEntry
 
 ;;; ============================================================
 
@@ -431,7 +431,7 @@ rtcs:   sec
         sta     entry_num
         copy16  #dir_data_buffer + 4, ptr
         rts
-.endproc
+.endproc ; SetPtrToFirstEntry
 
 ;;; ============================================================
 ;;; Swap file entries
@@ -450,7 +450,7 @@ loop:   lda     (ptr1),y
         dey
         bpl     loop
         rts
-.endproc
+.endproc ; SwapEntries
 
 ;;; ============================================================
 ;;; Compare file entries ($06, $08); order returned in carry.
@@ -557,7 +557,7 @@ storage_type2:
 storage_type1:
         .byte   0
 type:   .byte   0
-.endproc
+.endproc ; CompareFileEntries
 
 ;;; ============================================================
 ;;; Compare selection order of icons; order returned in carry.
@@ -672,7 +672,7 @@ clear:  clc
 
 match:  .byte   0
 match2: .byte   0
-.endproc
+.endproc ; CompareSelectionOrders
 
 ;;; ============================================================
 ;;; Compare file types/names ($06, $08 = ptrs, A=type)
@@ -724,7 +724,7 @@ rtcs:   lda     #0
         rts
 
 type0:  .byte   0
-.endproc
+.endproc ; CompareEntryTypesAndNames
 
 ;;; ============================================================
 ;;; Is the file entry a SYS file with .SYSTEM suffix?
@@ -768,7 +768,7 @@ fail:   sec
 
 str_system:
         PASCAL_STRING ".SYSTEM"
-.endproc
+.endproc ; CheckSystemFile
 
 ;;; ============================================================
 ;;; Compare file entry names; carry indicates order
@@ -813,7 +813,7 @@ rtcc:   clc
 len2:   .byte   0
 len1:   .byte   0
 
-.endproc
+.endproc ; CompareFileEntryNames
 
 ;;; ============================================================
 ;;; Convert filename character to uppercase
@@ -823,7 +823,7 @@ len1:   .byte   0
         bcc     :+
         and     #CASE_MASK      ; Make upper-case
 :       rts
-.endproc
+.endproc ; ToUppercase
 
 ;;; ============================================================
 

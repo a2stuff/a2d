@@ -34,4 +34,4 @@ wait3:  sbc     #1
 length: .byte   1               ;duration of tone
 
         .poporg
-.endproc
+.endproc ; DefaultBell

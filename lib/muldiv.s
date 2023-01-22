@@ -30,7 +30,7 @@ test:   lsr     num2
 
 num1:   .word   0
 num2:   .byte   0
-.endproc
+.endproc ; Multiply_16_8_16
 
 ;;; ============================================================
 ;;; Input: dividend in A,X, divisor in Y (all unsigned)
@@ -73,4 +73,4 @@ divisor:
         .word   0
 remainder:
         .word   0
-.endproc
+.endproc ; Divide_16_8_16

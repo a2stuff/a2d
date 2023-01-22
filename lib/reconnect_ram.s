@@ -28,7 +28,7 @@
 :       rts
 
 driver: jmp     (RAMSLOT)
-.endproc
+.endproc ; ReconnectRAM
 
 saved_ram_unitnum:
         .byte   0

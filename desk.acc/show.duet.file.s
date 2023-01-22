@@ -168,7 +168,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
         MGTK_CALL MGTK::CloseWindow, winfo
         MGTK_CALL MGTK::ShowCursor
         rts
-.endproc
+.endproc ; Init
 
 ;;; ============================================================
 ;;; Draw centered string
@@ -192,7 +192,7 @@ str_instruct:   PASCAL_STRING res_string_instructions
         MGTK_CALL MGTK::MoveTo, pos
         MGTK_CALL MGTK::DrawText, text_params
         rts
-.endproc
+.endproc ; DrawCenteredString
 
 ;;; ============================================================
 
@@ -247,7 +247,7 @@ ret:    rts
         stx     filename
 
         FALL_THROUGH_TO LoadFileAndRunDA
-.endproc
+.endproc ; Entry
 
 ;;; ============================================================
 ;;; Load the file
@@ -293,7 +293,7 @@ ret:    rts
         jsr     JUMP_TABLE_CLEAR_UPDATES
 
 exit:   rts
-.endproc
+.endproc ; LoadFileAndRunDA
 
 ;;; ============================================================
 
@@ -341,7 +341,7 @@ done:   jsr     NORMFAST_fast
         bit     LCBANK1
         bit     LCBANK1
         rts
-.endproc
+.endproc ; PlayFile
 
 ;;; ============================================================
 ;;; Player - uses built-in speaker
@@ -480,9 +480,9 @@ l79:    lda     ptr
         lda     #$30
         ldx     #$A0
 :       rts
-.endproc
+.endproc ; Sub
 
-.endproc
+.endproc ; Player
 
 ;;; ============================================================
 ;;; Alt. Player - uses built-in speaker
@@ -637,7 +637,7 @@ L6725:  rts                     ; Unreferenced?
 
 L6726:  dec     Z41
         jmp     L66F9
-.endproc
+.endproc ; Player2
 
 ;;; ============================================================
 ;;; Mockingboard Player - assumes Slot 4
@@ -790,7 +790,7 @@ ENACHN: LDA #ENAREG
 OCTAVE: .byte 1
 TEMPO:  .byte 8
 TEMP:   .byte 0
-.endproc
+.endproc ; Player3
 
 ;;; ============================================================
 ;;; The Cricket! Player
@@ -933,7 +933,7 @@ ENACHN: LDA #ENAREG
 OCTAVE: .byte   1
 TEMPO:  .byte   8
 TEMP:   .byte   0
-.endproc
+.endproc ; Player4
 
 ;;; ============================================================
 

@@ -217,7 +217,7 @@ loop:   lda     (src),y
         dex
         bne     loop
         rts
-.endproc
+.endproc ; CopySegment
 
 ;;; ============================================================
 

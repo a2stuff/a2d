@@ -131,4 +131,4 @@ close2:  MLI_CALL CLOSE, close_params
 
         rts
 
-.endproc
+.endproc ; LoadSettings

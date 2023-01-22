@@ -66,7 +66,7 @@ grafport:
 
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         rts
-.endproc
+.endproc ; Init
 
 ;;; ============================================================
 

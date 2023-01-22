@@ -58,7 +58,7 @@
         rts
 
 call_params:  .addr     0
-.endproc
+.endproc ; Dispatch
 
 jump_table_low:
         .byte   <InitToolKitImpl
@@ -281,7 +281,7 @@ bufsize         .word
 
 bufsize:
         .word   0
-.endproc
+.endproc ; InitToolKitImpl
 
 ;;; ============================================================
 ;;; AddIcon
@@ -319,7 +319,7 @@ bufsize:
         lsr
 
         rts
-.endproc
+.endproc ; AddIconImpl
 
 ;;; ============================================================
 ;;; Tests if the passed icon id is in `icon_list`
@@ -335,7 +335,7 @@ bufsize:
         bne     :-              ; not found
 
 done:   rts
-.endproc
+.endproc ; IsInIconList
 .endif
 
 ;;; ============================================================
@@ -387,7 +387,7 @@ done:   rts
         inc     highlight_count
 
         rts
-.endproc
+.endproc ; HighlightIconImpl
 
 ;;; ============================================================
 ;;; RemoveIcon
@@ -426,7 +426,7 @@ done:   rts
 
         jsr     RemoveIconCommon
         return  #0
-.endproc
+.endproc ; RemoveIconImpl
 
 ;;; ============================================================
 ;;; Remove the icon at $08
@@ -474,7 +474,7 @@ done:   rts
         jsr     RemoveFromHighlightList
 
 :       rts
-.endproc
+.endproc ; RemoveIconCommon
 
 ;;; ============================================================
 ;;; EraseIcon
@@ -496,7 +496,7 @@ done:   rts
         jsr     CalcIconPoly
         lda     #$80            ; redraw highlighted
         jmp     EraseIconCommon
-.endproc
+.endproc ; EraseIconImpl
 
 ;;; ============================================================
 ;;; RemoveAll
@@ -533,7 +533,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         jsr     RemoveIconCommon
 
         jmp     loop
-.endproc
+.endproc ; RemoveAllImpl
 
 ;;; ============================================================
 ;;; FindIcon
@@ -606,7 +606,7 @@ inside: pla
         ldy     #FindIconParams::result
         sta     (out_params),y
         rts
-.endproc
+.endproc ; FindIconImpl
 
 ;;; ============================================================
 ;;; DragHighlighted
@@ -701,7 +701,7 @@ check_deltay:
 y_lo:   cpx     #kDragDelta
         bcc     peek
         FALL_THROUGH_TO is_drag
-.endproc
+.endproc ; DragDetect
 
         ;; Meets the threshold - it is a drag, not just a click.
 is_drag:
@@ -1015,7 +1015,7 @@ find_icon:
         ITK_CALL IconTK::FindIcon, findwindow_params
         lda     findwindow_params::which_area ; Icon ID
         rts
-.endproc
+.endproc ; FindIconValidateWindow
 
 ;;; Dig deeper into FindWindow results to ensure it's really content.
 ;;; Input: `findwindow_params` populated
@@ -1049,7 +1049,7 @@ fail:   lda     #$FF
 
 headery:
         .word   0
-.endproc
+.endproc ; CheckRealContentArea
 
 
 .proc FindTargetAndHighlight
@@ -1102,7 +1102,7 @@ done:   jsr     PopPointers     ; do not tail-call optimise!
 
 icon_num:
         .byte   0
-.endproc
+.endproc ; FindTargetAndHighlight
 
 ;;; Input: A = icon number
 ;;; Output: A,X = address of IconEntry
@@ -1111,7 +1111,7 @@ icon_num:
         ldx     icon_ptrs_high,y
         lda     icon_ptrs_low,y
         rts
-.endproc
+.endproc ; GetIconPtr
 
 ;;; Input: A = icon number
 ;;; Output: A = window id (0=desktop)
@@ -1125,28 +1125,28 @@ icon_num:
         lda     (ptr),y
         and     #kIconEntryWinIdMask
         rts
-.endproc
+.endproc ; GetIconWin
 
 .proc XdrawOutline
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
         copy16  polybuf_addr, addr
         MGTK_CALL MGTK::FramePoly, SELF_MODIFIED, addr
         rts
-.endproc
+.endproc ; XdrawOutline
 
 .proc HighlightIcon
         ITK_CALL IconTK::HighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
-.endproc
+.endproc ; HighlightIcon
 
 .proc UnhighlightIcon
         ITK_CALL IconTK::UnhighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
-.endproc
+.endproc ; UnhighlightIcon
 
-.endproc
+.endproc ; DragHighlightedImpl
 
 ;;; ============================================================
 ;;; UnhighlightIcon
@@ -1191,7 +1191,7 @@ icon_num:
         icon_id := *+1
         lda     #SELF_MODIFIED_BYTE
         jmp     RemoveFromHighlightList
-.endproc
+.endproc ; UnhighlightIconImpl
 
 ;;; ============================================================
 ;;; IconInRect
@@ -1265,7 +1265,7 @@ outside:
 
 inside:
         return  #1
-.endproc
+.endproc ; IconInRectImpl
 
 ;;; ============================================================
 ;;; GetIconBounds
@@ -1297,7 +1297,7 @@ inside:
         bpl     :-
 
         rts
-.endproc
+.endproc ; GetIconBoundsImpl
 
 ;;; ============================================================
 
@@ -1328,7 +1328,7 @@ clip_dy:
 .proc DrawIconRawImpl
         lda     #0              ; `clip_icons_flag`
         jmp     DrawIconCommon
-.endproc
+.endproc ; DrawIconRawImpl
 
 ;;; ============================================================
 ;;; DrawIcon
@@ -1339,7 +1339,7 @@ clip_dy:
 .proc DrawIconImpl
         lda     #$80            ; `clip_icons_flag`
         jmp     DrawIconCommon
-.endproc
+.endproc ; DrawIconImpl
 
 ;;; ============================================================
 
@@ -1498,9 +1498,9 @@ ret:    rts
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, bitmap_rect
         rts
-.endproc
+.endproc ; Shade
 
-.endproc
+.endproc ; DoPaint
 
 state:                          ; copy of IconEntry::state
         .byte   0
@@ -1509,7 +1509,7 @@ win_flags:                      ; copy of IconEntry::win_flags
 
         DEFINE_POINT label_pos, 0, 0
 
-.endproc ; DrawIcon
+.endproc ; DrawIconCommon
 
 ;;; ============================================================
 
@@ -1596,7 +1596,7 @@ kIconLabelGapV = 2
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; CalcIconRects
 
 ;;; Input: $06 points at icon
 ;;; Output: Populates `bitmap_rect` and `label_rect` and `bounding_rect`
@@ -1628,7 +1628,7 @@ kIconLabelGapV = 2
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; CalcIconBoundingRect
 
 kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
@@ -1729,7 +1729,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; CalcIconPoly
 
 ;;; Copy name from IconEntry (ptr $06) to text_buffer,
 ;;; with leading/trailing spaces, and measure it.
@@ -1761,7 +1761,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         MGTK_CALL MGTK::TextWidth, textwidth_params
 
         rts
-.endproc
+.endproc ; PrepareName
 
 ;;; ============================================================
 ;;; DrawAll
@@ -1825,7 +1825,7 @@ done:   rts
 icon:   .byte   0
 rect:   .tag    MGTK::Rect
 
-.endproc
+.endproc ; DrawAllImpl
 
 ;;; ============================================================
 ;;; Remove icon from highlight list. Does not update icon's state.
@@ -1848,7 +1848,7 @@ rect:   .tag    MGTK::Rect
         ;; Remove it
         dec     highlight_count
         rts
-.endproc
+.endproc ; RemoveFromHighlightList
 
 ;;; ============================================================
 ;;; Erase an icon; redraws overlapping icons as needed
@@ -1911,7 +1911,7 @@ volume:
         lda     more_drawing_needed_flag
         bne     :-
         jmp     RedrawIconsAfterErase
-.endproc
+.endproc ; EraseIconCommon
 
 ;;; ============================================================
 
@@ -1922,7 +1922,7 @@ volume:
         MGTK_CALL MGTK::GetDeskPat, addr
         MGTK_CALL MGTK::SetPattern, 0, addr
         FALL_THROUGH_TO EraseWindowIcon
-.endproc
+.endproc ; EraseDesktopIcon
 
 ;;; Inputs: `bounding_rect` and `poly` must be populated
 .proc EraseWindowIcon
@@ -1932,7 +1932,7 @@ volume:
 
         MGTK_CALL MGTK::PaintPoly, poly
         rts
-.endproc
+.endproc ; EraseWindowIcon
 
 ;;; ============================================================
 ;;; After erasing an icon, redraw any overlapping icons
@@ -1995,7 +1995,7 @@ loop:   dex                     ; any icons to draw?
 next:   pla
         tax
         bpl     loop            ; always
-.endproc
+.endproc ; RedrawIconsAfterErase
 
 ;;; ============================================================
 ;;; Offset coordinates for windowed icons
@@ -2047,7 +2047,7 @@ loop1:  add16   poly::vertices+0,x, clip_dx, poly::vertices+0,x
 
         rts
 
-.endproc
+.endproc ; OffsetPoly
 
 .proc DoOffset
         ptr := $06
@@ -2062,7 +2062,7 @@ loop1:  add16   poly::vertices+0,x, clip_dx, poly::vertices+0,x
         sub16in (ptr),y, clip_dy, (ptr),y ; icony += viewloc::ycoord - maprect::top
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; DoOffset
 
 .proc UndoOffset
         ptr := $06
@@ -2077,9 +2077,9 @@ loop1:  add16   poly::vertices+0,x, clip_dx, poly::vertices+0,x
         add16in (ptr),y, clip_dy, (ptr),y ; icony += maprect::top - viewloc::xcoord
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc
+.endproc ; UndoOffset
 
-.endproc
+.endproc ; OffsetIconImpl
         offset_icon_poly_and_rect := OffsetIconImpl::entry_poly_and_rect
         offset_icon_do := OffsetIconImpl::entry_do
         offset_icon_undo := OffsetIconImpl::entry_undo
@@ -2134,7 +2134,7 @@ reserved:       .byte   0
         COPY_STRUCT MGTK::Rect, screen_bounds, portbits::maprect
 
         jmp     DuplicateClipStructsAndSetPortBits
-.endproc
+.endproc ; SetPortForVolIcon
 
 ;;; ============================================================
 
@@ -2167,7 +2167,7 @@ reserved:       .byte   0
         add16_8 portbits::maprect+MGTK::Rect::y1, #kOffset
 
         FALL_THROUGH_TO DuplicateClipStructsAndSetPortBits
-.endproc
+.endproc ; SetPortForWinIcon
 
 ;;; Call with these populated:
 ;;; * `portbits::maprect` - screen space clip rect
@@ -2203,7 +2203,7 @@ reserved:       .byte   0
         rts
 
 empty:  return #$FF
-.endproc
+.endproc ; DuplicateClipStructsAndSetPortBits
 
 ;;; ============================================================
 
@@ -2217,7 +2217,7 @@ empty:  return #$FF
         sub16   maprect+MGTK::Rect::x1, viewloc+MGTK::Point::xcoord, clip_dx
         sub16   maprect+MGTK::Rect::y1, viewloc+MGTK::Point::ycoord, clip_dy
         rts
-.endproc
+.endproc ; CalcClipDeltas
 
 ;;; ============================================================
 
@@ -2494,7 +2494,7 @@ case2:
 :       stx     cr_l
         sty     cr_l + 1
         jmp     set_bits
-.endproc
+.endproc ; CalcWindowIntersections
 
 ;;; ============================================================
 ;;; Used when doing clipped drawing to map viewport and icon
@@ -2526,7 +2526,7 @@ case2:
         sub16   #0, clip_dx, clip_dx
         sub16   #0, clip_dy, clip_dy
         rts
-.endproc
+.endproc ; OffsetPortAndIcon
 
 ;;; ============================================================
 
@@ -2539,7 +2539,7 @@ case2:
         add16_8 icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kOffset
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
-.endproc
+.endproc ; ShiftPortDown
 
 ;;; ============================================================
 ;;; Pushes two words from $6/$8 to stack; preserves Y only
@@ -2567,7 +2567,7 @@ case2:
         pha
 
         rts
-.endproc
+.endproc ; PushPointers
 
 ;;; ============================================================
 ;;; Pops two words from stack to $6/$8; preserves Y only
@@ -2595,6 +2595,6 @@ case2:
         pha
 
         rts
-.endproc
+.endproc ; PopPointers
 
 .endscope ; icon_toolkit

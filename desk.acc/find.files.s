@@ -60,7 +60,7 @@
         jsr     Init
         lda     show_index
         rts
-.endproc
+.endproc ; RunDA
 
 ;;; ============================================================
 
@@ -224,7 +224,7 @@ pattern:        .res    16      ; null-terminated/upcased version
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         LETK_CALL LETK::Idle, le_params
@@ -240,7 +240,7 @@ pattern:        .res    16      ; null-terminated/upcased version
         jsr     CheckMouseMoved
         bcc     InputLoop
         jmp     HandleMouseMove
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
@@ -249,7 +249,7 @@ pattern:        .res    16      ; null-terminated/upcased version
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -300,7 +300,7 @@ pattern:        .res    16      ; null-terminated/upcased version
 allow:  LETK_CALL LETK::Key, le_params
 ignore:
         jmp     InputLoop
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -316,7 +316,7 @@ ignore:
 
 yes:    clc                     ; C=0
         rts
-.endproc
+.endproc ; IsControlChar
 
 ;;; ============================================================
 
@@ -348,7 +348,7 @@ insert: clc
 
 ignore: sec
         rts
-.endproc
+.endproc ; IsSearchChar
 
 ;;; ============================================================
 
@@ -418,7 +418,7 @@ finish:
 
         jmp     InputLoop
 
-.endproc
+.endproc ; DoSearch
 
 ;;; ============================================================
 ;;; Make a path character uppercase; assumes no char >'z' is
@@ -429,7 +429,7 @@ finish:
         bcc     :+
         and     #CASE_MASK
 :       rts
-.endproc
+.endproc ; UpcasePathChar
 
 ;;; ============================================================
 
@@ -481,7 +481,7 @@ finish:
         LETK_CALL LETK::Click, le_params
 
 done:   jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 ;;; Determine if mouse moved (returns w/ carry set if moved)
@@ -503,7 +503,7 @@ diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
 
         DEFINE_POINT coords, 0, 0
 
-.endproc
+.endproc ; CheckMouseMoved
 
 ;;; ============================================================
 
@@ -530,19 +530,19 @@ inside:
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
 
 done:   jmp     InputLoop
-.endproc
+.endproc ; HandleMouseMove
 
 ;;; ============================================================
 
 .proc SetPortForList
         lda     #kResultsWindowID
         bne     SetPortForWindow ; always
-.endproc
+.endproc ; SetPortForList
 
 .proc SetPortForDialog
         lda     #kDAWindowID
         FALL_THROUGH_TO SetPortForWindow
-.endproc
+.endproc ; SetPortForDialog
 
 .proc SetPortForWindow
         sta     getwinport_params::window_id
@@ -550,7 +550,7 @@ done:   jmp     InputLoop
         ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
-.endproc
+.endproc ; SetPortForWindow
 
 ;;; ============================================================
 
@@ -573,7 +573,7 @@ done:   jmp     InputLoop
 
         MGTK_CALL MGTK::ShowCursor
 done:   rts
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 ;;; Populate `entry_buf` with entry in A
@@ -587,7 +587,7 @@ done:   rts
 
         sec                     ; main>aux
         jmp     AUXMOVE
-.endproc
+.endproc ; GetEntry
 
 ;;; ============================================================
 ;;; List Box
@@ -608,7 +608,7 @@ show_index:     .byte   $FF
         selected_index = aux::selected_index
         highlight_rect = aux::highlight_rect
 
-.endscope
+.endscope ; listbox
 
         .include "../lib/listbox.s"
 
@@ -618,7 +618,7 @@ show_index:     .byte   $FF
 .proc DrawListEntryProc
         jsr     GetEntry
         param_jump DrawString, entry_buf
-.endproc
+.endproc ; DrawListEntryProc
 
 ;;; ============================================================
 
@@ -628,7 +628,7 @@ show_index:     .byte   $FF
         copy16  #kListItemTextOffsetX, cur_pos::xcoord
         copy16  #kListItemTextOffsetY, cur_pos::ycoord
         rts
-.endproc
+.endproc ; PrepDrawIncrementalResults
 
 .proc DrawNextResult
         MGTK_CALL MGTK::MoveTo, cur_pos
@@ -639,7 +639,7 @@ show_index:     .byte   $FF
         add16_8 cur_pos::ycoord, #kListItemHeight
         inc     cur_line
         rts
-.endproc
+.endproc ; DrawNextResult
 
 ;;; ============================================================
 
@@ -663,7 +663,7 @@ show_index:     .byte   $FF
 
 num:    .byte   0
 offset: .addr   0
-.endproc
+.endproc ; GetEntryAddr
 
 ;;; ============================================================
 
@@ -793,7 +793,7 @@ continue:
 
 num:    .byte   0
 offset: .addr   0
-.endproc
+.endproc ; GetEntryAddr
 
 ;;; ============================================================
 ;;; Make a path character uppercase; assumes no char >'z' is
@@ -804,7 +804,7 @@ offset: .addr   0
         bcc     :+
         and     #CASE_MASK
 :       rts
-.endproc
+.endproc ; UpcasePathChar
 
 ;;; ============================================================
 
@@ -925,8 +925,8 @@ num_entries:
 
         ldax    #nameBuffer
         jmp     ReadDir
-.endproc
-.endproc
+.endproc ; Relay
+.endproc ; Start
 
 .proc Terminate
         MLI_CALL CLOSE, CloseParms ; close the directory
@@ -935,7 +935,7 @@ num_entries:
         txs
 
         rts
-.endproc
+.endproc ; Terminate
 
 ;;;
 ;;;******************************************************
@@ -1045,7 +1045,7 @@ hitDirEnd:
 
 OpenDone:
         rts
-.endproc
+.endproc ; OpenDir
 
 ;;;
 ;;;******************************************************
@@ -1093,7 +1093,7 @@ OpenDone:
         jeq     Terminate
 
 exit:   rts
-.endproc
+.endproc ; VisitFile
 
 ;;;
 ;;;******************************************************
@@ -1115,7 +1115,7 @@ exit:   rts
         jsr     RecursDir       ; enumerate all entries in sub-dir.
 
 :       rts
-.endproc
+.endproc ; VisitDir
 ;;;
 ;;;******************************************************
 ;;;
@@ -1205,7 +1205,7 @@ reOpened:
 
         dec     Depth
         rts
-.endproc
+.endproc ; RecursDir
 
 ;;;
 ;;;******************************************************
@@ -1250,7 +1250,7 @@ extloop:
 extCnt:         .res    1
 srcPtr:         .res    1
 destPtr:        .res    1
-.endproc
+.endproc ; ExtendName
 
 ;;;
 ;;;
@@ -1273,7 +1273,7 @@ ChopLoop:
         ldy     #0
         sta     (dirName),y
         rts
-.endproc
+.endproc ; ChopName
 
 ;;;
 ;;;******************************************************
@@ -1318,10 +1318,10 @@ ReadNext:
 DirDone:
         sec                     ; return 'an error occurred' (error in A)
         rts
-.endproc
+.endproc ; GetNext
 
 
-.endproc
+.endproc ; ReadDir
 
 ;;;
 ;;;******************************************************
@@ -1414,9 +1414,9 @@ stloop: txa                     ; We first try to match with * = ""
 
 fail:   clc                     ; Yes, no match found, return with C=0
         rts
-.endproc
+.endproc ; IsMatch
 
-.endscope
+.endscope ; RecursiveCatalog
 
 
 ;;; ============================================================
@@ -1435,7 +1435,7 @@ fail:   clc                     ; Yes, no match found, return with C=0
         bit     ROMIN2
 
         rts
-.endproc
+.endproc ; DrawNextResultFromMain
 
 ;;; ============================================================
 
@@ -1450,7 +1450,7 @@ devidx: .byte   0
 .proc InitVolumes
         copy    DEVCNT, devidx
         rts
-.endproc
+.endproc ; InitVolumes
 
 ;;; Appends next volume name to `searchPath`. Call `InitVolumes` first.
 ;;; Output: C=0 on success, C=1 on failure
@@ -1488,7 +1488,7 @@ repeat: ldx     devidx
 fail:
         sec
         rts
-.endproc
+.endproc ; NextVolume
 
 ;;; ============================================================
 

@@ -196,7 +196,7 @@ cancel:
 ;;; High bit set if erase, otherwise format.
 erase_flag:
         .byte   0
-.endproc
+.endproc ; PromptForDeviceAndName
 
 ;;; ============================================================
 ;;; Format Disk
@@ -280,7 +280,7 @@ cancel:
         ldx     #SELF_MODIFIED_BYTE
         pla
         rts
-.endproc
+.endproc ; FormatDisk
 
 ;;; ============================================================
 ;;; Erase Disk
@@ -336,7 +336,7 @@ cancel:
         ldx     #SELF_MODIFIED_BYTE
         pla
         rts
-.endproc
+.endproc ; EraseDisk
 
 ;;; ============================================================
 
@@ -379,7 +379,7 @@ update: pha                     ; A = new selection
         jsr     main::StashCoordsAndDetectDoubleClick
         beq     l5
         rts
-.endproc
+.endproc ; HandleClick
 
 ;;; ============================================================
 ;;; Get the coordinates of an option by index.
@@ -416,7 +416,7 @@ update: pha                     ; A = new selection
         pla                     ; X coord lo
 
         rts
-.endproc
+.endproc ; GetOptionPos
 
 ;;; ============================================================
 
@@ -455,7 +455,7 @@ update: pha                     ; A = new selection
         rts
 
 done:   return  #$FF
-.endproc
+.endproc ; GetOptionIndexFromCoords
 
 ;;; ============================================================
 ;;; Hilight volume label
@@ -474,7 +474,7 @@ done:   return  #$FF
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, vol_picker_item_rect
         rts
-.endproc
+.endproc ; HighlightVolumeLabel
 
 ;;; ============================================================
 
@@ -484,7 +484,7 @@ done:   return  #$FF
         jsr     HighlightVolumeLabel
         copy    #$FF, selected_device_index
 :       rts
-.endproc
+.endproc ; MaybeHighlightSelectedIndex
 
 ;;; ============================================================
 
@@ -514,7 +514,7 @@ done:   return  #$FF
 set:    sta     selected_device_index
         jsr     HighlightVolumeLabel
         return  #$FF
-.endproc
+.endproc ; PromptHandleKeyRight
 
 ;;; ============================================================
 
@@ -555,7 +555,7 @@ loop:   sec
 set:    sta     selected_device_index
         jsr     HighlightVolumeLabel
         return  #$FF
-.endproc
+.endproc ; PromptHandleKeyLeft
 
 ;;; ============================================================
 
@@ -573,7 +573,7 @@ set:    sta     selected_device_index
         sta     selected_device_index
         jsr     HighlightVolumeLabel
         return  #$FF
-.endproc
+.endproc ; PromptHandleKeyDown
 
 ;;; ============================================================
 
@@ -595,7 +595,7 @@ wrap:   ldx     num_volumes     ; go to last (num - 1)
         sta     selected_device_index
         jsr     HighlightVolumeLabel
         return  #$FF
-.endproc
+.endproc ; PromptHandleKeyUp
 
 ;;; ============================================================
 ;;; Draw volume labels
@@ -638,7 +638,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
         inc     vol
         jmp     loop
-.endproc
+.endproc ; DrawVolumeLabels
 
 ;;; ============================================================
 ;;; Gets the selected unit number from `DEVLST`
@@ -654,7 +654,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         tax
         lda     DEVLST,x
         rts
-.endproc
+.endproc ; GetSelectedUnitNum
 
 ;;; ============================================================
 ;;; Inputs: A = unit number (no need to mask off low nibble), X,Y = name
@@ -698,7 +698,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 no_match:
         clc
         rts
-.endproc
+.endproc ; CheckConflictingVolumeName
 
 ;;; ============================================================
 
@@ -736,7 +736,7 @@ path:
         tax
         pla
         rts
-.endproc
+.endproc ; GetDriverAddress
 
 ;;; ============================================================
 ;;; Format disk
@@ -773,7 +773,7 @@ driver: lda     unit_num
 
 unit_num:
         .byte   0
-.endproc
+.endproc ; FormatUnit
 
 ;;; ============================================================
 ;;; Check if the device supports formatting
@@ -808,7 +808,7 @@ supported:
 
 unit_num:
         .byte   0
-.endproc
+.endproc ; CheckSupportsFormat
 
 ;;; ============================================================
 ;;; Write the loader, volume directory, and volume bitmap
@@ -1072,9 +1072,9 @@ zerosecond:
 
 builddone:
         rts                     ; And we're done
-.endproc
+.endproc ; BuildBlock
 
-.endproc
+.endproc ; WriteHeaderBlocks
 
 ;;; ============================================================
 
@@ -1102,7 +1102,7 @@ zero_buffers:
         dey
         bne     :-
         rts
-.endproc
+.endproc ; WriteBlockAndZero
 
 ;;; ============================================================
 
@@ -1209,7 +1209,7 @@ maybe_dos:
         clc
         adc     #'0'
         rts
-.endproc
+.endproc ; GetSlotChar
 
 .proc GetDriveChar
         and     #$80
@@ -1217,7 +1217,7 @@ maybe_dos:
         rol     a
         adc     #'1'
         rts
-.endproc
+.endproc ; GetDriveChar
 
 ;;; Handle Pascal disk - name suffixed with ':'
 pascal_disk:
@@ -1242,7 +1242,7 @@ pascal_disk:
         lda     #':'
         sta     ovl_string_buf,x
         rts
-.endproc
+.endproc ; GetNonprodosVolName
 
 ;;; ============================================================
 ;;; Get a volume name, for ProDOS or non-ProDOS disk.
@@ -1272,7 +1272,7 @@ pascal_disk:
 non_pro:
         lda     on_line_params::unit_num
         jmp     GetNonprodosVolName
-.endproc
+.endproc ; GetVolName
 
 ;;; ============================================================
 
@@ -1290,7 +1290,7 @@ non_pro:
         sta     ovl_string_buf+1
         stx     ovl_string_buf
         rts
-.endproc
+.endproc ; EnquoteStringBuf
 
 ;;; ============================================================
 

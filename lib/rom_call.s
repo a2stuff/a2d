@@ -60,4 +60,4 @@
         plp
 
         rts
-.endproc
+.endproc ; ROMCall

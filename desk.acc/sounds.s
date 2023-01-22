@@ -53,7 +53,7 @@
         jsr     Init
         lda     dialog_result
         rts
-.endproc
+.endproc ; AuxEntry
 
 ;;; High bit set when anything changes.
 dialog_result:
@@ -64,7 +64,7 @@ dialog_result:
         ora     dialog_result
         sta     dialog_result
         rts
-.endproc
+.endproc ; MarkDirty
 
 ;;; ============================================================
 ;;; Resources
@@ -258,7 +258,7 @@ grafport_win:       .tag    MGTK::GrafPort
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
@@ -270,14 +270,14 @@ grafport_win:       .tag    MGTK::GrafPort
         beq     HandleKey
 
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo_listbox
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -305,7 +305,7 @@ grafport_win:       .tag    MGTK::GrafPort
     END_IF
 
         jmp     InputLoop
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -332,7 +332,7 @@ grafport_win:       .tag    MGTK::GrafPort
     END_IF
 
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -358,7 +358,7 @@ grafport_win:       .tag    MGTK::GrafPort
         ;; ----------------------------------------
 
         jmp     InputLoop
-.endproc
+.endproc ; HandleDialogClick
 
 ;;; ============================================================
 
@@ -414,7 +414,7 @@ grafport_win:       .tag    MGTK::GrafPort
         bpl     :-
 
         rts
-.endproc
+.endproc ; Swap
 
 .proc Install
         .assert kBellProcLength <= 128, error, "Can't BPL this loop"
@@ -425,21 +425,21 @@ grafport_win:       .tag    MGTK::GrafPort
         bpl     :-
 
         rts
-.endproc
+.endproc ; Install
 
-.endproc
+.endproc ; PlayIndex
 
 ;;; ============================================================
 
 .proc SetPortForList
         lda     #kListBoxWindowId
         bne     SetPortForWindow ; always
-.endproc
+.endproc ; SetPortForList
 
 .proc SetPortForDialog
         lda     #kDAWindowId
         FALL_THROUGH_TO SetPortForWindow
-.endproc
+.endproc ; SetPortForDialog
 
 .proc SetPortForWindow
         sta     getwinport_params::window_id
@@ -447,7 +447,7 @@ grafport_win:       .tag    MGTK::GrafPort
         ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
-.endproc
+.endproc ; SetPortForWindow
 
 
 ;;; ============================================================
@@ -469,7 +469,7 @@ grafport_win:       .tag    MGTK::GrafPort
 
         ;; List Box
         jmp     ListInit
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 
@@ -513,7 +513,7 @@ next:   inc     index
         lda     #$FF
         rts
 
-.endproc
+.endproc ; SearchForCurrent
 
 
 ;;; ============================================================
@@ -541,7 +541,7 @@ next:   inc     index
         hi := *+1
         ldx     #SELF_MODIFIED_BYTE
         rts
-.endproc
+.endproc ; CRC
 
 ;;; ============================================================
 ;;; Sound Routines
@@ -560,7 +560,7 @@ kChecksumLength = 16
 
 .macro END_SOUND_PROC
         .poporg
-.endproc
+.endproc ; name
         .assert .sizeof(__CURRENT_SOUND_PROC) <= kBellProcLength, error, "Sound proc too large"
         .assert .sizeof(__CURRENT_SOUND_PROC) >= kChecksumLength, error, "Sound proc too small"
         .undefine __CURRENT_SOUND_PROC
@@ -1325,8 +1325,8 @@ cloop:  lda     (ptr),y
         dey
         bpl     cloop
         rts
-.endproc
-.endproc
+.endproc ; DoRow
+.endproc ; InvertMenu
 
 hires_table_lo:
         .byte   $00,$00,$00,$00,$00,$00,$00,$00
@@ -1350,7 +1350,7 @@ END_SOUND_PROC
         bpl     :+
         rts
 :       jmp     PlayIndex
-.endproc
+.endproc ; OnListSelectionChange
 
 ;;; Play sound if same item is re-clicked.
 OnListSelectionNoChange := OnListSelectionChange
@@ -1368,7 +1368,7 @@ OnListSelectionNoChange := OnListSelectionChange
 
         selected_index = ::selected_index
         highlight_rect = itemrect
-.endscope
+.endscope ; listbox
 
         .include "../lib/listbox.s"
 
@@ -1385,7 +1385,7 @@ OnListSelectionNoChange := OnListSelectionChange
         tax
         pla
         jmp     DrawString
-.endproc
+.endproc ; DrawListEntryProc
 
 ;;; ============================================================
 
@@ -1465,7 +1465,7 @@ done:   rts
         bne     :-
         sty     filename_buffer
         rts
-.endproc
+.endproc ; AppendFilename
 
 .proc DoWrite
         ;; First time - ask if we should even try.
@@ -1505,9 +1505,9 @@ ret:    rts
 
 second_try_flag:
         .byte   0
-.endproc
+.endproc ; DoWrite
 
-.endproc
+.endproc ; SaveSettings
 
 ;;; ============================================================
 

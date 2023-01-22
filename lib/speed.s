@@ -53,7 +53,7 @@
     END_IF
 
         rts
-.endproc
+.endproc ; ResumeSpeed
 
 ;;; Assert: Aux LC is banked in; interrupts are inhibited
 ;;; NOTE: Must be followed by a call to `ResumeSpeed`
@@ -91,4 +91,4 @@
     END_IF
 
         rts
-.endproc
+.endproc ; SlowSpeed

@@ -20,7 +20,7 @@
         call_addr := *+1
         jsr     SELF_MODIFIED
         jmp     BankInMain
-.endproc
+.endproc ; CallMainToAuxImpl
 
 .assert * = CallAuxToMain, error, "entry point mismatch"
 .proc CallAuxToMainImpl
@@ -29,7 +29,7 @@
         call_addr := *+1
         jsr     SELF_MODIFIED
         jmp     BankInAux
-.endproc
+.endproc ; CallAuxToMainImpl
 
 ;;; ============================================================
 ;;; Common code for main>aux relays with MLI-style params
@@ -67,7 +67,7 @@ call_addr := * + 1
         jsr     SELF_MODIFIED
 params:  .res    3
         jmp     BankInMain
-.endproc
+.endproc ; ParamsRelayImpl
 
 ;;; ============================================================
 ;;; MGTK call from main>aux, MLI-style params
@@ -75,7 +75,7 @@ params:  .res    3
 .proc MGTKRelayImpl
         ldax    #MGTKAuxEntry
         jmp     ParamsRelayImpl
-.endproc
+.endproc ; MGTKRelayImpl
 
 ;;; ============================================================
 ;;; IconTK call from main>aux, MLI-style params
@@ -83,7 +83,7 @@ params:  .res    3
 .proc ITKRelayImpl
         ldax    #aux::ITKEntry
         jmp     ParamsRelayImpl
-.endproc
+.endproc ; ITKRelayImpl
 
 ;;; ============================================================
 ;;; LineEditTK call from main>aux, MLI-style params
@@ -91,7 +91,7 @@ params:  .res    3
 .proc LETKRelayImpl
         ldax    #aux::letk::LETKEntry
         jmp     ParamsRelayImpl
-.endproc
+.endproc ; LETKRelayImpl
 
 
 ;;; ============================================================
@@ -100,7 +100,7 @@ params:  .res    3
 .proc BTKRelayImpl
         ldax    #aux::btk::BTKEntry
         jmp     ParamsRelayImpl
-.endproc
+.endproc ; BTKRelayImpl
 
 
 ;;; ============================================================
@@ -133,7 +133,7 @@ loop:   lda     (src),y
         bpl     loop
 
         jmp     BankInMain
-.endproc
+.endproc ; OverwriteWindowPort
 
 ;;; ============================================================
 ;;; From MAIN, load AUX (A,X) into A
@@ -145,7 +145,7 @@ loop:   lda     (src),y
 op:     lda     SELF_MODIFIED
         sta     RAMRDOFF
         rts
-.endproc
+.endproc ; AuxLoad
 
 ;;; ============================================================
 ;;; From MAIN, show alert
@@ -155,14 +155,14 @@ op:     lda     SELF_MODIFIED
 .proc ShowAlert
         ldx     #$00
         FALL_THROUGH_TO ShowAlertOption
-.endproc
+.endproc ; ShowAlert
 
 ;;; A=alert number, X=custom options
 .proc ShowAlertOption
         jsr     BankInAux
         jsr     aux::AlertById
         jmp     BankInMain
-.endproc
+.endproc ; ShowAlertOption
 
 ;;; ============================================================
 ;;; Bell
@@ -172,7 +172,7 @@ op:     lda     SELF_MODIFIED
         jsr     BankInMain
         jsr     Bell
         jmp     BankInAux
-.endproc
+.endproc ; BellFromAux
 
 ;;; ============================================================
 ;;; Yield from a nested event loop, for periodic tasks.
@@ -182,7 +182,7 @@ op:     lda     SELF_MODIFIED
         jsr     BankInMain
         jsr     main__YieldLoop
         jmp     BankInAux
-.endproc
+.endproc ; YieldLoopFromAux
 
 ;;; ============================================================
 ;;; Helpers for banking in Aux/Main $200-$BFFF.
@@ -192,13 +192,13 @@ op:     lda     SELF_MODIFIED
         sta     RAMRDON
         sta     RAMWRTON
         rts
-.endproc
+.endproc ; BankInAux
 
 .proc BankInMain
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
-.endproc
+.endproc ; BankInMain
 
 ;;; ============================================================
 ;;; Pushes two words from $6/$8 to stack; preserves A,X,Y
@@ -236,7 +236,7 @@ op:     lda     SELF_MODIFIED
         lda     #SELF_MODIFIED_BYTE
 
         rts
-.endproc
+.endproc ; PushPointers
 
 ;;; ============================================================
 ;;; Pops two words from stack to $6/$8; preserves A,X,Y
@@ -274,7 +274,7 @@ op:     lda     SELF_MODIFIED
         lda     #SELF_MODIFIED_BYTE
 
         rts
-.endproc
+.endproc ; PopPointers
 
 ;;; ============================================================
 

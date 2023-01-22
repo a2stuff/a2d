@@ -139,7 +139,7 @@ char_label:  .byte   0
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
@@ -152,13 +152,13 @@ char_label:  .byte   0
         jeq     HandleKey
 
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -168,7 +168,7 @@ char_label:  .byte   0
         jeq     Exit
 
         jmp     InputLoop
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -186,7 +186,7 @@ char_label:  .byte   0
         cmp     #MGTK::Area::dragbar
         beq     HandleDrag
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -196,7 +196,7 @@ char_label:  .byte   0
         jeq     InputLoop
 
         jmp     Exit
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -216,7 +216,7 @@ char_label:  .byte   0
 
 :       jmp     InputLoop
 
-.endproc
+.endproc ; HandleDrag
 
 ;;; ============================================================
 
@@ -289,7 +289,7 @@ loop:   lda     index
 
 index:  .byte   0
 
-.endproc
+.endproc ; DrawWindow
 
         aux_font_buffer := *
 
@@ -337,7 +337,7 @@ filename:       .res    16
         jsr     AUXMOVE
 
         FALL_THROUGH_TO LoadFileAndRunDA
-.endproc
+.endproc ; Entry
 
 ;;; ============================================================
 ;;; Load the file
@@ -402,7 +402,7 @@ filename:       .res    16
 
 exit:   rts
 
-.endproc
+.endproc ; LoadFileAndRunDA
 
 ;;; ============================================================
 ;;; Calculate expected font file size, given font header
@@ -430,7 +430,7 @@ expected_size:
         add16_8 expected_size, #4 ; += 3 + 1
 
         rts
-.endproc
+.endproc ; CalcFontSize
 
 ;;; ============================================================
 

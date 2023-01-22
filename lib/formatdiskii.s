@@ -144,7 +144,7 @@ L08DB:  ldx     L0C23
         jsr     L0823
         pla
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -201,7 +201,7 @@ L093C:  sty     $D5
         cmp     #$AA
         beq     return_with_carry_clear
         FALL_THROUGH_TO return_with_carry_set
-.endproc
+.endproc ; L0907
 return_with_carry_set:
         sec
         rts
@@ -255,7 +255,7 @@ L0995:  sta     $DB
         cmp     #$AA
         bne     return_with_carry_set
         FALL_THROUGH_TO return_with_carry_clear
-.endproc
+.endproc ; L096A
 return_with_carry_clear:
         clc
         rts
@@ -310,7 +310,7 @@ motor:  and     #$03            ; PHASE0 + 2 * phase
         ldx     seltrack_slot
 
 done:   rts
-.endproc
+.endproc ; SelectTrack
 
 ;;; ============================================================
 
@@ -389,7 +389,7 @@ Write2: pha
         sta     DATA,x
         cmp     XMIT,x
         rts
-.endproc
+.endproc ; FormatSector
 
 ;;; ============================================================
 
@@ -443,7 +443,7 @@ loop:   jsr     rts1
 L0B15:  lda     RDMODE,x        ; Turn off write mode
         lda     XMIT,x
 rts1:   rts
-.endproc
+.endproc ; L0AAE
 
 ;;; ============================================================
 
@@ -478,7 +478,7 @@ start:  ldx     #$11
         sbc     #1
         bne     start
         rts
-.endproc
+.endproc ; L0B3A
 
 ;;; Timing (100-usecs)
 phase_on_table:  .byte   $01, $30, $28, $24, $20, $1E, $1D, $1C, $1C, $1C, $1C, $1C

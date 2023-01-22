@@ -22,4 +22,4 @@ clear:  copy16  #HIRES_ADDR, ptr
         dex
         bne     :-
         rts
-.endproc
+.endproc ; ClearDHRToBlack

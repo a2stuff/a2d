@@ -31,7 +31,7 @@
 .endif ; RC_LCBANK
         plp
         rts
-.endproc
+.endproc ; GetCopiedToRAMCardFlag
 
 ;;; Copy the RAMCard prefix (e.g. "/RAM") to the passed buffer.
 ;;; Input: A,X=destination buffer
@@ -64,7 +64,7 @@
 .endif ; RC_LCBANK
 
         rts
-.endproc
+.endproc ; CopyRAMCardPrefix
 
 ;;; Copy the original DeskTop prefix (e.g. "/HD/A2D") to the passed buffer.
 ;;; Input: A,X=destination buffer
@@ -97,7 +97,7 @@
 .endif ; RC_LCBANK
 
         rts
-.endproc
+.endproc ; CopyDeskTopOriginalPrefix
 
 ;;; Get the "was it copied to RAMCard?" flag for the specified entry
 ;;; Input: X = `entry_num`
@@ -125,7 +125,7 @@
 .endif ; RC_LCBANK
         plp
         rts
-.endproc
+.endproc ; GetEntryCopiedToRAMCardFlag
 
 ;;; Set the "was it copied to RAMCard?" flag for the specified entry
 ;;; Input: A = flag, X = `entry_num`
@@ -151,4 +151,4 @@
 .endif ; RC_LCBANK
 
         rts
-.endproc
+.endproc ; SetEntryCopiedToRAMCardFlag

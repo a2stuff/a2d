@@ -325,7 +325,7 @@ skipfc:
         plp             ; restore interrupt state
         rts
 
-.endscope
+.endscope ; NORMFAST
         NORMFAST_norm := NORMFAST::norm
         NORMFAST_fast := NORMFAST::fast
 

@@ -53,7 +53,7 @@
         jsr     COUT
 
 done:   rts
-.endproc
+.endproc ; InitProgress
 
 .proc UpdateProgress
         lda     #kProgressVtab
@@ -74,7 +74,7 @@ done:   rts
         bne     :-
 
         rts
-.endproc
+.endproc ; UpdateProgress
 UpdateProgress__count := UpdateProgress::count
 
 ;;; ============================================================
@@ -92,7 +92,7 @@ UpdateProgress__count := UpdateProgress::count
 enh:    copy    #$80, supports_mousetext
 
 done:   rts
-.endproc
+.endproc ; DetectMousetext
 
 supports_mousetext:
         .byte   0

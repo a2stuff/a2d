@@ -15,4 +15,4 @@
         inc16   textptr
         MGTK_CALL MGTK::DrawText, params
 done:   rts
-.endproc
+.endproc ; DrawString

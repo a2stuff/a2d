@@ -104,9 +104,9 @@ loop:   cmp     #10
         bne     loop            ; always
 
 done:   rts
-.endproc
+.endproc ; Split
 
-.endproc
+.endproc ; MakeTimeString
 
 ;;; ============================================================
 
@@ -141,7 +141,7 @@ mod7:   adc     #7              ; Returns (A+3) modulo 7
 month_offset_table:
         .byte   1,5,6,3,1,5,3,0,4,2,6,4
         ASSERT_TABLE_SIZE month_offset_table, 12
-.endproc
+.endproc ; DayOfWeek
 
 ;;; ============================================================
 ;;; Parse date/time
@@ -337,4 +337,4 @@ prodos_2_5:
 
 ytmp:   .word   0
 
-.endproc
+.endproc ; ParseDatetime

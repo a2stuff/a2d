@@ -35,7 +35,7 @@ penXOR:         .byte   MGTK::penXOR
         jsr     Invert
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 ;;; ============================================================
 ;;; Main Input Loop
@@ -51,7 +51,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         jmp     loop
 
 exit:   jmp     Invert
-.endproc
+.endproc ; InputLoop
 
 ;;; ============================================================
 ;;; Invert
@@ -64,7 +64,7 @@ exit:   jmp     Invert
         MGTK_CALL MGTK::PaintRect, rect
         MGTK_CALL MGTK::ShowCursor
         rts
-.endproc
+.endproc ; Invert
 
 ;;; ============================================================
 

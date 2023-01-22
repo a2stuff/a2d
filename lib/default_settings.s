@@ -52,4 +52,4 @@
         ;; Reserved for future use...
 
         PAD_TO settings_start + .sizeof(DeskTopSettings)
-.endscope
+.endscope ; settings

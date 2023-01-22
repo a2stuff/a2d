@@ -55,7 +55,7 @@
         jsr     init_window
         lda     dialog_result
         rts
-.endproc
+.endproc ; RunDA
 
 ;;; ============================================================
 ;;; Param blocks
@@ -373,7 +373,7 @@ init_window:
 :       cmp     #MGTK::EventKind::key_down
         bne     InputLoop
         FALL_THROUGH_TO OnKey
-.endproc
+.endproc ; InputLoop
 
 .proc OnKey
         MGTK_CALL MGTK::SetPort, winfo::port
@@ -412,7 +412,7 @@ init_window:
         jsr     DoIncOrDec
         MGTK_CALL MGTK::PaintRect, up_arrow_rect
         jmp     InputLoop
-.endproc
+.endproc ; OnKeyUp
 
 .proc OnKeyDown
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
@@ -421,7 +421,7 @@ init_window:
         jsr     DoIncOrDec
         MGTK_CALL MGTK::PaintRect, down_arrow_rect
         jmp     InputLoop
-.endproc
+.endproc ; OnKeyDown
 
 .proc OnKeyLeft
         sec
@@ -435,7 +435,7 @@ init_window:
         lda     #Field::period-1
     END_IF
         jmp     UpdateSelection
-.endproc
+.endproc ; OnKeyLeft
 
 .proc OnKeyRight
         clc
@@ -451,13 +451,13 @@ init_window:
         bne     UpdateSelection
         lda     #Field::day
         FALL_THROUGH_TO UpdateSelection
-.endproc
+.endproc ; OnKeyRight
 
 .proc UpdateSelection
         jsr     SelectField
         jmp     InputLoop
-.endproc
-.endproc
+.endproc ; UpdateSelection
+.endproc ; OnKey
 
 ;;; ============================================================
 
@@ -517,7 +517,7 @@ hit_target_jump_table:
         .addr   OnUp, OnDown
         .addr   OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick
         ASSERT_ADDRESS_TABLE_SIZE hit_target_jump_table, ::kNumHitRects
-.endproc
+.endproc ; OnClick
 
 ;;; ============================================================
 
@@ -529,12 +529,12 @@ hit_target_jump_table:
         jmp     OnOk
     END_IF
         rts
-.endproc
+.endproc ; OnClickOk
 
 .proc OnKeyOk
         BTK_CALL BTK::Flash, ok_button_params
         FALL_THROUGH_TO OnOk
-.endproc
+.endproc ; OnKeyOk
 
 .proc OnOk
         lda     clock_flag
@@ -542,7 +542,7 @@ hit_target_jump_table:
         jsr     UpdateProDOS
     END_IF
         jmp     Destroy
-.endproc
+.endproc ; OnOk
 
 ;;; ============================================================
 
@@ -553,7 +553,7 @@ hit_target_jump_table:
         pla
         tax
         jmp     OnUpOrDown
-.endproc
+.endproc ; OnUp
 
 .proc OnDown
         txa
@@ -562,14 +562,14 @@ hit_target_jump_table:
         pla
         tax
         jmp     OnUpOrDown
-.endproc
+.endproc ; OnDown
 
 .proc OnFieldClick
         txa
         sec
         sbc     #3
         jmp     SelectField
-.endproc
+.endproc ; OnFieldClick
 
 .proc OnUpOrDown
         stx     hit_rect_index
@@ -589,7 +589,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
 :       MGTK_CALL MGTK::PaintRect, up_arrow_rect
         rts
-.endproc
+.endproc ; OnUpOrDown
 
 .proc DoIncOrDec
         ptr := $6
@@ -685,7 +685,7 @@ finish:
 
 min:    .byte   0
 max:    .byte   0
-.endproc
+.endproc ; DoIncOrDec
 
 hit_rect_index:
         .byte   0
@@ -705,7 +705,7 @@ hit_rect_index:
 
         lda     #Field::period
         jmp     DrawField
-.endproc
+.endproc ; TogglePeriod
 
 ;;; ============================================================
 
@@ -752,7 +752,7 @@ month_length_table:
         sta     day_string+1    ; first char
         stx     day_string+2    ; second char
         rts
-.endproc
+.endproc ; PrepareDayString
 
 .proc PrepareMonthString
         lda     month           ; month * 3 - 1
@@ -776,7 +776,7 @@ loop:   lda     month_name_table,x
         bpl     loop
 
         rts
-.endproc
+.endproc ; PrepareMonthString
 
 month_name_table:
         .byte   .sprintf("%3s", res_string_month_abbrev_1)
@@ -802,7 +802,7 @@ str_pm: PASCAL_STRING "PM"
         sta     year_string+1
         stx     year_string+2
         rts
-.endproc
+.endproc ; PrepareYearString
 
 .proc PrepareHourString
         lda     hour
@@ -828,7 +828,7 @@ str_pm: PASCAL_STRING "PM"
         sta     hour_string+1
         stx     hour_string+2
         rts
-.endproc
+.endproc ; PrepareHourString
 
 .proc PrepareMinuteString
         lda     minute
@@ -836,7 +836,7 @@ str_pm: PASCAL_STRING "PM"
         sta     minute_string+1
         stx     minute_string+2
         rts
-.endproc
+.endproc ; PrepareMinuteString
 
 ;;; ============================================================
 ;;; Tear down the window and exit
@@ -850,7 +850,7 @@ dialog_result:  .byte   0
         MGTK_CALL MGTK::CloseWindow, closewindow_params
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Destroy
 
 ;;; ============================================================
 ;;; Figure out which button was hit (if any).
@@ -886,7 +886,7 @@ loop:   txa
 done:   pla
         tax
         rts
-.endproc
+.endproc ; FindHitTarget
 
 ;;; ============================================================
 ;;; Params for the display
@@ -969,7 +969,7 @@ label_downarrow:
         BTK_CALL BTK::RadioDraw, clock_24hour_params
 
         FALL_THROUGH_TO UpdateOptionButtons
-.endproc
+.endproc ; DrawWindow
 
 .proc UpdateOptionButtons
         lda     SETTINGS + DeskTopSettings::clock_24hours
@@ -985,7 +985,7 @@ label_downarrow:
         BTK_CALL BTK::RadioUpdate, clock_24hour_params
 
         rts
-.endproc
+.endproc ; UpdateOptionButtons
 
 .proc ZToN
         beq     :+
@@ -993,7 +993,7 @@ label_downarrow:
         rts
 :       lda     #$80
         rts
-.endproc
+.endproc ; ZToN
 
 ;;; A = field
 .proc DrawField
@@ -1023,29 +1023,29 @@ label_downarrow:
 .proc DrawDay
         MGTK_CALL MGTK::MoveTo, day_pos
         param_jump DrawString, day_string
-.endproc
+.endproc ; DrawDay
 
 .proc DrawMonth
         MGTK_CALL MGTK::MoveTo, month_pos
         param_call DrawString, spaces_string ; variable width, so clear first
         MGTK_CALL MGTK::MoveTo, month_pos
         param_jump DrawString, month_string
-.endproc
+.endproc ; DrawMonth
 
 .proc DrawYear
         MGTK_CALL MGTK::MoveTo, year_pos
         param_jump DrawString, year_string
-.endproc
+.endproc ; DrawYear
 
 .proc DrawHour
         MGTK_CALL MGTK::MoveTo, hour_pos
         param_jump DrawString, hour_string
-.endproc
+.endproc ; DrawHour
 
 .proc DrawMinute
         MGTK_CALL MGTK::MoveTo, minute_pos
         param_jump DrawString, minute_string
-.endproc
+.endproc ; DrawMinute
 
 .proc DrawPeriod
         MGTK_CALL MGTK::MoveTo, period_pos
@@ -1062,8 +1062,8 @@ label_downarrow:
       END_IF
     END_IF
         rts
-.endproc
-.endproc
+.endproc ; DrawPeriod
+.endproc ; DrawField
 
 ;;; ============================================================
 ;;; Selected a field (dehighlight the old one, highlight the new one)
@@ -1117,7 +1117,7 @@ fill_period:
         MGTK_CALL MGTK::PaintRect, period_rect
         rts
 
-.endproc
+.endproc ; SelectField
 
 ;;; ============================================================
 ;;; Delay
@@ -1134,7 +1134,7 @@ loop2:  sbc     #1
         sbc     #1
         bne     loop1
         rts
-.endproc
+.endproc ; Delay
 
 ;;; ============================================================
 ;;; Convert number to two ASCII digits (in A, X)
@@ -1153,7 +1153,7 @@ loop:   cmp     #10
         tya
         ora     #'0'
         rts
-.endproc
+.endproc ; NumberToASCII
 
 ;;; ============================================================
 ;;; Update the `max_table` for the max day given the month/year.
@@ -1172,7 +1172,7 @@ loop:   cmp     #10
     END_IF
         sty     max_table + Field::day - 1
         rts
-.endproc
+.endproc ; SetMonthLength
 
 ;;; ============================================================
 
@@ -1200,7 +1200,7 @@ loop:   cmp     #10
         jsr     DrawField
 
         rts                     ; back to `InputLoop`
-.endproc
+.endproc ; HandleOptionClick
 
 ;;; ============================================================
 ;;; Assert: Called from Aux
@@ -1211,7 +1211,7 @@ loop:   cmp     #10
         copy16  #auxdt, DESTINATIONLO
         sec                     ; main>aux
         jmp     AUXMOVE
-.endproc
+.endproc ; GetDateFromProDOS
 
 ;;; ============================================================
 ;;; Assert: Called from Aux
@@ -1240,7 +1240,7 @@ loop:   cmp     #10
         copy16  #DATELO, DESTINATIONLO
         clc                     ; aux>main
         jmp     AUXMOVE
-.endproc
+.endproc ; UpdateProDOS
 
 ;;; ============================================================
 
@@ -1276,7 +1276,7 @@ loop:   cmp     #10
         rts
 
 result: .byte   0
-.endscope
+.endscope ; main
 
 ;;; ============================================================
 
@@ -1316,7 +1316,7 @@ write_buffer:
         jsr     DoWrite
 
 done:   rts
-.endproc
+.endproc ; SaveSettings
 
 .proc AppendFilename
         ;; Append filename to buffer
@@ -1335,7 +1335,7 @@ done:   rts
         bne     :-
         sty     filename_buffer
         rts
-.endproc
+.endproc ; AppendFilename
 
 .proc DoWrite
         ;; First time - ask if we should even try.
@@ -1374,7 +1374,7 @@ ret:    rts
 
 second_try_flag:
         .byte   0
-.endproc
+.endproc ; DoWrite
 .endproc ; save_date
 SaveDate := save_date::SaveSettings
 

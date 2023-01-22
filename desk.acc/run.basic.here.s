@@ -180,7 +180,7 @@ str_extras_basic:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/BASIC.SYSTEM")
 str_basic_system:
         PASCAL_STRING "BASIC.SYSTEM"
-.endproc
+.endproc ; CheckBasicSystem
 
 ;;; ============================================================
 
@@ -206,7 +206,7 @@ str_basic_system:
 
 fail:   return  #1
 
-.endproc
+.endproc ; GetWinPath
 
 ;;; ============================================================
 

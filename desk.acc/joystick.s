@@ -200,7 +200,7 @@ joystick_bitmap:
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
@@ -214,13 +214,13 @@ joystick_bitmap:
         jsr     DoJoystick
 
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -229,7 +229,7 @@ joystick_bitmap:
         cmp     #CHAR_ESCAPE
         beq     Exit
         bne     InputLoop       ; always
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -248,7 +248,7 @@ joystick_bitmap:
         cmp     #MGTK::Area::content
         beq     HandleClick
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -257,7 +257,7 @@ joystick_bitmap:
         lda     trackgoaway_params::clicked
         bne     Exit
         jmp     InputLoop
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -277,7 +277,7 @@ joystick_bitmap:
 
 :       jmp     InputLoop
 
-.endproc
+.endproc ; HandleDrag
 
 
 ;;; ============================================================
@@ -285,7 +285,7 @@ joystick_bitmap:
 .proc HandleClick
         ;; no-op
         jmp     InputLoop
-.endproc
+.endproc ; HandleClick
 
 ;;; ============================================================
 
@@ -315,7 +315,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::ShowCursor
 
 ret:    rts
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 
@@ -428,7 +428,7 @@ set:    copy    #$80, joy2_valid_flag
         copy    curr+InputState::pdl1, joy_y
         copy    #0, joy_y+1
         add16   joy_y, #kJoystickDisplayY + 1, joy_y
-.endscope
+.endscope ; joy1
 .scope joy2
         joy_x := joy_marker2::viewloc::xcoord
         copy    curr+InputState::pdl2, joy_x
@@ -439,7 +439,7 @@ set:    copy    #$80, joy2_valid_flag
         copy    curr+InputState::pdl3, joy_y
         copy    #0, joy_y+1
         add16   joy_y, #kJoystickDisplayY + 1, joy_y
-.endscope
+.endscope ; joy2
 
         ;; Draw new
         MGTK_CALL MGTK::SetPenMode, notpencopy
@@ -480,7 +480,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
 joy2_valid_flag:
         .byte   0
-.endproc
+.endproc ; DoJoystick
 
 force_draw_flag:
         .byte   0
@@ -536,9 +536,9 @@ pdl3:   .byte   0
         bne     :-
         dey                     ; handle overflow
 done:   rts
-.endproc
+.endproc ; PRead
 
-.endproc
+.endproc ; ReadPaddles
 
 ;;; ============================================================
 

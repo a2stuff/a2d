@@ -140,7 +140,7 @@ copy_when:  .byte   0
 
 :       jsr     PopulateEntriesFlagTable
         FALL_THROUGH_TO dialog_loop
-.endproc
+.endproc ; Init
 
 dialog_loop:
         jsr     EventLoop
@@ -178,7 +178,7 @@ dialog_loop:
 
 :       jsr     main::SetCursorPointer
         jmp     DoCancel
-.endproc
+.endproc ; DoDelete
 
 ;;; ============================================================
 
@@ -299,7 +299,7 @@ l15:    jsr     main::SetCursorPointer
         jmp     L900F
 
 flags:  .byte   0
-.endproc
+.endproc ; DoEdit
 
 ;;; ============================================================
 
@@ -310,7 +310,7 @@ flags:  .byte   0
         jsr     main::ClearUpdates       ; Run dialog OK
         lda     selected_index
         rts
-.endproc
+.endproc ; DoRun
 
 ;;; ============================================================
 ;;; Cancel from Edit, Delete, or Run
@@ -329,14 +329,14 @@ flags:  .byte   0
 
         lda     #$FF
         jmp     L900F
-.endproc
+.endproc ; DoCancel
 
 ;;; ============================================================
 
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, winfo_entry_picker
         rts
-.endproc
+.endproc ; CloseWindow
 
 ;;; ============================================================
 
@@ -385,7 +385,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
     END_IF
 
         param_jump DrawTitleCentered, label_run
-.endproc
+.endproc ; OpenWindow
 
 ;;; ============================================================
 
@@ -403,7 +403,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         MGTK_CALL MGTK::MoveTo, entry_picker_item_rect::topleft
         ldax    $06
         jmp     DrawString
-.endproc
+.endproc ; DrawEntry
 
 ;;; ============================================================
 ;;; Get the coordinates of an option by index.
@@ -440,7 +440,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         pla                     ; X coord lo
 
         rts
-.endproc
+.endproc ; GetOptionPos
 
 ;;; ============================================================
 
@@ -479,7 +479,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         rts
 
 done:   return  #$FF
-.endproc
+.endproc ; GetOptionIndexFromCoords
 
 ;;; ============================================================
 
@@ -491,7 +491,7 @@ done:   return  #$FF
         stax    ptr
         param_call main::CopyPtr1ToBuf, text_buffer2
         param_jump main::DrawString, text_buffer2
-.endproc
+.endproc ; DrawString
 
 ;;; ============================================================
 
@@ -513,7 +513,7 @@ done:   return  #$FF
         MGTK_CALL MGTK::MoveTo, pos_dialog_title
         MGTK_CALL MGTK::DrawText, text_params
         rts
-.endproc
+.endproc ; DrawTitleCentered
 
 ;;; ============================================================
 ;;; When returning from event loop:
@@ -604,7 +604,7 @@ done:   return  #$FF
 
 new_selection:
         .byte   0
-.endproc
+.endproc ; EventLoop
 
 ;;; ============================================================
 
@@ -624,7 +624,7 @@ new_selection:
         MGTK_CALL MGTK::SetPenMode, pencopy
 
 ret:    rts
-.endproc
+.endproc ; MaybeToggleEntryHilite
 
 ;;; ============================================================
 ;;; Key down handler
@@ -655,21 +655,21 @@ ret:    rts
         jeq     HandleKeyUp
 
         return  #$FF
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
 .proc HandleKeyReturn
         BTK_CALL BTK::Flash, entry_picker_ok_button_params
         return  #0
-.endproc
+.endproc ; HandleKeyReturn
 
 ;;; ============================================================
 
 .proc HandleKeyEscape
         BTK_CALL BTK::Flash, entry_picker_cancel_button_params
         return  #1
-.endproc
+.endproc ; HandleKeyEscape
 
 ;;; ============================================================
 
@@ -718,7 +718,7 @@ set:    txa
         jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
-.endproc
+.endproc ; HandleKeyRight
 
 ;;; ============================================================
 
@@ -757,7 +757,7 @@ set:    txa
         jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
-.endproc
+.endproc ; HandleKeyLeft
 
 ;;; ============================================================
 
@@ -794,7 +794,7 @@ set:    sta     selected_index
         jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
-.endproc
+.endproc ; HandleKeyUp
 
 ;;; ============================================================
 
@@ -833,7 +833,7 @@ set:    sta     selected_index
         jsr     MaybeToggleEntryHilite
 
 done:   return  #$FF
-.endproc
+.endproc ; HandleKeyDown
 
 ;;; ============================================================
 
@@ -862,7 +862,7 @@ done:   return  #$FF
         inx
         bne     :-
 :       rts
-.endproc
+.endproc ; PopulateEntriesFlagTable
 
 ;;; Table for 24 entries; index (0...23) if in use, $FF if empty
 entries_flag_table:
@@ -916,7 +916,7 @@ entries_flag_table:
         rts
 
 index:  .byte   0
-.endproc
+.endproc ; AssignEntryData
 
 ;;; ============================================================
 ;;; Assigns name, flags, and path to an entry in the file buffer.
@@ -959,7 +959,7 @@ index:  .byte   0
         rts
 
 index:  .byte   0
-.endproc
+.endproc ; AssignSecondaryRunListEntryData
 
 ;;; ============================================================
 ;;; Removes the specified entry, shifting later entries down as
@@ -1067,9 +1067,9 @@ index:  .byte   0
         bpl     :-
 
         rts
-.endproc
+.endproc ; MoveEntryDown
 
-.endproc
+.endproc ; RemoveEntry
 
 ;;; ============================================================
 ;;; Update menu from the file data, following an add/edit/remove.
@@ -1138,10 +1138,10 @@ finish:
         bpl     :-
 
         rts
-.endproc
+.endproc ; CopyString
 
 index:  .byte   0
-.endproc
+.endproc ; UpdateMenuResources
 
 
 ;;; ============================================================
@@ -1160,7 +1160,7 @@ index:  .byte   0
         tax
         tya
         rts
-.endproc
+.endproc ; GetFileEntryAddr
 
 ;;; ============================================================
 ;;; Path address in the file buffer
@@ -1179,7 +1179,7 @@ index:  .byte   0
         tax
         tya
         rts
-.endproc
+.endproc ; GetFilePathAddr
 
 ;;; ============================================================
 ;;; Entry name address in the resource block (used for menu items)
@@ -1196,7 +1196,7 @@ index:  .byte   0
         tax
         tya
         rts
-.endproc
+.endproc ; GetResourceEntryAddr
 
 ;;; ============================================================
 ;;; Path address in the resource block (used for invoking)
@@ -1213,7 +1213,7 @@ index:  .byte   0
         tax
         tya
         rts
-.endproc
+.endproc ; GetResourcePathAddr
 
 ;;; ============================================================
 ;;; Write out SELECTOR.LIST file, using original prefix.
@@ -1289,7 +1289,7 @@ close:  MLI_CALL CLOSE, close_params
 
 second_try_flag:
         .byte   0
-.endproc
+.endproc ; WriteFileToOriginalPrefix
 
 ;;; ============================================================
 ;;; Read SELECTOR.LIST file (using current prefix)
@@ -1313,7 +1313,7 @@ read:   lda     open_curpfx_params::ref_num
         pla
         plp
         rts
-.endproc
+.endproc ; ReadFile
 
 ;;; ============================================================
 ;;; Write SELECTOR.LIST file (using current prefix)
@@ -1338,7 +1338,7 @@ write:  lda     open_curpfx_params::ref_num
 
 close:  MLI_CALL CLOSE, close_params
         rts
-.endproc
+.endproc ; WriteFile
 
 ;;; ============================================================
 
@@ -1346,7 +1346,7 @@ close:  MLI_CALL CLOSE, close_params
         jsr     ReadFile
         bpl     DrawAllEntries
         rts
-.endproc
+.endproc ; ReadFileAndDrawEntries
 
 ;;; ============================================================
 
@@ -1405,7 +1405,7 @@ loop2:  lda     index
 done:   return  #0
 
 index:  .byte   0
-.endproc
+.endproc ; DrawAllEntries
 
 ;;; ============================================================
 

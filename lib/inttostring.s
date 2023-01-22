@@ -80,7 +80,7 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
         .byte   0
 separator_flag:
         .byte   0
-.endscope
+.endscope ; IntToStringImpl
 
 IntToString                 := IntToStringImpl::nosep
 IntToStringWithSeparators   := IntToStringImpl::sep

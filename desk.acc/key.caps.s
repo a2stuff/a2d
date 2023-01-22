@@ -550,7 +550,7 @@ continue:
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
@@ -564,13 +564,13 @@ continue:
         jeq     HandleKey
 
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
 .proc Exit
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -618,7 +618,7 @@ last_char:
 
 return_flag:
         .byte   0
-.endproc
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -636,7 +636,7 @@ return_flag:
         cmp     #MGTK::Area::dragbar
         beq     HandleDrag
         jmp     InputLoop
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -646,7 +646,7 @@ return_flag:
         bne     :+
         jmp     InputLoop
 :       jmp     Exit
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -666,7 +666,7 @@ return_flag:
 
 :       jmp     InputLoop
 
-.endproc
+.endproc ; HandleDrag
 
 ;;; ============================================================
 
@@ -757,7 +757,7 @@ next:   dec     char
         rts
 
 char:   .byte   0
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 ;;; Returns Carry set if extended layout should be used.
@@ -802,7 +802,7 @@ check:  sec
 
 :       clc                     ; No - standard layout
         rts
-.endproc
+.endproc ; CheckExtendedLayout
 
 ;;; ============================================================
 ;;; Construct "inner" polygon for key in A.
@@ -853,7 +853,7 @@ normal:
         add16   tmp_rect::x1, #4, tmp_poly+2 + (4 * .sizeof(MGTK::Point))
         add16   tmp_rect::y1, #2, tmp_poly+2 + (4 * .sizeof(MGTK::Point))+2
         rts
-.endproc
+.endproc ; ConstructKeyPoly
 
 ;;; ============================================================
 

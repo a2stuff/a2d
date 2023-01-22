@@ -564,7 +564,7 @@ ploop:  lda     position_table+1,y
         lda     position_table+1
         sta     position_table
         stx     position_table+1
-.endproc
+.endproc ; Scramble
 
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
@@ -579,7 +579,7 @@ ploop:  lda     position_table+1,y
         jsr     DrawAll
         jsr     FindHole
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; CreateWindow
 
 ;;; ============================================================
 ;;; Input loop and processing
@@ -598,7 +598,7 @@ ploop:  lda     position_table+1,y
         bne     InputLoop
         jsr     CheckKey
         jmp     InputLoop
-.endproc
+.endproc ; InputLoop
 
         ;; click - where?
 .proc OnClick
@@ -641,7 +641,7 @@ check_title:
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         lda     #kDAWindowId
         jmp     redraw_window
-.endproc
+.endproc ; OnClick
 
         ;; on key press - exit if Escape
 .proc CheckKey
@@ -690,7 +690,7 @@ ret:    rts
 move:   stx     click_x
         sty     click_y
         jmp     ProcessClick
-.endproc
+.endproc ; CheckKey
 
 ;;; ============================================================
 ;;; Map click to piece x/y
@@ -738,7 +738,7 @@ yep:    sta     click_y
 
 nope:   clc
         rts
-.endproc
+.endproc ; FindClickPiece
 
 .proc FindClickX
         cpx     #kCol1
@@ -765,7 +765,7 @@ yep:    sta     click_x
 
 nope:   clc
         rts
-.endproc
+.endproc ; FindClickX
 
 ;;; ============================================================
 ;;; Process piece click
@@ -822,7 +822,7 @@ aloop:  lda     position_table+1,y
         dex
         bne     aloop
         beq     row             ; always
-.endproc
+.endproc ; ClickInRow
 
 .proc ClickInCol
         lda     click_y
@@ -856,7 +856,7 @@ aloop:  lda     position_table+4,y
         iny
         dex
         bne     aloop
-.endproc
+.endproc ; ClickInCol
 
 col:    lda     #kHolePiece
         sta     position_table,y
@@ -880,11 +880,11 @@ loop:   txa
         tax
         dex
         bne     loop
-.endproc
+.endproc ; OnVictory
 
 after_click:
         jmp     FindHole
-.endproc
+.endproc ; ProcessClick
 
 ;;; ============================================================
 ;;; Clear the background
@@ -915,7 +915,7 @@ DrawWindow:
         lda     #16
         sta     draw_end
         bne     DrawSelected    ; always
-.endproc
+.endproc ; DrawAll
 
 .proc DrawRow                   ; row specified in draw_rc
         lda     #1
@@ -926,7 +926,7 @@ DrawWindow:
         adc     #4
         sta     draw_end
         bne     DrawSelected    ; always
-.endproc
+.endproc ; DrawRow
 
 .proc DrawCol                   ; col specified in draw_rc
         lda     #4
@@ -935,7 +935,7 @@ DrawWindow:
         lda     #16
         sta     draw_end
         FALL_THROUGH_TO DrawSelected
-.endproc
+.endproc ; DrawCol
 
         ;; Draw pieces from A to draw_end, step draw_inc
 .proc DrawSelected
@@ -969,7 +969,7 @@ loop:   tya
         bcc     loop
         MGTK_CALL MGTK::ShowCursor
         rts
-.endproc
+.endproc ; DrawSelected
 
 ;;; ============================================================
 ;;; Play sound
@@ -990,7 +990,7 @@ delay2: dey
         dex
         bne     loop2
         rts
-.endproc
+.endproc ; PlaySound
 
 ;;; ============================================================
 ;;; Puzzle complete?
@@ -1062,7 +1062,7 @@ c131415:tya
 
 nope:   clc
         rts
-.endproc
+.endproc ; CheckVictory
 
 ;;; ============================================================
 ;;; Find hole piece
@@ -1088,7 +1088,7 @@ again:  cmp     #4
 
 done:   sta     hole_x
         rts
-.endproc
+.endproc ; FindHole
 
 ;;; ============================================================
 

@@ -108,7 +108,7 @@ event_params:   .tag MGTK::Event
         copy16  #event_params, DESTINATIONLO
         clc                     ; aux > main
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyEventAuxToMain
 
 ;;; ============================================================
 
@@ -132,7 +132,7 @@ event_params:   .tag MGTK::Event
         JUMP_TABLE_MGTK_CALL MGTK::ObscureCursor
 
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 ;;; ============================================================
 ;;; Main Input Loop
@@ -170,7 +170,7 @@ exit:
         jsr     JUMP_TABLE_HILITE_MENU
 
         rts                     ; exits input loop
-.endproc
+.endproc ; InputLoop
 
 .proc ShowFile
         ;; Check file type
@@ -218,7 +218,7 @@ get_eof:
         ;; Otherwise, assume Minipix
 
         jmp     ShowMinipixFile
-.endproc
+.endproc ; ShowFile
 
 .proc ShowFOTFile
         ;; Per File Type $08 (8) Note:
@@ -266,7 +266,7 @@ finish: JUMP_TABLE_MLI_CALL CLOSE, close_params
 
 signature:
         .byte   0
-.endproc
+.endproc ; ShowFOTFile
 
 
 .proc ShowHRFile
@@ -286,7 +286,7 @@ signature:
 
 str_a2hr_suffix:
         PASCAL_STRING ".A2HR"
-.endproc
+.endproc ; ShowHRFile
 
 .proc ShowDHRFile
         ptr := $06
@@ -317,7 +317,7 @@ str_a2hr_suffix:
 
 str_a2fm_suffix:
         PASCAL_STRING ".A2FM"
-.endproc
+.endproc ; ShowDHRFile
 
 .proc CopyHiresToAux
         ptr := $06
@@ -339,7 +339,7 @@ str_a2fm_suffix:
         sta     SET80STORE
         sta     RAMWRTOFF
         rts
-.endproc
+.endproc ; CopyHiresToAux
 
 
 .proc ShowMinipixFile
@@ -359,7 +359,7 @@ str_a2fm_suffix:
         JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, aux::paintbits_params
 
         rts
-.endproc
+.endproc ; ShowMinipixFile
 
 ;;; ============================================================
 ;;; Convert single hires to double hires
@@ -425,7 +425,7 @@ next:
         bne     rloop
 
 done:   rts
-.endproc
+.endproc ; HRToDHR
 
 ;;; ============================================================
 ;;; Minipix images
@@ -498,7 +498,7 @@ dorow:  ldx     #8
         sta     srcbit
 
 done:   rts
-.endproc
+.endproc ; GetBit
 
 PutBitProcTarget = $10
 PROC_AT PutBitProc, $10
@@ -507,7 +507,7 @@ PROC_AT PutBitProc, $10
         jsr     PutBit1
         plp
         FALL_THROUGH_TO PutBit1
-.endproc
+.endproc ; PutBit2
 .proc PutBit1
         sta     RAMRDON
         sta     RAMWRTON
@@ -530,12 +530,12 @@ done:
         sta     RAMRDOFF
         sta     RAMWRTOFF
         rts
-.endproc
+.endproc ; PutBit1
 END_PROC_AT
         PutBit1 := PutBitProc::PutBit1
         PutBit2 := PutBitProc::PutBit2
         sizeof_PutBitProc = .sizeof(PutBitProc)
-.endproc
+.endproc ; ConvertMinipixToBitmap
 
 ;;; ============================================================
 ;;; Color/B&W Toggle
@@ -546,7 +546,7 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
         lda     mode
         bne     SetBWMode
         FALL_THROUGH_TO SetColorMode
-.endproc
+.endproc ; ToggleMode
 
 .proc SetColorMode
         lda     mode
@@ -556,7 +556,7 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
         jsr     JUMP_TABLE_COLOR_MODE
 
 done:   rts
-.endproc
+.endproc ; SetColorMode
 
 .proc SetBWMode
         lda     mode
@@ -566,7 +566,7 @@ done:   rts
         jsr     JUMP_TABLE_MONO_MODE
 
 done:   rts
-.endproc
+.endproc ; SetBWMode
 
 ;;; ============================================================
 
@@ -736,7 +736,7 @@ not_10:
 
 exit:   pla
         rts
-.endproc
+.endproc ; Write
 
         ;; --------------------------------------------------
 
@@ -748,7 +748,7 @@ count:  .byte   0
 read_buf:
         .res    64
 
-.endproc
+.endproc ; UnpackRead
 ShowPackedHRFile     := UnpackRead::hr_file
 ShowPackedDHRFile    := UnpackRead::dhr_file
 
@@ -777,7 +777,7 @@ clear:  copy16  #hires, ptr
         rts
 
 done:
-.endproc
+.endproc ; ClearScreen
 
 ;;; ============================================================
 ;;; Check suffix on `INVOKE_PATH` to see if it matches passed string
@@ -813,7 +813,7 @@ no:     sec                     ; no match
 yes:    clc                     ; match!
         rts
 
-.endproc
+.endproc ; CheckSuffix
 
 ;;; ============================================================
 
@@ -822,7 +822,7 @@ yes:    clc                     ; match!
         bcc     :+
         and     #CASE_MASK ; Make upper-case
 :       rts
-.endproc
+.endproc ; ToUppercase
 
 ;;; ============================================================
 

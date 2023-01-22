@@ -163,7 +163,7 @@ loop:   lda     (src),y
         sta     ALTZPOFF
         bit     ROMIN2
         rts
-.endproc
+.endproc ; CopyToLc
 
 ;;; ============================================================
 

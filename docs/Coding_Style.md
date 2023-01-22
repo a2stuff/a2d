@@ -74,7 +74,7 @@ result: .byte   0
 .proc SetFlag                   ; procedure
         lda     #kTrue
 done:   sta     flag            ; internal label
-.endproc
+.endproc ; SetFlag
 
 .struct Point                   ; structure
 xcoord: .word
@@ -158,7 +158,7 @@ xcoord: .word
         lda     $06
         rol
         rts
-.endproc
+.endproc ; SomeRoutine
 ```
 
 * Try to encapsulate locally used data as much as possible.
@@ -171,7 +171,7 @@ xcoord: .word
         rts
 
 stash:  .byte   0
-.endproc
+.endproc ; SomeRoutine
 ```
 
 * Use `Impl` if the entry point is not at the start:
@@ -186,7 +186,7 @@ start:  lda     ptr
         sta     stash
         rts
 
-.endproc
+.endproc ; SomeRoutineImpl
 SomeRoutine := SomeRoutineImpl::start
 ```
 
@@ -203,7 +203,7 @@ SomeRoutine := SomeRoutineImpl::start
 
 .proc TwiddleTheThing
    ...
-.endproc
+.endproc ; TwiddleTheThing
 ```
 
 ## Macros

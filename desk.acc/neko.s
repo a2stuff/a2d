@@ -199,7 +199,7 @@ grow_box_bitmap:
         sub16_8 winfo::maprect::y2, #kGrowBoxHeight, grow_box_params::viewloc::ycoord
         MGTK_CALL MGTK::PaintBitsHC, grow_box_params
         rts
-.endproc
+.endproc ; DrawGrowBox
 
 ;;; ============================================================
 ;;; Animation Resources
@@ -280,13 +280,13 @@ reserved:       .byte   0
         rts
 
 frame:  .byte   0
-.endproc
+.endproc ; DrawFrame
 
 .proc EraseFrame
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, erase_rect
         rts
-.endproc
+.endproc ; EraseFrame
 
 ;;; ============================================================
 
@@ -333,7 +333,7 @@ bit_loop:
         dec     count
         bne     byte_loop
         rts
-.endproc
+.endproc ; FrameDouble
 
 ;;; ============================================================
 
@@ -371,7 +371,7 @@ ep_size := * - ep_start
         copy16  #event_params, DESTINATIONLO
         clc                     ; aux>main
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyEventDataToMain
 
 .proc CopyEventDataToAux
         copy16  #event_params, STARTLO
@@ -379,7 +379,7 @@ ep_size := * - ep_start
         copy16  #aux::event_params, DESTINATIONLO
         sec                     ; main>aux
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyEventDataToAux
 
 ;;; ============================================================
 
@@ -391,7 +391,7 @@ ep_size := * - ep_start
         copy16  #win_rect, DESTINATIONLO
         clc                     ; aux>main
         jmp     AUXMOVE
-.endproc
+.endproc ; GetWindowRect
 
 ;;; ============================================================
 
@@ -400,7 +400,7 @@ ep_size := * - ep_start
         jsr     DrawWindow
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 .proc InputLoop
         jsr JUMP_TABLE_YIELD_LOOP
@@ -414,7 +414,7 @@ ep_size := * - ep_start
         cmp     #MGTK::EventKind::no_event
         bne     InputLoop
         jmp     HandleNoEvent
-.endproc
+.endproc ; InputLoop
 
 ;;; ============================================================
 
@@ -423,12 +423,12 @@ ep_size := * - ep_start
         cmp     #CHAR_ESCAPE
         bne     InputLoop
         FALL_THROUGH_TO Exit
-.endproc
+.endproc ; HandleKey
 
 .proc Exit
         JUMP_TABLE_MGTK_CALL MGTK::CloseWindow, aux::winfo
         jmp JUMP_TABLE_CLEAR_UPDATES
-.endproc
+.endproc ; Exit
 
 ;;; ============================================================
 
@@ -446,7 +446,7 @@ ep_size := * - ep_start
         cmp     #MGTK::Area::content
         beq     HandleGrow
         bne     InputLoop       ; always
-.endproc
+.endproc ; HandleDown
 
 ;;; ============================================================
 
@@ -456,7 +456,7 @@ ep_size := * - ep_start
         lda     trackgoaway_params::clicked
         bne     Exit
         beq     InputLoop       ; always
-.endproc
+.endproc ; HandleClose
 
 ;;; ============================================================
 
@@ -475,7 +475,7 @@ common: jsr     CopyEventDataToMain
         jsr     DrawWindow
 
 finish: jmp     InputLoop
-.endproc
+.endproc ; HandleDrag
 
 ;;; ============================================================
 
@@ -502,7 +502,7 @@ finish: jmp     InputLoop
         jsr     CopyEventDataToAux
         JUMP_TABLE_MGTK_CALL MGTK::GrowWindow, aux::dragwindow_params
         jmp     HandleDrag::common
-.endproc
+.endproc ; HandleGrow
 
 ;;; ============================================================
 ;;; Behavior State Machine
@@ -860,9 +860,9 @@ set_frame:
         tay
 
         rts
-.endproc
+.endproc ; MoveAndClamp
 
-.endproc
+.endproc ; HandleNoEvent
 
 ;;; ============================================================
 
@@ -874,7 +874,7 @@ set_frame:
         copy16  #pos, DESTINATIONLO
         clc                     ; aux>main
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyPosToMain
 
 .proc CopyPosToAux
         copy16  #pos, STARTLO
@@ -882,7 +882,7 @@ set_frame:
         copy16  #aux::frame_params::viewloc, DESTINATIONLO
         sec                     ; main>aux
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyPosToAux
 
 ;;; ============================================================
 
@@ -930,7 +930,7 @@ scratch_frame_table:
         bne     ret             ; obscured
         JSR_TO_AUX aux::DrawGrowBox
 ret:    rts
-.endproc
+.endproc ; DrawWindow
 
 ;;; ============================================================
 
@@ -941,7 +941,7 @@ ret:    rts
         bne     ret
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
 ret:    rts
-.endproc
+.endproc ; GetSetPort
 
 ;;; ============================================================
 
@@ -976,7 +976,7 @@ cur_frame:                      ; NekoFrame::XXX
 .endif
 
 ret:    rts
-.endproc
+.endproc ; DrawCurrentFrame
 
 ;;; ============================================================
 
@@ -1002,7 +1002,7 @@ ret:    rts
         rts
 
 result: .byte   1
-.endproc
+.endproc ; GetRandom
 
 ;;; ============================================================
 

@@ -217,7 +217,7 @@ reserved:       .byte   0
         jsr     InitScrollBar
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 ;;; ============================================================
 ;;; Main Input Loop
@@ -232,7 +232,7 @@ reserved:       .byte   0
         bne     InputLoop      ; nope, keep waiting
 
         FALL_THROUGH_TO OnButtonDown
-.endproc
+.endproc ; InputLoop
 
 ;;; ============================================================
 
@@ -256,7 +256,7 @@ reserved:       .byte   0
 
 title:  jsr     OnTitleBarClick
         jmp     InputLoop
-.endproc
+.endproc ; OnButtonDown
 
 ;;; ============================================================
 ;;; Key
@@ -325,7 +325,7 @@ no_mod:
     END_IF
 
         jmp     InputLoop
-.endproc
+.endproc ; OnKeyDown
 
 ;;; ============================================================
 ;;; Click on Close Button
@@ -335,14 +335,14 @@ no_mod:
         lda     trackgoaway_params::goaway ; did click complete?
         bne     DoClose                    ; yes
         jmp     InputLoop                  ; no
-.endproc
+.endproc ; OnCloseClick
 
 .proc DoClose
         JSR_TO_MAIN CloseFile
         MGTK_CALL MGTK::CloseWindow, winfo
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts                     ; exits input loop
-.endproc
+.endproc ; DoClose
 
 ;;; ============================================================
 ;;; Click on Client Area
@@ -355,7 +355,7 @@ no_mod:
         cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     OnVScrollClick
 end:    rts
-.endproc
+.endproc ; OnClientClick
 
 ;;; ============================================================
 ;;; Click on Vertical Scroll Bar
@@ -373,7 +373,7 @@ end:    rts
         cmp     #MGTK::Part::down_arrow
         beq     OnVScrollDownClick
         rts
-.endproc
+.endproc ; OnVScrollClick
 
 .proc OnVScrollThumbClick
         copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
@@ -392,35 +392,35 @@ end:    rts
         jsr     UpdateScrollPos
 
 end:    rts
-.endproc
+.endproc ; OnVScrollThumbClick
 
 .proc OnVScrollBelowClick
 loop:   jsr     PageDown
         jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
         rts
-.endproc
+.endproc ; OnVScrollBelowClick
 
 .proc OnVScrollAboveClick
 loop:   jsr     PageUp
         jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
         rts
-.endproc
+.endproc ; OnVScrollAboveClick
 
 .proc OnVScrollDownClick
 loop:   jsr     ScrollDown
         jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
         rts
-.endproc
+.endproc ; OnVScrollDownClick
 
 .proc OnVScrollUpClick
 loop:   jsr     ScrollUp
         jsr     CheckButtonRelease
         bcc     loop            ; repeat while button down
         rts
-.endproc
+.endproc ; OnVScrollUpClick
 
 ;;; ============================================================
 
@@ -430,13 +430,13 @@ loop:   jsr     ScrollUp
         bne     ret
         lda     first_visible_line+1
 ret:    rts
-.endproc
+.endproc ; IsAtTop
 
 ;;; Returns Z=1 if at bottom, Z=0 otherwise
 .proc IsAtBottom
         ecmp16  first_visible_line, max_visible_line
         rts
-.endproc
+.endproc ; IsAtBottom
 
 ;;; ============================================================
 
@@ -450,7 +450,7 @@ ret:    rts
         jsr     UpdateScrollPos
 
 ret:    rts
-.endproc
+.endproc ; ScrollUp
 
 .proc PageUp
         jsr     IsAtTop
@@ -462,7 +462,7 @@ ret:    rts
         jsr     UpdateScrollPos
 
 ret:    rts
-.endproc
+.endproc ; PageUp
 
 .proc ScrollTop
         jsr     IsAtTop
@@ -472,7 +472,7 @@ force:  copy16  #0, first_visible_line
         jsr     UpdateScrollPos
 
 ret:    rts
-.endproc
+.endproc ; ScrollTop
 ForceScrollTop := ScrollTop::force
 
 .proc ScrollDown
@@ -485,7 +485,7 @@ ForceScrollTop := ScrollTop::force
         jsr     UpdateScrollPos
 
 ret:    rts
-.endproc
+.endproc ; ScrollDown
 
 .proc PageDown
         jsr     IsAtBottom
@@ -497,7 +497,7 @@ ret:    rts
         jsr     UpdateScrollPos
 
 ret:    rts
-.endproc
+.endproc ; PageDown
 
 .proc ScrollBottom
         jsr     IsAtBottom
@@ -507,7 +507,7 @@ force:  copy16  max_visible_line, first_visible_line
         jsr     UpdateScrollPos
 
 ret:    rts
-.endproc
+.endproc ; ScrollBottom
 ForceScrollBottom := ScrollBottom::force
 
 ;;; ============================================================
@@ -546,7 +546,7 @@ ForceScrollBottom := ScrollBottom::force
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         jmp     DrawContent
-.endproc
+.endproc ; UpdateScrollPos
 
 ;;; ============================================================
 
@@ -559,7 +559,7 @@ ForceScrollBottom := ScrollBottom::force
         bne     end
         sec
 end:    rts
-.endproc
+.endproc ; CheckButtonRelease
 
 ;;; ============================================================
 ;;; UI Helpers
@@ -567,7 +567,7 @@ end:    rts
 .proc ClearWindow
         MGTK_CALL MGTK::PaintRect, winfo::maprect::x1
         rts
-.endproc
+.endproc ; ClearWindow
 
 ;;; ============================================================
 ;;; Content Rendering
@@ -743,7 +743,7 @@ offset_counter:
 
 cur_offset:
         .word   0
-.endproc
+.endproc ; DrawContent
 
 ;;; ============================================================
 ;;; Input: A = character
@@ -758,7 +758,7 @@ cur_offset:
         lda     fixed_font + MGTK::Font::charwidth,y
     END_IF
         rts
-.endproc
+.endproc ; GetCharWidth
 
 ;;; ============================================================
 
@@ -825,7 +825,7 @@ more:   ldy     drawtext_params::textlen
         sta     L0945
 :       inc     drawtext_params::textlen
         FALL_THROUGH_TO FinishTextRun
-.endproc
+.endproc ; FindTextRun
 
 .proc FinishTextRun
         ptr := $06
@@ -840,7 +840,7 @@ more:   ldy     drawtext_params::textlen
 tab:    inc     drawtext_params::textlen
 :       clc
         rts
-.endproc
+.endproc ; FinishTextRun
 
 ;;; ============================================================
 
@@ -872,7 +872,7 @@ times70:.word   70
         .word   350
         .word   420
         .word   490
-.endproc
+.endproc ; HandleTab
 
 ;;; ============================================================
 ;;; Draw a line of content
@@ -884,7 +884,7 @@ times70:.word   70
         beq     end
         MGTK_CALL MGTK::DrawText, drawtext_params
 end:    rts
-.endproc
+.endproc ; DrawTextRun
 
 ;;; ============================================================
 
@@ -915,7 +915,7 @@ end:    rts
     END_IF
 
         rts
-.endproc
+.endproc ; EnsurePageBuffered
 
 ;;; ============================================================
 
@@ -963,7 +963,7 @@ prep:   lda     #$00
         sta     ENDHI
         rts
 
-.endproc
+.endproc ; ReadFilePage
 
 ;;; ============================================================
 
@@ -981,7 +981,7 @@ prep:   lda     #$00
         copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
-.endproc
+.endproc ; InitScrollBar
 
 ;;; ============================================================
 ;;; Title Bar (Proportional/Fixed mode button)
@@ -991,7 +991,7 @@ prep:   lda     #$00
         bcs     ToggleMode
         clc                     ; Click ignored
         rts
-.endproc
+.endproc ; OnTitleBarClick
 
 .proc ToggleMode
         ;; Toggle the state and redraw
@@ -1008,7 +1008,7 @@ prep:   lda     #$00
         jsr     InitScrollBar
         sec                     ; Click consumed
         rts
-.endproc
+.endproc ; ToggleMode
 
 ;;; ============================================================
 
@@ -1032,7 +1032,7 @@ mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 .params winframerect_params
 window_id:      .byte   kDAWindowId
         DEFINE_RECT rect, 0, 0, 0, 0
-.endproc
+.endproc ; aux
 
 ;;; ============================================================
 
@@ -1044,7 +1044,7 @@ window_id:      .byte   kDAWindowId
         add16_8 winframerect_params::rect::y1, #1, mode_mapinfo::viewloc::ycoord
 
         FALL_THROUGH_TO DrawMode
-.endproc
+.endproc ; CalcAndDrawMode
 
 .proc DrawMode
         ;; Set up port
@@ -1082,7 +1082,7 @@ window_id:      .byte   kDAWindowId
         COPY_STRUCT MGTK::MapInfo, default_port, winfo::port
         MGTK_CALL MGTK::SetPortBits, winfo::port
         rts
-.endproc
+.endproc ; DrawMode
 
 ;;; ============================================================
 
@@ -1142,7 +1142,7 @@ filename:       .res    16
         JSR_TO_AUX aux::Init
 
         rts
-.endproc
+.endproc ; Start
 
 ;;; ============================================================
 ;;; ProDOS MLI calls
@@ -1153,7 +1153,7 @@ filename:       .res    16
         MLI_CALL OPEN, open_params
         sta     ALTZPON
         jmp     CopyParamsMainToAux
-.endproc
+.endproc ; OpenFile
 
 .proc ReadFile
         jsr     CopyParamsAuxToMain
@@ -1161,7 +1161,7 @@ filename:       .res    16
         MLI_CALL READ, read_params
         sta     ALTZPON
         jmp     CopyParamsMainToAux
-.endproc
+.endproc ; ReadFile
 
 .proc GetFileEof
         jsr     CopyParamsAuxToMain
@@ -1169,7 +1169,7 @@ filename:       .res    16
         MLI_CALL GET_EOF, get_eof_params
         sta     ALTZPON
         jmp     CopyParamsMainToAux
-.endproc
+.endproc ; GetFileEof
 
 .proc SetFileMark
         jsr     CopyParamsAuxToMain
@@ -1177,7 +1177,7 @@ filename:       .res    16
         MLI_CALL SET_MARK, set_mark_params
         sta     ALTZPON
         jmp     CopyParamsMainToAux
-.endproc
+.endproc ; SetFileMark
 
 .proc CloseFile
         jsr     CopyParamsAuxToMain
@@ -1185,7 +1185,7 @@ filename:       .res    16
         MLI_CALL CLOSE, close_params
         sta     ALTZPON
         jmp     CopyParamsMainToAux
-.endproc
+.endproc ; CloseFile
 
 ;;; ============================================================
 
@@ -1196,7 +1196,7 @@ filename:       .res    16
         copy16  #mli_params, DESTINATIONLO
         clc                     ; aux>main
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyParamsAuxToMain
 
 ;;; Copies param blocks from Main to Aux
 ;;; Preserves A and P
@@ -1213,7 +1213,7 @@ filename:       .res    16
         pla
         plp
         rts
-.endproc
+.endproc ; CopyParamsMainToAux
 
 
 

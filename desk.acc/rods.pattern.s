@@ -86,7 +86,7 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         jmp     JUMP_TABLE_RGB_MODE
 
-.endproc
+.endproc ; Start
 
 ;;; ============================================================
 
@@ -130,7 +130,7 @@ cloop:
 
         sta     CLR80STORE
         rts
-.endproc
+.endproc ; SaveText
 
 ;;; Restore main/aux text page 1 (preserving screen holes)
 .proc RestoreText
@@ -168,7 +168,7 @@ cloop:
 
         sta     CLR80STORE
         rts
-.endproc
+.endproc ; RestoreText
 
 ;;; ============================================================
 
@@ -182,7 +182,7 @@ event_params:   .tag MGTK::Event
         copy16  #event_params, DESTINATIONLO
         clc                     ; aux > main
         jmp     AUXMOVE
-.endproc
+.endproc ; CopyEventAuxToMain
 
 ;;; ============================================================
 ;;; DA Guts of the screen saver
@@ -392,7 +392,7 @@ bcnt:   dex
         sta     color
         rts
 
-.endproc
+.endproc ; Run
 
 ;;; ============================================================
 

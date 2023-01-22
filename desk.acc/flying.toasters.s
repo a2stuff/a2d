@@ -25,7 +25,7 @@
 .proc AuxStart
         ;; Run the DA
         jmp     Init
-.endproc
+.endproc ; AuxStart
 
 ;;; ============================================================
 ;;; Animation Resources
@@ -83,7 +83,7 @@ grafport:       .tag MGTK::GrafPort
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; Init
 
 ;;; ============================================================
 ;;; Main Input Loop
@@ -107,7 +107,7 @@ exit:
 
         MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop
-.endproc
+.endproc ; InputLoop
 
 ;;; ============================================================
 ;;; Animate
@@ -187,7 +187,7 @@ xpos:   .word   0
 ypos:   .word   0
 frame:  .byte   0
 
-.endproc
+.endproc ; Animate
 
 
 ;;; ============================================================

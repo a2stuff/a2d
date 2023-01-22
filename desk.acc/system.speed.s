@@ -223,7 +223,7 @@ frame_counter:
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
-.endproc
+.endproc ; RunDA
 
 ;;; ============================================================
 ;;; Input loop
@@ -244,7 +244,7 @@ frame_counter:
         cmp     #MGTK::EventKind::key_down
         bne     InputLoop
         FALL_THROUGH_TO OnKey
-.endproc
+.endproc ; InputLoop
 
 .proc OnKey
         lda     event_params::modifiers
@@ -268,24 +268,24 @@ frame_counter:
         beq     OnKeyFast
 
         jmp     InputLoop
-.endproc
+.endproc ; OnKey
 
 .proc OnKeyOk
         BTK_CALL BTK::Flash, ok_button_params
         jmp     CloseWindow
-.endproc
+.endproc ; OnKeyOk
 
 .proc OnKeyNorm
         BTK_CALL BTK::Flash, norm_button_params
         JSR_TO_MAIN DoNorm
         jmp     InputLoop
-.endproc
+.endproc ; OnKeyNorm
 
 .proc OnKeyFast
         BTK_CALL BTK::Flash, fast_button_params
         JSR_TO_MAIN DoFast
         jmp     InputLoop
-.endproc
+.endproc ; OnKeyFast
 
 ;;; ============================================================
 
@@ -297,7 +297,7 @@ frame_counter:
         MGTK_CALL MGTK::InRect, anim_cursor_rect
         sta     cursor_flag
         jmp     InputLoop
-.endproc
+.endproc ; OnMove
 
 ;;; ============================================================
 
@@ -332,7 +332,7 @@ hit:    lda     winfo::window_id
         jeq     OnClickFast
 
         jmp     InputLoop
-.endproc
+.endproc ; OnClick
 
 ;;; ============================================================
 
@@ -340,7 +340,7 @@ hit:    lda     winfo::window_id
         BTK_CALL BTK::Track, ok_button_params
         jeq     CloseWindow
         jmp     InputLoop
-.endproc
+.endproc ; OnClickOk
 
 ;;; ============================================================
 
@@ -349,7 +349,7 @@ hit:    lda     winfo::window_id
         bne     :+
         JSR_TO_MAIN DoNorm
 :       jmp     InputLoop
-.endproc
+.endproc ; OnClickNorm
 
 ;;; ============================================================
 
@@ -358,7 +358,7 @@ hit:    lda     winfo::window_id
         bne     :+
         JSR_TO_MAIN DoFast
 :       jmp     InputLoop
-.endproc
+.endproc ; OnClickFast
 
 ;;; ============================================================
 
@@ -366,7 +366,7 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::CloseWindow, closewindow_params
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
-.endproc
+.endproc ; CloseWindow
 
 ;;; ============================================================
 ;;; Draw Title String (centered at top of port)
@@ -390,7 +390,7 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::MoveTo, title_label_pos
         MGTK_CALL MGTK::DrawText, text_params
         rts
-.endproc
+.endproc ; DrawTitleString
 
 ;;; ============================================================
 
@@ -437,7 +437,7 @@ hit:    lda     winfo::window_id
 :
 
         rts
-.endproc
+.endproc ; AnimFrame
 
 ;;; ============================================================
 
@@ -469,7 +469,7 @@ hit:    lda     winfo::window_id
         bit     LCBANK1
 
         rts
-.endproc
+.endproc ; DoNorm
 
 ;;; ============================================================
 
@@ -486,7 +486,7 @@ hit:    lda     winfo::window_id
         bit     LCBANK1
 
         rts
-.endproc
+.endproc ; DoFast
 
 ;;; ============================================================
 
