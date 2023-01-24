@@ -64,6 +64,8 @@ start:
 ;;; ProDOS 8 System file (SYS) - load at default $2000
         cmp     #FT_SYSTEM
         beq     load_target
+        .assert INVOKER_FILENAME = PRODOS_SYS_PATH, error, "protocol mismatch"
+
 
 ;;; ProDOS 16 System file (S16) - invoke via QUIT call
         cmp     #FT_S16
