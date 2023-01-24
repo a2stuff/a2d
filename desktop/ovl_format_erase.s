@@ -37,7 +37,7 @@ Exec:
         pla
         tax
         pla
-        cmp     #$04
+        cmp     #FormatEraseAction::format
         jeq     FormatDisk
         jmp     EraseDisk
 

@@ -2970,7 +2970,7 @@ drive_to_refresh:
 :
         jsr     GetSelectedUnitNum
         tax
-        lda     #4
+        lda     #FormatEraseAction::format
         jsr     format_erase_overlay__Exec
         stx     drive_to_refresh ; X = unit number
         pha                     ; A = result
@@ -2992,7 +2992,7 @@ drive_to_refresh:
 :
         jsr     GetSelectedUnitNum
         tax
-        lda     #5
+        lda     #FormatEraseAction::erase
         jsr     format_erase_overlay__Exec
         stx     drive_to_refresh ; X = unit number
         pha                     ; A = result

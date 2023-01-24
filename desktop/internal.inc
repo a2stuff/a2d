@@ -191,6 +191,11 @@ kMenuSizeSelector = 13
         run     = 4
 .endenum
 
+.enum FormatEraseAction
+        format = 4
+        erase  = 5
+.endenum
+
 ;;; ============================================================
 ;;; Device types
 

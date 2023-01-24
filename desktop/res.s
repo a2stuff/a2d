@@ -618,6 +618,11 @@ selector_menu:
         kMenuItemIdSelectorDelete    = 3
         kMenuItemIdSelectorRun       = 4
 
+        .assert kMenuItemIdSelectorAdd = SelectorAction::add, error, "enum mismatch"
+        .assert kMenuItemIdSelectorEdit = SelectorAction::edit, error, "enum mismatch"
+        .assert kMenuItemIdSelectorDelete = SelectorAction::delete, error, "enum mismatch"
+        .assert kMenuItemIdSelectorRun = SelectorAction::run, error, "enum mismatch"
+
 label_add:
         PASCAL_STRING res_string_menu_item_add_entry ; menu item
 label_edit:
