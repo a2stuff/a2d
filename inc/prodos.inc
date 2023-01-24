@@ -127,8 +127,12 @@ FT_SYSTEM       = $FF           ; ProDOS System File *
 ;;; System Files
 ;;; ============================================================
 
+;;; ProDOS 8 TRM 5.1.5.1 - Starting System Programs
+;;; http://www.easy68k.com/paulrsm/6502/PDOS8TRM.HTM#5.1.5.1
+
 PRODOS_SYS_START        := $2000
 PRODOS_INTERPRETER_BUF  := $2006
+PRODOS_SYS_PATH         := $280
 
 ;;; ============================================================
 ;;; Access

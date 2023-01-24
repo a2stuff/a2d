@@ -98,16 +98,58 @@ header_orig_prefix:
 
         kWriteBackSize = * - PRODOS_SYS_START
 
-
-
-
 ;;; ============================================================
 
 start:
+        jsr     EnsurePrefixSet
         jsr     DetectMousetext
         jsr     CreateLocalDir
         jsr     LoadSettings
         jmp     CopyDesktopToRAMCard
+
+;;; ============================================================
+
+;;; Dispatchers (e.g. Bitsy Bye) will set the prefix to the
+;;; directory containing this file. But if not, we need to set
+;;; it to the containing directory. The ProDOS convention for
+;;; starting SYSTEM programs is that the absolute or relative
+;;; path is set at $280, so use that if needed.
+
+.proc EnsurePrefixSet
+        ;; Does the current prefix contain this file?
+        ;; NOTE: If everything followed the convention, we could
+        ;; skip this and set the prefix unconditionally.
+        MLI_CALL GET_FILE_INFO, get_file_info_params
+        bcc     ret
+
+        ;; Ensure path has high bits clear. Workaround for Bitsy Bye bug:
+        ;; https://github.com/ProDOS-8/ProDOS8-Testing/issues/68
+        ldx     PRODOS_SYS_PATH
+:       lda     PRODOS_SYS_PATH,x
+        and     #$7F
+        sta     PRODOS_SYS_PATH,x
+        dex
+        bne     :-
+
+        ;; Strip last filename segment
+        ldx     PRODOS_SYS_PATH
+:       dex
+        beq     ret
+        lda     PRODOS_SYS_PATH,x
+        cmp     #'/'
+        bne     :-
+        dex
+        stx     PRODOS_SYS_PATH
+
+        ;; Set prefix
+        MLI_CALL SET_PREFIX, set_prefix_params
+ret:    rts
+
+str_self_filename:
+        PASCAL_STRING kFilenameLauncher
+        DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, str_self_filename
+        DEFINE_SET_PREFIX_PARAMS set_prefix_params, PRODOS_SYS_PATH
+.endproc
 
 ;;; ============================================================
 

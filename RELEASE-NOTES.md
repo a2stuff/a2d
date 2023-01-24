@@ -20,6 +20,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Ensure DeskTop is correctly detected on RAMCard when re-launched.
 * Allow pressing Escape to cancel copy to RAMCard.
+* Handle launching with PREFIX not set to DeskTop's directory.
 
 ### DeskTop
 

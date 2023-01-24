@@ -2,6 +2,11 @@
 
 > Status: Work in Progress
 
+# Launcher
+
+* Without starting DeskTop, launch BASIC.SYSTEM. Set a prefix (e.g. "/RAM"). Invoke DESKTOP.SYSTEM with an absolute path (e.g. "-/A2.DESKTOP/DESKTOP.SYSTEM"). Verify that it starts correctly.
+* Move DeskTop into a subdirectory of a volume (e.g. "/VOL/A2D"). Without starting DeskTop, launch BASIC.SYSTEM. Set a prefix to a parent directory of desktop (e.g. "/VOL"). Invoke DESKTOP.SYSTEM with a relative path (e.g. "-A2D/DESKTOP.SYSTEM"). Verify that it starts correctly.
+
 # DeskTop
 
 * Open a volume with double-click.
