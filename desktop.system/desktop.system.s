@@ -54,7 +54,7 @@ dir_io_buffer   := $800         ; 1024 bytes for I/O
 
 src_io_buffer   := $E00         ; 1024 bytes for I/O
 dst_io_buffer   := $1200        ; 1024 bytes for I/O
-selector_buffer := $1600        ; Room for kSelectorListBufSize
+selector_buffer := $1600        ; Room for `kSelectorListBufSize`
 
 copy_buffer     := $3700
 kCopyBufferSize = MLI - copy_buffer
@@ -107,7 +107,7 @@ start:
         jsr     DetectMousetext
         jsr     CreateLocalDir
         jsr     LoadSettings
-        jmp     CopyDesktopToRamcard
+        jmp     CopyDesktopToRAMCard
 
 ;;; ============================================================
 
@@ -131,10 +131,10 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 ;;;
 ;;; ============================================================
 
-;;; Entry point is GenericCopy::DoCopy
-;;; * Source path is GenericCopy::path2
-;;; * Destination path is GenericCopy::path1
-;;; * Callbacks (GenericCopy::hook_*) must be populated
+;;; Entry point is `GenericCopy::DoCopy`
+;;; * Source path is `GenericCopy::path2`
+;;; * Destination path is `GenericCopy::path1`
+;;; * Callbacks (`GenericCopy::hook_*`) must be populated
 
 .proc GenericCopy
 
@@ -235,7 +235,7 @@ gfi_ok: lda     get_path2_info_params::storage_type
 is_dir: lda     #$FF
 :       sta     is_dir_flag
 
-        ;; copy file_type, aux_type, storage_type
+        ;; copy `file_type`, `aux_type`, `storage_type`
         ldy     #7
 :       lda     get_path2_info_params,y
         sta     create_params,y
@@ -277,7 +277,7 @@ is_dir_flag:
 ;;; Inputs: `file_entry` populated with FileEntry
 ;;;         `path2` has source directory path
 ;;;         `path1` has destination directory path
-;;; Errors: HandleErrorCode is invoked
+;;; Errors: `hook_handle_error_code` is invoked
 
 .proc CopyEntry
         lda     file_entry + FileEntry::file_type
@@ -412,7 +412,7 @@ dst_size:       .word   0
 ;;; Copy a normal (non-directory) file. File info is copied too.
 ;;; Inputs: `open_srcfile_params` populated
 ;;;         `open_dstfile_params` populated; file already created
-;;; Errors: HandleErrorCode is invoked
+;;; Errors: `hook_handle_error_code` is invoked
 
 .proc CopyNormalFile
         ;; Open source
@@ -468,9 +468,9 @@ close:  MLI_CALL CLOSE, close_dstfile_params
         jmp     (hook_handle_error_code)
 :       COPY_BYTES $B, get_path2_info_params::access, get_path1_info_params::access
 
-        copy    #7, get_path1_info_params ; SET_FILE_INFO param_count
+        copy    #7, get_path1_info_params ; `SET_FILE_INFO` param_count
         MLI_CALL SET_FILE_INFO, get_path1_info_params
-        copy    #10, get_path1_info_params ; GET_FILE_INFO param_count
+        copy    #10, get_path1_info_params ; `GET_FILE_INFO` param_count
 
         rts
 .endproc ; CopyNormalFile
@@ -491,7 +491,7 @@ cancel: lda     #kErrCancel
 ;;; ============================================================
 
 .proc CreateDir
-        ;; Copy file_type, aux_type, storage_type
+        ;; Copy `file_type`, `aux_type`, `storage_type`
         ldx     #7
 :       lda     get_path2_info_params,x
         sta     create_dir_params,x
@@ -562,7 +562,7 @@ entry_index_in_block:   .byte   0
 
 ;;; ============================================================
 ;;; Open the source directory for reading, skipping header.
-;;; Inputs: path2 set to dir
+;;; Inputs: `path2` set to dir
 ;;; Outputs: ref_num
 
 .proc OpenSrcDir
@@ -672,7 +672,7 @@ eof:    return  #$FF
 
 ;;; ============================================================
 ;;; Recursively copy
-;;; Inputs: path2 points at source directory
+;;; Inputs: `path2` points at source directory
 
 .proc CopyDirectory
         lda     #0
@@ -817,12 +817,12 @@ done:   dex
 ;;;
 ;;; ============================================================
 
-.proc CopyDesktopToRamcardImpl
+.proc CopyDesktopToRAMCardImpl
 
 ;;; ============================================================
 ;;; Data buffers and param blocks
 
-        ;; Used in CheckDesktopOnDevice
+        ;; Used in `CheckDesktopOnDevice`
         path_buf := $D00
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params4, path_buf
 
@@ -854,7 +854,7 @@ Version:                .word   0
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 on_line_buffer: .res 17, 0
 
-copied_flag:                    ; set to dst_path's length, or reset
+copied_flag:                    ; set to `dst_path`'s length, or reset
         .byte   0
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, src_path
@@ -974,7 +974,7 @@ resume:
 
         ;; Clear flag - ramcard not found or unknown state.
         ldx     #0
-        jsr     SetCopiedToRamcardFlag
+        jsr     SetCopiedToRAMCardFlag
 
         ;; Skip RAMCard install if flag is set
         lda     SETTINGS + DeskTopSettings::options
@@ -1064,10 +1064,10 @@ test_unit_num:
 
         ;; Record that candidate device is found.
         ldx     #$C0
-        jsr     SetCopiedToRamcardFlag
+        jsr     SetCopiedToRAMCardFlag
 
         ;; Keep root path (e.g. "/RAM5") for selector entry copies
-        param_call SetRamcardPrefix, dst_path
+        param_call SetRAMCardPrefix, dst_path
 
         ;; Append app dir name, e.g. "/RAM5/DESKTOP"
         ldy     dst_path
@@ -1086,7 +1086,7 @@ test_unit_num:
 
         ;; Already copied - record that it was installed and grab path.
         ldx     #$80
-        jsr     SetCopiedToRamcardFlag
+        jsr     SetCopiedToRAMCardFlag
         jsr     CopyOrigPrefixToDesktopOrigPrefix
         copy    dst_path, copied_flag
         jmp     FinishDeskTopCopy ; sets prefix, etc.
@@ -1106,7 +1106,7 @@ test_unit_num:
 
         ;; Record that the copy was performed.
         ldx     #$80
-        jsr     SetCopiedToRamcardFlag
+        jsr     SetCopiedToRAMCardFlag
 
         ldy     src_path
 :       lda     src_path,y
@@ -1182,7 +1182,7 @@ file_loop:
         sta     BITMAP
 
         ;; Done! Move on to Part 2.
-        jmp     CopySelectorEntriesToRamcard
+        jmp     CopySelectorEntriesToRAMCard
 .endproc ; FinishDeskTopCopy
 
 ;;; ============================================================
@@ -1194,15 +1194,16 @@ file_loop:
 
 ;;; ============================================================
 
-.proc SetCopiedToRamcardFlag
+;;; Input: X = new flag
+.proc SetCopiedToRAMCardFlag
         bit     LCBANK2
         bit     LCBANK2
         stx     COPIED_TO_RAMCARD_FLAG
         bit     ROMIN2
         rts
-.endproc ; SetCopiedToRamcardFlag
+.endproc ; SetCopiedToRAMCardFlag
 
-.proc SetRamcardPrefix
+.proc SetRAMCardPrefix
         ptr := $6
         target := RAMCARD_PREFIX
 
@@ -1218,7 +1219,7 @@ file_loop:
         bpl     :-
         bit     ROMIN2
         rts
-.endproc ; SetRamcardPrefix
+.endproc ; SetRAMCardPrefix
 
 .proc SetDesktopOrigPrefix
         ptr := $6
@@ -1476,13 +1477,12 @@ UpdateSelfFile  := UpdateSelfFileImpl::start
 
 ;;; ============================================================
 
-.endproc ; CopyDesktopToRamcardImpl
-
-CopyDesktopToRamcard := CopyDesktopToRamcardImpl::Start
+.endproc ; CopyDesktopToRAMCardImpl
+CopyDesktopToRAMCard := CopyDesktopToRAMCardImpl::Start
 
 ;;; ============================================================
 
-        kProgressStops = CopyDesktopToRamcardImpl::kNumFilenames + 1
+        kProgressStops = CopyDesktopToRAMCardImpl::kNumFilenames + 1
         .include "../lib/loader_progress.s"
 
 ;;; ============================================================
@@ -1491,7 +1491,7 @@ CopyDesktopToRamcard := CopyDesktopToRamcardImpl::Start
 ;;;
 ;;; ============================================================
 
-.proc CopySelectorEntriesToRamcardImpl
+.proc CopySelectorEntriesToRAMCardImpl
 
 ;;; Save stack to restore on error during copy.
 saved_stack:
@@ -1519,11 +1519,10 @@ saved_stack:
         php
         bit     ROMIN2
         plp
-        bne     :+
-        jmp     InvokeSelectorOrDesktop ; no RAMCard - skip!
+        jeq     InvokeSelectorOrDesktop ; no RAMCard - skip!
 
         ;; Clear "Copied to RAMCard" flags
-:       bit     LCBANK2
+        bit     LCBANK2
         bit     LCBANK2
         ldx     #kSelectorListNumEntries-1
         lda     #0
@@ -1637,12 +1636,12 @@ entry_dir_name:
         jsr     PreparePathsFromEntryPaths
 
         ;; Set up destination dir path, e.g. "/RAM/APPLEWORKS"
-        ldx     GenericCopy::path1 ; Append '/' to path1
+        ldx     GenericCopy::path1 ; Append '/' to `path1`
         lda     #'/'
         sta     GenericCopy::path1+1,x
         inc     GenericCopy::path1
 
-        ldy     #0              ; Append entry_dir_name to path1
+        ldy     #0              ; Append `entry_dir_name` to `path1`
         ldx     GenericCopy::path1
 :       iny
         inx
@@ -1661,19 +1660,19 @@ entry_dir_name:
 .endproc ; CopyUsingEntryPaths
 
 ;;; ============================================================
-;;; Copy entry_path1/2 to path1/2
+;;; Copy `entry_path1/2` to `path1/2`
 
 .proc PreparePathsFromEntryPaths
         ldy     #$FF
 
-        ;; Copy entry_path2 to path2
+        ;; Copy `entry_path2` to `path2`
 loop:   iny
         lda     entry_path2,y
         sta     GenericCopy::path2,y
         cpy     entry_path2
         bne     loop
 
-        ;; Copy entry_path1 to path1
+        ;; Copy `entry_path1` to `path1`
         ldy     entry_path1
 loop2:  lda     entry_path1,y
         sta     GenericCopy::path1,y
@@ -1777,11 +1776,11 @@ bits:   .byte   $00
 ;;; Prepare entry paths
 ;;; Input: A,X = address of full entry path
 ;;;            e.g. ".../APPLEWORKS/AW.SYSTEM"
-;;; Output: entry_path2 set to path of entry parent dir
+;;; Output: `entry_path2` set to path of entry parent dir
 ;;;            e.g. ".../APPLEWORKS"
-;;;         entry_dir_name set to name of entry parent dir
+;;;         `entry_dir_name` set to name of entry parent dir
 ;;;            e.g. "APPLEWORKS"
-;;;         entry_path1 set to RAMCARD_PREFIX
+;;;         `entry_path1` set to RAMCARD_PREFIX
 ;;;            e.g. "/RAM"
 ;;; Trashes $06
 
@@ -1790,7 +1789,7 @@ bits:   .byte   $00
 
         stax    ptr
 
-        ;; Copy passed address to entry_path2
+        ;; Copy passed address to `entry_path2`
         ldy     #0
         lda     (ptr),y
         tay
@@ -1816,7 +1815,7 @@ bits:   .byte   $00
         dey
         bpl     :-
 
-        ;; ... and copy to entry_dir_name
+        ;; ... and copy to `entry_dir_name`
 :       ldx     #0
 :       iny
         inx
@@ -1826,7 +1825,7 @@ bits:   .byte   $00
         bne     :-
         stx     entry_dir_name
 
-        ;; Prep entry_path1 with RAMCARD_PREFIX
+        ;; Prep `entry_path1` with `RAMCARD_PREFIX`
         bit     LCBANK2
         bit     LCBANK2
         ldy     RAMCARD_PREFIX
@@ -1861,7 +1860,7 @@ str_not_completed:
 
 ;;; ============================================================
 
-;;; Callback; used for GenericCopy::hook_show_file
+;;; Callback; used for `GenericCopy::hook_show_file`
 .proc ShowCopyingEntryScreen
         jsr     HOME
         lda     #0
@@ -1875,7 +1874,7 @@ str_not_completed:
 
 ;;; ============================================================
 
-;;; Callback; used for GenericCopy::hook_insert_source
+;;; Callback; used for `GenericCopy::hook_insert_source`
 .proc ShowInsertPrompt
         lda     #0
         jsr     VTABZ
@@ -1895,7 +1894,7 @@ str_not_completed:
 
 ;;; ============================================================
 
-;;; Callback; used for GenericCopy::hook_handle_no_space
+;;; Callback; used for `GenericCopy::hook_handle_no_space`
 .proc ShowNoSpacePrompt
         ldx     saved_stack
         txs
@@ -1914,7 +1913,7 @@ str_not_completed:
 ;;; On copy failure, show an appropriate error; wait for key
 ;;; and invoke app.
 
-;;; Callback; used for GenericCopy::hook_handle_error_code
+;;; Callback; used for `GenericCopy::hook_handle_error_code`
 .proc HandleErrorCode
         ldx     saved_stack
         txs
@@ -1985,8 +1984,8 @@ done:   rts
 
 ;;; ============================================================
 
-.endproc ; CopySelectorEntriesToRamcardImpl
-CopySelectorEntriesToRamcard := CopySelectorEntriesToRamcardImpl::Start
+.endproc ; CopySelectorEntriesToRAMCardImpl
+CopySelectorEntriesToRAMCard := CopySelectorEntriesToRAMCardImpl::Start
 
 
 ;;; ============================================================
