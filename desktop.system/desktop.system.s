@@ -973,7 +973,7 @@ resume:
 :
 
         ;; Clear flag - ramcard not found or unknown state.
-        ldx     #0
+        lda     #0
         jsr     SetCopiedToRAMCardFlag
 
         ;; Skip RAMCard install if flag is set
@@ -1063,7 +1063,7 @@ test_unit_num:
         bne     :-
 
         ;; Record that candidate device is found.
-        ldx     #$C0
+        lda     #$C0
         jsr     SetCopiedToRAMCardFlag
 
         ;; Keep root path (e.g. "/RAM5") for selector entry copies
@@ -1085,7 +1085,7 @@ test_unit_num:
         bcs     StartCopy       ; No, start copy.
 
         ;; Already copied - record that it was installed and grab path.
-        ldx     #$80
+        lda     #$80
         jsr     SetCopiedToRAMCardFlag
         jsr     CopyOrigPrefixToDesktopOrigPrefix
         copy    dst_path, copied_flag
@@ -1105,7 +1105,7 @@ test_unit_num:
 :       dec     src_path
 
         ;; Record that the copy was performed.
-        ldx     #$80
+        lda     #$80
         jsr     SetCopiedToRAMCardFlag
 
         ldy     src_path
@@ -1194,14 +1194,24 @@ file_loop:
 
 ;;; ============================================================
 
-;;; Input: X = new flag
+;;; Input: A = new flag
 .proc SetCopiedToRAMCardFlag
         bit     LCBANK2
         bit     LCBANK2
-        stx     COPIED_TO_RAMCARD_FLAG
+        sta     COPIED_TO_RAMCARD_FLAG
         bit     ROMIN2
         rts
 .endproc ; SetCopiedToRAMCardFlag
+
+.proc GetCopiedToRAMCardFlag
+        bit     LCBANK2
+        bit     LCBANK2
+        lda     COPIED_TO_RAMCARD_FLAG
+        php
+        bit     ROMIN2
+        plp
+        rts
+.endproc ; GetCopiedToRAMCardFlag
 
 .proc SetRAMCardPrefix
         ptr := $6
@@ -1364,6 +1374,9 @@ done:   rts
 ;;; Callback from copy failure; restores stack and proceeds.
 
 .proc FailCopy
+        lda     #0              ; treat as no RAMCard
+        jsr     SetCopiedToRAMCardFlag
+
         ldx     saved_stack
         txs
 
@@ -1479,6 +1492,7 @@ UpdateSelfFile  := UpdateSelfFileImpl::start
 
 .endproc ; CopyDesktopToRAMCardImpl
 CopyDesktopToRAMCard := CopyDesktopToRAMCardImpl::Start
+GetCopiedToRAMCardFlag := CopyDesktopToRAMCardImpl::GetCopiedToRAMCardFlag
 
 ;;; ============================================================
 
@@ -1513,12 +1527,7 @@ saved_stack:
         ptr := $6
 
         ;; Is there a RAMCard?
-        bit     LCBANK2
-        bit     LCBANK2
-        lda     COPIED_TO_RAMCARD_FLAG
-        php
-        bit     ROMIN2
-        plp
+        jsr     GetCopiedToRAMCardFlag
         jeq     InvokeSelectorOrDesktop ; no RAMCard - skip!
 
         ;; Clear "Copied to RAMCard" flags
