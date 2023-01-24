@@ -2962,7 +2962,12 @@ drive_to_refresh:
 
 ;;; ============================================================
 
-.proc CmdFormatDisk
+.proc CmdFormatEraseDiskImpl
+format: lda     #FormatEraseAction::format
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+erase:  lda     #FormatEraseAction::erase
+        sta     action
+
         lda     #kDynamicRoutineFormatErase
         jsr     LoadDynamicRoutine
         bpl     :+
@@ -2970,7 +2975,8 @@ drive_to_refresh:
 :
         jsr     GetSelectedUnitNum
         tax
-        lda     #FormatEraseAction::format
+        action := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     format_erase_overlay__Exec
         stx     drive_to_refresh ; X = unit number
         pha                     ; A = result
@@ -2980,29 +2986,9 @@ drive_to_refresh:
         rts
 :
         jmp     CmdCheckSingleDriveByUnitNumber
-.endproc ; CmdFormatDisk
-
-;;; ============================================================
-
-.proc CmdEraseDisk
-        lda     #kDynamicRoutineFormatErase
-        jsr     LoadDynamicRoutine
-        bpl     :+
-        rts
-:
-        jsr     GetSelectedUnitNum
-        tax
-        lda     #FormatEraseAction::erase
-        jsr     format_erase_overlay__Exec
-        stx     drive_to_refresh ; X = unit number
-        pha                     ; A = result
-        jsr     ClearUpdates ; following dialog close
-        pla                     ; A = result
-        beq     :+
-        rts
-:
-        jmp     CmdCheckSingleDriveByUnitNumber
-.endproc ; CmdEraseDisk
+.endproc ; CmdFormatEraseDiskImpl
+CmdFormatDisk := CmdFormatEraseDiskImpl::format
+CmdEraseDisk := CmdFormatEraseDiskImpl::erase
 
 ;;; ============================================================
 
