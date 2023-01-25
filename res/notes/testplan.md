@@ -402,7 +402,7 @@
     * Apple > Control Panels (relative folders)
     * Control Panel, change desktop pattern, close, quit, restart (settings)
     * Windows are saved on exit/restored on restart (configuration)
-    * Invoking another application, then quitting back to DeskTop (quit handler)
+    * Invoking another application (e.g. BASIC.SYSTEM), then quitting back to DeskTop (quit handler)
     * Modifying shortcuts (selector)
 
 * Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. Go back to the volume window, and drag the folder icon to the trash. Click OK in the delete confirmation dialog. Verify that the folder's window closes.

@@ -11044,12 +11044,13 @@ wloop:  ldx     found_windows_count
 ;;; Assert: `src_path_buf` is a prefix of the path at $06!
 ;;; Inputs: $06 = path to update, `src_path_buf` and `dst_path_buf`,
 ;;; Outputs: Path at $06 updated.
-;;; Modifies `text_input_buf` and `tmp_path_buf`
+;;; Modifies `tmp_path_buf` and $1F00
+;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
 
 .proc UpdateTargetPath
         dst := $06
 
-        old_path := text_input_buf ; arbitrary usage of this buffer
+        old_path := $1F00
         new_path := tmp_path_buf   ; arbitrary usage of this buffer
 
         ;; Set `old_path` to the old path (should be `src_path_buf` + suffix)
@@ -11092,6 +11093,7 @@ assign: ldy     new_path
 ;;;
 ;;; Inputs: $06 = pointer to path to update
 ;;; Outputs: Path at $06 updated, Z=1 if updated, Z=0 if no change
+;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
 
 .proc MaybeUpdateTargetPath
         ptr := $06
@@ -11180,8 +11182,6 @@ no_change:
         copy16  #DESKTOP_ORIG_PREFIX, ptr
         jsr     MaybeUpdateTargetPath
         copy16  #RAMCARD_PREFIX, ptr
-        jsr     MaybeUpdateTargetPath
-        copy16  #SELECTOR + QuitRoutine::prefix_buffer_offset, ptr
         jsr     MaybeUpdateTargetPath
         sta     ALTZPON
         bit     LCBANK1
