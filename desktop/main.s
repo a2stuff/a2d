@@ -11091,12 +11091,14 @@ assign: ldy     new_path
 ;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
 ;;; update the target path if needed.
 ;;;
-;;; Inputs: $06 = pointer to path to update
+;;; Inputs: A,X = pointer to path to update
 ;;; Outputs: Path at $06 updated, Z=1 if updated, Z=0 if no change
 ;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
 
 .proc MaybeUpdateTargetPath
         ptr := $06
+
+        stax    ptr
 
         ;; Did path end with a '/'? If so, set flag and remove.
         ldy     #0
@@ -11167,8 +11169,7 @@ no_change:
 
         ;; ProDOS Prefix
         MLI_CALL GET_PREFIX, get_set_prefix_params
-        copy16  #path, ptr
-        jsr     MaybeUpdateTargetPath
+        param_call MaybeUpdateTargetPath, path
     IF_EQ
         MLI_CALL SET_PREFIX, get_set_prefix_params
     END_IF
@@ -11179,10 +11180,8 @@ no_change:
         sta     ALTZPOFF
         bit     LCBANK2
         bit     LCBANK2
-        copy16  #DESKTOP_ORIG_PREFIX, ptr
-        jsr     MaybeUpdateTargetPath
-        copy16  #RAMCARD_PREFIX, ptr
-        jsr     MaybeUpdateTargetPath
+        param_call MaybeUpdateTargetPath, DESKTOP_ORIG_PREFIX
+        param_call MaybeUpdateTargetPath, RAMCARD_PREFIX
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
@@ -11192,8 +11191,7 @@ no_change:
         sta     ALTZPOFF
         bit     LCBANK2
         bit     LCBANK2
-        copy16  #SELECTOR + QuitRoutine::prefix_buffer_offset, ptr
-        jsr     MaybeUpdateTargetPath
+        param_call MaybeUpdateTargetPath, SELECTOR + QuitRoutine::prefix_buffer_offset
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
