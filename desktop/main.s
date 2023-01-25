@@ -326,12 +326,12 @@ dispatch_table:
 
         ;; View menu (3)
         menu3_start := *
-        .addr   CmdViewByIcon
-        .addr   CmdViewBySmallIcon
-        .addr   CmdViewByName
-        .addr   CmdViewByDate
-        .addr   CmdViewBySize
-        .addr   CmdViewByType
+        .addr   CmdViewBy
+        .addr   CmdViewBy
+        .addr   CmdViewBy
+        .addr   CmdViewBy
+        .addr   CmdViewBy
+        .addr   CmdViewBy
         ASSERT_ADDRESS_TABLE_SIZE menu3_start, ::kMenuSizeView
 
         ;; Special menu (4)
@@ -2754,6 +2754,18 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 
 ;;; ============================================================
 
+menu_item_to_view_by:
+        .byte   kViewByIcon, kViewBySmallIcon
+        .byte   kViewByName, kViewByDate, kViewBySize, kViewByType
+
+.proc CmdViewBy
+        ldx     menu_click_params::item_num
+        lda     menu_item_to_view_by-1,x
+        FALL_THROUGH_TO ViewByCommon
+.endproc ; CmdViewBy
+
+;;; ============================================================
+
 .proc ViewByCommon
         sta     view
 
@@ -2841,49 +2853,6 @@ entry3:
         ;; Update scrollbars based on contents/viewport
         jmp     ScrollUpdate
 .endproc ; RedrawAfterContentChange
-
-
-;;; ============================================================
-
-.proc CmdViewByIcon
-        lda     #kViewByIcon
-        jmp     ViewByCommon
-.endproc ; CmdViewByIcon
-
-;;; ============================================================
-
-.proc CmdViewBySmallIcon
-        lda     #kViewBySmallIcon
-        jmp     ViewByCommon
-.endproc ; CmdViewBySmallIcon
-
-;;; ============================================================
-
-.proc CmdViewByName
-        lda     #kViewByName
-        jmp     ViewByCommon
-.endproc ; CmdViewByName
-
-;;; ============================================================
-
-.proc CmdViewByDate
-        lda     #kViewByDate
-        jmp     ViewByCommon
-.endproc ; CmdViewByDate
-
-;;; ============================================================
-
-.proc CmdViewBySize
-        lda     #kViewBySize
-        jmp     ViewByCommon
-.endproc ; CmdViewBySize
-
-;;; ============================================================
-
-.proc CmdViewByType
-        lda     #kViewByType
-        jmp     ViewByCommon
-.endproc ; CmdViewByType
 
 ;;; ============================================================
 
