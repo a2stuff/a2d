@@ -7044,56 +7044,63 @@ icon_height:    .word   0
 
         ;; Updated based on view type
 initial_xcoord:     .word   0
+icons_this_row:
+        .byte   0
+        DEFINE_POINT icon_coords, 0, 0
+
+        ;; Initial values when populating a list view
+init_view:
 icons_per_row:      .byte   0
 col_spacing:        .byte   0
 row_spacing:        .byte   0
         DEFINE_POINT row_coords, 0, 0
+        init_view_size := * - init_view
 
-icons_this_row:
-        .byte   0
-
-        DEFINE_POINT icon_coords, 0, 0
+        ;; Templates for populating initial values, based on view type
+init_list_view:
+        .byte   1, 0, kListItemHeight
+        .word   kListViewInitialLeft, kListViewInitialTop
+        .assert * - init_list_view = init_view_size, error, "struct size"
+init_icon_view:
+        .byte   kIconViewIconsPerRow, kIconViewSpacingX, kIconViewSpacingY
+        .word   kIconViewInitialLeft, kIconViewInitialTop
+        .assert * - init_icon_view = init_view_size, error, "struct size"
+init_smicon_view:
+        .byte   kSmallIconViewIconsPerRow, kSmallIconViewSpacingX, kSmallIconViewSpacingY
+        .word   kSmallIconViewInitialLeft, kSmallIconViewInitialTop
+        .assert * - init_smicon_view = init_view_size, error, "struct size"
 
 .proc Start
         jsr     PushPointers
 
+        ;; Select the template
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF_NEG
-        ;; List View
-        copy16  #kListViewInitialLeft, row_coords::xcoord
-        copy16  #kListViewInitialTop, row_coords::ycoord
-        copy    #1, icons_per_row ; by definition
-        copy    #0, col_spacing   ; N/A
-        copy    #kListItemHeight, row_spacing
+        ldax    #init_list_view
     ELSE
         .assert kViewByIcon = 0, error, "enum mismatch"
       IF_ZERO
-        ;; Icon View
-        copy16  #kIconViewInitialLeft, row_coords::xcoord
-        copy16  #kIconViewInitialTop, row_coords::ycoord
-        copy    #kIconViewIconsPerRow, icons_per_row
-        copy    #kIconViewSpacingX, col_spacing
-        copy    #kIconViewSpacingY, row_spacing
+        ldax    #init_icon_view
       ELSE
-        ;; Small Icon View
-        copy16  #kSmallIconViewInitialLeft, row_coords::xcoord
-        copy16  #kSmallIconViewInitialTop, row_coords::ycoord
-        copy    #kSmallIconViewIconsPerRow, icons_per_row
-        copy    #kSmallIconViewSpacingX, col_spacing
-        copy    #kSmallIconViewSpacingY, row_spacing
+        ldax    #init_smicon_view
       END_IF
     END_IF
 
+        ;; Populate the initial values fron the template
+        ptr := $06
+        stax    ptr
+        ldy     #init_view_size-1
+:       lda     (ptr),y
+        sta     init_view,y
+        dey
+        bpl     :-
+
+        ;; Init/zero out the rest of the state
         copy16  row_coords::xcoord, initial_xcoord
 
         lda     #0
         sta     icons_this_row
         sta     index
-
-        ldx     #3
-:       sta     icon_coords,x
-        dex
-        bpl     :-
 
         ;; Copy `cached_window_entry_list` to temp location
         record_order_list := $800
