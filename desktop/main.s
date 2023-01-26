@@ -2390,28 +2390,9 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         ;; Compare with name from dialog
 :       lda     cached_window_entry_list,x
         jsr     GetIconEntry
-        stax    ptr_icon
-
-        ;; Lengths match?
-        ldy     #IconEntry::name
-        lda     (ptr_icon),y
-        ldy     #0
-        cmp     (ptr_name),y
+        addax   #IconEntry::name, ptr_icon
+        jsr     CompareStrings
         bne     next
-
-        ;; Compare characters (case insensitive)
-        tay
-        add16_8 ptr_icon, #IconEntry::name
-cloop:  lda     (ptr_icon),y
-        jsr     UpcaseChar
-        sta     @char
-        lda     (ptr_name),y
-        jsr     UpcaseChar
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     next
-        dey
-        bne     cloop
 
         ;; Match!
         ldx     icon
@@ -3369,10 +3350,27 @@ next:   inc     inner
         bne     oloop
 
         rts
+.endproc ; GetSelectableIconsSorted
 
-;;; Compare strings at $06 (1) and $08 (2).
+;;; Assuming selectable icon buffer at $1800 is populated by the
+;;; above functions, return ptr to nth icon's name in A,X
+;;; Input: A = index
+;;; Output: A,X = icon name pointer
+.proc GetNthSelectableIconName
+        buffer := $1800
+
+        tax
+        lda     buffer+1,x         ; A = icon num
+        jmp     GetIconName
+.endproc ; GetNthSelectableIconName
+
+;;; ============================================================
+;;; Compare strings at $06 (1) and $08 (2). Case insensitive.
 ;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
 .proc CompareStrings
+        ptr1 := $06
+        ptr2 := $08
+
         ldy     #0
         copy    (ptr1),y, len1
         copy    (ptr2),y, len2
@@ -3405,21 +3403,6 @@ gt:     lda     #$FF            ; Z=0
         sec
 ret:    rts
 .endproc ; CompareStrings
-
-.endproc ; GetSelectableIconsSorted
-
-;;; Assuming selectable icon buffer at $1800 is populated by the
-;;; above functions, return ptr to nth icon's name in A,X
-;;; Input: A = index
-;;; Output: A,X = icon name pointer
-.proc GetNthSelectableIconName
-        buffer := $1800
-
-        tax
-        lda     buffer+1,x         ; A = icon num
-        jmp     GetIconName
-.endproc ; GetNthSelectableIconName
-
 
 ;;; ============================================================
 ;;; Select an arbitrary icon. If windowed, it is scrolled into view.
@@ -8037,7 +8020,7 @@ ret:    rts
         cmp     #kViewByName
     IF_EQ
         .assert FileRecord::name = 0, error, "Assumes name is at offset 0"
-        jmp     GetSelectableIconsSorted::CompareStrings
+        jmp     CompareStrings
     END_IF
 
         cmp     #kViewByDate
@@ -8134,7 +8117,7 @@ done:   rts
         jsr     PushPointers
         copy16  #scratch, $06
         copy16  #str_file_type, $08
-        jsr     GetSelectableIconsSorted::CompareStrings
+        jsr     CompareStrings
         jsr     PopPointers
         bit     LCBANK2
         bit     LCBANK2
@@ -9304,10 +9287,11 @@ offset:         .word   0
 ;;; Assert: `cached_window_entry_count` is one greater than actual count
 .proc CompareNames
 
-        string := cvi_data_buffer
         icon_ptr := $06
 
         jsr     PushPointers
+        copy16  #cvi_data_buffer, $08
+
         ldx     cached_window_entry_count
         dex
         stx     index
@@ -9320,23 +9304,8 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         jsr     GetIconName
         stax    icon_ptr
 
-        ;; Lengths match?
-        ldy     #0
-        lda     (icon_ptr),y
-        cmp     string
+        jsr     CompareStrings
         bne     next
-
-        tay
-cloop:  lda     (icon_ptr),y
-        jsr     UpcaseChar
-        sta     @char
-        lda     string,y
-        jsr     UpcaseChar
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     next
-        dey
-        bne     cloop
 
         ;; It matches; report a duplicate.
         lda     #ERR_DUPLICATE_VOLUME
@@ -10810,21 +10779,10 @@ ok:
         jsr     AppendFilenameToDstPath
 
         ;; Did the name change (ignoring case)?
-        ldx     old_name_buf
-        cpx     new_name_buf
-        bne     changed
-:       lda     old_name_buf,x
-        jsr     UpcaseChar
-        sta     @char
-        lda     new_name_buf,x
-        jsr     UpcaseChar
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     changed
-        dex
-        bne     :-
-        beq     no_change       ; always
-changed:
+        copy16  #old_name_buf, $06
+        copy16  #new_name_buf, $08
+        jsr     CompareStrings
+        beq     no_change
 
         ;; Already exists? (Mostly for volumes, but works for files as well)
         jsr     GetDstFileInfo
