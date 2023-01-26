@@ -2173,7 +2173,7 @@ normal: lda     #0
         ;; Select by name (if not already done via close)
         lda     selected_icon_count
     IF_ZERO
-        jsr     SelectFileIconByName ; $08 = name
+        param_call_indirect SelectFileIconByName, name_ptr
     END_IF
 
 done:   rts
@@ -2331,8 +2331,7 @@ success:
         jsr     SelectAndRefreshWindowOrClose
         bne     done
 
-        copy16  #text_input_buf, $08
-        jsr     SelectFileIconByName ; $08 = folder name
+        param_call SelectFileIconByName, text_input_buf
 
 done:   rts
 
@@ -2341,13 +2340,10 @@ CmdNewFolder    := CmdNewFolderImpl::start
 
 ;;; ============================================================
 ;;; Select and scroll into view an icon in the active window.
-;;; Inputs: $08 = name
+;;; Inputs: A,X = name
 ;;; Trashes $06
 
 .proc SelectFileIconByName
-        ptr_name := $8          ; Input
-
-        ldax    ptr_name
         ldy     active_window_id
         jsr     FindIconByName
         beq     ret             ; not found
@@ -5802,8 +5798,7 @@ no_win:
         stx     saved_stack
         jsr     OpenWindowForPath
 
-        copy16  #INVOKER_FILENAME, $08
-        jmp     SelectFileIconByName
+        param_jump SelectFileIconByName, INVOKER_FILENAME
 .endproc ; ShowFileWithPath
 
 ;;; ============================================================
@@ -10110,7 +10105,6 @@ common:
         ;; Drag/drop - compare src/dst paths (etc)
 @drop:  lda     selected_window_id
         jsr     GetWindowPath
-        stax    $08
         jsr     CheckMoveOrCopy
 @store: sta     move_flag
         jsr     DoCopyDialogPhase
@@ -13029,11 +13023,14 @@ CloseFilesCancelDialogWithResult := CloseFilesCancelDialog::ep2
 ;;; ============================================================
 ;;; Move or Copy? Compare src/dst paths, same vol = move.
 ;;; Button down inverts the default action.
+;;; Input: A,X = source path
 ;;; Output: A=high bit set if move, clear if copy
 
 .proc CheckMoveOrCopy
         src_ptr := $08
         dst_buf := path_buf4
+
+        stax    src_ptr
 
         jsr     ModifierDown    ; Apple inverts the default
         sta     flag
