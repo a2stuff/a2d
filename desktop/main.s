@@ -4857,9 +4857,6 @@ exception_flag:
         sta     window_id
 
     IF_NOT_ZERO
-        ;; Set up $06 to point at an imaginary `IconEntry`, to map
-        ;; `event_params::coords` from screen to window.
-        copy16  #(event_params::coords - IconEntry::iconx), $06
         ;; Map initial event coordinates
         jsr     CoordsScreenToWindow
     END_IF
@@ -5048,7 +5045,12 @@ last_pos:
 .proc CoordsScreenToWindow
         jsr     PushPointers
         jsr     PrepActiveWindowScreenMapping
+
+        ;; Point at an imaginary `IconEntry`, to map
+        ;; `event_params::coords` from screen to window.
+        ldax    #(event_params::coords - IconEntry::iconx)
         jsr     IconPtrScreenToWindow
+
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc ; CoordsScreenToWindow
@@ -6024,10 +6026,12 @@ header_and_offset_flag:
 :       txa
         pha                     ; A = index
         copy    selected_icon_list,x, icon_param
+        pha                     ; A = icon id
         jsr     GetIconEntry
-        stax    $06
         jsr     IconPtrScreenToWindow
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED
+        pla                     ; A = icon id
+        jsr     GetIconEntry
         jsr     IconPtrWindowToScreen
         pla                     ; A = index
         tax
@@ -6064,7 +6068,6 @@ loop:   lda     #SELF_MODIFIED_BYTE
         tax
         lda     cached_window_entry_list,x
         jsr     GetIconEntry
-        stax    entry_ptr
         jsr     IconPtrScreenToWindow
 
         inc     index
@@ -6091,7 +6094,6 @@ loop:   lda     #SELF_MODIFIED_BYTE
         tax
         lda     cached_window_entry_list,x
         jsr     GetIconEntry
-        stax    entry_ptr
         jsr     IconPtrWindowToScreen
 
         inc     index
@@ -8782,18 +8784,21 @@ saved_portbits:
         entry_ptr := $6
 
         jsr     PushPointers
-        jsr     GetIconEntry
-        stax    entry_ptr
+        pha
         jsr     PrepActiveWindowScreenMapping
+        pla
+        jsr     GetIconEntry
         jsr     IconPtrWindowToScreen
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc ; IconWindowToScreen
 
 ;;; Convert icon's coordinates from window to screen
-;;; Inputs: icon entry pointer in $6, `PrepActiveWindowScreenMapping` called
+;;; Inputs: A,X = `IconEntry`, `PrepActiveWindowScreenMapping` called
+;;; Trashes $06
 .proc IconPtrWindowToScreen
         entry_ptr := $6
+        stax    entry_ptr
 
         ;; iconx
         ldy     #IconEntry::iconx
@@ -8823,18 +8828,21 @@ saved_portbits:
         entry_ptr := $6
 
         jsr     PushPointers
-        jsr     GetIconEntry
-        stax    entry_ptr
+        pha
         jsr     PrepActiveWindowScreenMapping
+        pla
+        jsr     GetIconEntry
         jsr     IconPtrScreenToWindow
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc ; IconScreenToWindow
 
 ;;; Convert icon's coordinates from screen to window
-;;; Inputs: icon entry pointer in $6, `PrepActiveWindowScreenMapping` called
+;;; Inputs: A,X = `IconEntry`, `PrepActiveWindowScreenMapping` called
+;;; Trashes $06
 .proc IconPtrScreenToWindow
         entry_ptr := $6
+        stax    entry_ptr
 
         ;; iconx
         ldy     #IconEntry::iconx
