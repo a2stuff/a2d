@@ -4223,9 +4223,7 @@ common:
         inc     path_buf
         copy    #'/', path_buf+1
 
-        ldax    #path_buf
-        ldy     path_buf
-        jsr     FindWindowsForPrefix
+        param_call FindWindowsForPrefix, path_buf
         lda     found_windows_count
         beq     not_in_map
 
@@ -6164,11 +6162,19 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
         bne     :-
         dey
 :
-        ;; NOTE: Path is unchanged, but Y has effective length for
-        ;; the following call.
+
+        ;; Temporarily change path length
+        tya
+        ldy     #0
+        sta     (ptr),y
 
         ;; Update `found_windows_count` and `found_windows_list`
         param_call_indirect FindWindowsForPrefix, ptr
+
+        ;; Restore path length
+        ldy     #0
+        lda     pathlen
+        sta     (ptr),y
 
         ;; Determine if there are windows to update
         jsr     PopPointers     ; $06 = vol path
@@ -6236,41 +6242,25 @@ slash:  cpy     #1
 
 ;;; ============================================================
 ;;; `FindWindowForPath`
-;;; Inputs: A,X = string (uses full string)
+;;; Inputs: A,X = string
 ;;; Output: A = window id (0 if no match)
 ;;;
 ;;; `FindWindowsForPrefix`
-;;; Inputs: A,X = string, Y = prefix length
+;;; Inputs: A,X = string
 ;;; Outputs: `found_windows_count` and `found_windows_list` are updated
 
-        ;; If 'prefix' version called, length in Y; otherwise use str len
 .proc FindWindowsImpl
-        ptr := $6
+        ptr1 := $6
+        ptr2 := $8
 
-        ;; NOTE: Not used for MLI calls, so another buffer could be used.
-        path := tmp_path_buf
-
-exact:  stax    ptr
-        lda     #$80
+exact:  ldy     #$80
         bne     start           ; always
 
-prefix: stax    ptr
-        lda     #0
+prefix: ldy     #0
 
-start:  sta     exact_match_flag
-        bit     exact_match_flag
-        bpl     :+
-        ldy     #0              ; Use full length
-        lda     (ptr),y
-        tay
 
-:       sty     tmp_path_buf
-
-        ;; Copy ptr to `path`
-:       lda     (ptr),y
-        sta     path,y
-        dey
-        bne     :-
+start:  stax    ptr1
+        sty     exact_match_flag
 
         lda     #0
         sta     found_windows_count
@@ -6288,51 +6278,28 @@ loop:   inc     window_num
 :       rts
 
 check_window:
-        jsr     WindowLookup
-        stax    ptr
-        ldy     #MGTK::Winfo::status
-        lda     (ptr),y
+        tax
+        lda     window_to_dir_icon_table-1,x
         beq     loop
 
         lda     window_num
         jsr     GetWindowPath
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-        cmp     path
-        beq     :+
+        stax    ptr2
 
         bit     exact_match_flag
-        bmi     loop
-        ldy     path
-        iny
-        lda     (ptr),y
-        cmp     #'/'
+    IF_NS
+        jsr     CompareStrings  ; Z=1 if equal
         bne     loop
-        dey
+        return  window_num
+    END_IF
 
-        ;; Case-insensitive comparison
-:       lda     (ptr),y
-        jsr     UpcaseChar
-        sta     @char
-        lda     path,y
-        jsr     UpcaseChar
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     loop
-        dey
-        bne     :-
-
-        bit     exact_match_flag
-        bmi     done
+        jsr     IsPathPrefixOf  ; Z=0 if prefix
+        beq     loop
         ldx     found_windows_count
         lda     window_num
         sta     found_windows_list,x
         inc     found_windows_count
-        jmp     loop
-
-done:   return  window_num
+        bne     loop            ; always
 
 exact_match_flag:
         .byte   0
@@ -10958,27 +10925,10 @@ DoRename        := DoRenameImpl::start
 ;;; update any affected window paths.
 ;;;
 ;;; Uses `FindWindowsForPrefix`
-;;; Modifies $06
 ;;; Assert: The path actually changed.
 
 .proc UpdateWindowPaths
-        ;; Is there a window for the folder/volume?
-        jsr     FindWindowForSrcPath
-    IF_NOT_ZERO
-        dst := $06
-        ;; Update the path
-        jsr     GetWindowPath
-        stax    dst
-        lda     dst_path_buf
-        tay
-:       lda     dst_path_buf,y
-        sta     (dst),y
-        dey
-        bpl     :-
-    END_IF
-
-        ;; Update paths for any child windows.
-        ldy     src_path_buf    ; Y = length
+        ;; Update paths for any matching/child windows.
         param_call FindWindowsForPrefix, src_path_buf
         lda     found_windows_count
     IF_NOT_ZERO
@@ -10988,8 +10938,6 @@ DoRename        := DoRenameImpl::start
 wloop:  ldx     found_windows_count
         lda     found_windows_list,x
         jsr     GetWindowPath
-        stax    dst
-
         jsr     UpdateTargetPath
 
         dec     found_windows_count
@@ -11002,16 +10950,19 @@ wloop:  ldx     found_windows_count
 ;;; ============================================================
 ;;; Replace `src_path_buf` as the prefix of path at $06 with `dst_path_buf`.
 ;;; Assert: `src_path_buf` is a prefix of the path at $06!
-;;; Inputs: $06 = path to update, `src_path_buf` and `dst_path_buf`,
-;;; Outputs: Path at $06 updated.
+;;; Inputs: A,X = path to update, `src_path_buf` and `dst_path_buf`,
+;;; Outputs: Path updated.
 ;;; Modifies `tmp_path_buf` and $1F00
 ;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
+;;; Trashes $06
 
 .proc UpdateTargetPath
         dst := $06
 
         old_path := $1F00
         new_path := tmp_path_buf   ; arbitrary usage of this buffer
+
+        stax    dst
 
         ;; Set `old_path` to the old path (should be `src_path_buf` + suffix)
         param_call CopyPtr1ToBuf, old_path
@@ -11052,14 +11003,33 @@ assign: ldy     new_path
 ;;; update the target path if needed.
 ;;;
 ;;; Inputs: A,X = pointer to path to update
-;;; Outputs: Path at $06 updated, Z=1 if updated, Z=0 if no change
+;;; Outputs: Z=1 if updated, Z=0 if no change
 ;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
+;;; Trashes $06, $08
 
 .proc MaybeUpdateTargetPath
-        ptr := $06
+        ptr := $08
 
         stax    ptr
+        jsr     MaybeStripSlash
 
+        ;; Is `src_path_buf` a prefix?
+        copy16  #src_path_buf, $06
+        jsr     IsPathPrefixOf  ; Z=0 if a prefix
+        php
+    IF_NE
+        ;; It's a prefix! Do the replacement
+        param_call_indirect UpdateTargetPath, ptr
+    END_IF
+
+        jsr     MaybeRestoreSlash
+        plp                     ; Z=0 if updated
+    IF_NE
+        return  #0
+    END_IF
+        return  #$FF
+
+.proc MaybeStripSlash
         ;; Did path end with a '/'? If so, set flag and remove.
         ldy     #0
         sty     slash_flag
@@ -11074,34 +11044,10 @@ assign: ldy     new_path
         sec
         sbc     #1
         sta     (ptr),y
-        tay                     ; Y=updated target path length
-:
-        ;; Is `src_path_buf` a prefix?
-        cpy     src_path_buf
-        bcc     no_change       ; string is shorter, can't be a prefix
-        beq     :+              ; same length, maybe a prefix
-        ldy     src_path_buf
-        iny                     ; string is longer, but still need to ensure
-        lda     (ptr),y         ; that the next path char is a '/'
-        cmp     #'/'
-        bne     no_change       ; nope, so can't be a prefix
-:
-        ;; Compare strings
-        ldy     src_path_buf
-:       lda     (ptr),y
-        jsr     UpcaseChar
-        sta     @char
-        lda     src_path_buf,y
-        jsr     UpcaseChar
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     no_change
-        dey
-        bne     :-
+:       rts
+.endproc ; MaybeStripSlash
 
-        ;; It's a prefix! Do the replacement
-        jsr     UpdateTargetPath
-
+.proc MaybeRestoreSlash
         ;; Restore trailing '/' if needed
         slash_flag := *+1       ; non-zero if trailing slash needed
         lda     #SELF_MODIFIED_BYTE
@@ -11114,17 +11060,15 @@ assign: ldy     new_path
         tay
         lda     #'/'
         sta     (ptr),y
-:
-        return  #0
+:       rts
+.endproc ; MaybeRestoreSlash
+        slash_flag := MaybeRestoreSlash::slash_flag
 
-no_change:
-        return  #$FF
 .endproc ; MaybeUpdateTargetPath
 
 ;;; ============================================================
 
 .proc UpdatePrefix
-        ptr := $06
         path := tmp_path_buf    ; depends on `src_path_buf`, `dst_path_buf`
 
         ;; ProDOS Prefix
@@ -12836,39 +12780,12 @@ ret:    rts
 ;;; Output: A=0 if ok, A=err code otherwise.
 
 .proc CheckRecursion
-        src := src_path_buf
-        dst := dst_path_buf
-
-        ldx     src             ; Compare string lengths. If the same, need
-        cpx     dst             ; to compare strings. If `src` > `dst`
-        beq     compare         ; ('/a/b' vs. '/a'), then it's not a problem.
-        bcs     ok
-
-        ;; Assert: `src` is shorter then `dst`
-        inx                     ; See if `dst` is possibly a subfolder
-        lda     dst,x           ; ('/a/b/c' vs. '/a/b') or a sibling
-        cmp     #'/'            ; ('/a/bc' vs. /a/b').
-        bne     ok              ; At worst, a sibling - that's okay.
-
-        ;; Potentially self or a subfolder; compare strings.
-compare:
-        ldx     src
-:       lda     src,x
-        jsr     UpcaseChar
-        sta     @char
-        lda     dst,x
-        jsr     UpcaseChar
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     ok
-        dex
-        bne     :-
-
-        ;; Self or subfolder; show a fatal error.
-        return  #kErrMoveCopyIntoSelf
-
-ok:     return  #0
-
+        copy16  #src_path_buf, $06
+        copy16  #dst_path_buf, $08
+        jsr     IsPathPrefixOf
+        beq     ret
+        lda     #kErrMoveCopyIntoSelf
+ret:    rts
 .endproc ; CheckRecursion
 
 ;;; ============================================================
@@ -12884,40 +12801,57 @@ ok:     return  #0
 
         ;; Check for dst being subset of src
 
-        src := src_path_buf
-        dst := dst_path_buf
+        copy16  #dst_path_buf, $06
+        copy16  #src_path_buf, $08
+        jsr     IsPathPrefixOf
+        beq     ret
+        lda     #kErrBadReplacement
+ret:    rts
 
-        ldx     dst             ; Compare string lengths. If the same, need
-        cpx     src             ; to compare strings. If `dst` > `src`
+.endproc ; CheckBadReplacement
+
+;;; ============================================================
+;;; Check if $06 is same path or parent of $08.
+;;; Returns Z=1 if not, Z=0 if it is.
+
+.proc IsPathPrefixOf
+        ptr1 := $06
+        ptr2 := $08
+
+        ldy     #0
+        lda     (ptr1),y        ; Compare string lengths. If the same, need
+        cmp     (ptr2),y        ; to compare strings. If `ptr1` > `ptr2`
         beq     compare         ; ('/a/b' vs. '/a'), then it's not a problem.
         bcs     ok
 
-        ;; Assert: `dst` is shorter then `src`
-        inx                     ; See if `src` is possibly a subfolder
-        lda     src,x           ; ('/a/b/c' vs. '/a/b') or a sibling
+        ;; Assert: `ptr1` is shorter then `ptr2`
+        tay                     ; See if `ptr2` is possibly a subfolder
+        iny
+        lda     (ptr2),y        ; ('/a/b/c' vs. '/a/b') or a sibling
         cmp     #'/'            ; ('/a/bc' vs. /a/b').
         bne     ok              ; At worst, a sibling - that's okay.
 
         ;; Potentially self or a subfolder; compare strings.
 compare:
-        ldx     dst
-:       lda     dst,x
+        ldy     #0
+        lda     (ptr1),y
+        tay
+:       lda     (ptr1),y
         jsr     UpcaseChar
         sta     @char
-        lda     src,x
+        lda     (ptr2),y
         jsr     UpcaseChar
         @char := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     ok
-        dex
+        dey
         bne     :-
 
-        ;; Self or subfolder; show a fatal error.
-        return  #kErrBadReplacement
+        ;; Self or subfolder
+        return  #$FF
 
 ok:     return  #0
-
-.endproc ; CheckBadReplacement
+.endproc ; IsPathPrefixOf
 
 ;;; ============================================================
 ;;; Copy `path_buf3` to `src_path_buf`, `path_buf4` to `dst_path_buf`
