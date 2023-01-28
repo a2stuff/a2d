@@ -68,3 +68,16 @@ Version                 .word
         Clock                   = $0E
         Modem                   = $0F
 .endenum
+
+.macro DEFINE_SP_STATUS_PARAMS name, un, lp, sc
+.params name
+param_count:    .byte   3
+unit_num:       .byte   un
+list_ptr:       .addr   lp
+status_code:    .byte   sc
+        .refto param_count
+        .refto unit_num
+        .refto list_ptr
+        .refto status_code
+.endparams
+.endmacro

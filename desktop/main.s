@@ -790,13 +790,8 @@ finish: sta     result
         rts
 
         ;; params for call
-.params status_params
-param_count:    .byte   3
-unit_num:       .byte   1
-list_ptr:       .addr   status_buffer
-status_code:    .byte   0
-.endparams
-status_unit_num := status_params::unit_num
+        DEFINE_SP_STATUS_PARAMS status_params, 1, status_buffer, 0
+        status_unit_num := status_params::unit_num
 .endproc ; CheckDisksInDevices
 
 ;;; ============================================================
@@ -8851,12 +8846,7 @@ device_type_to_icon_address_table:
         ASSERT_ADDRESS_TABLE_SIZE device_type_to_icon_address_table, ::kNumDeviceTypes
 
 dib_buffer := $800
-.params status_params
-param_count:    .byte   3
-unit_num:       .byte   1
-list_ptr:       .addr   dib_buffer
-status_code:    .byte   3       ; Return Device Information Block (DIB)
-.endparams
+        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, 3 ; Return Device Information Block (DIB)
 
 ;;; Roughly follows:
 ;;; Technical Note: ProDOS #21: Identifying ProDOS Devices
@@ -10346,12 +10336,7 @@ ret:    rts
 
 done:   rts
 
-.params status_params
-param_count:    .byte   3
-unit_num:       .byte   SELF_MODIFIED_BYTE
-list_ptr:       .addr   dib_buffer
-status_code:    .byte   3       ; Return Device Information Block (DIB)
-.endparams
+        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
         status_unit_number := status_params::unit_num
 
 .params control_params

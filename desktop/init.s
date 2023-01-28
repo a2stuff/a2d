@@ -1042,12 +1042,7 @@ next:   inc     index
 
 done:   jmp     FinalSetup
 
-.params status_params
-param_count:    .byte   3
-unit_num:       .byte   SELF_MODIFIED_BYTE
-list_ptr:       .addr   dib_buffer
-status_code:    .byte   3       ; Return Device Information Block (DIB)
-.endparams
+        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
 
 dib_buffer := ::IO_BUFFER
 

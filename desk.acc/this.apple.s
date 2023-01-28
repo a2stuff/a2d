@@ -1831,12 +1831,7 @@ sig_values:
 slot:
         .byte   0
 
-.params status_params
-param_count:    .byte   3
-unit_num:       .byte   1
-list_ptr:       .addr   dib_buffer
-status_code:    .byte   3       ; Return Device Information Block (DIB)
-.endparams
+        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, 3 ; Return Device Information Block (DIB)
 
 .endproc ; CheckSlinkyMemory
 
@@ -1889,12 +1884,7 @@ p65802: return16 #str_65802     ; Other boards support 65802
 
 .proc ShowSmartPortDeviceNamesImpl
 
-.params status_params
-param_count:    .byte   3
-unit_num:       .byte   1
-list_ptr:       .addr   dib_buffer
-status_code:    .byte   3       ; Return Device Information Block (DIB)
-.endparams
+        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, 3 ; Return Device Information Block (DIB)
 
         slot_ptr := $06
 

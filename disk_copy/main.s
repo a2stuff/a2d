@@ -355,24 +355,9 @@ block_count_div8:
 
 .proc IsDriveEjectableImpl
 
-.params status_params
-param_count:    .byte   3
-unit_num:       .byte   1
-list_ptr:       .addr   dib_buffer
-status_code:    .byte   3       ; Return Device Information Block (DIB)
-.endparams
+        DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, 3 ; Return Device Information Block (DIB)
 
-PARAM_BLOCK dib_buffer, $220
-Device_Statbyte1       .byte
-Device_Size_Lo         .byte
-Device_Size_Med        .byte
-Device_Size_Hi         .byte
-ID_String_Length       .byte
-Device_Name            .res    16
-Device_Type_Code       .byte
-Device_Subtype_Code    .byte
-Version                .word
-END_PARAM_BLOCK
+        dib_buffer := $220
 
 start:
         ptr := $6
@@ -389,7 +374,7 @@ start:
         .addr   status_params
         bcs     not_removable
 
-        lda     dib_buffer::Device_Type_Code
+        lda     dib_buffer+SPDIB::Device_Type_Code
         cmp     #SPDeviceType::Disk35
         bne     not_removable
 

@@ -874,24 +874,9 @@ unit_num:
 ;;; Index into DEVLST while iterating devices.
 devnum: .byte   0
 
-.params status_params
-param_count:    .byte   3
-unit_num:       .byte   SELF_MODIFIED_BYTE
-list_ptr:       .addr   dib_buffer
-status_code:    .byte   3       ; Return Device Information Block (DIB)
-.endparams
+        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
 
-.params dib_buffer
-Device_Statbyte1:       .byte   0
-Device_Size_Lo:         .byte   0
-Device_Size_Med:        .byte   0
-Device_Size_Hi:         .byte   0
-ID_String_Length:       .byte   0
-Device_Name:            .res    16
-Device_Type_Code:       .byte   0
-Device_Subtype_Code:    .byte   0
-Version:                .word   0
-.endparams
+dib_buffer:     .tag SPDIB
 
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 on_line_buffer: .res 17, 0
@@ -1060,14 +1045,14 @@ loop:   ldx     devnum
         bcs     next_unit
 
         ;; Online?
-        lda     dib_buffer::Device_Statbyte1
+        lda     dib_buffer+SPDIB::Device_Statbyte1
         and     #$10            ; general status byte, $10 = disk in drive
         beq     next_unit
 
         ;; Check device type
         ;; Technical Note: SmartPort #4: SmartPort Device Types
         ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
-        lda     dib_buffer::Device_Type_Code
+        lda     dib_buffer+SPDIB::Device_Type_Code
         .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
         bne     next_unit       ; $00 = Memory Expansion Card (RAM Disk)
         lda     unit_num
