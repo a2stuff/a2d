@@ -123,6 +123,9 @@ kSelectorEntryCopyNever         = $C0
 ;;; This much is consistently reserved/written.
 kSelectorListBufSize = $800
 
+;;; If only the primary run list needs to be loaded, this is a sufficient buffer.
+kSelectorListShortSize = $400
+
 ;;; ============================================================
 ;;; Settings Config File
 

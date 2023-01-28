@@ -392,110 +392,71 @@ loop:
 
         selector_list_io_buf := IO_BUFFER
         selector_list_data_buf := data_buf
-        kSelectorListShortSize = $400
         .assert kSelectorListShortSize <= kDataBufferSize, error, "Buffer size error"
 
         MGTK_CALL MGTK::CheckEvents
 
-        copy    #0, L0A92
+        copy    #0, index
         jsr     ReadSelectorList
-        bne     done
+        jne     done
 
-        lda     selector_list_data_buf
+        lda     selector_list_data_buf + kSelectorListNumPrimaryRunListOffset
         clc
-        adc     selector_list_data_buf+1
+        adc     selector_list_data_buf + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
 
         copy    #0, selector_menu_items_updated_flag
 
         lda     selector_list_data_buf
-        sta     L0A93
-L0A3B:  lda     L0A92
-        cmp     L0A93
+        sta     count
+L0A3B:  lda     index
+        cmp     count
         beq     done
-        jsr     CalcDataAddr
-        stax    ptr1
-        lda     L0A92
-        jsr     CalcEntryAddr
-        stax    ptr2
-        ldy     #0
-        lda     (ptr1),y
-        tay
-L0A59:  lda     (ptr1),y
-        sta     (ptr2),y
-        dey
-        bpl     L0A59
+
+        ;; Copy entry name into place
+        jsr     main::ATimes16
+        addax   #selector_list_data_buf + kSelectorListEntriesOffset, ptr1
+        lda     index
+        jsr     main::ATimes16
+        addax   #run_list_entries, ptr2
+        jsr     CopyPtr1ToPtr2
+
+        ;; Copy entry flags into place
         ldy     #15
         lda     (ptr1),y
         sta     (ptr2),y
-        lda     L0A92
-        jsr     CalcDataStr
-        stax    ptr1
-        lda     L0A92
-        jsr     CalcEntryStr
-        stax    ptr2
-        ldy     #0
-        lda     (ptr1),y
-        tay
-L0A7F:  lda     (ptr1),y
-        sta     (ptr2),y
-        dey
-        bpl     L0A7F
-        inc     L0A92
+
+        ;; Copy entry path into place
+        lda     index
+        jsr     main::ATimes64
+        addax   #selector_list_data_buf + kSelectorListPathsOffset, ptr1
+        lda     index
+        jsr     main::ATimes64
+        addax   #main::run_list_paths, ptr2
+        jsr     CopyPtr1ToPtr2
+
+        inc     index
         inc     selector_menu
         jmp     L0A3B
 
 done:   jmp     CalcHeaderItemWidths
 
-L0A92:  .byte   0
-L0A93:  .byte   0
-        .byte   0
+index:  .byte   0
+count:  .byte   0
 
-;;; --------------------------------------------------
+.proc CopyPtr1ToPtr2
+        ptr1 := $06
+        ptr2 := $08
 
-CalcDataAddr:
-        jsr     main::ATimes16
-        clc
-        adc     #<(selector_list_data_buf+2)
+        ldy     #0
+        lda     (ptr1),y
         tay
-        txa
-        adc     #>(selector_list_data_buf+2)
-        tax
-        tya
+:       lda     (ptr1),y
+        sta     (ptr2),y
+        dey
+        bpl     :-
         rts
-
-CalcEntryAddr:
-        jsr     main::ATimes16
-        clc
-        adc     #<run_list_entries
-        tay
-        txa
-        adc     #>run_list_entries
-        tax
-        tya
-        rts
-
-CalcEntryStr:
-        jsr     main::ATimes64
-        clc
-        adc     #<main::run_list_paths
-        tay
-        txa
-        adc     #>main::run_list_paths
-        tax
-        tya
-        rts
-
-CalcDataStr:
-        jsr     main::ATimes64
-        clc
-        adc     #<(selector_list_data_buf+2 + $180)
-        tay
-        txa
-        adc     #>(selector_list_data_buf+2 + $180)
-        tax
-        tya
-        rts
+.endproc
 
 ;;; --------------------------------------------------
 
