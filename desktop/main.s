@@ -13603,9 +13603,9 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_dst - copy_dialog_params
         jsr     DereferencePtrToAddr
-        param_call CopyPtr1ToBuf, text_input_buf ; arbitrary usage of this buffer
+        jsr     CopyPtr1ToBuf0
         MGTK_CALL MGTK::MoveTo, aux::current_dest_file_pos
-        param_call DrawDialogPath, text_input_buf
+        jsr     DrawDialogPathBuf0
 
         param_call DrawDialogLabel, 4, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
