@@ -2783,14 +2783,7 @@ entry3:
 
         ;; Create the icons
         jsr     LoadActiveWindowEntryTable
-        jsr     InitCachedWindowEntries
-        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
-    IF_NEG
-        jsr     SortRecords
-    END_IF
-        jsr     CreateIconsForWindow
-        jsr     StoreWindowEntryTable
-        jsr     AddIconsForCachedWindow
+        jsr     InitWindowEntriesAndIcons
         jsr     AdjustViewportForNewIcons
 
         jmp     RedrawAfterContentChange
@@ -6950,14 +6943,7 @@ volume: lda     cached_window_id
         bpl     :-
     END_IF
 
-        jsr     InitCachedWindowEntries
-        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
-    IF_NEG
-        jsr     SortRecords
-    END_IF
-        jsr     CreateIconsForWindow
-        jsr     StoreWindowEntryTable
-        jsr     AddIconsForCachedWindow
+        jsr     InitWindowEntriesAndIcons
 
         bit     copy_new_window_bounds_flag
     IF_NC
@@ -7837,6 +7823,19 @@ next:   inc     icon_num
         jsr     PopPointers     ; do not tail-call optimize!
         rts
 .endproc ; InitCachedWindowEntries
+
+;;; ============================================================
+
+.proc InitWindowEntriesAndIcons
+        jsr     InitCachedWindowEntries
+        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
+    IF_NEG
+        jsr     SortRecords
+    END_IF
+        jsr     CreateIconsForWindow
+        jsr     StoreWindowEntryTable
+        jmp     AddIconsForCachedWindow
+.endproc
 
 ;;; ============================================================
 ;;; Fetch the entry count for a window; valid after `OpenDirectory`,
