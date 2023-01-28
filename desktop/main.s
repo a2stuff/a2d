@@ -4563,6 +4563,7 @@ check_double_click:
 
         ;; --------------------------------------------------
         ;; Drag of file icon
+
         copy    icon_num, drag_drop_params::icon
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
         tax
@@ -4571,58 +4572,13 @@ check_double_click:
 
 process_drop:
         jsr     DoDrop
-
-        ;; (1/4) Canceled?
-        cmp     #kOperationCanceled
-        ;; TODO: Refresh source/dest if partial success
-        jeq     ignore
-
-        ;; Was a move?
-        bit     move_flag
-    IF_NS
-        ;; Update source vol's contents
-        jsr     MaybeStashDropTargetName ; in case target is in window...
-        jsr     UpdateActiveWindow
-        jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
-    END_IF
-
-        ;; (2/4) Dropped on trash?
-        lda     drag_drop_params::result
-        cmp     trash_icon_num
-        ;; Update used/free for same-vol windows
-    IF_EQ
-        copy    #$80, validate_windows_flag
-        bne     UpdateActiveWindow ; always
-    END_IF
-
-        ;; (3/4) Dropped on icon?
-        lda     drag_drop_params::result
-    IF_POS
-        ;; Yes, on an icon; update used/free for same-vol windows
-        pha
-        jsr     UpdateUsedFreeViaIcon
-        pla
-        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
-      IF_EQ
-        inx
-        txa
-        jmp     SelectAndRefreshWindowOrClose
-      END_IF
-        rts
-    END_IF
-
-        ;; (4/4) Dropped on window!
-        and     #$7F            ; mask off window number
-        pha
-        jsr     UpdateUsedFreeViaWindow
-        pla
-        jmp     SelectAndRefreshWindowOrClose
+        jmp     PerformPostDropUpdates
 
         ;; --------------------------------------------------
 
 same_or_desktop:
-        cpx     #2              ; file icon dragged to desktop?
-        jeq     ignore
+        cpx     #2              ; not a drag
+        beq     ignore
 
         cpx     #$FF
         beq     failure
@@ -4638,8 +4594,7 @@ same_or_desktop:
         ldx     #0
 :       txa
         pha
-        lda     selected_icon_list,x
-        sta     icon_param
+        copy    selected_icon_list,x, icon_param
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag)
         pla
         tax
@@ -4659,6 +4614,75 @@ failure:
 
         ;; --------------------------------------------------
 
+.endproc ; HandleFileIconClick
+        ;; Used for delete shortcut; set `drag_drop_params::icon` first
+        process_drop := HandleFileIconClick::process_drop
+
+;;; ============================================================
+;;; After an icon drop (file or volume), update any affected
+;;; windows.
+;;; Inputs: A = result from `DoDrop`, and `drag_drop_params::result`
+
+.proc PerformPostDropUpdates
+        ;; --------------------------------------------------
+        ;; (1/4) Canceled?
+
+        cmp     #kOperationCanceled
+        ;; TODO: Refresh source/dest if partial success
+    IF_EQ
+        rts
+    END_IF
+
+        ;; Was a move?
+        ;; NOTE: Only applies in file icon case.
+        bit     move_flag
+    IF_NS
+        ;; Update source vol's contents
+        jsr     MaybeStashDropTargetName ; in case target is in window...
+        jsr     UpdateActiveWindow
+        jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; (2/4) Dropped on trash?
+
+        ;; NOTE: Only applies in file icon case; this proc is not called
+        ;; when dropping volume icons on trash.
+        lda     drag_drop_params::result
+        cmp     trash_icon_num
+        ;; Update used/free for same-vol windows
+    IF_EQ
+        copy    #$80, validate_windows_flag
+        bne     UpdateActiveWindow ; always
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; (3/4) Dropped on icon?
+
+        lda     drag_drop_params::result
+    IF_POS
+        ;; Yes, on an icon; update used/free for same-vol windows
+        pha
+        jsr     UpdateUsedFreeViaIcon
+        pla
+        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
+      IF_EQ
+        inx
+        txa
+        jmp     SelectAndRefreshWindowOrClose
+      END_IF
+        rts
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; (4/4) Dropped on window!
+
+        and     #$7F            ; mask off window number
+        pha
+        jsr     UpdateUsedFreeViaWindow
+        pla
+        jmp     SelectAndRefreshWindowOrClose
+
 .proc UpdateActiveWindow
         lda     active_window_id
         jsr     UpdateUsedFreeViaWindow
@@ -4666,9 +4690,7 @@ failure:
         jmp     SelectAndRefreshWindowOrClose
 .endproc ; UpdateActiveWindow
 
-.endproc ; HandleFileIconClick
-        ;; Used for delete shortcut; set `drag_drop_params::icon` first
-        process_drop := HandleFileIconClick::process_drop
+.endproc
 
 ;;; ============================================================
 ;;; Add specified icon to selection list, and redraw.
@@ -5497,58 +5519,25 @@ check_double_click:
 
         ;; --------------------------------------------------
         ;; Drag of volume icon
+
         copy    findicon_params::which_icon, drag_drop_params::icon
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
         tax
         lda     drag_drop_params::result
         beq     same_or_desktop
 
+process_drop:
         jsr     DoDrop
-
         ;; NOTE: If drop target is trash, `JTDrop` relays to
         ;; `CmdEject` and pops the return address.
-
-        ;; (1/4) Canceled?
-        cmp     #kOperationCanceled
-    IF_EQ
-        rts
-    END_IF
-
-        ;; (2/4) Dropped on trash? (eject)
-        ;; Not reached - see above.
-        ;; Assert: `drag_drop_params::result` != `trash_icon_num`
-
-        ;; (3/4) Dropped on icon?
-        lda     drag_drop_params::result
-    IF_POS
-        ;; Yes, on an icon; update used/free for same-vol windows
-        pha
-        jsr     UpdateUsedFreeViaIcon
-        pla
-        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
-      IF_EQ
-        inx
-        txa
-        jmp     SelectAndRefreshWindowOrClose
-      END_IF
-        rts
-    END_IF
-
-        ;; (4/4) Dropped on window!
-        and     #$7F            ; mask off window number
-        pha
-        jsr     UpdateUsedFreeViaWindow
-        pla
-        jmp     SelectAndRefreshWindowOrClose
+        jmp     PerformPostDropUpdates
 
         ;; --------------------------------------------------
 
 same_or_desktop:
-        txa
-        cmp     #2              ; not a drag
-        bne     :+
-        rts
-:
+        cpx     #2              ; file icon dragged to desktop?
+        beq     ignore
+
         ;; Icons moved on desktop - update and redraw
         ldx     #0
 :       txa
@@ -5561,7 +5550,8 @@ same_or_desktop:
         cpx     selected_icon_count
         bne     :-
 
-        rts
+ignore: rts
+
 .endproc ; HandleVolumeIconClick
 
 ;;; ============================================================
