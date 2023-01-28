@@ -81,3 +81,16 @@ status_code:    .byte   sc
         .refto status_code
 .endparams
 .endmacro
+
+.macro DEFINE_SP_CONTROL_PARAMS name, un, cl, cc
+.params name
+param_count:    .byte   3
+unit_number:    .byte   un
+control_list:   .addr   cl
+control_code:   .byte   cc
+        .refto param_count
+        .refto unit_number
+        .refto control_list
+        .refto control_code
+.endparams
+.endmacro

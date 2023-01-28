@@ -136,8 +136,8 @@ FBUFFR          := $100
 ;;; Softswitches
 ;;; ============================================================
 
-CLR80STORE      := $C000        ; (W) cause PAGE2 to bank display memory
-SET80STORE      := $C001        ; (W) restore normal PAGE2 control
+CLR80STORE      := $C000        ; (W) restore normal PAGE2 control
+SET80STORE      := $C001        ; (W) cause PAGE2 to bank display memory
 
 RAMRDOFF        := $C002        ; (W) Read from main 48K RAM ($200-$BFFF)
 RAMRDON         := $C003        ; (W) Read from auxiliary 48K RAM ($200-$BFFF)

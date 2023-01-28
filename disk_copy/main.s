@@ -158,13 +158,8 @@ disk_ii:
 
 .proc EjectDiskImpl
 
-.params control_params
-param_count:    .byte   3
-unit_number:    .byte   0
-control_list:   .addr   list
-control_code:   .byte   $04     ; For Apple/UniDisk 3.3: Eject disk
-.endparams
-control_params_unit_number := control_params::unit_number
+        DEFINE_SP_CONTROL_PARAMS control_params, 0, list, $04 ; For Apple/UniDisk 3.3: Eject disk
+        control_params_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list
 
 start:

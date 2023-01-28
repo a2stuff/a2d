@@ -10339,12 +10339,7 @@ done:   rts
         DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
         status_unit_number := status_params::unit_num
 
-.params control_params
-param_count:    .byte   3
-unit_number:    .byte   SELF_MODIFIED_BYTE
-control_list:   .addr   list
-control_code:   .byte   $04     ; For Apple/UniDisk 3.3: Eject disk
-.endparams
+        DEFINE_SP_CONTROL_PARAMS control_params, SELF_MODIFIED_BYTE, list, $04 ; For Apple/UniDisk 3.3: Eject disk
         control_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list
 .endproc ; SmartportEject
