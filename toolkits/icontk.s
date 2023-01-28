@@ -2222,8 +2222,6 @@ empty:  return #$FF
 ;;; ============================================================
 
 .proc CalcWindowIntersections
-        ptr := $06
-
         jmp     start
 
 .params findwindow_params

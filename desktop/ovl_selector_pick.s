@@ -304,8 +304,6 @@ flags:  .byte   0
 ;;; ============================================================
 
 .proc DoRun
-        ptr := $06
-
         jsr     CloseWindow
         jsr     main::ClearUpdates       ; Run dialog OK
         lda     selected_index

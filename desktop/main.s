@@ -1439,8 +1439,6 @@ entry_num:
 ;;; Input: `entry_path` is populated
 ;;; Output: A,X = `src_path_buf`
 .proc ComposeRAMCardEntryPath
-        ptr := $06
-
         ;; Initialize buffer
         param_call CopyRAMCardPrefix, src_path_buf
         ldy     entry_path
@@ -3926,8 +3924,6 @@ _Preamble:
 ;;; Apply `maprect` back to active window's GrafPort
 
 .proc _UpdateViewport
-        ptr := $06
-
         ;; Restore header to viewport
         sub16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight
 
@@ -6018,8 +6014,6 @@ skip:
 ;;; ============================================================
 
 .proc CachedIconsScreenToWindow
-        entry_ptr := $6
-
         jsr     PushPointers
         jsr     PrepActiveWindowScreenMapping
 
@@ -6044,8 +6038,6 @@ done:   jsr     PopPointers     ; do not tail-call optimize!
 ;;; ============================================================
 
 .proc CachedIconsWindowToScreen
-        entry_ptr := $6
-
         jsr     PushPointers
         jsr     PrepActiveWindowScreenMapping
 
@@ -7685,9 +7677,6 @@ xcoord:
         DEFINE_RECT iconbb_rect, 0, 0, 0, 0
 
 .proc ComputeIconsBBox
-
-        entry_ptr := $06
-
         kIntMax = $7FFF
 
 start:
@@ -8720,8 +8709,6 @@ saved_portbits:
 ;;; NOTE: Avoid calling in a loop; factor out `PrepActiveWindowScreenMapping`
 
 .proc IconWindowToScreen
-        entry_ptr := $6
-
         jsr     PushPointers
         pha
         jsr     PrepActiveWindowScreenMapping
@@ -8764,8 +8751,6 @@ saved_portbits:
 ;;; NOTE: Avoid calling in a loop; factor out `PrepActiveWindowScreenMapping`
 
 .proc IconScreenToWindow
-        entry_ptr := $6
-
         jsr     PushPointers
         pha
         jsr     PrepActiveWindowScreenMapping
@@ -10324,8 +10309,6 @@ ret:    rts
 ;;; Inputs: A = icon number
 
 .proc SmartportEject
-        ptr := $6
-
         dib_buffer := ::IO_BUFFER
 
         ;; Look up device index by icon number
@@ -10904,8 +10887,6 @@ end_filerecord_and_icon_update:
 ;;; N bit ($80) set if a window title was changed
 result_flags:
         .byte   0
-
-icony:  .word   0
 .endproc ; DoRenameImpl
 DoRename        := DoRenameImpl::start
 
@@ -10921,7 +10902,6 @@ DoRename        := DoRenameImpl::start
         param_call FindWindowsForPrefix, src_path_buf
         lda     found_windows_count
     IF_NOT_ZERO
-        dst := $06
 
         dec     found_windows_count
 wloop:  ldx     found_windows_count
@@ -14093,7 +14073,7 @@ do_close:
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::close
-do_close:
+
         jsr     ClosePromptDialog
         jmp     SetCursorPointer ; when closing dialog
 .endproc ; LockDialogProc

@@ -14,7 +14,6 @@
 
 ;;; ============================================================
 
-start:
         copy16  #PRODOS_SYS_START, jmp_addr
 
         ;; Initialize system bitmap
@@ -99,7 +98,6 @@ use_interpreter:
 load_target:
         MLI_CALL OPEN, open_params
         bcs     exit
-do_read:
         lda     open_params__ref_num
         sta     read_params__ref_num
         MLI_CALL READ, read_params
