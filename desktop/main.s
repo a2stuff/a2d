@@ -2757,12 +2757,13 @@ menu_item_to_view_by:
         sta     win_view_by_table-1,x
         jsr     UpdateViewMenuCheck
 
+;;; Entry point when view needs refreshing, e.g. rename when sorted.
+entry2:
         ;; Selection not preserved in other entry points
         ;; because file records are not retained.
         jsr     PreserveSelection
 
         ;; Destroy existing icons
-entry2:
         jsr     DestroyIconsInActiveWindow
 
 ;;; Entry point when refreshing window contents

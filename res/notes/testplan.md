@@ -468,7 +468,7 @@
   * Selected icons can be dragged to other windows or volume icons to initiate a move or copy.
   * Dragging a selected icon over a non-selected folder icon in the same window causes it to highlight, and initiates a move or copy (depending on modifier keys).
 * Launch DeskTop. Open window containing icons. View > by Name. Select one or more icons. Drag them within the window but not over any other icons. Release the mouse button. Verify that the icons do not move.
-* Launch DeskTop. Open window containing icons. View > by Name. Rename an icon, picking a name that would change the ordering. Verify that the window is refreshed and the icons are correctly sorted by name.
+* Launch DeskTop. Open window containing icons. View > by Name. Select an icon. File > Rename. Enter a new name that would change the ordering. Verify that the window is refreshed and the icons are correctly sorted by name, and that the icon is still selected.
 * Launch DeskTop. Open a window containing a folder. Open a folder. Activate the parent window and verify that the folder's icon is dimmed. View > by Name. Verify that the folder's icon is still dimmed. View > as Icons. Verify that the folder's icon is still dimmed.
 * Launch DeskTop. Open a window containing a folder. View > by Name. Verify that the folder's icon is dimmed. View > as Icon. Verify that the folder's icon is still dimmed.
 
