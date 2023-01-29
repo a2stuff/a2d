@@ -2076,7 +2076,6 @@ str_extras_basic:
         rts
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
-        DEFINE_GET_FILE_INFO_PARAMS file_info_params, INVOKER_INTERPRETER
 .endproc ; CheckBasicSystem
 
 ;;; ============================================================

@@ -355,8 +355,6 @@ block_count_div8:
         dib_buffer := $220
 
 start:
-        ptr := $6
-
         jsr     FindSmartportDispatchAddress
         bcs     not_removable
         stax    dispatch
@@ -1108,7 +1106,7 @@ memory_bitmap:
         bit     SETTINGS + DeskTopSettings::rgb_color
         bmi     color
 
-mono:   ldy     #$80            ; MONOCOLOR - Mono
+        ldy     #$80            ; MONOCOLOR - Mono
         lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         bne     store           ; always

@@ -246,7 +246,6 @@ nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
-pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME rect_frame, kDialogWidth, kDialogHeight
 
@@ -1209,7 +1208,7 @@ match:  clc
         ;; Copy the name out of the block
         str_name := default_block_buffer+6
 
-l1:     ldy     #0
+        ldy     #0
 :       lda     str_name,y
         sta     (ptr),y
         iny
