@@ -118,8 +118,10 @@
 * Launch DeskTop. Try to move a file (drag on same volume) where there is not enough space to make a temporary copy. Verify that the error message says that the file is too large to move.
 * Launch DeskTop. Try to copy a file (drag to different volume) where there is not enough space to make the copy. Verify that the error message says that the file is too large to copy.
 
-* Launch DeskTop. Open a volume window. Select icons in the window. Switch window's view to by Name. Verify that File > Get Info is disabled. Switch view back to as Icons. Verify that no icons are shown as selected, and that File > Get Info is still disabled.
 * Launch DeskTop. Open a volume window. Select volume icons on the desktop. Switch window's view to by Name. Verify that the volume icons are still selected, and that File > Get Info is still enabled (and shows the volume info). Switch window's view back to as Icons. Verify that the desktop volume icons are still selected.
+* Launch DeskTop. Open a window containing file icons. Select one or more file icons in the window. Select a different View option. Verify that the icons in the window remain selected.
+* Launch DeskTop. Open a window containing file icons. Hold Open-Apple and select multiple files in a specific order. Select a different View option. Apple > Sort Directory. View > as Icons. Verify that the icons appear in the selected order.
+* Launch DeskTop. Open a window containing file icons. Select one or more volume icons on the desktop. Select a different View option. Verify that the volume icons on the desktop remain selected.
 
 * Launch DeskTop. Open a volume window. Select an icon. Click in the header area (items/use/etc). Verify that selection is not cleared.
 

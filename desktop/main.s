@@ -2757,6 +2757,10 @@ menu_item_to_view_by:
         sta     win_view_by_table-1,x
         jsr     UpdateViewMenuCheck
 
+        ;; Selection not preserved in other entry points
+        ;; because file records are not retained.
+        jsr     PreserveSelection
+
         ;; Destroy existing icons
 entry2:
         jsr     DestroyIconsInActiveWindow
@@ -2779,8 +2783,109 @@ entry3:
         jsr     InitWindowEntriesAndIcons
         jsr     AdjustViewportForNewIcons
 
+        jsr     RestoreSelection
+
         jmp     RedrawAfterContentChange
+
+;;; --------------------------------------------------
+;;; Preserves selection by replacing selected icon ids
+;;; with their corresponding record indexes, which remain
+;;; valid across view changes.
+
+.proc PreserveSelection
+        lda     selected_window_id
+        beq     ret
+        lda     selected_icon_count
+        beq     ret
+        sta     selection_preserved_count
+
+        ;; For each selected icon, replace icon number
+        ;; with its corresponding file record number.
+:       ldx     selected_icon_count
+        lda     selected_icon_list-1,x
+        jsr     GetIconRecordNum
+        ldx     selected_icon_count
+        sta     selected_icon_list-1,x
+        dec     selected_icon_count
+        bne     :-
+
+        copy    #0, selected_window_id
+
+ret:    rts
+.endproc ; PreserveSelection
+
+;;; --------------------------------------------------
+;;; Restores selection after a view change, reversing what
+;;; `PreserveSelection` did.
+
+.proc RestoreSelection
+        lda     selection_preserved_count
+        beq     ret
+
+        ;; For each record num in the list, find and
+        ;; highlight the corresponding icon.
+:       ldx     selected_icon_count
+        lda     selected_icon_list,x
+        jsr     FindIconForRecordNum
+        ldx     selected_icon_count
+        sta     selected_icon_list,x
+        sta     icon_param
+        ITK_CALL IconTK::HighlightIcon, icon_param
+        inc     selected_icon_count
+        dec     selection_preserved_count
+        bne     :-
+
+        copy    cached_window_id, selected_window_id
+
+ret:    rts
+.endproc ; RestoreSelection
+
+selection_preserved_count:
+        .byte   0
 .endproc ; ViewByCommon
+
+;;; ============================================================
+;;; Find the icon for the cached window's given record index.
+;;; Input: A = record index in cached window
+;;; Output: A = icon id
+;;; Assert: there is a match, window has entries
+;;; Trashes $06
+
+.proc FindIconForRecordNum
+        sta     record_num
+
+        lda     cached_window_entry_count
+        sta     index
+
+        index := *+1
+:       ldx     #SELF_MODIFIED_BYTE
+        lda     cached_window_entry_list-1,x
+        jsr     GetIconRecordNum
+        record_num := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        beq     :+
+        dec     index
+        bpl     :-
+
+:       ldx     index
+        lda     cached_window_entry_list-1,x
+        rts
+.endproc
+
+;;; ============================================================
+;;; Retrieve the `IconEntry::record_num` for a given icon.
+;;; Input: A = icon id
+;;; Output: A = icon's record index in its window
+;;; Trashes $06
+
+.proc GetIconRecordNum
+        jsr     GetIconEntry
+        ptr := $06
+        stax    ptr
+        ldy     #IconEntry::record_num
+        lda     (ptr),y
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -5906,12 +6011,7 @@ rloop:  lda     #SELF_MODIFIED_BYTE
         lda     cached_window_entry_list,x
 
         ;; Look up file record number
-        ptr := $06
-        jsr     GetIconEntry
-        stax    ptr
-        ldy     #IconEntry::record_num
-        lda     (ptr),y
-
+        jsr     GetIconRecordNum
         jsr     DrawListViewRow
         inc     rows_done
         jmp     rloop
