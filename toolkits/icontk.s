@@ -124,6 +124,7 @@ mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 0, 0
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params mask_paintbits_params
@@ -132,6 +133,7 @@ mapbits:        .addr   0
 mapwidth:       .byte   0
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 0, 0
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params textwidth_params
@@ -2123,6 +2125,7 @@ mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 0, 0
+        REF_MAPINFO_MEMBERS
 .endparams
 
         DEFINE_RECT screen_bounds, 0, 0, kScreenWidth-1, kScreenHeight-1

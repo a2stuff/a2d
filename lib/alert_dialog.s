@@ -80,6 +80,7 @@ mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   6
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 36, 23
+        REF_MAPINFO_MEMBERS
 .endparams
 
 pencopy:        .byte   MGTK::pencopy
@@ -115,6 +116,7 @@ mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
 
 .params portmap
@@ -123,6 +125,7 @@ mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kAlertRectWidth, kAlertRectHeight
+        REF_MAPINFO_MEMBERS
 .endparams
 
 ;;; --------------------------------------------------

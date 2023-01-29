@@ -898,8 +898,6 @@ next:   pla
         bmi     PopulateStartupMenu
 :       jmp     process_volume  ; next!
 
-device_type:
-        .byte   0
 device_index:
         .byte   0
 cvi_result:

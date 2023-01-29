@@ -2956,8 +2956,6 @@ loop:   add16   xdelta,x, current_penloc_x,x, $92,x
 .proc LineToImpl
 
         params  := $92
-        xend    := params + 0
-        yend    := params + 2
 
         pt1     := $92
         x1      := pt1
@@ -3995,14 +3993,15 @@ mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
 maprect:        .word   0, 0, kScreenWidth-1, kScreenHeight-1
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         .word   0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-mode:           .byte   0
+penmode:        .byte   0
 textback:       .byte   0
 textfont:       .addr   0
+        REF_GRAFPORT_MEMBERS
 .endparams
 
 ;;; ============================================================
@@ -4013,14 +4012,15 @@ mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
 maprect:        .word   0, 0, kScreenWidth-1, kScreenHeight-1
-penpattern:     .res    8, $FF
+pattern:        .res    8, $FF
 colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penloc:         .word   0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-mode:           .byte   0
+penmode:        .byte   0
 textback:       .byte   0
 textfont:       .addr   0
+        REF_GRAFPORT_MEMBERS
 .endparams
 
 active_saved:           ; saved copy of $F4...$FF when ZP swapped
@@ -5397,8 +5397,6 @@ eventbuf:
                                         ; otherwise reset and then add
 :       clc
         adc     #MGTK::short_event_size
-
-compare:
         cmp     eventbuf_tail           ; did head catch up with tail?
         beq     rts_with_carry_set
         sta     eventbuf_head           ; nope, maybe next time
@@ -5463,7 +5461,6 @@ top:    .word   $ffff
 right:  .word   $230
 bottom: .word   $C
 .endparams
-        test_rect_top := test_rect_params::top
         test_rect_bottom := test_rect_params::bottom
 
 .params fill_rect_params2
@@ -6591,7 +6588,7 @@ ep2:    jsr     SetFillMode
         sub16   curmenuinfo::x_max, #1, fill_rect_params3_right
 
         MGTK_CALL MGTK::PaintRect, fill_rect_params3
-        MGTK_CALL MGTK::SetPattern, standard_port::penpattern
+        MGTK_CALL MGTK::SetPattern, standard_port::pattern
 
         lda     #MGTK::penXOR
         jmp     SetFillMode
@@ -7383,7 +7380,7 @@ has_goaway:
         sub16   winrect::x2, #3, right
 
         jsr     PaintRectImpl  ; Draw title bar stripes to right of title
-        MGTK_CALL MGTK::SetPattern, standard_port::penpattern
+        MGTK_CALL MGTK::SetPattern, standard_port::pattern
 
 no_titlebar:
         jsr     GetWindow
@@ -8398,7 +8395,7 @@ loop:   jsr     PutEvent
 
 plp_ret:
         plp
-ret:    rts
+        rts
 .endproc ; EraseWindow
 
 
@@ -8407,19 +8404,16 @@ wintitle_height:.word  12       ; font height + 3
 winframe_top:   .word  13       ; font height + 4
 
 .params set_port_params
-left:           .word   0
-top:            .word   $D
+        DEFINE_POINT viewloc, 0,$D
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved:       .byte   0
-hoffset:        .word   0
-voffset:        .word   0
-width:          .word   0
-height:         .word   0
+        DEFINE_RECT maprect, 0,0,0,0
+        REF_MAPINFO_MEMBERS
 .endparams
-        set_port_top  := set_port_params::top
-        set_port_size := set_port_params::width
-        set_port_maprect  := set_port_params::hoffset ; Re-used since h/voff are 0
+        set_port_top  := set_port_params::viewloc::ycoord
+        set_port_size := set_port_params::maprect::x2
+        set_port_maprect  := set_port_params::maprect::x1 ; Re-used since h/voff are 0
 
 ;;; ============================================================
 ;;; WindowToScreen
@@ -8610,7 +8604,7 @@ has_scroll:
 
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
         MGTK_CALL MGTK::PaintRect, winrect
-        MGTK_CALL MGTK::SetPattern, standard_port::penpattern
+        MGTK_CALL MGTK::SetPattern, standard_port::pattern
 
         bit     which_control
         bmi     vert_thumb

@@ -423,6 +423,7 @@ mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        REF_MAPINFO_MEMBERS
 .endparams
 
 checked_rb_bitmap:
@@ -520,6 +521,7 @@ mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
+        REF_MAPINFO_MEMBERS
 .endparams
 
 checked_cb_bitmap:
@@ -539,6 +541,7 @@ mapbits:        .addr   unchecked_cb_bitmap
 mapwidth:       .byte   3
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
+        REF_MAPINFO_MEMBERS
 .endparams
 
 unchecked_cb_bitmap:
