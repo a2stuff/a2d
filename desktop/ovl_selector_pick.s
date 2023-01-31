@@ -167,8 +167,6 @@ dialog_loop:
 ;;; ============================================================
 
 .proc DoDelete
-        lda     selected_index
-        jsr     MaybeToggleEntryHilite
         jsr     main::SetCursorWatch
         lda     selected_index
         jsr     RemoveEntry
@@ -183,8 +181,6 @@ dialog_loop:
 ;;; ============================================================
 
 .proc DoEdit
-        lda     selected_index
-        jsr     MaybeToggleEntryHilite
         jsr     CloseWindow
 
         lda     selected_index
@@ -387,12 +383,28 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 
 ;;; ============================================================
 
+.scope option_picker
+kOptionPickerRows = kShortcutPickerRows
+kOptionPickerCols = kShortcutPickerCols
+kOptionPickerItemWidth = kShortcutPickerItemWidth
+kOptionPickerItemHeight = kShortcutPickerItemHeight
+kOptionPickerLeft = kShortcutPickerLeft
+kOptionPickerTop = kShortcutPickerTop
+kOptionPickerRowShift = ::kShortcutPickerRowShift
+option_picker_item_rect := entry_picker_item_rect
+DetectDoubleClick := main::StashCoordsAndDetectDoubleClick
+
+        .include "../lib/option_picker.s"
+.endscope
+
+;;; ============================================================
+
 ;;; Inputs: A,X=string, Y=index
 .proc DrawEntry
         stax    $06
 
         tya
-        jsr     GetOptionPos
+        jsr     option_picker::GetOptionPos
         addax   #kShortcutPickerTextHOffset, entry_picker_item_rect::x1
         tya
         ldx     #0
@@ -402,82 +414,6 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         ldax    $06
         jmp     DrawString
 .endproc ; DrawEntry
-
-;;; ============================================================
-;;; Get the coordinates of an option by index.
-;;; Input: A = volume index
-;;; Output: A,X = x coordinate, Y = y coordinate
-.proc GetOptionPos
-        sta     index
-        .repeat ::kShortcutPickerRowShift
-        lsr                     ; lo
-        .endrepeat
-        ldx     #0              ; hi
-        ldy     #kShortcutPickerItemWidth
-        jsr     Multiply_16_8_16
-        clc
-        adc     #<kShortcutPickerLeft
-        pha                     ; lo
-        txa
-        adc     #>kShortcutPickerLeft
-        pha                     ; hi
-
-        ;; Y coordinate
-        index := *+1
-        lda     #SELF_MODIFIED_BYTE
-        and     #kShortcutPickerRows-1
-        ldx     #0              ; hi
-        ldy     #kShortcutPickerItemHeight
-        jsr     Multiply_16_8_16
-        clc
-        adc     #kShortcutPickerTop
-
-        tay                     ; Y coord
-        pla
-        tax                     ; X coord hi
-        pla                     ; X coord lo
-
-        rts
-.endproc ; GetOptionPos
-
-;;; ============================================================
-
-;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
-;;; Outputs: A=index, N=1 if no match
-.proc GetOptionIndexFromCoords
-        ;; Row
-        sub16   screentowindow_params::windowy, #kShortcutPickerTop, screentowindow_params::windowy
-        bmi     done
-
-        ldax    screentowindow_params::windowy
-        ldy     #kShortcutPickerItemHeight
-        jsr     Divide_16_8_16  ; A = row
-
-        cmp     #kShortcutPickerRows
-        bcs     done
-        sta     row
-
-        ;; Column
-        sub16   screentowindow_params::windowx, #kShortcutPickerLeft, screentowindow_params::windowx
-        bmi     done
-
-        ldax    screentowindow_params::windowx
-        ldy     #kShortcutPickerItemWidth
-        jsr     Divide_16_8_16  ; A = col
-
-        cmp     #kShortcutPickerCols
-        bcs     done
-
-        ;; Index
-        .repeat ::kShortcutPickerRowShift
-        asl
-        .endrepeat
-        row := *+1
-        ora     #SELF_MODIFIED_BYTE
-        rts
-
-done:   return  #$FF
-.endproc ; GetOptionIndexFromCoords
 
 ;;; ============================================================
 
@@ -552,7 +488,6 @@ handle_button:
         MGTK_CALL MGTK::InRect, entry_picker_ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
-        BTK_CALL BTK::Track, entry_picker_ok_button_params
         bmi     :+              ; nothing selected, re-enter loop
         lda     #$00            ; OK selected
 :       rts
@@ -566,63 +501,14 @@ not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_button_rec::rect
 :       rts
 
 not_cancel:
-        jsr     GetOptionIndexFromCoords
-        bmi     done
-
-        ;; Is it valid?
-        sta     new_selection
-        cmp     #8
-        bcs     l5
-        cmp     num_primary_run_list_entries
-        bcs     l6
-
-l4:     cmp     selected_index           ; same as previous selection?
-        beq     :+
-        lda     selected_index
-        jsr     MaybeToggleEntryHilite
-        lda     new_selection
-        sta     selected_index
-        jsr     MaybeToggleEntryHilite
-:       jmp     main::StashCoordsAndDetectDoubleClick
-
-l5:     sec
-        sbc     #kSelectorListNumPrimaryRunListEntries
-        cmp     num_secondary_run_list_entries
-        bcs     l6
-        clc
-        adc     #kSelectorListNumPrimaryRunListEntries
-        jmp     l4
-
-l6:     lda     selected_index
-        jsr     MaybeToggleEntryHilite
-        copy    #$FF, selected_index ; nothing selected, re-enter loop
-
-done:   return  #$FF
-
-
-new_selection:
-        .byte   0
-.endproc ; EventLoop
-
-;;; ============================================================
-
-.proc MaybeToggleEntryHilite
-        bmi     ret
-
-        jsr     GetOptionPos
-        stax    entry_picker_item_rect::x1
-        addax   #kShortcutPickerItemWidth-1, entry_picker_item_rect::x2
-        tya                     ; y lo
-        ldx     #0              ; y hi
-        stax    entry_picker_item_rect::y1
-        addax   #kShortcutPickerItemHeight-1, entry_picker_item_rect::y2
-
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, entry_picker_item_rect
-        MGTK_CALL MGTK::SetPenMode, pencopy
-
-ret:    rts
-.endproc ; MaybeToggleEntryHilite
+        jsr     option_picker::HandleOptionPickerClick
+    IF_NC
+        pha
+        BTK_CALL BTK::Flash, entry_picker_ok_button_params
+        pla
+    END_IF
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Key down handler
@@ -634,23 +520,21 @@ ret:    rts
         return  #$FF
 :       lda     event_params::key
 
-        cmp     #CHAR_LEFT
-        jeq     HandleKeyLeft
-
-        cmp     #CHAR_RIGHT
-        jeq     HandleKeyRight
-
         cmp     #CHAR_RETURN
         jeq     HandleKeyReturn
 
         cmp     #CHAR_ESCAPE
         jeq     HandleKeyEscape
 
-        cmp     #CHAR_DOWN
-        jeq     HandleKeyDown
-
-        cmp     #CHAR_UP
-        jeq     HandleKeyUp
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
+    IF_NE
+        lda     event_params::key
+        jsr     option_picker::IsOptionPickerKey
+      IF_EQ
+        jsr     option_picker::HandleOptionPickerKey
+      END_IF
+    END_IF
 
         return  #$FF
 .endproc ; HandleKey
@@ -671,167 +555,13 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc HandleKeyRight
-        lda     num_primary_run_list_entries
-        ora     num_secondary_run_list_entries
-        beq     done
-
-        lda     selected_index
-        bpl     move           ; have a selection
-
-        ;; No selection; find a valid one in top row
-        ldx     #0
-        lda     entries_flag_table
-        bpl     set
-
-        ldx     #8
-        lda     entries_flag_table+8
-        bpl     set
-
-        ldx     #16
-        lda     entries_flag_table+16
-        bpl     set
-
-        ;; Change selection
-move:   lda     selected_index  ; unselect current
-        jsr     MaybeToggleEntryHilite
-
-        lda     selected_index
-loop:   clc
-        adc     #8
-        cmp     #kSelectorListNumEntries
-        bcc     :+
-        clc
-        adc     #1
-        and     #7
-
-:       tax
-        lda     entries_flag_table,x
-        bpl     set
-        txa
-        jmp     loop
-
-set:    txa
-        sta     selected_index
-        jsr     MaybeToggleEntryHilite
-
-done:   return  #$FF
-.endproc ; HandleKeyRight
-
-;;; ============================================================
-
-.proc HandleKeyLeft
-        lda     num_primary_run_list_entries
-        ora     num_secondary_run_list_entries
-        beq     done
-
-        lda     selected_index
-        bpl     move            ; have a selection
-
-        ;; No selection - re-use logic to find last item
-        jmp     HandleKeyUp
-
-        ;; Change selection
-move:   lda     selected_index  ; unselect current
-        jsr     MaybeToggleEntryHilite
-
-        lda     selected_index
-loop:   sec
-        sbc     #8
-        bpl     :+
-        sec
-        sbc     #1
-        and     #7
-        ora     #16
-
-:       tax
-        lda     entries_flag_table,x
-        bpl     set
-        txa
-        jmp     loop
-
-set:    txa
-        sta     selected_index
-        jsr     MaybeToggleEntryHilite
-
-done:   return  #$FF
-.endproc ; HandleKeyLeft
-
-;;; ============================================================
-
-.proc HandleKeyUp
-        lda     num_primary_run_list_entries
-        ora     num_secondary_run_list_entries
-        beq     done
-
-        lda     selected_index
-        bpl     move            ; have a selection
-
-        ;; No selection; find last valid one
-        ldx     #kSelectorListNumEntries - 1
-:       lda     entries_flag_table,x
-        bpl     set
-        dex
-        bpl     :-
-
-        ;; Change selection
-move:   lda     selected_index  ; unselect current
-        jsr     MaybeToggleEntryHilite
-
-        ldx     selected_index
-loop:   dex                     ; to previous
-        bmi     wrap
-        lda     entries_flag_table,x
-        bpl     set
-        jmp     loop
-
-wrap:   ldx     #kSelectorListNumEntries
-        jmp     loop
-
-set:    sta     selected_index
-        jsr     MaybeToggleEntryHilite
-
-done:   return  #$FF
-.endproc ; HandleKeyUp
-
-;;; ============================================================
-
-.proc HandleKeyDown
-        lda     num_primary_run_list_entries
-        ora     num_secondary_run_list_entries
-        beq     done
-
-        lda     selected_index
-        bpl     move           ; have a selection
-
-        ;; No selection; find first valid one
-        ldx     #0
-:       lda     entries_flag_table,x
-        bpl     set
-        inx
-        bne     :-
-
-        ;; Change selection
-move:   lda     selected_index  ; unselect current
-        jsr     MaybeToggleEntryHilite
-
-        ldx     selected_index
-loop:   inx                     ; to next
-        cpx     #kSelectorListNumEntries
-        bcs     wrap
-        lda     entries_flag_table,x
-        bpl     set             ; valid!
-        jmp     loop
-
-wrap:   ldx     #AS_BYTE(-1)
-        jmp     loop
-
-        ;; Set the selection
-set:    sta     selected_index
-        jsr     MaybeToggleEntryHilite
-
-done:   return  #$FF
-.endproc ; HandleKeyDown
+;;; Input: A = index
+;;; Output: A unchanged, Z=1 if valid, Z=0 if not valid
+.proc IsIndexValid
+        tay
+        ldx     entries_flag_table,y
+        rts
+.endproc ; IsIndexValid
 
 ;;; ============================================================
 

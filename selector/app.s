@@ -754,6 +754,21 @@ menu_addr_table:
 
 ;;; ============================================================
 
+.scope option_picker
+kOptionPickerRows = kEntryPickerRows
+kOptionPickerCols = kEntryPickerCols
+kOptionPickerItemWidth = kEntryPickerItemWidth
+kOptionPickerItemHeight = kEntryPickerItemHeight
+kOptionPickerLeft = kEntryPickerLeft
+kOptionPickerTop = kEntryPickerTop
+kOptionPickerRowShift = app::kEntryPickerRowShift
+option_picker_item_rect := entry_picker_item_rect
+
+        .include "../lib/option_picker.s"
+.endscope
+
+;;; ============================================================
+
 .proc HandleKey
         lda     event_params::modifiers
         bne     has_modifiers
@@ -822,12 +837,10 @@ L93EB:  tsx
 ;;; ============================================================
 
 .proc CmdRunAProgram
-        lda     selected_index
-        bmi     L93FF
-        jsr     MaybeToggleEntryHilite
         lda     #$FF
-        sta     selected_index
-L93FF:  jsr     SetCursorWatch
+        jsr     option_picker::SetOptionPickerSelection
+retry:
+        jsr     SetCursorWatch
         MLI_CALL OPEN, open_selector_params
         bne     L9443
         lda     open_selector_params::ref_num
@@ -846,12 +859,9 @@ L943F:  jmp     LoadSelectorList
 
 L9443:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
-        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
-        bne     :+           ; `kAlertResultCancel` = 1
-        jsr     SetCursorWatch
-        jmp     L93FF
-
-:       rts
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        beq     retry           ; `kAlertResultTryAgain` = 0
+        rts
 .endproc ; CmdRunAProgram
 
 ;;; ============================================================
@@ -918,39 +928,13 @@ check_desktop_btn:
         ;; Entry selection?
 
 check_entries:
-        jsr     GetOptionIndexFromCoords
-        bmi     done
-
-        ;; Is it valid?
-        sta     index
-        cmp     #8
-        bcc     primary
-        bcs     secondary
-
-primary:
-        cmp     num_primary_run_list_entries
-        bcc     finish
-        lda     selected_index
-        jsr     MaybeToggleEntryHilite
-        copy    #$FF, selected_index
+        jsr     option_picker::HandleOptionPickerClick
+    IF_NC
+        BTK_CALL BTK::Flash, ok_button_params
+        jmp     InvokeEntry
+    END_IF
         rts
-
-secondary:
-        sec
-        sbc     #8
-        cmp     num_secondary_run_list_entries
-        bcc     finish
-        lda     selected_index
-        jsr     MaybeToggleEntryHilite
-        copy    #$FF, selected_index
-        rts
-
-finish: lda     index
-        jmp     HandleEntryClick
-
-index:  .byte   0
-
-.endproc ; HandleButtonDown
+.endproc
 
 ;;; ============================================================
 
@@ -1018,6 +1002,16 @@ noop:   rts
 
 ;;; ============================================================
 
+;;; Input: A = index
+;;; Output: A unchanged, Z=1 if valid, Z=0 if not valid
+.proc IsIndexValid
+        tay
+        ldx     entries_flag_table,y
+        rts
+.endproc ; IsIndexValid
+
+;;; ============================================================
+
 .proc HandleNonmenuKey
 
         lda     #winfo::kDialogId
@@ -1041,23 +1035,11 @@ noop:   rts
 
 :       sec
         sbc     #'1'
-        sta     tentative_selection
         cmp     num_primary_run_list_entries
         bcc     :+
         rts
 
-:       lda     selected_index
-        bmi     no_cur_sel
-        cmp     tentative_selection
-        bne     :+
-        rts
-
-:       lda     selected_index
-        jsr     MaybeToggleEntryHilite
-no_cur_sel:
-        lda     tentative_selection
-        sta     selected_index
-        jmp     MaybeToggleEntryHilite
+:       jmp     option_picker::SetOptionPickerSelection
 
         ;; --------------------------------------------------
         ;; Control characters - return and arrows
@@ -1074,192 +1056,15 @@ not_return:
         ;; --------------------------------------------------
         ;; Arrow keys?
 
-        cmp     #CHAR_LEFT
-        jeq     HandleKeyLeft
-
-        cmp     #CHAR_RIGHT
-        jeq     HandleKeyRight
-
-        cmp     #CHAR_DOWN
-        jeq     HandleKeyDown
-
-        cmp     #CHAR_UP
-        jeq     HandleKeyUp
+        lda     num_primary_run_list_entries
+        ora     num_secondary_run_list_entries
+    IF_NE
+        lda     event_params::key
+        jsr     option_picker::IsOptionPickerKey
+        jeq     option_picker::HandleOptionPickerKey
+    END_IF
 
         rts
-
-;;; ============================================================
-
-
-tentative_selection:
-        .byte   0
-
-
-;;; ============================================================
-
-.proc HandleKeyRight
-        lda     num_primary_run_list_entries
-        ora     num_secondary_run_list_entries
-        beq     done
-
-        lda     selected_index
-        bpl     move           ; have a selection
-
-        ;; No selection; find a valid one in top row
-        ldx     #0
-        lda     entries_flag_table
-        bpl     set
-
-        ldx     #8
-        lda     entries_flag_table+8
-        bpl     set
-
-        ldx     #16
-        lda     entries_flag_table+16
-        bpl     set
-
-        ;; Change selection
-move:   lda     selected_index  ; unselect current
-        jsr     MaybeToggleEntryHilite
-
-        lda     selected_index
-loop:   clc
-        adc     #8
-        cmp     #kSelectorListNumEntries
-        bcc     :+
-        clc
-        adc     #1
-        and     #7
-
-:       tax
-        lda     entries_flag_table,x
-        bpl     set
-        txa
-        jmp     loop
-
-set:    txa
-        sta     selected_index
-        jsr     MaybeToggleEntryHilite
-
-done:   return  #$FF
-.endproc ; HandleKeyRight
-
-;;; ============================================================
-
-.proc HandleKeyLeft
-        lda     num_primary_run_list_entries
-        ora     num_secondary_run_list_entries
-        beq     done
-
-        lda     selected_index
-        bpl     move            ; have a selection
-
-        ;; No selection - re-use logic to find last item
-        jmp     HandleKeyUp
-
-        ;; Change selection
-move:   lda     selected_index  ; unselect current
-        jsr     MaybeToggleEntryHilite
-
-        lda     selected_index
-loop:   sec
-        sbc     #8
-        bpl     :+
-        sec
-        sbc     #1
-        and     #7
-        ora     #16
-
-:       tax
-        lda     entries_flag_table,x
-        bpl     set
-        txa
-        jmp     loop
-
-set:    txa
-        sta     selected_index
-        jsr     MaybeToggleEntryHilite
-
-done:   return  #$FF
-.endproc ; HandleKeyLeft
-
-;;; ============================================================
-
-.proc HandleKeyUp
-        lda     num_primary_run_list_entries
-        ora     num_secondary_run_list_entries
-        beq     done
-
-        lda     selected_index
-        bpl     move            ; have a selection
-
-        ;; No selection; find last valid one
-        ldx     #kSelectorListNumEntries - 1
-:       lda     entries_flag_table,x
-        bpl     set
-        dex
-        bpl     :-
-
-        ;; Change selection
-move:   lda     selected_index  ; unselect current
-        jsr     MaybeToggleEntryHilite
-
-        ldx     selected_index
-loop:   dex                     ; to previous
-        bmi     wrap
-        lda     entries_flag_table,x
-        bpl     set
-        jmp     loop
-
-wrap:   ldx     #kSelectorListNumEntries
-        jmp     loop
-
-set:    sta     selected_index
-        jsr     MaybeToggleEntryHilite
-
-done:   return  #$FF
-.endproc ; HandleKeyUp
-
-;;; ============================================================
-
-.proc HandleKeyDown
-        lda     num_primary_run_list_entries
-        ora     num_secondary_run_list_entries
-        beq     done
-
-        lda     selected_index
-        bpl     move           ; have a selection
-
-        ;; No selection; find first valid one
-        ldx     #0
-:       lda     entries_flag_table,x
-        bpl     set
-        inx
-        bne     :-
-
-        ;; Change selection
-move:   lda     selected_index  ; unselect current
-        jsr     MaybeToggleEntryHilite
-
-        ldx     selected_index
-loop:   inx                     ; to next
-        cpx     #kSelectorListNumEntries
-        bcs     wrap
-        lda     entries_flag_table,x
-        bpl     set             ; valid!
-        jmp     loop
-
-wrap:   ldx     #AS_BYTE(-1)
-        jmp     loop
-
-        ;; Set the selection
-set:    sta     selected_index
-        jsr     MaybeToggleEntryHilite
-
-done:   return  #$FF
-.endproc ; HandleKeyDown
-
-;;; ============================================================
 
 .endproc ; HandleNonmenuKey
 
@@ -1577,82 +1382,6 @@ hi:    .byte   0
 .endproc ; GetSelectorListPathAddr
 
 ;;; ============================================================
-;;; Get the coordinates of an option by index.
-;;; Input: A = volume index
-;;; Output: A,X = x coordinate, Y = y coordinate
-.proc GetOptionPos
-        sta     index
-        .repeat app::kEntryPickerRowShift
-        lsr
-        .endrepeat
-        ldx     #0              ; hi
-        ldy     #kEntryPickerItemWidth
-        jsr     Multiply_16_8_16
-        clc
-        adc     #<kEntryPickerLeft
-        pha                     ; lo
-        txa
-        adc     #>kEntryPickerLeft
-        pha                     ; hi
-
-        ;; Y coordinate
-        index := *+1
-        lda     #SELF_MODIFIED_BYTE
-        and     #kEntryPickerRows-1
-        ldx     #0              ; hi
-        ldy     #kEntryPickerItemHeight
-        jsr     Multiply_16_8_16
-        clc
-        adc     #kEntryPickerTop
-
-        tay                     ; Y coord
-        pla
-        tax                     ; X coord hi
-        pla                     ; X coord lo
-
-        rts
-.endproc ; GetOptionPos
-
-;;; ============================================================
-
-;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
-;;; Outputs: A=index, N=1 if no match
-.proc GetOptionIndexFromCoords
-        ;; Row
-        sub16   screentowindow_params::windowy, #kEntryPickerTop, screentowindow_params::windowy
-        bmi     done
-
-        ldax    screentowindow_params::windowy
-        ldy     #kEntryPickerItemHeight
-        jsr     Divide_16_8_16  ; A = row
-
-        cmp     #kEntryPickerRows
-        bcs     done
-        sta     row
-
-        ;; Column
-        sub16   screentowindow_params::windowx, #kEntryPickerLeft, screentowindow_params::windowx
-        bmi     done
-
-        ldax    screentowindow_params::windowx
-        ldy     #kEntryPickerItemWidth
-        jsr     Divide_16_8_16  ; A = col
-
-        cmp     #kEntryPickerCols
-        bcs     done
-
-        ;; Index
-        .repeat app::kEntryPickerRowShift
-        asl
-        .endrepeat
-        row := *+1
-        ora     #SELF_MODIFIED_BYTE
-        rts
-
-done:   return  #$FF
-.endproc ; GetOptionIndexFromCoords
-
-;;; ============================================================
 ;;; Input: A = entry number
 
 .proc DrawListEntry
@@ -1704,7 +1433,7 @@ prefix: pla
 common: lda     #winfo::kDialogId
         jsr     GetWindowPort
         pla
-        jsr     GetOptionPos
+        jsr     option_picker::GetOptionPos
         addax   #kEntryPickerTextHOffset, entry_picker_item_rect::x1
         tya
         ldx     #0
@@ -1713,48 +1442,6 @@ common: lda     #winfo::kDialogId
         param_call DrawString, entry_string_buf
         rts
 .endproc ; DrawListEntry
-
-;;; ============================================================
-;;; Input: A = clicked entry
-
-.proc HandleEntryClick
-        cmp     selected_index  ; same as previous selection?
-        beq     :+
-        pha
-        lda     selected_index
-        jsr     MaybeToggleEntryHilite ; un-highlight old entry
-        pla
-        sta     selected_index
-        jsr     MaybeToggleEntryHilite ; highlight new entry
-:
-
-        jsr     DetectDoubleClick
-        jeq     InvokeEntry
-
-        rts
-
-.endproc ; HandleEntryClick
-
-;;; ============================================================
-;;; Toggle the highlight on an entry in the list
-;;; Input: A = entry number (negative if no selection)
-
-.proc MaybeToggleEntryHilite
-        bmi     ret
-
-        jsr     GetOptionPos
-        stax    entry_picker_item_rect::x1
-        addax   #kEntryPickerItemWidth-1, entry_picker_item_rect::x2
-        tya                     ; y lo
-        ldx     #0              ; y hi
-        stax    entry_picker_item_rect::y1
-        addax   #kEntryPickerItemHeight-1, entry_picker_item_rect::y2
-
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, entry_picker_item_rect
-
-ret:    rts
-.endproc ; MaybeToggleEntryHilite
 
 ;;; ============================================================
 
@@ -1783,10 +1470,14 @@ ret:    rts
         bne     :+              ; skip if there's no UI yet
         jsr     SetCursorWatch
         lda     selected_index
-        bmi     :+
-        jsr     MaybeToggleEntryHilite
+        pha
+        lda     #$FF            ; clear hilite
+        jsr     option_picker::SetOptionPickerSelection
+        pla
+        sta     selected_index  ; needed below; will be cleared on failure
 :       jmp     try
 
+        ;; TODO: Untangle this entry point
 ep2:    jmp     launch
 
 try:    lda     invoked_during_boot_flag

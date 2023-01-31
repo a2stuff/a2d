@@ -331,6 +331,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         kVolPickerCols = 3
         kVolPickerRows = 4
         kVolPickerRowShift = 2  ; log2(kVolPickerRows)
+        kVolPickerMaxEntries = kVolPickerCols * kVolPickerRows
         kVolPickerLeft = (winfo_prompt_dialog::kWidth - kVolPickerItemWidth * kVolPickerCols + 1) / 2
         kVolPickerTop = 44
         kVolPickerItemWidth = 127

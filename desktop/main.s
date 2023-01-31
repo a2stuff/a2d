@@ -13422,14 +13422,11 @@ check_button_cancel:
 
         bit     format_erase_overlay_flag
       IF_NS
-        cmp     #CHAR_LEFT
-        jeq     format_erase_overlay__PromptHandleKeyLeft
-        cmp     #CHAR_RIGHT
-        jeq     format_erase_overlay__PromptHandleKeyRight
-        cmp     #CHAR_UP
-        jeq     format_erase_overlay__PromptHandleKeyUp
-        cmp     #CHAR_DOWN
-        jeq     format_erase_overlay__PromptHandleKeyDown
+        jsr     format_erase_overlay__IsOptionPickerKey
+       IF_EQ
+        jsr     format_erase_overlay__HandleOptionPickerKey
+        return  #$FF
+       END_IF
       END_IF
 
         cmp     #CHAR_RETURN

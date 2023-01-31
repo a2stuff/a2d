@@ -44,7 +44,7 @@ Exec:
 ;;; ============================================================
 
 ;;; The selected index (0-based), or $FF if no drive is selected
-selected_device_index:
+selected_index:
         .byte   0
 
 ;;; Number of volumes; min(DEVCNT+1, kMaxVolumesInPicker)
@@ -91,7 +91,7 @@ num_volumes:
         MGTK_CALL MGTK::LineTo, vol_picker_line2_end
 
         jsr     DrawVolumeLabels
-        copy    #$FF, selected_device_index
+        copy    #$FF, selected_index
         copy16  #HandleClick, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
 
@@ -101,7 +101,7 @@ loop1:
         beq     :+              ; ok
         jmp     cancel          ; cancel
 :
-        bit     selected_device_index
+        bit     selected_index
         bmi     loop1
 
         jsr     GetSelectedUnitNum
@@ -340,262 +340,45 @@ cancel:
 
 ;;; ============================================================
 
+.scope option_picker
+kOptionPickerRows = kVolPickerRows
+kOptionPickerCols = kVolPickerCols
+kOptionPickerItemWidth = kVolPickerItemWidth
+kOptionPickerItemHeight = kVolPickerItemHeight
+kOptionPickerLeft = kVolPickerLeft
+kOptionPickerTop = kVolPickerTop
+kOptionPickerRowShift = ::kVolPickerRowShift
+option_picker_item_rect := vol_picker_item_rect
+DetectDoubleClick := main::StashCoordsAndDetectDoubleClick
+
+        .include "../lib/option_picker.s"
+.endscope
+
+;;; ============================================================
+
 .proc HandleClick
-        jsr     GetOptionIndexFromCoords
-        bmi     done
-
-        ;; Is it valid?
-        cmp     num_volumes
-        bcc     valid
-        lda     selected_device_index ; nope - clear selection if needed
-        bmi     done
-        lda     selected_device_index
-        jsr     HighlightVolumeLabel
-        lda     #$FF
-        sta     selected_device_index
-done:   return  #$FF
-
-        ;; Valid selection - has it changed?
-valid:  cmp     selected_device_index
-        bne     update
-
-        jsr     main::StashCoordsAndDetectDoubleClick
-        bmi     l6
-
-        ;; Activated by double-click
-l5:     BTK_CALL BTK::Flash, aux::ok_button_params
-        lda     #$00
-l6:     rts
-
-        ;; Update selection
-update: pha                     ; A = new selection
-        lda     selected_device_index
-        bmi     :+
-        jsr     HighlightVolumeLabel ; unhighlight old
-:
-        pla                     ; A = new selection
-        sta     selected_device_index
-        jsr     HighlightVolumeLabel ; highlight new
-        jsr     main::StashCoordsAndDetectDoubleClick
-        beq     l5
+        jsr     option_picker::HandleOptionPickerClick
+    IF_NC
+        ;; double-click
+        pha
+        BTK_CALL BTK::Flash, aux::ok_button_params
+        pla
+    END_IF
         rts
 .endproc ; HandleClick
 
 ;;; ============================================================
-;;; Get the coordinates of an option by index.
-;;; Input: A = volume index
-;;; Output: A,X = x coordinate, Y = y coordinate
-.proc GetOptionPos
-        sta     index
-        .repeat ::kVolPickerRowShift
-        lsr                     ; lo
-        .endrepeat
-        ldx     #0              ; hi
-        ldy     #kVolPickerItemWidth
-        jsr     Multiply_16_8_16
-        clc
-        adc     #<kVolPickerLeft
-        pha                     ; lo
-        txa
-        adc     #>kVolPickerLeft
-        pha                     ; hi
 
-        ;; Y coordinate
-        index := *+1
-        lda     #SELF_MODIFIED_BYTE
-        and     #kVolPickerRows-1
-        ldx     #0              ; hi
-        ldy     #kVolPickerItemHeight
-        jsr     Multiply_16_8_16
-        clc
-        adc     #kVolPickerTop
-
-        tay                     ; Y coord
-        pla
-        tax                     ; X coord hi
-        pla                     ; X coord lo
-
-        rts
-.endproc ; GetOptionPos
-
-;;; ============================================================
-
-;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
-;;; Outputs: A=index, N=1 if no match
-.proc GetOptionIndexFromCoords
-        ;; Row
-        sub16   screentowindow_params::windowy, #kVolPickerTop, screentowindow_params::windowy
-        bmi     done
-
-        ldax    screentowindow_params::windowy
-        ldy     #kVolPickerItemHeight
-        jsr     Divide_16_8_16  ; A = row
-
-        cmp     #kVolPickerRows
-        bcs     done
-        sta     row
-
-        ;; Column
-        sub16   screentowindow_params::windowx, #kVolPickerLeft, screentowindow_params::windowx
-        bmi     done
-
-        ldax    screentowindow_params::windowx
-        ldy     #kVolPickerItemWidth
-        jsr     Divide_16_8_16  ; A = col
-
-        cmp     #kVolPickerCols
-        bcs     done
-
-        ;; Index
-        .repeat ::kVolPickerRowShift
-        asl
-        .endrepeat
-        row := *+1
-        ora     #SELF_MODIFIED_BYTE
-        rts
-
-done:   return  #$FF
-.endproc ; GetOptionIndexFromCoords
-
-;;; ============================================================
-;;; Hilight volume label
-;;; Input: A = volume index
-
-.proc HighlightVolumeLabel
-        jsr     GetOptionPos
-        stax    vol_picker_item_rect::x1
-        addax   #kVolPickerItemWidth-1, vol_picker_item_rect::x2
-
-        tya
-        ldx     #0
-        stax    vol_picker_item_rect::y1
-        addax   #kListItemHeight-1, vol_picker_item_rect::y2
-
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, vol_picker_item_rect
-        rts
-.endproc ; HighlightVolumeLabel
-
-;;; ============================================================
-
-.proc MaybeHighlightSelectedIndex
-        lda     selected_device_index
-        bmi     :+
-        jsr     HighlightVolumeLabel
-        copy    #$FF, selected_device_index
-:       rts
-.endproc ; MaybeHighlightSelectedIndex
-
-;;; ============================================================
-
-        ;; Called from main
-.proc PromptHandleKeyRight
-        lda     selected_device_index
-        bpl     :+              ; has selection
-
-        lda     #0              ; no selection - select first
-        beq     set             ; always
-
-        ;; Change selection
-:       clc                     ; to the right is +4
-        adc     #4
-        cmp     num_volumes     ; unless we went too far?
-        bcc     :+
-        clc                     ; if we went too far, wrap to next row (+1)
-        adc     #1
-        and     #3              ; and clamp to first column
+;;; Input: A = index
+;;; Output: A unchanged, Z=1 if valid, Z=0 if not valid
+.proc IsIndexValid
         cmp     num_volumes
-        bcc     :+
-        lda     #0              ; wrap to 0 if needed
-
-:       pha
-        jsr     MaybeHighlightSelectedIndex
-        pla
-set:    sta     selected_device_index
-        jsr     HighlightVolumeLabel
-        return  #$FF
-.endproc ; PromptHandleKeyRight
-
-;;; ============================================================
-
-        ;; Called from main
-.proc PromptHandleKeyLeft
-        lda     selected_device_index
-        bpl     loop            ; has selection
-
-        ;; No selection - pick bottom-right one...
-        lda     num_volumes
-        cmp     #11             ; last in 3rd column?
-        bcc     :+
-        lda     #11
-        bne     set             ; always
-:       cmp     #7              ; last in 2nd column?
-        bcc     :+
-        lda     #7
-        bne     set             ; always
-:       tax
-        dex
-        txa
-        bpl     set             ; always
-
-        ;; Change selection
-loop:   sec
-        sbc     #4
-        bpl     :+
-        clc
-        adc     #15             ; (4 * num columns) - 1
-
-:       cmp     num_volumes
-        bcs     loop
-
-        pha
-        jsr     MaybeHighlightSelectedIndex
-        pla
-
-set:    sta     selected_device_index
-        jsr     HighlightVolumeLabel
-        return  #$FF
-.endproc ; PromptHandleKeyLeft
-
-;;; ============================================================
-
-        ;; Called from main
-.proc PromptHandleKeyDown
-        lda     selected_device_index ; $FF if none, would inc to #0
-        clc
-        adc     #1
-        cmp     num_volumes
-        bcc     :+
-        lda     #0              ; wrap to first
-:       pha
-        jsr     MaybeHighlightSelectedIndex
-        pla
-        sta     selected_device_index
-        jsr     HighlightVolumeLabel
-        return  #$FF
-.endproc ; PromptHandleKeyDown
-
-;;; ============================================================
-
-        ;; Called from main
-.proc PromptHandleKeyUp
-        lda     selected_device_index
-        bmi     wrap            ; if no selection, wrap
-        sec
-        sbc     #1              ; to to previous
-        bpl     :+              ; unless wrapping needed
-
-wrap:   ldx     num_volumes     ; go to last (num - 1)
-        dex
-        txa
-
-:       pha
-        jsr     MaybeHighlightSelectedIndex
-        pla
-        sta     selected_device_index
-        jsr     HighlightVolumeLabel
-        return  #$FF
-.endproc ; PromptHandleKeyUp
+        bcs     no
+        ldx     #0              ; clear N
+        rts
+no:     ldx     #$FF            ; set N
+        rts
+.endproc
 
 ;;; ============================================================
 ;;; Draw volume labels
@@ -617,7 +400,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         bne     :+
         rts
 :
-        jsr     GetOptionPos
+        jsr     option_picker::GetOptionPos
         addax   #kVolPickerTextHOffset, vol_picker_item_rect::x1
         tya
         ldx     #0
@@ -643,14 +426,14 @@ loop:   lda     #SELF_MODIFIED_BYTE
 ;;; ============================================================
 ;;; Gets the selected unit number from `DEVLST`
 ;;; Output: A = unit number (with low nibble intact)
-;;; Assert: `selected_device_index` is valid (i.e. not $FF)
+;;; Assert: `selected_index` is valid (i.e. not $FF)
 
 .proc GetSelectedUnitNum
         ;; Reverse order, so boot volume is first
         lda     num_volumes
         sec
         sbc     #1
-        sbc     selected_device_index
+        sbc     selected_index
         tax
         lda     DEVLST,x
         rts
@@ -1296,10 +1079,8 @@ non_pro:
 
 .endscope ; format_erase_overlay
 
-format_erase_overlay__PromptHandleKeyLeft     := format_erase_overlay::PromptHandleKeyLeft
-format_erase_overlay__PromptHandleKeyRight    := format_erase_overlay::PromptHandleKeyRight
-format_erase_overlay__PromptHandleKeyDown     := format_erase_overlay::PromptHandleKeyDown
-format_erase_overlay__PromptHandleKeyUp       := format_erase_overlay::PromptHandleKeyUp
+format_erase_overlay__IsOptionPickerKey := format_erase_overlay::option_picker::IsOptionPickerKey
+format_erase_overlay__HandleOptionPickerKey := format_erase_overlay::option_picker::HandleOptionPickerKey
 
 format_erase_overlay__Exec := format_erase_overlay::Exec
 
