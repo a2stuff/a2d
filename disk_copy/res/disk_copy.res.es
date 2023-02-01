@@ -5,7 +5,7 @@
 .define res_string_menu_item_quick_copy "Copia R\x10pida"
 .define res_string_dc_menu_item_disk_copy "Copiar Disco"
 .define res_string_button_read_drive "Leer Unidad"
-.define res_char_button_read_drive_shortcut 'D'
+.define res_char_button_read_drive_shortcut 'L'
 .define res_string_label_slot_drive_name "Ranura, Unidad, Nombre"
 .define res_string_prompt_select_source "Seleccione disco de origen"
 .define res_string_prompt_select_destination "Seleccione disco de destino"

@@ -13,7 +13,7 @@
 .define res_string_menu_item_slot_pattern "Ranura #"
 .define res_const_menu_item_slot_pattern_offset1 8
 .define res_string_button_desktop "Escritorio"
-.define res_char_button_desktop_shortcut 'Q'
+.define res_char_button_desktop_shortcut 'E'
 .define res_string_selector_name "Selector"
 .define res_string_label_download "Copiando a RAMDisk..."
 .define res_string_label_copying "Copiando: "

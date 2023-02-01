@@ -5,7 +5,7 @@
 .define res_string_menu_item_quick_copy "Snabb Kopia"
 .define res_string_dc_menu_item_disk_copy "Diskkopia"
 .define res_string_button_read_drive "L{s Drives"
-.define res_char_button_read_drive_shortcut 'D'
+.define res_char_button_read_drive_shortcut 'L'
 .define res_string_label_slot_drive_name "Kortplats, Enhet, Namn"
 .define res_string_prompt_select_source "V{lj k{lldisk"
 .define res_string_prompt_select_destination "V{lj destinationsskiva"

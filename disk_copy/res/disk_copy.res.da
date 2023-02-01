@@ -5,7 +5,7 @@
 .define res_string_menu_item_quick_copy "Hurtig kopi"
 .define res_string_dc_menu_item_disk_copy "Disk kopi"
 .define res_string_button_read_drive "L{s Drev"
-.define res_char_button_read_drive_shortcut 'D'
+.define res_char_button_read_drive_shortcut 'L'
 .define res_string_label_slot_drive_name "Kortplads, Drev, Navn"
 .define res_string_prompt_select_source "V{lg kildedisk"
 .define res_string_prompt_select_destination "V{lg destinationsdisk"

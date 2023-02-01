@@ -75,12 +75,14 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Fix clearing the text screen when launching programs.
 * Allow pressing Escape to cancel copy to RAMCard.
+* Change "DeskTop" button shortcut to 'D' in EN builds; corresponding changes in other languages.
 
 ### Disk Copy
 
 * Supports up to 14 devices. ([#712](https://github.com/a2stuff/a2d/issues/712))
 * Show Pascal volume names more consistently.
 * Ensure a confirmation prompt is shown before overwriting, unless destination is not formatted.
+* Change "Read Drives" button shortcut to 'R' in EN builds; corresponding changes in other languages.
 
 ### Desk Accessories
 
