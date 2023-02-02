@@ -949,11 +949,15 @@ tmp_path_buf:
         jeq     OpenFolder
 
         cmp     #IconType::system
-        beq     launch
+        jeq     launch
 
         cmp     #IconType::application
-        beq     launch
+        jeq     launch
 
+        cmp     #IconType::encoded
+        bne     :+
+        param_jump InvokeInterpreter, str_binscii
+:
         cmp     #IconType::archive
         bne     :+
         param_jump InvokeInterpreter, str_unshrink
@@ -1172,6 +1176,9 @@ str_extras_basic:
 
 str_unshrink:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/UnShrink")
+
+str_binscii:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/BinSCII")
 
 str_preview_fot:
         PASCAL_STRING .concat(kFilenamePreviewDir, "/show.image.file")
@@ -15491,6 +15498,8 @@ icontype_table:
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2fm_suffix, 0, IconType::graphics ; Apple II Full Monochrome
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2lc_suffix, 0, IconType::graphics ; Apple II Low Color
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2hr_suffix, 0, IconType::graphics ; Apple II High Resolution
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bsc_suffix, 0, IconType::encoded ; BinSCII
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bsq_suffix, 0, IconType::encoded ; BinSCII - ShrinkIt
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_btc_suffix, 0, IconType::audio ; Zero-Crossing Audio
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_zc_suffix, 0, IconType::audio ; Binary Time Constant Audio
 
@@ -15565,6 +15574,12 @@ str_zc_suffix:                  ; "Zero-Crossing" Audio
 
 str_btc_suffix:                 ; "Binary Time Constant" Audio
         PASCAL_STRING ".BTC"
+
+str_bsc_suffix:                 ; BinSCII
+        PASCAL_STRING ".BSC"
+
+str_bsq_suffix:                 ; BinSCII - ShrinkIt
+        PASCAL_STRING ".BSQ"
 
 ;;; ============================================================
 ;;; DeskTop icon placement
@@ -15786,6 +15801,7 @@ icontype_iconentryflags_table:
         .byte   0                    ; appleworks wp
         .byte   0                    ; appleworks sp
         .byte   0                    ; archive
+        .byte   0                    ; encoded
         .byte   0                    ; desk accessory
         .byte   0                    ; basic
         .byte   0                    ; system
@@ -15810,6 +15826,7 @@ type_icons_table:
         .addr   awp ; appleworks wp
         .addr   asp ; appleworks sp
         .addr   arc ; archive
+        .addr   arc ; encoded
         .addr   a2d ; desk accessory
         .addr   bas ; basic
         .addr   sys ; system

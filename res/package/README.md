@@ -13,4 +13,7 @@ From ProDOS Driver collection (https://github.com/a2stuff/prodos-drivers):
 AUTO UnShrinkIt by Andrew E. Nicholas:
 * UNSHRINK
 
+BinSCII by David Whitney:
+* BINSCII
+
 The other files go into the Sample Media folder, and are examples of various file types, including images, text, and music.

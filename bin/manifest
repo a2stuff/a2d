@@ -102,10 +102,9 @@ emit add_file $disposition "out/selector.built" "Modules" "Selector" F10000
 # Part 4: Extras.
 disposition="extra"
 
-# Add UnShrink
+# Add "Interpreters"
 emit add_file $disposition "res/package/UNSHRINK" "Extras" "UnShrink" FF0000
-
-# Add BASIC.SYSTEM
+emit add_file $disposition "res/package/BINSCII" "Extras" "BinSCII" FF0000
 emit add_file $disposition "res/package/BASIC.SYSTEM" "Extras" "BASIC.system" FF2000
 
 # --------------------------------------------------
