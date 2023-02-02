@@ -106,14 +106,14 @@ params:  .res    3
         ;; We'd switch back to color mode here, but since we're
         ;; launching DeskTop there's no point.
 
-        jsr     SETVID
-        jsr     SETKBD
-
         sta     DHIRESOFF
         sta     TXTSET
         sta     LOWSCR
         sta     LORES
         sta     MIXCLR
+
+        jsr     SETVID          ; after TXTSET so WNDTOP is set properly
+        jsr     SETKBD
 
         sta     CLRALTCHAR
         sta     CLR80VID

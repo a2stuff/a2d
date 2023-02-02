@@ -15,6 +15,7 @@ Project Page: https://github.com/a2stuff/a2d
 * A generic ProDOS clock driver is included in disk images.
 * The default double-click speed is now the middle setting.
 * Button appearance simplified. Showing shortcuts can be enabled with an option.
+* Reset text window correctly when exiting/launching other programs.
 
 ### Launcher
 

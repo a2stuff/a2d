@@ -2705,14 +2705,14 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         sta     ALTZPOFF
         bit     ROMIN2
 
-        jsr     SETVID
-        jsr     SETKBD
-
         sta     DHIRESOFF
         sta     TXTSET
         sta     LOWSCR
         sta     LORES
         sta     MIXCLR
+
+        jsr     SETVID          ; after TXTSET so WNDTOP is set properly
+        jsr     SETKBD
 
         sta     CLRALTCHAR
         sta     CLR80VID

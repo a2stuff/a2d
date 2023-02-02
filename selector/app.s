@@ -984,14 +984,14 @@ noop:   rts
         ;; Switch back to color DHR mode
         jsr     SetColorMode
 
-        jsr     SETVID
-        jsr     SETKBD
-
         sta     DHIRESOFF
         sta     TXTSET
         sta     LOWSCR
         sta     LORES
         sta     MIXCLR
+
+        jsr     SETVID          ; after TXTSET so WNDTOP is set properly
+        jsr     SETKBD
 
         sta     CLRALTCHAR
         sta     CLR80VID

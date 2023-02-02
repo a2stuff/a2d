@@ -525,6 +525,8 @@
 * Launch DeskTop. Select a file on a 5.25 disk. Remove the disk. File > Get Info. Verify that an alert is shown. Click OK. Verify that DeskTop doesn't hang or crash.
 * Launch DeskTop. Select two files on a 5.25 disk. Remove the disk. File > Get Info. Verify that an alert is shown. Insert the disk again. Click OK. Verify that details are shown for the second file.
 
+* Mount a disk with the BINSCII system utility. Launch DeskTop. Invoke the BINSCII system file. Verify that the display is not truncated.
+
 
 ## Shortcuts
 
@@ -857,6 +859,8 @@ Repeat for Calculator and Sci.Calc:
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at boot". Reboot, and launch DESKTOP.SYSTEM. Verify that all of the files were copied to the RAMCard. Once Selector starts, eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. Verify that the files are copied to the RAMCard, and that the program starts correctly. Return to Selector by quitting the program. Eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Invoke the shortcut again. Verify that the files are copied to the RAMCard and that the program starts correctly.
+
+* Configure a shortcut for the BINSCII system utility. Launch Selector. Invoke the BINSCII system file. Verify that the display is not truncated.
 
 
 # Disk Copy
