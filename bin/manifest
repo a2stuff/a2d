@@ -140,6 +140,7 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "res/package/SHAKESPEARE"   $mediadir "shakespeare"    040000
     emit add_file $disposition "res/package/JESU.JOY"      $mediadir "jesu.joy"       D5D0E7
     emit add_file $disposition "res/package/HELLO.WORLD"   $mediadir "hello.world"    FC0801
+    emit add_file $disposition "res/package/WOZ.BREAKOUT"  $mediadir "woz.breakout"   FA0000
     emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell"  060800
 
     emit add_file $disposition "mgtk/fonts/System.en"      $mediafnt "System.en"      070000
