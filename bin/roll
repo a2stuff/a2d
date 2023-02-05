@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -e
+source "bin/util.sh"
+
+roll () {
+    spath="$1"
+    sfile="$2"
+    tpath="$3"
+    tfile="$4"
+    if ! diff -q "$spath/$sfile" "$tpath/$tfile" > /dev/null; then
+        cp "$spath/$sfile" "$tpath/$tfile"
+        echo "rolled $tfile to "$(cd "$spath" && git rev-parse --short HEAD)
+    fi
+}
+
+roll "../intbasic" "out/intbasic.system.SYS" "res/package" "INTBASIC.SYSTEM"
+roll "../prodos-drivers/" "clocks/jumbo/out/clock.system.SYS" "res/package" "CLOCK.SYSTEM"
