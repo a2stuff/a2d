@@ -15744,7 +15744,7 @@ menu_kbd_flag:
 ;;; Map ProDOS file type to string (for listings/Get Info).
 ;;; If not found, $XX is used (like CATALOG).
 
-        kNumFileTypes = 18
+        kNumFileTypes = 19
 type_table:
         .byte   FT_TYPELESS   ; unknown
         .byte   FT_BAD        ; bad block
@@ -15761,6 +15761,7 @@ type_table:
         .byte   FT_MUSIC      ; music
         .byte   FT_SOUND      ; sampled sound
         .byte   FT_CMD        ; command
+        .byte   FT_INT        ; intbasic
         .byte   FT_BASIC      ; basic
         .byte   FT_REL        ; rel
         .byte   FT_SYSTEM     ; system
@@ -15783,6 +15784,7 @@ type_names_table:
         .byte   "MUS " ; music
         .byte   "SND " ; sampled sound
         .byte   "CMD " ; command *
+        .byte   "INT " ; basic *
         .byte   "BAS " ; basic *
         .byte   "REL " ; rel *
         .byte   "SYS " ; system *
