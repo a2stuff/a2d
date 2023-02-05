@@ -10,6 +10,9 @@ From ProDOS 2.4.2 (https://prodos8.com/):
 From ProDOS Driver collection (https://github.com/a2stuff/prodos-drivers):
 * CLOCK.SYSTEM
 
+From Integer BASIC for ProDOS (https://github.com/a2stuff/intbasic):
+* INTBASIC.SYSTEM
+
 AUTO UnShrinkIt by Andrew E. Nicholas:
 * UNSHRINK
 

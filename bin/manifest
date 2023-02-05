@@ -105,6 +105,7 @@ disposition="extra"
 # Add "Interpreters"
 emit add_file $disposition "res/package/UNSHRINK" "Extras" "UnShrink" FF0000
 emit add_file $disposition "res/package/BINSCII" "Extras" "BinSCII" FF0000
+emit add_file $disposition "res/package/INTBASIC.SYSTEM" "Extras" "IntBASIC.system" FF2000
 emit add_file $disposition "res/package/BASIC.SYSTEM" "Extras" "BASIC.system" FF2000
 
 # --------------------------------------------------

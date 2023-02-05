@@ -25,6 +25,7 @@ kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
         encoded
         desk_accessory
         basic
+        intbasic
         system
         application
         COUNT                   ; last

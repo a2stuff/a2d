@@ -954,6 +954,10 @@ tmp_path_buf:
         cmp     #IconType::application
         jeq     launch
 
+        cmp     #IconType::intbasic
+        bne     :+
+        param_jump InvokeInterpreter, str_intbasic
+:
         cmp     #IconType::encoded
         bne     :+
         param_jump InvokeInterpreter, str_binscii
@@ -1173,6 +1177,9 @@ str_basix_system:
 
 str_extras_basic:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/BASIC.system")
+
+str_intbasic:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/IntBASIC.system")
 
 str_unshrink:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/UnShrink")
@@ -15523,6 +15530,7 @@ icontype_table:
 
         DEFINE_ICTRECORD $FF, FT_CMD,       ICT_FLAGS_NONE, 0, 0, IconType::command       ; $F0
         DEFINE_ICTRECORD $FF, FT_BASIC,     ICT_FLAGS_NONE, 0, 0, IconType::basic         ; $FC
+        DEFINE_ICTRECORD $FF, FT_INT,       ICT_FLAGS_NONE, 0, 0, IconType::intbasic      ; $FA
         DEFINE_ICTRECORD $FF, FT_REL,       ICT_FLAGS_NONE, 0, 0, IconType::relocatable   ; $FE
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_SUFFIX, str_sys_suffix, 0, IconType::application ; $FF
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
@@ -15804,6 +15812,7 @@ icontype_iconentryflags_table:
         .byte   0                    ; encoded
         .byte   0                    ; desk accessory
         .byte   0                    ; basic
+        .byte   0                    ; intbasic
         .byte   0                    ; system
         .byte   0                    ; application
         ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT
@@ -15829,6 +15838,7 @@ type_icons_table:
         .addr   arc ; encoded
         .addr   a2d ; desk accessory
         .addr   bas ; basic
+        .addr   int ; intbasic
         .addr   sys ; system
         .addr   app ; application
         ASSERT_ADDRESS_TABLE_SIZE type_icons_table, IconType::COUNT

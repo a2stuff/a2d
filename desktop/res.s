@@ -829,6 +829,7 @@ portptr:        .addr   0
         DEFINE_ICON_RESOURCE dir, folder_icon, 4, 27, 11, folder_mask
         DEFINE_ICON_RESOURCE sys, sys_icon, 4, 27, 17, sys_mask
         DEFINE_ICON_RESOURCE bas, basic_icon, 4, 27, 14, basic_mask
+        DEFINE_ICON_RESOURCE int, intbasic_icon, 4, 27, 14, basic_mask
         DEFINE_ICON_RESOURCE fot, graphics_icon, 4, 27, 12, graphics_mask
         DEFINE_ICON_RESOURCE anm, video_icon, 4, 26, 12, graphics_mask
         DEFINE_ICON_RESOURCE mus, music_icon, 4, 27, 15, generic_mask
@@ -1083,6 +1084,24 @@ basic_mask:
         .byte   PX(%0000000),PX(%0000111),PX(%1110000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+
+intbasic_icon:
+        .byte   PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000110),PX(%0110000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0011000),PX(%0001100),PX(%0000000)
+        .byte   PX(%0000000),PX(%1100000),PX(%0000011),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0110000),PX(%1111000),PX(%0110011),PX(%1111110)
+        .byte   PX(%0110000),PX(%1101100),PX(%0110000),PX(%0110000)
+        .byte   PX(%0111000),PX(%1100110),PX(%0111000),PX(%0111000)
+        .byte   PX(%0111000),PX(%1110011),PX(%0111000),PX(%0111000)
+        .byte   PX(%0111000),PX(%1110001),PX(%1111000),PX(%0111000)
+        .byte   PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000)
+        .byte   PX(%0000000),PX(%1100000),PX(%0000011),PX(%0000000)
+        .byte   PX(%0000000),PX(%0011000),PX(%0001100),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000110),PX(%0110000),PX(%0000000)
+        .byte   PX(%0000000),PX(%0000001),PX(%1000000),PX(%0000000)
+        ;; shares `basic_mask`
 
 graphics_icon:                  ; Graphics
         .byte   PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)

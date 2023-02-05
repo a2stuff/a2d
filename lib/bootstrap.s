@@ -68,6 +68,7 @@ filename:
 
 start:
         ;; Show and clear 80-column text screen
+        sta     TXTSET
         bit     ROMIN2
         jsr     SETVID
         jsr     SETKBD
