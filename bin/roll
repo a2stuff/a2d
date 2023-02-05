@@ -10,7 +10,7 @@ roll () {
     tfile="$4"
     if ! diff -q "$spath/$sfile" "$tpath/$tfile" > /dev/null; then
         cp "$spath/$sfile" "$tpath/$tfile"
-        echo "rolled $tfile to "$(cd "$spath" && git rev-parse --short HEAD)
+        echo "roll $tfile to "$(cd "$spath" && git rev-parse --short HEAD)
     fi
 }
 
