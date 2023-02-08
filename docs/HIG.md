@@ -28,13 +28,21 @@ Note that these are for inspiration, not to be dutifully followed.
 * Border is 1x1 pixels thick, drawn with XOR pen to give subtly rounded corners.
 * Horizontal text inset is 5px.
 * Vertical text position is 10px (just above bottom border).
-* Indicate keyboard shortcut support for default action with carriage return glyph ⏎.
-* Indicate keyboard shortcut support for cancel action with Esc.
+* Displaying keyboard shortcuts is controlled with a user preference.
+  * If disabled:
+    * Label should be aligned centered.
+  * If enabled:
+    * Label should be aligned left.
+    * Keyboard shortcut should be aligned right.
+    * Indicate default action with carriage return glyph ⏎.
+    * Indicate cancel action with Esc.
 * Arrow buttons to increment or decrement values can be non-default height.
 
 ## Check Boxes and Radio Buttons
 
 * Clicking on the text label should be equivalent to clicking on the control.
+* Displaying keyboard shortcuts is controlled with a user preference.
+  * If enabled, the shortcut should follow the text label in parentheses.
 
 ## Line Edit (Text Input) Controls
 
