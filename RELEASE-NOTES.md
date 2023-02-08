@@ -108,6 +108,7 @@ Project Page: https://github.com/a2stuff/a2d
   * New sounds from Gorgon, Apple Panic, and more, c/o @frankmilliron
   * Play current selection if clicked again. ([#715](https://github.com/a2stuff/a2d/issues/715))
 * Calc/Sci.Calc: Show leading zero before decimal in results.
+* Sci.Calc: Fix intermediate calculations with functions (SIN, etc). ([#741](https://github.com/a2stuff/a2d/issues/741))
 * Find Files
   * Double-click a result to open the containing widow and select the file icon. ([#255](https://github.com/a2stuff/a2d/issues/255))
   * If no window is open, all on-line volumes are searched. ([#255](https://github.com/a2stuff/a2d/issues/255))

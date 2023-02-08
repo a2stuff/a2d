@@ -743,7 +743,7 @@ Image File:
 * Open the Control Panels folder. View > by Name. Open International. Change the date format from M/D/Y to D/M/Y or vice versa. CLick OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.
 * Open the Control Panels folder. View > by Name. Open International. Close without changing anything. Verify that only a minimal repaint happens.
 
-## Calculator
+## Calculator and Sci.Calc
 
 * Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
 
@@ -754,6 +754,10 @@ Repeat for Calculator and Sci.Calc:
 * With an Italian build, run the DA. Verify that ',' appears as the decimal separator in calculation result and that ',' when typed functions as a decimal separator. Verify that when '.' is typed, ',' appears.
 * Enter '1' '/' '2' '='. Verify that the result has a 0 before the decimal (i.e. "0.5").
 * Enter '0' '-' '.' '5' '='. Verify that the result has a 0 before the decimal (i.e. "-0.5").
+
+With Sci.Calc:
+* Enter '1' '+' '2' 'SIN' '='. Verify that the result is 1.909...
+* Enter '1' 'SIN' '+' '2' '='. Verify that the result is 2.841...
 
 ## Date & Time
 

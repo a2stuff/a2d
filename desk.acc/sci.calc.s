@@ -1092,8 +1092,6 @@ cloop:  lda     text_buffer1,x
         ;; Operators
 
 do_op:
-        copy    #0, calc_f
-
         pla                     ; A = current op
         ldx     calc_op         ; X = previous op
         sta     calc_op         ; save for later
@@ -1121,12 +1119,14 @@ do_op:
 
 :       cpx     #Function::op_power
         bne     :+
-        ROM_CALL LOAD_ARG       ; ARG = (A,Y)
+        ROM_CALL LOAD_ARG       ; ARG = (Y,A)
         ROM_CALL FPWRT          ; FAC = ARG ^ FAC
         jmp     PostOp
 
 :       cpx     #Function::equals
         bne     :+
+        ldy     calc_f
+        bne     PostOp
         ldy     calc_g
         bne     PostOp
         jmp     ResetBuffer1AndState
@@ -1137,8 +1137,10 @@ do_op:
 ;;; ============================================================
 
 .proc PostOp
+        copy    #0, calc_f
+
         ldxy    #farg           ; save intermediate result
-        ROM_CALL ROUND
+        ROM_CALL ROUND          ; (Y,A) = ROUND(FAC)
 
 ep2:    jsr     PushFAC
         ROM_CALL FOUT       ; output as null-terminated string to FBUFFR
