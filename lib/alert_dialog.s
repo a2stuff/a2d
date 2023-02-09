@@ -574,22 +574,27 @@ finish:
         ;; Frame it
         MGTK_CALL MGTK::FrameRect, rect
 
-        ;; Draw the label (left aligned)
-        add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
-        sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
-        MGTK_CALL MGTK::MoveTo, pos
-
-        param_call_indirect DrawString, a_label
-
-        ;; Draw the shortcut (if present, right aligned)
 PARAM_BLOCK tw_params, $6
 textptr .addr
 textlen .byte
 width   .word
 END_PARAM_BLOCK
+
+        sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
+
+        lda     SETTINGS+DeskTopSettings::options
+        and     #DeskTopSettings::kOptionsShowShortcuts
+    IF_NOT_ZERO
+        ;; Draw the label (left aligned)
+        add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, pos
+
+        param_call_indirect DrawString, a_label
+
+        ;; Draw the shortcut (if present, right aligned)
         lda     a_shortcut
         ora     a_shortcut+1
-        beq     :+
+      IF_NOT_ZERO
         ldy     #0
         lda     (a_shortcut),y
         sta     tw_params::textlen
@@ -600,7 +605,21 @@ END_PARAM_BLOCK
         sub16   pos+MGTK::Point::xcoord, tw_params::width, pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         MGTK_CALL MGTK::DrawText, tw_params
-:
+      END_IF
+    ELSE
+        ldy     #0
+        lda     (a_label),y
+        sta     tw_params::textlen
+        add16_8 a_label, #1, tw_params::textptr
+        MGTK_CALL MGTK::TextWidth, tw_params
+
+        add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
+        sub16   pos+MGTK::Point::xcoord, tw_params::width, pos+MGTK::Point::xcoord
+        asr16   pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, pos
+        MGTK_CALL MGTK::DrawText, tw_params
+    END_IF
+
         rts
 .endproc ; DrawButton
 

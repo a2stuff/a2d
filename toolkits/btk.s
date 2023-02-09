@@ -196,13 +196,14 @@ skip_port:
 
         pos := $0B
 
+        ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
+        sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
+
         lda     SETTINGS+DeskTopSettings::options
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF_NOT_ZERO
         ;; Draw the string (left aligned)
         add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
-        ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
-        sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
 
@@ -227,8 +228,6 @@ skip_port:
         add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
         sub16   pos+MGTK::Point::xcoord, width, pos+MGTK::Point::xcoord
         asr16   pos+MGTK::Point::xcoord
-        ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
-        sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
     END_IF
