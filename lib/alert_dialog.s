@@ -11,6 +11,7 @@
 ;;; Requires the following macro definitions:
 ;;; * `MGTK_CALL`
 ;;; Optionally define:
+;;; * `AD_YESNOALL` (if defined, yes/no/all buttons supported)
 ;;; * `AD_SAVEBG` (if defined, background saved/restored)
 ;;; * `AD_WRAP` (if defined, message is wrapped)
 ;;; * `AD_EJECTABLE` (if defined, polls for certain messages)
@@ -176,6 +177,12 @@ str_shortcut:   PASCAL_STRING {shortcut}
         DEFINE_ALERT_BUTTON try_again, res_string_button_try_again, res_char_button_try_again_shortcut, 300, 37
         DEFINE_ALERT_BUTTON cancel,    res_string_button_cancel, res_string_button_cancel_shortcut, 20, 37
 
+.ifdef AD_YESNOALL
+        DEFINE_ALERT_BUTTON yes,  res_string_button_yes, res_char_button_yes_shortcut, 175, 37, 65
+        DEFINE_ALERT_BUTTON no,   res_string_button_no,  res_char_button_no_shortcut,  255, 37, 65
+        DEFINE_ALERT_BUTTON all,  res_string_button_all, res_char_button_all_shortcut, 335, 37, 65
+.endif ; AD_YESNOALL
+
         kTextLeft = 75
         kTextRight = kAlertRectWidth - kAlertXMargin
         kWrapWidth = kTextRight - kTextLeft
@@ -201,14 +208,18 @@ text:           .addr   0
 buttons:        .byte   0       ; AlertButtonOptions
 options:        .byte   0       ; AlertOptions flags
 .endparams
+.assert .sizeof(alert_params) = .sizeof(AlertParams), error, "struct mismatch"
 
-       kShortcutTryAgain = res_char_button_try_again_shortcut
+        kShortcutTryAgain = res_char_button_try_again_shortcut
+        kShortcutYes      = res_char_button_yes_shortcut
+        kShortcutNo       = res_char_button_no_shortcut
+        kShortcutAll      = res_char_button_all_shortcut
 
         ;; Actual entry point
 start:
         ;; Copy passed params
         stax    @addr
-        ldx     #.sizeof(alert_params)-1
+        ldx     #.sizeof(AlertParams)-1
         @addr := *+1
 :       lda     SELF_MODIFIED,x
         sta     alert_params,x
@@ -293,6 +304,19 @@ start:
 
         bit     alert_params::buttons
         bvs     draw_ok_btn
+
+.ifdef AD_YESNOALL
+        ;; Yes/No/All?
+        lda     alert_params::buttons
+        and     #$0F
+        beq     :+
+
+        param_call DrawButton, yes_button_record
+        param_call DrawButton, no_button_record
+        param_call DrawButton, all_button_record
+        jmp     done_buttons
+:
+.endif
 
         ;; Try Again button
         param_call DrawButton, try_again_button_record
@@ -426,6 +450,42 @@ finish_cancel:
 :       bit     alert_params::buttons ; has Try Again?
         bvs     check_ok        ; nope
 
+.ifdef AD_YESNOALL
+        pha
+        lda     alert_params::buttons
+        and     #$0F
+        beq     not_yesnocancel
+
+        pla
+        cmp     #kShortcutNo
+        beq     do_no
+        cmp     #TO_LOWER(kShortcutNo)
+        beq     do_no
+        cmp     #kShortcutYes
+        beq     do_yes
+        cmp     #TO_LOWER(kShortcutYes)
+        beq     do_yes
+        cmp     #kShortcutAll
+        beq     do_all
+        cmp     #TO_LOWER(kShortcutAll)
+        beq     do_all
+        jmp     event_loop
+
+do_no:  param_call InvertButton, no_button_record
+        lda     #kAlertResultNo
+        jmp     finish
+do_yes: param_call InvertButton, yes_button_record
+        lda     #kAlertResultYes
+        jmp     finish
+do_all: param_call InvertButton, all_button_record
+        lda     #kAlertResultAll
+        jmp     finish
+
+not_yesnocancel:
+        pla
+.endif ; AD_YESNOALL
+
+
         cmp     #TO_LOWER(kShortcutTryAgain)
         bne     :+
 
@@ -460,20 +520,50 @@ HandleButtonDown:
         MGTK_CALL MGTK::MoveTo, event_coords
 
         bit     alert_params::buttons ; Anything but OK?
-        bpl     check_ok_rect   ; nope
+        jpl     check_ok_rect   ; nope
 
         ;; Cancel
         MGTK_CALL MGTK::InRect, cancel_button_record+AlertButtonRecord::rect
         cmp     #MGTK::inrect_inside
         bne     :+
         param_call TrackButton, cancel_button_record
-        bne     no_button
+        jne     no_button
         lda     #kAlertResultCancel
         .assert kAlertResultCancel <> 0, error, "kAlertResultCancel must be non-zero"
-        bne     finish          ; always
+        jne     finish          ; always
 
 :       bit     alert_params::buttons ; any other buttons?
         bvs     check_ok_rect   ; nope
+
+.ifdef AD_YESNOALL
+        lda     alert_params::buttons
+        and     #$0F
+        beq     not_yesnocancel2
+
+        ;; Yes & No & All
+        MGTK_CALL MGTK::InRect, yes_button_record+AlertButtonRecord::rect
+        cmp     #MGTK::inrect_inside
+        bne     :+
+        param_call TrackButton, yes_button_record
+        lda     #kAlertResultYes
+        jmp     finish
+:
+        MGTK_CALL MGTK::InRect, no_button_record+AlertButtonRecord::rect
+        cmp     #MGTK::inrect_inside
+        bne     :+
+        param_call TrackButton, no_button_record
+        lda     #kAlertResultNo
+        jmp     finish
+:
+        MGTK_CALL MGTK::InRect, all_button_record+AlertButtonRecord::rect
+        cmp     #MGTK::inrect_inside
+        bne     no_button
+        param_call TrackButton, all_button_record
+        lda     #kAlertResultAll
+        jmp     finish
+
+not_yesnocancel2:
+.endif
 
         ;; Try Again
         MGTK_CALL MGTK::InRect, try_again_button_record+AlertButtonRecord::rect

@@ -38,12 +38,6 @@
 .define res_string_menu_item_get_size "F} storlek"
 .define res_string_menu_item_rename_icon "Byt namn..."
 .define res_string_menu_item_duplicate "Duplicera..."
-.define res_string_prompt_button_yes " Ja"
-.define res_char_button_yes_shortcut 'J'
-.define res_string_prompt_button_no " Nej"
-.define res_char_button_no_shortcut 'N'
-.define res_string_prompt_button_all " Alla"
-.define res_char_button_all_shortcut 'A'
 .define res_string_about_text_line5 "F|rfattare: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais och Luc Barthelet"
 .define res_string_about_text_line7 "Med tack till: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
@@ -56,11 +50,12 @@
 .define res_string_move_dialog_title "Flytta..."
 .define res_string_move_label_status "Flytta: "
 .define res_string_move_status_files_remaining "Filer som }terst}r att flytta: "
-.define res_string_prompt_overwrite "Den filen finns redan. Vill du skriva |ver det?"
+.define res_string_prompt_overwrite "Den filen finns redan. Vill du byta ut den?"
 .define res_string_errmsg_too_large_to_copy "Den h{r filen {r f|r stor f|r att kopieras."
 .define res_string_errmsg_too_large_to_move "Den h{r filen {r f|r stor f|r att flyttas."
 .define res_string_delete_dialog_title "Radera..."
-.define res_string_prompt_delete_ok "Klicka p} OK f|r att ta bort: "
+.define res_string_prompt_delete_confirm_prefix "[r du s{ker p} att du vill ta bort "
+.define res_string_prompt_delete_confirm_suffix " permanent?"
 .define res_string_label_delete_count "Raderar: "
 .define res_string_label_file "Arkiv:"
 .define res_string_delete_remaining "Filer som }terst}r att radera: "

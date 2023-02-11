@@ -92,6 +92,16 @@ kDoubleClickDeltaY      = 4
 kAlertResultTryAgain    = 0
 kAlertResultCancel      = 1
 kAlertResultOK          = 2
+kAlertResultYes         = 3
+kAlertResultNo          = 4
+kAlertResultAll         = 5
+
+.struct AlertParams
+        text           .addr
+        buttons        .byte    ; AlertButtonOptions
+        options        .byte    ; AlertOptions flags
+.endstruct
+
 
 ;;; NOTE: See the Rename code in DeskTop for a use case for having
 ;;; TryAgain and OK differ. In that example, the error code determines
@@ -176,12 +186,14 @@ BELLPROC   := $300
 
 ;;; Button options
 ;;; $C0 (%11xxxxxx) = Cancel + Ok
+;;; $81 (%10xxxxx1) = Cancel + Yes + No + All
 ;;; $80 (%10xx0000) = Cancel + Try Again
 ;;; $00 (%0xxxxxxx) = Ok
 ;;; Note: Wrapper APIs that take A=id, X=options use X=0 to mean
 ;;; "use default options for that id", otherwise X & %00000001.
 .enum AlertButtonOptions
         OkCancel       = $C0
+        YesNoAllCancel = $81
         TryAgainCancel = $80
         Ok             = $00
 .endenum

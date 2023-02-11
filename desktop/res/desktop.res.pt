@@ -38,12 +38,6 @@
 .define res_string_menu_item_get_size "Obtenha o tamanho"
 .define res_string_menu_item_rename_icon "Renomear..."
 .define res_string_menu_item_duplicate "Dobro..."
-.define res_string_prompt_button_yes " Sim"
-.define res_char_button_yes_shortcut 'S'
-.define res_string_prompt_button_no " N[o"
-.define res_char_button_no_shortcut 'N'
-.define res_string_prompt_button_all " Tudo"
-.define res_char_button_all_shortcut 'T'
 .define res_string_about_text_line5 "Autores: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais e Luc Barthelet"
 .define res_string_about_text_line7 "Com agradecimentos a: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
@@ -60,7 +54,8 @@
 .define res_string_errmsg_too_large_to_copy "Arquivo muito grande para gravar."
 .define res_string_errmsg_too_large_to_move "Arquivo muito grande para mover."
 .define res_string_delete_dialog_title "Excluir..."
-.define res_string_prompt_delete_ok "Pressione OK para excluir: "
+.define res_string_prompt_delete_confirm_prefix "Tem certeza de que deseja excluir permanentemente "
+.define res_string_prompt_delete_confirm_suffix "?"
 .define res_string_label_delete_count "Excluindo: "
 .define res_string_label_file "Arquivo:"
 .define res_string_delete_remaining "Arquivos ausentes para excluir: "

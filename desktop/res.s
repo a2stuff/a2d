@@ -146,7 +146,14 @@ text_input_buf:
         .res    kPathBufferSize, 0
 
 ;;; ============================================================
-;;; Dialog used for prompts (yes/no/all) and operation progress
+;;; Dialog used for:
+;;; * File > New Folder...
+;;; * File > Get Info
+;;; * File > Rename...
+;;; * File > Duplicate...
+;;; * Special > Format a Disk...
+;;; * Special > Erase a Disk...
+;;; * Special > Get Size
 
 .params winfo_prompt_dialog
         kWindowId = aux::kPromptWindowId
@@ -203,7 +210,6 @@ nextwinfo:      .addr   0
 
 ;;; $00 = ok/cancel
 ;;; $80 = ok (only)
-;;; $40 = yes/no/all/cancel
 prompt_button_flags:
         .byte   0
 has_input_field_flag:
@@ -212,6 +218,55 @@ has_input_field_flag:
 format_erase_overlay_flag:      ; set when prompt is showing device picker
         .byte   0
 
+;;; ============================================================
+
+.params winfo_progress_dialog
+        kWindowId = $11
+
+        kWidth = aux::kProgressDialogWidth
+        kHeight = aux::kProgressDialogHeight
+        kLeft = (kScreenWidth - kWidth) / 2
+        kTop  = (kScreenHeight - kHeight) / 6
+
+window_id:      .byte   kWindowId
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontheight:  .word   50
+maxcontwidth:   .word   500
+maxcontheight:  .word   140
+port:
+        DEFINE_POINT viewloc, kLeft, kTop
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+        REF_WINFO_MEMBERS
+.endparams
+
+        kProgressDialogPathLeft = 60
+        kProgressDialogPathWidth = winfo_progress_dialog::kWidth - kProgressDialogPathLeft - kProgressDialogLabelDefaultX
+
+        kProgressDialogLabelDefaultX    = 25
+        kProgressDialogLabelBaseY       = 17
+        DEFINE_POINT progress_dialog_label_pos, kProgressDialogLabelDefaultX, 0
 
 ;;; ============================================================
 ;;; "About Apple II DeskTop" Dialog
@@ -530,6 +585,11 @@ icon_param:  .byte   0
         ;; * used for window frame zoom animation
         ASSERT_ADDRESS icon_param+1
         DEFINE_RECT tmp_rect, 0, 0, 0, 0
+
+;;; ============================================================
+;;; Alerts
+
+alert_params:   .tag    AlertParams
 
 ;;; ============================================================
 

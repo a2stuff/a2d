@@ -38,12 +38,6 @@
 .define res_string_menu_item_get_size "Obtener Tama|o"
 .define res_string_menu_item_rename_icon "Renombrar..."
 .define res_string_menu_item_duplicate "Duplicar..."
-.define res_string_prompt_button_yes " Si"
-.define res_char_button_yes_shortcut 'S'
-.define res_string_prompt_button_no " No"
-.define res_char_button_no_shortcut 'N'
-.define res_string_prompt_button_all " Todo"
-.define res_char_button_all_shortcut 'T'
 .define res_string_about_text_line5 "Autores: St\x11phane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais y Luc Barthelet"
 .define res_string_about_text_line7 "Con agradecimiento a: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
@@ -60,7 +54,8 @@
 .define res_string_errmsg_too_large_to_copy "Archivo demasiado grande para ser escrito."
 .define res_string_errmsg_too_large_to_move "Archivo demasiado grande para mover."
 .define res_string_delete_dialog_title "Borrar..."
-.define res_string_prompt_delete_ok "Presione OK para borrar: "
+.define res_string_prompt_delete_confirm_prefix "]Est\x10s seguro de que quieres eliminar permanentemente "
+.define res_string_prompt_delete_confirm_suffix "?"
 .define res_string_label_delete_count "Borrado: "
 .define res_string_label_file "Archivo:"
 .define res_string_delete_remaining "Archivos que faltan por borrar: "

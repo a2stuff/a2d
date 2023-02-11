@@ -164,6 +164,17 @@ op:     lda     SELF_MODIFIED
         jmp     BankInMain
 .endproc ; ShowAlertOption
 
+;;; A,X = string
+;;; Y = AlertButtonOptions
+.proc ShowAlertParams
+        jsr     BankInAux
+        stax    alert_params+AlertParams::text
+        sty     alert_params+AlertParams::buttons
+        copy    #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
+        param_call aux::Alert, alert_params
+        jmp     BankInMain
+.endproc ; ShowAlertParams
+
 ;;; ============================================================
 ;;; Bell
 ;;; Assert: Aux is banked in
@@ -275,6 +286,35 @@ op:     lda     SELF_MODIFIED
 
         rts
 .endproc ; PopPointers
+
+;;; ============================================================
+
+;;; From main, concatenate aux-visible string to `text_input_buf`
+;;; Assert: Main is banked in
+.proc AppendToTextInputBuf
+        jsr     BankInAux
+        jsr     PushPointers
+        ptr := $06
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        iny
+        ldx     text_input_buf
+        inx
+:       lda     (ptr),y
+        sta     text_input_buf,x
+        len := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        beq     :+
+        inx
+        iny
+        bne     :-              ; always
+:       stx     text_input_buf
+
+        jsr     PopPointers
+        jmp     BankInMain
+.endproc
 
 ;;; ============================================================
 

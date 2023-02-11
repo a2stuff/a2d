@@ -9950,9 +9950,6 @@ done:   rts
 .enum PromptResult
         ok      = 0
         cancel  = 1
-        yes     = 2
-        no      = 3
-        all     = 4
 .endenum
 
 ;;; ============================================================
@@ -9960,10 +9957,8 @@ done:   rts
 .enum DeleteDialogLifecycle
         open            = 0
         count           = 1
-        confirm         = 2     ; confirmation before deleting
-        show            = 3
-        locked          = 4     ; confirm deletion of locked file
-        close           = 5
+        show            = 2
+        close           = 3
 .endenum
 
 ;;; --------------------------------------------------
@@ -11581,9 +11576,7 @@ callbacks_for_copy:
         open            = 0
         count           = 1
         show            = 2
-        exists          = 3     ; show "file exists" prompt
-        too_large       = 4     ; show "too large" prompt
-        close           = 5
+        close           = 3
 .endenum
 
 ;;; Also used for Download
@@ -11630,7 +11623,6 @@ a_dst:  .addr   dst_path_buf
         count           = 1
         show            = 2
         close           = 3
-        too_large       = 4
 .endenum
 
 .proc DoDownloadDialogPhase
@@ -11664,14 +11656,10 @@ a_dst:  .addr   dst_path_buf
 .endproc ; DownloadDialogCompleteCallback
 
 .proc DownloadDialogTooLargeCallback
-        copy    #DownloadDialogLifecycle::too_large, copy_dialog_params::phase
-        param_call InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
-        ;; TODO: The dialog (in `DownloadDialogProc`) only has an OK button,
-        ;; so the result is never yes.
-        cmp     #PromptResult::yes
-        bne     :+
-        rts
-:       jmp     CloseFilesCancelDialog
+        ldax    #aux::str_ramcard_full
+        ldy     #AlertButtonOptions::Ok
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        jmp     CloseFilesCancelDialog
 .endproc ; DownloadDialogTooLargeCallback
 
 ;;; ============================================================
@@ -11776,16 +11764,16 @@ retry:  MLI_CALL CREATE, create_params2
         bne     err
         bit     all_flag
         bmi     yes
-        copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        jsr     RunCopyDialogProc
-        pha
-        copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
-        pla
-        cmp     #PromptResult::yes
+
+        ldax    #aux::str_exists_prompt
+        ldy     #AlertButtonOptions::YesNoAllCancel
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+
+        cmp     #kAlertResultYes
         beq     yes
-        cmp     #PromptResult::no
+        cmp     #kAlertResultNo
         beq     failure
-        cmp     #PromptResult::all
+        cmp     #kAlertResultAll
         bne     cancel
         copy    #$80, all_flag
 yes:    jsr     ApplyFileInfoAndSize
@@ -11940,11 +11928,18 @@ blocks_free:
         jsr     CheckSpace
         bcc     done
 
-        copy    #CopyDialogLifecycle::too_large, copy_dialog_params::phase
-        jsr     RunCopyDialogProc
-        jne     CloseFilesCancelDialog
+        bit     move_flag
+    IF_NS
+        ldax    #aux::str_large_move_prompt
+    ELSE
+        ldax    #aux::str_large_copy_prompt
+    END_IF
+        ldy     #AlertButtonOptions::OkCancel
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
 
-        copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
+        cmp     #kAlertResultCancel
+        jeq     CloseFilesCancelDialog
+
         sec
 done:   rts
 
@@ -12175,16 +12170,16 @@ retry:  MLI_CALL CREATE, create_params3
         bne     err
         bit     all_flag
         bmi     yes
-        copy    #CopyDialogLifecycle::exists, copy_dialog_params::phase
-        param_call InvokeDialogProc, kIndexCopyDialog, copy_dialog_params
-        pha
-        copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
-        pla
-        cmp     #PromptResult::yes
+
+        ldax    #aux::str_exists_prompt
+        ldy     #AlertButtonOptions::YesNoAllCancel
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+
+        cmp     #kAlertResultYes
         beq     yes
-        cmp     #PromptResult::no
+        cmp     #kAlertResultNo
         beq     failure
-        cmp     #PromptResult::all
+        cmp     #kAlertResultAll
         bne     cancel
         copy    #$80, all_flag
 yes:    jsr     ApplyFileInfoAndSize
@@ -12242,8 +12237,19 @@ a_path: .addr   src_path_buf
 .endproc ; DeleteDialogEnumerationCallback
 
 .proc DeleteDialogConfirmCallback
-        copy    #DeleteDialogLifecycle::confirm, delete_dialog_params::phase
-        jsr     RunDeleteDialogProc
+        ;; `text_input_buf` is used rather than `text_buffer2` due to size
+        jsr ComposeFileCountString
+        copy    #0, text_input_buf
+        param_call AppendToTextInputBuf, aux::str_delete_confirm_prefix
+        param_call AppendToTextInputBuf, str_file_count
+        param_call_indirect AppendToTextInputBuf, ptr_str_files_suffix
+        param_call AppendToTextInputBuf, aux::str_delete_confirm_suffix
+
+        ldax    #text_input_buf
+        ldy     #AlertButtonOptions::OkCancel
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+
+        cmp     #kAlertResultOK
         beq     :+
         lda     #kOperationCanceled
         jmp     CloseFilesCancelDialogWithResult
@@ -12330,16 +12336,16 @@ retry:  MLI_CALL DESTROY, destroy_params
         bne     error
         bit     all_flag
         bmi     do_it
-        copy    #DeleteDialogLifecycle::locked, delete_dialog_params::phase
-        jsr     RunDeleteDialogProc
-        pha
-        copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
-        pla
-        cmp     #PromptResult::no
+
+        ldax    #aux::str_delete_locked_file
+        ldy     #AlertButtonOptions::YesNoAllCancel
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+
+        cmp     #kAlertResultNo
         beq     done
-        cmp     #PromptResult::yes
+        cmp     #kAlertResultYes
         beq     do_it
-        cmp     #PromptResult::all
+        cmp     #kAlertResultAll
         bne     :+
         copy    #$80, all_flag
         bne     do_it           ; always
@@ -12406,16 +12412,16 @@ loop:   MLI_CALL DESTROY, destroy_params
         bne     err
         bit     all_flag
         bmi     unlock
-        copy    #DeleteDialogLifecycle::locked, delete_dialog_params::phase
-        param_call InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
-        pha
-        copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
-        pla
-        cmp     #PromptResult::no
+
+        ldax    #aux::str_delete_locked_file
+        ldy     #AlertButtonOptions::YesNoAllCancel
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+
+        cmp     #kAlertResultNo
         beq     next_file
-        cmp     #PromptResult::yes
+        cmp     #kAlertResultYes
         beq     unlock
-        cmp     #PromptResult::all
+        cmp     #kAlertResultAll
         bne     :+
         copy    #$80, all_flag
         bne     unlock           ; always
@@ -12468,7 +12474,7 @@ callbacks_for_lock:
 .enum LockDialogLifecycle
         open            = 0 ; opening window, initial label
         count           = 1 ; show operation details (e.g. file count)
-        operation       = 2 ; performing operation
+        show            = 2 ; performing operation
         close           = 3 ; destroy window
 .endenum
 
@@ -12540,7 +12546,7 @@ a_path: .addr   src_path_buf
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
 .proc LockProcessSelectedFile
-        copy    #LockDialogLifecycle::operation, lock_unlock_dialog_params::phase
+        copy    #LockDialogLifecycle::show, lock_unlock_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
         jsr     AppendSrcPathLastSegmentToDstPath
 
@@ -13344,8 +13350,6 @@ content:
 :       copy    winfo_prompt_dialog, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        bit     prompt_button_flags
-        jvs     check_button_yes
 
         MGTK_CALL MGTK::InRect, aux::ok_button_rec::rect
         cmp     #MGTK::inrect_inside
@@ -13356,33 +13360,6 @@ check_button_ok:
         BTK_CALL BTK::Track, aux::ok_button_params
         bmi     :+
         lda     #PromptResult::ok
-:       rts
-
-check_button_yes:
-        MGTK_CALL MGTK::InRect, aux::yes_button_rec::rect
-        cmp     #MGTK::inrect_inside
-        bne     check_button_no
-        BTK_CALL BTK::Track, aux::yes_button_params
-        bmi     :+
-        lda     #PromptResult::yes
-:       rts
-
-check_button_no:
-        MGTK_CALL MGTK::InRect, aux::no_button_rec::rect
-        cmp     #MGTK::inrect_inside
-        bne     check_button_all
-        BTK_CALL BTK::Track, aux::no_button_params
-        bmi     :+
-        lda     #PromptResult::no
-:       rts
-
-check_button_all:
-        MGTK_CALL MGTK::InRect, aux::all_button_rec::rect
-        cmp     #MGTK::inrect_inside
-        bne     maybe_check_button_cancel
-        BTK_CALL BTK::Track, aux::all_button_params
-        bmi     :+
-        lda     #PromptResult::all
 :       rts
 
 maybe_check_button_cancel:
@@ -13444,34 +13421,13 @@ check_button_cancel:
       END_IF
 
         cmp     #CHAR_RETURN
-      IF_EQ
-        bit     prompt_button_flags
-        jvc     HandleKeyOk
-      END_IF
+        jeq     HandleKeyOk
 
         cmp     #CHAR_ESCAPE
       IF_EQ
         bit     prompt_button_flags
         jpl     HandleKeyCancel
         jmp     HandleKeyOk
-      END_IF
-
-        bit     prompt_button_flags
-      IF_VS
-        cmp     #kShortcutYes
-        beq     do_yes
-        cmp     #TO_LOWER(kShortcutYes)
-        beq     do_yes
-        cmp     #kShortcutNo
-        beq     do_no
-        cmp     #TO_LOWER(kShortcutNo)
-        beq     do_no
-        cmp     #kShortcutAll
-        beq     do_all
-        cmp     #TO_LOWER(kShortcutAll)
-        beq     do_all
-        cmp     #CHAR_RETURN
-        beq     do_yes
       END_IF
 
         bit     has_input_field_flag
@@ -13488,15 +13444,6 @@ ignore:
         return  #$FF
 
         ;; --------------------------------------------------
-
-do_yes: BTK_CALL BTK::Flash, aux::yes_button_params
-        return  #PromptResult::yes
-
-do_no:  BTK_CALL BTK::Flash, aux::no_button_params
-        return  #PromptResult::no
-
-do_all: BTK_CALL BTK::Flash, aux::all_button_params
-        return  #PromptResult::all
 
 .proc HandleKeyOk
         BTK_CALL BTK::Flash, aux::ok_button_params
@@ -13612,22 +13559,15 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::phase - copy_dialog_params
-        lda     (ptr),y
+        lda     (ptr),y         ; `CopyDialogLifecycle`
 
         ;; --------------------------------------------------
         cmp     #CopyDialogLifecycle::open
     IF_EQ
         copy    #0, has_input_field_flag
-        jsr     OpenDialogWindow
-
-        bit     move_flag
-      IF_NC
-        param_call DrawDialogTitle, aux::str_copy_title
-      ELSE
-        param_call DrawDialogTitle, aux::str_move_title
-      END_IF
-        param_call DrawDialogLabel, 2, aux::str_copy_from
-        param_jump DrawDialogLabel, 3, aux::str_copy_to
+        jsr     OpenProgressDialog
+        param_call DrawProgressDialogLabel, 1, aux::str_copy_from
+        param_jump DrawProgressDialogLabel, 2, aux::str_copy_to
     END_IF
 
         ;; --------------------------------------------------
@@ -13635,12 +13575,12 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
     IF_EQ
         ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     SetPortForDialogWindow
+        jsr     SetPortForProgressDialog
         bit     move_flag
       IF_NC
-        param_call DrawDialogLabel, 1, aux::str_copy_copying
+        param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
       ELSE
-        param_call DrawDialogLabel, 1, aux::str_move_moving
+        param_call DrawProgressDialogLabel, 0, aux::str_move_moving
       END_IF
         jmp     DrawFileCountWithSuffix
     END_IF
@@ -13650,68 +13590,29 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
     IF_EQ
         ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     SetPortForDialogWindow
-        jsr     ClearTargetFileRect
-        jsr     ClearDestFileRect
+        jsr     SetPortForProgressDialog
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_src - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyPtr1ToBuf0
-        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
+        jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_dst - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyPtr1ToBuf0
-        MGTK_CALL MGTK::MoveTo, aux::current_dest_file_pos
+        jsr     ClearDestFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
-        param_call DrawDialogLabel, 4, aux::str_files_remaining
+        param_call DrawProgressDialogLabel, 3, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
         ;; --------------------------------------------------
-        cmp     #CopyDialogLifecycle::exists
-    IF_EQ
-        jsr     SetPortForDialogWindow
-        param_call DrawDialogLabel, 6, aux::str_exists_prompt
-        jsr     AddYesNoAllCancelButtons
-        jsr     Bell
-:       jsr     PromptInputLoop
-        bmi     :-
-        pha
-        jsr     EraseYesNoAllCancelButtons
-        jsr     ErasePrompt
-        pla
-        rts
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #CopyDialogLifecycle::too_large
-    IF_EQ
-        jsr     SetPortForDialogWindow
-        bit     move_flag
-      IF_NS
-        param_call DrawDialogLabel, 6, aux::str_large_move_prompt
-      ELSE
-        param_call DrawDialogLabel, 6, aux::str_large_copy_prompt
-      END_IF
-        jsr     AddOkCancelButtons
-        jsr     Bell
-:       jsr     PromptInputLoop
-        bmi     :-
-        pha
-        jsr     EraseOkCancelButtons
-        jsr     ErasePrompt
-        pla
-        rts
-    END_IF
-
-        ;; --------------------------------------------------
         ;; CopyDialogLifecycle::close
-        jsr     ClosePromptDialog
+        jsr     CloseProgressDialog
         jmp     SetCursorPointer ; when closing dialog
 .endproc ; CopyDialogProc
 
@@ -13723,17 +13624,15 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::phase - copy_dialog_params
-        lda     (ptr),y
+        lda     (ptr),y         ; `DownloadDialogLifecycle`
 
         ;; --------------------------------------------------
         cmp     #DownloadDialogLifecycle::open
     IF_EQ
         copy    #0, has_input_field_flag
-        jsr     OpenDialogWindow
-        param_call DrawDialogTitle, aux::str_download
-        param_call DrawDialogLabel, 2, aux::str_copy_from
-        param_call DrawDialogLabel, 3, aux::str_copy_to
-        rts
+        jsr     OpenProgressDialog
+        param_call DrawProgressDialogLabel, 1, aux::str_copy_from
+        param_jump DrawProgressDialogLabel, 2, aux::str_copy_to
     END_IF
 
         ;; --------------------------------------------------
@@ -13741,9 +13640,9 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
     IF_EQ
         ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     SetPortForDialogWindow
+        jsr     SetPortForProgressDialog
 
-        param_call DrawDialogLabel, 1, aux::str_copy_copying
+        param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
         jmp     DrawFileCountWithSuffix
     END_IF
 
@@ -13752,39 +13651,22 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
     IF_EQ
         ldy     #copy_dialog_params::count - copy_dialog_params
         copy16in (ptr),y, file_count
-        jsr     SetPortForDialogWindow
-        jsr     ClearTargetFileRect
+        jsr     SetPortForProgressDialog
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #copy_dialog_params::a_src - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyPtr1ToBuf0
-        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
+        jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
-        param_call DrawDialogLabel, 4, aux::str_files_remaining
+        param_call DrawProgressDialogLabel, 4, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
         ;; --------------------------------------------------
-        cmp     #DownloadDialogLifecycle::too_large
-    IF_EQ
-        jsr     SetPortForDialogWindow
-        param_call DrawDialogLabel, 6, aux::str_ramcard_full
-        jsr     AddOkButton
-        jsr     Bell
-:       jsr     PromptInputLoop
-        bmi     :-
-        pha
-        jsr     EraseOkButton
-        jsr     ErasePrompt
-        pla
-        rts
-    END_IF
-
-        ;; --------------------------------------------------
         ;; DownloadDialogLifecycle::close
-        jsr     ClosePromptDialog
+        jsr     CloseProgressDialog
         jmp     SetCursorPointer ; when closing dialog
 .endproc ; DownloadDialogProc
 
@@ -13860,14 +13742,14 @@ GetSizeDialogProc::do_count := *
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #delete_dialog_params::phase - delete_dialog_params
-        lda     (ptr),y         ; phase
+        lda     (ptr),y         ; `DeleteDialogLifecycle`
 
         ;; --------------------------------------------------
         cmp     #DeleteDialogLifecycle::open
     IF_EQ
         copy    #0, has_input_field_flag
-        jsr     OpenDialogWindow
-        param_jump DrawDialogTitle, aux::str_delete_title
+        jsr     OpenProgressDialog
+        param_jump DrawProgressDialogLabel, 1, aux::str_file_colon
     END_IF
 
         ;; --------------------------------------------------
@@ -13875,9 +13757,8 @@ GetSizeDialogProc::do_count := *
     IF_EQ
         ldy     #delete_dialog_params::count - delete_dialog_params
         copy16in (ptr),y, file_count
-        jsr     SetPortForDialogWindow
-
-        param_call DrawDialogLabel, 4, aux::str_delete_ok
+        jsr     SetPortForProgressDialog
+        param_call DrawProgressDialogLabel, 0, aux::str_delete_count
         jmp     DrawFileCountWithSuffix
     END_IF
 
@@ -13886,57 +13767,22 @@ GetSizeDialogProc::do_count := *
     IF_EQ
         ldy     #delete_dialog_params::count - delete_dialog_params
         copy16in (ptr),y, file_count
-        jsr     SetPortForDialogWindow
-        jsr     ClearTargetFileRect
+        jsr     SetPortForProgressDialog
+
         jsr     CopyDialogParamAddrToPtr
         ldy     #delete_dialog_params::a_path - delete_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyPtr1ToBuf0
-        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
+        jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
-        param_call DrawDialogLabel, 4, aux::str_files_remaining
+        param_call DrawProgressDialogLabel, 3, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
         ;; --------------------------------------------------
-        cmp     #DeleteDialogLifecycle::confirm
-    IF_EQ
-        jsr     SetPortForDialogWindow
-        jsr     AddOkCancelButtons
-        jsr     Bell
-:       jsr     PromptInputLoop
-        bmi     :-
-        bne     :+
-        jsr     EraseDialogLabels
-        jsr     EraseOkCancelButtons
-
-        param_call DrawDialogLabel, 1, aux::str_delete_count
-        jsr     DrawFileCountWithSuffix
-        param_call DrawDialogLabel, 2, aux::str_file_colon
-
-        lda     #$00
-:       rts
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #DeleteDialogLifecycle::locked
-    IF_EQ
-        jsr     SetPortForDialogWindow
-        param_call DrawDialogLabel, 6, aux::str_delete_locked_file
-        jsr     AddYesNoAllCancelButtons
-:       jsr     PromptInputLoop
-        bmi     :-
-        pha
-        jsr     EraseYesNoAllCancelButtons
-        jsr     ErasePrompt
-        pla
-        rts
-    END_IF
-
-        ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::close
-        jsr     ClosePromptDialog
+        jsr     CloseProgressDialog
         jmp     SetCursorPointer ; when closing dialog
 .endproc ; DeleteDialogProc
 
@@ -14114,20 +13960,14 @@ do_close:
 
         jsr     CopyDialogParamAddrToPtr
         ldy     #lock_unlock_dialog_params::phase - lock_unlock_dialog_params
-        lda     (ptr),y
+        lda     (ptr),y         ; `LockDialogLifecycle`
 
         ;; --------------------------------------------------
         cmp     #LockDialogLifecycle::open
     IF_EQ
         copy    #0, has_input_field_flag
-        jsr     OpenDialogWindow
-        bit     unlock_flag
-      IF_NS
-        param_call DrawDialogTitle, aux::label_unlock
-      ELSE
-        param_call DrawDialogTitle, aux::label_lock
-      END_IF
-        param_jump DrawDialogLabel, 2, aux::str_file_colon
+        jsr     OpenProgressDialog
+        param_jump DrawProgressDialogLabel, 1, aux::str_file_colon
     END_IF
 
         ;; --------------------------------------------------
@@ -14135,38 +13975,37 @@ do_close:
     IF_EQ
         ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
-        jsr     SetPortForDialogWindow
+        jsr     SetPortForProgressDialog
         bit     unlock_flag
       IF_NS
-        param_call DrawDialogLabel, 1, aux::str_unlock_count
+        param_call DrawProgressDialogLabel, 0, aux::str_unlock_count
       ELSE
-        param_call DrawDialogLabel, 1, aux::str_lock_count
+        param_call DrawProgressDialogLabel, 0, aux::str_lock_count
       END_IF
         jmp     DrawFileCountWithSuffix
     END_IF
 
         ;; --------------------------------------------------
-        cmp     #LockDialogLifecycle::operation
+        cmp     #LockDialogLifecycle::show
     IF_EQ
         ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
         copy16in (ptr),y, file_count
-        jsr     SetPortForDialogWindow
-        jsr     ClearTargetFileRect
+        jsr     SetPortForProgressDialog
         jsr     CopyDialogParamAddrToPtr
         ldy     #lock_unlock_dialog_params::a_path - lock_unlock_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyPtr1ToBuf0
-        MGTK_CALL MGTK::MoveTo, aux::current_target_file_pos
+        jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
-        param_call DrawDialogLabel, 4, aux::str_files_remaining
+        param_call DrawProgressDialogLabel, 3, aux::str_files_remaining
         jmp     DrawFileCountWithTrailingSpaces
     END_IF
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::close
 
-        jsr     ClosePromptDialog
+        jsr     CloseProgressDialog
         jmp     SetCursorPointer ; when closing dialog
 .endproc ; LockDialogProc
 UnlockDialogProc := LockDialogProc
@@ -14426,12 +14265,7 @@ params:  .res    3
 .proc OpenPromptWindow
         sta     prompt_button_flags
         jsr     OpenDialogWindow
-        bit     prompt_button_flags
-        bvc     :+
-        jsr     AddYesNoAllCancelButtons
-        jmp     no_ok
-
-:       jsr     DrawOkButton
+        jsr     DrawOkButton
 no_ok:  bit     prompt_button_flags
         bmi     done
         jsr     DrawCancelButton
@@ -14457,6 +14291,33 @@ done:   rts
         lda     #winfo_prompt_dialog::kWindowId
         jmp     SafeSetPortFromWindowId
 .endproc ; SetPortForDialogWindow
+
+;;; ============================================================
+
+.proc OpenProgressDialog
+        MGTK_CALL MGTK::OpenWindow, winfo_progress_dialog
+        jsr     SetPortForProgressDialog
+        jsr     SetPenModeNotCopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, aux::progress_dialog_frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        rts
+.endproc ; OpenProgressDialog
+
+;;; ============================================================
+
+.proc SetPortForProgressDialog
+        lda     #winfo_progress_dialog::kWindowId
+        jmp     SafeSetPortFromWindowId
+.endproc ; SetPortForProgressDialog
+
+;;; ============================================================
+
+.proc CloseProgressDialog
+        MGTK_CALL MGTK::CloseWindow, winfo_progress_dialog::window_id
+        jmp     ClearUpdates ; following CloseWindow
+.endproc ; ClosePromptDialog
 
 ;;; ============================================================
 
@@ -14534,13 +14395,37 @@ calc_y:
 .endproc ; DrawDialogLabel
 
 ;;; ============================================================
+;;; Draw Progress Dialog Label
+;;; A,X = string
+;;; Y = row number (0, 1, 2, ... )
+
+.proc DrawProgressDialogLabel
+        pha
+        txa
+        pha
+
+        ;; y = base + aux::kDialogLabelHeight * line
+        tya                     ; low byte
+        ldx     #0              ; high byte
+        ldy     #aux::kDialogLabelHeight
+        jsr     Multiply_16_8_16
+        addax   #kProgressDialogLabelBaseY, progress_dialog_label_pos::ycoord
+        MGTK_CALL MGTK::MoveTo, progress_dialog_label_pos
+
+        pla
+        tax
+        pla
+        jmp     DrawString
+.endproc ; DrawProgressDialogLabel
+
+;;; ============================================================
 
 .proc DrawDialogPathBuf0
         ldax    #path_buf0
         FALL_THROUGH_TO DrawDialogPath
 .endproc ; DrawDialogPathBuf0
 
-;;; Draw a path (long string) in the prompt dialog by without intruding
+;;; Draw a path (long string) in the progress dialog by without intruding
 ;;; into the border. If the string is too long, it is shrunk from the
 ;;; center with "..." inserted.
 ;;; Inputs: A,X = string address
@@ -14570,7 +14455,7 @@ measure:
         sta     len
         add16   ptr, #1, txt
         MGTK_CALL MGTK::TextWidth, txt
-        cmp16   result, #aux::kPromptDialogPathWidth
+        cmp16   result, #kProgressDialogPathWidth
         rts
 
 ellipsify:
@@ -14619,25 +14504,6 @@ ellipsify:
         BTK_CALL BTK::Draw, aux::cancel_button_params
         rts
 .endproc ; DrawCancelButton
-
-.proc AddYesNoAllCancelButtons
-        BTK_CALL BTK::Draw, aux::yes_button_params
-        BTK_CALL BTK::Draw, aux::no_button_params
-        BTK_CALL BTK::Draw, aux::all_button_params
-
-        jsr     DrawCancelButton
-        copy    #$40, prompt_button_flags
-        rts
-.endproc ; AddYesNoAllCancelButtons
-
-.proc EraseYesNoAllCancelButtons
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::yes_button_rec::rect
-        MGTK_CALL MGTK::PaintRect, aux::no_button_rec::rect
-        MGTK_CALL MGTK::PaintRect, aux::all_button_rec::rect
-        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rec::rect
-        rts
-.endproc ; EraseYesNoAllCancelButtons
 
 .proc AddOkCancelButtons
         jsr     DrawOkButton
@@ -14787,17 +14653,19 @@ ptr_str_files_suffix:
 
 ;;; ============================================================
 
-.proc ClearTargetFileRect
+.proc ClearTargetFileRectAndSetPos
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::current_target_file_rect
+        MGTK_CALL MGTK::MoveTo,  aux::current_target_file_pos
         rts
-.endproc ; ClearTargetFileRect
+.endproc ; ClearTargetFileRectAndSetPos
 
-.proc ClearDestFileRect
+.proc ClearDestFileRectAndSetPos
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::current_dest_file_rect
+        MGTK_CALL MGTK::MoveTo,  aux::current_dest_file_pos
         rts
-.endproc ; ClearDestFileRect
+.endproc ; ClearDestFileRectAndSetPos
 
 ;;; ============================================================
 

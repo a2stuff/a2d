@@ -215,12 +215,6 @@ special_menu:
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
         DEFINE_BUTTON cancel_button_rec, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, kPromptDialogHeight-19
         DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
-        DEFINE_BUTTON yes_button_rec, kPromptWindowId, res_string_prompt_button_yes,, 200, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON_PARAMS yes_button_params, yes_button_rec
-        DEFINE_BUTTON no_button_rec, kPromptWindowId, res_string_prompt_button_no,,  260, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON_PARAMS no_button_params, no_button_rec
-        DEFINE_BUTTON all_button_rec, kPromptWindowId, res_string_prompt_button_all,, 320, kPromptDialogHeight-19,40,kButtonHeight
-        DEFINE_BUTTON_PARAMS all_button_params, all_button_rec
 
 ;;; ============================================================
 
@@ -243,14 +237,26 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
         kPromptDialogInsetBottom = 20
         DEFINE_RECT clear_dialog_labels_rect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom
 
-        kPromptDialogPathLeft = 75
-        kPromptDialogPathWidth = kPromptDialogWidth - kPromptDialogPathLeft - kDialogLabelDefaultX
-
         DEFINE_RECT prompt_rect, 40, kDialogLabelRow5+1, 360, kDialogLabelRow6
-        DEFINE_POINT current_target_file_pos, kPromptDialogPathLeft, kDialogLabelRow2
-        DEFINE_POINT current_dest_file_pos, kPromptDialogPathLeft, kDialogLabelRow3
-        DEFINE_RECT current_target_file_rect, kPromptDialogPathLeft, kDialogLabelRow1+1, kPromptDialogWidth - kPromptDialogInsetRight, kDialogLabelRow2
-        DEFINE_RECT current_dest_file_rect, kPromptDialogPathLeft, kDialogLabelRow2+1, kPromptDialogWidth - kPromptDialogInsetRight, kDialogLabelRow3
+
+;;; ============================================================
+;;; Progress dialog resources
+
+        kProgressDialogWidth = 400
+        kProgressDialogHeight = 56
+
+        kProgressDialogLabelRow0        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 0
+        kProgressDialogLabelRow1        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 1
+        kProgressDialogLabelRow2        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 2
+        kProgressDialogLabelRow3        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 3
+
+        DEFINE_RECT_FRAME progress_dialog_frame_rect, kProgressDialogWidth, kProgressDialogHeight
+
+        DEFINE_POINT current_target_file_pos, kProgressDialogPathLeft, kProgressDialogLabelRow1
+        DEFINE_POINT current_dest_file_pos, kProgressDialogPathLeft, kProgressDialogLabelRow2
+        DEFINE_RECT current_target_file_rect, kProgressDialogPathLeft, kProgressDialogLabelRow0+1, kProgressDialogPathLeft + kProgressDialogPathWidth, kProgressDialogLabelRow1
+        DEFINE_RECT current_dest_file_rect, kProgressDialogPathLeft, kProgressDialogLabelRow1+1, kProgressDialogPathLeft + kProgressDialogPathWidth, kProgressDialogLabelRow2
+
 
 ;;; ============================================================
 ;;; "About" dialog resources
@@ -299,8 +305,10 @@ str_large_move_prompt:
         ;; "Delete" dialog strings
 str_delete_title:
         PASCAL_STRING res_string_delete_dialog_title ; dialog title
-str_delete_ok:
-        PASCAL_STRING res_string_prompt_delete_ok
+str_delete_confirm_prefix:
+        PASCAL_STRING res_string_prompt_delete_confirm_prefix
+str_delete_confirm_suffix:
+        PASCAL_STRING res_string_prompt_delete_confirm_suffix
 str_delete_count:
         PASCAL_STRING res_string_label_delete_count
 str_file_colon:
@@ -522,13 +530,6 @@ alert_options_table:
         .byte   AlertButtonOptions::Ok             ; kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
 
-.params alert_params
-text:           .addr   0
-buttons:        .byte   0       ; AlertButtonOptions
-options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
-
-.endparams
-
 start:
         ;; --------------------------------------------------
         ;; Process options, populate `alert_params`
@@ -545,7 +546,7 @@ start:
 :
 
         ;; Look up message
-        copylohi  message_table_low,y, message_table_high,y, alert_params::text
+        copylohi  message_table_low,y, message_table_high,y, alert_params+AlertParams::text
 
         ;; If options is 0, use table value; otherwise,
         ;; mask off low bit and it's the action (N and V bits)
@@ -559,10 +560,11 @@ start:
       IF_NE
         txa
         and     #$FE            ; ignore low bit, e.g. treat $01 as $00
-        sta     alert_params::buttons
+        sta     alert_params+AlertParams::buttons
       ELSE
-        copy    alert_options_table,y, alert_params::buttons
+        copy    alert_options_table,y, alert_params+AlertParams::buttons
       END_IF
+        copy    #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
 
         ldax    #alert_params
         FALL_THROUGH_TO Alert
@@ -578,6 +580,7 @@ start:
 
         AD_SAVEBG = 1
         AD_WRAP = 1
+        AD_YESNOALL = 1
         Bell := BellFromAux
         .include "../lib/alert_dialog.s"
         .include "../lib/drawstring.s"

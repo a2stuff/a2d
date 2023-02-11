@@ -38,12 +38,6 @@
 .define res_string_menu_item_get_size "F} st|rrelse"
 .define res_string_menu_item_rename_icon "Omd|b..."
 .define res_string_menu_item_duplicate "Duplikere..."
-.define res_string_prompt_button_yes " Ja"
-.define res_char_button_yes_shortcut 'J'
-.define res_string_prompt_button_no " Ingen"
-.define res_char_button_no_shortcut 'I'
-.define res_string_prompt_button_all " Alle"
-.define res_char_button_all_shortcut 'A'
 .define res_string_about_text_line5 "Forfattere: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais og Luc Barthelet"
 .define res_string_about_text_line7 "Med tak til: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
@@ -56,11 +50,12 @@
 .define res_string_move_dialog_title "Bev{ge sig..."
 .define res_string_move_label_status "Flytning: "
 .define res_string_move_status_files_remaining "Filer, der er tilbage at flytte: "
-.define res_string_prompt_overwrite "Den fil findes allerede. Vil du skrive over det?"
+.define res_string_prompt_overwrite "Den fil findes allerede. Vil du erstatte det?"
 .define res_string_errmsg_too_large_to_copy "Denne fil er for stor til at kopiere."
 .define res_string_errmsg_too_large_to_move "Denne fil er for stor til at flytte."
 .define res_string_delete_dialog_title "Slet..."
-.define res_string_prompt_delete_ok "Klik p} OK for at slette: "
+.define res_string_prompt_delete_confirm_prefix "Er du sikker p}, at du vil slette "
+.define res_string_prompt_delete_confirm_suffix " permanent?"
 .define res_string_label_delete_count "Sletter: "
 .define res_string_label_file "Fil:"
 .define res_string_delete_remaining "Filer tilbage at slette: "

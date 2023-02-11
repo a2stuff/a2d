@@ -38,12 +38,6 @@
 .define res_string_menu_item_get_size "Lire la taille"
 .define res_string_menu_item_rename_icon "Renommer..."
 .define res_string_menu_item_duplicate "Dupliquer..."
-.define res_string_prompt_button_yes " Oui"
-.define res_char_button_yes_shortcut 'O'
-.define res_string_prompt_button_no " Non"
-.define res_char_button_no_shortcut 'N'
-.define res_string_prompt_button_all " Tout"
-.define res_char_button_all_shortcut 'T'
 .define res_string_about_text_line5 "Auteurs : St{phane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais et Luc Barthelet"
 .define res_string_about_text_line7 "Remerciements @ : A. Gerard, J. Gerber, P. Pahl, J. Bernard"
@@ -60,7 +54,8 @@
 .define res_string_errmsg_too_large_to_copy "Fichier trop grand."
 .define res_string_errmsg_too_large_to_move "Fichier trop large."
 .define res_string_delete_dialog_title "Supprimer..."
-.define res_string_prompt_delete_ok "Cliquez sur OK pour supprimer : "
+.define res_string_prompt_delete_confirm_prefix "Voulez-vous vraiment supprimer d{finitivement "
+.define res_string_prompt_delete_confirm_suffix " ?"
 .define res_string_label_delete_count "Supprimer : "
 .define res_string_label_file "Fichier :"
 .define res_string_delete_remaining "Fichiers restant @ effacer : "

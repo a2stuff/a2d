@@ -3,6 +3,12 @@
 .define res_string_button_cancel_shortcut "Esc"
 .define res_string_button_try_again "Riprova"
 .define res_char_button_try_again_shortcut 'R'
+.define res_string_button_yes "Si"
+.define res_char_button_yes_shortcut 'S'
+.define res_string_button_no "No"
+.define res_char_button_no_shortcut 'N'
+.define res_string_button_all "Tutto"
+.define res_char_button_all_shortcut 'T'
 .define res_string_shortcut_apple_1 " (\x1F1)"
 .define res_string_shortcut_apple_2 " (\x1F2)"
 .define res_string_shortcut_apple_3 " (\x1F3)"
