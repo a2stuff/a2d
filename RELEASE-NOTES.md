@@ -45,6 +45,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Simplify New Folder dialog by not showing full path. ([#466](https://github.com/a2stuff/a2d/issues/466))
 * Filetype and support opening BINSCII files (.BSC and .BSQ).
 * Filetype and support for Integer BASIC (INT) files.
+* Improve progress and alert dialogs shown during copy/move, lock/unlock and delete operations.
 
 #### Disks & Files
 
