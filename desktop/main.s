@@ -9990,6 +9990,7 @@ DoCopyToRAM2:
 .endproc ; FinishOperation
 
 DoCopyToRAM:
+        copy    #0, move_flag
         copy    #$80, run_flag
         copy    #%11000000, operation_flags ; get size
         tsx
@@ -11618,15 +11619,8 @@ a_dst:  .addr   dst_path_buf
 ;;; ============================================================
 ;;; "Download" - shares heavily with Copy
 
-.enum DownloadDialogLifecycle
-        open            = 0
-        count           = 1
-        show            = 2
-        close           = 3
-.endenum
-
 .proc DoDownloadDialogPhase
-        copy    #DownloadDialogLifecycle::open, copy_dialog_params::phase
+        copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #DownloadDialogEnumerationCallback, operation_enumeration_callback
         copy16  #DownloadDialogCompleteCallback, operation_complete_callback
         param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
@@ -11651,7 +11645,7 @@ a_dst:  .addr   dst_path_buf
 .endproc ; PrepCallbacksForDownload
 
 .proc DownloadDialogCompleteCallback
-        copy    #DownloadDialogLifecycle::close, copy_dialog_params::phase
+        copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
         param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
 .endproc ; DownloadDialogCompleteCallback
 
@@ -13565,9 +13559,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         cmp     #CopyDialogLifecycle::open
     IF_EQ
         copy    #0, has_input_field_flag
-        jsr     OpenProgressDialog
-        param_call DrawProgressDialogLabel, 1, aux::str_copy_from
-        param_jump DrawProgressDialogLabel, 2, aux::str_copy_to
+        jmp     OpenProgressDialog
     END_IF
 
         ;; --------------------------------------------------
@@ -13596,6 +13588,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ldy     #copy_dialog_params::a_src - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyPtr1ToBuf0
+        param_call DrawProgressDialogLabel, 1, aux::str_copy_from
         jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
@@ -13603,6 +13596,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ldy     #copy_dialog_params::a_dst - copy_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyPtr1ToBuf0
+        param_call DrawProgressDialogLabel, 2, aux::str_copy_to
         jsr     ClearDestFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
@@ -13619,56 +13613,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
 ;;; ============================================================
 ;;; "DownLoad" dialog
 
-.proc DownloadDialogProc
-        ptr := $6
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #copy_dialog_params::phase - copy_dialog_params
-        lda     (ptr),y         ; `DownloadDialogLifecycle`
-
-        ;; --------------------------------------------------
-        cmp     #DownloadDialogLifecycle::open
-    IF_EQ
-        copy    #0, has_input_field_flag
-        jsr     OpenProgressDialog
-        param_call DrawProgressDialogLabel, 1, aux::str_copy_from
-        param_jump DrawProgressDialogLabel, 2, aux::str_copy_to
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #DownloadDialogLifecycle::count
-    IF_EQ
-        ldy     #copy_dialog_params::count - copy_dialog_params
-        copy16in (ptr),y, file_count
-        jsr     SetPortForProgressDialog
-
-        param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
-        jmp     DrawFileCountWithSuffix
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #DownloadDialogLifecycle::show
-    IF_EQ
-        ldy     #copy_dialog_params::count - copy_dialog_params
-        copy16in (ptr),y, file_count
-        jsr     SetPortForProgressDialog
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #copy_dialog_params::a_src - copy_dialog_params
-        jsr     DereferencePtrToAddr
-        jsr     CopyPtr1ToBuf0
-        jsr     ClearTargetFileRectAndSetPos
-        jsr     DrawDialogPathBuf0
-
-        param_call DrawProgressDialogLabel, 4, aux::str_files_remaining
-        jmp     DrawFileCountWithTrailingSpaces
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; DownloadDialogLifecycle::close
-        jsr     CloseProgressDialog
-        jmp     SetCursorPointer ; when closing dialog
-.endproc ; DownloadDialogProc
+DownloadDialogProc := CopyDialogProc
 
 ;;; ============================================================
 ;;; "Get Size" dialog
@@ -13748,8 +13693,7 @@ GetSizeDialogProc::do_count := *
         cmp     #DeleteDialogLifecycle::open
     IF_EQ
         copy    #0, has_input_field_flag
-        jsr     OpenProgressDialog
-        param_jump DrawProgressDialogLabel, 1, aux::str_file_colon
+        jmp     OpenProgressDialog
     END_IF
 
         ;; --------------------------------------------------
@@ -13773,6 +13717,7 @@ GetSizeDialogProc::do_count := *
         ldy     #delete_dialog_params::a_path - delete_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyPtr1ToBuf0
+        param_call DrawProgressDialogLabel, 1, aux::str_file_colon
         jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
@@ -13966,8 +13911,7 @@ do_close:
         cmp     #LockDialogLifecycle::open
     IF_EQ
         copy    #0, has_input_field_flag
-        jsr     OpenProgressDialog
-        param_jump DrawProgressDialogLabel, 1, aux::str_file_colon
+        jmp     OpenProgressDialog
     END_IF
 
         ;; --------------------------------------------------
@@ -13995,6 +13939,7 @@ do_close:
         ldy     #lock_unlock_dialog_params::a_path - lock_unlock_dialog_params
         jsr     DereferencePtrToAddr
         jsr     CopyPtr1ToBuf0
+        param_call DrawProgressDialogLabel, 1, aux::str_file_colon
         jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
