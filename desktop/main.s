@@ -14450,20 +14450,6 @@ ellipsify:
         rts
 .endproc ; DrawCancelButton
 
-.proc AddOkCancelButtons
-        jsr     DrawOkButton
-        jsr     DrawCancelButton
-        copy    #$00, prompt_button_flags
-        rts
-.endproc ; AddOkCancelButtons
-
-.proc EraseOkCancelButtons
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rec::rect
-        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rec::rect
-        rts
-.endproc ; EraseOkCancelButtons
-
 .proc AddOkButton
         jsr     DrawOkButton
         copy    #$80, prompt_button_flags
@@ -14481,12 +14467,6 @@ ellipsify:
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         rts
 .endproc ; EraseDialogLabels
-
-.proc ErasePrompt
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::prompt_rect
-        rts
-.endproc ; ErasePrompt
 
 ;;; ============================================================
 ;;; Draw text, pascal string address in A,X
