@@ -13,6 +13,8 @@
 #   nosel   - skip Selector on startup
 #   ram     - copy to RAMCard on starutp
 #   noram   - skip RAMCard on startup
+#   short   - show shortcuts in dialogs
+#   noshort - hide shortcuts in dialogs
 #
 
 set -e
@@ -92,6 +94,18 @@ for var in "$@"; do
             offset=16
             a=$(xxd -l 1 -seek $offset -p "$config")
             printf "\x$((${a} | 0x01))" | \
+                dd of="$config" bs=1 seek=16 count=1 conv=notrunc 2> /dev/null
+            ;;
+        "noshort")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$((${a} & ~0x04))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "short")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$((${a} | 0x04))" | \
                 dd of="$config" bs=1 seek=16 count=1 conv=notrunc 2> /dev/null
             ;;
         *)

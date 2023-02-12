@@ -280,6 +280,13 @@ done:
         MGTK_CALL MGTK::SetMenu, aux::desktop_menu
         jsr     main::ShowClock
 
+        lda     startdesktop_params::slot_num
+    IF_ZERO
+        lda     SETTINGS+DeskTopSettings::options
+        ora     #DeskTopSettings::kOptionsShowShortcuts
+        sta     SETTINGS+DeskTopSettings::options
+    END_IF
+
         ;; --------------------------------------------------
         ;; Cursor tracking
 

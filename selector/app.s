@@ -591,6 +591,13 @@ set_startup_menu_items:
         MGTK_CALL MGTK::ShowCursor
         MGTK_CALL MGTK::FlushEvents
 
+        lda     startdesktop_params::slot_num
+    IF_ZERO
+        lda     SETTINGS+DeskTopSettings::options
+        ora     #DeskTopSettings::kOptionsShowShortcuts
+        sta     SETTINGS+DeskTopSettings::options
+    END_IF
+
         ;; --------------------------------------------------
         ;; Cursor tracking
 
