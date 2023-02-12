@@ -14137,6 +14137,10 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 .proc MLIRelayImpl
         params_src := $7E
 
+        ;; Since this is likely to be I/O bound, process events
+        ;; so the mouse stays responsive.
+        MGTK_CALL MGTK::CheckEvents
+
         ;; Adjust return address on stack, compute
         ;; original params address.
         pla
