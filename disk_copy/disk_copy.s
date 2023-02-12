@@ -34,9 +34,11 @@ BELLDATA        := SETTINGS - kBellProcLength
 
         INITSEG 0
         DEFSEG Loader,          DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
-        DEFSEG SegmentAuxLC,    $D000, $2500
+        DEFSEG SegmentAuxLC,    $D000, $2600
         DEFSEG SegmentMain,     $0800, $0C00
         ;; Update `memory_bitmap` in main.s if these change!
+
+        .assert kSegmentAuxLCLength .mod BLOCK_SIZE = 0, error, "must be integral block size (loader issue?)"
 
 ;;; ============================================================
 ;;; Disk Copy module
