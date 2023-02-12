@@ -395,7 +395,7 @@ option_picker_item_rect := entry_picker_item_rect
 DetectDoubleClick := main::StashCoordsAndDetectDoubleClick
 
         .include "../lib/option_picker.s"
-.endscope
+.endscope ; option_picker
 
 ;;; ============================================================
 
@@ -508,7 +508,7 @@ not_cancel:
         pla
     END_IF
         rts
-.endproc
+.endproc ; EventLoop
 
 ;;; ============================================================
 ;;; Key down handler

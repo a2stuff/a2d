@@ -68,7 +68,7 @@ done:   return  #$FF
 handle_entry_click:
         jsr     SetOptionPickerSelection
         jmp     DetectDoubleClick
-.endproc ; HandleButtonDown
+.endproc ; HandleOptionPickerClick
 
 ;;; ============================================================
 ;;; Toggle the highlight on an entry in the list
@@ -297,7 +297,7 @@ loop:   clc
         jsr     _HighlightIndex
         pla
         rts
-.endproc
+.endproc ; _PreKey
 
 ;;; ============================================================
 

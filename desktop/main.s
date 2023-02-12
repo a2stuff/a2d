@@ -2885,7 +2885,7 @@ selection_preserved_count:
 :       ldx     index
         lda     cached_window_entry_list-1,x
         rts
-.endproc
+.endproc ; FindIconForRecordNum
 
 ;;; ============================================================
 ;;; Retrieve the `IconEntry::record_num` for a given icon.
@@ -2900,7 +2900,7 @@ selection_preserved_count:
         ldy     #IconEntry::record_num
         lda     (ptr),y
         rts
-.endproc
+.endproc ; GetIconRecordNum
 
 ;;; ============================================================
 
@@ -4801,7 +4801,7 @@ failure:
         jmp     SelectAndRefreshWindowOrClose
 .endproc ; UpdateActiveWindow
 
-.endproc
+.endproc ; PerformPostDropUpdates
 
 ;;; ============================================================
 ;;; Add specified icon to selection list, and redraw.
@@ -7924,7 +7924,7 @@ next:   inc     icon_num
         jsr     CreateIconsForWindow
         jsr     StoreWindowEntryTable
         jmp     AddIconsForCachedWindow
-.endproc
+.endproc ; InitWindowEntriesAndIcons
 
 ;;; ============================================================
 ;;; Fetch the entry count for a window; valid after `OpenDirectory`,
@@ -9975,19 +9975,18 @@ DoCopyFile:
         jsr     DoCopyDialogPhase
         jsr     SizeOrCountProcessSelectedFile
         jsr     PrepCallbacksForCopy
-        FALL_THROUGH_TO DoCopyToRAM2
+        FALL_THROUGH_TO DoCopyCommon
 
-DoCopyToRAM2:
+DoCopyCommon:
         copy    #$FF, copy_run_flag
         copy    #0, move_flag
         copy    #0, delete_skip_decrement_flag
-        jsr     copy_file_for_run
+        jsr     CopyProcessNotSelectedFile
         jsr     InvokeOperationCompleteCallback
         FALL_THROUGH_TO FinishOperation
 
-.proc FinishOperation
+FinishOperation:
         return  #kOperationSucceeded
-.endproc ; FinishOperation
 
 DoCopyToRAM:
         copy    #0, move_flag
@@ -9999,17 +9998,17 @@ DoCopyToRAM:
         jsr     DoDownloadDialogPhase
         jsr     SizeOrCountProcessSelectedFile
         jsr     PrepCallbacksForDownload
-        jmp     DoCopyToRAM2
+        jmp     DoCopyCommon
 
 ;;; --------------------------------------------------
 ;;; Lock
 
 DoLock:
-        jsr     L8FDD
+        jsr     DoLockUnlockCommonImpl__unlock
         jmp     FinishOperation
 
 DoUnlock:
-        jsr     L8FE1
+        jsr     DoLockUnlockCommonImpl__lock
         jmp     FinishOperation
 
 ;;; --------------------------------------------------
@@ -10017,13 +10016,13 @@ DoUnlock:
 .proc DoGetSize
         copy    #0, run_flag
         copy    #%11000000, operation_flags ; get size
-        jmp     L8FEB
+        jmp     DoOpOnSelectionCommon
 .endproc ; DoGetSize
 
 .proc DoCopySelection
         copy    #0, operation_flags ; copy/delete
         copy    #$40, copy_delete_flags ; target is `path_buf3`
-        jmp     L8FEB
+        jmp     DoOpOnSelectionCommon
 .endproc ; DoCopySelection
 
 ;;; Used for drag/drop copy as well as deleting selection
@@ -10037,18 +10036,23 @@ DoUnlock:
 :       lda     #$00
         sta     copy_delete_flags
         copy    #0, operation_flags ; copy/delete
-        jmp     L8FEB
+        jmp     DoOpOnSelectionCommon
 .endproc ; DoDrop
 
         ;; common for lock/unlock
-L8FDD:  lda     #$00            ; unlock
+.proc DoLockUnlockCommonImpl
+unlock: lda     #$00            ; unlock
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-L8FE1:  lda     #$80            ; lock
+lock:   lda     #$80            ; lock
         sta     unlock_flag
         copy    #%10000000, operation_flags ; lock/unlock
-        FALL_THROUGH_TO L8FEB
+        FALL_THROUGH_TO DoOpOnSelectionCommon
+.endproc ; DoLockUnlockCommonImpl
+        DoLockUnlockCommonImpl__lock := DoLockUnlockCommonImpl::lock
+        DoLockUnlockCommonImpl__unlock := DoLockUnlockCommonImpl::unlock
 
-L8FEB:  tsx
+.proc DoOpOnSelectionCommon
+        tsx
         stx     stack_stash
         copy    #0, delete_skip_decrement_flag
         lda     operation_flags
@@ -10102,6 +10106,7 @@ common:
         dey
         bpl     :-
         FALL_THROUGH_TO BeginOperation
+.endproc ; DoOpOnSelectionCommon
 
 ;;; --------------------------------------------------
 ;;; Start the actual operation
@@ -11657,18 +11662,19 @@ a_dst:  .addr   dst_path_buf
 .endproc ; DownloadDialogTooLargeCallback
 
 ;;; ============================================================
-;;; Handle copying of a selected file.
+;;; Handle copying of a file.
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
-.proc CopyProcessSelectedFile
+.proc CopyProcessFileImpl
+selected:
         copy    #$80, copy_run_flag
         copy    #0, delete_skip_decrement_flag
         beq     :+              ; always
 
-for_run:
+not_selected:
         lda     #$FF
 
-:       sta     is_run_flag
+:       sta     is_not_selected_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
         bit     operation_flags
@@ -11678,7 +11684,7 @@ for_run:
         bit     copy_run_flag
         bpl     get_src_info    ; never taken ???
         bvs     L9A50
-        is_run_flag := *+1
+        is_not_selected_flag := *+1
         lda     #SELF_MODIFIED_BYTE
         bne     :+
         lda     selected_window_id ; dragging from window?
@@ -11792,8 +11798,9 @@ CopyFile:
 
 failure:
         rts
-.endproc ; CopyProcessSelectedFile
-        copy_file_for_run := CopyProcessSelectedFile::for_run
+.endproc ; CopyProcessFileImpl
+        CopyProcessSelectedFile := CopyProcessFileImpl::selected
+        CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
 
 ;;; ============================================================
 
@@ -14266,7 +14273,7 @@ done:   rts
 .proc CloseProgressDialog
         MGTK_CALL MGTK::CloseWindow, winfo_progress_dialog::window_id
         jmp     ClearUpdates ; following CloseWindow
-.endproc ; ClosePromptDialog
+.endproc ; CloseProgressDialog
 
 ;;; ============================================================
 

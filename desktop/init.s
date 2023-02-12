@@ -456,7 +456,7 @@ count:  .byte   0
         dey
         bpl     :-
         rts
-.endproc
+.endproc ; CopyPtr1ToPtr2
 
 ;;; --------------------------------------------------
 

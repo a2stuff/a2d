@@ -314,7 +314,7 @@ op:     lda     SELF_MODIFIED
 
         jsr     PopPointers
         jmp     BankInMain
-.endproc
+.endproc ; AppendToTextInputBuf
 
 ;;; ============================================================
 

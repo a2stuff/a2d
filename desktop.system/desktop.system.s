@@ -149,7 +149,7 @@ str_self_filename:
         PASCAL_STRING kFilenameLauncher
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, str_self_filename
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, PRODOS_SYS_PATH
-.endproc
+.endproc ; EnsurePrefixSet
 
 ;;; ============================================================
 

@@ -352,7 +352,7 @@ option_picker_item_rect := vol_picker_item_rect
 DetectDoubleClick := main::StashCoordsAndDetectDoubleClick
 
         .include "../lib/option_picker.s"
-.endscope
+.endscope ; option_picker
 
 ;;; ============================================================
 
@@ -378,7 +378,7 @@ DetectDoubleClick := main::StashCoordsAndDetectDoubleClick
         rts
 no:     ldx     #$FF            ; set N
         rts
-.endproc
+.endproc ; IsIndexValid
 
 ;;; ============================================================
 ;;; Draw volume labels

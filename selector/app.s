@@ -765,7 +765,7 @@ kOptionPickerRowShift = app::kEntryPickerRowShift
 option_picker_item_rect := entry_picker_item_rect
 
         .include "../lib/option_picker.s"
-.endscope
+.endscope ; option_picker
 
 ;;; ============================================================
 
@@ -934,7 +934,7 @@ check_entries:
         jmp     InvokeEntry
     END_IF
         rts
-.endproc
+.endproc ; HandleButtonDown
 
 ;;; ============================================================
 
