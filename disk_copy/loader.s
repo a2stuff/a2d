@@ -67,6 +67,8 @@ start:
         jsr     CopyToLc
 
         copy16  #kSegmentMainOffset, set_mark_params::position
+        MLI_CALL SET_MARK, set_mark_params
+
         copy16  #kSegmentMainAddress, read_params::data_buffer
         copy16  #kSegmentMainLength, read_params::request_count
         MLI_CALL READ, read_params
