@@ -956,15 +956,15 @@ tmp_path_buf:
 
         cmp     #IconType::intbasic
         bne     :+
-        param_jump InvokeInterpreter, str_intbasic
+        param_jump invoke_interpreter, str_intbasic
 :
         cmp     #IconType::encoded
         bne     :+
-        param_jump InvokeInterpreter, str_binscii
+        param_jump invoke_interpreter, str_binscii
 :
         cmp     #IconType::archive
         bne     :+
-        param_jump InvokeInterpreter, str_unshrink
+        param_jump invoke_interpreter, str_unshrink
 
 :       cmp     #IconType::graphics
         bne     :+
@@ -1011,9 +1011,22 @@ no_file_sel:
         ;; --------------------------------------------------
 
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
-        beq     launch
+        beq     launch           ; yes, continue below
         lda     #kErrFileNotOpenable
         jmp     ShowAlert
+
+        ;; --------------------------------------------------
+        ;; Launch interpreter (system file that accepts path).
+
+invoke_interpreter:
+        ptr1 := $06
+        stax    ptr1            ; save for later
+
+        ;; Is the interpreter where we expect it?
+        jsr     GetFileInfo
+        jcs     SetCursorPointer ; nope, just ignore
+
+        param_call CopyPtr1ToBuf, INVOKER_INTERPRETER
 
 launch:
         param_call UpcaseString, INVOKER_PREFIX
@@ -1698,82 +1711,6 @@ main_length:    .word   0
         close_ref_num := close_params::ref_num
 
 .endproc ; InvokeDeskAcc
-
-;;; ============================================================
-;;; Launch interpreter (system file that accepts path).
-
-.proc InvokeInterpreter
-        ptr1 := $06
-        stax    ptr1            ; save for later
-
-        ;; Is the interpreter where we expect it?
-        jsr     GetFileInfo
-        jcs     SetCursorPointer ; nope, just ignore
-
-        ROUTINE_TARGET := $800
-        INTERPRETER_PATH := $A00
-        PREFIX_PATH := $A20
-        TARGET_PATH := INVOKER_PREFIX ; already populated and safe
-
-        ;; Stash path to interpreter for routine.
-        param_call CopyPtr1ToBuf, INTERPRETER_PATH
-
-        ;; Stash current window path, to use as PREFIX.
-        lda     active_window_id
-        jeq     SetCursorPointer ; no window, just fail
-        jsr     GetWindowPath
-        stax    ptr1
-        param_call CopyPtr1ToBuf, PREFIX_PATH
-
-        ;; Copy routine to $800 and invoke it
-        ldx     #0
-:       copy    routine,x, ROUTINE_TARGET,x ; single page
-        inx
-        bne     :-
-        jsr     RestoreSystem
-        jmp     ROUTINE_TARGET
-
-PROC_AT routine, InvokeInterpreter::ROUTINE_TARGET
-        ;; Override within the proc
-        MLIEntry := MLI
-
-        jmp     start
-
-        io_buf := $1C00
-        DEFINE_OPEN_PARAMS open_params, INTERPRETER_PATH, io_buf
-        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
-        DEFINE_CLOSE_PARAMS close_params
-        DEFINE_QUIT_PARAMS quit_params
-        DEFINE_SET_PREFIX_PARAMS set_prefix_params, PREFIX_PATH
-
-start:
-        ;; Try to load the interpreter
-        MLI_CALL OPEN, open_params
-        bcs     fail
-        lda open_params::ref_num
-        sta read_params::ref_num
-        sta close_params::ref_num
-        MLI_CALL READ, read_params
-        bcs     fail
-        MLI_CALL CLOSE, close_params
-
-        ;; Set PREFIX to current window
-        MLI_CALL SET_PREFIX, set_prefix_params
-
-        ;; Copy target pathname to interpreter's path buffer
-        ldx     TARGET_PATH
-:       copy    TARGET_PATH,x, PRODOS_INTERPRETER_BUF,x
-        dex
-        bpl     :-
-
-        jmp     PRODOS_SYS_START
-
-fail:   MLI_CALL CLOSE, close_params
-        MLI_CALL QUIT, quit_params
-
-END_PROC_AT
-        .assert .sizeof(routine) < $100, error, "Routine too large"
-.endproc ; InvokeInterpreter
 
 ;;; ============================================================
 
