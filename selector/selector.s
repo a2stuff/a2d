@@ -3,6 +3,7 @@
         BTK_SHORT = 1
 
         .include "apple2.inc"
+        .include "apple2.mac"
         .include "opcodes.inc"
         .include "../inc/macros.inc"
         .include "../inc/apple2.inc"

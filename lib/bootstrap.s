@@ -12,6 +12,9 @@
 .proc InstallAsQuit
         MLIEntry := MLI
 
+        ;; Patch the current prefix into `QuitRoutine`
+        MLI_CALL GET_PREFIX, prefix_params
+
         src     := QuitRoutine
         dst     := SELECTOR
         .assert sizeof_QuitRoutine <= $200, error, "too large"
@@ -31,8 +34,12 @@
 
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params
+
+        prefix_buffer := QuitRoutine + ::QuitRoutine__prefix_buffer_offset
+        DEFINE_GET_PREFIX_PARAMS prefix_params, prefix_buffer
 .endproc ; InstallAsQuit
-.assert sizeof_QuitRoutine + .sizeof(InstallAsQuit) <= kModuleBootstrapSize, error, "too large"
+
+
 
 ;;; New QUIT routine. Gets relocated to $1000 by ProDOS before
 ;;; being executed.
@@ -43,31 +50,8 @@
         MLIEntry := MLI
 
 self:
-        jmp     start
-
-reinstall_flag:                ; set once prefix saved and reinstalled
-        .byte   0
-
-kSplashVtab = 12
-str_loading:
-        PASCAL_STRING QR_LOADSTRING
-
-filename:
-        PASCAL_STRING QR_FILENAME
-
-        ;; ProDOS MLI call param blocks
-
-        io_buf := $1C00
-        .assert io_buf + $400 <= kSegmentLoaderAddress, error, "memory overlap"
-
-        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentLoaderOffset
-        DEFINE_READ_PARAMS read_params, kSegmentLoaderAddress, kSegmentLoaderLength
-        DEFINE_CLOSE_PARAMS close_params
-        DEFINE_GET_PREFIX_PARAMS prefix_params, prefix_buffer
-        DEFINE_OPEN_PARAMS open_params, filename, io_buf
-
-start:
-        ;; Show and clear 80-column text screen
+        ;; --------------------------------------------------
+        ;; Show 80-column text screen
         sta     TXTSET
         bit     ROMIN2
         jsr     SETVID
@@ -76,7 +60,6 @@ start:
         sta     SETALTCHAR
         sta     CLR80STORE
         jsr     SLOT3ENTRY
-        jsr     HOME
 
         ;; IIgs: Reset shadowing
         sec
@@ -84,17 +67,13 @@ start:
         bcs     :+
         copy    #0, SHADOW
 :
-
         ;; --------------------------------------------------
-
         ;; Display the loading string
+retry:
+        jsr     HOME
         lda     #kSplashVtab
         jsr     VTABZ
-
-        lda     #80             ; HTAB (80-width)/2
-        sec                     ; to center
-        sbc     str_loading     ; -= width
-        lsr     a               ; /= 2
+        lda     #(80 - kLoadingStringLength)/2
         sta     OURCH
 
         ldy     #0
@@ -119,49 +98,14 @@ start:
         lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     BITMAP
 
-        lda     reinstall_flag
-        bne     proceed
-
-        ;; Re-install quit routine (with prefix memorized)
-        MLI_CALL GET_PREFIX, prefix_params
-        beq     :+
-        jmp     ErrorHandler
-:
-        ;; --------------------------------------------------
-
-        dec     reinstall_flag
-        copy16  IRQLOC, irq_vector_stash
-
-        ;; --------------------------------------------------
-        ;; Copy self into the ProDOS QUIT routine
-        bit     LCBANK2
-        bit     LCBANK2
-
-        ldy     #0
-:       lda     self,y
-        sta     SELECTOR,y
-        lda     self+$100,y
-        sta     SELECTOR+$100,y
-        dey
-        bne     :-
-
-        bit     ROMIN2
-        jmp     load_loader
-
-proceed:
-        copy16  irq_vector_stash, IRQLOC
-
-;;; ============================================================
-;;; Load the Loader at $2000 and invoke it.
-
-load_loader:
+        ;; Load the target module's loader at $2000
         MLI_CALL SET_PREFIX, prefix_params
         bne     prompt_for_system_disk
         MLI_CALL OPEN, open_params
-        jne     ErrorHandler
-        lda     open_params::ref_num
-        sta     set_mark_params::ref_num
-        sta     read_params::ref_num
+        bne     ErrorHandler
+        lda     open_params__ref_num
+        sta     set_mark_params__ref_num
+        sta     read_params__ref_num
         MLI_CALL SET_MARK, set_mark_params
         bne     ErrorHandler
         MLI_CALL READ, read_params
@@ -169,30 +113,25 @@ load_loader:
         MLI_CALL CLOSE, close_params
         bne     ErrorHandler
 
+        ;; Invoke it
         jmp     kSegmentLoaderAddress
 
 ;;; ============================================================
 ;;; Display a string, and wait for Return keypress
 
 prompt_for_system_disk:
-        jsr     SLOT3ENTRY      ; 80 column mode
-        jsr     HOME            ; clear screen
-        lda     #kSplashVtab    ; VTAB 12
+        jsr     HOME
+        lda     #kSplashVtab
         jsr     VTABZ
-
-        lda     #80             ; HTAB (80-width)/2
-        sec                     ; to center the string
-        sbc     disk_prompt     ; -= width
-        lsr     a               ; /= 2
+        lda     #(80 - kDiskPromptLength)/2
         sta     OURCH
 
-        ;; Display prompt
         ldy     #0
-:       lda     disk_prompt+1,y
+:       lda     str_disk_prompt+1,y
         ora     #$80
         jsr     COUT
         iny
-        cpy     disk_prompt
+        cpy     str_disk_prompt
         bne     :-
 
 wait:   sta     KBDSTRB
@@ -200,24 +139,47 @@ wait:   sta     KBDSTRB
         bpl     :-
         cmp     #CHAR_RETURN | $80
         bne     wait
-        jmp     start
-
-disk_prompt:
-        PASCAL_STRING res_string_prompt_insert_system_disk
-
-;;; ============================================================
-
-irq_vector_stash:
-        .word   0
+        jmp     retry
 
 ;;; ============================================================
 ;;; Error Handler
 
 .proc ErrorHandler
-        sta     $06             ; Crash?
-        jmp     MONZ
+        brk                     ; just crash
 .endproc ; ErrorHandler
 
+;;; ============================================================
+;;; Strings
+
+kDiskPromptLength = .strlen(res_string_prompt_insert_system_disk)
+str_disk_prompt:
+        PASCAL_STRING res_string_prompt_insert_system_disk
+
+kSplashVtab = 12
+kLoadingStringLength = .strlen(QR_LOADSTRING)
+str_loading:
+        PASCAL_STRING QR_LOADSTRING
+
+;;; ============================================================
+;;; ProDOS MLI call param blocks
+
+        io_buf := $1C00
+        .assert io_buf + $400 <= kSegmentLoaderAddress, error, "memory overlap"
+
+        DEFINE_OPEN_PARAMS open_params, filename, io_buf
+        open_params__ref_num := open_params::ref_num
+        DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentLoaderOffset
+        set_mark_params__ref_num := set_mark_params::ref_num
+        DEFINE_READ_PARAMS read_params, kSegmentLoaderAddress, kSegmentLoaderLength
+        read_params__ref_num := read_params::ref_num
+        DEFINE_CLOSE_PARAMS close_params
+        DEFINE_SET_PREFIX_PARAMS prefix_params, prefix_buffer
+
+filename:
+        PASCAL_STRING QR_FILENAME
+
+;;; ============================================================
+;;; Populated before this routine is installed
 prefix_buffer:
         .res    64, 0
 
@@ -226,3 +188,8 @@ prefix_buffer_offset := prefix_buffer - self
 
 .endproc ; QuitRoutine
 sizeof_QuitRoutine = .sizeof(QuitRoutine)
+QuitRoutine__prefix_buffer_offset := QuitRoutine::prefix_buffer_offset
+
+;;; ============================================================
+
+.assert .sizeof(QuitRoutine) + .sizeof(InstallAsQuit) <= kModuleBootstrapSize, error, "too large"
