@@ -287,6 +287,8 @@ done:
         sta     SETTINGS+DeskTopSettings::options
     END_IF
 
+        copy    #$80, main::mli_relay_checkevents_flag
+
         ;; --------------------------------------------------
         ;; Cursor tracking
 

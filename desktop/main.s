@@ -2685,6 +2685,8 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 ;;; Returns with ALTZPOFF and ROM banked in.
 
 .proc RestoreSystem
+        copy    #0, main::mli_relay_checkevents_flag
+
         jsr     SaveWindows
 
         ;; Switch back to main ZP/LC, preserving return address.
@@ -14141,13 +14143,18 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 
 ;;; ============================================================
 
+mli_relay_checkevents_flag:
+        .byte   0
+
 .proc MLIRelayImpl
         params_src := $7E
 
         ;; Since this is likely to be I/O bound, process events
         ;; so the mouse stays responsive.
+        bit     mli_relay_checkevents_flag
+        bpl     :+
         MGTK_CALL MGTK::CheckEvents
-
+:
         ;; Adjust return address on stack, compute
         ;; original params address.
         pla
