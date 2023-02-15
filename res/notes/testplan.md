@@ -255,43 +255,43 @@
   * Special > Check Drive is disabled.
   * File > Duplicate... is disabled.
   * File > Rename... is disabled.
-  * File > Open, File > Get Info, Special > Lock..., Special > Unlock..., and Special > Get Size are disabled.
+  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are disabled.
 * Launch DeskTop. Select only the Trash icon. Verify that:
   * Special > Eject Disk is disabled.
   * Special > Check Drive is disabled.
   * File > Duplicate... is disabled.
   * File > Rename... is disabled.
-  * File > Open, File > Get Info, Special > Lock..., Special > Unlock..., and Special > Get Size are disabled.
+  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are disabled.
 * Launch DeskTop. Select a volume. Verify that:
   * Special > Eject Disk is enabled.
   * Special > Check Drive is enabled.
   * File > Duplicate... is disabled.
   * File > Rename... is enabled.
-  * File > Open, File > Get Info, Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
 * Launch DeskTop. Select two volume icons. Verify that:
   * Special > Eject Disk is enabled.
   * Special > Check Drive is enabled.
   * File > Duplicate... is disabled.
   * File > Rename... is disabled.
-  * File > Open, File > Get Info, Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
 * Launch DeskTop. Select a volume icon and the Trash icon. Verify that:
   * Special > Eject Disk is enabled.
   * Special > Check Drive is enabled.
   * File > Duplicate... is disabled.
   * File > Rename... is disabled.
-  * File > Open, File > Get Info, Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
 * Launch DeskTop. Open a volume window, and select a file. Verify that:
   * Special > Eject Disk is disabled.
   * Special > Check Drive is disabled.
   * File > Rename... is enabled.
   * File > Duplicate... is enabled.
-  * File > Open, File > Get Info, Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
 * Launch DeskTop. Open a volume window, and select two files. Verify that:
   * Special > Eject Disk is disabled.
   * Special > Check Drive is disabled.
   * File > Rename... is disabled.
   * File > Duplicate... is enabled.
-  * File > Open, File > Get Info, Special > Lock..., Special > Unlock..., and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
 * Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
 * Launch DeskTop. Open a window. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
 
@@ -510,8 +510,8 @@
   * Select the innermost folder. File > Rename...
   * Select the innermost folder. File > Duplicate...
   * Select the innermost folder. File > Copy To... (and pick a target)
-  * Select the innermost folder. Special > Lock...
-  * Select the innermost folder. Special > Unlock...
+  * Select the innermost folder. Special > Lock
+  * Select the innermost folder. Special > Unlock
   * Select the innermost folder. Special > Get Size
   * Select the innermost folder. Shortcuts > Add a Shortcut...
   * Drag a file onto the innermost folder.

@@ -31,8 +31,8 @@
 .define res_string_menu_item_format_disk "Formater en disk..."
 .define res_string_menu_item_erase_disk "Slet en disk..."
 .define res_string_menu_item_disk_copy "Disk kopi..."
-.define res_string_menu_item_lock "L}se..."
-.define res_string_menu_item_unlock "L}s op..."
+.define res_string_menu_item_lock "L}se"
+.define res_string_menu_item_unlock "L}s op"
 .define res_string_menu_item_get_info "Vis Info"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "F} st|rrelse"

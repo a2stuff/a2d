@@ -31,8 +31,8 @@
 .define res_string_menu_item_format_disk "Formater un volume..."
 .define res_string_menu_item_erase_disk "Effacer un volume..."
 .define res_string_menu_item_disk_copy "Copier un volume..."
-.define res_string_menu_item_lock "Verrouiller..."
-.define res_string_menu_item_unlock "D{verrouiller..."
+.define res_string_menu_item_lock "Verrouiller"
+.define res_string_menu_item_unlock "D{verrouiller"
 .define res_string_menu_item_get_info "Lire les informations"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "Lire la taille"

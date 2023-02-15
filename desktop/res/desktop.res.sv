@@ -31,8 +31,8 @@
 .define res_string_menu_item_format_disk "Formatera en disk..."
 .define res_string_menu_item_erase_disk "Radera en disk..."
 .define res_string_menu_item_disk_copy "Diskkopia..."
-.define res_string_menu_item_lock "L}sa..."
-.define res_string_menu_item_unlock "L}sa upp..."
+.define res_string_menu_item_lock "L}sa"
+.define res_string_menu_item_unlock "L}sa upp"
 .define res_string_menu_item_get_info "Visa info"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "F} storlek"

@@ -31,8 +31,8 @@
 .define res_string_menu_item_format_disk "Inicializar Disco..."
 .define res_string_menu_item_erase_disk "Borrar un Disco..."
 .define res_string_menu_item_disk_copy "Copiar un Disco..."
-.define res_string_menu_item_lock "Bloquear..."
-.define res_string_menu_item_unlock "Desbloquear..."
+.define res_string_menu_item_lock "Bloquear"
+.define res_string_menu_item_unlock "Desbloquear"
 .define res_string_menu_item_get_info "Obtener Informaci\x13n"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "Obtener Tama|o"

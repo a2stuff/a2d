@@ -31,8 +31,8 @@
 .define res_string_menu_item_format_disk "Format a Disk..."
 .define res_string_menu_item_erase_disk "Erase a Disk..."
 .define res_string_menu_item_disk_copy "Disk Copy..."
-.define res_string_menu_item_lock "Lock..."
-.define res_string_menu_item_unlock "Unlock..."
+.define res_string_menu_item_lock "Lock"
+.define res_string_menu_item_unlock "Unlock"
 .define res_string_menu_item_get_info "Get Info"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "Get Size"

@@ -31,8 +31,8 @@
 .define res_string_menu_item_format_disk "Inizializza..."
 .define res_string_menu_item_erase_disk "Cancella Volume..."
 .define res_string_menu_item_disk_copy "Copia Volume..."
-.define res_string_menu_item_lock "Blocca..."
-.define res_string_menu_item_unlock "Sblocca..."
+.define res_string_menu_item_lock "Blocca"
+.define res_string_menu_item_unlock "Sblocca"
 .define res_string_menu_item_get_info "Informazioni"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "Ottieni dimensioni"

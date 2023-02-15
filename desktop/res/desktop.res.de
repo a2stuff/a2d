@@ -31,8 +31,8 @@
 .define res_string_menu_item_format_disk "Laufwerk Formatieren..."
 .define res_string_menu_item_erase_disk "Laufwerk L|schen..."
 .define res_string_menu_item_disk_copy "Kopiere Laufwerk..."
-.define res_string_menu_item_lock "Schreibschutz setzen..."
-.define res_string_menu_item_unlock "Schreibschutz aufheben..."
+.define res_string_menu_item_lock "Schreibschutz setzen"
+.define res_string_menu_item_unlock "Schreibschutz aufheben"
 .define res_string_menu_item_get_info "Information"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "Gr|~e wird berechnet"
