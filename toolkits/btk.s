@@ -534,15 +534,6 @@ checked_cb_bitmap:
         .byte   PX(%1111000),PX(%0000000),PX(%1111000)
         .byte   PX(%1111111),PX(%1111111),PX(%1111000)
 
-.params unchecked_cb_params
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   unchecked_cb_bitmap
-mapwidth:       .byte   3
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
-        REF_MAPINFO_MEMBERS
-.endparams
-
 unchecked_cb_bitmap:
         .byte   PX(%1111111),PX(%1111111),PX(%1111000)
         .byte   PX(%1100000),PX(%0000000),PX(%0011000)

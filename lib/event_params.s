@@ -11,6 +11,7 @@
 ;;; `findwindow_params` (with x/y matching event x/y)
 ;;; `findcontrol_params` (with x/y matching event x/y)
 ;;; `findicon_params` (with x/y matching event x/y)
+;;; `beginupdate_params` (with matching event window_id)
 ;;; ============================================================
 
 .params event_params
@@ -51,7 +52,6 @@ thumbmoved := * + 6
 .params updatethumb_params
 which_ctl := * + 0
 thumbpos := * + 1
-stash := * + 5 ; not part of struct
 .endproc
 
 .assert setctlmax_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"

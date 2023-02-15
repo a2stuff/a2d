@@ -1231,10 +1231,6 @@ file_records_buffer := $D000
 kFileRecordsBufferLen = $1000
         .assert kFileRecordsBufferLen > .sizeof(FileRecord) * kMaxIconCount, error, "Size mismatch"
 
-;;; This remains constant:
-filerecords_free_end:
-        .word   file_records_buffer + kFileRecordsBufferLen
-
 ;;; This tracks the start of free space.
 filerecords_free_start:
         .word   file_records_buffer
@@ -5576,7 +5572,6 @@ check_double_click:
         lda     drag_drop_params::result
         beq     same_or_desktop
 
-process_drop:
         jsr     DoDrop
         ;; NOTE: If drop target is trash, `JTDrop` relays to
         ;; `CmdEject` and pops the return address.
@@ -7461,7 +7456,7 @@ tmpw:   .word   0
         jsr     PushPointers
         copy16  #icontype_table, ptr
 
-loop:   ldy     #0              ; type_mask, or $00 if done
+loop:   ldy     #ICTRecord::mask ; $00 if done
         lda     (ptr),y
         cmp     #kICTSentinel
         bne     :+
@@ -7470,13 +7465,15 @@ loop:   ldy     #0              ; type_mask, or $00 if done
         rts
 
         ;; Check type (with mask)
-:       and     icontype_filetype    ; A = type & type_mask
-        iny                     ; ASSERT: Y = ICTRecord::type
+:       and     icontype_filetype    ; A = type & mask
+        iny                     ; ASSERT: Y = ICTRecord::filetype
+        .assert ICTRecord::filetype = ICTRecord::mask+1, error, "enum mismatch"
         cmp     (ptr),y         ; type check
         jne     next
 
         ;; Flags
         iny                     ; ASSERT: Y = ICTRecord::flags
+        .assert ICTRecord::flags = ICTRecord::filetype+1, error, "enum mismatch"
         lda     (ptr),y
         sta     flags
 
@@ -7484,6 +7481,7 @@ loop:   ldy     #0              ; type_mask, or $00 if done
         bit     flags
     IF_NS                       ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux_suf
+        .assert ICTRecord::aux_suf = ICTRecord::flags+1, error, "enum mismatch"
         lda     icontype_auxtype
         cmp     (ptr),y
         bne     next
@@ -7728,7 +7726,6 @@ xcoord:
 .proc ComputeIconsBBox
         kIntMax = $7FFF
 
-start:
         ;; min.x = min.y = max.x = max.y = 0
         ldx     #.sizeof(MGTK::Rect)-1
         lda     #0
@@ -7750,7 +7747,6 @@ check_icon:
         cpx     cached_window_entry_count
         bne     more
 
-finish:
         ;; If there are any entries...
         lda     cached_window_entry_count
     IF_NOT_ZERO
@@ -7971,7 +7967,7 @@ next:   inc     inner
         dec     outer
         bne     oloop
 
-ret:    rts
+        rts
 
 ;;; --------------------------------------------------
 ;;; Input: A = index in list being sorted
@@ -11170,7 +11166,7 @@ retry:  lda     #DuplicateDialogState::run
         beq     success
 
         ;; Failure
-fail:   return  result_flag
+        return  result_flag
 
         ;; --------------------------------------------------
         ;; Success, new name in Y,X
@@ -14166,7 +14162,7 @@ params:  .res    3
         sta     prompt_button_flags
         jsr     OpenDialogWindow
         jsr     DrawOkButton
-no_ok:  bit     prompt_button_flags
+        bit     prompt_button_flags
         bmi     done
         jsr     DrawCancelButton
 done:   rts

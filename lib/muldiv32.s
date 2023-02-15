@@ -29,7 +29,6 @@ divloop:
         rol     remainder+3
 
         sec
-subtract:
         lda     remainder+0
         sbc     denominator+0
         sta     temp+0

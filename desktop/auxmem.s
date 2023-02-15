@@ -280,8 +280,6 @@ str_files_remaining:
         PASCAL_STRING res_string_label_files_remaining
 
         ;; "Copy File" dialog strings
-str_copy_title:
-        PASCAL_STRING res_string_copy_dialog_title ; dialog title
 str_copy_copying:
         PASCAL_STRING res_string_copy_label_status
 str_copy_from:
@@ -290,8 +288,6 @@ str_copy_to:
         PASCAL_STRING res_string_copy_label_to
 
         ;; "Move File" dialog strings
-str_move_title:
-        PASCAL_STRING res_string_move_dialog_title ; dialog title
 str_move_moving:
         PASCAL_STRING res_string_move_label_status
 
@@ -303,8 +299,6 @@ str_large_move_prompt:
         PASCAL_STRING res_string_errmsg_too_large_to_move
 
         ;; "Delete" dialog strings
-str_delete_title:
-        PASCAL_STRING res_string_delete_dialog_title ; dialog title
 str_delete_confirm_prefix:
         PASCAL_STRING res_string_prompt_delete_confirm_prefix
 str_delete_confirm_suffix:
@@ -391,9 +385,6 @@ str_size_number:
         PASCAL_STRING res_string_get_size_label_count
 str_size_blocks:
         PASCAL_STRING res_string_get_size_label_space
-
-str_download:
-        PASCAL_STRING res_string_download_dialog_title ; dialog title
 
 str_ramcard_full:
         PASCAL_STRING res_string_download_error_ramcard_full

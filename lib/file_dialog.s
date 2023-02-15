@@ -1505,7 +1505,7 @@ next:   inc     inner
         dec     outer
         bne     oloop
 
-ret:    rts
+        rts
 
 .proc CalcPtr
         tax

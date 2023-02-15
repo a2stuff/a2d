@@ -210,12 +210,12 @@ kDeviceTypeCDROM        = 5
         name                    .res 16
         file_type               .byte ; 16 $10
         blocks                  .word ; 17 $11
-        creation_date           .word ; 19 $13
-        creation_time           .word ; 21 $15
+        creation_date           .word ; 19 $13 - UNUSED
+        creation_time           .word ; 21 $15 - UNUSED
         modification_date       .word ; 23 $17
         modification_time       .word ; 25 $19
-        access                  .byte ; 27 $1B
-        header_pointer          .word ; 28 $1C
+        access                  .byte ; 27 $1B - UNUSED
+        header_pointer          .word ; 28 $1C - UNUSED
         aux_type                .word ; 30 $1E
 .endstruct
 
