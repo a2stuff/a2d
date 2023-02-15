@@ -185,9 +185,10 @@ str_shortcut:   PASCAL_STRING {shortcut}
 
         kTextLeft = 75
         kTextRight = kAlertRectWidth - kAlertXMargin
-        kWrapWidth = kTextRight - kTextLeft
 
 .ifdef AD_WRAP
+        kWrapWidth = kTextRight - kTextLeft
+
         DEFINE_POINT pos_prompt1, kTextLeft, 29-11
         DEFINE_POINT pos_prompt2, kTextLeft, 29
 
@@ -211,9 +212,12 @@ options:        .byte   0       ; AlertOptions flags
 .assert .sizeof(alert_params) = .sizeof(AlertParams), error, "struct mismatch"
 
         kShortcutTryAgain = res_char_button_try_again_shortcut
+
+.ifdef AD_YESNOALL
         kShortcutYes      = res_char_button_yes_shortcut
         kShortcutNo       = res_char_button_no_shortcut
         kShortcutAll      = res_char_button_all_shortcut
+.endif  ; AD_YESNOALL
 
         ;; Actual entry point
 start:
