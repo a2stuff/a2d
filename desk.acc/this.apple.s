@@ -57,8 +57,6 @@ kShortcutEasterEgg = res_char_easter_egg_shortcut
 
 ;;; ============================================================
 
-        MGTKEntry := MGTKAuxEntry
-
 kDAWindowId     = 60
 kDAWidth        = 400
 kDAHeight       = 118

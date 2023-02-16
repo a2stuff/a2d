@@ -17,9 +17,6 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
-        MGTKEntry := MGTKAuxEntry
-        BTKEntry := BTKAuxEntry
-
 ;;; ============================================================
 ;;; Memory map
 ;;;

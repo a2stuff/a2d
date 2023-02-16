@@ -88,8 +88,6 @@ kNumFrames      = 32
 
 ;;; ============================================================
 
-        MGTKEntry := MGTKAuxEntry
-
 kDAWindowId    = 60
 kDAWidth        = kScreenWidth / 2
 kDAHeight       = kScreenHeight / 2

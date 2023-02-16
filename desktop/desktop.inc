@@ -45,6 +45,11 @@ kOverlay10KBufferSize   = $2800
 .endmacro
 .macro DA_START_AUX_SEGMENT
         .org DA_LOAD_ADDRESS
+
+        MGTKEntry := MGTKAuxEntry
+        BTKEntry := BTKAuxEntry
+        LETKEntry := LETKAuxEntry
+
 .endmacro
 .macro DA_END_AUX_SEGMENT
         __da_aux_segment_end__ := *

@@ -92,12 +92,13 @@ for an I/O buffer.
 
 ### Execution from Aux Memory
 
-DAs can make toolkit calls directly by defining an entry point and
-using macros:
+DAs can make toolkit calls directly by using macros. The entry points
+required by the macros are defined automatically by the
+`DA_START_AUX_SEGMENT` macro.
 
-* MGTK: define `MGTKEntry := MGTKAuxEntry` and use `MGTK_CALL`
-* Button TK: define `BTKEntry := BTKAuxEntry` and use `BTK_CALL`
-* LineEdit TK: define `LETKEntry := LETKAuxEntry` and use `LETK_CALL`
+* MGTK: use `MGTK_CALL`
+* Button TK: use `BTK_CALL`
+* LineEdit TK: use `LETK_CALL`
 
 ProDOS MLI calls directly from Aux memory are _not supported_. DAs
 running from Aux memory need to implement helper methods in Main which

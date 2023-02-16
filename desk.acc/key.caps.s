@@ -14,8 +14,6 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
-        MGTKEntry := MGTKAuxEntry
-
 ;;; ============================================================
 
 kShortcutQuit = res_char_quit_shortcut

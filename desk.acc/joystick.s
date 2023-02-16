@@ -15,9 +15,6 @@
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
-        MGTKEntry := MGTKAuxEntry
-        BTKEntry := BTKAuxEntry
-
 ;;; ============================================================
 
         DA_HEADER

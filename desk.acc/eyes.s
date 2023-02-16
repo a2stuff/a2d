@@ -15,8 +15,6 @@
         .include "../desktop/desktop.inc"
         .include "../inc/fp_macros.inc"
 
-        MGTKEntry := MGTKAuxEntry
-
 ;;; ============================================================
 
         DA_HEADER
