@@ -31,6 +31,8 @@
 ;;; Other ToolKits - floating location (DAs have indirections)
 ;;; ============================================================
 
+        ReadSetting := ReadSettingFromAux
+
         .include "../toolkits/icontk.s"
         ITKEntry := icon_toolkit::ITKEntry
 
@@ -577,7 +579,7 @@ start:
         .include "../lib/drawstring.s"
 
 ;;; ============================================================
-;;; Relay table at fixed memory location (see desktop.s)
+;;; Relay table at fixed memory location (see desktop.inc)
 ;;; These are used by DAs calling directly from aux.
 
         PAD_TO ::BTKAuxEntry

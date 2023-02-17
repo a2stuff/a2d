@@ -806,9 +806,13 @@ lasty:  .byte   0
 ;;; ============================================================
 
 .proc InitDblclick
+        ldx     #DeskTopSettings::dblclick_speed
+        jsr     ReadSettingWord
+        stax    dblclick_speed
+
         ;; Find matching index in word table, or 0
         ldx     #kDblClickSpeedTableSize * 2
-loop:   ecmp16  SETTINGS + DeskTopSettings::dblclick_speed, dblclick_speed_table-2,x
+loop:   ecmp16  dblclick_speed, dblclick_speed_table-2,x
         bne     next
         ;; Found a match
         txa
@@ -821,6 +825,8 @@ next:   dex
         bpl     loop
         copy    #0, dblclick_selection ; not found
         rts
+
+dblclick_speed: .word   0
 .endproc ; InitDblclick
 
 .proc HandleDblclickClick
@@ -830,13 +836,23 @@ next:   dex
         dex
         dex                     ; 0, 2 or 4
 
-        copy16  dblclick_speed_table,x, SETTINGS + DeskTopSettings::dblclick_speed
+        copy16  dblclick_speed_table,x, dblclick_speed
+
+        ldx     #DeskTopSettings::dblclick_speed
+        lda     dblclick_speed
+        jsr     WriteSetting
+        ldx     #DeskTopSettings::dblclick_speed+1
+        lda     dblclick_speed+1
+        jsr     WriteSetting
+
         jsr     MarkDirty
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
         jsr     UpdateDblclickButtons
         jmp     InputLoop
+
+dblclick_speed: .word   0
 .endproc ; HandleDblclickClick
 
 ;;; ============================================================
@@ -845,7 +861,9 @@ next:   dex
         ;; --------------------------------------------------
         ;; Update Settings
 
-        sta     SETTINGS + DeskTopSettings::mouse_tracking
+        pha
+        ldx     #DeskTopSettings::mouse_tracking
+        jsr     WriteSetting
         jsr     MarkDirty
 
         ;; --------------------------------------------------
@@ -855,11 +873,11 @@ next:   dex
         copy    #0, scalemouse_params::y_exponent
 
         ;; Doubled if option selected
-        lda     SETTINGS + DeskTopSettings::mouse_tracking
-        IF_NOT_ZERO
+        pla
+    IF_NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
-        END_IF
+    END_IF
 
         ;; Also doubled if a IIc
         bit     ROMIN
@@ -906,7 +924,14 @@ next:   dex
 
 .proc HandlePatternClick
         MGTK_CALL MGTK::SetDeskPat, pattern
-        COPY_STRUCT MGTK::Pattern, pattern, SETTINGS + DeskTopSettings::pattern
+
+        ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
+:       lda     pattern - DeskTopSettings::pattern,x
+        jsr     WriteSetting
+        dex
+        cpx     #AS_BYTE(DeskTopSettings::pattern-1)
+        bne     :-
+
         jsr     MarkDirty
 
         MGTK_CALL MGTK::RedrawDeskTop
@@ -1089,13 +1114,15 @@ arrow_num:
 .proc UpdateTrackingButtons
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
-        lda     SETTINGS + DeskTopSettings::mouse_tracking
+        ldx     #DeskTopSettings::mouse_tracking
+        jsr     ReadSetting
         cmp     #0
         jsr     ZToN
         sta     tracking_slow_rec::state
         BTK_CALL BTK::RadioUpdate, tracking_slow_params
 
-        lda     SETTINGS + DeskTopSettings::mouse_tracking
+        ldx     #DeskTopSettings::mouse_tracking
+        jsr     ReadSetting
         cmp     #1
         jsr     ZToN
         sta     tracking_fast_rec::state
@@ -1130,7 +1157,8 @@ arrow_num:
 .endproc ; UpdateIpblinkButtons
 
 .proc UpdateRGBCheckbox
-        lda     SETTINGS + DeskTopSettings::rgb_color
+        ldx     #DeskTopSettings::rgb_color
+        jsr     ReadSetting
         and     #$80
         sta     rgb_color_rec::state
         BTK_CALL BTK::CheckboxUpdate, rgb_color_params
@@ -1514,9 +1542,13 @@ ipblink_counter:
         .word   kDefaultIPBlinkSpeed
 
 .proc InitIpblink
+        ldx     #DeskTopSettings::ip_blink_speed
+        jsr     ReadSettingWord
+        stax    ip_blink_speed
+
         ;; Find matching index in word table, or 0
         ldx     #kIPBlinkSpeedTableSize * 2
-loop:   ecmp16  SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_speed_table-2,x
+loop:   ecmp16  ip_blink_speed, ipblink_speed_table-2,x
         bne     next
         ;; Found a match
         txa
@@ -1529,6 +1561,8 @@ next:   dex
         bpl     loop
         copy    #0, ipblink_selection ; not found
         rts
+
+ip_blink_speed: .word   0
 .endproc ; InitIpblink
 
 .proc HandleIpblinkClick
@@ -1538,7 +1572,15 @@ next:   dex
         dex
         dex                     ; 0, 2 or 4
 
-        copy16  ipblink_speed_table,x, SETTINGS + DeskTopSettings::ip_blink_speed
+        copy16  ipblink_speed_table,x, ip_blink_speed
+
+        ldx     #DeskTopSettings::ip_blink_speed
+        lda     ip_blink_speed
+        jsr     WriteSetting
+        ldx     #DeskTopSettings::ip_blink_speed+1
+        lda     ip_blink_speed+1
+        jsr     WriteSetting
+
         jsr     MarkDirty
         jsr     ResetIPBlinkCounter
 
@@ -1546,10 +1588,15 @@ next:   dex
         MGTK_CALL MGTK::SetPort, grafport
         jsr     UpdateIpblinkButtons
         jmp     InputLoop
+
+ip_blink_speed: .word   0
 .endproc ; HandleIpblinkClick
 
 .proc ResetIPBlinkCounter
-        copy16  SETTINGS + DeskTopSettings::ip_blink_speed, ipblink_counter
+        ldx     #DeskTopSettings::ip_blink_speed
+        jsr     ReadSettingWord
+        stax    ipblink_counter
+
         ;; Scale it because it's much slower in the DA than in DeskTop
         ;; prompts, due to more hit testing, etc.  1/2 speed seems okay.
         lsr16   ipblink_counter
@@ -1589,9 +1636,10 @@ done:   rts
 ;;; ============================================================
 
 .proc HandleRGBClick
-        lda     SETTINGS + DeskTopSettings::rgb_color
+        ldx     #DeskTopSettings::rgb_color
+        jsr     ReadSetting
         eor     #$80
-        sta     SETTINGS + DeskTopSettings::rgb_color
+        jsr     WriteSetting
         jsr     MarkDirty
 
         jsr     UpdateRGBCheckbox
@@ -1626,6 +1674,20 @@ done:   rts
         rts
 .endproc ; DrawStringRight
 
+;;; ============================================================
+
+;;; Input: X = `DeskTopSettings::*`
+;;; Output: A,X = word
+
+.proc ReadSettingWord
+        jsr     ReadSetting
+        pha
+        inx
+        jsr     ReadSetting
+        tax
+        pla
+        rts
+.endproc
 
 ;;; ============================================================
 

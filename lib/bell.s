@@ -4,7 +4,6 @@
 ;;; Requires these definitions:
 ;;; * `kBellProcLength` - size of sound procs
 ;;; * `BELLPROC` - runtime location of sound procs
-;;; * `BELLDATA` - storage location for sound procs (app specific)
 ;;; * `SlowSpeed` - slow accelerator, if needed
 ;;; * `ResumeSpeed` - resume accelerator, if needed
 
@@ -32,6 +31,22 @@
 
 .proc Swap
         .assert kBellProcLength <= 128, error, "Can't BPL this loop"
+
+        ;; Save and change banking
+        ldy     RDALTZP
+        sty     rdaltzp_flag
+
+        ldy     RDLCRAM
+        sty     rdlcram_flag
+
+        ldy     RDBNK2
+        sty     rdbnk2_flag
+
+        sty     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+
+        ;; Swap proc into place
         ldy     #kBellProcLength - 1
 :       lda     BELLPROC,y
         pha
@@ -42,6 +57,23 @@
         dey
         bpl     :-
 
+        ;; Restore banking
+        rdaltzp_flag := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        bpl     :+              ; leave ALTZPOFF
+        sty     ALTZPON         ; restore ALTZPON
+:
+        rdbnk2_flag := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        bmi     :+              ; leave LCBANK2
+        bit     LCBANK1         ; restore LCBANK1
+        bit     LCBANK1
+:
+        rdlcram_flag := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        bmi     :+
+        bit     ROMIN2          ; restore ROMIN2
+:
         rts
 .endproc ; Swap
 

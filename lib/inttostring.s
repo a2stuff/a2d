@@ -19,6 +19,10 @@ common: stax    value
         ror                     ; move carry to high bit
         sta     separator_flag
 
+        ldx     #DeskTopSettings::intl_thou_sep
+        jsr     ReadSetting
+        sta     thou_sep_char
+
         lda     #0
         sta     nonzero_flag
         ldy     #0              ; y = position in string
@@ -57,7 +61,8 @@ not_pad:
         cpx     #2
         bne     next
         iny
-        lda     SETTINGS + DeskTopSettings::intl_thou_sep
+        thou_sep_char := *+1
+        lda     #SELF_MODIFIED_BYTE
         sta     str_from_int,y
 
 next:   inx

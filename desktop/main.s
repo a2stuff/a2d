@@ -8266,7 +8266,8 @@ append_date_strings:
         ldax    #datetime_for_conversion
         jsr     ParseDatetime
 
-        lda     SETTINGS+DeskTopSettings::intl_date_order
+        ldx     #DeskTopSettings::intl_date_order
+        jsr     ReadSetting
         .assert DeskTopSettings::kDateOrderMDY = 0, error, "enum mismatch"
     IF_EQ
         ;; Month Day, Year
@@ -9790,7 +9791,8 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 ;;; ============================================================
 
 .proc SetRGBMode
-        bit     SETTINGS + DeskTopSettings::rgb_color
+        ldx     #DeskTopSettings::rgb_color
+        jsr     ReadSetting
         bpl     SetMonoMode
         FALL_THROUGH_TO SetColorMode
 .endproc ; SetRGBMode
@@ -9870,7 +9872,8 @@ done:   rts
         bit     machine_config::iigs_flag
         bpl     SetMonoMode::done ; nope
 
-        bit     SETTINGS + DeskTopSettings::rgb_color
+        ldx     #DeskTopSettings::rgb_color
+        jsr     ReadSetting
         bmi     SetColorMode::iigs
         bpl     SetMonoMode::iigs ; always
 .endproc ; ResetIIgsRGB
@@ -15193,6 +15196,7 @@ ADJUSTCASE_VOLBUF:      .tag    VolumeDirectoryHeader
         .include "../lib/doubleclick.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/muldiv.s"
+        .include "../lib/readwrite_settings.s"
 
         is_iigs_flag := machine_config::iigs_flag
         is_iiecard_flag := machine_config::iiecard_flag
@@ -15618,6 +15622,8 @@ str_volume:
 
 .endscope ; main
         main__YieldLoop := main::YieldLoop
+        main__ReadSetting := main::ReadSetting
+        main__WriteSetting := main::WriteSetting
 
 ;;; ============================================================
 ;;; "Exports"

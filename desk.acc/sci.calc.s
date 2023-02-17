@@ -546,9 +546,20 @@ window_title:
 .endmacro
 
 ;;; ==================================================
+;;; Cached settings
+
+intl_deci_sep:  .byte   0
+
+;;; ==================================================
 ;;; DA Init
 
-init:   MGTK_CALL MGTK::OpenWindow, winfo
+init:
+        ;; Cache settings
+        ldx     #DeskTopSettings::intl_deci_sep
+        jsr     ReadSetting
+        sta     intl_deci_sep
+
+        MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::FlushEvents
@@ -691,7 +702,7 @@ ret:    rts
 :
         cmp     #'.'            ; allow either
         bne     :+
-        lda     SETTINGS + DeskTopSettings::intl_deci_sep
+        lda     intl_deci_sep
 :
         cmp     #CHAR_ESCAPE
     IF_EQ
@@ -721,7 +732,7 @@ ret:    rts
 :       dec     calc_l
         ldx     #0
         lda     text_buffer1 + kTextBufferSize
-        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
+        cmp     intl_deci_sep
         bne     :+
         stx     calc_d
 :       cmp     #'E'
@@ -898,7 +909,7 @@ ret:    rts
         lda     calc_l
         bne     :+
         inc     calc_l
-:       lda     SETTINGS + DeskTopSettings::intl_deci_sep
+:       lda     intl_deci_sep
         sta     calc_d
         jmp     Insert
 
@@ -961,7 +972,7 @@ ret:   rts
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
 cloop:  lda     text_buffer1,x
-        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
+        cmp     intl_deci_sep
         bne     :+
         lda     #'.'
 :       sta     FBUFFR,x
@@ -1154,7 +1165,7 @@ sloop:  lda     FBUFFR,y
 cloop:  lda     FBUFFR-1,y
         cmp     #'.'            ; map decimal character
         bne     :+
-        lda     SETTINGS + DeskTopSettings::intl_deci_sep
+        lda     intl_deci_sep
 :       sta     text_buffer1,x
         sta     text_buffer2,x
         dex
@@ -1200,7 +1211,7 @@ end:    jsr     DisplayBuffer1
 
 .proc MaybeAddLeadingZero
         lda     text_buffer1+1,x
-        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
+        cmp     intl_deci_sep
         bne     :+
         lda     #'0'
         sta     text_buffer1,x

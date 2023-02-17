@@ -18,8 +18,6 @@ FONT            := $8680
 START           := $8E00
 
 OVERLAY_ADDR    := MGTKEntry + kSegmentAppLength
-SETTINGS        := OVERLAY_ADDR - .sizeof(DeskTopSettings)
-BELLDATA        := SETTINGS - kBellProcLength
 
 MLIEntry        := MLI
 
@@ -47,7 +45,7 @@ basic_system_not_found  = $FF
 
         ;; Segments
         INITSEG kLoaderOffset
-        DEFSEG SegmentLoader,     $2000,        $0300
+        DEFSEG SegmentLoader,     $2000,        $0200
         DEFSEG SegmentInvoker,    INVOKER,      $0160
         DEFSEG SegmentApp,        $4000,        $6700
         DEFSEG SegmentAlert,      $D000,        $0800

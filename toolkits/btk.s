@@ -199,7 +199,8 @@ skip_port:
         ;; Y-offset from bottom for shorter-than-normal buttons, e.g. arrow glyphs
         sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
 
-        lda     SETTINGS+DeskTopSettings::options
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF_NOT_ZERO
         ;; Draw the string (left aligned)
@@ -614,7 +615,8 @@ a_record  .addr
 ;;; If option is enabled, and if `a_shortcut` is not null,
 ;;; draw it and add the width to `rect`.
 .proc _MaybeDrawAndMeasureShortcut
-        lda     SETTINGS+DeskTopSettings::options
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF_NOT_ZERO
         lda     a_shortcut

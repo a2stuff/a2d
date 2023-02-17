@@ -1,3 +1,7 @@
+;;; ============================================================
+;;; Default Sound
+;;; ============================================================
+
 ;;; From ProDOS 8 Technical Reference Manual 5.4:
 ;;; "The standard Apple II "Air-raid" bell has been replaced with a
 ;;; gentler tone. Use it to give users some aural feedback that

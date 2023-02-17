@@ -414,12 +414,22 @@ grafport_win:       .tag    MGTK::GrafPort
 .endproc ; Swap
 
 .proc Install
+        ldax    ptr
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+        stax    ptr
+
         .assert kBellProcLength <= 128, error, "Can't BPL this loop"
         ldy     #kBellProcLength - 1
 :       lda     (ptr),y
         sta     BELLDATA,y
         dey
         bpl     :-
+
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
 
         rts
 .endproc ; Install
@@ -471,6 +481,10 @@ grafport_win:       .tag    MGTK::GrafPort
 ;;; ============================================================
 
 .proc SearchForCurrent
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+
         ldax    #BELLDATA
         ldy     #kChecksumLength
         jsr     CRC
@@ -499,7 +513,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
         ;; Match!
         lda     index
-        rts
+        jmp     finish
 
 next:   inc     index
         lda     index
@@ -508,6 +522,11 @@ next:   inc     index
 
         ;; Not Found
         lda     #$FF
+        FALL_THROUGH_TO finish
+
+finish: sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
         rts
 
 .endproc ; SearchForCurrent
@@ -1421,10 +1440,16 @@ filename_buffer:
 ;;; ============================================================
 
 .proc SaveSettings
-        ;; Run from Main, but with LCBANK1 in
+        ;; Run from Main, but with Aux LCBANK1 in
 
-        ;; Copy from LCBANK to somewhere ProDOS can read.
+        ;; Copy from Main LCBANK2 to somewhere ProDOS can read.
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
         COPY_BYTES kBellProcLength, BELLDATA, write_buffer
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
 
         ;; Write to desktop current prefix
         ldax    #filename

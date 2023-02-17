@@ -17,12 +17,21 @@ filename_buffer:
         DEFINE_WRITE_PARAMS write_params, write_buffer, kDeskTopSettingsFileSize
         DEFINE_CLOSE_PARAMS close_params
 
+;;; Run from Main, but with Aux LCBANK1 in
 .proc SaveSettings
-        ;; Run from Main, but with LCBANK1 in
 
-        ;; Copy from LCBANK to somewhere ProDOS can read.
+        ;; Copy from Main LCBANK2 to somewhere ProDOS can read.
+
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+
         COPY_STRUCT DeskTopSettings, SETTINGS, write_buffer + kDeskTopSettingsFileOffset
         copy    #kDeskTopSettingsFileVersion, write_buffer
+
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
 
         ;; Write to desktop current prefix
         ldax    #filename

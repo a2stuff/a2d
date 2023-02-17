@@ -8,7 +8,7 @@
 ;;; Segment loaded into AUX $D000-$D1FF
 ;;; ============================================================
 
-        BEGINSEG SegmentDeskTopLC1A
+        BEGINSEG SegmentDeskTopLC
 
 ;;; ============================================================
 ;;; Exported entry points for main>aux and aux>main calls
@@ -30,6 +30,20 @@
         jsr     SELF_MODIFIED
         jmp     BankInAux
 .endproc ; CallAuxToMainImpl
+
+.assert * = ReadSettingFromAux, error, "entry point mismatch"
+.proc ReadSettingFromAuxImpl
+        jsr     BankInMain
+        jsr     main__ReadSetting
+        jmp     BankInAux
+.endproc ; ReadSettingFromAuxImpl
+
+.assert * = WriteSettingFromAux, error, "entry point mismatch"
+.proc WriteSettingFromAuxImpl
+        jsr     BankInMain
+        jsr     main__WriteSetting
+        jmp     BankInAux
+.endproc ; WriteSettingFromAuxImpl
 
 ;;; ============================================================
 ;;; Common code for main>aux relays with MLI-style params
@@ -320,32 +334,4 @@ op:     lda     SELF_MODIFIED
 
         .include "res.s"
 
-        ENDSEG SegmentDeskTopLC1A
-
-;;; ============================================================
-;;; Segment loaded into AUX $FEFA-$FFFF
-;;; ============================================================
-
-        BEGINSEG SegmentDeskTopLC1B
-
-;;; ============================================================
-;;; Settings - modified by Control Panels
-;;; ============================================================
-
-        ASSERT_ADDRESS BELLDATA
-        .include "../lib/default_sound.s"
-
-        PAD_TO ::SETTINGS
-        .include "../lib/default_settings.s"
-
-;;; ============================================================
-
-;;; Reserved space for 6502 vectors
-;;; * NMI is rarely used
-;;; * On RESET, the main page/ROM is banked in (Enh. IIe, IIc, IIgs)
-;;; * IRQ must be preserved; points into firmware
-;;; ... but might as well preserved
-
-        ASSERT_ADDRESS VECTORS
-
-        ENDSEG SegmentDeskTopLC1B
+        ENDSEG SegmentDeskTopLC

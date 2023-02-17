@@ -115,6 +115,7 @@ start:  pha                     ; alert number
         Bell = app::Bell
         DrawString = app::DrawString
         AlertYieldLoop = app::AlertYieldLoopRelay
+        ReadSetting := app::ReadSetting
         alert_grafport = app::grafport2
 
         AD_SAVEBG = 1

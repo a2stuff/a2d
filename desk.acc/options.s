@@ -378,7 +378,11 @@ loop:
 ;;; Inputs: A = bit to read from DeskTopSettings::options
 ;;; Outputs: A = $80 if set, $00 if unset
 .proc GetBit
-        and     SETTINGS + DeskTopSettings::options
+        sta     mask
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
+        mask := *+1
+        and     #SELF_MODIFIED_BYTE
         beq     set
         lda     #0
         rts
@@ -397,11 +401,14 @@ set:    lda     #$80
         copy16  button_rec_table,x, rec_addr
         copy16  button_params_table,x, params_addr
 
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
         ldx     index
-        lda     SETTINGS + DeskTopSettings::options
         eor     button_mask_table,x
-        sta     SETTINGS + DeskTopSettings::options
+        ldx     #DeskTopSettings::options
+        jsr     WriteSetting
 
+        ldx     index
         lda     button_mask_table,x
         jsr     GetBit
         ldx     index

@@ -21,8 +21,6 @@
 ;;;          :.............:
 ;;;          |.............|
 ;;;          |.(buffer)....|    * data buffer for copies to RAMCard
-;;;   $3700  +-------------+
-;;;          | Settings    |
 ;;;   $3680  +-------------+
 ;;;          |             |
 ;;;          |             |
@@ -59,8 +57,6 @@ selector_buffer := $1600        ; Room for `kSelectorListBufSize`
 copy_buffer     := $3700
 kCopyBufferSize = MLI - copy_buffer
         .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "better performance for an integral number of blocks"
-
-SETTINGS        := copy_buffer - .sizeof(DeskTopSettings)
 
 ;;; ============================================================
 
@@ -104,6 +100,7 @@ start:
         jsr     EnsurePrefixSet
         jsr     DetectMousetext
         jsr     CreateLocalDir
+        jsr     PreserveQuitCode
         jsr     LoadSettings
         jmp     CopyDesktopToRAMCard
 
@@ -164,8 +161,8 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 ;;; ============================================================
 
         SETTINGS_IO_BUF := src_io_buffer
-        SETTINGS_LOAD_BUF := copy_buffer
         .include "../lib/load_settings.s"
+        .include "../lib/readwrite_settings.s"
 
 ;;; ============================================================
 ;;;
@@ -986,11 +983,6 @@ have128k:
         jsr     SLOT3ENTRY
         jsr     HOME
 
-        ;; Save original Quit routine and small loader
-        ;; TODO: Assumes prefix is retained. Compose correct path.
-
-        jsr     PreserveQuitCode
-
 resume:
         ;; IIgs: Reset shadowing
         sec
@@ -1004,7 +996,8 @@ resume:
         jsr     SetCopiedToRAMCardFlag
 
         ;; Skip RAMCard install if flag is set
-        lda     SETTINGS + DeskTopSettings::options
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
         and     #DeskTopSettings::kOptionsSkipRAMCard
         beq     :+
         jmp     DidNotCopy
@@ -2048,7 +2041,8 @@ str_desktop:
 start:  MLI_CALL CLOSE, close_everything_params
 
         ;; Don't try selector if flag is set
-        lda     SETTINGS + DeskTopSettings::options
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
         and     #DeskTopSettings::kOptionsSkipSelector
         bne     :+
 
@@ -2196,10 +2190,6 @@ done:   rts
         ADJUSTCASE_VOLBUF  := $820
         ADJUSTCASE_IO_BUFFER := src_io_buffer
         .include "../lib/adjustfilecase.s"
-
-;;; ============================================================
-        ;; Reserve $80 bytes for settings
-        PAD_TO SETTINGS
 
 ;;; ============================================================
 ;;; Settings - modified by Control Panel

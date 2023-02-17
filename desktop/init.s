@@ -272,8 +272,17 @@ done:
 ;;; Initialize MGTK
 
 .scope
+        ;; Copy pattern from settings to somewhere MGTK can see
+        tmp_pattern := $00
+        ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
+:       jsr     main::ReadSetting
+        sta     tmp_pattern - DeskTopSettings::pattern,x
+        dex
+        cpx     #AS_BYTE(DeskTopSettings::pattern-1)
+        bne     :-
+
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
-        MGTK_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
+        MGTK_CALL MGTK::SetDeskPat, tmp_pattern
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
         MGTK_CALL MGTK::InitMenu, initmenu_params
         jsr     main::SetRGBMode
@@ -282,9 +291,10 @@ done:
 
         lda     startdesktop_params::slot_num
     IF_ZERO
-        lda     SETTINGS+DeskTopSettings::options
+        ldx     #DeskTopSettings::options
+        jsr     main::ReadSetting
         ora     #DeskTopSettings::kOptionsShowShortcuts
-        sta     SETTINGS+DeskTopSettings::options
+        jsr     main::WriteSetting
     END_IF
 
         copy    #$80, main::mli_relay_checkevents_flag
@@ -293,18 +303,19 @@ done:
         ;; Cursor tracking
 
         ;; Doubled if option selected
-        lda     SETTINGS + DeskTopSettings::mouse_tracking
-        IF_NOT_ZERO
+        ldx     #DeskTopSettings::mouse_tracking
+        jsr     main::ReadSetting
+    IF_NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
-        END_IF
+    END_IF
         ;; Also doubled if a IIc
         lda     machine_config::id_idbyte ; ZIDBYTE=0 for IIc / IIc+
-        IF_ZERO
+    IF_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
         END_IF
-        MGTK_CALL MGTK::ScaleMouse, scalemouse_params
+    MGTK_CALL MGTK::ScaleMouse, scalemouse_params
 
         ;; --------------------------------------------------
 

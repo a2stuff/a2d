@@ -10,7 +10,12 @@
         dex
         bpl     :-
 
-        copy16  SETTINGS + DeskTopSettings::dblclick_speed, counter
+        ldx     #DeskTopSettings::dblclick_speed
+        jsr     ReadSetting
+        sta     counter
+        ldx     #DeskTopSettings::dblclick_speed+1
+        jsr     ReadSetting
+        sta     counter+1
 
         ;; Decrement counter, bail if time delta exceeded
 loop:   dec16   counter

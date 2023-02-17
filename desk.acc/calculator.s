@@ -474,9 +474,19 @@ window_title:
 .endmacro
 
 ;;; ==================================================
+;;; Cached settings
+
+intl_deci_sep:  .byte   0
+
+;;; ==================================================
 ;;; DA Init
 
 .proc Init
+        ;; Cache settings
+        ldx     #DeskTopSettings::intl_deci_sep
+        jsr     ReadSetting
+        sta     intl_deci_sep
+
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
@@ -837,7 +847,7 @@ try_eq: cmp     #'='            ; Equals?
         ldxy    #btn_mul::port
         jmp     DoOpClick
 
-:       cmp     SETTINGS + DeskTopSettings::intl_deci_sep ; Decimal?
+:       cmp     intl_deci_sep   ; Decimal?
         beq     dsep
         cmp     #'.'            ; allow either
         bne     try_add
@@ -849,7 +859,7 @@ dsep:   ldxy    #btn_dec::port
         lda     calc_l
         bne     :+
         inc     calc_l
-:       lda     SETTINGS + DeskTopSettings::intl_deci_sep
+:       lda     intl_deci_sep
         sta     calc_d
         jmp     update
 
@@ -957,7 +967,7 @@ trydiv: cmp     #'/'            ; Divide?
 :       dec     calc_l
         ldx     #0
         lda     text_buffer1 + kTextBufferSize
-        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
+        cmp     intl_deci_sep
         bne     :+
         stx     calc_d
 :       cmp     #'E'
@@ -1049,7 +1059,7 @@ reparse:
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
 cloop:  lda     text_buffer1,x
-        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
+        cmp     intl_deci_sep
         bne     :+
         lda     #'.'
 :       sta     FBUFFR,x
@@ -1107,7 +1117,7 @@ sloop:  lda     FBUFFR,y
 cloop:  lda     FBUFFR-1,y
         cmp     #'.'            ; map decimal character
         bne     :+
-        lda     SETTINGS + DeskTopSettings::intl_deci_sep
+        lda     intl_deci_sep
 :       sta     text_buffer1,x
         sta     text_buffer2,x
         dex
@@ -1152,7 +1162,7 @@ end:    jsr     DisplayBuffer1
 
 .proc MaybeAddLeadingZero
         lda     text_buffer1+1,x
-        cmp     SETTINGS + DeskTopSettings::intl_deci_sep
+        cmp     intl_deci_sep
         bne     :+
         lda     #'0'
         sta     text_buffer1,x

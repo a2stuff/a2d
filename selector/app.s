@@ -576,7 +576,16 @@ set_startup_menu_items:
         sta     mi_x7 + kMenuItemShortcutOffset + 1
         sta     str_slot_x7 + kStrSlotXOffset
 
-        MGTK_CALL MGTK::SetDeskPat, SETTINGS + DeskTopSettings::pattern
+        ;; Copy pattern from settings
+        tmp_pattern := $00
+        ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
+:       jsr     ReadSetting
+        sta     tmp_pattern - DeskTopSettings::pattern,x
+        dex
+        cpx     #AS_BYTE(DeskTopSettings::pattern-1)
+        bne     :-
+
+        MGTK_CALL MGTK::SetDeskPat, tmp_pattern
 
         copy    VERSION, startdesktop_params::machine
         copy    ZIDBYTE, startdesktop_params::subid
@@ -593,26 +602,28 @@ set_startup_menu_items:
 
         lda     startdesktop_params::slot_num
     IF_ZERO
-        lda     SETTINGS+DeskTopSettings::options
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
         ora     #DeskTopSettings::kOptionsShowShortcuts
-        sta     SETTINGS+DeskTopSettings::options
+        jsr     WriteSetting
     END_IF
 
         ;; --------------------------------------------------
         ;; Cursor tracking
 
         ;; Doubled if option selected
-        lda     SETTINGS + DeskTopSettings::mouse_tracking
-        IF_NOT_ZERO
+        ldx     #DeskTopSettings::mouse_tracking
+        jsr     ReadSetting
+    IF_NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
-        END_IF
+    END_IF
         ;; Also doubled if a IIc
         lda     ZIDBYTE         ; ZIDBYTE=0 for IIc / IIc+
-        IF_ZERO
+    IF_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
-        END_IF
+    END_IF
         MGTK_CALL MGTK::ScaleMouse, scalemouse_params
         ;; --------------------------------------------------
 
@@ -1894,7 +1905,8 @@ len:    .byte   0
 ;;; Assert: ROM is banked in
 
 .proc SetRGBMode
-        bit     SETTINGS + DeskTopSettings::rgb_color
+        ldx     #DeskTopSettings::rgb_color
+        jsr     ReadSetting
         bpl     SetMonoMode
         FALL_THROUGH_TO SetColorMode
 .endproc ; SetRGBMode
@@ -1980,7 +1992,8 @@ done:   rts
         bit     is_iigs_flag
         bpl     SetMonoMode::done
 
-        bit     SETTINGS + DeskTopSettings::rgb_color
+        ldx     #DeskTopSettings::rgb_color
+        jsr     ReadSetting
         bmi     SetColorMode::iigs
         bpl     SetMonoMode::iigs ; always
 .endproc ; ResetIIgsRGB
@@ -2022,6 +2035,7 @@ loop_counter:
         .include "../lib/clear_dhr.s"
         .include "../lib/disconnect_ram.s"
         .include "../lib/reconnect_ram.s"
+        .include "../lib/readwrite_settings.s"
 
          ADJUSTCASE_VOLPATH := $810
          ADJUSTCASE_VOLBUF  := $820
@@ -2030,16 +2044,6 @@ loop_counter:
 
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry
-
-;;; ============================================================
-;;; Settings - modified by Control Panels
-;;; ============================================================
-
-        PAD_TO ::BELLDATA
-        .include "../lib/default_sound.s"
-
-        PAD_TO ::SETTINGS
-        .include "../lib/default_settings.s"
 
 ;;; ============================================================
 

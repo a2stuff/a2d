@@ -166,10 +166,10 @@ hour_string:
 minute_string:
         PASCAL_STRING "  "
 
-str_date_separator:             ; populated from SETTINGS at runtime
+str_date_separator:             ; populated from settings at runtime
         PASCAL_STRING {SELF_MODIFIED_BYTE}
 
-str_time_separator:             ; populated from SETTINGS at runtime
+str_time_separator:             ; populated from settings at runtime
         PASCAL_STRING {SELF_MODIFIED_BYTE}
 
         .include "../lib/event_params.s"
@@ -292,13 +292,24 @@ TIMEHI: .byte   0
 .endparams
 
 ;;; ============================================================
+;;; Cached settings
+
+clock_24hours:  .byte   0
+
+;;; ============================================================
 ;;; Initialize window, unpack the date.
 
 init_window:
-        lda     SETTINGS + DeskTopSettings::intl_date_sep
+        ;; Cache settings
+        ldx     #DeskTopSettings::intl_date_sep
+        jsr     ReadSetting
         sta     str_date_separator+1
-        lda     SETTINGS + DeskTopSettings::intl_time_sep
+        ldx     #DeskTopSettings::intl_time_sep
+        jsr     ReadSetting
         sta     str_time_separator+1
+        ldx     #DeskTopSettings::clock_24hours
+        jsr     ReadSetting
+        sta     clock_24hours
 
         jsr     GetDateFromProDOS
 
@@ -425,7 +436,7 @@ init_window:
         lda     selected_field
         sbc     #1
         bne     UpdateSelection
-        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bit     clock_24hours
     IF_NC
         lda     #Field::period
     ELSE
@@ -439,7 +450,7 @@ init_window:
         lda     selected_field
         adc     #1
 
-        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bit     clock_24hours
     IF_NC
         cmp     #Field::period+1
     ELSE
@@ -598,7 +609,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
         ;; Hour requires special handling for 12-hour clock; patch the
         ;; min/max table depending on clock setting and period.
-        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bit     clock_24hours
     IF_NC
         lda     hour
         cmp     #12
@@ -803,7 +814,7 @@ str_pm: PASCAL_STRING "PM"
 
 .proc PrepareHourString
         lda     hour
-        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bit     clock_24hours
     IF_NC
         cmp     #0
         bne     :+
@@ -815,7 +826,7 @@ str_pm: PASCAL_STRING "PM"
     END_IF
 
         jsr     NumberToASCII
-        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bit     clock_24hours
     IF_NC
         cmp     #'0'
         bne     :+
@@ -969,13 +980,13 @@ label_downarrow:
 .endproc ; DrawWindow
 
 .proc UpdateOptionButtons
-        lda     SETTINGS + DeskTopSettings::clock_24hours
+        lda     clock_24hours
         cmp     #0
         jsr     ZToN
         sta     clock_12hour_rec::state
         BTK_CALL BTK::RadioUpdate, clock_12hour_params
 
-        lda     SETTINGS + DeskTopSettings::clock_24hours
+        lda     clock_24hours
         cmp     #$80
         jsr     ZToN
         sta     clock_24hour_rec::state
@@ -1046,7 +1057,7 @@ label_downarrow:
 
 .proc DrawPeriod
         MGTK_CALL MGTK::MoveTo, period_pos
-        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bit     clock_24hours
     IF_NS
         param_call DrawString, spaces_string
     ELSE
@@ -1174,7 +1185,10 @@ loop:   cmp     #10
 ;;; ============================================================
 
 .proc HandleOptionClick
-        sta     SETTINGS + DeskTopSettings::clock_24hours
+        sta     clock_24hours
+        ldx     #DeskTopSettings::clock_24hours
+        jsr     WriteSetting
+
         jsr     UpdateOptionButtons
 
         ;; Set dirty bit

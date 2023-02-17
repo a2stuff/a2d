@@ -76,8 +76,6 @@ start:
         MLI_CALL CLOSE, close_params
         bcs     fail
 
-        jsr     LoadSettings
-
         ;; Detect IIgs
         sec
         jsr     IDROUTINE
@@ -166,12 +164,6 @@ loop:   lda     (src),y
         bit     ROMIN2
         rts
 .endproc ; CopyToLc
-
-;;; ============================================================
-
-        SETTINGS_IO_BUF := io_buf
-        SETTINGS_LOAD_BUF := load_buf
-        .include "../lib/load_settings.s"
 
 ;;; ============================================================
 

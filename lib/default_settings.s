@@ -1,9 +1,10 @@
 ;;; ============================================================
-;;; Settings
-
+;;; Default Settings
+;;;
 ;;; Keep in sync w/ DeskTopSettings definition/offsets
+;;; ============================================================
 
-.scope settings
+.proc DefaultSettings
         settings_start := *
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::pattern
@@ -52,4 +53,4 @@
         ;; Reserved for future use...
 
         PAD_TO settings_start + .sizeof(DeskTopSettings)
-.endscope ; settings
+.endproc ; DefaultSettings

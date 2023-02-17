@@ -7,6 +7,15 @@
         parsed_ptr := $06
 
         stax    parsed_ptr
+
+        ;; Cache settings
+        ldx     #DeskTopSettings::clock_24hours
+        jsr     ReadSetting
+        sta     clock_24hours
+        ldx     #DeskTopSettings::intl_time_sep
+        jsr     ReadSetting
+        sta     intl_time_sep
+
         ldy     #ParsedDateTime::hour
         lda     (parsed_ptr),y
         sta     hour
@@ -20,7 +29,7 @@
         lda     hour
 
         ;; 24->12 hour clock?
-        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bit     clock_24hours
         bmi     skip
 
         cmp     #12
@@ -35,7 +44,7 @@
 skip:   jsr     Split
         pha
         txa                     ; tens (if > 0)
-        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bit     clock_24hours
         bmi     :+
         cmp     #0              ; if 12-hour clock && 0, skip
         beq     ones
@@ -48,7 +57,8 @@ ones:   pla                     ; ones
         sta     str_time,y
 
         ;; Separator
-        lda     SETTINGS + DeskTopSettings::intl_time_sep
+        intl_time_sep := *+1
+        lda     #SELF_MODIFIED_BYTE
         iny
         sta     str_time,y
 
@@ -65,7 +75,7 @@ ones:   pla                     ; ones
         iny
         sta     str_time,y
 
-        bit     SETTINGS + DeskTopSettings::clock_24hours
+        bit     clock_24hours
         bmi     done
 
         ;; Space
@@ -90,6 +100,8 @@ done:   sty     str_time
 
 hour:   .byte   0
 min:    .byte   0
+clock_24hours:
+        .byte   0
 
 ;;; Input: A = number
 ;;; Output: X = tens, A = ones

@@ -176,13 +176,13 @@ kDeskTopSettingsFileSize = 1 + .sizeof(DeskTopSettings)
 kDeskTopSettingsFileOffset = 1  ; offset into file of settings (first byte is version)
 
 ;;; ============================================================
-;;; Alert Sounds. See lib/bell.s
+;;; Alert Sounds. See `lib/bell.s`
 
 kBellProcLength = 128
 BELLPROC   := $300
 
 ;;; ============================================================
-;;; Alert library options. See lib/alert_dialog.s
+;;; Alert library options. See `lib/alert_dialog.s`
 
 ;;; Button options
 ;;; $C0 (%11xxxxxx) = Cancel + Ok
@@ -204,7 +204,7 @@ BELLPROC   := $300
 .endenum
 
 ;;; ============================================================
-;;; Date/Time. See lib/datetime.s
+;;; Date/Time. See `lib/datetime.s`
 
 .struct ParsedDateTime
         year    .word
@@ -249,24 +249,36 @@ kVSDRIVESignatureValue = $63
 ;;; LCBANK2.
 
 ;;; 24 bytes - flags for each entry, set to $FF when copied to RAM disk.
-ENTRY_COPIED_FLAGS      := $D395
+ENTRY_COPIED_FLAGS      := $D295
 
 ;;; 65 bytes - original prefix DeskTop was loaded with (e.g. "/HD/A2D")
-DESKTOP_ORIG_PREFIX     := $D3AD
+DESKTOP_ORIG_PREFIX     := $D2AD
 
 ;;; 17 bytes - prefix for RAMCard (e.g. "/RAM")
-RAMCARD_PREFIX          := $D3EE
+RAMCARD_PREFIX          := $D2EE
 
 ;;; $00 = no ramcard found
 ;;; $C0 = ramcard found, but not copied (internal state)
 ;;; $80 = ramcard found, DeskTop copied
-COPIED_TO_RAMCARD_FLAG  := $D3FF
+COPIED_TO_RAMCARD_FLAG  := $D2FF
+
+;;; ============================================================
+;;; Sound & Settings
+
+;;; These are stored in the custom ProDOS QUIT routine area in Main
+;;; LCBANK2. See `lib/readwrite_settings.s`
+
+BELLDATA := $D300
+;;; See `kBellProcLength`
+
+SETTINGS := $D380
+;;; See `DeskTopSettings`
 
 ;;; ============================================================
 ;;; Invoker routine locations
 
 ;;; DeskTop and Selector both use a routine at $290 to launch
-;;; other apps. See: lib/invoker.s
+;;; other apps. See: `lib/invoker.s`
 
 INVOKER_PREFIX          := $220 ; Prefix to set
 INVOKER                 := $290 ; Invoke other programs

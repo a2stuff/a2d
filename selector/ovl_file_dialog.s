@@ -74,6 +74,7 @@ YieldLoop               := app::YieldLoop
 DetectDoubleClick       := app::DetectDoubleClick
 AdjustVolumeNameCase    := app::AdjustVolumeNameCase
 AdjustFileEntryCase     := app::AdjustFileEntryCase
+ReadSetting             := app::ReadSetting
 
 ;;; Required macro definitions:
         .include "../lib/file_dialog.s"

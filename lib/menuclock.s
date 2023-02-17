@@ -1,7 +1,7 @@
 ;;; Render current time to right side of menu bar
 ;;;
 ;;; Requires:
-;;;    `SETTINGS` defined
+;;;    `ReadSetting` defined
 ;;;    `MGTK_CALL` defined
 ;;;    lib/datetime.s for parsing functions
 ;;;    `dow_strings` table
@@ -34,17 +34,23 @@ common: lda     MACHID
         bne     update
         dex
         bpl     :-
-        lda     SETTINGS + DeskTopSettings::clock_24hours
+        ldx     #DeskTopSettings::clock_24hours
+        jsr     ReadSetting
         cmp     last_s1
         bne     update
-        lda     SETTINGS + DeskTopSettings::intl_time_sep
+        ldx     #DeskTopSettings::intl_time_sep
+        jsr     ReadSetting
         cmp     last_s2
         bne     update
         rts
 
 update: COPY_STRUCT DateTime, DATELO, last_dt
-        copy    SETTINGS + DeskTopSettings::clock_24hours, last_s1
-        copy    SETTINGS + DeskTopSettings::intl_time_sep, last_s2
+        ldx     #DeskTopSettings::clock_24hours
+        jsr     ReadSetting
+        sta     last_s1
+        ldx     #DeskTopSettings::intl_time_sep
+        jsr     ReadSetting
+        sta     last_s2
 
         ;; --------------------------------------------------
         ;; Save the current GrafPort and use a custom one for drawing

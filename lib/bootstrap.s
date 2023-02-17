@@ -15,19 +15,22 @@
         ;; Patch the current prefix into `QuitRoutine`
         MLI_CALL GET_PREFIX, prefix_params
 
-        src     := QuitRoutine
-        dst     := SELECTOR
-        .assert sizeof_QuitRoutine <= $200, error, "too large"
+        ;; Need room for flags in $D280+ range (see common.inc)
+        .assert sizeof_QuitRoutine <= $180, error, "too large"
 
         bit     LCBANK2
         bit     LCBANK2
 
+        src := $06
+        dst := $08
+        copy16  #QuitRoutine, src
+        copy16  #SELECTOR, dst
         ldy     #0
-:       lda     src,y
-        sta     dst,y
-        lda     src+$100,y
-        sta     dst+$100,y
-        dey
+:       lda     (src),y
+        sta     (dst),y
+        inc16   src
+        inc16   dst
+        ecmp16  src, #QuitRoutine + sizeof_QuitRoutine
         bne     :-
 
         bit     ROMIN2
@@ -38,7 +41,6 @@
         prefix_buffer := QuitRoutine + ::QuitRoutine__prefix_buffer_offset
         DEFINE_GET_PREFIX_PARAMS prefix_params, prefix_buffer
 .endproc ; InstallAsQuit
-
 
 
 ;;; New QUIT routine. Gets relocated to $1000 by ProDOS before

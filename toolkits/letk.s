@@ -140,8 +140,16 @@ a_record  .addr
 .endproc ; InitImpl
 
 .proc _ResetIPCounter
+        ldx     #DeskTopSettings::ip_blink_speed+1
+        jsr     ReadSetting
+        pha
+        ldx     #DeskTopSettings::ip_blink_speed
+        jsr     ReadSetting
         ldy     #LETK::LineEditRecord::ip_counter
-        copy16in SETTINGS + DeskTopSettings::ip_blink_speed, (a_record),y
+        sta     (a_record),y
+        iny
+        pla
+        sta     (a_record),y
         rts
 .endproc ; _ResetIPCounter
 

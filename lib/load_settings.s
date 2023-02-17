@@ -1,35 +1,28 @@
 ;;; ============================================================
-;;; Load settings file (if present), overwriting default settings.
+;;; Load settings and alert sound (if present; otherwise default)
+;;; and install in the ProDOS QUIT code area in Main/LCBank2.
+;;;
 ;;; Required:
-;;; * `SETTINGS`
 ;;; * `SETTINGS_IO_BUF` - 1k ProDOS I/O buffer for the load
-;;; * `SETTINGS_LOAD_BUF` - loading buffer (since SETTINGS may be in LC)
-;;; Optional:
-;;; * `BELLDATA` - if defined, that will be loaded too.
-;;; Assert: ROMIN/ALTZPOFF
+;;; Assert: Called with ROMIN/ALTZPOFF
+;;; ============================================================
 
 .proc LoadSettings
         jmp     start
 
-        .assert ::SETTINGS <> SETTINGS_LOAD_BUF, error, "Load address must not be SETTINGS"
         DEFINE_OPEN_PARAMS open_cfg_params, str_config, SETTINGS_IO_BUF
-        DEFINE_READ_PARAMS read_cfg_params, SETTINGS_LOAD_BUF, kDeskTopSettingsFileSize
+        DEFINE_READ_PARAMS read_cfg_params, SETTINGS_LOAD_ADDR, kDeskTopSettingsFileSize
 
-.if .defined(::BELLDATA)
-        .assert ::BELLDATA <> SETTINGS_LOAD_BUF, error, "Load address must not be BELLDATA"
         DEFINE_OPEN_PARAMS open_snd_params, str_sound, SETTINGS_IO_BUF
-        DEFINE_READ_PARAMS read_snd_params, SETTINGS_LOAD_BUF, kBellProcLength
-.endif
+        DEFINE_READ_PARAMS read_snd_params, DefaultBell, kBellProcLength
 
         DEFINE_CLOSE_PARAMS close_params
 
 str_config:
         PASCAL_STRING kPathnameDeskTopConfig
 
-.if .defined(::BELLDATA)
 str_sound:
         PASCAL_STRING kPathnameBellProc
-.endif
 
 start:
         ;; --------------------------------------------------
@@ -61,7 +54,7 @@ start:
         ;; Default:
         ldxy    #kDefaultDblClickSpeed
 
-update: stxy    SETTINGS + DeskTopSettings::dblclick_speed
+update: stxy    DefaultSettings + DeskTopSettings::dblclick_speed
 
         ;; --------------------------------------------------
         ;; Now try to load the config file, skip on failure
@@ -74,30 +67,22 @@ update: stxy    SETTINGS + DeskTopSettings::dblclick_speed
         MLI_CALL READ, read_cfg_params
         bcs     close1
 
-        ;; Check version bytes; ignore on mismatch
-        lda     SETTINGS_LOAD_BUF
+        ;; Check version byte; ignore on mismatch
+        lda     version_byte
         cmp     #kDeskTopSettingsFileVersion
         bne     close1
 
         ;; Successful - move settings block into place
-.if ::SETTINGS >= $C000
-        sta     ALTZPON         ; Bank in Aux LC Bank 1
-        bit     LCBANK1
-        bit     LCBANK1
-.endif
+        bit     LCBANK2
+        bit     LCBANK2
 
-        COPY_STRUCT DeskTopSettings, SETTINGS_LOAD_BUF + kDeskTopSettingsFileOffset, SETTINGS
+        COPY_STRUCT DeskTopSettings, DefaultSettings, SETTINGS
 
-.if ::SETTINGS >= $C000
-        sta     ALTZPOFF        ; Bank in Main ZP/LC and ROM
         bit     ROMIN2
-.endif
 
         ;; Finish up
 close1: MLI_CALL CLOSE, close_params
 
-
-.if .defined(::BELLDATA)
         ;; --------------------------------------------------
         ;; Now try to load the sound file, skip on failure
 
@@ -110,25 +95,27 @@ close1: MLI_CALL CLOSE, close_params
         bcs     close2
 
         ;; Successful - move settings block into place
-.if ::BELLDATA >= $C000
-        sta     ALTZPON         ; Bank in Aux LC Bank 1
-        bit     LCBANK1
-        bit     LCBANK1
-.endif
+        bit     LCBANK2
+        bit     LCBANK2
 
-        COPY_BYTES kBellProcLength, SETTINGS_LOAD_BUF, BELLDATA
+        COPY_BYTES kBellProcLength, DefaultBell, BELLDATA
 
-.if ::BELLDATA >= $C000
-        sta     ALTZPOFF        ; Bank in Main ZP/LC and ROM
         bit     ROMIN2
-.endif
 
         ;; Finish up
 close2:  MLI_CALL CLOSE, close_params
 
         ;; --------------------------------------------------
-.endif
 
         rts
+
+;;; ============================================================
+
+        .include "../lib/default_sound.s"
+
+        SETTINGS_LOAD_ADDR := *
+version_byte:   .byte   0
+        .include "../lib/default_settings.s"
+        .assert * - SETTINGS_LOAD_ADDR = kDeskTopSettingsFileSize, error, "size mismatch"
 
 .endproc ; LoadSettings

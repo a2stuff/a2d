@@ -1103,7 +1103,8 @@ memory_bitmap:
         bit     auxlc::is_iigs_flag
         bpl     done
 
-        bit     SETTINGS + DeskTopSettings::rgb_color
+        ldx     #DeskTopSettings::rgb_color
+        jsr     ReadSetting
         bmi     color
 
         ldy     #$80            ; MONOCOLOR - Mono
@@ -1127,6 +1128,7 @@ done:   rts
         SP_LCBANK1 = 1
         .include "../lib/smartport.s"
         .include "../lib/reconnect_ram.s"
+        .include "../lib/readwrite_settings.s"
 
 ;;; ============================================================
 
@@ -1159,5 +1161,7 @@ main__on_line_buffer2           := main::on_line_buffer2
 main__ResetIIgsRGB              := main::ResetIIgsRGB
 main__saved_ram_unitnum         := main::saved_ram_unitnum
 main__saved_ram_drvec           := main::saved_ram_drvec
+
+ReadSetting := main::ReadSetting
 
         ENDSEG SegmentMain

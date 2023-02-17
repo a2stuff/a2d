@@ -274,33 +274,34 @@ ret:    rts
 
         cpx     #Field::date
     IF_EQ
-        sta     SETTINGS + DeskTopSettings::intl_date_sep
-        beq     update          ; always
+        ldx     #DeskTopSettings::intl_date_sep
+        bne     update          ; always
     END_IF
 
         cpx     #Field::time
     IF_EQ
-        sta     SETTINGS + DeskTopSettings::intl_time_sep
-        beq     update          ; always
+        ldx     #DeskTopSettings::intl_time_sep
+        bne     update          ; always
     END_IF
 
         cpx     #Field::deci
     IF_EQ
-        sta     SETTINGS + DeskTopSettings::intl_deci_sep
-        beq     update          ; always
+        ldx     #DeskTopSettings::intl_deci_sep
+        bne     update          ; always
     END_IF
 
         cpx     #Field::thou
     IF_EQ
-        sta     SETTINGS + DeskTopSettings::intl_thou_sep
-        beq     update          ; always
+        ldx     #DeskTopSettings::intl_thou_sep
+        bne     update          ; always
     END_IF
 
         rts
 
 update:
+        jsr     WriteSetting
         copy    #$80, dialog_result
-        txa
+        lda     selected_field
         jmp     DrawField
 .endproc ; OnKeyChar
 
@@ -403,25 +404,33 @@ hit:
 ;;; ============================================================
 
 .proc OnClick12Hour
-        copy    #0, SETTINGS+DeskTopSettings::clock_24hours
+        lda     #0
+        ldx     #DeskTopSettings::clock_24hours
+        jsr     WriteSetting
         copy    #$80, dialog_result
         jmp     UpdateClockOptionButtons
 .endproc ; OnClick12Hour
 
 .proc OnClick24Hour
-        copy    #$80, SETTINGS+DeskTopSettings::clock_24hours
+        lda     #$80
+        ldx     #DeskTopSettings::clock_24hours
+        jsr     WriteSetting
         copy    #$80, dialog_result
         jmp     UpdateClockOptionButtons
 .endproc ; OnClick24Hour
 
 .proc OnClickMDY
-        copy    #DeskTopSettings::kDateOrderMDY, SETTINGS+DeskTopSettings::intl_date_order
+        lda     #DeskTopSettings::kDateOrderMDY
+        ldx     #DeskTopSettings::intl_date_order
+        jsr     WriteSetting
         copy    #$80, dialog_result
         jmp     UpdateDateOptionButtons
 .endproc ; OnClickMDY
 
 .proc OnClickDMY
-        copy    #DeskTopSettings::kDateOrderDMY, SETTINGS+DeskTopSettings::intl_date_order
+        lda     #DeskTopSettings::kDateOrderDMY
+        ldx     #DeskTopSettings::intl_date_order
+        jsr     WriteSetting
         copy    #$80, dialog_result
         jmp     UpdateDateOptionButtons
 .endproc ; OnClickDMY
@@ -500,13 +509,15 @@ dialog_result:  .byte   0
 .endproc ; UpdateOptionButtons
 
 .proc UpdateClockOptionButtons
-        lda     SETTINGS + DeskTopSettings::clock_24hours
+        ldx     #DeskTopSettings::clock_24hours
+        jsr     ReadSetting
         cmp     #0
         jsr     ZToN
         sta     clock_12hour_rec::state
         BTK_CALL BTK::RadioUpdate, clock_12hour_params
 
-        lda     SETTINGS + DeskTopSettings::clock_24hours
+        ldx     #DeskTopSettings::clock_24hours
+        jsr     ReadSetting
         cmp     #$80
         jsr     ZToN
         sta     clock_24hour_rec::state
@@ -516,13 +527,15 @@ dialog_result:  .byte   0
 .endproc ; UpdateClockOptionButtons
 
 .proc UpdateDateOptionButtons
-        lda     SETTINGS + DeskTopSettings::intl_date_order
+        ldx     #DeskTopSettings::intl_date_order
+        jsr     ReadSetting
         cmp     #DeskTopSettings::kDateOrderMDY
         jsr     ZToN
         sta     date_mdy_rec::state
         BTK_CALL BTK::RadioUpdate, date_mdy_params
 
-        lda     SETTINGS + DeskTopSettings::intl_date_order
+        ldx     #DeskTopSettings::intl_date_order
+        jsr     ReadSetting
         cmp     #DeskTopSettings::kDateOrderDMY
         jsr     ZToN
         sta     date_dmy_rec::state
@@ -562,7 +575,8 @@ char:   .byte   SELF_MODIFIED_BYTE
 
         cmp     #Field::date
     IF_EQ
-        lda     SETTINGS + DeskTopSettings::intl_date_sep
+        ldx     #DeskTopSettings::intl_date_sep
+        jsr     ReadSetting
         sta     drawchar_params::char
         sta     date_sample_label_str+kDateSampleOffset1
         sta     date_sample_label_str+kDateSampleOffset2
@@ -576,7 +590,8 @@ char:   .byte   SELF_MODIFIED_BYTE
 
         cmp     #Field::time
     IF_EQ
-        lda     SETTINGS + DeskTopSettings::intl_time_sep
+        ldx     #DeskTopSettings::intl_time_sep
+        jsr     ReadSetting
         sta     drawchar_params::char
         sta     time_sample_label_str+kTimeSampleOffset
         MGTK_CALL MGTK::PaintRect, time_hilite
@@ -589,7 +604,8 @@ char:   .byte   SELF_MODIFIED_BYTE
 
         cmp     #Field::deci
     IF_EQ
-        lda     SETTINGS + DeskTopSettings::intl_deci_sep
+        ldx     #DeskTopSettings::intl_deci_sep
+        jsr     ReadSetting
         sta     drawchar_params::char
         sta     deci_sample_label_str+kDeciSampleOffset
         MGTK_CALL MGTK::PaintRect, deci_hilite
@@ -602,7 +618,8 @@ char:   .byte   SELF_MODIFIED_BYTE
 
         cmp     #Field::thou
     IF_EQ
-        lda     SETTINGS + DeskTopSettings::intl_thou_sep
+        ldx     #DeskTopSettings::intl_thou_sep
+        jsr     ReadSetting
         sta     drawchar_params::char
         sta     thou_sample_label_str+kThouSampleOffset
         MGTK_CALL MGTK::PaintRect, thou_hilite

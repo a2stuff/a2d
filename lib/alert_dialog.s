@@ -676,7 +676,8 @@ END_PARAM_BLOCK
 
         sub16_8 rect+MGTK::Rect::y2, #(kButtonHeight - kButtonTextVOffset), pos+MGTK::Point::ycoord
 
-        lda     SETTINGS+DeskTopSettings::options
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF_NOT_ZERO
         ;; Draw the label (left aligned)

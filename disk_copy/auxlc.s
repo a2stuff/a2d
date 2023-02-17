@@ -2399,16 +2399,6 @@ Alert := alert_dialog::Alert
         .include "../lib/doubleclick.s"
 
 ;;; ============================================================
-;;; Settings - modified by Control Panels
-;;; ============================================================
-
-        PAD_TO ::BELLDATA
-        .include "../lib/default_sound.s"
-
-        PAD_TO ::SETTINGS
-        .include "../lib/default_settings.s"
-
-;;; ============================================================
 
         .assert * <= $F600, error, "Update memory_bitmap if code extends past $F600"
 .endscope ; auxlc

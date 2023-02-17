@@ -1709,4 +1709,4 @@ trash_mask:
 
 ;;; (there's enough room here for 128 files at up to 26 bytes each; index 0 not used)
 icon_entries:
-        .assert (BELLDATA - *) >= (kMaxIconCount+1) * .sizeof(IconEntry), error, "Not enough room for icons"
+        .assert ($10000 - *) >= (kMaxIconCount+1) * .sizeof(IconEntry), error, "Not enough room for icons"

@@ -27,10 +27,6 @@ kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS
 ;;; Used by DAs for window definitions
 DEFAULT_FONT    := $8680
 
-;;; Settings loaded from disk on startup.
-SETTINGS        := $10000 - kIntVectorsSize - kDeskTopSettingsSize
-BELLDATA        := SETTINGS - kBellProcLength
-
 ;;; A 10k buffer that can be restored using overlays; load
 ;;; `kDynamicRoutineRestore5000` and call `JUMP_TABLE_RESTORE_OVL`
 ;;; to restore DeskTop afterwards.
@@ -49,6 +45,8 @@ kOverlay10KBufferSize   = $2800
         MGTKEntry := MGTKAuxEntry
         BTKEntry := BTKAuxEntry
         LETKEntry := LETKAuxEntry
+        ReadSetting := ReadSettingFromAux
+        WriteSetting := WriteSettingFromAux
 
 .endmacro
 .macro DA_END_AUX_SEGMENT
@@ -193,3 +191,10 @@ CallAuxToMain := $D000+15       ; A,X = target address in Main
 .macro JSR_TO_MAIN addr
         param_call CallAuxToMain, addr
 .endmacro
+
+;;; ============================================================
+;;; Settings
+;;; ============================================================
+
+ReadSettingFromAux      := $D000+30 ; X=index, A=value (out)
+WriteSettingFromAux     := $D000+39 ; X=index, A=value

@@ -113,19 +113,11 @@ L2049:  lda     open_params::ref_num
 
         MLI_CALL CLOSE, close_params
 
-        jsr     LoadSettings
-
         ;; --------------------------------------------------
         ;; Invoke the Selector application
         jmp     START
 
 crash:  brk
-
-;;; ============================================================
-
-        SETTINGS_IO_BUF := io_buf
-        SETTINGS_LOAD_BUF := SAVE_AREA_BUFFER
-        .include "../lib/load_settings.s"
 
 ;;; ============================================================
 

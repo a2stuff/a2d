@@ -38,55 +38,55 @@ filename:
 ;;; $0800 main       - DeskTop initialization code; later overwritten by DAs, etc
 ;;; $0290 main       - Routine to invoke other programs
 
-kNumSegments = 6
+kNumSegments = 5
 
 segment_addr_table_low:         ; Temporary load addresses
-        .byte   <$3F00,<$4000,<$4000 ; loaded here and then moved into Aux / LC banks
+        .byte   <$3F00,<$4000 ; loaded here and then moved into Aux / LC banks
         .byte   <kSegmentDeskTopMainAddress,<kSegmentInitializerAddress,<kSegmentInvokerAddress ; "moved" in place
         ASSERT_TABLE_SIZE segment_addr_table_low, kNumSegments
 
 segment_addr_table_high:        ; Temporary load addresses
-        .byte   >$3F00,>$4000,>$4000 ; loaded here and then moved into Aux / LC banks
+        .byte   >$3F00,>$4000 ; loaded here and then moved into Aux / LC banks
         .byte   >kSegmentDeskTopMainAddress,>kSegmentInitializerAddress,>kSegmentInvokerAddress ; "moved" in place
         ASSERT_TABLE_SIZE segment_addr_table_high, kNumSegments
 
 segment_dest_table_low:         ; Runtime addresses (moved here)
-        .byte   <kSegmentDeskTopAuxAddress,<kSegmentDeskTopLC1AAddress,<kSegmentDeskTopLC1BAddress
+        .byte   <kSegmentDeskTopAuxAddress,<kSegmentDeskTopLCAddress
         .byte   0,0,0           ; loaded directly into final address, no need to move
         ASSERT_TABLE_SIZE segment_dest_table_low, kNumSegments
 
 segment_dest_table_high:        ; Runtime addresses (moved here)
-        .byte   >kSegmentDeskTopAuxAddress,>kSegmentDeskTopLC1AAddress,>kSegmentDeskTopLC1BAddress
+        .byte   >kSegmentDeskTopAuxAddress,>kSegmentDeskTopLCAddress
         .byte   0,0,0           ; loaded directly into final address, no need to move
         ASSERT_TABLE_SIZE segment_dest_table_high, kNumSegments
 
 segment_size_table_low:
-        .byte   <kSegmentDeskTopAuxLength,<kSegmentDeskTopLC1ALength,<kSegmentDeskTopLC1BLength
+        .byte   <kSegmentDeskTopAuxLength,<kSegmentDeskTopLCLength
         .byte   <kSegmentDeskTopMainLength,<kSegmentInitializerLength,<kSegmentInvokerLength
         ASSERT_TABLE_SIZE segment_size_table_low, kNumSegments
 
 segment_size_table_high:
-        .byte   >kSegmentDeskTopAuxLength,>kSegmentDeskTopLC1ALength,>kSegmentDeskTopLC1BLength
+        .byte   >kSegmentDeskTopAuxLength,>kSegmentDeskTopLCLength
         .byte   >kSegmentDeskTopMainLength,>kSegmentInitializerLength,>kSegmentInvokerLength
         ASSERT_TABLE_SIZE segment_size_table_high, kNumSegments
 
 segment_offset_table_low:
-        .byte   <kSegmentDeskTopAuxOffset,<kSegmentDeskTopLC1AOffset,<kSegmentDeskTopLC1BOffset
+        .byte   <kSegmentDeskTopAuxOffset,<kSegmentDeskTopLCOffset
         .byte   <kSegmentDeskTopMainOffset,<kSegmentInitializerOffset,<kSegmentInvokerOffset
         ASSERT_TABLE_SIZE segment_offset_table_low, kNumSegments
 
 segment_offset_table_high:
-        .byte   >kSegmentDeskTopAuxOffset,>kSegmentDeskTopLC1AOffset,>kSegmentDeskTopLC1BOffset
+        .byte   >kSegmentDeskTopAuxOffset,>kSegmentDeskTopLCOffset
         .byte   >kSegmentDeskTopMainOffset,>kSegmentInitializerOffset,>kSegmentInvokerOffset
         ASSERT_TABLE_SIZE segment_offset_table_high, kNumSegments
 
 segment_offset_table_bank:
-        .byte   ^kSegmentDeskTopAuxOffset,^kSegmentDeskTopLC1AOffset,^kSegmentDeskTopLC1BOffset
+        .byte   ^kSegmentDeskTopAuxOffset,^kSegmentDeskTopLCOffset
         .byte   ^kSegmentDeskTopMainOffset,^kSegmentInitializerOffset,^kSegmentInvokerOffset
         ASSERT_TABLE_SIZE segment_offset_table_bank, kNumSegments
 
 segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (aux)
-        .byte   1,2,2,0,0,0
+        .byte   1,2,0,0,0
         ASSERT_TABLE_SIZE segment_type_table, kNumSegments
 
 start:
@@ -124,8 +124,7 @@ segment_num := * + 1
         MLI_CALL CLOSE, close_params
         beq     :+
         brk                     ; crash
-:       jsr     LoadSettings
-
+:
         jmp     kSegmentInitializerAddress
 
 continue:
@@ -223,12 +222,6 @@ loop:   lda     (src),y
 
         kProgressStops = kNumSegments + 1
         .include "../lib/loader_progress.s"
-
-;;; ============================================================
-
-        SETTINGS_IO_BUF := $1A00
-        SETTINGS_LOAD_BUF := $1E00
-        .include "../lib/load_settings.s"
 
 ;;; ============================================================
 

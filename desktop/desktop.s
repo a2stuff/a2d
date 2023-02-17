@@ -26,10 +26,9 @@
 
         ;; Segments
         INITSEG kLoaderOffset
-        DEFSEG SegmentLoader,      $2000, $0300
+        DEFSEG SegmentLoader,      $2000, $0200
         DEFSEG SegmentDeskTopAux,  $4000, $8000
-        DEFSEG SegmentDeskTopLC1A, $D000, $1F00
-        DEFSEG SegmentDeskTopLC1B, BELLDATA, kBellProcLength + kDeskTopSettingsSize
+        DEFSEG SegmentDeskTopLC,   $D000, $1F00
         DEFSEG SegmentDeskTopMain, $4000, $7F00
         DEFSEG SegmentInitializer, $0800, $0A00
         DEFSEG SegmentInvoker,     $0290, $0160
