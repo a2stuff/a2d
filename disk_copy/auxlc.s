@@ -450,6 +450,12 @@ str_error_reading:
 LD5E0:  .byte   0
 
 init:   jsr     DisconnectRAM
+
+        ;; DeskTop will have left a no-longer valid port selected,
+        ;; so init a new port before we do anything else.
+        MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
+
         MGTK_CALL MGTK::SetMenu, menu_definition
         jsr     SetCursorPointer
         copy    #1, checkitem_params::menu_item
