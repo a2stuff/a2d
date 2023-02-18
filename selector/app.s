@@ -366,6 +366,8 @@ portptr:        .addr   0
 
 entry:
 .proc AppInit
+        cli
+
         ;; Detect IIgs
         sec
         jsr     IDROUTINE       ; clear C if IIgs

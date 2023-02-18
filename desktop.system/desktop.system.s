@@ -97,10 +97,6 @@ header_orig_prefix:
 ;;; ============================================================
 
 start:
-        ;; Old ProDOS leaves interrupts inhibited on start.
-        ;; Do this for good measure.
-        cli
-
         jsr     EnsurePrefixSet
         jsr     DetectMousetext
         jsr     CreateLocalDir
