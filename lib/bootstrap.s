@@ -16,7 +16,7 @@
         MLI_CALL GET_PREFIX, prefix_params
 
         ;; Need room for flags in $D280+ range (see common.inc)
-        .assert sizeof_QuitRoutine <= $180, error, "too large"
+        .assert sizeof_QuitRoutine <= kMaxQuitRoutineSize, error, "too large"
 
         bit     LCBANK2
         bit     LCBANK2

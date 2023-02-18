@@ -242,6 +242,19 @@ VSDRIVE_SIGNATURE_BYTE := $D003 ; in Main/LCBANK1
 kVSDRIVESignatureValue = $63
 
 ;;; ============================================================
+;;; QUIT Routine
+
+;;; Modules (DeskTop, Selector) install a QUIT handler to restart
+;;; themselves after launching external programs. These live in Main
+;;; LCBANK2.
+
+;;; The routine can extend from `SELECTOR` ($D100) up through
+;;; `ENTRY_COPIED_FLAGS` (see below), but this seems a good limit
+;;; to allow for future expansion.
+
+kMaxQuitRoutineSize = $180
+
+;;; ============================================================
 ;;; RAM Disk
 
 ;;; On startup, DeskTop will copy itself (including resources) and
@@ -249,6 +262,9 @@ kVSDRIVESignatureValue = $63
 ;;; are set and the original/new prefixes to DeskTop are maintained.
 ;;; These are stored in the custom ProDOS QUIT routine area in Main
 ;;; LCBANK2.
+
+;;; These can extend from `SELECTOR` + `kMaxQuitRoutineSize`
+;;; $D280 (see above) through `BELLDATA`/`SETTINGS` $D300 (see below)
 
 ;;; 24 bytes - flags for each entry, set to $FF when copied to RAM disk.
 ENTRY_COPIED_FLAGS      := $D295
