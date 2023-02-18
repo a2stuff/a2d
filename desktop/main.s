@@ -8469,15 +8469,14 @@ min     := parsed_date + ParsedDateTime::minute
         bne     file            ; A = window id
 
         ;; Volume - no base path
-        copy16  #0, $08         ; base
-        beq     common          ; always
+        copy16  #0, win_path_ptr ; base
+        beq     concat           ; always
 
         ;; File - window path is base path
 file:
         jsr     GetWindowPath
         stax    win_path_ptr
 
-common:
         ;; Is there room?
         ldy     #0
         lda     (icon_ptr),y
@@ -8486,6 +8485,7 @@ common:
         cmp     #kMaxPathLength ; not +1 because we'll add '/'
         bcs     too_long
 
+concat:
         ;; Yes, concatenate
         jsr     JoinPaths       ; $08 = base, $06 = file
         lda     #0
