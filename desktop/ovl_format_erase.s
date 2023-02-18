@@ -249,8 +249,7 @@ l10:    cmp     #ERR_WRITE_PROTECTED
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l11:
-        ;; TODO: Change to TryAgain/Cancel
-        param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_erasing_error
+        param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_erasing_error
         jmp     l14
 
 l12:    pha
@@ -264,8 +263,7 @@ l12:    pha
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
 l13:
-        ;; TODO: Change to TryAgain/Cancel
-        param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_formatting_error
+        param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_formatting_error
 l14:    cmp     #kAlertResultCancel
         jne     l8
 
@@ -319,8 +317,7 @@ l8:     cmp     #ERR_WRITE_PROTECTED
         jmp     l7              ; `kAlertResultTryAgain` = 0
 
 l9:
-        ;; TODO: Change to TryAgain/Cancel
-        param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_erasing_error
+        param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_erasing_error
         cmp     #kAlertResultCancel
         bne     l7
 
