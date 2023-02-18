@@ -248,9 +248,9 @@ l10:    cmp     #ERR_WRITE_PROTECTED
         bne     cancel          ; `kAlertResultCancel` = 1
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
-l11:    jsr     Bell
-        jsr     main::SetPortForDialogWindow
-        param_call main::DrawDialogLabel, 6, aux::str_erasing_error
+l11:
+        ;; TODO: Change to TryAgain/Cancel
+        param_call ShowAlertParams, AlertButtonOptions::OkCancel, aux::str_erasing_error
         jmp     l14
 
 l12:    pha
@@ -263,13 +263,11 @@ l12:    pha
         bne     cancel          ; `kAlertResultCancel` = 1
         jmp     l8              ; `kAlertResultTryAgain` = 0
 
-l13:    jsr     Bell
-        jsr     main::SetPortForDialogWindow
-        param_call main::DrawDialogLabel, 6, aux::str_formatting_error
-l14:    jsr     main::PromptInputLoop
-        bmi     l14             ; not done
-        bne     cancel          ; ok
-        jmp     l8              ; cancel
+l13:
+        ;; TODO: Change to TryAgain/Cancel
+        param_call ShowAlertParams, AlertButtonOptions::OkCancel, aux::str_formatting_error
+l14:    cmp     #kAlertResultCancel
+        jne     l8
 
 cancel:
         pha
@@ -320,12 +318,11 @@ l8:     cmp     #ERR_WRITE_PROTECTED
         bne     cancel          ; `kAlertResultCancel` = 1
         jmp     l7              ; `kAlertResultTryAgain` = 0
 
-l9:     jsr     Bell
-        jsr     main::SetPortForDialogWindow
-        param_call main::DrawDialogLabel, 6, aux::str_erasing_error
-l10:    jsr     main::PromptInputLoop
-        bmi     l10             ; not done
-        beq     l7              ; ok
+l9:
+        ;; TODO: Change to TryAgain/Cancel
+        param_call ShowAlertParams, AlertButtonOptions::OkCancel, aux::str_erasing_error
+        cmp     #kAlertResultCancel
+        bne     l7
 
 cancel:
         pha                     ; cancel
