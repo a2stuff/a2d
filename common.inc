@@ -111,7 +111,7 @@ kAlertResultAll         = 5
 ;;; ============================================================
 ;;; Selector List file
 
-;;; See docs/Selector_List_Format.md for file format.
+;;; See `docs/Selector_List_Format.md` for file format.
 
 kSelectorListNumPrimaryRunListEntries   = 8
 kSelectorListNumSecondaryRunListEntries = 16
@@ -138,6 +138,8 @@ kSelectorListShortSize = $400
 
 ;;; ============================================================
 ;;; Settings Config File
+
+;;; See `docs/Desktop_Config_Format.md` for file format.
 
 kDefaultDblClickSpeed   = 1200
 kDefaultIPBlinkSpeed    =  500

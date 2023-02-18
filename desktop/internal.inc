@@ -219,6 +219,11 @@ kDeviceTypeCDROM        = 5
         aux_type                .word ; 30 $1E
 .endstruct
 
+;;; ============================================================
+;;; DESKTOP.FILE format
+
+;;; See `docs/Desktop_File_Format.md` for file format.
+
 kDeskTopFileVersion  = $82  ; Increment when format changes
 
 .struct DeskTopFileItem

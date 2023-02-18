@@ -2,48 +2,74 @@
 
 * [Calculator](calculator.s)
   * A basic four function calculator. Original DA from MouseDesk, with fixes.
-* [Puzzle](puzzle.s)
-  * Sliding tile puzzle. Original DA from MouseDesk, with fixes.
 * [Sort Directory](sort.directory.s)
   * Reorders the files in the active window by file type or selection. Original DA from MouseDesk, with fixes.
-* [Date and Time](date.and.time.s)
-  * Based on the original Date DA from MouseDesk, expanded to include setting the time as well.
 * [This Apple](this.apple.s)
   * Gives details about the computer, expanded memory, and what's in each slot.
-* [Control Panel](control.panel.s)
-  * Modify DeskTop settings: desktop pattern, double-click speed, mouse tracking speed, and insertion point blink speed.
-* [Sounds](sounds.s)
-  * Select different alert sounds.
-* [Startup](startup.s)
-  * Modify startup options, including launching the selector or copying to RAMCard.
-* [Joystick](joystick.s)
-  * Shows joystick calibration.
-* [System Speed](system.speed.s)
-  * Enable/disable system accelerator.
 * [Calendar](calendar.s)
   * Displays any month, from 1901 through 2155.
-* [Eyes](eyes.s)
-  * Eyes that follow the mouse.
-* [Screen Dump](screen.dump.s)
-  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1.
 * [Key Caps](key.caps.s)
   * Shows an on-screen keyboard map, and indicates which key is pressed.
 * [Run Basic Here](run.basic.here.s)
   * Launches BASIC.SYSTEM with PREFIX set to current window's directory.
+* [Find Files](find.files.s)
+  * Search a directory and descendants for filenames. Use ? and * as wildcards.
+* [Scientific Calculator](sci.calc.s)
+  * Calculator with trigonometry and other additional functions
+* [Map](map.s)
+  * World map with some searchable city locations.
+
+## Control Panels
+
+* [Date and Time](date.and.time.s)
+  * Based on the original Date DA from MouseDesk, expanded to include setting the time as well.
+* [Control Panel](control.panel.s)
+  * Modify DeskTop settings: desktop pattern, double-click speed, mouse tracking speed, and insertion point blink speed.
+* [Sounds](sounds.s)
+  * Select different alert sounds.
+* [International](internationaloptions.s)
+  * Modify regional options, including date, time, and number formats.
+* [Options](options.s)
+  * Modify options, including launching the selector or copying to RAMCard.
+* [Joystick](joystick.s)
+  * Shows joystick calibration.
+* [System Speed](system.speed.s)
+  * Enable/disable system accelerator.
+
+## Entertainment
+
+* [Eyes](eyes.s)
+  * Eyes that follow the mouse.
+* [Puzzle](puzzle.s)
+  * Sliding tile puzzle. Original DA from MouseDesk, with fixes.
+* [Neko](neko.s)
+  * An animated cat who interacts with your mouse.
+* [CD Remote](cd.remote.s)
+  * Controls music playback on an AppleCD SC.
+
+## Screen Savers
+
 * [Flying Toasters](flying.toasters.s)
   * Visual distractions.
 * [Melt](melt.s)
   * Visual distractions.
 * [Invert](invert.s)
   * Visual distractions.
-* [Find Files](find.files.s)
-  * Search a directory and descendants for filenames. Use ? and * as wildcards.
+* [Analog Clock](analog.clock.s)
+  * Displays the current time.
+* [Digital Clock](digital.clock.s)
+  * Displays the current time.
+* [Matrix](matrix.s)
+  * Digital rain.
+* [Rod's Pattern](rods.pattern.s)
+  * Classic Apple II lo-res demo.
+
+## Development Tools
+
 * [Darkness](darkness.s)
   * A debugging tool that paints the whole screen a dark pattern.
-* [Scientific Calculator](sci.calc.s)
-  * Calculator with trigonometry and other additional functions
-* [Map](map.s)
-  * World map with some searchable city locations.
+* [Screen Dump](screen.dump.s)
+  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1.
 
 Note that the new desk accessories require an updated version of Apple II DeskTop and **will not work** with DeskTop 1.1 or MouseDesk.
 
