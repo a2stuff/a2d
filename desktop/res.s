@@ -267,6 +267,7 @@ nextwinfo:      .addr   0
         kProgressDialogLabelDefaultX    = 25
         kProgressDialogLabelBaseY       = 17
         DEFINE_POINT progress_dialog_label_pos, kProgressDialogLabelDefaultX, 0
+        DEFINE_POINT progress_dialog_remaining_pos, aux::kProgressDialogWidth/2, aux::kProgressDialogLabelRow0
 
 ;;; ============================================================
 ;;; "About Apple II DeskTop" Dialog

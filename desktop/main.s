@@ -13545,8 +13545,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         jsr     ClearDestFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
-        param_call DrawProgressDialogLabel, 3, aux::str_files_remaining
-        jmp     DrawFileCountWithTrailingSpaces
+        jmp     DrawProgressDialogFilesRemaining
     END_IF
 
         ;; --------------------------------------------------
@@ -13666,8 +13665,7 @@ GetSizeDialogProc::do_count := *
         jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
-        param_call DrawProgressDialogLabel, 3, aux::str_files_remaining
-        jmp     DrawFileCountWithTrailingSpaces
+        jmp     DrawProgressDialogFilesRemaining
     END_IF
 
         ;; --------------------------------------------------
@@ -13888,8 +13886,7 @@ do_close:
         jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
-        param_call DrawProgressDialogLabel, 3, aux::str_files_remaining
-        jmp     DrawFileCountWithTrailingSpaces
+        jmp     DrawProgressDialogFilesRemaining
     END_IF
 
         ;; --------------------------------------------------
@@ -14042,11 +14039,14 @@ do_close:
 .endproc ; DrawFileCountWithSuffix
 
 ;;; `file_count` must be populated
-.proc DrawFileCountWithTrailingSpaces
+.proc DrawProgressDialogFilesRemaining
+        MGTK_CALL MGTK::MoveTo, progress_dialog_remaining_pos
+        param_call DrawString, aux::str_files_remaining
+
         jsr     ComposeFileCountString
         param_call DrawString, str_file_count
         param_jump DrawString, str_2_spaces
-.endproc ; DrawFileCountWithTrailingSpaces
+.endproc ; DrawProgressDialogFilesRemaining
 
 ;;; ============================================================
 
