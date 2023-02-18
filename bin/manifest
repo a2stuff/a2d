@@ -166,4 +166,7 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "mgtk/fonts/TORONTO"        $mediafnt "TORONTO"        070000
     emit add_file $disposition "mgtk/fonts/UPSIDE.DOWN"    $mediafnt "UPSIDE.DOWN"    070000
     emit add_file $disposition "mgtk/fonts/VENICE"         $mediafnt "VENICE"         070000
+
+    emit add_file $disposition "mgtk/fonts/PIG.FONT"       $mediafnt "PIG.FONT"       070000
+    emit add_file $disposition "mgtk/fonts/mini"           $mediafnt "Mini"           070000
 fi
