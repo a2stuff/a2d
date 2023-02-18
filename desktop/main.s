@@ -11593,9 +11593,7 @@ a_dst:  .addr   dst_path_buf
 .endproc ; DownloadDialogCompleteCallback
 
 .proc DownloadDialogTooLargeCallback
-        ldax    #aux::str_ramcard_full
-        ldy     #AlertButtonOptions::Ok
-        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        param_call ShowAlertParams, AlertButtonOptions::Ok, aux::str_ramcard_full
         jmp     CloseFilesCancelDialog
 .endproc ; DownloadDialogTooLargeCallback
 
@@ -11703,9 +11701,7 @@ retry:  MLI_CALL CREATE, create_params2
         bit     all_flag
         bmi     yes
 
-        ldax    #aux::str_exists_prompt
-        ldy     #AlertButtonOptions::YesNoAllCancel
-        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_exists_prompt
 
         cmp     #kAlertResultYes
         beq     yes
@@ -12110,9 +12106,7 @@ retry:  MLI_CALL CREATE, create_params3
         bit     all_flag
         bmi     yes
 
-        ldax    #aux::str_exists_prompt
-        ldy     #AlertButtonOptions::YesNoAllCancel
-        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_exists_prompt
 
         cmp     #kAlertResultYes
         beq     yes
@@ -12184,9 +12178,7 @@ a_path: .addr   src_path_buf
         param_call_indirect AppendToTextInputBuf, ptr_str_files_suffix
         param_call AppendToTextInputBuf, aux::str_delete_confirm_suffix
 
-        ldax    #text_input_buf
-        ldy     #AlertButtonOptions::OkCancel
-        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        param_call ShowAlertParams, AlertButtonOptions::OkCancel, text_input_buf
 
         cmp     #kAlertResultOK
         beq     :+
@@ -12276,9 +12268,7 @@ retry:  MLI_CALL DESTROY, destroy_params
         bit     all_flag
         bmi     do_it
 
-        ldax    #aux::str_delete_locked_file
-        ldy     #AlertButtonOptions::YesNoAllCancel
-        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_delete_locked_file
 
         cmp     #kAlertResultNo
         beq     done
@@ -12352,9 +12342,7 @@ loop:   MLI_CALL DESTROY, destroy_params
         bit     all_flag
         bmi     unlock
 
-        ldax    #aux::str_delete_locked_file
-        ldy     #AlertButtonOptions::YesNoAllCancel
-        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_delete_locked_file
 
         cmp     #kAlertResultNo
         beq     next_file
