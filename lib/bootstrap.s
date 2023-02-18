@@ -52,6 +52,12 @@
         MLIEntry := MLI
 
 self:
+        ;; ProDOS 8 Technical Reference Manual 5.1.5.2
+        ;; "In addition, the $D100 byte must be a CLD ($D8) instruction,
+        ;; so that programs can tell whether selector code or the ProDOS
+        ;; dispatcher code is resident."
+        cld
+
         ;; --------------------------------------------------
         ;; Show 80-column text screen
         sta     TXTSET
