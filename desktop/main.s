@@ -9739,14 +9739,14 @@ str_desktop:
         ;; Called with routine # in A
 
 load:   pha
-        copy    #AlertButtonOptions::OkCancel, button_options
-        .assert AlertButtonOptions::OkCancel <> 0, error, "bne always assumption"
+        copy    #AlertButtonOptions::OKCancel, button_options
+        .assert AlertButtonOptions::OKCancel <> 0, error, "bne always assumption"
         bne     :+              ; always
 
 restore:
         pha
         ;; Need to set low bit in this case to override the default.
-        copy    #AlertButtonOptions::Ok|%00000001, button_options
+        copy    #AlertButtonOptions::OK|%00000001, button_options
 
 :       jsr     SetCursorWatch ; before loading overlay
         pla
@@ -11593,7 +11593,7 @@ a_dst:  .addr   dst_path_buf
 .endproc ; DownloadDialogCompleteCallback
 
 .proc DownloadDialogTooLargeCallback
-        param_call ShowAlertParams, AlertButtonOptions::Ok, aux::str_ramcard_full
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_ramcard_full
         jmp     CloseFilesCancelDialog
 .endproc ; DownloadDialogTooLargeCallback
 
@@ -11869,7 +11869,7 @@ blocks_free:
     ELSE
         ldax    #aux::str_large_copy_prompt
     END_IF
-        ldy     #AlertButtonOptions::OkCancel
+        ldy     #AlertButtonOptions::OKCancel
         jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
 
         cmp     #kAlertResultCancel
@@ -12178,7 +12178,7 @@ a_path: .addr   src_path_buf
         param_call_indirect AppendToTextInputBuf, ptr_str_files_suffix
         param_call AppendToTextInputBuf, aux::str_delete_confirm_suffix
 
-        param_call ShowAlertParams, AlertButtonOptions::OkCancel, text_input_buf
+        param_call ShowAlertParams, AlertButtonOptions::OKCancel, text_input_buf
 
         cmp     #kAlertResultOK
         beq     :+
@@ -13348,13 +13348,13 @@ check_button_cancel:
       END_IF
 
         cmp     #CHAR_RETURN
-        jeq     HandleKeyOk
+        jeq     HandleKeyOK
 
         cmp     #CHAR_ESCAPE
       IF_EQ
         bit     prompt_button_flags
         jpl     HandleKeyCancel
-        jmp     HandleKeyOk
+        jmp     HandleKeyOK
       END_IF
 
         bit     has_input_field_flag
@@ -13372,10 +13372,10 @@ ignore:
 
         ;; --------------------------------------------------
 
-.proc HandleKeyOk
+.proc HandleKeyOK
         BTK_CALL BTK::Flash, aux::ok_button_params
         return  #0
-.endproc ; HandleKeyOk
+.endproc ; HandleKeyOK
 
 .proc HandleKeyCancel
         BTK_CALL BTK::Flash, aux::cancel_button_params
@@ -13597,11 +13597,11 @@ GetSizeDialogProc::do_count := *
         jsr     do_count
 
         jsr     SetPortForDialogWindow
-        jsr     AddOkButton
+        jsr     AddOKButton
 :       jsr     PromptInputLoop
         bmi     :-
         jsr     EraseDialogLabels
-        jsr     EraseOkButton
+        jsr     EraseOKButton
         return  #0
     END_IF
 
@@ -14152,7 +14152,7 @@ params:  .res    3
 .proc OpenPromptWindow
         sta     prompt_button_flags
         jsr     OpenDialogWindow
-        jsr     DrawOkButton
+        jsr     DrawOKButton
         bit     prompt_button_flags
         bmi     done
         jsr     DrawCancelButton
@@ -14382,27 +14382,27 @@ ellipsify:
 
 ;;; ============================================================
 
-.proc DrawOkButton
+.proc DrawOKButton
         BTK_CALL BTK::Draw, aux::ok_button_params
         rts
-.endproc ; DrawOkButton
+.endproc ; DrawOKButton
 
 .proc DrawCancelButton
         BTK_CALL BTK::Draw, aux::cancel_button_params
         rts
 .endproc ; DrawCancelButton
 
-.proc AddOkButton
-        jsr     DrawOkButton
+.proc AddOKButton
+        jsr     DrawOKButton
         copy    #$80, prompt_button_flags
         rts
-.endproc ; AddOkButton
+.endproc ; AddOKButton
 
-.proc EraseOkButton
+.proc EraseOKButton
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::ok_button_rec::rect
         rts
-.endproc ; EraseOkButton
+.endproc ; EraseOKButton
 
 .proc EraseDialogLabels
         jsr     SetPenModeCopy

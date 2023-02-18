@@ -187,17 +187,17 @@ BELLPROC   := $300
 ;;; Alert library options. See `lib/alert_dialog.s`
 
 ;;; Button options
-;;; $C0 (%11xxxxxx) = Cancel + Ok
+;;; $C0 (%11xxxxxx) = Cancel + OK
 ;;; $81 (%10xxxxx1) = Cancel + Yes + No + All
 ;;; $80 (%10xx0000) = Cancel + Try Again
-;;; $00 (%0xxxxxxx) = Ok
+;;; $00 (%0xxxxxxx) = OK
 ;;; Note: Wrapper APIs that take A=id, X=options use X=0 to mean
 ;;; "use default options for that id", otherwise X & %00000001.
 .enum AlertButtonOptions
-        OkCancel       = $C0
+        OKCancel       = $C0
         YesNoAllCancel = $81
         TryAgainCancel = $80
-        Ok             = $00
+        OK             = $00
 .endenum
 
 .enum AlertOptions

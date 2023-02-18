@@ -258,7 +258,7 @@ ret:    rts
     IF_NC
         ;; File - accept it.
         BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
-        jmp     HandleOk
+        jmp     HandleOK
     END_IF
         ;; Folder - open it.
         BTK_CALL BTK::Flash, file_dialog_res::open_button_params
@@ -316,11 +316,11 @@ not_list:
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        jsr     IsOkAllowed
+        jsr     IsOKAllowed
         bcs     :+
         BTK_CALL BTK::Track, file_dialog_res::ok_button_params
         bmi     :+
-        jsr     HandleOk
+        jsr     HandleOK
 :       rts
     END_IF
 
@@ -514,7 +514,7 @@ no:     sec
 
 ;;; ============================================================
 
-IsOkAllowed := IsCloseAllowed
+IsOKAllowed := IsCloseAllowed
 
 ;;; ============================================================
 
@@ -652,10 +652,10 @@ ret:    rts
 ;;; ============================================================
 
 .proc KeyReturn
-        jsr     IsOkAllowed
+        jsr     IsOKAllowed
         bcs     ret
         BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
-        jmp     HandleOk
+        jmp     HandleOK
 
 ret:    rts
 .endproc ; KeyReturn
@@ -821,7 +821,7 @@ done:   rts
 ;;; ============================================================
 
 .proc UpdateDynamicButtons
-        jsr     DrawOkLabel
+        jsr     DrawOKLabel
         jsr     DrawOpenLabel
         jmp     DrawCloseLabel
 .endproc ; UpdateDynamicButtons
@@ -882,7 +882,7 @@ done:   rts
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::penXOR
 
-        jsr     IsOkAllowed
+        jsr     IsOKAllowed
         ror
         sta     file_dialog_res::ok_button_rec::state
         BTK_CALL BTK::Draw, file_dialog_res::ok_button_params
@@ -933,8 +933,8 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc DrawOkLabel
-        jsr     IsOkAllowed
+.proc DrawOKLabel
+        jsr     IsOKAllowed
         lda     #0
         ror                     ; C into high bit
         cmp     file_dialog_res::ok_button_rec::state
@@ -944,7 +944,7 @@ ret:    rts
         BTK_CALL BTK::Hilite, file_dialog_res::ok_button_params
 
 ret:    rts
-.endproc ; DrawOkLabel
+.endproc ; DrawOKLabel
 
 ;;; ============================================================
 
@@ -1643,7 +1643,7 @@ LineEditClick           := f1::Click
 
 kJumpTableSize = 6
 jump_table:
-HandleOk:       jmp     0
+HandleOK:       jmp     0
 HandleCancel:   jmp     0
         .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
 

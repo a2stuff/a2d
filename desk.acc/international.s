@@ -224,9 +224,9 @@ init_window:
 
         lda     event_params::key
         cmp     #CHAR_RETURN
-        jeq     OnKeyOk
+        jeq     OnKeyOK
         cmp     #CHAR_ESCAPE
-        jeq     OnKeyOk
+        jeq     OnKeyOK
 
         cmp     #CHAR_LEFT
         beq     OnKeyPrev
@@ -331,7 +331,7 @@ hit:
 
         MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
-        jeq     OnClickOk
+        jeq     OnClickOK
 
         ;; --------------------------------------------------
 
@@ -386,20 +386,20 @@ hit:
 
 ;;; ============================================================
 
-.proc OnClickOk
+.proc OnClickOK
         BTK_CALL BTK::Track, ok_button_params
-        beq     OnOk
+        beq     OnOK
         rts
-.endproc ; OnClickOk
+.endproc ; OnClickOK
 
-.proc OnKeyOk
+.proc OnKeyOK
         BTK_CALL BTK::Flash, ok_button_params
-        FALL_THROUGH_TO OnOk
-.endproc ; OnKeyOk
+        FALL_THROUGH_TO OnOK
+.endproc ; OnKeyOK
 
-.proc OnOk
+.proc OnOK
         jmp     Destroy
-.endproc ; OnOk
+.endproc ; OnOK
 
 ;;; ============================================================
 

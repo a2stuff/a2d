@@ -392,9 +392,9 @@ init_window:
         lda     event_params::key
 
         cmp     #CHAR_RETURN
-        jeq     OnKeyOk
+        jeq     OnKeyOK
         cmp     #CHAR_ESCAPE
-        jeq     OnKeyOk
+        jeq     OnKeyOK
 
         ;; If there is a system clock, fields are read-only
         ldx     clock_flag
@@ -492,7 +492,7 @@ hit:
 
         MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
-        jeq     OnClickOk
+        jeq     OnClickOK
 
         MGTK_CALL MGTK::InRect, clock_12hour_rec::rect
         cmp     #MGTK::inrect_inside
@@ -529,28 +529,28 @@ hit_target_jump_table:
 
 ;;; ============================================================
 
-.proc OnClickOk
+.proc OnClickOK
         BTK_CALL BTK::Track, ok_button_params
     IF_ZERO
         pla                     ; pop OnClick
         pla
-        jmp     OnOk
+        jmp     OnOK
     END_IF
         rts
-.endproc ; OnClickOk
+.endproc ; OnClickOK
 
-.proc OnKeyOk
+.proc OnKeyOK
         BTK_CALL BTK::Flash, ok_button_params
-        FALL_THROUGH_TO OnOk
-.endproc ; OnKeyOk
+        FALL_THROUGH_TO OnOK
+.endproc ; OnKeyOK
 
-.proc OnOk
+.proc OnOK
         lda     clock_flag
     IF_ZERO
         jsr     UpdateProDOS
     END_IF
         jmp     Destroy
-.endproc ; OnOk
+.endproc ; OnOK
 
 ;;; ============================================================
 

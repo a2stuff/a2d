@@ -48,7 +48,7 @@ start:  jsr     OpenWindow
 
 ;;; ============================================================
 
-.proc HandleOk
+.proc HandleOK
         param_call GetPath, buf_path
 
         ldx     saved_stack
@@ -56,7 +56,7 @@ start:  jsr     OpenWindow
         ldy     #<buf_path
         ldx     #>buf_path
         return  #$00
-.endproc ; HandleOk
+.endproc ; HandleOK
 
 ;;; ============================================================
 

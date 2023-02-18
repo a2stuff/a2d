@@ -131,7 +131,7 @@ buffer: .res 16, 0
 ;;; ============================================================
 
 jt_callbacks:
-        jmp     HandleOk
+        jmp     HandleOK
         jmp     HandleCancel
         .assert * - jt_callbacks = file_dialog::kJumpTableSize, error, "Table size error"
 
@@ -141,7 +141,7 @@ jt_callbacks:
 ;;;          X = which run list (1=primary, 2=secondary)
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
-.proc HandleOk
+.proc HandleOK
         param_call file_dialog::GetPath, path_buf0
 
         ;; If name is empty, use last path segment
@@ -190,7 +190,7 @@ ok:     jsr     file_dialog::CloseWindow
         ldx     which_run_list
         ldy     copy_when
         return  #0
-.endproc ; HandleOk
+.endproc ; HandleOK
 
 ;;; Returns C=0 if `path_buf0` is a volume path, C=1 otherwise
 ;;; Assert: Path is valid

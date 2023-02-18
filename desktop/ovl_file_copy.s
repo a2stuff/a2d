@@ -23,13 +23,13 @@
 .endproc ; Init
 
 jt_callbacks:
-        jmp     HandleOk
+        jmp     HandleOK
         jmp     HandleCancel
         .assert * - jt_callbacks = file_dialog::kJumpTableSize, error, "Table size error"
 
 ;;; ============================================================
 
-.proc HandleOk
+.proc HandleOK
         param_call file_dialog::GetPath, path_buf0
 
         jsr     file_dialog::CloseWindow
@@ -37,7 +37,7 @@ jt_callbacks:
         ldx     file_dialog::saved_stack
         txs
         return  #$00
-.endproc ; HandleOk
+.endproc ; HandleOK
 
 ;;; ============================================================
 

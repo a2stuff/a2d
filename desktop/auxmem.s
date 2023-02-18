@@ -488,39 +488,39 @@ message_table_high:
         ASSERT_TABLE_SIZE message_table_high, kNumAlerts
 
 alert_options_table:
-        .byte   AlertButtonOptions::Ok             ; dummy
-        .byte   AlertButtonOptions::Ok             ; ERR_IO_ERROR
-        .byte   AlertButtonOptions::Ok             ; ERR_DEVICE_NOT_CONNECTED
+        .byte   AlertButtonOptions::OK             ; dummy
+        .byte   AlertButtonOptions::OK             ; ERR_IO_ERROR
+        .byte   AlertButtonOptions::OK             ; ERR_DEVICE_NOT_CONNECTED
         .byte   AlertButtonOptions::TryAgainCancel ; ERR_WRITE_PROTECTED
-        .byte   AlertButtonOptions::Ok             ; ERR_INVALID_PATHNAME
+        .byte   AlertButtonOptions::OK             ; ERR_INVALID_PATHNAME
         .byte   AlertButtonOptions::TryAgainCancel ; ERR_PATH_NOT_FOUND
-        .byte   AlertButtonOptions::Ok             ; ERR_VOL_NOT_FOUND
-        .byte   AlertButtonOptions::Ok             ; ERR_FILE_NOT_FOUND
-        .byte   AlertButtonOptions::Ok             ; ERR_DUPLICATE_FILENAME
-        .byte   AlertButtonOptions::Ok             ; ERR_OVERRUN_ERROR
-        .byte   AlertButtonOptions::Ok             ; ERR_VOLUME_DIR_FULL
-        .byte   AlertButtonOptions::Ok             ; ERR_ACCESS_ERROR
-        .byte   AlertButtonOptions::Ok             ; ERR_NOT_PRODOS_VOLUME
-        .byte   AlertButtonOptions::Ok             ; ERR_DUPLICATE_VOLUME
+        .byte   AlertButtonOptions::OK             ; ERR_VOL_NOT_FOUND
+        .byte   AlertButtonOptions::OK             ; ERR_FILE_NOT_FOUND
+        .byte   AlertButtonOptions::OK             ; ERR_DUPLICATE_FILENAME
+        .byte   AlertButtonOptions::OK             ; ERR_OVERRUN_ERROR
+        .byte   AlertButtonOptions::OK             ; ERR_VOLUME_DIR_FULL
+        .byte   AlertButtonOptions::OK             ; ERR_ACCESS_ERROR
+        .byte   AlertButtonOptions::OK             ; ERR_NOT_PRODOS_VOLUME
+        .byte   AlertButtonOptions::OK             ; ERR_DUPLICATE_VOLUME
 
-        .byte   AlertButtonOptions::OkCancel       ; kErrInsertSystemDisk
-        .byte   AlertButtonOptions::Ok             ; kErrSelectorListFull
-        .byte   AlertButtonOptions::Ok             ; kErrWindowMustBeClosed
-        .byte   AlertButtonOptions::Ok             ; kErrTooManyFiles
-        .byte   AlertButtonOptions::Ok             ; kErrTooManyWindows
-        .byte   AlertButtonOptions::OkCancel       ; kErrSaveChanges
+        .byte   AlertButtonOptions::OKCancel       ; kErrInsertSystemDisk
+        .byte   AlertButtonOptions::OK             ; kErrSelectorListFull
+        .byte   AlertButtonOptions::OK             ; kErrWindowMustBeClosed
+        .byte   AlertButtonOptions::OK             ; kErrTooManyFiles
+        .byte   AlertButtonOptions::OK             ; kErrTooManyWindows
+        .byte   AlertButtonOptions::OKCancel       ; kErrSaveChanges
 
-        .byte   AlertButtonOptions::OkCancel       ; kErrConfirmRunning
-        .byte   AlertButtonOptions::Ok             ; kErrBadReplacement
-        .byte   AlertButtonOptions::OkCancel       ; kErrUnsupportedFileType
-        .byte   AlertButtonOptions::Ok             ; kErrNoWindowsOpen
-        .byte   AlertButtonOptions::Ok             ; kErrMoveCopyIntoSelf
-        .byte   AlertButtonOptions::Ok             ; kErrDuplicateVolName
-        .byte   AlertButtonOptions::Ok             ; kErrFileNotOpenable
-        .byte   AlertButtonOptions::Ok             ; kErrNameTooLong
+        .byte   AlertButtonOptions::OKCancel       ; kErrConfirmRunning
+        .byte   AlertButtonOptions::OK             ; kErrBadReplacement
+        .byte   AlertButtonOptions::OKCancel       ; kErrUnsupportedFileType
+        .byte   AlertButtonOptions::OK             ; kErrNoWindowsOpen
+        .byte   AlertButtonOptions::OK             ; kErrMoveCopyIntoSelf
+        .byte   AlertButtonOptions::OK             ; kErrDuplicateVolName
+        .byte   AlertButtonOptions::OK             ; kErrFileNotOpenable
+        .byte   AlertButtonOptions::OK             ; kErrNameTooLong
         .byte   AlertButtonOptions::TryAgainCancel ; kErrInsertSrcDisk
         .byte   AlertButtonOptions::TryAgainCancel ; kErrInsertDstDisk
-        .byte   AlertButtonOptions::Ok             ; kErrBasicSysNotFound
+        .byte   AlertButtonOptions::OK             ; kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
 
 start:

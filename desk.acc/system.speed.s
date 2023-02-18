@@ -249,10 +249,10 @@ frame_counter:
         lda     event_params::key
 
         cmp     #CHAR_RETURN
-        beq     OnKeyOk
+        beq     OnKeyOK
 
         cmp     #CHAR_ESCAPE
-        beq     OnKeyOk
+        beq     OnKeyOK
 
         cmp     #kShortcutNorm
         beq     OnKeyNorm
@@ -267,10 +267,10 @@ frame_counter:
         jmp     InputLoop
 .endproc ; OnKey
 
-.proc OnKeyOk
+.proc OnKeyOK
         BTK_CALL BTK::Flash, ok_button_params
         jmp     CloseWindow
-.endproc ; OnKeyOk
+.endproc ; OnKeyOK
 
 .proc OnKeyNorm
         BTK_CALL BTK::Flash, norm_button_params
@@ -318,7 +318,7 @@ hit:    lda     winfo::window_id
 
         MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
-        jeq     OnClickOk
+        jeq     OnClickOK
 
         MGTK_CALL MGTK::InRect, norm_button_rec::rect
         cmp     #MGTK::inrect_inside
@@ -333,11 +333,11 @@ hit:    lda     winfo::window_id
 
 ;;; ============================================================
 
-.proc OnClickOk
+.proc OnClickOK
         BTK_CALL BTK::Track, ok_button_params
         jeq     CloseWindow
         jmp     InputLoop
-.endproc ; OnClickOk
+.endproc ; OnClickOK
 
 ;;; ============================================================
 

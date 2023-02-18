@@ -671,7 +671,7 @@ use_sd:
     END_IF
 show:   jsr     ShowAlertDialog
         cmp     #kAlertResultOK
-        beq     maybe_format    ; Ok
+        beq     maybe_format    ; OK
         jmp     InitDialog      ; Cancel
 
         ;; --------------------------------------------------
@@ -2163,17 +2163,17 @@ message_table:
         ASSERT_ADDRESS_TABLE_SIZE message_table, auxlc::kNumAlertMessages
 
 alert_button_options_table:
-        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertSource
-        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgInsertDestination
-        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgConfirmErase
-        .byte   AlertButtonOptions::Ok          ; kAlertMsgDestinationFormatFail
+        .byte   AlertButtonOptions::OKCancel    ; kAlertMsgInsertSource
+        .byte   AlertButtonOptions::OKCancel    ; kAlertMsgInsertDestination
+        .byte   AlertButtonOptions::OKCancel    ; kAlertMsgConfirmErase
+        .byte   AlertButtonOptions::OK          ; kAlertMsgDestinationFormatFail
         .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgFormatError
         .byte   AlertButtonOptions::TryAgainCancel ; kAlertMsgDestinationProtected
-        .byte   AlertButtonOptions::OkCancel    ; kAlertMsgConfirmEraseSlotDrive
-        .byte   AlertButtonOptions::Ok          ; kAlertMsgCopySuccessful
-        .byte   AlertButtonOptions::Ok          ; kAlertMsgCopyFailure
-        .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertSourceOrCancel
-        .byte   AlertButtonOptions::Ok          ; kAlertMsgInsertDestinationOrCancel
+        .byte   AlertButtonOptions::OKCancel    ; kAlertMsgConfirmEraseSlotDrive
+        .byte   AlertButtonOptions::OK          ; kAlertMsgCopySuccessful
+        .byte   AlertButtonOptions::OK          ; kAlertMsgCopyFailure
+        .byte   AlertButtonOptions::OK          ; kAlertMsgInsertSourceOrCancel
+        .byte   AlertButtonOptions::OK          ; kAlertMsgInsertDestinationOrCancel
         ASSERT_TABLE_SIZE alert_button_options_table, auxlc::kNumAlertMessages
 
 alert_options_table:

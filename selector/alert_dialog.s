@@ -54,14 +54,14 @@ message_table:
         ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
 
 alert_options_table:
-        .byte   AlertButtonOptions::Ok
-        .byte   AlertButtonOptions::Ok
-        .byte   AlertButtonOptions::Ok
-        .byte   AlertButtonOptions::Ok
+        .byte   AlertButtonOptions::OK
+        .byte   AlertButtonOptions::OK
+        .byte   AlertButtonOptions::OK
+        .byte   AlertButtonOptions::OK
         .byte   AlertButtonOptions::TryAgainCancel
-        .byte   AlertButtonOptions::Ok
+        .byte   AlertButtonOptions::OK
         .byte   AlertButtonOptions::TryAgainCancel
-        .byte   AlertButtonOptions::Ok
+        .byte   AlertButtonOptions::OK
         ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
 
 .params alert_params
