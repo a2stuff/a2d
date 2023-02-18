@@ -125,7 +125,7 @@ skip_select:
         copy    #$00, format_erase_overlay_flag
         jsr     main::InitNameInput
         jsr     main::SetPortForDialogWindow
-        param_call main::DrawDialogLabel, 3, aux::str_new_volume
+        param_call main::DrawDialogLabel, 4, aux::str_new_volume
 
 loop2:
         jsr     main::PromptInputLoop
