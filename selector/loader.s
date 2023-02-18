@@ -35,6 +35,10 @@ str_selector:
 ;;; ============================================================
 
 start:
+        ;; Old ProDOS leaves interrupts inhibited on start.
+        ;; Do this for good measure.
+        cli
+
         ;; Initialize system bitmap
         ldx     #BITMAP_SIZE-1
         lda     #0
