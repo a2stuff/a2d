@@ -11,7 +11,8 @@
         jmp     start
 
         DEFINE_OPEN_PARAMS open_cfg_params, str_config, SETTINGS_IO_BUF
-        DEFINE_READ_PARAMS read_cfg_params, SETTINGS_LOAD_ADDR, kDeskTopSettingsFileSize
+        DEFINE_READ_PARAMS read_cfgver_params, version_byte, 1
+        DEFINE_READ_PARAMS read_cfg_params, DefaultSettings, .sizeof(DeskTopSettings)
 
         DEFINE_OPEN_PARAMS open_snd_params, str_sound, SETTINGS_IO_BUF
         DEFINE_READ_PARAMS read_snd_params, DefaultBell, kBellProcLength
@@ -23,6 +24,9 @@ str_config:
 
 str_sound:
         PASCAL_STRING kPathnameBellProc
+
+version_byte:
+        .byte   0
 
 start:
         ;; --------------------------------------------------
@@ -57,22 +61,31 @@ start:
 update: stxy    DefaultSettings + DeskTopSettings::dblclick_speed
 
         ;; --------------------------------------------------
-        ;; Now try to load the config file, skip on failure
-
+        ;; Now try to load the config file
+.scope
         MLI_CALL OPEN, open_cfg_params
-        bcs     close1
+        bcs     close           ; failed - use defaults
         lda     open_cfg_params::ref_num
+        sta     read_cfgver_params::ref_num
         sta     read_cfg_params::ref_num
         sta     close_params::ref_num
-        MLI_CALL READ, read_cfg_params
-        bcs     close1
+
+        MLI_CALL READ, read_cfgver_params
+        bcs     close           ; failed - use defaults
 
         ;; Check version byte; ignore on mismatch
         lda     version_byte
         cmp     #kDeskTopSettingsFileVersion
-        bne     close1
+        bne     close           ; mismatch - use defaults
 
-        ;; Successful - move settings block into place
+        ;; Version byte is fine - read the rest of the file
+        MLI_CALL READ, read_cfg_params
+
+close:  MLI_CALL CLOSE, close_params
+.endscope
+
+        ;; --------------------------------------------------
+        ;; Move settings block into place
         bit     LCBANK2
         bit     LCBANK2
 
@@ -80,42 +93,32 @@ update: stxy    DefaultSettings + DeskTopSettings::dblclick_speed
 
         bit     ROMIN2
 
-        ;; Finish up
-close1: MLI_CALL CLOSE, close_params
-
         ;; --------------------------------------------------
-        ;; Now try to load the sound file, skip on failure
-
+        ;; Now try to load the sound file
+.scope
         MLI_CALL OPEN, open_snd_params
-        bcs     close2
+        bcs     close           ; failed - use defaults
         lda     open_snd_params::ref_num
         sta     read_snd_params::ref_num
         sta     close_params::ref_num
         MLI_CALL READ, read_snd_params
-        bcs     close2
 
-        ;; Successful - move settings block into place
-        bit     LCBANK2
-        bit     LCBANK2
-
-        COPY_BYTES kBellProcLength, DefaultBell, BELLDATA
-
-        bit     ROMIN2
-
-        ;; Finish up
-close2:  MLI_CALL CLOSE, close_params
+close:  MLI_CALL CLOSE, close_params
+.endscope
 
         ;; --------------------------------------------------
+        ;; Move bell data block into place
+
+        bit     LCBANK2
+        bit     LCBANK2
+        COPY_BYTES kBellProcLength, DefaultBell, BELLDATA
+        bit     ROMIN2
 
         rts
 
 ;;; ============================================================
 
         .include "../lib/default_sound.s"
-
-        SETTINGS_LOAD_ADDR := *
-version_byte:   .byte   0
         .include "../lib/default_settings.s"
-        .assert * - SETTINGS_LOAD_ADDR = kDeskTopSettingsFileSize, error, "size mismatch"
 
 .endproc ; LoadSettings
