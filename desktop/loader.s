@@ -90,6 +90,10 @@ segment_type_table:             ; 0 = main, 1 = aux, 2 = banked (aux)
         ASSERT_TABLE_SIZE segment_type_table, kNumSegments
 
 start:
+        ;; Old ProDOS leaves interrupts inhibited on start.
+        ;; Do this for good measure.
+        cli
+
         ;; Initialize system bitmap
         ldx     #BITMAP_SIZE-1
         lda     #0
