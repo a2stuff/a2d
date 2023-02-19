@@ -1687,7 +1687,7 @@ done:   rts
         tax
         pla
         rts
-.endproc
+.endproc ; ReadSettingWord
 
 ;;; ============================================================
 

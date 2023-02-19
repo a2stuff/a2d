@@ -13600,8 +13600,6 @@ GetSizeDialogProc::do_count := *
         jsr     AddOKButton
 :       jsr     PromptInputLoop
         bmi     :-
-        jsr     EraseDialogLabels
-        jsr     EraseOKButton
         return  #0
     END_IF
 
@@ -14398,17 +14396,12 @@ ellipsify:
         rts
 .endproc ; AddOKButton
 
-.proc EraseOKButton
+.proc EraseOKCancelButtons
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::ok_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rec::rect
         rts
-.endproc ; EraseOKButton
-
-.proc EraseDialogLabels
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        rts
-.endproc ; EraseDialogLabels
+.endproc ; EraseOKCancelButtons
 
 ;;; ============================================================
 ;;; Draw text, pascal string address in A,X

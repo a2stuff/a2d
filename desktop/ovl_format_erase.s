@@ -184,6 +184,8 @@ ok2:    lda     text_input_buf
 .endscope
 
         ;; Confirmed!
+        jsr     main::EraseOKCancelButtons
+
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
         clc
