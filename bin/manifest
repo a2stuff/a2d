@@ -143,30 +143,31 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "res/package/WOZ.BREAKOUT"  $mediadir "woz.breakout"   FA0000
     emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell"  060800
 
+    # MGTK Fonts
     emit add_file $disposition "mgtk/fonts/System.en"      $mediafnt "System.en"      070000
-    emit add_file $disposition "mgtk/fonts/ASCII"          $mediafnt "ASCII"          070000
+    emit add_file $disposition "mgtk/fonts/Monaco.en"      $mediafnt "Monaco.en"      070000
+    emit add_file $disposition "mgtk/fonts/MP.FONT"        $mediafnt "MousePaint"     070000
+    emit add_file $disposition "mgtk/fonts/mini"           $mediafnt "Mini"           070000
     emit add_file $disposition "mgtk/fonts/ATHENS"         $mediafnt "ATHENS"         070000
+    emit add_file $disposition "mgtk/fonts/NEW.YORK"       $mediafnt "NEW.YORK"       070000
+    emit add_file $disposition "mgtk/fonts/TORONTO"        $mediafnt "TORONTO"        070000
+    emit add_file $disposition "mgtk/fonts/VENICE"         $mediafnt "VENICE"         070000
+
+    # HRCG conversions
+    emit add_file $disposition "mgtk/fonts/ASCII"          $mediafnt "ASCII"          070000
     emit add_file $disposition "mgtk/fonts/BLIPPO.BLACK"   $mediafnt "BLIPPO.BLACK"   070000
     emit add_file $disposition "mgtk/fonts/BYTE"           $mediafnt "BYTE"           070000
-
-    emit add_file $disposition "mgtk/fonts/COLLOSAL"       $mediafnt "COLLOSAL"       070000
+    emit add_file $disposition "mgtk/fonts/COLOSSAL"       $mediafnt "COLOSSAL"       070000
+    emit add_file $disposition "mgtk/fonts/COUNT"          $mediafnt "COUNT"          070000
     emit add_file $disposition "mgtk/fonts/FLOW"           $mediafnt "FLOW"           070000
     emit add_file $disposition "mgtk/fonts/GOTHIC"         $mediafnt "GOTHIC"         070000
     emit add_file $disposition "mgtk/fonts/MIRROR"         $mediafnt "MIRROR"         070000
-    emit add_file $disposition "mgtk/fonts/Monaco.en"      $mediafnt "Monaco.en"      070000
-
-    emit add_file $disposition "mgtk/fonts/MP.FONT"        $mediafnt "MP.FONT"        070000
-    emit add_file $disposition "mgtk/fonts/NEW.YORK"       $mediafnt "NEW.YORK"       070000
     emit add_file $disposition "mgtk/fonts/OUTLINE"        $mediafnt "OUTLINE"        070000
     emit add_file $disposition "mgtk/fonts/PUDGY"          $mediafnt "PUDGY"          070000
     emit add_file $disposition "mgtk/fonts/ROMAN"          $mediafnt "ROMAN"          070000
-
     emit add_file $disposition "mgtk/fonts/SLANT"          $mediafnt "SLANT"          070000
     emit add_file $disposition "mgtk/fonts/STOP"           $mediafnt "STOP"           070000
-    emit add_file $disposition "mgtk/fonts/TORONTO"        $mediafnt "TORONTO"        070000
     emit add_file $disposition "mgtk/fonts/UPSIDE.DOWN"    $mediafnt "UPSIDE.DOWN"    070000
-    emit add_file $disposition "mgtk/fonts/VENICE"         $mediafnt "VENICE"         070000
 
     emit add_file $disposition "mgtk/fonts/PIG.FONT"       $mediafnt "PIG.FONT"       070000
-    emit add_file $disposition "mgtk/fonts/mini"           $mediafnt "Mini"           070000
 fi
