@@ -123,6 +123,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Options
   * Add option to show shortcuts in dialogs.
   * Add keyboard shortcuts for checkboxes.
+* Map: Position indicator now blinks.
 
 ## 1.2
 

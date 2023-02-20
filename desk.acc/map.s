@@ -243,6 +243,18 @@ buf_search:     .res    kBufSize, 0 ; search term
 .proc InputLoop
         LETK_CALL LETK::Idle, le_params
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
+
+        lda     blink_counter
+        ora     blink_counter+1
+    IF_ZERO
+        jsr     ResetBlinkCounter
+        jsr     SetPort
+      IF_EQ
+        jsr     XDrawPositionIndicator
+      END_IF
+    END_IF
+        dec16   blink_counter
+
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -288,7 +300,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bne     InputLoop
+        jne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
@@ -352,7 +364,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         ;; Erase old position
         jsr     SetPort
     IF_EQ
-        jsr     DrawPositionIndicator
+        jsr     HidePositionIndicator
     END_IF
 
         copy16  #location_table, ptr
@@ -469,7 +481,7 @@ ret:    rts
         ;; Erase old position
         jsr     SetPort
     IF_EQ
-        jsr     DrawPositionIndicator
+        jsr     HidePositionIndicator
     END_IF
 
         ;; Compute new position
@@ -652,7 +664,7 @@ ret:    rts
         param_call DrawString, str_spaces
 
         jsr     UpdateCoordsFromLatLong
-        jmp     DrawPositionIndicator
+        jmp     ShowPositionIndicator
 
 tmp:    .word   0
 sflag:  .byte   0
@@ -662,11 +674,38 @@ sflag:  .byte   0
 ;;; Assert: Correct GrafPort selected
 ;;; Assert: `UpdateCoordsFromLatLong` has been called
 
-.proc DrawPositionIndicator
+.proc ShowPositionIndicator
+        bit     indicator_flag
+        bmi     XDrawPositionIndicator
+        rts
+.endproc
+HidePositionIndicator := ShowPositionIndicator
+
+.proc XDrawPositionIndicator
+        lda     indicator_flag
+        eor     #$80
+        sta     indicator_flag
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintBitsHC, position_marker_params
         rts
-.endproc ; DrawPositionIndicator
+.endproc ; XDrawPositionIndicator
+
+indicator_flag:
+        .byte   0
+
+.proc ResetBlinkCounter
+        ldx     #DeskTopSettings::ip_blink_speed
+        jsr     ReadSetting
+        sta     blink_counter
+        ldx     #DeskTopSettings::ip_blink_speed+1
+        jsr     ReadSetting
+        sta     blink_counter+1
+        lsr16   blink_counter
+        rts
+.endproc ;ResetBlinkCounter
+
+blink_counter:
+        .word   0
 
 ;;; ============================================================
 
