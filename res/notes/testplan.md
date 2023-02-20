@@ -527,6 +527,11 @@
 
 * Mount a disk with the BINSCII system utility. Launch DeskTop. Invoke the BINSCII system file. Verify that the display is not truncated.
 
+* Repeat the following test cases for these operations: Copy, Move, Delete, Lock, Unlock:
+  * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is cancelled and the progress dialog is closed.
+  * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is cancelled and the progress dialog is closed.
+* Select multiple files. Special > Get Size. During the count of the files, press Escape. Verify that the count is cancelled and the dialog is closed.
+
 
 ## Shortcuts
 

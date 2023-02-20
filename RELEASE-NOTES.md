@@ -46,6 +46,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Filetype and support opening BINSCII files (.BSC and .BSQ).
 * Filetype and support for Integer BASIC (INT) files.
 * Improve progress and alert dialogs shown during copy/move, lock/unlock and delete operations.
+* Escape key cancels operations (Copy/Move, Delete, Get Size, Lock/Unlock)
 
 #### Disks & Files
 

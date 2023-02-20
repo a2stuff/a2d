@@ -10115,6 +10115,9 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
         jne     ShowErrorAlert  ; too long
 
+        ;; During selection iteration, allow Escape to cancel the operation.
+        jsr     CheckCancel
+
         lda     do_op_flag
         beq     just_size_and_count
 
@@ -11473,6 +11476,9 @@ loop:   jsr     ReadFileEntry
         and     #NAME_LENGTH_MASK
         sta     file_entry_buf
 
+        ;; During directory iteration, allow Escape to cancel the operation.
+        jsr     CheckCancel
+
         copy    #0, cancel_descent_flag
         jsr     op_jt1          ; first - called when visiting dir
         lda     cancel_descent_flag
@@ -11772,9 +11778,6 @@ done:   rts
 ;;; Called by `ProcessDir` to process a single file
 
 .proc CopyProcessDirectoryEntry
-        jsr     CheckEscapeKeyDown
-        jne     CloseFilesCancelDialog
-
         lda     file_entry_buf + FileEntry::file_type
         cmp     #FT_DIRECTORY
         bne     regular_file
@@ -11973,7 +11976,7 @@ existing_size:
 read:   jsr     ReadSrc
         bit     src_dst_exclusive_flag
         bpl     write
-        jsr     CloseSrc       ; swap if necessary
+        jsr     CloseSrc        ; swap if necessary
 :       jsr     OpenDst
         bne     :-
         jsr     CopyDstRefNum
@@ -12306,10 +12309,6 @@ done:   rts
 ;;; Called by `ProcessDir` to process a single file
 
 .proc DeleteProcessDirectoryEntry
-        ;; Cancel if escape pressed
-        jsr     CheckEscapeKeyDown
-        jne     CloseFilesCancelDialog
-
         jsr     AppendFileEntryToSrcPath
         bit     delete_skip_decrement_flag
         bmi     :+
@@ -12896,6 +12895,20 @@ loop:   iny
 .endproc ; AppendSrcPathLastSegmentToDstPath
 
 ;;; ============================================================
+;;; If Escape is pressed, abort the operation.
+
+.proc CheckCancel
+        MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::key_down
+        bne     ret
+        lda     event_params::key
+        cmp     #CHAR_ESCAPE
+        beq     CloseFilesCancelDialog
+ret:    rts
+.endproc ; CheckCancel
+
+;;; ============================================================
 ;;; Closes dialog, closes all open files, and restores stack.
 
 .proc CloseFilesCancelDialog
@@ -12984,22 +12997,6 @@ match:  lda     flag
         eor     #$80
         rts
 .endproc ; CheckMoveOrCopy
-
-;;; ============================================================
-
-.proc CheckEscapeKeyDown
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::key_down
-        bne     nope
-        lda     event_params::key
-        cmp     #CHAR_ESCAPE
-        bne     nope
-        lda     #$FF
-        bne     done
-nope:   lda     #$00
-done:   rts
-.endproc ; CheckEscapeKeyDown
 
 ;;; ============================================================
 
