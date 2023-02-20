@@ -27,7 +27,7 @@ Offset +001. The remaining 128 bytes the file are defined by the
 `DeskTopSettings` struct in `../common.inc`.
 
 |  Offset  |  Length    | Description          |
-|---------:|:----------::----------------------|
+|---------:|:----------:|:----------------------|
 |  +$0000  |  8         | pattern              |
 |  +$0008  |  word (2)  | dblclick speed       |
 |  +$000A  |  word (2)  | IP blink speed       |
