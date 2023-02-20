@@ -124,6 +124,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Add option to show shortcuts in dialogs.
   * Add keyboard shortcuts for checkboxes.
 * Map: Position indicator now blinks.
+* Control Panel: Add more obvious button to apply desktop pattern change.
 
 ## 1.2
 

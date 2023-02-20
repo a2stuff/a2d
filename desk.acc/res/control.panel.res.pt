@@ -1,5 +1,5 @@
 .define res_string_window_title "Painel de Controlo"
-.define res_string_label_pattern "Dadr[o de Desktop"
+.define res_string_label_pattern "Definir Padr[o de Desktop"
 .define res_string_label_rgb_color "Cor RGB"
 .define res_string_label_dblclick_speed "Velocidade do Duplo Clique"
 .define res_string_label_mouse_tracking "Velocidade do Rato"

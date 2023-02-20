@@ -69,7 +69,7 @@ dialog_result:
 ;;; ============================================================
 
 kDAWindowId     = 61
-kDAWidth        = 416
+kDAWidth        = 431
 kDAHeight       = 132
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
@@ -117,11 +117,11 @@ penheight:      .byte   2
 .endparams
 
         DEFINE_POINT frame_l1a, 0, 68
-        DEFINE_POINT frame_l1b, 190, 68
-        DEFINE_POINT frame_l2a, 190, 68
+        DEFINE_POINT frame_l1b, 205, 68
+        DEFINE_POINT frame_l2a, 205, 68
         DEFINE_POINT frame_l2b, kDAWidth, 68
-        DEFINE_POINT frame_l3a, 190, 0
-        DEFINE_POINT frame_l3b, 190, kDAHeight
+        DEFINE_POINT frame_l3a, 205, 0
+        DEFINE_POINT frame_l3b, 205, kDAHeight
 
         DEFINE_RECT frame_rect, AS_WORD(-1), AS_WORD(-1), kDAWidth - 2, kDAHeight
 
@@ -144,7 +144,7 @@ grafport:       .tag    MGTK::GrafPort
 ;;; ============================================================
 ;;; Desktop Pattern Editor Resources
 
-kPatternEditX   = 12
+kPatternEditX   = 22
 kPatternEditY   = 6
 
 kFatBitWidth            = 8
@@ -155,7 +155,8 @@ kFatBitHeightShift      = 2
         ;; For hit testing
         DEFINE_RECT_SZ fatbits_rect, kPatternEditX+1, kPatternEditY+1,  8 * kFatBitWidth - 1, 8 * kFatBitHeight - 1
 
-        DEFINE_LABEL pattern, res_string_label_pattern, kPatternEditX + 35, kPatternEditY + 47
+        DEFINE_BUTTON pattern_button_rec, kDAWindowId, res_string_label_pattern,, kPatternEditX-10, kPatternEditY + 36, 180
+        DEFINE_BUTTON_PARAMS pattern_button_params, pattern_button_rec
 
 kPreviewLeft    = kPatternEditX + 79
 kPreviewTop     = kPatternEditY
@@ -221,7 +222,7 @@ rarr_bitmap:
 ;;; ============================================================
 ;;; Double-Click Speed Resources
 
-kDblClickX      = 208
+kDblClickX      = 223
 kDblClickY      = 6
 
         ;; Selected index (1-3, or 0 for 'no match')
@@ -383,7 +384,7 @@ y_exponent:     .byte   0
 ;;; ============================================================
 ;;; IP Blink Speed Resources
 
-kIPBlinkDisplayX = 214
+kIPBlinkDisplayX = 229
 kIPBlinkDisplayY = 85
 
         ;; Selected index (1-3, or 0 for 'no match')
@@ -590,6 +591,14 @@ ipblink_ip_bitmap:
         MGTK_CALL MGTK::InRect, preview_rect
         cmp     #MGTK::inrect_inside
         jeq     HandlePatternClick
+
+        MGTK_CALL MGTK::InRect, pattern_button_rec::rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        BTK_CALL BTK::Track, pattern_button_params
+        jmi     InputLoop
+        jmp     HandlePatternClick
+    END_IF
 
         MGTK_CALL MGTK::InRect, rgb_color_rec::rect
         cmp     #MGTK::inrect_inside
@@ -969,8 +978,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; ==============================
         ;; Desktop Pattern
 
-        MGTK_CALL MGTK::MoveTo, pattern_label_pos
-        param_call DrawString, pattern_label_str
+        BTK_CALL BTK::Draw, pattern_button_params
 
         MGTK_CALL MGTK::SetPenMode, penBIC
         MGTK_CALL MGTK::FrameRect, fatbits_frame

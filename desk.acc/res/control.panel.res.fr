@@ -1,5 +1,5 @@
 .define res_string_window_title "Panneau de configuration"
-.define res_string_label_pattern "Motif de fond d'{cran"
+.define res_string_label_pattern "D{finir motif de fond d'{cran"
 .define res_string_label_rgb_color "Couleur RGB"
 .define res_string_label_dblclick_speed "Vitesse du double-clic"
 .define res_string_label_mouse_tracking "Vitesse de d{filement"

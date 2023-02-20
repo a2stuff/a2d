@@ -1,5 +1,5 @@
 .define res_string_window_title "Pannello di controllo"
-.define res_string_label_pattern "Schema scrivania"
+.define res_string_label_pattern "Imposta lo Schema Scrivania"
 .define res_string_label_rgb_color "Colore RGB"
 .define res_string_label_dblclick_speed "Velocit{ doppio clic"
 .define res_string_label_mouse_tracking "Tracciamento mouse"

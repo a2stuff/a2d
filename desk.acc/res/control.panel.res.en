@@ -1,5 +1,5 @@
 .define res_string_window_title "Control Panel"
-.define res_string_label_pattern "Desktop Pattern"
+.define res_string_label_pattern "Set Desktop Pattern"
 .define res_string_label_rgb_color "RGB Color"
 .define res_string_label_dblclick_speed "Double-Click Speed"
 .define res_string_label_mouse_tracking "Mouse Tracking"
