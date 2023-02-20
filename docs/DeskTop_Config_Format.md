@@ -23,7 +23,7 @@ Header is one byte.
 
 ## Settings
 
-Offset +001. The remaining 128 bytes the file are defined by the
+File offset +$0001. The remaining 128 bytes the file are defined by the
 `DeskTopSettings` struct in `../common.inc`.
 
 |  Offset  |  Length    | Description          |
@@ -44,7 +44,7 @@ Offset +001. The remaining 128 bytes the file are defined by the
 
 * **pattern**
 
-   The desktop background pattern. An 8x8 bit bitmap.
+   The desktop background pattern. An 8x8 pixel bitmap.
 
 * **dblclick speed**
 
@@ -87,11 +87,11 @@ Offset +001. The remaining 128 bytes the file are defined by the
 
    This controls various options.
 
-   | Bit   | Meaning if set                          |
-   |------:|:----------------------------------------|
-   | 0     | Skip copying to RAMCard on boot         |
-   | 1     | Skip showing Selector                   |
-   | 2     | Show button shortcuts in dialogs        |
+   | Bit   | Meaning if clear                                                  | Meaning if set                          |
+   |------:|:------------------------------------------------------------------|:----------------------------------------|
+   | 0     | At startup, if RAMCard present, copy DeskTop and shortcuts to it  | Skip copying to RAMCard                 |
+   | 1     | At startup, if shortcuts defined, run Selector instead of DeskTop | Skip showing Selector                   |
+   | 2     | Do not show keyboard shortcuts for buttons in dialogs             | Show button shortcuts in dialogs        |
 
 * **date separator**
 

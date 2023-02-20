@@ -1,4 +1,4 @@
-# `SELECTOR.LIST` File Format
+# `SELECTOR.LIST` AFile Format
 
 This defines the shortcut menu entries present in DeskTop, as well as
 the entries shown in the optional Selector application.
@@ -35,7 +35,7 @@ Header is two bytes.
 
 ## Entries List
 
-Offset +002. There are always 24 entries. Each entry is 16 bytes.
+File offset +$0002. There are always 24 entries. Each entry is 16 bytes.
 
 The first 8 entries are for the primary list, regardless of
 NumPrimaryListEntries.
@@ -67,7 +67,7 @@ NumPrimaryListEntries.
 
 ## Path List
 
-Offset +386. There are always 24 entries. Each entry is a 64 byte,
+File offset +$0182. There are always 24 entries. Each entry is a 64 byte,
 length-prefixed pathname.
 
 The first 8 entries are for the primary list, regardless of

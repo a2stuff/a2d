@@ -23,7 +23,7 @@ Header is one byte.
 
 ## Windows
 
-Offset +001. There are a variable number of entries (0-8). Windows are
+File offset +$0001. There are a variable number of entries (0-8). Windows are
 listed bottom-most to top-most for ease of opening.
 
 Each window entry has this structure:
