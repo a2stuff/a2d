@@ -29,7 +29,7 @@ listed bottom-most to top-most for ease of opening.
 Each window entry has this structure:
 
 |  Offset  |  Length    | Description      |
-|---------:|:----------::-----------------|
+|---------:|:----------:|:-----------------|
 |  +$0000  |  byte (1)  | PathLength       |
 |  +$0001  |  $40       | PathName         |
 |  +$0041  |  byte (1)  | ViewType         |
