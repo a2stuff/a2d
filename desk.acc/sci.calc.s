@@ -558,6 +558,8 @@ init:
         ldx     #DeskTopSettings::intl_deci_sep
         jsr     ReadSetting
         sta     intl_deci_sep
+        sta     btn_dec::key
+        sta     btn_dec::label+1
 
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::InitPort, grafport
