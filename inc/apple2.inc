@@ -66,8 +66,11 @@ ERRFLG          := $D8
 CHRGET          := $B1          ; Routine called by ROM
 TXTPTR          := $B8
 FAC             := $9D
+FAC_SIGN        := $A2
 SHIFT_SIGN_EXT  := $A4          ; Zero before using FP ops
 ARG             := $A5
+ARG_SIGN        := $AA
+SGNCPR          := $AB          ; FAC_SIGN xor ARG_SIGN
 
 ;;; Entry Points
 GIVAYF          := $E2F2        ; FAC from signed integer in (Y,A)

@@ -242,7 +242,7 @@ port:           .word   left, top, left+kWideButtonWidth-3, top+kCalcButtonHeigh
         CALC_BUTTON_S btn_asin, Function::fn_asin,   "asin", kColBLeft, kRow0Top
         CALC_BUTTON_S btn_acos, Function::fn_acos,   "acos", kColBLeft, kRow1Top
         CALC_BUTTON_S btn_atan, Function::fn_atan,   "atan", kColBLeft, kRow2Top
-        CALC_BUTTON_S btn_ln,   Function::fn_ln,     "ln",  kColBLeft, kRow3Top
+        CALC_BUTTON_S btn_ln,   Function::fn_ln,     "ln",   kColBLeft, kRow3Top
         CALC_BUTTON_S btn_ex,   Function::fn_exp,    "e^x",  kColBLeft, kRow4Top
         CALC_BUTTON_S btn_1x,   Function::fn_inv,    "1/x",  kColBLeft, kRow5Top
 
@@ -990,16 +990,19 @@ cloop:  lda     text_buffer1,x
         ;; Function? These modify the FAC in place
         cmp     #Function::fn_sin
     IF_EQ
+        jsr     DegToRad
         ROM_CALL SIN
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_cos
     IF_EQ
+        jsr     DegToRad
         ROM_CALL COS
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_tan
     IF_EQ
+        jsr     DegToRad
         ROM_CALL TAN
         jmp     PostFunc
     END_IF
@@ -1008,15 +1011,17 @@ cloop:  lda     text_buffer1,x
         ;; ASIN(x) = ATN(X/SQR(-X*X+1))
         ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
+        jsr     FixSGNCPR
         ROM_CALL FMULTT         ; FAC = X * X
         ROM_CALL NEGOP          ; FAC = -X*X
         lday    #CON_ONE
         ROM_CALL FADD           ; FAC = -X*X+1
-        ROM_CALL ABS
         ROM_CALL SQR            ; FAC = SQR(-X*X+1)
         jsr     PopARG          ; ARG = X
+        jsr     FixSGNCPR
         ROM_CALL FDIVT          ; FAC = X/SQR(-X*X+1)
         ROM_CALL ATN            ; FAC = ATN(X/SQR(-X*X+1))
+        jsr     RadToDeg
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_acos
@@ -1024,23 +1029,26 @@ cloop:  lda     text_buffer1,x
         ;; ACOS(x) = -ATN(X/SQR(-X*X+l))+1.5708
         ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
+        jsr     FixSGNCPR
         ROM_CALL FMULTT         ; FAC = X * X
         ROM_CALL NEGOP          ; FAC = -X*X
         lday    #CON_ONE
         ROM_CALL FADD           ; FAC = -X*X+1
-        ROM_CALL ABS
         ROM_CALL SQR            ; FAC = SQR(-X*X+1)
         jsr     PopARG          ; ARG = X
+        jsr     FixSGNCPR
         ROM_CALL FDIVT          ; FAC = X/SQR(-X*X+1)
         ROM_CALL ATN            ; FAC = ATN(X/SQR(-X*X+1))
         ROM_CALL NEGOP          ; FAC = -ATN(X/SQR(-X*X+1))
         lday    #CON_HALF_PI    ;
-        ROM_CALL FADD           ; FAC = -ATN(X/SQR(-X*X+1))+1
+        ROM_CALL FADD           ; FAC = -ATN(X/SQR(-X*X+1))+1.5708
+        jsr     RadToDeg
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_atan
     IF_EQ
         ROM_CALL ATN
+        jsr     RadToDeg
         jmp     PostFunc
     END_IF
         cmp     #Function::fn_sqrt
@@ -1324,6 +1332,47 @@ kRegSize = 6
 
         rts
 .endproc ; PopARG
+
+;;; ============================================================
+
+;;; Convert FAC from degrees to radians
+.proc DegToRad
+        ;; R = D / 90 * (PI/2)
+        ROM_CALL FAC_TO_ARG_R   ; ARG = D
+        lda     #90
+        ROM_CALL FLOAT          ; FAC = 90
+        jsr     FixSGNCPR
+        ROM_CALL FDIVT          ; FAC = D / 90
+        lday    #CON_HALF_PI
+        ROM_CALL FMULT          ; FAC = (D / 90) * (PI/2)
+        rts
+.endproc
+
+;;; Convert FAC from radians to degrees
+.proc RadToDeg
+        ;; D = R * 90 / (PI/2)
+        ROM_CALL FAC_TO_ARG_R   ; ARG = R
+        lda     #90
+        ROM_CALL FLOAT          ; FAC = 90
+        jsr     FixSGNCPR
+        ROM_CALL FMULTT         ; FAC = R * 90
+        ROM_CALL FAC_TO_ARG_R   ; ARG = R * 90
+        lday    #CON_HALF_PI
+        ROM_CALL LOAD_FAC       ; FAC = PI/2
+        jsr     FixSGNCPR
+        ROM_CALL FDIVT          ; FAC = (R * 90) / (PI/2)
+        rts
+.endproc
+
+;;; Needed before FMULTT / FDIVT
+.proc FixSGNCPR
+        pha
+        lda     FAC_SIGN
+        eor     ARG_SIGN
+        sta     SGNCPR          ; compared sign for mul/div
+        pla
+        rts
+.endproc
 
 ;;; ============================================================
 
