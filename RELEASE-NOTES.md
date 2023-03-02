@@ -44,7 +44,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Show NON, ANM, S16, and SND type names in list views.
 * Simplify New Folder dialog by not showing full path. ([#466](https://github.com/a2stuff/a2d/issues/466))
 * Filetype and support opening BINSCII files (.BSC and .BSQ).
-* Filetype and support for Integer BASIC (INT) files.
+* Filetype and support for Integer BASIC (INT) files, c/o https://github.com/a2stuff/intbasic
 * Improve progress and alert dialogs shown during copy/move, lock/unlock and delete operations.
 * Escape key cancels operations (Copy/Move, Delete, Get Size, Lock/Unlock)
 
