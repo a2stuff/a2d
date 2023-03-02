@@ -53,7 +53,6 @@ kShortcutEasterEgg = res_char_easter_egg_shortcut
 
         DA_HEADER
         DA_START_AUX_SEGMENT
-.scope aux
 
 ;;; ============================================================
 
@@ -476,7 +475,6 @@ buf_string := *
 
 ;;; ============================================================
 
-.endscope ; aux
         DA_END_AUX_SEGMENT
         DA_START_MAIN_SEGMENT
 
@@ -2062,6 +2060,8 @@ done:   rts
 ;;; ============================================================
 
         .include  "../lib/detect_lcmeve.s"
+
+        ReadSetting = JUMP_TABLE_READ_SETTING
         .include "../lib/inttostring.s"
 
 ;;; ============================================================

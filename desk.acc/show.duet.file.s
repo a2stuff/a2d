@@ -257,10 +257,10 @@ ret:    rts
         ;; --------------------------------------------------
         ;; Load the file
 
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         JUMP_TABLE_MLI_CALL OPEN, open_params
         bcc     :+
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 :       lda     open_params::ref_num
         sta     read_params::ref_num
@@ -268,7 +268,7 @@ ret:    rts
         JUMP_TABLE_MLI_CALL READ, read_params
         php                     ; preserve error
         JUMP_TABLE_MLI_CALL CLOSE, close_params
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         plp
         bcs     exit
 
@@ -277,12 +277,12 @@ ret:    rts
         ;; Copy filename
         copy16  #filename, STARTLO
         copy16  #filename+kMaxFilenameLength, ENDLO
-        copy16  #name_buf, DESTINATIONLO
+        copy16  #aux::name_buf, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
         ;; Show the UI
-        JSR_TO_AUX Init
+        JSR_TO_AUX aux::Init
 
         ;; Page DeskTop's code back in.
         lda     #kDynamicRoutineRestore5000

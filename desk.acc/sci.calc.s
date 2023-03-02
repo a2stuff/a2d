@@ -110,7 +110,7 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
         REF_MAPINFO_MEMBERS
 
-label:          PASCAL_STRING labelstr, ::kLabelStrSize
+label:          PASCAL_STRING labelstr, aux::kLabelStrSize
 pos:            .word   left + 6, top+kCalcButtonHeight
 port:           .word   left, top, left+kCalcButtonWidth, top+kCalcButtonHeight
         .refto label
@@ -143,7 +143,7 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kSciButtonWidth, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
         REF_MAPINFO_MEMBERS
 
-label:          PASCAL_STRING labelstr, ::kLabelStrSize
+label:          PASCAL_STRING labelstr, aux::kLabelStrSize
 pos:            .word   left + kLabelOff, top+kCalcButtonHeight
 port:           .word   left, top, left+kSciButtonWidth-3, top+kCalcButtonHeight
         .refto label
@@ -227,7 +227,7 @@ mapbits:        .addr   wide_button_bitmap
 mapwidth:       .byte   kWideBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kWideButtonWidth, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
-label:          PASCAL_STRING "0", ::kLabelStrSize
+label:          PASCAL_STRING "0", aux::kLabelStrSize
 pos:            .word   left + 6, top+kCalcButtonHeight
 port:           .word   left, top, left+kWideButtonWidth-3, top+kCalcButtonHeight
 .endparams
@@ -255,7 +255,7 @@ mapwidth:       .byte   kBitmapStride
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, kCalcButtonHeight + kBorderLeftTop + kBorderBottomRight
         REF_MAPINFO_MEMBERS
-label:          PASCAL_STRING ".", ::kLabelStrSize
+label:          PASCAL_STRING ".", aux::kLabelStrSize
 pos:            .word   kCol3Left + 6 + 2, kRow5Bot ; + 2 to center the label
 port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
         .refto label
@@ -276,7 +276,7 @@ reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, kCalcButtonWidth + kBorderLeftTop + kBorderBottomRight, 27 ; + is extra tall
         REF_MAPINFO_MEMBERS
 
-label:          PASCAL_STRING '+', ::kLabelStrSize
+label:          PASCAL_STRING '+', aux::kLabelStrSize
 pos:            .word   kCol4Left + 6, kRow5Bot
 port:           .word   kCol4Left,kRow4Top,kCol4Right,kRow5Bot
         .refto label
@@ -1608,7 +1608,7 @@ END_PROC_AT
 
         DA_START_MAIN_SEGMENT
 
-        JSR_TO_AUX InitDA
+        JSR_TO_AUX aux::InitDA
         rts
 
         DA_END_MAIN_SEGMENT

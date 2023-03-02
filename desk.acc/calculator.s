@@ -1437,7 +1437,7 @@ END_PROC_AT
 
         DA_START_MAIN_SEGMENT
 
-        JSR_TO_AUX InitDA
+        JSR_TO_AUX aux::InitDA
         rts
 
         DA_END_MAIN_SEGMENT

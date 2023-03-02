@@ -1705,7 +1705,7 @@ done:   rts
 
         DA_START_MAIN_SEGMENT
 
-        JSR_TO_AUX RunDA
+        JSR_TO_AUX aux::RunDA
         bmi     SaveSettings
         rts
 

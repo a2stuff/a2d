@@ -57,6 +57,7 @@ JT_GET_ORIG_PREFIX:     jmp     CopyDeskTopOriginalPrefix ; *
 JT_BELL:                jmp     Bell                    ; *
 JT_SLOW_SPEED:          jmp     SlowSpeed               ; *
 JT_RESUME_SPEED:        jmp     ResumeSpeed             ; *
+JT_READ_SETTING:        jmp     ReadSetting             ; *
 
         .assert JUMP_TABLE_LAST = *, error, "Jump table mismatch"
 

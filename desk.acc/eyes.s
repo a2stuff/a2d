@@ -1054,7 +1054,7 @@ BumpOval := oval::BumpOval
 
         DA_START_MAIN_SEGMENT
 
-        JSR_TO_AUX AuxStart
+        JSR_TO_AUX aux::AuxStart
         rts
 
         DA_END_MAIN_SEGMENT

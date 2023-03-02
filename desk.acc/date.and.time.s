@@ -524,7 +524,7 @@ jump:   jmp     SELF_MODIFIED
 hit_target_jump_table:
         .addr   OnUp, OnDown
         .addr   OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick
-        ASSERT_ADDRESS_TABLE_SIZE hit_target_jump_table, ::kNumHitRects
+        ASSERT_ADDRESS_TABLE_SIZE hit_target_jump_table, aux::kNumHitRects
 .endproc ; OnClick
 
 ;;; ============================================================
@@ -1271,7 +1271,7 @@ loop:   cmp     #10
         lda     MACHID
         and     #%00000001
         tay                     ; A,X are trashed by macro
-        JSR_TO_AUX RunDA
+        JSR_TO_AUX aux::RunDA
         sta     result
 
         bit     result

@@ -46,7 +46,6 @@
 
         DA_HEADER
         DA_START_AUX_SEGMENT
-.scope aux
 
 ;;; ============================================================
 
@@ -54,7 +53,6 @@ event_params:   .tag MGTK::Event
 
 ;;; ============================================================
 
-.endscope ; aux
         DA_END_AUX_SEGMENT
         DA_START_MAIN_SEGMENT
 

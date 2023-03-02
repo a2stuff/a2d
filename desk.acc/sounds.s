@@ -1357,7 +1357,7 @@ END_SOUND_PROC
 
         ;; Since we swap the proc into place, need to ensure last proc
         ;; has sufficient padding before routines we actually use
-        .res    kBellProcLength
+        .res    ::kBellProcLength
 
 ;;; ============================================================
 
@@ -1382,7 +1382,7 @@ OnListSelectionNoChange := OnListSelectionChange
         num_items = num_sounds
         item_pos = itempos
 
-        selected_index = ::selected_index
+        selected_index = aux::selected_index
         highlight_rect = itemrect
 .endscope ; listbox
 
@@ -1418,7 +1418,7 @@ OnListSelectionNoChange := OnListSelectionChange
 
 ;;; ============================================================
 
-        JSR_TO_AUX AuxEntry
+        JSR_TO_AUX aux::AuxEntry
         bmi     SaveSettings
         rts
 

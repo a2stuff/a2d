@@ -41,7 +41,7 @@ kOverlay10KBufferSize   = $2800
 .endmacro
 .macro DA_START_AUX_SEGMENT
         .org DA_LOAD_ADDRESS
-
+.scope aux
         MGTKEntry := MGTKAuxEntry
         BTKEntry := BTKAuxEntry
         LETKEntry := LETKAuxEntry
@@ -50,6 +50,7 @@ kOverlay10KBufferSize   = $2800
 
 .endmacro
 .macro DA_END_AUX_SEGMENT
+.endscope ; aux
         __da_aux_segment_end__ := *
         .assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
 .endmacro
@@ -103,6 +104,7 @@ JT_ENTRY JUMP_TABLE_GET_ORIG_PREFIX   ; Returns original prefix, if copied (in: 
 JT_ENTRY JUMP_TABLE_BELL          ; Play settings-specified alert sound *
 JT_ENTRY JUMP_TABLE_SLOW_SPEED    ; Disable accelerator *
 JT_ENTRY JUMP_TABLE_RESUME_SPEED  ; Resume accelerator *
+JT_ENTRY JUMP_TABLE_READ_SETTING  ; Read setting byte (in: X=offset) *
 JT_ENTRY JUMP_TABLE_LAST
 
 ;;; ============================================================

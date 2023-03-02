@@ -44,7 +44,6 @@
 
         DA_HEADER
         DA_START_AUX_SEGMENT
-.scope aux
 
 ;;; ============================================================
 
@@ -296,7 +295,6 @@ buf_string := *
 
 ;;; ============================================================
 
-.endscope ; aux
         DA_END_AUX_SEGMENT
         DA_START_MAIN_SEGMENT
 

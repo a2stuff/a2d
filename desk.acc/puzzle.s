@@ -1095,7 +1095,7 @@ done:   sta     hole_x
 ;;; ============================================================
 
         DA_START_MAIN_SEGMENT
-        JSR_TO_AUX CreateWindow
+        JSR_TO_AUX aux::CreateWindow
         rts
         DA_END_MAIN_SEGMENT
 

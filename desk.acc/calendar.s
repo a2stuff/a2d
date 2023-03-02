@@ -740,7 +740,7 @@ tmp:    .word   0
 
         DA_START_MAIN_SEGMENT
 
-        JSR_TO_AUX Init
+        JSR_TO_AUX aux::Init
         rts
 
         DA_END_MAIN_SEGMENT

@@ -76,7 +76,7 @@ penwidth:       .byte   2
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
 textback:       .byte   $7F
-textfont:       .addr   aux_font_buffer
+textfont:       .addr   font_buffer
 nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
@@ -289,7 +289,7 @@ index:  .byte   0
 
 .endproc ; DrawWindow
 
-        aux_font_buffer := *
+        font_buffer := *
 
 ;;; ============================================================
 
@@ -330,7 +330,7 @@ filename:       .res    16
 
         copy16  #filename, STARTLO
         copy16  #filename+kMaxFilenameLength, ENDLO
-        copy16  #titlebuf, DESTINATIONLO
+        copy16  #aux::titlebuf, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
@@ -347,10 +347,10 @@ filename:       .res    16
         ;; --------------------------------------------------
         ;; Load the file
 
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         JUMP_TABLE_MLI_CALL OPEN, open_params
         bcc     :+
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 :       lda     open_params::ref_num
         sta     read_params::ref_num
@@ -358,7 +358,7 @@ filename:       .res    16
         JUMP_TABLE_MLI_CALL READ, read_params
         php                     ; preserve error
         JUMP_TABLE_MLI_CALL CLOSE, close_params
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         plp
         bcs     exit
 
@@ -389,14 +389,14 @@ filename:       .res    16
 
         copy16  #font_buffer, STARTLO
         add16   #font_buffer-1, read_params::trans_count, ENDLO
-        copy16  #aux_font_buffer, DESTINATIONLO
+        copy16  #aux::font_buffer, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
         ;; --------------------------------------------------
         ;; Run the DA from Aux, back to Main when done
 
-        JSR_TO_AUX Init
+        JSR_TO_AUX aux::Init
 
 exit:   rts
 
