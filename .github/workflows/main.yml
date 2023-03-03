@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - uses: a2stuff/build-install-ca65-action@v1
+      - uses: a2stuff/build-install-ca65-action@v2
       - uses: a2stuff/build-install-cadius-action@v1
 
       - name: build a2d - en
