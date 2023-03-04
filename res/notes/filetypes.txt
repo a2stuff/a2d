@@ -5,6 +5,7 @@ Apple File Type Notes:
 Modern registry:
 
 * https://github.com/a2infinitum/apple2-filetypes
+* https://docs.google.com/spreadsheets/d/1HIg5f1gispUvO0r8t6SEww8XM41eUAtn7wkNNDrNPtQ/edit
 
 Other listings:
 
