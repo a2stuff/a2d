@@ -109,7 +109,9 @@ Project Page: https://github.com/a2stuff/a2d
 * Sounds
   * New sounds from Gorgon, Apple Panic, and more, c/o @frankmilliron
   * Play current selection if clicked again. ([#715](https://github.com/a2stuff/a2d/issues/715))
-* Calc/Sci.Calc: Show leading zero before decimal in results.
+* Calc/Sci.Calc
+  * Show leading zero before decimal in results.
+  * Don't repaint on title bar click. ([#746](https://github.com/a2stuff/a2d/issues/746))
 * Sci.Calc
   * Fix intermediate calculations with functions (SIN, etc). ([#741](https://github.com/a2stuff/a2d/issues/741))
   * Do trig functions (SIN, COS, etc) in degrees rather than radians.
@@ -121,7 +123,9 @@ Project Page: https://github.com/a2stuff/a2d
 * Text Preview: Handle rendering long text files more intelligently.
 * Image Preview: Show .A2HR and .A2FM files in B&W.
 * Electric Duet Preview: Add alternate players: during playback, press 3 for Mockingboard, 4 for Cricket!
-* Puzzle: Added keyboard support - arrow keys move a tile into the hole.
+* Puzzle
+  * Added keyboard support - arrow keys move a tile into the hole.
+  * Don't repaint on title bar click. ([#746](https://github.com/a2stuff/a2d/issues/746))
 * Options
   * Add option to show shortcuts in dialogs.
   * Add keyboard shortcuts for checkboxes.

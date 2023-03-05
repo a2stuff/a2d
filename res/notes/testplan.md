@@ -728,6 +728,9 @@ Image File:
 
 # Desk Accessories
 
+Repeat for every desk accessory that runs in a movable window:
+* Launch DeskTop. Open the DA. Click on the title bar but don't move the window. Verify that window doesn't repaint if the window is not moved.
+
 ## Control Panel
 
 * Launch DeskTop. Open the Control Panel DA. Use the pattern editor to create a custom pattern, then click the desktop preview to apply it. Close the DA. Open the Control Panel DA. Click the right arrow above the desktop preview. Verify that the default checkerboard pattern is shown.

@@ -52,7 +52,7 @@ windowy := * + 7
 window_id      := *
 xcoord  := * + 1 ; aligns with event_params::xcoord
 ycoord  := * + 3 ; aligns with event_params::ycoord
-moved   := * + 5 ; ignored
+moved   := * + 5
 .endparams
 
 .params event_params
@@ -608,8 +608,11 @@ exit:   pla                     ; pop OnClick / OnKeyPress
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
+        bit     dragwindow_params::moved
+        bpl     ret
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawContent
+ret:    rts
 .endproc ; OnClick
 exit := OnClick::exit
 

@@ -675,6 +675,8 @@ loop:   lda     chrget_routine-1,x
     IF_EQ
         copy    #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
+        bit     dragwindow_params::moved
+        bpl     ret
 
         ;; Redraw DeskTop's windows and icons
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES

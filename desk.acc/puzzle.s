@@ -636,9 +636,12 @@ check_title:
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
+        bit     dragwindow_params::it_moved
+        bpl     ret
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         lda     #kDAWindowId
         jmp     redraw_window
+ret:    rts
 .endproc ; OnClick
 
         ;; on key press - exit if Escape
