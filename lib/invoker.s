@@ -79,7 +79,7 @@ ret:    rts
 ;;; ProDOS 2.4's Bitsy Bye invokes BASIS.SYSTEM with:
 ;;; * ProDOS prefix set to directory containing file.
 ;;; * Path buffer in BASIS.SYSTEM ($2006) set to filename.
-;;; * $280 set to name of root volume (e.g. "/VOL")
+;;; * $280 set to name of root volume (e.g. "/VOL") TODO: of target file or SYS?
 ;;; * $380 set to path of launched SYS (e.g. "/VOL/BASIS.SYSTEM")
 ;;; Not all should be necessary, but not doing so may lead to future
 ;;; compatibility issues.

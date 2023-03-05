@@ -47,6 +47,8 @@ Project Page: https://github.com/a2stuff/a2d
 * Filetype and support for Integer BASIC (INT) files, c/o https://github.com/a2stuff/intbasic
 * Improve progress and alert dialogs shown during copy/move, lock/unlock and delete operations.
 * Escape key cancels operations (Copy/Move, Delete, Get Size, Lock/Unlock)
+* Support for launching AppleWorks files.
+  * AppleWorks 5.1 must be on same volume as DeskTop, in AW5/ directory.
 
 #### Disks & Files
 

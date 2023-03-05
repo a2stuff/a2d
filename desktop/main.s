@@ -955,6 +955,14 @@ tmp_path_buf:
         cmp     #IconType::application
         jeq     launch
 
+        cmp     #IconType::appleworks_wp
+        beq     aw
+        cmp     #IconType::appleworks_sp
+        beq     aw
+        cmp     #IconType::appleworks_db
+        bne     :+
+aw:     param_jump invoke_interpreter, str_awlauncher
+:
         cmp     #IconType::intbasic
         bne     :+
         param_jump invoke_interpreter, str_intbasic
@@ -1027,7 +1035,10 @@ invoke_interpreter:
         jsr     GetFileInfo
         jcs     SetCursorPointer ; nope, just ignore
 
-        param_call CopyPtr1ToBuf, INVOKER_INTERPRETER
+        ;; Construct absolute path
+        MLI_CALL GET_PREFIX, get_prefix_params ; into `INVOKER_INTERPRETER`
+        ldax    ptr1
+        jsr     AppendToInvokerInterpreter
 
 launch:
         param_call UpcaseString, INVOKER_PREFIX
@@ -1080,14 +1091,7 @@ found_slash:
         stx     path_length
 
         ;; Append BASI?.SYSTEM to path and check for file.
-        ldx     interp_path
-        ldy     #0
-:       inx
-        iny
-        copy    str_basix_system,y, interp_path,x
-        cpy     str_basix_system
-        bne     :-
-        stx     interp_path
+        param_call AppendToInvokerInterpreter, str_basix_system
         param_call GetFileInfo, interp_path
         bne     pop_segment
 
@@ -1098,22 +1102,37 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
 .proc CheckBasicSystem
         MLI_CALL GET_PREFIX, get_prefix_params
 
-        ldy     #0
-        ldx     INVOKER_INTERPRETER
-:       iny
-        inx
-        lda     str_extras_basic,y
-        sta     INVOKER_INTERPRETER,x
-        cpy     str_extras_basic
-        bne     :-
-        stx     INVOKER_INTERPRETER
+        ldax    #str_extras_basic
+        jsr     AppendToInvokerInterpreter
         param_call GetFileInfo, INVOKER_INTERPRETER
         jne     CheckBasixSystemImpl::basic ; nope, look relative to launch path
         rts
-
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
 .endproc ; CheckBasicSystem
 
+;;; --------------------------------------------------
+
+;;; Input: A,X = relative path to append
+;;; Output: `INVOKER_INTERPRETER` updated
+;;; Trashes: $06
+.proc AppendToInvokerInterpreter
+        ptr1 := $06
+        stax    ptr1
+
+        ldy     #0
+        ldx     INVOKER_INTERPRETER
+        lda     (ptr1),y
+        sta     len
+:       iny
+        inx
+        lda     (ptr1),y
+        sta     INVOKER_INTERPRETER,x
+        len := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :-
+        stx     INVOKER_INTERPRETER
+
+        rts
+.endproc
 
 ;;; --------------------------------------------------
 
@@ -1125,6 +1144,8 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
 
         jmp     SetCursorPointer ; after opening folder
 .endproc ; OpenFolder
+
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
 
 .endproc ; LaunchFileWithPath
 
@@ -1194,6 +1215,9 @@ str_extras_basic:
 
 str_intbasic:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/IntBASIC.system")
+
+str_awlauncher:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/AWLaunch.system")
 
 str_unshrink:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/UnShrink")
