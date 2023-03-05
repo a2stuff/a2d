@@ -486,6 +486,8 @@ intl_deci_sep:  .byte   0
         ldx     #DeskTopSettings::intl_deci_sep
         jsr     ReadSetting
         sta     intl_deci_sep
+        sta     decimal_label
+        sta     decimal_lookup
 
         MGTK_CALL MGTK::OpenWindow, winfo
         MGTK_CALL MGTK::InitPort, grafport
