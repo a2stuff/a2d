@@ -435,13 +435,14 @@ modifiers:
     IF_EQ
         ;; Double-modifier shortcuts
         lda     event_params::key
-        cmp     #'O'
+        jsr     UpcaseChar
+        cmp     #res_char_menu_item_open_shortcut
         jeq     CmdOpenThenCloseCurrent
         cmp     #CHAR_DOWN
         jeq     CmdOpenThenCloseCurrent
         cmp     #CHAR_UP
         jeq     CmdOpenParentThenCloseCurrent
-        cmp     #'W'
+        cmp     #res_char_menu_item_close_shortcut
         jeq     CmdCloseAll
         rts
     END_IF

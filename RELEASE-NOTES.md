@@ -77,6 +77,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve double-click responsiveness when updating icons.
 * Fix numerous crashes with long pathnames.
 * Fix crash in File > Get Info is target is not available.
+* Make OA+SA+O and OA+SA+W shortcuts work when Caps Lock is off.
 
 ### Selector
 
