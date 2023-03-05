@@ -128,22 +128,37 @@ Start:
 .proc reloc
         .org ::RELOC_TARGET
 
+        jmp     ConstructPath
+;;; ============================================================
+
+;;; ============================================================
+
+str_aplworks_path:
+        PASCAL_STRING   "AW5/APLWORKS.SYSTEM"
+
+        DEFINE_OPEN_PARAMS open_params, SYS_PATH, IO_BUFFER
+        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, $FFFF
+        DEFINE_CLOSE_PARAMS close_params
+
+        DEFINE_GET_PREFIX_PARAMS prefix_params, PATHBUF2
+        DEFINE_QUIT_PARAMS quit_params
+
 ;;; ============================================================
 
         ;; * Construct a target path for AppleWorks.
-        ;; * Place it at $280
         ;; * Try to load it. If we fail, just QUIT.
         ;; * If we were passed a path:
-        ;;   * Construct an absolute path using PREFIX
-        ;;   * Split it into dir path and filename
-        ;;   * Patch the macro block with it
-        ;;   * Copy the macro block into AW
-        ;;   * Poke AW to load the macro block
-        ;; * Invoke AppleWorks
+        ;;   * Construct an absolute path using PREFIX.
+        ;;   * Split it into dir path and filename.
+        ;;   * Patch the macro block with it.
+        ;;   * Copy the macro block into AW.
+        ;;   * Poke AW to load the macro block.
+        ;; * Invoke AppleWorks.
 
         ;; --------------------------------------------------
         ;; Construct a target path for APLWORKS.SYSTEM at $280
 
+ConstructPath:
         ;; Append this system file's volume name
         ldx     #0
         ldy     #0
@@ -173,9 +188,9 @@ Start:
 
         MLI_CALL OPEN, open_params
         bne     quit
-        lda     open_ref_num
-        sta     read_ref_num
-        sta     close_ref_num
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
         MLI_CALL READ, read_params
         pha
         MLI_CALL CLOSE, close_params
@@ -185,43 +200,6 @@ Start:
 quit:   MLI_CALL QUIT, quit_params
         brk
 
-;;; ============================================================
-
-str_aplworks_path:
-        PASCAL_STRING   "AW5/APLWORKS.SYSTEM"
-
-;;; OPEN
-open_params:
-open_param_count:       .byte   3         ; in
-open_pathname:          .addr   SYS_PATH  ; in
-open_io_buffer:         .addr   IO_BUFFER ; in
-open_ref_num:           .byte   0         ; out
-
-;;; READ
-read_params:
-read_param_count:       .byte   4 ; in
-read_ref_num:           .byte   0 ; in, populated at runtime
-read_data_buffer:       .addr   PRODOS_SYS_START ; in
-read_request_count:     .word   $FFFF            ; in
-read_trans_count:       .word   0                ; out
-
-;;; CLOSE
-close_params:
-close_param_count:      .byte   1 ; in
-close_ref_num:          .byte   0 ; in, populated at runtime
-
-;;; GET/SET_PREFIX
-prefix_params:
-prefix_param_count:     .byte   1        ; in
-prefix_pathname:        .addr   PATHBUF2 ; in
-
-;;; QUIT
-quit_params:
-quit_param_count:       .byte   4 ; in
-quit_type:              .byte   0 ; in
-quit_res1:              .word   0 ; reserved
-quit_res2:              .byte   0 ; reserved
-quit_res3:              .word   0 ; reserved
 
 ;;; ============================================================
 ;;; Check to see if we were passed a path. If so:
@@ -290,7 +268,7 @@ SplitPath:
         stx     PATHBUF         ; new length
 
         ;; --------------------------------------------------
-        ;; TODO: Patch `PATHBUF` and `FILENAME` into macros
+        ;; Patch `PATHBUF` and `FILENAME` into macros
 
         ;; Patch `PATHBUF` into macros
         lda     #'"'           ; " string end delimiter
@@ -301,6 +279,7 @@ SplitPath:
         dey
         bne     :-
 
+        ;; Patch `FILENAME` into macros
         lda     #'"'           ; " string end delimiter
         ldy     FILENAME
         sta     PassedName,y
@@ -345,6 +324,7 @@ done:
         bit     ROMIN2
 .endscope ; move_macros
 
+        ;; --------------------------------------------------
         ;; Set flag in SEG.UM to NOT load default macros.
         lda     #$01
         sta     TaskStrup
