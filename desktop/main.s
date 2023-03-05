@@ -1005,10 +1005,7 @@ aw:     param_jump invoke_interpreter, str_awlauncher
         beq     no_file_sel
 
         jsr     CopyAndComposeWinIconPaths
-    IF_NE
-        jsr     ShowAlert
-        rts
-    END_IF
+        jne     ShowAlert
 
         jmp     :+
 
@@ -1299,10 +1296,7 @@ devlst_backup:
         beq     :+
 
         jsr     CopyAndComposeWinIconPaths
-      IF_NE
-        jsr     ShowAlert
-        rts
-      END_IF
+        jne     ShowAlert
 
         COPY_STRING src_path_buf, path_buf0
 :
@@ -1994,10 +1988,7 @@ maybe_open_file:
         pla
 
         jsr     CopyAndComposeWinIconPaths
-    IF_NE
-        jsr     ShowAlert
-        rts
-    END_IF
+        jne     ShowAlert
 
         jmp     LaunchFileWithPath
 .endproc ; CmdOpen
@@ -5146,8 +5137,7 @@ last_pos:
 .proc HandleResizeClick
         copy    active_window_id, event_params
         MGTK_CALL MGTK::GrowWindow, event_params
-        jsr     ScrollUpdate
-        rts
+        jmp     ScrollUpdate
 .endproc ; HandleResizeClick
 
 ;;; ============================================================
@@ -6791,7 +6781,7 @@ loop:   bit     LCBANK2
         ecmp16  ptr_src, filerecords_free_start
         bne     loop
 
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
 
         ;; Offset affected list pointers down
         lda     window_id_to_filerecord_list_count
@@ -8522,7 +8512,7 @@ too_long:
         lda     #ERR_INVALID_PATHNAME
 
 finish:
-        jsr     PopPointers
+        jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc ; GetIconPath
 
