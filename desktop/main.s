@@ -928,95 +928,26 @@ tmp_path_buf:
         copy16  #src_path_buf, icontype_filename
         jsr     GetIconType
 
-        cmp     #IconType::basic
-        bne     :+
-        jsr     CheckBasicSystem ; Only launch if BASIC.SYSTEM is found
-        jeq     launch
-        lda     #kErrBasicSysNotFound
-        jmp     ShowAlert
+        ;; Handler based on type
+        asl                     ; *= 4
+        asl
+        tax
 
-:       cmp     #IconType::binary
-        bne     :+
-        lda     menu_click_params::menu_id ; From a menu (File, Selector)
-        jne     launch
-        jsr     ModifierDown ; Otherwise, only launch if a button is down
-        jmi     launch
-        lda     #kErrConfirmRunning
-        jsr     ShowAlert       ; show a prompt otherwise
-        cmp     #kAlertResultOK
-        jeq     launch
-        jmp     SetCursorPointer ; after not launching BIN
-
-:       cmp     #IconType::folder
-        jeq     OpenFolder
-
-        cmp     #IconType::system
-        jeq     launch
-
-        cmp     #IconType::application
-        jeq     launch
-
-        cmp     #IconType::appleworks_wp
-        beq     aw
-        cmp     #IconType::appleworks_sp
-        beq     aw
-        cmp     #IconType::appleworks_db
-        bne     :+
-aw:     param_jump invoke_interpreter, str_awlauncher
-:
-        cmp     #IconType::intbasic
-        bne     :+
-        param_jump invoke_interpreter, str_intbasic
-:
-        cmp     #IconType::encoded
-        bne     :+
-        param_jump invoke_interpreter, str_binscii
-:
-        cmp     #IconType::archive
-        bne     :+
-        param_jump invoke_interpreter, str_unshrink
-
-:       cmp     #IconType::graphics
-        bne     :+
-        param_jump InvokeDeskAcc, str_preview_fot
-
-:       cmp     #IconType::text
-        bne     :+
-        param_jump InvokeDeskAcc, str_preview_txt
-
-:       cmp     #IconType::font
-        bne     :+
-        param_jump InvokeDeskAcc, str_preview_fnt
-
-:       cmp     #IconType::music
-        bne     :+
-        param_jump InvokeDeskAcc, str_preview_mus
-
-:       cmp     #IconType::desk_accessory
-    IF_EQ
-        ;; * Can't use `dst_path_buf` as it is within DA_IO_BUFFER
-        ;; * Can't use `src_path_buf` as it holds file selection
-        COPY_STRING src_path_buf, tmp_path_buf ; Use this to launch the DA
-
-        ;; As a convenience for DAs, set path to first selected file.
-        lda     selected_window_id
-        beq     no_file_sel
-        lda     selected_icon_count
-        beq     no_file_sel
-
-        jsr     CopyAndComposeWinIconPaths
-        jne     ShowAlert
-
-        jmp     :+
-
-no_file_sel:
-        copy    #0, src_path_buf ; Signal no file selection
-
-:       param_jump InvokeDeskAcc, tmp_path_buf
-    END_IF
+        lda     invoke_table+0,x
+        sta     handler
+        lda     invoke_table+1,x
+        sta     handler+1
+        lda     invoke_table+2,x
+        pha
+        lda     invoke_table+3,x
+        tax
+        pla
+        handler := *+1
+        jmp     SELF_MODIFIED
 
         ;; --------------------------------------------------
-
+        ;; Fallback - try BASIS.SYSTEM
+fallback:
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
         beq     launch           ; yes, continue below
         lda     #kErrFileNotOpenable
@@ -1024,8 +955,7 @@ no_file_sel:
 
         ;; --------------------------------------------------
         ;; Launch interpreter (system file that accepts path).
-
-invoke_interpreter:
+interpreter:
         ptr1 := $06
         stax    ptr1            ; save for later
 
@@ -1037,7 +967,10 @@ invoke_interpreter:
         MLI_CALL GET_PREFIX, get_prefix_params ; into `INVOKER_INTERPRETER`
         ldax    ptr1
         jsr     AppendToInvokerInterpreter
+        FALL_THROUGH_TO launch
 
+        ;; --------------------------------------------------
+        ;; Generic launch
 launch:
         param_call UpcaseString, INVOKER_PREFIX
         param_call UpcaseString, INVOKER_INTERPRETER
@@ -1045,6 +978,58 @@ launch:
 
         copy16  #INVOKER, reset_and_invoke_target
         jmp     ResetAndInvoke
+
+        ;; --------------------------------------------------
+        ;; BASIC program
+basic:  jsr     CheckBasicSystem ; Only launch if BASIC.SYSTEM is found
+        jeq     launch
+        lda     #kErrBasicSysNotFound
+        jmp     ShowAlert
+
+        ;; --------------------------------------------------
+        ;; Binary file
+binary:
+        lda     menu_click_params::menu_id ; From a menu (File, Selector)
+        jne     launch
+        jsr     ModifierDown ; Otherwise, only launch if a button is down
+        jmi     launch
+        lda     #kErrConfirmRunning
+        jsr     ShowAlert       ; show a prompt otherwise
+        cmp     #kAlertResultOK
+        jeq     launch
+        jmp     SetCursorPointer ; after not launching BIN
+
+;;; --------------------------------------------------
+
+.macro INVOKE_TABLE_ENTRY handler, param
+        .addr   handler
+        .addr   param
+.endmacro
+
+invoke_table:
+        INVOKE_TABLE_ENTRY      fallback, 0                    ; generic
+        INVOKE_TABLE_ENTRY      InvokeDeskAcc, str_preview_txt ; text
+        INVOKE_TABLE_ENTRY      binary, 0                      ; binary
+        INVOKE_TABLE_ENTRY      InvokeDeskAcc, str_preview_fot ; graphics
+        INVOKE_TABLE_ENTRY      fallback, 0                    ; animation
+        INVOKE_TABLE_ENTRY      InvokeDeskAcc, str_preview_mus ; music
+        INVOKE_TABLE_ENTRY      fallback, 0                    ; audio
+        INVOKE_TABLE_ENTRY      InvokeDeskAcc, str_preview_fnt ; font
+        INVOKE_TABLE_ENTRY      fallback, 0                    ; relocatable
+        INVOKE_TABLE_ENTRY      fallback, 0                    ; command
+        INVOKE_TABLE_ENTRY      OpenFolder, 0                  ; folder
+        INVOKE_TABLE_ENTRY      fallback, 0                    ; iigs
+        INVOKE_TABLE_ENTRY      interpreter, str_awlauncher    ; appleworks_wp
+        INVOKE_TABLE_ENTRY      interpreter, str_awlauncher    ; appleworks_sp
+        INVOKE_TABLE_ENTRY      interpreter, str_awlauncher    ; appleworks_db
+        INVOKE_TABLE_ENTRY      interpreter, str_unshrink      ; archive
+        INVOKE_TABLE_ENTRY      interpreter, str_binscii       ; encoded
+        INVOKE_TABLE_ENTRY      InvokeDeskAccWithSelection, 0  ; desk_accessory
+        INVOKE_TABLE_ENTRY      basic, 0                       ; basic
+        INVOKE_TABLE_ENTRY      interpreter, str_intbasic      ; intbasic
+        INVOKE_TABLE_ENTRY      launch, 0                      ; system
+        INVOKE_TABLE_ENTRY      launch, 0                      ; application
+        ASSERT_RECORD_TABLE_SIZE invoke_table, IconType::COUNT, 4
 
 ;;; --------------------------------------------------
 ;;; Check `src_path_buf`'s ancestors to see if the desired interpreter
@@ -1655,6 +1640,29 @@ skip:   iny
         jmp     LaunchFileWithPath
 .endproc ; CmdDeskaccImpl
 CmdDeskAcc      := CmdDeskaccImpl::start
+
+;;; ============================================================
+;;; Invoke a DA, with path set to first file selection
+;;; Input: `src_path_buf` has DA path
+
+.proc InvokeDeskAccWithSelection
+        ;; * Can't use `dst_path_buf` as it is within DA_IO_BUFFER
+        ;; * Can't use `src_path_buf` as it holds file selection
+        COPY_STRING src_path_buf, tmp_path_buf ; Use this to launch the DA
+
+        copy    #0, src_path_buf ; Signal no file selection
+
+        ;; As a convenience for DAs, set path to first selected file.
+        lda     selected_window_id
+        beq     :+              ; not a file
+        lda     selected_icon_count
+        beq     :+              ; no selection
+        jsr     CopyAndComposeWinIconPaths
+        jne     ShowAlert
+:
+        ldax    #tmp_path_buf
+        FALL_THROUGH_TO InvokeDeskAcc
+.endproc
 
 ;;; ============================================================
 ;;; Invoke Desk Accessory
