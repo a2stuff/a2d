@@ -384,7 +384,7 @@ cloop:  lda     (ptr),y
 
         bmi     hibitset
 
-        ;; complex case - need to spill in bit from prev col and store
+        ;; spill bit in from previous column; main bit7 encodes bit to spill
 
         lda     hr_to_dhr_aux,x
         sta     PAGE2ON
@@ -394,23 +394,28 @@ cloop:  lda     (ptr),y
         sta     PAGE2OFF
         sta     (ptr),y
 
-        ror                     ; move high bit to bit 6
-        and     #(1 << 6)
-        sta     spill
-
         jmp     next
 
 hibitset:
-        ;; simple case - no bit spillage
+        ;; no bit to spill in, but spill out leftmost pixel
+
         lda     hr_to_dhr_aux,x
+        pha
         sta     PAGE2ON
         sta     (ptr),y
         lda     hr_to_dhr_main,x
         sta     PAGE2OFF
         sta     (ptr),y
 
-        copy    #0, spill       ; no spill bit
+        pla
+        ror
+        ror
+
 next:
+        ror
+        and     #(1 << 6)
+        sta     spill
+
         dey
         bpl     cloop
 
