@@ -7207,6 +7207,7 @@ get_rect:
         jsr     FillAndFrameRect
         jsr     CenterTitleText
 
+        inc16   current_penloc_y ; bias glyphs downwards
         ldax    current_winfo::title
         jsr     DrawText
 
