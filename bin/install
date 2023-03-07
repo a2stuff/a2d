@@ -28,6 +28,30 @@ cecho yellow "Installing into image: $INSTALL_IMG at path: $INSTALL_PATH"
 tempdir=$(mktemp -d "${TMPDIR:-/tmp}/shk.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
 
+repeat () {
+    if [ $2 -gt 0 ]; then
+        for i in $(seq 1 $2); do echo -n "$1"; done
+    fi
+}
+
+progress () {
+    local cur="$1"
+    local total="$2"
+    local path="$3"
+
+    local w=30
+    local l=$(expr $w \* $cur / $total)
+    local r=$(expr $w - $l)
+    local ls=$(repeat '#' $l)
+    local rs=$(repeat ':' $r)
+
+    local reset="$(tput sgr0)"
+    local red="$(tput setaf 1)"
+    local green="$(tput setaf 2)"
+
+    echo -ne "\r$(tput el)[${green}$ls${red}$rs${reset}] ${green}$path${reset}"
+}
+
 # ============================================================
 # Implementation for manifest operations
 
@@ -37,6 +61,9 @@ add_file () {
     local folder="$3"
     local dst_file="$4"
     local suffix="$5"
+
+    local tmp_file="$tempdir/$dst_file#$suffix"
+    current_line=$(expr $current_line + 1)
 
     # Skip "boot" files when installing to existing image.
     if [ "$disposition" = "boot" ]; then
@@ -49,7 +76,7 @@ add_file () {
     fi
 
     local tmp_file="$tempdir/$dst_file#$suffix"
-    cecho green "- $dst_dir/$dst_file"
+    progress $current_line $total_lines "$dst_dir/$dst_file"
 
     cp "$src_file" "$tmp_file"
     if [ "$suffix" = "040000" ]; then
@@ -71,6 +98,9 @@ add_file () {
 suppress cadius CREATEFOLDER "$INSTALL_IMG" "$INSTALL_PATH" --quiet --no-case-bits
 
 manifest="$(no_loc_da_names=$INSTALL_NOLOCDA no_sample_media=$INSTALL_NOSAMPLES bin/manifest $@)"
+total_lines=$(echo "$manifest" | grep add_file | wc -l)
+current_line=0
 eval "$manifest"
+echo -ne "\r$(tput el)"
 
 rm -rf "${tempdir}"
