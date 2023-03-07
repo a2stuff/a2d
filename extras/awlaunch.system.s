@@ -292,36 +292,17 @@ SplitPath:
         ;; Move macros to $EF00
 .scope move_macros
         sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
+        bit     ROMIN           ; Read ROM; write RAM
+        bit     ROMIN
 
-        move_src := macros
-        move_end := macros+sizeof_macros-1
-        move_dst := $EF00
+        copy16  #macros, STARTLO
+        copy16  #macros+sizeof_macros-1, ENDLO
+        copy16  #$EF00, DESTINATIONLO
+        ldy     #0
+        jsr     MOVE
 
-        src := *+1
-loop:   lda     move_src
-        dst := *+1
-        sta     move_dst
-
-        lda     src
-        cmp     #<move_end
-        bne     :+
-        lda     src+1
-        cmp     #>move_end
-        beq     done
-:
-        inc     src
-        bne     :+
-        inc     src+1
-:
-        inc     dst
-        bne     loop
-        inc     dst+1
-        bne     loop            ; always
-done:
         sta     ALTZPOFF
-        bit     ROMIN2
+        bit     ROMIN2          ; Read ROM; no write
 .endscope ; move_macros
 
         ;; --------------------------------------------------
