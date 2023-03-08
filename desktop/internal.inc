@@ -73,6 +73,9 @@ kMaxWindowHeight = kIconViewSpacingY * 3 + kWindowHeaderHeight
 ;;; Height of items/used/free header
 kWindowHeaderHeight     = 14
 
+kWindowHeaderInsetX = 5
+kWindowHeaderSpacingX = 8
+
 ;;; --------------------------------------------------
 ;;; List views
 

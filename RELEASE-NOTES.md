@@ -79,6 +79,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix numerous crashes with long pathnames.
 * Fix crash in File > Get Info is target is not available.
 * Make OA+SA+O and OA+SA+W shortcuts work when Caps Lock is off.
+* Improve layout of window header counts/labels. ([#493](https://github.com/a2stuff/a2d/issues/493))
 
 ### Selector
 

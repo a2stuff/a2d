@@ -7587,19 +7587,12 @@ flags:  .byte   0
 ;;; Draw header (items/K in disk/K available/lines) for active window
 
 .proc DrawWindowHeader
-
-        ;; Compute header coords
+        ;; --------------------------------------------------
+        ;; Separator Lines
 
         ;; x coords
-        lda     window_grafport::maprect::x1
-        sta     header_line_left::xcoord
-        clc
-        adc     #5
-        sta     items_label_pos::xcoord
-        lda     window_grafport::maprect::x1+1
-        sta     header_line_left::xcoord+1
-        adc     #0
-        sta     items_label_pos::xcoord+1
+        copy16  window_grafport::maprect::x1, header_line_left::xcoord
+        copy16  window_grafport::maprect::x2, header_line_right::xcoord
 
         ;; y coords
         lda     window_grafport::maprect::y1
@@ -7614,7 +7607,6 @@ flags:  .byte   0
 
         ;; Draw top line
         MGTK_CALL MGTK::MoveTo, header_line_left
-        copy16  window_grafport::maprect::x2, header_line_right::xcoord
         jsr     SetPenModeNotCopy
         MGTK_CALL MGTK::LineTo, header_line_right
 
@@ -7633,23 +7625,23 @@ flags:  .byte   0
         MGTK_CALL MGTK::MoveTo, header_line_left
         MGTK_CALL MGTK::LineTo, header_line_right
 
-        ;; Baseline for header text
-        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight-4, items_label_pos::ycoord
+        ;; --------------------------------------------------
+        ;; Labels (Items/K in disk/K available)
 
-        ;; Draw "XXX Items"
+        ;; Cache values
         lda     active_window_id
         jsr     GetFileRecordCountForWindow
         ldx     #0
-        jsr     IntToStringWithSeparators
-        lda     cached_window_entry_count
-        jsr     adjust_item_suffix
+        stax    num_items
 
-        MGTK_CALL MGTK::MoveTo, items_label_pos
-        jsr     DrawIntString
-        param_call_indirect DrawString, ptr_str_items_suffix
+        ldax    #str_items_suffix
+        ldy     cached_window_entry_count
+        cpy     #1
+    IF_EQ
+        ldax    #str_item_suffix
+    END_IF
+        stax    ptr_str_items_suffix
 
-        ;; Draw "XXXK in disk"
-        jsr     CalcHeaderCoords
         ldx     active_window_id
         dex                     ; index 0 is window 1
         txa
@@ -7657,89 +7649,103 @@ flags:  .byte   0
         tay
         lda     window_draw_k_used_table,y
         ldx     window_draw_k_used_table+1,y
-        jsr     IntToStringWithSeparators
-        MGTK_CALL MGTK::MoveTo, pos_k_in_disk
+        stax    k_in_disk
+        lda     window_draw_k_free_table,y
+        ldx     window_draw_k_free_table+1,y
+        stax    k_available
+
+        ;; Measure strings
+        ldax    num_items
+        jsr     MeasureIntString
+        stax    width_num_items
+        param_call_indirect MeasureString, ptr_str_items_suffix
+        addax   width_num_items
+
+        ldax    k_in_disk
+        jsr     MeasureIntString
+        stax    width_k_in_disk
+        param_call MeasureString, str_k_in_disk
+        addax   width_k_in_disk
+
+        ldax    k_available
+        jsr     MeasureIntString
+        stax    width_k_available
+        param_call MeasureString, str_k_available
+        addax   width_k_available
+
+        ;; Determine gap for centering
+        gap := header_text_delta::xcoord
+        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, gap ; window width
+        sub16_8 gap, #kWindowHeaderInsetX * 2, gap ; minus left/right insets
+        sub16   gap, width_num_items, gap          ; minus width of all text
+        sub16   gap, width_k_in_disk, gap
+        sub16   gap, width_k_available, gap
+        asr16   gap                         ; divided evenly
+        scmp16  #kWindowHeaderSpacingX, gap ; is it below the minimum?
+    IF_POS
+        copy16  #kWindowHeaderSpacingX, gap ; yes, use the minimum
+    END_IF
+
+        ;; Draw "XXX items"
+        add16_8 window_grafport::maprect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
+        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight-4, header_text_pos::ycoord
+        MGTK_CALL MGTK::MoveTo, header_text_pos
+        ldax    num_items
+        jsr     DrawIntString
+        param_call_indirect DrawString, ptr_str_items_suffix
+
+        ;; Draw "XXXK in disk"
+        MGTK_CALL MGTK::Move, header_text_delta
+        ldax    k_in_disk
         jsr     DrawIntString
         param_call DrawString, str_k_in_disk
 
         ;; Draw "XXXK available"
-        ldx     active_window_id
-        dex                     ; index 0 is window 1
-        txa
-        asl     a
-        tay
-        lda     window_draw_k_free_table,y
-        ldx     window_draw_k_free_table+1,y
-        jsr     IntToStringWithSeparators
-        MGTK_CALL MGTK::MoveTo, pos_k_available
+        MGTK_CALL MGTK::Move, header_text_delta
+        ldax    k_available
         jsr     DrawIntString
         param_jump DrawString, str_k_available
 
-.proc  adjust_item_suffix
-        cmp     #1
-        bne     :+
-        copy16  #str_item_suffix, ptr_str_items_suffix
-        rts
+num_items:      .word   0
+k_in_disk:      .word   0
+k_available:    .word   0
 
-:       copy16  #str_items_suffix, ptr_str_items_suffix
-        rts
-.endproc ; adjust_item_suffix
-
+width_num_items:        .word   0
+width_k_in_disk:        .word   0
+width_k_available:      .word   0
 
 ptr_str_items_suffix:
         .addr   0
 
-;;; --------------------------------------------------
-
-.proc CalcHeaderCoords
-        ;; Width of window
-        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, xcoord
-
-        ;; Is there room to spread things out?
-        sub16   xcoord, width_items_label, xcoord
-        jmi     skipcenter
-        sub16   xcoord, width_right_labels, xcoord
-        jmi     skipcenter
-
-        ;; Yes - center "K in disk"
-        add16   width_left_labels, xcoord, pos_k_available::xcoord
-        lda     xcoord+1
-        beq     :+
-        lda     xcoord
-        cmp     #24             ; threshold
-        bcc     nosub
-:       sub16   pos_k_available::xcoord, #kWindowHeaderHeight-8, pos_k_available::xcoord
-nosub:  lsr16   xcoord          ; divide by 2 to center
-        add16   width_items_label_padded, xcoord, pos_k_in_disk::xcoord
-        jmp     finish
-
-        ;; No - just squish things together
-skipcenter:
-        copy16  width_items_label_padded, pos_k_in_disk::xcoord
-        copy16  width_left_labels, pos_k_available::xcoord
-
-finish:
-        add16   pos_k_in_disk::xcoord, window_grafport::maprect::x1, pos_k_in_disk::xcoord
-        add16   pos_k_available::xcoord, window_grafport::maprect::x1, pos_k_available::xcoord
-
-        ;; Update y coords
-        lda     items_label_pos::ycoord
-        sta     pos_k_in_disk::ycoord
-        sta     pos_k_available::ycoord
-        lda     items_label_pos::ycoord+1
-        sta     pos_k_in_disk::ycoord+1
-        sta     pos_k_available::ycoord+1
-
-        rts
-.endproc ; CalcHeaderCoords
-
 .proc DrawIntString
+        jsr     IntToStringWithSeparators
         param_jump DrawString, str_from_int
 .endproc ; DrawIntString
 
-xcoord:
-        .word   0
-.endproc ; DrawWindowHeader
+.proc MeasureIntString
+        jsr     IntToStringWithSeparators
+        ldax    #str_from_int
+        FALL_THROUGH_TO MeasureString
+.endproc ; MeasureIntString
+
+;;; Measure text, pascal string address in A,X; result in A,X
+;;; String must be in LC area (visible to both main and aux code)
+.proc MeasureString
+        ptr := $6
+        len := $8
+        result := $9
+
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        inc16   ptr
+        MGTK_CALL MGTK::TextWidth, ptr
+        ldax    result
+        rts
+.endproc ; MeasureString
+
+.endproc
 
 ;;; ============================================================
 ;;; Compute bounding box for icons within cached window
@@ -15462,18 +15468,6 @@ startup_slot_table:
         .res    7, 0            ; maps menu item index (0-based) to slot number
 
 ;;; ============================================================
-
-;;; Computed during startup
-width_items_label_padded:
-        .word   0
-width_left_labels:
-        .word   0
-
-;;; Computed during startup
-width_items_label:      .word   0
-width_k_in_disk_label:  .word   0
-width_k_available_label:        .word   0
-width_right_labels:     .word   0
 
 ;;; Assigned during startup
 trash_icon_num:  .byte   0

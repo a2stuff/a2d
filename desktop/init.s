@@ -459,7 +459,7 @@ L0A3B:  lda     index
         inc     selector_menu
         jmp     L0A3B
 
-done:   jmp     CalcHeaderItemWidths
+done:   jmp     end
 
 index:  .byte   0
 count:  .byte   0
@@ -531,54 +531,8 @@ ploop:  ldy     #0
 done:   rts
 .endproc ; WriteSelectorList
 
-.endproc ; LoadSelectorList
-
-;;; ============================================================
-
-.proc CalcHeaderItemWidths
-        ;; Enough space for "123,456"
-        param_call measure, str_from_int
-        stax    dx
-
-        ;; Width of "123,456 Items"
-        param_call measure, str_items_suffix
-        addax   dx, main::width_items_label
-
-        ;; Width of "123,456K in disk"
-        param_call measure, str_k_in_disk
-        addax   dx, main::width_k_in_disk_label
-
-        ;; Width of "123,456K available"
-        param_call measure, str_k_available
-        addax   dx, main::width_k_available_label
-
-        add16   main::width_k_in_disk_label, main::width_k_available_label, main::width_right_labels
-        add16   main::width_items_label, #5, main::width_items_label_padded
-        add16   main::width_items_label_padded, main::width_k_in_disk_label, main::width_left_labels
-        add16   main::width_left_labels, #3, main::width_left_labels
-        jmp     end
-
-dx:     .word   0
-
-;;; Measure text, pascal string address in A,X; result in A,X
-;;; String must be in LC area (visible to both main and aux code)
-.proc measure
-        ptr := $6
-        len := $8
-        result := $9
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        inc16   ptr
-        MGTK_CALL MGTK::TextWidth, ptr
-        ldax    result
-        rts
-.endproc ; measure
-
 end:
-.endproc ; CalcHeaderItemWidths
+.endproc ; LoadSelectorList
 
 ;;; ============================================================
 ;;; Enumerate Desk Accessories

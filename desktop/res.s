@@ -788,7 +788,8 @@ str_item_suffix:
 str_items_suffix:
         PASCAL_STRING res_string_window_header_items_suffix
 
-        DEFINE_POINT items_label_pos, 8, 10
+        DEFINE_POINT header_text_pos, 0, 0
+        DEFINE_POINT header_text_delta, 0, 0
 
         DEFINE_POINT header_line_left, 0, 0
         DEFINE_POINT header_line_right, 0, 0
