@@ -572,6 +572,8 @@
 
 * Configure at least two shortcuts. Launch DeskTop. Shortcuts > Run a Shortcut.... Cancel. Verify that neither shortcut is invoked.
 
+* Launch DeskTop. Shortcuts > Run a Shortcut. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
+
 
 ## File Types
 
