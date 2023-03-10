@@ -83,6 +83,8 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix crash in File > Get Info is target is not available.
 * Make OA+SA+O and OA+SA+W shortcuts work when Caps Lock is off.
 * Improve layout of window header counts/labels. ([#493](https://github.com/a2stuff/a2d/issues/493))
+* Improve mouse responsiveness during I/O operations.
+
 
 ### Selector
 
@@ -97,6 +99,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Show Pascal volume names more consistently.
 * Ensure a confirmation prompt is shown before overwriting, unless destination is not formatted.
 * Change "Read Drives" button shortcut to 'R' in EN builds; corresponding changes in other languages.
+* Improve mouse responsiveness during I/O operations.
 
 ### Desk Accessories
 

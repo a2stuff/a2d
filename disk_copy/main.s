@@ -39,6 +39,8 @@ volume_bitmap   := $4000
 .proc MLIRelayImpl
         params_src := $7E
 
+        jsr     auxlc::CheckEvents
+
         ;; Adjust return address on stack, compute
         ;; original params address.
         pla

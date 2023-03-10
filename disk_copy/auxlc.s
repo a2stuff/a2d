@@ -612,6 +612,8 @@ LD7AD:  lda     source_drive_index
         jmp     InitDialog      ; Cancel
 :
 
+        jsr     SetCursorWatch
+
         ;; --------------------------------------------------
         ;; Check destination disk
 
@@ -683,6 +685,8 @@ maybe_format:
         jmp     do_copy
 
 try_format:
+        jsr     SetCursorWatch
+
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         jsr     IsDiskII
@@ -724,6 +728,8 @@ format: MGTK_CALL MGTK::MoveTo, point_formatting
         ;; Perform the copy
 
 do_copy:
+        jsr     SetCursorWatch
+
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
@@ -745,7 +751,10 @@ do_copy:
         beq     LD8DF           ; OK
         jmp     InitDialog      ; Cancel
 
-LD8DF:  jsr     main__ReadVolumeBitmap
+LD8DF:
+        jsr     SetCursorWatch
+
+        jsr     main__ReadVolumeBitmap
         lda     #$00
         sta     block_num_div8
         sta     block_num_div8+1
@@ -755,7 +764,11 @@ LD8DF:  jsr     main__ReadVolumeBitmap
         jsr     LE4EC
         jsr     LE507
         jsr     DrawEscToStopCopyHint
-LD8FB:  jsr     LE4A8
+
+LD8FB:
+        jsr     SetCursorWatch
+
+        jsr     LE4A8
         lda     #$00
         jsr     main__CopyBlocks
         cmp     #$01
@@ -777,7 +790,10 @@ LD8FB:  jsr     LE4A8
         beq     LD928           ; OK
         jmp     InitDialog      ; Cancel
 
-LD928:  jsr     LE491
+LD928:
+        jsr     SetCursorWatch
+
+        jsr     LE491
         lda     #$80
         jsr     main__CopyBlocks
         bmi     LD955
@@ -801,7 +817,10 @@ LD928:  jsr     LE491
         beq     LD8FB           ; OK
         jmp     InitDialog      ; Cancel
 
-LD955:  jsr     LE507
+LD955:
+        jsr     SetCursorWatch
+
+        jsr     LE507
         jsr     main__FreeVolBitmapPages
         ldx     source_drive_index
         lda     drive_unitnum_table,x
@@ -2397,6 +2416,13 @@ Alert := alert_dialog::Alert
         .include "../lib/is_diskii.s"
         .include "../lib/muldiv.s"
         .include "../lib/doubleclick.s"
+
+;;; ============================================================
+
+.proc CheckEvents
+        MGTK_CALL MGTK::CheckEvents
+        rts
+.endproc ; CheckEvents
 
 ;;; ============================================================
 
