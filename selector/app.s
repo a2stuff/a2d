@@ -154,6 +154,9 @@ slot_x7:        .byte   0
 grafport2:
         .tag    MGTK::GrafPort
 
+solid_pattern:
+        .res    8, $FF
+
 ;;; ============================================================
 ;;; Application entry point
 
@@ -945,11 +948,13 @@ check_desktop_btn:
 
 check_entries:
         jsr     option_picker::HandleOptionPickerClick
+        bmi     ret
+        jsr     DetectDoubleClick
     IF_NC
         BTK_CALL BTK::Flash, ok_button_params
         jmp     InvokeEntry
     END_IF
-        rts
+ret:    rts
 .endproc ; HandleButtonDown
 
 ;;; ============================================================

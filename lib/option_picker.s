@@ -66,8 +66,7 @@ kOptionPickerMaxEntries = kOptionPickerRows * kOptionPickerCols
 done:   return  #$FF
 
 handle_entry_click:
-        jsr     SetOptionPickerSelection
-        jmp     DetectDoubleClick
+        jmp     SetOptionPickerSelection
 .endproc ; HandleOptionPickerClick
 
 ;;; ============================================================
@@ -85,6 +84,7 @@ handle_entry_click:
         stax    option_picker_item_rect + MGTK::Rect::y1
         addax   #kOptionPickerItemHeight-1, option_picker_item_rect + MGTK::Rect::y2
 
+        MGTK_CALL MGTK::SetPattern, solid_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, option_picker_item_rect
 

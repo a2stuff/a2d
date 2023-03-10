@@ -14419,6 +14419,15 @@ ellipsify:
 .endproc ; DrawOKButton
 
 .proc UpdateOKButton
+        bit     format_erase_overlay_flag
+    IF_NS
+        lda     #0
+        jsr     format_erase_overlay__ValidSelection ; preserves A
+        bpl     set_state
+        lda     #$80
+        bne     set_state       ; always
+    END_IF
+
         bit     has_input_field_flag
         bpl     ret
 
@@ -14426,10 +14435,14 @@ ellipsify:
         ldx     text_input_buf
         bne     :+
         lda     #$80
-:       cmp     ok_button_rec::state
+:
+
+set_state:
+        cmp     ok_button_rec::state
         beq     ret
         sta     ok_button_rec::state
         BTK_CALL BTK::Hilite, ok_button_params
+
 ret:    rts
 .endproc ; UpdateOKButton
 

@@ -94,15 +94,11 @@ num_volumes:
         copy    #$FF, selected_index
         copy16  #HandleClick, main::jump_relay+1
         copy    #$80, format_erase_overlay_flag
+        jsr     main::UpdateOKButton
 
-loop1:
-        jsr     main::PromptInputLoop
-        bmi     loop1           ; not done
-        beq     :+              ; ok
-        jmp     cancel          ; cancel
-:
-        bit     selected_index
-        bmi     loop1
+:       jsr     main::PromptInputLoop
+        bmi     :-              ; not done
+        jne     cancel          ; cancel
 
         jsr     GetSelectedUnitNum
         sta     unit_num
@@ -132,7 +128,7 @@ loop2:
         bmi     loop2           ; not done
         bne     cancel          ; cancel
 
-ok2:    jsr     main::SetCursorPointerWithFlag
+        jsr     main::SetCursorPointerWithFlag
 
         ;; Check for conflicting name
         ldxy    #text_input_buf
@@ -170,9 +166,7 @@ ok2:    jsr     main::SetCursorPointerWithFlag
     END_IF
 :       jsr     main::PromptInputLoop
         bmi     :-              ; not done
-        beq     :+              ; ok
-        jmp     cancel          ; cancel
-:
+        jne     cancel          ; cancel
 .endscope
 
         ;; Confirmed!
@@ -337,23 +331,42 @@ kOptionPickerLeft = kVolPickerLeft
 kOptionPickerTop = kVolPickerTop
 kOptionPickerRowShift = ::kVolPickerRowShift
 option_picker_item_rect := vol_picker_item_rect
-DetectDoubleClick := main::StashCoordsAndDetectDoubleClick
 
         .include "../lib/option_picker.s"
 .endscope ; option_picker
 
 ;;; ============================================================
 
+;;; Output: N=0 if there is a valid selection, N=1 if no selection
+;;; A,X,Y unmodified
+.proc ValidSelection
+        bit     selected_index
+        rts
+.endproc ; ValidSelection
+
+;;; ============================================================
+
 .proc HandleClick
         jsr     option_picker::HandleOptionPickerClick
+        php
+        jsr     main::UpdateOKButton
+        plp
+        bmi     ret
+        jsr     main::StashCoordsAndDetectDoubleClick
     IF_NC
-        ;; double-click
         pha
         BTK_CALL BTK::Flash, ok_button_params
         pla
     END_IF
-        rts
+ret:    rts
 .endproc ; HandleClick
+
+;;; ============================================================
+
+.proc HandleOptionPickerKey
+        jsr     option_picker::HandleOptionPickerKey
+        jmp     main::UpdateOKButton
+.endproc
 
 ;;; ============================================================
 
@@ -1068,7 +1081,8 @@ non_pro:
 .endscope ; format_erase_overlay
 
 format_erase_overlay__IsOptionPickerKey := format_erase_overlay::option_picker::IsOptionPickerKey
-format_erase_overlay__HandleOptionPickerKey := format_erase_overlay::option_picker::HandleOptionPickerKey
+format_erase_overlay__HandleOptionPickerKey := format_erase_overlay::HandleOptionPickerKey
+format_erase_overlay__ValidSelection := format_erase_overlay::ValidSelection
 
 format_erase_overlay__Exec := format_erase_overlay::Exec
 

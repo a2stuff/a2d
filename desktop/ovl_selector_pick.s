@@ -392,7 +392,6 @@ kOptionPickerLeft = kShortcutPickerLeft
 kOptionPickerTop = kShortcutPickerTop
 kOptionPickerRowShift = ::kShortcutPickerRowShift
 option_picker_item_rect := entry_picker_item_rect
-DetectDoubleClick := main::StashCoordsAndDetectDoubleClick
 
         .include "../lib/option_picker.s"
 .endscope ; option_picker
@@ -502,12 +501,14 @@ not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_button_rec::rect
 
 not_cancel:
         jsr     option_picker::HandleOptionPickerClick
+        bmi     ret
+        jsr     main::StashCoordsAndDetectDoubleClick
     IF_NC
         pha
         BTK_CALL BTK::Flash, entry_picker_ok_button_params
         pla
     END_IF
-        rts
+ret:    rts
 .endproc ; EventLoop
 
 ;;; ============================================================

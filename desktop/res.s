@@ -841,6 +841,9 @@ num_open_windows:
 
 ;;; ============================================================
 
+solid_pattern:
+        .res    8, $FF
+
 checkerboard_pattern:
         .byte   %01010101
         .byte   %10101010
