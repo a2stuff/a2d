@@ -1,28 +1,28 @@
 Same
 
- IIgs Finder                      DeskTop                           Shortcut
- -------------------------------- --------------------------------- --------
+ Mac System 6                IIgs Finder                      DeskTop                           Shortcut
+ --------------------------- -------------------------------- --------------------------------- --------
+ Apple > About the Finder... Apple > About This Apple IIgs... Apple > About Apple II DeskTop...
 
- Apple > About This Apple IIgs... Apple > About Apple II DeskTop...
+ File > New Folder           File > New Folder                File > New Folder...              OA-N
+ File > Open                 File > Open                      File > Open                       OA-O
+ File > Close                File > Close                     File > Close Window               OA-W
+                             File > Close All                 File > Close All
+ File > Duplicate            File > Duplicate...              File > Duplicate...               OA-D
+ Edit > Select All           Edit > Select All                File > Select All                 OA-A
+ File > Get Info             Special > Icon Info...           File > Get Info                   OA-I
+ Special > Shut Down         Special > Shut Down              File > Quit                       OA-Q
 
- File > New Folder                File > New Folder...              OA-N
- File > Open                      File > Open                       OA-O
- File > Close                     File > Close Window               OA-W
- File > Close All                 File > Close All
- File > Duplicate...              File > Duplicate...               OA-D
- Edit > Select All                File > Select All                 OA-A
- Special > Icon Info...           File > Get Info                   OA-I
- Special > Shut Down              File > Quit                       OA-Q
+ View > by Icon              View > by Icon                   View > as Icons
+ View > by Small Icon                                         View > as Small Icons
+ View > by Name              View > by Name                   View > by Name
+ View > by Date              View > by Date                   View > by Date
+ View > by Size              View > by Size                   View > by Size
+ View > by Kind              View > by Kind                   View > by Type
 
- View > by Icon                   View > as Icons
- View > by Name                   View > by Name
- View > by Date                   View > by Date
- View > by Size                   View > by Size
- View > by Kind                   View > by Type
-
- Disk > Eject                     Special > Eject Disk              OA-E
- Disk > Initialize...             Special > Format a Disk...
- Disk > Erase...                  Special > Erase a Disk...
+ File > Eject                Disk > Eject                     Special > Eject Disk              OA-E
+                             Disk > Initialize...             Special > Format a Disk...
+ Special > Erase Disk        Disk > Erase...                  Special > Erase a Disk...
 
 IIgs Finder but not DeskTop
 
