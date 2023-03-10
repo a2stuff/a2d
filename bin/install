@@ -45,6 +45,10 @@ progress () {
     local ls=$(repeat '#' $l)
     local rs=$(repeat ':' $r)
 
+    local cols=$(tput cols)
+    local pw=$(expr $cols - $w - 3)
+    path="$(echo "$path" | cut -c1-$pw)"
+
     local reset="$(tput sgr0)"
     local red="$(tput setaf 1)"
     local green="$(tput setaf 2)"
