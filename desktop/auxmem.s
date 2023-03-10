@@ -204,22 +204,6 @@ special_menu:
 
 ;;; ============================================================
 
-        ;; Rects
-        kPromptDialogWidth = 400
-        kPromptDialogHeight = 107
-        kPromptDialogLeft = (kScreenWidth - kPromptDialogWidth) / 2
-        kPromptDialogTop  = (kScreenHeight - kPromptDialogHeight) / 2
-
-        DEFINE_RECT_FRAME confirm_dialog_frame_rect, kPromptDialogWidth, kPromptDialogHeight
-
-        kPromptWindowId = $0F
-        DEFINE_BUTTON ok_button_rec, kPromptWindowId, res_string_button_ok, kGlyphReturn, 260, kPromptDialogHeight-19
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
-        DEFINE_BUTTON cancel_button_rec, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, kPromptDialogHeight-19
-        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
-
-;;; ============================================================
-
 kDialogLabelHeight      = kSystemFontHeight+1
 kDialogTitleY           = 17
 kDialogLabelBaseY       = 23
@@ -232,6 +216,8 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
 
 ;;; ============================================================
 ;;; Prompt dialog resources
+
+        DEFINE_RECT_FRAME prompt_dialog_frame_rect, kPromptDialogWidth, kPromptDialogHeight
 
         kPromptDialogInsetLeft   = 8
         kPromptDialogInsetTop    = 25

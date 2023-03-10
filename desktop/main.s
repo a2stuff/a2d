@@ -13241,6 +13241,8 @@ dialog_param_addr:
 ;;; ============================================================
 ;;; Message handler for OK/Cancel dialog
 
+;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
+
 .proc PromptInputLoop
         lda     has_input_field_flag
         beq     :+
@@ -13305,13 +13307,15 @@ content:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, aux::ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         beq     check_button_ok
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        BTK_CALL BTK::Track, aux::ok_button_params
+        bit     ok_button_rec::state
+        bmi     :+
+        BTK_CALL BTK::Track, ok_button_params
         bmi     :+
         lda     #PromptResult::ok
 :       rts
@@ -13322,10 +13326,10 @@ maybe_check_button_cancel:
         return  #$FF
 
 check_button_cancel:
-        MGTK_CALL MGTK::InRect, aux::cancel_button_rec::rect
+        MGTK_CALL MGTK::InRect, cancel_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, aux::cancel_button_params
+        BTK_CALL BTK::Track, cancel_button_params
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
@@ -13360,6 +13364,7 @@ check_button_cancel:
         bit     has_input_field_flag
       IF_NS
         LETK_CALL LETK::Key, le_params
+        jsr     UpdateOKButton
       END_IF
 
     ELSE
@@ -13391,6 +13396,7 @@ check_button_cancel:
         jsr     IsFilenameChar
         bcs     ignore
 allow:  LETK_CALL LETK::Key, le_params
+        jsr     UpdateOKButton
 ignore:
       END_IF
 
@@ -13400,13 +13406,16 @@ ignore:
         ;; --------------------------------------------------
 
 .proc HandleKeyOK
-        BTK_CALL BTK::Flash, aux::ok_button_params
-        return  #0
+        bit     ok_button_rec::state
+        bmi     ret
+        BTK_CALL BTK::Flash, ok_button_params
+        lda     #PromptResult::ok
+ret:    rts
 .endproc ; HandleKeyOK
 
 .proc HandleKeyCancel
-        BTK_CALL BTK::Flash, aux::cancel_button_params
-        return  #1
+        BTK_CALL BTK::Flash, cancel_button_params
+        return  #PromptResult::cancel
 .endproc ; HandleKeyCancel
 
 .endproc ; PromptKeyHandler
@@ -13700,7 +13709,6 @@ GetSizeDialogProc::do_count := *
         cmp     #NewFolderDialogState::open
     IF_EQ
         copy    #$80, has_input_field_flag
-        copy    #0, text_input_buf
         lda     #$00
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
@@ -13730,9 +13738,6 @@ GetSizeDialogProc::do_count := *
 loop:   jsr     PromptInputLoop
         bmi     loop
         bne     do_close
-
-        lda     text_input_buf
-        beq     loop            ; empty
 
         lda     path_buf0       ; full path okay?
         clc
@@ -13948,9 +13953,6 @@ UnlockDialogProc := LockDialogProc
 
         bne     do_close        ; canceled!
 
-        lda     text_input_buf
-        beq     :-              ; name is empty, retry
-
         ldy     #<text_input_buf
         ldx     #>text_input_buf
         return  #0
@@ -14001,9 +14003,6 @@ do_close:
         bmi     :-              ; continue?
 
         bne     do_close        ; canceled!
-
-        lda     text_input_buf
-        beq     :-              ; name is empty, retry
 
         ldy     #<text_input_buf
         ldx     #>text_input_buf
@@ -14174,8 +14173,13 @@ params:  .res    3
 
 ;;; ============================================================
 
+;;; Inputs: A = new `prompt_button_flags` value
+
 .proc OpenPromptWindow
         sta     prompt_button_flags
+
+        copy    #0, text_input_buf
+
         jsr     OpenDialogWindow
         jsr     DrawOKButton
         bit     prompt_button_flags
@@ -14187,11 +14191,13 @@ done:   rts
 ;;; ============================================================
 
 .proc OpenDialogWindow
+        copy    #0, ok_button_rec::state
+
         MGTK_CALL MGTK::OpenWindow, winfo_prompt_dialog
         jsr     SetPortForDialogWindow
         jsr     SetPenModeNotCopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, aux::confirm_dialog_frame_rect
+        MGTK_CALL MGTK::FrameRect, aux::prompt_dialog_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
         MGTK_CALL MGTK::SetPenMode, penXOR
         rts
@@ -14277,14 +14283,14 @@ done:   rts
 
         cmp     #DDL_CENTER
      IF_EQ
-        sub16   #aux::kPromptDialogWidth, result, dialog_label_pos::xcoord
+        sub16   #kPromptDialogWidth, result, dialog_label_pos::xcoord
         lsr16   dialog_label_pos::xcoord
         jmp     calc_y
      END_IF
 
         cmp     #DDL_RIGHT
      IF_EQ
-        sub16   #aux::kPromptDialogWidth - kDialogLabelDefaultX, result, dialog_label_pos::xcoord
+        sub16   #kPromptDialogWidth - kDialogLabelDefaultX, result, dialog_label_pos::xcoord
      ELSE
         ;; DDL_LRIGHT
         sub16   #kDialogLabelRightX, result, dialog_label_pos::xcoord
@@ -14408,12 +14414,27 @@ ellipsify:
 ;;; ============================================================
 
 .proc DrawOKButton
-        BTK_CALL BTK::Draw, aux::ok_button_params
+        BTK_CALL BTK::Draw, ok_button_params
         rts
 .endproc ; DrawOKButton
 
+.proc UpdateOKButton
+        bit     has_input_field_flag
+        bpl     ret
+
+        lda     #0
+        ldx     text_input_buf
+        bne     :+
+        lda     #$80
+:       cmp     ok_button_rec::state
+        beq     ret
+        sta     ok_button_rec::state
+        BTK_CALL BTK::Hilite, ok_button_params
+ret:    rts
+.endproc ; UpdateOKButton
+
 .proc DrawCancelButton
-        BTK_CALL BTK::Draw, aux::cancel_button_params
+        BTK_CALL BTK::Draw, cancel_button_params
         rts
 .endproc ; DrawCancelButton
 
@@ -14425,8 +14446,8 @@ ellipsify:
 
 .proc EraseOKCancelButtons
         jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::ok_button_rec::rect
-        MGTK_CALL MGTK::PaintRect, aux::cancel_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, ok_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, cancel_button_rec::rect
         rts
 .endproc ; EraseOKCancelButtons
 
@@ -14462,7 +14483,7 @@ done:   rts
         inc16   text_addr        ; point past length byte
         MGTK_CALL MGTK::TextWidth, text_params
 
-        sub16   #aux::kPromptDialogWidth, text_width, pos_dialog_title::xcoord
+        sub16   #kPromptDialogWidth, text_width, pos_dialog_title::xcoord
         lsr16   pos_dialog_title::xcoord ; /= 2
         MGTK_CALL MGTK::MoveTo, pos_dialog_title
         MGTK_CALL MGTK::DrawText, text_params
@@ -14486,7 +14507,7 @@ done:   rts
         MGTK_CALL MGTK::FrameRect, name_input_rect
         LETK_CALL LETK::Init, le_params
         LETK_CALL LETK::Activate, le_params
-        rts
+        jmp     UpdateOKButton
 .endproc ; InitNameInput
 
 ;;; ============================================================

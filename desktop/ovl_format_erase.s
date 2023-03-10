@@ -130,17 +130,9 @@ skip_select:
 loop2:
         jsr     main::PromptInputLoop
         bmi     loop2           ; not done
-        beq     ok2             ; ok
-        jmp     cancel          ; cancel
+        bne     cancel          ; cancel
 
-err2:   jsr     Bell
-        jmp     loop2
-
-ok2:    lda     text_input_buf
-        beq     err2            ; name is empty
-        cmp     #kMaxFilenameLength+1
-        bcs     err2            ; name > 15 characters
-        jsr     main::SetCursorPointerWithFlag
+ok2:    jsr     main::SetCursorPointerWithFlag
 
         ;; Check for conflicting name
         ldxy    #text_input_buf
@@ -357,7 +349,7 @@ DetectDoubleClick := main::StashCoordsAndDetectDoubleClick
     IF_NC
         ;; double-click
         pha
-        BTK_CALL BTK::Flash, aux::ok_button_params
+        BTK_CALL BTK::Flash, ok_button_params
         pla
     END_IF
         rts

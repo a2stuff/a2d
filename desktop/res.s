@@ -155,10 +155,16 @@ text_input_buf:
 ;;; * Special > Erase a Disk...
 ;;; * Special > Get Size
 
+        kPromptWindowId = $0F
+        kPromptDialogWidth = 400
+        kPromptDialogHeight = 107
+        kPromptDialogLeft = (kScreenWidth - kPromptDialogWidth) / 2
+        kPromptDialogTop  = (kScreenHeight - kPromptDialogHeight) / 2
+
 .params winfo_prompt_dialog
-        kWindowId = aux::kPromptWindowId
-        kWidth = aux::kPromptDialogWidth
-        kHeight = aux::kPromptDialogHeight
+        kWindowId = kPromptWindowId
+        kWidth = kPromptDialogWidth
+        kHeight = kPromptDialogHeight
 
 window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
@@ -176,7 +182,7 @@ mincontheight:  .word   50
 maxcontwidth:   .word   500
 maxcontheight:  .word   140
 port:
-        DEFINE_POINT viewloc, aux::kPromptDialogLeft, aux::kPromptDialogTop
+        DEFINE_POINT viewloc, kPromptDialogLeft, kPromptDialogTop
 mapbits:        .addr   MGTK::screen_mapbits
 mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   0
@@ -207,6 +213,11 @@ nextwinfo:      .addr   0
         DEFINE_POINT dialog_label_base_pos, kDialogLabelDefaultX, aux::kDialogLabelBaseY
 
         DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
+
+        DEFINE_BUTTON ok_button_rec, kPromptWindowId, res_string_button_ok, kGlyphReturn, 260, kPromptDialogHeight-19
+        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+        DEFINE_BUTTON cancel_button_rec, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, kPromptDialogHeight-19
+        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
 
 ;;; $00 = ok/cancel
 ;;; $80 = ok (only)
