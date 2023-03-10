@@ -398,6 +398,7 @@ entry:
 :
 
         copy    #$FF, selected_index
+        copy    #$80, ok_button_rec::state
         jsr     LoadSelectorList
         copy    #1, invoked_during_boot_flag
         lda     num_secondary_run_list_entries
@@ -640,6 +641,7 @@ set_startup_menu_items:
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     GetPortAndDrawWindow
         copy    #$FF, selected_index
+        copy    #$80, ok_button_rec::state
         jsr     LoadSelectorList
         jsr     PopulateEntriesFlagTable
         jsr     DrawEntries
@@ -858,6 +860,7 @@ L93EB:  tsx
 .proc CmdRunAProgram
         lda     #$FF
         jsr     option_picker::SetOptionPickerSelection
+        jsr     UpdateOKButton
 retry:
         jsr     SetCursorWatch
         MLI_CALL OPEN, open_selector_params
@@ -917,7 +920,8 @@ L9443:  lda     #AlertID::insert_system_disk
         MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     check_desktop_btn
-
+        bit     ok_button_rec::state
+        bmi     done
         BTK_CALL BTK::Track, ok_button_params
         bmi     done
         jsr     TryInvokeSelectedIndex
@@ -948,6 +952,9 @@ check_desktop_btn:
 
 check_entries:
         jsr     option_picker::HandleOptionPickerClick
+        php
+        jsr     UpdateOKButton
+        plp
         bmi     ret
         jsr     DetectDoubleClick
     IF_NC
@@ -956,6 +963,21 @@ check_entries:
     END_IF
 ret:    rts
 .endproc ; HandleButtonDown
+
+;;; ============================================================
+
+.proc UpdateOKButton
+        lda     #0
+        bit     selected_index
+        bpl     :+
+        lda     #$80
+:       cmp     ok_button_rec::state
+        beq     :+
+        sta     ok_button_rec::state
+        BTK_CALL BTK::Hilite, ok_button_params
+:       rts
+
+.endproc ; UpdateOKButton
 
 ;;; ============================================================
 
@@ -1060,7 +1082,8 @@ noop:   rts
         bcc     :+
         rts
 
-:       jmp     option_picker::SetOptionPickerSelection
+:       jsr     option_picker::SetOptionPickerSelection
+        jmp     UpdateOKButton
 
         ;; --------------------------------------------------
         ;; Control characters - return and arrows
@@ -1082,7 +1105,10 @@ not_return:
     IF_NE
         lda     event_params::key
         jsr     option_picker::IsOptionPickerKey
-        jeq     option_picker::HandleOptionPickerKey
+      IF_EQ
+        jsr     option_picker::HandleOptionPickerKey
+        jmp     UpdateOKButton
+      END_IF
     END_IF
 
         rts
@@ -1494,6 +1520,7 @@ common: lda     #winfo::kDialogId
         pha
         lda     #$FF            ; clear hilite
         jsr     option_picker::SetOptionPickerSelection
+        jsr     UpdateOKButton
         pla
         sta     selected_index  ; needed below; will be cleared on failure
 :       jmp     try

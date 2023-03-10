@@ -887,6 +887,9 @@ With Sci.Calc:
 
 * Configure a shortcut for the BINSCII system utility. Launch Selector. Invoke the BINSCII system file. Verify that the display is not truncated.
 
+* Launch Selector. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
+* Launch Selector. Select an item. Verify that the OK button becomes enabled. File > Run a Program... Cancel the dialog. Verify that selection is cleared and that the OK button is disabled.
+
 
 # Disk Copy
 

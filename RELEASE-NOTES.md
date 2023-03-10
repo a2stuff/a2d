@@ -89,6 +89,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix clearing the text screen when launching programs.
 * Allow pressing Escape to cancel copy to RAMCard.
 * Change "DeskTop" button shortcut to 'D' in EN builds; corresponding changes in other languages.
+* OK button is now disabled if there is no selection.
 
 ### Disk Copy
 
