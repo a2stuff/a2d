@@ -392,10 +392,7 @@ cloop:  lda     (ptr),y
         lda     hr_to_dhr_main,x
         ora     spill           ; apply previous spill bit (to bit 6)
         sta     PAGE2OFF
-        pha
-        and     #$7F
         sta     (ptr),y
-        pla
 
         jmp     next
 
