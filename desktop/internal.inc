@@ -66,12 +66,12 @@ kMinWindowWidth = 170
 kMaxWindowWidth = kIconBBoxPaddingLeft + (kMaxIconTotalWidth - kIconBitmapWidth) / 2 + (kIconViewIconsPerRow - 1) * kIconViewSpacingX + (kMaxIconTotalWidth + kIconBitmapWidth) / 2 + kIconBBoxPaddingRight
 
 kMinWindowHeight = 50
-kMaxWindowHeight = kIconViewSpacingY * 3 + kWindowHeaderHeight
+kMaxWindowHeight = kIconViewSpacingY * 3 + kWindowHeaderHeight - 1
 ;;; NOTE: `kMaxWindowHeight` is an integral number of icons so that
 ;;; each vertical scroll tick leaves the icons nicely aligned.
 
 ;;; Height of items/used/free header
-kWindowHeaderHeight     = 14
+kWindowHeaderHeight     = 15
 
 kWindowHeaderInsetX = 5
 kWindowHeaderSpacingX = 8
@@ -79,7 +79,7 @@ kWindowHeaderSpacingX = 8
 ;;; --------------------------------------------------
 ;;; List views
 
-kListViewInitialTop     = kWindowHeaderHeight + kIconBBoxPaddingTop
+kListViewInitialTop     = kWindowHeaderHeight - 1 + kIconBBoxPaddingTop
 kListViewInitialLeft    = 4
 
 kListViewFirstBaseline  = kListViewInitialTop - 2
@@ -97,7 +97,7 @@ kMaxIconTotalHeight     = kMaxIconBitmapHeight + kIconLabelGap + kIconLabelHeigh
 kMaxIconTotalWidth      = 115   ; width of " MMMMMMMMMMMMMMM "
 
 kIconViewInitialLeft = kIconBBoxPaddingLeft
-kIconViewInitialTop  = kWindowHeaderHeight + kIconBBoxPaddingTop + kMaxIconBitmapHeight
+kIconViewInitialTop  = kWindowHeaderHeight + kIconBBoxPaddingTop + kMaxIconBitmapHeight - 1
 kIconViewIconsPerRow = 5
 
 kIconViewSpacingX    = 80
@@ -106,7 +106,7 @@ kIconViewSpacingY    = 32
 ;;; --------------------------------------------------
 ;;; Small Icon view
 
-kSmallIconViewInitialTop     = kWindowHeaderHeight + kIconBBoxPaddingTop
+kSmallIconViewInitialTop     = kWindowHeaderHeight + kIconBBoxPaddingTop - 1
 kSmallIconViewInitialLeft    = 4
 kSmallIconViewIconsPerRow    = 3
 kSmallIconViewSpacingX       = 130

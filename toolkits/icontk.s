@@ -1032,14 +1032,14 @@ find_icon:
         .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
         bne     fail            ; scrollbar, etc.
 
-        ;; TODO: Use `header_height`
         ;; Ignore if y coord < window's header height
         MGTK_CALL MGTK::GetWinPtr, findwindow_params::window_id
         win_ptr := $06
         copy16  window_ptr, win_ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         lda     (win_ptr),y
-        add16in (win_ptr),y, #kWindowHeaderHeight + 1, headery
+        copy16in (win_ptr),y, headery
+        add16_8 headery, header_height
         cmp16   findwindow_params::mousey, headery
         bcc     fail
 
@@ -2165,9 +2165,8 @@ reserved:       .byte   0
         add16   portbits::maprect+MGTK::Rect::y1, portbits::maprect+MGTK::Rect::y2, portbits::maprect+MGTK::Rect::y2
 
         ;; For window's items/used/free space bar
-        kOffset = kWindowHeaderHeight + 1
-        ;; TODO: Use `header_height`
-        add16_8 portbits::maprect+MGTK::Rect::y1, #kOffset
+        kOffset = kWindowHeaderHeight
+        add16_8 portbits::maprect+MGTK::Rect::y1, header_height
 
         FALL_THROUGH_TO DuplicateClipStructsAndSetPortBits
 .endproc ; SetPortForWinIcon
@@ -2533,11 +2532,8 @@ case2:
 
 .proc ShiftPortDown
         ;; For window's items/used/free space bar
-        kOffset = kWindowHeaderHeight + 1
-        ;; TODO: Use `header_height`
-
-        add16_8 icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kOffset
-        add16_8 icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kOffset
+        add16_8 icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, header_height
+        add16_8 icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, header_height
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc ; ShiftPortDown

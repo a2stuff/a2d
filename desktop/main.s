@@ -247,7 +247,7 @@ ClearUpdates := ClearUpdatesImpl::clear
         stax    winfo_ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
         sub16in (winfo_ptr),y, window_grafport::viewloc::ycoord, yoff
-        scmp16  yoff, #kWindowHeaderHeight+1
+        scmp16  yoff, #kWindowHeaderHeight
         bpl     skip_adjust_port
 
         ;; Adjust grafport to account for header
@@ -2463,7 +2463,7 @@ stashed_name:
 
         ;; Get the viewport, and adjust for header
         jsr     ApplyActiveWinfoToWindowGrafport
-        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight
+        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight - 1
 
         copy    #0, dirty
 
@@ -2521,7 +2521,7 @@ doney:
         beq     done
 
         ;; Apply the viewport (accounting for header)
-        sub16_8 window_grafport::maprect::y1, #kWindowHeaderHeight
+        sub16_8 window_grafport::maprect::y1, #kWindowHeaderHeight - 1
         jsr     AssignActiveWindowCliprectAndUpdateCachedIcons
         jsr     ScrollUpdate
         jsr     RedrawAfterScroll
@@ -3736,7 +3736,7 @@ _Preamble:
 
         ;; Compute effective viewport
         jsr     ApplyActiveWinfoToWindowGrafport
-        add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight
+        add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 1
         COPY_STRUCT MGTK::Point, viewport+MGTK::Rect::topleft, old
         sub16   viewport+MGTK::Rect::x2, viewport+MGTK::Rect::x1, width
         sub16   viewport+MGTK::Rect::y2, viewport+MGTK::Rect::y1, height
@@ -4000,7 +4000,7 @@ _Preamble:
 
 .proc _UpdateViewport
         ;; Restore header to viewport
-        sub16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight
+        sub16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 1
 
         jmp     AssignActiveWindowCliprectAndUpdateCachedIcons
 .endproc ; _UpdateViewport
@@ -4571,7 +4571,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         copy    active_window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowy
-        cmp     #kWindowHeaderHeight + 1
+        cmp     #kWindowHeaderHeight
         bcs     :+
         rts
 :
@@ -6131,7 +6131,7 @@ done:   jsr     PopPointers     ; do not tail-call optimize!
 ;;; Adjust grafport for header.
 .proc OffsetWindowGrafportImpl
 
-        kOffset = kWindowHeaderHeight + 1
+        kOffset = kWindowHeaderHeight
 
 noset:  lda     #$80
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
@@ -7597,7 +7597,7 @@ flags:  .byte   0
         ;; y coords
         lda     window_grafport::maprect::y1
         clc
-        adc     #kWindowHeaderHeight - 2
+        adc     #kWindowHeaderHeight - 3
         sta     header_line_left::ycoord
         sta     header_line_right::ycoord
         lda     window_grafport::maprect::y1+1
@@ -7688,7 +7688,7 @@ flags:  .byte   0
 
         ;; Draw "XXX items"
         add16_8 window_grafport::maprect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
-        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight-4, header_text_pos::ycoord
+        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
         MGTK_CALL MGTK::MoveTo, header_text_pos
         ldax    num_items
         jsr     DrawIntString
