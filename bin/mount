@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-# Run this from the top level directory
+# Place the built files in a mount/ directory for use with Virtual ][
 
 set -e
+cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
 MOUNT_DIR="mount"

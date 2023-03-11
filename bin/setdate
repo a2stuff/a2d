@@ -3,9 +3,8 @@
 # Usage: bin/setdate LANG
 # Example: bin/setdate en
 
-# Run this from the top level directory
-
 set -e
+cd "$(dirname "$0")/.."
 
 test $# -eq 1 || (echo "Usage: $0 LANG"; exit 1)
 

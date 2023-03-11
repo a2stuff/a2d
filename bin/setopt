@@ -18,6 +18,7 @@
 #
 
 set -e
+cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
 if [ -z "$INSTALL_IMG" ]; then

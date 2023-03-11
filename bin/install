@@ -8,6 +8,7 @@
 #   INSTALL_IMG=/path/to/hd.2mg INSTALL_PATH=/hd/a2.desktop bin/install
 
 set -e
+cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
 if [ -z "$INSTALL_IMG" ]; then

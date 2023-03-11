@@ -8,6 +8,8 @@
 # Assumes:
 # * Tag is of the form: v1.2-alpha20
 
+set -e
+cd "$(dirname "$0")/.."
 
 # Most recent tag
 OLDTAG=`git describe --tags --abbrev=0`

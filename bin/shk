@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-# Run this from the top level directory
-
 # Use nulib2 to create a ShrinkIt! archive for distribution
 # https://nulib.com
 
 set -e
+cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
 if ! command -v "nulib2" >/dev/null; then

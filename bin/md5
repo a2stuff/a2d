@@ -4,6 +4,9 @@
 # changes to the code (e.g. bulk label renames) to ensure that no
 # output changes were introduced.
 
+set -e
+cd "$(dirname "$0")/.."
+
 MD5=$((command -v md5) || (command -v md5sum))
 
 $MD5 $(find out -name '*.da' -o -name '*.SYS' -o -name '*.built')

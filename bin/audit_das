@@ -3,6 +3,9 @@
 # Does a build, then shows the sizes of the Main and Aux segments
 # for all of the desk accessories.
 
+set -e
+cd "$(dirname "$0")/.."
+
 max_seg_size=$(( 0x1C00 - 0x800 ))
 
 make

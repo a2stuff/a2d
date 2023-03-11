@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
+# Roll dependencies; assumes they are checked out in sibling directories
+# * https://github.com/a2stuff/prodos-drivers - CLOCK.SYSTEM
+# * https://github.com/a2stuff/intbasic - INTBASIC.SYSTEM
+
 set -e
+cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
 roll () {
