@@ -93,6 +93,8 @@ add_file () {
     local dst_file="$4"
     local suffix="$5"
 
+    progress "$folder/$dst_file"
+
     add_file_internal $IMGFILE_COMPLETE_2MG "$src_file" "/$VOLNAME_COMPLETE/$folder" "$dst_file" "$suffix"
     add_file_internal $IMGFILE_COMPLETE_HDV "$src_file" "/$VOLNAME_COMPLETE/$folder" "$dst_file" "$suffix"
     if [ "$disposition" = "required" -o "$disposition" = "boot" ]; then
@@ -110,7 +112,9 @@ add_file () {
 # Populate the images with files and directories
 
 manifest="$(bin/manifest $@)"
+init_progress
 eval "$manifest"
+fini_progress
 
 # ============================================================
 # Verify and clean up

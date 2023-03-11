@@ -21,6 +21,8 @@ add_file() {
     local dst_file="$4"
     local suffix="$5"
 
+    progress "$folder/$dst_file"
+
     local dst_dir="$MOUNT_DIR"
     if [ "$folder" != "" ]; then
         dst_dir="$MOUNT_DIR/$folder"
@@ -33,7 +35,6 @@ add_file() {
     mkdir -p "$dst_dir"
     cp "$src_file" "$dst_dir/$dst" \
 	&& xattr -wx prodos.AuxType "$auxl $auxh" "$dst_dir/$dst" \
-        && (cecho green "- $dst_dir/$dst" ) \
         || (cecho red "failed to mount $dst_dir/$dst" ; return 1)
 
     if [ "$suffix" = "040000" ]; then
@@ -46,4 +47,6 @@ add_file() {
 cecho yellow "Copying files to $MOUNT_DIR/"
 
 manifest="$(bin/manifest $@)"
+init_progress
 eval "$manifest"
+fini_progress

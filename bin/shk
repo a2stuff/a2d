@@ -28,10 +28,11 @@ add_file() {
     local dst_file="$4"
     local suffix="$5"
 
+    progress "$folder/$dst_file"
+
     local tmp_file="$tempdir/$folder/$dst_file#$suffix"
     mkdir -p "$tempdir/$folder"
     cp "$src_file" "$tmp_file" \
-        && (cecho green "staging $dst_file" ) \
         || (cecho red "failed to stage $dst_file" ; return 1)
 
     if [ "$suffix" = "040000" ]; then
@@ -45,7 +46,9 @@ add_file() {
 cecho yellow "Copying files..."
 
 manifest="$(bin/manifest $@)"
+init_progress
 eval "$manifest"
+fini_progress
 
 cecho yellow "Creating SHK..."
 

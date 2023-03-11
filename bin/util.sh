@@ -32,3 +32,46 @@ function suppress {
     done <<<"$result"
     set -e
 }
+
+# Progress meter
+#  * init_progress
+#  * eval "$manifest"
+#  * fini_progress
+#  ... and in add_file call:
+#  * progress "$path"
+
+repeat () {
+    if [ $2 -gt 0 ]; then
+        for i in $(seq 1 $2); do echo -n "$1"; done
+    fi
+}
+
+init_progress() {
+    total_lines=$(echo "$manifest" | grep add_file | wc -l)
+    current_line=0
+}
+
+progress () {
+    local path="$1"
+
+    local w=30
+    local l=$(expr $w \* $current_line / $total_lines)
+    local r=$(expr $w - $l)
+    local ls=$(repeat '#' $l)
+    local rs=$(repeat ':' $r)
+
+    local cols=$(tput cols)
+    local pw=$(expr $cols - $w - 3)
+    path="$(echo "$path" | cut -c1-$pw)"
+
+    local reset="$(tput sgr0)"
+    local red="$(tput setaf 1)"
+    local green="$(tput setaf 2)"
+
+    echo -ne "\r$(tput el)[${green}$ls${red}$rs${reset}] ${green}$path${reset}"
+    current_line=$(expr $current_line + 1)
+}
+
+fini_progress () {
+    echo -ne "\r$(tput el)"
+}
