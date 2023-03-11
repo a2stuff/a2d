@@ -100,6 +100,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Ensure a confirmation prompt is shown before overwriting, unless destination is not formatted.
 * Change "Read Drives" button shortcut to 'R' in EN builds; corresponding changes in other languages.
 * Improve mouse responsiveness during I/O operations.
+* Update block count display continuously during copy.
 
 ### Desk Accessories
 

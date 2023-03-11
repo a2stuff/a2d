@@ -735,7 +735,7 @@ do_copy:
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
         lda     source_drive_index
         cmp     dest_drive_index
-        bne     LD8DF
+        bne     copy_read_bitmap
 
         ;; Disk swap
         tax
@@ -748,10 +748,10 @@ do_copy:
         lda     #kAlertMsgInsertSource ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
         cmp     #kAlertResultOK
-        beq     LD8DF           ; OK
-        jmp     InitDialog      ; Cancel
+        beq     copy_read_bitmap ; OK
+        jmp     InitDialog       ; Cancel
 
-LD8DF:
+copy_read_bitmap:
         jsr     SetCursorWatch
 
         jsr     main__ReadVolumeBitmap
@@ -760,23 +760,22 @@ LD8DF:
         sta     block_num_div8+1
         lda     #$07
         sta     block_num_shift
-        jsr     LE4BF
-        jsr     LE4EC
-        jsr     LE507
+        jsr     DrawTotalBlocks
+        jsr     DrawBlocksRead
+        jsr     DrawBlocksWritten
         jsr     DrawEscToStopCopyHint
 
-LD8FB:
+copy_loop:
         jsr     SetCursorWatch
 
-        jsr     LE4A8
+        jsr     DrawStatusReading
         lda     #$00
         jsr     main__CopyBlocks
         cmp     #$01
-        beq     LD97A
-        jsr     LE4EC
+        beq     copy_failure
         lda     source_drive_index
         cmp     dest_drive_index
-        bne     LD928
+        bne     copy_write
         tax
         lda     drive_unitnum_table,x
         pha
@@ -787,21 +786,20 @@ LD8FB:
         lda     #kAlertMsgInsertDestination ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
         cmp     #kAlertResultOK
-        beq     LD928           ; OK
+        beq     copy_write      ; OK
         jmp     InitDialog      ; Cancel
 
-LD928:
+copy_write:
         jsr     SetCursorWatch
 
-        jsr     LE491
+        jsr     DrawStatusWriting
         lda     #$80
         jsr     main__CopyBlocks
-        bmi     LD955
-        bne     LD97A
-        jsr     LE507
+        bmi     copy_next
+        bne     copy_failure
         lda     source_drive_index
         cmp     dest_drive_index
-        bne     LD8FB
+        bne     copy_loop
 
         ;; Disk swap
         tax
@@ -814,13 +812,12 @@ LD928:
         lda     #kAlertMsgInsertSource ; X !=0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
         cmp     #kAlertResultOK
-        beq     LD8FB           ; OK
+        beq     copy_loop       ; OK
         jmp     InitDialog      ; Cancel
 
-LD955:
+copy_next:
         jsr     SetCursorWatch
 
-        jsr     LE507
         jsr     main__FreeVolBitmapPages
         ldx     source_drive_index
         lda     drive_unitnum_table,x
@@ -834,7 +831,8 @@ LD955:
         jsr     ShowAlertDialog
         jmp     InitDialog
 
-LD97A:  jsr     main__FreeVolBitmapPages
+copy_failure:
+        jsr     main__FreeVolBitmapPages
         lda     #kAlertMsgCopyFailure ; no args
         jsr     ShowAlertDialog
         jmp     InitDialog
@@ -1776,17 +1774,22 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-LE491:  jsr     SetPortForDialog
+.proc DrawStatusWriting
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_writing
         param_call DrawString, str_writing
         rts
+.endproc ; DrawStatusWriting
 
-LE4A8:  jsr     SetPortForDialog
+.proc DrawStatusReading
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_reading
         param_call DrawString, str_reading
         rts
+.endproc ; DrawStatusReading
 
-LE4BF:  jsr     SetPortForDialog
+.proc DrawTotalBlocks
+        jsr     SetPortForDialog
         lda     source_drive_index
         asl     a
         tay
@@ -1798,36 +1801,42 @@ LE4BF:  jsr     SetPortForDialog
         param_call DrawString, str_blocks_to_transfer
         param_call DrawString, str_from_int
         rts
+.endproc ; DrawTotalBlocks
 
-LE4EC:  jsr     LE522
+.proc DrawBlocksRead
+        jsr     PrepDrawBlocks
         MGTK_CALL MGTK::MoveTo, point_blocks_read
         param_call DrawString, str_blocks_read
         param_call DrawString, str_from_int
         param_call DrawString, str_2_spaces
         rts
+.endproc ; DrawBlocksRead
 
-LE507:  jsr     LE522
+.proc DrawBlocksWritten
+        jsr     PrepDrawBlocks
         MGTK_CALL MGTK::MoveTo, point_blocks_written
         param_call DrawString, str_blocks_written
         param_call DrawString, str_from_int
         param_call DrawString, str_2_spaces
         rts
+.endproc ; DrawBlocksWritten
 
-LE522:  jsr     SetPortForDialog
+.proc PrepDrawBlocks
+        jsr     SetPortForDialog
         lda     block_num_div8+1
-        sta     LE558
+        sta     hi
         lda     block_num_div8
         asl     a
-        rol     LE558
+        rol     hi
         asl     a
-        rol     LE558
+        rol     hi
         asl     a
-        rol     LE558
+        rol     hi
         ldx     block_num_shift
         clc
         adc     LE550,x
         tay
-        lda     LE558
+        lda     hi
         adc     #$00
         tax
         tya
@@ -1835,7 +1844,8 @@ LE522:  jsr     SetPortForDialog
 
 LE550:  .byte   7,6,5,4,3,2,1,0
 
-LE558:  .byte   0
+hi:     .byte   0
+.endproc ; PrepDrawBlocks
 
 ;;; ============================================================
 
@@ -1961,8 +1971,8 @@ flag:   .byte   0
         lda     #kAlertMsgDestinationProtected ; no args
         jsr     ShowAlertDialog
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
-        bne     :+              ; Cancel
-        jsr     LE491           ; Try Again
+        bne     :+                ; Cancel
+        jsr     DrawStatusWriting ; Try Again
         return  #1
 
 :       jsr     main__FreeVolBitmapPages

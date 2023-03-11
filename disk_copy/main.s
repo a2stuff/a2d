@@ -410,6 +410,14 @@ common: lda     #7
         sta     L0FE5
 
 loop:
+        ;; Update displayed counts
+        bit     write_flag
+    IF_NC
+        jsr     auxlc::DrawBlocksRead
+    ELSE
+        jsr     auxlc::DrawBlocksWritten
+    END_IF
+
         ;; Check for keypress
         lda     KBD
         cmp     #(CHAR_ESCAPE | $80)
