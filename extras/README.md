@@ -10,5 +10,10 @@ AWP/ASP/ADB file path.
 
 * `awlaunch.system.s` is the system file.
 
-* `awlaunch_task.bin` is the compiled task file. When updated, string
-    offsets in the system file must be updated as well.
+* `awlaunch_task.bin` is the compiled task file. When updated, two
+    string offsets in the system file must be updated as well - these
+    are the offsets of the second byte of the second and third $22/$22
+    sequences in the file respectively. Offset location +$13/$14 in
+    the macro table itself contains the address of the end of that
+    particular macro table, assuming that the location of the table is
+    $EF00. The end of the table contains the sequence $00/$1E.
