@@ -7,6 +7,10 @@ LDFLAGS = --config ../res/asm.cfg
 # Each directory builds into an 'out' sibling dir:
 OUTDIR = ../out
 
+# Evaluated relative to each Makefile - include, library, and resource files
+COMMON_HEADERS = $(wildcard ../*.inc ../inc/*.inc *.inc inc/*.inc) \
+	$(wildcard ../lib/*.s) \
+	$(wildcard res/*.res.?? ../common/res/*.res.??)
 
 ### Build Rules
 

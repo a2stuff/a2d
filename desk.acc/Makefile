@@ -1,4 +1,7 @@
-HEADERS = $(wildcard inc/*.inc) $(wildcard ../*.inc) $(wildcard ../*/*.inc) $(wildcard ../lib/*.s) $(wildcard *.inc) $(wildcard res/*.res.??) $(wildcard ../common/res/*.res.??) $(wildcard ../mgtk/fonts/*)
+HEADERS = $(COMMON_HEADERS) \
+	$(wildcard ../mgtk/fonts/*) \
+	$(wildcard neko_frames/*.bin) \
+	../desktop/desktop.inc ../mgtk/mgtk.inc $(wildcard ../toolkits/*.inc)
 
 include ../res/Makefile.common
 

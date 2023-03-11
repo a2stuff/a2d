@@ -1,4 +1,5 @@
-HEADERS = $(wildcard *.bin) $(wildcard ../*.inc) $(wildcard ../inc/*.inc) $(wildcard ../lib/*.s) $(wildcard res/*.res.??) $(wildcard ../common/res/*.res.??)
+HEADERS = $(COMMON_HEADERS) \
+	$(wildcard *.bin)
 
 include ../res/Makefile.common
 
