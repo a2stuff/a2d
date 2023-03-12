@@ -12720,7 +12720,7 @@ do_sum_file_size:
       ELSE
         ;; Otherwise, query the existing path
         jsr     GetSrcFileInfo
-       IF_NOT_ZERO
+       IF_ZERO
         add16   op_block_count, src_file_info_params::blocks_used, op_block_count
        END_IF
       END_IF
