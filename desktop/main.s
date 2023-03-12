@@ -11696,28 +11696,26 @@ store:  sta     is_dir_flag
         jsr     DecFileCountAndRunCopyDialogProc
 
         ;; Copy access, file_type, aux_type, storage_type
-        ldy     #src_file_info_params::storage_type - src_file_info_params
-:       lda     src_file_info_params,y
-        sta     create_params2,y
-        dey
-        cpy     #src_file_info_params::access - src_file_info_params - 1
-        bne     :-
+        ldx     #src_file_info_params::storage_type - src_file_info_params::access
+:       lda     src_file_info_params::access,x
+        sta     create_params2::access,x
+        dex
+        bpl    :-
 
+        ;; Explicitly set default access
         copy    #ACCESS_DEFAULT, create_params2::access
+
         lda     copy_run_flag
         beq     success         ; never taken ???
         jsr     CheckSpaceAndShowPrompt
         bcs     failure
 
         ;; Copy create_time/create_date
-        ldy     #src_file_info_params::create_time - src_file_info_params + 1
-        ldx     #create_params2::create_time - create_params2 + 1
-:       lda     src_file_info_params,y
-        sta     create_params2,x
+        ldx     #.sizeof(DateTime)-1
+:       lda     src_file_info_params::create_date,x
+        sta     create_params2::create_date,x
         dex
-        dey
-        cpy     #src_file_info_params::create_date - src_file_info_params - 1
-        bne     :-
+        bpl     :-
 
         ;; If a volume, need to create a subdir instead
         lda     create_params2::storage_type
@@ -11726,7 +11724,6 @@ store:  sta     is_dir_flag
         lda     #ST_LINKED_DIRECTORY
         sta     create_params2::storage_type
 :
-
         ;; TODO: Dedupe with `TryCreateDst`
         jsr     DecrementOpFileCount
 retry:  MLI_CALL CREATE, create_params2
@@ -12258,9 +12255,9 @@ a_path: .addr   src_path_buf
 
         ;; Check if it's a regular file or directory
 :       lda     src_file_info_params::storage_type
-        sta     storage_type
+        ;; ST_VOLUME_DIRECTORY excluded because volumes are ejected.
         cmp     #ST_LINKED_DIRECTORY
-        beq     :+
+        beq     is_dir
         cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
     IF_GE
         lda     #kErrUnsupportedFileType
@@ -12269,24 +12266,13 @@ a_path: .addr   src_path_buf
         jeq     CloseFilesCancelDialog
         jmp     done
     END_IF
+        jmp     do_destroy
 
-        lda     #0
-        beq     store
-:       lda     #$FF
-
-store:  ;; sta     is_dir_flag - unused
-        beq     do_destroy
-
+is_dir:
         ;; Recurse, and process directory
         jsr     ProcessDir
-
-        ;; Was it a directory?
-        storage_type := *+1
-        lda     #SELF_MODIFIED_BYTE
-        cmp     #ST_LINKED_DIRECTORY
-        bne     :+
-        copy    #$FF, storage_type ; is this re-checked?
-:       jmp     do_destroy
+        ;; ST_VOLUME_DIRECTORY excluded because volumes are ejected.
+        FALL_THROUGH_TO do_destroy
 
 do_destroy:
         bit     delete_skip_decrement_flag
@@ -12518,26 +12504,14 @@ a_path: .addr   src_path_buf
         jmp     @retry
 
 :       lda     src_file_info_params::storage_type
-        sta     storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
-        beq     is_dir
-        lda     #$00
-        beq     store
-is_dir: lda     #$FF
-store:  ;; sta     is_dir_flag - unused
-        beq     do_lock
-
-        ;; Process files in directory
-        jsr     ProcessDir
-
-        ;; If this wasn't a volume directory, lock it too
-        storage_type := *+1
-        lda     #SELF_MODIFIED_BYTE
-        cmp     #ST_VOLUME_DIRECTORY
         bne     do_lock
-        rts
+
+is_dir:
+        jmp     ProcessDir
+        ;; Subdirectories and Volume directories are not locked
 
 do_lock:
         jsr     LockFileCommon
@@ -12675,15 +12649,9 @@ callbacks_for_size_or_count:
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
-        beq     is_dir
-        lda     #0
-        beq     store           ; always
+        bne     do_sum_file_size
 
-is_dir: lda     #$FF
-
-store:  ;; sta     is_dir_flag - unused
-        beq     do_sum_file_size           ; if not a dir
-
+is_dir:
         jsr     ProcessDir
         storage_type := *+1
         lda     #SELF_MODIFIED_BYTE
