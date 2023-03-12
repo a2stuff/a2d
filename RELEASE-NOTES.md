@@ -84,6 +84,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Make OA+SA+O and OA+SA+W shortcuts work when Caps Lock is off.
 * Improve layout of window header counts/labels. ([#493](https://github.com/a2stuff/a2d/issues/493))
 * Improve mouse responsiveness during I/O operations.
+* Show watch cursor during Copy/Move/Delete/Lock/Unlock and Get Size operations.
 
 
 ### Selector

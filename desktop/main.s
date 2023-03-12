@@ -11738,6 +11738,7 @@ retry:  MLI_CALL CREATE, create_params2
         bmi     yes
 
         param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_exists_prompt
+        jsr     SetCursorWatch  ; preserves A
 
         cmp     #kAlertResultYes
         beq     yes
@@ -11904,6 +11905,7 @@ blocks_free:
     END_IF
         ldy     #AlertButtonOptions::OKCancel
         jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        jsr     SetCursorWatch  ; preserves A
 
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialog
@@ -12140,6 +12142,7 @@ retry:  MLI_CALL CREATE, create_params3
         bmi     yes
 
         param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_exists_prompt
+        jsr     SetCursorWatch  ; preserves A
 
         cmp     #kAlertResultYes
         beq     yes
@@ -12212,6 +12215,7 @@ a_path: .addr   src_path_buf
         param_call AppendToTextInputBuf, aux::str_delete_confirm_suffix
 
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, text_input_buf
+        jsr     SetCursorWatch  ; preserves A
 
         cmp     #kAlertResultOK
         beq     :+
@@ -12302,6 +12306,7 @@ retry:  MLI_CALL DESTROY, destroy_params
         bmi     do_it
 
         param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_delete_locked_file
+        jsr     SetCursorWatch  ; preserves A
 
         cmp     #kAlertResultNo
         beq     done
@@ -12372,6 +12377,7 @@ loop:   MLI_CALL DESTROY, destroy_params
         bmi     unlock
 
         param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_delete_locked_file
+        jsr     SetCursorWatch  ; preserves A
 
         cmp     #kAlertResultNo
         beq     next_file
@@ -13108,6 +13114,7 @@ flag_clear:
         jsr     ShowAlert
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         bne     close           ; not kAlertResultTryAgain = 0
+        jsr     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
         rts
 
 not_found:
@@ -13127,6 +13134,7 @@ close:  jmp     CloseFilesCancelDialog
 flag:   .byte   0
 
 do_on_line:
+        jsr     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
         MLI_CALL ON_LINE, on_line_params2
         rts
 
@@ -13224,14 +13232,6 @@ dialog_param_addr:
         asl     a
         tax
         copy16  dialog_proc_table,x, @jump_addr
-
-        lda     #0
-        sta     has_input_field_flag
-        sta     format_erase_overlay_flag
-        sta     cursor_ibeam_flag
-
-        copy16  #rts1, jump_relay+1
-        jsr     SetCursorPointer ; when opening dialog
 
         @jump_addr := *+1
         jmp     SELF_MODIFIED
@@ -13574,8 +13574,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
 
         ;; --------------------------------------------------
         ;; CopyDialogLifecycle::close
-        jsr     CloseProgressDialog
-        jmp     SetCursorPointer ; when closing dialog
+        jmp     CloseProgressDialog
 .endproc ; CopyDialogProc
 
 ;;; ============================================================
@@ -13597,6 +13596,7 @@ DownloadDialogProc := CopyDialogProc
         cmp     #GetSizeDialogLifecycle::open
     IF_EQ
         jsr     OpenDialogWindow
+        jsr     SetCursorWatch  ; until `...::prompt` or on close
         param_call DrawDialogTitle, aux::label_get_size
         param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_size_number
         param_jump DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_size_blocks
@@ -13634,6 +13634,7 @@ GetSizeDialogProc::do_count := *
 
         jsr     SetPortForDialogWindow
         jsr     AddOKButton
+        jsr     SetCursorPointer ; set in `...::open`
 :       jsr     PromptInputLoop
         bmi     :-
         return  #0
@@ -13641,8 +13642,7 @@ GetSizeDialogProc::do_count := *
 
         ;; --------------------------------------------------
         ;; GetSizeDialogLifecycle::close
-        jsr     ClosePromptDialog
-        jmp     SetCursorPointer ; when closing dialog
+        jmp     ClosePromptDialog
 .endproc ; GetSizeDialogProc
 
 ;;; ============================================================
@@ -13692,8 +13692,7 @@ GetSizeDialogProc::do_count := *
 
         ;; --------------------------------------------------
         ;; DeleteDialogLifecycle::close
-        jsr     CloseProgressDialog
-        jmp     SetCursorPointer ; when closing dialog
+        jmp     CloseProgressDialog
 .endproc ; DeleteDialogProc
 
 ;;; ============================================================
@@ -13771,7 +13770,6 @@ not_run:
         ;; NewFolderDialogState::close
 do_close:
         jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
         return  #1
 .endproc ; NewFolderDialogProc
 
@@ -13853,7 +13851,6 @@ do_close:
 
         pha
         jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
         pla
         rts
 .endproc ; GetInfoDialogProc
@@ -13909,9 +13906,7 @@ do_close:
 
         ;; --------------------------------------------------
         ;; LockDialogLifecycle::close
-
-        jsr     CloseProgressDialog
-        jmp     SetCursorPointer ; when closing dialog
+        jmp     CloseProgressDialog
 .endproc ; LockDialogProc
 UnlockDialogProc := LockDialogProc
 
@@ -13962,7 +13957,6 @@ UnlockDialogProc := LockDialogProc
         ;; RenameDialogState::close
 do_close:
         jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
         return  #1
 .endproc ; RenameDialogProc
 
@@ -14013,7 +14007,6 @@ do_close:
         ;; DuplicateDialogState::close
 do_close:
         jsr     ClosePromptDialog
-        jsr     SetCursorPointer ; when closing dialog
         return  #1
 .endproc ; DuplicateDialogProc
 
@@ -14141,9 +14134,12 @@ params:  .res    3
 
 ;;; ============================================================
 
+;;; Preserves A
         .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
 .proc SetCursorWatch
+        pha
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        pla
         rts
 .endproc ; SetCursorWatch
 
@@ -14193,6 +14189,14 @@ done:   rts
 .proc OpenDialogWindow
         copy    #0, ok_button_rec::state
 
+        lda     #0
+        sta     has_input_field_flag
+        sta     format_erase_overlay_flag
+        sta     cursor_ibeam_flag
+        jsr     SetCursorPointer
+
+        copy16  #rts1, jump_relay+1
+
         MGTK_CALL MGTK::OpenWindow, winfo_prompt_dialog
         jsr     SetPortForDialogWindow
         jsr     SetPenModeNotCopy
@@ -14220,7 +14224,7 @@ done:   rts
         MGTK_CALL MGTK::FrameRect, aux::progress_dialog_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
         MGTK_CALL MGTK::SetPenMode, penXOR
-        rts
+        jmp     SetCursorWatch  ; undone by `CloseProgressDialog`
 .endproc ; OpenProgressDialog
 
 ;;; ============================================================
@@ -14234,7 +14238,8 @@ done:   rts
 
 .proc CloseProgressDialog
         MGTK_CALL MGTK::CloseWindow, winfo_progress_dialog::window_id
-        jmp     ClearUpdates ; following CloseWindow
+        jsr     ClearUpdates     ; following CloseWindow
+        jmp     SetCursorPointer ; when closing dialog
 .endproc ; CloseProgressDialog
 
 ;;; ============================================================
@@ -14627,7 +14632,8 @@ ptr_str_files_suffix:
 
 .proc ClosePromptDialog
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
-        jmp     ClearUpdates ; following CloseWindow
+        jsr     ClearUpdates     ; following CloseWindow
+        jmp     SetCursorPointer ; when closing dialog
 .endproc ; ClosePromptDialog
 
 ;;; ============================================================
