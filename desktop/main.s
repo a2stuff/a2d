@@ -12710,25 +12710,24 @@ do_sum_file_size:
 ;;; Called by `ProcessDir` to process a single file
 
 .proc SizeOrCountProcessDirectoryEntry
+        ;; If operation is "get size" or "download", add the block count to the sum
         bit     operation_flags
-        bvc     :+              ; not size
-
-        ;; If operation is "get size", add the block count to the sum
+    IF_VS
         lda     file_entry_buf + FileEntry::storage_type_name_length
-    IF_NOT_ZERO
-        jsr     AppendFileEntryToSrcPath
-    END_IF
+      IF_NOT_ZERO
+        ;; If we have a valid file entry, use its block count
+        add16   op_block_count, file_entry_buf+FileEntry::blocks_used, op_block_count
+      ELSE
+        ;; Otherwise, query the existing path
         jsr     GetSrcFileInfo
-        bne     :+
+       IF_NOT_ZERO
         add16   op_block_count, src_file_info_params::blocks_used, op_block_count
+       END_IF
+      END_IF
+    END_IF
 
-:       inc16   op_file_count
-
-        bit     operation_flags
-        bvc     :+              ; not size
-        jsr     RemoveSrcPathSegment
-
-:       ldax    op_file_count
+        inc16   op_file_count
+        ldax    op_file_count
         jmp     InvokeOperationEnumerationCallback
 .endproc ; SizeOrCountProcessDirectoryEntry
 

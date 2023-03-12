@@ -85,7 +85,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve layout of window header counts/labels. ([#493](https://github.com/a2stuff/a2d/issues/493))
 * Improve mouse responsiveness during I/O operations.
 * Show watch cursor during Copy/Move/Delete/Lock/Unlock and Get Size operations.
-
+* Improve performance of Special > Get Size command.
 
 ### Selector
 
