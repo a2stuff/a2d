@@ -11330,16 +11330,14 @@ file_entry_buf          .res    .sizeof(FileEntry)
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
 op_jt_addrs:
-op_jt_addr1:  .addr   CopyProcessDirectoryEntry     ; defaults are for copy
-op_jt_addr2:  .addr   copy_pop_directory
-op_jt_addr3:  .addr   DoNothing
+op_jt_addr1:  .addr   0
+op_jt_addr3:  .addr   0
 
 op_jt1: jmp     (op_jt_addr1)
-op_jt2: jmp     (op_jt_addr2)
 op_jt3: jmp     (op_jt_addr3)
 
         ;; overlayed indirect jump table
-        kOpJTAddrsSize = 6
+        kOpJTAddrsSize = 4
 
 DoNothing:   rts
 
@@ -11460,7 +11458,6 @@ eof:    return  #$FF
 ;;;  * op_jt1 c
 ;;;  * op_jt1 c/d
 ;;;  * op_jt3 c/d
-;;;  * op_jt2 c
 ;;;
 ;;; Visiting individual files is done via direct calls, not the
 ;;; overlayed jump table. Order is:
@@ -11471,7 +11468,6 @@ eof:    return  #$FF
 ;;;  * op_jt1 on c/d
 ;;;  * call: c/d/e
 ;;;  * op_jt3 on c/d
-;;;  * op_jt2 on c
 ;;;  * call: c
 ;;;  * call: f
 ;;;  (3x final calls ???)
@@ -11482,13 +11478,11 @@ eof:    return  #$FF
         jsr     RemoveSrcPathSegment
         jsr     PopEntryCount
         jsr     OpenSrcDir
-        jsr     sub
-        jmp     op_jt2          ; second - called when exited dir
 
-sub:    cmp16   entries_read, entries_to_skip
+:       cmp16   entries_read, entries_to_skip
         bcs     done
         jsr     ReadFileEntry
-        jmp     sub
+        jmp     :-
 done:   rts
 .endproc ; FinishDir
 
@@ -11545,16 +11539,14 @@ cancel_descent_flag:  .byte   0
 ;;;  - called for each file in selection; calls ProcessDir to recurse
 ;;; CopyProcessDirectoryEntry
 ;;;  - c/o ProcessDir for each file in dir; skips if dir, copies otherwise
-;;; copy_pop_directory
-;;;  - c/o ProcessDir when exiting dir; pops path segment
-;;; MaybeFinishFileMove
+;;; CopyFinishDirectory
 ;;;  - c/o ProcessDir after exiting; deletes dir if moving
 
 ;;; Overlays for copy operation (op_jt_addrs)
 callbacks_for_copy:
         .addr   CopyProcessDirectoryEntry
-        .addr   copy_pop_directory
-        .addr   MaybeFinishFileMove
+        .addr   CopyFinishDirectory
+        ASSERT_TABLE_SIZE callbacks_for_copy, kOpJTAddrsSize
 
 .enum CopyDialogLifecycle
         open            = 0
@@ -11786,12 +11778,12 @@ src_path_slash_index:
         .byte   0
 
 ;;; ============================================================
-
-copy_pop_directory:
-        jmp     RemoveDstPathSegment
-
-;;; ============================================================
 ;;; If moving, delete src file/directory.
+
+.proc CopyFinishDirectory
+        jsr     RemoveDstPathSegment
+        FALL_THROUGH_TO MaybeFinishFileMove
+.endproc
 
 .proc MaybeFinishFileMove
         ;; Copy or move?
@@ -12175,8 +12167,8 @@ failure:
 ;;; Overlays for delete operation (op_jt_addrs)
 callbacks_for_delete:
         .addr   DeleteProcessDirectoryEntry
-        .addr   DoNothing
         .addr   DeleteFinishDirectory
+        ASSERT_TABLE_SIZE callbacks_for_delete, kOpJTAddrsSize
 
 .params delete_dialog_params
 phase:  .byte   0
@@ -12381,7 +12373,7 @@ next_file:
 callbacks_for_lock:
         .addr   LockProcessDirectoryEntry
         .addr   DoNothing
-        .addr   DoNothing
+        ASSERT_TABLE_SIZE callbacks_for_lock, kOpJTAddrsSize
 
 .enum LockDialogLifecycle
         open            = 0 ; opening window, initial label
@@ -12584,7 +12576,7 @@ a_blocks:       .addr  op_block_count
 callbacks_for_size_or_count:
         .addr   SizeOrCountProcessDirectoryEntry
         .addr   DoNothing
-        .addr   DoNothing
+        ASSERT_TABLE_SIZE callbacks_for_size_or_count, kOpJTAddrsSize
 
 .proc PrepCallbacksForSizeOrCount
         ldy     #kOpJTAddrsSize-1
