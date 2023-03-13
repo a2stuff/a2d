@@ -11503,6 +11503,10 @@ loop:   jsr     ReadFileEntry
         lda     file_entry_buf + FileEntry::storage_type_name_length
         beq     loop
 
+        jsr     ConvertFileEntryToFileInfo
+
+        ;; Simplify to length-prefixed string
+        lda     file_entry_buf + FileEntry::storage_type_name_length
         and     #NAME_LENGTH_MASK
         sta     file_entry_buf
 
@@ -11670,12 +11674,18 @@ L9A50:  ldax    #filename_buf
         jsr     AppendFilenameToDstPath
 
 get_src_info:
+        ;; When recursing, called with `src_file_info_params` pre-populated
+        ;; But for selected files, need to get file info.
+        bit     is_not_selected_flag
+    IF_NC
 @retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
+:
+    END_IF
 
-:       lda     src_file_info_params::storage_type
+        lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
@@ -11812,14 +11822,10 @@ done:   rts
 
         ;; Directory
         jsr     AppendFileEntryToSrcPath
-@retry: jsr     GetSrcFileInfo
-        beq     :+
-        jsr     ShowErrorAlert
-        jmp     @retry
-
-:       jsr     AppendFileEntryToDstPath
+        jsr     AppendFileEntryToDstPath
         jsr     DecFileCountAndRunCopyDialogProc
 
+        ;; Called with `src_file_info_params` pre-populated
         jsr     TryCreateDst
         bcs     :+
         jsr     RemoveSrcPathSegment
@@ -11835,11 +11841,6 @@ regular_file:
         jsr     AppendFileEntryToDstPath
         jsr     AppendFileEntryToSrcPath
         jsr     DecFileCountAndRunCopyDialogProc
-@retry: jsr     GetSrcFileInfo
-        beq     :+
-        jsr     ShowErrorAlert
-        jmp     @retry
-:
         lda     src_file_info_params::storage_type
         cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
     IF_GE
@@ -11890,6 +11891,7 @@ blocks_free:
 
 ;;; ============================================================
 
+;;; Assert: `src_file_info_params` is populated
 .proc CheckSpaceAndShowPrompt
         jsr     CheckSpace
         bcc     done
@@ -11911,14 +11913,8 @@ blocks_free:
 done:   rts
 
 .proc CheckSpace
-        ;; Size of source
-@retry: jsr     GetSrcFileInfo
-        beq     :+
-        jsr     ShowErrorAlert
-        jmp     @retry
-
         ;; If destination doesn't exist, 0 blocks will be reclaimed.
-:       copy16  #0, existing_size
+        copy16  #0, existing_size
 
         ;; Does destination exist?
 @retry2:jsr     GetDstFileInfo
@@ -12264,7 +12260,7 @@ a_path: .addr   src_path_buf
         jsr     ShowAlert
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialog
-        jmp     done
+        rts
     END_IF
         jmp     do_destroy
 
@@ -12280,16 +12276,20 @@ do_destroy:
         jsr     DecFileCountAndRunDeleteDialogProc
 :       jsr     DecrementOpFileCount
 
+        FALL_THROUGH_TO DestroySrcFileWithRetry
+.endproc ; DeleteProcessSelectedFile
+
+.proc DestroySrcFileWithRetry
 retry:  MLI_CALL DESTROY, destroy_params
         beq     done
 
-        ;; Failed, try to unlock.
+        ;; Failed - determine why, maybe try to unlock.
         ;; TODO: If it's a directory, this could be because it's not empty,
         ;; e.g. if it contained files that could not be deleted.
         cmp     #ERR_ACCESS_ERROR
         bne     error
         bit     all_flag
-        bmi     do_it
+        bmi     unlock
 
         param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_delete_locked_file
         jsr     SetCursorWatch  ; preserves A
@@ -12297,21 +12297,22 @@ retry:  MLI_CALL DESTROY, destroy_params
         cmp     #kAlertResultNo
         beq     done
         cmp     #kAlertResultYes
-        beq     do_it
+        beq     unlock
         cmp     #kAlertResultAll
         bne     :+
         copy    #$80, all_flag
-        bne     do_it           ; always
+        bne     unlock          ; always
+        ;; PromptResult::cancel
 :       jmp     CloseFilesCancelDialog
 
-do_it:  jsr     UnlockSrcFile
+unlock: jsr     UnlockSrcFile
         beq     retry
 
 done:   rts
 
 error:  jsr     ShowErrorAlert
         jmp     retry
-.endproc ; DeleteProcessSelectedFile
+.endproc ; DestroySrcFileWithRetry
 
 .proc UnlockSrcFile
         jsr     GetSrcFileInfo
@@ -12336,14 +12337,9 @@ done:   rts
         jsr     DecFileCountAndRunDeleteDialogProc
 :       jsr     DecrementOpFileCount
 
-        ;; Check file type
-@retry: jsr     GetSrcFileInfo
-        beq     :+
-        jsr     ShowErrorAlert
-        jmp     @retry
-
+        ;; Called with `src_file_info_params` pre-populated
         ;; Directories will be processed separately
-:       lda     src_file_info_params::storage_type
+        lda     src_file_info_params::storage_type
         cmp     #ST_LINKED_DIRECTORY
         beq     next_file
         cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
@@ -12355,34 +12351,7 @@ done:   rts
         jmp     next_file
     END_IF
 
-loop:   MLI_CALL DESTROY, destroy_params
-        beq     next_file
-        cmp     #ERR_ACCESS_ERROR
-        bne     err
-        bit     all_flag
-        bmi     unlock
-
-        param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_delete_locked_file
-        jsr     SetCursorWatch  ; preserves A
-
-        cmp     #kAlertResultNo
-        beq     next_file
-        cmp     #kAlertResultYes
-        beq     unlock
-        cmp     #kAlertResultAll
-        bne     :+
-        copy    #$80, all_flag
-        bne     unlock           ; always
-        ;; PromptResult::cancel
-:       jmp     CloseFilesCancelDialog
-
-unlock: copy    #ACCESS_DEFAULT, src_file_info_params::access
-        jsr     SetSrcFileInfo
-        jmp     loop
-
-err:    jsr     ShowErrorAlert
-        jmp     loop
-
+        jsr     DestroySrcFileWithRetry
 next_file:
         jmp     RemoveSrcPathSegment
 .endproc ; DeleteProcessDirectoryEntry
@@ -12391,13 +12360,8 @@ next_file:
 ;;; Delete directory when exiting via traversal
 
 .proc DeleteFinishDirectory
-@retry: MLI_CALL DESTROY, destroy_params
-        beq     done
-        cmp     #ERR_ACCESS_ERROR
-        beq     done
-        jsr     ShowErrorAlert
-        jmp     @retry
-done:   rts
+        param_call InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
+        jmp     DestroySrcFileWithRetry
 .endproc ; DeleteFinishDirectory
 
 .proc RunDeleteDialogProc
@@ -12530,12 +12494,8 @@ LockProcessDirectoryEntry:
 
         jsr     DecrementOpFileCount
 
-@retry: jsr     GetSrcFileInfo
-        beq     :+
-        jsr     ShowErrorAlert
-        jmp     @retry
-
-:       lda     src_file_info_params::storage_type
+        ;; Called with `src_file_info_params` pre-populated
+        lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     ok
         cmp     #ST_LINKED_DIRECTORY
@@ -12711,6 +12671,45 @@ op_block_count:
         dec16   op_file_count
         rts
 .endproc ; DecrementOpFileCount
+
+;;; ============================================================
+
+;;; Populate `src_file_info_params` from `file_entry_buf`
+
+.proc ConvertFileEntryToFileInfo
+        ldx     #kMapSize-1
+:       ldy     map,x
+        lda     file_entry_buf,y
+        sta     src_file_info_params::access,x
+        dex
+        bpl     :-
+
+        ;; Fix `storage_type`
+        ldx     #4
+:       lsr     src_file_info_params::storage_type
+        dex
+        bne     :-
+
+        rts
+
+;;; index is offset in `src_file_info_params`, value is offset in `file_entry_buf`
+map:    .byte   FileEntry::access
+        .byte   FileEntry::file_type
+        .byte   FileEntry::aux_type
+        .byte   FileEntry::aux_type+1
+        .byte   FileEntry::storage_type_name_length
+        .byte   FileEntry::blocks_used
+        .byte   FileEntry::blocks_used+1
+        .byte   FileEntry::mod_date
+        .byte   FileEntry::mod_date+1
+        .byte   FileEntry::mod_time
+        .byte   FileEntry::mod_time+1
+        .byte   FileEntry::creation_date
+        .byte   FileEntry::creation_date+1
+        .byte   FileEntry::creation_time
+        .byte   FileEntry::creation_time+1
+        kMapSize = * - map
+.endproc ; ConvertFileEntryToFileInfo
 
 ;;; ============================================================
 ;;; Append name at `file_entry_buf` to path at `src_path_buf`

@@ -86,6 +86,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve mouse responsiveness during I/O operations.
 * Show watch cursor during Copy/Move/Delete/Lock/Unlock and Get Size operations.
 * Improve performance of Special > Get Size command.
+* Improve performance of Copy/Move, Delete, and Lock/Unlock commands.
 
 ### Selector
 

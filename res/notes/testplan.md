@@ -537,6 +537,7 @@
   * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is cancelled and the progress dialog is closed.
 * Select multiple files. Special > Get Size. During the count of the files, press Escape. Verify that the count is cancelled and the dialog is closed.
 
+* Using BASIC, create a directory structure: X/Y/Z and save a BASIC file B as X/Y/Z/B. Lock all three directories and the file from BASIC (not DeskTop). Launch DeskTop. Select X. File > Delete. Verify that a prompt is shown for deleting each file in deepest-first order (B, Z, Y, X). Click Yes at each prompt. Verify that all files are deleted.
 
 ## Shortcuts
 
