@@ -12460,7 +12460,6 @@ a_path: .addr   src_path_buf
 .proc LockProcessSelectedFile
         copy    #LockDialogLifecycle::show, lock_unlock_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
-        jsr     AppendSrcPathLastSegmentToDstPath
 
 @retry: jsr     GetSrcFileInfo
         beq     :+
