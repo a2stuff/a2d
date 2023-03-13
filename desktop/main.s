@@ -12468,14 +12468,19 @@ a_path: .addr   src_path_buf
         jmp     @retry
 
 :       lda     src_file_info_params::storage_type
+        sta     storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
         bne     do_lock
 
 is_dir:
-        jmp     ProcessDir
-        ;; Subdirectories and Volume directories are not locked
+        jsr     ProcessDir
+        storage_type := *+1
+        lda     #SELF_MODIFIED_BYTE
+        cmp     #ST_VOLUME_DIRECTORY
+        bne     do_lock
+        rts
 
 do_lock:
         jsr     LockFileCommon
@@ -12498,19 +12503,20 @@ LockProcessDirectoryEntry:
         lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     ok
-        cmp     #ST_LINKED_DIRECTORY
-        beq     ok
-        bit     unlock_flag
-        bpl     :+
-        lda     #ACCESS_DEFAULT
-        bne     set             ; always
-:       lda     #ACCESS_LOCKED
-set:    sta     src_file_info_params::access
 
-:       jsr     SetSrcFileInfo
+        lda     src_file_info_params::access
+        bit     unlock_flag
+    IF_NS
+        ora     #LOCKED_MASK    ; grant access
+    ELSE
+        and     #AS_BYTE(~LOCKED_MASK) ; revoke access
+    END_IF
+        sta     src_file_info_params::access
+
+retry:  jsr     SetSrcFileInfo
         beq     ok
         jsr     ShowErrorAlert
-        jmp     :-
+        jmp     retry
 
 ok:     jmp     RemoveSrcPathSegment
 

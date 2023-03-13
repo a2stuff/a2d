@@ -87,6 +87,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Show watch cursor during Copy/Move/Delete/Lock/Unlock and Get Size operations.
 * Improve performance of Special > Get Size command.
 * Improve performance of Copy/Move, Delete, and Lock/Unlock commands.
+* Special > Lock and Special > Unlock now work on folders.
 
 ### Selector
 

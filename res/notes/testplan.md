@@ -539,6 +539,8 @@
 
 * Using BASIC, create a directory structure: X/Y/Z and save a BASIC file B as X/Y/Z/B. Lock all three directories and the file from BASIC (not DeskTop). Launch DeskTop. Select X. File > Delete. Verify that a prompt is shown for deleting each file in deepest-first order (B, Z, Y, X). Click Yes at each prompt. Verify that all files are deleted.
 
+* Create a folder, and a subfolder within it. Select the top-most folder. Special > Lock. Using Apple > Run Basic Here, verify that the folder and subfolder are locked. BYE to return to DeskTop. Select the containing volume. Special > Unlock. Using Apple > Run Basic Here, verify that the folder and subfolder are unlocked.
+
 ## Shortcuts
 
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
