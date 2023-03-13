@@ -12479,8 +12479,10 @@ is_dir:
         storage_type := *+1
         lda     #SELF_MODIFIED_BYTE
         cmp     #ST_VOLUME_DIRECTORY
-        bne     do_lock
+        bne     :+
         rts
+:       jsr     GetSrcFileInfo
+        FALL_THROUGH_TO do_lock
 
 do_lock:
         jsr     LockFileCommon
