@@ -12356,17 +12356,7 @@ a_path: .addr   src_path_buf
 
 .proc DoLockDialogPhase
         copy    #LockDialogLifecycle::open, lock_unlock_dialog_params::phase
-        bit     unlock_flag
-        bpl     :+
-
-        ;; Unlock
-        copy16  #UnlockDialogEnumerationCallback, operation_enumeration_callback
-        jsr     RunUnlockDialogProc
-        copy16  #UnlockDialogCompleteCallback, operation_complete_callback
-        rts
-
-        ;; Lock
-:       copy16  #LockDialogEnumerationCallback, operation_enumeration_callback
+        copy16  #LockDialogEnumerationCallback, operation_enumeration_callback
         jsr     RunLockDialogProc
         copy16  #LockDialogCompleteCallback, operation_complete_callback
         rts
@@ -12377,12 +12367,6 @@ a_path: .addr   src_path_buf
         copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
         jmp     RunLockDialogProc
 .endproc ; LockDialogEnumerationCallback
-
-.proc UnlockDialogEnumerationCallback
-        stax    lock_unlock_dialog_params::count
-        copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
-        jmp     RunUnlockDialogProc
-.endproc ; UnlockDialogEnumerationCallback
 
 .proc PrepCallbacksForLock
         ldy     #kOpJTAddrsSize-1
@@ -12398,18 +12382,9 @@ a_path: .addr   src_path_buf
         jmp     RunLockDialogProc
 .endproc ; LockDialogCompleteCallback
 
-.proc UnlockDialogCompleteCallback
-        copy    #LockDialogLifecycle::close, lock_unlock_dialog_params::phase
-        jmp     RunUnlockDialogProc
-.endproc ; UnlockDialogCompleteCallback
-
 .proc RunLockDialogProc
         param_jump InvokeDialogProc, kIndexLockDialog, lock_unlock_dialog_params
 .endproc ; RunLockDialogProc
-
-.proc RunUnlockDialogProc
-        param_jump InvokeDialogProc, kIndexUnlockDialog, lock_unlock_dialog_params
-.endproc ; RunUnlockDialogProc
 
 ;;; ============================================================
 ;;; Handle locking of a selected file.
@@ -12482,11 +12457,7 @@ ok:     jmp     RemoveSrcPathSegment
 
 update_dialog:
         sub16   op_file_count, #1, lock_unlock_dialog_params::count
-        bit     unlock_flag
-        bpl     :+
-        jmp     RunUnlockDialogProc
-
-:       jmp     RunLockDialogProc
+        jmp     RunLockDialogProc
 .endproc ; LockFileCommon
 
 ;;; ============================================================
