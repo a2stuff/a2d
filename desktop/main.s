@@ -10148,59 +10148,24 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         ;; During selection iteration, allow Escape to cancel the operation.
         jsr     CheckCancel
 
-        lda     do_op_flag
-        beq     just_size_and_count
-
-        bit     operation_flags
-        bmi     @lock_or_size
-        bit     copy_delete_flags
-        bmi     :+
-
-        jsr     CopyProcessSelectedFile
-        bit     move_flag
-        bpl     next_icon
-        jsr     UpdateWindowPaths
-        jsr     UpdatePrefix
-        jmp     next_icon
-
-:       jsr     DeleteProcessSelectedFile
-        jmp     next_icon
-
-@lock_or_size:
-        bvs     @size           ; size?
-        jsr     LockProcessSelectedFile
-        jmp     next_icon
-
-@size:  jsr     SizeOrCountProcessSelectedFile
-        jmp     next_icon
-
-just_size_and_count:
-        ;; Just enumerate files...
-        bit     operation_flags
-        bmi     :+
-        bit     copy_delete_flags
-        bmi     :+
-
-        ;; But if copying, validate the target.
-        jsr     CopyPathsFromBufsToSrcAndDst
-        jsr     CheckRecursion
-        jne     ShowErrorAlert
-        jsr     AppendSrcPathLastSegmentToDstPath
-        jsr     CheckBadReplacement
-        jne     ShowErrorAlert
-
-:       jsr     SizeOrCountProcessSelectedFile
+        jsr     OpProcessSelectedFile
 
 next_icon:
+
         inc     icon_count
         ldx     icon_count
         cpx     selected_icon_count
         bne     loop
 
+        ;; Done icons - did we complete the operation?
         lda     do_op_flag
         bne     finish
+
+        ;; No, we finished enumerating. Now do the real work.
         inc     do_op_flag
 
+        ;; Do we need to show a confirmation dialog?
+        ;; (Delete, Get Size)
         bit     operation_flags
         bmi     @lock_or_size
 
@@ -10214,7 +10179,7 @@ next_icon:
 confirm:
         jsr     InvokeOperationConfirmCallback
         bit     operation_flags
-        bvs     finish
+        bvs     finish          ; get size - we're done!
 
 no_confirm:
         jmp     perform
@@ -11327,17 +11292,24 @@ file_entry_buf          .res    .sizeof(FileEntry)
 
 ;;; ============================================================
 
+        ;; overlayed indirect jump table
+        kOpJTAddrsSize = 6
+
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
 op_jt_addrs:
+op_jt_addr0:  .addr   0
 op_jt_addr1:  .addr   0
 op_jt_addr3:  .addr   0
+        ASSERT_TABLE_SIZE op_jt_addrs, kOpJTAddrsSize
 
-op_jt1: jmp     (op_jt_addr1)
-op_jt3: jmp     (op_jt_addr3)
+op_jt0: jmp     (op_jt_addr0)   ; process selected file
+op_jt1: jmp     (op_jt_addr1)   ; process directory entry
+op_jt3: jmp     (op_jt_addr3)   ; when finished directory
 
-        ;; overlayed indirect jump table
-        kOpJTAddrsSize = 4
+OpProcessSelectedFile   := op_jt0
+OpProcessDirectoryEntry := op_jt1
+OpFinishDirectory       := op_jt3
 
 DoNothing:   rts
 
@@ -11448,33 +11420,9 @@ eof:    return  #$FF
         jmp     OpenSrcDir
 .endproc ; PrepToOpenDir
 
-;;; Given this tree with b,c,e selected:
-;;;        b
-;;;        c/
-;;;           d/
-;;;               e
-;;;        f
-;;; Visit call sequence:
-;;;  * op_jt1 c
-;;;  * op_jt1 c/d
-;;;  * op_jt3 c/d
-;;;
-;;; Visiting individual files is done via direct calls, not the
-;;; overlayed jump table. Order is:
-;;;
-;;;  * call: b
-;;;  * op_jt1 on c
-;;;  * call: c/d
-;;;  * op_jt1 on c/d
-;;;  * call: c/d/e
-;;;  * op_jt3 on c/d
-;;;  * call: c
-;;;  * call: f
-;;;  (3x final calls ???)
-
 .proc FinishDir
         jsr     CloseSrcDir
-        jsr     op_jt3          ; third - called when exiting dir
+        jsr     OpFinishDirectory
         jsr     RemoveSrcPathSegment
         jsr     PopEntryCount
         jsr     OpenSrcDir
@@ -11508,7 +11456,7 @@ loop:   jsr     ReadFileEntry
         jsr     CheckCancel
 
         copy    #0, cancel_descent_flag
-        jsr     op_jt1          ; first - called when visiting dir
+        jsr     OpProcessDirectoryEntry
         lda     cancel_descent_flag
         bne     loop
 
@@ -11535,15 +11483,16 @@ cancel_descent_flag:  .byte   0
 ;;; "Copy" (including Drag/Drop/Move) files state and logic
 ;;; ============================================================
 
-;;; CopyProcessSelectedFile
-;;;  - called for each file in selection; calls ProcessDir to recurse
-;;; CopyProcessDirectoryEntry
-;;;  - c/o ProcessDir for each file in dir; skips if dir, copies otherwise
-;;; CopyFinishDirectory
-;;;  - c/o ProcessDir after exiting; deletes dir if moving
+;;; `CopyProcessSelectedFile`
+;;;  - delegates to `CopyProcessDirectoryEntry`; if op=move, fixes up paths
+;;; `CopyProcessDirectoryEntry`
+;;;  - copies file/directory
+;;; `CopyFinishDirectory`
+;;;  - if dir and op=move, deletes dir
 
-;;; Overlays for copy operation (op_jt_addrs)
+;;; Overlays for copy operation (`op_jt_addrs`)
 callbacks_for_copy:
+        .addr   CopyProcessSelectedFile
         .addr   CopyProcessDirectoryEntry
         .addr   CopyFinishDirectory
         ASSERT_TABLE_SIZE callbacks_for_copy, kOpJTAddrsSize
@@ -11608,13 +11557,12 @@ a_dst:  .addr   dst_path_buf
 .endproc ; DownloadDialogEnumerationCallback
 
 .proc PrepCallbacksForDownload
-        copy    #$80, all_flag
-
         ldy     #kOpJTAddrsSize-1
 :       copy    callbacks_for_copy,y, op_jt_addrs,y
         dey
         bpl     :-
 
+        copy    #$80, all_flag
         copy16  #DownloadDialogTooLargeCallback, operation_toolarge_callback
         rts
 .endproc ; PrepCallbacksForDownload
@@ -11634,11 +11582,13 @@ a_dst:  .addr   dst_path_buf
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
 .proc CopyProcessFileImpl
+        ;; Normal handling, via `CopyProcessSelectedFile`
 selected:
         copy    #$80, copy_run_flag
         copy    #0, delete_skip_decrement_flag
         beq     :+              ; always
 
+        ;; Via File > Duplicate or copying to RAMCard
 not_selected:
         lda     #$FF
 
@@ -11769,8 +11719,21 @@ CopyFile:
 failure:
         rts
 .endproc ; CopyProcessFileImpl
-        CopyProcessSelectedFile := CopyProcessFileImpl::selected
         CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
+
+;;; ============================================================
+
+.proc CopyProcessSelectedFile
+        jsr     CopyProcessFileImpl::selected
+
+        bit     move_flag
+    IF_NS
+        jsr     UpdateWindowPaths
+        jsr     UpdatePrefix
+    END_IF
+
+        rts
+.endproc
 
 ;;; ============================================================
 
@@ -12154,18 +12117,19 @@ failure:
 .endproc ; TryCreateDst
 
 ;;; ============================================================
-;;; Delete/Trash files dialog state and logic
+;;; "Delete" (Delete/Trash) files dialog state and logic
 ;;; ============================================================
 
-;;; DeleteProcessSelectedFile
-;;;  - called for each file in selection; calls ProcessDir to recurse
-;;; DeleteProcessDirectoryEntry
-;;;  - c/o ProcessDir for each file in dir; skips if dir, deletes otherwise
-;;; DeleteFinishDirectory
-;;;  - c/o ProcessDir when exiting dir; deletes it
+;;; `DeleteProcessSelectedFile`
+;;;  - if dir, recurses; delegates to `DestroySrcFileWithRetry`; if dir, destroys dir
+;;; `DeleteProcessDirectoryEntry`
+;;;  - if not dir, delegates to `DestroySrcFileWithRetry`
+;;; `DeleteFinishDirectory`
+;;;  - destroys dir via `DestroySrcFileWithRetry`
 
-;;; Overlays for delete operation (op_jt_addrs)
+;;; Overlays for delete operation (`op_jt_addrs`)
 callbacks_for_delete:
+        .addr   DeleteProcessSelectedFile
         .addr   DeleteProcessDirectoryEntry
         .addr   DeleteFinishDirectory
         ASSERT_TABLE_SIZE callbacks_for_delete, kOpJTAddrsSize
@@ -12364,13 +12328,15 @@ next_file:
 ;;; "Lock"/"Unlock" dialog state and logic
 ;;; ============================================================
 
-;;; LockProcessSelectedFile
-;;;  - called for each file in selection; calls ProcessDir to recurse
-;;; LockProcessDirectoryEntry
-;;;  - c/o ProcessDir for each file in dir; skips if dir, locks otherwise
+;;; `LockProcessSelectedFile`
+;;;  - if dir, recurses; locks file via `LockFileCommon`
+;;; `LockProcessDirectoryEntry`
+;;;  - locks file via `LockFileCommon`
+;;; (finishing a directory is a no-op)
 
-;;; Overlays for lock/unlock operation (op_jt_addrs)
+;;; Overlays for lock/unlock operation (`op_jt_addrs`)
 callbacks_for_lock:
+        .addr   LockProcessSelectedFile
         .addr   LockProcessDirectoryEntry
         .addr   DoNothing
         ASSERT_TABLE_SIZE callbacks_for_lock, kOpJTAddrsSize
@@ -12477,15 +12443,16 @@ is_dir:
 
 do_lock:
         jsr     LockFileCommon
-        jmp     AppendFileEntryToSrcPath
+        jmp     AppendFileEntryToSrcPath ; ???
 .endproc ; LockProcessSelectedFile
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
 
-LockProcessDirectoryEntry:
+.proc LockProcessDirectoryEntry
         jsr     AppendFileEntryToSrcPath
         FALL_THROUGH_TO LockFileCommon
+.endproc ; LockProcessDirectoryEntry
 
 .proc LockFileCommon
         jsr     update_dialog
@@ -12572,8 +12539,15 @@ a_blocks:       .addr  op_block_count
 ;;; Most operations start by doing a traversal to just count
 ;;; the files.
 
-;;; Overlays for size operation (op_jt_addrs)
+;;; `GetSizeOrCountProcessSelectedFile`
+;;;  - if op=copy, validates; if dir, recurses; delegates to:
+;;; `GetSizeOrCountProcessDirectoryEntry`
+;;;  - increments file count; if op=size, sums size
+;;; (finishing a directory is a no-op)
+
+;;; Overlays for size operation (`op_jt_addrs`)
 callbacks_for_size_or_count:
+        .addr   SizeOrCountProcessSelectedFile
         .addr   SizeOrCountProcessDirectoryEntry
         .addr   DoNothing
         ASSERT_TABLE_SIZE callbacks_for_size_or_count, kOpJTAddrsSize
@@ -12598,6 +12572,18 @@ callbacks_for_size_or_count:
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
 .proc SizeOrCountProcessSelectedFile
+        ;; If copy, validate the source vs. target
+        bit     operation_flags
+        bmi     :+
+        bit     copy_delete_flags
+        bmi     :+
+        jsr     CopyPathsFromBufsToSrcAndDst
+        jsr     CheckRecursion
+        jne     ShowErrorAlert
+        jsr     AppendSrcPathLastSegmentToDstPath
+        jsr     CheckBadReplacement
+        jne     ShowErrorAlert
+:
         jsr     CopyPathsFromBufsToSrcAndDst
 @retry: jsr     GetSrcFileInfo
         beq     :+
