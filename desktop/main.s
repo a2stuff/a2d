@@ -9939,9 +9939,9 @@ DoCopyFile:
         tsx
         stx     stack_stash
 
-        jsr     PrepCallbacksForSizeOrCount
+        jsr     PrepCallbacksForEnumeration
         jsr     DoCopyDialogPhase
-        jsr     SizeOrCountProcessSelectedFile
+        jsr     EnumerationProcessSelectedFile
         jsr     PrepCallbacksForCopy
         FALL_THROUGH_TO DoCopyCommon
 
@@ -9962,9 +9962,9 @@ DoCopyToRAM:
         copy    #%11000000, operation_flags ; get size
         tsx
         stx     stack_stash
-        jsr     PrepCallbacksForSizeOrCount
+        jsr     PrepCallbacksForEnumeration
         jsr     DoDownloadDialogPhase
-        jsr     SizeOrCountProcessSelectedFile
+        jsr     EnumerationProcessSelectedFile
         jsr     PrepCallbacksForDownload
         jmp     DoCopyCommon
 
@@ -10082,7 +10082,7 @@ common:
 .proc BeginOperation
         copy    #0, do_op_flag
 
-        jsr     PrepCallbacksForSizeOrCount
+        jsr     PrepCallbacksForEnumeration
         bit     operation_flags
         bvs     @size
         bmi     @lock
@@ -12539,20 +12539,20 @@ a_blocks:       .addr  op_block_count
 ;;; Most operations start by doing a traversal to just count
 ;;; the files.
 
-;;; `GetSizeOrCountProcessSelectedFile`
+;;; `EnumerationProcessSelectedFile`
 ;;;  - if op=copy, validates; if dir, recurses; delegates to:
-;;; `GetSizeOrCountProcessDirectoryEntry`
+;;; `EnumerationProcessDirectoryEntry`
 ;;;  - increments file count; if op=size, sums size
 ;;; (finishing a directory is a no-op)
 
 ;;; Overlays for size operation (`op_jt_addrs`)
 callbacks_for_size_or_count:
-        .addr   SizeOrCountProcessSelectedFile
-        .addr   SizeOrCountProcessDirectoryEntry
+        .addr   EnumerationProcessSelectedFile
+        .addr   EnumerationProcessDirectoryEntry
         .addr   DoNothing
         ASSERT_TABLE_SIZE callbacks_for_size_or_count, kOpJTAddrsSize
 
-.proc PrepCallbacksForSizeOrCount
+.proc PrepCallbacksForEnumeration
         ldy     #kOpJTAddrsSize-1
 :       copy    callbacks_for_size_or_count,y, op_jt_addrs,y
         dey
@@ -12565,13 +12565,13 @@ callbacks_for_size_or_count:
         sta     op_block_count+1
 
         rts
-.endproc ; PrepCallbacksForSizeOrCount
+.endproc ; PrepCallbacksForEnumeration
 
 ;;; ============================================================
 ;;; Handle sizing (or just counting) of a selected file.
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
-.proc SizeOrCountProcessSelectedFile
+.proc EnumerationProcessSelectedFile
         ;; If copy, validate the source vs. target
         bit     operation_flags
         bmi     :+
@@ -12616,13 +12616,13 @@ is_dir:
 do_sum_file_size:
         ;; Make subsequent call to `AppendFileEntryToSrcPath` a no-op
         copy    #0, file_entry_buf + FileEntry::storage_type_name_length
-        FALL_THROUGH_TO SizeOrCountProcessDirectoryEntry
-.endproc ; SizeOrCountProcessSelectedFile
+        FALL_THROUGH_TO EnumerationProcessDirectoryEntry
+.endproc ; EnumerationProcessSelectedFile
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
 
-.proc SizeOrCountProcessDirectoryEntry
+.proc EnumerationProcessDirectoryEntry
         ;; If operation is "get size" or "download", add the block count to the sum
         bit     operation_flags
     IF_VS
@@ -12642,7 +12642,7 @@ do_sum_file_size:
         inc16   op_file_count
         ldax    op_file_count
         jmp     InvokeOperationEnumerationCallback
-.endproc ; SizeOrCountProcessDirectoryEntry
+.endproc ; EnumerationProcessDirectoryEntry
 
 op_file_count:
         .word   0
