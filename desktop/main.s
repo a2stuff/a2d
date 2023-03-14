@@ -11760,53 +11760,53 @@ done:   rts
 ;;; Called by `ProcessDir` to process a single file
 
 .proc CopyProcessDirectoryEntry
-        lda     file_entry_buf + FileEntry::file_type
-        cmp     #FT_DIRECTORY
-        bne     regular_file
-
-        ;; Directory
-        jsr     AppendFileEntryToSrcPath
         jsr     AppendFileEntryToDstPath
+        jsr     AppendFileEntryToSrcPath
         jsr     DecFileCountAndRunCopyDialogProc
 
         ;; Called with `src_file_info_params` pre-populated
+        lda     file_entry_buf + FileEntry::file_type
+        lda     src_file_info_params::storage_type
+        cmp     #ST_LINKED_DIRECTORY
+        bne     regular_file
+
+        ;; --------------------------------------------------
+        ;; Directory
+
         jsr     TryCreateDst
         bcs     :+
+        ;; Success - leave dst path segment in place for recursion
         jsr     RemoveSrcPathSegment
-        jmp     done
-
-:       jsr     RemoveDstPathSegment
-        jsr     RemoveSrcPathSegment
+        rts
+:
         copy    #$FF, cancel_descent_flag
-        jmp     done
+        bne     done            ; always
 
+        ;; --------------------------------------------------
         ;; File
+
 regular_file:
-        jsr     AppendFileEntryToDstPath
-        jsr     AppendFileEntryToSrcPath
-        jsr     DecFileCountAndRunCopyDialogProc
-        lda     src_file_info_params::storage_type
         cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
     IF_GE
         lda     #kErrUnsupportedFileType
         jsr     ShowAlert
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialog
-        jmp     skip
+        bne     done            ; always
     END_IF
 
         jsr     CheckSpaceAndShowPrompt
         jcs     CloseFilesCancelDialog
 
-        jsr     RemoveSrcPathSegment
         jsr     TryCreateDst
-        bcs     :+
-        jsr     AppendFileEntryToSrcPath
+        bcs     done
+
         jsr     DoFileCopy
         jsr     MaybeFinishFileMove
-skip:   jsr     RemoveSrcPathSegment
-:       jsr     RemoveDstPathSegment
-done:   rts
+
+done:   jsr     RemoveSrcPathSegment
+        jsr     RemoveDstPathSegment
+        rts
 .endproc ; CopyProcessDirectoryEntry
 
 ;;; ============================================================
