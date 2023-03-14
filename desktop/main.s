@@ -9969,17 +9969,6 @@ DoCopyToRAM:
         jmp     DoCopyCommon
 
 ;;; --------------------------------------------------
-;;; Lock
-
-DoLock:
-        jsr     DoLockUnlockCommonImpl__unlock
-        jmp     FinishOperation
-
-DoUnlock:
-        jsr     DoLockUnlockCommonImpl__lock
-        jmp     FinishOperation
-
-;;; --------------------------------------------------
 
 .proc DoGetSize
         copy    #0, run_flag
@@ -10007,17 +9996,17 @@ DoUnlock:
         jmp     DoOpOnSelectionCommon
 .endproc ; DoDrop
 
-        ;; common for lock/unlock
-.proc DoLockUnlockCommonImpl
-unlock: lda     #$00            ; unlock
+.proc DoLockUnlockImpl
+lock:   lda     #$00
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-lock:   lda     #$80            ; lock
+unlock: lda     #$80
         sta     unlock_flag
         copy    #%10000000, operation_flags ; lock/unlock
-        FALL_THROUGH_TO DoOpOnSelectionCommon
-.endproc ; DoLockUnlockCommonImpl
-        DoLockUnlockCommonImpl__lock := DoLockUnlockCommonImpl::lock
-        DoLockUnlockCommonImpl__unlock := DoLockUnlockCommonImpl::unlock
+        jsr     DoOpOnSelectionCommon
+        jmp     FinishOperation
+.endproc ; DoLockUnlockImpl
+        DoLock   := DoLockUnlockImpl::lock
+        DoUnlock := DoLockUnlockImpl::unlock
 
 .proc DoOpOnSelectionCommon
         tsx
