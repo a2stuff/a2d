@@ -1115,7 +1115,7 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         stx     INVOKER_INTERPRETER
 
         rts
-.endproc
+.endproc ; AppendToInvokerInterpreter
 
 ;;; --------------------------------------------------
 
@@ -1662,7 +1662,7 @@ CmdDeskAcc      := CmdDeskaccImpl::start
 :
         ldax    #tmp_path_buf
         FALL_THROUGH_TO InvokeDeskAcc
-.endproc
+.endproc ; InvokeDeskAccWithSelection
 
 ;;; ============================================================
 ;;; Invoke Desk Accessory
@@ -7745,7 +7745,7 @@ ptr_str_items_suffix:
         rts
 .endproc ; MeasureString
 
-.endproc
+.endproc ; DrawWindowHeader
 
 ;;; ============================================================
 ;;; Compute bounding box for icons within cached window
@@ -9933,7 +9933,8 @@ done:   rts
 
 .scope operations
 
-DoCopyFile:
+;;; Used by Duplicate command for a single file copy
+.proc DoCopyFile
         copy    #0, operation_flags ; copy/delete
         copy    #0, move_flag
         tsx
@@ -9944,18 +9945,21 @@ DoCopyFile:
         jsr     EnumerationProcessSelectedFile
         jsr     PrepCallbacksForCopy
         FALL_THROUGH_TO DoCopyCommon
+.endproc ; DoCopyFile
 
-DoCopyCommon:
+.proc DoCopyCommon
         copy    #$FF, copy_run_flag
         copy    #0, move_flag
         jsr     CopyProcessNotSelectedFile
         jsr     InvokeOperationCompleteCallback
         FALL_THROUGH_TO FinishOperation
+.endproc ; DoCopyCommon
 
 FinishOperation:
         return  #kOperationSucceeded
 
-DoCopyToRAM:
+;;; Used when running a Shortcut, to copy to RAMCard
+.proc DoCopyToRAM
         copy    #0, move_flag
         copy    #$80, run_flag
         copy    #%11000000, operation_flags ; get size
@@ -9966,6 +9970,7 @@ DoCopyToRAM:
         jsr     EnumerationProcessSelectedFile
         jsr     PrepCallbacksForDownload
         jmp     DoCopyCommon
+.endproc ; DoCopyToRAM
 
 ;;; --------------------------------------------------
 
@@ -11579,7 +11584,7 @@ selected:
 not_selected:
         lda     #$FF
 
-:       sta     is_not_selected_flag
+        sta     is_not_selected_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
         bit     operation_flags
@@ -11720,7 +11725,7 @@ failure:
     END_IF
 
         rts
-.endproc
+.endproc ; CopyProcessSelectedFile
 
 ;;; ============================================================
 
@@ -11733,7 +11738,7 @@ src_path_slash_index:
 .proc CopyFinishDirectory
         jsr     RemoveDstPathSegment
         FALL_THROUGH_TO MaybeFinishFileMove
-.endproc
+.endproc ; CopyFinishDirectory
 
 .proc MaybeFinishFileMove
         ;; Copy or move?
