@@ -12052,12 +12052,11 @@ src_eof_flag:
 
 .proc TryCreateDst
         ;; Copy file_type, aux_type, storage_type
-        ldx     #7
-:       lda     src_file_info_params,x
-        sta     create_params3,x
+        ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
+:       lda     src_file_info_params::file_type,x
+        sta     create_params3::file_type,x
         dex
-        cpx     #3
-        bne     :-
+        bpl     :-
 
         jsr     DecrementOpFileCount
 retry:  MLI_CALL CREATE, create_params3
@@ -12081,6 +12080,7 @@ retry:  MLI_CALL CREATE, create_params3
 yes:    jsr     ApplyFileInfoAndSize
         jmp     success
 
+        ;; PromptResult::cancel
 cancel: jmp     CloseFilesCancelDialog
 
 err:    jsr     ShowErrorAlertDst
