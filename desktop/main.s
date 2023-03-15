@@ -13943,15 +13943,137 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
         .byte   0
 
 ;;; ============================================================
+
+.proc OpenProgressDialog
+        MGTK_CALL MGTK::OpenWindow, winfo_progress_dialog
+        jsr     SetPortForProgressDialog
+        jsr     SetPenModeNotCopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, aux::progress_dialog_frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        jmp     SetCursorWatch  ; undone by `CloseProgressDialog`
+.endproc ; OpenProgressDialog
+
+;;; ============================================================
+
+.proc SetPortForProgressDialog
+        lda     #winfo_progress_dialog::kWindowId
+        jmp     SafeSetPortFromWindowId
+.endproc ; SetPortForProgressDialog
+
+;;; ============================================================
+
+.proc CloseProgressDialog
+        MGTK_CALL MGTK::CloseWindow, winfo_progress_dialog::window_id
+        jsr     ClearUpdates     ; following CloseWindow
+        jmp     SetCursorPointer ; when closing dialog
+.endproc ; CloseProgressDialog
+
+;;; ============================================================
+;;; Draw Progress Dialog Label
+;;; A,X = string
+;;; Y = row number (0, 1, 2, ... )
+
+.proc DrawProgressDialogLabel
+        pha
+        txa
+        pha
+
+        ;; y = base + aux::kDialogLabelHeight * line
+        tya                     ; low byte
+        ldx     #0              ; high byte
+        ldy     #aux::kDialogLabelHeight
+        jsr     Multiply_16_8_16
+        addax   #kProgressDialogLabelBaseY, progress_dialog_label_pos::ycoord
+        MGTK_CALL MGTK::MoveTo, progress_dialog_label_pos
+
+        pla
+        tax
+        pla
+        jmp     DrawString
+.endproc ; DrawProgressDialogLabel
+
+;;; ============================================================
+
+.proc DrawDialogPathBuf0
+        ldax    #path_buf0
+        FALL_THROUGH_TO DrawDialogPath
+.endproc ; DrawDialogPathBuf0
+
+;;; Draw a path (long string) in the progress dialog by without intruding
+;;; into the border. If the string is too long, it is shrunk from the
+;;; center with "..." inserted.
+;;; Inputs: A,X = string address
+;;; Trashes $06...$0C
+.proc DrawDialogPath
+        ptr := $6
+        stax    ptr
+
+loop:   jsr     measure
+        bcc     draw            ; already short enough
+
+        jsr     ellipsify
+        jmp     loop
+
+        ;; Draw
+draw:   MGTK_CALL MGTK::DrawText, txt
+        rts
+
+        ;; Measure
+measure:
+        txt := $8
+        len := $A
+        result := $B
+
+        ldy     #0
+        lda     (ptr),y
+        sta     len
+        add16   ptr, #1, txt
+        MGTK_CALL MGTK::TextWidth, txt
+        cmp16   result, #kProgressDialogPathWidth
+        rts
+
+ellipsify:
+        ldy     #0
+        lda     (ptr),y         ; length
+        sta     length
+        pha
+        sec                     ; shrink length by one
+        sbc     #1
+        sta     (ptr),y
+        pla
+        lsr                     ; /= 2
+
+        pha                     ; A = length/2
+
+        tay
+:       iny                     ; shift chars from midpoint to
+        lda     (ptr),y         ; end of string down by one
+        dey
+        sta     (ptr),y
+        iny
+        length := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :-
+
+        pla                     ; A = length/2
+
+        tay                     ; overwrite midpoint with
+        lda     #'.'            ; "..."
+        sta     (ptr),y
+        iny
+        sta     (ptr),y
+        iny
+        sta     (ptr),y
+        rts
+.endproc ; DrawDialogPath
+
+;;; ============================================================
 ;;;
 ;;; Routines beyond this point are used by overlays
 ;;;
 ;;; ============================================================
-
-        .if * < $A000
-        .out "TODO: Rearrange to remove this padding!"
-        PAD_TO $A000
-        .endif
 
         .assert * >= $A000, error, "Routine used by overlays in overlay zone"
 
@@ -14089,34 +14211,6 @@ done:   rts
 
 ;;; ============================================================
 
-.proc OpenProgressDialog
-        MGTK_CALL MGTK::OpenWindow, winfo_progress_dialog
-        jsr     SetPortForProgressDialog
-        jsr     SetPenModeNotCopy
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, aux::progress_dialog_frame_rect
-        MGTK_CALL MGTK::SetPenSize, pensize_normal
-        MGTK_CALL MGTK::SetPenMode, penXOR
-        jmp     SetCursorWatch  ; undone by `CloseProgressDialog`
-.endproc ; OpenProgressDialog
-
-;;; ============================================================
-
-.proc SetPortForProgressDialog
-        lda     #winfo_progress_dialog::kWindowId
-        jmp     SafeSetPortFromWindowId
-.endproc ; SetPortForProgressDialog
-
-;;; ============================================================
-
-.proc CloseProgressDialog
-        MGTK_CALL MGTK::CloseWindow, winfo_progress_dialog::window_id
-        jsr     ClearUpdates     ; following CloseWindow
-        jmp     SetCursorPointer ; when closing dialog
-.endproc ; CloseProgressDialog
-
-;;; ============================================================
-
 ;;; Draw dialog label.
 ;;; A,X has pointer to DrawText params block
 ;;; Y has row number (1, 2, ... ) in low nibble, alignment in top nibble
@@ -14189,105 +14283,6 @@ calc_y:
         copy16  #kDialogLabelDefaultX, dialog_label_pos::xcoord
         rts
 .endproc ; DrawDialogLabel
-
-;;; ============================================================
-;;; Draw Progress Dialog Label
-;;; A,X = string
-;;; Y = row number (0, 1, 2, ... )
-
-.proc DrawProgressDialogLabel
-        pha
-        txa
-        pha
-
-        ;; y = base + aux::kDialogLabelHeight * line
-        tya                     ; low byte
-        ldx     #0              ; high byte
-        ldy     #aux::kDialogLabelHeight
-        jsr     Multiply_16_8_16
-        addax   #kProgressDialogLabelBaseY, progress_dialog_label_pos::ycoord
-        MGTK_CALL MGTK::MoveTo, progress_dialog_label_pos
-
-        pla
-        tax
-        pla
-        jmp     DrawString
-.endproc ; DrawProgressDialogLabel
-
-;;; ============================================================
-
-.proc DrawDialogPathBuf0
-        ldax    #path_buf0
-        FALL_THROUGH_TO DrawDialogPath
-.endproc ; DrawDialogPathBuf0
-
-;;; Draw a path (long string) in the progress dialog by without intruding
-;;; into the border. If the string is too long, it is shrunk from the
-;;; center with "..." inserted.
-;;; Inputs: A,X = string address
-;;; Trashes $06...$0C
-.proc DrawDialogPath
-        ptr := $6
-        stax    ptr
-
-loop:   jsr     measure
-        bcc     draw            ; already short enough
-
-        jsr     ellipsify
-        jmp     loop
-
-        ;; Draw
-draw:   MGTK_CALL MGTK::DrawText, txt
-        rts
-
-        ;; Measure
-measure:
-        txt := $8
-        len := $A
-        result := $B
-
-        ldy     #0
-        lda     (ptr),y
-        sta     len
-        add16   ptr, #1, txt
-        MGTK_CALL MGTK::TextWidth, txt
-        cmp16   result, #kProgressDialogPathWidth
-        rts
-
-ellipsify:
-        ldy     #0
-        lda     (ptr),y         ; length
-        sta     length
-        pha
-        sec                     ; shrink length by one
-        sbc     #1
-        sta     (ptr),y
-        pla
-        lsr                     ; /= 2
-
-        pha                     ; A = length/2
-
-        tay
-:       iny                     ; shift chars from midpoint to
-        lda     (ptr),y         ; end of string down by one
-        dey
-        sta     (ptr),y
-        iny
-        length := *+1
-        cpy     #SELF_MODIFIED_BYTE
-        bne     :-
-
-        pla                     ; A = length/2
-
-        tay                     ; overwrite midpoint with
-        lda     #'.'            ; "..."
-        sta     (ptr),y
-        iny
-        sta     (ptr),y
-        iny
-        sta     (ptr),y
-        rts
-.endproc ; DrawDialogPath
 
 ;;; ============================================================
 
