@@ -11634,12 +11634,12 @@ store:  sta     is_dir_flag
         jsr     CheckSpaceAndShowPrompt
         bcs     failure
 
-        ;; Copy access, file_type, aux_type, storage_type
+        ;; Copy file_type, aux_type, storage_type
         ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
 :       lda     src_file_info_params::file_type,x
         sta     create_params3::file_type,x
         dex
-        bpl    :-
+        bpl     :-
 
         ;; Copy create_time/create_date
         ldx     #.sizeof(DateTime)-1
@@ -12055,6 +12055,13 @@ src_eof_flag:
         ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
 :       lda     src_file_info_params::file_type,x
         sta     create_params3::file_type,x
+        dex
+        bpl     :-
+
+        ;; Copy create_time/create_date
+        ldx     #.sizeof(DateTime)-1
+:       lda     src_file_info_params::create_date,x
+        sta     create_params3::create_date,x
         dex
         bpl     :-
 

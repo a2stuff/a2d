@@ -542,6 +542,8 @@
 * Create a folder, and a subfolder within it. Select the top-most folder. Special > Lock. Using Apple > Run Basic Here, verify that the folder and subfolder are locked. BYE to return to DeskTop. Select the containing volume. Special > Unlock. Using Apple > Run Basic Here, verify that the folder and subfolder are unlocked.
 * Using BASIC, create a directory X and save a BASIC file X/B. Launch DeskTop. Select X. File > Lock. Close the window containing X. Open the window containing X. Verify that X is still a folder.
 
+* Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
+
 ## Shortcuts
 
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
