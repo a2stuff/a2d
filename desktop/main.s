@@ -13103,7 +13103,7 @@ appleworks:
 ;;; ============================================================
 ;;; Dialog Proc Invocation
 
-kNumDialogTypes = 11
+kNumDialogTypes = 10
 
 kIndexAboutDialog       = 0
 kIndexCopyDialog        = 1
@@ -13111,11 +13111,10 @@ kIndexDeleteDialog      = 2
 kIndexNewFolderDialog   = 3
 kIndexGetInfoDialog     = 4
 kIndexLockDialog        = 5
-kIndexUnlockDialog      = 6
-kIndexRenameDialog      = 7
-kIndexDownloadDialog    = 8
-kIndexGetSizeDialog     = 9
-kIndexDuplicateDialog   = 10
+kIndexRenameDialog      = 6
+kIndexDownloadDialog    = 7
+kIndexGetSizeDialog     = 8
+kIndexDuplicateDialog   = 9
 
 dialog_proc_table:
         .addr   AboutDialogProc
@@ -13124,7 +13123,6 @@ dialog_proc_table:
         .addr   NewFolderDialogProc
         .addr   GetInfoDialogProc
         .addr   LockDialogProc
-        .addr   UnlockDialogProc
         .addr   RenameDialogProc
         .addr   DownloadDialogProc
         .addr   GetSizeDialogProc
@@ -13816,7 +13814,6 @@ do_close:
         ;; LockDialogLifecycle::close
         jmp     CloseProgressDialog
 .endproc ; LockDialogProc
-UnlockDialogProc := LockDialogProc
 
 ;;; ============================================================
 ;;; "Rename" dialog
