@@ -11265,7 +11265,6 @@ file_entry_buf          .res    .sizeof(FileEntry)
         DEFINE_READ_PARAMS read_src_params, file_data_buffer, kBufSize
         DEFINE_WRITE_PARAMS write_dst_params, file_data_buffer, kBufSize
         DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
-        DEFINE_CREATE_PARAMS create_params2, dst_path_buf
 
         DEFINE_SET_EOF_PARAMS set_eof_params, 0
         DEFINE_SET_MARK_PARAMS mark_src_params, 0
@@ -11633,12 +11632,9 @@ store:  sta     is_dir_flag
         ;; Copy access, file_type, aux_type, storage_type
         ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
 :       lda     src_file_info_params::file_type,x
-        sta     create_params2::file_type,x
+        sta     create_params3::file_type,x
         dex
         bpl    :-
-
-        ;; Explicitly set default access
-        copy    #ACCESS_DEFAULT, create_params2::access
 
         lda     copy_run_flag
         beq     success         ; never taken ???
@@ -11648,20 +11644,20 @@ store:  sta     is_dir_flag
         ;; Copy create_time/create_date
         ldx     #.sizeof(DateTime)-1
 :       lda     src_file_info_params::create_date,x
-        sta     create_params2::create_date,x
+        sta     create_params3::create_date,x
         dex
         bpl     :-
 
         ;; If a volume, need to create a subdir instead
-        lda     create_params2::storage_type
+        lda     create_params3::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         bne     :+
         lda     #ST_LINKED_DIRECTORY
-        sta     create_params2::storage_type
+        sta     create_params3::storage_type
 :
         ;; TODO: Dedupe with `TryCreateDst`
         jsr     DecrementOpFileCount
-retry:  MLI_CALL CREATE, create_params2
+retry:  MLI_CALL CREATE, create_params3
         beq     success
 
         cmp     #ERR_DUPLICATE_FILENAME
