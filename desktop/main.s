@@ -11634,55 +11634,8 @@ store:  sta     is_dir_flag
         jsr     CheckSpaceAndShowPrompt
         bcs     failure
 
-        ;; Copy file_type, aux_type, storage_type
-        ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
-:       lda     src_file_info_params::file_type,x
-        sta     create_params3::file_type,x
-        dex
-        bpl     :-
-
-        ;; Copy create_time/create_date
-        ldx     #.sizeof(DateTime)-1
-:       lda     src_file_info_params::create_date,x
-        sta     create_params3::create_date,x
-        dex
-        bpl     :-
-
-        ;; If a volume, need to create a subdir instead
-        lda     create_params3::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        bne     :+
-        lda     #ST_LINKED_DIRECTORY
-        sta     create_params3::storage_type
-:
-        ;; TODO: Dedupe with `TryCreateDst`
-        jsr     DecrementOpFileCount
-retry:  MLI_CALL CREATE, create_params3
-        beq     success
-
-        cmp     #ERR_DUPLICATE_FILENAME
-        bne     err
-        bit     all_flag
-        bmi     yes
-
-        param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_exists_prompt
-        jsr     SetCursorWatch  ; preserves A
-
-        cmp     #kAlertResultYes
-        beq     yes
-        cmp     #kAlertResultNo
-        beq     failure
-        cmp     #kAlertResultAll
-        bne     cancel
-        copy    #$80, all_flag
-yes:    jsr     ApplyFileInfoAndSize
-        jmp     success
-
-        ;; PromptResult::cancel
-cancel: jmp     CloseFilesCancelDialog
-
-err:    jsr     ShowErrorAlertDst
-        jmp     retry
+        jsr     TryCreateDst
+        bcs     failure
 
 success:
         is_dir_flag := *+1
@@ -12065,6 +12018,13 @@ src_eof_flag:
         dex
         bpl     :-
 
+        ;; If a volume, need to create a subdir instead
+        lda     create_params3::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        bne     :+
+        lda     #ST_LINKED_DIRECTORY
+        sta     create_params3::storage_type
+:
         jsr     DecrementOpFileCount
 retry:  MLI_CALL CREATE, create_params3
         beq     success
@@ -13987,6 +13947,11 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 ;;; Routines beyond this point are used by overlays
 ;;;
 ;;; ============================================================
+
+        .if * < $A000
+        .out "TODO: Rearrange to remove this padding!"
+        PAD_TO $A000
+        .endif
 
         .assert * >= $A000, error, "Routine used by overlays in overlay zone"
 
