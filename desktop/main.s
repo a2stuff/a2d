@@ -9948,7 +9948,6 @@ DoCopyFile:
 DoCopyCommon:
         copy    #$FF, copy_run_flag
         copy    #0, move_flag
-        copy    #0, delete_skip_decrement_flag
         jsr     CopyProcessNotSelectedFile
         jsr     InvokeOperationCompleteCallback
         FALL_THROUGH_TO FinishOperation
@@ -10011,7 +10010,6 @@ unlock: lda     #$80
 .proc DoOpOnSelectionCommon
         tsx
         stx     stack_stash
-        copy    #0, delete_skip_decrement_flag
         lda     operation_flags
         jne     BeginOperation  ; copy/delete
 
@@ -11574,8 +11572,8 @@ a_dst:  .addr   dst_path_buf
         ;; Normal handling, via `CopyProcessSelectedFile`
 selected:
         copy    #$80, copy_run_flag
-        copy    #0, delete_skip_decrement_flag
-        beq     :+              ; always
+        lda     #0
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
         ;; Via File > Duplicate or copying to RAMCard
 not_selected:
@@ -12216,10 +12214,8 @@ is_dir:
         FALL_THROUGH_TO do_destroy
 
 do_destroy:
-        bit     delete_skip_decrement_flag
-        bmi     :+
         jsr     DecFileCountAndRunDeleteDialogProc
-:       jsr     DecrementOpFileCount
+        jsr     DecrementOpFileCount
 
         FALL_THROUGH_TO DestroySrcFileWithRetry
 .endproc ; DeleteProcessSelectedFile
@@ -12277,10 +12273,8 @@ done:   rts
 
 .proc DeleteProcessDirectoryEntry
         jsr     AppendFileEntryToSrcPath
-        bit     delete_skip_decrement_flag
-        bmi     :+
         jsr     DecFileCountAndRunDeleteDialogProc
-:       jsr     DecrementOpFileCount
+        jsr     DecrementOpFileCount
 
         ;; Called with `src_file_info_params` pre-populated
         ;; Directories will be processed separately
@@ -15363,9 +15357,6 @@ filename_buf:
 
         ;; Set to $80 for Copy, $FF for Run
 copy_run_flag:
-        .byte   0
-
-delete_skip_decrement_flag:     ; always set to 0 ???
         .byte   0
 
 op_ref_num:
