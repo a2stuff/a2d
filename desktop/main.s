@@ -12067,11 +12067,11 @@ failure:
 ;;; ============================================================
 
 ;;; `DeleteProcessSelectedFile`
-;;;  - if dir, recurses; delegates to `DestroySrcFileWithRetry`; if dir, destroys dir
+;;;  - if dir, recurses; delegates to `DeleteFileCommon`; if dir, destroys dir
 ;;; `DeleteProcessDirectoryEntry`
-;;;  - if not dir, delegates to `DestroySrcFileWithRetry`
+;;;  - if not dir, delegates to `DeleteFileCommon`
 ;;; `DeleteFinishDirectory`
-;;;  - destroys dir via `DestroySrcFileWithRetry`
+;;;  - destroys dir via `DeleteFileCommon`
 
 ;;; Overlays for delete operation (`op_jt_addrs`)
 callbacks_for_delete:
@@ -12180,13 +12180,14 @@ is_dir:
         FALL_THROUGH_TO do_destroy
 
 do_destroy:
-        jsr     DecFileCountAndRunDeleteDialogProc
-        jsr     DecrementOpFileCount
-
-        FALL_THROUGH_TO DestroySrcFileWithRetry
+        FALL_THROUGH_TO DeleteFileCommon
 .endproc ; DeleteProcessSelectedFile
 
-.proc DestroySrcFileWithRetry
+.proc DeleteFileCommon
+        sub16   op_file_count, #1, delete_dialog_params::count
+        jsr     RunDeleteDialogProc
+        jsr     DecrementOpFileCount
+
 retry:  MLI_CALL DESTROY, destroy_params
         beq     done
 
@@ -12219,7 +12220,7 @@ done:   rts
 
 error:  jsr     ShowErrorAlert
         jmp     retry
-.endproc ; DestroySrcFileWithRetry
+.endproc ; DeleteFileCommon
 
 .proc UnlockSrcFile
         jsr     GetSrcFileInfo
@@ -12239,8 +12240,6 @@ done:   rts
 
 .proc DeleteProcessDirectoryEntry
         jsr     AppendFileEntryToSrcPath
-        jsr     DecFileCountAndRunDeleteDialogProc
-        jsr     DecrementOpFileCount
 
         ;; Called with `src_file_info_params` pre-populated
         ;; Directories will be processed separately
@@ -12256,7 +12255,7 @@ done:   rts
         jmp     next_file
     END_IF
 
-        jsr     DestroySrcFileWithRetry
+        jsr     DeleteFileCommon
 next_file:
         jmp     RemoveSrcPathSegment
 .endproc ; DeleteProcessDirectoryEntry
@@ -12266,7 +12265,7 @@ next_file:
 
 .proc DeleteFinishDirectory
         param_call InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
-        jmp     DestroySrcFileWithRetry
+        jmp     DeleteFileCommon
 .endproc ; DeleteFinishDirectory
 
 .proc RunDeleteDialogProc
@@ -12348,6 +12347,7 @@ a_path: .addr   src_path_buf
         jsr     ShowErrorAlert
         jmp     @retry
 
+        ;; Check if it's a regular file or directory
 :       lda     src_file_info_params::storage_type
         sta     storage_type
         cmp     #ST_VOLUME_DIRECTORY
@@ -12356,6 +12356,7 @@ a_path: .addr   src_path_buf
         bne     do_lock
 
 is_dir:
+        ;; Recurse, and process directory
         jsr     ProcessDir
         storage_type := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -12366,8 +12367,7 @@ is_dir:
         FALL_THROUGH_TO do_lock
 
 do_lock:
-        jsr     LockFileCommon
-        jmp     AppendFileEntryToSrcPath ; ???
+        jmp     LockFileCommon
 .endproc ; LockProcessSelectedFile
 
 ;;; ============================================================
@@ -12375,19 +12375,16 @@ do_lock:
 
 .proc LockProcessDirectoryEntry
         jsr     AppendFileEntryToSrcPath
-        FALL_THROUGH_TO LockFileCommon
+        jsr     LockFileCommon
+        jmp     RemoveSrcPathSegment
 .endproc ; LockProcessDirectoryEntry
 
 .proc LockFileCommon
-        jsr     update_dialog
-
+        sub16   op_file_count, #1, lock_unlock_dialog_params::count
+        jsr     RunLockDialogProc
         jsr     DecrementOpFileCount
 
         ;; Called with `src_file_info_params` pre-populated
-        lda     src_file_info_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        beq     ok
-
         lda     src_file_info_params::access
         bit     unlock_flag
     IF_NS
@@ -12402,11 +12399,7 @@ retry:  jsr     SetSrcFileInfo
         jsr     ShowErrorAlert
         jmp     retry
 
-ok:     jmp     RemoveSrcPathSegment
-
-update_dialog:
-        sub16   op_file_count, #1, lock_unlock_dialog_params::count
-        jmp     RunLockDialogProc
+ok:     rts
 .endproc ; LockFileCommon
 
 ;;; ============================================================
@@ -12906,11 +12899,6 @@ match:  lda     flag
 .endproc ; CheckMoveOrCopy
 
 ;;; ============================================================
-
-.proc DecFileCountAndRunDeleteDialogProc
-        sub16   op_file_count, #1, delete_dialog_params::count
-        param_jump InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
-.endproc ; DecFileCountAndRunDeleteDialogProc
 
 .proc DecFileCountAndRunCopyDialogProc
         sub16   op_file_count, #1, copy_dialog_params::count
