@@ -9922,15 +9922,6 @@ done:   rts
 
 ;;; ============================================================
 
-.enum DeleteDialogLifecycle
-        open            = 0
-        count           = 1
-        show            = 2
-        close           = 3
-.endenum
-
-;;; --------------------------------------------------
-
 .scope operations
 
 ;;; Used by Duplicate command for a single file copy
@@ -12125,6 +12116,13 @@ callbacks_for_delete:
         .addr   DeleteProcessDirectoryEntry
         .addr   DeleteFinishDirectory
         ASSERT_TABLE_SIZE callbacks_for_delete, kOpJTAddrsSize
+
+.enum DeleteDialogLifecycle
+        open            = 0
+        count           = 1
+        show            = 2
+        close           = 3
+.endenum
 
 .params delete_dialog_params
 phase:  .byte   0
