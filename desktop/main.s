@@ -11681,7 +11681,7 @@ yes:    jsr     ApplyFileInfoAndSize
         ;; PromptResult::cancel
 cancel: jmp     CloseFilesCancelDialog
 
-err:    jsr     ShowErrorAlert
+err:    jsr     ShowErrorAlertDst
         jmp     retry
 
 success:
