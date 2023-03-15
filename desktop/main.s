@@ -12527,8 +12527,6 @@ is_dir:
 :       rts
 
 do_sum_file_size:
-        ;; Make subsequent call to `AppendFileEntryToSrcPath` a no-op
-        copy    #0, file_entry_buf + FileEntry::storage_type_name_length
         FALL_THROUGH_TO EnumerationProcessDirectoryEntry
 .endproc ; EnumerationProcessSelectedFile
 
@@ -12539,17 +12537,8 @@ do_sum_file_size:
         ;; If operation is "get size" or "download", add the block count to the sum
         bit     operation_flags
     IF_VS
-        lda     file_entry_buf + FileEntry::storage_type_name_length
-      IF_NOT_ZERO
-        ;; If we have a valid file entry, use its block count
-        add16   op_block_count, file_entry_buf+FileEntry::blocks_used, op_block_count
-      ELSE
-        ;; Otherwise, query the existing path
-        jsr     GetSrcFileInfo
-       IF_ZERO
+        ;; Called with `src_file_info_params` pre-populated
         add16   op_block_count, src_file_info_params::blocks_used, op_block_count
-       END_IF
-      END_IF
     END_IF
 
         inc16   op_file_count
