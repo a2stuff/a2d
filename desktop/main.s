@@ -11631,9 +11631,9 @@ store:  sta     is_dir_flag
         jsr     DecFileCountAndRunCopyDialogProc
 
         ;; Copy access, file_type, aux_type, storage_type
-        ldx     #src_file_info_params::storage_type - src_file_info_params::access
-:       lda     src_file_info_params::access,x
-        sta     create_params2::access,x
+        ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
+:       lda     src_file_info_params::file_type,x
+        sta     create_params2::file_type,x
         dex
         bpl    :-
 
