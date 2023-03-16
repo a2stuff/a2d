@@ -11598,17 +11598,11 @@ L9A50:  ldax    #filename_buf
         jsr     AppendFilenameToDstPath
 
 get_src_info:
-        ;; When recursing, called with `src_file_info_params` pre-populated
-        ;; But for selected files, need to get file info.
-        bit     is_not_selected_flag
-    IF_NC
 @retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
         jmp     @retry
 :
-    END_IF
-
         lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
@@ -11658,6 +11652,7 @@ failure:
 .proc CopyProcessSelectedFile
         jsr     CopyProcessFileImpl::selected
 
+        ;; TODO: Skip on failure
         bit     move_flag
     IF_NS
         jsr     UpdateWindowPaths
