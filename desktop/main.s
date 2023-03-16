@@ -9940,7 +9940,7 @@ done:   rts
 
 .proc DoCopyCommon
         copy    #$FF, copy_run_flag
-        copy    #0, move_flag
+        copy    #0, move_flag   ; TODO: Remove, redundant with callers?
         jsr     CopyProcessNotSelectedFile
         jsr     InvokeOperationCompleteCallback
         FALL_THROUGH_TO FinishOperation
@@ -11579,40 +11579,61 @@ a_dst:  .addr   dst_path_buf
 ;;; Handle copying of a file.
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
+
+;;; Used for these operations:
+;;; * File > Duplicate (via `not_selected` entry point) - operates on passed path, `operation_flags` = $C0
+;;; * Run a Shortcut (via `not_selected` entry point) - operates on passed path, `operation_flags` = $00
+;;; * File > Copy To - operates on selection, `operation_flags` = $00
+;;; * Drag/Drop (to non-Trash) - operates on selection, `operation_flags` = $00
+
 .proc CopyProcessFileImpl
         ;; Normal handling, via `CopyProcessSelectedFile`
 selected:
         copy    #$80, copy_run_flag
-        lda     #0
+        ;; Caller sets `move_flag` appropriately
+        lda     #0              ; new `is_not_selected_flag` value
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
         ;; Via File > Duplicate or copying to RAMCard
 not_selected:
-        lda     #$FF
+        ;; Caller sets `copy_run_flag` to $FF
+        ;; Caller sets `move_flag` to $00
+        lda     #$FF            ; new `is_not_selected_flag` value
 
         sta     is_not_selected_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
-        bit     operation_flags
+        bit     operation_flags ; CopyToRAM has N=1/V=1, otherwise N=0/V=0
         bvc     @not_run
         jsr     CheckVolBlocksFree           ; dst is a volume path (RAM Card)
 @not_run:
         bit     copy_run_flag
         bpl     get_src_info    ; never taken ???
-        bvs     L9A50
+        bvs     L9A50           ; taken if `not_selected` entry point was used
+
+        ;; ... therefore this check is redundant; will never be NE here
         is_not_selected_flag := *+1
         lda     #SELF_MODIFIED_BYTE
         bne     :+
-        lda     selected_window_id ; dragging from window?
-        jeq     CopyDir
 
-:       jsr     AppendSrcPathLastSegmentToDstPath
+        lda     selected_window_id ; dragging from desktop?
+        jeq     CopyDir            ; yes... copy just the volume's contents
+        ;; Note that this is different than when a shortcut is being
+        ;; copied; in that case if the parent is a volume, we create
+        ;; a corresponding folder.
+:
+        ;; ... therefore, operating on selected file/folder
+        jsr     AppendSrcPathLastSegmentToDstPath
         jmp     get_src_info
 
-        ;; Append filename to `dst_path_buf`
+        ;; `not_selected` entry point
+        ;; Append passed filename to `dst_path_buf`
 L9A50:  ldax    #filename_buf
         jsr     AppendFilenameToDstPath
 
+        ;; At this point, src and dst paths are set up.
+
+        ;; Copying a file
 get_src_info:
 @retry: jsr     GetSrcFileInfo
         beq     :+
@@ -11641,8 +11662,9 @@ store:  sta     is_dir_flag
 
         lda     copy_run_flag
         beq     success         ; never taken ???
-        jsr     CheckSpaceAndShowPrompt
-        bcs     failure
+        jsr     CheckSpaceAndShowPrompt ; TODO: Move into TryCreateDst
+        bcs     failure         ; TODO: We keep trying with other files in selection, unlike when recursing. Align?
+        ;; NOTE: Dialog has OK and Cancel; probably easiest to align on continuing the copy with other files, so fix other site?
 
         jsr     TryCreateDst
         bcs     failure
@@ -11680,6 +11702,7 @@ failure:
 
 ;;; ============================================================
 
+;;; TODO: Move closer to usage sites
 src_path_slash_index:
         .byte   0
 
@@ -12058,7 +12081,6 @@ retry:  MLI_CALL CREATE, create_params3
 yes:    jsr     ApplyFileInfoAndSize
         jmp     success
 
-        ;; PromptResult::cancel
 cancel: jmp     CloseFilesCancelDialog
 
 err:    jsr     ShowErrorAlertDst
@@ -12220,7 +12242,6 @@ retry:  MLI_CALL DESTROY, destroy_params
         bne     :+
         copy    #$80, all_flag
         bne     unlock          ; always
-        ;; PromptResult::cancel
 :       jmp     CloseFilesCancelDialog
 
 unlock: jsr     UnlockSrcFile
