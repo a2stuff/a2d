@@ -195,8 +195,7 @@ dialog_loop:
 
         lda     selected_index
         jsr     GetFilePathAddr
-        stax    $06
-        jsr     main::CopyPtr1ToBuf0
+        jsr     main::CopyToBuf0
 
         ldx     #$01
         lda     selected_index

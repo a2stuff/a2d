@@ -13347,15 +13347,14 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         copy16  copy_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
-        ptr1 := $06
-        copy16  copy_dialog_params::a_src, ptr1
-        jsr     CopyPtr1ToBuf0
+        ldax    copy_dialog_params::a_src
+        jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_copy_from
         jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
-        copy16  copy_dialog_params::a_dst, ptr1
-        jsr     CopyPtr1ToBuf0
+        ldax    copy_dialog_params::a_dst
+        jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 2, aux::str_copy_to
         jsr     ClearDestFileRectAndSetPos
         jsr     DrawDialogPathBuf0
@@ -13460,9 +13459,8 @@ GetSizeDialogProc::do_count := *
         copy16  delete_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
-        ptr1 := $06
-        copy16  delete_dialog_params::a_path, ptr1
-        jsr     CopyPtr1ToBuf0
+        ldax    delete_dialog_params::a_path
+        jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_file_colon
         jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
@@ -13648,9 +13646,8 @@ do_close:
     IF_EQ
         copy16  lock_unlock_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
-        ptr1 := $06
-        copy16  lock_unlock_dialog_params::a_path, ptr1
-        jsr     CopyPtr1ToBuf0
+        ldax    lock_unlock_dialog_params::a_path
+        jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_file_colon
         jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
@@ -14488,9 +14485,13 @@ ptr_str_files_suffix:
 
 ;;; ============================================================
 
-.proc CopyPtr1ToBuf0
+;;; Input: A,X = string to copy
+;;; Trashes: $06
+.proc CopyToBuf0
+        ptr1 := $06
+        stax    ptr1
         param_jump CopyPtr1ToBuf, path_buf0
-.endproc ; CopyPtr1ToBuf0
+.endproc ; CopyToBuf0
 
 ;;; ============================================================
 
