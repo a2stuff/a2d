@@ -9932,7 +9932,7 @@ done:   rts
         stx     stack_stash
 
         jsr     PrepCallbacksForEnumeration
-        jsr     DoCopyDialogPhase
+        jsr     OpenCopyProgressDialog
         jsr     EnumerationProcessSelectedFile
         jsr     PrepCallbacksForCopy
         FALL_THROUGH_TO DoCopyCommon
@@ -9957,7 +9957,7 @@ FinishOperation:
         tsx
         stx     stack_stash
         jsr     PrepCallbacksForEnumeration
-        jsr     DoDownloadDialogPhase
+        jsr     OpenDownloadProgressDialog
         jsr     EnumerationProcessSelectedFile
         jsr     PrepCallbacksForDownload
         jmp     DoCopyCommon
@@ -10082,16 +10082,16 @@ common:
         jsr     GetWindowPath
         jsr     CheckMoveOrCopy
 @store: sta     move_flag
-        jsr     DoCopyDialogPhase
+        jsr     OpenCopyProgressDialog
         jmp     iterate_selection
 
-@trash: jsr     DoDeleteDialogPhase
+@trash: jsr     OpenDeleteProgressDialog
         jmp     iterate_selection
 
-@lock:  jsr     DoLockDialogPhase
+@lock:  jsr     OpenLockProgressDialog
         jmp     iterate_selection
 
-@size:  jsr     DoGetSizeDialogPhase
+@size:  jsr     OpenGetSizeDialog
         jmp     iterate_selection
 
 ;;; Perform operation
@@ -11510,7 +11510,7 @@ a_src:  .addr   src_path_buf
 a_dst:  .addr   dst_path_buf
 .endparams
 
-.proc DoCopyDialogPhase
+.proc OpenCopyProgressDialog
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #CopyDialogEnumerationCallback, operation_enumeration_callback
         copy16  #CopyDialogCompleteCallback, operation_complete_callback
@@ -11526,7 +11526,7 @@ a_dst:  .addr   dst_path_buf
         copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
         jmp     RunCopyDialogProc
 .endproc ; CopyDialogCompleteCallback
-.endproc ; DoCopyDialogPhase
+.endproc ; OpenCopyProgressDialog
 
 .proc PrepCallbacksForCopy
         ldy     #kOpJTAddrsSize-1
@@ -11541,7 +11541,7 @@ a_dst:  .addr   dst_path_buf
 ;;; ============================================================
 ;;; "Download" - shares heavily with Copy
 
-.proc DoDownloadDialogPhase
+.proc OpenDownloadProgressDialog
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #DownloadDialogEnumerationCallback, operation_enumeration_callback
         copy16  #DownloadDialogCompleteCallback, operation_complete_callback
@@ -11557,7 +11557,7 @@ a_dst:  .addr   dst_path_buf
         copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
         jmp     DownloadDialogProc
 .endproc ; DownloadDialogCompleteCallback
-.endproc ; DoDownloadDialogPhase
+.endproc ; OpenDownloadProgressDialog
 
 .proc PrepCallbacksForDownload
         ldy     #kOpJTAddrsSize-1
@@ -12104,7 +12104,7 @@ count:  .word   0
 a_path: .addr   src_path_buf
 .endparams
 
-.proc DoDeleteDialogPhase
+.proc OpenDeleteProgressDialog
         copy    #DeleteDialogLifecycle::open, delete_dialog_params::phase
         copy16  #DeleteDialogConfirmCallback, operation_confirm_callback
         copy16  #DeleteDialogEnumerationCallback, operation_enumeration_callback
@@ -12136,8 +12136,7 @@ a_path: .addr   src_path_buf
         jmp     CloseFilesCancelDialogWithResult
 :       rts
 .endproc ; DeleteDialogConfirmCallback
-
-.endproc ; DoDeleteDialogPhase
+.endproc ; OpenDeleteProgressDialog
 
 ;;; ============================================================
 
@@ -12313,7 +12312,7 @@ count:  .word   0
 a_path: .addr   src_path_buf
 .endparams
 
-.proc DoLockDialogPhase
+.proc OpenLockProgressDialog
         copy    #LockDialogLifecycle::open, lock_unlock_dialog_params::phase
         copy16  #LockDialogEnumerationCallback, operation_enumeration_callback
         jsr     RunLockDialogProc
@@ -12330,7 +12329,7 @@ a_path: .addr   src_path_buf
         copy    #LockDialogLifecycle::close, lock_unlock_dialog_params::phase
         jmp     RunLockDialogProc
 .endproc ; LockDialogCompleteCallback
-.endproc ; DoLockDialogPhase
+.endproc ; OpenLockProgressDialog
 
 .proc PrepCallbacksForLock
         ldy     #kOpJTAddrsSize-1
@@ -12434,7 +12433,7 @@ a_files:        .addr  op_file_count
 a_blocks:       .addr  op_block_count
 .endparams
 
-.proc DoGetSizeDialogPhase
+.proc OpenGetSizeDialog
         copy    #0, get_size_dialog_params::phase
         copy16  #GetSizeDialogConfirmCallback, operation_confirm_callback
         copy16  #GetSizeDialogEnumerationCallback, operation_enumeration_callback
@@ -12456,7 +12455,7 @@ a_blocks:       .addr  op_block_count
         copy    #GetSizeDialogLifecycle::close, get_size_dialog_params::phase
         jmp     GetSizeDialogProc
 .endproc ; GetSizeDialogCompleteCallback
-.endproc ; DoGetSizeDialogPhase
+.endproc ; OpenGetSizeDialog
 
 ;;; ============================================================
 ;;; Most operations start by doing a traversal to just count
