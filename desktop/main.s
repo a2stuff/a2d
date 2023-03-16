@@ -14047,6 +14047,204 @@ ellipsify:
 .endproc ; DrawDialogPath
 
 ;;; ============================================================
+;;; Save/Restore window state at shutdown/launch
+
+.scope save_restore_windows
+        desktop_file_io_buf := IO_BUFFER
+        desktop_file_data_buf := $1800
+        kFileSize = 1 + 8 * .sizeof(DeskTopFileItem) + 1
+
+        DEFINE_CREATE_PARAMS create_params, str_desktop_file, ACCESS_DEFAULT, $F1
+        DEFINE_OPEN_PARAMS open_params, str_desktop_file, desktop_file_io_buf
+        DEFINE_READ_PARAMS read_params, desktop_file_data_buf, kFileSize
+        DEFINE_READ_PARAMS write_params, desktop_file_data_buf, kFileSize
+        DEFINE_CLOSE_PARAMS close_params
+str_desktop_file:
+        PASCAL_STRING kPathnameDeskTopState
+
+.proc Save
+        data_ptr := $06
+        winfo_ptr := $08
+
+        ;; Write file format version byte
+        copy    #kDeskTopFileVersion, desktop_file_data_buf
+
+        copy16  #desktop_file_data_buf+1, data_ptr
+
+        ;; Get first window pointer
+        MGTK_CALL MGTK::FrontWindow, window_id
+        lda     window_id
+        beq     finish
+        jsr     WindowLookup
+        stax    winfo_ptr
+        copy    #0, depth
+
+        ;; Is there a lower window?
+recurse_down:
+        next_ptr := $0A
+
+        ldy     #MGTK::Winfo::nextwinfo
+        copy16in (winfo_ptr),y, next_ptr
+        ora     next_ptr
+        beq     recurse_up      ; Nope - just finish.
+
+        ;; Yes, recurse
+        inc     depth
+        lda     winfo_ptr
+        pha
+        lda     winfo_ptr+1
+        pha
+
+        copy16  next_ptr, winfo_ptr
+        jmp     recurse_down
+
+recurse_up:
+        jsr     WriteWindowInfo
+        depth := *+1            ; Last window?
+        lda     #SELF_MODIFIED_BYTE
+        beq     finish          ; Yes - we're done!
+
+        dec     depth           ; No, pop the stack and write the next
+        pla
+        sta     winfo_ptr+1
+        pla
+        sta     winfo_ptr
+        jmp     recurse_up
+
+finish: ldy     #0              ; Write sentinel
+        tay
+        sta     (data_ptr),y
+
+        ;; Write out file, to current prefix.
+        jsr     WriteOutFile
+
+        ;; If DeskTop was copied to RAMCard, also write to original prefix.
+        jsr     GetCopiedToRAMCardFlag
+        bpl     exit
+
+        ;; * Can't use `src_path_buf`, that's holding external path to invoke
+        ;; * Can't use `dst_path_buf`, that's inside `IO_BUFFER`
+        param_call CopyDeskTopOriginalPrefix, tmp_path_buf
+
+        ;; Append '/'
+        ldy     tmp_path_buf
+        iny
+        lda     #'/'
+        sta     tmp_path_buf,y
+
+        ;; Append filename
+        ldx     #0
+:       inx
+        iny
+        copy    str_desktop_file,x, tmp_path_buf,y
+        cpx     str_desktop_file
+        bne     :-
+        sty     tmp_path_buf
+
+        ;; Write the file
+        lda     #<tmp_path_buf
+        sta     create_params::pathname
+        sta     open_params::pathname
+        lda     #>tmp_path_buf
+        sta     create_params::pathname+1
+        sta     open_params::pathname+1
+        jsr     WriteOutFile
+
+exit:   rts
+
+.proc WriteWindowInfo
+        path_ptr := $0A
+
+        ;; Find name
+        ldy     #MGTK::Winfo::window_id
+        lda     (winfo_ptr),y
+        pha                     ; A = window_id
+        jsr     GetWindowPath
+        stax    path_ptr
+
+        ;; Copy path in
+        .assert DeskTopFileItem::window_path = 0, error, "struct layout"
+        ldy     #::kPathBufferSize-1
+:       lda     (path_ptr),y
+        sta     (data_ptr),y
+        dey
+        bpl     :-
+
+        ;; Copy view_by in
+        pla                     ; A = window_id
+        tax
+        lda     win_view_by_table-1,x
+        ldy     #DeskTopFileItem::view_by
+        sta     (data_ptr),y
+
+        ;; Location - copy to `new_window_viewloc` as a temp location, then into data
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     (winfo_ptr),y
+        sta     new_window_viewloc,x
+        dey
+        dex
+        bpl     :-
+        ldy     #DeskTopFileItem::viewloc+.sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     new_window_viewloc,x
+        sta     (data_ptr),y
+        dey
+        dex
+        bpl     :-
+
+        ;; Bounds - copy to `new_window_maprect` as a temp location, then into data
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     (winfo_ptr),y
+        sta     new_window_maprect,x
+        dey
+        dex
+        bpl     :-
+        ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     new_window_maprect,x
+        sta     (data_ptr),y
+        dey
+        dex
+        bpl     :-
+
+        ;; Offset to next entry
+        add16_8 data_ptr, #.sizeof(DeskTopFileItem)
+        rts
+
+.endproc ; WriteWindowInfo
+
+window_id := findwindow_params::window_id
+
+.endproc ; Save
+
+.proc Open
+        MLI_CALL OPEN, open_params
+        rts
+.endproc ; Open
+
+.proc Close
+        MLI_CALL CLOSE, close_params
+        rts
+.endproc ; Close
+
+.proc WriteOutFile
+        MLI_CALL CREATE, create_params
+        jsr     Open
+        bcs     :+
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL WRITE, write_params
+        jsr     Close
+:       rts
+.endproc ; WriteOutFile
+
+.endscope ; save_restore_windows
+SaveWindows := save_restore_windows::Save
+
+;;; ============================================================
 ;;;
 ;;; Routines beyond this point are used by overlays
 ;;;
@@ -14617,206 +14815,6 @@ diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
         DEFINE_POINT coords, 0, 0
 
 .endproc ; CheckMouseMoved
-
-;;; ============================================================
-
-;;; ============================================================
-;;; Save/Restore window state at shutdown/launch
-
-.scope save_restore_windows
-        desktop_file_io_buf := IO_BUFFER
-        desktop_file_data_buf := $1800
-        kFileSize = 1 + 8 * .sizeof(DeskTopFileItem) + 1
-
-        DEFINE_CREATE_PARAMS create_params, str_desktop_file, ACCESS_DEFAULT, $F1
-        DEFINE_OPEN_PARAMS open_params, str_desktop_file, desktop_file_io_buf
-        DEFINE_READ_PARAMS read_params, desktop_file_data_buf, kFileSize
-        DEFINE_READ_PARAMS write_params, desktop_file_data_buf, kFileSize
-        DEFINE_CLOSE_PARAMS close_params
-str_desktop_file:
-        PASCAL_STRING kPathnameDeskTopState
-
-.proc Save
-        data_ptr := $06
-        winfo_ptr := $08
-
-        ;; Write file format version byte
-        copy    #kDeskTopFileVersion, desktop_file_data_buf
-
-        copy16  #desktop_file_data_buf+1, data_ptr
-
-        ;; Get first window pointer
-        MGTK_CALL MGTK::FrontWindow, window_id
-        lda     window_id
-        beq     finish
-        jsr     WindowLookup
-        stax    winfo_ptr
-        copy    #0, depth
-
-        ;; Is there a lower window?
-recurse_down:
-        next_ptr := $0A
-
-        ldy     #MGTK::Winfo::nextwinfo
-        copy16in (winfo_ptr),y, next_ptr
-        ora     next_ptr
-        beq     recurse_up      ; Nope - just finish.
-
-        ;; Yes, recurse
-        inc     depth
-        lda     winfo_ptr
-        pha
-        lda     winfo_ptr+1
-        pha
-
-        copy16  next_ptr, winfo_ptr
-        jmp     recurse_down
-
-recurse_up:
-        jsr     WriteWindowInfo
-        depth := *+1            ; Last window?
-        lda     #SELF_MODIFIED_BYTE
-        beq     finish          ; Yes - we're done!
-
-        dec     depth           ; No, pop the stack and write the next
-        pla
-        sta     winfo_ptr+1
-        pla
-        sta     winfo_ptr
-        jmp     recurse_up
-
-finish: ldy     #0              ; Write sentinel
-        tay
-        sta     (data_ptr),y
-
-        ;; Write out file, to current prefix.
-        jsr     WriteOutFile
-
-        ;; If DeskTop was copied to RAMCard, also write to original prefix.
-        jsr     GetCopiedToRAMCardFlag
-        bpl     exit
-
-        ;; * Can't use `src_path_buf`, that's holding external path to invoke
-        ;; * Can't use `dst_path_buf`, that's inside `IO_BUFFER`
-        param_call CopyDeskTopOriginalPrefix, tmp_path_buf
-
-        ;; Append '/'
-        ldy     tmp_path_buf
-        iny
-        lda     #'/'
-        sta     tmp_path_buf,y
-
-        ;; Append filename
-        ldx     #0
-:       inx
-        iny
-        copy    str_desktop_file,x, tmp_path_buf,y
-        cpx     str_desktop_file
-        bne     :-
-        sty     tmp_path_buf
-
-        ;; Write the file
-        lda     #<tmp_path_buf
-        sta     create_params::pathname
-        sta     open_params::pathname
-        lda     #>tmp_path_buf
-        sta     create_params::pathname+1
-        sta     open_params::pathname+1
-        jsr     WriteOutFile
-
-exit:   rts
-
-.proc WriteWindowInfo
-        path_ptr := $0A
-
-        ;; Find name
-        ldy     #MGTK::Winfo::window_id
-        lda     (winfo_ptr),y
-        pha                     ; A = window_id
-        jsr     GetWindowPath
-        stax    path_ptr
-
-        ;; Copy path in
-        .assert DeskTopFileItem::window_path = 0, error, "struct layout"
-        ldy     #::kPathBufferSize-1
-:       lda     (path_ptr),y
-        sta     (data_ptr),y
-        dey
-        bpl     :-
-
-        ;; Copy view_by in
-        pla                     ; A = window_id
-        tax
-        lda     win_view_by_table-1,x
-        ldy     #DeskTopFileItem::view_by
-        sta     (data_ptr),y
-
-        ;; Location - copy to `new_window_viewloc` as a temp location, then into data
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     (winfo_ptr),y
-        sta     new_window_viewloc,x
-        dey
-        dex
-        bpl     :-
-        ldy     #DeskTopFileItem::viewloc+.sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     new_window_viewloc,x
-        sta     (data_ptr),y
-        dey
-        dex
-        bpl     :-
-
-        ;; Bounds - copy to `new_window_maprect` as a temp location, then into data
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
-        ldx     #.sizeof(MGTK::Rect)-1
-:       lda     (winfo_ptr),y
-        sta     new_window_maprect,x
-        dey
-        dex
-        bpl     :-
-        ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
-        ldx     #.sizeof(MGTK::Rect)-1
-:       lda     new_window_maprect,x
-        sta     (data_ptr),y
-        dey
-        dex
-        bpl     :-
-
-        ;; Offset to next entry
-        add16_8 data_ptr, #.sizeof(DeskTopFileItem)
-        rts
-
-.endproc ; WriteWindowInfo
-
-window_id := findwindow_params::window_id
-
-.endproc ; Save
-
-.proc Open
-        MLI_CALL OPEN, open_params
-        rts
-.endproc ; Open
-
-.proc Close
-        MLI_CALL CLOSE, close_params
-        rts
-.endproc ; Close
-
-.proc WriteOutFile
-        MLI_CALL CREATE, create_params
-        jsr     Open
-        bcs     :+
-        lda     open_params::ref_num
-        sta     write_params::ref_num
-        sta     close_params::ref_num
-        MLI_CALL WRITE, write_params
-        jsr     Close
-:       rts
-.endproc ; WriteOutFile
-
-.endscope ; save_restore_windows
-SaveWindows := save_restore_windows::Save
 
 ;;; ============================================================
 
