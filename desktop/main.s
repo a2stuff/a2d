@@ -1581,7 +1581,7 @@ secondary:
 ;;; ============================================================
 
 .proc CmdAbout
-        param_jump InvokeDialogProc, kIndexAboutDialog, $0000
+        jmp     AboutDialogProc
 .endproc ; CmdAbout
 
 ;;; ============================================================
@@ -2259,7 +2259,7 @@ a_path: .addr   0
         DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
 start:  copy    #NewFolderDialogState::open, new_folder_dialog_params::phase
-        param_call InvokeDialogProc, kIndexNewFolderDialog, new_folder_dialog_params
+        jsr     NewFolderDialogProc
 
 L4FC6:  lda     active_window_id
         beq     done            ; command should not be active without a window
@@ -2267,7 +2267,7 @@ L4FC6:  lda     active_window_id
         stax    new_folder_dialog_params::a_path
 
         copy    #NewFolderDialogState::run, new_folder_dialog_params::phase
-        param_call InvokeDialogProc, kIndexNewFolderDialog, new_folder_dialog_params
+        jsr     NewFolderDialogProc
         jne     done            ; Canceled
 
         ;; Copy path
@@ -2287,7 +2287,7 @@ L4FC6:  lda     active_window_id
 
 success:
         copy    #NewFolderDialogState::close, new_folder_dialog_params::phase
-        param_call InvokeDialogProc, kIndexNewFolderDialog, new_folder_dialog_params
+        jsr     NewFolderDialogProc
         param_call FindLastPathSegment, src_path_buf
         sty     src_path_buf
         jsr     FindWindowForSrcPath
@@ -10666,7 +10666,7 @@ write_protected_flag:
         .byte   0
 
 .proc RunGetInfoDialogProc
-        param_jump InvokeDialogProc, kIndexGetInfoDialog, get_info_dialog_params
+        jmp     GetInfoDialogProc
 .endproc ; RunGetInfoDialogProc
 .endproc ; DoGetInfo
 
@@ -10912,7 +10912,7 @@ end_filerecord_and_icon_update:
 
 .proc RunDialogProc
         sta     rename_dialog_params
-        param_jump InvokeDialogProc, kIndexRenameDialog, rename_dialog_params
+        jmp     RenameDialogProc
 .endproc ; RunDialogProc
 
 ;;; N bit ($80) set if a window title was changed
@@ -11221,7 +11221,7 @@ success:
 
 .proc RunDialogProc
         sta     duplicate_dialog_params
-        param_jump InvokeDialogProc, kIndexDuplicateDialog, duplicate_dialog_params
+        jmp     DuplicateDialogProc
 .endproc ; RunDialogProc
 
 ;;; N bit ($80) set if anything succeeded (and window needs refreshing)
@@ -11545,13 +11545,13 @@ a_dst:  .addr   dst_path_buf
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #DownloadDialogEnumerationCallback, operation_enumeration_callback
         copy16  #DownloadDialogCompleteCallback, operation_complete_callback
-        param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
+        jmp     DownloadDialogProc
 .endproc ; DoDownloadDialogPhase
 
 .proc DownloadDialogEnumerationCallback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
-        param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
+        jmp     DownloadDialogProc
 .endproc ; DownloadDialogEnumerationCallback
 
 .proc PrepCallbacksForDownload
@@ -11567,7 +11567,7 @@ a_dst:  .addr   dst_path_buf
 
 .proc DownloadDialogCompleteCallback
         copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
-        param_jump InvokeDialogProc, kIndexDownloadDialog, copy_dialog_params
+        jmp     DownloadDialogProc
 .endproc ; DownloadDialogCompleteCallback
 
 .proc DownloadDialogTooLargeCallback
@@ -11766,7 +11766,7 @@ done:   jsr     RemoveSrcPathSegment
 ;;; ============================================================
 
 .proc RunCopyDialogProc
-        param_jump InvokeDialogProc, kIndexCopyDialog, copy_dialog_params
+        jmp     CopyDialogProc
 .endproc ; RunCopyDialogProc
 
 ;;; ============================================================
@@ -12275,12 +12275,12 @@ next_file:
 ;;; Delete directory when exiting via traversal
 
 .proc DeleteFinishDirectory
-        param_call InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
+        jsr     DeleteDialogProc
         jmp     DeleteFileCommon
 .endproc ; DeleteFinishDirectory
 
 .proc RunDeleteDialogProc
-        param_jump InvokeDialogProc, kIndexDeleteDialog, delete_dialog_params
+        jmp     DeleteDialogProc
 .endproc ; RunDeleteDialogProc
 
 ;;; ============================================================
@@ -12338,11 +12338,11 @@ a_path: .addr   src_path_buf
 
 .proc LockDialogCompleteCallback
         copy    #LockDialogLifecycle::close, lock_unlock_dialog_params::phase
-        jmp     RunLockDialogProc
+        FALL_THROUGH_TO RunLockDialogProc
 .endproc ; LockDialogCompleteCallback
 
 .proc RunLockDialogProc
-        param_jump InvokeDialogProc, kIndexLockDialog, lock_unlock_dialog_params
+        jmp     LockDialogProc
 .endproc ; RunLockDialogProc
 
 ;;; ============================================================
@@ -12438,25 +12438,24 @@ a_blocks:       .addr  op_block_count
         copy    #0, get_size_dialog_params::phase
         copy16  #GetSizeDialogConfirmCallback, operation_confirm_callback
         copy16  #GetSizeDialogEnumerationCallback, operation_enumeration_callback
-        param_call InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
+        jsr     GetSizeDialogProc
         copy16  #GetSizeDialogCompleteCallback, operation_complete_callback
         rts
 .endproc ; DoGetSizeDialogPhase
 
 .proc GetSizeDialogEnumerationCallback
         copy    #GetSizeDialogLifecycle::count, get_size_dialog_params::phase
-        param_jump InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
+        jmp     GetSizeDialogProc
 .endproc ; GetSizeDialogEnumerationCallback
 
 .proc GetSizeDialogConfirmCallback
         copy    #GetSizeDialogLifecycle::prompt, get_size_dialog_params::phase
-        param_jump InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
+        jmp     GetSizeDialogProc
 .endproc ; GetSizeDialogConfirmCallback
 
 .proc GetSizeDialogCompleteCallback
         copy    #GetSizeDialogLifecycle::close, get_size_dialog_params::phase
-        param_jump InvokeDialogProc, kIndexGetSizeDialog, get_size_dialog_params
-
+        jmp     GetSizeDialogProc
 .endproc ; GetSizeDialogCompleteCallback
 
 ;;; ============================================================
@@ -12890,7 +12889,7 @@ match:  lda     flag
 
 .proc DecFileCountAndRunCopyDialogProc
         sub16   op_file_count, #1, copy_dialog_params::count
-        param_jump InvokeDialogProc, kIndexCopyDialog, copy_dialog_params
+        jmp     CopyDialogProc
 .endproc ; DecFileCountAndRunCopyDialogProc
 
 ;;; ============================================================
@@ -13038,50 +13037,6 @@ appleworks:
 
         jmp     SetSrcFileInfo
 .endproc ; ApplyCaseBits
-
-;;; ============================================================
-;;; Dialog Proc Invocation
-
-kNumDialogTypes = 10
-
-kIndexAboutDialog       = 0
-kIndexCopyDialog        = 1
-kIndexDeleteDialog      = 2
-kIndexNewFolderDialog   = 3
-kIndexGetInfoDialog     = 4
-kIndexLockDialog        = 5
-kIndexRenameDialog      = 6
-kIndexDownloadDialog    = 7
-kIndexGetSizeDialog     = 8
-kIndexDuplicateDialog   = 9
-
-dialog_proc_table:
-        .addr   AboutDialogProc
-        .addr   CopyDialogProc
-        .addr   DeleteDialogProc
-        .addr   NewFolderDialogProc
-        .addr   GetInfoDialogProc
-        .addr   LockDialogProc
-        .addr   RenameDialogProc
-        .addr   DownloadDialogProc
-        .addr   GetSizeDialogProc
-        .addr   DuplicateDialogProc
-        ASSERT_ADDRESS_TABLE_SIZE dialog_proc_table, kNumDialogTypes
-
-dialog_param_addr:
-        .addr   0
-
-.proc InvokeDialogProc
-        stax    dialog_param_addr
-        tya
-        asl     a
-        tax
-        copy16  dialog_proc_table,x, @jump_addr
-
-        @jump_addr := *+1
-        jmp     SELF_MODIFIED
-.endproc ; InvokeDialogProc
-
 
 ;;; ============================================================
 ;;; Message handler for OK/Cancel dialog
@@ -13363,11 +13318,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
 ;;; ============================================================
 
 .proc CopyDialogProc
-        ptr := $6
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #copy_dialog_params::phase - copy_dialog_params
-        lda     (ptr),y         ; `CopyDialogLifecycle`
+        lda     copy_dialog_params::phase
 
         ;; --------------------------------------------------
         cmp     #CopyDialogLifecycle::open
@@ -13379,8 +13330,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ;; --------------------------------------------------
         cmp     #CopyDialogLifecycle::count
     IF_EQ
-        ldy     #copy_dialog_params::count - copy_dialog_params
-        copy16in (ptr),y, file_count
+        copy16   copy_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
         bit     move_flag
       IF_NC
@@ -13394,21 +13344,17 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ;; --------------------------------------------------
         cmp     #CopyDialogLifecycle::show
     IF_EQ
-        ldy     #copy_dialog_params::count - copy_dialog_params
-        copy16in (ptr),y, file_count
+        copy16  copy_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #copy_dialog_params::a_src - copy_dialog_params
-        jsr     DereferencePtrToAddr
+        ptr1 := $06
+        copy16  copy_dialog_params::a_src, ptr1
         jsr     CopyPtr1ToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_copy_from
         jsr     ClearTargetFileRectAndSetPos
         jsr     DrawDialogPathBuf0
 
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #copy_dialog_params::a_dst - copy_dialog_params
-        jsr     DereferencePtrToAddr
+        copy16  copy_dialog_params::a_dst, ptr1
         jsr     CopyPtr1ToBuf0
         param_call DrawProgressDialogLabel, 2, aux::str_copy_to
         jsr     ClearDestFileRectAndSetPos
@@ -13431,11 +13377,7 @@ DownloadDialogProc := CopyDialogProc
 ;;; "Get Size" dialog
 
 .proc GetSizeDialogProc
-        ptr := $6
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #get_size_dialog_params::phase - get_size_dialog_params
-        lda     (ptr),y
+        lda     get_size_dialog_params::phase
 
         ;; --------------------------------------------------
         cmp     #GetSizeDialogLifecycle::open
@@ -13452,18 +13394,18 @@ DownloadDialogProc := CopyDialogProc
     IF_EQ
 GetSizeDialogProc::do_count := *
         ;; File Count
-        ldy     #get_size_dialog_params::a_files - get_size_dialog_params
-        jsr     DereferencePtrToAddr
-        copy16in (ptr),y, file_count
+        ptr1 := $06
+        copy16  get_size_dialog_params::a_files, ptr1
+        ldy     #0
+        copy16in (ptr1),y, file_count
         jsr     ComposeFileCountString
         jsr     SetPortForDialogWindow
         param_call DrawDialogLabel, 1 | DDL_VALUE, str_file_count
 
         ;; Size
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #get_size_dialog_params::a_blocks - get_size_dialog_params
-        jsr     DereferencePtrToAddr
-        copy16in (ptr),y, file_count
+        copy16  get_size_dialog_params::a_blocks, ptr1
+        ldy     #0
+        copy16in (ptr1),y, file_count
 
         ldax    file_count
         jsr     ComposeSizeString
@@ -13494,11 +13436,7 @@ GetSizeDialogProc::do_count := *
 ;;; "Delete File" dialog
 
 .proc DeleteDialogProc
-        ptr := $06
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #delete_dialog_params::phase - delete_dialog_params
-        lda     (ptr),y         ; `DeleteDialogLifecycle`
+        lda     delete_dialog_params::phase
 
         ;; --------------------------------------------------
         cmp     #DeleteDialogLifecycle::open
@@ -13510,8 +13448,7 @@ GetSizeDialogProc::do_count := *
         ;; --------------------------------------------------
         cmp     #DeleteDialogLifecycle::count
     IF_EQ
-        ldy     #delete_dialog_params::count - delete_dialog_params
-        copy16in (ptr),y, file_count
+        copy16   delete_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
         param_call DrawProgressDialogLabel, 0, aux::str_delete_count
         jmp     DrawFileCountWithSuffix
@@ -13520,13 +13457,11 @@ GetSizeDialogProc::do_count := *
         ;; --------------------------------------------------
         cmp     #DeleteDialogLifecycle::show
     IF_EQ
-        ldy     #delete_dialog_params::count - delete_dialog_params
-        copy16in (ptr),y, file_count
+        copy16  delete_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #delete_dialog_params::a_path - delete_dialog_params
-        jsr     DereferencePtrToAddr
+        ptr1 := $06
+        copy16  delete_dialog_params::a_path, ptr1
         jsr     CopyPtr1ToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_file_colon
         jsr     ClearTargetFileRectAndSetPos
@@ -13544,10 +13479,7 @@ GetSizeDialogProc::do_count := *
 ;;; "New Folder" dialog
 
 .proc NewFolderDialogProc
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #new_folder_dialog_params::phase - new_folder_dialog_params
-        lda     ($06),y
+        lda     new_folder_dialog_params::phase
 
         ;; --------------------------------------------------
         cmp     #NewFolderDialogState::open
@@ -13565,9 +13497,7 @@ GetSizeDialogProc::do_count := *
 
         copy    #$80, has_input_field_flag
         copy    #0, prompt_button_flags
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #new_folder_dialog_params::a_path - new_folder_dialog_params
-        copy16in ($06),y, $08
+        copy16  new_folder_dialog_params::a_path, $08
         param_call CopyPtr2ToBuf, path_buf0
         param_call CopyPtr2ToBuf, path_buf4
         jsr     SplitPathBuf4
@@ -13622,19 +13552,14 @@ do_close:
 ;;; "Get Info" dialog
 
 .proc GetInfoDialogProc
-        ptr := $6
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #get_info_dialog_params::state - get_info_dialog_params
-        lda     (ptr),y
+        lda     get_info_dialog_params::state
 
         ;; --------------------------------------------------
         ;; GetInfoDialogState::prepare_*
     IF_NS
         ;; Draw the field labels (e.g. "Size:")
         copy    #0, has_input_field_flag
-        ;; ldy     #get_info_dialog_params::state - get_info_dialog_params
-        lda     (ptr),y
+        lda     get_info_dialog_params::state
         pha
         lsr     a               ; bit 1 set if multiple
         lsr     a               ; so configure buttons appropriately
@@ -13671,21 +13596,12 @@ do_close:
         cmp     #GetInfoDialogState::prompt
     IF_NE
         jsr     SetPortForDialogWindow
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #get_info_dialog_params::state - get_info_dialog_params
-        lda     (ptr),y
+        lda     get_info_dialog_params::state
         ora     #DDL_VALUE
-        sta     row
+        tay
 
         ;; Draw the string at `get_info_dialog_params::a_str`
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #get_info_dialog_params::a_str - get_info_dialog_params + 1
-        lda     (ptr),y
-        tax
-        dey
-        lda     (ptr),y
-        row := *+1
-        ldy     #SELF_MODIFIED_BYTE
+        ldax    get_info_dialog_params::a_str
         jmp     DrawDialogLabel
     END_IF
 
@@ -13704,11 +13620,7 @@ do_close:
 ;;; "Lock"/"Unlock" dialog
 
 .proc LockDialogProc
-        ptr := $06
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #lock_unlock_dialog_params::phase - lock_unlock_dialog_params
-        lda     (ptr),y         ; `LockDialogLifecycle`
+        lda     lock_unlock_dialog_params::phase
 
         ;; --------------------------------------------------
         cmp     #LockDialogLifecycle::open
@@ -13720,8 +13632,7 @@ do_close:
         ;; --------------------------------------------------
         cmp     #LockDialogLifecycle::count
     IF_EQ
-        ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
-        copy16in (ptr),y, file_count
+        copy16  lock_unlock_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
         bit     unlock_flag
       IF_NS
@@ -13735,12 +13646,10 @@ do_close:
         ;; --------------------------------------------------
         cmp     #LockDialogLifecycle::show
     IF_EQ
-        ldy     #lock_unlock_dialog_params::count - lock_unlock_dialog_params
-        copy16in (ptr),y, file_count
+        copy16  lock_unlock_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #lock_unlock_dialog_params::a_path - lock_unlock_dialog_params
-        jsr     DereferencePtrToAddr
+        ptr1 := $06
+        copy16  lock_unlock_dialog_params::a_path, ptr1
         jsr     CopyPtr1ToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_file_colon
         jsr     ClearTargetFileRectAndSetPos
@@ -13758,11 +13667,7 @@ do_close:
 ;;; "Rename" dialog
 
 .proc RenameDialogProc
-        params_ptr := $06
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #rename_dialog_params::state - rename_dialog_params
-        lda     (params_ptr),y
+        lda     rename_dialog_params::state
 
         ;; ----------------------------------------
         cmp     #RenameDialogState::open
@@ -13772,9 +13677,7 @@ do_close:
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
         param_call DrawDialogTitle, aux::label_rename_icon
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #rename_dialog_params::a_path - rename_dialog_params
-        copy16in (params_ptr),y, $08
+        copy16  rename_dialog_params::a_path, $08
         param_call CopyPtr2ToBuf, text_input_buf
         param_call DrawDialogLabel, 2, aux::str_rename_old
         param_call DrawString, text_input_buf
@@ -13808,11 +13711,7 @@ do_close:
 ;;; "Duplicate" dialog
 
 .proc DuplicateDialogProc
-        params_ptr := $06
-
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #duplicate_dialog_params::state - duplicate_dialog_params
-        lda     (params_ptr),y
+        lda     duplicate_dialog_params::state
 
         ;; --------------------------------------------------
         cmp     #DuplicateDialogState::open
@@ -13822,9 +13721,7 @@ do_close:
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
         param_call DrawDialogTitle, aux::label_duplicate_icon
-        jsr     CopyDialogParamAddrToPtr
-        ldy     #duplicate_dialog_params::a_path - duplicate_dialog_params
-        copy16in (params_ptr),y, $08
+        copy16  duplicate_dialog_params::a_path, $08
         param_call CopyPtr2ToBuf, text_input_buf
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
         param_call DrawString, text_input_buf
@@ -13853,30 +13750,6 @@ do_close:
         jsr     ClosePromptDialog
         return  #1
 .endproc ; DuplicateDialogProc
-
-;;; ============================================================
-
-.proc CopyDialogParamAddrToPtr
-        copy16  dialog_param_addr, $06
-        rts
-.endproc ; CopyDialogParamAddrToPtr
-
-;;; ============================================================
-;;; Convert a pointer-to-pointer to just a pointer.
-;;; Inputs: $06,Y references an address
-;;; Outputs: $06 set to that address, and Y=0 for quick use
-
-.proc DereferencePtrToAddr
-        ptr := $06
-        lda     (ptr),y
-        tax
-        iny
-        lda     (ptr),y
-        sta     ptr+1
-        stx     ptr
-        ldy     #0
-        rts
-.endproc ; DereferencePtrToAddr
 
 ;;; ============================================================
 
