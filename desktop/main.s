@@ -11662,10 +11662,6 @@ store:  sta     is_dir_flag
 
         lda     copy_run_flag
         beq     success         ; never taken ???
-        jsr     CheckSpaceAndShowPrompt ; TODO: Move into TryCreateDst
-        bcs     failure         ; TODO: We keep trying with other files in selection, unlike when recursing. Align?
-        ;; NOTE: Dialog has OK and Cancel; probably easiest to align on continuing the copy with other files, so fix other site?
-
         jsr     TryCreateDst
         bcs     failure
 
@@ -11771,9 +11767,6 @@ regular_file:
         jeq     CloseFilesCancelDialog
         bne     done            ; always
     END_IF
-
-        jsr     CheckSpaceAndShowPrompt
-        jcs     CloseFilesCancelDialog
 
         jsr     TryCreateDst
         bcs     done
@@ -12038,6 +12031,9 @@ src_eof_flag:
 ;;; ============================================================
 
 .proc TryCreateDst
+        jsr     CheckSpaceAndShowPrompt
+        bcs     failure
+
         ;; Copy file_type, aux_type, storage_type
         ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
 :       lda     src_file_info_params::file_type,x

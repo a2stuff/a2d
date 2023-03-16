@@ -117,6 +117,8 @@
 
 * Launch DeskTop. Try to move a file (drag on same volume) where there is not enough space to make a temporary copy. Verify that the error message says that the file is too large to move.
 * Launch DeskTop. Try to copy a file (drag to different volume) where there is not enough space to make the copy. Verify that the error message says that the file is too large to copy.
+* Launch DeskTop. Drag multiple selected files to a different voluem, where one of the middle files will be too large to fit on the target volume but that subsequently selected files will fit. Verify that an error message says that the file is too large to copy, and that clicking OK continues to copy the remaining files.
+* Launch DeskTop. Drag a single folder or volume containing multiple files to a different voluem, where one of the files will be too large to fit on the target volume but all other files will fit. Verify that an error message says that the file is too large to copy, and that clicking OK continues to copy the remaining files.
 
 * Launch DeskTop. Open a volume window. Select volume icons on the desktop. Switch window's view to by Name. Verify that the volume icons are still selected, and that File > Get Info is still enabled (and shows the volume info). Switch window's view back to as Icons. Verify that the desktop volume icons are still selected.
 * Launch DeskTop. Open a window containing file icons. Select one or more file icons in the window. Select a different View option. Verify that the icons in the window remain selected.
