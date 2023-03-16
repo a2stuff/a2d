@@ -10131,6 +10131,22 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         ;; During selection iteration, allow Escape to cancel the operation.
         jsr     CheckCancel
 
+        ;; If copy, validate the source vs. target during enumeration phase
+        ;; NOTE: Here rather than in `CopyProcessSelectedFile` because we don't
+        ;; run this for copy using paths (i.e. Duplicate, Copy to RAMCard)
+        lda     do_op_flag
+        bne     :+
+        bit     operation_flags
+        bmi     :+
+        bit     copy_delete_flags
+        bmi     :+
+        jsr     CopyPathsFromBufsToSrcAndDst
+        jsr     CheckRecursion
+        jne     ShowErrorAlert
+        jsr     AppendSrcPathLastSegmentToDstPath
+        jsr     CheckBadReplacement
+        jne     ShowErrorAlert
+:
         jsr     OpProcessSelectedFile
 
 next_icon:
@@ -12480,18 +12496,6 @@ callbacks_for_size_or_count:
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
 .proc EnumerationProcessSelectedFile
-        ;; If copy, validate the source vs. target
-        bit     operation_flags
-        bmi     :+
-        bit     copy_delete_flags
-        bmi     :+
-        jsr     CopyPathsFromBufsToSrcAndDst
-        jsr     CheckRecursion
-        jne     ShowErrorAlert
-        jsr     AppendSrcPathLastSegmentToDstPath
-        jsr     CheckBadReplacement
-        jne     ShowErrorAlert
-:
         jsr     CopyPathsFromBufsToSrcAndDst
 @retry: jsr     GetSrcFileInfo
         beq     :+
