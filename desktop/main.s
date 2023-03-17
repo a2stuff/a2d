@@ -11721,12 +11721,6 @@ failure:
 .endproc ; CopyProcessSelectedFile
 
 ;;; ============================================================
-
-;;; TODO: Move closer to usage sites
-src_path_slash_index:
-        .byte   0
-
-;;; ============================================================
 ;;; If moving, delete src file/directory.
 
 .proc CopyFinishDirectory
@@ -11762,7 +11756,6 @@ done:   rts
         jsr     DecFileCountAndRunCopyDialogProc
 
         ;; Called with `src_file_info_params` pre-populated
-        lda     file_entry_buf + FileEntry::file_type
         lda     src_file_info_params::storage_type
         cmp     #ST_LINKED_DIRECTORY
         bne     regular_file
@@ -12790,6 +12783,9 @@ loop:   iny
         ldax    #path_buf4
         jmp     CopyToDstPath
 .endproc ; CopyPathsFromBufsToSrcAndDst
+
+src_path_slash_index:
+        .byte   0
 
 ;;; ============================================================
 ;;; Assuming CopyPathsFromBufsToSrcAndDst has been called, append
