@@ -11543,17 +11543,17 @@ a_dst:  .addr   dst_path_buf
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #CopyDialogEnumerationCallback, operation_enumeration_callback
         copy16  #CopyDialogCompleteCallback, operation_complete_callback
-        jmp     RunCopyDialogProc
+        jmp     CopyDialogProc
 
 .proc CopyDialogEnumerationCallback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
-        jmp     RunCopyDialogProc
+        jmp     CopyDialogProc
 .endproc ; CopyDialogEnumerationCallback
 
 .proc CopyDialogCompleteCallback
         copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
-        jmp     RunCopyDialogProc
+        jmp     CopyDialogProc
 .endproc ; CopyDialogCompleteCallback
 .endproc ; OpenCopyProgressDialog
 
@@ -11802,14 +11802,8 @@ done:   jsr     RemoveSrcPathSegment
 .proc DecFileCountAndRunCopyDialogProc
         jsr     DecrementOpFileCount
         stax    copy_dialog_params::count
-        FALL_THROUGH_TO RunCopyDialogProc
-.endproc ; DecFileCountAndRunCopyDialogProc
-
-;;; ============================================================
-
-.proc RunCopyDialogProc
         jmp     CopyDialogProc
-.endproc ; RunCopyDialogProc
+.endproc ; DecFileCountAndRunCopyDialogProc
 
 ;;; ============================================================
 
@@ -12151,14 +12145,14 @@ a_path: .addr   src_path_buf
         copy    #DeleteDialogLifecycle::open, delete_dialog_params::phase
         copy16  #DeleteDialogConfirmCallback, operation_confirm_callback
         copy16  #DeleteDialogEnumerationCallback, operation_enumeration_callback
-        jsr     RunDeleteDialogProc
+        jsr     DeleteDialogProc
         copy16  #DeleteDialogCompleteCallback, operation_complete_callback
         rts
 
 .proc DeleteDialogEnumerationCallback
         stax    delete_dialog_params::count
         copy    #DeleteDialogLifecycle::count, delete_dialog_params::phase
-        jmp     RunDeleteDialogProc
+        jmp     DeleteDialogProc
 .endproc ; DeleteDialogEnumerationCallback
 
 .proc DeleteDialogConfirmCallback
@@ -12195,7 +12189,7 @@ a_path: .addr   src_path_buf
 
 .proc DeleteDialogCompleteCallback
         copy    #DeleteDialogLifecycle::close, delete_dialog_params::phase
-        jmp     RunDeleteDialogProc
+        jmp     DeleteDialogProc
 .endproc ; DeleteDialogCompleteCallback
 
 ;;; ============================================================
@@ -12284,12 +12278,8 @@ done:   rts
 .proc DecFileCountAndRunDeleteDialogProc
         jsr     DecrementOpFileCount
         stax    delete_dialog_params::count
-        FALL_THROUGH_TO RunDeleteDialogProc
-.endproc ; DecFileCountAndRunDeleteDialogProc
-
-.proc RunDeleteDialogProc
         jmp     DeleteDialogProc
-.endproc ; RunDeleteDialogProc
+.endproc ; DecFileCountAndRunDeleteDialogProc
 
 ;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
@@ -12352,19 +12342,19 @@ a_path: .addr   src_path_buf
 .proc OpenLockProgressDialog
         copy    #LockDialogLifecycle::open, lock_unlock_dialog_params::phase
         copy16  #LockDialogEnumerationCallback, operation_enumeration_callback
-        jsr     RunLockDialogProc
+        jsr     LockDialogProc
         copy16  #LockDialogCompleteCallback, operation_complete_callback
         rts
 
 .proc LockDialogEnumerationCallback
         stax    lock_unlock_dialog_params::count
         copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
-        jmp     RunLockDialogProc
+        jmp     LockDialogProc
 .endproc ; LockDialogEnumerationCallback
 
 .proc LockDialogCompleteCallback
         copy    #LockDialogLifecycle::close, lock_unlock_dialog_params::phase
-        jmp     RunLockDialogProc
+        jmp     LockDialogProc
 .endproc ; LockDialogCompleteCallback
 .endproc ; OpenLockProgressDialog
 
@@ -12449,12 +12439,8 @@ ok:     rts
 .proc DecFileCountAndRunLockDialogProc
         jsr     DecrementOpFileCount
         stax    lock_unlock_dialog_params::count
-        FALL_THROUGH_TO RunLockDialogProc
-.endproc ; DecFileCountAndRunLockDialogProc
-
-.proc RunLockDialogProc
         jmp     LockDialogProc
-.endproc ; RunLockDialogProc
+.endproc ; DecFileCountAndRunLockDialogProc
 
 ;;; ============================================================
 ;;; "Get Size" dialog state and logic
