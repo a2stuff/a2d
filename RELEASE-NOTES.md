@@ -89,6 +89,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve performance of Copy/Move, Delete, and Lock/Unlock commands.
 * Special > Lock and Special > Unlock now work on folders.
 * Allow continuing a copy of nested files if one file is too large to fit.
+* Ensure correct paths are visible when displaying alerts during operations.
 
 ### Selector
 

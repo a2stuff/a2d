@@ -546,6 +546,10 @@
 
 * Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
 
+* Launch DeskTop. Create a new folder. Select the folder, and use Special > Lock. Add a file to the folder. Ensure that the file is not locked. Select the folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the folder's path is visible in the progress dialog.
+* Launch DeskTop. Create a new folder. Create a second folder inside it. Select the second folder, and use Special > Lock. Add a file to the second folder. Ensure that the file is not locked. Select the first folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the second folder's path is visible in the progress dialog.
+
+
 ## Shortcuts
 
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
@@ -604,10 +608,10 @@
 * Launch DeskTop. Select a TXT file. Rename it to have a .BXY suffix. Verify that it has an archive icon, without moving.
 * Launch DeskTop. Select a TXT file. Rename it to have a .BNY suffix. Verify that it has an archive icon, without moving.
 
-* Launch DeskTop. Try to copy files including a GS/OS forked file in the selection. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
-* Launch DeskTop. Try to copy files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
-* Launch DeskTop. Try to delete files including a GS/OS forked file in the selection. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
-* Launch DeskTop. Try to delete files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted. Note that non-empty directories will fail to be deleted.
+* Launch DeskTop. Try to copy files including a GS/OS forked file in the selection. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
+* Launch DeskTop. Try to copy files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
+* Launch DeskTop. Try to delete files including a GS/OS forked file in the selection. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
+* Launch DeskTop. Try to delete files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted. Note that non-empty directories will fail to be deleted.
 * Launch DeskTop. Using drag/drop, try to copy or move a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
 * Launch DeskTop. Using drag/drop, try to copy a volume containing a GS/OS forked file and other files, where the destination window is visible. When an alert is shown, click OK. Verify that the destination window are updated.
 * Launch DeskTop. Using File > Copy To..., try to copy a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.

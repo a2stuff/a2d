@@ -11664,6 +11664,8 @@ L9A50:  ldax    #filename_buf
 
         ;; Copying a file
 get_src_info:
+        jsr     DecFileCountAndRunCopyDialogProc
+
 @retry: jsr     GetSrcFileInfo
         beq     :+
         jsr     ShowErrorAlert
@@ -11681,7 +11683,6 @@ get_src_info:
         beq     store
 is_dir: lda     #$FF
 store:  sta     is_dir_flag
-        jsr     DecFileCountAndRunCopyDialogProc
 
         lda     copy_run_flag
         beq     success         ; never taken ???
@@ -11795,6 +11796,14 @@ done:   jsr     RemoveSrcPathSegment
         jsr     RemoveDstPathSegment
         rts
 .endproc ; CopyProcessDirectoryEntry
+
+;;; ============================================================
+
+.proc DecFileCountAndRunCopyDialogProc
+        jsr     DecrementOpFileCount
+        stax    copy_dialog_params::count
+        FALL_THROUGH_TO RunCopyDialogProc
+.endproc ; DecFileCountAndRunCopyDialogProc
 
 ;;; ============================================================
 
@@ -12072,7 +12081,6 @@ src_eof_flag:
         lda     #ST_LINKED_DIRECTORY
         sta     create_params3::storage_type
 :
-        jsr     DecrementOpFileCount
 retry:  MLI_CALL CREATE, create_params3
         beq     success
 
@@ -12197,6 +12205,7 @@ a_path: .addr   src_path_buf
 .proc DeleteProcessSelectedFile
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
+        jsr     DecFileCountAndRunDeleteDialogProc
 
 @retry: jsr     GetSrcFileInfo
         beq     :+
@@ -12215,6 +12224,7 @@ a_path: .addr   src_path_buf
 is_dir:
         ;; Recurse, and process directory
         jsr     ProcessDir
+        jsr     DeleteDialogProc ; update path display
         ;; ST_VOLUME_DIRECTORY excluded because volumes are ejected.
         FALL_THROUGH_TO do_destroy
 
@@ -12223,10 +12233,6 @@ do_destroy:
 .endproc ; DeleteProcessSelectedFile
 
 .proc DeleteFileCommon
-        sub16   op_file_count, #1, delete_dialog_params::count
-        jsr     RunDeleteDialogProc
-        jsr     DecrementOpFileCount
-
 retry:  MLI_CALL DESTROY, destroy_params
         beq     done
 
@@ -12274,10 +12280,23 @@ done:   rts
 .endproc ; UnlockSrcFile
 
 ;;; ============================================================
+
+.proc DecFileCountAndRunDeleteDialogProc
+        jsr     DecrementOpFileCount
+        stax    delete_dialog_params::count
+        FALL_THROUGH_TO RunDeleteDialogProc
+.endproc ; DecFileCountAndRunDeleteDialogProc
+
+.proc RunDeleteDialogProc
+        jmp     DeleteDialogProc
+.endproc ; RunDeleteDialogProc
+
+;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
 
 .proc DeleteProcessDirectoryEntry
         jsr     AppendFileEntryToSrcPath
+        jsr     DecFileCountAndRunDeleteDialogProc
 
         ;; Called with `src_file_info_params` pre-populated
         ;; Directories will be processed separately
@@ -12299,10 +12318,6 @@ next_file:
         jsr     DeleteDialogProc
         jmp     DeleteFileCommon
 .endproc ; DeleteFinishDirectory
-
-.proc RunDeleteDialogProc
-        jmp     DeleteDialogProc
-.endproc ; RunDeleteDialogProc
 
 ;;; ============================================================
 ;;; "Lock"/"Unlock" dialog state and logic
@@ -12362,10 +12377,6 @@ a_path: .addr   src_path_buf
         rts
 .endproc ; PrepCallbacksForLock
 
-.proc RunLockDialogProc
-        jmp     LockDialogProc
-.endproc ; RunLockDialogProc
-
 ;;; ============================================================
 ;;; Handle locking of a selected file.
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
@@ -12373,6 +12384,7 @@ a_path: .addr   src_path_buf
 .proc LockProcessSelectedFile
         copy    #LockDialogLifecycle::show, lock_unlock_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
+        jsr     DecFileCountAndRunLockDialogProc
 
 @retry: jsr     GetSrcFileInfo
         beq     :+
@@ -12407,15 +12419,13 @@ do_lock:
 
 .proc LockProcessDirectoryEntry
         jsr     AppendFileEntryToSrcPath
+        jsr     DecFileCountAndRunLockDialogProc
+
         jsr     LockFileCommon
         jmp     RemoveSrcPathSegment
 .endproc ; LockProcessDirectoryEntry
 
 .proc LockFileCommon
-        sub16   op_file_count, #1, lock_unlock_dialog_params::count
-        jsr     RunLockDialogProc
-        jsr     DecrementOpFileCount
-
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::access
         bit     unlock_flag
@@ -12433,6 +12443,18 @@ retry:  jsr     SetSrcFileInfo
 
 ok:     rts
 .endproc ; LockFileCommon
+
+;;; ============================================================
+
+.proc DecFileCountAndRunLockDialogProc
+        jsr     DecrementOpFileCount
+        stax    lock_unlock_dialog_params::count
+        FALL_THROUGH_TO RunLockDialogProc
+.endproc ; DecFileCountAndRunLockDialogProc
+
+.proc RunLockDialogProc
+        jmp     LockDialogProc
+.endproc ; RunLockDialogProc
 
 ;;; ============================================================
 ;;; "Get Size" dialog state and logic
@@ -12575,6 +12597,7 @@ op_block_count:
 
 .proc DecrementOpFileCount
         dec16   op_file_count
+        ldax    op_file_count
         rts
 .endproc ; DecrementOpFileCount
 
@@ -12905,13 +12928,6 @@ match:  lda     flag
         eor     #$80
         rts
 .endproc ; CheckMoveOrCopy
-
-;;; ============================================================
-
-.proc DecFileCountAndRunCopyDialogProc
-        sub16   op_file_count, #1, copy_dialog_params::count
-        jmp     CopyDialogProc
-.endproc ; DecFileCountAndRunCopyDialogProc
 
 ;;; ============================================================
 
