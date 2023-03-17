@@ -11478,6 +11478,35 @@ end_dir:
 cancel_descent_flag:  .byte   0
 
 ;;; ============================================================
+
+;;; Verify that file is not forked (etc); if it is an OK/Cancel alert is shown.
+;;; If the user selects cancel, the operation is cancelled.
+;;;
+;;; Input: A=`storage_type`
+;;; Output: C=0 if supported type, C=1 if unsupported but user picks OK.
+;;; Exception: If user selects Cancel, `CloseFilesCancelDialog` is invoked.
+.proc ValidateStorageType
+        cmp     #ST_VOLUME_DIRECTORY
+        beq     ok
+        cmp     #ST_LINKED_DIRECTORY
+        beq     ok
+        cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
+        bcc     ok
+
+        ;; Unsupported type - show error, and either abort or return failure
+        lda     #kErrUnsupportedFileType
+        jsr     ShowAlert
+        cmp     #kAlertResultCancel
+        jeq     CloseFilesCancelDialog
+        sec
+        rts
+
+        ;; Return success
+ok:     clc
+        rts
+.endproc ; ValidateStorageType
+
+;;; ============================================================
 ;;; "Copy" (including Drag/Drop/Move) files state and logic
 ;;; ============================================================
 
@@ -11645,14 +11674,8 @@ get_src_info:
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
         beq     is_dir
-        cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
-    IF_GE
-        lda     #kErrUnsupportedFileType
-        jsr     ShowAlert
-        cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialog
-        jmp     failure
-    END_IF
+        jsr     ValidateStorageType
+        bcs     failure
 
         lda     #$00
         beq     store
@@ -11759,14 +11782,8 @@ done:   rts
         ;; File
 
 regular_file:
-        cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
-    IF_GE
-        lda     #kErrUnsupportedFileType
-        jsr     ShowAlert
-        cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialog
-        bne     done            ; always
-    END_IF
+        jsr     ValidateStorageType
+        bcs     done
 
         jsr     TryCreateDst
         bcs     done
@@ -12191,15 +12208,9 @@ a_path: .addr   src_path_buf
         ;; ST_VOLUME_DIRECTORY excluded because volumes are ejected.
         cmp     #ST_LINKED_DIRECTORY
         beq     is_dir
-        cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
-    IF_GE
-        lda     #kErrUnsupportedFileType
-        jsr     ShowAlert
-        cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialog
+        jsr     ValidateStorageType
+        bcc     do_destroy
         rts
-    END_IF
-        jmp     do_destroy
 
 is_dir:
         ;; Recurse, and process directory
@@ -12273,14 +12284,8 @@ done:   rts
         lda     src_file_info_params::storage_type
         cmp     #ST_LINKED_DIRECTORY
         beq     next_file
-        cmp     #ST_TREE_FILE+1 ; only seedling/sapling/tree supported
-    IF_GE
-        lda     #kErrUnsupportedFileType
-        jsr     ShowAlert
-        cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialog
-        jmp     next_file
-    END_IF
+        jsr     ValidateStorageType
+        bcs     next_file
 
         jsr     DeleteFileCommon
 next_file:
