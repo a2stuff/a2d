@@ -11703,33 +11703,6 @@ done:
         CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
 
 ;;; ============================================================
-;;; If moving, delete src file/directory.
-
-.proc CopyFinishDirectory
-        jsr     RemoveDstPathSegment
-        FALL_THROUGH_TO MaybeFinishFileMove
-.endproc ; CopyFinishDirectory
-
-.proc MaybeFinishFileMove
-        ;; Copy or move?
-        bit     move_flag
-        bpl     done
-
-        ;; Was a move - delete file
-@retry: MLI_CALL DESTROY, destroy_params
-        beq     done
-        cmp     #ERR_ACCESS_ERROR
-        bne     :+
-        jsr     UnlockSrcFile
-        beq     @retry
-        bne     done            ; silently leave file
-
-:       jsr     ShowErrorAlert
-        jmp     @retry
-done:   rts
-.endproc ; MaybeFinishFileMove
-
-;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
 
 .proc CopyProcessDirectoryEntry
@@ -11770,6 +11743,33 @@ ok_dir: jsr     RemoveSrcPathSegment
 .endproc ; CopyProcessDirectoryEntry
 
 ;;; ============================================================
+;;; If moving, delete src file/directory.
+
+.proc CopyFinishDirectory
+        jsr     RemoveDstPathSegment
+        FALL_THROUGH_TO MaybeFinishFileMove
+.endproc ; CopyFinishDirectory
+
+.proc MaybeFinishFileMove
+        ;; Copy or move?
+        bit     move_flag
+        bpl     done
+
+        ;; Was a move - delete file
+@retry: MLI_CALL DESTROY, destroy_params
+        beq     done
+        cmp     #ERR_ACCESS_ERROR
+        bne     :+
+        jsr     UnlockSrcFile
+        beq     @retry
+        bne     done            ; silently leave file
+
+:       jsr     ShowErrorAlert
+        jmp     @retry
+done:   rts
+.endproc ; MaybeFinishFileMove
+
+;;; ============================================================
 
 .proc DecFileCountAndRunCopyDialogProc
         jsr     DecrementOpFileCount
@@ -11778,6 +11778,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 .endproc ; DecFileCountAndRunCopyDialogProc
 
 ;;; ============================================================
+;;; Used before "Copy to RAMCard", to ensure everything will fit.
 
 .proc CheckVolBlocksFree
 @retry: jsr     GetDstFileInfo
@@ -11796,29 +11797,15 @@ blocks_free:
 .endproc ; CheckVolBlocksFree
 
 ;;; ============================================================
+;;; Used when copying a single file.
 
 ;;; Assert: `src_file_info_params` is populated
 .proc CheckSpaceAndShowPrompt
-        jsr     CheckSpace
-        bcc     done
 
-        bit     move_flag
-    IF_NS
-        ldax    #aux::str_large_move_prompt
-    ELSE
-        ldax    #aux::str_large_copy_prompt
-    END_IF
-        ldy     #AlertButtonOptions::OKCancel
-        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
-        jsr     SetCursorWatch  ; preserves A
+        ;; --------------------------------------------------
+        ;; Check how much space is available on the target volume
+        ;; (including space reclaimed if a file will be overwritten)
 
-        cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialog
-
-        sec
-done:   rts
-
-.proc CheckSpace
         ;; If destination doesn't exist, 0 blocks will be reclaimed.
         copy16  #0, existing_size
 
@@ -11861,23 +11848,101 @@ retry:  copy    dst_path_buf, saved_length
         ;; aux = total blocks
         sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
         add16   blocks_free, existing_size, blocks_free
+
+        ;; --------------------------------------------------
+        ;; Check if there is enough room
+
         cmp16   blocks_free, src_file_info_params::blocks_used
-        bcs     has_room
-
-        ;; not enough room
-        sec
-        rts
-
-has_room:
+    IF_GE
         clc
+        rts
+    END_IF
+
+        ;; Show appropriate message
+        ldax    #aux::str_large_copy_prompt
+        bit     move_flag
+    IF_NS
+        ldax    #aux::str_large_move_prompt
+    END_IF
+        ldy     #AlertButtonOptions::OKCancel
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
+        jsr     SetCursorWatch  ; preserves A
+
+        cmp     #kAlertResultCancel
+        jeq     CloseFilesCancelDialog
+
+        sec
         rts
 
 blocks_free:
         .word   0
 existing_size:
         .word   0
-.endproc ; CheckSpace
 .endproc ; CheckSpaceAndShowPrompt
+
+;;; ============================================================
+;;; Common implementation used by both `CopyProcessSelectedFile`
+;;; and `CopyProcessDirectoryEntry`
+
+.proc TryCreateDst
+        jsr     CheckSpaceAndShowPrompt
+        bcs     failure
+
+        ;; Copy file_type, aux_type, storage_type
+        ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
+:       lda     src_file_info_params::file_type,x
+        sta     create_params3::file_type,x
+        dex
+        bpl     :-
+
+        ;; Copy create_time/create_date
+        ldx     #.sizeof(DateTime)-1
+:       lda     src_file_info_params::create_date,x
+        sta     create_params3::create_date,x
+        dex
+        bpl     :-
+
+        ;; If a volume, need to create a subdir instead
+        lda     create_params3::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        bne     :+
+        lda     #ST_LINKED_DIRECTORY
+        sta     create_params3::storage_type
+:
+retry:  MLI_CALL CREATE, create_params3
+        beq     success
+
+        cmp     #ERR_DUPLICATE_FILENAME
+        bne     err
+        bit     all_flag
+        bmi     yes
+
+        param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_exists_prompt
+        jsr     SetCursorWatch  ; preserves A
+
+        cmp     #kAlertResultYes
+        beq     yes
+        cmp     #kAlertResultNo
+        beq     failure
+        cmp     #kAlertResultAll
+        bne     cancel
+        copy    #$80, all_flag
+yes:    jsr     ApplyFileInfoAndSize
+        jmp     success
+
+cancel: jmp     CloseFilesCancelDialog
+
+err:    jsr     ShowErrorAlertDst
+        jmp     retry
+
+success:
+        clc
+        rts
+
+failure:
+        sec
+        rts
+.endproc ; TryCreateDst
 
 ;;; ============================================================
 ;;; Actual byte-for-byte file copy routine
@@ -12021,68 +12086,6 @@ src_eof_flag:
 .endproc ; DoFileCopy
 
 ;;; ============================================================
-
-.proc TryCreateDst
-        jsr     CheckSpaceAndShowPrompt
-        bcs     failure
-
-        ;; Copy file_type, aux_type, storage_type
-        ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
-:       lda     src_file_info_params::file_type,x
-        sta     create_params3::file_type,x
-        dex
-        bpl     :-
-
-        ;; Copy create_time/create_date
-        ldx     #.sizeof(DateTime)-1
-:       lda     src_file_info_params::create_date,x
-        sta     create_params3::create_date,x
-        dex
-        bpl     :-
-
-        ;; If a volume, need to create a subdir instead
-        lda     create_params3::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        bne     :+
-        lda     #ST_LINKED_DIRECTORY
-        sta     create_params3::storage_type
-:
-retry:  MLI_CALL CREATE, create_params3
-        beq     success
-
-        cmp     #ERR_DUPLICATE_FILENAME
-        bne     err
-        bit     all_flag
-        bmi     yes
-
-        param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_exists_prompt
-        jsr     SetCursorWatch  ; preserves A
-
-        cmp     #kAlertResultYes
-        beq     yes
-        cmp     #kAlertResultNo
-        beq     failure
-        cmp     #kAlertResultAll
-        bne     cancel
-        copy    #$80, all_flag
-yes:    jsr     ApplyFileInfoAndSize
-        jmp     success
-
-cancel: jmp     CloseFilesCancelDialog
-
-err:    jsr     ShowErrorAlertDst
-        jmp     retry
-
-success:
-        clc
-        rts
-
-failure:
-        sec
-        rts
-.endproc ; TryCreateDst
-
-;;; ============================================================
 ;;; "Delete" (Delete/Trash) files dialog state and logic
 ;;; ============================================================
 
@@ -12200,6 +12203,10 @@ do_destroy:
         FALL_THROUGH_TO DeleteFileCommon
 .endproc ; DeleteProcessSelectedFile
 
+;;; ============================================================
+;;; Common implementation used by both `DeleteProcessSelectedFile`
+;;; and `DeleteProcessDirectoryEntry`
+
 .proc DeleteFileCommon
 retry:  MLI_CALL DESTROY, destroy_params
         beq     done
@@ -12248,14 +12255,6 @@ done:   rts
 .endproc ; UnlockSrcFile
 
 ;;; ============================================================
-
-.proc DecFileCountAndRunDeleteDialogProc
-        jsr     DecrementOpFileCount
-        stax    delete_dialog_params::count
-        jmp     DeleteDialogProc
-.endproc ; DecFileCountAndRunDeleteDialogProc
-
-;;; ============================================================
 ;;; Called by `ProcessDir` to process a single file
 
 .proc DeleteProcessDirectoryEntry
@@ -12282,6 +12281,14 @@ next_file:
         jsr     DeleteDialogProc
         jmp     DeleteFileCommon
 .endproc ; DeleteFinishDirectory
+
+;;; ============================================================
+
+.proc DecFileCountAndRunDeleteDialogProc
+        jsr     DecrementOpFileCount
+        stax    delete_dialog_params::count
+        jmp     DeleteDialogProc
+.endproc ; DecFileCountAndRunDeleteDialogProc
 
 ;;; ============================================================
 ;;; "Lock"/"Unlock" dialog state and logic
@@ -12377,19 +12384,12 @@ is_dir:
         FALL_THROUGH_TO do_lock
 
 do_lock:
-        jmp     LockFileCommon
+        FALL_THROUGH_TO LockFileCommon
 .endproc ; LockProcessSelectedFile
 
 ;;; ============================================================
-;;; Called by `ProcessDir` to process a single file
-
-.proc LockProcessDirectoryEntry
-        jsr     AppendFileEntryToSrcPath
-        jsr     DecFileCountAndRunLockDialogProc
-
-        jsr     LockFileCommon
-        jmp     RemoveSrcPathSegment
-.endproc ; LockProcessDirectoryEntry
+;;; Common implementation used by both for `LockProcessSelectedFile`
+;;; and `LockProcessDirectoryEntry`
 
 .proc LockFileCommon
         ;; Called with `src_file_info_params` pre-populated
@@ -12409,6 +12409,17 @@ retry:  jsr     SetSrcFileInfo
 
 ok:     rts
 .endproc ; LockFileCommon
+
+;;; ============================================================
+;;; Called by `ProcessDir` to process a single file
+
+.proc LockProcessDirectoryEntry
+        jsr     AppendFileEntryToSrcPath
+        jsr     DecFileCountAndRunLockDialogProc
+
+        jsr     LockFileCommon
+        jmp     RemoveSrcPathSegment
+.endproc ; LockProcessDirectoryEntry
 
 ;;; ============================================================
 
