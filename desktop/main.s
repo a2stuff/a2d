@@ -11673,10 +11673,10 @@ common:
         ;; File
 
         jsr     ValidateStorageType
-        bcs     failure
+        bcs     done
 
         jsr     TryCreateDst
-        bcs     failure
+        bcs     done
 
         jsr     DoFileCopy
         jmp     MaybeFinishFileMove
@@ -11685,30 +11685,22 @@ common:
         ;; Directory
 dir:
         jsr     TryCreateDst
-        bcs     failure
+        bcs     done
 copy_dir_contents:
         jsr     ProcessDir
-        jmp     MaybeFinishFileMove
+        jsr     MaybeFinishFileMove
 
-failure:
-        rts
-.endproc ; CopyProcessFileImpl
-        CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
-
-;;; ============================================================
-
-.proc CopyProcessSelectedFile
-        jsr     CopyProcessFileImpl::selected
-
-        ;; TODO: Skip on failure
         bit     move_flag
     IF_NS
         jsr     UpdateWindowPaths
         jsr     UpdatePrefix
     END_IF
 
+done:
         rts
-.endproc ; CopyProcessSelectedFile
+.endproc ; CopyProcessFileImpl
+        CopyProcessSelectedFile := CopyProcessFileImpl::selected
+        CopyProcessNotSelectedFile := CopyProcessFileImpl::not_selected
 
 ;;; ============================================================
 ;;; If moving, delete src file/directory.
