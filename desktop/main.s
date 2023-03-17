@@ -11646,7 +11646,7 @@ not_selected:
         bne     :+
 
         lda     selected_window_id ; dragging from desktop?
-        jeq     CopyDir            ; yes... copy just the volume's contents
+        jeq     copy_dir_contents ; yes... copy just the volume's contents
         ;; Note that this is different than when a shortcut is being
         ;; copied; in that case if the parent is a volume, we create
         ;; a corresponding folder.
@@ -11673,31 +11673,29 @@ get_src_info:
 :
         lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
-        beq     is_dir
+        beq     dir
         cmp     #ST_LINKED_DIRECTORY
-        beq     is_dir
+        beq     dir
+
+        ;; --------------------------------------------------
+        ;; File
+
         jsr     ValidateStorageType
         bcs     failure
 
-        lda     #$00
-        beq     store
-is_dir: lda     #$FF
-store:  sta     is_dir_flag
-
-        lda     copy_run_flag
-        beq     success         ; never taken ???
         jsr     TryCreateDst
         bcs     failure
 
-success:
-        is_dir_flag := *+1
-        lda     #SELF_MODIFIED_BYTE
-        beq     CopyFile
-CopyDir:                       ; also used when dragging a volume icon
-        jsr     ProcessDir
-        jmp     MaybeFinishFileMove
-CopyFile:
         jsr     DoFileCopy
+        jmp     MaybeFinishFileMove
+
+        ;; --------------------------------------------------
+        ;; Directory
+dir:
+        jsr     TryCreateDst
+        bcs     failure
+copy_dir_contents:
+        jsr     ProcessDir
         jmp     MaybeFinishFileMove
 
 failure:
@@ -11758,24 +11756,11 @@ done:   rts
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type
         cmp     #ST_LINKED_DIRECTORY
-        bne     regular_file
-
-        ;; --------------------------------------------------
-        ;; Directory
-
-        jsr     TryCreateDst
-        bcs     :+
-        ;; Success - leave dst path segment in place for recursion
-        jsr     RemoveSrcPathSegment
-        rts
-:
-        copy    #$FF, cancel_descent_flag
-        bne     done            ; always
+        beq     dir
 
         ;; --------------------------------------------------
         ;; File
 
-regular_file:
         jsr     ValidateStorageType
         bcs     done
 
@@ -11784,9 +11769,19 @@ regular_file:
 
         jsr     DoFileCopy
         jsr     MaybeFinishFileMove
+        jmp     done
 
-done:   jsr     RemoveSrcPathSegment
-        jsr     RemoveDstPathSegment
+        ;; --------------------------------------------------
+        ;; Directory
+dir:
+        jsr     TryCreateDst
+        bcc     ok_dir          ; leave dst path segment in place for recursion
+        copy    #$FF, cancel_descent_flag
+
+        ;; --------------------------------------------------
+
+done:   jsr     RemoveDstPathSegment
+ok_dir: jsr     RemoveSrcPathSegment
         rts
 .endproc ; CopyProcessDirectoryEntry
 
