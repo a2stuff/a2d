@@ -9939,7 +9939,6 @@ done:   rts
 .endproc ; DoCopyFile
 
 .proc DoCopyCommon
-        copy    #$FF, copy_run_flag
         copy    #0, move_flag   ; TODO: Remove, redundant with callers?
         jsr     CopyProcessNotSelectedFile
         jsr     InvokeOperationCompleteCallback
@@ -11618,52 +11617,45 @@ a_dst:  .addr   dst_path_buf
 .proc CopyProcessFileImpl
         ;; Normal handling, via `CopyProcessSelectedFile`
 selected:
-        copy    #$80, copy_run_flag
         ;; Caller sets `move_flag` appropriately
-        lda     #0              ; new `is_not_selected_flag` value
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        lda     #$80
+        bne     common          ; always
 
         ;; Via File > Duplicate or copying to RAMCard
 not_selected:
-        ;; Caller sets `copy_run_flag` to $FF
         ;; Caller sets `move_flag` to $00
-        lda     #$FF            ; new `is_not_selected_flag` value
+        lda     #0
 
-        sta     is_not_selected_flag
+common:
+        sta     use_selection_flag
         copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
+
+        ;; If "Copy to RAMCard", make sure there's enough room.
         bit     operation_flags ; CopyToRAM has N=1/V=1, otherwise N=0/V=0
-        bvc     @not_run
-        jsr     CheckVolBlocksFree           ; dst is a volume path (RAM Card)
-@not_run:
-        bit     copy_run_flag
-        bpl     get_src_info    ; never taken ???
-        bvs     L9A50           ; taken if `not_selected` entry point was used
+    IF_NS
+        jsr     CheckVolBlocksFree
+    END_IF
 
-        ;; ... therefore this check is redundant; will never be NE here
-        is_not_selected_flag := *+1
+        use_selection_flag := *+1
         lda     #SELF_MODIFIED_BYTE
-        bne     :+
-
-        lda     selected_window_id ; dragging from desktop?
-        jeq     copy_dir_contents ; yes... copy just the volume's contents
+    IF_NS
+        ;; If source is a volume icon, just copy the volume's contents.
         ;; Note that this is different than when a shortcut is being
         ;; copied; in that case if the parent is a volume, we create
         ;; a corresponding folder.
-:
-        ;; ... therefore, operating on selected file/folder
+        lda     selected_window_id ; dragging from desktop?
+        jeq     copy_dir_contents
+
+        ;; Use last segment of source for destination (e.g. for Copy/Move)
         jsr     AppendSrcPathLastSegmentToDstPath
-        jmp     get_src_info
-
-        ;; `not_selected` entry point
-        ;; Append passed filename to `dst_path_buf`
-L9A50:  ldax    #filename_buf
+    ELSE
+        ;; Used passed filename for destination (e.g. for Duplicate)
+        ldax    #filename_buf
         jsr     AppendFilenameToDstPath
+    END_IF
 
-        ;; At this point, src and dst paths are set up.
-
-        ;; Copying a file
-get_src_info:
+        ;; Paths are set up - update dialog and populate `src_file_info_params`
         jsr     DecFileCountAndRunCopyDialogProc
 
 @retry: jsr     GetSrcFileInfo
@@ -12187,6 +12179,8 @@ a_path: .addr   src_path_buf
 .proc DeleteProcessSelectedFile
         copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
+
+        ;; Path is set up - update dialog and populate `src_file_info_params`
         jsr     DecFileCountAndRunDeleteDialogProc
 
 @retry: jsr     GetSrcFileInfo
@@ -12362,6 +12356,8 @@ a_path: .addr   src_path_buf
 .proc LockProcessSelectedFile
         copy    #LockDialogLifecycle::show, lock_unlock_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
+
+        ;; Path is set up - update dialog and populate `src_file_info_params`
         jsr     DecFileCountAndRunLockDialogProc
 
 @retry: jsr     GetSrcFileInfo
@@ -15179,10 +15175,6 @@ path_buf3:
         .res    ::kPathBufferSize, 0
 filename_buf:
         .res    16, 0
-
-        ;; Set to $80 for Copy, $FF for Run
-copy_run_flag:
-        .byte   0
 
 op_ref_num:
         .byte   0
