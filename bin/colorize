@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# Color-codes stderr output as red.
+#
+# Sample usage:
+#     colorize ca65 -o target.o target.s $<
+#     colorize ld65 -o target target.o
+
+red="$(tput setaf 1)"
+reset="$(tput sgr0)"
+
+"$@" 2> >(while read line; do echo "${red}${line}${reset}" >&2; done)

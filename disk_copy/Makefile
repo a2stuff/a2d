@@ -18,7 +18,7 @@ clean:
 	rm -f $(TARGETS)
 
 $(OUTDIR)/disk_copy.o: disk_copy.s $(HEADERS) loader.s auxlc.s main.s ../toolkits/btk.s
-	../bin/warnerr ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+	../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 $(OUTDIR)/%.built: $(OUTDIR)/%.o ../res/asm.cfg
-	../bin/warnerr ld65 $(LDFLAGS) -o '$@' $<
+	../bin/colorize ld65 $(LDFLAGS) -o '$@' $<

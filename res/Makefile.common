@@ -1,8 +1,8 @@
 ### Common definitions
 
 # Compile flags.
-CAFLAGS = --target apple2enh --list-bytes 0
-LDFLAGS = --config ../res/asm.cfg
+CAFLAGS = --target apple2enh --list-bytes 0 --warnings-as-errors
+LDFLAGS = --config ../res/asm.cfg --warnings-as-errors
 
 # Each directory builds into an 'out' sibling dir:
 OUTDIR = ../out
@@ -16,12 +16,12 @@ COMMON_HEADERS = $(wildcard ../*.inc ../inc/*.inc *.inc inc/*.inc) \
 
 # Object files
 $(OUTDIR)/%.o: %.s $(HEADERS)
-	../bin/warnerr ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+	../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 # Desk Accessory Files .da
 $(OUTDIR)/%.da: $(OUTDIR)/%.o ../res/asm.cfg
-	../bin/warnerr ld65 $(LDFLAGS) -o '$@' $<
+	../bin/colorize ld65 $(LDFLAGS) -o '$@' $<
 
 # System Files .SYS
 $(OUTDIR)/%.SYS: $(OUTDIR)/%.o ../res/asm.cfg
-	../bin/warnerr ld65 $(LDFLAGS) -o '$@' $<
+	../bin/colorize ld65 $(LDFLAGS) -o '$@' $<
