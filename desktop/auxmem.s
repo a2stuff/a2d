@@ -377,6 +377,34 @@ str_size_blocks:
 str_ramcard_full:
         PASCAL_STRING res_string_download_error_ramcard_full
 
+;;; Miscellaneous alert strings
+
+str_warning_selector_list_full:
+        PASCAL_STRING res_string_warning_selector_list_full
+;;; The same string is used for both of these cases as the second case
+;;; (a single directory with too many items) is very difficult to hit.
+str_warning_too_many_files:     ; alt: `res_string_warning_too_many_files`
+str_warning_window_must_be_closed:
+        PASCAL_STRING res_string_warning_window_must_be_closed
+str_warning_too_many_windows:
+        PASCAL_STRING res_string_warning_too_many_windows
+str_alert_confirm_running:
+        PASCAL_STRING res_string_alert_confirm_running
+str_alert_bad_replacement:
+        PASCAL_STRING res_string_alert_bad_replacement
+str_alert_unsupported_type:
+        PASCAL_STRING res_string_alert_unsupported_type
+str_alert_move_copy_into_self:
+        PASCAL_STRING res_string_alert_move_copy_into_self
+str_alert_cannot_open:
+        PASCAL_STRING res_string_alert_cannot_open
+str_alert_name_too_long:
+        PASCAL_STRING res_string_alert_name_too_long
+str_alert_insert_source_disk:
+        PASCAL_STRING res_string_alert_insert_source_disk
+str_alert_insert_destination:
+        PASCAL_STRING res_string_alert_insert_destination
+
 ;;; ============================================================
 ;;; Show Alert Dialog
 ;;; Call show_alert_dialog with prompt number A, options in X
@@ -410,31 +438,21 @@ err_49:  PASCAL_STRING res_string_errmsg_49
 err_4E:  PASCAL_STRING res_string_errmsg_4E
 err_52:  PASCAL_STRING res_string_errmsg_52
 err_57:  PASCAL_STRING res_string_errmsg_57
-        ;; Below are internal (not ProDOS MLI) error codes.
-err_E0:  PASCAL_STRING res_string_warning_insert_system_disk
-err_E1:  PASCAL_STRING res_string_warning_selector_list_full
-;;; The same string is used for both of these cases as the second case
-;;; (a single directory with too many items) is very difficult to hit.
-;;; alt: `res_string_warning_too_many_files` for E3
-err_E2:
-err_E3:  PASCAL_STRING res_string_warning_window_must_be_closed
-err_E4:  PASCAL_STRING res_string_warning_too_many_windows
-err_E5:  PASCAL_STRING res_string_warning_save_changes
 
-err_F4:  PASCAL_STRING res_string_errmsg_F4
-err_F5:  PASCAL_STRING res_string_errmsg_F5
-err_F6:  PASCAL_STRING res_string_errmsg_F6
-err_F7:  PASCAL_STRING res_string_errmsg_F7
-err_F8:  PASCAL_STRING res_string_errmsg_F8
-err_F9:  PASCAL_STRING res_string_errmsg_F9
-err_FA:  PASCAL_STRING res_string_errmsg_FA
-err_FB:  PASCAL_STRING res_string_errmsg_FB
-err_FC:  PASCAL_STRING res_string_errmsg_FC
-err_FD:  PASCAL_STRING res_string_errmsg_FD
-err_FE:  PASCAL_STRING res_string_errmsg_FE
+;;; Below are internal (not ProDOS MLI) error codes.
+err_insert_system_disk:         ; kErrInsertSystemDisk
+        PASCAL_STRING res_string_warning_insert_system_disk
+err_save_changes:               ; kErrSaveChanges
+        PASCAL_STRING res_string_warning_save_changes
+err_no_windows:                 ; kErrNoWindowsOpen
+        PASCAL_STRING res_string_alert_no_windows_open
+err_duplicate_volumes:          ; kErrDuplicateVolName
+        PASCAL_STRING res_string_alert_duplicate_volume_names
+err_no_basic_system:            ; kErrBasicSysNotFound
+        PASCAL_STRING res_string_alert_basic_system_not_found
 
         ;; number of alert messages
-        kNumAlerts = 31
+        kNumAlerts = 19
 
         ;; message number-to-index table
         ;; (look up by scan to determine index)
@@ -447,30 +465,32 @@ alert_table:
         .byte   ERR_DUPLICATE_VOLUME
 
         ;; Internal error codes:
-        .byte   kErrInsertSystemDisk, kErrSelectorListFull, kErrWindowMustBeClosed
-        .byte   kErrTooManyFiles, kErrTooManyWindows, kErrSaveChanges
-        .byte   kErrConfirmRunning
-        .byte   kErrBadReplacement, kErrUnsupportedFileType, kErrNoWindowsOpen
-        .byte   kErrMoveCopyIntoSelf
-        .byte   kErrDuplicateVolName, kErrFileNotOpenable, kErrNameTooLong
-        .byte   kErrInsertSrcDisk, kErrInsertDstDisk, kErrBasicSysNotFound
+        .byte   kErrInsertSystemDisk
+        .byte   kErrSaveChanges
+        .byte   kErrNoWindowsOpen
+        .byte   kErrDuplicateVolName
+        .byte   kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_table, kNumAlerts
 
         ;; alert index to string address
 message_table_low:
         .byte   <err_00,<err_27,<err_28,<err_2B,<err_40,<err_44,<err_45,<err_46
         .byte   <err_47,<err_48,<err_49,<err_4E,<err_52,<err_57
-        .byte   <err_E0, <err_E1, <err_E2, <err_E3, <err_E4, <err_E5
-        .byte   <err_F4,<err_F5,<err_F6,<err_F7,<err_F8,<err_F9,<err_FA
-        .byte   <err_FB,<err_FC,<err_FD,<err_FE
+        .byte   <err_insert_system_disk
+        .byte   <err_save_changes
+        .byte   <err_no_windows
+        .byte   <err_duplicate_volumes
+        .byte   <err_no_basic_system
         ASSERT_TABLE_SIZE message_table_low, kNumAlerts
 
 message_table_high:
         .byte   >err_00,>err_27,>err_28,>err_2B,>err_40,>err_44,>err_45,>err_46
         .byte   >err_47,>err_48,>err_49,>err_4E,>err_52,>err_57
-        .byte   >err_E0, >err_E1, >err_E2, >err_E3, >err_E4, >err_E5
-        .byte   >err_F4,>err_F5,>err_F6,>err_F7,>err_F8,>err_F9,>err_FA
-        .byte   >err_FB,>err_FC,>err_FD,>err_FE
+        .byte   >err_insert_system_disk
+        .byte   >err_save_changes
+        .byte   >err_no_windows
+        .byte   >err_duplicate_volumes
+        .byte   >err_no_basic_system
         ASSERT_TABLE_SIZE message_table_high, kNumAlerts
 
 alert_options_table:
@@ -490,22 +510,9 @@ alert_options_table:
         .byte   AlertButtonOptions::OK             ; ERR_DUPLICATE_VOLUME
 
         .byte   AlertButtonOptions::OKCancel       ; kErrInsertSystemDisk
-        .byte   AlertButtonOptions::OK             ; kErrSelectorListFull
-        .byte   AlertButtonOptions::OK             ; kErrWindowMustBeClosed
-        .byte   AlertButtonOptions::OK             ; kErrTooManyFiles
-        .byte   AlertButtonOptions::OK             ; kErrTooManyWindows
         .byte   AlertButtonOptions::OKCancel       ; kErrSaveChanges
-
-        .byte   AlertButtonOptions::OKCancel       ; kErrConfirmRunning
-        .byte   AlertButtonOptions::OK             ; kErrBadReplacement
-        .byte   AlertButtonOptions::OKCancel       ; kErrUnsupportedFileType
         .byte   AlertButtonOptions::OK             ; kErrNoWindowsOpen
-        .byte   AlertButtonOptions::OK             ; kErrMoveCopyIntoSelf
         .byte   AlertButtonOptions::OK             ; kErrDuplicateVolName
-        .byte   AlertButtonOptions::OK             ; kErrFileNotOpenable
-        .byte   AlertButtonOptions::OK             ; kErrNameTooLong
-        .byte   AlertButtonOptions::TryAgainCancel ; kErrInsertSrcDisk
-        .byte   AlertButtonOptions::TryAgainCancel ; kErrInsertDstDisk
         .byte   AlertButtonOptions::OK             ; kErrBasicSysNotFound
         ASSERT_TABLE_SIZE alert_options_table, kNumAlerts
 

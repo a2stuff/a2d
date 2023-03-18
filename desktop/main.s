@@ -950,8 +950,7 @@ tmp_path_buf:
 fallback:
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
         beq     launch           ; yes, continue below
-        lda     #kErrFileNotOpenable
-        jmp     ShowAlert
+        param_jump ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_cannot_open
 
         ;; --------------------------------------------------
         ;; Launch interpreter (system file that accepts path).
@@ -993,8 +992,7 @@ binary:
         jne     launch
         jsr     ModifierDown ; Otherwise, only launch if a button is down
         jmi     launch
-        lda     #kErrConfirmRunning
-        jsr     ShowAlert       ; show a prompt otherwise
+        param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_confirm_running
         cmp     #kAlertResultOK
         jeq     launch
         jmp     SetCursorPointer ; after not launching BIN
@@ -5706,8 +5704,7 @@ no_win:
         bcc     :+
 
         ;; Nope, show error.
-        lda     #kErrTooManyWindows
-        jsr     ShowAlert
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_warning_too_many_windows
         ldx     saved_stack
         txs
         rts
@@ -6416,12 +6413,12 @@ index_in_dir:           .byte   0
 too_many_files:
         jsr     DoClose
 
-        lda     active_window_id ; is a window open?
-        beq     no_win
-        lda     #kErrWindowMustBeClosed ; suggest closing a window
-        bne     show            ; always
-no_win: lda     #kErrTooManyFiles ; too many files to show
-show:   jsr     ShowAlert
+        ldax    #aux::str_warning_window_must_be_closed ; too many files to show
+        ldy     active_window_id ; is a window open?
+        bne     :+
+        ldax    #aux::str_warning_too_many_files ; suggest closing a window
+:       ldy     #AlertButtonOptions::OK
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
 
         ;; Records not created, no need for `RemoveFileRecordsForIcon`
         jsr     MarkIconNotDimmed
@@ -10141,10 +10138,16 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         bmi     :+
         jsr     CopyPathsFromBufsToSrcAndDst
         jsr     CheckRecursion
-        jne     ShowErrorAlert
+    IF_NE
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_move_copy_into_self
+        jmp     CloseFilesCancelDialog
+    END_IF
         jsr     AppendSrcPathLastSegmentToDstPath
         jsr     CheckBadReplacement
-        jne     ShowErrorAlert
+    IF_NE
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_bad_replacement
+        jmp     CloseFilesCancelDialog
+    END_IF
 :
         jsr     OpProcessSelectedFile
 
@@ -11493,8 +11496,7 @@ cancel_descent_flag:  .byte   0
         bcc     ok
 
         ;; Unsupported type - show error, and either abort or return failure
-        lda     #kErrUnsupportedFileType
-        jsr     ShowAlert
+        param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unsupported_type
         cmp     #kAlertResultCancel
         jeq     CloseFilesCancelDialog
         sec
@@ -12677,15 +12679,12 @@ ret:    rts
 
 ;;; ============================================================
 ;;; Check if `src_path_buf` is inside `dst_path_buf`.
-;;; Output: A=0 if ok, A=err code otherwise.
+;;; Output: Z=1 if ok, Z=0 otherwise.
 
 .proc CheckRecursion
         copy16  #src_path_buf, $06
         copy16  #dst_path_buf, $08
-        jsr     IsPathPrefixOf
-        beq     ret
-        lda     #kErrMoveCopyIntoSelf
-ret:    rts
+        jmp     IsPathPrefixOf
 .endproc ; CheckRecursion
 
 ;;; ============================================================
@@ -12703,11 +12702,7 @@ ret:    rts
 
         copy16  #dst_path_buf, $06
         copy16  #src_path_buf, $08
-        jsr     IsPathPrefixOf
-        beq     ret
-        lda     #kErrBadReplacement
-ret:    rts
-
+        jmp     IsPathPrefixOf
 .endproc ; CheckBadReplacement
 
 ;;; ============================================================
@@ -12973,29 +12968,26 @@ flag_clear:
         jsr     ShowAlert
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         bne     close           ; not kAlertResultTryAgain = 0
-        jsr     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
-        rts
+        jmp     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
 
 not_found:
+        ldax    #aux::str_alert_insert_source_disk
         bit     flag
         bpl     :+
-        lda     #kErrInsertDstDisk
-        jmp     show
-
-:       lda     #kErrInsertSrcDisk
-show:   jsr     ShowAlert
+        ldax    #aux::str_alert_insert_destination
+:       ldy     #AlertButtonOptions::TryAgainCancel
+        jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         bne     close           ; not kAlertResultTryAgain = 0
-        jmp     do_on_line
+        jsr     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
+
+        ;; Poll drives before trying again
+        MLI_CALL ON_LINE, on_line_params2
+        rts
 
 close:  jmp     CloseFilesCancelDialog
 
 flag:   .byte   0
-
-do_on_line:
-        jsr     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
-        MLI_CALL ON_LINE, on_line_params2
-        rts
 
 .endproc ; ShowErrorAlertImpl
 ShowErrorAlert  := ShowErrorAlertImpl::flag_clear
@@ -13546,8 +13538,7 @@ loop:   jsr     PromptInputLoop
         return  #0
 
 too_long:
-        lda     #kErrNameTooLong
-        jsr     ShowAlert
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
         jmp     loop
 
 not_run:

@@ -159,23 +159,10 @@ kDynamicRoutineRestore9000      = 6
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors
 
-kErrInsertSystemDisk    = $E0
-kErrSelectorListFull    = $E1
-kErrWindowMustBeClosed  = $E2
-kErrTooManyFiles        = $E3
-kErrTooManyWindows      = $E4
-kErrSaveChanges         = $E5
-
-kErrConfirmRunning      = $F4
-kErrBadReplacement      = $F5
-kErrUnsupportedFileType = $F6
-kErrNoWindowsOpen       = $F7
-kErrMoveCopyIntoSelf    = $F8
-kErrDuplicateVolName    = $F9
-kErrFileNotOpenable     = $FA
-kErrNameTooLong         = $FB
-kErrInsertSrcDisk       = $FC
-kErrInsertDstDisk       = $FD
+kErrInsertSystemDisk    = $FA
+kErrSaveChanges         = $FB
+kErrNoWindowsOpen       = $FC
+kErrDuplicateVolName    = $FD
 kErrBasicSysNotFound    = $FE
 
 ;;; ============================================================

@@ -117,8 +117,7 @@ L90D3:  lda     num_secondary_run_list_entries
 
 L90F1:  jmp     L900F
 
-L90F4:  lda     #kErrSelectorListFull
-        jsr     ShowAlert
+L90F4:  param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_warning_selector_list_full
         dec     clean_flag      ; reset to "clean"
         jmp     L9016
 
