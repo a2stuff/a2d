@@ -40,8 +40,13 @@
 * Launch DeskTop. Select an AppleWorks file icon. File > Rename..., and specify a name using a mix of uppercase and lowercase. Click OK. Close the containing window and re-open it. Verify that the filename case is retained.
 * Launch DeskTop. Select an AppleWorks file icon. File > Duplicate..., and specify a name using a mix of uppercase and lowercase. Click OK. Close the containing window and re-open it. Verify that the filename case is retained.
 
-* File > Get Info a file.
-* File > Get Info a volume.
+* File > Get Info a non-folder file. Verify that the size shows as "_size_K".
+* File > Get Info a folder containing 0 files. Verify that the size shows as "_size_K for 0 items".
+* File > Get Info a folder containing 1 files. Verify that the size shows as "_size_K for 1 item".
+* File > Get Info a folder containing 2 or more files. Verify that the size shows as "_size_K for _count_ items".
+* File > Get Info a volume containing 0 files. Verify that the size shows as "_size_K for 0 items / _total_K".
+* File > Get Info a volume containing 1 files. Verify that the size shows as "_size_K for 1 item / _total_K".
+* File > Get Info a volume containing 2 or more files. Verify that the size shows as "_size_K for _count_ items / _total_K".
 
 * Open a window. Position two icons so one overlaps another. Select both. Drag both to a new location. Verify that the icons are repainted in the new location, and erased from the old location.
 * Open a window. Position two icons so one overlaps another. Select only one icon. Drag it to a new location. Verify that the the both icons repaint correctly.
@@ -219,11 +224,16 @@
 * Launch DeskTop. Open a window. File > Quit. Launch DeskTop again. Ensure the window is restored. Try to drag-select volume icons. Verify that they are selected.
 
 * Launch DeskTop. Select a volume icon, where the volume contains no files. Special > Get Size. Verify that numbers are shown (0) for number of files and space used.
+* Launch DeskTop. Select a volume icon, where the volume contains no files. File > Get Info. Verify that numbers are shown for number of files (0) and space used (a few K).
 * Launch DeskTop. Select a file icon. Special > Get Size. Verify that the size shown is correct. Select a directory. Special > Get Size, and dismiss. Now select the original file icon again, and Special > Get Size. Verify that the size shown is still correct.
+* Launch DeskTop. Select a file icon. File > Get Info. Verify that the size shown is correct. Select a directory. File > Get Info, and dismiss. Now select the original file icon again, and File > Get Info. Verify that the size shown is still correct.
 * Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. Special > Get Size. Verify that a "The specified path name is invalid." alert is not shown.
+* Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. File > Get Info. Verify that a "The specified path name is invalid." alert is not shown.
 
 * Launch DeskTop. Select a volume with more than 255 files in a folder (e.g. Total Replay). Special > Get Size. Verify that the count finishes.
+* Launch DeskTop. Select a volume with more than 255 files in a folder (e.g. Total Replay). File > Get Info. Verify that the count finishes.
 * Launch DeskTop. Create a folder. Place a file of known size (e.g. 17K) in the folder. Select the folder. Special > Get Size. Verify that 2 files are counted, and that the size is the same as the file size or slightly larger (e.g. 17K or 18K) but not twice the size of the file (e.g. 33K).
+* Launch DeskTop. Create a folder. Place a file of known size (e.g. 17K) in the folder. Select the folder. File > Get Info. Verify that 2 files are counted, and that the size is the same as the file size or slightly larger (e.g. 17K or 18K) but not twice the size of the file (e.g. 33K).
 
 * Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is dimmed but still selected.
 * Launch DeskTop. Double-click a volume. Verify that the volume icon is still selected.
@@ -539,6 +549,7 @@
   * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is cancelled and the progress dialog is closed.
   * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is cancelled and the progress dialog is closed.
 * Select multiple files. Special > Get Size. During the count of the files, press Escape. Verify that the count is cancelled and the dialog is closed.
+* Select a volume or folder containing multiple files. File > Get Info. During the count of the files, press Escape. Verify that the count is cancelled.
 
 * Using BASIC, create a directory structure: X/Y/Z and save a BASIC file B as X/Y/Z/B. Lock all three directories and the file from BASIC (not DeskTop). Launch DeskTop. Select X. File > Delete. Verify that a prompt is shown for deleting each file in deepest-first order (B, Z, Y, X). Click Yes at each prompt. Verify that all files are deleted.
 

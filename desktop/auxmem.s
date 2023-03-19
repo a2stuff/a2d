@@ -335,6 +335,14 @@ str_info_yes:
         PASCAL_STRING res_string_get_info_label_yes
 str_info_no:
         PASCAL_STRING res_string_get_info_label_no
+str_info_size_infix:
+        PASCAL_STRING res_string_get_info_label_size_infix
+str_info_size_suffix:
+        PASCAL_STRING res_string_get_info_label_size_suffix
+str_info_size_suffix_singular:
+        PASCAL_STRING res_string_get_info_label_size_suffix_singular
+str_info_size_slash:
+        PASCAL_STRING res_string_get_info_label_size_slash
 
 str_select_format:
         PASCAL_STRING res_string_format_disk_label_select

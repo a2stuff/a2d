@@ -10543,8 +10543,7 @@ common2:
         copy    #GetInfoDialogState::size, get_info_dialog_params::state
 
         ;; Compose "12345K" or "12345K / 67890K" string
-        buf := INVOKER_PREFIX
-        copy    #0, buf
+        copy    #0, text_input_buf
 
         lda     selected_window_id ; volume?
         beq     volume                ; yes
@@ -10561,50 +10560,21 @@ volume:
         ;; field and the total blocks for all files is returned in blocks_used.
 
         ldax    src_file_info_params::blocks_used
+        stax    vol_used_blocks
         jsr     ComposeSizeString
-
-        ;; `text_buffer2` now has "12345K"
-
-        ;; Copy into `buf`
-        ldx     buf
-        ldy     #0
-:       inx
-        lda     text_buffer2+1,y
-        sta     buf,x
-        iny
-        cpy     text_buffer2
-        bne     :-
-
-        ;; Append " / " to `buf`
-        inx
-        copy    #' ', buf,x
-        inx
-        copy    #'/', buf,x
-        inx
-        copy    #' ', buf,x
-        stx     buf
+        param_call AppendToTextInputBuf, text_buffer2
+        param_call AppendToTextInputBuf, aux::str_info_size_slash
 
         ;; Load up the total volume size...
         ldax    src_file_info_params::aux_type
+        stax    vol_total_blocks
 
         ;; Compute "12345K" (either volume size or file size)
 append_size:
         jsr     ComposeSizeString
+        param_call AppendToTextInputBuf, text_buffer2
 
-        ;; Append latest to buffer
-        ldx     buf
-        ldy     #1
-:       inx
-        lda     text_buffer2,y
-        sta     buf,x
-        cpy     text_buffer2
-        beq     :+
-        iny
-        bne     :-
-:       stx     buf
-
-        COPY_STRING buf, text_buffer2
-        copy16  #text_buffer2, get_info_dialog_params::a_str
+        copy16  #text_input_buf, get_info_dialog_params::a_str
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -10649,6 +10619,19 @@ show_protected:
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
+        ;; Descendant size/file count
+
+        lda     src_file_info_params::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        beq     do_dir
+        cmp     #ST_LINKED_DIRECTORY
+        bne     :+
+do_dir:
+        jsr     SetCursorWatch
+        jsr     GetDirSize
+        jsr     SetCursorPointer
+:
+        ;; --------------------------------------------------
 
         copy    #GetInfoDialogState::prompt, get_info_dialog_params::state
         jsr     RunGetInfoDialogProc
@@ -10659,6 +10642,87 @@ next:   inc     get_info_dialog_params::index
 
 done:   copy    #0, path_buf4
         rts
+
+.proc GetDirSize
+        lda     selected_window_id
+    IF_NOT_ZERO
+        copy16  #1, file_count
+        copy16  src_file_info_params::blocks_used, num_blocks
+    ELSE
+        copy16  #0, file_count
+        copy16  #0, num_blocks
+    END_IF
+
+        copy16  #GetInfoProcessDirEntry, op_jt_addr1
+        copy16  #DoNothing, op_jt_addr3
+        copy16  #DoNothing, operation_complete_callback ; handle error
+        tsx
+        stx     stack_stash
+        jsr     ProcessDir
+        jmp     UpdateDirSizeDisplay ; in case 0 files were seen
+.endproc
+
+.proc GetInfoProcessDirEntry
+        add16   num_blocks, src_file_info_params::blocks_used, num_blocks
+        inc16   file_count
+        FALL_THROUGH_TO UpdateDirSizeDisplay
+.endproc
+
+.proc UpdateDirSizeDisplay
+        ;; Dir: "<size>K for <count> file(s)"
+        ;; Vol: "<size>K for <count> file(s) / <total>K>"
+        copy    #0, text_input_buf
+
+        ;; "<size>K"
+        ldax    num_blocks
+        ldy     selected_window_id
+     IF_ZERO
+        ldax    vol_used_blocks
+     END_IF
+        jsr     ComposeSizeString
+        param_call AppendToTextInputBuf, text_buffer2
+
+        ;; " for "
+        param_call AppendToTextInputBuf, aux::str_info_size_infix
+
+        ;; "<count> "
+        jsr     ComposeFileCountString
+        param_call AppendToTextInputBuf, str_file_count
+
+        ;; "file(s)"
+        ldax    #aux::str_info_size_suffix
+        ldy     file_count+1
+        bne     :+
+        ldy     file_count
+        cpy     #1
+        bne     :+
+        ldax    #aux::str_info_size_suffix_singular
+:       jsr     AppendToTextInputBuf
+
+        lda     selected_window_id
+    IF_ZERO
+        ;; " / "
+        param_call AppendToTextInputBuf, aux::str_info_size_slash
+        ;; "<total>K"
+        ldax    vol_total_blocks
+        jsr     ComposeSizeString
+        param_call AppendToTextInputBuf, text_buffer2
+    END_IF
+        ;; In case it shrank
+        param_call AppendToTextInputBuf, str_2_spaces
+
+        copy16  #text_input_buf, get_info_dialog_params::a_str
+        copy    #GetInfoDialogState::size, get_info_dialog_params::state
+        jsr     RunGetInfoDialogProc
+
+        rts
+.endproc
+num_blocks:
+        .word   0
+vol_used_blocks:
+        .word   0
+vol_total_blocks:
+        .word   0
 
 write_protected_flag:
         .byte   0

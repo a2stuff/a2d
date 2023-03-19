@@ -36,6 +36,7 @@ Project Page: https://github.com/a2stuff/a2d
 * View > by Size sort order improved.
 * File > Copy a File... is now File > Copy To... and operates on current selection.
 * File > Delete a File... is now File > Delete and operates on current selection.
+* File > Get Info now shows total size/file count for folders/volumes.
 * Shortcuts > Add a Shortcut... defaults to currently selected file.
 * Shortcuts > Edit/Delete/Run a Shortcut: OK button is now disabled if there is no selection.
 * Format/Erase: Default device to selected volume.
@@ -50,7 +51,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Filetype and support opening BINSCII files (.BSC and .BSQ).
 * Filetype and support for Integer BASIC (INT) files, c/o https://github.com/a2stuff/intbasic
 * Improve progress and alert dialogs shown during copy/move, lock/unlock and delete operations.
-* Escape key cancels operations (Copy/Move, Delete, Get Size, Lock/Unlock)
+* Escape key cancels operations (Copy/Move, Delete, Lock/Unlock)
 * Support for launching AppleWorks files.
   * AppleWorks 5.1 must be on same volume as DeskTop, in AW5/ directory.
 
@@ -84,8 +85,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Make OA+SA+O and OA+SA+W shortcuts work when Caps Lock is off.
 * Improve layout of window header counts/labels. ([#493](https://github.com/a2stuff/a2d/issues/493))
 * Improve mouse responsiveness during I/O operations.
-* Show watch cursor during Copy/Move/Delete/Lock/Unlock and Get Size operations.
-* Improve performance of Special > Get Size command.
+* Show watch cursor during Copy/Move/Delete/Lock/Unlock operations.
 * Improve performance of Copy/Move, Delete, and Lock/Unlock commands.
 * Special > Lock and Special > Unlock now work on folders.
 * Allow continuing a copy of nested files if one file is too large to fit.
