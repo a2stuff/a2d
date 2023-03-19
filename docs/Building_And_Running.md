@@ -6,7 +6,7 @@ Fetch, build, and install [cc65](http://cc65.github.io/cc65/):
 
 ```
 git clone https://github.com/cc65/cc65
-make -C cc65 && make -C avail
+make -C cc65 && make -C cc65 avail
 ```
 
 A very recent version of cc65 will be required, as recent compiler features and symbols from `asminc/apple2.inc` are used, and these change fairly often.
