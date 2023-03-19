@@ -287,18 +287,23 @@ grafport_win:       .tag    MGTK::GrafPort
     END_IF
 
         ldx     event_params::modifiers
-    IF_ZERO
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        jeq     Exit
+        jmp     InputLoop
+    END_IF
+
         cmp     #CHAR_ESCAPE
-      IF_EQ
+    IF_EQ
         BTK_CALL BTK::Flash, ok_button_params
         jmp     Exit
-      END_IF
+    END_IF
 
         cmp     #CHAR_RETURN
-      IF_EQ
+    IF_EQ
         BTK_CALL BTK::Flash, ok_button_params
         jmp     Exit
-      END_IF
     END_IF
 
         jmp     InputLoop
@@ -1405,6 +1410,7 @@ OnListSelectionNoChange := OnListSelectionChange
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"
 

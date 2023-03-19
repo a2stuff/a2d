@@ -228,6 +228,15 @@ eye_rect:
 
 .proc HandleKey
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     Exit
+        bne     InputLoop       ; always
+    END_IF
+
         cmp     #CHAR_ESCAPE
         beq     Exit
         bne     InputLoop       ; always
@@ -1045,6 +1054,10 @@ temp:   .dword  0
 .endscope ; oval
 InitOval := oval::InitOval
 BumpOval := oval::BumpOval
+
+;;; ============================================================
+
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 

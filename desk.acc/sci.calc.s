@@ -29,6 +29,8 @@
 
 
 .proc ExitDA
+        MGTK_CALL MGTK::CloseWindow, closewindow_params
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
         rts
 .endproc ; ExitDA
@@ -666,8 +668,6 @@ loop:   lda     chrget_routine-1,x
         beq     ret
         pla                     ; pop OnClick
         pla
-        MGTK_CALL MGTK::CloseWindow, closewindow_params
-        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     ExitDA
     END_IF
 
@@ -691,12 +691,20 @@ ret:    rts
 ;;; On Key Press
 
 .proc OnKeyPress
-        lda     event_params::modifiers
-        beq     :+
-        rts
-:
-
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+      IF_EQ
+        pla                     ; pop OnKeyPress
+        pla
+        jmp     ExitDA
+      END_IF
+        rts
+    END_IF
+
         ;; To lowercase
         cmp     #'A'
         bcc     :+
@@ -716,8 +724,6 @@ ret:    rts
       IF_ZERO
         pla                     ; pop OnKeyPress
         pla
-        MGTK_CALL MGTK::CloseWindow, closewindow_params
-        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     ExitDA
       END_IF
 :       lda     #Function::clear
@@ -1599,6 +1605,7 @@ END_PROC_AT
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
         .include "../lib/rom_call.s"
 

@@ -387,9 +387,15 @@ init_window:
         MGTK_CALL MGTK::SetPort, winfo::port
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        lda     event_params::modifiers
-        bne     InputLoop
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        bne     InputLoop
+        jmp     OnKeyOK
+    END_IF
 
         cmp     #CHAR_RETURN
         jeq     OnKeyOK
@@ -1255,6 +1261,7 @@ loop:   cmp     #10
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================

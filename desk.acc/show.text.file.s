@@ -264,6 +264,7 @@ title:  jsr     OnTitleBarClick
 
         ;; Modifiers
         lda     event_params::key
+        jsr     ToUpperCase
 
         cpx     #3
     IF_EQ
@@ -292,6 +293,9 @@ title:  jsr     OnTitleBarClick
         jsr     PageDown
         ;; jmp     InputLoop
       END_IF
+
+        cmp     #kShortcutCloseWindow
+        jeq     DoClose
     END_IF
 
         jmp     InputLoop
@@ -1083,6 +1087,7 @@ window_id:      .byte   kDAWindowId
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/muldiv32.s"
 
 ;;; ============================================================

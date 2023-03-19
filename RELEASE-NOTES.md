@@ -120,6 +120,7 @@ Project Page: https://github.com/a2stuff/a2d
 #### Updates
 
 * The `DESK.ACC` folder has been renamed to `APPLE.MENU`.
+* Apple+W can be used to close windowed accessories.
 * Date & Time
   * Show shortcut key for OK button.
   * Support Tab key for changing fields.

@@ -620,10 +620,15 @@ exit := OnClick::exit
 ;;; On Key Press
 
 .proc OnKeyPress
-        lda     event_params::modifiers
-        bne     bail
-
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     exit
+        bne     bail            ; always
+    END_IF
 
         cmp     #CHAR_RETURN    ; Treat Return as Equals
         bne     :+
@@ -644,12 +649,7 @@ exit := OnClick::exit
 clear:  lda     #'C'            ; otherwise turn Escape into Clear
 
 :
-        cmp     #CHAR_DELETE    ; Delete?
-        beq     process
-
-        cmp     #'`'            ; lowercase range?
-        bcc     process
-        and     #$5F            ; convert to uppercase
+        jsr     ToUpperCase
 
 process:
         jmp     ProcessKey
@@ -1431,6 +1431,8 @@ END_PROC_AT
 
 ;;; ============================================================
 
+
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
         .include "../lib/rom_call.s"
 

@@ -71,6 +71,8 @@ kOverlay10KBufferSize   = $2800
 
 kMaxDeskTopWindows      = 8
 
+;;; TODO: Pull from loc files
+kShortcutCloseWindow  = 'W'
 
 ;;; ============================================================
 ;;; Direct Calls (from main memory)

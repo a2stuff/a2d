@@ -223,6 +223,15 @@ joystick_bitmap:
 
 .proc HandleKey
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     Exit
+        bne     InputLoop       ; always
+    END_IF
+
         cmp     #CHAR_ESCAPE
         beq     Exit
         bne     InputLoop       ; always
@@ -539,6 +548,7 @@ done:   rts
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================

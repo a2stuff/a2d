@@ -957,6 +957,15 @@ done:   rts
 
 .proc HandleKey
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     Exit
+        jmp     InputLoop
+    END_IF
+
         cmp     #CHAR_ESCAPE
         beq     Exit
         cmp     #kShortcutEasterEgg
@@ -2059,6 +2068,7 @@ done:   rts
 
 ;;; ============================================================
 
+        .include  "../lib/uppercase.s"
         .include  "../lib/detect_lcmeve.s"
 
         ReadSetting = JUMP_TABLE_READ_SETTING

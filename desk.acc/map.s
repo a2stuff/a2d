@@ -278,6 +278,15 @@ buf_search:     .res    kBufSize, 0 ; search term
 
 .proc HandleKey
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     Exit
+        jmp     InputLoop
+    END_IF
+
         cmp     #CHAR_ESCAPE
         beq     Exit
 
@@ -439,16 +448,7 @@ index:  .byte   0
 
 ;;; ============================================================
 
-.proc ToUpperCase
-        cmp     #'a'
-        bcc     ret
-        cmp     #'z'+1
-        bcs     ret
-        and     #CASE_MASK
-ret:    rts
-.endproc ; ToUpperCase
-
-
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 

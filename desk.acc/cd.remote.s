@@ -799,6 +799,11 @@ HandleKey:
         bcs     :+
         and     #CASE_MASK
 :
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        cmp     #kShortcutCloseWindow
+        jeq     DoQuitAction
+    END_IF
 
         ;; $51 = Q (Quit)
         cmp     #$51

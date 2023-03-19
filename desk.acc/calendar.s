@@ -274,6 +274,14 @@ minute: .byte   0
         cmp     #CHAR_DOWN
         jeq     IncDate
 
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     Exit
+        bne     InputLoop       ; always
+    END_IF
+
         cmp     #CHAR_ESCAPE
         beq     Exit
         bne     InputLoop       ; always
@@ -726,6 +734,7 @@ tmp:    .word   0
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
 

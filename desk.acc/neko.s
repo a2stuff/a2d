@@ -416,6 +416,15 @@ ep_size := * - ep_start
 
 .proc HandleKey
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     Exit
+        bne     InputLoop       ; always
+    END_IF
+
         cmp     #CHAR_ESCAPE
         bne     InputLoop
         FALL_THROUGH_TO Exit
@@ -1002,6 +1011,7 @@ result: .byte   1
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/muldiv.s"
 
 ;;; ============================================================

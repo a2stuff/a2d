@@ -573,13 +573,13 @@ continue:
 ;;; ============================================================
 
 .proc HandleKey
-        ;; Apple-Q to quit
         lda     event_params::modifiers
         beq     start
         lda     event_params::key
-        cmp     #kShortcutQuit
+        jsr     ToUpperCase
+        cmp     #kShortcutQuit  ; Apple-Q to quit
         beq     Exit
-        cmp     #TO_LOWER(kShortcutQuit)
+        cmp     #kShortcutCloseWindow ; Apple-W to close window
         beq     Exit
 
 start:  lda     KBD
@@ -852,6 +852,10 @@ normal:
         add16   tmp_rect::y1, #2, tmp_poly+2 + (4 * .sizeof(MGTK::Point))+2
         rts
 .endproc ; ConstructKeyPoly
+
+;;; ============================================================
+
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 

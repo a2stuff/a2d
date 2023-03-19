@@ -162,6 +162,15 @@ char_label:  .byte   0
 
 .proc HandleKey
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        jeq     Exit
+        jmp     InputLoop
+    END_IF
+
         cmp     #CHAR_ESCAPE
         jeq     Exit
 
@@ -288,6 +297,12 @@ loop:   lda     index
 index:  .byte   0
 
 .endproc ; DrawWindow
+
+;;; ============================================================
+
+        .include "../lib/uppercase.s"
+
+;;; ============================================================
 
         font_buffer := *
 

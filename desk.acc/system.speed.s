@@ -244,9 +244,15 @@ frame_counter:
 .endproc ; InputLoop
 
 .proc OnKey
-        lda     event_params::modifiers
-        bne     InputLoop
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     OnKeyOK
+        jmp     InputLoop
+    END_IF
 
         cmp     #CHAR_RETURN
         beq     OnKeyOK
@@ -438,6 +444,7 @@ hit:    lda     winfo::window_id
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================

@@ -224,17 +224,15 @@ button_eor_table:
 ;;; ============================================================
 
 .proc HandleKey
-        lda     event_params::modifiers
-    IF_ZERO
-        ;; no modifiers
         lda     event_params::key
-        cmp     #CHAR_ESCAPE
-        beq     Exit
-        bne     InputLoop       ; always
-    END_IF
 
-        ;; modifiers
-        lda     event_params::key
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     Exit
+
+        ;; Digit key?
         cmp     #'1'
         bcc     InputLoop
         cmp     #'1'+kNumButtons
@@ -244,6 +242,12 @@ button_eor_table:
         sbc     #'1'            ; ASCII -> index
 
         jmp     ToggleButton
+    END_IF
+
+        ;; no modifiers
+        cmp     #CHAR_ESCAPE
+        beq     Exit
+        bne     InputLoop       ; always
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -428,6 +432,7 @@ index:  .byte   0
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================

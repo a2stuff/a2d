@@ -646,10 +646,16 @@ ret:    rts
 
         ;; on key press - exit if Escape
 .proc CheckKey
-        lda     event_params::modifiers
-        bne     ret
-
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        beq     OnClick::destroy
+        bne     ret             ; always
+    END_IF
+
         cmp     #CHAR_ESCAPE
         beq     OnClick::destroy
 
@@ -1090,6 +1096,10 @@ again:  cmp     #4
 done:   sta     hole_x
         rts
 .endproc ; FindHole
+
+;;; ============================================================
+
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 

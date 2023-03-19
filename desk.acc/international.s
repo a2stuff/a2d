@@ -208,9 +208,14 @@ init_window:
 .proc OnKey
         MGTK_CALL MGTK::SetPort, winfo::port
 
-        lda     event_params::modifiers
-    IF_NOT_ZERO
         lda     event_params::key
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        jsr     ToUpperCase
+        cmp     #kShortcutCloseWindow
+        jeq     OnKeyOK
+
         cmp     #'1'
         jeq     OnClickMDY
         cmp     #'2'
@@ -222,7 +227,6 @@ init_window:
         rts
     END_IF
 
-        lda     event_params::key
         cmp     #CHAR_RETURN
         jeq     OnKeyOK
         cmp     #CHAR_ESCAPE
@@ -650,6 +654,7 @@ char:   .byte   SELF_MODIFIED_BYTE
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
 
 ;;; ============================================================

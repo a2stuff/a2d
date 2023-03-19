@@ -263,6 +263,11 @@ pattern:        .res    16      ; null-terminated/upcased version
     IF_NOT_ZERO
         ;; Modified
         lda     event_params::key
+        jsr     ToUpperCase
+
+        cmp     #kShortcutCloseWindow
+        jeq     Exit
+
         cmp     #'O'
       IF_EQ
         lda     selected_index
@@ -662,6 +667,7 @@ offset: .addr   0
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
         .include "../lib/muldiv.s"
