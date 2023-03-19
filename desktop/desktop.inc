@@ -71,8 +71,10 @@ kOverlay10KBufferSize   = $2800
 
 kMaxDeskTopWindows      = 8
 
-;;; TODO: Pull from loc files
-kShortcutCloseWindow  = 'W'
+kShortcutCloseWindow  = res_char_shortcut_close
+kShortcutGrowWindow   = res_char_shortcut_resize
+kShortcutMoveWindow   = res_char_shortcut_move
+kShortcutScrollWindow = res_char_shortcut_scroll
 
 ;;; ============================================================
 ;;; Direct Calls (from main memory)

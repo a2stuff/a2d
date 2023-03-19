@@ -8,7 +8,6 @@
 .define res_string_menu_item_open "Ouvrir"
 .define res_char_menu_item_open_shortcut 'O'
 .define res_string_menu_item_close "Fermer"
-.define res_char_menu_item_close_shortcut 'W'
 .define res_string_menu_item_close_all "Tout fermer"
 .define res_string_menu_item_select_all "Tout s{lectionner"
 .define res_char_menu_item_select_all_shortcut 'A'
@@ -121,9 +120,6 @@
 .define res_const_sd_prefix_pattern_offset1 2
 .define res_const_sd_prefix_pattern_offset2 6
 .define res_string_volume_type_unknown "Inconnu"
-.define res_char_resize_shortcut 'G'
-.define res_char_move_shortcut 'M'
-.define res_char_scroll_shortcut 'X'
 .define res_string_auxtype_prefix "     Type auxiliaire : $"
 .define res_string_volume "Volume"
 .define res_string_volume_type_disk_ii "Disque"

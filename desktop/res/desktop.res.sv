@@ -8,7 +8,6 @@
 .define res_string_menu_item_open "\\ppna"
 .define res_char_menu_item_open_shortcut 'O'
 .define res_string_menu_item_close "St{ng f|nster"
-.define res_char_menu_item_close_shortcut 'W'
 .define res_string_menu_item_close_all "St{ng alla"
 .define res_string_menu_item_select_all "Markera allt"
 .define res_char_menu_item_select_all_shortcut 'A'
@@ -121,9 +120,6 @@
 .define res_const_sd_prefix_pattern_offset1 2
 .define res_const_sd_prefix_pattern_offset2 6
 .define res_string_volume_type_unknown "Ok{nt"
-.define res_char_resize_shortcut 'G'
-.define res_char_move_shortcut 'M'
-.define res_char_scroll_shortcut 'X'
 .define res_string_auxtype_prefix "     Aux Typ: $"
 .define res_string_volume "Volym"
 .define res_string_volume_type_disk_ii "Disk II"

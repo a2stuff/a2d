@@ -129,7 +129,7 @@ file_menu:
         DEFINE_MENU kMenuSizeFile
 @items: DEFINE_MENU_ITEM label_new_folder, res_char_menu_item_new_folder_shortcut
         DEFINE_MENU_ITEM label_open, res_char_menu_item_open_shortcut
-        DEFINE_MENU_ITEM label_close, res_char_menu_item_close_shortcut
+        DEFINE_MENU_ITEM label_close, res_char_shortcut_close
         DEFINE_MENU_ITEM label_close_all
         DEFINE_MENU_ITEM label_select_all, res_char_menu_item_select_all_shortcut
         DEFINE_MENU_SEPARATOR

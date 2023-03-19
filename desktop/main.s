@@ -20,10 +20,6 @@
         BTKEntry := BTKRelayImpl
         ITKEntry  := ITKRelayImpl
 
-kShortcutResize = res_char_resize_shortcut
-kShortcutMove   = res_char_move_shortcut
-kShortcutScroll = res_char_scroll_shortcut
-
 src_path_buf    := INVOKER_PREFIX
 dst_path_buf    := $1F80
 
@@ -442,7 +438,7 @@ modifiers:
         jeq     CmdOpenThenCloseCurrent
         cmp     #CHAR_UP
         jeq     CmdOpenParentThenCloseCurrent
-        cmp     #res_char_menu_item_close_shortcut
+        cmp     #kShortcutCloseWindow
         jeq     CmdCloseAll
         rts
     END_IF
@@ -456,11 +452,11 @@ modifiers:
         jeq     CmdOpenParent
         bit     window_open_flag
         bpl     menu_accelerators
-        cmp     #kShortcutResize ; Apple-G (Resize)
+        cmp     #kShortcutGrowWindow ; Apple-G (Resize)
         jeq     CmdResize
-        cmp     #kShortcutMove  ; Apple-M (Move)
+        cmp     #kShortcutMoveWindow  ; Apple-M (Move)
         jeq     CmdMove
-        cmp     #kShortcutScroll ; Apple-X (Scroll)
+        cmp     #kShortcutScrollWindow ; Apple-X (Scroll)
         jeq     CmdScroll
         cmp     #'`'            ; Apple-` (Cycle Windows)
         beq     cycle

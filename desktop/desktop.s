@@ -57,8 +57,6 @@ kOverlayDeskTopRestore2Offset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRest
         RESOURCE_FILE "desktop.res"
 
         .include "../desktop/desktop.inc"
-        .assert kShortcutCloseWindow = res_char_menu_item_close_shortcut, error, "char mismatch"
-
         .include "internal.inc"
 
         .define QR_LOADSTRING .sprintf(res_string_status_loading, kDeskTopProductName)
