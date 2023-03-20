@@ -12534,12 +12534,16 @@ callbacks_for_size_or_count:
         cmp     #ST_LINKED_DIRECTORY
         bne     do_sum_file_size
 
+        ;; For linked directory - tally it now while we have
+        ;; `src_file_info_params` populated.
+        jsr     EnumerationProcessDirectoryEntry
+
 is_dir:
         jsr     ProcessDir
         storage_type := *+1
         lda     #SELF_MODIFIED_BYTE
         cmp     #ST_VOLUME_DIRECTORY
-        bne     do_sum_file_size           ; if a subdirectory
+        bne     :+              ; if a subdirectory
 
         ;; If copying a volume dir to RAMCard, the volume dir
         ;; will not be counted as a file during enumeration but

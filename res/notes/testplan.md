@@ -223,6 +223,7 @@
 * Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. Special > Get Size. Verify that a "The specified path name is invalid." alert is not shown.
 
 * Launch DeskTop. Select a volume with more than 255 files in a folder (e.g. Total Replay). Special > Get Size. Verify that the count finishes.
+* Launch DeskTop. Create a folder. Place a file of known size (e.g. 17K) in the folder. Select the folder. Special > Get Size. Verify that 2 files are counted, and that the size is the same as the file size or slightly larger (e.g. 17K or 18K) but not twice the size of the file (e.g. 33K).
 
 * Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is dimmed but still selected.
 * Launch DeskTop. Double-click a volume. Verify that the volume icon is still selected.
