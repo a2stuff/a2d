@@ -177,7 +177,7 @@ kMenuIdSelector = 6
 kMenuSizeApple    = kMaxDeskAccCount + 2 ; About + filler
 kMenuSizeFile     = 14
 kMenuSizeView     = 6
-kMenuSizeSpecial  = 11
+kMenuSizeSpecial  = 10
 kMenuSizeStartup  = 7
 kMenuSizeSelector = 13
 

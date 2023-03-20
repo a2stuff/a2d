@@ -343,7 +343,6 @@ dispatch_table:
         .addr   CmdNoOp         ; --------
         .addr   CmdLock
         .addr   CmdUnlock
-        .addr   CmdGetSize
         ASSERT_ADDRESS_TABLE_SIZE menu4_start, ::kMenuSizeSpecial
 
         ;; Startup menu (5)
@@ -3029,7 +3028,6 @@ found:  lda     DEVLST,x
 ;;; These commands don't need anything beyond the operation.
 
 CmdGetInfo      := DoGetInfo
-CmdGetSize      := DoGetSize
 CmdUnlock       := DoUnlock
 CmdLock         := DoLock
 
@@ -5434,8 +5432,6 @@ disable:lda     #MGTK::disableitem_disable
         lda     #aux::kMenuItemIdLock
         jsr     DisableMenuItem
         lda     #aux::kMenuItemIdUnlock
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdGetSize
         jmp     DisableMenuItem
 .endproc ; ToggleMenuItemsRequiringSelection
 EnableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::enable
@@ -9945,7 +9941,7 @@ FinishOperation:
 .proc DoCopyToRAM
         copy    #0, move_flag
         copy    #$80, run_flag
-        copy    #%11000000, operation_flags ; get size
+        copy    #%11000000, operation_flags
         tsx
         stx     stack_stash
         jsr     PrepCallbacksForEnumeration
@@ -9956,12 +9952,6 @@ FinishOperation:
 .endproc ; DoCopyToRAM
 
 ;;; --------------------------------------------------
-
-.proc DoGetSize
-        copy    #0, run_flag
-        copy    #%11000000, operation_flags ; get size
-        jmp     DoOpOnSelectionCommon
-.endproc ; DoGetSize
 
 .proc DoCopySelection
         copy    #0, operation_flags ; copy/delete
@@ -10059,7 +10049,6 @@ common:
 
         jsr     PrepCallbacksForEnumeration
         bit     operation_flags
-        bvs     @size
         bmi     @lock
         bit     copy_delete_flags
         bmi     @trash
@@ -10083,14 +10072,10 @@ common:
 @lock:  jsr     OpenLockProgressDialog
         jmp     iterate_selection
 
-@size:  jsr     OpenGetSizeDialog
-        jmp     iterate_selection
-
 ;;; Perform operation
 
 perform:
         bit     operation_flags
-        bvs     @size
         bmi     @lock
         bit     copy_delete_flags
         bmi     @trash
@@ -10102,8 +10087,6 @@ perform:
 
 @lock:  jsr     PrepCallbacksForLock
         FALL_THROUGH_TO iterate_selection
-
-@size:  FALL_THROUGH_TO iterate_selection
 
 iterate_selection:
         lda     selected_icon_count
@@ -10161,22 +10144,13 @@ next_icon:
         ;; No, we finished enumerating. Now do the real work.
         inc     do_op_flag
 
-        ;; Do we need to show a confirmation dialog?
-        ;; (Delete, Get Size)
+        ;; Do we need to show a confirmation dialog? (i.e. Delete)
         bit     operation_flags
-        bmi     @lock_or_size
-
+        bmi     no_confirm      ; lock
         bit     copy_delete_flags
         bpl     no_confirm
-        bmi     confirm
 
-@lock_or_size:
-        bvc     no_confirm      ; lock/unlock
-
-confirm:
         jsr     InvokeOperationConfirmCallback
-        bit     operation_flags
-        bvs     finish          ; get size - we're done!
 
 no_confirm:
         jmp     perform
@@ -10191,7 +10165,6 @@ finish: jsr     InvokeOperationCompleteCallback
         DoCopyFile := operations::DoCopyFile
         DoLock := operations::DoLock
         DoUnlock := operations::DoUnlock
-        DoGetSize := operations::DoGetSize
         DoDrop := operations::DoDrop
 
 ;;; ============================================================
@@ -10220,7 +10193,7 @@ stack_stash:
         .byte   0
 
         ;; $80 = lock/unlock
-        ;; $C0 = get size/run (easily probed with oVerflow flag)
+        ;; $C0 = "download" (a.k.a. copy to ramcard)
         ;; $00 = copy/delete
 operation_flags:
         .byte   0
@@ -10239,6 +10212,7 @@ move_flag:
 unlock_flag:
         .byte   0
 
+        ;; TODO: Is this reset accurately?
         ;; high bit set = from Selector > Run command
         ;; high bit clear = Get Size
 run_flag:
@@ -12505,51 +12479,6 @@ ok:     rts
 .endproc ; DecFileCountAndRunLockDialogProc
 
 ;;; ============================================================
-;;; "Get Size" dialog state and logic
-;;; ============================================================
-
-;;; Logic also used for "count" operation which precedes most
-;;; other operations (copy, delete, lock, unlock) to populate
-;;; confirmation dialog.
-
-.enum GetSizeDialogLifecycle
-        open    = 0
-        count   = 1
-        prompt  = 2
-        close   = 3
-.endenum
-
-.params get_size_dialog_params
-phase:          .byte   0
-a_files:        .addr  op_file_count
-a_blocks:       .addr  op_block_count
-.endparams
-
-.proc OpenGetSizeDialog
-        copy    #0, get_size_dialog_params::phase
-        copy16  #GetSizeDialogConfirmCallback, operation_confirm_callback
-        copy16  #GetSizeDialogEnumerationCallback, operation_enumeration_callback
-        jsr     GetSizeDialogProc
-        copy16  #GetSizeDialogCompleteCallback, operation_complete_callback
-        rts
-
-.proc GetSizeDialogEnumerationCallback
-        copy    #GetSizeDialogLifecycle::count, get_size_dialog_params::phase
-        jmp     GetSizeDialogProc
-.endproc ; GetSizeDialogEnumerationCallback
-
-.proc GetSizeDialogConfirmCallback
-        copy    #GetSizeDialogLifecycle::prompt, get_size_dialog_params::phase
-        jmp     GetSizeDialogProc
-.endproc ; GetSizeDialogConfirmCallback
-
-.proc GetSizeDialogCompleteCallback
-        copy    #GetSizeDialogLifecycle::close, get_size_dialog_params::phase
-        jmp     GetSizeDialogProc
-.endproc ; GetSizeDialogCompleteCallback
-.endproc ; OpenGetSizeDialog
-
-;;; ============================================================
 ;;; Most operations start by doing a traversal to just count
 ;;; the files.
 
@@ -13453,65 +13382,6 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
 ;;; "DownLoad" dialog
 
 DownloadDialogProc := CopyDialogProc
-
-;;; ============================================================
-;;; "Get Size" dialog
-
-.proc GetSizeDialogProc
-        lda     get_size_dialog_params::phase
-
-        ;; --------------------------------------------------
-        cmp     #GetSizeDialogLifecycle::open
-    IF_EQ
-        jsr     OpenDialogWindow
-        jsr     SetCursorWatch  ; until `...::prompt` or on close
-        param_call DrawDialogTitle, aux::label_get_size
-        param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_size_number
-        param_jump DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_size_blocks
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #GetSizeDialogLifecycle::count
-    IF_EQ
-GetSizeDialogProc::do_count := *
-        ;; File Count
-        ptr1 := $06
-        copy16  get_size_dialog_params::a_files, ptr1
-        ldy     #0
-        copy16in (ptr1),y, file_count
-        jsr     ComposeFileCountString
-        jsr     SetPortForDialogWindow
-        param_call DrawDialogLabel, 1 | DDL_VALUE, str_file_count
-
-        ;; Size
-        copy16  get_size_dialog_params::a_blocks, ptr1
-        ldy     #0
-        copy16in (ptr1),y, file_count
-
-        ldax    file_count
-        jsr     ComposeSizeString
-        param_jump DrawDialogLabel, 2 | DDL_VALUE, text_buffer2
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #GetSizeDialogLifecycle::prompt
-    IF_EQ
-        ;; If no files were seen, `do_count` was never executed and so the
-        ;; counts will not be shown. Update one last time, just in case.
-        jsr     do_count
-
-        jsr     SetPortForDialogWindow
-        jsr     AddOKButton
-        jsr     SetCursorPointer ; set in `...::open`
-:       jsr     PromptInputLoop
-        bmi     :-
-        return  #0
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; GetSizeDialogLifecycle::close
-        jmp     ClosePromptDialog
-.endproc ; GetSizeDialogProc
 
 ;;; ============================================================
 ;;; "Delete File" dialog
@@ -14448,12 +14318,6 @@ ret:    rts
         BTK_CALL BTK::Draw, cancel_button_params
         rts
 .endproc ; DrawCancelButton
-
-.proc AddOKButton
-        jsr     DrawOKButton
-        copy    #$80, prompt_button_flags
-        rts
-.endproc ; AddOKButton
 
 .proc EraseOKCancelButtons
         jsr     SetPenModeCopy

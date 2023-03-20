@@ -223,16 +223,11 @@
 
 * Launch DeskTop. Open a window. File > Quit. Launch DeskTop again. Ensure the window is restored. Try to drag-select volume icons. Verify that they are selected.
 
-* Launch DeskTop. Select a volume icon, where the volume contains no files. Special > Get Size. Verify that numbers are shown (0) for number of files and space used.
 * Launch DeskTop. Select a volume icon, where the volume contains no files. File > Get Info. Verify that numbers are shown for number of files (0) and space used (a few K).
-* Launch DeskTop. Select a file icon. Special > Get Size. Verify that the size shown is correct. Select a directory. Special > Get Size, and dismiss. Now select the original file icon again, and Special > Get Size. Verify that the size shown is still correct.
 * Launch DeskTop. Select a file icon. File > Get Info. Verify that the size shown is correct. Select a directory. File > Get Info, and dismiss. Now select the original file icon again, and File > Get Info. Verify that the size shown is still correct.
-* Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. Special > Get Size. Verify that a "The specified path name is invalid." alert is not shown.
 * Use real hardware, not an emulator. Launch DeskTop. Select a volume icon. File > Get Info. Verify that a "The specified path name is invalid." alert is not shown.
 
-* Launch DeskTop. Select a volume with more than 255 files in a folder (e.g. Total Replay). Special > Get Size. Verify that the count finishes.
 * Launch DeskTop. Select a volume with more than 255 files in a folder (e.g. Total Replay). File > Get Info. Verify that the count finishes.
-* Launch DeskTop. Create a folder. Place a file of known size (e.g. 17K) in the folder. Select the folder. Special > Get Size. Verify that 2 files are counted, and that the size is the same as the file size or slightly larger (e.g. 17K or 18K) but not twice the size of the file (e.g. 33K).
 * Launch DeskTop. Create a folder. Place a file of known size (e.g. 17K) in the folder. Select the folder. File > Get Info. Verify that 2 files are counted, and that the size is the same as the file size or slightly larger (e.g. 17K or 18K) but not twice the size of the file (e.g. 33K).
 
 * Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is dimmed but still selected.
@@ -271,43 +266,43 @@
   * Special > Check Drive is disabled.
   * File > Duplicate... is disabled.
   * File > Rename... is disabled.
-  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are disabled.
+  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are disabled.
 * Launch DeskTop. Select only the Trash icon. Verify that:
   * Special > Eject Disk is disabled.
   * Special > Check Drive is disabled.
   * File > Duplicate... is disabled.
   * File > Rename... is disabled.
-  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are disabled.
+  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are disabled.
 * Launch DeskTop. Select a volume. Verify that:
   * Special > Eject Disk is enabled.
   * Special > Check Drive is enabled.
   * File > Duplicate... is disabled.
   * File > Rename... is enabled.
-  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
 * Launch DeskTop. Select two volume icons. Verify that:
   * Special > Eject Disk is enabled.
   * Special > Check Drive is enabled.
   * File > Duplicate... is disabled.
   * File > Rename... is disabled.
-  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
 * Launch DeskTop. Select a volume icon and the Trash icon. Verify that:
   * Special > Eject Disk is enabled.
   * Special > Check Drive is enabled.
   * File > Duplicate... is disabled.
   * File > Rename... is disabled.
-  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
 * Launch DeskTop. Open a volume window, and select a file. Verify that:
   * Special > Eject Disk is disabled.
   * Special > Check Drive is disabled.
   * File > Rename... is enabled.
   * File > Duplicate... is enabled.
-  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
 * Launch DeskTop. Open a volume window, and select two files. Verify that:
   * Special > Eject Disk is disabled.
   * Special > Check Drive is disabled.
   * File > Rename... is disabled.
   * File > Duplicate... is enabled.
-  * File > Open, File > Get Info, Special > Lock, Special > Unlock, and Special > Get Size are enabled.
+  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
 * Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
 * Launch DeskTop. Open a window. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
 
@@ -530,7 +525,6 @@
   * Select the innermost folder. File > Copy To... (and pick a target)
   * Select the innermost folder. Special > Lock
   * Select the innermost folder. Special > Unlock
-  * Select the innermost folder. Special > Get Size
   * Select the innermost folder. Shortcuts > Add a Shortcut...
   * Drag a file onto the innermost folder.
   * Drag the innermost folder to another volume.
@@ -548,7 +542,6 @@
 * Repeat the following test cases for these operations: Copy, Move, Delete, Lock, Unlock:
   * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is cancelled and the progress dialog is closed.
   * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is cancelled and the progress dialog is closed.
-* Select multiple files. Special > Get Size. During the count of the files, press Escape. Verify that the count is cancelled and the dialog is closed.
 * Select a volume or folder containing multiple files. File > Get Info. During the count of the files, press Escape. Verify that the count is cancelled.
 
 * Using BASIC, create a directory structure: X/Y/Z and save a BASIC file B as X/Y/Z/B. Lock all three directories and the file from BASIC (not DeskTop). Launch DeskTop. Select X. File > Delete. Verify that a prompt is shown for deleting each file in deepest-first order (B, Z, Y, X). Click Yes at each prompt. Verify that all files are deleted.

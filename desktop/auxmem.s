@@ -108,8 +108,6 @@ label_unlock:
         PASCAL_STRING res_string_menu_item_unlock ; menu item
 label_get_info:
         PASCAL_STRING res_string_menu_item_get_info ; menu item
-label_get_size:
-        PASCAL_STRING res_string_menu_item_get_size ; menu item
 label_rename_icon:
         PASCAL_STRING res_string_menu_item_rename_icon ; menu item
 label_duplicate_icon:
@@ -187,7 +185,6 @@ special_menu:
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_lock
         DEFINE_MENU_ITEM label_unlock
-        DEFINE_MENU_ITEM label_get_size
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeSpecial, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdCheckAll    = 1
@@ -200,7 +197,6 @@ special_menu:
         ;; --------------------
         kMenuItemIdLock        = 9
         kMenuItemIdUnlock      = 10
-        kMenuItemIdGetSize     = 11
 
 ;;; ============================================================
 
@@ -376,17 +372,10 @@ str_unlock_count:
 str_lock_count:
         PASCAL_STRING res_string_lock_status_count
 
-        ;; "Get Size" dialog strings
-str_size_number:
-        PASCAL_STRING res_string_get_size_label_count
-str_size_blocks:
-        PASCAL_STRING res_string_get_size_label_space
+;;; Miscellaneous alert strings
 
 str_ramcard_full:
         PASCAL_STRING res_string_download_error_ramcard_full
-
-;;; Miscellaneous alert strings
-
 str_warning_selector_list_full:
         PASCAL_STRING res_string_warning_selector_list_full
 ;;; The same string is used for both of these cases as the second case

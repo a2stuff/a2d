@@ -37,6 +37,7 @@ Project Page: https://github.com/a2stuff/a2d
 * File > Copy a File... is now File > Copy To... and operates on current selection.
 * File > Delete a File... is now File > Delete and operates on current selection.
 * File > Get Info now shows total size/file count for folders/volumes.
+* Special > Get Size command is now redundant with File > Get Info, so was removed.
 * Shortcuts > Add a Shortcut... defaults to currently selected file.
 * Shortcuts > Edit/Delete/Run a Shortcut: OK button is now disabled if there is no selection.
 * Format/Erase: Default device to selected volume.
