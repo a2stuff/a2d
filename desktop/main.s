@@ -9940,7 +9940,6 @@ FinishOperation:
 ;;; Used when running a Shortcut, to copy to RAMCard
 .proc DoCopyToRAM
         copy    #0, move_flag
-        copy    #$80, run_flag
         copy    #%11000000, operation_flags
         tsx
         stx     stack_stash
@@ -10210,12 +10209,6 @@ move_flag:
 
         ;; high bit set = unlock, clear = lock
 unlock_flag:
-        .byte   0
-
-        ;; TODO: Is this reset accurately?
-        ;; high bit set = from Selector > Run command
-        ;; high bit clear = Get Size
-run_flag:
         .byte   0
 
 all_flag:
@@ -12543,8 +12536,8 @@ is_dir:
         ;; will be counted during copy, so include it to avoid
         ;; off-by-one.
         ;; https://github.com/a2stuff/a2d/issues/462
-        bit     run_flag
-        bpl     :+
+        bit     operation_flags
+        bvc     :+
         inc16   op_file_count
 :       rts
 

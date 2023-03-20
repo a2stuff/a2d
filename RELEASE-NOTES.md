@@ -91,6 +91,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Special > Lock and Special > Unlock now work on folders.
 * Allow continuing a copy of nested files if one file is too large to fit.
 * Ensure correct paths are visible when displaying alerts during operations.
+* Fix "Files remaining" count for volume after failed shortcut / copy to RAMCard.
 
 ### Selector
 

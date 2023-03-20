@@ -179,6 +179,7 @@
 
 * Launch DeskTop. Open a window. File > New Folder..., enter name, OK. Copy the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
 * Launch DeskTop. Open a window. File > New Folder..., enter name, OK. Move the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
+* Launch DeskTop. Create a shortcut for a non-executable file at the root of a volume. Run the shortcut. Verify that the "Files remaining" count bottoms out at 0. Close the alert. Drag a volume icon to another volume. Verify that the "Files remaining" count bottoms out at 0.
 
 * Launch DeskTop. Open a volume. File > New Folder..., create A. File > New Folder..., create B. Drag B onto A. File > New folder.... Verify DeskTop doesn't hang.
 
