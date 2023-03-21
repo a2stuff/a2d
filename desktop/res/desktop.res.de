@@ -73,6 +73,7 @@
 .define res_string_get_info_label_size_suffix_singular "Objekt"
 .define res_string_get_info_label_size_slash " / "
 .define res_string_format_disk_label_select "W{hle zu formatierendes Laufwerk:"
+.define res_string_format_disk_label_location "Laufwerk: "
 .define res_string_format_disk_label_enter_name "Name des neuen Laufwerks:"
 .define res_string_format_disk_prompt_format_prefix "M|chten Sie formatieren "
 .define res_string_format_disk_prompt_format_suffix "?"

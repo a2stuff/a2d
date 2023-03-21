@@ -73,6 +73,7 @@
 .define res_string_get_info_label_size_suffix_singular "{l{ment"
 .define res_string_get_info_label_size_slash " / "
 .define res_string_format_disk_label_select "S{lectionnez l'unit{ @ formater :"
+.define res_string_format_disk_label_location "Emplacement : "
 .define res_string_format_disk_label_enter_name "Nouveau nom de volume :"
 .define res_string_format_disk_prompt_format_prefix "Voulez-vous formater "
 .define res_string_format_disk_prompt_format_suffix " ?"

@@ -374,8 +374,8 @@
   * Repeat the following case with: no selection, multiple volume icons selected, a single file selected, and multiple files selected:
     * Launch DeskTop. Set selection as specified. Run the command. Verify that the device selector is not skipped.
   * Launch DeskTop. Make sure no volume icon is selected. Run the command. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
-  * Launch DeskTop. Make sure no volume icon is selected. Run the command. Click an item, then click OK. Verify the OK button becomes disabled. Enter text. Verify that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
-  * Launch DeskTop. Select a volume icon. Run the command. Verify that the OK button is disabled. Enter text. Verify that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
+  * Launch DeskTop. Make sure no volume icon is selected. Run the command. Click an item, then click OK. Verify that the device location is shown, and that the OK button becomes disabled. Enter text. Verify that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
+  * Launch DeskTop. Select a volume icon. Run the command. Verify that the OK button is disabled. Enter text. Verify that the device location is shown, and that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
 
 * Launch DeskTop. Open a window. File > New Folder..., enter a unique name, OK. File > New Folder..., enter the same name, OK. Verify that an alert is shown. Dismiss the alert. Verify that the input field still has the previously typed name.
 

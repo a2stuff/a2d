@@ -73,6 +73,7 @@
 .define res_string_get_info_label_size_suffix_singular "objekt"
 .define res_string_get_info_label_size_slash " / "
 .define res_string_format_disk_label_select "V{lj platsen f|r disken som ska formateras:"
+.define res_string_format_disk_label_location "Platsen: "
 .define res_string_format_disk_label_enter_name "Nytt volymnamn:"
 .define res_string_format_disk_prompt_format_prefix "Vill du formatera "
 .define res_string_format_disk_prompt_format_suffix "?"

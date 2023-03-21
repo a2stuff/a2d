@@ -119,9 +119,26 @@ skip_select:
         copy    #$80, has_input_field_flag
         copy    #0, text_input_buf
         copy    #$00, format_erase_overlay_flag
-        jsr     main::InitNameInput
-        jsr     main::SetPortForDialogWindow
+
+        param_call main::DrawDialogLabel, 2, aux::str_location
+        ;; Find DEVLST index of selected/specified device
+        lda     unit_num
+        and     #UNIT_NUM_MASK
+        sta     masked
+        ldx     #AS_BYTE(-1)
+:       inx
+        lda     DEVLST,x
+        and     #UNIT_NUM_MASK
+        masked := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     :-
+        ;; NOTE: Assertion violation if not found
+        txa
+        jsr     GetDeviceNameForIndex
+        jsr     main::DrawString
+
         param_call main::DrawDialogLabel, 4, aux::str_new_volume
+        jsr     main::InitNameInput
 
 loop2:
         jsr     main::PromptInputLoop
@@ -413,16 +430,25 @@ loop:   lda     #SELF_MODIFIED_BYTE
         sec
         sbc     #1
         sbc     vol
-        asl     a
-        tay
-        lda     device_name_table+1,y
-        tax
-        lda     device_name_table,y ; now A,X has pointer
+        jsr     GetDeviceNameForIndex
         jsr     main::DrawString
 
         inc     vol
         jmp     loop
 .endproc ; DrawVolumeLabels
+
+;;; ============================================================
+
+;;; Input: A = index in DEVLST
+;;; Output: A,X = device name
+.proc GetDeviceNameForIndex
+        asl     a
+        tay
+        lda     device_name_table+1,y
+        tax
+        lda     device_name_table,y ; now A,X has pointer
+        rts
+.endproc ; GetDeviceNameForIndex
 
 ;;; ============================================================
 ;;; Gets the selected unit number from `DEVLST`

@@ -73,6 +73,7 @@
 .define res_string_get_info_label_size_suffix_singular "\x12tem"
 .define res_string_get_info_label_size_slash " / "
 .define res_string_format_disk_label_select "Seleccione la localizaci\x13n del disco a inicializar:"
+.define res_string_format_disk_label_location "Localizaci\x13n: "
 .define res_string_format_disk_label_enter_name "Nuevo nombre de volumen:"
 .define res_string_format_disk_prompt_format_prefix "]Quiere inicializar "
 .define res_string_format_disk_prompt_format_suffix "?"

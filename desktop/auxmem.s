@@ -342,6 +342,8 @@ str_info_size_slash:
 
 str_select_format:
         PASCAL_STRING res_string_format_disk_label_select
+str_location:
+        PASCAL_STRING res_string_format_disk_label_location
 str_new_volume:
         PASCAL_STRING res_string_format_disk_label_enter_name
 str_confirm_format_prefix:

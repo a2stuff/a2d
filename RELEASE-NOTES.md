@@ -43,6 +43,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Format/Erase: Default device to selected volume.
 * Format/Erase: Show volume's previous name with adjusted case. ([#426](https://github.com/a2stuff/a2d/issues/426), [#427](https://github.com/a2stuff/a2d/issues/427))
 * Format/Erase: OK button is now disabled if there is no selection.
+* Format/Erase: Show format location when prompting for new volume name.
 * The OK button is now disabled in name input dialogs (New Folder, Rename, Duplicate, Format, Erase) if the name is empty.
 * Show keyboard shortcut for File > Delete in menu.
 * View style for windows is saved/restored across restarts.

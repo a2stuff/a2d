@@ -73,6 +73,7 @@
 .define res_string_get_info_label_size_suffix_singular "elemento"
 .define res_string_get_info_label_size_slash " / "
 .define res_string_format_disk_label_select "Selecione a localiza][o do disco para inicializar:"
+.define res_string_format_disk_label_location "Localiza][o: "
 .define res_string_format_disk_label_enter_name "Nome do novo volume:"
 .define res_string_format_disk_prompt_format_prefix "Voc& deseja inicializar "
 .define res_string_format_disk_prompt_format_suffix "?"
