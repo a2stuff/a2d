@@ -35,20 +35,29 @@
 
         ;; Dynamically loaded overlays
         DEFSEG OverlayFormatErase,  $0800, $1200
-        DEFSEG OverlayShortcutPick, $9000, $0A00
-        DEFSEG OverlayFileDialog,   $5000, $0F00
+        DEFSEG OverlayShortcutPick, $5000, $0A00
+        DEFSEG OverlayFileDialog,   $6000, $0F00
         DEFSEG OverlayFileCopy,     $7000, $0100
         DEFSEG OverlayShortcutEdit, $7000, $0300
 
 ;;; These pseudo-overlays restore DeskTop after overlays are used
 
-kOverlayDeskTopRestore1Length = $2800
-kOverlayDeskTopRestore1Address = $5000
-kOverlayDeskTopRestore1Offset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestore1Address - kSegmentDeskTopMainAddress)
+;;; Restore after OverlayShortcutPick has been used
+kOverlayDeskTopRestoreSPLength = kOverlayShortcutPickLength
+kOverlayDeskTopRestoreSPAddress = kOverlayShortcutPickAddress
+kOverlayDeskTopRestoreSPOffset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestoreSPAddress - kSegmentDeskTopMainAddress)
 
-kOverlayDeskTopRestore2Length = $1000
-kOverlayDeskTopRestore2Address = $9000
-kOverlayDeskTopRestore2Offset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestore2Address - kSegmentDeskTopMainAddress)
+;;; Restore after OverlayFileDialog and either OverlayFileCopy or OverlayShortcutEdit has been used
+kOverlayDeskTopRestoreFDLength = $1400
+kOverlayDeskTopRestoreFDAddress = kOverlayFileDialogAddress
+kOverlayDeskTopRestoreFDOffset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestoreFDAddress - kSegmentDeskTopMainAddress)
+.assert (kOverlayFileCopyAddress + kOverlayFileCopyLength) <= (kOverlayDeskTopRestoreFDAddress + kOverlayDeskTopRestoreFDLength), error, "restore coverage"
+.assert (kOverlayShortcutEditAddress + kOverlayShortcutEditLength) <= (kOverlayDeskTopRestoreFDAddress + kOverlayDeskTopRestoreFDLength), error, "restore coverage"
+
+;;; Restore after 10K buffer is used by Desk Accessories
+kOverlayDeskTopRestore10KLength = kOverlay10KBufferSize
+kOverlayDeskTopRestore10KAddress = OVERLAY_10K_BUFFER
+kOverlayDeskTopRestore10KOffset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestore10KAddress - kSegmentDeskTopMainAddress)
 
 ;;; ============================================================
 ;;; DeskTop module

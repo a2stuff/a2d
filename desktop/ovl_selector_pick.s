@@ -61,7 +61,7 @@ L9052:  lda     #$00
         pha
         tya
         pha
-        lda     #kDynamicRoutineRestore5000
+        lda     #kDynamicRoutineRestoreFD
         jsr     main::RestoreDynamicRoutine
         jsr     main::ClearUpdates ; Add File Dialog close
         pla
@@ -214,7 +214,7 @@ l3:     clc
         pha
         tya
         pha
-        lda     #kDynamicRoutineRestore5000
+        lda     #kDynamicRoutineRestoreFD
         jsr     main::RestoreDynamicRoutine
         jsr     main::ClearUpdates ; Edit File Dialog close
         pla
@@ -314,7 +314,7 @@ flags:  .byte   0
         cmp     #SelectorAction::edit
         bne     :+
 
-        lda     #kDynamicRoutineRestore5000
+        lda     #kDynamicRoutineRestoreFD
         jsr     main::RestoreDynamicRoutine
 
 :       jsr     CloseWindow

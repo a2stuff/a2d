@@ -193,7 +193,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc YieldLoop
         inc     loop_counter
         inc     loop_counter
@@ -673,7 +673,7 @@ done:   rts
 .endproc ; UnsafeSetPortFromWindowId
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc SafeSetPortFromWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -1127,7 +1127,7 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
 
 ;;; ============================================================
 
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc UpcaseChar
         cmp     #'a'
         bcc     done
@@ -1280,7 +1280,7 @@ devlst_backup:
 :
     END_IF
 
-        lda     #kDynamicRoutineSelector1 ; selector picker dialog
+        lda     #kDynamicRoutineShortcutPick
         jsr     LoadDynamicRoutine
         bmi     done
 
@@ -1288,7 +1288,7 @@ devlst_backup:
         cmp     #SelectorAction::delete
         bcs     invoke     ; delete or run (no need for more overlays)
 
-        lda     #kDynamicRoutineSelector2 ; file dialog driver
+        lda     #kDynamicRoutineShortcutEdit
         jsr     LoadDynamicRoutine
         bmi     done
         lda     #kDynamicRoutineFileDialog ; file dialog
@@ -1303,7 +1303,7 @@ invoke:
 
         ;; Restore from overlays
         ;; (restore from file dialog overlay handled in picker overlay)
-        lda     #kDynamicRoutineRestore9000 ; restore from picker dialog
+        lda     #kDynamicRoutineRestoreSP ; restore from picker dialog
         jsr     RestoreDynamicRoutine
 
         bit     result
@@ -1745,7 +1745,7 @@ main_length:    .word   0
         lda     #$00
         jsr     file_dialog__Exec
         pha                     ; A = dialog result
-        lda     #kDynamicRoutineRestore5000
+        lda     #kDynamicRoutineRestoreFD
         jsr     RestoreDynamicRoutine
         jsr     PushPointers    ; $06 = dst
         jsr     ClearUpdates    ; following picker dialog close
@@ -8369,7 +8369,7 @@ min     := parsed_date + ParsedDateTime::minute
 
 ;;; ============================================================
 
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 
 ;;; A,X = A * 16
 .proc ATimes16
@@ -9708,41 +9708,42 @@ next:   dec     step
 
 ;;; Routines are:
 ;;;  0 = format/erase disk        - A$ 800,L$1400 call w/ A = 4 = format, A = 5 = erase
-;;;  1 = selector actions (all)   - A$9000,L$1000
-;;;  2 = common file dialog       - A$5000,L$2000
+;;;  1 = shortcut picker          - A$9000,L$1000
+;;;  2 = common file dialog       - A$6000,L$1000
 ;;;  3 = part of copy file        - A$7000,L$ 800
-;;;  4 = selector add/edit        - L$7000,L$ 800
-;;;  5 = restore 1                - A$5000,L$2800 (restore $5000...$77FF)
-;;;  6 = restore 2                - A$9000,L$1000 (restore $9000...$9FFF)
+;;;  4 = shortcut editor          - L$7000,L$ 800
+;;;  5 = restore shortcut picker  - A$5000,L$1000 (restore $5000...$5FFF)
+;;;  6 = restore file dialog      - A$6000,L$1400 (restore $6000...$73FF)
+;;;  7 = restore 10K buffer       - A$5000,L$2800 (restore $5000...$77FF)
 ;;;
 ;;; Routines 1-5 need appropriate "restore routines" applied when complete.
 
 .proc LoadDynamicRoutineImpl
 
-kNumOverlays = 7
+kNumOverlays = 8
 
 pos_table:
         .dword  kOverlayFormatEraseOffset
         .dword  kOverlayShortcutPickOffset, kOverlayFileDialogOffset
         .dword  kOverlayFileCopyOffset
-        .dword  kOverlayShortcutEditOffset, kOverlayDeskTopRestore1Offset
-        .dword  kOverlayDeskTopRestore2Offset
+        .dword  kOverlayShortcutEditOffset, kOverlayDeskTopRestoreSPOffset
+        .dword  kOverlayDeskTopRestoreFDOffset, kOverlayDeskTopRestore10KOffset
         ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
 
 len_table:
         .word   kOverlayFormatEraseLength
         .word   kOverlayShortcutPickLength, kOverlayFileDialogLength
         .word   kOverlayFileCopyLength
-        .word   kOverlayShortcutEditLength, kOverlayDeskTopRestore1Length
-        .word   kOverlayDeskTopRestore2Length
+        .word   kOverlayShortcutEditLength, kOverlayDeskTopRestoreSPLength
+        .word   kOverlayDeskTopRestoreFDLength, kOverlayDeskTopRestore10KLength
         ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
 
 addr_table:
         .word   kOverlayFormatEraseAddress
         .word   kOverlayShortcutPickAddress, kOverlayFileDialogAddress
         .word   kOverlayFileCopyAddress
-        .word   kOverlayShortcutEditAddress, kOverlayDeskTopRestore1Address
-        .word   kOverlayDeskTopRestore2Address
+        .word   kOverlayShortcutEditAddress, kOverlayDeskTopRestoreSPAddress
+        .word   kOverlayDeskTopRestoreFDAddress, kOverlayDeskTopRestore10KAddress
         ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
 
         DEFINE_OPEN_PARAMS open_params, str_desktop, IO_BUFFER
@@ -14063,7 +14064,7 @@ SaveWindows := save_restore_windows::Save
 ;;;
 ;;; ============================================================
 
-        .assert * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 
 ;;; ============================================================
 
@@ -14118,7 +14119,7 @@ params:  .res    3
 ;;; ============================================================
 
 ;;; Preserves A
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc SetCursorWatch
         pha
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
@@ -14126,13 +14127,13 @@ params:  .res    3
         rts
 .endproc ; SetCursorWatch
 
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc SetCursorPointer
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 .endproc ; SetCursorPointer
 
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc SetCursorIBeam
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
@@ -14142,7 +14143,7 @@ params:  .res    3
 ;;; Double Click Detection
 ;;; Returns with A=0 if double click, A=$FF otherwise.
 
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc StashCoordsAndDetectDoubleClick
         ;; Stash coords for double-click in windows
         COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
@@ -14608,7 +14609,7 @@ done:   rts
 ;;; Determine if mouse moved (returns w/ carry set if moved)
 ;;; Used in dialogs to possibly change cursor
 
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc CheckMouseMoved
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     event_params::coords,x
@@ -14632,7 +14633,7 @@ diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
 ;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
 ;;; Output: A=high bit/N flag set if either is down.
 
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc ModifierDown
         lda     BUTN0
         ora     BUTN1
@@ -14663,7 +14664,7 @@ ret:    rts
 ;;; Test if shift is down (if it can be detected).
 ;;; Output: A=high bit/N flag set if down.
 
-        .assert * < $5000 || (* >= $7800 && * < $9000) || * >= $A000, error, "Routine used by overlays in overlay zone"
+        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc ShiftDown
         bit     machine_config::iigs_flag
         bpl     TestShiftMod    ; no, rely on shift key mod

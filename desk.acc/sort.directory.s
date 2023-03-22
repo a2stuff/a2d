@@ -98,7 +98,7 @@ start:  tsx
         lda     #kErrNoWindowsOpen
         jmp     JUMP_TABLE_SHOW_ALERT ; NOTE: Trashes AUX $800-$1AFF
 
-:       lda     #kDynamicRoutineRestore5000
+:       lda     #kDynamicRoutineRestore10K
         jsr     JUMP_TABLE_RESTORE_OVL
 
         lda     window_id

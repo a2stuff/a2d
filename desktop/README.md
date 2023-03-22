@@ -23,8 +23,8 @@ The file is broken down into multiple segments:
 | Initializer   | Main    | A$0800  | `init.s`                       |
 | Invoker       | Main    | A$0290  | `../lib/invoker.s`             |
 | Format/Erase  | Main    | A$0800  | `ovl_format_erase.s`           |
-| Pick Shortcut | Main    | A$9000  | `ovl_selector_pick.s`          |
-| File Dialog   | Main    | A$5000  | `ovl_file_dialog.s`            |
+| Pick Shortcut | Main    | A$5000  | `ovl_selector_pick.s`          |
+| File Dialog   | Main    | A$6000  | `ovl_file_dialog.s`            |
 | File Copy     | Main    | A$7000  | `ovl_file_copy.s`              |
 | Edit Shortcut | Main    | A$7000  | `ovl_selector_edit.s`          |
 
@@ -151,7 +151,7 @@ main memory code overlays. When complete, any original code above
 $4000 is reloaded (unless a full restart is required.)
 
 Several of the overlays also use a common file selector dialog overlay
-`ovl_file_dialog.s` ($5000-$6FFF).
+`ovl_file_dialog.s` ($6000-$6FFF).
 
 #### Disk Format/Disk Erase
 
@@ -160,18 +160,18 @@ This re-uses much of DeskTop's dialog framework for prompts and progress.
 
 #### Shortcuts - Delete Entry / Run Entry
 
-Simple overlay: `ovl_selector_pick.s` ($9000-$9FFF).
+Simple overlay: `ovl_selector_pick.s` ($5000-$5FFF).
 
 #### Shortcuts - Add Entry / Edit Entry
 
-Also uses `ovl_selector_pick.s` ($9000-$9FFF) but additionally uses overlay
+Also uses `ovl_selector_pick.s` ($5000-$5FFF) but additionally uses overlay
 `ovl_selector_edit.s` ($7000-$77FF) and the file selector dialog `ovl_file_dialog.s`
-($5000-$6FFF).
+($6000-$6FFF).
 
 #### File Copy
 
 Overlay `ovl_file_copy.s` ($7000-$77FF), uses file selector dialog `ovl_file_dialog.s`
-($5000-$6FFF).
+($6000-$6FFF).
 
 ## Memory Map
 
@@ -197,13 +197,6 @@ $BF00 +-------------+       | Utilities & |
       |             |       | * Alerts    |
       |             |       |             |
       |             |       |             |
-$A000 |      +------+       |             |
-      |      | Ovl  |       |             |
-      |      |      |       |             |
-      |      |      |       |             |
-$9000 |      +------+       |             |
-      |             |       |             |
-      |             |       |             |
       |             |       |             |
       |             |       |             |
       |             |       | Font        |
@@ -217,11 +210,8 @@ $7800 |      +------+       |             |
 $7000 |      +------+       |             |
       |      | Ovl  |       |             |
       |      |      |       |             |
-      |      |      |       |             |
-      |      |      |       |             |
-      |      |      |       |             |
-      |      |      |       |             |
-      |      |      |       |             |
+$6000 |      +------+       |             |
+      |      | Ovl  |       |             |
       |      |      |       |             |
 $5000 |      +------+       |             |
       |             |       |             |
