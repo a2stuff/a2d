@@ -10204,7 +10204,8 @@ operation_flags:
 copy_delete_flags:
         .byte   0
 
-        ;; high bit set = move, clear = copy
+        ;; bit 7 set = move, clear = copy
+        ;; bit 6 set = same volume move and relink supported
 move_flag:
         .byte   0
 
@@ -10365,7 +10366,7 @@ list:   .word   0               ; 0 items in list
 ;;; "Get Info" dialog state and logic
 ;;; ============================================================
 
-        DEFINE_READ_BLOCK_PARAMS block_params, $800, $A
+        DEFINE_READ_BLOCK_PARAMS getinfo_block_params, $800, $A
 
 .params get_info_dialog_params
 state:  .byte   0
@@ -10465,10 +10466,10 @@ vol_icon2:
         bpl     :-
         jmp     common2
 :       lda     DEVLST,y
-        sta     block_params::unit_num
-        MLI_CALL READ_BLOCK, block_params
+        sta     getinfo_block_params::unit_num
+        MLI_CALL READ_BLOCK, getinfo_block_params
         bne     common2
-        MLI_CALL WRITE_BLOCK, block_params
+        MLI_CALL WRITE_BLOCK, getinfo_block_params
         cmp     #ERR_WRITE_PROTECTED
         bne     common2
         copy    #$80, write_protected_flag
@@ -11721,6 +11722,11 @@ common:
         jsr     TryCreateDst
         bcs     done
 
+        bit     move_flag       ; same volume relink move?
+    IF_VS
+        jmp     RelinkFile
+    END_IF
+
         jsr     DoFileCopy
         jmp     MaybeFinishFileMove
 
@@ -11729,6 +11735,14 @@ common:
 dir:
         jsr     TryCreateDst
         bcs     done
+
+        bit     move_flag       ; same volume relink move?
+    IF_VS
+        jsr     RelinkFile
+        jsr     UpdateWindowPaths
+        jmp     UpdatePrefix
+    END_IF
+
 copy_dir_contents:
         jsr     ProcessDir
         jsr     MaybeFinishFileMove
@@ -11928,8 +11942,12 @@ existing_size:
 ;;; and `CopyProcessDirectoryEntry`
 
 .proc TryCreateDst
+        bit     move_flag       ; same volume relink move?
+    IF_VC
+        ;; No, verify that there is room.
         jsr     CheckSpaceAndShowPrompt
         bcs     failure
+    END_IF
 
         ;; Copy file_type, aux_type, storage_type
         ldx     #src_file_info_params::storage_type - src_file_info_params::file_type
@@ -11986,6 +12004,171 @@ failure:
         sec
         rts
 .endproc ; TryCreateDst
+
+;;; ============================================================
+;;; Relink - swaps source and target, then deletes source.
+;;;
+;;; Assert: `TryCreateDst` has succeeded
+
+.proc RelinkFileImpl
+        src_block := $800
+        dst_block := $A00
+
+        DEFINE_READ_BLOCK_PARAMS src_block_params, src_block, 0
+        DEFINE_READ_BLOCK_PARAMS dst_block_params, dst_block, 0
+src_entry_num:  .byte   0
+dst_entry_num:  .byte   0
+
+Start:  lda     DEVNUM
+        sta     src_block_params::unit_num
+        sta     dst_block_params::unit_num
+
+        ;; --------------------------------------------------
+        ;; Locate the source/destination directory blocks
+
+:       ldax    #src_path_buf
+        jsr     GetFileEntryBlock
+        bcc     :+
+        lda     #ERR_PATH_NOT_FOUND
+        jsr     ShowErrorAlert
+        jmp     :-
+:       stax    src_block_params::block_num
+        sty     src_entry_num
+
+:       ldax    #dst_path_buf
+        jsr     GetFileEntryBlock
+        bcc     :+
+        lda     #ERR_PATH_NOT_FOUND
+        jsr     ShowErrorAlert
+        jmp     :-
+:       stax    dst_block_params::block_num
+        sty     dst_entry_num
+
+        ;; --------------------------------------------------
+        ;; Load the directory blocks containing FileEntry records
+
+        jsr     ReadBlocks
+
+        ;; --------------------------------------------------
+        ;; Swap the File Entry fields between the blocks, but
+        ;; leave `header_pointer` unchanged
+
+        src_ptr := $06
+        dst_ptr := $08
+
+        ;; Point `src_ptr` / `dst_ptr` at `FileEntry` structures
+        copy16  #src_block + 4, src_ptr
+        copy16  #dst_block + 4, dst_ptr
+
+        ldx     src_entry_num
+    IF_NOT_ZERO
+:       add16_8 src_ptr, #.sizeof(FileEntry)
+        dex
+        bne     :-
+    END_IF
+
+        ldx     dst_entry_num
+    IF_NOT_ZERO
+:       add16_8 dst_ptr, #.sizeof(FileEntry)
+        dex
+        bne     :-
+    END_IF
+
+        ;; Swap everything but `header_pointer`
+        ldy     #FileEntry::header_pointer-1
+:       lda     (src_ptr),y
+        pha
+        lda     (dst_ptr),y
+        sta     (src_ptr),y
+        pla
+        sta     (dst_ptr),y
+        dey
+        bpl     :-
+
+        ;; --------------------------------------------------
+        ;; Write out the updated blocks
+
+        jsr     WriteBlocks
+
+        ;; --------------------------------------------------
+        ;; If a subdirectory, need to modify parent links
+
+        ldy     #FileEntry::storage_type_name_length
+        lda     (src_ptr),y
+        and     #STORAGE_TYPE_MASK
+        cmp     #ST_LINKED_DIRECTORY<<4
+    IF_EQ
+        ;; Identify the key blocks of the src/dst file
+        ldy     #FileEntry::key_pointer
+        copy    (src_ptr),y, src_block_params::block_num
+        copy    (dst_ptr),y, dst_block_params::block_num
+        iny
+        copy    (src_ptr),y, src_block_params::block_num+1
+        copy    (dst_ptr),y, dst_block_params::block_num+1
+
+        ;; Load the key blocks of the source/dest files
+        jsr     ReadBlocks
+
+        ;; Swap the `parent_pointer`/`parent_entry_number` fields between subdir headers
+        ldx     #2
+:       ldy     src_block + SubdirectoryHeader::parent_pointer,x
+        lda     dst_block + SubdirectoryHeader::parent_pointer,x
+        sta     src_block + SubdirectoryHeader::parent_pointer,x
+        tya
+        sta     dst_block + SubdirectoryHeader::parent_pointer,x
+        dex
+        bpl     :-
+
+        ;; Write out the updated key blocks
+        jsr     WriteBlocks
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Delete the file at the source location.
+
+:       MLI_CALL DESTROY, destroy_params
+        beq     :+
+        jsr     ShowErrorAlert
+        jmp     :-
+:
+        rts
+
+;;; --------------------------------------------------
+
+.proc ReadBlocks
+:
+        MLI_CALL READ_BLOCK, src_block_params
+        beq     :+
+        jsr     ShowErrorAlert
+        jmp     :-
+:
+        MLI_CALL READ_BLOCK, dst_block_params
+        beq     :+
+        jsr     ShowErrorAlert
+        jmp     :-
+:
+        rts
+.endproc ; ReadBlocks
+
+;;; --------------------------------------------------
+
+.proc WriteBlocks
+:
+        MLI_CALL WRITE_BLOCK, src_block_params
+        beq     :+
+        jsr     ShowErrorAlert
+        jmp     :-
+:
+        MLI_CALL WRITE_BLOCK, dst_block_params
+        beq     :+
+        jsr     ShowErrorAlert
+        jmp     :-
+:
+        rts
+.endproc ; WriteBlocks
+
+.endproc ; RelinkFileImpl
+        RelinkFile := RelinkFileImpl::Start
 
 ;;; ============================================================
 ;;; Actual byte-for-byte file copy routine
@@ -12525,6 +12708,11 @@ callbacks_for_size_or_count:
         ;; `src_file_info_params` populated.
         jsr     EnumerationProcessDirectoryEntry
 
+        bit     move_flag       ; same volume relink move?
+    IF_VS
+        rts
+    END_IF
+
 is_dir:
         jsr     ProcessDir
         storage_type := *+1
@@ -12836,17 +13024,21 @@ CloseFilesCancelDialogWithResult := CloseFilesCancelDialog::ep2
 ;;; Move or Copy? Compare src/dst paths, same vol = move.
 ;;; Button down inverts the default action.
 ;;; Input: A,X = source path
-;;; Output: A=high bit set if move, clear if copy
+;;; Output: A=bit 7 set if move, clear if copy
+;;;           bit 6 set if same vol move and block ops supported
 
 .proc CheckMoveOrCopy
         src_ptr := $08
         dst_buf := path_buf4
+        block_buffer := $800
 
         stax    src_ptr
 
         jsr     ModifierDown    ; Apple inverts the default
+        and     #%10000000
         sta     flag
 
+        ;; Check if same volume
         ldy     #0
         lda     (src_ptr),y
         sta     src_len
@@ -12893,11 +13085,28 @@ check_slash:
 no_match:
         flag := *+1
         lda     #SELF_MODIFIED_BYTE
-        rts
+ret:    rts
 
 match:  lda     flag
         eor     #$80
-        rts
+        beq     ret             ; copy
+
+        ;; Same vol - but are block operations supported?
+@retry: param_call_indirect GetFileInfo, src_ptr
+        beq     :+
+        jsr     ShowErrorAlert
+        jmp     @retry
+:
+        lda     DEVNUM
+        sta     block_params__unit_num
+        MLI_CALL READ_BLOCK, block_params
+        lda     #$80            ; bit 7 = move
+        bcs     :+
+        eor     #$40            ; bit 6 = relink supported
+:       rts
+
+        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
+        block_params__unit_num := block_params::unit_num
 .endproc ; CheckMoveOrCopy
 
 ;;; ============================================================
@@ -14057,6 +14266,165 @@ window_id := findwindow_params::window_id
 
 .endscope ; save_restore_windows
 SaveWindows := save_restore_windows::Save
+
+;;; ============================================================
+;;; Find the FileEntry for a file within the containing
+;;; directory, providing the block number and offset.
+;;;
+;;; The intended use is to modify properties of files that
+;;; GET/SET_FILE_INFO MLI calls can't, such as:
+;;; * Modifying the `version`/`min_version` bytes, which are
+;;;   used by GS/OS to store filename case bits.
+;;; * Modifying the `key_pointer` and other sensitive fields,
+;;;   e.g. to allow relinking files.
+;;; * Updating a subdirectory's key block's `parent_pointer`
+;;;   and `parent_entry_number` fields.
+;;;
+;;; Input: A,X = path
+;;; Output: C=0, A,X=block, Y=entry on success; C=1 on error
+.proc GetFileEntryBlock
+
+;;; Memory Map
+io_buf    := $800               ; $800-$BFF
+block_buf := $C00               ; $C00-$DFF
+kBlockSize = $200
+path_buf  := $E00
+filename  := $E70
+
+entry_num       := $E80         ; (byte) entry number in current block
+current_block   := $E81         ; (word) current block number
+saw_header_flag := $E83         ; (byte) indicates header entry seen
+kEntriesPerBlock = $0D
+
+
+        ptr := $06
+
+        stax    ptr
+        param_call CopyPtr1ToBuf, path_buf
+
+        ;; Clear out pointer to next block; used to identify
+        ;; the current block.
+        lda     #0
+        sta     block_buf+2
+        sta     block_buf+3
+        sta     saw_header_flag
+
+        ;; --------------------------------------------------
+        ;; Split path into dir path and filename
+
+        ldy     path_buf
+sloop:  lda     path_buf,y      ; find last '/'
+        cmp     #'/'
+        beq     :+
+        inx                     ; length of filename
+        dey
+        bne     sloop
+:
+        dey                     ; length not including '/'
+        bne     :+
+        sec                     ; was a volume path - failure
+        rts
+
+:       tya
+        pha                     ; A = new path length
+        stx     filename
+
+        iny
+        ldx     #0              ; copy out filename
+:       inx
+        iny
+        lda     path_buf,y
+        jsr     UpcaseChar
+        sta     filename,x
+        cpy     path_buf
+        bne     :-
+        stx     filename
+
+        pla
+        sta     path_buf
+
+        ;; --------------------------------------------------
+        ;; Open directory, search blocks for filename
+
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        jcs     exit
+
+        lda     open_params_ref_num
+        sta     read_params_ref_num
+        sta     close_params_ref_num
+
+next_block:
+        ;; This is the block we're about to read; save for later.
+        copy16  block_buf+2, current_block
+
+        JUMP_TABLE_MLI_CALL READ, read_params
+        bcs     close
+        copy    #AS_BYTE(-1), entry_num
+        entry_ptr := $06
+        copy16  #(block_buf+4 - .sizeof(FileEntry)), entry_ptr
+
+next_entry:
+        ;; Advance to next entry
+        lda     entry_num
+        cmp     #kEntriesPerBlock
+        beq     next_block
+
+        inc     entry_num
+        add16_8 entry_ptr, #.sizeof(FileEntry)
+
+        ;; Header?
+        lda     saw_header_flag
+    IF_ZERO
+        inc     saw_header_flag
+        bne     next_entry      ; always
+    END_IF
+
+        ;; Active entry?
+        ldy     #FileEntry::storage_type_name_length
+        lda     (entry_ptr),y
+        beq     next_entry
+        tax                     ; X = `storage_type_name_length`
+
+        ;; Is this the first block? Get block num from entry's pointer.
+        lda     current_block
+        ora     current_block+1
+        bne     :+
+        ldy     #FileEntry::header_pointer
+        copy16in (entry_ptr),y, current_block
+:
+        ;; See if this is the file we're looking for
+        txa                     ; A = `storage_type_name_length`
+        and     #NAME_LENGTH_MASK
+        cmp     filename
+        bne     next_entry
+        tay
+        .assert FileEntry::file_name = 1, error, "member offset"
+nloop:  lda     (entry_ptr),y
+        cmp     filename,y
+        bne     next_entry
+        dey
+        bne     nloop
+
+        ;; Match!
+        clc
+
+close:  php
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        plp
+exit:
+        ;; Only valid if C=0
+        ldax    current_block
+        ldy     entry_num
+        rts
+
+        DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
+        DEFINE_READ_PARAMS read_params, block_buf, kBlockSize
+        DEFINE_CLOSE_PARAMS close_params
+        open_params_ref_num := open_params::ref_num
+        read_params_ref_num := read_params::ref_num
+        close_params_ref_num := close_params::ref_num
+
+.endproc ; GetFileEntryBlock
 
 ;;; ============================================================
 ;;;

@@ -30,7 +30,11 @@
 * Copy a file by dragging - different volume - target is window.
 * Copy a file by dragging - different volume - target is volume icon.
 
-* Open a volume, open a folder, close the just volume window; re-open the volume, re-open the folder, ensure the previous window is activated.
+* Select multiple files, including a folder containing files. Drag the files to a folder on the same volume. Verify that the progress dialog shows "Moving" and that the number of files listed matches the number of selected files.
+* Select multiple files, including a folder containing files. Hold Solid-Apple and drag the files to a folder on the same volume. Verify that the progress dialog shows "Copying" and that the number of files listed matches the number of selected files plus the number of files in the folder.
+* Select multiple files, including a folder containing files. Hold Solid-Apple and drag the files to another volume. Verify that the progress dialog shows "Moving" and that the number of files listed matches the number of selected files plus the number of files in the folder.
+
+* Open a volume, open a folder, close just the volume window; re-open the volume, re-open the folder, ensure the previous window is activated.
 
 * Launch DeskTop. Select a file icon. File > Rename.... Enter a unique name, hit OK. Verify that the icon updates with the new name.
 * Launch DeskTop. Select a file icon. File > Rename.... Press OK without changing the name. Verify that the dialog is dismissed and the icon doesn't change.
@@ -120,7 +124,7 @@
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+O. Verify that nothing happens. Repeat with Caps Lock off.
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+Down. Verify that nothing happens.
 
-* Launch DeskTop. Try to move a file (drag on same volume) where there is not enough space to make a temporary copy. Verify that the error message says that the file is too large to move.
+* Launch DeskTop. Try to move a file (drag on same volume) where there is not enough space to make a temporary copy, e.g. a 100K file on a 140K disk. Verify that the file is moved successfully and no error is shown.
 * Launch DeskTop. Try to copy a file (drag to different volume) where there is not enough space to make the copy. Verify that the error message says that the file is too large to copy.
 * Launch DeskTop. Drag multiple selected files to a different voluem, where one of the middle files will be too large to fit on the target volume but that subsequently selected files will fit. Verify that an error message says that the file is too large to copy, and that clicking OK continues to copy the remaining files.
 * Launch DeskTop. Drag a single folder or volume containing multiple files to a different voluem, where one of the files will be too large to fit on the target volume but all other files will fit. Verify that an error message says that the file is too large to copy, and that clicking OK continues to copy the remaining files.

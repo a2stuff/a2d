@@ -93,6 +93,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Allow continuing a copy of nested files if one file is too large to fit.
 * Ensure correct paths are visible when displaying alerts during operations.
 * Fix "Files remaining" count for volume after failed shortcut / copy to RAMCard.
+* Improve performance of moving files on the same volume by relinking rather than copying/deleting. ([#350](https://github.com/a2stuff/a2d/issues/350))
 
 ### Selector
 
