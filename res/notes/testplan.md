@@ -490,6 +490,9 @@
 * Launch DeskTop. Open a window containing a folder. Open a folder. Activate the parent window and verify that the folder's icon is dimmed. View > by Name. Verify that the folder's icon is still dimmed. View > as Icons. Verify that the folder's icon is still dimmed.
 * Launch DeskTop. Open a window containing a folder. View > by Name. Verify that the folder's icon is dimmed. View > as Icon. Verify that the folder's icon is still dimmed.
 
+* Launch DeskTop. Open a volume window. Verify that the default view is "as Icons". View > by Name. Open a folder. Verify that the new folder's view is "by Name". Open a different volume window. Verify that it is "as Icons".
+* Launch DeskTop. Open the A2.Desktop folder. View > by Small Icons. Open the Apple.Menu folder. Open the Control.Panels folder. Verify that the view is still "by Small Icons". Activate a different window. Apple Menu > Control Panels. Verify that the Control.Panels window is activated, and the view is still "by Small Icons".
+
 * Launch DeskTop. Select a volume icon. Open it. Verify that the open animation starts at the icon location. (This will be easier to observe in emulators with acceleration disabled.)
 * Launch DeskTop, ensuring no windows are open. File > Select All. Verify that the volume icons are selected.
 

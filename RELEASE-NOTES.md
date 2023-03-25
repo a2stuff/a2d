@@ -56,6 +56,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Escape key cancels operations (Copy/Move, Delete, Lock/Unlock)
 * Support for launching AppleWorks files.
   * AppleWorks 5.1 must be on same volume as DeskTop, in AW5/ directory.
+* Default window view style to parent window's view style.
 
 #### Disks & Files
 

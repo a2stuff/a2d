@@ -54,6 +54,8 @@ kViewBySize      = $84
 kViewByType      = $85
 kViewByMenuMask  = $0F          ; Convert kViewByXYZ to menu index
 
+kViewByDefault = kViewByIcon
+
 ;;; ============================================================
 ;;; Window/Icon Metrics
 

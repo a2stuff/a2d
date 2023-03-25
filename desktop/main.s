@@ -5718,9 +5718,23 @@ no_win:
 
         ;; Update View and other menus
         inc     num_open_windows
+
+        copy    #kViewByDefault, initial_view_by
+        lda     icon_param
+        bmi     :+              ; no source icon, use default
+        jsr     GetIconEntry
+        stax    ptr
+        ldy     #IconEntry::win_flags
+        lda     (ptr),y
+        and     #kIconEntryWinIdMask
+        beq     :+              ; windowed, use default
+        tax
+        copy    win_view_by_table-1,x, initial_view_by
+:
         ldx     cached_window_id
-        ;; TODO: Will need update here
-        copy    #kViewByIcon, win_view_by_table-1,x
+        initial_view_by := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     win_view_by_table-1,x
 
         lda     num_open_windows ; Was there already a window open?
         cmp     #2
