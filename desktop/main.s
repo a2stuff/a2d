@@ -629,12 +629,8 @@ dispatch_click:
         bmi     done            ; $FF = dir icon freed
 
         sta     icon_param
-        jsr     GetIconEntry
-        stax    icon_ptr
 
-        ldy     #IconEntry::win_flags
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
+        jsr     GetIconWindow
         beq     :+               ; desktop - selection ok
         cmp     active_window_id ; This should never be true
         bne     done
@@ -2031,14 +2027,15 @@ window_id_to_close:
         param_call CopyPtr1ToBuf, buf_win_path
 
         ;; Copy file path to buf_filename
-        icon_ptr := $06
+        name_ptr := $06
 
         lda     selected_icon_list
-        jsr     GetIconEntry
-        stax    icon_ptr
-        ldy     #IconEntry::name
+        jsr     GetIconName
+        stax    name_ptr
 
-        lda     (icon_ptr),y    ; check length
+        ldy     #0
+        lda     (name_ptr),y    ; check length
+        tay
         clc
         adc     buf_win_path
         cmp     #kMaxPathLength ; not +1 because we'll add '/'
@@ -2046,15 +2043,10 @@ window_id_to_close:
         lda     #ERR_INVALID_PATHNAME
         rts
 :
-        lda     (icon_ptr),y
-        tax
-        clc
-        adc     #IconEntry::name
-        tay
-:       lda     (icon_ptr),y
-        sta     buf_filename,x
+
+:       lda     (name_ptr),y
+        sta     buf_filename,y
         dey
-        dex
         bpl     :-
 
         ;; Compose window path plus icon path
@@ -2322,7 +2314,7 @@ ret:    rts
 ;;; NOTE: Modifies `cached_window_id`
 
 .proc FindIconByName
-        ptr_icon := $06
+        ptr_icon_name := $06
         ptr_name := $08
 
         stax    tmp             ; name
@@ -2347,8 +2339,8 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         ;; Compare with name from dialog
 :       lda     cached_window_entry_list,x
-        jsr     GetIconEntry
-        addax   #IconEntry::name, ptr_icon
+        jsr     GetIconName
+        stax    ptr_icon_name
         jsr     CompareStrings
         bne     next
 
@@ -2374,8 +2366,6 @@ tmp:    .addr   0
 ;;; Assert: If target is a file icon, icon is in active window.
 ;;; Trashes $06
 .proc MaybeStashDropTargetName
-        icon_ptr := $06
-
         ;; Flag as not stashed
         ldy     #0
         sty     stashed_name
@@ -2384,16 +2374,14 @@ tmp:    .addr   0
         lda     drag_drop_params::result
         bmi     done            ; high bit set = window
 
-        jsr     GetIconEntry
-        stax    icon_ptr
-
-        ldy     #IconEntry::win_flags ; file icon?
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
+        jsr     GetIconWindow   ; file icon?
         beq     done            ; nope, vol icon
 
         ;; Stash name
-        add16_8 icon_ptr, #IconEntry::name
+        ptr1 := $06
+        lda     drag_drop_params::result
+        jsr     GetIconName
+        stax    ptr1
         param_call CopyPtr1ToBuf, stashed_name
 
 done:   rts
@@ -2852,6 +2840,23 @@ selection_preserved_count:
         stax    ptr
         ldy     #IconEntry::record_num
         lda     (ptr),y
+        rts
+.endproc ; GetIconRecordNum
+
+;;; ============================================================
+;;; Retrieve the window id for a given icon.
+;;; Input: A = icon id
+;;; Output: A = window id (0=desktop)
+
+.proc GetIconWindow
+        jsr     PushPointers
+        jsr     GetIconEntry
+        ptr := $06
+        stax    ptr
+        ldy     #IconEntry::win_flags
+        lda     (ptr),y
+        and     #kIconEntryWinIdMask
+        jsr     PopPointers     ; do not tail-call optimize!
         rts
 .endproc ; GetIconRecordNum
 
@@ -3472,14 +3477,8 @@ ret:    rts
         ITK_CALL IconTK::HighlightIcon, icon_param
 
         ;; Find icon's window, and set selection
-        icon_ptr := $06
         lda     icon_param
-        jsr     GetIconEntry
-        stax    icon_ptr
-        ldy     #IconEntry::win_flags
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
-
+        jsr     GetIconWindow
         sta     selected_window_id
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
@@ -5722,11 +5721,7 @@ no_win:
         copy    #kViewByDefault, initial_view_by
         lda     icon_param
         bmi     :+              ; no source icon, use default
-        jsr     GetIconEntry
-        stax    ptr
-        ldy     #IconEntry::win_flags
-        lda     (ptr),y
-        and     #kIconEntryWinIdMask
+        jsr     GetIconWindow
         beq     :+              ; windowed, use default
         tax
         copy    win_view_by_table-1,x, initial_view_by
@@ -6942,24 +6937,15 @@ size:   .word   0               ; size of a window's list
         lda     icon_param      ; set to $FF if opening via path
         pha
     IF_NC
-        ;; NOTE: This trashes $06 which is used as `winfo_ptr` below,
-        ;; but only in the case where a window is being restored,
-        ;; which will have `icon_param` of $FF so it's safe.
-
         ;; If a windowed icon, source from that
-        jsr     GetIconEntry
-        stax    icon_ptr
-        ldy     #IconEntry::win_flags
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
-        beq     skip            ; volume icon on desktop
-
+        jsr     GetIconWindow
+      IF_NOT_ZERO
         ;; Windowed (folder) icon
         asl     a
         tax
         copy16  window_k_used_table-2,x, vol_kb_used ; 1-based to 0-based
         copy16  window_k_free_table-2,x, vol_kb_free
-skip:
+      END_IF
     END_IF
 
         ;; Used cached window's details, which are correct now.
@@ -8491,38 +8477,31 @@ min     := parsed_date + ParsedDateTime::minute
 .proc GetIconPath
         jsr     PushPointers
 
-        icon_ptr := $06
+        name_ptr := $06
         win_path_ptr := $08
 
-        jsr     GetIconEntry
-        stax    icon_ptr
-
-        ldy     #IconEntry::win_flags
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
-        pha                     ; A = window id
-        add16_8 icon_ptr, #IconEntry::name
+        pha
+        jsr     GetIconName
+        stax    name_ptr
         pla
-        bne     file            ; A = window id
-
+        jsr     GetIconWindow
+    IF_ZERO
         ;; Volume - no base path
         copy16  #0, win_path_ptr ; base
-        beq     concat           ; always
-
+    ELSE
         ;; File - window path is base path
-file:
         jsr     GetWindowPath
         stax    win_path_ptr
 
         ;; Is there room?
         ldy     #0
-        lda     (icon_ptr),y
+        lda     (name_ptr),y
         clc
         adc     (win_path_ptr),y
         cmp     #kMaxPathLength ; not +1 because we'll add '/'
         bcs     too_long
+    END_IF
 
-concat:
         ;; Yes, concatenate
         jsr     JoinPaths       ; $08 = base, $06 = file
         lda     #0
