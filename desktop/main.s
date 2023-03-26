@@ -6941,25 +6941,29 @@ size:   .word   0               ; size of a window's list
 
         lda     icon_param      ; set to $FF if opening via path
         pha
-        bmi     volume
+    IF_NC
+        ;; NOTE: This trashes $06 which is used as `winfo_ptr` below,
+        ;; but only in the case where a window is being restored,
+        ;; which will have `icon_param` of $FF so it's safe.
 
+        ;; If a windowed icon, source from that
         jsr     GetIconEntry
         stax    icon_ptr
         ldy     #IconEntry::win_flags
         lda     (icon_ptr),y
         and     #kIconEntryWinIdMask
-        beq     volume
+        beq     skip            ; volume icon on desktop
 
         ;; Windowed (folder) icon
         asl     a
         tax
         copy16  window_k_used_table-2,x, vol_kb_used ; 1-based to 0-based
         copy16  window_k_free_table-2,x, vol_kb_free
+skip:
+    END_IF
 
-        ;; TODO: Missing branch here?
-
-        ;; Desktop (volume) icon
-volume: lda     cached_window_id
+        ;; Used cached window's details, which are correct now.
+        lda     cached_window_id
         asl     a
         tax
         copy16  vol_kb_used, window_k_used_table-2,x ; 1-based to 0-based
