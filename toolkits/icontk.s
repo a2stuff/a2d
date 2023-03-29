@@ -744,11 +744,10 @@ is_drag:
 
 next_icon:
         lda     highlight_count,x
+        sta     iconinrect_params::icon
+
         jsr     GetIconPtr
         stax    $06
-        ldy     #IconEntry::id
-        lda     ($06),y
-        sta     iconinrect_params::icon
 
         ldy     #IconEntry::win_flags
         lda     ($06),y
@@ -1956,6 +1955,7 @@ loop:   dex                     ; any icons to draw?
         cpy     erase_icon_id
         beq     next
 
+        sty     icon
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
 
         ;; Same window?
@@ -1973,11 +1973,9 @@ loop:   dex                     ; any icons to draw?
         bne     next
     END_IF
 
-        ldy     #IconEntry::id ; icon num
-        lda     (ptr),y
-        sta     icon
         bit     icon_in_window_flag ; windowed?
         bpl     :+           ; nope, desktop
+        lda     icon
         jsr     offset_icon_do  ; yes, adjust rect
 :       ITK_CALL IconTK::IconInRect, icon
         beq     :+
