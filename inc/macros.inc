@@ -1196,6 +1196,90 @@ __depth__ .set 0
         .error "Do you mean END_IF ?"
 .endmacro
 
+;;; --------------------------------------------------
+
+;;; Usage:
+;;;     ldx #17
+;;;     DO
+;;;     ...
+;;;     dex
+;;;     WHILE_POS
+;;;
+;;; Macros:
+;;;     WHILE_ZS           aliases: WHILE_EQ, WHILE_ZERO
+;;;     WHILE_ZC           aliases: WHILE_NE, WHILE_NOT_ZERO
+;;;     WHILE_CC           aliases: WHILE_LT
+;;;     WHILE_CS           aliases: WHILE_GE
+;;;     WHILE_VC
+;;;     WHILE_VS
+;;;     WHILE_NC           aliases: WHILE_POS, WHILE_PLUS
+;;;     WHILE_NS           aliases: WHILE_NEG, WHILE_MINUS
+
+.macro DO
+        ::__depth__ .set ::__depth__ + 1
+        .scope
+        .ident(.sprintf("__do_while__%d", ::__depth__)) := *
+.endmacro
+
+.macro WHILE_ZC
+        bne     .ident(.sprintf("__do_while__%d", ::__depth__))
+.endscope
+        ::__depth__ .set ::__depth__ - 1
+.endmacro
+
+.macro WHILE_ZS
+        beq     .ident(.sprintf("__do_while__%d", ::__depth__))
+.endscope
+        ::__depth__ .set ::__depth__ - 1
+.endmacro
+
+.macro WHILE_CC
+        bcc     .ident(.sprintf("__do_while__%d", ::__depth__))
+.endscope
+        ::__depth__ .set ::__depth__ - 1
+.endmacro
+
+.macro WHILE_CS
+        bcs     .ident(.sprintf("__do_while__%d", ::__depth__))
+.endscope
+        ::__depth__ .set ::__depth__ - 1
+.endmacro
+
+.macro WHILE_VC
+        bvc     .ident(.sprintf("__do_while__%d", ::__depth__))
+.endscope
+        ::__depth__ .set ::__depth__ - 1
+.endmacro
+
+.macro WHILE_VS
+        bvs     .ident(.sprintf("__do_while__%d", ::__depth__))
+.endscope
+        ::__depth__ .set ::__depth__ - 1
+.endmacro
+
+.macro WHILE_NC
+        bpl     .ident(.sprintf("__do_while__%d", ::__depth__))
+.endscope
+        ::__depth__ .set ::__depth__ - 1
+.endmacro
+
+.macro WHILE_CNS
+        bmi     .ident(.sprintf("__do_while__%d", ::__depth__))
+.endscope
+        ::__depth__ .set ::__depth__ - 1
+.endmacro
+
+        .define WHILE_EQ WHILE_ZS
+        .define WHILE_NE WHILE_ZC
+        .define WHILE_ZERO WHILE_EQ
+        .define WHILE_NOT_ZERO WHILE_NE
+        .define WHILE_GE WHILE_CS
+        .define WHILE_LT WHILE_CC
+        .define WHILE_PLUS WHILE_NC
+        .define WHILE_MINUS WHILE_NS
+        .define WHILE_POS WHILE_NC
+        .define WHILE_NEG WHILE_NS
+
 ;;; ============================================================
 ;;; Jump Table Definitions
 ;;; ============================================================

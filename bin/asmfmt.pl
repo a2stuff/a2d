@@ -22,6 +22,7 @@ sub min ($$) { $_[$_[0] > $_[1]] }
 my $tab = 8;
 my $comment_column = 32;
 my $tabstop = 0;
+my $flow_indent = 4;
 
 # TODO: untabify input
 # TODO: sigils to disable/enable formatting around blocks
@@ -100,14 +101,22 @@ while (<STDIN>) {
 
             $_ = $opcode . ' ' . $arguments;
 
-        } elsif (m/^(\b(?:IF_\w+|ELSE|END_IF)\b)\s*(.*)$/) {
+        } elsif (m/^(\b(?:IF_\w+|ELSE|END_IF|DO|WHILE_\w+)\b)\s*(.*)$/) {
 
-            # conditional macros - half indent left
+            # conditional macros - dynamic indent
             my ($opcode, $arguments) = ($1 // '', $2 // '');
             $tabstop = 0;
 
-            $_ = ' ' x ($tab/2);
+            if ($opcode =~ m/^(ELSE|END_IF|WHILE_\w+)$/) {
+                $flow_indent -= 2;
+            }
+
+            $_ = ' ' x $flow_indent;
             $_ .= $opcode . ' ' . $arguments;
+
+            if ($opcode =~ m/^(IF_\w+|ELSE|DO)$/) {
+                $flow_indent += 2;
+            }
 
         } elsif (m/^(@?\w*:)?\s*(\S+)?\s*(.*?)\s*(;.*)?$/) {
 
