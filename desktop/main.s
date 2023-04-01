@@ -15346,9 +15346,9 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_ASP,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_sp ; $1B
 
         DEFINE_ICTRECORD $FF, FT_CMD,       ICT_FLAGS_NONE, 0, 0, IconType::command       ; $F0
-        DEFINE_ICTRECORD $FF, FT_BASIC,     ICT_FLAGS_NONE, 0, 0, IconType::basic         ; $FC
         DEFINE_ICTRECORD $FF, FT_INT,       ICT_FLAGS_NONE, 0, 0, IconType::intbasic      ; $FA
         DEFINE_ICTRECORD $FF, FT_IVR,       ICT_FLAGS_NONE, 0, 0, IconType::variables     ; $FB
+        DEFINE_ICTRECORD $FF, FT_BASIC,     ICT_FLAGS_NONE, 0, 0, IconType::basic         ; $FC
         DEFINE_ICTRECORD $FF, FT_VAR,       ICT_FLAGS_NONE, 0, 0, IconType::variables     ; $FD
         DEFINE_ICTRECORD $FF, FT_REL,       ICT_FLAGS_NONE, 0, 0, IconType::relocatable   ; $FE
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_SUFFIX, str_sys_suffix, 0, IconType::application ; $FF
@@ -15564,8 +15564,8 @@ type_table:
         .byte   FT_SOUND      ; sampled sound
         .byte   FT_CMD        ; command
         .byte   FT_INT        ; intbasic
-        .byte   FT_BASIC      ; basic
         .byte   FT_IVR        ; intbasic variables
+        .byte   FT_BASIC      ; basic
         .byte   FT_VAR        ; applesoft variables
         .byte   FT_REL        ; rel
         .byte   FT_SYSTEM     ; system
@@ -15589,8 +15589,8 @@ type_names_table:
         .byte   "SND " ; sampled sound
         .byte   "CMD " ; command *
         .byte   "INT " ; basic *
-        .byte   "BAS " ; basic *
         .byte   "IVR " ; variables *
+        .byte   "BAS " ; basic *
         .byte   "VAR " ; variables *
         .byte   "REL " ; rel *
         .byte   "SYS " ; system *
