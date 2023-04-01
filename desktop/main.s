@@ -1016,6 +1016,7 @@ invoke_table:
         INVOKE_TABLE_ENTRY      InvokeDeskAccWithSelection, 0  ; desk_accessory
         INVOKE_TABLE_ENTRY      basic, 0                       ; basic
         INVOKE_TABLE_ENTRY      interpreter, str_intbasic      ; intbasic
+        INVOKE_TABLE_ENTRY      fallback, 0                    ; variables
         INVOKE_TABLE_ENTRY      launch, 0                      ; system
         INVOKE_TABLE_ENTRY      launch, 0                      ; application
         ASSERT_RECORD_TABLE_SIZE invoke_table, IconType::COUNT, 4
@@ -15347,6 +15348,8 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_CMD,       ICT_FLAGS_NONE, 0, 0, IconType::command       ; $F0
         DEFINE_ICTRECORD $FF, FT_BASIC,     ICT_FLAGS_NONE, 0, 0, IconType::basic         ; $FC
         DEFINE_ICTRECORD $FF, FT_INT,       ICT_FLAGS_NONE, 0, 0, IconType::intbasic      ; $FA
+        DEFINE_ICTRECORD $FF, FT_IVR,       ICT_FLAGS_NONE, 0, 0, IconType::variables     ; $FB
+        DEFINE_ICTRECORD $FF, FT_VAR,       ICT_FLAGS_NONE, 0, 0, IconType::variables     ; $FD
         DEFINE_ICTRECORD $FF, FT_REL,       ICT_FLAGS_NONE, 0, 0, IconType::relocatable   ; $FE
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_SUFFIX, str_sys_suffix, 0, IconType::application ; $FF
         DEFINE_ICTRECORD $FF, FT_SYSTEM,    ICT_FLAGS_NONE, 0, 0, IconType::system        ; $FF
@@ -15543,7 +15546,7 @@ menu_kbd_flag:
 ;;; Map ProDOS file type to string (for listings/Get Info).
 ;;; If not found, $XX is used (like CATALOG).
 
-        kNumFileTypes = 19
+        kNumFileTypes = 21
 type_table:
         .byte   FT_TYPELESS   ; unknown
         .byte   FT_BAD        ; bad block
@@ -15562,6 +15565,8 @@ type_table:
         .byte   FT_CMD        ; command
         .byte   FT_INT        ; intbasic
         .byte   FT_BASIC      ; basic
+        .byte   FT_IVR        ; intbasic variables
+        .byte   FT_VAR        ; applesoft variables
         .byte   FT_REL        ; rel
         .byte   FT_SYSTEM     ; system
         ASSERT_TABLE_SIZE type_table, kNumFileTypes
@@ -15585,6 +15590,8 @@ type_names_table:
         .byte   "CMD " ; command *
         .byte   "INT " ; basic *
         .byte   "BAS " ; basic *
+        .byte   "IVR " ; variables *
+        .byte   "VAR " ; variables *
         .byte   "REL " ; rel *
         .byte   "SYS " ; system *
         ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 4
@@ -15614,6 +15621,7 @@ icontype_iconentryflags_table:
         .byte   0                    ; desk accessory
         .byte   0                    ; basic
         .byte   0                    ; intbasic
+        .byte   0                    ; variables
         .byte   0                    ; system
         .byte   0                    ; application
         ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT
@@ -15640,6 +15648,7 @@ type_icons_table:
         .addr   a2d ; desk accessory
         .addr   bas ; basic
         .addr   int ; intbasic
+        .addr   var ; variables
         .addr   sys ; system
         .addr   app ; application
         ASSERT_ADDRESS_TABLE_SIZE type_icons_table, IconType::COUNT

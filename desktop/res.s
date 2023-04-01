@@ -915,6 +915,7 @@ portptr:        .addr   0
         DEFINE_ICON_RESOURCE a2d, a2d_file_icon, 4, 27, 15, generic_mask
         DEFINE_ICON_RESOURCE fnt, font_icon, 4, 27, 15, generic_mask
         DEFINE_ICON_RESOURCE app, app_icon, 5, 34, 16, app_mask
+        DEFINE_ICON_RESOURCE var, var_file_icon, 4, 27, 15, generic_mask
 
 ;;; ============================================================
 
@@ -1425,6 +1426,24 @@ app_mask:
         .byte   PX(%0000000),PX(%0000011),PX(%1111111),PX(%1000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%1111110),PX(%0000000),PX(%0000000)
         .byte   PX(%0000000),PX(%0000000),PX(%0011000),PX(%0000000),PX(%0000000)
+
+var_file_icon:                  ; Applesoft/IntBASIC variables
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%0000000)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000100),PX(%1100000)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000100),PX(%0011000)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000100),PX(%0000110)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000111),PX(%1111110)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
+        .byte   PX(%0100000),PX(%1110000),PX(%0000110),PX(%0000010)
+        .byte   PX(%0100001),PX(%1011000),PX(%0011111),PX(%1100010)
+        .byte   PX(%0100011),PX(%0001100),PX(%1100110),PX(%0000010)
+        .byte   PX(%0100110),PX(%0000110),PX(%0011111),PX(%1000010)
+        .byte   PX(%0100111),PX(%1111110),PX(%0000110),PX(%0110010)
+        .byte   PX(%0100110),PX(%0000110),PX(%0111111),PX(%1000010)
+        .byte   PX(%0100110),PX(%0000110),PX(%0000110),PX(%0000010)
+        .byte   PX(%0100000),PX(%0000000),PX(%0000000),PX(%0000010)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111110)
 
 ;;; Small Icons - use for "View > by XXXX"
 ;;; Same visibility rules as above.

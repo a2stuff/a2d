@@ -64,6 +64,7 @@ Project Page: https://github.com/a2stuff/a2d
 * CD-ROM drives now shown with a CD icon.
 * Treat files with .A2LC, .A2HR, and .A2FM extensions as images.
 * Icon for audio files (.BTC and .ZC, $D8/SND), video files ($5B/ANM)
+* Icon for Applesoft and IntBASIC variable files (VAR, IVR)
 
 #### Performance & Fixes
 
