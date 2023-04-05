@@ -122,6 +122,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Analog Clock: A new screen saver that shows the current time. ([#590](https://github.com/a2stuff/a2d/issues/590))
 * Rod's Color Pattern: A new screen saver based on the classic demo. c/o @frankmilliron
 * Neko: Provides a playful cat desk toy. (In Extras)
+* Print Catalog: Dumps a recursive catalog of filenames to a printer in Slot 1.
 
 #### Updates
 

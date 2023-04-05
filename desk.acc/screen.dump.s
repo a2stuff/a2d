@@ -5,6 +5,8 @@
 ;;; printer connected to a Super Serial Card in Slot 1.
 ;;; ============================================================
 
+        ;; TODO: Test for a serial card in Slot 1
+
         .include "../config.inc"
 
         .include "apple2.inc"

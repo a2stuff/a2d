@@ -18,6 +18,8 @@
   * Calculator with trigonometry and other additional functions
 * [Map](map.s)
   * World map with some searchable city locations.
+* [Print Catalog](print.catalog.s)
+  * Dumps a recursive catalog of filenames to a printer attached to Slot 1.
 
 ## Control Panels
 
