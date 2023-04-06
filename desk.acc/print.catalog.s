@@ -6,7 +6,7 @@
 ;;; ============================================================
 
         ;; TODO: Test for parallel or serial card in Slot 1
-        ;; TODO: Show more than filename - extension, size, date?
+        ;; TODO: Print modification date
 
         .include "../config.inc"
         RESOURCE_FILE "find.files.res"
@@ -113,7 +113,16 @@ continue:
         rts
 
 PrintCatalog:
+        ;; Header
+        ldx     #0
+:       lda     str_header+1,x
+        jsr     COut
+        inx
+        cpx     str_header
+        bne     :-
+        jsr     CROut
 
+        ;; If we're doing multiple volumes, get started
         bit     vol_flag
     IF_NS
         jsr     InitVolumes
@@ -121,6 +130,7 @@ PrintCatalog:
         bcs     finish
     END_IF
 
+        ;; Show the current path
 next:
         ldx     #0
 :       lda     searchPath+1,x
@@ -129,13 +139,13 @@ next:
         inx
         cpx     searchPath
         bcc     :-
-        lda     #$8D            ; CR
-        jsr     COut
+        jsr     CROut
         copy    #1, indent
 
         ;; And invoke it!
         jsr     RecursiveCatalog__Start
 
+        ;; If we're doing multiple volumes, do the next one
         bit     vol_flag
     IF_NS
         jsr     NextVolume
@@ -145,11 +155,19 @@ next:
 finish: rts
 .endscope
 
+ch:     .byte   0               ; cursor horizontal position
 
 vol_flag:
         .byte   0               ; high bit set if we're iterating volumes
 indent:
         .byte   0
+
+str_header:
+        PASCAL_STRING "Name                         Type  Blocks"
+        kColType   = 30         ; Left aligned
+        kTypeWidth = 3
+        kColBlocks = 41         ; Right aligned
+
 
 ;;; ============================================================
 ;;;
@@ -382,11 +400,16 @@ OpenDone:
 .proc VisitFile
         jsr     PrintName
 
-        ;; Print newline
-        lda     #$8D            ; CR
-        jmp     COut
+        ldx     #kColType
+        lda     #' '|$80
+:       jsr     COut
+        cpx     ch
+        bcs     :-
 
-        rts
+        jsr     PrintType
+        jsr     PrintSize
+
+        jmp     CROut
 .endproc ; VisitFile
 
 ;;; --------------------------------------------------
@@ -418,6 +441,55 @@ OpenDone:
         rts
 .endproc ; PrintName
 
+;;; --------------------------------------------------
+
+.proc PrintType
+        ldy     #FileEntry::file_type
+        lda     (entPtr),y
+
+        jsr     ComposeFileTypeString
+        ldx     #0
+:       lda     str_file_type+1,x
+        jsr     COut
+        inx
+        cpx     str_file_type
+        bne     :-
+
+        rts
+.endproc ; PrintType
+
+;;; --------------------------------------------------
+
+.proc PrintSize
+        ;; Load block count into A,X
+        ldy     #FileEntry::blocks_used+1
+        lda     (entPtr),y
+        tax
+        dey
+        lda     (entPtr),y
+
+        ;; Compose string
+        jsr     IntToString
+
+        ;; Left-pad it
+        ldx     #kColBlocks - kColType - kTypeWidth
+        lda     #' '|$80
+:       jsr     COut
+        dex
+        cpx     str_from_int
+        bne     :-
+
+        ;; Print it
+        ldx     #0
+:       lda     str_from_int+1,x
+        jsr     COut
+        inx
+        cpx     str_from_int
+        bne     :-
+
+        rts
+.endproc ; PrintSize
+
 ;;;
 ;;;******************************************************
 ;;;
@@ -426,8 +498,7 @@ OpenDone:
         jsr     PrintName
         lda     #'/'|$80
         jsr     COut
-        lda     #$8D            ; CR
-        jsr     COut
+        jsr     CROut
 
         ;; 6 bytes + 3 return addresses = 12 bytes are pushed to stack on
         ;; in RecursDir; 12 * 16 = 192 bytes, which leaves enough room
@@ -738,7 +809,17 @@ fail:
         rts
 .endproc ; PRNum1
 
+.proc CROut
+        lda     #0
+        sta     ch
+
+        lda     #$8D            ; CR
+        FALL_THROUGH_TO COut
+.endproc
+
 .proc COut
+        inc     ch
+
         ;; Normal banking
         sta     ALTZPOFF
         bit     ROMIN2
@@ -770,6 +851,16 @@ fail:
 
 old_hook:
         .word   0
+
+;;; ============================================================
+
+ReadSetting = JUMP_TABLE_READ_SETTING
+
+hex_digits:     .byte   "0123456789ABCDEF" ; Needed by ComposeFileTypeString
+str_from_int:   PASCAL_STRING "000,000"    ; Filled in by IntToString
+
+        .include "../lib/filetypestring.s"
+        .include "../lib/inttostring.s"
 
 ;;; ============================================================
 
