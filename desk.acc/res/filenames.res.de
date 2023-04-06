@@ -25,3 +25,4 @@
 .define res_filename_sounds Tone
 .define res_filename_analog_clock Analoge.Uhr
 .define res_filename_digital_clock Digitaluhr
+.define res_filename_print_catalog Katalog.drucken

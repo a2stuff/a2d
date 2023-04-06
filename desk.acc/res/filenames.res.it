@@ -25,3 +25,4 @@
 .define res_filename_sounds Suoni
 .define res_filename_analog_clock orologio.analog
 .define res_filename_digital_clock orologio.digit
+.define res_filename_print_catalog Stampa.Catalogo

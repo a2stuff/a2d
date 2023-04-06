@@ -25,3 +25,4 @@
 .define res_filename_sounds Sons
 .define res_filename_analog_clock relogio.analog
 .define res_filename_digital_clock relogio.digital
+.define res_filename_print_catalog Impr.Catalogo

@@ -25,3 +25,4 @@
 .define res_filename_sounds Ljud
 .define res_filename_analog_clock analog.klocka
 .define res_filename_digital_clock digital.klocka
+.define res_filename_print_catalog Skriv.katalog
