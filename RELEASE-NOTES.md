@@ -159,6 +159,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Add keyboard shortcuts for checkboxes.
 * Map: Position indicator now blinks.
 * Control Panel: Add more obvious button to apply desktop pattern change.
+* This Apple: Identify and show Tiger Learning Computer
 
 ## 1.2
 

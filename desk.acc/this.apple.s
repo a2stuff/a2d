@@ -192,6 +192,15 @@ reserved:       .res    1
         REF_MAPINFO_MEMBERS
 .endparams
 
+.params tlc_bitmap
+        DEFINE_POINT viewloc, 62, 6
+mapbits:        .addr   tlc_bits
+mapwidth:       .byte   7
+reserved:       .res    1
+        DEFINE_RECT maprect, 0, 0, 45, 24
+        REF_MAPINFO_MEMBERS
+.endparams
+
 ii_bits:
         .byte   PX(%0000000),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000),PX(%0000000),PX(%0000000),PX(%0000000)
         .byte   PX(%0000001),PX(%1000000),PX(%0000000),PX(%0000000),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000)
@@ -440,6 +449,34 @@ ace2000_bits:
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
         .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111)
 
+tlc_bits:
+        .byte   PX(%0000111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%0000000)
+        .byte   PX(%0001100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0001111),PX(%1100001),PX(%1111100),PX(%0011111),PX(%1000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0001000),PX(%0100001),PX(%0000100),PX(%0010000),PX(%1000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0011000),PX(%0110011),PX(%0000110),PX(%0110000),PX(%1100001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0001000),PX(%0100001),PX(%0000100),PX(%0010000),PX(%1000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0001111),PX(%1100001),PX(%1111100),PX(%0011111),PX(%1000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0001111),PX(%1100001),PX(%1111100),PX(%0011111),PX(%1000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0001000),PX(%0100001),PX(%0000100),PX(%0010000),PX(%1000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0011000),PX(%0110011),PX(%0000110),PX(%0110000),PX(%1100001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0001000),PX(%0100001),PX(%0000100),PX(%0010000),PX(%1000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0001111),PX(%1100001),PX(%1111100),PX(%0011111),PX(%1000001),PX(%1000000)
+        .byte   PX(%0001100),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000001),PX(%1000000)
+        .byte   PX(%0001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000)
+        .byte   PX(%0000000),PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0011000),PX(%0000000)
+        .byte   PX(%0001111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1000000)
+        .byte   PX(%0011000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%1100000)
+        .byte   PX(%0011001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0011001),PX(%1001100),PX(%1100000)
+        .byte   PX(%0110000),PX(%0110011),PX(%0011001),PX(%1001100),PX(%1100110),PX(%0110000),PX(%0110000)
+        .byte   PX(%0110001),PX(%1001100),PX(%1100110),PX(%0110011),PX(%0011001),PX(%1001100),PX(%0110000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0000010),PX(%1010100),PX(%0000000),PX(%0000000),PX(%0011000)
+        .byte   PX(%1100000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0000000),PX(%0011000)
+        .byte   PX(%0111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1111111),PX(%1110000)
+
+
 ;;; ============================================================
 
         DEFINE_POINT model_pos, 150, 12
@@ -567,6 +604,9 @@ str_ace500:
 str_ace2000:
         PASCAL_STRING res_string_model_ace2000
 
+str_tlc:
+        PASCAL_STRING "Tiger Learning Computer"
+
 ;;; ============================================================
 
 str_prodos_version:
@@ -689,6 +729,9 @@ dib_buffer:     .tag    SPDIB
 ;;;          at $FE1F, so the IIgs IDROUTINE must be used with caution: it
 ;;;          will modify A and output text!
 ;;;   v6.0 - has $FBC0=$E0 (like an enhanced IIe), and has $FE1F=$60
+;;;
+;;; The Tiger Learning Computer has identical ID bytes to the Enhanced IIe,
+;;; but can be distinguished by the sequence $CC $D4 $D7 $C9 $CE $8D at $FACF
 
 .enum model
         ii                      ; Apple ][
@@ -707,6 +750,7 @@ dib_buffer:     .tag    SPDIB
         laser128                ; Laser 128
         ace500                  ; Franklin ACE 500
         ace2000                 ; Franklin ACE 2000
+        tlc                     ; Tiger Learning Computer
         LAST
 .endenum
 kNumModels = model::LAST
@@ -728,6 +772,7 @@ model_str_table:
         .addr   str_laser128     ; Laser 128
         .addr   str_ace500       ; Franklin ACE 500
         .addr   str_ace2000      ; Franklin ACE 2000
+        .addr   str_tlc          ; Tiger Learning Computer
         ASSERT_ADDRESS_TABLE_SIZE model_str_table, kNumModels
 
 model_pix_table:
@@ -747,6 +792,7 @@ model_pix_table:
         .addr   aux::laser128_bitmap ; Laser 128
         .addr   aux::ace500_bitmap   ; Franklin ACE 500
         .addr   aux::ace2000_bitmap  ; Franklin ACE 2000
+        .addr   aux::tlc_bitmap      ; Tiger Learning Computer
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
@@ -802,6 +848,13 @@ model_lookup_table:
 
         .byte   $FF             ; sentinel
 
+
+;;; c/o https://github.com/david-schmidt/tlc-apple2/issues/1
+tlc_sequence:
+        .byte   $CC, $D4, $D7, $C9, $CE, $8D ; "LTWIN" CR
+        kTLCSequenceLength = * - tlc_sequence
+        TLC_ID_ADDR = $FAFC
+
 .proc IdentifyModel
         ;; Read from ROM
         bit     ROMIN2
@@ -838,22 +891,35 @@ fail:   ldy     #0
 
 match:  tya
 
-        ;; A has model; but now test for IIgs
-        cmp     #model::iie_enhanced   ; IIgs masquerades as Enhanced IIe
-        bne     :+
+        ;; A has model; but now test for IIgs and TLC;
+        ;; both masquerade as Enhanced IIe.
+        cmp     #model::iie_enhanced
+    IF_EQ
 
         sec
         jsr     IDROUTINE
-        bcs     :+              ; not IIgs
-
+      IF_CC
         ;; Is IIgs; Y holds ROM revision
         tya
         ora     #'0'            ; convert to ASCII digit
         sta     str_iigs + kStrIIgsROMOffset
         lda     #model::iigs
+      ELSE
+        ;; Is it a TLC?
+        tay
+        ldx     #kTLCSequenceLength-1
+:       lda     TLC_ID_ADDR,x
+        cmp     tlc_sequence,x
+        bne     :+
+        dex
+        bpl     :-
+        ldy     #model::tlc
+:       tya
+      END_IF
+    END_IF
 
         ;; A has model
-:       jsr     SetModelPtrs
+        jsr     SetModelPtrs
 
         ;; Read from LC RAM
         bit     LCBANK1
