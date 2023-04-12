@@ -15,6 +15,7 @@
 .define res_filename_joystick joystick
 .define res_filename_international Internacional
 .define res_filename_screen_savers Salvapantallas
+.define res_filename_toys Juguetes
 .define res_filename_flying_toasters tosta.voladoras
 .define res_filename_neko Neko
 .define res_filename_map Mapa
