@@ -24,8 +24,11 @@ str_file_type:
 
         ;; Found - copy string from `type_names_table`
 found:  tya
-        asl     a               ; *4
+        sta     add
         asl     a
+        clc
+        add := *+1
+        adc     #SELF_MODIFIED_BYTE
         tay
 
         ldx     #0
@@ -38,7 +41,7 @@ found:  tya
 
         rts
 
-        ;; Type not found - use generic " $xx"
+        ;; Type not found - use generic "$xx"
 not_found:
         copy    #'$', str_file_type+1
 
@@ -88,27 +91,27 @@ type_table:
 
 type_names_table:
         ;; Types marked with * are known to BASIC.SYSTEM.
-        .byte   "NON " ; unknown
-        .byte   "BAD " ; bad block
-        .byte   "TXT " ; text *
-        .byte   "BIN " ; binary *
-        .byte   "FNT " ; font
-        .byte   "FOT " ; graphics
-        .byte   "DIR " ; directory *
-        .byte   "ADB " ; appleworks db *
-        .byte   "AWP " ; appleworks wp *
-        .byte   "ASP " ; appleworks sp *
-        .byte   "ANM " ; animation
-        .byte   "S16 " ; IIgs application
-        .byte   "MUS " ; music
-        .byte   "SND " ; sampled sound
-        .byte   "CMD " ; command *
-        .byte   "INT " ; basic *
-        .byte   "IVR " ; variables *
-        .byte   "BAS " ; basic *
-        .byte   "VAR " ; variables *
-        .byte   "REL " ; rel *
-        .byte   "SYS " ; system *
-        ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 4
+        .byte   "NON" ; unknown
+        .byte   "BAD" ; bad block
+        .byte   "TXT" ; text *
+        .byte   "BIN" ; binary *
+        .byte   "FNT" ; font
+        .byte   "FOT" ; graphics
+        .byte   "DIR" ; directory *
+        .byte   "ADB" ; appleworks db *
+        .byte   "AWP" ; appleworks wp *
+        .byte   "ASP" ; appleworks sp *
+        .byte   "ANM" ; animation
+        .byte   "S16" ; IIgs application
+        .byte   "MUS" ; music
+        .byte   "SND" ; sampled sound
+        .byte   "CMD" ; command *
+        .byte   "INT" ; basic *
+        .byte   "IVR" ; variables *
+        .byte   "BAS" ; basic *
+        .byte   "VAR" ; variables *
+        .byte   "REL" ; rel *
+        .byte   "SYS" ; system *
+        ASSERT_RECORD_TABLE_SIZE type_names_table, kNumFileTypes, 3
 
 .endproc ; ComposeFileTypeString
