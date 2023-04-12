@@ -423,7 +423,9 @@ str_alert_insert_destination:
 ;;; --------------------------------------------------
 ;;; Messages
 
-err_00:  PASCAL_STRING res_string_errmsg_00
+err_unknown:                    ; kErrUnknown
+        PASCAL_STRING res_string_errmsg_00
+
 err_27:  PASCAL_STRING res_string_errmsg_27
 err_28:  PASCAL_STRING res_string_errmsg_28
 err_2B:  PASCAL_STRING res_string_errmsg_2B
@@ -456,8 +458,10 @@ err_no_basic_system:            ; kErrBasicSysNotFound
         ;; message number-to-index table
         ;; (look up by scan to determine index)
 alert_table:
+        .byte   kErrUnknown
+
         ;; ProDOS MLI error codes:
-        .byte   $00, ERR_IO_ERROR, ERR_DEVICE_NOT_CONNECTED, ERR_WRITE_PROTECTED
+        .byte   ERR_IO_ERROR, ERR_DEVICE_NOT_CONNECTED, ERR_WRITE_PROTECTED
         .byte   ERR_INVALID_PATHNAME, ERR_PATH_NOT_FOUND, ERR_VOL_NOT_FOUND
         .byte   ERR_FILE_NOT_FOUND, ERR_DUPLICATE_FILENAME, ERR_OVERRUN_ERROR
         .byte   ERR_VOLUME_DIR_FULL, ERR_ACCESS_ERROR, ERR_NOT_PRODOS_VOLUME
@@ -473,7 +477,8 @@ alert_table:
 
         ;; alert index to string address
 message_table_low:
-        .byte   <err_00,<err_27,<err_28,<err_2B,<err_40,<err_44,<err_45,<err_46
+        .byte   <err_unknown
+        .byte   <err_27,<err_28,<err_2B,<err_40,<err_44,<err_45,<err_46
         .byte   <err_47,<err_48,<err_49,<err_4E,<err_52,<err_57
         .byte   <err_insert_system_disk
         .byte   <err_save_changes
@@ -483,7 +488,8 @@ message_table_low:
         ASSERT_TABLE_SIZE message_table_low, kNumAlerts
 
 message_table_high:
-        .byte   >err_00,>err_27,>err_28,>err_2B,>err_40,>err_44,>err_45,>err_46
+        .byte   >err_unknown
+        .byte   >err_27,>err_28,>err_2B,>err_40,>err_44,>err_45,>err_46
         .byte   >err_47,>err_48,>err_49,>err_4E,>err_52,>err_57
         .byte   >err_insert_system_disk
         .byte   >err_save_changes
@@ -493,7 +499,7 @@ message_table_high:
         ASSERT_TABLE_SIZE message_table_high, kNumAlerts
 
 alert_options_table:
-        .byte   AlertButtonOptions::OK             ; dummy
+        .byte   AlertButtonOptions::OK             ; kErrUnknown
         .byte   AlertButtonOptions::OK             ; ERR_IO_ERROR
         .byte   AlertButtonOptions::OK             ; ERR_DEVICE_NOT_CONNECTED
         .byte   AlertButtonOptions::TryAgainCancel ; ERR_WRITE_PROTECTED

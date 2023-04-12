@@ -164,6 +164,7 @@ kDynamicRoutineRestore10K       = 7
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors
 
+kErrUnknown             = $00
 kErrInsertSystemDisk    = $FA
 kErrSaveChanges         = $FB
 kErrNoWindowsOpen       = $FC
