@@ -589,18 +589,14 @@ process_block:
         ldy     #FileEntry::storage_type_name_length
         lda     (dir_ptr),y
         and     #NAME_LENGTH_MASK
-        bne     :+
-        jmp     next_entry
+        jeq     next_entry
 
-:       inc     entry_num
+        inc     entry_num
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
 
-        cmp     #FT_DIRECTORY   ; Directory?
-        beq     include
-
         cmp     #kDAFileType    ; DA? (must match type/auxtype)
-        bne     :+
+    IF_EQ
         ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
         cmp     #<kDAFileAuxType
@@ -609,13 +605,9 @@ process_block:
         lda     (dir_ptr),y
         cmp     #>kDAFileAuxType
         jne     next_entry
+    END_IF
 
-:       ldx     #kNumAppleMenuTypes-1
-:       cmp     apple_menu_type_table,x
-        beq     include
-        dex
-        bpl     :-
-        jne     next_entry
+        ;; Allow anything else
 
 include:
         ;; Compute slot in DA name table
@@ -726,12 +718,6 @@ entries_per_block:      .byte   0
 entry_in_block: .byte   0
 
 name_buf:       .res    ::kDAMenuItemSize, 0
-
-        kNumAppleMenuTypes = 8
-apple_menu_type_table:
-        .byte   FT_SYSTEM, FT_S16, FT_BINARY, FT_BASIC ; Executable
-        .byte   FT_TEXT, FT_GRAPHICS, FT_FONT, FT_MUSIC ; Previewable
-        ASSERT_TABLE_SIZE apple_menu_type_table, kNumAppleMenuTypes
 
 end:
 .endscope
