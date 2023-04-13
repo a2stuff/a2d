@@ -65,6 +65,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Treat files with .A2LC, .A2HR, and .A2FM extensions as images.
 * Icon for audio files (.BTC and .ZC, $D8/SND), video files ($5B/ANM)
 * Icon for Applesoft and IntBASIC variable files (VAR, IVR)
+* Add Link file type support ($E1/LNK)
 
 #### Performance & Fixes
 
@@ -124,6 +125,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Rod's Color Pattern: A new screen saver based on the classic demo. c/o @frankmilliron
 * Neko: Provides a playful cat desk toy. (In Extras)
 * Print Catalog: Dumps a recursive catalog of filenames to a printer in Slot 1.
+* Make Link: Creates a link file to the selected icon, placed in the LINKS/ folder.
 
 #### Updates
 

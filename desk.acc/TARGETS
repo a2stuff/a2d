@@ -20,6 +20,7 @@ calculator                      apple.menu                      optional
 calendar                        apple.menu                      optional
 find.files                      apple.menu                      optional
 key.caps                        apple.menu                      optional
+make.link                       apple.menu                      optional
 run.basic.here                  apple.menu                      optional
 sort.directory                  apple.menu                      optional
 this.apple                      apple.menu                      optional

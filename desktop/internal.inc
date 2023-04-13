@@ -23,6 +23,7 @@ kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
         appleworks_sp
         archive
         encoded
+        link
         desk_accessory
         basic
         intbasic

@@ -137,6 +137,19 @@ kSelectorListBufSize = $800
 kSelectorListShortSize = $400
 
 ;;; ============================================================
+;;; Link files
+
+kLinkFileAuxType = $0001
+kLinkFileSig1Offset = 0
+kLinkFileSig2Offset = 1
+kLinkFileSig1Value = $C2
+kLinkFileSig2Value = $CD
+kLinkFileVersionOffset = 2
+kLinkFileCurrentVersion = $00
+kLinkFilePathLengthOffset = 3
+kLinkFileMaxSize = 68       ; signature + version + length + 64-byte path
+
+;;; ============================================================
 ;;; Settings Config File
 
 ;;; See `docs/Desktop_Config_Format.md` for file format.

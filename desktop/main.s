@@ -1013,6 +1013,7 @@ invoke_table:
         INVOKE_TABLE_ENTRY      interpreter, str_awlauncher    ; appleworks_db
         INVOKE_TABLE_ENTRY      interpreter, str_unshrink      ; archive
         INVOKE_TABLE_ENTRY      interpreter, str_binscii       ; encoded
+        INVOKE_TABLE_ENTRY      InvokeLink, 0                  ; link
         INVOKE_TABLE_ENTRY      InvokeDeskAccWithSelection, 0  ; desk_accessory
         INVOKE_TABLE_ENTRY      basic, 0                       ; basic
         INVOKE_TABLE_ENTRY      interpreter, str_intbasic      ; intbasic
@@ -1117,6 +1118,56 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
 
         jmp     SetCursorPointer ; after opening folder
 .endproc ; OpenFolder
+
+
+;;; --------------------------------------------------
+
+.proc InvokeLink
+        read_buf := $800
+
+        MLI_CALL OPEN, open_params
+        bcs     err
+        lda     open_params__ref_num
+        sta     read_params__ref_num
+        sta     close_params__ref_num
+        MLI_CALL READ, read_params
+        php
+        MLI_CALL CLOSE, close_params
+        plp
+        bcs     err
+
+        lda     read_params__trans_count
+        cmp     #kLinkFilePathLengthOffset
+        bcc     bad
+
+        ldx     #kCheckHeaderLength-1
+:       lda     read_buf,x
+        cmp     check_header,x
+        bne     bad
+        dex
+        bpl     :-
+
+        param_call CopyToSrcPath, read_buf + kLinkFilePathLengthOffset
+        jmp     LaunchFileWithPath
+
+bad:    lda     #kErrUnknown
+err:    jmp     ShowAlert
+
+check_header:
+        .byte   kLinkFileSig1Value, kLinkFileSig2Value, kLinkFileCurrentVersion
+        kCheckHeaderLength = * - check_header
+
+        DEFINE_OPEN_PARAMS open_params, src_path_buf, $1C00
+        open_params__ref_num := open_params::ref_num
+        DEFINE_READ_PARAMS read_params, read_buf, kLinkFileMaxSize
+        read_params__ref_num := read_params::ref_num
+        read_params__trans_count := read_params::trans_count
+        DEFINE_CLOSE_PARAMS close_params
+        close_params__ref_num := close_params::ref_num
+
+.endproc ; InvokeLink
+
+;;; --------------------------------------------------
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
 
@@ -1642,13 +1693,15 @@ CmdDeskAcc      := CmdDeskaccImpl::start
 
         copy    #0, src_path_buf ; Signal no file selection
 
-        ;; As a convenience for DAs, set path to first selected file.
-        lda     selected_window_id
-        beq     :+              ; not a file
+        ;; As a convenience for DAs, pass path to first selected icon.
         lda     selected_icon_count
-        beq     :+              ; no selection
-        jsr     CopyAndComposeWinIconPaths
+        beq     :+
+        lda     selected_icon_list ; first selected icon
+        cmp     trash_icon_num     ; ignore trash
+        beq     :+
+        jsr     GetIconPath
         jne     ShowAlert
+        param_call CopyToSrcPath, path_buf3
 :
         ldax    #tmp_path_buf
         FALL_THROUGH_TO InvokeDeskAcc
@@ -15303,7 +15356,8 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_ANIMATION, ICT_FLAGS_NONE, 0, 0, IconType::animation     ; $5B ANM
         DEFINE_ICTRECORD $FF, FT_SOUND,     ICT_FLAGS_NONE, 0, 0, IconType::audio         ; $D8 SND
         DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_NONE, 0, 0, IconType::music         ; $D5 MUS
-        DEFINE_ICTRECORD $FF, $E0,          ICT_FLAGS_AUX, $8002, 0, IconType::archive ; NuFX
+        DEFINE_ICTRECORD $FF, $E0,          ICT_FLAGS_AUX, $8002, 0, IconType::archive    ; NuFX
+        DEFINE_ICTRECORD $FF, FT_LINK,      ICT_FLAGS_AUX, kLinkFileAuxType, 0, IconType::link ; $E1 LNK
 
         ;; IIgs-Specific Files (ranges)
         DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
@@ -15509,6 +15563,7 @@ icontype_iconentryflags_table:
         .byte   0                    ; appleworks sp
         .byte   0                    ; archive
         .byte   0                    ; encoded
+        .byte   0                    ; link
         .byte   0                    ; desk accessory
         .byte   0                    ; basic
         .byte   0                    ; intbasic
@@ -15536,6 +15591,7 @@ type_icons_table:
         .addr   asp ; appleworks sp
         .addr   arc ; archive
         .addr   arc ; encoded
+        .addr   lnk ; link
         .addr   a2d ; desk accessory
         .addr   bas ; basic
         .addr   int ; intbasic
