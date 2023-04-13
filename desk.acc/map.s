@@ -678,7 +678,7 @@ sflag:  .byte   0
         bit     indicator_flag
         bmi     XDrawPositionIndicator
         rts
-.endproc
+.endproc ; ShowPositionIndicator
 HidePositionIndicator := ShowPositionIndicator
 
 .proc XDrawPositionIndicator
@@ -702,7 +702,7 @@ indicator_flag:
         sta     blink_counter+1
         lsr16   blink_counter
         rts
-.endproc ;ResetBlinkCounter
+.endproc ; ResetBlinkCounter
 
 blink_counter:
         .word   0

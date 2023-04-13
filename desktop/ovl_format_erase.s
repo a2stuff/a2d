@@ -383,7 +383,7 @@ ret:    rts
 .proc HandleOptionPickerKey
         jsr     option_picker::HandleOptionPickerKey
         jmp     main::UpdateOKButton
-.endproc
+.endproc ; HandleOptionPickerKey
 
 ;;; ============================================================
 

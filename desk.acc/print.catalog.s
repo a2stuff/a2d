@@ -815,7 +815,7 @@ fail:
 
         lda     #$8D            ; CR
         FALL_THROUGH_TO COut
-.endproc
+.endproc ; CROut
 
 .proc COut
         inc     ch
@@ -832,7 +832,7 @@ fail:
         bit     LCBANK1
 
         rts
-.endproc
+.endproc ; COut
 
 .proc RestoreCOutHook
         ;; Normal banking
@@ -847,7 +847,7 @@ fail:
         bit     LCBANK1
 
         rts
-.endproc
+.endproc ; RestoreCOutHook
 
 old_hook:
         .word   0

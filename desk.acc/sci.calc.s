@@ -1354,7 +1354,7 @@ kRegSize = 6
         lday    #CON_HALF_PI
         ROM_CALL FMULT          ; FAC = (D / 90) * (PI/2)
         rts
-.endproc
+.endproc ; DegToRad
 
 ;;; Convert FAC from radians to degrees
 .proc RadToDeg
@@ -1370,7 +1370,7 @@ kRegSize = 6
         jsr     FixSGNCPR
         ROM_CALL FDIVT          ; FAC = (R * 90) / (PI/2)
         rts
-.endproc
+.endproc ; RadToDeg
 
 ;;; Needed before FMULTT / FDIVT
 .proc FixSGNCPR
@@ -1380,7 +1380,7 @@ kRegSize = 6
         sta     SGNCPR          ; compared sign for mul/div
         pla
         rts
-.endproc
+.endproc ; FixSGNCPR
 
 ;;; ============================================================
 

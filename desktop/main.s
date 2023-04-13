@@ -2859,7 +2859,7 @@ selection_preserved_count:
         and     #kIconEntryWinIdMask
         jsr     PopPointers     ; do not tail-call optimize!
         rts
-.endproc ; GetIconRecordNum
+.endproc ; GetIconWindow
 
 ;;; ============================================================
 
@@ -10572,13 +10572,13 @@ done:   copy    #0, path_buf4
         stx     stack_stash
         jsr     ProcessDir
         jmp     UpdateDirSizeDisplay ; in case 0 files were seen
-.endproc
+.endproc ; GetDirSize
 
 .proc GetInfoProcessDirEntry
         add16   num_blocks, src_file_info_params::blocks_used, num_blocks
         inc16   file_count
         FALL_THROUGH_TO UpdateDirSizeDisplay
-.endproc
+.endproc ; GetInfoProcessDirEntry
 
 .proc UpdateDirSizeDisplay
         ;; Dir: "<size>K for <count> file(s)"
@@ -10628,7 +10628,7 @@ done:   copy    #0, path_buf4
         jsr     RunGetInfoDialogProc
 
         rts
-.endproc
+.endproc ; UpdateDirSizeDisplay
 num_blocks:
         .word   0
 vol_used_blocks:
