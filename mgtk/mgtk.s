@@ -6596,7 +6596,9 @@ ep2:    jsr     SetFillMode
 
 .proc DrawFiller
         ldx     menu_item_index
-        lda     sysfont_height
+        ldy     sysfont_height
+        iny                     ; /= 2, but round up
+        tya
         lsr
         clc
         adc     menu_item_y_table,x

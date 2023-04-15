@@ -17,6 +17,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Button appearance simplified. Showing shortcuts can be enabled with an option.
 * Reset text window correctly when exiting/launching other programs.
 * Visually center window title bar text. ([#744](https://github.com/a2stuff/a2d/issues/744))
+* Menu separators more vertically centered.
 
 ### Launcher
 
