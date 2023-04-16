@@ -862,7 +862,11 @@ With Sci.Calc:
 
 ## Puzzle
 
-* Launch DeskTop. Apple > Puzzle. Verify that the puzzle does not show as scrambled until the mouse button or a key is pressed. Repeat and verify that the puzzle is scrambled differently each time.
+* Launch DeskTop. Apple > Puzzle. Verify that the puzzle does not show as scrambled until the mouse button is clicked on the puzzle or a key is pressed. Repeat and verify that the puzzle is scrambled differently each time.
+* Launch DeskTop. Apple > Puzzle. Verify that you can move and close the window using the title bar before the puzzle is scrambled.
+* Launch DeskTop. Apple > Puzzle. Verify that you can close the window using Esc or Apple+W before the puzzle is scrambled.
+* Launch DeskTop. Apple > Puzzle. Scramble then solve the puzzle. After the victory sound plays, click on the puzzle again. Verify that the puzzle scrambles and that it can be solved again.
+* Launch DeskTop. Apple > Puzzle. Scramble the puzzle. Move the window so that only the title bar of the window is visible on screen. Use the arrow keys to move puzzle pieces. Verify that the puzzle pieces don't mispaint on the desktop.
 
 ## Run Basic Here
 

@@ -24,25 +24,6 @@
         kDAWindowId = 51
 
 ;;; ============================================================
-;;; Redraw the DA window
-
-        ;; called with window_id in A
-redraw_window:
-        sta     getwinport_params_window_id
-        lda     winfo_viewloc_ycoord ; is top on screen?
-        cmp     #kScreenHeight-1
-        bcc     :+              ; yes
-        rts
-
-:       MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, setport_params
-        lda     getwinport_params_window_id
-        cmp     #kDAWindowId
-        jeq     DrawWindow
-
-        rts
-
-;;; ============================================================
 ;;; Param Blocks
 
         ;; following memory space is re-used so x/y overlap
@@ -86,10 +67,9 @@ goaway: .byte   0
 .endparams
 
 .params getwinport_params
-window_id:      .byte   0
+window_id:      .byte   kDAWindowId
 a_grafport:     .addr   setport_params
 .endparams
-getwinport_params_window_id := getwinport_params::window_id
 
         ;; Puzzle piece row/columns
         kColWidth = 28
@@ -521,7 +501,13 @@ nextwinfo:      .addr   0
 .endparams
         winfo_viewloc_ycoord := winfo::viewloc::ycoord
 
+pencopy:         .byte  MGTK::pencopy
+notpenXOR:       .byte  MGTK::notpenXOR
+
 name:   PASCAL_STRING res_string_window_title  ; window title
+
+scrambled_flag:
+        .byte   0
 
 ;;; ============================================================
 ;;; Create the window
@@ -536,44 +522,9 @@ loop:   tya
         dey
         bpl     loop
 
-        lda     #kDAWindowId
-        jsr     redraw_window
+        jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
 
-        ;; Scramble?
-.proc Scramble
-        ldy     #3
-sloop:  tya
-        pha
-        ldx     position_table
-        ldy     #0
-ploop:  lda     position_table+1,y
-        sta     position_table,y
-        iny
-        cpy     #15
-        bcc     ploop
-
-        stx     position_table+15
-        pla
-        tay
-        dey
-        bne     sloop
-        ldx     position_table
-        lda     position_table+1
-        sta     position_table
-        stx     position_table+1
-.endproc ; Scramble
-
-        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     :+
-        cmp     #MGTK::EventKind::key_down
-        bne     Scramble
-:
-        jsr     CheckVictory
-        bcs     Scramble        ; BUG: This would require a second click!
         jsr     DrawAll
         jsr     FindHole
         FALL_THROUGH_TO InputLoop
@@ -611,6 +562,12 @@ bail:   rts
         ;; client area?
 :       cmp     #MGTK::Area::content
         bne     :+
+
+        bit     scrambled_flag
+    IF_NC
+        jmp     Scramble
+    END_IF
+
         jsr     FindClickPiece
         bcc     bail
         jmp     ProcessClick
@@ -628,7 +585,6 @@ destroy:
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
 
-
         ;; title bar?
 check_title:
         cmp     #MGTK::Area::dragbar
@@ -639,8 +595,8 @@ check_title:
         bit     dragwindow_params::it_moved
         bpl     ret
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
-        lda     #kDAWindowId
-        jmp     redraw_window
+        jmp     DrawWindow
+
 ret:    rts
 .endproc ; OnClick
 
@@ -654,6 +610,11 @@ ret:    rts
         cmp     #kShortcutCloseWindow
         beq     OnClick::destroy
         bne     ret             ; always
+    END_IF
+
+        bit     scrambled_flag
+    IF_NC
+        jmp     Scramble
     END_IF
 
         cmp     #CHAR_ESCAPE
@@ -883,10 +844,13 @@ done:   jsr     CheckVictory
 loop:   txa
         pha
         jsr     PlaySound
+        jsr     InvertWindow
         pla
         tax
         dex
         bne     loop
+
+        copy    #0, scrambled_flag
 .endproc ; OnVictory
 
 after_click:
@@ -894,9 +858,13 @@ after_click:
 .endproc ; ProcessClick
 
 ;;; ============================================================
-;;; Clear the background
+;;; Draw the DA window
 
-DrawWindow:
+.proc DrawWindow
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        bne     ret             ; obscured
+        MGTK_CALL MGTK::SetPort, setport_params
+
         MGTK_CALL MGTK::SetPattern, pattern_speckles
         MGTK_CALL MGTK::PaintRect, paintrect_params
         MGTK_CALL MGTK::SetPattern, pattern_black
@@ -906,11 +874,8 @@ DrawWindow:
 
         jsr     DrawAll
 
-        lda     #kDAWindowId
-        sta     getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, setport_params
-        rts
+ret:    rts
+.endproc ; RedrawWindow
 
 ;;; ============================================================
 ;;; Draw pieces
@@ -935,7 +900,7 @@ DrawWindow:
         bne     DrawSelected    ; always
 .endproc ; DrawRow
 
-.proc DrawCol                   ; col specified in draw_rc
+.proc DrawCol                   ; col specified in `draw_rc`
         lda     #4
         sta     draw_inc
         ldy     hole_x
@@ -944,15 +909,18 @@ DrawWindow:
         FALL_THROUGH_TO DrawSelected
 .endproc ; DrawCol
 
-        ;; Draw pieces from A to draw_end, step draw_inc
+        ;; Draw pieces from A to `draw_end`, step `draw_inc`
 .proc DrawSelected
         tya
         pha
-        MGTK_CALL MGTK::HideCursor
-        lda     #kDAWindowId
-        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
+    IF_NOT_ZERO
+        ;; obscured
+        pla
+        rts
+    END_IF
         MGTK_CALL MGTK::SetPort, setport_params
+        MGTK_CALL MGTK::HideCursor
         pla
         tay
 
@@ -998,6 +966,21 @@ delay2: dey
         bne     loop2
         rts
 .endproc ; PlaySound
+
+;;; ============================================================
+
+.proc InvertWindow
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        bne     ret             ; obscured
+        MGTK_CALL MGTK::SetPort, setport_params
+
+        MGTK_CALL MGTK::SetPattern, pattern_black
+        MGTK_CALL MGTK::SetPenMode, notpenXOR
+        MGTK_CALL MGTK::PaintRect, paintrect_params
+        MGTK_CALL MGTK::SetPenMode, pencopy
+
+ret:    rts
+.endproc ; InvertWindow
 
 ;;; ============================================================
 ;;; Puzzle complete?
@@ -1096,6 +1079,41 @@ again:  cmp     #4
 done:   sta     hole_x
         rts
 .endproc ; FindHole
+
+;;; ============================================================
+
+.proc Scramble
+        ldy     #3
+sloop:  tya
+        pha
+        ldx     position_table
+        ldy     #0
+ploop:  lda     position_table+1,y
+        sta     position_table,y
+        iny
+        cpy     #15
+        bcc     ploop
+
+        stx     position_table+15
+        pla
+        tay
+        dey
+        bne     sloop
+        ldx     position_table
+        lda     position_table+1
+        sta     position_table
+        stx     position_table+1
+
+        jsr     CheckVictory
+        bcs     Scramble
+
+        copy    #$80, scrambled_flag
+        jsr     DrawAll
+        jsr     FindHole
+
+        rts
+.endproc ; Scramble
+
 
 ;;; ============================================================
 

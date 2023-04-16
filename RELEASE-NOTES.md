@@ -159,6 +159,10 @@ Project Page: https://github.com/a2stuff/a2d
 * Puzzle
   * Added keyboard support - arrow keys move a tile into the hole.
   * Don't repaint on title bar click. ([#746](https://github.com/a2stuff/a2d/issues/746))
+  * Allow moving and closing the window before scrambling. ([#752](https://github.com/a2stuff/a2d/issues/752))
+  * Allow re-scrambling once the puzzle has been completed.
+  * Flash window on victory.
+  * Don't mispaint onto the desktop if the window is obscured.
 * Options
   * Add option to show shortcuts in dialogs.
   * Add keyboard shortcuts for checkboxes.
