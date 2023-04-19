@@ -23,6 +23,7 @@ Same
  File > Eject                Disk > Eject                     Special > Eject Disk              OA-E
                              Disk > Initialize...             Special > Format a Disk...
  Special > Erase Disk        Disk > Erase...                  Special > Erase a Disk...
+                             Extras > Make Alias...           Special > Make Alias
 
 IIgs Finder but not DeskTop
 
@@ -33,4 +34,3 @@ IIgs Finder but not DeskTop
  Edit > Copy            OA-C
  Edit > Paste           OA-V
  Special > Empty Trash  OA-T
- Extras > Make Alias... OA-M

@@ -112,6 +112,8 @@ label_rename_icon:
         PASCAL_STRING res_string_menu_item_rename_icon ; menu item
 label_duplicate_icon:
         PASCAL_STRING res_string_menu_item_duplicate ; menu item
+label_make_link:
+        PASCAL_STRING res_string_menu_item_make_link
 
 desktop_menu:
         DEFINE_MENU_BAR 6
@@ -185,6 +187,7 @@ special_menu:
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_lock
         DEFINE_MENU_ITEM label_unlock
+        DEFINE_MENU_ITEM label_make_link
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeSpecial, .sizeof(MGTK::MenuItem)
 
         kMenuItemIdCheckAll    = 1
@@ -197,6 +200,7 @@ special_menu:
         ;; --------------------
         kMenuItemIdLock        = 9
         kMenuItemIdUnlock      = 10
+        kMenuItemIdMakeLink    = 11
 
 ;;; ============================================================
 

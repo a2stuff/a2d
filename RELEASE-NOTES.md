@@ -40,6 +40,7 @@ Project Page: https://github.com/a2stuff/a2d
 * View > by Type sort order improved.
 * View > by Size sort order improved.
 * Special > Get Size command is now redundant with File > Get Info, so was removed.
+* Special > Make Alias command added - creates a Link file to the selected icon, placed in the LINKS/ folder.
 * Shortcuts > Add a Shortcut... defaults to currently selected file.
 * Shortcuts > Edit/Delete/Run a Shortcut: OK button is now disabled if there is no selection.
 * Format/Erase: Default device to selected volume.
@@ -127,7 +128,6 @@ Project Page: https://github.com/a2stuff/a2d
 * Rod's Color Pattern: A new screen saver based on the classic demo. c/o @frankmilliron
 * Neko: Provides a playful cat desk toy. (In Extras)
 * Print Catalog: Dumps a recursive catalog of filenames to a printer in Slot 1.
-* Make Link: Creates a link file to the selected icon, placed in the LINKS/ folder.
 
 #### Updates
 

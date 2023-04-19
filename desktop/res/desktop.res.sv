@@ -32,6 +32,7 @@
 .define res_string_menu_item_disk_copy "Diskkopia..."
 .define res_string_menu_item_lock "L}sa"
 .define res_string_menu_item_unlock "L}sa upp"
+.define res_string_menu_item_make_link "Skapa alias"
 .define res_string_menu_item_get_info "Visa info"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_get_size "F} storlek"

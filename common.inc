@@ -25,6 +25,7 @@
 .define kFilenamePreviewDir    "Preview"
 .define kFilenameExtrasDir     "Extras"
 .define kFilenameRAMCardDir    "DeskTop"
+.define kFilenameLinksDir      "Links"
 
 ;;; ============================================================
 ;;; DeskTop Modules

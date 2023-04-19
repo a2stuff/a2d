@@ -344,6 +344,7 @@ dispatch_table:
         .addr   CmdNoOp         ; --------
         .addr   CmdLock
         .addr   CmdUnlock
+        .addr   CmdMakeLink
         ASSERT_ADDRESS_TABLE_SIZE menu4_start, ::kMenuSizeSpecial
 
         ;; Startup menu (5)
@@ -4467,6 +4468,91 @@ check_drive_flags:
 
 ;;; ============================================================
 
+.proc CmdMakeLinkImpl
+
+;;; Param block written out as new link file
+PARAM_BLOCK link_struct, $800
+sig1    .byte
+sig2    .byte
+ver     .byte
+path    .byte
+END_PARAM_BLOCK
+
+header: .byte   kLinkFileSig1Value, kLinkFileSig2Value, kLinkFileCurrentVersion
+        kHeaderSize = * - header
+
+dir_path:
+        PASCAL_STRING kFilenameLinksDir
+
+        DEFINE_CREATE_PARAMS create_dir_params, dir_path, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
+        DEFINE_GET_PREFIX_PARAMS prefix_params, src_path_buf
+        DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_LINK, kLinkFileAuxType
+        DEFINE_OPEN_PARAMS open_params, src_path_buf, IO_BUFFER
+        DEFINE_WRITE_PARAMS write_params, link_struct, 0
+        DEFINE_CLOSE_PARAMS close_params
+
+start:
+        ;; Prep struct for writing
+        lda     selected_icon_list
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jne     ShowAlert
+
+        ldx     #kHeaderSize-1
+:       copy    header,x, link_struct,x
+        dex
+        bpl     :-
+
+        COPY_STRING path_buf3, link_struct::path
+        lda     link_struct::path
+        clc
+        adc     #link_struct::path-link_struct+1
+        sta     write_params::request_count
+
+        ;; Create dir (ok if it already exists)
+        MLI_CALL CREATE, create_dir_params
+        bcc     :+
+        cmp     #ERR_DUPLICATE_FILENAME
+        bne     err
+:
+        ;; Compose link file path
+        MLI_CALL GET_PREFIX, prefix_params
+        dec     src_path_buf    ; remove trailing '/'
+        param_call AppendFilenameToSrcPath, dir_path
+        lda     selected_icon_list
+        jsr     GetIconName
+        jsr     AppendFilenameToSrcPath
+
+        ;; Create link file (ok if it already exists)
+        MLI_CALL CREATE, create_params
+        bcc     :+
+        cmp     #ERR_DUPLICATE_FILENAME
+        bne     err
+:
+        ;; Write out link file
+        MLI_CALL OPEN, open_params
+        bcs     err
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL WRITE, write_params
+        php
+        MLI_CALL CLOSE, close_params
+        plp
+        bcs     err
+
+        ;; Update cached used/free for all same-volume windows
+        param_call UpdateUsedFreeViaPath, src_path_buf
+
+        ;; Show target file
+        jmp     ShowFileWithPath
+
+err:    jmp     ShowAlert
+
+.endproc ; CmdMakeLinkImpl
+        CmdMakeLink := CmdMakeLinkImpl::start
+
+;;; ============================================================
+
 .proc HandleClientClick
         jsr     LoadActiveWindowEntryTable
 
@@ -5513,7 +5599,12 @@ disable:lda     #MGTK::disableitem_disable
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdRenameIcon
-        jmp     DisableMenuItem
+        jsr     DisableMenuItem
+
+        ;; Special
+        copy    #kMenuIdSpecial, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdMakeLink
+        jsr     DisableMenuItem
 .endproc ; ToggleMenuItemsRequiringSingleSelection
 EnableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::enable
 DisableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::disable
@@ -5891,11 +5982,26 @@ no_win:
 .proc ShowFileWithPath
         jsr     SplitInvokerPath
 
+        lda     num_open_windows
+        sta     old
+
         tsx
         stx     saved_stack
         jsr     OpenWindowForPath
 
+        ;; If an existing window was shown, refresh the contents.
+        lda     num_open_windows
+        old := *+1
+        cmp     #SELF_MODIFIED_BYTE
+    IF_EQ
+        lda     active_window_id
+        jsr     SelectAndRefreshWindowOrClose
+        bne     err
+    END_IF
+
         param_jump SelectFileIconByName, INVOKER_FILENAME
+
+err:    rts
 .endproc ; ShowFileWithPath
 
 ;;; ============================================================
