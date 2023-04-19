@@ -135,18 +135,18 @@ adjust_stack:                   ; Adjust stack to account for params
         ldy     param_lengths+1,x ; Check param length...
         bpl     done_hiding
 
+        bit     desktop_initialized_flag
+        bpl     done_hiding
         txa                     ; if high bit was set, stash
         pha                     ; registers and params_addr and then
-        tya                     ; optionally hide cursor
+        tya                     ; hide cursor
         pha
         lda     params_addr
         pha
         lda     params_addr+1
         pha
-        bit     desktop_initialized_flag
-        bpl     :+
         jsr     HideCursor
-:       pla
+        pla
         sta     params_addr+1
         pla
         sta     params_addr
