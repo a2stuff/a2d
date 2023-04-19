@@ -126,18 +126,17 @@ start:
         ;; Ensure path has high bits clear. Workaround for Bitsy Bye bug:
         ;; https://github.com/ProDOS-8/ProDOS8-Testing/issues/68
         ldx     PRODOS_SYS_PATH
-:       lda     PRODOS_SYS_PATH,x
-        and     #$7F
-        sta     PRODOS_SYS_PATH,x
+:       asl     PRODOS_SYS_PATH,x
+        lsr     PRODOS_SYS_PATH,x
         dex
         bne     :-
 
         ;; Strip last filename segment
         ldx     PRODOS_SYS_PATH
+        lda     #'/'
 :       dex
         beq     ret
-        lda     PRODOS_SYS_PATH,x
-        cmp     #'/'
+        cmp     PRODOS_SYS_PATH,x
         bne     :-
         dex
         stx     PRODOS_SYS_PATH
@@ -250,9 +249,7 @@ filename:
         cmp     #ERR_VOL_NOT_FOUND
         beq     okerr
         cmp     #ERR_PATH_NOT_FOUND
-        beq     okerr
-        jmp     fail
-        rts                     ; Otherwise, fail the copy
+        bne     fail            ; Otherwise, fall through to okerr
 
         ;; Get source dir info
 okerr:  MLI_CALL GET_FILE_INFO, get_path2_info_params
@@ -268,22 +265,20 @@ prompt: jsr     ShowInsertPrompt
 fail:   jmp     (hook_handle_error_code)
 
         ;; Prepare for copy...
-gfi_ok: lda     get_path2_info_params::storage_type
+gfi_ok: ldy     #$FF
+        lda     get_path2_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
         beq     is_dir
-        lda     #0
-        beq     :+
-is_dir: lda     #$FF
-:       sta     is_dir_flag
-
+        ldy     #0
+is_dir: 
+        sty     is_dir_flag
         ;; copy `file_type`, `aux_type`, `storage_type`
-        ldy     #7
-:       lda     get_path2_info_params,y
-        sta     create_params,y
+        ldy     #4
+:       lda     get_path2_info_params+3,y
+        sta     create_params+3,y
         dey
-        cpy     #3
         bne     :-
         lda     #ACCESS_DEFAULT
         sta     create_params::access
@@ -301,16 +296,14 @@ is_dir: lda     #$FF
         lda     #ST_LINKED_DIRECTORY
         sta     create_params::storage_type
 :       MLI_CALL CREATE, create_params
-        beq     :+
-        jmp     (hook_handle_error_code)
+        bne     fail
 
-:       lda     is_dir_flag
+is_dir_flag=*+1
+        lda     #0                   ; SMC
         beq     :+
         jmp     CopyDirectory
 :       jmp     CopyNormalFile
 
-is_dir_flag:
-        .byte   0
 .endproc ; DoCopy
 
 ;;; ============================================================
@@ -333,19 +326,16 @@ is_dir_flag:
         jsr     ShowCopyingScreen
         MLI_CALL GET_FILE_INFO, get_path2_info_params
         beq     ok
-        jmp     (hook_handle_error_code)
+fail:   jmp     (hook_handle_error_code)
 
-onerr:  jsr     RemoveFilenameFromPath1
-        jsr     RemoveFilenameFromPath2
-        lda     #$FF
+onerr:  lda     #$FF
         sta     copy_err_flag
-        jmp     exit
+        bne     copy_err             ; always
 
 ok:     jsr     AppendFilenameToPath1
         jsr     CreateDir
         bcs     onerr
-        jsr     RemoveFilenameFromPath2
-        jmp     exit
+        jmp     RemoveFilenameFromPath2
 
         ;; --------------------------------------------------
         ;; File
@@ -354,10 +344,9 @@ do_file:
         jsr     AppendFilenameToPath2
         jsr     ShowCopyingScreen
         MLI_CALL GET_FILE_INFO, get_path2_info_params
-        beq     :+
-        jmp     (hook_handle_error_code)
+        bne     fail
 
-:       jsr     CheckSpaceAvailable
+        jsr     CheckSpaceAvailable
         bcc     :+
         jmp     (hook_handle_no_space)
 
@@ -369,10 +358,9 @@ do_file:
 
         ;; Do the copy
         jsr     CopyNormalFile
-        jsr     RemoveFilenameFromPath2
-        jsr     RemoveFilenameFromPath1
 
-exit:   rts
+copy_err:
+        jsr     RemoveFilenameFromPath2
 
 cleanup:
         jmp     RemoveFilenameFromPath1
@@ -389,20 +377,19 @@ cleanup:
         ;; Get source size
 
         MLI_CALL GET_FILE_INFO, get_path2_info_params
-        beq     :+
-        jmp     (hook_handle_error_code)
+        bne     fail
 
         ;; --------------------------------------------------
         ;; Get destination size (in case of overwrite)
 
-:       lda     #0
+        ;lda     #0
         sta     dst_size        ; default 0, if it doesn't exist
         sta     dst_size+1
         MLI_CALL GET_FILE_INFO, get_path1_info_params
         beq     :+
         cmp     #ERR_FILE_NOT_FOUND
         beq     got_dst_size    ; this is fine
-        jmp     (hook_handle_error_code)
+fail:   jmp     (hook_handle_error_code)
 :       copy16  get_path1_info_params::blocks_used, dst_size
 got_dst_size:
 
@@ -414,14 +401,13 @@ got_dst_size:
         sta     path1_length    ; save
 
         ldy     #1
+        lda     #'/'
 :       iny
         cpy     path1
         bcs     have_space
-        lda     path1,y
-        cmp     #'/'
+        cmp     path1,y
         bne     :-
-        tya
-        sta     path1
+        sty     path1
 
         ;; Get volume info
         MLI_CALL GET_FILE_INFO, get_path1_info_params
@@ -441,12 +427,12 @@ got_dst_size:
 
 have_space:
         clc
-:       lda     path1_length    ; restore
+path1_length=*+1                ; save full length of path
+:       lda     #0              ; SMC, restore
         sta     path1
         rts
 
 vol_free:       .word   0
-path1_length:   .byte   0       ; save full length of path
 dst_size:       .word   0
 .endproc ; CheckSpaceAvailable
 
@@ -460,15 +446,13 @@ dst_size:       .word   0
 .proc CopyNormalFile
         ;; Open source
         MLI_CALL OPEN, open_srcfile_params
-        beq     :+
-        jmp     (hook_handle_error_code)
+        bne     fail
 
         ;; Open destination
-:       MLI_CALL OPEN, open_dstfile_params
-        beq     :+
-        jmp     (hook_handle_error_code)
+        MLI_CALL OPEN, open_dstfile_params
+        bne     fail
 
-:       lda     open_srcfile_params::ref_num
+        lda     open_srcfile_params::ref_num
         sta     read_srcfile_params::ref_num
         sta     close_srcfile_params::ref_num
         lda     open_dstfile_params::ref_num
@@ -482,6 +466,7 @@ loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     close
+fail:
         jmp     (hook_handle_error_code)
 
         ;; Write the chunk
@@ -490,11 +475,10 @@ loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
         beq     close
         jsr     CheckCancel
         MLI_CALL WRITE, write_dstfile_params
-        beq     :+
-        jmp     (hook_handle_error_code)
+        bne     fail
 
         ;; More to copy?
-:       lda     write_dstfile_params::trans_count
+        lda     write_dstfile_params::trans_count
         cmp     #<kCopyBufferSize
         bne     close
         lda     write_dstfile_params::trans_count+1
@@ -507,9 +491,8 @@ close:  MLI_CALL CLOSE, close_dstfile_params
 
         ;; Copy file info
         MLI_CALL GET_FILE_INFO, get_path2_info_params
-        beq     :+
-        jmp     (hook_handle_error_code)
-:       COPY_BYTES $B, get_path2_info_params::access, get_path1_info_params::access
+        bne     fail
+        COPY_BYTES $B, get_path2_info_params::access, get_path1_info_params::access
 
         copy    #7, get_path1_info_params ; `SET_FILE_INFO` param_count
         MLI_CALL SET_FILE_INFO, get_path1_info_params
@@ -535,11 +518,10 @@ cancel: lda     #kErrCancel
 
 .proc CreateDir
         ;; Copy `file_type`, `aux_type`, `storage_type`
-        ldx     #7
-:       lda     get_path2_info_params,x
-        sta     create_dir_params,x
+        ldx     #4
+:       lda     get_path2_info_params+3,x
+        sta     create_dir_params+3,x
         dex
-        cpx     #3
         bne     :-
         lda     #ACCESS_DEFAULT
         sta     create_dir_params::access
@@ -615,6 +597,7 @@ entry_index_in_block:   .byte   0
         sta     entry_index_in_block
         MLI_CALL OPEN, open_path2_params
         beq     :+
+fail:
         jmp     (hook_handle_error_code)
 
         ;; Skip over prev/next block pointers in header
@@ -622,12 +605,11 @@ entry_index_in_block:   .byte   0
         sta     ref_num
         sta     read_block_pointers_params::ref_num
         MLI_CALL READ, read_block_pointers_params
-        beq     :+
-        jmp     (hook_handle_error_code)
+        bne     fail
 
         ;; Header size is next/prev blocks + a file entry
         .assert .sizeof(SubdirectoryHeader) = .sizeof(FileEntry) + 4, error, "incorrect struct size"
-:       copy    #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
+        copy    #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
         jsr     ReadFileEntry          ; read the rest of the header
 
         copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
@@ -660,7 +642,7 @@ entry_index_in_block:   .byte   0
         beq     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
-        jmp     (hook_handle_error_code)
+fail:   jmp     (hook_handle_error_code)
 :
         ldax    #file_entry
         jsr     AdjustFileEntryCase
@@ -668,19 +650,17 @@ entry_index_in_block:   .byte   0
         inc     entry_index_in_block
         lda     entry_index_in_block
         cmp     entries_per_block
+        lda     #0
         bcc     done
 
         ;; Advance to first entry in next "block"
-        lda     #0
         sta     entry_index_in_block
         lda     ref_num
         sta     read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
-        beq     :+
-        jmp     (hook_handle_error_code)
-:
+        bne     fail
 
-done:   return  #0
+done:   rts
 
 eof:    return  #$FF
 .endproc ; ReadFileEntry
@@ -728,7 +708,6 @@ loop:   jsr     ReadFileEntry
         lda     file_entry + FileEntry::storage_type_name_length
         beq     loop            ; deleted
 
-        lda     file_entry + FileEntry::storage_type_name_length
         and     #NAME_LENGTH_MASK
         sta     filename
 
@@ -768,23 +747,22 @@ copy_err_flag:
 
 .proc AppendFilenameToPath2
         lda     filename
-        bne     :+
-        rts
+        beq     done_ret
 
-:       ldx     #$00
+        ldx     #$00
         ldy     path2
         lda     #'/'
         sta     path2+1,y
-        iny
-loop:   cpx     filename
+loop:   iny
+        cpx     filename
         bcs     done
         lda     filename+1,x
         sta     path2+1,y
         inx
-        iny
-        jmp     loop
+        bne     loop            ; always
 
 done:   sty     path2
+done_ret:
         rts
 .endproc ; AppendFilenameToPath2
 
@@ -792,19 +770,18 @@ done:   sty     path2
 
 .proc RemoveFilenameFromPath2
         ldx     path2
-        bne     loop
-        rts
+        beq     done_ret
+        lda     #'/'
 
-loop:   lda     path2,x
-        cmp     #'/'
+loop:   cmp     path2,x
         beq     done
         dex
         bne     loop
-        stx     path2
-        rts
+        inx
 
 done:   dex
         stx     path2
+done_ret:
         rts
 .endproc ; RemoveFilenameFromPath2
 
@@ -812,23 +789,22 @@ done:   dex
 
 .proc AppendFilenameToPath1
         lda     filename
-        bne     :+
-        rts
+        beq     done_ret
 
-:       ldx     #0
+        ldx     #0
         ldy     path1
         lda     #'/'
         sta     path1+1,y
-        iny
-loop:   cpx     filename
+loop:   iny
+        cpx     filename
         bcs     done
         lda     filename+1,x
         sta     path1+1,y
         inx
-        iny
-        jmp     loop
+        bne     loop            ; always
 
 done:   sty     path1
+done_ret:
         rts
 .endproc ; AppendFilenameToPath1
 
@@ -836,19 +812,18 @@ done:   sty     path1
 
 .proc RemoveFilenameFromPath1
         ldx     path1
-        bne     loop
-        rts
+        beq     done_ret
+        lda     #'/'
 
-loop:   lda     path1,x
-        cmp     #'/'
+loop:   cmp     path1,x
         beq     done
         dex
         bne     loop
-        stx     path1
-        rts
+        inx
 
 done:   dex
         stx     path1
+done_ret:
         rts
 .endproc ; RemoveFilenameFromPath1
 
@@ -1003,14 +978,13 @@ resume:
         ldx     #DeskTopSettings::options
         jsr     ReadSetting
         and     #DeskTopSettings::kOptionsSkipRAMCard
-        beq     :+
-        jmp     DidNotCopy
+        bne     :+
 
         ;; Skip RAMCard install if button is down
-:       lda     BUTN0
+        lda     BUTN0
         ora     BUTN1
         bpl     SearchDevices
-        jmp     DidNotCopy
+:       jmp     DidNotCopy
 
         ;; --------------------------------------------------
         ;; Look for RAM disk
@@ -1195,11 +1169,10 @@ file_loop:
         sta     RAMWORKS_BANK   ; Just in case???
 
         ;; Initialize system bitmap
-        ldx     #BITMAP_SIZE-1
-        lda     #0
+        ldx     #BITMAP_SIZE-2
 :       sta     BITMAP,x
         dex
-        bpl     :-
+        bne     :-
         lda     #%00000001      ; ProDOS global page
         sta     BITMAP+BITMAP_SIZE-1
         lda     #%11001111      ; ZP, Stack, Text Page 1
@@ -1231,9 +1204,7 @@ file_loop:
         bit     LCBANK2
         bit     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
-        php
-        bit     ROMIN2
-        plp
+        sta     ROMIN2
         rts
 .endproc ; GetCopiedToRAMCardFlag
 
@@ -1279,23 +1250,23 @@ file_loop:
 
 .proc AppendFilenameToSrcPath
         lda     filename_buf
-        bne     :+
-        rts
+        beq     done_ret
 
-:       ldx     #0
+        ldx     #0
         ldy     src_path
         lda     #'/'
         sta     src_path+1,y
-        iny
-loop:   cpx     filename_buf
+
+loop:   iny
+        cpx     filename_buf
         bcs     done
         lda     filename_buf+1,x
         sta     src_path+1,y
         inx
-        iny
-        jmp     loop
+        bne     loop            ; always
 
 done:   sty     src_path
+done_ret:
         rts
 .endproc ; AppendFilenameToSrcPath
 
@@ -1303,19 +1274,18 @@ done:   sty     src_path
 
 .proc RemoveFilenameFromSrcPath
         ldx     src_path
-        bne     :+
-        rts
+        beq     done_ret
 
-:       lda     src_path,x
-        cmp     #'/'
+        lda     #'/'
+:       cmp     src_path,x
         beq     done
         dex
         bne     :-
-        stx     src_path
-        rts
+        inx
 
 done:   dex
         stx     src_path
+done_ret:
         rts
 .endproc ; RemoveFilenameFromSrcPath
 
@@ -1323,23 +1293,23 @@ done:   dex
 
 .proc AppendFilenameToDstPath
         lda     filename_buf
-        bne     :+
-        rts
+        beq     done_ret
 
-:       ldx     #0
+        ldx     #0
         ldy     dst_path
         lda     #'/'
         sta     dst_path+1,y
-        iny
-loop:   cpx     filename_buf
+
+loop:   iny
+        cpx     filename_buf
         bcs     done
         lda     filename_buf+1,x
         sta     dst_path+1,y
         inx
-        iny
-        jmp     loop
+        bne     loop            ; always
 
 done:   sty     dst_path
+done_ret:
         rts
 .endproc ; AppendFilenameToDstPath
 
@@ -1347,19 +1317,18 @@ done:   sty     dst_path
 
 .proc RemoveFilenameFromDstPath
         ldx     dst_path
-        bne     :+
-        rts
+        beq     done_ret
 
-:       lda     dst_path,x
-        cmp     #'/'
+        lda     #'/'
+:       cmp     dst_path,x
         beq     done
         dex
         bne     :-
-        stx     dst_path
-        rts
+        inx
 
 done:   dex
         stx     dst_path
+done_ret:
         rts
 .endproc ; RemoveFilenameFromDstPath
 
@@ -1634,12 +1603,9 @@ entry_loop:
 
         bit     LCBANK2
         bit     LCBANK2
-        lda     entry_num
-        clc
-        adc     #8
-        tax
+        ldx     entry_num
         lda     #$FF
-        sta     ENTRY_COPIED_FLAGS,x
+        sta     ENTRY_COPIED_FLAGS+8,x
         bit     ROMIN2
 next_entry:
         inc     entry_num
@@ -1833,8 +1799,8 @@ bits:   .byte   $00
 
         ;; Strip last segment, e.g. ".../APPLEWORKS/AW.SYSTEM" -> ".../APPLEWORKS"
         ldy     entry_path2
-:       lda     entry_path2,y
-        cmp     #'/'
+        lda     #'/'
+:       cmp     entry_path2,y
         beq     :+
         dey
         bne     :-
@@ -1842,8 +1808,7 @@ bits:   .byte   $00
         sty     entry_path2
 
         ;; Find offset of parent directory name, e.g. "APPLEWORKS"
-:       lda     entry_path2,y
-        cmp     #'/'
+:       cmp     entry_path2,y
         beq     :+
         dey
         bpl     :-
