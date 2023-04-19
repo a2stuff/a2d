@@ -709,15 +709,18 @@ kDAMenuItemSize = 19            ; length (1) + filename (15) + folder glyphs pre
 apple_menu:
         DEFINE_MENU 1
 @items: DEFINE_MENU_ITEM label_about
+        DEFINE_MENU_ITEM label_about_this_apply
         DEFINE_MENU_SEPARATOR
         .repeat kMaxDeskAccCount, i
         DEFINE_MENU_ITEM desk_acc_names + i * kDAMenuItemSize
         .endrepeat
-        .assert 2 + kMaxDeskAccCount = kMenuSizeApple, error, "Menu size mismatch"
+        .assert 3 + kMaxDeskAccCount = kMenuSizeApple, error, "Menu size mismatch"
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
         PASCAL_STRING .sprintf(res_string_menu_item_about, kDeskTopProductName) ; menu item
+label_about_this_apply:
+        PASCAL_STRING res_string_menu_item_about_this_apple
 
 desk_acc_names:
         .res    kMaxDeskAccCount * kDAMenuItemSize, 0

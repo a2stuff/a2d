@@ -297,6 +297,7 @@ dispatch_table:
         ;; Apple menu (1)
         menu1_start := *
         .addr   CmdAbout
+        .addr   CmdAboutThisApple
         .addr   CmdNoOp         ; --------
         .repeat ::kMaxDeskAccCount
         .addr   CmdDeskAcc
@@ -1240,6 +1241,9 @@ str_extras_basic:
 str_intbasic:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/IntBASIC.system")
 
+str_about_this_apple:
+        PASCAL_STRING .concat(kFilenameModulesDir, "/this.apple")
+
 str_awlauncher:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/AWLaunch.system")
 
@@ -1627,6 +1631,12 @@ secondary:
 
 ;;; ============================================================
 
+.proc CmdAboutThisApple
+        param_jump InvokeDeskAcc, str_about_this_apple
+.endproc ; CmdAboutThisApple
+
+;;; ============================================================
+
 .proc CmdDeskaccImpl
         ptr := $6
         path := INVOKER_PREFIX
@@ -1644,7 +1654,7 @@ start:  jsr     SetCursorWatch  ; before loading DA
         ;; Find DA name
         lda     menu_click_params::item_num           ; menu item index (1-based)
         sec
-        sbc     #3              ; About and separator before first item
+        sbc     #kAppleMenuFixedItems+1
         tay
         ldax    #kDAMenuItemSize
         jsr     Multiply_16_8_16

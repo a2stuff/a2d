@@ -1,3 +1,4 @@
+this.apple                      modules                         required
 control.panel                   apple.menu/control.panels       optional
 date.and.time                   apple.menu/control.panels       optional
 international                   apple.menu/control.panels       optional
@@ -23,7 +24,6 @@ key.caps                        apple.menu                      optional
 make.link                       apple.menu                      optional
 run.basic.here                  apple.menu                      optional
 sort.directory                  apple.menu                      optional
-this.apple                      apple.menu                      optional
 show.text.file                  preview                         optional
 show.image.file                 preview                         optional
 show.font.file                  preview                         optional

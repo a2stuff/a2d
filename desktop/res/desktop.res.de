@@ -158,6 +158,7 @@
 .define res_string_menu_item_delete_entry "L|sche Kurzbefehl..."
 .define res_string_menu_item_run_entry "Starte Kurzbefehl..."
 .define res_string_menu_item_about "]ber %s"
+.define res_string_menu_item_about_this_apple "]ber diesen Apple II"
 .define res_string_window_header_item_suffix " Objekt"
 .define res_string_window_header_items_suffix " Objekte"
 .define res_string_window_header_k_used_suffix "K auf Diskette"

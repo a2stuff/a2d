@@ -158,6 +158,7 @@
 .define res_string_menu_item_delete_entry "Ta bort en genv{g..."
 .define res_string_menu_item_run_entry "K|r en genv{g..."
 .define res_string_menu_item_about "Om %s"
+.define res_string_menu_item_about_this_apple "Om denna Apple II"
 .define res_string_window_header_item_suffix " Objekt"
 .define res_string_window_header_items_suffix " Objekt"
 .define res_string_window_header_k_used_suffix "K i skiva"

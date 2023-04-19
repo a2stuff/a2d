@@ -158,6 +158,7 @@
 .define res_string_menu_item_delete_entry "Borrar atajo..."
 .define res_string_menu_item_run_entry "Ejecutar atajo..."
 .define res_string_menu_item_about "Acerca %s"
+.define res_string_menu_item_about_this_apple "Acerca de esta Apple II"
 .define res_string_window_header_item_suffix " Elemento"
 .define res_string_window_header_items_suffix " Elementos"
 .define res_string_window_header_k_used_suffix "K en disco"

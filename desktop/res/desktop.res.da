@@ -158,6 +158,7 @@
 .define res_string_menu_item_delete_entry "Slet en genvej..."
 .define res_string_menu_item_run_entry "K|r en genvej..."
 .define res_string_menu_item_about "Om %s"
+.define res_string_menu_item_about_this_apple "Om denne Apple II"
 .define res_string_window_header_item_suffix " emne"
 .define res_string_window_header_items_suffix " emner"
 .define res_string_window_header_k_used_suffix "K p} disken"

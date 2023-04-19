@@ -32,12 +32,13 @@ Project Page: https://github.com/a2stuff/a2d
 * Support selection in list views. ([#28](https://github.com/a2stuff/a2d/issues/28))
 * Simplify list views by omitting directory file sizes.
 * Show file sizes right aligned in list views.
-* View > as Small Icons added.
-* View > by Type sort order improved.
-* View > by Size sort order improved.
+* Apple Menu > About This Apple II command added - invokes This Apple DA.
 * File > Copy a File... is now File > Copy To... and operates on current selection.
 * File > Delete a File... is now File > Delete and operates on current selection.
 * File > Get Info now shows total size/file count for folders/volumes.
+* View > as Small Icons added.
+* View > by Type sort order improved.
+* View > by Size sort order improved.
 * Special > Get Size command is now redundant with File > Get Info, so was removed.
 * Shortcuts > Add a Shortcut... defaults to currently selected file.
 * Shortcuts > Edit/Delete/Run a Shortcut: OK button is now disabled if there is no selection.
@@ -168,7 +169,9 @@ Project Page: https://github.com/a2stuff/a2d
   * Add keyboard shortcuts for checkboxes.
 * Map: Position indicator now blinks.
 * Control Panel: Add more obvious button to apply desktop pattern change.
-* This Apple: Identify and show Tiger Learning Computer
+* This Apple
+  * Identify and show Tiger Learning Computer
+  * Moved into MODULES/ directory, dedicated command added
 
 ## 1.2
 
