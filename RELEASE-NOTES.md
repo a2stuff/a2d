@@ -172,6 +172,7 @@ Project Page: https://github.com/a2stuff/a2d
 * This Apple
   * Identify and show Tiger Learning Computer
   * Moved into MODULES/ directory, dedicated command added
+* Screen Dump: Do nothing unless an SSC is in Slot 1.
 
 ## 1.2
 

@@ -891,6 +891,11 @@ With Sci.Calc:
 
 * Launch DeskTop. Open a window with at least two files. Apple Menu > Find Files. Type "*" and click Search. Press Down Arrow once. Type Return. Press Down Arrow again. Verify that only one entry in the list appears highlighted.
 
+## Screen Dump
+
+* Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Screen Dump DA. Verify it prints a screenshot.
+* Configure a system with a non-SSC in Slot 1. Invoke the Screen Dump DA. Verify nothing happens.
+
 # Selector
 
 * Load Selector. Put a disk in Slot 6, Drive 1. Startup > Slot 6. Verify that the system boots the disk. Repeat for all other slots with drives.

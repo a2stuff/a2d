@@ -33,9 +33,28 @@
 
 ;;; ============================================================
 
+kSigLen = 4
+sig_offsets:
+        .byte   $05, $07, $0B, $0C
+        ASSERT_TABLE_SIZE sig_offsets, kSigLen
+sig_bytes:
+        .byte   $38, $18, $01, $31
+        ASSERT_TABLE_SIZE sig_bytes, kSigLen
+
 .proc DumpScreen
 
         SLOT1   := $C100
+
+        ;; Check for hardware signature - SSC in Slot 1
+
+        ldy     #kSigLen-1
+:       ldx     sig_offsets,y
+        lda     SLOT1,x
+        cmp     sig_bytes,y
+        bne     ret
+        dey
+        bpl     :-
+
 
         hbasl := $6
         kScreenWidth  = 560
@@ -45,7 +64,7 @@
         jsr     PrintScreen
         bit     LCBANK1
         bit     LCBANK1
-        rts
+ret:    rts
 
 .proc SendSpacing
         ldy     #0
