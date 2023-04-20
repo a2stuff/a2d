@@ -1204,9 +1204,7 @@ file_loop:
         bit     LCBANK2
         bit     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
-        php
-        bit     ROMIN2
-        plp
+        sta     ROMIN2
         rts
 .endproc ; GetCopiedToRAMCardFlag
 
