@@ -298,8 +298,8 @@ is_dir:
 :       MLI_CALL CREATE, create_params
         bne     fail
 
-is_dir_flag=*+1
-        lda     #0                   ; SMC
+        is_dir_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
         beq     :+
         jmp     CopyDirectory
 :       jmp     CopyNormalFile
@@ -427,8 +427,8 @@ got_dst_size:
 
 have_space:
         clc
-path1_length=*+1                ; save full length of path
-:       lda     #0              ; SMC, restore
+        path1_length := *+1         ; save full length of path
+:       lda     #SELF_MODIFIED_BYTE ; restore
         sta     path1
         rts
 
@@ -1204,7 +1204,9 @@ file_loop:
         bit     LCBANK2
         bit     LCBANK2
         lda     COPIED_TO_RAMCARD_FLAG
-        sta     ROMIN2
+        php
+        bit     ROMIN2
+        plp
         rts
 .endproc ; GetCopiedToRAMCardFlag
 
