@@ -875,7 +875,7 @@ after_click:
         jsr     DrawAll
 
 ret:    rts
-.endproc ; RedrawWindow
+.endproc ; DrawWindow
 
 ;;; ============================================================
 ;;; Draw pieces
