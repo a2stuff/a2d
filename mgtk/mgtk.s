@@ -9464,7 +9464,7 @@ scale_y:
         rts
 .endproc ; SaveMousePos
 
-.proc RestoreCursor
+.proc UnstashCursor
         jsr     stash_addr
         copy16  kbd_mouse_cursor_stash, params_addr
         jsr     SetCursorImpl
@@ -9475,7 +9475,7 @@ scale_y:
         lda     #$40
         sta     mouse_status
         jmp     RestoreMousePos
-.endproc ; RestoreCursor
+.endproc ; UnstashCursor
 
 .proc KbdMouseInitTracking
         lda     #0
@@ -9747,7 +9747,7 @@ try_return:
         cmp     #CHAR_RETURN
         bne     try_up
         jsr     KbdMouseToMouse
-        jmp     RestoreCursor
+        jmp     UnstashCursor
 
 try_up:
         cmp     #CHAR_UP
@@ -9877,7 +9877,7 @@ fail:   clc
         php
         sei
         jsr     HideMenu
-        jsr     RestoreCursor
+        jsr     UnstashCursor
 
         lda     kbd_menu
         sta     MenuSelectImpl::params::menu_id
@@ -10054,11 +10054,11 @@ yclamp: cmp     #<kScreenHeight
 
         lda     #$80
         sta     movement_cancel
-        jmp     RestoreCursor
+        jmp     UnstashCursor
 
 :       cmp     #CHAR_RETURN
         bne     :+
-        jmp     RestoreCursor
+        jmp     UnstashCursor
 
 :       tax
         lda     set_input_modifiers
@@ -10168,7 +10168,7 @@ not_left:
 
         lda     #$40
         sta     movement_cancel
-        jmp     RestoreCursor
+        jmp     UnstashCursor
 
 :       rts
 .endproc ; MousekeysInput
