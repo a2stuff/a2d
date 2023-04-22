@@ -10347,32 +10347,25 @@ set_clamps:
         bmi     end
 
         ldy     mouse_scale_x
-        lda     #0
-        sta     mouse_x
-        sta     mouse_x+1
-        bit     mouse_hooked_flag
-        bmi     :+
-
-        sta     CLAMP_MIN_LO
-        sta     CLAMP_MIN_HI
-
-:       lda     clamp_x_table_low,y
-        sta     mouse_y
-        bit     mouse_hooked_flag
-        bmi     :+
-
-        sta     CLAMP_MAX_LO
-
-:       lda     clamp_x_table_high,y
-        sta     mouse_y+1
-        bit     mouse_hooked_flag
-        bmi     :+
-        sta     CLAMP_MAX_HI
-:       lda     #CLAMP_X
-        ldy     #CLAMPMOUSE
-        jsr     CallMouse
+        lda     clamp_x_table_low,y
+        ldx     clamp_x_table_high,y
+        ldy     #CLAMP_X
+        jsr     set_clamp
 
         ldy     mouse_scale_y
+        lda     clamp_y_table_low,y
+        ldx     clamp_y_table_high,y
+        ldy     #CLAMP_Y
+        FALL_THROUGH_TO set_clamp
+
+set_clamp:
+        sta     mouse_y
+        stx     mouse_y+1
+        bit     mouse_hooked_flag
+        bmi     :+
+        sta     CLAMP_MAX_LO
+        stx     CLAMP_MAX_HI
+:
         lda     #0
         sta     mouse_x
         sta     mouse_x+1
@@ -10380,19 +10373,11 @@ set_clamps:
         bmi     :+
         sta     CLAMP_MIN_LO
         sta     CLAMP_MIN_HI
-:       lda     clamp_y_table_low,y
-        sta     mouse_y
-        bit     mouse_hooked_flag
-        bmi     :+
-        sta     CLAMP_MAX_LO
-:       lda     clamp_y_table_high,y
-        sta     mouse_y+1
-        bit     mouse_hooked_flag
-        bmi     :+
-        sta     CLAMP_MAX_HI
-:       lda     #CLAMP_Y
+:
+        tya                     ; CLAMP_X or CLAMP_Y
         ldy     #CLAMPMOUSE
         jmp     CallMouse
+
 end:    rts
 
 clamp_x_table_low:  .byte   <(kScreenWidth-1), <(kScreenWidth/2-1), <(kScreenWidth/4-1), <(kScreenWidth/8-1)
