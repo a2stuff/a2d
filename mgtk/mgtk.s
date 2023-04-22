@@ -6365,6 +6365,14 @@ in_menu_item:
         rts
 .endproc ; SavebehindGetVidaddr
 
+.proc SavebehindDoRowVidToBuf
+        ldy     savebehind_mapwidth
+:       lda     (savebehind_vid_addr),y
+        sta     (savebehind_buf_addr),y
+        dey
+        bpl     :-
+        FALL_THROUGH_TO SavebehindNextLine
+.endproc ; SavebehindDoRowVidToBuf
 
 .proc SavebehindNextLine
         lda     savebehind_buf_addr
@@ -6381,27 +6389,23 @@ in_menu_item:
         jsr     SetUpSavebehind
 loop:   jsr     SavebehindGetVidaddr
         sta     HISCR
+        jsr     row
 
-        ldy     savebehind_mapwidth
-:       lda     (savebehind_buf_addr),y
-        sta     (savebehind_vid_addr),y
-        dey
-        bpl     :-
-        jsr     SavebehindNextLine
         sta     LOWSCR
-
-        ldy     savebehind_mapwidth
-:       lda     (savebehind_buf_addr),y
-        sta     (savebehind_vid_addr),y
-        dey
-        bpl     :-
-        jsr     SavebehindNextLine
+        jsr     row
 
         inx
         cpx     savebehind_bottom
         bcc     loop
         beq     loop
         jmp     ShowCursorImpl
+
+row:    ldy     savebehind_mapwidth
+:       lda     (savebehind_buf_addr),y
+        sta     (savebehind_vid_addr),y
+        dey
+        bpl     :-
+        bmi     SavebehindNextLine ; always
 .endproc ; RestoreMenuSavebehind
 
 
@@ -6434,21 +6438,9 @@ draw_or_hide:
 saveloop:
         jsr     SavebehindGetVidaddr
         sta     HISCR
-
-        ldy     savebehind_mapwidth
-:       lda     (savebehind_vid_addr),y
-        sta     (savebehind_buf_addr),y
-        dey
-        bpl     :-
-        jsr     SavebehindNextLine
+        jsr     SavebehindDoRowVidToBuf
         sta     LOWSCR
-
-        ldy     savebehind_mapwidth
-:       lda     (savebehind_vid_addr),y
-        sta     (savebehind_buf_addr),y
-        dey
-        bpl     :-
-        jsr     SavebehindNextLine
+        jsr     SavebehindDoRowVidToBuf
 
         inx
         cpx     savebehind_bottom
