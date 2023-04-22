@@ -562,8 +562,6 @@
 * Launch DeskTop. Create a new folder. Select the folder, and use Special > Lock. Add a file to the folder. Ensure that the file is not locked. Select the folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the folder's path is visible in the progress dialog.
 * Launch DeskTop. Create a new folder. Create a second folder inside it. Select the second folder, and use Special > Lock. Add a file to the second folder. Ensure that the file is not locked. Select the first folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the second folder's path is visible in the progress dialog.
 
-* Launch DeskTop. Click to open the File menu. Without clicking again, move the mouse pointer up and down over the menu items, while simultaneously tapping the 'A' key. Verify that the key presses do not cause other menus to open instead.
-
 ## Shortcuts
 
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
@@ -1148,3 +1146,69 @@ For the Sounds DA:
 
 Repeat for each list box where the contents are dynamic:
 * Populate the list so that the scrollbar is active. Scroll down by one row. Repopulate the list box so that the scrollbar is inactive. Verify that all expected items are shown, and hitting the Up Arrow key does nothing.
+
+# Menus
+
+* Click to open a menu. Without clicking again, move the mouse pointer up and down over the menu items, while simultaneously tapping the 'A' key. Verify that the key presses do not cause other menus to open instead.
+
+The following steps exercise the menu as "pull down" using the mouse:
+
+* Mouse-over a menu bar item, and press and hold the mouse button to pull down the menu. Drag to an item and release the button. Verify the menu closes and the item is invoked.
+* Mouse-over a menu bar item, and press and hold the mouse button to pull down the menu. Drag to a separator and release the button. Verify the menu closes.
+* Mouse-over a menu bar item, and press and hold the mouse button to pull down the menu. Drag off of the menu and release the button. Verify the menu closes.
+
+The following steps exercise the menu as "drop down" using the mouse:
+
+* Click (press and release the mouse button) on a menu bar item. Move the mouse over an item and click it. Verify the menu closes and that the item is invoked.
+* Click (press and release the mouse button) on a menu bar item. Move the mouse over a separator and click it. Verify the menu closes.
+* Click (press and release the mouse button) on a menu bar item. Move the mouse off the menu and click. Verify the menu closes.
+
+The following steps exercise the menu as "drop down" using the keyboard:
+
+* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Press the Escape key again. Verify that the menu closes and the mouse pointer returns to its previous location.
+* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Press the Escape key again. Verify that the menu closes and the mouse pointer returns to its previous location.
+* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Press the Return key. Verify that the menu closes, that the mouse pointer returns to its previous location, and that the item is invoked.
+
+The following steps exercise the menu as "drop down" using the mouse to initiate and finish the action, but with the keyboard as an intermediate step:
+
+* Click (press and release the mouse button) on a menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Move the mouse over an item and click it. Verify the menu closes, that the pointer does not move, and that the item is invoked.
+* Click (press and release the mouse button) on a menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Move the mouse over a separator and click it. Verify the menu closes, and that the pointer does not move.
+* Click (press and release the mouse button) on a menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Move the mouse off the menu and click. Verify the menu closes, and that the pointer does not move.
+
+The following steps exercise the menu as "drop down" using the keyboard to initiate and finish the action, but with the mouse as an intermediate step:
+
+* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Move the mouse over menu items. Press the Escape key again. Verify that the menu closes and the mouse pointer returns to its previous location.
+* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Move the mouse over a menu item. Press the Return key. Verify that the menu closes, that the mouse pointer returns to its previous location, and that the item is invoked.
+
+The following steps exercise the menu as "drop down" using the mouse to initiate the action and the keyboard to finish the action:
+
+* Click (press and release the mouse button) on a menu bar item. Use the mouse to move over an item. Use the arrow keys to select a different item. Press Escape. Verify that the menu closes, and that the pointer does not move.
+* Click (press and release the mouse button) on a menu bar item. Use the mouse to move over an item. Use the arrow keys to select a different item. Press Return. Verify that the menu closes, that the pointer does not move, and that the item is invoked.
+
+The following steps exercise the menu as "drop down" using the keyboard to initiate the action and the mouse to finish the action:
+
+* Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Click an item with the mouse. Verify that the menu closes, that the mouse pointer doesn't move, and that the item is invoked.
+* Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Click a separator with the mouse. Verify that the menu closes, and that the mouse pointer doesn't move.
+* Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Click outside the menu. Verify that the menu closes, and that the mouse pointer doesn't move.
+
+Note that for the following tests, the actual displayed shortcut (e.g. Open Apple+Q) must be used. (DeskTop normally allows either Open Apple or Solid Apple to be used, but that doesn't apply in this case.)
+
+* Click on a menu to show it. While it is open, press the shortcut key for a command (e.g. Open Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
+* Press Escape to activate the menu. While it is open, press the shortcut key for a command (e.g. Open Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
+
+# Mouse Keys
+
+* Enter MouseKeys mode (Open Apple+Solid Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid Apple (or Option) key as the mouse button, "pull down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
+* Enter MouseKeys mode (Open Apple+Solid Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid Apple (or Option) key as the mouse button, "drop down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
+
+# Keyboard Window Control
+
+These shortcuts only apply in DeskTop.
+
+* Open a window. Press Apple+M. Use the Left, Right, Up and Down Arrow keys to move the window outline. Press Escape. Verify that the window does not move.
+* Open a window. Press Apple+M. Use the Left, Right, Up and Down Arrow keys to move the window outline. Press Return. Verify that the window moves to the new location.
+* Open a window. Press Apple+G. Use the Left, Right, Up and Down Arrow keys to resize the window outline. Press Escape. Verify that the window does not resize.
+* Open a window. Press Apple+G. Use the Left, Right, Up and Down Arrow keys to resize the window outline. Press Return. Verify that the window resizes.
+
+
+

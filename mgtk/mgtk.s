@@ -6215,6 +6215,17 @@ menu_item  .byte
         sta     cur_open_menu
         sta     cur_hilited_menu_item
         sta     was_in_menu_flag
+        sta     sel_menu_index
+        sta     sel_menu_item_index
+
+        lda     kbd_mouse_state
+        .assert kKeyboardMouseStateInactive = 0, error, "enum mismatch"
+    IF_ZERO
+        lda     #kKeyboardMouseStateMenu
+        sta     kbd_mouse_state
+        jsr     MouseToKbdMouse
+    END_IF
+
         jsr     GetAndReturnEvent
 event_loop:
         bit     movement_cancel
@@ -6232,6 +6243,9 @@ event_loop:
         jsr     UnhiliteCurMenuItem
 
 in_menu:
+        copy    menu_index, sel_menu_index
+        copy    cur_hilited_menu_item, sel_menu_item_index
+
         jsr     GetAndReturnEvent
         cmp     #MGTK::EventKind::button_down
         beq     :+
@@ -6253,7 +6267,19 @@ in_menu:
         jsr     RestoreMenuSavebehind
 
 restore:jsr     RestoreParamsActivePort
+
+        lda     kbd_mouse_state
+        cmp     #kKeyboardMouseStateMenu
+    IF_EQ
+        lda     #kKeyboardMouseStateInactive
+        sta     kbd_mouse_state
+    END_IF
+
         lda     #0
+
+        ;; If menu was initiated with keyboard, cursor was stashed;
+        ;; clear that state, in case we're exiting via the mouse.
+        sta     stashed_cursor_flag
 
         ldx     cur_hilited_menu_item
         beq     :+
@@ -6289,7 +6315,7 @@ in_menu_item:
         sta     find_mode
         jsr     FindMenuItem
         cpx     cur_hilited_menu_item
-        beq     in_menu
+        jeq     in_menu
 
         lda     curmenu::disabled
         ora     curmenuitem::options
@@ -9443,6 +9469,11 @@ scale_y:
         rts
 .endproc ; KbdMouseToMouse
 
+.proc MouseToKbdMouse
+        COPY_BYTES 3, mouse_x, kbd_mouse_x
+        rts
+.endproc ; MouseToKbdMouse
+
 .proc PositionKbdMouse
         jsr     KbdMouseToMouse
         jmp     SetMousePosFromKbdMouse
@@ -9456,15 +9487,27 @@ scale_y:
 .endproc ; SaveMousePos
 
 .proc UnstashCursor
+        ;; Flag a button release to finish the implied drag
+        lda     #$40
+        sta     mouse_status
+
+        ;; Exit special state
+        lda     #kKeyboardMouseStateInactive
+        sta     kbd_mouse_state
+
+        ;; ... but only conditionally modify cursor state, in case
+        ;; called from normal (mouse) menu mode.
+        bit     stashed_cursor_flag
+        bmi     :+
+        rts
+:       clc
+        ror     stashed_cursor_flag
+
         jsr     stash_addr
         copy16  kbd_mouse_cursor_stash, params_addr
         jsr     SetCursorImpl
         jsr     restore_addr
 
-        lda     #kKeyboardMouseStateInactive
-        sta     kbd_mouse_state
-        lda     #$40
-        sta     mouse_status
         jmp     RestoreMousePos
 .endproc ; UnstashCursor
 
@@ -9510,7 +9553,7 @@ no_modifiers:
 :       cmp     #kKeyboardMouseStateMouseKeys
         beq     KbdMouseMousekeys
 
-        jsr     KbdMouseSyncCursor
+        jsr     KbdMouseSyncCursor ; call with A = `kbd_mouse_state`
 
         lda     kbd_mouse_state
         cmp     #kKeyboardMouseStateMenu
@@ -9522,12 +9565,18 @@ no_modifiers:
 
 
 .proc StashCursor
+        sec
+        ror     stashed_cursor_flag
+
         jsr     stash_addr
         copy16  active_cursor, kbd_mouse_cursor_stash
         copy16  #pointer_cursor, params_addr
         jsr     SetCursorImpl
         jmp     restore_addr
 .endproc ; StashCursor
+
+stashed_cursor_flag:
+        .byte   0
 
 kbd_mouse_cursor_stash:
         .res    2
@@ -9628,13 +9677,18 @@ beeploop:
 .endproc ; ActivateKeyboardMouse
 
 
+;;; Inputs: A = `kbd_mouse_state`
 .proc KbdMouseSyncCursor
         bit     mouse_status
         bpl     :+
 
+        cmp     #kKeyboardMouseStateForced
+    IF_EQ
         lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
         jmp     SetMousePosFromKbdMouse
+    END_IF
+        rts
 
 :       lda     mouse_status
         ldx     #$C0
@@ -9642,7 +9696,7 @@ beeploop:
         and     #$20
         beq     kbd_mouse_to_mouse_jmp
 
-        COPY_BYTES 3, mouse_x, kbd_mouse_x
+        jsr     MouseToKbdMouse
 
         stx     kbd_menu_select_flag           ; =$ff
         rts
