@@ -562,6 +562,7 @@
 * Launch DeskTop. Create a new folder. Select the folder, and use Special > Lock. Add a file to the folder. Ensure that the file is not locked. Select the folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the folder's path is visible in the progress dialog.
 * Launch DeskTop. Create a new folder. Create a second folder inside it. Select the second folder, and use Special > Lock. Add a file to the second folder. Ensure that the file is not locked. Select the first folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the second folder's path is visible in the progress dialog.
 
+* Launch DeskTop. Click to open the File menu. Without clicking again, move the mouse pointer up and down over the menu items, while simultaneously tapping the 'A' key. Verify that the key presses do not cause other menus to open instead.
 
 ## Shortcuts
 

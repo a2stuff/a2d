@@ -6221,9 +6221,7 @@ event_loop:
         bpl     :+
         jmp     KbdMenuReturn
 
-        ;; BUG: This is bogus if the event was a keyboard event;
-        ;; can cause unexpected menu jumps.
-:       MGTK_CALL MGTK::MoveTo, GetAndReturnEvent::event::mouse_pos
+:       MGTK_CALL MGTK::MoveTo, mouse_state
         MGTK_CALL MGTK::InRect, test_rect_params      ; test in menu bar
         bne     in_menu_bar
         lda     cur_open_menu

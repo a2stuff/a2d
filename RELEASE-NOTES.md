@@ -18,6 +18,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Reset text window correctly when exiting/launching other programs.
 * Visually center window title bar text. ([#744](https://github.com/a2stuff/a2d/issues/744))
 * Menu separators more vertically centered.
+* Prevent erratic behavior if keys pressed during menu selection.
 
 ### Launcher
 
