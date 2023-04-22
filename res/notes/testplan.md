@@ -1196,6 +1196,8 @@ Note that for the following tests, the actual displayed shortcut (e.g. Open Appl
 * Click on a menu to show it. While it is open, press the shortcut key for a command (e.g. Open Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
 * Press Escape to activate the menu. While it is open, press the shortcut key for a command (e.g. Open Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
 
+* Launch DeskTop. Close all windows. Press the Escape key. Use the Left and Right Arrow keys to highlight the View menu. Verify that all menu items are disabled. Press the Up and Down arrow keys. Verify that the cursor position does not change.
+
 # Mouse Keys
 
 * Enter MouseKeys mode (Open Apple+Solid Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid Apple (or Option) key as the mouse button, "pull down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.

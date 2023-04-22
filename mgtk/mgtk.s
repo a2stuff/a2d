@@ -9777,6 +9777,8 @@ position_menu_item:
 .proc HandleMenuKey
         pha
         jsr     KbdMenuSelectItem
+        ldx     sel_menu_index
+        jsr     GetMenu
         pla
         cmp     #CHAR_ESCAPE
         bne     try_return
@@ -9798,11 +9800,12 @@ try_up:
         cmp     #CHAR_UP
         bne     try_down
 
-uploop: dec     sel_menu_item_index
-        bpl     :+
+uploop:
+        bit     curmenu::disabled
+        bmi     zero
 
-        ldx     sel_menu_index
-        jsr     GetMenu
+        dec     sel_menu_item_index
+        bpl     :+
         ldx     menu_item_count
         stx     sel_menu_item_index
 
@@ -9822,17 +9825,19 @@ try_down:
         bne     try_right
 
 downloop:
+        bit     curmenu::disabled
+        bmi     zero
+
         inc     sel_menu_item_index
 
-        ldx     sel_menu_index
-        jsr     GetMenu
         lda     sel_menu_item_index
         cmp     menu_item_count
         bcc     :+
         beq     :+
 
-        lda     #0
+zero:   lda     #0
         sta     sel_menu_item_index
+
 :       ldx     sel_menu_item_index
         beq     :+
         dex
