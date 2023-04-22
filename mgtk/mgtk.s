@@ -6231,7 +6231,8 @@ event_loop:
         bne     in_menu_item
         jsr     UnhiliteCurMenuItem
 
-in_menu:jsr     GetAndReturnEvent
+in_menu:
+        jsr     GetAndReturnEvent
         cmp     #MGTK::EventKind::button_down
         beq     :+
         cmp     #MGTK::EventKind::button_up
