@@ -471,10 +471,7 @@ cycle:  jmp     CmdCycleWindows
         ;; (shortcuts or entering keyboard menu mode)
 menu_accelerators:
         copy    event_params::key, menu_click_params::which_key
-        lda     event_params::modifiers
-        beq     :+
-        lda     #1              ; treat Solid-Apple same as Open-Apple
-:       sta     menu_click_params::key_mods
+        copy    event_params::modifiers, menu_click_params::key_mods
         copy    #$80, menu_kbd_flag ; note that source is keyboard
         MGTK_CALL MGTK::MenuKey, menu_click_params
 

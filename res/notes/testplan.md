@@ -250,7 +250,7 @@
 
 * Launch DeskTop. Open a volume window with multiple files. Open a folder. Press Open-Apple+Up. Verify that the volume window is shown and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
 * Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window is shown and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
-* Launch DeskTop. Open a volume window with multiple files. Open a folder. Press Open-Apple+Solid-Apple++Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
+* Launch DeskTop. Open a volume window with multiple files. Open a folder. Press Open-Apple+Solid-Apple+Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
 * Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
 
 * Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the volume window re-opens, and that the folder window closes, and the that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and the volume icon is selected.
@@ -763,7 +763,7 @@ Repeat for every desk accessory that runs in a movable window:
 * Launch DeskTop. Open the DA. Click on the title bar but don't move the window. Verify that window doesn't repaint if the window is not moved.
 
 Repeat for every desk accessory that runs in a window.
-* Launch DeskTop. Open the DA. Hold Apple (either Open Apple or Solid Apple) and press W. Verify that the desk accessory exits. Repeat with caps-lock off.
+* Launch DeskTop. Open the DA. Hold Apple (either Open-Apple or Solid-Apple) and press W. Verify that the desk accessory exits. Repeat with caps-lock off.
 
 ## Control Panel
 
@@ -1191,17 +1191,15 @@ The following steps exercise the menu as "drop down" using the keyboard to initi
 * Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Click a separator with the mouse. Verify that the menu closes, and that the mouse pointer doesn't move.
 * Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Click outside the menu. Verify that the menu closes, and that the mouse pointer doesn't move.
 
-Note that for the following tests, the actual displayed shortcut (e.g. Open Apple+Q) must be used. (DeskTop normally allows either Open Apple or Solid Apple to be used, but that doesn't apply in this case.)
-
-* Click on a menu to show it. While it is open, press the shortcut key for a command (e.g. Open Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
-* Press Escape to activate the menu. While it is open, press the shortcut key for a command (e.g. Open Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
+* Click on a menu to show it. While it is open, press the shortcut key for a command (e.g. Open-Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
+* Press Escape to activate the menu. While it is open, press the shortcut key for a command (e.g. Open-Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
 
 * Launch DeskTop. Close all windows. Press the Escape key. Use the Left and Right Arrow keys to highlight the View menu. Verify that all menu items are disabled. Press the Up and Down arrow keys. Verify that the cursor position does not change.
 
 # Mouse Keys
 
-* Enter MouseKeys mode (Open Apple+Solid Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid Apple (or Option) key as the mouse button, "pull down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
-* Enter MouseKeys mode (Open Apple+Solid Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid Apple (or Option) key as the mouse button, "drop down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
+* Enter MouseKeys mode (Open-Apple+Solid-Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid-Apple (or Option) key as the mouse button, "pull down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
+* Enter MouseKeys mode (Open-Apple+Solid-Apple+Space). Using the Left, Right, Up and Down Arrow keys to move the mouse and the Solid-Apple (or Option) key as the mouse button, "drop down" a menu and select an item. Verify that after the item is selected that MouseKeys mode is still active. Press Escape to exit MouseKeys mode.
 
 # Keyboard Window Control
 

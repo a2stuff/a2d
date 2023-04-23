@@ -900,9 +900,7 @@ menu_offset_table:
         lda     event_params::key
         sta     menukey_params::which_key
         lda     event_params::modifiers
-        beq     :+
-        lda     #1              ; treat Solid-Apple same as Open-Apple
-:       sta     menukey_params::key_mods
+        sta     menukey_params::key_mods
         MGTK_CALL MGTK::MenuKey, menukey_params
         FALL_THROUGH_TO HandleMenuSelection
 .endproc ; HandleKey

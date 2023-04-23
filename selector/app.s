@@ -815,9 +815,7 @@ has_modifiers:
 menukey:
         sta     menu_params::which_key
         lda     event_params::modifiers
-        beq     :+
-        lda     #1
-:       sta     menu_params::key_mods
+        sta     menu_params::key_mods
         MGTK_CALL MGTK::MenuKey, menu_params::menu_id
         FALL_THROUGH_TO HandleMenu
 .endproc ; HandleKey

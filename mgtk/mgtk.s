@@ -6547,7 +6547,10 @@ no_mark:
         ora     #$40            ; control -> uppercase
         bne     sst             ; always
 
-oa_sa:  tax
+oa_sa:  cmp     #MGTK::MenuOpt::open_apple | MGTK::MenuOpt::solid_apple
+        bne     :+
+        lda     #MGTK::MenuOpt::open_apple ; just show OA
+:       tax
         lda     open_apple_glyph-MGTK::MenuOpt::open_apple,x
         sta     shortcut_text+1
 

@@ -823,7 +823,7 @@ ycoord: .word   top
 .macro DEFINE_MENU_ITEM saddr, shortcut
         .if .paramcount > 1
 
-        .byte   MGTK::MenuOpt::open_apple ; option byte
+        .byte   MGTK::MenuOpt::open_apple|MGTK::MenuOpt::solid_apple ; option byte
         .byte   0               ; mark_char
         .byte   shortcut        ; char1
 
