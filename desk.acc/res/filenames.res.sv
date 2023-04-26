@@ -2,7 +2,6 @@
 .define res_filename_date_and_time Datum.och.tid
 .define res_filename_puzzle Pussel
 .define res_filename_sort_directory sortera.katalog
-.define res_filename_this_apple detta.apple
 .define res_filename_eyes ogon
 .define res_filename_screen_dump Skarmdump
 .define res_filename_run_basic_here kor.BASIC.har

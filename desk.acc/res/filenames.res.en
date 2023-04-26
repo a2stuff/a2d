@@ -2,7 +2,6 @@
 .define res_filename_date_and_time date.and.time
 .define res_filename_puzzle puzzle
 .define res_filename_sort_directory sort.directory
-.define res_filename_this_apple this.apple
 .define res_filename_eyes eyes
 .define res_filename_screen_dump screen.dump
 .define res_filename_run_basic_here run.basic.here

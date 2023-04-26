@@ -2,7 +2,6 @@
 .define res_filename_date_and_time date.et.heure
 .define res_filename_puzzle puzzle
 .define res_filename_sort_directory repertoire.tri
-.define res_filename_this_apple cet.apple
 .define res_filename_eyes yeux
 .define res_filename_screen_dump imprimer.ecran
 .define res_filename_run_basic_here basic.ici

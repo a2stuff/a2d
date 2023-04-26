@@ -2,7 +2,6 @@
 .define res_filename_date_and_time fecha.y.hora
 .define res_filename_puzzle puzzle
 .define res_filename_sort_directory ordenar.dir
-.define res_filename_this_apple esta.apple
 .define res_filename_eyes ojos
 .define res_filename_screen_dump imprimir.pantal
 .define res_filename_run_basic_here basic.aqui

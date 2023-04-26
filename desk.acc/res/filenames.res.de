@@ -2,7 +2,6 @@
 .define res_filename_date_and_time datum.uhrzeit
 .define res_filename_puzzle puzzle
 .define res_filename_sort_directory dir.sortieren
-.define res_filename_this_apple diesen.apple
 .define res_filename_eyes augen
 .define res_filename_screen_dump bildschirm.drck
 .define res_filename_run_basic_here basic.hier

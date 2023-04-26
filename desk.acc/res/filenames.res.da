@@ -2,7 +2,6 @@
 .define res_filename_date_and_time dato.og.tid
 .define res_filename_puzzle gade
 .define res_filename_sort_directory sort.mappe
-.define res_filename_this_apple dette.aeble
 .define res_filename_eyes ojne
 .define res_filename_screen_dump skaerm.dump
 .define res_filename_run_basic_here kore.basic.her
