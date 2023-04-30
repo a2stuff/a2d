@@ -9560,10 +9560,10 @@ ret:    rts
         ptr := $06
         rect_table := $800
 
-        tmp_x := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 0
-        tmp_y := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 2
-        tmp_w := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 4
-        tmp_h := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 6
+        delta_x1 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 0
+        delta_y1 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 2
+        delta_x2 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 4
+        delta_y2 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 6
 
 
 close:  ldy     #$80
@@ -9590,13 +9590,12 @@ open:   ldy     #$00
         dex
         bpl     :-
 
-        ;; Convert viewloc and maprect to bounding rect; we need to
-        ;; calculate the width/height anyway.
+        ;; Convert viewloc and maprect to bounding rect
         COPY_STRUCT MGTK::Point, window_grafport + MGTK::GrafPort::viewloc, win_rect + MGTK::Rect::topleft
-        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, tmp_w
-        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, tmp_h
-        add16   win_rect + MGTK::Rect::x1, tmp_w, win_rect + MGTK::Rect::x2
-        add16   win_rect + MGTK::Rect::y1, tmp_h, win_rect + MGTK::Rect::y2
+        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, win_rect + MGTK::Rect::x2
+        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, win_rect + MGTK::Rect::y2
+        add16   win_rect + MGTK::Rect::x1, win_rect + MGTK::Rect::x2, win_rect + MGTK::Rect::x2
+        add16   win_rect + MGTK::Rect::y1, win_rect + MGTK::Rect::y2, win_rect + MGTK::Rect::y2
 
         ;; --------------------------------------------------
         ;; Get icon position - used as first rect
@@ -9604,27 +9603,21 @@ open:   ldy     #$00
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
         COPY_STRUCT MGTK::Rect, tmp_rect, icon_rect
 
-        ;; Use center of icon
-        ;; TODO: Use full icon bounds
-        add16   icon_rect+MGTK::Rect::x1, icon_rect+MGTK::Rect::x2, icon_rect+MGTK::Rect::x1
-        add16   icon_rect+MGTK::Rect::y1, icon_rect+MGTK::Rect::y2, icon_rect+MGTK::Rect::y1
-        asr16   icon_rect+MGTK::Rect::x1
-        asr16   icon_rect+MGTK::Rect::y1
-        COPY_STRUCT MGTK::Point, icon_rect+MGTK::Rect::topleft, icon_rect+MGTK::Rect::bottomright
-
         ;; --------------------------------------------------
         ;; Compute intermediate rects
 
         lda     #0
         sta     step
 
-        sub16   win_rect+MGTK::Rect::x1, icon_rect+MGTK::Rect::x1, tmp_x
-        sub16   win_rect+MGTK::Rect::y1, icon_rect+MGTK::Rect::y1, tmp_y
+        sub16   win_rect+MGTK::Rect::x1, icon_rect+MGTK::Rect::x1, delta_x1
+        sub16   win_rect+MGTK::Rect::y1, icon_rect+MGTK::Rect::y1, delta_y1
+        sub16   win_rect+MGTK::Rect::x2, icon_rect+MGTK::Rect::x2, delta_x2
+        sub16   win_rect+MGTK::Rect::y2, icon_rect+MGTK::Rect::y2, delta_y2
 
-loop:   asr16   tmp_x           ; divide by two (signed)
-        asr16   tmp_y
-        asr16   tmp_w
-        asr16   tmp_h
+loop:   asr16   delta_x1        ; divide by two (signed)
+        asr16   delta_y1
+        asr16   delta_x2
+        asr16   delta_y2
 
         ;; Address of target rect
         lda     #kMaxAnimationStep - 1
@@ -9635,10 +9628,10 @@ loop:   asr16   tmp_x           ; divide by two (signed)
         asl     a
         tax
 
-        add16   rect_table+MGTK::Rect::x1, tmp_x, rect_table+MGTK::Rect::x1,x
-        add16   rect_table+MGTK::Rect::y1, tmp_y, rect_table+MGTK::Rect::y1,x
-        add16   rect_table+MGTK::Rect::x1,x, tmp_w, rect_table+MGTK::Rect::x2,x
-        add16   rect_table+MGTK::Rect::y1,x, tmp_h, rect_table+MGTK::Rect::y2,x
+        add16   rect_table+MGTK::Rect::x1, delta_x1, rect_table+MGTK::Rect::x1,x
+        add16   rect_table+MGTK::Rect::y1, delta_y1, rect_table+MGTK::Rect::y1,x
+        add16   rect_table+MGTK::Rect::x2, delta_x2, rect_table+MGTK::Rect::x2,x
+        add16   rect_table+MGTK::Rect::y2, delta_y2, rect_table+MGTK::Rect::y2,x
 
         inc     step
         step := *+1
@@ -9663,7 +9656,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
 
 ;;; ============================================================
 
-kMaxAnimationStep = 11
+kMaxAnimationStep = 7
 
 .proc AnimateWindowOpenImpl
         ;; Loop N = 0 to 13
