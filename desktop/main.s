@@ -9560,16 +9560,27 @@ ret:    rts
         ptr := $06
         rect_table := $800
 
+        tmp_x := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 0
+        tmp_y := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 2
+        tmp_w := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 4
+        tmp_h := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 6
+
+
 close:  ldy     #$80
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 open:   ldy     #$00
         sty     close_flag
 
-        sta     icon_id
+        sta     icon_param
         txa                     ; A = window_id
 
-        ;; Get window rect
-        jsr     WindowLookup
+        win_rect := rect_table + kMaxAnimationStep * .sizeof(MGTK::Rect)
+        icon_rect := rect_table
+
+        ;; --------------------------------------------------
+        ;; Get window rect - used as last rect
+
+        jsr     WindowLookup    ; copy window's port somewhere handy
         stax    ptr
         ldy     #MGTK::Winfo::port + .sizeof(MGTK::GrafPort)-1
         ldx     #.sizeof(MGTK::GrafPort)-1
@@ -9579,116 +9590,64 @@ open:   ldy     #$00
         dex
         bpl     :-
 
-        ;; Get icon position
-        icon_id := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     GetIconEntry
-        stax    ptr
-        ldy     #IconEntry::iconx
-        lda     (ptr),y         ; x lo
-        clc
-        adc     #7
+        ;; Convert viewloc and maprect to bounding rect; we need to
+        ;; calculate the width/height anyway.
+        COPY_STRUCT MGTK::Point, window_grafport + MGTK::GrafPort::viewloc, win_rect + MGTK::Rect::topleft
+        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, tmp_w
+        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, tmp_h
+        add16   win_rect + MGTK::Rect::x1, tmp_w, win_rect + MGTK::Rect::x2
+        add16   win_rect + MGTK::Rect::y1, tmp_h, win_rect + MGTK::Rect::y2
 
-        sta     rect_table
-        sta     rect_table+4
+        ;; --------------------------------------------------
+        ;; Get icon position - used as first rect
 
-        iny
-        lda     (ptr),y
-        adc     #0
-        sta     rect_table+1
-        sta     rect_table+5
+        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
+        COPY_STRUCT MGTK::Rect, tmp_rect, icon_rect
 
-        iny
-        lda     (ptr),y
-        clc
-        adc     #7
-        sta     rect_table+2
-        sta     rect_table+6
+        ;; Use center of icon
+        ;; TODO: Use full icon bounds
+        add16   icon_rect+MGTK::Rect::x1, icon_rect+MGTK::Rect::x2, icon_rect+MGTK::Rect::x1
+        add16   icon_rect+MGTK::Rect::y1, icon_rect+MGTK::Rect::y2, icon_rect+MGTK::Rect::y1
+        asr16   icon_rect+MGTK::Rect::x1
+        asr16   icon_rect+MGTK::Rect::y1
+        COPY_STRUCT MGTK::Point, icon_rect+MGTK::Rect::topleft, icon_rect+MGTK::Rect::bottomright
 
-        iny
-        lda     (ptr),y         ; y hi
-        adc     #0
-        sta     rect_table+3
-        sta     rect_table+7
+        ;; --------------------------------------------------
+        ;; Compute intermediate rects
 
-        ldy     #kMaxAnimationStep * .sizeof(MGTK::Rect) + 3
-        ldx     #3
-:       lda     window_grafport,x
-        sta     rect_table,y
-        dey
-        dex
-        bpl     :-
-
-        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, L8D54
-        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, L8D56
-        add16   $0858, L8D54, $085C
-        add16   $085A, L8D56, $085E
-        lda     #$00
-        sta     flag
-        sta     flag2
+        lda     #0
         sta     step
-        sub16   $0858, rect_table, L8D50
-        sub16   $085A, $0802, L8D52
 
-        bit     L8D50+1
-        bpl     :+
+        sub16   win_rect+MGTK::Rect::x1, icon_rect+MGTK::Rect::x1, tmp_x
+        sub16   win_rect+MGTK::Rect::y1, icon_rect+MGTK::Rect::y1, tmp_y
 
-        copy    #$80, flag
-        lda     L8D50           ; negate
-        eor     #$FF
-        sta     L8D50
-        lda     L8D50+1
-        eor     #$FF
-        sta     L8D50+1
-        inc16   L8D50
-:
+loop:   asr16   tmp_x           ; divide by two (signed)
+        asr16   tmp_y
+        asr16   tmp_w
+        asr16   tmp_h
 
-        bit     L8D52+1
-        bpl     :+
-
-        copy    #$80, flag2
-        lda     L8D52           ; negate
-        eor     #$FF
-        sta     L8D52
-        lda     L8D52+1
-        eor     #$FF
-        sta     L8D52+1
-        inc16   L8D52
-:
-
-L8C8C:  lsr16   L8D50           ; divide by two
-        lsr16   L8D52
-        lsr16   L8D54
-        lsr16   L8D56
-        lda     #10
+        ;; Address of target rect
+        lda     #kMaxAnimationStep - 1
         sec
         sbc     step
         asl     a
         asl     a
         asl     a
         tax
-        bit     flag
-        bpl     :+
-        sub16   rect_table, L8D50, rect_table,x
-        jmp     L8CDC
 
-:       add16   rect_table, L8D50, rect_table,x
-
-L8CDC:  bit     flag2
-        bpl     L8CF7
-        sub16   $0802, L8D52, $0802,x
-        jmp     L8D0A
-
-L8CF7:  add16   rect_table+2, L8D52, rect_table+2,x
-
-L8D0A:  add16   rect_table,x, L8D54, rect_table+4,x ; right
-        add16   rect_table+2,x, L8D56, rect_table+6,x ; bottom
+        add16   rect_table+MGTK::Rect::x1, tmp_x, rect_table+MGTK::Rect::x1,x
+        add16   rect_table+MGTK::Rect::y1, tmp_y, rect_table+MGTK::Rect::y1,x
+        add16   rect_table+MGTK::Rect::x1,x, tmp_w, rect_table+MGTK::Rect::x2,x
+        add16   rect_table+MGTK::Rect::y1,x, tmp_h, rect_table+MGTK::Rect::y2,x
 
         inc     step
         step := *+1
         lda     #SELF_MODIFIED_BYTE
-        cmp     #10
-        jne     L8C8C
+        cmp     #kMaxAnimationStep-1
+        jne     loop
+
+        ;; --------------------------------------------------
+        ;; Animate it
 
         bit     close_flag
         bmi     :+
@@ -9698,13 +9657,6 @@ L8D0A:  add16   rect_table,x, L8D54, rect_table+4,x ; right
 
 close_flag:
         .byte   0
-
-flag:   .byte   0               ; ???
-flag2:  .byte   0               ; ???
-L8D50:  .word   0
-L8D52:  .word   0
-L8D54:  .word   0
-L8D56:  .word   0
 .endproc ; AnimateWindowImpl
 AnimateWindowClose      := AnimateWindowImpl::close
 AnimateWindowOpen       := AnimateWindowImpl::open
