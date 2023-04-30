@@ -21,6 +21,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Prevent erratic behavior if keys pressed during menu selection.
 * Allow keyboard control of menus even when initiated with the mouse. ([#754](https://github.com/a2stuff/a2d/issues/754))
 * Prevent keyboard cursor movement within disabled menus.
+* Don't move cursor when controlling menu with keyboard. ([#756](https://github.com/a2stuff/a2d/issues/756))
 
 ### Launcher
 

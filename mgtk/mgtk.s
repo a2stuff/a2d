@@ -366,14 +366,13 @@ jump_table:
 
         ;; Extra Calls
         .addr   BitBltImpl          ; $4D BitBlt
-        .addr   SetMenuSelectionImpl; $4E SetMenuSelection
-        .addr   GetDeskPatImpl      ; $4F GetDeskPat
-        .addr   SetDeskPatImpl      ; $50 SetDeskPat
-        .addr   DrawMenuImpl        ; $51 DrawMenu
-        .addr   GetWinFrameRectImpl ; $52 GetWinFrameRect
-        .addr   RedrawDeskTopImpl   ; $53 RedrawDeskTop
-        .addr   FindControlExImpl   ; $54 FindControlEx
-        .addr   PaintBitsImpl       ; $55 PaintBitsHC
+        .addr   GetDeskPatImpl      ; $4E GetDeskPat
+        .addr   SetDeskPatImpl      ; $4F SetDeskPat
+        .addr   DrawMenuImpl        ; $50 DrawMenu
+        .addr   GetWinFrameRectImpl ; $51 GetWinFrameRect
+        .addr   RedrawDeskTopImpl   ; $52 RedrawDeskTop
+        .addr   FindControlExImpl   ; $53 FindControlEx
+        .addr   PaintBitsImpl       ; $54 PaintBitsHC
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -490,14 +489,13 @@ param_lengths:
 
         ;; Extra Calls
         PARAM_DEFN 16, $8A, 0                ; $4D BitBlt
-        PARAM_DEFN  2, $82, 0                ; $4E SetMenuSelection
-        PARAM_DEFN  0, $00, 0                ; $4F GetDeskPat
-        PARAM_DEFN  0, $00, 0                ; $50 SetDeskPat
-        PARAM_DEFN  0, $00, 0                ; $51 DrawMenu
-        PARAM_DEFN  5, $82, 0                ; $52 GetWinFrameRect
-        PARAM_DEFN  0, $00, 0                ; $53 RedrawDeskTop
-        PARAM_DEFN  7, $82, 0                ; $54 FindControlEx
-        PARAM_DEFN 16, $8A, 1                ; $55 PaintBitsHC
+        PARAM_DEFN  0, $00, 0                ; $4E GetDeskPat
+        PARAM_DEFN  0, $00, 0                ; $4F SetDeskPat
+        PARAM_DEFN  0, $00, 0                ; $50 DrawMenu
+        PARAM_DEFN  5, $82, 0                ; $51 GetWinFrameRect
+        PARAM_DEFN  0, $00, 0                ; $52 RedrawDeskTop
+        PARAM_DEFN  7, $82, 0                ; $53 FindControlEx
+        PARAM_DEFN 16, $8A, 1                ; $54 PaintBitsHC
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -5702,7 +5700,13 @@ set_x:  stax    current_penloc_x
 .proc GetAndReturnEvent
         PARAM_BLOCK event, $82
 kind       .byte
+.union
 mouse_pos  .tag MGTK::Point
+.struct
+key        .byte
+modifiers  .byte
+.endstruct
+.endunion
         END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetEvent, event
@@ -5846,12 +5850,7 @@ filler: ldx     menu_item_index
         ldx     menu_index
         inx
         cpx     menu_count
-        beq     :+
-        jmp     menuloop
-
-:       lda     #0
-        sta     sel_menu_index
-        sta     sel_menu_item_index
+        jne     menuloop
 
         jsr     ShowCursorAndRestore
         sec
@@ -6008,7 +6007,7 @@ found:  rts
 
         lda     menu_param
         bne     :+
-        lda     cur_open_menu
+        lda     cur_open_menu_id
         sta     menu_param
 
 :       jsr     FindMenuByIdOrFail
@@ -6079,7 +6078,7 @@ key_mods   .byte
         bne     not_found
 
         lda     curmenu::menu_id
-        sta     cur_open_menu
+        sta     cur_open_menu_id
         bne     found
 
 not_found:
@@ -6184,7 +6183,7 @@ disable    .byte
 ;;; ============================================================
 ;;; MenuSelect
 
-cur_open_menu:
+cur_open_menu_id:
         .byte   0
 
 cur_hilited_menu_item:
@@ -6199,124 +6198,195 @@ menu_id    .byte
 menu_item  .byte
         END_PARAM_BLOCK
 
-
-        jsr     KbdMouseInitTracking
-
         jsr     GetMenuCount
         jsr     SaveParamsAndStack
         jsr     SetStandardPort
 
-        bit     kbd_mouse_state
-        bpl     :+
-        jsr     KbdMenuSelect
-        jmp     in_menu
-
-:       lda     #0
-        sta     cur_open_menu
+        lda     #0
+        sta     cur_open_menu_id
         sta     cur_hilited_menu_item
         sta     was_in_menu_flag
-        sta     sel_menu_index
-        sta     sel_menu_item_index
+        sta     movement_cancel
 
-        lda     kbd_mouse_state
-        .assert kKeyboardMouseStateInactive = 0, error, "enum mismatch"
-    IF_ZERO
-        lda     #kKeyboardMouseStateMenu
+        ;; Initiated with mouse or keyboard?
+        bit     kbd_mouse_state
+        jpl     in_menu_bar     ; use mouse coords for menu
+
+        lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
-        jsr     MouseToKbdMouse
-    END_IF
+        ldx     #0
+        jsr     GetMenu         ; X = index
+        lda     curmenu::menu_id
+        jmp     imb_change
+
+        ;; --------------------------------------------------
+
+event_loop:
+        COPY_BYTES kLastMousePosLen, mouse_x, last_mouse_pos
 
         jsr     GetAndReturnEvent
-event_loop:
-        bit     movement_cancel
-        bpl     :+
-        jmp     KbdMenuReturn
 
-:       MGTK_CALL MGTK::MoveTo, mouse_state
+        ;; --------------------
+
+        cmp     #MGTK::EventKind::button_down
+        jeq     handle_click
+
+        ;; --------------------
+
+        cmp     #MGTK::EventKind::button_up
+    IF_EQ
+        bit     was_in_menu_flag
+        jmi     handle_click
+        lda     cur_open_menu_id
+        bne     event_loop
+        jeq     handle_click    ; always
+    END_IF
+
+        ;; --------------------
+
+        cmp     #MGTK::EventKind::key_down
+    IF_EQ
+        ;; Set up `sel_menu_*`
+        lda     menu_index      ; TODO: Verify this is valid
+        sta     sel_menu_index
+        sta     last_menu_index
+        lda     cur_hilited_menu_item
+        sta     sel_menu_item_index
+
+        ;; BUG: hit 'A' when menu showing, redraws
+        ;; `menu_index` changes
+
+        ;; Process the key
+        lda     GetAndReturnEvent::event::modifiers
+        sta     set_input_modifiers
+        lda     GetAndReturnEvent::event::key
+        jsr     HandleMenuKey
+
+        ;; Done?
+        bit     movement_cancel
+      IF_NS
+        ;; Menu selection or cancel
+        jsr     close_menu
+        jsr     RestoreParamsActivePort
+
+        lda     sel_menu_item_index
+       IF_ZERO
+        ;; Cancel - just exit with 0,0
+        tax
+        jmp     store_xa_at_params
+       END_IF
+
+        ldx     sel_menu_index
+        jsr     GetMenu
+        lda     curmenu::menu_id
+        pha                     ; A = menu id
+        ldx     cur_hilited_menu_item ; left non-zero if selected
+       IF_ZERO
+        sta     HiliteMenuImpl::menu_param
+        jsr     HiliteMenuImpl
+       END_IF
+        pla                     ; A = menu id
+        ldx     sel_menu_item_index
+        jmp     store_xa_at_params
+      END_IF
+
+        ;; Did `sel_menu_index` change?
+        ldx     sel_menu_index
+        cpx     last_menu_index
+      IF_NE
+        lda     #0
+        sta     cur_hilited_menu_item
+        jsr     GetMenu         ; X = index
+        lda     curmenu::menu_id
+        jmp     imb_change
+      END_IF
+
+        ;; Did `sel_menu_item_index` change?
+        ldx     sel_menu_item_index
+        cpx     cur_hilited_menu_item
+      IF_NE
+        jmp     imi_change
+      END_IF
+
+        jmp     event_loop
+    END_IF
+
+        ;; --------------------
+
+        cmp     #MGTK::EventKind::drag
+        beq     :+
+        cmp     #MGTK::EventKind::no_event
+        jne     event_loop
+:
+        ;; Was there a move?
+        ldx     #kLastMousePosLen-1
+:       lda     mouse_x,x
+        cmp     last_mouse_pos,x
+        bne     :+
+        dex
+        bpl     :-
+        jmp     event_loop      ; no move, ignore
+:
+        ;; Moved - mouse pos dominates
+        MGTK_CALL MGTK::MoveTo, mouse_state
         MGTK_CALL MGTK::InRect, test_rect_params      ; test in menu bar
         bne     in_menu_bar
-        lda     cur_open_menu
-        beq     in_menu
+        lda     cur_open_menu_id
+        jeq     event_loop
 
         MGTK_CALL MGTK::InRect, test_rect_params2     ; test in menu
         bne     in_menu_item
         jsr     UnhiliteCurMenuItem
+        jmp     event_loop
 
-in_menu:
-        copy    menu_index, sel_menu_index
-        copy    cur_hilited_menu_item, sel_menu_item_index
+        ;; --------------------------------------------------
+        ;; Tear down menu
 
-        jsr     GetAndReturnEvent
-        cmp     #MGTK::EventKind::button_down
-        beq     :+
-        cmp     #MGTK::EventKind::button_up
-        bne     event_loop
+handle_click:
+        jsr     close_menu
+        FALL_THROUGH_TO restore
 
-        bit     was_in_menu_flag
-        bmi     :+
-        lda     cur_open_menu
-        bne     event_loop
-
-:       lda     cur_hilited_menu_item
-        bne     :+
-        jsr     HideMenu
-        jmp     restore
-
-:       jsr     HideCursorImpl
-        jsr     SetStandardPort
-        jsr     RestoreMenuSavebehind
-
-restore:jsr     RestoreParamsActivePort
-
-        lda     kbd_mouse_state
-        cmp     #kKeyboardMouseStateMenu
-    IF_EQ
-        lda     #kKeyboardMouseStateInactive
-        sta     kbd_mouse_state
-    END_IF
+        ;; --------------------------------------------------
+        ;; Exit menu loop
+restore:
+        jsr     RestoreParamsActivePort
 
         lda     #0
-
-        ;; If menu was initiated with keyboard, cursor was stashed;
-        ;; clear that state, in case we're exiting via the mouse.
-        sta     stashed_cursor_flag
-
         ldx     cur_hilited_menu_item
         beq     :+
-
-        lda     cur_open_menu
-        ldy     menu_index             ; ???
-        sty     sel_menu_index
-        stx     sel_menu_item_index
-
+        lda     cur_open_menu_id
 :       jmp     store_xa_at_params
 
-
+        ;; --------------------------------------------------
+        ;; Over an item in the menu bar
 in_menu_bar:
         jsr     UnhiliteCurMenuItem
 
         lda     #find_mode_by_coord
         jsr     find_menu
 
-        cmp     cur_open_menu
-        beq     in_menu
+        cmp     cur_open_menu_id
+        jeq     event_loop
+imb_change:
         pha
         jsr     HideMenu
         pla
-        sta     cur_open_menu
+        sta     cur_open_menu_id
 
         jsr     DrawMenu
-        jmp     in_menu
+        jmp     event_loop
 
-
+        ;; --------------------------------------------------
+        ;; Over an item the current menu
 in_menu_item:
         lda     #find_mode_by_coord
         sta     was_in_menu_flag
         sta     find_mode
         jsr     FindMenuItem
         cpx     cur_hilited_menu_item
-        jeq     in_menu
+        jeq     event_loop
 
+imi_change:
         lda     curmenu::disabled
         ora     curmenuitem::options
         and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
@@ -6330,9 +6400,194 @@ in_menu_item:
         sta     cur_hilited_menu_item
         jsr     HiliteMenuItem
 
-        jmp     in_menu
+        jmp     event_loop
+
+        ;; --------------------------------------------------
+
+close_menu:
+        lda     cur_hilited_menu_item
+        jeq     HideMenu        ; unhilite menu bar item
+
+        jsr     HideCursorImpl  ; leaves menu bar item alone
+        ldx     menu_index
+        jsr     GetMenu
+        jsr     SetStandardPort
+        jmp     RestoreMenuSavebehind
+
+        ;; --------------------------------------------------
+
+        ;; Keyboard navigation of menu
+.proc HandleMenuKey
+        pha
+        ldx     sel_menu_index
+        jsr     GetMenu
+        pla
+        cmp     #CHAR_ESCAPE
+        bne     try_return
+
+        ;; Escape - exit menu loop with no selection
+        lda     #0
+        sta     sel_menu_index
+        sta     sel_menu_item_index
+        sta     cur_hilited_menu_item ; ignore it
+        lda     #$80
+        sta     movement_cancel
+        rts
+
+try_return:
+        cmp     #CHAR_RETURN
+        bne     try_up
+
+        ;; Return - exit menu loop with selection
+        lda     #$80
+        sta     movement_cancel
+        rts
+
+try_up:
+        cmp     #CHAR_UP
+        bne     try_down
+
+uploop:
+        bit     curmenu::disabled
+        bmi     zero
+
+        dec     sel_menu_item_index
+        bpl     :+
+        ldx     menu_item_count
+        stx     sel_menu_item_index
+
+:       ldx     sel_menu_item_index
+        beq     :+
+        dex
+        jsr     GetMenuItem
+
+        lda     curmenuitem::options
+        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
+        bne     uploop
+
+:       jmp     finish
+
+try_down:
+        cmp     #CHAR_DOWN
+        bne     try_right
+
+downloop:
+        bit     curmenu::disabled
+        bmi     zero
+
+        inc     sel_menu_item_index
+
+        lda     sel_menu_item_index
+        cmp     menu_item_count
+        bcc     :+
+        beq     :+
+
+zero:   lda     #0
+        sta     sel_menu_item_index
+
+:       ldx     sel_menu_item_index
+        beq     :+
+        dex
+        jsr     GetMenuItem
+        lda     curmenuitem::options
+        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
+        bne     downloop
+
+:       jmp     finish
+
+try_right:
+        cmp     #CHAR_RIGHT
+        bne     try_left
+
+        lda     #0
+        sta     sel_menu_item_index
+        inc     sel_menu_index
+
+        ldx     sel_menu_index
+        cpx     menu_count
+        bcc     :+
+
+        sta     sel_menu_index
+:       jmp     finish
+
+try_left:
+        cmp     #CHAR_LEFT
+        bne     nope
+
+        lda     #0
+        sta     sel_menu_item_index
+        dec     sel_menu_index
+        bpl     :+
+
+        ldx     menu_count
+        dex
+        stx     sel_menu_index
+:       jmp     finish
+
+nope:   jsr     KbdMenuByShortcut
+        bcc     :+
+        lda     #$80
+        sta     movement_cancel
+        lda     #0
+        sta     cur_hilited_menu_item ; ignore it
+:
+
+finish: rts
+.endproc ; HandleMenuKey
+
+.proc KbdMenuByShortcut
+        sta     find_shortcut
+        lda     set_input_modifiers
+        and     #3
+        sta     find_options
+
+        lda     cur_open_menu_id
+        pha
+        lda     cur_hilited_menu_item
+        pha
+
+        lda     #find_mode_by_shortcut
+        jsr     find_menu
+        beq     fail
+
+        stx     sel_menu_item_index
+        lda     curmenu::disabled
+        bmi     fail
+
+        lda     curmenuitem::options
+        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
+        bne     fail
+
+        lda     menu_index
+        sta     sel_menu_index
+        sec
+        .byte   OPC_BCC         ; mask next byte (clc)
+
+fail:   clc
+        pla
+        sta     cur_hilited_menu_item
+        pla
+        sta     cur_open_menu_id
+        sta     find_menu_id
+        rts
+.endproc ; KbdMenuByShortcut
+
+;;; Used to track selection changes via keyboard. These are only valid
+;;; for the duration of a `MenuSelectImpl` call, while processing
+;;; an `EventKind::key_down` event.
+sel_menu_index:
+        .byte   0
+sel_menu_item_index:
+        .byte   0
+last_menu_index:
+        .byte   0
+
+kLastMousePosLen = 3            ; don't bother with Y high byte
+last_mouse_pos:
+        .res    kLastMousePosLen
 .endproc ; MenuSelectImpl
 
+;;; ============================================================
 
         savebehind_left_bytes := $82
         savebehind_bottom := $83
@@ -6448,7 +6703,7 @@ dmrts:  rts
 .proc DrawMenu
         sec
 draw_or_hide:
-        lda     cur_open_menu
+        lda     cur_open_menu_id
         beq     dmrts
         php
 
@@ -9308,30 +9563,8 @@ check_win:
 
 ;;; ============================================================
 
-;;; $4E SetMenuSelection
-
-;;; 2 bytes of params, copied to $82
-
-.proc SetMenuSelectionImpl
-        PARAM_BLOCK params, $82
-menu_index              .byte
-menu_item_index         .byte
-        END_PARAM_BLOCK
-
-        lda     params::menu_index
-        sta     sel_menu_index
-
-        lda     params::menu_item_index
-        sta     sel_menu_item_index
-
-        rts
-.endproc ; SetMenuSelectionImpl
-
-;;; ============================================================
-
 
 kKeyboardMouseStateInactive = 0  ; Disabled
-kKeyboardMouseStateMenu = 1      ; Menu activation with keyboard
 kKeyboardMouseStateMouseKeys = 4 ; MouseKeys mode
 kKeyboardMouseStateForced = $80  ; KeyboardMouse call
 
@@ -9342,22 +9575,10 @@ kbd_mouse_state:
 kbd_mouse_x:  .word     0
 kbd_mouse_y:  .word     0
 
-kbd_menu_select_flag:
-        .byte   0
-
-        ;; Currently selected menu/menu item. Note that menu is index,
-        ;; not ID from menu definition.
-sel_menu_index:
-        .byte   0
-sel_menu_item_index:
-        .byte   0
-
 saved_mouse_pos:
 saved_mouse_x:  .word   0
 saved_mouse_y:  .byte   0
 
-kbd_menu:  .byte   $00
-kbd_menu_item:  .byte   $00
 movement_cancel:  .byte   $00
 kbd_mouse_status:  .byte   $00
 
@@ -9472,11 +9693,6 @@ scale_y:
         rts
 .endproc ; KbdMouseToMouse
 
-.proc MouseToKbdMouse
-        COPY_BYTES 3, mouse_x, kbd_mouse_x
-        rts
-.endproc ; MouseToKbdMouse
-
 .proc PositionKbdMouse
         jsr     KbdMouseToMouse
         jmp     SetMousePosFromKbdMouse
@@ -9490,27 +9706,17 @@ scale_y:
 .endproc ; SaveMousePos
 
 .proc UnstashCursor
-        ;; Flag a button release to finish the implied drag
-        lda     #$40
-        sta     mouse_status
-
-        ;; Exit special state
-        lda     #kKeyboardMouseStateInactive
-        sta     kbd_mouse_state
-
-        ;; ... but only conditionally modify cursor state, in case
-        ;; called from normal (mouse) menu mode.
-        bit     stashed_cursor_flag
-        bmi     :+
-        rts
-:       clc
-        ror     stashed_cursor_flag
-
         jsr     stash_addr
         copy16  kbd_mouse_cursor_stash, params_addr
         jsr     SetCursorImpl
         jsr     restore_addr
 
+        ;; Exit special state
+        lda     #kKeyboardMouseStateInactive
+        sta     kbd_mouse_state
+        ;; Flag a button release to finish the implied drag
+        lda     #$40
+        sta     mouse_status
         jmp     RestoreMousePos
 .endproc ; UnstashCursor
 
@@ -9556,30 +9762,18 @@ no_modifiers:
 :       cmp     #kKeyboardMouseStateMouseKeys
         beq     KbdMouseMousekeys
 
-        jsr     KbdMouseSyncCursor ; call with A = `kbd_mouse_state`
-
-        lda     kbd_mouse_state
-        cmp     #kKeyboardMouseStateMenu
-        bne     :+
-        jmp     KbdMouseDoMenu
-
-:       jmp     KbdMouseDoWindow
+        jsr     KbdMouseSyncCursor
+        jmp     KbdMouseDoWindow
 .endproc ; HandleKeyboardMouse
 
 
 .proc StashCursor
-        sec
-        ror     stashed_cursor_flag
-
         jsr     stash_addr
         copy16  active_cursor, kbd_mouse_cursor_stash
         copy16  #pointer_cursor, params_addr
         jsr     SetCursorImpl
         jmp     restore_addr
 .endproc ; StashCursor
-
-stashed_cursor_flag:
-        .byte   0
 
 kbd_mouse_cursor_stash:
         .res    2
@@ -9680,278 +9874,26 @@ beeploop:
 .endproc ; ActivateKeyboardMouse
 
 
-;;; Inputs: A = `kbd_mouse_state`
 .proc KbdMouseSyncCursor
         bit     mouse_status
         bpl     :+
 
-        cmp     #kKeyboardMouseStateForced
-    IF_EQ
         lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
         jmp     SetMousePosFromKbdMouse
-    END_IF
-        rts
 
 :       lda     mouse_status
         ldx     #$C0
         stx     mouse_status
         and     #$20
-        beq     kbd_mouse_to_mouse_jmp
+        beq     :+
 
-        jsr     MouseToKbdMouse
-
-        stx     kbd_menu_select_flag           ; =$ff
+        COPY_BYTES 3, mouse_x, kbd_mouse_x
         rts
-
-kbd_mouse_to_mouse_jmp:
+:
         jmp     KbdMouseToMouse
 .endproc ; KbdMouseSyncCursor
 
-
-.proc KbdMenuSelect
-        php
-        sei
-        jsr     SaveMousePos
-
-        lda     #kKeyboardMouseStateMenu
-        sta     kbd_mouse_state
-
-        jsr     position_menu_item
-
-        lda     #$80
-        sta     mouse_status
-        jsr     StashCursor
-        ldx     sel_menu_index
-        jsr     GetMenu
-
-        lda     curmenu::menu_id
-        sta     cur_open_menu
-        jsr     DrawMenu
-
-        lda     sel_menu_item_index
-        sta     cur_hilited_menu_item
-        jsr     HiliteMenuItem
-        plp
-        rts
-
-position_menu_item:
-        ldx     sel_menu_index
-        jsr     GetMenu
-
-        add16   curmenu::x_min, #5, kbd_mouse_x
-
-        ldy     sel_menu_item_index
-        lda     menu_item_y_table,y
-        sta     kbd_mouse_y
-        lda     #$C0
-        sta     mouse_status
-        jmp     PositionKbdMouse
-.endproc ; KbdMenuSelect
-
-
-.proc KbdMenuSelectItem
-        bit     kbd_menu_select_flag
-        bpl     :+
-
-        lda     cur_hilited_menu_item
-        sta     sel_menu_item_index
-        ldx     cur_open_menu
-        dex
-        stx     sel_menu_index
-
-        lda     #0
-        sta     kbd_menu_select_flag
-:       rts
-.endproc ; KbdMenuSelectItem
-
-
-.proc KbdMouseDoMenu
-        jsr     KbdMouseSaveZP
-        jsr     :+
-        jmp     KbdMouseRestoreZP
-
-:       jsr     GetKey
-        bcs     HandleMenuKey
-        rts
-.endproc ; KbdMouseDoMenu
-
-        ;; Keyboard navigation of menu
-.proc HandleMenuKey
-        pha
-        jsr     KbdMenuSelectItem
-        ldx     sel_menu_index
-        jsr     GetMenu
-        pla
-        cmp     #CHAR_ESCAPE
-        bne     try_return
-
-        lda     #0
-        sta     kbd_menu_item
-        sta     kbd_menu
-        ror                                    ; carry set by CMP above
-        sta     movement_cancel
-        rts
-
-try_return:
-        cmp     #CHAR_RETURN
-        bne     try_up
-        jsr     KbdMouseToMouse
-        jmp     UnstashCursor
-
-try_up:
-        cmp     #CHAR_UP
-        bne     try_down
-
-uploop:
-        bit     curmenu::disabled
-        bmi     zero
-
-        dec     sel_menu_item_index
-        bpl     :+
-        ldx     menu_item_count
-        stx     sel_menu_item_index
-
-:       ldx     sel_menu_item_index
-        beq     :+
-        dex
-        jsr     GetMenuItem
-
-        lda     curmenuitem::options
-        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
-        bne     uploop
-
-:       jmp     KbdMenuSelect::position_menu_item
-
-try_down:
-        cmp     #CHAR_DOWN
-        bne     try_right
-
-downloop:
-        bit     curmenu::disabled
-        bmi     zero
-
-        inc     sel_menu_item_index
-
-        lda     sel_menu_item_index
-        cmp     menu_item_count
-        bcc     :+
-        beq     :+
-
-zero:   lda     #0
-        sta     sel_menu_item_index
-
-:       ldx     sel_menu_item_index
-        beq     :+
-        dex
-        jsr     GetMenuItem
-        lda     curmenuitem::options
-        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
-        bne     downloop
-
-:       jmp     KbdMenuSelect::position_menu_item
-
-try_right:
-        cmp     #CHAR_RIGHT
-        bne     try_left
-
-        lda     #0
-        sta     sel_menu_item_index
-        inc     sel_menu_index
-
-        ldx     sel_menu_index
-        cpx     menu_count
-        bcc     :+
-
-        sta     sel_menu_index
-:       jmp     KbdMenuSelect::position_menu_item
-
-try_left:
-        cmp     #CHAR_LEFT
-        bne     nope
-
-        lda     #0
-        sta     sel_menu_item_index
-        dec     sel_menu_index
-        bpl     :+
-
-        ldx     menu_count
-        dex
-        stx     sel_menu_index
-:       jmp     KbdMenuSelect::position_menu_item
-
-nope:   jsr     KbdMenuByShortcut
-        bcc     :+
-
-        lda     #$80
-        sta     movement_cancel
-:       rts
-.endproc ; HandleMenuKey
-
-.proc KbdMenuByShortcut
-        sta     find_shortcut
-        lda     set_input_modifiers
-        and     #3
-        sta     find_options
-
-        lda     cur_open_menu
-        pha
-        lda     cur_hilited_menu_item
-        pha
-
-        lda     #find_mode_by_shortcut
-        jsr     find_menu
-        beq     fail
-
-        stx     kbd_menu_item
-        lda     curmenu::disabled
-        bmi     fail
-
-        lda     curmenuitem::options
-        and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
-        bne     fail
-
-        lda     curmenu::menu_id
-        sta     kbd_menu
-        sec
-        .byte   OPC_BCC         ; mask next byte (clc)
-
-fail:   clc
-        pla
-        sta     cur_hilited_menu_item
-        pla
-        sta     cur_open_menu
-        sta     find_menu_id
-        rts
-.endproc ; KbdMenuByShortcut
-
-
-.proc KbdMenuReturn
-        php
-        sei
-        jsr     HideMenu
-        jsr     UnstashCursor
-
-        lda     kbd_menu
-        sta     MenuSelectImpl::params::menu_id
-        sta     cur_open_menu
-
-        lda     kbd_menu_item
-        sta     MenuSelectImpl::params::menu_item
-        sta     cur_hilited_menu_item
-
-        jsr     RestoreParamsActivePort
-        lda     kbd_menu
-        beq     :+
-        jsr     HiliteMenuImpl
-
-        lda     kbd_menu
-:       sta     cur_open_menu
-        ldx     kbd_menu_item
-        stx     cur_hilited_menu_item
-        plp
-        jmp     store_xa_at_params
-.endproc ; KbdMenuReturn
 
 
 .proc KbdWinDragOrGrow
@@ -10202,28 +10144,8 @@ out_of_boundsl:
         jmp     PositionKbdMouse
 
 not_left:
-        sta     set_input_key
-
-        lda     kbd_mouse_state
-        cmp     #kKeyboardMouseStateMenu
-        bne     :+
-
-        COPY_STRUCT MGTK::GrafPort, $A7, $0600
-
-        lda     set_input_key
-        jsr     KbdMenuByShortcut
-        php
-
-        COPY_STRUCT MGTK::GrafPort, $0600, $A7
-
-        plp
-        bcc     :+
-
-        lda     #$40
-        sta     movement_cancel
-        jmp     UnstashCursor
-
-:       rts
+        sta     set_input_key   ; TODO: Is this needed any more?
+        rts
 .endproc ; MousekeysInput
 
 

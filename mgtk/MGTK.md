@@ -1007,20 +1007,7 @@ Parameters:
 
 > This call was not listed in the 1985 APDA documentation, so the behavior is inferred from the source.
 
-#### SetMenuSelection ($4E)
-Set selected menu
-
-> Further documentation is needed.
-
-Parameters:
-```
-.byte       menu_id         Top level menu identifier.
-.byte       menu_item       Index (1-based) of item in menu.
-```
-
-> This call was not listed in the 1985 APDA documentation, so the behavior is inferred from the source.
-
-#### GetDeskPat ($4F)
+#### GetDeskPat ($4E)
 Get address of desktop pattern.
 
 Parameters:
@@ -1030,7 +1017,7 @@ Parameters:
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### SetDeskPat ($50)
+#### SetDeskPat ($4F)
 Set new desktop pattern. Note that this does NOT redraw anything.
 Applications can use `RedrawDeskTop` to force a redraw.
 
@@ -1041,7 +1028,7 @@ Parameters:
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### DrawMenu ($51)
+#### DrawMenu ($50)
 Redraws the current menu bar. Useful after full-screen operations.
 Note that hilite state of menu bar items is not restored; this must
 be done by manual calls to `HiliteMenu`
@@ -1050,7 +1037,7 @@ No parameters.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### GetWinFrameRect ($52)
+#### GetWinFrameRect ($51)
 Get the rectangle framing a window. This is in screen coordinates,
 and is the same rectangle that would be drawn for grow or move
 operations.
@@ -1063,7 +1050,7 @@ Rect        rect            (out)
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### RedrawDeskTop ($53)
+#### RedrawDeskTop ($52)
 Redraws the desktop background, and posts update events for the desktop and all
 windows.
 
@@ -1071,7 +1058,7 @@ No parameters.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### FindControlEx ($54)
+#### FindControlEx ($53)
 Like `FindControl`, but works on all windows, not just the topmost window.
 
 Parameters:
@@ -1085,7 +1072,7 @@ Parameters:
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### PaintBitsHC ($56)
+#### PaintBitsHC ($54)
 Like `PaintBits`, but hides/restores the cursor for the operation.
 
 Parameters:

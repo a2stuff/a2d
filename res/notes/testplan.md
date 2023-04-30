@@ -1165,31 +1165,31 @@ The following steps exercise the menu as "drop down" using the mouse:
 
 The following steps exercise the menu as "drop down" using the keyboard:
 
-* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Press the Escape key again. Verify that the menu closes and the mouse pointer returns to its previous location.
-* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Press the Escape key again. Verify that the menu closes and the mouse pointer returns to its previous location.
-* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Press the Return key. Verify that the menu closes, that the mouse pointer returns to its previous location, and that the item is invoked.
+* Press the Escape key. Verify that the first menu opens. Press the Escape key again. Verify that the menu closes.
+* Press the Escape key. Verify that the first menu opens. Use the Up, Down, Left and Right Arrow keys to move among menu items. Press the Escape key again. Verify that the menu closes.
+* Press the Escape key. Verify that the first menu opens. Use the Up, Down, Left and Right Arrow keys to move among menu items. Press the Return key. Verify that the menu closes, and that the item is invoked.
 
 The following steps exercise the menu as "drop down" using the mouse to initiate and finish the action, but with the keyboard as an intermediate step:
 
-* Click (press and release the mouse button) on a menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Move the mouse over an item and click it. Verify the menu closes, that the pointer does not move, and that the item is invoked.
-* Click (press and release the mouse button) on a menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Move the mouse over a separator and click it. Verify the menu closes, and that the pointer does not move.
-* Click (press and release the mouse button) on a menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Move the mouse off the menu and click. Verify the menu closes, and that the pointer does not move.
+* Click (press and release the mouse button) on a menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Move the mouse over an item and click it. Verify the menu closes, and that the item is invoked.
+* Click (press and release the mouse button) on a menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Move the mouse over a separator and click it. Verify the menu closes.
+* Click (press and release the mouse button) on a menu bar item. Use the Up, Down, Left and Right Arrow keys to move among menu items. Move the mouse off the menu and click. Verify the menu closes.
 
 The following steps exercise the menu as "drop down" using the keyboard to initiate and finish the action, but with the mouse as an intermediate step:
 
-* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Move the mouse over menu items. Press the Escape key again. Verify that the menu closes and the mouse pointer returns to its previous location.
-* Note the position of the mouse pointer. Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Move the mouse over a menu item. Press the Return key. Verify that the menu closes, that the mouse pointer returns to its previous location, and that the item is invoked.
+* Press the Escape key. Verify that the first menu opens. Move the mouse over menu items. Press the Escape key again. Verify that the menu closes.
+* Press the Escape key. Verify that the first menu opens. Move the mouse over a menu item. Press the Return key. Verify that the menu closes, and that the item is invoked.
 
 The following steps exercise the menu as "drop down" using the mouse to initiate the action and the keyboard to finish the action:
 
-* Click (press and release the mouse button) on a menu bar item. Use the mouse to move over an item. Use the arrow keys to select a different item. Press Escape. Verify that the menu closes, and that the pointer does not move.
-* Click (press and release the mouse button) on a menu bar item. Use the mouse to move over an item. Use the arrow keys to select a different item. Press Return. Verify that the menu closes, that the pointer does not move, and that the item is invoked.
+* Click (press and release the mouse button) on a menu bar item. Use the mouse to move over an item. Use the arrow keys to select a different item. Press Escape. Verify that the menu closes.
+* Click (press and release the mouse button) on a menu bar item. Use the mouse to move over an item. Use the arrow keys to select a different item. Press Return. Verify that the menu closes, and that the item is invoked.
 
 The following steps exercise the menu as "drop down" using the keyboard to initiate the action and the mouse to finish the action:
 
-* Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Click an item with the mouse. Verify that the menu closes, that the mouse pointer doesn't move, and that the item is invoked.
-* Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Click a separator with the mouse. Verify that the menu closes, and that the mouse pointer doesn't move.
-* Press the Escape key. Verify that a menu open and the mouse pointer moves over the menu bar item. Click outside the menu. Verify that the menu closes, and that the mouse pointer doesn't move.
+* Press the Escape key. Verify that the first menu opens. Click an item with the mouse. Verify that the menu closes, and that the item is invoked.
+* Press the Escape key. Verify that the first menu opens. Click a separator with the mouse. Verify that the menu closes.
+* Press the Escape key. Verify that the first menu opens. Click outside the menu. Verify that the menu closes.
 
 * Click on a menu to show it. While it is open, press the shortcut key for a command (e.g. Open-Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
 * Press Escape to activate the menu. While it is open, press the shortcut key for a command (e.g. Open-Apple+Q to Quit). Verify that the menu closes and that the command is invoked.

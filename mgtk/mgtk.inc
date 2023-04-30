@@ -511,33 +511,30 @@ ActivateCtl     = $4C           ; Activate/deactivate scroll bar
 BitBlt          = $4D
 ;;; (input length: 16 bytes)
 
-SetMenuSelection = $4E
-;;; (input length: 2 bytes)
-
-GetDeskPat      = $4F
+GetDeskPat      = $4E
 ;;; .addr       pattern         (out) Address of desktop pattern
 
-SetDeskPat      = $50
+SetDeskPat      = $4F
 ;;; .res 8      pattern         8x8 pixel pattern to use for desktop
 
-DrawMenu        = $51           ; Redraw menu bar
+DrawMenu        = $50           ; Redraw menu bar
 ;;; (no parameters)
 
-GetWinFrameRect = $52           ; Get outer frame rect of window
+GetWinFrameRect = $51           ; Get outer frame rect of window
 ;;; .byte window_id
 ;;; Rect        rect            (out)
 
-RedrawDeskTop   = $53           ; Redraw desktop, post updates for desktop and all windows
+RedrawDeskTop   = $52           ; Redraw desktop, post updates for desktop and all windows
 ;;; (no parameters)
 
-FindControlEx   = $54           ; Like FindControl, but works on non-topmost windows
+FindControlEx   = $53           ; Like FindControl, but works on non-topmost windows
 ;;; .word       mousex
 ;;; .word       mousey
 ;;; .byte       which_ctl       (out) Ctl::*
 ;;; .byte       which_part      (out) Part::*
 ;;; .byte       window_id
 
-PaintBitsHC     = $55           ; Like PaintBits, but hides the cursor
+PaintBitsHC     = $54           ; Like PaintBits, but hides the cursor
 ;;; (input is address of MapInfo record)
 
 
