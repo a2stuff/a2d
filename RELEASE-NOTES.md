@@ -146,6 +146,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Sounds
   * New sounds from Gorgon, Apple Panic, and more, c/o @frankmilliron
   * Play current selection if clicked again. ([#715](https://github.com/a2stuff/a2d/issues/715))
+  * Fix label translation.
 * Calc/Sci.Calc
   * Show leading zero before decimal in results.
   * Don't repaint on title bar click. ([#746](https://github.com/a2stuff/a2d/issues/746))
