@@ -36,6 +36,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Support selection in list views. ([#28](https://github.com/a2stuff/a2d/issues/28))
 * Simplify list views by omitting directory file sizes.
 * Show file sizes right aligned in list views.
+* Show file sizes under 10K as "#.5K" if an odd number of blocks. ([#758](https://github.com/a2stuff/a2d/issues/758))
 * Apple Menu > About This Apple II command added - invokes This Apple DA.
 * File > Copy a File... is now File > Copy To... and operates on current selection.
 * File > Delete a File... is now File > Delete and operates on current selection.

@@ -8406,10 +8406,21 @@ in_range:
 .proc ComposeSizeString
         stax    value           ; size in 512-byte blocks
 
+        ldx     #DeskTopSettings::intl_deci_sep
+        jsr     ReadSetting
+        sta     deci_sep
+
+        copy    #0, frac_flag
+        cmp16   value, #20
+    IF_LT
+        lsr16   value        ; Convert blocks to K, rounding up
+        ror     frac_flag    ; If < 10k and odd, show ".5" suffix"
+    ELSE
         lsr16   value       ; Convert blocks to K, rounding up
         bcc     :+          ; NOTE: divide then maybe inc, rather than
         inc16   value       ; always inc then divide, to handle $FFFF
 :
+    END_IF
 
         ldax    value
         jsr     IntToStringWithSeparators
@@ -8423,6 +8434,19 @@ in_range:
         inx
         cpy     str_from_int
         bne     :-
+
+        ;; Append ".5" if needed
+        frac_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+        bpl     :+
+        deci_sep := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     text_buffer2+1,x
+        inx
+        lda     #'5'
+        sta     text_buffer2+1,x
+        inx
+:
 
         ;; Append suffix
         ldy     #0
