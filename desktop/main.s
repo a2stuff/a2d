@@ -11484,9 +11484,7 @@ do_op_flag:
         beq     @retry2         ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialog
 
-:       jsr     ReadFileEntry
-        copy16  file_entry_buf+SubdirectoryHeader::file_count-kBlockPointersSize, entries_this_dir
-        rts
+:       jmp     ReadFileEntry
 .endproc ; OpenSrcDir
 
 .proc CloseSrcDir
@@ -11529,21 +11527,6 @@ do_op_flag:
 eof:    return  #$FF
 .endproc ; ReadFileEntry
 
-.proc ReadActiveFileEntry
-        lda     entries_this_dir
-        ora     entries_this_dir+1
-        beq     eof
-
-loop:   jsr     ReadFileEntry
-        bmi     eof
-        lda     file_entry_buf + FileEntry::storage_type_name_length
-        beq     loop
-        dec16   entries_this_dir
-        return  #0
-
-eof:    return  #$FF
-.endproc ; ReadActiveFileEntry
-
 ;;; ============================================================
 
 .proc PrepToOpenDir
@@ -11571,10 +11554,14 @@ done:   rts
 .proc ProcessDir
         copy    #0, process_depth
         jsr     OpenSrcDir
-loop:   jsr     ReadActiveFileEntry
+loop:   jsr     ReadFileEntry
         bne     end_dir
 
         param_call AdjustFileEntryCase, file_entry_buf
+
+        lda     file_entry_buf + FileEntry::storage_type_name_length
+        beq     loop
+
         jsr     ConvertFileEntryToFileInfo
 
         ;; Simplify to length-prefixed string
@@ -15575,8 +15562,6 @@ process_depth:
 num_entries_per_block:
         .byte   13
 
-entries_this_dir:
-        .word   0
 entries_read:
         .word   0
 entries_to_skip:
