@@ -716,7 +716,8 @@ skip:
 
 
 
-;;; Unsigned compare 16-bit values - test C (BCC/BCS) for result
+;;; Unsigned compare 16-bit values - test C (BCC/BCS) for ordering
+;;; WARNING: Z (for equality) is NOT set per CMP; use ecmp16 if needed.
 ;;;    cmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
 ;;;    cmp16 #$1111, $2222     ; immediate, absolute
 ;;;    cmp16 $1111, #$2222     ; absolute, immediate
@@ -753,8 +754,9 @@ skip:
     .endif
 .endmacro
 
-;;; Signed compare 16-bit values - test N (BPL/BMI) for result
+;;; Signed compare 16-bit values - test N (BPL/BMI) for ordering
 ;;; (http://6502.org/tutorials/compare_beyond.html#6)
+;;; WARNING: C (for ordering) and Z (for equality) are NOT set per CMP.
 ;;;    scmp16 #$1111, #$2222    ; immediate, immediate (silly, but supported)
 ;;;    scmp16 #$1111, $2222     ; immediate, absolute
 ;;;    scmp16 $1111, #$2222     ; absolute, immediate
@@ -770,7 +772,8 @@ skip:
 skip:
 .endmacro
 
-;;; Equality compare 16-bit values - test Z (BEQ/BNE) for result
+;;; Equality compare 16-bit values - test Z (BEQ/BNE) for equality, or C (BCC/BCS) for ordering.
+;;; NOTE: Use cmp16 (smaller code) if Z is not needed.
 ;;;    ecmp16 #$1111, #$2222   ; immediate, immediate (silly, but supported)
 ;;;    ecmp16 #$1111, $2222    ; immediate, absolute
 ;;;    ecmp16 $1111, #$2222    ; absolute, immediate

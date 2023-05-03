@@ -8233,22 +8233,25 @@ END_PARAM_BLOCK
         ldax    #scratch::date_b
         jsr     ParseDatetime
 
-        ;; Compare member-wise (just year/month/day)
-        year_a  := scratch::parsed_a + ParsedDateTime::year
-        year_b  := scratch::parsed_b + ParsedDateTime::year
-        ecmp16  year_a, year_b
+        ;; Compare member-wise
+        ecmp16  scratch::parsed_a + ParsedDateTime::year, scratch::parsed_b + ParsedDateTime::year
         bne     done
 
-        month_a := scratch::parsed_a + ParsedDateTime::month
-        month_b := scratch::parsed_b + ParsedDateTime::month
-        lda     month_a
-        cmp     month_b
+        lda     scratch::parsed_a + ParsedDateTime::month
+        cmp     scratch::parsed_b + ParsedDateTime::month
         bne     done
 
-        day_a   := scratch::parsed_a + ParsedDateTime::day
-        day_b   := scratch::parsed_b + ParsedDateTime::day
-        lda     day_a
-        cmp     day_b
+        lda     scratch::parsed_a + ParsedDateTime::day
+        cmp     scratch::parsed_b + ParsedDateTime::day
+        bne     done
+
+        lda     scratch::parsed_a + ParsedDateTime::hour
+        cmp     scratch::parsed_b + ParsedDateTime::hour
+        bne     done
+
+        lda     scratch::parsed_a + ParsedDateTime::minute
+        cmp     scratch::parsed_b + ParsedDateTime::minute
+
 done:   rts
     END_IF
 

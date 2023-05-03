@@ -65,6 +65,7 @@
 
 * Open folder with new files. Use File > Get Info; verify dates after 1999 show correctly.
 * Open folder with new files. Use View > by Date; verify dates after 1999 show correctly.
+* Open folder with new files. Use View > by Date. Verify that two files modified on the same date are correctly ordered by time.
 
 * Open folder with zero files. Use View > by Name. Verify that there is no crash.
 * Open folder with one files. Use View > by Name. Verify that the entry paints correctly.

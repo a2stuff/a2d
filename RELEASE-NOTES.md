@@ -44,6 +44,7 @@ Project Page: https://github.com/a2stuff/a2d
 * View > as Small Icons added.
 * View > by Type sort order improved.
 * View > by Size sort order improved.
+* View > by Date sort order now includes times.
 * Special > Get Size command is now redundant with File > Get Info, so was removed.
 * Special > Make Alias command added - creates a Link file to the selected icon, placed in the LINKS/ folder.
 * Shortcuts > Add a Shortcut... defaults to currently selected file.
