@@ -8483,23 +8483,30 @@ append_date_strings:
         ldax    #datetime_for_conversion
         jsr     ParseDatetime
 
+        ecmp16  datetime_for_conversion, DATELO
+    IF_EQ
+        param_call ConcatenateDatePart, str_today
+
+    ELSE
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
         .assert DeskTopSettings::kDateOrderMDY = 0, error, "enum mismatch"
-    IF_EQ
+      IF_EQ
         ;; Month Day, Year
         jsr     AppendMonthString
         param_call ConcatenateDatePart, str_space
         jsr     AppendDayString
         param_call ConcatenateDatePart, str_comma
-    ELSE
+      ELSE
         ;; Day Month Year
         jsr     AppendDayString
         param_call ConcatenateDatePart, str_space
         jsr     AppendMonthString
         param_call ConcatenateDatePart, str_space
-    END_IF
+      END_IF
         jsr     AppendYearString
+    END_IF
+
 
         param_call ConcatenateDatePart, str_at
         ldax    #parsed_date

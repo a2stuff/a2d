@@ -167,3 +167,4 @@
 .define res_string_no_date "sin fecha"
 .define res_string_comma_infix ", "
 .define res_string_at_infix " en "
+.define res_string_today "Hoy"

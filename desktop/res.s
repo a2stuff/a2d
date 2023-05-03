@@ -511,6 +511,8 @@ str_comma:
         PASCAL_STRING res_string_comma_infix
 str_at:
         PASCAL_STRING res_string_at_infix
+str_today:
+        PASCAL_STRING res_string_today
 
 ;;; ============================================================
 ;;; Shortcuts ("run list")

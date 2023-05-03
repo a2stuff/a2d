@@ -167,3 +167,4 @@
 .define res_string_no_date "inget datum"
 .define res_string_comma_infix ", "
 .define res_string_at_infix " p} "
+.define res_string_today "Idag"
