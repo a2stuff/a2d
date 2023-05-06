@@ -261,9 +261,15 @@ end:
 ;;; Load A,X
 ;;;    ldax #$1234      ; immediate
 ;;;    ldax $1234       ; absolute
-.macro ldax arg
+;;;    ldax $1234,y     ; absolute,y
+.macro ldax arg, reg
+    .if .paramcount > 1
+        lda    arg, reg
+        ldx    arg, reg
+    .else
         _op_lo lda, {arg}
         _op_hi ldx, {arg}
+    .endif
 .endmacro
 
 ;;; Load A,Y

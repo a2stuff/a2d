@@ -8525,9 +8525,7 @@ append_date_strings:
         lda     month
         asl     a
         tay
-        lda     month_table+1,y
-        tax
-        lda     month_table,y
+        ldax    month_table,y
 
         jmp     ConcatenateDatePart
 .endproc ; AppendMonthString

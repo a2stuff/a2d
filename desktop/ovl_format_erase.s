@@ -444,9 +444,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 .proc GetDeviceNameForIndex
         asl     a
         tay
-        lda     device_name_table+1,y
-        tax
-        lda     device_name_table,y ; now A,X has pointer
+        ldax    device_name_table,y ; now A,X has pointer
         rts
 .endproc ; GetDeviceNameForIndex
 

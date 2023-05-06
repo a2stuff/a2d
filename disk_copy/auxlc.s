@@ -601,8 +601,7 @@ LD7AD:  lda     source_drive_index
         jsr     DrawDestinationDriveInfo
         jsr     DrawCopyFormatType
         ldx     dest_drive_index
-        lda     drive_unitnum_table,x
-        tay
+        ldy     drive_unitnum_table,x
 
         ldx     #0
         lda     #kAlertMsgInsertDestination ; X=0 means just show alert
@@ -1791,9 +1790,7 @@ tmp:    .byte   0
         lda     source_drive_index
         asl     a
         tay
-        lda     block_count_table+1,y
-        tax
-        lda     block_count_table,y
+        ldax    block_count_table,y
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, point_source
         param_call DrawString, str_blocks_to_transfer

@@ -3006,8 +3006,7 @@ draw_line_jmp:
 
 swap_start_end:
         ldx     #3              ; Swap start/end
-:       lda     pt1,x
-        tay
+:       ldy     pt1,x
         lda     pt2,x
         sta     pt1,x
         tya
