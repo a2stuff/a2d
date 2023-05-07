@@ -570,7 +570,7 @@ open_dir:
         and     #$7F
         sta     file_count
 
-        lda     #2
+        lda     #kAppleMenuFixedItems
         sta     apple_menu      ; "About..." and separator
 
         lda     read_dir_buffer + SubdirectoryHeader::entries_per_block
