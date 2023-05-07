@@ -6020,7 +6020,27 @@ err:    rts
         bpl     ret             ; yes, so skip
 
         ;; Try to find a matching volume or folder icon.
-        COPY_STRING src_path_buf, path_buf4
+        param_call FindIconForPath, src_path_buf
+        beq     ret
+
+        ;; Associate window with icon, and mark it open.
+        ldx     active_window_id
+        sta     window_to_dir_icon_table-1,x
+        jsr     MarkIconOpen
+
+ret:    rts
+.endproc ; OpenWindowForPath
+
+;;; ============================================================
+;;; Find an icon for a given path. May be volume in any window.
+;;;
+;;; Inputs: A,X has path
+;;; Output: A=icon id and Z=0 if found, Z=1 if no match
+;;; Trashes $06 and `path_buf4`
+
+.proc FindIconForPath
+        stax    $06
+        param_call CopyPtr1ToBuf, path_buf4
         param_call FindLastPathSegment, path_buf4
         cpy     path_buf4       ; was there a filename?
     IF_EQ
@@ -6034,20 +6054,13 @@ err:    rts
         ;; File - need to see if there's a window
         jsr     SplitPathBuf4
         param_call FindWindowForPath, path_buf4
-        beq     ret             ; no matching window
-        tay                     ; Y=window id
+        bne     :+
+        rts                     ; no matching window
+:       tay                     ; Y=window id
         ldax    #filename_buf   ; A,X=filename
     END_IF
-        jsr     FindIconByName
-        beq     ret             ; no matching icon
-
-        ;; Associate window with icon, and mark it open.
-        ldx     active_window_id
-        sta     window_to_dir_icon_table-1,x
-        jsr     MarkIconOpen
-
-ret:    rts
-.endproc ; OpenWindowForPath
+        jmp     FindIconByName
+.endproc ; FindIconForPath
 
 ;;; ============================================================
 
