@@ -953,9 +953,8 @@ interpreter:
         jcs     SetCursorPointer ; nope, just ignore
 
         ;; Construct absolute path
-        MLI_CALL GET_PREFIX, get_prefix_params ; into `INVOKER_INTERPRETER`
         ldax    ptr1
-        jsr     AppendToInvokerInterpreter
+        jsr     GetPrefixAndAppendToInvokerInterpreter
         FALL_THROUGH_TO launch
 
         ;; --------------------------------------------------
@@ -996,13 +995,13 @@ binary:
 
 invoke_table:
         INVOKE_TABLE_ENTRY      fallback, 0                    ; generic
-        INVOKE_TABLE_ENTRY      InvokeDeskAcc, str_preview_txt ; text
+        INVOKE_TABLE_ENTRY      InvokePreview, str_preview_txt ; text
         INVOKE_TABLE_ENTRY      binary, 0                      ; binary
-        INVOKE_TABLE_ENTRY      InvokeDeskAcc, str_preview_fot ; graphics
+        INVOKE_TABLE_ENTRY      InvokePreview, str_preview_fot ; graphics
         INVOKE_TABLE_ENTRY      fallback, 0                    ; animation
-        INVOKE_TABLE_ENTRY      InvokeDeskAcc, str_preview_mus ; music
+        INVOKE_TABLE_ENTRY      InvokePreview, str_preview_mus ; music
         INVOKE_TABLE_ENTRY      fallback, 0                    ; audio
-        INVOKE_TABLE_ENTRY      InvokeDeskAcc, str_preview_fnt ; font
+        INVOKE_TABLE_ENTRY      InvokePreview, str_preview_fnt ; font
         INVOKE_TABLE_ENTRY      fallback, 0                    ; relocatable
         INVOKE_TABLE_ENTRY      fallback, 0                    ; command
         INVOKE_TABLE_ENTRY      OpenFolder, 0                  ; folder
@@ -1013,7 +1012,7 @@ invoke_table:
         INVOKE_TABLE_ENTRY      interpreter, str_unshrink      ; archive
         INVOKE_TABLE_ENTRY      interpreter, str_binscii       ; encoded
         INVOKE_TABLE_ENTRY      InvokeLink, 0                  ; link
-        INVOKE_TABLE_ENTRY      InvokeDeskAccWithSelection, 0  ; desk_accessory
+        INVOKE_TABLE_ENTRY      InvokeDeskAccByPath, 0         ; desk_accessory
         INVOKE_TABLE_ENTRY      basic, 0                       ; basic
         INVOKE_TABLE_ENTRY      interpreter, str_intbasic      ; intbasic
         INVOKE_TABLE_ENTRY      fallback, 0                    ; variables
@@ -1073,10 +1072,8 @@ found_slash:
 CheckBasisSystem        := CheckBasixSystemImpl::basis
 
 .proc CheckBasicSystem
-        MLI_CALL GET_PREFIX, get_prefix_params
-
         ldax    #str_extras_basic
-        jsr     AppendToInvokerInterpreter
+        jsr     GetPrefixAndAppendToInvokerInterpreter
         param_call GetFileInfo, INVOKER_INTERPRETER
         jne     CheckBasixSystemImpl::basic ; nope, look relative to launch path
         rts
@@ -1085,9 +1082,27 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
 ;;; --------------------------------------------------
 
 ;;; Input: A,X = relative path to append
+;;; Output: `INVOKER_INTERPRETER` has absolute path
+.proc GetPrefixAndAppendToInvokerInterpreter
+        pha
+        txa
+        pha
+
+        MLI_CALL GET_PREFIX, get_prefix_params
+
+        pla
+        tax
+        pla
+        FALL_THROUGH_TO AppendToInvokerInterpreter
+.endproc ; GetPrefixAndAppendToInvokerInterpreter
+
+;;; --------------------------------------------------
+
+;;; Input: A,X = relative path to append
 ;;; Output: `INVOKER_INTERPRETER` updated
-;;; Trashes: $06
 .proc AppendToInvokerInterpreter
+        jsr     PushPointers
+
         ptr1 := $06
         stax    ptr1
 
@@ -1104,6 +1119,7 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         bne     :-
         stx     INVOKER_INTERPRETER
 
+        jsr     PopPointers     ; do not tail-call optimize!
         rts
 .endproc ; AppendToInvokerInterpreter
 
@@ -1630,7 +1646,7 @@ secondary:
 ;;; ============================================================
 
 .proc CmdAboutThisApple
-        param_jump InvokeDeskAcc, str_about_this_apple
+        param_jump InvokeDeskAccWithIcon, $FF, str_about_this_apple
 .endproc ; CmdAboutThisApple
 
 ;;; ============================================================
@@ -1691,10 +1707,26 @@ skip:   iny
 CmdDeskAcc      := CmdDeskaccImpl::start
 
 ;;; ============================================================
-;;; Invoke a DA, with path set to first file selection
-;;; Input: `src_path_buf` has DA path
+;;; Invoke a Preview DA
+;;; Inputs: A,X = relative path to DA; `src_path_buf` is file to preview
 
-.proc InvokeDeskAccWithSelection
+.proc InvokePreview
+        pha
+        txa
+        pha
+        param_call IconToAnimate, src_path_buf
+        tay
+        pla
+        tax
+        pla
+        jmp     InvokeDeskAccWithIcon
+.endproc ; InvokePreview
+
+;;; ============================================================
+;;; Invoke a DA, with path set to first file selection
+;;; Input: `src_path_buf` has DA absolute path
+
+.proc InvokeDeskAccByPath
         ;; * Can't use `dst_path_buf` as it is within DA_IO_BUFFER
         ;; * Can't use `src_path_buf` as it holds file selection
         COPY_STRING src_path_buf, tmp_path_buf ; Use this to launch the DA
@@ -1711,24 +1743,36 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         jne     ShowAlert
         param_call CopyToSrcPath, path_buf3
 :
+        param_call IconToAnimate, tmp_path_buf
+        tay
         ldax    #tmp_path_buf
-        FALL_THROUGH_TO InvokeDeskAcc
-.endproc ; InvokeDeskAccWithSelection
+        FALL_THROUGH_TO InvokeDeskAccWithIcon
+.endproc ; InvokeDeskAccByPath
 
 ;;; ============================================================
 ;;; Invoke Desk Accessory
-;;; Input: A,X = address of pathname buffer
+;;; Input: A,X = DA pathname (relative is OK)
+;;;        Y = icon id to animate ($FF for none)
 
-.proc InvokeDeskAcc
+.proc InvokeDeskAccWithIcon
         stax    open_pathname
+        sty     icon_param
+
+        tya
+        pha                     ; A = icon id
+    IF_NC
+        ldx     #$FF            ; desktop
+        lda     icon_param
+        jsr     AnimateWindowOpen
+    END_IF
 
         ;; Load the DA
-@retry: MLI_CALL OPEN, open_params
+retry:  MLI_CALL OPEN, open_params
         beq     :+
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
         cmp     #kAlertResultOK
-        beq     @retry          ; ok, so try again
+        beq     retry           ; ok, so try again
         rts                     ; cancel, so fail
 :
         lda     open_ref_num
@@ -1762,6 +1806,15 @@ main:   copy16  DAHeader__main_length, read_request_count
         ;; Restore state
         jsr     InitSetDesktopPort ; DA's port destroyed, set something real as current
         jsr     ShowClockForceUpdate
+        jsr     ClearUpdates
+
+        pla                     ; A = icon id
+    IF_NC
+        ldx     #$FF            ; desktop
+        lda     icon_param
+        jsr     AnimateWindowClose
+    END_IF
+
         jmp     SetCursorPointer ; after invoking DA
 
 .params DAHeader
@@ -1785,7 +1838,86 @@ main_length:    .word   0
         DEFINE_CLOSE_PARAMS close_params
         close_ref_num := close_params::ref_num
 
-.endproc ; InvokeDeskAcc
+.endproc ; InvokeDeskAccWithIcon
+
+;;; ============================================================
+
+;;; Make a path absolute using current prefix. No-op if already absolute.
+;;; Inputs: A,X = path
+;;; Outputs: $06 is path, which is updated
+;;; Trashes: `INVOKER_INTERPRETER`
+.proc MakePathAbsolute
+        ptr := $06
+        stax    ptr
+
+        ;; Already absolute?
+        ldy     #1
+        lda     (ptr),y
+        cmp     #'/'
+        beq     ret
+
+        ;; Get prefix and append path
+        ldax    ptr
+        jsr     LaunchFileWithPath::GetPrefixAndAppendToInvokerInterpreter
+
+        ;; Copy back to original buffer
+        ldy     INVOKER_INTERPRETER
+:       lda     INVOKER_INTERPRETER,y
+        sta     (ptr),y
+        dey
+        bpl     :-
+
+ret:    rts
+.endproc ; MakePathAbsolute
+
+;;; ============================================================
+
+;;; Inputs: A,X = absolute path
+;;; Outputs: A = icon to animate (path or volume)
+
+.proc IconToAnimate
+        jsr     PushPointers
+
+        ptr := $06
+        stax    ptr
+
+        ;; Is the file represented by an icon?
+        jsr     FindIconForPath
+    IF_ZERO
+        ;; No, just use volume path
+
+        ;; Save length
+        ldy     #0
+        lda     (ptr),y
+        pha
+
+        ;; Search for second '/'
+        ldy     #2
+:       lda     (ptr),y
+        cmp     #'/'
+        beq     :+
+        iny
+        bne     :-              ; always
+:
+        ;; Overwrite length
+        dey
+        tya
+        ldy     #0
+        sta     (ptr),y
+
+        param_call_indirect FindIconForPath, ptr
+        tax
+
+        ;; Restore length
+        pla
+        ldy     #0
+        sta     (ptr),y
+
+        txa
+    END_IF
+        jsr     PopPointers     ; do not tail-call optimize!
+        rts
+.endproc ; IconToAnimate
 
 ;;; ============================================================
 
@@ -9622,6 +9754,14 @@ open:   ldy     #$00
         win_rect := rect_table + kMaxAnimationStep * .sizeof(MGTK::Rect)
         icon_rect := rect_table
 
+    IF_NEG
+        ;; --------------------------------------------------
+        ;; Use desktop rect
+        copy16  #0, win_rect + MGTK::Rect::x1
+        copy16  #kMenuBarHeight, win_rect + MGTK::Rect::y1
+        copy16  #kScreenWidth-1, win_rect + MGTK::Rect::x2
+        copy16  #kScreenHeight-1, win_rect + MGTK::Rect::y2
+    ELSE
         ;; --------------------------------------------------
         ;; Get window rect - used as last rect
 
@@ -9641,6 +9781,7 @@ open:   ldy     #$00
         sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, win_rect + MGTK::Rect::y2
         add16   win_rect + MGTK::Rect::x1, win_rect + MGTK::Rect::x2, win_rect + MGTK::Rect::x2
         add16   win_rect + MGTK::Rect::y1, win_rect + MGTK::Rect::y2, win_rect + MGTK::Rect::y2
+    END_IF
 
         ;; --------------------------------------------------
         ;; Get icon position - used as first rect
