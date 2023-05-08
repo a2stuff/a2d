@@ -2502,17 +2502,17 @@ ret:    rts
 ;;; Find an icon by name in the given window.
 ;;; Inputs: Y = window id, A,X = name
 ;;; Outputs: Z=0, A = icon id (or Z=1, A=0 if not found)
-;;; NOTE: Modifies `cached_window_id`
 
 .proc FindIconByName
         ptr_icon_name := $06
         ptr_name := $08
 
-        stax    tmp             ; name
-
         jsr     PushPointers
+        stax    ptr_name
 
-        copy16  tmp, ptr_name
+        lda     cached_window_id
+        pha
+
         tya
         jsr     LoadWindowEntryTable
 
@@ -2540,14 +2540,15 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         lda     cached_window_entry_list,x
         sta     icon
 
-done:   jsr     PopPointers
+done:
+        pla
+        jsr     LoadWindowEntryTable
+        jsr     PopPointers
         lda     icon
         rts
 
 next:   inc     icon
         bne     loop
-
-tmp:    .addr   0
 .endproc ; FindIconByName
 
 ;;; ============================================================
@@ -2580,7 +2581,6 @@ done:   rts
 
 ;;; Outputs: `drag_drop_params::result` updated if needed
 ;;; Assert: `MaybeStashDropTargetName` was previously called
-;;; NOTE: Preserves `cached_window_id`
 ;;; Trashes $06
 
 .proc MaybeUpdateDropTargetFromName
@@ -2589,20 +2589,9 @@ done:   rts
         beq     done            ; not stashed
 
         ;; Try to find the icon by name.
-        lda     cached_window_id
-        sta     prev_cached_window_id
-
         ldy     active_window_id
-        ldax    #stashed_name
-        jsr     FindIconByName  ; modifies `cached_window_id`
-        pha
-
-        prev_cached_window_id := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     LoadWindowEntryTable ; restore previous state
-
-        pla                          ; A = `FindIconByName` result
-        beq     done                 ; no match
+        param_call FindIconByName, stashed_name
+        beq     done            ; no match
 
         ;; Update drop target with new icon id.
         sta     drag_drop_params::result
@@ -5467,14 +5456,18 @@ last_pos:
         ldx     cached_window_id
         lda     window_to_dir_icon_table-1,x
         bmi     :+              ; $FF = dir icon freed
-
         sta     icon
-
-        ;; Animate closing into dir (vol/folder) icon
-        ldx     cached_window_id
-        lda     window_to_dir_icon_table-1,x
-        jsr     AnimateWindowClose ; A = icon id, X = window id
 :
+
+        ;; --------------------------------------------------
+        ;; Animate closing
+
+        lda     cached_window_id
+        jsr     GetWindowPath
+        jsr     IconToAnimate
+        ldx     cached_window_id
+        jsr     AnimateWindowClose ; A = icon id, X = window id
+
         ;; --------------------------------------------------
         ;; Tidy up after closing window
 
@@ -7244,7 +7237,6 @@ size:   .word   0               ; size of a window's list
         ;; Update used/free table
 
         lda     icon_param      ; set to $FF if opening via path
-        pha
     IF_NC
         ;; If a windowed icon, source from that
         jsr     GetIconWindow
@@ -7304,13 +7296,14 @@ size:   .word   0               ; size of a window's list
     END_IF
 
         ;; --------------------------------------------------
-        ;; Animate the window being opened (if needed)
+        ;; Animate the window being opened
 
-        pla                    ; A = source icon ($FF if from path)
-        bmi     :+             ; TODO: Find some plausible source icon
+        lda     cached_window_id
+        jsr     GetWindowPath
+        jsr     IconToAnimate
         ldx     cached_window_id
         jsr     AnimateWindowOpen
-:
+
         rts
 .endproc ; PrepareNewWindow
 
