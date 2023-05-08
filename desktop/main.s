@@ -1756,13 +1756,11 @@ CmdDeskAcc      := CmdDeskaccImpl::start
 
 .proc InvokeDeskAccWithIcon
         stax    open_pathname
-        sty     icon_param
 
         tya
         pha                     ; A = icon id
     IF_NC
         ldx     #$FF            ; desktop
-        lda     icon_param
         jsr     AnimateWindowOpen
     END_IF
 
@@ -1811,7 +1809,6 @@ main:   copy16  DAHeader__main_length, read_request_count
         pla                     ; A = icon id
     IF_NC
         ldx     #$FF            ; desktop
-        lda     icon_param
         jsr     AnimateWindowClose
     END_IF
 
