@@ -1036,38 +1036,27 @@ basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         sta     str_basix_system + kBSOffset
 
         ;; Start off with `interp_path` = `launch_path`
-        ldx     launch_path
-        stx     path_length
-:       copy    launch_path,x, interp_path,x
-        dex
-        bpl     :-
+        COPY_STRING launch_path, interp_path
 
         ;; Pop off a path segment.
 pop_segment:
-        path_length := *+1
-        ldx     #SELF_MODIFIED_BYTE
-:       lda     interp_path,x
-        cmp     #'/'
-        beq     found_slash
-        dex
-        bne     :-
-
-no_bs:  copy    #0, interp_path ; null out the path
-        return  #$FF            ; non-zero is failure
-
-found_slash:
-        cpx     #1
-        beq     no_bs
-        stx     interp_path
-        dex
-        stx     path_length
+        param_call RemovePathSegment, interp_path
+        cmp     #2
+        bcc     no_bs
+        inc     interp_path     ; restore trailing '/'
 
         ;; Append BASI?.SYSTEM to path and check for file.
         param_call AppendToInvokerInterpreter, str_basix_system
         param_call GetFileInfo, interp_path
-        bne     pop_segment
+        beq     ret             ; zero is success
 
-        rts                     ; zero is success
+        param_call RemovePathSegment, interp_path
+        bne     pop_segment     ; always
+
+no_bs:  copy    #0, interp_path ; null out the path
+        lda     #$FF            ; non-zero is failure
+
+ret:    rts
 .endproc ; CheckBasixSystemImpl
 CheckBasisSystem        := CheckBasixSystemImpl::basis
 
@@ -1488,26 +1477,11 @@ entry_num:
 
         ;; Strip segment off path at `entry_original_path`
         ;; e.g. "/VOL/MOUSEPAINT/MP.SYSTEM" -> "/VOL/MOUSEPAINT"
-
-        ldy     entry_original_path
-:       lda     entry_original_path,y
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-:       dey
-        sty     entry_original_path
+        param_call RemovePathSegment, entry_original_path
 
         ;; Strip segment off path at `entry_ramcard_path`
         ;; e.g. "/RAM/MOUSEPAINT/MP.SYSTEM" -> "/RAM/MOUSEPAINT"
-        ldy     entry_ramcard_path
-:       lda     entry_ramcard_path,y
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-:       dey
-        sty     entry_ramcard_path
+        param_call RemovePathSegment, entry_ramcard_path
 
         ;; Further prepare paths for copy
         copy16  #entry_original_path, $06
@@ -1888,20 +1862,7 @@ ret:    rts
         lda     (ptr),y
         pha
 
-        ;; Search for second '/'
-        ldy     #2
-:       lda     (ptr),y
-        cmp     #'/'
-        beq     :+
-        iny
-        bne     :-              ; always
-:
-        ;; Overwrite length
-        dey
-        tya
-        ldy     #0
-        sta     (ptr),y
-
+        param_call_indirect MakeVolumePath, ptr
         param_call_indirect FindIconForPath, ptr
         tax
 
@@ -1915,6 +1876,42 @@ ret:    rts
         jsr     PopPointers     ; do not tail-call optimize!
         rts
 .endproc ; IconToAnimate
+
+;;; ============================================================
+
+;;; Reduce an absolute path to just the volume path. If already a
+;;; volume path, the lenght is not changed.
+;;; e.g. "/VOL/DIR/FILE" to "/VOL"
+;;; Inputs: A,X = vol
+;;; Note: length is modified, but buffer otherwise unchanged
+
+.proc MakeVolumePath
+        jsr     PushPointers
+
+        ptr := $06
+        stax    ptr
+
+        ldy     #0
+        lda     (ptr),y
+        sta     pathlen
+        iny                     ; start at 2nd character
+:
+        iny
+        pathlen := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        beq     :+
+        lda     (ptr),y
+        cmp     #'/'
+        bne     :-
+        dey
+:
+        tya
+        ldy     #0
+        sta     (ptr),y
+
+        jsr     PopPointers     ; do not tail-call optimize!
+        rts
+.endproc ; MakeVolumePath
 
 ;;; ============================================================
 
@@ -5871,16 +5868,7 @@ same_or_desktop:
         beq     ignore
 
         ;; Icons moved on desktop - update and redraw
-        ldx     #0
-:       txa
-        pha
-        copy    selected_icon_list,x, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param
-        pla
-        tax
-        inx
-        cpx     selected_icon_count
-        bne     :-
+        jsr     RedrawSelectedIcons
 
 ignore: rts
 
@@ -6329,16 +6317,7 @@ header_and_offset_flag:
         lda     selected_window_id
     IF_ZERO
         ;; Desktop
-        ldx     #0
-:       txa
-        pha
-        copy    selected_icon_list,x, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
-        pla
-        tax
-        inx
-        cpx     selected_icon_count
-        bne     :-
+        jsr     RedrawSelectedIcons
     ELSE
         ;; Windowed - use a clipped port for the window
         cmp     active_window_id ; in the active window?
@@ -6378,6 +6357,26 @@ skip:
         sta     selected_window_id
         rts
 .endproc ; ClearSelection
+
+;;; ============================================================
+
+;;; Note: This uses IconTK::DrawIcon which will clip icons against
+;;; overlapping windows; if the selection is in the top-most window
+;;; then more optimized drawing should be used.
+
+.proc RedrawSelectedIcons
+        ldx     #0
+:       txa
+        pha
+        copy    selected_icon_list,x, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param
+        pla
+        tax
+        inx
+        cpx     selected_icon_count
+        bne     :-
+        rts
+.endproc ; RedrawSelectedIcons
 
 ;;; ============================================================
 
@@ -6491,32 +6490,19 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
         stax    ptr
         jsr     PushPointers    ; save $06 = path
 
-        ;; Strip to vol name - either end of string or next slash
-        ldy     #0              ; length offset
-        lda     (ptr),y
-        sta     pathlen
-        iny
-:       iny                     ; start at 2nd character
-        pathlen := *+1
-        cpy     #SELF_MODIFIED_BYTE
-        beq     :+
-        lda     (ptr),y
-        cmp     #'/'
-        bne     :-
-        dey
-:
-
-        ;; Temporarily change path length
-        tya
+        ;; Save original length
         ldy     #0
-        sta     (ptr),y
+        lda     (ptr),y
+        pha
+
+        param_call_indirect MakeVolumePath, ptr
 
         ;; Update `found_windows_count` and `found_windows_list`
         param_call_indirect FindWindowsForPrefix, ptr
 
         ;; Restore path length
+        pla
         ldy     #0
-        lda     pathlen
         sta     (ptr),y
 
         ;; Determine if there are windows to update
@@ -6973,15 +6959,7 @@ DoClose:
         copy    src_path_buf, saved_length
 
         ;; Strip to vol name - either end of string or next slash
-        ldx     #1
-:       inx                     ; start at 2nd character
-        cpx     src_path_buf
-        beq     :+
-        lda     src_path_buf,x
-        cmp     #'/'
-        bne     :-
-        dex
-:       stx     src_path_buf
+        param_call MakeVolumePath, src_path_buf
 
         ;; Get volume information
         jsr     GetSrcFileInfo
@@ -12098,15 +12076,7 @@ got_exist_size:
 retry:  copy    dst_path_buf, saved_length
 
         ;; Strip to vol name - either end of string or next slash
-        ldy     #1
-:       iny                     ; start at 2nd character
-        cpy     dst_path_buf
-        beq     :+
-        lda     dst_path_buf,y
-        cmp     #'/'
-        bne     :-
-        dey
-:       sty     dst_path_buf
+        param_call MakeVolumePath, dst_path_buf
 
         ;; Total blocks/used blocks on destination volume
         jsr     GetDstFileInfo
@@ -13032,23 +13002,40 @@ map:    .byte   FileEntry::access
 ;;; Remove segment from path at `src_path_buf`
 
 .proc RemoveSrcPathSegment
-        path := src_path_buf
+        ldax    #src_path_buf
+        FALL_THROUGH_TO RemovePathSegment
+.endproc ; RemoveSrcPathSegment
 
-        ldx     path            ; length
-        beq     ret
+;;; ============================================================
+;;; Remove segment from path at A,X
+;;; Inputs: A,X = path
+;;; Output: A = length
 
-:       lda     path,x
+.proc RemovePathSegment
+        jsr     PushPointers
+
+        ptr := $06
+        stax    ptr
+
+        ldy     #0
+        lda     (ptr),y         ; length
+        beq     finish
+
+        tay
+:       lda     (ptr),y
         cmp     #'/'
         beq     found
-        dex
+        dey
         bne     :-
-        stx     path
+        iny
+
+found:  dey
+        tya
+        ldy     #0
+        sta     (ptr),y
+
+finish: jsr     PopPointers     ; do not tail-call optimize!
         rts
-
-found:  dex
-        stx     path
-
-ret:    rts
 .endproc ; RemoveSrcPathSegment
 
 ;;; ============================================================
@@ -13063,23 +13050,7 @@ ret:    rts
 ;;; Remove segment from path at `dst_path_buf`
 
 .proc RemoveDstPathSegment
-        path := dst_path_buf
-
-        ldx     path            ; length
-        beq     ret
-
-:       lda     path,x
-        cmp     #'/'
-        beq     found
-        dex
-        bne     :-
-        stx     path
-        rts
-
-found:  dex
-        stx     path
-
-ret:    rts
+        param_jump RemovePathSegment, dst_path_buf
 .endproc ; RemoveDstPathSegment
 
 ;;; ============================================================
