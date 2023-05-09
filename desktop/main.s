@@ -906,6 +906,9 @@ tmp_path_buf:
 .proc LaunchFileWithPath
         jsr     SetCursorWatch ; before invoking
 
+        ;; Easiest to assume absolute path later.
+        param_call MakePathAbsolute, src_path_buf
+
         ;; Get the file info to determine type.
         jsr     GetSrcFileInfo
         beq     :+
@@ -960,6 +963,10 @@ interpreter:
         ;; --------------------------------------------------
         ;; Generic launch
 launch:
+        param_call IconToAnimate, src_path_buf
+        ldx     #$FF            ; desktop
+        jsr     AnimateWindowOpen
+
         param_call UpcaseString, INVOKER_PREFIX
         param_call UpcaseString, INVOKER_INTERPRETER
         jsr     SplitInvokerPath

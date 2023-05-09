@@ -69,6 +69,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Default window view style to parent window's view style.
 * Show open/close animation for windows without visible folder icons.
 * Show open/close animation for desk accessories and previews.
+* Show open animation when launching external applications.
 
 #### Disks & Files
 
