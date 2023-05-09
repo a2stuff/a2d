@@ -15395,38 +15395,75 @@ window_entry_table:             .res    ::kMaxIconCount, 0
 ;;; available, mark it and return index+1.
 
 .proc AllocateIcon
+        ;; Search for first byte with a set (available) bit
         ldx     #0
 loop:   lda     free_icon_map,x
-        beq     :+
+        bne     :+
         inx
-        cpx     #kMaxIconCount  ; allow up to the maximum
-        bne     loop
-        rts
+        bne     loop            ; always
+:
+        ;; X has byte offset - turn into index
+        pha                     ; A = table byte
+        txa                     ; X = offset
+        asl                     ; *= 8
+        asl
+        asl
+        tax                     ; X = index
 
-:       inx                     ; 0-based to 1-based
-        txa
+        ;; Add in the bit offset
+        pla                     ; A = table byte
         dex
-        tay
-        lda     #1
-        sta     free_icon_map,x
-        tya
+:       inx
+        ror
+        bcc     :-              ; clear = in use
+        txa
 
+        ;; Mark it used
+        pha
+        jsr     IconMapIndexToOffsetMask
+        eor     #$FF
+        and     free_icon_map,x ; clear bit to mark used
+        sta     free_icon_map,x
+
+        pla
         rts
 .endproc ; AllocateIcon
 
 ;;; Mark the specified icon as free
 
 .proc FreeIcon
-        tay
-        dey                     ; 1-based to 0-based
-        lda     #0
-        sta     free_icon_map,y
-
+        jsr     IconMapIndexToOffsetMask
+        ora     free_icon_map,x ; set bit to mark free
+        sta     free_icon_map,x
         rts
 .endproc ; FreeIcon
 
-;;; 0-based (0th entry represents icon_id=1)
-free_icon_map:  .res    ::kMaxIconCount, 0
+;;; Input: A = icon num (1...127)
+;;; Output: X = index in `free_icon_map`, A = bit mask (e.g. %0001000)
+.proc IconMapIndexToOffsetMask
+        pha                     ; A = index
+        and     #7
+        tax
+        ldy     table,x         ; Y = mask
+
+        pla                     ; A = index
+        lsr                     ; /= 8
+        lsr
+        lsr
+        tax                     ; X = offset
+
+        tya                     ; A = mask
+        rts
+
+table:  .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
+
+.endproc ; IconMapIndexToOffsetMask
+
+;;; Each byte represents 8 icons. id 0 is unused.
+free_icon_map:
+        .byte   $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+        .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+        .assert * - free_icon_map = (::kMaxIconCount + 7)/8, error, "table size"
 
 ;;; ============================================================
 ;;; Library Routines
