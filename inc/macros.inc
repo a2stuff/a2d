@@ -265,7 +265,7 @@ end:
 .macro ldax arg, reg
     .if .paramcount > 1
         lda    arg, reg
-        ldx    arg, reg
+        ldx    arg+1, reg
     .else
         _op_lo lda, {arg}
         _op_hi ldx, {arg}
