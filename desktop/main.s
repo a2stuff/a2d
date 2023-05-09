@@ -3197,12 +3197,8 @@ CmdEraseDisk := CmdFormatEraseDiskImpl::erase
         bne     fail            ; more/less than one selected
         lda     selected_icon_list
 
-        ;; Look up device index by icon number
-        ldx     #kMaxVolumes-1
-:       cmp     device_to_icon_map,x
+        jsr     IconToDeviceIndex
         beq     found
-        dex
-        bpl     :-
 
 fail:   lda     #0
         rts
@@ -3211,6 +3207,21 @@ found:  lda     DEVLST,x
         and     #UNIT_NUM_MASK
         rts
 .endproc ; GetSelectedUnitNum
+
+;;; ============================================================
+
+;;; Input: A = icon id
+;;; Output: if found, Z=1 and X = index in DEVLST; Z=0 otherwise
+
+.proc IconToDeviceIndex
+        ldx     #kMaxVolumes-1
+:       cmp     device_to_icon_map,x
+        beq     ret
+        dex
+        bpl     :-
+
+ret:    rts
+.endproc ; IconToDeviceIndex
 
 ;;; ============================================================
 
@@ -4403,14 +4414,11 @@ by_unit_number:
 
         ;; Map icon number to index in DEVLST
         lda     drive_to_refresh
-        ldy     #kMaxVolumes-1
-:       cmp     device_to_icon_map,y
+        jsr     IconToDeviceIndex
         beq     :+
-        dey
-        bpl     :-
         rts                         ; Not found - not a volume icon
 
-:       sty     devlst_index
+:       stx     devlst_index
         jmp     common
 
 ;;; --------------------------------------------------
@@ -10527,13 +10535,10 @@ ret:    rts
         dib_buffer := ::IO_BUFFER
 
         ;; Look up device index by icon number
-        ldy     #kMaxVolumes-1
-:       cmp     device_to_icon_map,y
+        jsr     IconToDeviceIndex
         beq     :+
-        dey
-        bpl     :-
         rts
-:       lda     DEVLST,y        ; A = unit_number
+:       lda     DEVLST,x        ; A = unit_number
 
         ;; Compute SmartPort dispatch address
         jsr     FindSmartportDispatchAddress
@@ -10665,14 +10670,10 @@ vol_icon2:
         lda     selected_icon_list,x
 
         ;; Map icon to unit number
-        ldy     #kMaxVolumes-1
+        jsr     IconToDeviceIndex
+        bne     common2
 
-:       cmp     device_to_icon_map,y
-        beq     :+
-        dey
-        bpl     :-
-        jmp     common2
-:       lda     DEVLST,y
+        lda     DEVLST,x
         sta     getinfo_block_params::unit_num
         MLI_CALL READ_BLOCK, getinfo_block_params
         bne     common2
