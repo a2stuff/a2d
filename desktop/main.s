@@ -6388,30 +6388,21 @@ skip:
 ;;; ============================================================
 
 .proc CachedIconsScreenToWindow
-        jsr     PushPointers
-        jsr     PrepActiveWindowScreenMapping
-
-        copy    #0, index
-        index := *+1
-loop:   lda     #SELF_MODIFIED_BYTE
-        cmp     cached_window_entry_count
-        beq     done
-
-        tax
-        lda     cached_window_entry_list,x
-        jsr     GetIconEntry
-        jsr     IconPtrScreenToWindow
-
-        inc     index
-        jmp     loop
-
-done:   jsr     PopPointers     ; do not tail-call optimize!
-        rts
+        param_jump CachedIconsXToY, IconPtrScreenToWindow
 .endproc ; CachedIconsScreenToWindow
 
 ;;; ============================================================
 
 .proc CachedIconsWindowToScreen
+        param_jump CachedIconsXToY, IconPtrWindowToScreen
+.endproc ; CachedIconsWindowToScreen
+
+;;; ============================================================
+
+;;; Inputs: A,X = proc to call for each icon
+.proc CachedIconsXToY
+        stax    proc
+
         jsr     PushPointers
         jsr     PrepActiveWindowScreenMapping
 
@@ -6424,14 +6415,15 @@ loop:   lda     #SELF_MODIFIED_BYTE
         tax
         lda     cached_window_entry_list,x
         jsr     GetIconEntry
-        jsr     IconPtrWindowToScreen
+        proc := *+1
+        jsr     SELF_MODIFIED
 
         inc     index
         jmp     loop
 
 done:   jsr     PopPointers     ; do not tail-call optimize!
         rts
-.endproc ; CachedIconsWindowToScreen
+.endproc ; CachedIconsXToY
 
 ;;; ============================================================
 ;;; Adjust grafport for header.
