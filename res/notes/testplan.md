@@ -775,6 +775,8 @@ Repeat for every desk accessory that runs in a window.
 * Open the Control Panel DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
 * Open the Control Panel DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
 
+* Configure a system with a color display. Open the Control Panel DA. Check "RGB Color" if needed to ensure the display is in color. Select one of the vertically striped patterns that appears as a solid color. Click the preview area. Verify that the color matches the preview. Move the DA window. Verify that colors still match. Repeat with other patterns.
+
 ## Options
 
 * Open the Options DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.

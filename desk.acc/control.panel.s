@@ -1187,19 +1187,15 @@ arrow_num:
 ;;; Assert: called with GrafPort already selected
 .proc DrawPreview
 
-        ;; Shift the pattern so that when interpreted as NTSC color it
-        ;; displays the same as it would when applied to the desktop.
-        kWindowBorderOffset = 3
-
         ldx     #7
 :       copy    pattern,x, rotated_pattern,x
         dex
         bpl     :-
 
-        add16   winfo::viewloc, preview_rect, offset
-        lda     offset
+        ;; Offset c/o window position (mod 8 so 8-bit math okay)
+        lda     winfo::viewloc::xcoord
         clc
-        adc     #kWindowBorderOffset
+        adc     #7
         and     #$07            ; pattern is 8 bits wide
         tay
 
@@ -1222,8 +1218,6 @@ loop:
         MGTK_CALL MGTK::PaintRect, preview_rect
 
         rts
-
-offset: .word   0
 
 rotated_pattern:
         .res    8
