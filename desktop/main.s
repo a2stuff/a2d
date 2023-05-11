@@ -1739,7 +1739,7 @@ CmdDeskAcc      := CmdDeskaccImpl::start
         stax    open_pathname
 
         tya
-        pha                     ; A = icon id
+        sta     icon            ; can't use stack, as DAs can modify
     IF_NC
         ldx     #$FF            ; desktop
         jsr     AnimateWindowOpen
@@ -1787,7 +1787,8 @@ main:   copy16  DAHeader__main_length, read_request_count
         jsr     ShowClockForceUpdate
         jsr     ClearUpdates
 
-        pla                     ; A = icon id
+        icon := *+1
+        lda     #SELF_MODIFIED_BYTE
     IF_NC
         ldx     #$FF            ; desktop
         jsr     AnimateWindowClose
