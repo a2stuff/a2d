@@ -972,6 +972,11 @@ With Sci.Calc:
 
 * Configure Virtual II with two Omnidisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Disk Copy.... Select the Omnidisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Do you want to erase ...?" confirmation prompt is shown.
 
+* Launch DeskTop. Special > Disk Copy.... Verify that the OK button is disabled. Select an item in the list with the keyboard. Verify that the OK button enables. Click in the blank space in the list below the items. Verify that the OK button disables. Click an item in the list. Verify that the OK button enables. Click OK to specify a source disk. Verify that the OK button disables. Repeat the above cases when selecting the destination disk.
+* Launch DeskTop. Special > Disk Copy.... Select a source disk. Verify that the OK button enables. Click Read Drives. Verify that the OK button disables. Select a source disk then click OK. Click OK. Select a destination disk. Click Read Drives. Verify that the OK button disables.
+* Launch DeskTop. Special > Disk Copy.... Select a source disk and a destination disk. Cancel the copy. Verify that the OK button is disabled.
+* Launch DeskTop. Special > Disk Copy.... Select a source disk and a destination disk. Allow the copy to complete. Verify that the OK button is disabled.
+
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.

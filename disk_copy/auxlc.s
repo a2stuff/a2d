@@ -473,6 +473,7 @@ InitDialog:
         sta     listbox_enabled_flag
         lda     #$FF
         sta     current_drive_selection
+        copy    #$80, ok_button_rec::state
         lda     #$81
         sta     LD44D
         copy    #0, disablemenu_params::disable
@@ -524,6 +525,7 @@ LD687:  lda     current_drive_selection
         jsr     EnumerateDestinationDevices
         copy    #$80, selection_mode
         jsr     ListInit
+        jsr     UpdateOKButton
 
         ;; Loop until there's a selection (or drive check)
 LD6E6:  jsr     LD986
@@ -882,6 +884,7 @@ menu_offset_table:
         jsr     IsListKey
       IF_EQ
         jsr     ListKey
+        jsr     UpdateOKButton
         return  #$FF
       END_IF
     END_IF
@@ -987,10 +990,27 @@ LDA7D:  copy    #0, checkitem_params::check
         beq     HandleDialogClick
         cmp     winfo_drive_select
         jsr     ListClick
+        php
+        jsr     UpdateOKButton
+        plp
         bmi     :+
         jsr     DetectDoubleClick
 :       rts
 .endproc ; HandleClick
+
+;;; ============================================================
+
+.proc UpdateOKButton
+        lda     current_drive_selection
+        and     #$80
+
+        cmp     ok_button_rec::state
+        beq     ret
+        sta     ok_button_rec::state
+        BTK_CALL BTK::Hilite, ok_button_params
+
+ret:    rts
+.endproc ; UpdateOKButton
 
 ;;; ============================================================
 
@@ -1003,6 +1023,8 @@ LDA7D:  copy    #0, checkitem_params::check
         MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
+        bit     ok_button_rec::state
+        bmi     :+
         BTK_CALL BTK::Track, ok_button_params
         bmi     :+
         lda     #$00
@@ -1070,8 +1092,11 @@ LDC09:  BTK_CALL BTK::Flash, read_drive_button_params
 
 LDC2D:  cmp     #CHAR_RETURN
     IF_EQ
+        bit     ok_button_rec::state
+        bmi     :+
         BTK_CALL BTK::Flash, ok_button_params
-        return  #$00
+        lda     #$00
+:       rts
     END_IF
 
         return  #$FF
@@ -1292,6 +1317,7 @@ match:  clc
 
 draw_buttons:
         BTK_CALL BTK::Draw, ok_button_params
+        jsr     UpdateOKButton
         BTK_CALL BTK::Draw, read_drive_button_params
         MGTK_CALL MGTK::MoveTo, point_slot_drive_name
         param_call DrawString, str_slot_drive_name

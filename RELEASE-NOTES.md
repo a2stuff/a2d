@@ -128,6 +128,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Change "Read Drives" button shortcut to 'R' in EN builds; corresponding changes in other languages.
 * Improve mouse responsiveness during I/O operations.
 * Update block count display continuously during copy.
+* OK button is now disabled if there is no selection.
 
 ### Desk Accessories
 
