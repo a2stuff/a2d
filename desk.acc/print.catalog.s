@@ -398,6 +398,13 @@ OpenDone:
 ;;;******************************************************
 ;;;
 .proc VisitFile
+        ;; Is the file visible?
+        ldy     #FileEntry::access
+        lda     (entPtr),y
+        and     #ACCESS_I
+        beq     :+
+        rts
+:
         jsr     PrintName
 
         ldx     #kColType

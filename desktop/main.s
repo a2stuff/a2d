@@ -6671,6 +6671,8 @@ file_count:             .word   0
 index_in_block:         .byte   0
 index_in_dir:           .byte   0
 
+record_count:           .byte   0
+
 .proc Start
         sta     window_id
         jsr     PushPointers
@@ -6742,17 +6744,11 @@ enough_room:
         sta     window_id_to_filerecord_list_entries,x ; update window id list
         inc     window_id_to_filerecord_list_count
 
-        ;; Store entry count
-        lda     dir_header::file_count
-        bit     LCBANK2
-        bit     LCBANK2
-        ldy     #0
-        sta     (record_ptr),y
-        bit     LCBANK1
-        bit     LCBANK1
-
         copy    #AS_BYTE(-1), index_in_dir ; immediately incremented
         copy    #0, index_in_block
+        copy    #0, record_count
+
+        jsr     PushPointers    ; save initial `record_ptr`
 
         entry_ptr := $08
 
@@ -6787,6 +6783,13 @@ L71F7:  ldx     #$00
         and     #$0F
         beq     next            ; inactive entry
         sta     record,x
+
+        ldy     #FileEntry::access
+        lda     (entry_ptr),y
+        and     #ACCESS_I
+        bne     do_entry
+
+        inc     record_count
 
         ;; See FileRecord struct for record structure
 
@@ -6871,6 +6874,17 @@ L71F7:  ldx     #$00
         jmp     do_entry
 
 finish: copy16  record_ptr, filerecords_free_start
+
+        ;; Store record count
+        jsr     PopPointers     ; restore `record_ptr` to list start
+        bit     LCBANK2
+        bit     LCBANK2
+        lda     record_count
+        ldy     #0
+        sta     (record_ptr),y
+        bit     LCBANK1
+        bit     LCBANK1
+
         jsr     DoClose
         jsr     SetCursorPointer ; after loading directory
         jsr     PopPointers      ; do not tail-call optimise!

@@ -1052,6 +1052,11 @@ OpenDone:
 ;;;******************************************************
 ;;;
 .proc VisitFile
+        ;; Is the file visible?
+        ldy     #FileEntry::access
+        lda     (entPtr),y
+        and     #ACCESS_I
+        bne     exit
 
         ;; Does the file match the search pattern?
         lda     pattern         ; Skip if pattern is empty

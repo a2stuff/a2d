@@ -592,9 +592,15 @@ process_block:
         jeq     next_entry
 
         inc     entry_num
+
+        ;; Hide invisible files
+        ldy     #FileEntry::access
+        lda     (dir_ptr),y
+        and     #ACCESS_I
+        jne     next_entry
+
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
-
         cmp     #kDAFileType    ; DA? (must match type/auxtype)
     IF_EQ
         ldy     #FileEntry::aux_type

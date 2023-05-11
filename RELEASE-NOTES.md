@@ -79,6 +79,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Icon for audio files (.BTC and .ZC, $D8/SND), video files ($5B/ANM)
 * Icon for Applesoft and IntBASIC variable files (VAR, IVR)
 * Add Link file type support ($E1/LNK)
+* "Invisible" files are now hidden.
 
 #### Performance & Fixes
 
