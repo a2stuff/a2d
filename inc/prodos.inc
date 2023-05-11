@@ -139,7 +139,14 @@ PRODOS_SYS_PATH         := $280
 ;;; Access
 ;;; ============================================================
 
-ACCESS_DEFAULT  = %11000011
+ACCESS_D  = %10000000           ; Access: Destroy-Enable
+ACCESS_RN = %01000000           ; Access: Rename-Enable
+ACCESS_B  = %00100000           ; Access: Backup
+ACCESS_I  = %00000100           ; Access: Invisible
+ACCESS_W  = %00000010           ; Access: Write-Enable
+ACCESS_R  = %00000001           ; Access: Read-Enable
+
+ACCESS_DEFAULT  = ACCESS_D | ACCESS_RN | ACCESS_W | ACCESS_R
 LOCKED_MASK     = %11000010     ; all 0 = locked, all 1 = unlocked
 
 ;;; ============================================================

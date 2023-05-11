@@ -6769,7 +6769,7 @@ do_entry:
         cmp     dir_header::file_count
         jeq     finish
 
-        inc     index_in_block
+next:   inc     index_in_block
         lda     index_in_block
         cmp     dir_header::entries_per_block
         beq     L71E7
@@ -6784,30 +6784,16 @@ L71F7:  ldx     #$00
         ldy     #$00
         lda     (entry_ptr),y
         and     #$0F
+        beq     next            ; inactive entry
         sta     record,x
-        bne     L7223
-        inc     index_in_block
-        lda     index_in_block
-        cmp     dir_header::entries_per_block
-        jeq     L71E7
-
-        add16_8 entry_ptr, dir_header::entry_length
-        jmp     L71F7
-
-L7223:  iny
-        inx
 
         ;; See FileRecord struct for record structure
 
-        txa
-        pha
-        tya
-        pha
         param_call_indirect AdjustFileEntryCase, entry_ptr
-        pla
-        tay
-        pla
-        tax
+
+        ;; Point at first character
+        ldx     #FileRecord::name+1
+        ldy     #FileEntry::file_name
 
         ;; name, file_type
 :       lda     (entry_ptr),y
