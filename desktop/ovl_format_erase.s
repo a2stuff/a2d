@@ -704,7 +704,7 @@ L1398:  stxy    total_blocks
 
         ldy     vol_name_buf    ; volume name
         tya
-        ora     #$F0
+        ora     #ST_VOLUME_DIRECTORY << 4
         sta     block_buffer + VolumeDirectoryHeader::storage_type_name_length
 :       lda     vol_name_buf,y
         sta     block_buffer + VolumeDirectoryHeader::file_name - 1,y
@@ -955,19 +955,25 @@ prodos_loader_blocks:
 ;;; Output: `ovl_string_buf` is populated.
 
 .proc GetNonprodosVolName
+        kPascalSig1  = $E0
+        kPascalSig2a = $70
+        kPascalSig2b = $60
+        kDOS33Sig1   = $A5
+        kDOS33Sig2   = $27
+
         ;; Read block 0
         sta     read_block_params::unit_num
         copy16  #0, read_block_params::block_num
         MLI_CALL READ_BLOCK, read_block_params
         bne     unknown         ; failure
         lda     read_buffer + 1
-        cmp     #$E0            ; DOS 3.3?
+        cmp     #kPascalSig1    ; DOS 3.3?
         beq     :+              ; Maybe...
         jmp     maybe_dos
 :       lda     read_buffer + 2
-        cmp     #$70
+        cmp     #kPascalSig2a
         beq     pascal
-        cmp     #$60
+        cmp     #kPascalSig2b
         beq     pascal
         FALL_THROUGH_TO unknown
 
@@ -992,10 +998,10 @@ pascal: param_call pascal_disk, ovl_string_buf
 
         ;; Maybe DOS 3.3, not sure yet...
 maybe_dos:
-        cmp     #$A5
+        cmp     #kDOS33Sig1
         bne     unknown
         lda     read_buffer + 2
-        cmp     #$27
+        cmp     #kDOS33Sig2
         bne     unknown
 
         ;; DOS 3.3, use slot and drive

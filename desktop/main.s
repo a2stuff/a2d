@@ -12658,7 +12658,7 @@ error:  jsr     ShowErrorAlert
 .proc UnlockSrcFile
         jsr     GetSrcFileInfo
         lda     src_file_info_params::access
-        and     #$80            ; destroy enabled bit set?
+        and     #ACCESS_D       ; destroy enabled bit set?
         bne     done            ; yes, no need to unlock
 
         lda     #ACCESS_DEFAULT

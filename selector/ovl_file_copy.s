@@ -77,7 +77,7 @@ buf_padding_bytes:
         DEFINE_READ_PARAMS read_params_src, data_buf, kDirCopyBufSize
         DEFINE_WRITE_PARAMS write_params_dst, data_buf, kDirCopyBufSize
 
-        DEFINE_CREATE_PARAMS create_params2, pathname_dst, $C3
+        DEFINE_CREATE_PARAMS create_params2, pathname_dst, ACCESS_DEFAULT
 
         DEFINE_CREATE_PARAMS create_params, pathname_dst
 
