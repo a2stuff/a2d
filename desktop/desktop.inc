@@ -15,11 +15,11 @@ BTKAuxEntry    := $C000-6
 ;;; LETK loaded into AUX
 LETKAuxEntry    := $C000-3
 
-;;; Desk Accessories are loaded in Main ($800-$1BFF) using
-;;; an I/O buffer (Main $1C00-1FFF). DAs often copy themselves
-;;; into Aux but can only use $800-$1AFF due to entry tables.
-;;; If they show alerts, they must not use scratch area (below).
-
+;;; Desk Accessories are loaded in Main ($800-$1BFF) and Aux
+;;; ($800-$1BFF) using an I/O buffer (Main $1C00-1FFF).
+;;; If they show alerts, they must not use the "save area" buffer
+;;; in Aux $800 since that is used to save the alert background.
+;;; TODO: Figure out a way to allow alerts w/ custom string from DAs.
 DA_LOAD_ADDRESS := $800         ; Loaded into Main
 DA_IO_BUFFER    := $1C00        ; ...through $1FFF
 kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS

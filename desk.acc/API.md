@@ -137,3 +137,56 @@ the following DeskTop calls can be used:
 * `JUMP_TABLE_GET_SEL_WIN` - returns the window id holding the selection (0 if desktop) in A
 * `JUMP_TABLE_GET_WIN_PATH` - called with window id in A, returns the path (in Aux LC1) in A,X
 * `JUMP_TABLE_GET_SEL_ICON` - called with selection index in A, returns IconEntry (in Aux LC1) in A,X
+
+At exit, a DA can request that a particular file icon be shown and
+highlighted in DeskTop. This can be done by copying the full path to
+`INVOKER_PREFIX` and then executing:
+
+```asm
+        ;; Save the top of the stack
+        pla
+        tax
+        pla
+        tay
+
+        ;; Inject a call to `JUMP_TABLE_SHOW_FILE`
+        lda     #>(JUMP_TABLE_SHOW_FILE-1)
+        pha
+        lda     #<(JUMP_TABLE_SHOW_FILE-1)
+        pha
+
+        ;; Restore the top of the stack
+        tya
+        pha
+        txa
+        pha
+```
+
+## More Memory?
+
+* If the DA will not be displaying DHGR graphics, or not be using MGTK
+  for graphics, or will be full-screen, it can use DHGR page 1
+  (Main+Aux $2000-$3FFF). On exit, it *must* reconstruct the desktop
+  by calling:
+    * MGTK's `MGTK::RedrawDeskTop` to redraw the desktop
+    * MGTK's `MGTK::DrawMenu` to redraw the menu
+    * DeskTop's `JUMP_TABLE_HILITE_MENU` to re-hilite the menu item
+      that invoked it, since it will be re-inverted on return to
+      DeskTop.
+* If the DA uses the text or lores screens, it *must* save the visible
+  bytes on entry and restore them on exit, and *must not* modify the
+  screen holes.
+* DAs can overwrite 10k of Main memory normally used for DeskTop code
+  that isn't used while a DA is running (e.g. command logic). This is
+  at `OVERLAY_10K_BUFFER` and the size is `kOverlay10KBufferSize`. To
+  restore DeskTop, the DA *must* call DeskTop's `JUMP_TABLE_RESTORE_OVL`
+
+See examples in the Screen Saver and Show XYZ File code.
+
+## Gotchas
+
+DeskTop's "alert" code uses Aux $800 and onward as a "save buffer"
+for the pixels overdrawn by the alert, so it can be quickly hidden
+without requiring redraws. This means that an alert can't use both
+an aux memory segment and use the `JUMP_TABLE_SHOW_ALERT` call,
+except when exiting.
