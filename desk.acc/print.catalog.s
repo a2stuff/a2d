@@ -5,7 +5,6 @@
 ;;; volumes) to a printer in Slot 1.
 ;;; ============================================================
 
-        ;; TODO: Test for parallel or serial card in Slot 1
         ;; TODO: Print modification date
 
         .include "../config.inc"
@@ -54,6 +53,16 @@
 .scope
         ptr := $06
 
+        ;; Try to verify a printer card in slot 1
+        param_call CheckSlot1Signature, sigtable_printer
+        beq     :+
+        param_call CheckSlot1Signature, sigtable_ssc
+        beq     :+
+        param_call CheckSlot1Signature, sigtable_parallel
+        beq     :+
+
+        rts
+:
         ;; Get top DeskTop window (if any) and find its path
         JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
@@ -168,6 +177,41 @@ str_header:
         kTypeWidth = 3
         kColBlocks = 41         ; Right aligned
 
+;;; ============================================================
+
+;;; Input: A,X = pointer to table (num, offset, mask, value, offset, mask, value, ...)
+;;; Output: Z=1 on match, Z=0 on no match
+.proc CheckSlot1Signature
+        ptr := $06
+
+        stax    ptr
+
+        ldy     #0
+        lda     (ptr),y         ; first byte in table is number of tuples
+        sta     count
+
+:       iny
+        lda     (ptr),y
+        tax
+        lda     SLOT1,x
+        iny
+        and     (ptr),y
+        iny
+        cmp     (ptr),y
+        bne     ret
+
+        dec     count
+        bne     :-
+
+ret:    rts
+
+count:  .byte   0
+.endproc ; CheckSlot1Signature
+
+;;; Format: count, offset1, mask1, value1, offset2, mask2, value2, ...
+sigtable_ssc:           .byte   4, $05, $FF, $38, $07, $FF, $18, $0B, $FF, $01, $0C, $FF, $31
+sigtable_printer:       .byte   4, $05, $FF, $38, $07, $FF, $18, $0B, $FF, $01, $0C, $F0, $10
+sigtable_parallel:      .byte   2, $05, $FF, $48, $07, $FF, $48
 
 ;;; ============================================================
 ;;;
