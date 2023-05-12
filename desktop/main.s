@@ -13037,7 +13037,7 @@ found:  dey
 
 finish: jsr     PopPointers     ; do not tail-call optimize!
         rts
-.endproc ; RemoveSrcPathSegment
+.endproc ; RemovePathSegment
 
 ;;; ============================================================
 ;;; Append name at `file_entry_buf` to path at `dst_path_buf`
