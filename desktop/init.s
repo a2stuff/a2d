@@ -326,33 +326,9 @@ done:
 .endscope
 
 ;;; ============================================================
-;;; Populate icon_entries table
+;;; Initialize IconTK
 
 .scope
-        ptr := $6
-
-        jsr     PushPointers
-        copy16  #icon_entries, ptr
-
-        ldx     #1
-loop:
-        ;; Populate table entry
-        txa                     ; A = icon id
-        asl     a
-        tay
-        copy16  ptr, icon_entry_address_table,y
-
-        ;; Initialize IconEntry
-        ldy     #IconEntry::state
-        copy    #0, (ptr),y     ; mark not allocated
-
-        ;; Next entry
-        add16_8 ptr, #.sizeof(IconEntry)
-        inx
-        cpx     #kMaxIconCount+1 ; allow up to the maximum
-        bne     loop
-        jsr     PopPointers
-
         ITK_CALL IconTK::InitToolKit, itkinit_params
 
         FALL_THROUGH_TO CreateTrashIcon
@@ -367,10 +343,11 @@ loop:
         lda     #1
         sta     cached_window_entry_count
         sta     icon_count
-        jsr     main::AllocateIcon
+        ITK_CALL IconTK::AllocIcon, get_icon_entry_params
+        lda     get_icon_entry_params::id
         sta     main::trash_icon_num
         sta     cached_window_entry_list
-        jsr     main::GetIconEntry
+        ldax    get_icon_entry_params::addr
         stax    ptr
 
         ;; Trash is a drop target
@@ -1078,9 +1055,6 @@ iloop:  cpx     cached_window_entry_count
         pha
         lda     cached_window_entry_list,x
         sta     icon_param
-        jsr     main::GetIconEntry
-        stax    icon_param+1
-        ITK_CALL IconTK::AddIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
         pla
         tax

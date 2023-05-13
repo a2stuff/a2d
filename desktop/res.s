@@ -537,10 +537,6 @@ new_window_view_by:     .byte   0
 icon_count:
         .byte   0
 
-        ;; Pointers into icon_entries buffer (index 0 not used)
-icon_entry_address_table:
-        .res    (kMaxIconCount+1)*2, 0
-
 ;;; Copy from aux memory of icon list for active window (0=desktop)
 
         ;; which window buffer is copied
@@ -579,6 +575,7 @@ headersize:     .byte   kWindowHeaderHeight
 a_polybuf:      .addr   SAVE_AREA_BUFFER
 bufsize:        .word   kSaveAreaSize
 a_typemap:      .addr   type_icons_table
+a_heap:         .addr   icon_entries
 .endproc
 
 ;;; Table mapping IconType to IconResource
@@ -635,12 +632,18 @@ icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
         ;; * follows icon_param for IconTK::IconInRect call
-        ;; * ... and for IconTK::AddIcon calls (but not as a rect)
         ;; * used for saving/restoring window bounds to/from file
         ;; * used for icon clipping
         ;; * used for window frame zoom animation
         ASSERT_ADDRESS icon_param+1
         DEFINE_RECT tmp_rect, 0, 0, 0, 0
+
+;;; Used by IconTK::AllocIcon and IconTK::GetIconEntry
+;;; TODO: See if we can use `icon_param` for this
+.proc get_icon_entry_params
+id:     .byte   0
+addr:   .addr   0
+.endproc
 
 ;;; ============================================================
 ;;; Alerts

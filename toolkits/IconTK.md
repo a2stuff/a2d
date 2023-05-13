@@ -20,8 +20,7 @@ The zero page addresses $06..$09 are preserved across calls.
 This defines an icon instance.
 ```
 .byte icon      icon index
-.byte state     bit 0 = allocated
-                bits 1-5 = (unused)
+.byte state     bits 0-5 = (unused)
                 bit 6 = highlighted
                 bit 7 = dimmed
 .byte type/window_id
@@ -74,21 +73,17 @@ Parameters:
 
 Since the buffer is only used during modal drag operations, it is safe to use the same "save area" given to MGTK, which is used only in modal menu operations. $D00 is enough for the maximum number of supported icons.
 
-### `IconTK::AddIcon` ($01)
+### `IconTK::AllocIcon` ($01)
 
-Inserts an icon record into the table.
+Allocates an icon, returning the icon id and address of the `IconEntry`.
 
 Parameters:
 ```
-.byte       icon            Icon number
-.addr       entry           Address of IconEntry
+.byte       icon            (out) Icon number
+.addr       entry           (out) Address of IconEntry
 ```
 
-Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc.
-
-Result codes (in A):
-* 0 = success
-* 1 = icon id already in use (`DEBUG` only)
+Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc. `RemoveIcon` will de-allocate the icon.
 
 ### `IconTK::HighlightIcon` ($02)
 
@@ -136,7 +131,6 @@ Note that it does not erase the icon. Callers must make a previous call to `Icon
 Result codes (in A):
 * 0 = success
 * 1 = icon not found (`DEBUG` only)
-* 2 = icon not in use (`DEBUG` only)
 
 ### `IconTK::RemoveAll` ($05)
 

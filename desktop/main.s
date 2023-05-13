@@ -3052,26 +3052,6 @@ selection_preserved_count:
 
 ;;; ============================================================
 
-.proc AddIconsForCachedWindow
-        copy    #0, index
-        index := *+1
-:       lda     #SELF_MODIFIED_BYTE
-        cmp     cached_window_entry_count
-        beq     :+
-        tax
-        lda     cached_window_entry_list,x
-        sta     icon_param
-        jsr     GetIconEntry
-        stax    icon_param+1
-        ITK_CALL IconTK::AddIcon, icon_param
-        inc     index
-        jmp     :-
-:
-        rts
-.endproc ; AddIconsForCachedWindow
-
-;;; ============================================================
-
 .proc RedrawAfterContentChange
         ;; Draw the contents
         lda     active_window_id
@@ -3123,15 +3103,12 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         beq     done
 
         lda     cached_window_entry_list,x
-        pha
-        jsr     FreeIcon
-        pla
-
         jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
     IF_EQ
         copy    #$FF, window_to_dir_icon_table,x ; $FF = dir icon freed
     END_IF
 
+        ;; TODO: Unnecessary - remove this!
         ldx     index
         copy    #0, cached_window_entry_list,x
 
@@ -4313,8 +4290,6 @@ loop:   lda     cached_window_entry_list,x
         ITK_CALL IconTK::RemoveIcon, icon_param
         lda     icon_param
         jsr     FreeDesktopIconPosition
-        lda     icon_param
-        jsr     FreeIcon
         dec     cached_window_entry_count
         dec     icon_count
 
@@ -4368,9 +4343,6 @@ cont:   txa
         beq     next
 
         sta     icon_param
-        jsr     GetIconEntry
-        stax    icon_param+1
-        ITK_CALL IconTK::AddIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
 
 next:   pla
@@ -4505,8 +4477,6 @@ not_in_map:
         jsr     RemoveIconFromWindow
         dec     icon_count
         lda     icon_param
-        jsr     FreeIcon
-        lda     icon_param
         jsr     FreeDesktopIconPosition
         ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
         ITK_CALL IconTK::RemoveIcon, icon_param
@@ -4556,9 +4526,6 @@ add_icon:
         dex
         lda     cached_window_entry_list,x
         sta     icon_param
-        jsr     GetIconEntry
-        stax    icon_param+1
-        ITK_CALL IconTK::AddIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
 
 :       jmp     StoreWindowEntryTable
@@ -7434,13 +7401,13 @@ records_base_ptr:
         pha                     ; A = record_num
 
         inc     icon_count
-        jsr     AllocateIcon
+        ITK_CALL IconTK::AllocIcon, get_icon_entry_params
+        copy16  get_icon_entry_params::addr, icon_entry
+        lda     get_icon_entry_params::id
         sta     icon_num
         ldx     cached_window_entry_count
         inc     cached_window_entry_count
         sta     cached_window_entry_list,x
-        jsr     GetIconEntry
-        stax    icon_entry
 
         ;; Assign record number
         pla                     ; A = record_num
@@ -8171,8 +8138,7 @@ next:   inc     icon_num
         jsr     SortRecords
     END_IF
         jsr     CreateIconsForWindow
-        jsr     StoreWindowEntryTable
-        jmp     AddIconsForCachedWindow
+        jmp     StoreWindowEntryTable
 .endproc ; InitWindowEntriesAndIcons
 
 ;;; ============================================================
@@ -8737,10 +8703,9 @@ min     := parsed_date + ParsedDateTime::minute
 ;;; Output: A,X = IconEntry address
 
 .proc GetIconEntry
-        asl     a
-        tay
-        lda     icon_entry_address_table,y
-        ldx     icon_entry_address_table+1,y
+        sta     get_icon_entry_params::id
+        ITK_CALL IconTK::GetIconEntry, get_icon_entry_params
+        ldax    get_icon_entry_params::addr
         rts
 .endproc ; GetIconEntry
 
@@ -9441,7 +9406,10 @@ success:
         icon_defn_ptr := $8
 
         jsr     PushPointers
-        jsr     AllocateIcon
+
+        ITK_CALL IconTK::AllocIcon, get_icon_entry_params
+        copy16  get_icon_entry_params::addr, icon_ptr
+        lda     get_icon_entry_params::id
 
         ;; Assign icon number
         ldy     devlst_index
@@ -9449,9 +9417,6 @@ success:
         ldx     cached_window_entry_count
         dex
         sta     cached_window_entry_list,x
-
-        jsr     GetIconEntry
-        stax    icon_ptr
 
         ;; Copy name
         param_call AdjustVolumeNameCase, cvi_data_buffer
@@ -15376,84 +15341,6 @@ window_entry_table:             .res    ::kMaxIconCount, 0
         lda     #0
         jmp     LoadWindowEntryTable
 .endproc ; LoadDesktopEntryTable
-
-;;; ============================================================
-;;; Used/Free icon map
-;;; ============================================================
-
-;;; Find first available free icon in the map; if
-;;; available, mark it and return index+1.
-
-.proc AllocateIcon
-        ;; Search for first byte with a set (available) bit
-        ldx     #0
-loop:   lda     free_icon_map,x
-        bne     :+
-        inx
-        bne     loop            ; always
-:
-        ;; X has byte offset - turn into index
-        pha                     ; A = table byte
-        txa                     ; X = offset
-        asl                     ; *= 8
-        asl
-        asl
-        tax                     ; X = index
-
-        ;; Add in the bit offset
-        pla                     ; A = table byte
-        dex
-:       inx
-        ror
-        bcc     :-              ; clear = in use
-        txa
-
-        ;; Mark it used
-        pha
-        jsr     IconMapIndexToOffsetMask
-        eor     #$FF
-        and     free_icon_map,x ; clear bit to mark used
-        sta     free_icon_map,x
-
-        pla
-        rts
-.endproc ; AllocateIcon
-
-;;; Mark the specified icon as free
-
-.proc FreeIcon
-        jsr     IconMapIndexToOffsetMask
-        ora     free_icon_map,x ; set bit to mark free
-        sta     free_icon_map,x
-        rts
-.endproc ; FreeIcon
-
-;;; Input: A = icon num (1...127)
-;;; Output: X = index in `free_icon_map`, A = bit mask (e.g. %0001000)
-.proc IconMapIndexToOffsetMask
-        pha                     ; A = index
-        and     #7
-        tax
-        ldy     table,x         ; Y = mask
-
-        pla                     ; A = index
-        lsr                     ; /= 8
-        lsr
-        lsr
-        tax                     ; X = offset
-
-        tya                     ; A = mask
-        rts
-
-table:  .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
-
-.endproc ; IconMapIndexToOffsetMask
-
-;;; Each byte represents 8 icons. id 0 is unused.
-free_icon_map:
-        .byte   $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-        .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-        .assert * - free_icon_map = (::kMaxIconCount + 7)/8, error, "table size"
 
 ;;; ============================================================
 ;;; Library Routines

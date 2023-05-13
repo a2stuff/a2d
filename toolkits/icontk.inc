@@ -6,8 +6,9 @@
 
 .scope IconTK
 
-InitToolKit     = $00   ; { .byte headersize, .addr a_polybuf, .word bufsize, .addr a_typemap }
-AddIcon         = $01   ; { .byte icon, .addr IconEntry }
+InitToolKit     = $00   ; { .byte headersize, .addr a_polybuf, .word bufsize,
+                        ;   .addr a_typemap, .addr a_heap }
+AllocIcon       = $01   ; { .byte icon, .addr IconEntry }
 HighlightIcon   = $02   ; { .byte icon }
 DrawIconRaw     = $03   ; { .byte icon }
 RemoveIcon      = $04   ; { .byte icon }
@@ -25,6 +26,7 @@ IconInRect      = $0A   ; { .byte icon, rect bounds }
 EraseIcon       = $0B   ; { .byte icon }
 GetIconBounds   = $0C   ; { .byte icon, rect bounds out }
 DrawIcon        = $0D   ; { .byte icon }
+GetIconEntry    = $0E   ; { .byte icon, .addr IconEntry }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 
@@ -57,8 +59,7 @@ label   := *
 ;;; ============================================================
 
 ;;; Icon (file/volume) entries - length 25 bytes, maximum of 127
-;;;      .byte state     bit 0   = allocated
-;;;                      bit 1-5 = (unused)
+;;;      .byte state     bit 0-5 = (unused)
 ;;;                      bit 6   = highlighted
 ;;;                      bit 7   = dimmed
 ;;;                      $00 if not allocated

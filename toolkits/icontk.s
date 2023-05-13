@@ -62,7 +62,7 @@ call_params:  .addr     0
 
 jump_table_low:
         .byte   <InitToolKitImpl
-        .byte   <AddIconImpl
+        .byte   <AllocIconImpl
         .byte   <HighlightIconImpl
         .byte   <DrawIconRawImpl
         .byte   <RemoveIconImpl
@@ -75,10 +75,11 @@ jump_table_low:
         .byte   <EraseIconImpl
         .byte   <GetIconBoundsImpl
         .byte   <DrawIconImpl
+        .byte   <GetIconEntryImpl
 
 jump_table_high:
         .byte   >InitToolKitImpl
-        .byte   >AddIconImpl
+        .byte   >AllocIconImpl
         .byte   >HighlightIconImpl
         .byte   >DrawIconRawImpl
         .byte   >RemoveIconImpl
@@ -91,6 +92,7 @@ jump_table_high:
         .byte   >EraseIconImpl
         .byte   >GetIconBoundsImpl
         .byte   >DrawIconImpl
+        .byte   >GetIconEntryImpl
 
 ;;; ============================================================
 
@@ -198,6 +200,15 @@ icon_list:  .res    (::kMaxIconCount+1), 0   ; list of allocated icons (index 0 
 icon_ptrs_low:  .res    (::kMaxIconCount+1), 0 ; addresses of icon details (index 0 not used)
 icon_ptrs_high: .res    (::kMaxIconCount+1), 0 ; addresses of icon details (index 0 not used)
 
+;;; Input: A = icon number
+;;; Output: A,X = address of IconEntry
+.proc GetIconPtr
+        tay
+        ldx     icon_ptrs_high,y
+        lda     icon_ptrs_low,y
+        rts
+.endproc ; GetIconPtr
+
 highlight_count:                ; number of highlighted icons
         .byte   0
 highlight_list:                 ; selected icons
@@ -264,7 +275,10 @@ headersize      .byte
 a_polybuf       .addr
 bufsize         .word
 a_typemap       .addr
+a_heap          .addr
 .endstruct
+
+        table_ptr := $08
 
         ldy     #InitToolKitParams::headersize
         copy    (params),y, header_height
@@ -274,7 +288,27 @@ a_typemap       .addr
         copy16in (params),y, bufsize
         iny                     ; Y = InitToolKitParams::a_typemap
         copy16in (params),y, typemap_addr
+        iny                     ; Y = InitToolKitParams::a_heap
+        copy16in (params),y, table_ptr
 
+        ;; --------------------------------------------------
+        ;; Populate `icon_ptrs_low/high` table
+
+        ldx     #1
+:
+        ;; Populate table entry
+        lda     table_ptr
+        sta     icon_ptrs_low,x
+        lda     table_ptr+1
+        sta     icon_ptrs_high,x
+
+        ;; Next entry
+        add16_8 table_ptr, #.sizeof(IconEntry)
+        inx
+        cpx     #kMaxIconCount+1 ; allow up to the maximum
+        bne     :-
+
+        ;; --------------------------------------------------
         ;; MaxDraggableItems = BufferSize / kIconPolySize
 
         ldy     #0
@@ -292,56 +326,43 @@ bufsize:
 .endproc ; InitToolKitImpl
 
 ;;; ============================================================
-;;; AddIcon
+;;; AllocIcon
 
-.proc AddIconImpl
+.proc AllocIconImpl
         params := $06
-.struct AddIconParams
-        icon    .byte
-        entry   .addr
+.struct AllocIconParams
+        icon    .byte           ; out
+        entry   .addr           ; out
 .endstruct
 
-        ldy     #AddIconParams::icon
-        lda     (params),y      ; A = icon id
-
-.ifdef DEBUG
-        ;; Check if passed ID is already in the icon list
-        jsr     IsInIconList
-        bne     :+
-        return  #1              ; That icon id is already in use
-:
-.endif ; DEBUG
+        jsr     AllocateIcon
+        ldy     #AllocIconParams::icon
+        sta     (params),y
 
         ;; Add it to `icon_list`
         ldx     num_icons
         sta     icon_list,x
         inc     num_icons
 
-        ;; Add to `icon_ptrs` table
-        tax
-        ldy     #AddIconParams::entry
-        lda     (params),y
-        sta     icon_ptrs_low,x
-        pha
+        ;; Grab the `IconEntry`, to return it and update it
+        ptr_icon := $08
+        jsr     GetIconPtr
+        stax    ptr_icon
+        ldy     #AllocIconParams::entry
+        sta     (params),y
+        txa
         iny
-        lda     (params),y
-        sta     icon_ptrs_high,x
+        sta     (params),y
 
-        ptr_icon := $06
-
-        sta     ptr_icon+1
-        pla
-        sta     ptr_icon
-
-        ;; Update IconEntry::state
-        lda     #kIconEntryStateAllocated
-        ldy     #IconEntry::state
-        ora     (ptr_icon),y    ; caller may have set state e.g. dimmed
+        ;; Initialize IconEntry::state
+        lda     #0
+        ;; ldy     #IconEntry::state
+        .assert IconEntry::state = 0, error, "enum mismatch"
+        tay
         sta     (ptr_icon),y
-        lsr
 
         rts
-.endproc ; AddIconImpl
+.endproc ; AllocIconImpl
 
 ;;; ============================================================
 ;;; Tests if the passed icon id is in `icon_list`
@@ -437,14 +458,6 @@ done:   rts
         tax
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
-.ifdef DEBUG
-        ldy     #IconEntry::state ; valid icon?
-        lda     (ptr),y
-        bne     :+
-        return  #2
-:
-.endif ; DEBUG
-
         txa
         jsr     RemoveIconCommon ; A = icon id, $08 = icon ptr
         return  #0
@@ -476,24 +489,21 @@ done:   rts
         ;; Remove it
         dec     num_icons
 
-        ;; Mark it as free
+        ;; Was it highlighted?
         ldy     #IconEntry::state
         lda     (ptr),y         ; A = state
-        ;; Was it highlighted?
         ;;and     #kIconEntryStateHighlighted
         .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
         asl
-        asl                     ; carry set if highlighted
-        lda     #0              ; not allocated
-        sta     (ptr),y
-
-        bcc     :+              ; not highlighted
+        bpl     :+              ; not highlighted
 
         icon_id := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     RemoveFromHighlightList
-
-:       rts
+:
+        ;; Mark it as free
+        lda     icon_id
+        jmp     FreeIcon
 .endproc ; RemoveIconCommon
 
 ;;; ============================================================
@@ -1125,15 +1135,6 @@ done:   jsr     PopPointers     ; do not tail-call optimise!
 icon_num:
         .byte   0
 .endproc ; FindTargetAndHighlight
-
-;;; Input: A = icon number
-;;; Output: A,X = address of IconEntry
-.proc GetIconPtr
-        tay
-        ldx     icon_ptrs_high,y
-        lda     icon_ptrs_low,y
-        rts
-.endproc ; GetIconPtr
 
 ;;; Input: A = icon number
 ;;; Output: A = window id (0=desktop)
@@ -1870,6 +1871,29 @@ rect:   .tag    MGTK::Rect
 .endproc ; DrawAllImpl
 
 ;;; ============================================================
+;;; GetIconEntry
+
+.proc GetIconEntryImpl
+        params := $06
+.struct GetIconEntryParams
+        icon    .byte           ; in
+        entry   .addr           ; out
+.endstruct
+
+        ldy     #GetIconEntryParams::icon
+        lda     (params),y      ; A = icon id
+
+        jsr     GetIconPtr
+        ldy     #GetIconEntryParams::entry
+        sta     (params),y
+        txa
+        iny
+        sta     (params),y
+
+        rts
+.endproc ; GetIconEntryImpl
+
+;;; ============================================================
 ;;; Remove icon from highlight list. Does not update icon's state.
 ;;; Inputs: A=icon id
 .proc RemoveFromHighlightList
@@ -2578,6 +2602,84 @@ case2:
         MGTK_CALL MGTK::SetPort, icon_grafport
         rts
 .endproc ; ShiftPortDown
+
+;;; ============================================================
+;;; Used/Free icon map
+;;; ============================================================
+
+;;; Find first available free icon in the map; if
+;;; available, mark it and return index+1.
+
+.proc AllocateIcon
+        ;; Search for first byte with a set (available) bit
+        ldx     #0
+loop:   lda     free_icon_map,x
+        bne     :+
+        inx
+        bne     loop            ; always
+:
+        ;; X has byte offset - turn into index
+        pha                     ; A = table byte
+        txa                     ; X = offset
+        asl                     ; *= 8
+        asl
+        asl
+        tax                     ; X = index
+
+        ;; Add in the bit offset
+        pla                     ; A = table byte
+        dex
+:       inx
+        ror
+        bcc     :-              ; clear = in use
+        txa
+
+        ;; Mark it used
+        pha
+        jsr     IconMapIndexToOffsetMask
+        eor     #$FF
+        and     free_icon_map,x ; clear bit to mark used
+        sta     free_icon_map,x
+
+        pla
+        rts
+.endproc ; AllocateIcon
+
+;;; Mark the specified icon as free
+
+.proc FreeIcon
+        jsr     IconMapIndexToOffsetMask
+        ora     free_icon_map,x ; set bit to mark free
+        sta     free_icon_map,x
+        rts
+.endproc ; FreeIcon
+
+;;; Input: A = icon num (1...127)
+;;; Output: X = index in `free_icon_map`, A = bit mask (e.g. %0001000)
+.proc IconMapIndexToOffsetMask
+        pha                     ; A = index
+        and     #7
+        tax
+        ldy     table,x         ; Y = mask
+
+        pla                     ; A = index
+        lsr                     ; /= 8
+        lsr
+        lsr
+        tax                     ; X = offset
+
+        tya                     ; A = mask
+        rts
+
+table:  .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
+
+.endproc ; IconMapIndexToOffsetMask
+
+;;; Each byte represents 8 icons. id 0 is unused.
+free_icon_map:
+        .byte   $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+        .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
+        .assert * - free_icon_map = (::kMaxIconCount + 7)/8, error, "table size"
 
 ;;; ============================================================
 ;;; Pushes two words from $6/$8 to stack; preserves Y only
