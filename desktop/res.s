@@ -578,7 +578,50 @@ win_table:
 headersize:     .byte   kWindowHeaderHeight
 a_polybuf:      .addr   SAVE_AREA_BUFFER
 bufsize:        .word   kSaveAreaSize
+a_typemap:      .addr   type_icons_table
 .endproc
+
+;;; Table mapping IconType to IconResource
+type_icons_table:
+        ;; Volumes
+        .addr   trash_icon      ; trash
+        .addr   floppy140_icon  ; floppy140
+        .addr   ramdisk_icon    ; ramdisk
+        .addr   profile_icon    ; profile
+        .addr   floppy800_icon  ; floppy800
+        .addr   fileshare_icon  ; fileshare
+        .addr   cdrom_icon      ; cdrom
+
+        ;; Files
+        .addr   gen ; generic
+        .addr   txt ; text
+        .addr   bin ; binary
+        .addr   fot ; graphics
+        .addr   anm ; animation/video
+        .addr   mus ; music
+        .addr   snd ; audio
+        .addr   fnt ; font
+        .addr   rel ; relocatable
+        .addr   cmd ; command
+        .addr   dir ; folder
+        .addr   src ; iigs
+        .addr   adb ; appleworks db
+        .addr   awp ; appleworks wp
+        .addr   asp ; appleworks sp
+        .addr   arc ; archive
+        .addr   arc ; encoded
+        .addr   lnk ; link
+        .addr   a2d ; desk accessory
+        .addr   bas ; basic
+        .addr   int ; intbasic
+        .addr   var ; variables
+        .addr   sys ; system
+        .addr   app ; application
+
+        ;; Small icons
+        .addr   sm_gen
+        .addr   sm_dir
+        ASSERT_ADDRESS_TABLE_SIZE type_icons_table, IconType::COUNT
 
 ;;; Used for multiple IconTK calls:
 ;;; * IconTK::EraseIcon

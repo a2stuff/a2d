@@ -216,6 +216,9 @@ header_height:  .byte   0
 polybuf_addr:           .addr   0
 max_draggable_icons:    .byte   0
 
+;;; Mapping of `IconEntry::type` to `IconResource`
+typemap_addr:   .addr   0
+
 ;;; ============================================================
 
 .params peekevent_params
@@ -260,6 +263,7 @@ icon_grafport:  .tag    MGTK::GrafPort
 headersize      .byte
 a_polybuf       .addr
 bufsize         .word
+a_typemap       .addr
 .endstruct
 
         ldy     #InitToolKitParams::headersize
@@ -268,6 +272,8 @@ bufsize         .word
         copy16in (params),y, polybuf_addr
         iny                     ; Y = InitToolKitParams::bufsize
         copy16in (params),y, bufsize
+        iny                     ; Y = InitToolKitParams::a_typemap
+        copy16in (params),y, typemap_addr
 
         ;; MaxDraggableItems = BufferSize / kIconPolySize
 
@@ -1395,8 +1401,7 @@ clip_dy:
         jsr     PushPointers
 
         ;; copy icon definition bits
-        ldy     #IconEntry::iconbits
-        copy16in ($06),y, $08
+        jsr     GetIconResource
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point) - 1
 :       lda     ($08),y
         sta     icon_paintbits_params::mapbits,y
@@ -1528,6 +1533,29 @@ win_flags:                      ; copy of IconEntry::win_flags
 
 ;;; ============================================================
 
+;;; Inputs: $06 = IconEntry
+;;; Output: $08 = IconResource
+.proc GetIconResource
+        icon_ptr := $06
+        res_ptr := $08
+
+        ldy     #IconEntry::type
+        lda     (icon_ptr),y         ; A = type
+        asl                     ; *= 2
+        tay
+        copy16  typemap_addr, $08
+        lda     ($08),y
+        pha
+        iny
+        lda     ($08),y
+        sta     res_ptr+1
+        pla
+        sta     res_ptr
+        rts
+.endproc ; GetIconResource
+
+;;; ============================================================
+
 kIconLabelGapV = 2
 
 ;;; Input: $06 points at icon
@@ -1542,8 +1570,7 @@ kIconLabelGapV = 2
         ;; Copy, pad, and measure name
         jsr     PrepareName
 
-        ldy     #IconEntry::iconbits
-        copy16in (entry_ptr),y, bitmap_ptr
+        jsr     GetIconResource ; sets $08 based on $06
 
         ;; Bitmap top/left - copy from icon entry
         ldy     #IconEntry::iconx+3

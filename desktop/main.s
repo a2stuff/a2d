@@ -1000,7 +1000,9 @@ binary:
         .addr   param
 .endmacro
 
-invoke_table:
+invoke_table := * - (4 * IconType::VOL_COUNT)
+        ;; Volume types skipped via above math; GET_FILE_INFO yields
+        ;; `FT_DIRECTORY` which maps to a folder
         INVOKE_TABLE_ENTRY      fallback, 0                    ; generic
         INVOKE_TABLE_ENTRY      InvokePreview, str_preview_txt ; text
         INVOKE_TABLE_ENTRY      binary, 0                      ; binary
@@ -1025,7 +1027,8 @@ invoke_table:
         INVOKE_TABLE_ENTRY      fallback, 0                    ; variables
         INVOKE_TABLE_ENTRY      launch, 0                      ; system
         INVOKE_TABLE_ENTRY      launch, 0                      ; application
-        ASSERT_RECORD_TABLE_SIZE invoke_table, IconType::COUNT, 4
+        ;; Small Icon types skipped via math below
+        ASSERT_RECORD_TABLE_SIZE invoke_table, IconType::COUNT - IconType::SMALL_COUNT, 4
 
 ;;; --------------------------------------------------
 ;;; Check `src_path_buf`'s ancestors to see if the desired interpreter
@@ -7304,7 +7307,7 @@ copy_new_window_bounds_flag:
 
 .proc CreateIconsForWindowImpl
 
-iconbits:       .addr   0
+icon_type:      .addr   0
 iconentry_flags: .byte   0
 icon_height:    .word   0
 
@@ -7536,8 +7539,8 @@ L7870:  lda     cached_window_id
         ora     iconentry_flags
         ldy     #IconEntry::win_flags
         sta     (icon_entry),y
-        ldy     #IconEntry::iconbits
-        copy16in iconbits, (icon_entry),y
+        ldy     #IconEntry::type
+        copy    icon_type, (icon_entry),y
         ldx     cached_window_entry_count
         dex
         lda     cached_window_entry_list,x
@@ -7571,7 +7574,7 @@ L7870:  lda     cached_window_id
 
 ;;; ============================================================
 ;;; Inputs: A = `IconType` member, Y = `kViewByXXX` value
-;;; Outputs: Populates `iconentry_flags`, `iconbits`, `icon_height`
+;;; Outputs: Populates `iconentry_flags`, `icon_type`, `icon_height`
 
 .proc FindIconDetailsForIconType
         ptr := $6
@@ -7584,7 +7587,7 @@ L7870:  lda     cached_window_id
         lda     icontype_iconentryflags_table,y
         sta     iconentry_flags
 
-        ;; Load up A,X with pointer to `IconResource`
+        ;; Adjust type and flags based on view
         view_by := *+1
         lda     #SELF_MODIFIED_BYTE
     IF_NE
@@ -7598,24 +7601,22 @@ L7870:  lda     cached_window_id
      END_IF
         sta     iconentry_flags
 
-        ldax    #sm_gen
+        lda     #IconType::small_generic
         cpy     #IconType::folder
-      IF_EQ
-        ldax    #sm_dir
-      END_IF
-   ELSE
-        ;; Icon View
-        tya                     ; Y = `IconType`
-        asl     a
+     IF_EQ
+        lda     #IconType::small_folder
+     END_IF
         tay
-        lda     type_icons_table,y
-        ldx     type_icons_table+1,y
    END_IF
 
-        ;; For populating IconEntry::iconbits
-        stax    iconbits
+        ;; For populating `IconEntry::type`
+        sty     icon_type
 
         ;; Icon height will be needed too
+        tya
+        asl                     ; *= 2
+        tay
+        ldax    type_icons_table,y
         stax    ptr
         ldy     #IconResource::maprect + MGTK::Rect::y2
         copy16in (ptr),y, icon_height
@@ -9170,15 +9171,6 @@ saved_portbits:
 ;;;
 ;;; Uses start of $800 as a param buffer
 
-device_type_to_icon_address_table:
-        .addr floppy140_icon
-        .addr ramdisk_icon
-        .addr profile_icon
-        .addr floppy800_icon
-        .addr fileshare_icon
-        .addr cdrom_icon
-        ASSERT_ADDRESS_TABLE_SIZE device_type_to_icon_address_table, ::kNumDeviceTypes
-
 dib_buffer := $800
         DEFINE_SP_STATUS_PARAMS status_params, 1, dib_buffer, 3 ; Return Device Information Block (DIB)
 
@@ -9198,7 +9190,7 @@ dib_buffer := $800
         cmp     #kRamAuxSystemUnitNum
         bne     :+
 ram:    ldax    #str_device_type_ramdisk
-        ldy     #kDeviceTypeRAMDisk
+        ldy     #IconType::ramdisk
         rts
 :
         ;; Special case for VEDRIVE
@@ -9208,7 +9200,7 @@ ram:    ldax    #str_device_type_ramdisk
         cpx     #>kVEDRIVEDriverAddress
         bne     :+
 vdrive: ldax    #str_device_type_vdrive
-        ldy     #kDeviceTypeFileShare
+        ldy     #IconType::fileshare
         rts
 :
         ;; Special case for VSDRIVE
@@ -9228,7 +9220,7 @@ vdrive: ldax    #str_device_type_vdrive
         jsr     IsDiskII
         bne     :+
         ldax    #str_device_type_diskii
-        ldy     #kDeviceTypeDiskII
+        ldy     #IconType::floppy140
         rts
 :
         ;; Look up driver address
@@ -9294,13 +9286,13 @@ done:
         .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
         bne     :+            ; $00 = Memory Expansion Card (RAM Disk)
         ldax    #dib_buffer+SPDIB::ID_String_Length
-        ldy     #kDeviceTypeRAMDisk
+        ldy     #IconType::ramdisk
         rts
 :
         cmp     #SPDeviceType::SCSICDROM
         bne     test_size
         ldax    #dib_buffer+SPDIB::ID_String_Length
-        ldy     #kDeviceTypeCDROM
+        ldy     #IconType::cdrom
         rts
 
         ;; NOTE: Codes for 3.5" disk ($01) and 5-1/4" disk ($0A) are not trusted
@@ -9315,7 +9307,7 @@ not_sp:
         cmp     #ERR_NETWORK_ERROR
         bne     :+
         ldax    #str_device_type_appletalk
-        ldy     #kDeviceTypeFileShare
+        ldy     #IconType::fileshare
         rts
 :
 
@@ -9352,15 +9344,15 @@ test_size:
         bcc     f35
 
 :       ldax    #dib_buffer+SPDIB::ID_String_Length
-        ldy     #kDeviceTypeFixed
+        ldy     #IconType::profile
         rts
 
 f525:   ldax    #dib_buffer+SPDIB::ID_String_Length
-        ldy     #kDeviceTypeDiskII
+        ldy     #IconType::floppy140
         rts
 
 f35:    ldax    #dib_buffer+SPDIB::ID_String_Length
-        ldy     #kDeviceTypeRemovable
+        ldy     #IconType::floppy800
         rts
 
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
@@ -9487,17 +9479,12 @@ success:
         unit_number := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     GetDeviceType   ; uses $800 as DIB buffer
-        tya                     ; Y = kDeviceType constant
+        tya                     ; Y = `IconType`
+        ldy     #IconEntry::type
+        sta     (icon_ptr),y
         asl                     ; * 2
         tax
-        ldy     #IconEntry::iconbits
-        lda     device_type_to_icon_address_table,x
-        sta     icon_defn_ptr
-        sta     (icon_ptr),y
-        iny
-        lda     device_type_to_icon_address_table+1,x
-        sta     icon_defn_ptr+1
-        sta     (icon_ptr),y
+        copy16  type_icons_table,x, icon_defn_ptr
 
         ;; ----------------------------------------
 
@@ -9525,7 +9512,7 @@ success:
         sta     (icon_ptr),y
         inx
         iny
-        cpy     #IconEntry::iconbits
+        cpy     #IconEntry::iconx + .sizeof(MGTK::Point)
         bne     :-
 
         ;; Center it horizontally
@@ -11114,9 +11101,9 @@ finish: lda     #RenameDialogState::close
         ;; Add old icon height to make icony top of text
         ldy     #IconEntry::icony
         sub16in tmp_rect::y2, CreateIconsForWindowImpl::icon_height, (icon_ptr),y
-        ;; Use `iconbits` to populate IconEntry::iconbits
-        ldy     #IconEntry::iconbits
-        copy16in CreateIconsForWindowImpl::iconbits, (icon_ptr),y
+        ;; Use `icon_type` to populate IconEntry::type
+        ldy     #IconEntry::type
+        copy    CreateIconsForWindowImpl::icon_type, (icon_ptr),y
         ;; Assumes `iconentry_flags` will not change, regardless of icon.
     END_IF
 
@@ -15775,7 +15762,8 @@ menu_kbd_flag:
 ;;; Map IconType to other icon/details
 
 ;;; Table mapping IconType to kIconEntryFlags*
-icontype_iconentryflags_table:
+icontype_iconentryflags_table := * - IconType::VOL_COUNT
+        ;; Volume types skipped via above math.
         .byte   0                    ; generic
         .byte   0                    ; text
         .byte   0                    ; binary
@@ -15800,35 +15788,8 @@ icontype_iconentryflags_table:
         .byte   0                    ; variables
         .byte   0                    ; system
         .byte   0                    ; application
-        ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT
-
-;;; Table mapping IconType to IconResource
-type_icons_table:
-        .addr   gen ; generic
-        .addr   txt ; text
-        .addr   bin ; binary
-        .addr   fot ; graphics
-        .addr   anm ; animation/video
-        .addr   mus ; music
-        .addr   snd ; audio
-        .addr   fnt ; font
-        .addr   rel ; relocatable
-        .addr   cmd ; command
-        .addr   dir ; folder
-        .addr   src ; iigs
-        .addr   adb ; appleworks db
-        .addr   awp ; appleworks wp
-        .addr   asp ; appleworks sp
-        .addr   arc ; archive
-        .addr   arc ; encoded
-        .addr   lnk ; link
-        .addr   a2d ; desk accessory
-        .addr   bas ; basic
-        .addr   int ; intbasic
-        .addr   var ; variables
-        .addr   sys ; system
-        .addr   app ; application
-        ASSERT_ADDRESS_TABLE_SIZE type_icons_table, IconType::COUNT
+        ;; Small Icon types skipped via math below
+        ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT - IconType::SMALL_COUNT
 
 ;;; ============================================================
 

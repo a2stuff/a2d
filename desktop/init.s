@@ -381,8 +381,8 @@ loop:
         copy16in #main::kTrashIconX, (ptr),y
         ldy     #IconEntry::icony
         copy16in #main::kTrashIconY, (ptr),y
-        ldy     #IconEntry::iconbits
-        copy16in #trash_icon, (ptr),y
+        ldy     #IconEntry::type
+        copy    #IconType::trash, (ptr),y
 
         iny
         ldx     #0

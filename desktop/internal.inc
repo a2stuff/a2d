@@ -6,6 +6,16 @@ kDAFileType     = $F1
 kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
 
 .enum IconType
+        ;; Volumes
+        trash                   ; pseudo-volume
+        floppy140
+        ramdisk
+        profile
+        floppy800
+        fileshare
+        cdrom
+
+        ;; Files
         generic
         text
         binary
@@ -30,7 +40,14 @@ kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
         variables
         system
         application
+
+        ;; Small Icons
+        small_generic
+        small_folder
+
         COUNT                   ; last
+        VOL_COUNT = generic
+        SMALL_COUNT = 2
 .endenum
 
 kMaxDeskAccCount        = MGTK::max_menu_items - kAppleMenuFixedItems
@@ -199,18 +216,6 @@ kMenuSizeSelector = 13
         format = 4
         erase  = 5
 .endenum
-
-;;; ============================================================
-;;; Device types
-
-kNumDeviceTypes = 6
-
-kDeviceTypeDiskII       = 0
-kDeviceTypeRAMDisk      = 1
-kDeviceTypeFixed        = 2
-kDeviceTypeRemovable    = 3
-kDeviceTypeFileShare    = 4
-kDeviceTypeCDROM        = 5
 
 ;;; ============================================================
 ;;; Internals - miscellaneous structures

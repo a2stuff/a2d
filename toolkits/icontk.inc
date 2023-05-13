@@ -6,7 +6,7 @@
 
 .scope IconTK
 
-InitToolKit     = $00   ; { .byte headersize, .addr a_polybuf, .word bufsize }
+InitToolKit     = $00   ; { .byte headersize, .addr a_polybuf, .word bufsize, .addr a_typemap }
 AddIcon         = $01   ; { .byte icon, .addr IconEntry }
 HighlightIcon   = $02   ; { .byte icon }
 DrawIconRaw     = $03   ; { .byte icon }
@@ -70,7 +70,7 @@ label   := *
 ;;;                      bit 7 = fixed location
 ;;;      .word iconx     (pixels)
 ;;;      .word icony     (pixels)
-;;;      .addr iconbits  (addr of IconResource)
+;;;      .byte type      mapped to IconResource (see InitToolKit)
 ;;;      .byte len       (name length)
 ;;;      .res  15  name  (name)
 ;;;      .byte record_num (index of icon in window)
@@ -80,10 +80,10 @@ label   := *
         win_flags       .byte   ; 1
         iconx           .word   ; 2
         icony           .word   ; 4
-        iconbits        .addr   ; 6
-        name            .res 16 ; 8 (length + 15 chars)
-        record_num      .byte   ; 24
-.endstruct                      ; 25
+        type            .byte   ; 6
+        name            .res 16 ; 7 (length + 15 chars)
+        record_num      .byte   ; 23
+.endstruct                      ; 24
 
 ;;; Icon numbers 1...127 are supported
 ;;; (Tables keyed by icon number must hold `kMaxIconCount` + 1 entries)

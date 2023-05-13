@@ -32,7 +32,7 @@ This defines an icon instance.
                 bit 7 = fixed location
 .word iconx     (pixels)
 .word icony     (pixels)
-.addr iconbits  (addr of IconResource)
+.type type      (type, mapped to IconResource)
 .res  16        (length-prefixed name)
 .byte record_num (index of icon in window)
 ```
@@ -64,11 +64,13 @@ Parameters:
 .byte       headersize
 .addr       a_polybuf
 .word       bufsize
+.addr       a_typemap
 ```
 
 * `headersize` is how much to vertically offset window ports to account for a header
 * `a_polybuf` points to a scratch buffer safe to use when doing a modal drag operation; this is used to construct the outline polygon
 * `bufsize` is the size of the above buffer
+* `a_typemap` is a table mapping (via index) from `IconEntry::type` to `IconResource`
 
 Since the buffer is only used during modal drag operations, it is safe to use the same "save area" given to MGTK, which is used only in modal menu operations. $D00 is enough for the maximum number of supported icons.
 
