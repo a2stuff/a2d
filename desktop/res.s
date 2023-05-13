@@ -592,6 +592,7 @@ icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work
         ;; * follows icon_param for IconTK::IconInRect call
+        ;; * ... and for IconTK::AddIcon calls (but not as a rect)
         ;; * used for saving/restoring window bounds to/from file
         ;; * used for icon clipping
         ;; * used for window frame zoom animation

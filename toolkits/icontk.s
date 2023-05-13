@@ -289,11 +289,14 @@ bufsize:
 ;;; AddIcon
 
 .proc AddIconImpl
-        ;; Parameter is an IconEntry
-        ptr_icon := $06
+        params := $06
+.struct AddIconParams
+        icon    .byte
+        entry   .addr
+.endstruct
 
-        ldy     #IconEntry::id
-        lda     (ptr_icon),y ; A = icon id
+        ldy     #AddIconParams::icon
+        lda     (params),y      ; A = icon id
 
 .ifdef DEBUG
         ;; Check if passed ID is already in the icon list
@@ -310,12 +313,23 @@ bufsize:
 
         ;; Add to `icon_ptrs` table
         tax
-        copylohi  ptr_icon, icon_ptrs_low,x, icon_ptrs_high,x
+        ldy     #AddIconParams::entry
+        lda     (params),y
+        sta     icon_ptrs_low,x
+        pha
+        iny
+        lda     (params),y
+        sta     icon_ptrs_high,x
+
+        ptr_icon := $06
+
+        sta     ptr_icon+1
+        pla
+        sta     ptr_icon
 
         ;; Update IconEntry::state
         lda     #kIconEntryStateAllocated
-        .assert kIconEntryStateAllocated = IconEntry::state, error, "flag mismatch"
-        tay
+        ldy     #IconEntry::state
         ora     (ptr_icon),y    ; caller may have set state e.g. dimmed
         sta     (ptr_icon),y
         lsr
@@ -361,8 +375,7 @@ done:   rts
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ;;ldy     #IconEntry::state
-        .assert (IconEntry::state - HighlightIconParams::icon) = 1, error, "state must be 1 more than icon"
-        iny
+        .assert IconEntry::state = HighlightIconParams::icon, error, "struct offsets mismatch"
         lda     (ptr),y         ; A = state
 .ifdef DEBUG
         ;; A = state; 0 = not valid
@@ -426,19 +439,18 @@ done:   rts
 :
 .endif ; DEBUG
 
-        jsr     RemoveIconCommon
+        txa
+        jsr     RemoveIconCommon ; A = icon id, $08 = icon ptr
         return  #0
 .endproc ; RemoveIconImpl
 
 ;;; ============================================================
 ;;; Remove the icon at $08
+;;; Inputs: A = icon id, $08 = icon ptr
 
 .proc RemoveIconCommon
         ptr := $08
 
-        ;; Dig out id
-        ldy     #IconEntry::id
-        lda     (ptr),y         ; icon num
         sta     icon_id
 
         ;; Find index
@@ -492,12 +504,8 @@ done:   rts
         ;; Pointer to IconEntry
         ldy     #EraseIconParams::icon
         lda     (params),y
-        tax
-        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
-
-        jsr     CalcIconPoly
-        lda     #$80            ; redraw highlighted
-        jmp     EraseIconCommon
+        ldx     #$80            ; redraw highlighted
+        jmp     EraseIconCommon ; A = icon id, X = redraw flag
 .endproc ; EraseIconImpl
 
 ;;; ============================================================
@@ -525,6 +533,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         dex
         ldy     icon_list,x
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
+
         ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask ; check window
@@ -532,7 +541,8 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         cmp     (params),y ; match?
         bne     loop                 ; nope
 
-        jsr     RemoveIconCommon
+        lda     icon_list,x
+        jsr     RemoveIconCommon ; A = icon id, $08 = icon ptr
 
         jmp     loop
 .endproc ; RemoveAllImpl
@@ -922,11 +932,9 @@ move_ok:
         bmi     :+
         txa
         pha
-        ldy     highlight_list,x
-        copylohi  icon_ptrs_low,y, icon_ptrs_high,y, $06
-        jsr     CalcIconPoly
-        lda     #0              ; don't redraw highlighted
-        jsr     EraseIconCommon
+        lda     highlight_list,x
+        ldx     #0              ; don't redraw highlighted
+        jsr     EraseIconCommon ; A = icon id, X = redraw flag
         pla
         tax
         bpl     :-              ; always
@@ -936,21 +944,28 @@ move_ok:
         copy16  polybuf_addr, $08
 @loop:  dex
         bmi     L9C63
+
+        ;; Struct offsets coincidentally match between poly vertex and
+        ;; `IconEntry` coordinates. If they didn't, icon pointer could
+        ;; be offset (i.e. add16_8 $06, #IconEntry::iconx - 2)
+
         ldy     highlight_list,x
         copylohi icon_ptrs_low,y, icon_ptrs_high,y, $06
         ldy     #2              ; offset in poly to first vertex
+        .assert IconEntry::iconx = 2, error, "struct offsets mismatch"
+
         lda     ($08),y
-        iny
         sta     ($06),y
+        iny
         lda     ($08),y
-        iny
         sta     ($06),y
+        iny
         lda     ($08),y
-        iny
         sta     ($06),y
+        iny
         lda     ($08),y
-        iny
         sta     ($06),y
+
         lda     $08
         clc
         adc     #kIconPolySize
@@ -1170,8 +1185,7 @@ icon_num:
         copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
 
         ;;ldy     #IconEntry::state
-        .assert (IconEntry::state - UnhighlightIconParams::icon) = 1, error, "state must be 1 more than icon"
-        iny
+        .assert IconEntry::state = UnhighlightIconParams::icon, error, "struct offsets mismatch"
         lda     (ptr),y         ; A = state
 .ifdef DEBUG
         bne     :+              ; 0 = not valid
@@ -1874,17 +1888,19 @@ icon_in_window_flag:
 window_id:      .byte   0
 .endparams
 
+;;; Inputs: A = icon id, X = redraw highlighted flag
 .proc EraseIconCommon
-        sta     redraw_highlighted_flag
+        sta     erase_icon_id
+        stx     redraw_highlighted_flag
+
+        tay
+        copylohi  icon_ptrs_low,y, icon_ptrs_high,y, $06
+        jsr     CalcIconPoly
+
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
 
-        ldy     #IconEntry::id
-        lda     ($06),y
-        sta     erase_icon_id
-        iny
-        iny
-        .assert IconEntry::win_flags - IconEntry::id = 2, error, "enum mismatch"
+        ldy     #IconEntry::win_flags
         lda     ($06),y
         and     #kIconEntryWinIdMask
         sta     clip_window_id

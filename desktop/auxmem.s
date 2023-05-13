@@ -581,6 +581,10 @@ start:
         .include "../lib/drawstring.s"
 
 ;;; ============================================================
+
+        ;; ENDSEG SegmentDeskTopAux - effective; for measuring usage
+
+;;; ============================================================
 ;;; Relay table at fixed memory location (see desktop.inc)
 ;;; These are used by DAs calling directly from aux.
 
@@ -593,4 +597,4 @@ start:
 
 .endscope ; aux
 
-        ENDSEG SegmentDeskTopAux
+        ENDSEG SegmentDeskTopAux ; real, but padded so not useful

@@ -343,10 +343,7 @@ loop:
         copy16  ptr, icon_entry_address_table,y
 
         ;; Initialize IconEntry
-        txa                     ; A = icon id
-        ldy     #IconEntry::id
-        sta     (ptr),y
-        iny                     ; Y = IconEntry::state
+        ldy     #IconEntry::state
         copy    #0, (ptr),y     ; mark not allocated
 
         ;; Next entry
@@ -1082,8 +1079,8 @@ iloop:  cpx     cached_window_entry_count
         lda     cached_window_entry_list,x
         sta     icon_param
         jsr     main::GetIconEntry
-        stax    @addr
-        ITK_CALL IconTK::AddIcon, 0, @addr
+        stax    icon_param+1
+        ITK_CALL IconTK::AddIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
         pla
         tax

@@ -76,7 +76,11 @@ Since the buffer is only used during modal drag operations, it is safe to use th
 
 Inserts an icon record into the table.
 
-Parameters: address of `IconEntry`
+Parameters:
+```
+.byte       icon            Icon number
+.addr       entry           Address of IconEntry
+```
 
 Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc.
 

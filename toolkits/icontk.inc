@@ -7,7 +7,7 @@
 .scope IconTK
 
 InitToolKit     = $00   ; { .byte headersize, .addr a_polybuf, .word bufsize }
-AddIcon         = $01   ; param is address of IconEntry
+AddIcon         = $01   ; { .byte icon, .addr IconEntry }
 HighlightIcon   = $02   ; { .byte icon }
 DrawIconRaw     = $03   ; { .byte icon }
 RemoveIcon      = $04   ; { .byte icon }
@@ -56,8 +56,7 @@ label   := *
 
 ;;; ============================================================
 
-;;; Icon (file/volume) entries - length 27 bytes, maximum of 127
-;;;      .byte icon      icon index
+;;; Icon (file/volume) entries - length 25 bytes, maximum of 127
 ;;;      .byte state     bit 0   = allocated
 ;;;                      bit 1-5 = (unused)
 ;;;                      bit 6   = highlighted
@@ -77,15 +76,14 @@ label   := *
 ;;;      .byte record_num (index of icon in window)
 
 .struct IconEntry
-        id              .byte   ; 0
-        state           .byte   ; 1
-        win_flags       .byte   ; 2
-        iconx           .word   ; 3
-        icony           .word   ; 5
-        iconbits        .addr   ; 7
-        name            .res 16 ; 9 (length + 15 chars)
-        record_num      .byte   ; 25
-.endstruct                      ; 26
+        state           .byte   ; 0
+        win_flags       .byte   ; 1
+        iconx           .word   ; 2
+        icony           .word   ; 4
+        iconbits        .addr   ; 6
+        name            .res 16 ; 8 (length + 15 chars)
+        record_num      .byte   ; 24
+.endstruct                      ; 25
 
 ;;; Icon numbers 1...127 are supported
 ;;; (Tables keyed by icon number must hold `kMaxIconCount` + 1 entries)

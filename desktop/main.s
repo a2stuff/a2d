@@ -2139,6 +2139,8 @@ next:   txa
         cmp     trash_icon_num
         beq     next_icon
 
+        pha                     ; A = icon id
+
         ;; Look at flags...
         jsr     GetIconEntry
         stax    ptr
@@ -2161,9 +2163,7 @@ next:   txa
         beq     :+                 ; no
         jsr     ClearSelection
 :
-
-        ldy     #0
-        lda     (ptr),y
+        pla                     ; A = icon id
         jsr     OpenWindowForIcon
 
 next_icon:
@@ -3057,8 +3057,8 @@ selection_preserved_count:
         lda     cached_window_entry_list,x
         sta     icon_param
         jsr     GetIconEntry
-        stax    @addr
-        ITK_CALL IconTK::AddIcon, 0, @addr
+        stax    icon_param+1
+        ITK_CALL IconTK::AddIcon, icon_param
         inc     index
         jmp     :-
 :
@@ -4364,8 +4364,8 @@ cont:   txa
 
         sta     icon_param
         jsr     GetIconEntry
-        stax    @addr
-        ITK_CALL IconTK::AddIcon, 0, @addr
+        stax    icon_param+1
+        ITK_CALL IconTK::AddIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
 
 next:   pla
@@ -4552,8 +4552,8 @@ add_icon:
         lda     cached_window_entry_list,x
         sta     icon_param
         jsr     GetIconEntry
-        stax    @addr
-        ITK_CALL IconTK::AddIcon, 0, @addr
+        stax    icon_param+1
+        ITK_CALL IconTK::AddIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
 
 :       jmp     StoreWindowEntryTable
@@ -9448,8 +9448,14 @@ success:
 
         jsr     PushPointers
         jsr     AllocateIcon
+
+        ;; Assign icon number
         ldy     devlst_index
         sta     device_to_icon_map,y
+        ldx     cached_window_entry_count
+        dex
+        sta     cached_window_entry_list,x
+
         jsr     GetIconEntry
         stax    icon_ptr
 
@@ -9533,12 +9539,6 @@ success:
         ldy     #IconEntry::icony
         add16in (icon_ptr),y, offset, (icon_ptr),y
 
-        ;; Assign icon number
-        ldx     cached_window_entry_count
-        dex
-        ldy     #IconEntry::id
-        lda     (icon_ptr),y
-        sta     cached_window_entry_list,x
         jsr     PopPointers
         return  #0
 
