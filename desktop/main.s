@@ -2132,7 +2132,7 @@ loop:   cpx     selected_icon_count_copy
 done:   rts
 
 next:   txa
-        pha
+        pha                     ; A = index
         lda     selected_icon_list_copy,x
 
         ;; Trash?
@@ -2167,18 +2167,20 @@ next:   txa
         jsr     OpenWindowForIcon
 
 next_icon:
-        pla
+        pla                     ; A = index
         tax
         inx
         jmp     loop
 
         ;; File (executable or data)
 maybe_open_file:
+        pla                     ; A = icon id; no longer needed
+
         lda     selected_icon_count_copy
         cmp     #2              ; multiple files open?
         bcs     next_icon       ; don't try to invoke
 
-        pla
+        pla                     ; A = index; no longer needed
 
         jsr     CopyAndComposeWinIconPaths
         jne     ShowAlert
