@@ -3108,10 +3108,6 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         copy    #$FF, window_to_dir_icon_table,x ; $FF = dir icon freed
     END_IF
 
-        ;; TODO: Unnecessary - remove this!
-        ldx     index
-        copy    #0, cached_window_entry_list,x
-
         inc     index
         bne     loop
 
@@ -4285,7 +4281,6 @@ loop:   lda     cached_window_entry_list,x
         pha
         lda     cached_window_entry_list,x
         sta     icon_param
-        copy    #0, cached_window_entry_list,x
         ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
         ITK_CALL IconTK::RemoveIcon, icon_param
         lda     icon_param
@@ -9591,9 +9586,6 @@ remove: lda     cached_window_entry_list+1,x
         cpx     cached_window_entry_count
         bne     remove
         dec     cached_window_entry_count
-        ldx     cached_window_entry_count
-        lda     #0
-        sta     cached_window_entry_list,x
         rts
 .endproc ; RemoveIconFromWindow
 
