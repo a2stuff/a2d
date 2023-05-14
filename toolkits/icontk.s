@@ -398,11 +398,10 @@ done:   rts
         ldy     #HighlightIconParams::icon
         lda     (params),y
         sta     icon_id
-        tax
-        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
+        jsr     GetIconPtr
+        stax    ptr
 
-        ;;ldy     #IconEntry::state
-        .assert IconEntry::state = HighlightIconParams::icon, error, "struct offsets mismatch"
+        ldy     #IconEntry::state
         lda     (ptr),y         ; A = state
 .ifdef DEBUG
         ;; A = state; 0 = not valid
@@ -455,10 +454,11 @@ done:   rts
 
         ;; Pointer to IconEntry
         ptr := $08
-        tax
-        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
+        pha                     ; A = icon id
+        jsr     GetIconPtr
+        stax    ptr
+        pla                     ; A = icon id
 
-        txa
         jsr     RemoveIconCommon ; A = icon id, $08 = icon ptr
         return  #0
 .endproc ; RemoveIconImpl
@@ -547,8 +547,9 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
 :       dec     count
         dex
-        ldy     icon_list,x
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
+        lda     icon_list,x
+        jsr     GetIconPtr
+        stax    ptr
 
         ldy     #IconEntry::win_flags
         lda     (ptr),y
@@ -557,6 +558,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         cmp     (params),y ; match?
         bne     loop                 ; nope
 
+        ldx     count
         lda     icon_list,x
         jsr     RemoveIconCommon ; A = icon id, $08 = icon ptr
 
@@ -601,8 +603,9 @@ loop:   cpx     num_icons
         ;; Check the icon
 :       txa
         pha
-        ldy     icon_list,x
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, icon_ptr
+        lda     icon_list,x
+        jsr     GetIconPtr
+        stax    icon_ptr
 
         ;; Matching window?
         ldy     #IconEntry::win_flags
@@ -935,8 +938,9 @@ same_window:
         jsr     CheckRealContentArea
         bne     L9C63           ; don't move
 
-        ldy     highlight_list
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, $06
+        lda     highlight_list
+        jsr     GetIconPtr
+        stax    $06
         ldy     #IconEntry::win_flags
         lda     ($06),y
         and     #kIconEntryFlagsFixed
@@ -1096,8 +1100,8 @@ headery:
         ;; Over an icon
         sta     icon_num
         ptr := $06
-        tax
-        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
+        jsr     GetIconPtr
+        stax    ptr
 
         ;; Highlighted?
         ldy     #IconEntry::state
@@ -1188,11 +1192,10 @@ icon_num:
         ldy     #UnhighlightIconParams::icon
         lda     (params),y
         sta     icon_id
-        tax
-        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
+        jsr     GetIconPtr
+        stax    ptr
 
-        ;;ldy     #IconEntry::state
-        .assert IconEntry::state = UnhighlightIconParams::icon, error, "struct offsets mismatch"
+        ldy     #IconEntry::state
         lda     (ptr),y         ; A = state
 .ifdef DEBUG
         bne     :+              ; 0 = not valid
@@ -1243,8 +1246,9 @@ start:  ldy     #IconInRectParams::icon
         dey
         bne     :-
 
-        ldx     icon
-        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
+        lda     icon
+        jsr     GetIconPtr
+        stax    ptr
         jsr     CalcIconRects
 
         ;; Compare the rect against both the bitmap and label rects
@@ -1304,8 +1308,8 @@ inside:
         ptr := $06
         ldy     #GetIconBoundsParams::icon
         lda     (params),y
-        tay
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
+        jsr     GetIconPtr
+        stax    ptr
         jsr     CalcIconBoundingRect
         jsr     PopPointers
 
@@ -1381,8 +1385,8 @@ clip_dy:
         ;; Pointer to IconEntry
         ldy     #DrawIconParams::icon
         lda     (params),y
-        tax
-        copylohi icon_ptrs_low,x, icon_ptrs_high,x, ptr
+        jsr     GetIconPtr
+        stax    ptr
 
         jsr     CalcIconRects
 
@@ -1840,11 +1844,12 @@ loop:   inx
         txa
         pha
 
-        ldy     icon_list,x
-        sty     icon
+        lda     icon_list,x
+        sta     icon
+        jsr     GetIconPtr
+        stax    ptr
 
         ;; Is it in the target window?
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
         ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryWinIdMask
