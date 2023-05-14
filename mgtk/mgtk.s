@@ -8833,7 +8833,6 @@ activate   .byte
 
 activate:
         sta     which_control
-        jsr     HideCursorSaveParams
         jsr     TopWindow
 
         ldy     #MGTK::Winfo::vscroll
@@ -8851,8 +8850,12 @@ activate:
 toggle: eor     params::activate
         and     #1
         eor     (window),y
-        sta     (window),y
+        cmp     (window),y      ; no-op if no change
+        bne     :+
+        rts
+:       sta     (window),y
 
+        jsr     HideCursorSaveParams
         lda     params::activate
         jsr     DrawOrEraseScrollbar
         jmp     ShowCursorAndRestore
@@ -9541,7 +9544,10 @@ check_win:
 
         ldy     #MGTK::Winfo::vthumbpos
 :       lda     params::thumbpos
-        sta     (window),y
+        cmp     (window),y      ; no-op if no change
+        bne     :+
+        rts
+:       sta     (window),y
 
         jsr     HideCursorSaveParams
         jsr     SetStandardPort
