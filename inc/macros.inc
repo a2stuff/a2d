@@ -1289,6 +1289,30 @@ __depth__ .set 0
         .define WHILE_POS WHILE_NC
         .define WHILE_NEG WHILE_NS
 
+
+;;; ============================================================
+;;; Lambda Invocation
+;;; ============================================================
+
+;;; Like `param_call` but the target is passed a "lambda"
+;;; that is defined inline. And RTS (or tail call) is required!
+
+.macro INVOKE_WITH_LAMBDA target
+.scope
+        lda     #<(lambda)
+        ldx     #>(lambda)
+        jsr     target
+        jmp     __end_of_lambda__
+.proc lambda
+.endmacro
+
+.macro END_OF_LAMBDA
+.endproc ; lambda
+        __end_of_lambda__ := *
+.endscope
+.endmacro
+
+
 ;;; ============================================================
 ;;; Jump Table Definitions
 ;;; ============================================================

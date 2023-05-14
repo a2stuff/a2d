@@ -96,11 +96,6 @@ Parameters:
 
 Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc.
 
-Result codes (in A):
-* 0 = success
-* 2 = invalid icon (`DEBUG` only)
-* 3 = already highlighted (`DEBUG` only)
-
 ### `IconTK::DrawIconRaw` ($03)
 
 Draws an icon by number. No clipping is done.
@@ -192,11 +187,6 @@ Parameters:
 ```
 
 Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc.
-
-Result codes (in A):
-* 0 = success
-* 2 = invalid icon (`DEBUG` only)
-* 3 = icon not highlighted (`DEBUG` only)
 
 ### `IconTK::DrawAll` ($09)
 

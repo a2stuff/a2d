@@ -209,11 +209,6 @@ icon_ptrs_high: .res    (::kMaxIconCount+1), 0 ; addresses of icon details (inde
         rts
 .endproc ; GetIconPtr
 
-highlight_count:                ; number of highlighted icons
-        .byte   0
-highlight_list:                 ; selected icons
-        .res    ::kMaxIconCount, 0
-
 
 ;;; ============================================================
 ;;; Initialization parameters passed by client
@@ -397,35 +392,14 @@ done:   rts
         ;; Pointer to IconEntry
         ldy     #HighlightIconParams::icon
         lda     (params),y
-        sta     icon_id
         jsr     GetIconPtr
         stax    ptr
 
+        ;; Mark highlighted
         ldy     #IconEntry::state
         lda     (ptr),y         ; A = state
-.ifdef DEBUG
-        ;; A = state; 0 = not valid
-        bne     :+              ; 0 = not valid
-        return  #2              ; Invalid icon
-:
-        ;;and     #kIconEntryStateHighlighted
-        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
-        asl
-        bpl     :+
-        return  #3              ; Already highlighted
-:       ror
-.endif ; DEBUG
-
-        ;; Mark highlighted
         ora     #kIconEntryStateHighlighted
         sta     (ptr),y
-
-        ;; Append to highlight list
-        icon_id := *+1
-        lda     #SELF_MODIFIED_BYTE
-        ldx     highlight_count
-        sta     highlight_list,x
-        inc     highlight_count
 
         rts
 .endproc ; HighlightIconImpl
@@ -489,20 +463,9 @@ done:   rts
         ;; Remove it
         dec     num_icons
 
-        ;; Was it highlighted?
-        ldy     #IconEntry::state
-        lda     (ptr),y         ; A = state
-        ;;and     #kIconEntryStateHighlighted
-        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
-        asl
-        bpl     :+              ; not highlighted
-
+        ;; Mark it as free
         icon_id := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     RemoveFromHighlightList
-:
-        ;; Mark it as free
-        lda     icon_id
         jmp     FreeIcon
 .endproc ; RemoveIconCommon
 
@@ -734,21 +697,40 @@ y_lo:   cpx     #kDragDelta
         FALL_THROUGH_TO is_drag
 .endproc ; DragDetect
 
+        ;; --------------------------------------------------
         ;; Meets the threshold - it is a drag, not just a click.
 is_drag:
+
+        ;; Count number of highlighted icons
+        copy    #0, highlight_count
+
+        INVOKE_WITH_LAMBDA IterateHighlightedIcons
+        ;; Count this one, and remember as potentially last
+        inc     highlight_count
+        sta     last_highlighted_icon
+
+        ;; Also check if Trash, and set flag appropriately
+        jsr     GetIconFlags
+        and     #kIconEntryFlagsNotDropSource
+        beq     :+
+        copy    #$80, trash_flag
+:
+        rts
+        END_OF_LAMBDA
+
+        ;; Make sure there's room
         lda     highlight_count
         cmp     max_draggable_icons
         beq     :+                      ; equal okay
         bcs     DragDetect::ignore_drag ; too many
 :
         ;; Was there a selection?
-        copy16  polybuf_addr, $08
         lda     highlight_count
         bne     :+
         lda     #3              ; return value - nothing highlighted
         jmp     just_select
 
-:       lda     highlight_list  ; first entry
+:       lda     last_highlighted_icon
         jsr     GetIconWin
         sta     source_window_id
 
@@ -768,38 +750,16 @@ is_drag:
         ;; --------------------------------------------------
         ;; Build drag polygon
 
-        ldx     highlight_count
-        stx     index
+        copy16  polybuf_addr, $08
+        copy    #$80, poly::lastpoly  ; more to follow
 
-next_icon:
-        lda     highlight_count,x
+        INVOKE_WITH_LAMBDA IterateHighlightedIcons
         sta     iconinrect_params::icon
 
-        jsr     GetIconPtr
-        stax    $06
-
-        ldy     #IconEntry::win_flags
-        lda     ($06),y
-        and     #kIconEntryFlagsNotDropSource
-        beq     :+
-        ldx     #$80
-        stx     trash_flag
-:
-        ITK_CALL IconTK::IconInRect, iconinrect_params::icon
-        beq     skip_icon
+        ITK_CALL IconTK::IconInRect, iconinrect_params
+    IF_NE
         jsr     CalcIconPoly
 
-        ;; Last icon?
-        lda     index
-        cmp     highlight_count
-        beq     :+
-        jsr     PushPointers    ; if so set flag
-        sub16_8 $08, #kIconPolySize
-        ldy     #1              ; MGTK Polygon "not last" flag
-        lda     #$80            ; more polygons to follow
-        sta     ($08),y
-        jsr     PopPointers
-:
         ;; Copy poly into place
         ldy     #kIconPolySize-1
 :       lda     poly,y
@@ -807,17 +767,18 @@ next_icon:
         dey
         bpl     :-
 
-        ;; Set number of vertices (for next one)
-        lda     #kPolySize
-        iny
-        sta     ($08),y
         add16_8 $08, #kIconPolySize
+    END_IF
+        rts
+        END_OF_LAMBDA
 
-        ;; More?
-skip_icon:
-        dec     index
-        ldx     index
-        bne     next_icon
+        ;; Mark last icon
+        sub16_8 $08, #kIconPolySize
+        ldy     #1              ; MGTK Polygon "not last" flag
+        lda     #0              ; last polygon
+        sta     ($08),y
+
+        copy    #0, poly::lastpoly ; restore default
 
         ;; --------------------------------------------------
 
@@ -933,12 +894,12 @@ same_window:
         beq     move_ok
 
         cmp     #MGTK::Area::content
-        bne     L9C63           ; don't move
+        jne     L9C63           ; don't move
 
         jsr     CheckRealContentArea
-        bne     L9C63           ; don't move
+        jne     L9C63           ; don't move
 
-        lda     highlight_list
+        lda     last_highlighted_icon
         jsr     GetIconPtr
         stax    $06
         ldy     #IconEntry::win_flags
@@ -946,31 +907,28 @@ same_window:
         and     #kIconEntryFlagsFixed
         bne     L9C63           ; don't move
 
+        ;; --------------------------------------------------
+
 move_ok:
-        ldx     highlight_count
-:       dex
-        bmi     :+
-        txa
-        pha
-        lda     highlight_list,x
+
+        INVOKE_WITH_LAMBDA IterateHighlightedIcons
         ldx     #0              ; don't redraw highlighted
-        jsr     EraseIconCommon ; A = icon id, X = redraw flag
-        pla
-        tax
-        bpl     :-              ; always
-:
+        jmp     EraseIconCommon ; A = icon id, X = redraw flag
+        END_OF_LAMBDA
+
+        ;; --------------------------------------------------
         ;; Update icons with new positions (based on poly)
-        ldx     highlight_count
+
         copy16  polybuf_addr, $08
-@loop:  dex
-        bmi     L9C63
+
+        INVOKE_WITH_LAMBDA IterateHighlightedIcons
+        jsr     GetIconPtr
+        stax    $06
 
         ;; Struct offsets coincidentally match between poly vertex and
         ;; `IconEntry` coordinates. If they didn't, icon pointer could
         ;; be offset (i.e. add16_8 $06, #IconEntry::iconx - 2)
 
-        ldy     highlight_list,x
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, $06
         ldy     #2              ; offset in poly to first vertex
         .assert IconEntry::iconx = 2, error, "struct offsets mismatch"
 
@@ -986,13 +944,11 @@ move_ok:
         lda     ($08),y
         sta     ($06),y
 
-        lda     $08
-        clc
-        adc     #kIconPolySize
-        sta     $08
-        bcc     @loop
-        inc     $08+1
-        bne     @loop           ; always
+        add16_8 $08, #kIconPolySize
+        rts
+        END_OF_LAMBDA
+
+        ;; --------------------------------------------------
 
 L9C63:  lda     #0              ; return value
 
@@ -1015,6 +971,39 @@ coords1y:       .word   0
 
 poly_dx:        .word   0
 poly_dy:        .word   0
+
+highlight_count:
+        .byte   0
+last_highlighted_icon:
+        .byte   0
+
+;;; Inputs: A,X = proc; called with A = icon id
+;;;
+.proc IterateHighlightedIcons
+        stax    proc
+
+        ldx     #0
+        stx     index
+
+loop:   lda     icon_list,x
+        jsr     GetIconState
+        and     #kIconEntryStateHighlighted
+        beq     next
+
+        ldx     index
+        lda     icon_list,x
+
+        proc := *+1
+        jsr     SELF_MODIFIED
+
+next:   inc     index
+        ldx     index
+        cpx     num_icons
+        bne     loop
+
+        rts
+.endproc ; IterateHighlightedIcons
+
 
 
 ;;; Like `FindIcon`, but validates that the passed coordinates are
@@ -1144,15 +1133,36 @@ icon_num:
 ;;; Output: A = window id (0=desktop)
 ;;; Trashes $06
 .proc GetIconWin
+        jsr     GetIconFlags
+        and     #kIconEntryWinIdMask
+        rts
+.endproc ; GetIconWin
+
+;;; Input: A = icon number
+;;; Output: A = flags (including window)
+;;; Trashes $06
+.proc GetIconFlags
         ptr := $06
 
         jsr     GetIconPtr
         stax    ptr
         ldy     #IconEntry::win_flags
         lda     (ptr),y
-        and     #kIconEntryWinIdMask
         rts
-.endproc ; GetIconWin
+.endproc ; GetIconFlags
+
+;;; Input: A = icon number
+;;; Output: A = state
+;;; Trashes $06
+.proc GetIconState
+        ptr := $06
+
+        jsr     GetIconPtr
+        stax    ptr
+        ldy     #IconEntry::state
+        lda     (ptr),y
+        rts
+.endproc ; GetIconState
 
 .proc XdrawOutline
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
@@ -1191,31 +1201,16 @@ icon_num:
         ;; Pointer to IconEntry
         ldy     #UnhighlightIconParams::icon
         lda     (params),y
-        sta     icon_id
         jsr     GetIconPtr
         stax    ptr
 
+        ;; Mark not highlighted
         ldy     #IconEntry::state
         lda     (ptr),y         ; A = state
-.ifdef DEBUG
-        bne     :+              ; 0 = not valid
-        return  #2              ; Invalid icon
-:
-        ;;and     #kIconEntryStateHighlighted
-        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
-        asl
-        bmi     :+
-        return  #3              ; Not highlighted
-:       ror
-.endif ; DEBUG
-
-        ;; Mark not highlighted
-        eor     #kIconEntryStateHighlighted
+        and     #AS_BYTE(~kIconEntryStateHighlighted)
         sta     (ptr),y
 
-        icon_id := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jmp     RemoveFromHighlightList
+        rts
 .endproc ; UnhighlightIconImpl
 
 ;;; ============================================================
@@ -1897,29 +1892,6 @@ rect:   .tag    MGTK::Rect
 
         rts
 .endproc ; GetIconEntryImpl
-
-;;; ============================================================
-;;; Remove icon from highlight list. Does not update icon's state.
-;;; Inputs: A=icon id
-.proc RemoveFromHighlightList
-        ;; Find index
-        ldx     #0
-:       cmp     highlight_list,x
-        beq     :+
-        inx
-        bne     :-              ; always
-
-        ;; Shift items down
-:       lda     highlight_list+1,x
-        sta     highlight_list,x
-        inx
-        cpx     highlight_count
-        bne     :-
-
-        ;; Remove it
-        dec     highlight_count
-        rts
-.endproc ; RemoveFromHighlightList
 
 ;;; ============================================================
 ;;; Erase an icon; redraws overlapping icons as needed
