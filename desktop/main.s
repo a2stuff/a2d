@@ -2818,6 +2818,8 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 
         jsr     SaveWindows
 
+        MGTK_CALL MGTK::StopDeskTop
+
         ;; Switch back to main ZP/LC, preserving return address.
         pla
         tax
