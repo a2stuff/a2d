@@ -90,6 +90,8 @@ params:  .res    3
         ;; Override in this scope
         MLIEntry := MLI
 
+        jsr     auxlc::CheckEvents
+
         sta     ALTZPOFF
         bit     ROMIN2
 

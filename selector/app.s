@@ -984,8 +984,6 @@ noop:   rts
 ;;; ============================================================
 
 .proc RunDesktop
-        sta     ALTZPOFF
-        bit     ROMIN2
         jsr     RestoreSystem
 
         MLI_CALL OPEN, open_desktop_params
@@ -1000,6 +998,7 @@ noop:   rts
 ;;; Assert: ROM banked in, ALTZP/LC is OFF
 
 .proc RestoreSystem
+        MGTK_CALL MGTK::StopDeskTop
         jsr     RestoreTextMode
         jsr     ReconnectRAM
         jmp     RestoreDeviceList
@@ -1498,8 +1497,6 @@ common: lda     #winfo::kDialogId
         lda     #<$C000
         sta     @addr
 
-        sta     ALTZPOFF
-        bit     ROMIN2
         jsr     RestoreSystem
 
         @addr := * + 1
@@ -1703,8 +1700,6 @@ check_path:
         ;; --------------------------------------------------
         ;; Invoke
 
-        sta     ALTZPOFF
-        bit     ROMIN2
         jsr     RestoreSystem
 
         jsr     INVOKER

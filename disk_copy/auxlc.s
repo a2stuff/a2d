@@ -2457,6 +2457,13 @@ Alert := alert_dialog::Alert
 
 ;;; ============================================================
 
+.proc StopDeskTop
+        MGTK_CALL MGTK::StopDeskTop
+        rts
+.endproc ; StopDeskTop
+
+;;; ============================================================
+
         .assert * <= $F600, error, "Update memory_bitmap if code extends past $F600"
 .endscope ; auxlc
         auxlc__start := auxlc::start
