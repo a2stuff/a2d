@@ -1818,7 +1818,7 @@ next:   inx                     ; next bank
         sta     memory
         lda     NumBanks+1
         sta     memory+1
-        rts
+        jmp     finish_iigs
 
         ;; ROM0 location is slightly different
         ;; c/o Frank Milliron
@@ -1829,8 +1829,14 @@ rom0:
         sta     memory
         lda     NumBanks0+1
         sta     memory+1
-
+        FALL_THROUGH_TO finish_iigs
         .popcpu
+
+finish_iigs:
+        ;; The memory manager only counts banks $7F and downward,
+        ;; which skips ROM ($Fx) and slow RAM ($Ex). Assume the
+        ;; two banks of slow RAM that every IIgs has ($E0/$E1)
+        add16_8 memory, #2
 
 done:   rts
 .endproc ; CheckIIgsMemory
