@@ -147,9 +147,16 @@ event_params:   .tag MGTK::Event
         bne     InputLoop
 
 on_key:
-        lda     event_params + MGTK::Event::modifiers
-        bne     InputLoop
         lda     event_params + MGTK::Event::key
+
+        ldx     event_params + MGTK::Event::modifiers
+    IF_NOT_ZERO
+        jsr     ToUppercase
+        cmp     #kShortcutCloseWindow
+        bne     InputLoop
+        beq     exit            ; always
+    END_IF
+
         cmp     #CHAR_ESCAPE
         beq     exit
         cmp     #CHAR_RETURN
