@@ -41,6 +41,8 @@
         minipix_dst_buf := $1580 ; Convert address (aux)
         kMinipixDstSize = 26*52
 
+        dir_path := $380
+
         .assert (minipix_src_buf + kMinipixSrcSize) < DA_IO_BUFFER, error, "Not enough room for Minipix load buffer"
         .assert (minipix_dst_buf + kMinipixDstSize) < $2000, error, "Not enough room for Minipix convert buffer"
 
@@ -152,6 +154,10 @@ on_key:
         beq     exit
         cmp     #CHAR_RETURN
         beq     exit
+        cmp     #CHAR_LEFT
+        jeq     PreviousFile
+        cmp     #CHAR_RIGHT
+        jeq     NextFile
         cmp     #' '
         bne     :+
         jsr     ToggleMode
@@ -280,8 +286,6 @@ signature:
 
         rts
 
-str_a2hr_suffix:
-        PASCAL_STRING ".A2HR"
 .endproc ; ShowHRFile
 
 .proc ShowDHRFile
@@ -311,8 +315,6 @@ str_a2hr_suffix:
 
         rts
 
-str_a2fm_suffix:
-        PASCAL_STRING ".A2FM"
 .endproc ; ShowDHRFile
 
 .proc CopyHiresToAux
@@ -827,8 +829,378 @@ yes:    clc                     ; match!
 
 ;;; ============================================================
 
+;;; Inputs: A,X = `FileEntry`
+;;; Output: C=1 if it's an image file we can preview, C=0 otherwise
+;;; Trashes: $06
+
+.proc IsImageFileEntry
+        ;; Copy somewhere more convenient
+        ptr := $06
+        stax    ptr
+        ldy     #.sizeof(FileEntry)-1
+:       lda     (ptr),y
+        sta     entry,y
+        dey
+        bpl     :-
+
+        ;; TODO: Keep this logic in sync with DeskTop's
+        ;; `ICT_RECORD` definitions for graphics files.
+
+        ;; Check file suffixes
+        lda     entry+FileEntry::storage_type_name_length
+        and     #NAME_LENGTH_MASK
+        sta     entry+FileEntry::storage_type_name_length
+        param_call check_suffix, str_a2fc_suffix
+        jcc     yes
+        param_call check_suffix, str_a2fm_suffix
+        jcc     yes
+        param_call check_suffix, str_a2lc_suffix
+        jcc     yes
+        param_call check_suffix, str_a2hr_suffix
+        jcc     yes
+
+        ;; File type
+        lda     entry+FileEntry::file_type
+        cmp     #FT_GRAPHICS
+        beq     yes
+        cmp     #FT_BINARY
+        bne     no
+
+        ;; Binary: Must match size/address
+        ecmp16  entry+FileEntry::blocks_used, #33
+    IF_EQ
+        ecmp16  entry+FileEntry::aux_type, #$2000
+        beq     yes
+        ecmp16  entry+FileEntry::aux_type, #$4000
+        beq     yes
+    END_IF
+
+        ecmp16  entry+FileEntry::blocks_used, #17
+    IF_EQ
+        ecmp16  entry+FileEntry::aux_type, #$2000
+        beq     yes
+        ecmp16  entry+FileEntry::aux_type, #$4000
+        beq     yes
+    END_IF
+
+        ecmp16  entry+FileEntry::blocks_used, #3
+    IF_EQ
+        ecmp16  entry+FileEntry::aux_type, #$5800
+        beq     yes
+    END_IF
+
+no:     clc
+        rts
+
+yes:    sec
+        rts
+
+        ;; --------------------------------------------------
+
+;;; Input: A,X = suffix to check against `entry`
+;;; Output: C=0 on match, C=1 otherwise
+.proc check_suffix
+        ptr := $06
+        path := entry+FileEntry::storage_type_name_length
+
+        stax    ptr
+
+        ldy     #0
+        lda     (ptr),y
+        tay
+        ldx     path
+:       lda     (ptr),y
+        jsr     ToUppercase
+        sta     @char
+        lda     path,x
+        jsr     ToUppercase
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     no              ; different - not a match
+        dey
+        beq     yes             ; out of suffix - it's a match
+        dex
+        bne     :-
+
+no:     sec                     ; no match
+        rts
+
+yes:    clc                     ; match!
+        rts
+
+.endproc ; check_suffix
+
+        ;; --------------------------------------------------
+
+entry:  .tag    FileEntry
+.endproc ; IsImageFileEntry
+
+;;; ============================================================
+
+;;; Inputs: A,X = callback, invoked with A,X=`FileEntry`
+;;;         `dir_path` populated
+;;; Note: Callbacks must not modify $08, but can use $06
+
+.proc EnumerateDirectory
+
+;;; Memory Map
+io_buf    := DA_IO_BUFFER              ; $1C00-$1FFF
+block_buf := DA_IO_BUFFER - BLOCK_SIZE ; $1A00-$1BFF
+
+kEntriesPerBlock = $0D
+
+        stax    callback
+
+        copy    #0, saw_header_flag
+
+        ;; Open directory
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        jcs     exit
+
+        lda     open_params_ref_num
+        sta     read_params_ref_num
+        sta     close_params_ref_num
+
+next_block:
+        JUMP_TABLE_MLI_CALL READ, read_params
+        bcs     close
+        copy    #AS_BYTE(-1), entry_in_block
+        entry_ptr := $08
+        copy16  #(block_buf+4 - .sizeof(FileEntry)), entry_ptr
+
+next_entry:
+        ;; Advance to next entry
+        lda     entry_in_block
+        cmp     #kEntriesPerBlock
+        beq     next_block
+
+        inc     entry_in_block
+        add16_8 entry_ptr, #.sizeof(FileEntry)
+
+        ;; Header?
+        lda     saw_header_flag
+    IF_ZERO
+        inc     saw_header_flag
+        bne     next_entry      ; always
+    END_IF
+
+        ;; Active entry?
+        ldy     #FileEntry::storage_type_name_length
+        lda     (entry_ptr),y
+        beq     next_entry
+
+        ;; Invoke callback
+        ldax    entry_ptr
+        callback := *+1
+        jsr     SELF_MODIFIED
+
+        jmp     next_entry
+
+close:  php
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        plp
+exit:
+        rts
+
+        DEFINE_OPEN_PARAMS open_params, dir_path, io_buf
+        DEFINE_READ_PARAMS read_params, block_buf, BLOCK_SIZE
+        DEFINE_CLOSE_PARAMS close_params
+        open_params_ref_num := open_params::ref_num
+        read_params_ref_num := read_params::ref_num
+        close_params_ref_num := close_params::ref_num
+
+entry_in_block:
+        .byte   0
+saw_header_flag:
+        .byte   0
+
+.endproc ; EnumerateDirectory
+
+;;; ============================================================
+
+.proc NextPreviousFileImpl
+next_file:
+        lda     #$80
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+previous_file:
+        lda     #0
+        sta     next_flag
+
+        ;; Init state
+        lda     #0
+        sta     seen_flag
+        sta     first_filename
+        sta     last_filename
+        sta     prev_filename
+        sta     next_filename
+
+        ;; Extract current path's dir
+        COPY_STRING INVOKE_PATH, dir_path
+        ldx     dir_path
+        inx
+:       dex
+        lda     dir_path,x
+        cmp     #'/'
+        bne     :-
+        dex
+        stx     dir_path
+
+        ;; Copy current path's file
+        inx
+        ldy     #0
+:       inx
+        iny
+        lda     dir_path,x
+        jsr     ToUppercase
+        sta     cur_filename,y
+        cpx     INVOKE_PATH
+        bne     :-
+        sty     cur_filename
+
+        param_call EnumerateDirectory, callback
+
+        ;; `first_filename` and `last_filename` are now populated,
+        ;; along with maybe `prev_filename` and `next_filename`.
+        ;; Based on `next_flag`, pick the right file to show.
+        bit     next_flag
+    IF_NS
+        lda     next_filename
+      IF_NOT_ZERO
+        ldax    #next_filename
+      ELSE
+        ldax    #first_filename
+      END_IF
+    ELSE
+        lda     prev_filename
+      IF_NOT_ZERO
+        ldax    #prev_filename
+      ELSE
+        ldax    #last_filename
+      END_IF
+    END_IF
+        fnptr := $06
+        stax    fnptr
+
+        ;; Append filename to `dir_path`
+        ldy     #0
+        lda     (fnptr),y
+        beq     fail            ; in case something went wrong
+        sta     len
+        ldx     dir_path
+        inx
+:       inx
+        iny
+        lda     (fnptr),y
+        sta     dir_path,x
+        len := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :-
+        stx     dir_path
+
+        COPY_STRING dir_path, INVOKE_PATH
+fail:   jmp     Init
+
+;;; Called with A,X = `FileEntry`
+.proc callback
+        stax    tmp
+        jsr     IsImageFileEntry ; A,X = `FileEntry`
+        bcc     ret
+
+        ptr := $06
+        ldax    tmp
+        stax    ptr
+
+        ;; Always record this as the last one seen
+        ldy     #0
+        lda     (ptr),y
+        and     #NAME_LENGTH_MASK
+        sta     (ptr),y
+        tay
+:       lda     (ptr),y
+        jsr     ToUppercase
+        sta     last_filename,y
+        dey
+        bpl     :-
+
+        ;; First seen? might need it
+        lda     first_filename
+    IF_ZERO
+        COPY_STRING last_filename, first_filename
+    END_IF
+
+        ;; Is this the current file?
+        ldx     cur_filename
+        cpx     last_filename
+        bne     not_cur
+:       lda     cur_filename,x
+        cmp     last_filename,x
+        bne     not_cur
+        dex
+        bne     :-
+
+        lda     #$80
+        sta     seen_flag
+        rts
+
+not_cur:
+        ;; No, might be prev or next though
+
+        ;; Seen the current file yet? If not, save it as previous
+        bit     seen_flag
+    IF_NC
+        COPY_STRING last_filename, prev_filename
+        rts
+    END_IF
+
+        ;; Yes... have we seen one after it? If not, save it as next
+        lda     next_filename
+    IF_ZERO
+        COPY_STRING last_filename, next_filename
+    END_IF
+
+ret:    rts
+
+tmp:    .addr   0
+.endproc
+
+next_flag:                      ; set for next, clear for previous
+        .byte   0
+seen_flag:
+        .byte   0
+cur_filename:
+        .res    16
+first_filename:
+        .res    16
+prev_filename:
+        .res    16
+next_filename:
+        .res    16
+last_filename:
+        .res    16
+
+.endproc ; NextPreviousFileImpl
+NextFile := NextPreviousFileImpl::next_file
+PreviousFile := NextPreviousFileImpl::previous_file
+
+;;; ============================================================
+
+str_a2fc_suffix:
+        PASCAL_STRING ".A2FC"
+str_a2fm_suffix:
+        PASCAL_STRING ".A2FM"
+str_a2lc_suffix:
+        PASCAL_STRING ".A2LC"
+str_a2hr_suffix:
+        PASCAL_STRING ".A2HR"
+
+;;; ============================================================
+
         .include "../inc/hires_table.inc"
         .include "inc/hr_to_dhr.inc"
+
+;;; ============================================================
+
+        .assert * < minipix_src_buf, error, "buffer collision!"
 
 ;;; ============================================================
 

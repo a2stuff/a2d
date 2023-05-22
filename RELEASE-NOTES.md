@@ -171,6 +171,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Image Preview
   * Show .A2HR and .A2FM files in B&W.
   * Fix HR image display glitches on palette bit transitions
+  * Right/Left Arrow keys preview next/previous image file.
 * Electric Duet Preview: Add alternate players: during playback, press 3 for Mockingboard, 4 for Cricket!
 * Puzzle
   * Added keyboard support - arrow keys move a tile into the hole.
