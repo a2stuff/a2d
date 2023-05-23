@@ -182,6 +182,7 @@
   * Launch DeskTop. Run the command. Verify if the OK button correctly enabled if the text field is empty, disabled if not. Enter text. Verify that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
 
 * Configure a system with removable disks. (e.g. Virtual II OmniDisks) Launch DeskTop. Verify that volume icons are positioned without gaps (down from the top-right, then across the bottom right to left). Eject one of the middle volumes. Verify icon disappears. Insert a new volume. Verify icon takes up the vacated spot. Repeat test, ejecting multiple volumes verify that positions are filled in order (down from the top-right, etc).
+* Configure a system with removable disks. (e.g. Virtual II OmniDisks) Launch DeskTop. Open a volume icon. Open a folder icon. Eject the disk using the hardware (or emulator). Verify that DeskTop doesn't crash and that both windows close.
 
 * Launch DeskTop. Open a window. File > New Folder..., enter name, OK. Copy the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
 * Launch DeskTop. Open a window. File > New Folder..., enter name, OK. Move the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.

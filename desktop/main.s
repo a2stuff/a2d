@@ -4445,17 +4445,15 @@ common:
         inc     path_buf
         copy    #'/', path_buf+1
 
-        param_call FindWindowsForPrefix, path_buf
-        lda     found_windows_count
-        beq     not_in_map
-
 close_loop:
+        ;; NOTE: This is called within loop because the list
+        ;; (`found_windows_count` / `found_windows_list`) is trashed
+        ;; during close when animating window.
+        param_call FindWindowsForPrefix, path_buf
         ldx     found_windows_count
         beq     not_in_map
-        dex
-        lda     found_windows_list,x
+        lda     found_windows_list-1,x
         jsr     CloseSpecifiedWindow
-        dec     found_windows_count
         jmp     close_loop
 
 not_in_map:
