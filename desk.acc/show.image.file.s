@@ -153,8 +153,12 @@ on_key:
     IF_NOT_ZERO
         jsr     ToUppercase
         cmp     #kShortcutCloseWindow
-        bne     InputLoop
-        beq     exit            ; always
+        beq     exit
+        cmp     #CHAR_LEFT
+        jeq     FirstFile
+        cmp     #CHAR_RIGHT
+        jeq     LastFile
+        bne     InputLoop       ; always
     END_IF
 
         cmp     #CHAR_ESCAPE
@@ -1025,13 +1029,26 @@ saw_header_flag:
 
 ;;; ============================================================
 
-.proc NextPreviousFileImpl
-next_file:
+.proc NextFile
         lda     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-previous_file:
-        lda     #0
-        sta     next_flag
+        bne     ChangeFile  ; always
+.endproc ; NextFile
+.proc LastFile
+        lda     #$C0
+        bne     ChangeFile  ; always
+.endproc ; LastFile
+.proc PreviousFile
+        lda     #$00
+        beq     ChangeFile  ; always
+.endproc ; PreviousFile
+.proc FirstFile
+        lda     #$40
+        FALL_THROUGH_TO ChangeFile
+.endproc ; FirstFile
+
+;;; Input: A = flags, bit6 = modified, bit7 = advance
+.proc ChangeFile
+        sta     flags
 
         ;; Init state
         lda     #0
@@ -1068,24 +1085,33 @@ previous_file:
 
         ;; `first_filename` and `last_filename` are now populated,
         ;; along with maybe `prev_filename` and `next_filename`.
-        ;; Based on `next_flag`, pick the right file to show.
-        bit     next_flag
-    IF_NS
-        lda     next_filename
-      IF_NOT_ZERO
-        ldax    #next_filename
+        ;; Based on `flags`, pick the right file to show.
+        bit     flags
+    IF_VS
+      IF_NS
+        ldax    #last_filename
       ELSE
         ldax    #first_filename
       END_IF
     ELSE
-        lda     prev_filename
-      IF_NOT_ZERO
-        ldax    #prev_filename
+      IF_NS
+        lda     next_filename
+       IF_NOT_ZERO
+        ldax    #next_filename
+       ELSE
+        ldax    #first_filename
+       END_IF
       ELSE
+        lda     prev_filename
+       IF_NOT_ZERO
+        ldax    #prev_filename
+       ELSE
         ldax    #last_filename
+       END_IF
       END_IF
     END_IF
-        fnptr := $06
+
+        fnptr   := $06
         stax    fnptr
 
         ;; Append filename to `dir_path`
@@ -1168,9 +1194,9 @@ not_cur:
 ret:    rts
 
 tmp:    .addr   0
-.endproc
+.endproc ; callback
 
-next_flag:                      ; set for next, clear for previous
+flags:                          ; bit 6 = modified, bit 7 = advance
         .byte   0
 seen_flag:
         .byte   0
@@ -1185,9 +1211,8 @@ next_filename:
 last_filename:
         .res    16
 
-.endproc ; NextPreviousFileImpl
-NextFile := NextPreviousFileImpl::next_file
-PreviousFile := NextPreviousFileImpl::previous_file
+.endproc ; ChangeFile
+
 
 ;;; ============================================================
 
