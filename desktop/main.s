@@ -9505,12 +9505,12 @@ offset:         .word   0
         copy16  #cvi_data_buffer, $08
 
         ldx     cached_window_entry_count
-        dex
+        dex                     ; skip the newly created icon
         stx     index
 
         index := *+1
 loop:   ldx     #SELF_MODIFIED_BYTE
-        lda     cached_window_entry_list,x
+        lda     cached_window_entry_list-1,x
         cmp     trash_icon_num
         beq     next
         jsr     GetIconName
@@ -9525,7 +9525,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         ;; Doesn't match, try again
 next:   dec     index
-        bpl     loop
+        bne     loop
 
         ;; All done, clean up and report no duplicates.
         lda     #0

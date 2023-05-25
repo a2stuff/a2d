@@ -340,6 +340,7 @@
 
 * Launch DeskTop. Open a window for a volume icon. Open a folder within the window. Select the volume icon. Special > Check Drive. Verify that both windows are closed.
 * Launch DeskTop. Open a window for a volume icon. Special > Check All Drives. Verify that all windows close, and that volume icons are correctly updated.
+* Launch DeskTop. Special > Check All Drives. Verify that no error is shown.
 
 * Launch DeskTop. Drag a file to a same-volume window so it is moved, not copied. Use File > Copy To... to copy a file. Verify that the file is indeed copied, not moved.
 
