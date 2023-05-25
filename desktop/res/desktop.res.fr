@@ -121,6 +121,7 @@
 .define res_string_alert_insert_source_disk "Veuillez ins{rer le disque source."
 .define res_string_alert_insert_destination "Veuilez ins{rer le disque destination."
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM non trouv{."
+.define res_string_alert_unreadable_format "Ce disque n'a pas pu etre lu. Voulez-vous le formater ?"
 .define res_string_trash_icon_name "Corbeille"
 .define res_string_sd_prefix_pattern "P#, D# : "
 .define res_const_sd_prefix_pattern_offset1 2

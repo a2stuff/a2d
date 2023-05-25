@@ -121,6 +121,7 @@
 .define res_string_alert_insert_source_disk "V{nligen s{tt i k{lldisken."
 .define res_string_alert_insert_destination "V{nligen s{tt i destinationsskivan."
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM hittades inte."
+.define res_string_alert_unreadable_format "Den h{r disken kunde inte l{sas. Vill du formatera det?"
 .define res_string_trash_icon_name "Radera"
 .define res_string_sd_prefix_pattern "K#, E#: "
 .define res_const_sd_prefix_pattern_offset1 2

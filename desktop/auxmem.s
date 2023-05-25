@@ -407,6 +407,8 @@ str_alert_insert_source_disk:
         PASCAL_STRING res_string_alert_insert_source_disk
 str_alert_insert_destination:
         PASCAL_STRING res_string_alert_insert_destination
+str_alert_unreadable_format:
+        PASCAL_STRING res_string_alert_unreadable_format
 
 ;;; ============================================================
 ;;; Show Alert Dialog

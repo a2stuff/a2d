@@ -121,6 +121,7 @@
 .define res_string_alert_insert_source_disk "Por favor inserte el disco original."
 .define res_string_alert_insert_destination "Por favor inserte el disco de destino."
 .define res_string_alert_basic_system_not_found "No se encuentra BASIC.SYSTEM."
+.define res_string_alert_unreadable_format "Este disco no se pudo leer. ]Quieres formatearlo?"
 .define res_string_trash_icon_name "Papelera"
 .define res_string_sd_prefix_pattern "R#,U#: "
 .define res_const_sd_prefix_pattern_offset1 2

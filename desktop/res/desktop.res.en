@@ -121,6 +121,7 @@
 .define res_string_alert_insert_source_disk "Please insert source disk."
 .define res_string_alert_insert_destination "Please insert destination disk."
 .define res_string_alert_basic_system_not_found "BASIC.SYSTEM not found."
+.define res_string_alert_unreadable_format "This disk could not be read. Do you want to format it?"
 .define res_string_trash_icon_name "Trash"
 .define res_string_sd_prefix_pattern "S#,D#: "
 .define res_const_sd_prefix_pattern_offset1 2

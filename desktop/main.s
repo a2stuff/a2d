@@ -3143,13 +3143,16 @@ format: lda     #FormatEraseAction::format
 erase:  lda     #FormatEraseAction::erase
         sta     action
 
-        lda     #kDynamicRoutineFormatErase
+        jsr     GetSelectedUnitNum
+        sta     unit_num
+
+exec:   lda     #kDynamicRoutineFormatErase
         jsr     LoadDynamicRoutine
         bpl     :+
         rts
 :
-        jsr     GetSelectedUnitNum
-        tax
+        unit_num := *+1
+        ldx     #SELF_MODIFIED_BYTE
         action := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     format_erase_overlay__Exec
@@ -3161,9 +3164,15 @@ erase:  lda     #FormatEraseAction::erase
         rts
 :
         jmp     CmdCheckSingleDriveByUnitNumber
+
+unit:   sta     unit_num
+        copy    #FormatEraseAction::format, action
+        bne     exec            ; always
+
 .endproc ; CmdFormatEraseDiskImpl
 CmdFormatDisk := CmdFormatEraseDiskImpl::format
 CmdEraseDisk := CmdFormatEraseDiskImpl::erase
+FormatUnitNum := CmdFormatEraseDiskImpl::unit
 
 ;;; ============================================================
 
@@ -4487,6 +4496,18 @@ not_in_map:
         ldx     icon_param      ; preserve icon index if known
         bne     :+
 :       jsr     CreateVolumeIcon ; A = unit num, Y = device index
+
+        cmp     #ERR_NOT_PRODOS_VOLUME
+    IF_EQ
+        param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unreadable_format
+        cmp     #kAlertResultCancel
+        bne     :+
+        rts
+:
+        ldy     devlst_index
+        lda     DEVLST,y        ; NOTE: Need low bits for refresh
+        jmp     FormatUnitNum
+    END_IF
 
         cmp     #ERR_DUPLICATE_VOLUME
         beq     err
