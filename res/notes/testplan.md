@@ -862,6 +862,8 @@ With Sci.Calc:
 
 * Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Launch This Apple DA, close it. Verify that the file is still present on Ram5.
 
+* Boot a system with only the 140k_disk1 image. Verify that About This Apple II is present in the Apple Menu.
+
 ## System Speed
 
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.

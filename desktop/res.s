@@ -756,7 +756,7 @@ kDAMenuItemSize = 19            ; length (1) + filename (15) + folder glyphs pre
 
         ;; Apple Menu
 apple_menu:
-        DEFINE_MENU 1
+        DEFINE_MENU 2
 @items: DEFINE_MENU_ITEM label_about
         DEFINE_MENU_ITEM label_about_this_apply
         DEFINE_MENU_SEPARATOR
