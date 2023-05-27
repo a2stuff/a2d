@@ -14,6 +14,8 @@
         RESOURCE_FILE "this.apple.res"
 
         .include "apple2.inc"
+        .include "opcodes.inc"
+
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
@@ -635,6 +637,7 @@ memory:.word    0
 str_cpu_prefix: PASCAL_STRING res_string_cpu_prefix
 str_6502:       PASCAL_STRING res_string_cpu_type_6502
 str_65C02:      PASCAL_STRING res_string_cpu_type_65C02
+str_R65C02:     PASCAL_STRING res_string_cpu_type_R65C02
 str_65802:      PASCAL_STRING res_string_cpu_type_65802
 str_65816:      PASCAL_STRING res_string_cpu_type_65816
 
@@ -1937,8 +1940,23 @@ str_from_int:
         sep     #%00000001    ; two-byte NOP on 65C02
         .popcpu
         bcs     p658xx
-        ; 65C02
-        return16 #str_65C02
+
+        ;; 65C02 - check for Rockwell R65C02
+        ;; (inspired by David Empson on comp.sys.apple2)
+        .pushcpu
+        .setcpu "65C02"
+        .assert OPC_NOP = $EA, error, "NOP no no"
+        ldx     $EA             ; save $EA
+        lda     #$FF
+        sta     $EA
+        rmb1    $EA             ; Rockwell R65C02 only; else NOP NOP
+        cmp     $EA
+        stx     $EA             ; restore $EA
+        beq     p65C02
+        .popcpu
+
+        return16 #str_R65C02
+p65C02: return16 #str_65C02
 p6502:  return16 #str_6502
 
         ;; Distinguish 65802 and 65816 by machine ID
