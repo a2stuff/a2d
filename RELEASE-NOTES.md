@@ -147,7 +147,7 @@ Project Page: https://github.com/a2stuff/a2d
 #### Updates
 
 * The `DESK.ACC` folder has been renamed to `APPLE.MENU`.
-* New Toys directory for Eyes, Neko and Puzzle
+* New Toys directory for Eyes, Neko and Puzzle.
 * Apple+W can be used to close windowed accessories.
 * Date & Time
   * Show shortcut key for OK button.
@@ -171,7 +171,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Text Preview: Handle rendering long text files more intelligently.
 * Image Preview
   * Show .A2HR and .A2FM files in B&W.
-  * Fix HR image display glitches on palette bit transitions
+  * Fix HR image display glitches on palette bit transitions.
   * Right/Left Arrow keys preview next/previous image file. Hold Apple key for last/first.
 * Electric Duet Preview: Add alternate players: during playback, press 3 for Mockingboard, 4 for Cricket!
 * Puzzle
@@ -187,9 +187,10 @@ Project Page: https://github.com/a2stuff/a2d
 * Map: Position indicator now blinks.
 * Control Panel: Add more obvious button to apply desktop pattern change.
 * This Apple
-  * Identify and show Tiger Learning Computer
-  * Moved into MODULES/ directory, dedicated command added
+  * Identify and show Tiger Learning Computer.
+  * Moved into MODULES/ directory, dedicated command added.
   * Include IIgs banks E0/E1 in total memory count.
+  * Identify Rockwell R65C02.
 * Screen Dump: Do nothing unless an SSC is in Slot 1.
 
 ## 1.2
