@@ -113,6 +113,9 @@ event_params:   .tag MGTK::Event
 .proc Init
         copy    #0, mode
 
+        ;; In case we're re-entered c/o switching to another file
+        jsr     MaybeCallExitHook
+
         JUMP_TABLE_MLI_CALL OPEN, open_params
         lda     open_params::ref_num
         sta     get_eof_params::ref_num
@@ -123,8 +126,12 @@ event_params:   .tag MGTK::Event
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         jsr     ClearScreen
         jsr     SetColorMode
-        jsr     ShowFile
+        jsr     ShowFile        ; C=1 on failure
+        php
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        plp
+        bcs     Exit
 
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         JUMP_TABLE_MGTK_CALL MGTK::ObscureCursor
@@ -141,7 +148,7 @@ event_params:   .tag MGTK::Event
 
         lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     exit
+        beq     Exit
         cmp     #MGTK::EventKind::key_down  ; any key?
         beq     on_key
         bne     InputLoop
@@ -153,7 +160,7 @@ on_key:
     IF_NOT_ZERO
         jsr     ToUppercase
         cmp     #kShortcutCloseWindow
-        beq     exit
+        beq     Exit
         cmp     #CHAR_LEFT
         jeq     FirstFile
         cmp     #CHAR_RIGHT
@@ -162,9 +169,9 @@ on_key:
     END_IF
 
         cmp     #CHAR_ESCAPE
-        beq     exit
+        beq     Exit
         cmp     #CHAR_RETURN
-        beq     exit
+        beq     Exit
         cmp     #CHAR_LEFT
         jeq     PreviousFile
         cmp     #CHAR_RIGHT
@@ -173,8 +180,13 @@ on_key:
         bne     :+
         jsr     ToggleMode
 :       jmp     InputLoop
+.endproc ; InputLoop
 
-exit:
+;;; ============================================================
+
+.proc Exit
+        jsr     MaybeCallExitHook
+
         jsr     JUMP_TABLE_RGB_MODE
 
         ;; Restore desktop and menu
@@ -182,8 +194,29 @@ exit:
         JUMP_TABLE_MGTK_CALL MGTK::DrawMenu
         jsr     JUMP_TABLE_HILITE_MENU
 
-        rts                     ; exits input loop
-.endproc ; InputLoop
+        rts
+.endproc ; Exit
+
+;;; ============================================================
+
+.proc MaybeCallExitHook
+        lda     hook
+        ora     hook+1
+        beq     :+
+
+        hook := *+1
+        jsr     $0000           ; self-modified; 0 = no hook
+        copy16  #0, hook
+
+:       rts
+
+.endproc ; MaybeCallExitHook
+
+exit_hook := MaybeCallExitHook::hook
+
+;;; ============================================================
+
+;;; Tail-called routines must exit with C=0 on success
 
 .proc ShowFile
         ;; Check file type
@@ -192,6 +225,10 @@ exit:
 fail:   rts
 
 :       lda     get_file_info_params::file_type
+
+        cmp     #FT_PIC
+        jeq     ShowSHR
+
         cmp     #FT_GRAPHICS
         bne     get_eof
 
@@ -233,6 +270,9 @@ get_eof:
         jmp     ShowMinipixFile
 .endproc ; ShowFile
 
+;;; ============================================================
+
+;;; Output: C=0 on success, C=1 on failure
 .proc ShowFOTFile
         ;; Per File Type $08 (8) Note:
 
@@ -269,19 +309,22 @@ kSigDHR         = %00000010
 dhr:    jsr     CopyHiresToAux
         JUMP_TABLE_MLI_CALL READ, read_params
 
-finish: JUMP_TABLE_MLI_CALL CLOSE, close_params
-
+finish:
         lda     signature
         and     #kSigColor
         bne     :+
         jsr     SetBWMode
-:       rts
+:
+        clc                     ; success
+        rts
 
 signature:
         .byte   0
 .endproc ; ShowFOTFile
 
+;;; ============================================================
 
+;;; Output: C=0 on success, C=1 on failure
 .proc ShowHRFile
         ;; If suffix is ".A2HR" show in mono mode
         param_call CheckSuffix, str_a2hr_suffix
@@ -291,14 +334,17 @@ signature:
 
         sta     PAGE2OFF
         JUMP_TABLE_MLI_CALL READ, read_params
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         jsr     HRToDHR
 
+        clc                     ; success
         rts
 
 .endproc ; ShowHRFile
 
+;;; ============================================================
+
+;;; Output: C=0 on success, C=1 on failure
 .proc ShowDHRFile
         ptr := $06
 
@@ -322,11 +368,13 @@ signature:
 
         ;; MAIN memory half
         JUMP_TABLE_MLI_CALL READ, read_params
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
 
+        clc                     ; success
         rts
 
 .endproc ; ShowDHRFile
+
+;;; ============================================================
 
 .proc CopyHiresToAux
         ptr := $06
@@ -350,13 +398,14 @@ signature:
         rts
 .endproc ; CopyHiresToAux
 
+;;; ============================================================
 
+;;; Output: C=0 on success, C=1 on failure
 .proc ShowMinipixFile
         jsr     SetBWMode
 
         ;; Load file at minipix_src_buf (MAIN $1800)
         JUMP_TABLE_MLI_CALL READ, read_minipix_params
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
 
         ;; Convert (main to aux)
         jsr     ConvertMinipixToBitmap
@@ -367,6 +416,7 @@ signature:
         JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::notpencopy
         JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, aux::paintbits_params
 
+        clc                     ; success
         rts
 .endproc ; ShowMinipixFile
 
@@ -608,7 +658,6 @@ loop:   copy    #1, read_buf_params::request_count
         bcc     body
 
         ;; EOF (or other error) - finish up
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
         bit     dhr_flag        ; if hires, need to convert
         bmi     :+
         jsr     HRToDHR
@@ -831,6 +880,158 @@ yes:    clc                     ; match!
 
 ;;; ============================================================
 
+;;; Output: C=0 on success, C=1 on failure
+.proc ShowSHR
+        ;; IIgs?
+        bit     ROMIN2
+        sec
+        jsr     IDROUTINE       ; Clears carry if IIgs
+        bit     LCBANK1
+        bit     LCBANK1
+        bcc     is_iigs
+
+        ;; Not IIgs - just fail fast
+        sec                     ; failure
+        rts
+
+        ;; --------------------------------------------------
+
+is_iigs:
+        SHR_SCREEN = $E12000
+        kSHRSize = $8000
+
+        jsr     InitSHR
+        jsr     PopulateSHR
+        copy16  #ExitSHR, exit_hook
+
+        clc                     ; success
+        rts
+
+        ;; --------------------------------------------------
+
+.proc InitSHR
+        .pushcpu
+        .p816
+        .a8
+
+        ;; Disable shadowing
+        lda     #%00111111
+        tsb     SHADOW
+
+        ;; Enable SHR
+        lda     #%11000000
+        tsb     NEWVIDEO
+
+        ;; Configure CPU and banking
+        clc                     ; leave emulation mode
+        xce
+
+        phb                     ; set data bank
+        lda     #^SHR_SCREEN
+        pha
+        plb
+
+        ;; Initialize the screen
+        .a16
+        .i16
+        rep     #$30            ; 16-bit accum/memory, index registers
+
+        ldx     #kSHRSize - 2
+:       stz     .loword(SHR_SCREEN),x
+        dex
+        dex
+        bpl     :-
+
+        ;; Restore banking and CPU
+        plb
+
+        sec                     ; re-enter emulation mode
+        xce
+        .popcpu
+
+        rts
+.endproc
+
+        ;; --------------------------------------------------
+
+.proc PopulateSHR
+        ;; Load $2000 bytes at a time, and copy them to
+        ;; the SHR screen
+
+        lda     #>.loword(SHR_SCREEN)
+        sta     dest+1
+
+loop:
+        ;; Load data
+        JUMP_TABLE_MLI_CALL READ, read_params
+
+        ;; Copy into SHR screen
+        .pushcpu
+        .p816
+        .a8
+
+        ;; Configure CPU and banking
+        clc                     ; leave emulation mode
+        xce
+
+        phb                     ; set data bank
+        lda     #^SHR_SCREEN
+        pha
+        plb
+
+        .a16
+        .i16
+        rep     #$30            ; 16-bit accum/memory, index registers
+
+        ldx     #kHiresSize-2
+:       lda     f:hires,x       ; TODO: Can we do 16 bits at a time?
+        dest := *+1
+        sta     .loword(SHR_SCREEN),x    ; self-modified
+        dex
+        dex
+        bpl     :-
+
+        ;; Restore banking and CPU
+        plb
+
+        sec                     ; re-enter emulation mode
+        xce
+        .popcpu
+
+        lda     dest+1
+        clc
+        adc     #>kHiresSize
+        sta     dest+1
+        cmp     #>(SHR_SCREEN+kSHRSize) ; done?
+        bne     loop
+
+        rts
+.endproc
+
+        ;; --------------------------------------------------
+
+.proc ExitSHR
+        .pushcpu
+        .p816
+        .a8
+
+        ;; Re-enable shadowing
+        lda     #%00111111
+        trb     SHADOW
+
+        ;; Disable SHR
+        lda     #%11000000
+        trb     NEWVIDEO
+
+        .popcpu
+
+        rts
+.endproc
+
+.endproc ; ShowSHR
+
+;;; ============================================================
+
 .proc ToUppercase
         cmp     #'a' ; Assumes valid filename character
         bcc     :+
@@ -873,7 +1074,15 @@ yes:    clc                     ; match!
         ;; File type
         lda     entry+FileEntry::file_type
         cmp     #FT_GRAPHICS
+        jeq     yes
+
+        cmp     #FT_PIC
+    IF_EQ
+        ecmp16  entry+FileEntry::aux_type, #$0000
         beq     yes
+        bne     no              ; always
+    END_IF
+
         cmp     #FT_BINARY
         bne     no
 

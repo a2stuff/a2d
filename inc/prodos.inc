@@ -109,6 +109,7 @@ FT_ASP          = $1B           ; AppleWorks Spreadsheet *
 FT_ANIMATION    = $5B           ; Animation/Video file
 FT_SRC          = $B0           ; IIgs system type; re-used?
 FT_S16          = $B3           ; IIgs Application Program
+FT_PIC          = $C1           ; IIgs Super Hi-Res picture
 FT_MUSIC        = $D5           ; Music File
 FT_SOUND        = $D8           ; Sampled Sound File
 FT_LINK         = $E1           ; Link

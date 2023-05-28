@@ -15483,6 +15483,7 @@ icontype_table:
         DEFINE_ICTRECORD $F0, $A0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs BASIC    $Ax
         DEFINE_ICTRECORD $FF, FT_S16, ICT_FLAGS_NONE, 0, 0, IconType::application ; IIgs System   $B3
         DEFINE_ICTRECORD $F0, $B0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs System   $Bx
+        DEFINE_ICTRECORD $FF, FT_PIC, ICT_FLAGS_AUX, $0000, 0, IconType::graphics ; IIgs SHR      $C1
         DEFINE_ICTRECORD $F0, $C0,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs Graphics $Cx
 
         ;; Desk Accessories/Applets $F1/$0642 and $F1/$8642
