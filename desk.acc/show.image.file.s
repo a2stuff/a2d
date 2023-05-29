@@ -968,31 +968,20 @@ loop:
         ;; Copy into SHR screen
         .pushcpu
         .p816
-        .a8
-
-        ;; Configure CPU and banking
         clc                     ; leave emulation mode
         xce
 
-        phb                     ; set data bank
-        lda     #^SHR_SCREEN
-        pha
-        plb
-
+        ;; Block move
         .a16
         .i16
         rep     #$30            ; 16-bit accum/memory, index registers
-
-        ldx     #kHiresSize-2
-:       lda     f:hires,x       ; TODO: Can we do 16 bits at a time?
-        dest := *+1
-        sta     .loword(SHR_SCREEN),x    ; self-modified
-        dex
-        dex
-        bpl     :-
-
-        ;; Restore banking and CPU
-        plb
+        phb                     ; preserve data bank
+        ldx     #hires          ; source
+        dest := *+1             ; destination
+        ldy     #.loword(SHR_SCREEN) ; high byte is self-modified
+        lda     #kHiresSize-1        ; length-1
+        mvn     #^hires, #^SHR_SCREEN
+        plb                     ; restore data bank
 
         sec                     ; re-enter emulation mode
         xce
