@@ -922,28 +922,23 @@ is_iigs:
         lda     #%11000000
         tsb     NEWVIDEO
 
-        ;; Configure CPU and banking
         clc                     ; leave emulation mode
         xce
 
-        phb                     ; set data bank
-        lda     #^SHR_SCREEN
-        pha
-        plb
+        ;; Memory fill
+        lda     #0              ; initialize first byte
+        sta     SHR_SCREEN
 
-        ;; Initialize the screen
         .a16
         .i16
         rep     #$30            ; 16-bit accum/memory, index registers
 
-        ldx     #kSHRSize - 2
-:       stz     .loword(SHR_SCREEN),x
-        dex
-        dex
-        bpl     :-
-
-        ;; Restore banking and CPU
-        plb
+        phb                     ; save data bank
+        ldx     #.loword(SHR_SCREEN)
+        ldy     #.loword(SHR_SCREEN)+1
+        lda     #kSHRSize - 2
+        mvn     #^SHR_SCREEN, #^SHR_SCREEN
+        plb                     ; restore data bank
 
         sec                     ; re-enter emulation mode
         xce
