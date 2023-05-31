@@ -192,6 +192,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Moved into MODULES/ directory, dedicated command added.
   * Include IIgs banks E0/E1 in total memory count.
   * Identify Rockwell R65C02.
+  * Identify The Cricket! sound/speech/clock device attached to SSC in Slot 2.
 * Screen Dump: Do nothing unless an SSC is in Slot 1.
 
 ## 1.2
