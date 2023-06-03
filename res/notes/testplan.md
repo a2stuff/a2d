@@ -1212,6 +1212,7 @@ The following steps exercise the menu as "drop down" using the keyboard to initi
 
 * Click on a menu to show it. While it is open, press the shortcut key for a command (e.g. Open-Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
 * Press Escape to activate the menu. While it is open, press the shortcut key for a command (e.g. Open-Apple+Q to Quit). Verify that the menu closes and that the command is invoked.
+* Press Escape to activate the menu. Arrow down to an item. Press a non-arrow, non-shortcut key (e.g. a punctuation key). Press Return. Verify that the menu item is activated.
 
 * Launch DeskTop. Close all windows. Press the Escape key. Use the Left and Right Arrow keys to highlight the View menu. Verify that all menu items are disabled. Press the Up and Down arrow keys. Verify that the cursor position does not change.
 

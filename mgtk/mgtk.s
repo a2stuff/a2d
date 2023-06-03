@@ -6530,6 +6530,8 @@ nope:   jsr     KbdMenuByShortcut
         lda     #0
         sta     cur_hilited_menu_item ; ignore it
 :
+        ldx     sel_menu_index
+        jsr     GetMenu
 
 finish: rts
 .endproc ; HandleMenuKey
