@@ -634,6 +634,7 @@ done:   rts
 
 ;;; ============================================================
 
+;;; Output: C=0 on success, C=1 on failure
 .proc UnpackRead
         DEFINE_READ_PARAMS read_buf_params, read_buf, 0
 
@@ -661,7 +662,9 @@ loop:   copy    #1, read_buf_params::request_count
         bit     dhr_flag        ; if hires, need to convert
         bmi     :+
         jsr     HRToDHR
-:       rts
+:
+        clc                     ; success
+        rts
 
         ;; Process op/count
 body:   lda     read_buf

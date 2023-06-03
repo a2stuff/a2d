@@ -747,6 +747,7 @@ Image File:
 * On a IIgs or with RGB card: name a hires image file with a ".A2LC" suffix. Verify it displays as color by default.
 * Configure a system with a realtime clock. Launch DeskTop. Preview an image file. Exit the preview. Verify that the menu bar clock reappears immediately.
 * In a directory with multiple images, preview one image. Verify that Left Arrow shows the previous image (and wraps around), Right Arrow shows the next image (and wraps around), Apple+Left Arrow shows the first image, and Apple+Right Arrow shows the last image. Note that order is per the natural directory order, e.g. as shown in View > as Icons.
+* Preview a packed FOT file (e.g. SAMPLE.MEDIA/MONARCH). Verify that the preview does not immediately exit after the image loads.
 
 * Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
