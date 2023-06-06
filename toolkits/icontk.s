@@ -618,9 +618,10 @@ inside: pla
         tya
         sta     ($06),y
 
-        ;; Copy initial coords to `coords1`
+        ;; Copy initial coords to `initial_coords` and `coords1`
         ldy     #DragHighlightedParams::coords + .sizeof(MGTK::Point)-1
 :       lda     ($06),y
+        sta     initial_coords-1,y
         sta     coords1-1,y
         dey
         ;;cpy     #DragHighlightedParams::coords-1
@@ -829,7 +830,7 @@ moved:
 
         jsr     XdrawOutline
         copy16  polybuf_addr, $08
-L9B60:  ldy     #2
+L9B60:  ldy     #2              ; offset in poly to first vertex
 L9B62:  add16in ($08),y, poly_dx, ($08),y
         iny
         add16in ($08),y, poly_dy, ($08),y
@@ -917,34 +918,19 @@ move_ok:
         END_OF_LAMBDA
 
         ;; --------------------------------------------------
-        ;; Update icons with new positions (based on poly)
+        ;; Update icons with new positions (based on delta)
 
-        copy16  polybuf_addr, $08
+        sub16   findwindow_params::mousex, initial_coords_x, poly_dx
+        sub16   findwindow_params::mousey, initial_coords_y, poly_dy
 
         INVOKE_WITH_LAMBDA IterateHighlightedIcons
         jsr     GetIconPtr
         stax    $06
 
-        ;; Struct offsets coincidentally match between poly vertex and
-        ;; `IconEntry` coordinates. If they didn't, icon pointer could
-        ;; be offset (i.e. add16_8 $06, #IconEntry::iconx - 2)
-
-        ldy     #2              ; offset in poly to first vertex
-        .assert IconEntry::iconx = 2, error, "struct offsets mismatch"
-
-        lda     ($08),y
-        sta     ($06),y
+        ldy     #IconEntry::iconx
+        add16in ($06),y, poly_dx, ($06),y
         iny
-        lda     ($08),y
-        sta     ($06),y
-        iny
-        lda     ($08),y
-        sta     ($06),y
-        iny
-        lda     ($08),y
-        sta     ($06),y
-
-        add16_8 $08, #kIconPolySize
+        add16in ($06),y, poly_dy, ($06),y
         rts
         END_OF_LAMBDA
 
@@ -964,6 +950,10 @@ just_select:                    ; ???
         rts
 
 index:  .byte   $00
+
+initial_coords:
+initial_coords_x:       .word   0
+initial_coords_y:       .word   0
 
 coords1:
 coords1x:       .word   0
