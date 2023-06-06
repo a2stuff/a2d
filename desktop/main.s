@@ -15003,6 +15003,10 @@ ptr_str_files_suffix:
 
 .proc InitSetDesktopPort
         MGTK_CALL MGTK::InitPort, desktop_grafport
+        ;; Exclude menu bar
+        ldax    #kMenuBarHeight
+        stax    desktop_grafport + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
+        stax    desktop_grafport + MGTK::GrafPort::maprect + MGTK::Rect::y1
         MGTK_CALL MGTK::SetPort, desktop_grafport
         rts
 .endproc ; InitSetDesktopPort

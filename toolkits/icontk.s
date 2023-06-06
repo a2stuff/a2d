@@ -2170,7 +2170,7 @@ reserved:       .byte   0
         REF_MAPINFO_MEMBERS
 .endparams
 
-        DEFINE_RECT screen_bounds, 0, 0, kScreenWidth-1, kScreenHeight-1
+        DEFINE_RECT screen_bounds, 0, kMenuBarHeight, kScreenWidth-1, kScreenHeight-1
 
 .proc SetPortForVolIcon
         jsr     CalcIconPoly    ; also populates `bounding_rect` (needed in erase case)
