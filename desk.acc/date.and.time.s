@@ -64,8 +64,8 @@
         ;; a hit target for a click.
 
         kNumHitRects = 8
-        kUpRectIndex = 2
-        kDownRectIndex = 3
+        kUpRectIndex = 1        ; 1-based
+        kDownRectIndex = 2
 
         kControlMarginX = 16
 
@@ -516,18 +516,22 @@ hit:
 
         ;; ----------------------------------------
 
+        ;; If there is a system clock, fields are read-only
+        ldx     clock_flag
+        bne     miss
+
         jsr     FindHitTarget
         cpx     #0
         beq     miss
         txa
-        sec
-        sbc     #1
         asl     a
         tay
-        copy16  hit_target_jump_table,y, jump+1
-jump:   jmp     SELF_MODIFIED
+        copy16  hit_target_jump_table-2,y, jump
+        jump := *+1
+        jmp     SELF_MODIFIED
 
 hit_target_jump_table:
+        ;; Called w/ X = index
         .addr   OnUp, OnDown
         .addr   OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick, OnFieldClick
         ASSERT_ADDRESS_TABLE_SIZE hit_target_jump_table, aux::kNumHitRects
@@ -579,9 +583,18 @@ hit_target_jump_table:
 .endproc ; OnDown
 
 .proc OnFieldClick
+        dex
+        dex
         txa
-        sec
-        sbc     #3
+
+        bit     clock_24hours
+    IF_NS
+        cmp     #Field::period
+        bne     :+
+        rts
+:
+    END_IF
+
         jmp     SelectField
 .endproc ; OnFieldClick
 
@@ -878,14 +891,6 @@ loop:   txa
         pha
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, test_addr
         bne     done
-
-        ;; If there is a system clock, only the first button is active
-        ldx     clock_flag
-    IF_NE
-        pla
-        ldx     #0
-        rts
-    END_IF
 
         add16_8 test_addr, #.sizeof(MGTK::Rect)
         pla

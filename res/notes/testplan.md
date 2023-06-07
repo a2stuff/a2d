@@ -828,6 +828,10 @@ With Sci.Calc:
 * Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0. Use the Right Arrow and Left Arrow keys and the mouse, and verify that the AM/PM field is not selectable. Use the up and down arrow keys and the arrow buttons, and verify that the field cycles from 0 through 23.
 * Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Change the month and year, and verify that the day range is clamped to 28, 29, 30 or 31 as appropriate, including for leap years.
 * Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Click on the up/down arrows. Verify that they invert correctly when the button is down.
+* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Click in the various fields (day/month/year/hour/minutes/period). Verify that the appropriate field highlights.
+* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Change the setting to 12 hour. Click on the AM/PM field. Verify that the field highlights.
+* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Change the setting to 24 hour. Click where the AM/PM field would be, to the right of the minutes field. Verify that nothing happens.
+* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Click the year field. Click the up arrow. Verify that the year increments. Click the down arrow. Verify that the year decrements. Verify that only the clicked buttons highlight, and that they un-highlight correctly when the button is released.
 
 ## Calendar
 
