@@ -134,7 +134,7 @@
 
 * Launch DeskTop. Open a volume window. Select volume icons on the desktop. Switch window's view to by Name. Verify that the volume icons are still selected, and that File > Get Info is still enabled (and shows the volume info). Switch window's view back to as Icons. Verify that the desktop volume icons are still selected.
 * Launch DeskTop. Open a window containing file icons. Select one or more file icons in the window. Select a different View option. Verify that the icons in the window remain selected.
-* Launch DeskTop. Open a window containing file icons. Hold Open-Apple and select multiple files in a specific order. Select a different View option. Apple > Sort Directory. View > as Icons. Verify that the icons appear in the selected order.
+* Launch DeskTop. Open a window containing file icons. Hold Open-Apple and select multiple files in a specific order. Select a different View option. Apple Menu > Sort Directory. View > as Icons. Verify that the icons appear in the selected order.
 * Launch DeskTop. Open a window containing file icons. Select one or more volume icons on the desktop. Select a different View option. Verify that the volume icons on the desktop remain selected.
 
 * Launch DeskTop. Open a volume window. Select an icon. Click in the header area (items/use/etc). Verify that selection is not cleared.
@@ -213,7 +213,7 @@
 * Load DeskTop. Open a window containing icons. View > by Name. Quit DeskTop, reload. Verify that the window is restored, and that it shows the icons in a list sorted by name, and that View > by Name is checked. Repeat for other View menu options.
 * Load DeskTop. Open a window for a volume in a Disk II drive. Quit DeskTop. Remove the disk from the Disk II drive. Load DeskTop. Verify that the Disk II drive is only polled once on startup, not twice.
 
-* Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. /HD. Launch DeskTop. Open the startup volume. Apple > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
+* Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. /HD. Launch DeskTop. Open the startup volume. Apple Menu > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
 
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Try opening volumes/folders until there are less than 8 windows but more than 127 icons. Verify that the "A window must be closed..." dialog has no Cancel button.
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Verify that 127 icons can be shown.
@@ -342,7 +342,7 @@
 
 * Launch DeskTop. Drag a file to a same-volume window so it is moved, not copied. Use File > Copy To... to copy a file. Verify that the file is indeed copied, not moved.
 
-* Launch DeskTop. Open a window. Select a file icon. Apple > Control Panels. Verify that the previously selected file is no longer selected.
+* Launch DeskTop. Open a window. Select a file icon. Apple Menu > Control Panels. Verify that the previously selected file is no longer selected.
 
 * Launch DeskTop. Open a window containing many folders. Select up to 7 folders. File > Open. Verify that as windows continue to open, the originally selected folders don't mispaint on top of them. (This will be easier to observe in emulators with acceleration disabled.)
 
@@ -419,8 +419,8 @@
   * Verify that the following still function:
     * File > Copy To... (overlays)
     * Special > Disk Copy (and that File > Quit returns to DeskTop) (overlay + quit handler)
-    * Apple > Calculator (desk accessories)
-    * Apple > Control Panels (relative folders)
+    * Apple Menu > Calculator (desk accessories)
+    * Apple Menu > Control Panels (relative folders)
     * Control Panel, change desktop pattern, close, quit, restart (settings)
     * Windows are saved on exit/restored on restart (configuration)
     * Invoking another application (e.g. BASIC.SYSTEM), then quitting back to DeskTop (quit handler)
@@ -474,7 +474,7 @@
 * Launch DeskTop. Open two volume windows. Click in the inactive window without selecting any icons. Verify that the window activates and the volume icon is selected.
 * Launch DeskTop. Open a volume window. Click on the desktop to clear selection. Click in an empty area within the window. Verify that the volume icon is selected.
 * Launch DeskTop. Open a volume window. Select a file icon. Click in an empty area within the window. Verify that the volume icon is selected.
-* Launch DeskTop. Apple > Control Panels. Close the window by clicking on the close box. Verify nothing mis-paints.
+* Launch DeskTop. Apple Menu > Control Panels. Close the window by clicking on the close box. Verify nothing mis-paints.
 
 * Launch DeskTop. On a volume, create folders named "A1", "B1", "A", and "B". View > by Name. Verify that the order is: "A", "A1", "B", "B1".
 
@@ -522,8 +522,8 @@
 * Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. File > Copy To.... Verify that the non-RAMCard volume containing DeskTop is the first disk shown. From within DeskTop, launch another app e.g. Basic.system. Eject the DeskTop volume. Exit the app back to DeskTop. Verify that the remaining volumes appear in default order.
 * Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch DeskTop. Verify that the non-RAMCard volume containing DeskTop appears in the top right corner of the desktop. File > Copy To.... Verify that the non-RAMCard volume containing DeskTop is the first disk shown.
 
-* Launch DeskTop. Apple > About Apple II DeskTop. Click anywhere on the screen. Verify that the dialog closes.
-* Launch DeskTop. Apple > About Apple II DeskTop. Press any non-modifier key screen. Verify that the dialog closes.
+* Launch DeskTop. Apple Menu > About Apple II DeskTop. Click anywhere on the screen. Verify that the dialog closes.
+* Launch DeskTop. Apple Menu > About Apple II DeskTop. Press any non-modifier key screen. Verify that the dialog closes.
 
 * Launch DeskTop. Open a window containing a folder. Open the folder window. Position the folder window so that it partially covers the "in disk" and "available" entries in the lower window. Drag a large file into the folder window. Verify that the "in disk" and "available" values update in the folder window. Drag the folder window away. Verify that the parent window "in disk" and "available" values repaint with the old values, and without visual artifacts. Activate the parent window. Verify that the "in disk" and "available" values now update.
 
@@ -539,7 +539,7 @@
   * Drag the innermost folder to another volume.
   * Drag the innermost folder to the Trash.
 * Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. File > Open. Verify that an alert is shown.
-* Copy PREVIEW/SHOW.IMAGE.FILE to the APPLE.MENU folder. Restart. Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. Apple > Show Image File. Verify that an alert is shown.
+* Copy PREVIEW/SHOW.IMAGE.FILE to the APPLE.MENU folder. Restart. Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. Apple Menu > Show Image File. Verify that an alert is shown.
 * Repeat the previous case, but with a Desk Accessory file as the innermost file instead of a folder. File > Open. Verify that an alert is shown.
 
 * Launch DeskTop. Select a 5.25 disk volume. Remove the disk. File > Get Info. Verify that an alert is shown. Click OK. Verify that DeskTop doesn't hang or crash.
@@ -555,7 +555,7 @@
 
 * Using BASIC, create a directory structure: X/Y/Z and save a BASIC file B as X/Y/Z/B. Lock all three directories and the file from BASIC (not DeskTop). Launch DeskTop. Select X. File > Delete. Verify that a prompt is shown for deleting each file in deepest-first order (B, Z, Y, X). Click Yes at each prompt. Verify that all files are deleted.
 
-* Create a folder, and a subfolder within it. Select the top-most folder. Special > Lock. Using Apple > Run Basic Here, verify that the folder and subfolder are locked. BYE to return to DeskTop. Select the containing volume. Special > Unlock. Using Apple > Run Basic Here, verify that the folder and subfolder are unlocked.
+* Create a folder, and a subfolder within it. Select the top-most folder. Special > Lock. Using Apple Menu > Run Basic Here, verify that the folder and subfolder are locked. BYE to return to DeskTop. Select the containing volume. Special > Unlock. Using Apple Menu > Run Basic Here, verify that the folder and subfolder are unlocked.
 * Using BASIC, create a directory X and save a BASIC file X/B. Launch DeskTop. Select X. File > Lock. Close the window containing X. Open the window containing X. Verify that X is still a folder.
 
 * Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
@@ -666,7 +666,7 @@ The following tests all require:
   * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and Modify a setting. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
   * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and modify a setting. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
 
-* Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple > Control Panels. Drag Apple.Menu from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.
+* Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple Menu > Control Panels. Drag Apple.Menu from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.
 
 * Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Eject the startup disk. Special > Format a Disk. Verify that no prompt for the startup disk is shown.
 * Invoke DESKTOP.SYSTEM, and hit Escape when copying to RAMCard. Once DeskTop has started, eject the startup disk. Special > Format a Disk. Verify that a prompt to insert the system disk is shown.
@@ -702,7 +702,7 @@ The following tests all require:
   * Launch DeskTop. Verify that the Ram5 volume is shown with a RAMDisk icon.
   * Configure DeskTop to copy to RAMCard on startup, and restart. Verify it is copied to /RAM5.
 
-* On a IIgs, go to Apple > This Apple. Verify the memory count is not "000,000".
+* On a IIgs, go to Apple Menu > About This Apple II. Verify the memory count is not "000,000".
 
 ### Apple IIc+
 
@@ -730,6 +730,7 @@ Text File:
   * Verify that Open-Apple plus Solid-Apple plus Up/Down Arrow keys scroll to start/end.
   * Click the Proportional/Fixed button on the title bar. Verify that the view is scrolled to the top.
 * Preview a long text file, e.g. 2000 lines. Verify that dragging the scroll thumb to the middle shows approximately the middle of the file.
+* Preview a long text file, e.g. 2000 lines. Verify that Up/Down Arrow keys scroll by one line consistently.
 * Preview a text file with a tab character in the first line. Verify that the file displays all lines correctly.
 * Preview a long text file. Verify that the first page of content appears immediately, and that the watch cursor is shown while the rest of the file is parsed. With any acceleration disabled, use Open-Apple+Solid-Apple+Down to jump to the bottom of the file. Verify that the view is displayed without undue delay.
 
@@ -793,9 +794,9 @@ Repeat for every desk accessory that runs in a window.
 
 ## Calculator and Sci.Calc
 
-* Run Apple > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
+* Run Apple Menu > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
 
-* Run Apple > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen. Drag window back up. Verify the typed numbers were input.
+* Run Apple Menu > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen. Drag window back up. Verify the typed numbers were input.
 
 Repeat for Calculator and Sci.Calc:
 * With an English build, run the DA. Verify that '.' appears as the decimal separator in calculation results and that '.' when typed functions as a decimal separator.
@@ -817,9 +818,9 @@ With Sci.Calc:
 
 * Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
 
-* Run DeskTop on a system without a system clock. Run Apple > Control Panels > Date and Time. Set date. Reboot system, and re-run DeskTop. Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
+* Run DeskTop on a system without a system clock. Run Apple Menu > Control Panels > Date and Time. Set date. Reboot system, and re-run DeskTop. Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
 
-* On a system with a system clock, invoke Apple > Control Panels > Date and Time. Verify that the date and time are read-only.
+* On a system with a system clock, invoke Apple Menu > Control Panels > Date and Time. Verify that the date and time are read-only.
 
 * Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 12 hour. Verify that the time is shown as 12-hour, and if less than 10 is displayed without a leading 0.
 * Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0.
@@ -835,28 +836,28 @@ With Sci.Calc:
 
 ## Sort Directory
 
-* Open a folder containing a folder. Open the folder by double-clicking. Apple > Sort Directory. Verify that files are sorted by type/name.
+* Open a folder containing a folder. Open the folder by double-clicking. Apple Menu > Sort Directory. Verify that files are sorted by type/name.
 
-* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open a volume window. Create a folder. Open the folder window, and close the volume window. Apple > Run Basic Here. Run a program such as `10 FOR I = 1 to 127-14 : ?CHR$(4);"SAVE F";I : NEXT` to create as many files as possible while keeping the total icon count to 127. `BYE` to return to DeskTop. Apple > Sort Directory. Make sure all the files are sorted lexicographically (e.g. F1, F10, F100, F101, ...)
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open a volume window. Create a folder. Open the folder window, and close the volume window. Apple Menu > Run Basic Here. Run a program such as `10 FOR I = 1 to 127-14 : ?CHR$(4);"SAVE F";I : NEXT` to create as many files as possible while keeping the total icon count to 127. `BYE` to return to DeskTop. Apple Menu > Sort Directory. Make sure all the files are sorted lexicographically (e.g. F1, F10, F100, F101, ...)
 
 ## Key Caps
 
-* Launch DeskTop. Run Apple > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
+* Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
 
 ## Screen Savers
 
-* Launch DeskTop. Apple > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
-* Configure a system with a realtime clock. Launch DeskTop. Apple > Screen Savers. Run a screen saver that uses the full graphics screen and conceals the menu (Flying Toasters or Melt). Exit it. Verify that the menu bar clock reappears immediately.
+* Launch DeskTop. Apple Menu > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
+* Configure a system with a realtime clock. Launch DeskTop. Apple Menu > Screen Savers. Run a screen saver that uses the full graphics screen and conceals the menu (Flying Toasters or Melt). Exit it. Verify that the menu bar clock reappears immediately.
 
-* Launch DeskTop. Apple > Screen Savers. Run Matrix. Click the mouse button. Verify that the screen saver exits. Run Matrix. Press a key. Verify that the screen saver exits.
+* Launch DeskTop. Apple Menu > Screen Savers. Run Matrix. Click the mouse button. Verify that the screen saver exits. Run Matrix. Press a key. Verify that the screen saver exits.
 
-## About This Apple
+## About This Apple II
 
-* Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Run the This Apple DA. Verify that the Mockingboard is detected.
+* Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Apple Menu > About This Apple II. Verify that the Mockingboard is detected.
 
-* Configure a device multiple drives connected to a Smartport controller on a higher slot, a single drive connected to a Smartport controller in a lower slot. Launch DeskTop, run the This Apple DA. Verify that the name on the lower slot doesn't have an extra character at the end.
+* Configure a device multiple drives connected to a Smartport controller on a higher slot, a single drive connected to a Smartport controller in a lower slot. Launch DeskTop. Apple Menu > About This Apple II. Verify that the name on the lower slot doesn't have an extra character at the end.
 
-* Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Launch This Apple DA, close it. Verify that the file is still present on Ram5.
+* Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Apple Menu > About This Apple II, close it. Verify that the file is still present on Ram5.
 
 * Boot a system with only the 140k_disk1 image. Verify that About This Apple II is present in the Apple Menu.
 
@@ -869,20 +870,20 @@ With Sci.Calc:
 
 ## Puzzle
 
-* Launch DeskTop. Apple > Puzzle. Verify that the puzzle does not show as scrambled until the mouse button is clicked on the puzzle or a key is pressed. Repeat and verify that the puzzle is scrambled differently each time.
-* Launch DeskTop. Apple > Puzzle. Verify that you can move and close the window using the title bar before the puzzle is scrambled.
-* Launch DeskTop. Apple > Puzzle. Verify that you can close the window using Esc or Apple+W before the puzzle is scrambled.
-* Launch DeskTop. Apple > Puzzle. Scramble then solve the puzzle. After the victory sound plays, click on the puzzle again. Verify that the puzzle scrambles and that it can be solved again.
-* Launch DeskTop. Apple > Puzzle. Scramble the puzzle. Move the window so that only the title bar of the window is visible on screen. Use the arrow keys to move puzzle pieces. Verify that the puzzle pieces don't mispaint on the desktop.
+* Launch DeskTop. Apple Menu > Puzzle. Verify that the puzzle does not show as scrambled until the mouse button is clicked on the puzzle or a key is pressed. Repeat and verify that the puzzle is scrambled differently each time.
+* Launch DeskTop. Apple Menu > Puzzle. Verify that you can move and close the window using the title bar before the puzzle is scrambled.
+* Launch DeskTop. Apple Menu > Puzzle. Verify that you can close the window using Esc or Apple+W before the puzzle is scrambled.
+* Launch DeskTop. Apple Menu > Puzzle. Scramble then solve the puzzle. After the victory sound plays, click on the puzzle again. Verify that the puzzle scrambles and that it can be solved again.
+* Launch DeskTop. Apple Menu > Puzzle. Scramble the puzzle. Move the window so that only the title bar of the window is visible on screen. Use the arrow keys to move puzzle pieces. Verify that the puzzle pieces don't mispaint on the desktop.
 
 ## Run Basic Here
 
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure BASIC.SYSTEM is present on the boot volume. Launch DeskTop. Open a window. Apple > Run Basic Here. Verify that BASIC.SYSTEM starts.
+* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure BASIC.SYSTEM is present on the boot volume. Launch DeskTop. Open a window. Apple Menu > Run Basic Here. Verify that BASIC.SYSTEM starts.
 
 ## Joystick
 
 * Configure a system with only a single joystick (or paddles 0 and 1). Run the DA. Verify that only a single indicator is shown.
-* Configure a system with only a two joysticks (or paddles 2 and 3). Run the DA. Verify that after the second joystick is moved, a second indicator is shown.
+* Configure a system with two joysticks (or paddles 2 and 3). Run the DA. Verify that after the second joystick is moved, a second indicator is shown.
 
 ## Find Files
 
@@ -894,7 +895,7 @@ With Sci.Calc:
 * Launch DeskTop. Open a window. Apple Menu > Find Files. Type "*" and click Search. Double-click a file in the list. Verify that the Find Files window closes, that a window containing the file opens, and that the file icon is selected.
 * Launch DeskTop. Open a volume window. Open a folder window. Activate the volume window. Apple Menu > Find Files. Type "*" and click Search. Double-click a file in the list that's inside the folder. Verify that the Find Files window closes, that a folder window is brought to the foreground, and that the file icon is selected.
 
-* Create a set of nested directories, 21 levels deep or more (e.g. `/VOL/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D`). Launch DeskTop and open the volume. Apple > Find Files. Enter a search term (e.g. `*`) and click Search. Verify that the DA doesn't crash. (Not all files will be found, though.)
+* Create a set of nested directories, 21 levels deep or more (e.g. `/VOL/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D/D`). Launch DeskTop and open the volume. Apple Menu > Find Files. Enter a search term (e.g. `*`) and click Search. Verify that the DA doesn't crash. (Not all files will be found, though.)
 
 * Launch DeskTop. Open a window with at least two files. Apple Menu > Find Files. Type "*" and click Search. Press Down Arrow once. Type Return. Press Down Arrow again. Verify that only one entry in the list appears highlighted.
 
@@ -916,7 +917,7 @@ With Sci.Calc:
 * Launch Selector. Type Open-Apple and 6. Ensure machine boots from Slot 6
 * Launch Selector. Type Solid-Apple and 6. Ensure machine boots from Slot 6
 
-* Launch Selector. Eject the disk with DeskTop on it. Type Q (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.
+* Launch Selector. Eject the disk with DeskTop on it. Type D (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.
 
 * Configure a system without a RAMCard. Launch Selector. File > Run a Program.... Verify that the volume containing Selector is the first disk shown.
 * Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch Selector. File > Run a Program.... Verify that the non-RAMCard volume containing Selector is the first disk shown.

@@ -521,6 +521,7 @@ ForceScrollBottom := ScrollBottom::force
         ldax    product
         stax    winfo::maprect::y1
         addax   #kDAHeight, winfo::maprect::y2
+        MGTK_CALL MGTK::SetPort, winfo::port
 
         ;; Update thumb position
 
