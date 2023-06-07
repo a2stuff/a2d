@@ -112,6 +112,13 @@ space_positions:                 ; left, top for all 16 holes
 position_table:
         .res    16, 0
 
+;;; Alternate table - when not yet scrambled (to the user), this is
+;;; temporarily swapped in, scrambled, and swapped out every event
+;;; loop tick. When (to the user) scrambling happens, it is swapped
+;;; in for real.
+swapped_table:
+        .res    16, 0
+
 .params paintbits_params
 left:           .word   0
 top:            .word   0
@@ -519,6 +526,7 @@ scrambled_flag:
         ldy     #15
 loop:   tya
         sta     position_table,y
+        sta     swapped_table,y
         dey
         bpl     loop
 
@@ -536,6 +544,12 @@ loop:   tya
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
+
+        bit     scrambled_flag
+    IF_NC
+        jsr     PreScramble
+    END_IF
+
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         bne     :+
@@ -1082,7 +1096,12 @@ done:   sta     hole_x
 
 ;;; ============================================================
 
-.proc Scramble
+;;; Called during event loop if not scrambled - gets the puzzle good
+;;; and randomized.
+.proc PreScramble
+        jsr     SwapTables      ; save
+
+redo:
         ldy     #3
 sloop:  tya
         pha
@@ -1105,7 +1124,16 @@ ploop:  lda     position_table+1,y
         stx     position_table+1
 
         jsr     CheckVictory
-        bcs     Scramble
+        bcs     redo
+
+        jmp     SwapTables      ; restore
+.endproc ; PreScramble
+
+;;; ============================================================
+
+;;; Called to apply the scrambled positions and paint
+.proc Scramble
+        jsr     SwapTables      ; swap
 
         copy    #$80, scrambled_flag
         jsr     DrawAll
@@ -1114,6 +1142,19 @@ ploop:  lda     position_table+1,y
         rts
 .endproc ; Scramble
 
+;;; ============================================================
+
+.proc SwapTables
+        ldy     #15
+:       lda     position_table,y
+        ldx     swapped_table,y
+        sta     swapped_table,y
+        txa
+        sta     position_table,y
+        dey
+        bpl     :-
+        rts
+.endproc ; SwapTables
 
 ;;; ============================================================
 
