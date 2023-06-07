@@ -185,6 +185,9 @@ savearea:       .addr   $800
 savesize:       .word   $800
 .endparams
 
+desktop_started_flag:
+        .byte   0
+
 .params scalemouse_params
 x_exponent:     .byte   1       ; MGTK default is x 2:1 and y 1:1
 y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
@@ -596,6 +599,7 @@ set_startup_menu_items:
 
         MGTK_CALL MGTK::SetZP1, setzp_params
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
+        copy    #$80, desktop_started_flag
         jsr     SetRGBMode
         MGTK_CALL MGTK::SetMenu, menu
         jsr     ShowClock
@@ -998,7 +1002,10 @@ noop:   rts
 ;;; Assert: ROM banked in, ALTZP/LC is OFF
 
 .proc RestoreSystem
+        bit     desktop_started_flag
+    IF_NS
         MGTK_CALL MGTK::StopDeskTop
+    END_IF
         jsr     RestoreTextMode
         jsr     ReconnectRAM
         jmp     RestoreDeviceList
