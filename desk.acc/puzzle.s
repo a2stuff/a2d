@@ -612,13 +612,13 @@ ret:    rts
         bne     ret             ; always
     END_IF
 
+        cmp     #CHAR_ESCAPE
+        beq     OnClick::destroy
+
         bit     scrambled_flag
     IF_NC
         jmp     Scramble
     END_IF
-
-        cmp     #CHAR_ESCAPE
-        beq     OnClick::destroy
 
         ldx     hole_x
         ldy     hole_y
