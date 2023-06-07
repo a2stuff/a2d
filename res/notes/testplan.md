@@ -45,9 +45,9 @@
 * Launch DeskTop. Select an AppleWorks file icon. File > Duplicate..., and specify a name using a mix of uppercase and lowercase. Click OK. Close the containing window and re-open it. Verify that the filename case is retained.
 
 * File > Get Info a non-folder file. Verify that the size shows as "_size_K".
-* File > Get Info a folder containing 0 files. Verify that the size shows as "_size_K for 0 items".
-* File > Get Info a folder containing 1 files. Verify that the size shows as "_size_K for 1 item".
-* File > Get Info a folder containing 2 or more files. Verify that the size shows as "_size_K for _count_ items".
+* File > Get Info a folder containing 0 files. Verify that the size shows as "_size_K for 1 item".
+* File > Get Info a folder containing 1 files. Verify that the size shows as "_size_K for 2 items".
+* File > Get Info a folder containing 2 or more files. Verify that the size shows as "_size_K for _count_ items", including the folder itself.
 * File > Get Info a volume containing 0 files. Verify that the size shows as "_size_K for 0 items / _total_K".
 * File > Get Info a volume containing 1 files. Verify that the size shows as "_size_K for 1 item / _total_K".
 * File > Get Info a volume containing 2 or more files. Verify that the size shows as "_size_K for _count_ items / _total_K".
