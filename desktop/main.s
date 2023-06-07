@@ -7901,8 +7901,8 @@ flags:  .byte   0
         ldx     #0
         stax    num_items
 
+        tay
         ldax    #str_items_suffix
-        ldy     cached_window_entry_count
         cpy     #1
     IF_EQ
         ldax    #str_item_suffix

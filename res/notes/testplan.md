@@ -86,6 +86,8 @@
 * Open a folder with no items. Verify window header says "0 Items"
 * Open a folder with only one item. Verify window header says "1 Item"
 * Open a folder with two or more items. Verify window header says "2 Items"
+* Open a folder with no items. File > New Folder. Enter a name a click OK. Verify that the window header says "1 Item"
+* Open a folder with only one item. File > New Folder. Enter a name a click OK. Verify that the window header says "2 Items"
 
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
