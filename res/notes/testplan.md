@@ -788,7 +788,7 @@ Repeat for every desk accessory that runs in a window.
 
 ## International
 
-* Open the Control Panels folder. View > by Name. Open International. Change the date format from M/D/Y to D/M/Y or vice versa. CLick OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.
+* Open the Control Panels folder. View > by Name. Open International. Change the date format from M/D/Y to D/M/Y or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.
 * Open the Control Panels folder. View > by Name. Open International. Close without changing anything. Verify that only a minimal repaint happens.
 
 ## Calculator and Sci.Calc
@@ -1062,15 +1062,15 @@ This covers:
    * File > Rename...
    * Special > Format a Disk...
    * Special > Erase a Disk...
+ * DeskTop's Add/Edit a Shortcut dialog (an extended File Picker)
  * Find Files DA.
- * File picker - some have two fields.
+ * Map DA.
 
 "IP" = Insertion Point, also known as the caret or cursor.
 
 Repeat for each field:
  * Type a printable character.
    * Should insert a character at IP, unless invalid in context or length limit reached. Length limits are:
-     * File path: 64 characters
      * File name: 15 characters
      * Shortcut name: 14 characters
    * Mouse cursor should be hidden until moved.
@@ -1111,12 +1111,6 @@ Repeat for each field:
  * Place IP at start of string, click OK.
  * Place IP at end of string, click OK.
 
-For file pickers with two fields:
- * Click in first field. Click in second field.
- * Click in second field. Click in first field.
- * Click in first field. Click OK.
- * Click in second field. Click Cancel.
-
 Watch out for:
  * Parts of the IP not erased.
  * Text being truncated when OK clicked.
@@ -1155,11 +1149,11 @@ Repeat for each list box:
 * Click on an item. Verify it is selected. Click on white space below the items (if possible). Verify that selection is cleared.
 
 For the Sounds DA:
-* Click on an item. Verify it is selected, and plays the sound. Click on the same selected item. Verity if plays the sound again.
+* Click on an item. Verify it is selected, and plays the sound. Click on the same selected item. Verify if plays the sound again.
 
 Repeat for each list box where the contents are dynamic:
-* Populate the list so that the scrollbar is active. Scroll down by one row. Repopulate the list box so that the scrollbar is inactive. Verify that all expected items are shown, and hitting the Up Arrow key does nothing.
-* Populate the list so that the scrollbar is active, and scrolled to the top. Repopulate the list so that the scrollbar is still active. Verify that the scrollbar doesn't repaint/flicker.
+* Populate the list so that the scrollbar is active. Scroll down by one row. Repopulate the list box so that the scrollbar is inactive. Verify that all expected items are shown, and hitting the Up Arrow key selects the last item.
+* Populate the list so that the scrollbar is active, and scrolled to the top. Repopulate the list so that the scrollbar is still active. Verify that the scrollbar doesn't repaint/flicker. (This is easiest in the Shortcuts > Add a Shortcut File Picker.)
 
 # Menus
 
