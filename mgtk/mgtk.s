@@ -5902,7 +5902,7 @@ filler: ldx     menu_item_index
         find_menu_item_id     := $C8
 
         find_mode_by_coord    := $80        ; find menu by x-coord/menu item by y-coord
-                                            ; coordinate is in set_pos_params
+                                            ; coordinate is in `mouse_x/y`
 
         find_mode_by_shortcut := $C0        ; find menu and menu item by shortcut key
         find_shortcut         := $C9
@@ -5926,7 +5926,7 @@ loop:   jsr     GetMenu
         bne     next
 found:  return  curmenu::menu_id          ; reload to clear Z flag
 
-:       ldax    set_pos_params::xcoord    ; search by x coordinate bounds
+:       ldax    mouse_x         ; search by x coordinate bounds
         cpx     curmenu::x_min+1
         bcc     next
         bne     :+
@@ -5967,7 +5967,7 @@ loop:   jsr     GetMenuItem
         rts
 
 :       lda     menu_item_y_table,x
-        cmp     set_pos_params::ycoord
+        cmp     mouse_y
         bcc     next
         rts
 
