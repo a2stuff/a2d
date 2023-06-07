@@ -350,11 +350,11 @@
 * Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click in the window to clear selection. Click on a volume icon. File > Rename.... Enter a new valid name, and click OK. Verify that no alert is shown.
 
 * Launch DeskTop. Select a volume icon. File > Rename.... Enter the name of another volume. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Rename dialog is still showing.
-* Launch DeskTop. Open a window. Select a file icon. File > Rename.... Enter the name of file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Rename dialog is still showing.
+* Launch DeskTop. Open a window. Select a file icon. File > Rename.... Enter the name of a file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the Rename dialog is still showing.
 * Launch DeskTop. Open a volume window. Open a folder window. Select the volume icon and rename it. Verify that neither window is closed, and volume window is renamed.
 * Launch DeskTop. Open a volume window. Open a folder window. Activate the volume window. View > By Name. Select the folder icon. Rename it. Verify that the folder window is renamed.
-* Launch DeskTop. Open a volume window. Position an file icon with a short name near the left edge of the window, but far enough away that the scrollbars are not active. Rename the file icon with a long name. Verify that the window's scrollbars activate.
-* Launch DeskTop. Open a volume window. Position an file icon with a long name near the left edge of the window, so that the name is partially cut off and the scrollbars activate. Rename the file icon with a short name. Verify that the window's scrollbars deactivate.
+* Launch DeskTop. Open a volume window. Position a file icon with a short name near the left edge of the window, but far enough away that the scrollbars are not active. Rename the file icon with a long name. Verify that the window's scrollbars activate.
+* Launch DeskTop. Open a volume window. Position a file icon with a long name near the left edge of the window, so that the name is partially cut off and the scrollbars activate. Rename the file icon with a short name. Verify that the window's scrollbars deactivate.
 * Launch DeskTop. Close all windows. Select a volume icon. File > Rename..., enter a new name, and click OK. Verify that after the dialog closes there is no mis-painting of a scrollbar on the desktop.
 
 * Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double click on B. Verify that the existing B window activates.
@@ -405,9 +405,6 @@
 * Launch DeskTop. Open a volume window containing a folder. Open the folder. Verify that the folder appears as dimmed. Position the window partially over the dimmed folder. Move the window to reveal the whole folder. Verify that the folder is repainted cleanly (no visual glitches).
 * Launch DeskTop. Open a volume window containing two folders (1 and 2). Open both folder windows, and verify that both folder icons are dimmed. Position folder 1's window partially covering folder 2's icon. Activate folder 1's window, and close it. Verify that the visible portions of folder 2 repaint, not dimmed.
 
-* Launch DeskTop. Open a volume window. Select two files. File > Duplicate.... Leave the filename unchanged and click OK. Verify that an alert is shown, but the dialog is not dismissed. Change the name and click OK. Verify that a prompt is shown for the second file.
-* Launch DeskTop. Open a volume window. Select two files. File > Duplicate.... Change the filename to the name of another file in the directory and click OK. Verify that an alert is shown, but the dialog is not dismissed. Change the name and click OK. Verify that a prompt is shown for the second file.
-
 * Perform the following tests in DeskTop using Mouse Keys mode:
   * Use the arrow keys to move the mouse to the top, bottom, left, and right edges of the screen. Verify that the mouse is clamped to the edges and does not wrap.
   * Select an icon. Press the Return key. Verify that Mouse Keys mode is not silently exited, and the cursor is not distorted.
@@ -433,7 +430,7 @@
 * Launch DeskTop. Open a volume window. Create a folder. Open the folder's window. Activate the folder's parent window and select the folder icon. File > Delete. Click OK in the delete confirmation dialog. Verify that the folder's window closes.
 
 * Close all windows. Start typing a volume name. Verify that a prefix-matching volume, or the subsequent volume (in lexicographic order) is selected, or the last volume (in lexicographic order).
-* Close all windows. Start typing a volume name. Move the moouse. Start typing another filename. Verify that the matching is reset.
+* Close all windows. Start typing a volume name. Move the mouse. Start typing another filename. Verify that the matching is reset.
 * Open a window containing multiple files. Start typing a filename. Verify that a prefix-matching file or volume, or the subsequent file or volume (in lexicographic order), or the last file or volume (in lexicographic order) is selected. For example, if the files "Alfa" and "Whiskey" and the volume "November" are present, typing "A" selects "Alfa", typing "AB" selects "Alfa", typing "AL" selects "Alfa", typing "ALFAA" selects "November", typing "B" selects "November", typing "Z" selects "Whiskey". Repeat including file and volume names with numbers and periods.
 * Open a window containing multiple files. Start typing a filename. Move the mouse. Start typing another filename. Verify that the matching is reset.
 * Open a window containing no files. Start typing a filename. Verify that matching is done against the volume icons.
@@ -501,10 +498,10 @@
 * Launch DeskTop, ensuring no windows are open. File > Select All. Verify that the volume icons are selected.
 
 * Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Release the mouse button. Verify that the icon is moved.
-* Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Without releasing the mouse button, press the Escape key. Verify that the drag is cancelled and the icon does not move.
-* Launch DeskTop. Select a volume icon. Drag it over another icon on the desktop, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is cancelled, the target icon is unhighlighted, and the dragged icon does not move.
-* Launch DeskTop. Select a file icon. Drag it over an empty space in the window. Without releasing the mouse button, press the Escape key. Verify that the drag is cancelled and the icon does not move.
-* Launch DeskTop. Select a file icon. Drag it over a folder icon, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is cancelled, the target icon is unhighlighted, and the dragged icon does not move.
+* Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled and the icon does not move.
+* Launch DeskTop. Select a volume icon. Drag it over another icon on the desktop, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled, the target icon is unhighlighted, and the dragged icon does not move.
+* Launch DeskTop. Select a file icon. Drag it over an empty space in the window. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled and the icon does not move.
+* Launch DeskTop. Select a file icon. Drag it over a folder icon, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled, the target icon is unhighlighted, and the dragged icon does not move.
 
 * Repeat the following:
   * For these permutations, as the specified window area:
@@ -552,9 +549,9 @@
 * Mount a disk with the BINSCII system utility. Launch DeskTop. Invoke the BINSCII system file. Verify that the display is not truncated.
 
 * Repeat the following test cases for these operations: Copy, Move, Delete, Lock, Unlock:
-  * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is cancelled and the progress dialog is closed.
-  * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is cancelled and the progress dialog is closed.
-* Select a volume or folder containing multiple files. File > Get Info. During the count of the files, press Escape. Verify that the count is cancelled.
+  * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed.
+  * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is canceled and the progress dialog is closed.
+* Select a volume or folder containing multiple files. File > Get Info. During the count of the files, press Escape. Verify that the count is canceled.
 
 * Using BASIC, create a directory structure: X/Y/Z and save a BASIC file B as X/Y/Z/B. Lock all three directories and the file from BASIC (not DeskTop). Launch DeskTop. Select X. File > Delete. Verify that a prompt is shown for deleting each file in deepest-first order (B, Z, Y, X). Click Yes at each prompt. Verify that all files are deleted.
 
