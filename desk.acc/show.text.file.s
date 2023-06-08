@@ -1112,11 +1112,18 @@ fixed_font:
 
 filename:       .res    16
 
+        DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKE_PATH
+
 .proc Start
         lda     INVOKE_PATH
-    IF_EQ
-        rts
-    END_IF
+        beq     ret
+
+        ;; Don't show directory files (volumes/subdirectories)
+        JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_info_params
+        bcs     ret
+        lda     get_info_params::file_type
+        cmp     #FT_DIRECTORY
+        beq     ret
 
         ;; Set window title to filename
         ldy     INVOKE_PATH
@@ -1143,7 +1150,7 @@ filename:       .res    16
         ;; Run the DA
         JSR_TO_AUX aux::Init
 
-        rts
+ret:    rts
 .endproc ; Start
 
 ;;; ============================================================
