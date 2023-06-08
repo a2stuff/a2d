@@ -542,6 +542,8 @@
 * Copy PREVIEW/SHOW.IMAGE.FILE to the APPLE.MENU folder. Restart. Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. Apple Menu > Show Image File. Verify that an alert is shown.
 * Repeat the previous case, but with a Desk Accessory file as the innermost file instead of a folder. File > Open. Verify that an alert is shown.
 
+* From BASIC.SYSTEM, create /VOL/A/B on an otherwise empty volume. Launch DeskTop. Open /VOL. Open A. Close /VOL. Open another volume with multiple icons. Verify that the window for A still renders the icon for B correctly.
+
 * Launch DeskTop. Select a 5.25 disk volume. Remove the disk. File > Get Info. Verify that an alert is shown. Click OK. Verify that DeskTop doesn't hang or crash.
 * Launch DeskTop. Select a file on a 5.25 disk. Remove the disk. File > Get Info. Verify that an alert is shown. Click OK. Verify that DeskTop doesn't hang or crash.
 * Launch DeskTop. Select two files on a 5.25 disk. Remove the disk. File > Get Info. Verify that an alert is shown. Insert the disk again. Click OK. Verify that details are shown for the second file.

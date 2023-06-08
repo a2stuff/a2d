@@ -15347,7 +15347,10 @@ done_store:
 
 window_entry_count_table:       .res    ::kMaxDeskTopWindows+1, 0
 window_entry_offset_table:      .res    ::kMaxDeskTopWindows+1, 0
-window_entry_table:             .res    ::kMaxIconCount, 0
+window_entry_table:             .res    ::kMaxIconCount+1, 0
+;;; NOTE: +1 in above is to address an off-by-one case in the shift-up
+;;; logic with 127 icons. A simpler fix may be possible, see commit
+;;; 41ebde49 for another attempt, but that introduces other issues.
 
 .proc LoadActiveWindowEntryTable
         lda     active_window_id
