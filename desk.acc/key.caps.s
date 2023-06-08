@@ -789,14 +789,8 @@ check:  sec
         sec                     ; Yes, is a IIc+
         rts
 
-        ;; Last chance... is it a Platinum IIe, maybe?
-:       lda     ZIDBYTE         ; $E0 = Enhanced IIe (or IIgs)
-        cmp     #$E0
-        bne     :+
-        lda     BUTN2           ; Shift key mod, which is pre-installed
-        bpl     :+              ; on Platinum IIe. Assume shift is not
-        sec                     ; down.
-        rts
+        ;; Can't distinguish Platinum IIe, even via shift key mod,
+        ;; because unshifted state is high, just like no mod.
 
 :       clc                     ; No - standard layout
         rts

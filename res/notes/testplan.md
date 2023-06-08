@@ -852,6 +852,11 @@ With Sci.Calc:
 ## Key Caps
 
 * Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Turn Caps Lock off. Hold Apple (either one) and press the Q key. Verify the desk accessory exits.
+* Repeat on an Apple IIe, Apple IIc, and Laser 128:
+  * Launch DeskTop. Apple Menu > Key Caps. Verify that the "original" layout is shown, with the backslash above the Return key.
+* Repeat on an Apple IIc+ and Apple IIgs:
+  * Launch DeskTop. Apple Menu > Key Caps. Verify that the "extended" layout is shown, with the backslash to the right of the spacebar.
+
 
 ## Screen Savers
 

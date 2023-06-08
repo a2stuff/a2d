@@ -194,6 +194,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Identify Rockwell R65C02.
   * Identify The Cricket! sound/speech/clock device attached to SSC in Slot 2.
 * Screen Dump: Do nothing unless an SSC is in Slot 1.
+* Key Caps: Detect IIe and Laser 128 layout correctly.
 
 ## 1.2
 
