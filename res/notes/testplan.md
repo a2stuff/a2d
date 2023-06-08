@@ -316,18 +316,18 @@
   * Launch DeskTop. Open a window with icons. View > by Name. Obscure the window. View > as Icons. Verify that the window contents don't appear on the desktop. Move the window so the contents are visible. Verify that it contains icons.
   * Launch DeskTop. Open a window with icons. Obscure the window. View > by Name. Verify that the window contents don't appear on the desktop. Move the window so the contents are visible. Verify that the contents display as a list.
   * Launch DeskTop. Open a window with at least two icons. Select the first icon. Obscure the window. Press the right arrow key. Verify that the icons don't appear on the desktop.
-  * Launch DeskTop. Open a window with icons. Obscure the window. File > Select All icon. Verify that the icons don't appear on the desktop.
-  * Launch DeskTop. Open a window with icons. File > Select All icon. Obscure the window. Click on the desktop to clear selection. Verify that the icons don't appear on the desktop.
+  * Launch DeskTop. Open a window with icons. Obscure the window. File > Select All. Verify that the icons don't appear on the desktop.
+  * Launch DeskTop. Open a window with icons. File > Select All. Obscure the window. Click on the desktop to clear selection. Verify that the icons don't appear on the desktop.
   * Launch DeskTop. Open a window with folder icons. Open a second window from one of the folders. Verify that the folder icon in the first window is dimmed. Obscure the first window. Close the second window. Verify that the folder icon doesn't appear on the desktop.
   * Launch DeskTop. Open a window with icons. Select (but don't open) a folder. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
-  * Launch DeskTop. Open a window with icons. Select (but don't open) a folder containing 127 icons. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
+  * Launch DeskTop. Open a window with icons. Select (but don't open) a folder containing 127 files. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
   * Launch DeskTop. Open a window. Obscure the window. File > New Folder, enter a name, OK. Verify that the folder icon doesn't appear on the desktop.
   * Launch DeskTop. Open a window with icons. Obscure the window. File > Quit. Relaunch DeskTop. Verify that the restored window's icons don't appear on the desktop, and that the menu bar is not glitched.
   * Launch DeskTop. Open two windows with icons. Obscure one window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
   * Launch DeskTop. Open two windows with icons. Activate a window, View > by Name, and then obscure the window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
   * Launch DeskTop. Open a window with icons. Select an icon. Obscure the window. File > Rename..., enter a new name, OK. Verify that the icon does not paint on the desktop.
 
-* Launch DeskTop. Open a window. Try to drag the window so that the title bar is behind the menu bar. Verify that the window ends up positioned partially behind the menu bar.
+* Launch DeskTop. Open a window. Try to drag the window so that the title bar intersects the menu bar. Verify that the window ends up positioned partially behind the menu bar.
 * Launch DeskTop. Open two windows. Drag them both so their title bars are partially behind the menu bar. Apple+Tab between the windows. Verify that the title bars do not mispaint on top of the menu bar.
 
 * Launch DeskTop. Drag a volume icon so that it overlaps the menu bar, but the mouse pointer is below the menu bar. Release the mouse button. Verify that the icon doesn't paint on top of the menu bar. File > Select All. Verify that the icon doesn't repaint on top of the menu bar.
@@ -455,9 +455,9 @@
 * Repeat the following, with a volume icon (A), an open volume window (B) with a folder icon (C), and a window for that folder (D).
   * Drag a file from another volume onto A. Verify that B activates and refreshes, and that B's used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Drag a file from another volume onto B. Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
-  * Copy a file from another volume onto B using File > Copy To.... Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Copy a file from another volume to A using File > Copy To.... Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Drag a file from another volume onto D. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
-  * Copy file from another volume onto D using File > Copy File.... Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Copy file from another volume to C using File > Copy File.... Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Drag a file from B to the trash. Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Delete a file from B using File > Delete. Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Drag a file from D to the trash. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
@@ -563,6 +563,8 @@
 * Launch DeskTop. Create a new folder. Select the folder, and use Special > Lock. Add a file to the folder. Ensure that the file is not locked. Select the folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the folder's path is visible in the progress dialog.
 * Launch DeskTop. Create a new folder. Create a second folder inside it. Select the second folder, and use Special > Lock. Add a file to the second folder. Ensure that the file is not locked. Select the first folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the second folder's path is visible in the progress dialog.
 
+* Open a directory with more than 30 files, without resizing the window. Scroll up and down by one tick, by one page, and to the top/bottom. Verify that such operations scroll by an integral number of icons, i.e. the last row of labels are always the same distance from the bottom of the window.
+
 ## Shortcuts
 
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
@@ -626,7 +628,7 @@
 * Launch DeskTop. Try to delete files including a GS/OS forked file in the selection. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted.
 * Launch DeskTop. Try to delete files including a GS/OS forked file contained in a selected folder. Verify that an alert is shown, with the filename visible in the progress dialog. Verify that if OK is clicked, the operation continues with other files, and if Cancel is clicked the operation is aborted. Note that non-empty directories will fail to be deleted.
 * Launch DeskTop. Using drag/drop, try to copy or move a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
-* Launch DeskTop. Using drag/drop, try to copy a volume containing a GS/OS forked file and other files, where the destination window is visible. When an alert is shown, click OK. Verify that the destination window are updated.
+* Launch DeskTop. Using drag/drop, try to copy a volume containing a GS/OS forked file and other files, where the destination window is visible. When an alert is shown, click OK. Verify that the destination window is updated.
 * Launch DeskTop. Using File > Copy To..., try to copy a folder containing a GS/OS forked file, where the source and destination windows are visible. When an alert is shown, click OK. Verify that the source and destination windows are updated.
 * Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click Cancel. Verify that the source window is not updated.
 * Launch DeskTop. Using drag/drop, try to delete a GS/OS forked file. When the delete confirmation dialog is shown, click OK. When an alert is shown, click OK. Verify that the source window is updated.
@@ -976,9 +978,9 @@ With Sci.Calc:
 * Launch DeskTop. Special > Disk Copy.... Select a Pascal disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name does not have adjusted case (e.g. "TGP:" not "Tgp:").
 * Launch DeskTop. Special > Disk Copy.... Select a DOS 3.3 disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, no volume name appears on the "Source" line.
 
-* Launch DeskTop. Special > Disk Copy.... Select a ProDOS disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME"), and the name is quoted.
-* Launch DeskTop. Special > Disk Copy.... Select a Pascal disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
-* Launch DeskTop. Special > Disk Copy.... Select a DOS 3.3 disk as a desination disk. Verify that in the "Do you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
+* Launch DeskTop. Special > Disk Copy.... Select a ProDOS disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME"), and the name is quoted.
+* Launch DeskTop. Special > Disk Copy.... Select a Pascal disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
+* Launch DeskTop. Special > Disk Copy.... Select a DOS 3.3 disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
 
 * Configure Virtual II with two Omnidisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Disk Copy.... Select the Omnidisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Do you want to erase ...?" confirmation prompt is shown.
 
@@ -1014,25 +1016,13 @@ Test the following in all of the above, except where called out specifically:
 * Browse to a directory containing 7 files. Verify that the scrollbar is inactive.
 * Browse to a directory containing 8 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
 
-* Ensure the default drive has 10 or more files. Verify that an active scrollbar appears in the file list. Click OK. Click Cancel. Verify that the scrollbar is scrolled to the top.
-
 * Launch DeskTop. Special > Format a Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy To.... Verify that the file list is populated.
-
-* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter text in the first field. Move the IP into the middle of the text. Click in the second field. Verify that the first field is not truncated.
-* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter a name in the first field. Move the IP into the middle of the text. Click OK. Verify that the first field is not truncated.
-
-* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter text in the second field. Move the IP into the middle of the text. Click in the first field. Verify that the second field is not truncated.
-* Launch DeskTop. Shortcuts > Add a Shortcut.... Enter a name in the second field. Move the IP into the middle of the text. Click Cancel. Verify that the second field is not truncated.
 
 * Create a directory, and in the directory create a file named "A.B" then a file named "A". Browse to the directory. Verify "A" sorts before "A.B".
 
-* Browse to a directory with more than 8 files, with at least 1 directory. Note the first directory name. Scroll down so that the first file in the list is not seen. Pick a file and click OK. Verify that the first directory is visible in the list.
-
-* Open a directory with more than 30 files, without resizing the window. Scroll up and down by one tick, by one page, and to the top/bottom. Verify that such operations scroll by an integral number of icons, i.e. the last row of labels are always the same distance from the bottom of the window.
-
 * In Shortcuts > Add/Edit a Shortcut... name field:
   * Type a non-path, non-control character. Verify that it is accepted.
-  * Type a control character that is not an alias for an arrow/Tab/Return/Escape, e.g. Control+D. Verify that it is ignored.
+  * Type a control character that is not an alias for an Arrow key (so not Control+H, J, K, or U), editing key (so not Control+F, Control+X), Return (Control+M), Escape (Control+[), or a button shortcut (so not Control+D, O, or C) e.g. Control+Q. Verify that it is ignored.
   * Move the cursor over the text field. Verify that the cursor changes to an I-beam.
   * Move the cursor off the text field. Verify that the cursor changes to a pointer.
 
