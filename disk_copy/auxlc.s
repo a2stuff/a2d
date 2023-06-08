@@ -382,13 +382,6 @@ LD44E:  .byte   0
 disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
         .byte   0
 
-is_iigs_flag:                   ; high bit set if IIgs
-        .byte   0
-is_iiecard_flag:                ; high bit set if Mac IIe Option Card
-        .byte   0
-is_laser128_flag:               ; high bit set if Laser 128
-        .byte   0
-
 str_2_spaces:   PASCAL_STRING "  "
 str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 
@@ -1281,8 +1274,6 @@ match:  clc
 ;;; ============================================================
 
         .include "../lib/inttostring.s"
-        .include "../lib/speed.s"
-        .include "../lib/bell.s"
         saved_ram_unitnum := main__saved_ram_unitnum
         saved_ram_drvec   := main__saved_ram_drvec
         .include "../lib/disconnect_ram.s"
@@ -1988,7 +1979,7 @@ flag:   .byte   0
 
         cmp     #ERR_WRITE_PROTECTED
         bne     l2
-        jsr     Bell
+        jsr     main__Bell
         lda     #kAlertMsgDestinationProtected ; no args
         jsr     ShowAlertDialog
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
@@ -1999,7 +1990,7 @@ flag:   .byte   0
 :       jsr     main__FreeVolBitmapPages
         return  #$80
 
-l2:     jsr     Bell
+l2:     jsr     main__Bell
         jsr     SetPortForDialog
         lda     main__block_params_block_num
         ldx     main__block_params_block_num+1
@@ -2379,6 +2370,7 @@ find_in_alert_table:
 
         alert_grafport := grafport
         AlertYieldLoop := YieldLoop
+        Bell := main__Bell
 
         AD_EJECTABLE = 1
         .include "../lib/alert_dialog.s"
@@ -2464,11 +2456,8 @@ Alert := alert_dialog::Alert
 
 ;;; ============================================================
 
-        .assert * <= $F600, error, "Update memory_bitmap if code extends past $F600"
+        .assert * <= $F400, error, "Update memory_bitmap if code extends past $F400"
 .endscope ; auxlc
         auxlc__start := auxlc::start
-        auxlc__is_iigs_flag := auxlc::is_iigs_flag
-        auxlc__is_iiecard_flag := auxlc::is_iiecard_flag
-        auxlc__is_laser128_flag := auxlc::is_laser128_flag
 
         ENDSEG SegmentAuxLC

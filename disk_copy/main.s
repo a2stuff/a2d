@@ -1045,7 +1045,7 @@ done:   rts
 memory_bitmap:
         ;; Main memory
         .byte   %00000000       ; $00-$0F - ZP/Stack/Text, then Disk Copy code...
-        .byte   %00111100       ; $10-$1F - but $14-1B free ($1C = i/o buf)
+        .byte   %00011100       ; $10-$1F - but $16-1B free ($1C = i/o buf)
         .byte   %00000000       ; $20-$2F - DHR graphics page
         .byte   %00000000       ; $30-$3F - DHR graphics page
         .byte   %11111111       ; $40-$4F - free
@@ -1077,7 +1077,7 @@ memory_bitmap:
         .byte   %00000000       ; $C0-$CF - I/O
         .byte   %00000000       ; $D0-$DF - Disk Copy code
         .byte   %00000000       ; $E0-$EF - Disk Copy code
-        .byte   %00011111       ; $F0-$FF - free $F6 and up
+        .byte   %00111111       ; $F0-$FF - free $F4 and up
 
         ;; Aux memory - LCBANK2
         .byte   %11111111       ; $D0-$DF - free
@@ -1112,7 +1112,7 @@ memory_bitmap:
 ;;; Assert: LCBANK1 is banked in
 
 .proc ResetIIgsRGB
-        bit     auxlc::is_iigs_flag
+        bit     is_iigs_flag
         bpl     done
 
         ldx     #DeskTopSettings::rgb_color
@@ -1136,15 +1136,26 @@ done:   rts
 
 ;;; ============================================================
 
+is_iigs_flag:                   ; high bit set if IIgs
+        .byte   0
+is_iiecard_flag:                ; high bit set if Mac IIe Option Card
+        .byte   0
+is_laser128_flag:               ; high bit set if Laser 128
+        .byte   0
+
+;;; ============================================================
+
         SP_ALTZP = 1
         SP_LCBANK1 = 1
         .include "../lib/smartport.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/readwrite_settings.s"
+        .include "../lib/speed.s"
+        .include "../lib/bell.s"
 
 ;;; ============================================================
 
-        .assert * <= $1400, error, "Update memory_bitmap if code extends past $1400"
+        .assert * <= $1600, error, "Update memory_bitmap if code extends past $1600"
 .endscope ; main
 
 main__FormatDevice              := main::FormatDevice
@@ -1173,6 +1184,10 @@ main__on_line_buffer2           := main::on_line_buffer2
 main__ResetIIgsRGB              := main::ResetIIgsRGB
 main__saved_ram_unitnum         := main::saved_ram_unitnum
 main__saved_ram_drvec           := main::saved_ram_drvec
+main__Bell                      := main::Bell
+main__is_iigs_flag              := main::is_iigs_flag
+main__is_iiecard_flag           := main::is_iiecard_flag
+main__is_laser128_flag          := main::is_laser128_flag
 
 ReadSetting := main::ReadSetting
 

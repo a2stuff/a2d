@@ -107,15 +107,15 @@ start:
 
         is_iigs_flag := *+1
         lda     #$00            ; self-modified, but initially 0
-        sta     auxlc__is_iigs_flag
+        sta     main__is_iigs_flag
 
         is_iiecard_flag := *+1
         lda     #$00            ; self-modified, but initially 0
-        sta     auxlc__is_iiecard_flag
+        sta     main__is_iiecard_flag
 
         is_laser128_flag := *+1
         lda     #$00            ; self-modified, but initially 0
-        sta     auxlc__is_laser128_flag
+        sta     main__is_laser128_flag
 
         jmp     auxlc__start
 

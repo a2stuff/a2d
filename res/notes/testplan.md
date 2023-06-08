@@ -990,6 +990,8 @@ With Sci.Calc:
 * Launch DeskTop. Special > Disk Copy.... Select a source disk and a destination disk. Cancel the copy. Verify that the OK button is disabled.
 * Launch DeskTop. Special > Disk Copy.... Select a source disk and a destination disk. Allow the copy to complete. Verify that the OK button is disabled.
 
+* Launch DeskTop. Special > Disk Copy.... Select a source disk and a destination disk. Allow the copy to start, but eject the destination disk in the middle of the copy. Verify that block write errors are shown (with alert sounds).
+
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.

@@ -29,7 +29,7 @@ DEFAULT_FONT    := $8680
         INITSEG 0
         DEFSEG Loader,          DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
         DEFSEG SegmentAuxLC,    $D000, $2500
-        DEFSEG SegmentMain,     $0800, $0C00
+        DEFSEG SegmentMain,     $0800, $0D00
         ;; Update `memory_bitmap` in main.s if these change!
 
 ;;; ============================================================
