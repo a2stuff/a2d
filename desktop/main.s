@@ -15283,11 +15283,11 @@ done_load:
         sbc     delta
         tax                     ; X = old offset
 
-:       last := *+1
+:       lda     window_entry_table,x
+        sta     window_entry_table,y
+        last := *+1
         cpx     #SELF_MODIFIED_BYTE
         beq     shift_offsets
-        lda     window_entry_table,x
-        sta     window_entry_table,y
         dex
         dey
         jmp     :-
