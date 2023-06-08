@@ -663,13 +663,14 @@ The following tests all require:
 * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
 * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Modify a shortcut. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
 
-* Repeat the following cases with the Options and Control Panel DAs, and the Date and Time DA (on a system without a real-time clock):
+* Repeat the following cases with the Options. International, and Control Panel DAs, and the Date and Time DA (on a system without a real-time clock):
   * Launch DeskTop, ensure it copies itself to RAMCard. Launch the DA and modify a setting. Verify that no prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
   * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and Modify a setting. Verify that a prompt is shown asking about saving the changes. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
   * Launch DeskTop, ensure it copies itself to RAMCard. Eject the startup disk. Launch the DA and modify a setting. Verify that a prompt is shown asking about saving the changes. Click OK. Verify that another prompt is shown asking to insert the system disk. Insert the system disk, and click OK. Verify that no further prompt is shown. Power cycle and launch DeskTop. Verify that the modifications are present.
 
-* Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple Menu > Control Panels. Drag Apple.Menu from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be movied or copied into itself.
+* Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple Menu > Control Panels. Drag Apple.Menu from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be moved or copied into itself.
 
+* Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Shortcuts > Edit a Shortcut. Select a modify a shortcut, and click OK. Verify that no prompt is shown for saving changes to the startup disk.
 * Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Eject the startup disk. Special > Format a Disk. Verify that no prompt for the startup disk is shown.
 * Invoke DESKTOP.SYSTEM, and hit Escape when copying to RAMCard. Once DeskTop has started, eject the startup disk. Special > Format a Disk. Verify that a prompt to insert the system disk is shown.
 

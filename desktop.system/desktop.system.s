@@ -1085,11 +1085,25 @@ test_unit_num:
         ;; Already copied - record that it was installed and grab path.
         lda     #$80
         jsr     SetCopiedToRAMCardFlag
+        jsr     SetHeaderOrigPrefix
         jsr     CopyOrigPrefixToDesktopOrigPrefix
         copy    dst_path, copied_flag
         jmp     FinishDeskTopCopy ; sets prefix, etc.
 .endproc ; SearchDevices
 .endproc ; Start
+
+.proc SetHeaderOrigPrefix
+        MLI_CALL GET_PREFIX, get_prefix_params
+        dec     src_path
+
+        ldy     src_path
+:       lda     src_path,y
+        sta     header_orig_prefix,y
+        dey
+        bpl     :-
+        
+        rts
+.endproc ; SetHeaderOrigPrefix
 
 .proc StartCopy
         ptr := $06
@@ -1097,20 +1111,11 @@ test_unit_num:
         jsr     ShowCopyingDeskTopScreen
         jsr     InitProgress
 
-        MLI_CALL GET_PREFIX, get_prefix_params
-        beq     :+
-        jmp     DidNotCopy
-:       dec     src_path
-
         ;; Record that the copy was performed.
         lda     #$80
         jsr     SetCopiedToRAMCardFlag
 
-        ldy     src_path
-:       lda     src_path,y
-        sta     header_orig_prefix,y
-        dey
-        bpl     :-
+        jsr     SetHeaderOrigPrefix
 
         ;; --------------------------------------------------
         ;; Create desktop directory, e.g. "/RAM/DESKTOP"
