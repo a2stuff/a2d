@@ -6,7 +6,7 @@
 # * Update config.inc release date
 
 # Assumes:
-# * Tag is of the form: v1.2-alpha20
+# * Tag is of the form: v1.3-beta20
 
 set -e
 cd "$(dirname "$0")/.."
@@ -21,7 +21,7 @@ DATE=`date '+%B %d, %Y'`
 
 echo "Bumping to $NEWTAG..."
 
-perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-alpha$NEWVER\"/" config.inc
+perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-beta$NEWVER\"/" config.inc
 
 bin/setlang "en"
 
