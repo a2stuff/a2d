@@ -462,7 +462,7 @@ loop:   lda     (ptr1),y
         ptr1 := $06
         ptr2 := $08
 
-        ldy     #0
+        ldy     #FileEntry::storage_type_name_length
         lda     (ptr1),y
         and     #STORAGE_TYPE_MASK ; Active file entry?
         jeq     rtcc
@@ -479,84 +479,51 @@ loop:   lda     (ptr1),y
         bne     :+              ; Nope (desktop or inactive window)
         jmp     CompareSelectionOrders
 
+        ;; Sorting by type then name
+
+        ;; SYS files with ".SYSTEM" suffix sort first
 :       ldax    ptr2
         jsr     CheckSystemFile
-        bcc     rtcc
-
+        php                     ; save first result (in C)
         ldax    ptr1
         jsr     CheckSystemFile
-        bcc     rtcs
+        lda     #0              ; combine both results
+        rol
+        plp
+        rol                     ; now low 2 bits have 0=yes, 1=no
+        beq     sys             ; both, so compare as SYS
+        cmp     #%00000011      ; neither, so continue
+        beq     :+
+        ror                     ; order back into C
+        rts
+:
+        ;; DIR next
+        lda     #FT_DIRECTORY
+        jsr     CompareEntryTypesAndNames
+        beq     ret
 
-        ldy     #0
-        lda     (ptr2),y
-        and     #STORAGE_TYPE_MASK
-        sta     storage_type2
-
-        ldy     #0
-        lda     (ptr1),y
-        and     #STORAGE_TYPE_MASK
-        sta     storage_type1
-
-        ;; Why does this dir-first comparison not just use FT_DIRECTORY ???
-
-        ;; Is #2 a dir?
-        lda     storage_type2
-        cmp     #(ST_LINKED_DIRECTORY << 4)
-        beq     dirs            ; yep, check #1
-
-        ;; Is #1 a dir?
-        lda     storage_type1
-        cmp     #(ST_LINKED_DIRECTORY << 4)
-        beq     rtcs            ; yep, but 2 wasn't, so order
-        bne     check_types     ; neither are dirs - check types
-
-        ;; #2 was a dir - is #1?
-dirs:   lda     storage_type1
-        cmp     #(ST_LINKED_DIRECTORY << 4)
-        bne     rtcc
-
-        ;; Both are dirs, order by name
-        jsr     CompareFileEntryNames
-        bcc     rtcc
-        bcs     rtcs
-
-        ;; TXT files first
-check_types:
+        ;; TXT files next
         lda     #FT_TEXT
         jsr     CompareEntryTypesAndNames
-        bne     :+
-        bcc     rtcc
-        bcs     rtcs
+        beq     ret
 
         ;; SYS files next
-:       lda     #FT_SYSTEM
+sys:    lda     #FT_SYSTEM
         jsr     CompareEntryTypesAndNames
-        bne     :+
-        bcc     rtcc
-        bcs     rtcs
+        beq     ret
 
         ;; Then order by type from $FD down
-:       lda     #$FD
-        sta     type
-loop:   dec     type
-        lda     type
-        beq     rtcc
-        jsr     CompareEntryTypesAndNames
-        bne     loop
-        bcs     rtcs
-        jmp     rtcc
+        ldy     #FileEntry::file_type
+        lda     (ptr1),y
+        cmp     (ptr2),y
+        bne     ret
+        jmp     CompareEntryTypesAndNames
 
 rtcs:   sec
         rts
 
 rtcc:   clc
-        rts
-
-storage_type2:
-        .byte   0
-storage_type1:
-        .byte   0
-type:   .byte   0
+ret:    rts
 .endproc ; CompareFileEntries
 
 ;;; ============================================================
@@ -737,7 +704,7 @@ type0:  .byte   0
         stax    ptr
         ldy     #FileEntry::file_type
         lda     (ptr),y
-        cmp     #$FF            ; type=SYS
+        cmp     #FT_SYSTEM
         bne     fail
 
         ;; Could name end in .SYSTEM?
