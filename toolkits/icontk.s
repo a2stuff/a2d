@@ -757,8 +757,6 @@ is_drag:
         INVOKE_WITH_LAMBDA IterateHighlightedIcons
         sta     iconinrect_params::icon
 
-        ITK_CALL IconTK::IconInRect, iconinrect_params
-    IF_NE
         jsr     CalcIconPoly
 
         ;; Copy poly into place
@@ -769,7 +767,6 @@ is_drag:
         bpl     :-
 
         add16_8 $08, #kIconPolySize
-    END_IF
         rts
         END_OF_LAMBDA
 

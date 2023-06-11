@@ -13,6 +13,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### DeskTop
 
 * Add file type "LBR" string for $E0 ("archival library")
+* Show drag outlines even for hidden icons.
 
 ### Selector
 

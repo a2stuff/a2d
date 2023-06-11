@@ -331,8 +331,9 @@
 * Launch DeskTop. Open two windows. Drag them both so their title bars are partially behind the menu bar. Apple+Tab between the windows. Verify that the title bars do not mispaint on top of the menu bar.
 
 * Launch DeskTop. Drag a volume icon so that it overlaps the menu bar, but the mouse pointer is below the menu bar. Release the mouse button. Verify that the icon doesn't paint on top of the menu bar. File > Select All. Verify that the icon doesn't repaint on top of the menu bar.
-* Launch DeskTop. Select multiple volume icons (at least 4). Drag the bottom icon up so that the top two icons are completely off the screen. Release the mouse button. Drag the icons back down. Verify that all icons reposition correctly.
+* Launch DeskTop. Select multiple volume icons (at least 4). Drag the bottom icon up so that the top two icons are completely off the screen. Release the mouse button. Drag the icons back down. Verify that while dragging, all icons have outlines, and when done dragging all icons reposition correctly.
 * Launch DeskTop. Open a window with at least 3 rows of icons. Position the window at the top of the screen. File > Select All. Drag an icon from the bottom row so that the top icons end up completely offscreen. Release the mouse button. Drag the icons back down. Verify that all icons reposition correctly.
+* Launch DeskTop. Open a window with multiple icons. Resize the window so some of the icons aren't visible without scrolling. File > Select All. Drag the icons. Verify that drag outlines are shown even for hidden icons.
 
 * Launch DeskTop. Open a window containing a folder. Open the folder's window. Activate the first window by clicking on it. Activate the second window by clicking on it. Verify that the folder icon is not selected by moving the second window around to force repaints.
 
