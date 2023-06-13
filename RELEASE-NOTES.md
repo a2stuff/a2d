@@ -8,6 +8,8 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### General
 
+* Improve mouse responsiveness and event ordering.
+
 ### Launcher
 
 ### DeskTop

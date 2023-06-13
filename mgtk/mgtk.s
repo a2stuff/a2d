@@ -4033,7 +4033,7 @@ cursor_flag:                    ; high bit clear if cursor drawn, set if not dra
 cursor_count:
         .byte   $FF             ; decremented on hide, incremented on shown; 0 = visible
 
-.params set_pos_params
+.params cursor_pos
 xcoord: .word   0
 ycoord: .word   0
 .endparams
@@ -4229,7 +4229,7 @@ srts:   rts
         sta     cursor_count
         sta     cursor_flag
 
-        lda     set_pos_params::ycoord
+        lda     cursor_pos::ycoord
         clc
         sbc     cursor_hotspot_y
         sta     cursor_y1
@@ -4237,11 +4237,11 @@ srts:   rts
         adc     #MGTK::cursor_height
         sta     cursor_y2
 
-        lda     set_pos_params::xcoord
+        lda     cursor_pos::xcoord
         sec
         sbc     cursor_hotspot_x
         tax
-        lda     set_pos_params::xcoord+1
+        lda     cursor_pos::xcoord+1
         sbc     #0
         bpl     :+
 
@@ -4511,26 +4511,10 @@ cursor_throttle:
         bpl     mrts
         lda     #2
         sta     cursor_throttle
+:
 
-:       ldx     #2
-:       lda     mouse_x,x
-        cmp     set_pos_params,x
-        bne     mouse_moved
-        dex
-        bpl     :-
-        bmi     no_move
+        ;; --------------------------------------------------
 
-mouse_moved:
-        jsr     RestoreCursorBackground
-        ldx     #2
-        stx     cursor_flag
-:       lda     mouse_x,x
-        sta     set_pos_params,x
-        dex
-        bpl     :-
-        jsr     UpdateCursor
-
-no_move:
         bit     no_mouse_flag
         bmi     :+
         jsr     ReadMousePos
@@ -4541,8 +4525,33 @@ no_move:
         sta     mouse_status
 
 :       lda     kbd_mouse_state
-        beq     rts4
+        beq     :+
         jsr     HandleKeyboardMouse
+:
+
+        ;; --------------------------------------------------
+
+        ldx     #2
+:       lda     mouse_x,x
+        cmp     cursor_pos,x
+        bne     mouse_moved
+        dex
+        bpl     :-
+        bmi     no_move
+
+        ;; --------------------------------------------------
+
+mouse_moved:
+        jsr     RestoreCursorBackground
+        ldx     #2
+        stx     cursor_flag
+:       lda     mouse_x,x
+        sta     cursor_pos,x
+        dex
+        bpl     :-
+        jsr     UpdateCursor
+
+no_move:
 .endproc ; MoveCursor
 rts4:   rts
 
@@ -5198,7 +5207,7 @@ error_return:
 
 :       sta     (params_addr),y         ; Store 5 bytes at params
         iny
-:       lda     set_pos_params-1,y
+:       lda     cursor_pos-1,y
         sta     (params_addr),y
         iny
         cpy     #MGTK::event_size
@@ -5283,7 +5292,7 @@ up:     bit     mouse_status
 set_state:
         sta     input::state
 
-        COPY_BYTES 3, set_pos_params, input::key
+        COPY_BYTES 3, cursor_pos, input::key
 
 put_key_event:
         jsr     PutEvent
@@ -5902,7 +5911,7 @@ filler: ldx     menu_item_index
         find_menu_item_id     := $C8
 
         find_mode_by_coord    := $80        ; find menu by x-coord/menu item by y-coord
-                                            ; coordinate is in `mouse_x/y`
+                                            ; coordinate is in `cursor_pos`
 
         find_mode_by_shortcut := $C0        ; find menu and menu item by shortcut key
         find_shortcut         := $C9
@@ -5926,7 +5935,7 @@ loop:   jsr     GetMenu
         bne     next
 found:  return  curmenu::menu_id          ; reload to clear Z flag
 
-:       ldax    mouse_x         ; search by x coordinate bounds
+:       ldax    cursor_pos::xcoord ; search by x coordinate bounds
         cpx     curmenu::x_min+1
         bcc     next
         bne     :+
@@ -5967,7 +5976,7 @@ loop:   jsr     GetMenuItem
         rts
 
 :       lda     menu_item_y_table,x
-        cmp     mouse_y
+        cmp     cursor_pos::ycoord
         bcc     next
         rts
 
@@ -6221,7 +6230,7 @@ menu_item  .byte
         ;; --------------------------------------------------
 
 event_loop:
-        COPY_BYTES kLastMousePosLen, mouse_x, last_mouse_pos
+        COPY_BYTES kLastCursorPosLen, cursor_pos::xcoord, last_cursor_pos
 
         jsr     GetAndReturnEvent
 
@@ -6318,9 +6327,9 @@ event_loop:
         jne     event_loop
 :
         ;; Was there a move?
-        ldx     #kLastMousePosLen-1
-:       lda     mouse_x,x
-        cmp     last_mouse_pos,x
+        ldx     #kLastCursorPosLen-1
+:       lda     cursor_pos,x
+        cmp     last_cursor_pos,x
         bne     :+
         dex
         bpl     :-
@@ -6583,9 +6592,9 @@ sel_menu_item_index:
 last_menu_index:
         .byte   0
 
-kLastMousePosLen = 3            ; don't bother with Y high byte
-last_mouse_pos:
-        .res    kLastMousePosLen
+kLastCursorPosLen = 3           ; don't bother with Y high byte
+last_cursor_pos:
+        .res    kLastCursorPosLen
 .endproc ; MenuSelectImpl
 
 ;;; ============================================================
@@ -8294,7 +8303,7 @@ loop:   jsr     GetAndReturnEvent
         cmp     #MGTK::EventKind::button_up
         beq     :+
 
-        MGTK_CALL MGTK::MoveTo, set_pos_params
+        MGTK_CALL MGTK::MoveTo, cursor_pos
         jsr     InWinRect
         eor     in_close_box
         bpl     loop
@@ -9843,7 +9852,7 @@ stashed_addr:  .addr     0
         sta     kbd_mouse_state
         lda     #0
         sta     kbd_mouse_status ; reset mouse button status
-        COPY_BYTES 3, set_pos_params, kbd_mouse_x
+        COPY_BYTES 3, cursor_pos, kbd_mouse_x
 
 ret:    rts
 
