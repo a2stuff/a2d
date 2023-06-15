@@ -6,24 +6,56 @@
 # * Update config.inc release date
 
 # Assumes:
-# * Tag is of the form: v1.3-beta20
+# * config.inc has previous major/minor/suffix
 
 set -e
 cd "$(dirname "$0")/.."
 
-# Most recent tag
-OLDTAG=`git describe --tags --abbrev=0`
-OLDVER=$(echo "$OLDTAG" | sed -E 's/^v[0-9]+\.[0-9]+-[a-z]+//')
-OLDPRE=$(echo "$OLDTAG" | sed -E 's/[0-9]+$//')
-NEWVER=`expr $OLDVER + 1`
-NEWTAG="$OLDPRE$NEWVER"
-DATE=`date '+%B %d, %Y'`
+# ============================================================
+# Extract metadata for the build
 
-echo "Bumping to $NEWTAG..."
+vmajor=$(grep 'kDeskTopVersionMajor =' config.inc | sed -e 's/.* = //')
+vminor=$(grep 'kDeskTopVersionMinor =' config.inc | sed -e 's/.* = //')
+vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc | cut -d'"' -f2)
+lang=$(grep 'define kBuildLang' config.inc | cut -d'"' -f2)
+vtype=$(echo "$vsuffix" | sed -E -e 's/^-//' -e 's/[0-9]+$//')
+vrel=$(echo "$vsuffix" | sed -E -e 's/[^0-9]*//')
 
-perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-beta$NEWVER\"/" config.inc
+# ============================================================
+# Update
+
+vrel=`expr $vrel + 1`
+
+version=$(echo ${vmajor}.${vminor}-${vtype}${vrel})
+
+# --------------------------------------------------
+echo "Bumping to ${version}..."
+
+perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-${vtype}${vrel}\"/" config.inc
 
 bin/setlang "en"
 
-git commit -a -m "Bump verson to $NEWTAG"
-git tag $NEWTAG
+git commit -a -m "Bump verson to ${version}" > /dev/null
+git tag "v${version}" > /dev/null
+
+# --------------------------------------------------
+echo "Building..."
+
+VOL="/A2.DESKTOP"
+IMG="out/A2DeskTop-${version}-${lang}_800k.2mg"
+make > /dev/null
+
+# --------------------------------------------------
+echo "Packaging..."
+
+make package > /dev/null
+
+# --------------------------------------------------
+echo "Configuring..."
+
+INSTALL_PATH="$VOL" INSTALL_IMG="$IMG" bin/defopt
+INSTALL_PATH="$VOL" INSTALL_IMG="$IMG" bin/setopt noram
+
+# --------------------------------------------------
+echo ""
+echo "Upload $IMG to AWS"
