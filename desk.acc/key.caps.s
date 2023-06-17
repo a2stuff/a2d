@@ -673,10 +673,9 @@ return_flag:
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
-        bne     :+
-        rts
+        RTS_IF_EQ
 
-:       MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
         MGTK_CALL MGTK::SetPenMode, pencopy

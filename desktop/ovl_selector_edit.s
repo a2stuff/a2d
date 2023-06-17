@@ -362,10 +362,9 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .proc HandleKey
         jsr     file_dialog::SetPortForDialog
         lda     event_params::modifiers
-        bne     :+
-        rts
+        RTS_IF_ZERO
 
-:       lda     event_params::key
+        lda     event_params::key
         cmp     #'1'
         jeq     ClickPrimaryRunListCtrl
 

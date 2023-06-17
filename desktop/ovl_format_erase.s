@@ -415,9 +415,8 @@ no:     ldx     #$FF            ; set N
         vol := *+1
 loop:   lda     #SELF_MODIFIED_BYTE
         cmp     num_volumes
-        bne     :+
-        rts
-:
+        RTS_IF_EQ
+
         jsr     option_picker::GetOptionPos
         addax   #kVolPickerTextHOffset, vol_picker_item_rect::x1
         tya

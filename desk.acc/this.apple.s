@@ -1119,10 +1119,9 @@ egg:    .byte   0
 .proc ClearWindow
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
         cmp     #MGTK::Error::window_obscured
-        bne     :+
-        rts
+        RTS_IF_EQ
 
-:       JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::grafport + MGTK::GrafPort::maprect
         rts
 .endproc ; ClearWindow
@@ -1134,10 +1133,9 @@ egg:    .byte   0
 
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
         cmp     #MGTK::Error::window_obscured
-        bne     :+
-        rts
+        RTS_IF_EQ
 
-:       JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
+        JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
 
         copy16  model_pix_ptr, bits_addr

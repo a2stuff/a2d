@@ -759,8 +759,7 @@ l3:     sty     pathname_src
 
 .proc RemoveSegmentFromSrcPathname
         ldx     pathname_src
-        bne     :+
-        rts
+        RTS_IF_ZERO
 
 :       lda     pathname_src,x
         cmp     #'/'

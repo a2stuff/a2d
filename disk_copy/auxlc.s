@@ -968,9 +968,10 @@ LDA7D:  copy    #0, checkitem_params::check
 .proc HandleClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        bne     :+
-        rts                     ; desktop - ignore
-:       cmp     #MGTK::Area::menubar
+        .assert MGTK::Area::desktop = 0, error, "enum mismatch"
+        RTS_IF_ZERO
+
+        cmp     #MGTK::Area::menubar
         bne     :+
         MGTK_CALL MGTK::MenuSelect, menuselect_params
         jmp     HandleMenuSelection

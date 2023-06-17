@@ -590,9 +590,7 @@ hit_target_jump_table:
         bit     clock_24hours
     IF_NS
         cmp     #Field::period
-        bne     :+
-        rts
-:
+        RTS_IF_EQ
     END_IF
 
         jmp     SelectField

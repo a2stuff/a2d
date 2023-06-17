@@ -1289,6 +1289,85 @@ __depth__ .set 0
         .define WHILE_POS WHILE_NC
         .define WHILE_NEG WHILE_NS
 
+;;; --------------------------------------------------
+
+;;; Macros:
+;;;     RTS_IF_ZS           aliases: RTS_IF_EQ, RTS_IF_ZERO
+;;;     RTS_IF_ZC           aliases: RTS_IF_NE, RTS_IF_NOT_ZERO
+;;;     RTS_IF_CC           aliases: RTS_IF_LT
+;;;     RTS_IF_CS           aliases: RTS_IF_GE
+;;;     RTS_IF_VC
+;;;     RTS_IF_VS
+;;;     RTS_IF_NC           aliases: RTS_IF_POS, RTS_IF_PLUS
+;;;     RTS_IF_NS           aliases: RTS_IF_NEG, RTS_IF_MINUS
+
+.macro RTS_IF_ZS
+        .local  skip
+        bne     skip
+        rts
+skip:
+.endmacro
+
+.macro RTS_IF_ZC
+        .local  skip
+        beq     skip
+        rts
+skip:
+.endmacro
+
+.macro RTS_IF_CS
+        .local  skip
+        bcc     skip
+        rts
+skip:
+.endmacro
+
+.macro RTS_IF_CC
+        .local  skip
+        bcs     skip
+        rts
+skip:
+.endmacro
+
+.macro RTS_IF_VC
+        .local  skip
+        bvs     skip
+        rts
+skip:
+.endmacro
+
+.macro RTS_IF_VS
+        .local  skip
+        bvc     skip
+        rts
+skip:
+.endmacro
+
+.macro RTS_IF_NC
+        .local  skip
+        bmi     skip
+        rts
+skip:
+.endmacro
+
+.macro RTS_IF_NS
+        .local  skip
+        bpl     skip
+        rts
+skip:
+.endmacro
+
+        .define RTS_IF_EQ RTS_IF_ZS
+        .define RTS_IF_NE RTS_IF_ZC
+        .define RTS_IF_ZERO RTS_IF_EQ
+        .define RTS_IF_NOT_ZERO RTS_IF_NE
+        .define RTS_IF_GE RTS_IF_CS
+        .define RTS_IF_LT RTS_IF_CC
+        .define RTS_IF_PLUS RTS_IF_NC
+        .define RTS_IF_MINUS RTS_IF_NS
+        .define RTS_IF_POS RTS_IF_NC
+        .define RTS_IF_NEG RTS_IF_NS
+
 
 ;;; ============================================================
 ;;; Lambda Invocation

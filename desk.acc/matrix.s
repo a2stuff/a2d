@@ -230,9 +230,8 @@ exit:   rts
         ldy     #Cursor::vpos
         lda     (ptr),y
         cmp     #24
-        bcc     :+
-        rts
-:
+        RTS_IF_GE
+
         ;; Set BASL/H
         sta     CV
         jsr     VTAB

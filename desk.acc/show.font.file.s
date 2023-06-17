@@ -257,10 +257,9 @@ END_PARAM_BLOCK
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
-        bne     :+
-        rts
+        RTS_IF_EQ
 
-:       MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
         copy16  #kInitialY, pos::ycoord

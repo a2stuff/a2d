@@ -496,9 +496,7 @@ set_key:
 .proc DrawWindow
         ;; Defer if content area is not visible
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-    IF_NOT_ZERO
-        rts
-    END_IF
+        RTS_IF_NOT_ZERO
 
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor

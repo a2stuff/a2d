@@ -192,10 +192,9 @@ reserved:       .byte   0
 
         ;; open file, get length
         JSR_TO_MAIN OpenFile
-        beq     :+
-        rts
+        RTS_IF_NOT_ZERO
 
-:       lda     open_params::ref_num
+        lda     open_params::ref_num
         sta     read_params::ref_num
         sta     set_mark_params::ref_num
         sta     get_eof_params::ref_num

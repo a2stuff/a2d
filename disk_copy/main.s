@@ -323,14 +323,12 @@ l6:     lda     ptr
         ;; blocks until we've accounted for all blocks on the volume.
 loop:   sub16   block_count_div8, #$200, block_count_div8
         lda     block_count_div8+1
-        bpl     :+
-        rts
+        RTS_IF_NEG
 
-:       lda     block_count_div8
-        bne     :+
-        rts
+        lda     block_count_div8
+        RTS_IF_ZERO
 
-:       add16   block_params::data_buffer, #$200, block_params::data_buffer
+        add16   block_params::data_buffer, #$200, block_params::data_buffer
 
         inc     block_params::block_num
         lda     block_params::data_buffer+1

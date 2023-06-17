@@ -1657,9 +1657,7 @@ entry_dir_name:
 
         ;; If already exists, consider that a success
         MLI_CALL GET_FILE_INFO, gfi_params
-        bne     :+
-        rts
-:
+        RTS_IF_ZERO
 
         ;; Install callbacks and invoke
         copy16  #HandleErrorCode, GenericCopy::hook_handle_error_code

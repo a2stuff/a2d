@@ -1306,9 +1306,9 @@ end:    rts
 .proc DrawContent
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
-        bne     :+
-        rts
-:       MGTK_CALL MGTK::SetPort, grafport
+        RTS_IF_EQ
+
+        MGTK_CALL MGTK::SetPort, grafport
 
         ;; Frame
         MGTK_CALL MGTK::HideCursor

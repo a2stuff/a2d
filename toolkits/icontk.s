@@ -1066,9 +1066,8 @@ headery:
 
 .proc FindTargetAndHighlight
         bit     trash_flag      ; Trash is not drop-able, so skip if in selection
-        bpl     :+
-        rts
-:
+        RTS_IF_NS
+
         jsr     PushPointers
         jsr     FindIconValidateWindow
         beq     done
@@ -2177,9 +2176,8 @@ reserved:       .byte   0
         lda     clip_window_id
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into `icon_grafport`
-        beq     :+
-        rts                     ; obscured
-:
+        RTS_IF_NE                                     ; obscured
+
         ;; Stash, needed to offset port when drawing to get correct patterns
         jsr     CalcClipDeltas
 
@@ -2532,9 +2530,8 @@ case2:
 
 .proc OffsetPortAndIcon
         lda     clip_window_id
-        bne     :+
-        rts
-:
+        RTS_IF_ZERO
+
         ldxy    clip_dx
         addxy   portbits::maprect::x1
         addxy   portbits::maprect::x2

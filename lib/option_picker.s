@@ -37,9 +37,8 @@ kOptionPickerMaxEntries = kOptionPickerRows * kOptionPickerCols
 
 .proc SetOptionPickerSelection
         cmp     selected_index  ; same as previous?
-        bne     :+
-        rts
-:
+        RTS_IF_EQ
+
         pha
         lda     selected_index
         jsr     _HighlightIndex

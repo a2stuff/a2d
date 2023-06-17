@@ -893,24 +893,22 @@ L9443:  lda     #AlertID::insert_system_disk
 .proc HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        bne     :+
-        rts
+        .assert MGTK::Area::desktop = 0, error, "enum mismatch"
+        RTS_IF_ZERO
 
-:       cmp     #MGTK::Area::menubar
+        cmp     #MGTK::Area::menubar
         bne     :+
         MGTK_CALL MGTK::MenuSelect, menu_params
         jmp     HandleMenu
 
 :       cmp     #MGTK::Area::content
-        beq     :+
-        rts
+        RTS_IF_NE
 
-:       lda     findwindow_params::window_id
+        lda     findwindow_params::window_id
         cmp     #winfo::kDialogId
-        beq     :+
-        rts
+        RTS_IF_NE
 
-:       lda     #winfo::kDialogId
+        lda     #winfo::kDialogId
         jsr     GetWindowPort
         lda     #winfo::kDialogId
         sta     screentowindow_params::window_id
@@ -1073,20 +1071,17 @@ noop:   rts
         ;; 1-8 to select entry
 
 :       cmp     #'1'
-        bcs     :+
-        rts
+        RTS_IF_LT
 
-:       cmp     #'9'
-        bcc     :+
-        rts
+        cmp     #'9'
+        RTS_IF_GE
 
-:       sec
+        sec
         sbc     #'1'
         cmp     num_primary_run_list_entries
-        bcc     :+
-        rts
+        RTS_IF_GE
 
-:       jsr     option_picker::SetOptionPickerSelection
+        jsr     option_picker::SetOptionPickerSelection
         jmp     UpdateOKButton
 
         ;; --------------------------------------------------

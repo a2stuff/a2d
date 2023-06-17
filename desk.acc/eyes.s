@@ -396,14 +396,11 @@ kMoveThresholdY = 5
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
-        bne     :+
-        rts
-:
+        RTS_IF_EQ
+
         ;; Defer until we have mouse coords
         lda     has_last_coords
-        bne     :+
-        rts
-:
+        RTS_IF_ZERO
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
@@ -931,16 +928,12 @@ product:                        ; [32.32]
         ;; if (vert [16.0] < oval.top [16.0])
         ;;   return;
         cmp16   vert, oval+OvalRec::top
-        bcs     :+
-        rts
-:
+        RTS_IF_LT
 
         ;; if (vert [16.0] >= oval.bottom [16.0])
         ;;   return;
         cmp16   vert, oval+OvalRec::bottom
-        bcc     :+
-        rts
-:
+        RTS_IF_GE
 
         ;; d0 [16.0] = oval.y [16.0];
         copy16  oval+OvalRec::yy, d0

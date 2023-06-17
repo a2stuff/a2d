@@ -1368,9 +1368,9 @@ END_SOUND_PROC
 
 .proc OnListSelectionChange
         lda     selected_index
-        bpl     :+
-        rts
-:       jmp     PlayIndex
+        RTS_IF_NS
+
+        jmp     PlayIndex
 .endproc ; OnListSelectionChange
 
 ;;; Play sound if same item is re-clicked.

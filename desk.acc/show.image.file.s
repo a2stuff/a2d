@@ -762,10 +762,9 @@ not_10:
         ;; ASSERT: Y=0
         sta     (ptr),y
         inc     ptr
-        beq     :+
-        rts
+        RTS_IF_NOT_ZERO
 
-:       pha
+        pha
 
         inc     ptr+1
         lda     ptr+1

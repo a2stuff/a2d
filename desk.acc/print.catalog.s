@@ -446,9 +446,8 @@ OpenDone:
         ldy     #FileEntry::access
         lda     (entPtr),y
         and     #ACCESS_I
-        beq     :+
-        rts
-:
+        RTS_IF_NOT_ZERO
+
         jsr     PrintName
 
         ldx     #kColType

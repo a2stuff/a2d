@@ -439,9 +439,7 @@ update: lda     #0
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         cmp     #MGTK::Error::window_obscured
-        IF_EQ
-        rts
-        END_IF
+        RTS_IF_EQ
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor

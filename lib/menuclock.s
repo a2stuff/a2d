@@ -19,10 +19,9 @@ normal: copy    #0, force_flag
 
 common: lda     MACHID
         and     #1              ; bit 0 = clock card
-        bne     :+
-        rts
+        RTS_IF_ZERO
 
-:       MLI_CALL GET_TIME, 0
+        MLI_CALL GET_TIME, 0
 
         bit     force_flag      ; forced update
         bmi     update

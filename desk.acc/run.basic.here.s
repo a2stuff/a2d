@@ -125,9 +125,7 @@ quit:   MLI_CALL QUIT, quit_params
         stx     bs_path
 
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
-        bne     :+
-        rts                     ; zero is success
-:
+        RTS_IF_ZERO             ; zero is success
 
         ;; Not there - search from `prefix_path` upwards
         ldx     prefix_path

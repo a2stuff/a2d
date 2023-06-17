@@ -215,10 +215,9 @@ ClearUpdates := ClearUpdatesImpl::clear
 .proc UpdateWindow
         lda     event_params::window_id
         cmp     #kMaxDeskTopWindows+1 ; directory windows are 1-8
-        bcc     :+
-        rts
+        RTS_IF_GE
 
-:       sta     active_window_id
+        sta     active_window_id
         jsr     LoadActiveWindowEntryTable
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
@@ -400,9 +399,9 @@ HandleKeydown:
 
         lda     event_params::key
         jsr     CheckTypeDown
-        bne     :+
-        rts
-:       jsr     ClearTypeDown
+        RTS_IF_ZERO
+
+        jsr     ClearTypeDown
 
         lda     event_params::key
         cmp     #CHAR_LEFT
@@ -477,10 +476,9 @@ menu_accelerators:
 
 MenuDispatch2:
         ldx     menu_click_params::menu_id
-        bne     :+
-        rts
+        RTS_IF_ZERO
 
-:       dex                     ; x has top level menu id
+        dex                     ; x has top level menu id
         lda     offset_table,x
         tax
         ldy     menu_click_params::item_num
@@ -1929,14 +1927,12 @@ ret:    rts
 .proc CmdCopySelection
         lda     #kDynamicRoutineFileDialog
         jsr     LoadDynamicRoutine
-        bpl     :+
-        rts
-:
+        RTS_IF_NS
+
         lda     #kDynamicRoutineFileCopy
         jsr     LoadDynamicRoutine
-        bpl     :+
-        rts
-:
+        RTS_IF_NS
+
         lda     #$00
         jsr     file_dialog__Exec
         pha                     ; A = dialog result
@@ -1946,9 +1942,8 @@ ret:    rts
         jsr     ClearUpdates    ; following picker dialog close
         jsr     PopPointers     ; $06 = dst
         pla                     ; A = dialog result
-        bpl     :+
-        rts
-:
+        RTS_IF_NS
+
         ;; --------------------------------------------------
         ;; Try the copy
 
@@ -2079,9 +2074,9 @@ volume:
 
 open_then_close_current:
         lda     selected_icon_count
-        bne     :+
-        rts
-:       copy    selected_window_id, window_id_to_close
+        RTS_IF_ZERO
+
+        copy    selected_window_id, window_id_to_close
         jmp     common
 
         ;; --------------------------------------------------
@@ -2090,9 +2085,9 @@ open_then_close_current:
         ;; Never close after open only.
 from_keyboard:
         lda     selected_icon_count
-        bne     :+
-        rts
-:       copy    #0, window_id_to_close
+        RTS_IF_ZERO
+
+        copy    #0, window_id_to_close
         jmp     common
 
         ;; --------------------------------------------------
@@ -2353,10 +2348,9 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 
 .proc CmdClose
         lda     active_window_id
-        bne     :+
-        rts
+        RTS_IF_ZERO
 
-:       jmp     CloseActiveWindow
+        jmp     CloseActiveWindow
 .endproc ; CmdClose
 
 ;;; ============================================================
@@ -2888,15 +2882,13 @@ menu_item_to_view_by:
 
         ;; Valid?
         lda     active_window_id
-        bne     :+
-        rts
-:
+        RTS_IF_ZERO
+
         ;; Is this a change?
         jsr     GetActiveWindowViewBy
         cmp     view
-        bne     :+              ; not by icon
-        rts
-:
+        RTS_IF_EQ
+
         ;; Update view menu/table
         view := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -3148,21 +3140,19 @@ erase:  lda     #FormatEraseAction::erase
 
 exec:   lda     #kDynamicRoutineFormatErase
         jsr     LoadDynamicRoutine
-        bpl     :+
-        rts
-:
+        RTS_IF_NS
+
         unit_num := *+1
         ldx     #SELF_MODIFIED_BYTE
         action := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     format_erase_overlay__Exec
         stx     drive_to_refresh ; X = unit number
-        pha                     ; A = result
-        jsr     ClearUpdates ; following dialog close
-        pla                     ; A = result
-        beq     :+
-        rts
-:
+        pha                      ; A = result
+        jsr     ClearUpdates     ; following dialog close
+        pla                      ; A = result
+        RTS_IF_NOT_ZERO
+
         jmp     CmdCheckSingleDriveByUnitNumber
 
 unit:   sta     unit_num
@@ -3400,9 +3390,8 @@ not_file_char:
 file_char:
         ldx     typedown_buf
         cpx     #kMaxFilenameLength
-        bne     :+
-        rts                     ; Z=1 to consume
-:
+        RTS_IF_ZS               ; Z=1 to consume
+
         inx
         stx     typedown_buf
         sta     typedown_buf,x
@@ -4399,10 +4388,9 @@ by_unit_number:
         ;; Map icon number to index in DEVLST
         lda     drive_to_refresh
         jsr     IconToDeviceIndex
-        beq     :+
-        rts                         ; Not found - not a volume icon
+        RTS_IF_NOT_ZERO             ; Not found - not a volume icon
 
-:       stx     devlst_index
+        stx     devlst_index
         jmp     common
 
 ;;; --------------------------------------------------
@@ -4501,9 +4489,8 @@ not_in_map:
     IF_EQ
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unreadable_format
         cmp     #kAlertResultCancel
-        bne     :+
-        rts
-:
+        RTS_IF_EQ
+
         ldy     devlst_index
         lda     DEVLST,y        ; NOTE: Need low bits for refresh
         jmp     FormatUnitNum
@@ -4679,9 +4666,7 @@ err:    jmp     ShowAlert
         ;; --------------------------------------------------
 
         cmp     #MGTK::Ctl::dead_zone
-    IF_EQ
-        rts
-    END_IF
+        RTS_IF_EQ
 
         cmp     #MGTK::Ctl::vertical_scroll_bar
     IF_EQ
@@ -4692,9 +4677,8 @@ err:    jmp     ShowAlert
         ldy     #MGTK::Winfo::vscroll
         lda     ($06),y
         and     #MGTK::Scroll::option_active
-        bne     :+
-        rts
-:
+        RTS_IF_EQ
+
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
         jeq     DoTrackThumb
@@ -4740,9 +4724,8 @@ err:    jmp     ShowAlert
         ldy     #MGTK::Winfo::hscroll
         lda     ($06),y
         and     #MGTK::Scroll::option_active
-        bne     :+
-        rts
-:
+        RTS_IF_EQ
+
         lda     findcontrol_params::which_part
         cmp     #MGTK::Part::thumb
         jeq     DoTrackThumb
@@ -4788,9 +4771,8 @@ err:    jmp     ShowAlert
         sta     trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
-        bne     :+
-        rts
-:
+        RTS_IF_ZERO
+
         lda     trackthumb_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
         bne     :+
@@ -4829,9 +4811,8 @@ bail:   return  #$FF            ; high bit set = not repeating
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowy
         cmp     #kWindowHeaderHeight
-        bcs     :+
-        rts
-:
+        RTS_IF_LT
+
         copy    active_window_id, findicon_params::window_id
         ITK_CALL IconTK::FindIcon, findicon_params
         lda     findicon_params::which_icon
@@ -4957,9 +4938,7 @@ failure:
 
         cmp     #kOperationCanceled
         ;; TODO: Refresh source/dest if partial success
-    IF_EQ
-        rts
-    END_IF
+        RTS_IF_EQ
 
         ;; Was a move?
         ;; NOTE: Only applies in file icon case.
@@ -5411,11 +5390,10 @@ last_pos:
         lda     active_window_id
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
-        bne     :+
-        rts
+        RTS_IF_ZERO
 
         ;; If modifier is down, close all windows
-:       jsr     ModifierDown
+        jsr     ModifierDown
         jmi     CmdCloseAll
 
         FALL_THROUGH_TO CloseActiveWindow
@@ -5903,11 +5881,10 @@ found_win:                    ; X = window id - 1
         ;; Is it the active window? If so, done!
         inx
         cpx     active_window_id
-        bne     :+
-        rts
+        RTS_IF_EQ
 
         ;; Otherwise, bring the window to the front.
-:       stx     findwindow_params::window_id
+        stx     findwindow_params::window_id
         jmp     ActivateWindow
 
         ;; --------------------------------------------------
@@ -6168,9 +6145,9 @@ ret:    rts
         ;; File - need to see if there's a window
         jsr     SplitPathBuf4
         param_call FindWindowForPath, path_buf4
-        bne     :+
-        rts                     ; no matching window
-:       tay                     ; Y=window id
+        RTS_IF_ZERO             ; no matching window
+
+        tay                     ; Y=window id
         ldax    #filename_buf   ; A,X=filename
     END_IF
         jmp     FindIconByName
@@ -6300,9 +6277,8 @@ header_and_offset_flag:
 
 .proc ClearSelection
         lda     selected_icon_count
-        bne     :+
-        rts
-:
+        RTS_IF_ZERO
+
         ;; --------------------------------------------------
         ;; Mark the icons as not highlighted
         ldx     #0
@@ -6461,9 +6437,8 @@ OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
 
 .proc UpdateUsedFreeViaIcon
         jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
-    IF_NE
-        rts                     ; too long
-    END_IF
+        RTS_IF_NE               ; too long
+
         param_jump UpdateUsedFreeViaPath, path_buf3
 .endproc ; UpdateUsedFreeViaIcon
 
@@ -6997,11 +6972,10 @@ vol_kb_used:  .word   0
 .proc RemoveWindowFilerecordEntries
         ;; Find address of FileRecord list
         jsr     FindIndexInFilerecordListEntries
-        beq     :+
-        rts
+        RTS_IF_ZC
 
         ;; Move list entries down by one
-:       stx     index
+        stx     index
         dex
 :       inx
         lda     window_id_to_filerecord_list_entries+1,x
@@ -8198,9 +8172,9 @@ scratch_space   := $804         ; can be used by comparison funcs
 
         lda     cached_window_entry_count
         cmp     #2
-        bcs     :+              ; can't sort < 2 records
-        rts
-:       sta     num_records
+        RTS_IF_LT               ; can't sort < 2 records
+
+        sta     num_records
 
         lda     cached_window_id
         jsr     GetFileRecordListForWindow
@@ -10504,9 +10478,9 @@ ret:    rts
 
         ;; Look up device index by icon number
         jsr     IconToDeviceIndex
-        beq     :+
-        rts
-:       lda     DEVLST,x        ; A = unit_number
+        RTS_IF_ZC
+
+        lda     DEVLST,x        ; A = unit_number
 
         ;; Compute SmartPort dispatch address
         jsr     FindSmartportDispatchAddress
@@ -10575,10 +10549,9 @@ index:  .byte   0               ; index in selected icon list
 ;;; Assert: At least one icon is selected
 .proc DoGetInfo
         lda     selected_icon_count
-        bne     :+
-        rts
+        RTS_IF_ZERO
 
-:       copy    #0, get_info_dialog_params::index
+        copy    #0, get_info_dialog_params::index
 loop:   ldx     get_info_dialog_params::index
         cpx     selected_icon_count
         jeq     done
@@ -12759,9 +12732,9 @@ is_dir:
         storage_type := *+1
         lda     #SELF_MODIFIED_BYTE
         cmp     #ST_VOLUME_DIRECTORY
-        bne     :+
-        rts
-:       jsr     GetSrcFileInfo
+        RTS_IF_EQ
+
+        jsr     GetSrcFileInfo
         FALL_THROUGH_TO do_lock
 
 do_lock:
@@ -12864,9 +12837,7 @@ callbacks_for_size_or_count:
         jsr     EnumerationProcessDirectoryEntry
 
         bit     move_flag       ; same volume relink move?
-    IF_VS
-        rts
-    END_IF
+        RTS_IF_VS
 
 is_dir:
         jsr     ProcessDir
