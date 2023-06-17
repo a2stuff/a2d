@@ -1353,7 +1353,7 @@ notpro:
 ;;;              c = device class
 ;;;              i = unique identifier
 
-        ldax    #sigtable_pascal
+        ldax    #sigtable_pascal_device
         jsr     SigCheck
         jcc     notpas
 
@@ -1478,12 +1478,19 @@ get_next:
         rts
 .endproc ; SigCheck
 
+;;; --------------------------------------------------
 ;;; Format is: num, offset, value, offset, value, ...
+
+;;; Firmware protocol signatures
+sigtable_pascal_device: .byte   3, $05, $38, $07, $18, $0B, $01
 sigtable_prodos_device: .byte   3, $01, $20, $03, $00, $05, $03
+
+;;; Specific device signatures
 sigtable_vidhd:         .byte   3, $00, $24, $01, $EA, $02, $4C
-sigtable_pascal:        .byte   3, $05, $38, $07, $18, $0B, $01
 sigtable_silentype:     .byte   3, $17, $C9, $37, $CF, $4C, $EA
 sigtable_thunderclock:  .byte   4, $00, $08, $02, $28, $04, $58, $06, $70
+
+;;; Generic signatures (c/o ProDOS BASIC Programming Examples)
 sigtable_clock:         .byte   3, $00, $08, $01, $78, $02, $28
 sigtable_comm:          .byte   2, $05, $18, $07, $38
 sigtable_serial:        .byte   2, $05, $38, $07, $18
