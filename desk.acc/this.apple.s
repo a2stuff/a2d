@@ -678,6 +678,9 @@ str_z80:        PASCAL_STRING res_string_card_type_z80
 str_uthernet2:  PASCAL_STRING res_string_card_type_uthernet2
 str_lcmeve:     PASCAL_STRING res_string_card_type_lcmeve
 str_vidhd:      PASCAL_STRING res_string_card_type_vidhd
+str_grappler:   PASCAL_STRING res_string_card_type_grappler
+str_thunderclock: PASCAL_STRING res_string_card_type_thunderclock
+str_applecat:   PASCAL_STRING res_string_card_type_applecat
 str_cricket:    PASCAL_STRING res_string_device_type_cricket
 str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
@@ -1367,6 +1370,8 @@ notpro:
     IF_SIGNATURE_THEN_RETURN $31, str_ssc
     IF_SIGNATURE_THEN_RETURN $88, str_80col
     IF_SIGNATURE_THEN_RETURN $20, str_mouse
+    IF_SIGNATURE_THEN_RETURN $14, str_grappler
+    IF_SIGNATURE_THEN_RETURN $41, str_applecat
 
         ;; Generic cards
         and     #$F0            ; just device class nibble
@@ -1386,6 +1391,16 @@ notpro:
         return16 #str_unknown
 
 notpas:
+
+;;; ---------------------------------------------
+;;; Based on ProDOS detection
+
+;;; ThunderClock
+        ldax    #sigtable_thunderclock
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_thunderclock
+:
 
 ;;; ---------------------------------------------
 ;;; Based on ProDOS BASIC Programming Examples
@@ -1468,6 +1483,7 @@ sigtable_prodos_device: .byte   3, $01, $20, $03, $00, $05, $03
 sigtable_vidhd:         .byte   3, $00, $24, $01, $EA, $02, $4C
 sigtable_pascal:        .byte   3, $05, $38, $07, $18, $0B, $01
 sigtable_silentype:     .byte   3, $17, $C9, $37, $CF, $4C, $EA
+sigtable_thunderclock:  .byte   4, $00, $08, $02, $28, $04, $58, $06, $70
 sigtable_clock:         .byte   3, $00, $08, $01, $78, $02, $28
 sigtable_comm:          .byte   2, $05, $18, $07, $38
 sigtable_serial:        .byte   2, $05, $38, $07, $18

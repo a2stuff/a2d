@@ -24,7 +24,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Desk Accessories
 
 * Sort Directory: Correctly order SYS files with ".SYSTEM" suffix. ([#762](https://github.com/a2stuff/a2d/issues/762))
-
+* This Apple: Detect Grappler, ThunderClock, and Apple-CAT
 
 ## 1.3
 
