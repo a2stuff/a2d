@@ -272,7 +272,7 @@ gfi_ok: ldy     #$FF
         cmp     #ST_LINKED_DIRECTORY
         beq     is_dir
         ldy     #0
-is_dir: 
+is_dir:
         sty     is_dir_flag
         ;; copy `file_type`, `aux_type`, `storage_type`
         ldy     #4
@@ -1101,7 +1101,7 @@ test_unit_num:
         sta     header_orig_prefix,y
         dey
         bpl     :-
-        
+
         rts
 .endproc ; SetHeaderOrigPrefix
 
@@ -1655,12 +1655,20 @@ entry_dir_name:
         bne     :-
         stx     GenericCopy::path1
 
+        ;; If already exists, consider that a success
+        MLI_CALL GET_FILE_INFO, gfi_params
+        bne     :+
+        rts
+:
+
         ;; Install callbacks and invoke
         copy16  #HandleErrorCode, GenericCopy::hook_handle_error_code
         copy16  #ShowNoSpacePrompt, GenericCopy::hook_handle_no_space
         copy16  #ShowInsertPrompt, GenericCopy::hook_insert_source
         copy16  #ShowCopyingEntryScreen, GenericCopy::hook_show_file
         jmp     GenericCopy::DoCopy
+
+        DEFINE_GET_FILE_INFO_PARAMS gfi_params, GenericCopy::path1
 .endproc ; CopyUsingEntryPaths
 
 ;;; ============================================================

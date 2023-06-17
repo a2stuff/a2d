@@ -6,6 +6,8 @@
 
 * Without starting DeskTop, launch BASIC.SYSTEM. Set a prefix (e.g. "/RAM"). Invoke DESKTOP.SYSTEM with an absolute path (e.g. "-/A2.DESKTOP/DESKTOP.SYSTEM"). Verify that it starts correctly.
 * Move DeskTop into a subdirectory of a volume (e.g. "/VOL/A2D"). Without starting DeskTop, launch BASIC.SYSTEM. Set a prefix to a parent directory of desktop (e.g. "/VOL"). Invoke DESKTOP.SYSTEM with a relative path (e.g. "-A2D/DESKTOP.SYSTEM"). Verify that it starts correctly.
+* Configure a shortcut to copy to RAMCard "at boot". Launch DeskTop. Verify the shortcut's files were copied to RAMCard. Quit DeskTop. Re-launch DeskTop from the original startup volume. Eject the disk containing the shortcut. Run the shortcut. Verify that it launches correctly.
+
 
 # DeskTop
 
