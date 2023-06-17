@@ -1281,6 +1281,8 @@ d4:     .byte   0
         DEFINE_ON_LINE_PARAMS on_line_params_drives, 0, dir_read_buf
 
 .proc ReadDrives
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+
         MLI_CALL ON_LINE, on_line_params_drives
 
         ptr := $06
@@ -1317,6 +1319,12 @@ next:   add16_8 ptr, #16        ; advance to next
 
 finish:
         jsr     SortFileNames
+
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+.ifdef FD_EXTENDED
+        copy    #0, cursor_ibeam_flag
+.endif
+
         clc
         rts
 .endproc ; ReadDrives
