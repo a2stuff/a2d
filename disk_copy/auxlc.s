@@ -933,10 +933,9 @@ do_jump:
 
 cmd_quick_copy:
         lda     disk_copy_flag
-        bne     LDA42
-        rts
+        RTS_IF_ZERO
 
-LDA42:  copy    #0, checkitem_params::check
+        copy    #0, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    disk_copy_flag, checkitem_params::menu_item
         copy    #1, checkitem_params::check
@@ -949,10 +948,9 @@ LDA42:  copy    #0, checkitem_params::check
 
 CmdDiskCopy:
         lda     disk_copy_flag
-        beq     LDA7D
-        rts
+        RTS_IF_NOT_ZERO
 
-LDA7D:  copy    #0, checkitem_params::check
+        copy    #0, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
         copy    #2, checkitem_params::menu_item
         copy    #1, checkitem_params::check
@@ -1371,8 +1369,7 @@ draw_buttons:
         lda     (ptr),y
         and     #NAME_LENGTH_MASK ; handle ON_LINE results, etc
         tay
-        bne     next
-        rts
+        RTS_IF_ZERO
 
 next:   dey
         beq     done

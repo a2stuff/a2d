@@ -2013,10 +2013,9 @@ unused_width:
         sta     $80
 
         jsr     ClipRect
-        bcs     :+
-        rts
+        RTS_IF_CC
 
-:       jsr     SetUpFillMode
+        jsr     SetUpFillMode
         lda     width_bytes
         asl     a
         ldx     left_masks_table+1      ; need left mask on aux?
@@ -7286,9 +7285,9 @@ end:    rts
         ;; if the window is not found.
 .proc WindowByIdOrExit
         jsr     WindowById
-        beq     nope
-        rts
-nope:   EXIT_CALL MGTK::Error::window_not_found
+        RTS_IF_NOT_ZERO
+
+        EXIT_CALL MGTK::Error::window_not_found
 .endproc ; WindowByIdOrExit
 
 
@@ -7993,8 +7992,7 @@ not_selected:
         cmp     current_window
         bne     :+
         cpx     current_window+1
-        bne     :+
-        rts
+        RTS_IF_EQ
 
 :       jsr     LinkWindow
 do_select_win:
@@ -8112,9 +8110,9 @@ win:    jsr     WindowByIdOrExit
 
         asl     preserve_zp_flag
         plp
-        bcc     :+
-        rts
-:       jsr     EndUpdateImpl
+        RTS_IF_CS
+
+        jsr     EndUpdateImpl
         FALL_THROUGH_TO err_obscured
 .endproc ; BeginUpdateImpl
 
@@ -8181,11 +8179,10 @@ win_port  .addr
         bpl     :-
 
         jsr     ClipRect
-        bcs     :+
-        rts
+        RTS_IF_CC
 
         ;; Load window's grafport into current_grafport.
-:       ldy     #MGTK::Winfo::port
+        ldy     #MGTK::Winfo::port
 :       lda     (window),y
         sta     current_grafport - MGTK::Winfo::port,y
         iny
@@ -8862,9 +8859,8 @@ toggle: eor     params::activate
         and     #1
         eor     (window),y
         cmp     (window),y      ; no-op if no change
-        bne     :+
-        rts
-:       sta     (window),y
+        RTS_IF_EQ
+        sta     (window),y
 
         jsr     HideCursorSaveParams
         lda     params::activate
@@ -9556,9 +9552,8 @@ check_win:
         ldy     #MGTK::Winfo::vthumbpos
 :       lda     params::thumbpos
         cmp     (window),y      ; no-op if no change
-        bne     :+
-        rts
-:       sta     (window),y
+        RTS_IF_EQ
+        sta     (window),y
 
         jsr     HideCursorSaveParams
         jsr     SetStandardPort
@@ -9772,10 +9767,9 @@ no_modifiers:
 
 .proc HandleKeyboardMouse
         lda     kbd_mouse_state
-        bne     :+
-        rts
+        RTS_IF_ZERO
 
-:       cmp     #kKeyboardMouseStateMouseKeys
+        cmp     #kKeyboardMouseStateMouseKeys
         beq     KbdMouseMousekeys
 
         jsr     KbdMouseSyncCursor
@@ -10057,10 +10051,9 @@ yclamp: cmp     #<kScreenHeight
         jmp     KbdMouseRestoreZP
 
 :       jsr     GetKey
-        bcs     :+
-        rts
+        RTS_IF_CC
 
-:       cmp     #CHAR_ESCAPE
+        cmp     #CHAR_ESCAPE
         bne     :+
 
         lda     #$80

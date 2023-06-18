@@ -735,10 +735,9 @@ blocks_total:
 
 .proc AppendFilenameToSrcPathname
         lda     file_entry+FileEntry::storage_type_name_length
-        bne     l1
-        rts
+        RTS_IF_ZERO
 
-l1:     ldx     #$00
+        ldx     #$00
         ldy     pathname_src
         lda     #'/'
         sta     pathname_src+1,y
@@ -778,10 +777,9 @@ l3:     sty     pathname_src
 
 .proc AppendFilenameToDstPathname
         lda     file_entry+FileEntry::storage_type_name_length
-        bne     l1
-        rts
+        RTS_IF_ZERO
 
-l1:     ldx     #$00
+        ldx     #$00
         ldy     pathname_dst
         lda     #'/'
         sta     pathname_dst+1,y
@@ -802,8 +800,7 @@ l3:     sty     pathname_dst
 
 .proc RemoveSegmentFromDstPathname
         ldx     pathname_dst
-        bne     l1
-        rts
+        RTS_IF_ZERO
 
 l1:     lda     pathname_dst,x
         cmp     #'/'

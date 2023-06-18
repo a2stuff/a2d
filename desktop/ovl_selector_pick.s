@@ -222,10 +222,9 @@ l3:     clc
         pla
         tax
         pla
-        beq     l4
-        rts
+        RTS_IF_NOT_ZERO
 
-l4:     inc     clean_flag      ; mark as "dirty"
+        inc     clean_flag      ; mark as "dirty"
         stx     which_run_list
         sty     copy_when
         lda     #$00
@@ -1097,8 +1096,8 @@ close:  MLI_CALL CLOSE, close_params
 
 .proc ReadFileAndDrawEntries
         jsr     ReadFile
-        bpl     DrawAllEntries
-        rts
+        RTS_IF_NS
+        FALL_THROUGH_TO  DrawAllEntries
 .endproc ; ReadFileAndDrawEntries
 
 ;;; ============================================================

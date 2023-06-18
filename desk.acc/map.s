@@ -676,8 +676,8 @@ sflag:  .byte   0
 
 .proc ShowPositionIndicator
         bit     indicator_flag
-        bmi     XDrawPositionIndicator
-        rts
+        RTS_IF_NC
+        FALL_THROUGH_TO XDrawPositionIndicator
 .endproc ; ShowPositionIndicator
 HidePositionIndicator := ShowPositionIndicator
 
