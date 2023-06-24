@@ -198,62 +198,7 @@ end:
 ;;; ============================================================
 ;;; Long branch pseudo-ops
 
-.macro jcc addr
-        .local end
-        bcs     end
-        jmp     addr
-end:
-.endmacro
-
-.macro jcs addr
-        .local end
-        bcc     end
-        jmp     addr
-end:
-.endmacro
-
-.macro jeq addr
-        .local end
-        bne     end
-        jmp     addr
-end:
-.endmacro
-
-.macro jmi addr
-        .local end
-        bpl     end
-        jmp     addr
-end:
-.endmacro
-
-.macro jne addr
-        .local end
-        beq     end
-        jmp     addr
-end:
-.endmacro
-
-.macro jpl addr
-        .local end
-        bmi     end
-        jmp     addr
-end:
-.endmacro
-
-.macro jvc addr
-        .local end
-        bvs     end
-        jmp     addr
-end:
-.endmacro
-
-.macro jvs addr
-        .local end
-        bvc     end
-        jmp     addr
-end:
-.endmacro
-
+.macpack longbranch
 
 ;;; ============================================================
 ;;; 16-bit pseudo-ops
