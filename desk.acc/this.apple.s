@@ -681,6 +681,7 @@ str_vidhd:      PASCAL_STRING res_string_card_type_vidhd
 str_grappler:   PASCAL_STRING res_string_card_type_grappler
 str_thunderclock: PASCAL_STRING res_string_card_type_thunderclock
 str_applecat:   PASCAL_STRING res_string_card_type_applecat
+str_workstation: PASCAL_STRING res_string_card_type_workstation
 str_cricket:    PASCAL_STRING res_string_device_type_cricket
 str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
@@ -1355,6 +1356,14 @@ notpro:
         jsr     SigCheck
         jcc     notpas
 
+        ;; Workstation card has same ID bytes as Super Serial Card,
+        ;; so test a few more after the Pascal 1.1 firmware signature
+        ldax    #sigtable_workstation
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_workstation
+:
+
         GET_FWB $0C             ; $Cn0C == ....
 
 .macro IF_SIGNATURE_THEN_RETURN     byte, arg
@@ -1487,6 +1496,7 @@ sigtable_prodos_device: .byte   3, $01, $20, $03, $00, $05, $03
 sigtable_vidhd:         .byte   3, $00, $24, $01, $EA, $02, $4C
 sigtable_silentype:     .byte   3, $17, $C9, $37, $CF, $4C, $EA
 sigtable_thunderclock:  .byte   4, $00, $08, $02, $28, $04, $58, $06, $70
+sigtable_workstation:   .byte   4, $0C, $31, $0D, $9D, $0E, $A3, $0F, $24
 
 ;;; Generic signatures (c/o ProDOS BASIC Programming Examples)
 sigtable_clock:         .byte   3, $00, $08, $01, $78, $02, $28
