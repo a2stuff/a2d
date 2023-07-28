@@ -872,8 +872,9 @@ str_from_int:                   ; populated by IntToString
 ;;; Selection drag/drop icon/result, and coords
 .params drag_drop_params
 icon:
-result:  .byte   0
+result: .byte   0
         DEFINE_POINT coords, 0, 0
+fixed:  .byte   0
 .endparams
 
 ;;; ============================================================

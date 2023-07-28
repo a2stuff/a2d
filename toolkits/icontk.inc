@@ -14,7 +14,7 @@ DrawIconRaw     = $03   ; { .byte icon }
 RemoveIcon      = $04   ; { .byte icon }
 RemoveAll       = $05   ; { .byte window_id }
 FindIcon        = $06   ; { .word mousex, .word mousey, .byte result, .byte window_id }
-DragHighlighted = $07   ; { .byte icon/result, .word mousex, .word mousey }
+DragHighlighted = $07   ; { .byte icon/result, .word mousex, .word mousey, .byte fixed }
                         ; Input: specific icon being dragged, mouse coords
                         ; Output: result byte is:
                         ;  * 0: A = 0 = icon move, 2 = not a drag, 3 = no selection
@@ -68,7 +68,7 @@ label   := *
 ;;;                      bit 4 = small icon
 ;;;                      bit 5 = not valid drop source flag (i.e. trash)
 ;;;                      bit 6 = drop target flag (trash, folder, dir)
-;;;                      bit 7 = fixed location
+;;;                      bit 7 = (unused)
 ;;;      .word iconx     (pixels)
 ;;;      .word icony     (pixels)
 ;;;      .byte type      mapped to IconResource (see InitToolKit)
@@ -96,7 +96,6 @@ kIconEntryStateHighlighted = %01000000
 kIconEntryStateAllocated   = %00000001
 
 ;;; Masks for IconEntry::win_flags
-kIconEntryFlagsFixed            = %10000000
 kIconEntryFlagsDropTarget       = %01000000
 kIconEntryFlagsNotDropSource    = %00100000
 kIconEntryFlagsSmall            = %00010000

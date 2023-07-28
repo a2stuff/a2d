@@ -610,13 +610,19 @@ inside: pla
 .struct DragHighlightedParams
         icon    .byte
         coords  .tag    MGTK::Point
+        fixed   .byte
 .endstruct
 
         ldy     #DragHighlightedParams::icon
         lda     ($06),y
         sta     icon_id
+        .assert DragHighlightedParams::icon = 0, error, "enum mismatch"
         tya
         sta     ($06),y
+
+        ldy     #DragHighlightedParams::fixed
+        lda     ($06),y
+        sta     fixed
 
         ;; Copy initial coords to `initial_coords` and `coords1`
         ldy     #DragHighlightedParams::coords + .sizeof(MGTK::Point)-1
@@ -633,6 +639,7 @@ inside: pla
 
 icon_id:
         .byte   $00
+fixed:  .byte   0               ; high bit set if list view
 
         ;; IconTK::HighlightIcon params
 highlight_icon_id:  .byte   $00
@@ -897,13 +904,8 @@ same_window:
         jsr     CheckRealContentArea
         jne     L9C63           ; don't move
 
-        lda     last_highlighted_icon
-        jsr     GetIconPtr
-        stax    $06
-        ldy     #IconEntry::win_flags
-        lda     ($06),y
-        and     #kIconEntryFlagsFixed
-        bne     L9C63           ; don't move
+        bit     fixed
+        bmi     L9C63           ; don't move
 
         ;; --------------------------------------------------
 

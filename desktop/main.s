@@ -4874,6 +4874,9 @@ check_double_click:
         ;; Drag of file icon
 
         copy    icon_num, drag_drop_params::icon
+        jsr     GetSelectionViewBy
+        .assert kViewByName >= $80, error, "enum mismatch"
+        sta     drag_drop_params::fixed
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
         tax
         lda     drag_drop_params::result
@@ -5833,6 +5836,7 @@ check_double_click:
         ;; Drag of volume icon
 
         copy    findicon_params::which_icon, drag_drop_params::icon
+        copy    #0, drag_drop_params::fixed
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
         tax
         lda     drag_drop_params::result
@@ -7549,13 +7553,8 @@ L7870:  lda     cached_window_id
         lda     #SELF_MODIFIED_BYTE
     IF_NE
         ;; List View / Small Icon View
-        php
         lda     iconentry_flags
         ora     #kIconEntryFlagsSmall
-        plp
-     IF_NEG
-        ora     #kIconEntryFlagsFixed
-     END_IF
         sta     iconentry_flags
 
         lda     #IconType::small_generic
