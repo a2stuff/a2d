@@ -542,7 +542,7 @@
   * Drag the innermost folder to another volume.
   * Drag the innermost folder to the Trash.
 * Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. File > Open. Verify that an alert is shown.
-* Copy PREVIEW/SHOW.IMAGE.FILE to the APPLE.MENU folder. Restart. Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. Apple Menu > Show Image File. Verify that an alert is shown.
+* Copy MODULES/SHOW.IMAGE.FILE to the APPLE.MENU folder. Restart. Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. Apple Menu > Show Image File. Verify that an alert is shown.
 * Repeat the previous case, but with a Desk Accessory file as the innermost file instead of a folder. File > Open. Verify that an alert is shown.
 
 * From BASIC.SYSTEM, create /VOL/A/B on an otherwise empty volume. Launch DeskTop. Open /VOL. Open A. Close /VOL. Open another volume with multiple icons. Verify that the window for A still renders the icon for B correctly.

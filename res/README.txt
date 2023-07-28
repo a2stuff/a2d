@@ -37,9 +37,9 @@ storage device:
     * `DESKTOP` - application file
     * `DISK.COPY` - application file
     * `SELECTOR` - application file
+    * ... and the `THIS.APPLE` DA plus Preview Accessories
   * `APPLE.MENU/` - contains Desk Accessories (DAs)
     * `CONTROL.PANELS/` - DAs for modifying DeskTop settings
     * `SCREEN.SAVERS/` - DAs that provide full-screen entertainment
-  * `PREVIEW/` - contains file preview handlers (special type of DAs)
   * `EXTRAS/` - contains additional utilities
   * `LOCAL/` - contains files created at runtime (settings, etc)

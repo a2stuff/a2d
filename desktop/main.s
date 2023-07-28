@@ -1265,16 +1265,16 @@ str_binscii:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/BinSCII")
 
 str_preview_fot:
-        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.image.file")
+        PASCAL_STRING .concat(kFilenameModulesDir, "/show.image.file")
 
 str_preview_fnt:
-        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.font.file")
+        PASCAL_STRING .concat(kFilenameModulesDir, "/show.font.file")
 
 str_preview_txt:
-        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.text.file")
+        PASCAL_STRING .concat(kFilenameModulesDir, "/show.text.file")
 
 str_preview_mus:
-        PASCAL_STRING .concat(kFilenamePreviewDir, "/show.duet.file")
+        PASCAL_STRING .concat(kFilenameModulesDir, "/show.duet.file")
 
 ;;; ============================================================
 

@@ -10,6 +10,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Improve mouse responsiveness and event ordering.
 * File Picker Dialog: Show watch cursor when polling all drives.
+* Eliminate top level PREVIEW/ directory.
 
 ### Launcher
 

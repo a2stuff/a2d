@@ -1,4 +1,8 @@
 this.apple                      modules                         required
+show.text.file                  modules                         optional
+show.image.file                 modules                         optional
+show.font.file                  modules                         optional
+show.duet.file                  modules                         optional
 control.panel                   apple.menu/control.panels       optional
 date.and.time                   apple.menu/control.panels       optional
 international                   apple.menu/control.panels       optional
@@ -23,10 +27,6 @@ find.files                      apple.menu                      optional
 key.caps                        apple.menu                      optional
 run.basic.here                  apple.menu                      optional
 sort.directory                  apple.menu                      optional
-show.text.file                  preview                         optional
-show.image.file                 preview                         optional
-show.font.file                  preview                         optional
-show.duet.file                  preview                         optional
 cd.remote                       extras                          extra
 darkness                        extras                          extra
 sci.calc                        extras                          extra

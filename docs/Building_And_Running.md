@@ -100,6 +100,10 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
          DESKTOP          $F1   $0000
          DISK.COPY        $F1   $0000
          SELECTOR         $F1   $0000
+         THIS.APPLE       $F1   $0642
+         SHOW.FONT.FILE   $F1   $0642
+         SHOW.IMAGE.FILE  $F1   $0642
+         ...
        APPLE.MENU/        DIR
          CALCULATOR       $F1   $0642
          EYES             $F1   $0642
@@ -107,10 +111,6 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
            DATE.AND.TIME  $F1   $0642
            SYSTEM.SPEED   $F1   $0642
            ...
-         ...
-       PREVIEW/           DIR
-         SHOW.FONT.FILE   $F1   $0642
-         SHOW.IMAGE.FILE  $F1   $0642
          ...
        EXTRAS/            DIR
          UNSHRINK         SYS
