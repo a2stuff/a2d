@@ -712,6 +712,8 @@ The following tests all require:
 
 * On a IIgs, go to Apple Menu > About This Apple II. Verify the memory count is not "000,000".
 
+* On a IIgs, launch DeskTop. Launch a IIgs-native program e.g. NoiseTracker. Exit and return to DeskTop. Verify that the display is not garbled.
+
 ### Apple IIc+
 
 * Run DeskTop on a IIc+ from a 3.5" floppy on internal drive. Verify that the disk doesn't spin constantly.

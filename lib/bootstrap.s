@@ -73,7 +73,12 @@ self:
         sec
         jsr     IDROUTINE
         bcs     :+
-        copy    #0, SHADOW
+        lda     SHADOW
+        and     #%10000000      ; bit 7 is reserved
+        sta     SHADOW
+        lda     NEWVIDEO
+        and     #%00011110      ; bits 1-4 are reserved
+        sta     NEWVIDEO
 :
         ;; --------------------------------------------------
         ;; Display the loading string
