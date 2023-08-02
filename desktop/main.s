@@ -904,6 +904,9 @@ tmp_path_buf:
 .proc LaunchFileWithPath
         jsr     SetCursorWatch ; before invoking
 
+        ;; Assume no interpreter to start
+        copy    #0, INVOKER_INTERPRETER
+
         ;; Easiest to assume absolute path later.
         param_call MakePathAbsolute, src_path_buf
 
