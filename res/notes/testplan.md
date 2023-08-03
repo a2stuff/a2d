@@ -178,6 +178,7 @@
 
 * Launch DeskTop. Open some windows. Special > Disk Copy. Quit back to DeskTop. Verify that the windows are restored.
 * Launch DeskTop. Close all windows. Special > Disk Copy. Quit back to DeskTop. Verify that no windows are restored.
+* Launch DeskTop. Special > Disk Copy. Quit back to DeskTop. Invoke BASIC.SYSTEM. Ensure /RAM exists.
 
 * Repeat the following cases for File > New Folder, File > Rename, and File > Duplicate:
   * Launch DeskTop. Open a window and (if needed) select a file. Run the command. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.

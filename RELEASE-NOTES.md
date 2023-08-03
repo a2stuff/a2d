@@ -25,6 +25,8 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Disk Copy
 
+* Ensure /RAM is correctly restored after exiting. ([#766](https://github.com/a2stuff/a2d/issues/766))
+
 ### Desk Accessories
 
 * Sort Directory: Correctly order SYS files with ".SYSTEM" suffix. ([#762](https://github.com/a2stuff/a2d/issues/762))

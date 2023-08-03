@@ -2413,6 +2413,19 @@ start:
         lda     #%11001111      ; ZP, Stack, Text Page 1
         sta     BITMAP
 
+        ;; Did we detach S3D2 /RAM?
+        ;; NOTE: ReconnectRAM is not used here because (1) it will be
+        ;; disconnected immediately by Disk Copy anyway and (2) we
+        ;; don't want to trash MGTK in aux memory. We restore just
+        ;; enough for Disk Copy to disconnect/reconnect properly.
+        lda     saved_ram_unitnum
+    IF_NE
+        inc     DEVCNT
+        ldx     DEVCNT
+        sta     DEVLST,x
+        copy16  saved_ram_drvec, RAMSLOT
+    END_IF
+
         ;; Restore modified ProDOS state
         jsr     RestoreDeviceList
 
