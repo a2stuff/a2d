@@ -18,7 +18,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### DeskTop
 
 * Add file type "LBR" string for $E0 ("archival library")
-* Show drag outlines even for hidden icons.
+* Show drag outlines even for icons outside visible area.
 * Prevent crash launching program after previewing images. ([#765](https://github.com/a2stuff/a2d/issues/765))
 
 ### Selector
@@ -34,7 +34,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ## 1.3
 
-An unofficial release with bug fixes and enhancements.
+An unofficial release with bug fixes and enhancements. July 1, 2023.
 
 See the release notes at:
 https://github.com/a2stuff/a2d/blob/release-1.3/RELEASE-NOTES.md
