@@ -79,14 +79,14 @@ ret:    rts
 ;;; ProDOS 2.4's Bitsy Bye invokes BASIS.SYSTEM with:
 ;;; * ProDOS prefix set to directory containing file.
 ;;; * Path buffer in BASIS.SYSTEM ($2006) set to filename.
-;;; * $280 set to name of root volume (e.g. "/VOL") TODO: of target file or SYS?
+;;; * $280 set to path of launched file (e.g. "/VOL/MEDIA")
 ;;; * $380 set to path of launched SYS (e.g. "/VOL/BASIS.SYSTEM")
 ;;; Not all should be necessary, but not doing so may lead to future
 ;;; compatibility issues.
 
-BITSY_VOL  = $280
-BITSY_PATH = $380
-.assert INVOKER_INTERPRETER = BITSY_PATH, error, "location mismatch"
+BITSY_FILE_PATH  = $280
+BITSY_SYS_PATH = $380
+.assert INVOKER_INTERPRETER = BITSY_SYS_PATH, error, "location mismatch"
 
 use_interpreter:
         copy16  #INVOKER_INTERPRETER, open_params__pathname
@@ -116,19 +116,13 @@ load_target:
         dey
         bpl     :-
 
-        ;; Also populate vol name (like Bitsy) now that memory is free.
-        .assert INVOKER_FILENAME = BITSY_VOL, error, "location mismatch"
-        ldx     #1              ; start at leading '/'
-        lda     INVOKER_PREFIX,x
-:       sta     BITSY_VOL,x
-        cpx     INVOKER_PREFIX  ; hit the end?
-        beq     :+
-        inx
-        lda     INVOKER_PREFIX,x ; found another '/'?
-        cmp     #'/'
-        bne     :-
+        ;; Also populate path (like Bitsy) now that memory is free.
+        .assert INVOKER_FILENAME = BITSY_FILE_PATH, error, "location mismatch"
+        ldx     INVOKER_PREFIX
+:       lda     INVOKER_PREFIX,x
+        sta     BITSY_FILE_PATH,x
         dex
-:       stx     BITSY_VOL
+        bpl     :-
     END_IF
 
         ;; Set return address to the QUIT call below
