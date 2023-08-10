@@ -13,6 +13,9 @@ From ProDOS Driver collection (https://github.com/a2stuff/prodos-drivers):
 From Integer BASIC for ProDOS (https://github.com/a2stuff/intbasic):
 * INTBASIC.SYSTEM
 
+PT3 Player by Vince Weaver, for ProDOS by Stefan Wessels
+* PT3PLR.SYSTEM
+
 AUTO UnShrinkIt by Andrew E. Nicholas:
 * UNSHRINK
 
@@ -23,3 +26,4 @@ The other files go into the Sample Media folder, and are examples of various fil
 
 * WOZ.BREAKOUT is the original published version
 * APPLEVISION by Bob Bishop
+* AUTUMN.PT3 from https://zxart.ee/eng/authors/k/kenotron/autumn3/qid:661156/

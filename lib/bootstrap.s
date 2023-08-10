@@ -60,6 +60,10 @@ self:
 
         ;; --------------------------------------------------
         ;; Show 80-column text screen
+
+        lda     #$FF
+        sta     INVFLG
+
         sta     TXTSET
         bit     ROMIN2
         jsr     SETVID

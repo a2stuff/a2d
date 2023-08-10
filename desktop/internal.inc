@@ -22,6 +22,7 @@ kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
         graphics
         animation
         music
+        tracker
         audio
         font
         relocatable

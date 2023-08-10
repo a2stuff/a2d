@@ -109,6 +109,7 @@ emit add_file $disposition "res/package/BINSCII" "Extras" "BinSCII" FF0000
 emit add_file $disposition "res/package/INTBASIC.SYSTEM" "Extras" "IntBASIC.system" FF2000
 emit add_file $disposition "res/package/BASIC.SYSTEM" "Extras" "BASIC.system" FF2000
 emit add_file $disposition "out/awlaunch.system.SYS" "Extras" "AWLaunch.system" FF2000
+emit add_file $disposition "res/package/PT3PLR.SYSTEM" "Extras" "PT3PLR.system" FF2000
 
 # --------------------------------------------------
 # Part 5: Desk Accessories (optional and extra)
@@ -145,6 +146,7 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "res/package/WOZ.BREAKOUT"  $mediadir "woz.breakout"   FA0000
     emit add_file $disposition "res/package/APPLEVISION"   $mediadir "AppleVision"    FA0000
     emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell"  060800
+    emit add_file $disposition "res/package/OUTER.SPACE.PT3" $mediadir "outer.space.pt3" 000000
 
     # MGTK Fonts
     emit add_file $disposition "mgtk/fonts/System.en"      $mediafnt "System.en"      070000

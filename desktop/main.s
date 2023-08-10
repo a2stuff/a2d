@@ -1010,6 +1010,7 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
         INVOKE_TABLE_ENTRY      InvokePreview, str_preview_fot ; graphics
         INVOKE_TABLE_ENTRY      fallback, 0                    ; animation
         INVOKE_TABLE_ENTRY      InvokePreview, str_preview_mus ; music
+        INVOKE_TABLE_ENTRY      interpreter, str_preview_pt3   ; tracker
         INVOKE_TABLE_ENTRY      fallback, 0                    ; audio
         INVOKE_TABLE_ENTRY      InvokePreview, str_preview_fnt ; font
         INVOKE_TABLE_ENTRY      fallback, 0                    ; relocatable
@@ -1278,6 +1279,9 @@ str_preview_txt:
 
 str_preview_mus:
         PASCAL_STRING .concat(kFilenameModulesDir, "/show.duet.file")
+
+str_preview_pt3:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/PT3PLR.system")
 
 ;;; ============================================================
 
@@ -15437,6 +15441,7 @@ icontype_table:
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bsq_suffix, 0, IconType::encoded ; BinSCII - ShrinkIt
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_btc_suffix, 0, IconType::audio ; Zero-Crossing Audio
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_zc_suffix, 0, IconType::audio ; Binary Time Constant Audio
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_pt3_suffix, 0, IconType::tracker ; Vortex Tracker PT3
 
         ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
         DEFINE_ICTRECORD $FF, FT_BINARY, ICT_FLAGS_AUX|ICT_FLAGS_BLOCKS, $2000, 17, IconType::graphics ; HR image as FOT
@@ -15520,6 +15525,9 @@ str_bsc_suffix:                 ; BinSCII
 
 str_bsq_suffix:                 ; BinSCII - ShrinkIt
         PASCAL_STRING ".BSQ"
+
+str_pt3_suffix:                 ; Vortex Tracker PT3
+        PASCAL_STRING ".PT3"
 
 ;;; ============================================================
 ;;; DeskTop icon placement
@@ -15664,6 +15672,7 @@ icontype_iconentryflags_table := * - IconType::VOL_COUNT
         .byte   0                    ; graphics
         .byte   0                    ; animation/video
         .byte   0                    ; music
+        .byte   0                    ; tracker
         .byte   0                    ; audio
         .byte   0                    ; font
         .byte   0                    ; relocatable

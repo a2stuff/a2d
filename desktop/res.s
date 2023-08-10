@@ -596,6 +596,7 @@ type_icons_table:
         .addr   fot ; graphics
         .addr   anm ; animation/video
         .addr   mus ; music
+        .addr   mus ; tracker
         .addr   snd ; audio
         .addr   fnt ; font
         .addr   rel ; relocatable
