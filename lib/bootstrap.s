@@ -94,11 +94,10 @@ retry:
         sta     OURCH
 
         ldy     #0
-:       lda     str_loading+1,y
-        ora     #$80
+:       lda     str_loading,y
         jsr     COUT
         iny
-        cpy     str_loading
+        cpy     #kLoadingStringLength
         bne     :-
 
         ;; Close all open files (just in case)
@@ -144,11 +143,10 @@ prompt_for_system_disk:
         sta     OURCH
 
         ldy     #0
-:       lda     str_disk_prompt+1,y
-        ora     #$80
+:       lda     str_disk_prompt,y
         jsr     COUT
         iny
-        cpy     str_disk_prompt
+        cpy     #kDiskPromptLength
         bne     :-
 
 wait:   sta     KBDSTRB
@@ -170,12 +168,12 @@ wait:   sta     KBDSTRB
 
 kDiskPromptLength = .strlen(res_string_prompt_insert_system_disk)
 str_disk_prompt:
-        PASCAL_STRING res_string_prompt_insert_system_disk
+        scrcode res_string_prompt_insert_system_disk
 
 kSplashVtab = 12
 kLoadingStringLength = .strlen(QR_LOADSTRING)
 str_loading:
-        PASCAL_STRING QR_LOADSTRING
+        scrcode QR_LOADSTRING
 
 ;;; ============================================================
 ;;; ProDOS MLI call param blocks
