@@ -146,7 +146,7 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "res/package/WOZ.BREAKOUT"  $mediadir "woz.breakout"   FA0000
     emit add_file $disposition "res/package/APPLEVISION"   $mediadir "AppleVision"    FA0000
     emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell"  060800
-    emit add_file $disposition "res/package/OUTER.SPACE.PT3" $mediadir "outer.space.pt3" 000000
+    emit add_file $disposition "res/package/AUTUMN.PT3"    $mediadir "autumn.pt3"     000000
 
     # MGTK Fonts
     emit add_file $disposition "mgtk/fonts/System.en"      $mediafnt "System.en"      070000
