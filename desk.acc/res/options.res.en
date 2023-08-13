@@ -1,4 +1,4 @@
 .define res_string_window_title "Options"
 .define res_string_label_ramcard "Copy to RAMCard (if present)"
-.define res_string_label_selector "Run Selector on startup"
-.define res_string_label_shortcuts "Show shortcuts in dialogs"
+.define res_string_label_selector "Show Shortcuts on startup"
+.define res_string_label_shortcuts "Show keyboard shortcuts in dialogs"

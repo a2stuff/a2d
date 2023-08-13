@@ -14,7 +14,7 @@
 .define res_const_menu_item_slot_pattern_offset1 8
 .define res_string_button_desktop "Escritorio"
 .define res_char_button_desktop_shortcut 'E'
-.define res_string_selector_name "Selector"
+.define res_string_selector_name "Atajos"
 .define res_string_label_download "Copiando a RAMDisk..."
 .define res_string_label_copying "Copiando: "
 .define res_string_errmsg_not_enough_room "No hay sitio suficiente en la RAMDisk para copiar la aplicaci\x13n."

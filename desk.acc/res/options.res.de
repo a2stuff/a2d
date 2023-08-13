@@ -1,4 +1,4 @@
 .define res_string_window_title "Optionen"
 .define res_string_label_ramcard "Auf RAMCard kopieren (falls vorhanden)"
-.define res_string_label_selector "Run Selektor beim Start"
-.define res_string_label_shortcuts "Verkn}pfungen in Dialogen anzeigen"
+.define res_string_label_selector "Kurzbefehle beim Start anzeigen"
+.define res_string_label_shortcuts "Tastaturk}rzel in Dialogen anzeigen"

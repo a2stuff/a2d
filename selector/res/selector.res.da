@@ -14,7 +14,7 @@
 .define res_const_menu_item_slot_pattern_offset1 11
 .define res_string_button_desktop "Skrivebord"
 .define res_char_button_desktop_shortcut 'S'
-.define res_string_selector_name "V{lger"
+.define res_string_selector_name "Genveje"
 .define res_string_label_download "Kopierer til RAMCard..."
 .define res_string_label_copying "Kopiering: "
 .define res_string_errmsg_not_enough_room "Ikke nok plads i RAMCard til at kopiere applikationen."

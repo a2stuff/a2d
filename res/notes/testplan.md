@@ -659,12 +659,12 @@ The following tests all require:
 
 * Configure a system with a RAMCard of at least 1MB. On a physical volume, create a directory with a system file (e.g. BASIC.SYSTEM) and a subdirectory. In the subdirectory, create 256 normal files followed by a subdirectory (with some files) followed by more files. Then run the following tests:
   * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at boot. Ensure DeskTop is set to copy to RAMCard on startup. Restart DeskTop. Verify that the directory is successfully copied.
-  * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at first use. Ensure DeskTop is set to copy to RAMCard on startup. Ensure DeskTop is set to launch Selector. Quit DeskTop. Launch Selector. Select the shortcut. Verify that the directory is successfully copied.
+  * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at first use. Ensure DeskTop is set to copy to RAMCard on startup. Ensure DeskTop is set to launch Shortcuts. Quit DeskTop. Launch Shortcuts. Select the shortcut. Verify that the directory is successfully copied.
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Drag a file to a same-volume window so it is moved. Configure a shortcut to copy to RAMCard "at first use". Invoke the shortcut. Verify that the shortcut's files were indeed copied, not moved.
 
-* Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Selector. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
-* Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in a directory, not the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Selector. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
+* Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Shortcuts. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
+* Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in a directory, not the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Shortcuts. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
 * Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut set to Copy to RAMCard at first use. Invoke the shortcut. Verify that it correctly copies to the RAMCard and runs.
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Modify a shortcut. Verify that no prompt is shown. Power cycle and launch DeskTop. Verify that the shortcut modifications are present.
@@ -928,36 +928,36 @@ With Sci.Calc:
 * Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Screen Dump DA. Verify it prints a screenshot.
 * Configure a system with a non-SSC in Slot 1. Invoke the Screen Dump DA. Verify nothing happens.
 
-# Selector
+# Shortcuts
 
-* Load Selector. Put a disk in Slot 6, Drive 1. Startup > Slot 6. Verify that the system boots the disk. Repeat for all other slots with drives.
+* Load Shortcuts. Put a disk in Slot 6, Drive 1. Startup > Slot 6. Verify that the system boots the disk. Repeat for all other slots with drives.
 
-* Launch Selector, invoke BASIC.SYSTEM. Ensure /RAM exists.
-* Launch Selector, invoke DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
-* Launch Selector. Invoke a BIN program file. Verify that during launch the screen goes completely black before the program starts, with no text characters present.
+* Launch Shortcuts, invoke BASIC.SYSTEM. Ensure /RAM exists.
+* Launch Shortcuts, invoke DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
+* Launch Shortcuts. Invoke a BIN program file. Verify that during launch the screen goes completely black before the program starts, with no text characters present.
 
-* Launch Selector. Type Open-Apple and R. Ensure "Run a Program..." dialog appears
-* Launch Selector. Type Solid-Apple and R. Ensure "Run a Program..." dialog appears
-* Launch Selector. Type Open-Apple and 6. Ensure machine boots from Slot 6
-* Launch Selector. Type Solid-Apple and 6. Ensure machine boots from Slot 6
+* Launch Shortcuts. Type Open-Apple and R. Ensure "Run a Program..." dialog appears
+* Launch Shortcuts. Type Solid-Apple and R. Ensure "Run a Program..." dialog appears
+* Launch Shortcuts. Type Open-Apple and 6. Ensure machine boots from Slot 6
+* Launch Shortcuts. Type Solid-Apple and 6. Ensure machine boots from Slot 6
 
-* Launch Selector. Eject the disk with DeskTop on it. Type D (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.
+* Launch Shortcuts. Eject the disk with DeskTop on it. Type D (don't click). Dismiss the dialog by hitting Esc. Verify that the dialog disappears, and the Apple menu is not shown.
 
-* Configure a system without a RAMCard. Launch Selector. File > Run a Program.... Verify that the volume containing Selector is the first disk shown.
-* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch Selector. File > Run a Program.... Verify that the non-RAMCard volume containing Selector is the first disk shown.
-* Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch Selector. File > Run a Program.... Verify that the non-RAMCard volume containing Selector is the first disk shown.
+* Configure a system without a RAMCard. Launch Shortcuts. File > Run a Program.... Verify that the volume containing Shortcuts is the first disk shown.
+* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch Shortcuts. File > Run a Program.... Verify that the non-RAMCard volume containing Shortcuts is the first disk shown.
+* Configure a system with a RAMCard, and set DeskTop to not copy itself to the RAMCard on startup. Launch Shortcuts. File > Run a Program.... Verify that the non-RAMCard volume containing Shortcuts is the first disk shown.
 
-* Using DeskTop, either delete LOCAL/SELECTOR.LIST or just delete all shortcuts. Configure Selector to start. Launch Selector. Ensure DeskTop is automatically invoked and starts correctly.
+* Using DeskTop, either delete LOCAL/SELECTOR.LIST or just delete all shortcuts. Configure Shortcuts to start. Launch Shortcuts. Ensure DeskTop is automatically invoked and starts correctly.
 
-* Configure a shortcut for a program with many associated files to copy to RAMCard "at boot". Reboot, and launch DESKTOP.SYSTEM. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Once Selector starts, invoke the shortcut. Verify that the program starts correctly.
-* Configure a shortcut for a program with many associated files to copy to RAMCard "at boot". Reboot, and launch DESKTOP.SYSTEM. Verify that all of the files were copied to the RAMCard. Once Selector starts, eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
-* Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. Verify that the files are copied to the RAMCard, and that the program starts correctly. Return to Selector by quitting the program. Eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
+* Configure a shortcut for a program with many associated files to copy to RAMCard "at boot". Reboot, and launch DESKTOP.SYSTEM. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Once Shortcuts starts, invoke the shortcut. Verify that the program starts correctly.
+* Configure a shortcut for a program with many associated files to copy to RAMCard "at boot". Reboot, and launch DESKTOP.SYSTEM. Verify that all of the files were copied to the RAMCard. Once Shortcuts starts, eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
+* Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. Verify that the files are copied to the RAMCard, and that the program starts correctly. Return to Shortcuts by quitting the program. Eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Invoke the shortcut again. Verify that the files are copied to the RAMCard and that the program starts correctly.
 
-* Configure a shortcut for the BINSCII system utility. Launch Selector. Invoke the BINSCII system file. Verify that the display is not truncated.
+* Configure a shortcut for the BINSCII system utility. Launch Shortcuts. Invoke the BINSCII system file. Verify that the display is not truncated.
 
-* Launch Selector. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
-* Launch Selector. Select an item. Verify that the OK button becomes enabled. File > Run a Program... Cancel the dialog. Verify that selection is cleared and that the OK button is disabled.
+* Launch Shortcuts. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
+* Launch Shortcuts. Select an item. Verify that the OK button becomes enabled. File > Run a Program... Cancel the dialog. Verify that selection is cleared and that the OK button is disabled.
 
 
 # Disk Copy
@@ -1012,14 +1012,14 @@ With Sci.Calc:
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.
-* Launch Selector. Trigger an alert with only OK (e.g. running a shortcut that only works in DeskTop, like a DA). Verify that Escape key closes alert.
+* Launch Shortcuts. Trigger an alert with only OK (e.g. running a shortcut that only works in DeskTop, like a DA). Verify that Escape key closes alert.
 * Launch DeskTop. Run Special > Disk Copy. Trigger an alert with only OK (e.g. let a copy complete successfully). Verify that Escape key closes alert.
 
 # File Picker
 
 This covers:
 
-* Selector: File > Run a Program...
+* Shortcuts: File > Run a Program...
 * DeskTop: File > Copy To...
 * DeskTop: Shortcuts > Add a Shortcut...
 * DeskTop: Shortcuts > Edit a Shortcut...
@@ -1064,7 +1064,7 @@ For DeskTop's Shortcut > Edit a Shortcut... file picker:
 * Create a shortcut not on the startup volume. Edit the shortcut. Verify that the file picker shows the shortcut target volume and file selected.
 * Create a shortcut on a removable volume. Eject the volume. Edit the shortcut. Verify that the file picker initializes to any available volume, and does not crash or show corrupted results.
 
-For Selector's File > Run a Program... file picker:
+For Shortcuts's File > Run a Program... file picker:
 * Navigate to an empty volume and don't select anything. Click OK. Verify that an alert is shown.
 * Move the mouse cursor over a folder in the list, and click to select it. Move the mouse cursor away from the click location but over the same item. Double-click. Verify that the folder opens with only the two clicks.
 * Move the mouse cursor over a folder in the list that is not selected. Double-click. Verify that the folder opens with only the two clicks.

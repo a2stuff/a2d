@@ -68,7 +68,7 @@ dialog_result:
 ;;; ============================================================
 
 kDAWindowId     = 62
-kDAWidth        = 350
+kDAWidth        = 375
 kDAHeight       = 100
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight

@@ -14,7 +14,7 @@
 .define res_const_menu_item_slot_pattern_offset1 11
 .define res_string_button_desktop "Skrivbord"
 .define res_char_button_desktop_shortcut 'S'
-.define res_string_selector_name "Selektor"
+.define res_string_selector_name "Genv{gar"
 .define res_string_label_download "Kopierar till RAMCard..."
 .define res_string_label_copying "Kopierar: "
 .define res_string_errmsg_not_enough_room "Inte tillr{ckligt med utrymme i RAMCard f|r att kopiera programmet."

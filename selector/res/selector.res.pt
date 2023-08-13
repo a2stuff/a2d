@@ -14,7 +14,7 @@
 .define res_const_menu_item_slot_pattern_offset1 9
 .define res_string_button_desktop "DeskTop"
 .define res_char_button_desktop_shortcut 'D'
-.define res_string_selector_name "Seletor"
+.define res_string_selector_name "Atalhos"
 .define res_string_label_download "Copiando para RAMDisk..."
 .define res_string_label_copying "Copiar: "
 .define res_string_errmsg_not_enough_room "N[o h@ espa]o suficiente no RAMDisk para copiar o aplicativo."

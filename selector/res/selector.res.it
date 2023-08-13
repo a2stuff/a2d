@@ -14,7 +14,7 @@
 .define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_button_desktop "Scrivania"
 .define res_char_button_desktop_shortcut 'S'
-.define res_string_selector_name "Selector"
+.define res_string_selector_name "Collegamenti"
 .define res_string_label_download "Copio sull'espansione RAM..."
 .define res_string_label_copying "Sto copiando: "
 .define res_string_errmsg_not_enough_room "Non c'} spazio sufficiente nell'espansione RAM per copiare."

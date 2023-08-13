@@ -11,9 +11,7 @@
 .define res_string_menu_item_close_all "Close All"
 .define res_string_menu_item_select_all "Select All"
 .define res_char_menu_item_select_all_shortcut 'A'
-.define res_string_menu_item_copy_file "Copy a File..."
 .define res_string_menu_item_copy_selection "Copy To..."
-.define res_string_menu_item_delete_file "Delete a File..."
 .define res_string_menu_item_delete_selection "Delete"
 .define res_string_menu_item_eject "Eject Disk"
 .define res_char_menu_item_eject_shortcut 'E'
@@ -35,7 +33,6 @@
 .define res_string_menu_item_make_link "Make Alias"
 .define res_string_menu_item_get_info "Get Info"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_get_size "Get Size"
 .define res_string_menu_item_rename_icon "Rename..."
 .define res_string_menu_item_duplicate "Duplicate..."
 .define res_string_about_text_line5 "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"

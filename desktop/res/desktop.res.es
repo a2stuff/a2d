@@ -11,9 +11,7 @@
 .define res_string_menu_item_close_all "Cerrar Todo"
 .define res_string_menu_item_select_all "Seleccionar Todo"
 .define res_char_menu_item_select_all_shortcut 'A'
-.define res_string_menu_item_copy_file "Copiar un Archivo..."
 .define res_string_menu_item_copy_selection "Copiar en..."
-.define res_string_menu_item_delete_file "Borrar un Archivo..."
 .define res_string_menu_item_delete_selection "Borrar"
 .define res_string_menu_item_eject "Expulsar Disco"
 .define res_char_menu_item_eject_shortcut 'E'
@@ -35,7 +33,6 @@
 .define res_string_menu_item_make_link "Crear alias"
 .define res_string_menu_item_get_info "Obtener Informaci\x13n"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_get_size "Obtener Tama|o"
 .define res_string_menu_item_rename_icon "Renombrar..."
 .define res_string_menu_item_duplicate "Duplicar..."
 .define res_string_about_text_line5 "Autores: St\x11phane Cavril, Bernard Gallet, Henri Lamiraux"

@@ -17,12 +17,14 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### DeskTop
 
-* Add file type "LBR" string for $E0 ("archival library")
+* Add file type string "LBR" for $E0 ("archival library")
 * Show drag outlines even for icons outside visible area.
 * Prevent crash launching program after previewing images. ([#765](https://github.com/a2stuff/a2d/issues/765))
 * Filetype and support for Vortex Tracker PT3 files.
 
 ### Selector
+
+* Selector is now named "Shortcuts" in UI strings.
 
 ### Disk Copy
 

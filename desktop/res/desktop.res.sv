@@ -11,9 +11,7 @@
 .define res_string_menu_item_close_all "St{ng alla"
 .define res_string_menu_item_select_all "Markera allt"
 .define res_char_menu_item_select_all_shortcut 'A'
-.define res_string_menu_item_copy_file "Kopiera en fil..."
 .define res_string_menu_item_copy_selection "Kopiera till..."
-.define res_string_menu_item_delete_file "Ta bort en fil..."
 .define res_string_menu_item_delete_selection "Radera"
 .define res_string_menu_item_eject "Mata ut skiva"
 .define res_char_menu_item_eject_shortcut 'E'
@@ -35,7 +33,6 @@
 .define res_string_menu_item_make_link "Skapa alias"
 .define res_string_menu_item_get_info "Visa info"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_get_size "F} storlek"
 .define res_string_menu_item_rename_icon "Byt namn..."
 .define res_string_menu_item_duplicate "Duplicera..."
 .define res_string_about_text_line5 "F|rfattare: Stephane Cavril, Bernard Gallet, Henri Lamiraux"

@@ -11,9 +11,7 @@
 .define res_string_menu_item_close_all "Luk alt"
 .define res_string_menu_item_select_all "V{lg alt"
 .define res_char_menu_item_select_all_shortcut 'A'
-.define res_string_menu_item_copy_file "Kopier en fil..."
 .define res_string_menu_item_copy_selection "Kopier til..."
-.define res_string_menu_item_delete_file "Slet en fil..."
 .define res_string_menu_item_delete_selection "Slet"
 .define res_string_menu_item_eject "Skub disk ud"
 .define res_char_menu_item_eject_shortcut 'E'
@@ -35,7 +33,6 @@
 .define res_string_menu_item_make_link "Opret henvisning"
 .define res_string_menu_item_get_info "Vis Info"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_get_size "F} st|rrelse"
 .define res_string_menu_item_rename_icon "Omd|b..."
 .define res_string_menu_item_duplicate "Duplikere..."
 .define res_string_about_text_line5 "Forfattere: Stephane Cavril, Bernard Gallet, Henri Lamiraux"

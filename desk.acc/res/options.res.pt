@@ -1,4 +1,4 @@
 .define res_string_window_title "Op]#es"
 .define res_string_label_ramcard "Copiar para RAM (se dispon{vel)"
-.define res_string_label_selector "Seletor de inicializa][o na inicializa][o"
-.define res_string_label_shortcuts "Mostrar atalhos em caixas de di@logo"
+.define res_string_label_selector "Mostrar Atalhos na inicializa][o"
+.define res_string_label_shortcuts "Mostrar atajos de teclado en cuadros de di@logo"
