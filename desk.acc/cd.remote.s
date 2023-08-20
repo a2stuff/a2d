@@ -1827,7 +1827,10 @@ RetryReadQSubcode:
         bne     RetryReadQSubcode
         beq     ExitReadQSubcode ; always
 
-        ;; TODO: Analysis - What do these returned values actually represent?  Are the variable names being used here appropriate?
+        ;; Data is the control flag, the track number (BCD), the index
+        ;; number, then minutes/seconds/frames (BCD) relative to the
+        ;; start of the track, then minutes/seconds/frames (BCD)
+        ;; absolute disc position. (c/o @MESSDrivers on YouTube)
 ReadQSubcodeSuccess:
         lda     SPBuffer + 1
         sta     BCDRelTrack
@@ -1870,7 +1873,9 @@ ExitReadQSubcode:
         sta     SPCode
         ;; Address type = $00 (Block), Block = 0
         jsr     ZeroOutSPBuffer
-        ;; TODO: Analysis - What does an all-zeroes AudioStop call actually do?  Just clear any existing set stop point?  Explicitly stop playback now?  Something else?
+        ;; All-zeros AudioStop stops immediately. Unknown if it
+        ;; affects the saved stop position. (c/o @MESSDrivers on
+        ;; YouTube)
         jsr     SPCallVector
         FALL_THROUGH_TO SetStopToEoBCDLTN
 .endproc ; C23AudioStop
