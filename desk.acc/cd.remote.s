@@ -300,6 +300,8 @@ buf_string := *
 
 ;;; ============================================================
 
+;;; ============================================================
+
         jmp     cdremote__MAIN
 
 ;;; ============================================================
@@ -805,59 +807,58 @@ HandleKey:
 
         ;; $51 = Q (Quit)
         cmp     #$51
-        bne     NotQ
+        bne     :+
         jmp     DoQuitAction
-
+:
         ;; $1B = ESC (Quit)
-NotQ:   cmp     #$1b
-        bne     NotESC
+        cmp     #$1b
+        bne     :+
         jmp     DoQuitAction
-
+:
         ;; $4C = L (Continuous Play)
-NotESC: cmp     #$4c
-        bne     NotL
+        cmp     #$4c
+        bne     :+
         jsr     ToggleLoopMode
         jmp     MainLoop
-
+:
         ;; $52 = R (Random Play)
-NotL:   cmp     #$52
-        bne     NotR
+        cmp     #$52
+        bne     :+
         jsr     ToggleRandomMode
         jmp     MainLoop
-
+:
         ;; All other key operations (Play/Stop/Pause/Next/Prev/Eject) require an online drive/disc, so check one more time
-NotR:   jsr     StatusDrive
+        jsr     StatusDrive
         jcs     MainLoop
 
         ;; Loop falls through to here only if the drive is online
         pha
         lda     TOCInvalidFlag
         ;; Valid TOC has been read, we can skip the re-read
-        beq     SkipTOCRead
+        beq     :+
         jsr     ReReadTOC
-SkipTOCRead:
+:
         pla
 
         ;; $50 = P (Play)
         cmp     #$50
-        bne     NotP
+        bne     :+
         jsr     DoPlayAction
         jmp     MainLoop
-
+:
         ;; $53 = S (Stop)
-NotP:   cmp     #$53
-        bne     NotS
+        cmp     #$53
+        bne     :+
         jsr     DoStopAction
         jmp     MainLoop
-
+:
         ;; $20 = Space (Pause)
-NotS:   cmp     #$20
-        bne     NotSpace
+        cmp     #$20
+        bne     :+
         jsr     DoPauseAction
         jmp     MainLoop
-
+:
         ;; $08 = ^H, LA (Previous Track, Scan Backward)
-NotSpace:
         cmp     #$08
         bne     NotCtrlH
         lda     event_params::modifiers
@@ -870,8 +871,8 @@ JustLeftArrow:
         jsr     DoPrevTrackAction
         jmp     MainLoop
 
-        ;; $15 = ^U, RA (Next Track/Scan Forward)
 NotCtrlH:
+        ;; $15 = ^U, RA (Next Track/Scan Forward)
         cmp     #$15
         bne     NotCtrlU
         lda     event_params::modifiers
@@ -884,8 +885,8 @@ JustRightArrow:
         jsr     DoNextTrackAction
         jmp     MainLoop
 
-        ;; $45 = E (Eject)
 NotCtrlU:
+        ;; $45 = E (Eject)
         cmp     #$45
         bne     UnsupportedKeypress
         jsr     C26Eject
@@ -1001,9 +1002,8 @@ ExitPBCHandler:
         lda     #$03
         sta     RetryCount
 
-        ;; $00 = Status
 RetryLoop:
-        lda     #$00
+        lda     #SPCall::Status
         sta     SPCommandType
         ;; $00 = Code
         lda     #$00
@@ -1577,11 +1577,9 @@ DNTACounter:
 .proc C26Eject
         jsr     ToggleUIEjectButton
 
-        ;; $26 = Eject
-        lda     #$26
+        lda     #SPControlSCSIAudio::Eject
         sta     SPCode
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
         jsr     SPCallVector
 
@@ -1642,11 +1640,9 @@ ClearTrackTime_TOC:
 .proc C21AudioPlay
         lda     #$ff
         sta     DrivePlayingFlag
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
-        ;; $21 = AudioPlay
-        lda     #$21
+        lda     #SPControlSCSIAudio::AudioPlay
         sta     SPCode
         jsr     ZeroOutSPBuffer
 
@@ -1692,10 +1688,9 @@ CallAudioPlay:
 
 
 .proc C20AudioSearch
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
-        lda     #$20
+        lda     #SPControlSCSIAudio::AudioSearch
         sta     SPCode
         jsr     ZeroOutSPBuffer
 
@@ -1747,11 +1742,9 @@ ASPauseIsInactive:
 ;;; ============================================================
 
 .proc C24AudioStatus
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
-        ;; $24 = Audio Status
-        lda     #$24
+        lda     #SPControlSCSIAudio::AudioStatus
         sta     SPCode
 
         ;; Try 3 times to fetch the Audio Status, then give up.
@@ -1770,11 +1763,9 @@ ExitAudioStatus:
 ;;; ============================================================
 
 .proc C27ReadTOC
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
-        ;; $27 = ReadTOC
-        lda     #$27
+        lda     #SPControlSCSIAudio::ReadTOC
         sta     SPCode
         ;; Start Track # = $00 (Whole Disc), Type = $00 (request First/Last Track numbers)
         jsr     ZeroOutSPBuffer
@@ -1810,11 +1801,9 @@ ExitReadTOC:
 ;;; ============================================================
 
 .proc C28ReadQSubcode
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
-        ;; $28 = ReadQSubcode
-        lda     #$28
+        lda     #SPControlSCSIAudio::ReadQSubcode
         sta     SPCode
 
         ;; Try 3 times to read the QSubcode, then give up.
@@ -1865,11 +1854,9 @@ ExitReadQSubcode:
         lda     #$00
         sta     DrivePlayingFlag
 
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
-        ;; $23 = AudioStop
-        lda     #$23
+        lda     #SPControlSCSIAudio::AudioStop
         sta     SPCode
         ;; Address type = $00 (Block), Block = 0
         jsr     ZeroOutSPBuffer
@@ -1883,11 +1870,9 @@ ExitReadQSubcode:
 ;;; ============================================================
 
 .proc SetStopToEoBCDLTN
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
-        ;; $23 = AudioStop
-        lda     #$23
+        lda     #SPControlSCSIAudio::AudioStop
         sta     SPCode
         jsr     ZeroOutSPBuffer
         ;; Address = Last Track
@@ -1904,11 +1889,9 @@ ExitReadQSubcode:
 ;;; ============================================================
 
 .proc C22AudioPause
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
-        ;; $22 = AudoPause
-        lda     #$22
+        lda     #SPControlSCSIAudio::AudioPause
         sta     SPCode
         jsr     ZeroOutSPBuffer
 
@@ -1928,11 +1911,9 @@ ExitReadQSubcode:
 ;;; ============================================================
 
 .proc C25AudioScanFwd
-        ;; $25 = AudioScan
-        lda     #$25
+        lda     #SPControlSCSIAudio::AudioScan
         sta     SPCode
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
         jsr     ZeroOutSPBuffer
 
@@ -1956,11 +1937,9 @@ ExitReadQSubcode:
 ;;; ============================================================
 
 .proc C25AudioScanBack
-        ;; $04 = Control
-        lda     #$04
+        lda     #SPCall::Control
         sta     SPCommandType
-        ;; $25 = AudioScan
-        lda     #$25
+        lda     #SPControlSCSIAudio::AudioScan
         sta     SPCode
         jsr     ZeroOutSPBuffer
 
@@ -2032,9 +2011,8 @@ ExitFindSCSICard:
         rts
 
 
-        ;; $00 = Status
 FindCDROM:
-        lda     #$00
+        lda     #SPCall::Status
         sta     SPCommandType
 
         ;; UnitNum = $00, StatusCode = $00 returns status of SmartPort itself

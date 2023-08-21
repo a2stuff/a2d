@@ -94,3 +94,17 @@ control_code:   .byte   cc
         .refto control_code
 .endparams
 .endmacro
+
+;;; SmartPort control codes for early Apple SCSI cards. Documented in
+;;; the Apple II SCSI Card Technical Reference Manual.
+.enum SPControlSCSIAudio
+        AudioSearch = $20
+        AudioPlay = $21
+        AudioPause = $22
+        AudioStop = $23
+        AudioStatus = $24
+        AudioScan = $25
+        Eject = $26
+        ReadTOC = $27
+        ReadQSubcode = $28
+.endenum
