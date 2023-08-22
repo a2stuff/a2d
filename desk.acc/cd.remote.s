@@ -806,23 +806,23 @@ HandleKey:
     END_IF
 
         ;; $51 = Q (Quit)
-        cmp     #$51
+        cmp     #'Q'
         bne     :+
         jmp     DoQuitAction
 :
         ;; $1B = ESC (Quit)
-        cmp     #$1b
+        cmp     #CHAR_ESCAPE
         bne     :+
         jmp     DoQuitAction
 :
         ;; $4C = L (Continuous Play)
-        cmp     #$4c
+        cmp     #'L'
         bne     :+
         jsr     ToggleLoopMode
         jmp     MainLoop
 :
         ;; $52 = R (Random Play)
-        cmp     #$52
+        cmp     #'R'
         bne     :+
         jsr     ToggleRandomMode
         jmp     MainLoop
@@ -841,26 +841,26 @@ HandleKey:
         pla
 
         ;; $50 = P (Play)
-        cmp     #$50
+        cmp     #'P'
         bne     :+
         jsr     DoPlayAction
         jmp     MainLoop
 :
         ;; $53 = S (Stop)
-        cmp     #$53
+        cmp     #'S'
         bne     :+
         jsr     DoStopAction
         jmp     MainLoop
 :
         ;; $20 = Space (Pause)
-        cmp     #$20
+        cmp     #' '
         bne     :+
         jsr     DoPauseAction
         jmp     MainLoop
 :
         ;; $08 = ^H, LA (Previous Track, Scan Backward)
-        cmp     #$08
-        bne     NotCtrlH
+        cmp     #CHAR_LEFT
+    IF_EQ
         lda     event_params::modifiers
         beq     JustLeftArrow
 OA_LeftArrow:
@@ -870,11 +870,11 @@ OA_LeftArrow:
 JustLeftArrow:
         jsr     DoPrevTrackAction
         jmp     MainLoop
+    END_IF
 
-NotCtrlH:
         ;; $15 = ^U, RA (Next Track/Scan Forward)
-        cmp     #$15
-        bne     NotCtrlU
+        cmp     #CHAR_RIGHT
+    IF_EQ
         lda     event_params::modifiers
         beq     JustRightArrow
 OA_RightArrow:
@@ -884,13 +884,13 @@ OA_RightArrow:
 JustRightArrow:
         jsr     DoNextTrackAction
         jmp     MainLoop
+    END_IF
 
-NotCtrlU:
         ;; $45 = E (Eject)
-        cmp     #$45
-        bne     UnsupportedKeypress
+        cmp     #'E'
+        bne     :+
         jsr     C26Eject
-UnsupportedKeypress:
+:
         jmp     MainLoop
 .endproc ; MainLoop
 
@@ -1724,7 +1724,6 @@ ASExecuteSearch:
         sta     SPBuffer + 6
         jsr     SPCallVector
 
-ASSkipDeadCode:
         lda     PauseButtonState
         ;; Pause button is inactive (already) - nothing to do
         beq     ASPauseIsInactive
