@@ -705,17 +705,17 @@ EXIT:
         jsr     C24AudioStatus
         lda     SPBuffer
         ;; Audio Status = $00 (currently playing)
-        beq     IDDPlaying
+        beq     Playing
         sec
         sbc     #1
         ;; Audio status = $01 (currently paused)
-        beq     IDDPaused
+        beq     Paused
         ;; Audio status = anything else - stop operation explicitly
         jsr     DoStopAction
         jmp     ExitInitDriveDisc
 
         ;; Set Pause button to active
-IDDPaused:
+Paused:
         dec     PauseButtonState
         jsr     ToggleUIPauseButton
         ;; Read the current disc position and update the Track and Time display
@@ -724,7 +724,7 @@ IDDPaused:
         jsr     DrawTime
 
         ;; Set Play button to active
-IDDPlaying:
+Playing:
         dec     PlayButtonState
         ;; Set drive playing flag to true
         dec     DrivePlayingFlag
@@ -905,19 +905,19 @@ JustRightArrow:
 .proc PlayBackComplete
         lda     RandomButtonState
         ;; Random button is inactive - the entire Disc has been played to the end
-        beq     PBCRandomIsInactive
+        beq     RandomIsInactive
 
         ;; Random button is active - handle rollover to next random track
         lda     PlayButtonState
         ;; Play button is inactive - bail out, there's nothing to do
-        beq     ExitPBCHandler
+        beq     ExitHandler
 
         ;; Increment the count of how many tracks have been played
         inc     HexPlayedCount0Base
         lda     HexPlayedCount0Base
         cmp     HexTrackCount0Base
         ;; Haven't played all the tracks on the disc, so pick another one
-        bne     PBCPlayARandomTrack
+        bne     PlayARandomTrack
 
         ;; All tracks have been played randomly - clear the Play button STATE to inactive (with no UI change) ...
         lda     #$00
@@ -930,7 +930,7 @@ JustRightArrow:
 
         lda     LoopButtonState
         ;; Loop button is active, so play the whole disc over again - start by picking a new track
-        bne     PBCPlayARandomTrack
+        bne     PlayARandomTrack
 
         ;; Loop button is inactive - reset the first/last/current values to the TOC values and stop
         lda     BCDFirstTrackTOC
@@ -939,9 +939,9 @@ JustRightArrow:
         lda     BCDLastTrackTOC
         sta     BCDLastTrackNow
         jsr     DoStopAction
-        jmp     ExitPBCHandler
+        jmp     ExitHandler
 
-PBCPlayARandomTrack:
+PlayARandomTrack:
         jsr     PickARandomTrack
         lda     BCDRandomPickedTrk
 
@@ -958,19 +958,19 @@ PBCPlayARandomTrack:
 
         ;; Call AudioPlay function and exit
         jsr     C21AudioPlay
-        jmp     ExitPBCHandler
+        jmp     ExitHandler
 
         ;; Entire disc has been played to the end, do we need to loop?
-PBCRandomIsInactive:
+RandomIsInactive:
         lda     LoopButtonState
         ;; Loop Button is inactive - so we just stop
-        beq     PBCLoopIsInactive
+        beq     LoopIsInactive
 
         ;; Loop button is active - reset stop point to EoT LastTrack
         jsr     C23AudioStop
         lda     PlayButtonState
         ;; Play button is inactive - bail out, there's nothing to do
-        beq     ExitPBCHandler
+        beq     ExitHandler
 
         ;; Make sure we start fresh from the first track on the disc
         lda     BCDFirstTrackTOC
@@ -979,18 +979,18 @@ PBCRandomIsInactive:
         dec     TrackOrMSFFlag
         ;; Call AudioPlay function and exit
         jsr     C21AudioPlay
-        jmp     ExitPBCHandler
+        jmp     ExitHandler
 
         ;; Stop, because Loop is inactive
-PBCLoopIsInactive:
+LoopIsInactive:
         lda     PlayButtonState
         ;; Play button is inactive (already) - bail out, there's nothing to do
-        beq     ExitPBCHandler
+        beq     ExitHandler
 
         ;; Use the existing StopAction to stop everything
         jsr     DoStopAction
 
-ExitPBCHandler:
+ExitHandler:
         rts
 .endproc ; PlayBackComplete
 
@@ -1160,7 +1160,7 @@ ended:  lda     #$00            ; N=0
 .proc DoPlayAction
         lda     PauseButtonState
         ;; Pause button is inactive - nothing to do yet
-        beq     DPAPauseIsInactive
+        beq     PauseIsInactive
 
         ;; Pause button is active - forcibly clear it to inactive and then...
         lda     #$00
@@ -1170,7 +1170,7 @@ ended:  lda     #$00            ; N=0
         jsr     C22AudioPause
         jmp     ExitPlayAction
 
-DPAPauseIsInactive:
+PauseIsInactive:
         lda     PlayButtonState
         ;; Play button is active (already) - bail out, there's nothing to do
         bne     ExitPlayAction
@@ -1178,7 +1178,7 @@ DPAPauseIsInactive:
         ;; Play button is inactive, we're starting from scratch - before activating, check the random mode
         lda     RandomButtonState
         ;; Random button is inactive - just update the UI buttons and start playback
-        beq     DPARandomIsInactive
+        beq     RandomIsInactive
 
         ;; Random button is active - initialize random mode, pick a Track, and start it
         jsr     RandomModeInit
@@ -1194,20 +1194,20 @@ DPAPauseIsInactive:
         jsr     C20AudioSearch
 
         ;; Set Play button to active
-DPARandomIsInactive:
+RandomIsInactive:
         dec     PlayButtonState
         jsr     ToggleUIPlayButton
 
         lda     StopButtonState
         ;; Stop button is inactive (already) - just start the playback and exit
-        beq     DPAStopIsInactive
+        beq     StopIsInactive
 
         ;; Set Stop button to inactive, then start the playback and exit
         lda     #$00
         sta     StopButtonState
         jsr     ToggleUIStopButton
 
-DPAStopIsInactive:
+StopIsInactive:
         jsr     C21AudioPlay
 ExitPlayAction:
         rts
@@ -1228,17 +1228,17 @@ ExitPlayAction:
 
         lda     PlayButtonState
         ;; Play button is inactive (already) - nothing to do
-        beq     DSAPlayIsInactive
+        beq     PlayIsInactive
 
         ;; Clear Play button to inactive
         lda     #$00
         sta     PlayButtonState
         jsr     ToggleUIPlayButton
 
-DSAPlayIsInactive:
+PlayIsInactive:
         lda     PauseButtonState
         ;; Pause button is inactive (already) - nothing to do
-        beq     DSAPauseIsInactive
+        beq     PauseIsInactive
 
         ;; Clear Pause button to inactive
         lda     #$00
@@ -1246,7 +1246,7 @@ DSAPlayIsInactive:
         jsr     ToggleUIPauseButton
 
         ;; Set Stop button to active
-DSAPauseIsInactive:
+PauseIsInactive:
         lda     #$ff
         sta     StopButtonState
         ;; Switch Stop Flag to EoTrack mode
@@ -1306,14 +1306,14 @@ ExitPauseAction:
         lda     #$ff
         eor     RandomButtonState
         sta     RandomButtonState
-        beq     TRMRandomIsInactive
+        beq     RandomIsInactive
 
         ;; Random button is now active - re-initialize random mode and exit
         jsr     RandomModeInit
-        jmp     TRMUpdateButton
+        jmp     UpdateButton
 
         ;; Random button is now inactive - reset First/Last to TOC values and update stop point to EoT last Track
-TRMRandomIsInactive:
+RandomIsInactive:
         lda     BCDLastTrackTOC
         sta     BCDLastTrackNow
         lda     BCDFirstTrackTOC
@@ -1321,7 +1321,7 @@ TRMRandomIsInactive:
         jsr     SetStopToEoBCDLTN
 
         ;; Update UI, wait for key release, and exit
-TRMUpdateButton:
+UpdateButton:
         jsr     ToggleUIRandButton
         rts
 .endproc ; ToggleRandomMode
@@ -1392,16 +1392,16 @@ ExitRandomInit:
         jsr     C25AudioScanBack
 
         ;; Keep updating the time display as long as you get good QSub reads
-DSBALoop:
+Loop:
         jsr     C28ReadQSubcode
-        bcs     DSBAQSubReadErr
+        bcs     QSubReadErr
         jsr     DrawTrack
         jsr     DrawTime
 
         ;; Keep scanning as long as the key is held down
-DSBAQSubReadErr:
+QSubReadErr:
         jsr     CheckGestureEnded
-        bmi     DSBALoop
+        bmi     Loop
 
         ;; Key released - dim the Scan Back button, and resume playing from where we are
         jsr     ToggleUIScanBackButton
@@ -1426,16 +1426,16 @@ ExitScanBackAction:
         jsr     C25AudioScanFwd
 
         ;; Keep updating the time display as long as you get good QSub reads
-DSFALoop:
+Loop:
         jsr     C28ReadQSubcode
-        bcs     DSFAQSubReadErr
+        bcs     QSubReadErr
         jsr     DrawTrack
         jsr     DrawTime
 
         ;; Keep scanning as long as the key is held down
-DSFAQSubReadErr:
+QSubReadErr:
         jsr     CheckGestureEnded
-        bmi     DSFALoop
+        bmi     Loop
 
         ;; Key released - dim the Scan Forward button, and resume playing from where we are
         jsr     ToggleUIScanFwdButton
@@ -1455,29 +1455,29 @@ ExitScanFwdAction:
         sta     BCDRelSeconds
         jsr     DrawTime
 
-DPTAWrapCheck:
+WrapCheck:
         lda     BCDRelTrack
         cmp     BCDFirstTrackTOC
         ;; If we're not at the "first" track, just decrement track #
-        bne     DPTAJustPrev
+        bne     JustPrev
 
         ;; Otherwise, wrap to the "last" track instead
         lda     BCDLastTrackTOC
         sta     BCDRelTrack
-        jmp     DPTACheckRandom
+        jmp     CheckRandom
 
         ;; BCD decrement
-DPTAJustPrev:
+JustPrev:
         sed
         lda     BCDRelTrack
         sbc     #$01
         sta     BCDRelTrack
         cld
 
-DPTACheckRandom:
+CheckRandom:
         lda     RandomButtonState
         ;; Random button is inactive - just execute playback
-        beq     DPTARandomInactive
+        beq     RandomInactive
 
         ;; Random button is active - set the current Track as First/Last/Picked, and set the proper random Stop mode
         lda     BCDRelTrack
@@ -1487,24 +1487,24 @@ DPTACheckRandom:
         jsr     SetStopToEoBCDLTN
 
         ;; Seek to new Track and update Track display
-DPTARandomInactive:
+RandomInactive:
         jsr     C20AudioSearch
         jsr     DrawTrack
 
         lda     #$FF            ; TODO: Does this need to be a word?
-        sta     DPTACounter
-DPTAHeldKeyCheck:
+        sta     Counter
+HeldKeyCheck:
         jsr     CheckGestureEnded
-        bpl     DPTAKeyReleased
-        dec     DPTACounter
-        beq     DPTAWrapCheck   ; Repeat the action
-        bne     DPTAHeldKeyCheck ; always
+        bpl     KeyReleased
+        dec     Counter
+        beq     WrapCheck   ; Repeat the action
+        bne     HeldKeyCheck ; always
 
-DPTAKeyReleased:
+KeyReleased:
         jsr     ToggleUIPrevButton
         rts
 
-DPTACounter:
+Counter:
         .byte   0
 .endproc ; DoPrevTrackAction
 
@@ -1519,29 +1519,29 @@ DPTACounter:
         sta     BCDRelSeconds
         jsr     DrawTime
 
-DNTAWrapCheck:
+WrapCheck:
         lda     BCDRelTrack
         cmp     BCDLastTrackTOC
         ;; If we're not at the "last" track, just increment track #
-        bne     DNTAJustNext
+        bne     JustNext
 
         ;; Otherwise, wrap to the "first" track instead
         lda     BCDFirstTrackTOC
         sta     BCDRelTrack
-        jmp     DNTACheckRandom
+        jmp     CheckRandom
 
         ;; BCD increment
-DNTAJustNext:
+JustNext:
         sed
         lda     BCDRelTrack
         adc     #$01
         sta     BCDRelTrack
         cld
 
-DNTACheckRandom:
+CheckRandom:
         lda     RandomButtonState
         ;; Random button is inactive - just execute playback
-        beq     DNTARandomInactive
+        beq     RandomInactive
 
         ;; Random button is active - set the current Track as First/Last/Picked, and set the proper random Stop mode
         lda     BCDRelTrack
@@ -1551,24 +1551,24 @@ DNTACheckRandom:
         jsr     SetStopToEoBCDLTN
 
         ;; Seek to new Track and update Track display
-DNTARandomInactive:
+RandomInactive:
         jsr     C20AudioSearch
         jsr     DrawTrack
 
         lda     #$FF            ; TODO: Does this need to be a word?
-        sta     DNTACounter
-DNTAHeldKeyCheck:
+        sta     Counter
+HeldKeyCheck:
         jsr     CheckGestureEnded
-        bpl     DNTAKeyReleased
-        dec     DNTACounter
-        beq     DNTAWrapCheck   ; Repeat the action
-        bne     DNTAHeldKeyCheck ; always
+        bpl     KeyReleased
+        dec     Counter
+        beq     WrapCheck   ; Repeat the action
+        bne     HeldKeyCheck ; always
 
-DNTAKeyReleased:
+KeyReleased:
         jsr     ToggleUINextButton
         rts
 
-DNTACounter:
+Counter:
         .byte   0
 .endproc ; DoNextTrackAction
 
@@ -1591,17 +1591,17 @@ DNTACounter:
 
         lda     PauseButtonState
         ;; Pause button is inactive (already) - nothing to do
-        beq     EjPauseIsInactive
+        beq     PauseIsInactive
 
         ;; Clear Pause button to inactive
         lda     #$00
         sta     PauseButtonState
         jsr     ToggleUIPauseButton
 
-EjPauseIsInactive:
+PauseIsInactive:
         lda     PlayButtonState
         ;; Play button is inactive (already) - nothing to do
-        beq     EjPlayIsInactive
+        beq     PlayIsInactive
 
         ;; Clear Play button to inactive
         lda     #$00
@@ -1609,7 +1609,7 @@ EjPauseIsInactive:
         jsr     ToggleUIPlayButton
 
         ;; Clear Drive Playing state
-EjPlayIsInactive:
+PlayIsInactive:
         lda     #$00
         sta     DrivePlayingFlag
 
@@ -1655,10 +1655,10 @@ ClearTrackTime_TOC:
 
         lda     TrackOrMSFFlag
         ;; Use M/S/F to stop playback at the end of the disc for sequential mode
-        beq     APStopAtMSF
+        beq     StopAtMSF
 
         ;; Use end of currently-selected Track as "stop" point for random mode
-APStopAtTrack:
+StopAtTrack:
         lda     BCDFirstTrackNow
         sta     SPBuffer + 2
         ;; Address Type = $02 (Track)
@@ -1668,7 +1668,7 @@ APStopAtTrack:
         sta     TrackOrMSFFlag
         beq     CallAudioPlay   ; always
 
-APStopAtMSF:
+StopAtMSF:
         lda     BCDAbsMinutes
         sta     SPBuffer + 4
         lda     BCDAbsSeconds
@@ -1696,22 +1696,22 @@ CallAudioPlay:
 
         lda     PlayButtonState
         ;; Play button is inactive - seek and hold
-        beq     ASHoldAfterSearch
+        beq     HoldAfterSearch
 
         ;; Play button is active - seek and play
-ASPlayAfterSearch:
+PlayAfterSearch:
         lda     #$ff
         ;; Set the Drive Playing flag to active
         sta     DrivePlayingFlag
 
         ;; $01 = Play after search
         lda     #$01
-        bne     ASExecuteSearch ; always
+        bne     ExecuteSearch ; always
 
         ;; $00 = Hold after search
-ASHoldAfterSearch:
+HoldAfterSearch:
         lda     #$00
-ASExecuteSearch:
+ExecuteSearch:
         sta     SPBuffer
         ;; $09 = Play mode (Standard stereo)
         lda     #$09
@@ -1726,13 +1726,13 @@ ASExecuteSearch:
 
         lda     PauseButtonState
         ;; Pause button is inactive (already) - nothing to do
-        beq     ASPauseIsInactive
+        beq     PauseIsInactive
 
         ;; Clear Pause button to inactive
         inc     PauseButtonState
         jsr     ToggleUIPauseButton
 
-ASPauseIsInactive:
+PauseIsInactive:
         lda     BCDRelTrack
         sta     BCDFirstTrackNow
         rts
@@ -1833,7 +1833,6 @@ ReadQSubcodeSuccess:
         lda     SPBuffer + 8
         sta     BCDAbsFrame
         lda     SPBuffer + 2
-        ;; TODO: Analysis - Is this value perhaps the Track Index?  Does Index 0 (gap/transition) get treated as a QSub read error?
         beq     ReadQSubcodeFail
 
         ;; Clear carry on success
