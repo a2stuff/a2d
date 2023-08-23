@@ -923,6 +923,25 @@ ycoord: .word   top
 
 ;;; ------------------------------------
 
-;;; Define pattern for PaintBits - low 7 bits are reversed
-;;; e.g. .byte PX(%1000000)
-.define PX(bits) (((bits&$40)>>6)|((bits&$20)>>4)|((bits&$10)>>2)|(bits&$8)|((bits&$4)<<2)|((bits&$2)<<4)|((bits&$1)<<6))
+;;; Define pattern for PaintBits as a string
+;;; * '#' is a 1 bit, anything else is a 0
+;;; * must be a multiple of 7 pixels wide.
+;;; e.g. PXS "..##############....."
+.macro PIXELS str, ii
+        ;; Bootstrap, after error checking.
+        .if .paramcount < 2
+                .if .strlen(str) .mod 7 <> 0
+                        .error "PIXELS: Bad string length"
+                .endif
+                PIXELS str, 0
+                .exitmacro
+        .endif
+
+        ;; Process next 7 characters into a byte.
+        .byte ((.strat(str, ii+0) = '#') << 0) | ((.strat(str, ii+1) = '#') << 1) | ((.strat(str, ii+2) = '#') << 2) | ((.strat(str, ii+3) = '#') << 3) | ((.strat(str, ii+4) = '#') << 4) | ((.strat(str, ii+5) = '#') << 5) | ((.strat(str, ii+6) = '#') << 6)
+
+        ;; Recurse if more characters remain.
+        .if (ii + 7) < .strlen(str)
+                PIXELS str, (ii + 7)
+        .endif
+.endmacro
