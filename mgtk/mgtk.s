@@ -4698,12 +4698,12 @@ savesize        .word
         inx
         inx
         inx
-        stx     fill_rect_params2_height      ; menu bar height = font height + 2
+        stx     hilite_menu_rect_height       ; menu bar height = font height + 2
 
         inx
         stx     wintitle_height               ; win title height = font height + 3
 
-        stx     test_rect_bottom
+        stx     menu_bar_rect_bottom
         stx     test_rect_params2_top
         stx     fill_rect_params4_top
 
@@ -5460,21 +5460,21 @@ sysfont_height:     .byte   0
 active_menu:
         .addr   0
 
-.params test_rect_params
-left:   .word   $ffff
-top:    .word   $ffff
-right:  .word   $230
+.params menu_bar_rect
+left:   .word   AS_WORD(-1)
+top:    .word   AS_WORD(-1)
+right:  .word   kScreenWidth
 bottom: .word   $C
 .endparams
-        test_rect_bottom := test_rect_params::bottom
+        menu_bar_rect_bottom := menu_bar_rect::bottom
 
-.params fill_rect_params2
+.params hilite_menu_rect
 left:   .word   0
 top:    .word   0
 width:  .word   0
 height: .word   11
 .endparams
-        fill_rect_params2_height := fill_rect_params2::height
+        hilite_menu_rect_height := hilite_menu_rect::height
 
 savebehind_buffer:
         .word   0
@@ -5518,8 +5518,8 @@ mark_text:
         .byte   1              ; length
         .byte   $1D
 
-test_rect_params_addr:
-        .addr   test_rect_params
+menu_bar_rect_addr:
+        .addr   menu_bar_rect
 
 test_rect_params2_addr:
         .addr   test_rect_params2
@@ -5742,7 +5742,7 @@ draw_menu_impl:
         jsr     HideCursorSaveParams
         jsr     SetStandardPort
 
-        ldax    test_rect_params_addr
+        ldax    menu_bar_rect_addr
         jsr     FillAndFrameRect
 
         ldax    #12
@@ -6030,9 +6030,9 @@ do_hilite:
 .proc HiliteMenu
         ldx     #1
 loop:   lda     curmenu::x_min,x
-        sta     fill_rect_params2::left,x
+        sta     hilite_menu_rect::left,x
         lda     curmenu::x_max,x
-        sta     fill_rect_params2::width,x
+        sta     hilite_menu_rect::width,x
 
         lda     curmenuinfo::x_min,x
         sta     test_rect_params2::left,x
@@ -6047,7 +6047,7 @@ loop:   lda     curmenu::x_min,x
 
         lda     #MGTK::penXOR
         jsr     SetFillMode
-        MGTK_CALL MGTK::PaintRect, fill_rect_params2
+        MGTK_CALL MGTK::PaintRect, hilite_menu_rect
         rts
 .endproc ; HiliteMenu
 
@@ -6336,7 +6336,7 @@ event_loop:
 :
         ;; Moved - mouse pos dominates
         MGTK_CALL MGTK::MoveTo, mouse_state
-        MGTK_CALL MGTK::InRect, test_rect_params      ; test in menu bar
+        MGTK_CALL MGTK::InRect, menu_bar_rect         ; test in menu bar
         bne     in_menu_bar
         lda     cur_open_menu_id
         jeq     event_loop
@@ -7859,7 +7859,7 @@ window_id   .byte
 
         jsr     SaveParamsAndStack
 
-        MGTK_CALL MGTK::InRect, test_rect_params ; check if in menubar
+        MGTK_CALL MGTK::InRect, menu_bar_rect ; check if in menubar
         beq     not_menubar
 
         lda     #MGTK::Area::menubar
