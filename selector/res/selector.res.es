@@ -20,5 +20,5 @@
 .define res_string_errmsg_not_enough_room "No hay sitio suficiente en la RAMDisk para copiar la aplicaci\x13n."
 .define res_string_errmsg_copy_incomplete "Ha ocurrido un error durante la descarga. La copia no se ha completado."
 .define res_string_label_files_to_copy "Archivos por copiar a la RAMDisk: "
-.define res_string_label_files_remaining "Archivos que quedan por copiar: "
+.define res_string_label_files_remaining "Archivos restantes: "
 .define res_string_label_file_to_run "Archivo a ejecutar:"
