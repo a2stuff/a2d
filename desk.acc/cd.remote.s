@@ -11,7 +11,6 @@
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
-        .include "../toolkits/btk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
         .include "../inc/smartport.inc"
@@ -646,9 +645,7 @@ rect:   .tag    MGTK::Rect
 .scope cdremote
 
 
-ZP1                 := $19
-ZP2                 := $1B
-ZP3                 := $1D
+ZP1                 := $19      ; used when probing for hardware
 PlayedListPtr       := $1F
 
 MAIN:                           ; "Null" out T/M/S values
@@ -740,41 +737,42 @@ ExitInitDriveDisc:
 .proc MainLoop
         lda     TOCInvalidFlag
         ;; Have we read in a valid, usable TOC from an audio CD?
-        beq     TOCisValid
-
+    IF_NOT_ZERO
         ;; We don't have a valid TOC - poll the drive to see if it's online so we can try to read a TOC
         jsr     StatusDrive
         ;; No - drive is offline, go check for user input instead
-        bcs     NoFurtherBGAction
+        bcs     CheckUserInput
         ;; Yes - make another attempt at reading a TOC
         jsr     ReReadTOC
+    END_IF
+
+        ;; ----------------------------------------
 
         ;; Re-check the status of the drive
-TOCisValid:
         jsr     StatusDrive
         lda     DrivePlayingFlag
-        ;; Drive is not currently playing audio, go check for user input
-        beq     NoFurtherBGAction
-
+    IF_NOT_ZERO
         ;; Drive is playing audio, watch for an AudioStatus return code of $03 = "Play operation complete"
         jsr     C24AudioStatus
         lda     SPBuffer
         cmp     #$03
         ;; Audio playback operation is not complete
-        bne     StillPlaying
-
+      IF_EQ
         ;; Deal with reaching the end of a playback operation.  It's complicated.  :)
         jsr     PlayBackComplete
+      END_IF
 
         ;; Go read the QSubcode channel and update the Track & Time display
-StillPlaying:
         jsr     C28ReadQSubcode
-        bcs     NoFurtherBGAction
+        bcs     CheckUserInput
         jsr     DrawTrack
         jsr     DrawTime
+    END_IF
+
+        ;; ----------------------------------------
 
         ;; Read and process any Keyboard inputs from the user
-NoFurtherBGAction:
+CheckUserInput:
         jsr     JUMP_TABLE_YIELD_LOOP
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
@@ -788,6 +786,8 @@ NoFurtherBGAction:
     END_IF
         cmp     #MGTK::EventKind::key_down
         bne     MainLoop
+
+        ;; ----------------------------------------
 
 HandleKey:
         lda     event_params::key
@@ -904,8 +904,7 @@ JustRightArrow:
 
 .proc PlayBackComplete
         lda     RandomButtonState
-        ;; Random button is inactive - the entire Disc has been played to the end
-        beq     RandomIsInactive
+    IF_NOT_ZERO
 
         ;; Random button is active - handle rollover to next random track
         lda     PlayButtonState
@@ -958,14 +957,10 @@ PlayARandomTrack:
 
         ;; Call AudioPlay function and exit
         jsr     C21AudioPlay
-        jmp     ExitHandler
-
+    ELSE
         ;; Entire disc has been played to the end, do we need to loop?
-RandomIsInactive:
         lda     LoopButtonState
-        ;; Loop Button is inactive - so we just stop
-        beq     LoopIsInactive
-
+      IF_NOT_ZERO
         ;; Loop button is active - reset stop point to EoT LastTrack
         jsr     C23AudioStop
         lda     PlayButtonState
@@ -979,16 +974,16 @@ RandomIsInactive:
         dec     TrackOrMSFFlag
         ;; Call AudioPlay function and exit
         jsr     C21AudioPlay
-        jmp     ExitHandler
-
+      ELSE
         ;; Stop, because Loop is inactive
-LoopIsInactive:
         lda     PlayButtonState
         ;; Play button is inactive (already) - bail out, there's nothing to do
         beq     ExitHandler
 
         ;; Use the existing StopAction to stop everything
         jsr     DoStopAction
+      END_IF
+    END_IF
 
 ExitHandler:
         rts
@@ -1458,36 +1453,31 @@ ExitScanFwdAction:
 WrapCheck:
         lda     BCDRelTrack
         cmp     BCDFirstTrackTOC
+    IF_EQ
         ;; If we're not at the "first" track, just decrement track #
-        bne     JustPrev
-
         ;; Otherwise, wrap to the "last" track instead
         lda     BCDLastTrackTOC
         sta     BCDRelTrack
-        jmp     CheckRandom
-
+    ELSE
         ;; BCD decrement
-JustPrev:
         sed
         lda     BCDRelTrack
         sbc     #$01
         sta     BCDRelTrack
         cld
+    END_IF
 
-CheckRandom:
         lda     RandomButtonState
-        ;; Random button is inactive - just execute playback
-        beq     RandomInactive
-
+    IF_NOT_ZERO
         ;; Random button is active - set the current Track as First/Last/Picked, and set the proper random Stop mode
         lda     BCDRelTrack
         sta     BCDFirstTrackNow
         sta     BCDLastTrackNow
         sta     BCDRandomPickedTrk
         jsr     SetStopToEoBCDLTN
+    END_IF
 
         ;; Seek to new Track and update Track display
-RandomInactive:
         jsr     C20AudioSearch
         jsr     DrawTrack
 
@@ -1522,36 +1512,31 @@ Counter:
 WrapCheck:
         lda     BCDRelTrack
         cmp     BCDLastTrackTOC
+    IF_EQ
         ;; If we're not at the "last" track, just increment track #
-        bne     JustNext
-
         ;; Otherwise, wrap to the "first" track instead
         lda     BCDFirstTrackTOC
         sta     BCDRelTrack
-        jmp     CheckRandom
-
+    ELSE
         ;; BCD increment
-JustNext:
         sed
         lda     BCDRelTrack
         adc     #$01
         sta     BCDRelTrack
         cld
+    END_IF
 
-CheckRandom:
         lda     RandomButtonState
-        ;; Random button is inactive - just execute playback
-        beq     RandomInactive
-
+    IF_NOT_ZERO
         ;; Random button is active - set the current Track as First/Last/Picked, and set the proper random Stop mode
         lda     BCDRelTrack
         sta     BCDFirstTrackNow
         sta     BCDLastTrackNow
         sta     BCDRandomPickedTrk
         jsr     SetStopToEoBCDLTN
+    END_IF
 
         ;; Seek to new Track and update Track display
-RandomInactive:
         jsr     C20AudioSearch
         jsr     DrawTrack
 
@@ -1586,30 +1571,26 @@ Counter:
         jsr     ToggleUIEjectButton
 
         lda     StopButtonState
-        ;; Stop button is active - just go wipe the Track & Time display and clear the TOC
-        bne     ClearTrackTime_TOC
+    IF_ZERO
+        ;; Stop button was active
 
         lda     PauseButtonState
-        ;; Pause button is inactive (already) - nothing to do
-        beq     PauseIsInactive
-
+      IF_NOT_ZERO
         ;; Clear Pause button to inactive
         lda     #$00
         sta     PauseButtonState
         jsr     ToggleUIPauseButton
+      END_IF
 
-PauseIsInactive:
         lda     PlayButtonState
-        ;; Play button is inactive (already) - nothing to do
-        beq     PlayIsInactive
-
+      IF_NOT_ZERO
         ;; Clear Play button to inactive
         lda     #$00
         sta     PlayButtonState
         jsr     ToggleUIPlayButton
+      END_IF
 
         ;; Clear Drive Playing state
-PlayIsInactive:
         lda     #$00
         sta     DrivePlayingFlag
 
@@ -1618,9 +1599,9 @@ PlayIsInactive:
         sbc     #1
         sta     StopButtonState
         jsr     ToggleUIStopButton
+    END_IF
 
         ;; "Null" out T/M/S, blank Track & Time display, and invalidate the TOC
-ClearTrackTime_TOC:
         lda     #$aa
         sta     BCDRelTrack
         sta     BCDRelMinutes
@@ -1725,14 +1706,12 @@ ExecuteSearch:
         jsr     SPCallVector
 
         lda     PauseButtonState
-        ;; Pause button is inactive (already) - nothing to do
-        beq     PauseIsInactive
-
+    IF_NOT_ZERO
         ;; Clear Pause button to inactive
         inc     PauseButtonState
         jsr     ToggleUIPauseButton
+    END_IF
 
-PauseIsInactive:
         lda     BCDRelTrack
         sta     BCDFirstTrackNow
         rts
@@ -1832,6 +1811,7 @@ ReadQSubcodeSuccess:
         sta     BCDAbsSeconds
         lda     SPBuffer + 8
         sta     BCDAbsFrame
+
         lda     SPBuffer + 2
         beq     ReadQSubcodeFail
 
@@ -1981,7 +1961,9 @@ SPZeroLoop:
 ExitFindHardware:
         rts
 
-FindSCSICard:
+;;; --------------------------------------------------
+
+.proc FindSCSICard
         lda     #$07
 CheckSlot:
         sta     CardSlot
@@ -2007,9 +1989,11 @@ YesFound:
         clc
 ExitFindSCSICard:
         rts
+.endproc ; FindSCSICard
 
+;;; --------------------------------------------------
 
-FindCDROM:
+.proc FindCDROM
         lda     #SPCall::Status
         sta     SPCommandType
 
@@ -2055,9 +2039,11 @@ CDROMFound:
         clc
 ExitFindCDROM:
         rts
+.endproc ; FindCDROM
 
+;;; --------------------------------------------------
 
-SmartPortCallSetup:
+.proc SmartPortCallSetup
         pha
         lda     CardSlot
         ora     #$c0
@@ -2070,6 +2056,8 @@ SelfModLDA:
         sta     SPCallVector + 1
         pla
         rts
+.endproc ; SmartPortCallSetup
+
 .endproc ; FindHardware
 
 ;;; ============================================================
@@ -2359,7 +2347,7 @@ PRNGSaveX       := *+1
         ;; This just zeroes all 99 elements in the Played List
 .proc ClearPlayedList
         lda     #$00
-        ldy     #$63
+        ldy     #99
 
 CPLLoop:
         sta     (PlayedListPtr),y
