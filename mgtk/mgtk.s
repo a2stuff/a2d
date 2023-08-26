@@ -368,7 +368,7 @@ jump_table:
         .addr   BitBltImpl          ; $4D BitBlt
         .addr   GetDeskPatImpl      ; $4E GetDeskPat
         .addr   SetDeskPatImpl      ; $4F SetDeskPat
-        .addr   DrawMenuImpl        ; $50 DrawMenu
+        .addr   DrawMenuImpl        ; $50 DrawMenuBar
         .addr   GetWinFrameRectImpl ; $51 GetWinFrameRect
         .addr   RedrawDeskTopImpl   ; $52 RedrawDeskTop
         .addr   FindControlExImpl   ; $53 FindControlEx
@@ -492,7 +492,7 @@ param_lengths:
         PARAM_DEFN 16, $8A, 0                ; $4D BitBlt
         PARAM_DEFN  0, $00, 0                ; $4E GetDeskPat
         PARAM_DEFN  0, $00, 0                ; $4F SetDeskPat
-        PARAM_DEFN  0, $00, 0                ; $50 DrawMenu
+        PARAM_DEFN  0, $00, 0                ; $50 DrawMenuBar
         PARAM_DEFN  5, $82, 0                ; $51 GetWinFrameRect
         PARAM_DEFN  0, $00, 0                ; $52 RedrawDeskTop
         PARAM_DEFN  7, $82, 0                ; $53 FindControlEx
@@ -6382,7 +6382,7 @@ imb_change:
         pla
         sta     cur_open_menu_id
 
-        jsr     DrawMenu
+        jsr     DrawMenuBar
         jmp     event_loop
 
         ;; --------------------------------------------------
@@ -6707,11 +6707,11 @@ dmrts:  rts
 .proc HideMenu
         clc
         .byte   OPC_BCS         ; mask next byte (sec)
-        FALL_THROUGH_TO DrawMenu
+        FALL_THROUGH_TO DrawMenuBar
 .endproc ; HideMenu
 
 
-.proc DrawMenu
+.proc DrawMenuBar
         sec
 draw_or_hide:
         lda     cur_open_menu_id
@@ -6843,7 +6843,7 @@ next:   ldx     menu_item_index
         beq     :+
         jmp     loop
 :       jmp     ShowCursorImpl
-.endproc ; DrawMenu
+.endproc ; DrawMenuBar
 
 
 .proc MovetoMenuitem
@@ -6899,7 +6899,7 @@ ep2:    jsr     SetFillMode
         beq     DimMenuitem::ep2 ; always
 .endproc ; DrawFiller
 
-draw_menu_draw_or_hide := DrawMenu::draw_or_hide
+draw_menu_draw_or_hide := DrawMenuBar::draw_or_hide
 
 
 light_speckle_pattern:

@@ -100,7 +100,7 @@ parsed: .tag    ParsedDateTime
 exit:
         MGTK_CALL MGTK::RedrawDeskTop
 
-        MGTK_CALL MGTK::DrawMenu
+        MGTK_CALL MGTK::DrawMenuBar
         JSR_TO_MAIN JUMP_TABLE_HILITE_MENU
 
         MGTK_CALL MGTK::ShowCursor

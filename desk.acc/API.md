@@ -169,7 +169,7 @@ highlighted in DeskTop. This can be done by copying the full path to
   (Main+Aux $2000-$3FFF). On exit, it *must* reconstruct the desktop
   by calling:
     * MGTK's `MGTK::RedrawDeskTop` to redraw the desktop
-    * MGTK's `MGTK::DrawMenu` to redraw the menu
+    * MGTK's `MGTK::DrawMenuBar` to redraw the menu
     * DeskTop's `JUMP_TABLE_HILITE_MENU` to re-hilite the menu item
       that invoked it, since it will be re-inverted on return to
       DeskTop.

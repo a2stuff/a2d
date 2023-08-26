@@ -191,7 +191,7 @@ on_key:
 
         ;; Restore desktop and menu
         JUMP_TABLE_MGTK_CALL MGTK::RedrawDeskTop
-        JUMP_TABLE_MGTK_CALL MGTK::DrawMenu
+        JUMP_TABLE_MGTK_CALL MGTK::DrawMenuBar
         jsr     JUMP_TABLE_HILITE_MENU
 
         rts

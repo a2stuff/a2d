@@ -1028,7 +1028,7 @@ Parameters:
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### DrawMenu ($50)
+#### DrawMenuBar ($50)
 Redraws the current menu bar. Useful after full-screen operations.
 Note that hilite state of menu bar items is not restored; this must
 be done by manual calls to `HiliteMenu`

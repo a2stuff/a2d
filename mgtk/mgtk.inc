@@ -517,7 +517,7 @@ GetDeskPat      = $4E
 SetDeskPat      = $4F
 ;;; .res 8      pattern         8x8 pixel pattern to use for desktop
 
-DrawMenu        = $50           ; Redraw menu bar
+DrawMenuBar     = $50           ; Redraw menu bar
 ;;; (no parameters)
 
 GetWinFrameRect = $51           ; Get outer frame rect of window
