@@ -537,6 +537,9 @@ FindControlEx   = $53           ; Like FindControl, but works on non-topmost win
 PaintBitsHC     = $54           ; Like PaintBits, but hides the cursor
 ;;; (input is address of MapInfo record)
 
+FlashMenuBar    = $55           ; Inverts menu bar (e.g. for silent alerts)
+;;; (no parameters)
+
 
 ;;; ============================================================
 ;;; Graphics Primitives Constants

@@ -1089,6 +1089,16 @@ extra dispatch is avoided.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
+#### FlashMenuBar ($55)
+Negates (XOR) the pixels of the menu bar. Useful for silent alerts.
+This should be called an even number of times before another MGTK call
+is made so the menu bar is left in a normal state.
+
+No parameters.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+
 # Creating Applications and DeskTop Desk Accessories
 
 ### Application Use

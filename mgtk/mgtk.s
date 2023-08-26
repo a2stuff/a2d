@@ -373,6 +373,7 @@ jump_table:
         .addr   RedrawDeskTopImpl   ; $52 RedrawDeskTop
         .addr   FindControlExImpl   ; $53 FindControlEx
         .addr   PaintBitsImpl       ; $54 PaintBitsHC
+        .addr   FlashMenuBarImpl    ; $55 FlashMenuBar
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -496,6 +497,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0                ; $52 RedrawDeskTop
         PARAM_DEFN  7, $82, 0                ; $53 FindControlEx
         PARAM_DEFN 16, $8A, 1                ; $54 PaintBitsHC
+        PARAM_DEFN  0, $00, 0                ; $55 FlashMenuBar
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -10542,6 +10544,18 @@ rect       .tag MGTK::Rect
         lda     #0              ; window to erase (none)
         jmp     EraseWindow
 .endproc ; RedrawDeskTopImpl
+
+;;; ============================================================
+
+.proc FlashMenuBarImpl
+        jsr     HideCursorSaveParams
+        jsr     SetStandardPort
+        lda     #MGTK::penXOR
+        jsr     SetFillMode
+        MGTK_CALL MGTK::PaintRect, menu_bar_rect
+        jsr     FillAndFrameRect
+        jmp     ShowCursorAndRestore
+.endproc ; FlashMenuBarImpl
 
 ;;; ============================================================
 
