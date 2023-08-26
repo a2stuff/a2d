@@ -105,7 +105,7 @@ L2049:  lda     open_params::ref_num
         sta     $0101           ; Aux stack pointer, in Aux ZP
 
         ldx     #0
-:       .repeat 8, i
+:       .repeat (::kSegmentAlertLength / $100), i
         lda     alert_load_addr + ($100 * i),x
         sta     alert_final_addr + ($100 * i),x
         .endrepeat

@@ -893,8 +893,6 @@ l6:     iny
 ;;; Copy Progress UI
 ;;; ============================================================
 
-        BTKEntry := app::BTKEntry
-
 .params winfo
         kWindowId = $0B
         kWidth = 350
@@ -932,9 +930,6 @@ nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
-        DEFINE_BUTTON ok_button_rec, winfo::kWindowId, res_string_button_ok, kGlyphReturn, winfo::kWidth-20-kButtonWidth, 49
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
-
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
         DEFINE_LABEL download, res_string_label_download, 116, 16
@@ -965,14 +960,6 @@ textfont:       .addr   FONT
         REF_GRAFPORT_MEMBERS
 .endparams
 
-str_not_enough_room:
-        PASCAL_STRING res_string_errmsg_not_enough_room
-str_click_ok:
-        PASCAL_STRING res_string_prompt_click_ok
-str_error_download:
-        PASCAL_STRING res_string_errmsg_error_download
-str_copy_incomplete:
-        PASCAL_STRING res_string_errmsg_copy_incomplete
 str_files_to_copy:
         PASCAL_STRING res_string_label_files_to_copy
 str_files_remaining:
@@ -1056,75 +1043,18 @@ ep2:    dec     file_count
 ;;; ============================================================
 
 .proc ShowDiskFullError
-        lda     #winfo::kWindowId
-        jsr     app::GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, rect_clear_details
-        MGTK_CALL MGTK::MoveTo, pos_copying
-        param_call app::DrawString, str_not_enough_room
-        MGTK_CALL MGTK::MoveTo, pos_remaining
-        param_call app::DrawString, str_click_ok
-        BTK_CALL BTK::Draw, ok_button_params
-        jsr     RunEventLoop
+        lda     #AlertID::not_enough_room
+        jsr     app::ShowAlert
         jmp     RestoreStackAndReturn
 .endproc ; ShowDiskFullError
 
 ;;; ============================================================
 
 .proc HandleErrorCode
-        lda     #winfo::kWindowId
-        jsr     app::GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, rect_clear_details
-        MGTK_CALL MGTK::MoveTo, pos_copying
-        param_call app::DrawString, str_error_download
-        MGTK_CALL MGTK::MoveTo, pos_remaining
-        param_call app::DrawString, str_copy_incomplete
-        BTK_CALL BTK::Draw, ok_button_params
-        jsr     RunEventLoop
+        lda     #AlertID::copy_incomplete
+        jsr     app::ShowAlert
         jmp     RestoreStackAndReturn
 .endproc ; HandleErrorCode
-
-;;; ============================================================
-
-RunEventLoop:
-        jsr     app::SetCursorPointer
-        FALL_THROUGH_TO event_loop
-
-event_loop:
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     HandleButtonDown
-        cmp     #MGTK::EventKind::key_down
-        bne     event_loop
-        lda     event_params::key
-        cmp     #CHAR_RETURN
-        bne     event_loop
-        BTK_CALL BTK::Flash, ok_button_params
-        jmp     app::SetCursorWatch
-
-HandleButtonDown:
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        beq     event_loop
-        cmp     #MGTK::Area::content
-        bne     event_loop
-        lda     findwindow_params::window_id
-        cmp     #winfo::kWindowId
-        bne     event_loop
-        lda     #winfo::kWindowId
-        jsr     app::GetWindowPort
-        lda     #winfo::kWindowId
-        sta     screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, ok_button_rec::rect
-        cmp     #MGTK::inrect_inside
-        bne     event_loop
-        BTK_CALL BTK::Track, ok_button_params
-        bmi     event_loop
-        jmp     app::SetCursorWatch
 
 ;;; ============================================================
 

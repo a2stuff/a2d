@@ -24,12 +24,16 @@ str_insert_source_disk:
         PASCAL_STRING res_string_alert_insert_source_disk
 str_file_not_found:
         PASCAL_STRING res_string_alert_file_not_found
+str_copy_incomplete:
+        PASCAL_STRING res_string_errmsg_copy_incomplete
+str_not_enough_room:
+        PASCAL_STRING res_string_errmsg_not_enough_room
 str_insert_system_disk:
         PASCAL_STRING res_string_alert_insert_system_disk
 str_basic_system_not_found:
         PASCAL_STRING res_string_alert_basic_system_not_found
 
-kNumAlerts = 8
+kNumAlerts = 10
 
 alert_table:
         .byte   AlertID::selector_unable_to_run
@@ -38,6 +42,8 @@ alert_table:
         .byte   AlertID::pathname_does_not_exist
         .byte   AlertID::insert_source_disk
         .byte   AlertID::file_not_found
+        .byte   AlertID::copy_incomplete
+        .byte   AlertID::not_enough_room
         .byte   AlertID::insert_system_disk
         .byte   AlertID::basic_system_not_found
         ASSERT_TABLE_SIZE alert_table, kNumAlerts
@@ -49,6 +55,8 @@ message_table:
         .addr   str_pathname_does_not_exist
         .addr   str_insert_source_disk
         .addr   str_file_not_found
+        .addr   str_copy_incomplete
+        .addr   str_not_enough_room
         .addr   str_insert_system_disk
         .addr   str_basic_system_not_found
         ASSERT_ADDRESS_TABLE_SIZE message_table, kNumAlerts
@@ -59,6 +67,8 @@ alert_options_table:
         .byte   AlertButtonOptions::OK
         .byte   AlertButtonOptions::OK
         .byte   AlertButtonOptions::TryAgainCancel
+        .byte   AlertButtonOptions::OK
+        .byte   AlertButtonOptions::OK
         .byte   AlertButtonOptions::OK
         .byte   AlertButtonOptions::TryAgainCancel
         .byte   AlertButtonOptions::OK

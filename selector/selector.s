@@ -28,6 +28,8 @@ no_device               = $28
 pathname_does_not_exist = $44
 insert_source_disk      = $45
 file_not_found          = $46
+copy_incomplete         = $FC
+not_enough_room         = $FD
 insert_system_disk      = $FE
 basic_system_not_found  = $FF
 .endenum
@@ -48,11 +50,11 @@ basic_system_not_found  = $FF
         DEFSEG SegmentLoader,     $2000,        $0200
         DEFSEG SegmentInvoker,    INVOKER,      $0160
         DEFSEG SegmentApp,        $4000,        $6700
-        DEFSEG SegmentAlert,      $D000,        $0800
+        DEFSEG SegmentAlert,      $D000,        $0900
 
         ;; Dynamically loaded overlays
         DEFSEG OverlayFileDialog, OVERLAY_ADDR, $0F00
-        DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0C00
+        DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0B00
 
 ;;; ============================================================
 ;;; Selector module
