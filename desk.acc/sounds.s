@@ -370,53 +370,15 @@ grafport_win:       .tag    MGTK::GrafPort
         ;; Look up routine
         asl
         tax
-        lda     proc_table,x
-        pha
-        sta     ptr
-        lda     proc_table+1,x
-        pha
-        sta     ptr+1
+        copy16  proc_table,x, ptr
 
         ;; Put routine into location
         jsr     Install
-        jsr     Swap
-
-        ;; Suppress interrupts
-        php
-        sei
 
         ;; Play it
-        JSR_TO_MAIN JUMP_TABLE_SLOW_SPEED
-        proc := *+1
-        jsr     BELLPROC
-        JSR_TO_MAIN JUMP_TABLE_RESUME_SPEED
-
-        ;; Restore interrupt state
-        plp
-
-        ;; And restore the memory (and pointers, in case trashed)
-        pla
-        sta     ptr+1
-        pla
-        sta     ptr
-        jsr     Swap
+        JSR_TO_MAIN JUMP_TABLE_BELL
 
         jmp     MarkDirty
-
-.proc Swap
-        .assert kBellProcLength <= 128, error, "Can't BPL this loop"
-        ldy     #kBellProcLength - 1
-:       lda     (ptr),y
-        pha
-        lda     BELLPROC,y
-        sta     (ptr),y
-        pla
-        sta     BELLPROC,y
-        dey
-        bpl     :-
-
-        rts
-.endproc ; Swap
 
 .proc Install
         ldax    ptr
@@ -1259,103 +1221,8 @@ END_SOUND_PROC
 ;;; "Silent" - flashes the menu bar
 
 SOUND_PROC Silent
-        ptr := $06
-
-        jsr     InvertMenu
-
-        ;; Delay using some heuristic.
-
-        ;; Option #1: Slow accelerator down to 1MHz
-        ;;
-        ;; 1a: Using documented accelerator access for each type of
-        ;;     hardware (IIgs, Mac IIe Card, IIc+, Laser, add-ons, ...)
-        ;;     like NORMFAST does it.
-        ;;
-        ;;   * This now happens by default on some systems, c/o
-        ;;     general beep slowdown. See `lib/sounds.s`
-        ;;   * This doesn't slow emulators.
-        ;;
-        ;; 1b: Touching the speaker quickly (i.e. STA SPKR twice), to
-        ;;      temporarily slow accelerators; this is inaudible on real
-        ;;      hardware.
-        ;;
-        ;;   * This causes Virtual ][ to stop playing sounds for a bit.
-        ;;   * This has an audible click in MAME.
-        ;;
-        ;; 1c: Hit slot 6 (e.g. BIT $C0EC) to temporarily slow accelerator.
-        ;; 1d: Hit PTRIG to temporarily slow accelerator.
-        ;;
-        ;;   * These doesn't slow emulators like Virtual ][.
-
-        ;; Option #2: Wait based on double-click setting.
-        ;;
-        ;; The assumption is that users will adjust the setting based on
-        ;; factors such as acceleration/emulation speed, so use it as
-        ;; the basis of a timing loop.
-        ;;
-        ;;  * Since we slow the machine to 1MHz while playing sound,
-        ;;    this ends up being unacceptably slow.
-
-        copy16  #kDefaultDblClickSpeed, ptr
-loop:   ldx     #48
-:       dex
-        bne     :-
-        dec     ptr
-        bne     loop
-        dec     ptr+1
-        bne     loop
-
-        ;; Option #3: Use VBL on Enh IIe/IIc/IIgs
-        ;; https://comp.sys.apple2.narkive.com/dHkvl39d/vblank-apple-iic
-        ;;
-        ;; * Emulators don't throttle to 60/50Hz, and rather sync VBL to
-        ;;   cycle counts.
-
-        ;; Option #4: Use interrupt timer from mouse card
-        ;;
-        ;; * Interrupts are hard. PRs welcome!
-
-        FALL_THROUGH_TO InvertMenu
-
-.proc InvertMenu
-        sta     SET80STORE
-
-        ldx     #kMenuBarHeight-1
-rloop:  lda     hires_table_lo,x
-        sta     ptr
-        lda     hires_table_hi,x
-        sta     ptr+1
-
-        sta     PAGE2ON
-        jsr     DoRow
-        sta     PAGE2OFF
-        jsr     DoRow
-
-        dex
-        bpl     rloop
-
-        sta     CLR80STORE
-
-        rts
-
-.proc DoRow
-        ldy     #39
-cloop:  lda     (ptr),y
-        eor     #$7F
-        sta     (ptr),y
-        dey
-        bpl     cloop
-        rts
-.endproc ; DoRow
-.endproc ; InvertMenu
-
-hires_table_lo:
-        .byte   $00,$00,$00,$00,$00,$00,$00,$00
-        .byte   $80,$80,$80,$80,$80,$80,$80,$80
-
-hires_table_hi:
-        .byte   $20,$24,$28,$2c,$30,$34,$38,$3c
-        .byte   $20,$24,$28,$2c,$30,$34,$38,$3c
+        .res    16, 0 ; see lib/bell.s - first byte 0 signals silent
+        .assert 16 >= kChecksumLength, error, "too small"
 END_SOUND_PROC
 
 ;;; ============================================================

@@ -129,6 +129,10 @@ reserved:       .byte   0
         REF_MAPINFO_MEMBERS
 .endparams
 
+.params getport_params
+portptr:        .addr   0
+.endparams
+
 ;;; --------------------------------------------------
 
 .struct AlertButtonRecord
@@ -276,6 +280,7 @@ start:
         MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
 
         MGTK_CALL MGTK::SetPortBits, portmap ; viewport for remaining operations
+        MGTK_CALL MGTK::GetPort, getport_params ; ensure port is updated from ZP
 
         ;; Draw rest of alert - coordinates are relative to portmap
         MGTK_CALL MGTK::SetPenMode, notpencopy

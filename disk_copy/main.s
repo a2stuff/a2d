@@ -9,6 +9,7 @@
 .scope main
 
         MLIEntry := MLIRelayImpl
+        MGTKEntry := auxlc::MGTKRelayImpl
 
 ;;; ============================================================
 
