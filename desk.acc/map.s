@@ -697,7 +697,7 @@ indicator_flag:
         ldx     #DeskTopSettings::ip_blink_speed
         jsr     ReadSetting
         sta     blink_counter
-        ldx     #DeskTopSettings::ip_blink_speed+1
+        inx                     ; `ReadSetting` preserves X
         jsr     ReadSetting
         sta     blink_counter+1
         lsr16   blink_counter

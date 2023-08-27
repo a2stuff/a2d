@@ -1691,7 +1691,7 @@ done:   rts
 .proc ReadSettingWord
         jsr     ReadSetting
         pha
-        inx
+        inx                     ; `ReadSetting` preserves X
         jsr     ReadSetting
         tax
         pla

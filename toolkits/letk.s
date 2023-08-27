@@ -143,7 +143,7 @@ a_record  .addr
         ldx     #DeskTopSettings::ip_blink_speed+1
         jsr     ReadSetting
         pha
-        ldx     #DeskTopSettings::ip_blink_speed
+        dex                     ; `ReadSetting` preserves X
         jsr     ReadSetting
         ldy     #LETK::LineEditRecord::ip_counter
         sta     (a_record),y

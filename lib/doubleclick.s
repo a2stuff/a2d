@@ -13,7 +13,7 @@
         ldx     #DeskTopSettings::dblclick_speed
         jsr     ReadSetting
         sta     counter
-        ldx     #DeskTopSettings::dblclick_speed+1
+        inx                     ; `ReadSetting` preserves X
         jsr     ReadSetting
         sta     counter+1
 
