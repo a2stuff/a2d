@@ -10548,13 +10548,12 @@ rect       .tag MGTK::Rect
 ;;; ============================================================
 
 .proc FlashMenuBarImpl
-        jsr     HideCursorSaveParams
+        jsr     SaveParamsAndStack
         jsr     SetStandardPort
         lda     #MGTK::penXOR
         jsr     SetFillMode
         MGTK_CALL MGTK::PaintRect, menu_bar_rect
-        jsr     FillAndFrameRect
-        jmp     ShowCursorAndRestore
+        jmp     RestoreParamsActivePort
 .endproc ; FlashMenuBarImpl
 
 ;;; ============================================================
