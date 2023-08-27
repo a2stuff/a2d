@@ -440,6 +440,8 @@ modifiers:
         jeq     CmdOpenParentThenCloseCurrent
         cmp     #kShortcutCloseWindow
         jeq     CmdCloseAll
+        cmp     #CHAR_CTRL_F
+        jeq     CmdFlipScreen
         rts
     END_IF
 
@@ -3822,6 +3824,16 @@ found:  inx
 
 done:   rts
 .endproc ; CmdCycleWindows
+
+;;; ============================================================
+;;; Flip Screen
+
+.proc CmdFlipScreen
+        JSR_TO_AUX aux::FlipMGTKHiresTable
+        MGTK_CALL MGTK::RedrawDeskTop
+        MGTK_CALL MGTK::DrawMenuBar
+        rts
+.endproc ; CmdFlipScreen
 
 ;;; ============================================================
 ;;; Keyboard-based scrolling of window contents

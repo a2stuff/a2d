@@ -584,6 +584,34 @@ start:
 
 ;;; ============================================================
 
+.proc FlipMGTKHiresTable
+        ldy     #0
+        ldx     #kScreenHeight-1
+
+:       lda     mgtk::hires_table_lo,x
+        pha
+        lda     mgtk::hires_table_lo,y
+        sta     mgtk::hires_table_lo,x
+        pla
+        sta     mgtk::hires_table_lo,y
+
+        lda     mgtk::hires_table_hi,x
+        pha
+        lda     mgtk::hires_table_hi,y
+        sta     mgtk::hires_table_hi,x
+        pla
+        sta     mgtk::hires_table_hi,y
+
+        dex
+        iny
+        cpy     #kScreenHeight/2
+        bne     :-
+
+        rts
+.endproc ; FlipMGTKHiresTable
+
+;;; ============================================================
+
         ;; ENDSEG SegmentDeskTopAux - effective; for measuring usage
 
 ;;; ============================================================
