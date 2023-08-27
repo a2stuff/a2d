@@ -21,10 +21,12 @@ Project Page: https://github.com/a2stuff/a2d
 * Show drag outlines even for icons outside visible area.
 * Prevent crash launching program after previewing images. ([#765](https://github.com/a2stuff/a2d/issues/765))
 * Filetype and support for Vortex Tracker PT3 files.
+* Added an easter egg. Can you find it?
 
 ### Selector
 
 * Selector is now named "Shortcuts" in UI strings.
+* Errors encountered when copying to RAMCard now show standard alerts.
 
 ### Disk Copy
 
