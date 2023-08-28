@@ -36,6 +36,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Sort Directory: Correctly order SYS files with ".SYSTEM" suffix. ([#762](https://github.com/a2stuff/a2d/issues/762))
 * This Apple: Detect Grappler, ThunderClock, Apple-CAT, and Workstation card.
+* Image Preview: Add slideshow mode - press 'S' to auto-advance images.
 
 ## 1.3
 

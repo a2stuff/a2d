@@ -131,7 +131,7 @@ event_params:   .tag MGTK::Event
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
         JUMP_TABLE_MLI_CALL CLOSE, close_params
         plp
-        bcs     Exit
+        jcs     Exit
 
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
         JUMP_TABLE_MGTK_CALL MGTK::ObscureCursor
@@ -148,12 +148,28 @@ event_params:   .tag MGTK::Event
 
         lda     event_params + MGTK::Event::kind
         cmp     #MGTK::EventKind::button_down ; was clicked?
-        beq     Exit
+        jeq     Exit
         cmp     #MGTK::EventKind::key_down  ; any key?
         beq     on_key
-        bne     InputLoop
 
+        bit     slideshow_flag
+        bpl     InputLoop
+
+        ;; --------------------------------------------------
+        ;; Slideshow mode
+
+        dec16   slideshow_counter
+        lda     slideshow_counter
+        ora     slideshow_counter+1
+        bne     InputLoop
+        jsr     InitSlideshowCounter
+        jmp     NextFile
+
+        ;; --------------------------------------------------
+        ;; Key Event
 on_key:
+        copy    #0, slideshow_flag
+
         lda     event_params + MGTK::Event::key
 
         ldx     event_params + MGTK::Event::modifiers
@@ -176,11 +192,37 @@ on_key:
         jeq     PreviousFile
         cmp     #CHAR_RIGHT
         jeq     NextFile
+        cmp     #'S'
+        beq     SetSlideshowMode
         cmp     #' '
         bne     :+
         jsr     ToggleMode
 :       jmp     InputLoop
 .endproc ; InputLoop
+
+;;; ============================================================
+
+.proc SetSlideshowMode
+        copy    #$80, slideshow_flag
+        jsr     InitSlideshowCounter
+        jmp     InputLoop
+.endproc ; SetSlideshowMode
+
+.proc InitSlideshowCounter
+        ldx     #DeskTopSettings::dblclick_speed
+        jsr     JUMP_TABLE_READ_SETTING
+        sta     slideshow_counter
+        inx                     ; `ReadSetting` preserves X
+        jsr     JUMP_TABLE_READ_SETTING
+        sta     slideshow_counter+1
+        asl16   slideshow_counter
+        rts
+.endproc ; InitSlideshowCounter
+
+slideshow_flag:
+        .byte   0
+slideshow_counter:
+        .word   0
 
 ;;; ============================================================
 
