@@ -171,10 +171,10 @@ on_key:
         copy    #0, slideshow_flag
 
         lda     event_params + MGTK::Event::key
+        jsr     ToUppercase
 
         ldx     event_params + MGTK::Event::modifiers
     IF_NOT_ZERO
-        jsr     ToUppercase
         cmp     #kShortcutCloseWindow
         beq     Exit
         cmp     #CHAR_LEFT
