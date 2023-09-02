@@ -862,12 +862,11 @@ HandleKey:
         cmp     #CHAR_LEFT
     IF_EQ
         lda     event_params::modifiers
-        beq     JustLeftArrow
-OA_LeftArrow:
+      IF_NOT_ZERO
         jsr     DoScanBackAction
         jmp     MainLoop
+      END_IF
 
-JustLeftArrow:
         jsr     DoPrevTrackAction
         jmp     MainLoop
     END_IF
@@ -876,12 +875,11 @@ JustLeftArrow:
         cmp     #CHAR_RIGHT
     IF_EQ
         lda     event_params::modifiers
-        beq     JustRightArrow
-OA_RightArrow:
+      IF_NOT_ZERO
         jsr     DoScanFwdAction
         jmp     MainLoop
+      END_IF
 
-JustRightArrow:
         jsr     DoNextTrackAction
         jmp     MainLoop
     END_IF
@@ -939,6 +937,8 @@ JustRightArrow:
         sta     BCDLastTrackNow
         jsr     DoStopAction
         jmp     ExitHandler
+
+        ;; --------------------------------------------------
 
 PlayARandomTrack:
         jsr     PickARandomTrack
@@ -1047,36 +1047,30 @@ ExitStatusDrive:
 .proc HardShutdown
         jsr     DoStopAction
         lda     PauseButtonState
-        ;; Pause button is inactive (already) - nothing to do
-        beq     NoPauseButtonChange
-
+    IF_NOT_ZERO
         ;; Clear Pause button to inactive
         lda     #$00
         sta     PauseButtonState
         jsr     ToggleUIPauseButton
+    END_IF
 
-NoPauseButtonChange:
         lda     PlayButtonState
-        ;; Play button is inactive (already) - nothing to do
-        beq     NoPlayButtonChange
-
+    IF_NOT_ZERO
         ;; Clear Play button to inactive
         lda     #$00
         sta     PlayButtonState
         jsr     ToggleUIPlayButton
+    END_IF
 
-NoPlayButtonChange:
         lda     StopButtonState
-        ;; Stop button is active (already) - nothing to do
-        bne     ClearTrackAndTime
-
+    IF_ZERO
         ;; Set Stop button to active
         lda     #$ff
         sta     StopButtonState
         jsr     ToggleUIStopButton
+    END_IF
 
         ;; "Null" out T/M/S values and blank Track & Time display
-ClearTrackAndTime:
         lda     #$aa
         sta     BCDRelTrack
         sta     BCDRelMinutes
@@ -1154,27 +1148,20 @@ ended:  lda     #$00            ; N=0
 
 .proc DoPlayAction
         lda     PauseButtonState
-        ;; Pause button is inactive - nothing to do yet
-        beq     PauseIsInactive
-
+    IF_NOT_ZERO
         ;; Pause button is active - forcibly clear it to inactive and then...
         lda     #$00
         sta     PauseButtonState
         jsr     ToggleUIPauseButton
         ;; call AudioPause to release Pause (resume playing) and exit
         jsr     C22AudioPause
-        jmp     ExitPlayAction
+    ELSE
 
-PauseIsInactive:
         lda     PlayButtonState
-        ;; Play button is active (already) - bail out, there's nothing to do
-        bne     ExitPlayAction
-
+      IF_ZERO
         ;; Play button is inactive, we're starting from scratch - before activating, check the random mode
         lda     RandomButtonState
-        ;; Random button is inactive - just update the UI buttons and start playback
-        beq     RandomIsInactive
-
+       IF_NOT_ZERO
         ;; Random button is active - initialize random mode, pick a Track, and start it
         jsr     RandomModeInit
         jsr     PickARandomTrack
@@ -1187,24 +1174,23 @@ PauseIsInactive:
         ;; and we "stop" playing at the end of that track
         jsr     SetStopToEoBCDLTN
         jsr     C20AudioSearch
+       END_IF
 
         ;; Set Play button to active
-RandomIsInactive:
         dec     PlayButtonState
         jsr     ToggleUIPlayButton
 
         lda     StopButtonState
-        ;; Stop button is inactive (already) - just start the playback and exit
-        beq     StopIsInactive
-
+       IF_NOT_ZERO
         ;; Set Stop button to inactive, then start the playback and exit
         lda     #$00
         sta     StopButtonState
         jsr     ToggleUIStopButton
+       END_IF
 
-StopIsInactive:
         jsr     C21AudioPlay
-ExitPlayAction:
+      END_IF
+    END_IF
         rts
 .endproc ; DoPlayAction
 
@@ -1212,9 +1198,7 @@ ExitPlayAction:
 
 .proc DoStopAction
         lda     StopButtonState
-        ;; Stop button is active (already) - bail out, there's nothing to do
-        bne     ExitStopAction
-
+    IF_ZERO
         ;; Reset First/Last to TOC values
         lda     BCDFirstTrackTOC
         sta     BCDFirstTrackNow
@@ -1222,26 +1206,22 @@ ExitPlayAction:
         sta     BCDLastTrackNow
 
         lda     PlayButtonState
-        ;; Play button is inactive (already) - nothing to do
-        beq     PlayIsInactive
-
+      IF_NOT_ZERO
         ;; Clear Play button to inactive
         lda     #$00
         sta     PlayButtonState
         jsr     ToggleUIPlayButton
+      END_IF
 
-PlayIsInactive:
         lda     PauseButtonState
-        ;; Pause button is inactive (already) - nothing to do
-        beq     PauseIsInactive
-
+      IF_NOT_ZERO
         ;; Clear Pause button to inactive
         lda     #$00
         sta     PauseButtonState
         jsr     ToggleUIPauseButton
+      END_IF
 
         ;; Set Stop button to active
-PauseIsInactive:
         lda     #$ff
         sta     StopButtonState
         ;; Switch Stop Flag to EoTrack mode
@@ -1261,7 +1241,7 @@ PauseIsInactive:
         jsr     DrawTrack
         jsr     DrawTime
 
-ExitStopAction:
+    END_IF
         rts
 .endproc ; DoStopAction
 
@@ -1269,9 +1249,7 @@ ExitStopAction:
 
 .proc DoPauseAction
         lda     StopButtonState
-        ;; Stop button is active - bail out, there's nothing to do
-        bne     ExitPauseAction
-
+    IF_ZERO
         ;; Toggle Pause button
         lda     #$ff
         eor     PauseButtonState
@@ -1280,8 +1258,7 @@ ExitStopAction:
 
         ;; Execute pause action (pause or resume) based on new button state
         jsr     C22AudioPause
-
-ExitPauseAction:
+    END_IF
         rts
 .endproc ; DoPauseAction
 
@@ -1301,12 +1278,10 @@ ExitPauseAction:
         lda     #$ff
         eor     RandomButtonState
         sta     RandomButtonState
-        beq     RandomIsInactive
-
+    IF_NOT_ZERO
         ;; Random button is now active - re-initialize random mode and exit
         jsr     RandomModeInit
-        jmp     UpdateButton
-
+    ELSE
         ;; Random button is now inactive - reset First/Last to TOC values and update stop point to EoT last Track
 RandomIsInactive:
         lda     BCDLastTrackTOC
@@ -1314,9 +1289,9 @@ RandomIsInactive:
         lda     BCDFirstTrackTOC
         sta     BCDFirstTrackNow
         jsr     SetStopToEoBCDLTN
+    END_IF
 
         ;; Update UI, wait for key release, and exit
-UpdateButton:
         jsr     ToggleUIRandButton
         rts
 .endproc ; ToggleRandomMode
