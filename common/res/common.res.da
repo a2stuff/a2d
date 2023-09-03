@@ -21,7 +21,6 @@
 .define res_string_button_drives "Drev"
 .define res_string_button_open "]bn"
 .define res_string_button_close "Luk"
-.define res_string_label_disk "Disk: "
 .define res_string_copyright_line1 "Copyright Apple Computer Inc., 1986"
 .define res_string_copyright_line2 "Copyright Version Soft, 1985 - 1986"
 .define res_string_copyright_line3 "Alle rettigheder forbeholdes"
@@ -64,6 +63,5 @@
 .define res_char_time_separator ':'
 .define res_const_date_order 1
 .define res_const_clock_format 128
-.define res_string_version_format_short "%s Version %d.%d"
 .define res_string_version_format_long "%s Version %d.%d%s"
 .define res_string_noprod_version_format_long "Version %d.%d%s"

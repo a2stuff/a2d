@@ -84,8 +84,6 @@
 .define res_string_erase_disk_error "Raderingsfel. Kontrollera enheten."
 .define res_string_unlock_status_count "Uppl}sning: "
 .define res_string_lock_status_count "L}sning: "
-.define res_string_get_size_label_count "Antal filer:"
-.define res_string_get_size_label_space "Utrymme som anv{nds p} disk:"
 .define res_string_download_error_ramcard_full "RAMCard {r fullt. Kopian blev inte f{rdig."
 .define res_string_warning_insert_system_disk "S{tt i systemdisken."
 .define res_string_warning_selector_list_full "Listan {r full. Du m}ste ta bort en genv{g innan du kan l{gga till en ny."
@@ -147,9 +145,6 @@
 .define res_string_file_suffix "fil"
 .define res_string_files_suffix "filer"
 .define res_string_kb_suffix "K"
-.define res_string_copy_file_label_source_filename "K{lla filnamn:"
-.define res_string_copy_file_label_destination_filename "Destinationsfilnamn:"
-.define res_string_delete_file_label_file_to_delete "Fil att radera:"
 .define res_string_menu_item_slot_pattern "Kortplats #"
 .define res_const_menu_item_slot_pattern_offset1 11
 .define res_string_menu_item_add_entry "L{gg till en genv{g..."

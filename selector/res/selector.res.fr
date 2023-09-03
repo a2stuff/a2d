@@ -21,4 +21,3 @@
 .define res_string_errmsg_copy_incomplete "Erreur pendant le t{l{chargement. Copie arret{e."
 .define res_string_label_files_to_copy "Fichiers @ copier dans la carte RAM : "
 .define res_string_label_files_remaining "Fichiers restants : "
-.define res_string_label_file_to_run "Fichier @ ex{cuter :"

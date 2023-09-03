@@ -21,4 +21,3 @@
 .define res_string_errmsg_copy_incomplete "Ein Fehler trat w{hrend des Ladens auf. Kopieren nicht vollst{ndig."
 .define res_string_label_files_to_copy "Dateien zu Kopieren auf RAMCard: "
 .define res_string_label_files_remaining "Verbleibende Dateien: "
-.define res_string_label_file_to_run "Starte Datei:"

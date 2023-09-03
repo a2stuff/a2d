@@ -84,8 +84,6 @@
 .define res_string_erase_disk_error "Sletningsfejl. Kontroller drevet."
 .define res_string_unlock_status_count "Opl}sning: "
 .define res_string_lock_status_count "L}sning: "
-.define res_string_get_size_label_count "Antal filer:"
-.define res_string_get_size_label_space "Brugt plads p} disken:"
 .define res_string_download_error_ramcard_full "RAMCard'et er fyldt. Kopien blev ikke f{rdiggjort."
 .define res_string_warning_insert_system_disk "Inds{t venligst systemdisken."
 .define res_string_warning_selector_list_full "Listen er fuld. Du skal slette en genvej, f|r du kan tilf|je en ny."
@@ -147,9 +145,6 @@
 .define res_string_file_suffix "arkiv"
 .define res_string_files_suffix "arkiver"
 .define res_string_kb_suffix "K"
-.define res_string_copy_file_label_source_filename "Kilde filnavn:"
-.define res_string_copy_file_label_destination_filename "Destinationsfilnavn:"
-.define res_string_delete_file_label_file_to_delete "Fil, der skal slettes:"
 .define res_string_menu_item_slot_pattern "Kortplads #"
 .define res_const_menu_item_slot_pattern_offset1 11
 .define res_string_menu_item_add_entry "Tilf|j en genvej..."

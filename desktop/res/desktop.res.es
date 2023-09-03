@@ -84,8 +84,6 @@
 .define res_string_erase_disk_error "Error de borrado. Compruebe el disco."
 .define res_string_unlock_status_count "Desbloqueo: "
 .define res_string_lock_status_count "Bloqueo: "
-.define res_string_get_size_label_count "N\x14mero de archivos:"
-.define res_string_get_size_label_space "Espacio usado en el disco:"
 .define res_string_download_error_ramcard_full "La RAMDisk est\x10 llena. La copia no se ha finalizado."
 .define res_string_warning_insert_system_disk "Por favor introduzca un disco de sistema."
 .define res_string_warning_selector_list_full "La lista est\x10 llena. Debe borrar un atajo antes de agregar m\x10s."
@@ -147,9 +145,6 @@
 .define res_string_file_suffix "archivo"
 .define res_string_files_suffix "archivos"
 .define res_string_kb_suffix "K"
-.define res_string_copy_file_label_source_filename "Nombre del archivo original:"
-.define res_string_copy_file_label_destination_filename "Nombre del archivo de destino:"
-.define res_string_delete_file_label_file_to_delete "Archivo a borrar:"
 .define res_string_menu_item_slot_pattern "Ranura #"
 .define res_const_menu_item_slot_pattern_offset1 8
 .define res_string_menu_item_add_entry "A|adir atajo..."

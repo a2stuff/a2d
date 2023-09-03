@@ -21,4 +21,3 @@
 .define res_string_errmsg_copy_incomplete "Der opstod en fejl under download. Kopien blev ikke f{rdiggjort."
 .define res_string_label_files_to_copy "Filer, der skal kopieres i RAMCard: "
 .define res_string_label_files_remaining "Filer tilbage: "
-.define res_string_label_file_to_run "Fil, der skal k|res:"

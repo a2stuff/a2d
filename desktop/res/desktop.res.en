@@ -84,8 +84,6 @@
 .define res_string_erase_disk_error "Erasing error. Check drive."
 .define res_string_unlock_status_count "Unlocking: "
 .define res_string_lock_status_count "Locking: "
-.define res_string_get_size_label_count "Number of files:"
-.define res_string_get_size_label_space "Space used on disk:"
 .define res_string_download_error_ramcard_full "The RAMCard is full. The copy was not completed."
 .define res_string_warning_insert_system_disk "Please insert the system disk."
 .define res_string_warning_selector_list_full "The list is full. You must delete a shortcut before you can add a new one."
@@ -147,9 +145,6 @@
 .define res_string_file_suffix "file"
 .define res_string_files_suffix "files"
 .define res_string_kb_suffix "K"
-.define res_string_copy_file_label_source_filename "Source filename:"
-.define res_string_copy_file_label_destination_filename "Destination filename:"
-.define res_string_delete_file_label_file_to_delete "File to delete:"
 .define res_string_menu_item_slot_pattern "Slot #"
 .define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_menu_item_add_entry "Add a Shortcut..."

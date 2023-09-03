@@ -21,4 +21,3 @@
 .define res_string_errmsg_copy_incomplete "Ocorreu um erro durante o download. A c~pia n[o foi conclu{da."
 .define res_string_label_files_to_copy "Arquivos para copiar para RAMDisk: "
 .define res_string_label_files_remaining "Arquivos restantes: "
-.define res_string_label_file_to_run "Arquivo a ser executado:"
