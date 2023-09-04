@@ -1,0 +1,8 @@
+.define res_string_label_date_separator "Datumscheider:"
+.define res_string_label_time_separator "Tijdscheider:"
+.define res_string_label_decimal_separator "Decimaalteken:"
+.define res_string_label_thousands_separator "Duizendscheider:"
+.define res_string_label_mdy "Maand Dag Jaar"
+.define res_string_label_dmy "Dag Maand Jaar"
+.define res_string_label_clock_12hour "12 uur"
+.define res_string_label_clock_24hour "24 uur"

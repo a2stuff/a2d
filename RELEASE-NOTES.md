@@ -13,6 +13,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Eliminate top level PREVIEW/ directory.
 * IIgs: Reset video banking state on launch to prevent garbled screen. ([#764](https://github.com/a2stuff/a2d/issues/764))
 * Improve wording and fix spelling/grammar mistakes in various strings.
+* Added Dutch (`nl`) localization. ([#767](https://github.com/a2stuff/a2d/issues/767))
 
 ### Launcher
 

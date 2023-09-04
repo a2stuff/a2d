@@ -1,0 +1,10 @@
+.define res_string_copying_to_ramcard "Kopieer %s naar RAMCard..."
+.define res_string_esc_to_cancel "Afbreken met Esc."
+.define res_string_label_tip_skip_copying "Om het kopi\x10ren naar de RAMCard over te slaan, druk op \x0F\x1B\x41\x18\x0E tijdens de start."
+.define res_string_label_copying "Kopi\x10ren naar RamCard: "
+.define res_string_prompt_insert_source "Plaats de originele schijf en druk op Return. Afbreken met Esc."
+.define res_string_prompt_ramcard_full "Geen ruimte meer op RAMCard. Druk op Return."
+.define res_string_error_prefix "Fout $"
+.define res_string_error_suffix " opgetreden tijdens kopi\x10ren "
+.define res_string_prompt_copy_not_completed "De kopie is niet compleet. Druk op Return."
+.define res_char_monitor_shortcut 'M'

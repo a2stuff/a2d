@@ -53,6 +53,9 @@ sub encode($$) {
         $s =~ tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/;
         # unofficial extensions for A2D
         $s =~ tr/áéíóú/\x10-\x14/;
+    } elsif ($lang eq 'nl') {
+        # unofficial extensions for A2D
+        $s =~ tr/ë/\x10/;
     } elsif ($lang eq 'da') {
         $s =~ tr/#@ÆØÅ`æøå~/#@[\\]`{|}~/;
     } elsif ($lang eq 'sv') {
@@ -126,13 +129,13 @@ sub check($$$$) {
 my $header = <STDIN>; # ignore header
 my $last_file = '';
 my %fhs = ();
-my @langs = ('en', 'fr', 'de', 'it', 'es', 'pt', 'sv', 'da');
+my @langs = ('en', 'fr', 'de', 'it', 'es', 'pt', 'sv', 'da', 'nl');
 
 my %dupes = ();
 
 while (<STDIN>) {
-    my ($file, $label, $comment, $en, $fr, $de, $it, $es, $pt, $sv, $da) = split(/\t/);
-    my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es, pt => $pt, sv => $sv, da => $da);
+    my ($file, $label, $comment, $en, $fr, $de, $it, $es, $pt, $sv, $da, $nl) = split(/\t/);
+    my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es, pt => $pt, sv => $sv, da => $da, nl => $nl);
 
     next unless $file and $label;
 

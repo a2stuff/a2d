@@ -1,0 +1,8 @@
+.define res_string_window_title "Kaart"
+.define res_string_button_find "Zoek"
+.define res_string_latitude "Breedtegraad:"
+.define res_string_longitude "Lengtegraad:"
+.define res_string_dir_n "N"
+.define res_string_dir_s "Z"
+.define res_string_dir_e "O"
+.define res_string_dir_w "W"

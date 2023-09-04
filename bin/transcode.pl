@@ -4,7 +4,7 @@
 
 # args: dir lang
 #   dir: "to" (UTF-8 to Apple) or "from" (Apple to UTF-8)
-#   lang: "fr", "de", "it", "es", "da", "sv", "pt"
+#   lang: "fr", "de", "it", "es", "da", "sv", "pt", "nl"
 #   e.g. transcode.pl to fr < in > out
 #   e.g. transcode.pl from fr < in > out
 
@@ -32,6 +32,9 @@ while (<>) {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/£§¡Ñ¿`˚ñç~/; } else { tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/; }
         # unofficial extensions for A2D
         if ($dir eq 'from') { tr/\x10-\x14/áéíóú/; } else { tr/áéíóú/\x10-\x14/; }
+    } elsif ($lang eq 'nl') {
+        # unofficial extensions for A2D
+        if ($dir eq 'from') { tr/\x10/ë/; } else { tr/ë/\x10/; }
     } elsif ($lang eq 'da') {
         if ($dir eq 'from') { tr/#@[\\]`{|}~/#@ÆØÅ`æøå~/; } else { tr/#@ÆØÅ`æøå~/#@[\\]`{|}~/; }
     } elsif ($lang eq 'sv') {
