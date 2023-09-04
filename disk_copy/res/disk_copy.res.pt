@@ -32,7 +32,7 @@
 .define res_string_error_reading "Erro ao ler o bloco "
 .define res_string_prompt_insert_source "Insira o disco original e pressione OK."
 .define res_string_prompt_insert_destination "Insira o disco de destino e pressione OK."
-.define res_string_prompt_erase_prefix "Voc& quer deletar \x22"
+.define res_string_prompt_erase_prefix "Tem certeza de que deseja deletar \x22"
 .define res_string_prompt_erase_suffix "\x22?"
 .define res_string_errmsg_dest_format_fail "O disco de destino n[o pode ser inicializado!"
 .define res_string_errmsg_format_error "erro de inicializa][o."

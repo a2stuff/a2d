@@ -32,7 +32,7 @@
 .define res_string_error_reading "Fel vid l{sning av block "
 .define res_string_prompt_insert_source "S{tt i k{lldisken och klicka p} OK."
 .define res_string_prompt_insert_destination "S{tt i m}lskivan och klicka p} OK."
-.define res_string_prompt_erase_prefix "Vill du radera \x22"
+.define res_string_prompt_erase_prefix "[r du s{ker att du vill radera \x22"
 .define res_string_prompt_erase_suffix "\x22?"
 .define res_string_errmsg_dest_format_fail "M}lskivan kan inte formateras!"
 .define res_string_errmsg_format_error "Fel under formatering."

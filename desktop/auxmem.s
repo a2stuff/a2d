@@ -350,10 +350,6 @@ str_location:
         PASCAL_STRING res_string_format_disk_label_location
 str_new_volume:
         PASCAL_STRING res_string_format_disk_label_enter_name
-str_confirm_format_prefix:
-        PASCAL_STRING res_string_format_disk_prompt_format_prefix
-str_confirm_format_suffix:
-        PASCAL_STRING res_string_format_disk_prompt_format_suffix
 str_formatting:
         PASCAL_STRING res_string_format_disk_status_formatting
 str_formatting_error:

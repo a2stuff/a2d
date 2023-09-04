@@ -166,21 +166,11 @@ loop2:
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
         copy    #0, has_input_field_flag
-        bit     erase_flag
-    IF_NC
-        param_call main::DrawDialogLabel, 3, aux::str_confirm_format_prefix
-    ELSE
         param_call main::DrawDialogLabel, 3, aux::str_confirm_erase_prefix
-    END_IF
         lda     unit_num
         jsr     GetVolName
         param_call main::DrawString, ovl_string_buf
-        bit     erase_flag
-    IF_NC
-        param_call main::DrawString, aux::str_confirm_format_suffix
-    ELSE
         param_call main::DrawString, aux::str_confirm_erase_suffix
-    END_IF
 :       jsr     main::PromptInputLoop
         bmi     :-              ; not done
         jne     cancel          ; cancel
