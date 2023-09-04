@@ -13,7 +13,7 @@
 .define res_string_label_status_writing "Sto scrivendo...   "
 .define res_string_label_status_reading "Sto leggendo...    "
 .define res_string_unknown "Sconosciuto"
-.define res_string_label_select_quit "Scegli Smetti dal menu Archivio (%cQ) per tornare alla scrivania"
+.define res_string_label_select_quit "Scegli %s dal menu %s (%c%c) per tornare alla scrivania"
 .define res_string_label_blocks_read "Blocchi letti: "
 .define res_string_label_blocks_written "Blocchi scritti: "
 .define res_string_label_blocks_to_transfer "Blocchi da trasferire: "

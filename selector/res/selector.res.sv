@@ -19,5 +19,5 @@
 .define res_string_label_copying "Kopierar: "
 .define res_string_errmsg_not_enough_room "Inte tillr{ckligt med utrymme i RAMCard f|r att kopiera programmet."
 .define res_string_errmsg_copy_incomplete "Ett fel uppstod under nedladdningen. Kopian blev inte f{rdig."
-.define res_string_label_files_to_copy "Filer att kopiera i RAMCard: "
+.define res_string_label_files_to_copy "Filer att kopiera: "
 .define res_string_label_files_remaining "Filer som }terst}r: "

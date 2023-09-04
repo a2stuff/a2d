@@ -13,7 +13,7 @@
 .define res_string_label_status_writing "Skrivande...   "
 .define res_string_label_status_reading "L{sning...    "
 .define res_string_unknown "Ok{nt"
-.define res_string_label_select_quit "V{lj Avsluta fr}n Arkiv-menyn (%cQ) f|r att g} tillbaka till skrivbordet"
+.define res_string_label_select_quit "V{lj %s fr}n %s-menyn (%c%c) f|r att }terg} till skrivbordet"
 .define res_string_label_blocks_read "Block L{s: "
 .define res_string_label_blocks_written "Block skrivna: "
 .define res_string_label_blocks_to_transfer "Block att |verf|ra: "

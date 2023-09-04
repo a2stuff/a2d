@@ -13,7 +13,7 @@
 .define res_string_label_status_writing "Schreiben...   "
 .define res_string_label_status_reading "Lesen...    "
 .define res_string_unknown "Unbekannt"
-.define res_string_label_select_quit "W{hle Beenden aus dem Ablagemenu (%cQ) zur R}ckkehr zum Schreibtisch"
+.define res_string_label_select_quit "W{hlen Sie %s aus dem %s-Men} (%c%c), um zum Schreibtisch zur}ckzukehren"
 .define res_string_label_blocks_read "Gelesene Bl|cke: "
 .define res_string_label_blocks_written "Geschriebene Bl|cke: "
 .define res_string_label_blocks_to_transfer "Zu verschiebene Bl|cke: "

@@ -13,7 +13,7 @@
 .define res_string_label_status_writing "Ecriture...   "
 .define res_string_label_status_reading "Lecture...    "
 .define res_string_unknown "Inconnu"
-.define res_string_label_select_quit "Quitter (%cQ) pour revenir @ Mouse Desk"
+.define res_string_label_select_quit "S{lectionnez %s dans le menu %s (%c%c) pour revenir au DeskTop"
 .define res_string_label_blocks_read "Blocs lus : "
 .define res_string_label_blocks_written "Blocs {crits : "
 .define res_string_label_blocks_to_transfer "Blocs @ transf{rer : "

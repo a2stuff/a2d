@@ -13,7 +13,7 @@
 .define res_string_label_status_writing "Escribiendo...   "
 .define res_string_label_status_reading "Leyendo...    "
 .define res_string_unknown "Desconocido"
-.define res_string_label_select_quit "Seleccione Salir del men\x14 (%cQ) para regresar al escritorio"
+.define res_string_label_select_quit "Selecciones %s del %s men\x14 (%c%c) para regresar al escritorio"
 .define res_string_label_blocks_read "Bloques le\x12dos: "
 .define res_string_label_blocks_written "Bloques escritos: "
 .define res_string_label_blocks_to_transfer "Bloques a transferir: "

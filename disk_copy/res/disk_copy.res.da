@@ -13,7 +13,7 @@
 .define res_string_label_status_writing "Skrivning...   "
 .define res_string_label_status_reading "L{sning...    "
 .define res_string_unknown "Ukendt"
-.define res_string_label_select_quit "V{lg Afslut i menuen Filer (%cQ) for at g} tilbage til skrivebordet"
+.define res_string_label_select_quit "V{lg %s fra %s-menuen (%c%c) for at vende tilbage til skrivebordet"
 .define res_string_label_blocks_read "L{ste blokke: "
 .define res_string_label_blocks_written "Blokke skrevet: "
 .define res_string_label_blocks_to_transfer "Blokke til overf|rsel: "

@@ -290,7 +290,7 @@ str_reading:
 str_unknown:
         PASCAL_STRING res_string_unknown
 str_select_quit:
-        PASCAL_STRING .sprintf(res_string_label_select_quit, ::kGlyphOpenApple) ; dialog label
+        PASCAL_STRING .sprintf(res_string_label_select_quit, res_string_dc_menu_item_quit, res_string_dc_menu_bar_item_file, ::kGlyphOpenApple, res_char_dc_menu_item_quit_shortcut) ; dialog label
 
 bg_black:
         .byte   0
