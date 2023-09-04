@@ -12,6 +12,7 @@ Project Page: https://github.com/a2stuff/a2d
 * File Picker Dialog: Show watch cursor when polling all drives.
 * Eliminate top level PREVIEW/ directory.
 * IIgs: Reset video banking state on launch to prevent garbled screen. ([#764](https://github.com/a2stuff/a2d/issues/764))
+* Improve wording and fix spelling/grammar mistakes in various strings.
 
 ### Launcher
 
