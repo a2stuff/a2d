@@ -2158,7 +2158,7 @@ str_format_error:
 str_dest_protected:
         PASCAL_STRING res_string_errmsg_dest_protected
 
-;;; This string is seen when copying a ProDOS disk to DOS 3.3 or Pascal disk.
+;;; This string is seen when copying over a non-ProDOS/non-Pascal disk.
 str_confirm_erase_sd:
         PASCAL_STRING res_string_prompt_erase_slot_drive_pattern
         kStrConfirmEraseSDSlotOffset = res_const_prompt_erase_slot_drive_pattern_offset1
