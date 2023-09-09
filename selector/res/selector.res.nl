@@ -10,8 +10,8 @@
 .define res_string_menu_bar_item_startup "Opstart"
 .define res_string_menu_item_run_a_program "Een programma uitvoeren..."
 .define res_char_menu_item_run_a_program_shortcut 'E'
-.define res_string_menu_item_slot_pattern "Sleuf #"
-.define res_const_menu_item_slot_pattern_offset1 7
+.define res_string_menu_item_slot_pattern "Slot #"
+.define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_button_desktop "Bureaublad"
 .define res_char_button_desktop_shortcut 'B'
 .define res_string_selector_name "Opdrachten"

@@ -6,7 +6,7 @@
 .define res_string_dc_menu_item_disk_copy "Schijf kopi\x10ren"
 .define res_string_button_read_drive "Lees schijven"
 .define res_char_button_read_drive_shortcut 'L'
-.define res_string_label_slot_drive_name "Sleuf, Schijfstation, Naam"
+.define res_string_label_slot_drive_name "Slot, Schijfstation, Naam"
 .define res_string_prompt_select_source "Selecteer bronschijf"
 .define res_string_prompt_select_destination "Selecteer doelschijf"
 .define res_string_label_status_formatting "Schijf formatteren..."
@@ -19,7 +19,7 @@
 .define res_string_label_blocks_to_transfer "Blokken om over te dragen: "
 .define res_string_source "Bronschijf "
 .define res_string_destination "Doelschijf "
-.define res_string_slot_prefix "Sleuf "
+.define res_string_slot_prefix "Slot "
 .define res_string_drive_infix "  Schijf "
 .define res_string_dos33_s_d_pattern "DOS 3.3 S#, D# "
 .define res_const_dos33_s_d_pattern_offset1 10
@@ -37,9 +37,9 @@
 .define res_string_errmsg_dest_format_fail "De doelschijf kan niet worden geformatteerd!"
 .define res_string_errmsg_format_error "Fout tijdens het formatteren."
 .define res_string_errmsg_dest_protected "Het doelvolume is tegen schrijven beveiligd!"
-.define res_string_prompt_erase_slot_drive_pattern "Wilt u de schijf in sleuf # station # wissen?"
-.define res_const_prompt_erase_slot_drive_pattern_offset1 27
-.define res_const_prompt_erase_slot_drive_pattern_offset2 37
+.define res_string_prompt_erase_slot_drive_pattern "Wilt u de schijf in slot # station # wissen?"
+.define res_const_prompt_erase_slot_drive_pattern_offset1 26
+.define res_const_prompt_erase_slot_drive_pattern_offset2 36
 .define res_string_label_status_copy_success "Het kopi\x10ren is gelukt."
 .define res_string_label_status_copy_fail "De kopie is niet voltooid."
 .define res_string_prompt_insert_source_or_cancel "Plaats de bronschijf of druk op Esc om te annuleren."

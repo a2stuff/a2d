@@ -134,17 +134,17 @@
 .define res_string_selector_label_at_first_boot "tijdens het opstarten"
 .define res_string_selector_label_at_first_use "bij eerste gebruik"
 .define res_string_selector_label_never "nooit"
-.define res_string_the_dos_33_disk_suffix_pattern "de DOS 3.3-schijf in sleuf # schijfstation #"
-.define res_const_the_dos_33_disk_suffix_pattern_offset1 28
-.define res_const_the_dos_33_disk_suffix_pattern_offset2 44
-.define res_string_the_disk_in_slot_suffix_pattern "de schijf in sleuf # schijfstation #"
-.define res_const_the_disk_in_slot_suffix_pattern_offset1 20
-.define res_const_the_disk_in_slot_suffix_pattern_offset2 36
+.define res_string_the_dos_33_disk_suffix_pattern "de DOS 3.3-schijf in slot # schijfstation #"
+.define res_const_the_dos_33_disk_suffix_pattern_offset1 27
+.define res_const_the_dos_33_disk_suffix_pattern_offset2 43
+.define res_string_the_disk_in_slot_suffix_pattern "de schijf in slot # schijfstation #"
+.define res_const_the_disk_in_slot_suffix_pattern_offset1 19
+.define res_const_the_disk_in_slot_suffix_pattern_offset2 35
 .define res_string_file_suffix "bestand"
 .define res_string_files_suffix "bestanden"
 .define res_string_kb_suffix "K"
-.define res_string_menu_item_slot_pattern "Sleuf #"
-.define res_const_menu_item_slot_pattern_offset1 7
+.define res_string_menu_item_slot_pattern "Slot #"
+.define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_menu_item_add_entry "Een snelkoppeling toevoegen..."
 .define res_string_menu_item_edit_entry "Een snelkoppeling bewerken..."
 .define res_string_menu_item_delete_entry "Een snelkoppeling verwijderen..."
