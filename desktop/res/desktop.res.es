@@ -1,3 +1,4 @@
+.define res_string_status_loading_desktop "Iniciando Apple II DeskTop..."
 .define res_string_menu_bar_item_file "Archivo"
 .define res_string_menu_bar_item_view "Listado"
 .define res_string_menu_bar_item_special "Especial"
@@ -149,7 +150,7 @@
 .define res_string_menu_item_edit_entry "Editar atajo..."
 .define res_string_menu_item_delete_entry "Borrar atajo..."
 .define res_string_menu_item_run_entry "Ejecutar atajo..."
-.define res_string_menu_item_about "Acerca %s"
+.define res_string_menu_item_about "Acerca Apple II DeskTop"
 .define res_string_menu_item_about_this_apple "Acerca de esta Apple II"
 .define res_string_window_header_item_suffix " Elemento"
 .define res_string_window_header_items_suffix " Elementos"

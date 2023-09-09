@@ -1,3 +1,5 @@
+.define res_string_selector_name "Atajos"
+.define res_string_status_loading_selector "Iniciando Atajos..."
 .define res_string_alert_selector_unable_to_run "No puede ejecutar el programa."
 .define res_string_alert_io_error "Error de E/S."
 .define res_string_alert_no_device "Ning\x14n dispositivo conectado."
@@ -14,7 +16,6 @@
 .define res_const_menu_item_slot_pattern_offset1 8
 .define res_string_button_desktop "Escritorio"
 .define res_char_button_desktop_shortcut 'E'
-.define res_string_selector_name "Atajos"
 .define res_string_label_download "Copiando a RAMDisk..."
 .define res_string_label_copying "Copiando: "
 .define res_string_errmsg_not_enough_room "No hay sitio suficiente en la RAMDisk para copiar la aplicaci\x13n."

@@ -62,7 +62,7 @@ basic_system_not_found  = $FF
 
         RESOURCE_FILE "selector.res"
 
-        .define QR_LOADSTRING .sprintf(res_string_status_loading, res_string_selector_name)
+        .define QR_LOADSTRING res_string_status_loading_selector
         .define QR_FILENAME kPathnameSelector
         .include "../lib/bootstrap.s"
 

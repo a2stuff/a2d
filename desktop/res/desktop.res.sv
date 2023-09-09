@@ -1,3 +1,4 @@
+.define res_string_status_loading_desktop "Startar Apple II DeskTop..."
 .define res_string_menu_bar_item_file "Arkiv"
 .define res_string_menu_bar_item_view "Inneh}ll"
 .define res_string_menu_bar_item_special "Speciell"
@@ -149,7 +150,7 @@
 .define res_string_menu_item_edit_entry "Redigera en genv{g..."
 .define res_string_menu_item_delete_entry "Ta bort en genv{g..."
 .define res_string_menu_item_run_entry "K|r en genv{g..."
-.define res_string_menu_item_about "Om %s"
+.define res_string_menu_item_about "Om Apple II DeskTop"
 .define res_string_menu_item_about_this_apple "Om denna Apple II"
 .define res_string_window_header_item_suffix " Objekt"
 .define res_string_window_header_items_suffix " Objekt"

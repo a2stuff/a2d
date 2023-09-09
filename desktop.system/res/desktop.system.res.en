@@ -1,4 +1,4 @@
-.define res_string_copying_to_ramcard "Copying %s into RAMCard..."
+.define res_string_copying_to_ramcard "Copying Apple II DeskTop into RAMCard..."
 .define res_string_esc_to_cancel "Press Esc to cancel."
 .define res_string_label_tip_skip_copying "To skip copying to RAMCard, hold down \x0F\x1B\x41\x18\x0E when launching."
 .define res_string_label_copying "Copying to RAMCard: "

@@ -1,3 +1,5 @@
+.define res_string_selector_name "Shortcuts"
+.define res_string_status_loading_selector "Starting Shortcuts..."
 .define res_string_alert_selector_unable_to_run "Unable to run the program."
 .define res_string_alert_io_error "I/O error."
 .define res_string_alert_no_device "No device connected."
@@ -14,7 +16,6 @@
 .define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_button_desktop "DeskTop"
 .define res_char_button_desktop_shortcut 'D'
-.define res_string_selector_name "Shortcuts"
 .define res_string_label_download "Copying to RAMCard..."
 .define res_string_label_copying "Copying: "
 .define res_string_errmsg_not_enough_room "Not enough room in the RAMCard to copy the application."

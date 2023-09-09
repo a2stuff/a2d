@@ -1,4 +1,4 @@
-.define res_string_copying_to_ramcard "Kopierar %s till RAMCard..."
+.define res_string_copying_to_ramcard "Kopierar Apple II DeskTop till RAMCard..."
 .define res_string_esc_to_cancel "P} Esc f|r att avbryta."
 .define res_string_label_tip_skip_copying "F|r att hoppa |ver kopiering till RAMCard, h}ll ner \x0F\x1B\x41\x18\x0E n{r du startar."
 .define res_string_label_copying "Kopiera till RAMCard: "

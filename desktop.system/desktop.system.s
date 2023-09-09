@@ -879,10 +879,10 @@ filename_table:
         .addr str_f1,str_f2,str_f3,str_f4,str_f5
         ASSERT_ADDRESS_TABLE_SIZE filename_table, kNumFilenames
 
-        kHtabCopyingMsg = (80 - .strlen(.sprintf(res_string_copying_to_ramcard, kDeskTopProductName))) / 2
+        kHtabCopyingMsg = (80 - .strlen(res_string_copying_to_ramcard)) / 2
         kVtabCopyingMsg = 12
 str_copying_to_ramcard:
-        PASCAL_STRING .sprintf(res_string_copying_to_ramcard, kDeskTopProductName)
+        PASCAL_STRING res_string_copying_to_ramcard
 
         kHtabCancelMsg = (80 - .strlen(res_string_esc_to_cancel)) / 2
         kVtabCancelMsg = 16

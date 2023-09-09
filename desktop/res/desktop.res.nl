@@ -1,3 +1,4 @@
+.define res_string_status_loading_desktop "Apple II DeskTop starten..."
 .define res_string_menu_bar_item_file "Archief"
 .define res_string_menu_bar_item_view "Weergave"
 .define res_string_menu_bar_item_special "Speciaal"
@@ -149,7 +150,7 @@
 .define res_string_menu_item_edit_entry "Een snelkoppeling bewerken..."
 .define res_string_menu_item_delete_entry "Een snelkoppeling verwijderen..."
 .define res_string_menu_item_run_entry "Voer een snelkoppeling uit..."
-.define res_string_menu_item_about "Over %s"
+.define res_string_menu_item_about "Over Apple II DeskTop"
 .define res_string_menu_item_about_this_apple "Over deze Apple II"
 .define res_string_window_header_item_suffix " onderdeel"
 .define res_string_window_header_items_suffix " onderdelen"

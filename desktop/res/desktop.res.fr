@@ -1,3 +1,4 @@
+.define res_string_status_loading_desktop "D{marrage d'Apple II DeskTop..."
 .define res_string_menu_bar_item_file "Fichier"
 .define res_string_menu_bar_item_view "Pr{sentation"
 .define res_string_menu_bar_item_special "Sp{cial"
@@ -149,7 +150,7 @@
 .define res_string_menu_item_edit_entry "Modifier un raccourci..."
 .define res_string_menu_item_delete_entry "Supprimer un raccourci..."
 .define res_string_menu_item_run_entry "Ex{cuter un raccourci..."
-.define res_string_menu_item_about "A propos d'%s"
+.define res_string_menu_item_about "A propos d'Apple II DeskTop"
 .define res_string_menu_item_about_this_apple "A propos de cet Apple II"
 .define res_string_window_header_item_suffix " {l{ment"
 .define res_string_window_header_items_suffix " {l{ments"

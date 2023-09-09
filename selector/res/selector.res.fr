@@ -1,3 +1,5 @@
+.define res_string_selector_name "Raccourcis"
+.define res_string_status_loading_selector "D{marrage des Raccourcis..."
 .define res_string_alert_selector_unable_to_run "ne peut pas lancer ce programme."
 .define res_string_alert_io_error "Erreur d'E/S."
 .define res_string_alert_no_device "Pas d'unit{ connect{e."
@@ -14,7 +16,6 @@
 .define res_const_menu_item_slot_pattern_offset1 6
 .define res_string_button_desktop "DeskTop"
 .define res_char_button_desktop_shortcut 'D'
-.define res_string_selector_name "Raccourcis"
 .define res_string_label_download "En cours de copie vers la carte RAM..."
 .define res_string_label_copying "Copie : "
 .define res_string_errmsg_not_enough_room "M{moire insuffisante en carte RAM pour copier l'application."

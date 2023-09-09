@@ -768,7 +768,7 @@ apple_menu:
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
-        PASCAL_STRING .sprintf(res_string_menu_item_about, kDeskTopProductName) ; menu item
+        PASCAL_STRING res_string_menu_item_about ; menu item
 label_about_this_apply:
         PASCAL_STRING res_string_menu_item_about_this_apple
 

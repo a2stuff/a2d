@@ -1,3 +1,4 @@
+.define res_string_status_loading_desktop "Starting Apple II DeskTop..."
 .define res_string_menu_bar_item_file "File"
 .define res_string_menu_bar_item_view "View"
 .define res_string_menu_bar_item_special "Special"
@@ -149,7 +150,7 @@
 .define res_string_menu_item_edit_entry "Edit a Shortcut..."
 .define res_string_menu_item_delete_entry "Delete a Shortcut..."
 .define res_string_menu_item_run_entry "Run a Shortcut..."
-.define res_string_menu_item_about "About %s"
+.define res_string_menu_item_about "About Apple II DeskTop"
 .define res_string_menu_item_about_this_apple "About This Apple II"
 .define res_string_window_header_item_suffix " Item"
 .define res_string_window_header_items_suffix " Items"

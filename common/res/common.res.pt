@@ -24,7 +24,6 @@
 .define res_string_copyright_line1 "Copyright Apple Computer Inc., 1986"
 .define res_string_copyright_line2 "Copyright Version Soft, 1985 - 1986"
 .define res_string_copyright_line3 "Todos os direitos reservados"
-.define res_string_status_loading "Carregando %s..."
 .define res_string_prompt_insert_system_disk "Insira o disco do sistema e pressione Return."
 .define res_string_weekday_abbrev_1 "Dom"
 .define res_string_weekday_abbrev_2 "Seg"
