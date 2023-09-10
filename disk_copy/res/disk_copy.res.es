@@ -38,8 +38,8 @@
 .define res_const_prompt_erase_slot_drive_pattern_offset1 62
 .define res_const_prompt_erase_slot_drive_pattern_offset2 71
 .define res_string_errmsg_dest_format_fail "[El disco de destino no puede inicializarse!"
+.define res_string_errmsg_dest_protected "[El disco de destino est\x10 protegido contra escritura!"
 .define res_string_errmsg_format_error "Error de inicializaci\x13n."
-.define res_string_errmsg_dest_protected "[El volumen de destino est\x10 protegido contra escritura!"
 .define res_string_label_status_copy_success "La copia fue exitosa."
 .define res_string_label_status_copy_fail "La copia no fue completada."
 .define res_string_prompt_insert_source_or_cancel "Inserte el disco original o presione Esc para cancelar."
