@@ -34,12 +34,12 @@
 .define res_string_prompt_insert_destination "Insert the destination disk and click OK."
 .define res_string_prompt_erase_prefix "Are you sure you want to erase \x22"
 .define res_string_prompt_erase_suffix "\x22?"
+.define res_string_prompt_erase_slot_drive_pattern "Are you sure you want to erase the disk in slot # drive #?"
+.define res_const_prompt_erase_slot_drive_pattern_offset1 49
+.define res_const_prompt_erase_slot_drive_pattern_offset2 57
 .define res_string_errmsg_dest_format_fail "The destination disk cannot be formatted!"
 .define res_string_errmsg_format_error "Error during formatting."
 .define res_string_errmsg_dest_protected "The destination volume is write protected!"
-.define res_string_prompt_erase_slot_drive_pattern "Do you want to erase the disk in slot # drive #?"
-.define res_const_prompt_erase_slot_drive_pattern_offset1 39
-.define res_const_prompt_erase_slot_drive_pattern_offset2 47
 .define res_string_label_status_copy_success "The copy was successful."
 .define res_string_label_status_copy_fail "The copy was not completed."
 .define res_string_prompt_insert_source_or_cancel "Insert the source disk or press Esc to cancel."

@@ -34,12 +34,12 @@
 .define res_string_prompt_insert_destination "Lege Zieldiskette ein und Dr}cke OK."
 .define res_string_prompt_erase_prefix "Sind Sie sicher, dass Sie l|schen m|chten \x22"
 .define res_string_prompt_erase_suffix "\x22?"
+.define res_string_prompt_erase_slot_drive_pattern "Sind Sie sicher, dass Sie die Diskette in Steckplatz # Laufwerk # l|schen m|chten?"
+.define res_const_prompt_erase_slot_drive_pattern_offset1 54
+.define res_const_prompt_erase_slot_drive_pattern_offset2 65
 .define res_string_errmsg_dest_format_fail "Die Zieldiskette kann nicht formatiert werden!"
 .define res_string_errmsg_format_error "Fehler beim Formatieren."
 .define res_string_errmsg_dest_protected "Die Zieldiskette ist schreibgesch}tzt!"
-.define res_string_prompt_erase_slot_drive_pattern "M|chten Sie die Diskette in Steckplatz # Laufwerk # l|schen?"
-.define res_const_prompt_erase_slot_drive_pattern_offset1 40
-.define res_const_prompt_erase_slot_drive_pattern_offset2 51
 .define res_string_label_status_copy_success "Kopie erfolgreich."
 .define res_string_label_status_copy_fail "Kopie nicht abgschlossen."
 .define res_string_prompt_insert_source_or_cancel "Lege Quelldiskette ein oder Dr}cke Esc f}r Abbruch."

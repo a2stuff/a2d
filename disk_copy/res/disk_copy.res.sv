@@ -34,12 +34,12 @@
 .define res_string_prompt_insert_destination "S{tt i m}lskivan och klicka p} OK."
 .define res_string_prompt_erase_prefix "[r du s{ker att du vill radera \x22"
 .define res_string_prompt_erase_suffix "\x22?"
+.define res_string_prompt_erase_slot_drive_pattern "[r du s{ker att du vill radera disken i kortplats # enhet #?"
+.define res_const_prompt_erase_slot_drive_pattern_offset1 51
+.define res_const_prompt_erase_slot_drive_pattern_offset2 59
 .define res_string_errmsg_dest_format_fail "M}lskivan kan inte formateras!"
 .define res_string_errmsg_format_error "Fel under formatering."
 .define res_string_errmsg_dest_protected "Destinationsvolymen {r skrivskyddad!"
-.define res_string_prompt_erase_slot_drive_pattern "Vill du radera disken i kortplats # enhet #?"
-.define res_const_prompt_erase_slot_drive_pattern_offset1 35
-.define res_const_prompt_erase_slot_drive_pattern_offset2 43
 .define res_string_label_status_copy_success "Kopian lyckades."
 .define res_string_label_status_copy_fail "Kopian blev inte f{rdig."
 .define res_string_prompt_insert_source_or_cancel "S{tt i k{llskivan eller tryck p} Esc f|r att avbryta."
