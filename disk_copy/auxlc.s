@@ -365,8 +365,6 @@ block_count_div8:              ; calculated when reading volume bitmap
 
 LD429:  .byte   0
 
-        DEFINE_RECT rect_D42A, 18, 20, kDialogWidth-10, 88
-
 .params win_frame_rect_params
 id:     .byte   winfo_drive_select::kWindowId
 rect:   .tag    MGTK::Rect
@@ -570,35 +568,25 @@ prompt_insert_source:
         sta     main__on_line_params2_unit_num
         jsr     main__CallOnLine2
         beq     source_is_pro
+
+check_source_error:
         cmp     #ERR_NOT_PRODOS_VOLUME
-        bne     check_source_error
+        bne     prompt_insert_source
+
+        ;; Source is non-ProDOS
         jsr     main__IdentifySourceNonProDOSDiskType
         jsr     MaybeEraseSelectQuitTip
         jsr     DrawSourceDriveInfo
         jmp     check_source_finish
 
-check_source_error:
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, rect_D42A ; TODO: What is this?
-        jmp     prompt_insert_source
-
+        ;; Source is ProDOS
 source_is_pro:
         lda     main__on_line_buffer2
         and     #$0F            ; mask off name length
-        bne     source_get_name ; 0 signals error
+        bne     :+              ; 0 signals error
         lda     main__on_line_buffer2+1
-        ;; TODO: Dedupe with identical block above
-        cmp     #ERR_NOT_PRODOS_VOLUME
-        bne     check_source_error
-        jsr     main__IdentifySourceNonProDOSDiskType
-        jsr     MaybeEraseSelectQuitTip
-        jsr     DrawSourceDriveInfo
-        jmp     check_source_finish
-
-source_get_name:
-        lda     main__on_line_buffer2
-        and     #$0F            ; mask off name length
+        jmp     check_source_error
+:
         sta     main__on_line_buffer2
         param_call AdjustCase, main__on_line_buffer2
         jsr     MaybeEraseSelectQuitTip
