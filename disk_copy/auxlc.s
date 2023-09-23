@@ -539,6 +539,7 @@ LD6F9:  lda     current_drive_selection
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
 
+        ;; Erase the drive selection listbox
         MGTK_CALL MGTK::GetWinFrameRect, win_frame_rect_params
         MGTK_CALL MGTK::CloseWindow, winfo_drive_select
         sub16   win_frame_rect_params::rect+MGTK::Rect::x1, winfo_dialog::viewloc::xcoord, win_frame_rect_params::rect+MGTK::Rect::x1
@@ -547,7 +548,11 @@ LD6F9:  lda     current_drive_selection
         sub16   win_frame_rect_params::rect+MGTK::Rect::y2, winfo_dialog::viewloc::ycoord, win_frame_rect_params::rect+MGTK::Rect::y2
         MGTK_CALL MGTK::PaintRect, win_frame_rect_params::rect
 
-LD734:  ldx     #0
+        ;; --------------------------------------------------
+        ;; Prompt to insert source disk
+
+prompt_insert_source:
+        ldx     #0
         lda     #kAlertMsgInsertSource ; X=0 means just show alert
         jsr     ShowAlertDialog
         cmp     #kAlertResultOK
@@ -556,47 +561,59 @@ LD734:  ldx     #0
 
 :       lda     #$00
         sta     LD44D
+
+        ;; --------------------------------------------------
+        ;; Check source disk
+
         ldx     source_drive_index
         lda     drive_unitnum_table,x
         sta     main__on_line_params2_unit_num
         jsr     main__CallOnLine2
-        beq     LD77E
+        beq     source_is_pro
         cmp     #ERR_NOT_PRODOS_VOLUME
-        bne     LD763
+        bne     check_source_error
         jsr     main__IdentifySourceNonProDOSDiskType
         jsr     MaybeEraseSelectQuitTip
         jsr     DrawSourceDriveInfo
-        jmp     LD7AD
+        jmp     check_source_finish
 
-LD763:  jsr     SetPortForDialog
+check_source_error:
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_D42A ; TODO: What is this?
-        jmp     LD734
+        jmp     prompt_insert_source
 
-LD77E:  lda     main__on_line_buffer2
+source_is_pro:
+        lda     main__on_line_buffer2
         and     #$0F            ; mask off name length
-        bne     LD798           ; 0 signals error
+        bne     source_get_name ; 0 signals error
         lda     main__on_line_buffer2+1
+        ;; TODO: Dedupe with identical block above
         cmp     #ERR_NOT_PRODOS_VOLUME
-        bne     LD763
+        bne     check_source_error
         jsr     main__IdentifySourceNonProDOSDiskType
         jsr     MaybeEraseSelectQuitTip
         jsr     DrawSourceDriveInfo
-        jmp     LD7AD
+        jmp     check_source_finish
 
-LD798:  lda     main__on_line_buffer2
+source_get_name:
+        lda     main__on_line_buffer2
         and     #$0F            ; mask off name length
         sta     main__on_line_buffer2
         param_call AdjustCase, main__on_line_buffer2
         jsr     MaybeEraseSelectQuitTip
         jsr     DrawSourceDriveInfo
 
-LD7AD:  lda     source_drive_index
+check_source_finish:
+        lda     source_drive_index
         jsr     GetBlockCount
         jsr     DrawDestinationDriveInfo
         jsr     DrawCopyFormatType
         ldx     dest_drive_index
         ldy     drive_unitnum_table,x
+
+        ;; --------------------------------------------------
+        ;; Prompt to insert destination disk
 
         ldx     #0
         lda     #kAlertMsgInsertDestination ; X=0 means just show alert
@@ -615,12 +632,13 @@ LD7AD:  lda     source_drive_index
         lda     drive_unitnum_table,x
         sta     main__on_line_params2_unit_num
         jsr     main__CallOnLine2
-        beq     is_pro
+        beq     dest_is_pro
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     dest_ok
         jmp     try_format      ; Can't even read drive - try formatting
 
-is_pro: lda     main__on_line_buffer2
+dest_is_pro:
+        lda     main__on_line_buffer2
         and     #NAME_LENGTH_MASK
         bne     dest_ok         ; 0 signals error
         lda     main__on_line_buffer2+1
