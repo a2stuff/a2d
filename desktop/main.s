@@ -5933,9 +5933,6 @@ no_linked_win:
     IF_NE
         jsr     ShowAlert       ; A has error if `GetIconPath` fails
 
-        jsr     RemoveFileRecordsForIcon ; TODO: Is this needed?
-        jsr     MarkIconNotDimmed
-
         dec     num_open_windows
         ldx     saved_stack
         txs
@@ -6718,7 +6715,6 @@ too_many_files:
 :       ldy     #AlertButtonOptions::OK
         jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
 
-        ;; Records not created, no need for `RemoveFileRecordsForIcon`
         jsr     MarkIconNotDimmed
         dec     num_open_windows
 
@@ -6907,7 +6903,6 @@ finish: copy16  record_ptr, filerecords_free_start
 :       bit     icon_param      ; Were we opening a path?
         bmi     :+              ; Yes, no icons to twiddle.
 
-        jsr     RemoveFileRecordsForIcon ; TODO: Is this needed?
         jsr     MarkIconNotDimmed
 
         lda     selected_window_id
@@ -9628,24 +9623,6 @@ remove: lda     cached_window_entry_list+1,x
         bpl     :-
 done:   rts
 .endproc ; FindWindowIndexForDirIcon
-
-;;; ============================================================
-;;; Used when recovering from a failed open (bad path, too many icons, etc)
-;;; Inputs: `icon_param` points at icon
-
-.proc RemoveFileRecordsForIcon
-        lda     icon_param
-        beq     ret
-
-        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
-    IF_EQ
-        inx
-        txa
-        jsr     RemoveWindowFilerecordEntries
-    END_IF
-
-ret:    rts
-.endproc ; RemoveFileRecordsForIcon
 
 ;;; ============================================================
 ;;; Used when recovering from a failed open (bad path, too many icons, etc)
