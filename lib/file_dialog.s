@@ -87,7 +87,6 @@ file_names      := $1800
         DEFINE_CLOSE_PARAMS close_params
 
 on_line_buffer: .res    16, 0
-device_num:     .byte   0       ; current drive, index in DEVLST
 path_buf:       .res    ::kPathBufferSize, 0  ; used in MLI calls, so must be in main memory
 
 only_show_dirs_flag:            ; set when selecting copy destination
@@ -132,7 +131,6 @@ routine_table:
         pha
 .endif
         jsr     SetCursorPointer
-        copy    DEVCNT, device_num
 
         lda     #0
         sta     type_down_buf
@@ -1076,7 +1074,10 @@ ret:    rts
 ;;; ============================================================
 
 .proc InitPathWithDefaultDevice
-retry:  ldx     device_num
+        copy    DEVCNT, device_num
+
+        device_num := *+1
+retry:  ldx     #SELF_MODIFIED_BYTE
         lda     DEVLST,x
 
         and     #UNIT_NUM_MASK
@@ -1095,33 +1096,8 @@ retry:  ldx     device_num
 found:  param_call AdjustVolumeNameCase, on_line_buffer
         lda     #0
         sta     path_buf
-        param_call AppendToPathBuf, on_line_buffer
-        jmp     ClearSelection
+        param_jump AppendToPathBuf, on_line_buffer
 .endproc ; InitPathWithDefaultDevice
-
-;;; ============================================================
-;;; Init `device_number` (index) from the most recently accessed
-;;; device via ProDOS Global Page `DEVNUM`. Used when the dialog
-;;; is initialized with a specific path.
-
-.ifdef FD_EXTENDED
-.proc InitDeviceNumber
-        lda     DEVNUM
-        sta     last
-
-        ldx     DEVCNT
-        inx
-:       dex
-        lda     DEVLST,x
-        and     #UNIT_NUM_MASK
-        cmp     last
-        bne     :-
-        stx     device_num
-        rts
-
-last:   .byte   0
-.endproc ; InitDeviceNumber
-.endif
 
 ;;; ============================================================
 ;;; Output: Z=1 on success, Z=1 on failure
