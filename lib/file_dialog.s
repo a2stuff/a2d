@@ -376,14 +376,27 @@ click_handler_hook:
         jmp     UpdateDynamicButtons
 .endproc ; UpdateListFromPath
 
-;;; ============================================================
+;;; As above, but select filename passed in A,X
+.ifdef FD_EXTENDED
+.proc UpdateListFromPathAndSelectFile
+        pha
+        txa
+        pha
 
-;;;  Inputs: A=index ($FF if none)
-.proc SetSelectionAndUpdateList
+        jsr     ReadDir
+        jsr     UpdateDiskName
+        jsr     UpdateDirName
+
+        pla
+        tax
+        pla
+        jsr     FindFilenameIndex
         sta     selected_index
+
         jsr     ListInit
         jmp     UpdateDynamicButtons
-.endproc ; SetSelectionAndUpdateList
+.endproc ; UpdateListFromPathAndSelectFile
+.endif
 
 ;;; ============================================================
 
@@ -1062,7 +1075,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc DeviceOnLine
+.proc InitPathWithDefaultDevice
 retry:  ldx     device_num
         lda     DEVLST,x
 
@@ -1084,7 +1097,7 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         sta     path_buf
         param_call AppendToPathBuf, on_line_buffer
         jmp     ClearSelection
-.endproc ; DeviceOnLine
+.endproc ; InitPathWithDefaultDevice
 
 ;;; ============================================================
 ;;; Init `device_number` (index) from the most recently accessed

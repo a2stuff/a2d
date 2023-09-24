@@ -15,7 +15,7 @@
 
         jsr     file_dialog::OpenWindow
         param_call file_dialog::DrawTitleCentered, aux::label_copy_selection
-        jsr     file_dialog::DeviceOnLine
+        jsr     file_dialog::InitPathWithDefaultDevice
         jsr     file_dialog::UpdateListFromPath
         COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
 

@@ -22,7 +22,7 @@
         copy    #$80, file_dialog::extra_controls_flag
 
         jsr     file_dialog::OpenWindow
-        jsr     DrawControls
+        jsr     DrawControls    ; calls file_dialog::DrawTitleCentered
 
         COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
 
@@ -38,13 +38,11 @@
         copy16  #HandleKey, file_dialog::HandleKeyEvent::key_meta_digit+1
         copy    #kSelectorMaxNameLength, file_dialog_res::line_edit_f1::max_length
 
-        jsr     file_dialog::DeviceOnLine
-
-        ;; TODO: Move all of this into file dialog itself?
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
         lda     path_buf0
-    IF_NE
-
+    IF_ZERO
+        jsr     file_dialog::InitPathWithDefaultDevice
+    ELSE
         COPY_STRING path_buf0, file_dialog::path_buf
 
         ;; Was it just a volume name, e.g. "/VOL"?
@@ -66,16 +64,9 @@
         sty     buffer
       END_IF
     END_IF
-        jsr     file_dialog::ReadDir
-        jsr     file_dialog::UpdateDiskName
-        jsr     file_dialog::UpdateDirName
-        lda     #$00
-        bcs     :+              ; no files
-        param_call file_dialog::FindFilenameIndex, buffer
-:       jsr     file_dialog::SetSelectionAndUpdateList
+        param_call file_dialog::UpdateListFromPathAndSelectFile, buffer
         jsr     file_dialog::LineEditInit
         jsr     file_dialog::LineEditActivate
-        jsr     file_dialog::InitDeviceNumber
         jmp     file_dialog::EventLoop
 
 buffer: .res 16, 0
