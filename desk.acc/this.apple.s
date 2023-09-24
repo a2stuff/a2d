@@ -655,6 +655,8 @@ slot_pos_table:
 kMaxSmartportDevices = 8
 
 str_diskii:     PASCAL_STRING res_string_card_type_diskii
+str_nvram:      PASCAL_STRING res_string_device_type_nvram
+str_booti:      PASCAL_STRING res_string_device_type_booti
 str_block:      PASCAL_STRING res_string_card_type_block
 kStrSmartportLength = .strlen(res_string_card_type_smartport)
 str_smartport:  PASCAL_STRING res_string_card_type_smartport
@@ -1312,7 +1314,7 @@ mask:   .byte   0
 
         ldax    #sigtable_prodos_device
         jsr     SigCheck
-        bcc     notpro
+    IF_CS
 
 ;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
@@ -1320,17 +1322,29 @@ mask:   .byte   0
         bne     :+
         return16 #str_diskii
 :
+        ;; Smartport?
         COMPARE_FWB $07, $00    ; $Cn07 == $00 ?
-        beq     :+
-        sec
-        return16 #str_block
-:
+        bne     :+
         sec
         bit     ret             ; set V flag to signal SmartPort
         ldax    #str_smartport
 ret:    rts
+:
+        ;; Block devices - a few signatures
+        ldax    #sigtable_nvram
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_nvram
+:
+        ldax    #sigtable_booti
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_booti
+:
+        sec
+        return16 #str_block
 
-notpro:
+    END_IF
 
 ;;; ---------------------------------------------
 ;;; VidHD
@@ -1503,6 +1517,10 @@ sigtable_clock:         .byte   3, $00, $08, $01, $78, $02, $28
 sigtable_comm:          .byte   2, $05, $18, $07, $38
 sigtable_serial:        .byte   2, $05, $38, $07, $18
 sigtable_parallel:      .byte   2, $05, $48, $07, $48
+
+;;; Block Devices
+sigtable_nvram:         .byte   3, $07, $3C, $0B, $58, $0C, $FF
+sigtable_booti:         .byte   3, $07, $3C, $0B, $B0, $0C, $01
 
 .endproc ; ProbeSlot
 
