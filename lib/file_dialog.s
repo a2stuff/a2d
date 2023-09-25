@@ -822,14 +822,6 @@ done:   rts
 
 ;;; ============================================================
 
-.proc ClearSelection
-        lda     #$FF
-        jsr     ListSetSelection
-        jmp     UpdateDynamicButtons
-.endproc ; ClearSelection
-
-;;; ============================================================
-
 .proc UpdateDynamicButtons
         jsr     DrawOKLabel
         jsr     DrawOpenLabel

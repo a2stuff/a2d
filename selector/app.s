@@ -22,13 +22,8 @@
 ;;; Generic Resources (outside scope for convenience)
 
 pencopy:        .byte   MGTK::pencopy
-penOR:          .byte   MGTK::penOR
 penXOR:         .byte   MGTK::penXOR
-penBIC:         .byte   MGTK::penBIC
 notpencopy:     .byte   MGTK::notpencopy
-notpenOR:       .byte   MGTK::notpenOR
-notpenXOR:      .byte   MGTK::notpenXOR
-notpenBIC:      .byte   MGTK::notpenBIC
 
 ;;; ============================================================
 ;;; Event Params (and overlapping param structs)

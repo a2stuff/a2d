@@ -618,8 +618,6 @@ dispatch_click:
 ;;; Selection should be cleared before calling
 
 .proc SelectIconForWindow
-        icon_ptr := $06
-
         ;; Select window's corresponding volume icon.
         ;; (Doesn't work for folder icons as only the active
         ;; window and desktop can have selections.)
