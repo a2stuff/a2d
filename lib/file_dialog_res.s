@@ -17,8 +17,6 @@ filename_buf:
         kListBoxWidth = 125
         kListRows = 7
 
-        DEFINE_RECT rect_selection, 0, 0, kListBoxWidth, 0
-
         DEFINE_POINT picker_entry_pos, 2, 0
 
 str_folder:

@@ -19,7 +19,6 @@
 ;;; * `kRows` - number of visible rows in the list
 ;;; * `num_items` - number of items in the list
 ;;; * `item_pos` - a scratch MGTK::Point
-;;; * `highlight_rect` - a scratch MGTK::Rect
 ;;; * `selected_index` - updated to be the selection or $FF if none
 ;;; Requires the following proc definitions:
 ;;; * `DrawListEntryProc` - called to draw an item (A=index)
@@ -27,6 +26,8 @@
 ;;; Optionally:
 ;;; * `OnListSelectionChange` - called when `selected_index` has changed
 ;;; * `OnListSelectionNoChange` - called on click when `selected_index` has not changed
+;;; Notes:
+;;; * Routines dirty $20...$2F
 ;;; ============================================================
 
 ;;; ============================================================
@@ -350,18 +351,22 @@ SetSelection:
 ;;; Input: A = row to highlight
 
 .proc _HighlightIndex
+        highlight_rect := $20
+
         cmp     #0              ; don't assume caller has flags set
         bmi     ret
 
         ldx     #0              ; hi (A=lo)
         ldy     #kListItemHeight
         jsr     Multiply_16_8_16
-        stax    listbox::highlight_rect+MGTK::Rect::y1
-        addax   #kListItemHeight-1, listbox::highlight_rect+MGTK::Rect::y2
+        stax    highlight_rect+MGTK::Rect::y1
+        addax   #kListItemHeight-1, highlight_rect+MGTK::Rect::y2
+        copy16  #0, highlight_rect+MGTK::Rect::x1
+        copy16  #kScreenWidth, highlight_rect+MGTK::Rect::x2
 
         jsr     _SetPort
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, listbox::highlight_rect
+        MGTK_CALL MGTK::PaintRect, highlight_rect
 ret:    rts
 .endproc ; _HighlightIndex
 

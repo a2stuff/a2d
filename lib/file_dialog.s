@@ -1663,8 +1663,6 @@ HandleCancel:   jmp     0
         kRows = file_dialog_res::kListRows
         num_items = num_file_names
         item_pos = file_dialog_res::picker_entry_pos
-
-        highlight_rect = file_dialog_res::rect_selection
 .endscope ; listbox
 listbox::selected_index = selected_index
 

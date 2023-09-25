@@ -297,9 +297,6 @@ bg_black:
 bg_white:
         .byte   $7F
 
-        DEFINE_RECT rect_highlight_row, 0, 0, kListBoxWidth, 0
-
-
 current_drive_selection:        ; $FF if no selection
         .byte   0
 
@@ -1436,7 +1433,6 @@ CheckAlpha:
         item_pos = list_entry_pos
 
         selected_index = current_drive_selection
-        highlight_rect = rect_highlight_row
 .endscope ; listbox
 
         .include "../lib/listbox.s"

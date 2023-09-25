@@ -184,7 +184,6 @@ nextwinfo:      .addr   0
 .endparams
 
         DEFINE_POINT itempos, kListItemTextOffsetX, 0
-        DEFINE_RECT itemrect, 0, 0, winfo_listbox::kWidth, 0
 
 ;;; ============================================================
 
@@ -1255,7 +1254,6 @@ OnListSelectionNoChange := OnListSelectionChange
         item_pos = itempos
 
         selected_index = aux::selected_index
-        highlight_rect = itemrect
 .endscope ; listbox
 
         .include "../lib/listbox.s"
