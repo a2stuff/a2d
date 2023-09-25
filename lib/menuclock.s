@@ -128,7 +128,7 @@ update: COPY_STRUCT DateTime, DATELO, last_dt
         MGTK_CALL MGTK::Move, result
         MGTK_CALL MGTK::DrawText, params
         MGTK_CALL MGTK::Move, result
-done:   rts
+        rts
 .endproc ; DrawStringRight
 
 last_dt:

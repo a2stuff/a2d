@@ -62,7 +62,6 @@ label   := *
 ;;;      .byte state     bit 0-5 = (unused)
 ;;;                      bit 6   = highlighted
 ;;;                      bit 7   = dimmed
-;;;                      $00 if not allocated
 ;;;      .byte flags/window_id
 ;;;                      bits 0-3 = window_id
 ;;;                      bit 4 = small icon
@@ -93,7 +92,6 @@ kMaxIconCount   = 127
 ;;; Masks for IconEntry::state
 kIconEntryStateDimmed      = %10000000
 kIconEntryStateHighlighted = %01000000
-kIconEntryStateAllocated   = %00000001
 
 ;;; Masks for IconEntry::win_flags
 kIconEntryFlagsDropTarget       = %01000000

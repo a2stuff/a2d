@@ -624,7 +624,6 @@ a_record  .addr
       IF_NOT_ZERO
         jsr     _DrawShortcut
 
-        width := $9
         jsr     _MeasureShortcut
         addax   rect+MGTK::Rect::x2
       END_IF

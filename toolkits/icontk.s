@@ -442,8 +442,6 @@ done:   rts
 ;;; Inputs: A = icon id, $08 = icon ptr
 
 .proc RemoveIconCommon
-        ptr := $08
-
         sta     icon_id
 
         ;; Find index
@@ -477,8 +475,6 @@ done:   rts
 .struct EraseIconParams
         icon    .byte
 .endstruct
-
-        ptr := $06              ; Overwrites params
 
         ;; Pointer to IconEntry
         ldy     #EraseIconParams::icon
@@ -614,19 +610,19 @@ inside: pla
 .endstruct
 
         ldy     #DragHighlightedParams::icon
-        lda     ($06),y
+        lda     (params),y
         sta     icon_id
         .assert DragHighlightedParams::icon = 0, error, "enum mismatch"
         tya
-        sta     ($06),y
+        sta     (params),y
 
         ldy     #DragHighlightedParams::fixed
-        lda     ($06),y
+        lda     (params),y
         sta     fixed
 
         ;; Copy initial coords to `initial_coords` and `coords1`
         ldy     #DragHighlightedParams::coords + .sizeof(MGTK::Point)-1
-:       lda     ($06),y
+:       lda     (params),y
         sta     initial_coords-1,y
         sta     coords1-1,y
         dey
@@ -647,12 +643,6 @@ highlight_icon_id:  .byte   $00
 window_id:              .byte   0
 source_window_id:       .byte   0 ; source window of drag (0=desktop)
 trash_flag:             .byte   0 ; if Trash is included in selection
-
-        ;; IconTK::IconInRect params
-.params iconinrect_params
-icon:  .byte    0
-rect:  .tag     MGTK::Rect
-.endparams
 
 start:  lda     #0
         sta     highlight_icon_id
@@ -753,8 +743,6 @@ is_drag:
         port_ptr := $06
         MGTK_CALL MGTK::GetPort, port_ptr
 
-        COPY_STRUCT MGTK::Rect, drag_outline_grafport+MGTK::GrafPort::maprect, iconinrect_params::rect
-
         ;; --------------------------------------------------
         ;; Build drag polygon
 
@@ -762,7 +750,6 @@ is_drag:
         copy    #$80, poly::lastpoly  ; more to follow
 
         INVOKE_WITH_LAMBDA IterateHighlightedIcons
-        sta     iconinrect_params::icon
 
         jsr     CalcIconPoly
 
