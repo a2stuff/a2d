@@ -331,36 +331,25 @@ END_PARAM_BLOCK
 
 ;;; ============================================================
 
-.params event_params
-kind := * + 0
-        ;; if `kind` is key_down
-key := * + 1
-modifiers := * + 2
-        ;; if `kind` is no_event, button_down/up, drag, or apple_key:
-coords := * + 1
-xcoord := * + 1
-ycoord := * + 3
-        ;; if `kind` is update:
-window_id := * + 1
-.endparams
-.params screentowindow_params
-window_id := * + 0
-screen  := * + 1
-screenx := * + 1
-screeny := * + 3
-window  := * + 5
-windowx := * + 5
-windowy := * + 7
-        .assert screenx = event_params::xcoord, error, "param mismatch"
-        .assert screeny = event_params::ycoord, error, "param mismatch"
-.endproc ; btk
-        .res    9
 
 .proc TrackImpl
         PARAM_BLOCK params, btk::command_data
 a_record  .addr
         END_PARAM_BLOCK
         .assert a_record = params::a_record, error, "a_record must be first"
+
+        ;; Use ZP for temporary params
+        PARAM_BLOCK event_params, btk::command_data + .sizeof(params)
+kind    .byte
+coords  .res 4
+        END_PARAM_BLOCK
+        .assert .sizeof(event_params) = .sizeof(MGTK::Event), error, "size mismatch"
+        PARAM_BLOCK screentowindow_params, btk::command_data + .sizeof(params)
+window_id       .byte
+screen          .res 4
+window          .res 4
+        END_PARAM_BLOCK
+        .assert screentowindow_params + .sizeof(screentowindow_params) <= $2F, error, "bounds"
 
         jsr     _SetPort
 
