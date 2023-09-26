@@ -350,6 +350,7 @@ screen          .res 4
 window          .res 4
         END_PARAM_BLOCK
         .assert screentowindow_params + .sizeof(screentowindow_params) <= $2F, error, "bounds"
+        .assert screentowindow_params::screen = event_params::coords, error, "mismatch"
 
         jsr     _SetPort
 

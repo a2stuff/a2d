@@ -490,7 +490,7 @@ is_file:
         jsr     CopyFile
         jsr     RemoveSegmentFromSrcPathname
         jsr     RemoveSegmentFromDstPathname
-ret:    rts
+        rts
 
 .endproc ; CopyVisitFile
 

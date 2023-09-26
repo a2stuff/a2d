@@ -171,9 +171,10 @@ stash_y:        .byte   0
 
 ;;; Set when `click_handler_hook` should be called and name input present.
 
+.ifdef FD_EXTENDED
 extra_controls_flag:
         .byte   0
-
+.endif
 ;;; ============================================================
 
 .proc EventLoop
@@ -358,8 +359,10 @@ not_list:
 ;;; ============================================================
 ;;; This vector gets patched by overlays that add controls.
 
+.ifdef FD_EXTENDED
 click_handler_hook:
         jmp     NoOp
+.endif
 
 ;;; ============================================================
 ;;; Refresh the list view from the current path
@@ -681,8 +684,10 @@ ret:    rts
 ;;; ============================================================
 ;;; This vector gets patched by overlays that add controls.
 
+.ifdef FD_EXTENDED
 key_meta_digit:
         jmp     NoOp
+.endif
 
 ;;; ============================================================
 
