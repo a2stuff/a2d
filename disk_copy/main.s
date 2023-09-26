@@ -91,7 +91,7 @@ params:  .res    3
         ;; Override in this scope
         MLIEntry := MLI
 
-        jsr     auxlc::CheckEvents
+        jsr     auxlc::StopDeskTop
 
         sta     ALTZPOFF
         bit     ROMIN2
