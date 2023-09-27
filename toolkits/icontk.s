@@ -387,17 +387,13 @@ done:   rts
         icon    .byte
 .endstruct
 
-        ptr := $06              ; Overwrites params
-
         ;; Pointer to IconEntry
         ldy     #HighlightIconParams::icon
         lda     (params),y
-        jsr     GetIconPtr
-        stax    ptr
+        ptr := $06              ; Overwrites params
+        jsr     GetIconState    ; sets `ptr`/$06 too
 
         ;; Mark highlighted
-        ldy     #IconEntry::state
-        lda     (ptr),y         ; A = state
         ora     #kIconEntryStateHighlighted
         sta     (ptr),y
 
@@ -426,20 +422,13 @@ done:   rts
 :
 .endif ; DEBUG
 
-        ;; Pointer to IconEntry
-        ptr := $08
-        pha                     ; A = icon id
-        jsr     GetIconPtr
-        stax    ptr
-        pla                     ; A = icon id
-
-        jsr     RemoveIconCommon ; A = icon id, $08 = icon ptr
+        jsr     RemoveIconCommon ; A = icon id
         return  #0
 .endproc ; RemoveIconImpl
 
 ;;; ============================================================
-;;; Remove the icon at $08
-;;; Inputs: A = icon id, $08 = icon ptr
+;;; Remove the icon
+;;; Inputs: A = icon id
 
 .proc RemoveIconCommon
         sta     icon_id
@@ -494,7 +483,9 @@ done:   rts
         window_id       .byte
 .endstruct
 
-        ptr := $08
+        ldy     #RemoveAllParams::window_id
+        lda     (params),y
+        sta     window_id
 
         lda     num_icons
         sta     count
@@ -506,20 +497,16 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
 :       dec     count
         dex
-        lda     icon_list,x
-        jsr     GetIconPtr
-        stax    ptr
 
-        ldy     #IconEntry::win_flags
-        lda     (ptr),y
-        and     #kIconEntryWinIdMask ; check window
-        ldy     #RemoveAllParams::window_id
-        cmp     (params),y ; match?
+        lda     icon_list,x
+        jsr     GetIconWin
+        window_id := *+1
+        cmp     #SELF_MODIFIED_BYTE
         bne     loop                 ; nope
 
         ldx     count
         lda     icon_list,x
-        jsr     RemoveIconCommon ; A = icon id, $08 = icon ptr
+        jsr     RemoveIconCommon ; A = icon id
 
         jmp     loop
 .endproc ; RemoveAllImpl
@@ -563,15 +550,10 @@ loop:   cpx     num_icons
 :       txa
         pha
         lda     icon_list,x
-        jsr     GetIconPtr
-        stax    icon_ptr
+        jsr     GetIconWin      ; sets `icon_ptr`/$06 too
 
         ;; Matching window?
-        ldy     #IconEntry::win_flags
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask
-
-window_id := * + 1
+        window_id := * + 1
         cmp     #SELF_MODIFIED_BYTE
         bne     :+
 
@@ -1064,12 +1046,9 @@ headery:
         ;; Over an icon
         sta     icon_num
         ptr := $06
-        jsr     GetIconPtr
-        stax    ptr
+        jsr     GetIconState    ; sets `ptr`/$06 too
 
         ;; Highlighted?
-        ldy     #IconEntry::state
-        lda     (ptr),y
         ;;and     #kIconEntryStateHighlighted
         .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
         asl
@@ -1104,41 +1083,6 @@ icon_num:
         .byte   0
 .endproc ; FindTargetAndHighlight
 
-;;; Input: A = icon number
-;;; Output: A = window id (0=desktop)
-;;; Trashes $06
-.proc GetIconWin
-        jsr     GetIconFlags
-        and     #kIconEntryWinIdMask
-        rts
-.endproc ; GetIconWin
-
-;;; Input: A = icon number
-;;; Output: A = flags (including window)
-;;; Trashes $06
-.proc GetIconFlags
-        ptr := $06
-
-        jsr     GetIconPtr
-        stax    ptr
-        ldy     #IconEntry::win_flags
-        lda     (ptr),y
-        rts
-.endproc ; GetIconFlags
-
-;;; Input: A = icon number
-;;; Output: A = state
-;;; Trashes $06
-.proc GetIconState
-        ptr := $06
-
-        jsr     GetIconPtr
-        stax    ptr
-        ldy     #IconEntry::state
-        lda     (ptr),y
-        rts
-.endproc ; GetIconState
-
 .proc XdrawOutline
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
         copy16  polybuf_addr, addr
@@ -1161,6 +1105,40 @@ icon_num:
 .endproc ; DragHighlightedImpl
 
 ;;; ============================================================
+
+;;; Input: A = icon number
+;;; Output: A = window id (0=desktop), $06 = icon ptr
+.proc GetIconWin
+        jsr     GetIconFlags
+        and     #kIconEntryWinIdMask
+        rts
+.endproc ; GetIconWin
+
+;;; Input: A = icon number
+;;; Output: A = flags (including window), Y = IconEntry::win_flags, $06 = icon ptr
+.proc GetIconFlags
+        ptr := $06
+
+        jsr     GetIconPtr
+        stax    ptr
+        ldy     #IconEntry::win_flags
+        lda     (ptr),y
+        rts
+.endproc ; GetIconFlags
+
+;;; Input: A = icon number
+;;; Output: A = state, Y = IconEntry::state, $06 icon ptr
+.proc GetIconState
+        ptr := $06
+
+        jsr     GetIconPtr
+        stax    ptr
+        ldy     #IconEntry::state
+        lda     (ptr),y
+        rts
+.endproc ; GetIconState
+
+;;; ============================================================
 ;;; UnhighlightIcon
 
 ;;; param is pointer to IconEntry
@@ -1171,17 +1149,13 @@ icon_num:
         icon    .byte
 .endstruct
 
-        ptr := $06              ; Overwrites params
-
         ;; Pointer to IconEntry
         ldy     #UnhighlightIconParams::icon
         lda     (params),y
-        jsr     GetIconPtr
-        stax    ptr
+        ptr := $06              ; Overwrites params
+        jsr     GetIconState    ; sets `ptr`/$06 too
 
         ;; Mark not highlighted
-        ldy     #IconEntry::state
-        lda     (ptr),y         ; A = state
         and     #AS_BYTE(~kIconEntryStateHighlighted)
         sta     (ptr),y
 
@@ -1793,8 +1767,6 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         lda     (params),y
         sta     window_id
 
-        ptr := $06
-
         ;; Get current clip rect
         port_ptr := $06
         MGTK_CALL MGTK::GetPort, port_ptr
@@ -1816,13 +1788,10 @@ loop:   inx
 
         lda     icon_list,x
         sta     icon
-        jsr     GetIconPtr
-        stax    ptr
+        ptr := $06
+        jsr     GetIconWin      ; sets `ptr`/$06 too
 
         ;; Is it in the target window?
-        ldy     #IconEntry::win_flags
-        lda     (ptr),y
-        and     #kIconEntryWinIdMask
         window_id := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     next            ; no, skip it
@@ -1958,8 +1927,6 @@ volume:
 ;;; After erasing an icon, redraw any overlapping icons
 
 .proc RedrawIconsAfterErase
-        ptr := $8
-
         jsr     PushPointers
         ldx     num_icons
 loop:   dex                     ; any icons to draw?
@@ -1970,17 +1937,15 @@ loop:   dex                     ; any icons to draw?
 
 :       txa
         pha
-        ldy     icon_list,x
-        cpy     erase_icon_id
+        lda     icon_list,x
+        cmp     erase_icon_id
         beq     next
 
-        sty     icon
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
+        sta     icon
+        ptr := $06
+        jsr     GetIconWin      ; sets `ptr`/$06 too
 
         ;; Same window?
-        ldy     #IconEntry::win_flags
-        lda     (ptr),y
-        and     #kIconEntryWinIdMask
         cmp     clip_window_id
         bne     next
 
