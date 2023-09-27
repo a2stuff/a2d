@@ -431,7 +431,7 @@ done:   rts
 ;;; Inputs: A = icon id
 
 .proc RemoveIconCommon
-        sta     icon_id
+        pha                     ; A = icon id
 
         ;; Find index
         ldx     #0
@@ -451,8 +451,7 @@ done:   rts
         dec     num_icons
 
         ;; Mark it as free
-        icon_id := *+1
-        lda     #SELF_MODIFIED_BYTE
+        pla                     ; A = icon id
         jmp     FreeIcon
 .endproc ; RemoveIconCommon
 
@@ -1856,34 +1855,29 @@ icon_rect:
 icon_in_window_flag:
         .byte   0
 
-.params frontwindow_params
-window_id:      .byte   0
-.endparams
-
 ;;; Inputs: A = icon id, X = redraw highlighted flag
 .proc EraseIconCommon
         sta     erase_icon_id
         stx     redraw_highlighted_flag
 
-        tay
-        copylohi  icon_ptrs_low,y, icon_ptrs_high,y, $06
+        ptr := $06
+        jsr     GetIconPtr
+        stax    ptr
         jsr     CalcIconPoly
 
         MGTK_CALL MGTK::InitPort, icon_grafport
         MGTK_CALL MGTK::SetPort, icon_grafport
 
         ldy     #IconEntry::win_flags
-        lda     ($06),y
+        lda     (ptr),y
         and     #kIconEntryWinIdMask
         sta     clip_window_id
+        sta     getwinport_params::window_id
         beq     volume
 
         ;; File (i.e. icon in window)
         copy    #$80, icon_in_window_flag
         MGTK_CALL MGTK::SetPattern, white_pattern
-        MGTK_CALL MGTK::FrontWindow, frontwindow_params ; Use window's port
-        lda     frontwindow_params::window_id
-        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         bne     ret             ; obscured!
         jsr     offset_icon_poly_and_rect
