@@ -1880,7 +1880,7 @@ icon_in_window_flag:
         MGTK_CALL MGTK::SetPattern, white_pattern
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         bne     ret             ; obscured!
-        jsr     offset_icon_poly_and_rect
+        jsr     OffsetIconPolyAndRect
         jsr     ShiftPortDown ; Further offset by window's items/used/free bar
         jsr     EraseWindowIcon
         jmp     RedrawIconsAfterErase
@@ -1952,60 +1952,51 @@ loop:   dex                     ; any icons to draw?
     END_IF
 
         bit     icon_in_window_flag ; windowed?
-        bpl     :+           ; nope, desktop
+    IF_NS
         lda     icon
-        jsr     offset_icon_do  ; yes, adjust rect
-:       ITK_CALL IconTK::IconInRect, icon
-        beq     :+
-
-        bit     icon_in_window_flag
-    IF_NC
-        ITK_CALL IconTK::DrawIcon, icon
-    ELSE
-        ITK_CALL IconTK::DrawIconRaw, icon
+        pha                     ; A = icon
+        jsr     CalcClipDeltas
+        pla                     ; A = icon
+        jsr     OffsetIcon      ; yes, adjust rect
     END_IF
 
-:       bit     icon_in_window_flag
-        bpl     next
+        ITK_CALL IconTK::IconInRect, icon
+    IF_NOT_ZERO
+        bit     icon_in_window_flag
+      IF_NC
+        ITK_CALL IconTK::DrawIcon, icon
+      ELSE
+        ITK_CALL IconTK::DrawIconRaw, icon
+      END_IF
+    END_IF
+
+        bit     icon_in_window_flag
+    IF_NS
+        jsr     InvertClipDeltas
         lda     icon
-        jsr     offset_icon_undo
+        jsr     OffsetIcon
+    END_IF
 
 next:   pla
         tax
         bpl     loop            ; always
+
+.proc OffsetIcon
+        ldy     #IconEntry::iconx
+        add16in (ptr),y, clip_dx, (ptr),y ; iconx += maprect::left - viewloc::xcoord
+        iny
+        add16in (ptr),y, clip_dy, (ptr),y ; icony += maprect::top - viewloc::xcoord
+        rts
+.endproc ; OffsetIcon
+
 .endproc ; RedrawIconsAfterErase
 
 ;;; ============================================================
 ;;; Offset coordinates for windowed icons
 
-.proc OffsetIconImpl
-
-offset_flags:  .byte   0        ; bit 7 = offset poly, bit 6 = undo offset, otherwise do offset
-
-entry_poly_and_rect:
-        copy    #$80, offset_flags
-        bmi     common          ; always
-
-entry_do:
-        pha
-        lda     #$40
-        sta     offset_flags
-        jmp     common
-
-entry_undo:
-        pha
-        lda     #0
-        sta     offset_flags
-
-common:
+.proc OffsetIconPolyAndRect
         jsr     CalcClipDeltas
 
-        bit     offset_flags
-        bmi     OffsetPoly
-        jvc     DoOffset
-        jmp     UndoOffset
-
-.proc OffsetPoly
         ldxy    clip_dx
         addxy   bounding_rect::x1
         addxy   bounding_rect::x2
@@ -2024,43 +2015,7 @@ loop1:  add16   poly::vertices+0,x, clip_dx, poly::vertices+0,x
         bne     loop1
 
         rts
-
-.endproc ; OffsetPoly
-
-.proc DoOffset
-        ptr := $06
-
-        pla
-        tay
-        jsr     PushPointers
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
-        ldy     #IconEntry::iconx
-        sub16in (ptr),y, clip_dx, (ptr),y ; icony += viewloc::xcoord - maprect::left
-        iny
-        sub16in (ptr),y, clip_dy, (ptr),y ; icony += viewloc::ycoord - maprect::top
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
-.endproc ; DoOffset
-
-.proc UndoOffset
-        ptr := $06
-
-        pla
-        tay
-        jsr     PushPointers
-        copylohi icon_ptrs_low,y, icon_ptrs_high,y, ptr
-        ldy     #IconEntry::iconx
-        add16in (ptr),y, clip_dx, (ptr),y ; iconx += maprect::left - viewloc::xcoord
-        iny
-        add16in (ptr),y, clip_dy, (ptr),y ; icony += maprect::top - viewloc::xcoord
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
-.endproc ; UndoOffset
-
-.endproc ; OffsetIconImpl
-        offset_icon_poly_and_rect := OffsetIconImpl::entry_poly_and_rect
-        offset_icon_do := OffsetIconImpl::entry_do
-        offset_icon_undo := OffsetIconImpl::entry_undo
+.endproc ; OffsetIconPolyAndRect
 
 ;;; ============================================================
 ;;; This handles drawing volume icons "behind" windows. It is
@@ -2497,10 +2452,14 @@ case2:
         MGTK_CALL MGTK::SetPortBits, portbits
 
         ;; Invert for the next call
+        FALL_THROUGH_TO InvertClipDeltas
+.endproc ; OffsetPortAndIcon
+
+.proc InvertClipDeltas
         sub16   #0, clip_dx, clip_dx
         sub16   #0, clip_dy, clip_dy
         rts
-.endproc ; OffsetPortAndIcon
+.endproc ; InvertClipDeltas
 
 ;;; ============================================================
 
