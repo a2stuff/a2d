@@ -782,21 +782,27 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
 moved:
         jsr     XdrawOutline
 
-        ;; Still over the highlighted icon?
-        lda     highlight_icon_id
-        beq     :+
+        ;; Check for highlighting changes
+        bit     trash_flag      ; Trash is not drop-able, so skip if in selection
+        bmi     update_poly
+
         jsr     FindIconValidateWindow
-        cmp     highlight_icon_id             ; already over it?
-        beq     :+
+        cmp     highlight_icon_id
+        beq     update_poly     ; no change
 
         ;; No longer over the highlighted icon - unhighlight it
+        pha
+        lda     highlight_icon_id
+        beq     :+
         jsr     UnhighlightIcon
-        lda     #0
-        sta     highlight_icon_id
+        copy    #0, highlight_icon_id
 :
-        ;; New icon to highlight?
-        jsr     FindTargetAndHighlight
+        ;; Is the new icon valid?
+        pla
+        beq     update_poly
+        jsr     ValidateTargetAndHighlight
 
+update_poly:
         ;; Update poly coordinates
         sub16   findwindow_params::mousex, coords1x, poly_dx
         sub16   findwindow_params::mousey, coords1y, poly_dy
@@ -1035,16 +1041,13 @@ headery:
 .endproc ; CheckRealContentArea
 
 
-.proc FindTargetAndHighlight
-        bit     trash_flag      ; Trash is not drop-able, so skip if in selection
-        RTS_IF_NS
-
-        jsr     PushPointers
-        jsr     FindIconValidateWindow
-        beq     done
-
+.proc ValidateTargetAndHighlight
         ;; Over an icon
         sta     icon_num
+
+        jsr     PushPointers
+
+        lda     icon_num
         ptr := $06
         jsr     GetIconState    ; sets `ptr`/$06 too
 
@@ -1070,16 +1073,14 @@ headery:
         sta     window_id
 
         ;; Highlight it!
-        lda     icon_num
+        icon_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         sta     highlight_icon_id
         jsr     HighlightIcon
 
 done:   jsr     PopPointers     ; do not tail-call optimise!
         rts
-
-icon_num:
-        .byte   0
-.endproc ; FindTargetAndHighlight
+.endproc ; ValidateTargetAndHighlight
 
 .proc XdrawOutline
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
