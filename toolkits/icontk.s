@@ -777,11 +777,11 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         bne     moved
         dex
         bpl     :-
-
-        jsr     FindTargetAndHighlight
-        jmp     peek
+        bmi     peek            ; always
 
 moved:
+        jsr     XdrawOutline
+
         ;; Still over the highlighted icon?
         lda     highlight_icon_id
         beq     :+
@@ -790,17 +790,18 @@ moved:
         beq     :+
 
         ;; No longer over the highlighted icon - unhighlight it
-        jsr     XdrawOutline
         jsr     UnhighlightIcon
-        jsr     XdrawOutline
         lda     #0
         sta     highlight_icon_id
+:
+        ;; New icon to highlight?
+        jsr     FindTargetAndHighlight
 
-:       sub16   findwindow_params::mousex, coords1x, poly_dx
+        ;; Update poly coordinates
+        sub16   findwindow_params::mousex, coords1x, poly_dx
         sub16   findwindow_params::mousey, coords1y, poly_dy
         COPY_STRUCT MGTK::Point, findwindow_params, coords1
 
-        jsr     XdrawOutline
         copy16  polybuf_addr, $08
 L9B60:  ldy     #2              ; offset in poly to first vertex
 L9B62:  add16in ($08),y, poly_dx, ($08),y
@@ -1071,9 +1072,7 @@ headery:
         ;; Highlight it!
         lda     icon_num
         sta     highlight_icon_id
-        jsr     XdrawOutline
         jsr     HighlightIcon
-        jsr     XdrawOutline
 
 done:   jsr     PopPointers     ; do not tail-call optimise!
         rts
@@ -1090,12 +1089,14 @@ icon_num:
 .endproc ; XdrawOutline
 
 .proc HighlightIcon
+        MGTK_CALL MGTK::SetPort, icon_grafport
         ITK_CALL IconTK::HighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
 .endproc ; HighlightIcon
 
 .proc UnhighlightIcon
+        MGTK_CALL MGTK::SetPort, icon_grafport
         ITK_CALL IconTK::UnhighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
