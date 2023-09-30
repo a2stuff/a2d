@@ -42,7 +42,11 @@ loop:   dec16   counter
         cmp     #MGTK::EventKind::apple_key ; modified-click
         bne     exit
 
-:       MGTK_CALL MGTK::GetEvent, event_params
+:
+        ;; Double-click! Flush events rather than just getting the
+        ;; next event to ensure there isn't a lingering button event.
+        ;; (Observed on real hardware, e.g. IIc+)
+        MGTK_CALL MGTK::FlushEvents
         return  #0              ; double-click
 
 exit:   return  #$FF            ; not double-click
