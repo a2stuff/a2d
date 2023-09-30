@@ -1307,7 +1307,7 @@ clip_dy:
 
 .proc DrawIconImpl
         lda     #$80            ; `clip_icons_flag`
-        jmp     DrawIconCommon
+        FALL_THROUGH_TO DrawIconCommon
 .endproc ; DrawIconImpl
 
 ;;; ============================================================
@@ -1838,23 +1838,6 @@ rect:   .tag    MGTK::Rect
 
 ;;; ============================================================
 ;;; Erase an icon; redraws overlapping icons as needed
-;;; Inputs: A = high bit set to redraw selected icons, clear to skip
-
-        ;; For `RedrawIconsAfterErase`
-redraw_highlighted_flag:
-        .byte   0
-erase_icon_id:
-        .byte   0
-
-        ;; IconTK::DrawIconXXX params
-        ;; IconTK::IconInRect params (in `RedrawIconsAfterErase`)
-icon:   .byte   0
-icon_rect:
-        .tag    MGTK::Rect
-
-icon_in_window_flag:
-        .byte   0
-
 ;;; Inputs: A = icon id, X = redraw highlighted flag
 .proc EraseIconCommon
         sta     erase_icon_id
@@ -1882,45 +1865,28 @@ icon_in_window_flag:
         bne     ret             ; obscured!
         jsr     OffsetIconPolyAndRect
         jsr     ShiftPortDown ; Further offset by window's items/used/free bar
-        jsr     EraseWindowIcon
+        MGTK_CALL MGTK::PaintPoly, poly
         jmp     RedrawIconsAfterErase
 ret:    rts
 
         ;; Volume (i.e. icon on desktop)
 volume:
-        jsr     SetPortForVolIcon
-:       jsr     CalcWindowIntersections
-        jsr     EraseDesktopIcon
-        lda     more_drawing_needed_flag
-        bne     :-
-        jmp     RedrawIconsAfterErase
-.endproc ; EraseIconCommon
-
-;;; ============================================================
-
-.proc EraseDesktopIcon
-        lda     #0
-        sta     icon_in_window_flag
-
+        copy    #0, icon_in_window_flag
         MGTK_CALL MGTK::GetDeskPat, addr
         MGTK_CALL MGTK::SetPattern, 0, addr
-        FALL_THROUGH_TO EraseWindowIcon
-.endproc ; EraseDesktopIcon
-
-;;; Inputs: `bounding_rect` and `poly` must be populated
-.proc EraseWindowIcon
-        ;; Construct a bounding rect from the icon's polygon.
-        ;; Used in `RedrawIconsAfterErase`
-        COPY_STRUCT MGTK::Rect, bounding_rect, icon_rect
-
+        jsr     SetPortForVolIcon
+:       jsr     CalcWindowIntersections
         MGTK_CALL MGTK::PaintPoly, poly
-        rts
-.endproc ; EraseWindowIcon
+        lda     more_drawing_needed_flag
+        bne     :-
+        FALL_THROUGH_TO RedrawIconsAfterErase
 
 ;;; ============================================================
 ;;; After erasing an icon, redraw any overlapping icons
 
 .proc RedrawIconsAfterErase
+        COPY_STRUCT MGTK::Rect, bounding_rect, icon_rect
+
         jsr     PushPointers
         ldx     num_icons
 loop:   dex                     ; any icons to draw?
@@ -2017,8 +1983,26 @@ loop1:  add16   poly::vertices+0,x, clip_dx, poly::vertices+0,x
         rts
 .endproc ; OffsetIconPolyAndRect
 
+        ;; For `RedrawIconsAfterErase`
+redraw_highlighted_flag:
+        .byte   0
+erase_icon_id:
+        .byte   0
+
+        ;; IconTK::DrawIconXXX params
+        ;; IconTK::IconInRect params (in `RedrawIconsAfterErase`)
+icon:   .byte   0
+icon_rect:
+        .tag    MGTK::Rect
+
+icon_in_window_flag:
+        .byte   0
+
+.endproc ; EraseIconCommon
+
+
 ;;; ============================================================
-;;; This handles drawing volume icons "behind" windows. It is
+;;; This handles drawing icons "behind" windows. It is
 ;;; done by comparing the bounding rect of the icon (including
 ;;; label) with windows, and returning a reduced clipping rect.
 ;;; Since the overlap may be concave, multiple calls may be
