@@ -141,7 +141,7 @@ reserved:       .byte   0
 .params textwidth_params
 textptr:        .addr   text_buffer
 textlen:        .byte   0
-result: .word   0
+result:         .word   0
 .endparams
 settextbg_params    := textwidth_params::result + 1  ; re-used
 
@@ -234,17 +234,17 @@ kind:   .byte   0               ; spills into next block
 ;;; `findwindow_params::window_id` is used as first part of
 ;;; GetWinPtr params structure including `window_ptr`.
 .params findwindow_params
-mousex: .word   0
-mousey: .word   0
+mousex:         .word   0
+mousey:         .word   0
 which_area:     .byte   0
 window_id:      .byte   0
 .endparams
-window_ptr:  .word   0          ; do not move this; see above
+window_ptr:     .word   0       ; do not move this; see above
         .assert window_ptr = findwindow_params::window_id + 1, error, "struct moved"
 
 .params findcontrol_params
-mousex: .word   0
-mousey: .word   0
+mousex:         .word   0
+mousey:         .word   0
 which_ctl:      .byte   0
 which_part:     .byte   0
 window_id:      .byte   0       ; For FindControlEx
@@ -601,11 +601,11 @@ inside: pla
         lda     (params),y
         sta     fixed
 
-        ;; Copy initial coords to `initial_coords` and `coords1`
+        ;; Copy initial coords to `initial_coords` and `last_coords`
         ldy     #DragHighlightedParams::coords + .sizeof(MGTK::Point)-1
 :       lda     (params),y
         sta     initial_coords-1,y
-        sta     coords1-1,y
+        sta     last_coords-1,y
         dey
         ;;cpy     #DragHighlightedParams::coords-1
         .assert DragHighlightedParams::coords = 1, error, "coords must be 1"
@@ -630,7 +630,7 @@ start:  lda     #0
         sta     trash_flag
 
 ;;; Determine if it's a drag or just a click
-.proc DragDetect
+.proc DragDetectImpl
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
@@ -644,10 +644,10 @@ ignore_drag:
         ;; Compute mouse delta
 drag:   lda     findwindow_params::mousex
         sec
-        sbc     coords1x
+        sbc     last_coords+MGTK::Point::xcoord
         tax
         lda     findwindow_params::mousex + 1
-        sbc     coords1x + 1
+        sbc     last_coords+MGTK::Point::xcoord + 1
 
         kDragDelta = 5
 
@@ -663,10 +663,10 @@ x_lo:   cpx     #kDragDelta
 check_deltay:
         lda     findwindow_params::mousey
         sec
-        sbc     coords1y
+        sbc     last_coords+MGTK::Point::ycoord
         tax
         lda     findwindow_params::mousey + 1
-        sbc     coords1y + 1
+        sbc     last_coords+MGTK::Point::ycoord + 1
         bpl     y_lo
         cpx     #AS_BYTE(-kDragDelta)
         bcc     is_drag
@@ -674,7 +674,7 @@ check_deltay:
 y_lo:   cpx     #kDragDelta
         bcc     peek
         FALL_THROUGH_TO is_drag
-.endproc ; DragDetect
+.endproc ; DragDetectImpl
 
         ;; --------------------------------------------------
         ;; Meets the threshold - it is a drag, not just a click.
@@ -701,7 +701,7 @@ is_drag:
         lda     highlight_count
         cmp     max_draggable_icons
         beq     :+                      ; equal okay
-        bcs     DragDetect::ignore_drag ; too many
+        bcs     DragDetectImpl::ignore_drag ; too many
 :
         ;; Was there a selection?
         lda     highlight_count
@@ -773,12 +773,15 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         ;; Coords changed?
         ldx     #.sizeof(MGTK::Point)-1
 :       lda     findwindow_params,x
-        cmp     coords1,x
+        cmp     last_coords,x
         bne     moved
         dex
         bpl     :-
         bmi     peek            ; always
 
+        ;; --------------------------------------------------
+        ;; Mouse moved - check for (un)highlighting, and
+        ;; update the drag outline.
 moved:
         jsr     XdrawOutline
 
@@ -804,49 +807,56 @@ moved:
 
 update_poly:
         ;; Update poly coordinates
-        sub16   findwindow_params::mousex, coords1x, poly_dx
-        sub16   findwindow_params::mousey, coords1y, poly_dy
-        COPY_STRUCT MGTK::Point, findwindow_params, coords1
+        sub16   findwindow_params::mousex, last_coords+MGTK::Point::xcoord, poly_dx
+        sub16   findwindow_params::mousey, last_coords+MGTK::Point::ycoord, poly_dy
+        COPY_STRUCT MGTK::Point, findwindow_params, last_coords
 
-        copy16  polybuf_addr, $08
-L9B60:  ldy     #2              ; offset in poly to first vertex
-L9B62:  add16in ($08),y, poly_dx, ($08),y
+        poly_ptr := $08
+        copy16  polybuf_addr, poly_ptr
+ploop:  ldy     #2              ; offset in poly to first vertex
+vloop:  add16in (poly_ptr),y, poly_dx, (poly_ptr),y
         iny
-        add16in ($08),y, poly_dy, ($08),y
+        add16in (poly_ptr),y, poly_dy, (poly_ptr),y
         iny
         cpy     #kIconPolySize
-        bne     L9B62
+        bne     vloop
         ldy     #1              ; MGTK Polygon "not last" flag
-        lda     ($08),y
-        beq     L9B9C
-        lda     $08
+        lda     (poly_ptr),y
+        beq     :+
+        lda     poly_ptr
         clc
         adc     #kIconPolySize
-        sta     $08
-        bcc     L9B60
-        inc     $08+1
-        bcs     L9B60
-
-L9B9C:  jsr     XdrawOutline
+        sta     poly_ptr
+        bcc     ploop
+        inc     poly_ptr+1
+        bcs     ploop
+:
+        jsr     XdrawOutline
         jmp     peek
 
+        ;; --------------------------------------------------
+        ;; End of the drag - figure out how to finish up
 not_drag:
         jsr     XdrawOutline
+
         lda     highlight_icon_id
         beq     :+
         jsr     UnhighlightIcon
 :
+        ;; Drag ended by a keystroke?
         lda     peekevent_params::kind
         cmp     #MGTK::EventKind::key_down ; cancel?
         bne     :+
         copy    #0, highlight_icon_id
-        jmp     L9C63
+        jmp     finish
 :
+        ;; Drag ended over an icon?
         lda     highlight_icon_id
         beq     :+
-        jmp     L9C63
-
-:       MGTK_CALL MGTK::FindWindow, findwindow_params
+        jmp     finish
+:
+        ;; Drag ended over a window/desktop?
+        MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         cmp     source_window_id
         beq     same_window
@@ -855,14 +865,16 @@ not_drag:
         bmi     includes_trash
 
         lda     findwindow_params::window_id
-        bne     L9BD4
-ignore: jmp     DragDetect::ignore_drag
+        bne     different_window ; if drag onto desktop, ignore it
+ignore: jmp     DragDetectImpl::ignore_drag
 
-L9BD4:  ora     #$80
+        ;; Drop selection onto a window
+different_window:
+        ora     #$80
         sta     highlight_icon_id
-        jne     L9C63           ; always
+        jne     finish          ; always TODO: Make just JMP
 
-        ;; Drop selection including Trash on a window
+        ;; Drop selection *including Trash* on a window
 includes_trash:
         lda     source_window_id
         beq     ignore          ; TODO: always true for Trash?
@@ -874,13 +886,13 @@ same_window:
         beq     move_ok
 
         cmp     #MGTK::Area::content
-        jne     L9C63           ; don't move
+        jne     finish          ; don't move
 
         jsr     CheckRealContentArea
-        jne     L9C63           ; don't move
+        jne     finish          ; don't move
 
         bit     fixed
-        bmi     L9C63           ; don't move
+        bmi     finish          ; don't move
 
         ;; --------------------------------------------------
 
@@ -894,8 +906,8 @@ move_ok:
         ;; --------------------------------------------------
         ;; Update icons with new positions (based on delta)
 
-        sub16   findwindow_params::mousex, initial_coords_x, poly_dx
-        sub16   findwindow_params::mousey, initial_coords_y, poly_dy
+        sub16   findwindow_params::mousex, initial_coords+MGTK::Point::xcoord, poly_dx
+        sub16   findwindow_params::mousey, initial_coords+MGTK::Point::ycoord, poly_dy
 
         INVOKE_WITH_LAMBDA IterateHighlightedIcons
         jsr     GetIconPtr
@@ -910,28 +922,23 @@ move_ok:
 
         ;; --------------------------------------------------
 
-L9C63:  lda     #0              ; return value
+finish: lda     #0              ; return value
 
-just_select:                    ; ???
-        tay
+just_select:
+        tay                     ; A = return value
         jsr     PopPointers
-        tya
-        tax
+        tya                     ; A = return value
+        tax                     ; A = return value
         ldy     #0
         lda     highlight_icon_id
-        sta     ($06),y
-        txa
+        sta     (params),y
+        txa                     ; A = return value
         rts
 
-index:  .byte   $00
+index:  .byte   0
 
-initial_coords:
-initial_coords_x:       .word   0
-initial_coords_y:       .word   0
-
-coords1:
-coords1x:       .word   0
-coords1y:       .word   0
+        DEFINE_POINT initial_coords, 0, 0
+        DEFINE_POINT last_coords, 0, 0
 
 poly_dx:        .word   0
 poly_dy:        .word   0
@@ -1973,10 +1980,7 @@ icon_rect:
 ;;; ============================================================
 
 ;;; Initial bounds, saved for re-entry.
-bounds_l:  .word   0            ; unused, but makes a complete MGTK::Rect
-bounds_t:  .word   0
-bounds_r:  .word   0
-bounds_b:  .word   0
+        DEFINE_RECT clip_bounds, 0,0,0,0
 
 .params portbits
         DEFINE_POINT viewloc, 0, 0
@@ -2059,7 +2063,7 @@ reserved:       .byte   0
         bmi     empty
 
         ;; Duplicate structs needed for clipping
-        COPY_STRUCT MGTK::Rect, portbits::maprect, bounds_l
+        COPY_STRUCT MGTK::Rect, portbits::maprect, clip_bounds
         COPY_STRUCT MGTK::Point, portbits::maprect::topleft, portbits::viewloc
 
         MGTK_CALL MGTK::SetPortBits, portbits
@@ -2074,8 +2078,8 @@ empty:  return #$FF
         jmp     start
 
 .params findwindow_params
-mousex: .word   0
-mousey: .word   0
+mousex:         .word   0
+mousey:         .word   0
 which_area:     .byte   0
 window_id:      .byte   0
 .endparams
@@ -2125,10 +2129,10 @@ start:  lda     more_drawing_needed_flag
 :       sty     cr_l+1
         sty     vx+1
 
-        ;; cr_t = bounds_t
-        ;; cr_r = bounds_r
-        ;; cr_b = bounds_b
-        COPY_BYTES 6, bounds_t, cr_t
+        ;; cr_t = clip_bounds::y1
+        ;; cr_r = clip_bounds::x2
+        ;; cr_b = clip_bounds::y2
+        COPY_BYTES 6, clip_bounds::y1, cr_t
 
         ;; vy = cr_t
         copy16  cr_t, vy
@@ -2180,13 +2184,13 @@ set_bits:
         ;; Ensure clip right does not exceed screen bounds.
         ;; Fixes https://github.com/a2stuff/a2d/issues/182
         ;; TODO: Enforce this in the algorithm instead?
-        cmp16   cr_r, bounds_r
+        cmp16   cr_r, clip_bounds::x2
         bcc     :+
-        copy16  bounds_r, cr_r
+        copy16  clip_bounds::x2, cr_r
 
 :       MGTK_CALL MGTK::SetPortBits, portbits
-        ;; if (cr_r < bounds_r) more drawing is needed
-        cmp16   cr_r, bounds_r
+        ;; if (cr_r < clip_bounds::x2) more drawing is needed
+        cmp16   cr_r, clip_bounds::x2
         asl
         lda     #0
         rol
@@ -2332,9 +2336,9 @@ case2:
         jmp     reclip
 
         ;; Case 5 - done!
-:       copy16  bounds_r, cr_r
-        ldx     bounds_r
-        ldy     bounds_r + 1
+:       copy16  clip_bounds::x2, cr_r
+        ldx     clip_bounds::x2
+        ldy     clip_bounds::x2 + 1
         inx
         bne     :+
         iny
