@@ -611,21 +611,9 @@ inside: pla
         .assert DragHighlightedParams::coords = 1, error, "coords must be 1"
         bne     :-
 
-        jsr     PushPointers
-        jmp     start           ; skip over data
+        jsr     PushPointers    ; save `params`
 
-icon_id:
-        .byte   $00
-fixed:  .byte   0               ; high bit set if list view
-
-        ;; IconTK::HighlightIcon params
-highlight_icon_id:  .byte   $00
-
-window_id:              .byte   0
-source_window_id:       .byte   0 ; source window of drag (0=desktop)
-trash_flag:             .byte   0 ; if Trash is included in selection
-
-start:  lda     #0
+        lda     #0
         sta     highlight_icon_id
         sta     trash_flag
 
@@ -872,7 +860,7 @@ ignore: jmp     DragDetectImpl::ignore_drag
 different_window:
         ora     #$80
         sta     highlight_icon_id
-        jne     finish          ; always TODO: Make just JMP
+        jmp     finish
 
         ;; Drop selection *including Trash* on a window
 includes_trash:
@@ -926,7 +914,7 @@ finish: lda     #0              ; return value
 
 just_select:
         tay                     ; A = return value
-        jsr     PopPointers
+        jsr     PopPointers     ; restore `params`
         tya                     ; A = return value
         tax                     ; A = return value
         ldy     #0
@@ -935,7 +923,18 @@ just_select:
         txa                     ; A = return value
         rts
 
-index:  .byte   0
+;;; ============================================================
+
+icon_id:
+        .byte   0
+fixed:  .byte   0               ; high bit set if list view
+
+        ;; IconTK::HighlightIcon params
+        ;; also used as the return value
+highlight_icon_id:  .byte   $00
+
+source_window_id:       .byte   0 ; source window of drag (0=desktop)
+trash_flag:             .byte   0 ; if Trash is included in selection
 
         DEFINE_POINT initial_coords, 0, 0
         DEFINE_POINT last_coords, 0, 0
@@ -968,7 +967,8 @@ loop:   lda     icon_list,x
         jsr     SELF_MODIFIED
 
 next:   inc     index
-        ldx     index
+        index := *+1
+        ldx     #SELF_MODIFIED_BYTE
         cpx     num_icons
         bne     loop
 
@@ -1017,6 +1017,7 @@ find_icon:
 ;;; Input: `findwindow_params` populated
 ;;; Output:
 ;;; Assert: `FindWindow` was called and returned `Area::content`
+;;; Trashes $06
 .proc CheckRealContentArea
         COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
         copy    findwindow_params::window_id, findcontrol_params::window_id
@@ -1047,14 +1048,11 @@ headery:
         .word   0
 .endproc ; CheckRealContentArea
 
-
+;;; Trashes $06
 .proc ValidateTargetAndHighlight
         ;; Over an icon
         sta     icon_num
 
-        jsr     PushPointers
-
-        lda     icon_num
         ptr := $06
         jsr     GetIconState    ; sets `ptr`/$06 too
 
@@ -1074,19 +1072,13 @@ headery:
         asl
         bpl     done
 
-        ;; Stash window for the future
-        lsr
-        and     #kIconEntryWinIdMask
-        sta     window_id
-
         ;; Highlight it!
         icon_num := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     highlight_icon_id
         jsr     HighlightIcon
 
-done:   jsr     PopPointers     ; do not tail-call optimise!
-        rts
+done:   rts
 .endproc ; ValidateTargetAndHighlight
 
 .proc XdrawOutline
