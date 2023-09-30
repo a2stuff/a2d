@@ -1859,19 +1859,15 @@ rect:   .tag    MGTK::Rect
         beq     volume
 
         ;; File (i.e. icon in window)
-        copy    #$80, icon_in_window_flag
         MGTK_CALL MGTK::SetPattern, white_pattern
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        jsr     SetPortForWinIcon
         bne     ret             ; obscured!
-        jsr     OffsetIconPolyAndRect
-        jsr     ShiftPortDown ; Further offset by window's items/used/free bar
         MGTK_CALL MGTK::PaintPoly, poly
         jmp     RedrawIconsAfterErase
 ret:    rts
 
         ;; Volume (i.e. icon on desktop)
 volume:
-        copy    #0, icon_in_window_flag
         MGTK_CALL MGTK::GetDeskPat, addr
         MGTK_CALL MGTK::SetPattern, 0, addr
         jsr     SetPortForVolIcon
@@ -1917,71 +1913,21 @@ loop:   dex                     ; any icons to draw?
         bne     next
     END_IF
 
-        bit     icon_in_window_flag ; windowed?
-    IF_NS
-        lda     icon
-        pha                     ; A = icon
-        jsr     CalcClipDeltas
-        pla                     ; A = icon
-        jsr     OffsetIcon      ; yes, adjust rect
-    END_IF
-
         ITK_CALL IconTK::IconInRect, icon
     IF_NOT_ZERO
-        bit     icon_in_window_flag
-      IF_NC
+        lda     clip_window_id
+      IF_ZERO
         ITK_CALL IconTK::DrawIcon, icon
       ELSE
         ITK_CALL IconTK::DrawIconRaw, icon
       END_IF
     END_IF
 
-        bit     icon_in_window_flag
-    IF_NS
-        jsr     InvertClipDeltas
-        lda     icon
-        jsr     OffsetIcon
-    END_IF
-
 next:   pla
         tax
         bpl     loop            ; always
 
-.proc OffsetIcon
-        ldy     #IconEntry::iconx
-        add16in (ptr),y, clip_dx, (ptr),y ; iconx += maprect::left - viewloc::xcoord
-        iny
-        add16in (ptr),y, clip_dy, (ptr),y ; icony += maprect::top - viewloc::xcoord
-        rts
-.endproc ; OffsetIcon
-
 .endproc ; RedrawIconsAfterErase
-
-;;; ============================================================
-;;; Offset coordinates for windowed icons
-
-.proc OffsetIconPolyAndRect
-        jsr     CalcClipDeltas
-
-        ldxy    clip_dx
-        addxy   bounding_rect::x1
-        addxy   bounding_rect::x2
-        ldxy    clip_dy
-        addxy   bounding_rect::y1
-        addxy   bounding_rect::y2
-
-        ldx     #0
-loop1:  add16   poly::vertices+0,x, clip_dx, poly::vertices+0,x
-        add16   poly::vertices+2,x, clip_dy, poly::vertices+2,x
-        inx
-        inx
-        inx
-        inx
-        cpx     #kPolySize * .sizeof(MGTK::Point)
-        bne     loop1
-
-        rts
-.endproc ; OffsetIconPolyAndRect
 
         ;; For `RedrawIconsAfterErase`
 redraw_highlighted_flag:
@@ -1994,10 +1940,6 @@ erase_icon_id:
 icon:   .byte   0
 icon_rect:
         .tag    MGTK::Rect
-
-icon_in_window_flag:
-        .byte   0
-
 .endproc ; EraseIconCommon
 
 
@@ -2043,6 +1985,8 @@ reserved:       .byte   0
         REF_MAPINFO_MEMBERS
 .endparams
 
+;;; ============================================================
+
         DEFINE_RECT screen_bounds, 0, kMenuBarHeight, kScreenWidth-1, kScreenHeight-1
 
 .proc SetPortForVolIcon
@@ -2065,13 +2009,15 @@ reserved:       .byte   0
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into `icon_grafport`
         RTS_IF_NE                                     ; obscured
 
+        viewloc := icon_grafport+MGTK::GrafPort::viewloc
+        maprect := icon_grafport+MGTK::GrafPort::maprect
+
         ;; Stash, needed to offset port when drawing to get correct patterns
-        jsr     CalcClipDeltas
+        sub16   maprect+MGTK::Rect::x1, viewloc+MGTK::Point::xcoord, clip_dx
+        sub16   maprect+MGTK::Rect::y1, viewloc+MGTK::Point::ycoord, clip_dy
 
         ;; Adjust `icon_grafport` so that `viewloc` and `maprect` are just
         ;; a clipping rectangle in screen coords.
-        viewloc := icon_grafport+MGTK::GrafPort::viewloc
-        maprect := icon_grafport+MGTK::GrafPort::maprect
         sub16   maprect+MGTK::Rect::x2, maprect+MGTK::Rect::x1, portbits::maprect+MGTK::Rect::x2
         sub16   maprect+MGTK::Rect::y2, maprect+MGTK::Rect::y1, portbits::maprect+MGTK::Rect::y2
         COPY_STRUCT MGTK::Point, icon_grafport+MGTK::GrafPort::viewloc, portbits::maprect
@@ -2079,7 +2025,6 @@ reserved:       .byte   0
         add16   portbits::maprect+MGTK::Rect::y1, portbits::maprect+MGTK::Rect::y2, portbits::maprect+MGTK::Rect::y2
 
         ;; For window's items/used/free space bar
-        kOffset = kWindowHeaderHeight
         add16_8 portbits::maprect+MGTK::Rect::y1, header_height
 
         FALL_THROUGH_TO DuplicateClipStructsAndSetPortBits
@@ -2120,20 +2065,6 @@ reserved:       .byte   0
 
 empty:  return #$FF
 .endproc ; DuplicateClipStructsAndSetPortBits
-
-;;; ============================================================
-
-;;; Computes delta between screen and viewport coodinates
-;;; Inputs: `icon_grafport` has viewport
-;;; Output: `clip_dx` and `clip_dy` initialized
-.proc CalcClipDeltas
-        viewloc := icon_grafport+MGTK::GrafPort::viewloc
-        maprect := icon_grafport+MGTK::GrafPort::maprect
-
-        sub16   maprect+MGTK::Rect::x1, viewloc+MGTK::Point::xcoord, clip_dx
-        sub16   maprect+MGTK::Rect::y1, viewloc+MGTK::Point::ycoord, clip_dy
-        rts
-.endproc ; CalcClipDeltas
 
 ;;; ============================================================
 
@@ -2436,24 +2367,10 @@ case2:
         MGTK_CALL MGTK::SetPortBits, portbits
 
         ;; Invert for the next call
-        FALL_THROUGH_TO InvertClipDeltas
-.endproc ; OffsetPortAndIcon
-
-.proc InvertClipDeltas
         sub16   #0, clip_dx, clip_dx
         sub16   #0, clip_dy, clip_dy
         rts
-.endproc ; InvertClipDeltas
-
-;;; ============================================================
-
-.proc ShiftPortDown
-        ;; For window's items/used/free space bar
-        add16_8 icon_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, header_height
-        add16_8 icon_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, header_height
-        MGTK_CALL MGTK::SetPort, icon_grafport
-        rts
-.endproc ; ShiftPortDown
+.endproc ; OffsetPortAndIcon
 
 ;;; ============================================================
 ;;; Used/Free icon map
