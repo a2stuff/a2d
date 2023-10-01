@@ -2223,9 +2223,6 @@ do_pt:  lda     pt_num
         copy    findwindow_params::window_id, getwinframerect_params::window_id
         MGTK_CALL MGTK::GetWinFrameRect, getwinframerect_params
 
-        ;; TODO: Determine why these are necessary:
-        dec16   win_r
-
         ;; ==================================================
         ;; At this point, win_r/t/l/b are the window edges,
         ;; cr_r/t/l/b are the rect we know has at least one
@@ -2252,17 +2249,11 @@ do_pt:  lda     pt_num
 
         ;; Cases 1/2/3 (and continue below)
         ;; if (cr_r > win_r)
-        ;; . cr_r = win_r + 1
-        scmp16  cr_r, win_r
-        bmi     case789
+        ;; . cr_r = win_r
+        scmp16  win_r, cr_r
+        bpl     case789
 
-        ldx     win_r
-        ldy     win_r + 1
-        inx
-        bne     :+
-        iny
-:       stx     cr_r
-        sty     cr_r + 1
+        copy16  win_r, cr_r
         jmp     vert
 
         ;; Cases 7/8/9 (and done)
@@ -2306,16 +2297,16 @@ vert:   scmp16  cr_t, win_t
 
         ;; Case 2
         ;; if (win_r < stash_r)
-        ;; . cr_l = win_r + 2
-        ;; . vx   = win_r + 2
+        ;; . cr_l = win_r + 1
+        ;; . vx   = win_r + 1
         ;; . cr_r = stash_r + 2 (workaround for https://github.com/a2stuff/a2d/issues/153)
 case2:
-        scmp16  win_r, stash_r
-        bpl     :+
+        scmp16  stash_r, win_r
+        bmi     :+
 
         lda     win_r
         clc
-        adc     #2
+        adc     #1
         sta     cr_l
         sta     vx
         lda     win_r+1
