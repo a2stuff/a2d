@@ -25,6 +25,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Prevent crash launching program after previewing images. ([#765](https://github.com/a2stuff/a2d/issues/765))
 * Filetype and support for Vortex Tracker PT3 files.
 * Added an easter egg. Can you find it?
+* Improve layout of Add/Edit a Shortcut dialog.
 
 ### Selector
 

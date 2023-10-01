@@ -2224,8 +2224,6 @@ do_pt:  lda     pt_num
         MGTK_CALL MGTK::GetWinFrameRect, getwinframerect_params
 
         ;; TODO: Determine why these are necessary:
-        dec16   win_l
-        dec16   win_t
         dec16   win_r
 
         ;; ==================================================
@@ -2269,21 +2267,21 @@ do_pt:  lda     pt_num
 
         ;; Cases 7/8/9 (and done)
         ;; if (win_l > cr_l)
-        ;; . cr_r = win_l
+        ;; . cr_r = win_l - 1
 case789:
-        scmp16  win_l, cr_l
-        bmi     vert
+        scmp16  cr_l, win_l
+        bpl     vert
 
-        copy16  win_l, cr_r
+        sub16   win_l, #1, cr_r
         jmp     reclip
 
         ;; Cases 3/6 (and done)
         ;; if (win_t > cr_t)
-        ;; . cr_b = win_t
-vert:   scmp16  win_t, cr_t
-        bmi     :+
+        ;; . cr_b = win_t - 1
+vert:   scmp16  cr_t, win_t
+        bpl     :+
 
-        copy16  win_t, cr_b
+        sub16   win_t, #1, cr_b
         copy    #1, more_drawing_needed_flag
         jmp     reclip
 
