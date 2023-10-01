@@ -2273,7 +2273,6 @@ vert:   scmp16  cr_t, win_t
         bpl     :+
 
         sub16   win_t, #1, cr_b
-        copy    #1, more_drawing_needed_flag
         jmp     reclip
 
         ;; Cases 1/4 (and done)
@@ -2292,7 +2291,6 @@ vert:   scmp16  cr_t, win_t
         iny
 :       sty     cr_t+1
         sty     vy+1
-        copy    #1, more_drawing_needed_flag
         jmp     reclip
 
         ;; Case 2
@@ -2341,14 +2339,12 @@ case2:
         addxy   portbits::maprect::x1
         addxy   portbits::maprect::x2
         addxy   bitmap_rect::x1
-        addxy   bitmap_rect::x2
         addxy   label_rect::x1  ; x2 not used
 
         ldxy    clip_dy
         addxy   portbits::maprect::y1
         addxy   portbits::maprect::y2
         addxy   bitmap_rect::y1
-        addxy   bitmap_rect::y2
         addxy   label_rect::y1  ; y2 not used
 
         MGTK_CALL MGTK::SetPortBits, portbits
