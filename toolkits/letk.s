@@ -335,7 +335,9 @@ data    .addr
 length  .byte
 END_PARAM_BLOCK
 
-        add16_8 a_buf, #1, text_params::data
+        ldxy    a_buf
+        inxy
+        stxy    text_params::data
         ldy     #0
         lda     (a_buf),y
         sta     text_params::length
@@ -700,7 +702,9 @@ END_PARAM_BLOCK
         lda     (a_buf),y
         beq     :+
         sta     dt_params::textlen
-        add16_8 a_buf, #1, dt_params::textptr
+        ldxy    a_buf
+        inxy
+        stxy    dt_params::textptr
         MGTK_CALL MGTK::DrawText, dt_params
 :
 

@@ -694,7 +694,9 @@ END_PARAM_BLOCK
         ldy     #0
         lda     (a_shortcut),y
         sta     tw_params::textlen
-        add16_8 a_shortcut, #1, tw_params::textptr
+        ldxy    a_shortcut
+        inxy
+        stxy    tw_params::textptr
         MGTK_CALL MGTK::TextWidth, tw_params
 
         sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
@@ -706,7 +708,9 @@ END_PARAM_BLOCK
         ldy     #0
         lda     (a_label),y
         sta     tw_params::textlen
-        add16_8 a_label, #1, tw_params::textptr
+        ldxy    a_label
+        inxy
+        stxy    tw_params::textptr
         MGTK_CALL MGTK::TextWidth, tw_params
 
         add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord

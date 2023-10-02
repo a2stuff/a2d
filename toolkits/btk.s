@@ -262,7 +262,9 @@ END_PARAM_BLOCK
         lda     (a_label),y
         beq     :+
         sta     dt_params::textlen
-        add16_8 a_label, #1, dt_params::textptr
+        ldxy    a_label
+        inxy
+        stxy    dt_params::textptr
         MGTK_CALL MGTK::DrawText, dt_params
 :       rts
 .endproc ; _DrawLabel
@@ -284,7 +286,9 @@ END_PARAM_BLOCK
         rts
 :
         sta     tw_params::textlen
-        add16_8 a_label, #1, tw_params::textptr
+        ldxy    a_label
+        inxy
+        stxy    tw_params::textptr
         MGTK_CALL MGTK::TextWidth, tw_params
         ldax    tw_params::width
         rts
@@ -301,7 +305,9 @@ END_PARAM_BLOCK
         lda     (a_shortcut),y
         beq     :+
         sta     dt_params::textlen
-        add16_8 a_shortcut, #1, dt_params::textptr
+        ldxy    a_shortcut
+        inxy
+        stxy    dt_params::textptr
         MGTK_CALL MGTK::DrawText, dt_params
 :       rts
 .endproc ; _DrawShortcut
@@ -323,7 +329,9 @@ END_PARAM_BLOCK
         rts
 :
         sta     tw_params::textlen
-        add16_8 a_shortcut, #1, tw_params::textptr
+        ldxy    a_shortcut
+        inxy
+        stxy    tw_params::textptr
         MGTK_CALL MGTK::TextWidth, tw_params
         ldax    tw_params::width
         rts

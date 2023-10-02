@@ -14162,7 +14162,9 @@ measure:
         ldy     #0
         lda     (ptr),y
         sta     len
-        add16   ptr, #1, txt
+        ldxy    ptr
+        inxy
+        stxy    txt
         MGTK_CALL MGTK::TextWidth, txt
         cmp16   result, #kProgressDialogPathWidth
         rts
@@ -14736,7 +14738,9 @@ done:   rts
 
         ;; Compute text width
         pha                     ; A = flags
-        add16_8 ptr, #1, textptr
+        ldxy    ptr
+        inxy
+        stxy    textptr
         ldax    ptr
         jsr     AuxLoad
         sta     textlen
