@@ -342,13 +342,9 @@ done_buttons:
 .ifdef AD_WRAP
 .scope
         ;; Measure for splitting
-        ldx     alert_params::text
-        ldy     alert_params::text + 1
-        inx
-        bne     :+
-        iny
-:       stx     textwidth_params::data
-        sty     textwidth_params::data + 1
+        ldxy    alert_params::text
+        inxy
+        stxy    textwidth_params::data
 
         ptr := $06
         copy16  alert_params::text, ptr

@@ -254,6 +254,15 @@ end:
         sty     arg+1
 .endmacro
 
+;;; Increment X,Y as a 16-bit number (x lo, y hi)
+.macro inxy
+        .local skip
+        inx
+        bne     skip
+        iny
+skip:
+.endmacro
+
 ;;; Core for add16/sub16
 .macro _addsub16 op, opc, arg1, arg2, arg3, arg4, arg5, arg6
     .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}

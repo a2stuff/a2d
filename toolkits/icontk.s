@@ -2111,15 +2111,10 @@ start:  lda     more_drawing_needed_flag
 
         ;; cr_l = cr_r + 1
         ;; vx   = cr_r + 1
-        ldx     cr_r
-        ldy     cr_r+1
-        inx
-        stx     cr_l
-        stx     vx
-        bne     :+
-        iny
-:       sty     cr_l+1
-        sty     vx+1
+        ldxy    cr_r
+        inxy
+        stxy    cr_l
+        stxy    vx
 
         ;; cr_t = clip_bounds::y1
         ;; cr_r = clip_bounds::x2
@@ -2277,20 +2272,15 @@ vert:   scmp16  cr_t, win_t
 
         ;; Cases 1/4 (and done)
         ;; if (win_b < cr_b)
-        ;; . cr_t = win_b + 2
-        ;; . vy   = win_b + 2
+        ;; . cr_t = win_b + 1
+        ;; . vy   = win_b + 1
 :       scmp16  win_b, cr_b
         bpl     case2
 
-        ldx     win_b
-        ldy     win_b+1
-        inx
-        stx     cr_t
-        stx     vy
-        bne     :+
-        iny
-:       sty     cr_t+1
-        sty     vy+1
+        ldxy    win_b
+        inxy
+        stxy    cr_t
+        stxy    vy
         jmp     reclip
 
         ;; Case 2
@@ -2302,27 +2292,18 @@ case2:
         scmp16  stash_r, win_r
         bmi     :+
 
-        lda     win_r
-        clc
-        adc     #1
-        sta     cr_l
-        sta     vx
-        lda     win_r+1
-        adc     #0
-        sta     cr_l+1
-        sta     vx+1
+        ldxy    win_r
+        inxy
+        stxy    cr_l
+        stxy    vx
         add16   stash_r, #2, cr_r
         jmp     reclip
 
         ;; Case 5 - done!
 :       copy16  clip_bounds::x2, cr_r
-        ldx     clip_bounds::x2
-        ldy     clip_bounds::x2 + 1
-        inx
-        bne     :+
-        iny
-:       stx     cr_l
-        sty     cr_l + 1
+        ldxy    clip_bounds::x2
+        inxy
+        stxy    cr_l
         jmp     set_bits
 .endproc ; CalcWindowIntersections
 
