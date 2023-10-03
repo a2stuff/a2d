@@ -874,10 +874,10 @@ same_window:
         beq     move_ok
 
         cmp     #MGTK::Area::content
-        jne     finish          ; don't move
+        bne     finish          ; don't move
 
         jsr     CheckRealContentArea
-        jne     finish          ; don't move
+        bcs     finish          ; don't move
 
         bit     fixed
         bmi     finish          ; don't move
@@ -996,7 +996,7 @@ next:   inc     index
         bne     fail            ; menubar, titlebar, etc
 
         jsr     CheckRealContentArea
-        beq     find_icon
+        bcc     find_icon
 
 fail:   return  #0              ; no icon
 
@@ -1015,7 +1015,7 @@ find_icon:
 
 ;;; Dig deeper into FindWindow results to ensure it's really content.
 ;;; Input: `findwindow_params` populated
-;;; Output:
+;;; Output: C=0 if content, C=1 if non-content
 ;;; Assert: `FindWindow` was called and returned `Area::content`
 ;;; Trashes $06
 .proc CheckRealContentArea
@@ -1038,10 +1038,10 @@ find_icon:
         cmp16   findwindow_params::mousey, headery
         bcc     fail
 
-        lda     #0
+        clc
         rts
 
-fail:   lda     #$FF
+fail:   sec
         rts
 
 headery:
@@ -1271,7 +1271,10 @@ inside:
 
 ;;; ============================================================
 
-;;; Used by DrawIcon and EraseIcon
+;;; Used by `DrawIcon` and `EraseIcon`. Expected to be 0 on first call
+;;; to `CalcWindowIntersections` to signal the start of a clipping
+;;; sequence. Set to 1 if a subsequent call is needed, and back to 0
+;;; once all drawing is complete.
 more_drawing_needed_flag:
         .byte   0
 
@@ -1366,7 +1369,7 @@ clip_dy:
         ;; Determine if we want clipping, based on icon type and flags.
 
         bit     clip_icons_flag
-        jpl     DoPaint         ; no clipping, just paint
+        bpl     DoPaint         ; no clipping, just paint
 
         ;; Set up clipping structs and port
         lda     clip_window_id
@@ -1379,6 +1382,7 @@ clip_dy:
 
         ;; Paint icon iteratively, handling overlapping windows
 :       jsr     CalcWindowIntersections
+        bcs     ret             ; nothing remaining to draw
 
         jsr     OffsetPortAndIcon
         jsr     DoPaint
@@ -1391,6 +1395,8 @@ ret:    rts
 
 
 .proc DoPaint
+        label_pos := $06
+
         ;; Prep coords
         copy16  label_rect+MGTK::Rect::x1, label_pos+MGTK::Point::xcoord
         add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight-1, label_pos+MGTK::Point::ycoord
@@ -1475,8 +1481,6 @@ state:                          ; copy of IconEntry::state
         .byte   0
 win_flags:                      ; copy of IconEntry::win_flags
         .byte   0
-
-        DEFINE_POINT label_pos, 0, 0
 
 .endproc ; DrawIconCommon
 
@@ -1873,9 +1877,11 @@ volume:
         MGTK_CALL MGTK::SetPattern, 0, addr
         jsr     SetPortForVolIcon
 :       jsr     CalcWindowIntersections
+        bcs     :+              ; nothing remaining to draw
         MGTK_CALL MGTK::PaintPoly, poly
         lda     more_drawing_needed_flag
         bne     :-
+:
         FALL_THROUGH_TO RedrawIconsAfterErase
 
 ;;; ============================================================
@@ -2066,6 +2072,10 @@ empty:  return #$FF
 
 ;;; ============================================================
 
+;;; Returns C=0 if a non-degenerate clipping rect is returned, so a
+;;; paint call is needed, and `more_drawing_needed_flag` is non-zero
+;;; if another call to this proc is needed after the paint. Returns
+;;; C=1 if no clipping rect remains, so no drawing is needed.
 .proc CalcWindowIntersections
         jmp     start
 
@@ -2178,10 +2188,11 @@ set_bits:
 :       MGTK_CALL MGTK::SetPortBits, portbits
         ;; if (cr_r < clip_bounds::x2) more drawing is needed
         cmp16   cr_r, clip_bounds::x2
-        asl
+        asl                     ; C=1 if more drawing needed
         lda     #0
-        rol
+        rol                     ; A=1 if more drawing needed
         sta     more_drawing_needed_flag
+        clc                     ; C=0 means clipping rect is valid
         rts
 
         ;; ==================================================
@@ -2300,11 +2311,9 @@ case2:
         jmp     reclip
 
         ;; Case 5 - done!
-:       copy16  clip_bounds::x2, cr_r
-        ldxy    clip_bounds::x2
-        inxy
-        stxy    cr_l
-        jmp     set_bits
+:       copy    #0, more_drawing_needed_flag
+        sec                     ; C=1 means no clipping rect remains
+        rts
 .endproc ; CalcWindowIntersections
 
 ;;; ============================================================
