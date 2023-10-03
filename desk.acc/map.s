@@ -207,13 +207,13 @@ xcoord := position_marker_params::viewloc::xcoord
 ycoord := position_marker_params::viewloc::ycoord
 
 position_marker_bitmap:
-        PIXELS  ".....#........"
-        PIXELS  "..#..#..#....."
-        PIXELS  "...#...#......"
-        PIXELS  "###.....###..."
-        PIXELS  "...#...#......"
-        PIXELS  "..#..#..#....."
-        PIXELS  ".....#........"
+        PIXELS  ".....#....."
+        PIXELS  "..#..#..#.."
+        PIXELS  "...#...#..."
+        PIXELS  "###.....###"
+        PIXELS  "...#...#..."
+        PIXELS  "..#..#..#.."
+        PIXELS  ".....#....."
 
 ;;; ============================================================
 ;;; Line Edit

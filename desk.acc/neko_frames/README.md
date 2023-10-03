@@ -73,7 +73,7 @@ https://www.345tool.com/converter/hex-to-binary-converter (make sure "Pad Leadin
 00000000000000000000000000000000
 ```
 
-* Convert 01 to .# and make into strings for use with the A2D conversion macro "PIXELS". Pad until a multiple of 7 long.
+* Convert 01 to .# and make into strings for use with the A2D conversion macro "PIXELS".
 
 ```
         PIXELS  "..................................."

@@ -930,21 +930,19 @@ ycoord: .word   top
 ;;; * '#' is a 1 bit, anything else is a 0
 ;;; * must be a multiple of 7 pixels wide.
 ;;; e.g. PXS "..##############....."
-.macro PIXELS str, ii
-        ;; Bootstrap, after error checking.
+.macro PIXELS str, dummy
         .if .paramcount < 2
-                .if .strlen(str) .mod 7 <> 0
-                        .error "PIXELS: Bad string length"
-                .endif
-                PIXELS str, 0
-                .exitmacro
-        .endif
 
-        ;; Process next 7 characters into a byte.
-        .byte ((.strat(str, ii+0) = '#') << 0) | ((.strat(str, ii+1) = '#') << 1) | ((.strat(str, ii+2) = '#') << 2) | ((.strat(str, ii+3) = '#') << 3) | ((.strat(str, ii+4) = '#') << 4) | ((.strat(str, ii+5) = '#') << 5) | ((.strat(str, ii+6) = '#') << 6)
+        ;; Pad out with 0 bits
+        PIXELS .concat(str, "......"), 1234
 
-        ;; Recurse if more characters remain.
-        .if (ii + 7) < .strlen(str)
-                PIXELS str, (ii + 7)
+        .else
+
+        ;; Process each 7 characters into a byte.
+        .repeat .strlen(str) / 7, idx
+        __pixel__ .set idx * 7
+        .byte ((.strat(str, __pixel__+0) = '#') << 0) | ((.strat(str, __pixel__+1) = '#') << 1) | ((.strat(str, __pixel__+2) = '#') << 2) | ((.strat(str, __pixel__+3) = '#') << 3) | ((.strat(str, __pixel__+4) = '#') << 4) | ((.strat(str, __pixel__+5) = '#') << 5) | ((.strat(str, __pixel__+6) = '#') << 6)
+        .endrepeat
+
         .endif
 .endmacro
