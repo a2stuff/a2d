@@ -467,8 +467,8 @@ done:   rts
         ;; Pointer to IconEntry
         ldy     #EraseIconParams::icon
         lda     (params),y
-        ldx     #$80            ; redraw highlighted
-        jmp     EraseIconCommon ; A = icon id, X = redraw flag
+        sec                     ; redraw highlighted
+        jmp     EraseIconCommon ; A = icon id, C = redraw flag
 .endproc ; EraseIconImpl
 
 ;;; ============================================================
@@ -887,8 +887,8 @@ same_window:
 move_ok:
 
         INVOKE_WITH_LAMBDA IterateHighlightedIcons
-        ldx     #0              ; don't redraw highlighted
-        jmp     EraseIconCommon ; A = icon id, X = redraw flag
+        clc                     ; don't redraw highlighted
+        jmp     EraseIconCommon ; A = icon id, C = redraw flag
         END_OF_LAMBDA
 
         ;; --------------------------------------------------
@@ -1843,10 +1843,10 @@ rect:   .tag    MGTK::Rect
 
 ;;; ============================================================
 ;;; Erase an icon; redraws overlapping icons as needed
-;;; Inputs: A = icon id, X = redraw highlighted flag
+;;; Inputs: A = icon id, C = redraw highlighted flag
 .proc EraseIconCommon
         sta     erase_icon_id
-        stx     redraw_highlighted_flag
+        ror     redraw_highlighted_flag ; shift C into high bit
 
         ptr := $06
         jsr     GetIconPtr
