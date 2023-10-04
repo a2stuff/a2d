@@ -374,7 +374,7 @@
   * Launch DeskTop. Run the command. Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
   * Launch DeskTop. Run the command. Select an empty drive. Let the operation continue until it fails. Verify that an error message is shown.
   * Configure a system with at least 9 volumes. Launch DeskTop. Run the command. Select a volume in the third column. Click OK. Verify that the selection rect is fully erased.
-  * Configure a system with 13 volumes, not counting /RAM. Launch DeskTop. Run the command. Verify that the boot device is excluded from the list so that only 12 devices are shown. Verify using the arrow keys that there aren't any overlapping volume entries.
+  * Configure a system with 13 volumes, not counting /RAM. Launch DeskTop. Run the command. Verify that all 13 volumes are shown.
   * Launch DeskTop. Run the command. Select a slot/drive containing an existing volume. Enter a new name and click OK. Verify that the confirmation prompt shows the volume with adjusted case matching the volume's icon, with quotes around the name.
   * Launch DeskTop. Run the command. Select a slot/drive containing an existing volume with a GS/OS-cased name and click OK. Enter a new name and click OK. Verify that the confirmation prompt shows the volume with the correct case matching the volume's icon, with quotes around the name.
   * Launch DeskTop. Run the command. Select a slot/drive containing a Pascal disk. Enter a new name and click OK. Verify that the confirmation prompt shows the Pascal volume name (e.g. "TGP:"), with quotes around the name.

@@ -14664,10 +14664,10 @@ params:  .res    3
         copy    #0, text_input_buf
 
         jsr     OpenDialogWindow
-        jsr     DrawOKButton
+        BTK_CALL BTK::Draw, ok_button_params
         bit     prompt_button_flags
         bmi     done
-        jsr     DrawCancelButton
+        BTK_CALL BTK::Draw, cancel_button_params
 done:   rts
 .endproc ; OpenPromptWindow
 
@@ -14780,11 +14780,6 @@ calc_y:
 
 ;;; ============================================================
 
-.proc DrawOKButton
-        BTK_CALL BTK::Draw, ok_button_params
-        rts
-.endproc ; DrawOKButton
-
 .proc UpdateOKButton
         bit     format_erase_overlay_flag
     IF_NS
@@ -14812,11 +14807,6 @@ set_state:
 
 ret:    rts
 .endproc ; UpdateOKButton
-
-.proc DrawCancelButton
-        BTK_CALL BTK::Draw, cancel_button_params
-        rts
-.endproc ; DrawCancelButton
 
 .proc EraseOKCancelButtons
         jsr     SetPenModeCopy

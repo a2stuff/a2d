@@ -363,7 +363,6 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         ;; Options control metrics
         kShortcutPickerCols = 3
         kShortcutPickerRows = 8
-        kShortcutPickerRowShift = 3 ; log2(kShortcutPickerRows)
         kShortcutPickerLeft = (winfo_entry_picker::kWidth - kShortcutPickerItemWidth * kShortcutPickerCols + 1) / 2
         kShortcutPickerTop  = 24
         kShortcutPickerItemWidth  = 104
@@ -390,14 +389,16 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         ;; Options control metrics
         kVolPickerCols = 3
-        kVolPickerRows = 4
-        kVolPickerRowShift = 2  ; log2(kVolPickerRows)
+        kVolPickerRows = 5
         kVolPickerLeft = (winfo_prompt_dialog::kWidth - kVolPickerItemWidth * kVolPickerCols + 1) / 2
-        kVolPickerTop = 44
+        kVolPickerTop = 34
         kVolPickerItemWidth = 127
         kVolPickerItemHeight = kListItemHeight
         kVolPickerTextHOffset = 1
         kVolPickerTextVOffset = kVolPickerItemHeight-1
+
+        ;; Label pos
+        DEFINE_POINT vol_picker_select_pos, kDialogLabelDefaultX, kVolPickerTop - 4
 
         ;; Line endpoints
         DEFINE_POINT vol_picker_line1_start, 7, kVolPickerTop - 2

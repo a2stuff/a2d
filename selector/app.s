@@ -243,7 +243,6 @@ str_selector_title:
         ;; Options control metrics
         kEntryPickerCols = 3
         kEntryPickerRows = 8
-        kEntryPickerRowShift = 3 ; log2(kEntryPickerRows)
         kEntryPickerLeft = (winfo::kWidth - kEntryPickerItemWidth * kEntryPickerCols + 1) / 2
         kEntryPickerTop  = 21
         kEntryPickerItemWidth = 127
@@ -781,7 +780,6 @@ kOptionPickerItemWidth = kEntryPickerItemWidth
 kOptionPickerItemHeight = kEntryPickerItemHeight
 kOptionPickerLeft = kEntryPickerLeft
 kOptionPickerTop = kEntryPickerTop
-kOptionPickerRowShift = app::kEntryPickerRowShift
 option_picker_item_rect := entry_picker_item_rect
 
         .include "../lib/option_picker.s"

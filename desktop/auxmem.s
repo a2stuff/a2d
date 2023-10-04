@@ -220,7 +220,7 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
         DEFINE_RECT_FRAME prompt_dialog_frame_rect, kPromptDialogWidth, kPromptDialogHeight
 
         kPromptDialogInsetLeft   = 8
-        kPromptDialogInsetTop    = 25
+        kPromptDialogInsetTop    = 20
         kPromptDialogInsetRight  = 8
         kPromptDialogInsetBottom = 20
         DEFINE_RECT clear_dialog_labels_rect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom

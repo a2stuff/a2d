@@ -19,8 +19,6 @@
 
         kDefaultFloppyBlocks = 280
 
-        kMaxVolumesInPicker = 12 ; 3 cols * 4 rows
-
 ;;; ============================================================
 
         ;; This must be page-aligned.
@@ -45,10 +43,6 @@ Exec:
 
 ;;; The selected index (0-based), or $FF if no drive is selected
 selected_index:
-        .byte   0
-
-;;; Number of volumes; min(DEVCNT+1, kMaxVolumesInPicker)
-num_volumes:
         .byte   0
 
 ;;; ============================================================
@@ -77,12 +71,14 @@ num_volumes:
         lda     unit_num
         bne     skip_select
 
+        MGTK_CALL MGTK::MoveTo, vol_picker_select_pos
         bit     erase_flag
     IF_NC
-        param_call main::DrawDialogLabel, 1, aux::str_select_format
+        ldax    #aux::str_select_format
     ELSE
-        param_call main::DrawDialogLabel, 1, aux::str_select_erase
+        ldax    #aux::str_select_erase
     END_IF
+        jsr     main::DrawString
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::MoveTo, vol_picker_line1_start
@@ -336,7 +332,6 @@ kOptionPickerItemWidth = kVolPickerItemWidth
 kOptionPickerItemHeight = kVolPickerItemHeight
 kOptionPickerLeft = kVolPickerLeft
 kOptionPickerTop = kVolPickerTop
-kOptionPickerRowShift = ::kVolPickerRowShift
 option_picker_item_rect := vol_picker_item_rect
 
         .include "../lib/option_picker.s"
@@ -380,9 +375,10 @@ ret:    rts
 ;;; Input: A = index
 ;;; Output: A unchanged, Z=1 if valid, Z=0 if not valid
 .proc IsIndexValid
-        cmp     num_volumes
+        cmp     DEVCNT
+        beq     yes
         bcs     no
-        ldx     #0              ; clear N
+yes:    ldx     #0              ; clear N
         rts
 no:     ldx     #$FF            ; set N
         rts
@@ -392,21 +388,16 @@ no:     ldx     #$FF            ; set N
 ;;; Draw volume labels
 
 .proc DrawVolumeLabels
-        ldx     DEVCNT          ; number of volumes - 1
-        inx
-        cpx     #kMaxVolumesInPicker
-        bcc     :+
-        ldx     #kMaxVolumesInPicker
-:       stx     num_volumes
-
         lda     #0
         sta     vol
 
         vol := *+1
 loop:   lda     #SELF_MODIFIED_BYTE
-        cmp     num_volumes
-        RTS_IF_EQ
-
+        cmp     DEVCNT
+        bcc     :+
+        beq     :+
+        rts
+:
         jsr     option_picker::GetOptionPos
         addax   #kVolPickerTextHOffset, vol_picker_item_rect::x1
         tya
@@ -415,9 +406,8 @@ loop:   lda     #SELF_MODIFIED_BYTE
         MGTK_CALL MGTK::MoveTo, vol_picker_item_rect::topleft
 
         ;; Reverse order, so boot volume is first
-        lda     num_volumes
+        lda     DEVCNT
         sec
-        sbc     #1
         sbc     vol
         jsr     GetDeviceNameForIndex
         jsr     main::DrawString
@@ -444,9 +434,8 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
 .proc GetSelectedUnitNum
         ;; Reverse order, so boot volume is first
-        lda     num_volumes
+        lda     DEVCNT
         sec
-        sbc     #1
         sbc     selected_index
         tax
         lda     DEVLST,x

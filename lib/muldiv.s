@@ -34,7 +34,7 @@ num2:   .byte   0
 
 ;;; ============================================================
 ;;; Input: dividend in A,X, divisor in Y (all unsigned)
-;;; Output: quotient in A,X (unsigned)
+;;; Output: quotient in A,X (unsigned), Y = remainder
 
 .proc Divide_16_8_16
         result := dividend
@@ -65,6 +65,7 @@ loop:   asl     dividend
 skip:   dex
         bne     loop
         ldax    dividend
+        ldy     remainder
         rts
 
 dividend:

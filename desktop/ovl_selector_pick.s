@@ -388,7 +388,6 @@ kOptionPickerItemWidth = kShortcutPickerItemWidth
 kOptionPickerItemHeight = kShortcutPickerItemHeight
 kOptionPickerLeft = kShortcutPickerLeft
 kOptionPickerTop = kShortcutPickerTop
-kOptionPickerRowShift = ::kShortcutPickerRowShift
 option_picker_item_rect := entry_picker_item_rect
 
         .include "../lib/option_picker.s"

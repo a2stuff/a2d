@@ -19,7 +19,6 @@
 ;;; * `kOptionPickerItemHeight` - const
 ;;; * `kOptionPickerLeft` - const
 ;;; * `kOptionPickerTop` - const
-;;; * `kOptionPickerRowShift` - const - log2(rows)
 ;;; Required definitions:
 ;;; * `selected_index` - byte, $FF if no selection
 ;;; * `option_picker_item_rect` - MGTK::Rect
@@ -31,7 +30,6 @@
 .scope option_picker_impl
 
 kOptionPickerMaxEntries = kOptionPickerRows * kOptionPickerCols
-.assert 1 << option_picker::kOptionPickerRowShift = kOptionPickerRows, error, "Rows/RowShift mismatch"
 
 ;;; ============================================================
 
@@ -95,11 +93,10 @@ ret:    rts
 ;;; Input: A = volume index
 ;;; Output: A,X = x coordinate, Y = y coordinate
 .proc GetOptionPos
-        sta     index
-        .repeat option_picker::kOptionPickerRowShift
-        lsr                     ; lo
-        .endrepeat
         ldx     #0              ; hi
+        ldy     #option_picker::kOptionPickerRows
+        jsr     Divide_16_8_16
+        sty     remainder
         ldy     #kOptionPickerItemWidth
         jsr     Multiply_16_8_16
         clc
@@ -110,10 +107,9 @@ ret:    rts
         pha                     ; hi
 
         ;; Y coordinate
-        index := *+1
-        lda     #SELF_MODIFIED_BYTE
-        and     #kOptionPickerRows-1
-        ldx     #0              ; hi
+        remainder := *+1
+        lda     #SELF_MODIFIED_BYTE ; lo
+        ldx     #0                  ; hi
         ldy     #kOptionPickerItemHeight
         jsr     Multiply_16_8_16
         clc
@@ -155,11 +151,12 @@ ret:    rts
         bcs     done
 
         ;; Index
-        .repeat option_picker::kOptionPickerRowShift
-        asl
-        .endrepeat
+        ldx     #0              ; hi
+        ldy     #option_picker::kOptionPickerRows
+        jsr     Multiply_16_8_16
+        clc
         row := *+1
-        ora     #SELF_MODIFIED_BYTE
+        adc     #SELF_MODIFIED_BYTE
         rts
 
 done:   return  #$FF
