@@ -390,6 +390,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         ;; Options control metrics
         kVolPickerCols = 3
         kVolPickerRows = 5
+        .assert kMaxDevListSize <= kVolPickerRows * kVolPickerCols, error, "can't fit all vols"
         kVolPickerLeft = (winfo_prompt_dialog::kWidth - kVolPickerItemWidth * kVolPickerCols + 1) / 2
         kVolPickerTop = 34
         kVolPickerItemWidth = 127
