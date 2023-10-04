@@ -36,7 +36,7 @@
 
         copy16  #HandleClick, file_dialog::click_handler_hook+1
         copy16  #HandleKey, file_dialog::HandleKeyEvent::key_meta_digit+1
-        copy    #kSelectorMaxNameLength, file_dialog_res::line_edit_f1::max_length
+        copy    #kSelectorMaxNameLength, file_dialog_res::line_edit::max_length
 
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
         lda     path_buf0
@@ -85,7 +85,7 @@ buffer: .res 16, 0
         jsr     file_dialog::DrawTitleCentered
 
         jsr     file_dialog::SetPortForDialog
-        param_call file_dialog::DrawInput1Label, enter_the_name_to_appear_label
+        param_call file_dialog::DrawLineEditLabel, enter_the_name_to_appear_label
 
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         param_call file_dialog::DrawString, add_a_new_entry_to_label_str

@@ -130,7 +130,7 @@ routine_table:
 .ifdef FD_EXTENDED
         pha
 .endif
-        jsr     SetCursorPointer
+        jsr     _SetCursorPointer
 
         lda     #0
         sta     type_down_buf
@@ -191,7 +191,7 @@ extra_controls_flag:
         cmp     #MGTK::EventKind::button_down
         bne     :+
         copy    #0, type_down_buf
-        jsr     HandleButtonDown
+        jsr     _HandleButtonDown
         jmp     EventLoop
 
 :       cmp     #MGTK::EventKind::key_down
@@ -212,7 +212,7 @@ extra_controls_flag:
         lda     findwindow_params::window_id
         cmp     #file_dialog_res::kFilePickerDlgWindowID
         beq     l1
-        jsr     UnsetCursorIBeam
+        jsr     _UnsetCursorIBeam
         jmp     EventLoop
 
 l1:
@@ -226,9 +226,9 @@ l1:
         MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         .assert MGTK::inrect_inside <> 0, error, "enum mismatch"
       IF_NE
-        jsr     SetCursorIBeam
+        jsr     _SetCursorIBeam
       ELSE
-        jsr     UnsetCursorIBeam
+        jsr     _UnsetCursorIBeam
       END_IF
     END_IF
 .endif
@@ -238,7 +238,7 @@ l1:
 
 ;;; ============================================================
 
-.proc HandleButtonDown
+.proc _HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
@@ -261,7 +261,7 @@ ret:    rts
     END_IF
         ;; Folder - open it.
         BTK_CALL BTK::Flash, file_dialog_res::open_button_params
-        jmp     DoOpen
+        jmp     _DoOpen
 
 not_list:
         lda     #file_dialog_res::kFilePickerDlgWindowID
@@ -277,7 +277,7 @@ not_list:
     IF_EQ
         BTK_CALL BTK::Track, file_dialog_res::drives_button_params
         bmi     :+
-        jsr     DoDrives
+        jsr     _DoDrives
 :       rts
     END_IF
 
@@ -287,11 +287,11 @@ not_list:
         MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rec::rect
         cmp     #MGTK::inrect_inside
      IF_EQ
-        jsr     IsOpenAllowed
+        jsr     _IsOpenAllowed
         bcs     :+
         BTK_CALL BTK::Track, file_dialog_res::open_button_params
         bmi     :+
-        jsr     DoOpen
+        jsr     _DoOpen
 :       rts
     END_IF
 
@@ -301,11 +301,11 @@ not_list:
         MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        jsr     IsCloseAllowed
+        jsr     _IsCloseAllowed
         bcs     :+
         BTK_CALL BTK::Track, file_dialog_res::close_button_params
         bmi     :+
-        jsr     DoClose
+        jsr     _DoClose
 :       rts
     END_IF
 
@@ -315,7 +315,7 @@ not_list:
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        jsr     IsOKAllowed
+        jsr     _IsOKAllowed
         bcs     :+
         BTK_CALL BTK::Track, file_dialog_res::ok_button_params
         bmi     :+
@@ -354,7 +354,7 @@ not_list:
 .endif
 
         rts
-.endproc ; HandleButtonDown
+.endproc ; _HandleButtonDown
 
 ;;; ============================================================
 ;;; This vector gets patched by overlays that add controls.
@@ -369,12 +369,12 @@ click_handler_hook:
 ;;; Clears selection.
 
 .proc UpdateListFromPath
-        jsr     ReadDir
-        jsr     UpdateDiskName
-        jsr     UpdateDirName
+        jsr     _ReadDir
+        jsr     _UpdateDiskName
+        jsr     _UpdateDirName
         copy    #$FF, selected_index
         jsr     ListInit
-        jmp     UpdateDynamicButtons
+        jmp     _UpdateDynamicButtons
 .endproc ; UpdateListFromPath
 
 ;;; As above, but select filename passed in A,X
@@ -384,50 +384,50 @@ click_handler_hook:
         txa
         pha
 
-        jsr     ReadDir
-        jsr     UpdateDiskName
-        jsr     UpdateDirName
+        jsr     _ReadDir
+        jsr     _UpdateDiskName
+        jsr     _UpdateDirName
 
         pla
         tax
         pla
-        jsr     FindFilenameIndex
+        jsr     _FindFilenameIndex
         sta     selected_index
 
         jsr     ListInit
-        jmp     UpdateDynamicButtons
+        jmp     _UpdateDynamicButtons
 .endproc ; UpdateListFromPathAndSelectFile
 .endif
 
 ;;; ============================================================
 
 .ifdef FD_EXTENDED
-.proc UnsetCursorIBeam
+.proc _UnsetCursorIBeam
         bit     cursor_ibeam_flag
         bpl     :+
-        jsr     SetCursorPointer
+        jsr     _SetCursorPointer
         copy    #0, cursor_ibeam_flag
 :       rts
-.endproc ; UnsetCursorIBeam
+.endproc ; _UnsetCursorIBeam
 .endif
 
 ;;; ============================================================
 
-.proc SetCursorPointer
+.proc _SetCursorPointer
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
-.endproc ; SetCursorPointer
+.endproc ; _SetCursorPointer
 
 ;;; ============================================================
 
 .ifdef FD_EXTENDED
-.proc SetCursorIBeam
+.proc _SetCursorIBeam
         bit     cursor_ibeam_flag
         bmi     :+
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         copy    #$80, cursor_ibeam_flag
 :       rts
-.endproc ; SetCursorIBeam
+.endproc ; _SetCursorIBeam
 
 cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         .byte   0
@@ -446,8 +446,8 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         ;; Append filename temporarily
         lda     file_list_index,x
         and     #$7F
-        jsr     GetNthFilename
-        jsr     AppendToPathBuf
+        jsr     _GetNthFilename
+        jsr     _AppendToPathBuf
     END_IF
 
         ldy     path_buf
@@ -467,37 +467,37 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 ;;; ============================================================
 
-.proc DoOpen
+.proc _DoOpen
         ldx     selected_index
         lda     file_list_index,x
         and     #$7F
 
-        jsr     GetNthFilename
-        jsr     AppendToPathBuf
+        jsr     _GetNthFilename
+        jsr     _AppendToPathBuf
 
         jmp     UpdateListFromPath
-.endproc ; DoOpen
+.endproc ; _DoOpen
 
 ;;; ============================================================
 
-.proc DoDrives
-        jsr     SetRootPath
+.proc _DoDrives
+        jsr     _SetRootPath
         jmp     UpdateListFromPath
-.endproc ; DoDrives
+.endproc ; _DoDrives
 
 ;;; ============================================================
 ;;; Set `path_buf` to "/"
 
-.proc SetRootPath
+.proc _SetRootPath
         copy    #1, path_buf
         copy    #'/', path_buf+1
         rts
-.endproc ; SetRootPath
+.endproc ; _SetRootPath
 
 ;;; ============================================================
 
 ;;; Output: C=0 if allowed, C=1 if not.
-.proc IsOpenAllowed
+.proc _IsOpenAllowed
         lda     selected_index
         bmi     no              ; no selection
         tax
@@ -509,12 +509,12 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 no:     sec
         rts
-.endproc ; IsOpenAllowed
+.endproc ; _IsOpenAllowed
 
 ;;; ============================================================
 
 ;;; Output: C=0 if allowed, C=1 if not.
-.proc IsCloseAllowed
+.proc _IsCloseAllowed
         lda     path_buf
         cmp     #1
         beq     no
@@ -524,16 +524,16 @@ no:     sec
 
 no:     sec
         rts
-.endproc ; IsCloseAllowed
+.endproc ; _IsCloseAllowed
 
 ;;; ============================================================
 
-IsOKAllowed := IsCloseAllowed
+_IsOKAllowed := _IsCloseAllowed
 
 ;;; ============================================================
 
-.proc DoClose
-        jsr     IsCloseAllowed
+.proc _DoClose
+        jsr     _IsCloseAllowed
         bcs     ret
 
         ;; Remove last segment
@@ -541,13 +541,13 @@ IsOKAllowed := IsCloseAllowed
 
         lda     path_buf
         bne     :+
-        jsr     SetRootPath
+        jsr     _SetRootPath
 :
 
         jsr     UpdateListFromPath
 
 ret:    rts
-.endproc ; DoClose
+.endproc ; _DoClose
 
 ;;; ============================================================
 ;;; Key handler
@@ -565,7 +565,7 @@ ret:    rts
         ;; With modifiers
         lda     event_params::key
 
-        jsr     CheckTypeDown
+        jsr     _CheckTypeDown
         jeq     exit
 
         copy    #0, type_down_buf
@@ -592,13 +592,13 @@ ret:    rts
 
 .ifndef FD_EXTENDED
         lda     event_params::key
-        jsr     CheckTypeDown
+        jsr     _CheckTypeDown
         jeq     exit
 .else
         bit     extra_controls_flag
       IF_NC
         lda     event_params::key
-        jsr     CheckTypeDown
+        jsr     _CheckTypeDown
         jeq     exit
       END_IF
 .endif
@@ -607,19 +607,19 @@ ret:    rts
         lda     event_params::key
 
         cmp     #CHAR_RETURN
-        jeq     KeyReturn
+        jeq     _KeyReturn
 
         cmp     #CHAR_ESCAPE
-        jeq     KeyEscape
+        jeq     _KeyEscape
 
         cmp     #CHAR_CTRL_O
-        jeq     KeyOpen
+        jeq     _KeyOpen
 
         cmp     #CHAR_CTRL_D
-        jeq     KeyDrives
+        jeq     _KeyDrives
 
         cmp     #CHAR_CTRL_C
-        jeq     KeyClose
+        jeq     _KeyClose
 
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
@@ -634,52 +634,52 @@ exit:   rts
 
 ;;; ============================================================
 
-.proc KeyOpen
-        jsr     IsOpenAllowed
+.proc _KeyOpen
+        jsr     _IsOpenAllowed
         bcs     ret
 
         BTK_CALL BTK::Flash, file_dialog_res::open_button_params
-        jsr     DoOpen
+        jsr     _DoOpen
 
 ret:    rts
-.endproc ; KeyOpen
+.endproc ; _KeyOpen
 
 ;;; ============================================================
 
-.proc KeyClose
-        jsr     IsCloseAllowed
+.proc _KeyClose
+        jsr     _IsCloseAllowed
         bcs     ret
 
         BTK_CALL BTK::Flash, file_dialog_res::close_button_params
-        jsr     DoClose
+        jsr     _DoClose
 
 ret:    rts
-.endproc ; KeyClose
+.endproc ; _KeyClose
 
 ;;; ============================================================
 
-.proc KeyDrives
+.proc _KeyDrives
         BTK_CALL BTK::Flash, file_dialog_res::drives_button_params
-        jmp     DoDrives
-.endproc ; KeyDrives
+        jmp     _DoDrives
+.endproc ; _KeyDrives
 
 ;;; ============================================================
 
-.proc KeyReturn
-        jsr     IsOKAllowed
+.proc _KeyReturn
+        jsr     _IsOKAllowed
         bcs     ret
         BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
         jmp     HandleOK
 
 ret:    rts
-.endproc ; KeyReturn
+.endproc ; _KeyReturn
 
 ;;; ============================================================
 
-.proc KeyEscape
+.proc _KeyEscape
         BTK_CALL BTK::Flash, file_dialog_res::cancel_button_params
         jmp     HandleCancel
-.endproc ; KeyEscape
+.endproc ; _KeyEscape
 
 ;;; ============================================================
 ;;; This vector gets patched by overlays that add controls.
@@ -691,8 +691,8 @@ key_meta_digit:
 
 ;;; ============================================================
 
-.proc CheckTypeDown
-        jsr     UpcaseChar
+.proc _CheckTypeDown
+        jsr     _UpcaseChar
         cmp     #'A'
         bcc     :+
         cmp     #'Z'+1
@@ -720,16 +720,16 @@ file_char:
         stx     type_down_buf
         sta     type_down_buf,x
 
-        jsr     FindMatch
+        jsr     _FindMatch
         bmi     done
         cmp     selected_index
         beq     done
         jsr     ListSetSelection
-        jmp     UpdateDynamicButtons
+        jmp     _UpdateDynamicButtons
 
 done:   return  #0
 
-.proc FindMatch
+.proc _FindMatch
         lda     num_file_names
         bne     :+
         return  #$FF
@@ -739,7 +739,7 @@ done:   return  #0
 loop:   ldx     index
         lda     file_list_index,x
         and     #$7F
-        jsr     SetPtrToNthFilename
+        jsr     _SetPtrToNthFilename
 
         ldy     #0
         lda     ($06),y
@@ -747,7 +747,7 @@ loop:   ldx     index
 
         ldy     #1              ; compare strings (length >= 1)
 cloop:  lda     ($06),y
-        jsr     UpcaseChar
+        jsr     _UpcaseChar
         cmp     type_down_buf,y
         bcc     next
         beq     :+
@@ -769,11 +769,11 @@ next:   inc     index
 found:  return  index
 
 len:    .byte   0
-.endproc ; FindMatch
+.endproc ; _FindMatch
 
 index:  .byte   0
 
-.endproc ; CheckTypeDown
+.endproc ; _CheckTypeDown
 
 .endproc ; HandleKeyEvent
 
@@ -781,7 +781,7 @@ index:  .byte   0
 
 ;;; Input: A = index
 ;;; Output: A,X = filename
-.proc GetNthFilename
+.proc _GetNthFilename
         ldx     #$00
         stx     hi
 
@@ -804,34 +804,34 @@ index:  .byte   0
         tax
         tya
         rts
-.endproc ; GetNthFilename
+.endproc ; _GetNthFilename
 
 ;;; Input: A = index
 ;;; Output: $06 and A,X = filename
-.proc SetPtrToNthFilename
-        jsr     GetNthFilename
+.proc _SetPtrToNthFilename
+        jsr     _GetNthFilename
         stax    $06
         rts
-.endproc ; SetPtrToNthFilename
+.endproc ; _SetPtrToNthFilename
 
 ;;; ============================================================
 
-.proc UpcaseChar
+.proc _UpcaseChar
         cmp     #'a'
         bcc     done
         cmp     #'z'+1
         bcs     done
         and     #(CASE_MASK & $7F) ; convert lowercase to uppercase
 done:   rts
-.endproc ; UpcaseChar
+.endproc ; _UpcaseChar
 
 ;;; ============================================================
 
-.proc UpdateDynamicButtons
-        jsr     DrawOKLabel
-        jsr     DrawOpenLabel
-        jmp     DrawCloseLabel
-.endproc ; UpdateDynamicButtons
+.proc _UpdateDynamicButtons
+        jsr     _DrawOKLabel
+        jsr     _DrawOpenLabel
+        jmp     _DrawCloseLabel
+.endproc ; _UpdateDynamicButtons
 
 ;;; ============================================================
 
@@ -889,7 +889,7 @@ done:   rts
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::penXOR
 
-        jsr     IsOKAllowed
+        jsr     _IsOKAllowed
         ror
         sta     file_dialog_res::ok_button_rec::state
         BTK_CALL BTK::Draw, file_dialog_res::ok_button_params
@@ -897,12 +897,12 @@ done:   rts
         BTK_CALL BTK::Draw, file_dialog_res::cancel_button_params
         BTK_CALL BTK::Draw, file_dialog_res::drives_button_params
 
-        jsr     IsOpenAllowed
+        jsr     _IsOpenAllowed
         ror
         sta     file_dialog_res::open_button_rec::state
         BTK_CALL BTK::Draw, file_dialog_res::open_button_params
 
-        jsr     IsCloseAllowed
+        jsr     _IsCloseAllowed
         ror
         sta     file_dialog_res::close_button_rec::state
         BTK_CALL BTK::Draw, file_dialog_res::close_button_params
@@ -925,8 +925,8 @@ done:   rts
 
 ;;; ============================================================
 
-.proc DrawOpenLabel
-        jsr     IsOpenAllowed
+.proc _DrawOpenLabel
+        jsr     _IsOpenAllowed
         lda     #0
         ror                     ; C into high bit
         cmp     file_dialog_res::open_button_rec::state
@@ -936,12 +936,12 @@ done:   rts
         BTK_CALL BTK::Hilite, file_dialog_res::open_button_params
 
 ret:    rts
-.endproc ; DrawOpenLabel
+.endproc ; _DrawOpenLabel
 
 ;;; ============================================================
 
-.proc DrawOKLabel
-        jsr     IsOKAllowed
+.proc _DrawOKLabel
+        jsr     _IsOKAllowed
         lda     #0
         ror                     ; C into high bit
         cmp     file_dialog_res::ok_button_rec::state
@@ -951,12 +951,12 @@ ret:    rts
         BTK_CALL BTK::Hilite, file_dialog_res::ok_button_params
 
 ret:    rts
-.endproc ; DrawOKLabel
+.endproc ; _DrawOKLabel
 
 ;;; ============================================================
 
-.proc DrawCloseLabel
-        jsr     IsCloseAllowed
+.proc _DrawCloseLabel
+        jsr     _IsCloseAllowed
         lda     #0
         ror                     ; C into high bit
         cmp     file_dialog_res::close_button_rec::state
@@ -966,7 +966,7 @@ ret:    rts
         BTK_CALL BTK::Hilite, file_dialog_res::close_button_params
 
 ret:    rts
-.endproc ; DrawCloseLabel
+.endproc ; _DrawCloseLabel
 
 ;;; ============================================================
 
@@ -975,7 +975,7 @@ ret:    rts
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
         copy    #0, file_dialog::only_show_dirs_flag
 .ifdef FD_EXTENDED
-        jsr     UnsetCursorIBeam
+        jsr     _UnsetCursorIBeam
 .endif
         rts
 .endproc ; CloseWindow
@@ -985,7 +985,7 @@ ret:    rts
 ;;; Output: Copied to `file_dialog_res::filename_buf`
 ;;; Assert: 15 characters or less
 
-.proc CopyFilenameToBuf
+.proc _CopyFilenameToBuf
         stax    ptr
         ldx     #kMaxFilenameLength
         ptr := *+1
@@ -994,7 +994,7 @@ ret:    rts
         dex
         bpl     :-
         rts
-.endproc ; CopyFilenameToBuf
+.endproc ; _CopyFilenameToBuf
 
 ;;; ============================================================
 
@@ -1014,7 +1014,7 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc DrawStringCentered
+.proc _DrawStringCentered
         ptr := $06
         params := $06
 
@@ -1035,7 +1035,7 @@ ret:    rts
         MGTK_CALL MGTK::Move, params+3
         MGTK_CALL MGTK::DrawText, params
 ret:    rts
-.endproc ; DrawStringCentered
+.endproc ; _DrawStringCentered
 
 ;;; ============================================================
 
@@ -1054,18 +1054,18 @@ ret:    rts
         tax
         pla
 
-        jmp     DrawStringCentered
+        jmp     _DrawStringCentered
 .endproc ; DrawTitleCentered
 
 ;;; ============================================================
 
 .ifdef FD_EXTENDED
-.proc DrawInput1Label
+.proc DrawLineEditLabel
         stax    $06
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
         ldax    $06
         jmp     DrawString
-.endproc ; DrawInput1Label
+.endproc ; DrawLineEditLabel
 .endif
 
 ;;; ============================================================
@@ -1093,13 +1093,13 @@ retry:  ldx     #SELF_MODIFIED_BYTE
 found:  param_call AdjustVolumeNameCase, on_line_buffer
         lda     #0
         sta     path_buf
-        param_jump AppendToPathBuf, on_line_buffer
+        param_jump _AppendToPathBuf, on_line_buffer
 .endproc ; InitPathWithDefaultDevice
 
 ;;; ============================================================
 ;;; Output: Z=1 on success, Z=1 on failure
 
-.proc OpenDir
+.proc _OpenDir
         MLI_CALL OPEN, open_params
         bne     ret
         lda     open_params::ref_num
@@ -1107,11 +1107,11 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         sta     close_params::ref_num
         MLI_CALL READ, read_params
 ret:    rts
-.endproc ; OpenDir
+.endproc ; _OpenDir
 
 ;;; ============================================================
 
-.proc AppendToPathBuf
+.proc _AppendToPathBuf
         ptr := $06
         stax    ptr
         ldx     path_buf
@@ -1148,7 +1148,7 @@ ret:    rts
         lda     #0
 .endif
         rts
-.endproc ; AppendToPathBuf
+.endproc ; _AppendToPathBuf
 
 ;;; ============================================================
 
@@ -1165,15 +1165,15 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc ReadDir
+.proc _ReadDir
         lda     path_buf
         cmp     #1
-        jeq     ReadDrives
+        jeq     _ReadDrives
 
-        jsr     OpenDir
+        jsr     _OpenDir
         beq     :+
         copy    #1, path_buf
-        jmp     ReadDrives
+        jmp     _ReadDrives
 
 :
         lda     #0
@@ -1223,7 +1223,7 @@ l4:     ldy     #$00
         sta     (ptr),y
 
         lda     d1
-        jsr     CopyIntoNthFilename
+        jsr     _CopyIntoNthFilename
 
         inc     d1
         inc     d2
@@ -1237,7 +1237,7 @@ close:  MLI_CALL CLOSE, close_params
         bpl     :+
         lda     dir_count
         sta     num_file_names
-:       jsr     SortFileNames
+:       jsr     _SortFileNames
         clc
         rts
 
@@ -1259,13 +1259,13 @@ d3:     .byte   0
 entry_length:
         .byte   0
 d4:     .byte   0
-.endproc ; ReadDir
+.endproc ; _ReadDir
 
 ;;; ============================================================
 
         DEFINE_ON_LINE_PARAMS on_line_params_drives, 0, dir_read_buf
 
-.proc ReadDrives
+.proc _ReadDrives
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
 
         MLI_CALL ON_LINE, on_line_params_drives
@@ -1289,7 +1289,7 @@ loop:   ldy     #0
         param_call_indirect AdjustVolumeNameCase, ptr
 
         lda     num_file_names
-        jsr     CopyIntoNthFilename
+        jsr     _CopyIntoNthFilename
 
 
         ldx     num_file_names
@@ -1303,7 +1303,7 @@ next:   add16_8 ptr, #16        ; advance to next
         jmp     loop
 
 finish:
-        jsr     SortFileNames
+        jsr     _SortFileNames
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
 .ifdef FD_EXTENDED
@@ -1312,16 +1312,16 @@ finish:
 
         clc
         rts
-.endproc ; ReadDrives
+.endproc ; _ReadDrives
 
 ;;; ============================================================
 ;;; Inputs: A = dst filename index; $06 = src ptr
 ;;; Trashes $08
 
-.proc CopyIntoNthFilename
+.proc _CopyIntoNthFilename
         src_ptr := $06
         dst_ptr := $08
-        jsr     GetNthFilename
+        jsr     _GetNthFilename
         stax    dst_ptr
 
         ldy     #0
@@ -1333,11 +1333,11 @@ finish:
         bpl     :-
 
         rts
-.endproc ; CopyIntoNthFilename
+.endproc ; _CopyIntoNthFilename
 
 ;;; ============================================================
 
-.proc UpdateDiskName
+.proc _UpdateDiskName
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
 
@@ -1366,15 +1366,15 @@ finish:
 :       sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
-        param_call DrawStringCentered, file_dialog_res::filename_buf
+        param_call _DrawStringCentered, file_dialog_res::filename_buf
 
 ret:    rts
 
-.endproc ; UpdateDiskName
+.endproc ; _UpdateDiskName
 
 ;;; ============================================================
 
-.proc UpdateDirName
+.proc _UpdateDirName
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, file_dialog_res::dir_name_rect
         copy16  #path_buf, $06
@@ -1414,37 +1414,37 @@ ret:    rts
 :       sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
-        param_call DrawStringCentered, file_dialog_res::filename_buf
+        param_call _DrawStringCentered, file_dialog_res::filename_buf
 
 ret:    rts
-.endproc ; UpdateDirName
+.endproc ; _UpdateDirName
 
 ;;; ============================================================
 
 
 .proc SetPortForList
         lda     #file_dialog_res::kEntryListCtlWindowID
-        bne     SetPortForWindow ; always
+        bne     _SetPortForWindow ; always
 .endproc ; SetPortForList
 
 .proc SetPortForDialog
         lda     #file_dialog_res::kFilePickerDlgWindowID
-        FALL_THROUGH_TO SetPortForWindow
+        FALL_THROUGH_TO _SetPortForWindow
 .endproc ; SetPortForDialog
 
-.proc SetPortForWindow
+.proc _SetPortForWindow
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, window_grafport
         rts
-.endproc ; SetPortForWindow
+.endproc ; _SetPortForWindow
 
 ;;; ============================================================
 ;;; Sorts `file_list_index` so names are in ascending order
 ;;; Assert: On entry, `file_list_index` table is populated 0...`num_file_names`-1
 
-.proc SortFileNames
+.proc _SortFileNames
         lda     num_file_names
         cmp     #2
         RTS_IF_LT               ; can't sort < 2 records
@@ -1461,7 +1461,7 @@ ret:    rts
 
         outer := *+1
 oloop:  lda     #SELF_MODIFIED_BYTE
-        jsr     CalcPtr
+        jsr     _CalcPtr
         stax    ptr2
 
         lda     #0
@@ -1469,10 +1469,10 @@ oloop:  lda     #SELF_MODIFIED_BYTE
 
         inner := *+1
 iloop:  lda     #SELF_MODIFIED_BYTE
-        jsr     CalcPtr
+        jsr     _CalcPtr
         stax    ptr1
 
-        jsr     CompareStrings
+        jsr     _CompareStrings
         bcc     next
 
         ;; Swap
@@ -1486,7 +1486,7 @@ iloop:  lda     #SELF_MODIFIED_BYTE
         sta     file_list_index,y
 
         lda     outer
-        jsr     CalcPtr
+        jsr     _CalcPtr
         stax    ptr2
 
 next:   inc     inner
@@ -1499,27 +1499,27 @@ next:   inc     inner
 
         rts
 
-.proc CalcPtr
+.proc _CalcPtr
         tax
         lda     file_list_index,x
         and     #$7F
-        jmp     GetNthFilename
-.endproc ; CalcPtr
+        jmp     _GetNthFilename
+.endproc ; _CalcPtr
 
 ;;; Inputs: $06, $08 are pts to strings
 ;;; Compare strings at $06 (1) and $08 (2).
 ;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
-.proc CompareStrings
+.proc _CompareStrings
         ldy     #0
         copy    (ptr1),y, len1
         copy    (ptr2),y, len2
         iny
 
 loop:   lda     (ptr2),y
-        jsr     UpcaseChar
+        jsr     _UpcaseChar
         sta     char
         lda     (ptr1),y
-        jsr     UpcaseChar
+        jsr     _UpcaseChar
         char := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     ret             ; differ at Yth character
@@ -1541,9 +1541,9 @@ loop:   lda     (ptr2),y
 gt:     lda     #$FF            ; Z=0
         sec
 ret:    rts
-.endproc ; CompareStrings
+.endproc ; _CompareStrings
 
-.endproc ; SortFileNames
+.endproc ; _SortFileNames
 
 ;;; ============================================================
 ;;; Find index to filename in file_list_index.
@@ -1551,7 +1551,7 @@ ret:    rts
 ;;; Output: A = index, or $FF if not found
 
 .ifdef FD_EXTENDED
-.proc FindFilenameIndex
+.proc _FindFilenameIndex
         name_ptr := $08
         curr_ptr := $06
 
@@ -1568,7 +1568,7 @@ loop:
         beq     failed
 
         ;; Check length
-        jsr     SortFileNames::CompareStrings
+        jsr     _SortFileNames::_CompareStrings
         beq     found
 
         ;; No match - next!
@@ -1587,7 +1587,7 @@ found:  ldx     num_file_names
         bne     :-
         txa
         rts
-.endproc ; FindFilenameIndex
+.endproc ; _FindFilenameIndex
 .endif
 
 ;;; ============================================================
@@ -1596,40 +1596,29 @@ found:  ldx     num_file_names
 
 .ifdef FD_EXTENDED
 
-.scope f1
-
-.proc Init
-        LETK_CALL LETK::Init, file_dialog_res::le_params_f1
+.proc LineEditInit
+        LETK_CALL LETK::Init, file_dialog_res::le_params
         rts
-.endproc ; Init
-.proc Idle
-        LETK_CALL LETK::Idle, file_dialog_res::le_params_f1
+.endproc ; LineEditInit
+.proc LineEditIdle
+        LETK_CALL LETK::Idle, file_dialog_res::le_params
         rts
-.endproc ; Idle
-.proc Activate
-        LETK_CALL LETK::Activate, file_dialog_res::le_params_f1
+.endproc ; LineEditIdle
+.proc LineEditActivate
+        LETK_CALL LETK::Activate, file_dialog_res::le_params
         rts
-.endproc ; Activate
-.proc Key
-        copy    event_params::key, file_dialog_res::le_params_f1::key
-        copy    event_params::modifiers, file_dialog_res::le_params_f1::modifiers
-        LETK_CALL LETK::Key, file_dialog_res::le_params_f1
+.endproc ; LineEditActivate
+.proc LineEditKey
+        copy    event_params::key, file_dialog_res::le_params::key
+        copy    event_params::modifiers, file_dialog_res::le_params::modifiers
+        LETK_CALL LETK::Key, file_dialog_res::le_params
         rts
-.endproc ; Key
-.proc Click
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params_f1::coords
-        LETK_CALL LETK::Click, file_dialog_res::le_params_f1
+.endproc ; LineEditKey
+.proc LineEditClick
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params::coords
+        LETK_CALL LETK::Click, file_dialog_res::le_params
         rts
-.endproc ; Click
-
-.endscope ; f1
-
-LineEditInit            := f1::Init
-LineEditIdle            := f1::Idle
-LineEditActivate        := f1::Activate
-LineEditKey             := f1::Key
-LineEditClick           := f1::Click
-
+.endproc ; LineEditClick
 
 ;;; Dynamically altered table of handlers.
 
@@ -1639,20 +1628,16 @@ HandleOK:       jmp     0
 HandleCancel:   jmp     0
         .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
 
-;;; ============================================================
-
 .endif ; FD_EXTENDED
-
-;;; ============================================================
-
-.proc OnListSelectionChange
-        jsr     UpdateDynamicButtons
-        rts
-.endproc ; OnListSelectionChange
 
 ;;; ============================================================
 ;;; List Box
 ;;; ============================================================
+
+.proc OnListSelectionChange
+        jsr     _UpdateDynamicButtons
+        rts
+.endproc ; OnListSelectionChange
 
 .scope listbox
         winfo = file_dialog_res::winfo_listbox
@@ -1674,8 +1659,8 @@ listbox::selected_index = selected_index
         pha
         and     #$7F
 
-        jsr     GetNthFilename
-        jsr     CopyFilenameToBuf
+        jsr     _GetNthFilename
+        jsr     _CopyFilenameToBuf
         copy16  #kListViewNameX, listbox::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, listbox::item_pos
         param_call DrawString, file_dialog_res::filename_buf

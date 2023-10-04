@@ -197,8 +197,8 @@ nextwinfo:      .addr   0
 
 .ifdef FD_EXTENDED
 ;;; Auxiliary field
-        DEFINE_LINE_EDIT line_edit_f1, kFilePickerDlgWindowID, text_input_buf, kControlsLeft, kInput1Y, kInputWidth, kMaxPathLength
-        DEFINE_LINE_EDIT_PARAMS le_params_f1, line_edit_f1
+        DEFINE_LINE_EDIT line_edit, kFilePickerDlgWindowID, text_input_buf, kControlsLeft, kInput1Y, kInputWidth, kMaxPathLength
+        DEFINE_LINE_EDIT_PARAMS le_params, line_edit
 .endif ; FD_EXTENDED
 
 .endscope ; file_dialog_res
