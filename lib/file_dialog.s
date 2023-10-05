@@ -682,14 +682,6 @@ ret:    rts
 .endproc ; _KeyEscape
 
 ;;; ============================================================
-;;; This vector gets patched by overlays that add controls.
-
-.ifdef FD_EXTENDED
-key_meta_digit:
-        jmp     NoOp
-.endif
-
-;;; ============================================================
 
 .proc _CheckTypeDown
         jsr     _UpcaseChar
@@ -776,6 +768,14 @@ index:  .byte   0
 .endproc ; _CheckTypeDown
 
 .endproc ; HandleKeyEvent
+
+;;; ============================================================
+;;; This vector gets patched by overlays that add controls.
+
+.ifdef FD_EXTENDED
+key_meta_digit:
+        jmp     NoOp
+.endif
 
 ;;; ============================================================
 

@@ -35,7 +35,7 @@
         jsr     DrawCopyWhenButton
 
         copy16  #HandleClick, file_dialog::click_handler_hook+1
-        copy16  #HandleKey, file_dialog::HandleKeyEvent::key_meta_digit+1
+        copy16  #HandleKey, file_dialog::key_meta_digit+1
         copy    #kSelectorMaxNameLength, file_dialog_res::line_edit::max_length
 
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
@@ -175,7 +175,7 @@ invalid:
         jmp     ShowAlert
 
 ok:     jsr     file_dialog::CloseWindow
-        copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
+        copy16  #file_dialog::NoOp, file_dialog::key_meta_digit+1
         ldx     file_dialog::saved_stack
         txs
         ldx     which_run_list
@@ -201,7 +201,7 @@ found:  cpy     #2
 
 .proc HandleCancel
         jsr     file_dialog::CloseWindow
-        copy16  #file_dialog::NoOp, file_dialog::HandleKeyEvent::key_meta_digit+1
+        copy16  #file_dialog::NoOp, file_dialog::key_meta_digit+1
         ldx     file_dialog::saved_stack
         txs
         return  #$FF
