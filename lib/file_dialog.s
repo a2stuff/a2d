@@ -63,7 +63,7 @@
 ;;;
 ;;; ============================================================
 
-
+.scope file_dialog_impl
 
 ;;; Map from index in file_names to list entry; high bit is
 ;;; set for directories.
@@ -973,7 +973,7 @@ ret:    rts
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, file_dialog::only_show_dirs_flag
+        copy    #0, only_show_dirs_flag
 .ifdef FD_EXTENDED
         jsr     _UnsetCursorIBeam
 .endif
@@ -1685,3 +1685,35 @@ listbox::selected_index = selected_index
 .endproc ; DrawListEntryProc
 
 ;;; ============================================================
+
+.endscope ; file_dialog_impl
+
+;;; "Exports"
+CloseWindow := file_dialog_impl::CloseWindow
+DrawString := file_dialog_impl::DrawString
+DrawTitleCentered := file_dialog_impl::DrawTitleCentered
+EventLoop := file_dialog_impl::EventLoop
+GetPath := file_dialog_impl::GetPath
+InitPathWithDefaultDevice := file_dialog_impl::InitPathWithDefaultDevice
+NoOp := file_dialog_impl::NoOp
+OpenWindow := file_dialog_impl::OpenWindow
+SetPortForDialog := file_dialog_impl::SetPortForDialog
+Start := file_dialog_impl::Start
+StripPathBufSegment := file_dialog_impl::StripPathBufSegment
+UpdateListFromPath := file_dialog_impl::UpdateListFromPath
+
+only_show_dirs_flag := file_dialog_impl::only_show_dirs_flag
+path_buf := file_dialog_impl::path_buf
+saved_stack := file_dialog_impl::saved_stack
+
+.ifdef FD_EXTENDED
+UpdateListFromPathAndSelectFile := file_dialog_impl::UpdateListFromPathAndSelectFile
+DrawLineEditLabel := file_dialog_impl::DrawLineEditLabel
+LineEditActivate := file_dialog_impl::LineEditActivate
+LineEditInit := file_dialog_impl::LineEditInit
+click_handler_hook := file_dialog_impl::click_handler_hook
+kJumpTableSize := file_dialog_impl::kJumpTableSize
+key_meta_digit := file_dialog_impl::key_meta_digit
+jump_table := file_dialog_impl::jump_table
+extra_controls_flag := file_dialog_impl::extra_controls_flag
+.endif
