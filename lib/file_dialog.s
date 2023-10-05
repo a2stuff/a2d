@@ -1707,13 +1707,14 @@ path_buf := file_dialog_impl::path_buf
 saved_stack := file_dialog_impl::saved_stack
 
 .ifdef FD_EXTENDED
-UpdateListFromPathAndSelectFile := file_dialog_impl::UpdateListFromPathAndSelectFile
 DrawLineEditLabel := file_dialog_impl::DrawLineEditLabel
 LineEditActivate := file_dialog_impl::LineEditActivate
 LineEditInit := file_dialog_impl::LineEditInit
+UpdateListFromPathAndSelectFile := file_dialog_impl::UpdateListFromPathAndSelectFile
+
 click_handler_hook := file_dialog_impl::click_handler_hook
+extra_controls_flag := file_dialog_impl::extra_controls_flag
+jump_table := file_dialog_impl::jump_table
 kJumpTableSize := file_dialog_impl::kJumpTableSize
 key_meta_digit := file_dialog_impl::key_meta_digit
-jump_table := file_dialog_impl::jump_table
-extra_controls_flag := file_dialog_impl::extra_controls_flag
 .endif
