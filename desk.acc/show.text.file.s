@@ -54,11 +54,6 @@ mli_params:
         DEFINE_CLOSE_PARAMS close_params
 sizeof_mli_params = * - mli_params
 
-L0945:  .byte   $00
-L0946:  .byte   $00
-
-read_flag:                      ; set when the file is successfully read
-        .byte   0
 visible_flag:                   ; clear until text that should be visible is in view
         .byte   0
 
@@ -640,9 +635,6 @@ end:    rts
         jsr     ReadFilePage               ; second page
 
         lda     #0
-        sta     L0945           ; ???
-        sta     L0946           ; ???
-        sta     read_flag
         sta     visible_flag
 
 
@@ -775,30 +767,18 @@ cur_offset:
         sta     drawtext_params::textlen
         copy16  ptr, drawtext_params::textptr
 
-loop:   lda     L0945
-        bne     more
-        lda     read_flag
-        beq     :+
-        jsr     DrawTextRun
-        sec
-        rts
-
-:       jsr     EnsurePageBuffered
-more:   ldy     drawtext_params::textlen
+loop:
+        jsr     EnsurePageBuffered
+        ldy     drawtext_params::textlen
         lda     (ptr),y
         and     #CHAR_MASK
         sta     (ptr),y
-        inc     L0945
         cmp     #CHAR_RETURN
         beq     FinishTextRun
         cmp     #' '
         bne     :+
 
         sty     L0F9B
-        pha
-        lda     L0945
-        sta     L0946
-        pla
 
 :       cmp     #CHAR_TAB
         jeq     HandleTab
@@ -822,8 +802,6 @@ more:   ldy     drawtext_params::textlen
         cmp     #$FF
         beq     :+
         sta     drawtext_params::textlen
-        lda     L0946
-        sta     L0945
 :       inc     drawtext_params::textlen
         FALL_THROUGH_TO FinishTextRun
 .endproc ; FindTextRun
@@ -892,9 +870,6 @@ end:    rts
 .proc EnsurePageBuffered
         ptr := $06
 
-        lda     #0
-        sta     L0945           ; ???
-
         ;; Pointing at second page already?
         lda     drawtext_params::textptr+1
         cmp     #>default_buffer
@@ -934,8 +909,6 @@ store:  sta     default_buffer,x         ; self-modified
         clc                     ; aux>main
         jsr     AUXMOVE
 
-        lda     #0
-        sta     read_flag
         JSR_TO_MAIN ReadFile
 
         pha                     ; copy read buffer main>aux
@@ -944,13 +917,12 @@ store:  sta     default_buffer,x         ; self-modified
         jsr     AUXMOVE
         pla
 
-        beq     end
+        beq     done
         cmp     #ERR_END_OF_FILE
         beq     done
         brk                     ; crash on other error
-done:   lda     #1
-        sta     read_flag
-end:    rts
+
+done:   rts
 
 
 prep:   lda     #$00
