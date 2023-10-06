@@ -168,19 +168,25 @@ stash_y:        .byte   0
 ;;; ============================================================
 ;;; Flags set by invoker to alter behavior
 
-;;; Set when `click_handler_hook` should be called and name input present.
-
 .ifdef FD_EXTENDED
+;;; Set when `click_handler_hook` should be called and name input present.
 extra_controls_flag:
         .byte   0
+
+;;; These vectors get patched by overlays that add controls.
+click_handler_hook:
+        jmp     NoOp
+key_handler_hook:
+        jmp     NoOp
 .endif
+
 ;;; ============================================================
 
 .proc EventLoop
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
     IF_NS
-        jsr     LineEditIdle
+        LETK_CALL LETK::Idle, file_dialog_res::le_params
     END_IF
 .endif
         jsr     YieldLoop
@@ -344,7 +350,9 @@ not_list:
         MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
         cmp     #MGTK::inrect_inside
       IF_EQ
-        jmp     LineEditClick
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params::coords
+        LETK_CALL LETK::Click, file_dialog_res::le_params
+        rts
       END_IF
 
         ;; Additional controls
@@ -354,14 +362,6 @@ not_list:
 
         rts
 .endproc ; _HandleButtonDown
-
-;;; ============================================================
-;;; This vector gets patched by overlays that add controls.
-
-.ifdef FD_EXTENDED
-click_handler_hook:
-        jmp     NoOp
-.endif
 
 ;;; ============================================================
 ;;; Refresh the list view from the current path
@@ -401,25 +401,6 @@ click_handler_hook:
 ;;; ============================================================
 
 .ifdef FD_EXTENDED
-.proc _UnsetCursorIBeam
-        bit     cursor_ibeam_flag
-        bpl     :+
-        jsr     _SetCursorPointer
-        copy    #0, cursor_ibeam_flag
-:       rts
-.endproc ; _UnsetCursorIBeam
-.endif
-
-;;; ============================================================
-
-.proc _SetCursorPointer
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        rts
-.endproc ; _SetCursorPointer
-
-;;; ============================================================
-
-.ifdef FD_EXTENDED
 .proc _SetCursorIBeam
         bit     cursor_ibeam_flag
         bmi     :+
@@ -428,9 +409,24 @@ click_handler_hook:
 :       rts
 .endproc ; _SetCursorIBeam
 
+.proc _UnsetCursorIBeam
+        bit     cursor_ibeam_flag
+        bpl     :+
+        jsr     _SetCursorPointer
+        copy    #0, cursor_ibeam_flag
+:       rts
+.endproc ; _UnsetCursorIBeam
+
 cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         .byte   0
 .endif
+
+;;; ============================================================
+
+.proc _SetCursorPointer
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        rts
+.endproc ; _SetCursorPointer
 
 ;;; ============================================================
 ;;; Get the current path, including the selection (if any)
@@ -580,8 +576,6 @@ ret:    rts
         cmp     #'9'+1
         jcc     key_handler_hook
 :
-        ;; Edit control
-        jmp     LineEditKey
       END_IF
 .endif
 
@@ -620,14 +614,18 @@ ret:    rts
         cmp     #CHAR_CTRL_C
         jeq     _KeyClose
 
+    END_IF
+
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
       IF_NS
         ;; Edit control
-        jmp     LineEditKey
+        copy    event_params::key, file_dialog_res::le_params::key
+        copy    event_params::modifiers, file_dialog_res::le_params::modifiers
+        LETK_CALL LETK::Key, file_dialog_res::le_params
       END_IF
 .endif
-    END_IF
+
 
 exit:   rts
 
@@ -767,14 +765,6 @@ index:  .byte   0
 .endproc ; _CheckTypeDown
 
 .endproc ; HandleKeyEvent
-
-;;; ============================================================
-;;; This vector gets patched by overlays that add controls.
-
-.ifdef FD_EXTENDED
-key_handler_hook:
-        jmp     NoOp
-.endif
 
 ;;; ============================================================
 
@@ -1100,6 +1090,9 @@ ret:    rts
 
 ;;; ============================================================
 
+;;; Appends filename at A,X to `path_buf`
+;;; Output: C=0 on success, C=1 and path unchanged if too long
+
 .proc _AppendToPathBuf
         ptr := $06
         stax    ptr
@@ -1114,13 +1107,13 @@ ret:    rts
         tay
         clc
         adc     path_buf
-.ifdef FD_EXTENDED
+
         ;; Enough room?
         cmp     #kPathBufferSize
         bcc     :+
-        return  #$FF            ; failure
+        dec     path_buf
+        rts                     ; C=1 failure
 :
-.endif
         pha
         tax
 :       lda     (ptr),y
@@ -1133,9 +1126,7 @@ ret:    rts
         pla
         sta     path_buf
 
-.ifdef FD_EXTENDED
-        lda     #0
-.endif
+        clc                     ; C=0 success
         rts
 .endproc ; _AppendToPathBuf
 
@@ -1294,7 +1285,7 @@ next:   add16_8 ptr, #16        ; advance to next
 finish:
         jsr     _SortFileNames
 
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        jsr     _SetCursorPointer
 .ifdef FD_EXTENDED
         copy    #0, cursor_ibeam_flag
 .endif
@@ -1589,25 +1580,10 @@ found:  ldx     num_file_names
         LETK_CALL LETK::Init, file_dialog_res::le_params
         rts
 .endproc ; LineEditInit
-.proc LineEditIdle
-        LETK_CALL LETK::Idle, file_dialog_res::le_params
-        rts
-.endproc ; LineEditIdle
 .proc LineEditActivate
         LETK_CALL LETK::Activate, file_dialog_res::le_params
         rts
 .endproc ; LineEditActivate
-.proc LineEditKey
-        copy    event_params::key, file_dialog_res::le_params::key
-        copy    event_params::modifiers, file_dialog_res::le_params::modifiers
-        LETK_CALL LETK::Key, file_dialog_res::le_params
-        rts
-.endproc ; LineEditKey
-.proc LineEditClick
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params::coords
-        LETK_CALL LETK::Click, file_dialog_res::le_params
-        rts
-.endproc ; LineEditClick
 
 ;;; Dynamically altered table of handlers.
 
