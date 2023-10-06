@@ -128,7 +128,7 @@
 .define res_string_volume_type_fileshare "AppleShare"
 .define res_string_volume_type_vdrive "ADTPro VDRIVE"
 .define res_string_selector_label_enter_name "Genv{gsnamn:"
-.define res_string_selector_label_add_a_new_entry_to "L{gg till en genv{g till:"
+.define res_string_selector_label_add_a_new_entry_to "Visa genv{g i:"
 .define res_string_selector_label_primary_run_list "meny och lista"
 .define res_string_selector_label_secondary_run_list "endast lista"
 .define res_string_selector_label_download "Kopiera till RAMCard:"

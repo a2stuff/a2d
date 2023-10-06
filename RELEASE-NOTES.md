@@ -27,6 +27,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Added an easter egg. Can you find it?
 * Improve layout of Add/Edit a Shortcut dialog.
 * Remove 12 volume limit from Format/Erase picker.
+* Update label in Add/Edit a Shortcut dialog.
 
 ### Selector
 

@@ -128,7 +128,7 @@
 .define res_string_volume_type_fileshare "AppleShare"
 .define res_string_volume_type_vdrive "ADTPro VDRIVE"
 .define res_string_selector_label_enter_name "Kurzbefehl Name:"
-.define res_string_selector_label_add_a_new_entry_to "F}ge einen Kurzbefehl zu:"
+.define res_string_selector_label_add_a_new_entry_to "Kurzbefehl anzeigen in:"
 .define res_string_selector_label_primary_run_list "Men} und Liste"
 .define res_string_selector_label_secondary_run_list "nur Liste"
 .define res_string_selector_label_download "Kopiere auf RAMCard:"

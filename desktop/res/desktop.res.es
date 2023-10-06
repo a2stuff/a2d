@@ -128,7 +128,7 @@
 .define res_string_volume_type_fileshare "AppleShare"
 .define res_string_volume_type_vdrive "ADTPro VDRIVE"
 .define res_string_selector_label_enter_name "Nombre del atajo:"
-.define res_string_selector_label_add_a_new_entry_to "A|adir atajo a la:"
+.define res_string_selector_label_add_a_new_entry_to "Mostrar atajo en:"
 .define res_string_selector_label_primary_run_list "men\x14 y lista"
 .define res_string_selector_label_secondary_run_list "solo la lista"
 .define res_string_selector_label_download "Copiar a RAMDisk:"

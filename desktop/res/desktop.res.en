@@ -128,7 +128,7 @@
 .define res_string_volume_type_fileshare "AppleShare"
 .define res_string_volume_type_vdrive "ADTPro VDRIVE"
 .define res_string_selector_label_enter_name "Shortcut name:"
-.define res_string_selector_label_add_a_new_entry_to "Add a shortcut to the:"
+.define res_string_selector_label_add_a_new_entry_to "Show shortcut in:"
 .define res_string_selector_label_primary_run_list "menu and list"
 .define res_string_selector_label_secondary_run_list "list only"
 .define res_string_selector_label_download "Copy to RAMCard:"

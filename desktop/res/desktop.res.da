@@ -128,7 +128,7 @@
 .define res_string_volume_type_fileshare "AppleShare"
 .define res_string_volume_type_vdrive "ADTPro VDRIVE"
 .define res_string_selector_label_enter_name "Genvejsnavn:"
-.define res_string_selector_label_add_a_new_entry_to "Tilf|j en genvej til:"
+.define res_string_selector_label_add_a_new_entry_to "Vis genvej i:"
 .define res_string_selector_label_primary_run_list "menu og liste"
 .define res_string_selector_label_secondary_run_list "kun liste"
 .define res_string_selector_label_download "Kopier til RAMCard:"

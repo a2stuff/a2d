@@ -128,7 +128,7 @@
 .define res_string_volume_type_fileshare "AppleShare"
 .define res_string_volume_type_vdrive "ADTPro VDRIVE"
 .define res_string_selector_label_enter_name "Naam snelkoppeling:"
-.define res_string_selector_label_add_a_new_entry_to "Voeg een snelkoppeling:"
+.define res_string_selector_label_add_a_new_entry_to "Snelkoppeling weergeven in:"
 .define res_string_selector_label_primary_run_list "aan menu en lijst"
 .define res_string_selector_label_secondary_run_list "aan alleen lijst"
 .define res_string_selector_label_download "Kopi\x10ren naar RAMCard:"
