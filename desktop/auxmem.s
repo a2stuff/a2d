@@ -70,8 +70,6 @@ label_close_all:
         PASCAL_STRING res_string_menu_item_close_all ; menu item
 label_select_all:
         PASCAL_STRING res_string_menu_item_select_all ; menu item
-label_copy_selection:
-        PASCAL_STRING res_string_menu_item_copy_selection ; menu item
 label_delete_selection:
         PASCAL_STRING res_string_menu_item_delete_selection ; menu item
 label_eject:

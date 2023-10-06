@@ -13,8 +13,7 @@
         copy    #0, file_dialog::extra_controls_flag
         copy    #$80, file_dialog::only_show_dirs_flag
 
-        jsr     file_dialog::OpenWindow
-        param_call file_dialog::DrawTitleCentered, aux::label_copy_selection
+        param_call file_dialog::OpenWindow, label_copy_selection
         jsr     file_dialog::InitPathWithDefaultDevice
         jsr     file_dialog::UpdateListFromPath
         COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table

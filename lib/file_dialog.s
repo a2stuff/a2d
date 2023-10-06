@@ -24,7 +24,6 @@
 ;;; If `FD_EXTENDED` is defined:
 ;;; * lib/line_edit_res.s is required to be previously included
 ;;; * name field at bottom and extra clickable controls on right are supported
-;;; * title passed to `DrawTitleCentered` in aux, `AuxLoad` is used
 
 ;;; ============================================================
 ;;; Memory map
@@ -579,7 +578,7 @@ ret:    rts
         cmp     #'0'
         bcc     :+
         cmp     #'9'+1
-        jcc     key_meta_digit
+        jcc     key_handler_hook
 :
         ;; Edit control
         jmp     LineEditKey
@@ -773,7 +772,7 @@ index:  .byte   0
 ;;; This vector gets patched by overlays that add controls.
 
 .ifdef FD_EXTENDED
-key_meta_digit:
+key_handler_hook:
         jmp     NoOp
 .endif
 
@@ -843,6 +842,11 @@ done:   rts
 
 .proc OpenWindow
 
+        ;; Save title string param
+        pha
+        txa
+        pha
+
 .ifdef FD_EXTENDED
         ;; Set correct sizes for the windows (dialog and listbox) based on options.
         ldx     #.sizeof(MGTK::Point)-1
@@ -888,6 +892,15 @@ done:   rts
 .endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::penXOR
+
+        ;; Draw title
+        copy16  file_dialog_res::winfo::maprect::x2, file_dialog_res::pos_title::xcoord
+        lsr16   file_dialog_res::pos_title::xcoord ; /= 2
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
+        pla
+        tax
+        pla
+        jsr     _DrawStringCentered
 
         jsr     _IsOKAllowed
         ror
@@ -1019,12 +1032,8 @@ ret:    rts
         params := $06
 
         stax    ptr
-.ifdef FD_EXTENDED
-        jsr     AuxLoad
-.else
         ldy     #0
         lda     (ptr),y
-.endif
         beq     ret
         sta     params+2
         inc16   params
@@ -1036,26 +1045,6 @@ ret:    rts
         MGTK_CALL MGTK::DrawText, params
 ret:    rts
 .endproc ; _DrawStringCentered
-
-;;; ============================================================
-
-.proc DrawTitleCentered
-        pha
-        txa
-        pha
-
-        jsr     SetPortForDialog
-
-        copy16  file_dialog_res::winfo::maprect::x2, file_dialog_res::pos_title::xcoord
-        lsr16   file_dialog_res::pos_title::xcoord ; /= 2
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::pos_title
-
-        pla
-        tax
-        pla
-
-        jmp     _DrawStringCentered
-.endproc ; DrawTitleCentered
 
 ;;; ============================================================
 
@@ -1690,8 +1679,6 @@ listbox::selected_index = selected_index
 
 ;;; "Exports"
 CloseWindow := file_dialog_impl::CloseWindow
-DrawString := file_dialog_impl::DrawString
-DrawTitleCentered := file_dialog_impl::DrawTitleCentered
 EventLoop := file_dialog_impl::EventLoop
 GetPath := file_dialog_impl::GetPath
 InitPathWithDefaultDevice := file_dialog_impl::InitPathWithDefaultDevice
@@ -1699,7 +1686,6 @@ NoOp := file_dialog_impl::NoOp
 OpenWindow := file_dialog_impl::OpenWindow
 SetPortForDialog := file_dialog_impl::SetPortForDialog
 Start := file_dialog_impl::Start
-StripPathBufSegment := file_dialog_impl::StripPathBufSegment
 UpdateListFromPath := file_dialog_impl::UpdateListFromPath
 
 only_show_dirs_flag := file_dialog_impl::only_show_dirs_flag
@@ -1713,8 +1699,8 @@ LineEditInit := file_dialog_impl::LineEditInit
 UpdateListFromPathAndSelectFile := file_dialog_impl::UpdateListFromPathAndSelectFile
 
 click_handler_hook := file_dialog_impl::click_handler_hook
+key_handler_hook := file_dialog_impl::key_handler_hook
 extra_controls_flag := file_dialog_impl::extra_controls_flag
 jump_table := file_dialog_impl::jump_table
 kJumpTableSize := file_dialog_impl::kJumpTableSize
-key_meta_digit := file_dialog_impl::key_meta_digit
 .endif

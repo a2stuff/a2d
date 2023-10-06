@@ -21,8 +21,13 @@
 
         copy    #$80, file_dialog::extra_controls_flag
 
+        ldax    #label_edit
+        bit     is_add_flag
+    IF_NS
+        ldax    #label_add
+    END_IF
         jsr     file_dialog::OpenWindow
-        jsr     DrawControls    ; calls file_dialog::DrawTitleCentered
+        jsr     DrawControls
 
         COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
 
@@ -35,7 +40,7 @@
         jsr     DrawCopyWhenButton
 
         copy16  #HandleClick, file_dialog::click_handler_hook+1
-        copy16  #HandleKey, file_dialog::key_meta_digit+1
+        copy16  #HandleKey, file_dialog::key_handler_hook+1
         copy    #kSelectorMaxNameLength, file_dialog_res::line_edit::max_length
 
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
@@ -49,7 +54,7 @@
         jsr     IsVolPath
       IF_CS
         ;; No, strip to parent directory
-        jsr     file_dialog::StripPathBufSegment
+        param_call main::RemovePathSegment, file_dialog::path_buf
 
         ;; And populate `buffer` with filename
         ldx     file_dialog::path_buf
@@ -76,25 +81,17 @@ buffer: .res 16, 0
 ;;; ============================================================
 
 .proc DrawControls
-        bit     is_add_flag
-    IF_NS
-        ldax    #label_add
-    ELSE
-        ldax    #label_edit
-    END_IF
-        jsr     file_dialog::DrawTitleCentered
-
         jsr     file_dialog::SetPortForDialog
         param_call file_dialog::DrawLineEditLabel, enter_the_name_to_appear_label
 
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
-        param_call file_dialog::DrawString, add_a_new_entry_to_label_str
+        param_call main::DrawString, add_a_new_entry_to_label_str
 
         BTK_CALL BTK::RadioDraw, primary_run_list_params
         BTK_CALL BTK::RadioDraw, secondary_run_list_params
 
         MGTK_CALL MGTK::MoveTo, down_load_label_pos
-        param_call file_dialog::DrawString, down_load_label_str
+        param_call main::DrawString, down_load_label_str
 
         BTK_CALL BTK::RadioDraw, at_first_boot_params
         BTK_CALL BTK::RadioDraw, at_first_use_params
@@ -175,7 +172,7 @@ invalid:
         jmp     ShowAlert
 
 ok:     jsr     file_dialog::CloseWindow
-        copy16  #file_dialog::NoOp, file_dialog::key_meta_digit+1
+        copy16  #file_dialog::NoOp, file_dialog::key_handler_hook+1
         ldx     file_dialog::saved_stack
         txs
         ldx     which_run_list
@@ -201,7 +198,7 @@ found:  cpy     #2
 
 .proc HandleCancel
         jsr     file_dialog::CloseWindow
-        copy16  #file_dialog::NoOp, file_dialog::key_meta_digit+1
+        copy16  #file_dialog::NoOp, file_dialog::key_handler_hook+1
         ldx     file_dialog::saved_stack
         txs
         return  #$FF

@@ -480,6 +480,11 @@ kRadioButtonLeft  = 332
 
 ;;; ============================================================
 
+label_copy_selection:
+        PASCAL_STRING res_string_menu_item_copy_selection ; menu item / dialog title
+
+;;; ============================================================
+
 str_jan:PASCAL_STRING res_string_month_name_1
 str_feb:PASCAL_STRING res_string_month_name_2
 str_mar:PASCAL_STRING res_string_month_name_3
@@ -742,13 +747,13 @@ selector_menu:
         .assert kMenuItemIdSelectorRun = SelectorAction::run, error, "enum mismatch"
 
 label_add:
-        PASCAL_STRING res_string_menu_item_add_entry ; menu item
+        PASCAL_STRING res_string_menu_item_add_entry ; menu item / dialog title
 label_edit:
-        PASCAL_STRING res_string_menu_item_edit_entry ; menu item
+        PASCAL_STRING res_string_menu_item_edit_entry ; menu item / dialog title
 label_del:
-        PASCAL_STRING res_string_menu_item_delete_entry ; menu item
+        PASCAL_STRING res_string_menu_item_delete_entry ; menu item / dialog title
 label_run:
-        PASCAL_STRING res_string_menu_item_run_entry ; menu item
+        PASCAL_STRING res_string_menu_item_run_entry ; menu item / dialog title
 
 kDAMenuItemSize = 19            ; length (1) + filename (15) + folder glyphs prefix (3)
 

@@ -40,8 +40,7 @@ buf_path:
 ;;; ============================================================
 
 ;;; Called back from file dialog's `Start`
-start:  jsr     OpenWindow
-        param_call DrawTitleCentered, app::str_run_a_program
+start:  param_call OpenWindow, app::str_run_a_program
         jsr     InitPathWithDefaultDevice
         jsr     UpdateListFromPath
         jmp     EventLoop
