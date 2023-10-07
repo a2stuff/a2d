@@ -252,8 +252,6 @@ not_list:
         MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rec::rect
         cmp     #MGTK::inrect_inside
      IF_EQ
-        jsr     _IsOpenAllowed
-        bcs     :+
         BTK_CALL BTK::Track, file_dialog_res::open_button_params
         bmi     :+
         jsr     _DoOpen
@@ -266,8 +264,6 @@ not_list:
         MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        jsr     _IsCloseAllowed
-        bcs     :+
         BTK_CALL BTK::Track, file_dialog_res::close_button_params
         bmi     :+
         jsr     _DoClose
@@ -280,8 +276,6 @@ not_list:
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        jsr     _IsOKAllowed
-        bcs     :+
         BTK_CALL BTK::Track, file_dialog_res::ok_button_params
         bmi     :+
         jsr     HandleOK

@@ -919,8 +919,6 @@ L9443:  lda     #AlertID::insert_system_disk
         MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     check_desktop_btn
-        bit     ok_button_rec::state
-        bmi     done
         BTK_CALL BTK::Track, ok_button_params
         bmi     done
         jsr     TryInvokeSelectedIndex

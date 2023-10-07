@@ -497,8 +497,6 @@ handle_button:
         MGTK_CALL MGTK::InRect, entry_picker_ok_button_rec::rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
-        bit     selected_index
-        bmi     :+
         BTK_CALL BTK::Track, entry_picker_ok_button_params
         bmi     :+
         lda     #$00            ; OK selected

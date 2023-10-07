@@ -13459,8 +13459,6 @@ content:
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        bit     ok_button_rec::state
-        bmi     :+
         BTK_CALL BTK::Track, ok_button_params
         bmi     :+
         lda     #PromptResult::ok

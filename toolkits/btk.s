@@ -360,6 +360,12 @@ window          .res 4
         .assert screentowindow_params + .sizeof(screentowindow_params) <= $2F, error, "bounds"
         .assert screentowindow_params::screen = event_params::coords, error, "mismatch"
 
+        ;; If disabled, return canceled
+        bit     state
+    IF_NS
+        return  #$80
+    END_IF
+
         jsr     _SetPort
 
         ;; Initial state

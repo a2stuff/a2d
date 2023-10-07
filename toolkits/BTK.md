@@ -57,7 +57,7 @@ Parameters:
 
 
 ### Track ($03)
-Start a nested event loop tracking after a click is initiated in the control. Returns with N=0/Z=1 if clicked, N=1/Z=0 if cancelled.
+Start a nested event loop tracking after a click is initiated in the control. Returns with N=0/Z=1 if clicked, N=1/Z=0 if cancelled (or disabled).
 
 Parameters:
 ```

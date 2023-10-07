@@ -1013,8 +1013,6 @@ ret:    rts
         MGTK_CALL MGTK::InRect, ok_button_rec::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        bit     ok_button_rec::state
-        bmi     :+
         BTK_CALL BTK::Track, ok_button_params
         bmi     :+
         lda     #$00
