@@ -771,9 +771,40 @@ done:   rts
 ;;; ============================================================
 
 .proc _UpdateDynamicButtons
-        jsr     _DrawOKLabel
-        jsr     _DrawOpenLabel
-        jmp     _DrawCloseLabel
+        ;; --------------------------------------------------
+        ;; OK
+        jsr     _IsOKAllowed
+        lda     #0
+        ror                     ; C into high bit
+        cmp     file_dialog_res::ok_button_rec::state
+        beq     :+              ; no change
+
+        sta     file_dialog_res::ok_button_rec::state
+        BTK_CALL BTK::Hilite, file_dialog_res::ok_button_params
+:
+        ;; --------------------------------------------------
+        ;; Open
+        jsr     _IsOpenAllowed
+        lda     #0
+        ror                     ; C into high bit
+        cmp     file_dialog_res::open_button_rec::state
+        beq     :+              ; no change
+
+        sta     file_dialog_res::open_button_rec::state
+        BTK_CALL BTK::Hilite, file_dialog_res::open_button_params
+:
+        ;; --------------------------------------------------
+        ;; Close
+        jsr     _IsCloseAllowed
+        lda     #0
+        ror                     ; C into high bit
+        cmp     file_dialog_res::close_button_rec::state
+        beq     :+              ; no change
+
+        sta     file_dialog_res::close_button_rec::state
+        BTK_CALL BTK::Hilite, file_dialog_res::close_button_params
+:
+        rts
 .endproc ; _UpdateDynamicButtons
 
 ;;; ============================================================
@@ -882,51 +913,6 @@ done:   rts
 .endif
         rts
 .endproc ; OpenWindow
-
-;;; ============================================================
-
-.proc _DrawOpenLabel
-        jsr     _IsOpenAllowed
-        lda     #0
-        ror                     ; C into high bit
-        cmp     file_dialog_res::open_button_rec::state
-        beq     ret             ; no change
-
-        sta     file_dialog_res::open_button_rec::state
-        BTK_CALL BTK::Hilite, file_dialog_res::open_button_params
-
-ret:    rts
-.endproc ; _DrawOpenLabel
-
-;;; ============================================================
-
-.proc _DrawOKLabel
-        jsr     _IsOKAllowed
-        lda     #0
-        ror                     ; C into high bit
-        cmp     file_dialog_res::ok_button_rec::state
-        beq     ret             ; no change
-
-        sta     file_dialog_res::ok_button_rec::state
-        BTK_CALL BTK::Hilite, file_dialog_res::ok_button_params
-
-ret:    rts
-.endproc ; _DrawOKLabel
-
-;;; ============================================================
-
-.proc _DrawCloseLabel
-        jsr     _IsCloseAllowed
-        lda     #0
-        ror                     ; C into high bit
-        cmp     file_dialog_res::close_button_rec::state
-        beq     ret             ; no change
-
-        sta     file_dialog_res::close_button_rec::state
-        BTK_CALL BTK::Hilite, file_dialog_res::close_button_params
-
-ret:    rts
-.endproc ; _DrawCloseLabel
 
 ;;; ============================================================
 
