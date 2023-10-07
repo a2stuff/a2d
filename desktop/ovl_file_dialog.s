@@ -15,11 +15,6 @@
 
 ;;; ============================================================
 
-Exec:
-        jmp     Start
-
-;;; ============================================================
-
 ;;; Required proc definitions
 CheckMouseMoved         := main::CheckMouseMoved
 YieldLoop               := main::YieldLoop
@@ -34,7 +29,5 @@ AdjustFileEntryCase     := main::AdjustFileEntryCase
 ;;; ============================================================
 
 .endscope ; file_dialog
-
-file_dialog__Exec := file_dialog::Exec
 
         ENDSEG OverlayFileDialog

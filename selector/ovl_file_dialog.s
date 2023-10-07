@@ -14,7 +14,17 @@
 ;;; ============================================================
 
 ep_init:
-        jmp     Start
+        tsx
+        stx     saved_stack
+
+        jsr     Init
+        param_call OpenWindow, app::str_run_a_program
+        jsr     InitPathWithDefaultDevice
+        jsr     UpdateListFromPath
+        jmp     EventLoop
+
+;;; ============================================================
+
 
 ep_loop:
         jmp     EventLoop
@@ -32,18 +42,13 @@ window_grafport:
 buf_path:
         .res    ::kPathBufferSize, 0
 
+saved_stack:
+        .byte   0
+
 ;;; ============================================================
 ;;; File Picker Dialog
 
         .include "../lib/file_dialog_res.s"
-
-;;; ============================================================
-
-;;; Called back from file dialog's `Start`
-start:  param_call OpenWindow, app::str_run_a_program
-        jsr     InitPathWithDefaultDevice
-        jsr     UpdateListFromPath
-        jmp     EventLoop
 
 ;;; ============================================================
 

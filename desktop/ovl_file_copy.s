@@ -8,8 +8,11 @@
 
 .scope FileCopyOverlay
 
-;;; Called back from file dialog's `Start`
-.proc Init
+.proc Run
+        tsx
+        stx     saved_stack
+
+        jsr     file_dialog::Init
         copy    #0, file_dialog::extra_controls_flag
         copy    #$80, file_dialog::only_show_dirs_flag
 
@@ -20,6 +23,9 @@
 
         jmp     file_dialog::EventLoop
 .endproc ; Init
+
+saved_stack:
+        .byte   0
 
 jt_callbacks:
         jmp     HandleOK
@@ -33,7 +39,7 @@ jt_callbacks:
 
         jsr     file_dialog::CloseWindow
         copy16  #path_buf0, $6
-        ldx     file_dialog::saved_stack
+        ldx     saved_stack
         txs
         return  #$00
 .endproc ; HandleOK
@@ -42,7 +48,7 @@ jt_callbacks:
 
 .proc HandleCancel
         jsr     file_dialog::CloseWindow
-        ldx     file_dialog::saved_stack
+        ldx     saved_stack
         txs
         return  #$FF
 .endproc ; HandleCancel
@@ -50,5 +56,6 @@ jt_callbacks:
 ;;; ============================================================
 
 .endscope ; FileCopyOverlay
+FileCopyOverlay__Run := FileCopyOverlay::Run
 
         ENDSEG OverlayFileCopy

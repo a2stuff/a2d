@@ -54,8 +54,10 @@ DoAdd:  ldx     #1
 L9052:  lda     #$00
         sta     text_input_buf       ; clear name, but leave path alone
         ldy     #$03 | $80      ; high bit set = Add
-        lda     #$02
-        jsr     file_dialog__Exec
+        ;; A = (obsolete, was dialog type)
+        ;; Y = is_add_flag | copy_when
+        ;; X = which_run_list
+        jsr     SelectorEditOverlay__Run
         pha
         txa
         pha
@@ -207,8 +209,10 @@ l3:     clc
         rol     a
         adc     #$01
         tay
-        lda     #$02
-        jsr     file_dialog__Exec
+        ;; A = (obsolete, was dialog type)
+        ;; Y = is_add_flag | copy_when
+        ;; X = which_run_list
+        jsr     SelectorEditOverlay__Run
         pha
         txa
         pha

@@ -11,13 +11,20 @@
         MGTKEntry := MGTKRelayImpl
         BTKEntry := BTKRelayImpl
 
-;;; Called back from file dialog's `Start`
-.proc Init
+.proc Run
+        ;; A = (obsolete, was dialog type)
+        ;; Y = is_add_flag | copy_when
+        ;; X = which_run_list
         stx     which_run_list
         sty     is_add_flag
         tya
         and     #$7F
         sta     copy_when
+
+        tsx
+        stx     saved_stack
+
+        jsr     file_dialog::Init
 
         copy    #$80, file_dialog::extra_controls_flag
 
@@ -118,6 +125,9 @@ buffer: .res 16, 0
 
 ;;; ============================================================
 
+saved_stack:
+        .byte   0
+
 jt_callbacks:
         jmp     HandleOK
         jmp     HandleCancel
@@ -173,7 +183,7 @@ invalid:
 
 ok:     jsr     file_dialog::CloseWindow
         copy16  #file_dialog::NoOp, file_dialog::key_handler_hook+1
-        ldx     file_dialog::saved_stack
+        ldx     saved_stack
         txs
         ldx     which_run_list
         ldy     copy_when
@@ -199,7 +209,7 @@ found:  cpy     #2
 .proc HandleCancel
         jsr     file_dialog::CloseWindow
         copy16  #file_dialog::NoOp, file_dialog::key_handler_hook+1
-        ldx     file_dialog::saved_stack
+        ldx     saved_stack
         txs
         return  #$FF
 .endproc ; HandleCancel
@@ -374,5 +384,6 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 ;;; ============================================================
 
 .endscope ; SelectorEditOverlay
+SelectorEditOverlay__Run := SelectorEditOverlay::Run
 
         ENDSEG OverlayShortcutEdit

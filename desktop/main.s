@@ -1940,8 +1940,7 @@ ret:    rts
         jsr     LoadDynamicRoutine
         RTS_IF_NS
 
-        lda     #$00
-        jsr     file_dialog__Exec
+        jsr     FileCopyOverlay__Run
         pha                     ; A = dialog result
         lda     #kDynamicRoutineRestoreFD
         jsr     RestoreDynamicRoutine

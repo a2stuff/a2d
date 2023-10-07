@@ -94,9 +94,6 @@ only_show_dirs_flag:            ; set when selecting copy destination
 dir_count:
         .byte   0
 
-saved_stack:
-        .byte   0
-
 ;;; Buffer used when selecting filename by holding Apple key and typing name.
 ;;; Length-prefixed string, initialized to 0 when the dialog is shown.
 type_down_buf:
@@ -107,28 +104,7 @@ selected_index:                 ; $FF if none
 
 ;;; ============================================================
 
-.ifdef FD_EXTENDED
-routine_table:
-        .addr   kOverlayFileCopyAddress
-        .addr   0               ; TODO: Remove this entire table
-        .addr   kOverlayShortcutEditAddress
-.endif
-
-;;; ============================================================
-
-;;; For FD_EXTENDED, A=routine to jump to from `routine_table`
-;;; Otherwise, jumps to label `start`.
-
-.proc Start
-.ifdef FD_EXTENDED
-        sty     stash_y
-        stx     stash_x
-.endif
-        tsx
-        stx     saved_stack
-.ifdef FD_EXTENDED
-        pha
-.endif
+.proc Init
         jsr     _SetCursorPointer
 
         lda     #0
@@ -146,24 +122,8 @@ routine_table:
         sta     file_dialog_res::close_button_rec::state
         sta     file_dialog_res::drives_button_rec::state
 
-.ifdef FD_EXTENDED
-        pla
-        asl     a
-        tax
-        copy16  routine_table,x, @jump
-        ldy     stash_y
-        ldx     stash_x
-
-        @jump := *+1
-        jmp     SELF_MODIFIED
-
-stash_x:        .byte   0
-stash_y:        .byte   0
-.else
-        jmp     start
-.endif
-
-.endproc ; Start
+        rts
+.endproc ; Init
 
 ;;; ============================================================
 ;;; Flags set by invoker to alter behavior
@@ -1661,12 +1621,11 @@ InitPathWithDefaultDevice := file_dialog_impl::InitPathWithDefaultDevice
 NoOp := file_dialog_impl::NoOp
 OpenWindow := file_dialog_impl::OpenWindow
 SetPortForDialog := file_dialog_impl::SetPortForDialog
-Start := file_dialog_impl::Start
+Init := file_dialog_impl::Init
 UpdateListFromPath := file_dialog_impl::UpdateListFromPath
 
 only_show_dirs_flag := file_dialog_impl::only_show_dirs_flag
 path_buf := file_dialog_impl::path_buf
-saved_stack := file_dialog_impl::saved_stack
 
 .ifdef FD_EXTENDED
 DrawLineEditLabel := file_dialog_impl::DrawLineEditLabel
