@@ -560,13 +560,28 @@ ret:    rts
         jeq     _KeyEscape
 
         cmp     #CHAR_CTRL_O
-        jeq     _KeyOpen
+      IF_EQ
+        jsr     _IsOpenAllowed
+        RTS_IF_CS
+
+        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
+        jmp     _DoOpen
+      END_IF
 
         cmp     #CHAR_CTRL_D
-        jeq     _KeyDrives
+      IF_EQ
+        BTK_CALL BTK::Flash, file_dialog_res::drives_button_params
+        jmp     _DoDrives
+      END_IF
 
         cmp     #CHAR_CTRL_C
-        jeq     _KeyClose
+      IF_EQ
+        jsr     _IsCloseAllowed
+        RTS_IF_CS
+
+        BTK_CALL BTK::Flash, file_dialog_res::close_button_params
+        jmp     _DoClose
+      END_IF
 
     END_IF
 
@@ -582,37 +597,6 @@ ret:    rts
 
 
 exit:   rts
-
-;;; ============================================================
-
-.proc _KeyOpen
-        jsr     _IsOpenAllowed
-        bcs     ret
-
-        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
-        jsr     _DoOpen
-
-ret:    rts
-.endproc ; _KeyOpen
-
-;;; ============================================================
-
-.proc _KeyClose
-        jsr     _IsCloseAllowed
-        bcs     ret
-
-        BTK_CALL BTK::Flash, file_dialog_res::close_button_params
-        jsr     _DoClose
-
-ret:    rts
-.endproc ; _KeyClose
-
-;;; ============================================================
-
-.proc _KeyDrives
-        BTK_CALL BTK::Flash, file_dialog_res::drives_button_params
-        jmp     _DoDrives
-.endproc ; _KeyDrives
 
 ;;; ============================================================
 
