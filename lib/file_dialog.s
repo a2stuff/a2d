@@ -881,6 +881,9 @@ done:   rts
         MGTK_CALL MGTK::SetPattern, file_dialog_res::winfo::pattern
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dialog_sep_start
         MGTK_CALL MGTK::LineTo, file_dialog_res::dialog_sep_end
+
+        LETK_CALL LETK::Init, file_dialog_res::le_params
+        LETK_CALL LETK::Activate, file_dialog_res::le_params
     END_IF
 .endif
         rts
@@ -1536,15 +1539,6 @@ found:  ldx     num_file_names
 
 .ifdef FD_EXTENDED
 
-.proc LineEditInit
-        LETK_CALL LETK::Init, file_dialog_res::le_params
-        rts
-.endproc ; LineEditInit
-.proc LineEditActivate
-        LETK_CALL LETK::Activate, file_dialog_res::le_params
-        rts
-.endproc ; LineEditActivate
-
 ;;; Dynamically altered table of handlers.
 
 kJumpTableSize = 6
@@ -1629,8 +1623,6 @@ path_buf := file_dialog_impl::path_buf
 
 .ifdef FD_EXTENDED
 DrawLineEditLabel := file_dialog_impl::DrawLineEditLabel
-LineEditActivate := file_dialog_impl::LineEditActivate
-LineEditInit := file_dialog_impl::LineEditInit
 UpdateListFromPathAndSelectFile := file_dialog_impl::UpdateListFromPathAndSelectFile
 
 click_handler_hook := file_dialog_impl::click_handler_hook

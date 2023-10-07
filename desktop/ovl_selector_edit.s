@@ -37,7 +37,6 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         stx     saved_stack
 
         jsr     file_dialog::Init
-
         copy    #$80, file_dialog::extra_controls_flag
 
         ldax    #label_edit
@@ -89,8 +88,6 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
       END_IF
     END_IF
         param_call file_dialog::UpdateListFromPathAndSelectFile, buffer
-        jsr     file_dialog::LineEditInit
-        jsr     file_dialog::LineEditActivate
         jmp     file_dialog::EventLoop
 
 buffer: .res 16, 0

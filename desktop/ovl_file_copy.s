@@ -13,7 +13,6 @@
         stx     saved_stack
 
         jsr     file_dialog::Init
-        copy    #0, file_dialog::extra_controls_flag
         copy    #$80, file_dialog::only_show_dirs_flag
 
         param_call file_dialog::OpenWindow, label_copy_selection
