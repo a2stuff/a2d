@@ -46,14 +46,14 @@ L9017:  lda     selector_list + kSelectorListNumPrimaryRunListOffset
 
 ;;; ============================================================
 
-DoAdd:  ldx     #1
+DoAdd:  ldx     #kRunListPrimary
         lda     selector_menu
         cmp     #kSelectorMenuMinItems + 8
         bcc     L9052
         inx
 L9052:  lda     #$00
-        sta     text_input_buf       ; clear name, but leave path alone
-        ldy     #$03 | $80      ; high bit set = Add
+        sta     text_input_buf    ; clear name, but leave path alone
+        ldy     #kCopyNever | $80 ; high bit set = Add
         ;; A = (obsolete, was dialog type)
         ;; Y = is_add_flag | copy_when
         ;; X = which_run_list
@@ -89,7 +89,7 @@ L9088:  sta     copy_when
 
 L9093:  copy16  selector_list, num_primary_run_list_entries
         lda     which_run_list
-        cmp     #1
+        cmp     #kRunListPrimary
         bne     L90D3
         lda     num_primary_run_list_entries
         cmp     #kSelectorListNumPrimaryRunListEntries
@@ -198,17 +198,24 @@ dialog_loop:
         jsr     GetFilePathAddr
         jsr     main::CopyToBuf0
 
-        ldx     #$01
+        ldx     #kRunListPrimary
         lda     selected_index
         cmp     #kSelectorListNumPrimaryRunListEntries
-        bcc     l3
+        bcc     :+
         inx
-l3:     clc
+:
+        ;; Map to `kSelectorEntryCopyOnBoot` to `kCopyOnBoot` etc
+        .define swizzle(n) (n >> 7) + 1 + (n > 127)
+        .assert swizzle kSelectorEntryCopyOnBoot = kCopyOnBoot, error, "const mismatch"
+        .assert swizzle kSelectorEntryCopyOnUse  = kCopyOnUse,  error, "const mismatch"
+        .assert swizzle kSelectorEntryCopyNever  = kCopyNever,  error, "const mismatch"
+        clc
         lda     flags
         rol     a
         rol     a
-        adc     #$01
+        adc     #1
         tay
+
         ;; A = (obsolete, was dialog type)
         ;; Y = is_add_flag | copy_when
         ;; X = which_run_list
@@ -230,15 +237,17 @@ l3:     clc
 
         inc     clean_flag      ; mark as "dirty"
         stx     which_run_list
-        sty     copy_when
-        lda     #$00
-l5:     dey                     ; map 0/1/2 to $00/$80/$C0
-        beq     l6
+        sty     copy_when       ; TODO: Remove this; overwritten below
+
+        ;; Map to `kCopyOnBoot` to `kSelectorEntryCopyOnBoot` etc
+        lda     #0              ; TODO: Replace with lookup table?
+:       dey
+        beq     :+
         sec
         ror     a
-        jmp     l5
-
-l6:     sta     copy_when
+        jmp     :-              ; TODO: Can be BNE
+:
+        sta     copy_when
         jsr     ReadFile
         bpl     l7
         jmp     CloseWindow
@@ -247,7 +256,7 @@ l7:     lda     selected_index
         cmp     #kSelectorListNumPrimaryRunListEntries
         bcc     l10
         lda     which_run_list
-        cmp     #2
+        cmp     #kRunListSecondary
         beq     l13
         lda     num_primary_run_list_entries
         cmp     #kSelectorListNumPrimaryRunListEntries
@@ -266,7 +275,7 @@ l9:     ldx     num_primary_run_list_entries
         jmp     l14
 
 l10:    lda     which_run_list
-        cmp     #1
+        cmp     #kRunListPrimary
         beq     l13
         lda     num_secondary_run_list_entries
         cmp     #kSelectorListNumSecondaryRunListEntries

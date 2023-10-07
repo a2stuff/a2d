@@ -6,6 +6,18 @@
 
         BEGINSEG OverlayShortcutEdit
 
+
+;;; Constants specific to this dialog and used by the caller. These
+;;; correspond to properties of `docs/Selector_List_Format.md` but are
+;;; specific to this dialog and the caller.
+
+kRunListPrimary   = 1           ; entry is in first 8 (menu and dialog)
+kRunListSecondary = 2           ; entry is in second 16 (dialog only)
+
+kCopyOnBoot = 1                 ; corresponds to `kSelectorEntryCopyOnBoot`
+kCopyOnUse  = 2                 ; corresponds to `kSelectorEntryCopyOnUse`
+kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
+
 .scope SelectorEditOverlay
 
         MGTKEntry := MGTKRelayImpl
@@ -104,19 +116,19 @@ buffer: .res 16, 0
         BTK_CALL BTK::RadioDraw, at_first_use_params
         BTK_CALL BTK::RadioDraw, never_params
 
-        lda     #1
+        lda     #kRunListPrimary
         clc
         jsr     UpdateRunListButton
-        lda     #2
+        lda     #kRunListSecondary
         clc
         jsr     UpdateRunListButton
-        lda     #1
+        lda     #kCopyOnBoot
         clc
         jsr     DrawCopyWhenButton
-        lda     #2
+        lda     #kCopyOnUse
         clc
         jsr     DrawCopyWhenButton
-        lda     #3
+        lda     #kCopyNever
         clc
         jsr     DrawCopyWhenButton
 
@@ -173,7 +185,7 @@ jt_callbacks:
         jsr     IsVolPath
         bcs     ok              ; nope
         lda     copy_when       ; Disallow copying volume to ramcard
-        cmp     #3
+        cmp     #kCopyNever
         beq     ok
         FALL_THROUGH_TO invalid
 
@@ -251,11 +263,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickPrimaryRunListCtrl
         lda     which_run_list
-        cmp     #1
+        cmp     #kRunListPrimary
         beq     :+
         clc
         jsr     UpdateRunListButton
-        lda     #1
+        lda     #kRunListPrimary
         sta     which_run_list
         sec
         jsr     UpdateRunListButton
@@ -264,11 +276,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickSecondaryRunListCtrl
         lda     which_run_list
-        cmp     #2
+        cmp     #kRunListSecondary
         beq     :+
         clc
         jsr     UpdateRunListButton
-        lda     #2
+        lda     #kRunListSecondary
         sta     which_run_list
         sec
         jsr     UpdateRunListButton
@@ -277,11 +289,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickAtFirstBootCtrl
         lda     copy_when
-        cmp     #1
+        cmp     #kCopyOnBoot
         beq     :+
         clc
         jsr     DrawCopyWhenButton
-        lda     #1
+        lda     #kCopyOnBoot
         sta     copy_when
         sec
         jsr     DrawCopyWhenButton
@@ -290,11 +302,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickAtFirstUseCtrl
         lda     copy_when
-        cmp     #2
+        cmp     #kCopyOnUse
         beq     :+
         clc
         jsr     DrawCopyWhenButton
-        lda     #2
+        lda     #kCopyOnUse
         sta     copy_when
         sec
         jsr     DrawCopyWhenButton
@@ -303,11 +315,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickNeverCtrl
         lda     copy_when
-        cmp     #3
+        cmp     #kCopyNever
         beq     :+
         clc
         jsr     DrawCopyWhenButton
-        lda     #3
+        lda     #kCopyNever
         sta     copy_when
         sec
         jsr     DrawCopyWhenButton
@@ -321,7 +333,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         bcc     :+
         ldx     #$80
 :
-        cmp     #1
+        cmp     #kRunListPrimary
     IF_EQ
         stx     primary_run_list_rec::state
         BTK_CALL BTK::RadioUpdate, primary_run_list_params
@@ -338,13 +350,13 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         bcc     :+
         ldx     #$80
 :
-        cmp     #1
+        cmp     #kCopyOnBoot
         bne     :+
         stx     at_first_boot_rec::state
         BTK_CALL BTK::RadioUpdate, at_first_boot_params
         rts
 :
-        cmp     #2
+        cmp     #kCopyOnUse
         bne     :+
         stx     at_first_use_rec::state
         BTK_CALL BTK::RadioUpdate, at_first_use_params
