@@ -323,8 +323,7 @@ not_list:
 
 .proc UpdateListFromPath
         jsr     _ReadDir
-        jsr     _UpdateDiskName
-        jsr     _UpdateDirName
+        jsr     _UpdateDiskAndDirNames
         copy    #$FF, selected_index
         jsr     ListInit
         jmp     _UpdateDynamicButtons
@@ -338,8 +337,7 @@ not_list:
         pha
 
         jsr     _ReadDir
-        jsr     _UpdateDiskName
-        jsr     _UpdateDirName
+        jsr     _UpdateDiskAndDirNames
 
         pla
         tax
@@ -554,10 +552,19 @@ ret:    rts
         lda     event_params::key
 
         cmp     #CHAR_RETURN
-        jeq     _KeyReturn
+      IF_EQ
+        jsr     _IsOKAllowed
+        RTS_IF_CS
+
+        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
+        jmp     HandleOK
+      END_IF
 
         cmp     #CHAR_ESCAPE
-        jeq     _KeyEscape
+      IF_EQ
+        BTK_CALL BTK::Flash, file_dialog_res::cancel_button_params
+        jmp     HandleCancel
+      END_IF
 
         cmp     #CHAR_CTRL_O
       IF_EQ
@@ -597,24 +604,6 @@ ret:    rts
 
 
 exit:   rts
-
-;;; ============================================================
-
-.proc _KeyReturn
-        jsr     _IsOKAllowed
-        bcs     ret
-        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
-        jmp     HandleOK
-
-ret:    rts
-.endproc ; _KeyReturn
-
-;;; ============================================================
-
-.proc _KeyEscape
-        BTK_CALL BTK::Flash, file_dialog_res::cancel_button_params
-        jmp     HandleCancel
-.endproc ; _KeyEscape
 
 ;;; ============================================================
 
@@ -1003,19 +992,6 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
 .endproc ; InitPathWithDefaultDevice
 
 ;;; ============================================================
-;;; Output: Z=1 on success, Z=1 on failure
-
-.proc _OpenDir
-        MLI_CALL OPEN, open_params
-        bne     ret
-        lda     open_params::ref_num
-        sta     read_params::ref_num
-        sta     close_params::ref_num
-        MLI_CALL READ, read_params
-ret:    rts
-.endproc ; _OpenDir
-
-;;; ============================================================
 
 ;;; Appends filename at A,X to `path_buf`
 ;;; Output: C=0 on success, C=1 and path unchanged if too long
@@ -1077,11 +1053,15 @@ ret:    rts
         cmp     #1
         jeq     _ReadDrives
 
-        jsr     _OpenDir
+        MLI_CALL OPEN, open_params
+        bne     err
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
+        MLI_CALL READ, read_params
         beq     :+
-        copy    #1, path_buf
+err:    copy    #1, path_buf
         jmp     _ReadDrives
-
 :
         lda     #0
         sta     d1
@@ -1244,14 +1224,17 @@ finish:
 
 ;;; ============================================================
 
-.proc _UpdateDiskName
+.proc _UpdateDiskAndDirNames
         jsr     SetPortForDialog
+
+        ;; --------------------------------------------------
+        ;; Disk Name
+
         MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
 
         lda     path_buf
         cmp     #1
-        beq     ret
-
+    IF_NE
         copy16  #path_buf, $06
 
         copy    #kGlyphDiskLeft, file_dialog_res::filename_buf+1
@@ -1274,22 +1257,17 @@ finish:
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         param_call _DrawStringCentered, file_dialog_res::filename_buf
+    END_IF
 
-ret:    rts
+        ;; --------------------------------------------------
+        ;; Dir Name
 
-.endproc ; _UpdateDiskName
-
-;;; ============================================================
-
-.proc _UpdateDirName
-        jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, file_dialog_res::dir_name_rect
         copy16  #path_buf, $06
 
         lda     path_buf
         cmp     #1
-        beq     ret
-
+    IF_NE
         ;; Copy last segment
         ldx     path_buf
 :       lda     path_buf,x
@@ -1301,13 +1279,13 @@ ret:    rts
 
         ldy     #1
         cpx     #2
-    IF_NE
+      IF_NE
         copy    #kGlyphFolderLeft, file_dialog_res::filename_buf+1
         copy    #kGlyphFolderRight, file_dialog_res::filename_buf+2
-    ELSE
+      ELSE
         copy    #kGlyphDiskLeft, file_dialog_res::filename_buf+1
         copy    #kGlyphDiskRight, file_dialog_res::filename_buf+2
-    END_IF
+      END_IF
         copy    #kGlyphSpacer, file_dialog_res::filename_buf+3
         ldy     #4
 
@@ -1322,12 +1300,12 @@ ret:    rts
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
         param_call _DrawStringCentered, file_dialog_res::filename_buf
+    END_IF
 
-ret:    rts
-.endproc ; _UpdateDirName
+        rts
+.endproc ; _UpdateDiskAndDirNames
 
 ;;; ============================================================
-
 
 .proc SetPortForList
         lda     #file_dialog_res::kEntryListCtlWindowID
