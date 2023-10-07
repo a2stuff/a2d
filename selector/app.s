@@ -858,6 +858,8 @@ L93EB:  tsx
         jsr     UpdateOKButton
 retry:
         jsr     SetCursorWatch
+
+        ;; Load file dialog overlay
         MLI_CALL OPEN, open_selector_params
         bne     L9443
         lda     open_selector_params::ref_num
@@ -866,11 +868,13 @@ retry:
         MLI_CALL SET_MARK, set_mark_overlay1_params
         MLI_CALL READ, read_overlay1_params
         MLI_CALL CLOSE, close_params2
+
+        ;; Invoke file dialog
         jsr     file_dialog_init
         ;; Returns Z=1 on success, Y,X = path to launch
         bne     cancel
 ok:     tya                     ; now A,X = path
-        jsr     invoke_entry_ep2
+        jsr     LaunchPath
         jsr     file_dialog_loop ; ditto
         beq     ok
 
@@ -1505,6 +1509,8 @@ common: lda     #winfo::kDialogId
 .proc InvokeEntry
         ptr := $06
 
+        ;; --------------------------------------------------
+        ;; Highlight entry in UI, if needed
         lda     invoked_during_boot_flag
         bne     :+              ; skip if there's no UI yet
         jsr     SetCursorWatch
@@ -1515,12 +1521,10 @@ common: lda     #winfo::kDialogId
         jsr     UpdateOKButton
         pla
         sta     selected_index  ; needed below; will be cleared on failure
-:       jmp     try
-
-        ;; TODO: Untangle this entry point
-ep2:    jmp     launch
-
-try:    lda     invoked_during_boot_flag
+:
+        ;; --------------------------------------------------
+        ;; Figure out entry path, given entry options and overrides
+        lda     invoked_during_boot_flag
         bne     check_entry_flags
         bit     BUTN0           ; if Open-Apple is down, skip RAMCard copy
         bpl     :+
@@ -1584,7 +1588,7 @@ on_boot:
 use_ramcard_path:
         lda     selected_index
         jsr     ComposeRAMCardEntryPath
-        jmp     launch
+        jmp     LaunchPath
 
         ;; --------------------------------------------------
         ;; Not copied to RAMCard - just use entry's path
@@ -1592,10 +1596,13 @@ use_entry_path:
         lda     selected_index
         jsr     GetSelectorListPathAddr
 
+        FALL_THROUGH_TO LaunchPath
+.endproc
 
-        ;; --------------------------------------------------
-        ;; Launch specified path (A,X = path)
-launch:
+;;; ============================================================
+;;; Launch specified path (A,X = path)
+.proc LaunchPath
+        ptr := $06
 
         ;; Copy path to INVOKER_PREFIX
         stax    ptr
@@ -1606,6 +1613,8 @@ launch:
         sta     INVOKER_PREFIX,y
         dey
         bpl     :-
+
+retry:
         param_call GetFileInfo, INVOKER_PREFIX
         beq     check_type
 
@@ -1624,7 +1633,7 @@ launch:
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     fail            ; `kAlertResultCancel` = 1
         jsr     SetCursorWatch
-        jmp     use_entry_path
+        jmp     retry
 
 fail:   jmp     ClearSelectedIndex
 
@@ -1674,7 +1683,7 @@ check_path:
         jsr     ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     ClearSelectedIndex ; `kAlertResultCancel` = 1
-        jmp     try
+        jmp     retry
 
 :       dey
         tya
@@ -1709,7 +1718,6 @@ check_path:
         brk
 
 .endproc ; InvokeEntry
-        invoke_entry_ep2 := InvokeEntry::ep2
 
         DEFINE_QUIT_PARAMS quit_params
 
