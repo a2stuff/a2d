@@ -867,12 +867,14 @@ retry:
         MLI_CALL READ, read_overlay1_params
         MLI_CALL CLOSE, close_params2
         jsr     file_dialog_init
-        bne     L943F
-L9436:  tya
+        ;; Returns Z=1 on success, Y,X = path to launch
+        bne     cancel
+ok:     tya                     ; now A,X = path
         jsr     invoke_entry_ep2
-        jsr     file_dialog_loop
-        beq     L9436
-L943F:  jmp     LoadSelectorList
+        jsr     file_dialog_loop ; ditto
+        beq     ok
+
+cancel: jmp     LoadSelectorList
 
 L9443:  lda     #AlertID::insert_system_disk
         jsr     ShowAlert
