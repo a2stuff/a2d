@@ -116,22 +116,6 @@ buffer: .res 16, 0
         BTK_CALL BTK::RadioDraw, at_first_use_params
         BTK_CALL BTK::RadioDraw, never_params
 
-        lda     #kRunListPrimary
-        clc
-        jsr     UpdateRunListButton
-        lda     #kRunListSecondary
-        clc
-        jsr     UpdateRunListButton
-        lda     #kCopyOnBoot
-        clc
-        jsr     DrawCopyWhenButton
-        lda     #kCopyOnUse
-        clc
-        jsr     DrawCopyWhenButton
-        lda     #kCopyNever
-        clc
-        jsr     DrawCopyWhenButton
-
         rts
 .endproc ; DrawControls
 
