@@ -237,16 +237,9 @@ dialog_loop:
 
         inc     clean_flag      ; mark as "dirty"
         stx     which_run_list
-        sty     copy_when       ; TODO: Remove this; overwritten below
 
         ;; Map to `kCopyOnBoot` to `kSelectorEntryCopyOnBoot` etc
-        lda     #0              ; TODO: Replace with lookup table?
-:       dey
-        beq     :+
-        sec
-        ror     a
-        jmp     :-              ; TODO: Can be BNE
-:
+        lda     copy_when_conversion_table-1,y
         sta     copy_when
         jsr     ReadFile
         bpl     l7
@@ -306,6 +299,13 @@ l15:    jsr     main::SetCursorPointer
         jmp     L900F
 
 flags:  .byte   0
+
+        ;; Index is kCopyXXX-1, value is kSelectorEntryCopyXXX
+copy_when_conversion_table:
+        .byte   kSelectorEntryCopyOnBoot
+        .byte   kSelectorEntryCopyOnUse
+        .byte   kSelectorEntryCopyNever
+
 .endproc ; DoEdit
 
 ;;; ============================================================
