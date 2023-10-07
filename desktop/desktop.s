@@ -30,13 +30,13 @@
         DEFSEG SegmentDeskTopAux,  $4000, $8000
         DEFSEG SegmentDeskTopLC,   $D000, $2000
         DEFSEG SegmentDeskTopMain, $4000, $7B00
-        DEFSEG SegmentInitializer, $0800, $0A00
+        DEFSEG SegmentInitializer, $0800, $0900
         DEFSEG SegmentInvoker,     $0290, $0160
 
         ;; Dynamically loaded overlays
-        DEFSEG OverlayFormatErase,  $0800, $1200
+        DEFSEG OverlayFormatErase,  $0800, $1100
         DEFSEG OverlayShortcutPick, $5000, $0A00
-        DEFSEG OverlayFileDialog,   $6000, $0F00
+        DEFSEG OverlayFileDialog,   $6000, $0E00
         DEFSEG OverlayFileCopy,     $7000, $0100
         DEFSEG OverlayShortcutEdit, $7000, $0300
 
