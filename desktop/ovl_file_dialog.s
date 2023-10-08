@@ -22,9 +22,7 @@ DetectDoubleClick       := main::StashCoordsAndDetectDoubleClick
 AdjustVolumeNameCase    := main::AdjustVolumeNameCase
 AdjustFileEntryCase     := main::AdjustFileEntryCase
 
-;;; Required macro definitions
         .include "../lib/file_dialog.s"
-        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 
