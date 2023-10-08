@@ -175,7 +175,6 @@ invalid:
         jmp     ShowAlert
 
 ok:     jsr     file_dialog::CloseWindow
-        copy16  #file_dialog::NoOp, file_dialog::key_handler_hook+1
         ldx     saved_stack
         txs
         ldx     which_run_list
@@ -201,7 +200,6 @@ found:  cpy     #2
 
 .proc HandleCancel
         jsr     file_dialog::CloseWindow
-        copy16  #file_dialog::NoOp, file_dialog::key_handler_hook+1
         ldx     saved_stack
         txs
         return  #$FF

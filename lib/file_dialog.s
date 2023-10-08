@@ -889,7 +889,6 @@ done:   rts
 .proc CloseWindow
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo_listbox
         MGTK_CALL MGTK::CloseWindow, file_dialog_res::winfo
-        copy    #0, only_show_dirs_flag
 .ifdef FD_EXTENDED
         jsr     _UnsetCursorIBeam
 .endif
