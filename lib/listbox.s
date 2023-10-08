@@ -15,7 +15,6 @@
 ;;;
 ;;; Requires `listbox` scope with:
 ;;; * `winfo` - winfo of the list control
-;;; * `kHeight` - height of the list in pixels
 ;;; * `kRows` - number of visible rows in the list
 ;;; * `num_items` - number of items in the list
 ;;; * `item_pos` - a scratch MGTK::Point
@@ -455,11 +454,18 @@ skip:   lda     #SELF_MODIFIED_BYTE
 ;;; the GrafPort using the client's `SetPortForList`.
 
 .proc _SetPort
+        maprect := listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
+
+        ;; Set y2 to height
+        sub16   maprect+MGTK::Rect::y2, maprect+MGTK::Rect::y1, maprect+MGTK::Rect::y2
+
         ldax    #kListItemHeight
         ldy     listbox::winfo+MGTK::Winfo::vthumbpos
         jsr     Multiply_16_8_16
-        stax    listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
-        addax   #listbox::kHeight, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y2
+        stax    maprect+MGTK::Rect::y1
+
+        ;; Set y2 to bottom
+        addax   maprect+MGTK::Rect::y2, maprect+MGTK::Rect::y2
 
         jmp     SetPortForList
 .endproc ; _SetPort

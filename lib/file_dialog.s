@@ -1486,7 +1486,6 @@ HandleCancel:   jmp     0
 
 .scope listbox
         winfo = file_dialog_res::winfo_listbox
-        kHeight = file_dialog_res::winfo_listbox::kHeight
         kRows = file_dialog_res::kListRows
         num_items = num_file_names
         item_pos = file_dialog_res::picker_entry_pos

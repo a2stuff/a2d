@@ -601,7 +601,6 @@ show_index:     .byte   $FF
 
 .scope listbox
         winfo = winfo_results
-        kHeight = kResultsHeight
         kRows = kResultsRows
         num_items = num_entries
         item_pos = cur_pos

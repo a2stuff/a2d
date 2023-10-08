@@ -1248,7 +1248,6 @@ OnListSelectionNoChange := OnListSelectionChange
 
 .scope listbox
         winfo = winfo_listbox
-        kHeight = winfo_listbox::kHeight
         kRows = kListRows
         num_items = num_sounds
         item_pos = itempos

@@ -1420,7 +1420,6 @@ CheckAlpha:
 
 .scope listbox
         winfo = winfo_drive_select
-        kHeight = kListBoxHeight
         kRows = kListRows
         num_items = num_drives
         item_pos = list_entry_pos
