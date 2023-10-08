@@ -42,6 +42,12 @@
 ;;;          | index     | position in list to filename
 ;;;  $1780   +-----------+
 ;;;          | (unused)  |
+;;;  $1661   +-----------+
+;;;          | path buf  |
+;;;  $1620   +-----------+
+;;;          | online buf|
+;;;  $1610   +-----------+
+;;;          | typedown  |
 ;;;  $1600   +-----------+
 ;;;          |           |
 ;;;          | dir buf   | current directory block
@@ -64,6 +70,12 @@
 
 .scope file_dialog_impl
 
+;;; Buffer used when selecting filename by holding Apple key and typing name.
+;;; Length-prefixed string, initialized to 0 when the dialog is shown.
+type_down_buf   := $1600        ; 16 bytes
+on_line_buffer  := $1610        ; 16 bytes for ON_LINE calls
+path_buf        := $1620        ; 65 bytes for path+length
+
 ;;; Map from index in file_names to list entry; high bit is
 ;;; set for directories.
 file_list_index := $1780
@@ -85,19 +97,11 @@ file_names      := $1800
         DEFINE_READ_PARAMS read_params, dir_read_buf, kDirReadSize
         DEFINE_CLOSE_PARAMS close_params
 
-on_line_buffer: .res    16, 0
-path_buf:       .res    ::kPathBufferSize, 0  ; used in MLI calls, so must be in main memory
-
 only_show_dirs_flag:            ; set when selecting copy destination
         .byte   0
 
 dir_count:
         .byte   0
-
-;;; Buffer used when selecting filename by holding Apple key and typing name.
-;;; Length-prefixed string, initialized to 0 when the dialog is shown.
-type_down_buf:
-        .res    16, 0
 
 selected_index:                 ; $FF if none
         .byte   0
