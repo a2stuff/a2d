@@ -80,7 +80,7 @@ checkerboard_pattern:
         kInputHeight = kTextBoxHeight
 
         kInput1Y = 114
-        DEFINE_POINT input1_label_pos, kControlsLeft, kInput1Y-1
+        DEFINE_POINT input1_label_pos, kControlsLeft, kInput1Y-2
         DEFINE_RECT_SZ input1_rect, kControlsLeft, kInput1Y, kInputWidth, kInputHeight
 .endif
 

@@ -57,8 +57,8 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         sec
         jsr     DrawCopyWhenButton
 
-        copy16  #HandleClick, file_dialog::click_handler_hook+1
-        copy16  #HandleKey, file_dialog::key_handler_hook+1
+        copy16  #HandleClick, file_dialog::click_handler_hook
+        copy16  #HandleKey, file_dialog::key_handler_hook
         copy    #kSelectorMaxNameLength, file_dialog_res::line_edit::max_length
 
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.

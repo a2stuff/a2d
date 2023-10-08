@@ -135,9 +135,9 @@ extra_controls_flag:
 
 ;;; These vectors get patched by overlays that add controls.
 click_handler_hook:
-        jmp     NoOp
+        .addr   NoOp
 key_handler_hook:
-        jmp     NoOp
+        .addr   NoOp
 .endif
 
 ;;; ============================================================
@@ -161,7 +161,7 @@ key_handler_hook:
 
 :       cmp     #MGTK::EventKind::key_down
         bne     :+
-        jsr     HandleKeyEvent
+        jsr     _HandleKeyEvent
         jmp     EventLoop
 
 :       jsr     CheckMouseMoved
@@ -310,7 +310,7 @@ not_list:
       END_IF
 
         ;; Additional controls
-        jmp     click_handler_hook
+        jmp     (click_handler_hook)
     END_IF
 .endif
 
@@ -406,7 +406,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
         bit     selected_index
     IF_NC
-        jsr     StripPathBufSegment
+        jsr     _StripPathBufSegment
     END_IF
 
         rts
@@ -484,7 +484,7 @@ _IsOKAllowed := _IsCloseAllowed
         bcs     ret
 
         ;; Remove last segment
-        jsr     StripPathBufSegment
+        jsr     _StripPathBufSegment
 
         lda     path_buf
         bne     :+
@@ -499,7 +499,7 @@ ret:    rts
 ;;; ============================================================
 ;;; Key handler
 
-.proc HandleKeyEvent
+.proc _HandleKeyEvent
         lda     event_params::key
         jsr     IsListKey
     IF_EQ
@@ -526,7 +526,8 @@ ret:    rts
         cmp     #'0'
         bcc     :+
         cmp     #'9'+1
-        jcc     key_handler_hook
+        bcs     :+
+        jmp     (key_handler_hook)
 :
       END_IF
 .endif
@@ -652,10 +653,12 @@ done:   return  #0
 :
         copy    #0, index
 
-loop:   ldx     index
+        index := *+1
+loop:   ldx     #SELF_MODIFIED_BYTE
         lda     file_list_index,x
         and     #$7F
-        jsr     _SetPtrToNthFilename
+        jsr     _GetNthFilename
+        stax    $06
 
         ldy     #0
         lda     ($06),y
@@ -673,7 +676,8 @@ cloop:  lda     ($06),y
         beq     found
 
         iny
-        cpy     len
+        len := *+1
+        cpy     #SELF_MODIFIED_BYTE
         bcc     cloop
         beq     cloop
 
@@ -684,14 +688,11 @@ next:   inc     index
         dec     index
 found:  return  index
 
-len:    .byte   0
 .endproc ; _FindMatch
-
-index:  .byte   0
 
 .endproc ; _CheckTypeDown
 
-.endproc ; HandleKeyEvent
+.endproc ; _HandleKeyEvent
 
 ;;; ============================================================
 
@@ -721,14 +722,6 @@ index:  .byte   0
         tya
         rts
 .endproc ; _GetNthFilename
-
-;;; Input: A = index
-;;; Output: $06 and A,X = filename
-.proc _SetPtrToNthFilename
-        jsr     _GetNthFilename
-        stax    $06
-        rts
-.endproc ; _SetPtrToNthFilename
 
 ;;; ============================================================
 
@@ -900,22 +893,6 @@ done:   rts
 .endproc ; CloseWindow
 
 ;;; ============================================================
-;;; Inputs: A,X = string
-;;; Output: Copied to `file_dialog_res::filename_buf`
-;;; Assert: 15 characters or less
-
-.proc _CopyFilenameToBuf
-        stax    ptr
-        ldx     #kMaxFilenameLength
-        ptr := *+1
-:       lda     SELF_MODIFIED,x
-        sta     file_dialog_res::filename_buf,x
-        dex
-        bpl     :-
-        rts
-.endproc ; _CopyFilenameToBuf
-
-;;; ============================================================
 
 .proc DrawString
         ptr := $06
@@ -956,9 +933,13 @@ ret:    rts
 
 .ifdef FD_EXTENDED
 .proc DrawLineEditLabel
-        stax    $06
+        pha                     ; save A,X
+        txa
+        pha
         MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
-        ldax    $06
+        pla                     ; restore A,X
+        tax
+        pla
         jmp     DrawString
 .endproc ; DrawLineEditLabel
 .endif
@@ -1035,7 +1016,7 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
 
 ;;; ============================================================
 
-.proc StripPathBufSegment
+.proc _StripPathBufSegment
 :       ldx     path_buf
         cpx     #0
         beq     :+
@@ -1044,7 +1025,7 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         cmp     #'/'
         bne     :-
 :       rts
-.endproc ; StripPathBufSegment
+.endproc ; _StripPathBufSegment
 
 ;;; ============================================================
 
@@ -1521,7 +1502,13 @@ listbox::selected_index = selected_index
         and     #$7F
 
         jsr     _GetNthFilename
-        jsr     _CopyFilenameToBuf
+        stax    ptr
+        ldx     #kMaxFilenameLength
+        ptr := *+1
+:       lda     SELF_MODIFIED,x
+        sta     file_dialog_res::filename_buf,x
+        dex
+        bpl     :-
         copy16  #kListViewNameX, listbox::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, listbox::item_pos
         param_call DrawString, file_dialog_res::filename_buf
