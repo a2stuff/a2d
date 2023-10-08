@@ -509,8 +509,6 @@ ret:    rts
         ldx     event_params::modifiers
     IF_NE
         ;; With modifiers
-        lda     event_params::key
-
         jsr     _CheckTypeDown
         jeq     exit
 
@@ -536,13 +534,11 @@ ret:    rts
         ;; No modifiers
 
 .ifndef FD_EXTENDED
-        lda     event_params::key
         jsr     _CheckTypeDown
         jeq     exit
 .else
         bit     extra_controls_flag
       IF_NC
-        lda     event_params::key
         jsr     _CheckTypeDown
         jeq     exit
       END_IF
@@ -608,6 +604,7 @@ exit:   rts
 ;;; ============================================================
 
 .proc _CheckTypeDown
+        lda     event_params::key
         jsr     _UpcaseChar
         cmp     #'A'
         bcc     :+
@@ -1218,6 +1215,10 @@ finish:
 .proc _UpdateDiskAndDirNames
         jsr     SetPortForDialog
 
+        copy    #kGlyphDiskLeft, file_dialog_res::filename_buf+1
+        copy    #kGlyphDiskRight, file_dialog_res::filename_buf+2
+        copy    #kGlyphSpacer, file_dialog_res::filename_buf+3
+
         ;; --------------------------------------------------
         ;; Disk Name
 
@@ -1228,9 +1229,6 @@ finish:
     IF_NE
         copy16  #path_buf, $06
 
-        copy    #kGlyphDiskLeft, file_dialog_res::filename_buf+1
-        copy    #kGlyphDiskRight, file_dialog_res::filename_buf+2
-        copy    #kGlyphSpacer, file_dialog_res::filename_buf+3
         ldy     #3
 
         ;; Copy first segment
@@ -1268,18 +1266,13 @@ finish:
         bne     :-              ; always
 :       inx
 
-        ldy     #1
         cpx     #2
       IF_NE
         copy    #kGlyphFolderLeft, file_dialog_res::filename_buf+1
         copy    #kGlyphFolderRight, file_dialog_res::filename_buf+2
-      ELSE
-        copy    #kGlyphDiskLeft, file_dialog_res::filename_buf+1
-        copy    #kGlyphDiskRight, file_dialog_res::filename_buf+2
       END_IF
-        copy    #kGlyphSpacer, file_dialog_res::filename_buf+3
-        ldy     #4
 
+        ldy     #4
 :       lda     path_buf,x
         sta     file_dialog_res::filename_buf,y
         cpx     path_buf

@@ -36,7 +36,7 @@
         ;; Dynamically loaded overlays
         DEFSEG OverlayFormatErase,  $0800, $1100
         DEFSEG OverlayShortcutPick, $5000, $0A00
-        DEFSEG OverlayFileDialog,   $6000, $0E00
+        DEFSEG OverlayFileDialog,   $6000, $0D00
         DEFSEG OverlayFileCopy,     $7000, $0100
         DEFSEG OverlayShortcutEdit, $7000, $0300
 
