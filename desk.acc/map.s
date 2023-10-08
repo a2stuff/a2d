@@ -531,8 +531,6 @@ ret:    rts
 .endproc ; SetPort
 
 ;;; ============================================================
-        .include "../lib/mouse_moved.s"
-;;; ============================================================
 
 .proc HandleMouseMove
         copy    #kDAWindowId, screentowindow_params::window_id
@@ -719,6 +717,7 @@ blink_counter:
         .include "../lib/drawstring.s"
         .include "../lib/inttostring.s"
         .include "../lib/muldiv.s"
+        .include "../lib/mouse_moved.s"
 
 ;;; ============================================================
 

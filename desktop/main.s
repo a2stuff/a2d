@@ -15102,13 +15102,6 @@ done:   rts
 .endproc ; ToggleMenuHilite
 
 ;;; ============================================================
-;;; Determine if mouse moved (returns w/ carry set if moved)
-;;; Used in dialogs to possibly change cursor
-
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
-        .include "../lib/mouse_moved.s"
-
-;;; ============================================================
 
 ;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
 ;;; Output: A=high bit/N flag set if either is down.
@@ -15343,6 +15336,7 @@ ADJUSTCASE_VOLBUF:      .tag    VolumeDirectoryHeader
         .include "../lib/reconnect_ram.s"
         .include "../lib/muldiv.s"
         .include "../lib/readwrite_settings.s"
+        .include "../lib/mouse_moved.s"
 
         is_iigs_flag := machine_config::iigs_flag
         is_iiecard_flag := machine_config::iiecard_flag

@@ -484,8 +484,6 @@ done:   jmp     InputLoop
 .endproc ; HandleDown
 
 ;;; ============================================================
-        .include "../lib/mouse_moved.s"
-;;; ============================================================
 
 .proc HandleMouseMove
         copy    #kDAWindowID, screentowindow_params::window_id
@@ -651,6 +649,7 @@ offset: .addr   0
         .include "../lib/measurestring.s"
         .include "../lib/muldiv.s"
         .include "../lib/doubleclick.s"
+        .include "../lib/mouse_moved.s"
 
 ;;; ============================================================
 
