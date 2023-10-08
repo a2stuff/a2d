@@ -21,10 +21,10 @@ MGTK::Point pos             Text origin within the control.
 
 .byte       dirty_flag      Set when the control's value has changed.
 
-.byte       active_flag     Internal: Set when the IP in the control should blink.
-.byte       ip_pos          Internal: Position of the insertion point
-.byte       ip_flag         Internal: Set during the IP blink cycle while the IP is visible.
-.word       ip_counter      Internal: counter for the IP blink cycle.
+.byte       active_flag     Internal: Set when the caret in the control should blink.
+.byte       caret_pos       Internal: Position of the caret.
+.byte       caret_flag      Internal: Set during the caret blink cycle while the caret is visible.
+.word       caret_counter   Internal: counter for the caret blink cycle.
 ```
 
 ## Commands
@@ -38,7 +38,7 @@ Parameters:
 ```
 
 ### Idle ($01)
-Call from event loop; blinks the insertion point.
+Call from event loop; blinks the caret.
 
 Parameters:
 ```
@@ -46,17 +46,17 @@ Parameters:
 ```
 
 ### Activate ($02)
-Moves IP to end and makes it visible.
+Moves caret to end and makes it visible.
 
 Parameters:
 ```
 .addr       a_record        Address of the LineEditRecord
 ```
 
-NOTE: It is safe to call this more than once without calling `Deactivate`, e.g. to move IP to the end.
+NOTE: It is safe to call this more than once without calling `Deactivate`, e.g. to move caret to the end.
 
 ### Deactivate ($03)
-Hide the IP.
+Hide the caret.
 
 Parameters:
 ```
@@ -78,15 +78,15 @@ Parameters:
 ### Key ($05)
 Handle key press.
 
-Non-printable (control) characters are used to move the IP and/or erase text:
+Non-printable (control) characters are used to move the caret and/or erase text:
 
-* Delete key - delete character to left of IP.
-* Control+F - delete character to right of IP.
+* Delete key - delete character to left of caret.
+* Control+F - delete character to right of caret.
 * Control+X (or Clear key on IIgs) - clear all text.
-* Left/Right Arrow - move IP one character to the left/right.
-* Apple+Left/Right Arrow - move IP to the start/end of the text.
+* Left/Right Arrow - move caret one character to the left/right.
+* Apple+Left/Right Arrow - move caret to the start/end of the text.
 
-Printable characters ($20-$7E) are inserted at the IP position, if there is room in the buffer. The caller is responsible for filtering out undesired printables.
+Printable characters ($20-$7E) are inserted at the caret position, if there is room in the buffer. The caller is responsible for filtering out undesired printables.
 
 Also obscures the mouse cursor, i.e. it is hidden until moved.
 

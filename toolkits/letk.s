@@ -126,32 +126,32 @@ a_record  .addr
         sta     (a_record),y
         iny
         sta     (a_record),y
-        .assert (LETK::LineEditRecord::ip_pos - LETK::LineEditRecord::active_flag) = 1, error, "order"
+        .assert (LETK::LineEditRecord::caret_pos - LETK::LineEditRecord::active_flag) = 1, error, "order"
         iny
         sta     (a_record),y
-        .assert (LETK::LineEditRecord::ip_flag - LETK::LineEditRecord::ip_pos) = 1, error, "order"
+        .assert (LETK::LineEditRecord::caret_flag - LETK::LineEditRecord::caret_pos) = 1, error, "order"
         iny
         sta     (a_record),y
-        .assert (LETK::LineEditRecord::ip_counter - LETK::LineEditRecord::ip_flag) = 1, error, "order"
+        .assert (LETK::LineEditRecord::caret_counter - LETK::LineEditRecord::caret_flag) = 1, error, "order"
 
         jsr     UpdateImpl
 
-        FALL_THROUGH_TO _ResetIPCounter
+        FALL_THROUGH_TO _ResetCaretCounter
 .endproc ; InitImpl
 
-.proc _ResetIPCounter
-        ldx     #DeskTopSettings::ip_blink_speed+1
+.proc _ResetCaretCounter
+        ldx     #DeskTopSettings::caret_blink_speed+1
         jsr     ReadSetting
         pha
         dex                     ; `ReadSetting` preserves X
         jsr     ReadSetting
-        ldy     #LETK::LineEditRecord::ip_counter
+        ldy     #LETK::LineEditRecord::caret_counter
         sta     (a_record),y
         iny
         pla
         sta     (a_record),y
         rts
-.endproc ; _ResetIPCounter
+.endproc ; _ResetCaretCounter
 
 ;;; ============================================================
 
@@ -167,54 +167,54 @@ a_record  .addr
 ret:    rts
 :
 
-        ldy     #LETK::LineEditRecord::ip_counter
+        ldy     #LETK::LineEditRecord::caret_counter
         sub16in (a_record),y, #1, (a_record),y
 
-        lda     (a_record),y  ; Y = LETK::LineEditRecord::ip_counter+1
+        lda     (a_record),y  ; Y = LETK::LineEditRecord::caret_counter+1
         dey
-        ora     (a_record),y  ; Y = LETK::LineEditRecord::ip_counter
+        ora     (a_record),y  ; Y = LETK::LineEditRecord::caret_counter
         bne     ret
 
-        jsr     _ResetIPCounter
+        jsr     _ResetCaretCounter
 
-        ldy     #LETK::LineEditRecord::ip_flag
+        ldy     #LETK::LineEditRecord::caret_flag
         lda     (a_record),y
         eor     #$80
         sta     (a_record),y
 
-        FALL_THROUGH_TO _XDrawIP
+        FALL_THROUGH_TO _XDrawCaret
 .endproc ; IdleImpl
 
-.proc _XDrawIP
+.proc _XDrawCaret
         point := $6
         xcoord := $6
         ycoord := $8
 
         jsr     _SetPort
 
-        jsr     _CalcIPPos
+        jsr     _CalcCaretPos
         stax    xcoord
         dec16   xcoord          ; between characters
         copy16  pos + MGTK::Point::ycoord, ycoord
 
         MGTK_CALL MGTK::MoveTo, point
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::Line, ip_move
+        MGTK_CALL MGTK::Line, caret_move
         MGTK_CALL MGTK::SetPenMode, pencopy
 
         rts
-.endproc ; _XDrawIP
+.endproc ; _XDrawCaret
 
-        ;; Delta from text baseline to top of text, for drawing IP
-        DEFINE_POINT ip_move, 0, AS_WORD(-kSystemFontHeight)
+        ;; Delta from text baseline to top of text, for drawing caret
+        DEFINE_POINT caret_move, 0, AS_WORD(-kSystemFontHeight)
 
-.proc _HideIP
-        ldy     #LETK::LineEditRecord::ip_flag
+.proc _HideCaret
+        ldy     #LETK::LineEditRecord::caret_flag
         lda     (a_record),y
-        bmi     _XDrawIP
+        bmi     _XDrawCaret
         rts
-.endproc ; _HideIP
-_ShowIP := _HideIP
+.endproc ; _HideCaret
+_ShowCaret := _HideCaret
 
 ;;; ============================================================
 
@@ -252,13 +252,13 @@ a_record  .addr
         END_PARAM_BLOCK
         .assert a_record = params::a_record, error, "a_record must be first"
 
-        ;; Idempotent, to allow Activate to be used to just move IP
-        jsr     _HideIP
+        ;; Idempotent, to allow Activate to be used to just move caret
+        jsr     _HideCaret
 
-        ;; Move IP to end
+        ;; Move caret to end
         ldy     #0
         lda     (a_buf),y
-        ldy     #LETK::LineEditRecord::ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
         sta     (a_record),y
 
         ;; Set active flag
@@ -266,19 +266,19 @@ a_record  .addr
         lda     #$80
         sta     (a_record),y
 
-        jmp     _ShowIP
+        jmp     _ShowCaret
 .endproc ; ActivateImpl
 
 ;;; ============================================================
 
 .proc DeactivateImpl
-        jsr     _HideIP
+        jsr     _HideCaret
 
         ldy     #LETK::LineEditRecord::active_flag
         lda     #0
         sta     (a_record),y
 
-        ldy     #LETK::LineEditRecord::ip_flag
+        ldy     #LETK::LineEditRecord::caret_flag
         sta     (a_record),y
 
         rts
@@ -287,7 +287,7 @@ a_record  .addr
 ;;; ============================================================
 ;;; Internal proc: used as part of insert/delete procs
 
-.proc _RedrawRightOfIP
+.proc _RedrawRightOfCaret
         jsr     _SetPort
 
 PARAM_BLOCK point, $06
@@ -295,7 +295,7 @@ xcoord  .word
 ycoord  .word
 END_PARAM_BLOCK
 
-        jsr     _CalcIPPos
+        jsr     _CalcCaretPos
         stax    point::xcoord
         copy16  pos + MGTK::Point::ycoord, point::ycoord
         MGTK_CALL MGTK::MoveTo, point
@@ -308,22 +308,22 @@ END_PARAM_BLOCK
         jsr     _PrepTextParams
         sta     len
 
-        ldy     #LETK::LineEditRecord::ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
-        sta     ip_pos
+        sta     caret_pos
 
-        add16_8 dt_params::data, ip_pos
+        add16_8 dt_params::data, caret_pos
         len := *+1
         lda     #SELF_MODIFIED_BYTE
         sec
-        ip_pos := *+1
+        caret_pos := *+1
         sbc     #SELF_MODIFIED_BYTE
         beq     :+
         sta     dt_params::length
         MGTK_CALL MGTK::DrawText, dt_params
 :
         rts
-.endproc ; _RedrawRightOfIP
+.endproc ; _RedrawRightOfCaret
 
 ;;; ============================================================
 ;;; Prepare params for a TextWidth or DrawText call
@@ -387,22 +387,22 @@ loop:   cmp16   tw_params::width, params::xcoord
 :
         lda     tw_params::length
 set:    pha
-        jsr     _HideIP
+        jsr     _HideCaret
         pla
-        ldy     #LETK::LineEditRecord::ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
         sta     (a_record),y
-        jsr     _ShowIP
+        jsr     _ShowCaret
 
 ret:    rts
 
 .endproc ; ClickImpl
 
 ;;; ============================================================
-;;; Move IP one character left.
+;;; Move caret one character left.
 
-.proc _MoveIPLeft
-        ;; Any characters to left of IP?
-        ldy     #LETK::LineEditRecord::ip_pos
+.proc _MoveCaretLeft
+        ;; Any characters to left of caret?
+        ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
         beq     ret
 
@@ -411,34 +411,34 @@ ret:    rts
         sta     (a_record),y
 
 ret:    rts
-.endproc ; _MoveIPLeft
+.endproc ; _MoveCaretLeft
 
 ;;; ============================================================
-;;; Move IP one character right.
+;;; Move caret one character right.
 
-.proc _MoveIPRight
-        ;; Any characters to right of IP?
-        ldy     #LETK::LineEditRecord::ip_pos
-        lda     (a_record),y    ; A = ip_pos
+.proc _MoveCaretRight
+        ;; Any characters to right of caret?
+        ldy     #LETK::LineEditRecord::caret_pos
+        lda     (a_record),y    ; A = caret_pos
         ldy     #0
         cmp     (a_buf),y
         beq     ret
 
         clc
         adc     #1
-        ldy     #LETK::LineEditRecord::ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
         sta     (a_record),y
 
 ret:    rts
-.endproc ; _MoveIPRight
+.endproc ; _MoveCaretRight
 
 ;;; ============================================================
 ;;; When delete (backspace) is hit
 
 .proc _DeleteLeft
         ;; Anything to delete?
-        ldy     #LETK::LineEditRecord::ip_pos
-        lda     (a_record),y    ; A = ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
+        lda     (a_record),y    ; A = caret_pos
         beq     ret
 
         sec
@@ -455,8 +455,8 @@ ret:    rts
 
 .proc _DeleteRight
         ;; Anything to delete?
-        ldy     #LETK::LineEditRecord::ip_pos
-        lda     (a_record),y    ; A = ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
+        lda     (a_record),y    ; A = caret_pos
 
         ldy     #0
         cmp     (a_buf),y
@@ -479,9 +479,9 @@ modifiers .byte
         .assert a_record = params::a_record, error, "a_record must be first"
 
         MGTK_CALL MGTK::ObscureCursor
-        jsr     _HideIP
+        jsr     _HideCaret
         jsr     :+
-        jmp     _ShowIP
+        jmp     _ShowCaret
 
 :       lda     params::key
 
@@ -490,10 +490,10 @@ modifiers .byte
 
         ;; Not modified
         cmp     #CHAR_LEFT
-        beq     _MoveIPLeft
+        beq     _MoveCaretLeft
 
         cmp     #CHAR_RIGHT
-        beq     _MoveIPRight
+        beq     _MoveCaretRight
 
         cmp     #CHAR_DELETE
         beq     _DeleteLeft
@@ -512,10 +512,10 @@ modifiers .byte
         ;; Modified
 modified:
         cmp     #CHAR_LEFT
-        beq     _MoveIPStart
+        beq     _MoveCaretStart
 
         cmp     #CHAR_RIGHT
-        beq     _MoveIPEnd
+        beq     _MoveCaretEnd
 
         rts
 .endproc ; KeyImpl
@@ -526,10 +526,10 @@ modified:
 .proc _InsertChar
         sta     char
 
-        ;; Stash current IP pos
-        ldy     #LETK::LineEditRecord::ip_pos
+        ;; Stash current caret pos
+        ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
-        sta     @ip_pos
+        sta     @caret_pos
 
         ;; Is there room?
         ldy     #0
@@ -537,9 +537,9 @@ modified:
         cmp     max_length
         bcs     ret
 
-        ;; Move everything to right of IP up
+        ;; Move everything to right of caret up
         tay
-        @ip_pos := *+1
+        @caret_pos := *+1
 :       cpy     #SELF_MODIFIED_BYTE
         beq     :+
         lda     (a_buf),y
@@ -560,11 +560,11 @@ modified:
         adc     #1
         sta     (a_buf),y
 
-        ;; Redraw string to right of old IP position
-        jsr     _RedrawRightOfIP
+        ;; Redraw string to right of old caret position
+        jsr     _RedrawRightOfCaret
 
-        ;; Now move IP to new position
-        ldy     #LETK::LineEditRecord::ip_pos
+        ;; Now move caret to new position
+        ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
         clc
         adc     #1
@@ -583,7 +583,7 @@ ret:    rts
 
         lda     #0
         sta     (a_buf),y
-        ldy     #LETK::LineEditRecord::ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
         sta     (a_record),y
 
         jsr     _SetPort
@@ -593,25 +593,25 @@ ret:    rts
 .endproc ; _DeleteLine
 
 ;;; ============================================================
-;;; Move IP to start of input field.
+;;; Move caret to start of input field.
 
-.proc _MoveIPStart
+.proc _MoveCaretStart
         lda     #0
-        ldy     #LETK::LineEditRecord::ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
         sta     (a_record),y
         rts
-.endproc ; _MoveIPStart
+.endproc ; _MoveCaretStart
 
 ;;; ============================================================
-;;; Move IP to end of input field.
+;;; Move caret to end of input field.
 
-.proc _MoveIPEnd
+.proc _MoveCaretEnd
         ldy     #0
         lda     (a_buf),y
-        ldy     #LETK::LineEditRecord::ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
         sta     (a_record),y
         rts
-.endproc ; _MoveIPEnd
+.endproc ; _MoveCaretEnd
 
 ;;; ============================================================
 ;;; Common logic for DeleteLeft/DeleteRight
@@ -625,8 +625,8 @@ ret:    rts
         sta     (a_buf),y
         sta     @len
 
-        ;; Move everything to the right of the IP down
-        ldy     #LETK::LineEditRecord::ip_pos
+        ;; Move everything to the right of the caret down
+        ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
         tay
         @len := *+1
@@ -639,17 +639,17 @@ ret:    rts
         sta     (a_buf),y
         bne     :-              ; always
 :
-        ;; Redraw everything to the right of the IP
-        jsr     _RedrawRightOfIP
+        ;; Redraw everything to the right of the caret
+        jsr     _RedrawRightOfCaret
         MGTK_CALL MGTK::DrawText, draw2spaces_params
 
         rts
 .endproc ; _DeleteCharCommon
 
 ;;; ============================================================
-;;; Output: A,X = X coordinate of insertion point
+;;; Output: A,X = X coordinate of caret
 
-.proc _CalcIPPos
+.proc _CalcCaretPos
         PARAM_BLOCK tw_params, $06
 data    .addr
 length  .byte
@@ -659,7 +659,7 @@ width   .word
         jsr     _PrepTextParams
         copy16  #0, tw_params::width
 
-        ldy     #LETK::LineEditRecord::ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
     IF_NOT_ZERO
         sta     tw_params::length
@@ -675,7 +675,7 @@ width   .word
         tax
         tya
         rts
-.endproc ; _CalcIPPos
+.endproc ; _CalcCaretPos
 
 ;;; ============================================================
 ;;; Redraw the contents of the control; used after a window move or string change.
@@ -689,7 +689,7 @@ a_record  .addr
         jsr     _SetPort
 
         ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     _HideIP
+        ;; jsr     _HideCaret
 
         MGTK_CALL MGTK::PaintRect, rect
         MGTK_CALL MGTK::MoveTo, pos
@@ -708,15 +708,15 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::DrawText, dt_params
 :
 
-        ;; Fix IP position if string has shrunk
+        ;; Fix caret position if string has shrunk
         ldy     #0
         lda     (a_buf),y
-        ldy     #LETK::LineEditRecord::ip_pos
-        cmp     (a_record),y    ; len >= ip_pos
+        ldy     #LETK::LineEditRecord::caret_pos
+        cmp     (a_record),y    ; len >= caret_pos
         bcs     :+
-        sta     (a_record),y    ; no, clamp ip_pos
+        sta     (a_record),y    ; no, clamp caret_pos
 :
-        jmp     _ShowIP
+        jmp     _ShowCaret
 .endproc ; UpdateImpl
 
 ;;; ============================================================

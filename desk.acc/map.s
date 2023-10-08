@@ -694,7 +694,7 @@ indicator_flag:
         .byte   0
 
 .proc ResetBlinkCounter
-        ldx     #DeskTopSettings::ip_blink_speed
+        ldx     #DeskTopSettings::caret_blink_speed
         jsr     ReadSetting
         sta     blink_counter
         inx                     ; `ReadSetting` preserves X

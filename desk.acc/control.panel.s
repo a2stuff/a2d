@@ -382,37 +382,37 @@ y_exponent:     .byte   0
 .endparams
 
 ;;; ============================================================
-;;; IP Blink Speed Resources
+;;; Caret Blink Speed Resources
 
-kIPBlinkDisplayX = 229
-kIPBlinkDisplayY = 85
+kCaretBlinkDisplayX = 229
+kCaretBlinkDisplayY = 85
 
         ;; Selected index (1-3, or 0 for 'no match')
-ipblink_selection:
+caret_blink_selection:
         .byte   0
 
-        DEFINE_LABEL ipblink1, res_string_label_ipblink1, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 11
-        DEFINE_LABEL ipblink2, res_string_label_ipblink2, kIPBlinkDisplayX-4, kIPBlinkDisplayY + 21
-        DEFINE_LABEL ipblink_slow, res_string_label_slow, kIPBlinkDisplayX + 100, kIPBlinkDisplayY + 34
-        DEFINE_LABEL ipblink_fast, res_string_label_fast, kIPBlinkDisplayX + 189, kIPBlinkDisplayY + 34
+        DEFINE_LABEL caret_blink1, res_string_label_ipblink1, kCaretBlinkDisplayX-4, kCaretBlinkDisplayY + 11
+        DEFINE_LABEL caret_blink2, res_string_label_ipblink2, kCaretBlinkDisplayX-4, kCaretBlinkDisplayY + 21
+        DEFINE_LABEL caret_blink_slow, res_string_label_slow, kCaretBlinkDisplayX + 100, kCaretBlinkDisplayY + 34
+        DEFINE_LABEL caret_blink_fast, res_string_label_fast, kCaretBlinkDisplayX + 189, kCaretBlinkDisplayY + 34
 
-        DEFINE_BUTTON ipblink_btn1_rec, kDAWindowId,,, kIPBlinkDisplayX + 116, kIPBlinkDisplayY + 16
-        DEFINE_BUTTON ipblink_btn2_rec, kDAWindowId,,, kIPBlinkDisplayX + 136, kIPBlinkDisplayY + 16
-        DEFINE_BUTTON ipblink_btn3_rec, kDAWindowId,,, kIPBlinkDisplayX + 156, kIPBlinkDisplayY + 16
-        DEFINE_BUTTON_PARAMS ipblink_btn1_params, ipblink_btn1_rec
-        DEFINE_BUTTON_PARAMS ipblink_btn2_params, ipblink_btn2_rec
-        DEFINE_BUTTON_PARAMS ipblink_btn3_params, ipblink_btn3_rec
+        DEFINE_BUTTON caret_blink_btn1_rec, kDAWindowId,,, kCaretBlinkDisplayX + 116, kCaretBlinkDisplayY + 16
+        DEFINE_BUTTON caret_blink_btn2_rec, kDAWindowId,,, kCaretBlinkDisplayX + 136, kCaretBlinkDisplayY + 16
+        DEFINE_BUTTON caret_blink_btn3_rec, kDAWindowId,,, kCaretBlinkDisplayX + 156, kCaretBlinkDisplayY + 16
+        DEFINE_BUTTON_PARAMS caret_blink_btn1_params, caret_blink_btn1_rec
+        DEFINE_BUTTON_PARAMS caret_blink_btn2_params, caret_blink_btn2_rec
+        DEFINE_BUTTON_PARAMS caret_blink_btn3_params, caret_blink_btn3_rec
 
-.params ipblink_bitmap_params
-        DEFINE_POINT viewloc, kIPBlinkDisplayX + 123, kIPBlinkDisplayY
-mapbits:        .addr   ipblink_bitmap
+.params caret_blink_bitmap_params
+        DEFINE_POINT viewloc, kCaretBlinkDisplayX + 123, kCaretBlinkDisplayY
+mapbits:        .addr   caret_blink_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 37, 12
         REF_MAPINFO_MEMBERS
 .endparams
 
-ipblink_bitmap:
+caret_blink_bitmap:
         PIXELS  "....##..............##..............##...."
         PIXELS  "....................##...................."
         PIXELS  "........##..........##..........##........"
@@ -427,32 +427,32 @@ ipblink_bitmap:
         PIXELS  "....................##...................."
         PIXELS  "....##..............##..............##...."
 
-kIPBmpPosX = kIPBlinkDisplayX + 143
-kIPBmpPosY = kIPBlinkDisplayY
-kIPBmpWidth  = 2
-kIPBmpHeight = 13
+kCaretBmpPosX = kCaretBlinkDisplayX + 143
+kCaretBmpPosY = kCaretBlinkDisplayY
+kCaretBmpWidth  = 2
+kCaretBmpHeight = 13
 
-.params ipblink_bitmap_ip_params
-        DEFINE_POINT viewloc, kIPBmpPosX, kIPBmpPosY
-mapbits:        .addr   ipblink_ip_bitmap
+.params caret_blink_bitmap_caret_params
+        DEFINE_POINT viewloc, kCaretBmpPosX, kCaretBmpPosY
+mapbits:        .addr   caret_blink_caret_bitmap
 mapwidth:       .byte   1
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kIPBmpWidth - 1, kIPBmpHeight - 1
+        DEFINE_RECT maprect, 0, 0, kCaretBmpWidth - 1, kCaretBmpHeight - 1
         REF_MAPINFO_MEMBERS
 .endparams
 
 kCursorWidth    = 8
 kCursorHeight   = 12
 kSlop           = 14            ; Two DHR bytes worth of pixels
-        ;; Bounding rect for where the blinking IP and cursor could overlap.
+        ;; Bounding rect for where the blinking caret and cursor could overlap.
         ;; If the cursor is inside this rect, it is hidden before drawing
         ;; the bitmap.
-        DEFINE_RECT_SZ anim_cursor_rect, kIPBmpPosX - kCursorWidth - kSlop,  kIPBmpPosY - kCursorHeight, kCursorWidth + kIPBmpWidth + 2*kSlop, kCursorHeight + kIPBmpHeight
+        DEFINE_RECT_SZ anim_cursor_rect, kCaretBmpPosX - kCursorWidth - kSlop,  kCaretBmpPosY - kCursorHeight, kCursorWidth + kCaretBmpWidth + 2*kSlop, kCursorHeight + kCaretBmpHeight
 cursor_flag:
         .byte   0
 
 
-ipblink_ip_bitmap:
+caret_blink_caret_bitmap:
         PIXELS  "##"
         PIXELS  "##"
         PIXELS  "##"
@@ -472,7 +472,7 @@ ipblink_ip_bitmap:
 
 .proc Init
         jsr     InitPattern
-        jsr     InitIpblink
+        jsr     InitCaretBlink
         jsr     InitDblclick
 
         MGTK_CALL MGTK::OpenWindow, winfo
@@ -482,7 +482,7 @@ ipblink_ip_bitmap:
 .endproc ; Init
 
 .proc InputLoop
-        jsr     DoIPBlink
+        jsr     DoCaretBlink
         JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
@@ -654,25 +654,25 @@ ipblink_ip_bitmap:
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, ipblink_btn1_rec::rect
+        MGTK_CALL MGTK::InRect, caret_blink_btn1_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
-        jmp     HandleIpblinkClick
+        jmp     HandleCaretBlinkClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, ipblink_btn2_rec::rect
+        MGTK_CALL MGTK::InRect, caret_blink_btn2_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #2
-        jmp     HandleIpblinkClick
+        jmp     HandleCaretBlinkClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, ipblink_btn3_rec::rect
+        MGTK_CALL MGTK::InRect, caret_blink_btn3_rec::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #3
-        jmp     HandleIpblinkClick
+        jmp     HandleCaretBlinkClick
         END_IF
 
         jmp     InputLoop
@@ -1054,26 +1054,26 @@ loop:   ldy     #3
         MGTK_CALL MGTK::PaintBitsHC, mouse_tracking_params
 
         ;; ==============================
-        ;; IP Blinking
+        ;; Caret Blinking
 
-        MGTK_CALL MGTK::MoveTo, ipblink1_label_pos
-        param_call DrawString, ipblink1_label_str
+        MGTK_CALL MGTK::MoveTo, caret_blink1_label_pos
+        param_call DrawString, caret_blink1_label_str
 
-        MGTK_CALL MGTK::MoveTo, ipblink2_label_pos
-        param_call DrawString, ipblink2_label_str
+        MGTK_CALL MGTK::MoveTo, caret_blink2_label_pos
+        param_call DrawString, caret_blink2_label_str
 
-        MGTK_CALL MGTK::PaintBitsHC, ipblink_bitmap_params
+        MGTK_CALL MGTK::PaintBitsHC, caret_blink_bitmap_params
 
-        MGTK_CALL MGTK::MoveTo, ipblink_slow_label_pos
-        param_call DrawString, ipblink_slow_label_str
+        MGTK_CALL MGTK::MoveTo, caret_blink_slow_label_pos
+        param_call DrawString, caret_blink_slow_label_str
 
-        MGTK_CALL MGTK::MoveTo, ipblink_fast_label_pos
-        param_call DrawStringRight, ipblink_fast_label_str
+        MGTK_CALL MGTK::MoveTo, caret_blink_fast_label_pos
+        param_call DrawStringRight, caret_blink_fast_label_str
 
-        BTK_CALL BTK::RadioDraw, ipblink_btn1_params
-        BTK_CALL BTK::RadioDraw, ipblink_btn2_params
-        BTK_CALL BTK::RadioDraw, ipblink_btn3_params
-        jsr     UpdateIpblinkButtons
+        BTK_CALL BTK::RadioDraw, caret_blink_btn1_params
+        BTK_CALL BTK::RadioDraw, caret_blink_btn2_params
+        BTK_CALL BTK::RadioDraw, caret_blink_btn3_params
+        jsr     UpdateCaretBlinkButtons
 
         ;; ==============================
         ;; Frame
@@ -1147,29 +1147,29 @@ arrow_num:
 .endproc ; UpdateTrackingButtons
 
 
-.proc UpdateIpblinkButtons
+.proc UpdateCaretBlinkButtons
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
-        lda     ipblink_selection
+        lda     caret_blink_selection
         cmp     #1
         jsr     ZToN
-        sta     ipblink_btn1_rec::state
-        BTK_CALL BTK::RadioUpdate, ipblink_btn1_params
+        sta     caret_blink_btn1_rec::state
+        BTK_CALL BTK::RadioUpdate, caret_blink_btn1_params
 
-        lda     ipblink_selection
+        lda     caret_blink_selection
         cmp     #2
         jsr     ZToN
-        sta     ipblink_btn2_rec::state
-        BTK_CALL BTK::RadioUpdate, ipblink_btn2_params
+        sta     caret_blink_btn2_rec::state
+        BTK_CALL BTK::RadioUpdate, caret_blink_btn2_params
 
-        lda     ipblink_selection
+        lda     caret_blink_selection
         cmp     #3
         jsr     ZToN
-        sta     ipblink_btn3_rec::state
-        BTK_CALL BTK::RadioUpdate, ipblink_btn3_params
+        sta     caret_blink_btn3_rec::state
+        BTK_CALL BTK::RadioUpdate, caret_blink_btn3_params
 
         rts
-.endproc ; UpdateIpblinkButtons
+.endproc ; UpdateCaretBlinkButtons
 
 .proc UpdateRGBCheckbox
         ldx     #DeskTopSettings::rgb_color
@@ -1538,88 +1538,88 @@ pattern_cD:      .res 8, $BB     ; D = lavender
 pattern_cE:      .res 8, $77     ; E = aqua
 
 ;;; ============================================================
-;;; IP Blink
+;;; Caret Blink
 
-kIPBlinkSpeedTableSize = 3
+kCaretBlinkSpeedTableSize = 3
 
-ipblink_speed_table:
-        .word   kDefaultIPBlinkSpeed * 2
-        .word   kDefaultIPBlinkSpeed * 1
-        .word   kDefaultIPBlinkSpeed * 1/2
+caret_blink_speed_table:
+        .word   kDefaultCaretBlinkSpeed * 2
+        .word   kDefaultCaretBlinkSpeed * 1
+        .word   kDefaultCaretBlinkSpeed * 1/2
 
-ipblink_counter:
-        .word   kDefaultIPBlinkSpeed
+caret_blink_counter:
+        .word   kDefaultCaretBlinkSpeed
 
-.proc InitIpblink
-        ldx     #DeskTopSettings::ip_blink_speed
+.proc InitCaretBlink
+        ldx     #DeskTopSettings::caret_blink_speed
         jsr     ReadSettingWord
-        stax    ip_blink_speed
+        stax    caret_blink_speed
 
         ;; Find matching index in word table, or 0
-        ldx     #kIPBlinkSpeedTableSize * 2
-loop:   ecmp16  ip_blink_speed, ipblink_speed_table-2,x
+        ldx     #kCaretBlinkSpeedTableSize * 2
+loop:   ecmp16  caret_blink_speed, caret_blink_speed_table-2,x
         bne     next
         ;; Found a match
         txa
         lsr                     ; /= 2
-        sta     ipblink_selection
+        sta     caret_blink_selection
         rts
 
 next:   dex
         dex
         bpl     loop
-        copy    #0, ipblink_selection ; not found
+        copy    #0, caret_blink_selection ; not found
         rts
 
-ip_blink_speed: .word   0
-.endproc ; InitIpblink
+caret_blink_speed: .word   0
+.endproc ; InitCaretBlink
 
-.proc HandleIpblinkClick
-        sta     ipblink_selection ; 1, 2 or 3
+.proc HandleCaretBlinkClick
+        sta     caret_blink_selection ; 1, 2 or 3
         asl                     ; *= 2
         tax
         dex
         dex                     ; 0, 2 or 4
 
-        copy16  ipblink_speed_table,x, ip_blink_speed
+        copy16  caret_blink_speed_table,x, caret_blink_speed
 
-        ldx     #DeskTopSettings::ip_blink_speed
-        lda     ip_blink_speed
+        ldx     #DeskTopSettings::caret_blink_speed
+        lda     caret_blink_speed
         jsr     WriteSetting
-        ldx     #DeskTopSettings::ip_blink_speed+1
-        lda     ip_blink_speed+1
+        ldx     #DeskTopSettings::caret_blink_speed+1
+        lda     caret_blink_speed+1
         jsr     WriteSetting
 
         jsr     MarkDirty
-        jsr     ResetIPBlinkCounter
+        jsr     ResetCaretBlinkCounter
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         MGTK_CALL MGTK::SetPort, grafport
-        jsr     UpdateIpblinkButtons
+        jsr     UpdateCaretBlinkButtons
         jmp     InputLoop
 
-ip_blink_speed: .word   0
-.endproc ; HandleIpblinkClick
+caret_blink_speed: .word   0
+.endproc ; HandleCaretBlinkClick
 
-.proc ResetIPBlinkCounter
-        ldx     #DeskTopSettings::ip_blink_speed
+.proc ResetCaretBlinkCounter
+        ldx     #DeskTopSettings::caret_blink_speed
         jsr     ReadSettingWord
-        stax    ipblink_counter
+        stax    caret_blink_counter
 
         ;; Scale it because it's much slower in the DA than in DeskTop
         ;; prompts, due to more hit testing, etc.  1/2 speed seems okay.
-        lsr16   ipblink_counter
+        lsr16   caret_blink_counter
         rts
-.endproc ; ResetIPBlinkCounter
+.endproc ; ResetCaretBlinkCounter
 
 
-.proc DoIPBlink
-        dec16   ipblink_counter
-        lda     ipblink_counter
-        ora     ipblink_counter+1
+.proc DoCaretBlink
+        dec16   caret_blink_counter
+        lda     caret_blink_counter
+        ora     caret_blink_counter+1
         bne     done
 
-        jsr     ResetIPBlinkCounter
+        jsr     ResetCaretBlinkCounter
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -1631,7 +1631,7 @@ ip_blink_speed: .word   0
         MGTK_CALL MGTK::HideCursor
 :
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintBitsHC, ipblink_bitmap_ip_params
+        MGTK_CALL MGTK::PaintBitsHC, caret_blink_bitmap_caret_params
 
         bit     cursor_flag
         bpl     :+
@@ -1640,7 +1640,7 @@ ip_blink_speed: .word   0
 
 done:   rts
 
-.endproc ; DoIPBlink
+.endproc ; DoCaretBlink
 
 ;;; ============================================================
 

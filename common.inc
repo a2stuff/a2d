@@ -155,14 +155,14 @@ kLinkFileMaxSize = 68       ; signature + version + length + 64-byte path
 ;;; See `docs/Desktop_Config_Format.md` for file format.
 
 kDefaultDblClickSpeed   = 1200
-kDefaultIPBlinkSpeed    =  500
+kDefaultCaretBlinkSpeed =  500
 
 kDeskTopSettingsSize    = $80
 
 .struct DeskTopSettings
         pattern         .res 8
         dblclick_speed  .word
-        ip_blink_speed  .word
+        caret_blink_speed .word
         clock_24hours   .byte   ; $00 = 12 hour, $80 = 24 hour
         rgb_color       .byte   ; $00 = B&W, $80 = Color
         mouse_tracking  .byte   ; 0 = normal, 1 = 2x speed

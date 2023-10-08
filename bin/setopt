@@ -48,17 +48,17 @@ config="$tempdir/DESKTOP.CONFIG#F10000"
 # See config.inc for the DeskTopSettings definition. Note that first byte
 # of the file is version number, rest is settings struct.
 #
-# file_version   = offset  0 len 1
-# pattern        = offset  1 len 8
-# dblclick_speed = offset  9 len 2
-# ipblink_speed  = offset 11 len 2
-# clock_24hours  = offset 13 len 1
+# file_version       = offset  0 len 1
+# pattern            = offset  1 len 8
+# dblclick_speed     = offset  9 len 2
+# caret_blink_speed  = offset 11 len 2
+# clock_24hours      = offset 13 len 1
 #   bit 7 = 24-hour (else 12-hour)
-# rgb_color      = offset 14 len 1
+# rgb_color          = offset 14 len 1
 #   bit 7 = color (else monochrome)
-# mouse_tracking = offset 15 len 1
+# mouse_tracking     = offset 15 len 1
 #   0 = normal, 1 = 2x speed
-# startup        = offset 16 len 1
+# startup            = offset 16 len 1
 #   bit 0 = skip RAMCard (else copy), bit 1 = skip Selector (else run)
 
 for var in "$@"; do

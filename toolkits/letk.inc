@@ -27,14 +27,14 @@ max_length      .byte
 
 ;;; --------------------------------------------------
 
-;;; Internal: Set when the IP in the control should blink.
+;;; Internal: Set when the caret in the control should blink.
 active_flag     .byte
-;;; Internal: Position of the insertion point
-ip_pos          .byte
-;;; Internal: Set during the IP blink cycle while the IP is visible.
-ip_flag         .byte
-;;; Internal: counter for the IP blink cycle.
-ip_counter      .word
+;;; Internal: Position of the caret.
+caret_pos       .byte
+;;; Internal: Set during the caret blink cycle while the caret is visible.
+caret_flag      .byte
+;;; Internal: counter for the caret blink cycle.
+caret_counter   .word
 
 .endstruct
 
@@ -62,13 +62,13 @@ dirty_flag:     .byte   0
 Init            = $00           ; Initialize LineEditRecord members
 ;;; .addr       record
 
-Idle            = $01           ; Call from event loop; blinks IP
+Idle            = $01           ; Call from event loop; blinks caret
 ;;; .addr       record
 
-Activate        = $02           ; Move IP to the end and shows it
+Activate        = $02           ; Move caret to the end and shows it
 ;;; .addr       record
 
-Deactivate      = $03           ; Hide IP
+Deactivate      = $03           ; Hide caret
 ;;; .addr       record
 
 Click           = $04           ; Handle click within control bounds

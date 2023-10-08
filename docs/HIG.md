@@ -51,14 +51,14 @@ Note that these are for inspiration, not to be dutifully followed.
 * Border is 1x1 pixels thick, drawn with solid pen black pen (not XOR).
 * Horizontal text inset is 5px.
 * Vertical text position is 10px (just above bottom border).
-* Insertion point (a.k.a. text caret) is the full height of field, XOR-drawn between text glyphs. Moving the insertion point does not cause the string to change.
+* Caret (a.k.a. insertion point) is the full height of field, XOR-drawn between text glyphs. Moving the caret does not cause the string to change.
 * The following keyboard shortcuts are supported:
-  * Left Arrow - move IP one character left.
-  * Right Arrow - move IP one character right.
-  * Apple+Left Arrow - move IP to start of text.
-  * Apple+Right Arrow - move IP to end of string.
-  * Delete - erase character to the left of the IP.
-  * Control+F - erase character to the right of the IP.
+  * Left Arrow - move caret one character left.
+  * Right Arrow - move caret one character right.
+  * Apple+Left Arrow - move caret to start of text.
+  * Apple+Right Arrow - move caret to end of string.
+  * Delete - erase character to the left of the caret.
+  * Control+F - erase character to the right of the caret.
   * Control+X - erase all text
 
 ## List Box Controls

@@ -27,10 +27,10 @@ File offset +$0001. The remaining 128 bytes the file are defined by the
 `DeskTopSettings` struct in `../common.inc`.
 
 |  Offset  |  Length    | Description          |
-|---------:|:----------:|:----------------------|
+|---------:|:----------:|:---------------------|
 |  +$0000  |  8         | pattern              |
 |  +$0008  |  word (2)  | dblclick speed       |
-|  +$000A  |  word (2)  | IP blink speed       |
+|  +$000A  |  word (2)  | caret blink speed    |
 |  +$000C  |  byte (1)  | clock 24hours flag   |
 |  +$000D  |  byte (1)  | RGB color flag       |
 |  +$000E  |  byte (1)  | mouse tracking speed |
@@ -51,7 +51,7 @@ File offset +$0001. The remaining 128 bytes the file are defined by the
    Maximum time to wait for a second click to be considered a
    double-click. The number is in iterations of the event loop.
 
-* **IP blink speed**
+* **caret blink speed**
 
    Speed at which the insertion point in text entry fields blinks. The
    number is in iterations of the event loop.

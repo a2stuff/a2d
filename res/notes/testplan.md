@@ -181,7 +181,7 @@
 * Launch DeskTop. Special > Disk Copy. Quit back to DeskTop. Invoke BASIC.SYSTEM. Ensure /RAM exists.
 
 * Repeat the following cases for File > New Folder, File > Rename, and File > Duplicate:
-  * Launch DeskTop. Open a window and (if needed) select a file. Run the command. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
+  * Launch DeskTop. Open a window and (if needed) select a file. Run the command. Enter a name, but place the caret in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
 
 * Repeat the following cases for File > New Folder, File > Rename, and File > Duplicate:
   * Launch DeskTop. Run the command. Verify if the OK button correctly enabled if the text field is empty, disabled if not. Enter text. Verify that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
@@ -371,7 +371,7 @@
   * Launch DeskTop. Run the command. For the new name, enter a volume name not currently in use. Verify that you are not prompted for a new name.
   * Launch DeskTop. Run the command. For the new name, enter the name of a volume in a different slot/drive. Verify that an alert shows, indicating that the name is in use.
   * Launch DeskTop. Run the command. For the new name, enter the name of the current disk in that slot/drive. Verify that you are not prompted for a new name.
-  * Launch DeskTop. Run the command. Select a disk (other than the startup disk) and click OK. Enter a name, but place the IP in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
+  * Launch DeskTop. Run the command. Select a disk (other than the startup disk) and click OK. Enter a name, but place the caret in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
   * Launch DeskTop. Run the command. Select an empty drive. Let the operation continue until it fails. Verify that an error message is shown.
   * Configure a system with at least 9 volumes. Launch DeskTop. Run the command. Select a volume in the third column. Click OK. Verify that the selection rect is fully erased.
   * Configure a system with 13 volumes, not counting /RAM. Launch DeskTop. Run the command. Verify that all 13 volumes are shown.
@@ -1082,55 +1082,53 @@ This covers:
  * Find Files DA.
  * Map DA.
 
-"IP" = Insertion Point, also known as the caret or cursor.
-
 Repeat for each field:
  * Type a printable character.
-   * Should insert a character at IP, unless invalid in context or length limit reached. Length limits are:
+   * Should insert a character at caret, unless invalid in context or length limit reached. Length limits are:
      * File name: 15 characters
      * Shortcut name: 14 characters
    * Mouse cursor should be hidden until moved.
-   * Test with IP at start, in middle, and at end of the string.
+   * Test with caret at start, in middle, and at end of the string.
  * Delete key
-   * Should delete character to left of IP, unless at start of string.
+   * Should delete character to left of caret, unless at start of string.
    * Mouse cursor should be hidden until moved.
-   * Test with IP at start, in middle, and at end of the string.
+   * Test with caret at start, in middle, and at end of the string.
  * Control+F (Forward delete)
-   * Should delete character to right of IP, unless at end of string.
+   * Should delete character to right of caret, unless at end of string.
    * Mouse cursor should be hidden until moved.
-   * Test with IP at start, in middle, and at end of the string.
+   * Test with caret at start, in middle, and at end of the string.
  * Control+X (or Clear key on IIgs)
    * Should clear all text.
    * Mouse cursor should be hidden until moved.
-   * Test with IP at start, in middle, and at end of the string.
+   * Test with caret at start, in middle, and at end of the string.
  * Left Arrow
-   * Should move IP one character to the left, unless at start of string.
+   * Should move caret one character to the left, unless at start of string.
    * Mouse cursor should be hidden until moved.
-   * Test with IP at start, in middle, and at end of the string.
+   * Test with caret at start, in middle, and at end of the string.
  * Right Arrow
-   * Should move IP one character to the right, unless at end of string.
+   * Should move caret one character to the right, unless at end of string.
    * Mouse cursor should be hidden until moved.
-   * Test with IP at start, in middle, and at end of the string.
+   * Test with caret at start, in middle, and at end of the string.
  * Apple+Left Arrow
-   * Should move IP to start of string.
+   * Should move caret to start of string.
    * Mouse cursor should be hidden until moved.
-   * Test with IP at start, in middle, and at end of the string.
+   * Test with caret at start, in middle, and at end of the string.
  * Apple+Right Arrow
-   * Should move IP to end of string.
+   * Should move caret to end of string.
    * Mouse cursor should be hidden until moved.
    * Test at start, in middle, and at end of the string.
  * Click to left of string. Verify the mouse cursor is not obscured.
- * Click to left of IP, within the string. Verify the mouse cursor is not obscured.
+ * Click to left of caret, within the string. Verify the mouse cursor is not obscured.
  * Click to right string. Verify the mouse cursor is not obscured.
- * Click to right of IP, within the string. Verify the mouse cursor is not obscured.
- * Place IP within string, click OK.
- * Place IP at start of string, click OK.
- * Place IP at end of string, click OK.
+ * Click to right of caret, within the string. Verify the mouse cursor is not obscured.
+ * Place caret within string, click OK.
+ * Place caret at start of string, click OK.
+ * Place caret at end of string, click OK.
 
 Watch out for:
- * Parts of the IP not erased.
+ * Parts of the caret not erased.
  * Text being truncated when OK clicked.
- * IP being placed in the wrong place by a click.
+ * Caret being placed in the wrong place by a click.
 
 # List Boxes Controls
 

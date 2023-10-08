@@ -20,8 +20,8 @@
         ASSERT_ADDRESS settings_start + DeskTopSettings::dblclick_speed
         .word   kDefaultDblClickSpeed * 4 ; * 1, * 4, or * 16
 
-        ASSERT_ADDRESS settings_start + DeskTopSettings::ip_blink_speed
-        .word   kDefaultIPBlinkSpeed ; * 0.5, * 1, or * 2
+        ASSERT_ADDRESS settings_start + DeskTopSettings::caret_blink_speed
+        .word   kDefaultCaretBlinkSpeed ; * 0.5, * 1, or * 2
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::clock_24hours
         .byte   res_const_clock_format ; $80 = 24-hour

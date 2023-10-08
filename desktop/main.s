@@ -14860,7 +14860,7 @@ done:   rts
 
 ;;; ============================================================
 ;;; Frames and initializes the line edit control in the prompt
-;;; dialog. Call after `text_input_buf` is populated so IP is set
+;;; dialog. Call after `text_input_buf` is populated so caret is set
 ;;; correctly.
 
 .proc InitNameInput
