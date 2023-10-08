@@ -29,6 +29,8 @@
 ;;; * Routines dirty $20...$2F
 ;;; ============================================================
 
+.scope listbox_impl
+
 ;;; ============================================================
 ;;; Call to initialize (or reset) the list. The caller must set
 ;;; `listbox::num_items` and `listbox::selected_index` first.
@@ -37,10 +39,6 @@
 ;;; * Draw the list items
 ;;; * If `listbox::selected_index` is not none, that item will
 ;;;   be scrolled into view and highlighted.
-
-.scope listbox_impl
-
-;;; ============================================================
 
 .proc ListInit
         jsr     _EnableScrollbar
@@ -58,9 +56,7 @@
 ;;;         N=1/A=$FF otherwise
 
 .proc ListClick
-        MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar
+        jsr     _FindControlIsVerticalScrollBar
     IF_EQ
         jsr     _HandleListScroll
         return  #$FF            ; not an item
@@ -188,10 +184,7 @@ repeat: lda     listbox::winfo+MGTK::Winfo::vthumbpos
 
         ;; --------------------------------------------------
 
-update: sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-
+update: jsr     _UpdateThumb
         jmp     _Draw
 .endproc ; _HandleListScroll
 
@@ -215,9 +208,7 @@ update: sta     updatethumb_params::thumbpos
         cmp     #MGTK::Area::content
         bne     cancel
 
-        MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar
+        jsr     _FindControlIsVerticalScrollBar
         bne     cancel
 
         lda     findcontrol_params::which_part
@@ -384,30 +375,31 @@ ret:    rts
 ;;; Assert: `listbox::num_items` is set.
 
 .proc _EnableScrollbar
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        ;; Reset thumb pos
+        lda     #0
+        jsr     _UpdateThumb
 
         lda     listbox::num_items
         cmp     #listbox::kRows + 1
     IF_LT
-        copy    #0, updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-
-        copy    #MGTK::activatectl_deactivate, activatectl_params::activate
-        MGTK_CALL MGTK::ActivateCtl, activatectl_params
-
-        rts
+        ;; Deactivate
+        lda     #MGTK::activatectl_deactivate
+        .assert MGTK::activatectl_deactivate = 0, error, "enum mismatch"
+        beq     activate        ; always
     END_IF
 
-        copy    #0, updatethumb_params::thumbpos
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-
+        ;; Set max and activate
         lda     listbox::num_items
         sec
         sbc     #listbox::kRows
         sta     setctlmax_params::ctlmax
         MGTK_CALL MGTK::SetCtlMax, setctlmax_params
 
-        copy    #MGTK::activatectl_activate, activatectl_params::activate
+        lda     #MGTK::activatectl_activate
+
+activate:
+        sta     activatectl_params::activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
 .endproc ; _EnableScrollbar
@@ -422,32 +414,47 @@ ret:    rts
         and     #$7F            ; A = index
 
         cmp     listbox::winfo+MGTK::Winfo::vthumbpos
-    IF_LT
-        sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        jmp     _Draw
-    END_IF
+        bcc     update
 
         sec
         sbc     #listbox::kRows-1
         bmi     skip
         cmp     listbox::winfo+MGTK::Winfo::vthumbpos
         beq     skip
-    IF_GE
-        sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
-        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
-        jmp     _Draw
-    END_IF
-
+        bcs     update
+skip:
         force_draw_flag := *+1
-skip:   lda     #SELF_MODIFIED_BYTE
+        lda     #SELF_MODIFIED_BYTE
         bmi     _Draw ; will highlight selection
 
         lda     listbox::selected_index
         jmp     _HighlightIndex
+
+update:
+        jsr     _UpdateThumb
+        jmp     _Draw
 .endproc ; _ScrollIntoView
+
+;;; ============================================================
+;;; Update thumb position.
+;;; Input: A = new thumb pos
+.proc _UpdateThumb
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        rts
+.endproc ; _UpdateThumb
+
+;;; ============================================================
+
+;;; Runs `MGTK::FindControl` with coords from `event_params`.
+;;; Output: Z=1 if over vertical scrollbar, Z=0 otherwise
+.proc _FindControlIsVerticalScrollBar
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        rts
+.endproc ; _FindControlIsVerticalScrollBar
 
 ;;; ============================================================
 ;;; Adjusts the viewport given the scroll position, and selects
