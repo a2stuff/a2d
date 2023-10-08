@@ -15106,23 +15106,7 @@ done:   rts
 ;;; Used in dialogs to possibly change cursor
 
         .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
-.proc CheckMouseMoved
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_params::coords,x
-        cmp     coords,x
-        bne     diff
-        dex
-        bpl     :-
-        clc
-        rts
-
-diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
-        sec
-        rts
-
-        DEFINE_POINT coords, 0, 0
-
-.endproc ; CheckMouseMoved
+        .include "../lib/mouse_moved.s"
 
 ;;; ============================================================
 

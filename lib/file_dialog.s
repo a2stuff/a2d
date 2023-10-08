@@ -6,24 +6,24 @@
 ;;; * lib/doubleclick.s
 ;;; * lib/event_params.s
 ;;; * lib/file_dialog_res.s
+;;; * lib/mouse_moved.s
 ;;; * lib/muldiv.s
+;;;
 ;;; Requires these macros to be functional:
 ;;; * `MLI_CALL`
 ;;; * `MGTK_CALL`
-;;; * `LETK_CALL`
 ;;; * `BTK_CALL`
 ;;;
 ;;; Requires the following proc definitions:
-;;; * `CheckMouseMoved`
-;;; * `ModifierDown`
 ;;; * `YieldLoop`
+;;;
 ;;; Requires the following data definitions:
 ;;; * `getwinport_params`
 ;;; * `window_grafport`
 ;;;
 ;;; If `FD_EXTENDED` is defined:
-;;; * lib/line_edit_res.s is required to be previously included
 ;;; * name field at bottom and extra clickable controls on right are supported
+;;; * `LETK_CALL` is required
 
 ;;; ============================================================
 ;;; Memory map
@@ -1459,8 +1459,6 @@ found:  ldx     num_file_names
 .endproc ; _FindFilenameIndex
 .endif
 
-;;; ============================================================
-;;; Text Edit Control
 ;;; ============================================================
 
 .ifdef FD_EXTENDED

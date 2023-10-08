@@ -80,32 +80,8 @@ AdjustVolumeNameCase    := app::AdjustVolumeNameCase
 AdjustFileEntryCase     := app::AdjustFileEntryCase
 ReadSetting             := app::ReadSetting
 
-;;; Required macro definitions:
         .include "../lib/file_dialog.s"
-
-;;; ============================================================
-;;; Determine if mouse moved
-;;; Output: C=1 if mouse moved
-
-.proc CheckMouseMoved
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_coords,x
-        cmp     coords,x
-        bne     diff
-        dex
-        bpl     :-
-        clc
-        rts
-
-diff:   COPY_STRUCT MGTK::Point, event_coords, coords
-        sec
-        rts
-
-        DEFINE_POINT coords, 0, 0
-.endproc ; CheckMouseMoved
-
-;;; ============================================================
-
+        .include "../lib/mouse_moved.s"
         .include "../lib/muldiv.s"
 
 ;;; ============================================================
