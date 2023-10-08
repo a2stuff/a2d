@@ -185,10 +185,7 @@ key_handler_hook:
         jmp     EventLoop
 
 l1:
-        lda     #file_dialog_res::kFilePickerDlgWindowID
-        sta     screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        jsr     _MoveToWindowCoords
 
         bit     extra_controls_flag
     IF_NS
@@ -204,6 +201,16 @@ l1:
 
         jmp     EventLoop
 .endproc ; EventLoop
+
+;;; ============================================================
+
+.proc _MoveToWindowCoords
+        lda     #file_dialog_res::kFilePickerDlgWindowID
+        sta     screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        rts
+.endproc ; _MoveToWindowCoords
 
 ;;; ============================================================
 
@@ -233,10 +240,7 @@ ret:    rts
         jmp     _DoOpen
 
 not_list:
-        lda     #file_dialog_res::kFilePickerDlgWindowID
-        sta     screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        jsr     _MoveToWindowCoords
 
         ;; --------------------------------------------------
         ;; Drives button
@@ -392,13 +396,10 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         stax    ptr
 
         ;; Any selection?
-        ldx     selected_index
+        bit     selected_index
     IF_NC
         ;; Append filename temporarily
-        lda     file_list_index,x
-        and     #$7F
-        jsr     _GetNthFilename
-        jsr     _AppendToPathBuf
+        jsr     _AppendSelectedFilename
     END_IF
 
         ldy     path_buf
@@ -419,13 +420,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 ;;; ============================================================
 
 .proc _DoOpen
-        ldx     selected_index
-        lda     file_list_index,x
-        and     #$7F
-
-        jsr     _GetNthFilename
-        jsr     _AppendToPathBuf
-
+        jsr     _AppendSelectedFilename
         jmp     UpdateListFromPath
 .endproc ; _DoOpen
 
@@ -974,6 +969,18 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         sta     path_buf
         param_jump _AppendToPathBuf, on_line_buffer
 .endproc ; InitPathWithDefaultDevice
+
+;;; ============================================================
+;;; Assert: `selected_index` is valid (not -1)
+
+.proc _AppendSelectedFilename
+        ldx     selected_index
+        lda     file_list_index,x
+        and     #$7F
+
+        jsr     _GetNthFilename
+        FALL_THROUGH_TO _AppendToPathBuf
+.endproc ; _AppendSelectedFilename
 
 ;;; ============================================================
 
