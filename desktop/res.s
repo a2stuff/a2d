@@ -376,9 +376,6 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_POINT entry_picker_line2_start, kBorderDX*2, winfo_entry_picker::kHeight-21
         DEFINE_POINT entry_picker_line2_end, winfo_entry_picker::kWidth - kBorderDX*2, winfo_entry_picker::kHeight-21
 
-        ;; Used when rendering entries
-        DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
-
         DEFINE_BUTTON entry_picker_ok_button_rec, winfo_entry_picker::kWindowId, res_string_button_ok, kGlyphReturn, 210, winfo_entry_picker::kHeight-18
         DEFINE_BUTTON_PARAMS entry_picker_ok_button_params, entry_picker_ok_button_rec
         DEFINE_BUTTON entry_picker_cancel_button_rec, winfo_entry_picker::kWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, winfo_entry_picker::kHeight-18
@@ -406,9 +403,6 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_POINT vol_picker_line1_end, winfo_prompt_dialog::kWidth - 8, kVolPickerTop - 2
         DEFINE_POINT vol_picker_line2_start, 7, winfo_prompt_dialog::kHeight-22
         DEFINE_POINT vol_picker_line2_end, winfo_prompt_dialog::kWidth - 8, winfo_prompt_dialog::kHeight-22
-
-        ;; Used when rendering entries
-        DEFINE_RECT vol_picker_item_rect, 0, 0, 0, 0
 
 the_dos_33_disk_label:
         PASCAL_STRING res_string_the_dos_33_disk_suffix_pattern

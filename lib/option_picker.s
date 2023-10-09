@@ -23,10 +23,11 @@
 ;;; * `kOptionPickerTop` - const
 ;;; Required definitions:
 ;;; * `selected_index` - byte, $FF if no selection
-;;; * `option_picker_item_rect` - MGTK::Rect
 ;;; * `screentowindow_params`
 ;;; Requires the following proc definitions:
 ;;; * `IsIndexValid` - proc, Z=1 if A is valid index, Z=0 otherwise
+;;; Notes:
+;;; * Routines dirty $20...$2F
 ;;; ============================================================
 
 .scope option_picker_impl
@@ -75,17 +76,19 @@ handle_entry_click:
 .proc _HighlightIndex
         bmi     ret
 
+        rect := $20
+
         jsr     _GetOptionPos
-        stax    option_picker_item_rect + MGTK::Rect::x1
-        addax   #kOptionPickerItemWidth-1, option_picker_item_rect + MGTK::Rect::x2
+        stax    rect + MGTK::Rect::x1
+        addax   #kOptionPickerItemWidth-1, rect + MGTK::Rect::x2
         tya                     ; y lo
         ldx     #0              ; y hi
-        stax    option_picker_item_rect + MGTK::Rect::y1
-        addax   #kOptionPickerItemHeight-1, option_picker_item_rect + MGTK::Rect::y2
+        stax    rect + MGTK::Rect::y1
+        addax   #kOptionPickerItemHeight-1, rect + MGTK::Rect::y2
 
         MGTK_CALL MGTK::SetPattern, solid_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintRect, option_picker_item_rect
+        MGTK_CALL MGTK::PaintRect, rect
 
 ret:    rts
 .endproc ; _HighlightIndex
@@ -130,11 +133,13 @@ ret:    rts
 .proc MoveToOption
         jsr     _GetOptionPos
 
-        addax   #kOptionPickerTextHOffset, option_picker_item_rect+MGTK::Rect::x1
+        point := $20
+
+        addax   #kOptionPickerTextHOffset, point + MGTK::Point::xcoord
         tya
         ldx     #0
-        addax   #kOptionPickerTextVOffset, option_picker_item_rect+MGTK::Rect::y1
-        MGTK_CALL MGTK::MoveTo, option_picker_item_rect+MGTK::Rect::topleft
+        addax   #kOptionPickerTextVOffset, point + MGTK::Point::ycoord
+        MGTK_CALL MGTK::MoveTo, point
 
         rts
 .endproc ; MoveToOption

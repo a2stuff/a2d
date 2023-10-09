@@ -403,7 +403,6 @@ kOptionPickerTextHOffset = kShortcutPickerTextHOffset
 kOptionPickerTextVOffset = kShortcutPickerTextVOffset
 kOptionPickerLeft = kShortcutPickerLeft
 kOptionPickerTop = kShortcutPickerTop
-option_picker_item_rect := entry_picker_item_rect
 
         .include "../lib/option_picker.s"
 .endscope ; option_picker

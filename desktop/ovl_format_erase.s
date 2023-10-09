@@ -334,7 +334,6 @@ kOptionPickerTextHOffset = kVolPickerTextHOffset
 kOptionPickerTextVOffset = kVolPickerTextVOffset
 kOptionPickerLeft = kVolPickerLeft
 kOptionPickerTop = kVolPickerTop
-option_picker_item_rect := vol_picker_item_rect
 
         .include "../lib/option_picker.s"
 .endscope ; option_picker

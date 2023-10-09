@@ -256,9 +256,6 @@ str_selector_title:
         DEFINE_POINT line2_pt1, kBorderDX*2, winfo::kHeight - 22
         DEFINE_POINT line2_pt2, winfo::kWidth - kBorderDX*2, winfo::kHeight - 22
 
-        ;; Used when rendering entries
-        DEFINE_RECT entry_picker_item_rect, 0, 0, 0, 0
-
         io_buf_sl = $BB00
 
         DEFINE_OPEN_PARAMS open_selector_list_params, str_selector_list, io_buf_sl
@@ -782,7 +779,6 @@ kOptionPickerTextHOffset = kEntryPickerTextHOffset
 kOptionPickerTextVOffset = kEntryPickerTextVOffset
 kOptionPickerLeft = kEntryPickerLeft
 kOptionPickerTop = kEntryPickerTop
-option_picker_item_rect := entry_picker_item_rect
 
         .include "../lib/option_picker.s"
 .endscope ; option_picker
