@@ -330,6 +330,8 @@ kOptionPickerRows = kVolPickerRows
 kOptionPickerCols = kVolPickerCols
 kOptionPickerItemWidth = kVolPickerItemWidth
 kOptionPickerItemHeight = kVolPickerItemHeight
+kOptionPickerTextHOffset = kVolPickerTextHOffset
+kOptionPickerTextVOffset = kVolPickerTextVOffset
 kOptionPickerLeft = kVolPickerLeft
 kOptionPickerTop = kVolPickerTop
 option_picker_item_rect := vol_picker_item_rect
@@ -398,12 +400,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         beq     :+
         rts
 :
-        jsr     option_picker::GetOptionPos
-        addax   #kVolPickerTextHOffset, vol_picker_item_rect::x1
-        tya
-        ldx     #0
-        addax   #kVolPickerTextVOffset, vol_picker_item_rect::y1
-        MGTK_CALL MGTK::MoveTo, vol_picker_item_rect::topleft
+        jsr     option_picker::MoveToOption
 
         ;; Reverse order, so boot volume is first
         lda     DEVCNT

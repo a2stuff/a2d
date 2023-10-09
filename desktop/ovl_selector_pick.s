@@ -399,6 +399,8 @@ kOptionPickerRows = kShortcutPickerRows
 kOptionPickerCols = kShortcutPickerCols
 kOptionPickerItemWidth = kShortcutPickerItemWidth
 kOptionPickerItemHeight = kShortcutPickerItemHeight
+kOptionPickerTextHOffset = kShortcutPickerTextHOffset
+kOptionPickerTextVOffset = kShortcutPickerTextVOffset
 kOptionPickerLeft = kShortcutPickerLeft
 kOptionPickerTop = kShortcutPickerTop
 option_picker_item_rect := entry_picker_item_rect
@@ -413,13 +415,7 @@ option_picker_item_rect := entry_picker_item_rect
         stax    $06
 
         tya
-        jsr     option_picker::GetOptionPos
-        addax   #kShortcutPickerTextHOffset, entry_picker_item_rect::x1
-        tya
-        ldx     #0
-        addax   #kShortcutPickerTextYOffset, entry_picker_item_rect::y1
-
-        MGTK_CALL MGTK::MoveTo, entry_picker_item_rect::topleft
+        jsr     option_picker::MoveToOption
         ldax    $06
         jmp     DrawString
 .endproc ; DrawEntry

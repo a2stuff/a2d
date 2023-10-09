@@ -368,7 +368,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         kShortcutPickerItemWidth  = 104
         kShortcutPickerItemHeight = kListItemHeight
         kShortcutPickerTextHOffset = 10
-        kShortcutPickerTextYOffset = kShortcutPickerItemHeight - 1
+        kShortcutPickerTextVOffset = kShortcutPickerItemHeight - 1
 
         ;; Line endpoints
         DEFINE_POINT entry_picker_line1_start, kBorderDX*2, 22

@@ -778,6 +778,8 @@ kOptionPickerRows = kEntryPickerRows
 kOptionPickerCols = kEntryPickerCols
 kOptionPickerItemWidth = kEntryPickerItemWidth
 kOptionPickerItemHeight = kEntryPickerItemHeight
+kOptionPickerTextHOffset = kEntryPickerTextHOffset
+kOptionPickerTextVOffset = kEntryPickerTextVOffset
 kOptionPickerLeft = kEntryPickerLeft
 kOptionPickerTop = kEntryPickerTop
 option_picker_item_rect := entry_picker_item_rect
@@ -1476,12 +1478,7 @@ prefix: pla
 common: lda     #winfo::kDialogId
         jsr     GetWindowPort
         pla
-        jsr     option_picker::GetOptionPos
-        addax   #kEntryPickerTextHOffset, entry_picker_item_rect::x1
-        tya
-        ldx     #0
-        addax   #kEntryPickerTextVOffset, entry_picker_item_rect::y1
-        MGTK_CALL MGTK::MoveTo, entry_picker_item_rect::topleft
+        jsr     option_picker::MoveToOption
         param_call DrawString, entry_string_buf
         rts
 .endproc ; DrawListEntry

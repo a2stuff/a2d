@@ -2,7 +2,7 @@
 ;;; Option Picker Control
 ;;;
 ;;; API:
-;;; * `GetOptionPos` - call when drawing labels (caller responsible)
+;;; * `MoveToOption` - call when drawing labels (caller responsible)
 ;;; * `IsOptionPickerKey` - call to see if key would be handled
 ;;; * `HandleOptionPickerKey` - call to handle key
 ;;; * `HandleOptionPickerClick` - `screentowindow_params` must be mapped
@@ -17,6 +17,8 @@
 ;;; * `kOptionPickerCols` - const
 ;;; * `kOptionPickerItemWidth` - const
 ;;; * `kOptionPickerItemHeight` - const
+;;; * `kOptionPickerTextHOffset` - const
+;;; * `kOptionPickerItemVOffset` - const
 ;;; * `kOptionPickerLeft` - const
 ;;; * `kOptionPickerTop` - const
 ;;; Required definitions:
@@ -73,7 +75,7 @@ handle_entry_click:
 .proc _HighlightIndex
         bmi     ret
 
-        jsr     GetOptionPos
+        jsr     _GetOptionPos
         stax    option_picker_item_rect + MGTK::Rect::x1
         addax   #kOptionPickerItemWidth-1, option_picker_item_rect + MGTK::Rect::x2
         tya                     ; y lo
@@ -92,7 +94,7 @@ ret:    rts
 ;;; Get the coordinates of an option by index.
 ;;; Input: A = volume index
 ;;; Output: A,X = x coordinate, Y = y coordinate
-.proc GetOptionPos
+.proc _GetOptionPos
         ldx     #0              ; hi
         ldy     #option_picker::kOptionPickerRows
         jsr     Divide_16_8_16
@@ -121,7 +123,21 @@ ret:    rts
         pla                     ; X coord lo
 
         rts
-.endproc ; GetOptionPos
+.endproc ; _GetOptionPos
+
+;;; ============================================================
+
+.proc MoveToOption
+        jsr     _GetOptionPos
+
+        addax   #kOptionPickerTextHOffset, option_picker_item_rect+MGTK::Rect::x1
+        tya
+        ldx     #0
+        addax   #kOptionPickerTextVOffset, option_picker_item_rect+MGTK::Rect::y1
+        MGTK_CALL MGTK::MoveTo, option_picker_item_rect+MGTK::Rect::topleft
+
+        rts
+.endproc ; MoveToOption
 
 ;;; ============================================================
 ;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
@@ -300,7 +316,7 @@ loop:   clc
 .endscope ; option_picker_impl
 
 ;;; "Exports"
-GetOptionPos := option_picker_impl::GetOptionPos
+MoveToOption := option_picker_impl::MoveToOption
 IsOptionPickerKey := option_picker_impl::IsOptionPickerKey
 HandleOptionPickerKey := option_picker_impl::HandleOptionPickerKey
 HandleOptionPickerClick := option_picker_impl::HandleOptionPickerClick
