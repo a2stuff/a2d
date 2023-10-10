@@ -133,14 +133,6 @@ click:  jsr     HandleClick
 ;;; event is seen, and also explicitly following operations
 ;;; (e.g. a window close followed by a nested loop or slow
 ;;; file operation).
-;;;
-;;; This is made more complicated by the presence of desktop
-;;; (volume) icons, which MGTK is unaware of. Implicit updates
-;;; trigger a desktop icon repaint, but these are insufficient
-;;; for cases where MGTK doesn't think there's anything to
-;;; update. Therefore, most DeskTop sites will call explicitly
-;;; to both clear updates and redraw icons using the
-;;; `ClearUpdates` entry point.
 
 .proc ClearUpdatesImpl
 
