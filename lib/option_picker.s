@@ -2,7 +2,7 @@
 ;;; Option Picker Control
 ;;;
 ;;; API:
-;;; * `MoveToOption` - call when drawing labels (caller responsible)
+;;; * `DrawOption` - call when drawing labels (caller responsible)
 ;;; * `IsOptionPickerKey` - call to see if key would be handled
 ;;; * `HandleOptionPickerKey` - call to handle key
 ;;; * `HandleOptionPickerClick` - `screentowindow_params` must be mapped
@@ -130,19 +130,32 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc MoveToOption
+.proc DrawOption
+        textptr := $20
+        textlen := $22
+        point   := $23
+
+        sty     index
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        beq     ret
+
+        sta     textlen
+        inc16   textptr
+
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     _GetOptionPos
-
-        point := $20
-
         addax   #kOptionPickerTextHOffset, point + MGTK::Point::xcoord
         tya
         ldx     #0
         addax   #kOptionPickerTextVOffset, point + MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, point
+        MGTK_CALL MGTK::DrawText, textptr
 
-        rts
-.endproc ; MoveToOption
+ret:    rts
+.endproc ; DrawOption
 
 ;;; ============================================================
 ;;; Inputs: `screentowindow_params` has `windowx` and `windowy` mapped
@@ -321,7 +334,7 @@ loop:   clc
 .endscope ; option_picker_impl
 
 ;;; "Exports"
-MoveToOption := option_picker_impl::MoveToOption
+DrawOption := option_picker_impl::DrawOption
 IsOptionPickerKey := option_picker_impl::IsOptionPickerKey
 HandleOptionPickerKey := option_picker_impl::HandleOptionPickerKey
 HandleOptionPickerClick := option_picker_impl::HandleOptionPickerClick

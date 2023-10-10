@@ -1474,8 +1474,8 @@ prefix: pla
 common: lda     #winfo::kDialogId
         jsr     GetWindowPort
         pla
-        jsr     option_picker::MoveToOption
-        param_call DrawString, entry_string_buf
+        tay
+        param_call option_picker::DrawOption, entry_string_buf
         rts
 .endproc ; DrawListEntry
 

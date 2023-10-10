@@ -399,14 +399,13 @@ loop:   lda     #SELF_MODIFIED_BYTE
         beq     :+
         rts
 :
-        jsr     option_picker::MoveToOption
-
         ;; Reverse order, so boot volume is first
         lda     DEVCNT
         sec
         sbc     vol
         jsr     GetDeviceNameForIndex
-        jsr     main::DrawString
+        ldy     vol
+        jsr     option_picker::DrawOption
 
         inc     vol
         jmp     loop

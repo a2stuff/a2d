@@ -411,25 +411,17 @@ kOptionPickerTop = kShortcutPickerTop
 
 ;;; Inputs: A,X=string, Y=index
 .proc DrawEntry
-        stax    $06
-
+        ptr1 := $06
+        stax    ptr1
         tya
-        jsr     option_picker::MoveToOption
-        ldax    $06
-        jmp     DrawString
-.endproc ; DrawEntry
+        pha
 
-;;; ============================================================
-
-;;; Copy the string somewhere visible to MGTK in auxmem.
-;;; Input: A,X = string
-.proc DrawString
-        ptr := $06
-
-        stax    ptr
         param_call main::CopyPtr1ToBuf, text_buffer2
-        param_jump main::DrawString, text_buffer2
-.endproc ; DrawString
+        pla
+        tay
+
+        param_jump option_picker::DrawOption, text_buffer2
+.endproc ; DrawEntry
 
 ;;; ============================================================
 
