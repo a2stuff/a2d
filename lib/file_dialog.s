@@ -174,17 +174,6 @@ key_handler_hook:
         copy    #0, type_down_buf
 
 .ifdef FD_EXTENDED
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        jeq     EventLoop
-
-        lda     findwindow_params::window_id
-        cmp     #file_dialog_res::kFilePickerDlgWindowID
-        beq     l1
-        jsr     _UnsetCursorIBeam
-        jmp     EventLoop
-
-l1:
         jsr     _MoveToWindowCoords
 
         bit     extra_controls_flag

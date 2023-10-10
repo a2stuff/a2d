@@ -13404,16 +13404,7 @@ appleworks:
         jsr     CheckMouseMoved
         bcc     PromptInputLoop
 
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        beq     PromptInputLoop
-
-        lda     findwindow_params::window_id
-        cmp     #winfo_prompt_dialog::kWindowId
-        bne     PromptInputLoop
-
-        ;; Is over this window... but where?
-        copy    winfo_prompt_dialog, event_params
+        copy    winfo_prompt_dialog, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, name_input_rect
