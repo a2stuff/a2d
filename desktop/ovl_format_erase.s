@@ -355,7 +355,7 @@ kOptionPickerTop = kVolPickerTop
         jsr     main::UpdateOKButton
         plp
         bmi     ret
-        jsr     main::StashCoordsAndDetectDoubleClick
+        jsr     DetectDoubleClick
     IF_NC
         pha
         BTK_CALL BTK::Flash, ok_button_params
@@ -1046,7 +1046,7 @@ pascal_disk:
         beq     non_pro
         sta     on_line_buffer
         pha
-        param_call main::AdjustVolumeNameCase, on_line_buffer
+        param_call AdjustVolumeNameCase, on_line_buffer
         pla
         tax
 :       lda     on_line_buffer,x

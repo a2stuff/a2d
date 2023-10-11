@@ -15661,16 +15661,20 @@ str_volume:
 ;;; ============================================================
 
 .endscope ; main
-        main__SystemTask := main::SystemTask
-        main__ReadSetting := main::ReadSetting
-        main__WriteSetting := main::WriteSetting
 
 ;;; ============================================================
-;;; "Exports"
+;;; "Exports" from lib/ routines (mostly)
 
+        ReadSetting := main::ReadSetting
+        WriteSetting := main::WriteSetting
         Bell := main::Bell
         Multiply_16_8_16 := main::Multiply_16_8_16
         Divide_16_8_16 := main::Divide_16_8_16
+        DetectDoubleClick := main::DetectDoubleClick
+        SystemTask := main::SystemTask
+        CheckMouseMoved := main::CheckMouseMoved
+        AdjustVolumeNameCase := main::AdjustVolumeNameCase
+        AdjustFileEntryCase := main::AdjustFileEntryCase
 
 ;;; ============================================================
 

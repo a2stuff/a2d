@@ -275,7 +275,7 @@ done:
         ;; Copy pattern from settings to somewhere MGTK can see
         tmp_pattern := $00
         ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
-:       jsr     main::ReadSetting
+:       jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
         dex
         cpx     #AS_BYTE(DeskTopSettings::pattern-1)
@@ -292,9 +292,9 @@ done:
         lda     startdesktop_params::slot_num
     IF_ZERO
         ldx     #DeskTopSettings::options
-        jsr     main::ReadSetting
+        jsr     ReadSetting
         ora     #DeskTopSettings::kOptionsShowShortcuts
-        jsr     main::WriteSetting
+        jsr     WriteSetting
     END_IF
 
         copy    #$80, main::mli_relay_checkevents_flag
@@ -304,7 +304,7 @@ done:
 
         ;; Doubled if option selected
         ldx     #DeskTopSettings::mouse_tracking
-        jsr     main::ReadSetting
+        jsr     ReadSetting
     IF_NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
@@ -558,7 +558,7 @@ open_dir:
         copy16  #read_dir_buffer + .sizeof(SubdirectoryHeader), dir_ptr
 
 process_block:
-        param_call_indirect main::AdjustFileEntryCase, dir_ptr
+        param_call_indirect AdjustFileEntryCase, dir_ptr
 
         ldy     #FileEntry::storage_type_name_length
         lda     (dir_ptr),y

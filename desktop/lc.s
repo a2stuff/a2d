@@ -34,14 +34,14 @@
 .assert * = ReadSettingFromAux, error, "entry point mismatch"
 .proc ReadSettingFromAuxImpl
         jsr     BankInMain
-        jsr     main__ReadSetting
+        jsr     ReadSetting
         jmp     BankInAux
 .endproc ; ReadSettingFromAuxImpl
 
 .assert * = WriteSettingFromAux, error, "entry point mismatch"
 .proc WriteSettingFromAuxImpl
         jsr     BankInMain
-        jsr     main__WriteSetting
+        jsr     WriteSetting
         jmp     BankInAux
 .endproc ; WriteSettingFromAuxImpl
 
@@ -205,7 +205,7 @@ op:     lda     SELF_MODIFIED
 
 .proc SystemTaskFromAux
         jsr     BankInMain
-        jsr     main__SystemTask
+        jsr     SystemTask
         jmp     BankInAux
 .endproc ; SystemTaskFromAux
 

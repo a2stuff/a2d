@@ -15,13 +15,6 @@
 
 ;;; ============================================================
 
-;;; Required proc definitions
-CheckMouseMoved         := main::CheckMouseMoved
-SystemTask               := main::SystemTask
-DetectDoubleClick       := main::StashCoordsAndDetectDoubleClick
-AdjustVolumeNameCase    := main::AdjustVolumeNameCase
-AdjustFileEntryCase     := main::AdjustFileEntryCase
-
         .include "../lib/file_dialog.s"
 
 ;;; ============================================================

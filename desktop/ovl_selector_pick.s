@@ -452,7 +452,7 @@ kOptionPickerTop = kShortcutPickerTop
 ;;; Otherwise: Cancel selected
 
 .proc EventLoop
-        jsr     main::SystemTask
+        jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -503,7 +503,7 @@ not_cancel:
         jsr     UpdateOKButton
         plp
         bmi     ret
-        jsr     main::StashCoordsAndDetectDoubleClick
+        jsr     DetectDoubleClick
     IF_NC
         pha
         BTK_CALL BTK::Flash, entry_picker_ok_button_params
