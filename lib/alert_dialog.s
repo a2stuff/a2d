@@ -5,7 +5,7 @@
 ;;; * `pointer_cursor`
 ;;; * `Bell`
 ;;; * `DrawString`
-;;; * `AlertYieldLoop`
+;;; * `SystemTask`
 ;;; Requires the following data definitions:
 ;;; * `alert_grafport`
 ;;; Requires the following macro definitions:
@@ -428,7 +428,7 @@ event_loop:
     END_IF
 .endif ; AD_EJECTABLE
 
-        jsr     AlertYieldLoop
+        jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         cmp     #MGTK::EventKind::button_down

@@ -206,7 +206,7 @@ eye_rect:
 .endproc ; Init
 
 .proc InputLoop
-        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down

@@ -452,7 +452,7 @@ kOptionPickerTop = kShortcutPickerTop
 ;;; Otherwise: Cancel selected
 
 .proc EventLoop
-        jsr     main::YieldLoop
+        jsr     main::SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down

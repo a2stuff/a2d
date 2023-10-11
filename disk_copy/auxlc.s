@@ -837,7 +837,7 @@ copy_failure:
 
 LD986:  MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
-LD998:  jsr     YieldLoop
+LD998:  jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -2361,7 +2361,6 @@ find_in_alert_table:
 .scope alert_dialog
 
         alert_grafport := grafport
-        AlertYieldLoop := YieldLoop
         Bell := main__Bell
 
         AD_EJECTABLE = 1
@@ -2389,7 +2388,7 @@ find_in_alert_table:
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
 
-        jsr     AlertYieldLoop
+        jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, Alert::event_params
         lda     Alert::event_kind
         cmp     #MGTK::EventKind::key_down
@@ -2410,7 +2409,7 @@ Alert := alert_dialog::Alert
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
-.proc YieldLoop
+.proc SystemTask
         kMaxCounter = $E0       ; arbitrary
 
         inc     loop_counter
@@ -2426,7 +2425,7 @@ Alert := alert_dialog::Alert
 
 :       lda     loop_counter
         rts
-.endproc ; YieldLoop
+.endproc ; SystemTask
 
         .include "../lib/is_diskii.s"
         .include "../lib/muldiv.s"

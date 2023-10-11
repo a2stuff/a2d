@@ -650,7 +650,7 @@ quick_boot_slot:
 ;;; Event Loop
 
 .proc EventLoop
-        jsr     YieldLoop
+        jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -1910,15 +1910,15 @@ len:    .byte   0
 
 ;;; Alert code calls here to yield; swaps memory banks back in
 ;;; to do things like read the ProDOS clock.
-.proc AlertYieldLoopRelay
+.proc SystemTaskFromLC
         sta     ALTZPOFF
         bit     ROMIN2
-        jsr     YieldLoop
+        jsr     SystemTask
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
         rts
-.endproc ; AlertYieldLoopRelay
+.endproc ; SystemTaskFromLC
 
 ;;; ============================================================
 ;;; Assert: ROM is banked in
@@ -2021,7 +2021,7 @@ done:   rts
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
-.proc YieldLoop
+.proc SystemTask
         kMaxCounter = $E0       ; arbitrary
 
         inc     loop_counter
@@ -2039,7 +2039,7 @@ done:   rts
 
 loop_counter:
         .byte   0
-.endproc ; YieldLoop
+.endproc ; SystemTask
 
 ;;; ============================================================
 

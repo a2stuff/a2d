@@ -1117,6 +1117,7 @@ _Notes specific to DeskTop Desk Accessories (DA) are included where usage differ
 
 #### Main Loop
 
+* Call a `SystemTask`-equivalent function provided by the app to do periodic tasks.
 * `GetEvent`
 * If `MGTK::EventKind::button_down` or `MGTK::EventKind::apple_key`:
    * `FindWindow` to figure out what was clicked
@@ -1140,6 +1141,9 @@ _Notes specific to DeskTop Desk Accessories (DA) are included where usage differ
    * If `window_id` is 0, draw any desktop details into clipped port
    * Otherwise, draw contents of `window_id` into clipped port
 
+_DA specific:_
+
+* Call `JUMP_TABLE_SYSTEM_TASK` to allow DeskTop to handle periodic tasks such as updating the clock.
 
 #### Redraw window
 

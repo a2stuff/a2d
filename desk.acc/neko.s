@@ -399,7 +399,7 @@ ep_size := * - ep_start
 .endproc ; Init
 
 .proc InputLoop
-        jsr JUMP_TABLE_YIELD_LOOP
+        jsr JUMP_TABLE_SYSTEM_TASK
         JUMP_TABLE_MGTK_CALL MGTK::GetEvent, aux::event_params
         jsr     CopyEventDataToMain
         lda     event_params::kind

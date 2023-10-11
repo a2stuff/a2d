@@ -566,7 +566,7 @@ start:
 ;;; Inputs: A,X=alert_params structure
 ;;;    { .addr text, .byte AlertButtonOptions, .byte AlertOptions }
 
-        AlertYieldLoop = YieldLoopFromAux
+        SystemTask = SystemTaskFromAux
         alert_grafport = desktop_grafport
 
         AD_SAVEBG = 1

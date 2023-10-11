@@ -242,7 +242,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 
 .proc InputLoop
         LETK_CALL LETK::Idle, le_params
-        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
 
         lda     blink_counter
         ora     blink_counter+1

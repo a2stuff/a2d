@@ -228,7 +228,7 @@ frame_counter:
 .proc InputLoop
         jsr     AnimFrame
 
-        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
 

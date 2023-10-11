@@ -15,7 +15,7 @@
 ;;; * `BTK_CALL`
 ;;;
 ;;; Requires the following proc definitions:
-;;; * `YieldLoop`
+;;; * `SystemTask`
 ;;;
 ;;; Requires the following data definitions:
 ;;; * `getwinport_params`
@@ -153,7 +153,7 @@ key_handler_hook:
         LETK_CALL LETK::Idle, file_dialog_res::le_params
     END_IF
 .endif
-        jsr     YieldLoop
+        jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind

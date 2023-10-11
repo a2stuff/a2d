@@ -542,7 +542,7 @@ loop:   tya
 ;;; Input loop and processing
 
 .proc InputLoop
-        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
 
         bit     scrambled_flag

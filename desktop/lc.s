@@ -203,11 +203,11 @@ op:     lda     SELF_MODIFIED
 ;;; Yield from a nested event loop, for periodic tasks.
 ;;; Assert: Aux is banked in
 
-.proc YieldLoopFromAux
+.proc SystemTaskFromAux
         jsr     BankInMain
-        jsr     main__YieldLoop
+        jsr     main__SystemTask
         jmp     BankInAux
-.endproc ; YieldLoopFromAux
+.endproc ; SystemTaskFromAux
 
 ;;; ============================================================
 ;;; Helpers for banking in Aux/Main $200-$BFFF.

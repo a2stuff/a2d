@@ -74,7 +74,7 @@ saved_stack:
 ;;; ============================================================
 
 ;;; Required proc definitions:
-YieldLoop               := app::YieldLoop
+SystemTask               := app::SystemTask
 DetectDoubleClick       := app::DetectDoubleClick
 AdjustVolumeNameCase    := app::AdjustVolumeNameCase
 AdjustFileEntryCase     := app::AdjustFileEntryCase

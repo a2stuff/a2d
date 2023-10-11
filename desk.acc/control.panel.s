@@ -483,7 +483,7 @@ caret_blink_caret_bitmap:
 
 .proc InputLoop
         jsr     DoCaretBlink
-        JSR_TO_MAIN JUMP_TABLE_YIELD_LOOP
+        JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_kind
         .assert MGTK::EventKind::no_event = 0, error, "no_event must be 0"

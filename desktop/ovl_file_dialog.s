@@ -17,7 +17,7 @@
 
 ;;; Required proc definitions
 CheckMouseMoved         := main::CheckMouseMoved
-YieldLoop               := main::YieldLoop
+SystemTask               := main::SystemTask
 DetectDoubleClick       := main::StashCoordsAndDetectDoubleClick
 AdjustVolumeNameCase    := main::AdjustVolumeNameCase
 AdjustFileEntryCase     := main::AdjustFileEntryCase

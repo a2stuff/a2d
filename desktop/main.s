@@ -30,7 +30,7 @@ dst_path_buf    := $1F80
 JT_MGTK_CALL:           jmp     ::MGTKRelayImpl         ; *
 JT_MLI_CALL:            jmp     MLIRelayImpl            ; *
 JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
-JT_YIELD_LOOP:          jmp     YieldLoop               ; *
+JT_SYSTEM_TASK:         jmp     SystemTask               ; *
 JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
@@ -62,7 +62,7 @@ JT_READ_SETTING:        jmp     ReadSetting             ; *
         ;; Close any windows that are not longer valid, if necessary
         jsr     ValidateWindows
 
-        jsr     YieldLoop
+        jsr     SystemTask
         bne     :+
 
         ;; Poll drives for updates
@@ -186,7 +186,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 ;;; Returns 0 if the periodic tasks were run.
 
         .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
-.proc YieldLoop
+.proc SystemTask
         inc     loop_counter
         inc     loop_counter
         loop_counter := *+1
@@ -200,7 +200,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 
 :       lda     loop_counter
         rts
-.endproc ; YieldLoop
+.endproc ; SystemTask
 
 ;;; ============================================================
 
@@ -13387,7 +13387,7 @@ appleworks:
         LETK_CALL LETK::Idle, le_params
 :
         ;; Dispatch event types - mouse down, key press
-        jsr     YieldLoop
+        jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -13630,7 +13630,7 @@ jump_relay:
         param_call DrawDialogLabel, 9, aux::str_about8
         param_call DrawDialogLabel, 9 | DDL_RIGHT, aux::str_about9
 
-:       jsr     YieldLoop
+:       jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
@@ -15661,7 +15661,7 @@ str_volume:
 ;;; ============================================================
 
 .endscope ; main
-        main__YieldLoop := main::YieldLoop
+        main__SystemTask := main::SystemTask
         main__ReadSetting := main::ReadSetting
         main__WriteSetting := main::WriteSetting
 

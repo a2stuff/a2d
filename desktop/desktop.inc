@@ -85,7 +85,7 @@ JT_INIT $4000
 JT_ENTRY JUMP_TABLE_MGTK_CALL    ; MGTK call (MLI-style, params follow) *
 JT_ENTRY JUMP_TABLE_MLI_CALL     ; ProDOS MLI call (MLI-style, params follow) *
 JT_ENTRY JUMP_TABLE_CLEAR_UPDATES ; Clear update events (e.g. after a drag) *
-JT_ENTRY JUMP_TABLE_YIELD_LOOP    ; Yield the event loop *
+JT_ENTRY JUMP_TABLE_SYSTEM_TASK   ; Yield the event loop *
 JT_ENTRY JUMP_TABLE_SELECT_WINDOW ; Select and refresh given window *
 JT_ENTRY JUMP_TABLE_SHOW_ALERT    ; Show alert (A=kErrXXX or ProDOS error code, default options)
 JT_ENTRY JUMP_TABLE_SHOW_ALERT_OPTIONS       ; Show alert X (A=err code, X=options)
