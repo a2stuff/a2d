@@ -243,17 +243,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 .proc InputLoop
         LETK_CALL LETK::Idle, le_params
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
-
-        lda     blink_counter
-        ora     blink_counter+1
-    IF_ZERO
-        jsr     ResetBlinkCounter
-        jsr     SetPort
-      IF_EQ
-        jsr     XDrawPositionIndicator
-      END_IF
-    END_IF
-        dec16   blink_counter
+        jsr     IdlePositionIndicator
 
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
@@ -648,6 +638,22 @@ ret:    rts
 tmp:    .word   0
 sflag:  .byte   0
 .endproc ; DrawLatLong
+
+;;; ============================================================
+
+.proc IdlePositionIndicator
+        lda     blink_counter
+        ora     blink_counter+1
+    IF_ZERO
+        jsr     ResetBlinkCounter
+        jsr     SetPort
+      IF_EQ
+        jsr     XDrawPositionIndicator
+      END_IF
+    END_IF
+        dec16   blink_counter
+        rts
+.endproc ; IdlePositionIndicator
 
 ;;; ============================================================
 ;;; Assert: Correct GrafPort selected
