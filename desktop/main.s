@@ -61,6 +61,11 @@ JT_READ_SETTING:        jmp     ReadSetting             ; *
 ;;; Main event loop for the application
 
 .proc MainLoop
+
+        ;; Poll drives every Nth time `SystemTask` does its thing.
+        ;; At 1MHz on a //e this is about once every 3 seconds.
+        kDrivePollFrequency = 35
+
         ;; Close any windows that are not longer valid, if necessary
         jsr     ValidateWindows
 
@@ -71,9 +76,13 @@ JT_READ_SETTING:        jmp     ReadSetting             ; *
 loop:
         jsr     SystemTask
     IF_ZERO
-        ;; Poll drives for updates
+        ;; Maybe poll drives for updates
+        dec     counter
+      IF_NEG
+        copy    #kDrivePollFrequency, counter
         jsr     CheckDiskInsertedEjected
         jmp     MainLoop
+      END_IF
     END_IF
 
         ;; Get an event
@@ -114,6 +123,9 @@ click:
     END_IF
 
         jmp     loop
+
+counter:
+        .byte   0
 
 .endproc ; MainLoop
 

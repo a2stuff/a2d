@@ -28,6 +28,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve layout of Add/Edit a Shortcut dialog.
 * Remove 12 volume limit from Format/Erase picker.
 * Update label in Add/Edit a Shortcut dialog.
+* Reduce drive poll frequency to ~0.33Hz for 1MHz systems.
 
 ### Selector
 
