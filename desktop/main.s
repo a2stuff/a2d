@@ -57,48 +57,53 @@ JT_READ_SETTING:        jmp     ReadSetting             ; *
 
         .assert JUMP_TABLE_LAST = *, error, "Jump table mismatch"
 
-        ;; Main Loop
+;;; ============================================================
+;;; Main event loop for the application
+
 .proc MainLoop
         ;; Close any windows that are not longer valid, if necessary
         jsr     ValidateWindows
 
-        jsr     SystemTask
-        bne     :+
+        ;; Enable/disable menu items, based on windows/selection
+        jsr     UpdateMenuItemStates
 
+        ;; Can loop to here if no state changed
+loop:
+        jsr     SystemTask
+    IF_ZERO
         ;; Poll drives for updates
         jsr     CheckDiskInsertedEjected
-:
-        jsr     UpdateMenuItemStates
+        jmp     MainLoop
+    END_IF
 
         ;; Get an event
         jsr     GetEvent
         lda     event_params::kind
 
+        ;; Did the mouse move?
+        cmp     #MGTK::EventKind::no_event
+    IF_EQ
+        jsr     CheckMouseMoved
+        bcc     loop            ; nope, ignore
+        jsr     ClearTypeDown   ; yep, reset typedown
+        jmp     loop
+    END_IF
+
         ;; Is it a key down event?
         cmp     #MGTK::EventKind::key_down
     IF_EQ
         jsr     HandleKeydown
-        jmp     MainLoop
+        jmp     loop
     END_IF
-
-        ;; Was it maybe a mouse move?
-        cmp     #MGTK::EventKind::no_event
-    IF_EQ
-        jsr     CheckMouseMoved
-        bcc     MainLoop        ; nope, ignore
-        ;; fall through...
-    END_IF
-
-        ;; Cancel any type down selection.
-        jsr     ClearTypeDown
-        lda     event_params::kind
 
         ;; Is it a button-down event? (including w/ modifiers)
         cmp     #MGTK::EventKind::button_down
         beq     click
         cmp     #MGTK::EventKind::apple_key
         bne     :+
-click:  jsr     HandleClick
+click:
+        jsr     ClearTypeDown
+        jsr     HandleClick
         jmp     MainLoop
 :
 
@@ -108,7 +113,7 @@ click:  jsr     HandleClick
         jsr     ClearUpdatesNoPeek
     END_IF
 
-        jmp     MainLoop
+        jmp     loop
 
 .endproc ; MainLoop
 
