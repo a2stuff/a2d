@@ -2174,9 +2174,3 @@ done:   rts
         ADJUSTCASE_VOLBUF  := $820
         ADJUSTCASE_IO_BUFFER := src_io_buffer
         .include "../lib/adjustfilecase.s"
-
-;;; ============================================================
-;;; Settings - modified by Control Panel
-;;; ============================================================
-
-        .include "../lib/default_settings.s"
