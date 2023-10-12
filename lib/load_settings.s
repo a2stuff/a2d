@@ -64,7 +64,7 @@ update: stxy    DefaultSettings + DeskTopSettings::dblclick_speed
         ;; Now try to load the config file
 .scope
         MLI_CALL OPEN, open_cfg_params
-        bcs     close           ; failed - use defaults
+        bcs     skip            ; failed - use defaults
         lda     open_cfg_params::ref_num
         sta     read_cfgver_params::ref_num
         sta     read_cfg_params::ref_num
@@ -82,6 +82,7 @@ update: stxy    DefaultSettings + DeskTopSettings::dblclick_speed
         MLI_CALL READ, read_cfg_params
 
 close:  MLI_CALL CLOSE, close_params
+skip:
 .endscope
 
         ;; --------------------------------------------------
