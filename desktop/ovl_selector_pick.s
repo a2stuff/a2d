@@ -365,7 +365,7 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         MGTK_CALL MGTK::OpenWindow, winfo_entry_picker
         lda     #winfo_entry_picker::kWindowId
         jsr     main::SafeSetPortFromWindowId
-        MGTK_CALL MGTK::SetPenMode, notpencopy
+        jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, entry_picker_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal

@@ -14064,7 +14064,7 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, aux::progress_dialog_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        MGTK_CALL MGTK::SetPenMode, penXOR
+        jsr     SetPenModeXOR
         jmp     SetCursorWatch  ; undone by `CloseProgressDialog`
 .endproc ; OpenProgressDialog
 
@@ -14670,7 +14670,7 @@ done:   rts
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, aux::prompt_dialog_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        MGTK_CALL MGTK::SetPenMode, penXOR
+        jsr     SetPenModeXOR
         rts
 .endproc ; OpenDialogWindow
 
@@ -14847,7 +14847,7 @@ done:   rts
 ;;; correctly.
 
 .proc InitNameInput
-        MGTK_CALL MGTK::SetPenMode, notpencopy
+        jsr     SetPenModeNotCopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
         LETK_CALL LETK::Init, le_params
         LETK_CALL LETK::Activate, le_params
@@ -14924,6 +14924,8 @@ ptr_str_files_suffix:
 .endproc ; ClearDestFileRectAndSetPos
 
 ;;; ============================================================
+
+        .assert * >= $7800, error, "Routines used by overlays in overlay zone"
 
 .proc GetEvent
         MGTK_CALL MGTK::GetEvent, event_params
@@ -15294,7 +15296,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 ;;; Library Routines
 ;;; ============================================================
 
-        .assert * >= $A000, error, "Routines used by overlays in overlay zone"
+        .assert * >= $7800, error, "Routines used by overlays in overlay zone"
 
         RC_AUXMEM = 1
         RC_LCBANK = 1

@@ -80,7 +80,7 @@ selected_index:
     END_IF
         jsr     main::DrawString
 
-        MGTK_CALL MGTK::SetPenMode, notpencopy
+        jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::MoveTo, vol_picker_line1_start
         MGTK_CALL MGTK::LineTo, vol_picker_line1_end
         MGTK_CALL MGTK::MoveTo, vol_picker_line2_start
@@ -108,9 +108,9 @@ skip_select:
         copy16  #main::NoOp, main::jump_relay+1
 
         jsr     main::SetPortForDialogWindow
-        MGTK_CALL MGTK::SetPenMode, pencopy
+        jsr     main::SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
-        MGTK_CALL MGTK::SetPenMode, notpencopy
+        jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
         copy    #$80, has_input_field_flag
         copy    #0, text_input_buf
@@ -158,7 +158,7 @@ loop2:
         ;; Confirm operation
 .scope
         jsr     main::SetPortForDialogWindow
-        MGTK_CALL MGTK::SetPenMode, pencopy
+        jsr     main::SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
 
         copy    #0, has_input_field_flag
@@ -203,7 +203,7 @@ erase_flag:
         ;; Proceed with format
 l8:
         jsr     main::SetPortForDialogWindow
-        MGTK_CALL MGTK::SetPenMode, pencopy
+        jsr     main::SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_formatting
 
@@ -217,7 +217,7 @@ l8:
         jsr     FormatUnit
         bcs     l12
 l9:     jsr     main::SetPortForDialogWindow
-        MGTK_CALL MGTK::SetPenMode, pencopy
+        jsr     main::SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
         param_call main::UpcaseString, text_input_buf
@@ -283,7 +283,7 @@ cancel:
         ;; Proceed with erase
 l7:
         jsr     main::SetPortForDialogWindow
-        MGTK_CALL MGTK::SetPenMode, pencopy
+        jsr     main::SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
         param_call main::UpcaseString, text_input_buf
