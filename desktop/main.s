@@ -5882,6 +5882,17 @@ ignore: rts
 .endproc ; HandleVolumeIconClick
 
 ;;; ============================================================
+;;; Double Click Detection helper specifically for dragging.
+;;; Returns with A=0 if double click, A=$FF otherwise.
+;;; Stashes initial coords so dragging is accurate.
+
+.proc StashCoordsAndDetectDoubleClick
+        COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
+
+        jmp     DetectDoubleClick
+.endproc ; StashCoordsAndDetectDoubleClick
+
+;;; ============================================================
 ;;; Open a folder/volume icon
 ;;; Input: A = icon
 ;;; Note: stack will be restored via `saved_stack` on failure
@@ -14621,18 +14632,6 @@ params:  .res    3
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
 .endproc ; SetCursorIBeam
-
-;;; ============================================================
-;;; Double Click Detection
-;;; Returns with A=0 if double click, A=$FF otherwise.
-
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
-.proc StashCoordsAndDetectDoubleClick
-        ;; Stash coords for double-click in windows
-        COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
-
-        jmp     DetectDoubleClick
-.endproc ; StashCoordsAndDetectDoubleClick
 
 ;;; ============================================================
 
