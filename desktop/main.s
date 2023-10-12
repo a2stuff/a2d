@@ -30,7 +30,7 @@ dst_path_buf    := $1F80
 JT_MGTK_CALL:           jmp     ::MGTKRelayImpl         ; *
 JT_MLI_CALL:            jmp     MLIRelayImpl            ; *
 JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
-JT_SYSTEM_TASK:         jmp     SystemTask               ; *
+JT_SYSTEM_TASK:         jmp     SystemTask              ; *
 JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
@@ -67,10 +67,8 @@ JT_READ_SETTING:        jmp     ReadSetting             ; *
 
         ;; Poll drives for updates
         jsr     CheckDiskInsertedEjected
-        beq     :+
-        jsr     CheckDrive      ; DEVLST index+3 of changed drive
-
-:       jsr     UpdateMenuItemStates
+:
+        jsr     UpdateMenuItemStates
 
         ;; Get an event
         jsr     GetEvent
@@ -111,17 +109,6 @@ click:  jsr     HandleClick
     END_IF
 
         jmp     MainLoop
-
-;;; --------------------------------------------------
-
-.proc CheckDrive
-        tsx
-        stx     saved_stack
-        sta     menu_click_params::item_num
-        jsr     CmdCheckSingleDriveByMenu
-        copy    #0, menu_click_params::item_num
-        rts
-.endproc ; CheckDrive
 
 .endproc ; MainLoop
 
@@ -694,10 +681,9 @@ changed:
         dey
         bpl     :-
         rts
-
-:       tya
-        clc
-        adc     #$03
+:
+        sty     drive_to_refresh ; DEVLST index
+        jsr     CheckDriveByIndex
         rts
 .endproc ; CheckDiskInsertedEjected
 
@@ -2757,7 +2743,7 @@ loop1:  lda     selected_icon_list,y
 loop2:  ldx     #SELF_MODIFIED_BYTE
         lda     buffer,x
         sta     drive_to_refresh ; icon number
-        jsr     CmdCheckSingleDriveByIconNumber
+        jsr     CheckDriveByIconNumber
         dec     count
         bpl     loop2
 
@@ -3133,8 +3119,8 @@ done:   rts
 ;;; ============================================================
 
 ;;; Set after format, erase, failed open, etc.
-;;; Used by 'cmd_check_single_drive_by_XXX'; may be unit number
-;;; or device index depending on call site.
+;;; Used by `CheckDriveByXXX`; may be unit number,
+;;; icon number, or device index depending on call site.
 drive_to_refresh:
         .byte   0
 
@@ -3164,7 +3150,7 @@ exec:   lda     #kDynamicRoutineFormatErase
         pla                      ; A = result
         RTS_IF_NOT_ZERO
 
-        jmp     CmdCheckSingleDriveByUnitNumber
+        jmp     CheckDriveByUnitNumber
 
 unit:   sta     unit_num
         copy    #FormatEraseAction::format, action
@@ -4379,18 +4365,15 @@ pending_alert:
 ;;; following Format (etc)
 ;;;
 
-.proc CmdCheckSingleDriveImpl
-
-        ;; index in DEVLST
-        devlst_index  := menu_click_params::item_num
+.proc CheckDriveImpl
 
         ;; After open/eject/rename
 by_icon_number:
         lda     #$C0            ; NOTE: This not safe to skip!
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
-        ;; Check Drive command
-by_menu:
+        ;; After polling drives
+by_index:
         lda     #$00
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
@@ -4400,8 +4383,8 @@ by_unit_number:
 
         sta     check_drive_flags
         bit     check_drive_flags
-        bpl     explicit_command
-        bvc     after_format_erase
+        bpl     have_index
+        bvc     map_icon_number
 
 ;;; --------------------------------------------------
 ;;; After an Open/Eject/Rename action
@@ -4412,13 +4395,12 @@ by_unit_number:
         RTS_IF_NOT_ZERO             ; Not found - not a volume icon
 
         stx     devlst_index
-        jmp     common
+        jmp     have_index
 
 ;;; --------------------------------------------------
 ;;; After a Format/Erase action
 
-after_format_erase:
-
+map_icon_number:
         ;; Map unit number to index in DEVLST
         ldy     DEVCNT
         lda     drive_to_refresh
@@ -4428,21 +4410,13 @@ after_format_erase:
         bpl     :-
         iny
 :       sty     devlst_index
-        jmp     common
-
-;;; --------------------------------------------------
-;;; Check Drive command
-
-explicit_command:
-        ;; Map menu number to index in DEVLST
-        lda     menu_click_params::item_num
-        sec
-        sbc     #3
-        sta     devlst_index
+        jmp     have_index
 
 ;;; --------------------------------------------------
 
-common:
+        devlst_index := drive_to_refresh
+
+have_index:
         ldy     devlst_index
         lda     device_to_icon_map,y
         jeq     not_in_map
@@ -4558,12 +4532,11 @@ add_icon:
 check_drive_flags:
         .byte   0
 
-.endproc ; CmdCheckSingleDriveImpl
+.endproc ; CheckDriveImpl
 
-        CmdCheckSingleDriveByMenu := CmdCheckSingleDriveImpl::by_menu
-        CmdCheckSingleDriveByUnitNumber := CmdCheckSingleDriveImpl::by_unit_number
-        CmdCheckSingleDriveByIconNumber := CmdCheckSingleDriveImpl::by_icon_number
-
+        CheckDriveByIndex := CheckDriveImpl::by_index
+        CheckDriveByUnitNumber := CheckDriveImpl::by_unit_number
+        CheckDriveByIconNumber := CheckDriveImpl::by_icon_number
 
 ;;; ============================================================
 
@@ -6911,7 +6884,7 @@ finish: copy16  record_ptr, filerecords_free_start
         ;; Volume icon - check that it's still valid.
         lda     icon_param
         sta     drive_to_refresh ; icon_number
-        jsr     CmdCheckSingleDriveByIconNumber
+        jsr     CheckDriveByIconNumber
 
         ;; A window was allocated but unused, so restore the count
         ;; and menu item state.
