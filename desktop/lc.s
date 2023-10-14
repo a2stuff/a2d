@@ -118,36 +118,54 @@ params:  .res    3
 
 
 ;;; ============================================================
-;;; Assign active state to active_window_id window
+;;; Within an update event, adjust the update port of a window after
+;;; the header has been drawn, if needed, so that the window contents
+;;; are appropriately clipped.
+;;;
+;;; Output: C=0 if valid port set, C=1 if degenerate (so don't paint)
+;;; Assert: Within a `BeginUpdate`...`EndUpdate` sequence with port set
+;;; Assert: `window_grafport` is set to window's raw port
 
-.proc OverwriteWindowPort
-        src := $6
-        dst := $8
+.proc MaybeOffsetUpdatePort
+        port_ptr := $06
 
         jsr     BankInAux
-
         MGTKEntry := aux::MGTKEntry
-        MGTK_CALL MGTK::GetPort, src ; grab window state
+        MGTK_CALL MGTK::GetPort, port_ptr
 
-        lda     active_window_id   ; which desktop window?
-        asl     a
-        tax
-        copy16  win_table,x, dst
-        lda     dst
-        clc
-        adc     #MGTK::Winfo::port
-        sta     dst
-        bcc     :+
-        inc     dst+1
-
-:       ldy     #.sizeof(MGTK::GrafPort)-1
-loop:   lda     (src),y
-        sta     (dst),y
+        ;; Copy somewhere easier to work with
+        ldy     #.sizeof(MGTK::GrafPort)-1
+:       copy    (port_ptr),y, desktop_grafport,y
         dey
-        bpl     loop
+        bpl     :-
 
+        ;; Determine the update's maprect is already below the header; if
+        ;; not, we need to offset the maprect below the header.
+        sub16   desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, tmpw
+        scmp16  tmpw, #kWindowHeaderHeight
+        bpl     skip
+
+        ;; Adjust grafport to account for header
+        add16 window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
+        add16 window_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
+
+        ;; MGTK doesn't like offscreen grafports, so if we end up with
+        ;; nothing to draw, skip drawing!
+        ;; https://github.com/a2stuff/a2d/issues/369
+        scmp16  desktop_grafport+MGTK::GrafPort::viewloc + MGTK::Point::ycoord, #kScreenHeight
+        bpl     fail
+        MGTK_CALL MGTK::SetPort, desktop_grafport
+        bne     fail
+
+skip:   clc
+        .byte   OPC_BCS         ; mask next byte (sec)
+
+fail:   sec
         jmp     BankInMain
-.endproc ; OverwriteWindowPort
+
+tmpw:   .word   0
+.endproc
+
 
 ;;; ============================================================
 ;;; From MAIN, load AUX (A,X) into A

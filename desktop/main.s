@@ -223,61 +223,15 @@ ClearUpdates := ClearUpdatesImpl::clear
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     DrawWindowHeader
 
-        ;; Overwrite the Winfo's port with the maprect we got for the update
-        ;; since downstream calls will use the Winfo's port.
-        lda     active_window_id
-        jsr     SwapWindowPortbits
-        jsr     OverwriteWindowPort
-
-        winfo_ptr := $06
-
-        ;; Determine the update's maprect is already below the header; if
-        ;; not, we need to offset the maprect below the header.
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    winfo_ptr
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord
-        sub16in (winfo_ptr),y, window_grafport::viewloc::ycoord, yoff
-        scmp16  yoff, #kWindowHeaderHeight
-        bpl     skip_adjust_port
-
-        ;; Adjust grafport to account for header
-        jsr     OffsetWindowGrafport
-
-        ;; MGTK doesn't like offscreen grafports, so if we end up with
-        ;; nothing to draw, skip drawing!
-        ;; https://github.com/a2stuff/a2d/issues/369
-        ldx     #MGTK::GrafPort::viewloc + MGTK::Point::ycoord
-        scmp16  window_grafport,x, #kScreenHeight
-        bpl     done
-
-        ;; Apply the computed grafport to the Winfo
-        ldx     #MGTK::GrafPort::maprect + MGTK::Point::ycoord + 1
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + MGTK::Point::ycoord + 1
-        copy    window_grafport,x, (winfo_ptr),y
-        dey
-        dex
-        copy    window_grafport,x, (winfo_ptr),y
-
-        ldx     #MGTK::GrafPort::viewloc + MGTK::Point::ycoord + 1
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + MGTK::Point::ycoord + 1
-        copy    window_grafport,x, (winfo_ptr),y
-        dey
-        dex
-        copy    window_grafport,x, (winfo_ptr),y
-
-skip_adjust_port:
-
+        ;; `MaybeOffsetUpdatePort` also relies on `window_grafport`
+        jsr     MaybeOffsetUpdatePort
+    IF_CC
         ;; Actually draw the window icons/list
         lda     #kDrawWindowEntriesContentOnlyPortAdjusted
         jsr     DrawWindowEntries
+    END_IF
 
-done:
-        ;; Restore window's port
-        lda     active_window_id
-        jmp     SwapWindowPortbits
-
-yoff:   .word   0
+        rts
 .endproc ; UpdateWindow
 
 ;;; ============================================================
@@ -6212,22 +6166,18 @@ kDrawWindowEntriesContentOnlyPortAdjusted = $80
         jsr     PushPointers
 
         bit     header_and_offset_flag
-    IF_NS
-        lda     cached_window_id
-        jsr     UnsafeSetPortFromWindowId ; CHECKED
-        jne     done
-    ELSE
-    IF_VS
+    IF_NC
+      IF_VS
         lda     cached_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         jne     done
-    ELSE
+      ELSE
         lda     cached_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
         jne     done
         jsr     DrawWindowHeader
         jsr     OffsetWindowGrafportAndSet
-    END_IF
+      END_IF
     END_IF
 
         ;; --------------------------------------------------
