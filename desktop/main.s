@@ -6373,25 +6373,13 @@ done:   jsr     PopPointers     ; do not tail-call optimize!
 
 ;;; ============================================================
 ;;; Adjust grafport for header.
-.proc OffsetWindowGrafportImpl
 
-        kOffset = kWindowHeaderHeight
-
-noset:  lda     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-set:    lda     #0
-        sta     flag
-        add16_8 window_grafport::viewloc::ycoord, #kOffset
-        add16_8 window_grafport::maprect::y1, #kOffset
-        bit     flag
-        bmi     :+
+.proc OffsetWindowGrafportAndSet
+        add16_8 window_grafport::viewloc::ycoord, #kWindowHeaderHeight
+        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight
         MGTK_CALL MGTK::SetPort, window_grafport
-:       rts
-
-flag:   .byte   0
-.endproc ; OffsetWindowGrafportImpl
-OffsetWindowGrafport    := OffsetWindowGrafportImpl::noset
-OffsetWindowGrafportAndSet      := OffsetWindowGrafportImpl::set
+        rts
+.endproc ; OffsetWindowGrafportAndSet
 
 ;;; ============================================================
 
