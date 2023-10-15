@@ -439,6 +439,8 @@
 * Open a window containing multiple files. Start typing a filename. Move the mouse. Start typing another filename. Verify that the matching is reset.
 * Open a window containing no files. Start typing a filename. Verify that matching is done against the volume icons.
 * Open a window containing one or more files starting with lowercase letters (AppleWorks or GS/OS). Verify the files appear with correct names. Press a letter. Verify that the first file starting with that letter is selected.
+* Disable any acceleration. Close all windows. Restart DeskTop. Type the first letter of a volume name to select it. Quickly press Open-Apple+O. Verify the volume opens.
+* Disable any acceleration. Close all windows. Restart DeskTop. Type the first letter of a volume name to select it. Quickly click on the File menu. Verify that Open is enabled.
 
 * Repeat the following:
   * For these permutations:

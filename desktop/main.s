@@ -102,7 +102,7 @@ loop:
         cmp     #MGTK::EventKind::key_down
     IF_EQ
         jsr     HandleKeydown
-        jmp     loop
+        jmp     MainLoop
     END_IF
 
         ;; Is it a button-down event? (including w/ modifiers)
