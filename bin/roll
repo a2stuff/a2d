@@ -10,14 +10,20 @@ cd "$(dirname "$0")/.."
 source "bin/util.sh"
 
 roll () {
-    spath="$1"
-    sfile="$2"
-    tpath="$3"
-    tfile="$4"
-    if ! diff -q "$spath/$sfile" "$tpath/$tfile" > /dev/null; then
-        cp "$spath/$sfile" "$tpath/$tfile"
-        echo "roll $tfile to "$(cd "$spath" && git rev-parse --short HEAD)
-    fi
+  spath="$1"
+  sfile="$2"
+  tpath="$3"
+  tfile="$4"
+  if ! diff -q "$spath/$sfile" "$tpath/$tfile" > /dev/null; then
+    cp "${spath}/${sfile}" "${tpath}/${tfile}"
+    last=$(git log --oneline | egrep roll | egrep -o "${tfile} to \w+" | head -1 | cut -d' ' -f3)
+    curr=$(cd "$spath" && git rev-parse --short HEAD)
+    echo "roll ${tfile} to ${curr}"
+    (
+      cd "${spath}"
+      git log --oneline --no-decorate ${last}..${curr}
+    )
+  fi
 }
 
 roll "../intbasic" "out/intbasic.system.SYS" "res/package" "INTBASIC.SYSTEM"
