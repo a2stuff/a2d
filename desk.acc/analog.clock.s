@@ -63,7 +63,7 @@ parsed: .tag    ParsedDateTime
 ;;; DA Init
 
 .proc Init
-        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::ObscureCursor
 
         ;; Clear screen to black
         MGTK_CALL MGTK::InitPort, grafport
@@ -97,7 +97,6 @@ exit:
         MGTK_CALL MGTK::DrawMenuBar
         JSR_TO_MAIN JUMP_TABLE_HILITE_MENU
 
-        MGTK_CALL MGTK::ShowCursor
         rts                     ; exits input loop
 .endproc ; InputLoop
 
