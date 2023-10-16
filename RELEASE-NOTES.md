@@ -45,6 +45,7 @@ Project Page: https://github.com/a2stuff/a2d
 * This Apple:
   * Detect Grappler, ThunderClock, Apple-CAT, and Workstation card.
   * Detect NVRAM and BOOTI block devices.
+  * Prevent hang on IIc and IIc+ in MAME.
 * Image Preview: Add slideshow mode - press 'S' to auto-advance images.
 * Text Preview: Fix memory corruption causing incorrect line display. ([#770](https://github.com/a2stuff/a2d/issues/770))
 

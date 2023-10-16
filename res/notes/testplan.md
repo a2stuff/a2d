@@ -888,6 +888,8 @@ With Sci.Calc:
 
 * Boot a system with only the 140k_disk1 image. Verify that About This Apple II is present in the Apple Menu.
 
+* Configure a IIc or IIc+ in MAME. Launch DeskTop. Apple > About This Apple II. Verify that the system doesn't hang probing Slot 2.
+
 ## System Speed
 
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.

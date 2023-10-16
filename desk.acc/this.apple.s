@@ -1798,6 +1798,7 @@ fail:   clc
         ;; Send "Read Cricket ID", code 0
         lda     #0
         jsr     sendbyte
+        bcs     not_found_with_restore ; timeout
 
         jsr     readbyte
         bcs     not_found_with_restore ; timeout
@@ -1843,14 +1844,32 @@ restore:
 
         ;; Write byte in A
 .proc sendbyte
+        WRITE_DELAY_HI = $3 * 3 ; ($300 iterations is normal * 3.6MHz)
+
+        tries := $100 * WRITE_DELAY_HI
+        counter := $08
+
         pha
+
+        copy16  #tries, counter
         ldy     #STATUS
-:       lda     (ptr),y
+check:  lda     (ptr),y
         and     #(1 << 4)       ; transmit register empty? (bit 4)
-        beq     :-              ; nope, keep waiting
+        bne     ready           ; yes, ready to write
+
+        dec     counter
+        bne     check
+        dec     counter+1
+        bne     check
+
         pla
+        sec                     ; failed
+        rts
+
+ready:  pla
         ldy     #TDREG
-        sta     (ptr),y
+        sta     (ptr),y         ; actually write to the register
+        clc
         rts
 .endproc
 
