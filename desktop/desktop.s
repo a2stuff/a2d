@@ -29,7 +29,7 @@
         DEFSEG SegmentLoader,      $2000, $0200
         DEFSEG SegmentDeskTopAux,  $4000, $8000
         DEFSEG SegmentDeskTopLC,   $D000, $2000
-        DEFSEG SegmentDeskTopMain, $4000, $7B00
+        DEFSEG SegmentDeskTopMain, $4000, $7900
         DEFSEG SegmentInitializer, $0800, $0900
         DEFSEG SegmentInvoker,     $0290, $0160
 
