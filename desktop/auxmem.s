@@ -234,7 +234,6 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
         kProgressDialogLabelRow0        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 0
         kProgressDialogLabelRow1        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 1
         kProgressDialogLabelRow2        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 2
-        kProgressDialogLabelRow3        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 3
 
         DEFINE_RECT_FRAME progress_dialog_frame_rect, kProgressDialogWidth, kProgressDialogHeight
 

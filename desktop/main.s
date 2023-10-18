@@ -6150,14 +6150,6 @@ UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 ;;; ============================================================
 ;;; Draw all entries (icons or list items) in (cached) window
 
-.proc SetPortAndDrawWindowEntries
-        lda     cached_window_id
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        RTS_IF_NE                                  ; obscured
-
-        FALL_THROUGH_TO DrawWindowEntries
-.endproc
-
 .proc DrawWindowEntries
         ;; --------------------------------------------------
         ;; Icons
@@ -8884,32 +8876,6 @@ auxtype:
 
 ret:    rts
 .endproc ; DrawStringRight
-
-;;; ============================================================
-
-.proc SwapWindowPortbits
-        ptr := $6
-
-        jsr     PushPointers
-        jsr     WindowLookup
-        stax    ptr
-
-        ldy     #MGTK::Winfo::port
-:       lda     (ptr),y
-        tax
-        lda     saved_portbits-MGTK::Winfo::port,y
-        sta     (ptr),y
-        txa
-        sta     saved_portbits-MGTK::Winfo::port,y
-        iny
-        cpy     #MGTK::Winfo::port+.sizeof(MGTK::GrafPort)
-        bne     :-
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
-
-saved_portbits:
-        .res    .sizeof(MGTK::GrafPort)+1, 0
-.endproc ; SwapWindowPortbits
 
 ;;; ============================================================
 ;;; Convert icon's coordinates from window to screen
