@@ -545,17 +545,11 @@ dispatch_click:
         ;; Make the window active.
         MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
         copy    findwindow_params::window_id, active_window_id
+
+        ;; Repaint the contents
         jsr     UpdateWindowUsedFreeDisplayValues
         jsr     LoadActiveWindowEntryTable
-
-
-        lda     cached_window_id
-        jsr     UnsafeSetPortFromWindowId ; CHECKED
-    IF_ZERO
-        jsr     DrawWindowHeader
-        jsr     OffsetWindowGrafportAndSet
-        jsr     DrawWindowEntries
-    END_IF
+        jsr     DrawCachedWindowHeaderAndEntries
 
         ;; Update menu items
         jsr     UncheckViewMenuItem
@@ -569,6 +563,32 @@ dispatch_click:
         inc     checkitem_params::menu_item
         jmp     CheckViewMenuItem
 .endproc ; CheckViewMenuItemForActiveWindow
+
+;;; ============================================================
+
+.proc DrawCachedWindowHeaderAndEntries
+        lda     cached_window_id
+        jsr     UnsafeSetPortFromWindowId ; CHECKED
+    IF_ZERO
+        jsr     DrawWindowHeader
+        jsr     OffsetWindowGrafportAndSet
+        jsr     DrawWindowEntries
+    END_IF
+        rts
+.endproc ; DrawCachedWindowHeaderAndEntries
+
+;;; ============================================================
+;;; Redraw the active window's entries. The header is not redrawn.
+
+.proc ClearAndDrawActiveWindowEntries
+        lda     active_window_id
+        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
+    IF_ZERO
+        jsr     ClearWindowBackground
+        jsr     DrawWindowEntries
+    END_IF
+        rts
+.endproc ; ClearAndDrawActiveWindowEntries
 
 ;;; ============================================================
 ;;; Inputs: A = window_id
@@ -2664,7 +2684,7 @@ doney:
         sub16_8 window_grafport::maprect::y1, #kWindowHeaderHeight - 1
         jsr     AssignActiveWindowCliprectAndUpdateCachedIcons
         jsr     ScrollUpdate
-        jsr     RedrawAfterScroll
+        jsr     ClearAndDrawActiveWindowEntries
 
 done:   rts
 
@@ -3022,13 +3042,7 @@ selection_preserved_count:
 ;;; ============================================================
 
 .proc RedrawAfterContentChange
-        ;; Draw the contents
-        lda     active_window_id
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-    IF_ZERO
-        jsr     ClearWindowBackground
-        jsr     DrawWindowEntries
-    END_IF
+        jsr     ClearAndDrawActiveWindowEntries
 
         ;; Update scrollbars based on contents/viewport
         jmp     ScrollUpdate
@@ -4078,7 +4092,7 @@ _Preamble:
     IF_NE
         jsr     _SetHThumbFromViewport
         jsr     _UpdateViewport
-        jsr     RedrawAfterScroll
+        jsr     ClearAndDrawActiveWindowEntries
 
         ;; Handle offset case - may be able to deactivate scrollbar now
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
@@ -4099,7 +4113,7 @@ _Preamble:
     IF_NE
         jsr     _SetVThumbFromViewport
         jsr     _UpdateViewport
-        jsr     RedrawAfterScroll
+        jsr     ClearAndDrawActiveWindowEntries
 
         ;; Handle offset case - may be able to deactivate scrollbar now
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
@@ -5570,21 +5584,6 @@ done:   rts
 
 
 ;;; ============================================================
-;;; After scrolling which adjusts maprect, redraw the contents.
-;;; The header is not redrawn.
-
-.proc RedrawAfterScroll
-        ;; Clear content background, not header
-        lda     active_window_id
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-    IF_ZERO
-        jsr     ClearWindowBackground
-        jsr     DrawWindowEntries
-    END_IF
-        rts
-.endproc ; RedrawAfterScroll
-
-;;; ============================================================
 ;;; If a window is open, ensure the right view item is checked,.
 ;;; Otherwise, ensure the necessary menu items are disabled.
 ;;; (Called on window close)
@@ -5980,14 +5979,8 @@ no_win:
         MGTK_CALL MGTK::OpenWindow, 0, @addr
 
         jsr     CheckViewMenuItemForActiveWindow
-
-        lda     active_window_id
-        jsr     UnsafeSetPortFromWindowId ; CHECKED
-        bne     :+              ; Skip drawing if obscured
-        jsr     DrawWindowHeader
-:
-        jmp     RedrawAfterContentChange
-
+        jsr     DrawCachedWindowHeaderAndEntries
+        jmp     ScrollUpdate
 
 ;;; Common code to update the dir (vol/folder) icon.
 ;;; * If `icon_param` is valid:
