@@ -224,7 +224,6 @@ ClearUpdates := ClearUpdatesImpl::clear
         jsr     MaybeOffsetUpdatePort
     IF_CC
         ;; Actually draw the window icons/list
-        lda     #kDrawWindowEntriesContentOnlyPortAdjusted
         jsr     DrawWindowEntries
     END_IF
 
@@ -548,8 +547,15 @@ dispatch_click:
         copy    findwindow_params::window_id, active_window_id
         jsr     UpdateWindowUsedFreeDisplayValues
         jsr     LoadActiveWindowEntryTable
-        lda     #kDrawWindowEntriesHeaderAndContent
+
+
+        lda     cached_window_id
+        jsr     UnsafeSetPortFromWindowId ; CHECKED
+    IF_ZERO
+        jsr     DrawWindowHeader
+        jsr     OffsetWindowGrafportAndSet
         jsr     DrawWindowEntries
+    END_IF
 
         ;; Update menu items
         jsr     UncheckViewMenuItem
@@ -3019,10 +3025,10 @@ selection_preserved_count:
         ;; Draw the contents
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        jsr     ClearWindowBackgroundIfNotObscured
-
-        lda     #kDrawWindowEntriesContentOnly
+    IF_ZERO
+        jsr     ClearWindowBackground
         jsr     DrawWindowEntries
+    END_IF
 
         ;; Update scrollbars based on contents/viewport
         jmp     ScrollUpdate
@@ -5075,7 +5081,9 @@ exception_flag:
         ;; Clear background
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
-        jsr     ClearWindowBackgroundIfNotObscured
+    IF_ZERO
+        jsr     ClearWindowBackground
+    END_IF
 
         ;; Remove old FileRecords
         lda     active_window_id
@@ -5109,16 +5117,14 @@ exception_flag:
 .endproc ; SelectAndRefreshWindow
 
 ;;; ============================================================
-;;; Clear the window background, following a call to either
-;;; `UnsafeSetPortFromWindowId` or `UnsafeOffsetAndSetPortFromWindowId`
+;;; Clear the window background
+;;; Assert: Valid port is set
 
-.proc ClearWindowBackgroundIfNotObscured
-    IF_ZERO                     ; Skip drawing if obscured
+.proc ClearWindowBackground
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, window_grafport::maprect
-    END_IF
         rts
-.endproc ; ClearWindowBackgroundIfNotObscured
+.endproc ; ClearWindowBackground
 
 ;;; ============================================================
 ;;; Drag Selection
@@ -5571,11 +5577,11 @@ done:   rts
         ;; Clear content background, not header
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        jsr     ClearWindowBackgroundIfNotObscured
-
-        ;; Only draw content, not header
-        lda     #kDrawWindowEntriesContentOnly
-        jmp     DrawWindowEntries
+    IF_ZERO
+        jsr     ClearWindowBackground
+        jsr     DrawWindowEntries
+    END_IF
+        rts
 .endproc ; RedrawAfterScroll
 
 ;;; ============================================================
@@ -6150,39 +6156,16 @@ UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 
 ;;; ============================================================
 ;;; Draw all entries (icons or list items) in (cached) window
-;;; Input: A=flag
-;;;
-;;; Called from:
-;;; * `UpdateWindow` flag=$80
-;;; * `ActivateWindow`; flag=$00
-;;; * `RedrawAfterContentChange`; flag=$40
-;;; * `RedrawAfterScroll`; flag=$40
-kDrawWindowEntriesHeaderAndContent        = $00
-kDrawWindowEntriesContentOnly             = $40
-kDrawWindowEntriesContentOnlyPortAdjusted = $80
 
-.proc DrawWindowEntries
-        sta     header_and_offset_flag
-
-        jsr     PushPointers
-
-        bit     header_and_offset_flag
-    IF_NC
-      IF_VS
-        ;; `kDrawWindowEntriesContentOnly`
+.proc SetPortAndDrawWindowEntries
         lda     cached_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        jne     done
-      ELSE
-        ;; `kDrawWindowEntriesHeaderAndContent`
-        lda     cached_window_id
-        jsr     UnsafeSetPortFromWindowId ; CHECKED
-        jne     done
-        jsr     DrawWindowHeader
-        jsr     OffsetWindowGrafportAndSet
-      END_IF
-    END_IF
+        RTS_IF_NE                                  ; obscured
 
+        FALL_THROUGH_TO DrawWindowEntries
+.endproc
+
+.proc DrawWindowEntries
         ;; --------------------------------------------------
         ;; Icons
 
@@ -6236,17 +6219,7 @@ rloop:  lda     #SELF_MODIFIED_BYTE
 
         ;; --------------------------------------------------
 done:
-        jsr     PopPointers     ; do not tail-call optimise!
         rts
-
-;;; * If $80 N=1 V=?: the caller has offset the winfo's port; the
-;;;   header is not drawn and the port is not adjusted.
-;;; * If $40 N=0 V=1: skips drawing the header and offsets the port
-;;;   for the content.
-;;; * If $00 N=0 V=0: draws the header, then adjusts the port and
-;;;   draws the content.
-header_and_offset_flag:
-        .byte   0
 .endproc ; DrawWindowEntries
 
 ;;; ============================================================
