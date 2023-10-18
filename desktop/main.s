@@ -142,13 +142,10 @@ counter:
 
 ;;; Caller already called GetEvent, no need to PeekEvent;
 ;;; just jump directly into the clearing loop.
-clear_no_peek:
-        copy    active_window_id, saved_active_window_id
-        jmp     handle_update   ; skip PeekEvent
+clear_no_peek := handle_update
 
 ;;; Clear any pending updates.
 clear:
-        copy    active_window_id, saved_active_window_id
         FALL_THROUGH_TO loop
 
         ;; --------------------------------------------------
@@ -160,26 +157,20 @@ loop:
         jsr     GetEvent
 
 handle_update:
-        lda     event_params::window_id
-        bne     win
-
-        ;; Desktop
         MGTK_CALL MGTK::BeginUpdate, event_params::window_id
+        bne     loop            ; obscured
+        lda     event_params::window_id
+    IF_ZERO
+        ;; Desktop
         ITK_CALL IconTK::DrawAll, event_params::window_id
+    ELSE
+        ;; Window
+        jsr     UpdateWindow
+    END_IF
         MGTK_CALL MGTK::EndUpdate
         jmp     loop
 
-        ;; Window
-win:    MGTK_CALL MGTK::BeginUpdate, event_params::window_id
-        bne     :+            ; obscured
-        jsr     UpdateWindow
-        MGTK_CALL MGTK::EndUpdate
-:       jmp     loop
-
 finish:
-        saved_active_window_id := *+1
-        lda     #SELF_MODIFIED_BYTE
-        sta     active_window_id
         rts
 .endproc ; ClearUpdatesImpl
 ClearUpdatesNoPeek := ClearUpdatesImpl::clear_no_peek
@@ -208,12 +199,18 @@ ClearUpdates := ClearUpdatesImpl::clear
 
 ;;; ============================================================
 
+;;; Inputs: A = `window_id` from `update` event
+;;; Note: Modifies `active_window_id` which must be restored
 .proc UpdateWindow
-        lda     event_params::window_id
         cmp     #kMaxDeskTopWindows+1 ; directory windows are 1-8
         RTS_IF_GE
 
-        sta     active_window_id
+        ;; Temporarily overwrite `active_window_id`, for called procs
+        tax
+        lda     active_window_id
+        pha
+        stx     active_window_id
+
         jsr     LoadActiveWindowEntryTable
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
@@ -230,6 +227,10 @@ ClearUpdates := ClearUpdatesImpl::clear
         lda     #kDrawWindowEntriesContentOnlyPortAdjusted
         jsr     DrawWindowEntries
     END_IF
+
+        ;; Restore `active_window_id`
+        pla
+        sta     active_window_id
 
         rts
 .endproc ; UpdateWindow
@@ -6168,10 +6169,12 @@ kDrawWindowEntriesContentOnlyPortAdjusted = $80
         bit     header_and_offset_flag
     IF_NC
       IF_VS
+        ;; `kDrawWindowEntriesContentOnly`
         lda     cached_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         jne     done
       ELSE
+        ;; `kDrawWindowEntriesHeaderAndContent`
         lda     cached_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
         jne     done
