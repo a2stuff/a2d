@@ -11,9 +11,9 @@
 MGTKAuxEntry    := $4000
 
 ;;; BTK loaded into AUX
-BTKAuxEntry    := $C000-6
+BTKAuxEntry     := $4003
 ;;; LETK loaded into AUX
-LETKAuxEntry    := $C000-3
+LETKAuxEntry    := $4006
 
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) and Aux
 ;;; ($800-$1BFF) using an I/O buffer (Main $1C00-1FFF).

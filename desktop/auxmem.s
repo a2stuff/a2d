@@ -12,6 +12,14 @@
 
 .scope aux
 
+        ;; Fixed location entry points
+        .assert * = MGTKAuxEntry, error, "entry point"
+        jmp     MGTKEntry
+        .assert * = BTKAuxEntry, error, "entry point"
+        jmp     btk__BTKEntry
+        .assert * = LETKAuxEntry, error, "entry point"
+        jmp     letk__LETKEntry
+
 ;;; ============================================================
 ;;; MouseGraphics ToolKit - fixed location for DAs to reference
 ;;; ============================================================
@@ -37,7 +45,10 @@
         ITKEntry := icon_toolkit::ITKEntry
 
         .include "../toolkits/letk.s"
+        letk__LETKEntry := letk::LETKEntry
+
         .include "../toolkits/btk.s"
+        btk__BTKEntry := btk::BTKEntry
 
 ;;; ============================================================
 ;;; Resources
@@ -602,19 +613,6 @@ start:
 
         rts
 .endproc ; FlipMGTKHiresTable
-
-;;; ============================================================
-
-        ;; ENDSEG SegmentDeskTopAux - effective; for measuring usage
-
-;;; ============================================================
-;;; Relay table at fixed memory location (see desktop.inc)
-;;; These are used by DAs calling directly from aux.
-
-        PAD_TO ::BTKAuxEntry
-        jmp     btk::BTKEntry
-        PAD_TO ::LETKAuxEntry
-        jmp     letk::LETKEntry
 
 ;;; ============================================================
 
