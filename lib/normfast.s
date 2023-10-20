@@ -119,6 +119,13 @@ fc_speed        :=      $C06D
 FC_1MHZ         =       9
 FC_ON           =       40      ; doco says 16.6Mhz
 
+;;; Titan Accelerator IIe
+;;; This overlaps BSR address, but BSR is read-only so OK
+ta_speed       :=      $C086
+TA_1MHZ        =       1
+TA_MAX         =       5
+;TA_LOCK       =       $a
+
 ;;; TransWarp I
 ;;; may overlap with paddle trigger
 tw1_speed       :=      $C074
@@ -268,6 +275,16 @@ addon:
         ; TransWarp I
 
         sta     tw1_speed
+
+        ; Titan Accelerator IIe
+
+        pha
+        eor     #0
+        bne     taset
+        lda     #TA_MAX
+taset:
+        sta     ta_speed
+        pla
 
         ; Zip Chip
 
