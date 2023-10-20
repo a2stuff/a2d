@@ -87,7 +87,26 @@ kDoubleClickDeltaX      = 5
 kDoubleClickDeltaY      = 4
 
 ;;; ============================================================
-;;; Alerts
+;;; Alert library options. See `lib/alert_dialog.s`
+
+;;; Button options
+;;; $C0 (%11xxxxxx) = Cancel + OK
+;;; $81 (%10xxxxx1) = Cancel + Yes + No + All
+;;; $80 (%10xx0000) = Cancel + Try Again
+;;; $00 (%0xxxxxxx) = OK
+;;; Note: Wrapper APIs that take A=id, X=options use X=0 to mean
+;;; "use default options for that id", otherwise X & %00000001.
+.enum AlertButtonOptions
+        OKCancel       = $C0
+        YesNoAllCancel = $81
+        TryAgainCancel = $80
+        OK             = $00
+.endenum
+
+.enum AlertOptions
+        Beep       = %10000000  ; N = play beep sound
+        SaveBack   = %01000000  ; V = save/restore background
+.endenum
 
 kAlertResultTryAgain    = 0
 kAlertResultCancel      = 1
@@ -101,7 +120,6 @@ kAlertResultAll         = 5
         buttons        .byte    ; AlertButtonOptions
         options        .byte    ; AlertOptions flags
 .endstruct
-
 
 ;;; NOTE: See the Rename code in DeskTop for a use case for having
 ;;; TryAgain and OK differ. In that example, the error code determines
@@ -195,28 +213,6 @@ kDeskTopSettingsFileOffset = 1  ; offset into file of settings (first byte is ve
 
 kBellProcLength = 128
 BELLPROC   := $300
-
-;;; ============================================================
-;;; Alert library options. See `lib/alert_dialog.s`
-
-;;; Button options
-;;; $C0 (%11xxxxxx) = Cancel + OK
-;;; $81 (%10xxxxx1) = Cancel + Yes + No + All
-;;; $80 (%10xx0000) = Cancel + Try Again
-;;; $00 (%0xxxxxxx) = OK
-;;; Note: Wrapper APIs that take A=id, X=options use X=0 to mean
-;;; "use default options for that id", otherwise X & %00000001.
-.enum AlertButtonOptions
-        OKCancel       = $C0
-        YesNoAllCancel = $81
-        TryAgainCancel = $80
-        OK             = $00
-.endenum
-
-.enum AlertOptions
-        Beep       = %10000000  ; N = play beep sound
-        SaveBack   = %01000000  ; V = save/restore background
-.endenum
 
 ;;; ============================================================
 ;;; Date/Time. See `lib/datetime.s`

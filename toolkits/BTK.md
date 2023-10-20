@@ -22,6 +22,8 @@ MGTK:Rect   rect            Bounding rect of the control.
 .byte       state           Button state. bit7 = disabled (or checked, if radio/checkbox).
 ```
 
+If `window_id` is set to 0 then (1) the port is never set to the window's port and (2) event coordinates are not mapped to the window's space. This can be used for buttons drawn directly to the screen port, e.g. alerts.
+
 ## Commands
 
 ### Draw ($00)

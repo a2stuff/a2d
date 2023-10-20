@@ -12,7 +12,7 @@
 ;;; * are adjacent
 ;;; * order matters
 
-;;; Window containing the control
+;;; Window containing the control (0 for desktop)
 window_id       .byte
 
 ;;; Address of the label string

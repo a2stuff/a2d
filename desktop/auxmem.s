@@ -580,9 +580,9 @@ start:
         alert_grafport = desktop_grafport
 
         AD_SAVEBG = 1
-        AD_WRAP = 1
         AD_YESNOALL = 1
         Bell := BellFromAux
+        BTKEntry := BTKAuxEntry
         .include "../lib/alert_dialog.s"
         .include "../lib/drawstring.s"
 

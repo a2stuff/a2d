@@ -127,9 +127,9 @@ start:  pha                     ; alert number
         SystemTask = app::SystemTaskFromLC
         ReadSetting := app::ReadSetting
         alert_grafport = app::grafport2
+        BTKEntry := app::BTKEntry
 
         AD_SAVEBG = 1
-        AD_WRAP = 1
         .include "../lib/alert_dialog.s"
 
 ;;; ============================================================

@@ -71,7 +71,7 @@
 
         ;; Cache static fields from the record, for convenience
         ldy     #.sizeof(BTK::ButtonRecord)-1
-:       copy    (a_record),y, window_id,y
+:       copy    (a_record),y, cache,y
         dey
         bpl     :-
 
@@ -128,7 +128,9 @@ grafport_win:   .tag    MGTK::GrafPort
         bmi     ret
 
         ;; Set the port
-        copy    window_id, getwinport_params::window_id
+        lda     window_id
+        beq     ret
+        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         bne     obscured
         MGTK_CALL MGTK::SetPort, grafport_win
@@ -379,9 +381,14 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_up
         beq     exit
-        copy    window_id, screentowindow_params::window_id
+        lda     window_id
+    IF_ZERO
+        MGTK_CALL MGTK::MoveTo, event_params::coords
+    ELSE
+        sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+    END_IF
         MGTK_CALL MGTK::InRect, rect
         cmp     #MGTK::inrect_inside
         beq     inside
