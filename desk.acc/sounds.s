@@ -63,6 +63,15 @@ dialog_result:
         rts
 .endproc ; MarkDirty
 
+;;; Cancel any changes, restore saved proc
+.proc DoCancel
+        lda     #$00
+        sta     dialog_result
+        lda     original_index
+        jsr     InstallIndex
+        jmp     Exit
+.endproc
+
 ;;; ============================================================
 ;;; Resources
 ;;; ============================================================
@@ -126,6 +135,9 @@ nextwinfo:      .addr   0
 
         DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+
+        DEFINE_BUTTON cancel_button_rec, kDAWindowId, res_string_button_cancel,, kDAWidth - kMarginX - kButtonWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
+        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
 
         DEFINE_LABEL alert_sound, res_string_label_alert, kMarginX, kMarginY+kTextHeight
         kLabelWidth = 105
@@ -227,6 +239,8 @@ proc_table:
 
 selected_index:
         .byte   $FF
+original_index:
+        .byte   $FF
 
 ;;; ============================================================
 
@@ -250,6 +264,8 @@ grafport_win:       .tag    MGTK::GrafPort
         jsr     DrawWindow
 
         jsr     SearchForCurrent
+        ; keep it around in case we want to cancel
+        sta     original_index
         jsr     ListSetSelection
 
         MGTK_CALL MGTK::FlushEvents
@@ -295,8 +311,8 @@ grafport_win:       .tag    MGTK::GrafPort
 
         cmp     #CHAR_ESCAPE
     IF_EQ
-        BTK_CALL BTK::Flash, ok_button_params
-        jmp     Exit
+        BTK_CALL BTK::Flash, cancel_button_params
+        jmp     DoCancel
     END_IF
 
         cmp     #CHAR_RETURN
@@ -356,6 +372,15 @@ grafport_win:       .tag    MGTK::GrafPort
         jmp     InputLoop
     END_IF
 
+        MGTK_CALL MGTK::InRect, cancel_button_rec::rect
+        cmp     #MGTK::inrect_inside
+    IF_EQ
+        BTK_CALL BTK::Track, cancel_button_params
+        beq     :+
+        jmp     InputLoop
+:       jmp     DoCancel
+    END_IF
+
         ;; ----------------------------------------
 
         jmp     InputLoop
@@ -363,7 +388,7 @@ grafport_win:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
-.proc PlayIndex
+.proc InstallIndex
         ptr := $06
 
         ;; Look up routine
@@ -374,10 +399,7 @@ grafport_win:       .tag    MGTK::GrafPort
         ;; Put routine into location
         jsr     Install
 
-        ;; Play it
-        JSR_TO_MAIN JUMP_TABLE_BELL
-
-        jmp     MarkDirty
+        rts
 
 .proc Install
         ldax    ptr
@@ -400,6 +422,17 @@ grafport_win:       .tag    MGTK::GrafPort
         rts
 .endproc ; Install
 
+.endproc ; InstallIndex
+
+;;; ============================================================
+
+.proc PlayIndex
+        jsr     InstallIndex
+
+        ;; Play it
+        JSR_TO_MAIN JUMP_TABLE_BELL
+
+        jmp     MarkDirty
 .endproc ; PlayIndex
 
 ;;; ============================================================
@@ -438,6 +471,7 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::MoveTo, alert_sound_label_pos
         param_call DrawString, alert_sound_label_str
 
+        BTK_CALL BTK::Draw, cancel_button_params
         BTK_CALL BTK::Draw, ok_button_params
 
         ;; List Box
