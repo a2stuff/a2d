@@ -136,7 +136,7 @@ nextwinfo:      .addr   0
         DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
-        DEFINE_BUTTON cancel_button_rec, kDAWindowId, res_string_button_cancel,, kDAWidth - kMarginX - kButtonWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
+        DEFINE_BUTTON cancel_button_rec, kDAWindowId, res_string_button_cancel,, kMarginX, kDAHeight - kMarginY - kButtonHeight
         DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
 
         DEFINE_LABEL alert_sound, res_string_label_alert, kMarginX, kMarginY+kTextHeight
