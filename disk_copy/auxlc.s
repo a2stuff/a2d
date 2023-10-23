@@ -2013,25 +2013,16 @@ err_writing_flag:
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        sta     ptr1
-        sta     ptr2
-        stx     ptr1+1
-        stx     ptr2+1
-        inc     ptr2+1
+        jsr     main__PrepBlockPtrs
 
         ;; Read block
-        copy16  #default_block_buffer, main__block_params_data_buffer
-retry:  jsr     main__ReadBlock
-        beq     move
-        ldx     #0              ; reading
-        jsr     ShowBlockError
-        beq     move
-        bpl     retry
-        rts
+        jsr     main__ReadBlockWithRetry
+        bmi     ret
 
         ;; Copy block from main to aux
 move:   sta     RAMRDOFF
         sta     RAMWRTON
+
         ldy     #$FF
         iny
 :       lda     default_block_buffer,y
@@ -2040,11 +2031,12 @@ move:   sta     RAMRDOFF
         sta     (ptr2),y
         iny
         bne     :-
+
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
         lda     #0
-        rts
+ret:    rts
 .endproc ; ReadBlockToAuxmem
 
 ;;; ============================================================
@@ -2056,16 +2048,12 @@ move:   sta     RAMRDOFF
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        sta     ptr1
-        sta     ptr2
-        stx     ptr1+1
-        stx     ptr2+1
-        inc     ptr2+1
+        jsr     main__PrepBlockPtrs
 
         ;; Copy block aux to main
-        copy16  #default_block_buffer, main__block_params_data_buffer
         sta     RAMRDON
         sta     RAMWRTOFF
+
         ldy     #$FF
         iny
 :       lda     (ptr1),y
@@ -2074,17 +2062,12 @@ move:   sta     RAMRDOFF
         sta     default_block_buffer+$100,y
         iny
         bne     :-
+
         sta     RAMRDOFF
         sta     RAMWRTOFF
 
         ;; Write block
-retry:  jsr     main__WriteBlock
-        beq     done
-        ldx     #$80            ; writing
-        jsr     ShowBlockError
-        beq     done
-        bpl     retry
-done:   rts
+        jmp     main__WriteBlockWithRetry
 .endproc ; WriteBlockFromAuxmem
 
 ;;; ============================================================
