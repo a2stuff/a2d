@@ -244,18 +244,18 @@ buf_search:     .res    kBufSize, 0 ; search term
         LETK_CALL LETK::Idle, le_params
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         jsr     IdlePositionIndicator
+        jsr     GetNextEvent
 
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        cmp     #kEventKindMouseMoved
+        jeq     HandleMouseMove
+
         cmp     #MGTK::EventKind::button_down
         beq     HandleDown
+
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey
-        cmp     #MGTK::EventKind::no_event
-        bne     InputLoop
-        jsr     CheckMouseMoved
-        bcc     InputLoop
-        jmp     HandleMouseMove
+
+        bne     InputLoop       ; always
 .endproc ; InputLoop
 
 .proc Exit
@@ -723,7 +723,7 @@ blink_counter:
         .include "../lib/drawstring.s"
         .include "../lib/inttostring.s"
         .include "../lib/muldiv.s"
-        .include "../lib/mouse_moved.s"
+        .include "../lib/get_next_event.s"
 
 ;;; ============================================================
 

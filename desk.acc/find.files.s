@@ -224,17 +224,18 @@ pattern:        .res    16      ; null-terminated/upcased version
 .proc InputLoop
         LETK_CALL LETK::Idle, le_params
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        jsr     GetNextEvent
+
+        cmp     #kEventKindMouseMoved
+        jeq     HandleMouseMove
+
         cmp     #MGTK::EventKind::button_down
         jeq     HandleDown
+
         cmp     #MGTK::EventKind::key_down
-        jeq     HandleKey
-        cmp     #MGTK::EventKind::no_event
-        bne     InputLoop
-        jsr     CheckMouseMoved
-        bcc     InputLoop
-        jmp     HandleMouseMove
+        beq     HandleKey
+
+        bne     InputLoop       ; always
 .endproc ; InputLoop
 
 .proc Exit
@@ -649,7 +650,7 @@ offset: .addr   0
         .include "../lib/measurestring.s"
         .include "../lib/muldiv.s"
         .include "../lib/doubleclick.s"
-        .include "../lib/mouse_moved.s"
+        .include "../lib/get_next_event.s"
 
 ;;; ============================================================
 

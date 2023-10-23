@@ -83,7 +83,7 @@ Multiply_16_8_16        := app::Multiply_16_8_16
 Divide_16_8_16          := app::Divide_16_8_16
 
         .include "../lib/file_dialog.s"
-        .include "../lib/mouse_moved.s"
+        .include "../lib/get_next_event.s"
 
 ;;; ============================================================
 

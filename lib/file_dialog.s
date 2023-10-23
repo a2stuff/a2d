@@ -6,7 +6,7 @@
 ;;; * lib/doubleclick.s
 ;;; * lib/event_params.s
 ;;; * lib/file_dialog_res.s
-;;; * lib/mouse_moved.s
+;;; * lib/get_next_event.s
 ;;; * lib/muldiv.s
 ;;;
 ;;; Requires these macros to be functional:
@@ -154,39 +154,40 @@ key_handler_hook:
     END_IF
 .endif
         jsr     SystemTask
-        MGTK_CALL MGTK::GetEvent, event_params
+        jsr     GetNextEvent
 
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        bne     :+
-        copy    #0, type_down_buf
-        jsr     _HandleButtonDown
-        jmp     EventLoop
-
-:       cmp     #MGTK::EventKind::key_down
-        bne     :+
+        cmp     #MGTK::EventKind::key_down
+    IF_EQ
         jsr     _HandleKeyEvent
         jmp     EventLoop
-
-:       jsr     CheckMouseMoved
-        bcc     EventLoop
-
-        copy    #0, type_down_buf
-
-.ifdef FD_EXTENDED
-        jsr     _MoveToWindowCoords
-
-        bit     extra_controls_flag
-    IF_NS
-        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
-        .assert MGTK::inrect_inside <> 0, error, "enum mismatch"
-      IF_NE
-        jsr     _SetCursorIBeam
-      ELSE
-        jsr     _UnsetCursorIBeam
-      END_IF
     END_IF
+
+        cmp     #MGTK::EventKind::button_down
+    IF_EQ
+        ldx     #0              ; Clear type-down
+        stx     type_down_buf
+        jsr     _HandleButtonDown
+        jmp     EventLoop
+    END_IF
+
+        cmp     #kEventKindMouseMoved
+    IF_EQ
+        ldx     #0              ; Clear type-down
+        stx     type_down_buf
+.ifdef FD_EXTENDED
+        bit     extra_controls_flag
+      IF_NS
+        jsr     _MoveToWindowCoords
+        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        .assert MGTK::inrect_outside = 0, error, "enum mismatch"
+        beq     out
+        jsr     _SetCursorIBeam
+        jmp     EventLoop
+out:    jsr     _UnsetCursorIBeam
+        ;; Fall through to JMP
+      END_IF
 .endif
+    END_IF
 
         jmp     EventLoop
 .endproc ; EventLoop

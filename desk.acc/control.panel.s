@@ -484,12 +484,14 @@ caret_blink_caret_bitmap:
 .proc InputLoop
         jsr     DoCaretBlink
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
-        .assert MGTK::EventKind::no_event = 0, error, "no_event must be 0"
+        jsr     GetNextEvent
+
+        cmp     #kEventKindMouseMoved
         beq     HandleMove
+
         cmp     #MGTK::EventKind::button_down
         beq     HandleDown
+
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey
 
@@ -1605,10 +1607,6 @@ caret_blink_speed: .word   0
         ldx     #DeskTopSettings::caret_blink_speed
         jsr     ReadSettingWord
         stax    caret_blink_counter
-
-        ;; Scale it because it's much slower in the DA than in DeskTop
-        ;; prompts, due to more hit testing, etc.  1/2 speed seems okay.
-        lsr16   caret_blink_counter
         rts
 .endproc ; ResetCaretBlinkCounter
 
@@ -1701,6 +1699,7 @@ done:   rts
 ;;; ============================================================
 
         .include "../lib/uppercase.s"
+        .include "../lib/get_next_event.s"
 
 ;;; ============================================================
 

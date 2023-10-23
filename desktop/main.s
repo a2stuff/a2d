@@ -86,15 +86,13 @@ loop:
     END_IF
 
         ;; Get an event
-        jsr     GetEvent
+        jsr     GetNextEvent
 
         ;; Did the mouse move?
-        cmp     #MGTK::EventKind::no_event
+        cmp     #kEventKindMouseMoved
     IF_EQ
-        jsr     CheckMouseMoved
-        bcc     loop            ; nope, ignore
-        jsr     ClearTypeDown   ; yep, reset typedown
-        jmp     loop
+        jsr     ClearTypeDown
+        jmp     MainLoop
     END_IF
 
         ;; Is it a key down event?
@@ -153,7 +151,7 @@ loop:
         lda     event_params::kind
         cmp     #MGTK::EventKind::update
         bne     finish
-        jsr     GetEvent
+        jsr     GetEvent        ; no need to synthesize events
 
 handle_update:
         MGTK_CALL MGTK::BeginUpdate, event_params::window_id
@@ -3805,7 +3803,7 @@ done:   rts
 ;;; Keyboard-based scrolling of window contents
 
 .proc CmdScroll
-loop:   jsr     GetEvent
+loop:   jsr     GetEvent        ; no need to synthesize events
 
         cmp     #MGTK::EventKind::button_down
         beq     done
@@ -12987,7 +12985,7 @@ src_path_slash_index:
 ;;; If Escape is pressed, abort the operation.
 
 .proc CheckCancel
-        jsr     GetEvent
+        jsr     GetEvent        ; no need to synthesize events
 
         cmp     #MGTK::EventKind::key_down
         bne     ret
@@ -13258,13 +13256,12 @@ appleworks:
 ;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
 
 .proc PromptInputLoop
-        lda     has_input_field_flag
-        beq     :+
+        bit     has_input_field_flag
+        bpl     :+
         LETK_CALL LETK::Idle, le_params
 :
-        ;; Dispatch event types - mouse down, key press
         jsr     SystemTask
-        jsr     GetEvent
+        jsr     GetNextEvent
 
         cmp     #MGTK::EventKind::button_down
         jeq     PromptClickHandler
@@ -13273,23 +13270,24 @@ appleworks:
         jeq     PromptKeyHandler
 
         ;; Does the dialog have an input field?
-        lda     has_input_field_flag
-        beq     PromptInputLoop
+        bit     has_input_field_flag
+        bpl     PromptInputLoop
+
+        cmp     #kEventKindMouseMoved
+        bne     PromptInputLoop
 
         ;; Check if mouse is over input field, change cursor appropriately.
-        jsr     CheckMouseMoved
-        bcc     PromptInputLoop
-
         copy    winfo_prompt_dialog, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, name_input_rect
-        cmp     #MGTK::inrect_inside
-        bne     out
+        .assert MGTK::inrect_outside = 0, error, "enum mismatch"
+        beq     out
         jsr     SetCursorIBeamWithFlag ; toggling in prompt dialog
-        jmp     done
+        jmp     PromptInputLoop
+
 out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
-done:   jmp     PromptInputLoop
+        jmp     PromptInputLoop
 .endproc ; PromptInputLoop
 
 ;;; Click handler for prompt dialog
@@ -13507,7 +13505,7 @@ jump_relay:
         param_call DrawDialogLabel, 9 | DDL_RIGHT, aux::str_about9
 
 :       jsr     SystemTask
-        jsr     GetEvent
+        jsr     GetNextEvent
 
         cmp     #MGTK::EventKind::button_down
         beq     close
@@ -15188,7 +15186,7 @@ ADJUSTCASE_VOLBUF:      .tag    VolumeDirectoryHeader
         .include "../lib/reconnect_ram.s"
         .include "../lib/muldiv.s"
         .include "../lib/readwrite_settings.s"
-        .include "../lib/mouse_moved.s"
+        .include "../lib/get_next_event.s"
 
         is_iigs_flag := machine_config::iigs_flag
         is_iiecard_flag := machine_config::iiecard_flag
@@ -15536,12 +15534,12 @@ str_volume:
 
         ReadSetting := main::ReadSetting
         WriteSetting := main::WriteSetting
+        GetNextEvent := main::GetNextEvent
+        SystemTask := main::SystemTask
         Bell := main::Bell
         Multiply_16_8_16 := main::Multiply_16_8_16
         Divide_16_8_16 := main::Divide_16_8_16
         DetectDoubleClick := main::DetectDoubleClick
-        SystemTask := main::SystemTask
-        CheckMouseMoved := main::CheckMouseMoved
         AdjustVolumeNameCase := main::AdjustVolumeNameCase
         AdjustFileEntryCase := main::AdjustFileEntryCase
 
