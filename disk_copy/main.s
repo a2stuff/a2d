@@ -831,6 +831,24 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 .endproc ; GetBitmapOffsetShift
 
 ;;; ============================================================
+
+;;; Inputs: A,X = target block
+;;; Output: $06/$08 set to A,X, A,X+1; `block_params::data_buffer` init
+.proc PrepBlockPtrs
+        ptr1 := $06
+        ptr2 := $08             ; one page up
+
+        sta     ptr1
+        sta     ptr2
+        stx     ptr1+1
+        stx     ptr2+1
+        inc     ptr2+1
+
+        copy16  #default_block_buffer, block_params::data_buffer
+        rts
+.endproc ; PrepBlockPtrs
+
+;;; ============================================================
 ;;; Read block (w/ retries) to main memory
 ;;; Inputs: A,X=mem address to store it
 ;;; Outputs: A=0 on success, nonzero otherwise
@@ -860,27 +878,14 @@ done:   rts
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        sta     ptr1
-        sta     ptr2
-        stx     ptr1+1
-        stx     ptr2+1
-        inc     ptr2+1
-
-        copy16  #default_block_buffer, block_params::data_buffer
+        jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
-        beq     move
-        rts                     ; failure, N=1
+        bne     ret             ; failure
 
-move:   ldy     #$FF
-        iny
-loop:   lda     default_block_buffer,y
-        sta     (ptr1),y
-        lda     default_block_buffer+$100,y
-        sta     (ptr2),y
-        iny
-        bne     loop
+        jsr     CopyFromBlockBuffer
+        lda     #0              ; success
 
-        return  #0
+ret:    rts
 .endproc ; ReadBlockToLcbank1
 
 ;;; ============================================================
@@ -892,31 +897,43 @@ loop:   lda     default_block_buffer,y
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        sta     ptr1
-        sta     ptr2
-        stx     ptr1+1
-        stx     ptr2+1
-        inc     ptr2+1
-
-        copy16  #default_block_buffer, block_params::data_buffer
+        jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
-        beq     move
-        rts                     ; failure, N=1
+        bne     ret             ; failure
 
-move:   bit     LCBANK2
         bit     LCBANK2
+        bit     LCBANK2
+
+        jsr     CopyFromBlockBuffer
+
+        bit     LCBANK1
+        bit     LCBANK1
+
+        lda     #0              ; success
+
+ret:    rts
+.endproc ; ReadBlockToLcbank2
+
+;;; ============================================================
+;;; Copies block from `default_block_buffer`
+;;; Inputs: $06/$08 point at target pages
+
+.proc CopyFromBlockBuffer
+        ptr1 := $06
+        ptr2 := $08             ; one page up
+
         ldy     #$FF
         iny
+
 loop:   lda     default_block_buffer,y
         sta     (ptr1),y
         lda     default_block_buffer+$100,y
         sta     (ptr2),y
         iny
         bne     loop
-        bit     LCBANK1
-        bit     LCBANK1
-        return  #$00
-.endproc ; ReadBlockToLcbank2
+
+        rts
+.endproc ; CopyFromBlockBuffer
 
 ;;; ============================================================
 ;;; Write block (w/ retries) from main memory
@@ -948,21 +965,8 @@ done:   rts
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        sta     ptr1
-        sta     ptr2
-        stx     ptr1+1
-        stx     ptr2+1
-        inc     ptr2+1
-
-        copy16  #default_block_buffer, block_params::data_buffer
-        ldy     #$FF
-        iny
-loop:   lda     (ptr1),y
-        sta     default_block_buffer,y
-        lda     (ptr2),y
-        sta     default_block_buffer+$100,y
-        iny
-        bne     loop
+        jsr     PrepBlockPtrs
+        jsr     CopyToBlockBuffer
 
         jmp     WriteBlockWithRetry
 .endproc ; WriteBlockFromLcbank1
@@ -973,19 +977,30 @@ loop:   lda     (ptr1),y
 ;;; Outputs: A=0 on success, nonzero otherwise
 
 .proc WriteBlockFromLcbank2
-        bit     LCBANK2
-        bit     LCBANK2
-
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        sta     ptr1
-        sta     ptr2
-        stx     ptr1+1
-        stx     ptr2+1
-        inc     ptr2+1
+        jsr     PrepBlockPtrs
 
-        copy16  #default_block_buffer, block_params::data_buffer
+        bit     LCBANK2
+        bit     LCBANK2
+
+        jsr     CopyToBlockBuffer
+
+        bit     LCBANK1
+        bit     LCBANK1
+
+        jmp     WriteBlockWithRetry
+.endproc ; WriteBlockFromLcbank2
+
+;;; ============================================================
+;;; Copies block to `default_block_buffer`
+;;; Inputs: $06/$08 point at source pages
+
+.proc CopyToBlockBuffer
+        ptr1 := $06
+        ptr2 := $08             ; one page up
+
         ldy     #$FF
         iny
 loop:   lda     (ptr1),y
@@ -995,11 +1010,8 @@ loop:   lda     (ptr1),y
         iny
         bne     loop
 
-        bit     LCBANK1
-        bit     LCBANK1
-
-        jmp     WriteBlockWithRetry
-.endproc ; WriteBlockFromLcbank2
+        rts
+.endproc ; CopyToBlockBuffer
 
 ;;; ============================================================
 
