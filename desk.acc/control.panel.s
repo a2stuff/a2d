@@ -1631,7 +1631,7 @@ caret_blink_speed: .word   0
         MGTK_CALL MGTK::HideCursor
 :
         MGTK_CALL MGTK::SetPenMode, penXOR
-        MGTK_CALL MGTK::PaintBitsHC, caret_blink_bitmap_caret_params
+        MGTK_CALL MGTK::PaintBits, caret_blink_bitmap_caret_params
 
         bit     cursor_flag
         bpl     :+
