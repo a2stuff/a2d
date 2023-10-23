@@ -837,6 +837,11 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 
 .proc ReadBlockToMain
         stax    block_params::data_buffer
+        FALL_THROUGH_TO ReadBlockWithRetry
+.endproc ; ReadBlockToMain
+
+;;; Returns with 0 on success or N=1 on failure
+.proc ReadBlockWithRetry
 retry:  jsr     ReadBlock
         beq     done
         ldx     #0              ; reading
@@ -844,7 +849,7 @@ retry:  jsr     ReadBlock
         bmi     done
         bne     retry
 done:   rts
-.endproc ; ReadBlockToMain
+.endproc ; ReadBlockWithRetry
 
 ;;; ============================================================
 ;;; Read block (w/ retries) to aux LCBANK1 memory
@@ -862,13 +867,9 @@ done:   rts
         inc     ptr2+1
 
         copy16  #default_block_buffer, block_params::data_buffer
-retry:  jsr     ReadBlock
+        jsr     ReadBlockWithRetry
         beq     move
-        ldx     #0              ; reading
-        jsr     auxlc::ShowBlockError
-        beq     move
-        bpl     retry
-        return  #$80
+        rts                     ; failure, N=1
 
 move:   ldy     #$FF
         iny
@@ -898,15 +899,9 @@ loop:   lda     default_block_buffer,y
         inc     ptr2+1
 
         copy16  #default_block_buffer, block_params::data_buffer
-retry:  jsr     ReadBlock
+        jsr     ReadBlockWithRetry
         beq     move
-        ldx     #0              ; reading
-        jsr     auxlc::ShowBlockError
-        beq     move
-        bpl     retry
-        bit     LCBANK1
-        bit     LCBANK1
-        return  #$80
+        rts                     ; failure, N=1
 
 move:   bit     LCBANK2
         bit     LCBANK2
@@ -930,6 +925,11 @@ loop:   lda     default_block_buffer,y
 
 .proc WriteBlockFromMain
         stax    block_params::data_buffer
+        FALL_THROUGH_TO WriteBlockWithRetry
+.endproc ; WriteBlockFromMain
+
+;;; Input: `block_params::data_buffer` populated
+.proc WriteBlockWithRetry
 retry:  jsr     WriteBlock
         beq     done
         ldx     #$80            ; writing
@@ -937,7 +937,7 @@ retry:  jsr     WriteBlock
         beq     done
         bpl     retry
 done:   rts
-.endproc ; WriteBlockFromMain
+.endproc ; WriteBlockWithRetry
 
 ;;; ============================================================
 ;;; Write block (w/ retries) from aux LCBANK1 memory
@@ -964,13 +964,7 @@ loop:   lda     (ptr1),y
         iny
         bne     loop
 
-retry:  jsr     WriteBlock
-        beq     done
-        ldx     #$80            ; writing
-        jsr     auxlc::ShowBlockError
-        beq     done
-        bpl     retry
-done:   rts
+        jmp     WriteBlockWithRetry
 .endproc ; WriteBlockFromLcbank1
 
 ;;; ============================================================
@@ -1003,13 +997,8 @@ loop:   lda     (ptr1),y
 
         bit     LCBANK1
         bit     LCBANK1
-retry:  jsr     WriteBlock
-        beq     done
-        ldx     #$80            ; writing
-        jsr     auxlc::ShowBlockError
-        beq     done
-        bpl     retry
-done:   rts
+
+        jmp     WriteBlockWithRetry
 .endproc ; WriteBlockFromLcbank2
 
 ;;; ============================================================
