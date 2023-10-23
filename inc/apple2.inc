@@ -228,6 +228,7 @@ DESTINATIONHI   := $43
 ;;; Other Locations
 XFERSTARTLO     := $03ED
 XFERSTARTHI     := $03EE
+FW80MODE        := $04FB        ; 80 Col firmware mode ($FF = inactive)
 OURCH           := $057B        ; 80 Col horizontal position
 OURCV           := $05FB        ; 80 Col vertical position
 

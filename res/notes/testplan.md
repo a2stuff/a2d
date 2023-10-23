@@ -563,7 +563,7 @@
 
 * Using BASIC, create a directory structure: X/Y/Z and save a BASIC file B as X/Y/Z/B. Lock all three directories and the file from BASIC (not DeskTop). Launch DeskTop. Select X. File > Delete. Verify that a prompt is shown for deleting each file in deepest-first order (B, Z, Y, X). Click Yes at each prompt. Verify that all files are deleted.
 
-* Create a folder, and a subfolder within it. Select the top-most folder. Special > Lock. Using Apple Menu > Run Basic Here, verify that the folder and subfolder are locked. BYE to return to DeskTop. Select the containing volume. Special > Unlock. Using Apple Menu > Run Basic Here, verify that the folder and subfolder are unlocked.
+* Create a folder, and a subfolder within it. Select the top-most folder. Special > Lock. Using Apple Menu > Run Basic Here, verify that the folder and subfolder are locked. `BYE` to return to DeskTop. Select the containing volume. Special > Unlock. Using Apple Menu > Run Basic Here, verify that the folder and subfolder are unlocked.
 * Using BASIC, create a directory X and save a BASIC file X/B. Launch DeskTop. Select X. File > Lock. Close the window containing X. Open the window containing X. Verify that X is still a folder.
 
 * Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
@@ -718,6 +718,10 @@ The following tests all require:
 * On a IIgs, go to Apple Menu > About This Apple II. Verify the memory count is not "000,000".
 
 * On a IIgs, launch DeskTop. Launch a IIgs-native program e.g. NoiseTracker. Exit and return to DeskTop. Verify that the display is not garbled.
+
+### Apple IIc
+
+* Run DeskTop on a IIc (or IIc+). Start BASIC.SYSTEM. Run `POKE 1275,0`. `BYE` to return to DeskTop. Verify that the progress bar has a gray background, not "VWVWVW..."
 
 ### Apple IIc+
 

@@ -918,9 +918,6 @@ str_slash_desktop:
 ;;; ============================================================
 
 .proc Start
-        sta     KBDSTRB
-        sta     TXTSET
-
         lda     MACHID
         and     #%00000001      ; bit 0 = clock card
         bne     :+
@@ -938,6 +935,13 @@ str_slash_desktop:
         DEFINE_QUIT_PARAMS quit_params
 
 have128k:
+        lda     #$FF
+        sta     INVFLG
+        sta     FW80MODE
+
+        sta     KBDSTRB
+        sta     TXTSET
+
         ;; Clear Main & AUX text screen memory so
         ;; junk doesn't show on switch to 80-column,
         ;; while protecting 'screen holes' for //c & //c+

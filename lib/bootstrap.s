@@ -63,6 +63,7 @@ self:
 
         lda     #$FF
         sta     INVFLG
+        sta     FW80MODE
 
         sta     TXTSET
         bit     ROMIN2
