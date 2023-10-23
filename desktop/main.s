@@ -87,7 +87,6 @@ loop:
 
         ;; Get an event
         jsr     GetEvent
-        lda     event_params::kind
 
         ;; Did the mouse move?
         cmp     #MGTK::EventKind::no_event
@@ -3807,11 +3806,13 @@ done:   rts
 
 .proc CmdScroll
 loop:   jsr     GetEvent
-        lda     event_params::kind
+
         cmp     #MGTK::EventKind::button_down
         beq     done
+
         cmp     #MGTK::EventKind::key_down
         bne     loop
+
         lda     event_params::key
         cmp     #CHAR_RETURN
         beq     done
@@ -12986,10 +12987,11 @@ src_path_slash_index:
 ;;; If Escape is pressed, abort the operation.
 
 .proc CheckCancel
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        jsr     GetEvent
+
         cmp     #MGTK::EventKind::key_down
         bne     ret
+
         lda     event_params::key
         cmp     #CHAR_ESCAPE
         beq     CloseFilesCancelDialog
@@ -13262,8 +13264,8 @@ appleworks:
 :
         ;; Dispatch event types - mouse down, key press
         jsr     SystemTask
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        jsr     GetEvent
+
         cmp     #MGTK::EventKind::button_down
         jeq     PromptClickHandler
 
@@ -13505,10 +13507,11 @@ jump_relay:
         param_call DrawDialogLabel, 9 | DDL_RIGHT, aux::str_about9
 
 :       jsr     SystemTask
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        jsr     GetEvent
+
         cmp     #MGTK::EventKind::button_down
         beq     close
+
         cmp     #MGTK::EventKind::key_down
         bne     :-
 
@@ -14789,8 +14792,10 @@ ptr_str_files_suffix:
 
         .assert * >= $7800, error, "Routines used by overlays in overlay zone"
 
+;;; Wrapper for `MGTK::GetEvent`, returns the `EventKind` in A
 .proc GetEvent
         MGTK_CALL MGTK::GetEvent, event_params
+        lda     event_params::kind
         rts
 .endproc ; GetEvent
 

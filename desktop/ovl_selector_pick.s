@@ -453,8 +453,8 @@ kOptionPickerTop = kShortcutPickerTop
 
 .proc EventLoop
         jsr     SystemTask
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        jsr     main::GetEvent
+
         cmp     #MGTK::EventKind::button_down
         jeq     handle_button
 
