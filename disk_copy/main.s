@@ -238,9 +238,6 @@ l3:     cmp     #$A5
 
 .proc ReadVolumeBitmap
 
-        lda     #>volume_bitmap
-        jsr     MarkUsedInMemoryBitmap
-
         lda     auxlc::source_drive_index
         asl     a
         tax
@@ -289,22 +286,21 @@ loop1:  lda     #0
         ;; Now mark block-pages used in memory bitmap
         lda     #>volume_bitmap
         sta     ptr
-        lda     auxlc::block_count_div8+1
-        pha
-loop:   inc     ptr
+        lda     #0
+        sta     count
+loop:   lda     ptr
+        jsr     MarkUsedInMemoryBitmap
         inc     ptr
-        pla
-        sec
-        sbc     #$02
-        pha
-        bmi     l5
-        jsr     l6
-        jmp     loop
+        inc     ptr
+        inc     count
+        inc     count
 
-l5:     pla
-
-l6:     lda     ptr
-        jmp     MarkUsedInMemoryBitmap
+        count := *+1
+        lda     #SELF_MODIFIED_BYTE
+        cmp     auxlc::block_count_div8+1
+        beq     loop
+        bcc     loop
+        rts
 .endscope
 
         ;; --------------------------------------------------
@@ -316,13 +312,17 @@ l6:     lda     ptr
         lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
         copy16  #volume_bitmap, block_params::data_buffer
-        jsr     ReadBlock
-        beq     loop
-        brk                     ; rude!
 
         ;; Each volume bitmap block holds $200*8 bits, so keep reading
         ;; blocks until we've accounted for all blocks on the volume.
-loop:   sub16   block_count_div8, #$200, block_count_div8
+loop:
+        lda     block_params::data_buffer+1
+        jsr     MarkUsedInMemoryBitmap
+        jsr     ReadBlock
+        beq     :+
+        brk                     ; rude!
+:
+        sub16   block_count_div8, #$200, block_count_div8
         lda     block_count_div8+1
         RTS_IF_NEG
 
@@ -332,13 +332,7 @@ loop:   sub16   block_count_div8, #$200, block_count_div8
         add16   block_params::data_buffer, #$200, block_params::data_buffer
 
         inc     block_params::block_num
-        lda     block_params::data_buffer+1
-        jsr     MarkUsedInMemoryBitmap
-        jsr     ReadBlock
-        beq     :+
-        brk                     ; rude!
-
-:       jmp     loop
+        bne     loop            ; always
 .endproc ; QuickCopy
 
         ;; Number of blocks to copy, divided by 8
@@ -600,19 +594,12 @@ not_last:
         ptr := $06
 
         ;; Find byte in volume bitmap
-        lda     #<volume_bitmap
-        clc
-        adc     auxlc::block_num_div8
-        sta     ptr
-        lda     #>volume_bitmap
-        adc     auxlc::block_num_div8+1
-        sta     ptr+1
+        add16   #volume_bitmap, auxlc::block_num_div8, ptr
 
         ;; Find bit in volume bitmap
         ldy     #0
         lda     (ptr),y
         ldx     auxlc::block_num_shift
-        cpx     #$00
         beq     mask
 :       lsr     a
         dex
@@ -625,27 +612,21 @@ mask:   and     #$01
         iny
 
         ;; Now compute block number
-        ;; Why do this? Isn't this stashed anywhere else???
         lda     auxlc::block_num_div8+1
-        sta     tmp
+        sta     hi
         lda     auxlc::block_num_div8
         asl     a               ; * 8
-        rol     tmp
+        rol     hi
         asl     a
-        rol     tmp
+        rol     hi
         asl     a
-        rol     tmp
+        rol     hi
 
         ldx     auxlc::block_num_shift
-        clc
-        adc     table,x
+        ora     table,x
 
-        pha
-        tmp := *+1
-        lda     #SELF_MODIFIED_BYTE
-        adc     #$00
-        tax
-        pla
+        hi := *+1
+        ldx     #SELF_MODIFIED_BYTE
 
         ;; A,X = block number
         rts
@@ -772,17 +753,8 @@ loop:   lda     page_num
         rts
 
 .proc MarkFreeInMemoryBitmap
-        jsr     GetBitmapOffsetShift
-        tay
-        lda     #1
-        cpx     #0
-        beq     mask
-
-:       asl     a
-        dex
-        bne     :-
-
-mask:   ora     memory_bitmap,y
+        jsr     GetBitmapOffsetMask
+        ora     memory_bitmap,y
         sta     memory_bitmap,y
         rts
 .endproc ; MarkFreeInMemoryBitmap
@@ -791,44 +763,37 @@ mask:   ora     memory_bitmap,y
 ;;; ============================================================
 
 .proc MarkUsedInMemoryBitmap
-        jsr     GetBitmapOffsetShift
-        tay
-        lda     #1
-        cpx     #0
-        beq     mask
-
-:       asl     a
-        dex
-        bne     :-
-
-mask:   eor     #$FF
+        jsr     GetBitmapOffsetMask
+        eor     #$FF
         and     memory_bitmap,y
         sta     memory_bitmap,y
         rts
 .endproc ; MarkUsedInMemoryBitmap
 
 ;;; ============================================================
-;;; Sets X to 7 - (low nibble of A / 2) -- bit shift
-;;; Sets A to the high nibble of A -- bitmap offset
-;;; e.g. $76 ==> A = $07
-;;;              X = $04
+;;; Sets Y to offset in `memory_bitmap`
+;;; Sets A to mask bit
+;;; e.g. $76 ==> Y = $07
+;;;              A = %00010000
 
-.proc GetBitmapOffsetShift
+.proc GetBitmapOffsetMask
         pha
+        lsr     a
+        lsr     a
+        lsr     a
+        lsr     a
+        tay
+
+        pla
         and     #$0F
         lsr     a
         tax
         lda     table,x
-        tax
-        pla
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
+
         rts
 
-table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
-.endproc ; GetBitmapOffsetShift
+table:  .byte   1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0
+.endproc ; GetBitmapOffsetMask
 
 ;;; ============================================================
 

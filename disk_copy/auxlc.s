@@ -725,10 +725,10 @@ do_copy:
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
+
         lda     source_drive_index
         cmp     dest_drive_index
-        bne     copy_read_bitmap
-
+    IF_EQ
         ;; Disk swap
         tax
         lda     drive_unitnum_table,x
@@ -740,10 +740,11 @@ do_copy:
         lda     #kAlertMsgInsertSource ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
         cmp     #kAlertResultOK
-        beq     copy_read_bitmap ; OK
-        jmp     InitDialog       ; Cancel
+        beq     :+              ; OK
+        jmp     InitDialog      ; Cancel
+:
+    END_IF
 
-copy_read_bitmap:
         jsr     SetCursorWatch
 
         jsr     main__ReadVolumeBitmap
@@ -765,9 +766,11 @@ copy_loop:
         jsr     main__CopyBlocks
         cmp     #$01
         beq     copy_failure
+
         lda     source_drive_index
         cmp     dest_drive_index
-        bne     copy_write
+    IF_EQ
+        ;; Disk swap
         tax
         lda     drive_unitnum_table,x
         pha
@@ -778,16 +781,17 @@ copy_loop:
         lda     #kAlertMsgInsertDestination ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
         cmp     #kAlertResultOK
-        beq     copy_write      ; OK
+        beq     :+              ; OK
         jmp     InitDialog      ; Cancel
+:
+    END_IF
 
-copy_write:
         jsr     SetCursorWatch
 
         jsr     DrawStatusWriting
         lda     #$80
         jsr     main__CopyBlocks
-        bmi     copy_next
+        bmi     copy_success
         bne     copy_failure
         lda     source_drive_index
         cmp     dest_drive_index
@@ -807,7 +811,7 @@ copy_write:
         beq     copy_loop       ; OK
         jmp     InitDialog      ; Cancel
 
-copy_next:
+copy_success:
         jsr     SetCursorWatch
 
         jsr     main__FreeVolBitmapPages
