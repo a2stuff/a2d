@@ -430,8 +430,6 @@ str_error_reading:
 
 ;;; ============================================================
 
-LD5E0:  .byte   0
-
 init:   jsr     DisconnectRAM
 
         ;; DeskTop will have left a no-longer valid port selected,
@@ -448,7 +446,6 @@ init:   jsr     DisconnectRAM
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
         lda     #$00
         sta     disk_copy_flag
-        sta     LD5E0
         jsr     OpenDialog
 
 InitDialog:
@@ -473,14 +470,12 @@ InitDialog:
 
         jsr     SetCursorWatch
         jsr     EnumerateDevices
+        jsr     GetAllBlockCounts
+
         jsr     SetCursorPointer
         copy    #$00, selection_mode
 
-        lda     LD5E0
-        bne     :+
-        jsr     GetAllBlockCounts
-:       jsr     ListInit
-        inc     LD5E0
+        jsr     ListInit
 
         ;; Loop until there's a selection (or drive check)
 LD674:  jsr     LD986

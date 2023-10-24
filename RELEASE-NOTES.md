@@ -39,6 +39,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Disk Copy
 
 * Ensure /RAM is correctly restored after exiting. ([#766](https://github.com/a2stuff/a2d/issues/766))
+* Re-verify block counts when Read Drives is clicked, so correct desination drives are shown.
 
 ### Desk Accessories
 

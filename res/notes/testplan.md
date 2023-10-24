@@ -1018,6 +1018,8 @@ With Sci.Calc:
 
 * Launch DeskTop. Special > Disk Copy.... Select a source disk and a destination disk. Allow the copy to start, but eject the destination disk in the middle of the copy. Verify that block write errors are shown (with alert sounds).
 
+* Configure a system with two drives capable of holding the same capacity non-140k disk (e.g. two 800k or 32MB drives). Start with a disk in first drive, but with the second drive empty. Launch DeskTop. Special > Disk Copy.... Verify that the second drive shows "Unknown" in the source drive list. Select the first drive and click OK. Verify that the second drive does not appear in the destination drive list. Place a disk in the second drive. Click Read Drives. Verify that the second drive now appears with the correct name in the source drive list. Select the first drive and click OK. Verify that the second drive now appears in the destination drive list.
+
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.
