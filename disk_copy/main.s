@@ -840,9 +840,6 @@ done:   rts
 ;;; Outputs: A=0 on success, nonzero otherwise
 
 .proc ReadBlockToLcbank1
-        ptr1 := $06
-        ptr2 := $08             ; one page up
-
         jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
         bne     ret             ; failure
@@ -859,9 +856,6 @@ ret:    rts
 ;;; Outputs: A=0 on success, nonzero otherwise
 
 .proc ReadBlockToLcbank2
-        ptr1 := $06
-        ptr2 := $08             ; one page up
-
         jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
         bne     ret             ; failure
@@ -927,9 +921,6 @@ done:   rts
 ;;; Outputs: A=0 on success, nonzero otherwise
 
 .proc WriteBlockFromLcbank1
-        ptr1 := $06
-        ptr2 := $08             ; one page up
-
         jsr     PrepBlockPtrs
         jsr     CopyToBlockBuffer
 
@@ -942,9 +933,6 @@ done:   rts
 ;;; Outputs: A=0 on success, nonzero otherwise
 
 .proc WriteBlockFromLcbank2
-        ptr1 := $06
-        ptr2 := $08             ; one page up
-
         jsr     PrepBlockPtrs
 
         bit     LCBANK2

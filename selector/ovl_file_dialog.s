@@ -78,7 +78,6 @@ SystemTask               := app::SystemTask
 DetectDoubleClick       := app::DetectDoubleClick
 AdjustVolumeNameCase    := app::AdjustVolumeNameCase
 AdjustFileEntryCase     := app::AdjustFileEntryCase
-ReadSetting             := app::ReadSetting
 Multiply_16_8_16        := app::Multiply_16_8_16
 Divide_16_8_16          := app::Divide_16_8_16
 

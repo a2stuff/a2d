@@ -362,7 +362,7 @@ portptr:        .addr   0
 ;;; App Initialization
 
 entry:
-.proc AppInit
+.scope AppInit
         ;; Detect IIgs
         sec
         jsr     IDROUTINE       ; clear C if IIgs
@@ -644,7 +644,7 @@ set_startup_menu_items:
 
 quick_boot_slot:
         .byte   0
-.endproc ; AppInit
+.endscope ; AppInit
 
 ;;; ============================================================
 ;;; Event Loop

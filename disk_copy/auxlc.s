@@ -2019,7 +2019,7 @@ err_writing_flag:
         bmi     ret
 
         ;; Copy block from main to aux
-move:   sta     RAMRDOFF
+        sta     RAMRDOFF
         sta     RAMWRTON
 
         ldy     #$FF

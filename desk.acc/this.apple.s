@@ -1132,8 +1132,6 @@ egg:    .byte   0
 ;;; ============================================================
 
 .proc DrawWindow
-        ptr := $06
-
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
         cmp     #MGTK::Error::window_obscured
         RTS_IF_EQ
@@ -1530,8 +1528,6 @@ sigtable_booti:         .byte   3, $07, $3C, $0B, $B0, $0C, $01
 ;;; Output: Carry set and string ptr in A,X if detected, carry clear otherwise
 
 .proc ProbeSlotNoFirmware
-        ptr     := $6
-
         ;; Point ptr at $Cn00
         jsr     SetSlotPtr
 
@@ -1669,7 +1665,7 @@ tmp:    .byte   0
 
         ;; --------------------------------------------------
         ;; Probe without resetting the device
-newtest:
+
         lda     MR,x
         and     #%01111111      ; Be absolutely sure we don't reset
         eor     #%01110111      ; Flip all the non-significant bits
@@ -1735,7 +1731,7 @@ loop:   lda     (ptr),Y         ; 6522 Low-Order Counter
         dex
         bne     loop
 
-found:  sec
+        sec
         rts
 
 fail:   clc
@@ -2312,7 +2308,6 @@ finish:
         jsr     DrawString
     END_IF
 
-exit:
         rts
 
 empty_flag:

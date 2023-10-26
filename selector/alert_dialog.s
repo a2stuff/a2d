@@ -123,9 +123,7 @@ start:  pha                     ; alert number
 ;;;    { .addr text, .byte AlertButtonOptions, .byte AlertOptions }
 
         Bell = app::Bell
-        DrawString = app::DrawString
         SystemTask = app::SystemTaskFromLC
-        ReadSetting := app::ReadSetting
         alert_grafport = app::grafport2
         BTKEntry := app::BTKEntry
 
