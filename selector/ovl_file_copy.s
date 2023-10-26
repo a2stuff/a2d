@@ -646,17 +646,6 @@ enum_jt:
         sta     blocks_total
         sta     blocks_total+1
 
-        ;; Initialize system bitmap
-        ldx     #BITMAP_SIZE-1
-        lda     #0
-:       sta     BITMAP,x
-        dex
-        bpl     :-
-        lda     #%00000001      ; ProDOS global page
-        sta     BITMAP+BITMAP_SIZE-1
-        lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     BITMAP
-
         jsr     CopyPathsFromBufsToSrcAndDst
 LA6E3:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
         beq     LA6FF
