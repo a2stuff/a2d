@@ -15,7 +15,7 @@
 ;;; ============================================================
 ;;; Font
 
-        PAD_TO ::FONT
+        FONT := *
         .incbin .concat("../mgtk/fonts/System.", kBuildLang)
 
 ;;; ============================================================
@@ -151,14 +151,6 @@ grafport2:
 
 solid_pattern:
         .res    8, $FF
-
-;;; ============================================================
-;;; Application entry point
-
-        PAD_TO ::START
-        jmp     entry
-
-;;; ============================================================
 
 .params getwinport_params
 window_id:     .byte   0
@@ -2067,6 +2059,7 @@ loop_counter:
 ;;; ============================================================
 
 .endscope ; app
+        app__entry := app::entry
 
         ENDSEG SegmentApp
         ASSERT_ADDRESS OVERLAY_ADDR

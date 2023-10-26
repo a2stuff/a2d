@@ -14,8 +14,6 @@
 
 SAVE_AREA_BUFFER:= $0800
 MGTKEntry       := $4000
-FONT            := $8680
-START           := $8E00
 
 OVERLAY_ADDR    := MGTKEntry + kSegmentAppLength
 
@@ -49,7 +47,7 @@ basic_system_not_found  = $FF
         INITSEG kLoaderOffset
         DEFSEG SegmentLoader,     $2000,        $0200
         DEFSEG SegmentInvoker,    INVOKER,      $0160
-        DEFSEG SegmentApp,        $4000,        $6700
+        DEFSEG SegmentApp,        $4000,        $6600
         DEFSEG SegmentAlert,      $D000,        $0700
 
         ;; Dynamically loaded overlays
