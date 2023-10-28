@@ -33,7 +33,6 @@ filename:
 ;;; Segments are:
 ;;; $4000 aux        - MGTK and DeskTop code
 ;;; $D000 aux/banked - DeskTop code callable from main, and resources
-;;; $FB00 aux/banked - more DeskTop resources (icons, strings, etc)
 ;;; $4000 main       - more DeskTop code
 ;;; $0800 main       - DeskTop initialization code; later overwritten by DAs, etc
 ;;; $0290 main       - Routine to invoke other programs

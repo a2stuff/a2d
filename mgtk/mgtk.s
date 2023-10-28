@@ -5424,7 +5424,7 @@ rts_with_carry_set:
 
 :       clc
         adc     #MGTK::short_event_size
-ret:    clc
+        clc
         rts
 .endproc ; NextEvent
 
@@ -6713,7 +6713,6 @@ dmrts:  rts
 
 .proc DrawMenuBar
         sec
-draw_or_hide:
         lda     cur_open_menu_id
         beq     dmrts
         php
@@ -6898,9 +6897,6 @@ ep2:    jsr     SetFillMode
         lda     #MGTK::pencopy
         beq     DimMenuitem::ep2 ; always
 .endproc ; DrawFiller
-
-draw_menu_draw_or_hide := DrawMenuBar::draw_or_hide
-
 
 light_speckle_pattern:
         .byte   %10001000
@@ -9595,22 +9591,6 @@ saved_mouse_y:  .byte   0
 movement_cancel:  .byte   $00
 kbd_mouse_status:  .byte   $00
 
-.proc KbdMouseSaveZP
-        COPY_BYTES $80, $80, kbd_mouse_zp_stash
-        rts
-.endproc ; KbdMouseSaveZP
-
-
-.proc KbdMouseRestoreZP
-        COPY_BYTES $80, kbd_mouse_zp_stash,$80
-        rts
-.endproc ; KbdMouseRestoreZP
-
-
-kbd_mouse_zp_stash:
-        .res    128
-
-
 ;;; ============================================================
 ;;; X = xlo, Y = xhi, A = y
 
@@ -10048,11 +10028,7 @@ yclamp: cmp     #<kScreenHeight
 
 
 .proc KbdMouseDoWindow
-        jsr     KbdMouseSaveZP
-        jsr     :+
-        jmp     KbdMouseRestoreZP
-
-:       jsr     GetKey
+        jsr     GetKey
         RTS_IF_CC
 
         cmp     #CHAR_ESCAPE
@@ -10141,7 +10117,6 @@ not_right:
         sbc     #64 - 8
 
 :       sbc     #8
-move_left:
         sta     kbd_mouse_x
         lda     kbd_mouse_x+1
         sbc     #0
@@ -10561,4 +10536,4 @@ rect       .tag MGTK::Rect
 .endscope ; mgtk
 
         ;; Room for future expansion
-        PAD_TO $8680
+        PAD_TO $8600

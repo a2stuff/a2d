@@ -4,29 +4,33 @@ The Selector is an optional app that can be configured with shortcuts to launch 
 
 ## File Structure
 
-
 The file is broken down into multiple segments:
 
-| Purpose      | File Offset | Bank    | Address     | Length | Source              |
-|--------------|-------------|---------|-------------|--------|---------------------|
-| Loader       | B$000300    | Main    | $2000-$22FF | L$0300 | `loader.s`          |
-| Invoker      | B$000600    | Main    | $0290-$03EF | L$0160 | `../lib/invoker.s`  |
-| MGTK + App   | B$000760    | Main    | $4000-$A1FF | L$6200 | `mgtk.s`, `app.s`   |
-| Alert Dialog | B$006960    | Aux LC1 | $D000-$D7FF | L$0800 | `alert_dialog.s`    |
-| Overlay 1    | B$007160    | Main    | $A400-$BEFF | L$1D00 | `ovl_file_dialog.s` |
-| Overlay 2    | B$008E60    | Main    | $A400-$AEFF | L$0D00 | `ovl_file_copy.s`   |
+| Purpose      | Bank    | Address | Source               |
+|--------------|---------|---------|----------------------|
+| Bootstrap    | Main    | $2000   | `../lib/bootstrap.s` |
+| Loader       | Main    | $2000   | `loader.s`           |
+| Invoker      | Main    | $0290   | `../lib/invoker.s`   |
+| App          | Main    | $4000   | `app.s`              |
+| Alert Dialog | Aux LC1 | $D000   | `alert_dialog.s`     |
+| File Dialog  | Main    | $A500   | `ovl_file_dialog.s`  |
+| Copy Dialog  | Main    | $A500   | `ovl_file_copy.s`    |
+
+See `selector.s` for the specific values. Segments are padded in the
+file to ensure they appear at block boundaries, enabling faster
+loading.
 
 ## Segments
 
 ### Bootstrap - `../lib/bootstrap.s`
 
-The first $300 bytes are loaded at $2000 by `DESKTOP.SYSTEM`.
+The first $200 bytes are loaded at $2000 by `DESKTOP.SYSTEM`.
 
 Copies the Quit Handler to the ProDOS quit handler, then invokes QUIT.
 
 The Quit Handler is invoked via ProDOS QUIT, so relocated/executed at $1000.
 
-Loads the Loader - reads SELECTOR $600 bytes at $1D00, and jumps to $2000
+Loads and invokes the Loader.
 
 ### Loader - `loader.s`
 
@@ -39,26 +43,26 @@ Responsible for loading and invoking the selected app.
 Handles BIN, BAS, SYS and S16 files, and selects
 appropriate IO buffer location based on load address.
 
-### MGTK and Selector App - `app.s`
+### Selector App - `app.s`
 
 * A copy of MGTK resides at $4000.
-* The font is at $8600.
-* The application entry point is $8E00.
+* The font comes next.
+* The application resources, entry point, and code follows.
 
 ### Alert Dialog - `alert_dialog.s`
 
 Shows a modal alert dialog. Loaded to Aux LC1
 
-### Overlay 1 - `ovl_file_dialog.s`
+### File Dialog Overlay - `ovl_file_dialog.s`
 
-The File > Run a Program... implementation. Loaded to $A400.
+The File > Run a Program... implementation. Loaded after the app
 
 Shows a file picker, and allow selecting an arbitrary program
 to run.
 
-### Overlay 2 - `ovl_file_copy.s`
+### File Copy Overlay - `ovl_file_copy.s`
 
-Recursive copy implementation. Loaded to $A400.
+Recursive copy implementation. Loaded to $A600.
 
 Used when invoking a program via the selector with the option
 "Copy to RAMCard" / "On first use" specified.
@@ -87,28 +91,16 @@ $B300 + - - - - - - +       |             |
       | Overlays    |       |             |
       |             |       |             |
       |             |       |             |
-$A400 +-------------+       |             |
+$A600 +-------------+       |             |
       | Selector    |       |             |
+      |             |       |             |
       | App Code    |       |             |
       |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-$8E00 +-------------+       |             |
       | Resources   |       |             |
       |             |       |   Unused    |
-      |             |       |             |
       | Font        |       |             |
-$8600 +-------------+       |             |
+      |             |       |             |
       | MGTK        |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
-      |             |       |             |
 $4000 +-------------+       +-------------+
       |.Graphics....|       |.Graphics....|
       |.............|       |.............|

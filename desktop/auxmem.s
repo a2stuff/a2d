@@ -618,4 +618,4 @@ start:
 
 .endscope ; aux
 
-        ENDSEG SegmentDeskTopAux ; real, but padded so not useful
+        ENDSEG SegmentDeskTopAux

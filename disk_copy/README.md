@@ -10,20 +10,21 @@ maintenance, and potentially running on lower capacity devices.
 
 | Purpose                 | Bank    | Address | Source     |
 |-------------------------|---------|---------|------------|
-| MGTK                    | Aux     | A$4000  | `mgtk.s`   |
 | Loader                  | Main    | A$1800  | `loader.s` |
 | App Logic and Resources | Aux LC1 | A$D000  | `auxlc.s`  |
 | Disk Copy Logic         | Main    | A$0800  | `main.s`   |
 
-Lengths/offsets are defined in `disk_copy.s`.
+Lengths/offsets are defined in `disk_copy.s`. Segments are padded in
+the file to ensure they appear at block boundaries, enabling faster
+loading.
 
 ## Structure
 
 DeskTop's `CmdDiskCopy` loads Disk Copy's $200-byte loader into main
-memory (`loader.s`, $1800-$19FF), does sometidying, then hands over
+memory (`loader.s` at $1800), does sometidying, then hands over
 control. This then loads app code and a replacement for the resources
-in the aux language card area (`auxlc.s`, Aux LC $D000-$F1FF) and
-another block of code in main memory (`main.s`, Main $0800-$12FF).
+in the aux language card area (`auxlc.s` at $D000) and
+another block of code in main memory (`main.s` at $0800).
 When exiting, the DeskTop is restarted from the beginning.
 
 ## Memory Map
@@ -33,7 +34,7 @@ When exiting, the DeskTop is restarted from the beginning.
 $FFFF +-------------+       +-------------+       +-------------+
       |.ProDOS......|       |#############|       |.Monitor.....|
 $F800 |.............|       |#############|       +-------------+
-$F600 |.............|       +-------------+       |.Applesoft...|
+$F200 |.............|       +-------------+       |.Applesoft...|
       |.............|Bank2  | App Logic   |Bank2  |.............|
 $E000 |......+-----------+  | &    +-----------+  |.............|
       |......|.ProDOS..*.|  | Rsrc |###########|  |.............|

@@ -13,22 +13,24 @@ still having more code segments swapped in dynamically.
 
 The file is broken down into multiple segments:
 
-| Purpose       | Bank    | Address | Sources                        |
-|---------------|---------|---------|--------------------------------|
-| Loader        | Main    | A$2000  | `loader.s`                     |
-| MGTK/DeskTop  | Aux     | A$4000  | `mgtk.s`, `auxmem.s`           |
-| DeskTop       | Aux LC1 | A$D000  | `lc.s`,`res.s`                 |
-| DeskTop       | Aux LC1 | A$FB00  | `res.s`                        |
-| DeskTop       | Main    | A$4000  | `main.s`                       |
-| Initializer   | Main    | A$0800  | `init.s`                       |
-| Invoker       | Main    | A$0290  | `../lib/invoker.s`             |
-| Format/Erase  | Main    | A$0800  | `ovl_format_erase.s`           |
-| Pick Shortcut | Main    | A$5000  | `ovl_selector_pick.s`          |
-| File Dialog   | Main    | A$6000  | `ovl_file_dialog.s`            |
-| File Copy     | Main    | A$7000  | `ovl_file_copy.s`              |
-| Edit Shortcut | Main    | A$7000  | `ovl_selector_edit.s`          |
+| Purpose            | Bank    | Address | Sources               |
+|--------------------|---------|---------|-----------------------|
+| Bootstrap          | Main    | $2000   | `../lib/bootstrap.s`  |
+| Loader             | Main    | A$2000  | `loader.s`            |
+| Toolkits+Resources | Aux     | A$4000  | `auxmem.s`            |
+| Relays+Resources   | Aux LC1 | A$D000  | `lc.s`,`res.s`        |
+| Application Logic  | Main    | A$4000  | `main.s`              |
+| Initializer        | Main    | A$0800  | `init.s`              |
+| Invoker            | Main    | A$0290  | `../lib/invoker.s`    |
+| Format/Erase       | Main    | A$0800  | `ovl_format_erase.s`  |
+| Pick Shortcut      | Main    | A$5000  | `ovl_selector_pick.s` |
+| File Dialog        | Main    | A$6000  | `ovl_file_dialog.s`   |
+| File Copy          | Main    | A$7000  | `ovl_file_copy.s`     |
+| Edit Shortcut      | Main    | A$7000  | `ovl_selector_edit.s` |
 
-Lengths/offsets are defined in `internal.inc`.
+Lengths/offsets are defined in `desktop.s`. Segments are padded in the
+file to ensure they appear at block boundaries, enabling faster
+loading.
 
 The DeskTop segments loaded into the Aux bank switched ("language
 card") memory can be used from both main and aux, so contain relay
@@ -47,7 +49,7 @@ DeskTop binary as well, but has been pulled out.
 
 `../lib/bootstrap.s`
 
-The first $300 bytes are loaded at $2000 by `DESKTOP.SYSTEM`.
+The first $200 bytes are loaded at $2000 by `DESKTOP.SYSTEM`.
 
 Invoked at $2000; patches the ProDOS QUIT routine (at LC2 $D100) then
 invokes it. That gets copied to $1000-$11FF and run by ProDOS. This
@@ -92,8 +94,8 @@ The main application includes:
 
 DeskTop code is in the lower 48k of both Main and Aux banks, and the
 Aux language card areas. The main application logic is in Main, with
-Aux and LC memory used for Mouse/Graphics, Icon, and Alert toolkits
-and resources.
+Aux and LC memory used for Mouse/Graphics, Icon, Button, LineEdit, and
+Alert toolkits and resources.
 
 When running, memory use includes:
 
@@ -115,8 +117,7 @@ When running, memory use includes:
    * Desk Accessories can use this space.
  * $2000-$3FFF is the hires graphics page.
  * $4000-$BFFF (`auxmem.s`) includes these:
- * $4000-$85FF is the [MouseGraphics ToolKit](../mgtk/MGTK.md)
- * $8600-$BFFF - Resources and tookits, with floating memory layout
+   * [MouseGraphics ToolKit](../mgtk/MGTK.md)
    * Resources, including icons, font, menu definitions, etc.
    * [Icon ToolKit](APIs.md)
    * [LineEdit ToolKit](../toolkits/LETK.md)
@@ -127,14 +128,10 @@ When running, memory use includes:
 main code) are relays, buffers and resources:
 
 * Aux LC
- * $D000-$D1FF - main-to-aux relay calls (`lc.s`)
- * $D200-$ECFF - resources (menus, strings, window)
- * $ED00-$FAFF - buffer for IconEntries
- * $FB00-$FFFF - more resources (file types, icons)
-
-`res.s` defines these common resources. It is built as part of
-`desktop.s`. Many additional resources needed for MGTK operations
-exist in `auxmem.s` as well.
+ * $D000-$FFFF
+   * main-to-aux relay calls (`lc.s`)
+   * resources (menus, strings, window) (`res.s`)
+   * buffer for IconEntries
 
 The Aux memory language card bank 2 ($D000-$DFFF) holds `FileRecord`
 entries, 32-byte structures which hold metadata for files in open
@@ -247,4 +244,5 @@ $0100 +-------------+       +-------------+
 $0000 +-------------+       +-------------+
 ```
 
-Memory use by the Disk Copy overlay is not shown.
+Memory use by the Disk Copy overlay is not shown. See
+[the Disk Copy README](../disk_copy/README.md).

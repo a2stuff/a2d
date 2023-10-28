@@ -61,9 +61,11 @@ kMaxNameWidth = 140
         DEFINE_BUTTON ok_button_rec, kFilePickerDlgWindowID,           res_string_button_ok, kGlyphReturn,                          kButtonsLeft, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
         DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
 
+.ifdef FD_EXTENDED
 ;;; Dividing line
         DEFINE_POINT dialog_sep_start, 315, kControlsTop
         DEFINE_POINT dialog_sep_end,   315, 99
+.endif
 
         kButtonSepY = kControlsTop + 3*kButtonHeight + 3*kButtonGap + 1
         DEFINE_POINT button_sep_start, kButtonsLeft, kButtonSepY
