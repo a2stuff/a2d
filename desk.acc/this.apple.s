@@ -658,7 +658,6 @@ str_diskii:     PASCAL_STRING res_string_card_type_diskii
 str_nvram:      PASCAL_STRING res_string_device_type_nvram
 str_booti:      PASCAL_STRING res_string_device_type_booti
 str_block:      PASCAL_STRING res_string_card_type_block
-kStrSmartportLength = .strlen(res_string_card_type_smartport)
 str_smartport:  PASCAL_STRING res_string_card_type_smartport
 str_ssc:        PASCAL_STRING res_string_card_type_ssc
 str_80col:      PASCAL_STRING res_string_card_type_80col
@@ -2208,7 +2207,6 @@ p65802: return16 #str_65802     ; Other boards support 65802
 
 start:
         copy    #$80, empty_flag
-        copy    #kStrSmartportLength, str_smartport
 
         ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
         ldy     #$FF
