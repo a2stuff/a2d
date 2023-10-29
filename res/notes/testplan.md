@@ -968,6 +968,8 @@ With Sci.Calc:
 * Launch Shortcuts. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
 * Launch Shortcuts. Select an item. Verify that the OK button becomes enabled. File > Run a Program... Cancel the dialog. Verify that selection is cleared and that the OK button is disabled.
 
+* Configure a system with DeskTop booting from slot 7 and a floppy drive in slot 6. Place a ProDOS formatted disk without `PRODOS` in the floppy drive. Invoke `DESKTOP.SYSTEM`. While the "Starting Shortcuts..." progress bar is displayed, hold down Apple and 6. Verify that when the progress bar disappears the screen clears completely to black and that the message "UNABLE TO LOAD PRODOS" is displayed properly in 40-column mode.
+
 
 # Disk Copy
 

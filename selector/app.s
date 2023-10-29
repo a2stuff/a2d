@@ -408,6 +408,7 @@ check_key_down:
         bpl     done_keys
         sta     KBDSTRB
         and     #CHAR_MASK
+        jsr     ToUpperCase
         bit     BUTN0           ; Open Apple?
         bmi     :+
         bit     BUTN1           ; Solid Apple?
@@ -416,15 +417,12 @@ check_key_down:
         bcc     check_key
         cmp     #'8'
         bcs     check_key
-        sec
-        sbc     #$30            ; ASCII to number
+        and     #%00001111      ; ASCII to number
         sta     quick_boot_slot
         jmp     done_keys
 
 check_key:
-        cmp     #kShortcutRunDeskTop ; If Q is down, try launching DeskTop
-        beq     quick_run_desktop
-        cmp     #TO_LOWER(kShortcutRunDeskTop)
+        cmp     #kShortcutRunDeskTop ; If key is down, try launching DeskTop
         beq     quick_run_desktop
 
         sec
@@ -507,16 +505,11 @@ next:   dex
         lda     quick_boot_slot
         beq     set_startup_menu_items
         ldy     slot_table
-L91FA:  cmp     slot_table,y
-        beq     L9205
+:       cmp     slot_table,y
+        jeq     StartupSlot
         dey
-        bne     L91FA
+        bne     :-
         jmp     set_startup_menu_items
-
-L9205:  ora     #$C0
-        sta     @addr+1
-        @addr := *+1
-        jmp     $C000           ; High byte is self-modified
 
 set_startup_menu_items:
         lda     slot_table
@@ -659,12 +652,11 @@ quick_boot_slot:
         bit     desktop_available_flag
         bmi     not_desktop
         lda     event_params::key
+        jsr     ToUpperCase
         cmp     #kShortcutRunDeskTop
-        beq     :+
-        cmp     #TO_LOWER(kShortcutRunDeskTop)
         bne     not_desktop
 
-:       BTK_CALL BTK::Flash, desktop_button_params
+        BTK_CALL BTK::Flash, desktop_button_params
 @retry: param_call GetFileInfo, str_desktop_2
         beq     :+
         lda     #AlertID::insert_system_disk
@@ -788,11 +780,10 @@ other:  jmp     HandleNonmenuKey
 
 has_modifiers:
         lda     event_params::key
+        jsr     ToUpperCase
         cmp     #CHAR_ESCAPE
         beq     menukey
         cmp     #kShortcutRunProgram
-        beq     menukey
-        cmp     #TO_LOWER(kShortcutRunProgram)
         beq     menukey
         cmp     #'9'+1
         bcs     other
@@ -1001,6 +992,8 @@ noop:   rts
 ;;; Assert: ROM is banked in, ALTZP/LC is off
 
 .proc RestoreTextMode
+        sta     SET80STORE      ; Seems necessary for HOME to work?
+
         lda     #0              ; INIT is not used as that briefly
         sta     WNDLFT          ; displays the dirty text page
         sta     WNDTOP
@@ -1008,7 +1001,7 @@ noop:   rts
         sta     WNDWDTH
         lda     #24
         sta     WNDBTM
-        jsr     HOME            ; Clear 80-col screen
+        jsr     HOME
 
         lda     #$11            ; Ctrl-Q - disable 80-col firmware
         jsr     COUT
@@ -1476,7 +1469,7 @@ common: lda     #winfo::kDialogId
 .proc CmdStartup
         ldy     menu_params::menu_item
         lda     slot_table,y
-        ora     #>$C000         ; compute $Cn00
+set:    ora     #>$C000         ; compute $Cn00
         sta     @addr+1
         lda     #<$C000
         sta     @addr
@@ -1486,6 +1479,7 @@ common: lda     #winfo::kDialogId
         @addr := * + 1
         jmp     SELF_MODIFIED
 .endproc ; CmdStartup
+StartupSlot := CmdStartup::set
 
 ;;; ============================================================
 
@@ -1821,19 +1815,16 @@ str_extras_basic:
         beq     ret
         tay
 @loop:  lda     (ptr),y
-        cmp     #'a'
-        bcc     :+
-        cmp     #'z'+1
-        bcs     :+
-        and     #CASE_MASK
+        jsr     ToUpperCase
         sta     (ptr),y
-:       dey
+        dey
         bne     @loop
 ret:    rts
 .endproc ; UpcaseString
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../lib/ramcard.s"
 
 ;;; ============================================================
