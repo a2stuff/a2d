@@ -96,6 +96,7 @@ params:  .res    3
         sta     ALTZPOFF
         bit     ROMIN2
 
+        sta     SET80STORE      ; 80-col firmware expects this
         lda     #0              ; INIT is not used as that briefly
         sta     WNDLFT          ; displays the dirty text page
         sta     WNDTOP

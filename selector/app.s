@@ -992,8 +992,7 @@ noop:   rts
 ;;; Assert: ROM is banked in, ALTZP/LC is off
 
 .proc RestoreTextMode
-        sta     SET80STORE      ; Seems necessary for HOME to work?
-
+        sta     SET80STORE      ; 80-col firmware expects this
         lda     #0              ; INIT is not used as that briefly
         sta     WNDLFT          ; displays the dirty text page
         sta     WNDTOP
@@ -1001,7 +1000,7 @@ noop:   rts
         sta     WNDWDTH
         lda     #24
         sta     WNDBTM
-        jsr     HOME
+        jsr     HOME            ; Clear 80-col screen
 
         lda     #$11            ; Ctrl-Q - disable 80-col firmware
         jsr     COUT

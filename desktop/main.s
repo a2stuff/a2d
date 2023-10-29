@@ -2818,6 +2818,7 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         ;; Exit graphics mode entirely
         bit     ROMIN2
 
+        sta     SET80STORE      ; 80-col firmware expects this
         lda     #0              ; INIT is not used as that briefly
         sta     WNDLFT          ; displays the dirty text page
         sta     WNDTOP
