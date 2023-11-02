@@ -161,10 +161,8 @@ grid_pen:
 
         kArrowDX = 16
         kArrowDY = 10
-        DEFINE_BUTTON left_button_rec, kDAWindowId, kGlyphLeftArrow,, 40, 2, kArrowDX, kArrowDY
-        DEFINE_BUTTON_PARAMS left_button_params, left_button_rec
-        DEFINE_BUTTON right_button_rec, kDAWindowId, kGlyphRightArrow,, kDAWidth - kArrowDX - 40, 2, kArrowDX, kArrowDY
-        DEFINE_BUTTON_PARAMS right_button_params, right_button_rec
+        DEFINE_BUTTON left_button, kDAWindowId, kGlyphLeftArrow,, 40, 2, kArrowDX, kArrowDY
+        DEFINE_BUTTON right_button, kDAWindowId, kGlyphRightArrow,, kDAWidth - kArrowDX - 40, 2, kArrowDX, kArrowDY
 
         DEFINE_RECT rect_month_year, kArrowDX+44, 0, kDAWidth-kArrowDX-44, 11
 
@@ -332,7 +330,7 @@ fin:    jsr     UpdateWindow
     IF_NE
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
-        MGTK_CALL MGTK::PaintRect, left_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, left_button::rect
     END_IF
         rts
 .endproc ; InvertDec
@@ -367,7 +365,7 @@ fin:    jsr     UpdateWindow
     IF_NE
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
-        MGTK_CALL MGTK::PaintRect, right_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, right_button::rect
     END_IF
         rts
 .endproc ; InvertInc
@@ -408,11 +406,11 @@ common: bit     dragwindow_params::moved
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, left_button_rec::rect
+        MGTK_CALL MGTK::InRect, left_button::rect
         cmp     #MGTK::inrect_inside
         jeq     DecDate
 
-        MGTK_CALL MGTK::InRect, right_button_rec::rect
+        MGTK_CALL MGTK::InRect, right_button::rect
         cmp     #MGTK::inrect_inside
         jeq     IncDate
 
@@ -643,8 +641,8 @@ draw_date:
 
         bit     full_flag
     IF_MINUS
-        BTK_CALL BTK::Draw, left_button_params
-        BTK_CALL BTK::Draw, right_button_params
+        BTK_CALL BTK::Draw, left_button
+        BTK_CALL BTK::Draw, right_button
     END_IF
 
         ;; --------------------------------------------------

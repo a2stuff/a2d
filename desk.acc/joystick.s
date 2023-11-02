@@ -121,12 +121,9 @@ kJoystickDisplayH = 64
         DEFINE_RECT_SZ joy_disp_frame_rect, kJoystickDisplayX    , kJoystickDisplayY    , kJoystickDisplayW + 8, kJoystickDisplayH + 5
         DEFINE_RECT_SZ joy_disp_rect,       kJoystickDisplayX + 1, kJoystickDisplayY + 1, kJoystickDisplayW + 6, kJoystickDisplayH + 3
 
-        DEFINE_BUTTON joy_btn0_rec, kDAWindowId, res_string_label_joy_btn0,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10
-        DEFINE_BUTTON joy_btn1_rec, kDAWindowId, res_string_label_joy_btn1,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30
-        DEFINE_BUTTON joy_btn2_rec, kDAWindowId, res_string_label_joy_btn2,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 50
-        DEFINE_BUTTON_PARAMS joy_btn0_params, joy_btn0_rec
-        DEFINE_BUTTON_PARAMS joy_btn1_params, joy_btn1_rec
-        DEFINE_BUTTON_PARAMS joy_btn2_params, joy_btn2_rec
+        DEFINE_BUTTON joy_btn0_button, kDAWindowId, res_string_label_joy_btn0,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 10
+        DEFINE_BUTTON joy_btn1_button, kDAWindowId, res_string_label_joy_btn1,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 30
+        DEFINE_BUTTON joy_btn2_button, kDAWindowId, res_string_label_joy_btn2,, kJoystickDisplayX + kJoystickDisplayW + 20, kJoystickDisplayY + 50
 
 .params joy_marker
         DEFINE_POINT viewloc, kJoystickDisplayX+1, kJoystickDisplayY+1
@@ -313,9 +310,9 @@ notpencopy:     .byte   MGTK::notpencopy
 
         MGTK_CALL MGTK::FrameRect, joy_disp_frame_rect
 
-        BTK_CALL BTK::RadioDraw, joy_btn0_params
-        BTK_CALL BTK::RadioDraw, joy_btn1_params
-        BTK_CALL BTK::RadioDraw, joy_btn2_params
+        BTK_CALL BTK::RadioDraw, joy_btn0_button
+        BTK_CALL BTK::RadioDraw, joy_btn1_button
+        BTK_CALL BTK::RadioDraw, joy_btn2_button
 
         copy    #$80, force_draw_flag
         MGTK_CALL MGTK::ShowCursor
@@ -458,18 +455,18 @@ set:    copy    #$80, joy2_valid_flag
 
         lda     curr+InputState::butn0
         and     #$80
-        sta     joy_btn0_rec::state
-        BTK_CALL BTK::RadioDraw, joy_btn0_params
+        sta     joy_btn0_button::state
+        BTK_CALL BTK::RadioDraw, joy_btn0_button
 
         lda     curr+InputState::butn1
         and     #$80
-        sta     joy_btn1_rec::state
-        BTK_CALL BTK::RadioDraw, joy_btn1_params
+        sta     joy_btn1_button::state
+        BTK_CALL BTK::RadioDraw, joy_btn1_button
 
         lda     curr+InputState::butn2
         and     #$80
-        sta     joy_btn2_rec::state
-        BTK_CALL BTK::RadioDraw, joy_btn2_params
+        sta     joy_btn2_button::state
+        BTK_CALL BTK::RadioDraw, joy_btn2_button
 
         ;; --------------------------------------------------
 

@@ -114,8 +114,7 @@
 
         kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
         kOKButtonTop = kDialogHeight - kButtonHeight - 7
-        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kOKButtonTop
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+        DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kOKButtonTop
 
 .params settextbg_black_params
 backcolor:   .byte   0          ; black
@@ -223,10 +222,8 @@ nextwinfo:      .addr   0
 kOptionDisplayX = 30
 kOptionDisplayY = 44
 
-        DEFINE_BUTTON clock_12hour_rec, kDAWindowId, res_string_label_clock_12hour,, kOptionDisplayX+60-10, kOptionDisplayY
-        DEFINE_BUTTON clock_24hour_rec, kDAWindowId, res_string_label_clock_24hour,, kOptionDisplayX+120, kOptionDisplayY
-        DEFINE_BUTTON_PARAMS clock_12hour_params, clock_12hour_rec
-        DEFINE_BUTTON_PARAMS clock_24hour_params, clock_24hour_rec
+        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour,, kOptionDisplayX+60-10, kOptionDisplayY
+        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour,, kOptionDisplayX+120, kOptionDisplayY
 
 .params date_bitmap_params
         DEFINE_POINT viewloc, 14, 40
@@ -496,18 +493,18 @@ hit:
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, ok_button::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickOK
 
-        MGTK_CALL MGTK::InRect, clock_12hour_rec::rect
+        MGTK_CALL MGTK::InRect, clock_12hour_button::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #$00
         jmp     HandleOptionClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, clock_24hour_rec::rect
+        MGTK_CALL MGTK::InRect, clock_24hour_button::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #$80
@@ -540,7 +537,7 @@ hit_target_jump_table:
 ;;; ============================================================
 
 .proc OnClickOK
-        BTK_CALL BTK::Track, ok_button_params
+        BTK_CALL BTK::Track, ok_button
     IF_ZERO
         pla                     ; pop OnClick
         pla
@@ -550,7 +547,7 @@ hit_target_jump_table:
 .endproc ; OnClickOK
 
 .proc OnKeyOK
-        BTK_CALL BTK::Flash, ok_button_params
+        BTK_CALL BTK::Flash, ok_button
         FALL_THROUGH_TO OnOK
 .endproc ; OnKeyOK
 
@@ -981,9 +978,9 @@ label_downarrow:
 
         ;; --------------------------------------------------
 
-        BTK_CALL BTK::Draw, ok_button_params
-        BTK_CALL BTK::RadioDraw, clock_12hour_params
-        BTK_CALL BTK::RadioDraw, clock_24hour_params
+        BTK_CALL BTK::Draw, ok_button
+        BTK_CALL BTK::RadioDraw, clock_12hour_button
+        BTK_CALL BTK::RadioDraw, clock_24hour_button
 
         FALL_THROUGH_TO UpdateOptionButtons
 .endproc ; DrawWindow
@@ -992,14 +989,14 @@ label_downarrow:
         lda     clock_24hours
         cmp     #0
         jsr     ZToN
-        sta     clock_12hour_rec::state
-        BTK_CALL BTK::RadioUpdate, clock_12hour_params
+        sta     clock_12hour_button::state
+        BTK_CALL BTK::RadioUpdate, clock_12hour_button
 
         lda     clock_24hours
         cmp     #$80
         jsr     ZToN
-        sta     clock_24hour_rec::state
-        BTK_CALL BTK::RadioUpdate, clock_24hour_params
+        sta     clock_24hour_button::state
+        BTK_CALL BTK::RadioUpdate, clock_24hour_button
 
         rts
 .endproc ; UpdateOptionButtons

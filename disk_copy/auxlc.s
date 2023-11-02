@@ -248,8 +248,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT rect_erase_dialog_upper, 8, 20, kDialogWidth-8, 103 ; under title to bottom of buttons
         DEFINE_RECT rect_erase_dialog_lower, 8, 103, kDialogWidth-8, kDialogHeight-4 ; top of buttons to bottom of dialog
 
-        DEFINE_BUTTON ok_button_rec, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+        DEFINE_BUTTON ok_button, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
 
         ;; For drawing/updating the dialog title
         DEFINE_POINT point_title, 0, 15
@@ -257,8 +256,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
 
-        DEFINE_BUTTON read_drive_button_rec, winfo_dialog::kWindowId, res_string_button_read_drive, res_char_button_read_drive_shortcut, 210, 90
-        DEFINE_BUTTON_PARAMS read_drive_button_params, read_drive_button_rec
+        DEFINE_BUTTON read_drive_button, winfo_dialog::kWindowId, res_string_button_read_drive, res_char_button_read_drive_shortcut, 210, 90
 
         DEFINE_POINT point_slot_drive_name, 20, 28
 str_slot_drive_name:
@@ -453,7 +451,7 @@ InitDialog:
         sta     listbox_enabled_flag
         lda     #$FF
         sta     current_drive_selection
-        copy    #$80, ok_button_rec::state
+        copy    #$80, ok_button::state
         lda     #$81
         sta     LD44D
         copy    #0, disablemenu_params::disable
@@ -993,10 +991,10 @@ CmdDiskCopy:
         lda     current_drive_selection
         and     #$80
 
-        cmp     ok_button_rec::state
+        cmp     ok_button::state
         beq     ret
-        sta     ok_button_rec::state
-        BTK_CALL BTK::Hilite, ok_button_params
+        sta     ok_button::state
+        BTK_CALL BTK::Hilite, ok_button
 
 ret:    rts
 .endproc ; UpdateOKButton
@@ -1009,19 +1007,19 @@ ret:    rts
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, ok_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, ok_button_params
+        BTK_CALL BTK::Track, ok_button
         bmi     :+
         lda     #$00
 :       rts
     END_IF
 
-        MGTK_CALL MGTK::InRect, read_drive_button_rec::rect
+        MGTK_CALL MGTK::InRect, read_drive_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, read_drive_button_params
+        BTK_CALL BTK::Track, read_drive_button
         bmi     :+
         lda     #$01
 :
@@ -1074,14 +1072,14 @@ params: .res    3
         beq     LDC09
         cmp     #TO_LOWER(kShortcutReadDisk)
         bne     LDC2D
-LDC09:  BTK_CALL BTK::Flash, read_drive_button_params
+LDC09:  BTK_CALL BTK::Flash, read_drive_button
         return  #$01
 
 LDC2D:  cmp     #CHAR_RETURN
     IF_EQ
-        bit     ok_button_rec::state
+        bit     ok_button::state
         bmi     :+
-        BTK_CALL BTK::Flash, ok_button_params
+        BTK_CALL BTK::Flash, ok_button
         lda     #$00
 :       rts
     END_IF
@@ -1301,9 +1299,9 @@ match:  clc
 :       param_call DrawTitleText, label_disk_copy
 
 draw_buttons:
-        BTK_CALL BTK::Draw, ok_button_params
+        BTK_CALL BTK::Draw, ok_button
         jsr     UpdateOKButton
-        BTK_CALL BTK::Draw, read_drive_button_params
+        BTK_CALL BTK::Draw, read_drive_button
         MGTK_CALL MGTK::MoveTo, point_slot_drive_name
         param_call DrawString, str_slot_drive_name
         MGTK_CALL MGTK::MoveTo, point_select_source

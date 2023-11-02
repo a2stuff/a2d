@@ -103,15 +103,15 @@ buffer: .res 16, 0
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         param_call main::DrawString, add_a_new_entry_to_label_str
 
-        BTK_CALL BTK::RadioDraw, primary_run_list_params
-        BTK_CALL BTK::RadioDraw, secondary_run_list_params
+        BTK_CALL BTK::RadioDraw, primary_run_list_button
+        BTK_CALL BTK::RadioDraw, secondary_run_list_button
 
         MGTK_CALL MGTK::MoveTo, down_load_label_pos
         param_call main::DrawString, down_load_label_str
 
-        BTK_CALL BTK::RadioDraw, at_first_boot_params
-        BTK_CALL BTK::RadioDraw, at_first_use_params
-        BTK_CALL BTK::RadioDraw, never_params
+        BTK_CALL BTK::RadioDraw, at_first_boot_button
+        BTK_CALL BTK::RadioDraw, at_first_use_button
+        BTK_CALL BTK::RadioDraw, never_button
 
         rts
 .endproc ; DrawControls
@@ -217,23 +217,23 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 ;;; ============================================================
 
 .proc HandleClick
-        MGTK_CALL MGTK::InRect, primary_run_list_rec::rect
+        MGTK_CALL MGTK::InRect, primary_run_list_button::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickPrimaryRunListCtrl
 
-        MGTK_CALL MGTK::InRect, secondary_run_list_rec::rect
+        MGTK_CALL MGTK::InRect, secondary_run_list_button::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickSecondaryRunListCtrl
 
-        MGTK_CALL MGTK::InRect, at_first_boot_rec::rect
+        MGTK_CALL MGTK::InRect, at_first_boot_button::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickAtFirstBootCtrl
 
-        MGTK_CALL MGTK::InRect, at_first_use_rec::rect
+        MGTK_CALL MGTK::InRect, at_first_use_button::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickAtFirstUseCtrl
 
-        MGTK_CALL MGTK::InRect, never_rec::rect
+        MGTK_CALL MGTK::InRect, never_button::rect
         cmp     #MGTK::inrect_inside
         jeq     ClickNeverCtrl
 
@@ -314,11 +314,11 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 :
         cmp     #kRunListPrimary
     IF_EQ
-        stx     primary_run_list_rec::state
-        BTK_CALL BTK::RadioUpdate, primary_run_list_params
+        stx     primary_run_list_button::state
+        BTK_CALL BTK::RadioUpdate, primary_run_list_button
     ELSE
-        stx     secondary_run_list_rec::state
-        BTK_CALL BTK::RadioUpdate, secondary_run_list_params
+        stx     secondary_run_list_button::state
+        BTK_CALL BTK::RadioUpdate, secondary_run_list_button
     END_IF
 
         rts
@@ -331,18 +331,18 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 :
         cmp     #kCopyOnBoot
         bne     :+
-        stx     at_first_boot_rec::state
-        BTK_CALL BTK::RadioUpdate, at_first_boot_params
+        stx     at_first_boot_button::state
+        BTK_CALL BTK::RadioUpdate, at_first_boot_button
         rts
 :
         cmp     #kCopyOnUse
         bne     :+
-        stx     at_first_use_rec::state
-        BTK_CALL BTK::RadioUpdate, at_first_use_params
+        stx     at_first_use_button::state
+        BTK_CALL BTK::RadioUpdate, at_first_use_button
         rts
 :
-        stx     never_rec::state
-        BTK_CALL BTK::RadioUpdate, never_params
+        stx     never_button::state
+        BTK_CALL BTK::RadioUpdate, never_button
         rts
 .endproc ; DrawCopyWhenButton
 

@@ -125,20 +125,14 @@ reserved:       .byte   0
 
         kAlertButtonTop = kAlertRectTop + 37
 
-        DEFINE_BUTTON ok_rec,        0, res_string_button_ok, kGlyphReturn, kAlertRectLeft + 300, kAlertButtonTop
-        DEFINE_BUTTON try_again_rec, 0, res_string_button_try_again, res_char_button_try_again_shortcut, kAlertRectLeft + 300, kAlertButtonTop
-        DEFINE_BUTTON cancel_rec,    0, res_string_button_cancel, res_string_button_cancel_shortcut, kAlertRectLeft + 20, kAlertButtonTop
-        DEFINE_BUTTON_PARAMS ok_params, ok_rec
-        DEFINE_BUTTON_PARAMS try_again_params, try_again_rec
-        DEFINE_BUTTON_PARAMS cancel_params, cancel_rec
+        DEFINE_BUTTON ok_button,        0, res_string_button_ok, kGlyphReturn, kAlertRectLeft + 300, kAlertButtonTop
+        DEFINE_BUTTON try_again_button, 0, res_string_button_try_again, res_char_button_try_again_shortcut, kAlertRectLeft + 300, kAlertButtonTop
+        DEFINE_BUTTON cancel_button,    0, res_string_button_cancel, res_string_button_cancel_shortcut, kAlertRectLeft + 20, kAlertButtonTop
 
 .ifdef AD_YESNOALL
-        DEFINE_BUTTON yes_rec,  0, res_string_button_yes, res_char_button_yes_shortcut, kAlertRectLeft + 175, kAlertButtonTop, 65
-        DEFINE_BUTTON no_rec,   0, res_string_button_no,  res_char_button_no_shortcut,  kAlertRectLeft + 255, kAlertButtonTop, 65
-        DEFINE_BUTTON all_rec,  0, res_string_button_all, res_char_button_all_shortcut, kAlertRectLeft + 335, kAlertButtonTop, 65
-        DEFINE_BUTTON_PARAMS yes_params, yes_rec
-        DEFINE_BUTTON_PARAMS no_params, no_rec
-        DEFINE_BUTTON_PARAMS all_params, all_rec
+        DEFINE_BUTTON yes_button,  0, res_string_button_yes, res_char_button_yes_shortcut, kAlertRectLeft + 175, kAlertButtonTop, 65
+        DEFINE_BUTTON no_button,   0, res_string_button_no,  res_char_button_no_shortcut,  kAlertRectLeft + 255, kAlertButtonTop, 65
+        DEFINE_BUTTON all_button,  0, res_string_button_all, res_char_button_all_shortcut, kAlertRectLeft + 335, kAlertButtonTop, 65
 .endif ; AD_YESNOALL
 
         kTextLeft = kAlertRectLeft + 75
@@ -252,7 +246,7 @@ start:
         bpl     draw_ok_btn
 
         ;; Cancel button
-        BTK_CALL BTK::Draw, cancel_params
+        BTK_CALL BTK::Draw, cancel_button
 
         bit     alert_params::buttons ; V bit set = Cancel + OK
         bvs     draw_ok_btn
@@ -262,20 +256,20 @@ start:
         lda     alert_params::buttons
         and     #$0F
     IF_NOT_ZERO
-        BTK_CALL BTK::Draw, yes_params
-        BTK_CALL BTK::Draw, no_params
-        BTK_CALL BTK::Draw, all_params
+        BTK_CALL BTK::Draw, yes_button
+        BTK_CALL BTK::Draw, no_button
+        BTK_CALL BTK::Draw, all_button
         jmp     done_buttons
     END_IF
 .endif
 
         ;; Try Again button
-        BTK_CALL BTK::Draw, try_again_params
+        BTK_CALL BTK::Draw, try_again_button
         jmp     done_buttons
 
         ;; OK button
 draw_ok_btn:
-        BTK_CALL BTK::Draw, ok_params
+        BTK_CALL BTK::Draw, ok_button
 
 done_buttons:
 
@@ -385,7 +379,7 @@ event_loop:
         bne     :+
 
         ;; Cancel
-        BTK_CALL BTK::Flash, cancel_params
+        BTK_CALL BTK::Flash, cancel_button
 finish_cancel:
         lda     #kAlertResultCancel
         jmp     finish
@@ -401,19 +395,19 @@ finish_cancel:
         pla
         cmp     #kShortcutNo
         bne     :+
-        BTK_CALL BTK::Flash, no_params
+        BTK_CALL BTK::Flash, no_button
         lda     #kAlertResultNo
         jmp     finish
 :
         cmp     #kShortcutYes
         bne     :+
-        BTK_CALL BTK::Flash, yes_params
+        BTK_CALL BTK::Flash, yes_button
         lda     #kAlertResultYes
         jmp     finish
 :
         cmp     #kShortcutAll
         bne     :+
-        BTK_CALL BTK::Flash, all_params
+        BTK_CALL BTK::Flash, all_button
         lda     #kAlertResultAll
         jmp     finish
 :
@@ -425,7 +419,7 @@ finish_cancel:
         cmp     #kShortcutTryAgain
         bne     :+
 do_try_again:
-        BTK_CALL BTK::Flash, try_again_params
+        BTK_CALL BTK::Flash, try_again_button
         lda     #kAlertResultTryAgain
         jmp     finish
 :
@@ -440,7 +434,7 @@ check_ok:
         cmp     #CHAR_RETURN
         jne     event_loop
 
-do_ok:  BTK_CALL BTK::Flash, ok_params
+do_ok:  BTK_CALL BTK::Flash, ok_button
 finish_ok:
         lda     #kAlertResultOK
         jmp     finish          ; not a fixed value, cannot BNE/BEQ
@@ -455,11 +449,11 @@ HandleButtonDown:
         jpl     check_ok_rect
 
         ;; Cancel
-        MGTK_CALL MGTK::InRect, cancel_rec+BTK::ButtonRecord::rect
+        MGTK_CALL MGTK::InRect, cancel_button+BTK::ButtonRecord::rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        BTK_CALL BTK::Track, cancel_params
-        jne     no_button
+        BTK_CALL BTK::Track, cancel_button
+        jne     was_no_button
         lda     #kAlertResultCancel
         .assert kAlertResultCancel <> 0, error, "kAlertResultCancel must be non-zero"
         bne     finish          ; always
@@ -472,29 +466,29 @@ HandleButtonDown:
         and     #$0F
     IF_NOT_ZERO
         ;; Yes & No & All
-        MGTK_CALL MGTK::InRect, yes_rec+BTK::ButtonRecord::rect
+        MGTK_CALL MGTK::InRect, yes_button+BTK::ButtonRecord::rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        BTK_CALL BTK::Track, yes_params
-        bne     no_button
+        BTK_CALL BTK::Track, yes_button
+        bne     was_no_button
         lda     #kAlertResultYes
         .assert kAlertResultYes <> 0, error, "constant mismatch"
         bne     finish          ; always
 :
-        MGTK_CALL MGTK::InRect, no_rec+BTK::ButtonRecord::rect
+        MGTK_CALL MGTK::InRect, no_button+BTK::ButtonRecord::rect
         cmp     #MGTK::inrect_inside
         bne     :+
-        BTK_CALL BTK::Track, no_params
-        bne     no_button
+        BTK_CALL BTK::Track, no_button
+        bne     was_no_button
         lda     #kAlertResultNo
         .assert kAlertResultNo <> 0, error, "constant mismatch"
         bne     finish          ; always
 :
-        MGTK_CALL MGTK::InRect, all_rec+BTK::ButtonRecord::rect
+        MGTK_CALL MGTK::InRect, all_button+BTK::ButtonRecord::rect
         cmp     #MGTK::inrect_inside
-        bne     no_button
-        BTK_CALL BTK::Track, all_params
-        bne     no_button
+        bne     was_no_button
+        BTK_CALL BTK::Track, all_button
+        bne     was_no_button
         lda     #kAlertResultAll
         .assert kAlertResultAll <> 0, error, "constant mismatch"
         bne     finish          ; always
@@ -502,27 +496,27 @@ HandleButtonDown:
 .endif
 
         ;; Try Again
-        MGTK_CALL MGTK::InRect, try_again_rec+BTK::ButtonRecord::rect
+        MGTK_CALL MGTK::InRect, try_again_button+BTK::ButtonRecord::rect
         cmp     #MGTK::inrect_inside
-        bne     no_button
-        BTK_CALL BTK::Track, try_again_params
-        bne     no_button
+        bne     was_no_button
+        BTK_CALL BTK::Track, try_again_button
+        bne     was_no_button
         lda     #kAlertResultTryAgain
         .assert kAlertResultTryAgain = 0, error, "kAlertResultTryAgain must be non-zero"
         beq     finish          ; always
 
         ;; OK
 check_ok_rect:
-        MGTK_CALL MGTK::InRect, ok_rec+BTK::ButtonRecord::rect
+        MGTK_CALL MGTK::InRect, ok_button+BTK::ButtonRecord::rect
         cmp     #MGTK::inrect_inside
-        bne     no_button
-        BTK_CALL BTK::Track, ok_params
-        bne     no_button
+        bne     was_no_button
+        BTK_CALL BTK::Track, ok_button
+        bne     was_no_button
         lda     #kAlertResultOK
         .assert kAlertResultOK <> 0, error, "constant mismatch"
         bne     finish          ; always
 
-no_button:
+was_no_button:
         jmp     event_loop
 
 ;;; ============================================================

@@ -171,11 +171,9 @@ grafport_win:   .tag    MGTK::GrafPort
         ;; Left edges are adjusted dynamically based on label width
         DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
 
-        DEFINE_BUTTON search_button_rec, kDAWindowID, res_string_button_search, kGlyphReturn, kDAWidth-235, kControlsTop
-        DEFINE_BUTTON_PARAMS search_button_params, search_button_rec
+        DEFINE_BUTTON search_button, kDAWindowID, res_string_button_search, kGlyphReturn, kDAWidth-235, kControlsTop
 
-        DEFINE_BUTTON cancel_button_rec, kDAWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
-        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
+        DEFINE_BUTTON cancel_button, kDAWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
 
 penXOR:         .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
@@ -284,13 +282,13 @@ pattern:        .res    16      ; null-terminated/upcased version
         ;; Not modified
         cmp     #CHAR_ESCAPE
       IF_EQ
-        BTK_CALL BTK::Flash, cancel_button_params
+        BTK_CALL BTK::Flash, cancel_button
         jmp     Exit
       END_IF
 
         cmp     #CHAR_RETURN
       IF_EQ
-        BTK_CALL BTK::Flash, search_button_params
+        BTK_CALL BTK::Flash, search_button
         jmp     DoSearch
       END_IF
 
@@ -461,15 +459,15 @@ finish:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, search_button_rec::rect
+        MGTK_CALL MGTK::InRect, search_button::rect
         beq     :+
-        BTK_CALL BTK::Track, search_button_params
+        BTK_CALL BTK::Track, search_button
         bmi     done
         jmp     DoSearch
 :
-        MGTK_CALL MGTK::InRect, cancel_button_rec::rect
+        MGTK_CALL MGTK::InRect, cancel_button::rect
         beq     :+
-        BTK_CALL BTK::Track, cancel_button_params
+        BTK_CALL BTK::Track, cancel_button
         bmi     done
         jmp     Exit
 :
@@ -547,8 +545,8 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::MoveTo, find_label_pos
         param_call DrawString, find_label_str
 
-        BTK_CALL BTK::Draw, search_button_params
-        BTK_CALL BTK::Draw, cancel_button_params
+        BTK_CALL BTK::Draw, search_button
+        BTK_CALL BTK::Draw, cancel_button
 
         MGTK_CALL MGTK::ShowCursor
 done:   rts

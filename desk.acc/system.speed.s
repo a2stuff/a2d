@@ -46,12 +46,9 @@ kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeigh
 
 kButtonInsetX   = 25
 
-        DEFINE_BUTTON norm_button_rec, kDAWindowId, res_string_button_norm, res_char_button_norm_shortcut, kButtonInsetX, 28
-        DEFINE_BUTTON_PARAMS norm_button_params, norm_button_rec
-        DEFINE_BUTTON fast_button_rec, kDAWindowId, res_string_button_fast, res_char_button_fast_shortcut, kDAWidth - kButtonWidth - kButtonInsetX, 28
-        DEFINE_BUTTON_PARAMS fast_button_params, fast_button_rec
-        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kButtonWidth - kButtonInsetX, 52
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+        DEFINE_BUTTON norm_button, kDAWindowId, res_string_button_norm, res_char_button_norm_shortcut, kButtonInsetX, 28
+        DEFINE_BUTTON fast_button, kDAWindowId, res_string_button_fast, res_char_button_fast_shortcut, kDAWidth - kButtonWidth - kButtonInsetX, 28
+        DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kButtonWidth - kButtonInsetX, 52
 
         DEFINE_LABEL title, res_string_dialog_title, 0, 18
 
@@ -214,9 +211,9 @@ frame_counter:
 
         param_call DrawTitleString, title_label_str
 
-        BTK_CALL BTK::Draw, ok_button_params
-        BTK_CALL BTK::Draw, norm_button_params
-        BTK_CALL BTK::Draw, fast_button_params
+        BTK_CALL BTK::Draw, ok_button
+        BTK_CALL BTK::Draw, norm_button
+        BTK_CALL BTK::Draw, fast_button
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -274,18 +271,18 @@ frame_counter:
 .endproc ; OnKey
 
 .proc OnKeyOK
-        BTK_CALL BTK::Flash, ok_button_params
+        BTK_CALL BTK::Flash, ok_button
         jmp     CloseWindow
 .endproc ; OnKeyOK
 
 .proc OnKeyNorm
-        BTK_CALL BTK::Flash, norm_button_params
+        BTK_CALL BTK::Flash, norm_button
         JSR_TO_MAIN DoNorm
         jmp     InputLoop
 .endproc ; OnKeyNorm
 
 .proc OnKeyFast
-        BTK_CALL BTK::Flash, fast_button_params
+        BTK_CALL BTK::Flash, fast_button
         JSR_TO_MAIN DoFast
         jmp     InputLoop
 .endproc ; OnKeyFast
@@ -322,15 +319,15 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, ok_button::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickOK
 
-        MGTK_CALL MGTK::InRect, norm_button_rec::rect
+        MGTK_CALL MGTK::InRect, norm_button::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickNorm
 
-        MGTK_CALL MGTK::InRect, fast_button_rec::rect
+        MGTK_CALL MGTK::InRect, fast_button::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickFast
 
@@ -340,7 +337,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClickOK
-        BTK_CALL BTK::Track, ok_button_params
+        BTK_CALL BTK::Track, ok_button
         jeq     CloseWindow
         jmp     InputLoop
 .endproc ; OnClickOK
@@ -348,7 +345,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClickNorm
-        BTK_CALL BTK::Track, norm_button_params
+        BTK_CALL BTK::Track, norm_button
         bne     :+
         JSR_TO_MAIN DoNorm
 :       jmp     InputLoop
@@ -357,7 +354,7 @@ hit:    lda     winfo::window_id
 ;;; ============================================================
 
 .proc OnClickFast
-        BTK_CALL BTK::Track, fast_button_params
+        BTK_CALL BTK::Track, fast_button
         bne     :+
         JSR_TO_MAIN DoFast
 :       jmp     InputLoop

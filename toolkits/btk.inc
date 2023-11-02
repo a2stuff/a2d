@@ -77,41 +77,34 @@ str_shortcut:   PASCAL_STRING {shortcut}
 
 Draw            = $00           ; Draw button
 ;;; .addr       record
-;;; .byte       update_flag
 
-Flash           = $01           ; Flash button
+Update          = $01           ; Draw button (during update event)
 ;;; .addr       record
 
-Hilite          = $02           ; Redraw label (after state change)
+Flash           = $02           ; Flash button
 ;;; .addr       record
 
-Track           = $03           ; Handle click within control bounds
+Hilite          = $03           ; Redraw label (after state change)
+;;; .addr       record
+
+Track           = $04           ; Handle click within control bounds
 ;;; .addr       record
 
 .ifndef BTK_SHORT
-RadioDraw       = $04           ; Draw a radio button (and update hit rect)
+RadioDraw       = $05           ; Draw a radio button (and update hit rect)
 ;;; .addr       record
 
-RadioUpdate     = $05           ; Update a radio button after a click
+RadioUpdate     = $06           ; Update a radio button after a click
 ;;; .addr       record
 
-CheckboxDraw    = $06           ; Draw a checkbox button (and update hit rect)
+CheckboxDraw    = $07           ; Draw a checkbox button (and update hit rect)
 ;;; .addr       record
 
-CheckboxUpdate  = $07           ; Update a checkbox button after a click
+CheckboxUpdate  = $08           ; Update a checkbox button after a click
 ;;; .addr       record
 .endif
 
 .endscope ; BTK
-
-.macro DEFINE_BUTTON_PARAMS name, rec
-.params name
-record: .addr   rec
-update: .byte   0
-        .refto record
-        .refto update
-.endparams
-.endmacro
 
 ;;; ============================================================
 

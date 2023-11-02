@@ -26,91 +26,57 @@ If `window_id` is set to 0 then (1) the port is never set to the window's port a
 
 ## Commands
 
+The parameter for every call is just the address of the `ButtonRecord`.
+
 ### Draw ($00)
 Draw the button, including frame and label, considering the disable state.
 
-Parameters:
-```
-.addr       a_record        Address of the ButtonRecord
-.byte       update          If high bit is set, do not set port.
-```
-
-The `update` flag is used as follows:
-* If not set, the control's window GrafPort is selected before any drawing is performed.
-* If set, the current GrafPort is used. This is useful when processing update events and the clipping rectangle should be maintained.
+If the `window_id` is no-zero, the control's window GrafPort is selected before any drawing is performed. When processing update events, use `Update` instead.
 
 
-### Flash ($01)
+### Update ($01)
+Draw the button, including frame and label, considering the disable state.
+
+This should only be used when processing update events i.e. between `MGTK::BeginUpdate` and `MGTK::EndUpdate` calls. The current GrafPort is used.
+
+
+### Flash ($02)
 Flash the button label. Used after a keypress.
 
-Parameters:
-```
-.addr       a_record        Address of the ButtonRecord
-```
 
-
-### Hilite ($02)
+### Hilite ($03)
 Redraw the control label, considering the disable state.
 
-Parameters:
-```
-.addr       a_record        Address of the ButtonRecord
-```
 
-
-### Track ($03)
+### Track ($04)
 Start a nested event loop tracking after a click is initiated in the control. Returns with N=0/Z=1 if clicked, N=1/Z=0 if cancelled (or disabled).
 
-Parameters:
-```
-.addr       a_record        Address of the ButtonRecord
-```
 
-
-### RadioDraw ($04)
+### RadioDraw ($05)
 Draw a radio button.
 
-Parameters:
-```
-.addr       a_record        Address of the ButtonRecord
-```
 
 The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
 
 The shortcut is ignored. After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
 
 
-### RadioUpdate ($05)
+### RadioUpdate ($06)
 Update the bitmap of a radio button.
 
-Parameters:
-```
-.addr       a_record        Address of the ButtonRecord
-```
-
 The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
 
 
-### CheckboxDraw ($06)
+### CheckboxDraw ($07)
 Draw a checkbox button.
-
-Parameters:
-```
-.addr       a_record        Address of the ButtonRecord
-```
 
 The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
 
 The shortcut is ignored. After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
 
 
-### CheckboxUpdate ($07)
+### CheckboxUpdate ($08)
 Update the bitmap of a checkbox button.
-
-Parameters:
-```
-.addr       a_record        Address of the ButtonRecord
-```
 
 The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
 
@@ -124,14 +90,10 @@ The high bit of the `ButtonRecord::state` signifies whether or not the button is
   * label string
   * shortcut string (blank if none)
   * left, top, width (optional), and height (optional)
-* `DEFINE_BUTTON_PARAMS` can be used to instantiate a union-style parameter block. Callers can then pass this to BTK calls.
-  * symbol (name) for the parameter block
-  * symbol (name) of the associated `ButtonRecord`
 
 Example:
 ```
-        DEFINE_BUTTON button_rec, kWindowId, "Press Me", kLeft, kTop ; default width/height
-        DEFINE_BUTTON_PARAMS button_params, button_rec
+        DEFINE_BUTTON my_button, kWindowId, "Press Me", kLeft, kTop ; default width/height
         ...
-        BTK_CALL BTK::Draw, button_params
+        BTK_CALL BTK::Draw, my_button
 ```

@@ -50,16 +50,11 @@ kMaxNameWidth = 140
         DEFINE_POINT disk_label_pos, kDiskLabelCenterX, 16 + kSystemFontHeight
         DEFINE_RECT_SZ disk_name_rect, kDiskLabelCenterX - kMaxNameWidth/2, 16, kMaxNameWidth, kSystemFontHeight
 
-        DEFINE_BUTTON drives_button_rec, kFilePickerDlgWindowID, res_string_button_drives, "^D", kButtonsLeft, kControlsTop + 0 * (kButtonHeight + kButtonGap)
-        DEFINE_BUTTON_PARAMS drives_button_params, drives_button_rec
-        DEFINE_BUTTON open_button_rec, kFilePickerDlgWindowID,         res_string_button_open, "^O",         kButtonsLeft, kControlsTop + 1 * (kButtonHeight + kButtonGap)
-        DEFINE_BUTTON_PARAMS open_button_params, open_button_rec
-        DEFINE_BUTTON close_button_rec, kFilePickerDlgWindowID,        res_string_button_close, "^C",        kButtonsLeft, kControlsTop + 2 * (kButtonHeight + kButtonGap)
-        DEFINE_BUTTON_PARAMS close_button_params, close_button_rec
-        DEFINE_BUTTON cancel_button_rec, kFilePickerDlgWindowID,       res_string_button_cancel, res_string_button_cancel_shortcut, kButtonsLeft, kControlsTop + 3 * (kButtonHeight + kButtonGap) + kSep
-        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
-        DEFINE_BUTTON ok_button_rec, kFilePickerDlgWindowID,           res_string_button_ok, kGlyphReturn,                          kButtonsLeft, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+        DEFINE_BUTTON drives_button, kFilePickerDlgWindowID, res_string_button_drives, "^D", kButtonsLeft, kControlsTop + 0 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON open_button, kFilePickerDlgWindowID,         res_string_button_open, "^O",         kButtonsLeft, kControlsTop + 1 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON close_button, kFilePickerDlgWindowID,        res_string_button_close, "^C",        kButtonsLeft, kControlsTop + 2 * (kButtonHeight + kButtonGap)
+        DEFINE_BUTTON cancel_button, kFilePickerDlgWindowID,       res_string_button_cancel, res_string_button_cancel_shortcut, kButtonsLeft, kControlsTop + 3 * (kButtonHeight + kButtonGap) + kSep
+        DEFINE_BUTTON ok_button, kFilePickerDlgWindowID,           res_string_button_ok, kGlyphReturn,                          kButtonsLeft, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
 
 .ifdef FD_EXTENDED
 ;;; Dividing line

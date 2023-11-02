@@ -166,22 +166,15 @@ kButtonLeft     = 10
 kButtonTop      = 10
 kButtonSpacing  = kSystemFontHeight + 2
 
-        DEFINE_BUTTON ramcard_rec, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, kButtonLeft, kButtonTop + kButtonSpacing * 0
-        DEFINE_BUTTON_PARAMS ramcard_params, ramcard_rec
+        DEFINE_BUTTON ramcard_button, kDAWindowId, res_string_label_ramcard, res_string_shortcut_apple_1, kButtonLeft, kButtonTop + kButtonSpacing * 0
 
-        DEFINE_BUTTON selector_rec, kDAWindowId, res_string_label_selector, res_string_shortcut_apple_2, kButtonLeft, kButtonTop + kButtonSpacing * 1
-        DEFINE_BUTTON_PARAMS selector_params, selector_rec
+        DEFINE_BUTTON selector_button, kDAWindowId, res_string_label_selector, res_string_shortcut_apple_2, kButtonLeft, kButtonTop + kButtonSpacing * 1
 
-        DEFINE_BUTTON shortcuts_rec, kDAWindowId, res_string_label_shortcuts, res_string_shortcut_apple_3, kButtonLeft, kButtonTop + kButtonSpacing * 2
-        DEFINE_BUTTON_PARAMS shortcuts_params, shortcuts_rec
+        DEFINE_BUTTON shortcuts_button, kDAWindowId, res_string_label_shortcuts, res_string_shortcut_apple_3, kButtonLeft, kButtonTop + kButtonSpacing * 2
 
-button_rec_table:
-        .addr   ramcard_rec, selector_rec, shortcuts_rec
-        ASSERT_ADDRESS_TABLE_SIZE button_rec_table, kNumButtons
-
-button_params_table:
-        .addr   ramcard_params, selector_params, shortcuts_params
-        ASSERT_ADDRESS_TABLE_SIZE button_params_table, kNumButtons
+button_button_table:
+        .addr   ramcard_button, selector_button, shortcuts_button
+        ASSERT_ADDRESS_TABLE_SIZE button_button_table, kNumButtons
 
 ;;; Which bit in DeskTopSettings::options this checkbox corresponds to
 button_mask_table:
@@ -316,7 +309,7 @@ loop:
         lda     #SELF_MODIFIED_BYTE
         asl
         tax
-        copy16  button_rec_table,x, rect_addr
+        copy16  button_button_table,x, rect_addr
         add16_8 rect_addr, #BTK::ButtonRecord::rect
 
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr
@@ -353,8 +346,8 @@ loop:
         lda     #SELF_MODIFIED_BYTE
         asl
         tax
-        copy16  button_rec_table,x, rec_addr
-        copy16  button_params_table,x, params_addr
+        copy16  button_button_table,x, rec_addr
+        copy16  button_button_table,x, params_addr
 
         ldx     index
         lda     button_mask_table,x
@@ -399,9 +392,10 @@ set:    lda     #$80
         sta     index
 
         asl
-        tax
-        copy16  button_rec_table,x, rec_addr
-        copy16  button_params_table,x, params_addr
+        tay
+        ldax    button_button_table,y
+        stax    rec_addr
+        stax    params_addr
 
         ldx     #DeskTopSettings::options
         jsr     ReadSetting

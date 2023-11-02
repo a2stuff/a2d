@@ -45,8 +45,7 @@ kTextBoxLeft = kControlsLeft
 kTextBoxTop = kRow1
 kTextBoxWidth = 7 * 15 + 2 * kTextBoxTextHOffset
         DEFINE_RECT_SZ input_rect, kTextBoxLeft, kTextBoxTop, kTextBoxWidth, kTextBoxHeight
-        DEFINE_BUTTON find_button_rec, kDAWindowId, res_string_button_find,, kTextBoxLeft + kTextBoxWidth + 5, kTextBoxTop, 62
-        DEFINE_BUTTON_PARAMS btn_params, find_button_rec
+        DEFINE_BUTTON find_button, kDAWindowId, res_string_button_find,, kTextBoxLeft + kTextBoxWidth + 5, kTextBoxTop, 62
 
 kLabelLeft = kControlsLeft + kTextBoxTextHOffset
 kValueLeft = 80
@@ -282,7 +281,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 
         cmp     #CHAR_RETURN
     IF_EQ
-        BTK_CALL BTK::Flash, btn_params
+        BTK_CALL BTK::Flash, find_button
         jsr     DoFind
         jmp     InputLoop
     END_IF
@@ -448,9 +447,9 @@ index:  .byte   0
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         ;; Click in button?
-        MGTK_CALL MGTK::InRect, find_button_rec::rect
+        MGTK_CALL MGTK::InRect, find_button::rect
     IF_NE
-        BTK_CALL BTK::Track, btn_params
+        BTK_CALL BTK::Track, find_button
         bmi     :+
         jsr     DoFind
 :       jmp     done
@@ -571,7 +570,7 @@ done:   jmp     InputLoop
 
         jsr     DrawLatLong
 
-        BTK_CALL BTK::Draw, btn_params
+        BTK_CALL BTK::Draw, find_button
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, input_rect

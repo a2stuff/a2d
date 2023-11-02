@@ -4,23 +4,20 @@
 .scope btk
         BTKEntry := *
 
-        ;; Points at call parameters
+        ;; Points at call parameters (i.e. ButtonRecord)
         params_addr := $10
 
+        update_flag := $12
+
         ;; Cache of static fields from the record
-        cache       := $12
+        cache       := $13
         window_id   := cache + BTK::ButtonRecord::window_id
         a_label     := cache + BTK::ButtonRecord::a_label
         a_shortcut  := cache + BTK::ButtonRecord::a_shortcut
         rect        := cache + BTK::ButtonRecord::rect
         state       := cache + BTK::ButtonRecord::state
 
-        ;; Call parameters copied here (0...6 bytes)
-        command_data = cache + .sizeof(BTK::ButtonRecord)
-
-        ;; ButtonRecord address, in all param blocks
-        a_record = command_data
-        update_flag = command_data + 2
+        zp_scratch  := cache + .sizeof(BTK::ButtonRecord)
 
         .assert BTKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
@@ -41,7 +38,6 @@
         ;; Grab command number
         ldy     #1              ; Note: rts address is off-by-one
         lda     (params_addr),y
-        pha                     ; A = command number
         asl     a
         tax
         copy16  jump_table,x, jump_addr
@@ -59,19 +55,9 @@
         lda     #0
         sta     update_flag     ; default for most commands
 
-        ;; Copy param data to `command_data`
-        pla                       ; A = command number
-        tay
-        lda     length_table,y
-        tay
-        dey
-:       copy    (params_addr),y, command_data,y
-        dey
-        bpl     :-
-
         ;; Cache static fields from the record, for convenience
         ldy     #.sizeof(BTK::ButtonRecord)-1
-:       copy    (a_record),y, cache,y
+:       copy    (params_addr),y, cache,y
         dey
         bpl     :-
 
@@ -80,6 +66,7 @@
 
 jump_table:
         .addr   DrawImpl
+        .addr   UpdateImpl
         .addr   FlashImpl
         .addr   HiliteImpl
         .addr   TrackImpl
@@ -90,18 +77,6 @@ jump_table:
         .addr   CheckboxUpdateImpl
 .endif ; BTK_SHORT
 
-        ;; Must be non-zero
-length_table:
-        .byte   3               ; Draw
-        .byte   2               ; Flash
-        .byte   2               ; Hilite
-        .byte   2               ; Track
-.ifndef BTK_SHORT
-        .byte   2               ; RadioDraw
-        .byte   2               ; RadioUpdate
-        .byte   2               ; CheckboxDraw
-        .byte   2               ; CheckboxUpdate
-.endif ; BTK_SHORT
 .endproc ; Dispatch
 
 ;;; ============================================================
@@ -143,17 +118,16 @@ ret:
         rts
 .endproc ; _SetPort
 
+;;; ============================================================
+
+.proc UpdateImpl
+        copy    #$80, update_flag
+        FALL_THROUGH_TO DrawImpl
+.endproc ; UpdateImpl
 
 ;;; ============================================================
 
 .proc DrawImpl
-        PARAM_BLOCK params, btk::command_data
-a_record  .addr
-update    .byte
-        END_PARAM_BLOCK
-        .assert a_record = params::a_record, error, "a_record must be first"
-        .assert update_flag = params::update, error, "param mismatch"
-
         jsr     _SetPort
 
         MGTK_CALL MGTK::SetPattern, solid_pattern
@@ -168,11 +142,6 @@ update    .byte
 ;;; ============================================================
 
 .proc FlashImpl
-        PARAM_BLOCK params, btk::command_data
-a_record  .addr
-        END_PARAM_BLOCK
-        .assert a_record = params::a_record, error, "a_record must be first"
-
         jsr     _SetPort
 
         jsr     _Invert
@@ -188,11 +157,6 @@ a_record  .addr
 ;;; ============================================================
 
 .proc HiliteImpl
-        PARAM_BLOCK params, btk::command_data
-a_record  .addr
-        END_PARAM_BLOCK
-        .assert a_record = params::a_record, error, "a_record must be first"
-
         jsr     _SetPort
 skip_port:
 
@@ -343,18 +307,13 @@ END_PARAM_BLOCK
 
 
 .proc TrackImpl
-        PARAM_BLOCK params, btk::command_data
-a_record  .addr
-        END_PARAM_BLOCK
-        .assert a_record = params::a_record, error, "a_record must be first"
-
         ;; Use ZP for temporary params
-        PARAM_BLOCK event_params, btk::command_data + .sizeof(params)
+        PARAM_BLOCK event_params, btk::zp_scratch
 kind    .byte
 coords  .res 4
         END_PARAM_BLOCK
         .assert .sizeof(event_params) = .sizeof(MGTK::Event), error, "size mismatch"
-        PARAM_BLOCK screentowindow_params, btk::command_data + .sizeof(params)
+        PARAM_BLOCK screentowindow_params, btk::zp_scratch
 window_id       .byte
 screen          .res 4
 window          .res 4
@@ -460,11 +419,6 @@ unchecked_rb_bitmap:
 ;;; ============================================================
 
 .proc RadioDrawImpl
-        PARAM_BLOCK params, btk::command_data
-a_record  .addr
-        END_PARAM_BLOCK
-        .assert a_record = params::a_record, error, "a_record must be first"
-
         jsr     _SetPort
 
         ;; Initial size is just the button
@@ -497,11 +451,6 @@ a_record  .addr
 ;;; ============================================================
 
 .proc RadioUpdateImpl
-        PARAM_BLOCK params, btk::command_data
-a_record  .addr
-        END_PARAM_BLOCK
-        .assert a_record = params::a_record, error, "a_record must be first"
-
         jsr     _SetPort
 
         FALL_THROUGH_TO _DrawRadioBitmap
@@ -560,11 +509,6 @@ unchecked_cb_bitmap:
 ;;; ============================================================
 
 .proc CheckboxDrawImpl
-        PARAM_BLOCK params, btk::command_data
-a_record  .addr
-        END_PARAM_BLOCK
-        .assert a_record = params::a_record, error, "a_record must be first"
-
         jsr     _SetPort
 
         ;; Initial size is just the button
@@ -597,11 +541,6 @@ a_record  .addr
 ;;; ============================================================
 
 .proc CheckboxUpdateImpl
-        PARAM_BLOCK params, btk::command_data
-a_record  .addr
-        END_PARAM_BLOCK
-        .assert a_record = params::a_record, error, "a_record must be first"
-
         jsr     _SetPort
 
         FALL_THROUGH_TO _DrawCheckboxBitmap
@@ -649,7 +588,7 @@ a_record  .addr
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
 :       lda     rect,x
-        sta     (a_record),y
+        sta     (params_addr),y
         dey
         dex
         bpl     :-

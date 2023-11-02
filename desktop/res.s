@@ -208,10 +208,8 @@ nextwinfo:      .addr   0
 
         DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
 
-        DEFINE_BUTTON ok_button_rec, kPromptWindowId, res_string_button_ok, kGlyphReturn, 260, kPromptDialogHeight-19
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
-        DEFINE_BUTTON cancel_button_rec, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, kPromptDialogHeight-19
-        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
+        DEFINE_BUTTON ok_button, kPromptWindowId, res_string_button_ok, kGlyphReturn, 260, kPromptDialogHeight-19
+        DEFINE_BUTTON cancel_button, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, kPromptDialogHeight-19
 
 ;;; $00 = ok/cancel
 ;;; $80 = ok (only)
@@ -376,10 +374,8 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_POINT entry_picker_line2_start, kBorderDX*2, winfo_entry_picker::kHeight-21
         DEFINE_POINT entry_picker_line2_end, winfo_entry_picker::kWidth - kBorderDX*2, winfo_entry_picker::kHeight-21
 
-        DEFINE_BUTTON entry_picker_ok_button_rec, winfo_entry_picker::kWindowId, res_string_button_ok, kGlyphReturn, 210, winfo_entry_picker::kHeight-18
-        DEFINE_BUTTON_PARAMS entry_picker_ok_button_params, entry_picker_ok_button_rec
-        DEFINE_BUTTON entry_picker_cancel_button_rec, winfo_entry_picker::kWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, winfo_entry_picker::kHeight-18
-        DEFINE_BUTTON_PARAMS entry_picker_cancel_button_params, entry_picker_cancel_button_rec
+        DEFINE_BUTTON entry_picker_ok_button, winfo_entry_picker::kWindowId, res_string_button_ok, kGlyphReturn, 210, winfo_entry_picker::kHeight-18
+        DEFINE_BUTTON entry_picker_cancel_button, winfo_entry_picker::kWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, winfo_entry_picker::kHeight-18
 
 ;;; ============================================================
 ;;; Format/Erase dialogs
@@ -458,19 +454,14 @@ kRadioButtonLeft  = 332
 
         DEFINE_LABEL add_a_new_entry_to, res_string_selector_label_add_a_new_entry_to,                   329, 35
 
-        DEFINE_BUTTON primary_run_list_rec,   kFDWinId, res_string_selector_label_primary_run_list, res_string_shortcut_apple_1, kRadioButtonLeft, 37
-        DEFINE_BUTTON_PARAMS primary_run_list_params, primary_run_list_rec
-        DEFINE_BUTTON secondary_run_list_rec, kFDWinId, res_string_selector_label_secondary_run_list, res_string_shortcut_apple_2, kRadioButtonLeft, 47
-        DEFINE_BUTTON_PARAMS secondary_run_list_params, secondary_run_list_rec
+        DEFINE_BUTTON primary_run_list_button,   kFDWinId, res_string_selector_label_primary_run_list, res_string_shortcut_apple_1, kRadioButtonLeft, 37
+        DEFINE_BUTTON secondary_run_list_button, kFDWinId, res_string_selector_label_secondary_run_list, res_string_shortcut_apple_2, kRadioButtonLeft, 47
 
         DEFINE_LABEL down_load,          res_string_selector_label_download,                             329, 69
 
-        DEFINE_BUTTON at_first_boot_rec,      kFDWinId, res_string_selector_label_at_first_boot, res_string_shortcut_apple_3, kRadioButtonLeft, 71
-        DEFINE_BUTTON_PARAMS at_first_boot_params, at_first_boot_rec
-        DEFINE_BUTTON at_first_use_rec,       kFDWinId, res_string_selector_label_at_first_use, res_string_shortcut_apple_4, kRadioButtonLeft, 81
-        DEFINE_BUTTON_PARAMS at_first_use_params, at_first_use_rec
-        DEFINE_BUTTON never_rec,              kFDWinId, res_string_selector_label_never, res_string_shortcut_apple_5, kRadioButtonLeft, 91
-        DEFINE_BUTTON_PARAMS never_params, never_rec
+        DEFINE_BUTTON at_first_boot_button,      kFDWinId, res_string_selector_label_at_first_boot, res_string_shortcut_apple_3, kRadioButtonLeft, 71
+        DEFINE_BUTTON at_first_use_button,       kFDWinId, res_string_selector_label_at_first_use, res_string_shortcut_apple_4, kRadioButtonLeft, 81
+        DEFINE_BUTTON never_button,              kFDWinId, res_string_selector_label_never, res_string_shortcut_apple_5, kRadioButtonLeft, 91
 
 ;;; ============================================================
 

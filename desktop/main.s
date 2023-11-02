@@ -13311,13 +13311,13 @@ content:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, ok_button::rect
         cmp     #MGTK::inrect_inside
         beq     check_button_ok
         jmp     maybe_check_button_cancel
 
 check_button_ok:
-        BTK_CALL BTK::Track, ok_button_params
+        BTK_CALL BTK::Track, ok_button
         bmi     :+
         lda     #PromptResult::ok
 :       rts
@@ -13328,10 +13328,10 @@ maybe_check_button_cancel:
         return  #$FF
 
 check_button_cancel:
-        MGTK_CALL MGTK::InRect, cancel_button_rec::rect
+        MGTK_CALL MGTK::InRect, cancel_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, cancel_button_params
+        BTK_CALL BTK::Track, cancel_button
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
@@ -13408,15 +13408,15 @@ ignore:
         ;; --------------------------------------------------
 
 .proc HandleKeyOK
-        bit     ok_button_rec::state
+        bit     ok_button::state
         bmi     ret
-        BTK_CALL BTK::Flash, ok_button_params
+        BTK_CALL BTK::Flash, ok_button
         lda     #PromptResult::ok
 ret:    rts
 .endproc ; HandleKeyOK
 
 .proc HandleKeyCancel
-        BTK_CALL BTK::Flash, cancel_button_params
+        BTK_CALL BTK::Flash, cancel_button
         return  #PromptResult::cancel
 .endproc ; HandleKeyCancel
 
@@ -14508,17 +14508,17 @@ params:  .res    3
         copy    #0, text_input_buf
 
         jsr     OpenDialogWindow
-        BTK_CALL BTK::Draw, ok_button_params
+        BTK_CALL BTK::Draw, ok_button
         bit     prompt_button_flags
         bmi     done
-        BTK_CALL BTK::Draw, cancel_button_params
+        BTK_CALL BTK::Draw, cancel_button
 done:   rts
 .endproc ; OpenPromptWindow
 
 ;;; ============================================================
 
 .proc OpenDialogWindow
-        copy    #0, ok_button_rec::state
+        copy    #0, ok_button::state
 
         lda     #0
         sta     has_input_field_flag
@@ -14644,18 +14644,18 @@ calc_y:
 :
 
 set_state:
-        cmp     ok_button_rec::state
+        cmp     ok_button::state
         beq     ret
-        sta     ok_button_rec::state
-        BTK_CALL BTK::Hilite, ok_button_params
+        sta     ok_button::state
+        BTK_CALL BTK::Hilite, ok_button
 
 ret:    rts
 .endproc ; UpdateOKButton
 
 .proc EraseOKCancelButtons
         jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, ok_button_rec::rect
-        MGTK_CALL MGTK::PaintRect, cancel_button_rec::rect
+        MGTK_CALL MGTK::PaintRect, ok_button::rect
+        MGTK_CALL MGTK::PaintRect, cancel_button::rect
         rts
 .endproc ; EraseOKCancelButtons
 

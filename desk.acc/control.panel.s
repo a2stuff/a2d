@@ -155,8 +155,7 @@ kFatBitHeightShift      = 2
         ;; For hit testing
         DEFINE_RECT_SZ fatbits_rect, kPatternEditX+1, kPatternEditY+1,  8 * kFatBitWidth - 1, 8 * kFatBitHeight - 1
 
-        DEFINE_BUTTON pattern_button_rec, kDAWindowId, res_string_label_pattern,, kPatternEditX-10, kPatternEditY + 36, 180
-        DEFINE_BUTTON_PARAMS pattern_button_params, pattern_button_rec
+        DEFINE_BUTTON pattern_button, kDAWindowId, res_string_label_pattern,, kPatternEditX-10, kPatternEditY + 36, 180
 
 kPreviewLeft    = kPatternEditX + 79
 kPreviewTop     = kPatternEditY
@@ -216,8 +215,7 @@ rarr_bitmap:
         PIXELS  "####.."
         PIXELS  "##...."
 
-        DEFINE_BUTTON rgb_color_rec, kDAWindowId, res_string_label_rgb_color,, kPatternEditX + 46, kPatternEditY + 50
-        DEFINE_BUTTON_PARAMS rgb_color_params, rgb_color_rec
+        DEFINE_BUTTON rgb_color_button, kDAWindowId, res_string_label_rgb_color,, kPatternEditX + 46, kPatternEditY + 50
 
 ;;; ============================================================
 ;;; Double-Click Speed Resources
@@ -257,12 +255,9 @@ arrows_table:
         DEFINE_POINT dblclick_arrow_pos6, kDblClickX + 155, kDblClickY + 23
         ASSERT_RECORD_TABLE_SIZE arrows_table, kNumArrows, .sizeof(MGTK::Point)
 
-        DEFINE_BUTTON dblclick_button1_rec, kDAWindowId,,, kDblClickX + 175, kDblClickY + 25
-        DEFINE_BUTTON dblclick_button2_rec, kDAWindowId,,, kDblClickX + 130, kDblClickY + 25
-        DEFINE_BUTTON dblclick_button3_rec, kDAWindowId,,, kDblClickX +  85, kDblClickY + 25
-        DEFINE_BUTTON_PARAMS dblclick_button1_params, dblclick_button1_rec
-        DEFINE_BUTTON_PARAMS dblclick_button2_params, dblclick_button2_rec
-        DEFINE_BUTTON_PARAMS dblclick_button3_params, dblclick_button3_rec
+        DEFINE_BUTTON dblclick_button1, kDAWindowId,,, kDblClickX + 175, kDblClickY + 25
+        DEFINE_BUTTON dblclick_button2, kDAWindowId,,, kDblClickX + 130, kDblClickY + 25
+        DEFINE_BUTTON dblclick_button3, kDAWindowId,,, kDblClickX +  85, kDblClickY + 25
 
 dblclick_bitmap:
         PIXELS  "..........................##.........................."
@@ -328,10 +323,8 @@ kMouseTrackingY = 78
 
         DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + 30, kMouseTrackingY + 45
 
-        DEFINE_BUTTON tracking_slow_rec, kDAWindowId, res_string_label_slow,, kMouseTrackingX + 84, kMouseTrackingY + 8
-        DEFINE_BUTTON tracking_fast_rec, kDAWindowId, res_string_label_fast,, kMouseTrackingX + 84, kMouseTrackingY + 21
-        DEFINE_BUTTON_PARAMS tracking_slow_params, tracking_slow_rec
-        DEFINE_BUTTON_PARAMS tracking_fast_params, tracking_fast_rec
+        DEFINE_BUTTON tracking_slow_button, kDAWindowId, res_string_label_slow,, kMouseTrackingX + 84, kMouseTrackingY + 8
+        DEFINE_BUTTON tracking_fast_button, kDAWindowId, res_string_label_fast,, kMouseTrackingX + 84, kMouseTrackingY + 21
 
 .params mouse_tracking_params
         DEFINE_POINT viewloc, kMouseTrackingX + 5, kMouseTrackingY
@@ -396,12 +389,9 @@ caret_blink_selection:
         DEFINE_LABEL caret_blink_slow, res_string_label_slow, kCaretBlinkDisplayX + 100, kCaretBlinkDisplayY + 34
         DEFINE_LABEL caret_blink_fast, res_string_label_fast, kCaretBlinkDisplayX + 189, kCaretBlinkDisplayY + 34
 
-        DEFINE_BUTTON caret_blink_btn1_rec, kDAWindowId,,, kCaretBlinkDisplayX + 116, kCaretBlinkDisplayY + 16
-        DEFINE_BUTTON caret_blink_btn2_rec, kDAWindowId,,, kCaretBlinkDisplayX + 136, kCaretBlinkDisplayY + 16
-        DEFINE_BUTTON caret_blink_btn3_rec, kDAWindowId,,, kCaretBlinkDisplayX + 156, kCaretBlinkDisplayY + 16
-        DEFINE_BUTTON_PARAMS caret_blink_btn1_params, caret_blink_btn1_rec
-        DEFINE_BUTTON_PARAMS caret_blink_btn2_params, caret_blink_btn2_rec
-        DEFINE_BUTTON_PARAMS caret_blink_btn3_params, caret_blink_btn3_rec
+        DEFINE_BUTTON caret_blink_button1, kDAWindowId,,, kCaretBlinkDisplayX + 116, kCaretBlinkDisplayY + 16
+        DEFINE_BUTTON caret_blink_button2, kDAWindowId,,, kCaretBlinkDisplayX + 136, kCaretBlinkDisplayY + 16
+        DEFINE_BUTTON caret_blink_button3, kDAWindowId,,, kCaretBlinkDisplayX + 156, kCaretBlinkDisplayY + 16
 
 .params caret_blink_bitmap_params
         DEFINE_POINT viewloc, kCaretBlinkDisplayX + 123, kCaretBlinkDisplayY
@@ -603,35 +593,35 @@ caret_blink_caret_bitmap:
         cmp     #MGTK::inrect_inside
         jeq     HandlePatternClick
 
-        MGTK_CALL MGTK::InRect, pattern_button_rec::rect
+        MGTK_CALL MGTK::InRect, pattern_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, pattern_button_params
+        BTK_CALL BTK::Track, pattern_button
         jmi     InputLoop
         jmp     HandlePatternClick
     END_IF
 
-        MGTK_CALL MGTK::InRect, rgb_color_rec::rect
+        MGTK_CALL MGTK::InRect, rgb_color_button::rect
         cmp     #MGTK::inrect_inside
         jeq     HandleRGBClick
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, dblclick_button1_rec::rect
+        MGTK_CALL MGTK::InRect, dblclick_button1::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
         jmp     HandleDblclickClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, dblclick_button2_rec::rect
+        MGTK_CALL MGTK::InRect, dblclick_button2::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #2
         jmp     HandleDblclickClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, dblclick_button3_rec::rect
+        MGTK_CALL MGTK::InRect, dblclick_button3::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #3
@@ -640,14 +630,14 @@ caret_blink_caret_bitmap:
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, tracking_slow_rec::rect
+        MGTK_CALL MGTK::InRect, tracking_slow_button::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #0
         jmp     HandleTrackingClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, tracking_fast_rec::rect
+        MGTK_CALL MGTK::InRect, tracking_fast_button::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
@@ -656,21 +646,21 @@ caret_blink_caret_bitmap:
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, caret_blink_btn1_rec::rect
+        MGTK_CALL MGTK::InRect, caret_blink_button1::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #1
         jmp     HandleCaretBlinkClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, caret_blink_btn2_rec::rect
+        MGTK_CALL MGTK::InRect, caret_blink_button2::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #2
         jmp     HandleCaretBlinkClick
         END_IF
 
-        MGTK_CALL MGTK::InRect, caret_blink_btn3_rec::rect
+        MGTK_CALL MGTK::InRect, caret_blink_button3::rect
         cmp     #MGTK::inrect_inside
         IF_EQ
         lda     #3
@@ -987,7 +977,7 @@ notpencopy:     .byte   MGTK::notpencopy
         ;; ==============================
         ;; Desktop Pattern
 
-        BTK_CALL BTK::Draw, pattern_button_params
+        BTK_CALL BTK::Draw, pattern_button
 
         MGTK_CALL MGTK::SetPenMode, penBIC
         MGTK_CALL MGTK::FrameRect, fatbits_frame
@@ -1005,7 +995,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
-        BTK_CALL BTK::CheckboxDraw, rgb_color_params
+        BTK_CALL BTK::CheckboxDraw, rgb_color_button
         jsr     UpdateRGBCheckbox
 
         ;; ==============================
@@ -1035,9 +1025,9 @@ loop:   ldy     #3
         bne     loop
 .endscope
 
-        BTK_CALL BTK::RadioDraw, dblclick_button1_params
-        BTK_CALL BTK::RadioDraw, dblclick_button2_params
-        BTK_CALL BTK::RadioDraw, dblclick_button3_params
+        BTK_CALL BTK::RadioDraw, dblclick_button1
+        BTK_CALL BTK::RadioDraw, dblclick_button2
+        BTK_CALL BTK::RadioDraw, dblclick_button3
 
         jsr     UpdateDblclickButtons
 
@@ -1049,8 +1039,8 @@ loop:   ldy     #3
         MGTK_CALL MGTK::MoveTo, mouse_tracking_label_pos
         param_call DrawString, mouse_tracking_label_str
 
-        BTK_CALL BTK::RadioDraw, tracking_slow_params
-        BTK_CALL BTK::RadioDraw, tracking_fast_params
+        BTK_CALL BTK::RadioDraw, tracking_slow_button
+        BTK_CALL BTK::RadioDraw, tracking_fast_button
         jsr     UpdateTrackingButtons
 
         MGTK_CALL MGTK::PaintBitsHC, mouse_tracking_params
@@ -1072,9 +1062,9 @@ loop:   ldy     #3
         MGTK_CALL MGTK::MoveTo, caret_blink_fast_label_pos
         param_call DrawStringRight, caret_blink_fast_label_str
 
-        BTK_CALL BTK::RadioDraw, caret_blink_btn1_params
-        BTK_CALL BTK::RadioDraw, caret_blink_btn2_params
-        BTK_CALL BTK::RadioDraw, caret_blink_btn3_params
+        BTK_CALL BTK::RadioDraw, caret_blink_button1
+        BTK_CALL BTK::RadioDraw, caret_blink_button2
+        BTK_CALL BTK::RadioDraw, caret_blink_button3
         jsr     UpdateCaretBlinkButtons
 
         ;; ==============================
@@ -1110,20 +1100,20 @@ arrow_num:
         lda     dblclick_selection
         cmp     #1
         jsr     ZToN
-        sta     dblclick_button1_rec::state
-        BTK_CALL BTK::RadioUpdate, dblclick_button1_params
+        sta     dblclick_button1::state
+        BTK_CALL BTK::RadioUpdate, dblclick_button1
 
         lda     dblclick_selection
         cmp     #2
         jsr     ZToN
-        sta     dblclick_button2_rec::state
-        BTK_CALL BTK::RadioUpdate, dblclick_button2_params
+        sta     dblclick_button2::state
+        BTK_CALL BTK::RadioUpdate, dblclick_button2
 
         lda     dblclick_selection
         cmp     #3
         jsr     ZToN
-        sta     dblclick_button3_rec::state
-        BTK_CALL BTK::RadioUpdate, dblclick_button3_params
+        sta     dblclick_button3::state
+        BTK_CALL BTK::RadioUpdate, dblclick_button3
 
         rts
 .endproc ; UpdateDblclickButtons
@@ -1135,15 +1125,15 @@ arrow_num:
         jsr     ReadSetting
         cmp     #0
         jsr     ZToN
-        sta     tracking_slow_rec::state
-        BTK_CALL BTK::RadioUpdate, tracking_slow_params
+        sta     tracking_slow_button::state
+        BTK_CALL BTK::RadioUpdate, tracking_slow_button
 
         ldx     #DeskTopSettings::mouse_tracking
         jsr     ReadSetting
         cmp     #1
         jsr     ZToN
-        sta     tracking_fast_rec::state
-        BTK_CALL BTK::RadioUpdate, tracking_fast_params
+        sta     tracking_fast_button::state
+        BTK_CALL BTK::RadioUpdate, tracking_fast_button
 
         rts
 .endproc ; UpdateTrackingButtons
@@ -1155,20 +1145,20 @@ arrow_num:
         lda     caret_blink_selection
         cmp     #1
         jsr     ZToN
-        sta     caret_blink_btn1_rec::state
-        BTK_CALL BTK::RadioUpdate, caret_blink_btn1_params
+        sta     caret_blink_button1::state
+        BTK_CALL BTK::RadioUpdate, caret_blink_button1
 
         lda     caret_blink_selection
         cmp     #2
         jsr     ZToN
-        sta     caret_blink_btn2_rec::state
-        BTK_CALL BTK::RadioUpdate, caret_blink_btn2_params
+        sta     caret_blink_button2::state
+        BTK_CALL BTK::RadioUpdate, caret_blink_button2
 
         lda     caret_blink_selection
         cmp     #3
         jsr     ZToN
-        sta     caret_blink_btn3_rec::state
-        BTK_CALL BTK::RadioUpdate, caret_blink_btn3_params
+        sta     caret_blink_button3::state
+        BTK_CALL BTK::RadioUpdate, caret_blink_button3
 
         rts
 .endproc ; UpdateCaretBlinkButtons
@@ -1177,8 +1167,8 @@ arrow_num:
         ldx     #DeskTopSettings::rgb_color
         jsr     ReadSetting
         and     #$80
-        sta     rgb_color_rec::state
-        BTK_CALL BTK::CheckboxUpdate, rgb_color_params
+        sta     rgb_color_button::state
+        BTK_CALL BTK::CheckboxUpdate, rgb_color_button
         rts
 .endproc ; UpdateRGBCheckbox
 

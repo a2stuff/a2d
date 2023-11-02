@@ -122,9 +122,9 @@ selected_index:                 ; $FF if none
         copy    #$FF, selected_index
 
         lda     #0
-        sta     file_dialog_res::open_button_rec::state
-        sta     file_dialog_res::close_button_rec::state
-        sta     file_dialog_res::drives_button_rec::state
+        sta     file_dialog_res::open_button::state
+        sta     file_dialog_res::close_button::state
+        sta     file_dialog_res::drives_button::state
 
         rts
 .endproc ; Init
@@ -222,11 +222,11 @@ ret:    rts
         lda     file_list_index,x
     IF_NC
         ;; File - accept it.
-        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
+        BTK_CALL BTK::Flash, file_dialog_res::ok_button
         jmp     HandleOK
     END_IF
         ;; Folder - open it.
-        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
+        BTK_CALL BTK::Flash, file_dialog_res::open_button
         jmp     _DoOpen
 
 not_list:
@@ -235,10 +235,10 @@ not_list:
         ;; --------------------------------------------------
         ;; Drives button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::drives_button_rec::rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::drives_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, file_dialog_res::drives_button_params
+        BTK_CALL BTK::Track, file_dialog_res::drives_button
         bmi     :+
         jsr     _DoDrives
 :       rts
@@ -247,10 +247,10 @@ not_list:
         ;; --------------------------------------------------
         ;; Open button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::open_button_rec::rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::open_button::rect
         cmp     #MGTK::inrect_inside
      IF_EQ
-        BTK_CALL BTK::Track, file_dialog_res::open_button_params
+        BTK_CALL BTK::Track, file_dialog_res::open_button
         bmi     :+
         jsr     _DoOpen
 :       rts
@@ -259,10 +259,10 @@ not_list:
         ;; --------------------------------------------------
         ;; Close button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::close_button_rec::rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::close_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, file_dialog_res::close_button_params
+        BTK_CALL BTK::Track, file_dialog_res::close_button
         bmi     :+
         jsr     _DoClose
 :       rts
@@ -271,10 +271,10 @@ not_list:
         ;; --------------------------------------------------
         ;; OK button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::ok_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, file_dialog_res::ok_button_params
+        BTK_CALL BTK::Track, file_dialog_res::ok_button
         bmi     :+
         jsr     HandleOK
 :       rts
@@ -283,10 +283,10 @@ not_list:
         ;; --------------------------------------------------
         ;; Cancel button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button_rec::rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, file_dialog_res::cancel_button_params
+        BTK_CALL BTK::Track, file_dialog_res::cancel_button
         bmi     :+
         jsr     HandleCancel
 :       rts
@@ -542,13 +542,13 @@ ret:    rts
         jsr     _IsOKAllowed
         RTS_IF_CS
 
-        BTK_CALL BTK::Flash, file_dialog_res::ok_button_params
+        BTK_CALL BTK::Flash, file_dialog_res::ok_button
         jmp     HandleOK
       END_IF
 
         cmp     #CHAR_ESCAPE
       IF_EQ
-        BTK_CALL BTK::Flash, file_dialog_res::cancel_button_params
+        BTK_CALL BTK::Flash, file_dialog_res::cancel_button
         jmp     HandleCancel
       END_IF
 
@@ -557,13 +557,13 @@ ret:    rts
         jsr     _IsOpenAllowed
         RTS_IF_CS
 
-        BTK_CALL BTK::Flash, file_dialog_res::open_button_params
+        BTK_CALL BTK::Flash, file_dialog_res::open_button
         jmp     _DoOpen
       END_IF
 
         cmp     #CHAR_CTRL_D
       IF_EQ
-        BTK_CALL BTK::Flash, file_dialog_res::drives_button_params
+        BTK_CALL BTK::Flash, file_dialog_res::drives_button
         jmp     _DoDrives
       END_IF
 
@@ -572,7 +572,7 @@ ret:    rts
         jsr     _IsCloseAllowed
         RTS_IF_CS
 
-        BTK_CALL BTK::Flash, file_dialog_res::close_button_params
+        BTK_CALL BTK::Flash, file_dialog_res::close_button
         jmp     _DoClose
       END_IF
 
@@ -728,33 +728,33 @@ done:   rts
         jsr     _IsOKAllowed
         lda     #0
         ror                     ; C into high bit
-        cmp     file_dialog_res::ok_button_rec::state
+        cmp     file_dialog_res::ok_button::state
         beq     :+              ; no change
 
-        sta     file_dialog_res::ok_button_rec::state
-        BTK_CALL BTK::Hilite, file_dialog_res::ok_button_params
+        sta     file_dialog_res::ok_button::state
+        BTK_CALL BTK::Hilite, file_dialog_res::ok_button
 :
         ;; --------------------------------------------------
         ;; Open
         jsr     _IsOpenAllowed
         lda     #0
         ror                     ; C into high bit
-        cmp     file_dialog_res::open_button_rec::state
+        cmp     file_dialog_res::open_button::state
         beq     :+              ; no change
 
-        sta     file_dialog_res::open_button_rec::state
-        BTK_CALL BTK::Hilite, file_dialog_res::open_button_params
+        sta     file_dialog_res::open_button::state
+        BTK_CALL BTK::Hilite, file_dialog_res::open_button
 :
         ;; --------------------------------------------------
         ;; Close
         jsr     _IsCloseAllowed
         lda     #0
         ror                     ; C into high bit
-        cmp     file_dialog_res::close_button_rec::state
+        cmp     file_dialog_res::close_button::state
         beq     :+              ; no change
 
-        sta     file_dialog_res::close_button_rec::state
-        BTK_CALL BTK::Hilite, file_dialog_res::close_button_params
+        sta     file_dialog_res::close_button::state
+        BTK_CALL BTK::Hilite, file_dialog_res::close_button
 :
         rts
 .endproc ; _UpdateDynamicButtons
@@ -831,21 +831,21 @@ done:   rts
 
         jsr     _IsOKAllowed
         ror
-        sta     file_dialog_res::ok_button_rec::state
-        BTK_CALL BTK::Draw, file_dialog_res::ok_button_params
+        sta     file_dialog_res::ok_button::state
+        BTK_CALL BTK::Draw, file_dialog_res::ok_button
 
-        BTK_CALL BTK::Draw, file_dialog_res::cancel_button_params
-        BTK_CALL BTK::Draw, file_dialog_res::drives_button_params
+        BTK_CALL BTK::Draw, file_dialog_res::cancel_button
+        BTK_CALL BTK::Draw, file_dialog_res::drives_button
 
         jsr     _IsOpenAllowed
         ror
-        sta     file_dialog_res::open_button_rec::state
-        BTK_CALL BTK::Draw, file_dialog_res::open_button_params
+        sta     file_dialog_res::open_button::state
+        BTK_CALL BTK::Draw, file_dialog_res::open_button
 
         jsr     _IsCloseAllowed
         ror
-        sta     file_dialog_res::close_button_rec::state
-        BTK_CALL BTK::Draw, file_dialog_res::close_button_params
+        sta     file_dialog_res::close_button::state
+        BTK_CALL BTK::Draw, file_dialog_res::close_button
 
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::penXOR
         MGTK_CALL MGTK::SetPattern, file_dialog_res::checkerboard_pattern

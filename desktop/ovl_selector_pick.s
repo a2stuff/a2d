@@ -134,7 +134,7 @@ copy_when:  .byte   0
         sta     num_primary_run_list_entries
         sta     num_secondary_run_list_entries
         copy    #$FF, selected_index
-        copy    #$80, entry_picker_ok_button_rec::state
+        copy    #$80, entry_picker_ok_button::state
         jsr     OpenWindow
         jsr     ReadFileAndDrawEntries
         bpl     :+
@@ -375,8 +375,8 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         MGTK_CALL MGTK::MoveTo, entry_picker_line2_start
         MGTK_CALL MGTK::LineTo, entry_picker_line2_end
 
-        BTK_CALL BTK::Draw, entry_picker_ok_button_params
-        BTK_CALL BTK::Draw, entry_picker_cancel_button_params
+        BTK_CALL BTK::Draw, entry_picker_ok_button
+        BTK_CALL BTK::Draw, entry_picker_cancel_button
 
         lda     selector_action
         cmp     #SelectorAction::edit
@@ -481,18 +481,18 @@ handle_button:
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, entry_picker_ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, entry_picker_ok_button::rect
         cmp     #MGTK::inrect_inside
         bne     not_ok
-        BTK_CALL BTK::Track, entry_picker_ok_button_params
+        BTK_CALL BTK::Track, entry_picker_ok_button
         bmi     :+
         lda     #$00            ; OK selected
 :       rts
 
-not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_button_rec::rect
+not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_button::rect
         cmp     #MGTK::inrect_inside
         bne     not_cancel
-        BTK_CALL BTK::Track, entry_picker_cancel_button_params
+        BTK_CALL BTK::Track, entry_picker_cancel_button
         bmi     :+
         lda     #$01            ; cancel selected
 :       rts
@@ -506,7 +506,7 @@ not_cancel:
         jsr     DetectDoubleClick
     IF_NC
         pha
-        BTK_CALL BTK::Flash, entry_picker_ok_button_params
+        BTK_CALL BTK::Flash, entry_picker_ok_button
         pla
     END_IF
 ret:    rts
@@ -545,9 +545,9 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleKeyReturn
-        bit     entry_picker_ok_button_rec::state
+        bit     entry_picker_ok_button::state
         bmi     ret
-        BTK_CALL BTK::Flash, entry_picker_ok_button_params
+        BTK_CALL BTK::Flash, entry_picker_ok_button
         lda     #0
 ret:    rts
 .endproc ; HandleKeyReturn
@@ -555,7 +555,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleKeyEscape
-        BTK_CALL BTK::Flash, entry_picker_cancel_button_params
+        BTK_CALL BTK::Flash, entry_picker_cancel_button
         return  #1
 .endproc ; HandleKeyEscape
 
@@ -566,10 +566,10 @@ ret:    rts
         bit     selected_index
         bpl     :+
         lda     #$80
-:       cmp     entry_picker_ok_button_rec::state
+:       cmp     entry_picker_ok_button::state
         beq     :+
-        sta     entry_picker_ok_button_rec::state
-        BTK_CALL BTK::Hilite, entry_picker_ok_button_params
+        sta     entry_picker_ok_button::state
+        BTK_CALL BTK::Hilite, entry_picker_ok_button
 :       rts
 
 .endproc ; UpdateOKButton

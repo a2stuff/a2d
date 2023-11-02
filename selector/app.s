@@ -219,10 +219,8 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT_FRAME rect_frame, winfo::kWidth, winfo::kHeight
 
-        DEFINE_BUTTON ok_button_rec,      winfo::kDialogId, res_string_button_ok, kGlyphReturn, winfo::kWidth - kButtonWidth - 60, winfo::kHeight - 18
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
-        DEFINE_BUTTON desktop_button_rec, winfo::kDialogId, res_string_button_desktop, res_char_button_desktop_shortcut,       60, winfo::kHeight - 18
-        DEFINE_BUTTON_PARAMS desktop_button_params, desktop_button_rec
+        DEFINE_BUTTON ok_button,      winfo::kDialogId, res_string_button_ok, kGlyphReturn, winfo::kWidth - kButtonWidth - 60, winfo::kHeight - 18
+        DEFINE_BUTTON desktop_button, winfo::kDialogId, res_string_button_desktop, res_char_button_desktop_shortcut,       60, winfo::kHeight - 18
 
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
@@ -384,7 +382,7 @@ entry:
 :
 
         copy    #$FF, selected_index
-        copy    #$80, ok_button_rec::state
+        copy    #$80, ok_button::state
         jsr     LoadSelectorList
         copy    #1, invoked_during_boot_flag
         lda     num_secondary_run_list_entries
@@ -621,7 +619,7 @@ set_startup_menu_items:
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     GetPortAndDrawWindow
         copy    #$FF, selected_index
-        copy    #$80, ok_button_rec::state
+        copy    #$80, ok_button::state
         jsr     LoadSelectorList
         jsr     PopulateEntriesFlagTable
         jsr     DrawEntries
@@ -656,7 +654,7 @@ quick_boot_slot:
         cmp     #kShortcutRunDeskTop
         bne     not_desktop
 
-        BTK_CALL BTK::Flash, desktop_button_params
+        BTK_CALL BTK::Flash, desktop_button
 @retry: param_call GetFileInfo, str_desktop_2
         beq     :+
         lda     #AlertID::insert_system_disk
@@ -703,22 +701,11 @@ ClearUpdates:
 
         MGTK_CALL MGTK::BeginUpdate, beginupdate_params
         bne     done            ; obscured
-        lda     #$80
-        sta     ok_button_params::update
-        sta     desktop_button_params::update
-        jsr     DrawWindowAndEntries
-        lda     #$00
-        sta     ok_button_params::update
-        sta     desktop_button_params::update
+        lda     #$80            ; is update
+        jsr     DrawWindow
+        jsr     DrawEntries
         MGTK_CALL MGTK::EndUpdate
 done:   rts
-
-;;; ============================================================
-
-.proc DrawWindowAndEntries
-        jsr     DrawWindow
-        jmp     DrawEntries
-.endproc ; DrawWindowAndEntries
 
 ;;; ============================================================
 ;;; Menu dispatch tables
@@ -897,10 +884,10 @@ L9443:  lda     #AlertID::insert_system_disk
 
         ;; OK button?
 
-        MGTK_CALL MGTK::InRect, ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, ok_button::rect
         cmp     #MGTK::inrect_inside
         bne     check_desktop_btn
-        BTK_CALL BTK::Track, ok_button_params
+        BTK_CALL BTK::Track, ok_button
         bmi     done
         jsr     TryInvokeSelectedIndex
 done:   rts
@@ -910,11 +897,11 @@ done:   rts
 check_desktop_btn:
         bit     desktop_available_flag
         bmi     check_entries
-        MGTK_CALL MGTK::InRect, desktop_button_rec::rect
+        MGTK_CALL MGTK::InRect, desktop_button::rect
         cmp     #MGTK::inrect_inside
         bne     check_entries
 
-        BTK_CALL BTK::Track, desktop_button_params
+        BTK_CALL BTK::Track, desktop_button
         bmi     done
 
 @retry: param_call GetFileInfo, str_desktop_2
@@ -936,7 +923,7 @@ check_entries:
         bmi     ret
         jsr     DetectDoubleClick
     IF_NC
-        BTK_CALL BTK::Flash, ok_button_params
+        BTK_CALL BTK::Flash, ok_button
         jmp     InvokeEntry
     END_IF
 ret:    rts
@@ -949,10 +936,10 @@ ret:    rts
         bit     selected_index
         bpl     :+
         lda     #$80
-:       cmp     ok_button_rec::state
+:       cmp     ok_button::state
         beq     :+
-        sta     ok_button_rec::state
-        BTK_CALL BTK::Hilite, ok_button_params
+        sta     ok_button::state
+        BTK_CALL BTK::Hilite, ok_button
 :       rts
 
 .endproc ; UpdateOKButton
@@ -1071,7 +1058,7 @@ noop:   rts
 control_char:
         cmp     #CHAR_RETURN
         bne     not_return
-        BTK_CALL BTK::Flash, ok_button_params
+        BTK_CALL BTK::Flash, ok_button
         jmp     TryInvokeSelectedIndex
 not_return:
 
@@ -1293,10 +1280,15 @@ backup_devlst:
 .proc GetPortAndDrawWindow
         lda     #winfo::kDialogId
         jsr     GetWindowPort
+        lda     #0              ; not an update
         FALL_THROUGH_TO DrawWindow
 .endproc ; GetPortAndDrawWindow
 
+;;; Inputs: A high bit set if processing update event, clear otherwise
 .proc DrawWindow
+        ;; A = is update
+        pha
+
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, rect_frame
@@ -1304,10 +1296,21 @@ backup_devlst:
         MGTK_CALL MGTK::SetPenSize, pensize_normal
         param_call DrawTitleString, str_selector_title
 
-        BTK_CALL BTK::Draw, ok_button_params
+        pla
+    IF_NS
+        ;; Processing update event
+        BTK_CALL BTK::Update, ok_button
         bit     desktop_available_flag
-    IF_NC
-        BTK_CALL BTK::Draw, desktop_button_params
+      IF_NC
+        BTK_CALL BTK::Update, desktop_button
+      END_IF
+    ELSE
+        ;; Non-update
+        BTK_CALL BTK::Draw, ok_button
+        bit     desktop_available_flag
+      IF_NC
+        BTK_CALL BTK::Draw, desktop_button
+      END_IF
     END_IF
 
         MGTK_CALL MGTK::SetPenMode, penXOR

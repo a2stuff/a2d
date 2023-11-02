@@ -88,20 +88,15 @@
         kThouSampleOffset = 3
 
         kOptionDisplayX = 260
-        DEFINE_BUTTON date_mdy_rec, kDAWindowId, res_string_label_mdy, res_string_shortcut_apple_1, kOptionDisplayX, 16
-        DEFINE_BUTTON date_dmy_rec, kDAWindowId, res_string_label_dmy, res_string_shortcut_apple_2, kOptionDisplayX, 27
-        DEFINE_BUTTON_PARAMS date_mdy_params, date_mdy_rec
-        DEFINE_BUTTON_PARAMS date_dmy_params, date_dmy_rec
+        DEFINE_BUTTON date_mdy_button, kDAWindowId, res_string_label_mdy, res_string_shortcut_apple_1, kOptionDisplayX, 16
+        DEFINE_BUTTON date_dmy_button, kDAWindowId, res_string_label_dmy, res_string_shortcut_apple_2, kOptionDisplayX, 27
 
-        DEFINE_BUTTON clock_12hour_rec, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_3, kOptionDisplayX, 45
-        DEFINE_BUTTON clock_24hour_rec, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_4, kOptionDisplayX, 56
-        DEFINE_BUTTON_PARAMS clock_12hour_params, clock_12hour_rec
-        DEFINE_BUTTON_PARAMS clock_24hour_params, clock_24hour_rec
+        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_3, kOptionDisplayX, 45
+        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_4, kOptionDisplayX, 56
 
         kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
         kOKButtonTop = kDialogHeight - kButtonHeight - 7
-        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kOKButtonTop
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+        DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kOKButtonTop
 
 .params settextbg_black_params
 backcolor:   .byte   0          ; black
@@ -333,25 +328,25 @@ hit:
 
         ;; ----------------------------------------
 
-        MGTK_CALL MGTK::InRect, ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, ok_button::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickOK
 
         ;; --------------------------------------------------
 
-        MGTK_CALL MGTK::InRect, clock_12hour_rec::rect
+        MGTK_CALL MGTK::InRect, clock_12hour_button::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClick12Hour
 
-        MGTK_CALL MGTK::InRect, clock_24hour_rec::rect
+        MGTK_CALL MGTK::InRect, clock_24hour_button::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClick24Hour
 
-        MGTK_CALL MGTK::InRect, date_mdy_rec::rect
+        MGTK_CALL MGTK::InRect, date_mdy_button::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickMDY
 
-        MGTK_CALL MGTK::InRect, date_dmy_rec::rect
+        MGTK_CALL MGTK::InRect, date_dmy_button::rect
         cmp     #MGTK::inrect_inside
         jeq     OnClickDMY
 
@@ -391,13 +386,13 @@ hit:
 ;;; ============================================================
 
 .proc OnClickOK
-        BTK_CALL BTK::Track, ok_button_params
+        BTK_CALL BTK::Track, ok_button
         beq     OnOK
         rts
 .endproc ; OnClickOK
 
 .proc OnKeyOK
-        BTK_CALL BTK::Flash, ok_button_params
+        BTK_CALL BTK::Flash, ok_button
         FALL_THROUGH_TO OnOK
 .endproc ; OnKeyOK
 
@@ -498,11 +493,11 @@ dialog_result:  .byte   0
         lda     #Field::thou
         jsr     DrawField
 
-        BTK_CALL BTK::Draw, ok_button_params
-        BTK_CALL BTK::RadioDraw, date_mdy_params
-        BTK_CALL BTK::RadioDraw, date_dmy_params
-        BTK_CALL BTK::RadioDraw, clock_12hour_params
-        BTK_CALL BTK::RadioDraw, clock_24hour_params
+        BTK_CALL BTK::Draw, ok_button
+        BTK_CALL BTK::RadioDraw, date_mdy_button
+        BTK_CALL BTK::RadioDraw, date_dmy_button
+        BTK_CALL BTK::RadioDraw, clock_12hour_button
+        BTK_CALL BTK::RadioDraw, clock_24hour_button
 
         FALL_THROUGH_TO UpdateOptionButtons
 .endproc ; DrawWindow
@@ -517,15 +512,15 @@ dialog_result:  .byte   0
         jsr     ReadSetting
         cmp     #0
         jsr     ZToN
-        sta     clock_12hour_rec::state
-        BTK_CALL BTK::RadioUpdate, clock_12hour_params
+        sta     clock_12hour_button::state
+        BTK_CALL BTK::RadioUpdate, clock_12hour_button
 
         ldx     #DeskTopSettings::clock_24hours
         jsr     ReadSetting
         cmp     #$80
         jsr     ZToN
-        sta     clock_24hour_rec::state
-        BTK_CALL BTK::RadioUpdate, clock_24hour_params
+        sta     clock_24hour_button::state
+        BTK_CALL BTK::RadioUpdate, clock_24hour_button
 
         rts
 .endproc ; UpdateClockOptionButtons
@@ -535,15 +530,15 @@ dialog_result:  .byte   0
         jsr     ReadSetting
         cmp     #DeskTopSettings::kDateOrderMDY
         jsr     ZToN
-        sta     date_mdy_rec::state
-        BTK_CALL BTK::RadioUpdate, date_mdy_params
+        sta     date_mdy_button::state
+        BTK_CALL BTK::RadioUpdate, date_mdy_button
 
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
         cmp     #DeskTopSettings::kDateOrderDMY
         jsr     ZToN
-        sta     date_dmy_rec::state
-        BTK_CALL BTK::RadioUpdate, date_dmy_params
+        sta     date_dmy_button::state
+        BTK_CALL BTK::RadioUpdate, date_dmy_button
 
         rts
 .endproc ; UpdateDateOptionButtons

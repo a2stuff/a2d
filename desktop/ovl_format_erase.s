@@ -358,7 +358,7 @@ kOptionPickerTop = kVolPickerTop
         jsr     DetectDoubleClick
     IF_NC
         pha
-        BTK_CALL BTK::Flash, ok_button_params
+        BTK_CALL BTK::Flash, ok_button
         pla
     END_IF
 ret:    rts

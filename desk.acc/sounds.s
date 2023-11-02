@@ -133,11 +133,9 @@ nextwinfo:      .addr   0
         kMarginY = 10
         kTextHeight = kSystemFontHeight
 
-        DEFINE_BUTTON ok_button_rec, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
-        DEFINE_BUTTON_PARAMS ok_button_params, ok_button_rec
+        DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kDAWidth - kMarginX - kButtonWidth, kDAHeight - kMarginY - kButtonHeight
 
-        DEFINE_BUTTON cancel_button_rec, kDAWindowId, res_string_button_cancel,, kMarginX, kDAHeight - kMarginY - kButtonHeight
-        DEFINE_BUTTON_PARAMS cancel_button_params, cancel_button_rec
+        DEFINE_BUTTON cancel_button, kDAWindowId, res_string_button_cancel,, kMarginX, kDAHeight - kMarginY - kButtonHeight
 
         DEFINE_LABEL alert_sound, res_string_label_alert, kMarginX, kMarginY+kTextHeight
         kLabelWidth = 105
@@ -311,13 +309,13 @@ grafport_win:       .tag    MGTK::GrafPort
 
         cmp     #CHAR_ESCAPE
     IF_EQ
-        BTK_CALL BTK::Flash, cancel_button_params
+        BTK_CALL BTK::Flash, cancel_button
         jmp     DoCancel
     END_IF
 
         cmp     #CHAR_RETURN
     IF_EQ
-        BTK_CALL BTK::Flash, ok_button_params
+        BTK_CALL BTK::Flash, ok_button
         jmp     Exit
     END_IF
 
@@ -364,18 +362,18 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, ok_button_rec::rect
+        MGTK_CALL MGTK::InRect, ok_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, ok_button_params
+        BTK_CALL BTK::Track, ok_button
         jeq     Exit
         jmp     InputLoop
     END_IF
 
-        MGTK_CALL MGTK::InRect, cancel_button_rec::rect
+        MGTK_CALL MGTK::InRect, cancel_button::rect
         cmp     #MGTK::inrect_inside
     IF_EQ
-        BTK_CALL BTK::Track, cancel_button_params
+        BTK_CALL BTK::Track, cancel_button
         beq     :+
         jmp     InputLoop
 :       jmp     DoCancel
@@ -471,8 +469,8 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::MoveTo, alert_sound_label_pos
         param_call DrawString, alert_sound_label_str
 
-        BTK_CALL BTK::Draw, cancel_button_params
-        BTK_CALL BTK::Draw, ok_button_params
+        BTK_CALL BTK::Draw, cancel_button
+        BTK_CALL BTK::Draw, ok_button
 
         ;; List Box
         jmp     ListInit
