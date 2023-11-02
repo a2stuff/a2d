@@ -13409,6 +13409,7 @@ ignore:
 
 .proc HandleKeyOK
         bit     ok_button::state
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         bmi     ret
         BTK_CALL BTK::Flash, ok_button
         lda     #PromptResult::ok
@@ -14518,7 +14519,7 @@ done:   rts
 ;;; ============================================================
 
 .proc OpenDialogWindow
-        copy    #0, ok_button::state
+        copy    #BTK::kButtonStateNormal, ok_button::state
 
         lda     #0
         sta     has_input_field_flag
@@ -14637,10 +14638,10 @@ calc_y:
         bit     has_input_field_flag
         bpl     ret
 
-        lda     #0
+        lda     #BTK::kButtonStateNormal
         ldx     text_input_buf
         bne     :+
-        lda     #$80
+        lda     #BTK::kButtonStateChecked
 :
 
 set_state:

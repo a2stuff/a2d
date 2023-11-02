@@ -382,7 +382,7 @@ entry:
 :
 
         copy    #$FF, selected_index
-        copy    #$80, ok_button::state
+        copy    #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
         copy    #1, invoked_during_boot_flag
         lda     num_secondary_run_list_entries
@@ -619,7 +619,7 @@ set_startup_menu_items:
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     GetPortAndDrawWindow
         copy    #$FF, selected_index
-        copy    #$80, ok_button::state
+        copy    #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
         jsr     PopulateEntriesFlagTable
         jsr     DrawEntries
@@ -932,10 +932,10 @@ ret:    rts
 ;;; ============================================================
 
 .proc UpdateOKButton
-        lda     #0
+        lda     #BTK::kButtonStateNormal
         bit     selected_index
         bpl     :+
-        lda     #$80
+        lda     #BTK::kButtonStateDisabled
 :       cmp     ok_button::state
         beq     :+
         sta     ok_button::state

@@ -451,7 +451,7 @@ InitDialog:
         sta     listbox_enabled_flag
         lda     #$FF
         sta     current_drive_selection
-        copy    #$80, ok_button::state
+        copy    #BTK::kButtonStateDisabled, ok_button::state
         lda     #$81
         sta     LD44D
         copy    #0, disablemenu_params::disable
@@ -990,6 +990,7 @@ CmdDiskCopy:
 .proc UpdateOKButton
         lda     current_drive_selection
         and     #$80
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
 
         cmp     ok_button::state
         beq     ret
@@ -1078,6 +1079,7 @@ LDC09:  BTK_CALL BTK::Flash, read_drive_button
 LDC2D:  cmp     #CHAR_RETURN
     IF_EQ
         bit     ok_button::state
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         bmi     :+
         BTK_CALL BTK::Flash, ok_button
         lda     #$00

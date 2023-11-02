@@ -121,7 +121,7 @@ selected_index:                 ; $FF if none
 
         copy    #$FF, selected_index
 
-        lda     #0
+        lda     #BTK::kButtonStateNormal
         sta     file_dialog_res::open_button::state
         sta     file_dialog_res::close_button::state
         sta     file_dialog_res::drives_button::state
@@ -728,6 +728,7 @@ done:   rts
         jsr     _IsOKAllowed
         lda     #0
         ror                     ; C into high bit
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         cmp     file_dialog_res::ok_button::state
         beq     :+              ; no change
 
@@ -739,6 +740,7 @@ done:   rts
         jsr     _IsOpenAllowed
         lda     #0
         ror                     ; C into high bit
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         cmp     file_dialog_res::open_button::state
         beq     :+              ; no change
 
@@ -750,6 +752,7 @@ done:   rts
         jsr     _IsCloseAllowed
         lda     #0
         ror                     ; C into high bit
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         cmp     file_dialog_res::close_button::state
         beq     :+              ; no change
 
@@ -831,6 +834,7 @@ done:   rts
 
         jsr     _IsOKAllowed
         ror
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         sta     file_dialog_res::ok_button::state
         BTK_CALL BTK::Draw, file_dialog_res::ok_button
 
@@ -839,11 +843,13 @@ done:   rts
 
         jsr     _IsOpenAllowed
         ror
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         sta     file_dialog_res::open_button::state
         BTK_CALL BTK::Draw, file_dialog_res::open_button
 
         jsr     _IsCloseAllowed
         ror
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         sta     file_dialog_res::close_button::state
         BTK_CALL BTK::Draw, file_dialog_res::close_button
 

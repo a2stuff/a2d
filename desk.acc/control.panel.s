@@ -1088,30 +1088,30 @@ arrow_num:
 
 .endproc ; DrawWindow
 
-.proc ZToN
+.proc ZToButtonState
         beq     :+
-        lda     #0
+        lda     #BTK::kButtonStateNormal
         rts
-:       lda     #$80
+:       lda     #BTK::kButtonStateChecked
         rts
-.endproc ; ZToN
+.endproc ; ZToButtonState
 
 .proc UpdateDblclickButtons
         lda     dblclick_selection
         cmp     #1
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     dblclick_button1::state
         BTK_CALL BTK::RadioUpdate, dblclick_button1
 
         lda     dblclick_selection
         cmp     #2
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     dblclick_button2::state
         BTK_CALL BTK::RadioUpdate, dblclick_button2
 
         lda     dblclick_selection
         cmp     #3
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     dblclick_button3::state
         BTK_CALL BTK::RadioUpdate, dblclick_button3
 
@@ -1124,14 +1124,14 @@ arrow_num:
         ldx     #DeskTopSettings::mouse_tracking
         jsr     ReadSetting
         cmp     #0
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     tracking_slow_button::state
         BTK_CALL BTK::RadioUpdate, tracking_slow_button
 
         ldx     #DeskTopSettings::mouse_tracking
         jsr     ReadSetting
         cmp     #1
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     tracking_fast_button::state
         BTK_CALL BTK::RadioUpdate, tracking_fast_button
 
@@ -1144,19 +1144,19 @@ arrow_num:
 
         lda     caret_blink_selection
         cmp     #1
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     caret_blink_button1::state
         BTK_CALL BTK::RadioUpdate, caret_blink_button1
 
         lda     caret_blink_selection
         cmp     #2
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     caret_blink_button2::state
         BTK_CALL BTK::RadioUpdate, caret_blink_button2
 
         lda     caret_blink_selection
         cmp     #3
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     caret_blink_button3::state
         BTK_CALL BTK::RadioUpdate, caret_blink_button3
 
@@ -1167,6 +1167,7 @@ arrow_num:
         ldx     #DeskTopSettings::rgb_color
         jsr     ReadSetting
         and     #$80
+        .assert BTK::kButtonStateChecked = $80, error, "const mismatch"
         sta     rgb_color_button::state
         BTK_CALL BTK::CheckboxUpdate, rgb_color_button
         rts

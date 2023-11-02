@@ -134,7 +134,7 @@ copy_when:  .byte   0
         sta     num_primary_run_list_entries
         sta     num_secondary_run_list_entries
         copy    #$FF, selected_index
-        copy    #$80, entry_picker_ok_button::state
+        copy    #BTK::kButtonStateDisabled, entry_picker_ok_button::state
         jsr     OpenWindow
         jsr     ReadFileAndDrawEntries
         bpl     :+
@@ -546,6 +546,7 @@ ret:    rts
 
 .proc HandleKeyReturn
         bit     entry_picker_ok_button::state
+        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         bmi     ret
         BTK_CALL BTK::Flash, entry_picker_ok_button
         lda     #0
@@ -562,10 +563,10 @@ ret:    rts
 ;;; ============================================================
 
 .proc UpdateOKButton
-        lda     #0
+        lda     #BTK::kButtonStateNormal
         bit     selected_index
         bpl     :+
-        lda     #$80
+        lda     #BTK::kButtonStateDisabled
 :       cmp     entry_picker_ok_button::state
         beq     :+
         sta     entry_picker_ok_button::state

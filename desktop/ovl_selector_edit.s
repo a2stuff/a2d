@@ -308,9 +308,9 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 ;;; ============================================================
 
 .proc UpdateRunListButton
-        ldx     #0
+        ldx     #BTK::kButtonStateNormal
         bcc     :+
-        ldx     #$80
+        ldx     #BTK::kButtonStateChecked
 :
         cmp     #kRunListPrimary
     IF_EQ
@@ -325,9 +325,9 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 .endproc ; UpdateRunListButton
 
 .proc DrawCopyWhenButton
-        ldx     #0
+        ldx     #BTK::kButtonStateNormal
         bcc     :+
-        ldx     #$80
+        ldx     #BTK::kButtonStateChecked
 :
         cmp     #kCopyOnBoot
         bne     :+

@@ -988,26 +988,26 @@ label_downarrow:
 .proc UpdateOptionButtons
         lda     clock_24hours
         cmp     #0
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     clock_12hour_button::state
         BTK_CALL BTK::RadioUpdate, clock_12hour_button
 
         lda     clock_24hours
         cmp     #$80
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     clock_24hour_button::state
         BTK_CALL BTK::RadioUpdate, clock_24hour_button
 
         rts
 .endproc ; UpdateOptionButtons
 
-.proc ZToN
+.proc ZToButtonState
         beq     :+
-        lda     #0
+        lda     #BTK::kButtonStateNormal
         rts
-:       lda     #$80
+:       lda     #BTK::kButtonStateChecked
         rts
-.endproc ; ZToN
+.endproc ; ZToButtonState
 
 ;;; A = field
 .proc DrawField

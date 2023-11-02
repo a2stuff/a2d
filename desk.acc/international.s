@@ -511,14 +511,14 @@ dialog_result:  .byte   0
         ldx     #DeskTopSettings::clock_24hours
         jsr     ReadSetting
         cmp     #0
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     clock_12hour_button::state
         BTK_CALL BTK::RadioUpdate, clock_12hour_button
 
         ldx     #DeskTopSettings::clock_24hours
         jsr     ReadSetting
         cmp     #$80
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     clock_24hour_button::state
         BTK_CALL BTK::RadioUpdate, clock_24hour_button
 
@@ -529,27 +529,27 @@ dialog_result:  .byte   0
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
         cmp     #DeskTopSettings::kDateOrderMDY
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     date_mdy_button::state
         BTK_CALL BTK::RadioUpdate, date_mdy_button
 
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
         cmp     #DeskTopSettings::kDateOrderDMY
-        jsr     ZToN
+        jsr     ZToButtonState
         sta     date_dmy_button::state
         BTK_CALL BTK::RadioUpdate, date_dmy_button
 
         rts
 .endproc ; UpdateDateOptionButtons
 
-.proc ZToN
+.proc ZToButtonState
         beq     :+
-        lda     #0
+        lda     #BTK::kButtonStateNormal
         rts
-:       lda     #$80
+:       lda     #BTK::kButtonStateChecked
         rts
-.endproc ; ZToN
+.endproc ; ZToButtonState
 
 ;;; ============================================================
 

@@ -183,7 +183,7 @@ button_mask_table:
 
 ;;; For inverting the sense of a bit vs. its checkbox; high bit set to invert
 button_eor_table:
-        .byte   0, 0, $80
+        .byte   0, 0, BTK::kButtonStateChecked
         ASSERT_TABLE_SIZE button_eor_table, kNumButtons
 
 
@@ -372,6 +372,8 @@ loop:
 
 ;;; Inputs: A = bit to read from DeskTopSettings::options
 ;;; Outputs: A = $80 if set, $00 if unset
+.assert BTK::kButtonStateNormal = $00, error, "enum mismatch"
+.assert BTK::kButtonStateChecked = $80, error, "const mismatch"
 .proc GetBit
         sta     mask
         ldx     #DeskTopSettings::options
