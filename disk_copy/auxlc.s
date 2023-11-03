@@ -268,15 +268,11 @@ str_select_source:
 str_select_destination:
         PASCAL_STRING res_string_prompt_select_destination ; dialog label
 
-        DEFINE_POINT point_formatting, 210, 68
+        DEFINE_POINT point_status, 210, 68
 str_formatting:
         PASCAL_STRING res_string_label_status_formatting
-
-        DEFINE_POINT point_writing, 210, 68
 str_writing:
         PASCAL_STRING res_string_label_status_writing
-
-        DEFINE_POINT point_reading, 210, 68
 str_reading:
         PASCAL_STRING res_string_label_status_reading
 
@@ -353,8 +349,6 @@ start_block_shift:
 block_count_div8:              ; calculated when reading volume bitmap
         .word   0
 
-LD429:  .byte   0
-
 .params win_frame_rect_params
 id:     .byte   winfo_drive_select::kWindowId
 rect:   .tag    MGTK::Rect
@@ -365,7 +359,6 @@ device_name_buf:
 
 listbox_enabled_flag:  .byte   0
 LD44D:  .byte   0
-LD44E:  .byte   0
 
 disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
         .byte   0
@@ -461,8 +454,6 @@ InitDialog:
         MGTK_CALL MGTK::CheckItem, checkitem_params
         jsr     DrawDialog
         MGTK_CALL MGTK::OpenWindow, winfo_drive_select
-        lda     #$00
-        sta     LD429
         lda     #$FF
         sta     listbox_enabled_flag
 
@@ -690,7 +681,7 @@ try_format:
         and     #$08            ; bit 3 = The device supports formatting.
         beq     do_copy
 
-format: MGTK_CALL MGTK::MoveTo, point_formatting
+format: MGTK_CALL MGTK::MoveTo, point_status
         param_call DrawString, str_formatting
         jsr     main__FormatDevice
         bcc     do_copy
@@ -1134,8 +1125,6 @@ default_block_buffer := main__default_block_buffer
         tax
         tya
         jsr     GetPascalVolName
-        lda     #$80
-        sta     LD44E
         return  #$00
 
 fail:   return  #$FF
@@ -1446,7 +1435,6 @@ draw:   jmp     DrawDeviceListEntry
 ;;; Populates `num_drives`, `drive_unitnum_table` and `drive_name_table`
 .proc EnumerateDevices
         lda     #$00
-        sta     LD44E
         sta     main__on_line_params2_unit_num
         jsr     main__CallOnLine2
         beq     LE17A
@@ -1781,14 +1769,14 @@ tmp:    .byte   0
 
 .proc DrawStatusWriting
         jsr     SetPortForDialog
-        MGTK_CALL MGTK::MoveTo, point_writing
+        MGTK_CALL MGTK::MoveTo, point_status
         param_call DrawString, str_writing
         rts
 .endproc ; DrawStatusWriting
 
 .proc DrawStatusReading
         jsr     SetPortForDialog
-        MGTK_CALL MGTK::MoveTo, point_reading
+        MGTK_CALL MGTK::MoveTo, point_status
         param_call DrawString, str_reading
         rts
 .endproc ; DrawStatusReading
