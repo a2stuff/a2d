@@ -190,10 +190,7 @@ EjectDisk := EjectDiskImpl::start
 ;;; Identify the disk type by reading the first block.
 ;;; NOTE: Not used for ProDOS disks.
 ;;; Inputs: `source_drive_index` must be set
-;;; Outputs: sets `LD44D` to:
-;;;            $81 = unknown/failure
-;;;            $C0 = Pascal
-;;;            $80 = DOS 3.3
+;;; Outputs: sets `source_disk_format`
 .proc IdentifySourceNonProDOSDiskType
         ldx     auxlc::source_drive_index
         lda     auxlc::drive_unitnum_table,x
@@ -215,13 +212,13 @@ EjectDisk := EjectDiskImpl::start
         cmp     #$60
         beq     l2
 
-fail:   lda     #$81
-        sta     auxlc::LD44D
+fail:   lda     #$81            ; Other
+        sta     auxlc::source_disk_format
         rts
 
 l2:     param_call auxlc::GetPascalVolName, on_line_buffer2
-        lda     #$C0
-        sta     auxlc::LD44D
+        lda     #$C0            ; Pascal
+        sta     auxlc::source_disk_format
         rts
 
 l3:     cmp     #$A5
@@ -229,8 +226,8 @@ l3:     cmp     #$A5
         lda     default_block_buffer+2
         cmp     #$27
         bne     fail
-        lda     #$80
-        sta     auxlc::LD44D
+        lda     #$80            ; DOS 3.3
+        sta     auxlc::source_disk_format
         rts
 .endproc ; IdentifySourceNonProDOSDiskType
 
@@ -247,8 +244,8 @@ l3:     cmp     #$A5
         lsr16   block_count_div8
         lsr16   block_count_div8
         copy16  block_count_div8, auxlc::block_count_div8
-        bit     auxlc::LD44D
-        bmi     :+
+        bit     auxlc::source_disk_format
+        bmi     :+              ; not ProDOS
         lda     auxlc::disk_copy_flag
         bne     :+
         jmp     QuickCopy
@@ -438,10 +435,10 @@ loop:
 L0F51:  stax    mem_block_addr
         jsr     AdvanceToNextBlock
         bcc     ReadOrWriteBlock
-        bne     L0F62
+        bne     :+
         cpx     #$00
         beq     L0F69
-L0F62:  ldy     #$80
+:       ldy     #$80
         sty     L0FE5
         bne     ReadOrWriteBlock
 

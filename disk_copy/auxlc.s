@@ -358,7 +358,14 @@ device_name_buf:
         .res 18, 0
 
 listbox_enabled_flag:  .byte   0
-LD44D:  .byte   0
+
+
+;;; %0xxxxxxx = ProDOS
+;;; %10xxxxxx = DOS 3.3
+;;; %11xxxxx0 = Pascal
+;;; %11xxxxx1 = Other
+source_disk_format:
+        .byte   0
 
 disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
         .byte   0
@@ -445,8 +452,8 @@ InitDialog:
         lda     #$FF
         sta     current_drive_selection
         copy    #BTK::kButtonStateDisabled, ok_button::state
-        lda     #$81
-        sta     LD44D
+        lda     #$81            ; other
+        sta     source_disk_format
         copy    #0, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
         lda     #1
@@ -467,13 +474,15 @@ InitDialog:
         jsr     ListInit
 
         ;; Loop until there's a selection (or drive check)
-LD674:  jsr     LD986
-        bmi     LD674
-        beq     LD687
+.scope
+loop:   jsr     EventLoop
+        bmi     loop
+        beq     check
         MGTK_CALL MGTK::CloseWindow, winfo_drive_select
         jmp     InitDialog
-LD687:  lda     current_drive_selection
-        bmi     LD674
+check:  lda     current_drive_selection
+        bmi     loop
+.endscope
 
         ;; Have a source selection
         copy    #1, disablemenu_params::disable
@@ -495,13 +504,15 @@ LD687:  lda     current_drive_selection
         jsr     UpdateOKButton
 
         ;; Loop until there's a selection (or drive check)
-LD6E6:  jsr     LD986
-        bmi     LD6E6
-        beq     LD6F9
+.scope
+loop:   jsr     EventLoop
+        bmi     loop
+        beq     check
         MGTK_CALL MGTK::CloseWindow, winfo_drive_select
         jmp     InitDialog
-LD6F9:  lda     current_drive_selection
-        bmi     LD6E6
+check:  lda     current_drive_selection
+        bmi     loop
+.endscope
 
         ;; Have a destination selection
         tax
@@ -533,8 +544,8 @@ prompt_insert_source:
         beq     :+              ; OK
         jmp     InitDialog      ; Cancel
 
-:       lda     #$00
-        sta     LD44D
+:       lda     #$00            ; ProDOS
+        sta     source_disk_format
 
         ;; --------------------------------------------------
         ;; Check source disk
@@ -823,17 +834,19 @@ copy_failure:
 ;;;         Z=1 if OK selected, should proceed
 ;;;         Otherwise: Cancel selected (close/re-init dialog)
 
-LD986:  MGTK_CALL MGTK::InitPort, grafport
+EventLoop:
+        MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
-LD998:  jsr     SystemTask
+
+loop:   jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        bne     LD9BA
+        bne     :+
         jmp     HandleClick
 
-LD9BA:  cmp     #MGTK::EventKind::key_down
-        bne     LD998
+:       cmp     #MGTK::EventKind::key_down
+        bne     loop
         jmp     HandleKey
 
 ;;; ============================================================
@@ -906,7 +919,7 @@ menu_offset_table:
         copy16  menu_command_table,x, jump_addr
         jsr     do_jump
         MGTK_CALL MGTK::HiliteMenu, hilitemenu_params
-        jmp     LD986
+        jmp     EventLoop
 
 do_jump:
         tsx
@@ -1061,13 +1074,14 @@ params: .res    3
 .proc dialog_shortcuts
         lda     event_params::key
         cmp     #kShortcutReadDisk
-        beq     LDC09
+        beq     :+
         cmp     #TO_LOWER(kShortcutReadDisk)
-        bne     LDC2D
-LDC09:  BTK_CALL BTK::Flash, read_drive_button
+        bne     check_return
+:       BTK_CALL BTK::Flash, read_drive_button
         return  #$01
 
-LDC2D:  cmp     #CHAR_RETURN
+check_return:
+        cmp     #CHAR_RETURN
     IF_EQ
         bit     ok_button::state
         .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
@@ -1437,31 +1451,31 @@ draw:   jmp     DrawDeviceListEntry
         lda     #$00
         sta     main__on_line_params2_unit_num
         jsr     main__CallOnLine2
-        beq     LE17A
+        beq     :+
 
         brk                     ; rude!
 
-LE17A:  lda     #$00
+:       lda     #$00
         sta     device_index
         sta     num_drives
-LE182:  lda     #>main__on_line_buffer2
+loop:   lda     #>main__on_line_buffer2
         sta     $07
         lda     #<main__on_line_buffer2
         sta     $06
-        sta     LE264
+        sta     hi
         lda     device_index
         asl     a
-        rol     LE264
+        rol     hi
         asl     a
-        rol     LE264
+        rol     hi
         asl     a
-        rol     LE264
+        rol     hi
         asl     a
-        rol     LE264
+        rol     hi
         clc
         adc     $06
         sta     $06
-        lda     LE264
+        lda     hi
         adc     $07
         sta     $07
 
@@ -1469,10 +1483,10 @@ LE182:  lda     #>main__on_line_buffer2
         ldy     #0
         lda     ($06),y
         and     #NAME_LENGTH_MASK
-        bne     LE20D
+        bne     is_prodos
 
         lda     ($06),y         ; 0?
-        beq     LE1CC           ; done!
+        beq     done            ; done!
 
         iny                     ; name_len=0 signifies an error
         lda     ($06),y         ; error code in second byte
@@ -1485,7 +1499,7 @@ LE182:  lda     #>main__on_line_buffer2
         lda     #ERR_DEVICE_NOT_CONNECTED
         bne     LE1CD           ; always
 
-LE1CC:  rts
+done:   rts
 
 LE1CD:  pha
         ldy     #$00
@@ -1495,14 +1509,14 @@ LE1CD:  pha
         sta     drive_unitnum_table,x
         pla
         cmp     #ERR_NOT_PRODOS_VOLUME
-        bne     LE1EA
+        bne     :+
         lda     drive_unitnum_table,x
         and     #UNIT_NUM_MASK
         jsr     NameNonProDOSVolume
-        beq     LE207
-
+        beq     next
+:
         ;; Unknown
-LE1EA:  lda     num_drives
+        lda     num_drives
         asl     a
         asl     a
         asl     a
@@ -1518,11 +1532,12 @@ LE1EA:  lda     num_drives
         lda     str_unknown,x
         sta     drive_name_table,y
 
-LE207:  inc     num_drives
+next:   inc     num_drives
         jmp     next_device
 
         ;; Valid ProDOS volume
-LE20D:  ldx     num_drives
+is_prodos:
+        ldx     num_drives
         ldy     #$00
         lda     ($06),y
         jsr     FindUnitNum
@@ -1540,16 +1555,16 @@ LE20D:  ldx     num_drives
         lda     ($06),y
         and     #NAME_LENGTH_MASK
         sta     drive_name_table,x
-        sta     LE264
+        sta     hi
 :       inx
         iny
-        cpy     LE264
-        beq     LE24D
+        cpy     hi
+        beq     :+
         lda     ($06),y
         sta     drive_name_table,x
         jmp     :-
 
-LE24D:  lda     ($06),y
+:       lda     ($06),y
         sta     drive_name_table,x
         inc     num_drives
 
@@ -1558,14 +1573,14 @@ next_device:
         inc     device_index
         lda     device_index
         cmp     #kMaxNumDrives+1
-        beq     LE262
-        jmp     LE182
+        beq     :+
+        jmp     loop
 
-LE262:  rts
+:       rts
 
 device_index:
         .byte   0
-LE264:  .byte   0
+hi:     .byte   0
 
 ;;; --------------------------------------------------
 ;;; Inputs: A=driver/slot (DSSSxxxx)
@@ -1825,7 +1840,7 @@ tmp:    .byte   0
         rol     hi
         ldx     block_num_shift
         clc
-        adc     LE550,x
+        adc     table,x
         tay
         lda     hi
         adc     #$00
@@ -1833,7 +1848,7 @@ tmp:    .byte   0
         tya
         jmp     IntToStringWithSeparators
 
-LE550:  .byte   7,6,5,4,3,2,1,0
+table:  .byte   7,6,5,4,3,2,1,0
 
 hi:     .byte   0
 .endproc ; PrepDrawBlocks
@@ -1852,15 +1867,16 @@ hi:     .byte   0
         param_call DrawString, str_s
         param_call DrawString, str_drive
         param_call DrawString, str_d
-        bit     LD44D
-        bpl     LE5C6
-        bvc     LE5C5
-        lda     LD44D
+        bit     source_disk_format
+        bpl     show_name       ; ProDOS
+        bvc     :+              ; DOS 3.3
+        lda     source_disk_format
         and     #$0F
-        beq     LE5C6
-LE5C5:  rts
+        beq     show_name       ; Pascal
+:       rts
 
-LE5C6:  param_call DrawString, str_2_spaces
+show_name:
+        param_call DrawString, str_2_spaces
         COPY_STRING main__on_line_buffer2, device_name_buf
         param_call DrawString, device_name_buf
         rts
@@ -1888,24 +1904,24 @@ LE5C6:  param_call DrawString, str_2_spaces
 .proc DrawCopyFormatType
         jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_disk_copy
-        bit     LD44D
-        bmi     :+
+        bit     source_disk_format
+        bmi     :+              ; not ProDOS
         param_call DrawString, str_prodos_disk_copy
         rts
 
-:       bvs     :+
+:       bvs     :+              ; not DOS 3.3
         param_call DrawString, str_dos33_disk_copy
         rts
 
-:       lda     LD44D
+:       lda     source_disk_format
         and     #$0F
-        bne     :+
+        bne     :+              ; not Pascal
         param_call DrawString, str_pascal_disk_copy
 :       rts
 .endproc ; DrawCopyFormatType
 
 .proc MaybeEraseSelectQuitTip
-        lda     LD44D
+        lda     source_disk_format
         cmp     #$C0
         beq     :+
         jsr     SetPortForDialog
