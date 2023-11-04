@@ -311,6 +311,7 @@ kMaxNumDrives = 14
 
 drive_name_table:
         .res    kMaxNumDrives * 16, 0
+;;; Entries are properly masked (i.e. with `UNIT_NUM_MASK`)
 drive_unitnum_table:
         .res    kMaxNumDrives, 0
 ;;; Mapping from filtered destination list index to drive_*_table index
@@ -649,7 +650,6 @@ use_sd:
         ;; No name, use slot/drive
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        and     #UNIT_NUM_MASK
         tax                     ; slot/drive
         lda     #kAlertMsgConfirmEraseSlotDrive ; X = unit number
     ELSE
@@ -1127,29 +1127,15 @@ default_block_buffer := main__default_block_buffer
 
         ;; Find slot for string in table
         lda     num_drives
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     #<drive_name_table
-        tay
-        lda     #>drive_name_table
-        adc     #0
-        tax
-        tya
+        jsr     GetDriveNameTableSlot
         jsr     GetPascalVolName
         return  #$00
 
 fail:   return  #$FF
 
 try_dos33:
-        lda     default_block_buffer+1
-        cmp     #$A5
-        bne     fail
-        lda     default_block_buffer+2
-        cmp     #$27
-        bne     fail
+        jsr     IsDOS33BootBlock
+        bcs     fail
         FALL_THROUGH_TO GetDos33VolName
 .endproc ; NameNonProDOSVolume
 
@@ -1170,33 +1156,44 @@ try_dos33:
         sta     str_dos33_s_d + kStrDOS33DriveOffset
 
         ;; Find slot for string in table
+        ptr := $06
         lda     num_drives
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        tay
+        jsr     GetDriveNameTableSlot
+        stax    ptr
 
         ;; Copy the string in
-        ldx     #0
-:       lda     str_dos33_s_d,x
-        sta     drive_name_table,y
-        iny
-        inx
-        cpx     str_dos33_s_d
-        bne     :-
+        ldy     str_dos33_s_d
+:       lda     str_dos33_s_d,y
+        sta     (ptr),y
+        dey
+        bpl     :-
 
-        lda     str_dos33_s_d,x
-        sta     drive_name_table,y
-
-        lda     #$43            ; ???
-        sta     $0300           ; ???
         return  #0
 .endproc ; GetDos33VolName
 
 ;;; ============================================================
+;;; Input: A = table index
+;;; Output: A,X = address in `drive_name_table`
+
+.proc GetDriveNameTableSlot
+        asl     a
+        asl     a
+        asl     a
+        asl     a
+        clc
+        adc     #<drive_name_table
+        tay
+        lda     #>drive_name_table
+        adc     #0
+        tax
+        tya
+
+        rts
+.endproc
+
+;;; ============================================================
 ;;; Check block at `default_block_buffer` for Pascal signature
-;;; Output: C=0 if Pascal volume, C=0 otherwise
+;;; Output: C=0 if Pascal volume, C=1 otherwise
 
 .proc IsPascalBootBlock
         lda     default_block_buffer+1
@@ -1216,6 +1213,24 @@ match:  clc
         rts
 .endproc ; IsPascalBootBlock
 
+;;; ============================================================
+;;; Check block at `default_block_buffer` for DOS 3.3 signature
+;;; Output: C=0 if DOS 3.3 volume, C=1 otherwise
+
+.proc IsDOS33BootBlock
+        lda     default_block_buffer+1
+        cmp     #$A5
+        bne     fail
+        lda     default_block_buffer+2
+        cmp     #$27
+        beq     match
+
+fail:   sec
+        rts
+
+match:  clc
+        rts
+.endproc ; IsDOS33BootBlock
 
 ;;; ============================================================
 ;;; Get Pascal volume name
@@ -1297,13 +1312,14 @@ match:  clc
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
-        lda     disk_copy_flag
-        bne     :+
-        param_call DrawTitleText, label_quick_copy
-        jmp     draw_buttons
-:       param_call DrawTitleText, label_disk_copy
 
-draw_buttons:
+        lda     disk_copy_flag
+    IF_ZERO
+        param_call DrawTitleText, label_quick_copy
+    ELSE
+        param_call DrawTitleText, label_disk_copy
+    END_IF
+
         BTK_CALL BTK::Draw, ok_button
         jsr     UpdateOKButton
         BTK_CALL BTK::Draw, read_drive_button
@@ -1455,29 +1471,20 @@ draw:   jmp     DrawDeviceListEntry
 
         brk                     ; rude!
 
-:       lda     #$00
+:       lda     #0
         sta     device_index
         sta     num_drives
-loop:   lda     #>main__on_line_buffer2
-        sta     $07
-        lda     #<main__on_line_buffer2
-        sta     $06
-        sta     hi
-        lda     device_index
+loop:   lda     device_index    ; <16
+        asl     a               ; *=16 (each record is 16 bytes)
         asl     a
-        rol     hi
         asl     a
-        rol     hi
         asl     a
-        rol     hi
-        asl     a
-        rol     hi
         clc
-        adc     $06
+        adc     #<main__on_line_buffer2
         sta     $06
-        lda     hi
-        adc     $07
-        sta     $07
+        lda     #0
+        adc     #>main__on_line_buffer2
+        sta     $06+1
 
         ;; Check first byte of record
         ldy     #0
@@ -1502,47 +1509,40 @@ loop:   lda     #>main__on_line_buffer2
 done:   rts
 
 LE1CD:  pha
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
-        jsr     FindUnitNum
+        and     #UNIT_NUM_MASK
         ldx     num_drives
         sta     drive_unitnum_table,x
+
         pla
         cmp     #ERR_NOT_PRODOS_VOLUME
         bne     :+
         lda     drive_unitnum_table,x
-        and     #UNIT_NUM_MASK
         jsr     NameNonProDOSVolume
         beq     next
 :
         ;; Unknown
         lda     num_drives
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        tay
-        ldx     #$00
-:       lda     str_unknown,x
-        sta     drive_name_table,y
-        iny
-        inx
-        cpx     str_unknown
-        bne     :-
-        lda     str_unknown,x
-        sta     drive_name_table,y
+        jsr     GetDriveNameTableSlot
+        stax    $06
+        ldy     str_unknown
+:       lda     str_unknown,y
+        sta     ($06),y
+        dey
+        bpl     :-
 
 next:   inc     num_drives
         jmp     next_device
 
         ;; Valid ProDOS volume
 is_prodos:
-        ldx     num_drives
-        ldy     #$00
+        ldy     #0
         lda     ($06),y
-        jsr     FindUnitNum
+        and     #UNIT_NUM_MASK
         ldx     num_drives
         sta     drive_unitnum_table,x
+
         ldax    $06
         jsr     AdjustCase
         lda     num_drives
@@ -1555,10 +1555,11 @@ is_prodos:
         lda     ($06),y
         and     #NAME_LENGTH_MASK
         sta     drive_name_table,x
-        sta     hi
+        sta     len
 :       inx
         iny
-        cpy     hi
+        len := *+1
+        cpy     #SELF_MODIFIED_BYTE
         beq     :+
         lda     ($06),y
         sta     drive_name_table,x
@@ -1580,32 +1581,6 @@ next_device:
 
 device_index:
         .byte   0
-hi:     .byte   0
-
-;;; --------------------------------------------------
-;;; Inputs: A=driver/slot (DSSSxxxx)
-;;; Outputs: full unit_num
-;;; Assert: Is present in DEVLST
-.proc FindUnitNum
-        and     #UNIT_NUM_MASK
-        sta     masked
-
-        ldx     DEVCNT
-loop:   lda     DEVLST,x
-        and     #UNIT_NUM_MASK
-
-        masked := *+1
-        cmp     #SELF_MODIFIED_BYTE
-
-        beq     match
-        dex
-        bpl     loop
-        ;; NOTE: Assertion violated if not found
-
-match:  lda     DEVLST,x
-        rts
-.endproc ; FindUnitNum
-
 .endproc ; EnumerateDevices
 
 ;;; ============================================================
@@ -1685,20 +1660,9 @@ src_block_count:
         lda     #kListEntryNameOffset
         sta     list_entry_pos::xcoord
         MGTK_CALL MGTK::MoveTo, list_entry_pos
-        lda     device_index
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        clc
-        adc     #<drive_name_table
-        sta     $06
-        lda     #>drive_name_table
-        adc     #$00
-        sta     $07
 
-        lda     $06
-        ldx     $07
+        lda     device_index
+        jsr     GetDriveNameTableSlot
         jmp     DrawString
 
 device_index:
@@ -2280,8 +2244,7 @@ find_in_alert_table:
         copy    alert_button_options_table,y, alert_params::buttons
         copy    alert_options_table,y, alert_params::options
 
-        ldax    #alert_params
-        jmp     Alert
+        param_jump Alert, alert_params
 
 ;;; --------------------------------------------------
 ;;; Inputs: X,Y = volume name

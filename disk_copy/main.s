@@ -148,7 +148,6 @@ params:  .res    3
         lda     #DRIVER_COMMAND_FORMAT
         sta     DRIVER_COMMAND
         lda     unit_number
-        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
         jmp     ($06)
 
@@ -201,32 +200,23 @@ EjectDisk := EjectDiskImpl::start
         jsr     ReadBlock
         bne     fail
 
-        lda     default_block_buffer+1
-        cmp     #$E0
-        beq     :+
-        jmp     l3
-
-:       lda     default_block_buffer+2
-        cmp     #$70
-        beq     l2
-        cmp     #$60
-        beq     l2
-
-fail:   lda     #$81            ; Other
-        sta     auxlc::source_disk_format
-        rts
-
-l2:     param_call auxlc::GetPascalVolName, on_line_buffer2
+        ;; Pascal?
+        jsr     auxlc::IsPascalBootBlock
+        bcs     :+
+        param_call auxlc::GetPascalVolName, on_line_buffer2
         lda     #$C0            ; Pascal
         sta     auxlc::source_disk_format
         rts
-
-l3:     cmp     #$A5
-        bne     fail
-        lda     default_block_buffer+2
-        cmp     #$27
-        bne     fail
+:
+        ;; DOS 3.3?
+        jsr     auxlc::IsDOS33BootBlock
+        bcs     :+
         lda     #$80            ; DOS 3.3
+        sta     auxlc::source_disk_format
+        rts
+:
+        ;; Anything else
+fail:   lda     #$81            ; Other
         sta     auxlc::source_disk_format
         rts
 .endproc ; IdentifySourceNonProDOSDiskType
@@ -524,10 +514,8 @@ use_lcbank2:
         jmp     loop
 
 :       jsr     WriteBlockFromLcbank2
-        bmi     l4
+        bmi     error
         jmp     loop
-
-l4:     jmp     error
 .endproc ; ReadOrWriteBlock
 
 L0FE4:  .byte   0
@@ -1034,13 +1022,12 @@ memory_bitmap:
         .byte   %11111111       ; $D0-$DF - free
 
 ;;; ============================================================
-;;; Inputs: A = unit num (DSSSxxxx), X,Y = driver address
+;;; Inputs: A = unit num (DSSS0000), X,Y = driver address
 ;;; Outputs: X,Y = blocks
 
 .proc GetDeviceBlocksUsingDriver
         sta     ALTZPOFF
 
-        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
         stxy    @driver
 
