@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; Disk Copy - Main Memory Segment $0800 - $137F
+;;; Disk Copy - Main Memory Segment $0800
 ;;;
 ;;; Compiled as part of disk_copy.s
 ;;; ============================================================
@@ -984,7 +984,7 @@ loop:   lda     (ptr1),y
 memory_bitmap:
         ;; Main memory
         .byte   %00000000       ; $00-$0F - ZP/Stack/Text, then Disk Copy code...
-        .byte   %00011100       ; $10-$1F - but $16-1B free ($1C = i/o buf)
+        .byte   %00111100       ; $10-$1F - but $14-1B free ($1C = I/O buffer)
         .byte   %00000000       ; $20-$2F - DHR graphics page
         .byte   %00000000       ; $30-$3F - DHR graphics page
         .byte   %11111111       ; $40-$4F - free
@@ -1093,7 +1093,7 @@ is_laser128_flag:               ; high bit set if Laser 128
 
 ;;; ============================================================
 
-        .assert * <= $1600, error, "Update memory_bitmap if code extends past $1600"
+        .assert * <= $1400, error, "Update memory_bitmap if code extends past $1400"
 .endscope ; main
 
 main__FormatDevice              := main::FormatDevice

@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; Disk Copy - Auxiliary LC Segment $D000 - $F1FF
+;;; Disk Copy - Auxiliary LC Segment $D000
 ;;;
 ;;; Compiled as part of disk_copy.s
 ;;; ============================================================
@@ -2396,7 +2396,7 @@ Alert := alert_dialog::Alert
 
 ;;; ============================================================
 
-        .assert * <= $F200, error, "Update memory_bitmap if code extends past $F400"
+        .assert * <= $F200, error, "Update memory_bitmap if code extends past $F200"
 .endscope ; auxlc
         auxlc__start := auxlc::start
 
