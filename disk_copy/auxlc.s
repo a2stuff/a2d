@@ -109,6 +109,9 @@ menu_facilities:
         DEFINE_MENU_ITEM label_disk_copy
         ASSERT_RECORD_TABLE_SIZE @items, 2, .sizeof(MGTK::MenuItem)
 
+        kMenuItemIdQuickCopy = 1
+        kMenuItemIdDiskCopy  = 2
+
 label_file:
         PASCAL_STRING res_string_dc_menu_bar_item_file    ; menu bar item
 label_facilities:
@@ -438,32 +441,35 @@ init:   jsr     DisconnectRAM
 
         MGTK_CALL MGTK::SetMenu, menu_definition
         jsr     SetCursorPointer
-        copy    #1, checkitem_params::menu_item
-        copy    #1, checkitem_params::check
+
+        copy    #kMenuItemIdQuickCopy, checkitem_params::menu_item
+        copy    #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
-        copy    #1, disablemenu_params::disable
+
+        ;; TODO: Remove, since menu is immediately enabled below
+        copy    #MGTK::disablemenu_disable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
-        lda     #$00
-        sta     disk_copy_flag
+
+        copy    #0, disk_copy_flag
         jsr     OpenDialog
 
 InitDialog:
-        lda     #$00
-        sta     listbox_enabled_flag
-        lda     #$FF
-        sta     current_drive_selection
+        copy    #0, listbox_enabled_flag
+        copy    #$FF, current_drive_selection
         copy    #BTK::kButtonStateDisabled, ok_button::state
+
         lda     #$81            ; other
         sta     source_disk_format
-        copy    #0, disablemenu_params::disable
+
+        copy    #MGTK::disablemenu_enable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
-        lda     #1
-        sta     checkitem_params::check
+
+        copy    #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
+
         jsr     DrawDialog
         MGTK_CALL MGTK::OpenWindow, winfo_drive_select
-        lda     #$FF
-        sta     listbox_enabled_flag
+        copy    #$FF, listbox_enabled_flag
 
         jsr     SetCursorWatch
         jsr     EnumerateDevices
@@ -486,8 +492,9 @@ check:  lda     current_drive_selection
 .endscope
 
         ;; Have a source selection
-        copy    #1, disablemenu_params::disable
+        copy    #MGTK::disablemenu_disable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
+
         lda     current_drive_selection
         sta     source_drive_index
 
@@ -668,7 +675,7 @@ show:   jsr     ShowAlertDialog
 
 maybe_format:
         lda     disk_copy_flag
-        bne     try_format
+        bne     try_format      ; full disk copy
         jmp     do_copy
 
 try_format:
@@ -851,7 +858,7 @@ menu_command_table:
         ;; File menu
         .addr   main__Quit
         ;; Facilities menu
-        .addr   cmd_quick_copy
+        .addr   CmdQuickCopy
         .addr   CmdDiskCopy
 
 menu_offset_table:
@@ -920,35 +927,42 @@ do_jump:
 
 ;;; ============================================================
 
-cmd_quick_copy:
+.proc CmdQuickCopy
         lda     disk_copy_flag
         RTS_IF_ZERO
 
-        copy    #0, checkitem_params::check
+        copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
+
+        ;; TODO: Use #1 here and save a byte
         copy    disk_copy_flag, checkitem_params::menu_item
-        copy    #1, checkitem_params::check
+        copy    #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
+
         copy    #0, disk_copy_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         param_call DrawTitleText, label_quick_copy
         rts
+.endproc
 
-CmdDiskCopy:
+.proc CmdDiskCopy
         lda     disk_copy_flag
         RTS_IF_NOT_ZERO
 
-        copy    #0, checkitem_params::check
+        copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
-        copy    #2, checkitem_params::menu_item
-        copy    #1, checkitem_params::check
+
+        copy    #kMenuItemIdDiskCopy, checkitem_params::menu_item
+        copy    #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
+
         copy    #1, disk_copy_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         param_call DrawTitleText, label_disk_copy
         rts
+.endproc
 
 ;;; ============================================================
 
