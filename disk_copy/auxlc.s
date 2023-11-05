@@ -721,24 +721,8 @@ do_copy:
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
 
-        lda     source_drive_index
-        cmp     dest_drive_index
-    IF_EQ
-        ;; Disk swap
-        tax
-        lda     drive_unitnum_table,x
-        pha
-        jsr     main__EjectDisk
-        pla
-        tay
-        ldx     #$80
-        lda     #kAlertMsgInsertSource ; X != 0 means Y=unit number, auto-dismiss
-        jsr     ShowAlertDialog
-        cmp     #kAlertResultOK
-        beq     :+              ; OK
-        jmp     InitDialog      ; Cancel
-:
-    END_IF
+        ldx     #kAlertMsgInsertSource
+        jsr     MaybePromptDiskSwap
 
         jsr     SetCursorWatch
 
@@ -762,24 +746,8 @@ copy_loop:
         cmp     #$01
         beq     copy_failure
 
-        lda     source_drive_index
-        cmp     dest_drive_index
-    IF_EQ
-        ;; Disk swap
-        tax
-        lda     drive_unitnum_table,x
-        pha
-        jsr     main__EjectDisk
-        pla
-        tay
-        ldx     #$80
-        lda     #kAlertMsgInsertDestination ; X != 0 means Y=unit number, auto-dismiss
-        jsr     ShowAlertDialog
-        cmp     #kAlertResultOK
-        beq     :+              ; OK
-        jmp     InitDialog      ; Cancel
-:
-    END_IF
+        ldx     #kAlertMsgInsertDestination
+        jsr     MaybePromptDiskSwap
 
         jsr     SetCursorWatch
 
@@ -788,23 +756,10 @@ copy_loop:
         jsr     main__CopyBlocks
         bmi     copy_success
         bne     copy_failure
-        lda     source_drive_index
-        cmp     dest_drive_index
-        bne     copy_loop
 
-        ;; Disk swap
-        tax
-        lda     drive_unitnum_table,x
-        pha
-        jsr     main__EjectDisk
-        pla
-        tay
-        ldx     #$80
-        lda     #kAlertMsgInsertSource ; X !=0 means Y=unit number, auto-dismiss
-        jsr     ShowAlertDialog
-        cmp     #kAlertResultOK
-        beq     copy_loop       ; OK
-        jmp     InitDialog      ; Cancel
+        ldx     #kAlertMsgInsertSource
+        jsr     MaybePromptDiskSwap
+        jmp     copy_loop
 
 copy_success:
         jsr     SetCursorWatch
@@ -827,6 +782,41 @@ copy_failure:
         lda     #kAlertMsgCopyFailure ; no args
         jsr     ShowAlertDialog
         jmp     InitDialog
+
+;;; ============================================================
+
+;;; Input: X = message (`kAlertMsgInsertSource` or `kAlertMsgInsertDestination`)
+;;; Returns when complete; if canceled, pops return address and runs `InitDialog`
+
+.proc MaybePromptDiskSwap
+        stx     message
+
+        lda     source_drive_index
+        cmp     dest_drive_index
+        bne     ret
+
+        tax                     ; A = index
+        lda     drive_unitnum_table,x
+        pha                     ; A = unit num
+        jsr     main__EjectDisk
+        pla                     ; A = unit num
+        tay                     ; Y = unit num
+
+
+        message := *+1
+        lda     #SELF_MODIFIED_BYTE
+        ldx     #$80        ; X != 0 means Y=unit number, auto-dismiss
+        jsr     ShowAlertDialog
+
+        cmp     #kAlertResultOK
+        beq     ret             ; OK
+
+        pla                     ; Cancel
+        pla
+        jmp     InitDialog
+
+ret:    rts
+.endproc ; MaybePromptDiskSwap
 
 ;;; ============================================================
 ;;; Wait for and process event
