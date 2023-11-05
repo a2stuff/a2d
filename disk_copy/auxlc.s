@@ -446,10 +446,6 @@ init:   jsr     DisconnectRAM
         copy    #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        ;; TODO: Remove, since menu is immediately enabled below
-        copy    #MGTK::disablemenu_disable, disablemenu_params::disable
-        MGTK_CALL MGTK::DisableMenu, disablemenu_params
-
         copy    #0, disk_copy_flag
         jsr     OpenDialog
 
@@ -463,9 +459,6 @@ InitDialog:
 
         copy    #MGTK::disablemenu_enable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
-
-        copy    #MGTK::checkitem_check, checkitem_params::check
-        MGTK_CALL MGTK::CheckItem, checkitem_params
 
         jsr     DrawDialog
         MGTK_CALL MGTK::OpenWindow, winfo_drive_select
@@ -929,13 +922,12 @@ do_jump:
 
 .proc CmdQuickCopy
         lda     disk_copy_flag
-        RTS_IF_ZERO
+        beq     ret
 
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        ;; TODO: Use #1 here and save a byte
-        copy    disk_copy_flag, checkitem_params::menu_item
+        copy    #kMenuItemIdQuickCopy, checkitem_params::menu_item
         copy    #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
@@ -943,12 +935,13 @@ do_jump:
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         param_call DrawTitleText, label_quick_copy
-        rts
+
+ret:    rts
 .endproc
 
 .proc CmdDiskCopy
         lda     disk_copy_flag
-        RTS_IF_NOT_ZERO
+        bne     ret
 
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
@@ -961,7 +954,8 @@ do_jump:
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         param_call DrawTitleText, label_disk_copy
-        rts
+
+ret:    rts
 .endproc
 
 ;;; ============================================================
@@ -1017,8 +1011,7 @@ ret:    rts
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, ok_button
         bmi     :+
         lda     #$00
@@ -1026,8 +1019,7 @@ ret:    rts
     END_IF
 
         MGTK_CALL MGTK::InRect, read_drive_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, read_drive_button
         bmi     :+
         lda     #$01
