@@ -38,14 +38,16 @@ IMGFILE_PART1="out/A2DeskTop-${version}_140k_disk1.po"
 IMGFILE_PART2="out/A2DeskTop-${version}_140k_disk2.po"
 IMGFILE_PART3="out/A2DeskTop-${version}_140k_disk3.po"
 IMGFILE_PART4="out/A2DeskTop-${version}_140k_disk4.po"
+IMGFILE_PART5="out/A2DeskTop-${version}_140k_disk5.po"
 
 VOLNAME_COMPLETE="A2.DeskTop"
 VOLNAME_PART1="A2.DeskTop.1"
 VOLNAME_PART2="A2.DeskTop.2"
 VOLNAME_PART3="A2.DeskTop.3"
 VOLNAME_PART4="A2.DeskTop.4"
+VOLNAME_PART5="A2.DeskTop.5"
 
-IMAGES="$IMGFILE_COMPLETE_2MG $IMGFILE_COMPLETE_HDV $IMGFILE_PART1 $IMGFILE_PART2 $IMGFILE_PART3 $IMGFILE_PART4"
+IMAGES="$IMGFILE_COMPLETE_2MG $IMGFILE_COMPLETE_HDV $IMGFILE_PART1 $IMGFILE_PART2 $IMGFILE_PART3 $IMGFILE_PART4 $IMGFILE_PART5"
 
 # Create disk images.
 
@@ -59,6 +61,7 @@ suppress cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-ca
 suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART3 $VOLNAME_PART3 140KB --quiet --no-case-bits
 suppress cadius CREATEVOLUME $IMGFILE_PART4 $VOLNAME_PART4 140KB --quiet --no-case-bits
+suppress cadius CREATEVOLUME $IMGFILE_PART5 $VOLNAME_PART5 140KB --quiet --no-case-bits
 
 # ============================================================
 # Implementation for manifest operations
@@ -103,8 +106,10 @@ add_file () {
         add_file_internal $IMGFILE_PART2 "$src_file" "/$VOLNAME_PART2/$folder" "$dst_file" "$suffix"
     elif [ "$disposition" = "extra" ]; then
         add_file_internal $IMGFILE_PART3 "$src_file" "/$VOLNAME_PART3/$folder" "$dst_file" "$suffix"
-    else # sample media
+    elif [[ "$src_file" != mgtk/fonts/*/* ]]; then # sample media
         add_file_internal $IMGFILE_PART4 "$src_file" "/$VOLNAME_PART4/$folder" "$dst_file" "$suffix"
+    else # additional fonts
+        add_file_internal $IMGFILE_PART5 "$src_file" "/$VOLNAME_PART5/$folder" "$dst_file" "$suffix"
     fi
 }
 
