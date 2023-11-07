@@ -727,10 +727,10 @@ do_copy:
         jsr     SetCursorWatch
 
         jsr     main__ReadVolumeBitmap
-        lda     #$00
+        lda     #0
         sta     block_num_div8
         sta     block_num_div8+1
-        lda     #$07
+        lda     #7              ; 7 - (n % 8)
         sta     block_num_shift
         jsr     DrawTotalBlocks
         jsr     DrawBlocksRead
@@ -855,7 +855,7 @@ menu_command_table:
         .addr   CmdDiskCopy
 
 menu_offset_table:
-        .byte   0, 5*2, 6*2, 8*2
+        .byte   0, 5*2, 6*2
 
 ;;; ============================================================
 
@@ -894,19 +894,12 @@ menu_offset_table:
         bne     :+
         return  #$FF
         ;; Compute offset into command table - menu offset + item offset
-:       dex
-        lda     menu_offset_table,x
-        tax
-        ldy     menuselect_params::menu_item
-        dey
-        tya
+:       lda     menuselect_params::menu_item ; menu item index is 1-based
         asl     a
-        sta     jump_addr
-        txa
         clc
-        adc     jump_addr
+        adc     menu_offset_table-1,x ; menu id is also 1-based
         tax
-        copy16  menu_command_table,x, jump_addr
+        copy16  menu_command_table-2,x, jump_addr ; 1-based (*2) to 0-based
         jsr     do_jump
         MGTK_CALL MGTK::HiliteMenu, hilitemenu_params
         jmp     EventLoop
@@ -1789,28 +1782,8 @@ tmp:    .byte   0
 
 .proc PrepDrawBlocks
         jsr     SetPortForDialog
-        lda     block_num_div8+1
-        sta     hi
-        lda     block_num_div8
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        asl     a
-        rol     hi
-        ldx     block_num_shift
-        clc
-        adc     table,x
-        tay
-        lda     hi
-        adc     #$00
-        tax
-        tya
+        jsr     main__GetBlockNumFromDivAndShift
         jmp     IntToStringWithSeparators
-
-table:  .byte   7,6,5,4,3,2,1,0
-
-hi:     .byte   0
 .endproc ; PrepDrawBlocks
 
 ;;; ============================================================

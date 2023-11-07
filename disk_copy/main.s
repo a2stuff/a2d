@@ -385,7 +385,7 @@ IsDriveEjectable := IsDriveEjectableImpl::start
         lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
 
-common: lda     #7
+common: lda     #7              ; 7 - (n % 8)
         sta     auxlc::block_index_shift
         lda     #0
         sta     auxlc::block_index_div8
@@ -552,15 +552,13 @@ free:   jsr     Next
 
 .proc Next
         dec     auxlc::block_num_shift
-        lda     auxlc::block_num_shift
-        cmp     #$FF
-        beq     :+
+        bmi     :+
 
 not_last:
         clc
         rts
 
-:       lda     #$07
+:       lda     #7              ; 7 - (n % 8)
         sta     auxlc::block_num_shift
         inc16   auxlc::block_num_div8
         ecmp16  auxlc::block_num_div8, auxlc::block_count_div8
@@ -574,7 +572,7 @@ not_last:
 ;;; ============================================================
 ;;; Look up block in volume bitmap
 ;;; Input: Uses `block_num_div8` and `block_num_shift`
-;;; Output: A,X = block number, Y = $FF if set in vol bitmap, $0 otherwise
+;;; Output: A,X = block number, Y = masked bit from bitmap
 
 .proc LookupInVolumeBitmap
         ptr := $06
@@ -586,39 +584,36 @@ not_last:
         ldy     #0
         lda     (ptr),y
         ldx     auxlc::block_num_shift
-        beq     mask
-:       lsr     a
-        dex
-        bne     :-
-mask:   and     #$01
-
-        ;; Set Y to 0 (if clear) or $FF (if set)
-        eor     #$FF
-        tay
-        iny
+        and     bit_shift_table,x
+        tay                     ; Y = masked bit
 
         ;; Now compute block number
+        FALL_THROUGH_TO GetBlockNumFromDivAndShift
+.endproc ; LookupInVolumeBitmap
+
+;;; ============================================================
+
+;;; Input: `block_num_div8` and `block_num_shift` are set
+;;; Output: A,X = block number
+
+.proc GetBlockNumFromDivAndShift
         lda     auxlc::block_num_div8+1
         sta     hi
         lda     auxlc::block_num_div8
-        asl     a               ; * 8
+        asl     a               ; *=8
         rol     hi
         asl     a
         rol     hi
         asl     a
         rol     hi
-
         ldx     auxlc::block_num_shift
         ora     table,x
-
         hi := *+1
         ldx     #SELF_MODIFIED_BYTE
-
-        ;; A,X = block number
         rts
 
-table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
-.endproc ; LookupInVolumeBitmap
+table:  .byte   7,6,5,4,3,2,1,0
+.endproc ; GetBlockNumFromDivAndShift
 
 ;;; ============================================================
 
@@ -640,9 +635,8 @@ table:  .byte   7, 6, 5, 4, 3, 2, 1, 0
 ;;; Advance to next
 .proc Next
         dec     auxlc::block_index_shift
-        lda     auxlc::block_index_shift
-        cmp     #$FF
-        beq     :+
+        bmi     :+
+
 ok:     clc
         rts
 
@@ -650,7 +644,7 @@ ok:     clc
         sta     auxlc::block_index_shift
         inc     auxlc::block_index_div8
         lda     auxlc::block_index_div8
-        cmp     #$21
+        cmp     #kMemoryBitmapSize
         bcc     ok
 
         sec
@@ -662,25 +656,15 @@ ok:     clc
 ;;; Compute memory page signature; low nibble is high nibble of
 ;;; page, high nibble is "bank" (0=main, 1=aux, 2=aux lcbank2)
 ;;; Input: `block_index_div8` and `block_index_shift`
-;;; Output: A,X=address to store block; Y=bit is set in bitmap
+;;; Output: A,X=address to store block; Y=masked bit from bitmap
 
 .proc ComputeMemoryPageSignature
         ;; Read from bitmap
         ldx     auxlc::block_index_div8
         lda     memory_bitmap,x
         ldx     auxlc::block_index_shift
-        cpx     #0
-        beq     mask
-:       lsr     a
-        dex
-        bne     :-
-mask:   and     #$01
-
-        bne     set
-        ldy     #$00
-        beq     :+              ; always
-set:    ldy     #$FF
-:
+        and     bit_shift_table,x
+        tay                     ; Y = masked bit
 
         ;; Now compute address to store in memory
         lda     auxlc::block_index_div8
@@ -714,6 +698,9 @@ calc:   asl     a               ; *= 16
 
 table:  .byte   $0E, $0C, $0A, $08, $06, $04, $02, $00
 .endproc ; ComputeMemoryPageSignature
+
+bit_shift_table:
+        .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
 
 ;;; ============================================================
 
@@ -764,7 +751,7 @@ loop:   lda     page_num
 
 .proc GetBitmapOffsetMask
         pha
-        lsr     a
+        lsr     a               ; /=16
         lsr     a
         lsr     a
         lsr     a
@@ -772,13 +759,14 @@ loop:   lda     page_num
 
         pla
         and     #$0F
-        lsr     a
+        lsr     a               ; /=2 (1 bit for 2 pages)
         tax
         lda     table,x
 
         rts
 
-table:  .byte   1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0
+table:
+        .byte   1<<7, 1<<6, 1<<5, 1<<4, 1<<3, 1<<2, 1<<1, 1<<0
 .endproc ; GetBitmapOffsetMask
 
 ;;; ============================================================
@@ -980,6 +968,10 @@ loop:   lda     (ptr1),y
 ;;;
 ;;; Each bit represents a double-page, enough for one 512-byte
 ;;; disk block. 1 = available, 0 = reserved.
+;;;
+;;; Note that the `memory_bitmap` has _lowest_ address represented
+;;; by the _highest_ bit in the corresponding byte. So page 0 is
+;;; represented as available by %1xxxxxxx, page 1 by %x1xxxxxx, etc.
 
 memory_bitmap:
         ;; Main memory
@@ -1020,6 +1012,8 @@ memory_bitmap:
 
         ;; Aux memory - LCBANK2
         .byte   %11111111       ; $D0-$DF - free
+kMemoryBitmapSize = * - memory_bitmap
+
 
 ;;; ============================================================
 ;;; Inputs: A = unit num (DSSS0000), X,Y = driver address
@@ -1104,6 +1098,7 @@ main__CopyBlocks                := main::CopyBlocks
 main__FreeVolBitmapPages        := main::FreeVolBitmapPages
 main__CallOnLine2               := main::CallOnLine2
 main__CallOnLine                := main::CallOnLine
+main__GetBlockNumFromDivAndShift := main::GetBlockNumFromDivAndShift
 main__PrepBlockPtrs             := main::PrepBlockPtrs
 main__ReadBlock                 := main::ReadBlock
 main__ReadBlockWithRetry        := main::ReadBlockWithRetry
