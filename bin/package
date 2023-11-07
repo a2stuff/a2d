@@ -106,9 +106,9 @@ add_file () {
         add_file_internal $IMGFILE_PART2 "$src_file" "/$VOLNAME_PART2/$folder" "$dst_file" "$suffix"
     elif [ "$disposition" = "extra" ]; then
         add_file_internal $IMGFILE_PART3 "$src_file" "/$VOLNAME_PART3/$folder" "$dst_file" "$suffix"
-    elif [[ "$src_file" != mgtk/fonts/*/* ]]; then # sample media
+    elif [ "$disposition" = "sample" ]; then
         add_file_internal $IMGFILE_PART4 "$src_file" "/$VOLNAME_PART4/$folder" "$dst_file" "$suffix"
-    else # additional fonts
+    else # fonts
         add_file_internal $IMGFILE_PART5 "$src_file" "/$VOLNAME_PART5/$folder" "$dst_file" "$suffix"
     fi
 }

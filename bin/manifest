@@ -148,6 +148,8 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell"  060800
     emit add_file $disposition "res/package/AUTUMN.PT3"    $mediadir "autumn.pt3"     000000
 
+    disposition="fonts"
+
     # MGTK Fonts
     emit add_file $disposition "mgtk/fonts/System.en"      $mediafnt "System.en"      070000
     emit add_file $disposition "mgtk/fonts/Monaco.en"      $mediafnt "Monaco.en"      070000
