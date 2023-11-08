@@ -148,6 +148,8 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "karateka.yell"  060800
     emit add_file $disposition "res/package/AUTUMN.PT3"    $mediadir "autumn.pt3"     000000
 
+    disposition="fonts"
+
     # MGTK Fonts
     emit add_file $disposition "mgtk/fonts/System.en"      $mediafnt "System.en"      070000
     emit add_file $disposition "mgtk/fonts/Monaco.en"      $mediafnt "Monaco.en"      070000
@@ -157,6 +159,19 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "mgtk/fonts/NEW.YORK"       $mediafnt "NEW.YORK"       070000
     emit add_file $disposition "mgtk/fonts/TORONTO"        $mediafnt "TORONTO"        070000
     emit add_file $disposition "mgtk/fonts/VENICE"         $mediafnt "VENICE"         070000
+
+    emit add_file $disposition "mgtk/fonts/fairfax/Fairfax.en"   $mediafnt "Fairfax.en"     070000
+    emit add_file $disposition "mgtk/fonts/fairfax/FairfaxBd.en" $mediafnt "FairfaxBd.en"   070000
+    emit add_file $disposition "mgtk/fonts/fairfax/FairfaxIt.en" $mediafnt "FairfaxIt.en"   070000
+    emit add_file $disposition "mgtk/fonts/fairfax/FairfaxSf.en" $mediafnt "FairfaxSf.en"   070000
+    emit add_file $disposition "mgtk/fonts/erin/Magdalena.en"    $mediafnt "Magdalena.en"   070000
+    emit add_file $disposition "mgtk/fonts/erin/MagdalenaBd.en"  $mediafnt "MagdalenaBd.en" 070000
+    emit add_file $disposition "mgtk/fonts/erin/McMillen.en"     $mediafnt "McMillen.en"    070000
+    emit add_file $disposition "mgtk/fonts/erin/McMillenBd.en"   $mediafnt "McMillenBd.en"  070000
+    emit add_file $disposition "mgtk/fonts/erin/Mischke.en"      $mediafnt "Mischke.en"     070000
+    emit add_file $disposition "mgtk/fonts/erin/MischkeBd.en"    $mediafnt "MischkeBd.en"   070000
+    emit add_file $disposition "mgtk/fonts/erin/Monterey.en"     $mediafnt "Monterey.en"    070000
+    emit add_file $disposition "mgtk/fonts/erin/MontereyBd.en"   $mediafnt "MontereyBd.en"  070000
 
     # HRCG conversions
     emit add_file $disposition "mgtk/fonts/ASCII"          $mediafnt "ASCII"          070000
