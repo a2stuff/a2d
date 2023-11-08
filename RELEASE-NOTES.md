@@ -54,6 +54,11 @@ Project Page: https://github.com/a2stuff/a2d
 * System Speed: Add support for Titan Accelerator IIe c/o @buserror.
 * Sounds: Add Cancel button c/o @buserror.
 
+### Misc
+
+* Add additional MGTK fonts Fairfax, Magdalena, McMillen, Mischke, and Monterey, c/o RebeccaRGB.
+
+
 ## 1.3
 
 An unofficial release with bug fixes and enhancements. July 1, 2023.
