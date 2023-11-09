@@ -2329,13 +2329,15 @@ case2:
         addxy   portbits::maprect::x1
         addxy   portbits::maprect::x2
         addxy   bitmap_rect::x1
-        addxy   label_rect::x1  ; x2 not used
+        addxy   bitmap_rect::x2 ; `bitmap_rect` used for dimming
+        addxy   label_rect::x1  ; x2 not used for clipping
 
         ldxy    clip_dy
         addxy   portbits::maprect::y1
         addxy   portbits::maprect::y2
         addxy   bitmap_rect::y1
-        addxy   label_rect::y1  ; y2 not used
+        addxy   bitmap_rect::y2 ; `bitmap_rect` used for dimming
+        addxy   label_rect::y1  ; y2 not used for clipping
 
         MGTK_CALL MGTK::SetPortBits, portbits
 

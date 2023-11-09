@@ -408,6 +408,7 @@
 
 * Launch DeskTop. Open a volume window containing a folder. Open the folder. Verify that the folder appears as dimmed. Position the window partially over the dimmed folder. Move the window to reveal the whole folder. Verify that the folder is repainted cleanly (no visual glitches).
 * Launch DeskTop. Open a volume window containing two folders (1 and 2). Open both folder windows, and verify that both folder icons are dimmed. Position folder 1's window partially covering folder 2's icon. Activate folder 1's window, and close it. Verify that the visible portions of folder 2 repaint, not dimmed.
+* Disable any acceleration. Launch DeskTop. Open a volume window containing a folder with a long name. Double-click the folder to open it. Verify that when the icon is painting as dimmed that the dimming effect doesn't extend past the bounding box of the icon, even temporarily.
 
 * Perform the following tests in DeskTop using Mouse Keys mode:
   * Use the arrow keys to move the mouse to the top, bottom, left, and right edges of the screen. Verify that the mouse is clamped to the edges and does not wrap.
