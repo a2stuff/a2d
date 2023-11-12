@@ -56,6 +56,7 @@
 .define res_string_cpu_prefix "    CPU: "
 .define res_string_cpu_type_6502 "6502"
 .define res_string_cpu_type_65C02 "65C02"
+.define res_string_cpu_type_65C02zip "65C02 (ZIP CHIP)"
 .define res_string_cpu_type_R65C02 "R65C02"
 .define res_string_cpu_type_65802 "65802"
 .define res_string_cpu_type_65816 "65816"

@@ -637,6 +637,7 @@ memory:.word    0
 str_cpu_prefix: PASCAL_STRING res_string_cpu_prefix
 str_6502:       PASCAL_STRING res_string_cpu_type_6502
 str_65C02:      PASCAL_STRING res_string_cpu_type_65C02
+str_65C02zip:   PASCAL_STRING res_string_cpu_type_65C02zip
 str_R65C02:     PASCAL_STRING res_string_cpu_type_R65C02
 str_65802:      PASCAL_STRING res_string_cpu_type_65802
 str_65816:      PASCAL_STRING res_string_cpu_type_65816
@@ -2162,6 +2163,38 @@ str_from_int:
         sep     #%00000001    ; two-byte NOP on 65C02
         .popcpu
         bcs     p658xx
+
+        ;; 65C02 - check for ZIP CHIP
+        php                     ; timing sensitive
+        sei
+
+        ;; Unlock
+        lda     #kZCUnlock
+        sta     ZC_REG_LOCK
+        sta     ZC_REG_LOCK
+        sta     ZC_REG_LOCK
+        sta     ZC_REG_LOCK
+
+        ;; ZIP CHIP present?
+        lda     ZC_REG_SLOTSPKR
+        eor     #$FF
+        sta     ZC_REG_SLOTSPKR
+        cmp     ZC_REG_SLOTSPKR
+        bne     :+
+        eor     #$FF
+        sta     ZC_REG_SLOTSPKR
+        cmp     ZC_REG_SLOTSPKR
+        bne     :+
+
+        ;; Lock
+        lda     #kZCLock
+        sta     ZC_REG_LOCK
+
+        plp
+        return16 #str_65C02zip
+        rts
+
+:       plp
 
         ;; 65C02 - check for Rockwell R65C02
         ;; (inspired by David Empson on comp.sys.apple2)
