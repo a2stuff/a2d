@@ -242,10 +242,10 @@ frame_counter:
 
 .proc OnKey
         lda     event_params::key
+        jsr     ToUpperCase
 
         ldx     event_params::modifiers
     IF_NOT_ZERO
-        jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     OnKeyOK
         jmp     InputLoop
@@ -259,12 +259,8 @@ frame_counter:
 
         cmp     #kShortcutNorm
         beq     OnKeyNorm
-        cmp     #TO_LOWER(kShortcutNorm)
-        beq     OnKeyNorm
 
         cmp     #kShortcutFast
-        beq     OnKeyFast
-        cmp     #TO_LOWER(kShortcutFast)
         beq     OnKeyFast
 
         jmp     InputLoop

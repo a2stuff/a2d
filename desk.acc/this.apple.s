@@ -965,10 +965,10 @@ done:   rts
 
 .proc HandleKey
         lda     event_params::key
+        jsr     ToUpperCase
 
         ldx     event_params::modifiers
     IF_NOT_ZERO
-        jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
         jmp     InputLoop
@@ -976,11 +976,11 @@ done:   rts
 
         cmp     #CHAR_ESCAPE
         beq     Exit
+
         cmp     #kShortcutEasterEgg
-        beq     :+
-        cmp     #TO_LOWER(kShortcutEasterEgg)
-        bne     InputLoop
-:       jmp     HandleEgg
+        beq     HandleEgg
+
+        jmp     InputLoop
 .endproc ; HandleKey
 
 ;;; ============================================================
