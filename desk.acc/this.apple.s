@@ -113,95 +113,27 @@ grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
-.params ii_bitmap
-        DEFINE_POINT viewloc, 59, 8
-mapbits:        .addr   ii_bits
-mapwidth:       .byte   8
+.macro DEFINE_BITMAP identifier, width, height
+.params .ident(.sprintf("%s_bitmap", .string(identifier)))
+        DEFINE_POINT viewloc, 88 - (width/2), 19 - (height/2)
+mapbits:        .addr   .ident(.sprintf("%s_bits", .string(identifier)))
+mapwidth:       .byte   (width + 6) / 7
 reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 50, 18
+        DEFINE_RECT maprect, 0, 0, width-1, height-1
         REF_MAPINFO_MEMBERS
 .endparams
+.endmacro
 
-.params iii_bitmap
-        DEFINE_POINT viewloc, 57, 5
-mapbits:        .addr   iii_bits
-mapwidth:       .byte   8
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 54, 24
-        REF_MAPINFO_MEMBERS
-.endparams
-
-.params iie_bitmap
-        DEFINE_POINT viewloc, 59, 5
-mapbits:        .addr   iie_bits
-mapwidth:       .byte   8
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 50, 25
-        REF_MAPINFO_MEMBERS
-.endparams
-
-.params iic_bitmap
-        DEFINE_POINT viewloc, 62, 4
-mapbits:        .addr   iic_bits
-mapwidth:       .byte   7
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 45, 27
-        REF_MAPINFO_MEMBERS
-.endparams
-
-.params iigs_bitmap
-        DEFINE_POINT viewloc, 65, 5
-mapbits:        .addr   iigs_bits
-mapwidth:       .byte   6
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 38, 25
-        REF_MAPINFO_MEMBERS
-.endparams
-
-.params iie_card_bitmap
-        DEFINE_POINT viewloc, 56, 9
-mapbits:        .addr   iie_card_bits
-mapwidth:       .byte   8
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 55, 21
-        REF_MAPINFO_MEMBERS
-.endparams
-
-.params laser128_bitmap
-        DEFINE_POINT viewloc, 60, 4
-mapbits:        .addr   laser128_bits
-mapwidth:       .byte   7
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 47, 29
-        REF_MAPINFO_MEMBERS
-.endparams
-
-.params ace500_bitmap
-        DEFINE_POINT viewloc, 60, 4
-mapbits:        .addr   ace500_bits
-mapwidth:       .byte   7
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 48, 29
-        REF_MAPINFO_MEMBERS
-.endparams
-
-.params ace2000_bitmap
-        DEFINE_POINT viewloc, 60, 7
-mapbits:        .addr   ace2000_bits
-mapwidth:       .byte   7
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 48, 23
-        REF_MAPINFO_MEMBERS
-.endparams
-
-.params tlc_bitmap
-        DEFINE_POINT viewloc, 62, 6
-mapbits:        .addr   tlc_bits
-mapwidth:       .byte   7
-reserved:       .res    1
-        DEFINE_RECT maprect, 0, 0, 45, 24
-        REF_MAPINFO_MEMBERS
-.endparams
+        DEFINE_BITMAP ii, 51, 19
+        DEFINE_BITMAP iii, 55, 25
+        DEFINE_BITMAP iie, 51, 26
+        DEFINE_BITMAP iic, 46, 28
+        DEFINE_BITMAP iigs, 39, 26
+        DEFINE_BITMAP iie_card, 56, 22
+        DEFINE_BITMAP laser128, 48, 30
+        DEFINE_BITMAP ace500, 49, 30
+        DEFINE_BITMAP ace2000, 49, 24
+        DEFINE_BITMAP tlc, 46, 25
 
 ii_bits:
         PIXELS  ".......######################....................."
