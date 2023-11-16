@@ -134,6 +134,7 @@ reserved:       .res    1
         DEFINE_BITMAP ace500, 49, 30
         DEFINE_BITMAP ace2000, 49, 24
         DEFINE_BITMAP tlc, 46, 25
+        DEFINE_BITMAP trackstar, 56, 25
 
 ii_bits:
         PIXELS  ".......######################....................."
@@ -410,6 +411,32 @@ tlc_bits:
         PIXELS  "##..........................................##"
         PIXELS  ".############################################."
 
+trackstar_bits:
+        PIXELS  ".........######################################........."
+        PIXELS  "........##....................................##........"
+        PIXELS  "........##...##############################...##........"
+        PIXELS  "........##..##........................######..##........"
+        PIXELS  "........##..##..##..##..##..##........######..##........"
+        PIXELS  "........##..##........................######..##........"
+        PIXELS  "........##..##..##..##................##..##..##........"
+        PIXELS  "........##..##........................######..##........"
+        PIXELS  "........##..##..##....................##..##..##........"
+        PIXELS  "........##..##........................######..##........"
+        PIXELS  "........##..##........................##..##..##........"
+        PIXELS  "........##..##........................######..##........"
+        PIXELS  "........##...##############################...##........"
+        PIXELS  "........##....................................##........"
+        PIXELS  ".........######################################........."
+        PIXELS  "................##....................##................"
+        PIXELS  "..####################################################.."
+        PIXELS  ".##..................................................##."
+        PIXELS  ".##...###.............#############################..##."
+        PIXELS  ".##...###.............##############.##############..##."
+        PIXELS  "##....................##..........##.##..........##...##"
+        PIXELS  "##..#.#.#.#.#.#.#.#...##############.##############...##"
+        PIXELS  "##..#.#.#.#.#.#.#.#...#############################...##"
+        PIXELS  "##....................................................##"
+        PIXELS  ".######################################################."
 
 ;;; ============================================================
 
@@ -541,6 +568,12 @@ str_ace2000:
 str_tlc:
         PASCAL_STRING "Tiger Learning Computer"
 
+str_trackstar_e:
+        PASCAL_STRING "Trackstar E"
+
+str_trackstar_plus:
+        PASCAL_STRING "Trackstar Plus"
+
 ;;; ============================================================
 
 str_prodos_version:
@@ -632,8 +665,8 @@ dib_buffer:     .tag    SPDIB
 
 ;;; Machine                    $FBB3    $FB1E    $FBC0    $FBDD    $FBBF
 ;;; --------------------------------------------------------------------
-;;; Apple ][                    $38     [$AD]    [$60]             [$2F]
-;;; Apple ][+                   $EA      $AD     [$EA]             [$EA]
+;;; Apple ][                    $38     [$AD]    [$60]    [$A9]    [$2F]
+;;; Apple ][+                   $EA      $AD     [$EA]    [$A9]    [$EA]
 ;;; Apple /// (emulation)       $EA      $8A
 ;;; Apple IIe                   $06     [$AD]     $EA     [$A9]    [$00]
 ;;; Apple IIe (enhanced)        $06     [$AD]     $E0     [$A9]    [$00]
@@ -648,6 +681,8 @@ dib_buffer:     .tag    SPDIB
 ;;; Laser 128                   $06      $AC     [$E0]    [$8D]    [$00]
 ;;; Franklin ACE 500            $06      $AD      $00      $4C     [$00]
 ;;; Franklin ACE 2000 ****      $06      $AD    $EA/$E0    $4C     [$00]
+;;; Trackstar E                 $06     [$AD]     $EA      $A9      $EA
+;;; Trackstar Plus              $06     [$AD]     $E0      $A9      $EA
 ;;;
 ;;; (Values in [] are for reference, not needed for compatibility check)
 ;;;
@@ -693,6 +728,8 @@ dib_buffer:     .tag    SPDIB
         ace500                  ; Franklin ACE 500
         ace2000                 ; Franklin ACE 2000
         tlc                     ; Tiger Learning Computer
+        trackstar_e             ; Trackstar E
+        trackstar_plus          ; Trackstar Plus
         LAST
 .endenum
 kNumModels = model::LAST
@@ -715,6 +752,8 @@ model_str_table:
         .addr   str_ace500       ; Franklin ACE 500
         .addr   str_ace2000      ; Franklin ACE 2000
         .addr   str_tlc          ; Tiger Learning Computer
+        .addr   str_trackstar_e  ; Trackstar E
+        .addr   str_trackstar_plus ; Trackstar Plus
         ASSERT_ADDRESS_TABLE_SIZE model_str_table, kNumModels
 
 model_pix_table:
@@ -735,6 +774,8 @@ model_pix_table:
         .addr   aux::ace500_bitmap   ; Franklin ACE 500
         .addr   aux::ace2000_bitmap  ; Franklin ACE 2000
         .addr   aux::tlc_bitmap      ; Tiger Learning Computer
+        .addr   aux::trackstar_bitmap ; Trackstar E
+        .addr   aux::trackstar_bitmap ; Trackstar Plus
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
@@ -763,6 +804,12 @@ model_lookup_table:
 
         .byte   model::ace2000  ; must check before IIe
         .byte   $B3, $06, $1E, $AD, $C0, $E0, $DD, $4C, 0
+
+        .byte   model::trackstar_e ; must check before IIe
+        .byte   $B3, $06, $C0, $EA, $DD, $A9, $BF, $EA, 0
+
+        .byte   model::trackstar_plus ; must check before IIe
+        .byte   $B3, $06, $C0, $E0, $DD, $A9, $BF, $EA, 0
 
         .byte   model::iie_original
         .byte   $B3, $06, $C0, $EA, 0
