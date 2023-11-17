@@ -930,7 +930,7 @@ do_jump:
         param_call DrawTitleText, label_quick_copy
 
 ret:    rts
-.endproc
+.endproc ; CmdQuickCopy
 
 .proc CmdDiskCopy
         lda     disk_copy_flag
@@ -949,7 +949,7 @@ ret:    rts
         param_call DrawTitleText, label_disk_copy
 
 ret:    rts
-.endproc
+.endproc ; CmdDiskCopy
 
 ;;; ============================================================
 
@@ -1178,7 +1178,7 @@ try_dos33:
         tya
 
         rts
-.endproc
+.endproc ; GetDriveNameTableSlot
 
 ;;; ============================================================
 ;;; Check block at `default_block_buffer` for Pascal signature

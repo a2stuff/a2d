@@ -164,7 +164,7 @@ fail:   sec
         jmp     BankInMain
 
 tmpw:   .word   0
-.endproc
+.endproc ; MaybeOffsetUpdatePort
 
 
 ;;; ============================================================

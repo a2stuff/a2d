@@ -628,10 +628,10 @@ icon_param:  .byte   0
 
 ;;; Used by IconTK::AllocIcon and IconTK::GetIconEntry
 ;;; TODO: See if we can use `icon_param` for this
-.proc get_icon_entry_params
+.params get_icon_entry_params
 id:     .byte   0
 addr:   .addr   0
-.endproc
+.endparams
 
 ;;; ============================================================
 ;;; Alerts

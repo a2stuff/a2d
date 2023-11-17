@@ -970,7 +970,7 @@ loop:   lda     src,x
 
 .macro END_PROC_AT
         .poporg
-.endproc
+.endproc ; name
 .endmacro
 
 
@@ -1012,7 +1012,7 @@ __pushorg_depth__ .set 0
 .endmacro
 
 .macro .endparams
-        .endproc
+.endproc ; label
 .endmacro
 
 

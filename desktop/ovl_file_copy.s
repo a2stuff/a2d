@@ -21,7 +21,7 @@
         COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
 
         jmp     file_dialog::EventLoop
-.endproc ; Init
+.endproc ; Run
 
 saved_stack:
         .byte   0

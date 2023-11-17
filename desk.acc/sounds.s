@@ -70,7 +70,7 @@ dialog_result:
         lda     original_index
         jsr     InstallIndex
         jmp     Exit
-.endproc
+.endproc ; DoCancel
 
 ;;; ============================================================
 ;;; Resources

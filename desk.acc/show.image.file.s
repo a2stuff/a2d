@@ -989,7 +989,7 @@ is_iigs:
         .popcpu
 
         rts
-.endproc
+.endproc ; InitSHR
 
         ;; --------------------------------------------------
 
@@ -1034,7 +1034,7 @@ loop:
         bne     loop
 
         rts
-.endproc
+.endproc ; PopulateSHR
 
         ;; --------------------------------------------------
 
@@ -1054,7 +1054,7 @@ loop:
         .popcpu
 
         rts
-.endproc
+.endproc ; ExitSHR
 
 .endproc ; ShowSHR
 

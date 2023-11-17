@@ -92,7 +92,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
 
 buffer: .res 16, 0
 
-.endproc ; Init
+.endproc ; Run
 
 ;;; ============================================================
 

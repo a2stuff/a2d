@@ -1846,7 +1846,7 @@ ready:  pla
         sta     (ptr),y         ; actually write to the register
         clc
         rts
-.endproc
+.endproc ; sendbyte
 
         ;; Read byte into A, or carry set if timed out
 .proc readbyte
@@ -1874,7 +1874,7 @@ ready:  ldy     #RDREG
         lda     (ptr),y         ; actually read the register
         clc
         rts
-.endproc
+.endproc ; readbyte
 
 ;;; SSC Signature
 sig_offset:     .byte   $05, $07, $0B, $0C

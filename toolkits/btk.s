@@ -597,4 +597,4 @@ unchecked_cb_bitmap:
 ;;; ============================================================
 .endif ; BTK_SHORT
 
-.endscope
+.endscope ; btk

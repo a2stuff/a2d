@@ -1574,7 +1574,7 @@ use_entry_path:
         jsr     GetSelectorListPathAddr
 
         FALL_THROUGH_TO LaunchPath
-.endproc
+.endproc ; InvokeEntry
 
 ;;; ============================================================
 ;;; Launch specified path (A,X = path)
@@ -1694,7 +1694,7 @@ check_path:
         MLI_CALL QUIT, quit_params
         brk
 
-.endproc ; InvokeEntry
+.endproc ; LaunchPath
 
         DEFINE_QUIT_PARAMS quit_params
 
