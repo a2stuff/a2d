@@ -1098,6 +1098,31 @@ No parameters.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
+#### SaveScreenRect ($56)
+Save the passed screen rectangle to the save area.
+
+Parameters:
+```
+Rect        rect
+```
+
+This exposes the logic used to save the bits behind a menu, allowing
+for quickly restoring. This can be used to implement pop-ups, alerts,
+or other modal effects without requiring underlying windows to update.
+
+Note that no error checking is done that the passed rect is valid or
+that the save area passed to `StartDeskTop` is large enough.
+
+#### RestoreScreenRect ($57)
+Restore the passed screen rectangle from the save area.
+
+Parameters:
+```
+Rect        rect
+```
+
+This must only be used following a `SaveScreenRect` call and must be
+passed the same rectangle dimensions. No error checking is done.
 
 # Creating Applications and DeskTop Desk Accessories
 

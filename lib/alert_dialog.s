@@ -183,34 +183,19 @@ start:
         ;; --------------------------------------------------
         ;; Draw alert
 
-        MGTK_CALL MGTK::HideCursor
 
 .ifdef AD_SAVEBG
         bit     alert_params::options
     IF_VS                       ; V = use save area
-        ;; Compute save bounds
-        ldax    #kAlertFrameLeft
-        jsr     CalcXSaveBounds
-        sty     save_x1_byte
-        sta     save_x1_bit
-
-        ldax    #kAlertFrameLeft + kAlertFrameWidth
-        jsr     CalcXSaveBounds
-        sty     save_x2_byte
-        sta     save_x2_bit
-
-        lda     #kAlertFrameTop
-        sta     save_y1
-        lda     #kAlertFrameTop + kAlertFrameHeight
-        sta     save_y2
-
-        jsr     DialogBackgroundSave
+        MGTK_CALL MGTK::SaveScreenRect, alert_rect
     END_IF
 .endif ; AD_SAVEBG
 
         ;; Set up GrafPort - all drawing is in screen coordinates
         MGTK_CALL MGTK::InitPort, alert_grafport
         MGTK_CALL MGTK::SetPort, alert_grafport
+
+        MGTK_CALL MGTK::HideCursor
 
         ;; --------------------------------------------------
         ;; Draw alert box and bitmap
@@ -526,9 +511,7 @@ finish:
         bit     alert_params::options
     IF_VS                       ; V = use save area
         pha
-        MGTK_CALL MGTK::HideCursor
-        jsr     DialogBackgroundRestore
-        MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::RestoreScreenRect, alert_rect
         pla
     END_IF
 .else
@@ -539,14 +522,6 @@ finish:
         pla
 .endif ; AD_SAVEBG
         rts
-
-;;; ============================================================
-
-.ifdef AD_SAVEBG
-        .include "savedialogbackground.s"
-        DialogBackgroundSave := dialog_background::Save
-        DialogBackgroundRestore := dialog_background::Restore
-.endif ; AD_SAVEBG
 
 ;;; ============================================================
 

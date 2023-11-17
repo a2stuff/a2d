@@ -374,6 +374,8 @@ jump_table:
         .addr   FindControlExImpl   ; $53 FindControlEx
         .addr   PaintBitsImpl       ; $54 PaintBitsHC
         .addr   FlashMenuBarImpl    ; $55 FlashMenuBar
+        .addr   SaveScreenRectImpl  ; $56 SaveScreenRect
+        .addr   RestoreScreenRectImpl ; $57 RestoreScreenRect
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -498,6 +500,8 @@ param_lengths:
         PARAM_DEFN  7, $82, 0                ; $53 FindControlEx
         PARAM_DEFN 16, $8A, 1                ; $54 PaintBitsHC
         PARAM_DEFN  0, $00, 0                ; $55 FlashMenuBar
+        PARAM_DEFN  8, $92, 1                ; $56 SaveScreenRect
+        PARAM_DEFN  8, $92, 1                ; $57 RestoreScreenRect
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -6608,7 +6612,7 @@ last_cursor_pos:
         savebehind_mapwidth := $90
 
 
-.proc SetUpSavebehind
+.proc SetUpMenuSavebehind
         lda     curmenuinfo::x_min+1
         lsr     a
         lda     curmenuinfo::x_min
@@ -6643,8 +6647,37 @@ last_cursor_pos:
         stx     fill_rect_params4::top
         stx     test_rect_params2::top
         rts
-.endproc ; SetUpSavebehind
+.endproc ; SetUpMenuSavebehind
 
+.proc SetUpRectSavebehind
+        rect := $92
+
+        lda     rect+MGTK::Rect::x1+1
+        lsr     a
+        lda     rect+MGTK::Rect::x1
+        ror     a
+        tax
+        lda     div7_table,x
+        sta     savebehind_left_bytes
+
+        lda     rect+MGTK::Rect::x2+1
+        lsr     a
+        lda     rect+MGTK::Rect::x2
+        ror     a
+        tax
+        lda     div7_table,x
+        sec
+        sbc     savebehind_left_bytes
+        sta     savebehind_mapwidth
+
+        copy16  savebehind_buffer, savebehind_buf_addr
+
+        lda     rect+MGTK::Rect::y2
+        sta     savebehind_bottom
+
+        ldx     rect+MGTK::Rect::y1
+        rts
+.endproc ; SetUpRectSavebehind
 
 .proc SavebehindGetVidaddr
         lda     hires_table_lo,x
@@ -6657,14 +6690,28 @@ last_cursor_pos:
         rts
 .endproc ; SavebehindGetVidaddr
 
-.proc SavebehindDoRowVidToBuf
-        ldy     savebehind_mapwidth
+
+.proc DoSavebehind
+loop:   jsr     SavebehindGetVidaddr
+        sta     HISCR
+        jsr     row
+        sta     LOWSCR
+        jsr     row
+
+        inx
+        cpx     savebehind_bottom
+        bcc     loop
+        beq     loop
+
+        rts
+
+row:    ldy     savebehind_mapwidth
 :       lda     (savebehind_vid_addr),y
         sta     (savebehind_buf_addr),y
         dey
         bpl     :-
         FALL_THROUGH_TO SavebehindNextLine
-.endproc ; SavebehindDoRowVidToBuf
+.endproc ; DoSavebehind
 
 .proc SavebehindNextLine
         lda     savebehind_buf_addr
@@ -6676,9 +6723,12 @@ last_cursor_pos:
 :       rts
 .endproc ; SavebehindNextLine
 
-
 .proc RestoreMenuSavebehind
-        jsr     SetUpSavebehind
+        jsr     SetUpMenuSavebehind
+        FALL_THROUGH_TO RestoreSavebehind
+.endproc ; RestoreMenuSavebehind
+
+.proc RestoreSavebehind
 loop:   jsr     SavebehindGetVidaddr
         sta     HISCR
         jsr     row
@@ -6698,7 +6748,7 @@ row:    ldy     savebehind_mapwidth
         dey
         bpl     :-
         bmi     SavebehindNextLine ; always
-.endproc ; RestoreMenuSavebehind
+.endproc ; RestoreSavebehind
 
 
 dmrts:  rts
@@ -6725,18 +6775,8 @@ dmrts:  rts
         plp
         bcc     RestoreMenuSavebehind
 
-        jsr     SetUpSavebehind
-saveloop:
-        jsr     SavebehindGetVidaddr
-        sta     HISCR
-        jsr     SavebehindDoRowVidToBuf
-        sta     LOWSCR
-        jsr     SavebehindDoRowVidToBuf
-
-        inx
-        cpx     savebehind_bottom
-        bcc     saveloop
-        beq     saveloop
+        jsr     SetUpMenuSavebehind
+        jsr     DoSavebehind
 
         jsr     SetStandardPort
 
@@ -10530,6 +10570,20 @@ rect       .tag MGTK::Rect
         MGTK_CALL MGTK::PaintRect, menu_bar_rect
         jmp     RestoreParamsActivePort
 .endproc ; FlashMenuBarImpl
+
+;;; ============================================================
+
+.proc SaveScreenRectImpl
+        jsr     SetUpRectSavebehind
+        jmp     DoSavebehind
+.endproc ; SaveScreenRectImpl
+
+;;; ============================================================
+
+.proc RestoreScreenRectImpl
+        jsr     SetUpRectSavebehind
+        jmp     RestoreSavebehind
+.endproc ; RestoreScreenRectImpl
 
 ;;; ============================================================
 

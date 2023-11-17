@@ -540,6 +540,11 @@ PaintBitsHC     = $54           ; Like PaintBits, but hides the cursor
 FlashMenuBar    = $55           ; Inverts menu bar (e.g. for silent alerts)
 ;;; (no parameters)
 
+SaveScreenRect        = $56
+;;; Rect        rect
+
+RestoreScreenRect     = $57
+;;; Rect        rect
 
 ;;; ============================================================
 ;;; Graphics Primitives Constants
