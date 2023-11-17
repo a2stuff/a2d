@@ -363,20 +363,17 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, ok_button
         jeq     Exit
         jmp     InputLoop
     END_IF
 
         MGTK_CALL MGTK::InRect, cancel_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
-        beq     :+
+        jeq     DoCancel
         jmp     InputLoop
-:       jmp     DoCancel
     END_IF
 
         ;; ----------------------------------------

@@ -473,8 +473,7 @@ finish:
 :
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, input_rect
-        cmp     #MGTK::inrect_inside
-        bne     done
+        beq     done
 
         COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
         LETK_CALL LETK::Click, le_params
@@ -490,8 +489,7 @@ done:   jmp     InputLoop
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, input_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
+        bne     inside
 
 outside:
         bit     cursor_ibeam_flag

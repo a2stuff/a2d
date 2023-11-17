@@ -527,8 +527,7 @@ ret:    rts
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, input_rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
+        bne     inside
 
 outside:
         bit     cursor_ibeam_flag

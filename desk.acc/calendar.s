@@ -407,12 +407,10 @@ common: bit     dragwindow_params::moved
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, left_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     DecDate
+        jne     DecDate
 
         MGTK_CALL MGTK::InRect, right_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     IncDate
+        jne     IncDate
 
         jmp     InputLoop
 .endproc ; HandleClick

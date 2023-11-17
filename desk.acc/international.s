@@ -329,53 +329,44 @@ hit:
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     OnClickOK
+        jne     OnClickOK
 
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::InRect, clock_12hour_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     OnClick12Hour
+        jne     OnClick12Hour
 
         MGTK_CALL MGTK::InRect, clock_24hour_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     OnClick24Hour
+        jne     OnClick24Hour
 
         MGTK_CALL MGTK::InRect, date_mdy_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     OnClickMDY
+        jne     OnClickMDY
 
         MGTK_CALL MGTK::InRect, date_dmy_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     OnClickDMY
+        jne     OnClickDMY
 
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::InRect, date_rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         lda     #Field::date
         jmp     SelectField
     END_IF
 
         MGTK_CALL MGTK::InRect, time_rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         lda     #Field::time
         jmp     SelectField
     END_IF
 
         MGTK_CALL MGTK::InRect, deci_rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         lda     #Field::deci
         jmp     SelectField
     END_IF
 
         MGTK_CALL MGTK::InRect, thou_rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         lda     #Field::thou
         jmp     SelectField
     END_IF

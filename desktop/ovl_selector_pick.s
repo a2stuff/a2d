@@ -482,16 +482,14 @@ handle_button:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, entry_picker_ok_button::rect
-        cmp     #MGTK::inrect_inside
-        bne     not_ok
+        beq     not_ok
         BTK_CALL BTK::Track, entry_picker_ok_button
         bmi     :+
         lda     #$00            ; OK selected
 :       rts
 
 not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_button::rect
-        cmp     #MGTK::inrect_inside
-        bne     not_cancel
+        beq     not_cancel
         BTK_CALL BTK::Track, entry_picker_cancel_button
         bmi     :+
         lda     #$01            ; cancel selected

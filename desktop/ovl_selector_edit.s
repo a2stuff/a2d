@@ -218,24 +218,19 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc HandleClick
         MGTK_CALL MGTK::InRect, primary_run_list_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     ClickPrimaryRunListCtrl
+        jne     ClickPrimaryRunListCtrl
 
         MGTK_CALL MGTK::InRect, secondary_run_list_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     ClickSecondaryRunListCtrl
+        jne     ClickSecondaryRunListCtrl
 
         MGTK_CALL MGTK::InRect, at_first_boot_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     ClickAtFirstBootCtrl
+        jne     ClickAtFirstBootCtrl
 
         MGTK_CALL MGTK::InRect, at_first_use_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     ClickAtFirstUseCtrl
+        jne     ClickAtFirstUseCtrl
 
         MGTK_CALL MGTK::InRect, never_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     ClickNeverCtrl
+        jne     ClickNeverCtrl
 
         return  #0
 .endproc ; HandleClick

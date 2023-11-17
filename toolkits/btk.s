@@ -349,8 +349,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
     END_IF
         MGTK_CALL MGTK::InRect, rect
-        cmp     #MGTK::inrect_inside
-        beq     inside
+        bne     inside
         lda     down_flag       ; outside but was inside?
         beq     toggle
         bne     loop            ; always

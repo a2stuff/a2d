@@ -885,8 +885,7 @@ L9443:  lda     #AlertID::insert_system_disk
         ;; OK button?
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        cmp     #MGTK::inrect_inside
-        bne     check_desktop_btn
+        beq     check_desktop_btn
         BTK_CALL BTK::Track, ok_button
         bmi     done
         jsr     TryInvokeSelectedIndex
@@ -898,8 +897,7 @@ check_desktop_btn:
         bit     desktop_available_flag
         bmi     check_entries
         MGTK_CALL MGTK::InRect, desktop_button::rect
-        cmp     #MGTK::inrect_inside
-        bne     check_entries
+        beq     check_entries
 
         BTK_CALL BTK::Track, desktop_button
         bmi     done

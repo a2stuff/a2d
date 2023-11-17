@@ -313,8 +313,7 @@ loop:
         add16_8 rect_addr, #BTK::ButtonRecord::rect
 
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr
-        cmp     #MGTK::inrect_inside
-        bne     next
+        beq     next
 
         lda     index
         jmp     ToggleButton

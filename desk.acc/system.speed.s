@@ -316,16 +316,13 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     OnClickOK
+        jne     OnClickOK
 
         MGTK_CALL MGTK::InRect, norm_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     OnClickNorm
+        jne     OnClickNorm
 
         MGTK_CALL MGTK::InRect, fast_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     OnClickFast
+        jne     OnClickFast
 
         jmp     InputLoop
 .endproc ; OnClick

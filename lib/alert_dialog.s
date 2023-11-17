@@ -435,15 +435,15 @@ HandleButtonDown:
 
         ;; Cancel
         MGTK_CALL MGTK::InRect, cancel_button+BTK::ButtonRecord::rect
-        cmp     #MGTK::inrect_inside
-        bne     :+
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         jne     was_no_button
         lda     #kAlertResultCancel
         .assert kAlertResultCancel <> 0, error, "kAlertResultCancel must be non-zero"
         bne     finish          ; always
+    END_IF
 
-:       bit     alert_params::buttons  ; V bit set = Cancel + OK
+        bit     alert_params::buttons  ; V bit set = Cancel + OK
         bvs     check_ok_rect
 
 .ifdef AD_YESNOALL
@@ -452,26 +452,25 @@ HandleButtonDown:
     IF_NOT_ZERO
         ;; Yes & No & All
         MGTK_CALL MGTK::InRect, yes_button+BTK::ButtonRecord::rect
-        cmp     #MGTK::inrect_inside
-        bne     :+
+      IF_NOT_ZERO
         BTK_CALL BTK::Track, yes_button
         bne     was_no_button
         lda     #kAlertResultYes
         .assert kAlertResultYes <> 0, error, "constant mismatch"
         bne     finish          ; always
-:
+      END_IF
+
         MGTK_CALL MGTK::InRect, no_button+BTK::ButtonRecord::rect
-        cmp     #MGTK::inrect_inside
-        bne     :+
+      IF_NOT_ZERO
         BTK_CALL BTK::Track, no_button
         bne     was_no_button
         lda     #kAlertResultNo
         .assert kAlertResultNo <> 0, error, "constant mismatch"
         bne     finish          ; always
-:
+      END_IF
+
         MGTK_CALL MGTK::InRect, all_button+BTK::ButtonRecord::rect
-        cmp     #MGTK::inrect_inside
-        bne     was_no_button
+        beq     was_no_button
         BTK_CALL BTK::Track, all_button
         bne     was_no_button
         lda     #kAlertResultAll
@@ -482,8 +481,7 @@ HandleButtonDown:
 
         ;; Try Again
         MGTK_CALL MGTK::InRect, try_again_button+BTK::ButtonRecord::rect
-        cmp     #MGTK::inrect_inside
-        bne     was_no_button
+        beq     was_no_button
         BTK_CALL BTK::Track, try_again_button
         bne     was_no_button
         lda     #kAlertResultTryAgain
@@ -493,8 +491,7 @@ HandleButtonDown:
         ;; OK
 check_ok_rect:
         MGTK_CALL MGTK::InRect, ok_button+BTK::ButtonRecord::rect
-        cmp     #MGTK::inrect_inside
-        bne     was_no_button
+        beq     was_no_button
         BTK_CALL BTK::Track, ok_button
         bne     was_no_button
         lda     #kAlertResultOK

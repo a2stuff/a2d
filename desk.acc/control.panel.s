@@ -578,94 +578,80 @@ caret_blink_caret_bitmap:
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, fatbits_rect
-        cmp     #MGTK::inrect_inside
-        jeq     HandleBitsClick
+        jne     HandleBitsClick
 
         MGTK_CALL MGTK::InRect, larr_rect
-        cmp     #MGTK::inrect_inside
-        jeq     HandleLArrClick
+        jne     HandleLArrClick
 
         MGTK_CALL MGTK::InRect, rarr_rect
-        cmp     #MGTK::inrect_inside
-        jeq     HandleRArrClick
+        jne     HandleRArrClick
 
         MGTK_CALL MGTK::InRect, preview_rect
-        cmp     #MGTK::inrect_inside
-        jeq     HandlePatternClick
+        jne     HandlePatternClick
 
         MGTK_CALL MGTK::InRect, pattern_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, pattern_button
         jmi     InputLoop
         jmp     HandlePatternClick
     END_IF
 
         MGTK_CALL MGTK::InRect, rgb_color_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     HandleRGBClick
+        jne     HandleRGBClick
 
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, dblclick_button1::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #1
         jmp     HandleDblclickClick
-        END_IF
+    END_IF
 
         MGTK_CALL MGTK::InRect, dblclick_button2::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #2
         jmp     HandleDblclickClick
-        END_IF
+    END_IF
 
         MGTK_CALL MGTK::InRect, dblclick_button3::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #3
         jmp     HandleDblclickClick
-        END_IF
+    END_IF
 
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, tracking_slow_button::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #0
         jmp     HandleTrackingClick
-        END_IF
+    END_IF
 
         MGTK_CALL MGTK::InRect, tracking_fast_button::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #1
         jmp     HandleTrackingClick
-        END_IF
+    END_IF
 
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, caret_blink_button1::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #1
         jmp     HandleCaretBlinkClick
-        END_IF
+    END_IF
 
         MGTK_CALL MGTK::InRect, caret_blink_button2::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #2
         jmp     HandleCaretBlinkClick
-        END_IF
+    END_IF
 
         MGTK_CALL MGTK::InRect, caret_blink_button3::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #3
         jmp     HandleCaretBlinkClick
-        END_IF
+    END_IF
 
         jmp     InputLoop
 .endproc ; HandleClick
@@ -771,8 +757,7 @@ event:  MGTK_CALL MGTK::GetEvent, event_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, fatbits_rect
-        cmp     #MGTK::inrect_inside
-        bne     event
+        beq     event
 
         jsr     MapCoords
         ldx     screentowindow_params::windowx

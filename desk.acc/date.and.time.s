@@ -494,22 +494,19 @@ hit:
         ;; ----------------------------------------
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        cmp     #MGTK::inrect_inside
-        jeq     OnClickOK
+        jne     OnClickOK
 
         MGTK_CALL MGTK::InRect, clock_12hour_button::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #$00
         jmp     HandleOptionClick
-        END_IF
+    END_IF
 
         MGTK_CALL MGTK::InRect, clock_24hour_button::rect
-        cmp     #MGTK::inrect_inside
-        IF_EQ
+    IF_NOT_ZERO
         lda     #$80
         jmp     HandleOptionClick
-        END_IF
+    END_IF
 
         ;; ----------------------------------------
 

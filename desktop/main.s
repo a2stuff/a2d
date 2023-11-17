@@ -13312,8 +13312,7 @@ content:
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        cmp     #MGTK::inrect_inside
-        beq     check_button_ok
+        bne     check_button_ok
         jmp     maybe_check_button_cancel
 
 check_button_ok:
@@ -13329,8 +13328,7 @@ maybe_check_button_cancel:
 
 check_button_cancel:
         MGTK_CALL MGTK::InRect, cancel_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         bmi     :+
         lda     #PromptResult::cancel
@@ -13345,11 +13343,12 @@ check_button_cancel:
 
         ;; Was click inside text box?
         MGTK_CALL MGTK::InRect, name_input_rect
-        cmp     #MGTK::inrect_inside
-        bne     :+
+    IF_NOT_ZERO
         COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
         LETK_CALL LETK::Click, le_params
-:       return  #$FF
+    END_IF
+
+        return  #$FF
 .endproc ; PromptClickHandler
 
 ;;; Key handler for prompt dialog

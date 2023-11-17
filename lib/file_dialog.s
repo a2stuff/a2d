@@ -236,8 +236,7 @@ not_list:
         ;; Drives button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::drives_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::drives_button
         bmi     :+
         jsr     _DoDrives
@@ -248,8 +247,7 @@ not_list:
         ;; Open button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::open_button::rect
-        cmp     #MGTK::inrect_inside
-     IF_EQ
+     IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::open_button
         bmi     :+
         jsr     _DoOpen
@@ -260,8 +258,7 @@ not_list:
         ;; Close button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::close_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::close_button
         bmi     :+
         jsr     _DoClose
@@ -272,8 +269,7 @@ not_list:
         ;; OK button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::ok_button
         bmi     :+
         jsr     HandleOK
@@ -284,8 +280,7 @@ not_list:
         ;; Cancel button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button::rect
-        cmp     #MGTK::inrect_inside
-    IF_EQ
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::cancel_button
         bmi     :+
         jsr     HandleCancel
@@ -300,8 +295,7 @@ not_list:
     IF_NS
         ;; Text Edit
         MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
-        cmp     #MGTK::inrect_inside
-      IF_EQ
+      IF_NOT_ZERO
         COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params::coords
         LETK_CALL LETK::Click, file_dialog_res::le_params
         rts
