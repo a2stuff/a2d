@@ -1946,9 +1946,6 @@ bad_rect:
 src_width_bytes:
         .res    1          ; width of source data in chars
 
-unused_width:
-        .res    1          ; holds the width of data, but is not used ???
-
 .proc PaintBitsImpl
 
         dbi_left   := $8A
@@ -2030,7 +2027,6 @@ unused_width:
         ldx     right_masks_table       ; need right mask on main?
         cpx     #1                      ; set carry if >= 1
         adc     #0
-        sta     unused_width
         sta     src_width_bytes         ; adjusted width in chars
 
         lda     #2
@@ -6938,16 +6934,6 @@ ep2:    jsr     SetFillMode
         beq     DimMenuitem::ep2 ; always
 .endproc ; DrawFiller
 
-light_speckle_pattern:
-        .byte   %10001000
-        .byte   %01010101
-        .byte   %10001000
-        .byte   %01010101
-        .byte   %10001000
-        .byte   %01010101
-        .byte   %10001000
-        .byte   %01010101
-
 .params fill_rect_params3
 left:   .word   0
 top:    .word   0
@@ -7163,8 +7149,6 @@ right_scroll_bitmap:
         PIXELS  "#..########..##......"
         PIXELS  "#........####........"
         PIXELS  "#........##.........."
-
-        .byte   0         ; unreferenced ???
 
         ;; Resize Box
 resize_box_bitmap:
@@ -8357,8 +8341,6 @@ end:    sta     (params_addr),y
 
 ;;; ============================================================
 
-        .byte   $00
-
 .params drag_initialpos
 xcoord: .res    2
 ycoord: .res    2
@@ -8958,9 +8940,6 @@ light_speckles_pattern:
         .byte   %01110111
         .byte   %11011101
         .byte   %01110111
-
-        .byte   $00,$00
-
 
 .proc GetScrollbarScrollArea
         bit     which_control

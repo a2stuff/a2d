@@ -90,8 +90,6 @@ notpencopy:     .byte   MGTK::notpencopy
 event_params:   .tag    MGTK::Event
 event_kind      := event_params + MGTK::Event::kind
 event_coords    := event_params + MGTK::Event::xcoord
-event_xcoord    := event_params + MGTK::Event::xcoord
-event_ycoord    := event_params + MGTK::Event::ycoord
 event_key       := event_params + MGTK::Event::key
 
 ;;; Bounds of the alert "window"
@@ -111,15 +109,6 @@ kAlertFrameHeight = kAlertRectHeight + 2
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_SZ alert_inner_frame_rect, kAlertRectLeft + kBorderDX, kAlertRectTop + kBorderDY, kAlertRectWidth - kBorderDX*3 + 1, kAlertRectHeight - kBorderDY*3 + 1
-
-.params screen_portbits
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
-        REF_MAPINFO_MEMBERS
-.endparams
 
 ;;; --------------------------------------------------
 
@@ -513,7 +502,6 @@ finish:
     END_IF
 .else
         pha
-        MGTK_CALL MGTK::SetPortBits, screen_portbits
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, alert_rect
         pla

@@ -909,6 +909,7 @@ skip:   dec     arg
 ;;;
 .macro PARAM_BLOCK name, addr
         name := addr
+        .refto name
         .struct name
         .org addr
 .endmacro
