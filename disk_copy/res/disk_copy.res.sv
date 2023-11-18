@@ -19,8 +19,9 @@
 .define res_string_label_blocks_to_transfer "Block att |verf|ra: "
 .define res_string_source "K{lla "
 .define res_string_destination "Destination "
-.define res_string_slot_prefix "Kortplats "
-.define res_string_drive_infix "  Diskenhet "
+.define res_string_slot_drive_pattern "Kortplats #  Diskenhet #"
+.define res_const_slot_drive_pattern_offset1 11
+.define res_const_slot_drive_pattern_offset2 24
 .define res_string_dos33_s_d_pattern "DOS 3.3 K#, E# "
 .define res_const_dos33_s_d_pattern_offset1 10
 .define res_const_dos33_s_d_pattern_offset2 14

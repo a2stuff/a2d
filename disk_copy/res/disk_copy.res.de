@@ -19,8 +19,9 @@
 .define res_string_label_blocks_to_transfer "Zu verschiebene Bl|cke: "
 .define res_string_source "Quelle "
 .define res_string_destination "Ziel "
-.define res_string_slot_prefix "Steckplatz "
-.define res_string_drive_infix "  Laufwerk "
+.define res_string_slot_drive_pattern "Steckplatz #  Laufwerk #"
+.define res_const_slot_drive_pattern_offset1 12
+.define res_const_slot_drive_pattern_offset2 24
 .define res_string_dos33_s_d_pattern "DOS 3,3 S#,L# "
 .define res_const_dos33_s_d_pattern_offset1 10
 .define res_const_dos33_s_d_pattern_offset2 13

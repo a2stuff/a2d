@@ -19,8 +19,9 @@
 .define res_string_label_blocks_to_transfer "Blokken om over te dragen: "
 .define res_string_source "Bronschijf "
 .define res_string_destination "Doelschijf "
-.define res_string_slot_prefix "Slot "
-.define res_string_drive_infix "  Schijf "
+.define res_string_slot_drive_pattern "Slot #  Schijf #"
+.define res_const_slot_drive_pattern_offset1 6
+.define res_const_slot_drive_pattern_offset2 16
 .define res_string_dos33_s_d_pattern "DOS 3.3 S#, D# "
 .define res_const_dos33_s_d_pattern_offset1 10
 .define res_const_dos33_s_d_pattern_offset2 14

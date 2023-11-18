@@ -19,8 +19,9 @@
 .define res_string_label_blocks_to_transfer "Blocos para transferir: "
 .define res_string_source "Fonte "
 .define res_string_destination "Destino "
-.define res_string_slot_prefix "Ranhura "
-.define res_string_drive_infix "  Unidade "
+.define res_string_slot_drive_pattern "Ranhura #  Unidade #"
+.define res_const_slot_drive_pattern_offset1 9
+.define res_const_slot_drive_pattern_offset2 20
 .define res_string_dos33_s_d_pattern "DOS 3.3 R#, U# "
 .define res_const_dos33_s_d_pattern_offset1 10
 .define res_const_dos33_s_d_pattern_offset2 14

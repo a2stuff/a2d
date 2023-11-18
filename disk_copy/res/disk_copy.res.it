@@ -19,8 +19,9 @@
 .define res_string_label_blocks_to_transfer "Blocchi da trasferire: "
 .define res_string_source "Sorgente "
 .define res_string_destination "Destinazione "
-.define res_string_slot_prefix "Slot "
-.define res_string_drive_infix "  Lettore "
+.define res_string_slot_drive_pattern "Slot #  Lettore #"
+.define res_const_slot_drive_pattern_offset1 6
+.define res_const_slot_drive_pattern_offset2 17
 .define res_string_dos33_s_d_pattern "DOS 3,3 S#,L# "
 .define res_const_dos33_s_d_pattern_offset1 10
 .define res_const_dos33_s_d_pattern_offset2 13

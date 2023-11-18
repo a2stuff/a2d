@@ -390,10 +390,8 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
         DEFINE_LABEL error_writing, res_string_error_writing, 40, 100
         DEFINE_LABEL error_reading, res_string_error_reading, 40, 90
 
-str_slot:
-        PASCAL_STRING res_string_slot_prefix
-str_drive:
-        PASCAL_STRING res_string_drive_infix
+str_slot_drive_pattern:
+        PASCAL_STRING res_string_slot_drive_pattern
 
 str_dos33_s_d:
         PASCAL_STRING res_string_dos33_s_d_pattern
@@ -1762,10 +1760,7 @@ tmp:    .byte   0
         lda     drive_unitnum_table,x
         jsr     PrepSDStrings
         MGTK_CALL MGTK::MoveTo, point_source_slot_drive
-        param_call DrawString, str_slot
-        param_call DrawString, str_s
-        param_call DrawString, str_drive
-        param_call DrawString, str_d
+        param_call DrawString, str_slot_drive_pattern
         bit     source_disk_format
         bpl     show_name       ; ProDOS
         bvc     :+              ; DOS 3.3
@@ -1791,10 +1786,7 @@ show_name:
         lda     drive_unitnum_table,x
         jsr     PrepSDStrings
         MGTK_CALL MGTK::MoveTo, point_destination_slot_drive
-        param_call DrawString, str_slot
-        param_call DrawString, str_s
-        param_call DrawString, str_drive
-        param_call DrawString, str_d
+        param_call DrawString, str_slot_drive_pattern
         rts
 .endproc ; DrawDestinationDriveInfo
 
@@ -1975,14 +1967,16 @@ ret:    rts
 ;;; ============================================================
 
 ;;; Input: A = unit number (i.e. %DSSSxxxx)
-;;; Output: `str_s` and `str_d` populated with digits
+;;; Output: `str_slot_drive_pattern` populated
 .proc PrepSDStrings
         pha
         jsr     UnitNumToSlotDigit
         sta     str_s + 1
+        sta     str_slot_drive_pattern + res_const_slot_drive_pattern_offset1
         pla
         jsr     UnitNumToDriveDigit
         sta     str_d + 1
+        sta     str_slot_drive_pattern + res_const_slot_drive_pattern_offset2
         rts
 .endproc ; PrepSDStrings
 
