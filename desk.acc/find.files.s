@@ -379,7 +379,7 @@ search:
         cpy     #0
         beq     endloop
 loop:   lda     buf_search,y    ; copy characters
-        jsr     UpcasePathChar
+        jsr     ToUpperCase
         sta     pattern-1,y
         dey
         bne     loop
@@ -418,17 +418,6 @@ finish:
         jmp     InputLoop
 
 .endproc ; DoSearch
-
-;;; ============================================================
-;;; Make a path character uppercase; assumes no char >'z' is
-;;; a valid path character.
-
-.proc UpcasePathChar
-        cmp     #'a'
-        bcc     :+
-        and     #CASE_MASK
-:       rts
-.endproc ; UpcasePathChar
 
 ;;; ============================================================
 
@@ -770,17 +759,6 @@ continue:
 num:    .byte   0
 offset: .addr   0
 .endproc ; GetEntryAddr
-
-;;; ============================================================
-;;; Make a path character uppercase; assumes no char >'z' is
-;;; a valid path character.
-
-.proc UpcasePathChar
-        cmp     #'a'
-        bcc     :+
-        and     #CASE_MASK
-:       rts
-.endproc ; UpcasePathChar
 
 ;;; ============================================================
 
@@ -1334,7 +1312,7 @@ string:         .res    16      ; 15 + null terminator
         cpy     #0
         beq     endloop
 loop:   lda     (entPtr),y      ; copy characters
-        jsr     UpcasePathChar
+        jsr     ToUpperCase
 
         sta     string-1,y
         dey
@@ -1470,6 +1448,10 @@ fail:
         sec
         rts
 .endproc ; NextVolume
+
+;;; ============================================================
+
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 
