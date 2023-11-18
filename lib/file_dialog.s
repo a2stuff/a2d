@@ -589,7 +589,7 @@ exit:   rts
 
 .proc _CheckTypeDown
         lda     event_params::key
-        jsr     _UpcaseChar
+        jsr     _ToUpperCase
         cmp     #'A'
         bcc     :+
         cmp     #'Z'+1
@@ -646,7 +646,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         ldy     #1              ; compare strings (length >= 1)
 cloop:  lda     ($06),y
-        jsr     _UpcaseChar
+        jsr     _ToUpperCase
         cmp     type_down_buf,y
         bcc     next
         beq     :+
@@ -705,14 +705,8 @@ found:  return  index
 
 ;;; ============================================================
 
-.proc _UpcaseChar
-        cmp     #'a'
-        bcc     done
-        cmp     #'z'+1
-        bcs     done
-        and     #(CASE_MASK & $7F) ; convert lowercase to uppercase
-done:   rts
-.endproc ; _UpcaseChar
+        .include "../lib/uppercase.s"
+        _ToUpperCase := ToUpperCase
 
 ;;; ============================================================
 
@@ -1375,10 +1369,10 @@ next:   inc     inner
         iny
 
 loop:   lda     (ptr2),y
-        jsr     _UpcaseChar
+        jsr     _ToUpperCase
         sta     char
         lda     (ptr1),y
-        jsr     _UpcaseChar
+        jsr     _ToUpperCase
         char := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     ret             ; differ at Yth character

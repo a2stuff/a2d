@@ -378,7 +378,7 @@ modifiers:
     IF_EQ
         ;; Double-modifier shortcuts
         lda     event_params::key
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         cmp     #res_char_menu_item_open_shortcut
         jeq     CmdOpenThenCloseCurrent
         cmp     #CHAR_DOWN
@@ -394,7 +394,7 @@ modifiers:
 
         ;; Non-menu keys
         lda     event_params::key
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         cmp     #CHAR_DOWN      ; Apple-Down (Open)
         jeq     CmdOpenFromKeyboard
         cmp     #CHAR_UP        ; Apple-Up (Open Parent)
@@ -1165,14 +1165,7 @@ check_header:
 ;;; ============================================================
 
         .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
-.proc UpcaseChar
-        cmp     #'a'
-        bcc     done
-        cmp     #'z'+1
-        bcs     done
-        and     #CASE_MASK
-done:   rts
-.endproc ; UpcaseChar
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 ;;; Uppercase a string
@@ -1188,7 +1181,7 @@ done:   rts
         beq     ret
         tay
 @loop:  lda     (ptr),y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         sta     (ptr),y
         dey
         bne     @loop
@@ -3355,7 +3348,7 @@ CmdHighlightAlphaNext := CmdHighlightImpl::a_next
 
 ;;; Returns Z=1 if consumed, Z=0 otherwise.
 .proc CheckTypeDown
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         cmp     #'A'
         bcc     :+
         cmp     #'Z'+1
@@ -3435,7 +3428,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
         ldy     #1
 cloop:  lda     (ptr),y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         cmp     typedown_buf,y
         bcc     next
         beq     :+
@@ -3601,10 +3594,10 @@ next:   inc     inner
         iny
 
 loop:   lda     (ptr2),y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         sta     char
         lda     (ptr1),y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         char := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     ret             ; differ at Yth character
@@ -7704,12 +7697,12 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         suffix_pos := *+1
 :       ldy     #SELF_MODIFIED_BYTE
         lda     (ptr_suffix),y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         sta     char
         filename_pos := *+1
         ldy     #SELF_MODIFIED_BYTE
         lda     (ptr_filename),y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         char := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     next            ; no match
@@ -12918,10 +12911,10 @@ compare:
         lda     (ptr1),y
         tay
 :       lda     (ptr1),y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         sta     @char
         lda     (ptr2),y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         @char := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     ok
@@ -13046,10 +13039,10 @@ CloseFilesCancelDialogWithResult := CloseFilesCancelDialog::ep2
 
         ;; Chars the same?
 loop:   lda     (src_ptr),y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         sta     @char
         lda     dst_buf,y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         @char := *+1
         cmp     #SELF_MODIFIED_BYTE
         bne     no_match
@@ -13226,7 +13219,7 @@ fallback:
         ;; See: https://github.com/a2stuff/a2d/issues/352
         ldy     stashed_name
 :       lda     stashed_name,y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         sta     stashed_name,y
         dey
         bne     :-
@@ -14325,7 +14318,7 @@ sloop:  lda     path_buf,y      ; find last '/'
 :       inx
         iny
         lda     path_buf,y
-        jsr     UpcaseChar
+        jsr     ToUpperCase
         sta     filename,x
         cpy     path_buf
         bne     :-
