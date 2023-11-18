@@ -9,7 +9,6 @@
 ;;;
 ;;; Required includes:
 ;;; * lib/event_params.s
-;;; * lib/drawstring.s
 ;;; * lib/muldiv.s
 ;;; Requires `MGTK_CALL` macro to be functional.
 ;;;
@@ -21,7 +20,6 @@
 ;;; * `selected_index` - updated to be the selection or $FF if none
 ;;; Requires the following proc definitions:
 ;;; * `DrawListEntryProc` - called to draw an item (A=index)
-;;; * `SetPortForList` - called to set the port for the window
 ;;; Optionally:
 ;;; * `OnListSelectionChange` - called when `selected_index` has changed
 ;;; * `OnListSelectionNoChange` - called on click when `selected_index` has not changed
@@ -458,7 +456,7 @@ update:
 
 ;;; ============================================================
 ;;; Adjusts the viewport given the scroll position, and selects
-;;; the GrafPort using the client's `SetPortForList`.
+;;; the GrafPort of the control.
 
 .proc _SetPort
         maprect := listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
@@ -474,7 +472,8 @@ update:
         ;; Set y2 to bottom
         addax   maprect+MGTK::Rect::y2, maprect+MGTK::Rect::y2
 
-        jmp     SetPortForList
+        MGTK_CALL MGTK::SetPort, listbox::winfo+MGTK::Winfo::port
+        rts
 .endproc ; _SetPort
 
 ;;; ============================================================
@@ -484,6 +483,7 @@ update:
         jsr     _SetPort
 
         MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect
 
         lda     listbox::num_items

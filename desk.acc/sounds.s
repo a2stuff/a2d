@@ -89,6 +89,7 @@ pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
 
 penXOR:         .byte   MGTK::penXOR
+pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 
 .params winfo
@@ -432,24 +433,12 @@ grafport_win:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
-.proc SetPortForList
-        lda     #kListBoxWindowId
-        bne     SetPortForWindow ; always
-.endproc ; SetPortForList
-
 .proc SetPortForDialog
-        lda     #kDAWindowId
-        FALL_THROUGH_TO SetPortForWindow
-.endproc ; SetPortForDialog
-
-.proc SetPortForWindow
-        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
-.endproc ; SetPortForWindow
-
+.endproc ; SetPortForDialog
 
 ;;; ============================================================
 

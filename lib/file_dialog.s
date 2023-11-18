@@ -1275,11 +1275,6 @@ finish:
 
 ;;; ============================================================
 
-.proc SetPortForList
-        lda     #file_dialog_res::kEntryListCtlWindowID
-        bne     _SetPortForWindow ; always
-.endproc ; SetPortForList
-
 .proc SetPortForDialog
         lda     #file_dialog_res::kFilePickerDlgWindowID
         FALL_THROUGH_TO _SetPortForWindow

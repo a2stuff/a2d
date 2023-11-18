@@ -154,7 +154,7 @@ entry_buf:
         .include "../lib/event_params.s"
 
 .params getwinport_params
-window_id:      .byte   0
+window_id:      .byte   kDAWindowID
 port:           .addr   grafport_win
 .endparams
 
@@ -176,6 +176,7 @@ grafport_win:   .tag    MGTK::GrafPort
         DEFINE_BUTTON cancel_button, kDAWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
 
 penXOR:         .byte   MGTK::penXOR
+pencopy:        .byte   MGTK::pencopy
 notpencopy:     .byte   MGTK::notpencopy
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
@@ -498,23 +499,12 @@ done:   jmp     InputLoop
 
 ;;; ============================================================
 
-.proc SetPortForList
-        lda     #kResultsWindowID
-        bne     SetPortForWindow ; always
-.endproc ; SetPortForList
-
 .proc SetPortForDialog
-        lda     #kDAWindowID
-        FALL_THROUGH_TO SetPortForWindow
-.endproc ; SetPortForDialog
-
-.proc SetPortForWindow
-        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
-.endproc ; SetPortForWindow
+.endproc ; SetPortForDialog
 
 ;;; ============================================================
 
@@ -586,7 +576,7 @@ show_index:     .byte   $FF
 ;;; ============================================================
 
 .proc PrepDrawIncrementalResults
-        jsr     SetPortForList
+        MGTK_CALL MGTK::SetPort, winfo_results::port
         copy    #0, cur_line
         copy16  #kListItemTextOffsetX, cur_pos::xcoord
         copy16  #kListItemTextOffsetY, cur_pos::ycoord

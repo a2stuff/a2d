@@ -1403,11 +1403,6 @@ CheckAlpha:
 
 ;;; ============================================================
 
-.proc SetPortForList
-        lda     #winfo_drive_select::kWindowId
-        bne     SetPortForWindow ; always
-.endproc ; SetPortForList
-
 .proc SetPortForDialog
         lda     #winfo_dialog::kWindowId
         FALL_THROUGH_TO SetPortForWindow
