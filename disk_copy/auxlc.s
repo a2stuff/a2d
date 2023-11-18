@@ -153,14 +153,16 @@ check:          .byte   0
 
         .include "../lib/event_params.s"
 
-grafport:  .res .sizeof(MGTK::GrafPort), 0
+grafport:       .tag MGTK::GrafPort
+
+        kDialogWindowId = 1
 
 .params getwinport_params
-window_id:      .byte   0
+window_id:      .byte   kDialogWindowId
 port:           .addr   grafport_win
 .endparams
 
-grafport_win:  .res    .sizeof(MGTK::GrafPort), 0
+grafport_win:   .tag MGTK::GrafPort
 
 kDialogWidth    = 500
 kDialogHeight   = 150
@@ -168,7 +170,7 @@ kDialogLeft     = (::kScreenWidth - kDialogWidth)/2
 kDialogTop      = (::kScreenHeight - kDialogHeight)/2
 
 .params winfo_dialog
-        kWindowId = 1
+        kWindowId = kDialogWindowId
 window_id:      .byte   kWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
@@ -261,13 +263,9 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         DEFINE_BUTTON read_drive_button, winfo_dialog::kWindowId, res_string_button_read_drive, res_char_button_read_drive_shortcut, 210, 90
 
-        DEFINE_POINT point_slot_drive_name, 20, 28
-str_slot_drive_name:
-        PASCAL_STRING res_string_label_slot_drive_name ; dialog label
+        DEFINE_LABEL slot_drive_name, res_string_label_slot_drive_name, 20, 28
 
-        DEFINE_POINT point_select_source, 270, 46
-str_select_source:
-        PASCAL_STRING res_string_prompt_select_source ; dialog label
+        DEFINE_LABEL select_source, res_string_prompt_select_source, 270, 46
 str_select_destination:
         PASCAL_STRING res_string_prompt_select_destination ; dialog label
 
@@ -281,8 +279,6 @@ str_reading:
 
 str_unknown:
         PASCAL_STRING res_string_unknown
-str_select_quit:
-        PASCAL_STRING .sprintf(res_string_label_select_quit, res_string_dc_menu_item_quit, res_string_dc_menu_bar_item_file, ::kGlyphOpenApple, res_char_dc_menu_item_quit_shortcut) ; dialog label
 
 bg_black:
         .byte   0
@@ -371,37 +367,29 @@ listbox_enabled_flag:  .byte   0
 source_disk_format:
         .byte   0
 
-disk_copy_flag:                 ; mode: 0 = Disk Copy, 1 = Quick Copy
+disk_copy_flag:                 ; bit7 0 = Quick Copy, 1 = Disk Copy
         .byte   0
 
 str_2_spaces:   PASCAL_STRING "  "
 str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 
-;;; Label positions
-        DEFINE_POINT point_blocks_read, 300, 125
-        DEFINE_POINT point_blocks_written, 300, 135
-        DEFINE_POINT point_source, 300, 115
-        DEFINE_POINT point_source2, 40, 125
-        DEFINE_POINT point_slot_drive, 110, 125
-        DEFINE_POINT point_destination, 40, 135
-        DEFINE_POINT point_slot_drive2, 110, 135
-        DEFINE_POINT point_disk_copy, 40, 115
-        DEFINE_POINT point_select_quit, 20, 145
-        DEFINE_RECT rect_select_quit, 20, 136, 400, 145
-        DEFINE_POINT point_escape_stop_copy, 300, 145
-        DEFINE_POINT point_error_writing, 40, 100
-        DEFINE_POINT point_error_reading, 40, 90
+        DEFINE_LABEL blocks_read, res_string_label_blocks_read, 300, 125
+        DEFINE_LABEL blocks_written, res_string_label_blocks_written, 300, 135
+        DEFINE_LABEL blocks_to_transfer, res_string_label_blocks_to_transfer, 300, 115
+        DEFINE_LABEL source, res_string_source, 40, 125
+        DEFINE_LABEL destination, res_string_destination, 40, 135
 
-str_blocks_read:
-        PASCAL_STRING res_string_label_blocks_read
-str_blocks_written:
-        PASCAL_STRING res_string_label_blocks_written
-str_blocks_to_transfer:
-        PASCAL_STRING res_string_label_blocks_to_transfer
-str_source:
-        PASCAL_STRING res_string_source
-str_destination:
-        PASCAL_STRING res_string_destination
+        DEFINE_POINT point_source_slot_drive, 110, 125
+        DEFINE_POINT point_destination_slot_drive, 110, 135
+        DEFINE_POINT point_disk_copy, 40, 115
+
+        DEFINE_LABEL select_quit, .sprintf(res_string_label_select_quit, res_string_dc_menu_item_quit, res_string_dc_menu_bar_item_file, ::kGlyphOpenApple, res_char_dc_menu_item_quit_shortcut), 20, 145
+        DEFINE_RECT rect_select_quit, 20, 136, 400, 145
+
+        DEFINE_LABEL escape_stop_copy, res_string_escape_stop_copy, 300, 145
+        DEFINE_LABEL error_writing, res_string_error_writing, 40, 100
+        DEFINE_LABEL error_reading, res_string_error_reading, 40, 90
+
 str_slot:
         PASCAL_STRING res_string_slot_prefix
 str_drive:
@@ -420,15 +408,6 @@ str_pascal_disk_copy:
 
 str_prodos_disk_copy:
         PASCAL_STRING res_string_prodos_disk_copy
-
-str_escape_stop_copy:
-        PASCAL_STRING res_string_escape_stop_copy
-
-str_error_writing:
-        PASCAL_STRING res_string_error_writing
-
-str_error_reading:
-        PASCAL_STRING res_string_error_reading
 
 ;;; ============================================================
 
@@ -494,7 +473,7 @@ check:  lda     current_drive_selection
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_select_src
-        MGTK_CALL MGTK::MoveTo, point_select_source
+        MGTK_CALL MGTK::MoveTo, select_source_label_pos
         param_call DrawString, str_select_destination
         jsr     DrawSourceDriveInfo
 
@@ -528,10 +507,8 @@ check:  lda     current_drive_selection
         ;; Erase the drive selection listbox
         MGTK_CALL MGTK::GetWinFrameRect, win_frame_rect_params
         MGTK_CALL MGTK::CloseWindow, winfo_drive_select
-        sub16   win_frame_rect_params::rect+MGTK::Rect::x1, winfo_dialog::viewloc::xcoord, win_frame_rect_params::rect+MGTK::Rect::x1
-        sub16   win_frame_rect_params::rect+MGTK::Rect::y1, winfo_dialog::viewloc::ycoord, win_frame_rect_params::rect+MGTK::Rect::y1
-        sub16   win_frame_rect_params::rect+MGTK::Rect::x2, winfo_dialog::viewloc::xcoord, win_frame_rect_params::rect+MGTK::Rect::x2
-        sub16   win_frame_rect_params::rect+MGTK::Rect::y2, winfo_dialog::viewloc::ycoord, win_frame_rect_params::rect+MGTK::Rect::y2
+        MGTK_CALL MGTK::InitPort, grafport
+        MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::PaintRect, win_frame_rect_params::rect
 
         ;; --------------------------------------------------
@@ -667,8 +644,8 @@ show:   jsr     ShowAlertDialog
         ;; Format if necessary (and supported)
 
 maybe_format:
-        lda     disk_copy_flag
-        bne     try_format      ; full disk copy
+        bit     disk_copy_flag
+        bmi     try_format      ; full disk copy
         jmp     do_copy
 
 try_format:
@@ -914,8 +891,8 @@ do_jump:
 ;;; ============================================================
 
 .proc CmdQuickCopy
-        lda     disk_copy_flag
-        beq     ret
+        bit     disk_copy_flag
+        bpl     ret
 
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
@@ -933,8 +910,8 @@ ret:    rts
 .endproc ; CmdQuickCopy
 
 .proc CmdDiskCopy
-        lda     disk_copy_flag
-        bne     ret
+        bit     disk_copy_flag
+        bmi     ret
 
         copy    #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
@@ -943,7 +920,7 @@ ret:    rts
         copy    #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        copy    #1, disk_copy_flag
+        copy    #$80, disk_copy_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         param_call DrawTitleText, label_disk_copy
@@ -1302,22 +1279,22 @@ match:  clc
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
 
-        lda     disk_copy_flag
-    IF_ZERO
-        param_call DrawTitleText, label_quick_copy
-    ELSE
-        param_call DrawTitleText, label_disk_copy
+        ldax    #label_quick_copy
+        bit     disk_copy_flag
+    IF_NS
+        ldax    #label_disk_copy
     END_IF
+        jsr     DrawTitleText
 
         BTK_CALL BTK::Draw, ok_button
         jsr     UpdateOKButton
         BTK_CALL BTK::Draw, read_drive_button
-        MGTK_CALL MGTK::MoveTo, point_slot_drive_name
-        param_call DrawString, str_slot_drive_name
-        MGTK_CALL MGTK::MoveTo, point_select_source
-        param_call DrawString, str_select_source
-        MGTK_CALL MGTK::MoveTo, point_select_quit
-        param_call DrawString, str_select_quit
+        MGTK_CALL MGTK::MoveTo, slot_drive_name_label_pos
+        param_call DrawString, slot_drive_name_label_str
+        MGTK_CALL MGTK::MoveTo, select_source_label_pos
+        param_call DrawString, select_source_label_str
+        MGTK_CALL MGTK::MoveTo, select_quit_label_pos
+        param_call DrawString, select_quit_label_str
 
         MGTK_CALL MGTK::InitPort, grafport
         MGTK_CALL MGTK::SetPort, grafport
@@ -1404,17 +1381,11 @@ CheckAlpha:
 ;;; ============================================================
 
 .proc SetPortForDialog
-        lda     #winfo_dialog::kWindowId
-        FALL_THROUGH_TO SetPortForWindow
-.endproc ; SetPortForDialog
-
-.proc SetPortForWindow
-        sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, grafport_win
         rts
-.endproc ; SetPortForWindow
+.endproc ; SetPortForDialog
 
 ;;; ============================================================
 ;;; List Box
@@ -1751,16 +1722,16 @@ tmp:    .byte   0
         tay
         ldax    block_count_table,y
         jsr     IntToStringWithSeparators
-        MGTK_CALL MGTK::MoveTo, point_source
-        param_call DrawString, str_blocks_to_transfer
+        MGTK_CALL MGTK::MoveTo, blocks_to_transfer_label_pos
+        param_call DrawString, blocks_to_transfer_label_str
         param_call DrawString, str_from_int
         rts
 .endproc ; DrawTotalBlocks
 
 .proc DrawBlocksRead
         jsr     PrepDrawBlocks
-        MGTK_CALL MGTK::MoveTo, point_blocks_read
-        param_call DrawString, str_blocks_read
+        MGTK_CALL MGTK::MoveTo, blocks_read_label_pos
+        param_call DrawString, blocks_read_label_str
         param_call DrawString, str_from_int
         param_call DrawString, str_2_spaces
         rts
@@ -1768,8 +1739,8 @@ tmp:    .byte   0
 
 .proc DrawBlocksWritten
         jsr     PrepDrawBlocks
-        MGTK_CALL MGTK::MoveTo, point_blocks_written
-        param_call DrawString, str_blocks_written
+        MGTK_CALL MGTK::MoveTo, blocks_written_label_pos
+        param_call DrawString, blocks_written_label_str
         param_call DrawString, str_from_int
         param_call DrawString, str_2_spaces
         rts
@@ -1785,12 +1756,12 @@ tmp:    .byte   0
 
 .proc DrawSourceDriveInfo
         jsr     SetPortForDialog
-        MGTK_CALL MGTK::MoveTo, point_source2
-        param_call DrawString, str_source
+        MGTK_CALL MGTK::MoveTo, source_label_pos
+        param_call DrawString, source_label_str
         ldx     source_drive_index
         lda     drive_unitnum_table,x
         jsr     PrepSDStrings
-        MGTK_CALL MGTK::MoveTo, point_slot_drive
+        MGTK_CALL MGTK::MoveTo, point_source_slot_drive
         param_call DrawString, str_slot
         param_call DrawString, str_s
         param_call DrawString, str_drive
@@ -1814,12 +1785,12 @@ show_name:
 
 .proc DrawDestinationDriveInfo
         jsr     SetPortForDialog
-        MGTK_CALL MGTK::MoveTo, point_destination
-        param_call DrawString, str_destination
+        MGTK_CALL MGTK::MoveTo, destination_label_pos
+        param_call DrawString, destination_label_str
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
         jsr     PrepSDStrings
-        MGTK_CALL MGTK::MoveTo, point_slot_drive2
+        MGTK_CALL MGTK::MoveTo, point_destination_slot_drive
         param_call DrawString, str_slot
         param_call DrawString, str_s
         param_call DrawString, str_drive
@@ -1860,8 +1831,8 @@ show_name:
 
 .proc DrawEscToStopCopyHint
         jsr     SetPortForDialog
-        MGTK_CALL MGTK::MoveTo, point_escape_stop_copy
-        param_call DrawString, str_escape_stop_copy
+        MGTK_CALL MGTK::MoveTo, escape_stop_copy_label_pos
+        param_call DrawString, escape_stop_copy_label_str
         rts
 .endproc ; DrawEscToStopCopyHint
 
@@ -1883,8 +1854,8 @@ loop:   dec     count
         MGTK_CALL MGTK::SetTextBG, bg_white
         beq     move
 :       MGTK_CALL MGTK::SetTextBG, bg_black
-move:   MGTK_CALL MGTK::MoveTo, point_escape_stop_copy
-        param_call DrawString, str_escape_stop_copy
+move:   MGTK_CALL MGTK::MoveTo, escape_stop_copy_label_pos
+        param_call DrawString, escape_stop_copy_label_str
         jmp     loop
 
 finish: MGTK_CALL MGTK::SetTextBG, bg_white
@@ -1921,13 +1892,13 @@ l2:     jsr     main__Bell
         lda     err_writing_flag
         bne     :+
 
-        MGTK_CALL MGTK::MoveTo, point_error_reading
-        param_call DrawString, str_error_reading
+        MGTK_CALL MGTK::MoveTo, error_reading_label_pos
+        param_call DrawString, error_reading_label_str
         param_call DrawString, str_from_int
         return  #0
 
-:       MGTK_CALL MGTK::MoveTo, point_error_writing
-        param_call DrawString, str_error_writing
+:       MGTK_CALL MGTK::MoveTo, error_writing_label_pos
+        param_call DrawString, error_writing_label_str
         param_call DrawString, str_from_int
         return  #0
 
