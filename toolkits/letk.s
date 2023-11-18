@@ -691,6 +691,7 @@ a_record  .addr
         ;; Unnecessary - the entire field will be repainted.
         ;; jsr     _HideCaret
 
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect
         MGTK_CALL MGTK::MoveTo, pos
 

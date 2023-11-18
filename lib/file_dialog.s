@@ -788,7 +788,7 @@ found:  return  index
         sta     file_dialog_res::winfo_listbox::vscroll
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
 
-        jsr     SetPortForDialog
+        MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::notpencopy
 
 .ifdef FD_EXTENDED
@@ -1197,7 +1197,7 @@ finish:
 ;;; ============================================================
 
 .proc _UpdateDiskAndDirNames
-        jsr     SetPortForDialog
+        MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
 
         copy    #kGlyphDiskLeft, file_dialog_res::filename_buf+1
         copy    #kGlyphDiskRight, file_dialog_res::filename_buf+2
@@ -1206,6 +1206,7 @@ finish:
         ;; --------------------------------------------------
         ;; Disk Name
 
+        MGTK_CALL MGTK::SetPenMode, file_dialog_res::pencopy
         MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
 
         lda     path_buf
@@ -1272,21 +1273,6 @@ finish:
 
         rts
 .endproc ; _UpdateDiskAndDirNames
-
-;;; ============================================================
-
-.proc SetPortForDialog
-        lda     #file_dialog_res::kFilePickerDlgWindowID
-        FALL_THROUGH_TO _SetPortForWindow
-.endproc ; SetPortForDialog
-
-.proc _SetPortForWindow
-        sta     getwinport_params::window_id
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        ;; ASSERT: Not obscured.
-        MGTK_CALL MGTK::SetPort, window_grafport
-        rts
-.endproc ; _SetPortForWindow
 
 ;;; ============================================================
 ;;; Sorts `file_list_index` so names are in ascending order
@@ -1522,7 +1508,6 @@ GetPath := file_dialog_impl::GetPath
 InitPathWithDefaultDevice := file_dialog_impl::InitPathWithDefaultDevice
 NoOp := file_dialog_impl::NoOp
 OpenWindow := file_dialog_impl::OpenWindow
-SetPortForDialog := file_dialog_impl::SetPortForDialog
 Init := file_dialog_impl::Init
 UpdateListFromPath := file_dialog_impl::UpdateListFromPath
 

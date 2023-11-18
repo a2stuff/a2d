@@ -49,7 +49,6 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
 
         COPY_BYTES file_dialog::kJumpTableSize, jt_callbacks, file_dialog::jump_table
 
-        jsr     file_dialog::SetPortForDialog
         lda     which_run_list
         sec
         jsr     UpdateRunListButton
@@ -97,17 +96,17 @@ buffer: .res 16, 0
 ;;; ============================================================
 
 .proc DrawControls
-        jsr     file_dialog::SetPortForDialog
+        MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
         param_call file_dialog::DrawLineEditLabel, enter_the_name_to_appear_label
 
         MGTK_CALL MGTK::MoveTo, add_a_new_entry_to_label_pos
         param_call main::DrawString, add_a_new_entry_to_label_str
 
-        BTK_CALL BTK::RadioDraw, primary_run_list_button
-        BTK_CALL BTK::RadioDraw, secondary_run_list_button
-
         MGTK_CALL MGTK::MoveTo, down_load_label_pos
         param_call main::DrawString, down_load_label_str
+
+        BTK_CALL BTK::RadioDraw, primary_run_list_button
+        BTK_CALL BTK::RadioDraw, secondary_run_list_button
 
         BTK_CALL BTK::RadioDraw, at_first_boot_button
         BTK_CALL BTK::RadioDraw, at_first_use_button
@@ -344,7 +343,6 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 ;;; ============================================================
 
 .proc HandleKey
-        jsr     file_dialog::SetPortForDialog
         lda     event_params::modifiers
         RTS_IF_ZERO
 
