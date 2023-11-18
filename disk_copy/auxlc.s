@@ -77,13 +77,13 @@ key_mods  := * + 3
 
         kMenuIdApple = 1
         kMenuIdFile = 2
-        kMenuIdFacilities = 3
+        kMenuIdOptions = 3
 
 menu_definition:
         DEFINE_MENU_BAR 3
 @items: DEFINE_MENU_BAR_ITEM kMenuIdApple, label_apple, menu_apple
         DEFINE_MENU_BAR_ITEM kMenuIdFile, label_file, menu_file
-        DEFINE_MENU_BAR_ITEM kMenuIdFacilities, label_facilities, menu_facilities
+        DEFINE_MENU_BAR_ITEM kMenuIdOptions, label_facilities, menu_facilities
         ASSERT_RECORD_TABLE_SIZE @items, 3, .sizeof(MGTK::MenuBarItem)
 
 menu_apple:
@@ -141,12 +141,12 @@ label_disk_copy:
 ;;; ============================================================
 
 .params disablemenu_params
-menu_id:        .byte   3
+menu_id:        .byte   kMenuIdOptions
 disable:        .byte   0
 .endparams
 
 .params checkitem_params
-menu_id:        .byte   3
+menu_id:        .byte   kMenuIdOptions
 menu_item:      .byte   0
 check:          .byte   0
 .endparams
@@ -424,7 +424,13 @@ init:   jsr     DisconnectRAM
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
         copy    #0, disk_copy_flag
-        jsr     OpenDialog
+
+        ;; Open dialog window
+        MGTK_CALL MGTK::OpenWindow, winfo_dialog
+        jsr     SetPortForDialog
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, rect_frame
 
 InitDialog:
         copy    #0, listbox_enabled_flag
@@ -437,7 +443,34 @@ InitDialog:
         copy    #MGTK::disablemenu_enable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
 
-        jsr     DrawDialog
+        ;; --------------------------------------------------
+        ;; Draw dialog window
+
+        jsr     SetPortForDialog
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
+        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
+
+        ldax    #label_quick_copy
+        bit     disk_copy_flag
+    IF_NS
+        ldax    #label_disk_copy
+    END_IF
+        jsr     DrawTitleText
+
+        BTK_CALL BTK::Draw, ok_button
+        jsr     UpdateOKButton
+        BTK_CALL BTK::Draw, read_drive_button
+        MGTK_CALL MGTK::MoveTo, slot_drive_name_label_pos
+        param_call DrawString, slot_drive_name_label_str
+        MGTK_CALL MGTK::MoveTo, select_source_label_pos
+        param_call DrawString, select_source_label_str
+        MGTK_CALL MGTK::MoveTo, select_quit_label_pos
+        param_call DrawString, select_quit_label_str
+
+        ;; --------------------------------------------------
+        ;; Drive select listbox
+
         MGTK_CALL MGTK::OpenWindow, winfo_drive_select
         copy    #$FF, listbox_enabled_flag
 
@@ -450,16 +483,9 @@ InitDialog:
 
         jsr     ListInit
 
+        ;; --------------------------------------------------
         ;; Loop until there's a selection (or drive check)
-.scope
-loop:   jsr     EventLoop
-        bmi     loop
-        beq     check
-        MGTK_CALL MGTK::CloseWindow, winfo_drive_select
-        jmp     InitDialog
-check:  lda     current_drive_selection
-        bmi     loop
-.endscope
+        jsr     WaitForSelection
 
         ;; Have a source selection
         copy    #MGTK::disablemenu_disable, disablemenu_params::disable
@@ -481,16 +507,9 @@ check:  lda     current_drive_selection
         jsr     ListInit
         jsr     UpdateOKButton
 
+        ;; --------------------------------------------------
         ;; Loop until there's a selection (or drive check)
-.scope
-loop:   jsr     EventLoop
-        bmi     loop
-        beq     check
-        MGTK_CALL MGTK::CloseWindow, winfo_drive_select
-        jmp     InitDialog
-check:  lda     current_drive_selection
-        bmi     loop
-.endscope
+        jsr     WaitForSelection
 
         ;; Have a destination selection
         tax
@@ -759,6 +778,26 @@ copy_failure:
         jmp     InitDialog
 
 ;;; ============================================================
+;;; Wait until there's a selection, or refresh drive list --
+;;; in which case this doesn't return.
+;;; Output: A = selection
+
+.proc WaitForSelection
+loop:   jsr     EventLoop
+        bmi     loop
+        beq     check
+
+        MGTK_CALL MGTK::CloseWindow, winfo_drive_select
+        pla
+        pla
+        jmp     InitDialog
+
+check:  lda     current_drive_selection
+        bmi     loop
+        rts
+.endproc ;  WaitForSelection
+
+;;; ============================================================
 
 ;;; Input: X = message (`kAlertMsgInsertSource` or `kAlertMsgInsertDestination`)
 ;;; Returns when complete; if canceled, pops return address and runs `InitDialog`
@@ -800,9 +839,6 @@ ret:    rts
 ;;;         Otherwise: Cancel selected (close/re-init dialog)
 
 EventLoop:
-        MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport
-
 loop:   jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
@@ -1259,49 +1295,6 @@ match:  clc
 
 ;;; ============================================================
 
-.proc OpenDialog
-        MGTK_CALL MGTK::OpenWindow, winfo_dialog
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, rect_frame
-
-        MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport
-        rts
-.endproc ; OpenDialog
-
-.proc DrawDialog
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
-        MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
-
-        ldax    #label_quick_copy
-        bit     disk_copy_flag
-    IF_NS
-        ldax    #label_disk_copy
-    END_IF
-        jsr     DrawTitleText
-
-        BTK_CALL BTK::Draw, ok_button
-        jsr     UpdateOKButton
-        BTK_CALL BTK::Draw, read_drive_button
-        MGTK_CALL MGTK::MoveTo, slot_drive_name_label_pos
-        param_call DrawString, slot_drive_name_label_str
-        MGTK_CALL MGTK::MoveTo, select_source_label_pos
-        param_call DrawString, select_source_label_str
-        MGTK_CALL MGTK::MoveTo, select_quit_label_pos
-        param_call DrawString, select_quit_label_str
-
-        MGTK_CALL MGTK::InitPort, grafport
-        MGTK_CALL MGTK::SetPort, grafport
-        rts
-
-.endproc ; DrawDialog
-
-;;; ============================================================
-
 .proc DrawString
         ptr := $0A
 
@@ -1722,27 +1715,27 @@ tmp:    .byte   0
         jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, blocks_to_transfer_label_pos
         param_call DrawString, blocks_to_transfer_label_str
-        param_call DrawString, str_from_int
-        rts
+        jmp     DrawIntString
 .endproc ; DrawTotalBlocks
 
 .proc DrawBlocksRead
         jsr     PrepDrawBlocks
         MGTK_CALL MGTK::MoveTo, blocks_read_label_pos
         param_call DrawString, blocks_read_label_str
-        param_call DrawString, str_from_int
-        param_call DrawString, str_2_spaces
-        rts
+        jmp     DrawIntString
 .endproc ; DrawBlocksRead
 
 .proc DrawBlocksWritten
         jsr     PrepDrawBlocks
         MGTK_CALL MGTK::MoveTo, blocks_written_label_pos
         param_call DrawString, blocks_written_label_str
-        param_call DrawString, str_from_int
-        param_call DrawString, str_2_spaces
-        rts
+        FALL_THROUGH_TO DrawIntString
 .endproc ; DrawBlocksWritten
+
+.proc DrawIntString
+        param_call DrawString, str_from_int
+        param_jump DrawString, str_2_spaces
+.endproc ; DrawIntString
 
 .proc PrepDrawBlocks
         jsr     SetPortForDialog
@@ -1886,12 +1879,12 @@ l2:     jsr     main__Bell
 
         MGTK_CALL MGTK::MoveTo, error_reading_label_pos
         param_call DrawString, error_reading_label_str
-        param_call DrawString, str_from_int
+        jsr     DrawIntString
         return  #0
 
 :       MGTK_CALL MGTK::MoveTo, error_writing_label_pos
         param_call DrawString, error_writing_label_str
-        param_call DrawString, str_from_int
+        jsr     DrawIntString
         return  #0
 
 err_writing_flag:
@@ -2325,7 +2318,7 @@ Alert := alert_dialog::Alert
 
 ;;; ============================================================
 
-        .assert * <= $F200, error, "Update memory_bitmap if code extends past $F200"
+        .assert * <= $F000, error, "Update memory_bitmap if code extends past $F000"
 .endscope ; auxlc
         auxlc__start := auxlc::start
 
