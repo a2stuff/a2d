@@ -17,10 +17,6 @@
 ;;; Requires the following proc definitions:
 ;;; * `SystemTask`
 ;;;
-;;; Requires the following data definitions:
-;;; * `getwinport_params`
-;;; * `window_grafport`
-;;;
 ;;; If `FD_EXTENDED` is defined:
 ;;; * name field at bottom and extra clickable controls on right are supported
 ;;; * `LETK_CALL` is required
