@@ -8086,7 +8086,7 @@ previous_port:
         .res    2
 
 update_port:
-        .res    .sizeof(MGTK::GrafPort)
+        .tag    MGTK::GrafPort
 
 .proc BeginUpdateImpl
         lda     $82

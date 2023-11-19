@@ -1308,7 +1308,7 @@ filename_buffer:
         DEFINE_CLOSE_PARAMS close_params
 
 write_buffer:
-        .res    .sizeof(DateTime), 0
+        .tag    DateTime
         sizeof_write_buffer = * - write_buffer
 
 .proc SaveSettings

@@ -11299,7 +11299,7 @@ DoDuplicate     := DoDuplicateImpl::start
         PARAM_BLOCK dir_data, $C00
 buf_block_pointers      .res    kBlockPointersSize
 buf_padding_bytes       .res    kMaxPaddingBytes
-file_entry_buf          .res    .sizeof(FileEntry)
+file_entry_buf          .tag    FileEntry
         END_PARAM_BLOCK
         file_entry_buf := dir_data::file_entry_buf
 

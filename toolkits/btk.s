@@ -310,13 +310,13 @@ END_PARAM_BLOCK
         ;; Use ZP for temporary params
         PARAM_BLOCK event_params, btk::zp_scratch
 kind    .byte
-coords  .res 4
+coords  .tag MGTK::Point
         END_PARAM_BLOCK
         .assert .sizeof(event_params) = .sizeof(MGTK::Event), error, "size mismatch"
         PARAM_BLOCK screentowindow_params, btk::zp_scratch
 window_id       .byte
-screen          .res 4
-window          .res 4
+screen          .tag MGTK::Point
+window          .tag MGTK::Point
         END_PARAM_BLOCK
         .assert screentowindow_params + .sizeof(screentowindow_params) <= $2F, error, "bounds"
         .assert screentowindow_params::screen = event_params::coords, error, "mismatch"

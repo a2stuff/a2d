@@ -87,7 +87,7 @@ kShortcutMonitor = res_char_monitor_shortcut
 
         ASSERT_ADDRESS PRODOS_SYS_START + kLauncherDateOffset
 header_date:                    ; written into file by Date and Time DA
-        .res    .sizeof(DateTime)
+        .tag    DateTime
 
 header_orig_prefix:
         .res    64, 0           ; written into file with original path
