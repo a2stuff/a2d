@@ -805,7 +805,6 @@ found:  return  index
     END_IF
 .endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_normal
-        MGTK_CALL MGTK::SetPenMode, file_dialog_res::penXOR
 
         ;; Draw title
         copy16  file_dialog_res::winfo::maprect::x2, file_dialog_res::pos_title::xcoord

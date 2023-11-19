@@ -978,8 +978,6 @@ notpencopy:     .byte   MGTK::notpencopy
         jsr     DrawPreview
         jsr     DrawBits
 
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-
         BTK_CALL BTK::CheckboxDraw, rgb_color_button
         jsr     UpdateRGBCheckbox
 
@@ -1104,8 +1102,6 @@ arrow_num:
 .endproc ; UpdateDblclickButtons
 
 .proc UpdateTrackingButtons
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-
         ldx     #DeskTopSettings::mouse_tracking
         jsr     ReadSetting
         cmp     #0
@@ -1125,8 +1121,6 @@ arrow_num:
 
 
 .proc UpdateCaretBlinkButtons
-        MGTK_CALL MGTK::SetPenMode, notpencopy
-
         lda     caret_blink_selection
         cmp     #1
         jsr     ZToButtonState

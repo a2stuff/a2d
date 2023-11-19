@@ -682,7 +682,6 @@ return_flag:
         MGTK_CALL MGTK::SetPattern, background_pattern
         MGTK_CALL MGTK::PaintRect, background_rect
 
-        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPattern, winfo::pattern
         MGTK_CALL MGTK::PaintRect, keys_bg_rect
         MGTK_CALL MGTK::SetPattern, background_pattern

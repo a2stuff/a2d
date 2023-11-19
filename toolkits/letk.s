@@ -200,7 +200,6 @@ ret:    rts
         MGTK_CALL MGTK::MoveTo, point
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::Line, caret_move
-        MGTK_CALL MGTK::SetPenMode, pencopy
 
         rts
 .endproc ; _XDrawCaret

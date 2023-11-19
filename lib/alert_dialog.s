@@ -194,7 +194,6 @@ start:
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, alert_rect ; alert outline
 
-        MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, alert_inner_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
