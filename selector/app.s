@@ -637,34 +637,36 @@ quick_boot_slot:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
-        bne     :+
+    IF_EQ
         jsr     HandleButtonDown
         jmp     EventLoop
+    END_IF
 
-:       cmp     #MGTK::EventKind::key_down
+        cmp     #MGTK::EventKind::key_down
         bne     not_key
 
         ;; --------------------------------------------------
         ;; Key Down
 
         bit     desktop_available_flag
-        bmi     not_desktop
+    IF_NC
         lda     event_params::key
         jsr     ToUpperCase
         cmp     #kShortcutRunDeskTop
-        bne     not_desktop
+      IF_EQ
 
         BTK_CALL BTK::Flash, desktop_button
-@retry: param_call GetFileInfo, str_desktop_2
+retry:  param_call GetFileInfo, str_desktop_2
         beq     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     EventLoop       ; `kAlertResultCancel` = 1
-        beq     @retry          ; `kAlertResultTryAgain` = 0
+        beq     retry           ; `kAlertResultTryAgain` = 0
 :       jmp     RunDesktop
+      END_IF
+    END_IF
 
-not_desktop:
         jsr     HandleKey
         jmp     EventLoop
 
@@ -864,11 +866,12 @@ L9443:  lda     #AlertID::insert_system_disk
         RTS_IF_ZERO
 
         cmp     #MGTK::Area::menubar
-        bne     :+
+    IF_EQ
         MGTK_CALL MGTK::MenuSelect, menu_params
         jmp     HandleMenu
+    END_IF
 
-:       cmp     #MGTK::Area::content
+        cmp     #MGTK::Area::content
         RTS_IF_NE
 
         lda     findwindow_params::window_id
@@ -895,10 +898,9 @@ done:   rts
 
 check_desktop_btn:
         bit     desktop_available_flag
-        bmi     check_entries
+    IF_NC
         MGTK_CALL MGTK::InRect, desktop_button::rect
-        beq     check_entries
-
+      IF_NOT_ZERO
         BTK_CALL BTK::Track, desktop_button
         bmi     done
 
@@ -910,10 +912,10 @@ check_desktop_btn:
         bne     done            ; `kAlertResultCancel` = 1
         beq     @retry          ; `kAlertResultTryAgain` = 0
 :       jmp     RunDesktop
+      END_IF
+    END_IF
 
         ;; Entry selection?
-
-check_entries:
         jsr     option_picker::HandleOptionPickerClick
         php
         jsr     UpdateOKButton
@@ -1037,7 +1039,7 @@ noop:   rts
 :       cmp     #'1'
         RTS_IF_LT
 
-        cmp     #'9'
+        cmp     #'8'+1
         RTS_IF_GE
 
         sec

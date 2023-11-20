@@ -481,21 +481,23 @@ handle_button:
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+
         MGTK_CALL MGTK::InRect, entry_picker_ok_button::rect
-        beq     not_ok
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, entry_picker_ok_button
         bmi     :+
         lda     #$00            ; OK selected
 :       rts
+    END_IF
 
-not_ok: MGTK_CALL MGTK::InRect, entry_picker_cancel_button::rect
-        beq     not_cancel
+        MGTK_CALL MGTK::InRect, entry_picker_cancel_button::rect
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, entry_picker_cancel_button
         bmi     :+
         lda     #$01            ; cancel selected
 :       rts
+    END_IF
 
-not_cancel:
         jsr     option_picker::HandleOptionPickerClick
         php
         jsr     UpdateOKButton

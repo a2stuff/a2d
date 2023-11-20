@@ -448,7 +448,7 @@ index:  .byte   0
 
         ;; Click in button?
         MGTK_CALL MGTK::InRect, find_button::rect
-    IF_NE
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, find_button
         bmi     :+
         jsr     DoFind
