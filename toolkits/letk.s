@@ -255,10 +255,7 @@ a_record  .addr
         jsr     _HideCaret
 
         ;; Move caret to end
-        ldy     #0
-        lda     (a_buf),y
-        ldy     #LETK::LineEditRecord::caret_pos
-        sta     (a_record),y
+        jsr     _MoveCaretEnd
 
         ;; Set active flag
         ldy     #LETK::LineEditRecord::active_flag
