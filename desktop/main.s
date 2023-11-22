@@ -13331,7 +13331,7 @@ check_button_cancel:
         bit     has_input_field_flag
     IF_PLUS
         lda     #$FF
-        jmp     jump_relay
+        jmp     (PromptDialogClickHandlerHook)
     END_IF
 
         ;; Was click inside text box?
@@ -13471,9 +13471,8 @@ ignore: sec
 
 ;;; ============================================================
 
-jump_relay:
-        jmp     SELF_MODIFIED
-
+PromptDialogClickHandlerHook:
+        .addr   SELF_MODIFIED
 
 ;;; ============================================================
 ;;; "About" dialog
@@ -14519,7 +14518,7 @@ done:   rts
         sta     cursor_ibeam_flag
         jsr     SetCursorPointer
 
-        copy16  #rts1, jump_relay+1
+        copy16  #NoOp, PromptDialogClickHandlerHook
 
         MGTK_CALL MGTK::OpenWindow, winfo_prompt_dialog
         jsr     SetPortForDialogWindow

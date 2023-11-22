@@ -88,7 +88,7 @@ selected_index:
 
         jsr     DrawVolumeLabels
         copy    #$FF, selected_index
-        copy16  #HandleClick, main::jump_relay+1
+        copy16  #HandleClick, main::PromptDialogClickHandlerHook
         copy    #$80, format_erase_overlay_flag
         jsr     main::UpdateOKButton
 
@@ -105,7 +105,7 @@ skip_select:
         ;; --------------------------------------------------
         ;; Prompt for name
 .scope
-        copy16  #main::NoOp, main::jump_relay+1
+        copy16  #main::NoOp, main::PromptDialogClickHandlerHook
 
         jsr     main::SetPortForDialogWindow
         jsr     main::SetPenModeCopy
