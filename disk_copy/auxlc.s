@@ -526,6 +526,11 @@ InitDialog:
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::PaintRect, win_frame_rect_params::rect
 
+        ;; Erase tip
+        jsr     SetPortForDialog
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, rect_select_quit
+
         ;; --------------------------------------------------
         ;; Prompt to insert source disk
 
@@ -555,7 +560,6 @@ check_source_error:
 
         ;; Source is non-ProDOS
         jsr     main__IdentifySourceNonProDOSDiskType
-        jsr     MaybeEraseSelectQuitTip
         jsr     DrawSourceDriveInfo
         jmp     check_source_finish
 
@@ -569,7 +573,6 @@ source_is_pro:
 :
         sta     main__on_line_buffer2
         param_call AdjustCase, main__on_line_buffer2
-        jsr     MaybeEraseSelectQuitTip
         jsr     DrawSourceDriveInfo
 
 check_source_finish:
@@ -1801,16 +1804,6 @@ show_name:
         param_call DrawString, str_pascal_disk_copy
 :       rts
 .endproc ; DrawCopyFormatType
-
-.proc MaybeEraseSelectQuitTip
-        lda     source_disk_format
-        cmp     #$C0
-        beq     :+
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, rect_select_quit
-:       rts
-.endproc ; MaybeEraseSelectQuitTip
 
 .proc DrawEscToStopCopyHint
         jsr     SetPortForDialog
