@@ -89,6 +89,7 @@ selected_index:
         jsr     DrawVolumeLabels
         copy    #$FF, selected_index
         copy16  #HandleClick, main::PromptDialogClickHandlerHook
+        copy16  #HandleKey, main::PromptDialogKeyHandlerHook
         copy    #$80, format_erase_overlay_flag
         jsr     main::UpdateOKButton
 
@@ -106,6 +107,7 @@ skip_select:
         ;; Prompt for name
 .scope
         copy16  #main::NoOp, main::PromptDialogClickHandlerHook
+        copy16  #main::NoOp, main::PromptDialogKeyHandlerHook
 
         jsr     main::SetPortForDialogWindow
         jsr     main::SetPenModeCopy
@@ -366,10 +368,15 @@ ret:    rts
 
 ;;; ============================================================
 
-.proc HandleOptionPickerKey
+.proc HandleKey
+        jsr     option_picker::IsOptionPickerKey
+    IF_EQ
         jsr     option_picker::HandleOptionPickerKey
-        jmp     main::UpdateOKButton
-.endproc ; HandleOptionPickerKey
+        jsr     main::UpdateOKButton
+    END_IF
+
+        return  #$FF
+.endproc ; HandleKey
 
 ;;; ============================================================
 
@@ -1083,8 +1090,6 @@ non_pro:
 
 .endscope ; format_erase_overlay
 
-format_erase_overlay__IsOptionPickerKey := format_erase_overlay::option_picker::IsOptionPickerKey
-format_erase_overlay__HandleOptionPickerKey := format_erase_overlay::HandleOptionPickerKey
 format_erase_overlay__ValidSelection := format_erase_overlay::ValidSelection
 
 format_erase_overlay__Exec := format_erase_overlay::Exec

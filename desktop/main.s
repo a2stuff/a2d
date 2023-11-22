@@ -10389,6 +10389,7 @@ list:   .word   0               ; 0 items in list
 .params get_info_dialog_params
 state:  .byte   0
 a_str:  .addr   0               ; e.g. string address
+locked: .byte   0               ; bit7 = 1 if file, bit6 = 1 if locked
 index:  .byte   0               ; index in selected icon list
 .endparams
 
@@ -10578,26 +10579,29 @@ append_size:
         ;; --------------------------------------------------
         ;; Locked/Protected
         copy    #GetInfoDialogState::locked, get_info_dialog_params::state
+
         lda     selected_window_id
-        bne     is_file
-
-        bit     write_protected_flag ; Volume
-        bmi     is_protected
-        bpl     not_protected
-
-is_file:
+    IF_ZERO
+        ;; Volume
+        ldax    #aux::str_info_no
+        bit     write_protected_flag
+      IF_NS
+        ldax    #aux::str_info_yes
+      END_IF
+        stax    get_info_dialog_params::a_str
+        lda     #0              ; not file
+    ELSE
+        ;; File
         lda     src_file_info_params::access ; File
         and     #ACCESS_DEFAULT
         cmp     #ACCESS_DEFAULT
-        beq     not_protected
-
-is_protected:
-        ldax    #aux::str_info_yes
-        bne     show_protected           ; always
-not_protected:
-        ldax    #aux::str_info_no
-show_protected:
-        stax    get_info_dialog_params::a_str
+      IF_EQ
+        lda     #$80            ; file, not locked
+      ELSE
+        lda     #$C0            ; file, locked
+      END_IF
+    END_IF
+        sta     get_info_dialog_params::locked
         jsr     RunGetInfoDialogProc
 
         ;; --------------------------------------------------
@@ -13289,48 +13293,41 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
 .proc PromptClickHandler
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        bne     :+
+        cmp     #MGTK::Area::content
+        beq     :+
         return  #$FF
-:       cmp     #MGTK::Area::content
-        jeq     content
-        return  #$FF
-
-content:
+:
         lda     findwindow_params::window_id
         cmp     #winfo_prompt_dialog::kWindowId
         beq     :+
         return  #$FF
-:       copy    winfo_prompt_dialog, event_params
+:
+        copy    winfo_prompt_dialog, event_params
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, ok_button::rect
-        bne     check_button_ok
-        jmp     maybe_check_button_cancel
-
-check_button_ok:
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, ok_button
         bmi     :+
         lda     #PromptResult::ok
 :       rts
+    END_IF
 
-maybe_check_button_cancel:
         bit     prompt_button_flags
-        bpl     check_button_cancel
-        return  #$FF
-
-check_button_cancel:
+    IF_NS
         MGTK_CALL MGTK::InRect, cancel_button::rect
-    IF_NOT_ZERO
+      IF_NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         bmi     :+
         lda     #PromptResult::cancel
 :       rts
+      END_IF
     END_IF
 
         bit     has_input_field_flag
-    IF_PLUS
-        lda     #$FF
+    IF_NC
+        lda     #$FF            ; in case handler is just RTS
         jmp     (PromptDialogClickHandlerHook)
     END_IF
 
@@ -13359,45 +13356,45 @@ check_button_cancel:
       IF_NS
         LETK_CALL LETK::Key, le_params
         jsr     UpdateOKButton
+      ELSE
+        jsr     KeyHookRelay
+        return  #$FF
       END_IF
 
     ELSE
         ;; No modifiers
 
-        bit     format_erase_overlay_flag
-      IF_NS
-        jsr     format_erase_overlay__IsOptionPickerKey
-       IF_EQ
-        jsr     format_erase_overlay__HandleOptionPickerKey
-        return  #$FF
-       END_IF
-      END_IF
-
         cmp     #CHAR_RETURN
-        jeq     HandleKeyOK
+        beq     HandleKeyOK
 
         cmp     #CHAR_ESCAPE
       IF_EQ
         bit     prompt_button_flags
-        jpl     HandleKeyCancel
-        jmp     HandleKeyOK
+        bpl     HandleKeyCancel
+        bmi     HandleKeyOK     ; always
       END_IF
 
         bit     has_input_field_flag
       IF_NS
-        jsr     IsControlChar ; pass through control characters
+        jsr     IsControlChar   ; pass through control characters
         bcc     allow
         jsr     IsFilenameChar
         bcs     ignore
 allow:  LETK_CALL LETK::Key, le_params
         jsr     UpdateOKButton
 ignore:
+      ELSE
+        jsr     KeyHookRelay
+        return  #$FF
       END_IF
 
     END_IF
         return  #$FF
 
         ;; --------------------------------------------------
+
+KeyHookRelay:
+        jmp     (PromptDialogKeyHandlerHook)
 
 .proc HandleKeyOK
         bit     ok_button::state
@@ -13414,9 +13411,6 @@ ret:    rts
 .endproc ; HandleKeyCancel
 
 .endproc ; PromptKeyHandler
-
-rts1:
-        rts
 
 ;;; ============================================================
 
@@ -13472,6 +13466,8 @@ ignore: sec
 ;;; ============================================================
 
 PromptDialogClickHandlerHook:
+        .addr   SELF_MODIFIED
+PromptDialogKeyHandlerHook:
         .addr   SELF_MODIFIED
 
 ;;; ============================================================
@@ -13717,8 +13713,7 @@ do_close:
         param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
         param_jump DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
       ELSE
-        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
-        param_jump DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_locked
+        param_jump DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
       END_IF
     END_IF
 
@@ -13728,6 +13723,19 @@ do_close:
 
         cmp     #GetInfoDialogState::prompt
     IF_NE
+        cmp     #GetInfoDialogState::locked
+     IF_EQ
+        lda     get_info_dialog_params::locked ; bit 7 = file, bit 6 = locked
+       IF_NS
+        asl                     ; now bit 7 = locked = checked
+        sta     locked_button::state
+        BTK_CALL BTK::CheckboxDraw, locked_button
+        copy16  #HandleClick, main::PromptDialogClickHandlerHook
+        copy16  #HandleKey, main::PromptDialogKeyHandlerHook
+        rts
+       END_IF
+     END_IF
+
         jsr     SetPortForDialogWindow
         lda     get_info_dialog_params::state
         ora     #DDL_VALUE
@@ -13747,6 +13755,46 @@ do_close:
         jsr     ClosePromptDialog
         pla
         rts
+
+.proc HandleClick
+        MGTK_CALL MGTK::InRect, locked_button::rect
+    IF_NOT_ZERO
+        jsr     ToggleFileLock
+    END_IF
+        return #$FF
+.endproc ; HandleClick
+
+.proc HandleKey
+        cmp     #CHAR_CTRL_L
+        beq     ToggleFileLock
+        rts
+.endproc ; HandleKey
+
+.proc ToggleFileLock
+        ;; Modify file
+        lda     src_file_info_params::access
+        bit     locked_button::state
+    IF_NS
+        ;; Unlock
+        ora     #LOCKED_MASK
+    ELSE
+        ;; Lock
+        and     #AS_BYTE(~LOCKED_MASK)
+    END_IF
+        sta     src_file_info_params::access
+        jsr     SetSrcFileInfo
+        bne     ret
+        ;; TODO: Show alert, offer retry on failure?
+
+        ;; Toggle UI
+        lda     locked_button::state
+        eor     #$80
+        sta     locked_button::state
+        BTK_CALL BTK::CheckboxUpdate, locked_button
+
+ret:    return  #$FF
+.endproc ; ToggleFileLock
+
 .endproc ; GetInfoDialogProc
 
 ;;; ============================================================
@@ -14519,6 +14567,7 @@ done:   rts
         jsr     SetCursorPointer
 
         copy16  #NoOp, PromptDialogClickHandlerHook
+        copy16  #NoOp, PromptDialogKeyHandlerHook
 
         MGTK_CALL MGTK::OpenWindow, winfo_prompt_dialog
         jsr     SetPortForDialogWindow

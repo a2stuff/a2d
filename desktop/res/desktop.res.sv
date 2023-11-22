@@ -63,6 +63,7 @@
 .define res_string_get_info_label_mod "Senaste {ndring:"
 .define res_string_get_info_label_type "Typ:"
 .define res_string_get_info_label_locked "L}st:"
+.define res_string_get_info_checkbox_locked "L}st"
 .define res_string_get_info_label_protected "Skrivskyddad:"
 .define res_string_get_info_label_yes "Ja"
 .define res_string_get_info_label_no "Nej"

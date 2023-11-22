@@ -63,6 +63,7 @@
 .define res_string_get_info_label_mod "Ultima modificaci\x13n:"
 .define res_string_get_info_label_type "Tipo:"
 .define res_string_get_info_label_locked "Bloqueado:"
+.define res_string_get_info_checkbox_locked "Bloqueado"
 .define res_string_get_info_label_protected "Protegido contra escritura:"
 .define res_string_get_info_label_yes "Si"
 .define res_string_get_info_label_no "No"

@@ -795,7 +795,7 @@ loop:   jsr     EventLoop
 check:  lda     current_drive_selection
         bmi     loop
         rts
-.endproc ;  WaitForSelection
+.endproc ; WaitForSelection
 
 ;;; ============================================================
 

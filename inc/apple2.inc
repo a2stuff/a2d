@@ -396,6 +396,7 @@ CHAR_LEFT       = $08
 CHAR_TAB        = $09
 CHAR_DOWN       = $0A
 CHAR_UP         = $0B
+CHAR_CTRL_L     = $0C
 CHAR_RETURN     = $0D
 CHAR_CTRL_O     = $0F
 CHAR_RIGHT      = $15

@@ -30,6 +30,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Update label in Add/Edit a Shortcut dialog.
 * Reduce drive poll frequency to ~0.33Hz for 1MHz systems.
 * Fix tracking of Yes/No/All buttons in alerts.
+* Add checkbox to lock/unlock file in Get Info dialog. (([#149](https://github.com/a2stuff/a2d/issues/149))
 
 ### Selector
 

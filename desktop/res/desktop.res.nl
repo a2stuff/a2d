@@ -63,6 +63,7 @@
 .define res_string_get_info_label_mod "Bewerkingsdatum:"
 .define res_string_get_info_label_type "Type:"
 .define res_string_get_info_label_locked "Beveiligd:"
+.define res_string_get_info_checkbox_locked "Beveiligd"
 .define res_string_get_info_label_protected "Schrijfbeveiligd:"
 .define res_string_get_info_label_yes "Ja"
 .define res_string_get_info_label_no "Nee"
