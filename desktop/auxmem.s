@@ -317,8 +317,6 @@ str_duplicate_original:
         ;; "Get Info" dialog strings
 str_info_name:
         PASCAL_STRING res_string_get_info_label_name
-str_info_locked:
-        PASCAL_STRING res_string_get_info_label_locked
 str_info_file_size:
         PASCAL_STRING res_string_get_info_label_file_size
 str_info_create:
