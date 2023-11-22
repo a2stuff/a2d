@@ -277,37 +277,37 @@
   * Special > Eject Disk and Special > Check Drive are disabled.
   * File > Duplicate... is disabled.
   * File > Rename... and Special > Make Alias are disabled.
-  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are disabled.
+  * File > Open and File > Get Info are disabled.
 * Launch DeskTop. Select only the Trash icon. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
   * File > Duplicate... is disabled.
   * File > Rename... and Special > Make Alias are disabled.
-  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are disabled.
+  * File > Open and File > Get Info are disabled.
 * Launch DeskTop. Select a volume. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
   * File > Duplicate... is disabled.
   * File > Rename... and Special > Make Alias are enabled.
-  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
+  * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Select two volume icons. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
   * File > Duplicate... is disabled.
   * File > Rename... and Special > Make Alias are disabled.
-  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
+  * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Select a volume icon and the Trash icon. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
   * File > Duplicate... is disabled.
   * File > Rename... and Special > Make Alias are disabled.
-  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
+  * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Open a volume window, and select a file. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
   * File > Duplicate... is enabled.
   * File > Rename... and Special > Make Alias are enabled.
-  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
+  * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Open a volume window, and select two files. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
   * File > Duplicate... is enabled.
   * File > Rename... and Special > Make Alias are disabled.
-  * File > Open, File > Get Info, Special > Lock, and Special > Unlock are enabled.
+  * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
 * Launch DeskTop. Open a window. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
 
@@ -539,8 +539,6 @@
   * Select the innermost folder. File > Rename...
   * Select the innermost folder. File > Duplicate...
   * Select the innermost folder. File > Copy To... (and pick a target)
-  * Select the innermost folder. Special > Lock
-  * Select the innermost folder. Special > Unlock
   * Select the innermost folder. Shortcuts > Add a Shortcut...
   * Drag a file onto the innermost folder.
   * Drag the innermost folder to another volume.
@@ -557,20 +555,14 @@
 
 * Mount a disk with the BINSCII system utility. Launch DeskTop. Invoke the BINSCII system file. Verify that the display is not truncated.
 
-* Repeat the following test cases for these operations: Copy, Move, Delete, Lock, Unlock:
+* Repeat the following test cases for these operations: Copy, Move, Delete:
   * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed.
   * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is canceled and the progress dialog is closed.
 * Select a volume or folder containing multiple files. File > Get Info. During the count of the files, press Escape. Verify that the count is canceled.
 
 * Using BASIC, create a directory structure: X/Y/Z and save a BASIC file B as X/Y/Z/B. Lock all three directories and the file from BASIC (not DeskTop). Launch DeskTop. Select X. File > Delete. Verify that a prompt is shown for deleting each file in deepest-first order (B, Z, Y, X). Click Yes at each prompt. Verify that all files are deleted.
 
-* Create a folder, and a subfolder within it. Select the top-most folder. Special > Lock. Using Apple Menu > Run Basic Here, verify that the folder and subfolder are locked. `BYE` to return to DeskTop. Select the containing volume. Special > Unlock. Using Apple Menu > Run Basic Here, verify that the folder and subfolder are unlocked.
-* Using BASIC, create a directory X and save a BASIC file X/B. Launch DeskTop. Select X. File > Lock. Close the window containing X. Open the window containing X. Verify that X is still a folder.
-
 * Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
-
-* Launch DeskTop. Create a new folder. Select the folder, and use Special > Lock. Add a file to the folder. Ensure that the file is not locked. Select the folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the folder's path is visible in the progress dialog.
-* Launch DeskTop. Create a new folder. Create a second folder inside it. Select the second folder, and use Special > Lock. Add a file to the second folder. Ensure that the file is not locked. Select the first folder, and use File > Delete. Click OK to confirm the deletion. When a prompt is shown to confirm deleting a locked file, verify that the second folder's path is visible in the progress dialog.
 
 * Open a directory with more than 30 files, without resizing the window. Scroll up and down by one tick, by one page, and to the top/bottom. Verify that such operations scroll by an integral number of icons, i.e. the last row of labels are always the same distance from the bottom of the window.
 

@@ -288,8 +288,6 @@ dispatch_table:
         .addr   CmdEraseDisk
         .addr   CmdDiskCopy
         .addr   CmdNoOp         ; --------
-        .addr   CmdLock
-        .addr   CmdUnlock
         .addr   CmdMakeLink
         ASSERT_ADDRESS_TABLE_SIZE menu4_start, ::kMenuSizeSpecial
 
@@ -3188,8 +3186,6 @@ ret:    rts
 ;;; These commands don't need anything beyond the operation.
 
 CmdGetInfo      := DoGetInfo
-CmdUnlock       := DoUnlock
-CmdLock         := DoLock
 
 ;;; ============================================================
 
@@ -5639,13 +5635,6 @@ disable:lda     #MGTK::disableitem_disable
         lda     #aux::kMenuItemIdOpen
         jsr     DisableMenuItem
         lda     #aux::kMenuItemIdGetInfo
-        jsr     DisableMenuItem
-
-        ;; Special
-        copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdLock
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdUnlock
         jmp     DisableMenuItem
 .endproc ; ToggleMenuItemsRequiringSelection
 EnableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::enable
@@ -9994,18 +9983,6 @@ FinishOperation:
         jmp     DoOpOnSelectionCommon
 .endproc ; DoDrop
 
-.proc DoLockUnlockImpl
-lock:   lda     #$00
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-unlock: lda     #$80
-        sta     unlock_flag
-        copy    #%10000000, operation_flags ; lock/unlock
-        jsr     DoOpOnSelectionCommon
-        jmp     FinishOperation
-.endproc ; DoLockUnlockImpl
-        DoLock   := DoLockUnlockImpl::lock
-        DoUnlock := DoLockUnlockImpl::unlock
-
 .proc DoOpOnSelectionCommon
         tsx
         stx     stack_stash
@@ -10069,8 +10046,6 @@ common:
         copy    #0, do_op_flag
 
         jsr     PrepCallbacksForEnumeration
-        bit     operation_flags
-        bmi     @lock
         bit     copy_delete_flags
         bmi     @trash
 
@@ -10090,23 +10065,15 @@ common:
 @trash: jsr     OpenDeleteProgressDialog
         jmp     iterate_selection
 
-@lock:  jsr     OpenLockProgressDialog
-        jmp     iterate_selection
-
 ;;; Perform operation
 
 perform:
-        bit     operation_flags
-        bmi     @lock
         bit     copy_delete_flags
         bmi     @trash
         jsr     PrepCallbacksForCopy
         jmp     iterate_selection
 
 @trash: jsr     PrepCallbacksForDelete
-        jmp     iterate_selection
-
-@lock:  jsr     PrepCallbacksForLock
         FALL_THROUGH_TO iterate_selection
 
 iterate_selection:
@@ -10184,8 +10151,6 @@ finish: jsr     InvokeOperationCompleteCallback
         DoCopySelection := operations::DoCopySelection
         DoCopyToRAM := operations::DoCopyToRAM
         DoCopyFile := operations::DoCopyFile
-        DoLock := operations::DoLock
-        DoUnlock := operations::DoUnlock
         DoDrop := operations::DoDrop
 
 ;;; ============================================================
@@ -10213,7 +10178,7 @@ InvokeOperationTooLargeCallback:
 stack_stash:
         .byte   0
 
-        ;; $80 = lock/unlock
+        ;; $80 = lock/unlock (obsolete)
         ;; $C0 = "download" (a.k.a. copy to ramcard)
         ;; $00 = copy/delete
 operation_flags:
@@ -10228,10 +10193,6 @@ copy_delete_flags:
         ;; bit 7 set = move, clear = copy
         ;; bit 6 set = same volume move and relink supported
 move_flag:
-        .byte   0
-
-        ;; high bit set = unlock, clear = lock
-unlock_flag:
         .byte   0
 
 all_flag:
@@ -12513,145 +12474,6 @@ next_file:
 .endproc ; DecFileCountAndRunDeleteDialogProc
 
 ;;; ============================================================
-;;; "Lock"/"Unlock" dialog state and logic
-;;; ============================================================
-
-;;; `LockProcessSelectedFile`
-;;;  - if dir, recurses; locks file via `LockFileCommon`
-;;; `LockProcessDirectoryEntry`
-;;;  - locks file via `LockFileCommon`
-;;; (finishing a directory is a no-op)
-
-;;; Overlays for lock/unlock operation (`op_jt_addrs`)
-callbacks_for_lock:
-        .addr   LockProcessSelectedFile
-        .addr   LockProcessDirectoryEntry
-        .addr   DoNothing
-        ASSERT_TABLE_SIZE callbacks_for_lock, kOpJTAddrsSize
-
-.enum LockDialogLifecycle
-        open            = 0 ; opening window, initial label
-        count           = 1 ; show operation details (e.g. file count)
-        show            = 2 ; performing operation
-        close           = 3 ; destroy window
-.endenum
-
-.params lock_unlock_dialog_params
-phase:  .byte   0
-count:  .word   0
-a_path: .addr   src_path_buf
-.endparams
-
-.proc OpenLockProgressDialog
-        copy    #LockDialogLifecycle::open, lock_unlock_dialog_params::phase
-        copy16  #LockDialogEnumerationCallback, operation_enumeration_callback
-        jsr     LockDialogProc
-        copy16  #LockDialogCompleteCallback, operation_complete_callback
-        rts
-
-.proc LockDialogEnumerationCallback
-        stax    lock_unlock_dialog_params::count
-        copy    #LockDialogLifecycle::count, lock_unlock_dialog_params::phase
-        jmp     LockDialogProc
-.endproc ; LockDialogEnumerationCallback
-
-.proc LockDialogCompleteCallback
-        copy    #LockDialogLifecycle::close, lock_unlock_dialog_params::phase
-        jmp     LockDialogProc
-.endproc ; LockDialogCompleteCallback
-.endproc ; OpenLockProgressDialog
-
-.proc PrepCallbacksForLock
-        ldy     #kOpJTAddrsSize-1
-:       copy    callbacks_for_lock,y, op_jt_addrs,y
-        dey
-        bpl     :-
-
-        rts
-.endproc ; PrepCallbacksForLock
-
-;;; ============================================================
-;;; Handle locking of a selected file.
-;;; Calls into the recursion logic of `ProcessDir` as necessary.
-
-.proc LockProcessSelectedFile
-        copy    #LockDialogLifecycle::show, lock_unlock_dialog_params::phase
-        jsr     CopyPathsFromBufsToSrcAndDst
-
-        ;; Path is set up - update dialog and populate `src_file_info_params`
-        jsr     DecFileCountAndRunLockDialogProc
-
-@retry: jsr     GetSrcFileInfo
-        beq     :+
-        jsr     ShowErrorAlert
-        jmp     @retry
-
-        ;; Check if it's a regular file or directory
-:       lda     src_file_info_params::storage_type
-        sta     storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        beq     is_dir
-        cmp     #ST_LINKED_DIRECTORY
-        bne     do_lock
-
-is_dir:
-        ;; Recurse, and process directory
-        jsr     ProcessDir
-        storage_type := *+1
-        lda     #SELF_MODIFIED_BYTE
-        cmp     #ST_VOLUME_DIRECTORY
-        RTS_IF_EQ
-
-        jsr     GetSrcFileInfo
-        FALL_THROUGH_TO do_lock
-
-do_lock:
-        FALL_THROUGH_TO LockFileCommon
-.endproc ; LockProcessSelectedFile
-
-;;; ============================================================
-;;; Common implementation used by both for `LockProcessSelectedFile`
-;;; and `LockProcessDirectoryEntry`
-
-.proc LockFileCommon
-        ;; Called with `src_file_info_params` pre-populated
-        lda     src_file_info_params::access
-        bit     unlock_flag
-    IF_NS
-        ora     #LOCKED_MASK    ; grant access
-    ELSE
-        and     #AS_BYTE(~LOCKED_MASK) ; revoke access
-    END_IF
-        sta     src_file_info_params::access
-
-retry:  jsr     SetSrcFileInfo
-        beq     ok
-        jsr     ShowErrorAlert
-        jmp     retry
-
-ok:     rts
-.endproc ; LockFileCommon
-
-;;; ============================================================
-;;; Called by `ProcessDir` to process a single file
-
-.proc LockProcessDirectoryEntry
-        jsr     AppendFileEntryToSrcPath
-        jsr     DecFileCountAndRunLockDialogProc
-
-        jsr     LockFileCommon
-        jmp     RemoveSrcPathSegment
-.endproc ; LockProcessDirectoryEntry
-
-;;; ============================================================
-
-.proc DecFileCountAndRunLockDialogProc
-        jsr     DecrementOpFileCount
-        stax    lock_unlock_dialog_params::count
-        jmp     LockDialogProc
-.endproc ; DecFileCountAndRunLockDialogProc
-
-;;; ============================================================
 ;;; Most operations start by doing a traversal to just count
 ;;; the files.
 
@@ -13796,52 +13618,6 @@ ret:    return  #$FF
 .endproc ; ToggleFileLock
 
 .endproc ; GetInfoDialogProc
-
-;;; ============================================================
-;;; "Lock"/"Unlock" dialog
-
-.proc LockDialogProc
-        lda     lock_unlock_dialog_params::phase
-
-        ;; --------------------------------------------------
-        cmp     #LockDialogLifecycle::open
-    IF_EQ
-        copy    #0, has_input_field_flag
-        jmp     OpenProgressDialog
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #LockDialogLifecycle::count
-    IF_EQ
-        copy16  lock_unlock_dialog_params::count, file_count
-        jsr     SetPortForProgressDialog
-        bit     unlock_flag
-      IF_NS
-        param_call DrawProgressDialogLabel, 0, aux::str_unlock_count
-      ELSE
-        param_call DrawProgressDialogLabel, 0, aux::str_lock_count
-      END_IF
-        jmp     DrawFileCountWithSuffix
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #LockDialogLifecycle::show
-    IF_EQ
-        copy16  lock_unlock_dialog_params::count, file_count
-        jsr     SetPortForProgressDialog
-        ldax    lock_unlock_dialog_params::a_path
-        jsr     CopyToBuf0
-        param_call DrawProgressDialogLabel, 1, aux::str_file_colon
-        jsr     ClearTargetFileRectAndSetPos
-        jsr     DrawDialogPathBuf0
-
-        jmp     DrawProgressDialogFilesRemaining
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; LockDialogLifecycle::close
-        jmp     CloseProgressDialog
-.endproc ; LockDialogProc
 
 ;;; ============================================================
 ;;; "Rename" dialog

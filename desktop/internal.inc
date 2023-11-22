@@ -201,7 +201,7 @@ kAppleMenuFixedItems = 3
 kMenuSizeApple    = kMaxDeskAccCount + kAppleMenuFixedItems
 kMenuSizeFile     = 14
 kMenuSizeView     = 6
-kMenuSizeSpecial  = 11
+kMenuSizeSpecial  = 9
 kMenuSizeStartup  = 7
 kMenuSizeSelector = 13
 

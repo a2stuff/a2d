@@ -111,10 +111,6 @@ label_erase_disk:
         PASCAL_STRING res_string_menu_item_erase_disk ; menu item
 label_disk_copy:
         PASCAL_STRING res_string_menu_item_disk_copy ; menu item
-label_lock:
-        PASCAL_STRING res_string_menu_item_lock ; menu item
-label_unlock:
-        PASCAL_STRING res_string_menu_item_unlock ; menu item
 label_get_info:
         PASCAL_STRING res_string_menu_item_get_info ; menu item
 label_rename_icon:
@@ -194,8 +190,6 @@ special_menu:
         DEFINE_MENU_ITEM label_erase_disk
         DEFINE_MENU_ITEM label_disk_copy
         DEFINE_MENU_SEPARATOR
-        DEFINE_MENU_ITEM label_lock
-        DEFINE_MENU_ITEM label_unlock
         DEFINE_MENU_ITEM label_make_link
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeSpecial, .sizeof(MGTK::MenuItem)
 
@@ -207,9 +201,7 @@ special_menu:
         kMenuItemIdEraseDisk   = 6
         kMenuItemIdDiskCopy    = 7
         ;; --------------------
-        kMenuItemIdLock        = 9
-        kMenuItemIdUnlock      = 10
-        kMenuItemIdMakeLink    = 11
+        kMenuItemIdMakeLink    = 9
 
 ;;; ============================================================
 
@@ -373,14 +365,6 @@ str_erasing:
         PASCAL_STRING res_string_erase_disk_status_erasing
 str_erasing_error:
         PASCAL_STRING res_string_erase_disk_error
-
-        ;; "Unlock File" dialog strings
-str_unlock_count:
-        PASCAL_STRING res_string_unlock_status_count
-
-        ;; "Lock File" dialog strings
-str_lock_count:
-        PASCAL_STRING res_string_lock_status_count
 
 ;;; Miscellaneous alert strings
 
