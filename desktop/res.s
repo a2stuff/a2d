@@ -211,7 +211,7 @@ nextwinfo:      .addr   0
         DEFINE_BUTTON ok_button, kPromptWindowId, res_string_button_ok, kGlyphReturn, 260, kPromptDialogHeight-19
         DEFINE_BUTTON cancel_button, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, kPromptDialogHeight-19
 
-        DEFINE_BUTTON locked_button, kPromptWindowId, res_string_get_info_checkbox_locked, "^L", kDialogValueLeft, aux::kDialogLabelRow5+2
+        DEFINE_BUTTON locked_button, kPromptWindowId, res_string_get_info_checkbox_locked, " (^L)", kDialogValueLeft, aux::kDialogLabelRow5+2
 
 ;;; $00 = ok/cancel
 ;;; $80 = ok (only)
