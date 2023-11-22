@@ -89,7 +89,7 @@ menu_definition:
 menu_apple:
         DEFINE_MENU 5
 @items: DEFINE_MENU_ITEM label_desktop
-        DEFINE_MENU_ITEM label_blank
+        DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_copyright1
         DEFINE_MENU_ITEM label_copyright2
         DEFINE_MENU_ITEM label_copyright3
@@ -120,8 +120,6 @@ label_facilities:
 label_desktop:
         PASCAL_STRING .sprintf(res_string_version_format_long, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor, kDeskTopVersionSuffix)
 
-label_blank:
-        PASCAL_STRING " "
 label_copyright1:
         PASCAL_STRING res_string_copyright_line1 ; menu item
 label_copyright2:

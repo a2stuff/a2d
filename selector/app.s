@@ -68,7 +68,7 @@ menu:   DEFINE_MENU_BAR 3
 apple_menu:
         DEFINE_MENU 5
         DEFINE_MENU_ITEM str_a2desktop
-        DEFINE_MENU_ITEM str_blank
+        DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM str_copyright1
         DEFINE_MENU_ITEM str_copyright2
         DEFINE_MENU_ITEM str_copyright3
@@ -101,8 +101,6 @@ str_startup:
 str_a2desktop:
         PASCAL_STRING .sprintf(res_string_version_format_long, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor, kDeskTopVersionSuffix)
 
-str_blank:
-        PASCAL_STRING " "
 str_copyright1:
         PASCAL_STRING res_string_copyright_line1 ; menu item
 str_copyright2:
