@@ -26,3 +26,4 @@
 .define res_filename_analog_clock reloj.analogo
 .define res_filename_digital_clock reloj.digital
 .define res_filename_print_catalog Impr.catalogo
+.define res_filename_change_type cambiar.tipo

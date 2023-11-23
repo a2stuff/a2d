@@ -26,3 +26,4 @@
 .define res_filename_analog_clock Analog.Clock
 .define res_filename_digital_clock Digital.Clock
 .define res_filename_print_catalog Print.Catalog
+.define res_filename_change_type Change.Type

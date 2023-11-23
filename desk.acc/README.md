@@ -20,6 +20,8 @@
   * World map with some searchable city locations.
 * [Print Catalog](print.catalog.s)
   * Dumps a recursive catalog of filenames to a printer attached to Slot 1.
+* [Change Type](change.type.s)
+  * Shows the type and auxtype of selected files, and allows changing them.
 
 ## Control Panels
 

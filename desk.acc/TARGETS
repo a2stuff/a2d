@@ -23,6 +23,7 @@ neko                            apple.menu/toys                 optional
 puzzle                          apple.menu/toys                 optional
 calculator                      apple.menu                      optional
 calendar                        apple.menu                      optional
+change.type                     apple.menu                      optional
 find.files                      apple.menu                      optional
 key.caps                        apple.menu                      optional
 run.basic.here                  apple.menu                      optional

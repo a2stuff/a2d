@@ -26,3 +26,4 @@
 .define res_filename_analog_clock analog.klocka
 .define res_filename_digital_clock digital.klocka
 .define res_filename_print_catalog Skriv.katalog
+.define res_filename_change_type andra.typ
