@@ -135,6 +135,7 @@ reserved:       .res    1
         DEFINE_BITMAP ace2000, 49, 24
         DEFINE_BITMAP tlc, 46, 25
         DEFINE_BITMAP trackstar, 56, 25
+        DEFINE_BITMAP mega_iie, 48, 22
 
 ii_bits:
         PIXELS  ".......######################....................."
@@ -438,6 +439,30 @@ trackstar_bits:
         PIXELS  "##....................................................##"
         PIXELS  ".######################################################."
 
+mega_iie_bits:
+        PIXELS  "....##..##..##..##..##..##..##..##..##..##...."
+        PIXELS  "..##########################################.."
+        PIXELS  "####......................................####"
+        PIXELS  "..##.......#.###..........................##.."
+        PIXELS  "####....#.#.#.####..#...#.#.....###.###...####"
+        PIXELS  "..##...###.#.#.####.#...#.#....#.....#....##.."
+        PIXELS  "####...####.#.#####..#.#..#.....##...#....####"
+        PIXELS  "..##...#####.######..#.#..#.......#..#....##.."
+        PIXELS  "####....##########....#...####.###..###...####"
+        PIXELS  "..##......######..........................##.."
+        PIXELS  "####......................................####"
+        PIXELS  "..##......................................##.."
+        PIXELS  "####..##.##.##.##.##.........##.##.##.##..####"
+        PIXELS  "..##......................................##.."
+        PIXELS  "####..##.##.##.##.##.##...................####"
+        PIXELS  "..##......................................##.."
+        PIXELS  "####..##.##.##.##.##.##.##.##.............####"
+        PIXELS  "..##......................................##.."
+        PIXELS  "####..##.##.##.##.##.##.##.##.##..........####"
+        PIXELS  "..##......................................##.."
+        PIXELS  "..##########################################.."
+        PIXELS  "....##..##..##..##..##..##..##..##..##..##...."
+
 ;;; ============================================================
 
         DEFINE_POINT model_pos, 150, 12
@@ -573,6 +598,9 @@ str_trackstar_e:
 
 str_trackstar_plus:
         PASCAL_STRING "Trackstar Plus"
+
+str_mega_iie:
+        PASCAL_STRING "Mega IIe"
 
 ;;; ============================================================
 
@@ -730,6 +758,7 @@ dib_buffer:     .tag    SPDIB
         tlc                     ; Tiger Learning Computer
         trackstar_e             ; Trackstar E
         trackstar_plus          ; Trackstar Plus
+        mega_iie                ; Mega IIe
         LAST
 .endenum
 kNumModels = model::LAST
@@ -754,6 +783,7 @@ model_str_table:
         .addr   str_tlc          ; Tiger Learning Computer
         .addr   str_trackstar_e  ; Trackstar E
         .addr   str_trackstar_plus ; Trackstar Plus
+        .addr   str_mega_iie       ; Mega IIe
         ASSERT_ADDRESS_TABLE_SIZE model_str_table, kNumModels
 
 model_pix_table:
@@ -776,6 +806,7 @@ model_pix_table:
         .addr   aux::tlc_bitmap      ; Tiger Learning Computer
         .addr   aux::trackstar_bitmap ; Trackstar E
         .addr   aux::trackstar_bitmap ; Trackstar Plus
+        .addr   aux::mega_iie_bitmap ; Mega IIe
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
@@ -810,6 +841,9 @@ model_lookup_table:
 
         .byte   model::trackstar_plus ; must check before IIe
         .byte   $B3, $06, $C0, $E0, $DD, $A9, $BF, $EA, 0
+
+        .byte   model::mega_iie ; must check before IIe
+        .byte   $09, $CD, $0A, $E5, $0B, $E7, $0C, $E1, $0D, $A0, $0E, $C9, $0F, $C9, $10, $E5, 0
 
         .byte   model::iie_original
         .byte   $B3, $06, $C0, $EA, 0
