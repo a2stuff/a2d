@@ -71,6 +71,7 @@ iigs_flag:      .byte   0       ; High bit set if IIgs
 iiecard_flag:   .byte   0       ; High bit set if Mac IIe Option Card
 iic_plus_flag:  .byte   0       ; High bit set if IIc+
 laser128_flag:  .byte   0       ; High bit set if Laser 128
+megaiie_flag:   .byte   0       ; high bit set if Mega IIe
 
 ;;; ============================================================
 

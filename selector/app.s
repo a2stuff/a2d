@@ -307,6 +307,9 @@ is_iiecard_flag:                ; high bit set if Mac IIe Option Card
 is_laser128_flag:               ; high bit set if Laser 128
         .byte   0
 
+is_megaiie_flag:                   ; high bit set if Mega IIe
+        .byte   0
+
 lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
         .byte   0
 
@@ -378,7 +381,10 @@ entry:
         beq     :+              ; Z=1 means no LCMEve
         copy    #$80, lcm_eve_flag
 :
-
+        jsr     DetectMegaIIe
+        bne     :+              ; Z=0 means Mega IIe
+        copy    #$80, is_megaiie_flag
+:
         copy    #$FF, selected_index
         copy    #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
@@ -1915,9 +1921,11 @@ len:    .byte   0
 
 .proc SetColorMode
         ;; IIgs?
-        sec
-        jsr     IDROUTINE
-        bcc     iigs
+        bit     is_iigs_flag
+        bmi     iigs
+
+        bit     is_megaiie_flag
+        bmi     megaii
 
         bit     lcm_eve_flag
         bmi     lcmeve
@@ -1940,19 +1948,24 @@ lcmeve: sta     AN3_OFF
         sta     HR3_OFF
         rts
 
-        ;; Apple IIgs - DHR Color
-iigs:   lda     NEWVIDEO
+        ;; Apple IIgs - DHR Color (Composite)
+iigs:   lda     #$00            ; Color
+        sta     MONOCOLOR
+        FALL_THROUGH_TO megaii
+
+        ;; Mega II - DHR Color (RGB)
+megaii: lda     NEWVIDEO
         and     #<~(1<<5)       ; Color
         sta     NEWVIDEO
-        lda     #$00            ; Color
-        sta     MONOCOLOR
         rts
 .endproc ; SetColorMode
 
 .proc SetMonoMode
-        sec
-        jsr     IDROUTINE
-        bcc     iigs
+        bit     is_iigs_flag
+        bmi     iigs
+
+        bit     is_megaiie_flag
+        bmi     megaii
 
         bit     lcm_eve_flag
         bmi     lcmeve
@@ -1976,23 +1989,23 @@ lcmeve: sta     AN3_OFF
         sta     HR3_ON
         rts
 
-        ;; Apple IIgs - DHR B&W
-iigs:   lda     NEWVIDEO
+        ;; Apple IIgs - DHR B&W (Composite)
+iigs:   lda     #$80            ; Mono
+        sta     MONOCOLOR
+        FALL_THROUGH_TO megaii
+
+        ;; Mega IIe - DHR B&W (RGB)
+megaii: lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
-        lda     #$80            ; Mono
-        sta     MONOCOLOR
-
 done:   rts
 .endproc ; SetMonoMode
 
-
-;;; ============================================================
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 
 .proc ResetIIgsRGB
         bit     is_iigs_flag
-        bpl     SetMonoMode::done
+        bpl     SetMonoMode::done ; nope
 
         ldx     #DeskTopSettings::rgb_color
         jsr     ReadSetting
@@ -2033,6 +2046,7 @@ loop_counter:
         .include "../lib/muldiv.s"
         .include "../lib/speed.s"
         .include "../lib/bell.s"
+        .include "../lib/detect_megaiie.s"
         .include "../lib/detect_lcmeve.s"
         .include "../lib/clear_dhr.s"
         .include "../lib/disconnect_ram.s"

@@ -9831,6 +9831,9 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         bit     machine_config::iigs_flag
         bmi     iigs
 
+        bit     machine_config::megaiie_flag
+        bmi     megaii
+
         bit     machine_config::lcm_eve_flag
         bmi     lcmeve
 
@@ -9852,18 +9855,24 @@ lcmeve: sta     AN3_OFF
         sta     HR3_OFF
         rts
 
-        ;; Apple IIgs - DHR Color
-iigs:   lda     NEWVIDEO
+        ;; Apple IIgs - DHR Color (Composite)
+iigs:   lda     #$00            ; Color
+        sta     MONOCOLOR
+        FALL_THROUGH_TO megaii
+
+        ;; Mega II - DHR Color (RGB)
+megaii: lda     NEWVIDEO
         and     #<~(1<<5)       ; Color
         sta     NEWVIDEO
-        lda     #$00            ; Color
-        sta     MONOCOLOR
         rts
 .endproc ; SetColorMode
 
 .proc SetMonoMode
         bit     machine_config::iigs_flag
         bmi     iigs
+
+        bit     machine_config::megaiie_flag
+        bmi     megaii
 
         bit     machine_config::lcm_eve_flag
         bmi     lcmeve
@@ -9887,13 +9896,15 @@ lcmeve: sta     AN3_OFF
         sta     HR3_ON
         rts
 
-        ;; Apple IIgs - DHR B&W
-iigs:   lda     NEWVIDEO
+        ;; Apple IIgs - DHR B&W (Composite)
+iigs:   lda     #$80            ; Mono
+        sta     MONOCOLOR
+        FALL_THROUGH_TO megaii
+
+        ;; Mega II - DHR B&W (RGB)
+megaii: lda     NEWVIDEO
         ora     #(1<<5)         ; B&W
         sta     NEWVIDEO
-        lda     #$80            ; Mono
-        sta     MONOCOLOR
-
 done:   rts
 .endproc ; SetMonoMode
 
