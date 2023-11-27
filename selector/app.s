@@ -307,7 +307,7 @@ is_iiecard_flag:                ; high bit set if Mac IIe Option Card
 is_laser128_flag:               ; high bit set if Laser 128
         .byte   0
 
-is_megaiie_flag:                   ; high bit set if Mega IIe
+is_megaii_flag:                 ; high bit set if Mega II
         .byte   0
 
 lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
@@ -381,9 +381,9 @@ entry:
         beq     :+              ; Z=1 means no LCMEve
         copy    #$80, lcm_eve_flag
 :
-        jsr     DetectMegaIIe
-        bne     :+              ; Z=0 means Mega IIe
-        copy    #$80, is_megaiie_flag
+        jsr     DetectMegaII
+        bne     :+              ; Z=0 means Mega II
+        copy    #$80, is_megaii_flag
 :
         copy    #$FF, selected_index
         copy    #BTK::kButtonStateDisabled, ok_button::state
@@ -1924,7 +1924,7 @@ len:    .byte   0
         bit     is_iigs_flag
         bmi     iigs
 
-        bit     is_megaiie_flag
+        bit     is_megaii_flag
         bmi     megaii
 
         bit     lcm_eve_flag
@@ -1964,7 +1964,7 @@ megaii: lda     NEWVIDEO
         bit     is_iigs_flag
         bmi     iigs
 
-        bit     is_megaiie_flag
+        bit     is_megaii_flag
         bmi     megaii
 
         bit     lcm_eve_flag
@@ -2046,7 +2046,7 @@ loop_counter:
         .include "../lib/muldiv.s"
         .include "../lib/speed.s"
         .include "../lib/bell.s"
-        .include "../lib/detect_megaiie.s"
+        .include "../lib/detect_megaii.s"
         .include "../lib/detect_lcmeve.s"
         .include "../lib/clear_dhr.s"
         .include "../lib/disconnect_ram.s"

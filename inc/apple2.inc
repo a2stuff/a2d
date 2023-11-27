@@ -192,6 +192,16 @@ HIRESOFF        := $C057
 AN3_OFF         := $C05E
 AN3_ON          := $C05F
 
+STATEREG        := $C068        ; Mega II chip (IIgs, etc)
+        ;; bit7 = ALTZP
+        ;; bit6 = PAGE2
+        ;; bit5 = RAMRD
+        ;; bit4 = RAMWRT
+        ;; bit3 = RDROM
+        ;; bit2 = BANK2
+        ;; bit1 = ROMBANK
+        ;; bit0 = INTCXROM
+
 RAMWORKS_BANK   := $C073
 LASER128EX_CFG  := $C074        ; high two bits control speed
 

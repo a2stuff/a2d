@@ -9831,7 +9831,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
         bit     machine_config::iigs_flag
         bmi     iigs
 
-        bit     machine_config::megaiie_flag
+        bit     machine_config::megaii_flag
         bmi     megaii
 
         bit     machine_config::lcm_eve_flag
@@ -9871,7 +9871,7 @@ megaii: lda     NEWVIDEO
         bit     machine_config::iigs_flag
         bmi     iigs
 
-        bit     machine_config::megaiie_flag
+        bit     machine_config::megaii_flag
         bmi     megaii
 
         bit     machine_config::lcm_eve_flag

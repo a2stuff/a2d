@@ -207,19 +207,19 @@ end:
 .endscope ; lcm
 
 ;;; ============================================================
-;;; Detect Mega IIe
+;;; Detect Mega II
 
-.scope megaiie
+.scope megaii
         bit     ROMIN2
-        jsr     DetectMegaIIe
+        jsr     DetectMegaII
         php
         bit     LCBANK1
         bit     LCBANK1
         plp
-        bne     :+              ; Z=1 means Mega IIe
-        copy    #$80, machine_config::megaiie_flag
+        bne     :+              ; Z=1 means Mega II
+        copy    #$80, machine_config::megaii_flag
 :
-.endscope ; megaiie
+.endscope ; megaii
 
 ;;; ============================================================
 ;;; Back up DEVLST
@@ -1206,7 +1206,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
 
 ;;; ============================================================
 
-        .include "../lib/detect_megaiie.s"
+        .include "../lib/detect_megaii.s"
         .include "../lib/detect_lcmeve.s"
         .include "../lib/clear_dhr.s"
         saved_ram_unitnum := main::saved_ram_unitnum
