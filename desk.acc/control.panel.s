@@ -130,6 +130,8 @@ penheight:      .byte   2
 
         .include "../lib/event_params.s"
 
+last_mouse_pos: .tag    MGTK::Point
+
 .params trackgoaway_params
 clicked:        .byte   0
 .endparams
@@ -155,7 +157,7 @@ kFatBitHeightShift      = 2
         ;; For hit testing
         DEFINE_RECT_SZ fatbits_rect, kPatternEditX+1, kPatternEditY+1,  8 * kFatBitWidth - 1, 8 * kFatBitHeight - 1
 
-        DEFINE_BUTTON pattern_button, kDAWindowId, res_string_label_pattern,, kPatternEditX-10, kPatternEditY + 36, 180
+        DEFINE_BUTTON pattern_button, kDAWindowId, res_string_label_pattern, "^D", kPatternEditX-10, kPatternEditY + 36, 180
 
 kPreviewLeft    = kPatternEditX + 79
 kPreviewTop     = kPatternEditY
@@ -215,7 +217,7 @@ rarr_bitmap:
         PIXELS  "####.."
         PIXELS  "##...."
 
-        DEFINE_BUTTON rgb_color_button, kDAWindowId, res_string_label_rgb_color,, kPatternEditX + 46, kPatternEditY + 50
+        DEFINE_BUTTON rgb_color_button, kDAWindowId, res_string_label_rgb_color, res_string_shortcut_apple_1, kPatternEditX + 46, kPatternEditY + 50
 
 ;;; ============================================================
 ;;; Double-Click Speed Resources
@@ -252,12 +254,16 @@ arrows_table:
         DEFINE_POINT dblclick_arrow_pos3, kDblClickX + 110, kDblClickY + 10
         DEFINE_POINT dblclick_arrow_pos4, kDblClickX + 110, kDblClickY + 22
         DEFINE_POINT dblclick_arrow_pos5, kDblClickX + 155, kDblClickY + 13
-        DEFINE_POINT dblclick_arrow_pos6, kDblClickX + 155, kDblClickY + 23
+        DEFINE_POINT dblclick_arrow_pos6, kDblClickX + 155, kDblClickY + 22
         ASSERT_RECORD_TABLE_SIZE arrows_table, kNumArrows, .sizeof(MGTK::Point)
 
         DEFINE_BUTTON dblclick_button1, kDAWindowId,,, kDblClickX + 175, kDblClickY + 25
         DEFINE_BUTTON dblclick_button2, kDAWindowId,,, kDblClickX + 130, kDblClickY + 25
         DEFINE_BUTTON dblclick_button3, kDAWindowId,,, kDblClickX +  85, kDblClickY + 25
+
+        DEFINE_LABEL dblclick_shortcut1, .sprintf("(%c4)", ::kGlyphOpenApple), kDblClickX +  85, kDblClickY + 22
+        DEFINE_LABEL dblclick_shortcut2, .sprintf("(%c5)", ::kGlyphOpenApple), kDblClickX + 130, kDblClickY + 22
+        DEFINE_LABEL dblclick_shortcut3, .sprintf("(%c6)", ::kGlyphOpenApple), kDblClickX + 175, kDblClickY + 22
 
 dblclick_bitmap:
         PIXELS  "..........................##.........................."
@@ -323,8 +329,8 @@ kMouseTrackingY = 78
 
         DEFINE_LABEL mouse_tracking, res_string_label_mouse_tracking, kMouseTrackingX + 30, kMouseTrackingY + 45
 
-        DEFINE_BUTTON tracking_slow_button, kDAWindowId, res_string_label_slow,, kMouseTrackingX + 84, kMouseTrackingY + 8
-        DEFINE_BUTTON tracking_fast_button, kDAWindowId, res_string_label_fast,, kMouseTrackingX + 84, kMouseTrackingY + 21
+        DEFINE_BUTTON tracking_slow_button, kDAWindowId, res_string_label_slow, res_string_shortcut_apple_2, kMouseTrackingX + 84, kMouseTrackingY + 8
+        DEFINE_BUTTON tracking_fast_button, kDAWindowId, res_string_label_fast, res_string_shortcut_apple_3, kMouseTrackingX + 84, kMouseTrackingY + 21
 
 .params mouse_tracking_params
         DEFINE_POINT viewloc, kMouseTrackingX + 5, kMouseTrackingY
@@ -388,6 +394,10 @@ caret_blink_selection:
         DEFINE_LABEL caret_blink2, res_string_label_ipblink2, kCaretBlinkDisplayX-4, kCaretBlinkDisplayY + 21
         DEFINE_LABEL caret_blink_slow, res_string_label_slow, kCaretBlinkDisplayX + 100, kCaretBlinkDisplayY + 34
         DEFINE_LABEL caret_blink_fast, res_string_label_fast, kCaretBlinkDisplayX + 189, kCaretBlinkDisplayY + 34
+
+        DEFINE_LABEL caret_blink_button1_shortcut, .sprintf("(%c7)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 100, kCaretBlinkDisplayY + 45
+        DEFINE_LABEL caret_blink_button2_shortcut, .sprintf("(%c8)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 144, kCaretBlinkDisplayY + 45
+        DEFINE_LABEL caret_blink_button3_shortcut, .sprintf("(%c9)", ::kGlyphOpenApple), kCaretBlinkDisplayX + 189, kCaretBlinkDisplayY + 45
 
         DEFINE_BUTTON caret_blink_button1, kDAWindowId,,, kCaretBlinkDisplayX + 116, kCaretBlinkDisplayY + 16
         DEFINE_BUTTON caret_blink_button2, kDAWindowId,,, kCaretBlinkDisplayX + 136, kCaretBlinkDisplayY + 16
@@ -480,7 +490,7 @@ caret_blink_caret_bitmap:
         beq     HandleMove
 
         cmp     #MGTK::EventKind::button_down
-        beq     HandleDown
+        jeq     HandleDown
 
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey
@@ -497,6 +507,7 @@ caret_blink_caret_bitmap:
 ;;; ============================================================
 
 .proc HandleMove
+        COPY_STRUCT MGTK::Point, event_params::coords, last_mouse_pos
         copy    winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -515,12 +526,50 @@ caret_blink_caret_bitmap:
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     Exit
-        bne     InputLoop       ; always
+
+        cmp     #'1'
+        bcc     :+
+        cmp     #'9'+1
+        bcs     :+
+
+        sec
+        sbc     #'1'
+        tax
+        copylohi shortcut_table_addr_lo,x, shortcut_table_addr_hi,x, addr
+        lda     shortcut_table_values,x
+        addr := *+1
+        jmp     SELF_MODIFIED
+:
+
+        jmp     InputLoop
     END_IF
 
         cmp     #CHAR_ESCAPE
-        beq     Exit
-        bne     InputLoop       ; always
+        jeq     Exit
+
+        cmp     #CHAR_LEFT
+        jeq     HandleLArrClick
+
+        cmp     #CHAR_RIGHT
+        jeq     HandleRArrClick
+
+        cmp     #CHAR_CTRL_D
+    IF_EQ
+        BTK_CALL BTK::Flash, pattern_button
+        jmp     HandlePatternClick
+    END_IF
+
+        jmp     InputLoop
+
+
+shortcut_table_values:
+        .byte   0, 0, 1, 3, 2, 1, 1, 2, 3
+shortcut_table_addr_lo:
+        .byte   <HandleRGBClick, <HandleTrackingClick, <HandleTrackingClick, <HandleDblclickClick, <HandleDblclickClick, <HandleDblclickClick, <HandleCaretBlinkClick, <HandleCaretBlinkClick, <HandleCaretBlinkClick
+shortcut_table_addr_hi:
+        .byte   >HandleRGBClick, >HandleTrackingClick, >HandleTrackingClick, >HandleDblclickClick, >HandleDblclickClick, >HandleDblclickClick, >HandleCaretBlinkClick, >HandleCaretBlinkClick, >HandleCaretBlinkClick
+
+
 .endproc ; HandleKey
 
 ;;; ============================================================
@@ -545,7 +594,7 @@ caret_blink_caret_bitmap:
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     Exit
+        jne     Exit
         jmp     InputLoop
 .endproc ; HandleClose
 
@@ -887,9 +936,10 @@ dblclick_speed: .word   0
 
         MGTK_CALL MGTK::ScaleMouse, scalemouse_params
 
-        ;; Set the cursor to the same position (c/o click event),
+        ;; Set the cursor to the same position (c/o last move),
         ;; to avoid it warping due to the scale change.
         copy    #MGTK::EventKind::no_event, event_kind
+        COPY_STRUCT MGTK::Point, last_mouse_pos, event_params::coords
         MGTK_CALL MGTK::PostEvent, event_params
 
         ;; --------------------------------------------------
@@ -1012,6 +1062,19 @@ loop:   ldy     #3
         BTK_CALL BTK::RadioDraw, dblclick_button2
         BTK_CALL BTK::RadioDraw, dblclick_button3
 
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
+        and     #DeskTopSettings::kOptionsShowShortcuts
+    IF_NOT_ZERO
+        MGTK_CALL MGTK::MoveTo, dblclick_shortcut1_label_pos
+        param_call DrawString, dblclick_shortcut1_label_str
+        MGTK_CALL MGTK::MoveTo, dblclick_shortcut2_label_pos
+        param_call DrawString, dblclick_shortcut2_label_str
+        MGTK_CALL MGTK::MoveTo, dblclick_shortcut3_label_pos
+        param_call DrawString, dblclick_shortcut3_label_str
+    END_IF
+
+
         jsr     UpdateDblclickButtons
 
         MGTK_CALL MGTK::PaintBitsHC, dblclick_params
@@ -1049,6 +1112,19 @@ loop:   ldy     #3
         BTK_CALL BTK::RadioDraw, caret_blink_button2
         BTK_CALL BTK::RadioDraw, caret_blink_button3
         jsr     UpdateCaretBlinkButtons
+
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
+        and     #DeskTopSettings::kOptionsShowShortcuts
+    IF_NOT_ZERO
+        MGTK_CALL MGTK::MoveTo, caret_blink_button1_shortcut_label_pos
+        param_call DrawString, caret_blink_button1_shortcut_label_str
+        MGTK_CALL MGTK::MoveTo, caret_blink_button2_shortcut_label_pos
+        param_call DrawStringCentered, caret_blink_button2_shortcut_label_str
+        MGTK_CALL MGTK::MoveTo, caret_blink_button3_shortcut_label_pos
+        param_call DrawStringRight, caret_blink_button3_shortcut_label_str
+    END_IF
+
 
         ;; ==============================
         ;; Frame
@@ -1650,6 +1726,28 @@ done:   rts
         MGTK_CALL MGTK::DrawText, params
         rts
 .endproc ; DrawStringRight
+
+.proc DrawStringCentered
+        params := $6
+        textptr := $6
+        textlen := $8
+        result := $9
+
+        stax    textptr
+        ldy     #0
+        lda     (textptr),y
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::TextWidth, params
+        lsr16   result
+        sub16   #0, result, result
+        lda     #0
+        sta     result+2
+        sta     result+3
+        MGTK_CALL MGTK::Move, result
+        MGTK_CALL MGTK::DrawText, params
+        rts
+.endproc ; DrawStringCentered
 
 ;;; ============================================================
 

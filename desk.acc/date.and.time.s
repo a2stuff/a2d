@@ -69,7 +69,7 @@
 
         kControlMarginX = 16
 
-        kFieldTop = 20
+        kFieldTop = 14
         kField1Left = 22
         kField2Left = kField1Left + 40
         kField3Left = kField2Left + 48
@@ -86,8 +86,8 @@
         kUpDownButtonLeft = kDialogWidth - kUpDownButtonWidth - kControlMarginX
 
         first_hit_rect := *
-        DEFINE_RECT_SZ up_arrow_rect, kUpDownButtonLeft, 14, kUpDownButtonWidth, kUpDownButtonHeight
-        DEFINE_RECT_SZ down_arrow_rect, kUpDownButtonLeft, 26, kUpDownButtonWidth, kUpDownButtonHeight
+        DEFINE_RECT_SZ up_arrow_rect, kUpDownButtonLeft, kFieldTop - 6, kUpDownButtonWidth, kUpDownButtonHeight
+        DEFINE_RECT_SZ down_arrow_rect, kUpDownButtonLeft, kFieldTop + 6, kUpDownButtonWidth, kUpDownButtonHeight
         DEFINE_RECT_SZ day_rect, kField1Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
         DEFINE_RECT_SZ month_rect, kField2Left, kFieldTop, kFieldMonthWidth, kFieldHeight
         DEFINE_RECT_SZ year_rect, kField3Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
@@ -96,8 +96,8 @@
         DEFINE_RECT_SZ period_rect, kField6Left, kFieldTop, kFieldDigitsWidth, kFieldHeight
         ASSERT_RECORD_TABLE_SIZE first_hit_rect, kNumHitRects, .sizeof(MGTK::Rect)
 
-        DEFINE_POINT label_uparrow_pos, kUpDownButtonLeft + 2, 23
-        DEFINE_POINT label_downarrow_pos, kUpDownButtonLeft + 2, 35
+        DEFINE_POINT label_uparrow_pos, kUpDownButtonLeft + 2, kFieldTop + 3
+        DEFINE_POINT label_downarrow_pos, kUpDownButtonLeft + 2, kFieldTop + 15
         DEFINE_POINT day_pos, kField1Left + 6, kFieldTop + 10
         DEFINE_POINT month_pos, kField2Left + 6, kFieldTop + 10
         DEFINE_POINT year_pos, kField3Left + 6, kFieldTop + 10
@@ -219,14 +219,14 @@ nextwinfo:      .addr   0
 ;;; 12/24 Hour Resources
 
 
-kOptionDisplayX = 30
-kOptionDisplayY = 44
+kOptionDisplayX = 150
+kOptionDisplayY = 34
 
-        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour,, kOptionDisplayX+60-10, kOptionDisplayY
-        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour,, kOptionDisplayX+120, kOptionDisplayY
+        DEFINE_BUTTON clock_12hour_button, kDAWindowId, res_string_label_clock_12hour, res_string_shortcut_apple_1, kOptionDisplayX, kOptionDisplayY
+        DEFINE_BUTTON clock_24hour_button, kDAWindowId, res_string_label_clock_24hour, res_string_shortcut_apple_2, kOptionDisplayX, kOptionDisplayY+10
 
 .params date_bitmap_params
-        DEFINE_POINT viewloc, 14, 40
+        DEFINE_POINT viewloc, 14, 34
 mapbits:        .addr   date_bitmap
 mapwidth:       .byte   6
 reserved:       .byte   0
@@ -254,7 +254,7 @@ date_bitmap:
         PIXELS  "...................######################"
 
 .params time_bitmap_params
-        DEFINE_POINT viewloc, kDialogWidth - 32 - 11, 39
+        DEFINE_POINT viewloc, kDialogWidth - 32 - 11, 33
 mapbits:        .addr   time_bitmap
 mapwidth:       .byte   5
 reserved:       .byte   0
@@ -390,8 +390,23 @@ init_window:
     IF_NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
-        bne     InputLoop
-        jmp     OnKeyOK
+        jeq     OnKeyOK
+
+        cmp     #'1'
+      IF_EQ
+        lda     #$00
+        jsr     HandleOptionClick
+        jmp     InputLoop
+      END_IF
+
+        cmp     #'2'
+      IF_EQ
+        lda     #$80
+        jsr     HandleOptionClick
+        jmp     InputLoop
+      END_IF
+
+        jmp     InputLoop
     END_IF
 
         cmp     #CHAR_RETURN
