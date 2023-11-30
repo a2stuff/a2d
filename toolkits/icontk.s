@@ -467,8 +467,9 @@ done:   rts
         ;; Pointer to IconEntry
         ldy     #EraseIconParams::icon
         lda     (params),y
-        sec                     ; redraw highlighted
-        jmp     EraseIconCommon ; A = icon id, C = redraw flag
+        ldx     #$80            ; do clip
+        sec                     ; do redraw highlighted
+        jmp     EraseIconCommon ; A = icon id, X = clip flag, C = redraw flag
 .endproc ; EraseIconImpl
 
 ;;; ============================================================
@@ -887,8 +888,9 @@ same_window:
 move_ok:
 
         INVOKE_WITH_LAMBDA IterateHighlightedIcons
+        ldx     #0              ; don't clip
         clc                     ; don't redraw highlighted
-        jmp     EraseIconCommon ; A = icon id, C = redraw flag
+        jmp     EraseIconCommon ; A = icon id, X = clip flag, C = redraw flag
         END_OF_LAMBDA
 
         ;; --------------------------------------------------
@@ -1278,7 +1280,7 @@ inside:
 more_drawing_needed_flag:
         .byte   0
 
-;;; Set by some callers of DrawIcon
+;;; Set by some callers of `DrawIconCommon` and `EraseIconCommon`
 clip_icons_flag:
         .byte   0
 
@@ -1843,9 +1845,10 @@ rect:   .tag    MGTK::Rect
 
 ;;; ============================================================
 ;;; Erase an icon; redraws overlapping icons as needed
-;;; Inputs: A = icon id, C = redraw highlighted flag
+;;; Inputs: A = icon id, X = clip_icons_flag, C = redraw highlighted flag
 .proc EraseIconCommon
         sta     erase_icon_id
+        stx     clip_icons_flag
         ror     redraw_highlighted_flag ; shift C into high bit
 
         ptr := $06
@@ -1861,27 +1864,28 @@ rect:   .tag    MGTK::Rect
         and     #kIconEntryWinIdMask
         sta     clip_window_id
         sta     getwinport_params::window_id
-        beq     volume
 
-        ;; File (i.e. icon in window)
-        MGTK_CALL MGTK::SetPattern, white_pattern
-        jsr     SetPortForWinIcon
-        bne     ret             ; obscured!
-        MGTK_CALL MGTK::PaintPoly, poly
-        jmp     RedrawIconsAfterErase
-ret:    rts
-
-        ;; Volume (i.e. icon on desktop)
-volume:
+    IF_ZERO
+        jsr     SetPortForVolIcon
         MGTK_CALL MGTK::GetDeskPat, addr
         MGTK_CALL MGTK::SetPattern, 0, addr
-        jsr     SetPortForVolIcon
+    ELSE
+        jsr     SetPortForWinIcon
+        RTS_IF_NE               ; obscured!
+        MGTK_CALL MGTK::SetPattern, white_pattern
+    END_IF
+
+        bit     clip_icons_flag
+    IF_NC
+        MGTK_CALL MGTK::PaintPoly, poly
+    ELSE
 :       jsr     CalcWindowIntersections
         bcs     :+              ; nothing remaining to draw
         MGTK_CALL MGTK::PaintPoly, poly
         lda     more_drawing_needed_flag
         bne     :-
 :
+    END_IF
         FALL_THROUGH_TO RedrawIconsAfterErase
 
 ;;; ============================================================

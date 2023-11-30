@@ -129,6 +129,8 @@
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+O. Verify that nothing happens. Repeat with Caps Lock off.
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+Down. Verify that nothing happens.
 
+* Launch DeskTop. Open a window and select multiple folder icons. File > Open. Verify that the folders open, and that the icons remain selected and become dimmed.
+
 * Launch DeskTop. Try to move a file (drag on same volume) where there is not enough space to make a temporary copy, e.g. a 100K file on a 140K disk. Verify that the file is moved successfully and no error is shown.
 * Launch DeskTop. Try to copy a file (drag to different volume) where there is not enough space to make the copy. Verify that the error message says that the file is too large to copy.
 * Launch DeskTop. Drag multiple selected files to a different volume, where one of the middle files will be too large to fit on the target volume but that subsequently selected files will fit. Verify that an error message says that the file is too large to copy, and that clicking OK continues to copy the remaining files.
@@ -179,6 +181,11 @@
 * Launch DeskTop. Open some windows. Special > Disk Copy. Quit back to DeskTop. Verify that the windows are restored.
 * Launch DeskTop. Close all windows. Special > Disk Copy. Quit back to DeskTop. Verify that no windows are restored.
 * Launch DeskTop. Special > Disk Copy. Quit back to DeskTop. Invoke BASIC.SYSTEM. Ensure /RAM exists.
+
+* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window. File > Delete. Click OK. Verify that the window with the deleted file refreshes.
+* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window. File > Duplicate. Enter a new name, and click OK. Verify that the window with the selected file refreshes.
+* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window. File > Rename. Enter a new name, and click OK. Verify that the icon is renamed.
+* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window and move it so that it partially obscures the selected file (e.g. with the title bar). File > Rename. Enter a new name, and click OK. Verify that the active window is not mis-painted.
 
 * Repeat the following cases for File > New Folder, File > Rename, and File > Duplicate:
   * Launch DeskTop. Open a window and (if needed) select a file. Run the command. Enter a name, but place the caret in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
@@ -244,10 +251,14 @@
 
 * Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is dimmed but still selected.
 * Launch DeskTop. Double-click a volume. Verify that the volume icon is still selected.
-* Launch DeskTop. Select a folder. File > Open. Verify that the folder icon is dimmed but no longer selected.
-* Launch DeskTop. Double-click a folder. Verify that the folder icon is no longer selected.
-* Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Select the folder. File > Open. Verify that the folder icon is no longer selected.
-* Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Double-click the folder. Verify that the folder icon is no longer selected.
+* Launch DeskTop. Select a folder. File > Open. Verify that the folder icon is dimmed but still selected.
+* Launch DeskTop. Double-click a folder. Verify that the folder icon is still selected.
+* Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Select the folder. File > Open. Verify that the folder icon is dimmed but still selected.
+* Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Double-click the folder. Verify that the folder icon is dimmed but still selected.
+
+* Launch DeskTop. Open two windows for two different volumes. Select an icon in one window. Click on the title bar, scroll bars, or header of the other window to activate it. Verify that the icon in the first window is still selected. Click on the title bar, scroll bar or header of the active window. Verify that the icon in the first window is still selected. Click on the content area of the active window. Verify that the icon is no longer selected, and the window's corresponding volume icon becomes selected when the mouse button is released.
+* Launch DeskTop. Open a window for a volume icon and a window for a folder icon. Click in the content area of the volume icon's window. Verify that the volume icon is selected. Click in the content area of the folder icon's window. Verify that the folder icon is selected.
+* Launch DeskTop. Open a window for a volume icon and a window for a folder icon within that volume. Close the window for the volume icon. Click in the content area of the folder icon's window. Verify that the volume icon is selected.
 
 * Configure a system with 14 devices. Launch and then exit DeskTop. Load another ProDOS app that enumerates devices. Verify that all expected devices are present, and that there's no "Slot 0, Drive 1" entry.
 

@@ -488,7 +488,6 @@ not_menu:
         lda     active_window_id
         cmp     findwindow_params::window_id
     IF_NE
-        jsr     ClearSelection
         jsr     ActivateWindow
     END_IF
 
@@ -497,9 +496,7 @@ not_menu:
 
         lda     selected_icon_count
     IF_ZERO
-        ;; Try to select the window's parent icon. (Only works
-        ;; for volume icons, otherwise it would put selection
-        ;; in an inactive window.)
+        ;; Try to select the window's parent icon.
         lda     active_window_id
         jne     SelectIconForWindow
     END_IF
@@ -590,27 +587,18 @@ dispatch_click:
 ;;; Selection should be cleared before calling
 
 .proc SelectIconForWindow
-        ;; Select window's corresponding volume icon.
-        ;; (Doesn't work for folder icons as only the active
-        ;; window and desktop can have selections.)
-        tax
-        lda     window_to_dir_icon_table-1,x
-        bmi     done            ; $FF = dir icon freed
-
+        jsr     GetWindowPath
+        jsr     IconToAnimate
         sta     icon_param
 
         jsr     GetIconWindow
-        beq     :+               ; desktop - selection ok
-        cmp     active_window_id ; This should never be true
-        bne     done
-:
         sta     selected_window_id
         copy    #1, selected_icon_count
         copy    icon_param, selected_icon_list
         ITK_CALL IconTK::HighlightIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
 
-done:   rts
+        rts
 .endproc ; SelectIconForWindow
 
 ;;; ============================================================
@@ -2091,8 +2079,9 @@ loop:   cpx     selected_icon_count_copy
         ;; Finish up...
 
         ;; Were any directories opened?
-        lda     dir_flag
-        beq     done
+        dir_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+        bpl     done
 
         ;; Maybe close the previously active window, depending on source/modifiers
         jsr     MaybeCloseWindowAfterOpen
@@ -2119,18 +2108,8 @@ next:   txa
         beq     maybe_open_file       ; nope
 
         ;; Directory
+        copy    #$80, dir_flag
 
-        ;; Set when we see the first vol/folder icon, so we can
-        ;; clear selection (if it's a folder).
-        dir_flag := *+1         ; first one seen?
-        lda     #SELF_MODIFIED_BYTE
-
-        bne     :+              ; not the first
-        inc     dir_flag        ; only do this once
-        lda     selected_window_id ; selection in a window?
-        beq     :+                 ; no
-        jsr     ClearSelection
-:
         pla                     ; A = icon id
         jsr     OpenWindowForIcon
 
@@ -3236,7 +3215,7 @@ CmdGetInfo      := DoGetInfo
         param_call UpdateUsedFreeViaPath, path_buf3
 
         ;; Select/refresh window if there was one
-        lda     active_window_id
+        lda     selected_window_id
         jne     SelectAndRefreshWindowOrClose
 
 ret:    rts
@@ -3727,7 +3706,6 @@ finish: rts
 ;;; Cycle Through Windows
 ;;; Input: A = Key used; '~' is reversed
 
-
 .proc CmdCycleWindows
         tay
 
@@ -3774,7 +3752,8 @@ reverse:
 
 found:  inx
         stx     findwindow_params::window_id
-        jmp     ActivateWindowAndSelectIcon
+
+        jmp     ActivateWindow
 
 done:   rts
 .endproc ; CmdCycleWindows
@@ -4924,7 +4903,7 @@ failure:
     IF_NS
         ;; Update source vol's contents
         jsr     MaybeStashDropTargetName ; in case target is in window...
-        jsr     UpdateActiveWindow
+        jsr     UpdateSelectedWindow
         jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
     END_IF
 
@@ -4938,7 +4917,7 @@ failure:
         ;; Update used/free for same-vol windows
     IF_EQ
         copy    #$80, validate_windows_flag
-        bne     UpdateActiveWindow ; always
+        bne     UpdateSelectedWindow ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -4968,12 +4947,12 @@ failure:
         pla
         jmp     SelectAndRefreshWindowOrClose
 
-.proc UpdateActiveWindow
-        lda     active_window_id
+.proc UpdateSelectedWindow
+        lda     selected_window_id
         jsr     UpdateUsedFreeViaWindow
-        lda     active_window_id
+        lda     selected_window_id
         jmp     SelectAndRefreshWindowOrClose
-.endproc ; UpdateActiveWindow
+.endproc ; UpdateSelectedWindow
 
 .endproc ; PerformPostDropUpdates
 
@@ -5835,12 +5814,8 @@ ignore: rts
         sta     icon_param
 
         ;; Already an open window for the icon?
-        ldx     #kMaxDeskTopWindows-1
-:       cmp     window_to_dir_icon_table,x
-        beq     found_win
-        dex
-        bpl     :-
-        jmp     no_linked_win
+        jsr     FindWindowIndexForDirIcon
+        bne     no_linked_win
 
         ;; --------------------------------------------------
         ;; There is an existing window associated with icon.
@@ -6215,10 +6190,10 @@ done:
         ;; Desktop
         jsr     RedrawSelectedIcons
     ELSE
-        ;; Windowed - use a clipped port for the window
-        cmp     active_window_id ; in the active window?
-        bne     skip             ; TODO: This should not be possible
-
+        ;; Windowed
+        cmp     active_window_id
+      IF_EQ
+        ;; Fast path - use a clipped port
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
         bne     skip             ; obscured
 
@@ -6242,6 +6217,19 @@ done:
         cpx     selected_icon_count
         bne     :-
         jsr     PopPointers     ; do not tail-call optimize!
+      ELSE
+        ldx     #0
+:       txa
+        pha                     ; A = index
+        copy    selected_icon_list,x, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
+        pla                     ; A = index
+        tax
+        inx
+        cpx     selected_icon_count
+        bne     :-
+      END_IF
+
 
 skip:
     END_IF
