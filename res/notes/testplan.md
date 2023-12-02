@@ -89,7 +89,9 @@
 * Open a folder with only one item. Verify window header says "1 Item"
 * Open a folder with two or more items. Verify window header says "2 Items"
 * Open a folder with no items. File > New Folder. Enter a name a click OK. Verify that the window header says "1 Item"
-* Open a folder with only one item. File > New Folder. Enter a name a click OK. Verify that the window header says "2 Items"
+* Open a folder with only one item. File > New Folder. Enter a name and click OK. Verify that the window header says "2 Items"
+
+* Open window for an otherwise empty RAMDisk volume. Note the "K in disk" and "K free" values in the header. File > New Folder. Enter a name and click OK. Verify that the "K in disk" increases by 0 or 1, and that the "K free" decreases by 0 or 1. File > New Folder. Enter another name and click OK. Verify that the "K in disk" increases by 0 or 1, and that the "K free" decreases by 0 or 1.
 
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
@@ -658,7 +660,7 @@ The following tests all require:
 * Configuring DeskTop to install itself to the RAMCard on boot. This is the default but can be controlled using the Options control panel.
 
 * Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under APPLE.MENU are copied to /RAM/DESKTOP/APPLE.MENU.
-* Run DeskTop on a system with Slinky Ramdisk. Verify that subdirectories under APPLE.MENU are copied to /RAM5/DESKTOP/APPLE.MENU (or appropriate volume path).
+* Run DeskTop on a system with Slinky RAMDisk. Verify that subdirectories under APPLE.MENU are copied to /RAM5/DESKTOP/APPLE.MENU (or appropriate volume path).
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that LOCAL/DESKTOP.CONFIG is written to the startup disk.
 * Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Shortcuts > Add a Shortcut, and create a new shortcut. When prompted to save to the system disk, select OK. Verify that LOCAL/SELECTOR.LIST is written to the startup disk.

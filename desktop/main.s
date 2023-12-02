@@ -6827,19 +6827,14 @@ DoClose:
         bne     finish          ; failure
 
         ;; aux = total blocks
-        copy16  src_file_info_params::aux_type, vol_kb_used
+        copy16  src_file_info_params::blocks_used, vol_kb_used
         ;; total - used = free
-        sub16   src_file_info_params::aux_type, src_file_info_params::blocks_used, vol_kb_free
-        sub16   vol_kb_used, vol_kb_free, vol_kb_used ; total - free = used
+        sub16   src_file_info_params::aux_type, vol_kb_used, vol_kb_free
 
         ;; Blocks to K
         lsr16   vol_kb_free
-        php
         lsr16   vol_kb_used
-        plp
-        bcc     :+
-        inc16   vol_kb_used
-:       lda     #0              ; success
+        lda     #0              ; success
 
 finish: php
 
