@@ -784,6 +784,13 @@ multi:  jsr     DisableMenuItemsRequiringSingleSelection
         ;; Files selected (not volumes)
 
         jsr     DisableMenuItemsRequiringVolumeSelection
+        lda     selected_icon_count
+        cmp     #1
+    IF_EQ
+        jsr     EnableMenuItemsRequiringSingleFileSelection
+    ELSE
+        jsr     DisableMenuItemsRequiringSingleFileSelection
+    END_IF
         jsr     EnableMenuItemsRequiringFileSelection
         jmp     EnableMenuItemsRequiringSelection
 
@@ -791,6 +798,7 @@ multi:  jsr     DisableMenuItemsRequiringSingleSelection
         ;; Volumes selected (not files)
 
 :       jsr     EnableMenuItemsRequiringVolumeSelection
+        jsr     DisableMenuItemsRequiringSingleFileSelection
         jsr     DisableMenuItemsRequiringFileSelection
         jmp     EnableMenuItemsRequiringSelection
 
@@ -798,6 +806,7 @@ multi:  jsr     DisableMenuItemsRequiringSingleSelection
         ;; No Selection
 no_selection:
         jsr     DisableMenuItemsRequiringVolumeSelection
+        jsr     DisableMenuItemsRequiringSingleFileSelection
         jsr     DisableMenuItemsRequiringFileSelection
         jsr     DisableMenuItemsRequiringSelection
         jmp     DisableMenuItemsRequiringSingleSelection
@@ -3179,7 +3188,7 @@ CmdGetInfo      := DoGetInfo
 
 ;;; ============================================================
 
-;;; Assert: Single icon selected, and it's not trash
+;;; Assert: Single icon selected, and it's not Trash
 .proc CmdRename
         jsr     DoRename
         pha                     ; A = result
@@ -3208,17 +3217,22 @@ CmdGetInfo      := DoGetInfo
 
 ;;; ============================================================
 
-;;; Assert: One or more file icons selected
+;;; Assert: Single file icon selected
 .proc CmdDuplicate
         jsr     DoDuplicate
         beq     ret             ; flag set if window needs refreshing
 
         ;; Update cached used/free for all same-volume windows
-        param_call UpdateUsedFreeViaPath, path_buf3
-
-        ;; Select/refresh window if there was one
         lda     selected_window_id
-        jne     SelectAndRefreshWindowOrClose
+        jsr     GetWindowPath
+        jsr     UpdateUsedFreeViaPath
+
+        lda     selected_window_id
+        jsr     SelectAndRefreshWindowOrClose
+        bne     ret
+
+        jsr     ClearSelection
+        param_call SelectFileIconByName, text_input_buf
 
 ret:    rts
 .endproc ; CmdDuplicate
@@ -5664,8 +5678,6 @@ disable:lda     #MGTK::disableitem_disable
         sta     disableitem_params::disable
 
         copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdDuplicate
-        jsr     DisableMenuItem
         lda     #aux::kMenuItemIdCopyFile
         jsr     DisableMenuItem
         lda     #aux::kMenuItemIdDeleteFile
@@ -5676,6 +5688,25 @@ disable:lda     #MGTK::disableitem_disable
 .endproc ; ToggleMenuItemsRequiringFileSelection
 EnableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::enable
 DisableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::disable
+
+;;; ============================================================
+
+.proc ToggleMenuItemsRequiringSingleFileSelection
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
+
+        copy    #kMenuIdFile, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdDuplicate
+        jsr     DisableMenuItem
+
+        rts
+
+.endproc ; ToggleMenuItemsRequiringSingleFileSelection
+EnableMenuItemsRequiringSingleFileSelection := ToggleMenuItemsRequiringSingleFileSelection::enable
+DisableMenuItemsRequiringSingleFileSelection := ToggleMenuItemsRequiringSingleFileSelection::disable
 
 ;;; ============================================================
 
@@ -11123,28 +11154,14 @@ state:  .byte   0
 a_path: .addr   old_name_buf
 .endparams
 
+;;; Assert: Single file icon selected
 .proc DoDuplicateImpl
 
 start:
         lda     #0
-        sta     index
         sta     result_flag
 
-        ;; Verify selection is files (menu item shouldn't be enabled, though)
-        lda     selected_window_id
-        bne     :+
-        return  result_flag
-:
-        ;; Loop over all selected icons
-        index := *+1
-loop:   lda     #SELF_MODIFIED_BYTE
-        cmp     selected_icon_count
-        bne     :+
-        return  result_flag
-:
-        ;; Compose full path
-        ldx     index
-        lda     selected_icon_list,x
+        lda     selected_icon_list
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
     IF_NE
         jsr     ShowAlert
@@ -11153,8 +11170,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
         param_call CopyToSrcPath, path_buf3
 
-        ldx     index
-        lda     selected_icon_list,x
+        lda     selected_icon_list
         jsr     GetIconName
         stax    $06
 
@@ -11218,11 +11234,10 @@ success:
         COPY_STRING dst_path_buf, src_path_buf
         jsr     ApplyCaseBits
 :
-
         ;; --------------------------------------------------
-        ;; Totally done - advance to next selected icon
-        inc     index
-        jmp     loop
+        ;; Totally done
+
+        return  result_flag
 
 .proc RunDialogProc
         sta     duplicate_dialog_params

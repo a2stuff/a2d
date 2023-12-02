@@ -20,6 +20,7 @@
 * Open a text file with File > Open.
 
 * Create a new folder (File > New Folder) - verify that it is selected / scrolled into view.
+* Select a file. File > Duplicate.... Enter a new name, and click OK. Verify that the new file is selected / scrolled into view.
 
 * Move a file by dragging - same volume - target is window.
 * Move a file by dragging - same volume - target is volume icon.
@@ -319,7 +320,7 @@
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Open a volume window, and select two files. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
-  * File > Duplicate... is enabled.
+  * File > Duplicate... is disabled.
   * File > Rename... and Special > Make Alias are disabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
