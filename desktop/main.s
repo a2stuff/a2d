@@ -2395,6 +2395,7 @@ phase:  .byte   0
 a_path: .addr   0
 .endparams
 
+;;; Assert: There is an active window
 .proc CmdNewFolderImpl
 
         ;; access = destroy/rename/write/read
@@ -2403,8 +2404,7 @@ a_path: .addr   0
 start:  copy    #NewFolderDialogState::open, new_folder_dialog_params::phase
         jsr     NewFolderDialogProc
 
-L4FC6:  lda     active_window_id
-        beq     done            ; command should not be active without a window
+retry:  lda     active_window_id
         jsr     GetWindowPath
         stax    new_folder_dialog_params::a_path
 
@@ -2425,16 +2425,18 @@ L4FC6:  lda     active_window_id
 
         ;; Failure
         jsr     ShowAlert
-        jmp     L4FC6
+        jmp     retry
 
 success:
         copy    #NewFolderDialogState::close, new_folder_dialog_params::phase
         jsr     NewFolderDialogProc
-        param_call FindLastPathSegment, src_path_buf
-        sty     src_path_buf
-        jsr     FindWindowForSrcPath
-        beq     done
 
+        ;; Update cached used/free for all same-volume windows
+        lda     active_window_id
+        jsr     GetWindowPath
+        jsr     UpdateUsedFreeViaPath
+
+        lda     active_window_id
         jsr     SelectAndRefreshWindowOrClose
         bne     done
 

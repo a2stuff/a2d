@@ -34,6 +34,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Remove Special > Lock and Special > Unlock commands.
 * Allow selection to remain in inactive windows.
 * Fix off-by-one in used/free values in window headers.
+* Fix updating of window headers following File > New Folder.
 
 ### Selector
 

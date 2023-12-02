@@ -92,6 +92,7 @@
 * Open a folder with only one item. File > New Folder. Enter a name and click OK. Verify that the window header says "2 Items"
 
 * Open window for an otherwise empty RAMDisk volume. Note the "K in disk" and "K free" values in the header. File > New Folder. Enter a name and click OK. Verify that the "K in disk" increases by 0 or 1, and that the "K free" decreases by 0 or 1. File > New Folder. Enter another name and click OK. Verify that the "K in disk" increases by 0 or 1, and that the "K free" decreases by 0 or 1.
+* Open two windows for different volumes. Note the "items", "K in disk" and "K free" values in the header of the second window. File > New Folder. Enter a name and click OK. Verify that the "items" value increases by one, and "K in disk" increases by 0 or 1, and that the "K free" decreases by 0 or 1.
 
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
