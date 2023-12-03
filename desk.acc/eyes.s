@@ -681,13 +681,25 @@ cyf:    DEFINE_FLOAT
 
 .scope oval
 
-;;; Temp Oval
-oval:   .tag    OvalRec
+;;; Temp `OvalRec`
+oval := $50
 
 ;;; Set up `io_params` before calling.
 .proc InitOval
         ovalHeight := io_params::height ; [16.0]
         ovalWidth  := io_params::width  ; [16.0]
+
+        ;; --------------------------------------------------
+        ;; Local variables
+
+.struct
+        .org $10
+        d0              .word   ; [16.0]
+        ovalWidthDiv2   .dword  ; [16.16]
+        aspect_ratio    .dword  ; [16.16]
+        temp            .dword
+        product         .res 8  ; [32.32]
+.endstruct
 
         ;; --------------------------------------------------
         ;; Init top/bottom to rect top/bottom
@@ -896,18 +908,6 @@ rotate:
         copy16  io_params::oval, ptr
         jmp     SaveOval
 
-        ;; --------------------------------------------------
-        ;; Local variables
-
-d0:     .word   0               ; [16.0]
-ovalWidthDiv2:
-        .dword  0               ; [16.16]
-aspect_ratio:                   ; [16.16]
-        .dword  0
-temp:   .dword  0
-
-product:                        ; [32.32]
-        .res    8
 .endproc ; InitOval
 
 ;;; Set up `bo_params` before calling.
@@ -915,6 +915,15 @@ product:                        ; [32.32]
 
         ptr := $06
         vert := bo_params::vert
+
+        ;; --------------------------------------------------
+        ;; Local variables
+
+.struct
+        .org $10
+        d0     .word            ; [16.0]
+        temp   .dword
+.endstruct
 
         ;; --------------------------------------------------
         ;; Copy to working OvalRec
@@ -1009,13 +1018,7 @@ endloop2:
         ;; --------------------------------------------------
         ;; Finish
 
-        jmp     SaveOval
-
-        ;; --------------------------------------------------
-        ;; Local variables
-
-d0:     .word   0               ; [16.0]
-temp:   .dword  0
+        FALL_THROUGH_TO SaveOval
 .endproc ; BumpOval
 
 ;;; Write `oval` to `OvalRec` addr at $06

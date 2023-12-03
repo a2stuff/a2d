@@ -856,6 +856,14 @@ skip:   dec     arg
 ;;;    copy32 #$11111111, $2222 ; immediate, absolute
 ;;;    copy32 $1111, $2222      ; absolute, absolute
 .macro copy32 arg1, arg2
+      .if .xmatch ({arg1}, #0)
+        ;; Common special case
+        lda     #0
+        sta     arg2
+        sta     arg2+1
+        sta     arg2+2
+        sta     arg2+3
+      .else
         _op_b0  lda, {arg1}
         sta     arg2
         _op_b1  lda, {arg1}
@@ -864,6 +872,7 @@ skip:   dec     arg
         sta     arg2+2
         _op_b3  lda, {arg1}
         sta     arg2+3
+      .endif
 .endmacro
 
 ;;; Shift 32-bit values
