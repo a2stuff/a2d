@@ -182,9 +182,9 @@
 * Launch DeskTop. Open a window containing folders and files. Open another window, for an empty volume. Drag an icon from the first to the second. Ensure no scrollbars activate in the target window.
 * Launch DeskTop. Open a window containing folders and files, with no scrollbars active. Open another window. Drag an icon from the first to the second. Ensure no scrollbars activate in the source window.
 
-* Launch DeskTop. Open some windows. Special > Disk Copy. Quit back to DeskTop. Verify that the windows are restored.
-* Launch DeskTop. Close all windows. Special > Disk Copy. Quit back to DeskTop. Verify that no windows are restored.
-* Launch DeskTop. Special > Disk Copy. Quit back to DeskTop. Invoke BASIC.SYSTEM. Ensure /RAM exists.
+* Launch DeskTop. Open some windows. Special > Copy Disk. Quit back to DeskTop. Verify that the windows are restored.
+* Launch DeskTop. Close all windows. Special > Copy Disk. Quit back to DeskTop. Verify that no windows are restored.
+* Launch DeskTop. Special > Copy Disk. Quit back to DeskTop. Invoke BASIC.SYSTEM. Ensure /RAM exists.
 
 * Launch DeskTop. Open two windows. Select a file in one window. Activate the other window. File > Delete. Click OK. Verify that the window with the deleted file refreshes.
 * Launch DeskTop. Open two windows. Select a file in one window. Activate the other window. File > Duplicate. Enter a new name, and click OK. Verify that the window with the selected file refreshes.
@@ -380,7 +380,7 @@
 
 * Launch DeskTop. Open a window. Create a folder with a short name (e.g. "A"). Open the folder. Drag the folder's window so it covers just the left edge of the icon. Drag it away. Verify that the folder repaints. Repeat for the right edge.
 
-* Repeat the following cases for Special > Format a Disk and Special > Erase a Disk:
+* Repeat the following cases for Special > Format Disk and Special > Erase Disk:
   * Launch DeskTop. Run the command. Ensure left/right arrows move selection correctly.
   * Launch DeskTop. Run the command. Verify that the device order shown matches the order of volumes shown on the DeskTop (boot device first, etc). Select a device and proceed with the operation. Verify the correct device was formatted or erased.
   * Launch DeskTop. Run the command. For the new name, enter a volume name not currently in use. Verify that you are not prompted for a new name.
@@ -438,7 +438,7 @@
     * Renaming (1) the volume that DeskTop loaded from, and renaming (2) the DeskTop folder itself.
   * Verify that the following still function:
     * File > Copy To... (overlays)
-    * Special > Disk Copy (and that File > Quit returns to DeskTop) (overlay + quit handler)
+    * Special > Copy Disk (and that File > Quit returns to DeskTop) (overlay + quit handler)
     * Apple Menu > Calculator (desk accessories)
     * Apple Menu > Control Panels (relative folders)
     * Control Panel, change desktop pattern, close, quit, restart (settings)
@@ -689,17 +689,17 @@ The following tests all require:
 * Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple Menu > Control Panels. Drag Apple.Menu from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be moved or copied into itself.
 
 * Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Shortcuts > Edit a Shortcut. Select a modify a shortcut, and click OK. Verify that no prompt is shown for saving changes to the startup disk.
-* Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Eject the startup disk. Special > Format a Disk. Verify that no prompt for the startup disk is shown.
-* Invoke DESKTOP.SYSTEM, and hit Escape when copying to RAMCard. Once DeskTop has started, eject the startup disk. Special > Format a Disk. Verify that a prompt to insert the system disk is shown.
+* Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Eject the startup disk. Special > Format Disk. Verify that no prompt for the startup disk is shown.
+* Invoke DESKTOP.SYSTEM, and hit Escape when copying to RAMCard. Once DeskTop has started, eject the startup disk. Special > Format Disk. Verify that a prompt to insert the system disk is shown.
 
 * Boot to BASIC.SYSTEM (without going through DESKTOP.SYSTEM first). Run the following commands: `CREATE /RAM5/DESKTOP`, `CREATE /RAM5/DESKTOP/MODULES`, `BSAVE /RAM5/DESKTOP/MODULES/DESKTOP,A0,L0` (substituting the RAM disks's name for `RAM5`). Launch `DESKTOP.SYSTEM`. Verify the install doesn't hang silently or loop endlessly.
 
 ### SmartPort
 
-* Configure a system with more than 2 drives on a SmartPort controller. Boot ProDOS 2.4 (any patch version). Launch DeskTop. Special > Format a Disk. Verify that correct device names are shown for the mirrored drives.
-* Configure a system with more than 2 drives on a SmartPort controller. Boot into ProDOS 2.0.1, 2.0.2, or 2.0.3. Launch DeskTop. Special > Format a Disk. Verify that correct device names are shown for the mirrored drives.
+* Configure a system with more than 2 drives on a SmartPort controller. Boot ProDOS 2.4 (any patch version). Launch DeskTop. Special > Format Disk. Verify that correct device names are shown for the mirrored drives.
+* Configure a system with more than 2 drives on a SmartPort controller. Boot into ProDOS 2.0.1, 2.0.2, or 2.0.3. Launch DeskTop. Special > Format Disk. Verify that correct device names are shown for the mirrored drives.
 * Run on a system with a single slot providing 3 or 4 drives (e.g. CFFA, BOOTI, Floppy Emu); verify that all show up.
-* Configure a system with a SmartPort controller in slot 1 and one drive. Launch DeskTop. Special > Format a Disk. Select the drive in slot 1. Verify that the format succeeds. Repeat for slots 2, 4, 5, 6 and 7.
+* Configure a system with a SmartPort controller in slot 1 and one drive. Launch DeskTop. Special > Format Disk. Select the drive in slot 1. Verify that the format succeeds. Repeat for slots 2, 4, 5, 6 and 7.
 
 * With a Floppy Emu in SmartPort mode, ensure that the 32MB image shows up as an option.
 
@@ -981,60 +981,60 @@ With Sci.Calc:
 
 # Disk Copy
 
-* Launch DeskTop. Special > Disk Copy.... File > Quit. Special > Disk Copy.... Ensure drive list is correct.
+* Launch DeskTop. Special > Copy Disk.... File > Quit. Special > Copy Disk.... Ensure drive list is correct.
 
-* Launch DeskTop. Special > Disk Copy.... Press Escape key. Verify that menu keyboard mode starts.
-* Launch DeskTop. Special > Disk Copy.... Press Open-Apple Q. Verify that DeskTop launches.
-* Launch DeskTop. Special > Disk Copy.... Press Solid-Apple Q. Verify that DeskTop launches.
+* Launch DeskTop. Special > Copy Disk.... Press Escape key. Verify that menu keyboard mode starts.
+* Launch DeskTop. Special > Copy Disk.... Press Open-Apple Q. Verify that DeskTop launches.
+* Launch DeskTop. Special > Copy Disk.... Press Solid-Apple Q. Verify that DeskTop launches.
 
-* Launch DeskTop. Special > Disk Copy. Copy a disk with more than 999 blocks. Verify thousands separators are shown in block counts.
-* Launch DeskTop. Special > Disk Copy.... Copy a 32MB disk image using Quick Copy (the default mode). Verify that the screen is not garbled, and that the copy is successful.
-* Launch DeskTop. Special > Disk Copy.... Copy a 32MB disk image using Disk Copy (the other mode). Verify that the screen is not garbled, and that the copy is successful.
+* Launch DeskTop. Special > Copy Disk. Copy a disk with more than 999 blocks. Verify thousands separators are shown in block counts.
+* Launch DeskTop. Special > Copy Disk.... Copy a 32MB disk image using Quick Copy (the default mode). Verify that the screen is not garbled, and that the copy is successful.
+* Launch DeskTop. Special > Copy Disk.... Copy a 32MB disk image using Disk Copy (the other mode). Verify that the screen is not garbled, and that the copy is successful.
 
-* Launch DeskTop. Special > Disk Copy.... Make a device selection (using mouse or keyboard) but don't click OK. Open the menu (using mouse or keyboard) but dismiss it. Verify that source device wasn't accepted.
-* Launch DeskTop. Special > Disk Copy.... Select a drive using the mouse or keyboard, but don't click OK. Double-click the same drive. Verify that it was accepted, and that a prompt for an appropriate destination drive was shown.
-* Launch DeskTop. Special > Disk Copy.... Select a drive using the mouse or keyboard, but don't click OK. Double-click a different drive. Verify that it was accepted, and that a prompt for an appropriate destination drive was shown.
+* Launch DeskTop. Special > Copy Disk.... Make a device selection (using mouse or keyboard) but don't click OK. Open the menu (using mouse or keyboard) but dismiss it. Verify that source device wasn't accepted.
+* Launch DeskTop. Special > Copy Disk.... Select a drive using the mouse or keyboard, but don't click OK. Double-click the same drive. Verify that it was accepted, and that a prompt for an appropriate destination drive was shown.
+* Launch DeskTop. Special > Copy Disk.... Select a drive using the mouse or keyboard, but don't click OK. Double-click a different drive. Verify that it was accepted, and that a prompt for an appropriate destination drive was shown.
 
-* Rename the DISK.COPY file to something else. Launch DeskTop. Special > Disk Copy.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
-* Launch DeskTop. Eject the boot volume. Special > Disk Copy.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
-* Launch DeskTop. Eject the boot volume. Special > Disk Copy.... Verify that an alert is shown. Re-insert the boot volume. Click OK in the alert. Verify that Disk Copy starts.
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Special > Disk Copy.... Verify that Disk Copy starts.
-* Launch DeskTop. Open and position a window. Special > Disk Copy.... File > Quit. Verify that DeskTop restores the window.
-* On a IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Special > Disk Copy.... Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that the display remains in color.
-* On a IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Special > Disk Copy.... Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that the display resets to monochrome.
+* Rename the DISK.COPY file to something else. Launch DeskTop. Special > Copy Disk.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
+* Launch DeskTop. Eject the boot volume. Special > Copy Disk.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
+* Launch DeskTop. Eject the boot volume. Special > Copy Disk.... Verify that an alert is shown. Re-insert the boot volume. Click OK in the alert. Verify that Disk Copy starts.
+* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Special > Copy Disk.... Verify that Disk Copy starts.
+* Launch DeskTop. Open and position a window. Special > Copy Disk.... File > Quit. Verify that DeskTop restores the window.
+* On a IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Special > Copy Disk.... Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that the display remains in color.
+* On a IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Special > Copy Disk.... Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that the display resets to monochrome.
 
-* Configure a system with a RAMDisk in Slot 3, e.g. using RAM.DRV.SYSTEM or RAMAUX.SYSTEM. Launch DeskTop. Special > Disk Copy.... Verify that the RAMDisk appears.
-* Configure a system with 8 or fewer drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is inactive.
-* Configure a system with 9 or more drives. Launch DeskTop. Special > Disk Copy.... Verify that the scrollbar is active.
+* Configure a system with a RAMDisk in Slot 3, e.g. using RAM.DRV.SYSTEM or RAMAUX.SYSTEM. Launch DeskTop. Special > Copy Disk.... Verify that the RAMDisk appears.
+* Configure a system with 8 or fewer drives. Launch DeskTop. Special > Copy Disk.... Verify that the scrollbar is inactive.
+* Configure a system with 9 or more drives. Launch DeskTop. Special > Copy Disk.... Verify that the scrollbar is active.
 
-* Launch DeskTop. Special > Disk Copy.... Verify that ProDOS disk names in the device list have adjusted case (e.g. "Volume" not "VOLUME").
-* Launch DeskTop. Special > Disk Copy.... Verify that Pascal disk names in the device list do not have adjusted case (e.g. "TGP:" not "Tgp:").
-* Launch DeskTop. Special > Disk Copy.... Verify that DOS 3.3 disk names in the device list appear as "DOS 3.3 Sn, Dn" and do not have adjusted case.
+* Launch DeskTop. Special > Copy Disk.... Verify that ProDOS disk names in the device list have adjusted case (e.g. "Volume" not "VOLUME").
+* Launch DeskTop. Special > Copy Disk.... Verify that Pascal disk names in the device list do not have adjusted case (e.g. "TGP:" not "Tgp:").
+* Launch DeskTop. Special > Copy Disk.... Verify that DOS 3.3 disk names in the device list appear as "DOS 3.3 Sn, Dn" and do not have adjusted case.
 
-* Launch DeskTop. Special > Disk Copy.... Select a ProDOS disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name has adjusted case (e.g. "Volume" not "VOLUME").
-* Launch DeskTop. Special > Disk Copy.... Select a Pascal disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name does not have adjusted case (e.g. "TGP:" not "Tgp:").
-* Launch DeskTop. Special > Disk Copy.... Select a DOS 3.3 disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, no volume name appears on the "Source" line.
+* Launch DeskTop. Special > Copy Disk.... Select a ProDOS disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name has adjusted case (e.g. "Volume" not "VOLUME").
+* Launch DeskTop. Special > Copy Disk.... Select a Pascal disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name does not have adjusted case (e.g. "TGP:" not "Tgp:").
+* Launch DeskTop. Special > Copy Disk.... Select a DOS 3.3 disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, no volume name appears on the "Source" line.
 
-* Launch DeskTop. Special > Disk Copy.... Select a ProDOS disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME"), and the name is quoted.
-* Launch DeskTop. Special > Disk Copy.... Select a Pascal disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
-* Launch DeskTop. Special > Disk Copy.... Select a DOS 3.3 disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
+* Launch DeskTop. Special > Copy Disk.... Select a ProDOS disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME"), and the name is quoted.
+* Launch DeskTop. Special > Copy Disk.... Select a Pascal disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
+* Launch DeskTop. Special > Copy Disk.... Select a DOS 3.3 disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
 
-* Configure Virtual II with two Omnidisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Disk Copy.... Select the Omnidisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Do you want to erase ...?" confirmation prompt is shown.
+* Configure Virtual II with two Omnidisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Copy Disk.... Select the Omnidisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Do you want to erase ...?" confirmation prompt is shown.
 
-* Launch DeskTop. Special > Disk Copy.... Verify that the OK button is disabled. Select an item in the list with the keyboard. Verify that the OK button enables. Click in the blank space in the list below the items. Verify that the OK button disables. Click an item in the list. Verify that the OK button enables. Click OK to specify a source disk. Verify that the OK button disables. Repeat the above cases when selecting the destination disk.
-* Launch DeskTop. Special > Disk Copy.... Select a source disk. Verify that the OK button enables. Click Read Drives. Verify that the OK button disables. Select a source disk then click OK. Click OK. Select a destination disk. Click Read Drives. Verify that the OK button disables.
-* Launch DeskTop. Special > Disk Copy.... Select a source disk and a destination disk. Cancel the copy. Verify that the OK button is disabled.
-* Launch DeskTop. Special > Disk Copy.... Select a source disk and a destination disk. Allow the copy to complete. Verify that the OK button is disabled.
+* Launch DeskTop. Special > Copy Disk.... Verify that the OK button is disabled. Select an item in the list with the keyboard. Verify that the OK button enables. Click in the blank space in the list below the items. Verify that the OK button disables. Click an item in the list. Verify that the OK button enables. Click OK to specify a source disk. Verify that the OK button disables. Repeat the above cases when selecting the destination disk.
+* Launch DeskTop. Special > Copy Disk.... Select a source disk. Verify that the OK button enables. Click Read Drives. Verify that the OK button disables. Select a source disk then click OK. Click OK. Select a destination disk. Click Read Drives. Verify that the OK button disables.
+* Launch DeskTop. Special > Copy Disk.... Select a source disk and a destination disk. Cancel the copy. Verify that the OK button is disabled.
+* Launch DeskTop. Special > Copy Disk.... Select a source disk and a destination disk. Allow the copy to complete. Verify that the OK button is disabled.
 
-* Launch DeskTop. Special > Disk Copy.... Select a source disk and a destination disk. Allow the copy to start, but eject the destination disk in the middle of the copy. Verify that block write errors are shown (with alert sounds).
+* Launch DeskTop. Special > Copy Disk.... Select a source disk and a destination disk. Allow the copy to start, but eject the destination disk in the middle of the copy. Verify that block write errors are shown (with alert sounds).
 
-* Configure a system with two drives capable of holding the same capacity non-140k disk (e.g. two 800k or 32MB drives). Start with a disk in first drive, but with the second drive empty. Launch DeskTop. Special > Disk Copy.... Verify that the second drive shows "Unknown" in the source drive list. Select the first drive and click OK. Verify that the second drive does not appear in the destination drive list. Place a disk in the second drive. Click Read Drives. Verify that the second drive now appears with the correct name in the source drive list. Select the first drive and click OK. Verify that the second drive now appears in the destination drive list.
+* Configure a system with two drives capable of holding the same capacity non-140k disk (e.g. two 800k or 32MB drives). Start with a disk in first drive, but with the second drive empty. Launch DeskTop. Special > Copy Disk.... Verify that the second drive shows "Unknown" in the source drive list. Select the first drive and click OK. Verify that the second drive does not appear in the destination drive list. Place a disk in the second drive. Click Read Drives. Verify that the second drive now appears with the correct name in the source drive list. Select the first drive and click OK. Verify that the second drive now appears in the destination drive list.
 
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.
 * Launch Shortcuts. Trigger an alert with only OK (e.g. running a shortcut that only works in DeskTop, like a DA). Verify that Escape key closes alert.
-* Launch DeskTop. Run Special > Disk Copy. Trigger an alert with only OK (e.g. let a copy complete successfully). Verify that Escape key closes alert.
+* Launch DeskTop. Run Special > Copy Disk. Trigger an alert with only OK (e.g. let a copy complete successfully). Verify that Escape key closes alert.
 * Launch DeskTop. Select 3 files and drag them to another volume. Drag the same 3 files to the other volume again. When the alert with Yes/No/All buttons appears, mouse down on the Yes button, drag the cursor off the button, and release the mouse button. Verify that nothing happens. Click Yes to allow the copy to continue. Repeat for No and All.
 
 # File Picker
@@ -1058,7 +1058,7 @@ Test the following in all of the above, except where called out specifically:
 * Browse to a directory containing 7 files. Verify that the scrollbar is inactive.
 * Browse to a directory containing 8 files. Verify that the scrollbar is active. Press Apple+Down. Verify that the scrollbar thumb moves to the bottom of the track.
 
-* Launch DeskTop. Special > Format a Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy To.... Verify that the file list is populated.
+* Launch DeskTop. Special > Format Disk.... Select a drive with no disk, let the format fail and cancel. File > Copy To.... Verify that the file list is populated.
 
 * Create a directory, and in the directory create a file named "A.B" then a file named "A". Browse to the directory. Verify "A" sorts before "A.B".
 
@@ -1097,8 +1097,8 @@ This covers:
  * DeskTop's name prompt, used in:
    * File > Duplicate...
    * File > Rename...
-   * Special > Format a Disk...
-   * Special > Erase a Disk...
+   * Special > Format Disk...
+   * Special > Erase Disk...
  * DeskTop's Add/Edit a Shortcut dialog (an extended File Picker)
  * Find Files DA.
  * Map DA.

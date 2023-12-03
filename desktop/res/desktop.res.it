@@ -26,7 +26,7 @@
 .define res_string_menu_item_by_type "per Tipo"
 .define res_string_menu_item_check_all_drives "Controlla tutte le periferiche"
 .define res_string_menu_item_check_drive "Controlla questa periferica"
-.define res_string_menu_item_format_disk "Inizializza..."
+.define res_string_menu_item_format_disk "Inizializza Volume..."
 .define res_string_menu_item_erase_disk "Cancella Volume..."
 .define res_string_menu_item_disk_copy "Copia Volume..."
 .define res_string_menu_item_lock "Blocca"
