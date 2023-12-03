@@ -9836,7 +9836,9 @@ stashed_addr:  .addr     0
         bne     ret             ; no, ignore
 
         ;; Give immediate feedback
-        jsr     ClearStrobeAndPlaySound
+        bit     KBDSTRB
+        jsr     PlayTone1
+        jsr     PlayTone2
 
         ;; Wait for OA and SA to be released
 :       jsr     ComputeModifiers
@@ -9861,26 +9863,38 @@ in_kbd_mouse:
         bne     :+
 
         ;; Give immediate feedback
-        jsr     ClearStrobeAndPlaySound
+        bit     KBDSTRB
+        jsr     PlayTone2
+        jsr     PlayTone1
         lda     #kKeyboardMouseStateInactive
         sta     kbd_mouse_state
 
 :       rts
 
-.proc ClearStrobeAndPlaySound
-        bit     KBDSTRB
+.proc PlayTone1
+        lda     #$00            ; pitch = 256
+        ldx     #$40            ; duration = 16384
+        bne     PlayTone        ; always
+.endproc ; PlayTone1
 
-        ldx     #10
+.proc PlayTone2
+        lda     #$E0            ; pitch = 224
+        ldx     #$49            ; duration = 16352
+        FALL_THROUGH_TO PlayTone
+.endproc ; PlayTone2
+
+;;; A = pitch, A*X = duration
+.proc PlayTone
 beeploop:
-        lda     SPKR
-        ldy     #0
+        bit     SPKR
+        tay
 :       dey
         bne     :-
         dex
-        bpl     beeploop
+        bne     beeploop
 
         rts
-.endproc ; ClearStrobeAndPlaySound
+.endproc ; PlayTone
 
 .endproc ; ActivateKeyboardMouse
 
