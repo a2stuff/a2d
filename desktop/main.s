@@ -1857,7 +1857,7 @@ ret:    rts
 ;;; ============================================================
 
 ;;; Reduce an absolute path to just the volume path. If already a
-;;; volume path, the lenght is not changed.
+;;; volume path, the length is not changed.
 ;;; e.g. "/VOL/DIR/FILE" to "/VOL"
 ;;; Inputs: A,X = vol
 ;;; Note: length is modified, but buffer otherwise unchanged

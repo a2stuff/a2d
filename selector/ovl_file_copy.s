@@ -90,7 +90,7 @@ file_entry:
 
 addr_table:
 
-;;; Jeump table - populated by operation
+;;; Jump table - populated by operation
 op_jt_addrs:
 op_jt_addr1:  .addr   CopyVisitFile
 op_jt_addr2:  .addr   PopDstSegment
@@ -615,7 +615,7 @@ done:
         beq     :+
         cmp     #ERR_DUPLICATE_FILENAME
         jne     HandleErrorCode
-:       clc                     ; treate as success
+:       clc                     ; treated as success
         rts
 .endproc ; CreateDstFile
 

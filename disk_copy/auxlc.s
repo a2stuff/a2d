@@ -289,7 +289,7 @@ current_drive_selection:        ; $FF if no selection
 kListRows = 8                   ; number of visible rows
 
 selection_mode:
-        .byte   0               ; high bit clear = source; set = desination
+        .byte   0               ; high bit clear = source; set = destination
 
 
 kListEntrySlotOffset    = 8
