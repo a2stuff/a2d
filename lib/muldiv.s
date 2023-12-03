@@ -1,8 +1,15 @@
 ;;; ============================================================
 ;;; Input: numbers in A,X, Y (all unsigned)
 ;;; Output: number in A,X (unsigned)
+;;; Uses $10...$1F
 
 .proc Multiply_16_8_16
+.struct
+        .org $10
+num1    .word
+num2    .byte
+.endstruct
+
         stax    num1
         sty     num2
 
@@ -28,15 +35,21 @@ test:   lsr     num2
 
         rts
 
-num1:   .word   0
-num2:   .byte   0
 .endproc ; Multiply_16_8_16
 
 ;;; ============================================================
 ;;; Input: dividend in A,X, divisor in Y (all unsigned)
 ;;; Output: quotient in A,X (unsigned), Y = remainder
+;;; Uses $10...$1F
 
 .proc Divide_16_8_16
+.struct
+        .org $10
+dividend        .word
+divisor         .word
+remainder       .word
+.endstruct
+
         result := dividend
 
         stax    dividend
@@ -67,11 +80,4 @@ skip:   dex
         ldax    dividend
         ldy     remainder
         rts
-
-dividend:
-        .word   0
-divisor:
-        .word   0
-remainder:
-        .word   0
 .endproc ; Divide_16_8_16
