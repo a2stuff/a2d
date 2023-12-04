@@ -390,6 +390,7 @@
   * Launch DeskTop. Run the command. Select an empty drive. Let the operation continue until it fails. Verify that an error message is shown.
   * Configure a system with at least 9 volumes. Launch DeskTop. Run the command. Select a volume in the third column. Click OK. Verify that the selection rect is fully erased.
   * Configure a system with 13 volumes, not counting /RAM. Launch DeskTop. Run the command. Verify that all 13 volumes are shown.
+  * Launch DeskTop. Run the command. Select a slot/drive containing an existing volume. Enter a new name and click OK. Click OK to confirm the operation. Verify that the icon for the volume is updated with the new name.
   * Launch DeskTop. Run the command. Select a slot/drive containing an existing volume. Enter a new name and click OK. Verify that the confirmation prompt shows the volume with adjusted case matching the volume's icon, with quotes around the name.
   * Launch DeskTop. Run the command. Select a slot/drive containing an existing volume with a GS/OS-cased name and click OK. Enter a new name and click OK. Verify that the confirmation prompt shows the volume with the correct case matching the volume's icon, with quotes around the name.
   * Launch DeskTop. Run the command. Select a slot/drive containing a Pascal disk. Enter a new name and click OK. Verify that the confirmation prompt shows the Pascal volume name (e.g. "TGP:"), with quotes around the name.

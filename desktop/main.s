@@ -4379,8 +4379,9 @@ by_unit_number:
 map_icon_number:
         ;; Map unit number to index in DEVLST
         ldy     DEVCNT
-        lda     drive_to_refresh
-:       cmp     DEVLST,y
+:       lda     DEVLST,y
+        and     #UNIT_NUM_MASK
+        cmp     drive_to_refresh
         beq     :+
         dey
         bpl     :-

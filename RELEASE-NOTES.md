@@ -38,6 +38,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix updating of window headers following File > New Folder.
 * Select new file after File > Duplicate...
 * Improve menu item names for Format, Erase and Copy Disk.
+* Fix refreshing volume icon after Format/Erase.
 
 ### Selector
 
