@@ -119,18 +119,16 @@ skip_select:
         copy    #$00, format_erase_overlay_flag
 
         param_call main::DrawDialogLabel, 2, aux::str_location
-        ;; Find DEVLST index of selected/specified device
-        lda     unit_num
-        and     #UNIT_NUM_MASK
-        sta     masked
+
+        ;; Find `DEVLST` index of selected/specified device
         ldx     #AS_BYTE(-1)
 :       inx
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
-        masked := *+1
-        cmp     #SELF_MODIFIED_BYTE
+        cmp     unit_num
         bne     :-
         ;; NOTE: Assertion violation if not found
+
         txa
         jsr     GetDeviceNameForIndex
         jsr     main::DrawString
@@ -198,7 +196,6 @@ erase_flag:
         lda     #$00
         jsr     PromptForDeviceAndName
         jcs     cancel
-        sta     d2
         sta     unit_num
 
         ;; --------------------------------------------------
@@ -265,8 +262,7 @@ cancel:
         jsr     main::SetCursorPointer
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
 
-        d2 := *+1               ; ???
-        ldx     #SELF_MODIFIED_BYTE
+        ldx     unit_num
         pla
         rts
 .endproc ; FormatDisk
@@ -278,7 +274,6 @@ cancel:
         lda     #$80
         jsr     PromptForDeviceAndName
         bcs     cancel
-        sta     d2
         sta     unit_num
 
         ;; --------------------------------------------------
@@ -319,8 +314,7 @@ cancel:
         jsr     main::SetCursorPointer
         MGTK_CALL MGTK::CloseWindow, winfo_prompt_dialog
 
-        d2 := *+1               ; ???
-        ldx     #SELF_MODIFIED_BYTE
+        ldx     unit_num
         pla
         rts
 .endproc ; EraseDisk
@@ -420,7 +414,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
 ;;; ============================================================
 
-;;; Input: A = index in DEVLST
+;;; Input: A = index in `DEVLST`
 ;;; Output: A,X = device name
 .proc GetDeviceNameForIndex
         asl     a
@@ -441,6 +435,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         sbc     selected_index
         tax
         lda     DEVLST,x
+        and     #UNIT_NUM_MASK
         rts
 .endproc ; GetSelectedUnitNum
 
@@ -451,7 +446,6 @@ loop:   lda     #SELF_MODIFIED_BYTE
 .proc CheckConflictingVolumeName
         ptr := $06
         stxy    ptr
-        and     #UNIT_NUM_MASK
         sta     unit_num
 
         ;; Copy name, prepending '/'
@@ -496,9 +490,6 @@ no_match:
         DEFINE_READ_BLOCK_PARAMS read_block_params, read_buffer, 0
         DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
 
-unit_num:
-        .byte   $00
-
         ;; Used to check for existing volume with same name
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path
 
@@ -528,7 +519,7 @@ path:
 
 ;;; ============================================================
 ;;; Format disk
-;;; Input: A = unit number (with low nibble intact)
+;;; Input: A = unit number
 
 .proc FormatUnit
         sta     unit_num
@@ -543,24 +534,21 @@ path:
         ;; Format using driver
 driver: lda     unit_num
         jsr     GetDriverAddress
-        stax    @driver
+        stax    driver_addr
 
         sta     ALTZPOFF        ; Main ZP/LCBANKs
 
         copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
-        lda     unit_num
-        and     #UNIT_NUM_MASK
+        unit_num := *+1
+        lda     #SELF_MODIFIED_BYTE
         sta     DRIVER_UNIT_NUMBER
 
-        @driver := *+1
+        driver_addr := *+1
         jsr     SELF_MODIFIED
 
         sta     ALTZPON         ; Aux ZP/LCBANKs
 
         rts
-
-unit_num:
-        .byte   0
 .endproc ; FormatUnit
 
 ;;; ============================================================
@@ -600,11 +588,10 @@ unit_num:
 
 ;;; ============================================================
 ;;; Write the loader, volume directory, and volume bitmap
-;;; Inputs: A = unit number (with low nibble intact), X,Y = volume name
+;;; Inputs: A = unit number, X,Y = volume name
 
 .proc WriteHeaderBlocks
         sta     unit_num
-        and     #UNIT_NUM_MASK
         sta     write_block_params::unit_num
         stxy    $06
 
@@ -641,7 +628,6 @@ L132C:  param_call main::CopyPtr1ToBuf, vol_name_buf
 
         copy    #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
         lda     unit_num
-        and     #UNIT_NUM_MASK
         sta     DRIVER_UNIT_NUMBER
         lda     #$00
         sta     DRIVER_BLOCK_NUMBER
@@ -796,6 +782,9 @@ gowrite:
 
 L1483:  sec
         rts
+
+unit_num:
+        .byte   0
 
 ;;; Values with "n+1" (1-8) high-endian bits set
 bitmask:
@@ -1040,11 +1029,10 @@ pascal_disk:
 
 ;;; ============================================================
 ;;; Get a volume name, for ProDOS or non-ProDOS disk.
-;;; Input: A = unit number (no need to mask off low nibble)
+;;; Input: A = unit number
 ;;; Output: `ovl_string_buf` is populated
 
 .proc GetVolName
-        and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
         bne     non_pro
