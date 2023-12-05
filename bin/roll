@@ -27,5 +27,5 @@ roll () {
 }
 
 roll "../intbasic" "out/intbasic.system.SYS" "res/package" "INTBASIC.SYSTEM"
-roll "../prodos-drivers/" "clocks/jumbo/out/clock.system.SYS" "res/package" "CLOCK.SYSTEM"
+roll "../prodos-drivers/" "out/clock.system.SYS" "res/package" "CLOCK.SYSTEM"
 roll "../pt3plr" "pt3plr.apple2" "res/package" "PT3PLR.SYSTEM"
