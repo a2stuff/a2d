@@ -1002,6 +1002,7 @@ resume:
 
 loop:   ldx     devnum
         lda     DEVLST,x
+        ;; NOTE: Not masked with `UNIT_NUM_MASK` for tests below.
         sta     unit_num
 
         ;; Special case for RAM.DRV.SYSTEM/RAMAUX.SYSTEM.
@@ -1011,7 +1012,7 @@ loop:   ldx     devnum
         beq     test_unit_num
 
         ;; Smartport?
-        jsr     FindSmartportDispatchAddress
+        jsr     FindSmartportDispatchAddress ; handled unmasked unit num
         bcs     next_unit
         stax    dispatch
         sty     status_params::unit_num
@@ -1046,7 +1047,7 @@ next_unit:
 test_unit_num:
         ;; Verify it's online.
         lda     unit_num
-        and     #UNIT_NUM_MASK
+        and     #UNIT_NUM_MASK  ; explicitly not masked above
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
         bne     next_unit

@@ -4291,7 +4291,8 @@ next:   dex
         lda     #0
         sta     device_to_icon_map,y
         lda     DEVLST,y
-        jsr     CreateVolumeIcon ; A = unit num, Y = device index
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
+        jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
         cmp     #ERR_DUPLICATE_VOLUME
         bne     :+
         lda     #kErrDuplicateVolName
@@ -4453,9 +4454,10 @@ not_in_map:
         pla
         tay
         lda     DEVLST,y
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
         ldx     icon_param      ; preserve icon index if known
-        bne     :+
-:       jsr     CreateVolumeIcon ; A = unit num, Y = device index
+        bne     :+              ; TODO: WTF?
+:       jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
 
         cmp     #ERR_NOT_PRODOS_VOLUME
     IF_EQ
@@ -4464,6 +4466,7 @@ not_in_map:
         RTS_IF_EQ
 
         ldy     devlst_index
+        ;; TODO: This seems incorrect now.
         lda     DEVLST,y        ; NOTE: Need low bits for refresh
         jmp     FormatUnitNum
     END_IF
@@ -8999,7 +9002,7 @@ ret:    rts
 .endproc ; PrepActiveWindowScreenMapping
 
 ;;; ============================================================
-;;; Input: A = unit_number
+;;; Input: A = unmasked unit number
 ;;; Output: A,X=name (length may be 0), Y =
 ;;;  0 = Disk II
 ;;;  1 = RAM Disk (including SmartPort RAM Disk)
@@ -9238,7 +9241,7 @@ GetBlockCount   := GetBlockCountImpl::start
 
 ;;; ============================================================
 ;;; Create Volume Icon
-;;; Input: A = unit number, Y = index in DEVLST
+;;; Input: A = unmasked unit number, Y = index in DEVLST
 ;;; Output: 0 on success, ProDOS error code on failure
 ;;; Assert: `cached_window_id` == 0
 ;;;
@@ -9252,7 +9255,7 @@ GetBlockCount   := GetBlockCountImpl::start
         kMaxIconWidth = 53
         kMaxIconHeight = 15
 
-        sta     unit_number
+        sta     unit_number     ; unmasked, for `GetDeviceType`
         sty     devlst_index
         and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
@@ -10334,6 +10337,7 @@ ret:    rts
         RTS_IF_ZC
 
         lda     DEVLST,x        ; A = unit_number
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `FindSmartportDispatchAddress` handles it.
 
         ;; Compute SmartPort dispatch address
         jsr     FindSmartportDispatchAddress
@@ -10469,6 +10473,7 @@ vol_icon2:
         bne     common2
 
         lda     DEVLST,x
+        ;; TODO: Should use `UNIT_NUM_MASK` here.
         sta     getinfo_block_params::unit_num
         MLI_CALL READ_BLOCK, getinfo_block_params
         bne     common2

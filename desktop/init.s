@@ -738,7 +738,8 @@ process_volume:
         tay
         copy16  device_name_table,y, devname_ptr
         ldy     device_index
-        lda     DEVLST,y
+        lda     DEVLST,y        ;
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
 
         pha                     ; save all registers
         txa
@@ -749,7 +750,7 @@ process_volume:
         inc     cached_window_entry_count
         inc     icon_count
         lda     DEVLST,y
-        jsr     main::CreateVolumeIcon ; A = unit number, Y = device index
+        jsr     main::CreateVolumeIcon ; A = unmasked unit number, Y = device index
         sta     cvi_result
         MGTK_CALL MGTK::CheckEvents
 
@@ -771,6 +772,7 @@ process_volume:
 
         ldy     device_index
         lda     DEVLST,y
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
         jsr     main::IsDiskII
         beq     select_template ; skip
         ldx     device_index
@@ -963,6 +965,7 @@ slot_string_table:
 
 loop:   ldy     index
         lda     DEVLST,y
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `DeviceDriverAddress` handles it.
         sta     unit_num
         jsr     main::DeviceDriverAddress
         bvs     append          ; remapped SmartPort, it's usable

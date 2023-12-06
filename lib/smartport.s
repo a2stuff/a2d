@@ -151,7 +151,7 @@ mirrored:
 
 ;;; ============================================================
 ;;; Get driver address for unit number
-;;; Input: A = unit number
+;;; Input: A = unit number (no need to mask it)
 ;;; Output: A,X=driver address
 ;;;         V=1 if a mirrored SmartPort device, and Y is table index
 ;;;         Z=1 if a firmware address ($CnXX)
