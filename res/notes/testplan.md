@@ -240,6 +240,7 @@
 * Launch DeskTop. Copy a folder containing multiple files to another volume. Repeat the copy. When prompted to overwrite, alternate clicking Yes and No. Verify that the "Files remaining" count decreases to zero.
 
 * Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Insert disks A, B, C, D in drives starting at the highest slot first, e.g. S7D1, S7D2, S5D1, S5D2. Launch DeskTop. Verify that the disks appear in order A, B, C, D. Eject the disks, and wait for DeskTop to remove the icons. Pause the emulator, and reinsert the disks in the same drives. Un-pause the emulator. Verify that the disks appear on the DeskTop in the same order. Eject the disks again, pause, and insert the disks into the drives in reverse order (A in S5D2, etc). Un-pause the emulator. Verify that the disks appear in reverse order on the DeskTop.
+* Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Launch DeskTop. Insert an unformatted SmartPort disk image. When prompted to format, click OK. Verify that the prompt for the name includes the correct slot and drive designation for the disk.
 
 * Configure a system with two volumes of the same name. Launch DeskTop. Verify that an error is shown, and only one volume appears.
 * Launch DeskTop. Try to rename a volume to have the same name as another. Verify that an error is shown.

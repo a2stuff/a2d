@@ -4455,9 +4455,7 @@ not_in_map:
         tay
         lda     DEVLST,y
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
-        ldx     icon_param      ; preserve icon index if known
-        bne     :+              ; TODO: WTF?
-:       jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
+        jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
 
         cmp     #ERR_NOT_PRODOS_VOLUME
     IF_EQ
@@ -4466,8 +4464,8 @@ not_in_map:
         RTS_IF_EQ
 
         ldy     devlst_index
-        ;; TODO: This seems incorrect now.
-        lda     DEVLST,y        ; NOTE: Need low bits for refresh
+        lda     DEVLST,y
+        and     #UNIT_NUM_MASK
         jmp     FormatUnitNum
     END_IF
 
@@ -10473,7 +10471,7 @@ vol_icon2:
         bne     common2
 
         lda     DEVLST,x
-        ;; TODO: Should use `UNIT_NUM_MASK` here.
+        and     #UNIT_NUM_MASK
         sta     getinfo_block_params::unit_num
         MLI_CALL READ_BLOCK, getinfo_block_params
         bne     common2
