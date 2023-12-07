@@ -96,7 +96,7 @@ start:  tsx
         bne     :+
 
         lda     #kErrNoWindowsOpen
-        jmp     JUMP_TABLE_SHOW_ALERT ; NOTE: Trashes AUX $800-$1AFF
+        jmp     JUMP_TABLE_SHOW_ALERT
 
 :       lda     #kDynamicRoutineRestore10K
         jsr     JUMP_TABLE_RESTORE_OVL

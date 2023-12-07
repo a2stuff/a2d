@@ -67,7 +67,7 @@ Show alert, with default button options for error number
 
 Error number is in A - either a ProDOS error number, or a DeskTop `kErrXXX` error as defined in `desktop/desktop.inc`.
 
-NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
+NOTE: This will use Aux $1000...$1FFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
 
 #### `JUMP_TABLE_SHOW_ALERT_OPTIONS`
 
@@ -77,7 +77,15 @@ Error number is in A - either a ProDOS error number, or a DeskTop `kErrXXX` erro
 
 Button options are in X per `desktop/desktop.inc`.
 
-NOTE: This will use Aux $800...$1AFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
+NOTE: This will use Aux $1000...$1FFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
+
+#### `JUMP_TABLE_SHOW_ALERT_PARAMS`
+
+Show alert, with custom parameters.
+
+A,X is the address of an `AlertParams` structure; see `common.inc`.
+
+NOTE: This will use Aux $1000...$1FFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
 
 #### `JUMP_TABLE_LAUNCH_FILE`
 

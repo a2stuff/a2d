@@ -112,6 +112,17 @@ str_auxtype:
         DEFINE_LABEL auxtype, res_string_label_auxtype, kTextBoxLeft-2, kAuxtypeY+kSystemFontHeight+1
 
 ;;; ============================================================
+;;; Alerts
+
+.params AlertNoFilesSelected
+        .addr   str_err_no_files_selected
+        .byte   AlertButtonOptions::OK
+        .byte   AlertOptions::Beep | AlertOptions::SaveBack
+.endparams
+str_err_no_files_selected:
+        PASCAL_STRING res_string_err_no_files_selected
+
+;;; ============================================================
 
         .include "../lib/event_params.s"
 
@@ -619,9 +630,14 @@ stash_stack:
         stx     stash_stack
 
         jsr     JUMP_TABLE_GET_SEL_WIN
-        RTS_IF_ZERO             ; TODO: Show error message
+    IF_ZERO
+        param_jump JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertNoFilesSelected
+    END_IF
+
         jsr     JUMP_TABLE_GET_SEL_COUNT
-        RTS_IF_ZERO             ; TODO: Show error message
+    IF_ZERO
+        param_jump JUMP_TABLE_SHOW_ALERT_PARAMS, aux::AlertNoFilesSelected
+    END_IF
 
         jsr     GetTypes
 

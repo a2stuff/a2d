@@ -89,6 +89,7 @@ JT_ENTRY JUMP_TABLE_SYSTEM_TASK   ; Yield the event loop *
 JT_ENTRY JUMP_TABLE_SELECT_WINDOW ; Select and refresh given window *
 JT_ENTRY JUMP_TABLE_SHOW_ALERT    ; Show alert (A=kErrXXX or ProDOS error code, default options)
 JT_ENTRY JUMP_TABLE_SHOW_ALERT_OPTIONS       ; Show alert X (A=err code, X=options)
+JT_ENTRY JUMP_TABLE_SHOW_ALERT_PARAMS        ; Show alert (A,X = `AlertParams`)
 JT_ENTRY JUMP_TABLE_LAUNCH_FILE   ; Launch file
 JT_ENTRY JUMP_TABLE_SHOW_FILE     ; Show file *
 JT_ENTRY JUMP_TABLE_RESTORE_OVL   ; Restore from overlay routine

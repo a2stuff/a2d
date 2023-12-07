@@ -109,7 +109,7 @@ When running, memory use includes:
 ($C000-$CFFF is reserved for I/O, and main $BF page and language card is ProDOS)
 
 * Aux
- * $0800-$1FFF is a "save area"; used by MGTK to store the background
+ * $1000-$1FFF is a "save area"; used by MGTK to store the background
      when menus are drawn so it can be restored without redrawing. The
      save area is also used by DeskTop to save the background for
      alert dialogs, and icon outlines when dragging - basically, any

@@ -185,8 +185,7 @@ See examples in the Screen Saver and Show XYZ File code.
 
 ## Gotchas
 
-DeskTop's "alert" code uses Aux $800 and onward as a "save buffer"
+DeskTop's "alert" code uses Aux $1000-$1FFF as a "save buffer"
 for the pixels overdrawn by the alert, so it can be quickly hidden
-without requiring redraws. This means that an alert can't use both
-an aux memory segment and use the `JUMP_TABLE_SHOW_ALERT` call,
-except when exiting.
+without requiring redraws. This leaves $800-$FFF free for resources,
+but if an alert is shown memory over $1000 will be overwritten.

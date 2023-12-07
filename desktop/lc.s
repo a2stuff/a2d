@@ -197,7 +197,7 @@ op:     lda     SELF_MODIFIED
 .endproc ; ShowAlertOption
 
 ;;; A,X = string
-;;; Y = AlertButtonOptions
+;;; Y = `AlertButtonOptions`
 .proc ShowAlertParams
         jsr     BankInAux
         stax    alert_params+AlertParams::text
@@ -206,6 +206,13 @@ op:     lda     SELF_MODIFIED
         param_call aux::Alert, alert_params
         jmp     BankInMain
 .endproc ; ShowAlertParams
+
+;;; A,X = `AlertParams` struct
+.proc ShowAlertStruct
+        jsr     BankInAux
+        jsr     aux::Alert
+        jmp     BankInMain
+.endproc ; ShowAlertStruct
 
 ;;; ============================================================
 ;;; Bell
