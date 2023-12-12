@@ -2909,7 +2909,8 @@ entry3:
 
 .proc PreserveSelection
         lda     selected_window_id
-        beq     ret
+        cmp     active_window_id
+        bne     ret
         lda     selected_icon_count
         beq     ret
         sta     selection_preserved_count

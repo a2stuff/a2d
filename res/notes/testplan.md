@@ -412,6 +412,8 @@
 * Launch DeskTop. Clear selection by closing all windows and clicking on the desktop. Press Apple+Down. Verify that nothing happens.
 
 * Launch DeskTop. Open a volume window. View > by Name. Open a separate volume window. Open a folder window. Open a sub-folder window. View > by Name. Close the window. Verify DeskTop doesn't crash.
+* Launch DeskTop. Open a volume window. Open a folder window. View > by Name. Verify that the selection is still in the volume window, and that there is no selection in the folder window.
+* Launch DeskTop. Open a volume window. Open a folder window. Select a file in the folder window. View > by Name. Verify that the selection is still in the folder window.
 
 * Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
   * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Tab repeatedly. Verify that windows are activated and cycle in forward order (A, B, C, A, B, C, ...).
