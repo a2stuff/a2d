@@ -580,31 +580,31 @@ type_icons_table:
         .addr   cdrom_icon      ; cdrom
 
         ;; Files
-        .addr   gen ; generic
-        .addr   txt ; text
-        .addr   bin ; binary
-        .addr   fot ; graphics
-        .addr   anm ; animation/video
-        .addr   mus ; music
-        .addr   mus ; tracker
-        .addr   snd ; audio
-        .addr   fnt ; font
-        .addr   rel ; relocatable
-        .addr   cmd ; command
-        .addr   dir ; folder
-        .addr   src ; iigs
-        .addr   adb ; appleworks db
-        .addr   awp ; appleworks wp
-        .addr   asp ; appleworks sp
-        .addr   arc ; archive
-        .addr   arc ; encoded
-        .addr   lnk ; link
-        .addr   a2d ; desk accessory
-        .addr   bas ; basic
-        .addr   int ; intbasic
-        .addr   var ; variables
-        .addr   sys ; system
-        .addr   app ; application
+        .addr   gen             ; generic
+        .addr   txt             ; text
+        .addr   bin             ; binary
+        .addr   fot             ; graphics
+        .addr   anm             ; animation
+        .addr   mus             ; music
+        .addr   mus             ; tracker
+        .addr   snd             ; audio
+        .addr   fnt             ; font
+        .addr   rel             ; relocatable
+        .addr   cmd             ; command
+        .addr   dir             ; folder
+        .addr   src             ; iigs
+        .addr   adb             ; appleworks_db
+        .addr   awp             ; appleworks_wp
+        .addr   asp             ; appleworks_sp
+        .addr   arc             ; archive
+        .addr   arc             ; encoded
+        .addr   lnk             ; link
+        .addr   a2d             ; desk_accessory
+        .addr   bas             ; basic
+        .addr   int             ; intbasic
+        .addr   var             ; variables
+        .addr   sys             ; system
+        .addr   app             ; application
 
         ;; Small icons
         .addr   sm_gen

@@ -7475,11 +7475,7 @@ L7870:  lda     cached_window_id
         ora     #kIconEntryFlagsSmall
         sta     iconentry_flags
 
-        lda     #IconType::small_generic
-        cpy     #IconType::folder
-     IF_EQ
-        lda     #IconType::small_folder
-     END_IF
+        lda     icontype_to_smicon_table,y
         tay
    END_IF
 
@@ -15311,7 +15307,7 @@ icontype_iconentryflags_table := * - IconType::VOL_COUNT
         .byte   0                    ; text
         .byte   0                    ; binary
         .byte   0                    ; graphics
-        .byte   0                    ; animation/video
+        .byte   0                    ; animation
         .byte   0                    ; music
         .byte   0                    ; tracker
         .byte   0                    ; audio
@@ -15320,13 +15316,13 @@ icontype_iconentryflags_table := * - IconType::VOL_COUNT
         .byte   0                    ; command
         .byte   kIconEntryFlagsDropTarget ; folder
         .byte   0                    ; iigs
-        .byte   0                    ; appleworks db
-        .byte   0                    ; appleworks wp
-        .byte   0                    ; appleworks sp
+        .byte   0                    ; appleworks_db
+        .byte   0                    ; appleworks_wp
+        .byte   0                    ; appleworks_sp
         .byte   0                    ; archive
         .byte   0                    ; encoded
         .byte   0                    ; link
-        .byte   0                    ; desk accessory
+        .byte   0                    ; desk_accessory
         .byte   0                    ; basic
         .byte   0                    ; intbasic
         .byte   0                    ; variables
@@ -15334,6 +15330,36 @@ icontype_iconentryflags_table := * - IconType::VOL_COUNT
         .byte   0                    ; application
         ;; Small Icon types skipped via math below
         ASSERT_TABLE_SIZE icontype_iconentryflags_table, IconType::COUNT - IconType::SMALL_COUNT
+
+icontype_to_smicon_table := * - IconType::VOL_COUNT
+        ;; Volume types skipped via above math
+        .byte      IconType::small_generic ; generic
+        .byte      IconType::small_generic ; text
+        .byte      IconType::small_generic ; binary
+        .byte      IconType::small_generic ; graphics
+        .byte      IconType::small_generic ; animation/video
+        .byte      IconType::small_generic ; music
+        .byte      IconType::small_generic ; tracker
+        .byte      IconType::small_generic ; audio
+        .byte      IconType::small_generic ; font
+        .byte      IconType::small_generic ; relocatable
+        .byte      IconType::small_generic ; command
+        .byte      IconType::small_folder  ; folder
+        .byte      IconType::small_generic ; iigs
+        .byte      IconType::small_generic ; appleworks_db
+        .byte      IconType::small_generic ; appleworks_wp
+        .byte      IconType::small_generic ; appleworks_sp
+        .byte      IconType::small_generic ; archive
+        .byte      IconType::small_generic ; encoded
+        .byte      IconType::small_generic ; link
+        .byte      IconType::small_generic ; desk_accessory
+        .byte      IconType::small_generic ; basic
+        .byte      IconType::small_generic ; intbasic
+        .byte      IconType::small_generic ; variables
+        .byte      IconType::small_generic ; system
+        .byte      IconType::small_generic ; application
+        ;; Small Icon types skipped via math below
+        ASSERT_TABLE_SIZE icontype_to_smicon_table, IconType::COUNT - IconType::SMALL_COUNT
 
 ;;; ============================================================
 
