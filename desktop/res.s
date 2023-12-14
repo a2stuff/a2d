@@ -592,6 +592,7 @@ type_icons_table:
         .addr   rel             ; relocatable
         .addr   cmd             ; command
         .addr   dir             ; folder
+        .addr   sdr             ; system_folder
         .addr   src             ; iigs
         .addr   adb             ; appleworks_db
         .addr   awp             ; appleworks_wp
@@ -945,6 +946,7 @@ portptr:        .addr   0
         DEFINE_ICON_RESOURCE txt, text_icon, 4, 25, 15, generic_mask
         DEFINE_ICON_RESOURCE bin, binary_icon, 4, 27, 14, binary_mask
         DEFINE_ICON_RESOURCE dir, folder_icon, 4, 27, 11, folder_mask
+        DEFINE_ICON_RESOURCE sdr, system_folder_icon, 4, 27, 11, folder_mask
         DEFINE_ICON_RESOURCE sys, sys_icon, 4, 27, 17, sys_mask
         DEFINE_ICON_RESOURCE bas, basic_icon, 4, 27, 14, basic_mask
         DEFINE_ICON_RESOURCE int, intbasic_icon, 4, 27, 14, basic_mask
@@ -1115,6 +1117,20 @@ folder_icon:                    ; Folder
         PIXELS  "#..........................#"
         PIXELS  "#..........................#"
         PIXELS  "#..........................#"
+        PIXELS  ".##########################."
+
+system_folder_icon:             ; System Folder
+        PIXELS  "..###########..............."
+        PIXELS  ".#...........#.............."
+        PIXELS  ".##########################."
+        PIXELS  "#..............##..........#"
+        PIXELS  "#.............##...........#"
+        PIXELS  "#..........##...##.........#"
+        PIXELS  "#........###########.......#"
+        PIXELS  "#.......#########..........#"
+        PIXELS  "#.......############.......#"
+        PIXELS  "#........##########........#"
+        PIXELS  "#.........###..###.........#"
         PIXELS  ".##########################."
 
 folder_mask:

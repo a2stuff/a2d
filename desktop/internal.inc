@@ -28,6 +28,7 @@ kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
         relocatable
         command
         folder
+        system_folder
         iigs
         appleworks_db
         appleworks_wp

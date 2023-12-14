@@ -985,6 +985,7 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
         INVOKE_TABLE_ENTRY      fallback, 0                    ; relocatable
         INVOKE_TABLE_ENTRY      fallback, 0                    ; command
         INVOKE_TABLE_ENTRY      OpenFolder, 0                  ; folder
+        INVOKE_TABLE_ENTRY      OpenFolder, 0                  ; system_folder
         INVOKE_TABLE_ENTRY      fallback, 0                    ; iigs
         INVOKE_TABLE_ENTRY      interpreter, str_awlauncher    ; appleworks_wp
         INVOKE_TABLE_ENTRY      interpreter, str_awlauncher    ; appleworks_sp
@@ -15093,6 +15094,7 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_FONT,      ICT_FLAGS_NONE, 0, 0, IconType::font          ; $07
         DEFINE_ICTRECORD $FF, FT_GRAPHICS,  ICT_FLAGS_NONE, 0, 0, IconType::graphics      ; $08
 
+        DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_AUX, $8000, 0, IconType::system_folder ; $0F
         DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_NONE, 0, 0, IconType::folder        ; $0F
         DEFINE_ICTRECORD $FF, FT_ADB,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_db ; $19
         DEFINE_ICTRECORD $FF, FT_AWP,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_wp ; $1A
@@ -15315,6 +15317,7 @@ icontype_iconentryflags_table := * - IconType::VOL_COUNT
         .byte   0                    ; relocatable
         .byte   0                    ; command
         .byte   kIconEntryFlagsDropTarget ; folder
+        .byte   kIconEntryFlagsDropTarget ; system_folder
         .byte   0                    ; iigs
         .byte   0                    ; appleworks_db
         .byte   0                    ; appleworks_wp
@@ -15345,6 +15348,7 @@ icontype_to_smicon_table := * - IconType::VOL_COUNT
         .byte      IconType::small_generic ; relocatable
         .byte      IconType::small_generic ; command
         .byte      IconType::small_folder  ; folder
+        .byte      IconType::small_folder  ; system_folder
         .byte      IconType::small_generic ; iigs
         .byte      IconType::small_generic ; appleworks_db
         .byte      IconType::small_generic ; appleworks_wp

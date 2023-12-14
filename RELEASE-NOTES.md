@@ -39,6 +39,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Select new file after File > Duplicate...
 * Improve menu item names for Format, Erase and Copy Disk.
 * Fix refreshing volume icon after Format/Erase.
+* Show special icon for folders with AuxType $8000.
 
 ### Selector
 
