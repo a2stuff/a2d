@@ -4696,8 +4696,11 @@ savesize        .word
         tax
         stx     sysfont_height
         dex
-        stx     goaway_height                 ; goaway height = font height - 1
-        inx
+        dex
+        dex
+        stx     goaway_height                 ; goaway height = font height - 3
+
+        tax
         inx
         inx
         stx     hilite_menu_rect_height       ; menu bar height = font height + 2
@@ -7481,14 +7484,14 @@ get_rect:
         inx
 :       stax    winrect::x1
         clc
-        adc     #14
+        adc     #12
         bcc     :+
         inx
 :       stax    winrect::x2
 
         ldax    winrect::y1
         clc
-        adc     #2
+        adc     #3
         bcc     :+
         inx
 :       stax    winrect::y1
@@ -7572,7 +7575,6 @@ stripes_pattern_alt := *+1
         .byte   %11111111
         .byte   %00000000
         .byte   %11111111
-
 
 .proc SetStripesPattern
         jsr     GetWinGoAwayRect
@@ -8706,7 +8708,7 @@ plp_ret:
 .endproc ; EraseWindow
 
 
-goaway_height:  .word   8       ; font height - 1
+goaway_height:  .word   6       ; font height - 3
 wintitle_height:.word  12       ; font height + 3
 winframe_top:   .word  13       ; font height + 4
 

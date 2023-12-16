@@ -16,6 +16,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve wording and fix spelling/grammar mistakes in various strings.
 * Added Dutch (`nl`) localization. ([#767](https://github.com/a2stuff/a2d/issues/767))
 * Improve sound played when entering/exiting Mouse Keys mode.
+* Improve window title bar apperance.
 
 ### Launcher
 
