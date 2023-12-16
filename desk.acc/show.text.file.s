@@ -381,7 +381,7 @@ end:    rts
         copy    trackthumb_params::thumbpos, multiplier ; lo
         copy    #0, multiplier+1                        ; hi
         copy16  max_visible_line, multiplicand
-        jsr     Mul_16_16
+        jsr     Multiply_16_16_32
         copy16  product+1, first_visible_line
 
         jsr     UpdateScrollPos
@@ -511,7 +511,7 @@ ForceScrollBottom := ScrollBottom::force
         ;; Update viewport
         copy16  first_visible_line, multiplier
         copy16  #kLineScrollDelta * kLineHeight, multiplicand
-        jsr     Mul_16_16
+        jsr     Multiply_16_16_32
         ldax    product
         stax    winfo::maprect::y1
         addax   #kDAHeight, winfo::maprect::y2
@@ -529,7 +529,7 @@ ForceScrollBottom := ScrollBottom::force
         bpl     :-
         copy16  first_visible_line, numerator+1 ; = `first_visible_line` * 256
         copy16  max_visible_line, denominator   ; = `max_visible_line`
-        jsr     Div_32_32
+        jsr     Divide_32_32_32
         lda     quotient+1
     IF_NOT_ZERO
         lda     #kVScrollMax
@@ -610,7 +610,7 @@ end:    rts
         ;; And adjust to the appropriate offset for that line in the viewport.
         copy16  current_line, multiplier
         copy16  #kLineHeight, multiplicand
-        jsr     Mul_16_16
+        jsr     Multiply_16_16_32
         copy16  product, line_pos::base
     END_IF
 

@@ -6,7 +6,7 @@ numerator       := $10
 denominator     := $14
 quotient        := numerator
 
-.proc Div_32_32
+.proc Divide_32_32_32
 remainder       := $18
 temp            := $1C
 
@@ -58,7 +58,7 @@ next:   dex
         bne     divloop
 
         rts
-.endproc ; Div_32_32
+.endproc ; Divide_32_32_32
 
 ;;; ============================================================
 ;;; 16 bit by 16 bit multiply with 32 bit product
@@ -67,7 +67,7 @@ multiplier      := $10
 multiplicand    := $12
 product         := $14
 
-.proc Mul_16_16
+.proc Multiply_16_16_32
         lda     #0
         sta     product+2
         sta     product+3
@@ -93,4 +93,4 @@ rotate:
         bne     shift
 
         rts
-.endproc ; Mul_16_16
+.endproc ; Multiply_16_16_32

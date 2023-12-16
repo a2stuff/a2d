@@ -4011,10 +4011,10 @@ _Preamble:
 .proc _TrackMulDiv
         copy    trackthumb_params::thumbpos, multiplicand
         copy    #0, multiplicand+1
-        jsr     Mul_16_16
+        jsr     Multiply_16_16_32
         copy32  product, numerator
         copy32  #kScrollThumbMax, denominator
-        jmp     Div_32_32
+        jmp     Divide_32_32_32
 .endproc ; _TrackMulDiv
 
 ;;; --------------------------------------------------
@@ -4120,12 +4120,12 @@ _Preamble:
 .proc _SetHThumbFromViewport
         sub16   viewport+MGTK::Rect::x1, ubox::x1, multiplier
         copy16  #kScrollThumbMax, multiplicand
-        jsr     Mul_16_16
+        jsr     Multiply_16_16_32
         copy32  product, numerator
         sub16   ubox::x2, ubox::x1, denominator
         sub16   denominator, width, denominator
         copy16  #0, denominator+2 ; 16->32 bits
-        jsr     Div_32_32
+        jsr     Divide_32_32_32
         lda     quotient
         ldx     #MGTK::Ctl::horizontal_scroll_bar
         jmp     _UpdateThumb
@@ -4135,12 +4135,12 @@ _Preamble:
 .proc _SetVThumbFromViewport
         sub16   viewport+MGTK::Rect::y1, ubox::y1, multiplier
         copy16  #kScrollThumbMax, multiplicand
-        jsr     Mul_16_16
+        jsr     Multiply_16_16_32
         copy32  product, numerator
         sub16   ubox::y2, ubox::y1, denominator
         sub16   denominator, height, denominator
         copy16  #0, denominator+2 ; 16->32 bits
-        jsr     Div_32_32
+        jsr     Divide_32_32_32
         lda     quotient
         ldx     #MGTK::Ctl::vertical_scroll_bar
         jmp     _UpdateThumb
