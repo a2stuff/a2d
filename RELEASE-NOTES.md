@@ -69,7 +69,9 @@ Project Page: https://github.com/a2stuff/a2d
 * New DA: Change Type - allows changing the type and auxtype of files. (([#149](https://github.com/a2stuff/a2d/issues/149))
 * Control Panel: Show shortcut keys for buttons (if that option is enabled).
 * Date & Time: Show shortcut keys for buttons (if that option is enabled).
-* Map: Show shortcut key for button (if that option is enabled).
+* Map
+  * Show shortcut key for button (if that option is enabled).
+  * Larger map image is shown.
 
 ### Misc
 
