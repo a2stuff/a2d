@@ -376,13 +376,13 @@ end:    rts
         lda     trackthumb_params::thumbmoved
         beq     end
 
-        ;; `first_visible_line` = `trackthumb_params::thumbpos` * `max_visible_line` / 256
-        ;; [16] = ( [8] * [16] ) >> 8
-        copy    trackthumb_params::thumbpos, multiplier ; lo
-        copy    #0, multiplier+1                        ; hi
-        copy16  max_visible_line, multiplicand
-        jsr     Multiply_16_16_32
-        copy16  product+1, first_visible_line
+        ;; `first_visible_line` = `trackthumb_params::thumbpos` * `max_visible_line` / `kVScrollMax`
+        copy16  max_visible_line, muldiv_number
+        copy    trackthumb_params::thumbpos, muldiv_numerator ; lo
+        copy    #0, muldiv_numerator+1                        ; hi
+        copy16  #kVScrollMax, muldiv_denominator
+        jsr     MulDiv
+        copy16  muldiv_result, first_visible_line
 
         jsr     UpdateScrollPos
 
@@ -509,32 +509,27 @@ ForceScrollBottom := ScrollBottom::force
 
 .proc UpdateScrollPos
         ;; Update viewport
-        copy16  first_visible_line, multiplier
-        copy16  #kLineScrollDelta * kLineHeight, multiplicand
-        jsr     Multiply_16_16_32
-        ldax    product
+        copy16  first_visible_line, muldiv_number
+        copy16  #kLineScrollDelta * kLineHeight, muldiv_numerator
+        copy16  #1, muldiv_denominator
+        jsr     MulDiv
+        ldax    muldiv_result
         stax    winfo::maprect::y1
         addax   #kDAHeight, winfo::maprect::y2
         MGTK_CALL MGTK::SetPort, winfo::port
 
         ;; Update thumb position
 
-        ;; `updatethumb_params::thumbpos` = `first_visible_line` * 256 / `max_visible_line`
-        ;; [8] = ([16] << 8) / [16]
-        lda     #0              ; zero everything
-        ldx     #3
-:       sta     numerator,x
-        sta     denominator,x
-        dex
-        bpl     :-
-        copy16  first_visible_line, numerator+1 ; = `first_visible_line` * 256
-        copy16  max_visible_line, denominator   ; = `max_visible_line`
-        jsr     Divide_32_32_32
-        lda     quotient+1
+        ;; `updatethumb_params::thumbpos` = `first_visible_line` * `kVScrollMax` / `max_visible_line`
+        copy16  #kVScrollMax, muldiv_number
+        copy16  first_visible_line, muldiv_numerator
+        copy16  max_visible_line, muldiv_denominator
+        jsr     MulDiv
+        lda     muldiv_result+1
     IF_NOT_ZERO
         lda     #kVScrollMax
     ELSE
-        lda     quotient
+        lda     muldiv_result
     END_IF
         sta     updatethumb_params::thumbpos
 
@@ -608,10 +603,11 @@ end:    rts
         JSR_TO_MAIN SetFileMark
 
         ;; And adjust to the appropriate offset for that line in the viewport.
-        copy16  current_line, multiplier
-        copy16  #kLineHeight, multiplicand
-        jsr     Multiply_16_16_32
-        copy16  product, line_pos::base
+        copy16  current_line, muldiv_number
+        copy16  #kLineHeight, muldiv_numerator
+        copy16  #1, muldiv_denominator
+        jsr     MulDiv
+        copy16  muldiv_result, line_pos::base
     END_IF
 
         ;; Select appropriate font
@@ -1060,7 +1056,7 @@ window_id:      .byte   kDAWindowId
 ;;; ============================================================
 
         .include "../lib/uppercase.s"
-        .include "../lib/muldiv32.s"
+        .include "../lib/muldiv16.s"
 
 ;;; ============================================================
 

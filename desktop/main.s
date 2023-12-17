@@ -3834,7 +3834,7 @@ done:   rts
 
 .scope ScrollManager
 
-        .include "../lib/muldiv32.s"
+        .include "../lib/muldiv16.s"
 
 ;;; Terminology:
 ;;; * "offset" - When the icons would fit entirely within the viewport
@@ -3990,31 +3990,29 @@ _Preamble:
 
 .proc TrackHThumb
         jsr     _Preamble
-        sub16   ubox::x2, ubox::x1, multiplier
-        sub16   multiplier, width, multiplier
+        sub16   ubox::x2, ubox::x1, muldiv_number
+        sub16   muldiv_number, width, muldiv_number
         jsr     _TrackMulDiv
-        add16   quotient, ubox::x1, viewport+MGTK::Rect::x1
+        add16   muldiv_result, ubox::x1, viewport+MGTK::Rect::x1
         add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
         jmp     _MaybeUpdateHThumb
 .endproc ; TrackHThumb
 
 .proc TrackVThumb
         jsr     _Preamble
-        sub16   ubox::y2, ubox::y1, multiplier
-        sub16   multiplier, height, multiplier
+        sub16   ubox::y2, ubox::y1, muldiv_number
+        sub16   muldiv_number, height, muldiv_number
         jsr     _TrackMulDiv
-        add16   quotient, ubox::y1, viewport+MGTK::Rect::y1
+        add16   muldiv_result, ubox::y1, viewport+MGTK::Rect::y1
         add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
         jmp     _MaybeUpdateVThumb
 .endproc ; TrackVThumb
 
 .proc _TrackMulDiv
-        copy    trackthumb_params::thumbpos, multiplicand
-        copy    #0, multiplicand+1
-        jsr     Multiply_16_16_32
-        copy32  product, numerator
-        copy32  #kScrollThumbMax, denominator
-        jmp     Divide_32_32_32
+        copy    trackthumb_params::thumbpos, muldiv_numerator
+        copy    #0, muldiv_numerator+1
+        copy16  #kScrollThumbMax, muldiv_denominator
+        jmp     MulDiv
 .endproc ; _TrackMulDiv
 
 ;;; --------------------------------------------------
@@ -4118,30 +4116,24 @@ _Preamble:
 
 ;;; Set hthumb position relative to `maprect` and `ubox`.
 .proc _SetHThumbFromViewport
-        sub16   viewport+MGTK::Rect::x1, ubox::x1, multiplier
-        copy16  #kScrollThumbMax, multiplicand
-        jsr     Multiply_16_16_32
-        copy32  product, numerator
-        sub16   ubox::x2, ubox::x1, denominator
-        sub16   denominator, width, denominator
-        copy16  #0, denominator+2 ; 16->32 bits
-        jsr     Divide_32_32_32
-        lda     quotient
+        sub16   viewport+MGTK::Rect::x1, ubox::x1, muldiv_number
+        copy16  #kScrollThumbMax, muldiv_numerator
+        sub16   ubox::x2, ubox::x1, muldiv_denominator
+        sub16   muldiv_denominator, width, muldiv_denominator
+        jsr     MulDiv
+        lda     muldiv_result
         ldx     #MGTK::Ctl::horizontal_scroll_bar
         jmp     _UpdateThumb
 .endproc ; _SetHThumbFromViewport
 
 ;;; Set vthumb position relative to `maprect` and `ubox`.
 .proc _SetVThumbFromViewport
-        sub16   viewport+MGTK::Rect::y1, ubox::y1, multiplier
-        copy16  #kScrollThumbMax, multiplicand
-        jsr     Multiply_16_16_32
-        copy32  product, numerator
-        sub16   ubox::y2, ubox::y1, denominator
-        sub16   denominator, height, denominator
-        copy16  #0, denominator+2 ; 16->32 bits
-        jsr     Divide_32_32_32
-        lda     quotient
+        sub16   viewport+MGTK::Rect::y1, ubox::y1, muldiv_number
+        copy16  #kScrollThumbMax, muldiv_numerator
+        sub16   ubox::y2, ubox::y1, muldiv_denominator
+        sub16   muldiv_denominator, height, muldiv_denominator
+        jsr     MulDiv
+        lda     muldiv_result
         ldx     #MGTK::Ctl::vertical_scroll_bar
         jmp     _UpdateThumb
 .endproc ; _SetVThumbFromViewport

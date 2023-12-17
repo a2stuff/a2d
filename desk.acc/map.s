@@ -478,22 +478,18 @@ index:  .byte   0
         sub16   screentowindow_params::windowy, #kMapTop, lat
 
         ;; Map latitude to +90...-90
-        ldax    lat
-        ldy     #180
-        jsr     Multiply_16_8_16
-        ldy     #kMapHeight
-        jsr     Divide_16_8_16
-        stax    lat
-        sub16   #90, lat, lat
+        copy16  lat, muldiv_numerator
+        copy16  #kMapHeight, muldiv_denominator
+        copy16  #180, muldiv_number
+        jsr     MulDiv
+        sub16   #90, muldiv_result, lat
 
         ;; Map longitude to -180...+180
-        ldax    long
-        ldy     #360/2
-        jsr     Multiply_16_8_16
-        ldy     #kMapWidth/2
-        jsr     Divide_16_8_16
-        stax    long
-        sub16   long, #180, long
+        copy16  long, muldiv_numerator
+        copy16  #kMapWidth, muldiv_denominator
+        copy16  #360, muldiv_number
+        jsr     MulDiv
+        sub16   muldiv_result, #180, long
 
         ;; Update display
         jsr     SetPort
@@ -694,22 +690,18 @@ blink_counter:
 
 .proc UpdateCoordsFromLatLong
         ;; Map latitude from +90...-90
-        sub16   #90, lat, ycoord ; 90...-90 to 0...180
-        ldax    ycoord
-        ldy     #kMapHeight
-        jsr     Multiply_16_8_16
-        ldy     #180
-        jsr     Divide_16_8_16
-        stax    ycoord
+        sub16   #90, lat, muldiv_numerator ; 90...-90 to 0...180
+        copy16  #180, muldiv_denominator
+        copy16  #kMapHeight, muldiv_number
+        jsr     MulDiv
+        copy16  muldiv_result, ycoord
 
         ;; Map longitude from -180...+180
-        add16   long, #180, xcoord ; -180...180 to 0...360
-        ldax    xcoord
-        ldy     #kMapWidth/2
-        jsr     Multiply_16_8_16
-        ldy     #360/2
-        jsr     Divide_16_8_16
-        stax    xcoord
+        add16   long, #180, muldiv_numerator ; -180...180 to 0...360
+        copy16  #360, muldiv_denominator
+        copy16  #kMapWidth, muldiv_number
+        jsr     MulDiv
+        copy16  muldiv_result, xcoord
 
         add16   xcoord, #kMapLeft+1 - (kPositionMarkerWidth/2), xcoord
         add16   ycoord, #kMapTop    - (kPositionMarkerHeight/2), ycoord
@@ -720,7 +712,7 @@ blink_counter:
 
         .include "../lib/drawstring.s"
         .include "../lib/inttostring.s"
-        .include "../lib/muldiv.s"
+        .include "../lib/muldiv16.s"
         .include "../lib/get_next_event.s"
 
 ;;; ============================================================
