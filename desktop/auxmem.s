@@ -232,7 +232,7 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
 ;;; Progress dialog resources
 
         kProgressDialogWidth = 400
-        kProgressDialogHeight = 46
+        kProgressDialogHeight = 58
 
         kProgressDialogLabelRow0        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 0
         kProgressDialogLabelRow1        = kProgressDialogLabelBaseY + aux::kDialogLabelHeight * 1

@@ -3834,8 +3834,6 @@ done:   rts
 
 .scope ScrollManager
 
-        .include "../lib/muldiv16.s"
-
 ;;; Terminology:
 ;;; * "offset" - When the icons would fit entirely within the viewport
 ;;;   (for a given dimension) but the viewport is offset so a scrollbar
@@ -13349,7 +13347,9 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         ;; --------------------------------------------------
         cmp     #CopyDialogLifecycle::count
     IF_EQ
-        copy16   copy_dialog_params::count, file_count
+        ldax    copy_dialog_params::count
+        stax    file_count
+        stax    total_count
         jsr     SetPortForProgressDialog
         bit     move_flag
       IF_NC
@@ -13407,7 +13407,9 @@ DownloadDialogProc := CopyDialogProc
         ;; --------------------------------------------------
         cmp     #DeleteDialogLifecycle::count
     IF_EQ
-        copy16   delete_dialog_params::count, file_count
+        ldax    delete_dialog_params::count
+        stax    total_count
+        stax    file_count
         jsr     SetPortForProgressDialog
         param_call DrawProgressDialogLabel, 0, aux::str_delete_count
         jmp     DrawFileCountWithSuffix
@@ -13729,7 +13731,19 @@ do_close:
 
         jsr     ComposeFileCountString
         param_call DrawString, str_file_count
-        param_jump DrawString, str_2_spaces
+        param_call DrawString, str_2_spaces
+
+        ;; Update progress bar
+        sub16   total_count, file_count, muldiv_numerator
+        copy16  total_count, muldiv_denominator
+        copy16  #kProgressBarWidth, muldiv_number
+        jsr     MulDiv
+        add16   muldiv_result, progress_dialog_bar_meter::x1, progress_dialog_bar_meter::x2
+        jsr     SetPenModeCopy
+        MGTK_CALL MGTK::SetPattern, progress_pattern
+        MGTK_CALL MGTK::PaintRect, progress_dialog_bar_meter
+
+        rts
 .endproc ; DrawProgressDialogFilesRemaining
 
 ;;; ============================================================
@@ -13762,7 +13776,7 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, aux::progress_dialog_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        jsr     SetPenModeXOR
+        MGTK_CALL MGTK::FrameRect, progress_dialog_bar_frame
         jmp     SetCursorWatch  ; undone by `CloseProgressDialog`
 .endproc ; OpenProgressDialog
 
@@ -15011,6 +15025,7 @@ ADJUSTCASE_VOLBUF:      .tag    VolumeDirectoryHeader
         .include "../lib/muldiv.s"
         .include "../lib/readwrite_settings.s"
         .include "../lib/get_next_event.s"
+        .include "../lib/muldiv16.s"
 
         is_iigs_flag := machine_config::iigs_flag
         is_iiecard_flag := machine_config::iiecard_flag

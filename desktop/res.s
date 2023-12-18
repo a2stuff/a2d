@@ -275,6 +275,22 @@ nextwinfo:      .addr   0
         DEFINE_POINT progress_dialog_label_pos, kProgressDialogLabelDefaultX, 0
         DEFINE_POINT progress_dialog_remaining_pos, aux::kProgressDialogWidth/2, aux::kProgressDialogLabelRow0
 
+        kProgressBarTop = 41
+        kProgressBarWidth = winfo_progress_dialog::kWidth - kProgressDialogLabelDefaultX*2
+        kProgressBarHeight = 7
+        DEFINE_RECT progress_dialog_bar_frame, kProgressDialogLabelDefaultX-1, kProgressBarTop-1, kProgressDialogLabelDefaultX + kProgressBarWidth+1, kProgressBarTop + kProgressBarHeight+1
+        DEFINE_RECT progress_dialog_bar_meter, kProgressDialogLabelDefaultX, kProgressBarTop, kProgressDialogLabelDefaultX + kProgressBarWidth, kProgressBarTop + kProgressBarHeight
+
+progress_pattern:
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+
 ;;; ============================================================
 ;;; "About Apple II DeskTop" Dialog
 
@@ -437,6 +453,8 @@ str_kb_suffix:
         PASCAL_STRING res_string_kb_suffix       ; suffix for kilobytes
 
 file_count:
+        .word   0
+total_count:
         .word   0
 
 ;;; ============================================================
