@@ -630,15 +630,6 @@ bloop:  asl
         tay                     ; Y = masked bit
 
         ;; Now compute block number
-        FALL_THROUGH_TO GetBlockNumFromDivAndShift
-.endproc ; LookupInVolumeBitmap
-
-;;; ============================================================
-
-;;; Input: `block_num_div8` and `block_num_shift` are set
-;;; Output: A,X = block number
-
-.proc GetBlockNumFromDivAndShift
         lda     auxlc::block_num_div8+1
         sta     hi
         lda     auxlc::block_num_div8
@@ -655,7 +646,7 @@ bloop:  asl
         rts
 
 table:  .byte   7,6,5,4,3,2,1,0
-.endproc ; GetBlockNumFromDivAndShift
+.endproc ; LookupInVolumeBitmap
 
 ;;; ============================================================
 
@@ -1141,7 +1132,6 @@ main__FreeVolBitmapPages        := main::FreeVolBitmapPages
 main__CallOnLine2               := main::CallOnLine2
 main__CallOnLine                := main::CallOnLine
 main__CountActiveBlocksInVolumeBitmap := main::CountActiveBlocksInVolumeBitmap
-main__GetBlockNumFromDivAndShift := main::GetBlockNumFromDivAndShift
 main__PrepBlockPtrs             := main::PrepBlockPtrs
 main__ReadBlock                 := main::ReadBlock
 main__ReadBlockWithRetry        := main::ReadBlockWithRetry
