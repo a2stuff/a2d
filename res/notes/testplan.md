@@ -1035,6 +1035,9 @@ With Sci.Calc:
 
 * Configure a system with two drives capable of holding the same capacity non-140k disk (e.g. two 800k or 32MB drives). Start with a disk in first drive, but with the second drive empty. Launch DeskTop. Special > Copy Disk.... Verify that the second drive shows "Unknown" in the source drive list. Select the first drive and click OK. Verify that the second drive does not appear in the destination drive list. Place a disk in the second drive. Click Read Drives. Verify that the second drive now appears with the correct name in the source drive list. Select the first drive and click OK. Verify that the second drive now appears in the destination drive list.
 
+* Populate a ProDOS disk with several large files, then delete all but the last. Launch DeskTop. Special > Copy Disk.... Select the prepared disk. Ensure Options > Quick Copy is checked. Select an appropriate destination disk. Proceed with the copy. Verify that the "Blocks to transfer" count is accurate (i.e. less than the total block count), and the blocks read/written count up to the transfer count accurately.
+* Populate a ProDOS disk with several large files, then delete all but the last. Launch DeskTop. Special > Copy Disk.... Select the prepared disk. Select Options > Disk Copy. Select an appropriate destination disk. Proceed with the copy. Verify that the "Blocks to transfer" count is equal to the total block count of the device, and the blocks read/written count up to the transfer count accurately.
+
 # Alerts
 
 * Launch DeskTop. Trigger an alert with only OK (e.g. running a shortcut with disk ejected). Verify that Escape key closes alert.

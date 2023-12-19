@@ -722,14 +722,25 @@ do_copy:
         jsr     SetCursorWatch
 
         jsr     main__ReadVolumeBitmap
+
+        ;; Current block
         lda     #0
         sta     block_num_div8
         sta     block_num_div8+1
         lda     #7              ; 7 - (n % 8)
         sta     block_num_shift
+
+        ;; Blocks to copy
+        jsr     main__CountActiveBlocksInVolumeBitmap
         jsr     DrawTotalBlocks
-        jsr     DrawBlocksRead
-        jsr     DrawBlocksWritten
+
+        ;; Blocks read/written so far
+        ldax    #AS_WORD(-1)
+        stax    blocks_read
+        stax    blocks_written
+
+        jsr     IncAndDrawBlocksRead
+        jsr     IncAndDrawBlocksWritten
         jsr     DrawEscToStopCopyHint
 
 copy_loop:
@@ -1708,41 +1719,42 @@ tmp:    .byte   0
 .endproc ; DrawStatusReading
 
 .proc DrawTotalBlocks
-        jsr     SetPortForDialog
-        lda     source_drive_index
-        asl     a
-        tay
-        ldax    block_count_table,y
         jsr     IntToStringWithSeparators
+        jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, blocks_to_transfer_label_pos
         param_call DrawString, blocks_to_transfer_label_str
         jmp     DrawIntString
 .endproc ; DrawTotalBlocks
 
-.proc DrawBlocksRead
-        jsr     PrepDrawBlocks
+.proc IncAndDrawBlocksRead
+        jsr     SetPortForDialog
+        inc16   blocks_read
+        ldax    blocks_read
+        jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, blocks_read_label_pos
         param_call DrawString, blocks_read_label_str
         jmp     DrawIntString
-.endproc ; DrawBlocksRead
+.endproc ; IncAndDrawBlocksRead
 
-.proc DrawBlocksWritten
-        jsr     PrepDrawBlocks
+.proc IncAndDrawBlocksWritten
+        jsr     SetPortForDialog
+        inc16   blocks_written
+        ldax    blocks_written
+        jsr     IntToStringWithSeparators
         MGTK_CALL MGTK::MoveTo, blocks_written_label_pos
         param_call DrawString, blocks_written_label_str
         FALL_THROUGH_TO DrawIntString
-.endproc ; DrawBlocksWritten
+.endproc ; IncAndDrawBlocksWritten
 
 .proc DrawIntString
         param_call DrawString, str_from_int
         param_jump DrawString, str_2_spaces
 .endproc ; DrawIntString
 
-.proc PrepDrawBlocks
-        jsr     SetPortForDialog
-        jsr     main__GetBlockNumFromDivAndShift
-        jmp     IntToStringWithSeparators
-.endproc ; PrepDrawBlocks
+blocks_read:
+        .word   0
+blocks_written:
+        .word   0
 
 ;;; ============================================================
 

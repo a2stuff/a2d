@@ -54,6 +54,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Ensure /RAM is correctly restored after exiting. ([#766](https://github.com/a2stuff/a2d/issues/766))
 * Re-verify block counts when Read Drives is clicked, so correct destination drives are shown.
 * Hide "Select Quit..." once menu is not accessible.
+* Show correct block counts during Quick Copy.
 
 ### Desk Accessories
 

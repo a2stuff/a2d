@@ -371,36 +371,39 @@ IsDriveEjectable := IsDriveEjectableImpl::start
 .proc CopyBlocks
         sta     write_flag
         and     #$FF
-        bpl     :+
+
+    IF_NEG
         copy16  auxlc::start_block_div8, auxlc::block_num_div8
         copy    auxlc::start_block_shift, auxlc::block_num_shift
         ldx     auxlc::dest_drive_index
-        lda     auxlc::drive_unitnum_table,x
-        sta     block_params::unit_num
-        jmp     common
-
-:       copy16  auxlc::block_num_div8, auxlc::start_block_div8
+    ELSE
+        copy16  auxlc::block_num_div8, auxlc::start_block_div8
         copy    auxlc::block_num_shift, auxlc::start_block_shift
         ldx     auxlc::source_drive_index
+    END_IF
         lda     auxlc::drive_unitnum_table,x
         sta     block_params::unit_num
 
-common: lda     #7              ; 7 - (n % 8)
+        lda     #7              ; 7 - (n % 8)
         sta     auxlc::block_index_shift
         lda     #0
         sta     auxlc::block_index_div8
         sta     L0FE4
         sta     L0FE5
 
+        beq     check           ; always
+
 loop:
         ;; Update displayed counts
         bit     write_flag
     IF_NC
-        jsr     auxlc::DrawBlocksRead
+        jsr     auxlc::IncAndDrawBlocksRead
     ELSE
-        jsr     auxlc::DrawBlocksWritten
+        jsr     auxlc::IncAndDrawBlocksWritten
     END_IF
 
+
+check:
         ;; Check for keypress
         lda     KBD
         cmp     #(CHAR_ESCAPE | $80)
@@ -568,6 +571,45 @@ not_last:
         rts
 .endproc ; Next
 .endproc ; AdvanceToNextBlock
+
+;;; ============================================================
+;;; Count active blocks in volume bitmap
+;;; Output: A,X = block count
+
+.proc CountActiveBlocksInVolumeBitmap
+        ptr := $06
+        count := $08
+
+        copy16  #0, count
+
+        add16   #volume_bitmap, auxlc::block_count_div8, ptr
+
+        ldy     #0
+loop:   dec16   ptr
+        lda     (ptr),y
+
+        ;; Count 0 bits in byte
+        eor     #$FF
+        ldx     #AS_BYTE(-1)
+incr:   inx
+bloop:  asl
+        bcs     incr
+        bne     bloop
+        txa
+
+        clc
+        adc     count
+        sta     count
+        lda     #0
+        adc     count+1
+        sta     count+1
+
+        ecmp16  ptr, #volume_bitmap
+        bne     loop
+
+        ldax    count
+        rts
+.endproc ; CountActiveBlocksInVolumeBitmap
 
 ;;; ============================================================
 ;;; Look up block in volume bitmap
@@ -976,7 +1018,7 @@ loop:   lda     (ptr1),y
 memory_bitmap:
         ;; Main memory
         .byte   %00000000       ; $00-$0F - ZP/Stack/Text, then Disk Copy code...
-        .byte   %00111100       ; $10-$1F - but $14-1B free ($1C = I/O buffer)
+        .byte   %00011100       ; $10-$1F - but $16-1B free ($1C = I/O buffer)
         .byte   %00000000       ; $20-$2F - DHR graphics page
         .byte   %00000000       ; $30-$3F - DHR graphics page
         .byte   %11111111       ; $40-$4F - free
@@ -1087,7 +1129,7 @@ is_laser128_flag:               ; high bit set if Laser 128
 
 ;;; ============================================================
 
-        .assert * <= $1400, error, "Update memory_bitmap if code extends past $1400"
+        .assert * <= $1600, error, "Update memory_bitmap if code extends past $1600"
 .endscope ; main
 
 main__FormatDevice              := main::FormatDevice
@@ -1098,6 +1140,7 @@ main__CopyBlocks                := main::CopyBlocks
 main__FreeVolBitmapPages        := main::FreeVolBitmapPages
 main__CallOnLine2               := main::CallOnLine2
 main__CallOnLine                := main::CallOnLine
+main__CountActiveBlocksInVolumeBitmap := main::CountActiveBlocksInVolumeBitmap
 main__GetBlockNumFromDivAndShift := main::GetBlockNumFromDivAndShift
 main__PrepBlockPtrs             := main::PrepBlockPtrs
 main__ReadBlock                 := main::ReadBlock
