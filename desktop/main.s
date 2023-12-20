@@ -13141,7 +13141,7 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
     END_IF
 
         bit     prompt_button_flags
-    IF_NS
+    IF_NC
         MGTK_CALL MGTK::InRect, cancel_button::rect
       IF_NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
