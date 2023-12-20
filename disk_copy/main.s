@@ -21,13 +21,19 @@
 
         DEFINE_QUIT_PARAMS quit_params
 
-on_line_buffer2 := ::kSegmentMainAddress + ::kSegmentMainLength
-        DEFINE_ON_LINE_PARAMS on_line_params2,, on_line_buffer2
-
+        ;; Used only for single device
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
+.struct
+        .org $300
+on_line_buffer  .res    16      ; enough for single device
+.endstruct
 
-on_line_buffer:                 ; TODO: Move to $240 ?
-        .res    16, 0
+        ;; Used for enumerating all devices and single device
+        DEFINE_ON_LINE_PARAMS on_line_params2,, on_line_buffer2
+.struct
+        .org  ::kSegmentMainAddress + ::kSegmentMainLength
+on_line_buffer2 .res    256     ; enough for all devices
+.endstruct
 
         DEFINE_READ_BLOCK_PARAMS block_params, default_block_buffer, 0
 
@@ -225,6 +231,8 @@ fail:   lda     #$81            ; Other
 ;;; Reads the volume bitmap (blocks 6 through ...)
 
 .proc ReadVolumeBitmap
+        ;; Number of blocks to copy, divided by 8
+        block_count_div8 := $08 ; word
 
         lda     auxlc::source_drive_index
         asl     a
@@ -247,44 +255,28 @@ fail:   lda     #$81            ; Other
 .scope
         ptr := $06
 
-
-        add16   #volume_bitmap - 1, auxlc::block_count_div8, ptr
-
         ;; Zero out the volume bitmap
+        add16   #volume_bitmap, auxlc::block_count_div8, ptr
         ldy     #0
-loop1:  lda     #0
+:       dec16   ptr
+        tya
         sta     (ptr),y
-
-        dec     ptr             ; dec16 ptr
-        lda     ptr
-        cmp     #$FF
-        bne     :+
-        dec     ptr+1
-:
-        lda     ptr+1
-        cmp     #>volume_bitmap
-        bne     loop1
-        lda     ptr
-        cmp     #<volume_bitmap
-        bne     loop1
-
-        lda     #$00            ; special case for last byte
-        sta     (ptr),y         ; (this algorithm could be improved)
+        ecmp16  ptr, #volume_bitmap
+        bne     :-
 
         ;; Now mark block-pages used in memory bitmap
-        lda     #>volume_bitmap
-        sta     ptr
-        lda     #0
-        sta     count
-loop:   lda     ptr
+        page := $07          ; high byte of `volume_bitmap` from above
+        count := $06         ; no longer needed
+
+        sty     count
+loop:   lda     page
         jsr     MarkUsedInMemoryBitmap
-        inc     ptr
-        inc     ptr
+        inc     page
+        inc     page
         inc     count
         inc     count
 
-        count := *+1
-        lda     #SELF_MODIFIED_BYTE
+        lda     count
         cmp     auxlc::block_count_div8+1
         beq     loop
         bcc     loop
@@ -322,10 +314,6 @@ loop:
         inc     block_params::block_num
         bne     loop            ; always
 .endproc ; QuickCopy
-
-        ;; Number of blocks to copy, divided by 8
-block_count_div8:
-        .word   0
 .endproc ; ReadVolumeBitmap
 
 ;;; ============================================================
@@ -630,6 +618,7 @@ bloop:  asl
         tay                     ; Y = masked bit
 
         ;; Now compute block number
+        hi := $06
         lda     auxlc::block_num_div8+1
         sta     hi
         lda     auxlc::block_num_div8
@@ -641,8 +630,7 @@ bloop:  asl
         rol     hi
         ldx     auxlc::block_num_shift
         ora     table,x
-        hi := *+1
-        ldx     #SELF_MODIFIED_BYTE
+        ldx     hi
         rts
 
 table:  .byte   7,6,5,4,3,2,1,0
@@ -1009,7 +997,7 @@ loop:   lda     (ptr1),y
 memory_bitmap:
         ;; Main memory
         .byte   %00000000       ; $00-$0F - ZP/Stack/Text, then Disk Copy code...
-        .byte   %00011100       ; $10-$1F - but $16-1B free ($1C = I/O buffer)
+        .byte   %00111100       ; $10-$1F - but $14-1B free ($1C = I/O buffer)
         .byte   %00000000       ; $20-$2F - DHR graphics page
         .byte   %00000000       ; $30-$3F - DHR graphics page
         .byte   %11111111       ; $40-$4F - free
@@ -1120,7 +1108,7 @@ is_laser128_flag:               ; high bit set if Laser 128
 
 ;;; ============================================================
 
-        .assert * <= $1600, error, "Update memory_bitmap if code extends past $1600"
+        .assert * <= $1400, error, "Update memory_bitmap if code extends past $1400"
 .endscope ; main
 
 main__FormatDevice              := main::FormatDevice
