@@ -275,6 +275,23 @@ str_writing:
 str_reading:
         PASCAL_STRING res_string_label_status_reading
 
+        ;; Progress bar
+        kProgressTop = 72
+        kProgressHeight = 9
+        kProgressLeft = 16
+        kProgressWidth = kDialogWidth-kProgressLeft*2
+        DEFINE_RECT_SZ progress_frame, kProgressLeft-1, kProgressTop-1, kProgressWidth+2, kProgressHeight+2
+        DEFINE_RECT_SZ progress_bar, kProgressLeft, kProgressTop, kProgressWidth, kProgressHeight
+progress_pattern:
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+
 str_unknown:
         PASCAL_STRING res_string_unknown
 
@@ -732,6 +749,7 @@ do_copy:
 
         ;; Blocks to copy
         jsr     main__CountActiveBlocksInVolumeBitmap
+        stax    transfer_blocks
         jsr     DrawTotalBlocks
 
         ;; Blocks read/written so far
@@ -1708,14 +1726,14 @@ tmp:    .byte   0
         jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_status
         param_call DrawString, str_writing
-        rts
+        jmp     DrawProgressBar
 .endproc ; DrawStatusWriting
 
 .proc DrawStatusReading
         jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, point_status
         param_call DrawString, str_reading
-        rts
+        jmp     DrawProgressBar
 .endproc ; DrawStatusReading
 
 .proc DrawTotalBlocks
@@ -1755,6 +1773,39 @@ blocks_read:
         .word   0
 blocks_written:
         .word   0
+transfer_blocks:
+        .word   0
+
+.proc DrawProgressBar
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, progress_frame
+        copy16  transfer_blocks, muldiv_denominator
+
+        ;; read+written will not fit in 16 bits if total is > $7FFF
+        ;; so scale appropriately
+        tmp_read := muldiv_numerator
+        tmp_written := muldiv_number
+        copy16  blocks_read, tmp_read
+        copy16  blocks_written, tmp_written
+        bit     muldiv_denominator+1
+    IF_NC
+        ;; Use (read + written) / total*2
+        asl16   muldiv_denominator
+    ELSE
+        ;; Use ((read + written) / 2) / total
+        lsr16   tmp_read
+        lsr16   tmp_written
+    END_IF
+        add16   tmp_read, tmp_written, muldiv_numerator
+
+        copy16  #kProgressWidth, muldiv_number
+        jsr     MulDiv
+        add16   progress_bar::x1, muldiv_result, progress_bar::x2
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::SetPattern, progress_pattern
+        MGTK_CALL MGTK::PaintRect, progress_bar
+        rts
+.endproc ; DrawProgressBar
 
 ;;; ============================================================
 
@@ -2303,6 +2354,7 @@ Alert := alert_dialog::Alert
 
         .include "../lib/is_diskii.s"
         .include "../lib/muldiv.s"
+        .include "../lib/muldiv16.s"
         .include "../lib/doubleclick.s"
 
 ;;; ============================================================
@@ -2321,7 +2373,7 @@ Alert := alert_dialog::Alert
 
 ;;; ============================================================
 
-        .assert * <= $F000, error, "Update memory_bitmap if code extends past $F000"
+        .assert * <= $F200, error, "Update memory_bitmap if code extends past $F200"
 .endscope ; auxlc
         auxlc__start := auxlc::start
 

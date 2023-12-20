@@ -389,7 +389,7 @@ loop:
     ELSE
         jsr     auxlc::IncAndDrawBlocksWritten
     END_IF
-
+        jsr     auxlc::DrawProgressBar
 
 check:
         ;; Check for keypress
@@ -1029,7 +1029,7 @@ memory_bitmap:
         .byte   %00000000       ; $C0-$CF - I/O
         .byte   %00000000       ; $D0-$DF - Disk Copy code
         .byte   %00000000       ; $E0-$EF - Disk Copy code
-        .byte   %11111111       ; $F0-$FF - free $F0 and up
+        .byte   %01111111       ; $F0-$FF - free $F2 and up
 
         ;; Aux memory - LCBANK2
         .byte   %11111111       ; $D0-$DF - free

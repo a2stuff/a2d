@@ -55,6 +55,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Re-verify block counts when Read Drives is clicked, so correct destination drives are shown.
 * Hide "Select Quit..." once menu is not accessible.
 * Show correct block counts during Quick Copy.
+* Show progress bar during copy.
 
 ### Desk Accessories
 
