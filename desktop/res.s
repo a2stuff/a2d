@@ -278,8 +278,8 @@ nextwinfo:      .addr   0
         kProgressBarTop = 41
         kProgressBarWidth = winfo_progress_dialog::kWidth - kProgressDialogLabelDefaultX*2
         kProgressBarHeight = 7
-        DEFINE_RECT progress_dialog_bar_frame, kProgressDialogLabelDefaultX-1, kProgressBarTop-1, kProgressDialogLabelDefaultX + kProgressBarWidth+1, kProgressBarTop + kProgressBarHeight+1
-        DEFINE_RECT progress_dialog_bar_meter, kProgressDialogLabelDefaultX, kProgressBarTop, kProgressDialogLabelDefaultX + kProgressBarWidth, kProgressBarTop + kProgressBarHeight
+        DEFINE_RECT_SZ progress_dialog_bar_frame, kProgressDialogLabelDefaultX-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight+2
+        DEFINE_RECT_SZ progress_dialog_bar_meter, kProgressDialogLabelDefaultX, kProgressBarTop,  kProgressBarWidth,kProgressBarHeight
 
 progress_pattern:
         .byte   %01000100
