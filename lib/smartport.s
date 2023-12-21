@@ -8,46 +8,58 @@
 
 ;;; TODO: Handle additional versions, either by adding more
 ;;; logic or building mirroring tables ourselves on startup.
+DevAdrP243      = $FCE4
+SPUnitP243      = $D6EF         ; absolute
+SPVecLP243      = $FD4F         ; DevAdr + 107
+SPVecHP243      = $FD5E         ; SPVecL + 15 (constant offset)
+
 DevAdrP24       = $FCE6
-SPUnitP24       = $D6EF
-SPVecLP24       = $FD51
-SPVecHP24       = $FD60
+SPUnitP24       = $D6EF         ; absolute
+SPVecLP24       = $FD51         ; DevAdr + 107
+SPVecHP24       = $FD60         ; SPVecL + 15 (constant offset)
 
 DevAdrP20x      = $FD08
-SPUnitP20x      = $D6EF
-SPVecLP20x      = $FD6E
-SPVecHP20x      = $FD7D
+SPUnitP20x      = $D6EF         ; absolute
+SPVecLP20x      = $FD6E         ; DevAdr + 102
+SPVecHP20x      = $FD7D         ; SPVecL + 15 (constant offset)
+
+.assert SPUnitP20x = SPUnitP24, error, "mismatch"
+.assert (SPVecHP20x - SPVecLP20x) = (SPVecHP24 - SPVecLP24), error, "mismatch"
 
 ;;; ============================================================
 ;;; Look up SmartPort dispatch address.
 ;;; Input: A = unit number
 ;;; Output: C=0 if SP, A,X=dispatch address, Y = SP unit num
 ;;;         C=1 if not SP
+;;; Uses $10...$12 on both zero pages
 
 .proc FindSmartportDispatchAddress
+
+.struct
+        .org $10
+dispatch        .word
+mirrored_slot   .byte
+.endstruct
+
         sta     unit_number     ; DSSSnnnn
 
         ;; Get device driver address
         jsr     DeviceDriverAddress
-        bvs     mirrored
+
+        bvs     mirrored        ; mirrored by ProDOS 2.x
+
         bne     fail            ; RAM-based driver
-        stx     dispatch_hi     ; just need high byte ($Cn)
-        stx     hi1
-        stx     hi2
 
-        ;; Find actual address
-        hi1 := *+2
-        lda     $C007           ; SmartPort signature byte ($Cn07)
+        ;; --------------------------------------------------
+        ;; Not mirrored, or mirrored by ProDOS 1.x
+
+        ;; Find actual SmartPort dispatch address
+        lda     #0
+        sta     dispatch        ; $Cn00
+        stx     dispatch+1
+        ldy     #$07
+        lda     (dispatch),y    ; SmartPort signature byte ($Cn07)
         bne     fail            ; nope (exit with Z=0 on failure)
-
-        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
-        hi2 := *+2
-        lda     $C0FF
-        clc
-        adc     #3
-        sta     dispatch_lo
-
-        ;; Figure out SmartPort control unit number in Y
 
 ;;; Per Technical Note: ProDOS #21: Mirrored Devices and SmartPort
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.20.html
@@ -66,6 +78,14 @@ SPVecHP20x      = $FD7D
 ;;;   device is not mirrored, the unit number slot will match the driver
 ;;;   slot, and the SmartPort unit is 1 or 2.
 
+        ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
+        ldy     #$FF
+        lda     (dispatch),y
+        clc
+        adc     #3
+        sta     dispatch        ; low byte
+
+        ;; Figure out SmartPort control unit number in Y
         ldy     #1              ; start with unit 1
         bit     unit_number     ; high bit is D
         bpl     :+
@@ -81,19 +101,15 @@ SPVecHP20x      = $FD7D
         lsr
         sta     mirrored_slot   ; 00000SSS
 
-        lda     dispatch_hi     ; $Cn
+        lda     dispatch+1      ; $Cn
         and     #%00001111      ; $0n
-        mirrored_slot := *+1
-        cmp     #SELF_MODIFIED_BYTE ; equal = not mirrored
+        cmp     mirrored_slot   ; equal = not mirrored
         beq     :+
         iny                     ; now Y = 3 or 4
         iny
 :
-        dispatch_lo := *+1
-        lda     #SELF_MODIFIED_BYTE
-        dispatch_hi := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        clc
+        ldax    dispatch
+        clc                     ; Y = SmartPort unit number
         rts
 
 fail:   sec
@@ -103,16 +119,6 @@ fail:   sec
         ;; Mirrored SmartPort device with a known handler.
         ;; Look at ProDOS's internal tables to determine.
 mirrored:
-        tya
-        tax                     ; X = ProDOS version index
-
-        lda     unit_number
-        lsr
-        lsr
-        lsr
-        lsr
-        tay                     ; Y = offset
-
 .ifdef SP_ALTZP
         sta     ALTZPOFF
 .endif
@@ -120,23 +126,43 @@ mirrored:
         bit     LCBANK1
         bit     LCBANK1
 .endif
+        ;; Point `dispatch` at SPVecL table
+        sta     dispatch
+        tya                     ; Y = offset from start of driver
+        clc
+        adc     dispatch
+        sta     dispatch
+        bcc     :+
+        inx
+:       stx     dispatch+1
 
-        cpx     #1
-    IF_EQ
-        ;; ProDOS 2.0.x
-        ldx     SPVecHP20x,y    ; X = sp vec hi
-        lda     SPVecLP20x,y
-        pha
+        ;; Calculate index into table (0...15)
+        lda     unit_number
+        lsr
+        lsr
+        lsr
+        lsr
+        tay                     ; Y = offset into tables
+
+        lda     (dispatch),y
+        pha                     ; A = sp vec lo
+
         lda     SPUnitP20x,y
-    ELSE
-        ;; ProDOS 2.4.x
-        ldx     SPVecHP24,y     ; X = sp vec hi
-        lda     SPVecLP24,y
-        pha
-        lda     SPUnitP24,y
-    END_IF
+        pha                     ; A = sp unit
+
+        tya
+        clc
+        adc     #(SPVecHP20x - SPVecLP20x)
+        tay
+
+        lda     (dispatch),y
+        tax                     ; X = sp vec hi
+
+        pla
         tay                     ; Y = sp unit
+
         pla                     ; A = sp vec lo
+
 
 .ifdef SP_ALTZP
         sta     ALTZPON
@@ -147,13 +173,14 @@ mirrored:
 
         clc
         rts
+
 .endproc ; FindSmartportDispatchAddress
 
 ;;; ============================================================
 ;;; Get driver address for unit number
 ;;; Input: A = unit number (no need to mask it)
 ;;; Output: A,X=driver address
-;;;         V=1 if a mirrored SmartPort device, and Y is table index
+;;;         V=1 if a mirrored SmartPort device, and Y is table offset
 ;;;         Z=1 if a firmware address ($CnXX)
 
 .proc DeviceDriverAddress
@@ -169,13 +196,18 @@ mirrored:
         ldx     DEVADR+1,y      ; X = hi
 
         ;; ProDOS 2.x SmartPort mirroring?
-        ldy     #0              ; Y=0 = ProDOS 2.4.x
+        ldy     #(SPVecLP24 - DevAdrP24)
         cmp     #<DevAdrP24
         bne     :+
         cpx     #>DevAdrP24
         beq     mirrored
 :
-        iny                     ; Y=1 = ProDOS 2.0.x
+        cmp     #<DevAdrP243
+        bne     :+
+        cpx     #>DevAdrP243
+        beq     mirrored
+:
+        ldy     #(SPVecLP20x - DevAdrP20x)
         cmp     #<DevAdrP20x
         bne     :+
         cpx     #>DevAdrP20x
