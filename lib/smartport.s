@@ -8,10 +8,6 @@
 
 ;;; TODO: Handle additional versions, either by adding more
 ;;; logic or building mirroring tables ourselves on startup.
-DevAdrP243      = $FCE4
-SPUnitP243      = $D6EF         ; absolute
-SPVecLP243      = $FD4F         ; DevAdr + 107
-SPVecHP243      = $FD5E         ; SPVecL + 15 (constant offset)
 
 DevAdrP24       = $FCE6
 SPUnitP24       = $D6EF         ; absolute
@@ -200,11 +196,6 @@ mirrored:
         cmp     #<DevAdrP24
         bne     :+
         cpx     #>DevAdrP24
-        beq     mirrored
-:
-        cmp     #<DevAdrP243
-        bne     :+
-        cpx     #>DevAdrP243
         beq     mirrored
 :
         ldy     #(SPVecLP20x - DevAdrP20x)
