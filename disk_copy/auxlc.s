@@ -254,7 +254,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_BUTTON ok_button, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
 
         ;; For drawing/updating the dialog title
-        DEFINE_POINT point_title, 0, 15
+        DEFINE_POINT point_title, kDialogWidth/2, 15
         DEFINE_RECT rect_title, 8, 4, kDialogWidth-8, 15
 
         DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
@@ -267,7 +267,8 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 str_select_destination:
         PASCAL_STRING res_string_prompt_select_destination ; dialog label
 
-        DEFINE_POINT point_status, 210, 68
+        DEFINE_POINT point_status, kDialogWidth/2, 68
+        DEFINE_RECT rect_status, 8, 57, kDialogWidth-8, 68
 str_formatting:
         PASCAL_STRING res_string_label_status_formatting
 str_writing:
@@ -466,12 +467,13 @@ InitDialog:
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_lower
 
+        MGTK_CALL MGTK::MoveTo, point_title
         ldax    #label_quick_copy
         bit     disk_copy_flag
     IF_NS
         ldax    #label_disk_copy
     END_IF
-        jsr     DrawTitleText
+        jsr     DrawStringCentered
 
         BTK_CALL BTK::Draw, ok_button
         jsr     UpdateOKButton
@@ -704,8 +706,7 @@ try_format:
         and     #$08            ; bit 3 = The device supports formatting.
         beq     do_copy
 
-format: MGTK_CALL MGTK::MoveTo, point_status
-        param_call DrawString, str_formatting
+format: param_call DrawStatus, str_formatting
         jsr     main__FormatDevice
         bcc     do_copy
         cmp     #ERR_WRITE_PROTECTED
@@ -968,7 +969,8 @@ do_jump:
         copy    #0, disk_copy_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
-        param_call DrawTitleText, label_quick_copy
+        MGTK_CALL MGTK::MoveTo, point_title
+        param_call DrawStringCentered, label_quick_copy
 
 ret:    rts
 .endproc ; CmdQuickCopy
@@ -987,7 +989,8 @@ ret:    rts
         copy    #$80, disk_copy_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
-        param_call DrawTitleText, label_disk_copy
+        MGTK_CALL MGTK::MoveTo, point_title
+        param_call DrawStringCentered, label_disk_copy
 
 ret:    rts
 .endproc ; CmdDiskCopy
@@ -1339,25 +1342,27 @@ match:  clc
 
 ;;; ============================================================
 
-.proc DrawTitleText
-        text_params     := $6
-        text_addr       := text_params + 0
-        text_length     := text_params + 2
-        text_width      := text_params + 3
+.proc DrawStringCentered
+        params  := $0A
+        textptr := params
+        textlen := params+2
+        result  := params+3
 
-        stax    text_addr       ; input is length-prefixed string
+        stax    textptr
         ldy     #0
-        lda     (text_addr),y
-        sta     text_length
-        inc16   text_addr       ; point past length
-        MGTK_CALL MGTK::TextWidth, text_params
-
-        sub16   #kDialogWidth, text_width, point_title::xcoord
-        lsr16   point_title::xcoord ; /= 2
-        MGTK_CALL MGTK::MoveTo, point_title
-        MGTK_CALL MGTK::DrawText, text_params
+        lda     (textptr),y
+        sta     textlen
+        inc16   textptr
+        MGTK_CALL MGTK::TextWidth, params
+        lsr16   result
+        sub16   #0, result, result
+        lda     #0
+        sta     result+2
+        sta     result+3
+        MGTK_CALL MGTK::Move, result
+        MGTK_CALL MGTK::DrawText, params
         rts
-.endproc ; DrawTitleText
+.endproc ; DrawStringCentered
 
 ;;; ============================================================
 
@@ -1722,17 +1727,26 @@ tmp:    .byte   0
 
 ;;; ============================================================
 
-.proc DrawStatusWriting
+.proc DrawStatus
+        pha
+        txa
+        pha
         jsr     SetPortForDialog
+        MGTK_CALL MGTK::PaintRect, rect_status
         MGTK_CALL MGTK::MoveTo, point_status
-        param_call DrawString, str_writing
+        pla
+        tax
+        pla
+        jmp     DrawStringCentered
+.endproc ; DrawStatus
+
+.proc DrawStatusWriting
+        param_call DrawStatus, str_writing
         jmp     DrawProgressBar
 .endproc ; DrawStatusWriting
 
 .proc DrawStatusReading
-        jsr     SetPortForDialog
-        MGTK_CALL MGTK::MoveTo, point_status
-        param_call DrawString, str_reading
+        param_call DrawStatus, str_reading
         jmp     DrawProgressBar
 .endproc ; DrawStatusReading
 
