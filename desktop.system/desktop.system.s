@@ -102,6 +102,7 @@ start:
         cli
 
         jsr     EnsurePrefixSet
+        jsr     BrandSystemFolder
         jsr     DetectMousetext
         jsr     CreateLocalDir
         jsr     PreserveQuitCode
@@ -150,6 +151,25 @@ str_self_filename:
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, str_self_filename
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, PRODOS_SYS_PATH
 .endproc ; EnsurePrefixSet
+
+;;; ============================================================
+
+.proc BrandSystemFolder
+        MLI_CALL GET_PREFIX, get_prefix_params
+        MLI_CALL GET_FILE_INFO, file_info_params
+        bcs     ret
+        lda     file_info_params + 7         ; storage_type
+        cmp     #ST_LINKED_DIRECTORY
+        bne     ret
+        copy    #7, file_info_params + 0     ; SET_FILE_INFO param_count
+        copy16  #$8000, file_info_params + 5 ; aux_type
+        MLI_CALL SET_FILE_INFO, file_info_params
+ret:    rts
+
+prefix_buf := $800
+        DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buf
+        DEFINE_GET_FILE_INFO_PARAMS file_info_params, prefix_buf
+.endproc ; BrandSystemFolder
 
 ;;; ============================================================
 

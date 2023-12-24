@@ -19,6 +19,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve window title bar apperance.
 
 ### Launcher
+* If starting from a folder, brand it as a system folder.
 
 ### DeskTop
 
