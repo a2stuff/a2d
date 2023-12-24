@@ -86,7 +86,7 @@ buf_padding_bytes:
         DEFINE_GET_FILE_INFO_PARAMS get_dst_file_info_params, pathname_dst
 
 file_entry:
-        .res    48, 0
+        .res    .sizeof(FileEntry)
 
 addr_table:
 
@@ -444,7 +444,7 @@ PopDstSegment:
 
 .proc CopyVisitFile
         jsr     CheckEscapeKeyDown
-        jne     RestoreStackAndReturn
+        jeq     RestoreStackAndReturn
 
         lda     file_entry+FileEntry::file_type
         cmp     #FT_DIRECTORY
@@ -702,7 +702,7 @@ visit:  jsr     EnumerateVisitFile
 
 .proc EnumerateVisitFile
         jsr     CheckEscapeKeyDown
-        jne     RestoreStackAndReturn
+        jeq     RestoreStackAndReturn
 
         jsr     AppendFilenameToSrcPathname
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
@@ -716,6 +716,8 @@ visit:  jsr     EnumerateVisitFile
 ;;; ============================================================
 
 file_count:
+        .word   0
+total_count:
         .word   0
 blocks_total:
         .word   0
@@ -932,31 +934,32 @@ str_copying:
         DEFINE_RECT rect_clear_count, 18, 24, winfo::kWidth-kBorderDX*2, 32
         DEFINE_RECT rect_clear_details, kBorderDX*2, 24, winfo::kWidth-kBorderDX*2, winfo::kHeight-kBorderDY*2
 
-.params setportbits_params
-        DEFINE_POINT viewloc, 100, 50
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 340, 66
-pattern:        .res    8, $FF
-colormasks:     .byte   $FF, $00
-penloc:         .word   0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   $7F
-textfont:       .addr   FONT
-        REF_GRAFPORT_MEMBERS
-.endparams
-
 str_files_to_copy:
         PASCAL_STRING res_string_label_files_to_copy
 str_files_remaining:
         PASCAL_STRING res_string_label_files_remaining
 str_spaces:
         PASCAL_STRING "    "
-str_space:
-        PASCAL_STRING " "
+str_from_int:
+        PASCAL_STRING "000,000"
+
+        kProgressBarTop = 51
+        kProgressBarInset = 20
+        kProgressBarWidth = winfo::kWidth - kProgressBarInset*2
+        kProgressBarHeight = 7
+        DEFINE_RECT_SZ progress_frame, kProgressBarInset-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight+2
+        DEFINE_RECT_SZ progress_meter, kProgressBarInset, kProgressBarTop,  kProgressBarWidth,kProgressBarHeight
+
+progress_pattern:
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+
 
 ;;; ============================================================
 
@@ -980,8 +983,12 @@ str_space:
 .proc DrawWindowContent
         lda     #winfo::kWindowId
         jsr     app::GetWindowPort
-        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_clear_details
+
+        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::FrameRect, progress_frame
+
+        copy16  file_count, total_count
 
 ep2:    dec     file_count
         lda     file_count
@@ -990,31 +997,43 @@ ep2:    dec     file_count
         dec     file_count+1
 :
 
-        jsr     PopulateCount
-        MGTK_CALL MGTK::SetPortBits, setportbits_params
-        MGTK_CALL MGTK::SetPenMode, pencopy
+        lda     #winfo::kWindowId
+        jsr     app::GetWindowPort
+
+        ldax    file_count
+        jsr     IntToString
         MGTK_CALL MGTK::PaintRect, rect_clear_count
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_copying
-        param_call app::DrawString, str_space
         param_call app::DrawString, pathname_src
         MGTK_CALL MGTK::MoveTo, pos_remaining
         param_call app::DrawString, str_files_remaining
-        param_call app::DrawString, str_count
+        param_call app::DrawString, str_from_int
         param_call app::DrawString, str_spaces
+
+        sub16   total_count, file_count, muldiv_numerator
+        copy16  total_count, muldiv_denominator
+        copy16  #kProgressBarWidth, muldiv_number
+        jsr     MulDiv
+        add16   muldiv_result, progress_meter::x1, progress_meter::x2
+        MGTK_CALL MGTK::SetPattern, progress_pattern
+        MGTK_CALL MGTK::PaintRect, progress_meter
+
         rts
 .endproc ; DrawWindowContent
         draw_window_content_ep2 := DrawWindowContent::ep2
 ;;; ============================================================
 
 .proc UpdateFileCountDisplay
-        jsr     PopulateCount
-        MGTK_CALL MGTK::SetPortBits, setportbits_params
+        lda     #winfo::kWindowId
+        jsr     app::GetWindowPort
+
+        ldax    file_count
+        jsr     IntToString
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call app::DrawString, str_files_to_copy
-        param_call app::DrawString, str_count
-        param_call app::DrawString, str_spaces
-        rts
+        param_call app::DrawString, str_from_int
+        param_jump app::DrawString, str_spaces
 .endproc ; UpdateFileCountDisplay
 
 ;;; ============================================================
@@ -1063,83 +1082,22 @@ ep2:    dec     file_count
 
 ;;; ============================================================
 
+;;; Output: Z=1 if Escape is down
 .proc CheckEscapeKeyDown
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::key_down
-        bne     nope
+        bne     ret
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        bne     nope
-        lda     #$FF
-        bne     done
-nope:   lda     #$00
-done:   rts
+ret:    rts
 .endproc ; CheckEscapeKeyDown
 
 ;;; ============================================================
 
-.proc PopulateCount
-        copy16  file_count, value
-        ldx     #7
-        lda     #' '
-:       sta     str_count,x
-        dex
-        bne     :-
-        lda     #0
-        sta     nonzero_flag
-        ldy     #0
-        ldx     #0
-
-loop:   lda     #0
-        sta     digit
-sloop:  cmp16   value, powers,x
-        bcs     subtract
-        lda     digit
-        bne     not_pad
-        bit     nonzero_flag
-        bmi     not_pad
-        lda     #' '
-        bne     store
-not_pad:
-        ora     #$30            ; to ASCII digit
-        pha
-        lda     #$80
-        sta     nonzero_flag
-        pla
-store:  sta     str_count+2,y
-        iny
-        inx
-        inx
-        cpx     #8
-        beq     done
-        jmp     loop
-
-subtract:
-        inc     digit
-        lda     value
-        sec
-        sbc     powers,x
-        sta     value
-        lda     value+1
-        sbc     powers+1,x
-        sta     value+1
-        jmp     sloop
-
-done:   lda     value
-        ora     #$30            ; number to ASCII digit
-        sta     str_count+2,y
-        rts
-
-powers: .word   10000, 1000, 100, 10
-value:  .word   0
-digit:  .byte   0
-nonzero_flag:
-        .byte   0
-.endproc ; PopulateCount
-
-str_count:
-        PASCAL_STRING "       "
+        .include "../lib/muldiv16.s"
+        ReadSetting := app::ReadSetting
+        .include "../lib/inttostring.s"
 
 ;;; ============================================================
 

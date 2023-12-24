@@ -48,6 +48,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Selector is now named "Shortcuts" in UI strings.
 * Errors encountered when copying to RAMCard now show standard alerts.
 * Fully clear and reset text screen when quick-booting from a slot.
+* Show progress bar while copying shortcut to RAMCard.
 
 ### Disk Copy
 

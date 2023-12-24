@@ -31,14 +31,6 @@ ep_loop:
 
 ;;; ============================================================
 
-.params getwinport_params
-window_id:     .byte   0
-a_grafport:    .addr   window_grafport
-.endparams
-
-window_grafport:
-        .tag    MGTK::GrafPort
-
 buf_path:
         .res    ::kPathBufferSize, 0
 
