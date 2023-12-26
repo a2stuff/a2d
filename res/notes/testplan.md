@@ -763,12 +763,12 @@ Text File:
   * Verify that Solid-Apple plus Up/Down Arrow keys scroll by page.
   * Verify that Open-Apple plus Solid-Apple plus Up/Down Arrow keys scroll to start/end.
   * Click the Proportional/Fixed button on the title bar. Verify that the view is scrolled to the top.
+  * Scroll somewhere in the file. Click the scrollbar thumb without moving it. Verify the thumb doesn't move and the content doesn't scroll.
 * Preview a long text file, e.g. 2000 lines. Verify that dragging the scroll thumb to the middle shows approximately the middle of the file.
 * Preview a long text file, e.g. 2000 lines. Verify that Up/Down Arrow keys scroll by one line consistently.
 * Preview a text file with a tab character in the first line. Verify that the file displays all lines correctly.
 * Preview a long text file. Verify that the first page of content appears immediately, and that the watch cursor is shown while the rest of the file is parsed. With any acceleration disabled, use Open-Apple+Solid-Apple+Down to jump to the bottom of the file. Verify that the view is displayed without undue delay.
 * Download SUDOKU.dsk from www.michaeljmahon.com/Sudoku.html and mount it. Open the SUDOKU.STORY text file. Click on "Proportional" to change to "Fixed" font. Scroll down using down arrow key until bottom line reads "with". Scroll down again using down arrow key. Verify that the file correctly scrolled down one line. Scroll to the bottom of the file. Ensure the entire file is visible.
-
 
 Image File:
 * Verify that Escape key exits.

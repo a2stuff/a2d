@@ -17,6 +17,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Added Dutch (`nl`) localization. ([#767](https://github.com/a2stuff/a2d/issues/767))
 * Improve sound played when entering/exiting Mouse Keys mode.
 * Improve window title bar apperance.
+* Prevent scrollbar thumb jumping when not moved. ([#778](https://github.com/a2stuff/a2d/issues/778))
 
 ### Launcher
 * If starting from a folder, brand it as a system folder.

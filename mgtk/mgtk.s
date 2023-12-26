@@ -9318,6 +9318,19 @@ got_ctl:lda     params::which_ctl
         EXIT_CALL MGTK::Error::no_active_window
 
 :       jsr     GetThumbRect
+
+        ;; Stash initial position, to detect no-op
+        initial_pos := $8A
+
+        ldx     #0
+        bit     which_control
+        bpl     :+
+        ldx     #2
+:       lda     winrect,x
+        sta     initial_pos
+        lda     winrect+1,x
+        sta     initial_pos+1
+
         jsr     SaveParamsAndStack
         jsr     SetDesktopPort
 
@@ -9397,6 +9410,21 @@ drag_done:
         jsr     FrameWinRect
         jsr     ShowCursorAndRestore
 
+        ;; Did position change?
+        ldx     #0
+        bit     which_control
+        bpl     :+
+        ldx     #2
+:       lda     winrect,x
+        cmp     initial_pos
+        bne     :+
+        lda     winrect+1,x
+        cmp     initial_pos+1
+        bne     :+
+        lda     thumb_pos       ; (out) thumbpos = original value
+        ldx     #0              ; (out) thumbmoved = 0
+        beq     store           ; always
+:
         jsr     SetUpThumbDivision
 
         jsr     FixedDiv
@@ -9411,13 +9439,10 @@ drag_done:
 
         ldx     fixed_div_quotient+1     ; 0.8 fractional part
         jsr     GetThumbCoord
-
-:       ldx     #1
-        cmp     fixed_div_quotient+2
-        bne     :+
-        dex
-
-:       ldy     #params::thumbpos - params
+:
+        ldx     #1              ; (out) thumbmoved
+store:
+        ldy     #params::thumbpos - params
         jmp     store_xa_at_y
 .endproc ; TrackThumbImpl
 
