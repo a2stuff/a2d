@@ -19,7 +19,8 @@
 .define res_string_slot_n_pattern "Kortplats #:   "
 .define res_const_slot_n_pattern_offset1 11
 .define res_string_memory_prefix "Minne: "
-.define res_string_memory_suffix "K"
+.define res_string_memory_kb_suffix "K"
+.define res_string_memory_mb_suffix "MB"
 .define res_string_card_type_diskii "Disk II"
 .define res_string_card_type_block "Generic Block Device"
 .define res_string_card_type_smartport "SmartPort: "

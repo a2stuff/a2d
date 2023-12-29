@@ -617,13 +617,16 @@ str_slot_n:
 str_memory_prefix:
         PASCAL_STRING res_string_memory_prefix ; dialog label
 
-str_memory_suffix:
-        PASCAL_STRING res_string_memory_suffix       ; memory size suffix for kilobytes
+str_memory_kb_suffix:
+        PASCAL_STRING res_string_memory_kb_suffix ; memory size suffix for kilobytes
+str_memory_mb_suffix:
+        PASCAL_STRING res_string_memory_mb_suffix ; memory size suffix for megabytes
 
 str_list_separator:
         PASCAL_STRING ", "
 
 memory:.word    0
+memory_is_mb_flag:      .byte   0
 
 ;;; ============================================================
 
@@ -1168,7 +1171,12 @@ egg:    .byte   0
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::mem_pos
         param_call DrawString, str_memory_prefix
         param_call DrawString, str_from_int
-        param_call DrawString, str_memory_suffix
+        bit     memory_is_mb_flag
+    IF_NS
+        param_call DrawString, str_memory_mb_suffix
+    ELSE
+        param_call DrawString, str_memory_kb_suffix
+    END_IF
         param_call DrawString, str_cpu_prefix
         jsr     CPUId
         jsr     DrawString
@@ -1932,10 +1940,23 @@ sig_value:      .byte   $38, $18, $01, $31
         jsr     CheckIIgsMemory
         jsr     CheckSlinkyMemory
 
+        lda     memory+1
+        and     #%11111100
+    IF_ZERO
+        ;; Convert number of 64K banks to KB
         ldy     #6
 :       asl16   memory          ; * 64
         dey
         bne     :-
+    ELSE
+        ;; Convert number of 64K banks to MB
+        ldy     #4
+:       lsr16   memory          ; / 16
+        dey
+        bne     :-
+        copy    #$80, memory_is_mb_flag
+    END_IF
+
         ldax    memory
         jmp     IntToStringWithSeparators
 .endproc ; IdentifyMemory

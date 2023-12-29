@@ -68,6 +68,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Detect NVRAM and BOOTI block devices.
   * Prevent hang on IIc and IIc+ in MAME.
   * Detect ZIP CHIP accelerator.
+  * Display larger memory sizes in MB.
 * Image Preview: Add slideshow mode - press 'S' to auto-advance images.
 * Text Preview: Fix memory corruption causing incorrect line display. ([#770](https://github.com/a2stuff/a2d/issues/770))
 * System Speed: Add support for Titan Accelerator IIe c/o @buserror.
