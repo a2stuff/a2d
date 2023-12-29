@@ -21,6 +21,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Launcher
 * If starting from a folder, brand it as a system folder.
+* Prevent crash or hang when quitting back to launcher on unsupported system.
 
 ### DeskTop
 

@@ -101,6 +101,9 @@ start:
         ;; Do this for good measure.
         cli
 
+        jsr     Check128K       ; QUITs if check fails
+        jsr     ClearScreenEnable80Cols
+
         jsr     EnsurePrefixSet
         jsr     BrandSystemFolder
         jsr     DetectMousetext
@@ -108,6 +111,74 @@ start:
         jsr     PreserveQuitCode
         jsr     LoadSettings
         jmp     CopyDesktopToRAMCard
+
+;;; ============================================================
+
+.proc Check128K
+        lda     MACHID
+        and     #%00000001      ; bit 0 = clock card
+        bne     :+
+        lda     DATELO          ; Any date already set?
+        ora     DATEHI
+        bne     :+
+        COPY_STRUCT DateTime, header_date, DATELO
+:       lda     MACHID
+        and     #%00110000      ; bits 4,5 set = 128k
+        cmp     #%00110000
+        RTS_IF_EQ
+
+        ;;  If not 128k machine, just quit back to ProDOS
+        MLI_CALL QUIT, quit_params
+        DEFINE_QUIT_PARAMS quit_params
+
+.endproc ; Check128K
+
+;;; ============================================================
+
+.proc ClearScreenEnable80Cols
+        lda     #$FF
+        sta     INVFLG
+        sta     FW80MODE
+
+        sta     KBDSTRB
+        sta     TXTSET
+
+        ;; Clear Main & AUX text screen memory so
+        ;; junk doesn't show on switch to 80-column,
+        ;; while protecting 'screen holes' for //c & //c+
+        jsr     HOME
+        sta     RAMWRTON
+        lda     #$A0
+        ldx     #$77
+:       sta     $400,x
+        sta     $480,x
+        sta     $500,x
+        sta     $580,x
+        sta     $600,x
+        sta     $680,x
+        sta     $700,x
+        sta     $780,x
+        dex
+        bpl     :-
+        sta     RAMWRTOFF
+
+        ;; Turn on 80-column mode
+        jsr     SLOT3ENTRY
+        jsr     HOME
+
+        ;; IIgs: Reset shadowing
+        sec
+        jsr     IDROUTINE
+        bcs     :+
+        lda     SHADOW
+        and     #%10000000      ; bit 7 is reserved
+        sta     SHADOW
+        lda     NEWVIDEO
+        and     #%00011110      ; bits 1-4 are reserved
+        sta     NEWVIDEO
+:
+        rts
+.endproc ; ClearScreenEnable80Cols
 
 ;;; ============================================================
 
@@ -937,65 +1008,6 @@ str_slash_desktop:
 ;;; ============================================================
 
 .proc Start
-        lda     MACHID
-        and     #%00000001      ; bit 0 = clock card
-        bne     :+
-        lda     DATELO          ; Any date already set?
-        ora     DATEHI
-        bne     :+
-        COPY_STRUCT DateTime, header_date, DATELO
-:       lda     MACHID
-        and     #%00110000      ; bits 4,5 set = 128k
-        cmp     #%00110000
-        beq     have128k
-
-        ;;  If not 128k machine, just quit back to ProDOS
-        MLI_CALL QUIT, quit_params
-        DEFINE_QUIT_PARAMS quit_params
-
-have128k:
-        lda     #$FF
-        sta     INVFLG
-        sta     FW80MODE
-
-        sta     KBDSTRB
-        sta     TXTSET
-
-        ;; Clear Main & AUX text screen memory so
-        ;; junk doesn't show on switch to 80-column,
-        ;; while protecting 'screen holes' for //c & //c+
-        jsr     HOME
-        sta     RAMWRTON
-        lda     #$A0
-        ldx     #$77
-:       sta     $400,x
-        sta     $480,x
-        sta     $500,x
-        sta     $580,x
-        sta     $600,x
-        sta     $680,x
-        sta     $700,x
-        sta     $780,x
-        dex
-        bpl     :-
-        sta     RAMWRTOFF
-
-        ;; Turn on 80-column mode
-        jsr     SLOT3ENTRY
-        jsr     HOME
-
-resume:
-        ;; IIgs: Reset shadowing
-        sec
-        jsr     IDROUTINE
-        bcs     :+
-        lda     SHADOW
-        and     #%10000000      ; bit 7 is reserved
-        sta     SHADOW
-        lda     NEWVIDEO
-        and     #%00011110      ; bits 1-4 are reserved
-        sta     NEWVIDEO
-:
 
         ;; Clear flag - ramcard not found or unknown state.
         lda     #0
