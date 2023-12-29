@@ -49,6 +49,7 @@
 MLIEntry        := MLI
 
 dir_io_buffer   := $800         ; 1024 bytes for I/O
+block_buffer    := $800         ; 512 bytes for block read (exclusive with previous)
 
 src_io_buffer   := $E00         ; 1024 bytes for I/O
 dst_io_buffer   := $1200        ; 1024 bytes for I/O
@@ -103,6 +104,7 @@ start:
 
         jsr     Check128K       ; QUITs if check fails
         jsr     ClearScreenEnable80Cols
+        jsr     CheckRAMEmpty   ; QUITs if user cancels
 
         jsr     EnsurePrefixSet
         jsr     BrandSystemFolder
@@ -2011,21 +2013,6 @@ monitor:
 
 ;;; ============================================================
 
-.proc WaitEnterEscape
-        sta     KBDSTRB
-:       lda     KBD
-        bpl     :-
-        sta     KBDSTRB
-        and     #CHAR_MASK
-        cmp     #CHAR_ESCAPE
-        beq     done
-        cmp     #CHAR_RETURN
-        bne     :-
-done:   rts
-.endproc ; WaitEnterEscape
-
-;;; ============================================================
-
 .proc FinishAndInvoke
         jsr     HOME
         jmp     InvokeSelectorOrDesktop
@@ -2179,6 +2166,64 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
 
 ;;; ============================================================
 
+.proc CheckRAMEmpty
+        ;; See if /RAM exists
+        ldx     DEVCNT
+:       lda     DEVLST,x
+.ifndef PRODOS_2_5
+        and     #$F3            ; per ProDOS 8 Technical Reference Manual
+        cmp     #$B3            ; 5.2.2.3 - one of $BF, $BB, $B7, $B3
+.else
+        cmp     #$B0            ; ProDOS 2.5 uses $B0
+.endif ; PRODOS_2_5
+        beq     found
+        dex
+        bpl     :-
+
+        rts                     ; not found
+
+        DEFINE_READ_BLOCK_PARAMS read_block_params, block_buffer, 2
+
+found:
+        ;; Found it in DEVLST, X = index
+        copy    DEVLST,x, read_block_params::unit_num
+        MLI_CALL READ_BLOCK, read_block_params
+        bcs     ret
+
+        ;; Look at file count
+        lda     block_buffer + VolumeDirectoryHeader::file_count
+        ora     block_buffer + VolumeDirectoryHeader::file_count+1
+        beq     ret
+
+        lda     #kHtabRamNotEmptyMsg
+        sta     OURCH
+        lda     #kVtabRamNotEmptyMsg
+        jsr     VTABZ
+        param_call CoutString, str_ram_not_empty
+        jsr     WaitEnterEscape
+        cmp     #CHAR_ESCAPE
+        beq     quit
+        jsr     HOME
+
+ret:    rts
+
+quit:   jsr     HOME
+        lda     #$11               ; Ctrl-Q - disable 80-col firmware
+        jsr     COUT
+        MLI_CALL QUIT, quit_params
+        DEFINE_QUIT_PARAMS quit_params
+
+        ;; TODO: "/RAM" might not be volume name
+
+        kHtabRamNotEmptyMsg = (80 - .strlen(res_string_prompt_ram_not_empty)) / 2
+        kVtabRamNotEmptyMsg = 12
+str_ram_not_empty:
+        PASCAL_STRING res_string_prompt_ram_not_empty
+
+.endproc ; CheckRAMEmpty
+
+;;; ============================================================
+
 .proc CoutStringNewline
         jsr     CoutString
         lda     #$80|CHAR_RETURN
@@ -2202,6 +2247,21 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
         bne     :-
 done:   rts
 .endproc ; CoutString
+
+;;; ============================================================
+
+.proc WaitEnterEscape
+        sta     KBDSTRB
+:       lda     KBD
+        bpl     :-
+        sta     KBDSTRB
+        and     #CHAR_MASK
+        cmp     #CHAR_ESCAPE
+        beq     done
+        cmp     #CHAR_RETURN
+        bne     :-
+done:   rts
+.endproc ; WaitEnterEscape
 
 ;;; ============================================================
 

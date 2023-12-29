@@ -2,6 +2,7 @@
 .define res_string_esc_to_cancel "Presione Esc para cancelar."
 .define res_string_label_tip_skip_copying "Para omitir la copia a Memoria RAM, presione \x0F\x1B\x41\x18\x0E al comenzar."
 .define res_string_label_copying "Copiando a Memoria RAM: "
+.define res_string_prompt_ram_not_empty "/RAM ser\x10 destruido. Presione Return para continuar o Esc para cancelar."
 .define res_string_prompt_insert_source "Inserte el disco original y presione Return para continuar o Esc para cancelar."
 .define res_string_prompt_ramcard_full "No hay suficiente espacio en la Memoria RAM. Presione Return para continuar."
 .define res_string_error_prefix "Error $"

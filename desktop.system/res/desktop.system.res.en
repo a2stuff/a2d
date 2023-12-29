@@ -2,6 +2,7 @@
 .define res_string_esc_to_cancel "Press Esc to cancel."
 .define res_string_label_tip_skip_copying "To skip copying to RAMCard, hold down \x0F\x1B\x41\x18\x0E when launching."
 .define res_string_label_copying "Copying to RAMCard: "
+.define res_string_prompt_ram_not_empty "/RAM will be destroyed. Press Return to continue or Esc to cancel."
 .define res_string_prompt_insert_source "Insert the source disk and press Return to continue or Esc to cancel."
 .define res_string_prompt_ramcard_full "Not enough room in the RAMCard. Press Return to continue."
 .define res_string_error_prefix "Error $"

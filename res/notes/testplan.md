@@ -9,6 +9,7 @@
 * Configure a shortcut to copy to RAMCard "at boot". Launch DeskTop. Verify the shortcut's files were copied to RAMCard. Quit DeskTop. Re-launch DeskTop from the original startup volume. Eject the disk containing the shortcut. Run the shortcut. Verify that it launches correctly.
 * Configure an Apple II+ system. Invoke DESKTOP.SYSTEM from a launcher (e.g. Bitsy Bye). Verify the launcher is restarted and does not crash or hang.
 * Configure an Apple IIe system with no card in the Aux slot. Invoke DESKTOP.SYSTEM from a launcher (e.g. Bitsy Bye). Verify the launcher is restarted and does not crash or hang.
+* Launch BASIC.SYSTEM. Save a file to /RAM. Invoke DESKTOP.SYSTEM. Verify that a warning is shown about /RAM not being empty. Press Esc. Verify that the ProDOS launcher is re-invoked. Verify that the file is still present in /RAM.
 
 
 # DeskTop
