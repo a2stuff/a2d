@@ -395,7 +395,7 @@ entry:
 
 quick_run_desktop:
         param_call GetFileInfo, str_desktop_2
-        beq     :+
+        bcc     :+
         jmp     done_keys
 :       jmp     RunDesktop
 
@@ -613,7 +613,7 @@ set_startup_menu_items:
 
         ;; Is DeskTop available?
         param_call GetFileInfo, str_desktop_2
-        beq     :+
+        bcc     :+
         lda     #$80
 :       sta     desktop_available_flag
 
@@ -661,7 +661,7 @@ quick_boot_slot:
 
         BTK_CALL BTK::Flash, desktop_button
 retry:  param_call GetFileInfo, str_desktop_2
-        beq     :+
+        bcc     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
@@ -835,7 +835,7 @@ retry:
 
         ;; Load file dialog overlay
         MLI_CALL OPEN, open_selector_params
-        bne     L9443
+        bcs     L9443
         lda     open_selector_params::ref_num
         sta     set_mark_overlay1_params::ref_num
         sta     read_overlay1_params::ref_num
@@ -909,7 +909,7 @@ check_desktop_btn:
         bmi     done
 
 @retry: param_call GetFileInfo, str_desktop_2
-        beq     :+
+        bcc     :+
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
@@ -1166,7 +1166,7 @@ count:  .byte   0
         sta     selector_list + kSelectorListNumSecondaryRunListOffset
 
         MLI_CALL OPEN, open_selector_list_params
-        bne     cache
+        bcs     cache
 
         lda     open_selector_list_params::ref_num
         sta     read_selector_list_params::ref_num
@@ -1182,7 +1182,7 @@ cache:  copy    selector_list + kSelectorListNumPrimaryRunListOffset, num_primar
 
 .proc LoadOverlayCopyDialog
 start:  MLI_CALL OPEN, open_selector_params
-        bne     error
+        bcs     error
         lda     open_selector_params::ref_num
         sta     set_mark_overlay2_params::ref_num
         sta     read_overlay2_params::ref_num
@@ -1599,7 +1599,7 @@ use_entry_path:
 
 retry:
         param_call GetFileInfo, INVOKER_PREFIX
-        beq     check_type
+        bcc     check_type
 
         ;; Not present; maybe show a retry prompt
         tax
@@ -1770,7 +1770,7 @@ found_slash:
         bne     :-
         stx     interp_path
         param_call GetFileInfo, interp_path
-        bne     pop_segment
+        bcs     pop_segment
 
         rts                     ; zero is success
 .endproc ; CheckBasixSystemImpl
@@ -1792,7 +1792,7 @@ str_extras_basic:
         bne     :-
         stx     INVOKER_INTERPRETER
         param_call GetFileInfo, INVOKER_INTERPRETER
-        jne     CheckBasixSystemImpl::basic ; nope, look relative to launch path
+        jcs     CheckBasixSystemImpl::basic ; nope, look relative to launch path
         rts
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER

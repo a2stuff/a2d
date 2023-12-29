@@ -55,7 +55,7 @@ start:
 
         ;; Open up Selector itself
         MLI_CALL OPEN, open_params
-        beq     L2049
+        bcc     L2049
         brk
 
 L2049:  lda     open_params::ref_num
@@ -72,21 +72,21 @@ L2049:  lda     open_params::ref_num
         jsr     UpdateProgress
 
         MLI_CALL SET_MARK, set_mark_params1
-        jne     crash
+        jcs     crash
         MLI_CALL READ, read_params1
-        jne     crash
+        jcs     crash
         jsr     UpdateProgress
 
         MLI_CALL SET_MARK, set_mark_params2
-        jne     crash
+        jcs     crash
         MLI_CALL READ, read_params2
-        jne     crash
+        jcs     crash
         jsr     UpdateProgress
 
         MLI_CALL SET_MARK, set_mark_params3
-        jne     crash
+        jcs     crash
         MLI_CALL READ, read_params3
-        jne     crash
+        jcs     crash
         jsr     UpdateProgress
 
         ;; Copy Alert segment to Aux LC1

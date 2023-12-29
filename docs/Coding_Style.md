@@ -112,7 +112,7 @@ xcoord: .word
 
 ```asm
 @retry: MLI_CALL GET_FILE_INFO, params
-        beq     :+
+        bcc     :+
         jsr     show_error_alert
         jmp     @retry
 ```

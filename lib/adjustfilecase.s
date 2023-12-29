@@ -39,12 +39,12 @@ vol_name:
         inc     volpath
 
         MLI_CALL OPEN, volname_open_params
-        bne     fallback
+        bcs     fallback
         lda     volname_open_params::ref_num
         sta     volname_read_params::ref_num
         sta     volname_close_params::ref_num
         MLI_CALL READ, volname_read_params
-        bne     fallback
+        bcs     fallback
         MLI_CALL CLOSE, volname_close_params
 
         copy16  volbuf + $1A, version_bytes

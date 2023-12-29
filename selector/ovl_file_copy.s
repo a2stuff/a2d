@@ -160,14 +160,14 @@ entry_index_in_block:   .byte   0
         sta     entry_index_in_dir+1
         sta     entry_index_in_block
         MLI_CALL OPEN, open_params
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
         lda     open_params::ref_num
         sta     ref_num
         sta     read_block_pointers_params::ref_num
         MLI_CALL READ, read_block_pointers_params
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
         copy    #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
@@ -184,7 +184,7 @@ entry_index_in_block:   .byte   0
         lda     ref_num
         sta     close_params::ref_num
         MLI_CALL CLOSE, close_params
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
         rts
@@ -199,7 +199,7 @@ entry_index_in_block:   .byte   0
         lda     ref_num
         sta     read_fileentry_params::ref_num
         MLI_CALL READ, read_fileentry_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
         jmp     HandleErrorCode
@@ -215,7 +215,7 @@ entry_index_in_block:   .byte   0
         lda     ref_num
         sta     read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
 
@@ -324,7 +324,7 @@ copy_jt:
         sta     LA4F9
         jsr     CopyPathsFromBufsToSrcAndDst
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
         ;; Is there enough space?
@@ -349,7 +349,7 @@ copy_jt:
         stx     pathname_dst
 
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
-        beq     check_src
+        bcc     check_src
         cmp     #ERR_FILE_NOT_FOUND
         beq     check_src
         cmp     #ERR_VOL_NOT_FOUND
@@ -360,7 +360,7 @@ copy_jt:
 
 check_src:
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        beq     LA491
+        bcc     LA491
         cmp     #ERR_VOL_NOT_FOUND
         beq     LA488
         cmp     #ERR_FILE_NOT_FOUND
@@ -409,7 +409,7 @@ LA4BF:  ldy     #(get_src_file_info_params::create_time+1 - get_src_file_info_pa
         lda     #ST_LINKED_DIRECTORY
         sta     create_params::storage_type
 :       MLI_CALL CREATE, create_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_DUPLICATE_FILENAME
         beq     :+
         jmp     HandleErrorCode
@@ -455,7 +455,7 @@ PopDstSegment:
         jsr     AppendFilenameToSrcPathname
         jsr     draw_window_content_ep2
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        beq     LA528
+        bcc     LA528
         jmp     HandleErrorCode
 
 err:    jsr     RemoveSegmentFromDstPathname
@@ -476,7 +476,7 @@ is_file:
         jsr     AppendFilenameToSrcPathname
         jsr     draw_window_content_ep2
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
         jsr     CheckSpace2
@@ -500,12 +500,12 @@ is_file:
         jsr     RemoveSegmentFromDstPathname
 
 ep2:    MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
         copy16  #0, existing_blocks
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
-        beq     exists
+        bcc     exists
         cmp     #ERR_FILE_NOT_FOUND
         beq     LA5A1
         jmp     HandleErrorCode
@@ -526,7 +526,7 @@ LA5A1:  copy    pathname_dst, saved_length
 
         ;; Total blocks/used blocks on destination volume
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
         ;; aux = total blocks
@@ -558,11 +558,11 @@ CheckSpace2 := CheckSpace::ep2
 
 .proc CopyFile
         MLI_CALL OPEN, open_params_src
-        beq     :+
+        bcc     :+
         jsr     HandleErrorCode
 :
         MLI_CALL OPEN, open_params_dst
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
         lda     open_params_src::ref_num
@@ -575,7 +575,7 @@ CheckSpace2 := CheckSpace::ep2
 loop:
         copy16  #kDirCopyBufSize, read_params_src::request_count
         MLI_CALL READ, read_params_src
-        beq     :+
+        bcc     :+
         cmp     #ERR_END_OF_FILE
         beq     done
         jmp     HandleErrorCode
@@ -584,7 +584,7 @@ loop:
         ora     read_params_src::trans_count
         beq     done
         MLI_CALL WRITE, write_params_dst
-        beq     :+
+        bcc     :+
         jmp     HandleErrorCode
 :
         lda     write_params_dst::trans_count
@@ -612,7 +612,7 @@ done:
         bne     :-
 
         MLI_CALL CREATE, create_params2
-        beq     :+
+        bcc     :+
         cmp     #ERR_DUPLICATE_FILENAME
         jne     HandleErrorCode
 :       clc                     ; treated as success
@@ -648,7 +648,7 @@ enum_jt:
 
         jsr     CopyPathsFromBufsToSrcAndDst
 LA6E3:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        beq     LA6FF
+        bcc     LA6FF
         cmp     #ERR_VOL_NOT_FOUND
         beq     LA6F6
         cmp     #ERR_FILE_NOT_FOUND
@@ -706,7 +706,7 @@ visit:  jsr     EnumerateVisitFile
 
         jsr     AppendFilenameToSrcPathname
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        bne     :+
+        bcs     :+
         add16   blocks_total, get_src_file_info_params::blocks_used, blocks_total
 :       inc16   file_count
         jsr     RemoveSegmentFromSrcPathname

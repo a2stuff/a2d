@@ -263,7 +263,7 @@ exit_hook := MaybeCallExitHook::hook
 .proc ShowFile
         ;; Check file type
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
-        beq     :+
+        bcc     :+
 fail:   rts
 
 :       lda     get_file_info_params::file_type

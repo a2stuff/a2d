@@ -479,7 +479,7 @@ str_selector_list:
 
 .proc ReadSelectorList
         MLI_CALL OPEN, open_params
-        bne     WriteSelectorList
+        bcs     WriteSelectorList
 
         lda     open_params::ref_num
         sta     read_params::ref_num
@@ -508,7 +508,7 @@ ploop:  ldy     #0
 
         ;; Write out file
         MLI_CALL CREATE, create_params
-        bne     done
+        bcs     done
         MLI_CALL OPEN, open_params
         lda     open_params::ref_num
         sta     write_params::ref_num
@@ -533,7 +533,7 @@ end:
 
         ;; Does the directory exist?
         MLI_CALL GET_FILE_INFO, get_file_info_params
-        beq     :+
+        bcc     :+
         jmp     end
 
 :       lda     get_file_info_type

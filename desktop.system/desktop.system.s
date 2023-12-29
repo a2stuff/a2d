@@ -273,7 +273,7 @@ filename:
 
         ;; Get source dir info
 okerr:  MLI_CALL GET_FILE_INFO, get_path2_info_params
-        beq     gfi_ok
+        bcc     gfi_ok
         cmp     #ERR_VOL_NOT_FOUND
         beq     prompt
         cmp     #ERR_FILE_NOT_FOUND
@@ -316,7 +316,7 @@ is_dir:
         lda     #ST_LINKED_DIRECTORY
         sta     create_params::storage_type
 :       MLI_CALL CREATE, create_params
-        bne     fail
+        bcs     fail
 
         is_dir_flag := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -345,7 +345,7 @@ is_dir:
         jsr     AppendFilenameToPath2
         jsr     ShowCopyingScreen
         MLI_CALL GET_FILE_INFO, get_path2_info_params
-        beq     ok
+        bcc     ok
 fail:   jmp     (hook_handle_error_code)
 
 onerr:  lda     #$FF
@@ -364,7 +364,7 @@ do_file:
         jsr     AppendFilenameToPath2
         jsr     ShowCopyingScreen
         MLI_CALL GET_FILE_INFO, get_path2_info_params
-        bne     fail
+        bcs     fail
 
         jsr     CheckSpaceAvailable
         bcc     :+
@@ -397,7 +397,7 @@ cleanup:
         ;; Get source size
 
         MLI_CALL GET_FILE_INFO, get_path2_info_params
-        bne     fail
+        bcs     fail
 
         ;; --------------------------------------------------
         ;; Get destination size (in case of overwrite)
@@ -406,7 +406,7 @@ cleanup:
         sta     dst_size        ; default 0, if it doesn't exist
         sta     dst_size+1
         MLI_CALL GET_FILE_INFO, get_path1_info_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_FILE_NOT_FOUND
         beq     got_dst_size    ; this is fine
 fail:   jmp     (hook_handle_error_code)
@@ -431,7 +431,7 @@ got_dst_size:
 
         ;; Get volume info
         MLI_CALL GET_FILE_INFO, get_path1_info_params
-        beq     :+
+        bcc     :+
         jmp     (hook_handle_error_code)
 
         ;; Free = Total - Used
@@ -466,11 +466,11 @@ dst_size:       .word   0
 .proc CopyNormalFile
         ;; Open source
         MLI_CALL OPEN, open_srcfile_params
-        bne     fail
+        bcs     fail
 
         ;; Open destination
         MLI_CALL OPEN, open_dstfile_params
-        bne     fail
+        bcs     fail
 
         lda     open_srcfile_params::ref_num
         sta     read_srcfile_params::ref_num
@@ -483,7 +483,7 @@ dst_size:       .word   0
 loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
         jsr     CheckCancel
         MLI_CALL READ, read_srcfile_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_END_OF_FILE
         beq     close
 fail:
@@ -495,7 +495,7 @@ fail:
         beq     close
         jsr     CheckCancel
         MLI_CALL WRITE, write_dstfile_params
-        bne     fail
+        bcs     fail
 
         ;; More to copy?
         lda     write_dstfile_params::trans_count
@@ -511,7 +511,7 @@ close:  MLI_CALL CLOSE, close_dstfile_params
 
         ;; Copy file info
         MLI_CALL GET_FILE_INFO, get_path2_info_params
-        bne     fail
+        bcs     fail
         COPY_BYTES $B, get_path2_info_params::access, get_path1_info_params::access
 
         copy    #7, get_path1_info_params ; `SET_FILE_INFO` param_count
@@ -556,8 +556,7 @@ cancel: lda     #kErrCancel
         lda     #ST_LINKED_DIRECTORY
         sta     create_dir_params::storage_type
 :       MLI_CALL CREATE, create_dir_params
-        clc
-        beq     :+
+        bcc     :+
         jmp     (hook_handle_error_code)
 :       rts
 .endproc ; CreateDir
@@ -616,7 +615,7 @@ entry_index_in_block:   .byte   0
         sta     entry_index_in_dir+1
         sta     entry_index_in_block
         MLI_CALL OPEN, open_path2_params
-        beq     :+
+        bcc     :+
 fail:
         jmp     (hook_handle_error_code)
 
@@ -625,7 +624,7 @@ fail:
         sta     ref_num
         sta     read_block_pointers_params::ref_num
         MLI_CALL READ, read_block_pointers_params
-        bne     fail
+        bcs     fail
 
         ;; Header size is next/prev blocks + a file entry
         .assert .sizeof(SubdirectoryHeader) = .sizeof(FileEntry) + 4, error, "incorrect struct size"
@@ -643,7 +642,7 @@ fail:
         lda     ref_num
         sta     close_params::ref_num
         MLI_CALL CLOSE, close_params
-        beq     :+
+        bcc     :+
         jmp     (hook_handle_error_code)
 :       rts
 .endproc ; DoCloseFile
@@ -659,7 +658,7 @@ fail:
         lda     ref_num
         sta     read_fileentry_params::ref_num
         MLI_CALL READ, read_fileentry_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
 fail:   jmp     (hook_handle_error_code)
@@ -678,7 +677,7 @@ fail:   jmp     (hook_handle_error_code)
         lda     ref_num
         sta     read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
-        bne     fail
+        bcs     fail
 
 done:   rts
 
@@ -1070,7 +1069,7 @@ test_unit_num:
         and     #UNIT_NUM_MASK  ; explicitly not masked above
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
-        bne     next_unit
+        bcs     next_unit
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
         beq     next_unit
@@ -1150,7 +1149,7 @@ test_unit_num:
         ;; Create desktop directory, e.g. "/RAM/DESKTOP"
 
         MLI_CALL CREATE, create_dt_dir_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_DUPLICATE_FILENAME
         beq     :+
         jsr     DidNotCopy
@@ -1417,7 +1416,7 @@ done:   rts
         jsr     AppendFilenameToDstPath
         jsr     AppendFilenameToSrcPath
         MLI_CALL GET_FILE_INFO, get_file_info_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_FILE_NOT_FOUND
         beq     cleanup
         jmp     DidNotCopy
@@ -1497,12 +1496,12 @@ str_self_filename:
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params
-        bne     :+
+        bcs     :+
         lda     open_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
         MLI_CALL WRITE, write_params
-        bne     :+
+        bcs     :+
         MLI_CALL CLOSE, close_params
 :       rts
 .endproc ; UpdateSelfFileImpl
@@ -1686,7 +1685,7 @@ entry_dir_name:
 
         ;; If already exists, consider that a success
         MLI_CALL GET_FILE_INFO, gfi_params
-        RTS_IF_ZERO
+        RTS_IF_CC
 
         ;; Install callbacks and invoke
         copy16  #HandleErrorCode, GenericCopy::hook_handle_error_code
@@ -1766,7 +1765,7 @@ str_selector_list:
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params
-        bne     :+
+        bcs     :+
         lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
@@ -2056,15 +2055,15 @@ start:  MLI_CALL CLOSE, close_everything_params
         bne     :+
 
         MLI_CALL OPEN, open_selector_params
-        beq     selector
+        bcc     selector
 
 :       MLI_CALL OPEN, open_desktop_params
-        beq     desktop
+        bcc     desktop
 
         ;; But if DeskTop wasn't present, ignore options and try Selector.
         ;; This supports a Selector-only install without config, e.g. by admins.
         MLI_CALL OPEN, open_selector_params
-        beq     selector
+        bcc     selector
 
 crash:  brk                     ; just crash
 
@@ -2148,7 +2147,7 @@ start:  bit     LCBANK2
         copy16  DATELO, create_params::create_date
         copy16  TIMELO, create_params::create_time
         MLI_CALL CREATE, create_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_DUPLICATE_FILENAME
         bne     done
 

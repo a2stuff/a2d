@@ -806,14 +806,14 @@ index:  .byte   0
 .proc GetFileInfo
         copy    #$A, gfi_params::param_count ; GET_FILE_INFO
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, gfi_params
-        jne     Abort
+        jcs     Abort
         rts
 .endproc ; GetFileInfo
 
 .proc SetFileInfo
         copy    #7, gfi_params::param_count ; SET_FILE_INFO
         JUMP_TABLE_MLI_CALL SET_FILE_INFO, gfi_params
-        jne     Abort
+        jcs     Abort
         rts
 .endproc ; SetFileInfo
 

@@ -881,7 +881,7 @@ tmp_path_buf:
 
         ;; Get the file info to determine type.
         jsr     GetSrcFileInfo
-        beq     :+
+        bcc     :+
         jmp     ShowAlert
 
         ;; Check file type.
@@ -912,7 +912,7 @@ tmp_path_buf:
         ;; Fallback - try BASIS.SYSTEM
 fallback:
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
-        beq     launch           ; yes, continue below
+        bcc     launch           ; yes, continue below
         param_jump ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_cannot_open
 
         ;; --------------------------------------------------
@@ -947,7 +947,7 @@ launch:
         ;; --------------------------------------------------
         ;; BASIC program
 basic:  jsr     CheckBasicSystem ; Only launch if BASIC.SYSTEM is found
-        jeq     launch
+        jcc     launch
         lda     #kErrBasicSysNotFound
         jmp     ShowAlert
 
@@ -1006,7 +1006,7 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
 ;;; Check `src_path_buf`'s ancestors to see if the desired interpreter
 ;;; (BASIC.SYSTEM or BASIS.SYSTEM) is present.
 ;;; Input: `src_path_buf` set to target path
-;;; Output: zero if found, non-zero if not found
+;;; Output: C=0 if found, C=1 if not found
 
 .proc CheckBasixSystemImpl
         launch_path := INVOKER_PREFIX
@@ -1030,13 +1030,13 @@ pop_segment:
         ;; Append BASI?.SYSTEM to path and check for file.
         param_call AppendToInvokerInterpreter, str_basix_system
         param_call GetFileInfo, interp_path
-        beq     ret             ; zero is success
+        bcc     ret
 
         param_call RemovePathSegment, interp_path
         bne     pop_segment     ; always
 
 no_bs:  copy    #0, interp_path ; null out the path
-        lda     #$FF            ; non-zero is failure
+        sec
 
 ret:    rts
 .endproc ; CheckBasixSystemImpl
@@ -1046,7 +1046,7 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         ldax    #str_extras_basic
         jsr     GetPrefixAndAppendToInvokerInterpreter
         param_call GetFileInfo, INVOKER_INTERPRETER
-        jne     CheckBasixSystemImpl::basic ; nope, look relative to launch path
+        jcs     CheckBasixSystemImpl::basic ; nope, look relative to launch path
         rts
 .endproc ; CheckBasicSystem
 
@@ -1718,7 +1718,7 @@ CmdDeskAcc      := CmdDeskaccImpl::start
 
         ;; Load the DA
 retry:  MLI_CALL OPEN, open_params
-        beq     :+
+        bcc     :+
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
         cmp     #kAlertResultOK
@@ -2341,7 +2341,7 @@ start:
         jsr     SaveWindows
 
         MLI_CALL OPEN, open_params
-        beq     :+
+        bcc     :+
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
         cmp     #kAlertResultOK
@@ -2432,7 +2432,7 @@ retry:  lda     active_window_id
 
         ;; Create folder
         MLI_CALL CREATE, create_params
-        beq     success
+        bcc     success
 
         ;; Failure
         jsr     ShowAlert
@@ -2763,7 +2763,7 @@ start:
 
         ;; Load and run/reinstall previous QUIT handler.
         MLI_CALL OPEN, open_params
-        bne     fail
+        bcs     fail
         lda open_params::ref_num
         sta read_params::ref_num
         sta close_params::ref_num
@@ -5501,7 +5501,7 @@ loop:
 
         ;; See if it exists
         jsr     GetSrcFileInfo
-        beq     next
+        bcc     next
 
         ;; Nope - close the window
         lda     window_id
@@ -6777,7 +6777,7 @@ finish: copy16  record_ptr, filerecords_free_start
 
 .proc DoOpen
         MLI_CALL OPEN, open_params
-        beq     done
+        bcc     done
 
         ;; On error, clean up state
 
@@ -6852,7 +6852,7 @@ DoClose:
 
         ;; Get volume information
         jsr     GetSrcFileInfo
-        bne     finish          ; failure
+        bcs     finish          ; failure
 
         ;; aux = total blocks
         copy16  src_file_info_params::blocks_used, vol_kb_used
@@ -9136,7 +9136,7 @@ done:
 not_sp:
         ;; Not SmartPort - try AppleTalk
         MLI_CALL READ_BLOCK, block_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_NETWORK_ERROR
         bne     :+
         ldax    #str_device_type_appletalk
@@ -9247,7 +9247,7 @@ GetBlockCount   := GetBlockCountImpl::start
         and     #UNIT_NUM_MASK
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
-        beq     success
+        bcc     success
 
 error:  pha                     ; save error
         ldy     devlst_index      ; remove unit from list
@@ -9803,7 +9803,7 @@ restore:
         copy16  addr_table,y, read_params::data_buffer
 
 retry:  MLI_CALL OPEN, open_params
-        beq     :+
+        bcc     :+
 
         lda     #kErrInsertSystemDisk
         button_options := *+1
@@ -10419,7 +10419,7 @@ loop:   ldx     get_info_dialog_params::index
 
         ;; Try to get file info
 common: jsr     GetSrcFileInfo
-    IF_NE
+    IF_CS
         jsr     ShowAlert
         cmp     #kAlertResultTryAgain
         beq     common
@@ -10463,7 +10463,7 @@ vol_icon2:
         and     #UNIT_NUM_MASK
         sta     getinfo_block_params::unit_num
         MLI_CALL READ_BLOCK, getinfo_block_params
-        bne     common2
+        bcs     common2
         MLI_CALL WRITE_BLOCK, getinfo_block_params
         cmp     #ERR_WRITE_PROTECTED
         bne     common2
@@ -10785,7 +10785,7 @@ ok:
 
         ;; Already exists? (Mostly for volumes, but works for files as well)
         jsr     GetDstFileInfo
-        bne     :+
+        bcs     :+
         lda     #ERR_DUPLICATE_FILENAME
         jsr     ShowAlert
         jmp     retry
@@ -10797,7 +10797,7 @@ no_change:
         jsr     ApplyCaseBits
 
         MLI_CALL RENAME, rename_params
-        beq     finish
+        bcc     finish
         ;; Failed, maybe retry
         jsr     ShowAlert       ; Alert options depend on specific ProDOS error
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
@@ -11203,7 +11203,7 @@ success:
         ;; Check for unchanged/duplicate name
 
         jsr     GetDstFileInfo
-    IF_ZERO
+    IF_CC
         lda     #ERR_DUPLICATE_FILENAME
         jsr     ShowAlert
         jmp     retry
@@ -11359,7 +11359,7 @@ do_op_flag:
         sta     entries_read_this_block
 
 @retry: MLI_CALL OPEN, open_src_dir_params
-        beq     :+
+        bcc     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
@@ -11371,7 +11371,7 @@ do_op_flag:
         sta     read_block_pointers_params::ref_num
 
 @retry2:MLI_CALL READ, read_block_pointers_params
-        beq     :+
+        bcc     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
@@ -11385,7 +11385,7 @@ do_op_flag:
         lda     op_ref_num
         sta     close_src_dir_params::ref_num
 @retry: MLI_CALL CLOSE, close_src_dir_params
-        beq     :+
+        bcc     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
@@ -11400,7 +11400,7 @@ do_op_flag:
         lda     op_ref_num
         sta     read_src_dir_entry_params::ref_num
 @retry: MLI_CALL READ, read_src_dir_entry_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
         ldx     #AlertButtonOptions::TryAgainCancel
@@ -11672,7 +11672,7 @@ common:
         jsr     DecFileCountAndRunCopyDialogProc
 
 @retry: jsr     GetSrcFileInfo
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     @retry
 :
@@ -11783,7 +11783,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 
         ;; Was a move - delete file
 @retry: MLI_CALL DESTROY, destroy_params
-        beq     done
+        bcc     done
         cmp     #ERR_ACCESS_ERROR
         bne     :+
         jsr     UnlockSrcFile
@@ -11808,7 +11808,7 @@ done:   rts
 
 .proc CheckVolBlocksFree
 @retry: jsr     GetDstFileInfo
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlertDst
         jmp     @retry
 
@@ -11837,7 +11837,7 @@ blocks_free:
 
         ;; Does destination exist?
 @retry2:jsr     GetDstFileInfo
-        beq     got_exist_size
+        bcc     got_exist_size
         cmp     #ERR_FILE_NOT_FOUND
         beq     :+
         jsr     ShowErrorAlertDst ; retry if destination not present
@@ -11932,7 +11932,7 @@ existing_size:
         sta     create_params3::storage_type
 :
 retry:  MLI_CALL CREATE, create_params3
-        beq     success
+        bcc     success
 
         cmp     #ERR_DUPLICATE_FILENAME
         bne     err
@@ -12088,7 +12088,7 @@ Start:  lda     DEVNUM
         ;; Delete the file at the source location.
 
 :       MLI_CALL DESTROY, destroy_params
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     :-
 :
@@ -12099,12 +12099,12 @@ Start:  lda     DEVNUM
 .proc ReadBlocks
 :
         MLI_CALL READ_BLOCK, src_block_params
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     :-
 :
         MLI_CALL READ_BLOCK, dst_block_params
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     :-
 :
@@ -12116,12 +12116,12 @@ Start:  lda     DEVNUM
 .proc WriteBlocks
 :
         MLI_CALL WRITE_BLOCK, src_block_params
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     :-
 :
         MLI_CALL WRITE_BLOCK, dst_block_params
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     :-
 :
@@ -12176,7 +12176,7 @@ write:  bit     src_eof_flag
         jsr     CopySrcRefNum
 
         MLI_CALL SET_MARK, mark_src_params
-        beq     read
+        bcc     read
         copy    #$FF, src_eof_flag
         jmp     read
 
@@ -12190,7 +12190,7 @@ eof:    jsr     CloseDst
 
 .proc OpenSrc
 @retry: MLI_CALL OPEN, open_src_params
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     @retry
 :       rts
@@ -12206,7 +12206,7 @@ eof:    jsr     CloseDst
 
 .proc OpenDst
 @retry: MLI_CALL OPEN, open_dst_params
-        beq     done
+        bcc     done
         cmp     #ERR_VOL_NOT_FOUND
         beq     not_found
         jsr     ShowErrorAlertDst
@@ -12230,7 +12230,7 @@ done:   rts
 .proc ReadSrc
         copy16  #kBufSize, read_src_params::request_count
 @retry: MLI_CALL READ, read_src_params
-        beq     :+
+        bcc     :+
         cmp     #ERR_END_OF_FILE
         beq     eof
         jsr     ShowErrorAlert
@@ -12246,7 +12246,7 @@ eof:    copy    #$FF, src_eof_flag
 
 .proc WriteDst
 @retry: MLI_CALL WRITE, write_dst_params
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlertDst
         jmp     @retry
 :       MLI_CALL GET_MARK, mark_dst_params
@@ -12366,7 +12366,7 @@ a_path: .addr   src_path_buf
         jsr     DecFileCountAndRunDeleteDialogProc
 
 @retry: jsr     GetSrcFileInfo
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     @retry
 
@@ -12396,7 +12396,7 @@ do_destroy:
 
 .proc DeleteFileCommon
 retry:  MLI_CALL DESTROY, destroy_params
-        beq     done
+        bcc     done
 
         ;; Failed - determine why, maybe try to unlock.
         ;; TODO: If it's a directory, this could be because it's not empty,
@@ -12516,7 +12516,7 @@ callbacks_for_size_or_count:
 .proc EnumerationProcessSelectedFile
         jsr     CopyPathsFromBufsToSrcAndDst
 @retry: jsr     GetSrcFileInfo
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     @retry
 
@@ -12915,7 +12915,7 @@ match:  lda     flag
 
         ;; Same vol - but are block operations supported?
 @retry: param_call_indirect GetFileInfo, src_ptr
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlert
         jmp     @retry
 :
@@ -12943,7 +12943,7 @@ match:  lda     flag
 
         ;; If a regular file, open/set eof/close
         MLI_CALL OPEN, open_dst_params
-        beq     :+
+        bcc     :+
         jsr     ShowErrorAlertDst
         jmp     :-              ; retry
 
@@ -12951,7 +12951,7 @@ match:  lda     flag
         sta     set_eof_params::ref_num
         sta     close_dst_params::ref_num
 @retry: MLI_CALL SET_EOF, set_eof_params
-        beq     close
+        bcc     close
         jsr     ShowErrorAlertDst
         jmp     @retry
 
@@ -12970,7 +12970,7 @@ done:   rts
         pha
         copy    #$A, dst_file_info_params::param_count ; GET_FILE_INFO
         pla
-        beq     done
+        bcc     done
         jsr     ShowErrorAlertDst
         jmp     :-
 
@@ -13613,7 +13613,7 @@ do_close:
     END_IF
         sta     src_file_info_params::access
         jsr     SetSrcFileInfo
-        bne     ret
+        bcs     ret
         ;; TODO: Show alert, offer retry on failure?
 
         ;; Toggle UI

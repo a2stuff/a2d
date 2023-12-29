@@ -1004,7 +1004,7 @@ filename:
 
 @retry: MLI_CALL CREATE, create_params
         MLI_CALL OPEN, open_origpfx_params
-        beq     write
+        bcc     write
 
         ;; First time - ask if we should even try.
         lda     second_try_flag
@@ -1029,7 +1029,7 @@ write:  lda     open_origpfx_params::ref_num
         sta     close_params::ref_num
 
 @retry: MLI_CALL WRITE, write_params
-        beq     close
+        bcc     close
         jsr     ShowAlert
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
@@ -1046,7 +1046,7 @@ second_try_flag:
 
 .proc ReadFile
 @retry: MLI_CALL OPEN, open_curpfx_params
-        beq     read
+        bcc     read
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
         cmp     #kAlertResultOK
@@ -1070,7 +1070,7 @@ read:   lda     open_curpfx_params::ref_num
 
 .proc WriteFile
 @retry: MLI_CALL OPEN, open_curpfx_params
-        beq     write
+        bcc     write
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
         cmp     #kAlertResultOK
@@ -1081,7 +1081,7 @@ write:  lda     open_curpfx_params::ref_num
         sta     write_params::ref_num
         sta     close_params::ref_num
 @retry: MLI_CALL WRITE, write_params
-        beq     close
+        bcc     close
         jsr     ShowAlert
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0

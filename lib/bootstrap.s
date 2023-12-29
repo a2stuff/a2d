@@ -117,18 +117,18 @@ retry:
 
         ;; Load the target module's loader at $2000
         MLI_CALL SET_PREFIX, prefix_params
-        bne     prompt_for_system_disk
+        bcs     prompt_for_system_disk
         MLI_CALL OPEN, open_params
-        bne     ErrorHandler
+        bcs     ErrorHandler
         lda     open_params__ref_num
         sta     set_mark_params__ref_num
         sta     read_params__ref_num
         MLI_CALL SET_MARK, set_mark_params
-        bne     ErrorHandler
+        bcs     ErrorHandler
         MLI_CALL READ, read_params
-        bne     ErrorHandler
+        bcs     ErrorHandler
         MLI_CALL CLOSE, close_params
-        bne     ErrorHandler
+        bcs     ErrorHandler
 
         ;; Invoke it
         jmp     kSegmentLoaderAddress

@@ -109,7 +109,7 @@ start:
 
         ;; Open this system file
         MLI_CALL OPEN, open_params
-        beq     :+
+        bcc     :+
         brk                     ; crash
 :       lda     open_params::ref_num
         sta     set_mark_params::ref_num
@@ -125,7 +125,7 @@ segment_num := * + 1
 
         ;; Close
         MLI_CALL CLOSE, close_params
-        beq     :+
+        bcc     :+
         brk                     ; crash
 :
         jmp     kSegmentInitializerAddress
@@ -135,13 +135,13 @@ continue:
         copy    segment_offset_table_high,x, set_mark_params::position+1
         copy    segment_offset_table_bank,x, set_mark_params::position+2
         MLI_CALL SET_MARK, set_mark_params
-        beq     :+
+        bcc     :+
         brk                     ; crash
 :
         copylohi segment_addr_table_low,x, segment_addr_table_high,x, read_params::data_buffer
         copylohi segment_size_table_low,x, segment_size_table_high,x, read_params::request_count
         MLI_CALL READ, read_params
-        beq     :+
+        bcc     :+
         brk                     ; crash
 :
         ldx     segment_num

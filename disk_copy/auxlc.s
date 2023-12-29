@@ -571,7 +571,7 @@ prompt_insert_source:
         lda     drive_unitnum_table,x
         sta     main__on_line_params2_unit_num
         jsr     main__CallOnLine2
-        beq     source_is_pro
+        bcc     source_is_pro
 
 check_source_error:
         cmp     #ERR_NOT_PRODOS_VOLUME
@@ -622,7 +622,7 @@ check_source_finish:
         lda     drive_unitnum_table,x
         sta     main__on_line_params2_unit_num
         jsr     main__CallOnLine2
-        beq     dest_is_pro
+        bcc     dest_is_pro
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     dest_ok
         jmp     try_format      ; Can't even read drive - try formatting
@@ -651,7 +651,7 @@ dest_ok:
         copy16  #0, main__block_params_block_num
         copy16  #default_block_buffer, main__block_params_data_buffer
         jsr     main__ReadBlock
-        bne     use_sd
+        bcs     use_sd
         jsr     IsPascalBootBlock
         bcs     use_sd
 
@@ -1153,7 +1153,7 @@ default_block_buffer := main__default_block_buffer
         copy16  #0, main__block_params_block_num
         copy16  #default_block_buffer, main__block_params_data_buffer
         jsr     main__ReadBlock
-        bne     fail
+        bcs     fail
 
         jsr     IsPascalBootBlock
         bne     try_dos33
@@ -1277,7 +1277,7 @@ match:  clc
         stax    ptr
         copy16  #2, main__block_params_block_num
         jsr     main__ReadBlock
-    IF_NOT_ZERO
+    IF_CS
         ;; Just use a single space as the name
         ldy     #0
         lda     #1
@@ -1448,7 +1448,7 @@ draw:   jmp     DrawDeviceListEntry
         lda     #$00
         sta     main__on_line_params2_unit_num
         jsr     main__CallOnLine2
-        beq     :+
+        bcc     :+
 
         brk                     ; rude!
 
@@ -2316,7 +2316,7 @@ find_in_alert_table:
         lda     unit_num
         sta     main__on_line_params_unit_num
         jsr     main__CallOnLine
-        beq     done
+        bcc     done
 
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done

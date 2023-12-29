@@ -112,7 +112,7 @@ quit:   MLI_CALL QUIT, quit_params
 .proc CheckBasicSystem
         ;; Check well known location first
         JUMP_TABLE_MLI_CALL GET_PREFIX, get_prefix_params
-        bne     no_bs
+        bcs     no_bs
 
         ldy     #0
         ldx     bs_path
@@ -125,7 +125,7 @@ quit:   MLI_CALL QUIT, quit_params
         stx     bs_path
 
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
-        RTS_IF_ZERO             ; zero is success
+        RTS_IF_CC
 
         ;; Not there - search from `prefix_path` upwards
         ldx     prefix_path
@@ -148,7 +148,7 @@ loop:
         bne     :-
         stx     bs_path
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
-        bne     not_found
+        bcs     not_found
         rts                     ; zero is success
 
         ;; Pop off a path segment and try again.

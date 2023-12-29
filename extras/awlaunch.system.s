@@ -187,7 +187,7 @@ ConstructPath:
         ;; Try to load APLWORKS.SYSTEM file
 
         MLI_CALL OPEN, open_params
-        bne     quit
+        bcs     quit
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
@@ -195,7 +195,7 @@ ConstructPath:
         pha
         MLI_CALL CLOSE, close_params
         pla
-        beq     CheckPath
+        bcc     CheckPath
 
 quit:   MLI_CALL QUIT, quit_params
         brk
@@ -220,7 +220,7 @@ CheckPath:
 
         ;; Relative - make `PATHBUF` absolute using PREFIX
         MLI_CALL GET_PREFIX, prefix_params
-        beq     :+
+        bcc     :+
         jmp     LaunchAppleWorks ; TODO: or QUIT?
 :
         ldx     PATHBUF2        ; `PATHBUF2` is PREFIX

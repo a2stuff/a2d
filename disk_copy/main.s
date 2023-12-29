@@ -204,7 +204,7 @@ EjectDisk := EjectDiskImpl::start
         sta     block_params::block_num
         sta     block_params::block_num+1
         jsr     ReadBlock
-        bne     fail
+        bcs     fail
 
         ;; Pascal?
         jsr     auxlc::IsPascalBootBlock
@@ -299,7 +299,7 @@ loop:
         lda     block_params::data_buffer+1
         jsr     MarkUsedInMemoryBitmap
         jsr     ReadBlock
-        beq     :+
+        bcc     :+
         brk                     ; rude!
 :
         sub16   block_count_div8, #$200, block_count_div8
@@ -821,7 +821,7 @@ table:
 ;;; Returns with 0 on success or N=1 on failure
 .proc ReadBlockWithRetry
 retry:  jsr     ReadBlock
-        beq     done
+        bcc     done
         ldx     #0              ; reading
         jsr     auxlc::ShowBlockError
         bmi     done
@@ -902,7 +902,7 @@ loop:   lda     default_block_buffer,y
 ;;; Input: `block_params::data_buffer` populated
 .proc WriteBlockWithRetry
 retry:  jsr     WriteBlock
-        beq     done
+        bcc     done
         ldx     #$80            ; writing
         jsr     auxlc::ShowBlockError
         beq     done

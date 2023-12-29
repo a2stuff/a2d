@@ -462,7 +462,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         copy    #'/', path+1
 
         MLI_CALL GET_FILE_INFO, get_file_info_params
-        bne     no_match
+        bcs     no_match
 
         ;; A volume with that name exists... but is it the one
         ;; we're about to format/erase?
@@ -652,7 +652,7 @@ L1398:  stxy    total_blocks
         copy16  #prodos_loader_blocks, write_block_params::data_buffer
         copy16  #0, write_block_params::block_num
         MLI_CALL WRITE_BLOCK, write_block_params
-        beq     :+
+        bcc     :+
         jmp     fail2
 
         ;; Write second block of loader
@@ -864,7 +864,7 @@ fail2:  sec
 
 .proc WriteBlockAndZero
         MLI_CALL WRITE_BLOCK, write_block_params
-        bne     fail
+        bcs     fail
         jsr     zero_buffers
         inc     write_block_params::block_num
         rts
@@ -934,7 +934,7 @@ prodos_loader_blocks:
         sta     read_block_params::unit_num
         copy16  #0, read_block_params::block_num
         MLI_CALL READ_BLOCK, read_block_params
-        bne     unknown         ; failure
+        bcs     unknown         ; failure
         lda     read_buffer + 1
         cmp     #kPascalSig1    ; DOS 3.3?
         beq     :+              ; Maybe...
@@ -1006,7 +1006,7 @@ maybe_dos:
 pascal_disk:
         copy16  #$0002, read_block_params::block_num
         MLI_CALL READ_BLOCK, read_block_params
-        beq     :+
+        bcc     :+
         ;; Pascal disk, empty name - use " :" (weird, but okay?)
         copy    #2, ovl_string_buf
         copy    #' ', ovl_string_buf+1
@@ -1035,7 +1035,7 @@ pascal_disk:
 .proc GetVolName
         sta     on_line_params::unit_num
         MLI_CALL ON_LINE, on_line_params
-        bne     non_pro
+        bcs     non_pro
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
         beq     non_pro

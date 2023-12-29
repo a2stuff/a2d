@@ -1021,12 +1021,12 @@ found:  param_call AdjustVolumeNameCase, on_line_buffer
         jeq     _ReadDrives
 
         MLI_CALL OPEN, open_params
-        bne     err
+        bcs     err
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         MLI_CALL READ, read_params
-        beq     :+
+        bcc     :+
 err:    copy    #1, path_buf
         jmp     _ReadDrives
 :
