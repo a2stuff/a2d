@@ -23,7 +23,7 @@
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          | MP Src    | | MP Dst    |
-;;;  $1580   +-----------+ +-----------+
+;;;  $1600   +-----------+ +-----------+
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
@@ -36,9 +36,9 @@
         kHiresSize = $2000
 
         ;; Minipix/Print Shop images are loaded/converted
-        minipix_src_buf := $1580 ; Load address (main)
+        minipix_src_buf := $1600 ; Load address (main)
         kMinipixSrcSize = 576
-        minipix_dst_buf := $1580 ; Convert address (aux)
+        minipix_dst_buf := $1600 ; Convert address (aux)
         kMinipixDstSize = 26*52
 
         dir_path := $380
@@ -274,12 +274,21 @@ fail:   rts
         cmp     #FT_GRAPHICS
         bne     get_eof
 
-        ;; FOT files - auxtype $4000 / $4001 are packed hires/double-hires
-        lda     get_file_info_params::aux_type+1
-        cmp     #$40
+        ;; FOT files
+        lda     get_file_info_params::aux_type
+        ldx     get_file_info_params::aux_type+1
+
+        ;; auxtype $8066 - LZ4FH packed image
+        cpx     #$80
+        bne     :+
+        cmp     #$66
+        bne     :+
+        jmp     ShowLZ4FHFile
+:
+        ;; auxtype $4000 / $4001 are packed hires/double-hires
+        cpx     #$40
         bne     ShowFOTFile
 
-        lda     get_file_info_params::aux_type
         cmp     #$00
         bne     :+
         jmp     ShowPackedHRFile
@@ -363,6 +372,46 @@ finish:
 signature:
         .byte   0
 .endproc ; ShowFOTFile
+
+;;; ============================================================
+
+;;; Output: C=0 on success, C=1 on failure
+.proc ShowLZ4FHFile
+        sta     PAGE2OFF
+
+        copy16  #OVERLAY_10K_BUFFER, read_params::data_buffer
+        JUMP_TABLE_MLI_CALL READ, read_params
+        copy16  #$2000, read_params::data_buffer
+
+        ;; NOTE: `Init` also calls `CLOSE`, but it's harmless to call
+        ;; it twice.
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+
+        copy16  #OVERLAY_10K_BUFFER, LZ4FH__in_src
+        copy16  #$2000, LZ4FH__in_dst
+        jsr     LZ4FH
+        php
+
+        lda     #kDynamicRoutineRestore10K
+        jsr     JUMP_TABLE_RESTORE_OVL
+
+        ;; `JUMP_TABLE_RESTORE_OVL` calls `MGTK::SetCursor` which
+        ;; resets the cursor count and shows it, so we need to hide
+        ;; it again before the HR->DHR conversion.
+        JUMP_TABLE_MGTK_CALL MGTK::HideCursor
+
+        plp
+        bne     fail
+
+        jsr     HRToDHR
+
+        clc                     ; success
+        rts
+
+fail:   sec                     ; failure
+        rts
+
+.endproc ; ShowLZ4FHFile
 
 ;;; ============================================================
 
@@ -1466,6 +1515,12 @@ str_a2hr_suffix:
 
         .include "../inc/hires_table.inc"
         .include "inc/hr_to_dhr.inc"
+
+.proc LZ4FH
+        .include "../lib/lz4fh6502.s"
+.endproc
+LZ4FH__in_src := LZ4FH::in_src
+LZ4FH__in_dst := LZ4FH::in_dst
 
 ;;; ============================================================
 

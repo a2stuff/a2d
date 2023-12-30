@@ -19,6 +19,7 @@ DeskTop-internal types:
 
 Proposed types:
 
+* $08 FOT / $8066 - LZ4FH image - https://github.com/fadden/fhpack
 * $5B ANM / $10xx - Animation / Video stream - https://github.com/frankmilliron/play.vids.system
   * $1001 - GR - sequence of $400-byte frames
   * $1002 - DGR - sequence of $800-byte frames (aux first)
