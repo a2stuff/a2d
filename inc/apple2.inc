@@ -173,7 +173,10 @@ NEWVIDEO        := $C029        ; IIgs - new video modes
         ;; Bit 7 = 1 = Enable Super-Hi-Res
         ;; Bit 6 = 1 = Linearize SHR
         ;; Bit 5 = 0 = Color DHR, 1 = B/W DHR
-        ;; Bits 4-0 must be 0
+        ;; Bits 4-1 must be 0
+        ;; Bit 0 = Enable bank 1 latch to allow long instructions
+        ;;         to access bank 1 directly; set by Monitor
+        ;;         only; a programmer must not change this bit.
 
 MACIIE          := $C02B        ; Macintosh IIe Option Card
         ;; Tech Note: Apple IIe #10: The Apple IIe Card for the Macintosh LC

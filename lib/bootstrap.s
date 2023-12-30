@@ -82,7 +82,7 @@ self:
         and     #%10000000      ; bit 7 is reserved
         sta     SHADOW
         lda     NEWVIDEO
-        and     #%00011110      ; bits 1-4 are reserved
+        and     #%00011111      ; bits 1-4 are reserved, bit 0 unchanged
         sta     NEWVIDEO
 :
         ;; --------------------------------------------------

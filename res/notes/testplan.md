@@ -737,6 +737,8 @@ The following tests all require:
 
 * On a IIgs, launch DeskTop. Launch a IIgs-native program e.g. NoiseTracker. Exit and return to DeskTop. Verify that the display is not garbled.
 
+* On the Crossrunner IIgs emulator, launch DeskTop. Verify it does not hang on startup.
+
 ### Apple IIc
 
 * Run DeskTop on a IIc (or IIc+). Start BASIC.SYSTEM. Run `POKE 1275,0`. `BYE` to return to DeskTop. Verify that the progress bar has a gray background, not "VWVWVW..."
