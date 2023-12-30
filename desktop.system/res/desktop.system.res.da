@@ -2,7 +2,7 @@
 .define res_string_esc_to_cancel "P} Esc for at annullere."
 .define res_string_label_tip_skip_copying "For at springe over kopiering til RAMCard skal du holde \x0F\x1B\x41\x18\x0E nede, n}r du starter."
 .define res_string_label_copying "Kopiering til RAMCard: "
-.define res_string_prompt_ram_not_empty "/RAM vil blive |delagt. Tryk p} Retur for at forts{tte eller Esc for at annullere."
+.define res_string_prompt_ram_not_empty "/RAM vil blive |delagt. Tryk p} Retur for at forts{tte, Esc for at annullere."
 .define res_string_prompt_insert_source "Inds{t kildedisken, og tryk p} Retur for at forts{tte eller Esc for at annullere."
 .define res_string_prompt_ramcard_full "Ikke nok plads i RAMCard. Tryk p} Retur for at forts{tte."
 .define res_string_error_prefix "Fejl $"
