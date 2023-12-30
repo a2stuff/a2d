@@ -75,7 +75,9 @@ Project Page: https://github.com/a2stuff/a2d
   * Add support for LZ4FH-compressed files. (https://github.com/fadden/fhpack)
 * Text Preview: Fix memory corruption causing incorrect line display. ([#770](https://github.com/a2stuff/a2d/issues/770))
 * System Speed: Add support for Titan Accelerator IIe c/o @buserror.
-* Sounds: Add Cancel button c/o @buserror.
+* Sounds
+  * Add Cancel button c/o @buserror.
+  * Add several new sounds c/o@ frankmilliron.
 * New DA: Change Type - allows changing the type and auxtype of files. (([#149](https://github.com/a2stuff/a2d/issues/149))
 * Control Panel: Show shortcut keys for buttons (if that option is enabled).
 * Date & Time: Show shortcut keys for buttons (if that option is enabled).
