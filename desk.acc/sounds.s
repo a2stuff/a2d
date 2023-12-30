@@ -216,7 +216,10 @@ str_aal_swoop:  PASCAL_STRING "Assembly Line Swoop"
 str_aal_blast:  PASCAL_STRING "Assembly Line Laser"
 str_aal_bell:   PASCAL_STRING "Assembly Line Bell"
 str_aal_klaxon: PASCAL_STRING "Assembly Line Klaxon"
-        kNumSounds = 18
+str_obn_whopi:  PASCAL_STRING "Obnoxious Whopidoop"
+str_obn_phasor: PASCAL_STRING "Obnoxious Phasor"
+str_obn_gleep:  PASCAL_STRING "Obnoxious Gleep"
+        kNumSounds = 21
 
 ;;; This is in anticipation of factoring out ListBox code, and/or
 ;;; dynamically populating the list of sounds from files, etc.
@@ -226,14 +229,17 @@ num_sounds:
 name_table:
         .addr   str_buzz, str_bonk, str_bell, str_silent, str_awbeep
         .addr   str_dazzledraw, str_koala, str_816paint, str_panic1
-        .addr   str_panic2, str_bombdrop, str_detonate, str_gorgon, str_versiontel
-        .addr   str_aal_swoop, str_aal_blast, str_aal_bell, str_aal_klaxon
+        .addr   str_panic2, str_bombdrop, str_detonate, str_gorgon
+        .addr   str_versiontel, str_aal_swoop, str_aal_blast
+        .addr   str_aal_bell, str_aal_klaxon, str_obn_whopi
+        .addr   str_obn_phasor, str_obn_gleep
         ASSERT_ADDRESS_TABLE_SIZE name_table, kNumSounds
 
 proc_table:
         .addr   Buzz, Bonk, ClassicBeep, Silent, AwBeep, DazzleDraw
-        .addr   Koala, Paint816, Panic1, Panic2, Bombdrop, Detonate, Gorgon, VersionTel
-        .addr   AALLaserSwoop, AALLaserBlast, AALSCBell, AALKlaxon
+        .addr   Koala, Paint816, Panic1, Panic2, Bombdrop, Detonate, Gorgon
+        .addr   VersionTel, AALLaserSwoop, AALLaserBlast, AALSCBell
+        .addr   AALKlaxon, OBNWhopi, OBNPhasor, OBNGleep
         ASSERT_ADDRESS_TABLE_SIZE proc_table, kNumSounds
 
 selected_index:
@@ -848,7 +854,7 @@ END_SOUND_PROC
 
 SOUND_PROC Panic1
         ;; Played during intro to 'Apple Panic'
-        ;; Adapted for A2D by Frank Milliron
+        ;; Adapted for A2D by @frankmilliron
 
         lda     #$C0
         sta     $14
@@ -878,7 +884,7 @@ END_SOUND_PROC
 
 SOUND_PROC Panic2
         ;; Played during intro to 'Apple Panic'
-        ;; Adapted for A2D by Frank Milliron
+        ;; Adapted for A2D by @frankmilliron
 
         ldx     #$06
 loop1:  lda     #$60
@@ -911,7 +917,7 @@ END_SOUND_PROC
 SOUND_PROC Bombdrop
         ;; From ftp.apple.asimov.net/images/sound/ripped_off_routines.zip
         ;; BRUN BOMBDROP(CALL3091)
-        ;; Adapted for A2D by Frank Milliron
+        ;; Adapted for A2D by @frankmilliron
 
         LDA     #$00
         STA     $FF
@@ -940,7 +946,7 @@ END_SOUND_PROC
 
 SOUND_PROC Detonate
         ;; Played during intro to 'Short Circuit' by David H. Schroeder
-        ;; Adapted for A2D by Frank Milliron
+        ;; Adapted for A2D by @frankmilliron
 
         ldx     #6-1
 move:   lda     patch, x
@@ -998,7 +1004,7 @@ END_SOUND_PROC
 
 SOUND_PROC Gorgon
         ;; Played during intro to 'Gorgon' by Nasir Gabelli
-        ;; Adapted for A2D by Frank Milliron
+        ;; Adapted for A2D by @frankmilliron
 
         lda     #0
         jsr     wait
@@ -1232,6 +1238,138 @@ SOUNDS_2:
        BNE @l1
        RTS
 ;;; --------------------------------
+END_SOUND_PROC
+
+;;; ============================================================
+;;; Sound Routine: Obnoxious: WHOPIDOOP
+
+SOUND_PROC OBNWhopi
+        ;; Taken from "Assembly Cookbook for the Apple II/IIe" 
+        ;; by Don Lancaster. (Chapter 4: "Obnoxious Sounds")
+        ;; Adapted for A2D by @frankmilliron
+
+        LDA     #$01
+        STA     TRPCNT
+SWEEP:  LDY     #$18            ; WHOPIDOOP
+
+NXTSWP: TYA
+        TAX                     ; DURATION
+NXTCYC: TYA                     ; PITCH
+        JSR     WAIT
+        BIT     SPKR            ; WHAP SPEAKER
+        CPX     #$80            ; BYPASS IF GEIGER
+        BEQ     EXIT            ;  SPECIAL EFFECT
+        DEX
+        BNE     NXTCYC          ; ANOTHER CYCLE
+        DEY
+        BNE     NXTSWP          ; GO UP IN PITCH
+        DEC     TRPCNT          ; MADE ALL TRIPS?
+        BNE     SWEEP           ;  NO, REPEAT
+
+EXIT:   PLA                     ; RESTORE REGISTERS
+        TAY
+        PLA
+        PLP
+        RTS                     ; AND EXIT
+
+TRPCNT: .byte $01               ; TRIP COUNT DECREMENTED HERE
+
+WAIT:   SEC
+WAIT2:  PHA
+WAIT3:  SBC     #1
+        BNE     WAIT3
+        PLA
+        SBC     #1
+        BNE     WAIT2
+        RTS
+END_SOUND_PROC
+
+;;; ============================================================
+;;; Sound Routine: Obnoxious: PHASOR
+
+SOUND_PROC OBNPhasor
+        ;; Taken from "Assembly Cookbook for the Apple II/IIe" 
+        ;; by Don Lancaster. (Chapter 4: "Obnoxious Sounds")
+        ;; Adapted for A2D by @frankmilliron
+
+        LDA     #$06
+        STA     TRPCNT
+SWEEP:  LDY     #$10            ; PHASOR
+
+NXTSWP: TYA
+        TAX                     ; DURATION
+NXTCYC: TYA                     ; PITCH
+        JSR     WAIT
+        BIT     SPKR            ; WHAP SPEAKER
+        CPX     #$80            ; BYPASS IF GEIGER
+        BEQ     EXIT            ;  SPECIAL EFFECT
+        DEX
+        BNE     NXTCYC          ; ANOTHER CYCLE
+        DEY
+        BNE     NXTSWP          ; GO UP IN PITCH
+        DEC     TRPCNT          ; MADE ALL TRIPS?
+        BNE     SWEEP           ;  NO, REPEAT
+
+EXIT:   PLA                     ; RESTORE REGISTERS
+        TAY
+        PLA
+        PLP
+        RTS                     ; AND EXIT
+
+TRPCNT: .byte $01               ; TRIP COUNT DECREMENTED HERE
+
+WAIT:   SEC
+WAIT2:  PHA
+WAIT3:  SBC     #1
+        BNE     WAIT3
+        PLA
+        SBC     #1
+        BNE     WAIT2
+        RTS
+END_SOUND_PROC
+
+;;; ============================================================
+;;; Sound Routine: Obnoxious: GLEEP
+
+SOUND_PROC OBNGleep
+        ;; Taken from "Assembly Cookbook for the Apple II/IIe" 
+        ;; by Don Lancaster. (Chapter 4: "Obnoxious Sounds")
+        ;; Adapted for A2D by @frankmilliron
+
+        LDA     #$FF
+        STA     TRPCNT
+SWEEP:  LDY     #$02            ; GLEEP
+
+NXTSWP: TYA
+        TAX                     ; DURATION
+NXTCYC: TYA                     ; PITCH
+        JSR     WAIT
+        BIT     SPKR            ; WHAP SPEAKER
+        CPX     #$80            ; BYPASS IF GEIGER
+        BEQ     EXIT            ;  SPECIAL EFFECT
+        DEX
+        BNE     NXTCYC          ; ANOTHER CYCLE
+        DEY
+        BNE     NXTSWP          ; GO UP IN PITCH
+        DEC     TRPCNT          ; MADE ALL TRIPS?
+        BNE     SWEEP           ;  NO, REPEAT
+
+EXIT:   PLA                     ; RESTORE REGISTERS
+        TAY
+        PLA
+        PLP
+        RTS                     ; AND EXIT
+
+TRPCNT: .byte $01               ; TRIP COUNT DECREMENTED HERE
+
+WAIT:   SEC
+WAIT2:  PHA
+WAIT3:  SBC     #1
+        BNE     WAIT3
+        PLA
+        SBC     #1
+        BNE     WAIT2
+        RTS
 END_SOUND_PROC
 
 ;;; ============================================================
