@@ -3,7 +3,7 @@ Files in this directory are included in disk images.
 Specific to Apple II DeskTop:
 * READ.ME
 
-From ProDOS 2.4.2 (https://prodos8.com/):
+From ProDOS 2.4.3 (https://prodos8.com/):
 * PRODOS
 * BASIC.SYSTEM
 
