@@ -158,6 +158,7 @@ RDPAGE2         := $C01C        ; (R7) bit 7=1 if PAGE2 on
 RDALTCHAR       := $C01E        ; (R7) bit 7=1 if ALTCHAR on
 
 MONOCOLOR       := $C021        ; IIgs - bit 7=1 switches composite to mono
+TBCOLOR         := $C022        ; IIgs - text foreground/background colors
 
 KEYMODREG       := $C025        ; IIgs - keyboard modifiers
         ;; bit 7= Open Apple key active

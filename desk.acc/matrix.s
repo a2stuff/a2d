@@ -43,7 +43,25 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     TXTSET
         sta     CLR80VID
 
+        ;; IIgs: set green-on-black
+        sec
+        jsr     IDROUTINE
+    IF_CC
+        lda     TBCOLOR
+        pha
+        lda     #$C0
+        sta     TBCOLOR
+    END_IF
+
         jsr     Run
+
+        ;; IIgs: restore color
+        sec
+        jsr     IDROUTINE
+    IF_CC
+        pla
+        sta     TBCOLOR
+    END_IF
 
         sta     TXTCLR
         sta     SET80VID
