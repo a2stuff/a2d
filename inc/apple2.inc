@@ -185,6 +185,7 @@ MACIIE          := $C02B        ; Macintosh IIe Option Card
         ;; Bit 2 = Speed (1.9 MHz if set, 1 MHz if clear)
 
 SPKR            := $C030
+CLOCKCTL        := $C034        ; IIgs - bit 0-3 border color, 5-7 clock I/O
 SHADOW          := $C035        ; IIgs - inhibit shadowing
 
 ;;; Video mode

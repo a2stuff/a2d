@@ -47,10 +47,19 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sec
         jsr     IDROUTINE
     IF_CC
-        lda     TBCOLOR
+        .pushcpu
+        .setcpu "65816"
+        lda     TBCOLOR         ; save text fg/bg
         pha
-        lda     #$C0
+        lda     #$C0            ; assign text fg/bg
         sta     TBCOLOR
+
+        lda     CLOCKCTL        ; save border
+        and     #$0F
+        pha
+        lda     #$0F            ; assign border
+        trb     CLOCKCTL
+        .popcpu
     END_IF
 
         jsr     Run
@@ -59,8 +68,14 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sec
         jsr     IDROUTINE
     IF_CC
-        pla
+        .pushcpu
+        .setcpu "65816"
+        pla                     ; restore border
+        tsb     CLOCKCTL
+
+        pla                     ; restore text fg/bg
         sta     TBCOLOR
+        .popcpu
     END_IF
 
         sta     TXTCLR
