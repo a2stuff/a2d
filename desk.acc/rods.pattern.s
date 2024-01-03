@@ -18,6 +18,7 @@
         forty     :=   $28
         gbasl     :=   $26
         color     :=   $30
+        cgs       :=   $31
         textpt    :=   $3A
         A1        :=   $3C
         A2        :=   $3E
@@ -72,7 +73,39 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         sta     CLR80VID
         sta     DHIRESOFF
 
+        ;; IIgs: save text & border colors & set white-on-black text
+        sec
+        jsr     IDROUTINE
+    IF_CC
+        .pushcpu
+        .setcpu "65816"
+        lda     TBCOLOR         ; save text fg/bg
+        pha
+        lda     #$F0            ; assign text fg/bg
+        sta     TBCOLOR
+
+        lda     CLOCKCTL        ; save border
+        and     #$0F
+        pha
+        .popcpu
+    END_IF
+
         jsr     Run
+
+        ;; IIgs: restore original border color
+        sec
+        jsr     IDROUTINE
+    IF_CC
+        .pushcpu
+        .setcpu "65816"
+        lda     #$0F
+        trb     CLOCKCTL
+        pla
+        tsb     CLOCKCTL        ; restore border
+        pla
+        sta     TBCOLOR         ; restore text fg/bg
+        .popcpu
+    END_IF
 
         sta     TXTCLR
         sta     SET80VID
@@ -259,7 +292,7 @@ nxtj:   clc
 ; Delay by setting of PDL(0)
 ;
 delay:  ldx     #$00
-        jsr     pread           ;read pdl(o)
+        jsr     pread           ;read pdl(0)
         tya
         lsr                     ;divide by 4
         lsr
@@ -382,12 +415,27 @@ bcnt:   dex
         adc     A5
         and     #$0F            ;copy to upper nibble
         sta     color
+        sta     cgs             ;for IIgs only
         asl
         asl
         asl
         asl
         ora     color
         sta     color
+
+        ;; If IIgs, set border to plot color
+        sec
+        jsr     IDROUTINE
+    IF_CC
+        .pushcpu
+        .setcpu "65816"
+        lda     #$0F
+        trb     CLOCKCTL
+        lda     cgs
+        tsb     CLOCKCTL
+        .popcpu
+    END_IF
+
         rts
 
 .endproc ; Run
