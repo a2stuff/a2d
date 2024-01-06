@@ -264,9 +264,10 @@ grafport_win:       .tag    MGTK::GrafPort
 
 .proc Init
         MGTK_CALL MGTK::OpenWindow, winfo
-        MGTK_CALL MGTK::OpenWindow, winfo_listbox
-
         jsr     DrawWindow
+
+        MGTK_CALL MGTK::OpenWindow, winfo_listbox
+        jsr     ListInit
 
         jsr     SearchForCurrent
         ; keep it around in case we want to cancel
@@ -464,8 +465,7 @@ grafport_win:       .tag    MGTK::GrafPort
         BTK_CALL BTK::Draw, cancel_button
         BTK_CALL BTK::Draw, ok_button
 
-        ;; List Box
-        jmp     ListInit
+        rts
 .endproc ; DrawWindow
 
 ;;; ============================================================

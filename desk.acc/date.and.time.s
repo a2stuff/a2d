@@ -931,6 +931,11 @@ label_downarrow:
 
 .proc DrawWindow
         MGTK_CALL MGTK::SetPort, winfo::port
+
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+
         MGTK_CALL MGTK::FrameRect, date_rect
         MGTK_CALL MGTK::FrameRect, time_rect
 
@@ -943,10 +948,6 @@ label_downarrow:
         param_call DrawString, str_date_separator
         MGTK_CALL MGTK::MoveTo, time_sep_pos
         param_call DrawString, str_time_separator
-
-        MGTK_CALL MGTK::SetPenSize, pensize_frame
-        MGTK_CALL MGTK::FrameRect, frame_rect
-        MGTK_CALL MGTK::SetPenSize, pensize_normal
 
         MGTK_CALL MGTK::SetPenMode, penXOR
 

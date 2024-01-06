@@ -170,7 +170,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
+penmode:        .byte   MGTK::notpencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -559,7 +559,6 @@ done:   jmp     InputLoop
 
         ;; ==============================
 
-        MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal

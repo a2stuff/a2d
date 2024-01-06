@@ -780,10 +780,6 @@ found:  return  index
 
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo
 
-        lda     #MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
-        sta     file_dialog_res::winfo_listbox::vscroll
-        MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
-
         MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::notpencopy
 
@@ -852,6 +848,11 @@ found:  return  index
         LETK_CALL LETK::Activate, file_dialog_res::le_params
     END_IF
 .endif
+
+        lda     #MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
+        sta     file_dialog_res::winfo_listbox::vscroll
+        MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo_listbox
+
         rts
 .endproc ; OpenWindow
 
