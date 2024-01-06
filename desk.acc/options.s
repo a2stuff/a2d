@@ -339,7 +339,7 @@ next:   dec     index
 
         ;; --------------------------------------------------
 
-        copy    #kNumButtons, index
+        copy    #kNumButtons-1, index
 loop:
         index := *+1
         lda     #SELF_MODIFIED_BYTE

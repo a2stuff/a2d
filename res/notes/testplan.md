@@ -826,6 +826,7 @@ Repeat for every desk accessory that runs in a window.
 * Open the Options DA. Eject the startup volume. Close the DA without changing any settings. Verify that you are not prompted to save.
 * Open the Options DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
 * Open the Options DA. Move the window to the bottom of the screen so only the title bar is visible. Press Apple-1, Apple-2, Apple-3. Verify that checkboxes don't mis-paint on the screen. Move the window back up. Verify that the state of the checkboxes has toggled.
+* Open the Options DA. Close the DA. Apple Menu > Run Basic Here. Verify that the system does not crash to the monitor.
 
 ## International
 
