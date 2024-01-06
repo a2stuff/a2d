@@ -21,7 +21,7 @@ sub enquote($$) {
     return "\"$value\"" if $label =~ /^res_string_/;
     return "'$value'" if $label =~ /^res_char_/;
     return $value if $label =~ /^res_const_/;
-    return $value if $label =~ /^res_filename_/;
+    return "\"$value\"" if $label =~ /^res_filename_/;
 
     die "Bad label: \"$label\" at line $.\n";
 }

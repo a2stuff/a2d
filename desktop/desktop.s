@@ -12,6 +12,7 @@
         .include "../toolkits/letk.inc"
         .include "../toolkits/btk.inc"
         .include "../common.inc"
+        .include .concat("../desk.acc/res/filenames.res.", kBuildLang)
 
 ;;; ============================================================
 ;;; File Structure

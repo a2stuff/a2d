@@ -46,6 +46,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix refreshing volume icon after Format/Erase.
 * Show special icon for folders with AuxType $8000.
 * Show progress bar during copy and delete operations.
+* Click on menu bar clock now shows Date & Time DA.
 
 ### Selector
 

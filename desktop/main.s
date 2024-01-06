@@ -478,6 +478,17 @@ window_open_flag := HandleKeydownImpl::window_open_flag
 not_desktop:
         cmp     #MGTK::Area::menubar  ; menu?
         bne     not_menu
+
+        ;; Maybe clock?
+        lda     MACHID
+        and     #%00000001      ; bit 0 = clock card
+    IF_NE
+        cmp16   event_params::xcoord, #460 ; TODO: Hard coded?
+      IF_CS
+        param_jump InvokeDeskAccWithIcon, $FF, str_date_and_time
+      END_IF
+    END_IF
+
         copy    #0, menu_kbd_flag ; note that source is not keyboard
         MGTK_CALL MGTK::MenuSelect, menu_click_params
         jmp     MenuDispatch2
@@ -1245,6 +1256,9 @@ str_preview_mus:
 
 str_preview_pt3:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/PT3PLR.system")
+
+str_date_and_time:
+        PASCAL_STRING .concat(kFilenameDADir, "/", res_filename_control_panels, "/", res_filename_date_and_time)
 
 ;;; ============================================================
 

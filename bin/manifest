@@ -39,7 +39,7 @@ get_da_loc_name() {
     local filename="desk.acc/res/filenames.res.${lang}"
     local match=$(egrep -i "^\.define ${res} " "${filename}" | cut -d' ' -f3)
     if [[ -z "$no_loc_da_names" && -n "$match" ]]; then
-        echo "$match"
+        echo "$match" | tr -d '"'
     else
         echo "$name"
     fi
