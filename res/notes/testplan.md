@@ -828,6 +828,10 @@ Repeat for every desk accessory that runs in a window.
 * Open the Options DA. Move the window to the bottom of the screen so only the title bar is visible. Press Apple-1, Apple-2, Apple-3. Verify that checkboxes don't mis-paint on the screen. Move the window back up. Verify that the state of the checkboxes has toggled.
 * Open the Options DA. Close the DA. Apple Menu > Run Basic Here. Verify that the system does not crash to the monitor.
 
+## Sounds
+
+* Open the Sounds DA. Select one of the "Obnoxious" sounds. Exit the DA. Run BASIC.SYSTEM from the EXTRAS/ folder. Verify that the system does not crash to the monitor.
+
 ## International
 
 * Open the Control Panels folder. View > by Name. Open International. Change the date format from M/D/Y to D/M/Y or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.

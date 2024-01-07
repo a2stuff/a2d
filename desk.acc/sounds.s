@@ -1266,11 +1266,7 @@ NXTCYC: TYA                     ; PITCH
         DEC     TRPCNT          ; MADE ALL TRIPS?
         BNE     SWEEP           ;  NO, REPEAT
 
-EXIT:   PLA                     ; RESTORE REGISTERS
-        TAY
-        PLA
-        PLP
-        RTS                     ; AND EXIT
+EXIT:   RTS                     ; AND EXIT
 
 TRPCNT: .byte $01               ; TRIP COUNT DECREMENTED HERE
 
@@ -1310,11 +1306,7 @@ NXTCYC: TYA                     ; PITCH
         DEC     TRPCNT          ; MADE ALL TRIPS?
         BNE     SWEEP           ;  NO, REPEAT
 
-EXIT:   PLA                     ; RESTORE REGISTERS
-        TAY
-        PLA
-        PLP
-        RTS                     ; AND EXIT
+EXIT:   RTS                     ; AND EXIT
 
 TRPCNT: .byte $01               ; TRIP COUNT DECREMENTED HERE
 
@@ -1354,11 +1346,7 @@ NXTCYC: TYA                     ; PITCH
         DEC     TRPCNT          ; MADE ALL TRIPS?
         BNE     SWEEP           ;  NO, REPEAT
 
-EXIT:   PLA                     ; RESTORE REGISTERS
-        TAY
-        PLA
-        PLP
-        RTS                     ; AND EXIT
+EXIT:   RTS                     ; AND EXIT
 
 TRPCNT: .byte $01               ; TRIP COUNT DECREMENTED HERE
 
