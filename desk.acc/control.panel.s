@@ -104,7 +104,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
+penmode:        .byte   MGTK::notpencopy
 textback:       .byte   $7F
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
@@ -891,8 +891,6 @@ dblclick_speed: .word   0
 
         jsr     MarkDirty
 
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport
         jsr     UpdateDblclickButtons
         jmp     InputLoop
 
@@ -945,8 +943,6 @@ dblclick_speed: .word   0
         ;; --------------------------------------------------
         ;; Update the UI
 
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport
         jsr     UpdateTrackingButtons
 
         jmp     InputLoop
@@ -994,7 +990,6 @@ dblclick_speed: .word   0
 
 penXOR:         .byte   MGTK::penXOR
 pencopy:        .byte   MGTK::pencopy
-penBIC:         .byte   MGTK::penBIC
 notpencopy:     .byte   MGTK::notpencopy
 
 
@@ -1003,18 +998,29 @@ notpencopy:     .byte   MGTK::notpencopy
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        RTS_IF_EQ
+        RTS_IF_NOT_ZERO         ; obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
+
+        ;; ==============================
+        ;; Frame
+
+        MGTK_CALL MGTK::SetPenSize, frame_pensize
+        MGTK_CALL MGTK::MoveTo, frame_l1a
+        MGTK_CALL MGTK::LineTo, frame_l1b
+        MGTK_CALL MGTK::MoveTo, frame_l2a
+        MGTK_CALL MGTK::LineTo, frame_l2b
+        MGTK_CALL MGTK::MoveTo, frame_l3a
+        MGTK_CALL MGTK::LineTo, frame_l3b
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::SetPenSize, winfo::penwidth
 
         ;; ==============================
         ;; Desktop Pattern
 
         BTK_CALL BTK::Draw, pattern_button
 
-        MGTK_CALL MGTK::SetPenMode, penBIC
         MGTK_CALL MGTK::FrameRect, fatbits_frame
         MGTK_CALL MGTK::PaintBitsHC, larr_params
         MGTK_CALL MGTK::PaintBitsHC, rarr_params
@@ -1022,7 +1028,7 @@ notpencopy:     .byte   MGTK::notpencopy
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, preview_frame
 
-        MGTK_CALL MGTK::SetPenMode, penBIC
+        MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, preview_line
 
         jsr     DrawPreview
@@ -1125,19 +1131,6 @@ loop:   ldy     #3
         param_call DrawStringRight, caret_blink_button3_shortcut_label_str
     END_IF
 
-
-        ;; ==============================
-        ;; Frame
-
-        MGTK_CALL MGTK::SetPenSize, frame_pensize
-        MGTK_CALL MGTK::MoveTo, frame_l1a
-        MGTK_CALL MGTK::LineTo, frame_l1b
-        MGTK_CALL MGTK::MoveTo, frame_l2a
-        MGTK_CALL MGTK::LineTo, frame_l2b
-        MGTK_CALL MGTK::MoveTo, frame_l3a
-        MGTK_CALL MGTK::LineTo, frame_l3b
-        MGTK_CALL MGTK::FrameRect, frame_rect
-        MGTK_CALL MGTK::SetPenSize, winfo::penwidth
 
 done:   MGTK_CALL MGTK::ShowCursor
         rts
@@ -1641,8 +1634,6 @@ caret_blink_speed: .word   0
         jsr     MarkDirty
         jsr     ResetCaretBlinkCounter
 
-        MGTK_CALL MGTK::GetWinPort, getwinport_params
-        MGTK_CALL MGTK::SetPort, grafport
         jsr     UpdateCaretBlinkButtons
         jmp     InputLoop
 
