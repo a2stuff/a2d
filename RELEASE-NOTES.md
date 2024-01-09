@@ -75,6 +75,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Image Preview
   * Add slideshow mode - press 'S' to auto-advance images.
   * Add support for LZ4FH-compressed files. (https://github.com/fadden/fhpack)
+  * Packed Super Hi-Res PNT files ($C0/$0001) can be previewed on Apple IIgs.
 * Text Preview: Fix memory corruption causing incorrect line display. ([#770](https://github.com/a2stuff/a2d/issues/770))
 * System Speed: Add support for Titan Accelerator IIe c/o @buserror.
 * Sounds

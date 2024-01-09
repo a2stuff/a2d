@@ -268,8 +268,11 @@ fail:   rts
 
 :       lda     get_file_info_params::file_type
 
+        cmp     #FT_PNT
+        jeq     ShowPackedSHR
+
         cmp     #FT_PIC
-        jeq     ShowSHR
+        jeq     ShowUnpackedSHR
 
         cmp     #FT_GRAPHICS
         bne     get_eof
@@ -999,7 +1002,15 @@ yes:    clc                     ; match!
 ;;; ============================================================
 
 ;;; Output: C=0 on success, C=1 on failure
-.proc ShowSHR
+.proc ShowSHRImpl
+
+packed:
+        lda     #$80
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+unpacked:
+        lda     #0
+        sta     packed_flag
+
         ;; IIgs?
         bit     ROMIN2
         sec
@@ -1019,11 +1030,19 @@ is_iigs:
         kSHRSize = $8000
 
         jsr     InitSHR
-        jsr     PopulateSHR
+        bit     packed_flag
+    IF_NS
+        jsr     LoadPackedSHR
+    ELSE
+        jsr     LoadUnpackedSHR
+    END_IF
         copy16  #ExitSHR, exit_hook
 
         clc                     ; success
         rts
+
+packed_flag:
+        .byte   0
 
         ;; --------------------------------------------------
 
@@ -1060,6 +1079,7 @@ is_iigs:
 
         sec                     ; re-enter emulation mode
         xce
+
         .popcpu
 
         rts
@@ -1067,7 +1087,7 @@ is_iigs:
 
         ;; --------------------------------------------------
 
-.proc PopulateSHR
+.proc LoadUnpackedSHR
         ;; Load $2000 bytes at a time, and copy them to
         ;; the SHR screen
 
@@ -1108,7 +1128,42 @@ loop:
         bne     loop
 
         rts
-.endproc ; PopulateSHR
+.endproc ; LoadUnpackedSHR
+
+        ;; --------------------------------------------------
+
+.proc LoadPackedSHR
+
+        lda     #<SHR_SCREEN
+        sta     addr
+        lda     #>SHR_SCREEN
+        sta     addr+1
+        lda     #^SHR_SCREEN
+        sta     addr+2
+
+        param_jump UnpackRead, write
+
+        ;; A = byte
+        ;; Y = 0 on entry/exit
+write:
+
+        ;; Copy into SHR screen
+        .pushcpu
+        .p816
+
+        addr := *+1
+        sta     $123456
+
+        inc     addr
+        bne     :+
+        inc     addr+1
+        bne     :+
+        inc     addr+2
+:
+        rts
+        .popcpu
+
+.endproc ; LoadPackedSHR
 
         ;; --------------------------------------------------
 
@@ -1130,7 +1185,9 @@ loop:
         rts
 .endproc ; ExitSHR
 
-.endproc ; ShowSHR
+.endproc ; ShowSHRImpl
+ShowPackedSHR := ShowSHRImpl::packed
+ShowUnpackedSHR := ShowSHRImpl::unpacked
 
 ;;; ============================================================
 
@@ -1177,6 +1234,13 @@ loop:
         lda     entry+FileEntry::file_type
         cmp     #FT_GRAPHICS
         jeq     yes
+
+        cmp     #FT_PNT
+    IF_EQ
+        ecmp16  entry+FileEntry::aux_type, #$0001
+        jeq     yes
+        jmp     no
+    END_IF
 
         cmp     #FT_PIC
     IF_EQ
