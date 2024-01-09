@@ -725,22 +725,14 @@ done:   rts
 
 ;;; ============================================================
 
+;;; Input: A,X = callback proc, called with:
+;;;    A = byte, Y = 0 on entry/exit
 ;;; Output: C=0 on success, C=1 on failure
-.proc UnpackRead
+.proc UnpackReadImpl
         DEFINE_READ_PARAMS read_buf_params, read_buf, 0
 
-        ptr := $06
-
-dhr_file:
-        lda     #$C0            ; S = is dhr?, V = is aux page?
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-hr_file:
-        lda     #0
-        sta     dhr_flag
-
-        copy16  #hires, ptr
-
-        sta     PAGE2OFF
+start:
+        stax    write_proc
 
         copy    open_params::ref_num, read_buf_params::ref_num
 
@@ -750,10 +742,6 @@ loop:   copy    #1, read_buf_params::request_count
         bcc     body
 
         ;; EOF (or other error) - finish up
-        bit     dhr_flag        ; if hires, need to convert
-        bmi     :+
-        jsr     HRToDHR
-:
         clc                     ; success
         rts
 
@@ -847,7 +835,49 @@ not_10:
 
         jmp     loop
 
+
+        write_proc := *+1
+Write:  jmp     SELF_MODIFIED
+
+count:  .byte   0
+
+read_buf:
+        .res    64
+
+.endproc ; UnpackReadImpl
+UnpackRead := UnpackReadImpl::start
+
+;;; ============================================================
+
+;;; Unpack HR / DHR
+;;; Output: C=0 on success, C=1 on failure
+.proc ShowPackedHRDHRFileImpl
+        ptr := $06
+
+dhr_file:
+        lda     #$C0            ; S = is dhr?, V = is aux page?
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+hr_file:
+        lda     #0
+        sta     dhr_flag
+
+        copy16  #hires, ptr
+
+        sta     PAGE2OFF
+
+        param_call UnpackRead, Write
+
+        bit     dhr_flag        ; if hires, need to convert
+        bmi     :+
+        jsr     HRToDHR
+:
+        clc                     ; success
+        rts
+
         ;; --------------------------------------------------
+        ;; Callback for each unique byte to write
+        ;; A = byte
+        ;; Y = 0 on entry/exit
 
 .proc Write
         ;; ASSERT: Y=0
@@ -899,14 +929,9 @@ exit:   pla
 dhr_flag:
         .byte   0
 
-count:  .byte   0
-
-read_buf:
-        .res    64
-
-.endproc ; UnpackRead
-ShowPackedHRFile     := UnpackRead::hr_file
-ShowPackedDHRFile    := UnpackRead::dhr_file
+.endproc ; ShowPackedHRDHRFileImpl
+ShowPackedHRFile     := ShowPackedHRDHRFileImpl::hr_file
+ShowPackedDHRFile    := ShowPackedHRDHRFileImpl::dhr_file
 
 ;;; ============================================================
 ;;; Clear screen to black
