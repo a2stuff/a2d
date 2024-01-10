@@ -150,7 +150,17 @@ ret:
 
 .proc _Invert
         MGTK_CALL MGTK::SetPenMode, penXOR
+        inc16   rect+MGTK::Rect::x1
+        inc16   rect+MGTK::Rect::y1
+        dec16   rect+MGTK::Rect::x2
+        dec16   rect+MGTK::Rect::y2
+
         MGTK_CALL MGTK::PaintRect, rect
+        dec16   rect+MGTK::Rect::x1
+        dec16   rect+MGTK::Rect::y1
+        inc16   rect+MGTK::Rect::x2
+        inc16   rect+MGTK::Rect::y2
+
         rts
 .endproc ; _Invert
 
