@@ -432,20 +432,20 @@ init_window:
         FALL_THROUGH_TO OnKeyUp
 
 .proc OnKeyUp
-        MGTK_CALL MGTK::PaintRect, up_arrow_rect
+        jsr     InvertUp
         lda     #kUpRectIndex
         sta     hit_rect_index
         jsr     DoIncOrDec
-        MGTK_CALL MGTK::PaintRect, up_arrow_rect
+        jsr     InvertUp
         jmp     InputLoop
 .endproc ; OnKeyUp
 
 .proc OnKeyDown
-        MGTK_CALL MGTK::PaintRect, down_arrow_rect
+        jsr     InvertDown
         lda     #kDownRectIndex
         sta     hit_rect_index
         jsr     DoIncOrDec
-        MGTK_CALL MGTK::PaintRect, down_arrow_rect
+        jsr     InvertDown
         jmp     InputLoop
 .endproc ; OnKeyDown
 
@@ -576,7 +576,7 @@ hit_target_jump_table:
 .proc OnUp
         txa
         pha
-        MGTK_CALL MGTK::PaintRect, up_arrow_rect
+        jsr     InvertUp
         pla
         tax
         jmp     OnUpOrDown
@@ -585,7 +585,7 @@ hit_target_jump_table:
 .proc OnDown
         txa
         pha
-        MGTK_CALL MGTK::PaintRect, down_arrow_rect
+        jsr     InvertDown
         pla
         tax
         jmp     OnUpOrDown
@@ -616,13 +616,8 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
 
 :       lda     hit_rect_index
         cmp     #kUpRectIndex
-        beq     :+
-
-        MGTK_CALL MGTK::PaintRect, down_arrow_rect
-        rts
-
-:       MGTK_CALL MGTK::PaintRect, up_arrow_rect
-        rts
+        jeq     InvertUp
+        jmp     InvertDown
 .endproc ; OnUpOrDown
 
 .proc DoIncOrDec
@@ -1091,6 +1086,41 @@ label_downarrow:
         rts
 .endproc ; DrawPeriod
 .endproc ; DrawField
+
+;;; ============================================================
+
+.proc InvertUp
+        MGTK_CALL MGTK::InflateRect, shrink
+        MGTK_CALL MGTK::PaintRect, up_arrow_rect
+        MGTK_CALL MGTK::InflateRect, grow
+        rts
+
+.params shrink
+        .addr   up_arrow_rect
+        .word   AS_WORD(-1)
+        .word   AS_WORD(-1)
+.endparams
+.params grow
+        .addr   up_arrow_rect
+        .word   1
+        .word   1
+.endparams
+.endproc ; InvertUp
+
+.proc InvertDown
+        MGTK_CALL MGTK::InflateRect, shrink
+        MGTK_CALL MGTK::PaintRect, down_arrow_rect
+        MGTK_CALL MGTK::InflateRect, grow
+        rts
+.params shrink
+        .addr   down_arrow_rect
+        .word   AS_WORD(-1), AS_WORD(-1)
+.endparams
+.params grow
+        .addr   down_arrow_rect
+        .word   1, 1
+.endparams
+.endproc ; InvertDown
 
 ;;; ============================================================
 ;;; Selected a field (dehighlight the old one, highlight the new one)

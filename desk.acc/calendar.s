@@ -330,9 +330,19 @@ fin:    jsr     UpdateWindow
     IF_NE
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
+        MGTK_CALL MGTK::InflateRect, shrink
         MGTK_CALL MGTK::PaintRect, left_button::rect
+        MGTK_CALL MGTK::InflateRect, grow
     END_IF
         rts
+.params shrink
+        .addr   left_button::rect
+        .word   AS_WORD(-1), AS_WORD(-1)
+.endparams
+.params grow
+        .addr   left_button::rect
+        .word   1, 1
+.endparams
 .endproc ; InvertDec
 
 .endproc ; DecDate
@@ -365,9 +375,19 @@ fin:    jsr     UpdateWindow
     IF_NE
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
+        MGTK_CALL MGTK::InflateRect, shrink
         MGTK_CALL MGTK::PaintRect, right_button::rect
+        MGTK_CALL MGTK::InflateRect, grow
     END_IF
         rts
+.params shrink
+        .addr   right_button::rect
+        .word   AS_WORD(-1), AS_WORD(-1)
+.endparams
+.params grow
+        .addr   right_button::rect
+        .word   1, 1
+.endparams
 .endproc ; InvertInc
 .endproc ; IncDate
 

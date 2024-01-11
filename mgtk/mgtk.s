@@ -376,6 +376,7 @@ jump_table:
         .addr   FlashMenuBarImpl    ; $55 FlashMenuBar
         .addr   SaveScreenRectImpl  ; $56 SaveScreenRect
         .addr   RestoreScreenRectImpl ; $57 RestoreScreenRect
+        .addr   InflateRectImpl     ; $58 InflateRect
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -502,6 +503,7 @@ param_lengths:
         PARAM_DEFN  0, $00, 0                ; $55 FlashMenuBar
         PARAM_DEFN  8, $92, 1                ; $56 SaveScreenRect
         PARAM_DEFN  8, $92, 1                ; $57 RestoreScreenRect
+        PARAM_DEFN  6, $82, 0                ; $58 InflateRect
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -10604,6 +10606,27 @@ rect       .tag MGTK::Rect
         jsr     SetUpRectSavebehind
         jmp     RestoreSavebehind
 .endproc ; RestoreScreenRectImpl
+
+;;; ============================================================
+
+.proc InflateRectImpl
+        PARAM_BLOCK params, $82
+rect       .addr
+xdelta     .word
+ydelta     .word
+        END_PARAM_BLOCK
+
+        ldy     #0
+        sub16in (params::rect),y, params::xdelta, (params::rect),y
+        iny
+        sub16in (params::rect),y, params::ydelta, (params::rect),y
+        iny
+        add16in (params::rect),y, params::xdelta, (params::rect),y
+        iny
+        add16in (params::rect),y, params::ydelta, (params::rect),y
+
+        rts
+.endproc ; InflateRectImpl
 
 ;;; ============================================================
 

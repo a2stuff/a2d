@@ -88,6 +88,16 @@ solid_pattern:
 checkerboard_pattern:
         .byte   $55, $AA, $55, $AA, $55, $AA, $55, $AA
 
+.params shrink_rect
+        .addr   rect
+        .word   AS_WORD(-1), AS_WORD(-1)
+.endparams
+
+.params grow_rect
+        .addr   rect
+        .word   1, 1
+.endparams
+
 ;;; ============================================================
 
 .params getwinport_params
@@ -150,7 +160,9 @@ ret:
 
 .proc _Invert
         MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::InflateRect, shrink_rect
         MGTK_CALL MGTK::PaintRect, rect
+        MGTK_CALL MGTK::InflateRect, grow_rect
         rts
 .endproc ; _Invert
 
@@ -201,13 +213,9 @@ skip_port:
 
         bit     state
     IF_NS
-        inc16   rect+MGTK::Rect::x1
-        inc16   rect+MGTK::Rect::y1
-        dec16   rect+MGTK::Rect::x2
-        dec16   rect+MGTK::Rect::y2
-
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
         MGTK_CALL MGTK::SetPenMode, penOR
+        MGTK_CALL MGTK::InflateRect, shrink_rect
         MGTK_CALL MGTK::PaintRect, rect
     END_IF
 

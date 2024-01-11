@@ -19,6 +19,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve window title bar apperance.
 * Prevent scrollbar thumb jumping when not moved. ([#778](https://github.com/a2stuff/a2d/issues/778))
 * Package now includes ProDOS 2.4.3 and BASIC.system 1.7.
+* Improve appearance of buttons when clicked. c/o @buserror
 
 ### Launcher
 * If starting from a folder, brand it as a system folder.

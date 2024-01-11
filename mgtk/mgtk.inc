@@ -546,6 +546,11 @@ SaveScreenRect        = $56
 RestoreScreenRect     = $57
 ;;; Rect        rect
 
+InflateRect           = $58
+;;; .addr       rect            Address of MGTK::Rect
+;;; .word       xdelta
+;;; .word       ydelta
+
 ;;; ============================================================
 ;;; Graphics Primitives Constants
 
