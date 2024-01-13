@@ -2622,10 +2622,7 @@ stashed_name:
         copy    #0, dirty
 
         ;; Padding
-        sub16_8 tmp_rect::x1, #kIconBBoxPaddingLeft
-        add16_8 tmp_rect::x2, #kIconBBoxPaddingRight
-        sub16_8 tmp_rect::y1, #kIconBBoxPaddingTop
-        add16_8 tmp_rect::y2, #kIconBBoxPaddingBottom
+        MGTK_CALL MGTK::InflateRect, bbox_pad_tmp_rect
 
         ;; --------------------------------------------------
         ;; X adjustment
@@ -7910,8 +7907,6 @@ ptr_str_items_suffix:
 ;;; Compute bounding box for icons within cached window
 ;;; Inputs: `cached_window_id` is set
 
-        DEFINE_RECT iconbb_rect, 0, 0, 0, 0
-
 .proc ComputeIconsBBox
         kIntMax = $7FFF
 
@@ -7940,10 +7935,7 @@ check_icon:
         lda     cached_window_entry_count
     IF_NOT_ZERO
         ;; Add padding around bbox
-        sub16_8 iconbb_rect::x1, #kIconBBoxPaddingLeft
-        add16_8 iconbb_rect::x2, #kIconBBoxPaddingRight
-        sub16_8 iconbb_rect::y1, #kIconBBoxPaddingTop
-        add16_8 iconbb_rect::y2, #kIconBBoxPaddingBottom
+        MGTK_CALL MGTK::InflateRect, bbox_pad_iconbb_rect
 
         ;; List view?
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view

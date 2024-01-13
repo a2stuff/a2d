@@ -138,10 +138,12 @@ kSmallIconViewSpacingY       = kListItemHeight+2
 ;;; --------------------------------------------------
 ;;; Bounding box padding (all view types)
 
-kIconBBoxPaddingTop      = 2
-kIconBBoxPaddingLeft     = 4
-kIconBBoxPaddingBottom   = 2
-kIconBBoxPaddingRight    = 4
+kIconBBoxPaddingX        = 4
+kIconBBoxPaddingY        = 2
+kIconBBoxPaddingTop      = kIconBBoxPaddingY
+kIconBBoxPaddingLeft     = kIconBBoxPaddingX
+kIconBBoxPaddingBottom   = kIconBBoxPaddingY
+kIconBBoxPaddingRight    = kIconBBoxPaddingX
 
 ;;; NOTE: Offsets are selected in conjunction with icon spacing
 ;;; and maximum window sizing so that scrolling all the way down

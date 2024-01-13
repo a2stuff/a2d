@@ -655,6 +655,21 @@ id:     .byte   0
 addr:   .addr   0
 .endparams
 
+;;; Used by DeskTop to pad `tmp_rect`
+.params bbox_pad_tmp_rect
+        .addr   tmp_rect
+        .word   kIconBBoxPaddingX, kIconBBoxPaddingY
+.endparams
+
+;;; Used by DeskTop to compute bounding box for icons
+        DEFINE_RECT iconbb_rect, 0, 0, 0, 0
+
+;;; Used by DeskTop to pad `iconbb_rect`
+.params bbox_pad_iconbb_rect
+        .addr   iconbb_rect
+        .word   kIconBBoxPaddingX, kIconBBoxPaddingY
+.endparams
+
 ;;; ============================================================
 ;;; Alerts
 
