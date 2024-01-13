@@ -2093,7 +2093,7 @@ rom0:
         .popcpu
 
 finish_iigs:
-        ;; The memory manager only counts banks $7F and downward,
+        ;; The memory manager only counts banks $DF and downward,
         ;; which skips ROM ($Fx) and slow RAM ($Ex). Assume the
         ;; two banks of slow RAM that every IIgs has ($E0/$E1)
         add16_8 memory, #2
