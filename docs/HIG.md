@@ -37,6 +37,7 @@ Note that these are for inspiration, not to be dutifully followed.
     * Indicate default action with carriage return glyph ⏎.
     * Indicate cancel action with Esc.
 * Arrow buttons to increment or decrement values can be non-default height.
+* When clicking, the internal area is inverted, but not the border.
 
 ## Check Boxes and Radio Buttons
 
@@ -76,6 +77,11 @@ Note that these are for inspiration, not to be dutifully followed.
   * This gives 1px margin above the text, 0px below (counting descenders).
 * Left/Right Arrow keys should wrap selection to the previous/next row.
 * Up/Down Arrow keys should wrap selection to the previous/next column.
+
+## Progress Bars
+
+* Total height is 10 pixels, including a 1px border.
+* Pattern is 75% dark / 25% light.
 
 ## Keyboard
 
