@@ -89,6 +89,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Show shortcut key for button (if that option is enabled).
   * Larger map image is shown.
 * Matrix: Show green-on-black text on IIgs.
+* New Screen Saver: Helix.
 
 ### Misc
 

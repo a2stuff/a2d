@@ -59,6 +59,8 @@
   * Visual distractions.
 * [Invert](invert.s)
   * Visual distractions.
+* [Helix](helix.s)
+  * Visual distractions.
 * [Analog Clock](analog.clock.s)
   * Displays the current time.
 * [Digital Clock](digital.clock.s)

@@ -14,6 +14,7 @@ system.speed                    apple.menu/control.panels       optional
 analog.clock                    apple.menu/screen.savers        optional
 digital.clock                   apple.menu/screen.savers        optional
 flying.toasters                 apple.menu/screen.savers        optional
+helix                           apple.menu/screen.savers        optional
 invert                          apple.menu/screen.savers        optional
 matrix                          apple.menu/screen.savers        optional
 melt                            apple.menu/screen.savers        optional
