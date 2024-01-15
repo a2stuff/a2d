@@ -1,3 +1,4 @@
+.define res_string_128k_required "128K OCH IIE ELLER SENARE KR[VS\r\rTRYCK P] EN KNAPP F\\R ATT AVSLUTA"
 .define res_string_copying_to_ramcard "Kopierar Apple II DeskTop till RAMCard..."
 .define res_string_esc_to_cancel "P} Esc f|r att avbryta."
 .define res_string_label_tip_skip_copying "F|r att hoppa |ver kopiering till RAMCard, h}ll ner \x0F\x1B\x41\x18\x0E n{r du startar."

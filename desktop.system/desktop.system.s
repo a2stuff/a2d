@@ -130,8 +130,17 @@ start:
         RTS_IF_EQ
 
         ;;  If not 128k machine, just quit back to ProDOS
+        jsr     HOME
+        param_call CoutString, str_128k_required
+        sta     KBDSTRB
+:       lda     KBD
+        bpl     :-
+        sta     KBDSTRB
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params
+
+str_128k_required:
+        PASCAL_STRING res_string_128k_required
 
 .endproc ; Check128K
 

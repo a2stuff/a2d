@@ -1,3 +1,4 @@
+.define res_string_128k_required "128K E IIE O SUCCESSIVAMENTE RICHIESTI\r\rPREMERE UN TASTO PER USCIRE"
 .define res_string_copying_to_ramcard "Copiatura di Apple II DeskTop in RAM..."
 .define res_string_esc_to_cancel "Premi Esc per annullare."
 .define res_string_label_tip_skip_copying "Per evitare il caricamento nella scheda RAM, tenere premuto \x0F\x1B\x41\x18\x0E durante l'avvio."

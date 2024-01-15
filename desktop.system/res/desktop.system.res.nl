@@ -1,3 +1,4 @@
+.define res_string_128k_required "128K EN IIE OF LATER VEREIST\r\rDRUK OP EEN TOETS OM TE VERLATEN"
 .define res_string_copying_to_ramcard "Kopieer Apple II DeskTop naar RAMCard..."
 .define res_string_esc_to_cancel "Afbreken met Esc."
 .define res_string_label_tip_skip_copying "Om het kopi\x10ren naar de RAMCard over te slaan, druk op \x0F\x1B\x41\x18\x0E tijdens de start."
