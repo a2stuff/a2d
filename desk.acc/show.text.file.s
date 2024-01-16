@@ -996,7 +996,7 @@ reserved:       .byte   0
 .endparams
 mode_mapinfo_viewloc_xcoord := mode_mapinfo::viewloc::xcoord
 
-        DEFINE_POINT mode_pos, 0, 9
+        DEFINE_POINT mode_pos, 0, 10
 
 .params winframerect_params
 window_id:      .byte   kDAWindowId
