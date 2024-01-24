@@ -92,6 +92,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Larger map image is shown.
 * Matrix: Show green-on-black text on IIgs.
 * New Screen Saver: Helix.
+* Electric Duet Preview: Detect Mockingboard and use for playback if found.
 
 ### Misc
 

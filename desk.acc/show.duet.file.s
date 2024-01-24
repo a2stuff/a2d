@@ -2,7 +2,7 @@
 ;;; SHOW.DUET.FILE - Desk Accessory
 ;;;
 ;;; Electric Duet by Paul Lutus
-;;; Player by Alexander Patalenski
+;;; Players by Alexander Patalenski and @cybernesto
 ;;;
 ;;; Preview accessory for playing Electric Duet files.
 ;;; ============================================================
@@ -296,12 +296,29 @@ exit:   rts
 ;;; ============================================================
 
 .proc PlayFile
+        jsr     FindMockingboard
+    IF_CS
+        copy16  #PlayerMockingboard, play_routine
+
+        ;; When Virtual ][ is running at accelerated speed it seems to
+        ;; not slow down immediately during Mockingboard playback,
+        ;; leading to glitches. Hitting the speaker seems to resolve
+        ;; this.
+        bit     SPKR
+        bit     SPKR
+    END_IF
+
+        ;; --------------------------------------------------
+
         bit     ROMIN2
 
         jsr     NORMFAST_norm
 
         bit     KBDSTRB         ; player will stop on keypress
-        jmp     p1              ; start with default player
+
+play:   ldax    #data_buf
+        play_routine := *+1
+        jsr     Player
 
 redo:
         ;; If a key was pressed, maybe restart with alt player
@@ -311,27 +328,23 @@ redo:
 
         cmp     #'1'|$80
         bne     :+
-p1:     ldax    #data_buf
-        jsr     Player
-        jmp     redo
+        copy16  #Player, play_routine
+        jmp     play
 :
         cmp     #'2'|$80
         bne     :+
-        ldax    #data_buf
-        jsr     Player2
-        jmp     redo
+        copy16  #Player2, play_routine
+        jmp     play
 :
         cmp     #'3'|$80
         bne     :+
-        ldax    #data_buf
-        jsr     Player3
-        jmp     redo
+        copy16  #PlayerMockingboard, play_routine
+        jmp     play
 :
         cmp     #'4'|$80
         bne     :+
-        ldax    #data_buf
-        jsr     Player4
-        jmp     redo
+        copy16  #PlayerCricket, play_routine
+        jmp     play
 :
 
 done:   jsr     NORMFAST_fast
@@ -638,13 +651,13 @@ L6726:  dec     Z41
 .endproc ; Player2
 
 ;;; ============================================================
-;;; Mockingboard Player - assumes Slot 4
+;;; Mockingboard Player - A,X = song
 ;;; By @cybernesto
 ;;; Used with permission
 
 ;;; https://github.com/cybernesto/electric-mock/blob/master/src/MOCKINGDUET.S
 
-.proc Player3
+.proc PlayerMockingboard
 ;;; *ELECTRIC DUET MUSIC PLAYER FOR THE MOCKINGBOARD
 ;;; *COPYRIGHT 2014 CYBERNESTO
 
@@ -687,6 +700,7 @@ SETNOTE:
         STA DURATION
         LDA #LEFTCHN
 SEND:   STA CHN
+        patch1 := *+2
         STA $C401
         JSR SETREG1
         INY
@@ -694,13 +708,16 @@ SEND:   STA CHN
         BEQ SKIP                ;IF 0 KEEP LTTSA
         JSR CONVFREQ
 SKIP:   LDA TONE
+        patch2 := *+2
         STA $C401
         JSR WRDATA1
         INC CHN
         LDA CHN
+        patch3 := *+2
         STA $C401
         JSR SETREG1
         LDA TONE+1
+        patch4 := *+2
         STA $C401
         JSR WRDATA1
         LDA #RIGHTCHN
@@ -736,51 +753,69 @@ LOBYTE: STA TONE
 
 
 RESET:  LDA #$00
+        patch5 := *+2
         STA $C400
+        patch6 := *+2
         STA $C480
         LDA #$04
+        patch7 := *+2
         STA $C400
+        patch8 := *+2
         STA $C480
         RTS
 
 INIT:   LDA #$FF
+        patch9 := *+2
         STA $C403
+        patch10 := *+2
         STA $C483
         LDA #$07
+        patch11 := *+2
         STA $C402
+        patch12 := *+2
         STA $C482
         RTS
 
 SETREG1:
         LDA #$07
+        patch13 := *+2
         STA $C400
         LDA #$04
+        patch14 := *+2
         STA $C400
         RTS
 
 WRDATA1:
         LDA #$06
+        patch15 := *+2
         STA $C400
         LDA #$04
+        patch16 := *+2
         STA $C400
         RTS
 
 ENACHN: LDA #ENAREG
+        patch17 := *+2
         STA $C401
         JSR SETREG1
         LDA #%00111100
+        patch18 := *+2
         STA $C401
         JSR WRDATA1
         LDA #VOL_A
+        patch19 := *+2
         STA $C401
         JSR SETREG1
         LDA #$0F
+        patch20 := *+2
         STA $C401
         JSR WRDATA1
         LDA #VOL_B
+        patch21 := *+2
         STA $C401
         JSR SETREG1
         LDA #$0F
+        patch22 := *+2
         STA $C401
         JSR WRDATA1
         RTS
@@ -788,7 +823,30 @@ ENACHN: LDA #ENAREG
 OCTAVE: .byte 1
 TEMPO:  .byte 8
 TEMP:   .byte 0
-.endproc ; Player3
+
+.proc ScanSlots
+        ptr := $06
+        copy16  #$C700, ptr
+probe:  param_call WithInterruptsDisabled, DetectMockingboard
+    IF_CS
+        ;; Found
+        lda     ptr+1
+        .repeat 22, i
+        sta     .ident(.sprintf("patch%d",i+1))
+        .endrepeat
+        rts                     ; C=1 is found
+    END_IF
+
+        dec     ptr+1
+        lda     ptr+1
+        cmp     #$C0
+        bne     probe
+
+        clc                     ; C=0 is not found
+        rts
+.endproc ; ScanSlots
+.endproc ; PlayerMockingboard
+FindMockingboard := PlayerMockingboard::ScanSlots
 
 ;;; ============================================================
 ;;; The Cricket! Player
@@ -797,7 +855,7 @@ TEMP:   .byte 0
 
 ;;; https://github.com/cybernesto/electric-mock/blob/master/src/CRICKETDUET.S
 
-.proc Player4
+.proc PlayerCricket
 ;;; *ELECTRIC DUET MUSIC PLAYER FOR THE CRICKET
 
 CHN             := $1D
@@ -931,7 +989,69 @@ ENACHN: LDA #ENAREG
 OCTAVE: .byte   1
 TEMPO:  .byte   8
 TEMP:   .byte   0
-.endproc ; Player4
+.endproc ; PlayerCricket
+
+;;; ============================================================
+
+;;; Wrapper for calling procs with interrupts disabled.
+;;; Inputs: A,X = proc to call
+;;; Outputs: A,X,Y registers and C flag return from proc unscathed.
+;;; Other flags will be trashed.
+.proc WithInterruptsDisabled
+        stax    addr
+
+        ;; Disable interrupts
+        php
+        sei
+
+        addr := *+1
+        jsr     SELF_MODIFIED
+
+        ;; Restore interrupts, while stashing/restoring C
+        rol     tmp
+        plp
+        ror     tmp
+
+        rts
+
+tmp:    .byte   0
+.endproc ; WithInterruptsDisabled
+
+;;; ============================================================
+
+;;; Detect Mockingboard
+;;; Assumes $06 points at $Cn00, returns carry set if found
+
+.proc DetectMockingboard
+        ptr := $06
+        tmp := $08
+
+        ;; Hit Slot 6, which causes accelerators e.g. Zip Chip
+        ;; to slow down.
+        ;; NOTE: $C0E0 causes Virtual ][ emulator to make sound;
+        ;; $C0EC (data read location) does not.
+        bit     $C0EC
+
+        ldy     #4              ; $Cn04
+        ldx     #2              ; try 2 times
+
+loop:   lda     (ptr),Y         ; 6522 Low-Order Counter
+        sta     tmp             ; read 8 cycles apart
+        lda     (ptr),Y
+
+        sec                     ; compare counter offset
+        sbc     tmp
+        cmp     #($100 - 8)
+        bne     fail
+        dex
+        bne     loop
+
+        sec
+        rts
+
+fail:   clc
+        rts
+.endproc ; DetectMockingboard
 
 ;;; ============================================================
 
