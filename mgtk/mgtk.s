@@ -4611,6 +4611,28 @@ done:   rts
 
 ;;; ============================================================
 
+;;; Inputs: Y = routine
+;;; NOTE: C does not reflect call result
+
+.proc CallMouseWithROMBankedIn
+        ;; Mouse firmware inspects ROM `VERSION` byte
+        bit     RDLCRAM
+        php
+        bit     ROMIN2          ; Bank ROM in unconditionally
+
+        jsr     CallMouse
+
+        plp
+    IF_NS
+        bit     LCBANK1         ; Bank RAM back in if needed
+        bit     LCBANK1
+    END_IF
+
+        rts
+.endproc ; CallMouseWithROMBankedIn
+
+;;; ============================================================
+
         ;; Call mouse firmware, kOperation in Y, param in A
 .proc CallMouse
         proc_ptr          := $88
@@ -4789,11 +4811,7 @@ no_mouse:
 
         MLI_CALL ALLOC_INTERRUPT, alloc_interrupt_params
 
-no_irq: lda     VERSION
-        pha
-        lda     #F8VERSION           ; F8 ROM IIe ID byte
-        sta     VERSION              ; Mouse firmware inspects the byte!
-
+no_irq:
         ldy     #SETMOUSE
         lda     #1
 
@@ -4801,10 +4819,8 @@ no_irq: lda     VERSION
         bpl     :+
         cli
         ora     #8
-:       jsr     CallMouse
-
-        pla
-        sta     VERSION
+:
+        jsr     CallMouseWithROMBankedIn ; ensure `VERSION` is accurate
 
         jsr     InitGrafImpl
         jsr     SetPointerCursor
@@ -10447,16 +10463,9 @@ loop:   txa
         inx                     ; no mouse found
         rts
 
-found:  lda     VERSION
-        pha
-        lda     #F8VERSION      ; F8 ROM IIe ID byte
-        sta     VERSION         ; Mouse firmware inspects the byte!
-
+found:
         ldy     #INITMOUSE
-        jsr     CallMouse
-
-        pla
-        sta     VERSION
+        jsr     CallMouseWithROMBankedIn ; ensure `VERSION` is accurate
 
         jsr     ScaleMouseImpl::set_clamps
         ldy     #HOMEMOUSE
