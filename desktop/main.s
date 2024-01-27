@@ -15017,8 +15017,6 @@ ADJUSTCASE_VOLBUF:      .tag    VolumeDirectoryHeader
         ADJUSTCASE_IO_BUFFER := IO_BUFFER
         .include "../lib/adjustfilecase.s"
 
-        SP_ALTZP = 1
-        SP_LCBANK1 = 1
         .include "../lib/smartport.s"
 
         .include "../lib/menuclock.s"

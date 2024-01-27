@@ -1,6 +1,5 @@
-;;; define `SP_ALTZP` if called with ALTZPON active, don't if ALTZPOFF
-;;; define `SP_LCBANK1` if called with LCBANK1 active, don't if ROMIN2
-
+;;; NOTE: Can be called with ALTZPON or OFF, and LCBANK1 or ROMIN2;
+;;; the initial banking state will be preserved.
 
 ;;; Internal ProDOS tables are used to handle mirrored drives. The
 ;;; locations vary between ProDOS versions. For details, see:
@@ -115,13 +114,17 @@ fail:   sec
         ;; Mirrored SmartPort device with a known handler.
         ;; Look at ProDOS's internal tables to determine.
 mirrored:
-.ifdef SP_ALTZP
-        sta     ALTZPOFF
-.endif
-.ifndef SP_LCBANK1
+        ;; Save and change banking
+        bit     RDALTZP
+        sta     ALTZPOFF        ; preserve state on main stack
+        php
+
+        bit     RDLCRAM
+        php
+
         bit     LCBANK1
         bit     LCBANK1
-.endif
+
         ;; Point `dispatch` at SPVecL table
         sta     dispatch
         tya                     ; Y = offset from start of driver
@@ -160,13 +163,17 @@ mirrored:
         pla                     ; A = sp vec lo
 
 
-.ifdef SP_ALTZP
-        sta     ALTZPON
-.endif
-.ifndef SP_LCBANK1
-        bit     ROMIN2
-.endif
+        ;; Restore banking
+        plp
+        bmi     :+              ; leave LCRAM
+        bit     ROMIN2          ; restore ROMIN2
+:
+        plp
+        bpl     :+              ; leave ALTZPOFF
+        sta     ALTZPON         ; restore ALTZPON
+:
 
+        ;; Exit
         clc
         rts
 

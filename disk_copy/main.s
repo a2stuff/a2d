@@ -1098,8 +1098,6 @@ is_laser128_flag:               ; high bit set if Laser 128
 
 ;;; ============================================================
 
-        SP_ALTZP = 1
-        SP_LCBANK1 = 1
         .include "../lib/smartport.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/readwrite_settings.s"
