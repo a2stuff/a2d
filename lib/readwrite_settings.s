@@ -31,7 +31,6 @@ write:  ldy     #OPC_STA_abx
         bit     RDBNK2
         php
 
-        sta     ALTZPOFF
         bit     LCBANK2
         bit     LCBANK2
 
