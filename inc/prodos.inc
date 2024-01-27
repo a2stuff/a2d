@@ -327,11 +327,7 @@ DRIVER_COMMAND_FORMAT  = 3
 param_count:    .byte   3
 pathname:       .addr   pn
 io_buffer:      .addr   io
-    .ifnblank rn
-ref_num:        .byte   rn
-    .else
 ref_num:        .byte   0
-    .endif
         .refto param_count
         .refto pathname
         .refto io_buffer

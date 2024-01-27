@@ -149,7 +149,7 @@ exit:   rts
 
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, INVOKER_PREFIX
 
-        DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800, 1
+        DEFINE_OPEN_PARAMS open_params, INVOKER_FILENAME, $800
         open_params__ref_num := open_params::ref_num
         open_params__io_buffer := open_params::io_buffer
         open_params__pathname := open_params::pathname
