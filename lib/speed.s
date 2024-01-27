@@ -23,6 +23,7 @@
 ;;; Required definitions:
 ;;; * `is_iigs_flag` - high bit set if on IIgs
 ;;; * `is_iiecard_flag` - high bit set if on Mac IIe Option Card
+;;; * `is_laser128_flag` - high bit set if on Laser 128
 ;;; ============================================================
 
 ;;; Assert: Aux LC is banked in; interrupts are inhibited

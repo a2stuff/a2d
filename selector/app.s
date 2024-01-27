@@ -298,20 +298,22 @@ num_secondary_run_list_entries:
 invoked_during_boot_flag:       ; set to 1 during key checks during boot, 0 otherwise
         .byte   0
 
-is_iigs_flag:                   ; high bit set if IIgs
+.scope machine_config
+iigs_flag:                      ; high bit set if IIgs
         .byte   0
 
-is_iiecard_flag:                ; high bit set if Mac IIe Option Card
+iiecard_flag:                   ; high bit set if Mac IIe Option Card
         .byte   0
 
-is_laser128_flag:               ; high bit set if Laser 128
+laser128_flag:                  ; high bit set if Laser 128
         .byte   0
 
-is_megaii_flag:                 ; high bit set if Mega II
+megaii_flag:                    ; high bit set if Mega II
         .byte   0
 
 lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
         .byte   0
+.endscope ; machine_config
 
 ;;; ============================================================
 ;;; Clock Resources
@@ -368,22 +370,22 @@ entry:
         lda     IDBYTEMACIIE
         cmp     #$02            ; Mac IIe Option Card signature
         bne     :+
-        copy    #$80, is_iiecard_flag
+        copy    #$80, machine_config::iiecard_flag
 :
         ;; Detect Laser 128
         lda     IDBYTELASER128
         cmp     #$AC
     IF_EQ
-        copy    #$80, is_laser128_flag
+        copy    #$80, machine_config::laser128_flag
     END_IF
 
         jsr     DetectLeChatMauveEve
         beq     :+              ; Z=1 means no LCMEve
-        copy    #$80, lcm_eve_flag
+        copy    #$80, machine_config::lcm_eve_flag
 :
         jsr     DetectMegaII
         bne     :+              ; Z=0 means Mega II
-        copy    #$80, is_megaii_flag
+        copy    #$80, machine_config::megaii_flag
 :
         copy    #$FF, selected_index
         copy    #BTK::kButtonStateDisabled, ok_button::state
@@ -1910,108 +1912,8 @@ len:    .byte   0
 .endproc ; SystemTaskFromLC
 
 ;;; ============================================================
-;;; Assert: ROM is banked in
 
-.proc SetRGBMode
-        ldx     #DeskTopSettings::rgb_color
-        jsr     ReadSetting
-        bpl     SetMonoMode
-        FALL_THROUGH_TO SetColorMode
-.endproc ; SetRGBMode
-
-.proc SetColorMode
-        ;; IIgs?
-        bit     is_iigs_flag
-        bmi     iigs
-
-        bit     is_megaii_flag
-        bmi     megaii
-
-        bit     lcm_eve_flag
-        bmi     lcmeve
-
-        ;; AppleColor Card - Mode 2 (Color 140x192)
-        ;; Also: Video-7 and Le Chat Mauve Feline
-        sta     SET80VID        ; set register to 1
-        sta     AN3_OFF
-        sta     AN3_ON          ; shift in 1 as first bit
-        sta     AN3_OFF
-        sta     AN3_ON          ; shift in 1 as second bit
-        sta     DHIRESON        ; re-enable DHR
-        rts
-
-        ;; Le Chat Mauve Eve - COL140 mode
-        ;; (AN3 off, HR1 off, HR2 off, HR3 off)
-lcmeve: sta     AN3_OFF
-        sta     HR1_OFF
-        sta     HR2_OFF
-        sta     HR3_OFF
-        rts
-
-        ;; Apple IIgs - DHR Color (Composite)
-iigs:   lda     #$00            ; Color
-        sta     MONOCOLOR
-        FALL_THROUGH_TO megaii
-
-        ;; Mega II - DHR Color (RGB)
-megaii: lda     NEWVIDEO
-        and     #<~(1<<5)       ; Color
-        sta     NEWVIDEO
-        rts
-.endproc ; SetColorMode
-
-.proc SetMonoMode
-        bit     is_iigs_flag
-        bmi     iigs
-
-        bit     is_megaii_flag
-        bmi     megaii
-
-        bit     lcm_eve_flag
-        bmi     lcmeve
-
-        ;; AppleColor Card - Mode 1 (Monochrome 560x192)
-        ;; Also: Video-7 and Le Chat Mauve Feline
-        sta     CLR80VID        ; set register to 0
-        sta     AN3_OFF
-        sta     AN3_ON          ; shift in 0 as first bit
-        sta     AN3_OFF
-        sta     AN3_ON          ; shift in 0 as second bit
-        sta     SET80VID        ; re-enable DHR
-        sta     DHIRESON
-        rts
-
-        ;; Le Chat Mauve Eve - BW560 mode
-        ;; (AN3 off, HR1 off, HR2 on, HR3 on)
-lcmeve: sta     AN3_OFF
-        sta     HR1_OFF
-        sta     HR2_ON
-        sta     HR3_ON
-        rts
-
-        ;; Apple IIgs - DHR B&W (Composite)
-iigs:   lda     #$80            ; Mono
-        sta     MONOCOLOR
-        FALL_THROUGH_TO megaii
-
-        ;; Mega IIe - DHR B&W (RGB)
-megaii: lda     NEWVIDEO
-        ora     #(1<<5)         ; B&W
-        sta     NEWVIDEO
-done:   rts
-.endproc ; SetMonoMode
-
-;;; On IIgs, force preferred RGB mode. No-op otherwise.
-
-.proc ResetIIgsRGB
-        bit     is_iigs_flag
-        bpl     SetMonoMode::done ; nope
-
-        ldx     #DeskTopSettings::rgb_color
-        jsr     ReadSetting
-        bmi     SetColorMode::iigs
-        bpl     SetMonoMode::iigs ; always
-.endproc ; ResetIIgsRGB
+        .include "../lib/monocolor.s"
 
 ;;; ============================================================
 ;;; Called by main and nested event loops to do periodic tasks.
@@ -2044,6 +1946,10 @@ loop_counter:
         .include "../lib/doubleclick.s"
         .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"
+
+        is_iigs_flag := machine_config::iigs_flag
+        is_iiecard_flag := machine_config::iiecard_flag
+        is_laser128_flag := machine_config::laser128_flag
         .include "../lib/speed.s"
         .include "../lib/bell.s"
         .include "../lib/detect_megaii.s"
