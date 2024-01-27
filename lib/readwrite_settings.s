@@ -21,16 +21,17 @@ write:  ldy     #OPC_STA_abx
         sty     op
 
         ;; Save and change banking
-        ldy     RDALTZP
-        sty     rdaltzp_flag
+        bit     RDALTZP
+        sta     ALTZPOFF        ; preserve state on main stack
+        php
 
-        ldy     RDLCRAM
-        sty     rdlcram_flag
+        bit     RDLCRAM
+        php
 
-        ldy     RDBNK2
-        sty     rdbnk2_flag
+        bit     RDBNK2
+        php
 
-        sty     ALTZPOFF
+        sta     ALTZPOFF
         bit     LCBANK2
         bit     LCBANK2
 
@@ -38,21 +39,18 @@ write:  ldy     #OPC_STA_abx
 op:     lda     SETTINGS,x      ; self-modified
 
         ;; Restore banking
-        rdaltzp_flag := *+1
-        ldy     #SELF_MODIFIED_BYTE
-        bpl     :+              ; leave ALTZPOFF
-        sty     ALTZPON         ; restore ALTZPON
-:
-        rdbnk2_flag := *+1
-        ldy     #SELF_MODIFIED_BYTE
+        plp
         bmi     :+              ; leave LCBANK2
         bit     LCBANK1         ; restore LCBANK1
         bit     LCBANK1
 :
-        rdlcram_flag := *+1
-        ldy     #SELF_MODIFIED_BYTE
-        bmi     :+
+        plp
+        bmi     :+              ; leave LCRAM
         bit     ROMIN2          ; restore ROMIN2
+:
+        plp
+        bpl     :+              ; leave ALTZPOFF
+        sta     ALTZPON         ; restore ALTZPON
 :
         pha                     ; ensure Z/N are set
         pla
