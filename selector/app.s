@@ -360,7 +360,7 @@ entry:
         sec
         jsr     IDROUTINE       ; clear C if IIgs
     IF_CC
-        copy    #$80, is_iigs_flag
+        copy    #$80, machine_config::iigs_flag
     END_IF
 
         ;; Detect Mac IIe Option Card
@@ -1943,9 +1943,6 @@ loop_counter:
         .include "../lib/drawstring.s"
         .include "../lib/muldiv.s"
 
-        is_iigs_flag := machine_config::iigs_flag
-        is_iiecard_flag := machine_config::iiecard_flag
-        is_laser128_flag := machine_config::laser128_flag
         .include "../lib/speed.s"
         .include "../lib/bell.s"
         .include "../lib/detect_megaii.s"

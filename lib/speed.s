@@ -21,16 +21,16 @@
 ;;; * `ResumeSpeed` - restores accelerator to previous state
 ;;; ============================================================
 ;;; Required definitions:
-;;; * `is_iigs_flag` - high bit set if on IIgs
-;;; * `is_iiecard_flag` - high bit set if on Mac IIe Option Card
-;;; * `is_laser128_flag` - high bit set if on Laser 128
+;;; * `machine_config::iigs_flag` - high bit set if on IIgs
+;;; * `machine_config::iiecard_flag` - high bit set if on Mac IIe Option Card
+;;; * `machine_config::laser128_flag` - high bit set if on Laser 128
 ;;; ============================================================
 
 ;;; Assert: Aux LC is banked in; interrupts are inhibited
 ;;; NOTE: Must be called after `SlowSpeed`
 .proc ResumeSpeed
         ;; Restore speed on IIgs
-        bit     is_iigs_flag
+        bit     machine_config::iigs_flag
     IF_NS
         ResumeSpeed::saved_cyareg := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -38,7 +38,7 @@
     END_IF
 
         ;; Restore speed on Mac IIe Option Card
-        bit     is_iiecard_flag
+        bit     machine_config::iiecard_flag
     IF_NS
         ResumeSpeed::saved_maciie := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -46,7 +46,7 @@
     END_IF
 
         ;; Restore speed on Laser 128
-        bit     is_laser128_flag
+        bit     machine_config::laser128_flag
     IF_NS
         ResumeSpeed::saved_laserreg := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -60,7 +60,7 @@
 ;;; NOTE: Must be followed by a call to `ResumeSpeed`
 .proc SlowSpeed
         ;; Slow down on IIgs
-        bit     is_iigs_flag
+        bit     machine_config::iigs_flag
     IF_NS
         lda     CYAREG
         sta     ResumeSpeed::saved_cyareg
@@ -71,7 +71,7 @@
         ;; Slow down on Mac IIe Option Card
         ;; Per Technical Note: Apple IIe #10: The Apple IIe Card for the Macintosh LC
         ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.10.html
-        bit     is_iiecard_flag
+        bit     machine_config::iiecard_flag
     IF_NS
         lda     MACIIE
         sta     ResumeSpeed::saved_maciie
@@ -80,7 +80,7 @@
     END_IF
 
         ;; Slow down on Laser 128 (EX or EX/2)
-        bit     is_laser128_flag
+        bit     machine_config::laser128_flag
     IF_NS
         lda     LASER128EX_CFG
         sta     ResumeSpeed::saved_laserreg
