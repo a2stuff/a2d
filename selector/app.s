@@ -1912,10 +1912,6 @@ len:    .byte   0
 .endproc ; SystemTaskFromLC
 
 ;;; ============================================================
-
-        .include "../lib/monocolor.s"
-
-;;; ============================================================
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
@@ -1958,6 +1954,7 @@ loop_counter:
         .include "../lib/disconnect_ram.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/readwrite_settings.s"
+        .include "../lib/monocolor.s"
 
          ADJUSTCASE_VOLPATH := $810
          ADJUSTCASE_VOLBUF  := $820

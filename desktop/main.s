@@ -9832,10 +9832,6 @@ LoadDynamicRoutine      := LoadDynamicRoutineImpl::load
 RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
 ;;; ============================================================
-
-        .include "../lib/monocolor.s"
-
-;;; ============================================================
 ;;; Operations performed on selection
 ;;;
 ;;; These operate on the entire selection recursively, e.g.
@@ -14933,6 +14929,7 @@ ADJUSTCASE_VOLBUF:      .tag    VolumeDirectoryHeader
         .include "../lib/readwrite_settings.s"
         .include "../lib/get_next_event.s"
         .include "../lib/muldiv16.s"
+        .include "../lib/monocolor.s"
 
         is_iigs_flag := machine_config::iigs_flag
         is_iiecard_flag := machine_config::iiecard_flag
