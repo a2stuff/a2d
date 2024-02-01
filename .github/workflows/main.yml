@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: a2stuff/build-install-ca65-action@v2
       - uses: a2stuff/build-install-cadius-action@v1
 
@@ -43,7 +43,7 @@ jobs:
 
       - name: deploy new version
         if: startsWith(github.ref, 'refs/tags/')
-        uses: ncipollo/release-action@v1.11.2
+        uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "out/*.zip,res/README.txt"
