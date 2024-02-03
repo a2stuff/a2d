@@ -55,7 +55,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Errors encountered when copying to RAMCard now show standard alerts.
 * Fully clear and reset text screen when quick-booting from a slot.
 * Show progress bar while copying shortcut to RAMCard.
-* Prevent crash on IIc+ under ProDOS 2.4.3.
+* Prevent crash on IIc+ under ProDOS 2.4.3. ([#789](https://github.com/a2stuff/a2d/issues/789))
 
 ### Disk Copy
 
