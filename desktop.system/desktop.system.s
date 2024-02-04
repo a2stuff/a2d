@@ -21,7 +21,7 @@
 ;;;          :.............:
 ;;;          |.............|
 ;;;          |.(buffer)....|    * data buffer for copies to RAMCard
-;;;   $3680  +-------------+
+;;;   $3900  +-------------+
 ;;;          |             |
 ;;;          |             |
 ;;;          |             |
@@ -55,7 +55,7 @@ src_io_buffer   := $E00         ; 1024 bytes for I/O
 dst_io_buffer   := $1200        ; 1024 bytes for I/O
 selector_buffer := $1600        ; Room for `kSelectorListBufSize`
 
-copy_buffer     := $3700
+copy_buffer     := $3900
 kCopyBufferSize = MLI - copy_buffer
         .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "better performance for an integral number of blocks"
 
@@ -2279,3 +2279,7 @@ done:   rts
         ADJUSTCASE_VOLBUF  := $820
         ADJUSTCASE_IO_BUFFER := src_io_buffer
         .include "../lib/adjustfilecase.s"
+
+;;; ============================================================
+
+        .assert * <= copy_buffer, error, "copy_buffer collides with code"
