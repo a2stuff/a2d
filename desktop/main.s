@@ -33,7 +33,6 @@ JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
 JT_SYSTEM_TASK:         jmp     SystemTask              ; *
 JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
-JT_SHOW_ALERT_OPTIONS:  jmp     ShowAlertOption
 JT_SHOW_ALERT_PARAMS :  jmp     ShowAlertStruct         ; *
 JT_LAUNCH_FILE:         jmp     LaunchFileWithPath
 JT_SHOW_FILE:           jmp     ShowFileWithPath        ; *
