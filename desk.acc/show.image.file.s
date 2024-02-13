@@ -226,8 +226,17 @@ slideshow_counter:
 
 ;;; ============================================================
 
+restore_10k_overlay_flag:
+        .byte   0
+
 .proc Exit
         jsr     MaybeCallExitHook
+
+        bit     restore_10k_overlay_flag
+    IF_NS
+        lda     #kDynamicRoutineRestore10K
+        jsr     JUMP_TABLE_RESTORE_OVL
+    END_IF
 
         jsr     JUMP_TABLE_RGB_MODE
 
@@ -382,6 +391,7 @@ signature:
 .proc ShowLZ4FHFile
         sta     PAGE2OFF
 
+        copy    #$80, restore_10k_overlay_flag
         copy16  #OVERLAY_10K_BUFFER, read_params::data_buffer
         JUMP_TABLE_MLI_CALL READ, read_params
         copy16  #$2000, read_params::data_buffer
@@ -393,17 +403,6 @@ signature:
         copy16  #OVERLAY_10K_BUFFER, LZ4FH__in_src
         copy16  #$2000, LZ4FH__in_dst
         jsr     LZ4FH
-        php
-
-        lda     #kDynamicRoutineRestore10K
-        jsr     JUMP_TABLE_RESTORE_OVL
-
-        ;; `JUMP_TABLE_RESTORE_OVL` calls `MGTK::SetCursor` which
-        ;; resets the cursor count and shows it, so we need to hide
-        ;; it again before the HR->DHR conversion.
-        JUMP_TABLE_MGTK_CALL MGTK::HideCursor
-
-        plp
         bne     fail
 
         jsr     HRToDHR
