@@ -94,6 +94,8 @@ Project Page: https://github.com/a2stuff/a2d
 * Matrix: Show green-on-black text on IIgs.
 * New Screen Saver: Helix.
 * Electric Duet Preview: Detect Mockingboard and The Cricket!, and use for playback if found.
+* New DA: Benchmark - measures CPU speed using VBL.
+
 
 ### Misc
 

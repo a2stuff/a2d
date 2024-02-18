@@ -8,7 +8,6 @@
         ;; TODO: Print modification date
 
         .include "../config.inc"
-        RESOURCE_FILE "find.files.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"

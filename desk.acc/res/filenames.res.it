@@ -27,3 +27,4 @@
 .define res_filename_digital_clock "orologio.digit"
 .define res_filename_print_catalog "Stampa.Catalogo"
 .define res_filename_change_type "modifica.tipo"
+.define res_filename_benchmark "benchmark"

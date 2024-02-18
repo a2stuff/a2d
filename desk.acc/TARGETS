@@ -30,6 +30,7 @@ key.caps                        apple.menu                      optional
 run.basic.here                  apple.menu                      optional
 sort.directory                  apple.menu                      optional
 cd.remote                       extras                          extra
+benchmark                       extras                          extra
 darkness                        extras                          extra
 sci.calc                        extras                          extra
 screen.dump                     extras                          extra

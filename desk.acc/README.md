@@ -76,6 +76,8 @@
   * A debugging tool that paints the whole screen a dark pattern.
 * [Screen Dump](screen.dump.s)
   * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1.
+* [Benchmark](benchmark.s)
+  * Measures CPU speed using VBL.
 
 Note that the new desk accessories require an updated version of Apple II DeskTop and **will not work** with DeskTop 1.1 or MouseDesk.
 

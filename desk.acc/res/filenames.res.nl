@@ -27,3 +27,4 @@
 .define res_filename_digital_clock "digitale.klok"
 .define res_filename_print_catalog "print.catalogus"
 .define res_filename_change_type "wijzig.type"
+.define res_filename_benchmark "benchmark"

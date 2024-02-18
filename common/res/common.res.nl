@@ -14,6 +14,7 @@
 .define res_string_shortcut_apple_3 " (\x1F3)"
 .define res_string_shortcut_apple_4 " (\x1F4)"
 .define res_string_shortcut_apple_5 " (\x1F5)"
+.define res_string_shortcut_apple_6 " (\x1F6)"
 .define res_char_shortcut_resize ' '
 .define res_char_shortcut_move ' '
 .define res_char_shortcut_scroll 'X'

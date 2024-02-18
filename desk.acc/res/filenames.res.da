@@ -27,3 +27,4 @@
 .define res_filename_digital_clock "digitalt.ur"
 .define res_filename_print_catalog "Udskriv.katalog"
 .define res_filename_change_type "skift.type"
+.define res_filename_benchmark "benchmark"
