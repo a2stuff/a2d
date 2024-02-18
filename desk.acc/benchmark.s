@@ -109,8 +109,8 @@ str_spaces:     PASCAL_STRING "    "
 
 counter:        .word   0       ; set by `ProbeSpeed`
 
-        kSpeedDefault60Hz = 1063
-        kSpeedDefault50Hz = 1275 ; TODO: Validate on real hardware
+        kSpeedDefault60Hz = 97  ; Measured
+        kSpeedDefault50Hz = kSpeedDefault60Hz * 60 / 50 ; TODO: Validate on real hardware
         kSpeedMax = 16          ; MHz
 
         kMeterTop = 24
@@ -412,11 +412,20 @@ done:   jmp     InputLoop
         ;; Loop until full cycle seen
 loop1:
         inc16   counter
+
+        ldx     #$20            ; IIgs slows to read VBL; spin
+:       dex                     ; here so bulk of loop is fast.
+        bne     :-              ; c/o Kent Dickey
+
         bit     RDVBLBAR
         bpl     loop1
 
 loop2:
         inc16   counter
+
+        ldx     #$20            ; IIgs slows to read VBL; spin
+:       dex                     ; here so bulk of loop is fast.
+        bne     :-              ; c/o Kent Dickey
 
         bit     RDVBLBAR
         bmi     loop2
@@ -442,6 +451,11 @@ loop2:
         ;; Wait for VBL
 loop2c:
         inc16   counter
+
+        ldx     #$20            ; IIgs slows to read VBL; spin
+:       dex                     ; here so bulk of loop is fast.
+        bne     :-              ; c/o Kent Dickey
+
         bit     RDVBLBAR
         bpl     loop2c
         bit     IOUDISON        ; = RDIOUDIS (since PTRIG sould slow)
