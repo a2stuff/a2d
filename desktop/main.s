@@ -3206,6 +3206,16 @@ CmdGetInfo      := DoGetInfo
         jsr     DoRename
         pha                     ; A = result
 
+        ;; If selection in non-active window, activate it
+        lda     selected_window_id
+    IF_NE
+        cmp     active_window_id
+      IF_NE
+        sta     findwindow_params::window_id
+        jsr     ActivateWindow
+      END_IF
+    END_IF
+
         ;; If selection is in a window with View > by Name, refresh
         lda     selected_window_id
     IF_NE
@@ -3214,6 +3224,9 @@ CmdGetInfo      := DoGetInfo
       IF_EQ
         txa                     ; X = window id
         jsr     ViewByCommon::entry2
+
+        lda     selected_icon_list
+        jsr     ScrollIconIntoView
       ELSE
         ;; Scrollbars may need adjusting
         jsr     ScrollUpdate

@@ -48,6 +48,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Show special icon for folders with AuxType $8000.
 * Show progress bar during copy and delete operations.
 * Click on menu bar clock now shows Date & Time DA.
+* Refresh correct window after renaming an icon, if view is by name.
 
 ### Selector
 
