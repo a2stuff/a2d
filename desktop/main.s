@@ -6190,9 +6190,7 @@ UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 
         ;; First row
         ldax    #kListViewFirstBaseline
-        stax    pos_col_type::ycoord
-        stax    pos_col_size::ycoord
-        stax    pos_col_date::ycoord
+        stax    pos_col::ycoord
 
         ;; Draw each list view row
         lda     #0
@@ -8348,31 +8346,37 @@ CompareFileRecords_sort_by := CompareFileRecords::sort_by
         bit     LCBANK1
 
         ;; Below bottom?
-        scmp16  pos_col_type::ycoord, window_grafport::maprect::y2
+        scmp16  pos_col::ycoord, window_grafport::maprect::y2
         bpl     ret
 
-        add16_8 pos_col_type::ycoord, #kListViewRowHeight
-        add16_8 pos_col_size::ycoord, #kListViewRowHeight
-        add16_8 pos_col_date::ycoord, #kListViewRowHeight
+        add16   pos_col::ycoord, #kListViewRowHeight, pos_col::ycoord
 
         ;; Above top?
-        scmp16  pos_col_type::ycoord, window_grafport::maprect::y1
+        scmp16  pos_col::ycoord, window_grafport::maprect::y1
         bpl     in_range
 ret:    rts
 
         ;; Draw it!
 in_range:
-        MGTK_CALL MGTK::MoveTo, pos_col_type
+        ldax    #kColType
+        jsr     set_pos
         jsr     PrepareColType
         param_call DrawString, text_buffer2
 
-        MGTK_CALL MGTK::MoveTo, pos_col_size
+        ldax    #kColSize
+        jsr     set_pos
         jsr     PrepareColSize
         param_call DrawStringRight, text_buffer2
 
-        MGTK_CALL MGTK::MoveTo, pos_col_date
+        ldax    #kColDate
+        jsr     set_pos
         jsr     ComposeDateString
         param_jump DrawString, text_buffer2
+
+set_pos:
+        stax    pos_col::xcoord
+        MGTK_CALL MGTK::MoveTo, pos_col
+        rts
 .endproc ; DrawListViewRow
 
 ;;; ============================================================

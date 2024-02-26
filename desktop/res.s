@@ -812,9 +812,10 @@ window_title_addr_table:
 win_view_by_table:
         .res    kMaxDeskTopWindows, 0
 
-        DEFINE_POINT pos_col_type, 128, 0
-        DEFINE_POINT pos_col_size, 212, 0 ; right-aligned
-        DEFINE_POINT pos_col_date, 231, 0
+        DEFINE_POINT pos_col, 0, 0
+        kColType = 128
+        kColSize = 212          ; right-aligned
+        kColDate = 231
 
 ;;; Scratch buffer visible to MGTK, primarily used for list view columns.
 kTextBuffer2Len = 49
