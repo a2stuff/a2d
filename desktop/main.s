@@ -496,8 +496,8 @@ not_menu:
         pha                     ; A = MGTK::Area::*
 
         ;; Activate if needed
-        lda     active_window_id
-        cmp     findwindow_params::window_id
+        lda     findwindow_params::window_id
+        cmp     active_window_id
     IF_NE
         jsr     ActivateWindow
     END_IF
@@ -527,10 +527,12 @@ dispatch_click:
 
 ;;; ============================================================
 ;;; Activate the window, and sets selection to its parent icon
-;;; Inputs: window id to activate in `findwindow_params::window_id`
+;;; Inputs: A = window id to activate
 
 .proc ActivateWindowAndSelectIcon
+        pha
         jsr     ClearSelection
+        pla
         jsr     ActivateWindow
 
         ;; Try to select the window's parent icon. (Only works
@@ -542,10 +544,11 @@ dispatch_click:
 
 ;;; ============================================================
 ;;; Activate the window, draw contents, and update menu items
-;;; Inputs: window id to activate in `findwindow_params::window_id`
+;;; Inputs: A = window id to activate
 
 .proc ActivateWindow
         ;; Make the window active.
+        sta     findwindow_params::window_id
         MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
         copy    findwindow_params::window_id, active_window_id
 
@@ -3211,7 +3214,6 @@ CmdGetInfo      := DoGetInfo
     IF_NE
         cmp     active_window_id
       IF_NE
-        sta     findwindow_params::window_id
         jsr     ActivateWindow
       END_IF
     END_IF
@@ -3793,8 +3795,7 @@ reverse:
         FALL_THROUGH_TO found
 
 found:  inx
-        stx     findwindow_params::window_id
-
+        txa
         jmp     ActivateWindow
 
 done:   rts
@@ -5091,7 +5092,6 @@ exception_flag:
         pla                     ; A = window_id
         cmp     active_window_id
         beq     :+
-        sta     findwindow_params::window_id
         jsr     ActivateWindowAndSelectIcon ; bring to front
 :
         ;; Clear background
@@ -5878,7 +5878,7 @@ found_win:                    ; X = window id - 1
         RTS_IF_EQ
 
         ;; Otherwise, bring the window to the front.
-        stx     findwindow_params::window_id
+        txa
         jmp     ActivateWindow
 
         ;; --------------------------------------------------
@@ -12994,6 +12994,13 @@ appleworks:
 ;;; ============================================================
 ;;; Message handler for OK/Cancel dialog
 
+;;; NOTE: These are referenced by indirect JMP and *must not*
+;;; cross page boundaries.
+PromptDialogClickHandlerHook:
+        .addr   SELF_MODIFIED
+PromptDialogKeyHandlerHook:
+        .addr   SELF_MODIFIED
+
 ;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
 
 .proc PromptInputLoop
@@ -13205,13 +13212,6 @@ allow:  clc
 ignore: sec
         rts
 .endproc ; IsFilenameChar
-
-;;; ============================================================
-
-PromptDialogClickHandlerHook:
-        .addr   SELF_MODIFIED
-PromptDialogKeyHandlerHook:
-        .addr   SELF_MODIFIED
 
 ;;; ============================================================
 ;;; "About" dialog
