@@ -334,7 +334,7 @@ INVOKER_INTERPRETER     := $380 ; If non-empty, use path as interpreter.
 ;;; $04 = file right   !           $14 = divide       *
 ;;; $05 = disk left    !           $15 = rarrow       ! (MT:U)
 ;;; $06 = disk right   !           $16 = degree       !
-;;; $07 = hbar           (MT:S)    $17 = open circ
+;;; $07 = lock         !           $17 = open circ
 ;;; $08 = larrow       ! (MT:H)    $18 = close          (MT:])
 ;;; $09 = left box                 $19 = gray odd       (MT:W)
 ;;; $0A = darrow       ! (MT:J)    $1A = gray even      (MT:V)
@@ -357,6 +357,7 @@ kGlyphFileRight         = $04
 kGlyphDiskLeft          = $05
 kGlyphDiskRight         = $06
 
+kGlyphLock              = $07
 kGlyphLeftArrow         = $08
 kGlyphRightArrow        = $15
 kGlyphUpArrow           = $0B

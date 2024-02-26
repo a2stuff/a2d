@@ -3189,9 +3189,23 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; These commands don't need anything beyond the operation.
+.proc CmdGetInfo
+        jsr     DoGetInfo
+    IF_NS
+        ;; Selected items were modified (e.g. locked), so refresh
+        lda     selected_window_id
+      IF_NOT_ZERO               ; windowed (not desktop); no refresh needed
+        cmp     active_window_id
+       IF_EQ
+        jsr     ClearAndDrawActiveWindowEntries ; active - just repaint
+       ELSE
+        jsr     ActivateWindow  ; inactivate - activate, it will repaint
+       END_IF
+      END_IF
+    END_IF
 
-CmdGetInfo      := DoGetInfo
+        rts
+.endproc ; CmdGetInfo
 
 ;;; ============================================================
 
@@ -8358,6 +8372,11 @@ ret:    rts
 
         ;; Draw it!
 in_range:
+        ldax    #kColLock
+        jsr     set_pos
+        jsr     PrepareColLock
+        param_call DrawString, text_buffer2
+
         ldax    #kColType
         jsr     set_pos
         jsr     PrepareColType
@@ -8391,6 +8410,21 @@ set_pos:
 
         rts
 .endproc ; PrepareColType
+
+.proc PrepareColLock
+        copy    #0, text_buffer2
+
+        access := list_view_filerecord + FileRecord::access
+        lda     access
+        and     #ACCESS_DEFAULT
+        cmp     #ACCESS_DEFAULT
+    IF_NE
+        inc     text_buffer2
+        copy    #kGlyphLock, text_buffer2+1
+    END_IF
+
+        rts
+.endproc ; PrepareColLock
 
 .proc PrepareColSize
         file_type := list_view_filerecord + FileRecord::file_type
@@ -10292,6 +10326,7 @@ state:  .byte   0
 a_str:  .addr   0               ; e.g. string address
 locked: .byte   0               ; bit7 = 1 if file, bit6 = 1 if locked
 index:  .byte   0               ; index in selected icon list
+refresh:.byte   0               ; bit7 = 1 if selection modified
 .endparams
 
 .enum GetInfoDialogState
@@ -10311,13 +10346,17 @@ index:  .byte   0               ; index in selected icon list
 
 ;;; ============================================================
 ;;; Get Info
-
+;;; Returns: A has bit7 = 1 if selected items were modified
 ;;; Assert: At least one icon is selected
+
 .proc DoGetInfo
         lda     selected_icon_count
         RTS_IF_ZERO
 
-        copy    #0, get_info_dialog_params::index
+        lda     #0
+        sta     get_info_dialog_params::index
+        sta     get_info_dialog_params::refresh
+
 loop:   ldx     get_info_dialog_params::index
         cpx     selected_icon_count
         jeq     done
@@ -10529,6 +10568,7 @@ next:   inc     get_info_dialog_params::index
         jmp     loop
 
 done:   copy    #0, path_buf4
+        lda     get_info_dialog_params::refresh
         rts
 
 .proc GetDirSize
@@ -10768,22 +10808,8 @@ finish: lda     #RenameDialogState::close
         sub16_8 tmp_rect::y2, #kIconLabelHeight + kIconLabelGap, tmp_rect::y2
     END_IF
 
-        ldy     #IconEntry::record_num
-        lda     (icon_ptr),y
-        pha                     ; A = index of icon in window
-
-        ;; Find the window's FileRecord list.
         file_record_ptr := $08
-        lda     selected_window_id
-        jsr     GetFileRecordListForWindow
-        stax    file_record_ptr ; points at head of list (entry count)
-        inc16   file_record_ptr ; now points at first FileRecord in list
-
-        ;; Look up the FileRecord within the list.
-        pla                     ; A = index
-        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
-        jsr     ATimes32        ; A,X = index * 32
-        addax   file_record_ptr, file_record_ptr
+        jsr     SetFileRecordPtrFromIconPtr
 
         ;; Bank in FileRecords, and copy the new name in.
         bit     LCBANK2
@@ -10870,6 +10896,32 @@ result_flags:
         .byte   0
 .endproc ; DoRenameImpl
 DoRename        := DoRenameImpl::start
+
+;;; ============================================================
+;;; Input: $06 has `IconEntry` ptr
+;;; Output: $08 has `FileRecord` ptr
+
+.proc SetFileRecordPtrFromIconPtr
+        icon_ptr := $06
+        file_record_ptr := $08
+
+        ldy     #IconEntry::record_num
+        lda     (icon_ptr),y
+        pha                     ; A = index of icon in window
+
+        ;; Find the window's FileRecord list.
+        lda     selected_window_id
+        jsr     GetFileRecordListForWindow
+        stax    file_record_ptr ; points at head of list (entry count)
+        inc16   file_record_ptr ; now points at first FileRecord in list
+
+        ;; Look up the FileRecord within the list.
+        pla                     ; A = index
+        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        jsr     ATimes32        ; A,X = index * 32
+        addax   file_record_ptr, file_record_ptr
+        rts
+.endproc ; SetFileRecordPtrFromIconPtr
 
 ;;; ============================================================
 ;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
@@ -13542,6 +13594,26 @@ do_close:
         eor     #$80
         sta     locked_button::state
         BTK_CALL BTK::CheckboxUpdate, locked_button
+
+        ;; Update FileRecord
+        icon_ptr := $06
+        file_record_ptr := $08
+
+        ldx     get_info_dialog_params::index
+        lda     selected_icon_list,x
+        jsr     GetIconEntry
+        stax    icon_ptr
+        jsr     SetFileRecordPtrFromIconPtr
+
+        bit     LCBANK2
+        bit     LCBANK2
+        lda     src_file_info_params::access
+        ldy     #FileRecord::access
+        sta     (file_record_ptr),y
+        bit     LCBANK1
+        bit     LCBANK1
+
+        copy    #$80, get_info_dialog_params::refresh
 
 ret:    return  #$FF
 .endproc ; ToggleFileLock
