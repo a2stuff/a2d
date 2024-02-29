@@ -5059,6 +5059,7 @@ top:    .word   0               ; initialized by `StartDeskTopImpl`)
 right:  .word   kScreenWidth-1
 bottom: .word   kScreenHeight-1
 .endparams
+.assert desktop_rect = desktop_port_bits + MGTK::GrafPort::maprect, error, "misalignment"
 
 desktop_pattern:
         .byte   %01010101
@@ -10562,24 +10563,10 @@ rect       .tag MGTK::Rect
 .proc RedrawDeskTopImpl
         jsr     SetDesktopPort
 
-        ldx     #3
-:       lda     desktop_port_bits,x
-        sta     left,x
-        lda     desktop_rect::right,x
-        sta     right,x
-        dex
-        bpl     :-
-
+        ;; Needed by `EraseWindow`
+        COPY_STRUCT MGTK::Rect, desktop_rect, left
         jsr     ClipRect
-
-        ldx     #3
-:       lda     left,x
-        sta     set_port_maprect,x
-        sta     set_port_params,x
-        lda     right,x
-        sta     set_port_size,x
-        dex
-        bpl     :-
+        COPY_STRUCT MGTK::MapInfo, desktop_port_bits, set_port_params
 
         ;; Restored by `EraseWindow`
         jsr     HideCursorSaveParams
