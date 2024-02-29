@@ -4739,8 +4739,8 @@ savesize        .word
         inx                                   ; font height + 4: top of desktop area
         stx     set_port_top
         stx     winframe_top
-        stx     desktop_port_y
-        stx     fill_rect_top
+        stx     desktop_port_bits+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
+        stx     desktop_rect+MGTK::Rect::y1
 
         dex
         stx     menu_item_y_table
@@ -4835,7 +4835,7 @@ reset_desktop:
 
         ;; Fills the desktop background on startup (menu left black)
         MGTK_CALL MGTK::SetPattern, desktop_pattern
-        MGTK_CALL MGTK::PaintRect, fill_rect_params
+        MGTK_CALL MGTK::PaintRect, desktop_rect
         jmp     RestoreParamsActivePort
 .endproc ; StartDeskTopImpl
 
@@ -5043,26 +5043,22 @@ stack_ptr_save:
         jsr     SetStandardPort
         MGTK_CALL MGTK::SetPortBits, desktop_port_bits
         rts
+.endproc ; SetDesktopPort
 
-desktop_port_bits:
+.params desktop_port_bits
         .word   0               ; viewloc x
-port_y:
-        .word   13              ; viewloc y = font height + 4
+        .word   13              ; viewloc y (initialized by `StartDeskTopImpl`)
         .word   $2000           ; mapbits
         .byte   $80             ; mapwidth
         .res    1               ; reserved
-.endproc ; SetDesktopPort
+.endparams
 
-desktop_port_y := SetDesktopPort::port_y
-
-
-.params fill_rect_params
+.params desktop_rect
 left:   .word   0
-top:    .word   0
+top:    .word   0               ; initialized by `StartDeskTopImpl`)
 right:  .word   kScreenWidth-1
 bottom: .word   kScreenHeight-1
 .endparams
-        fill_rect_top := fill_rect_params::top
 
 desktop_pattern:
         .byte   %01010101
@@ -8194,7 +8190,7 @@ win_port  .addr
         jsr     WindowByIdOrExit
         copy16  params::win_port, params_addr
 
-        COPY_STRUCT MGTK::Rect, fill_rect_params, current_maprect_x1
+        COPY_STRUCT MGTK::Rect, desktop_rect, current_maprect_x1
 
         jsr     PrepareWinport
         bcc     err_obscured
@@ -10567,9 +10563,9 @@ rect       .tag MGTK::Rect
         jsr     SetDesktopPort
 
         ldx     #3
-:       lda     SetDesktopPort::desktop_port_bits,x
+:       lda     desktop_port_bits,x
         sta     left,x
-        lda     fill_rect_params::right,x
+        lda     desktop_rect::right,x
         sta     right,x
         dex
         bpl     :-
