@@ -868,10 +868,13 @@ hires_table_hi:
         left_masks_table     := $92        ; bitmasks for left edge indexed by page (0=main, 1=aux)
         right_masks_table    := $96        ; bitmasks for right edge indexed by page (0=main, 1=aux)
 
-        top                  := $94        ; top/starting/current y-coordinate
-        bottom               := $98        ; bottom/ending/maximum y-coordinate
         left                 := $92
+        top                  := $94        ; top/starting/current y-coordinate
         right                := $96
+        bottom               := $98        ; bottom/ending/maximum y-coordinate
+
+        clipped_left         := $9B        ; number of bits clipped off left side
+        clipped_top          := $9D        ; number of bits clipped off top side
 
         fixed_div_dividend   := $A1        ; parameters used by FixedDiv proc
         fixed_div_divisor    := $A3
@@ -1819,10 +1822,7 @@ fail:   rts
         rts
 .endproc ; SetPortBitsImpl
 
-
-        clipped_left := $9B        ; number of bits clipped off left side
-        clipped_top := $9D         ; number of bits clipped off top side
-
+;;; ============================================================
 
 .proc ClipRect
         lda     current_maprect_x2+1
@@ -1920,6 +1920,7 @@ in_top: ldy     #0
         rts
 .endproc ; ClipRect
 
+;;; ============================================================
 
 .proc CheckRect
         sec
@@ -4036,10 +4037,7 @@ cursor_flag:                    ; high bit clear if cursor drawn, set if not dra
 cursor_count:
         .byte   $FF             ; decremented on hide, incremented on shown; 0 = visible
 
-.params cursor_pos
-xcoord: .word   0
-ycoord: .word   0
-.endparams
+        DEFINE_POINT cursor_pos, 0, 0
 
 mouse_state:
 mouse_x:        .word   0
@@ -4739,8 +4737,8 @@ savesize        .word
         inx                                   ; font height + 4: top of desktop area
         stx     set_port_top
         stx     winframe_top
-        stx     desktop_port_bits+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
-        stx     desktop_rect+MGTK::Rect::y1
+        stx     desktop_mapinfo+MGTK::MapInfo::viewloc+MGTK::Point::ycoord
+        stx     desktop_mapinfo+MGTK::MapInfo::maprect+MGTK::Rect::y1
 
         dex
         stx     menu_item_y_table
@@ -4835,7 +4833,7 @@ reset_desktop:
 
         ;; Fills the desktop background on startup (menu left black)
         MGTK_CALL MGTK::SetPattern, desktop_pattern
-        MGTK_CALL MGTK::PaintRect, desktop_rect
+        MGTK_CALL MGTK::PaintRect, desktop_mapinfo+MGTK::MapInfo::maprect
         jmp     RestoreParamsActivePort
 .endproc ; StartDeskTopImpl
 
@@ -5041,25 +5039,20 @@ stack_ptr_save:
 
 .proc SetDesktopPort
         jsr     SetStandardPort
-        MGTK_CALL MGTK::SetPortBits, desktop_port_bits
+        MGTK_CALL MGTK::SetPortBits, desktop_mapinfo
         rts
 .endproc ; SetDesktopPort
 
-.params desktop_port_bits
-        .word   0               ; viewloc x
-        .word   13              ; viewloc y (initialized by `StartDeskTopImpl`)
-        .word   $2000           ; mapbits
-        .byte   $80             ; mapwidth
-        .res    1               ; reserved
-.endparams
 
-.params desktop_rect
-left:   .word   0
-top:    .word   0               ; initialized by `StartDeskTopImpl`)
-right:  .word   kScreenWidth-1
-bottom: .word   kScreenHeight-1
+.params desktop_mapinfo
+        ;; `viewloc` and `maprect` initialized by `StartDeskTopImpl`
+        DEFINE_POINT viewloc, 0, 13
+mapbits:        .word   $2000
+mapwidth:       .byte   $80
+reserved:       .res    1
+        DEFINE_RECT maprect, 0, 0, kScreenWidth-1, kScreenHeight-1
+        REF_MAPINFO_MEMBERS
 .endparams
-.assert desktop_rect = desktop_port_bits + MGTK::GrafPort::maprect, error, "misalignment"
 
 desktop_pattern:
         .byte   %01010101
@@ -5480,36 +5473,18 @@ sysfont_height:     .byte   0
 active_menu:
         .addr   0
 
-.params menu_bar_rect
-left:   .word   AS_WORD(-1)
-top:    .word   AS_WORD(-1)
-right:  .word   kScreenWidth
-bottom: .word   $C
-.endparams
+        ;; Modified by `StartDeskTopImpl`
+        DEFINE_RECT menu_bar_rect, AS_WORD(-1), AS_WORD(-1), kScreenWidth, $C
 
-.params hilite_menu_rect
-left:   .word   0
-top:    .word   0
-width:  .word   0
-height: .word   11
-.endparams
+        ;; Modified by `StartDeskTopImpl` and `HiliteMenu`
+        DEFINE_RECT hilite_menu_rect, 0, 0, 0, 11
 
 savebehind_buffer:
         .word   0
 
-.params menu_hittest_rect
-left:   .word   0
-top:    .word   12
-right:  .word   0
-bottom: .word   0
-.endparams
+        DEFINE_RECT menu_hittest_rect, 0, 12, 0, 0
 
-.params menu_fill_rect
-left:   .word   0
-top:    .word   12
-right:  .word   0
-bottom: .word   0
-.endparams
+        DEFINE_RECT menu_fill_rect, 0, 12, 0, 0
 
 menu_item_y_table:
         .res    MGTK::max_menu_items+1 ; last entry represents height of menu
@@ -6046,17 +6021,17 @@ do_hilite:
 .proc HiliteMenu
         ldx     #1
 loop:   lda     curmenu::x_min,x
-        sta     hilite_menu_rect::left,x
+        sta     hilite_menu_rect+MGTK::Rect::x1,x
         lda     curmenu::x_max,x
-        sta     hilite_menu_rect::width,x
+        sta     hilite_menu_rect+MGTK::Rect::x2,x
 
         lda     curmenuinfo::x_min,x
-        sta     menu_hittest_rect::left,x
-        sta     menu_fill_rect::left,x
+        sta     menu_hittest_rect+MGTK::Rect::x1,x
+        sta     menu_fill_rect+MGTK::Rect::x1,x
 
         lda     curmenuinfo::x_max,x
-        sta     menu_hittest_rect::right,x
-        sta     menu_fill_rect::right,x
+        sta     menu_hittest_rect+MGTK::Rect::x2,x
+        sta     menu_fill_rect+MGTK::Rect::x2,x
 
         dex
         bpl     loop
@@ -6647,15 +6622,15 @@ last_cursor_pos:
         ldx     menu_item_y_table,y ; height of menu
         inx
         stx     savebehind_bottom
-        stx     menu_fill_rect::bottom
-        stx     menu_hittest_rect::bottom
+        stx     menu_fill_rect+MGTK::Rect::y2
+        stx     menu_hittest_rect+MGTK::Rect::y2
 
         ldx     sysfont_height
         inx
         inx
         inx
-        stx     menu_fill_rect::top
-        stx     menu_hittest_rect::top
+        stx     menu_fill_rect+MGTK::Rect::y1
+        stx     menu_hittest_rect+MGTK::Rect::y1
         rts
 .endproc ; SetUpMenuSavebehind
 
@@ -6792,11 +6767,11 @@ dmrts:  rts
 
         ldax    menu_hittest_rect_addr
         jsr     FillAndFrameRect
-        inc16   menu_fill_rect::left
-        lda     menu_fill_rect::right
+        inc16   menu_fill_rect+MGTK::Rect::x1
+        lda     menu_fill_rect+MGTK::Rect::x2
         bne     :+
-        dec     menu_fill_rect::right+1
-:       dec     menu_fill_rect::right
+        dec     menu_fill_rect+MGTK::Rect::x2+1
+:       dec     menu_fill_rect+MGTK::Rect::x2
 
         jsr     GetMenuAndMenuItem
 
@@ -6948,12 +6923,7 @@ ep2:    jsr     SetFillMode
         beq     DimMenuitem::ep2 ; always
 .endproc ; DrawFiller
 
-.params menu_item_rect
-left:   .word   0
-top:    .word   0
-right:  .word   0
-bottom: .word   0
-.endparams
+        DEFINE_RECT menu_item_rect, 0, 0, 0, 0
 
         ;; Move to the given distance from the right side of the menu.
 .proc MovetoFromright
@@ -6978,9 +6948,9 @@ hmrts:  rts
         beq     hmrts
         ldy     menu_item_y_table-1,x
         iny
-        sty     menu_fill_rect::top
+        sty     menu_fill_rect+MGTK::Rect::y1
         ldy     menu_item_y_table,x
-        sty     menu_fill_rect::bottom
+        sty     menu_fill_rect+MGTK::Rect::y2
         jsr     HideCursorImpl
 
         lda     #MGTK::penXOR
@@ -8182,7 +8152,7 @@ win_port  .addr
         jsr     WindowByIdOrExit
         copy16  params::win_port, params_addr
 
-        COPY_STRUCT MGTK::Rect, desktop_rect, current_maprect_x1
+        COPY_STRUCT MGTK::Rect, desktop_mapinfo+MGTK::MapInfo::maprect, current_maprect_x1
 
         jsr     PrepareWinport
         bcc     err_obscured
@@ -10552,7 +10522,7 @@ rect       .tag MGTK::Rect
 ;;; RedrawDeskTop
 
 .proc RedrawDeskTopImpl
-        COPY_STRUCT MGTK::MapInfo, desktop_port_bits, set_port_params
+        COPY_STRUCT MGTK::MapInfo, desktop_mapinfo, set_port_params
 
         ;; Restored by `EraseWindow`
         jsr     HideCursorSaveParams
