@@ -707,7 +707,6 @@ UpdateWindow := PaintWindow::update
 
         ldx     #AS_BYTE(-1)
 :       inx
-        sec
         sub16   tmp, #1000, tmp
         bcs     :-
         add16   tmp, #1000, tmp
@@ -718,7 +717,6 @@ UpdateWindow := PaintWindow::update
 
         ldx     #AS_BYTE(-1)
 :       inx
-        sec
         sub16   tmp, #100, tmp
         bcs     :-
         add16   tmp, #100, tmp
@@ -729,7 +727,6 @@ UpdateWindow := PaintWindow::update
 
         ldx     #AS_BYTE(-1)
 :       inx
-        sec
         sub16   tmp, #10, tmp
         bcs     :-
         add16   tmp, #10, tmp

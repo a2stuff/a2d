@@ -10561,15 +10561,11 @@ rect       .tag MGTK::Rect
 ;;; RedrawDeskTop
 
 .proc RedrawDeskTopImpl
-        jsr     SetDesktopPort
-
-        ;; Needed by `EraseWindow`
-        COPY_STRUCT MGTK::Rect, desktop_rect, left
-        jsr     ClipRect
         COPY_STRUCT MGTK::MapInfo, desktop_port_bits, set_port_params
 
         ;; Restored by `EraseWindow`
         jsr     HideCursorSaveParams
+
         lda     #0              ; window to erase (none)
         jmp     EraseWindow
 .endproc ; RedrawDeskTopImpl
