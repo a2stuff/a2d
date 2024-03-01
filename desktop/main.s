@@ -3003,21 +3003,6 @@ selection_preserved_count:
 .endproc ; FindIconForRecordNum
 
 ;;; ============================================================
-;;; Retrieve the `IconEntry::record_num` for a given icon.
-;;; Input: A = icon id
-;;; Output: A = icon's record index in its window
-;;; Trashes $06
-
-.proc GetIconRecordNum
-        jsr     GetIconEntry
-        ptr := $06
-        stax    ptr
-        ldy     #IconEntry::record_num
-        lda     (ptr),y
-        rts
-.endproc ; GetIconRecordNum
-
-;;; ============================================================
 ;;; Retrieve the window id for a given icon.
 ;;; Input: A = icon id
 ;;; Output: A = window id (0=desktop)
@@ -6172,6 +6157,7 @@ UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 ;;; ============================================================
 ;;; Draw all entries (icons or list items) in (cached) window
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc DrawWindowEntries
         ;; --------------------------------------------------
         ;; Icons
@@ -6226,6 +6212,22 @@ rloop:  lda     #SELF_MODIFIED_BYTE
 done:
         rts
 .endproc ; DrawWindowEntries
+
+;;; ============================================================
+;;; Retrieve the `IconEntry::record_num` for a given icon.
+;;; Input: A = icon id
+;;; Output: A = icon's record index in its window
+;;; Trashes $06
+
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+.proc GetIconRecordNum
+        jsr     GetIconEntry
+        ptr := $06
+        stax    ptr
+        ldy     #IconEntry::record_num
+        lda     (ptr),y
+        rts
+.endproc ; GetIconRecordNum
 
 ;;; ============================================================
 
@@ -6327,12 +6329,14 @@ skip:
 
 ;;; ============================================================
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc CachedIconsScreenToWindow
         param_jump CachedIconsXToY, IconPtrScreenToWindow
 .endproc ; CachedIconsScreenToWindow
 
 ;;; ============================================================
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc CachedIconsWindowToScreen
         param_jump CachedIconsXToY, IconPtrWindowToScreen
 .endproc ; CachedIconsWindowToScreen
@@ -6340,6 +6344,7 @@ skip:
 ;;; ============================================================
 
 ;;; Inputs: A,X = proc to call for each icon
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc CachedIconsXToY
         stax    proc
 
@@ -7766,6 +7771,7 @@ flags:  .byte   0
 ;;; ============================================================
 ;;; Draw header (items/K in disk/K available/lines) for active window
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc DrawWindowHeader
         ;; --------------------------------------------------
         ;; Separator Lines
@@ -8340,6 +8346,7 @@ CompareFileRecords_sort_by := CompareFileRecords::sort_by
 ;;; ============================================================
 ;;; A = entry number
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc DrawListViewRow
 
         ptr := $06
@@ -8396,7 +8403,6 @@ set_pos:
         stax    pos_col::xcoord
         MGTK_CALL MGTK::MoveTo, pos_col
         rts
-.endproc ; DrawListViewRow
 
 ;;; ============================================================
 
@@ -8443,9 +8449,12 @@ set_pos:
         FALL_THROUGH_TO ComposeSizeString
 .endproc ; PrepareColSize
 
+.endproc ; DrawListViewRow
+
 ;;; ============================================================
 ;;; Populate `text_buffer2` with "12,345K"
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc ComposeSizeString
         stax    value           ; size in 512-byte blocks
 
@@ -8509,6 +8518,7 @@ value:  .word   0
 
 ;;; ============================================================
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc ComposeDateString
         copy    #0, text_buffer2
         copy16  #text_buffer2, $8
@@ -14721,6 +14731,7 @@ done:   rts
 ;;; Inputs: A = window id
 ;;; Outputs: Z = 1 if found, and X = index in `window_id_to_filerecord_list_entries`
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc FindIndexInFilerecordListEntries
         ldx     window_id_to_filerecord_list_count
         dex
@@ -14734,6 +14745,7 @@ done:   rts
 ;;; Input: A = window_id
 ;;; Output: A,X = address of FileRecord list (first entry is length)
 ;;; Assert: Window is found in list.
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc GetFileRecordListForWindow
         jsr     FindIndexInFilerecordListEntries
         txa
@@ -14759,6 +14771,7 @@ done:   rts
 .endproc ; GetActiveWindowViewBy
 
 ;;; Assert: There is a cached window
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc GetCachedWindowViewBy
         ldx     cached_window_id
         lda     win_view_by_table-1,x
@@ -14856,6 +14869,7 @@ ret:    rts
 ;;; ============================================================
 
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 ;;; Input: A = window_id (0=desktop)
 .proc LoadWindowEntryTable
         sta     cached_window_id
@@ -14978,6 +14992,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 ;;; logic with 127 icons. A simpler fix may be possible, see commit
 ;;; 41ebde49 for another attempt, but that introduces other issues.
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc LoadActiveWindowEntryTable
         lda     active_window_id
         jmp     LoadWindowEntryTable
@@ -15212,6 +15227,7 @@ desktop_icon_usage_table:
 
 ;;; ============================================================
 
+        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 ;;; FileRecord for list view
 list_view_filerecord:
         .tag FileRecord

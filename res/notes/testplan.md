@@ -420,6 +420,9 @@
 * Launch DeskTop. Open a volume window. Open a folder window. View > by Name. Verify that the selection is still in the volume window, and that there is no selection in the folder window.
 * Launch DeskTop. Open a volume window. Open a folder window. Select a file in the folder window. View > by Name. Verify that the selection is still in the folder window.
 
+* Repeat for the Shortcuts > Add, Edit, Delete, and Run a Shortcut commands
+  * Launch DeskTop. Open a volume window. View > by Name. Run the command from the Shortcuts menu. Cancel. Verify that the window entries repaint correctly (correct types, sizes, dates) and DeskTop doesn't crash.
+
 * Repeat the following cases with these modifiers: Open-Apple, Solid-Apple:
   * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press Tab repeatedly. Verify that windows are activated and cycle in forward order (A, B, C, A, B, C, ...).
   * Launch DeskTop. Open 3 windows (A, B, C). Hold modifier and press \` repeatedly. Verify that windows are activated cycle in forward order (A, B, C, A, B, C, ...).
