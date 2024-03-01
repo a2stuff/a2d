@@ -4727,14 +4727,14 @@ savesize        .word
         tax
         inx
         inx
-        stx     hilite_menu_rect_height       ; menu bar height = font height + 2
+        stx     hilite_menu_rect + MGTK::Rect::y2 ; menu bar height = font height + 2
 
         inx
         stx     wintitle_height               ; win title height = font height + 3
 
-        stx     menu_bar_rect_bottom
-        stx     test_rect_params2_top
-        stx     fill_rect_params4_top
+        stx     menu_bar_rect + MGTK::Rect::y2
+        stx     menu_hittest_rect + MGTK::Rect::y1
+        stx     menu_fill_rect + MGTK::Rect::y1
 
         inx                                   ; font height + 4: top of desktop area
         stx     set_port_top
@@ -5486,7 +5486,6 @@ top:    .word   AS_WORD(-1)
 right:  .word   kScreenWidth
 bottom: .word   $C
 .endparams
-        menu_bar_rect_bottom := menu_bar_rect::bottom
 
 .params hilite_menu_rect
 left:   .word   0
@@ -5494,26 +5493,23 @@ top:    .word   0
 width:  .word   0
 height: .word   11
 .endparams
-        hilite_menu_rect_height := hilite_menu_rect::height
 
 savebehind_buffer:
         .word   0
 
-.params test_rect_params2
+.params menu_hittest_rect
 left:   .word   0
 top:    .word   12
 right:  .word   0
 bottom: .word   0
 .endparams
-        test_rect_params2_top := test_rect_params2::top
 
-.params fill_rect_params4
+.params menu_fill_rect
 left:   .word   0
 top:    .word   12
 right:  .word   0
 bottom: .word   0
 .endparams
-        fill_rect_params4_top := fill_rect_params4::top
 
 menu_item_y_table:
         .res    MGTK::max_menu_items+1 ; last entry represents height of menu
@@ -5541,8 +5537,8 @@ mark_text:
 menu_bar_rect_addr:
         .addr   menu_bar_rect
 
-test_rect_params2_addr:
-        .addr   test_rect_params2
+menu_hittest_rect_addr:
+        .addr   menu_hittest_rect
 
 mark_text_addr:
         .addr   mark_text
@@ -6055,12 +6051,12 @@ loop:   lda     curmenu::x_min,x
         sta     hilite_menu_rect::width,x
 
         lda     curmenuinfo::x_min,x
-        sta     test_rect_params2::left,x
-        sta     fill_rect_params4::left,x
+        sta     menu_hittest_rect::left,x
+        sta     menu_fill_rect::left,x
 
         lda     curmenuinfo::x_max,x
-        sta     test_rect_params2::right,x
-        sta     fill_rect_params4::right,x
+        sta     menu_hittest_rect::right,x
+        sta     menu_fill_rect::right,x
 
         dex
         bpl     loop
@@ -6356,12 +6352,12 @@ event_loop:
 :
         ;; Moved - mouse pos dominates
         MGTK_CALL MGTK::MoveTo, mouse_state
-        MGTK_CALL MGTK::InRect, menu_bar_rect         ; test in menu bar
+        MGTK_CALL MGTK::InRect, menu_bar_rect
         bne     in_menu_bar
         lda     cur_open_menu_id
         jeq     event_loop
 
-        MGTK_CALL MGTK::InRect, test_rect_params2     ; test in menu
+        MGTK_CALL MGTK::InRect, menu_hittest_rect     ; test in menu
         bne     in_menu_item
         jsr     UnhiliteCurMenuItem
         jmp     event_loop
@@ -6651,15 +6647,15 @@ last_cursor_pos:
         ldx     menu_item_y_table,y ; height of menu
         inx
         stx     savebehind_bottom
-        stx     fill_rect_params4::bottom
-        stx     test_rect_params2::bottom
+        stx     menu_fill_rect::bottom
+        stx     menu_hittest_rect::bottom
 
         ldx     sysfont_height
         inx
         inx
         inx
-        stx     fill_rect_params4::top
-        stx     test_rect_params2::top
+        stx     menu_fill_rect::top
+        stx     menu_hittest_rect::top
         rts
 .endproc ; SetUpMenuSavebehind
 
@@ -6794,13 +6790,13 @@ dmrts:  rts
 
         jsr     SetStandardPort
 
-        ldax    test_rect_params2_addr
+        ldax    menu_hittest_rect_addr
         jsr     FillAndFrameRect
-        inc16   fill_rect_params4::left
-        lda     fill_rect_params4::right
+        inc16   menu_fill_rect::left
+        lda     menu_fill_rect::right
         bne     :+
-        dec     fill_rect_params4::right+1
-:       dec     fill_rect_params4::right
+        dec     menu_fill_rect::right+1
+:       dec     menu_fill_rect::right
 
         jsr     GetMenuAndMenuItem
 
@@ -6916,19 +6912,19 @@ next:   ldx     menu_item_index
         ldx     menu_item_index
         ldy     menu_item_y_table,x
         iny
-        sty     fill_rect_params3_top
+        sty     menu_item_rect+MGTK::Rect::y1
         lda     menu_item_y_table+1,x
-        sta     fill_rect_params3_bottom
+        sta     menu_item_rect+MGTK::Rect::y2
 
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 
         lda     #MGTK::penOR
 ep2:    jsr     SetFillMode
 
-        add16   curmenuinfo::x_min, #1, fill_rect_params3_left
-        sub16   curmenuinfo::x_max, #1, fill_rect_params3_right
+        add16   curmenuinfo::x_min, #1, menu_item_rect+MGTK::Rect::x1
+        sub16   curmenuinfo::x_max, #1, menu_item_rect+MGTK::Rect::x2
 
-        MGTK_CALL MGTK::PaintRect, fill_rect_params3
+        MGTK_CALL MGTK::PaintRect, menu_item_rect
         MGTK_CALL MGTK::SetPattern, standard_port::pattern
 
         lda     #MGTK::penXOR
@@ -6943,8 +6939,8 @@ ep2:    jsr     SetFillMode
         lsr
         clc
         adc     menu_item_y_table,x
-        sta     fill_rect_params3_top
-        sta     fill_rect_params3_bottom
+        sta     menu_item_rect+MGTK::Rect::y1
+        sta     menu_item_rect+MGTK::Rect::y2
 
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 
@@ -6952,17 +6948,12 @@ ep2:    jsr     SetFillMode
         beq     DimMenuitem::ep2 ; always
 .endproc ; DrawFiller
 
-.params fill_rect_params3
+.params menu_item_rect
 left:   .word   0
 top:    .word   0
 right:  .word   0
 bottom: .word   0
 .endparams
-        fill_rect_params3_left := fill_rect_params3::left
-        fill_rect_params3_top := fill_rect_params3::top
-        fill_rect_params3_right := fill_rect_params3::right
-        fill_rect_params3_bottom := fill_rect_params3::bottom
-
 
         ;; Move to the given distance from the right side of the menu.
 .proc MovetoFromright
@@ -6987,14 +6978,14 @@ hmrts:  rts
         beq     hmrts
         ldy     menu_item_y_table-1,x
         iny
-        sty     fill_rect_params4::top
+        sty     menu_fill_rect::top
         ldy     menu_item_y_table,x
-        sty     fill_rect_params4::bottom
+        sty     menu_fill_rect::bottom
         jsr     HideCursorImpl
 
         lda     #MGTK::penXOR
         jsr     SetFillMode
-        MGTK_CALL MGTK::PaintRect, fill_rect_params4
+        MGTK_CALL MGTK::PaintRect, menu_fill_rect
         jmp     ShowCursorImpl
 .endproc ; HiliteMenuItem
 
