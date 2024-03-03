@@ -1369,39 +1369,36 @@ match:  clc
 .proc AdjustCase
         ptr := $A
 
-        stx     ptr+1
-        sta     ptr
+        stax    ptr
         ldy     #0
         lda     (ptr),y
         and     #NAME_LENGTH_MASK ; handle ON_LINE results, etc
-        tay
-        RTS_IF_ZERO
+        beq     done
 
-next:   dey
+        ;; Walk backwards through string. At char N, check char N-1; if
+        ;; it is a letter, and char N is also a letter, lower-case it.
+        tay
+
+loop:   dey
         beq     done
         bpl     :+
 done:   rts
 
 :       lda     (ptr),y
-        cmp     #'/'
-        beq     skip
-        cmp     #'.'
-        bne     CheckAlpha
-skip:   dey
-        jmp     next
+        cmp     #'A'
+        bcs     check_alpha
+        dey
+        bpl     loop            ; always
 
-CheckAlpha:
+check_alpha:
         iny
         lda     (ptr),y
         cmp     #'A'
         bcc     :+
-        cmp     #'Z'+1
-        bcs     :+
-        clc
-        adc     #('a' - 'A')    ; convert to lower case
+        ora     #AS_BYTE(~CASE_MASK)
         sta     (ptr),y
 :       dey
-        jmp     next
+        bpl     loop            ; always
 .endproc ; AdjustCase
 
 ;;; ============================================================
