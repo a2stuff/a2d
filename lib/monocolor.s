@@ -10,11 +10,6 @@
 ;;;
 ;;; Required includes:
 ;;; * `lib/readwrite_settings.s`
-;;;
-;;; Required definitions:
-;;; * `machine_config::iigs_flag` - high bit set if on IIgs
-;;; * `machine_config::megaii_flag` - high bit set if Mega II system
-;;; * `machine_config::lcm_eve_flag` - high bit set if LCM EVE present
 ;;; ============================================================
 
 .proc SetRGBMode
@@ -25,14 +20,20 @@
 .endproc ; SetRGBMode
 
 .proc SetColorMode
-        bit     machine_config::iigs_flag
-        bmi     iigs
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
 
-        bit     machine_config::megaii_flag
-        bmi     megaii
+        tax                     ; A = X = kSysCapXYZ bitmap
+        and     #DeskTopSettings::kSysCapIsIIgs
+        bne     iigs
 
-        bit     machine_config::lcm_eve_flag
-        bmi     lcmeve
+        txa                     ; A = X = kSysCapXYZ bitmap
+        and     #DeskTopSettings::kSysCapMegaII
+        bne     megaii
+
+        txa                     ; A = X = kSysCapXYZ bitmap
+        and     #DeskTopSettings::kSysCapLCMEve
+        bne     lcmeve
 
         ;; AppleColor Card - Mode 2 (Color 140x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
@@ -65,14 +66,20 @@ megaii: lda     NEWVIDEO
 .endproc ; SetColorMode
 
 .proc SetMonoMode
-        bit     machine_config::iigs_flag
-        bmi     iigs
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
 
-        bit     machine_config::megaii_flag
-        bmi     megaii
+        tax                     ; A = X = kSysCapXYZ bitmap
+        and     #DeskTopSettings::kSysCapIsIIgs
+        bne     iigs
 
-        bit     machine_config::lcm_eve_flag
-        bmi     lcmeve
+        txa                     ; A = X = kSysCapXYZ bitmap
+        and     #DeskTopSettings::kSysCapMegaII
+        bne     megaii
+
+        txa                     ; A = X = kSysCapXYZ bitmap
+        and     #DeskTopSettings::kSysCapLCMEve
+        bne     lcmeve
 
         ;; AppleColor Card - Mode 1 (Monochrome 560x192)
         ;; Also: Video-7 and Le Chat Mauve Feline
@@ -107,8 +114,10 @@ done:   rts
 
 ;;; On IIgs, force preferred RGB mode. No-op otherwise.
 .proc ResetIIgsRGB
-        bit     machine_config::iigs_flag
-        bpl     SetMonoMode::done ; nope
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
+        and     #DeskTopSettings::kSysCapIsIIgs
+        beq     SetMonoMode::done ; nope
 
         ldx     #DeskTopSettings::rgb_color
         jsr     ReadSetting

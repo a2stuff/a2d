@@ -14813,8 +14813,10 @@ done:   rts
 
 .proc ExtendSelectionModifierDown
         ;; IIgs? Use KEYMODREG instead
-        bit     machine_config::iigs_flag
-        bmi     iigs
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
+        and     #DeskTopSettings::kSysCapIsIIgs
+        bne     iigs
 
         jsr     TestShiftMod  ; Shift key state, if detectable
         ora     BUTN0           ; Either way, check button state
@@ -14833,8 +14835,10 @@ ret:    rts
 
         .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
 .proc ShiftDown
-        bit     machine_config::iigs_flag
-        bpl     TestShiftMod    ; no, rely on shift key mod
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
+        and     #DeskTopSettings::kSysCapIsIIgs
+        beq     TestShiftMod    ; no, rely on shift key mod
 
         lda     KEYMODREG       ; On IIgs, use register instead
         and     #%00000001      ; bit 7 = Command (OA), bit 0 = Shift
@@ -14848,17 +14852,16 @@ ret:    rts
 ;;; detectable.
 
 .proc TestShiftMod
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
+
         ;; If a IIe, maybe use shift key mod
-        ldx     machine_config::id_idbyte ; $00 = IIc/IIc+
-        ldy     machine_config::id_idlaser ; $AC = Laser 128
-        lda     #0
-        cpx     #0              ; ZIDBYTE = $00 == IIc/IIc+
-        beq     :+
-        cpy     #$AC            ; IDBYTELASER128 = $AC = Laser 128
-        beq     :+              ; On Laser, BUTN2 set when mouse button clicked
+        ;; Not IIc/Laser 128 as BUTN2 set when mouse button clicked
+        and     #DeskTopSettings::kSysCapIsIIc | DeskTopSettings::kSysCapIsLaser128
+        bne     :+
 
         ;; It's a IIe, compare shift key state
-        lda     machine_config::pb2_initial_state ; if shift key mod installed, %1xxxxxxx
+        lda     pb2_initial_state ; if shift key mod installed, %1xxxxxxx
         eor     BUTN2             ; ... and if shift is down, %0xxxxxxx
 
 :       rts

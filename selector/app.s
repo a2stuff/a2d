@@ -298,23 +298,6 @@ num_secondary_run_list_entries:
 invoked_during_boot_flag:       ; set to 1 during key checks during boot, 0 otherwise
         .byte   0
 
-.scope machine_config
-iigs_flag:                      ; high bit set if IIgs
-        .byte   0
-
-iiecard_flag:                   ; high bit set if Mac IIe Option Card
-        .byte   0
-
-laser128_flag:                  ; high bit set if Laser 128
-        .byte   0
-
-megaii_flag:                    ; high bit set if Mega II
-        .byte   0
-
-lcm_eve_flag:                   ; high bit set if Le Chat Mauve Eve present
-        .byte   0
-.endscope ; machine_config
-
 ;;; ============================================================
 ;;; Clock Resources
 
@@ -356,37 +339,6 @@ portptr:        .addr   0
 
 entry:
 .scope AppInit
-        ;; Detect IIgs
-        sec
-        jsr     IDROUTINE       ; clear C if IIgs
-    IF_CC
-        copy    #$80, machine_config::iigs_flag
-    END_IF
-
-        ;; Detect Mac IIe Option Card
-        lda     ZIDBYTE
-        cmp     #$E0            ; Is Enhanced IIe?
-        bne     :+
-        lda     IDBYTEMACIIE
-        cmp     #$02            ; Mac IIe Option Card signature
-        bne     :+
-        copy    #$80, machine_config::iiecard_flag
-:
-        ;; Detect Laser 128
-        lda     IDBYTELASER128
-        cmp     #$AC
-    IF_EQ
-        copy    #$80, machine_config::laser128_flag
-    END_IF
-
-        jsr     DetectLeChatMauveEve
-        beq     :+              ; Z=1 means no LCMEve
-        copy    #$80, machine_config::lcm_eve_flag
-:
-        jsr     DetectMegaII
-        bne     :+              ; Z=0 means Mega II
-        copy    #$80, machine_config::megaii_flag
-:
         copy    #$FF, selected_index
         copy    #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
@@ -1945,8 +1897,6 @@ loop_counter:
 
         .include "../lib/speed.s"
         .include "../lib/bell.s"
-        .include "../lib/detect_megaii.s"
-        .include "../lib/detect_lcmeve.s"
         .include "../lib/clear_dhr.s"
         .include "../lib/disconnect_ram.s"
         .include "../lib/reconnect_ram.s"

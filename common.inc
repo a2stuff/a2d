@@ -200,7 +200,10 @@ kDeskTopSettingsSize    = $80
         intl_deci_sep   .byte   ; decimal separator
         intl_date_order .byte   ; kDateOrderXYZ
 
-        reserved        .res 107
+        reserved        .res 106
+
+        ;; Written on every startup, in settings for convenience
+        system_capabilities .byte ; kSysCapXYZ
 .endstruct
         .assert .sizeof(DeskTopSettings) = kDeskTopSettingsSize, error, .sprintf("Expected $%02X, was $%0X", kDeskTopSettingsSize, .sizeof(DeskTopSettings))
 
@@ -210,6 +213,14 @@ DeskTopSettings::kDateOrderDMY = 1
 DeskTopSettings::kOptionsSkipRAMCard   = %00000001 ; skip copy to RAMCard, if set
 DeskTopSettings::kOptionsSkipSelector  = %00000010 ; skip starting Selector, if set
 DeskTopSettings::kOptionsShowShortcuts = %00000100 ; show button shortcuts, if set
+
+DeskTopSettings::kSysCapIsIIgs     = %00000001
+DeskTopSettings::kSysCapIsIIc      = %00000010 ; also set for IIc Plus
+DeskTopSettings::kSysCapIsIIcPlus  = %00000100
+DeskTopSettings::kSysCapIsIIeCard  = %00001000
+DeskTopSettings::kSysCapIsLaser128 = %00010000
+DeskTopSettings::kSysCapMegaII     = %00100000
+DeskTopSettings::kSysCapLCMEve     = %01000000
 
 kDeskTopSettingsFileVersion = 3
 kDeskTopSettingsFileSize = 1 + .sizeof(DeskTopSettings)

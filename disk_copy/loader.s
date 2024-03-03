@@ -76,46 +76,9 @@ start:
         MLI_CALL CLOSE, close_params
         bcs     fail
 
-        ;; Detect IIgs
-        sec
-        jsr     IDROUTINE
-    IF_CC
-        copy    #$80, is_iigs_flag
-    END_IF
-
-        ;; Detect Mac IIe Option Card
-        lda     ZIDBYTE
-        cmp     #$E0            ; Is Enhanced IIe?
-        bne     :+
-        lda     IDBYTEMACIIE
-        cmp     #$02            ; Mac IIe Option Card signature
-        bne     :+
-        copy    #$80, is_iiecard_flag
-:
-        ;; Detect Laser 128
-        lda     IDBYTELASER128
-        cmp     #$AC
-    IF_EQ
-        copy    #$80, is_laser128_flag
-    END_IF
-
-
-
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
-
-        is_iigs_flag := *+1
-        lda     #$00            ; self-modified, but initially 0
-        sta     main__is_iigs_flag
-
-        is_iiecard_flag := *+1
-        lda     #$00            ; self-modified, but initially 0
-        sta     main__is_iiecard_flag
-
-        is_laser128_flag := *+1
-        lda     #$00            ; self-modified, but initially 0
-        sta     main__is_laser128_flag
 
         jmp     auxlc__start
 

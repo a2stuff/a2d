@@ -1065,8 +1065,10 @@ kMemoryBitmapSize = * - memory_bitmap
 ;;; Assert: LCBANK1 is banked in
 
 .proc ResetIIgsRGB
-        bit     main__is_iigs_flag
-        bpl     done
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
+        and     #DeskTopSettings::kSysCapIsIIgs
+        beq     done
 
         ldx     #DeskTopSettings::rgb_color
         jsr     ReadSetting
@@ -1086,17 +1088,6 @@ store:  sta     NEWVIDEO
 
 done:   rts
 .endproc ; ResetIIgsRGB
-
-;;; ============================================================
-
-.scope machine_config
-iigs_flag:                   ; high bit set if IIgs
-        .byte   0
-iiecard_flag:                ; high bit set if Mac IIe Option Card
-        .byte   0
-laser128_flag:               ; high bit set if Laser 128
-        .byte   0
-.endscope
 
 ;;; ============================================================
 
@@ -1141,9 +1132,6 @@ main__ResetIIgsRGB              := main::ResetIIgsRGB
 main__saved_ram_unitnum         := main::saved_ram_unitnum
 main__saved_ram_drvec           := main::saved_ram_drvec
 main__Bell                      := main::Bell
-main__is_iigs_flag              := main::machine_config::iigs_flag
-main__is_iiecard_flag           := main::machine_config::iiecard_flag
-main__is_laser128_flag          := main::machine_config::laser128_flag
 
 ReadSetting := main::ReadSetting
 

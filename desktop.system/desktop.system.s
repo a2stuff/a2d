@@ -112,6 +112,7 @@ start:
         jsr     CreateLocalDir
         jsr     PreserveQuitCode
         jsr     LoadSettings
+        jsr     DetectSystem
         jmp     CopyDesktopToRAMCard
 
 ;;; ============================================================
@@ -268,6 +269,93 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
         SETTINGS_IO_BUF := src_io_buffer
         .include "../lib/load_settings.s"
         .include "../lib/readwrite_settings.s"
+
+;;; ============================================================
+
+;;; Probe system capabilities, `DeskTopSettings::system_capabilities`
+;;; Assert: ROM is banked in
+.proc DetectSystem
+        copy    #0, syscap
+
+        ;; IIgs?
+        sec                     ; Follow detection protocol
+        jsr     IDROUTINE       ; RTS on pre-IIgs
+    IF_CC
+        lda     #DeskTopSettings::kSysCapIsIIgs
+        jsr     set_bit
+        jmp     done_machid
+    END_IF
+
+        ;; IIc?
+        lda     ZIDBYTE         ; $00 = IIc or later
+    IF_ZERO
+        lda     #DeskTopSettings::kSysCapIsIIc
+        jsr     set_bit
+
+        ;; IIc Plus?
+        lda     ZIDBYTE2        ; ROM version
+        cmp     #$05            ; IIc Plus = $05
+      IF_EQ
+        lda     #DeskTopSettings::kSysCapIsIIcPlus
+        jsr     set_bit
+      END_IF
+        jmp     done_machid
+    END_IF
+
+        ;; Laser 128?
+        lda     IDBYTELASER128
+        cmp     #$AC
+    IF_EQ
+        lda     #DeskTopSettings::kSysCapIsLaser128
+        jsr     set_bit
+        jmp     done_machid
+    END_IF
+
+        ;; Macintosh IIe Option Card?
+        lda     ZIDBYTE
+        cmp     #$E0            ; Enhanced IIe
+    IF_EQ
+        lda     IDBYTEMACIIE
+        cmp     #$02            ; Mac IIe Option Card
+      IF_EQ
+        lda     #DeskTopSettings::kSysCapIsIIeCard
+        jsr     set_bit
+        jmp     done_machid
+      END_IF
+    END_IF
+
+done_machid:
+
+        ;; Le Chat Mauve Eve?
+        jsr     DetectLeChatMauveEve
+    IF_NOT_ZERO                 ; non-zero if LCM Eve detected
+        lda     #DeskTopSettings::kSysCapLCMEve
+        jsr     set_bit
+    END_IF
+
+        ;; Mega II?
+        jsr     DetectMegaII
+    IF_ZERO                     ; Z=1 if Mega II, Z=0 otherwise
+        lda     #DeskTopSettings::kSysCapMegaII
+        jsr     set_bit
+    END_IF
+
+        ;; Write to settings
+        ldx     #DeskTopSettings::system_capabilities
+        lda     syscap
+        jmp     WriteSetting
+
+set_bit:
+        ora     syscap
+        sta     syscap
+        rts
+
+syscap: .byte   0
+
+.endproc
+
+        .include "../lib/detect_lcmeve.s"
+        .include "../lib/detect_megaii.s"
 
 ;;; ============================================================
 ;;;

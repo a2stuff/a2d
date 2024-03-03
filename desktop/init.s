@@ -91,93 +91,43 @@ start:
 .scope machine_type
         ;; See Apple II Miscellaneous #7: Apple II Family Identification
 
-        ;; First, detect IIgs
-        sec                     ; Follow detection protocol
-        jsr     IDROUTINE       ; RTS on pre-IIgs
-        bcs     :+              ; carry clear = IIgs
-        copy    #$80, tmp_iigs_flag
-:
         ;; Now stash the bytes we need
         copy    VERSION, tmp_version  ; $06 = IIe or later
         copy    ZIDBYTE, tmp_idbyte   ; $00 = IIc or later
-        copy    ZIDBYTE2, tmp_idbyte2 ; IIc ROM version (IIc+ = $05)
-        copy    IDBYTEMACIIE, tmp_idmaciie ; $02 = Mac IIe Option Card
-        copy    IDBYTELASER128, tmp_idlaser ; $AC = Laser 128
 
         ;; ... and page in LCBANK1
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
 
-        ;; Place the version bytes somewhere useful later
+        ;; State needed by MGTK
         tmp_version := *+1
         lda     #SELF_MODIFIED_BYTE
-        sta     machine_config::id_version
+        sta     startdesktop_params::machine
         tmp_idbyte := *+1
         lda     #SELF_MODIFIED_BYTE
-        sta     machine_config::id_idbyte
-        tmp_idbyte2 := *+1
-        lda     #SELF_MODIFIED_BYTE
-        sta     machine_config::id_idbyte2
-        tmp_idmaciie := *+1
-        lda     #SELF_MODIFIED_BYTE
-        sta     machine_config::id_idmaciie
-        tmp_idlaser := *+1
-        lda     #SELF_MODIFIED_BYTE
-        sta     machine_config::id_idlaser
-        tmp_iigs_flag := *+1
-        lda     #SELF_MODIFIED_BYTE
-        sta     machine_config::iigs_flag
+        sta     startdesktop_params::subid
 
-        ;; Ensure we're on a IIe or later
-        lda     machine_config::id_version
-        cmp     #$06            ; Ensure a IIe or later
-        beq     :+
-        brk                     ; Otherwise (][, ][+, ///), just crash
+        ;; Model?
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
 
-        ;; State needed by MGTK
-:       copy    machine_config::id_version, startdesktop_params::machine
-        copy    machine_config::id_idbyte, startdesktop_params::subid
-
-        ;; Identify machine type (periodic delays and other flags)
-        lda     machine_config::id_idbyte
-        beq     is_iic          ; $FBC0 = $00 -> is IIc or IIc+
-        bit     machine_config::iigs_flag
-        bmi     is_iigs
-
-        ;; Laser 128?
-        lda     machine_config::id_idlaser ; Is it a Laser 128?
-        cmp     #$AC
-        bne     is_iie
-
-        copy    #$80, machine_config::laser128_flag
-        lda     #kPeriodicTaskDelayIIgs ; Assume accelerated???
-        bne     end                     ; always
-
-        ;; IIe (or Mac IIe Option Card)
-is_iie: lda     machine_config::id_idbyte
-        cmp     #$E0            ; Is Enhanced IIe?
-        bne     :+
-        lda     machine_config::id_idmaciie
-        cmp     #$02            ; Mac IIe Option Card signature
-        bne     :+
-        copy    #$80, machine_config::iiecard_flag
-:
-        lda     #kPeriodicTaskDelayIIe
-        bne     end             ; always
-
-        ;; IIgs
-is_iigs:
+        tax                     ; A = X = kSysCapXYZ bitmap
+        ora     #DeskTopSettings::kSysCapIsIIgs | DeskTopSettings::kSysCapIsLaser128
+    IF_NOT_ZERO
         lda     #kPeriodicTaskDelayIIgs
-        bne     end             ; always
+        bne     end                     ; always
+    END_IF
 
-        ;; IIc or IIc+
-is_iic: lda     machine_config::id_idbyte2 ; ROM version
-        cmp     #$05                  ; IIc Plus = $05
-        bne     :+
-        copy    #$80, machine_config::iic_plus_flag
-:       lda     #kPeriodicTaskDelayIIc
+        txa                     ; A = X = kSysCapXYZ bitmap
+        ora     #DeskTopSettings::kSysCapIsIIc
+    IF_NOT_ZERO
+        lda     #kPeriodicTaskDelayIIc
+        bne     end                     ; always
+    END_IF
 
+        ;; Default
+        lda     #kPeriodicTaskDelayIIe
 end:
         sta     periodic_task_delay
 
@@ -188,38 +138,9 @@ end:
 ;;; Snapshot state of PB2 (shift key mod)
 
 .scope pb2_state
-        copy    BUTN2, machine_config::pb2_initial_state
+        copy    BUTN2, pb2_initial_state
+        ;; fall through
 .endscope ; pb2_state
-
-;;; ============================================================
-;;; Detect Le Chat Mauve Eve RGB card
-
-.scope lcm
-        bit     ROMIN2
-        jsr     DetectLeChatMauveEve
-        pha
-        bit     LCBANK1
-        bit     LCBANK1
-        pla
-        beq     :+              ; Z=1 means no LCMEve
-        copy    #$80, machine_config::lcm_eve_flag
-:
-.endscope ; lcm
-
-;;; ============================================================
-;;; Detect Mega II
-
-.scope megaii
-        bit     ROMIN2
-        jsr     DetectMegaII
-        php
-        bit     LCBANK1
-        bit     LCBANK1
-        plp
-        bne     :+              ; Z=1 means Mega II
-        copy    #$80, machine_config::megaii_flag
-:
-.endscope ; megaii
 
 ;;; ============================================================
 ;;; Back up DEVLST
@@ -324,13 +245,16 @@ done:
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
     END_IF
+
         ;; Also doubled if a IIc
-        lda     machine_config::id_idbyte ; ZIDBYTE=0 for IIc / IIc+
-    IF_ZERO
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
+        and     #DeskTopSettings::kSysCapIsIIc
+    IF_NOT_ZERO
         inc     scalemouse_params::x_exponent
         inc     scalemouse_params::y_exponent
-        END_IF
-    MGTK_CALL MGTK::ScaleMouse, scalemouse_params
+    END_IF
+        MGTK_CALL MGTK::ScaleMouse, scalemouse_params
 
         ;; --------------------------------------------------
 
@@ -1007,12 +931,15 @@ append: lda     unit_num
 
         ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
         ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
-        bit     machine_config::iic_plus_flag
-        bpl     :+
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
+        and     #DeskTopSettings::kSysCapIsIIcPlus
+    IF_NOT_ZERO
         and     #%01110000      ; mask off slot
         cmp     #$50            ; is it slot 5?
         beq     next            ; if so, ignore
-:
+    END_IF
+
         ;; Do SmartPort STATUS call to filter out 5.25 devices
         lda     unit_num
         jsr     main::FindSmartportDispatchAddress
@@ -1022,8 +949,10 @@ append: lda     unit_num
 
         ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
         ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
-        bit     machine_config::laser128_flag
-    IF_NS
+        ldx     #DeskTopSettings::system_capabilities
+        jsr     ReadSetting
+        and     #DeskTopSettings::kSysCapIsLaser128
+    IF_NOT_ZERO
         lda     dispatch+1      ; $Cs
         and     #%00001111      ; mask off slot
         cmp     #$07            ; is it slot 7?
@@ -1209,8 +1138,6 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
 
 ;;; ============================================================
 
-        .include "../lib/detect_megaii.s"
-        .include "../lib/detect_lcmeve.s"
         .include "../lib/clear_dhr.s"
         saved_ram_unitnum := main::saved_ram_unitnum
         saved_ram_drvec   := main::saved_ram_drvec

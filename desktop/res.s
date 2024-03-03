@@ -58,32 +58,10 @@ savearea:       .addr   SAVE_AREA_BUFFER
 savesize:       .word   kSaveAreaSize
 .endparams
 
-.params machine_config
-;;; ID bytes, copied from ROM
-id_version:     .byte   0       ; ROM FBB3; $06 = IIe or later
-id_idbyte:      .byte   0       ; ROM FBC0; $00 = IIc or later
-id_idbyte2:     .byte   0       ; ROM FBBF; IIc ROM version (IIc+ = $05)
-id_idmaciie:    .byte   0       ; ROM FBDD; $02 = Mac IIe Option Card
-id_idlaser:     .byte   0       ; ROM FB1E; $AC = Laser 128
-
-;;; Flags for machines with built-in accelerators
-iigs_flag:      .byte   0       ; High bit set if IIgs
-iiecard_flag:   .byte   0       ; High bit set if Mac IIe Option Card
-iic_plus_flag:  .byte   0       ; High bit set if IIc+
-laser128_flag:  .byte   0       ; High bit set if Laser 128
-megaii_flag:    .byte   0       ; high bit set if Mega II
-
-;;; ============================================================
-
-;;; High bit set if Le Chat Mauve Eve present
-lcm_eve_flag:
-        .byte   0
-
 ;;; Shift key mod sets PB2 if shift is *not* down. Since we can't detect
 ;;; the mod, snapshot on init (and assume shift is not down) and XOR.
 pb2_initial_state:
         .byte   0
-.endparams
 
 .params initmenu_params
 open_char:      .byte   kGlyphOpenApple
