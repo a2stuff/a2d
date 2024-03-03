@@ -40,6 +40,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Add checkbox to lock/unlock file in Get Info dialog. (([#149](https://github.com/a2stuff/a2d/issues/149))
 * Remove Special > Lock and Special > Unlock commands.
 * Show icon for locked files in list views.
+* Reorder columns in list views.
 * Allow selection to remain in inactive windows.
 * Fix off-by-one in used/free values in window headers.
 * Fix updating of window headers following File > New Folder.

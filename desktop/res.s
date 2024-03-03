@@ -791,9 +791,9 @@ win_view_by_table:
         .res    kMaxDeskTopWindows, 0
 
         DEFINE_POINT pos_col, 0, 0
-        kColLock = 136
-        kColType = 146
-        kColSize = 216          ; right-aligned
+        kColSize = 180          ; right-aligned
+        kColLock = 186
+        kColType = 200
         kColDate = 231
 
 ;;; Scratch buffer visible to MGTK, primarily used for list view columns.
