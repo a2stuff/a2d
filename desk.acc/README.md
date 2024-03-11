@@ -67,6 +67,8 @@
   * Displays the current time.
 * [Matrix](matrix.s)
   * Digital rain.
+* [Message](message.s)
+  * Scrolls the typed message across the screen..
 * [Rod's Pattern](rods.pattern.s)
   * Classic Apple II lo-res demo.
 

@@ -100,6 +100,7 @@ Project Page: https://github.com/a2stuff/a2d
 * New Screen Saver: Helix.
 * Electric Duet Preview: Detect Mockingboard and The Cricket!, and use for playback if found.
 * New DA: Benchmark - measures CPU speed using VBL.
+* New Screen Saver: Message
 
 
 ### Misc

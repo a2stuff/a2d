@@ -28,3 +28,4 @@
 .define res_filename_print_catalog "Impr.catalogue"
 .define res_filename_change_type "modifier.type"
 .define res_filename_benchmark "reference"
+.define res_filename_message "Message"

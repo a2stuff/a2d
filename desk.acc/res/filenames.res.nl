@@ -28,3 +28,4 @@
 .define res_filename_print_catalog "print.catalogus"
 .define res_filename_change_type "wijzig.type"
 .define res_filename_benchmark "benchmark"
+.define res_filename_message "Bericht"
