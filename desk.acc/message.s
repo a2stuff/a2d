@@ -50,12 +50,6 @@ length: .byte   .strlen(res_string_message_placeholder)
 width:  .word   0               ; for `TextWidth` call
 .endparams
 
-.params spaces_params
-data:   .addr   spaces
-length: .byte   50
-spaces: .res    50, ' '
-.endparams
-
         DEFINE_RECT rect, 0, (kScreenHeight - kFontHeight)/2, kScreenWidth-1, (kScreenHeight + kFontHeight)/2
 
 event_params:   .tag MGTK::Event
