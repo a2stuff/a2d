@@ -184,8 +184,6 @@ backspace:
 .proc Animate
         MGTK_CALL MGTK::MoveTo, text_pos
 
-        MGTK_CALL MGTK::PaintRect, rect
-
         lda     text_params::length
     IF_ZERO
         copy16  #0, rect::x1
@@ -205,7 +203,7 @@ backspace:
 
         add16   text_pos::xcoord, text_params::width, rect::x1
         copy16  #kScreenWidth-1, rect::x2
-        scmp16  rect::x2, rect::x1
+        scmp16  rect::x1, rect::x2
       IF_NEG
         MGTK_CALL MGTK::PaintRect, rect
       END_IF
