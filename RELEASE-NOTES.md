@@ -106,6 +106,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Misc
 
 * Add additional MGTK fonts Fairfax, Magdalena, McMillen, Mischke, and Monterey, c/o RebeccaRGB.
+* Improve compatibility with older AppleWorks files.
 
 
 ## 1.3
