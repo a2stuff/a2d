@@ -37,16 +37,20 @@ delta:  .word   AS_WORD(-3)
 placeholder_flag:
         .byte   $80
 
-        kMaxStringLength = 48
+        kPadChar = ' '
 
-buf:    .byte   res_string_message_placeholder
+        ;; Limit because MGTK mispaints if string is wider than screen
+        kMaxStringLength = 44
+
+        ;; Always leave enough for a leading and trailing space
+buf:    .byte   .sprintf("%c%s%c", kPadChar, res_string_message_placeholder, kPadChar)
         .res    kMaxStringLength - (* - buf),0
 
 font:   .incbin "../mgtk/fonts/ATHENS"
 
 .params text_params
 data:   .addr   buf
-length: .byte   .strlen(res_string_message_placeholder)
+length: .byte   .strlen(res_string_message_placeholder)+2
 width:  .word   0               ; for `TextWidth` call
 .endparams
 
@@ -110,11 +114,12 @@ exit:
         lda     event_params + MGTK::Event::key
         cmp     #CHAR_DELETE
         beq     backspace
-        cmp     #' '
+        cmp     #kPadChar
         bcs     printable
 
         ;; --------------------------------------------------
         ;; Non-printable
+
         cmp     #CHAR_ESCAPE
         beq     InputLoop::exit
 
@@ -133,42 +138,54 @@ exit:
         jmp     InputLoop
 
         ;; --------------------------------------------------
-        ;; Printable
+        ;; Printable (append char, preserving trailing space)
 
 printable:
-        bit     placeholder_flag
-    IF_NS
-        ldx     #0
-        stx     text_params::length
-        stx     placeholder_flag
-    END_IF
+        jsr     maybe_init
 
         ldx     text_params::length
-        cpx     #kMaxStringLength
+        dex
+        cpx     #kMaxStringLength-1
     IF_LT
         sta     buf,x
+        lda     #kPadChar
+        sta     buf+1,x
         inc     text_params::length
     END_IF
 
         jmp     InputLoop
 
         ;; --------------------------------------------------
-        ;; Backspace
+        ;; Backspace (truncate, preserving trailing space)
 
 backspace:
-        bit     placeholder_flag
-    IF_NS
-        ldx     #0
-        stx     text_params::length
-        stx     placeholder_flag
-    END_IF
+        jsr     maybe_init
 
         lda     text_params::length
-    IF_NOT_ZERO
+        cmp     #3
+    IF_GE
         dec     text_params::length
+        ldx     text_params::length
+        lda     #kPadChar
+        sta     buf-1,x
     END_IF
 
         jmp     InputLoop
+
+        ;; --------------------------------------------------
+        ;; Initialze on first input
+        ;; Preserves A
+maybe_init:
+        bit     placeholder_flag
+    IF_NS
+        ldx     #0
+        stx     placeholder_flag
+        ldx     #2
+        stx     text_params::length
+        ldx     #kPadChar
+        stx     buf+1
+    END_IF
+        rts
 
 .endproc ; HandleKeyDown
 
