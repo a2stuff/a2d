@@ -590,8 +590,7 @@ source_is_pro:
         lda     main__on_line_buffer2+1
         jmp     check_source_error
 :
-        sta     main__on_line_buffer2
-        param_call AdjustCase, main__on_line_buffer2
+        param_call AdjustOnLineEntryCase, main__on_line_buffer2
         jsr     DrawSourceDriveInfo
 
 check_source_finish:
@@ -667,8 +666,7 @@ use_sd:
         tax                     ; slot/drive
         lda     #kAlertMsgConfirmEraseSlotDrive ; X = unit number
     ELSE
-        sta     main__on_line_buffer2
-        param_call AdjustCase, main__on_line_buffer2
+        param_call AdjustOnLineEntryCase, main__on_line_buffer2
         ldxy    #main__on_line_buffer2
         lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
     END_IF
@@ -1366,13 +1364,52 @@ match:  clc
 
 ;;; ============================================================
 
-.proc AdjustCase
+;;; Input: A,X is ON_LINE data buffer entry *including* the
+;;;        slot/drive bits, not just the name.
+;;; Output: entry is length-prefix, case-adjusted
+
+.proc AdjustOnLineEntryCase
         ptr := $A
 
         stax    ptr
+
         ldy     #0
         lda     (ptr),y
-        and     #NAME_LENGTH_MASK ; handle ON_LINE results, etc
+        pha
+        and     #UNIT_NUM_MASK  ; stash unit number
+        sta     main__block_params_unit_num
+        pla
+        and     #NAME_LENGTH_MASK
+        sta     (ptr),y         ; mask off length
+
+        ;; --------------------------------------------------
+        ;; Check for GS/OS case bits, apply if found
+
+        copy16  #2, main__block_params_block_num
+        copy16  #default_block_buffer, main__block_params_data_buffer
+        jsr     main__ReadBlock
+        bcs     fallback
+
+        case_bytes := default_block_buffer + $1A
+        asl16   case_bytes
+        bcc     fallback      ; High bit set = GS/OS case bits present
+
+        ldy     #1
+bloop:  asl16   case_bytes      ; Shift out high byte first
+        bcc     :+
+        lda     (ptr),y
+        ora     #AS_BYTE(~CASE_MASK)
+        sta     (ptr),y
+:       iny
+        cpy     #16             ; bits
+        bcc     bloop
+        rts
+
+        ;; --------------------------------------------------
+        ;; Use heuristic
+fallback:
+        ldy     #0
+        lda     (ptr),y
         beq     done
 
         ;; Walk backwards through string. At char N, check char N-1; if
@@ -1399,7 +1436,7 @@ check_alpha:
         sta     (ptr),y
 :       dey
         bpl     loop            ; always
-.endproc ; AdjustCase
+.endproc ; AdjustOnLineEntryCase
 
 ;;; ============================================================
 
@@ -1522,7 +1559,7 @@ is_prodos:
         sta     drive_unitnum_table,x
 
         ldax    $06
-        jsr     AdjustCase
+        jsr     AdjustOnLineEntryCase
         lda     num_drives
         asl     a
         asl     a

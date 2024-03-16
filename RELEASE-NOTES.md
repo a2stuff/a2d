@@ -69,6 +69,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Hide "Select Quit..." once menu is not accessible.
 * Show correct block counts during Quick Copy.
 * Show progress bar during copy.
+* Apply GS/OS case bits to ProDOS volume names, if present. ([#428](https://github.com/a2stuff/a2d/issues/428))
 
 ### Desk Accessories
 
