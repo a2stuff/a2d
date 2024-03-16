@@ -52,6 +52,9 @@
 * Launch DeskTop. Select an AppleWorks file icon. File > Rename..., and specify a name using a mix of uppercase and lowercase. Click OK. Close the containing window and re-open it. Verify that the filename case is retained.
 * Launch DeskTop. Select an AppleWorks file icon. File > Duplicate..., and specify a name using a mix of uppercase and lowercase. Click OK. Close the containing window and re-open it. Verify that the filename case is retained.
 
+* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). File > Rename..., and specify a new name. Click OK. Verify that the name reverts to heuristic mixed-case. Close the containing window and re-open it. Verify that the heuristic mixed-case name remains.
+* Launch DeskTop. Select a volume named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). File > Rename..., and specify a new name. Click OK. Verify that the name reverts to heuristic mixed-case. Restart DeskTop. Verify that the heuristic mixed-case name remains.
+
 * File > Get Info a non-folder file. Verify that the size shows as "_size_K".
 * File > Get Info a folder containing 0 files. Verify that the size shows as "_size_K for 1 item".
 * File > Get Info a folder containing 1 files. Verify that the size shows as "_size_K for 2 items".

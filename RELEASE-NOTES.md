@@ -52,7 +52,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Click on menu bar clock now shows Date & Time DA.
 * Refresh correct window after renaming an icon, if view is by name.
 * Fix corruption when exiting Shortcuts dialogs with a list view window. (([#790](https://github.com/a2stuff/a2d/issues/790))
-
+* Clear GS/OS "case bits" when renaming files/volumes. (([#352](https://github.com/a2stuff/a2d/issues/352))
 
 ### Selector
 

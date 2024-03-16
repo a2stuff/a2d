@@ -12001,22 +12001,15 @@ Start:  lda     DEVNUM
         dst_ptr := $08
 
         ;; Point `src_ptr` / `dst_ptr` at `FileEntry` structures
-        copy16  #src_block + 4, src_ptr
-        copy16  #dst_block + 4, dst_ptr
+        ldax    #src_block
+        ldy     src_entry_num
+        jsr     GetFileEntryBlockOffset
+        stax    src_ptr
 
-        ldx     src_entry_num
-    IF_NOT_ZERO
-:       add16_8 src_ptr, #.sizeof(FileEntry)
-        dex
-        bne     :-
-    END_IF
-
-        ldx     dst_entry_num
-    IF_NOT_ZERO
-:       add16_8 dst_ptr, #.sizeof(FileEntry)
-        dex
-        bne     :-
-    END_IF
+        ldax    #dst_block
+        ldy     dst_entry_num
+        jsr     GetFileEntryBlockOffset
+        stax    dst_ptr
 
         ;; Swap everything but `header_pointer`
         ldy     #FileEntry::header_pointer-1
@@ -13015,6 +13008,11 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 .proc ApplyCaseBits
         jsr     GetSrcFileInfo
         bcs     fallback
+        copy    DEVNUM, unit_number
+
+        lda     src_file_info_params::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        beq     volume
 
         lda     src_file_info_params::file_type
         cmp     #FT_ADB
@@ -13024,7 +13022,26 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
         cmp     #FT_ASP
         beq     appleworks
 
-        ;; TODO: Handle GS/OS case bits
+        ;; --------------------------------------------------
+        ;; Wipe file GS/OS case bits
+
+        ldax    #src_path_buf
+        jsr     GetFileEntryBlock
+        bcs     fallback
+        stax    block_number
+
+        block_ptr := $06
+        ldax    #block_buffer
+        jsr     GetFileEntryBlockOffset ; Y is already the entry number
+        stax    block_ptr
+
+        MLI_CALL READ_BLOCK, block_params
+        bcs     fallback
+        ldy     #FileEntry::version
+        copy16in #0, (block_ptr),y
+write_block:
+        MLI_CALL WRITE_BLOCK, block_params
+        FALL_THROUGH_TO fallback
 
         ;; --------------------------------------------------
 fallback:
@@ -13055,6 +13072,21 @@ appleworks:
         bpl     :-
 
         jmp     SetSrcFileInfo
+
+        ;; --------------------------------------------------
+        ;; Wipe volume GS/OS case bits
+volume:
+        copy16  #2, block_number ; volume directory key block
+        MLI_CALL READ_BLOCK, block_params
+        bcs     fallback
+        copy16  #0, block_buffer + $1A
+        jmp     write_block
+
+        block_buffer := $800
+        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, SELF_MODIFIED
+        unit_number := block_params::unit_num
+        block_number := block_params::block_num
+
 .endproc ; ApplyCaseBits
 
 ;;; ============================================================
@@ -14255,6 +14287,36 @@ exit:
         close_params_ref_num := close_params::ref_num
 
 .endproc ; GetFileEntryBlock
+
+;;; ============================================================
+;;; After calling `GetFileEntryBlock`, this can be used to translate
+;;; the entry number in Y into the address of the corresponding
+;;; `FileEntry` with a memory buffer for the block.
+
+;;; Inputs: A,X = directory block, Y = entry number in block
+;;; Outputs: A,X = pointer to `FileEntry`
+
+.proc GetFileEntryBlockOffset
+        ;; Skip prev/next block pointers
+        clc
+        adc     #4
+        bcc     :+
+        inx
+:
+        ;; Iterate through entries
+        cpy     #0
+        beq     ret
+
+loop:   clc
+        adc     #.sizeof(FileEntry)
+        bcc     :+
+        inx
+:       dey
+        bne     loop
+
+ret:    rts
+
+.endproc ; GetFileEntryBlockOffset
 
 ;;; ============================================================
 ;;;
