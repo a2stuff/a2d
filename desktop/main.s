@@ -14147,17 +14147,15 @@ SaveWindows := save_restore_windows::Save
 .proc GetFileEntryBlock
 
 ;;; Memory Map
-io_buf    := $800               ; $800-$BFF
-block_buf := $C00               ; $C00-$DFF
-kBlockSize = $200
-path_buf  := $E00
-filename  := $E70
+io_buf    := $1000              ; $1000-$13FF
+block_buf := $1400              ; $1400-$15FF
+path_buf  := $1600
+filename  := $1670
 
-entry_num       := $E80         ; (byte) entry number in current block
-current_block   := $E81         ; (word) current block number
-saw_header_flag := $E83         ; (byte) indicates header entry seen
+entry_num       := $1680        ; (byte) entry number in current block
+current_block   := $1681        ; (word) current block number
+saw_header_flag := $1683        ; (byte) indicates header entry seen
 kEntriesPerBlock = $0D
-
 
         ptr := $06
 
@@ -14280,7 +14278,7 @@ exit:
         rts
 
         DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
-        DEFINE_READ_PARAMS read_params, block_buf, kBlockSize
+        DEFINE_READ_PARAMS read_params, block_buf, BLOCK_SIZE
         DEFINE_CLOSE_PARAMS close_params
         open_params_ref_num := open_params::ref_num
         read_params_ref_num := read_params::ref_num
