@@ -47,7 +47,7 @@ vol_name:
         bcs     fallback
         MLI_CALL CLOSE, volname_close_params
 
-        copy16  volbuf + $1A, version_bytes
+        copy16  volbuf + VolumeDirectoryHeader::case_bits, case_bits
         jmp     common
 
 ;;; --------------------------------------------------
@@ -67,12 +67,12 @@ file_entry:
         cmp     #FT_ASP
         beq     appleworks
 
-        ldy     #FileEntry::version
-        copy16in (ptr),y, version_bytes
+        ldy     #FileEntry::case_bits
+        copy16in (ptr),y, case_bits
         FALL_THROUGH_TO common
 
 common:
-        asl16   version_bytes
+        asl16   case_bits
         bcs     apply_bits      ; High bit set = GS/OS case bits present
 
 ;;; --------------------------------------------------
@@ -122,7 +122,7 @@ check_alpha:
 
 apply_bits:
         ldy     #1
-@bloop: asl16   version_bytes   ; NOTE: Shift out high byte first
+@bloop: asl16   case_bits   ; NOTE: Shift out high byte first
         bcc     :+
         lda     (ptr),y
         ora     #AS_BYTE(~CASE_MASK)
@@ -153,10 +153,10 @@ apply_bits:
 appleworks:
         ldy     #FileEntry::aux_type
         lda     (ptr),y
-        sta     version_bytes+1
+        sta     case_bits+1
         iny
         lda     (ptr),y
-        sta     version_bytes
+        sta     case_bits
         jmp     apply_bits
 
 ;;; --------------------------------------------------
@@ -168,7 +168,7 @@ file_name:
 
 ;;; --------------------------------------------------
 
-version_bytes:
+case_bits:
         .word   0
 .endproc ; AdjustCaseImpl
 

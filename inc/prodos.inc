@@ -32,6 +32,8 @@ SELECTOR_ORG    := $1000        ; QUIT handler execution load address
 
 BLOCK_SIZE      = $200
 
+kVolumeDirKeyBlock = 2
+
 ;;; ============================================================
 ;;; Unit Numbers
 ;;; ============================================================
@@ -238,6 +240,7 @@ NAME_LENGTH_MASK        = $0F
         total_blocks    .word
 .endstruct
         .assert .sizeof(VolumeDirectoryHeader) = $2B, error, "incorrect struct size"
+        VolumeDirectoryHeader::case_bits = $1A
 
 ;;; Subdirectory Header structure
 .struct SubdirectoryHeader
@@ -280,6 +283,7 @@ NAME_LENGTH_MASK        = $0F
         header_pointer  .word
 .endstruct
         .assert .sizeof(FileEntry) = $27, error, "incorrect struct size"
+        FileEntry::case_bits = FileEntry::version
 
 ;;; ============================================================
 ;;; ProDOS Driver Protocol

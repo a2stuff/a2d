@@ -1273,7 +1273,7 @@ match:  clc
         ptr := $06
 
         stax    ptr
-        copy16  #2, main__block_params_block_num
+        copy16  #kVolumeDirKeyBlock, main__block_params_block_num
         jsr     main__ReadBlock
     IF_CS
         ;; Just use a single space as the name
@@ -1385,17 +1385,17 @@ match:  clc
         ;; --------------------------------------------------
         ;; Check for GS/OS case bits, apply if found
 
-        copy16  #2, main__block_params_block_num
+        copy16  #kVolumeDirKeyBlock, main__block_params_block_num
         copy16  #default_block_buffer, main__block_params_data_buffer
         jsr     main__ReadBlock
         bcs     fallback
 
-        case_bytes := default_block_buffer + $1A
-        asl16   case_bytes
+        case_bits := default_block_buffer + VolumeDirectoryHeader::case_bits
+        asl16   case_bits
         bcc     fallback      ; High bit set = GS/OS case bits present
 
         ldy     #1
-bloop:  asl16   case_bytes      ; Shift out high byte first
+bloop:  asl16   case_bits       ; Shift out high byte first
         bcc     :+
         lda     (ptr),y
         ora     #AS_BYTE(~CASE_MASK)

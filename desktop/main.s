@@ -9254,7 +9254,7 @@ f35:    ldax    #dib_buffer+SPDIB::ID_String_Length
         ldy     #IconType::floppy800
         rts
 
-        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
+        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, kVolumeDirKeyBlock
         unit_number := block_params::unit_num
 
 blocks: .word   0
@@ -11973,17 +11973,17 @@ failure:
     IF_EQ
         ;; Volume
         copy    DEVNUM, block_params::unit_num
-        copy16  #2, block_params::block_num
+        copy16  #kVolumeDirKeyBlock, block_params::block_num
         MLI_CALL READ_BLOCK, block_params
         bcs     ret
-        copy16  block_buffer + $1A, case_bits
+        copy16  block_buffer + VolumeDirectoryHeader::case_bits, case_bits
     ELSE
         ;; File
         ldax    #src_path_buf
         jsr     GetFileEntryBlock ; leaves $06 pointing at `FileEntry`
         bcs     ret
         entry_ptr := $06
-        ldy     #FileEntry::version
+        ldy     #FileEntry::case_bits
         copy16in (entry_ptr),y, case_bits
     END_IF
 
@@ -12005,7 +12005,7 @@ ret:    rts
         copy    DEVNUM, block_params::unit_num
         MLI_CALL READ_BLOCK, block_params
         bcs     ret
-        ldy     #FileEntry::version
+        ldy     #FileEntry::case_bits
         copy16in case_bits, (block_ptr),y
         MLI_CALL WRITE_BLOCK, block_params
 
@@ -12968,7 +12968,7 @@ match:  lda     flag
         eor     #$40            ; bit 6 = relink supported
 :       rts
 
-        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, 2
+        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, kVolumeDirKeyBlock
         block_params__unit_num := block_params::unit_num
 .endproc ; CheckMoveOrCopy
 
@@ -13102,7 +13102,7 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 
         MLI_CALL READ_BLOCK, block_params
         bcs     fallback
-        ldy     #FileEntry::version
+        ldy     #FileEntry::case_bits
         copy16in #0, (block_ptr),y
 write_block:
         MLI_CALL WRITE_BLOCK, block_params
@@ -13141,10 +13141,10 @@ appleworks:
         ;; --------------------------------------------------
         ;; Wipe volume GS/OS case bits
 volume:
-        copy16  #2, block_number ; volume directory key block
+        copy16  #kVolumeDirKeyBlock, block_number
         MLI_CALL READ_BLOCK, block_params
         bcs     fallback
-        copy16  #0, block_buffer + $1A
+        copy16  #0, block_buffer + VolumeDirectoryHeader::case_bits
         jmp     write_block
 
         block_buffer := $800

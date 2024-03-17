@@ -1004,7 +1004,7 @@ maybe_dos:
 
 ;;; Handle Pascal disk - name suffixed with ':'
 pascal_disk:
-        copy16  #$0002, read_block_params::block_num
+        copy16  #kVolumeDirKeyBlock, read_block_params::block_num
         MLI_CALL READ_BLOCK, read_block_params
         bcc     :+
         ;; Pascal disk, empty name - use " :" (weird, but okay?)

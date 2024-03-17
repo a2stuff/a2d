@@ -2279,7 +2279,7 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
 
         rts                     ; not found
 
-        DEFINE_READ_BLOCK_PARAMS read_block_params, block_buffer, 2
+        DEFINE_READ_BLOCK_PARAMS read_block_params, block_buffer, kVolumeDirKeyBlock
 
 found:
         ;; Found it in DEVLST, X = index
