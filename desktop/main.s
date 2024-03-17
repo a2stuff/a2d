@@ -11283,6 +11283,8 @@ file_entry_buf          .tag    FileEntry
         DEFINE_SET_MARK_PARAMS mark_dst_params, 0
         DEFINE_ON_LINE_PARAMS on_line_params2,, $800
 
+        block_buffer := file_data_buffer
+        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, SELF_MODIFIED
 
 ;;; ============================================================
 
@@ -11907,6 +11909,8 @@ existing_size:
         dex
         bpl     :-
 
+        jsr     ReadSrcCaseBits
+
         ;; If a volume, need to create a subdir instead
         lda     create_params3::storage_type
         cmp     #ST_VOLUME_DIRECTORY
@@ -11941,6 +11945,12 @@ err:    jsr     ShowErrorAlertDst
         jmp     retry
 
 success:
+        lda     case_bits
+        ora     case_bits+1
+    IF_NOT_ZERO
+        jsr     WriteDstCaseBits
+    END_IF
+
         clc
         rts
 
@@ -11948,6 +11958,61 @@ failure:
         sec
         rts
 .endproc ; TryCreateDst
+
+;;; ============================================================
+;;; Case Bits
+
+.proc ReadSrcCaseBits
+        copy16  #0, case_bits   ; best effort
+
+        jsr     GetSrcFileInfo
+        bcs     ret
+
+        lda     src_file_info_params::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+    IF_EQ
+        ;; Volume
+        copy    DEVNUM, block_params::unit_num
+        copy16  #2, block_params::block_num
+        MLI_CALL READ_BLOCK, block_params
+        bcs     ret
+        copy16  block_buffer + $1A, case_bits
+    ELSE
+        ;; File
+        ldax    #src_path_buf
+        jsr     GetFileEntryBlock ; leaves $06 pointing at `FileEntry`
+        bcs     ret
+        entry_ptr := $06
+        ldy     #FileEntry::version
+        copy16in (entry_ptr),y, case_bits
+    END_IF
+
+        clc                     ; success
+ret:    rts
+.endproc ; ReadSrcCaseBits
+
+.proc WriteDstCaseBits
+        ldax    #dst_path_buf
+        jsr     GetFileEntryBlock
+        bcs     ret
+        stax    block_params::block_num
+
+        block_ptr := $06
+        ldax    #block_buffer
+        jsr     GetFileEntryBlockOffset ; Y is already the entry number
+        stax    block_ptr
+
+        copy    DEVNUM, block_params::unit_num
+        MLI_CALL READ_BLOCK, block_params
+        bcs     ret
+        ldy     #FileEntry::version
+        copy16in case_bits, (block_ptr),y
+        MLI_CALL WRITE_BLOCK, block_params
+
+ret:    rts
+.endproc ; WriteDstCaseBits
+
+case_bits:      .word   0
 
 ;;; ============================================================
 ;;; Relink - swaps source and target, then deletes source.
@@ -14144,6 +14209,7 @@ SaveWindows := save_restore_windows::Save
 ;;;
 ;;; Input: A,X = path
 ;;; Output: C=0, A,X=block, Y=entry on success; C=1 on error
+;;;         If successful, $06 points at `FileEntry` in block buffer
 .proc GetFileEntryBlock
 
 ;;; Memory Map

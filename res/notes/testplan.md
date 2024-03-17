@@ -55,6 +55,11 @@
 * Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). File > Rename..., and specify a new name. Click OK. Verify that the name reverts to heuristic mixed-case. Close the containing window and re-open it. Verify that the heuristic mixed-case name remains.
 * Launch DeskTop. Select a volume named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). File > Rename..., and specify a new name. Click OK. Verify that the name reverts to heuristic mixed-case. Restart DeskTop. Verify that the heuristic mixed-case name remains.
 
+* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Drag it to another volume to copy it. Verify that the copied file retains the same mixed case name.
+* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Drag it to another folder on the same volume to move it. Verify that the moved file retains the same mixed case name.
+* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Hold Solid-Apple and drag it to another volume to move it. Verify that the moved file retains the same mixed case name.
+* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Hold Solid-Apple and drag it to another folder on the same volume to copy it. Verify that the copied file retains the same mixed case name.
+
 * File > Get Info a non-folder file. Verify that the size shows as "_size_K".
 * File > Get Info a folder containing 0 files. Verify that the size shows as "_size_K for 1 item".
 * File > Get Info a folder containing 1 files. Verify that the size shows as "_size_K for 2 items".
@@ -636,6 +641,7 @@
 
 * Launch DeskTop. Shortcuts > Run a Shortcut. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
 
+* Configure DeskTop to copy to RAMCard on start. Add a shortcut for an application file that can be launched from DeskTop in the root of a disk named with mixed case using GS/OS, and configure it to copy to RAMCard "on first use". Invoke the shortcut. Exit back to DeskTop. Verify that the folder name on the RAMCard has the same mixed case as the original disk.
 
 ## File Types
 

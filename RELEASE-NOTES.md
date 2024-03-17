@@ -53,6 +53,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Refresh correct window after renaming an icon, if view is by name.
 * Fix corruption when exiting Shortcuts dialogs with a list view window. (([#790](https://github.com/a2stuff/a2d/issues/790))
 * Clear GS/OS "case bits" when renaming files/volumes. (([#352](https://github.com/a2stuff/a2d/issues/352))
+* Preserve GS/OS "case bits" when copying files. (([#352](https://github.com/a2stuff/a2d/issues/352))
 
 ### Selector
 
@@ -69,7 +70,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Hide "Select Quit..." once menu is not accessible.
 * Show correct block counts during Quick Copy.
 * Show progress bar during copy.
-* Apply GS/OS case bits to ProDOS volume names, if present. ([#428](https://github.com/a2stuff/a2d/issues/428))
+* Show ProDOS volume names with GS/OS "case bits", if present. ([#428](https://github.com/a2stuff/a2d/issues/428))
 
 ### Desk Accessories
 
