@@ -47,6 +47,7 @@
 .define res_string_prompt_overwrite "El archivo ya existe. ]Quiere reemplazarlo?"
 .define res_string_errmsg_too_large_to_copy "Archivo demasiado grande para ser escrito."
 .define res_string_errmsg_too_large_to_move "Archivo demasiado grande para mover."
+.define res_string_errmsg_overwrite_dir "Una carpeta no puede ser reemplazada por otro elemento. Elim\x11elo y luego vuelva a intentarlo."
 .define res_string_prompt_delete_confirm_prefix "]Est\x10s seguro de que quieres eliminar permanentemente "
 .define res_string_prompt_delete_confirm_suffix "?"
 .define res_string_label_delete_count "Borrado: "

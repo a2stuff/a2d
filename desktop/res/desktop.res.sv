@@ -47,6 +47,7 @@
 .define res_string_prompt_overwrite "Den filen finns redan. Vill du byta ut den?"
 .define res_string_errmsg_too_large_to_copy "Den h{r filen {r f|r stor f|r att kopieras."
 .define res_string_errmsg_too_large_to_move "Den h{r filen {r f|r stor f|r att flyttas."
+.define res_string_errmsg_overwrite_dir "En mapp kan inte ers{ttas av ett annat objekt. Radera det sedan f|rs|k igen."
 .define res_string_prompt_delete_confirm_prefix "[r du s{ker p} att du vill ta bort "
 .define res_string_prompt_delete_confirm_suffix " permanent?"
 .define res_string_label_delete_count "Raderar: "

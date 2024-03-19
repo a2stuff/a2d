@@ -47,6 +47,7 @@
 .define res_string_prompt_overwrite "Bestand bestaat al. Overschrijven?"
 .define res_string_errmsg_too_large_to_copy "Bestand te groot om te kopi\x10ren."
 .define res_string_errmsg_too_large_to_move "Bestand te groot om te verplaatsen."
+.define res_string_errmsg_overwrite_dir "Een map kan niet worden vervangen door een ander item. Verwijder het en probeer het opnieuw."
 .define res_string_prompt_delete_confirm_prefix "Weet je zeker dat je "
 .define res_string_prompt_delete_confirm_suffix " permanent wilt verwijderen?"
 .define res_string_label_delete_count "Wissen: "

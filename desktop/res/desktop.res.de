@@ -47,6 +47,7 @@
 .define res_string_prompt_overwrite "Datei bereits vorhanden. ]berschreiben?"
 .define res_string_errmsg_too_large_to_copy "Datei zu gro~ zum Kopieren."
 .define res_string_errmsg_too_large_to_move "Datei zu gro~ zum Bewegen."
+.define res_string_errmsg_overwrite_dir "Ein Ordner kann nicht durch einen anderen Artikel ersetzt werden. L|schen Sie es und versuchen Sie es erneut."
 .define res_string_prompt_delete_confirm_prefix "M|chten Sie wirklich "
 .define res_string_prompt_delete_confirm_suffix " dauerhaft l|schen?"
 .define res_string_label_delete_count "L|schen: "

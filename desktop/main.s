@@ -11271,14 +11271,14 @@ file_entry_buf          .tag    FileEntry
 
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
-        DEFINE_DESTROY_PARAMS destroy_params, src_path_buf
+        DEFINE_DESTROY_PARAMS destroy_src_params, src_path_buf
+        DEFINE_DESTROY_PARAMS destroy_dst_params, dst_path_buf
         DEFINE_OPEN_PARAMS open_src_params, src_path_buf, $0D00
         DEFINE_OPEN_PARAMS open_dst_params, dst_path_buf, $1100
         DEFINE_READ_PARAMS read_src_params, file_data_buffer, kBufSize
         DEFINE_WRITE_PARAMS write_dst_params, file_data_buffer, kBufSize
         DEFINE_CREATE_PARAMS create_params3, dst_path_buf, ACCESS_DEFAULT
 
-        DEFINE_SET_EOF_PARAMS set_eof_params, 0
         DEFINE_SET_MARK_PARAMS mark_src_params, 0
         DEFINE_SET_MARK_PARAMS mark_dst_params, 0
         DEFINE_ON_LINE_PARAMS on_line_params2,, $800
@@ -11767,7 +11767,7 @@ ok_dir: jsr     RemoveSrcPathSegment
         bpl     done
 
         ;; Was a move - delete file
-@retry: MLI_CALL DESTROY, destroy_params
+@retry: MLI_CALL DESTROY, destroy_src_params
         bcc     done
         cmp     #ERR_ACCESS_ERROR
         bne     :+
@@ -11886,13 +11886,14 @@ existing_size:
 ;;; ============================================================
 ;;; Common implementation used by both `CopyProcessSelectedFile`
 ;;; and `CopyProcessDirectoryEntry`
+;;; Output: C=0 on success, C=1 on failure
 
 .proc TryCreateDst
         bit     move_flag       ; same volume relink move?
     IF_VC
         ;; No, verify that there is room.
         jsr     CheckSpaceAndShowPrompt
-        bcs     failure
+        RTS_IF_CS
     END_IF
 
         ;; Copy file_type, aux_type, storage_type
@@ -11918,11 +11919,23 @@ existing_size:
         lda     #ST_LINKED_DIRECTORY
         sta     create_params3::storage_type
 :
-retry:  MLI_CALL CREATE, create_params3
-        bcc     success
 
-        cmp     #ERR_DUPLICATE_FILENAME
-        bne     err
+        ;; --------------------------------------------------
+retry:  jsr     GetDstFileInfo
+        bcs     create
+        cmp     #ERR_FILE_NOT_FOUND
+        beq     create
+
+        ;; File exists
+        lda     dst_file_info_params::storage_type
+        cmp     #ST_LINKED_DIRECTORY
+    IF_EQ
+        ;; TODO: In the future, prompt and recursively delete
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_no_overwrite_dir
+        jsr     SetCursorWatch
+        jmp     CloseFilesCancelDialog
+    END_IF
+        ;; Prompt to replace
         bit     all_flag
         bmi     yes
 
@@ -11936,12 +11949,16 @@ retry:  MLI_CALL CREATE, create_params3
         cmp     #kAlertResultAll
         bne     cancel
         copy    #$80, all_flag
-yes:    jsr     ApplyFileInfoAndSize
-        jmp     success
+yes:
+        MLI_CALL DESTROY, destroy_dst_params
+        bcs     retry
 
-cancel: jmp     CloseFilesCancelDialog
-
-err:    jsr     ShowErrorAlertDst
+        ;; --------------------------------------------------
+        ;; Create the file
+create:
+        MLI_CALL CREATE, create_params3
+        bcc     success
+        jsr     ShowErrorAlertDst
         jmp     retry
 
 success:
@@ -11957,6 +11974,8 @@ success:
 failure:
         sec
         rts
+
+cancel: jmp     CloseFilesCancelDialog
 .endproc ; TryCreateDst
 
 ;;; ============================================================
@@ -12128,7 +12147,7 @@ Start:  lda     DEVNUM
         ;; --------------------------------------------------
         ;; Delete the file at the source location.
 
-:       MLI_CALL DESTROY, destroy_params
+:       MLI_CALL DESTROY, destroy_src_params
         bcc     :+
         jsr     ShowErrorAlert
         jmp     :-
@@ -12436,7 +12455,7 @@ do_destroy:
 ;;; and `DeleteProcessDirectoryEntry`
 
 .proc DeleteFileCommon
-retry:  MLI_CALL DESTROY, destroy_params
+retry:  MLI_CALL DESTROY, destroy_src_params
         bcc     done
 
         ;; Failed - determine why, maybe try to unlock.
@@ -12973,32 +12992,6 @@ match:  lda     flag
 .endproc ; CheckMoveOrCopy
 
 ;;; ============================================================
-
-.proc ApplyFileInfoAndSize
-:       jsr     CopyFileInfo
-        copy    #ACCESS_DEFAULT, dst_file_info_params::access
-        jsr     SetDstFileInfo
-        lda     src_file_info_params::file_type
-        cmp     #FT_DIRECTORY
-        beq     done
-
-        ;; If a regular file, open/set eof/close
-        MLI_CALL OPEN, open_dst_params
-        bcc     :+
-        jsr     ShowErrorAlertDst
-        jmp     :-              ; retry
-
-:       lda     open_dst_params::ref_num
-        sta     set_eof_params::ref_num
-        sta     close_dst_params::ref_num
-@retry: MLI_CALL SET_EOF, set_eof_params
-        bcc     close
-        jsr     ShowErrorAlertDst
-        jmp     @retry
-
-close:  MLI_CALL CLOSE, close_dst_params
-done:   rts
-.endproc ; ApplyFileInfoAndSize
 
 .proc CopyFileInfo
         COPY_BYTES 11, src_file_info_params::access, dst_file_info_params::access

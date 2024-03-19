@@ -47,6 +47,7 @@
 .define res_string_prompt_overwrite "Il file esiste gi{. Vuoi sovrascriverlo?"
 .define res_string_errmsg_too_large_to_copy "File troppo grande."
 .define res_string_errmsg_too_large_to_move "File troppo grande."
+.define res_string_errmsg_overwrite_dir "Una cartella non pu| essere sostituita da un altro elemento. Elimina e poi riprova."
 .define res_string_prompt_delete_confirm_prefix "Sei sicuro di voler eliminare definitivamente "
 .define res_string_prompt_delete_confirm_suffix "?"
 .define res_string_label_delete_count "Cancellazione: "

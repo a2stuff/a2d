@@ -47,6 +47,7 @@
 .define res_string_prompt_overwrite "Le fichier existe d{j@. Voulez-vous le remplacer ?"
 .define res_string_errmsg_too_large_to_copy "Fichier trop grand."
 .define res_string_errmsg_too_large_to_move "Fichier trop large."
+.define res_string_errmsg_overwrite_dir "Un dossier ne peut pas etre remplac{ par un autre {l{ment. Supprimez-le puis r{essayez."
 .define res_string_prompt_delete_confirm_prefix "Voulez-vous vraiment supprimer d{finitivement "
 .define res_string_prompt_delete_confirm_suffix " ?"
 .define res_string_label_delete_count "Supprimer : "

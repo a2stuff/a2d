@@ -285,6 +285,8 @@ str_large_copy_prompt:
         PASCAL_STRING res_string_errmsg_too_large_to_copy
 str_large_move_prompt:
         PASCAL_STRING res_string_errmsg_too_large_to_move
+str_no_overwrite_dir:
+        PASCAL_STRING res_string_errmsg_overwrite_dir
 
         ;; "Delete" dialog strings
 str_delete_confirm_prefix:
