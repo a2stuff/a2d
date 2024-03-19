@@ -125,7 +125,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 .endif ; AD_YESNOALL
 
         kTextLeft = kAlertRectLeft + 75
-        kTextRight = kAlertRectWidth - kAlertXMargin
+        kTextRight = kAlertRectLeft + kAlertRectWidth - kAlertXMargin
 
         kWrapWidth = kTextRight - kTextLeft
 
