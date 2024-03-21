@@ -2428,16 +2428,20 @@ a_path: .addr   0
         ;; access = destroy/rename/write/read
         DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
-start:  copy    #NewFolderDialogState::open, new_folder_dialog_params::phase
-        jsr     NewFolderDialogProc
-
-retry:  lda     active_window_id
+start:
+        ;; Dialog needs base path to ensure new name is valid path
+        lda     active_window_id
         jsr     GetWindowPath
         stax    new_folder_dialog_params::a_path
         jsr     CopyToSrcPath
 
-        copy    #NewFolderDialogState::run, new_folder_dialog_params::phase
-        jsr     NewFolderDialogProc
+        ;; Open the dialog
+        lda     #NewFolderDialogState::open
+        jsr     RunDialogProc
+
+        ;; Run the dialog
+retry:  lda     #NewFolderDialogState::run
+        jsr     RunDialogProc
         jne     done            ; Canceled
 
         ;; Stash filename and path
@@ -2457,8 +2461,8 @@ retry:  lda     active_window_id
         jmp     retry
 
 success:
-        copy    #NewFolderDialogState::close, new_folder_dialog_params::phase
-        jsr     NewFolderDialogProc
+        lda     #NewFolderDialogState::close
+        jsr     RunDialogProc
 
         ;; Update cached used/free for all same-volume windows
         lda     active_window_id
@@ -2472,6 +2476,11 @@ success:
         param_call SelectFileIconByName, text_input_buf
 
 done:   rts
+
+.proc RunDialogProc
+        sta     new_folder_dialog_params::phase
+        jmp     NewFolderDialogProc
+.endproc ; RunDialogProc
 
 .endproc ; CmdNewFolderImpl
 CmdNewFolder    := CmdNewFolderImpl::start
@@ -13541,48 +13550,36 @@ DownloadDialogProc := CopyDialogProc
         ;; --------------------------------------------------
         cmp     #NewFolderDialogState::open
     IF_EQ
-        copy    #$80, has_input_field_flag
-        lda     #$00
+        lda     #$00            ; for `prompt_button_flags`
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
-        param_jump DrawDialogTitle, aux::label_new_folder
+        param_call DrawDialogTitle, aux::label_new_folder
+
+        copy16  new_folder_dialog_params::a_path, $08
+        param_call CopyPtr2ToBuf, path_buf4
+        jsr     SplitPathBuf4
+        COPY_STRING filename_buf, buf_filename ; for display
+        param_call DrawDialogLabel, 2, aux::str_in
+        param_call DrawString, buf_filename
+        param_call DrawDialogLabel, 4, aux::str_enter_folder_name
+        jmp     InitNameInput
     END_IF
 
         ;; --------------------------------------------------
         cmp     #NewFolderDialogState::run
-        jne     not_run
-
+    IF_EQ
         copy    #$80, has_input_field_flag
-        copy    #0, prompt_button_flags
-        copy16  new_folder_dialog_params::a_path, $08
-        param_call CopyPtr2ToBuf, path_buf0
-        param_call CopyPtr2ToBuf, path_buf4
-        jsr     SplitPathBuf4
-        COPY_STRING filename_buf, buf_filename ; for display
-
-        jsr     SetPortForDialogWindow
-        param_call DrawDialogLabel, 2, aux::str_in
-        param_call DrawString, buf_filename
-        param_call DrawDialogLabel, 4, aux::str_enter_folder_name
-        jsr     InitNameInput
 
 loop:   jsr     PromptInputLoop
-        bmi     loop
-        bne     do_close
+        bmi     loop            ; continue?
+        bne     do_close        ; canceled!
 
-        lda     path_buf0       ; full path okay?
-        clc
-        adc     text_input_buf
-        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
-    IF_GE
-        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
-        jmp     loop
-    END_IF
+        param_call_indirect CheckPathAndTextLength, new_folder_dialog_params::a_path
+        bcs     loop
 
         ldxy    #text_input_buf
         return  #0
-
-not_run:
+    END_IF
 
         ;; --------------------------------------------------
         ;; NewFolderDialogState::close
@@ -13590,6 +13587,25 @@ do_close:
         jsr     ClosePromptDialog
         return  #1
 .endproc ; NewFolderDialogProc
+
+;;; ============================================================
+
+;;; Inputs: A,X=path, `text_input_buf` has prospective filename
+;;; Output: C=0 if okay, C=1 if too long
+;;; Trashes: $08, path_buf0
+.proc CheckPathAndTextLength
+        stax    $08
+        param_call CopyPtr2ToBuf, path_buf0
+        lda     path_buf0       ; full path okay?
+        clc
+        adc     text_input_buf
+        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
+    IF_GE
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
+        sec
+    END_IF
+        rts
+.endproc ; CheckPathAndTextLength
 
 ;;; ============================================================
 ;;; "Get Info" dialog
@@ -13740,11 +13756,11 @@ ret:    return  #$FF
         ;; ----------------------------------------
         cmp     #RenameDialogState::open
     IF_EQ
-        copy    #$80, has_input_field_flag
-        lda     #$00
+        lda     #$00            ; for `prompt_button_flags`
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
         param_call DrawDialogTitle, aux::label_rename_icon
+
         copy16  rename_dialog_params::a_prev, $08
         param_call CopyPtr2ToBuf, text_input_buf
         param_call DrawDialogLabel, 2, aux::str_rename_old
@@ -13756,23 +13772,14 @@ ret:    return  #$FF
         ;; --------------------------------------------------
         cmp     #RenameDialogState::run
     IF_EQ
-        copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
+
 loop:   jsr     PromptInputLoop
         bmi     loop            ; continue?
-
         bne     do_close        ; canceled!
 
-        copy16  rename_dialog_params::a_path, $08
-        param_call CopyPtr2ToBuf, path_buf0
-        lda     path_buf0       ; full path okay?
-        clc
-        adc     text_input_buf
-        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
-      IF_CS
-        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
-        jmp     loop
-      END_IF
+        param_call_indirect CheckPathAndTextLength, rename_dialog_params::a_path
+        bcs     loop
 
         ldxy    #text_input_buf
         return  #0
@@ -13794,11 +13801,11 @@ do_close:
         ;; --------------------------------------------------
         cmp     #DuplicateDialogState::open
     IF_EQ
-        copy    #$80, has_input_field_flag
-        lda     #$00
+        lda     #$00            ; for `prompt_button_flags`
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
         param_call DrawDialogTitle, aux::label_duplicate_icon
+
         copy16  duplicate_dialog_params::a_prev, $08
         param_call CopyPtr2ToBuf, text_input_buf
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
@@ -13810,23 +13817,14 @@ do_close:
         ;; --------------------------------------------------
         cmp     #DuplicateDialogState::run
     IF_EQ
-        copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
+
 loop:   jsr     PromptInputLoop
         bmi     loop            ; continue?
-
         bne     do_close        ; canceled!
 
-        copy16  duplicate_dialog_params::a_path, $08
-        param_call CopyPtr2ToBuf, path_buf0
-        lda     path_buf0       ; full path okay?
-        clc
-        adc     text_input_buf
-        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
-      IF_CS
-        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
-        jmp     loop
-      END_IF
+        param_call_indirect CheckPathAndTextLength, duplicate_dialog_params::a_path
+        bcs     loop
 
         ldxy    #text_input_buf
         return  #0
