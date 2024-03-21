@@ -55,6 +55,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix corruption when exiting Shortcuts dialogs with a list view window. (([#790](https://github.com/a2stuff/a2d/issues/790))
 * Clear GS/OS "case bits" when renaming files/volumes. (([#352](https://github.com/a2stuff/a2d/issues/352))
 * Preserve GS/OS "case bits" when copying files. (([#352](https://github.com/a2stuff/a2d/issues/352))
+* Don't close File > Rename... and File > Duplicate... dialogs if path is too long.
 
 ### Selector
 

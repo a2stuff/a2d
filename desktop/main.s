@@ -2434,14 +2434,16 @@ start:  copy    #NewFolderDialogState::open, new_folder_dialog_params::phase
 retry:  lda     active_window_id
         jsr     GetWindowPath
         stax    new_folder_dialog_params::a_path
+        jsr     CopyToSrcPath
 
         copy    #NewFolderDialogState::run, new_folder_dialog_params::phase
         jsr     NewFolderDialogProc
         jne     done            ; Canceled
 
-        ;; Copy path
-        tya                     ; A,X = Y,X
-        jsr     CopyToSrcPath
+        ;; Stash filename and path
+        stxy    $06
+        ldax    $06
+        jsr     AppendFilenameToSrcPath
 
         ;; Create with current date
         COPY_STRUCT DateTime, DATELO, create_params::create_date
@@ -8702,6 +8704,19 @@ min     := parsed_date + ParsedDateTime::minute
 .endproc ; GetWindowPath
 
 ;;; ============================================================
+;;; Returns window path or a "/" path if 0=desktop is passed
+
+.proc GetWindowOrRootPath
+        cmp     #0
+        bne     GetWindowPath
+        ldax    #str_root_path
+        rts
+
+str_root_path:  PASCAL_STRING "/"
+
+.endproc ; GetWindowOrRootPath
+
+;;; ============================================================
 ;;; Look up window title path.
 ;;; Input: A = window_id
 ;;; Output: A,X = title path address
@@ -10685,7 +10700,8 @@ write_protected_flag:
 
 .params rename_dialog_params
 state:  .byte   0
-a_path: .addr   old_name_buf
+a_prev: .addr   old_name_buf
+a_path: .addr   SELF_MODIFIED_BYTE
 .endparams
 
 ;;; Assert: Single icon selected, and it's not Trash.
@@ -10695,19 +10711,24 @@ start:
         lda     #0
         sta     result_flags
 
+        ;; Dialog needs base path to ensure new name is valid path
+        jsr     GetSelectionWindow
+        jsr     GetWindowOrRootPath
+        stax    rename_dialog_params::a_path
+
+        ;; Original path
         lda     selected_icon_list
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
     IF_NE
         jsr     ShowAlert
         return  result_flags
     END_IF
-
         param_call CopyToSrcPath, path_buf3
 
+        ;; Copy original name for display/default
         lda     selected_icon_list
         jsr     GetIconName
         stax    $06
-
         param_call CopyPtr1ToBuf, old_name_buf
 
         ;; Open the dialog
@@ -10717,18 +10738,17 @@ start:
         ;; Run the dialog
 retry:  lda     #RenameDialogState::run
         jsr     RunDialogProc
-        beq     ok
+        beq     success
 
         ;; Failure
 fail:   return  result_flags
 
         ;; --------------------------------------------------
-        ;; Success, new name in Y,X
+        ;; Success, new name in X,Y
 
-ok:
+success:
         new_name_ptr := $08
-        sty     new_name_ptr
-        stx     new_name_ptr+1
+        stxy    new_name_ptr
 
         ;; Copy the name somewhere LCBANK-safe
         param_call CopyPtr2ToBuf, new_name_buf
@@ -11127,7 +11147,8 @@ assign: ldy     new_path
 
 .params duplicate_dialog_params
 state:  .byte   0
-a_path: .addr   old_name_buf
+a_prev: .addr   old_name_buf
+a_path: .addr   SELF_MODIFIED
 .endparams
 
 ;;; Assert: Single file icon selected
@@ -11137,20 +11158,24 @@ start:
         lda     #0
         sta     result_flag
 
+        ;; Dialog needs base path to ensure new name is valid path
+        jsr     GetSelectionWindow
+        jsr     GetWindowOrRootPath
+        stax    duplicate_dialog_params::a_path
+
+        ;; Original path
         lda     selected_icon_list
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
     IF_NE
         jsr     ShowAlert
         return  result_flag
     END_IF
-
         param_call CopyToSrcPath, path_buf3
 
+        ;; Copy original name for display/default
         lda     selected_icon_list
         jsr     GetIconName
         stax    $06
-
-        ;; Copy name for display/default
         param_call CopyPtr1ToBuf, old_name_buf
 
         ;; Open the dialog
@@ -11166,12 +11191,11 @@ retry:  lda     #DuplicateDialogState::run
         return  result_flag
 
         ;; --------------------------------------------------
-        ;; Success, new name in Y,X
+        ;; Success, new name in X,Y
 
 success:
         new_name_ptr := $08
-        sty     new_name_ptr
-        stx     new_name_ptr+1
+        stxy    new_name_ptr
         param_call CopyPtr2ToBuf, new_name_buf
 
         lda     selected_window_id
@@ -13550,26 +13574,13 @@ loop:   jsr     PromptInputLoop
         clc
         adc     text_input_buf
         cmp     #::kMaxPathLength ; not +1 because we'll add '/'
-        bcs     too_long
-
-        inc     path_buf0
-        ldx     path_buf0
-        copy    #'/', path_buf0,x
-        ldx     path_buf0
-        ldy     #0
-:       inx
-        iny
-        copy    text_input_buf,y, path_buf0,x
-        cpy     text_input_buf
-        bne     :-
-        stx     path_buf0
-        ldy     #<path_buf0
-        ldx     #>path_buf0
-        return  #0
-
-too_long:
+    IF_GE
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
         jmp     loop
+    END_IF
+
+        ldxy    #text_input_buf
+        return  #0
 
 not_run:
 
@@ -13734,7 +13745,7 @@ ret:    return  #$FF
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
         param_call DrawDialogTitle, aux::label_rename_icon
-        copy16  rename_dialog_params::a_path, $08
+        copy16  rename_dialog_params::a_prev, $08
         param_call CopyPtr2ToBuf, text_input_buf
         param_call DrawDialogLabel, 2, aux::str_rename_old
         param_call DrawString, text_input_buf
@@ -13747,13 +13758,23 @@ ret:    return  #$FF
     IF_EQ
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
-:       jsr     PromptInputLoop
-        bmi     :-              ; continue?
+loop:   jsr     PromptInputLoop
+        bmi     loop            ; continue?
 
         bne     do_close        ; canceled!
 
-        ldy     #<text_input_buf
-        ldx     #>text_input_buf
+        copy16  rename_dialog_params::a_path, $08
+        param_call CopyPtr2ToBuf, path_buf0
+        lda     path_buf0       ; full path okay?
+        clc
+        adc     text_input_buf
+        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
+      IF_CS
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
+        jmp     loop
+      END_IF
+
+        ldxy    #text_input_buf
         return  #0
     END_IF
 
@@ -13778,7 +13799,7 @@ do_close:
         jsr     OpenPromptWindow
         jsr     SetPortForDialogWindow
         param_call DrawDialogTitle, aux::label_duplicate_icon
-        copy16  duplicate_dialog_params::a_path, $08
+        copy16  duplicate_dialog_params::a_prev, $08
         param_call CopyPtr2ToBuf, text_input_buf
         param_call DrawDialogLabel, 2, aux::str_duplicate_original
         param_call DrawString, text_input_buf
@@ -13791,13 +13812,23 @@ do_close:
     IF_EQ
         copy    #$00, prompt_button_flags
         copy    #$80, has_input_field_flag
-:       jsr     PromptInputLoop
-        bmi     :-              ; continue?
+loop:   jsr     PromptInputLoop
+        bmi     loop            ; continue?
 
         bne     do_close        ; canceled!
 
-        ldy     #<text_input_buf
-        ldx     #>text_input_buf
+        copy16  duplicate_dialog_params::a_path, $08
+        param_call CopyPtr2ToBuf, path_buf0
+        lda     path_buf0       ; full path okay?
+        clc
+        adc     text_input_buf
+        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
+      IF_CS
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
+        jmp     loop
+      END_IF
+
+        ldxy    #text_input_buf
         return  #0
     END_IF
 
