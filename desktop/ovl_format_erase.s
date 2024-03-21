@@ -219,7 +219,6 @@ l9:     jsr     main::SetPortForDialogWindow
         jsr     main::SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
-        param_call main::UpcaseString, text_input_buf
 
         ldxy    #text_input_buf
         lda     unit_num
@@ -283,7 +282,6 @@ l7:
         jsr     main::SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
         param_call main::DrawDialogLabel, 1, aux::str_erasing
-        param_call main::UpcaseString, text_input_buf
         jsr     main::SetCursorWatch
 
         ldxy    #text_input_buf
@@ -595,21 +593,9 @@ unit_num:
         sta     write_block_params::unit_num
         stxy    $06
 
-        ;; Remove leading '/' from name, if necessary
-        ldy     #1
-        lda     ($06),y
-        cmp     #'/'
-        bne     L132C           ; nope
-        dey
-        lda     ($06),y         ; shrink string, adjust pointer
-        sec
-        sbc     #1
-        iny
-        sta     ($06),y
-        inc16   $06
-
         ;; Copy name into volume directory key block data
-L132C:  param_call main::CopyPtr1ToBuf, vol_name_buf
+        param_call main::CopyPtr1ToBuf, vol_name_buf
+        param_call main::UpcaseString, vol_name_buf
 
         ;; --------------------------------------------------
         ;; Get the block count for the device
@@ -901,7 +887,7 @@ total_blocks:
         ASSERT_TABLE_SIZE key_block_header_bytes, kNumKeyBlockHeaderBytes
 
 vol_name_buf:
-        .res    27,0
+        .res    16,0
 
 ;;; ============================================================
 ;;; ProDOS Loader
