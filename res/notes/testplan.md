@@ -68,10 +68,11 @@
 
 * Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". File > New Folder. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). In the Options control panel, uncheck "Preserve uppercae and lowercase in names". Select the folder. File > Rename. Click OK without changing the name. Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
 
-* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Drag it to another volume to copy it. Verify that the copied file retains the same mixed case name.
-* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Drag it to another folder on the same volume to move it. Verify that the moved file retains the same mixed case name.
-* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Hold Solid-Apple and drag it to another volume to move it. Verify that the moved file retains the same mixed case name.
-* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Hold Solid-Apple and drag it to another folder on the same volume to copy it. Verify that the copied file retains the same mixed case name.
+* Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". File > New Folder. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Click OK. Select the folder. Then run these test cases:
+  * Drag it to another volume to copy it. Verify that the copied file retains the same mixed case name.
+  * Drag it to another folder on the same volume to move it. Verify that the moved file retains the same mixed case name.
+  * Hold Solid-Apple and drag it to another volume to move it. Verify that the moved file retains the same mixed case name.
+  * Hold Solid-Apple and drag it to another folder on the same volume to copy it. Verify that the copied file retains the same mixed case name.
 
 * File > Get Info a non-folder file. Verify that the size shows as "_size_K".
 * File > Get Info a folder containing 0 files. Verify that the size shows as "_size_K for 1 item".
@@ -101,8 +102,8 @@
 
 * Open a window for a volume; open a window for a folder; close volume window; close folder window. Repeat 10 times to verify that the volume table doesn't have leaks.
 
-* Verify that GS/OS volume name cases show correctly (e.g. ProDOS 2.5 disk).
-* Verify that GS/OS file name cases show correctly (e.g. ProDOS 2.5 disk).
+* Verify that GS/OS volume name cases show correctly.
+* Verify that GS/OS file name cases show correctly.
 
 * Open two windows. Click the close box on the active window. Verify that only the active window closes.
 * Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
