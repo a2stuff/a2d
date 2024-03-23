@@ -105,7 +105,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Electric Duet Preview: Detect Mockingboard and The Cricket!, and use for playback if found.
 * New DA: Benchmark - measures CPU speed using VBL.
 * New Screen Saver: Message
-
+* Options: Add setting to preserve upper/lowercase when naming files and volumes. (([#352](https://github.com/a2stuff/a2d/issues/352))
 
 ### Misc
 

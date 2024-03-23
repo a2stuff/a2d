@@ -2,3 +2,4 @@
 .define res_string_label_ramcard "Copy to RAMCard (if present)"
 .define res_string_label_selector "Show Shortcuts on startup"
 .define res_string_label_shortcuts "Show keyboard shortcuts in dialogs"
+.define res_string_label_case "Preserve uppercase and lowercase in names"

@@ -161,7 +161,7 @@ grafport:       .tag    MGTK::GrafPort
 
 ;;; ============================================================
 
-kNumButtons     = 3
+kNumButtons     = 4
 kButtonLeft     = 10
 kButtonTop      = 10
 kButtonSpacing  = kSystemFontHeight + 2
@@ -172,18 +172,20 @@ kButtonSpacing  = kSystemFontHeight + 2
 
         DEFINE_BUTTON shortcuts_button, kDAWindowId, res_string_label_shortcuts, res_string_shortcut_apple_3, kButtonLeft, kButtonTop + kButtonSpacing * 2
 
+        DEFINE_BUTTON casebits_button, kDAWindowId, res_string_label_case, res_string_shortcut_apple_4, kButtonLeft, kButtonTop + kButtonSpacing * 3
+
 button_button_table:
-        .addr   ramcard_button, selector_button, shortcuts_button
+        .addr   ramcard_button, selector_button, shortcuts_button, casebits_button
         ASSERT_ADDRESS_TABLE_SIZE button_button_table, kNumButtons
 
 ;;; Which bit in DeskTopSettings::options this checkbox corresponds to
 button_mask_table:
-        .byte   DeskTopSettings::kOptionsSkipRAMCard, DeskTopSettings::kOptionsSkipSelector, DeskTopSettings::kOptionsShowShortcuts
+        .byte   DeskTopSettings::kOptionsSkipRAMCard, DeskTopSettings::kOptionsSkipSelector, DeskTopSettings::kOptionsShowShortcuts, DeskTopSettings::kOptionsSetCaseBits
         ASSERT_TABLE_SIZE button_mask_table, kNumButtons
 
 ;;; For inverting the sense of a bit vs. its checkbox; high bit set to invert
 button_eor_table:
-        .byte   0, 0, BTK::kButtonStateChecked
+        .byte   0, 0, BTK::kButtonStateChecked, BTK::kButtonStateChecked
         ASSERT_TABLE_SIZE button_eor_table, kNumButtons
 
 

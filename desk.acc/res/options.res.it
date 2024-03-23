@@ -2,3 +2,4 @@
 .define res_string_label_ramcard "Copia su scheda di espansione RAM (se presente)"
 .define res_string_label_selector "Mostra Collegamenti all'avvio"
 .define res_string_label_shortcuts "Mostra scorciatoie da tastiera nelle finestre di dialogo"
+.define res_string_label_case "Conserva le maiuscole e le minuscole nei nomi"

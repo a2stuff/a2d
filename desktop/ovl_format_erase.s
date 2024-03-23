@@ -595,6 +595,17 @@ unit_num:
 
         ;; Copy name into volume directory key block data
         param_call main::CopyPtr1ToBuf, vol_name_buf
+
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
+        and     #DeskTopSettings::kOptionsSetCaseBits
+    IF_ZERO
+        ldax    #0
+    ELSE
+        param_call_indirect main::CalculateCaseBits, $06
+    END_IF
+        stax    case_bits
+
         param_call main::UpcaseString, vol_name_buf
 
         ;; --------------------------------------------------
@@ -675,6 +686,8 @@ L1398:  stxy    total_blocks
         sta     block_buffer + VolumeDirectoryHeader::creation_date,y
         dey
         bpl     :-
+
+        copy16  case_bits, block_buffer + VolumeDirectoryHeader::case_bits
 
         jsr     WriteBlockAndZero
 
@@ -888,6 +901,9 @@ total_blocks:
 
 vol_name_buf:
         .res    16,0
+
+case_bits:
+        .word   0
 
 ;;; ============================================================
 ;;; ProDOS Loader

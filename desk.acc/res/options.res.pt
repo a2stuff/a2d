@@ -2,3 +2,4 @@
 .define res_string_label_ramcard "Copiar para RAM (se dispon{vel)"
 .define res_string_label_selector "Mostrar Atalhos na inicializa][o"
 .define res_string_label_shortcuts "Mostrar atajos de teclado en cuadros de di@logo"
+.define res_string_label_case "Preservar letras mai|sculas e min|sculas nos nomes"

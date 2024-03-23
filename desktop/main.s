@@ -2446,6 +2446,7 @@ retry:  lda     #NewFolderDialogState::run
 
         ;; Stash filename and path
         stxy    $06
+        param_call CopyPtr1ToBuf, stashed_name ; for re-casing
         ldax    $06
         jsr     AppendFilenameToSrcPath
 
@@ -2461,6 +2462,8 @@ retry:  lda     #NewFolderDialogState::run
         jmp     retry
 
 success:
+        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
+
         lda     #NewFolderDialogState::close
         jsr     RunDialogProc
 
@@ -10794,7 +10797,7 @@ success:
 :
 no_change:
         ;; Update case bits, in memory or on disk
-        jsr     ApplyCaseBits
+        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
 
         MLI_CALL RENAME, rename_params
         bcc     finish
@@ -11241,7 +11244,7 @@ success:
         sta     result_flag
         ;; Update name case bits on disk, if possible.
         COPY_STRING dst_path_buf, src_path_buf
-        jsr     ApplyCaseBits
+        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
 :
         ;; --------------------------------------------------
         ;; Totally done
@@ -13092,20 +13095,55 @@ ShowErrorAlert  := ShowErrorAlertImpl::flag_clear
 ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 
 ;;; ============================================================
-
+;;; Given a path and a prospective name, update the filesystem with
+;;; the desired case bits, considering type and the option
+;;; `DeskTopSettings::kOptionsSetCaseBits`.
+;;;
+;;; Volume - If option set, write case bits to volume header;
+;;; otherwise clear case bits in volume header and recase the string
+;;; in memory.
+;;;
+;;; Regular File - If option set, write case bits to directory entry;
+;;; otherwise clear case bits in directory entry and recase the string
+;;; in memory.
+;;;
+;;; AppleWorks File - Write case bits to auxtype. If option set, also
+;;; write case bits to directory entry. Otherwise, clear case bits in
+;;; directory entry. (The string in memory is never recased, which
+;;; makes this not a superset of the regular file case.)
+;;;
 ;;; Inputs: `src_path_buf` is file, `stashed_name` is new name
-;;; Outputs: `new_name_buf` had "resulting" file case
+;;; Outputs: `stashed_name` had "resulting" file case
 
 .proc ApplyCaseBits
+        param_call CalculateCaseBits, stashed_name
+        stax    case_bits
+
         jsr     GetSrcFileInfo
-        bcs     fallback
+        bcs     ret
         copy    DEVNUM, unit_number
 
         lda     src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     volume
 
-        lda     src_file_info_params::file_type
+        ;; --------------------------------------------------
+        ;; File
+file:
+        param_call GetFileEntryBlock, src_path_buf
+        bcs     ret
+        stax    block_number
+
+        block_ptr := $08
+        param_call GetFileEntryBlockOffset, block_buffer ; Y is already the entry number
+        stax    block_ptr
+
+        MLI_CALL READ_BLOCK, block_params
+        bcs     ret
+
+        ;; Is AppleWorks?
+        ldy     #FileEntry::file_type
+        lda     (block_ptr),y
         cmp     #FT_ADB
         beq     appleworks
         cmp     #FT_AWP
@@ -13114,71 +13152,124 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
         beq     appleworks
 
         ;; --------------------------------------------------
-        ;; Wipe file GS/OS case bits
+        ;; Non-AppleWorks file
 
-        ldax    #src_path_buf
-        jsr     GetFileEntryBlock
-        bcs     fallback
-        stax    block_number
+        jsr     get_case_bits_per_option_and_adjust_string
+        jmp     write_file_case_bits_and_block
 
-        block_ptr := $06
-        ldax    #block_buffer
-        jsr     GetFileEntryBlockOffset ; Y is already the entry number
-        stax    block_ptr
+        ;; --------------------------------------------------
+        ;; AppleWorks file
 
-        MLI_CALL READ_BLOCK, block_params
-        bcs     fallback
+appleworks:
+        ;; Per Per File Type Notes: File Type $19 (25) All Auxiliary Types (etc)
+        ;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+        ;;
+        ;; Like as GS/OS case bits, except:
+        ;; * Shifted left by one bit; low bit is clear
+        ;; * Word is stored byte-swapped
+        lda     case_bits
+        asl     a
+        tax
+        lda     case_bits+1
+        rol     a
+
+        ldy     #FileEntry::aux_type
+        sta     (block_ptr),y
+        txa
+        iny
+        sta     (block_ptr),y
+
+        jsr     get_option
+    IF_ZERO
+        ;; Option not set, so zero case bits; memory string preserved
+        ldax    #0
+    ELSE
+        ;; Option set, so write case bits as is.
+        ldax    case_bits
+    END_IF
+        FALL_THROUGH_TO write_file_case_bits_and_block
+
+write_file_case_bits_and_block:
         ldy     #FileEntry::case_bits
-        copy16in #0, (block_ptr),y
+        sta     (block_ptr),y
+        iny
+        txa
+        sta     (block_ptr),y
+        FALL_THROUGH_TO write_block
+
 write_block:
         MLI_CALL WRITE_BLOCK, block_params
-        FALL_THROUGH_TO fallback
+ret:    rts
 
         ;; --------------------------------------------------
-fallback:
-        ;; Since we can't preserve casing, just upcase it for now.
-        ;; See: https://github.com/a2stuff/a2d/issues/352
-        ldy     stashed_name
-:       lda     stashed_name,y
-        jsr     ToUpperCase
-        sta     stashed_name,y
-        dey
-        bne     :-
-
-        ;; ... then recase it, so we're consistent for icons/paths.
-        ldax    #stashed_name
-        jmp     AdjustFileNameCase
-
-        ;; --------------------------------------------------
-appleworks:
-        ;; We can preserve case, so apply it
-        ldx     #15
-        clc
-
-:       ror     src_file_info_params::aux_type
-        ror     src_file_info_params::aux_type+1
-        lda     stashed_name,x
-        cmp     #'a'
-        dex
-        bpl     :-
-
-        jmp     SetSrcFileInfo
-
-        ;; --------------------------------------------------
-        ;; Wipe volume GS/OS case bits
+        ;; Volume
 volume:
         copy16  #kVolumeDirKeyBlock, block_number
         MLI_CALL READ_BLOCK, block_params
-        bcs     fallback
-        copy16  #0, block_buffer + VolumeDirectoryHeader::case_bits
+        bcs     ret
+
+        jsr     get_case_bits_per_option_and_adjust_string
+        stax    block_buffer + VolumeDirectoryHeader::case_bits
         jmp     write_block
 
+        ;; --------------------------------------------------
+        ;; Helpers
+
+        ;; Returns Z=0 if option set, Z=1 otherwise
+get_option:
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
+        and     #DeskTopSettings::kOptionsSetCaseBits
+        rts
+
+        ;; Returns A,X=case bits if option set, A,X=0 otherwise
+get_case_bits_per_option_and_adjust_string:
+        jsr     get_option
+    IF_ZERO
+        ;; Option not set, so zero case bits, adjust memory string
+        param_call UpcaseString, stashed_name
+        param_call AdjustFileNameCase, stashed_name
+        ldax    #0
+    ELSE
+        ;; Option set, so write case bits as is, leave string alone
+        ldax    case_bits
+    END_IF
+        rts
+
+        ;; --------------------------------------------------
         block_buffer := $800
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, SELF_MODIFIED
         unit_number := block_params::unit_num
         block_number := block_params::block_num
-
 .endproc ; ApplyCaseBits
+
+;;; ============================================================
+
+;;; Per Technical Note: GS/OS #8: Filenames With More Than CAPS and Numerals
+;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
+;;; Input: A,X = name
+;;; Output: A,X = case bits
+;;; Trashes: $06/$08
+.proc CalculateCaseBits
+        ptr  := $06
+        bits := $08
+
+        stax    ptr
+
+        ldy     #15
+:       lda     (ptr),y
+        cmp     #'a'            ; set C if lowercase
+        ror     bits+1
+        ror     bits
+        dey
+        bne     :-
+        sec
+        ror     bits+1
+        ror     bits
+
+        ldax    bits
+        rts
+.endproc ; CalculateCaseBits
 
 ;;; ============================================================
 ;;; Message handler for OK/Cancel dialog

@@ -52,8 +52,21 @@
 * Launch DeskTop. Select an AppleWorks file icon. File > Rename..., and specify a name using a mix of uppercase and lowercase. Click OK. Close the containing window and re-open it. Verify that the filename case is retained.
 * Launch DeskTop. Select an AppleWorks file icon. File > Duplicate..., and specify a name using a mix of uppercase and lowercase. Click OK. Close the containing window and re-open it. Verify that the filename case is retained.
 
-* Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). File > Rename..., and specify a new name. Click OK. Verify that the name reverts to heuristic mixed-case. Close the containing window and re-open it. Verify that the heuristic mixed-case name remains.
-* Launch DeskTop. Select a volume named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). File > Rename..., and specify a new name. Click OK. Verify that the name reverts to heuristic mixed-case. Restart DeskTop. Verify that the heuristic mixed-case name remains.
+* Launch DeskTop. In the Options control panel, uncheck "Preserve uppercase and lowercase in names". Then run these test cases:
+  * File > New Folder. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Click OK. Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
+  * Select a non-AppleWorks file. File > Rename. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Click OK. Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
+  * Select a non-AppleWorks file. File > Duplicate. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Click OK. Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
+  * Select a disk. Special > Format Disk. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Restart DeskTop. Verify that the name remains unchanged.
+  * Select a disk. Special > Erase Disk. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Restart DeskTop. Verify that the name remains unchanged.
+
+* Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". Then run these test cases:
+  * File > New Folder. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Click OK. Verify that the name appears with the specified case (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
+  * Select a non-AppleWorks file. File > Rename. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Click OK. Verify that the name appears with the specified case (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
+  * Select a non-AppleWorks file. File > Duplicate. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Click OK. Verify that the name appears with the specified (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
+  * Select a disk. Special > Format Disk. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that the name appears with the specified case (e.g. "lower.UPPER.MiX"). Restart DeskTop. Verify that the name remains unchanged.
+  * Select a disk. Special > Erase Disk. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that the name appears with the specified case (e.g. "lower.UPPER.MiX"). Restart DeskTop. Verify that the name remains unchanged.
+
+* Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". File > New Folder. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). In the Options control panel, uncheck "Preserve uppercae and lowercase in names". Select the folder. File > Rename. Click OK without changing the name. Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
 
 * Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Drag it to another volume to copy it. Verify that the copied file retains the same mixed case name.
 * Launch DeskTop. Select a file named with mixed case using GS/OS (e.g. ProDOS 2.5 disk). Drag it to another folder on the same volume to move it. Verify that the moved file retains the same mixed case name.
@@ -243,7 +256,7 @@
 * Load DeskTop. Open a window containing icons. View > by Name. Quit DeskTop, reload. Verify that the window is restored, and that it shows the icons in a list sorted by name, and that View > by Name is checked. Repeat for other View menu options.
 * Load DeskTop. Open a window for a volume in a Disk II drive. Quit DeskTop. Remove the disk from the Disk II drive. Load DeskTop. Verify that the Disk II drive is only polled once on startup, not twice.
 
-* Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. /HD. Launch DeskTop. Open the startup volume. Apple Menu > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
+* Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. `/HD` but that shows as "Hd". Launch DeskTop. Open the startup volume. Apple Menu > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
 
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Try opening volumes/folders until there are less than 8 windows but more than 127 icons. Verify that the "A window must be closed..." dialog has no Cancel button.
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Verify that 127 icons can be shown.

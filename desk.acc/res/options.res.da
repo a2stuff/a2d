@@ -2,3 +2,4 @@
 .define res_string_label_ramcard "Kopier til RAMCard (hvis til stede)"
 .define res_string_label_selector "Vis Genveje ved opstart"
 .define res_string_label_shortcuts "Vis tastaturgenveje i dialoger"
+.define res_string_label_case "Bevar store og sm} bogstaver i navne"
