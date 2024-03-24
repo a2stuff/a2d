@@ -15,6 +15,8 @@
 #   noram   - skip RAMCard on startup
 #   short   - show shortcuts in dialogs
 #   noshort - hide shortcuts in dialogs
+#   case    - preserve case in names
+#   nocase  - don't preserve case in name
 #
 
 set -e
@@ -58,8 +60,11 @@ config="$tempdir/DESKTOP.CONFIG#F10000"
 #   bit 7 = color (else monochrome)
 # mouse_tracking     = offset 15 len 1
 #   0 = normal, 1 = 2x speed
-# startup            = offset 16 len 1
-#   bit 0 = skip RAMCard (else copy), bit 1 = skip Selector (else run)
+# options            = offset 16 len 1
+#   bit 0 = skip RAMCard (else copy)
+#   bit 1 = skip Selector (else run)
+#   bit 2 = show button shortcuts
+#   bit 3 = preserve name case
 
 for var in "$@"; do
     case "$var" in
@@ -76,40 +81,52 @@ for var in "$@"; do
         "sel")
             offset=16
             a=$(xxd -l 1 -seek $offset -p "$config")
-            printf "\x$((${a} & ~0x02))" | \
+            printf "\x$(printf %x $((0x${a} & ~0x02)))" | \
                 dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
             ;;
         "nosel")
             offset=16
             a=$(xxd -l 1 -seek $offset -p "$config")
-            printf "\x$((${a} | 0x02))" | \
-                dd of="$config" bs=1 seek=16 count=1 conv=notrunc 2> /dev/null
+            printf "\x$(printf %x $((0x${a} | 0x02)))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
             ;;
         "ram")
             offset=16
             a=$(xxd -l 1 -seek $offset -p "$config")
-            printf "\x$((${a} & ~0x01))" | \
+            printf "\x$(printf %x $((0x${a} & ~0x01)))" | \
                 dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
             ;;
         "noram")
             offset=16
             a=$(xxd -l 1 -seek $offset -p "$config")
-            printf "\x$((${a} | 0x01))" | \
-                dd of="$config" bs=1 seek=16 count=1 conv=notrunc 2> /dev/null
+            printf "\x$(printf %x $((0x${a} | 0x01)))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
             ;;
         "noshort")
             offset=16
             a=$(xxd -l 1 -seek $offset -p "$config")
-            printf "\x$((${a} & ~0x04))" | \
+            printf "\x$(printf %x $((0x${a} & ~0x04)))" | \
                 dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
             ;;
         "short")
             offset=16
             a=$(xxd -l 1 -seek $offset -p "$config")
-            printf "\x$((${a} | 0x04))" | \
-                dd of="$config" bs=1 seek=16 count=1 conv=notrunc 2> /dev/null
+            printf "\x$(printf %x $((0x${a} | 0x04)))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
             ;;
-        *)
+        "nocase")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$(printf %x $((0x${a} & ~0x08)))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+        "case")
+            offset=16
+            a=$(xxd -l 1 -seek $offset -p "$config")
+            printf "\x$(printf %x $((0x${a} | 0x08)))" | \
+                dd of="$config" bs=1 seek=$offset count=1 conv=notrunc 2> /dev/null
+            ;;
+       *)
             cecho red "$0: Unknown option: $var"
             exit 1
     esac
