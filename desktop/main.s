@@ -9354,12 +9354,11 @@ error:  pha                     ; save error
 success:
         lda     cvi_data_buffer ; dr/slot/name_len
         and     #NAME_LENGTH_MASK
-        sta     cvi_data_buffer
         bne     :+
         lda     cvi_data_buffer+1 ; if name len is zero, second byte is error
         jmp     error
 :
-
+        param_call AdjustVolumeNameCase, cvi_data_buffer
         jsr     CompareNames
         bne     error
 
@@ -9380,8 +9379,6 @@ success:
         sta     cached_window_entry_list,x
 
         ;; Copy name
-        param_call AdjustVolumeNameCase, cvi_data_buffer
-
         ldy     #IconEntry::name+1
 
         ldx     #0
@@ -15255,10 +15252,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
         RC_LCBANK = 1
         .include "../lib/ramcard.s"
 
-        ;; Place buffers here so they're safe to call from DAs/Overlays
-ADJUSTCASE_VOLPATH:     .res    17 ; Room for len+'/'+name
-ADJUSTCASE_VOLBUF:      .tag    VolumeDirectoryHeader
-        ADJUSTCASE_IO_BUFFER := IO_BUFFER
+        ADJUSTCASE_BLOCK_BUFFER := IO_BUFFER
         .include "../lib/adjustfilecase.s"
 
         .include "../lib/smartport.s"

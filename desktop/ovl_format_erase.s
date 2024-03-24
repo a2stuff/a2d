@@ -1041,11 +1041,10 @@ pascal_disk:
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
         beq     non_pro
-        sta     on_line_buffer
-        pha
+
         param_call AdjustVolumeNameCase, on_line_buffer
-        pla
-        tax
+
+        ldx     on_line_buffer
 :       lda     on_line_buffer,x
         sta     ovl_string_buf,x
         dex

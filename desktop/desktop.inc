@@ -102,7 +102,7 @@ JT_ENTRY JUMP_TABLE_GET_SEL_WIN   ; Get window containing selection (out: A=wind
 JT_ENTRY JUMP_TABLE_GET_WIN_PATH  ; Get path to window (in: A=window_id; out: A,X=path address) *
 JT_ENTRY JUMP_TABLE_HILITE_MENU   ; Toggle hilite on last clicked menu *
 JT_ENTRY JUMP_TABLE_ADJUST_FILEENTRY  ; Adjust case in FileEntry structure (in: A,X=FileEntry) *
-JT_ENTRY JUMP_TABLE_ADJUST_VOLNAME    ; Adjust case in volume name (in: A,X=name) *
+JT_ENTRY JUMP_TABLE_ADJUST_VOLNAME    ; Adjust case in volume name (in: A,X=ON_LINE entry) *
 JT_ENTRY JUMP_TABLE_GET_RAMCARD_FLAG  ; Returns high bit set if copied to RAMCard *
 JT_ENTRY JUMP_TABLE_GET_ORIG_PREFIX   ; Returns original prefix, if copied (in: A,X=buffer) *
 JT_ENTRY JUMP_TABLE_BELL          ; Play settings-specified alert sound *

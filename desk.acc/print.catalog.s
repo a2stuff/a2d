@@ -815,7 +815,6 @@ repeat: ldx     devidx
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
         beq     repeat          ; error - try next one
-        sta     on_line_buffer
 
         param_call JUMP_TABLE_ADJUST_VOLNAME, on_line_buffer
 

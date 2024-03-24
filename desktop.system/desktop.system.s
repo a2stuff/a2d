@@ -1184,7 +1184,7 @@ test_unit_num:
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
         beq     next_unit
-        sta     on_line_buffer
+
         param_call AdjustVolumeNameCase, on_line_buffer
 
         ;; Copy the name prepended with '/' to `dst_path`
@@ -2363,9 +2363,7 @@ done:   rts
 ;;; ============================================================
 
         .include "../lib/smartport.s"
-        ADJUSTCASE_VOLPATH := $810
-        ADJUSTCASE_VOLBUF  := $820
-        ADJUSTCASE_IO_BUFFER := src_io_buffer
+        ADJUSTCASE_BLOCK_BUFFER := src_io_buffer
         .include "../lib/adjustfilecase.s"
 
 ;;; ============================================================

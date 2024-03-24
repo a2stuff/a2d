@@ -7,15 +7,14 @@
 ;;; Input: A,X points at FileEntry structure.
 
 ;;; AdjustVolumeNameCase:
-;;; Input: A,X points at ON_LINE result (e.g. 'MY.DISK', length + 15 chars)
+;;; Input: A,X points at ON_LINE entry (e.g. unit num / length, 15 chars)
+;;; Output: entry starts with just length, and case adjusted
+
+;;; `ADJUSTCASE_BLOCK_BUFFER` must be defined; used for volume names
 
 .proc AdjustCaseImpl
 
-        volpath := ADJUSTCASE_VOLPATH
-        volbuf  := ADJUSTCASE_VOLBUF
-        DEFINE_OPEN_PARAMS volname_open_params, volpath, ADJUSTCASE_IO_BUFFER
-        DEFINE_READ_PARAMS volname_read_params, volbuf, .sizeof(VolumeDirectoryHeader)
-        DEFINE_CLOSE_PARAMS volname_close_params
+        DEFINE_READ_BLOCK_PARAMS volname_block_params, ADJUSTCASE_BLOCK_BUFFER, kVolumeDirKeyBlock
 
         ptr := $A
 
@@ -25,29 +24,18 @@
 vol_name:
         stax    ptr
 
-        ;; Convert volume name to a path
         ldy     #0
         lda     (ptr),y
-        sta     volpath
-        tay
-:       lda     (ptr),y
-        sta     volpath+1,y
-        dey
-        bne     :-
-        lda     #'/'
-        sta     volpath+1
-        inc     volpath
+        and     #UNIT_NUM_MASK
+        sta     volname_block_params::unit_num
+        lda     (ptr),y
+        and     #NAME_LENGTH_MASK
+        sta     (ptr),y
 
-        MLI_CALL OPEN, volname_open_params
+        MLI_CALL READ_BLOCK, volname_block_params
         bcs     fallback
-        lda     volname_open_params::ref_num
-        sta     volname_read_params::ref_num
-        sta     volname_close_params::ref_num
-        MLI_CALL READ, volname_read_params
-        bcs     fallback
-        MLI_CALL CLOSE, volname_close_params
 
-        copy16  volbuf + VolumeDirectoryHeader::case_bits, case_bits
+        copy16  ADJUSTCASE_BLOCK_BUFFER + VolumeDirectoryHeader::case_bits, case_bits
         jmp     common
 
 ;;; --------------------------------------------------

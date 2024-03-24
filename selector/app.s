@@ -1903,9 +1903,7 @@ loop_counter:
         .include "../lib/readwrite_settings.s"
         .include "../lib/monocolor.s"
 
-         ADJUSTCASE_VOLPATH := $810
-         ADJUSTCASE_VOLBUF  := $820
-         ADJUSTCASE_IO_BUFFER := $1C00
+         ADJUSTCASE_BLOCK_BUFFER := $1C00
         .include "../lib/adjustfilecase.s"
 
         .include "../toolkits/btk.s"

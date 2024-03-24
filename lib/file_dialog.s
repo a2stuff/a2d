@@ -933,7 +933,6 @@ retry:  ldx     #SELF_MODIFIED_BYTE
         MLI_CALL ON_LINE, on_line_params
         lda     on_line_buffer
         and     #NAME_LENGTH_MASK
-        sta     on_line_buffer
         bne     found
 
         dec     device_num
@@ -1139,8 +1138,6 @@ loop:   ldy     #0
         bne     next            ; error, so skip
         beq     finish          ; always
 :
-        sta     (ptr),y         ; A = name_len
-
         param_call_indirect AdjustVolumeNameCase, ptr
 
         lda     num_file_names
