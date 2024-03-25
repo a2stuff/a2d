@@ -7,6 +7,7 @@
 .scope
         ldy     #0
         lda     (ptr),y
+        and     #NAME_LENGTH_MASK
         beq     done
 
         ;; Walk backwards through string. At char N, check char N-1; if
