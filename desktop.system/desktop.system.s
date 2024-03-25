@@ -1185,7 +1185,7 @@ test_unit_num:
         and     #NAME_LENGTH_MASK
         beq     next_unit
 
-        param_call AdjustVolumeNameCase, on_line_buffer
+        param_call AdjustOnLineEntryCase, on_line_buffer
 
         ;; Copy the name prepended with '/' to `dst_path`
         ldy     on_line_buffer

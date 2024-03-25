@@ -4,10 +4,11 @@
 ;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
 
 ;;; AdjustFileEntryCase:
-;;; Input: A,X points at FileEntry structure.
+;;; Input: A,X points at `FileEntry` structure.
+;;; Output: `FileEntry`'s filename case is adjusted
 
-;;; AdjustVolumeNameCase:
-;;; Input: A,X points at ON_LINE entry (e.g. unit num / length, 15 chars)
+;;; AdjustOnLineEntryCase:
+;;; Input: A,X points at `ON_LINE` entry (i.e. unit num / length, 15 chars)
 ;;; Output: entry starts with just length, and case adjusted
 
 ;;; `ADJUSTCASE_BLOCK_BUFFER` must be defined; used for volume names
@@ -26,9 +27,10 @@ vol_name:
 
         ldy     #0
         lda     (ptr),y
+        pha
         and     #UNIT_NUM_MASK
         sta     volname_block_params::unit_num
-        lda     (ptr),y
+        pla
         and     #NAME_LENGTH_MASK
         sta     (ptr),y
 
@@ -69,7 +71,6 @@ common:
 fallback:
         ldy     #0
         lda     (ptr),y
-        and     #NAME_LENGTH_MASK
         beq     done
 
         ;; Walk backwards through string. At char N, check char N-1; if
@@ -162,4 +163,4 @@ case_bits:
 
 AdjustFileNameCase      := AdjustCaseImpl::file_name
 AdjustFileEntryCase     := AdjustCaseImpl::file_entry
-AdjustVolumeNameCase    := AdjustCaseImpl::vol_name
+AdjustOnLineEntryCase    := AdjustCaseImpl::vol_name

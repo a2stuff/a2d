@@ -1415,7 +1415,7 @@ repeat: ldx     devidx
         and     #NAME_LENGTH_MASK
         beq     repeat          ; error - try next one
 
-        param_call JUMP_TABLE_ADJUST_VOLNAME, on_line_buffer
+        param_call JUMP_TABLE_ADJUST_ONLINEENTRY, on_line_buffer
 
         ldx     #0
 :       copy    on_line_buffer+1,x, searchPath+2,x

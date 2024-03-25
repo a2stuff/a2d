@@ -47,7 +47,7 @@ JT_GET_SEL_WIN:         jmp     GetSelectionWindow      ; *
 JT_GET_WIN_PATH:        jmp     GetWindowPath           ; *
 JT_HILITE_MENU:         jmp     ToggleMenuHilite        ; *
 JT_ADJUST_FILEENTRY:    jmp     AdjustFileEntryCase     ; *
-JT_ADJUST_VOLNAME:      jmp     AdjustVolumeNameCase    ; *
+JT_ADJUST_ONLINEENTRY:  jmp     AdjustOnLineEntryCase   ; *
 JT_GET_RAMCARD_FLAG:    jmp     GetCopiedToRAMCardFlag  ; *
 JT_GET_ORIG_PREFIX:     jmp     CopyDeskTopOriginalPrefix ; *
 JT_BELL:                jmp     Bell                    ; *
@@ -9358,7 +9358,7 @@ success:
         lda     cvi_data_buffer+1 ; if name len is zero, second byte is error
         jmp     error
 :
-        param_call AdjustVolumeNameCase, cvi_data_buffer
+        param_call AdjustOnLineEntryCase, cvi_data_buffer
         jsr     CompareNames
         bne     error
 
@@ -15653,7 +15653,7 @@ str_volume:
         Multiply_16_8_16 := main::Multiply_16_8_16
         Divide_16_8_16 := main::Divide_16_8_16
         DetectDoubleClick := main::DetectDoubleClick
-        AdjustVolumeNameCase := main::AdjustVolumeNameCase
+        AdjustOnLineEntryCase := main::AdjustOnLineEntryCase
         AdjustFileEntryCase := main::AdjustFileEntryCase
 
 ;;; ============================================================

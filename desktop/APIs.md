@@ -140,7 +140,7 @@ Adjust case in FileEntry structure. If GS/OS filename bits are set, those are us
 
 Input: A,X = FileEntry structure.
 
-#### `JUMP_TABLE_ADJUST_VOLNAME` *
+#### `JUMP_TABLE_ADJUST_ONLINEENTRY` *
 
 Adjust case in volume name. If GS/OS filename bits are set, those are used. Otherwise, case is inferred.
 

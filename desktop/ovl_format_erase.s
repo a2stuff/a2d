@@ -1042,7 +1042,7 @@ pascal_disk:
         and     #NAME_LENGTH_MASK
         beq     non_pro
 
-        param_call AdjustVolumeNameCase, on_line_buffer
+        param_call AdjustOnLineEntryCase, on_line_buffer
 
         ldx     on_line_buffer
 :       lda     on_line_buffer,x

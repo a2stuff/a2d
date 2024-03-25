@@ -940,7 +940,7 @@ retry:  ldx     #SELF_MODIFIED_BYTE
         copy    DEVCNT, device_num
         jmp     retry
 
-found:  param_call AdjustVolumeNameCase, on_line_buffer
+found:  param_call AdjustOnLineEntryCase, on_line_buffer
         lda     #0
         sta     path_buf
         param_jump _AppendToPathBuf, on_line_buffer
@@ -1138,7 +1138,7 @@ loop:   ldy     #0
         bne     next            ; error, so skip
         beq     finish          ; always
 :
-        param_call_indirect AdjustVolumeNameCase, ptr
+        param_call_indirect AdjustOnLineEntryCase, ptr
 
         lda     num_file_names
         jsr     _CopyIntoNthFilename
