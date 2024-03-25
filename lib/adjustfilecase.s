@@ -22,7 +22,7 @@
 ;;; --------------------------------------------------
 ;;; Called with volume name. Convert to path, load
 ;;; VolumeDirectoryHeader, use bytes $1A/$1B
-vol_name:
+online_entry:
         stax    ptr
 
         ldy     #0
@@ -69,34 +69,7 @@ common:
 ;;; GS/OS bits are not present; apply heuristics
 
 fallback:
-        ldy     #0
-        lda     (ptr),y
-        beq     done
-
-        ;; Walk backwards through string. At char N, check char N-1; if
-        ;; it is a letter, and char N is also a letter, lower-case it.
-        tay
-
-loop:   dey
-        beq     done
-        bpl     :+
-done:   rts
-
-:       lda     (ptr),y
-        cmp     #'A'
-        bcs     check_alpha
-        dey
-        bpl     loop            ; always
-
-check_alpha:
-        iny
-        lda     (ptr),y
-        cmp     #'A'
-        bcc     :+
-        ora     #AS_BYTE(~CASE_MASK)
-        sta     (ptr),y
-:       dey
-        bpl     loop            ; always
+        .include "wordcase.s"
 
 ;;; --------------------------------------------------
 ;;; GS/OS bits are present - apply to recase string.
@@ -163,4 +136,4 @@ case_bits:
 
 AdjustFileNameCase      := AdjustCaseImpl::file_name
 AdjustFileEntryCase     := AdjustCaseImpl::file_entry
-AdjustOnLineEntryCase    := AdjustCaseImpl::vol_name
+AdjustOnLineEntryCase   := AdjustCaseImpl::online_entry
