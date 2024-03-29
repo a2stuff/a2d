@@ -2433,7 +2433,6 @@ start:
         lda     active_window_id
         jsr     GetWindowPath
         stax    new_folder_dialog_params::a_path
-        jsr     CopyToSrcPath
 
         ;; Open the dialog
         lda     #NewFolderDialogState::open
@@ -2447,6 +2446,11 @@ retry:  lda     #NewFolderDialogState::run
         ;; Stash filename and path
         stxy    $06
         param_call CopyPtr1ToBuf, stashed_name ; for re-casing
+
+        lda     active_window_id
+        jsr     GetWindowPath
+        jsr     CopyToSrcPath
+
         ldax    $06
         jsr     AppendFilenameToSrcPath
 
