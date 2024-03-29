@@ -120,11 +120,56 @@ text_input_buf:
         .res    kPathBufferSize, 0
 
 ;;; ============================================================
+
+        ;; Offsets from icon's calculated rename rect to what the window needs
+        kRenameDialogLeftOffset = 5
+        kRenameDialogRightOffset = 4
+        kRenameDialogTopOffset = 1
+
+.params winfo_rename_dialog
+        kWindowId = $12
+        kWidth = SELF_MODIFIED
+        kHeight = kTextBoxHeight - 2
+
+window_id:      .byte   kWindowId
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   150
+mincontheight:  .word   50
+maxcontwidth:   .word   500
+maxcontheight:  .word   140
+port:
+        DEFINE_POINT viewloc, SELF_MODIFIED, SELF_MODIFIED
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::pencopy
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+        REF_WINFO_MEMBERS
+.endparams
+
+        DEFINE_LINE_EDIT rename_line_edit_rec, winfo_rename_dialog::kWindowId, text_input_buf, 0, -1, 200, kMaxFilenameLength
+        DEFINE_LINE_EDIT_PARAMS rename_le_params, rename_line_edit_rec
+
+;;; ============================================================
 ;;; Dialog used for:
-;;; * File > New Folder...
 ;;; * File > Get Info
-;;; * File > Rename...
-;;; * File > Duplicate...
 ;;; * Special > Format Disk...
 ;;; * Special > Erase Disk...
 
@@ -408,7 +453,7 @@ the_disk_in_slot_label:
         kTheDiskInSlotDriveCharOffset = res_const_the_disk_in_slot_suffix_pattern_offset2
 
 ;;; ============================================================
-;;; Name prompt dialog (used for Rename, Duplicate, Format, Erase)
+;;; Name prompt dialog (used for Format/Erase)
 
         DEFINE_LINE_EDIT prompt_line_edit_rec, winfo_prompt_dialog::kWindowId, text_input_buf, kNameInputLeft, kNameInputTop, kNameInputWidth, kMaxFilenameLength
         DEFINE_LINE_EDIT_PARAMS prompt_le_params, prompt_line_edit_rec
@@ -616,6 +661,7 @@ type_icons_table:
 ;;; * IconTK::RemoveIcon
 ;;; * IconTK::UnhighlightIcon
 ;;; * IconTK::GetIconBounds (with following `tmp_rect`)
+;;; * IconTK::GetRenameRect (with following `tmp_rect`)
 icon_param:  .byte   0
 
         ;; Used for all sorts of temporary work

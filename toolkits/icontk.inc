@@ -27,6 +27,7 @@ EraseIcon       = $0B   ; { .byte icon }
 GetIconBounds   = $0C   ; { .byte icon, rect bounds out }
 DrawIcon        = $0D   ; { .byte icon }
 GetIconEntry    = $0E   ; { .byte icon, .addr IconEntry }
+GetRenameRect   = $0F   ; { .byte icon, rect bounds out }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
 

@@ -241,7 +241,7 @@ Parameters:
 MGTK::Rect  bounds          (out) Bounding rectangle
 ```
 
-### `IconTK::DrawIcon` ($03)
+### `IconTK::DrawIcon` ($0D)
 
 Redraws an icon by number, into any window (or the desktop), with appropriate clipping.
 
@@ -255,6 +255,33 @@ No error checking is done, no result codes.
 Note that unlike `IconTK::DrawIconRaw`, this call does _not_ require a GrafPort to be set by the caller. Icons in windows are clipped to the visible portion of the window (including overlapping windows). Icons on the desktop are clipped against overlapping windows.
 
 Due to the clipping, this call is slower than `IconTK::DrawIconRaw`, and should be avoided if possible when multiple icons are being updated.
+
+
+### `IconTK::GetIconEntry` ($0E)
+
+Given an icon number, returns the address of its `IconEntry` struct.
+
+Parameters:
+```
+.byte       icon            Icon number
+.addr       entry           (out) Address of IconEntry
+```
+
+No error checking is done, no result codes.
+
+
+### `IconTK::GetRenameRect` ($0F)
+
+Given an icon number, returns the maximum bounds of the name, used
+for positioning a rename entry field.
+
+Parameters:
+```
+.byte       icon            Icon number
+MGTK::Rect  rect            (out) Bounding rect for name
+```
+
+No error checking is done, no result codes.
 
 
 ## Convenience Macros

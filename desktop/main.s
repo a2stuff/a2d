@@ -2411,83 +2411,64 @@ start:
 
 ;;; ============================================================
 
-.enum NewFolderDialogState
-        open  = $00
-        run   = $80
-        close = $40
-.endenum
-
-.params new_folder_dialog_params
-phase:  .byte   0
-a_path: .addr   0
-.endparams
-
 ;;; Assert: There is an active window
 .proc CmdNewFolderImpl
 
         ;; access = destroy/rename/write/read
         DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
+str_new_folder:
+        PASCAL_STRING "New.Folder"
+
 start:
-        ;; Dialog needs base path to ensure new name is valid path
-        lda     active_window_id
-        jsr     GetWindowPath
-        stax    new_folder_dialog_params::a_path
-
-        ;; Open the dialog
-        lda     #NewFolderDialogState::open
-        jsr     RunDialogProc
-
-        ;; Run the dialog
-retry:  lda     #NewFolderDialogState::run
-        jsr     RunDialogProc
-        jne     done            ; Canceled
-
-        ;; Stash filename and path
-        stxy    $06
-        param_call CopyPtr1ToBuf, stashed_name ; for re-casing
-
-        lda     active_window_id
-        jsr     GetWindowPath
-        jsr     CopyToSrcPath
-
-        ldax    $06
-        jsr     AppendFilenameToSrcPath
-
         ;; Create with current date
+        MLI_CALL GET_TIME
         COPY_STRUCT DateTime, DATELO, create_params::create_date
 
-        ;; Create folder
-        MLI_CALL CREATE, create_params
-        bcc     success
+        ;; --------------------------------------------------
+        ;; Determine the name to use
 
-        ;; Failure
-        jsr     ShowAlert
+        ;; Start with generic folder name
+        COPY_STRING str_new_folder, stashed_name
+
+        ;; Repeat to find a free name
+retry:  lda     active_window_id
+        jsr     GetWindowPath
+        jsr     CopyToSrcPath
+        param_call AppendFilenameToSrcPath, stashed_name
+        jsr     GetSrcFileInfo
+        bcc     spin
+        cmp     #ERR_FILE_NOT_FOUND
+        beq     create
+        bne     error
+
+spin:   jsr     SpinName
         jmp     retry
 
-success:
-        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
-
-        lda     #NewFolderDialogState::close
-        jsr     RunDialogProc
+        ;; --------------------------------------------------
+        ;; Try creating the folder
+create:
+        MLI_CALL CREATE, create_params
+        bcs     error
 
         ;; Update cached used/free for all same-volume windows
         lda     active_window_id
         jsr     GetWindowPath
         jsr     UpdateUsedFreeViaPath
 
+        ;; Refresh the window
         lda     active_window_id
         jsr     SelectAndRefreshWindowOrClose
-        bne     done
+        RTS_IF_NE
 
-        param_call SelectFileIconByName, text_input_buf
+        ;; Select and rename the file
+        param_call SelectFileIconByName, stashed_name
+        jmp     CmdRename
 
-done:   rts
-
-.proc RunDialogProc
-        sta     new_folder_dialog_params::phase
-        jmp     NewFolderDialogProc
-.endproc ; RunDialogProc
+        ;; --------------------------------------------------
+error:
+        ldx     #AlertButtonOptions::OK
+        jmp     ShowAlertOption
 
 .endproc ; CmdNewFolderImpl
 CmdNewFolder    := CmdNewFolderImpl::start
@@ -2614,6 +2595,92 @@ done:   rts
 
 stashed_name:
         .res    16, 0
+
+;;; ============================================================
+;;; Take the name in `stashed_name` and "increment it":
+;;; * If ends in dot-digits, increment (adjusting length if needed)
+;;; * Otherwise, append ".2" (shrinking if needed)
+;;; Trashes $10...$1F
+
+.proc SpinName
+        digits := $10
+
+        ;; Zero out counter (a digit string, in reverse)
+        lda     #'0'
+        ldy     #15
+:       sta     digits,y
+        dey
+        bne     :-
+
+        ;; While digits, pop from string (X=len) onto digits (Y=len)
+        ldx     stashed_name
+:       lda     stashed_name,x
+        cmp     #'0'
+        bcc     :+
+        cmp     #'9'+1
+        bcs     :+
+        iny
+        sta     digits,y        ; stash digits as we go
+        dex
+        bne     :-              ; always (name must start w/ letter)
+:
+        ;; Did the string end with '.' then digits?
+        cmp     #'.'            ; dot before numbers?
+        bne     just_append
+        cpy     #0              ; any digits found?
+        beq     just_append
+
+        ;; Truncate the '.', and increment the digits
+        dex
+        stx     stashed_name
+        sty     digits
+
+        ldx     #0              ; increment
+:       inc     digits+1,x
+        lda     digits+1,x
+        cmp     #'9'+1
+        bne     concatenate     ; done
+        lda     #'0'
+        sta     digits+1,x
+        inx
+        cpx     digits
+        bne     :-
+        inc     digits
+        cpx     #13             ; max of 13 digits
+        bne     :-
+        beq     SpinName        ; restart
+
+        ;; --------------------------------------------------
+just_append:
+        lda     #1
+        sta     digits
+        lda     #'2'
+        sta     digits+1
+        FALL_THROUGH_TO concatenate
+
+        ;; --------------------------------------------------
+concatenate:
+        lda     #14
+        sec
+        sbc     digits
+        cmp     stashed_name
+    IF_LT
+        sta     stashed_name
+    END_IF
+
+        ldx     stashed_name
+        inx
+        lda     #'.'
+        sta     stashed_name,x
+        ldy     digits
+:       lda     digits,y
+        inx
+        sta     stashed_name,x
+        dey
+        bne     :-
+        stx     stashed_name
+        rts
+.endproc ; SpinName
 
 ;;; ============================================================
 ;;; Input: Icon number in A.
@@ -3264,22 +3331,65 @@ ret:    rts
 
 ;;; Assert: Single file icon selected
 .proc CmdDuplicate
-        jsr     DoDuplicate
-        beq     ret             ; flag set if window needs refreshing
+
+        ;; --------------------------------------------------
+        ;; Determine the name to use
+
+        ;; Start with original name
+        lda     selected_icon_list
+        jsr     GetIconName
+        stax    $06
+        param_call CopyPtr1ToBuf, stashed_name
+
+        ;; Construct src path
+        jsr     GetSelectionWindow
+        jsr     GetWindowPath
+        jsr     CopyToSrcPath
+        param_call AppendFilenameToSrcPath, stashed_name
+
+        ;; Repeat to find a free name
+spin:   jsr     GetSelectionWindow
+        jsr     GetWindowPath
+        jsr     CopyToDstPath
+        jsr     SpinName
+        param_call AppendFilenameToDstPath, stashed_name
+        jsr     GetDstFileInfo
+        bcc     spin
+        cmp     #ERR_FILE_NOT_FOUND
+        bne     error
+
+        ;; --------------------------------------------------
+        ;; Try copying the file
+
+        copy16  #src_path_buf, $06
+        copy16  #dst_path_buf, $08
+        jsr     CopyPathsFromPtrsToBufsAndSplitName
+        jsr     DoCopyFile
+        RTS_IF_NS
+
+        ;; Update name case bits on disk, if possible.
+        COPY_STRING dst_path_buf, src_path_buf
+        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
 
         ;; Update cached used/free for all same-volume windows
         lda     selected_window_id
         jsr     GetWindowPath
         jsr     UpdateUsedFreeViaPath
 
+        ;; Refresh the window
         lda     selected_window_id
         jsr     SelectAndRefreshWindowOrClose
-        bne     ret
+        RTS_IF_NE
 
-        jsr     ClearSelection
-        param_call SelectFileIconByName, text_input_buf
+        ;; Select and rename the file
+        param_call SelectFileIconByName, stashed_name
+        jmp     CmdRename
 
-ret:    rts
+        ;; --------------------------------------------------
+error:
+        ldx     #AlertButtonOptions::OK
+        jmp     ShowAlertOption
+
 .endproc ; CmdDuplicate
 
 ;;; ============================================================
@@ -10715,6 +10825,7 @@ write_protected_flag:
 state:  .byte   0
 a_prev: .addr   old_name_buf
 a_path: .addr   SELF_MODIFIED_BYTE
+        DEFINE_RECT rect,0,0,0,0
 .endparams
 
 ;;; Assert: Single icon selected, and it's not Trash.
@@ -10743,6 +10854,11 @@ start:
         jsr     GetIconName
         stax    $06
         param_call CopyPtr1ToBuf, old_name_buf
+
+        lda     selected_icon_list
+        sta     icon_param
+        ITK_CALL IconTK::GetRenameRect, icon_param
+        COPY_STRUCT MGTK::Rect, tmp_rect, rename_dialog_params::rect
 
         ;; Open the dialog
         lda     #RenameDialogState::open
@@ -11149,119 +11265,6 @@ assign: ldy     new_path
 
         DEFINE_GET_PREFIX_PARAMS get_set_prefix_params, path
 .endproc ; UpdatePrefix
-
-;;; ============================================================
-
-.enum DuplicateDialogState
-        open  = $00
-        run   = $80
-        close = $40
-.endenum
-
-.params duplicate_dialog_params
-state:  .byte   0
-a_prev: .addr   old_name_buf
-a_path: .addr   SELF_MODIFIED
-.endparams
-
-;;; Assert: Single file icon selected
-.proc DoDuplicateImpl
-
-start:
-        lda     #0
-        sta     result_flag
-
-        ;; Dialog needs base path to ensure new name is valid path
-        jsr     GetSelectionWindow
-        jsr     GetWindowOrRootPath
-        stax    duplicate_dialog_params::a_path
-
-        ;; Original path
-        lda     selected_icon_list
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
-    IF_NE
-        jsr     ShowAlert
-        return  result_flag
-    END_IF
-        param_call CopyToSrcPath, path_buf3
-
-        ;; Copy original name for display/default
-        lda     selected_icon_list
-        jsr     GetIconName
-        stax    $06
-        param_call CopyPtr1ToBuf, old_name_buf
-
-        ;; Open the dialog
-        lda     #DuplicateDialogState::open
-        jsr     RunDialogProc
-
-        ;; Run the dialog
-retry:  lda     #DuplicateDialogState::run
-        jsr     RunDialogProc
-        beq     success
-
-        ;; Failure
-        return  result_flag
-
-        ;; --------------------------------------------------
-        ;; Success, new name in X,Y
-
-success:
-        new_name_ptr := $08
-        stxy    new_name_ptr
-        param_call CopyPtr2ToBuf, new_name_buf
-
-        lda     selected_window_id
-        jsr     GetWindowPath
-        jsr     CopyToDstPath
-
-        ;; Append new filename
-        ldax    new_name_ptr
-        jsr     AppendFilenameToDstPath
-
-        ;; --------------------------------------------------
-        ;; Check for unchanged/duplicate name
-
-        jsr     GetDstFileInfo
-    IF_CC
-        lda     #ERR_DUPLICATE_FILENAME
-        jsr     ShowAlert
-        jmp     retry
-    END_IF
-
-        ;; Close the dialog
-        lda     #DuplicateDialogState::close
-        jsr     RunDialogProc
-
-        ;; --------------------------------------------------
-        ;; Try copying the file
-
-        copy16  #src_path_buf, $06
-        copy16  #dst_path_buf, $08
-        jsr     CopyPathsFromPtrsToBufsAndSplitName
-        jsr     DoCopyFile
-        bmi     :+
-        lda     #$80
-        sta     result_flag
-        ;; Update name case bits on disk, if possible.
-        COPY_STRING dst_path_buf, src_path_buf
-        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
-:
-        ;; --------------------------------------------------
-        ;; Totally done
-
-        return  result_flag
-
-.proc RunDialogProc
-        sta     duplicate_dialog_params
-        jmp     DuplicateDialogProc
-.endproc ; RunDialogProc
-
-;;; N bit ($80) set if anything succeeded (and window needs refreshing)
-result_flag:
-        .byte   0
-.endproc ; DoDuplicateImpl
-DoDuplicate     := DoDuplicateImpl::start
 
 ;;; ============================================================
 
@@ -13634,72 +13637,6 @@ DownloadDialogProc := CopyDialogProc
 .endproc ; DeleteDialogProc
 
 ;;; ============================================================
-;;; "New Folder" dialog
-
-.proc NewFolderDialogProc
-        lda     new_folder_dialog_params::phase
-
-        ;; --------------------------------------------------
-        cmp     #NewFolderDialogState::open
-    IF_EQ
-        lda     #$00            ; for `prompt_button_flags`
-        jsr     OpenPromptWindow
-        jsr     SetPortForDialogWindow
-        param_call DrawDialogTitle, aux::label_new_folder
-
-        copy16  new_folder_dialog_params::a_path, $08
-        param_call CopyPtr2ToBuf, path_buf4
-        jsr     SplitPathBuf4
-        COPY_STRING filename_buf, buf_filename ; for display
-        param_call DrawDialogLabel, 2, aux::str_in
-        param_call DrawString, buf_filename
-        param_call DrawDialogLabel, 4, aux::str_enter_folder_name
-        jmp     InitNameInput
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #NewFolderDialogState::run
-    IF_EQ
-        copy    #$80, has_input_field_flag
-
-loop:   jsr     PromptInputLoop
-        bmi     loop            ; continue?
-        bne     do_close        ; canceled!
-
-        param_call_indirect CheckPathAndTextLength, new_folder_dialog_params::a_path
-        bcs     loop
-
-        ldxy    #text_input_buf
-        return  #0
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; NewFolderDialogState::close
-do_close:
-        jsr     ClosePromptDialog
-        return  #1
-.endproc ; NewFolderDialogProc
-
-;;; ============================================================
-
-;;; Inputs: A,X=path, `text_input_buf` has prospective filename
-;;; Output: C=0 if okay, C=1 if too long
-;;; Trashes: $08, path_buf0
-.proc CheckPathAndTextLength
-        stax    $08
-        param_call CopyPtr2ToBuf, path_buf0
-        lda     path_buf0       ; full path okay?
-        clc
-        adc     text_input_buf
-        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
-    IF_GE
-        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
-        sec
-    END_IF
-        rts
-.endproc ; CheckPathAndTextLength
-
-;;; ============================================================
 ;;; "Get Info" dialog
 
 .proc GetInfoDialogProc
@@ -13842,36 +13779,55 @@ ret:    return  #$FF
 ;;; ============================================================
 ;;; "Rename" dialog
 
+;;; This uses a minimal dialog window to simulate modeless rename.
+
 .proc RenameDialogProc
         lda     rename_dialog_params::state
 
         ;; ----------------------------------------
         cmp     #RenameDialogState::open
     IF_EQ
-        lda     #$00            ; for `prompt_button_flags`
-        jsr     OpenPromptWindow
-        jsr     SetPortForDialogWindow
-        param_call DrawDialogTitle, aux::label_rename_icon
+        sub16_8 rename_dialog_params::rect::x1, #kRenameDialogLeftOffset, winfo_rename_dialog::viewloc+MGTK::Rect::x1
 
+        ;; Special case: if left edge is offscreen, scootch right
+        bit     winfo_rename_dialog::viewloc+MGTK::Rect::x1+1
+      IF_NS
+        copy16  #0, winfo_rename_dialog::viewloc+MGTK::Rect::x1
+      END_IF
+
+        sub16_8 rename_dialog_params::rect::y1, #kRenameDialogTopOffset, winfo_rename_dialog::viewloc+MGTK::Rect::y1
+        sub16   rename_dialog_params::rect::x2, rename_dialog_params::rect::x1, winfo_rename_dialog::maprect::x2
+        add16_8 winfo_rename_dialog::maprect::x2, #kRenameDialogLeftOffset + kRenameDialogRightOffset
+
+        jsr     OpenRenameWindow
         copy16  rename_dialog_params::a_prev, $08
         param_call CopyPtr2ToBuf, text_input_buf
-        param_call DrawDialogLabel, 2, aux::str_rename_old
-        param_call DrawString, text_input_buf
-        param_call DrawDialogLabel, 4, aux::str_rename_new
-        jmp     InitNameInput
+        LETK_CALL LETK::Init, rename_le_params
+        LETK_CALL LETK::Activate, rename_le_params
+        rts
     END_IF
 
         ;; --------------------------------------------------
         cmp     #RenameDialogState::run
     IF_EQ
-        copy    #$80, has_input_field_flag
-
-loop:   jsr     PromptInputLoop
+loop:   jsr     RenameInputLoop
         bmi     loop            ; continue?
         bne     do_close        ; canceled!
 
-        param_call_indirect CheckPathAndTextLength, rename_dialog_params::a_path
-        bcs     loop
+        lda     text_input_buf  ; treat empty as cancel
+        beq     do_close
+
+        ;; Validate path length before committing
+        copy16  rename_dialog_params::a_path, $08
+        param_call CopyPtr2ToBuf, path_buf0
+        lda     path_buf0       ; full path okay?
+        clc
+        adc     text_input_buf
+        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
+      IF_GE
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
+        jmp     loop
+      END_IF
 
         ldxy    #text_input_buf
         return  #0
@@ -13880,54 +13836,102 @@ loop:   jsr     PromptInputLoop
         ;; --------------------------------------------------
         ;; RenameDialogState::close
 do_close:
-        jsr     ClosePromptDialog
+        MGTK_CALL MGTK::CloseWindow, winfo_rename_dialog
+        jsr     ClearUpdates     ; following CloseWindow
+        jsr     SetCursorPointer ; when closing dialog
         return  #1
 .endproc ; RenameDialogProc
 
 ;;; ============================================================
-;;; "Duplicate" dialog
 
-.proc DuplicateDialogProc
-        lda     duplicate_dialog_params::state
+;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
 
-        ;; --------------------------------------------------
-        cmp     #DuplicateDialogState::open
-    IF_EQ
-        lda     #$00            ; for `prompt_button_flags`
-        jsr     OpenPromptWindow
-        jsr     SetPortForDialogWindow
-        param_call DrawDialogTitle, aux::label_duplicate_icon
+.proc RenameInputLoop
+        LETK_CALL LETK::Idle, rename_le_params
 
-        copy16  duplicate_dialog_params::a_prev, $08
-        param_call CopyPtr2ToBuf, text_input_buf
-        param_call DrawDialogLabel, 2, aux::str_duplicate_original
-        param_call DrawString, text_input_buf
-        param_call DrawDialogLabel, 4, aux::str_rename_new
-        jmp     InitNameInput
+        jsr     SystemTask
+        jsr     GetNextEvent
+
+        cmp     #MGTK::EventKind::button_down
+        jeq     RenameClickHandler
+
+        cmp     #MGTK::EventKind::key_down
+        jeq     RenameKeyHandler
+
+        cmp     #kEventKindMouseMoved
+        bne     RenameInputLoop
+
+        ;; Check if mouse is over window, change cursor appropriately.
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+        bne     out
+        lda     findwindow_params::window_id
+        cmp     #winfo_rename_dialog::kWindowId
+        bne     out
+
+        jsr     SetCursorIBeamWithFlag
+        jmp     RenameInputLoop
+
+out:    jsr     SetCursorPointerWithFlag
+        jmp     RenameInputLoop
+.endproc ; RenameInputLoop
+
+;;; Click handler for rename dialog
+
+.proc RenameClickHandler
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+    IF_NE
+        return  #PromptResult::ok
     END_IF
 
-        ;; --------------------------------------------------
-        cmp     #DuplicateDialogState::run
-    IF_EQ
-        copy    #$80, has_input_field_flag
-
-loop:   jsr     PromptInputLoop
-        bmi     loop            ; continue?
-        bne     do_close        ; canceled!
-
-        param_call_indirect CheckPathAndTextLength, duplicate_dialog_params::a_path
-        bcs     loop
-
-        ldxy    #text_input_buf
-        return  #0
+        lda     findwindow_params::window_id
+        cmp     #winfo_rename_dialog::kWindowId
+    IF_NE
+        return  #PromptResult::ok
     END_IF
 
-        ;; --------------------------------------------------
-        ;; DuplicateDialogState::close
-do_close:
-        jsr     ClosePromptDialog
-        return  #1
-.endproc ; DuplicateDialogProc
+        copy    winfo_rename_dialog, event_params
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, rename_le_params::coords
+        LETK_CALL LETK::Click, rename_le_params
+
+        return  #$FF
+.endproc ; RenameClickHandler
+
+;;; Key handler for rename dialog
+
+.proc RenameKeyHandler
+        lda     event_params::key
+        sta     rename_le_params::key
+
+        ;; Modifiers?
+        ldx     event_params::modifiers
+        stx     rename_le_params::modifiers
+        bne     allow           ; pass through modified keys
+
+        ;; No modifiers
+        cmp     #CHAR_RETURN
+      IF_EQ
+        return  #PromptResult::ok
+      END_IF
+
+        cmp     #CHAR_ESCAPE
+      IF_EQ
+        return  #PromptResult::cancel
+      END_IF
+
+        jsr     IsControlChar   ; pass through control characters
+        bcc     allow
+        jsr     IsFilenameChar
+        bcs     ignore
+allow:  LETK_CALL LETK::Key, rename_le_params
+ignore:
+        return  #$FF
+.endproc ; RenameKeyHandler
 
 ;;; ============================================================
 
@@ -14615,6 +14619,17 @@ done:   rts
         MGTK_CALL MGTK::FrameRect, aux::prompt_dialog_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
         jsr     SetPenModeXOR
+        rts
+.endproc ; OpenDialogWindow
+
+;;; ============================================================
+
+.proc OpenRenameWindow
+        lda     #0
+        sta     cursor_ibeam_flag
+        jsr     SetCursorPointer
+
+        MGTK_CALL MGTK::OpenWindow, winfo_rename_dialog
         rts
 .endproc ; OpenDialogWindow
 

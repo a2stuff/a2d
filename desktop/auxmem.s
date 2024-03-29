@@ -300,22 +300,6 @@ str_file_colon:
 str_delete_locked_file:
         PASCAL_STRING res_string_delete_prompt_locked_file
 
-        ;; "New Folder" dialog strings
-str_in:
-        PASCAL_STRING res_string_new_folder_label_in
-str_enter_folder_name:
-        PASCAL_STRING res_string_new_folder_label_name
-
-        ;; "Rename Icon" dialog strings
-str_rename_old:
-        PASCAL_STRING res_string_rename_label_old
-str_rename_new:
-        PASCAL_STRING res_string_rename_label_new
-
-        ;; "Duplicate" dialog strings
-str_duplicate_original:
-        PASCAL_STRING res_string_rename_label_original
-
         ;; "Get Info" dialog strings
 str_info_name:
         PASCAL_STRING res_string_get_info_label_name

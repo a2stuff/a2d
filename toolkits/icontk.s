@@ -76,6 +76,7 @@ jump_table_low:
         .byte   <GetIconBoundsImpl
         .byte   <DrawIconImpl
         .byte   <GetIconEntryImpl
+        .byte   <GetRenameRectImpl
 
 jump_table_high:
         .byte   >InitToolKitImpl
@@ -93,6 +94,7 @@ jump_table_high:
         .byte   >GetIconBoundsImpl
         .byte   >DrawIconImpl
         .byte   >GetIconEntryImpl
+        .byte   >GetRenameRectImpl
 
 ;;; ============================================================
 
@@ -101,7 +103,9 @@ jump_table_high:
         DEFINE_RECT bitmap_rect, 0,0,0,0 ; bitmap portion of icon
         DEFINE_RECT label_rect, 0,0,0,0  ; label portion of icon
         DEFINE_RECT bounding_rect, 0,0,0,0 ; overall bounding box of above
+        DEFINE_RECT rename_rect, 0,0,0,0 ; rect if name was maximum size
 
+kNameMaxWidth = 15 * 7
 kPolySize = 8
 
 .params poly
@@ -1272,6 +1276,38 @@ inside:
 .endproc ; GetIconBoundsImpl
 
 ;;; ============================================================
+;;; GetRenameRect
+
+.proc GetRenameRectImpl
+        params := $06
+.struct GetRenameRectParams
+        icon    .byte
+        rect    .tag    MGTK::Rect ; out
+.endstruct
+
+        ;; Calc icon bounds
+        jsr     PushPointers
+        ptr := $06
+        ldy     #GetRenameRectParams::icon
+        lda     (params),y
+        jsr     GetIconPtr
+        stax    ptr
+        jsr     CalcIconRects
+        jsr     PopPointers
+
+        ;; Copy rect into out params
+        ldx     #.sizeof(MGTK::Rect)-1
+        ldy     #GetRenameRectParams::rect + .sizeof(MGTK::Rect)-1
+:       lda     rename_rect,x
+        sta     (params),y
+        dey
+        dex
+        bpl     :-
+
+        rts
+.endproc ; GetRenameRectImpl
+
+;;; ============================================================
 
 ;;; Used by `DrawIcon` and `EraseIcon`. Expected to be 0 on first call
 ;;; to `CalcWindowIntersections` to signal the start of a clipping
@@ -1558,6 +1594,8 @@ kIconLabelGapV = 2
         ;; Left edge of label
         add16_8 bitmap_rect::x2, #kListViewIconGap-2, label_rect::x1
 
+        jsr     stash_rename_rect
+
         ;; Label right
         add16   label_rect::x1, textwidth_params::result, label_rect::x2
 
@@ -1583,15 +1621,25 @@ kIconLabelGapV = 2
         asl16   label_rect::x1
         ldy     #IconResource::maprect + MGTK::Rect::x2
         add16in label_rect::x1, (bitmap_ptr),y, label_rect::x1
+        jsr     stash_rename_rect
         sub16   label_rect::x1, textwidth_params::result, label_rect::x1
         asr16   label_rect::x1 ; signed
+
+        sub16_8 rename_rect::x1, #kNameMaxWidth, rename_rect::x1
+        asr16   rename_rect::x1
 
         ;; Label right
         add16   label_rect::x1, textwidth_params::result, label_rect::x2
 
     END_IF
 
+        add16_8 rename_rect::x1, #kNameMaxWidth, rename_rect::x2
+
         jsr     PopPointers     ; do not tail-call optimise!
+        rts
+
+stash_rename_rect:
+        COPY_STRUCT MGTK::Rect, label_rect, rename_rect
         rts
 .endproc ; CalcIconRects
 

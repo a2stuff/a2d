@@ -7485,6 +7485,7 @@ get_rect:
         jsr     GetWinFrameRect
         jsr     FillAndFrameRect
 
+preserve_content:
         lda     current_winfo::options
         ;;and     #MGTK::Option::dialog_box
         ;;bne     no_titlebar
@@ -7535,6 +7536,7 @@ no_vert_scroll:
         jmp     DrawWinframe
 :       rts
 .endproc ; DrawWindow
+DrawWindowPreserveContent := DrawWindow::preserve_content
 
         ;;  Drawing title bar, maybe?
 draw_erase_mode:
@@ -8568,6 +8570,7 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
         jsr     HideCursorSaveParams
 
         jsr     WinframeToSetPort
+        php                     ; Save C=1 if valid port
         jsr     LinkWindow
 
         ldy     #MGTK::Winfo::status
@@ -8578,6 +8581,20 @@ DragWindowImpl_drag_or_grow := DragWindowImpl::drag_or_grow
         jsr     TopWindow
         lda     current_winfo::id
         sta     sel_window_id
+
+        plp
+    IF_CC
+        ;; Port was not valid; the window was entirely offscreen, so
+        ;; erasing and posting updates is not required. But newly
+        ;; active window may need redrawing.
+        jsr     TopWindow
+      IF_NE
+        jsr     SetDesktopPort
+        jsr     DrawWindowPreserveContent
+      END_IF
+        jmp     ShowCursorAndRestore
+    END_IF
+
         lda     #0
         beq     EraseWindow
 .endproc ; CloseWindowImpl
