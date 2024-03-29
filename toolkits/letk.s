@@ -228,18 +228,14 @@ grafport_win:   .tag    MGTK::GrafPort
         ;; Set the port
         copy    window_id, getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        ;; ASSERT: Not obscured
-
-        ;; Calculate a clip rect, maintaining the same drawing coordinates.
-
-        ;; Offset viewloc by rect topleft
-        add16 grafport_win+MGTK::MapInfo::viewloc+MGTK::Point::xcoord, rect+MGTK::Rect::x1, grafport_win+MGTK::MapInfo::viewloc+MGTK::Point::xcoord
-        add16 grafport_win+MGTK::MapInfo::viewloc+MGTK::Point::ycoord, rect+MGTK::Rect::y1, grafport_win+MGTK::MapInfo::viewloc+MGTK::Point::ycoord
-
-        ;; Assign same maprect
-        COPY_STRUCT MGTK::Rect, rect, grafport_win + MGTK::GrafPort::maprect
-
+        bne     obscured
         MGTK_CALL MGTK::SetPort, grafport_win
+        beq     ret
+
+obscured:
+        pla
+        pla
+ret:
         rts
 .endproc ; _SetPort
 
@@ -583,10 +579,13 @@ ret:    rts
         sta     (a_record),y
 
         jsr     _SetPort
+clear:
+        MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect
 
 ret:    rts
 .endproc ; _DeleteLine
+_ClearRect := _DeleteLine::clear
 
 ;;; ============================================================
 ;;; Move caret to start of input field.
@@ -687,8 +686,7 @@ a_record  .addr
         ;; Unnecessary - the entire field will be repainted.
         ;; jsr     _HideCaret
 
-        MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::PaintRect, rect
+        jsr     _ClearRect
         MGTK_CALL MGTK::MoveTo, pos
 
 PARAM_BLOCK dt_params, $6

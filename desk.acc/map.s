@@ -333,22 +333,6 @@ buf_search:     .res    kBufSize, 0 ; search term
         bit     dragwindow_params::moved
         bpl     :+
 
-        ;; Force DA onscreen (to keep line edit control visible)
-        bit     winfo::viewloc::xcoord+1
-    IF_NS
-        copy16  #0, winfo::viewloc::xcoord
-    END_IF
-
-        cmp16   winfo::viewloc::xcoord, #kScreenWidth - kDAWidth
-    IF_CS
-        copy16  #kScreenWidth - kDAWidth, winfo::viewloc::xcoord
-    END_IF
-
-        cmp16   winfo::viewloc::ycoord, #kScreenHeight - kDAHeight
-    IF_CS
-        copy16  #kScreenHeight - kDAHeight, winfo::viewloc::ycoord
-    END_IF
-
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 

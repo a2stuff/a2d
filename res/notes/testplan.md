@@ -1155,7 +1155,11 @@ This covers:
    * Special > Erase Disk...
  * DeskTop's Add/Edit a Shortcut dialog (an extended File Picker)
  * Find Files DA.
- * Map DA.
+ * Map DA:
+   * With input field fully on screen.
+   * With input field partially off screen.
+   * With input field completely off screen.
+   * With window moved to bottom of screen so that only the title bar is visible.
 
 Repeat for each field:
  * Type a printable character.
@@ -1204,6 +1208,7 @@ Watch out for:
  * Parts of the caret not erased.
  * Text being truncated when OK clicked.
  * Caret being placed in the wrong place by a click.
+ * Mispaint when cleared with Control+X (or Clear key on IIgs)
 
 # List Boxes Controls
 
