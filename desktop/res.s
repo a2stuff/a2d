@@ -410,8 +410,8 @@ the_disk_in_slot_label:
 ;;; ============================================================
 ;;; Name prompt dialog (used for Rename, Duplicate, Format, Erase)
 
-        DEFINE_LINE_EDIT line_edit_rec, winfo_prompt_dialog::kWindowId, text_input_buf, kNameInputLeft, kNameInputTop, kNameInputWidth, kMaxFilenameLength
-        DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
+        DEFINE_LINE_EDIT prompt_line_edit_rec, winfo_prompt_dialog::kWindowId, text_input_buf, kNameInputLeft, kNameInputTop, kNameInputWidth, kMaxFilenameLength
+        DEFINE_LINE_EDIT_PARAMS prompt_le_params, prompt_line_edit_rec
 
 ;;; ============================================================
 

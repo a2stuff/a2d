@@ -13287,7 +13287,7 @@ PromptDialogKeyHandlerHook:
 .proc PromptInputLoop
         bit     has_input_field_flag
         bpl     :+
-        LETK_CALL LETK::Idle, le_params
+        LETK_CALL LETK::Idle, prompt_le_params
 :
         jsr     SystemTask
         jsr     GetNextEvent
@@ -13365,8 +13365,8 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         ;; Was click inside text box?
         MGTK_CALL MGTK::InRect, name_input_rect
     IF_NOT_ZERO
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, le_params::coords
-        LETK_CALL LETK::Click, le_params
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, prompt_le_params::coords
+        LETK_CALL LETK::Click, prompt_le_params
     END_IF
 
         return  #$FF
@@ -13376,16 +13376,16 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
 
 .proc PromptKeyHandler
         lda     event_params::key
-        sta     le_params::key
+        sta     prompt_le_params::key
 
         ldx     event_params::modifiers
-        stx     le_params::modifiers
+        stx     prompt_le_params::modifiers
     IF_NOT_ZERO
         ;; Modifiers
 
         bit     has_input_field_flag
       IF_NS
-        LETK_CALL LETK::Key, le_params
+        LETK_CALL LETK::Key, prompt_le_params
         jsr     UpdateOKButton
       ELSE
         jsr     KeyHookRelay
@@ -13411,7 +13411,7 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         bcc     allow
         jsr     IsFilenameChar
         bcs     ignore
-allow:  LETK_CALL LETK::Key, le_params
+allow:  LETK_CALL LETK::Key, prompt_le_params
         jsr     UpdateOKButton
 ignore:
       ELSE
@@ -14793,8 +14793,8 @@ done:   rts
 .proc InitNameInput
         jsr     SetPenModeNotCopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
-        LETK_CALL LETK::Init, le_params
-        LETK_CALL LETK::Activate, le_params
+        LETK_CALL LETK::Init, prompt_le_params
+        LETK_CALL LETK::Activate, prompt_le_params
         jmp     UpdateOKButton
 .endproc ; InitNameInput
 
