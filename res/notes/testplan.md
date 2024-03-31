@@ -54,6 +54,12 @@
 * Launch DeskTop. Select a volume icon. File > Rename.... Enter a unique name. Verify that the icon updates with the new name.
 * Launch DeskTop. Select a volume icon. File > Rename.... Click away without changing the name. Verify that the icon doesn't change.
 
+* Repeat the following for volume icons and file icons:
+  * Launch DeskTop. Select the icon. Click the icon's name. Verify that a rename prompt appears.
+  * Launch DeskTop. Select the icon. Click the icon's bitmap. Verify that no rename prompt appears.
+  * Launch DeskTop. With no selection, click the icon's name. Verify that no rename prompt appears.
+  * Launch DeskTop. With multiple icons selected, click an icon's name. Verify that no rename prompt appears.
+
 * Launch DeskTop. Select a file icon. Position the window so that the icon is entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
 * Launch DeskTop. Close all windows. Select a volume icon. Move the icon so that the name entirely offscreen. File > Rename.... Press Escape to cancel. Verify that nothing mispaints on the desktop.
 * Launch DeskTop. Open a window. Select a volume icon. Move the icon so that the name entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.

@@ -798,9 +798,8 @@ multi:  jsr     DisableMenuItemsRequiringSingleSelection
         ;; Files selected (not volumes)
 
         jsr     DisableMenuItemsRequiringVolumeSelection
-        lda     selected_icon_count
-        cmp     #1
-    IF_EQ
+        jsr     GetSingleSelectedIcon
+    IF_NOT_ZERO
         jsr     EnableMenuItemsRequiringSingleFileSelection
     ELSE
         jsr     DisableMenuItemsRequiringSingleFileSelection
@@ -2785,16 +2784,12 @@ check:  lda     #0
 done:   rts
 
         ;; And if there's only one, it's not Trash
-:       lda     selected_icon_count
-        beq     done
-        cmp     #1              ; single selection
-        bne     :+
-        lda     selected_icon_list
+:       jsr     GetSingleSelectedIcon
         cmp     trash_icon_num  ; if it's Trash, skip it
         beq     done
 
         ;; Record non-Trash selected volume icons to a buffer
-:       lda     #0
+        lda     #0
         tax
         tay
 loop1:  lda     selected_icon_list,y
@@ -3226,10 +3221,8 @@ FormatUnitNum := CmdFormatEraseDiskImpl::unit
         ;; Get single selected volume icon (or fail)
         lda     selected_window_id
         bne     fail            ; not the desktop
-        lda     selected_icon_count
-        cmp     #1
-        bne     fail            ; more/less than one selected
-        lda     selected_icon_list
+        jsr     GetSingleSelectedIcon
+        beq     fail
 
         jsr     IconToDeviceIndex
         beq     found
@@ -3535,15 +3528,12 @@ file_char:
         sta     icon
 
         ;; Already the selection?
-        lda     selected_icon_count
-        cmp     #1
-        bne     update
-        lda     selected_icon_list
+        jsr     GetSingleSelectedIcon
         cmp     icon
         beq     done            ; yes, nothing to do
 
         ;; Update the selection.
-update: jsr     ClearSelection
+        jsr     ClearSelection
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     SelectIcon
@@ -4941,7 +4931,13 @@ bail:   return  #$FF            ; high bit set = not repeating
 
 ;;; ============================================================
 
+;;; Input: A = icon
 .proc HandleFileIconClick
+        pha
+        jsr     GetSingleSelectedIcon
+        sta     prev_selected_icon
+        pla
+
         sta     icon_num
         jsr     IsIconSelected
         bne     not_selected
@@ -5006,7 +5002,7 @@ process_drop:
 
 same_or_desktop:
         cpx     #2              ; not a drag
-        beq     ignore
+        jeq     CheckRenameClick
 
         cpx     #$FF
         beq     failure
@@ -5031,9 +5027,7 @@ same_or_desktop:
         bne     :-
 
         jsr     CachedIconsWindowToScreen
-        jsr     ScrollUpdate
-
-ignore: rts
+        jmp     ScrollUpdate
 
 failure:
         ldx     saved_stack
@@ -5900,8 +5894,13 @@ DisableSelectorMenuItems := ToggleSelectorMenuItems::disable
 
 ;;; ============================================================
 
+;;; Input: A = icon
 .proc HandleVolumeIconClick
-        lda     findicon_params::which_icon
+        pha
+        jsr     GetSingleSelectedIcon
+        sta     prev_selected_icon
+        pla
+
         jsr     IsIconSelected
         bne     not_selected
 
@@ -5961,14 +5960,47 @@ check_double_click:
 
 same_or_desktop:
         cpx     #2              ; file icon dragged to desktop?
-        beq     ignore
+        beq     CheckRenameClick
 
         ;; Icons moved on desktop - update and redraw
-        jsr     RedrawSelectedIcons
-
-ignore: rts
-
+        jmp     RedrawSelectedIcons
 .endproc ; HandleVolumeIconClick
+
+;;; ============================================================
+
+;;; Used during icon click to trigger rename
+prev_selected_icon:
+        .byte   0
+
+;;; Prior to processing the click, `prev_selected_icon` should
+;;; be set to the result of `GetSingleSelectedIcon`.
+.proc CheckRenameClick
+        jsr     GetSingleSelectedIcon
+        cmp     prev_selected_icon
+        bne     ret
+        sta     icon_param
+        ITK_CALL IconTK::GetRenameRect, icon_param
+        MGTK_CALL MGTK::MoveTo, event_params::coords
+        MGTK_CALL MGTK::InRect, tmp_rect
+        jne     CmdRename
+ret:    rts
+.endproc ; CheckRenameClick
+
+;;; ============================================================
+
+;;; If there's a single icon selected, return it. Otherwise,
+;;; return zero.
+;;; Z=0 and A=icon num if only one, Z=0 and A=0 otherwise
+.proc GetSingleSelectedIcon
+        lda     selected_icon_count
+        cmp     #1
+    IF_NE
+        lda     #0
+        rts
+    END_IF
+        lda     selected_icon_list
+        rts
+.endproc ; GetSingleSelectedIcon
 
 ;;; ============================================================
 ;;; Double Click Detection helper specifically for dragging.
@@ -6411,18 +6443,8 @@ done:
         bne     :-
         jsr     PopPointers     ; do not tail-call optimize!
       ELSE
-        ldx     #0
-:       txa
-        pha                     ; A = index
-        copy    selected_icon_list,x, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED
-        pla                     ; A = index
-        tax
-        inx
-        cpx     selected_icon_count
-        bne     :-
+        jsr     RedrawSelectedIcons
       END_IF
-
 
 skip:
     END_IF
