@@ -12,18 +12,29 @@
         a_buf      := $13
         rect       := $15
         max_length := $1D
+        options    := $1E
         .assert (a_buf - window_id) = (LETK::LineEditRecord::a_buf - LETK::LineEditRecord::window_id), error, "mismatch"
         .assert (rect - window_id) = (LETK::LineEditRecord::rect - LETK::LineEditRecord::window_id), error, "mismatch"
         .assert (max_length - window_id) = (LETK::LineEditRecord::max_length - LETK::LineEditRecord::window_id), error, "mismatch"
+        .assert (options - window_id) = (LETK::LineEditRecord::options - LETK::LineEditRecord::window_id), error, "mismatch"
+        kCacheSize = options - window_id
 
         ;; Calculated from rect
-        pos        := $1E
+        pos        := $1F
 
         ;; Call parameters copied here (0...6 bytes)
-        command_data = $22
+        command_data := pos + .sizeof(MGTK::Point)
 
         ;; LineEditRecord address, in all param blocks
-        a_record = command_data
+        a_record := command_data
+
+        PARAM_BLOCK text_params, $29
+data    .addr
+length  .byte
+width   .word
+        END_PARAM_BLOCK
+        .assert text_params = command_data + 6, error, "mismatch"
+        .assert text_params+.sizeof(text_params) <= $2F, error, "mismatch"
 
         .assert LETKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
@@ -71,13 +82,12 @@
 
         ;; Cache static fields from the record, for convenience
         .assert LETK::LineEditRecord::window_id = 0, error, "mismatch"
-        ldy     #LETK::LineEditRecord::max_length
+        ldy     #kCacheSize
 :       copy    (a_record),y, window_id,y
         dey
         bpl     :-
 
-        add16_8 rect+MGTK::Rect::x1, #kTextBoxTextHOffset-1, pos+MGTK::Point::xcoord
-        add16_8 rect+MGTK::Rect::y1, #kTextBoxTextVOffset-1, pos+MGTK::Point::ycoord
+        jsr     _CalcPos
 
         jump_addr := *+1
         jmp     SELF_MODIFIED
@@ -107,11 +117,28 @@ length_table:
 pencopy:        .byte   MGTK::pencopy
 penXOR:         .byte   MGTK::penXOR
 
-.params draw2spaces_params
-        .addr   spaces
-        .byte   2
-spaces: .byte   "  "
-.endparams
+;;; ============================================================
+
+.proc _CalcPos
+        ;; Default position
+        add16_8 rect+MGTK::Rect::x1, #kTextBoxTextHOffset-1, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::y1, #kTextBoxTextVOffset-1, pos+MGTK::Point::ycoord
+
+        bit     options         ; bit7 = centered
+    IF_NS
+        add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
+
+        jsr     _PrepTextParams
+      IF_NOT_ZERO
+        MGTK_CALL MGTK::TextWidth, text_params
+      END_IF
+
+        sub16   pos+MGTK::Point::xcoord, text_params::width, pos+MGTK::Point::xcoord
+        lsr16   pos+MGTK::Point::xcoord
+   END_IF
+
+        rts
+.endproc ; _CalcPos
 
 ;;; ============================================================
 
@@ -292,11 +319,6 @@ END_PARAM_BLOCK
         copy16  pos + MGTK::Point::ycoord, point::ycoord
         MGTK_CALL MGTK::MoveTo, point
 
-PARAM_BLOCK dt_params, $06
-data    .addr
-length  .byte
-END_PARAM_BLOCK
-
         jsr     _PrepTextParams
         sta     len
 
@@ -304,15 +326,15 @@ END_PARAM_BLOCK
         lda     (a_record),y
         sta     caret_pos
 
-        add16_8 dt_params::data, caret_pos
+        add16_8 text_params::data, caret_pos
         len := *+1
         lda     #SELF_MODIFIED_BYTE
         sec
         caret_pos := *+1
         sbc     #SELF_MODIFIED_BYTE
         beq     :+
-        sta     dt_params::length
-        MGTK_CALL MGTK::DrawText, dt_params
+        sta     text_params::length
+        MGTK_CALL MGTK::DrawText, text_params
 :
         rts
 .endproc ; _RedrawRightOfCaret
@@ -320,17 +342,15 @@ END_PARAM_BLOCK
 ;;; ============================================================
 ;;; Prepare params for a TextWidth or DrawText call
 ;;; Output: A=length (and Z=1 if empty)
+;;;         `text_params::width` set to 0
 
 .proc _PrepTextParams
-PARAM_BLOCK text_params, $06
-data    .addr
-length  .byte
-END_PARAM_BLOCK
-
         ldxy    a_buf
         inxy
         stxy    text_params::data
         ldy     #0
+        sty     text_params::width
+        sty     text_params::width+1
         lda     (a_buf),y
         sta     text_params::length
         rts
@@ -346,12 +366,6 @@ ycoord  .word
         END_PARAM_BLOCK
         .assert a_record = params::a_record, error, "a_record must be first"
 
-        PARAM_BLOCK tw_params, $06
-data    .addr
-length  .byte
-width   .word
-        END_PARAM_BLOCK
-
         jsr     _PrepTextParams
         beq     ret
         sta     len
@@ -364,20 +378,20 @@ width   .word
 
         ;; Iterate to find the position
         lda     #0
-        sta     tw_params::width
-        sta     tw_params::width+1
-        sta     tw_params::length
-loop:   cmp16   tw_params::width, params::xcoord
+        sta     text_params::width
+        sta     text_params::width+1
+        sta     text_params::length
+loop:   cmp16   text_params::width, params::xcoord
         bcs     :+
-        inc     tw_params::length
-        lda     tw_params::length
+        inc     text_params::length
+        lda     text_params::length
         len := *+1
         cmp     #SELF_MODIFIED_BYTE
         beq     :+
-        MGTK_CALL MGTK::TextWidth, tw_params
+        MGTK_CALL MGTK::TextWidth, text_params
         beq     loop            ; always
 :
-        lda     tw_params::length
+        lda     text_params::length
 set:    pha
         jsr     _HideCaret
         pla
@@ -552,8 +566,14 @@ modified:
         adc     #1
         sta     (a_buf),y
 
+        bit     options         ; bit7 = centered
+    IF_NS
+        ;; Redraw everything
+        jsr     _ClearAndDrawText
+    ELSE
         ;; Redraw string to right of old caret position
         jsr     _RedrawRightOfCaret
+    END_IF
 
         ;; Now move caret to new position
         ldy     #LETK::LineEditRecord::caret_pos
@@ -579,6 +599,11 @@ ret:    rts
         sta     (a_record),y
 
         jsr     _SetPort
+
+        ;; NOTE: Don't include `_SetPort` call in `_ClearRect`
+        ;; because if the port is obscured then `_SetPort` pops
+        ;; the caller!
+
 clear:
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect
@@ -634,43 +659,64 @@ _ClearRect := _DeleteLine::clear
         sta     (a_buf),y
         bne     :-              ; always
 :
+        bit     options         ; bit7 = centered
+    IF_NS
+        ;; Redraw everything
+        jmp     _ClearAndDrawText
+    END_IF
+
         ;; Redraw everything to the right of the caret
         jsr     _RedrawRightOfCaret
-        MGTK_CALL MGTK::DrawText, draw2spaces_params
-
-        rts
+        jsr     _PrepTextParams
+    IF_NOT_ZERO
+        MGTK_CALL MGTK::TextWidth, text_params
+        add16   pos, text_params::width, rect+MGTK::Rect::x1
+    END_IF
+        jmp     _ClearRect
 .endproc ; _DeleteCharCommon
 
 ;;; ============================================================
 ;;; Output: A,X = X coordinate of caret
 
 .proc _CalcCaretPos
-        PARAM_BLOCK tw_params, $06
-data    .addr
-length  .byte
-width   .word
-        END_PARAM_BLOCK
-
         jsr     _PrepTextParams
-        copy16  #0, tw_params::width
 
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
     IF_NOT_ZERO
-        sta     tw_params::length
-        MGTK_CALL MGTK::TextWidth, tw_params
+        sta     text_params::length
+        MGTK_CALL MGTK::TextWidth, text_params
     END_IF
 
-        lda     tw_params::width
+        lda     text_params::width
         clc
         adc     pos + MGTK::Point::xcoord
         tay
-        lda     tw_params::width+1
+        lda     text_params::width+1
         adc     pos + MGTK::Point::xcoord+1
         tax
         tya
         rts
 .endproc ; _CalcCaretPos
+
+;;; ============================================================
+;;; Clears and redraws text. The caret must be redrawn afterwards
+;;; by the caller.
+
+.proc _ClearAndDrawText
+        jsr     _SetPort
+
+        jsr     _ClearRect
+        jsr     _CalcPos
+        MGTK_CALL MGTK::MoveTo, pos
+
+        jsr     _PrepTextParams
+    IF_NOT_ZERO
+        MGTK_CALL MGTK::DrawText, text_params
+    END_IF
+
+        rts
+.endproc ; _ClearAndDrawText
 
 ;;; ============================================================
 ;;; Redraw the contents of the control; used after a window move or string change.
@@ -681,27 +727,8 @@ a_record  .addr
         END_PARAM_BLOCK
         .assert a_record = params::a_record, error, "a_record must be first"
 
-        jsr     _SetPort
-
-        ;; Unnecessary - the entire field will be repainted.
-        ;; jsr     _HideCaret
-
-        jsr     _ClearRect
-        MGTK_CALL MGTK::MoveTo, pos
-
-PARAM_BLOCK dt_params, $6
-textptr .addr
-textlen .byte
-END_PARAM_BLOCK
-        ldy     #0
-        lda     (a_buf),y
-        beq     :+
-        sta     dt_params::textlen
-        ldxy    a_buf
-        inxy
-        stxy    dt_params::textptr
-        MGTK_CALL MGTK::DrawText, dt_params
-:
+        ;; Implicitly hides caret
+        jsr     _ClearAndDrawText
 
         ;; Fix caret position if string has shrunk
         ldy     #0

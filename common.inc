@@ -61,6 +61,7 @@ kScreenHeight   = 192
 
 ;;; Prefer DEFAULT_FONT+MGTK::Font::height, but that's not always convenient.
 kSystemFontHeight = 9
+kSystemFontWidth  = 7           ; proportional, but this is the maximum
 
 kMenuBarHeight  = kSystemFontHeight+4
 

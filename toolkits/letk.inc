@@ -25,6 +25,9 @@ rect            .tag    MGTK::Rect
 ;;; Set to the maximum length
 max_length      .byte
 
+;;; Options. bit7 = centered
+options         .byte
+
 ;;; --------------------------------------------------
 
 ;;; Internal: Set when the caret in the control should blink.
@@ -38,12 +41,20 @@ caret_counter   .word
 
 .endstruct
 
-.macro DEFINE_LINE_EDIT name, winid, buf, left, top, width, maxlen
+kLineEditOptionsNormal   = %00000000
+kLineEditOptionsCentered = %10000000
+
+.macro DEFINE_LINE_EDIT name, winid, buf, left, top, width, maxlen, options_param
 .params name
 window_id:      .byte   winid
 a_buf:          .addr   buf
         DEFINE_RECT_SZ rect, left+1, top+1, width-2, kTextBoxHeight-2
 max_length:     .byte   maxlen
+.if .paramcount > 7
+options:        .byte   options_param
+.else
+options:        .byte   0
+.endif
 dirty_flag:     .byte   0
         .res    .sizeof(LETK::LineEditRecord) - (*-window_id)
 

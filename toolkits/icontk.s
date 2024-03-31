@@ -105,7 +105,6 @@ jump_table_high:
         DEFINE_RECT bounding_rect, 0,0,0,0 ; overall bounding box of above
         DEFINE_RECT rename_rect, 0,0,0,0 ; rect if name was maximum size
 
-kNameMaxWidth = 15 * 7
 kPolySize = 8
 
 .params poly
@@ -1625,7 +1624,7 @@ kIconLabelGapV = 2
         sub16   label_rect::x1, textwidth_params::result, label_rect::x1
         asr16   label_rect::x1 ; signed
 
-        sub16_8 rename_rect::x1, #kNameMaxWidth, rename_rect::x1
+        sub16_8 rename_rect::x1, #kIconRenameLineEditWidth, rename_rect::x1
         asr16   rename_rect::x1
 
         ;; Label right
@@ -1633,7 +1632,8 @@ kIconLabelGapV = 2
 
     END_IF
 
-        add16_8 rename_rect::x1, #kNameMaxWidth, rename_rect::x2
+        add16_8 rename_rect::x1, #kIconRenameLineEditWidth, rename_rect::x2
+        dec16   rename_rect::y1
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts

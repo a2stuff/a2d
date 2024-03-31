@@ -18,6 +18,7 @@ This defines the state of a control instance.
 MGTK:Rect   rect            Bounding rect of the control.
 MGTK::Point pos             Text origin within the control.
 .byte       max_length      Set to the maximum allowed length.
+.byte       options         Options. bit7 = centered
 
 .byte       dirty_flag      Set when the control's value has changed.
 
@@ -114,6 +115,7 @@ Parameters:
   * text buffer address
   * left, top, and width of the frame rect; this will be inset by 1px as a convenience
   * maximum length of the text
+  * options (optional)
 * `DEFINE_LINE_EDIT_PARAMS` can be used to instantiate a union-style parameter block. Callers can then pass this to LETK calls, populating additional fields for `Click` and `Key` calls. Parameters are:
   * symbol (name) for the parameter block
   * symbol (name) of the associated `LineEditRecord`

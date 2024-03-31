@@ -121,14 +121,9 @@ text_input_buf:
 
 ;;; ============================================================
 
-        ;; Offsets from icon's calculated rename rect to what the window needs
-        kRenameDialogLeftOffset = 5
-        kRenameDialogRightOffset = 4
-        kRenameDialogTopOffset = 1
-
 .params winfo_rename_dialog
         kWindowId = $12
-        kWidth = SELF_MODIFIED
+        kWidth = kIconRenameLineEditWidth
         kHeight = kTextBoxHeight - 2
 
 window_id:      .byte   kWindowId
@@ -164,7 +159,7 @@ nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
-        DEFINE_LINE_EDIT rename_line_edit_rec, winfo_rename_dialog::kWindowId, text_input_buf, 0, -1, 200, kMaxFilenameLength
+        DEFINE_LINE_EDIT rename_line_edit_rec, winfo_rename_dialog::kWindowId, text_input_buf, 0, -1, kIconRenameLineEditWidth, kMaxFilenameLength
         DEFINE_LINE_EDIT_PARAMS rename_le_params, rename_line_edit_rec
 
 ;;; ============================================================

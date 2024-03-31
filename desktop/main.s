@@ -13809,17 +13809,15 @@ ret:    return  #$FF
         ;; ----------------------------------------
         cmp     #RenameDialogState::open
     IF_EQ
-        sub16_8 rename_dialog_params::rect::x1, #kRenameDialogLeftOffset, winfo_rename_dialog::viewloc+MGTK::Rect::x1
-
-        ;; Special case: if left edge is offscreen, scootch right
-        bit     winfo_rename_dialog::viewloc+MGTK::Rect::x1+1
-      IF_NS
-        copy16  #0, winfo_rename_dialog::viewloc+MGTK::Rect::x1
+        ldy     #LETK::kLineEditOptionsNormal
+        jsr     GetSelectionViewBy
+        cmp     #kViewByIcon
+      IF_EQ
+        ldy     #LETK::kLineEditOptionsCentered
       END_IF
+        sty     rename_line_edit_rec::options
 
-        sub16_8 rename_dialog_params::rect::y1, #kRenameDialogTopOffset, winfo_rename_dialog::viewloc+MGTK::Rect::y1
-        sub16   rename_dialog_params::rect::x2, rename_dialog_params::rect::x1, winfo_rename_dialog::maprect::x2
-        add16_8 winfo_rename_dialog::maprect::x2, #kRenameDialogLeftOffset + kRenameDialogRightOffset
+        COPY_STRUCT MGTK::Point, rename_dialog_params::rect::topleft, winfo_rename_dialog::viewloc
 
         jsr     OpenRenameWindow
         copy16  rename_dialog_params::a_prev, $08
@@ -15057,6 +15055,7 @@ done:   rts
 
 ;;; Assert: There is a selection.
 ;;; NOTE: This variant works even if selection is on desktop
+;;; Preserves Y
 .proc GetSelectionViewBy
         ldx     selected_window_id
         lda     win_view_by_table-1,x

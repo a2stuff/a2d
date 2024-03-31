@@ -100,6 +100,9 @@ kIconEntryFlagsNotDropSource    = %00100000
 kIconEntryFlagsSmall            = %00010000
 kIconEntryWinIdMask             = %00001111
 
+;;; Metrics
+kIconRenameLineEditWidth = kMaxFilenameLength * kSystemFontWidth + kTextBoxTextHOffset * 2 - 1
+
 .struct IconResource
         ;; First part is MGTK::MapInfo without leading viewloc
         mapbits         .addr   ; address of bitmap bits
