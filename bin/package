@@ -55,13 +55,13 @@ for img in $IMAGES; do
     rm -f "$img"
 done
 
-suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_2MG $VOLNAME_COMPLETE 800KB --quiet --no-case-bits
-suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_HDV $VOLNAME_COMPLETE 32MB --quiet --no-case-bits
-suppress cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet --no-case-bits
-suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet --no-case-bits
-suppress cadius CREATEVOLUME $IMGFILE_PART3 $VOLNAME_PART3 140KB --quiet --no-case-bits
-suppress cadius CREATEVOLUME $IMGFILE_PART4 $VOLNAME_PART4 140KB --quiet --no-case-bits
-suppress cadius CREATEVOLUME $IMGFILE_PART5 $VOLNAME_PART5 140KB --quiet --no-case-bits
+suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_2MG $VOLNAME_COMPLETE 800KB --quiet
+suppress cadius CREATEVOLUME $IMGFILE_COMPLETE_HDV $VOLNAME_COMPLETE 32MB --quiet
+suppress cadius CREATEVOLUME $IMGFILE_PART1 $VOLNAME_PART1 140KB --quiet
+suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet
+suppress cadius CREATEVOLUME $IMGFILE_PART3 $VOLNAME_PART3 140KB --quiet
+suppress cadius CREATEVOLUME $IMGFILE_PART4 $VOLNAME_PART4 140KB --quiet
+suppress cadius CREATEVOLUME $IMGFILE_PART5 $VOLNAME_PART5 140KB --quiet
 
 # ============================================================
 # Implementation for manifest operations
@@ -84,9 +84,9 @@ add_file () {
         fi
 
         if [ "$folder" != "" ]; then
-            suppress cadius CREATEFOLDER "$img_file" "$folder" --quiet --no-case-bits
+            suppress cadius CREATEFOLDER "$img_file" "$folder" --quiet
         fi
-        suppress cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet --no-case-bits
+        suppress cadius ADDFILE "$img_file" "$folder" "$tmp_file" --quiet
         rm "$tmp_file"
     }
 

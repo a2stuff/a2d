@@ -41,8 +41,8 @@ fi
 # Read config file
 tempdir=$(mktemp -d "${TMPDIR:-/tmp}/shk.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
-suppress cadius EXTRACTFILE "$INSTALL_IMG" "$INSTALL_PATH/Local/DeskTop.config" "$tempdir" --quiet --no-case-bits
-config="$tempdir/DESKTOP.CONFIG#F10000"
+suppress cadius EXTRACTFILE "$INSTALL_IMG" "$INSTALL_PATH/Local/DeskTop.config" "$tempdir" --quiet
+config="$tempdir/DeskTop.config#F10000"
 
 # ============================================================
 # Modify bytes based on command line args
@@ -135,5 +135,5 @@ done
 # ============================================================
 # Write file back out
 
-suppress cadius REPLACEFILE "$INSTALL_IMG" "$INSTALL_PATH/Local" "$config" --quiet --no-case-bits
+suppress cadius REPLACEFILE "$INSTALL_IMG" "$INSTALL_PATH/Local" "$config" --quiet
 rm -rf "${tempdir}"

@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 
-# Input: HCRG-style Font (768 bytes)
+# Input: HRCG-style Font (768 bytes)
 # Output: MGTK font definition
 
 # Usage: perl convert.pl < font_data > font.bin

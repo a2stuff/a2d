@@ -30,7 +30,7 @@ fi
 # Read config file
 tempdir=$(mktemp -d "${TMPDIR:-/tmp}/shk.XXXXXXXXX")
 test -d "${tempdir}" || (cecho red "cannot make tempdir"; exit 1)
-config="$tempdir/DESKTOP.CONFIG#F10000"
+config="$tempdir/DeskTop.config#F10000"
 
 echo -ne '' > $config
 echo -ne '\x03\x55\xaa\x55\xaa\x55\xaa\x55\xaa\xb0\x04\xf4\x01\x00\x00\x00' >> $config
@@ -47,5 +47,5 @@ echo -ne '\x00' >> $config
 # ============================================================
 # Write file back out
 
-suppress cadius ADDFILE "$INSTALL_IMG" "$INSTALL_PATH/Local" "$config" --quiet --no-case-bits
+suppress cadius ADDFILE "$INSTALL_IMG" "$INSTALL_PATH/Local" "$config" --quiet
 rm -rf "${tempdir}"
