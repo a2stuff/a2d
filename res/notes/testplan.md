@@ -1331,5 +1331,9 @@ These shortcuts only apply in DeskTop.
 * Open a window. Press Apple+G. Use the Left, Right, Up and Down Arrow keys to resize the window outline. Press Escape. Verify that the window does not resize.
 * Open a window. Press Apple+G. Use the Left, Right, Up and Down Arrow keys to resize the window outline. Press Return. Verify that the window resizes.
 
+# Localization
 
+Repeat these tests for all language builds:
 
+* Launch DeskTop. Click the Apple Menu. Verify that no screen corruption occurs.
+* Launch DeskTop. Click the Shortcuts menu. Verify that no screen corruption occurs.

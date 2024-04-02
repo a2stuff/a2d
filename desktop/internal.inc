@@ -176,7 +176,7 @@ kOperationFailed        = $FF
 ;;; * Used by DeskTop to save background while alert dialog shown
 ;;; * Used by IconTK to store icon outlines during DragHighlighted
 
-SAVE_AREA_BUFFER := $1000        ; through $2000
+SAVE_AREA_BUFFER := $E00        ; through $2000
 kSaveAreaSize   = $2000 - SAVE_AREA_BUFFER
 
 ;;; Most common I/O buffer, used during initializer, loading DAs,
