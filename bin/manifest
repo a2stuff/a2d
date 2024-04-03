@@ -153,12 +153,12 @@ if [[ -z "$no_sample_media" ]]; then
     # MGTK Fonts
     emit add_file $disposition "mgtk/fonts/System.en"      $mediafnt "System.en"      070000
     emit add_file $disposition "mgtk/fonts/Monaco.en"      $mediafnt "Monaco.en"      070000
-    emit add_file $disposition "mgtk/fonts/MP.FONT"        $mediafnt "MousePaint"     070000
+    emit add_file $disposition "mgtk/fonts/MousePaint"     $mediafnt "MousePaint"     070000
     emit add_file $disposition "mgtk/fonts/mini"           $mediafnt "Mini"           070000
-    emit add_file $disposition "mgtk/fonts/ATHENS"         $mediafnt "Athens"         070000
-    emit add_file $disposition "mgtk/fonts/NEW.YORK"       $mediafnt "New.York"       070000
-    emit add_file $disposition "mgtk/fonts/TORONTO"        $mediafnt "Toronto"        070000
-    emit add_file $disposition "mgtk/fonts/VENICE"         $mediafnt "Venice"         070000
+    emit add_file $disposition "mgtk/fonts/Athens"         $mediafnt "Athens"         070000
+    emit add_file $disposition "mgtk/fonts/New.York"       $mediafnt "New.York"       070000
+    emit add_file $disposition "mgtk/fonts/Toronto"        $mediafnt "Toronto"        070000
+    emit add_file $disposition "mgtk/fonts/Venice"         $mediafnt "Venice"         070000
 
     emit add_file $disposition "mgtk/fonts/fairfax/Fairfax.en"   $mediafnt "Fairfax.en"     070000
     emit add_file $disposition "mgtk/fonts/fairfax/FairfaxBd.en" $mediafnt "FairfaxBd.en"   070000
@@ -174,20 +174,20 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "mgtk/fonts/erin/MontereyBd.en"   $mediafnt "MontereyBd.en"  070000
 
     # HRCG conversions
-    emit add_file $disposition "mgtk/fonts/ASCII"          $mediafnt "ASCII"          070000
-    emit add_file $disposition "mgtk/fonts/BLIPPO.BLACK"   $mediafnt "Blippo.Black"   070000
-    emit add_file $disposition "mgtk/fonts/BYTE"           $mediafnt "Byte"           070000
-    emit add_file $disposition "mgtk/fonts/COLOSSAL"       $mediafnt "Colossal"       070000
-    emit add_file $disposition "mgtk/fonts/COUNT"          $mediafnt "Count"          070000
-    emit add_file $disposition "mgtk/fonts/FLOW"           $mediafnt "Flow"           070000
-    emit add_file $disposition "mgtk/fonts/GOTHIC"         $mediafnt "Gothic"         070000
-    emit add_file $disposition "mgtk/fonts/MIRROR"         $mediafnt "Mirror"         070000
-    emit add_file $disposition "mgtk/fonts/OUTLINE"        $mediafnt "Outline"        070000
-    emit add_file $disposition "mgtk/fonts/PUDGY"          $mediafnt "Pudgy"          070000
-    emit add_file $disposition "mgtk/fonts/ROMAN"          $mediafnt "Roman"          070000
-    emit add_file $disposition "mgtk/fonts/SLANT"          $mediafnt "Slant"          070000
-    emit add_file $disposition "mgtk/fonts/STOP"           $mediafnt "Stop"           070000
-    emit add_file $disposition "mgtk/fonts/UPSIDE.DOWN"    $mediafnt "Upside.Down"    070000
+    emit add_file $disposition "mgtk/fonts/hrcg/ASCII"           $mediafnt "ASCII"          070000
+    emit add_file $disposition "mgtk/fonts/hrcg/BLIPPO.BLACK"    $mediafnt "Blippo.Black"   070000
+    emit add_file $disposition "mgtk/fonts/hrcg/BYTE"            $mediafnt "Byte"           070000
+    emit add_file $disposition "mgtk/fonts/hrcg/COLOSSAL"        $mediafnt "Colossal"       070000
+    emit add_file $disposition "mgtk/fonts/hrcg/COUNT"           $mediafnt "Count"          070000
+    emit add_file $disposition "mgtk/fonts/hrcg/FLOW"            $mediafnt "Flow"           070000
+    emit add_file $disposition "mgtk/fonts/hrcg/GOTHIC"          $mediafnt "Gothic"         070000
+    emit add_file $disposition "mgtk/fonts/hrcg/MIRROR"          $mediafnt "Mirror"         070000
+    emit add_file $disposition "mgtk/fonts/hrcg/OUTLINE"         $mediafnt "Outline"        070000
+    emit add_file $disposition "mgtk/fonts/hrcg/PUDGY"           $mediafnt "Pudgy"          070000
+    emit add_file $disposition "mgtk/fonts/hrcg/ROMAN"           $mediafnt "Roman"          070000
+    emit add_file $disposition "mgtk/fonts/hrcg/SLANT"           $mediafnt "Slant"          070000
+    emit add_file $disposition "mgtk/fonts/hrcg/STOP"            $mediafnt "Stop"           070000
+    emit add_file $disposition "mgtk/fonts/hrcg/UPSIDE.DOWN"     $mediafnt "Upside.Down"    070000
 
-    emit add_file $disposition "mgtk/fonts/PIG.FONT"       $mediafnt "Pig.Font"       070000
+    emit add_file $disposition "mgtk/fonts/Pig.Font"       $mediafnt "Pig.Font"       070000
 fi
