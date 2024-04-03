@@ -33,13 +33,27 @@ for (my $i = 0; $i < $NCHARS; ++$i) {
 
     my @bytes = map { ord($_) & 0x7f } split('', $chars[$i]);
 
-    my $bits = 0;
-    for (my $b = 0; $b < 8; ++$b) {
-        $bits = $bits | $bytes[$b];
+    # determine which bits are used for all rows in glyph
+    my $bits;
+    while (1) {
+        $bits = 0;
+        for (my $b = 0; $b < 8; ++$b) {
+            $bits = $bits | $bytes[$b];
+        }
+
+        last if (!$bits) || ($bits & 1);
+
+        # trim off empty bits on left
+        for (my $b = 0; $b < 8; ++$b) {
+            $bytes[$b] = $bytes[$b] >> 1;
+        }
     }
 
+    # update glyph
     $chars[$i] = join('', map { chr } @bytes);
 
+    # width depends on used bits; at most 7, but
+    # otherwise max width + 1 (for spacing)
     my $w =
         $bits >= (1<<6) ? 7 :
         $bits >= (1<<5) ? 7 :
@@ -48,6 +62,11 @@ for (my $i = 0; $i < $NCHARS; ++$i) {
         $bits >= (1<<2) ? 4 :
         $bits >= (1<<1) ? 3 :
         $bits >= (1<<0) ? 2 : 1;
+
+    # Special treatment for space character
+    if ($i == 0x20 && $w < 4) {
+        $w = 4;
+    }
 
     push @out, $w;
 }
