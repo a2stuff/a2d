@@ -33,7 +33,7 @@
 ;;; *                                                          *
 ;;; *                     **************                       *
 ;;; *                                                          *
-;;; *          *  ASSUMPTIONS MADE BY AW51Laucher  *           *
+;;; *          *  ASSUMPTIONS MADE BY AW51Launcher  *          *
 ;;; *            (See ProDOS 8 Technical Reference             *
 ;;; *                 Manual, Section 5.1.5.1)                 *
 ;;; *                                                          *
@@ -120,7 +120,7 @@ Start:
         dex
         bpl     :-
 
-        ;; Contnue in relocated code
+        ;; Continue in relocated code
         jmp     RELOC_TARGET
 
 ;;; ============================================================

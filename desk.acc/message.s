@@ -173,7 +173,7 @@ backspace:
         jmp     InputLoop
 
         ;; --------------------------------------------------
-        ;; Initialze on first input
+        ;; Initialize on first input
         ;; Preserves A
 maybe_init:
         bit     placeholder_flag

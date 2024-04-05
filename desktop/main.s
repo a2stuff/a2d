@@ -7415,7 +7415,7 @@ init_smicon_view:
       END_IF
     END_IF
 
-        ;; Populate the initial values fron the template
+        ;; Populate the initial values from the template
         ptr := $06
         stax    ptr
         ldy     #init_view_size-1

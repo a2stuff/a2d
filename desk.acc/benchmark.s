@@ -458,7 +458,7 @@ loop2c:
 
         bit     RDVBLBAR
         bpl     loop2c
-        bit     IOUDISON        ; = RDIOUDIS (since PTRIG sould slow)
+        bit     IOUDISON        ; = RDIOUDIS (since PTRIG would slow)
 
         pla                     ; restore VBL interrupt state
         bmi     :+
