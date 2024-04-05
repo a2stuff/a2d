@@ -33,6 +33,7 @@
 .define res_filename_message "Mensaje"
 .define res_filename_cd_remote "CD.Remoto"
 .define res_filename_darkness "Oscuridad"
+.define res_filename_round_corners "Esquinas.Redon"
 .define res_filename_sci_calc "Calc.Ciencia"
 .define res_filename_this_apple "This.Apple"
 .define res_filename_show_text_file "Show.Text.File"

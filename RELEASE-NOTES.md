@@ -109,6 +109,7 @@ Project Page: https://github.com/a2stuff/a2d
 * New DA: Benchmark - measures CPU speed using VBL.
 * New Screen Saver: Message
 * Options: Add setting to preserve upper/lowercase when naming files and volumes. (([#352](https://github.com/a2stuff/a2d/issues/352))
+* New DA: Round Corners - temporarily makes the corners of the screen rounded.
 
 ### Misc
 

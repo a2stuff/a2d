@@ -33,6 +33,7 @@
 .define res_filename_message "Meddelande"
 .define res_filename_cd_remote "CD.Fjarr"
 .define res_filename_darkness "Morker"
+.define res_filename_round_corners "Runda.Horn"
 .define res_filename_sci_calc "Sci.Berakn"
 .define res_filename_this_apple "This.Apple"
 .define res_filename_show_text_file "Show.Text.File"
