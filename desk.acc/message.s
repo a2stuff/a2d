@@ -46,7 +46,7 @@ placeholder_flag:
 buf:    .byte   .sprintf("%c%s%c", kPadChar, res_string_message_placeholder, kPadChar)
         .res    kMaxStringLength - (* - buf),0
 
-font:   .incbin "../mgtk/fonts/ATHENS"
+font:   .incbin "../mgtk/fonts/Athens"
 
 .params text_params
 data:   .addr   buf
