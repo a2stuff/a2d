@@ -119,4 +119,4 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
 
 ## Running
 
-Invoke `DESKTOP.SYSTEM` to launch the app. By default, DeskTop will launch. You can use the control panel Options to configure Selector to start instead, which will show a dialog containing any shortcuts you have configued in DeskTop, for faster access to programs.
+Invoke `DESKTOP.SYSTEM` to launch the app. By default, DeskTop will launch. You can use the control panel Options to configure Selector to start instead, which will show a dialog containing any shortcuts you have configured in DeskTop, for faster access to programs.
