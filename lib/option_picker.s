@@ -9,7 +9,7 @@
 ;;; * `SetOptionPickerSelection` - A = selection ($FF to clear)
 ;;;
 ;;; Required includes:
-;;; * lib/muldiv.s
+;;; * lib/muldiv16.s
 ;;; Requires `MGTK_CALL` macro to be functional.
 ;;;
 ;;; Required constants:
@@ -18,7 +18,7 @@
 ;;; * `kOptionPickerItemWidth` - const
 ;;; * `kOptionPickerItemHeight` - const
 ;;; * `kOptionPickerTextHOffset` - const
-;;; * `kOptionPickerItemVOffset` - const
+;;; * `kOptionPickerTextVOffset` - const
 ;;; * `kOptionPickerLeft` - const
 ;;; * `kOptionPickerTop` - const
 ;;; Required definitions:
@@ -100,10 +100,10 @@ ret:    rts
 .proc _GetOptionPos
         ldx     #0              ; hi
         ldy     #option_picker::kOptionPickerRows
-        jsr     Divide_16_8_16
+        jsr     _Divide
         sty     remainder
         ldy     #kOptionPickerItemWidth
-        jsr     Multiply_16_8_16
+        jsr     _Multiply
         clc
         adc     #<kOptionPickerLeft
         pha                     ; lo
@@ -116,7 +116,7 @@ ret:    rts
         lda     #SELF_MODIFIED_BYTE ; lo
         ldx     #0                  ; hi
         ldy     #kOptionPickerItemHeight
-        jsr     Multiply_16_8_16
+        jsr     _Multiply
         clc
         adc     #kOptionPickerTop
 
@@ -167,7 +167,7 @@ ret:    rts
 
         ldax    screentowindow_params::windowy
         ldy     #kOptionPickerItemHeight
-        jsr     Divide_16_8_16  ; A = row
+        jsr     _Divide         ; A = row
 
         cmp     #kOptionPickerRows
         bcs     done
@@ -179,7 +179,7 @@ ret:    rts
 
         ldax    screentowindow_params::windowx
         ldy     #kOptionPickerItemWidth
-        jsr     Divide_16_8_16  ; A = col
+        jsr     _Divide         ; A = col
 
         cmp     #kOptionPickerCols
         bcs     done
@@ -187,7 +187,7 @@ ret:    rts
         ;; Index
         ldx     #0              ; hi
         ldy     #option_picker::kOptionPickerRows
-        jsr     Multiply_16_8_16
+        jsr     _Multiply
         clc
         row := *+1
         adc     #SELF_MODIFIED_BYTE
@@ -328,6 +328,33 @@ loop:   clc
         pla
         rts
 .endproc ; _PreKey
+
+;;; ============================================================
+
+;;; A,X = A,X * Y
+.proc _Multiply
+        stax    muldiv_number
+        sty     muldiv_numerator
+        copy    #0, muldiv_numerator+1
+        copy16  #1, muldiv_denominator
+        jsr     MulDiv
+        ldax    muldiv_result
+        rts
+.endproc ; _Multiply
+
+;;; ============================================================
+
+;;; A,X = A,X / Y, Y = remainder
+.proc _Divide
+        stax    muldiv_numerator
+        sty     muldiv_denominator
+        copy    #0, muldiv_denominator+1
+        copy16  #1, muldiv_number
+        jsr     MulDiv
+        ldax    muldiv_result
+        ldy     muldiv_remainder
+        rts
+.endproc ; _Divide
 
 ;;; ============================================================
 

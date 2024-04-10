@@ -77,4 +77,4 @@ muldiv_number       := MulDiv::ACL      ; [16]
 muldiv_numerator    := MulDiv::AUXL     ; [16]
 muldiv_denominator  := MulDiv::AUX2L    ; [16]
 muldiv_result       := MulDiv::ACL      ; [16]
-
+muldiv_remainder    := MulDiv::XTNDL    ; [16]

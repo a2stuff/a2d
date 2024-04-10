@@ -1893,7 +1893,7 @@ loop_counter:
         .include "../lib/datetime.s"
         .include "../lib/doubleclick.s"
         .include "../lib/drawstring.s"
-        .include "../lib/muldiv.s"
+        .include "../lib/muldiv16.s"
 
         .include "../lib/speed.s"
         .include "../lib/bell.s"

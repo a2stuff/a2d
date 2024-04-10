@@ -9,7 +9,7 @@
 ;;;
 ;;; Required includes:
 ;;; * lib/event_params.s
-;;; * lib/muldiv.s
+;;; * lib/muldiv16.s
 ;;; Requires `MGTK_CALL` macro to be functional.
 ;;;
 ;;; Requires `listbox` scope with:
@@ -68,9 +68,12 @@
         copy    listbox::winfo+MGTK::Winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_params::windowy, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, screentowindow_params::windowy
-        ldax    screentowindow_params::windowy
-        ldy     #kListItemHeight
-        jsr     Divide_16_8_16
+
+        copy16  screentowindow_params::windowy, muldiv_numerator
+        copy16  #kListItemHeight, muldiv_denominator
+        copy16  #1, muldiv_number
+        jsr     MulDiv
+        lda     muldiv_result
 
         ;; Validate
         cmp     listbox::num_items
@@ -346,7 +349,7 @@ SetSelection:
 
         ldx     #0              ; hi (A=lo)
         ldy     #kListItemHeight
-        jsr     Multiply_16_8_16
+        jsr     _Multiply
         stax    highlight_rect+MGTK::Rect::y1
         addax   #kListItemHeight-1, highlight_rect+MGTK::Rect::y2
         copy16  #0, highlight_rect+MGTK::Rect::x1
@@ -466,7 +469,7 @@ update:
 
         ldax    #kListItemHeight
         ldy     listbox::winfo+MGTK::Winfo::vthumbpos
-        jsr     Multiply_16_8_16
+        jsr     _Multiply
         stax    maprect+MGTK::Rect::y1
 
         ;; Set y2 to bottom
@@ -521,6 +524,19 @@ finish: MGTK_CALL MGTK::ShowCursor
 
 rows:   .byte   0
 .endproc ; _Draw
+
+;;; ============================================================
+
+;;; A,X = A,X * Y
+.proc _Multiply
+        stax    muldiv_number
+        sty     muldiv_numerator
+        copy    #0, muldiv_numerator+1
+        copy16  #1, muldiv_denominator
+        jsr     MulDiv
+        ldax    muldiv_result
+        rts
+.endproc ; _Multiply
 
 ;;; ============================================================
 

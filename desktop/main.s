@@ -15283,6 +15283,33 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 .endproc ; LoadDesktopEntryTable
 
 ;;; ============================================================
+
+;;; A,X = A,X * Y
+.proc Multiply_16_8_16
+        stax    muldiv_number
+        sty     muldiv_numerator
+        copy    #0, muldiv_numerator+1
+        copy16  #1, muldiv_denominator
+        jsr     MulDiv
+        ldax    muldiv_result
+        rts
+.endproc ; Multiply_16_8_16
+
+;;; ============================================================
+
+;;; A,X = A,X / Y, Y = remainder
+.proc Divide_16_8_16
+        stax    muldiv_numerator
+        sty     muldiv_denominator
+        copy    #0, muldiv_denominator+1
+        copy16  #1, muldiv_number
+        jsr     MulDiv
+        ldax    muldiv_result
+        ldy     muldiv_remainder
+        rts
+.endproc ; Divide_16_8_16
+
+;;; ============================================================
 ;;; Library Routines
 ;;; ============================================================
 
@@ -15304,7 +15331,6 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
         .include "../lib/is_diskii.s"
         .include "../lib/doubleclick.s"
         .include "../lib/reconnect_ram.s"
-        .include "../lib/muldiv.s"
         .include "../lib/readwrite_settings.s"
         .include "../lib/get_next_event.s"
         .include "../lib/muldiv16.s"
@@ -15695,6 +15721,12 @@ str_volume:
         DetectDoubleClick := main::DetectDoubleClick
         AdjustOnLineEntryCase := main::AdjustOnLineEntryCase
         AdjustFileEntryCase := main::AdjustFileEntryCase
+        MulDiv := main::MulDiv
+        muldiv_number := main::muldiv_number
+        muldiv_numerator := main::muldiv_numerator
+        muldiv_denominator := main::muldiv_denominator
+        muldiv_result := main::muldiv_result
+        muldiv_remainder := main::muldiv_remainder
 
 ;;; ============================================================
 

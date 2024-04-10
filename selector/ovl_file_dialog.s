@@ -70,8 +70,11 @@ SystemTask              := app::SystemTask
 DetectDoubleClick       := app::DetectDoubleClick
 AdjustOnLineEntryCase   := app::AdjustOnLineEntryCase
 AdjustFileEntryCase     := app::AdjustFileEntryCase
-Multiply_16_8_16        := app::Multiply_16_8_16
-Divide_16_8_16          := app::Divide_16_8_16
+MulDiv                  := app::MulDiv
+muldiv_number           := app::muldiv_number
+muldiv_numerator        := app::muldiv_numerator
+muldiv_denominator      := app::muldiv_denominator
+muldiv_result           := app::muldiv_result
 
         .include "../lib/file_dialog.s"
         .include "../lib/get_next_event.s"
