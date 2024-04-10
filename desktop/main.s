@@ -15333,7 +15333,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
         .include "../lib/reconnect_ram.s"
         .include "../lib/readwrite_settings.s"
         .include "../lib/get_next_event.s"
-        .include "../lib/muldiv16.s"
+        .include "../lib/muldiv.s"
         .include "../lib/monocolor.s"
         .include "../lib/speed.s"
         .include "../lib/bell.s"

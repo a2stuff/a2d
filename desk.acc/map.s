@@ -702,7 +702,7 @@ blink_counter:
 
         .include "../lib/drawstring.s"
         .include "../lib/inttostring.s"
-        .include "../lib/muldiv16.s"
+        .include "../lib/muldiv.s"
         .include "../lib/get_next_event.s"
 
 ;;; ============================================================

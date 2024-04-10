@@ -9,7 +9,7 @@
 ;;;
 ;;; Required includes:
 ;;; * lib/event_params.s
-;;; * lib/muldiv16.s
+;;; * lib/muldiv.s
 ;;; Requires `MGTK_CALL` macro to be functional.
 ;;;
 ;;; Requires `listbox` scope with:

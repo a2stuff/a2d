@@ -502,7 +502,7 @@ loop2c:
 
 ;;; ============================================================
 
-        .include "../lib/muldiv16.s"
+        .include "../lib/muldiv.s"
         .include "../lib/inttostring.s"
         .include "../lib/uppercase.s"
 

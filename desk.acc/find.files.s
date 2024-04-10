@@ -621,7 +621,7 @@ offset: .addr   0
         .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
         .include "../lib/measurestring.s"
-        .include "../lib/muldiv16.s"
+        .include "../lib/muldiv.s"
         .include "../lib/doubleclick.s"
         .include "../lib/get_next_event.s"
 

@@ -2374,7 +2374,7 @@ Alert := alert_dialog::Alert
 .endproc ; SystemTask
 
         .include "../lib/is_diskii.s"
-        .include "../lib/muldiv16.s"
+        .include "../lib/muldiv.s"
         .include "../lib/doubleclick.s"
 
 ;;; ============================================================

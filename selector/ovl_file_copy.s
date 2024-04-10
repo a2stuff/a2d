@@ -1095,7 +1095,7 @@ ret:    rts
 
 ;;; ============================================================
 
-        .include "../lib/muldiv16.s"
+        .include "../lib/muldiv.s"
         ReadSetting := app::ReadSetting
         .include "../lib/inttostring.s"
 

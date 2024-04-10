@@ -9,7 +9,7 @@
 ;;; * `SetOptionPickerSelection` - A = selection ($FF to clear)
 ;;;
 ;;; Required includes:
-;;; * lib/muldiv16.s
+;;; * lib/muldiv.s
 ;;; Requires `MGTK_CALL` macro to be functional.
 ;;;
 ;;; Required constants:
