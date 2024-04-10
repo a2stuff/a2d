@@ -28,13 +28,6 @@
 
 ;;; A = operation (Format/Erase); X = unit num (or 0)
 Exec:
-        pha
-        txa
-        pha
-        jsr     main::SetCursorPointer
-        pla
-        tax
-        pla
         cmp     #FormatEraseAction::format
         jeq     FormatDisk
         jmp     EraseDisk
@@ -63,10 +56,11 @@ selected_index:
         jsr     main::SetPortForDialogWindow
         bit     erase_flag
     IF_NC
-        param_call main::DrawDialogTitle, aux::label_format_disk
+        ldax    #aux::label_format_disk
     ELSE
-        param_call main::DrawDialogTitle, aux::label_erase_disk
+        ldax    #aux::label_erase_disk
     END_IF
+        jsr     main::DrawDialogTitle
 
         lda     unit_num
         bne     skip_select
@@ -106,12 +100,11 @@ skip_select:
         ;; --------------------------------------------------
         ;; Prompt for name
 .scope
-        copy16  #main::NoOp, main::PromptDialogClickHandlerHook
-        copy16  #main::NoOp, main::PromptDialogKeyHandlerHook
+        ldax    #main::NoOp
+        stax    main::PromptDialogClickHandlerHook
+        stax    main::PromptDialogKeyHandlerHook
 
-        jsr     main::SetPortForDialogWindow
-        jsr     main::SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        jsr     SetPortAndClear
         jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
         copy    #$80, has_input_field_flag
@@ -157,9 +150,7 @@ loop2:
         ;; --------------------------------------------------
         ;; Confirm operation
 .scope
-        jsr     main::SetPortForDialogWindow
-        jsr     main::SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        jsr     SetPortAndClear
 
         copy    #0, has_input_field_flag
         param_call main::DrawDialogLabel, 3, aux::str_confirm_erase_prefix
@@ -201,9 +192,7 @@ erase_flag:
         ;; --------------------------------------------------
         ;; Proceed with format
 l8:
-        jsr     main::SetPortForDialogWindow
-        jsr     main::SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        jsr     SetPortAndClear
         param_call main::DrawDialogLabel, 1, aux::str_formatting
 
         unit_num := *+1
@@ -215,9 +204,8 @@ l8:
         lda     unit_num
         jsr     FormatUnit
         bcs     l12
-l9:     jsr     main::SetPortForDialogWindow
-        jsr     main::SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+l9:
+        jsr     SetPortAndClear
         param_call main::DrawDialogLabel, 1, aux::str_erasing
 
         ldxy    #text_input_buf
@@ -278,9 +266,7 @@ cancel:
         ;; --------------------------------------------------
         ;; Proceed with erase
 l7:
-        jsr     main::SetPortForDialogWindow
-        jsr     main::SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        jsr     SetPortAndClear
         param_call main::DrawDialogLabel, 1, aux::str_erasing
         jsr     main::SetCursorWatch
 
@@ -316,6 +302,14 @@ cancel:
         pla
         rts
 .endproc ; EraseDisk
+
+;;; ============================================================
+
+.proc SetPortAndClear
+        jsr     main::SetPortForDialogWindow
+        MGTK_CALL MGTK::PaintRect, aux::clear_dialog_labels_rect
+        rts
+.endproc ; SetPortAndClear
 
 ;;; ============================================================
 
