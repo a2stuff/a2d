@@ -8114,15 +8114,15 @@ check_icon:
         ;; If there are any entries...
         lda     cached_window_entry_count
     IF_NOT_ZERO
-        ;; Add padding around bbox
-        MGTK_CALL MGTK::InflateRect, bbox_pad_iconbb_rect
-
         ;; List view?
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
       IF_NEG
         ;; max.x = kListViewWidth
-        copy16  #kListViewWidth, iconbb_rect::x2
+        add16   iconbb_rect::x1, #kListViewWidth, iconbb_rect::x2
       END_IF
+
+        ;; Add padding around bbox
+        MGTK_CALL MGTK::InflateRect, bbox_pad_iconbb_rect
     END_IF
 
         rts
