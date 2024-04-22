@@ -4740,8 +4740,9 @@ savesize        .word
         stx     desktop_mapinfo+MGTK::MapInfo::viewloc+MGTK::Point::ycoord
         stx     desktop_mapinfo+MGTK::MapInfo::maprect+MGTK::Rect::y1
 
-        dex
         stx     menu_item_y_table
+        dex
+        dex
 
         clc
         ldy     #$00
@@ -6947,7 +6948,6 @@ hmrts:  rts
         ldx     cur_hilited_menu_item
         beq     hmrts
         ldy     menu_item_y_table-1,x
-        iny
         sty     menu_fill_rect+MGTK::Rect::y1
         ldy     menu_item_y_table,x
         sty     menu_fill_rect+MGTK::Rect::y2

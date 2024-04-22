@@ -22,6 +22,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve appearance of buttons when clicked. c/o @buserror
 * Fix corruption issues when replacing files with folders and folders with anything during copy.
 * Fix initial window size calculation for list views so scrollbar is not shown. ([#792](https://github.com/a2stuff/a2d/issues/792))
+* Reduce vertical spacing between menu items. ([#794](https://github.com/a2stuff/a2d/issues/794))
 
 ### Launcher
 * If starting from a folder, brand it as a system folder.
