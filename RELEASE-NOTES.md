@@ -61,6 +61,7 @@ Project Page: https://github.com/a2stuff/a2d
 * File > Rename is now modeless, and can be invoked by clicking a selected icon's name. (([#203](https://github.com/a2stuff/a2d/issues/203))
 * File > New Folder now creates a directory called "New.Folder", then prompts to rename it.
 * File > Duplicate now copies the selected file, then prompts to rename it.
+* Increase number of items that can be added to the Apple Menu to 13.
 
 ### Selector
 

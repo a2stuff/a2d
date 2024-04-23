@@ -651,7 +651,7 @@ event_modifier_solid_apple = 1 << 1
         disable_flag    = 1 << 7
 .endenum
 
-max_menu_items          = 14
+max_menu_items          = 16
 
 disablemenu_enable      = 0
 disablemenu_disable     = 1
