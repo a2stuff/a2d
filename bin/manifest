@@ -159,6 +159,7 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "mgtk/fonts/New.York"       $mediafnt "New.York"       070000
     emit add_file $disposition "mgtk/fonts/Toronto"        $mediafnt "Toronto"        070000
     emit add_file $disposition "mgtk/fonts/Venice"         $mediafnt "Venice"         070000
+    emit add_file $disposition "mgtk/fonts/Catalyst"       $mediafnt "Catalyst"       070000
 
     emit add_file $disposition "mgtk/fonts/fairfax/Fairfax.en"   $mediafnt "Fairfax.en"     070000
     emit add_file $disposition "mgtk/fonts/fairfax/FairfaxBd.en" $mediafnt "FairfaxBd.en"   070000

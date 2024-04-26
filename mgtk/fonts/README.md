@@ -45,6 +45,7 @@ Mischke.*     | Kreative Software | Double | 16
 MischkeBd.*   | Kreative Software | Double | 16
 Monterey.*    | Kreative Software | Double | 16
 MontereyBd.*  | Kreative Software | Double | 16
+Catalyst      | Quark Software    | Double | 8
 
 Single width fonts can be 1-7 pixels wide. Double width fonts can be
 1-14 pixels wide. Glyphs must include inter-character spacing
