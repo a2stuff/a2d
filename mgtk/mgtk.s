@@ -7554,8 +7554,12 @@ stripes_pattern_alt := *+1
         .byte   %00000000
         .byte   %11111111
 
+;;; Also sets `top` and `bottom` using "go away" rect
 .proc SetStripesPattern
         jsr     GetWinGoAwayRect
+        copy16  winrect::y1, top
+        copy16  winrect::y2, bottom
+
         lda     winrect::y1
         and     #1
         beq     :+
@@ -7590,7 +7594,7 @@ stripes_pattern_alt := *+1
 
         jsr     GetWinGoAwayRect
         jsr     FrameWinRect
-        jsr     SetStripesPattern
+        jsr     SetStripesPattern ; also inits `top` and `bottom`
 
         ldax    winrect::x1
         sec
@@ -7605,9 +7609,6 @@ stripes_pattern_alt := *+1
         inx
 :       stax    right
 
-        copy16  winrect::y1, top
-        copy16  winrect::y2, bottom
-
         jsr     PaintRectImpl  ; draws title bar stripes to left of close box
 
 no_goaway:
@@ -7621,7 +7622,7 @@ no_goaway:
         jsr     GetWinTitleBarRect
         jsr     CenterTitleText
         jsr     PenlocToBounds
-        jsr     SetStripesPattern
+        jsr     SetStripesPattern ; also inits `top` and `bottom`
 
         ldax    winrect::x2
         clc
