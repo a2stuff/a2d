@@ -7455,19 +7455,19 @@ get_rect:
 
         ldax    winrect::x1
         clc
-        adc     #12
+        adc     #kGoAwayLeft
         bcc     :+
         inx
 :       stax    winrect::x1
         clc
-        adc     #12
+        adc     #kGoAwayWidth
         bcc     :+
         inx
 :       stax    winrect::x2
 
         ldax    winrect::y1
         clc
-        adc     #3
+        adc     #kGoAwayTop
         bcc     :+
         inx
 :       stax    winrect::y1
@@ -7592,24 +7592,36 @@ stripes_pattern_alt := *+1
         bcs     no_goaway
         beq     no_goaway
 
+        ;; --------------------------------------------------
+        ;; Draw "go away" box
+
         jsr     GetWinGoAwayRect
         jsr     FrameWinRect
+
+        ;; --------------------------------------------------
+        ;; Draw stripes to left of "go away" box
+
         jsr     SetStripesPattern ; also inits `top` and `bottom`
 
+        kStripesXInset = 3
+        kTitleXInset = 10
+
+        ;; Left edge
         ldax    winrect::x1
         sec
-        sbc     #9
+        sbc     #kGoAwayLeft - kStripesXInset
         bcs     :+
         dex
 :       stax    left
 
+        ;; Right edge
         clc
-        adc     #6
+        adc     #(kGoAwayLeft - kStripesXInset) - kStripesXInset
         bcc     :+
         inx
 :       stax    right
 
-        jsr     PaintRectImpl  ; draws title bar stripes to left of close box
+        jsr     PaintRectImpl
 
 no_goaway:
         lda     current_winfo::options
@@ -7619,61 +7631,82 @@ no_goaway:
         lsr
         bcs     no_titlebar
 
+        ;; --------------------------------------------------
+        ;; Measure title
+
         jsr     GetWinTitleBarRect
         jsr     CenterTitleText
-        jsr     PenlocToBounds
-        jsr     SetStripesPattern ; also inits `top` and `bottom`
+        jsr     PenlocToBounds  ; inits `left` and `right`
 
-        ldax    winrect::x2
+        ;; --------------------------------------------------
+        ;; Draw stripes to left of title
+
+        jsr     SetStripesPattern ; sets `winrect` to "go away" box, inits `top` and `bottom`
+
+        ;; Calculate A,X = left edge (to right of "go away" box, if necessary)
+        ldax    winrect::x2     ; right edge of "go away" box
         clc
-        adc     #3
+        adc     #kStripesXInset
         bcc     :+
         inx
 :       tay
 
         lda     current_winfo::options
         and     #MGTK::Option::go_away_box
-        bne     has_goaway
-
+    IF_ZERO
+        ;; There was no "go away" box, so further offset left
         tya
         sec
-        sbc     #$1A
+        sbc     #kGoAwayLeft + kGoAwayWidth + 2 ; TODO: Fix this!
         bcs     :+
         dex
 :       tay
-
-has_goaway:
+    END_IF
         tya
+
+        ;; Stash right edge of title text temporarily in `winrect::x2`
         ldy     right
         sty     winrect::x2
         ldy     right+1
         sty     winrect::x2+1
 
+        ;; Set `right` to left edge of title text
         ldy     left
         sty     right
         ldy     left+1
         sty     right+1
 
+        ;; Set `left` as calculated
         stax    left
 
+        ;; Add padding to left of title
         lda     right
         sec
-        sbc     #10
+        sbc     #kTitleXInset
         sta     right
         bcs     :+
         dec     right+1
+:
 
-:       cmp16   right, left     ; skip if degenerate
-        bmi     :+
-        jsr     PaintRectImpl  ; Draw title bar stripes between close box and title
-:       add16   winrect::x2, #10, left
+        cmp16   right, left     ; skip if degenerate
+    IF_POS
+        jsr     PaintRectImpl
+    END_IF
 
+        ;; --------------------------------------------------
+        ;; Draw stripes to right of title
+
+        ;; Use stashed right edge of title text, with padding, as `left`
+        add16   winrect::x2, #kTitleXInset, left
         jsr     GetWinTitleBarRect
-        sub16   winrect::x2, #3, right
 
-        jsr     PaintRectImpl  ; Draw title bar stripes to right of title
+        ;; Use right edge of window, inset, as `right`
+        sub16   winrect::x2, #kStripesXInset, right
+
+        jsr     PaintRectImpl
         MGTK_CALL MGTK::SetPattern, standard_port::pattern
 
+        ;; --------------------------------------------------
 no_titlebar:
         jsr     GetWindow
 
@@ -8701,6 +8734,10 @@ plp_ret:
         rts
 .endproc ; EraseWindow
 
+
+kGoAwayLeft     = 12
+kGoAwayWidth    = 12
+kGoAwayTop      = 3
 
 goaway_height:  .word   6       ; font height - 3
 wintitle_height:.word  12       ; font height + 3
