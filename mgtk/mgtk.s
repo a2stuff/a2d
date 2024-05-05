@@ -7657,7 +7657,7 @@ no_goaway:
         ;; There was no "go away" box, so further offset left
         tya
         sec
-        sbc     #kGoAwayLeft + kGoAwayWidth + 2 ; TODO: Fix this!
+        sbc     #kGoAwayLeft + kGoAwayWidth
         bcs     :+
         dex
 :       tay
