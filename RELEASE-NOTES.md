@@ -116,7 +116,11 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Misc
 
+* Include all code page fonts for System and Monaco in packages.
+* Fix width of 'ö' and 'ü' in German System font, 'ö' in Swedish System font.
+* Fix '9' glyph in System and Monaco fonts.
 * Add additional MGTK fonts Fairfax, Magdalena, McMillen, Mischke, and Monterey, c/o RebeccaRGB.
+* Add Quark Catalyst font, c/o @eric-ja.
 * Improve compatibility with older AppleWorks files.
 
 
