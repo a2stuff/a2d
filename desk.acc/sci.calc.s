@@ -468,7 +468,7 @@ textlen:        .byte   15
 result:         .word   0
 .endparams
 
-        kDAWindowId = 52
+        kDAWindowId = $80
 
 .params closewindow_params
 window_id:     .byte   kDAWindowId

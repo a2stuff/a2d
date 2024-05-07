@@ -28,7 +28,7 @@
         kDialogWidth = 287
         kDialogHeight = 75
 
-        kDAWindowId = 100
+        kDAWindowId = $80
 
 .params closewindow_params
 window_id:     .byte   kDAWindowId

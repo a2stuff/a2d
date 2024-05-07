@@ -134,7 +134,7 @@ str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 
 ;;; ============================================================
 
-kDAWindowId     = 61
+kDAWindowId     = $80
 kDAWidth        = kMapWidth + 19
 kDAHeight       = kMapHeight + 51
 kDALeft         = (kScreenWidth - kDAWidth)/2

@@ -28,7 +28,7 @@ kShortcutQuit = res_char_quit_shortcut
         kKeyWidth = 22
         kKeyHeight = 15
 
-kDAWindowId    = 60
+kDAWindowId     = $80
 kDAWidth        = kKeyWidth * 31/2
 kDAHeight       = kKeyHeight * 6
 kDALeft         = (kScreenWidth - kDAWidth)/2

@@ -122,7 +122,7 @@ selected_field:
 
         .include "../lib/event_params.s"
 
-        kDAWindowId = 100
+        kDAWindowId = $80
 
 .params closewindow_params
 window_id:     .byte   kDAWindowId

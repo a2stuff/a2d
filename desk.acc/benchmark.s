@@ -24,7 +24,7 @@
 ;;; ============================================================
 ;;; Param blocks
 
-kDAWindowId     = 100
+kDAWindowId     = $80
 kDAWidth        = 400
 kDAHeight       = 70
 kDALeft         = (kScreenWidth - kDAWidth)/2

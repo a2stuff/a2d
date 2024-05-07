@@ -38,7 +38,7 @@ kShortcutFast = res_char_button_fast_shortcut
 ;;; ============================================================
 ;;; Param blocks
 
-kDAWindowId     = 100
+kDAWindowId     = $80
 kDAWidth        = 290
 kDAHeight       = 70
 kDALeft         = (kScreenWidth - kDAWidth)/2

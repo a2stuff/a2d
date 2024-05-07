@@ -58,7 +58,7 @@ kShortcutEasterEgg = res_char_easter_egg_shortcut
 
 ;;; ============================================================
 
-kDAWindowId     = 60
+kDAWindowId     = $80
 kDAWidth        = 400
 kDAHeight       = 118
 kDALeft         = (kScreenWidth - kDAWidth)/2

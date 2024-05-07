@@ -87,7 +87,7 @@ kNumFrames      = 32
 
 ;;; ============================================================
 
-kDAWindowId    = 60
+kDAWindowId     = $80
 kDAWidth        = kScreenWidth / 2
 kDAHeight       = kScreenHeight / 2
 kDALeft         = (kScreenWidth - kDAWidth)/2

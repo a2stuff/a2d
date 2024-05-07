@@ -62,7 +62,7 @@ kReadLength      = kOverlay10KBufferSize
 
 ;;; ============================================================
 
-kDAWindowId     = 61
+kDAWindowId     = $80
 kDAWidth        = 340
 kDAHeight       = 70
 kDALeft         = (kScreenWidth - kDAWidth)/2

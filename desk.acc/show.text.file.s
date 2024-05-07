@@ -60,7 +60,7 @@ visible_flag:                   ; clear until text that should be visible is in 
 params_end := * + 4       ; bug in original? (harmless as this is static)
 ;;; ----------------------------------------
 
-        kDAWindowId = 100
+        kDAWindowId = $80
 
         kLineSpacing = 10
         kWrapWidth = 506

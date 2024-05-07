@@ -59,13 +59,13 @@
 
 ;;; ============================================================
 
-kDAWindowID     = 63
+kDAWindowId     = $80
 kDAWidth        = 465
 kDAHeight       = kResultsHeight + 40
 kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
-kResultsWindowID        = kDAWindowID+1
+kResultsWindowId        = kDAWindowId+1
 kResultsWidth           = kDAWidth - 60
 kResultsWidthSB         = kResultsWidth + 20
 kResultsHeight          = kResultsRows * kListItemHeight - 1
@@ -75,7 +75,7 @@ kResultsTop             = kDATop + 30
 kResultsRows    = 11                ; line height is 10
 
 .params winfo
-window_id:      .byte   kDAWindowID
+window_id:      .byte   kDAWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -109,7 +109,7 @@ nextwinfo:      .addr   0
 .endparams
 
 .params winfo_results
-window_id:      .byte   kResultsWindowID
+window_id:      .byte   kResultsWindowId
 options:        .byte   MGTK::Option::dialog_box
 title:          .addr   0
 hscroll:        .byte   MGTK::Scroll::option_none
@@ -154,7 +154,7 @@ entry_buf:
         .include "../lib/event_params.s"
 
 .params getwinport_params
-window_id:      .byte   kDAWindowID
+window_id:      .byte   kDAWindowId
 port:           .addr   grafport_win
 .endparams
 
@@ -171,9 +171,9 @@ grafport_win:   .tag    MGTK::GrafPort
         ;; Left edges are adjusted dynamically based on label width
         DEFINE_RECT input_rect, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250, kControlsTop + kTextBoxHeight
 
-        DEFINE_BUTTON search_button, kDAWindowID, res_string_button_search, kGlyphReturn, kDAWidth-235, kControlsTop
+        DEFINE_BUTTON search_button, kDAWindowId, res_string_button_search, kGlyphReturn, kDAWidth-235, kControlsTop
 
-        DEFINE_BUTTON cancel_button, kDAWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
+        DEFINE_BUTTON cancel_button, kDAWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kDAWidth-120, kControlsTop
 
 penXOR:         .byte   MGTK::penXOR
 pencopy:        .byte   MGTK::pencopy
@@ -190,7 +190,7 @@ pattern:        .res    16      ; null-terminated/upcased version
 ;;; ============================================================
 ;;; Search field
 
-        DEFINE_LINE_EDIT line_edit_rec, kDAWindowID, buf_search, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250-(kFindLeft+kLabelHOffset), kMaxFilenameLength
+        DEFINE_LINE_EDIT line_edit_rec, kDAWindowId, buf_search, kFindLeft + kLabelHOffset, kControlsTop, kDAWidth-250-(kFindLeft+kLabelHOffset), kMaxFilenameLength
         DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
 
 ;;; ============================================================
@@ -428,7 +428,7 @@ finish:
         bne     done
 
         lda     findwindow_params::window_id
-        cmp     #kResultsWindowID
+        cmp     #kResultsWindowId
     IF_EQ
         jsr     ListClick
         bmi     :+
@@ -440,11 +440,11 @@ finish:
 :       jmp     InputLoop
     END_IF
 
-        cmp     #kDAWindowID
+        cmp     #kDAWindowId
         bne     done
 
         ;; Click in DA content area
-        copy    #kDAWindowID, screentowindow_params::window_id
+        copy    #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -473,7 +473,7 @@ done:   jmp     InputLoop
 ;;; ============================================================
 
 .proc HandleMouseMove
-        copy    #kDAWindowID, screentowindow_params::window_id
+        copy    #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window

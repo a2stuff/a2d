@@ -41,7 +41,7 @@
 
 ;;; ============================================================
 
-kDAWindowId    = 60
+kDAWindowId     = $80
 kDAWidth        = 380
 kDAHeight       = 140
 kDALeft         = (kScreenWidth - kDAWidth)/2

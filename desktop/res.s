@@ -168,14 +168,13 @@ nextwinfo:      .addr   0
 ;;; * Special > Format Disk...
 ;;; * Special > Erase Disk...
 
-        kPromptWindowId = $0F
         kPromptDialogWidth = 400
         kPromptDialogHeight = 107
         kPromptDialogLeft = (kScreenWidth - kPromptDialogWidth) / 2
         kPromptDialogTop  = (kScreenHeight - kPromptDialogHeight) / 2
 
 .params winfo_prompt_dialog
-        kWindowId = kPromptWindowId
+        kWindowId = $13
         kWidth = kPromptDialogWidth
         kHeight = kPromptDialogHeight
 
@@ -227,6 +226,7 @@ nextwinfo:      .addr   0
 
         DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
 
+        kPromptWindowId = winfo_prompt_dialog::kWindowId
         DEFINE_BUTTON ok_button, kPromptWindowId, res_string_button_ok, kGlyphReturn, 260, kPromptDialogHeight-19
         DEFINE_BUTTON cancel_button, kPromptWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, 40, kPromptDialogHeight-19
 

@@ -76,7 +76,7 @@ dialog_result:
 ;;; Resources
 ;;; ============================================================
 
-kDAWindowId     = 62
+kDAWindowId     = $80
 kDAWidth        = 300
 kDAHeight       = 100
 kDALeft         = (kScreenWidth - kDAWidth)/2

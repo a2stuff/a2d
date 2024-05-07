@@ -27,7 +27,7 @@
 kDayDX = 35
 kDayDY = 13
 
-kDAWindowId     = 61
+kDAWindowId     = $80
 kDAWidth        = kDayDX * 7
 kDAHeight       = kDayDY * 8 - 2
 kDALeft         = (kScreenWidth - kDAWidth)/2
