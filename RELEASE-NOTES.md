@@ -44,7 +44,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Remove Special > Lock and Special > Unlock commands.
 * Show icon for locked files in list views.
 * Reorder columns in list views.
-* Allow selection to remain in inactive windows.
+* Allow selection to remain in inactive windows. (([#361](https://github.com/a2stuff/a2d/issues/361))
 * Fix off-by-one in used/free values in window headers.
 * Fix updating of window headers following File > New Folder.
 * Select new file after File > Duplicate...
