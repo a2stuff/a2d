@@ -1,7 +1,7 @@
 ;;; ============================================================
 ;;; Adjust filename case, using GS/OS bits or heuristics
 ;;; Per Technical Note: GS/OS #8: Filenames With More Than CAPS and Numerals
-;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/gsos/tn.gsos.08.html
 
 ;;; AdjustFileEntryCase:
 ;;; Input: A,X points at `FileEntry` structure.
@@ -74,7 +74,7 @@ fallback:
 ;;; --------------------------------------------------
 ;;; GS/OS bits are present - apply to recase string.
 ;;; Per Technical Note: GS/OS #8: Filenames With More Than CAPS and Numerals
-;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/gsos/tn.gsos.08.html
 ;;;
 ;;; "If version is read as a word value, bit 7 of min_version would be the
 ;;; highest bit (bit 15) of the word. If that bit is set, the remaining 15
@@ -97,11 +97,11 @@ apply_bits:
 ;;; --------------------------------------------------
 ;;; AppleWorks
 ;;; Per File Type Notes: File Type $19 (25) All Auxiliary Types
-;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/ftyp/ftn.19.xxxx.html
 ;;; Per File Type Notes: File Type $1A (26) All Auxiliary Types
-;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.1A.xxxx.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/ftyp/ftn.1A.xxxx.html
 ;;; Per File Type Notes: File Type $1B (27) All Auxiliary Types
-;;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.1B.xxxx.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/ftyp/ftn.1B.xxxx.html
 ;;;
 ;;; "The volume or subdirectory auxiliary type word for this file type is
 ;;; defined to control uppercase and lowercase display of filenames. The

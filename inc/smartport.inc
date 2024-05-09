@@ -7,7 +7,7 @@
 ;;; References:
 ;;; * Apple IIGS Firmware Reference
 ;;; * Apple IIc Technical Reference Manual, Second Edition
-;;; * TechNotes: http://www.1000bit.it/support/manuali/apple/technotes/tn.0.html#smpt
+;;; * TechNotes: https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/tn.0.html#smpt
 
 .enum SPCall                    ; CMDNUM for SmartPort calls
         Status          = $00

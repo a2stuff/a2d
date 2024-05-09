@@ -1161,7 +1161,7 @@ loop:   ldx     devnum
 
         ;; Check device type
         ;; Technical Note: SmartPort #4: SmartPort Device Types
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer+SPDIB::Device_Type_Code
         .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
         bne     next_unit       ; $00 = Memory Expansion Card (RAM Disk)

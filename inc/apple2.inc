@@ -181,7 +181,7 @@ NEWVIDEO        := $C029        ; IIgs - new video modes
 
 MACIIE          := $C02B        ; Macintosh IIe Option Card
         ;; Tech Note: Apple IIe #10: The Apple IIe Card for the Macintosh LC
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.10.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiie/tn.aiie.10.html
         ;; Bit 2 = Speed (1.9 MHz if set, 1 MHz if clear)
 
 SPKR            := $C030

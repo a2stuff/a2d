@@ -529,7 +529,7 @@ pdl3:   .byte   0
 
         ;; Read paddle
         ;; Per Technical Note: Apple IIe #6: The Apple II Paddle Circuits
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.06.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiie/tn.aiie.06.html
 :       lda     PTRIG           ; Trigger paddles
         ldy     #0              ; Init counter
         nop                     ; ... and wait for first count

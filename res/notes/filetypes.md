@@ -1,6 +1,6 @@
 Apple File Type Notes:
 
-* http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ft.about.html
+* https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/ftyp/ft.about.html
 
 Modern registry:
 

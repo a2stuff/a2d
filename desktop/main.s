@@ -4614,7 +4614,7 @@ not_in_map:
         beq     add_icon
 
         ;; Expected errors per Technical Note: ProDOS #21
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.21.html
         cmp     #ERR_IO_ERROR   ; disk damaged or blank
         beq     add_icon
         cmp     #ERR_DEVICE_OFFLINE ; no disk in the drive
@@ -9238,7 +9238,7 @@ dib_buffer := $800
 
 ;;; Roughly follows:
 ;;; Technical Note: ProDOS #21: Identifying ProDOS Devices
-;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.21.html
 
 .proc GetDeviceType
         ;; Avoid Initializer memory ($800-$1200)
@@ -9343,7 +9343,7 @@ done:
 
         ;; Check device type
         ;; Technical Note: SmartPort #4: SmartPort Device Types
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer+SPDIB::Device_Type_Code
         .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
         bne     :+            ; $00 = Memory Expansion Card (RAM Disk)
@@ -13188,7 +13188,7 @@ file:
 
 appleworks:
         ;; Per Per File Type Notes: File Type $19 (25) All Auxiliary Types (etc)
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/ftyp/ftn.19.xxxx.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/ftyp/ftn.19.xxxx.html
         ;;
         ;; Like as GS/OS case bits, except:
         ;; * Shifted left by one bit; low bit is clear
@@ -13272,7 +13272,7 @@ get_case_bits_per_option_and_adjust_string:
 ;;; ============================================================
 
 ;;; Per Technical Note: GS/OS #8: Filenames With More Than CAPS and Numerals
-;;; http://www.1000bit.it/support/manuali/apple/technotes/gsos/tn.gsos.08.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/gsos/tn.gsos.08.html
 ;;; Input: A,X = name
 ;;; Output: A,X = case bits
 ;;; Trashes: $06/$08

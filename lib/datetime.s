@@ -218,7 +218,7 @@ year:   lda     #0
 
         ;; 0-39 is 2000-2039
         ;; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.28.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.28.html
 tn28:   lda     ytmp            ; ytmp is still just one byte
         cmp     #40
         bcs     :+

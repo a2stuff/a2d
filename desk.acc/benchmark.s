@@ -433,7 +433,7 @@ loop2:
         ;; IIc
 
         ;; See Apple IIc Tech Note #9: Detecting VBL
-        ;; https://www.1000bit.it/support/manuali/apple/technotes/aiic/tn.aiic.9.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiic/tn.aiic.9.html
 
         lda     IOUDISON        ; = RDIOUDIS
         pha                     ; save IOUDIS state

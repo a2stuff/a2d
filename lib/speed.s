@@ -77,7 +77,7 @@
 
         ;; Slow down on Mac IIe Option Card
         ;; Per Technical Note: Apple IIe #10: The Apple IIe Card for the Macintosh LC
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiie/tn.aiie.10.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiie/tn.aiie.10.html
         ;; Restore speed on Mac IIe Option Card
         txa                     ; A = X = kSysCapXYZ bitmap
         and     #DeskTopSettings::kSysCapIsIIeCard

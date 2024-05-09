@@ -691,7 +691,7 @@ dib_buffer:     .tag    SPDIB
 
 ;;; ============================================================
 ;;; Per Technical Note: Apple II Miscellaneous #7: Apple II Family Identification
-;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.07.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/misc/tn.misc.07.html
 ;;; and c/o JohnMBrooks
 
 ;;; Machine                    $FBB3    $FB1E    $FBC0    $FBDD    $FBBF
@@ -813,7 +813,7 @@ model_pix_table:
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
-;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.07.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/misc/tn.misc.07.html
 ;;; Note that IIgs resolves as IIe (enh.) and is identified by ROM call.
 ;;;
 ;;; Format is: model (enum), then byte pairs [$FBxx, expected], then $00
@@ -1302,9 +1302,9 @@ mask:   .byte   0
 ;;;
 ;;; Uses a variety of sources:
 ;;; * Technical Note: ProDOS #21: Identifying ProDOS Devices
-;;;   http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+;;;   https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.21.html
 ;;; * Technical Note: Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
-;;;   http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
+;;;   https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/misc/tn.misc.08.html
 ;;; * "ProDOS BASIC Programming Examples" disk
 
 .proc ProbeSlot
@@ -1327,7 +1327,7 @@ mask:   .byte   0
 
 ;;; ---------------------------------------------
 ;;; Per Technical Note: Miscellaneous #8: Pascal 1.1 Firmware Protocol ID Bytes
-;;; http://www.1000bit.it/support/manuali/apple/technotes/misc/tn.misc.08.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/misc/tn.misc.08.html
 
 ;;; ProDOS and SmartPort Devices
 
@@ -1336,7 +1336,7 @@ mask:   .byte   0
     IF_CS
 
 ;;; Per Technical Note: ProDOS #21: Identifying ProDOS Devices
-;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.21.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.21.html
         COMPARE_FWB $FF, $00    ; $CnFF == $00 ?
         bne     :+
         return16 #str_diskii
@@ -2046,7 +2046,7 @@ p65802: return16 #str_65802     ; Other boards support 65802
 ;;; Inputs: $06 points at $Cn00
 
 ;;; Follows Technical Note: SmartPort #4: SmartPort Device Types
-;;; http://www.1000bit.it/support/manuali/apple/technotes/smpt/tn.smpt.4.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/smpt/tn.smpt.4.html
 
 .proc ShowSmartPortDeviceNamesImpl
 

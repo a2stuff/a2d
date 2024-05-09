@@ -57,7 +57,7 @@ mirrored_slot   .byte
         bne     fail            ; nope (exit with Z=0 on failure)
 
 ;;; Per Technical Note: ProDOS #21: Mirrored Devices and SmartPort
-;;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.20.html
+;;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.20.html
 ;;; ... but that predates ProDOS 2.x, which changes the scheme.
 ;;;
 ;;; Since we know that the `DEVADR` entry is a firmware ($Cn) address:

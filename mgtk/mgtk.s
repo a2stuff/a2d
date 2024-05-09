@@ -4762,7 +4762,7 @@ savesize        .word
         bvs     :+
 
         ;; Per Technical Note: Apple IIc #1: Mouse Differences on IIe and IIc
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/aiic/tn.aiic.1.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiic/tn.aiic.1.html
         stx     mouse_scale_y
         inx                              ; default scaling for IIc/IIc+
         stx     mouse_scale_x

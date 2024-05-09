@@ -775,7 +775,7 @@ nameBuffer:     .res    ::kPathBufferSize ; space for directory name
 ;;; Revised by Dave Lyons, Keith Rollin, & Matt Deatherage (November 1989)
 ;;; Written by Greg Seitz (December 1983)
 ;;;
-;;; From http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.17.html
+;;; From https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.17.html
 ;;;
 ;;; * Converted to ca65 syntax
 ;;; * Using A2D headers/macros

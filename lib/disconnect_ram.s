@@ -37,7 +37,7 @@ shift:  lda     DEVLST+1,x
         ;; TODO: Issue ON_LINE call to device after disconnecting it
         ;; to erases the VCB entry for the disconnected device, per
         ;; Technical Note: ProDOS #8: Dealing with /RAM
-        ;; http://www.1000bit.it/support/manuali/apple/technotes/pdos/tn.pdos.08.html
+        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.08.html
 
         rts
 .endproc ; DisconnectRAM
