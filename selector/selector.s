@@ -51,7 +51,7 @@ basic_system_not_found  = $FF
         DEFSEG SegmentAlert,      $D000,        $0600
 
         ;; Dynamically loaded overlays
-        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $0E00
+        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $0D00
         DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0B00
 
 ;;; ============================================================
