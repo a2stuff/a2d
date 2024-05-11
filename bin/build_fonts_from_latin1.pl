@@ -4,8 +4,10 @@ use strict;
 use warnings;
 use IPC::Open2;
 use Encode qw(decode encode);
+use File::Basename;
 
 my $font = shift or die "Usage: $0 fontname\n";
+my $dir = dirname(__FILE__);
 
 # --------------------------------------------------
 # Get mapping - given a language code, returns a
@@ -16,7 +18,7 @@ my $font = shift or die "Usage: $0 fontname\n";
 sub getmap($) {
   my ($lang) = @_;
 
-  my $pid = open2(*CHILD_OUT, *CHILD_IN, 'bin/transcode.pl', ('from', $lang)) or die $!;
+  my $pid = open2(*CHILD_OUT, *CHILD_IN, "$dir/transcode.pl", ('from', $lang)) or die $!;
   for (my $i = 0; $i < 128; ++$i) {
     print CHILD_IN chr($i);
   }
