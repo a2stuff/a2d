@@ -16,8 +16,9 @@ mm=$(expr `date +%m` + 0)
 dd=$(expr `date +%d` + 0)
 
 month=$(egrep "\bres_string_month_name_${mm}\b" "common/res/common.res.${lang}" | cut -d'"' -f2)
+order=$(egrep "\bres_const_date_order\b" "common/res/common.res.${lang}" | cut -d' ' -f3)
 
-if [ "$lang" = "en" ]; then
+if [ "$order" = "0" ]; then
     date="$month $dd, $yyyy"
 else
     date="$dd $month $yyyy"
@@ -32,4 +33,4 @@ perl -pni -e 's/^(kBuildYY \s+ = \s+) \d+ /${1}'"$yy"'/x' config.inc
 perl -pni -e 's/^(kBuildMM \s+ = \s+) \d+ /${1}'"$mm"'/x' config.inc
 perl -pni -e 's/^(kBuildDD \s+ = \s+) \d+ /${1}'"$dd"'/x' config.inc
 
-echo Set date to: $(echo "$date" | bin/transcode.pl from $lang)
+echo Set date to: $(echo "$date" | bin/transcode.pl decode $lang)

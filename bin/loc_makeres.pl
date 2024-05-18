@@ -2,7 +2,11 @@
 
 use strict;
 use warnings;
-use utf8;
+
+use FindBin;
+use lib "$FindBin::Bin";
+use Transcode;
+
 binmode(STDIN, ':utf8');
 binmode(STDOUT, ':utf8');
 binmode(STDERR, ':utf8');
@@ -41,30 +45,12 @@ sub indexes($$) {
 # Encodes into source strings (with escaping)
 sub encode($$) {
   my ($lang, $s) = @_;
+
   $s =~ tr/\xA0/ /; # NBSP to regular space
   $s =~ tr/\\/\xFF/; # Protect \ temporarily, for \xNN sequences (etc)
-  if ($lang eq 'fr') {
-    $s =~ tr/£à˚ç§`éùè¨/#@[\\]`{|}~/;
-  } elsif ($lang eq 'de') {
-    $s =~ tr/#§ÄÖÜ`äöüß/#@[\\]`{|}~/;
-  } elsif ($lang eq 'it') {
-    $s =~ tr/£§˚çéùàòèì/#@[\\]`{|}~/;
-  } elsif ($lang eq 'es') {
-    $s =~ tr/£§¡Ñ¿`˚ñç~/#@[\\]`{|}~/;
-    # unofficial extensions for A2D
-    $s =~ tr/áéíóú/\x10-\x14/;
-  } elsif ($lang eq 'nl') {
-    # unofficial extensions for A2D
-    $s =~ tr/ë/\x10/;
-  } elsif ($lang eq 'da') {
-    $s =~ tr/#@ÆØÅ`æøå~/#@[\\]`{|}~/;
-  } elsif ($lang eq 'sv') {
-    $s =~ tr/#@ÄÖÅ`äöå~/#@[\\]`{|}~/;
-  } elsif ($lang eq 'pt') {
-    $s =~ tr/õêáãâçàéíúôó/#&@[\\]_`{|}~/; # Based on TK3000
-  } else {
-    die "Unknown lang: $lang\n";
-  }
+
+  $s = Transcode::encode($lang, $s);
+
   $s =~ s|\\|\\\\|g; # Escape newly generated \
   $s =~ tr/\xFF/\\/; # Restore the original \ (see above)
   $s =~ s/([\x10-\x14])/sprintf("\\x%02x",ord($1))/seg; # Escape control chars

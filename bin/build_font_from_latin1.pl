@@ -2,12 +2,12 @@
 
 use strict;
 use warnings;
-use IPC::Open2;
-use Encode qw(decode encode);
-use File::Basename;
 
-my $font = shift or die "Usage: $0 fontname\n";
-my $dir = dirname(__FILE__);
+use FindBin;
+use lib "$FindBin::Bin";
+use Transcode;
+
+my $lang = shift or die "Usage: $0 lang < font.latin1 > font.lang\n";
 
 # --------------------------------------------------
 # Get mapping - given a language code, returns a
@@ -18,28 +18,22 @@ my $dir = dirname(__FILE__);
 sub getmap($) {
   my ($lang) = @_;
 
-  my $pid = open2(*CHILD_OUT, *CHILD_IN, "$dir/transcode.pl", ('from', $lang)) or die $!;
+  my $s = '';
   for (my $i = 0; $i < 128; ++$i) {
-    print CHILD_IN chr($i);
+    $s .= chr($i);
   }
-  close(CHILD_IN);
 
-  my $octets = do { local $/; <CHILD_OUT>};
-  close(CHILD_OUT);
-  waitpid($pid, 0);
-  return decode('UTF-8', $octets);
+  return Transcode::decode($lang, $s);
 }
 
 # --------------------------------------------------
 # Read source file
 # --------------------------------------------------
 
-my $src = "${font}.latin1";
-open SRC, '<' . $src or die $!;
-binmode(SRC);
+binmode STDIN;
 sub getbyte {
   my $b;
-  read(SRC, $b, 1);
+  read(STDIN, $b, 1);
   return ord($b);
 }
 my $type = getbyte();
@@ -64,34 +58,25 @@ for (my $row = 0; $row < $height; ++$row) {
   }
 }
 
-close SRC;
-
-
 # --------------------------------------------------
-# Dump out fonts
+# Dump out font
 # --------------------------------------------------
 
-foreach my $lang (qw(da de en es fr it nl pt sv)) {
-  my @mapping = split('', getmap($lang));
+my @mapping = split('', getmap($lang));
 
-  my $dst = "${font}.${lang}";
-  open DST, '>' . $dst or die $!;
-  binmode(DST);
-  print DST chr(0x00); # type
-  print DST chr(0x7F); # last
-  print DST chr($height); # height
+binmode STDOUT;
+print chr(0x00); # type
+print chr(0x7F); # last
+print chr($height); # height
 
+for (my $i = 0; $i < 128; ++$i) {
+  my $ucp = ord($mapping[$i]);
+  print chr($widths[$ucp]);
+}
+
+for (my $row = 0; $row < $height; ++$row) {
   for (my $i = 0; $i < 128; ++$i) {
     my $ucp = ord($mapping[$i]);
-    print DST chr($widths[$ucp]);
+    print chr(${$chars[$ucp]}[$row]);
   }
-
-  for (my $row = 0; $row < $height; ++$row) {
-    for (my $i = 0; $i < 128; ++$i) {
-      my $ucp = ord($mapping[$i]);
-      print DST chr(${$chars[$ucp]}[$row]);
-    }
-  }
-
-  close DST;
 }
