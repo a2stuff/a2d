@@ -38,9 +38,9 @@ my $src = "${font}.latin1";
 open SRC, '<' . $src or die $!;
 binmode(SRC);
 sub getbyte {
-    my $b;
-    read(SRC, $b, 1);
-    return ord($b);
+  my $b;
+  read(SRC, $b, 1);
+  return ord($b);
 }
 my $type = getbyte();
 die "Only type 0x00 supported\n" unless $type == 0x00;
@@ -51,11 +51,11 @@ my $height = getbyte();
 
 my @chars;
 for (my $i = 0; $i < $num; ++$i) {
-    $chars[$i] = [];
+  $chars[$i] = [];
 }
 my @widths;
 for (my $i = 0; $i < $num; ++$i) {
-    push @widths, getbyte();
+  push @widths, getbyte();
 }
 
 for (my $row = 0; $row < $height; ++$row) {

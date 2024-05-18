@@ -7,16 +7,16 @@ use warnings;
 my $offset = 0;
 
 sub getbyte {
-    my $b;
-    read(STDIN, $b, 1) or die "EOF";
-    ++$offset;
-    return ord($b);
+  my $b;
+  read(STDIN, $b, 1) or die "EOF";
+  ++$offset;
+  return ord($b);
 }
 
 sub getword {
-    my $b1 = getbyte();
-    my $b2 = getbyte();
-    return $b2 * 256 + $b1;
+  my $b1 = getbyte();
+  my $b2 = getbyte();
+  return $b2 * 256 + $b1;
 }
 
 my @widths = ();
@@ -37,48 +37,48 @@ printf("Baseline : %02x\n", $baseline);
 printf("EOF      : %04x\n", $eof);
 
 for (my $i = 0; $i < $max-32+1; ++$i) {
-    printf("== char header: %d / '%c' ==\n", $i, $i+32);
-    my $offset = getword();
-    my $width = getbyte();
+  printf("== char header: %d / '%c' ==\n", $i, $i+32);
+  my $offset = getword();
+  my $width = getbyte();
 
-    printf(" Offset : %04x\n", $offset);
-    printf(" Width  : %02x\n", $width);
+  printf(" Offset : %04x\n", $offset);
+  printf(" Width  : %02x\n", $width);
 
-    push @offsets, $offset;
-    push @widths, $width;
+  push @offsets, $offset;
+  push @widths, $width;
 }
 
 for (my $i = 0; $i < $max-32+1; ++$i) {
-    my $o = $offsets[$i];
-    my $width = $widths[$i];
-    printf("== char: %d / '%c' / w=%d ==\n", $i, $i+32, $width);
-    if ($o != $offset) {
-        die "BAD! char $i offset $offset expected $o\n";
+  my $o = $offsets[$i];
+  my $width = $widths[$i];
+  printf("== char: %d / '%c' / w=%d ==\n", $i, $i+32, $width);
+  if ($o != $offset) {
+    die "BAD! char $i offset $offset expected $o\n";
+  }
+  for (my $line = 0; $line < $height; ++$line) {
+    my $s = sprintf("%07b", getbyte());
+    my $w = $width;
+    while ($w > 8) {
+      $s = sprintf("%07b", getbyte()) . $s;
+      $w -= 8;
     }
-    for (my $line = 0; $line < $height; ++$line) {
-        my $s = sprintf("%07b", getbyte());
-        my $w = $width;
-        while ($w > 8) {
-            $s = sprintf("%07b", getbyte()) . $s;
-            $w -= 8;
-        }
-        $s =~ tr/01/ #/;
-        $s = reverse($s);
-        print "$s\n";
-    }
+    $s =~ tr/01/ #/;
+    $s = reverse($s);
+    print "$s\n";
+  }
 }
 if ($offset != $eof) {
-    die "BAD EOF offset $offset expected $eof\n";
+  die "BAD EOF offset $offset expected $eof\n";
 }
 
 
 __END__
 while (1) {
-    my $b2 = sprintf("%07b", getbyte());
-    my $s = $b2 . $b1;
-    $s =~ tr/01/ #/;
-    $s = reverse($s);
-    print "$s\n";
+  my $b2 = sprintf("%07b", getbyte());
+  my $s = $b2 . $b1;
+  $s =~ tr/01/ #/;
+  $s = reverse($s);
+  print "$s\n";
 }
 
 
@@ -97,36 +97,36 @@ print "height: $height\n";
 
 my @chars;
 for (my $i = 0; $i < $num; ++$i) {
-    $chars[$i] = '';
+  $chars[$i] = '';
 }
 
 my @widths;
 for (my $i = 0; $i < $num; ++$i) {
-    push @widths, getbyte();
+  push @widths, getbyte();
 }
 
 for (my $row = 0; $row < $height; ++$row) {
-    for (my $col = 0; $col < $cols; ++$col) {
-        for (my $c = 0; $c < $num; ++$c) {
-            my $bits = sprintf("%07b", getbyte());
-            $bits =~ tr/01/.#/;
-            $bits = reverse $bits;
-
-            $chars[$c] .= $bits;
-        }
-    }
+  for (my $col = 0; $col < $cols; ++$col) {
     for (my $c = 0; $c < $num; ++$c) {
-        $chars[$c] .= "\n";
+      my $bits = sprintf("%07b", getbyte());
+      $bits =~ tr/01/.#/;
+      $bits = reverse $bits;
+
+      $chars[$c] .= $bits;
     }
+  }
+  for (my $c = 0; $c < $num; ++$c) {
+    $chars[$c] .= "\n";
+  }
 }
 
 for (my $i = 0; $i < $num; ++$i) {
-    $chars[$i] =
-        join("\n",
-             map { substr($_, 0, $widths[$i]) }
-             split("\n", $chars[$i]));
+  $chars[$i] =
+    join("\n",
+       map { substr($_, 0, $widths[$i]) }
+       split("\n", $chars[$i]));
 }
 
 for (my $i = 0; $i < $num; ++$i) {
-    print "== 0x".sprintf("%02x",$i)." ==\n$chars[$i]\n";
+  print "== 0x".sprintf("%02x",$i)." ==\n$chars[$i]\n";
 }

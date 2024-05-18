@@ -19,27 +19,27 @@ my $command = shift(@ARGV) // "";
 my @dirs = ();
 
 while (<STDIN>) {
-    chomp();
-    s/#.*$//g;
-    next unless $_;
+  chomp();
+  s/#.*$//g;
+  next unless $_;
 
-    my ($target, $path, $disposition) = split();
+  my ($target, $path, $disposition) = split();
 
-    if ($command eq "targets") {
-        print $target, "\n";
-    } elsif ($command eq "dirs") {
-        push @dirs, $path;
-    } elsif ($command eq "") {
-        print $target, ",", $path, ",", $disposition, "\n";
-    } else {
-        die "Unknown command: $command\n";
-    }
+  if ($command eq "targets") {
+    print $target, "\n";
+  } elsif ($command eq "dirs") {
+    push @dirs, $path;
+  } elsif ($command eq "") {
+    print $target, ",", $path, ",", $disposition, "\n";
+  } else {
+    die "Unknown command: $command\n";
+  }
 }
 
 if ($command eq "dirs") {
-    my %hash;
-    @hash{@dirs} = ();
-    foreach my $dir (sort keys %hash) {
-        print $dir, "\n";
-    }
+  my %hash;
+  @hash{@dirs} = ();
+  foreach my $dir (sort keys %hash) {
+    print $dir, "\n";
+  }
 }

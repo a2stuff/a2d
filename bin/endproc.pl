@@ -9,13 +9,13 @@ use strict;
 use warnings;
 
 BEGIN {
-    my @stack = ();
+  my @stack = ();
 }
 
 our @stack;
 if (m/\.(?:proc|scope)\b\s*(\w*)/) {
-    push(@stack, $1);
+  push(@stack, $1);
 } elsif (m/(\.end(?:proc|scope))\b/) {
-    my $label = pop(@stack);
-    $_ = "$1 ; $label\n" if $label;
+  my $label = pop(@stack);
+  $_ = "$1 ; $label\n" if $label;
 }
