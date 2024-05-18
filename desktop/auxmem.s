@@ -33,7 +33,7 @@
 ;;; ============================================================
 
         ASSERT_ADDRESS ::DEFAULT_FONT
-        .incbin .concat("../mgtk/fonts/System.", kBuildLang)
+        .incbin .concat("../out/System.", kBuildLang, ".font")
 
 ;;; ============================================================
 ;;; Other ToolKits - floating location (DAs have indirections)

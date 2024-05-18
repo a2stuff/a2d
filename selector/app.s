@@ -16,7 +16,7 @@
 ;;; Font
 
         FONT := *
-        .incbin .concat("../mgtk/fonts/System.", kBuildLang)
+        .incbin .concat("../out/System.", kBuildLang, ".font")
 
 ;;; ============================================================
 ;;; Generic Resources (outside scope for convenience)

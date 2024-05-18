@@ -1,5 +1,5 @@
 HEADERS = $(COMMON_HEADERS) \
-	$(wildcard ../mgtk/fonts/*) \
+	$(MONO_FONTS) \
 	$(wildcard neko_frames/*.bin) \
 	../desktop/desktop.inc ../mgtk/mgtk.inc $(wildcard ../toolkits/*.inc)
 
@@ -18,4 +18,5 @@ $(OUTDIR):
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
+	rm -f $(OUTDIR)/*.font
 	rm -f $(TARGETS)

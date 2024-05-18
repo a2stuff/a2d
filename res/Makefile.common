@@ -12,6 +12,10 @@ COMMON_HEADERS = $(wildcard ../*.inc ../inc/*.inc *.inc inc/*.inc) \
 	$(wildcard ../lib/*.s) \
 	$(wildcard res/*.res.?? ../common/res/*.res.??)
 
+LANGS = da de en es fr it nl pt sv
+SYS_FONTS = $(foreach LANG,$(LANGS),$(OUTDIR)/System.$(LANG).font)
+MONO_FONTS = $(foreach LANG,$(LANGS),$(OUTDIR)/Monaco.$(LANG).font)
+
 ### Build Rules
 
 # Object files
@@ -25,3 +29,9 @@ $(OUTDIR)/%.da: $(OUTDIR)/%.o ../res/asm.cfg
 # System Files .SYS
 $(OUTDIR)/%.SYS: $(OUTDIR)/%.o ../res/asm.cfg
 	../bin/colorize ld65 $(LDFLAGS) -o '$@' $<
+
+# Fonts
+.SECONDEXPANSION:
+$(OUTDIR)/%.font: ../mgtk/fonts/$$(basename $$*).latin1
+	../bin/build_font_from_latin1.pl $(subst .,,$(suffix $*)) < ../mgtk/fonts/$(basename $*).latin1 > $@
+.NOTINTERMEDIATE: $(SYS_FONTS) $(MONO_FONTS)

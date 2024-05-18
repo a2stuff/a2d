@@ -1,5 +1,5 @@
 HEADERS = $(COMMON_HEADERS) \
-	$(wildcard ../mgtk/fonts/System.*) \
+	$(SYS_FONTS) \
 	../mgtk/mgtk.inc ../toolkits/btk.inc
 
 include ../res/Makefile.common
@@ -15,6 +15,7 @@ $(OUTDIR):
 clean:
 	rm -f $(OUTDIR)/*.o
 	rm -f $(OUTDIR)/*.list
+	rm -f $(OUTDIR)/*.font
 	rm -f $(TARGETS)
 
 $(OUTDIR)/disk_copy.o: disk_copy.s $(HEADERS) loader.s auxlc.s main.s ../toolkits/btk.s

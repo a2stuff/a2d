@@ -152,8 +152,8 @@ if [[ -z "$no_sample_media" ]]; then
 
     # MGTK Fonts
     for l in en fr de it es pt sv da nl; do
-      emit add_file $disposition "mgtk/fonts/System.$l"    $mediafnt "System.$l"      070000
-      emit add_file $disposition "mgtk/fonts/Monaco.$l"    $mediafnt "Monaco.$l"      070000
+      emit add_file $disposition "out/System.$l.font"      $mediafnt "System.$l"      070000
+      emit add_file $disposition "out/Monaco.$l.font"      $mediafnt "Monaco.$l"      070000
     done
     emit add_file $disposition "mgtk/fonts/MousePaint"     $mediafnt "MousePaint"     070000
     emit add_file $disposition "mgtk/fonts/mini"           $mediafnt "Mini"           070000
