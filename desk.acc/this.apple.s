@@ -1937,6 +1937,11 @@ loop:   lda     slot
         dex
         bne     :-
 
+        ;; Rounding up if needed
+        bcc     :+
+        inc16   dib_buffer+SPDIB::Device_Size_Lo
+:
+
         add16   memory, dib_buffer+SPDIB::Device_Size_Lo, memory
 
 next:   dec     slot

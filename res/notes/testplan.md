@@ -969,6 +969,8 @@ With Sci.Calc:
 
 * Configure a IIc or IIc+ in MAME. Launch DeskTop. Apple > About This Apple II. Verify that the system doesn't hang probing Slot 2.
 
+* Configure a IIe system with a 16MB RAMFactor card (e.g. GR8RAM from https://garrettsworkshop.com/) with a single 16MB partition. Apple > About This Apple II. Verify that the calculated memory size is accurate, i.e. it is not off by 64k.
+
 ## System Speed
 
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.

@@ -139,6 +139,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Prevent hang on IIc and IIc+ in MAME.
   * Detect ZIP CHIP accelerator.
   * Display larger memory sizes in MB.
+  * Round up bank counts from Slinky memory if needed.
 * Matrix: Show green-on-black text on IIgs.
 
 
