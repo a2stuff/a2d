@@ -770,6 +770,10 @@ The following tests all require:
 
 * Configure a system with a Z80 card and without a No-Slot Clock. Boot a package disk including the CLOCK.SYSTEM driver. Verify that it doesn't hang.
 
+### ZIP CHIP
+
+* Run DeskTop on a IIe with a ZIP CHIP installed.. Apple Menu > About This Apple II. Verify that a ZIP CHIP is reported.
+
 ### Apple IIgs
 
 * On an IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop remains in color.
@@ -795,6 +799,7 @@ The following tests all require:
 
 * Run DeskTop on a IIc+ from a 3.5" floppy on internal drive. Verify that the disk doesn't spin constantly.
 * Configure a disk with ProDOS 2.4.3. Run DeskTop on a IIc+. Create a Shortcut to launch BASIC.SYSTEM. Use Control Panel > Options to set Shortcuts to run on startup. Restart. From Shortcuts, invoke the BASIC.SYSTEM shortcut. Verify that it doesn't crash. Restart. From Shortcuts, invoke DeskTop. Verify that it doesn't crash.
+* Run DeskTop on a IIc+. Apple Menu > About This Apple II. Verify that a ZIP CHIP is not reported.
 
 ### Laser 128
 

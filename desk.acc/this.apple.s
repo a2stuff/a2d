@@ -640,6 +640,7 @@ str_65816:      PASCAL_STRING res_string_cpu_type_65816
 
 ;;; ============================================================
 
+model:                .byte   0
 model_str_ptr:        .addr   0
 model_pix_ptr:        .addr   0
 
@@ -945,6 +946,7 @@ match:  tya
     END_IF
 
         ;; A has model
+        sta     model
         jsr     SetModelPtrs
 
         ;; Read from LC RAM
@@ -1985,7 +1987,10 @@ str_from_int:
         .popcpu
         bcs     p658xx
 
-        ;; 65C02 - check for ZIP CHIP
+        ;; 65C02 - check for ZIP CHIP (except on IIc Plus)
+        lda     model           ; cached
+        cmp     #model::iic_plus
+    IF_NE
         php                     ; timing sensitive
         sei
 
@@ -2016,6 +2021,7 @@ str_from_int:
         rts
 
 :       plp
+    END_IF
 
         ;; 65C02 - check for Rockwell R65C02
         ;; (inspired by David Empson on comp.sys.apple2)
