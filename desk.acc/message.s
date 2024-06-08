@@ -59,7 +59,7 @@ width:  .word   0               ; for `TextWidth` call
 event_params:   .tag MGTK::Event
 
 notpencopy:     .byte   MGTK::notpencopy
-textbg:         .byte   0
+textbg:         .byte   MGTK::textbg_black
 
 grafport:       .tag MGTK::GrafPort
 

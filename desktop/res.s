@@ -28,7 +28,7 @@ mapwidth:       .byte   0
 reserved:       .byte   0
         DEFINE_RECT maprect, 0, 0, 0, 0
 pattern:        .res    8, 0
-colormasks:     .byte   0, 0
+colormasks:     .byte   0, 0    ; TODO: Use MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   0
 penheight:      .byte   0

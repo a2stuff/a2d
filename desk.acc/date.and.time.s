@@ -209,7 +209,7 @@ colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::notpencopy
-textback:       .byte   $7F
+textback:       .byte   MGTK::textbg_white
 textfont:       .addr   DEFAULT_FONT
 nextwinfo:      .addr   0
         REF_WINFO_MEMBERS

@@ -204,12 +204,12 @@ mapwidth:       .byte   MGTK::screen_mapwidth
 reserved2:      .byte   $00
         DEFINE_RECT maprect, 0, 0, kWidth, kHeight
 pattern:        .res    8, $FF
-colormasks:     .byte   $FF, 0
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
         DEFINE_POINT penloc, 0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   MGTK::pencopy
-textback:       .byte   $7F
+textback:       .byte   MGTK::textbg_white
 textfont:       .word   FONT
 nextwinfo:      .addr   0
         REF_WINFO_MEMBERS

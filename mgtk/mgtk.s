@@ -4000,7 +4000,7 @@ penloc:         .word   0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textback:       .byte   0
+textback:       .byte   MGTK::textbg_black
 textfont:       .addr   0
         REF_GRAFPORT_MEMBERS
 .endparams
@@ -4019,7 +4019,7 @@ penloc:         .word   0, 0
 penwidth:       .byte   1
 penheight:      .byte   1
 penmode:        .byte   0
-textback:       .byte   0
+textback:       .byte   MGTK::textbg_black
 textfont:       .addr   0
         REF_GRAFPORT_MEMBERS
 .endparams
