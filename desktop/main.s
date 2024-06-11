@@ -10124,6 +10124,7 @@ FinishOperation:
 ;;; Used for drag/drop copy as well as deleting selection
 ;;; (if `drag_drop_params::result` equals `trash_icon_num`)
 .proc DoDrop
+        copy    #0, move_flag
         lda     drag_drop_params::result
         cmp     trash_icon_num
         bne     :+
