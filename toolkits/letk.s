@@ -591,26 +591,26 @@ ret:    rts
         ;; Anything to delete?
         ldy     #0
         lda     (a_buf),y
-        beq     ret
+        beq     _InsertChar::ret
 
         lda     #0
         sta     (a_buf),y
         ldy     #LETK::LineEditRecord::caret_pos
         sta     (a_record),y
 
-        jsr     _SetPort
+        jmp     _ClearAndDrawText
+.endproc ; _DeleteLine
 
+;;; ============================================================
+
+.proc _ClearRect
         ;; NOTE: Don't include `_SetPort` call in `_ClearRect`
         ;; because if the port is obscured then `_SetPort` pops
         ;; the caller!
-
-clear:
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect
-
-ret:    rts
-.endproc ; _DeleteLine
-_ClearRect := _DeleteLine::clear
+        rts
+.endproc ; _ClearRect
 
 ;;; ============================================================
 ;;; Move caret to start of input field.
