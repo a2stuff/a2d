@@ -1166,7 +1166,7 @@ Repeat for each file picker:
 
 For DeskTop's Shortcut > Edit a Shortcut... file picker:
 * Create a shortcut not on the startup volume. Edit the shortcut. Verify that the file picker shows the shortcut target volume and file selected.
-* Create a shortcut on a removable volume. Eject the volume. Edit the shortcut. Verify that the file picker initializes to any available volume, and does not crash or show corrupted results.
+* Create a shortcut on a removable volume. Eject the volume. Edit the shortcut. Verify that the file picker initializes to the drives list, and does not crash or show corrupted results.
 
 For Shortcuts's File > Run a Program... file picker:
 * Navigate to an empty volume and don't select anything. Click OK. Verify that an alert is shown.
@@ -1176,11 +1176,14 @@ For Shortcuts's File > Run a Program... file picker:
 # Text Input Fields
 
 This covers:
- * DeskTop's name prompt, used in:
-   * File > Duplicate...
-   * File > Rename...
+ * DeskTop's modal name dialog, used in:
    * Special > Format Disk...
    * Special > Erase Disk...
+ * DeskTop's modeless rename prompt, used in:
+   * File > New Folder...
+   * File > Duplicate...
+   * File > Rename...
+   * Note that this uniquely shows text centered, so pay close attention!
  * DeskTop's Add/Edit a Shortcut dialog (an extended File Picker)
  * Find Files DA.
  * Map DA:
@@ -1271,7 +1274,7 @@ Repeat for each list box:
 * Click on an item. Verify it is selected. Click on white space below the items (if possible). Verify that selection is cleared.
 
 For the Sounds DA:
-* Click on an item. Verify it is selected, and plays the sound. Click on the same selected item. Verify if plays the sound again.
+* Click on an item. Verify it is selected, and plays the sound. Click on the same selected item. Verify it plays the sound again.
 
 Repeat for each list box where the contents are dynamic:
 * Populate the list so that the scrollbar is active. Scroll down by one row. Repopulate the list box so that the scrollbar is inactive. Verify that all expected items are shown, and hitting the Up Arrow key selects the last item.
