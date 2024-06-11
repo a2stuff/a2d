@@ -3374,6 +3374,15 @@ spin:   jsr     GetSelectionWindow
         jsr     SelectAndRefreshWindowOrClose
         RTS_IF_NE
 
+        ;; Refreshing may have selected active window's icon; clear
+        ;; selection if needed.
+        ;; TODO: Make `SelectAndRefreshWindow` not select icon?
+        lda     selected_window_id
+        cmp     active_window_id
+    IF_NE
+        jsr     ClearSelection
+    END_IF
+
         ;; Select and rename the file
         param_call SelectFileIconByName, stashed_name
         jmp     CmdRename

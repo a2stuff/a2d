@@ -24,6 +24,7 @@
 
 * Create a new folder (File > New Folder) - verify that it is selected / scrolled into view.
 * Select a file. File > Duplicate.... Verify that the new file is selected / scrolled into view / prompting for rename.
+* Select a file, ensuring that the file's containing window's folder or volume icon is present. File > Duplicate.... Verify that only the new file is selected, and not the parent window's folder or volume icon.
 
 * Move a file by dragging - same volume - target is window.
 * Move a file by dragging - same volume - target is volume icon.
