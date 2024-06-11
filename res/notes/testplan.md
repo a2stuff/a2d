@@ -61,9 +61,9 @@
   * Launch DeskTop. With multiple icons selected, click an icon's name. Verify that no rename prompt appears.
 
 * Launch DeskTop. Select a file icon. Position the window so that the icon is entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
-* Launch DeskTop. Close all windows. Select a volume icon. Move the icon so that the name entirely offscreen. File > Rename.... Press Escape to cancel. Verify that nothing mispaints on the desktop.
-* Launch DeskTop. Open a window. Select a volume icon. Move the icon so that the name entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
-* Launch DeskTop. Open two windows. Select a volume icon. Move the icon so that the name entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the previously active window title bar is reactivated and that nothing mispaints on the desktop.
+* Launch DeskTop. Close all windows. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename.... Press Escape to cancel. Verify that nothing mispaints on the desktop.
+* Launch DeskTop. Open a window. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
+* Launch DeskTop. Open two windows. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the previously active window title bar is reactivated and that nothing mispaints on the desktop.
 
 * Launch DeskTop. Select an AppleWorks file icon. File > Rename.... Specify a name using a mix of uppercase and lowercase. Close the containing window and re-open it. Verify that the filename case is retained.
 * Launch DeskTop. Select an AppleWorks file icon. File > Duplicate.... Specify a name using a mix of uppercase and lowercase. Close the containing window and re-open it. Verify that the filename case is retained.
@@ -82,7 +82,7 @@
   * Select a disk. Special > Format Disk. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that the name appears with the specified case (e.g. "lower.UPPER.MiX"). Restart DeskTop. Verify that the name remains unchanged.
   * Select a disk. Special > Erase Disk. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Let the operation complete. Verify that the name appears with the specified case (e.g. "lower.UPPER.MiX"). Restart DeskTop. Verify that the name remains unchanged.
 
-* Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". File > New Folder. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). In the Options control panel, uncheck "Preserve uppercae and lowercase in names". Select the folder. File > Rename. Click away without changing the name. Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
+* Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". File > New Folder. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). In the Options control panel, uncheck "Preserve uppercase and lowercase in names". Select the folder. File > Rename. Click away without changing the name. Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
 
 * Launch DeskTop. In the Options control panel, check "Preserve uppercase and lowercase in names". File > New Folder. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Select the folder. Then run these test cases:
   * Drag it to another volume to copy it. Verify that the copied file retains the same mixed case name.
@@ -92,10 +92,10 @@
 
 * File > Get Info a non-folder file. Verify that the size shows as "_size_K".
 * File > Get Info a folder containing 0 files. Verify that the size shows as "_size_K for 1 item".
-* File > Get Info a folder containing 1 files. Verify that the size shows as "_size_K for 2 items".
+* File > Get Info a folder containing 1 file. Verify that the size shows as "_size_K for 2 items".
 * File > Get Info a folder containing 2 or more files. Verify that the size shows as "_size_K for _count_ items", including the folder itself.
 * File > Get Info a volume containing 0 files. Verify that the size shows as "_size_K for 0 items / _total_K".
-* File > Get Info a volume containing 1 files. Verify that the size shows as "_size_K for 1 item / _total_K".
+* File > Get Info a volume containing 1 file. Verify that the size shows as "_size_K for 1 item / _total_K".
 * File > Get Info a volume containing 2 or more files. Verify that the size shows as "_size_K for _count_ items / _total_K".
 
 * Open a window. Position two icons so one overlaps another. Select both. Drag both to a new location. Verify that the icons are repainted in the new location, and erased from the old location.
@@ -114,7 +114,7 @@
 * Open folder with new files. Use View > by Date. Verify that two files modified on the same date are correctly ordered by time.
 
 * Open folder with zero files. Use View > by Name. Verify that there is no crash.
-* Open folder with one files. Use View > by Name. Verify that the entry paints correctly.
+* Open folder with one file. Use View > by Name. Verify that the entry paints correctly.
 
 * Open a window for a volume; open a window for a folder; close volume window; close folder window. Repeat 10 times to verify that the volume table doesn't have leaks.
 
@@ -150,7 +150,7 @@
   * Launch DeskTop. Select two volume icons. Hold modifier and click on the desktop, not on an icon. Verify that selection is not cleared.
   * Launch DeskTop. Select one or more volume icons. Hold modifier and click a selected volume icon. Verify that it is deselected.
   * Launch DeskTop. Hold modifier and double-click on a non-selected volume icon. Verify that it highlights then unhighlights, and does not open.
-  * Launch DeskTop. Select a volume icon. Hold modifier and double-click the selected volume icon. Verify that it unhighlights then highlights, and does not open.
+  * Launch DeskTop. Select a volume icon. Wait a few seconds for the double-click timer to expire. Hold modifier and double-click the selected volume icon. Verify that it unhighlights then highlights, and does not open.
   * Launch DeskTop. Select a volume icon. Hold modifier down and drag a selection rectangle around another volume icon. Verify that both are selected.
   * Launch DeskTop. Open a volume containing files. Click on a file icon. Hold modifier and click a different file icon. Verify that selection is extended.
   * Launch DeskTop. Open a volume containing files. Select two file icons. Hold modifier and click on the window, not on an icon. Verify that selection is not cleared.
@@ -158,7 +158,7 @@
   * Launch DeskTop. Open a window. Select an icon. Hold modifier down and drag a selection rectangle around another icon. Verify that both are selected.
   * Launch DeskTop. Open a window. Select one or more file icons. Hold modifier and click a selected file icon. Verify that it is deselected.
   * Launch DeskTop. Open a window. Hold modifier and double-click on a non-selected file icon. Verify that it highlights then unhighlights, and does not open.
-  * Launch DeskTop. Open a window. Select a file icon. Hold modifier and double-click the selected file icon. Verify that it unhighlights then highlights, and does not open.
+  * Launch DeskTop. Open a window. Select a file icon. Wait a few seconds for the double-click timer to expire. Hold modifier and double-click the selected file icon. Verify that it unhighlights then highlights, and does not open.
   * Launch DeskTop. Open a volume window. Hold modifier, and drag-select icons in the window. Release the modifier. Verify that the volume icon is no longer selected. Click an empty area in the window to clear selection. Verify that the selection in the window clears, and that the volume icon becomes selected.
   * Launch DeskTop. Open a volume window with many icons. Click on a file icon to select it. Modifier-click the icon to deselect it. Drag-select on the desktop covering a large area. Verify that no file icons are erroneously painted.
   * Launch DeskTop. Open a volume window with many icons. Modifier-click on a file icon to select it. Drag-select on the desktop covering a large area. Verify that no file icons are erroneously painted.
@@ -211,10 +211,10 @@
 * Launch DeskTop. Open a folder using Apple menu (e.g. Control Panels) or a shortcut. Verify that the used/free numbers are non-zero.
 * Launch DeskTop. Open a subdirectory folder. Quit and relaunch DeskTop. Verify that the used/free numbers in the restored windows are non-zero.
 
-* Launch DeskTop. Open a folder containing subfolders. Select all the icons in the folder. Double-click one of the subfolders. Verify that the selection is not retained in the parent window. Position the child window over top of the parent so it overlaps some of the icons. Close the child window. Verify that the parent window correctly shows only the previously opened folder as highlighted.
+* Launch DeskTop. Open a folder containing subfolders. Select all the icons in the folder. Double-click one of the subfolders. Verify that the selection is retained in the parent window, with the subfolder icons dimmed. Position a child window over top of the parent so it overlaps some of the icons. Close the child window. Verify that the parent window correctly shows only the previously opened folder as selected.
 
-* Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the obscured part of the folder. Verify the folder doesn't highlight.
-* Launch DeskTop. Open a window containing folders and files. Scroll window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the visible part of the folder. Verify the folder highlights but doesn't render past window bounds. Continue dragging over the obscured part of the folder. Verify that the folder unhighlights.
+* Launch DeskTop. Open a window containing folders and files. Scroll the window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the obscured part of the folder. Verify the folder doesn't highlight.
+* Launch DeskTop. Open a window containing folders and files. Scroll the window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file over the visible part of the folder. Verify the folder highlights but doesn't render past window bounds. Continue dragging over the obscured part of the folder. Verify that the folder unhighlights.
 
 * Launch DeskTop. Open two windows containing folders and files. Drag a file from one window over a folder in the other window. Verify that the folder highlights. Drop the file. Verify that the file is copied or moved to the correct target folder.
 * Launch DeskTop. Open two windows containing folders and files. Scroll one window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file from the other window over the obscured part of the folder. Verify the folder doesn't highlight.
@@ -229,14 +229,13 @@
 * Launch DeskTop. Close all windows. Special > Copy Disk. Quit back to DeskTop. Verify that no windows are restored.
 * Launch DeskTop. Special > Copy Disk. Quit back to DeskTop. Invoke BASIC.SYSTEM. Ensure /RAM exists.
 
-* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window. File > Delete. Click OK. Verify that the window with the deleted file refreshes.
-* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window. File > Duplicate. Enter a new name. Verify that the window with the selected file refreshes.
-* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window. File > Rename. Enter a new name. Verify that the icon is renamed.
+* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window by clicking its title bar. File > Delete. Click OK. Verify that the window with the deleted file refreshes.
+* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window by clicking its title bar. File > Duplicate. Enter a new name. Verify that the window with the selected file refreshes.
+* Launch DeskTop. Open two windows. Select a file in one window. Activate the other window by clicking its title bar. File > Rename. Enter a new name. Verify that the icon is renamed.
 * Launch DeskTop. Open two windows. Select a file in one window. Activate the other window and move it so that it partially obscures the selected file (e.g. with the title bar). File > Rename. Enter a new name. Verify that the active window is not mis-painted.
 
 * Repeat the following cases for File > New Folder, File > Rename, and File > Duplicate:
   * Launch DeskTop. Open a window and (if needed) select a file. Run the command. Enter a name, but place the caret in the middle of the name (e.g. "exam|ple"). Click away. Verify that the full name is used.
-  * Launch DeskTop. Run the command. Verify if the OK button correctly enabled if the text field is empty, disabled if not. Enter text. Verify that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
   * Launch DeskTop. Create a set of nested folders approaching the path length limit (e.g. `/VOL/AAAAAAAAAAAAAAA/BBBBBBBBBBBBBBB/CCCCCCCCCCCCCCC/`). Use the command to try creating, duplicating, or renaming a folder within the nested folders that is longer than the path limit (e.g. `DDDDDDDDDDDX`). Verify that an error is shown but the dialog is not dismissed. Shorten the name under the length limit (e.g. `DDDDDDDDDDD`) and verify that the command is successful.
 
 * Configure a system with removable disks. (e.g. Virtual II OmniDisks) Launch DeskTop. Verify that volume icons are positioned without gaps (down from the top-right, then across the bottom right to left). Eject one of the middle volumes. Verify icon disappears. Insert a new volume. Verify icon takes up the vacated spot. Repeat test, ejecting multiple volumes verify that positions are filled in order (down from the top-right, etc).
@@ -244,7 +243,7 @@
 
 * Launch DeskTop. Open a window. File > New Folder..., enter name. Copy the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
 * Launch DeskTop. Open a window. File > New Folder..., enter name. Move the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
-* Launch DeskTop. Create a shortcut for a non-executable file at the root of a volume. Run the shortcut. Verify that the "Files remaining" count bottoms out at 0. Close the alert. Drag a volume icon to another volume. Verify that the "Files remaining" count bottoms out at 0.
+* Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Create a shortcut for a non-executable file at the root of a volume, set to "Copy to RAMCard" "at first use". Run the shortcut. Verify that the "Files remaining" count bottoms out at 0. Close the alert. Drag a volume icon to another volume. Verify that the "Files remaining" count bottoms out at 0.
 
 * Launch DeskTop. Open a volume. File > New Folder..., create A. File > New Folder..., create B. Drag B onto A. File > New folder.... Verify DeskTop doesn't hang.
 
@@ -266,7 +265,7 @@
 * Load DeskTop. Create a folder, and a file within the folder with the same name as the folder, and another file (e.g. /RAM/F and /RAM/F/F and /RAM/F/B). Select both files and try to move them into the parent folder using drag and drop. Verify that an error is shown before any files are moved.
 
 * Load DeskTop. Create a folder on a volume. Create a non-folder file with the same name as the folder on a second volume. Drag the folder to the second volume. When prompted to overwrite, click Yes. Verify that the volume contains a folder of the appropriate name.
-* Load DeskTop. Create a folder on a volume, containing a non-folder file. Create a non-folder file with the same name as the folderon a second volume. Drag the folder to the second volume. When prompted to overwrite, click Yes. Verify that the volume contains a folder of the appropriate name, containing a non-folder file.
+* Load DeskTop. Create a folder on a volume, containing a non-folder file. Create a non-folder file with the same name as the folder on a second volume. Drag the folder to the second volume. When prompted to overwrite, click Yes. Verify that the volume contains a folder of the appropriate name, containing a non-folder file.
 * Load DeskTop. Create a non-folder file on a volume. Create a folder with the same name as the file on a second volume. Drag the file onto the second volume. Verify that an alert is shown about overwriting a directory.
 
 * Load DeskTop. Open a volume. Adjust the window size so that horizontal and vertical scrolling is required. Scroll to the bottom-right. Quit DeskTop, reload. Verify that the window size and scroll position was restored correctly.
@@ -284,7 +283,6 @@
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Drag a volume icon into an open window. Verify that after the copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
 
 * Launch DeskTop. Copy multiple selected files to another volume. Repeat the copy. When prompted to overwrite, alternate clicking Yes and No. Verify that the "Files remaining" count decreases to zero.
-* Launch DeskTop. Copy a folder containing multiple files to another volume. Repeat the copy. When prompted to overwrite, alternate clicking Yes and No. Verify that the "Files remaining" count decreases to zero.
 
 * Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Insert disks A, B, C, D in drives starting at the highest slot first, e.g. S7D1, S7D2, S5D1, S5D2. Launch DeskTop. Verify that the disks appear in order A, B, C, D. Eject the disks, and wait for DeskTop to remove the icons. Pause the emulator, and reinsert the disks in the same drives. Un-pause the emulator. Verify that the disks appear on the DeskTop in the same order. Eject the disks again, pause, and insert the disks into the drives in reverse order (A in S5D2, etc). Un-pause the emulator. Verify that the disks appear in reverse order on the DeskTop.
 * Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Launch DeskTop. Insert an unformatted SmartPort disk image. When prompted to format, click OK. Verify that the prompt for the name includes the correct slot and drive designation for the disk.
@@ -860,7 +858,7 @@ Image File:
 # Desk Accessories
 
 Repeat for every desk accessory that runs in a movable window:
-* Launch DeskTop. Open the DA. Click on the title bar but don't move the window. Verify that window doesn't repaint if the window is not moved.
+* Launch DeskTop. Open the DA. Click on the title bar but don't move the window. Verify that the window doesn't repaint if the window is not moved.
 
 Repeat for every desk accessory that runs in a window.
 * Launch DeskTop. Open the DA. Hold Apple (either Open-Apple or Solid-Apple) and press W. Verify that the desk accessory exits. Repeat with caps-lock off.
@@ -894,9 +892,9 @@ Repeat for every desk accessory that runs in a window.
 
 ## Calculator and Sci.Calc
 
-* Run Apple Menu > Calculator. Drag Calculator window over a volume icon. Then drag calculator to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
+* Run Apple Menu > Calculator. Drag the Calculator window over a volume icon. Then drag the Calculator window to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
 
-* Run Apple Menu > Calculator. Drag Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen. Drag window back up. Verify the typed numbers were input.
+* Run Apple Menu > Calculator. Drag the Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen. Drag window back up. Verify the typed numbers were input.
 
 Repeat for Calculator and Sci.Calc:
 * With an English build, run the DA. Verify that '.' appears as the decimal separator in calculation results and that '.' when typed functions as a decimal separator.
@@ -966,7 +964,7 @@ With Sci.Calc:
 
 * Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Apple Menu > About This Apple II. Verify that the Mockingboard is detected.
 
-* Configure a device multiple drives connected to a Smartport controller on a higher slot, a single drive connected to a Smartport controller in a lower slot. Launch DeskTop. Apple Menu > About This Apple II. Verify that the name on the lower slot doesn't have an extra character at the end.
+* Configure multiple drives connected to a Smartport controller on a higher numbered slot, a single drive connected to a Smartport controller in a lower numbered slot. Launch DeskTop. Apple Menu > About This Apple II. Verify that the name on the lower numbered slot doesn't have an extra character at the end.
 
 * Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Apple Menu > About This Apple II, close it. Verify that the file is still present on Ram5.
 
@@ -980,7 +978,7 @@ With Sci.Calc:
 
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
 * Run System Speed DA. Click Fast then click OK. Verify DeskTop does not lock up.
-* Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that display does not switch from DHR to HR.
+* Run DeskTop on a IIc. Launch Control Panel > System Speed. Click Normal and Fast. Verify that the display does not switch from DHR to HR.
 * Run System Speed DA. Position the cursor to the left of the animation, where it is not flickering, and move it up and down. Verify that stray pixels are not left behind by the animation.
 
 ## Puzzle
@@ -993,7 +991,7 @@ With Sci.Calc:
 
 ## Run Basic Here
 
-* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure BASIC.SYSTEM is present on the boot volume. Launch DeskTop. Open a window. Apple Menu > Run Basic Here. Verify that BASIC.SYSTEM starts.
+* Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure BASIC.SYSTEM is present on the boot volume. Open a window. Apple Menu > Run Basic Here. Verify that BASIC.SYSTEM starts.
 
 ## Joystick
 
@@ -1277,7 +1275,7 @@ Repeat for each list box where the contents are dynamic:
 # Menus
 
 * Click to open a menu. Without clicking again, move the mouse pointer up and down over the menu items, while simultaneously tapping the 'A' key. Verify that the key presses do not cause other menus to open instead.
-* Click to open a menu. Move the mouse over menu bar items and menu items. Verify that the highlight changes immediately when mouse pointer hot spot is over the next item, not delayed by one movement. For example, if the mouse moves down and the next item doesn't highlight, moving the mouse right also shouldn't cause it to highlight.
+* Click to open a menu. Move the mouse over menu bar items and menu items. Verify that the highlight changes immediately when the mouse pointer hot spot is over the next item, not delayed by one movement. For example, if the mouse moves down and the next item doesn't highlight, moving the mouse right also shouldn't cause it to highlight.
 
 The following steps exercise the menu as "pull down" using the mouse:
 
