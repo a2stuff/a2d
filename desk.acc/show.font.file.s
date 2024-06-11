@@ -323,31 +323,8 @@ filename:       .res    16
         DEFINE_CLOSE_PARAMS close_params
 
 ;;; ============================================================
-;;; Get filename from DeskTop
 
 .proc Entry
-        ;; Set window title to filename
-        ldy     INVOKE_PATH
-:       lda     INVOKE_PATH,y       ; find last '/'
-        cmp     #'/'
-        beq     :+
-        dey
-        bne     :-
-:       ldx     #0
-:       lda     INVOKE_PATH+1,y     ; copy filename
-        sta     filename+1,x
-        inx
-        iny
-        cpy     INVOKE_PATH
-        bne     :-
-        stx     filename
-
-        copy16  #filename, STARTLO
-        copy16  #filename+kMaxFilenameLength, ENDLO
-        copy16  #aux::titlebuf, DESTINATIONLO
-        sec                     ; main>aux
-        jsr     AUXMOVE
-
         FALL_THROUGH_TO LoadFileAndRunDA
 .endproc ; Entry
 
@@ -374,7 +351,7 @@ filename:       .res    16
         JUMP_TABLE_MLI_CALL CLOSE, close_params
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         plp
-        bcs     exit
+        jcs     exit
 
         ;; --------------------------------------------------
         ;; Try to verify that this is a font file
@@ -383,11 +360,11 @@ filename:       .res    16
         cmp     #$00            ; regular?
         beq     :+
         cmp     #$80            ; double-width?
-        bne     exit
+        jne     exit
 
 :       lda     font_buffer + MGTK::Font::lastchar ; usually $7F
-        beq     exit
-        bmi     exit
+        jeq     exit
+        jmi     exit
 
         lda     font_buffer + MGTK::Font::height ; 1-16
         beq     exit
@@ -404,6 +381,30 @@ filename:       .res    16
         copy16  #font_buffer, STARTLO
         add16   #font_buffer-1, read_params::trans_count, ENDLO
         copy16  #aux::font_buffer, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        ;; --------------------------------------------------
+        ;; Set window title to filename
+
+        ldy     INVOKE_PATH
+:       lda     INVOKE_PATH,y       ; find last '/'
+        cmp     #'/'
+        beq     :+
+        dey
+        bne     :-
+:       ldx     #0
+:       lda     INVOKE_PATH+1,y     ; copy filename
+        sta     filename+1,x
+        inx
+        iny
+        cpy     INVOKE_PATH
+        bne     :-
+        stx     filename
+
+        copy16  #filename, STARTLO
+        copy16  #filename+kMaxFilenameLength, ENDLO
+        copy16  #aux::titlebuf, DESTINATIONLO
         sec                     ; main>aux
         jsr     AUXMOVE
 
