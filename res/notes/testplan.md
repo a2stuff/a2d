@@ -841,18 +841,22 @@ Image File:
 * Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
     * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select folder icon, select DA from Apple menu. Verify nothing happens.
     * Select image file icon, select DA from Apple menu. Verify image is shown.
 * Put `SHOW.TEXT.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
     * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select folder icon, select DA from Apple menu. Verify nothing happens.
     * Select text file icon, select DA from Apple menu. Verify text is shown.
 * Put `SHOW.FONT.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
     * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select folder icon, select DA from Apple menu. Verify nothing happens.
     * Select font file icon, select DA from Apple menu. Verify font is shown.
 * Put `SHOW.DUET.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
     * Select volume icon, select DA from Apple menu. Verify nothing happens.
+    * Select folder icon, select DA from Apple menu. Verify nothing happens.
     * Select Electric Duet file icon, select DA from Apple menu. Verify music is played.
 
 # Desk Accessories
