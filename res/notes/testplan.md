@@ -644,6 +644,11 @@
 
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
 
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Check "at boot". Click Cancel. Shortcuts > Add a Shortcut.... Verify "at boot" is not checked.
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Check "at first use". Click Cancel. Shortcuts > Add a Shortcut.... Verify "at first use" is not checked.
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Check "list only". Click Cancel. Shortcuts > Add a Shortcut.... Verify "list only" is not checked.
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Select a target. Check "list only" and "at first use". Click OK. Restart DeskTop. Shortcuts > Edit a Shortcut... Select the previously created shortcut. Click Cancel. Shortcuts > Add a Shortcut.... Verify that "list only" and "at first use" are not checked.
+
 * Launch DeskTop. Create a shortcut, "menu and list" / "at boot". Create a second shortcut, "menu and list", "at first use". Create a third shortcut, "menu and list", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
 * Launch DeskTop. Create a shortcut, "list only" / "at boot". Create a second shortcut, "list only", "at first use". Create a third shortcut, "list only", "never". Delete the first shortcut. Verify that the remaining shortcuts are "at first use" and "never".
 * Launch DeskTop. Delete all shortcuts. Create a shortcut, "list only" / "never". Edit the shortcut. Verify that it is still "list only" / "never". Change it to "menu and list", and click OK. Verify that it appears in the Shortcuts menu.

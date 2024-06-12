@@ -39,6 +39,13 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         jsr     file_dialog::Init
         copy    #$80, file_dialog::extra_controls_flag
 
+        lda     #BTK::kButtonStateNormal
+        sta     primary_run_list_button::state
+        sta     secondary_run_list_button::state
+        sta     at_first_boot_button::state
+        sta     at_first_use_button::state
+        sta     never_button::state
+
         ldax    #label_edit
         bit     is_add_flag
     IF_NS
