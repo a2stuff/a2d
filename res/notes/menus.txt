@@ -4,11 +4,11 @@ Same
  --------------------------- -------------------------------- --------------------------------- --------
  Apple > About the Finder... Apple > About This Apple IIgs... Apple > About Apple II DeskTop...
 
- File > New Folder           File > New Folder                File > New Folder...              OA-N
+ File > New Folder           File > New Folder                File > New Folder                 OA-N
  File > Open                 File > Open                      File > Open                       OA-O
  File > Close                File > Close                     File > Close Window               OA-W
                              File > Close All                 File > Close All
- File > Duplicate            File > Duplicate...              File > Duplicate...               OA-D
+ File > Duplicate            File > Duplicate...              File > Duplicate                  OA-D
  Edit > Select All           Edit > Select All                File > Select All                 OA-A
  File > Get Info             Special > Icon Info...           File > Get Info                   OA-I
  Special > Shut Down         Special > Shut Down              File > Quit                       OA-Q

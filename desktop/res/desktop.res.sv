@@ -4,7 +4,7 @@
 .define res_string_menu_bar_item_special "Speciell"
 .define res_string_menu_bar_item_startup "Start"
 .define res_string_menu_bar_item_selector "Genv{gar"
-.define res_string_menu_item_new_folder "Ny Mapp..."
+.define res_string_menu_item_new_folder "Ny Mapp"
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "\\ppna"
 .define res_char_menu_item_open_shortcut 'O'
@@ -34,8 +34,8 @@
 .define res_string_menu_item_make_link "Skapa alias"
 .define res_string_menu_item_get_info "Visa info"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_rename_icon "Byt namn..."
-.define res_string_menu_item_duplicate "Duplicera..."
+.define res_string_menu_item_rename_icon "Byt namn"
+.define res_string_menu_item_duplicate "Duplicera"
 .define res_string_about_text_line5 "F|rfattare: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais och Luc Barthelet"
 .define res_string_about_text_line7 "Med tack till: A. Gerard, J. Gerber, P. Pahl, J. Bernard"

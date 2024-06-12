@@ -54,7 +54,6 @@ Project Page: https://github.com/a2stuff/a2d
 * Add file type string "LBR" for $E0 ("archival library")
 * Filetype and support for Vortex Tracker PT3 files.
 * Show drag outlines even for icons outside visible area.
-* Select new file after File > Duplicate...
 * Show icon for locked files in list views.
 * Show special icon for folders with AuxType $8000.
 * Update GS/OS "case bits" when renaming files/volumes. (([#352](https://github.com/a2stuff/a2d/issues/352))
@@ -74,7 +73,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix refreshing volume icon after Format/Erase.
 * Refresh correct window after renaming an icon, if view is by name.
 * Fix corruption when exiting Shortcuts dialogs with a list view window. (([#790](https://github.com/a2stuff/a2d/issues/790))
-* Don't close File > Rename... and File > Duplicate... prompt if path is too long.
+* Don't close File > Rename and File > Duplicate prompt if path is too long.
 * Fix corruption issues when replacing files with folders and folders with anything during copy.
 * Fix initial window size calculation for list views so scrollbar is not shown. ([#792](https://github.com/a2stuff/a2d/issues/792))
 

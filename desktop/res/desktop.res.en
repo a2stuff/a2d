@@ -4,7 +4,7 @@
 .define res_string_menu_bar_item_special "Special"
 .define res_string_menu_bar_item_startup "Startup"
 .define res_string_menu_bar_item_selector "Shortcuts"
-.define res_string_menu_item_new_folder "New Folder..."
+.define res_string_menu_item_new_folder "New Folder"
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "Open"
 .define res_char_menu_item_open_shortcut 'O'
@@ -34,8 +34,8 @@
 .define res_string_menu_item_make_link "Make Alias"
 .define res_string_menu_item_get_info "Get Info"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_rename_icon "Rename..."
-.define res_string_menu_item_duplicate "Duplicate..."
+.define res_string_menu_item_rename_icon "Rename"
+.define res_string_menu_item_duplicate "Duplicate"
 .define res_string_about_text_line5 "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais and Luc Barthelet"
 .define res_string_about_text_line7 "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"

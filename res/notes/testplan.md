@@ -23,8 +23,8 @@
 * Open a text file with File > Open.
 
 * Create a new folder (File > New Folder) - verify that it is selected / scrolled into view.
-* Select a file. File > Duplicate.... Verify that the new file is selected / scrolled into view / prompting for rename.
-* Select a file, ensuring that the file's containing window's folder or volume icon is present. File > Duplicate.... Verify that only the new file is selected, and not the parent window's folder or volume icon.
+* Select a file. File > Duplicate. Verify that the new file is selected / scrolled into view / prompting for rename.
+* Select a file, ensuring that the file's containing window's folder or volume icon is present. File > Duplicate. Verify that only the new file is selected, and not the parent window's folder or volume icon.
 
 * Move a file by dragging - same volume - target is window.
 * Move a file by dragging - same volume - target is volume icon.
@@ -43,17 +43,17 @@
 
 * Open a volume, open a folder, close just the volume window; re-open the volume, re-open the folder, ensure the previous window is activated.
 
-* Launch DeskTop. Select an icon. File > Rename.... Enter a new name. Press Return. Verify that the icon updates with the new name.
-* Launch DeskTop. Select an icon. File > Rename.... Enter a new name. Press Escape. Verify that the icon doesn't change.
-* Launch DeskTop. Select an icon. File > Rename.... Enter a new name. Click away. Verify that the icon updates with the new name.
-* Launch DeskTop. Select an icon. File > Rename.... Make the name empty. Press Return. Verify that the icon doesn't change.
-* Launch DeskTop. Select an icon. File > Rename.... Make the name empty. Press Escape. Verify that the icon doesn't change.
-* Launch DeskTop. Select an icon. File > Rename.... Make the name empty. Click away. Verify that the icon doesn't change.
+* Launch DeskTop. Select an icon. File > Rename. Enter a new name. Press Return. Verify that the icon updates with the new name.
+* Launch DeskTop. Select an icon. File > Rename. Enter a new name. Press Escape. Verify that the icon doesn't change.
+* Launch DeskTop. Select an icon. File > Rename. Enter a new name. Click away. Verify that the icon updates with the new name.
+* Launch DeskTop. Select an icon. File > Rename. Make the name empty. Press Return. Verify that the icon doesn't change.
+* Launch DeskTop. Select an icon. File > Rename. Make the name empty. Press Escape. Verify that the icon doesn't change.
+* Launch DeskTop. Select an icon. File > Rename. Make the name empty. Click away. Verify that the icon doesn't change.
 
-* Launch DeskTop. Select a file icon. File > Rename.... Enter a unique name. Verify that the icon updates with the new name.
-* Launch DeskTop. Select a file icon. File > Rename.... Click away without changing the name. Verify that icon doesn't change.
-* Launch DeskTop. Select a volume icon. File > Rename.... Enter a unique name. Verify that the icon updates with the new name.
-* Launch DeskTop. Select a volume icon. File > Rename.... Click away without changing the name. Verify that the icon doesn't change.
+* Launch DeskTop. Select a file icon. File > Rename. Enter a unique name. Verify that the icon updates with the new name.
+* Launch DeskTop. Select a file icon. File > Rename. Click away without changing the name. Verify that icon doesn't change.
+* Launch DeskTop. Select a volume icon. File > Rename. Enter a unique name. Verify that the icon updates with the new name.
+* Launch DeskTop. Select a volume icon. File > Rename. Click away without changing the name. Verify that the icon doesn't change.
 
 * Repeat the following for volume icons and file icons:
   * Launch DeskTop. Select the icon. Click the icon's name. Verify that a rename prompt appears.
@@ -61,13 +61,13 @@
   * Launch DeskTop. With no selection, click the icon's name. Verify that no rename prompt appears.
   * Launch DeskTop. With multiple icons selected, click an icon's name. Verify that no rename prompt appears.
 
-* Launch DeskTop. Select a file icon. Position the window so that the icon is entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
-* Launch DeskTop. Close all windows. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename.... Press Escape to cancel. Verify that nothing mispaints on the desktop.
-* Launch DeskTop. Open a window. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
-* Launch DeskTop. Open two windows. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename.... Press Escape to cancel. Verify that the previously active window title bar is reactivated and that nothing mispaints on the desktop.
+* Launch DeskTop. Select a file icon. Position the window so that the icon is entirely offscreen. File > Rename. Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
+* Launch DeskTop. Close all windows. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename. Press Escape to cancel. Verify that nothing mispaints on the desktop.
+* Launch DeskTop. Open a window. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename. Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
+* Launch DeskTop. Open two windows. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename. Press Escape to cancel. Verify that the previously active window title bar is reactivated and that nothing mispaints on the desktop.
 
-* Launch DeskTop. Select an AppleWorks file icon. File > Rename.... Specify a name using a mix of uppercase and lowercase. Close the containing window and re-open it. Verify that the filename case is retained.
-* Launch DeskTop. Select an AppleWorks file icon. File > Duplicate.... Specify a name using a mix of uppercase and lowercase. Close the containing window and re-open it. Verify that the filename case is retained.
+* Launch DeskTop. Select an AppleWorks file icon. File > Rename. Specify a name using a mix of uppercase and lowercase. Close the containing window and re-open it. Verify that the filename case is retained.
+* Launch DeskTop. Select an AppleWorks file icon. File > Duplicate. Specify a name using a mix of uppercase and lowercase. Close the containing window and re-open it. Verify that the filename case is retained.
 
 * Launch DeskTop. In the Options control panel, uncheck "Preserve uppercase and lowercase in names". Then run these test cases:
   * File > New Folder. Enter a name with mixed case (e.g. "lower.UPPER.MiX"). Verify that the name appears with heuristic word casing (e.g. "Lower.Upper.Mix"). Close the window and re-open it. Verify that the name remains unchanged.
@@ -242,11 +242,11 @@
 * Configure a system with removable disks. (e.g. Virtual II OmniDisks) Launch DeskTop. Verify that volume icons are positioned without gaps (down from the top-right, then across the bottom right to left). Eject one of the middle volumes. Verify icon disappears. Insert a new volume. Verify icon takes up the vacated spot. Repeat test, ejecting multiple volumes verify that positions are filled in order (down from the top-right, etc).
 * Configure a system with removable disks. (e.g. Virtual II OmniDisks) Launch DeskTop. Open a volume icon. Open a folder icon. Eject the disk using the hardware (or emulator). Verify that DeskTop doesn't crash and that both windows close.
 
-* Launch DeskTop. Open a window. File > New Folder..., enter name. Copy the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
-* Launch DeskTop. Open a window. File > New Folder..., enter name. Move the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
+* Launch DeskTop. Open a window. File > New Folder, enter name. Copy the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
+* Launch DeskTop. Open a window. File > New Folder, enter name. Move the file to another folder or volume. Verify that the "Files remaining" count bottoms out at 0.
 * Configure a system with a RAMCard, and set DeskTop to copy itself to the RAMCard on startup. Launch DeskTop. Create a shortcut for a non-executable file at the root of a volume, set to "Copy to RAMCard" "at first use". Run the shortcut. Verify that the "Files remaining" count bottoms out at 0. Close the alert. Drag a volume icon to another volume. Verify that the "Files remaining" count bottoms out at 0.
 
-* Launch DeskTop. Open a volume. File > New Folder..., create A. File > New Folder..., create B. Drag B onto A. File > New folder.... Verify DeskTop doesn't hang.
+* Launch DeskTop. Open a volume. File > New Folder, create A. File > New Folder, create B. Drag B onto A. File > New Folder. Verify DeskTop doesn't hang.
 
 * Launch DeskTop. Open a window with files with dates with long month names (e.g. "February 29, 2020"). View > by Name. Resize the window so the lines are cut off on the right. Move the horizontal scrollbar all the way to the right. Verify that the right edges of all lines are visible.
 * Launch DeskTop. Open a window containing a folder. View > by Name. Open the folder. Verify that in the new window, the horizontal scrollbar is inactive.
@@ -337,41 +337,41 @@
 
 * Launch DeskTop. Clear the selection (e.g. by clicking on the DeskTop). Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
-  * File > Duplicate... is disabled.
-  * File > Rename... and Special > Make Alias are disabled.
+  * File > Duplicate is disabled.
+  * File > Rename and Special > Make Alias are disabled.
   * File > Open and File > Get Info are disabled.
 * Launch DeskTop. Select only the Trash icon. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
-  * File > Duplicate... is disabled.
-  * File > Rename... and Special > Make Alias are disabled.
+  * File > Duplicate is disabled.
+  * File > Rename and Special > Make Alias are disabled.
   * File > Open and File > Get Info are disabled.
 * Launch DeskTop. Select a volume. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
-  * File > Duplicate... is disabled.
-  * File > Rename... and Special > Make Alias are enabled.
+  * File > Duplicate is disabled.
+  * File > Rename and Special > Make Alias are enabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Select two volume icons. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
-  * File > Duplicate... is disabled.
-  * File > Rename... and Special > Make Alias are disabled.
+  * File > Duplicate is disabled.
+  * File > Rename and Special > Make Alias are disabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Select a volume icon and the Trash icon. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
-  * File > Duplicate... is disabled.
-  * File > Rename... and Special > Make Alias are disabled.
+  * File > Duplicate is disabled.
+  * File > Rename and Special > Make Alias are disabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Open a volume window, and select a file. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
-  * File > Duplicate... is enabled.
-  * File > Rename... and Special > Make Alias are enabled.
+  * File > Duplicate is enabled.
+  * File > Rename and Special > Make Alias are enabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Open a volume window, and select two files. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
-  * File > Duplicate... is disabled.
-  * File > Rename... and Special > Make Alias are disabled.
+  * File > Duplicate is disabled.
+  * File > Rename and Special > Make Alias are disabled.
   * File > Open and File > Get Info are enabled.
-* Launch DeskTop. Close all windows. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are disabled.
-* Launch DeskTop. Open a window. Verify that File > New Folder..., File > Close Window, File > Close All, and everything in the View menu are enabled.
+* Launch DeskTop. Close all windows. Verify that File > New Folder, File > Close Window, File > Close All, and everything in the View menu are disabled.
+* Launch DeskTop. Open a window. Verify that File > New Folder, File > Close Window, File > Close All, and everything in the View menu are enabled.
 
 
 * Launch DeskTop. Open 3 windows. Close the top one. Verify that the repaint is correct.
@@ -390,7 +390,7 @@
   * Launch DeskTop. Open a window with icons. Obscure the window. File > Quit. Relaunch DeskTop. Verify that the restored window's icons don't appear on the desktop, and that the menu bar is not glitched.
   * Launch DeskTop. Open two windows with icons. Obscure one window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
   * Launch DeskTop. Open two windows with icons. Activate a window, View > by Name, and then obscure the window. Click on the other window's title bar. Click on the obscured window's title bar. Verify that the window contents don't repaint on the desktop.
-  * Launch DeskTop. Open a window with icons. Select an icon. Obscure the window. File > Rename..., enter a new name. Verify that the icon does not paint on the desktop.
+  * Launch DeskTop. Open a window with icons. Select an icon. Obscure the window. File > Rename, enter a new name. Verify that the icon does not paint on the desktop.
 
 * Launch DeskTop. Open a window. Try to drag the window so that the title bar intersects the menu bar. Verify that the window ends up positioned partially behind the menu bar.
 * Launch DeskTop. Open two windows. Drag them both so their title bars are partially behind the menu bar. Apple+Tab between the windows. Verify that the title bars do not mispaint on top of the menu bar.
@@ -413,15 +413,15 @@
 * Launch DeskTop. Open a window containing many folders. Select up to 7 folders. File > Open. Verify that as windows continue to open, the originally selected folders don't mispaint on top of them. (This will be easier to observe in emulators with acceleration disabled.)
 
 * Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click in the window to clear selection. Click on a volume icon. Click elsewhere on the desktop. Verify the icon isn't mispainted.
-* Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click in the window to clear selection. Click on a volume icon. File > Rename.... Enter a new valid name. Verify that no alert is shown.
+* Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click in the window to clear selection. Click on a volume icon. File > Rename. Enter a new valid name. Verify that no alert is shown.
 
-* Launch DeskTop. Select a volume icon. File > Rename.... Enter the name of another volume. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing.
-* Launch DeskTop. Open a window. Select a file icon. File > Rename.... Enter the name of a file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing.
+* Launch DeskTop. Select a volume icon. File > Rename. Enter the name of another volume. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing.
+* Launch DeskTop. Open a window. Select a file icon. File > Rename. Enter the name of a file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing.
 * Launch DeskTop. Open a volume window. Open a folder window. Select the volume icon and rename it. Verify that neither window is closed, and volume window is renamed.
 * Launch DeskTop. Open a volume window. Open a folder window. Activate the volume window. View > By Name. Select the folder icon. Rename it. Verify that the folder window is renamed.
 * Launch DeskTop. Open a volume window. Position a file icon with a short name near the left edge of the window, but far enough away that the scrollbars are not active. Rename the file icon with a long name. Verify that the window's scrollbars activate.
 * Launch DeskTop. Open a volume window. Position a file icon with a long name near the left edge of the window, so that the name is partially cut off and the scrollbars activate. Rename the file icon with a short name. Verify that the window's scrollbars deactivate.
-* Launch DeskTop. Close all windows. Select a volume icon. File > Rename..., enter a new name. Verify that there is no mis-painting of a scrollbar on the desktop.
+* Launch DeskTop. Close all windows. Select a volume icon. File > Rename, enter a new name. Verify that there is no mis-painting of a scrollbar on the desktop.
 
 * Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double click on B. Verify that the existing B window activates.
 * Launch DeskTop. Open a window. Create folders A, B and C. Drag B onto C. Drag A to the trash. Click OK in the delete confirmation dialog. Verify that after the deletion, no alerts appear and volume icons can still be selected.
@@ -454,8 +454,8 @@
 
   * Launch DeskTop. Insert a non-formatted disk into a SmartPort drive (e.g. Virtual ][ Omnidisk). Verify that a prompt is shown to format the disk. Click OK. Enter a name, and click OK. Verify that the correct slot and drive are shown in the confirmation prompt.
 
-* Launch DeskTop. Open a window. File > New Folder..., enter a unique name. File > New Folder..., enter the same name. Verify that an alert is shown. Dismiss the alert. Verify that the input field still has the previously typed name.
-* Launch DeskTop. Open a window. File > New Folder..., enter a unique name. File > New Folder..., enter the same name. Verify that an alert is shown. Dismiss the alert. Enter a new unique name. Verify that the second folder is created as a sibling to the first folder, not as a child.
+* Launch DeskTop. Open a window. File > New Folder, enter a unique name. File > New Folder, enter the same name. Verify that an alert is shown. Dismiss the alert. Verify that the input field still has the previously typed name.
+* Launch DeskTop. Open a window. File > New Folder, enter a unique name. File > New Folder, enter the same name. Verify that an alert is shown. Dismiss the alert. Enter a new unique name. Verify that the second folder is created as a sibling to the first folder, not as a child.
 
 * Launch DeskTop. Clear selection by closing all windows and clicking on the desktop. Press Apple+Down. Verify that nothing happens.
 
@@ -540,7 +540,7 @@
   * Delete a file from B using File > Delete. Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Drag a file from D to the trash. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Delete a file from D using File > Delete. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
-  * Duplicate a file in D using File > Duplicate.... Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Duplicate a file in D using File > Duplicate. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Drag a file in B onto C while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Drag a file in B onto D while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
 
@@ -608,8 +608,8 @@
 
 * Launch DeskTop. Create a set of nested folders with a total path length just under the 64-character limit (e.g. "/RAMA/AAAAAAAAAAAAAAA/BBBBBBBBBBBBBBB/CCCCCCCCCCCCCCC/DDDDDDDDDD"). Rename the volume so that the total path length of the innermost folder would be longer than 64 characters (e.g. "RAMAXXXXXXXXXXX"). Repeat the following operations, and verify that an error is shown and DeskTop doesn't crash or hang:
   * Select the innermost folder. File > Get Info.
-  * Select the innermost folder. File > Rename...
-  * Select the innermost folder. File > Duplicate...
+  * Select the innermost folder. File > Rename
+  * Select the innermost folder. File > Duplicate
   * Select the innermost folder. File > Copy To... (and pick a target)
   * Select the innermost folder. Shortcuts > Add a Shortcut...
   * Drag a file onto the innermost folder.
@@ -1186,9 +1186,9 @@ This covers:
    * Special > Format Disk...
    * Special > Erase Disk...
  * DeskTop's modeless rename prompt, used in:
-   * File > New Folder...
-   * File > Duplicate...
-   * File > Rename...
+   * File > New Folder
+   * File > Duplicate
+   * File > Rename
    * Note that this uniquely shows text centered, so pay close attention!
  * DeskTop's Add/Edit a Shortcut dialog (an extended File Picker)
  * Find Files DA.

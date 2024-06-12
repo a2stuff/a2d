@@ -4,7 +4,7 @@
 .define res_string_menu_bar_item_special "Speciel"
 .define res_string_menu_bar_item_startup "Start"
 .define res_string_menu_bar_item_selector "Genveje"
-.define res_string_menu_item_new_folder "Ny Mappe..."
+.define res_string_menu_item_new_folder "Ny Mappe"
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "]bn"
 .define res_char_menu_item_open_shortcut 'O'
@@ -34,8 +34,8 @@
 .define res_string_menu_item_make_link "Opret henvisning"
 .define res_string_menu_item_get_info "Vis Info"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_rename_icon "Omd|b..."
-.define res_string_menu_item_duplicate "Duplikere..."
+.define res_string_menu_item_rename_icon "Omd|b"
+.define res_string_menu_item_duplicate "Duplikere"
 .define res_string_about_text_line5 "Forfattere: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais og Luc Barthelet"
 .define res_string_about_text_line7 "Med tak til: A. Gerard, J. Gerber, P. Pahl, J. Bernard"

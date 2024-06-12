@@ -4,7 +4,7 @@
 .define res_string_menu_bar_item_special "Especial"
 .define res_string_menu_bar_item_startup "Arranque"
 .define res_string_menu_bar_item_selector "Atalhos"
-.define res_string_menu_item_new_folder "Nova Pasta..."
+.define res_string_menu_item_new_folder "Nova Pasta"
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "Abrir"
 .define res_char_menu_item_open_shortcut 'O'
@@ -34,8 +34,8 @@
 .define res_string_menu_item_make_link "Criar alias"
 .define res_string_menu_item_get_info "Obter Unforma][o"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_rename_icon "Renomear..."
-.define res_string_menu_item_duplicate "Dobro..."
+.define res_string_menu_item_rename_icon "Renomear"
+.define res_string_menu_item_duplicate "Dobro"
 .define res_string_about_text_line5 "Autores: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais e Luc Barthelet"
 .define res_string_about_text_line7 "Com agradecimentos a: A. Gerard, J. Gerber, P. Pahl, J. Bernard"

@@ -4,7 +4,7 @@
 .define res_string_menu_bar_item_special "Speciaal"
 .define res_string_menu_bar_item_startup "Opstart"
 .define res_string_menu_bar_item_selector "Opdrachten"
-.define res_string_menu_item_new_folder "Nieuwe map..."
+.define res_string_menu_item_new_folder "Nieuwe map"
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "Open"
 .define res_char_menu_item_open_shortcut 'O'
@@ -34,8 +34,8 @@
 .define res_string_menu_item_make_link "Maak alias aan"
 .define res_string_menu_item_get_info "Toon info"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_rename_icon "Wijzig naam..."
-.define res_string_menu_item_duplicate "Dupliceer..."
+.define res_string_menu_item_rename_icon "Wijzig naam"
+.define res_string_menu_item_duplicate "Dupliceer"
 .define res_string_about_text_line5 "Auteurs: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais en Luc Barthelet"
 .define res_string_about_text_line7 "Met dank aan: A. Gerard, J. Gerber, P. Pahl, J. Bernard"

@@ -4,7 +4,7 @@
 .define res_string_menu_bar_item_special "Especial"
 .define res_string_menu_bar_item_startup "Arranque"
 .define res_string_menu_bar_item_selector "Atajos"
-.define res_string_menu_item_new_folder "Nuevo Folder..."
+.define res_string_menu_item_new_folder "Nuevo Folder"
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "Abrir"
 .define res_char_menu_item_open_shortcut 'O'
@@ -34,8 +34,8 @@
 .define res_string_menu_item_make_link "Crear alias"
 .define res_string_menu_item_get_info "Obtener Informaci\x13n"
 .define res_char_menu_item_get_info_shortcut 'I'
-.define res_string_menu_item_rename_icon "Renombrar..."
-.define res_string_menu_item_duplicate "Duplicar..."
+.define res_string_menu_item_rename_icon "Renombrar"
+.define res_string_menu_item_duplicate "Duplicar"
 .define res_string_about_text_line5 "Autores: St\x11phane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais y Luc Barthelet"
 .define res_string_about_text_line7 "Con agradecimiento a: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
