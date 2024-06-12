@@ -723,7 +723,7 @@ The following tests all require:
 * Run DeskTop on a system with Slinky RAMDisk. Verify that subdirectories under APPLE.MENU are copied to /RAM5/DESKTOP/APPLE.MENU (or appropriate volume path).
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that LOCAL/DESKTOP.CONFIG is written to the startup disk.
-* Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Shortcuts > Add a Shortcut, and create a new shortcut. When prompted to save to the system disk, select OK. Verify that LOCAL/SELECTOR.LIST is written to the startup disk.
+* Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Shortcuts > Add a Shortcut, and create a new shortcut. Verify that LOCAL/SELECTOR.LIST is written to the startup disk.
 
 * Configure a system with a RAMCard of at least 1MB. On a physical volume, create a directory with a system file (e.g. BASIC.SYSTEM) and a subdirectory. In the subdirectory, create 256 normal files followed by a subdirectory (with some files) followed by more files. Then run the following tests:
   * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at boot. Ensure DeskTop is set to copy to RAMCard on startup. Restart DeskTop. Verify that the directory is successfully copied.
@@ -746,7 +746,7 @@ The following tests all require:
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Open the RAM Disk volume. Open the Desktop folder. Apple Menu > Control Panels. Drag Apple.Menu from the Desktop folder to the Control.Panels window. Verify that an alert is shown that an item can't be moved or copied into itself.
 
-* Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Shortcuts > Edit a Shortcut. Select a modify a shortcut, and click OK. Verify that no prompt is shown for saving changes to the startup disk.
+* Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Shortcuts > Edit a Shortcut. Select a shortcut, modify it (e.g. change its name) and click OK. Verify that no prompt is shown for saving changes to the startup disk.
 * Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Eject the startup disk. Special > Format Disk. Verify that no prompt for the startup disk is shown.
 * Invoke DESKTOP.SYSTEM, and hit Escape when copying to RAMCard. Once DeskTop has started, eject the startup disk. Special > Format Disk. Verify that a prompt to insert the system disk is shown.
 
