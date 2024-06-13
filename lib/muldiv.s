@@ -6,9 +6,9 @@
 ;;; Callers should populate:
 ;;; * `muldiv_number`, `muldiv_numerator`, `muldiv_denominator`
 ;;; Result is in:
-;;; * `muldiv_result`
+;;; * `muldiv_result`, `muldiv_remainder`
 
-;;; Uses $10...$17
+;;; Uses $10...$19
 
 .proc MulDiv
         ACL     := $10                  ; $50 in original routines
@@ -19,6 +19,8 @@
         AUXH    := $15
         AUX2L   := $16                  ; not in original routines
         AUX2H   := $17
+        TMPL    := $18                  ; not in original routines
+        TMPH    := $19
 
         ;; Prepare, per "Apple II Monitors Peeled" pp.71
 
@@ -47,34 +49,67 @@ MUL5:   ror     ACL,x
         dey
         bne     MUL2
 
-        ;; From DIV routine in Apple II Monitor, by Woz
-        ;; "Apple II Reference Manual" pp.162
-        ;; (but divisor is AUX2 instead of AUX)
+        ;; Numerator: ACX,XTNDX
+        ;; Denominator: AUX2X
+        ;; Remainder: AUXX,TMPH
 
-        ldy     #16             ; Index for 16 bits
-DIV2:   asl     ACL
+        lda     #0              ; clear remainder
+        sta     AUXL
+        sta     AUXH
+        sta     TMPL
+        sta     TMPH
+
+        ldy     #32             ; bits remaining
+
+DIV2:   asl     ACL             ; shift high bits of numerator...
         rol     ACH
-        rol     XTNDL           ; XTND/AUX2
-        rol     XTNDH           ;   to AC.
-        sec
-        lda     XTNDL
-        sbc     AUX2L           ; Modulus to XTND.
-        tax
-        lda     XTNDH
-        sbc     AUX2H
-        bcc     DIV3
-        stx     XTNDL
-        sta     XTNDH
-        inc     ACL
-DIV3:   dey
-        bne     DIV2
+        rol     XTNDL
+        rol     XTNDH
 
+        rol     AUXL            ; into remainder
+        rol     AUXH
+        rol     TMPL
+        rol     TMPH
+
+        sec                     ; is remainder > denominator?
+
+        lda     AUXL            ; temp = remainder - denominator
+        sbc     AUX2L
+        pha
+        lda     AUXH
+        sbc     AUX2H
+        pha
+        lda     TMPL
+        sbc     #0
+        tax
+        lda     TMPH
+        sbc     #0
+
+        bcs     DIV3
+
+        pla                     ; no, drop temp value
+        pla
+
+        dey
+        bne     DIV2
         rts
 
+DIV3:   inc     ACL             ; yes
+
+        sta     TMPH            ; remainder = temp
+        stx     TMPL
+        pla
+        sta     AUXH
+        pla
+        sta     AUXL
+
+        dey
+        bne     DIV2
+        rts
 .endproc ; MulDiv
 
-muldiv_number       := MulDiv::ACL      ; [16]
-muldiv_numerator    := MulDiv::AUXL     ; [16]
+muldiv_number       := MulDiv::AUXL     ; [16]
+muldiv_numerator    := MulDiv::ACL      ; [16]
 muldiv_denominator  := MulDiv::AUX2L    ; [16]
 muldiv_result       := MulDiv::ACL      ; [16]
-muldiv_remainder    := MulDiv::XTNDL    ; [16]
+muldiv_remainder    := MulDiv::AUXL     ; [16]

@@ -1073,8 +1073,8 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 * Launch DeskTop. Special > Copy Disk.... Press Solid-Apple Q. Verify that DeskTop launches.
 
 * Launch DeskTop. Special > Copy Disk. Copy a disk with more than 999 blocks. Verify thousands separators are shown in block counts.
-* Launch DeskTop. Special > Copy Disk.... Copy a 32MB disk image using Quick Copy (the default mode). Verify that the screen is not garbled, and that the copy is successful.
-* Launch DeskTop. Special > Copy Disk.... Copy a 32MB disk image using Disk Copy (the other mode). Verify that the screen is not garbled, and that the copy is successful.
+* Launch DeskTop. Special > Copy Disk.... Copy a 32MB disk image using Quick Copy (the default mode). Verify that the screen is not garbled, the progress bar updates correctly, and that the copy is successful.
+* Launch DeskTop. Special > Copy Disk.... Copy a 32MB disk image using Disk Copy (the other mode). Verify that the screen is not garbled, the progress bar updates correctly, and that the copy is successful.
 
 * Launch DeskTop. Special > Copy Disk.... Make a device selection (using mouse or keyboard) but don't click OK. Open the menu (using mouse or keyboard) but dismiss it. Verify that source device wasn't accepted.
 * Launch DeskTop. Special > Copy Disk.... Select a drive using the mouse or keyboard, but don't click OK. Double-click the same drive. Verify that it was accepted, and that a prompt for an appropriate destination drive was shown.

@@ -15306,20 +15306,6 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 .endproc ; Multiply_16_8_16
 
 ;;; ============================================================
-
-;;; A,X = A,X / Y, Y = remainder
-.proc Divide_16_8_16
-        stax    muldiv_numerator
-        sty     muldiv_denominator
-        copy    #0, muldiv_denominator+1
-        copy16  #1, muldiv_number
-        jsr     MulDiv
-        ldax    muldiv_result
-        ldy     muldiv_remainder
-        rts
-.endproc ; Divide_16_8_16
-
-;;; ============================================================
 ;;; Library Routines
 ;;; ============================================================
 
@@ -15727,7 +15713,6 @@ str_volume:
         SystemTask := main::SystemTask
         Bell := main::Bell
         Multiply_16_8_16 := main::Multiply_16_8_16
-        Divide_16_8_16 := main::Divide_16_8_16
         DetectDoubleClick := main::DetectDoubleClick
         AdjustOnLineEntryCase := main::AdjustOnLineEntryCase
         AdjustFileEntryCase := main::AdjustFileEntryCase
