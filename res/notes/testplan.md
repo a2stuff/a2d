@@ -400,8 +400,6 @@
 * Launch DeskTop. Open a window with at least 3 rows of icons. Position the window at the top of the screen. File > Select All. Drag an icon from the bottom row so that the top icons end up completely offscreen. Release the mouse button. Drag the icons back down. Verify that all icons reposition correctly.
 * Launch DeskTop. Open a window with multiple icons. Resize the window so some of the icons aren't visible without scrolling. File > Select All. Drag the icons. Verify that drag outlines are shown even for hidden icons.
 
-* Launch DeskTop. Open a window containing a folder. Open the folder's window. Activate the first window by clicking on it. Activate the second window by clicking on it. Verify that the folder icon is not selected by moving the second window around to force repaints.
-
 * Launch DeskTop. Open a window for a volume icon. Open a folder within the window. Select the volume icon. Special > Check Drive. Verify that both windows are closed.
 * Launch DeskTop. Open a window for a volume icon. Special > Check All Drives. Verify that all windows close, and that volume icons are correctly updated.
 * Launch DeskTop. Special > Check All Drives. Verify that no error is shown.
@@ -412,8 +410,8 @@
 
 * Launch DeskTop. Open a window containing many folders. Select up to 7 folders. File > Open. Verify that as windows continue to open, the originally selected folders don't mispaint on top of them. (This will be easier to observe in emulators with acceleration disabled.)
 
-* Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click in the window to clear selection. Click on a volume icon. Click elsewhere on the desktop. Verify the icon isn't mispainted.
-* Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click in the window to clear selection. Click on a volume icon. File > Rename. Enter a new valid name. Verify that no alert is shown.
+* Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click on the desktop to clear selection. Click on a volume icon. Click elsewhere on the desktop. Verify the icon isn't mispainted.
+* Launch DeskTop. Open a window containing multiple icons. Drag-select several icons. Click on the desktop to clear selection. Click on a volume icon. File > Rename. Enter a new valid name. Verify that no alert is shown.
 
 * Launch DeskTop. Select a volume icon. File > Rename. Enter the name of another volume. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing.
 * Launch DeskTop. Open a window. Select a file icon. File > Rename. Enter the name of a file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing.
@@ -478,7 +476,7 @@
 * Launch DeskTop. Open a volume window containing a file and a folder. Open the folder window. Drag the file to the folder icon (not the window). Verify that the folder window activates and updates to show the file.
 
 * Launch DeskTop. Open a volume window containing a folder. Open the folder. Verify that the folder appears as dimmed. Position the window partially over the dimmed folder. Move the window to reveal the whole folder. Verify that the folder is repainted cleanly (no visual glitches).
-* Launch DeskTop. Open a volume window containing two folders (1 and 2). Open both folder windows, and verify that both folder icons are dimmed. Position folder 1's window partially covering folder 2's icon. Activate folder 1's window, and close it. Verify that the visible portions of folder 2 repaint, not dimmed.
+* Launch DeskTop. Open a volume window containing two folders (1 and 2). Open both folder windows, and verify that both folder icons are dimmed. Position folder 1's window partially covering folder 1's and folder 2's icons. Activate folder 1's window, and close it. Verify that the visible portions of folder 1 repaint (not dimmed) and folder 2 repaint (dimmed).
 * Disable any acceleration. Launch DeskTop. Open a volume window containing a folder with a long name. Double-click the folder to open it. Verify that when the icon is painting as dimmed that the dimming effect doesn't extend past the bounding box of the icon, even temporarily.
 
 * Perform the following tests in DeskTop using Mouse Keys mode:
@@ -530,6 +528,8 @@
     * Clear selection. Press Shift+Tab repeatedly. Verify that icons are selected in reverse lexicographic order.
     * Select an icon. Press Shift+Tab. Verify that the previous icon in lexicographic order is selected.
 
+# TODO: Rewrite this A -> Vol's icon, B -> Vol's window, C -> Folder's icon, D -> Folder's window
+
 * Repeat the following, with a volume icon (A), an open volume window (B) with a folder icon (C), and a window for that folder (D).
   * Drag a file from another volume onto A. Verify that B activates and refreshes, and that B's used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Drag a file from another volume onto B. Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
@@ -568,10 +568,10 @@
 * Launch DeskTop. Open window containing icons. View > by Name. Select an icon. File > Rename. Enter a new name that would change the ordering. Verify that the window is refreshed and the icons are correctly sorted by name, and that the icon is still selected.
 * Launch DeskTop. Open two windows containing icons. View > by Name. Select an icon. Activate the other window. Verify that selection remains in the first window. File > Rename. Enter a new name that would change the ordering. Verify that the first window is activated and refreshed and the icons are correctly sorted by name, and that the icon is still selected and scrolled into view.
 * Launch DeskTop. Open a window containing a folder. Open a folder. Activate the parent window and verify that the folder's icon is dimmed. View > by Name. Verify that the folder's icon is still dimmed. View > as Icons. Verify that the folder's icon is still dimmed.
-* Launch DeskTop. Open a window containing a folder. View > by Name. Verify that the folder's icon is dimmed. View > as Icon. Verify that the folder's icon is still dimmed.
+* Launch DeskTop. Open a window containing a folder. View > by Name. Verify that the volume's icon is dimmed. View > as Icon. Verify that the volume's icon is still dimmed.
 
 * Launch DeskTop. Open a volume window. Verify that the default view is "as Icons". View > by Name. Open a folder. Verify that the new folder's view is "by Name". Open a different volume window. Verify that it is "as Icons".
-* Launch DeskTop. Open the A2.Desktop folder. View > by Small Icons. Open the Apple.Menu folder. Open the Control.Panels folder. Verify that the view is still "by Small Icons". Activate a different window. Apple Menu > Control Panels. Verify that the Control.Panels window is activated, and the view is still "by Small Icons".
+* Launch DeskTop. Open the A2.Desktop volume. View > as Small Icons. Open the Apple.Menu folder. Open the Control.Panels folder. Verify that the view is still "as Small Icons". Activate a different window. Apple Menu > Control Panels. Verify that the Control.Panels window is activated, and the view is still "as Small Icons".
 
 * Launch DeskTop. Select a volume icon. Open it. Verify that the open animation starts at the icon location. (This will be easier to observe in emulators with acceleration disabled.)
 * Launch DeskTop, ensuring no windows are open. File > Select All. Verify that the volume icons are selected.
@@ -640,7 +640,7 @@
 
 * Preview an image file (e.g. SAMPLE.MEDIA/ROOM). Press Right Arrow to preview the next image. Press Escape to exit. Invoke a system file or binary file (e.g. KARATEKA.YELL). Verify it launches correctly with no crash.
 
-## Shortcuts
+## Shortcuts (in DeskTop)
 
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
 
@@ -1028,7 +1028,9 @@ With Sci.Calc:
 * Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Screen Dump DA. Verify it prints a screenshot.
 * Configure a system with a non-SSC in Slot 1. Invoke the Screen Dump DA. Verify nothing happens.
 
-# Shortcuts
+# Shortcuts (Module)
+
+Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shortcuts on startup. Launching `DESKTOP.SYSTEM` should load the Shortcuts module instead of DeskTop, as long as there is at least one shortcut configured.
 
 * Load Shortcuts. Put a disk in Slot 6, Drive 1. Startup > Slot 6. Verify that the system boots the disk. Repeat for all other slots with drives.
 
