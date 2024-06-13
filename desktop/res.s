@@ -762,10 +762,8 @@ startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu i
 
 ;;; ============================================================
 
-kSelectorMenuMinItems = 5
-
 selector_menu:
-        DEFINE_MENU kSelectorMenuMinItems
+        DEFINE_MENU kSelectorMenuFixedItems
 @items: DEFINE_MENU_ITEM label_add
         DEFINE_MENU_ITEM label_edit
         DEFINE_MENU_ITEM label_del
@@ -800,7 +798,7 @@ kDAMenuItemSize = 19            ; length (1) + filename (15) + folder glyphs pre
 
         ;; Apple Menu
 apple_menu:
-        DEFINE_MENU 2
+        DEFINE_MENU kAppleMenuFixedItems
 @items: DEFINE_MENU_ITEM label_about
         DEFINE_MENU_ITEM label_about_this_apply
         DEFINE_MENU_SEPARATOR

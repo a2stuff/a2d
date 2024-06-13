@@ -445,6 +445,13 @@ done:   rts
 .endproc ; WriteSelectorList
 
 end:
+        ;; No separator if it is last
+        lda     selector_menu
+        cmp     #kSelectorMenuFixedItems
+    IF_EQ
+        dec     selector_menu
+    END_IF
+
 .endproc ; LoadSelectorList
 
 ;;; ============================================================
@@ -482,9 +489,6 @@ open_dir:
         lda     read_dir_buffer + SubdirectoryHeader::file_count
         and     #$7F
         sta     file_count
-
-        lda     #kAppleMenuFixedItems
-        sta     apple_menu      ; "About..." and separator
 
         lda     read_dir_buffer + SubdirectoryHeader::entries_per_block
         sta     entries_per_block
@@ -639,6 +643,13 @@ entry_in_block: .byte   0
 name_buf:       .res    ::kDAMenuItemSize, 0
 
 end:
+        ;; No separator if it is last
+        lda     apple_menu
+        cmp     #kAppleMenuFixedItems
+    IF_EQ
+        dec     apple_menu
+    END_IF
+
 .endscope
 
 ;;; ============================================================

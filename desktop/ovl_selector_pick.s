@@ -48,7 +48,7 @@ L9017:  lda     selector_list + kSelectorListNumPrimaryRunListOffset
 
 DoAdd:  ldx     #kRunListPrimary
         lda     selector_menu
-        cmp     #kSelectorMenuMinItems + 8
+        cmp     #kSelectorMenuFixedItems + 8
         bcc     L9052
         inx
 L9052:  lda     #$00
@@ -864,8 +864,13 @@ finish:
         ;; Menu size
         lda     selector_list + kSelectorListNumPrimaryRunListOffset
         clc
-        adc     #kSelectorMenuMinItems
+        adc     #kSelectorMenuFixedItems
         sta     selector_menu
+        ;; No separator if it is last
+        cmp     #kSelectorMenuFixedItems
+    IF_EQ
+        dec     selector_menu
+    END_IF
 
         ;; Re-initialize the menu so that new widths can be pre-computed.
         ;; That will un-hilite the Selector menu, so re-hilite it so

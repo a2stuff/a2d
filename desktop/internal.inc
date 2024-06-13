@@ -201,12 +201,14 @@ kMenuIdSelector = 6
 
 kAppleMenuFixedItems = 3
 
+kSelectorMenuFixedItems = 5
+
 kMenuSizeApple    = kMaxDeskAccCount + kAppleMenuFixedItems
 kMenuSizeFile     = 14
 kMenuSizeView     = 6
 kMenuSizeSpecial  = 9
 kMenuSizeStartup  = 7
-kMenuSizeSelector = 13
+kMenuSizeSelector = kSelectorMenuFixedItems + 8
 
 ;;; These must correspond to indexes in the Selector menu.
 .enum SelectorAction

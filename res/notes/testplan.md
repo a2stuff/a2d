@@ -640,9 +640,16 @@
 
 * Preview an image file (e.g. SAMPLE.MEDIA/ROOM). Press Right Arrow to preview the next image. Press Escape to exit. Invoke a system file or binary file (e.g. KARATEKA.YELL). Verify it launches correctly with no crash.
 
+## Apple Menu
+
+* Rename the APPLE.MENU directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.
+* Create a new APPLE.MENU directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.
+* Create a new APPLE.MENU directory. Copy the CHANGE.TYPE accessory into it. Launch DeskTop. Verify that the Apple Menu has two "About" items, a separator, and "Change Type". Select the Change Type icon. Apple Menu > Change Type. Change the type to $8642. Restart DeskTop. Verify that the Apple Menu has two "About" items, and no separator.
+
 ## Shortcuts (in DeskTop)
 
-* Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled.
+* Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled, and the menu has no separator. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled, and the menu has a separator, and the shortcut appears. Delete the shortcut. Verify that the menu has its initial state again.
+* Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled, and the menu has no separator. Add a shortcut to "list only". Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled, but the menu still has no separator or shortcuts. Delete the shortcut. Verify that the menu has its initial state again.
 
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Check "at boot". Click Cancel. Shortcuts > Add a Shortcut.... Verify "at boot" is not checked.
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Check "at first use". Click Cancel. Shortcuts > Add a Shortcut.... Verify "at first use" is not checked.
