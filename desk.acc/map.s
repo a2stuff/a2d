@@ -784,6 +784,7 @@ location_table:
         DEFINE_LOCATION "Shanghai", 31, 121
         DEFINE_LOCATION "Shenzhen", 22, 114
         DEFINE_LOCATION "Singapore", 1, 103
+        DEFINE_LOCATION "Springfield", 40, -90
         DEFINE_LOCATION "Suzhou", 31, 120
         DEFINE_LOCATION "Sydney", -33, 151
         DEFINE_LOCATION "Tianjin", 39, 117
