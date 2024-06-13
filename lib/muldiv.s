@@ -4,9 +4,9 @@
 ;;; Used for scaling e.g. scroll bar or progress bar position.
 
 ;;; Callers should populate:
-;;; * `muldiv_number`, `muldiv_numerator`, `muldiv_denominator`
+;;; * `z:muldiv_number`, `z:muldiv_numerator`, `z:muldiv_denominator`
 ;;; Result is in:
-;;; * `muldiv_result`, `muldiv_remainder`
+;;; * `z:muldiv_result`, `z:muldiv_remainder`
 
 ;;; Uses $10...$19
 

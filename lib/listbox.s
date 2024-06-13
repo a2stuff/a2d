@@ -69,11 +69,11 @@
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         add16   screentowindow_params::windowy, listbox::winfo+MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1, screentowindow_params::windowy
 
-        copy16  screentowindow_params::windowy, muldiv_numerator
-        copy16  #kListItemHeight, muldiv_denominator
-        copy16  #1, muldiv_number
+        copy16  screentowindow_params::windowy, z:muldiv_numerator
+        copy16  #kListItemHeight, z:muldiv_denominator
+        copy16  #1, z:muldiv_number
         jsr     MulDiv
-        lda     muldiv_result
+        lda     z:muldiv_result
 
         ;; Validate
         cmp     listbox::num_items
@@ -529,12 +529,12 @@ rows:   .byte   0
 
 ;;; A,X = A,X * Y
 .proc _Multiply
-        stax    muldiv_number
-        sty     muldiv_numerator
-        copy    #0, muldiv_numerator+1
-        copy16  #1, muldiv_denominator
+        stax    z:muldiv_number
+        sty     z:muldiv_numerator
+        copy    #0, z:muldiv_numerator+1
+        copy16  #1, z:muldiv_denominator
         jsr     MulDiv
-        ldax    muldiv_result
+        ldax    z:muldiv_result
         rts
 .endproc ; _Multiply
 

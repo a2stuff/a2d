@@ -1013,12 +1013,12 @@ result: .byte   1
 
 ;;; A,X = A,X * Y
 .proc Multiply_16_8_16
-        stax    muldiv_number
-        sty     muldiv_numerator
-        copy    #0, muldiv_numerator+1
-        copy16  #1, muldiv_denominator
+        stax    z:muldiv_number
+        sty     z:muldiv_numerator
+        copy    #0, z:muldiv_numerator+1
+        copy16  #1, z:muldiv_denominator
         jsr     MulDiv
-        ldax    muldiv_result
+        ldax    z:muldiv_result
         rts
 .endproc ; Multiply_16_8_16
 
@@ -1026,13 +1026,13 @@ result: .byte   1
 
 ;;; A,X = A,X / Y, Y = remainder
 .proc Divide_16_8_16
-        stax    muldiv_numerator
-        sty     muldiv_denominator
-        copy    #0, muldiv_denominator+1
-        copy16  #1, muldiv_number
+        stax    z:muldiv_numerator
+        sty     z:muldiv_denominator
+        copy    #0, z:muldiv_denominator+1
+        copy16  #1, z:muldiv_number
         jsr     MulDiv
-        ldax    muldiv_result
-        ldy     muldiv_remainder
+        ldax    z:muldiv_result
+        ldy     z:muldiv_remainder
         rts
 .endproc ; Divide_16_8_16
 

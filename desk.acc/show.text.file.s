@@ -377,12 +377,12 @@ end:    rts
         beq     end
 
         ;; `first_visible_line` = `trackthumb_params::thumbpos` * `max_visible_line` / `kVScrollMax`
-        copy16  max_visible_line, muldiv_number
-        copy    trackthumb_params::thumbpos, muldiv_numerator ; lo
-        copy    #0, muldiv_numerator+1                        ; hi
-        copy16  #kVScrollMax, muldiv_denominator
+        copy16  max_visible_line, z:muldiv_number
+        copy    trackthumb_params::thumbpos, z:muldiv_numerator ; lo
+        copy    #0, z:muldiv_numerator+1                        ; hi
+        copy16  #kVScrollMax, z:muldiv_denominator
         jsr     MulDiv
-        copy16  muldiv_result, first_visible_line
+        copy16  z:muldiv_result, first_visible_line
 
         jsr     UpdateScrollPos
 
@@ -509,11 +509,11 @@ ForceScrollBottom := ScrollBottom::force
 
 .proc UpdateScrollPos
         ;; Update viewport
-        copy16  first_visible_line, muldiv_number
-        copy16  #kLineScrollDelta * kLineHeight, muldiv_numerator
-        copy16  #1, muldiv_denominator
+        copy16  first_visible_line, z:muldiv_number
+        copy16  #kLineScrollDelta * kLineHeight, z:muldiv_numerator
+        copy16  #1, z:muldiv_denominator
         jsr     MulDiv
-        ldax    muldiv_result
+        ldax    z:muldiv_result
         stax    winfo::maprect::y1
         addax   #kDAHeight, winfo::maprect::y2
         MGTK_CALL MGTK::SetPort, winfo::port
@@ -521,15 +521,15 @@ ForceScrollBottom := ScrollBottom::force
         ;; Update thumb position
 
         ;; `updatethumb_params::thumbpos` = `first_visible_line` * `kVScrollMax` / `max_visible_line`
-        copy16  #kVScrollMax, muldiv_number
-        copy16  first_visible_line, muldiv_numerator
-        copy16  max_visible_line, muldiv_denominator
+        copy16  #kVScrollMax, z:muldiv_number
+        copy16  first_visible_line, z:muldiv_numerator
+        copy16  max_visible_line, z:muldiv_denominator
         jsr     MulDiv
-        lda     muldiv_result+1
+        lda     z:muldiv_result+1
     IF_NOT_ZERO
         lda     #kVScrollMax
     ELSE
-        lda     muldiv_result
+        lda     z:muldiv_result
     END_IF
         sta     updatethumb_params::thumbpos
 
@@ -603,11 +603,11 @@ end:    rts
         JSR_TO_MAIN SetFileMark
 
         ;; And adjust to the appropriate offset for that line in the viewport.
-        copy16  current_line, muldiv_number
-        copy16  #kLineHeight, muldiv_numerator
-        copy16  #1, muldiv_denominator
+        copy16  current_line, z:muldiv_number
+        copy16  #kLineHeight, z:muldiv_numerator
+        copy16  #1, z:muldiv_denominator
         jsr     MulDiv
-        copy16  muldiv_result, line_pos::base
+        copy16  z:muldiv_result, line_pos::base
     END_IF
 
         ;; Select appropriate font

@@ -1011,11 +1011,11 @@ ep2:    dec     file_count
         param_call app::DrawString, str_from_int
         param_call app::DrawString, str_spaces
 
-        sub16   total_count, file_count, muldiv_numerator
-        copy16  total_count, muldiv_denominator
-        copy16  #kProgressBarWidth, muldiv_number
+        sub16   total_count, file_count, z:muldiv_numerator
+        copy16  total_count, z:muldiv_denominator
+        copy16  #kProgressBarWidth, z:muldiv_number
         jsr     MulDiv
-        add16   muldiv_result, progress_meter::x1, progress_meter::x2
+        add16   z:muldiv_result, progress_meter::x1, progress_meter::x2
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::PaintRect, progress_meter
 

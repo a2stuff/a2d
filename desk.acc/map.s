@@ -469,18 +469,18 @@ index:  .byte   0
         sub16   screentowindow_params::windowy, #kMapTop, lat
 
         ;; Map latitude to +90...-90
-        copy16  lat, muldiv_numerator
-        copy16  #kMapHeight, muldiv_denominator
-        copy16  #180, muldiv_number
+        copy16  lat, z:muldiv_numerator
+        copy16  #kMapHeight, z:muldiv_denominator
+        copy16  #180, z:muldiv_number
         jsr     MulDiv
-        sub16   #90, muldiv_result, lat
+        sub16   #90, z:muldiv_result, lat
 
         ;; Map longitude to -180...+180
-        copy16  long, muldiv_numerator
-        copy16  #kMapWidth, muldiv_denominator
-        copy16  #360, muldiv_number
+        copy16  long, z:muldiv_numerator
+        copy16  #kMapWidth, z:muldiv_denominator
+        copy16  #360, z:muldiv_number
         jsr     MulDiv
-        sub16   muldiv_result, #180, long
+        sub16   z:muldiv_result, #180, long
 
         ;; Update display
         jsr     SetPort
@@ -680,18 +680,18 @@ blink_counter:
 
 .proc UpdateCoordsFromLatLong
         ;; Map latitude from +90...-90
-        sub16   #90, lat, muldiv_numerator ; 90...-90 to 0...180
-        copy16  #180, muldiv_denominator
-        copy16  #kMapHeight, muldiv_number
+        sub16   #90, lat, z:muldiv_numerator ; 90...-90 to 0...180
+        copy16  #180, z:muldiv_denominator
+        copy16  #kMapHeight, z:muldiv_number
         jsr     MulDiv
-        copy16  muldiv_result, ycoord
+        copy16  z:muldiv_result, ycoord
 
         ;; Map longitude from -180...+180
-        add16   long, #180, muldiv_numerator ; -180...180 to 0...360
-        copy16  #360, muldiv_denominator
-        copy16  #kMapWidth, muldiv_number
+        add16   long, #180, z:muldiv_numerator ; -180...180 to 0...360
+        copy16  #360, z:muldiv_denominator
+        copy16  #kMapWidth, z:muldiv_number
         jsr     MulDiv
-        copy16  muldiv_result, xcoord
+        copy16  z:muldiv_result, xcoord
 
         add16   xcoord, #kMapLeft+1 - (kPositionMarkerWidth/2), xcoord
         add16   ycoord, #kMapTop    - (kPositionMarkerHeight/2), ycoord

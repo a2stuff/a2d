@@ -163,12 +163,12 @@ pattern_right:
 
         lda     #0
 loop:   pha
-        sta     muldiv_numerator
-        copy    #0, muldiv_numerator+1
-        copy16  #kSpeedMax, muldiv_denominator
-        copy16  #kMeterWidth, muldiv_number
+        sta     z:muldiv_numerator
+        copy    #0, z:muldiv_numerator+1
+        copy16  #kSpeedMax, z:muldiv_denominator
+        copy16  #kMeterWidth, z:muldiv_number
         jsr     MulDiv
-        add16   meter_left::x1, muldiv_result, pt_tick::xcoord
+        add16   meter_left::x1, z:muldiv_result, pt_tick::xcoord
         MGTK_CALL MGTK::MoveTo, pt_tick
         MGTK_CALL MGTK::Line, pt_tickdelta
         pla
@@ -338,17 +338,17 @@ done:   jmp     InputLoop
 .proc UpdateMeter
         jsr     ProbeSpeed
 
-        copy16  counter, muldiv_numerator
+        copy16  counter, z:muldiv_numerator
         bit     radio_60hz_button::state
     IF_NS
-        copy16  #kSpeedMax * kSpeedDefault60Hz, muldiv_denominator
+        copy16  #kSpeedMax * kSpeedDefault60Hz, z:muldiv_denominator
     ELSE
-        copy16  #kSpeedMax * kSpeedDefault50Hz, muldiv_denominator
+        copy16  #kSpeedMax * kSpeedDefault50Hz, z:muldiv_denominator
     END_IF
-        copy16  #kMeterWidth, muldiv_number
+        copy16  #kMeterWidth, z:muldiv_number
 
         jsr     MulDiv
-        add16   meter_left::x1, muldiv_result, meter_left::x2
+        add16   meter_left::x1, z:muldiv_result, meter_left::x2
         add16   meter_left::x2, #1, meter_right::x1
 
         MGTK_CALL MGTK::SetPenMode, pencopy

@@ -1800,7 +1800,7 @@ transfer_blocks:
 .proc DrawProgressBar
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, progress_frame
-        copy16  transfer_blocks, muldiv_denominator
+        copy16  transfer_blocks, z:muldiv_denominator
 
         ;; read+written will not fit in 16 bits if total is > $7FFF
         ;; so scale appropriately
@@ -1808,20 +1808,20 @@ transfer_blocks:
         tmp_written := muldiv_number
         copy16  blocks_read, tmp_read
         copy16  blocks_written, tmp_written
-        bit     muldiv_denominator+1
+        bit     z:muldiv_denominator+1
     IF_NC
         ;; Use (read + written) / total*2
-        asl16   muldiv_denominator
+        asl16   z:muldiv_denominator
     ELSE
         ;; Use ((read + written) / 2) / total
-        lsr16   tmp_read
-        lsr16   tmp_written
+        lsr16   z:tmp_read
+        lsr16   z:tmp_written
     END_IF
-        add16   tmp_read, tmp_written, muldiv_numerator
+        add16   z:tmp_read, z:tmp_written, z:muldiv_numerator
 
-        copy16  #kProgressWidth, muldiv_number
+        copy16  #kProgressWidth, z:muldiv_number
         jsr     MulDiv
-        add16   progress_bar::x1, muldiv_result, progress_bar::x2
+        add16   progress_bar::x1, z:muldiv_result, progress_bar::x2
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::PaintRect, progress_bar

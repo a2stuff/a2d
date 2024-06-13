@@ -4138,28 +4138,28 @@ _Preamble:
 
 .proc TrackHThumb
         jsr     _Preamble
-        sub16   ubox::x2, ubox::x1, muldiv_number
-        sub16   muldiv_number, width, muldiv_number
+        sub16   ubox::x2, ubox::x1, z:muldiv_number
+        sub16   z:muldiv_number, width, z:muldiv_number
         jsr     _TrackMulDiv
-        add16   muldiv_result, ubox::x1, viewport+MGTK::Rect::x1
+        add16   z:muldiv_result, ubox::x1, viewport+MGTK::Rect::x1
         add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
         jmp     _MaybeUpdateHThumb
 .endproc ; TrackHThumb
 
 .proc TrackVThumb
         jsr     _Preamble
-        sub16   ubox::y2, ubox::y1, muldiv_number
-        sub16   muldiv_number, height, muldiv_number
+        sub16   ubox::y2, ubox::y1, z:muldiv_number
+        sub16   z:muldiv_number, height, z:muldiv_number
         jsr     _TrackMulDiv
-        add16   muldiv_result, ubox::y1, viewport+MGTK::Rect::y1
+        add16   z:muldiv_result, ubox::y1, viewport+MGTK::Rect::y1
         add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
         jmp     _MaybeUpdateVThumb
 .endproc ; TrackVThumb
 
 .proc _TrackMulDiv
-        copy    trackthumb_params::thumbpos, muldiv_numerator
-        copy    #0, muldiv_numerator+1
-        copy16  #kScrollThumbMax, muldiv_denominator
+        copy    trackthumb_params::thumbpos, z:muldiv_numerator
+        copy    #0, z:muldiv_numerator+1
+        copy16  #kScrollThumbMax, z:muldiv_denominator
         jmp     MulDiv
 .endproc ; _TrackMulDiv
 
@@ -4264,24 +4264,24 @@ _Preamble:
 
 ;;; Set hthumb position relative to `maprect` and `ubox`.
 .proc _SetHThumbFromViewport
-        sub16   viewport+MGTK::Rect::x1, ubox::x1, muldiv_number
-        copy16  #kScrollThumbMax, muldiv_numerator
-        sub16   ubox::x2, ubox::x1, muldiv_denominator
-        sub16   muldiv_denominator, width, muldiv_denominator
+        sub16   viewport+MGTK::Rect::x1, ubox::x1, z:muldiv_number
+        copy16  #kScrollThumbMax, z:muldiv_numerator
+        sub16   ubox::x2, ubox::x1, z:muldiv_denominator
+        sub16   z:muldiv_denominator, width, z:muldiv_denominator
         jsr     MulDiv
-        lda     muldiv_result
+        lda     z:muldiv_result
         ldx     #MGTK::Ctl::horizontal_scroll_bar
         jmp     _UpdateThumb
 .endproc ; _SetHThumbFromViewport
 
 ;;; Set vthumb position relative to `maprect` and `ubox`.
 .proc _SetVThumbFromViewport
-        sub16   viewport+MGTK::Rect::y1, ubox::y1, muldiv_number
-        copy16  #kScrollThumbMax, muldiv_numerator
-        sub16   ubox::y2, ubox::y1, muldiv_denominator
-        sub16   muldiv_denominator, height, muldiv_denominator
+        sub16   viewport+MGTK::Rect::y1, ubox::y1, z:muldiv_number
+        copy16  #kScrollThumbMax, z:muldiv_numerator
+        sub16   ubox::y2, ubox::y1, z:muldiv_denominator
+        sub16   z:muldiv_denominator, height, z:muldiv_denominator
         jsr     MulDiv
-        lda     muldiv_result
+        lda     z:muldiv_result
         ldx     #MGTK::Ctl::vertical_scroll_bar
         jmp     _UpdateThumb
 .endproc ; _SetVThumbFromViewport
@@ -13982,11 +13982,11 @@ ignore:
         param_call DrawString, str_2_spaces
 
         ;; Update progress bar
-        sub16   total_count, file_count, muldiv_numerator
-        copy16  total_count, muldiv_denominator
-        copy16  #kProgressBarWidth, muldiv_number
+        sub16   total_count, file_count, z:muldiv_numerator
+        copy16  total_count, z:muldiv_denominator
+        copy16  #kProgressBarWidth, z:muldiv_number
         jsr     MulDiv
-        add16   muldiv_result, progress_dialog_bar_meter::x1, progress_dialog_bar_meter::x2
+        add16   z:muldiv_result, progress_dialog_bar_meter::x1, progress_dialog_bar_meter::x2
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::PaintRect, progress_dialog_bar_meter
@@ -15296,12 +15296,12 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 
 ;;; A,X = A,X * Y
 .proc Multiply_16_8_16
-        stax    muldiv_number
-        sty     muldiv_numerator
-        copy    #0, muldiv_numerator+1
-        copy16  #1, muldiv_denominator
+        stax    z:muldiv_number
+        sty     z:muldiv_numerator
+        copy    #0, z:muldiv_numerator+1
+        copy16  #1, z:muldiv_denominator
         jsr     MulDiv
-        ldax    muldiv_result
+        ldax    z:muldiv_result
         rts
 .endproc ; Multiply_16_8_16
 
