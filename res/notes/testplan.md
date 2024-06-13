@@ -444,7 +444,7 @@
   * Launch DeskTop. Run the command. Select a slot/drive containing a DOS 3.3 disk. Enter a new name and click OK. Verify that the confirmation prompt shows "the DOS 3.3 disk in slot # drive #", without quotes.
   * Launch DeskTop. Run the command. Select a slot/drive containing an unformatted disk. Enter a new name and click OK. Verify that the confirmation prompt shows "the disk in slot # drive #", without quotes.
   * Launch DeskTop. Select a volume icon. Run the command. Verify that the device selector is skipped. Enter a new volume name. Verify that the confirmation prompt refers to the selected volume.
-  * Repeat the following case with: no selection, multiple volume icons selected, a single file selected, and multiple files selected:
+  * Repeat the following case with: no selection, Trash selected, multiple volume icons selected, a single file selected, and multiple files selected:
     * Launch DeskTop. Set selection as specified. Run the command. Verify that the device selector is not skipped.
   * Launch DeskTop. Make sure no volume icon is selected. Run the command. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
   * Launch DeskTop. Make sure no volume icon is selected. Run the command. Click an item, then click OK. Verify that the device location is shown, and that the OK button becomes disabled. Enter text. Verify that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
@@ -489,7 +489,7 @@
 * Repeat the following:
   * For these permutations:
     * DeskTop (1) copied to RAMCard and (2) not copied to RAMCard.
-    * Renaming (1) the volume that DeskTop loaded from, and renaming (2) the DeskTop folder itself.
+    * Renaming (1) the volume that DeskTop loaded from, and renaming (2) the DeskTop folder itself. (For #2, move all DeskTop files to a subfolder.)
   * Verify that the following still function:
     * File > Copy To... (overlays)
     * Special > Copy Disk (and that File > Quit returns to DeskTop) (overlay + quit handler)
@@ -1080,7 +1080,7 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 * Launch DeskTop. Special > Copy Disk.... Select a drive using the mouse or keyboard, but don't click OK. Double-click the same drive. Verify that it was accepted, and that a prompt for an appropriate destination drive was shown.
 * Launch DeskTop. Special > Copy Disk.... Select a drive using the mouse or keyboard, but don't click OK. Double-click a different drive. Verify that it was accepted, and that a prompt for an appropriate destination drive was shown.
 
-* Rename the DISK.COPY file to something else. Launch DeskTop. Special > Copy Disk.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
+* Rename the MODULES/DISK.COPY file to something else. Launch DeskTop. Special > Copy Disk.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
 * Launch DeskTop. Eject the boot volume. Special > Copy Disk.... Verify that an alert is shown. Cancel the alert. Verify that DeskTop continues to run.
 * Launch DeskTop. Eject the boot volume. Special > Copy Disk.... Verify that an alert is shown. Re-insert the boot volume. Click OK in the alert. Verify that Disk Copy starts.
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Special > Copy Disk.... Verify that Disk Copy starts.
@@ -1101,12 +1101,12 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 * Launch DeskTop. Special > Copy Disk.... Select a Pascal disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, the volume name appears on the "Source" line and the name does not have adjusted case (e.g. "TGP:" not "Tgp:").
 * Launch DeskTop. Special > Copy Disk.... Select a DOS 3.3 disk as a source disk. Verify that after the "Insert source disk" prompt is dismissed, no volume name appears on the "Source" line.
 
-* Launch DeskTop. Special > Copy Disk.... Select a ProDOS disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME"), and the name is quoted.
-* Launch DeskTop. Special > Copy Disk.... Select a GS/OS disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the name has correct case (e.g. "GS.OS.disk" not "Gs.Os.Disk"), and the name is quoted.
-* Launch DeskTop. Special > Copy Disk.... Select a Pascal disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
-* Launch DeskTop. Special > Copy Disk.... Select a DOS 3.3 disk as a destination disk. Verify that in the "Do you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
+* Launch DeskTop. Special > Copy Disk.... Select a ProDOS disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the name has adjusted case (e.g. "Volume" not "VOLUME"), and the name is quoted.
+* Launch DeskTop. Special > Copy Disk.... Select a GS/OS disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the name has correct case (e.g. "GS.OS.disk" not "Gs.Os.Disk"), and the name is quoted.
+* Launch DeskTop. Special > Copy Disk.... Select a Pascal disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
+* Launch DeskTop. Special > Copy Disk.... Select a DOS 3.3 disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
 
-* Configure Virtual II with two Omnidisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Copy Disk.... Select the Omnidisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Do you want to erase ...?" confirmation prompt is shown.
+* Configure Virtual II with two Omnidisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Copy Disk.... Select the Omnidisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Are you sure you want to erase ...?" confirmation prompt is shown.
 
 * Launch DeskTop. Special > Copy Disk.... Verify that the OK button is disabled. Select an item in the list with the keyboard. Verify that the OK button enables. Click in the blank space in the list below the items. Verify that the OK button disables. Click an item in the list. Verify that the OK button enables. Click OK to specify a source disk. Verify that the OK button disables. Repeat the above cases when selecting the destination disk.
 * Launch DeskTop. Special > Copy Disk.... Select a source disk. Verify that the OK button enables. Click Read Drives. Verify that the OK button disables. Select a source disk then click OK. Click OK. Select a destination disk. Click Read Drives. Verify that the OK button disables.
