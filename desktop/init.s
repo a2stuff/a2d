@@ -938,7 +938,13 @@ done:   jmp     FinalSetup
 dib_buffer := ::IO_BUFFER
 
         ;; Maybe add device to the removable device table
-append: lda     unit_num
+append:
+        ;; Do SmartPort STATUS call to filter out 5.25 devices
+        lda     unit_num
+        jsr     main::FindSmartportDispatchAddress
+        bcs     next            ; can't determine address - skip it!
+        stax    dispatch
+        sty     status_params::unit_num
 
         ;; Don't issue STATUS calls to IIc Plus Slot 5 firmware, as it causes
         ;; the motor to spin. https://github.com/a2stuff/a2d/issues/25
@@ -946,17 +952,11 @@ append: lda     unit_num
         jsr     ReadSetting
         and     #DeskTopSettings::kSysCapIsIIcPlus
     IF_NOT_ZERO
-        and     #%01110000      ; mask off slot
-        cmp     #$50            ; is it slot 5?
+        lda     dispatch+1
+        and     #%00001111      ; mask off slot
+        cmp     #$05            ; is it slot 5?
         beq     next            ; if so, ignore
     END_IF
-
-        ;; Do SmartPort STATUS call to filter out 5.25 devices
-        lda     unit_num
-        jsr     main::FindSmartportDispatchAddress
-        bcs     next            ; can't determine address - skip it!
-        stax    dispatch
-        sty     status_params::unit_num
 
         ;; Don't issue STATUS calls to Laser 128 Slot 7 firmware, as it causes
         ;; hangs in some cases. https://github.com/a2stuff/a2d/issues/138
