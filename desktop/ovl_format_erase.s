@@ -150,22 +150,26 @@ loop2:
         ;; --------------------------------------------------
         ;; Confirm operation
 .scope
-        jsr     SetPortAndClear
+        COPY_STRING text_input_buf, buf_filename
 
         copy    #0, has_input_field_flag
-        param_call main::DrawDialogLabel, 3, aux::str_confirm_erase_prefix
+        jsr     SetPortAndClear
+        jsr     main::EraseOKCancelButtons
+
         lda     unit_num
-        jsr     GetVolName
-        param_call main::DrawString, ovl_string_buf
-        param_call main::DrawString, aux::str_confirm_erase_suffix
-:       jsr     main::PromptInputLoop
-        bmi     :-              ; not done
-        jne     cancel          ; cancel
+        jsr     GetVolName      ; populates `ovl_string_buf`
+
+        copy    #0, text_input_buf
+        param_call AppendToTextInputBuf, aux::str_confirm_erase_prefix
+        param_call AppendToTextInputBuf, ovl_string_buf
+        param_call AppendToTextInputBuf, aux::str_delete_confirm_suffix
+
+        param_call ShowAlertParams, AlertButtonOptions::OKCancel, text_input_buf
+        cmp     #kAlertResultOK
+        jne     cancel
 .endscope
 
         ;; Confirmed!
-        jsr     main::EraseOKCancelButtons
-
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
         clc
@@ -208,7 +212,7 @@ l9:
         jsr     SetPortAndClear
         param_call main::DrawDialogLabel, 1, aux::str_erasing
 
-        ldxy    #text_input_buf
+        ldxy    #buf_filename
         lda     unit_num
         jsr     WriteHeaderBlocks
         pha
@@ -270,7 +274,7 @@ l7:
         param_call main::DrawDialogLabel, 1, aux::str_erasing
         jsr     main::SetCursorWatch
 
-        ldxy    #text_input_buf
+        ldxy    #buf_filename
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     WriteHeaderBlocks

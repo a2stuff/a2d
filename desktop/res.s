@@ -115,9 +115,10 @@ buf_win_path:
 path_buf0:
         .res    kPathBufferSize, 0
 
-;;; Generic path buffer. Used primarily as line edit text content.
+;;; Generic path buffer. Used primarily as line edit text content,
+;;; and for composing long alert messages.
 text_input_buf:
-        .res    kPathBufferSize, 0
+        .res    128, 0
 
 ;;; ============================================================
 
