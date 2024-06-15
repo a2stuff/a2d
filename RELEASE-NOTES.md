@@ -140,7 +140,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Display larger memory sizes in MB.
   * Round up bank counts from Slinky memory if needed.
 * Matrix: Show green-on-black text on IIgs.
-
+* Screen Dump: Improve output aspect ratio.
 
 
 ## 1.3

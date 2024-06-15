@@ -106,7 +106,7 @@ init_graphics:
         copy16  #0, x_coord
 
 col_loop:
-        lda     #8              ; 8 vertical pixels per row
+        lda     #4              ; 8 vertical pixels per row (doubled)
         sta     count
         lda     y_row
         sta     y_coord
@@ -125,7 +125,10 @@ y_loop: lda     y_coord
 :       lda     (hbasl),y       ; Grab the whole byte
         and     mask            ; Isolate the pixel we care about
         cmp     #1              ; Set carry if non-zero
+        php
         ror     accum           ; And slide it into place
+        plp
+        ror     accum           ; Doubled
         inc     y_coord
         dec     count
         bne     y_loop
@@ -240,8 +243,8 @@ col_num:.byte   0              ; 0...79
         .byte   0, 0
 
 spacing_sequence:
-        .byte   CHAR_ESCAPE,'e'         ; 107 DPI (horizontal)
-        .byte   CHAR_ESCAPE,"T16"       ; distance between lines (16/144")
+        .byte   CHAR_ESCAPE,'n'         ; 72 DPI (horizontal; "Extended")
+        .byte   CHAR_ESCAPE,"T16"       ; 72 DPI (vertical; 8 strikers / 72 = 16/144")
         .byte   CHAR_TAB,$4C,$20,$44,$8D ; ???
         .byte   CHAR_TAB,$5A,$8D     ; ???
         .byte   0
