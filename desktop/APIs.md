@@ -57,9 +57,9 @@ Desk Accessories should call this (from main!) from their event loop unless they
 
 Yielding during further nested loops (e.g. button tracking, etc) can be done but is not worth the effort.
 
-#### `JUMP_TABLE_SELECT_WINDOW` *
+#### `JUMP_TABLE_ACTIVATE_WINDOW` *
 
-Select and refresh the specified window (A = window id)
+Activate and refresh the specified window (A = window id)
 
 #### `JUMP_TABLE_SHOW_ALERT` *
 

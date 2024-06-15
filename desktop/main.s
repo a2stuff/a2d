@@ -31,7 +31,7 @@ JT_MGTK_CALL:           jmp     ::MGTKRelayImpl         ; *
 JT_MLI_CALL:            jmp     MLIRelayImpl            ; *
 JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
 JT_SYSTEM_TASK:         jmp     SystemTask              ; *
-JT_SELECT_WINDOW:       jmp     SelectAndRefreshWindow  ; *
+JT_ACTIVATE_WINDOW:     jmp     ActivateAndRefreshWindow ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
 JT_SHOW_ALERT_PARAMS :  jmp     ShowAlertStruct         ; *
 JT_LAUNCH_FILE:         jmp     LaunchFileWithPath
@@ -1946,7 +1946,7 @@ ret:    rts
 
         ;; Select/refresh window if there was one
         pla
-        jne     SelectAndRefreshWindowOrClose
+        jne     ActivateAndRefreshWindowOrClose
 
         rts
 
@@ -2457,7 +2457,7 @@ create:
 
         ;; Refresh the window
         lda     active_window_id
-        jsr     SelectAndRefreshWindowOrClose
+        jsr     ActivateAndRefreshWindowOrClose
         RTS_IF_NE
 
         ;; Select and rename the file
@@ -3371,12 +3371,12 @@ spin:   jsr     GetSelectionWindow
 
         ;; Refresh the window
         lda     selected_window_id
-        jsr     SelectAndRefreshWindowOrClose
+        jsr     ActivateAndRefreshWindowOrClose
         RTS_IF_NE
 
         ;; Refreshing may have selected active window's icon; clear
         ;; selection if needed.
-        ;; TODO: Make `SelectAndRefreshWindow` not select icon?
+        ;; TODO: Make `ActivateAndRefreshWindow` not select icon?
         lda     selected_window_id
         cmp     active_window_id
     IF_NE
@@ -5098,7 +5098,7 @@ failure:
       IF_EQ
         inx
         txa
-        jmp     SelectAndRefreshWindowOrClose
+        jmp     ActivateAndRefreshWindowOrClose
       END_IF
         rts
     END_IF
@@ -5110,13 +5110,13 @@ failure:
         pha
         jsr     UpdateUsedFreeViaWindow
         pla
-        jmp     SelectAndRefreshWindowOrClose
+        jmp     ActivateAndRefreshWindowOrClose
 
 .proc UpdateSelectedWindow
         lda     selected_window_id
         jsr     UpdateUsedFreeViaWindow
         lda     selected_window_id
-        jmp     SelectAndRefreshWindowOrClose
+        jmp     ActivateAndRefreshWindowOrClose
 .endproc ; UpdateSelectedWindow
 
 .endproc ; PerformPostDropUpdates
@@ -5177,14 +5177,14 @@ failure:
 
 ;;; ============================================================
 
-;;; Calls `SelectAndRefreshWindow` - on failure (e.g. too
+;;; Calls `ActivateAndRefreshWindow` - on failure (e.g. too
 ;;; many files) the window is closed.
 ;;; Input: A = window id
 ;;; Output: A=0/Z=1/N=0 on success, A=$FF/Z=0/N=1 on failure
 
-.proc SelectAndRefreshWindowOrClose
+.proc ActivateAndRefreshWindowOrClose
         pha
-        jsr     TrySelectAndRefreshWindow
+        jsr     TryActivateAndRefreshWindow
         pla
 
         bit     exception_flag
@@ -5195,24 +5195,24 @@ failure:
         jsr     CloseSpecifiedWindow
         return  #$FF
 
-.proc TrySelectAndRefreshWindow
+.proc TryActivateAndRefreshWindow
         ldx     #$80
         stx     exception_flag
         tsx
         stx     saved_stack
-        jsr     SelectAndRefreshWindow
+        jsr     ActivateAndRefreshWindow
         ldx     #0
         stx     exception_flag
         rts
-.endproc ; TrySelectAndRefreshWindow
+.endproc ; TryActivateAndRefreshWindow
 
 exception_flag:
         .byte   0
-.endproc ; SelectAndRefreshWindowOrClose
+.endproc ; ActivateAndRefreshWindowOrClose
 
 ;;; ============================================================
 
-.proc SelectAndRefreshWindow
+.proc ActivateAndRefreshWindow
         pha                     ; A = window_id
 
         ;; Clear selection
@@ -5260,7 +5260,7 @@ exception_flag:
 
         ;; Create icons and draw contents
         jmp     ViewByCommon::entry3
-.endproc ; SelectAndRefreshWindow
+.endproc ; ActivateAndRefreshWindow
 
 ;;; ============================================================
 ;;; Clear the window background
@@ -6236,7 +6236,7 @@ no_win:
         cmp     #SELF_MODIFIED_BYTE
     IF_EQ
         lda     active_window_id
-        jsr     SelectAndRefreshWindowOrClose
+        jsr     ActivateAndRefreshWindowOrClose
         bne     err
     END_IF
 

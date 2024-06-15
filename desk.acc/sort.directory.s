@@ -102,7 +102,7 @@ start:  tsx
         jsr     JUMP_TABLE_RESTORE_OVL
 
         lda     window_id
-        jmp     JUMP_TABLE_SELECT_WINDOW
+        jmp     JUMP_TABLE_ACTIVATE_WINDOW
 .endproc ; Exit
 
 ;;; ============================================================

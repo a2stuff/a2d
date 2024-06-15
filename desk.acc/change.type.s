@@ -659,7 +659,7 @@ stash_stack:
         jsr     ApplyTypes
 
         jsr     JUMP_TABLE_GET_SEL_WIN
-        jmp     JUMP_TABLE_SELECT_WINDOW
+        jmp     JUMP_TABLE_ACTIVATE_WINDOW
 .endproc ; Main
 
 .proc Abort
