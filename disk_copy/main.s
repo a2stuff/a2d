@@ -111,25 +111,16 @@ params:  .res    3
         lda     #24
         sta     WNDBTM
         jsr     HOME            ; Clear 80-col screen
+        sta     TXTSET          ; ... and show it
 
-        lda     #$11            ; Ctrl-Q - disable 80-col firmware
+        lda     #$95            ; Ctrl-U - disable 80-col firmware
         jsr     COUT
+        jsr     INIT            ; reset text window again
+        jsr     SETVID          ; after INIT so WNDTOP is set properly
+        jsr     SETKBD
 
         ;; We'd switch back to color mode here, but since we're
         ;; launching DeskTop there's no point.
-
-        sta     DHIRESOFF
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-
-        jsr     SETVID          ; after TXTSET so WNDTOP is set properly
-        jsr     SETKBD
-
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80STORE
 
         jsr     ReconnectRAM
 

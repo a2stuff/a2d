@@ -946,25 +946,17 @@ noop:   rts
         lda     #24
         sta     WNDBTM
         jsr     HOME            ; Clear 80-col screen
+        sta     TXTSET          ; ... and show it
 
-        lda     #$11            ; Ctrl-Q - disable 80-col firmware
+        lda     #$95            ; Ctrl-U - disable 80-col firmware
         jsr     COUT
+        jsr     INIT            ; reset text window again
+        jsr     SETVID          ; after INIT so WNDTOP is set properly
+        jsr     SETKBD
 
         ;; Switch back to color DHR mode
         jsr     SetColorMode
-
-        sta     DHIRESOFF
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-
-        jsr     SETVID          ; after TXTSET so WNDTOP is set properly
-        jsr     SETKBD
-
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80STORE
+        sta     CLR80VID        ; back off, after `SetColorMode` call
 
         rts
 .endproc ; RestoreTextMode

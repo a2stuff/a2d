@@ -8,6 +8,8 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### General
 
+* Correctly exit 80-column firmware when exiting.
+
 ### Launcher
 
 ### DeskTop

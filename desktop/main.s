@@ -2903,30 +2903,22 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         lda     #24
         sta     WNDBTM
         jsr     HOME            ; Clear 80-col screen
+        sta     TXTSET          ; ... and show it
 
-        lda     #$11            ; Ctrl-Q - disable 80-col firmware
+        lda     #$95            ; Ctrl-U - disable 80-col firmware
         jsr     COUT
+        jsr     INIT            ; reset text window again
+        jsr     SETVID          ; after INIT so WNDTOP is set properly
+        jsr     SETKBD
 
         ;; Switch back to color DHR mode now that screen is blank
         bit     LCBANK1
         bit     LCBANK1
         sta     ALTZPON
         jsr     SetColorMode    ; depends on state in Aux LC
+        sta     CLR80VID        ; back off, after `SetColorMode` call
         sta     ALTZPOFF
         bit     ROMIN2
-
-        sta     DHIRESOFF
-        sta     TXTSET
-        sta     LOWSCR
-        sta     LORES
-        sta     MIXCLR
-
-        jsr     SETVID          ; after TXTSET so WNDTOP is set properly
-        jsr     SETKBD
-
-        sta     CLRALTCHAR
-        sta     CLR80VID
-        sta     CLR80STORE
 
         jsr     ReconnectRAM
         jmp     RestoreDeviceList

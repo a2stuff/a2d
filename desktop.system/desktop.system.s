@@ -2305,7 +2305,7 @@ found:
 ret:    rts
 
 quit:   jsr     HOME
-        lda     #$11               ; Ctrl-Q - disable 80-col firmware
+        lda     #$95               ; Ctrl-U - disable 80-col firmware
         jsr     COUT
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params

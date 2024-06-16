@@ -68,7 +68,7 @@ done:   rts
         sta     count
 
         tax
-        lda     #' '
+        lda     #' '            ; inverse
 :       jsr     COUT
         dex
         bne     :-
