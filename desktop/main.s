@@ -526,41 +526,26 @@ dispatch_click:
 .endproc ; HandleClick
 
 ;;; ============================================================
-;;; Activate the window, and sets selection to its parent icon
-;;; Inputs: A = window id to activate
-
-.proc ActivateWindowAndSelectIcon
-        pha
-        jsr     ClearSelection
-        pla
-        jsr     ActivateWindow
-
-        ;; Try to select the window's parent icon. (Only works
-        ;; for volume icons, otherwise it would put selection
-        ;; in an inactive window.)
-        lda     active_window_id
-        jmp     SelectIconForWindow
-.endproc ; ActivateWindowAndSelectIcon
-
-;;; ============================================================
 ;;; Activate the window, draw contents, and update menu items
 ;;; Inputs: A = window id to activate
 
 .proc ActivateWindow
         ;; Make the window active.
-        sta     findwindow_params::window_id
-        MGTK_CALL MGTK::SelectWindow, findwindow_params::window_id
-        copy    findwindow_params::window_id, active_window_id
+        sta     active_window_id
+        MGTK_CALL MGTK::SelectWindow, active_window_id
 
         ;; Repaint the contents
         jsr     UpdateWindowUsedFreeDisplayValues
         jsr     LoadActiveWindowEntryTable
         jsr     DrawCachedWindowHeaderAndEntries
 
-        ;; Update menu items
+        FALL_THROUGH_TO UncheckAndCheckViewMenuItemForActiveWindow
+.endproc ; ActivateWindow
+
+.proc UncheckAndCheckViewMenuItemForActiveWindow
         jsr     UncheckViewMenuItem
         FALL_THROUGH_TO CheckViewMenuItemForActiveWindow
-.endproc ; ActivateWindow
+.endproc ; UncheckAndCheckViewMenuItemForActiveWindow
 
 .proc CheckViewMenuItemForActiveWindow
         jsr     GetActiveWindowViewBy
@@ -3366,15 +3351,6 @@ spin:   jsr     GetSelectionWindow
         jsr     ActivateAndRefreshWindowOrClose
         RTS_IF_NE
 
-        ;; Refreshing may have selected active window's icon; clear
-        ;; selection if needed.
-        ;; TODO: Make `ActivateAndRefreshWindow` not select icon?
-        lda     selected_window_id
-        cmp     active_window_id
-    IF_NE
-        jsr     ClearSelection
-    END_IF
-
         ;; Select and rename the file
         param_call SelectFileIconByName, stashed_name
         jmp     CmdRename
@@ -5213,9 +5189,14 @@ exception_flag:
         ;; Bring window to front if needed
         pla                     ; A = window_id
         cmp     active_window_id
-        beq     :+
-        jsr     ActivateWindowAndSelectIcon ; bring to front
-:
+    IF_NE
+        sta     active_window_id
+        MGTK_CALL MGTK::SelectWindow, active_window_id
+
+        ;; Update menu items
+        jsr     UncheckAndCheckViewMenuItemForActiveWindow
+    END_IF
+
         ;; Clear background
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
