@@ -1215,8 +1215,8 @@ This covers:
 
 Repeat for each field:
  * Type a printable character.
-   * Should insert a character at caret, unless invalid in context or length limit reached. Length limits are:
-     * File name: 15 characters
+   * Should insert a character at caret, unless invalid in context or length limit reached. Limits are:
+     * File name: 15 characters; only alpha, numeric, and period accepted; only alpha at start
      * Shortcut name: 14 characters
    * Mouse cursor should be hidden until moved.
    * Test with caret at start, in middle, and at end of the string.

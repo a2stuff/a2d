@@ -13417,6 +13417,7 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
       IF_NS
         jsr     IsControlChar   ; pass through control characters
         bcc     allow
+        ldy     prompt_line_edit_rec+LETK::LineEditRecord::caret_pos
         jsr     IsFilenameChar
         bcs     ignore
 allow:  LETK_CALL LETK::Key, prompt_le_params
@@ -13469,7 +13470,7 @@ yes:    clc                     ; C=0
 
 ;;; ============================================================
 
-;;; Input: A=character
+;;; Input: A=character, Y=caret_pos
 ;;; Output: C=0 if valid filename character, C=1 otherwise
 .proc IsFilenameChar
         cmp     #'.'
@@ -13492,7 +13493,7 @@ yes:    clc                     ; C=0
         bcs     ignore          ; always
 
 allow_if_not_first:
-        ldx     text_input_buf
+        cpy     #0
         beq     ignore
 
 allow:  clc
@@ -13929,6 +13930,7 @@ out:    jsr     SetCursorPointerWithFlag
 
         jsr     IsControlChar   ; pass through control characters
         bcc     allow
+        ldy     rename_line_edit_rec+LETK::LineEditRecord::caret_pos
         jsr     IsFilenameChar
         bcs     ignore
 allow:  LETK_CALL LETK::Key, rename_le_params
