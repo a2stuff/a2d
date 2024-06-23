@@ -481,6 +481,10 @@
 * Launch DeskTop. Open a volume window containing two folders (1 and 2). Open both folder windows, and verify that both folder icons are dimmed. Position folder 1's window partially covering folder 1's and folder 2's icons. Activate folder 1's window, and close it. Verify that the visible portions of folder 1 repaint (not dimmed) and folder 2 repaint (dimmed).
 * Disable any acceleration. Launch DeskTop. Open a volume window containing a folder with a long name. Double-click the folder to open it. Verify that when the icon is painting as dimmed that the dimming effect doesn't extend past the bounding box of the icon, even temporarily.
 
+* Launch DeskTop. Open a volume window containing a folder. Open the folder. Close the folder's window. Verify that it animates into the volume icon, which becomes selected.
+* Launch DeskTop. Open a volume window containing a folder and a sub-folder. Open the folder. Open the sub-folder. Close the sub-folder's window. Verify that it animates into the the folder icon, which becomes selected.
+* Launch DeskTop. Open a volume window containing a folder and a sub-folder. Open the folder. Open the sub-folder. Close the parent folder's window. Verify that it animates into the volume icon, which becomes selected.
+
 * Perform the following tests in DeskTop using Mouse Keys mode:
   * Use the arrow keys to move the mouse to the top, bottom, left, and right edges of the screen. Verify that the mouse is clamped to the edges and does not wrap.
   * Select an icon. Press the Return key. Verify that Mouse Keys mode is not silently exited, and the cursor is not distorted.

@@ -5091,6 +5091,8 @@ failure:
 
 ;;; ============================================================
 ;;; Add specified icon to selection list, and redraw.
+;;; NOTE: This increments `selected_icon_count` and does NOT change
+;;; `selected_window_id`
 ;;; Input: A = icon number
 ;;; Assert: Icon is in active window/desktop, `selected_window_id` is set.
 
@@ -5538,6 +5540,7 @@ last_pos:
         lda     cached_window_id
         jsr     GetWindowPath
         jsr     IconToAnimate
+        sta     anim_icon       ; to select later
         ldx     cached_window_id
         jsr     AnimateWindowClose ; A = icon id, X = window id
 
@@ -5569,8 +5572,8 @@ last_pos:
 
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
-        beq     finish          ; none
-
+    IF_NE
+        ;; Have parent icon - mark as not dimmed
         sta     icon_param
         jsr     GetIconEntry
         stax    icon_ptr
@@ -5579,23 +5582,20 @@ last_pos:
         lda     (icon_ptr),y
         and     #AS_BYTE(~kIconEntryStateDimmed)
         sta     (icon_ptr),y
+        ;; Assert: `icon` == `anim_icon`, and will get redrawn next.
+    END_IF
 
-        .assert IconEntry::win_flags = IconEntry::state + 1, error, "enum mismatch"
-        iny
-        lda     (icon_ptr),y
-        and     #kIconEntryWinIdMask ; which window?
-        beq     :+              ; desktop, can draw/select
-        cmp     active_window_id
-        bne     redraw          ; not top window, skip select
-:
-        ;; Set selection and redraw
+        ;; --------------------------------------------------
+        ;; Select the ancestor icon that was animated into
+
+        anim_icon := *+1
+        lda     #SELF_MODIFIED_BYTE
+        pha                     ; A = `anim_icon`
+        jsr     GetIconWindow
         sta     selected_window_id
-        copy    #1, selected_icon_count
-        copy    icon, selected_icon_list
-        ITK_CALL IconTK::HighlightIcon, icon_param
+        pla                     ; A = `anim_icon`
+        jmp     HighlightAndSelectIcon
 
-redraw: ITK_CALL IconTK::DrawIcon, icon_param
-finish: rts
 .endproc ; CloseSpecifiedWindow
 
 ;;; ============================================================
