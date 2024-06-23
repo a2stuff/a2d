@@ -127,7 +127,11 @@
 * Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
   * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
 * Open two windows. Press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
-
+* Open two windows. Hold Solid-Apple and select File > Close Window. Verify that all windows close.
+* Open two windows. Hold Open-Apple and select File > Close Window. Verify that all windows close.
+* Open two windows. Open the File menu, then press Solid-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
+* Open two windows. Open the File menu, then press Open-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
+* Open two windows. Open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 
 * Start DeskTop with a hard disk and a 5.25" floppy mounted. Remove the floppy, and double-click the floppy icon, and dismiss the "The volume cannot be found." dialog. Verify that the floppy icon disappears, and that no additional icons are added.
 
@@ -175,6 +179,9 @@
 * Launch DeskTop. Open a window. Select a folder icon. Hold Open-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
 * Launch DeskTop. Open a window. Select a folder icon. Press Open-Apple+Solid-Apple+O. Verify that the folder opens, and that the original window closes. Repeat with Caps Lock off.
 * Launch DeskTop. Open a window. Select a folder icon. Press Open-Apple+Solid-Apple+Down. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Solid-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
+* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
+* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+Solid-Apple+O. Verify that the folder opens, and the original window closes. Repeat with Caps Lock off.
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+O. Verify that nothing happens. Repeat with Caps Lock off.
 * Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+Down. Verify that nothing happens.
 

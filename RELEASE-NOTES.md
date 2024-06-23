@@ -17,6 +17,8 @@ Project Page: https://github.com/a2stuff/a2d
 * Don't always select window's icon after refresh (just usually)
 * When closing window, select volume icon if folder icon absent.
 * Ignore non-alpha character typed at start when naming file/volume.
+* Hold either Apple key when selecting File > Close to Close All.
+* Fix Apple+O to not "Open and Close" when menu already showing. ([#796](https://github.com/a2stuff/a2d/issues/796))
 
 ### Selector
 

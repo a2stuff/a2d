@@ -418,7 +418,7 @@ cycle:  jmp     CmdCycleWindows
 menu_accelerators:
         copy    event_params::key, menu_click_params::which_key
         copy    event_params::modifiers, menu_click_params::key_mods
-        copy    #$80, menu_kbd_flag ; note that source is keyboard
+        copy    #0, menu_modified_click_flag ; note that source is not Apple+click
         MGTK_CALL MGTK::MenuKey, menu_click_params
 
 MenuDispatch2:
@@ -488,8 +488,18 @@ not_desktop:
       END_IF
     END_IF
 
-        copy    #0, menu_kbd_flag ; note that source is not keyboard
+        ;; Note if menu showing via modified click
+        jsr     ModifierDown
+        sta     menu_modified_click_flag
+
         MGTK_CALL MGTK::MenuSelect, menu_click_params
+
+        ;; But allow double-modifier click or shortcut too
+        lda     BUTN0
+        and     BUTN1
+        ora     menu_modified_click_flag
+        sta     menu_modified_click_flag
+
         jmp     MenuDispatch2
 
 not_menu:
@@ -2028,15 +2038,13 @@ volume:
         ;; Entry point from menu
 
         ;; Close after open only if from real menu, and modifier is down.
-        copy    #0, window_id_to_close
-        bit     menu_kbd_flag   ; If keyboard (Apple-O) ignore. (see issue #9)
-        bmi     :+
-        jsr     ModifierDown
-        bpl     :+
-        copy    selected_window_id, window_id_to_close
-:
+        lda     #0
+        bit     menu_modified_click_flag
+    IF_NS
+        lda     selected_window_id
+    END_IF
+        sta     window_id_to_close
         jmp     common
-
 
         ;; --------------------------------------------------
         ;; Entry point from OA+SA+O / OA+SA+Down
@@ -2309,6 +2317,9 @@ CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
 .proc CmdClose
         lda     active_window_id
         RTS_IF_ZERO
+
+        bit     menu_modified_click_flag
+        bmi     CmdCloseAll
 
         jmp     CloseActiveWindow
 .endproc ; CmdClose
@@ -15580,8 +15591,8 @@ hex_digits:
 
 ;;; ============================================================
 
-;;; High bit set if menu dispatch via keyboard accelerator, clear otherwise.
-menu_kbd_flag:
+;;; High bit set if menu dispatch via mouse with option, clear otherwise.
+menu_modified_click_flag:
         .byte   0
 
 ;;; ============================================================
