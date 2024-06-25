@@ -4,7 +4,7 @@ Home Page: https://a2desktop.com
 
 Project Page: https://github.com/a2stuff/a2d
 
-## 1.4 Alpha
+## 1.4 Beta
 
 ### General
 
