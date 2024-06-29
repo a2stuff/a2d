@@ -507,10 +507,7 @@ not_menu:
 
         ;; Activate if needed
         lda     findwindow_params::window_id
-        cmp     active_window_id
-    IF_NE
-        jsr     ActivateWindow
-    END_IF
+        jsr     ActivateWindow  ; no-op if already active
 
         pla                     ; A = MGTK::Area::*
         jsr     dispatch_click
@@ -537,9 +534,13 @@ dispatch_click:
 
 ;;; ============================================================
 ;;; Activate the window, draw contents, and update menu items
+;;; No-op if the window is already active.
 ;;; Inputs: A = window id to activate
 
 .proc ActivateWindow
+        cmp     active_window_id
+        RTS_IF_EQ
+
         ;; Make the window active.
         sta     active_window_id
         MGTK_CALL MGTK::SelectWindow, active_window_id
@@ -3250,7 +3251,7 @@ ret:    rts
        IF_EQ
         jsr     ClearAndDrawActiveWindowEntries ; active - just repaint
        ELSE
-        jsr     ActivateWindow  ; inactivate - activate, it will repaint
+        jsr     ActivateWindow  ; inactive - activate, it will repaint
        END_IF
       END_IF
     END_IF
@@ -3277,10 +3278,7 @@ ret:    rts
         ;; If selection in non-active window, activate it
         lda     selected_window_id
     IF_NE
-        cmp     active_window_id
-      IF_NE
-        jsr     ActivateWindow
-      END_IF
+        jsr     ActivateWindow  ; no-op if already active
     END_IF
 
         ;; If selection is in a window with View > by Name, refresh
@@ -3416,12 +3414,10 @@ common: lda     selected_icon_count
         dex
         bpl     :-
 
-
-        ;; No selection; pick the first icon identified.
+        ;; No selection; pick the first volume icon.
 pick_first:
         copy    #0, selected_index
-        jsr     ClearSelection
-        jmp     HighlightIcon
+        beq     select_next     ; always
 
         ;; There was a selection; clear it, and pick prev/next
         ;; based on keypress.
@@ -3457,6 +3453,12 @@ select_prev:
 HighlightIcon:
         ldx     selected_index
         lda     buffer+1,x
+        pha
+        jsr     GetIconWindow
+    IF_NE
+        jsr     ActivateWindow  ; no-op if already active
+    END_IF
+        pla
         jmp     SelectIcon
 .endproc ; CmdHighlightImpl
 CmdHighlightPrev := CmdHighlightImpl::prev
@@ -3524,6 +3526,9 @@ file_char:
         jsr     ClearSelection
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
+        jsr     GetIconWindow
+        jsr     ActivateWindow  ; no-op if already active
+        lda     icon
         jsr     SelectIcon
 
 done:   lda     #0
@@ -3583,59 +3588,29 @@ typedown_buf:
 
 ;;; ============================================================
 ;;; Build list of selectable icons.
-;;; Includes icons in the active window (if any, and if icon view)
-;;; followed by the volume icons on the desktop, including Trash.
+;;; This is all icons, so order is stable as windows are activated
+;;; while the arrow keys are held down and selection cycles.
 ;;; Output: Buffer at $1800 (length prefixed)
 
 .proc GetSelectableIcons
         buffer := $1800
 
-        copy    #0, buffer
-        lda     active_window_id
-        beq     volumes         ; no active window
+        window_id := findwindow_params::window_id
 
-        ;; --------------------------------------------------
-        ;; Icons in active window
+        ldx     icon_count
+        stx     buffer
+        beq     ret
 
-        jsr     LoadActiveWindowEntryTable
-
-        ldx     #0              ; index in buffer and icon list
-win_loop:
-        cpx     cached_window_entry_count
-        beq     :+
-
-        lda     cached_window_entry_list,x
+:       lda     window_entry_table,x
         sta     buffer+1,x
-        inc     buffer
-        inx
-        jmp     win_loop
-:
+        dex
+        bpl     :-
 
-        ;; --------------------------------------------------
-        ;; Desktop (volume) icons
-
-volumes:
-        jsr     LoadDesktopEntryTable
-
-        ldx     buffer
-        ldy     #0
-vol_loop:
-        lda     cached_window_entry_list,y
-        sta     buffer+1,x
-        iny
-        inx
-        cpy     cached_window_entry_count
-        bne     vol_loop
-        lda     buffer
-        clc
-        adc     cached_window_entry_count
-        sta     buffer
-
-        rts
+ret:    rts
 .endproc ; GetSelectableIcons
 
-;;; Gather the selectable icons (in active window plus desktop) into
-;;; buffer at $1800, as above, but also sort them by name.
+;;; Gather the selectable icons into buffer at $1800, as above, but
+;;; also sort them by name.
 ;;; Output: Buffer at $1800 (length prefixed)
 
 .proc GetSelectableIconsSorted
@@ -6023,15 +5998,10 @@ ret:    rts
         ;; --------------------------------------------------
         ;; There is an existing window associated with icon.
 
-found_win:                    ; X = window id - 1
-        ;; Is it the active window? If so, done!
+found_win:                      ; X = window id - 1
         inx
-        cpx     active_window_id
-        RTS_IF_EQ
-
-        ;; Otherwise, bring the window to the front.
         txa
-        jmp     ActivateWindow
+        jmp     ActivateWindow  ; no-op if already active
 
         ;; --------------------------------------------------
         ;; No associated window - check for matching path.
@@ -13294,13 +13264,6 @@ get_case_bits_per_option_and_adjust_string:
 ;;; ============================================================
 ;;; Message handler for OK/Cancel dialog
 
-;;; NOTE: These are referenced by indirect JMP and *must not*
-;;; cross page boundaries.
-PromptDialogClickHandlerHook:
-        .addr   SELF_MODIFIED
-PromptDialogKeyHandlerHook:
-        .addr   SELF_MODIFIED
-
 ;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
 
 .proc PromptInputLoop
@@ -13462,6 +13425,13 @@ ret:    rts
 .endproc ; HandleKeyCancel
 
 .endproc ; PromptKeyHandler
+
+;;; NOTE: These are referenced by indirect JMP and *must not*
+;;; cross page boundaries.
+PromptDialogClickHandlerHook:
+        .addr   SELF_MODIFIED
+PromptDialogKeyHandlerHook:
+        .addr   SELF_MODIFIED
 
 ;;; ============================================================
 
