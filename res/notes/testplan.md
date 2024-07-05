@@ -103,6 +103,7 @@
 * Open a window. Position two icons so one overlaps another. Select only one icon. Drag it to a new location. Verify that the the both icons repaint correctly.
 
 * Position a volume icon in the middle of the DeskTop. Incrementally move a window so that it obscures all 8 positions around it (top, top right, right, etc). Ensure the icon repaints fully, and no part of the window is over-drawn.
+* Position a window partially overlapping desktop icons. Select overlapped desktop icons. Drag icons a few pixels to the right. Verify that window is not over-drawn.
 
 * Launch DeskTop, File > Quit, run BASIC.SYSTEM. Ensure /RAM exists.
 

@@ -873,6 +873,7 @@ includes_trash:
 
         ;; Drag within same window (or desktop)
 same_window:
+        ldx     #$80            ; clip (if desktop)
         lda     findwindow_params::which_area
         .assert MGTK::Area::desktop = 0, error, "enum mismatch"
         beq     move_ok
@@ -888,10 +889,12 @@ same_window:
 
         ;; --------------------------------------------------
 
+        ldx     #0              ; don't clip (not desktop; unnecessary)
 move_ok:
-
+        stx     ::drag_highlighted_lambda_clip_flag
         INVOKE_WITH_LAMBDA IterateHighlightedIcons
-        ldx     #0              ; don't clip
+        ::drag_highlighted_lambda_clip_flag := *+1
+        ldx     #SELF_MODIFIED_BYTE
         clc                     ; don't redraw highlighted
         jmp     EraseIconCommon ; A = icon id, X = clip flag, C = redraw flag
         END_OF_LAMBDA
