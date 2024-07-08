@@ -27,6 +27,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Desk Accessories
 
+* About This Apple II: Detect Microdigital TK-3000 //e
 
 ## 1.4
 

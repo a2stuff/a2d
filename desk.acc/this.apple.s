@@ -602,6 +602,9 @@ str_trackstar_plus:
 str_mega_iie:
         PASCAL_STRING "Mega IIe"
 
+str_tk3000:
+        PASCAL_STRING "Microdigital TK-3000 //e"
+
 ;;; ============================================================
 
 str_prodos_version:
@@ -741,6 +744,8 @@ dib_buffer:     .tag    SPDIB
 ;;;
 ;;; The Tiger Learning Computer has identical ID bytes to the Enhanced IIe,
 ;;; but can be distinguished by the sequence $CC $D4 $D7 $C9 $CE $8D at $FACF
+;;;
+;;; The Microdigital TK-3000 //e has the string "TK3000//e" at $FF0A
 
 .enum model
         ii                      ; Apple ][
@@ -763,6 +768,7 @@ dib_buffer:     .tag    SPDIB
         trackstar_e             ; Trackstar E
         trackstar_plus          ; Trackstar Plus
         mega_iie                ; Mega IIe
+        tk3000                  ; Microdigital TK-3000 //e
         LAST
 .endenum
 kNumModels = model::LAST
@@ -787,7 +793,8 @@ model_str_table:
         .addr   str_tlc          ; Tiger Learning Computer
         .addr   str_trackstar_e  ; Trackstar E
         .addr   str_trackstar_plus ; Trackstar Plus
-        .addr   str_mega_iie       ; Mega IIe
+        .addr   str_mega_iie     ; Mega IIe
+        .addr   str_tk3000       ; Microdigital TK-3000 //e
         ASSERT_ADDRESS_TABLE_SIZE model_str_table, kNumModels
 
 model_pix_table:
@@ -811,6 +818,7 @@ model_pix_table:
         .addr   aux::trackstar_bitmap ; Trackstar E
         .addr   aux::trackstar_bitmap ; Trackstar Plus
         .addr   aux::mega_iie_bitmap ; Mega IIe
+        .addr   aux::iie_bitmap      ; Microdigital TK-3000 //e
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
@@ -882,6 +890,11 @@ tlc_sequence:
         kTLCSequenceLength = * - tlc_sequence
         TLC_ID_ADDR = $FAFC
 
+tk3000_sequence:
+        .byte   $D4, $CB, $B3, $B0, $B0, $B0, $AF, $AF, $E5 ; "TK3000//e"
+        kTK3000SequenceLength = * - tk3000_sequence
+        TK3000_ID_ADDR = $FF0A
+
 .proc IdentifyModel
         ;; Read from ROM
         bit     ROMIN2
@@ -918,8 +931,8 @@ fail:   ldy     #0
 
 match:  tya
 
-        ;; A has model; but now test for IIgs and TLC;
-        ;; both masquerade as Enhanced IIe.
+        ;; A has model; but now test for IIgs, TLC, and TK3000;
+        ;; all masquerade as Enhanced IIe.
         cmp     #model::iie_enhanced
     IF_EQ
 
@@ -931,20 +944,34 @@ match:  tya
         ora     #'0'            ; convert to ASCII digit
         sta     str_iigs + kStrIIgsROMOffset
         lda     #model::iigs
-      ELSE
+        bne     found          ; always
+      END_IF
+
         ;; Is it a TLC?
-        tay
         ldx     #kTLCSequenceLength-1
 :       lda     TLC_ID_ADDR,x
         cmp     tlc_sequence,x
         bne     :+
         dex
         bpl     :-
-        ldy     #model::tlc
-:       tya
-      END_IF
+        lda     #model::tlc
+        bne     found           ; always
+:
+        ;; Is it a TK3000?
+        ldx     #kTK3000SequenceLength-1
+:       lda     TK3000_ID_ADDR,x
+        cmp     tk3000_sequence,x
+        bne     :+
+        dex
+        bpl     :-
+        lda     #model::tk3000
+        bne     found           ; always
+:
+        lda     #model::iie_enhanced
+        FALL_THROUGH_TO found
     END_IF
 
+found:
         ;; A has model
         sta     model
         jsr     SetModelPtrs
