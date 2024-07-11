@@ -14,14 +14,6 @@
 
 # DeskTop
 
-* Open a volume with double-click.
-* Open a directory with double-click.
-* Open a text file with double-click.
-
-* Open a volume with File > Open.
-* Open a directory with File > Open.
-* Open a text file with File > Open.
-
 * Open a volume, open a folder, close just the volume window; re-open the volume, re-open the folder, ensure the previous window is activated.
 
 * Open a window. Position two icons so one overlaps another. Select both. Drag both to a new location. Verify that the icons are repainted in the new location, and erased from the old location.
@@ -33,16 +25,6 @@
 * Run on system with realtime clock; verify that time shows in top-right of menu.
 
 * Open a window for a volume; open a window for a folder; close volume window; close folder window. Repeat 10 times to verify that the volume table doesn't have leaks.
-
-* Open two windows. Click the close box on the active window. Verify that only the active window closes.
-* Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
-  * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
-* Open two windows. Press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
-* Open two windows. Hold Solid-Apple and select File > Close Window. Verify that all windows close.
-* Open two windows. Hold Open-Apple and select File > Close Window. Verify that all windows close.
-* Open two windows. Open the File menu, then press Solid-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
-* Open two windows. Open the File menu, then press Open-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
-* Open two windows. Open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 
 * Start DeskTop with a hard disk and a 5.25" floppy mounted. Remove the floppy, and double-click the floppy icon, and dismiss the "The volume cannot be found." dialog. Verify that the floppy icon disappears, and that no additional icons are added.
 
@@ -72,21 +54,6 @@
 
 * Launch DeskTop. Click on a volume icon. Hold Solid-Apple and click on a different volume icon. Verify that selection changes to the second icon.
 * Launch DeskTop. Open a volume containing files. Click on a file icon. Hold Solid-Apple and click on a different file icon. Verify that selection changes to the second icon.
-
-* Launch DeskTop. Select two volume icons. Double-click one of the volume icons. Verify that two windows open.
-* Launch DeskTop. Open a window. Select two folder icons. Double-click one of the folder icons. Verify that two windows open.
-* Launch DeskTop. Open a window. Hold Solid-Apple and double-click a folder icon. Verify that the folder opens, and that the original window closes.
-* Launch DeskTop. Open a window. Select a folder icon. Hold Solid-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
-* Launch DeskTop. Open a window. Select a folder icon. Hold Open-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
-* Launch DeskTop. Open a window. Select a folder icon. Press Open-Apple+Solid-Apple+O. Verify that the folder opens, and that the original window closes. Repeat with Caps Lock off.
-* Launch DeskTop. Open a window. Select a folder icon. Press Open-Apple+Solid-Apple+Down. Verify that the folder opens, and that the original window closes.
-* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Solid-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
-* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
-* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+Solid-Apple+O. Verify that the folder opens, and the original window closes. Repeat with Caps Lock off.
-* Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+O. Verify that nothing happens. Repeat with Caps Lock off.
-* Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+Down. Verify that nothing happens.
-
-* Launch DeskTop. Open a window and select multiple folder icons. File > Open. Verify that the folders open, and that the icons remain selected and become dimmed.
 
 * Launch DeskTop. Open a volume window. Select an icon. Click in the header area (items/use/etc). Verify that selection is not cleared.
 
@@ -147,29 +114,10 @@
 
 * Configure a system with two volumes of the same name. Launch DeskTop. Verify that an error is shown, and only one volume appears.
 
-* Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is dimmed but still selected.
-* Launch DeskTop. Double-click a volume. Verify that the volume icon is still selected.
-* Launch DeskTop. Select a folder. File > Open. Verify that the folder icon is dimmed but still selected.
-* Launch DeskTop. Double-click a folder. Verify that the folder icon is still selected.
-* Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Select the folder. File > Open. Verify that the folder icon is dimmed but still selected.
-* Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Double-click the folder. Verify that the folder icon is dimmed but still selected.
-
 * Launch DeskTop. Open two windows for two different volumes. Select an icon in one window. Click on the title bar, scroll bars, or header of the other window to activate it. Verify that the icon in the first window is still selected. Click on the title bar, scroll bar or header of the active window. Verify that the icon in the first window is still selected. Click on the content area of the active window. Verify that the icon is no longer selected, and the window's corresponding volume icon becomes selected when the mouse button is released.
 * Launch DeskTop. Open a window for a volume icon and a window for a folder icon. Click in the content area of the volume icon's window. Verify that the volume icon is selected. Click in the content area of the folder icon's window. Verify that the folder icon is selected.
 * Launch DeskTop. Open a window for a volume icon and a window for a folder icon within that volume. Close the window for the volume icon. Click in the content area of the folder icon's window. Verify that the volume icon is selected.
 
-* Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window re-opens, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
-* Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Up. Verify that the volume window is activated, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
-* Launch DeskTop. Open a volume window. Open a folder. Activate the volume window. Switch the window's view to by Name. Activate the folder window. Press Open-Apple+Up. Verify that the volume window is activated, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
-
-* Launch DeskTop. Open a volume window with multiple files. Open a folder. Press Open-Apple+Up. Verify that the volume window is shown and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
-* Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window is shown and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
-* Launch DeskTop. Open a volume window with multiple files. Open a folder. Press Open-Apple+Solid-Apple+Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
-* Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
-
-* Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the volume window re-opens, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and the volume icon is selected.
-* Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Solid-Apple+Up. Verify that the volume window is activated, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and that the volume icon is selected.
-* Launch DeskTop. Open a volume window. Open a folder. Activate the volume window. Switch the window's view to by Name. Activate the folder window. Press Open-Apple+Solid-Apple+Up. Verify that the volume window is activated, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and that the volume icon is selected.
 
 * Launch DeskTop. Position a volume icon near the center of the screen. Drag another volume onto it. Verify that after the copy dialog closes, the volume icon is still visible.
 * Launch DeskTop. Position a volume icon near the center of the screen. Open the volume icon, and move/size the window to ensure the volume icon is visible. Drag another volume onto the window. Verify that after the copy dialog closes, the volume icon is still visible.
@@ -355,7 +303,6 @@
 * Launch DeskTop. Open a volume window. Select a file icon. Click in an empty area within the window. Verify that the volume icon is selected.
 * Launch DeskTop. Apple Menu > Control Panels. Close the window by clicking on the close box. Verify nothing mis-paints.
 
-* Launch DeskTop. Select a volume icon. Open it. Verify that the open animation starts at the icon location. (This will be easier to observe in emulators with acceleration disabled.)
 * Launch DeskTop, ensuring no windows are open. File > Select All. Verify that the volume icons are selected.
 
 * Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Release the mouse button. Verify that the icon is moved.
@@ -407,6 +354,81 @@
 * Open a directory with more than 30 files, without resizing the window. Scroll up and down by one tick, by one page, and to the top/bottom. Verify that such operations scroll by an integral number of icons, i.e. the last row of labels are always the same distance from the bottom of the window.
 
 * Preview an image file (e.g. SAMPLE.MEDIA/ROOM). Press Right Arrow to preview the next image. Press Escape to exit. Invoke a system file or binary file (e.g. KARATEKA.YELL). Verify it launches correctly with no crash.
+
+## Open
+
+* Open a volume with double-click.
+* Open a directory with double-click.
+* Open a text file with double-click.
+
+* Open a volume with File > Open.
+* Open a directory with File > Open.
+* Open a text file with File > Open.
+
+* Launch DeskTop. Select a volume. File > Open. Verify that the volume icon is dimmed but still selected.
+* Launch DeskTop. Double-click a volume. Verify that the volume icon is still selected.
+* Launch DeskTop. Select a folder. File > Open. Verify that the folder icon is dimmed but still selected.
+* Launch DeskTop. Double-click a folder. Verify that the folder icon is still selected.
+* Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Select the folder. File > Open. Verify that the folder icon is dimmed but still selected.
+* Launch DeskTop. Open a window containing a folder. Position the window so that the folder icon will not be obscured when opened. Double-click the folder. Verify that the folder icon is dimmed but still selected.
+
+* Launch DeskTop. Select a volume icon. Open it. Verify that the open animation starts at the icon location. (This will be easier to observe in emulators with acceleration disabled.)
+
+
+## Close Window
+
+* Open two windows. Click the close box on the active window. Verify that only the active window closes.
+* Open two windows. Open the File menu, then press Solid-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
+* Open two windows. Open the File menu, then press Open-Apple+W. Verify that only the top window closes. Repeat with Caps Lock off.
+
+* Launch DeskTop. Select two volume icons. Double-click one of the volume icons. Verify that two windows open.
+* Launch DeskTop. Open a window. Select two folder icons. Double-click one of the folder icons. Verify that two windows open.
+* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Solid-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
+* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
+
+* Launch DeskTop. Open a window and select multiple folder icons. File > Open. Verify that the folders open, and that the icons remain selected and become dimmed.
+
+
+## Open Then Close
+
+* Launch DeskTop. Open a window. Hold Solid-Apple and double-click a folder icon. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Select a folder icon. Hold Solid-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Select a folder icon. Hold Open-Apple and select File > Open. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Select a folder icon. Press Open-Apple+Solid-Apple+O. Verify that the folder opens, and that the original window closes. Repeat with Caps Lock off.
+* Launch DeskTop. Open a window. Select a folder icon. Press Open-Apple+Solid-Apple+Down. Verify that the folder opens, and that the original window closes.
+* Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+Solid-Apple+O. Verify that the folder opens, and the original window closes. Repeat with Caps Lock off.
+* Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+O. Verify that nothing happens. Repeat with Caps Lock off.
+* Launch DeskTop. Ensure nothing is selected. Press Open-Apple+Solid-Apple+Down. Verify that nothing happens.
+
+
+## Open Enclosing Folder
+
+* Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window re-opens, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
+* Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Up. Verify that the volume window is activated, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
+* Launch DeskTop. Open a volume window. Open a folder. Activate the volume window. Switch the window's view to by Name. Activate the folder window. Press Open-Apple+Up. Verify that the volume window is activated, and that the folder icon is selected. Press Open-Apple+Up again. Verify that the volume icon is selected.
+
+* Launch DeskTop. Open a volume window with multiple files. Open a folder. Press Open-Apple+Up. Verify that the volume window is shown and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
+* Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Up. Verify that the volume window is shown and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
+
+
+## Open Enclosing Folder Then Close
+
+* Launch DeskTop. Open a volume window. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the volume window re-opens, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and the volume icon is selected.
+* Launch DeskTop. Open a volume window. Open a folder. Press Open-Apple+Solid-Apple+Up. Verify that the volume window is activated, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and that the volume icon is selected.
+* Launch DeskTop. Open a volume window. Open a folder. Activate the volume window. Switch the window's view to by Name. Activate the folder window. Press Open-Apple+Solid-Apple+Up. Verify that the volume window is activated, and that the folder window closes, and that the folder icon is selected. Press Open-Apple+Solid-Apple+Up again. Verify that the volume window closes, and that the volume icon is selected.
+
+* Launch DeskTop. Open a volume window with multiple files. Open a folder. Press Open-Apple+Solid-Apple+Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
+* Launch DeskTop. Open a volume window with multiple files. Open a folder. Close the volume window. Press Open-Apple+Solid-Apple+Up. Verify that the folder window is closed, the volume window is shown, and the folder is selected. Press Right Arrow. Verify that only a single icon shows as selected.
+
+
+## Close All
+
+* Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
+  * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
+* Open two windows. Press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
+* Open two windows. Hold Solid-Apple and select File > Close Window. Verify that all windows close.
+* Open two windows. Hold Open-Apple and select File > Close Window. Verify that all windows close.
+* Open two windows. Open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 
 
 ## View Menu
