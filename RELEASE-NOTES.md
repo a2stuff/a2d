@@ -12,6 +12,8 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Launcher
 
+* Don't trust a partial copy of DeskTop on RAMCard; use DESKTOP.SYSTEM itself as a sentinel.
+
 ### DeskTop
 
 * Don't always select window's icon after refresh (just usually)

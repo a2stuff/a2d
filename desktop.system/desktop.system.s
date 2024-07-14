@@ -1058,11 +1058,11 @@ copied_flag:                    ; set to `dst_path`'s length, or reset
 kNumFilenames = 5
 
         ;; Files/Directories to copy
-str_f1: PASCAL_STRING kFilenameLauncher
-str_f2: PASCAL_STRING kFilenameModulesDir
-str_f3: PASCAL_STRING kFilenameLocalDir
-str_f4: PASCAL_STRING kFilenameDADir
-str_f5: PASCAL_STRING kFilenameExtrasDir
+str_f1: PASCAL_STRING kFilenameModulesDir
+str_f2: PASCAL_STRING kFilenameLocalDir
+str_f3: PASCAL_STRING kFilenameDADir
+str_f4: PASCAL_STRING kFilenameExtrasDir
+str_f5: PASCAL_STRING kFilenameLauncher ; last - serves as a sentinel
 
 filename_table:
         .addr str_f1,str_f2,str_f3,str_f4,str_f5
@@ -1565,18 +1565,21 @@ noop:
 ;;; ============================================================
 ;;; Input: `dst_path` set to RAMCard app dir (e.g. "/RAM5/DESKTOP")
 
+;;; DeskTop.system itself is used as a sentinel, as it is the last
+;;; file copied to the folder.
+
 .proc CheckDesktopOnDevice
         ;; `path_buf` = `dst_path`
         COPY_STRING dst_path, path_buf
 
-        ;; `path_buf` += "/Modules/DeskTop"
+        ;; `path_buf` += "/DeskTop.system"
         ldx     path_buf
         ldy     #0
 loop:   inx
         iny
-        lda     str_desktop_path,y
+        lda     str_sentinel_path,y
         sta     path_buf,x
-        cpy     str_desktop_path
+        cpy     str_sentinel_path
         bne     loop
         stx     path_buf
 
@@ -1591,8 +1594,8 @@ loop:   inx
 ret:    rts
 
         ;; Appended to RAMCard root path e.g. "/RAM5"
-str_desktop_path:
-        PASCAL_STRING .concat("/", kPathnameDeskTop)
+str_sentinel_path:
+        PASCAL_STRING .concat("/", kFilenameLauncher)
 .endproc ; CheckDesktopOnDevice
 
 ;;; ============================================================
