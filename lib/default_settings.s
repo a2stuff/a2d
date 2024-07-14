@@ -33,7 +33,7 @@
         .byte   0
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::options
-        .byte   DeskTopSettings::kOptionsSkipSelector
+        .byte   DeskTopSettings::kOptionsSkipSelector | DeskTopSettings::kOptionsSkipRAMCard | DeskTopSettings::kOptionsSetCaseBits
 
         ASSERT_ADDRESS settings_start + DeskTopSettings::intl_date_sep
         .byte   res_char_date_separator

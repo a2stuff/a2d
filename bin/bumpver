@@ -54,7 +54,7 @@ make package > /dev/null
 echo "Configuring..."
 
 INSTALL_PATH="$VOL" INSTALL_IMG="$IMG" bin/defopt
-INSTALL_PATH="$VOL" INSTALL_IMG="$IMG" bin/setopt noram
+INSTALL_PATH="$VOL" INSTALL_IMG="$IMG" bin/setopt noram nosel noshort case
 
 # --------------------------------------------------
 echo ""

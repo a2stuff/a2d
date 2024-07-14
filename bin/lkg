@@ -32,7 +32,7 @@ version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
 lkg="out/lkg.2mg"
 cp "out/A2DeskTop-${version}_800k.2mg" ${lkg}
 INSTALL_IMG="${lkg}" INSTALL_PATH="/A2.DESKTOP" bin/defopt
-INSTALL_IMG="${lkg}" INSTALL_PATH="/A2.DESKTOP" bin/setopt noram
+INSTALL_IMG="${lkg}" INSTALL_PATH="/A2.DESKTOP" bin/setopt noram nosel noshort case
 
 # ============================================================
 # Reset config
