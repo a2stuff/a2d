@@ -11,6 +11,7 @@
 * Configure an Apple IIe system with no card in the Aux slot. Invoke DESKTOP.SYSTEM from a launcher (e.g. Bitsy Bye). Verify the launcher is restarted and does not crash or hang.
 * Launch BASIC.SYSTEM. Save a file to /RAM. Invoke DESKTOP.SYSTEM. Verify that a warning is shown about /RAM not being empty. Press Esc. Verify that the ProDOS launcher is re-invoked. Verify that the file is still present in /RAM.
 * Configure a system with a RAMCard, and ensure DeskTop is configured to copy to RAMCard on startup. Invoke DESKTOP.SYSTEM. After the progress bar advances a few ticks but before it gets more than halfway, press Escape. Wait for DeskTop to start. File > Quit. Invoke DESKTOP.SYSTEM again. Open the SAMPLE.MEDIA folder and select APPLEVISION. File > Open. Verify that it starts.
+* Configure a system with a RAMCard, and ensure DeskTop is configured to copy to RAMCard on startup, but hasn't yet. Manually copy all DeskTop files to the RAMCard. Launch the copy of DESKTOP.SYSTEM on the RAMCard. Verify that it doesn't try to copy itself to that RAMCard.
 
 
 # DeskTop

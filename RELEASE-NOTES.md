@@ -13,6 +13,7 @@ Project Page: https://github.com/a2stuff/a2d
 ### Launcher
 
 * Don't trust a partial copy of DeskTop on RAMCard; use DESKTOP.SYSTEM itself as a sentinel.
+* If running from a RAMCard, don't try to copy DeskTop to it.
 
 ### DeskTop
 

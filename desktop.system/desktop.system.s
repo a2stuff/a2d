@@ -1036,6 +1036,9 @@ done_ret:
 unit_num:
         .byte   0
 
+current_unit_num:
+        .byte   0
+
 ;;; Index into DEVLST while iterating devices.
 devnum: .byte   0
 
@@ -1107,10 +1110,12 @@ str_slash_desktop:
 ;;; ============================================================
 
 .proc Start
-
         ;; Clear flag - ramcard not found or unknown state.
         lda     #0
         jsr     SetCopiedToRAMCardFlag
+
+        ;; Remember the current volume
+        copy    DEVNUM, current_unit_num
 
         ;; Skip RAMCard install if flag is set
         ldx     #DeskTopSettings::options
@@ -1134,6 +1139,13 @@ loop:   ldx     devnum
         lda     DEVLST,x
         ;; NOTE: Not masked with `UNIT_NUM_MASK` for tests below.
         sta     unit_num
+
+        ;; Ignore current volume
+        and     #UNIT_NUM_MASK
+        cmp     current_unit_num
+        beq     next_unit
+
+        lda     unit_num        ; not masked
 
         ;; Special case for RAM.DRV.SYSTEM/RAMAUX.SYSTEM.
         cmp     #kRamDrvSystemUnitNum
