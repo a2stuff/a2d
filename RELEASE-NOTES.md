@@ -25,7 +25,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix '9' glyph in System and Monaco fonts.
 * Add additional MGTK fonts Fairfax, Magdalena, McMillen, Mischke, and Monterey, c/o @RebeccaRGB.
 * Add Quark Catalyst font, c/o @eric-ja.
-* Improve compatibility with older AppleWorks files.
+* Improve compatibility with older AppleWorks files, c/o Hugh Hood.
 
 ### Launcher
 
@@ -39,10 +39,10 @@ Project Page: https://github.com/a2stuff/a2d
 * Remove 12 volume limit from Format/Erase picker.
 * Improve layout of Add/Edit a Shortcut dialog.
 * Update label in Add/Edit a Shortcut dialog.
-* Add checkbox to lock/unlock file in Get Info dialog. (([#149](https://github.com/a2stuff/a2d/issues/149))
+* Add checkbox to lock/unlock file in Get Info dialog. ([#149](https://github.com/a2stuff/a2d/issues/149))
 * Remove Special > Lock and Special > Unlock commands.
 * Reorder columns in list views.
-* Allow selection to remain in inactive windows. (([#361](https://github.com/a2stuff/a2d/issues/361))
+* Allow selection to remain in inactive windows. ([#361](https://github.com/a2stuff/a2d/issues/361))
 * Improve menu item names for Format, Erase and Copy Disk.
 * Show progress bar during copy and delete operations.
 * Click on menu bar clock now shows Date & Time DA.
@@ -56,9 +56,9 @@ Project Page: https://github.com/a2stuff/a2d
 * Show drag outlines even for icons outside visible area.
 * Show icon for locked files in list views.
 * Show special icon for folders with AuxType $8000.
-* Update GS/OS "case bits" when renaming files/volumes. (([#352](https://github.com/a2stuff/a2d/issues/352))
-* Preserve GS/OS "case bits" when copying files. (([#352](https://github.com/a2stuff/a2d/issues/352))
-* File > Rename is now modeless, and can be invoked by clicking a selected icon's name. (([#203](https://github.com/a2stuff/a2d/issues/203))
+* Update GS/OS "case bits" when renaming files/volumes. ([#352](https://github.com/a2stuff/a2d/issues/352))
+* Preserve GS/OS "case bits" when copying files. ([#352](https://github.com/a2stuff/a2d/issues/352))
+* File > Rename is now modeless, and can be invoked by clicking a selected icon's name. ([#203](https://github.com/a2stuff/a2d/issues/203))
 * File > New Folder now creates a directory called "New.Folder", then prompts to rename it.
 * File > Duplicate now copies the selected file, then prompts to rename it.
 * Pbageby Bcra-Nccyr Fbyvq-Nccyr S.
@@ -72,7 +72,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix updating of window headers following File > New Folder.
 * Fix refreshing volume icon after Format/Erase.
 * Refresh correct window after renaming an icon, if view is by name.
-* Fix corruption when exiting Shortcuts dialogs with a list view window. (([#790](https://github.com/a2stuff/a2d/issues/790))
+* Fix corruption when exiting Shortcuts dialogs with a list view window. ([#790](https://github.com/a2stuff/a2d/issues/790))
 * Don't close File > Rename and File > Duplicate prompt if path is too long.
 * Fix corruption issues when replacing files with folders and folders with anything during copy.
 * Fix initial window size calculation for list views so scrollbar is not shown. ([#792](https://github.com/a2stuff/a2d/issues/792))
@@ -99,7 +99,7 @@ Project Page: https://github.com/a2stuff/a2d
 #### New Accessories
 
 * Benchmark - measures CPU speed using VBL.
-* Change Type - allows changing the type and auxtype of files. (([#149](https://github.com/a2stuff/a2d/issues/149))
+* Change Type - allows changing the type and auxtype of files. ([#149](https://github.com/a2stuff/a2d/issues/149))
 * Round Corners - temporarily makes the corners of the screen rounded.
 * Screen Saver: Helix.
 * Screen Saver: Message
@@ -123,7 +123,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Sounds
   * Add Cancel button c/o @buserror.
   * Add several new sounds c/o @frankmilliron.
-* Options: Add setting to preserve upper/lowercase when naming files and volumes. (([#352](https://github.com/a2stuff/a2d/issues/352))
+* Options: Add setting to preserve upper/lowercase when naming files and volumes. ([#352](https://github.com/a2stuff/a2d/issues/352))
 * System Speed: Add support for Titan Accelerator IIe c/o @buserror.
 * Map
   * Show shortcut key for button (if that option is enabled).
