@@ -1059,7 +1059,7 @@ exit:   rts
         cmp     #kMaxRecursionDepth
         bcs     :+
 
-        jsr     RecursDir       ; enumerate all entries in sub-dir.
+        jmp     RecursDir       ; enumerate all entries in sub-dir.
 
 :       rts
 .endproc ; VisitDir
