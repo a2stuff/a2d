@@ -93,7 +93,7 @@ pass the address of the data in Aux memory. For data modified at
 runtime (e.g. strings, events, etc.) it is necessary to copy the data
 Main to Aux before and/or Aux to Main after the call using `AUXMOVE`.
 
-Calls into other tookits (Button TK, Line Edit TK) directly from Main
+Calls into other toolkits (Button TK, Line Edit TK) directly from Main
 are not currently supported. (But this is straightforward to add, if
 needed.)
 
