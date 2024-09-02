@@ -591,27 +591,27 @@ str_ace2000:
         PASCAL_STRING res_string_model_ace2000
 
 str_tlc:
-        PASCAL_STRING "Tiger Learning Computer"
+        PASCAL_STRING res_string_model_tlc
 
 str_trackstar_e:
-        PASCAL_STRING "Trackstar E"
+        PASCAL_STRING res_string_model_trackstar_e
 
 str_trackstar_plus:
-        PASCAL_STRING "Trackstar Plus"
+        PASCAL_STRING res_string_model_trackstar_plus
 
 str_mega_iie:
-        PASCAL_STRING "Mega IIe"
+        PASCAL_STRING res_string_model_mega_iie
 
 str_tk3000:
-        PASCAL_STRING "Microdigital TK-3000 //e"
+        PASCAL_STRING res_string_model_tk3000
 
 ;;; ============================================================
 
 str_prodos_version:
-        PASCAL_STRING "ProDOS #.#.#"
-        kVersionStrMajor = 8
-        kVersionStrMinor = 10
-        kVersionStrPatch = 12
+        PASCAL_STRING res_string_prodos_version_pattern
+        kVersionStrMajor = res_const_prodos_version_pattern_offset1
+        kVersionStrMinor = res_const_prodos_version_pattern_offset2
+        kVersionStrPatch = res_const_prodos_version_pattern_offset3
 
 str_slot_n:
         PASCAL_STRING res_string_slot_n_pattern ; dialog label

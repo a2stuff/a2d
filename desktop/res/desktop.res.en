@@ -36,6 +36,7 @@
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_rename_icon "Rename"
 .define res_string_menu_item_duplicate "Duplicate"
+.define res_string_new_folder_default "New.Folder"
 .define res_string_about_text_line5 "Authors: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais and Luc Barthelet"
 .define res_string_about_text_line7 "With thanks to: A. Gerard, J. Gerber, P. Pahl, J. Bernard"

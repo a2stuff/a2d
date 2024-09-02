@@ -8,6 +8,7 @@
         ;; TODO: Print modification date
 
         .include "../config.inc"
+        RESOURCE_FILE "print.catalog.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -171,7 +172,7 @@ indent:
         .byte   0
 
 str_header:
-        PASCAL_STRING "Name                         Type  Blocks"
+        PASCAL_STRING .sprintf("%29s%6s%6s", res_string_col_name, res_string_col_type, res_string_col_blocks)
         kColType   = 30         ; Left aligned
         kTypeWidth = 3
         kColBlocks = 41         ; Right aligned

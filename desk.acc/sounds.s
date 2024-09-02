@@ -198,27 +198,27 @@ nextwinfo:      .addr   0
 
 ;;; ============================================================
 
-str_buzz:       PASCAL_STRING "ProDOS Buzz"
-str_bonk:       PASCAL_STRING "IIgs Bonk"
-str_bell:       PASCAL_STRING "Control-G Bell"
+str_buzz:       PASCAL_STRING res_string_name_prodos_buzz
+str_bonk:       PASCAL_STRING res_string_name_iigs_bonk
+str_bell:       PASCAL_STRING res_string_name_control_g_bell
 str_silent:     PASCAL_STRING res_string_name_silent
-str_awbeep:     PASCAL_STRING "Apple Writer II"
-str_dazzledraw: PASCAL_STRING "Dazzle Draw"
-str_koala:      PASCAL_STRING "Koala Illustrator"
-str_816paint:   PASCAL_STRING "816/Paint"
-str_panic1:     PASCAL_STRING "Apple Panic 1"
-str_panic2:     PASCAL_STRING "Apple Panic 2"
-str_bombdrop:   PASCAL_STRING "Bombdrop"
-str_detonate:   PASCAL_STRING "Detonate"
-str_gorgon:     PASCAL_STRING "Gorgon"
-str_versiontel: PASCAL_STRING "VersionTel"
-str_aal_swoop:  PASCAL_STRING "Assembly Line Swoop"
-str_aal_blast:  PASCAL_STRING "Assembly Line Laser"
-str_aal_bell:   PASCAL_STRING "Assembly Line Bell"
-str_aal_klaxon: PASCAL_STRING "Assembly Line Klaxon"
-str_obn_whopi:  PASCAL_STRING "Obnoxious Whopidoop"
-str_obn_phasor: PASCAL_STRING "Obnoxious Phasor"
-str_obn_gleep:  PASCAL_STRING "Obnoxious Gleep"
+str_awbeep:     PASCAL_STRING res_string_name_apple_writer_ii
+str_dazzledraw: PASCAL_STRING res_string_name_dazzle_draw
+str_koala:      PASCAL_STRING res_string_name_koala_illustrator
+str_816paint:   PASCAL_STRING res_string_name_816_paint
+str_panic1:     PASCAL_STRING res_string_name_apple_panic_1
+str_panic2:     PASCAL_STRING res_string_name_apple_panic_2
+str_bombdrop:   PASCAL_STRING res_string_name_bombdrop
+str_detonate:   PASCAL_STRING res_string_name_detonate
+str_gorgon:     PASCAL_STRING res_string_name_gorgon
+str_versiontel: PASCAL_STRING res_string_name_versiontel
+str_aal_swoop:  PASCAL_STRING res_string_name_assembly_line_swoop
+str_aal_blast:  PASCAL_STRING res_string_name_assembly_line_laser
+str_aal_bell:   PASCAL_STRING res_string_name_assembly_line_bell
+str_aal_klaxon: PASCAL_STRING res_string_name_assembly_line_klaxon
+str_obn_whopi:  PASCAL_STRING res_string_name_obnoxious_whopidoop
+str_obn_phasor: PASCAL_STRING res_string_name_obnoxious_phasor
+str_obn_gleep:  PASCAL_STRING res_string_name_obnoxious_gleep
         kNumSounds = 21
 
 ;;; This is in anticipation of factoring out ListBox code, and/or

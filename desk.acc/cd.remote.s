@@ -5,6 +5,7 @@
 ;;; ============================================================
 
         .include "../config.inc"
+        RESOURCE_FILE "cd.remote.res"
 
         .include "apple2.inc"
         .include "../inc/apple2.inc"
@@ -53,7 +54,7 @@ kDALeft         = (kScreenWidth - kDAWidth)/2
 kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
 
 str_title:
-        PASCAL_STRING "CD Remote"
+        PASCAL_STRING res_string_window_title
 
 .params winfo
 window_id:      .byte   kDAWindowId
@@ -552,7 +553,7 @@ set_key:
 ;;; ============================================================
 
 str_track:
-        PASCAL_STRING "Track: "
+        PASCAL_STRING res_string_label_track
 str_track_num:
         PASCAL_STRING "##  "
 str_time:

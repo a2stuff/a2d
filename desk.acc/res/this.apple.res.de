@@ -16,6 +16,15 @@
 .define res_string_model_laser128 "Laser 128"
 .define res_string_model_ace500 "Franklin ACE 500"
 .define res_string_model_ace2000 "Franklin ACE 2X00"
+.define res_string_model_tlc "Tiger Learning Computer"
+.define res_string_model_trackstar_e "Trackstar E"
+.define res_string_model_trackstar_plus "Trackstar Plus"
+.define res_string_model_mega_iie "Mega IIe"
+.define res_string_model_tk3000 "Microdigital TK-3000 //e"
+.define res_string_prodos_version_pattern "ProDOS #.#.#"
+.define res_const_prodos_version_pattern_offset1 8
+.define res_const_prodos_version_pattern_offset2 10
+.define res_const_prodos_version_pattern_offset3 12
 .define res_string_slot_n_pattern "Steckplatz #:   "
 .define res_const_slot_n_pattern_offset1 12
 .define res_string_memory_prefix "Speicher: "

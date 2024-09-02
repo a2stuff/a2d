@@ -2414,7 +2414,7 @@ start:
         DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
 str_new_folder:
-        PASCAL_STRING "New.Folder"
+        PASCAL_STRING res_string_new_folder_default
 
 start:
         ;; Create with current date
