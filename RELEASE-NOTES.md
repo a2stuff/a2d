@@ -34,9 +34,10 @@ Project Page: https://github.com/a2stuff/a2d
 
 ## 1.4
 
-An unofficial release with bug fixes and enhancements. ??? 2004.
+An unofficial release with bug fixes and enhancements. July 28, 2024..
 
-
+See the release notes at:
+https://github.com/a2stuff/a2d/blob/release-1.4/RELEASE-NOTES.md
 
 ## 1.3
 
