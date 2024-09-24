@@ -77,7 +77,7 @@
 .define res_string_erase_disk_prompt_erase_suffix "?"
 .define res_string_erase_disk_status_erasing "Sto cancellando il disco..."
 .define res_string_erase_disk_error "Errore di cancellazione. Controlla il lettore."
-.define res_string_tip_copy_prodos "Suggerimento: copiare PRODOS sul disco per renderlo avviabile."
+.define res_string_tip_copy_prodos "Suggerimento: Copiare PRODOS sul disco per renderlo avviabile."
 .define res_string_download_error_ramcard_full "La RAM } piena. La copia non } stata completata."
 .define res_string_warning_insert_system_disk "Per favore inserisci il disco di sistema."
 .define res_string_warning_selector_list_full "L'elenco } pieno. Devi eliminare un collegamento prima di aggiungerne altri."

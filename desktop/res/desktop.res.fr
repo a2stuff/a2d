@@ -77,7 +77,7 @@
 .define res_string_erase_disk_prompt_erase_suffix " ?"
 .define res_string_erase_disk_status_erasing "Effacement du disque..."
 .define res_string_erase_disk_error "Erreur lors de l'effacement. V{rifiez le lecteur."
-.define res_string_tip_copy_prodos "Astuce : copiez PRODOS sur le disque pour le rendre bootable."
+.define res_string_tip_copy_prodos "Astuce : Copiez PRODOS sur le disque pour le rendre bootable."
 .define res_string_download_error_ramcard_full "Pas assez de place. La copie est annul{e."
 .define res_string_warning_insert_system_disk "Ins{rez le disque syst}me."
 .define res_string_warning_selector_list_full "La liste est pleine. Effacer une raccourci avant d'en ajouter une autre."
