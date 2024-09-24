@@ -136,6 +136,7 @@ reserved:       .res    1
         DEFINE_BITMAP tlc, 46, 25
         DEFINE_BITMAP trackstar, 56, 25
         DEFINE_BITMAP mega_iie, 48, 22
+        DEFINE_BITMAP pravetz, 51, 24
 
 ii_bits:
         PIXELS  ".......######################....................."
@@ -463,6 +464,32 @@ mega_iie_bits:
         PIXELS  "..##########################################.."
         PIXELS  "....##..##..##..##..##..##..##..##..##..##...."
 
+pravetz_bits:
+        PIXELS  ".......####################################......."
+        PIXELS  "......##..................................##......"
+        PIXELS  "......##...########################.......##......"
+        PIXELS  "......##..##......................##......##......"
+        PIXELS  "......##..##......#####...##......##......##......"
+        PIXELS  "......##..##....######......###...##..##..##......"
+        PIXELS  "......##..##.....##...##......##..##..##..##......"
+        PIXELS  "......##..##............##....##..##......##......"
+        PIXELS  "......##..##....####......##..##..##..##..##......"
+        PIXELS  "......##..##...##..###......##....##..##..##......"
+        PIXELS  "......##..##..##......######..##..##......##......"
+        PIXELS  "......##..##......................##..##..##......"
+        PIXELS  "......##...########################...##..##......"
+        PIXELS  "......##..................................##......"
+        PIXELS  ".......####################################......."
+        PIXELS  ".........##............................##........."
+        PIXELS  ".......####################################......."
+        PIXELS  ".....###..................................###....."
+        PIXELS  "...###....##..##..##..##..##..##..##..##....###..."
+        PIXELS  ".###....##..##..##..##..##..##..##..##..##....###."
+        PIXELS  "##....##..##..##..##..##..##..##..##..##..##....##"
+        PIXELS  "##..............................................##"
+        PIXELS  "##..............................................##"
+        PIXELS  ".###############################################.."
+
 ;;; ============================================================
 
         DEFINE_POINT model_pos, 150, 12
@@ -605,6 +632,9 @@ str_mega_iie:
 str_tk3000:
         PASCAL_STRING res_string_model_tk3000
 
+str_pravetz:
+        PASCAL_STRING res_string_model_pravetz
+
 ;;; ============================================================
 
 str_prodos_version:
@@ -746,6 +776,8 @@ dib_buffer:     .tag    SPDIB
 ;;; but can be distinguished by the sequence $CC $D4 $D7 $C9 $CE $8D at $FACF
 ;;;
 ;;; The Microdigital TK-3000 //e has the string "TK3000//e" at $FF0A
+;;;
+;;; The Pravetz 8A and 8C look like an original IIe, with the string "ПРАВЕЦ" at $FB0A
 
 .enum model
         ii                      ; Apple ][
@@ -769,6 +801,7 @@ dib_buffer:     .tag    SPDIB
         trackstar_plus          ; Trackstar Plus
         mega_iie                ; Mega IIe
         tk3000                  ; Microdigital TK-3000 //e
+        pravetz                 ; Pravetz 8A/C
         LAST
 .endenum
 kNumModels = model::LAST
@@ -795,6 +828,7 @@ model_str_table:
         .addr   str_trackstar_plus ; Trackstar Plus
         .addr   str_mega_iie     ; Mega IIe
         .addr   str_tk3000       ; Microdigital TK-3000 //e
+        .addr   str_pravetz      ; Pravetz 8A/C
         ASSERT_ADDRESS_TABLE_SIZE model_str_table, kNumModels
 
 model_pix_table:
@@ -819,6 +853,7 @@ model_pix_table:
         .addr   aux::trackstar_bitmap ; Trackstar Plus
         .addr   aux::mega_iie_bitmap ; Mega IIe
         .addr   aux::iie_bitmap      ; Microdigital TK-3000 //e
+        .addr   aux::pravetz_bitmap  ; Pravetz 8A/C
         ASSERT_ADDRESS_TABLE_SIZE model_pix_table, kNumModels
 
 ;;; Based on Technical Note: Miscellaneous #2: Apple II Family Identification Routines 2.1
@@ -895,6 +930,11 @@ tk3000_sequence:
         kTK3000SequenceLength = * - tk3000_sequence
         TK3000_ID_ADDR = $FF0A
 
+pravetz_8ac_sequence:
+        .byte   $F0, $F2, $E1, $F7, $E5, $E3 ; "ПРАВЕЦ"
+        kPravetz8ACSequenceLength = * - pravetz_8ac_sequence
+        PRAVETZ_8AC_ID_ADDR = $FB0A
+
 .proc IdentifyModel
         ;; Read from ROM
         bit     ROMIN2
@@ -930,6 +970,23 @@ b_loop: lda     model_lookup_table,x ; offset from MODEL_ID_PAGE
 fail:   ldy     #0
 
 match:  tya
+
+        cmp     #model::iie_original
+    IF_EQ
+        ;; Is it a Pravetz 8A/C?
+        ldx     #kPravetz8ACSequenceLength-1
+:       lda     PRAVETZ_8AC_ID_ADDR,x
+        cmp     pravetz_8ac_sequence,x
+        bne     :+
+        dex
+        bpl     :-
+        lda     #model::pravetz
+        bne     found           ; always
+:
+        lda     #model::iie_original
+        .assert model::iie_original <> 0, error, "enum mismatch"
+        bne     found           ; always
+    END_IF
 
         ;; A has model; but now test for IIgs, TLC, and TK3000;
         ;; all masquerade as Enhanced IIe.

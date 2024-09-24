@@ -21,6 +21,7 @@
 .define res_string_model_trackstar_plus "Trackstar Plus"
 .define res_string_model_mega_iie "Mega IIe"
 .define res_string_model_tk3000 "Microdigital TK-3000 //e"
+.define res_string_model_pravetz "Pravetz 8A/C"
 .define res_string_prodos_version_pattern "ProDOS #.#.#"
 .define res_const_prodos_version_pattern_offset1 8
 .define res_const_prodos_version_pattern_offset2 10
