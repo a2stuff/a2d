@@ -29,8 +29,6 @@
 .define res_string_menu_item_format_disk "Formater disk..."
 .define res_string_menu_item_erase_disk "Slet disk..."
 .define res_string_menu_item_disk_copy "Kopi disk ..."
-.define res_string_menu_item_lock "L}se"
-.define res_string_menu_item_unlock "L}s op"
 .define res_string_menu_item_make_link "Opret henvisning"
 .define res_string_menu_item_get_info "Vis Info"
 .define res_char_menu_item_get_info_shortcut 'I'
@@ -79,8 +77,7 @@
 .define res_string_erase_disk_prompt_erase_suffix "?"
 .define res_string_erase_disk_status_erasing "Sletter disken..."
 .define res_string_erase_disk_error "Sletningsfejl. Kontroller drevet."
-.define res_string_unlock_status_count "Opl}sning: "
-.define res_string_lock_status_count "L}sning: "
+.define res_string_tip_copy_prodos "Tip: Kopier PRODOS til disken for at g|re den bootbar."
 .define res_string_download_error_ramcard_full "RAMCard'et er fyldt. Kopien blev ikke f{rdiggjort."
 .define res_string_warning_insert_system_disk "Inds{t venligst systemdisken."
 .define res_string_warning_selector_list_full "Listen er fuld. Du skal slette en genvej, f|r du kan tilf|je en ny."

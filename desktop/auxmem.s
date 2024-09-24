@@ -350,6 +350,9 @@ str_erasing:
 str_erasing_error:
         PASCAL_STRING res_string_erase_disk_error
 
+str_tip_prodos:
+        PASCAL_STRING res_string_tip_copy_prodos
+
 ;;; Miscellaneous alert strings
 
 str_ramcard_full:

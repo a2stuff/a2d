@@ -29,8 +29,6 @@
 .define res_string_menu_item_format_disk "Formatera disk..."
 .define res_string_menu_item_erase_disk "Radera disk..."
 .define res_string_menu_item_disk_copy "Kopia disk ..."
-.define res_string_menu_item_lock "L}sa"
-.define res_string_menu_item_unlock "L}sa upp"
 .define res_string_menu_item_make_link "Skapa alias"
 .define res_string_menu_item_get_info "Visa info"
 .define res_char_menu_item_get_info_shortcut 'I'
@@ -79,8 +77,7 @@
 .define res_string_erase_disk_prompt_erase_suffix "?"
 .define res_string_erase_disk_status_erasing "Raderar disken..."
 .define res_string_erase_disk_error "Raderingsfel. Kontrollera enheten."
-.define res_string_unlock_status_count "Uppl}sning: "
-.define res_string_lock_status_count "L}sning: "
+.define res_string_tip_copy_prodos "Tips: Kopiera PRODOS till disken f|r att g|ra den startbar."
 .define res_string_download_error_ramcard_full "RAMCard {r fullt. Kopian blev inte f{rdig."
 .define res_string_warning_insert_system_disk "S{tt i systemdisken."
 .define res_string_warning_selector_list_full "Listan {r full. Du m}ste ta bort en genv{g innan du kan l{gga till en ny."

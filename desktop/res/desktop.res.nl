@@ -29,8 +29,6 @@
 .define res_string_menu_item_format_disk "Schijf formatteren..."
 .define res_string_menu_item_erase_disk "Schijf wissen..."
 .define res_string_menu_item_disk_copy "Schijf kopi\x10ren..."
-.define res_string_menu_item_lock "Vergrendel"
-.define res_string_menu_item_unlock "Ontgrendel"
 .define res_string_menu_item_make_link "Maak alias aan"
 .define res_string_menu_item_get_info "Toon info"
 .define res_char_menu_item_get_info_shortcut 'I'
@@ -79,8 +77,7 @@
 .define res_string_erase_disk_prompt_erase_suffix "?"
 .define res_string_erase_disk_status_erasing "Wis schijf..."
 .define res_string_erase_disk_error "Fout bij het wissen. Controleer station."
-.define res_string_unlock_status_count "Bezig met ontgrendelen: "
-.define res_string_lock_status_count "Bezig met vergrendelen: "
+.define res_string_tip_copy_prodos "Tip: Kopieer PRODOS naar de schijf om het opstartbaar te maken."
 .define res_string_download_error_ramcard_full "The RAMCard is vol. De kopie is niet compleet."
 .define res_string_warning_insert_system_disk "Plaats de systeemschijf."
 .define res_string_warning_selector_list_full "De lijst is vol. Verwijder een snelkoppeling. voordat je een nieuwe kunt toevoegen."

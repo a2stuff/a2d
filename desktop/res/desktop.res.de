@@ -29,8 +29,6 @@
 .define res_string_menu_item_format_disk "Laufwerk Formatieren..."
 .define res_string_menu_item_erase_disk "Laufwerk L|schen..."
 .define res_string_menu_item_disk_copy "Laufwerk Kopiere..."
-.define res_string_menu_item_lock "Schreibschutz setzen"
-.define res_string_menu_item_unlock "Schreibschutz aufheben"
 .define res_string_menu_item_make_link "Alias erzeugen"
 .define res_string_menu_item_get_info "Information"
 .define res_char_menu_item_get_info_shortcut 'I'
@@ -79,8 +77,7 @@
 .define res_string_erase_disk_prompt_erase_suffix "?"
 .define res_string_erase_disk_status_erasing "L|sche Laufwerk..."
 .define res_string_erase_disk_error "Fehler beim L|schen. ]berpr}fe Laufwerk."
-.define res_string_unlock_status_count "Schreibschutz aufheben: "
-.define res_string_lock_status_count "Schreibschutz setzen: "
+.define res_string_tip_copy_prodos "Tipp: Kopieren Sie PRODOS auf die Platte, um es bootf{hig zu machen."
 .define res_string_download_error_ramcard_full "Die RAMCard ist voll. Kopieren nicht vollst{ndig."
 .define res_string_warning_insert_system_disk "Bitte Systemdiskette Einlegen."
 .define res_string_warning_selector_list_full "Die Liste ist voll. L|schen Sie eine Kurzbefehl, bevor eine neue Kurzbefehl erstellt wird."

@@ -29,8 +29,6 @@
 .define res_string_menu_item_format_disk "Inicializar Disco..."
 .define res_string_menu_item_erase_disk "Borrar Disco..."
 .define res_string_menu_item_disk_copy "Copiar Disco..."
-.define res_string_menu_item_lock "Bloquear"
-.define res_string_menu_item_unlock "Desbloquear"
 .define res_string_menu_item_make_link "Crear alias"
 .define res_string_menu_item_get_info "Obtener Informaci\x13n"
 .define res_char_menu_item_get_info_shortcut 'I'
@@ -79,8 +77,7 @@
 .define res_string_erase_disk_prompt_erase_suffix "?"
 .define res_string_erase_disk_status_erasing "Borrando el disco..."
 .define res_string_erase_disk_error "Error de borrado. Compruebe el disco."
-.define res_string_unlock_status_count "Desbloqueo: "
-.define res_string_lock_status_count "Bloqueo: "
+.define res_string_tip_copy_prodos "Consejo: Copie PRODOS al disco para que sea de arranque."
 .define res_string_download_error_ramcard_full "La RAMDisk est\x10 llena. La copia no se ha finalizado."
 .define res_string_warning_insert_system_disk "Por favor introduzca un disco de sistema."
 .define res_string_warning_selector_list_full "La lista est\x10 llena. Debe borrar un atajo antes de agregar m\x10s."

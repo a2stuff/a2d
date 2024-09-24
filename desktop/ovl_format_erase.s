@@ -190,7 +190,7 @@ erase_flag:
 .proc FormatDisk
         lda     #$00
         jsr     PromptForDeviceAndName
-        jcs     cancel
+        bcs     cancel
         sta     unit_num
 
         ;; --------------------------------------------------
@@ -198,40 +198,20 @@ erase_flag:
 l8:
         jsr     SetPortAndClear
         param_call main::DrawDialogLabel, 1, aux::str_formatting
+        param_call main::DrawDialogLabel, 7, aux::str_tip_prodos
+        jsr     main::SetCursorWatch
 
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     CheckSupportsFormat
         and     #$FF
         bne     l9
-        jsr     main::SetCursorWatch
         lda     unit_num
         jsr     FormatUnit
         bcs     l12
 l9:
-        jsr     SetPortAndClear
-        param_call main::DrawDialogLabel, 1, aux::str_erasing
-
-        ldxy    #buf_filename
         lda     unit_num
-        jsr     WriteHeaderBlocks
-        pha
-        jsr     main::SetCursorPointer
-        pla
-        bne     l10
-        lda     #$00
-        jmp     cancel
-
-l10:    cmp     #ERR_WRITE_PROTECTED
-        bne     l11
-        jsr     ShowAlert
-        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
-        bne     cancel          ; `kAlertResultCancel` = 1
-        jmp     l8              ; `kAlertResultTryAgain` = 0
-
-l11:
-        param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_erasing_error
-        jmp     l14
+        jmp     EraseDisk__EP2
 
 l12:    pha
         jsr     main::SetCursorPointer
@@ -265,6 +245,9 @@ cancel:
         lda     #$80
         jsr     PromptForDeviceAndName
         bcs     cancel
+
+;;; Entry point used after `FormatDisk`
+EP2:
         sta     unit_num
 
         ;; --------------------------------------------------
@@ -272,6 +255,7 @@ cancel:
 l7:
         jsr     SetPortAndClear
         param_call main::DrawDialogLabel, 1, aux::str_erasing
+        param_call main::DrawDialogLabel, 7, aux::str_tip_prodos
         jsr     main::SetCursorWatch
 
         ldxy    #buf_filename
@@ -306,6 +290,7 @@ cancel:
         pla
         rts
 .endproc ; EraseDisk
+EraseDisk__EP2 := EraseDisk::EP2
 
 ;;; ============================================================
 
