@@ -225,9 +225,9 @@
 
 * Close all windows. Start typing a volume name. Verify that a prefix-matching volume, or the subsequent volume (in lexicographic order) is selected, or the last volume (in lexicographic order).
 * Close all windows. Start typing a volume name. Move the mouse. Start typing another filename. Verify that the matching is reset.
-* Open a window containing multiple files. Start typing a filename. Verify that a prefix-matching file or volume, or the subsequent file or volume (in lexicographic order), or the last file or volume (in lexicographic order) is selected. For example, if the files "Alfa" and "Whiskey" and the volume "November" are present, typing "A" selects "Alfa", typing "AB" selects "Alfa", typing "AL" selects "Alfa", typing "ALFAA" selects "November", typing "B" selects "November", typing "Z" selects "Whiskey". Repeat including file and volume names with numbers and periods.
+* Open a window containing multiple files. Start typing a filename. Verify that a prefix-matching file in the window, or the subsequent file (in lexicographic order), or the last file (in lexicographic order) is selected. For example, if the files "Alfa" and "Whiskey" and the volume "November" are present, typing "A" selects "Alfa", typing "AB" selects "Alfa", typing "AL" selects "Alfa", typing "ALFAA" selects "Whiskey", typing "B" selects "Whiskey", typing "Z" selects "Whiskey". Repeat including file names with numbers and periods.
 * Open a window containing multiple files. Start typing a filename. Move the mouse. Start typing another filename. Verify that the matching is reset.
-* Open a window containing no files. Start typing a filename. Verify that matching is done against the volume icons.
+* Open a window containing no files. Start typing a filename. Verify that nothing is selected.
 * Open a window containing one or more files starting with lowercase letters (AppleWorks or GS/OS). Verify the files appear with correct names. Press a letter. Verify that the first file starting with that letter is selected.
 * Disable any acceleration. Close all windows. Restart DeskTop. Type the first letter of a volume name to select it. Quickly press Open-Apple+O. Verify the volume opens.
 * Disable any acceleration. Close all windows. Restart DeskTop. Type the first letter of a volume name to select it. Quickly click on the File menu. Verify that Open is enabled.
@@ -238,15 +238,15 @@
     * Open a window containing no file icons.
     * Open a window containing file icons.
   * Run these steps:
-    * Clear selection. Press Tab repeatedly. Verify that icons are selected in lexicographic order.
-    * Select an icon. Press Tab. Verify that the next icon in lexicographic order is selected.
-    * Clear selection. Press \` repeatedly. Verify that icons are selected in lexicographic order.
-    * Select an icon. Press \`. Verify that the next icon in lexicographic order is selected.
-    * Clear selection. Press Shift+\` repeatedly. Verify that icons are selected in reverse lexicographic order.
-    * Select an icon. Press Shift+\`. Verify that the previous icon in lexicographic order is selected.
+    * Clear selection. Press Tab repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in lexicographic order.
+    * Select an icon. Press Tab. Verify that the next icon in the active window (or desktop if no window is open) in lexicographic order is selected.
+    * Clear selection. Press \` repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in lexicographic order.
+    * Select an icon. Press \`. Verify that the next icon in the active window (or desktop if no window is open) in lexicographic order is selected.
+    * Clear selection. Press Shift+\` repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in reverse lexicographic order.
+    * Select an icon. Press Shift+\`. Verify that the previous icon in the active window (or desktop if no window is open) in lexicographic order is selected.
   * On a IIgs and a Platinum IIe:
-    * Clear selection. Press Shift+Tab repeatedly. Verify that icons are selected in reverse lexicographic order.
-    * Select an icon. Press Shift+Tab. Verify that the previous icon in lexicographic order is selected.
+    * Clear selection. Press Shift+Tab repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in reverse lexicographic order.
+    * Select an icon. Press Shift+Tab. Verify that the previous icon in the active window (or desktop if no window is open) in lexicographic order is selected.
 
 
 * Launch DeskTop. Open a volume containing no files. Verify that the default minimum window size is used - about 170px by 50px not counting title/scrollbars.

@@ -534,11 +534,14 @@ dispatch_click:
 
 ;;; ============================================================
 ;;; Activate the window, draw contents, and update menu items
-;;; No-op if the window is already active.
+;;; No-op if the window is already active, or if 0 passed.
 ;;; Inputs: A = window id to activate
 
 .proc ActivateWindow
         cmp     active_window_id
+        RTS_IF_EQ
+
+        cmp     #0
         RTS_IF_EQ
 
         ;; Make the window active.
@@ -3277,9 +3280,7 @@ ret:    rts
 
         ;; If selection in non-active window, activate it
         lda     selected_window_id
-    IF_NE
-        jsr     ActivateWindow  ; no-op if already active
-    END_IF
+        jsr     ActivateWindow  ; no-op if already active, or 0
 
         ;; If selection is in a window with View > by Name, refresh
         lda     selected_window_id
@@ -3386,7 +3387,7 @@ a_next: lda     #$00
 alpha:  jsr     ShiftDown
 
 store:  sta     flag
-        jsr     GetSelectableIconsSorted
+        jsr     GetNameSelectableIconsSorted
         jmp     common
 
         ;; Arrows - next/prev in icon order
@@ -3455,9 +3456,7 @@ HighlightIcon:
         lda     buffer+1,x
         pha
         jsr     GetIconWindow
-    IF_NE
-        jsr     ActivateWindow  ; no-op if already active
-    END_IF
+        jsr     ActivateWindow  ; no-op if already active, or 0
         pla
         jmp     SelectIcon
 .endproc ; CmdHighlightImpl
@@ -3506,7 +3505,7 @@ file_char:
         sta     typedown_buf,x
 
         ;; Collect and sort the potential type-down matches
-        jsr     GetSelectableIconsSorted
+        jsr     GetNameSelectableIconsSorted
 
         ;; Find a match. There will always be one, since
         ;; desktop icons (including Trash) are considered.
@@ -3527,7 +3526,7 @@ file_char:
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     GetIconWindow
-        jsr     ActivateWindow  ; no-op if already active
+        jsr     ActivateWindow  ; no-op if already active, or 0
         lda     icon
         jsr     SelectIcon
 
@@ -3609,22 +3608,33 @@ typedown_buf:
 ret:    rts
 .endproc ; GetSelectableIcons
 
-;;; Gather the selectable icons into buffer at $1800, as above, but
-;;; also sort them by name.
+;;; Gather the name-selectable icons - those in the active window or
+;;; desktop - into buffer at $1800, and sort them by name.
 ;;; Output: Buffer at $1800 (length prefixed)
 
-.proc GetSelectableIconsSorted
+.proc GetNameSelectableIconsSorted
         buffer := $1800
         ptr1 := $06
         ptr2 := $08
 
-        ;; Init table with unsorted list of icons (never empty)
-        jsr     GetSelectableIcons
+        jsr     LoadActiveWindowEntryTable
+        ldx     #0
+:
+        cpx     cached_window_entry_count
+        beq     :+
+        lda     cached_window_entry_list,x
+        sta     buffer+1,x
+        inx
+        bne     :-
+:
+        stx     buffer
+
+        cpx     #2
+        RTS_IF_CC
 
         ;; Selection sort. In each outer iteration, the highest
         ;; remaining element is moved to the end of the unsorted
         ;; region, and the region is reduced by one. O(n^2)
-        ldx     buffer          ; count
         dex
         stx     outer
 
@@ -3666,7 +3676,7 @@ next:   inc     inner
         bne     oloop
 
         rts
-.endproc ; GetSelectableIconsSorted
+.endproc ; GetNameSelectableIconsSorted
 
 ;;; Assuming selectable icon buffer at $1800 is populated by the
 ;;; above functions, return ptr to nth icon's name in A,X

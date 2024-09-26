@@ -8,9 +8,9 @@ slightly different file format which other tools/emulators/solid state
 drives prefer, and is a 32 MB image so you have plenty of space to
 copy other things onto the disk.
 
-A2DeskTop...140k_disk1.po, ...disk2.po and ...disk3.po are 140k images
-containing different parts of the application, and can be transferred
-to 5.25" floppies using ADTPro.
+A2DeskTop...140k_disk1.po, ...disk2.po, etc are 140k images containing
+different parts of the application, and can be transferred to 5.25"
+floppies using ADTPro.
 
 
 Documentation
@@ -34,12 +34,9 @@ storage device:
 * `A2.DESKTOP/` - any name is allowed, can be in any subdirectory
   * `DESKTOP.SYSTEM` - run this to launch DeskTop
   * `MODULES/` - contains parts of the application
-    * `DESKTOP` - application file
-    * `DISK.COPY` - application file
-    * `SELECTOR` - application file
-    * ... and the `THIS.APPLE` DA plus Preview Accessories
   * `APPLE.MENU/` - contains Desk Accessories (DAs)
-    * `CONTROL.PANELS/` - DAs for modifying DeskTop settings
-    * `SCREEN.SAVERS/` - DAs that provide full-screen entertainment
   * `EXTRAS/` - contains additional utilities
   * `LOCAL/` - contains files created at runtime (settings, etc)
+
+If you are installing from floppy disks onto a hard disk, follow the
+above structure as you copy files from each floppy.
