@@ -3403,7 +3403,12 @@ next:   lda     #$00
 
 ;;; Figure out current selected index, based on selection.
 
-common: lda     selected_icon_count
+common:
+        ;; Anything selectable?
+        lda     buffer
+        RTS_IF_EQ
+
+        lda     selected_icon_count
         beq     pick_first
 
         ;; Try to find actual selection in our list
@@ -3506,9 +3511,10 @@ file_char:
 
         ;; Collect and sort the potential type-down matches
         jsr     GetNameSelectableIconsSorted
+        lda     num_filenames
+        beq     done
 
-        ;; Find a match. There will always be one, since
-        ;; desktop icons (including Trash) are considered.
+        ;; Find a match.
         jsr     FindMatch
 
         ;; Icon to select

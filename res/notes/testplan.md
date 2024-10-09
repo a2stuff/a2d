@@ -248,6 +248,9 @@
     * Clear selection. Press Shift+Tab repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in reverse lexicographic order.
     * Select an icon. Press Shift+Tab. Verify that the previous icon in the active window (or desktop if no window is open) in lexicographic order is selected.
 
+* Open a volume window containing no file icons. Clear selection by clicking on the desktop. Press Tab repeatedly. Verify selection does not change, scrollbars do not appear in the window, and DeskTop does not crash. Close the window. Verify that the volume icon is no longer dimmed.
+* Open a volume window containing no file icons. Clear selection by clicking on the desktop. Type 'Z' repeatedly. Verify selection does not change, scrollbars do not appear in the window, and DeskTop does not crash. Close the window. Verify that the volume icon is no longer dimmed.
+
 
 * Launch DeskTop. Open a volume containing no files. Verify that the default minimum window size is used - about 170px by 50px not counting title/scrollbars.
 
