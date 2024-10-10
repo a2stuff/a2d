@@ -7907,6 +7907,20 @@ flags:  .byte   0
 
         .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc DrawWindowHeader
+
+;;; Local variables on ZP
+PARAM_BLOCK, $50
+num_items               .word
+k_in_disk               .word
+k_available             .word
+
+width_num_items         .word
+width_k_in_disk         .word
+width_k_available       .word
+
+ptr_str_items_suffix    .addr
+END_PARAM_BLOCK
+
         ;; --------------------------------------------------
         ;; Separator Lines
 
@@ -8025,17 +8039,6 @@ flags:  .byte   0
         ldax    k_available
         jsr     DrawIntString
         param_jump DrawString, str_k_available
-
-num_items:      .word   0
-k_in_disk:      .word   0
-k_available:    .word   0
-
-width_num_items:        .word   0
-width_k_in_disk:        .word   0
-width_k_available:      .word   0
-
-ptr_str_items_suffix:
-        .addr   0
 
 .proc DrawIntString
         jsr     IntToStringWithSeparators
