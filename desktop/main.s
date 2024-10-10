@@ -3963,19 +3963,23 @@ done:   rts
 ;;; Effective viewport  ("Effective" discounts the window header.)
 viewport := window_grafport::maprect
 
+;;; Local variables on ZP
+;;; NOTE: $50...$6F is used because MulDiv uses $10...$19
+PARAM_BLOCK, $50
 ;;; `ubox` is a union of the effective viewport and icon bounding box
-        DEFINE_RECT ubox, 0, 0, 0, 0
+ubox    .tag    MGTK::Rect
 
 ;;; Effective dimensions of the viewport
-width:          .word   0
-height:         .word   0
+width   .word
+height  .word
 
 ;;; Initial effective viewport top/left
-        DEFINE_POINT old, 0, 0
+old     .tag    MGTK::Point
 
 ;;; Increment/decrement sizes (depends on view type)
-tick_h: .byte   0
-tick_v: .byte   0
+tick_h  .byte
+tick_v  .byte
+END_PARAM_BLOCK
 
 ;;; --------------------------------------------------
 ;;; Compute the necessary data for scroll operations:
@@ -4013,21 +4017,21 @@ _Preamble:
         ;; Make `ubox` bound both viewport and icons; needed to ensure
         ;; offset cases are handled.
         COPY_STRUCT MGTK::Rect, iconbb_rect, ubox
-        scmp16  viewport+MGTK::Rect::x1, ubox::x1
+        scmp16  viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1
     IF_NEG
-        copy16  viewport+MGTK::Rect::x1, ubox::x1
+        copy16  viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1
     END_IF
-        scmp16  viewport+MGTK::Rect::x2, ubox::x2
+        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
     IF_POS
-        copy16  viewport+MGTK::Rect::x2, ubox::x2
+        copy16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
     END_IF
-        scmp16  viewport+MGTK::Rect::y1, ubox::y1
+        scmp16  viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1
     IF_NEG
-        copy16  viewport+MGTK::Rect::y1, ubox::y1
+        copy16  viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1
     END_IF
-        scmp16  viewport+MGTK::Rect::y2, ubox::y2
+        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
     IF_POS
-        copy16  viewport+MGTK::Rect::y2, ubox::y2
+        copy16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
     END_IF
 
         rts
@@ -4108,20 +4112,20 @@ _Preamble:
 
 .proc TrackHThumb
         jsr     _Preamble
-        sub16   ubox::x2, ubox::x1, z:muldiv_number
+        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, z:muldiv_number
         sub16   z:muldiv_number, width, z:muldiv_number
         jsr     _TrackMulDiv
-        add16   z:muldiv_result, ubox::x1, viewport+MGTK::Rect::x1
+        add16   z:muldiv_result, ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
         add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
         jmp     _MaybeUpdateHThumb
 .endproc ; TrackHThumb
 
 .proc TrackVThumb
         jsr     _Preamble
-        sub16   ubox::y2, ubox::y1, z:muldiv_number
+        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, z:muldiv_number
         sub16   z:muldiv_number, height, z:muldiv_number
         jsr     _TrackMulDiv
-        add16   z:muldiv_result, ubox::y1, viewport+MGTK::Rect::y1
+        add16   z:muldiv_result, ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
         add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
         jmp     _MaybeUpdateVThumb
 .endproc ; TrackVThumb
@@ -4140,18 +4144,18 @@ _Preamble:
 ;;;   3. goto update
 
 .proc _Clamp_x2
-        scmp16  viewport+MGTK::Rect::x2, ubox::x2
+        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
     IF_POS
-        copy16  ubox::x2, viewport+MGTK::Rect::x2
+        copy16  ubox+MGTK::Rect::x2, viewport+MGTK::Rect::x2
     END_IF
         sub16   viewport+MGTK::Rect::x2, width, viewport+MGTK::Rect::x1
         jmp     _MaybeUpdateHThumb
 .endproc ; _Clamp_x2
 
 .proc _Clamp_y2
-        scmp16  viewport+MGTK::Rect::y2, ubox::y2
+        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
     IF_POS
-        copy16  ubox::y2, viewport+MGTK::Rect::y2
+        copy16  ubox+MGTK::Rect::y2, viewport+MGTK::Rect::y2
     END_IF
         sub16   viewport+MGTK::Rect::y2, height, viewport+MGTK::Rect::y1
         jmp     _MaybeUpdateVThumb
@@ -4164,18 +4168,18 @@ _Preamble:
 ;;;   3. goto update
 
 .proc _Clamp_x1
-        scmp16  viewport+MGTK::Rect::x1, ubox::x1
+        scmp16  viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1
     IF_NEG
-        copy16  ubox::x1, viewport+MGTK::Rect::x1
+        copy16  ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
     END_IF
         add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
         jmp     _MaybeUpdateHThumb
 .endproc ; _Clamp_x1
 
 .proc _Clamp_y1
-        scmp16  viewport+MGTK::Rect::y1, ubox::y1
+        scmp16  viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1
     IF_NEG
-        copy16  ubox::y1, viewport+MGTK::Rect::y1
+        copy16  ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
     END_IF
         add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
         jmp     _MaybeUpdateVThumb
@@ -4191,7 +4195,7 @@ _Preamble:
 ;;;     3. redraw
 
 .proc _MaybeUpdateHThumb
-        ecmp16  viewport+MGTK::Rect::x1, old::xcoord
+        ecmp16  viewport+MGTK::Rect::x1, old+MGTK::Point::xcoord
     IF_NE
         jsr     _SetHThumbFromViewport
         jsr     _UpdateViewport
@@ -4199,9 +4203,9 @@ _Preamble:
 
         ;; Handle offset case - may be able to deactivate scrollbar now
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
-        scmp16  ubox::x1, viewport+MGTK::Rect::x1
+        scmp16  ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
         bmi     :+
-        scmp16  viewport+MGTK::Rect::x2, ubox::x2
+        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
         bmi     :+
         ldx     #MGTK::Ctl::horizontal_scroll_bar
         lda     #MGTK::activatectl_deactivate
@@ -4212,7 +4216,7 @@ _Preamble:
 .endproc ; _MaybeUpdateHThumb
 
 .proc _MaybeUpdateVThumb
-        ecmp16  viewport+MGTK::Rect::y1, old::ycoord
+        ecmp16  viewport+MGTK::Rect::y1, old+MGTK::Point::ycoord
     IF_NE
         jsr     _SetVThumbFromViewport
         jsr     _UpdateViewport
@@ -4220,9 +4224,9 @@ _Preamble:
 
         ;; Handle offset case - may be able to deactivate scrollbar now
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
-        scmp16  ubox::y1, viewport+MGTK::Rect::y1
+        scmp16  ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
         bmi     :+
-        scmp16  viewport+MGTK::Rect::y2, ubox::y2
+        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
         bmi     :+
         ldx     #MGTK::Ctl::vertical_scroll_bar
         lda     #MGTK::activatectl_deactivate
@@ -4234,9 +4238,9 @@ _Preamble:
 
 ;;; Set hthumb position relative to `maprect` and `ubox`.
 .proc _SetHThumbFromViewport
-        sub16   viewport+MGTK::Rect::x1, ubox::x1, z:muldiv_number
+        sub16   viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1, z:muldiv_number
         copy16  #kScrollThumbMax, z:muldiv_numerator
-        sub16   ubox::x2, ubox::x1, z:muldiv_denominator
+        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, z:muldiv_denominator
         sub16   z:muldiv_denominator, width, z:muldiv_denominator
         jsr     MulDiv
         lda     z:muldiv_result
@@ -4246,9 +4250,9 @@ _Preamble:
 
 ;;; Set vthumb position relative to `maprect` and `ubox`.
 .proc _SetVThumbFromViewport
-        sub16   viewport+MGTK::Rect::y1, ubox::y1, z:muldiv_number
+        sub16   viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1, z:muldiv_number
         copy16  #kScrollThumbMax, z:muldiv_numerator
-        sub16   ubox::y2, ubox::y1, z:muldiv_denominator
+        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, z:muldiv_denominator
         sub16   z:muldiv_denominator, height, z:muldiv_denominator
         jsr     MulDiv
         lda     z:muldiv_result
@@ -4273,9 +4277,9 @@ _Preamble:
 .proc ActivateCtlsSetThumbs
         jsr     _Preamble
 
-        scmp16  ubox::x1, viewport+MGTK::Rect::x1
+        scmp16  ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
         bmi     activate_hscroll
-        scmp16  viewport+MGTK::Rect::x2, ubox::x2
+        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
@@ -4297,9 +4301,9 @@ activate_hscroll:
         ;; --------------------------------------------------
 
 check_vscroll:
-        scmp16  ubox::y1, viewport+MGTK::Rect::y1
+        scmp16  ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
         bmi     activate_vscroll
-        scmp16  viewport+MGTK::Rect::y2, ubox::y2
+        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar

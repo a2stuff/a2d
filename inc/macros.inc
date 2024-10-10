@@ -916,9 +916,14 @@ skip:   dec     arg
 ;;;            lda     #params              ; equiv. to lda #$82
 ;;;            lda     #.sizeof(params)     ; equiv. to lda #10
 ;;;
+;;; The `name` argument can be empty, in which case an anonymous block
+;;; is used, with the parameters defined in the current scope.
+
 .macro PARAM_BLOCK name, addr
+    .ifnblank name
         name := addr
         .refto name
+    .endif
         .struct name
         .org addr
 .endmacro
