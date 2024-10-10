@@ -77,8 +77,8 @@ done:   sta     flag            ; internal label
 .endproc ; SetFlag
 
 .struct Point                   ; structure
-xcoord: .word
-xcoord: .word
+xcoord  .word
+xcoord  .word
 .endstruct
 
 .enum Options                   ; enum
