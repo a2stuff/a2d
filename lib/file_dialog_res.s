@@ -73,15 +73,6 @@ notpencopy:     .byte   MGTK::notpencopy
 checkerboard_pattern:
         .byte   $55, $AA, $55, $AA, $55, $AA, $55, $AA
 
-.ifdef FD_EXTENDED
-        kInputWidth = 435
-        kInputHeight = kTextBoxHeight
-
-        kInput1Y = 114
-        DEFINE_POINT input1_label_pos, kControlsLeft, kInput1Y-2
-        DEFINE_RECT_SZ input1_rect, kControlsLeft, kInput1Y, kInputWidth, kInputHeight
-.endif
-
 kFilePickerDlgWindowID  = $3E
 
 ;;; Simple, no customizations supported
@@ -194,8 +185,16 @@ nextwinfo:      .addr   0
 ;;; ============================================================
 
 .ifdef FD_EXTENDED
-;;; Auxiliary field
-        DEFINE_LINE_EDIT line_edit, kFilePickerDlgWindowID, text_input_buf, kControlsLeft, kInput1Y, kInputWidth, kMaxPathLength
+;;; Line Edit - Filename (etc)
+        kLineEditX = kControlsLeft
+        kLineEditWidth = 435
+        kLineEditY = 114
+        kLineEditHeight = kTextBoxHeight
+
+        DEFINE_POINT line_edit_label_pos, kLineEditX, kLineEditY-2
+        DEFINE_RECT_SZ line_edit_rect, kLineEditX, kLineEditY, kLineEditWidth, kLineEditHeight
+
+        DEFINE_LINE_EDIT line_edit, kFilePickerDlgWindowID, text_input_buf, kLineEditX, kLineEditY, kLineEditWidth, kMaxFilenameLength
         DEFINE_LINE_EDIT_PARAMS le_params, line_edit
 .endif ; FD_EXTENDED
 

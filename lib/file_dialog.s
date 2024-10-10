@@ -174,7 +174,7 @@ key_handler_hook:
         bit     extra_controls_flag
       IF_NS
         jsr     _MoveToWindowCoords
-        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::line_edit_rect
         .assert MGTK::inrect_outside = 0, error, "enum mismatch"
         beq     out
         jsr     _SetCursorIBeam
@@ -290,7 +290,7 @@ not_list:
         bit     extra_controls_flag
     IF_NS
         ;; Text Edit
-        MGTK_CALL MGTK::InRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::line_edit_rect
       IF_NOT_ZERO
         COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params::coords
         LETK_CALL LETK::Click, file_dialog_res::le_params
@@ -786,7 +786,7 @@ found:  return  index
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
     IF_NS
-        MGTK_CALL MGTK::FrameRect, file_dialog_res::input1_rect
+        MGTK_CALL MGTK::FrameRect, file_dialog_res::line_edit_rect
     END_IF
 .endif
         MGTK_CALL MGTK::SetPenSize, file_dialog_res::pensize_frame
@@ -911,7 +911,7 @@ ret:    rts
         pha                     ; save A,X
         txa
         pha
-        MGTK_CALL MGTK::MoveTo, file_dialog_res::input1_label_pos
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::line_edit_label_pos
         pla                     ; restore A,X
         tax
         pla
