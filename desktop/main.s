@@ -5259,6 +5259,15 @@ exception_flag:
 ;;; Assert: `cached_window_id` == A
 
 .proc DragSelect
+
+PARAM_BLOCK, $10
+window_id       .byte    ; 0 = desktop, assumed to be active otherwise
+deltax          .word
+deltay          .word
+initial_pos     .tag    MGTK::Point
+last_pos        .tag    MGTK::Point
+END_PARAM_BLOCK
+
         sta     window_id
 
     IF_NOT_ZERO
@@ -5436,16 +5445,6 @@ update: lda     window_id
 
         jsr     FrameTmpRect
         jmp     event_loop
-
-window_id:                      ; 0 = desktop, assumed to be active otherwise
-        .byte   0
-
-deltax: .word   0
-deltay: .word   0
-initial_pos:
-        .tag    MGTK::Point
-last_pos:
-        .tag    MGTK::Point
 
 .proc CoordsScreenToWindow
         jsr     PushPointers
