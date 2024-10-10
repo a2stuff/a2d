@@ -26,6 +26,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix Apple+O to not "Open and Close" when menu already showing. ([#796](https://github.com/a2stuff/a2d/issues/796))
 * Allow keyboard selection of icons in all windows.
 * Show tip about copying PRODOS during Format/Erase process.
+* Arrow keys now move icon selection in appropriate direction. ([#300](https://github.com/a2stuff/a2d/issues/300))
 
 ### Selector
 

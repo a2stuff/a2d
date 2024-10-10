@@ -238,19 +238,33 @@
     * Open a window containing no file icons.
     * Open a window containing file icons.
   * Run these steps:
-    * Clear selection. Press Tab repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in lexicographic order.
+    * Clear selection. Press Tab repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in lexicographic order, starting with first in lexicographic order.
     * Select an icon. Press Tab. Verify that the next icon in the active window (or desktop if no window is open) in lexicographic order is selected.
-    * Clear selection. Press \` repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in lexicographic order.
+    * Clear selection. Press \` repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in lexicographic order, starting with first in lexicographic order.
     * Select an icon. Press \`. Verify that the next icon in the active window (or desktop if no window is open) in lexicographic order is selected.
-    * Clear selection. Press Shift+\` repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in reverse lexicographic order.
+    * Clear selection. Press Shift+\` repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in reverse lexicographic order, starting with last in lexicographic order.
     * Select an icon. Press Shift+\`. Verify that the previous icon in the active window (or desktop if no window is open) in lexicographic order is selected.
   * On a IIgs and a Platinum IIe:
-    * Clear selection. Press Shift+Tab repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in reverse lexicographic order.
+    * Clear selection. Press Shift+Tab repeatedly. Verify that icons in the active window (or desktop if no window is open) are selected in reverse lexicographic order, starting with last in lexicographic order.
     * Select an icon. Press Shift+Tab. Verify that the previous icon in the active window (or desktop if no window is open) in lexicographic order is selected.
 
 * Open a volume window containing no file icons. Clear selection by clicking on the desktop. Press Tab repeatedly. Verify selection does not change, scrollbars do not appear in the window, and DeskTop does not crash. Close the window. Verify that the volume icon is no longer dimmed.
 * Open a volume window containing no file icons. Clear selection by clicking on the desktop. Type 'Z' repeatedly. Verify selection does not change, scrollbars do not appear in the window, and DeskTop does not crash. Close the window. Verify that the volume icon is no longer dimmed.
 
+* Launch DeskTop. Close all windows. Clear selection by clicking on the desktop. Press an arrow key. Verify that the first (non-Trash) volume icon is selected.
+* Launch DeskTop. Close all windows. Select a volume icon. Press an arrow key. Verify that the next icon in the specified direction is selected, if any. If none, verify that selection remains unchanged.
+* Launch DeskTop. Close all windows. Eject all disks, and verify that only the Trash icon remains. Clear selection by clicking on the desktop. Press an arrow key. Verify that the Trash icon is selected.
+
+* Launch DeskTop. Open a window. Select a volume icon. Press an arrow key. Verify that the first icon in the window is selected.
+* Launch DeskTop. Open two windows, both containing icons. Select an icon in one window. Activate the other window without changing selection. Press an arrow key. Verify that the first icon in the active window is selected.
+* Launch DeskTop. Open a window containing multiple icons. Select an icon in the window. Press an arrow key. Verify that the next icon in the specified direction is selected, if any. If none, verify that selection remains unchanged.
+
+* Launch DeskTop. Open one window containing icons, the other containing no icons. Select an icon in the first window. Activate the other window without changing selection. Press an arrow key. Verify that selection remains unchanged.
+* Launch DeskTop. Open a window containing icons. Select a volume icon. Press an arrow key. Verify that selection remains unchanged.
+
+* Launch DeskTop. Open a window containing icons. View > by Date. Press the Right Arrow key. Verify that selection remains unchanged. Repeat with the Left Arrow key.
+* Launch DeskTop. Open a window containing icons. View > by Date. Clear selection by clicking on the desktop. Press the Down Arrow key. Verify that the first icon in visual order is selected. Press the Down Arrow key again. Verify that the next icon in visual order is selected. Repeat, and verify that selection does not wrap around.
+* Launch DeskTop. Open a window containing icons. View > by Date. Clear selection by clicking on the desktop. Press the Up Arrow key. Verify that the last icon in visual order is selected. Press the Up Arrow key again. Verify that the previous icon in visual order is selected. Repeat, and verify that selection does not wrap around.
 
 * Launch DeskTop. Open a volume containing no files. Verify that the default minimum window size is used - about 170px by 50px not counting title/scrollbars.
 
