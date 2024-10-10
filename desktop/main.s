@@ -7349,23 +7349,25 @@ copy_new_window_bounds_flag:
 
 .proc CreateIconsForWindowImpl
 
-icon_type:      .addr   0
-iconentry_flags: .byte   0
-icon_height:    .word   0
+;;; Local variables on ZP
+PARAM_BLOCK, $50
+icon_type       .addr
+iconentry_flags .byte
+icon_height     .word
 
         ;; Updated based on view type
-initial_xcoord:     .word   0
-icons_this_row:
-        .byte   0
-        DEFINE_POINT icon_coords, 0, 0
+initial_xcoord  .word
+icons_this_row  .byte
+icon_coords     .tag    MGTK::Point
 
         ;; Initial values when populating a list view
-init_view:
-icons_per_row:      .byte   0
-col_spacing:        .byte   0
-row_spacing:        .byte   0
-        DEFINE_POINT row_coords, 0, 0
-        init_view_size := * - init_view
+icons_per_row   .byte
+col_spacing     .byte
+row_spacing     .byte
+row_coords      .tag    MGTK::Point
+END_PARAM_BLOCK
+        init_view := icons_per_row
+        init_view_size = 3 + .sizeof(MGTK::Point)
 
         ;; Templates for populating initial values, based on view type
 init_list_view:
@@ -7407,7 +7409,7 @@ init_smicon_view:
         bpl     :-
 
         ;; Init/zero out the rest of the state
-        copy16  row_coords::xcoord, initial_xcoord
+        copy16  row_coords+MGTK::Point::xcoord, initial_xcoord
 
         lda     #0
         sta     icons_this_row
@@ -7560,22 +7562,22 @@ L77F0:  lda     name_tmp,x
         cmp     icons_per_row
         beq     L781A
         bcs     L7826
-L781A:  copy16  row_coords::xcoord, icon_coords::xcoord
-L7826:  copy16  row_coords::ycoord, icon_coords::ycoord
+L781A:  copy16  row_coords+MGTK::Point::xcoord, icon_coords+MGTK::Point::xcoord
+L7826:  copy16  row_coords+MGTK::Point::ycoord, icon_coords+MGTK::Point::ycoord
         inc     icons_this_row
         lda     icons_this_row
         cmp     icons_per_row
         bne     L7862
 
         ;; Next row (and initial column) if necessary
-        add16_8 row_coords::ycoord, row_spacing
-        copy16  initial_xcoord, row_coords::xcoord
+        add16_8 row_coords+MGTK::Point::ycoord, row_spacing
+        copy16  initial_xcoord, row_coords+MGTK::Point::xcoord
         lda     #0
         sta     icons_this_row
         jmp     L7870
 
         ;; Next column otherwise
-L7862:  add16_8 row_coords::xcoord, col_spacing
+L7862:  add16_8 row_coords+MGTK::Point::xcoord, col_spacing
 
 L7870:  lda     cached_window_id
         ora     iconentry_flags
