@@ -10621,13 +10621,34 @@ ydelta     .word
         END_PARAM_BLOCK
 
         ldy     #0
-        sub16in (params::rect),y, params::xdelta, (params::rect),y
+
+        ;; Subtract from x1 and y1; Y is 0...3
+        ldx     #2
+:       sec
+        lda     (params::rect),y
+        sbc     params::xdelta,y
+        sta     (params::rect),y
         iny
-        sub16in (params::rect),y, params::ydelta, (params::rect),y
+        lda     (params::rect),y
+        sbc     params::xdelta,y
+        sta     (params::rect),y
         iny
-        add16in (params::rect),y, params::xdelta, (params::rect),y
+        dex
+        bne     :-
+
+        ;; Add to x1 and y1; Y is 4...7
+        ldx     #2
+:       clc
+        lda     (params::rect),y
+        adc     params::xdelta - 4,y
+        sta     (params::rect),y
         iny
-        add16in (params::rect),y, params::ydelta, (params::rect),y
+        lda     (params::rect),y
+        adc     params::xdelta - 4,y
+        sta     (params::rect),y
+        iny
+        dex
+        bne     :-
 
         rts
 .endproc ; InflateRectImpl
