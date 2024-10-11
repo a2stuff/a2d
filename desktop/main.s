@@ -3558,10 +3558,17 @@ common:
         copy    #(560 / kDeltaX), iter_count
 
 rect_loop:
-        add16   delta_x, tmp_rect+MGTK::Rect::x1, tmp_rect+MGTK::Rect::x1
-        add16   delta_x, tmp_rect+MGTK::Rect::x2, tmp_rect+MGTK::Rect::x2
-        add16   delta_y, tmp_rect+MGTK::Rect::y1, tmp_rect+MGTK::Rect::y1
-        add16   delta_y, tmp_rect+MGTK::Rect::y2, tmp_rect+MGTK::Rect::y2
+        ;; Offset rect
+        ptr := $06
+        copy16  #tmp_rect, ptr
+        ldy     #0
+        ldx     #2
+:       add16in (ptr),y, delta_x, (ptr),y
+        iny
+        add16in (ptr),y, delta_y, (ptr),y
+        iny
+        dex
+        bne     :-
 
         copy    #0, index
 icon_loop:
