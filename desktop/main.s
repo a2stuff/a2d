@@ -3470,63 +3470,46 @@ CmdHighlightAlphaNext := CmdHighlightImpl::a_next
 
 ;;; Local variables on ZP
 PARAM_BLOCK, $50
-delta_x    .word
-delta_y    .word
+dir        .byte
 tmpw       .word
-iter_count .byte
 index      .byte
+cur_icon   .byte
+icon_rect  .tag MGTK::Rect
+best_icon  .byte
+best_value .word
 END_PARAM_BLOCK
+        view_by := tmpw
+        .assert icon_rect = cur_icon+1, error, "Must be adjacent"
 
-        ;; Values that work in Icon and Small Icon views
-        kDeltaX = 40
-        kDeltaY = 10
+        kDirLeft  = 0
+        kDirRight = 1
+        kDirUp    = 2
+        kDirDown  = 3
 
-left:   ldx     #AS_BYTE(-kDeltaX)
-        ldy     #0
-        beq     common          ; always
+left:   lda     #kDirLeft
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
-right:  ldx     #kDeltaX
-        ldy     #0
-        beq     common          ; always
+right:  lda     #kDirRight
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
-up:     ldy     #AS_BYTE(-kDeltaY)
-        ldx     #0
-        beq     common          ; always
+up:     lda     #kDirUp
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
-down:   ldy     #kDeltaY
-        ldx     #0
-        FALL_THROUGH_TO common
+down:   lda     #kDirDown
 
-;;; --------------------------------------------------
-;;; Compute 16-bit deltas
-
-common:
-        stx     delta_x
-        ;; sign-extend
-        txa
-        and     #$80
-        bpl     :+
-        lda     #$FF
-:       sta     delta_x+1
-
-        sty     delta_y
-        ;; sign-extend
-        tya
-        and     #$80
-        bpl     :+
-        lda     #$FF
-:       sta     delta_y+1
+        sta     dir
 
 ;;; --------------------------------------------------
 ;;; If a list view, use index-based logic
 
         jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
+        sta     view_by
     IF_NEG
-        lda     delta_x
-        RTS_IF_NOT_ZERO         ; ignore
-        bit     delta_y
-        jpl     CmdHighlightNext
-        jmp     CmdHighlightPrev
+        lda     dir
+        cmp     #kDirUp
+        beq     CmdHighlightPrev
+        bcs     CmdHighlightNext
+        rts                     ; ignore if left/right
     END_IF
 
 ;;; --------------------------------------------------
@@ -3545,58 +3528,105 @@ common:
         sta     icon_param
 
 ;;; --------------------------------------------------
-;;; Get bounds, walk rect until a different icon is contained
+;;; Get bounds
 
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
 
+        lda     view_by
+        .assert kViewByIcon = 0, error, "enum mismatch"
+    IF_ZERO
         ;; Constrain to icon bitmap width (long names tend to overlap)
         add16   tmp_rect+MGTK::Rect::x1, tmp_rect+MGTK::Rect::x2, tmpw
         lsr16   tmpw
         sub16   tmpw, #kIconBitmapWidth/2, tmp_rect+MGTK::Rect::x1
         add16   tmpw, #kIconBitmapWidth/2, tmp_rect+MGTK::Rect::x2
+    END_IF
 
-        copy    #(560 / kDeltaX), iter_count
+;;; --------------------------------------------------
+;;; Extend rect, based on dir
 
-rect_loop:
-        ;; Offset rect
-        ptr := $06
-        copy16  #tmp_rect, ptr
-        ldy     #0
-        ldx     #2
-:       add16in (ptr),y, delta_x, (ptr),y
+        kDelta = 1024
+
+        ;; For relevant dir, determine:
+        ;;   A,X = delta (positive or negative)
+        ;;   Y = offset into `tmp_rect`
+        ldy     dir
+        lda     rect_deltas_lo,y
+        ldx     rect_deltas_hi,y
+        pha
+        lda     far_offsets,y
+        tay
+        pla
+
+        ;; `tmp_rect`+y += A,X
+        clc
+        adc     tmp_rect,y
+        sta     tmp_rect,y
+        txa
         iny
-        add16in (ptr),y, delta_y, (ptr),y
-        iny
-        dex
-        bne     :-
+        adc     tmp_rect,y
+        sta     tmp_rect,y
 
-        copy    #0, index
+;;; --------------------------------------------------
+;;; Iterate over icons, consider any in rect
+
+        lda     #0
+        sta     best_icon
+        sta     index
+
 icon_loop:
         ldx     index
         cpx     cached_window_entry_count
-        beq     next_rect
+        beq     finish_loop
 
         lda     cached_window_entry_list,x
+        sta     cur_icon
         sta     icon_param
         jsr     IsIconSelected
         beq     next_icon
 
-        ITK_CALL IconTK::IconInRect, icon_param
-    IF_NOT_ZERO
-        lda     icon_param
-        bne     select          ; always
-    END_IF
+        ITK_CALL IconTK::IconInRect, icon_param ; tests against `tmp_rect`
+        beq     next_icon
+
+        ITK_CALL IconTK::GetIconBounds, cur_icon ; result in `icon_rect`
+
+        ldx     dir
+        ldy     near_offsets,x  ; y = MGTK::Rect member offset
+
+        ;; If icon's near edge < selected icon's near edge, ignore
+        scmp16  icon_rect,y, tmp_rect,y
+        eor     compare_order,x ; flip result if needed
+        bmi     next_icon
+
+        ;; Any other candidates so far?
+        lda     best_icon
+        beq     best
+
+        ;; If icon's near edge > `best_value`, ignore
+        scmp16  icon_rect,y, best_value
+        eor     compare_order,x ; flip result if needed
+        bpl     next_icon
+
+best:
+        copy    cur_icon, best_icon
+        copy16  icon_rect,y, best_value
 
 next_icon:
         inc     index
         bne     icon_loop       ; always
 
-next_rect:
-        dec     iter_count
-        bne     rect_loop
+finish_loop:
+        lda     best_icon
+        bne     select
 
 ret:    rts
 
+;;; Tables indexed by `kDirXXX`
+rect_deltas_lo: .byte   <AS_WORD(-kDelta), <kDelta, <AS_WORD(-kDelta), <kDelta
+rect_deltas_hi: .byte   >AS_WORD(-kDelta), >kDelta, >AS_WORD(-kDelta), >kDelta
+far_offsets:    .byte   MGTK::Rect::x1, MGTK::Rect::x2, MGTK::Rect::y1, MGTK::Rect::y2
+near_offsets:   .byte   MGTK::Rect::x2, MGTK::Rect::x1, MGTK::Rect::y2, MGTK::Rect::y1
+compare_order:  .byte   $80, $00, $80, $00
 ;;; --------------------------------------------------
 ;;; If there was no (usable) selection, pick icon from active window.
 
