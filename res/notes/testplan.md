@@ -316,8 +316,8 @@
 * From BASIC.SYSTEM, create /VOL/A/B on an otherwise empty volume. Launch DeskTop. Open /VOL. Open A. Close /VOL. Open another volume with multiple icons. Verify that the window for A still renders the icon for B correctly.
 
 * Repeat the following test cases for these operations: Copy, Move, Delete:
-  * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed.
-  * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is canceled and the progress dialog is closed.
+  * Select multiple files. Start the operation. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed, and that the window contents do not refresh.
+  * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is canceled and the progress dialog is closed, and that the window contents do refresh.
 
 * Using BASIC, create a directory structure: X/Y/Z and save a BASIC file B as X/Y/Z/B. Lock all three directories and the file from BASIC (not DeskTop). Launch DeskTop. Select X. File > Delete. Verify that a prompt is shown for deleting each file in deepest-first order (B, Z, Y, X). Click Yes at each prompt. Verify that all files are deleted.
 
@@ -572,6 +572,9 @@
 
 * Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
 
+* Launch DeskTop. Open two windows containing multiple files. Select multiples files in the first window. File > Copy To.... Select the second window's location as a destination and click OK. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed, and that the second window's contents do not refresh.
+* Launch DeskTop. Open two windows containing multiple files. Select multiples files in the first window. File > Copy To.... Select the second window's location as a destination and click OK. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the second window's contents do refresh.
+
 
 ## Get Info
 
@@ -650,6 +653,9 @@
 
 * Repeat the following cases for File > New Folder, File > Duplicate, and File > Delete:
   * Launch DeskTop. Open a window and (if needed) select a file. Run the command. Verify that when the window is refreshed, the scrollbars are inactive or at the top/left positions.
+
+* Select a folder containing many files. File > Duplicate. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed, and that the window contents do not refresh.
+* Select a folder containing many files. File > Duplicate. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is canceled and the progress dialog is closed, and that the window contents do refresh, but that no rename prompt appears.
 
 
 ## Name Casing
@@ -745,6 +751,9 @@
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at boot". Reboot, and launch DESKTOP.SYSTEM. Verify that all of the files were copied to the RAMCard. Once DeskTop starts, eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. Verify that the files are copied to the RAMCard, and that the program starts correctly. Return to DeskTop by quitting the program. Eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Delete the folder from the RAMCard. Invoke the shortcut again. Verify that the files are copied to the RAMCard and that the program starts correctly.
+
+* Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Open a window for the RAMCard volume. Invoke the shortcut. During the initial count of the program's files are being counted, press Escape to cancel. Verify that the volume window contents do not not refresh.
+* Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Open a window for the RAMCard volume. Invoke the shortcut. After the initial count of the files is complete and the actual copy has started, press Escape to cancel. Verify that the volume window contents do refresh.
 
 * Repeat the following:
   * For these permutations:

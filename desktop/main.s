@@ -1417,8 +1417,17 @@ done:   rts
         ;; Need to copy to RAMCard
         jsr     PrepEntryCopyPaths
         jsr     DoCopyToRAM
-        bne     ret             ; canceled!
 
+        cmp     #kOperationCanceled
+        RTS_IF_EQ
+
+        cmp     #kOperationFailed
+    IF_EQ
+        param_call CopyRAMCardPrefix, path_buf4
+        jmp     RefreshWindowForPathBuf4
+    END_IF
+
+        ;; Success!
         ldx     entry_num
         lda     #$FF
         jsr     SetEntryCopiedToRAMCardFlag
@@ -1447,8 +1456,6 @@ use_entry_path:
 
 launch: param_call CopyPtr1ToBuf, INVOKER_PREFIX
         jmp     LaunchFileWithPath
-
-ret:    rts
 
 entry_num:
         .byte   0
@@ -1933,9 +1940,16 @@ ret:    rts
         param_call CopyPtr1ToBuf, path_buf3
         jsr     DoCopySelection
 
-        ;; --------------------------------------------------
-        ;; Update windows with results
+        cmp     #kOperationCanceled
+        RTS_IF_EQ
 
+        FALL_THROUGH_TO RefreshWindowForPathBuf4
+
+.endproc ; CmdCopySelection
+
+;;; ============================================================
+
+.proc RefreshWindowForPathBuf4
         ;; See if there's a window we should activate later.
         param_call FindWindowForPath, path_buf4
         pha                     ; save for later
@@ -1948,8 +1962,7 @@ ret:    rts
         jne     ActivateAndRefreshWindowOrClose
 
         rts
-
-.endproc ; CmdCopySelection
+.endproc ; RefreshWindowForPathBuf4
 
 ;;; ============================================================
 ;;; Copy string at ($6) to `path_buf3`, string at ($8) to `path_buf4`,
@@ -2450,14 +2463,9 @@ create:
         MLI_CALL CREATE, create_params
         bcs     error
 
-        ;; Update cached used/free for all same-volume windows
+        ;; Update cached used/free for all same-volume windows and refresh
         lda     active_window_id
-        jsr     GetWindowPath
-        jsr     UpdateUsedFreeViaPath
-
-        ;; Refresh the window
-        lda     active_window_id
-        jsr     ActivateAndRefreshWindowOrClose
+        jsr     UpdateActivateAndRefreshWindow
         RTS_IF_NE
 
         ;; Select and rename the file
@@ -3345,21 +3353,24 @@ spin:   jsr     GetSelectionWindow
         copy16  #dst_path_buf, $08
         jsr     CopyPathsFromPtrsToBufsAndSplitName
         jsr     DoCopyFile
-        RTS_IF_NS
+        sta     result
+        cmp     #kOperationCanceled
+        RTS_IF_EQ
 
         ;; Update name case bits on disk, if possible.
         COPY_STRING dst_path_buf, src_path_buf
         jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
 
-        ;; Update cached used/free for all same-volume windows
+        ;; Update cached used/free for all same-volume windows, and refresh
         lda     selected_window_id
-        jsr     GetWindowPath
-        jsr     UpdateUsedFreeViaPath
-
-        ;; Refresh the window
-        lda     selected_window_id
-        jsr     ActivateAndRefreshWindowOrClose
+        jsr     UpdateActivateAndRefreshWindow
         RTS_IF_NE
+
+        ;; If operation failed, then just leave the default name.
+        result := *+1
+        lda     #SELF_MODIFIED_BYTE
+        .assert kOperationFailed <> 0, error, "enum mismatch"
+        RTS_IF_NOT_ZERO
 
         ;; Select and rename the file
         param_call SelectFileIconByName, stashed_name
@@ -5221,7 +5232,6 @@ failure:
         ;; (1/4) Canceled?
 
         cmp     #kOperationCanceled
-        ;; TODO: Refresh source/dest if partial success
         RTS_IF_EQ
 
         ;; Was a move?
@@ -5269,19 +5279,27 @@ failure:
         ;; (4/4) Dropped on window!
 
         and     #$7F            ; mask off window number
+        bne     UpdateActivateAndRefreshWindow ; always
+
+.proc UpdateSelectedWindow
+        lda     selected_window_id
+        FALL_THROUGH_TO UpdateActivateAndRefreshWindow
+.endproc ; UpdateSelectedWindow
+
+.endproc ; PerformPostDropUpdates
+
+;;; ============================================================
+;;; Given a window, update used/free data for all same-volume windows,
+;;; then activate the window (if needed) and refresh the contents
+;;; (closing on error).
+;;; Same inputs/outputs as `ActivateAndRefreshWindowOrClose`
+
+.proc UpdateActivateAndRefreshWindow
         pha
         jsr     UpdateUsedFreeViaWindow
         pla
         jmp     ActivateAndRefreshWindowOrClose
-
-.proc UpdateSelectedWindow
-        lda     selected_window_id
-        jsr     UpdateUsedFreeViaWindow
-        lda     selected_window_id
-        jmp     ActivateAndRefreshWindowOrClose
-.endproc ; UpdateSelectedWindow
-
-.endproc ; PerformPostDropUpdates
+.endproc ; UpdateActivateAndRefreshWindow
 
 ;;; ============================================================
 ;;; Add specified icon to selection list, and redraw.
@@ -10362,8 +10380,6 @@ common:
 ;;; Start the actual operation
 
 .proc BeginOperation
-        copy    #0, do_op_flag
-
         jsr     PrepCallbacksForEnumeration
         bit     copy_delete_flags
         bmi     @trash
@@ -10426,13 +10442,13 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         jsr     CheckRecursion
     IF_NE
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_move_copy_into_self
-        jmp     CloseFilesCancelDialog
+        jmp     CloseFilesCancelDialogWithCanceledResult
     END_IF
         jsr     AppendSrcPathLastSegmentToDstPath
         jsr     CheckBadReplacement
     IF_NE
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_bad_replacement
-        jmp     CloseFilesCancelDialog
+        jmp     CloseFilesCancelDialogWithCanceledResult
     END_IF
 :
         jsr     OpProcessSelectedFile
@@ -10449,7 +10465,6 @@ next_icon:
         bne     finish
 
         ;; No, we finished enumerating. Now do the real work.
-        inc     do_op_flag
 
         ;; Do we need to show a confirmation dialog? (i.e. Delete)
         bit     operation_flags
@@ -10514,6 +10529,7 @@ copy_delete_flags:
 move_flag:
         .byte   0
 
+        ;; bit 7 set = "all" selected in Yes / No / All prompt
 all_flag:
         .byte   0
 
@@ -11587,7 +11603,7 @@ do_op_flag:
         jsr     ShowAlertOption
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
-        jmp     CloseFilesCancelDialog
+        jmp     CloseFilesCancelDialogWithFailedResult
 
 :       lda     open_src_dir_params::ref_num
         sta     op_ref_num
@@ -11599,7 +11615,7 @@ do_op_flag:
         jsr     ShowAlertOption
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry2         ; `kAlertResultTryAgain` = 0
-        jmp     CloseFilesCancelDialog
+        jmp     CloseFilesCancelDialogWithFailedResult
 
 :       jmp     ReadFileEntry
 .endproc ; OpenSrcDir
@@ -11613,7 +11629,7 @@ do_op_flag:
         jsr     ShowAlertOption
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
-        jmp     CloseFilesCancelDialog
+        jmp     CloseFilesCancelDialogWithFailedResult
 
 :       rts
 .endproc ; CloseSrcDir
@@ -11630,7 +11646,7 @@ do_op_flag:
         jsr     ShowAlertOption
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         beq     @retry          ; `kAlertResultTryAgain` = 0
-        jmp     CloseFilesCancelDialog
+        jmp     CloseFilesCancelDialogWithFailedResult
 
 :       inc     entries_read_this_block
         lda     entries_read_this_block
@@ -11720,7 +11736,7 @@ cancel_descent_flag:  .byte   0
 ;;;
 ;;; Input: A=`storage_type`
 ;;; Output: C=0 if supported type, C=1 if unsupported but user picks OK.
-;;; Exception: If user selects Cancel, `CloseFilesCancelDialog` is invoked.
+;;; Exception: If user selects Cancel, `CloseFilesCancelDialogWithFailedResult` is invoked.
 .proc ValidateStorageType
         cmp     #ST_VOLUME_DIRECTORY
         beq     ok
@@ -11732,7 +11748,7 @@ cancel_descent_flag:  .byte   0
         ;; Unsupported type - show error, and either abort or return failure
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unsupported_type
         cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialog
+        jeq     CloseFilesCancelDialogWithFailedResult
         sec
         rts
 
@@ -11799,6 +11815,7 @@ a_dst:  .addr   dst_path_buf
         bpl     :-
 
         copy    #0, all_flag
+        copy    #1, do_op_flag
         rts
 .endproc ; PrepCallbacksForCopy
 
@@ -11831,11 +11848,12 @@ a_dst:  .addr   dst_path_buf
 
         copy    #$80, all_flag
         copy16  #DownloadDialogTooLargeCallback, operation_toolarge_callback
+        copy    #1, do_op_flag
         rts
 
 .proc DownloadDialogTooLargeCallback
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_ramcard_full
-        jmp     CloseFilesCancelDialog
+        jmp     CloseFilesCancelDialogWithFailedResult
 .endproc ; DownloadDialogTooLargeCallback
 .endproc ; PrepCallbacksForDownload
 
@@ -12110,7 +12128,7 @@ retry:  copy    dst_path_buf, saved_length
         jsr     SetCursorWatch  ; preserves A
 
         cmp     #kAlertResultCancel
-        jeq     CloseFilesCancelDialog
+        jeq     CloseFilesCancelDialogWithFailedResult
 
         sec
         rts
@@ -12171,7 +12189,7 @@ retry:  jsr     GetDstFileInfo
         ;; TODO: In the future, prompt and recursively delete
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_no_overwrite_dir
         jsr     SetCursorWatch
-        jmp     CloseFilesCancelDialog
+        jmp     CloseFilesCancelDialogWithFailedResult
     END_IF
         ;; Prompt to replace
         bit     all_flag
@@ -12213,7 +12231,7 @@ failure:
         sec
         rts
 
-cancel: jmp     CloseFilesCancelDialog
+cancel: jmp     CloseFilesCancelDialogWithFailedResult
 .endproc ; TryCreateDst
 
 ;;; ============================================================
@@ -12629,8 +12647,7 @@ a_path: .addr   src_path_buf
 
         cmp     #kAlertResultOK
         beq     :+
-        lda     #kOperationCanceled
-        jmp     CloseFilesCancelDialogWithResult
+        jmp     CloseFilesCancelDialogWithCanceledResult
 :       rts
 .endproc ; DeleteDialogConfirmCallback
 .endproc ; OpenDeleteProgressDialog
@@ -12644,6 +12661,7 @@ a_path: .addr   src_path_buf
         bpl     :-
 
         copy    #0, all_flag
+        copy    #1, do_op_flag
         rts
 .endproc ; PrepCallbacksForDelete
 
@@ -12715,7 +12733,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         bne     :+
         copy    #$80, all_flag
         bne     unlock          ; always
-:       jmp     CloseFilesCancelDialog
+:       jmp     CloseFilesCancelDialogWithFailedResult
 
 unlock: jsr     UnlockSrcFile
         beq     retry
@@ -12803,6 +12821,7 @@ callbacks_for_size_or_count:
         sta     op_file_count+1
         sta     op_block_count
         sta     op_block_count+1
+        sta     do_op_flag
 
         rts
 .endproc ; PrepCallbacksForEnumeration
@@ -13114,17 +13133,27 @@ src_path_slash_index:
 
         lda     event_params::key
         cmp     #CHAR_ESCAPE
-        beq     CloseFilesCancelDialog
+        beq     cancel
+
 ret:    rts
+
+cancel: lda     do_op_flag
+        beq     CloseFilesCancelDialogWithCanceledResult
+        FALL_THROUGH_TO CloseFilesCancelDialogWithFailedResult
 .endproc ; CheckCancel
 
 ;;; ============================================================
 ;;; Closes dialog, closes all open files, and restores stack.
 
-.proc CloseFilesCancelDialog
+.proc CloseFilesCancelDialogImpl
+failed:
         lda     #kOperationFailed
-ep2:    sta     @result
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
+canceled:
+        lda     #kOperationCanceled
+
+        sta     @result
         jsr     InvokeOperationCompleteCallback
 
         MLI_CALL CLOSE, close_params
@@ -13137,8 +13166,9 @@ ep2:    sta     @result
         rts
 
         DEFINE_CLOSE_PARAMS close_params
-.endproc ; CloseFilesCancelDialog
-CloseFilesCancelDialogWithResult := CloseFilesCancelDialog::ep2
+.endproc ; CloseFilesCancelDialogImpl
+CloseFilesCancelDialogWithFailedResult := CloseFilesCancelDialogImpl::failed
+CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 
 ;;; ============================================================
 ;;; Move or Copy? Compare src/dst paths, same vol = move.
@@ -13288,7 +13318,7 @@ not_found:
         MLI_CALL ON_LINE, on_line_params2
         rts
 
-close:  jmp     CloseFilesCancelDialog
+close:  jmp     CloseFilesCancelDialogWithFailedResult
 
 flag:   .byte   0
 

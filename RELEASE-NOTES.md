@@ -27,6 +27,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Allow keyboard selection of icons in all windows.
 * Show tip about copying PRODOS during Format/Erase process.
 * Arrow keys now move icon selection in appropriate direction. ([#300](https://github.com/a2stuff/a2d/issues/300))
+* More consistently refresh (or don't refresh) window contents after canceled or failed operations.
 
 ### Selector
 

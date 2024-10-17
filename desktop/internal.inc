@@ -165,8 +165,8 @@ kListViewScrollTickV = kListViewRowHeight
 ;;; Operations
 
 kOperationSucceeded     = 0
-kOperationCanceled      = 1
-kOperationFailed        = $FF
+kOperationCanceled      = 1     ; no filesystem changes occurred
+kOperationFailed        = $FF   ; filesystem changes possibly occurred
 
 ;;; ============================================================
 ;;; Memory Areas
