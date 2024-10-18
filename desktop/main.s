@@ -197,7 +197,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 ;;; ============================================================
 
 ;;; Inputs: A = `window_id` from `update` event
-;;; Note: Modifies `active_window_id` which must be restored
+;;; NOTE: Modifies `active_window_id` which must be restored
 .proc UpdateWindow
         cmp     #kMaxDeskTopWindows+1 ; directory windows are 1-8
         RTS_IF_GE
@@ -468,7 +468,7 @@ window_open_flag := HandleKeydownImpl::window_open_flag
         copy    #0, findwindow_params::window_id
         ITK_CALL IconTK::FindIcon, event_params::coords
         lda     findicon_params::which_icon
-        jne     HandleVolumeIconClick
+        jne     HandleIconClick
 
         jsr     LoadDesktopEntryTable
         lda     #0
@@ -516,7 +516,11 @@ not_menu:
     IF_ZERO
         ;; Try to select the window's parent icon.
         lda     active_window_id
-        jne     SelectIconForWindow
+      IF_NOT_ZERO
+        jsr     GetWindowPath
+        jsr     IconToAnimate
+        jmp     SelectIcon
+      END_IF
     END_IF
         rts
 
@@ -596,25 +600,6 @@ dispatch_click:
 .endproc ; ClearAndDrawActiveWindowEntries
 
 ;;; ============================================================
-;;; Inputs: A = window_id
-;;; Selection should be cleared before calling
-
-.proc SelectIconForWindow
-        jsr     GetWindowPath
-        jsr     IconToAnimate
-        sta     icon_param
-
-        jsr     GetIconWindow
-        sta     selected_window_id
-        copy    #1, selected_icon_count
-        copy    icon_param, selected_icon_list
-        ITK_CALL IconTK::HighlightIcon, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param
-
-        rts
-.endproc ; SelectIconForWindow
-
-;;; ============================================================
 
 ;;; Used only for file windows; adjusts port to account for header.
 ;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
@@ -623,7 +608,6 @@ dispatch_click:
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         bne     :+              ; MGTK::Error::window_obscured
         jsr     OffsetWindowGrafportAndSet
-        lda     #0
 :       rts
 .endproc ; UnsafeOffsetAndSetPortFromWindowId
 
@@ -2315,7 +2299,7 @@ done:   rts
 volume: lda     window_id_to_close
         beq     :+
         jsr     CloseActiveWindow
-:       jsr     ClearSelection
+:
         ldx     src_path_buf ; Strip '/'
         dex
         stx     src_path_buf+1
@@ -2323,7 +2307,7 @@ volume: lda     window_id_to_close
         ldy     #0              ; 0=desktop
         jsr     FindIconByName
         beq     :+
-        jsr     SelectIcon
+        jsr     SelectIconAndEnsureVisible
 :       rts
 .endproc ; CmdOpenParentImpl
 CmdOpenParent := CmdOpenParentImpl::normal
@@ -2488,15 +2472,9 @@ CmdNewFolder    := CmdNewFolderImpl::start
 .proc SelectFileIconByName
         ldy     active_window_id
         jsr     FindIconByName
-        beq     ret             ; not found
+        RTS_IF_ZERO             ; not found
 
-        pha
-        jsr     HighlightAndSelectIcon
-        copy    active_window_id, selected_window_id
-        pla
-        jsr     ScrollIconIntoView
-
-ret:    rts
+        jmp     SelectIconAndEnsureVisible
 .endproc ; SelectFileIconByName
 
 ;;; ============================================================
@@ -3037,11 +3015,9 @@ ret:    rts
 :       ldx     selected_icon_count
         lda     selected_icon_list,x
         jsr     FindIconForRecordNum
-        ldx     selected_icon_count
-        sta     selected_icon_list,x
+        jsr     AddToSelectionList
         sta     icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
-        inc     selected_icon_count
         dec     selection_preserved_count
         bne     :-
 
@@ -3464,7 +3440,7 @@ pick_next_prev:
 
 select_index:
         lda     buffer+1,x
-        jmp     ClearSelectionActivateWindowAndSelectIcon
+        jmp     SelectIconAndEnsureVisible
 
 ret:    rts
 
@@ -3659,7 +3635,7 @@ fallback:
         lda     cached_window_entry_list,x
 
 select:
-        jmp     ClearSelectionActivateWindowAndSelectIcon
+        jmp     SelectIconAndEnsureVisible
 
 .endproc ; CmdHighlightSpatialImpl
 CmdHighlightLeft  := CmdHighlightSpatialImpl::left
@@ -3726,7 +3702,7 @@ file_char:
         ;; Update the selection.
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     ClearSelectionActivateWindowAndSelectIcon
+        jsr     SelectIconAndEnsureVisible
 
 done:   lda     #0
         rts
@@ -3920,27 +3896,20 @@ ret:    rts
 
 ;;; ============================================================
 ;;; Replace selection with the specified icon. The icon's
-;;; window is activated if necessary.
+;;; window is activated if necessary. If windowed, it is scrolled
+;;; into view.
 ;;; Inputs: A = icon id
 
-.proc ClearSelectionActivateWindowAndSelectIcon
+.proc SelectIconAndEnsureVisible
         pha
         jsr     ClearSelection
         pla
+
         pha
         jsr     GetIconWindow
         jsr     ActivateWindow  ; no-op if already active, or 0
         pla
 
-        FALL_THROUGH_TO SelectIcon
-.endproc ; ClearSelectionActivateWindowAndSelectIcon
-
-;;; ============================================================
-;;; Select an arbitrary icon. If windowed, it is scrolled into view.
-;;; Inputs: A = icon id
-;;; Assert: Selection is empty. If windowed, it's in the active window.
-
-.proc SelectIcon
         sta     icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
 
@@ -3961,7 +3930,7 @@ ret:    rts
         ITK_CALL IconTK::DrawIcon, selected_icon_list
 
         rts
-.endproc ; SelectIcon
+.endproc ; SelectIconAndEnsureVisible
 
 ;;; ============================================================
 
@@ -3985,12 +3954,11 @@ ret:    rts
 
         lda     selected_window_id
     IF_ZERO
-        sta     err             ; zero if desktop; will overwrite if windowed
         jsr     InitSetDesktopPort
     ELSE
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        sta     err
     END_IF
+        pha                     ; A = obscured?
 
         ;; --------------------------------------------------
         ;; Mark all icons as highlighted
@@ -4007,8 +3975,8 @@ ret:    rts
 
         ;; --------------------------------------------------
         ;; Repaint the icons
-        err := *+1
-        lda     #SELF_MODIFIED_BYTE
+
+        pla                     ; A = obscured?
     IF_ZERO                     ; Skip drawing if obscured
         lda     cached_window_id
         beq     :+
@@ -5104,7 +5072,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         copy    active_window_id, findicon_params::window_id
         ITK_CALL IconTK::FindIcon, findicon_params
         lda     findicon_params::which_icon
-        bne     HandleFileIconClick
+        bne     HandleIconClick
 
         ;; Not an icon - maybe a drag?
         lda     active_window_id
@@ -5112,15 +5080,18 @@ bail:   return  #$FF            ; high bit set = not repeating
 .endproc ; HandleContentClick
 
 ;;; ============================================================
-
+;;; Handle a click on an icon, either windowed or desktop. They
+;;; are processed the same way, unless a drag occurs.
 ;;; Input: A = icon
-.proc HandleFileIconClick
+;;;   `findicon_params::which_icon` and `findicon_params::window_id`
+;;;   must still be populated
+
+.proc HandleIconClick
         pha
         jsr     GetSingleSelectedIcon
         sta     prev_selected_icon
         pla
 
-        sta     icon_num
         jsr     IsIconSelected
         bne     not_selected
 
@@ -5130,33 +5101,29 @@ bail:   return  #$FF            ; high bit set = not repeating
         bpl     :+
 
         ;; Modifier down - remove from selection
-        icon_num := *+1
-        lda     #SELF_MODIFIED_BYTE
+        lda     findicon_params::which_icon
         jmp     UnhighlightAndDeselectIcon ; deselect, nothing further
 
         ;; Double click or drag?
 :       jmp     check_double_click
 
         ;; --------------------------------------------------
-        ;; Icon not already selected
+        ;; Icon was not already selected
 not_selected:
         jsr     ExtendSelectionModifierDown
         bpl     replace_selection
 
         ;; Modifier down - add to selection
-        lda     selected_window_id
-        cmp     active_window_id ; same window?
-        beq     :+               ; if so, retain selection
-        jsr     ClearSelection
-        copy    active_window_id, selected_window_id
-:       lda     icon_num
-        jmp     HighlightAndSelectIcon ; select, nothing further
+        lda     findicon_params::window_id
+        cmp     selected_window_id
+        bne     replace_selection
+        lda     findicon_params::which_icon
+        jmp     AddIconToSelection ; select, nothing further
 
+        ;; Replace selection with clicked icon
 replace_selection:
-        jsr     ClearSelection
-        copy    active_window_id, selected_window_id
-        lda     icon_num
-        jsr     HighlightAndSelectIcon
+        lda     findicon_params::which_icon
+        jsr     SelectIcon
         FALL_THROUGH_TO check_double_click
 
         ;; --------------------------------------------------
@@ -5167,11 +5134,22 @@ check_double_click:
         ;; --------------------------------------------------
         ;; Drag of file icon
 
-        copy    icon_num, drag_drop_params::icon
+        copy    findicon_params::which_icon, drag_drop_params::icon
         jsr     GetSelectionViewBy
         .assert kViewByName >= $80, error, "enum mismatch"
         sta     drag_drop_params::fixed
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
+        ldy     findicon_params::window_id
+        jeq     HandleVolumeIconDrag
+
+        FALL_THROUGH_TO HandleFileIconDrag
+.endproc
+
+;;; ============================================================
+;;; Inputs: A = `IconTK::DragHighlighted` return value, and
+;;;         `drag_drop_params::result` is set.
+
+.proc HandleFileIconDrag
         tax
         lda     drag_drop_params::result
         beq     same_or_desktop
@@ -5218,9 +5196,9 @@ failure:
 
         ;; --------------------------------------------------
 
-.endproc ; HandleFileIconClick
+.endproc ; HandleFileIconDrag
         ;; Used for delete shortcut; set `drag_drop_params::icon` first
-        process_drop := HandleFileIconClick::process_drop
+        process_drop := HandleFileIconDrag::process_drop
 
 ;;; ============================================================
 ;;; After an icon drop (file or volume), update any affected
@@ -5302,23 +5280,50 @@ failure:
 .endproc ; UpdateActivateAndRefreshWindow
 
 ;;; ============================================================
-;;; Add specified icon to selection list, and redraw.
+;;; Input: A = icon id
+;;; NOTE: It does not activate the icon's window, or scroll the icon
+;;; into view.
+
+.proc SelectIcon
+        pha
+        jsr     ClearSelection
+        pla
+        pha
+        jsr     GetIconWindow
+        sta     selected_window_id
+        pla
+        FALL_THROUGH_TO AddIconToSelection
+.endproc ; SelectIcon
+
+;;; ============================================================
+;;; Add specified icon to selection list, mark it highlighted, and redraw.
 ;;; NOTE: This increments `selected_icon_count` and does NOT change
 ;;; `selected_window_id`
 ;;; Input: A = icon number
 ;;; Assert: Icon is in active window/desktop, `selected_window_id` is set.
 
-.proc HighlightAndSelectIcon
+.proc AddIconToSelection
         sta     icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
 
-        ldx     selected_icon_count
-        copy    icon_param, selected_icon_list,x
-        inc     selected_icon_count
+        lda     icon_param
+        FALL_THROUGH_TO AddToSelectionList
+.endproc ; AddIconToSelection
 
+;;; ============================================================
+;;; Add specified icon to `selected_icon_list`
+;;; Inputs: A = icon_num
+;;; Outputs: A is not modified
+;;; Assert: icon is not present in the list.
+;;; NOTE: Does not modify `selected_window_id`.
+
+.proc AddToSelectionList
+        ldx     selected_icon_count
+        sta     selected_icon_list,x
+        inc     selected_icon_count
         rts
-.endproc ; HighlightAndSelectIcon
+.endproc ; AddToSelectionList
 
 ;;; ============================================================
 ;;; Remove specified icon from selection list, and redraw.
@@ -5331,13 +5336,14 @@ failure:
         ITK_CALL IconTK::DrawIcon, icon_param
 
         lda     icon_param
-        jmp     RemoveFromSelectionList
+        FALL_THROUGH_TO RemoveFromSelectionList
 .endproc ; UnhighlightAndDeselectIcon
 
 ;;; ============================================================
 ;;; Remove specified icon from `selected_icon_list`
 ;;; Inputs: A = icon_num
 ;;; Assert: icon is present in the list.
+;;; NOTE: Clears `selected_window_id` if count drops to 0.
 
 .proc RemoveFromSelectionList
         ;; Find index in list
@@ -5354,6 +5360,9 @@ failure:
         bne     :-
 
         dec     selected_icon_count
+    IF_ZERO
+        copy    #0, selected_window_id
+    END_IF
         rts
 .endproc ; RemoveFromSelectionList
 
@@ -5534,14 +5543,7 @@ event_loop:
         jsr     FrameTmpRect
         ldx     #0
 iloop:  cpx     cached_window_entry_count
-    IF_ZERO
-        ;; Finished!
-        lda     window_id
-      IF_ZERO
-        sta     selected_window_id
-      END_IF
-        rts
-    END_IF
+        RTS_IF_EQ
 
         ;; Check if icon should be selected
         txa
@@ -5560,10 +5562,11 @@ iloop:  cpx     cached_window_entry_count
         jsr     IsIconSelected
     IF_NE
         ;; Highlight and add to selection
+        ;; NOTE: Does not use `AddIconToSelection` because we perform
+        ;; a more optimized drawing below.
         ITK_CALL IconTK::HighlightIcon, icon_param
-        ldx     selected_icon_count
-        inc     selected_icon_count
-        copy    icon_param, selected_icon_list,x
+        lda     icon_param
+        jsr     AddToSelectionList
         copy    window_id, selected_window_id
     ELSE
         ;; Unhighlight and remove from selection
@@ -5801,11 +5804,7 @@ update: lda     window_id
 
         anim_icon := *+1
         lda     #SELF_MODIFIED_BYTE
-        pha                     ; A = `anim_icon`
-        jsr     GetIconWindow
-        sta     selected_window_id
-        pla                     ; A = `anim_icon`
-        jmp     HighlightAndSelectIcon
+        jmp     SelectIcon
 
 .endproc ; CloseSpecifiedWindow
 
@@ -6087,59 +6086,9 @@ DisableSelectorMenuItems := ToggleSelectorMenuItems::disable
 
 ;;; ============================================================
 
-;;; Input: A = icon
-.proc HandleVolumeIconClick
-        pha
-        jsr     GetSingleSelectedIcon
-        sta     prev_selected_icon
-        pla
-
-        jsr     IsIconSelected
-        bne     not_selected
-
-        ;; --------------------------------------------------
-        ;; Icon was already selected
-        jsr     ExtendSelectionModifierDown
-        bpl     :+
-
-        ;; Modifier down - remove from selection
-        lda     findicon_params::which_icon
-        jmp     UnhighlightAndDeselectIcon ; deselect, nothing further
-
-        ;; Double click or drag?
-:       jmp     check_double_click
-
-        ;; --------------------------------------------------
-        ;; Icon was not already selected
-not_selected:
-        jsr     ExtendSelectionModifierDown
-        bpl     replace_selection
-
-        ;; Modifier down - add to selection
-        lda     selected_window_id ; on desktop?
-        beq     :+                 ; if so, retain selection
-        jsr     ClearSelection
-:       lda     findicon_params::which_icon
-        jmp     HighlightAndSelectIcon ; select, nothing further
-
-        ;; Replace selection with clicked icon
-replace_selection:
-        jsr     ClearSelection
-        lda     findicon_params::which_icon
-        jsr     HighlightAndSelectIcon
-        FALL_THROUGH_TO check_double_click
-
-        ;; --------------------------------------------------
-check_double_click:
-        jsr     StashCoordsAndDetectDoubleClick
-        jpl     CmdOpenFromDoubleClick
-
-        ;; --------------------------------------------------
-        ;; Drag of volume icon
-
-        copy    findicon_params::which_icon, drag_drop_params::icon
-        copy    #0, drag_drop_params::fixed
-        ITK_CALL IconTK::DragHighlighted, drag_drop_params
+;;; Inputs: A = `IconTK::DragHighlighted` return value, and
+;;;         `drag_drop_params::result` is set.
+.proc HandleVolumeIconDrag
         tax
         lda     drag_drop_params::result
         beq     same_or_desktop
