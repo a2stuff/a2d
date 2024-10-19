@@ -39,6 +39,7 @@ Project Page: https://github.com/a2stuff/a2d
 * About This Apple II
   * Detect Microdigital TK-3000 //e
   * Detect Pravetz 8A/C
+* Screen Dump: Restore CR/LF state after printing.
 
 ## 1.4
 

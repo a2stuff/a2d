@@ -1137,6 +1137,7 @@ With Sci.Calc:
 
 * Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Screen Dump DA. Verify it prints a screenshot.
 * Configure a system with a non-SSC in Slot 1. Invoke the Screen Dump DA. Verify nothing happens.
+* Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Screen Dump DA. Invoke the Print Catalog DA. Verify that the catalog is printed on separate lines, not all overprinted on the same line onto one.
 
 # Shortcuts (Module)
 

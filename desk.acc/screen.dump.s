@@ -31,6 +31,10 @@
 
 ;;; ============================================================
 
+;;; Original code issued a "Zap" command to SSC to suppress further
+;;; control character processing. This affects later use of the SSC
+;;; so is disabled. ZAP = 1 to restore.
+
 kSigLen = 4
 sig_offsets:
         .byte   $05, $07, $0B, $0C
@@ -58,8 +62,12 @@ sig_bytes:
         kScreenWidth  = 560
         kScreenHeight = 192
 
+        sta     ALTZPOFF
         bit     ROMIN2
+
         jsr     PrintScreen
+
+        sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
 ret:    rts
@@ -75,6 +83,19 @@ done:   rts
 .endproc ; SendSpacing
 
 .proc SendRestoreState
+.ifdef ZAP
+        ;; Per Apple II Super Serial Card Installation and Operating Manual
+        ;; "The only way to reinstate command recognition after the Z
+        ;; command is to reinitialize the SSC, or clear the high-order bit
+        ;; at location $5F8+s (where s is the slot in which the SSC is
+        ;; installed)."
+
+        ;; TODO: Does not seem to work on Virtual ][ ???
+        lda     $5F8+1
+        and     %01111111
+        sta     $5F8+1
+.endif
+
         ldy     #$00
 :       lda     restore_state,y
         beq     done
@@ -139,6 +160,14 @@ y_loop: lda     y_coord
         sta     PAGE2OFF        ; Read main mem $2000-$3FFF
         jsr     COut            ; And actually print
 
+.ifndef ZAP
+        ;; If Ctrl+I, send again (default SSC control character)
+        cmp     #CHAR_TAB
+        bne     :+
+        jsr     COut
+:
+.endif
+
         ;; Done all pixels across?
         lda     x_coord
         cmp     #<(kScreenWidth-1)
@@ -164,6 +193,12 @@ done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
 .endproc ; SendRow
 
 .proc PrintScreen
+        ;; Save
+        lda     COUT_HOOK
+        pha
+        lda     COUT_HOOK+1
+        pha
+
         ;; Init printer
         jsr     PRNum1
         jsr     SendSpacing
@@ -189,6 +224,12 @@ loop:   jsr     SendRow
         lda     #CHAR_RETURN
         jsr     COut
         jsr     SendRestoreState
+
+        ;; Restore
+        pla
+        sta     COUT_HOOK+1
+        pla
+        sta     COUT_HOOK
 
         rts
 .endproc ; PrintScreen
@@ -243,15 +284,18 @@ col_num:.byte   0              ; 0...79
         .byte   0, 0
 
 spacing_sequence:
-        .byte   CHAR_ESCAPE,'n'         ; 72 DPI (horizontal; "Extended")
-        .byte   CHAR_ESCAPE,"T16"       ; 72 DPI (vertical; 8 strikers / 72 = 16/144")
-        .byte   CHAR_TAB,$4C,$20,$44,$8D ; ???
-        .byte   CHAR_TAB,$5A,$8D     ; ???
+        .byte   CHAR_ESCAPE,'n'    ; IW2: 72 DPI (horizontal; "Extended")
+        .byte   CHAR_ESCAPE,"T16"  ; IW2: 72 DPI (vertical; 8 strikers / 72 = 16/144")
+        .byte   CHAR_TAB,"L D",$8D ; SSC: Disable LF after CR
+.ifdef ZAP
+        .byte   CHAR_TAB,"Z",$8D   ; SSC: Zap (suppress) further control characters
+.endif
         .byte   0
 
 restore_state:
-        .byte   CHAR_ESCAPE,'N'         ; 80 DPI (horizontal)
-        .byte   CHAR_ESCAPE,"T24"       ; distance between lines (24/144")
+        .byte   CHAR_ESCAPE,'N'    ; IW2: 80 DPI (horizontal)
+        .byte   CHAR_ESCAPE,"T24"  ; IW2: distance between lines (24/144")
+        .byte   CHAR_TAB,"L E",$8D ; SSC: Enable LF after CR
         .byte   0
 
 invoke_slot1:
