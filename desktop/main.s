@@ -2453,8 +2453,7 @@ create:
         RTS_IF_NE
 
         ;; Select and rename the file
-        param_call SelectFileIconByName, stashed_name
-        jmp     CmdRename
+        jmp     TriggerRenameForFileIconWithStashedName
 
         ;; --------------------------------------------------
 error:
@@ -3257,6 +3256,13 @@ ret:    rts
 
 ;;; ============================================================
 
+.proc TriggerRenameForFileIconWithStashedName
+        param_call SelectFileIconByName, stashed_name
+        FALL_THROUGH_TO CmdRename
+.endproc ; TriggerRenameForFileIconWithStashedName
+
+;;; ============================================================
+
 ;;; Assert: Single icon selected, and it's not Trash
 .proc CmdRename
         jsr     DoRename
@@ -3334,7 +3340,7 @@ spin:   jsr     GetSelectionWindow
         RTS_IF_EQ
 
         ;; Update name case bits on disk, if possible.
-        COPY_STRING dst_path_buf, src_path_buf
+        param_call CopyToSrcPath, dst_path_buf
         jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
 
         ;; Update cached used/free for all same-volume windows, and refresh
@@ -3349,8 +3355,7 @@ spin:   jsr     GetSelectionWindow
         RTS_IF_NOT_ZERO
 
         ;; Select and rename the file
-        param_call SelectFileIconByName, stashed_name
-        jmp     CmdRename
+        jmp     TriggerRenameForFileIconWithStashedName
 
         ;; --------------------------------------------------
 error:
@@ -4833,18 +4838,18 @@ END_PARAM_BLOCK
 header: .byte   kLinkFileSig1Value, kLinkFileSig2Value, kLinkFileCurrentVersion
         kHeaderSize = * - header
 
-dir_path:
-        PASCAL_STRING kFilenameLinksDir
+        .define kAliasSuffix ".alias"
+suffix: .byte   kAliasSuffix
 
-        DEFINE_CREATE_PARAMS create_dir_params, dir_path, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
-        DEFINE_GET_PREFIX_PARAMS prefix_params, src_path_buf
-        DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_LINK, kLinkFileAuxType
-        DEFINE_OPEN_PARAMS open_params, src_path_buf, IO_BUFFER
+        DEFINE_CREATE_PARAMS create_params, dst_path_buf, ACCESS_DEFAULT, FT_LINK, kLinkFileAuxType
+        DEFINE_OPEN_PARAMS open_params, dst_path_buf, IO_BUFFER
         DEFINE_WRITE_PARAMS write_params, link_struct, 0
         DEFINE_CLOSE_PARAMS close_params
 
 start:
+        ;; --------------------------------------------------
         ;; Prep struct for writing
+
         lda     selected_icon_list
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
         jne     ShowAlert
@@ -4860,27 +4865,50 @@ start:
         adc     #link_struct::path-link_struct+1
         sta     write_params::request_count
 
-        ;; Create dir (ok if it already exists)
-        MLI_CALL CREATE, create_dir_params
-        bcc     :+
-        cmp     #ERR_DUPLICATE_FILENAME
-        bne     err
-:
-        ;; Compose link file path
-        MLI_CALL GET_PREFIX, prefix_params
-        dec     src_path_buf    ; remove trailing '/'
-        param_call AppendFilenameToSrcPath, dir_path
+        ;; --------------------------------------------------
+        ;; Determine the name to use
+
+        ;; Start with original name
         lda     selected_icon_list
         jsr     GetIconName
-        jsr     AppendFilenameToSrcPath
+        stax    $06
+        param_call CopyPtr1ToBuf, stashed_name
 
-        ;; Create link file (ok if it already exists)
-        MLI_CALL CREATE, create_params
+        ;; Append ".alias"
+        lda     stashed_name
+        clc
+        adc     #.strlen(kAliasSuffix)
+        cmp     #kMaxFilenameLength+1
         bcc     :+
-        cmp     #ERR_DUPLICATE_FILENAME
+        lda     #kMaxFilenameLength
+:       tax
+        sta     stashed_name
+        ldy     #.strlen(kAliasSuffix)-1
+:       lda     suffix,y
+        sta     stashed_name,x
+        dex
+        dey
+        bpl     :-
+
+        ;; Repeat to find a free name
+retry:  jsr     GetSelectionWindow
+        jsr     GetWindowPath
+        jsr     CopyToDstPath
+        param_call AppendFilenameToDstPath, stashed_name
+        jsr     GetDstFileInfo
+        bcc     spin
+        cmp     #ERR_FILE_NOT_FOUND
+        beq     create
         bne     err
-:
-        ;; Write out link file
+spin:   jsr     SpinName
+        jmp     retry
+
+        ;; --------------------------------------------------
+        ;; Create and write link file
+create:
+        MLI_CALL CREATE, create_params
+        bcs     err
+
         MLI_CALL OPEN, open_params
         bcs     err
         lda     open_params::ref_num
@@ -4892,12 +4920,20 @@ start:
         plp
         bcs     err
 
-        ;; Update cached used/free for all same-volume windows
-        param_call UpdateUsedFreeViaPath, src_path_buf
+        ;; Update name case bits on disk, if possible.
+        param_call CopyToSrcPath, dst_path_buf
+        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
 
-        ;; Show target file
-        jmp     ShowFileWithPath
+        ;; --------------------------------------------------
+        ;; Update cached used/free for all same-volume windows, and refresh
+        lda     selected_window_id
+        jsr     UpdateActivateAndRefreshWindow
+        RTS_IF_NE
 
+        ;; Select and rename the file
+        jmp     TriggerRenameForFileIconWithStashedName
+
+        ;; --------------------------------------------------
 err:    jmp     ShowAlert
 
 .endproc ; CmdMakeLinkImpl
@@ -5973,11 +6009,6 @@ disable:lda     #MGTK::disableitem_disable
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdRenameIcon
         jsr     DisableMenuItem
-
-        ;; Special
-        copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdMakeLink
-        jsr     DisableMenuItem
 .endproc ; ToggleMenuItemsRequiringSingleSelection
 EnableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::enable
 DisableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::disable
@@ -6022,8 +6053,14 @@ enable: lda     #MGTK::disableitem_enable
 disable:lda     #MGTK::disableitem_disable
         sta     disableitem_params::disable
 
+        ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdDuplicate
+        jsr     DisableMenuItem
+
+        ;; Special
+        copy    #kMenuIdSpecial, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdMakeLink
         jsr     DisableMenuItem
 
         rts

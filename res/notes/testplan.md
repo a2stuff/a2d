@@ -119,38 +119,38 @@
 
 * Launch DeskTop. Clear the selection (e.g. by clicking on the DeskTop). Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
-  * File > Duplicate is disabled.
-  * File > Rename and Special > Make Alias are disabled.
+  * File > Duplicate and Special > Make Alias are disabled.
+  * File > Rename is disabled.
   * File > Open and File > Get Info are disabled.
 * Launch DeskTop. Select only the Trash icon. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
-  * File > Duplicate is disabled.
-  * File > Rename and Special > Make Alias are disabled.
+  * File > Duplicate and Special > Make Alias are disabled.
+  * File > Rename is disabled.
   * File > Open and File > Get Info are disabled.
 * Launch DeskTop. Select a volume. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
-  * File > Duplicate is disabled.
-  * File > Rename and Special > Make Alias are enabled.
+  * File > Duplicate and Special > Make Alias are disabled.
+  * File > Rename is enabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Select two volume icons. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
-  * File > Duplicate is disabled.
-  * File > Rename and Special > Make Alias are disabled.
+  * File > Duplicate and Special > Make Alias are disabled.
+  * File > Rename is disabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Select a volume icon and the Trash icon. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
-  * File > Duplicate is disabled.
-  * File > Rename and Special > Make Alias are disabled.
+  * File > Duplicate and Special > Make Alias are disabled.
+  * File > Rename is disabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Open a volume window, and select a file. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
-  * File > Duplicate is enabled.
-  * File > Rename and Special > Make Alias are enabled.
+  * File > Duplicate and Special > Make Alias are enabled.
+  * File > Rename is enabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Open a volume window, and select two files. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
-  * File > Duplicate is disabled.
-  * File > Rename and Special > Make Alias are disabled.
+  * File > Duplicate and Special > Make Alias are disabled.
+  * File > Rename is disabled.
   * File > Open and File > Get Info are enabled.
 * Launch DeskTop. Close all windows. Verify that File > New Folder, File > Close Window, File > Close All, and everything in the View menu are disabled.
 * Launch DeskTop. Open a window. Verify that File > New Folder, File > Close Window, File > Close All, and everything in the View menu are enabled.

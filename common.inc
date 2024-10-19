@@ -24,7 +24,6 @@
 .define kFilenameDADir         "Apple.Menu"
 .define kFilenameExtrasDir     "Extras"
 .define kFilenameRAMCardDir    "DeskTop"
-.define kFilenameLinksDir      "Links"
 
 ;;; ============================================================
 ;;; DeskTop Modules
