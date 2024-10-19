@@ -3458,14 +3458,12 @@ CmdHighlightAlphaNext := CmdHighlightImpl::a_next
 ;;; Local variables on ZP
 PARAM_BLOCK, $50
 dir        .byte
-tmpw       .word
 index      .byte
 cur_icon   .byte
 icon_rect  .tag MGTK::Rect
 best_icon  .byte
 best_value .word
 END_PARAM_BLOCK
-        view_by := tmpw
         .assert icon_rect = cur_icon+1, error, "Must be adjacent"
 
         kDirLeft  = 0
@@ -3490,7 +3488,6 @@ down:   lda     #kDirDown
 ;;; If a list view, use index-based logic
 
         jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
-        sta     view_by
     IF_NEG
         lda     dir
         cmp     #kDirUp
@@ -3517,17 +3514,7 @@ down:   lda     #kDirDown
 ;;; --------------------------------------------------
 ;;; Get bounds
 
-        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
-
-        lda     view_by
-        .assert kViewByIcon = 0, error, "enum mismatch"
-    IF_ZERO
-        ;; Constrain to icon bitmap width (long names tend to overlap)
-        add16   tmp_rect+MGTK::Rect::x1, tmp_rect+MGTK::Rect::x2, tmpw
-        lsr16   tmpw
-        sub16   tmpw, #kIconBitmapWidth/2, tmp_rect+MGTK::Rect::x1
-        add16   tmpw, #kIconBitmapWidth/2, tmp_rect+MGTK::Rect::x2
-    END_IF
+        ITK_CALL IconTK::GetBitmapRect, icon_param ; inits `tmp_rect`
 
 ;;; --------------------------------------------------
 ;;; Extend rect, based on dir

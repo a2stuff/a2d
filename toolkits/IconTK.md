@@ -284,6 +284,19 @@ MGTK::Rect  rect            (out) Bounding rect for name
 No error checking is done, no result codes.
 
 
+### `IconTK::GetBitmapRect` ($10)
+
+Populates the `bounds` rectangle with a bounding rect surrounding just the icon bitmap.
+
+Parameters:
+```
+.byte       icon            Icon number
+MGTK::Rect  rect            (out) Bounding rect for bitmap
+```
+
+No error checking is done, no result codes.
+
+
 ## Convenience Macros
 
 * `ITK_CALL` can be used to make calls in the form `ITK_CALL command, params`, if `ITKEntry` is defined.

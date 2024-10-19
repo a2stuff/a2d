@@ -77,6 +77,7 @@ jump_table_low:
         .byte   <DrawIconImpl
         .byte   <GetIconEntryImpl
         .byte   <GetRenameRectImpl
+        .byte   <GetBitmapRectImpl
 
 jump_table_high:
         .byte   >InitToolKitImpl
@@ -95,6 +96,7 @@ jump_table_high:
         .byte   >DrawIconImpl
         .byte   >GetIconEntryImpl
         .byte   >GetRenameRectImpl
+        .byte   >GetBitmapRectImpl
 
 ;;; ============================================================
 
@@ -1288,14 +1290,9 @@ inside:
 .endstruct
 
         ;; Calc icon bounds
-        jsr     PushPointers
-        ptr := $06
-        ldy     #GetRenameRectParams::icon
-        lda     (params),y
-        jsr     GetIconPtr
-        stax    ptr
-        jsr     CalcIconRects
-        jsr     PopPointers
+        .assert params = $06, error, "param placement"
+        .assert GetRenameRectParams::icon = 0, error, "struct layout"
+        jsr     GetXYZRectImplHelper
 
         ;; Copy rect into out params
         ldx     #.sizeof(MGTK::Rect)-1
@@ -1308,6 +1305,49 @@ inside:
 
         rts
 .endproc ; GetRenameRectImpl
+
+;;; ============================================================
+;;; GetBitmapRect
+
+.proc GetBitmapRectImpl
+        params := $06
+.struct GetBitmapRectParams
+        icon    .byte
+        rect    .tag    MGTK::Rect ; out
+.endstruct
+
+        ;; Calc icon bounds
+        .assert params = $06, error, "param placement"
+        .assert GetBitmapRectParams::icon = 0, error, "struct layout"
+        jsr     GetXYZRectImplHelper
+
+        ;; Copy rect into out params
+        ldx     #.sizeof(MGTK::Rect)-1
+        ldy     #GetBitmapRectParams::rect + .sizeof(MGTK::Rect)-1
+:       lda     bitmap_rect,x
+        sta     (params),y
+        dey
+        dex
+        bpl     :-
+
+        rts
+.endproc ; GetBitmapRectImpl
+
+.proc GetXYZRectImplHelper
+        params := $06
+        params_icon_offset = 0
+
+        ;; Calc icon bounds
+        jsr     PushPointers
+        ptr := $06
+        ldy     #params_icon_offset
+        lda     (params),y
+        jsr     GetIconPtr
+        stax    ptr
+        jsr     CalcIconRects
+        jsr     PopPointers     ; do not tail-call optimise!
+        rts
+.endproc ; GetXYZRectImplHelper
 
 ;;; ============================================================
 
