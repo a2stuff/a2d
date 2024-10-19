@@ -225,91 +225,77 @@ HiliteImpl__skip_port := HiliteImpl::skip_port
 
 ;;; ============================================================
 
-;;; Input: `a_label` points at string
-;;; Trashes $06..$08
-.proc _DrawLabel
-PARAM_BLOCK dt_params, $6
-textptr .addr
-textlen .byte
-END_PARAM_BLOCK
-        ldy     #0
-        lda     (a_label),y
-        beq     :+
-        sta     dt_params::textlen
-        ldxy    a_label
-        inxy
-        stxy    dt_params::textptr
-        MGTK_CALL MGTK::DrawText, dt_params
-:       rts
-.endproc ; _DrawLabel
-
-;;; Inputs: `a_label` points at string
-;;; Output: A,X = width
-;;; Trashes: $06..$0A
-.proc _MeasureLabel
-PARAM_BLOCK tw_params, $6
-textptr .addr
-textlen .byte
-width   .word
-END_PARAM_BLOCK
-        ldy     #0
-        lda     (a_label),y
-        bne     :+
-        lda     #0
-        tax
-        rts
-:
-        sta     tw_params::textlen
-        ldxy    a_label
-        inxy
-        stxy    tw_params::textptr
-        MGTK_CALL MGTK::TextWidth, tw_params
-        ldax    tw_params::width
-        rts
-.endproc ; _MeasureLabel
-
 ;;; Input: `a_shortcut` points at string
 ;;; Trashes $06..$08
 .proc _DrawShortcut
+        ldax    a_shortcut
+        jmp     _DrawString
+.endproc ; _DrawShortcut
+
+;;; Input: `a_label` points at string
+;;; Trashes $06..$08
+.proc _DrawLabel
+        ldax    a_label
+        FALL_THROUGH_TO _DrawString
+.endproc ; _DrawLabel
+
+;;; Inputs: A,X points at string
+;;; Trashes $06..$08
+.proc _DrawString
 PARAM_BLOCK dt_params, $6
 textptr .addr
 textlen .byte
 END_PARAM_BLOCK
+        stax    dt_params::textptr
         ldy     #0
-        lda     (a_shortcut),y
+        lda     (dt_params::textptr),y
         beq     :+
         sta     dt_params::textlen
-        ldxy    a_shortcut
-        inxy
-        stxy    dt_params::textptr
+        inc16   dt_params::textptr
         MGTK_CALL MGTK::DrawText, dt_params
 :       rts
-.endproc ; _DrawShortcut
+.endproc ; _DrawString
 
 ;;; Inputs: `a_shortcut` points at string
 ;;; Output: A,X = width
 ;;; Trashes: $06..$0A
 .proc _MeasureShortcut
+        ldax    a_shortcut
+        jmp     _MeasureString
+.endproc ; _MeasureShortcut
+
+;;; Inputs: `a_label` points at string
+;;; Output: A,X = width
+;;; Trashes: $06..$0A
+.proc _MeasureLabel
+        ldax    a_label
+        FALL_THROUGH_TO _MeasureString
+.endproc ; _MeasureLabel
+
+;;; Inputs: A,X points at string
+;;; Output: A,X = width
+;;; Trashes: $06..$0A
+.proc _MeasureString
 PARAM_BLOCK tw_params, $6
 textptr .addr
 textlen .byte
 width   .word
 END_PARAM_BLOCK
+        stax    tw_params::textptr
+
         ldy     #0
-        lda     (a_shortcut),y
+        lda     (tw_params::textptr),y
         bne     :+
         lda     #0
         tax
         rts
 :
         sta     tw_params::textlen
-        ldxy    a_shortcut
-        inxy
-        stxy    tw_params::textptr
+        inc16   tw_params::textptr
         MGTK_CALL MGTK::TextWidth, tw_params
         ldax    tw_params::width
         rts
-.endproc ; _MeasureShortcut
+.endproc ; _MeasureString
 
 ;;; ============================================================
 
