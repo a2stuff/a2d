@@ -3605,21 +3605,27 @@ compare_order:  .byte   $80, $00, $80, $00
 ;;; If there was no (usable) selection, pick icon from active window.
 
 fallback:
-        lda     cached_window_entry_count
+        ldy     cached_window_entry_count
         beq     ret
 
-        ;; Default to first icon
+        ;; Default to first (X) / last (Y) icon
         ldx     #0
+        dey
         lda     active_window_id
     IF_ZERO
-        ;; ...except on desktop, since that's trash.
-        inx
+        ;; ...except on desktop, since first is Trash.
+        tay                     ; make last (Y) be Trash (0)
+        inx                     ; and first (X) be 1st volume icon
         cpx     cached_window_entry_count
-        bne     :+
+        bne     :+              ; unless there isn't one
         dex
 :
     END_IF
+        ror     dir             ; C = 1 if right/down
         lda     cached_window_entry_list,x
+        bcs     :+
+        lda     cached_window_entry_list,y
+:
 
 select:
         jmp     SelectIconAndEnsureVisible
