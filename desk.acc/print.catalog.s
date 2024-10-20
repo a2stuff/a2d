@@ -50,6 +50,12 @@
 
         SLOT1   := $C100
 
+        ;; SSC entry point lookup table
+        PInit   = $0D
+        PRead   = $0E
+        PWrite  = $0F
+        PStatus = $10
+
 .scope
         ptr := $06
 
@@ -113,10 +119,19 @@ no_windows:
 continue:
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
 
+        ldy     #PInit
+        jsr     GoCard
+
+        ;; Init IW2 settings
+        ldx     #0
+:       lda     iw2_init,x
+        jsr     COut
+        inx
+        cpx     #kLenIW2Init
+        bne     :-
+
         ;; Recurse and print
-        jsr     PRNum1
         jsr     PrintCatalog
-        jsr     RestoreCOutHook
 
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
@@ -143,7 +158,6 @@ PrintCatalog:
 next:
         ldx     #0
 :       lda     searchPath+1,x
-        ora     #$80
         jsr     COut
         inx
         cpx     searchPath
@@ -161,7 +175,7 @@ next:
         bcc     next
     END_IF
 
-finish: rts
+finish: jmp     CROut
 .endscope
 
 ch:     .byte   0               ; cursor horizontal position
@@ -176,6 +190,10 @@ str_header:
         kColType   = 30         ; Left aligned
         kTypeWidth = 3
         kColBlocks = 41         ; Right aligned
+
+iw2_init:
+        .byte   CHAR_ESCAPE, 'Z', $80, $00 ; disable automatic LF after CR
+        kLenIW2Init = * - iw2_init
 
 ;;; ============================================================
 
@@ -451,7 +469,7 @@ OpenDone:
         jsr     PrintName
 
         ldx     #kColType
-        lda     #' '|$80
+        lda     #' '
 :       jsr     COut
         cpx     ch
         bcs     :-
@@ -468,7 +486,7 @@ OpenDone:
         ;; Print indentation
         ldx     indent
     IF_NOT_ZERO
-        lda     #' '|$80
+        lda     #' '
 :       jsr     COut
         jsr     COut
         dex
@@ -482,7 +500,6 @@ OpenDone:
         tax
         ldy     #1
 :       lda     (entPtr),y
-        ora     #$80
         jsr     COut
         iny
         dex
@@ -523,7 +540,7 @@ OpenDone:
 
         ;; Left-pad it
         ldx     #kColBlocks - kColType - kTypeWidth
-        lda     #' '|$80
+        lda     #' '
 :       jsr     COut
         dex
         cpx     str_from_int
@@ -546,7 +563,7 @@ OpenDone:
 .proc VisitDir
 
         jsr     PrintName
-        lda     #'/'|$80
+        lda     #'/'
         jsr     COut
         jsr     CROut
 
@@ -840,15 +857,17 @@ fail:
 
 ;;; ============================================================
 
-.proc PRNum1
+;;; Inputs: Y = entry point, A = char to output (for `PWrite`)
+.proc GoCard
         ;; Normal banking
         sta     ALTZPOFF
         bit     ROMIN2
 
-        copy16  COUT_HOOK, old_hook
-        copy16  #SLOT1, COUT_HOOK
-        lda     #(CHAR_RETURN | $80)
-        jsr     SLOT1
+        ldx     SLOT1,Y
+        stx     vector+1
+        ldx     #>SLOT1                  ; X = $Cn
+        ldy     #((>SLOT1)<<4)&%11110000 ; Y = $n0
+vector: jsr     SLOT1                    ; self-modified
 
         ;; Back to what DeskTop expects
         sta     ALTZPON
@@ -856,50 +875,38 @@ fail:
         bit     LCBANK1
 
         rts
-.endproc ; PRNum1
+.endproc ; GoCard
 
 .proc CROut
         lda     #0
         sta     ch
 
-        lda     #$8D            ; CR
+        lda     #CHAR_RETURN
+        jsr     COut
+        lda     #CHAR_DOWN
         FALL_THROUGH_TO COut
 .endproc ; CROut
 
 .proc COut
         inc     ch
 
-        ;; Normal banking
-        sta     ALTZPOFF
-        bit     ROMIN2
+        sta     asave
+        stx     xsave
+        sty     ysave
 
-        jsr     COUT
+        ldy     #PWrite
+        jsr     GoCard
 
-        ;; Back to what DeskTop expects
-        sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
+        lda     asave
+        ldx     xsave
+        ldy     ysave
 
         rts
+
+asave:  .byte   0
+xsave:  .byte   0
+ysave:  .byte   0
 .endproc ; COut
-
-.proc RestoreCOutHook
-        ;; Normal banking
-        sta     ALTZPOFF
-        bit     ROMIN2
-
-        copy16  old_hook, COUT_HOOK
-
-        ;; Back to what DeskTop expects
-        sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
-
-        rts
-.endproc ; RestoreCOutHook
-
-old_hook:
-        .word   0
 
 ;;; ============================================================
 
