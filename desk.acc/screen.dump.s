@@ -43,12 +43,6 @@ sig_bytes:
 
         SLOT1   := $C100
 
-        ;; SSC entry point lookup table
-        PInit   = $0D
-        PRead   = $0E
-        PWrite  = $0F
-        PStatus = $10
-
         ;; Check for hardware signature - SSC in Slot 1
 
         ldy     #kSigLen-1
@@ -176,7 +170,7 @@ done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
 
 .proc PrintScreen
         ;; Init printer
-        ldy     #PInit
+        ldy     #SSC::PInit
         jsr     GoCard
 
         jsr     SendSpacing
@@ -246,7 +240,7 @@ vector: jmp     SLOT1                    ; self-modified
         stx     xsave
         sty     ysave
 
-        ldy     #PWrite
+        ldy     #SSC::PWrite
         jsr     GoCard
 
         lda     asave

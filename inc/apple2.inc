@@ -248,6 +248,20 @@ OURCH           := $057B        ; 80 Col horizontal position
 OURCV           := $05FB        ; 80 Col vertical position
 
 ;;; ============================================================
+;;; Super Serial Card
+;;; ============================================================
+
+;;; Pascal 1.1 Entry Points
+;;; Offset from $Cs00 to actual entry point in $CsXX space
+;;; On entry, X=$Cs, Y=$s0
+.enum SSC
+        PInit   = $0D
+        PRead   = $0E
+        PWrite  = $0F
+        PStatus = $10
+.endenum
+
+;;; ============================================================
 ;;; Disk II / IWM I/O locations
 ;;; ============================================================
 

@@ -50,12 +50,6 @@
 
         SLOT1   := $C100
 
-        ;; SSC entry point lookup table
-        PInit   = $0D
-        PRead   = $0E
-        PWrite  = $0F
-        PStatus = $10
-
 .scope
         ptr := $06
 
@@ -119,7 +113,7 @@ no_windows:
 continue:
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
 
-        ldy     #PInit
+        ldy     #SSC::PInit
         jsr     GoCard
 
         ;; Init IW2 settings
@@ -857,7 +851,7 @@ fail:
 
 ;;; ============================================================
 
-;;; Inputs: Y = entry point, A = char to output (for `PWrite`)
+;;; Inputs: Y = entry point, A = char to output (for `SSC::PWrite`)
 .proc GoCard
         ;; Normal banking
         sta     ALTZPOFF
@@ -894,7 +888,7 @@ vector: jsr     SLOT1                    ; self-modified
         stx     xsave
         sty     ysave
 
-        ldy     #PWrite
+        ldy     #SSC::PWrite
         jsr     GoCard
 
         lda     asave
