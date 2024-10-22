@@ -1,5 +1,6 @@
 .define res_string_status_loading_desktop "Startar Apple II DeskTop..."
 .define res_string_menu_bar_item_file "Arkiv"
+.define res_string_menu_bar_item_edit "Redigera"
 .define res_string_menu_bar_item_view "Inneh}ll"
 .define res_string_menu_bar_item_special "Speciell"
 .define res_string_menu_bar_item_startup "Start"
@@ -18,6 +19,13 @@
 .define res_char_menu_item_eject_shortcut 'E'
 .define res_string_menu_item_quit "Avsluta"
 .define res_char_menu_item_quit_shortcut 'Q'
+.define res_string_menu_item_cut "Klipp ut"
+.define res_char_menu_item_cut_shortcut 'X'
+.define res_string_menu_item_copy "Kopiera"
+.define res_char_menu_item_copy_shortcut 'C'
+.define res_string_menu_item_paste "Klistra in"
+.define res_char_menu_item_paste_shortcut 'V'
+.define res_string_menu_item_clear "Rensa"
 .define res_string_menu_item_by_icon "Som symboler"
 .define res_string_menu_item_by_small_icon "Som sm} symboler"
 .define res_string_menu_item_by_name "vid Namn"

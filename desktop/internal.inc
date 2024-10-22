@@ -192,19 +192,23 @@ SELECTOR_FILE_BUF := $0C00
 ;;; ============================================================
 ;;; Menu Constants
 
+kMenuNumItems = 7
+
 kMenuIdApple    = 1
 kMenuIdFile     = 2
-kMenuIdView     = 3
-kMenuIdSpecial  = 4
-kMenuIdStartup  = 5
-kMenuIdSelector = 6
+kMenuIdEdit     = 3
+kMenuIdView     = 4
+kMenuIdSpecial  = 5
+kMenuIdStartup  = 6
+kMenuIdSelector = 7
 
 kAppleMenuFixedItems = 3
 
 kSelectorMenuFixedItems = 5
 
 kMenuSizeApple    = kMaxDeskAccCount + kAppleMenuFixedItems
-kMenuSizeFile     = 14
+kMenuSizeFile     = 13
+kMenuSizeEdit     = 6
 kMenuSizeView     = 6
 kMenuSizeSpecial  = 9
 kMenuSizeStartup  = 7

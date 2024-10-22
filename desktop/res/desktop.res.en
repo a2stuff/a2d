@@ -1,5 +1,6 @@
 .define res_string_status_loading_desktop "Starting Apple II DeskTop..."
 .define res_string_menu_bar_item_file "File"
+.define res_string_menu_bar_item_edit "Edit"
 .define res_string_menu_bar_item_view "View"
 .define res_string_menu_bar_item_special "Special"
 .define res_string_menu_bar_item_startup "Startup"
@@ -18,6 +19,13 @@
 .define res_char_menu_item_eject_shortcut 'E'
 .define res_string_menu_item_quit "Quit"
 .define res_char_menu_item_quit_shortcut 'Q'
+.define res_string_menu_item_cut "Cut"
+.define res_char_menu_item_cut_shortcut 'X'
+.define res_string_menu_item_copy "Copy"
+.define res_char_menu_item_copy_shortcut 'C'
+.define res_string_menu_item_paste "Paste"
+.define res_char_menu_item_paste_shortcut 'V'
+.define res_string_menu_item_clear "Clear"
 .define res_string_menu_item_by_icon "as Icons"
 .define res_string_menu_item_by_small_icon "as Small Icons"
 .define res_string_menu_item_by_name "by Name"

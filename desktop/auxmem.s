@@ -62,6 +62,8 @@ label_apple:
         PASCAL_STRING kGlyphSolidApple
 label_file:
         PASCAL_STRING res_string_menu_bar_item_file    ; menu bar item
+label_edit:
+        PASCAL_STRING res_string_menu_bar_item_edit    ; menu bar item
 label_view:
         PASCAL_STRING res_string_menu_bar_item_view    ; menu bar item
 label_special:
@@ -79,14 +81,23 @@ label_close:
         PASCAL_STRING res_string_menu_item_close ; menu item
 label_close_all:
         PASCAL_STRING res_string_menu_item_close_all ; menu item
-label_select_all:
-        PASCAL_STRING res_string_menu_item_select_all ; menu item
 label_delete_selection:
         PASCAL_STRING res_string_menu_item_delete_selection ; menu item
 label_eject:
         PASCAL_STRING res_string_menu_item_eject ; menu item
 label_quit:
         PASCAL_STRING res_string_menu_item_quit ; menu item
+
+label_cut:
+        PASCAL_STRING res_string_menu_item_cut ; menu item
+label_copy:
+        PASCAL_STRING res_string_menu_item_copy ; menu item
+label_paste:
+        PASCAL_STRING res_string_menu_item_paste ; menu item
+label_clear:
+        PASCAL_STRING res_string_menu_item_clear ; menu item
+label_select_all:
+        PASCAL_STRING res_string_menu_item_select_all ; menu item
 
 label_by_icon:
         PASCAL_STRING res_string_menu_item_by_icon ; menu item
@@ -121,14 +132,15 @@ label_make_link:
         PASCAL_STRING res_string_menu_item_make_link
 
 desktop_menu:
-        DEFINE_MENU_BAR 6
+        DEFINE_MENU_BAR kMenuNumItems
 @items: DEFINE_MENU_BAR_ITEM kMenuIdApple, label_apple, apple_menu
         DEFINE_MENU_BAR_ITEM kMenuIdFile, label_file, file_menu
+        DEFINE_MENU_BAR_ITEM kMenuIdEdit, label_edit, edit_menu
         DEFINE_MENU_BAR_ITEM kMenuIdView, label_view, view_menu
         DEFINE_MENU_BAR_ITEM kMenuIdSpecial, label_special, special_menu
         DEFINE_MENU_BAR_ITEM kMenuIdStartup, label_startup, startup_menu
         DEFINE_MENU_BAR_ITEM kMenuIdSelector, label_selector, selector_menu
-        ASSERT_RECORD_TABLE_SIZE @items, 6, .sizeof(MGTK::MenuBarItem)
+        ASSERT_RECORD_TABLE_SIZE @items, ::kMenuNumItems, .sizeof(MGTK::MenuBarItem)
 
 file_menu:
         DEFINE_MENU kMenuSizeFile
@@ -136,7 +148,6 @@ file_menu:
         DEFINE_MENU_ITEM label_open, res_char_menu_item_open_shortcut
         DEFINE_MENU_ITEM label_close, res_char_shortcut_close
         DEFINE_MENU_ITEM label_close_all
-        DEFINE_MENU_ITEM label_select_all, res_char_menu_item_select_all_shortcut
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_get_info, res_char_menu_item_get_info_shortcut
         DEFINE_MENU_ITEM_NOMOD label_rename_icon, CHAR_RETURN, CHAR_RETURN
@@ -152,16 +163,32 @@ file_menu:
         kMenuItemIdOpen        = 2
         kMenuItemIdClose       = 3
         kMenuItemIdCloseAll    = 4
-        kMenuItemIdSelectAll   = 5
         ;; --------------------
-        kMenuItemIdGetInfo     = 7
-        kMenuItemIdRenameIcon  = 8
-        kMenuItemIdDuplicate   = 9
+        kMenuItemIdGetInfo     = 6
+        kMenuItemIdRenameIcon  = 7
+        kMenuItemIdDuplicate   = 8
         ;; --------------------
-        kMenuItemIdCopyFile    = 11
-        kMenuItemIdDeleteFile  = 12
+        kMenuItemIdCopyFile    = 10
+        kMenuItemIdDeleteFile  = 11
         ;; --------------------
-        kMenuItemIdQuit        = 14
+        kMenuItemIdQuit        = 13
+
+edit_menu:
+        DEFINE_MENU kMenuSizeEdit
+@items: DEFINE_MENU_ITEM label_cut, res_char_menu_item_cut_shortcut
+        DEFINE_MENU_ITEM label_copy, res_char_menu_item_copy_shortcut
+        DEFINE_MENU_ITEM label_paste, res_char_menu_item_paste_shortcut
+        DEFINE_MENU_ITEM label_clear
+        DEFINE_MENU_SEPARATOR
+        DEFINE_MENU_ITEM label_select_all, res_char_menu_item_select_all_shortcut
+        ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeEdit, .sizeof(MGTK::MenuItem)
+
+        kMenuItemIdCut       = 1
+        kMenuItemIdCopy      = 2
+        kMenuItemIdPaste     = 3
+        kMenuItemIdClear     = 4
+        ;; --------------------
+        kMenuItemIdSelectAll = 6
 
 view_menu:
         DEFINE_MENU kMenuSizeView

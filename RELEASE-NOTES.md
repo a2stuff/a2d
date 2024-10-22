@@ -29,6 +29,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Arrow keys now move icon selection in appropriate direction. ([#300](https://github.com/a2stuff/a2d/issues/300))
 * More consistently refresh (or don't refresh) window contents after canceled or failed operations.
 * Special > Make Alias now creates link file in same directory as original.
+* Add Edit menu with Cut/Copy/Paste/Clear, relocate Select All.
 
 ### Selector
 

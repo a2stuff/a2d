@@ -256,7 +256,6 @@ dispatch_table:
         .addr   CmdOpen
         .addr   CmdClose
         .addr   CmdCloseAll
-        .addr   CmdSelectAll
         .addr   CmdNoOp         ; --------
         .addr   CmdGetInfo
         .addr   CmdRename
@@ -268,18 +267,28 @@ dispatch_table:
         .addr   CmdQuit
         ASSERT_ADDRESS_TABLE_SIZE menu2_start, ::kMenuSizeFile
 
-        ;; View menu (3)
+        ;; Edit menu (3)
         menu3_start := *
-        .addr   CmdViewBy
-        .addr   CmdViewBy
-        .addr   CmdViewBy
-        .addr   CmdViewBy
-        .addr   CmdViewBy
-        .addr   CmdViewBy
-        ASSERT_ADDRESS_TABLE_SIZE menu3_start, ::kMenuSizeView
+        .addr   CmdCut
+        .addr   CmdCopy
+        .addr   CmdPaste
+        .addr   CmdClear
+        .addr   CmdNoOp         ; --------
+        .addr   CmdSelectAll
+        ASSERT_ADDRESS_TABLE_SIZE menu3_start, ::kMenuSizeEdit
 
-        ;; Special menu (4)
+        ;; View menu (4)
         menu4_start := *
+        .addr   CmdViewBy
+        .addr   CmdViewBy
+        .addr   CmdViewBy
+        .addr   CmdViewBy
+        .addr   CmdViewBy
+        .addr   CmdViewBy
+        ASSERT_ADDRESS_TABLE_SIZE menu4_start, ::kMenuSizeView
+
+        ;; Special menu (5)
+        menu5_start := *
         .addr   CmdCheckDrives
         .addr   CmdCheckDrive
         .addr   CmdEject
@@ -289,21 +298,21 @@ dispatch_table:
         .addr   CmdDiskCopy
         .addr   CmdNoOp         ; --------
         .addr   CmdMakeLink
-        ASSERT_ADDRESS_TABLE_SIZE menu4_start, ::kMenuSizeSpecial
+        ASSERT_ADDRESS_TABLE_SIZE menu5_start, ::kMenuSizeSpecial
 
-        ;; Startup menu (5)
-        menu5_start := *
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        .addr   CmdStartupItem
-        ASSERT_ADDRESS_TABLE_SIZE menu5_start, ::kMenuSizeStartup
-
-        ;; Selector menu (6)
+        ;; Startup menu (6)
         menu6_start := *
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        .addr   CmdStartupItem
+        ASSERT_ADDRESS_TABLE_SIZE menu6_start, ::kMenuSizeStartup
+
+        ;; Selector menu (7)
+        menu7_start := *
         .addr   CmdSelectorAction
         .addr   CmdSelectorAction
         .addr   CmdSelectorAction
@@ -317,7 +326,7 @@ dispatch_table:
         .addr   CmdSelectorItem
         .addr   CmdSelectorItem
         .addr   CmdSelectorItem
-        ASSERT_ADDRESS_TABLE_SIZE menu6_start, ::kMenuSizeSelector
+        ASSERT_ADDRESS_TABLE_SIZE menu7_start, ::kMenuSizeSelector
 
         menu_end := *
 
@@ -329,7 +338,9 @@ offset_table:
         .byte   menu4_start - dispatch_table
         .byte   menu5_start - dispatch_table
         .byte   menu6_start - dispatch_table
+        .byte   menu7_start - dispatch_table
         .byte   menu_end - dispatch_table
+        ASSERT_TABLE_SIZE offset_table, ::kMenuNumItems+1
 
         ;; Set if there are open windows
 window_open_flag:   .byte   $00
@@ -403,7 +414,7 @@ modifiers:
         jeq     CmdResize
         cmp     #kShortcutMoveWindow  ; Apple-M (Move)
         jeq     CmdMove
-        cmp     #kShortcutScrollWindow ; Apple-X (Scroll)
+        cmp     #kShortcutScrollWindow ; Apple-S (Scroll)
         jeq     CmdScroll
         cmp     #'`'            ; Apple-` (Cycle Windows)
         beq     cycle
@@ -3256,6 +3267,36 @@ ret:    rts
 
 ;;; ============================================================
 
+;;; Assert: Single icon selected, and it's not Trash
+
+.proc CmdCopy
+        lda     selected_icon_list
+        jsr     GetIconName
+        stax    $06
+        param_jump CopyPtr1ToBuf, clipboard
+.endproc ; CmdCopy
+
+.proc CmdPaste
+        ;; MacOS 6 behavior - no-op if clipboard is empty
+        lda     clipboard
+        RTS_IF_EQ
+
+        ldax    #clipboard
+        jmp     CmdRenameWithDefaultNameGiven
+.endproc ; CmdPaste
+
+.proc CmdCut
+        jsr     CmdCopy
+        FALL_THROUGH_TO CmdClear
+.endproc ; CmdCut
+
+.proc CmdClear
+        ldax    #str_empty
+        jmp     CmdRenameWithDefaultNameGiven
+.endproc ; CmdClear
+
+;;; ============================================================
+
 .proc TriggerRenameForFileIconWithStashedName
         param_call SelectFileIconByName, stashed_name
         FALL_THROUGH_TO CmdRename
@@ -3265,6 +3306,12 @@ ret:    rts
 
 ;;; Assert: Single icon selected, and it's not Trash
 .proc CmdRename
+        ;; Dialog will use this field (populated in `DoRename`) as default
+        ldax    #old_name_buf
+
+        ;; ... but callers can override and use this entry point instead.
+ep2:
+        stax    rename_dialog_params__a_prev
         jsr     DoRename
         pha                     ; A = result
 
@@ -3296,6 +3343,7 @@ ret:    rts
 :
         rts
 .endproc ; CmdRename
+CmdRenameWithDefaultNameGiven := CmdRename::ep2 ; A,X = name
 
 ;;; ============================================================
 
@@ -6009,6 +6057,19 @@ disable:lda     #MGTK::disableitem_disable
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdRenameIcon
         jsr     DisableMenuItem
+
+        ;; Edit
+        copy    #kMenuIdEdit, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdCut
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdCopy
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdPaste
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdClear
+        jsr     DisableMenuItem
+
+        rts
 .endproc ; ToggleMenuItemsRequiringSingleSelection
 EnableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::enable
 DisableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::disable
@@ -11020,6 +11081,7 @@ a_prev: .addr   old_name_buf
 a_path: .addr   SELF_MODIFIED_BYTE
         DEFINE_RECT rect,0,0,0,0
 .endparams
+rename_dialog_params__a_prev := rename_dialog_params::a_prev
 
 ;;; Assert: Single icon selected, and it's not Trash.
 .proc DoRenameImpl
@@ -15712,6 +15774,9 @@ datetime_for_conversion := list_view_filerecord + FileRecord::modification_date
 
 ;;; ============================================================
 
+;;; Holds a single filename
+clipboard:
+        .res    16, 0
 
 path_buf4:
         .res    ::kPathBufferSize, 0

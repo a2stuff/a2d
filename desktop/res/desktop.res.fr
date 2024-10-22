@@ -1,5 +1,6 @@
 .define res_string_status_loading_desktop "D{marrage d'Apple II DeskTop..."
 .define res_string_menu_bar_item_file "Fichier"
+.define res_string_menu_bar_item_edit "Edition"
 .define res_string_menu_bar_item_view "Pr{sentation"
 .define res_string_menu_bar_item_special "Sp{cial"
 .define res_string_menu_bar_item_startup "D{marrer"
@@ -18,6 +19,13 @@
 .define res_char_menu_item_eject_shortcut 'E'
 .define res_string_menu_item_quit "Quitter"
 .define res_char_menu_item_quit_shortcut 'Q'
+.define res_string_menu_item_cut "Couper"
+.define res_char_menu_item_cut_shortcut 'X'
+.define res_string_menu_item_copy "Copier"
+.define res_char_menu_item_copy_shortcut 'C'
+.define res_string_menu_item_paste "Coller"
+.define res_char_menu_item_paste_shortcut 'V'
+.define res_string_menu_item_clear "Effacer"
 .define res_string_menu_item_by_icon "Par icone"
 .define res_string_menu_item_by_small_icon "Par petite icone"
 .define res_string_menu_item_by_name "Par nom"

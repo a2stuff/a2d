@@ -157,8 +157,8 @@
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
 * Launch DeskTop. Select multiple volume icons (at least 4). Drag the bottom icon up so that the top two icons are completely off the screen. Release the mouse button. Drag the icons back down. Verify that while dragging, all icons have outlines, and when done dragging all icons reposition correctly.
-* Launch DeskTop. Open a window with at least 3 rows of icons. Position the window at the top of the screen. File > Select All. Drag an icon from the bottom row so that the top icons end up completely offscreen. Release the mouse button. Drag the icons back down. Verify that all icons reposition correctly.
-* Launch DeskTop. Open a window with multiple icons. Resize the window so some of the icons aren't visible without scrolling. File > Select All. Drag the icons. Verify that drag outlines are shown even for hidden icons.
+* Launch DeskTop. Open a window with at least 3 rows of icons. Position the window at the top of the screen. Edit > Select All. Drag an icon from the bottom row so that the top icons end up completely offscreen. Release the mouse button. Drag the icons back down. Verify that all icons reposition correctly.
+* Launch DeskTop. Open a window with multiple icons. Resize the window so some of the icons aren't visible without scrolling. Edit > Select All. Drag the icons. Verify that drag outlines are shown even for hidden icons.
 
 * Launch DeskTop. Open a window for a volume icon. Open a folder within the window. Select the volume icon. Special > Check Drive. Verify that both windows are closed.
 * Launch DeskTop. Open a window for a volume icon. Special > Check All Drives. Verify that all windows close, and that volume icons are correctly updated.
@@ -278,7 +278,7 @@
 * Launch DeskTop. Open a volume window. Click on the desktop to clear selection. Click in an empty area within the window. Verify that the volume icon is selected.
 * Launch DeskTop. Open a volume window. Select a file icon. Click in an empty area within the window. Verify that the volume icon is selected.
 
-* Launch DeskTop, ensuring no windows are open. File > Select All. Verify that the volume icons are selected.
+* Launch DeskTop, ensuring no windows are open. Edit > Select All. Verify that the volume icons are selected.
 
 * Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Release the mouse button. Verify that the icon is moved.
 * Launch DeskTop. Select a volume icon. Drag it over an empty space on the desktop. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled and the icon does not move.
@@ -350,8 +350,8 @@
   * Launch DeskTop. Open a window with icons. View > by Name. Obscure the window. View > as Icons. Verify that the window contents don't appear on the desktop. Move the window so the contents are visible. Verify that it contains icons.
   * Launch DeskTop. Open a window with icons. Obscure the window. View > by Name. Verify that the window contents don't appear on the desktop. Move the window so the contents are visible. Verify that the contents display as a list.
   * Launch DeskTop. Open a window with at least two icons. Select the first icon. Obscure the window. Press the right arrow key. Verify that the icons don't appear on the desktop.
-  * Launch DeskTop. Open a window with icons. Obscure the window. File > Select All. Verify that the icons don't appear on the desktop.
-  * Launch DeskTop. Open a window with icons. File > Select All. Obscure the window. Click on the desktop to clear selection. Verify that the icons don't appear on the desktop.
+  * Launch DeskTop. Open a window with icons. Obscure the window. Edit > Select All. Verify that the icons don't appear on the desktop.
+  * Launch DeskTop. Open a window with icons. Edit > Select All. Obscure the window. Click on the desktop to clear selection. Verify that the icons don't appear on the desktop.
   * Launch DeskTop. Open a window with folder icons. Open a second window from one of the folders. Verify that the folder icon in the first window is dimmed. Obscure the first window. Close the second window. Verify that the folder icon doesn't appear on the desktop.
   * Launch DeskTop. Open a window with icons. Select (but don't open) a folder. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
   * Launch DeskTop. Open a window with icons. Select (but don't open) a folder containing 127 files. Obscure the window. File > Open. Verify that the folder icon does not appear on the desktop.
@@ -364,7 +364,7 @@
 * Launch DeskTop. Open a window. Try to move the window so that the title bar intersects the menu bar. Verify that the window ends up positioned partially behind the menu bar.
 * Launch DeskTop. Open two windows. Move them both so their title bars are partially behind the menu bar. Apple+Tab between the windows. Verify that the title bars do not mispaint on top of the menu bar.
 
-* Launch DeskTop. Drag a volume icon so that it overlaps the menu bar, but the mouse pointer is below the menu bar. Release the mouse button. Verify that the icon doesn't paint on top of the menu bar. File > Select All. Verify that the icon doesn't repaint on top of the menu bar.
+* Launch DeskTop. Drag a volume icon so that it overlaps the menu bar, but the mouse pointer is below the menu bar. Release the mouse button. Verify that the icon doesn't paint on top of the menu bar. Edit > Select All. Verify that the icon doesn't repaint on top of the menu bar.
 
 * Launch DeskTop. Open a window containing many folders. Select up to 7 folders. File > Open. Verify that as windows continue to open, the originally selected folders don't mispaint on top of them. (This will be easier to observe in emulators with acceleration disabled.)
 

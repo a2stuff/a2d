@@ -15,9 +15,9 @@
 .define res_string_shortcut_apple_4 " (\x1F4)"
 .define res_string_shortcut_apple_5 " (\x1F5)"
 .define res_string_shortcut_apple_6 " (\x1F6)"
-.define res_char_shortcut_resize ' '
-.define res_char_shortcut_move ' '
-.define res_char_shortcut_scroll 'X'
+.define res_char_shortcut_resize 'G'
+.define res_char_shortcut_move 'M'
+.define res_char_shortcut_scroll 'S'
 .define res_char_shortcut_close 'W'
 .define res_string_button_drives "Schijfstations"
 .define res_string_button_open "Open"
