@@ -8,10 +8,18 @@ Same
  File > Open                 File > Open                      File > Open                       OA-O
  File > Close                File > Close                     File > Close Window               OA-W
                              File > Close All                 File > Close All
- File > Duplicate            File > Duplicate...              File > Duplicate                  OA-D
- Edit > Select All           Edit > Select All                File > Select All                 OA-A
  File > Get Info             Special > Icon Info...           File > Get Info                   OA-I
+                                                              File > Rename
+ File > Duplicate            File > Duplicate...              File > Duplicate                  OA-D
+                                                              File > Copy To...
+                                                              File > Delete
  Special > Shut Down         Special > Shut Down              File > Quit                       OA-Q
+
+ Edit > Cut                  Edit > Cut                       Edit > Cut                        OA-X
+ Edit > Copy                 Edit > Copy                      Edit > Copy                       OA-C
+ Edit > Paste                Edit > Paste                     Edit > Paste                      OA-V
+ Edit > Clear                Edit > Clear                     Edit > Clear
+ Edit > Select All           Edit > Select All                File > Select All                 OA-A
 
  View > by Icon              View > by Icon                   View > as Icons
  View > by Small Icon                                         View > as Small Icons
@@ -20,9 +28,12 @@ Same
  View > by Size              View > by Size                   View > by Size
  View > by Kind              View > by Kind                   View > by Type
 
+                                                              Special > Check All Drives
+                                                              Special > Check Drive
  File > Eject                Disk > Eject                     Special > Eject Disk              OA-E
                              Disk > Initialize...             Special > Format Disk...
  Special > Erase Disk        Disk > Erase...                  Special > Erase Disk...
+                                                              Special > Copy Disk...
                              Extras > Make Alias...           Special > Make Alias
 
 IIgs Finder but not DeskTop
@@ -30,7 +41,4 @@ IIgs Finder but not DeskTop
  Apple > Help           OA-?
  File > Put Away        OA-Y
  Edit > Undo            OA-Z
- Edit > Cut             OA-X
- Edit > Copy            OA-C
- Edit > Paste           OA-V
  Special > Empty Trash  OA-T
