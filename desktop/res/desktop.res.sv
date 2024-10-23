@@ -9,7 +9,7 @@
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "\\ppna"
 .define res_char_menu_item_open_shortcut 'O'
-.define res_string_menu_item_close "St{ng f|nster"
+.define res_string_menu_item_close "St{ng"
 .define res_string_menu_item_close_all "St{ng alla"
 .define res_string_menu_item_select_all "Markera allt"
 .define res_char_menu_item_select_all_shortcut 'A'

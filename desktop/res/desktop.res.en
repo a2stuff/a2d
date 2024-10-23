@@ -9,7 +9,7 @@
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "Open"
 .define res_char_menu_item_open_shortcut 'O'
-.define res_string_menu_item_close "Close Window"
+.define res_string_menu_item_close "Close"
 .define res_string_menu_item_close_all "Close All"
 .define res_string_menu_item_select_all "Select All"
 .define res_char_menu_item_select_all_shortcut 'A'

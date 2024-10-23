@@ -9,7 +9,7 @@
 .define res_char_menu_item_new_folder_shortcut 'N'
 .define res_string_menu_item_open "]bn"
 .define res_char_menu_item_open_shortcut 'O'
-.define res_string_menu_item_close "Luk vindue"
+.define res_string_menu_item_close "Luk"
 .define res_string_menu_item_close_all "Luk alt"
 .define res_string_menu_item_select_all "V{lg alt"
 .define res_char_menu_item_select_all_shortcut 'A'

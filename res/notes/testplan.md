@@ -152,8 +152,8 @@
   * File > Duplicate and Special > Make Alias are disabled.
   * File > Rename is disabled.
   * File > Open and File > Get Info are enabled.
-* Launch DeskTop. Close all windows. Verify that File > New Folder, File > Close Window, File > Close All, and everything in the View menu are disabled.
-* Launch DeskTop. Open a window. Verify that File > New Folder, File > Close Window, File > Close All, and everything in the View menu are enabled.
+* Launch DeskTop. Close all windows. Verify that File > New Folder, File > Close, File > Close All, and everything in the View menu are disabled.
+* Launch DeskTop. Open a window. Verify that File > New Folder, File > Close, File > Close All, and everything in the View menu are enabled.
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
 * Launch DeskTop. Select multiple volume icons (at least 4). Drag the bottom icon up so that the top two icons are completely off the screen. Release the mouse button. Drag the icons back down. Verify that while dragging, all icons have outlines, and when done dragging all icons reposition correctly.
@@ -451,8 +451,8 @@
 * Repeat the following case with these modifiers: Open-Apple, Solid-Apple:
   * Open two windows. Hold modifier and click the close box on the active window. Verify that all windows close.
 * Open two windows. Press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
-* Open two windows. Hold Solid-Apple and select File > Close Window. Verify that all windows close.
-* Open two windows. Hold Open-Apple and select File > Close Window. Verify that all windows close.
+* Open two windows. Hold Solid-Apple and select File > Close. Verify that all windows close.
+* Open two windows. Hold Open-Apple and select File > Close. Verify that all windows close.
 * Open two windows. Open the File menu, then press Open-Apple+Solid-Apple+W. Verify that all windows close. Repeat with Caps Lock off.
 
 
