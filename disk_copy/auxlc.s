@@ -113,9 +113,9 @@ menu_facilities:
         kMenuItemIdDiskCopy  = 2
 
 label_file:
-        PASCAL_STRING res_string_dc_menu_bar_item_file    ; menu bar item
+        PASCAL_STRING res_string_dc_menu_bar_item_file
 label_facilities:
-        PASCAL_STRING res_string_menu_bar_item_facilities ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_facilities
 
 label_desktop:
         PASCAL_STRING .sprintf(res_string_version_format_long, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor, kDeskTopVersionSuffix)
@@ -128,13 +128,13 @@ label_copyright3:
         PASCAL_STRING res_string_copyright_line3 ; menu item
 
 label_quit:
-        PASCAL_STRING res_string_dc_menu_item_quit    ; menu item
+        PASCAL_STRING res_string_dc_menu_item_quit
 
 label_quick_copy:
-        PASCAL_STRING res_string_menu_item_quick_copy ; menu item
+        PASCAL_STRING res_string_menu_item_quick_copy
 
 label_disk_copy:
-        PASCAL_STRING res_string_dc_menu_item_disk_copy ; menu item
+        PASCAL_STRING res_string_dc_menu_item_disk_copy
 
 ;;; ============================================================
 
@@ -265,7 +265,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
         DEFINE_LABEL select_source, res_string_prompt_select_source, 270, 46
 str_select_destination:
-        PASCAL_STRING res_string_prompt_select_destination ; dialog label
+        PASCAL_STRING res_string_prompt_select_destination
 
         DEFINE_POINT point_status, kDialogWidth/2, 68
         DEFINE_RECT rect_status, 8, 57, kDialogWidth-8, 68

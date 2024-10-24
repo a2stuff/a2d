@@ -354,7 +354,7 @@ set_bit:
 
 syscap: .byte   0
 
-.endproc
+.endproc ; DetectSystem
 
         .include "../lib/detect_lcmeve.s"
         .include "../lib/detect_megaii.s"

@@ -511,7 +511,7 @@ nextwinfo:      .addr   0
 pencopy:         .byte  MGTK::pencopy
 notpenXOR:       .byte  MGTK::notpenXOR
 
-name:   PASCAL_STRING res_string_window_title  ; window title
+name:   PASCAL_STRING res_string_window_title
 
 scrambled_flag:
         .byte   0

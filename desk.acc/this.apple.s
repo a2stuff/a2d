@@ -99,7 +99,7 @@ nextwinfo:      .addr   0
 .endparams
 
 str_title:
-        PASCAL_STRING res_string_window_title ; dialog title
+        PASCAL_STRING res_string_window_title
 
 notpencopy:     .byte   MGTK::notpencopy
 
@@ -644,11 +644,11 @@ str_prodos_version:
         kVersionStrPatch = res_const_prodos_version_pattern_offset3
 
 str_slot_n:
-        PASCAL_STRING res_string_slot_n_pattern ; dialog label
+        PASCAL_STRING res_string_slot_n_pattern
         kStrSlotNOffset = res_const_slot_n_pattern_offset1
 
 str_memory_prefix:
-        PASCAL_STRING res_string_memory_prefix ; dialog label
+        PASCAL_STRING res_string_memory_prefix
 
 str_memory_kb_suffix:
         PASCAL_STRING res_string_memory_kb_suffix ; memory size suffix for kilobytes

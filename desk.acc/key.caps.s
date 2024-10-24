@@ -69,7 +69,7 @@ nextwinfo:      .addr   0
 .endparams
 
 str_title:
-        PASCAL_STRING res_string_window_title ; window title
+        PASCAL_STRING res_string_window_title
 
 background_pattern:
         .byte   %11011101

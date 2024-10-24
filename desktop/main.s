@@ -5220,7 +5220,7 @@ check_double_click:
         jeq     HandleVolumeIconDrag
 
         FALL_THROUGH_TO HandleFileIconDrag
-.endproc
+.endproc ; HandleIconClick
 
 ;;; ============================================================
 ;;; Inputs: A = `IconTK::DragHighlighted` return value, and
@@ -6197,7 +6197,7 @@ same_or_desktop:
 
         ;; Icons moved on desktop - update and redraw
         jmp     RedrawSelectedIcons
-.endproc ; HandleVolumeIconClick
+.endproc ; HandleVolumeIconDrag
 
 ;;; ============================================================
 
@@ -14905,7 +14905,7 @@ done:   rts
 
         MGTK_CALL MGTK::OpenWindow, winfo_rename_dialog
         rts
-.endproc ; OpenDialogWindow
+.endproc ; OpenRenameWindow
 
 ;;; ============================================================
 

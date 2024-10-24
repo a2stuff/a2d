@@ -506,7 +506,7 @@ kRadioButtonLeft  = 332
 ;;; ============================================================
 
 label_copy_selection:
-        PASCAL_STRING res_string_menu_item_copy_selection ; menu item / dialog title
+        PASCAL_STRING res_string_menu_item_copy_selection
 
 ;;; ============================================================
 
@@ -752,13 +752,13 @@ device_name_table:
 
 ;;; Startup menu items (populated by slot scan at startup)
 
-startup_menu_item_1:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
-startup_menu_item_2:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
-startup_menu_item_3:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
-startup_menu_item_4:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
-startup_menu_item_5:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
-startup_menu_item_6:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
-startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern ; menu item
+startup_menu_item_1:    PASCAL_STRING res_string_menu_item_slot_pattern
+startup_menu_item_2:    PASCAL_STRING res_string_menu_item_slot_pattern
+startup_menu_item_3:    PASCAL_STRING res_string_menu_item_slot_pattern
+startup_menu_item_4:    PASCAL_STRING res_string_menu_item_slot_pattern
+startup_menu_item_5:    PASCAL_STRING res_string_menu_item_slot_pattern
+startup_menu_item_6:    PASCAL_STRING res_string_menu_item_slot_pattern
+startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern
         kStartupMenuItemSlotOffset = res_const_menu_item_slot_pattern_offset1
 
 ;;; ============================================================
@@ -787,13 +787,13 @@ selector_menu:
         .assert kMenuItemIdSelectorRun = SelectorAction::run, error, "enum mismatch"
 
 label_add:
-        PASCAL_STRING res_string_menu_item_add_entry ; menu item / dialog title
+        PASCAL_STRING res_string_menu_item_add_entry ; also dialog title
 label_edit:
-        PASCAL_STRING res_string_menu_item_edit_entry ; menu item / dialog title
+        PASCAL_STRING res_string_menu_item_edit_entry ; also dialog title
 label_del:
-        PASCAL_STRING res_string_menu_item_delete_entry ; menu item / dialog title
+        PASCAL_STRING res_string_menu_item_delete_entry ; also dialog title
 label_run:
-        PASCAL_STRING res_string_menu_item_run_entry ; menu item / dialog title
+        PASCAL_STRING res_string_menu_item_run_entry ; also dialog title
 
 kDAMenuItemSize = 19            ; length (1) + filename (15) + folder glyphs prefix (3)
 
@@ -810,7 +810,7 @@ apple_menu:
         ASSERT_RECORD_TABLE_SIZE @items, kMenuSizeApple, .sizeof(MGTK::MenuItem)
 
 label_about:
-        PASCAL_STRING res_string_menu_item_about ; menu item
+        PASCAL_STRING res_string_menu_item_about
 label_about_this_apply:
         PASCAL_STRING res_string_menu_item_about_this_apple
 

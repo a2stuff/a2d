@@ -1609,7 +1609,7 @@ str_a2hr_suffix:
 
 .proc LZ4FH
         .include "../lib/lz4fh6502.s"
-.endproc
+.endproc ; LZ4FH
 LZ4FH__in_src := LZ4FH::in_src
 LZ4FH__in_dst := LZ4FH::in_dst
 

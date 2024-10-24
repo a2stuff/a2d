@@ -61,73 +61,73 @@
 label_apple:
         PASCAL_STRING kGlyphSolidApple
 label_file:
-        PASCAL_STRING res_string_menu_bar_item_file    ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_file
 label_edit:
-        PASCAL_STRING res_string_menu_bar_item_edit    ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_edit
 label_view:
-        PASCAL_STRING res_string_menu_bar_item_view    ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_view
 label_special:
-        PASCAL_STRING res_string_menu_bar_item_special ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_special
 label_startup:
-        PASCAL_STRING res_string_menu_bar_item_startup ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_startup
 label_selector:
-        PASCAL_STRING res_string_menu_bar_item_selector ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_selector
 
 label_new_folder:
-        PASCAL_STRING res_string_menu_item_new_folder ; menu item
+        PASCAL_STRING res_string_menu_item_new_folder
 label_open:
-        PASCAL_STRING res_string_menu_item_open ; menu item
+        PASCAL_STRING res_string_menu_item_open
 label_close:
-        PASCAL_STRING res_string_menu_item_close ; menu item
+        PASCAL_STRING res_string_menu_item_close
 label_close_all:
-        PASCAL_STRING res_string_menu_item_close_all ; menu item
+        PASCAL_STRING res_string_menu_item_close_all
 label_delete_selection:
-        PASCAL_STRING res_string_menu_item_delete_selection ; menu item
+        PASCAL_STRING res_string_menu_item_delete_selection
 label_eject:
-        PASCAL_STRING res_string_menu_item_eject ; menu item
+        PASCAL_STRING res_string_menu_item_eject
 label_quit:
-        PASCAL_STRING res_string_menu_item_quit ; menu item
+        PASCAL_STRING res_string_menu_item_quit
 
 label_cut:
-        PASCAL_STRING res_string_menu_item_cut ; menu item
+        PASCAL_STRING res_string_menu_item_cut
 label_copy:
-        PASCAL_STRING res_string_menu_item_copy ; menu item
+        PASCAL_STRING res_string_menu_item_copy
 label_paste:
-        PASCAL_STRING res_string_menu_item_paste ; menu item
+        PASCAL_STRING res_string_menu_item_paste
 label_clear:
-        PASCAL_STRING res_string_menu_item_clear ; menu item
+        PASCAL_STRING res_string_menu_item_clear
 label_select_all:
-        PASCAL_STRING res_string_menu_item_select_all ; menu item
+        PASCAL_STRING res_string_menu_item_select_all
 
 label_by_icon:
-        PASCAL_STRING res_string_menu_item_by_icon ; menu item
+        PASCAL_STRING res_string_menu_item_by_icon
 label_by_small_icon:
-        PASCAL_STRING res_string_menu_item_by_small_icon ; menu item
+        PASCAL_STRING res_string_menu_item_by_small_icon
 label_by_name:
-        PASCAL_STRING res_string_menu_item_by_name ; menu item
+        PASCAL_STRING res_string_menu_item_by_name
 label_by_date:
-        PASCAL_STRING res_string_menu_item_by_date ; menu item
+        PASCAL_STRING res_string_menu_item_by_date
 label_by_size:
-        PASCAL_STRING res_string_menu_item_by_size ; menu item
+        PASCAL_STRING res_string_menu_item_by_size
 label_by_type:
-        PASCAL_STRING res_string_menu_item_by_type ; menu item
+        PASCAL_STRING res_string_menu_item_by_type
 
 label_check_all_drives:
-        PASCAL_STRING res_string_menu_item_check_all_drives ; menu item
+        PASCAL_STRING res_string_menu_item_check_all_drives
 label_check_drive:
-        PASCAL_STRING res_string_menu_item_check_drive ; menu item
+        PASCAL_STRING res_string_menu_item_check_drive
 label_format_disk:
-        PASCAL_STRING res_string_menu_item_format_disk ; menu item
+        PASCAL_STRING res_string_menu_item_format_disk
 label_erase_disk:
-        PASCAL_STRING res_string_menu_item_erase_disk ; menu item
+        PASCAL_STRING res_string_menu_item_erase_disk
 label_disk_copy:
-        PASCAL_STRING res_string_menu_item_disk_copy ; menu item
+        PASCAL_STRING res_string_menu_item_disk_copy
 label_get_info:
-        PASCAL_STRING res_string_menu_item_get_info ; menu item
+        PASCAL_STRING res_string_menu_item_get_info
 label_rename_icon:
-        PASCAL_STRING res_string_menu_item_rename_icon ; menu item
+        PASCAL_STRING res_string_menu_item_rename_icon
 label_duplicate_icon:
-        PASCAL_STRING res_string_menu_item_duplicate ; menu item
+        PASCAL_STRING res_string_menu_item_duplicate
 label_make_link:
         PASCAL_STRING res_string_menu_item_make_link
 

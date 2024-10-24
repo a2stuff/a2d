@@ -94,9 +94,9 @@ str_apple:
         PASCAL_STRING kGlyphSolidApple
 
 str_file:
-        PASCAL_STRING res_string_menu_bar_item_file    ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_file
 str_startup:
-        PASCAL_STRING res_string_menu_bar_item_startup ; menu bar item
+        PASCAL_STRING res_string_menu_bar_item_startup
 
 str_a2desktop:
         PASCAL_STRING .sprintf(res_string_version_format_long, kDeskTopProductName, ::kDeskTopVersionMajor, ::kDeskTopVersionMinor, kDeskTopVersionSuffix)
@@ -109,23 +109,23 @@ str_copyright3:
         PASCAL_STRING res_string_copyright_line3 ; menu item
 
 str_run_a_program:
-        PASCAL_STRING res_string_menu_item_run_a_program ; menu item
+        PASCAL_STRING res_string_menu_item_run_a_program
 
 
 str_slot_x1:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern
 str_slot_x2:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern
 str_slot_x3:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern
 str_slot_x4:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern
 str_slot_x5:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern
 str_slot_x6:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern
 str_slot_x7:
-        PASCAL_STRING res_string_menu_item_slot_pattern  ; menu item
+        PASCAL_STRING res_string_menu_item_slot_pattern
         kStrSlotXOffset = res_const_menu_item_slot_pattern_offset1
 
 
