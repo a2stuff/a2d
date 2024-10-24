@@ -3,3 +3,4 @@
 .define res_string_label_selector "Mostrar Atajos al inicio"
 .define res_string_label_shortcuts "Mostrar atajos en los di\x10logos"
 .define res_string_label_case "Conservar may\x14sculas y min\x14sculas en los nombres"
+.define res_string_label_invisible "Mostrar archivos invisibles"

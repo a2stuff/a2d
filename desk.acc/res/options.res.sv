@@ -3,3 +3,4 @@
 .define res_string_label_selector "Visa Genv{gar vid start"
 .define res_string_label_shortcuts "Visa kortkommandon i dialogrutor"
 .define res_string_label_case "Bevara versaler och gemener i namn"
+.define res_string_label_invisible "Visa osynliga filer"

@@ -7084,10 +7084,15 @@ L71F7:  ldx     #$00
         beq     next            ; inactive entry
         sta     record,x
 
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
+        and     #DeskTopSettings::kOptionsShowInvisible
+    IF_ZERO
         ldy     #FileEntry::access
         lda     (entry_ptr),y
         and     #ACCESS_I
         bne     do_entry
+    END_IF
 
         inc     record_count
 

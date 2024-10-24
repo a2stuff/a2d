@@ -3,3 +3,4 @@
 .define res_string_label_selector "Afficher Raccourcis au d{marrage"
 .define res_string_label_shortcuts "Afficher les raccourcis clavier dans les boites de dialogue"
 .define res_string_label_case "Conserver les majuscules et les minuscules dans les noms"
+.define res_string_label_invisible "Afficher les fichiers invisibles"

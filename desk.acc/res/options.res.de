@@ -3,3 +3,4 @@
 .define res_string_label_selector "Kurzbefehle beim Start anzeigen"
 .define res_string_label_shortcuts "Tastaturk}rzel in Dialogen anzeigen"
 .define res_string_label_case "Behalten Sie Gro~- und Kleinschreibung in Namen bei"
+.define res_string_label_invisible "Unsichtbare Dateien anzeigen"

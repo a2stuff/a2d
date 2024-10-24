@@ -42,6 +42,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Detect Pravetz 8A/C
 * Screen Dump: Improve use of SSC and IW2.
 * Print Catalog: Improve use of SSC and IW2.
+* Options: Add option to show invisible files.
 
 ## 1.4
 

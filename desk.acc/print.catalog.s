@@ -454,11 +454,16 @@ OpenDone:
 ;;;******************************************************
 ;;;
 .proc VisitFile
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
+        and     #DeskTopSettings::kOptionsShowInvisible
+    IF_ZERO
         ;; Is the file visible?
         ldy     #FileEntry::access
         lda     (entPtr),y
         and     #ACCESS_I
         RTS_IF_NOT_ZERO
+    END_IF
 
         jsr     PrintName
 

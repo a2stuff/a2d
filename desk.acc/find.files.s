@@ -993,11 +993,16 @@ OpenDone:
 ;;;******************************************************
 ;;;
 .proc VisitFile
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
+        and     #DeskTopSettings::kOptionsShowInvisible
+    IF_ZERO
         ;; Is the file visible?
         ldy     #FileEntry::access
         lda     (entPtr),y
         and     #ACCESS_I
         bne     exit
+    END_IF
 
         ;; Does the file match the search pattern?
         lda     pattern         ; Skip if pattern is empty
@@ -1437,6 +1442,8 @@ fail:
 .endproc ; NextVolume
 
 ;;; ============================================================
+
+ReadSetting = JUMP_TABLE_READ_SETTING
 
         .include "../lib/uppercase.s"
 
