@@ -77,14 +77,17 @@ self:
         ;; IIgs: Reset shadowing
         sec
         jsr     IDROUTINE
-        bcs     :+
-        lda     SHADOW
-        and     #%10000000      ; bit 7 is reserved
-        sta     SHADOW
-        lda     NEWVIDEO
-        and     #%00011111      ; bits 1-4 are reserved, bit 0 unchanged
-        sta     NEWVIDEO
-:
+    IF_CC
+        .pushcpu
+        .p816
+        .a8
+        lda     #%01111111      ; bit 7 is reserved
+        trb     SHADOW          ; ensure shadowing is enabled
+        lda     #%11100000      ; bits 1-4 are reserved, bit 0 unchanged
+        trb     NEWVIDEO        ; color DHR, etc
+        .popcpu
+    END_IF
+
         ;; --------------------------------------------------
         ;; Display the loading string
 retry:
