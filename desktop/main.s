@@ -11297,8 +11297,7 @@ end_filerecord_and_icon_update:
     END_IF
 
         ;; Update affected window paths, ProDOS prefix
-        jsr     UpdateWindowPaths
-        jsr     UpdatePrefix
+        jsr     NotifyPathChanged
 
         ;; --------------------------------------------------
         ;; Totally done
@@ -11344,29 +11343,69 @@ DoRename        := DoRenameImpl::start
 
 ;;; ============================================================
 ;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
-;;; update any affected window paths.
+;;; update any affected paths.
 ;;;
-;;; Uses `FindWindowsForPrefix`
+;;; * Window paths (so operations within windows still work)
+;;; * ProDOS PREFIX (which points at DeskTop's folder)
+;;; * Original PREFIX (if copied to RAMCard)
+;;; * Restart PREFIX (in the ProDOS Selector code)
+;;;
 ;;; Assert: The path actually changed.
 
-.proc UpdateWindowPaths
-        ;; Update paths for any matching/child windows.
-        param_call FindWindowsForPrefix, src_path_buf
-        lda     found_windows_count
-    IF_NOT_ZERO
+.proc NotifyPathChanged
 
-        dec     found_windows_count
-wloop:  ldx     found_windows_count
-        lda     found_windows_list,x
+        ;; --------------------------------------------------
+        ;; Update any affected window paths
+
+        ldx     #kMaxDeskTopWindows
+wloop:  txa
+        pha
+        ldy     window_to_dir_icon_table-1,x ; X = 1-based id, so -1 to index
+        beq     wnext           ; not in use
         jsr     GetWindowPath
-        jsr     UpdateTargetPath
+        jsr     MaybeUpdateTargetPath
+wnext:  pla
+        tax
+        dex
+        bne     wloop
 
-        dec     found_windows_count
-        bpl     wloop
+        ;; --------------------------------------------------
+        ;; Update prefixes
+
+        path := tmp_path_buf    ; depends on `src_path_buf`, `dst_path_buf`
+
+        ;; ProDOS Prefix
+        MLI_CALL GET_PREFIX, get_set_prefix_params
+        param_call MaybeUpdateTargetPath, path
+    IF_NE
+        MLI_CALL SET_PREFIX, get_set_prefix_params
     END_IF
 
+        ;; Original Prefix
+        jsr     GetCopiedToRAMCardFlag
+    IF_MINUS
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+        param_call MaybeUpdateTargetPath, DESKTOP_ORIG_PREFIX
+        param_call MaybeUpdateTargetPath, RAMCARD_PREFIX
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+    END_IF
+
+        ;; Restart Prefix
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+        param_call MaybeUpdateTargetPath, SELECTOR + QuitRoutine::prefix_buffer_offset
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+
         rts
-.endproc ; UpdateWindowPaths
+
+        DEFINE_GET_PREFIX_PARAMS get_set_prefix_params, path
 
 ;;; ============================================================
 ;;; Replace `src_path_buf` as the prefix of path at $06 with `dst_path_buf`.
@@ -11424,7 +11463,7 @@ assign: ldy     new_path
 ;;; update the target path if needed.
 ;;;
 ;;; Inputs: A,X = pointer to path to update
-;;; Outputs: Z=1 if updated, Z=0 if no change
+;;; Outputs: Z=0 if updated, Z=1 if no change
 ;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
 ;;; Trashes $06, $08
 
@@ -11445,10 +11484,7 @@ assign: ldy     new_path
 
         jsr     MaybeRestoreSlash
         plp                     ; Z=0 if updated
-    IF_NE
-        return  #0
-    END_IF
-        return  #$FF
+        rts
 
 .proc MaybeStripSlash
         ;; Did path end with a '/'? If so, set flag and remove.
@@ -11487,44 +11523,7 @@ assign: ldy     new_path
 
 .endproc ; MaybeUpdateTargetPath
 
-;;; ============================================================
-
-.proc UpdatePrefix
-        path := tmp_path_buf    ; depends on `src_path_buf`, `dst_path_buf`
-
-        ;; ProDOS Prefix
-        MLI_CALL GET_PREFIX, get_set_prefix_params
-        param_call MaybeUpdateTargetPath, path
-    IF_EQ
-        MLI_CALL SET_PREFIX, get_set_prefix_params
-    END_IF
-
-        ;; Original Prefix
-        jsr     GetCopiedToRAMCardFlag
-    IF_MINUS
-        sta     ALTZPOFF
-        bit     LCBANK2
-        bit     LCBANK2
-        param_call MaybeUpdateTargetPath, DESKTOP_ORIG_PREFIX
-        param_call MaybeUpdateTargetPath, RAMCARD_PREFIX
-        sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
-    END_IF
-
-        ;; Restart Prefix
-        sta     ALTZPOFF
-        bit     LCBANK2
-        bit     LCBANK2
-        param_call MaybeUpdateTargetPath, SELECTOR + QuitRoutine::prefix_buffer_offset
-        sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
-
-        rts
-
-        DEFINE_GET_PREFIX_PARAMS get_set_prefix_params, path
-.endproc ; UpdatePrefix
+.endproc ; NotifyPathChanged
 
 ;;; ============================================================
 
@@ -11995,8 +11994,7 @@ dir:
         bit     move_flag       ; same volume relink move?
     IF_VS
         jsr     RelinkFile
-        jsr     UpdateWindowPaths
-        jmp     UpdatePrefix
+        jmp     NotifyPathChanged
     END_IF
 
 copy_dir_contents:
@@ -12005,8 +12003,7 @@ copy_dir_contents:
 
         bit     move_flag
     IF_NS
-        jsr     UpdateWindowPaths
-        jsr     UpdatePrefix
+        jsr     NotifyPathChanged
     END_IF
 
 done:
