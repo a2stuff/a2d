@@ -11999,6 +11999,7 @@ dir:
 
 copy_dir_contents:
         jsr     ProcessDir
+        jsr     GetAndApplySrcInfoToDst ; copy modified date/time
         jsr     MaybeFinishFileMove
 
         bit     move_flag
@@ -12056,6 +12057,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 ;;; If moving, delete src file/directory.
 
 .proc CopyFinishDirectory
+        jsr     GetAndApplySrcInfoToDst ; apply modification date/time
         jsr     RemoveDstPathSegment
         FALL_THROUGH_TO MaybeFinishFileMove
 .endproc ; CopyFinishDirectory
@@ -12544,8 +12546,7 @@ eof:    jsr     CloseDst
         bit     src_dst_exclusive_flag
         bmi     :+
         jsr     CloseSrc
-:       jsr     CopyFileInfo
-        jmp     SetDstFileInfo
+:       jmp     ApplySrcInfoToDst
 
 .proc OpenSrc
 @retry: MLI_CALL OPEN, open_src_params
@@ -13304,10 +13305,17 @@ match:  lda     flag
 
 ;;; ============================================================
 
-.proc CopyFileInfo
+.proc GetAndApplySrcInfoToDst
+        jsr     GetSrcFileInfo
+        FALL_THROUGH_TO ApplySrcInfoToDst
+.endproc  ; GetAndApplySrcInfoToDst
+
+.proc ApplySrcInfoToDst
         COPY_BYTES 11, src_file_info_params::access, dst_file_info_params::access
-        rts
-.endproc ; CopyFileInfo
+        FALL_THROUGH_TO SetDstFileInfo
+.endproc ; ApplySrcInfoToDst
+
+;;; ============================================================
 
 .proc SetDstFileInfo
 :       copy    #7, dst_file_info_params::param_count ; SET_FILE_INFO
