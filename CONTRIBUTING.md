@@ -5,27 +5,13 @@ Contributions welcome! Preliminaries:
 * Please review the [README](README.md).
 * Read and adhere to the [Code of Conduct](CODE_OF_CONDUCT.md).
 * Read the [Coding Style](docs/Coding_Style.md) guide.
+* See [APIs](APIs.md) for an overview of the APIs used.
 
 ## Sub-Projects
 
 ### Desk Accessories
 
 These are pretty easy to write. See the bug tracker (links below) for examples, but anything is welcome. Look at existing DA code for examples, and see the [API](desk.acc/API.md) and [MGTK](mgtk/MGTK.md) docs for more details.
-
-### Disassembly
-
-Pure disassembly changes take place in the `disasm` branch, which builds identically to the original. The `main` branch is based on `disasm`. (NOTE: As time has gone on, much of the disassembly has been done in `main` and should be 'upstreamed', time permitting.)
-
-Disassembly efforts include:
-
-1. DeskTop itself
-   * The core bits of DeskTop
-   * The various overlays
-   * The DiskCopy overlay (basically a stand-alone app)
-1. Selector
-1. DeskTop.system launcher
-
-The bulk of the disassembly is complete, with only some procedures that have not been fully analyzed and commented.
 
 ### Bug Fixes & Enhancements
 
@@ -45,10 +31,10 @@ Issues marked [Good First Bug](https://github.com/a2stuff/a2d/issues?q=is%3Aissu
 
 MouseDesk originally shipped in French, English, German, Italian. The
 project has been structured to allow localization into additional
-languages. Since then, support for Spanish, Portuguese, Swedish and
-Danish have been added. The work involved for most contributions is
-just to add an additional column to a spreadsheet which translations
-for each string.
+languages. Since then, support for Spanish, Portuguese, Swedish,
+Danish and Dutch have been added. The work involved for most
+contributions is just to add an additional column to a spreadsheet
+which contains translations for each string.
 
 [DeskTop Localization Spreadsheet](https://docs.google.com/spreadsheets/d/1NIZQM4ua6ruLJk_P7MfTKN9S5LNwHwYJM_UhvY-ep3A/edit?usp=sharing)
 
@@ -56,14 +42,33 @@ If you want to contribute a localization, please contact a project
 maintainer.
 
 
-## DeskTop Disassembly Burn-Down
+## Disassembly
+
+> NOTE: This section is historical. The bulk of the disassembly is complete, with only some procedures that have not been fully analyzed and commented.
+
+Pure disassembly changes take place in the `disasm` branch, which builds identically to the original. The `main` branch is based on `disasm`.
+
+> NOTE: As time has gone on, much of the remaining disassembly has been done in `main` and the `disasm` branch abandoned.
+
+Disassembly efforts include:
+
+1. DeskTop itself
+   * The core bits of DeskTop
+   * The various overlays
+   * The DiskCopy overlay (basically a stand-alone app)
+1. Selector
+1. DeskTop.system launcher
+
+### DeskTop Disassembly Burn-Down
 
 To feel confident about making additions and fixes to DeskTop, we need to
 make sure we're not breaking things. That can be done in some cases by
 relying on API boundaries, such as between MGTK and the DeskTop application.
 But DeskTop itself is a big, monolithic application with multiple overlays,
 so we need to understand nearly all of it before we can start moving code
-around. (Fortunately, that's mostly behind us now.)
+around.
+
+> NOTE: As noted above, this is no longer a concern.
 
 The `bin/stats.pl` tool provides is a quick and dirty analysis of the
 progress in turning raw da65 output into something we can confidently
@@ -72,14 +77,11 @@ attention:
 
 ```
 
-desktop/auxmem.s               unscoped:  0  scoped: 46  raw:  0
-desktop/main.s                 unscoped:  0  scoped: 28  raw: 12
-desktop/ovl_selector_pick.s    unscoped: 15  scoped:  1  raw:  0
-disk_copy/auxlc.s              unscoped: 66  scoped: 28  raw:  7
-lib/formatdiskii.s             unscoped: 43  scoped: 15  raw:  0
-mgtk/mgtk.s                    unscoped:  0  scoped: 10  raw:  8
-selector/app.s                 unscoped:  1  scoped: 32  raw:  1
-selector/ovl_file_copy.s       unscoped: 42  scoped: 37  raw:  0
+desktop/main.s                 unscoped:  0  scoped:  7  raw: 13
+desktop/ovl_selector_pick.s    unscoped: 12  scoped:  0  raw: 0
+lib/formatdiskii.s             unscoped: 43  scoped: 15  raw: 0
+mgtk/mgtk.s                    unscoped:  0  scoped: 10  raw: 7
+selector/ovl_file_copy.s       unscoped:  0  scoped: 12  raw: 0
 
 ```
 
