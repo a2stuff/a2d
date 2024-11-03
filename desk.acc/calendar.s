@@ -247,6 +247,8 @@ minute: .byte   0
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_down
         jeq     HandleDown
+        cmp     #MGTK::EventKind::apple_key
+        jeq     HandleDown
         cmp     #MGTK::EventKind::key_down
         beq     HandleKey
 
@@ -308,6 +310,13 @@ minute: .byte   0
         jsr     InvertDec
 
         lda     BUTN0
+        and     BUTN1
+    IF_NS
+        sub16_8 datetime + ParsedDateTime::year, #10
+        jmp     check
+    END_IF
+
+        lda     BUTN0
         ora     BUTN1
         bmi     year
 
@@ -316,7 +325,7 @@ minute: .byte   0
 
         copy    #12, datetime + ParsedDateTime::month
 year:   dec16   datetime + ParsedDateTime::year
-        cmp16   datetime + ParsedDateTime::year, #1901
+check:  cmp16   datetime + ParsedDateTime::year, #1901
         bcs     fin
         copy16  #2155, datetime + ParsedDateTime::year
 
@@ -351,6 +360,13 @@ fin:    jsr     UpdateWindow
         jsr     InvertInc
 
         lda     BUTN0
+        and     BUTN1
+    IF_NS
+        add16_8 datetime + ParsedDateTime::year, #10
+        jmp     check
+    END_IF
+
+        lda     BUTN0
         ora     BUTN1
         bmi     year
 
@@ -361,7 +377,7 @@ fin:    jsr     UpdateWindow
 
         copy    #1, datetime + ParsedDateTime::month
 year:   inc16   datetime + ParsedDateTime::year
-        cmp16   datetime + ParsedDateTime::year, #2155
+check:  cmp16   datetime + ParsedDateTime::year, #2155
         bcc     fin
         copy16  #1901, datetime + ParsedDateTime::year
 

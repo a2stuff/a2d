@@ -44,6 +44,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Screen Dump: Improve use of SSC and IW2.
 * Print Catalog: Improve use of SSC and IW2.
 * Options: Add option to show invisible files.
+* Calendar: Allow modifiers when clicking, double-modifiers for decade. ([#693](https://github.com/a2stuff/a2d/issues/693))
 
 ## 1.4
 
