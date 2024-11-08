@@ -24,7 +24,6 @@ Project Page: https://github.com/a2stuff/a2d
 * Ignore non-alpha character typed at start when naming file/volume.
 * Hold either Apple key when selecting File > Close to Close All.
 * Fix Apple+O to not "Open and Close" when menu already showing. ([#796](https://github.com/a2stuff/a2d/issues/796))
-* Allow keyboard selection of icons in all windows.
 * Show tip about copying PRODOS during Format/Erase process.
 * Arrow keys now move icon selection in appropriate direction. ([#300](https://github.com/a2stuff/a2d/issues/300))
 * More consistently refresh (or don't refresh) window contents after canceled or failed operations.
@@ -48,7 +47,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 ## 1.4
 
-An unofficial release with bug fixes and enhancements. July 28, 2024..
+An unofficial release with bug fixes and enhancements. July 28, 2024.
 
 See the release notes at:
 https://github.com/a2stuff/a2d/blob/release-1.4/RELEASE-NOTES.md
