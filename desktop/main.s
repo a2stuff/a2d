@@ -877,6 +877,12 @@ tmp_path_buf:
 ;;; Inputs: Path in `src_path_buf` (a.k.a. `INVOKER_PREFIX`)
 
 .proc LaunchFileWithPath
+        clc
+        bcc     :+              ; always
+sys_disk:
+        sec
+:       ror     sys_prompt_flag
+
         jsr     SetCursorWatch ; before invoking
 
         ;; Assume no interpreter to start
@@ -886,9 +892,18 @@ tmp_path_buf:
         param_call MakePathAbsolute, src_path_buf
 
         ;; Get the file info to determine type.
-        jsr     GetSrcFileInfo
+retry:  jsr     GetSrcFileInfo
         bcc     :+
-        jmp     ShowAlert
+
+        sys_prompt_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jpl     ShowAlert
+
+        lda     #kErrInsertSystemDisk
+        jsr     ShowAlert
+        cmp     #kAlertResultOK
+        beq     retry           ; ok, so try again
+        rts                     ; cancel, so fail
 
         ;; Check file type.
 :       copy    src_file_info_params::file_type, icontype_filetype
@@ -1164,6 +1179,7 @@ check_header:
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
 
 .endproc ; LaunchFileWithPath
+LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
 
 ;;; ============================================================
 
@@ -1670,7 +1686,7 @@ skip:   iny
         stx     path
 
         ;; Allow arbitrary types in menu (e.g. folders)
-        jmp     LaunchFileWithPath
+        jmp     LaunchFileWithPathOnSystemDisk
 .endproc ; CmdDeskaccImpl
 CmdDeskAcc      := CmdDeskaccImpl::start
 

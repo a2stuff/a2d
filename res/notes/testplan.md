@@ -18,7 +18,7 @@
 
 * Open a volume, open a folder, close just the volume window; re-open the volume, re-open the folder, ensure the previous window is activated.
 
-* Run on system with realtime clock; verify that time shows in top-right of menu.
+* Run on system with real-time clock; verify that time shows in top-right of menu.
 
 * Open a window for a volume; open a window for a folder; close volume window; close folder window. Repeat 10 times to verify that the volume table doesn't have leaks.
 
@@ -57,7 +57,7 @@
 
 * Launch DeskTop. Open a volume window with icons. Drag leftmost icon to the left to make horizontal scrollbar activate. Click horizontal scrollbar so viewport shifts left. Verify dragged icon still renders.
 * Launch DeskTop. Open a volume window with icons. Drag leftmost icon to the left to make horizontal scrollbar activate. Click horizontal scrollbar so viewport shifts left. Move window to the right so it overlaps desktop icons. Verify DeskTop doesn't lock up.
-* Launch DeskTop. Open a volume window with icons. Resize the window so that the horizontal scrollbar is active. Move the window so the left edge of the scrollbar thumb is offscreen to the left. Click on the right arrow, and verify that the window scrolls correctly. Repeat for the page right region.
+* Launch DeskTop. Open a volume window with icons. Resize the window so that the horizontal scrollbar is active. Move the window so the left edge of the scrollbar thumb is off-screen to the left. Click on the right arrow, and verify that the window scrolls correctly. Repeat for the page right region.
 
 * Launch DeskTop. Open a volume window with icons. Move window so only header is visible. Verify that DeskTop doesn't render garbage or lock up.
 
@@ -157,7 +157,7 @@
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.
 
 * Launch DeskTop. Select multiple volume icons (at least 4). Drag the bottom icon up so that the top two icons are completely off the screen. Release the mouse button. Drag the icons back down. Verify that while dragging, all icons have outlines, and when done dragging all icons reposition correctly.
-* Launch DeskTop. Open a window with at least 3 rows of icons. Position the window at the top of the screen. Edit > Select All. Drag an icon from the bottom row so that the top icons end up completely offscreen. Release the mouse button. Drag the icons back down. Verify that all icons reposition correctly.
+* Launch DeskTop. Open a window with at least 3 rows of icons. Position the window at the top of the screen. Edit > Select All. Drag an icon from the bottom row so that the top icons end up completely off-screen. Release the mouse button. Drag the icons back down. Verify that all icons reposition correctly.
 * Launch DeskTop. Open a window with multiple icons. Resize the window so some of the icons aren't visible without scrolling. Edit > Select All. Drag the icons. Verify that drag outlines are shown even for hidden icons.
 
 * Launch DeskTop. Open a window for a volume icon. Open a folder within the window. Select the volume icon. Special > Check Drive. Verify that both windows are closed.
@@ -178,7 +178,7 @@
   * Launch DeskTop. Run the command. For the new name, enter the name of the current disk in that slot/drive. Verify that you are not prompted for a new name.
   * Launch DeskTop. Run the command. Select a disk (other than the startup disk) and click OK. Enter a name, but place the caret in the middle of the name (e.g. "exam|ple"). Click OK. Verify that the full name is used.
   * Launch DeskTop. Run the command. Select an empty drive. Let the operation continue until it fails. Verify that an error message is shown.
-  * Configure a system with at least 9 volumes. Launch DeskTop. Run the command. Select a volume in the third column. Click OK. Verify that the selection rect is fully erased.
+  * Configure a system with at least 9 volumes. Launch DeskTop. Run the command. Select a volume in the third column. Click OK. Verify that the selection rectangle is fully erased.
   * Configure a system with 13 volumes, not counting /RAM. Launch DeskTop. Run the command. Verify that all 13 volumes are shown.
   * Launch DeskTop. Select a volume icon. Run the command. Enter a new name and click OK. Click OK to confirm the operation. Verify that the icon for the volume is updated with the new name.
   * Launch DeskTop. Run the command. Select a slot/drive containing an existing volume. Enter a new name and click OK. Click OK to confirm the operation. Verify that the icon for the volume is updated with the new name.
@@ -194,7 +194,7 @@
   * Launch DeskTop. Make sure no volume icon is selected. Run the command. Click an item, then click OK. Verify that the device location is shown, and that the OK button becomes disabled. Enter text. Verify that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
   * Launch DeskTop. Select a volume icon. Run the command. Verify that the OK button is disabled. Enter text. Verify that the device location is shown, and that the OK button is enabled. Delete all of the text. Verify that the OK button becomes disabled. Enter text. Verify that the OK button becomes enabled.
 
-  * Launch DeskTop. Insert a non-formatted disk into a SmartPort drive (e.g. Virtual ][ Omnidisk). Verify that a prompt is shown to format the disk. Click OK. Enter a name, and click OK. Verify that the correct slot and drive are shown in the confirmation prompt.
+  * Launch DeskTop. Insert a non-formatted disk into a SmartPort drive (e.g. Virtual ][ OmniDisk). Verify that a prompt is shown to format the disk. Click OK. Enter a name, and click OK. Verify that the correct slot and drive are shown in the confirmation prompt.
 
 * Launch DeskTop. Clear selection by closing all windows and clicking on the desktop. Press Apple+Down. Verify that nothing happens.
 
@@ -210,8 +210,8 @@
 * Launch DeskTop. Open a volume window containing a file and a folder. Open the folder window. Drag the file to the folder icon (not the window). Verify that the folder window activates and updates to show the file.
 
 * Launch DeskTop. Open a volume window containing a folder. Open the folder. Close the folder's window. Verify that it animates into the volume icon, which becomes selected.
-* Launch DeskTop. Open a volume window containing a folder and a sub-folder. Open the folder. Open the sub-folder. Close the sub-folder's window. Verify that it animates into the the folder icon, which becomes selected.
-* Launch DeskTop. Open a volume window containing a folder and a sub-folder. Open the folder. Open the sub-folder. Close the parent folder's window. Verify that it animates into the volume icon, which becomes selected.
+* Launch DeskTop. Open a volume window containing a folder and a subfolder. Open the folder. Open the subfolder. Close the subfolder's window. Verify that it animates into the the folder icon, which becomes selected.
+* Launch DeskTop. Open a volume window containing a folder and a subfolder. Open the folder. Open the subfolder. Close the parent folder's window. Verify that it animates into the volume icon, which becomes selected.
 
 * Perform the following tests in DeskTop using Mouse Keys mode:
   * Use the arrow keys to move the mouse to the top, bottom, left, and right edges of the screen. Verify that the mouse is clamped to the edges and does not wrap.
@@ -467,7 +467,7 @@
 * Launch DeskTop. Open a window with files with dates with long month names (e.g. "February 29, 2020"). View > by Name. Resize the window so the lines are cut off on the right. Move the horizontal scrollbar all the way to the right. Verify that the right edges of all lines are visible.
 * Launch DeskTop. Open a window containing a folder. View > by Name. Open the folder. Verify that in the new window, the horizontal scrollbar is inactive.
 
-* Launch DeskTop. Open a volume window. View > by Name. Open a separate volume window. Open a folder window. Open a sub-folder window. View > by Name. Close the window. Verify DeskTop doesn't crash.
+* Launch DeskTop. Open a volume window. View > by Name. Open a separate volume window. Open a folder window. Open a subfolder window. View > by Name. Close the window. Verify DeskTop doesn't crash.
 * Launch DeskTop. Open a volume window. Open a folder window. View > by Name. Verify that the selection is still in the volume window, and that there is no selection in the folder window.
 * Launch DeskTop. Open a volume window. Open a folder window. Select a file in the folder window. View > by Name. Verify that the selection is still in the folder window.
 
@@ -632,10 +632,10 @@
   * Launch DeskTop. With no selection, click the icon's name. Verify that no rename prompt appears.
   * Launch DeskTop. With multiple icons selected, click an icon's name. Verify that no rename prompt appears.
 
-* Launch DeskTop. Select a file icon. Position the window so that the icon is entirely offscreen. File > Rename. Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
-* Launch DeskTop. Close all windows. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename. Press Escape to cancel. Verify that nothing mispaints on the desktop.
-* Launch DeskTop. Open a window. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename. Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
-* Launch DeskTop. Open two windows. Select a volume icon. Move the icon so that the name is entirely offscreen. File > Rename. Press Escape to cancel. Verify that the previously active window title bar is reactivated and that nothing mispaints on the desktop.
+* Launch DeskTop. Select a file icon. Position the window so that the icon is entirely off-screen. File > Rename. Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
+* Launch DeskTop. Close all windows. Select a volume icon. Move the icon so that the name is entirely off-screen. File > Rename. Press Escape to cancel. Verify that nothing mispaints on the desktop.
+* Launch DeskTop. Open a window. Select a volume icon. Move the icon so that the name is entirely off-screen. File > Rename. Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
+* Launch DeskTop. Open two windows. Select a volume icon. Move the icon so that the name is entirely off-screen. File > Rename. Press Escape to cancel. Verify that the previously active window title bar is reactivated and that nothing mispaints on the desktop.
 
 * Repeat the following cases for File > New Folder, File > Rename, and File > Duplicate:
   * Launch DeskTop. Open a window and (if needed) select a file. Run the command. Enter a name, but place the caret in the middle of the name (e.g. "exam|ple"). Click away. Verify that the full name is used.
@@ -724,6 +724,8 @@
 * Rename the APPLE.MENU directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.
 * Create a new APPLE.MENU directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.
 * Create a new APPLE.MENU directory. Copy the CHANGE.TYPE accessory into it. Launch DeskTop. Verify that the Apple Menu has two "About" items, a separator, and "Change Type". Select the Change Type icon. Apple Menu > Change Type. Change the type to $8642. Restart DeskTop. Verify that the Apple Menu has two "About" items, and no separator.
+* Eject the startup disk. Select an accessory (e.g. Calculator) from the Apple Menu. Verify that an alert is shown prompting to reinsert the startup disk. Insert the startup disk and click OK. Verify that the accessory launches.
+* Eject the startup disk. Select a folder (e.g. Control Panels) from the Apple Menu. Verify that an alert is shown prompting to reinsert the startup disk. Insert the startup disk and click OK. Verify that the folder window opens.
 
 ## Shortcuts (in DeskTop)
 
@@ -835,8 +837,8 @@ The following tests all require:
 * A RAM disk such as RAMWorks (and a ProDOS driver) or a "Slinky" memory expansion card.
 * Configuring DeskTop to install itself to the RAMCard on boot. This is the default but can be controlled using the Options control panel.
 
-* Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that subdirectories under APPLE.MENU are copied to /RAM/DESKTOP/APPLE.MENU.
-* Run DeskTop on a system with Slinky RAMDisk. Verify that subdirectories under APPLE.MENU are copied to /RAM5/DESKTOP/APPLE.MENU (or appropriate volume path).
+* Run DeskTop on a system with RAMWorks and using RAM.DRV.SYSTEM. Verify that sub-directories under APPLE.MENU are copied to /RAM/DESKTOP/APPLE.MENU.
+* Run DeskTop on a system with Slinky RAMDisk. Verify that sub-directories under APPLE.MENU are copied to /RAM5/DESKTOP/APPLE.MENU (or appropriate volume path).
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/DESKTOP.CONFIG file from the startup disk, if it was present. Go into Control Panels and change a setting. Verify that LOCAL/DESKTOP.CONFIG is written to the startup disk.
 * Launch DeskTop, ensure it copies itself to RAMCard. Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Shortcuts > Add a Shortcut, and create a new shortcut. Verify that LOCAL/SELECTOR.LIST is written to the startup disk.
@@ -866,7 +868,7 @@ The following tests all require:
 * Invoke DESKTOP.SYSTEM, ensure it copies itself to RAMCard. Quit DeskTop. Restart DeskTop from the original startup disk. Eject the startup disk. Special > Format Disk. Verify that no prompt for the startup disk is shown.
 * Invoke DESKTOP.SYSTEM, and hit Escape when copying to RAMCard. Once DeskTop has started, eject the startup disk. Special > Format Disk. Verify that a prompt to insert the system disk is shown.
 
-* Boot to BASIC.SYSTEM (without going through DESKTOP.SYSTEM first). Run the following commands: `CREATE /RAM5/DESKTOP`, `CREATE /RAM5/DESKTOP/MODULES`, `BSAVE /RAM5/DESKTOP/MODULES/DESKTOP,A0,L0` (substituting the RAM disks's name for `RAM5`). Launch `DESKTOP.SYSTEM`. Verify the install doesn't hang silently or loop endlessly.
+* Boot to BASIC.SYSTEM (without going through DESKTOP.SYSTEM first). Run the following commands: `CREATE /RAM5/DESKTOP`, `CREATE /RAM5/DESKTOP/MODULES`, `BSAVE /RAM5/DESKTOP/MODULES/DESKTOP,A0,L0` (substituting the RAM disk's name for `RAM5`). Launch `DESKTOP.SYSTEM`. Verify the install doesn't hang silently or loop endlessly.
 
 ### SmartPort
 
@@ -952,7 +954,7 @@ Image File:
 * On a IIgs or with RGB card; verify that space bar toggles color/mono.
 * On a IIgs or with RGB card: name a hires image file with a ".A2HR" suffix. Verify it displays as mono by default.
 * On a IIgs or with RGB card: name a hires image file with a ".A2LC" suffix. Verify it displays as color by default.
-* Configure a system with a realtime clock. Launch DeskTop. Preview an image file. Exit the preview. Verify that the menu bar clock reappears immediately.
+* Configure a system with a real-time clock. Launch DeskTop. Preview an image file. Exit the preview. Verify that the menu bar clock reappears immediately.
 * In a directory with multiple images, preview one image. Verify that Left Arrow shows the previous image (and wraps around), Right Arrow shows the next image (and wraps around), Apple+Left Arrow shows the first image, and Apple+Right Arrow shows the last image. Note that order is per the natural directory order, e.g. as shown in View > as Icons.
 * Preview a packed FOT file (e.g. SAMPLE.MEDIA/MONARCH). Verify that the preview does not immediately exit after the image loads.
 
@@ -1036,27 +1038,27 @@ With Sci.Calc:
 
 ## Date & Time
 
-* Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
+* Configure a system with a real-time clock. Launch DeskTop. Run the Date and Time desk accessory. Press Escape key. Verify the desk accessory exits. Repeat with the Return key.
 
 * Run DeskTop on a system without a system clock. Run Apple Menu > Control Panels > Date and Time. Set date. Reboot system, and re-run DeskTop. Create a new folder. Use File > Get Info. Verify that the date was saved/restored.
 
 * On a system with a system clock, invoke Apple Menu > Control Panels > Date and Time. Verify that the date and time are read-only.
 
-* Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 12 hour. Verify that the time is shown as 12-hour, and if less than 10 is displayed without a leading 0.
-* Configure a system with a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 12 hour. Verify that the time is shown as 12-hour, and if less than 10 is displayed without a leading 0. Use the Right Arrow and Left Arrow keys and the mouse, and verify that the AM/PM field is selectable. Select the AM/PM field. Use the up and down arrow keys and the arrow buttons, and verify that the field toggles. Select the hours field. Use the up and down arrow keys and the arrow buttons, and verify that the field cycles from 1 through 12.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0. Use the Right Arrow and Left Arrow keys and the mouse, and verify that the AM/PM field is not selectable. Use the up and down arrow keys and the arrow buttons, and verify that the field cycles from 0 through 23.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Change the month and year, and verify that the day range is clamped to 28, 29, 30 or 31 as appropriate, including for leap years.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Click on the up/down arrows. Verify that they invert correctly when the button is down.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Click in the various fields (day/month/year/hour/minutes/period). Verify that the appropriate field highlights.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Change the setting to 12 hour. Click on the AM/PM field. Verify that the field highlights.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Change the setting to 24 hour. Click where the AM/PM field would be, to the right of the minutes field. Verify that nothing happens.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Date and Time DA. Click the year field. Click the up arrow. Verify that the year increments. Click the down arrow. Verify that the year decrements. Verify that only the clicked buttons highlight, and that they un-highlight correctly when the button is released.
+* Configure a system with a real-time clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 12 hour. Verify that the time is shown as 12-hour, and if less than 10 is displayed without a leading 0.
+* Configure a system with a real-time clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0.
+* Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 12 hour. Verify that the time is shown as 12-hour, and if less than 10 is displayed without a leading 0. Use the Right Arrow and Left Arrow keys and the mouse, and verify that the AM/PM field is selectable. Select the AM/PM field. Use the up and down arrow keys and the arrow buttons, and verify that the field toggles. Select the hours field. Use the up and down arrow keys and the arrow buttons, and verify that the field cycles from 1 through 12.
+* Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA, and change the setting to 24 hour. Verify that the time is shown as 24-hour, and if less than 10 is displayed with a leading 0. Use the Right Arrow and Left Arrow keys and the mouse, and verify that the AM/PM field is not selectable. Use the up and down arrow keys and the arrow buttons, and verify that the field cycles from 0 through 23.
+* Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA. Change the month and year, and verify that the day range is clamped to 28, 29, 30 or 31 as appropriate, including for leap years.
+* Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA. Click on the up/down arrows. Verify that they invert correctly when the button is down.
+* Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA. Click in the various fields (day/month/year/hour/minutes/period). Verify that the appropriate field highlights.
+* Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA. Change the setting to 12 hour. Click on the AM/PM field. Verify that the field highlights.
+* Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA. Change the setting to 24 hour. Click where the AM/PM field would be, to the right of the minutes field. Verify that nothing happens.
+* Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA. Click the year field. Click the up arrow. Verify that the year increments. Click the down arrow. Verify that the year decrements. Verify that only the clicked buttons highlight, and that they un-highlight correctly when the button is released.
 
 ## Calendar
 
-* Configure a system with a realtime clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the current month and year correctly.
-* Configure a system without a realtime clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the build's release month and year correctly.
+* Configure a system with a real-time clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the current month and year correctly.
+* Configure a system without a real-time clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the build's release month and year correctly.
 
 ## Sort Directory
 
@@ -1072,13 +1074,13 @@ With Sci.Calc:
 * Repeat on an Apple IIe, Apple IIc, and Laser 128:
   * Launch DeskTop. Apple Menu > Key Caps. Verify that the "original" layout is shown, with the backslash above the Return key.
 * Repeat on an Apple IIc+ and Apple IIgs:
-  * Launch DeskTop. Apple Menu > Key Caps. Verify that the "extended" layout is shown, with the backslash to the right of the spacebar.
+  * Launch DeskTop. Apple Menu > Key Caps. Verify that the "extended" layout is shown, with the backslash to the right of the space bar.
 
 
 ## Screen Savers
 
 * Launch DeskTop. Apple Menu > Screen Savers. Select Melt. File > Open (or Apple+O). Click to exit. Press Apple+Down. Click to exit. Verify that the File menu is not highlighted.
-* Configure a system with a realtime clock. Launch DeskTop. Apple Menu > Screen Savers. Run a screen saver that uses the full graphics screen and conceals the menu (Flying Toasters or Melt). Exit it. Verify that the menu bar clock reappears immediately.
+* Configure a system with a real-time clock. Launch DeskTop. Apple Menu > Screen Savers. Run a screen saver that uses the full graphics screen and conceals the menu (Flying Toasters or Melt). Exit it. Verify that the menu bar clock reappears immediately.
 
 * Launch DeskTop. Apple Menu > Screen Savers. Run Matrix. Click the mouse button. Verify that the screen saver exits. Run Matrix. Press a key. Verify that the screen saver exits.
 
@@ -1086,7 +1088,7 @@ With Sci.Calc:
 
 * Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Apple Menu > About This Apple II. Verify that the Mockingboard is detected.
 
-* Configure multiple drives connected to a Smartport controller on a higher numbered slot, a single drive connected to a Smartport controller in a lower numbered slot. Launch DeskTop. Apple Menu > About This Apple II. Verify that the name on the lower numbered slot doesn't have an extra character at the end.
+* Configure multiple drives connected to a SmartPort controller on a higher numbered slot, a single drive connected to a SmartPort controller in a lower numbered slot. Launch DeskTop. Apple Menu > About This Apple II. Verify that the name on the lower numbered slot doesn't have an extra character at the end.
 
 * Run on Laser 128. Launch DeskTop. Copy a file to Ram5. Apple Menu > About This Apple II, close it. Verify that the file is still present on Ram5.
 
@@ -1218,7 +1220,7 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 * Launch DeskTop. Special > Copy Disk.... Select a Pascal disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the name does not have adjusted case (e.g. "TGP:" not "Tgp:"), and the name is quoted.
 * Launch DeskTop. Special > Copy Disk.... Select a DOS 3.3 disk as a destination disk. Verify that in the "Are you sure you want to erase ...?" dialog that the prompt describes the disk using slot and drive, and is not quoted.
 
-* Configure Virtual II with two Omnidisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Copy Disk.... Select the Omnidisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Are you sure you want to erase ...?" confirmation prompt is shown.
+* Configure Virtual II with two OmniDisks formatted as ProDOS volumes mounted. Launch DeskTop. Special > Copy Disk.... Select the OmniDisks as Source and Destination. Verify that after being prompted to insert the source and destination disks, a "Are you sure you want to erase ...?" confirmation prompt is shown.
 
 * Launch DeskTop. Special > Copy Disk.... Verify that the OK button is disabled. Select an item in the list with the keyboard. Verify that the OK button enables. Click in the blank space in the list below the items. Verify that the OK button disables. Click an item in the list. Verify that the OK button enables. Click OK to specify a source disk. Verify that the OK button disables. Repeat the above cases when selecting the destination disk.
 * Launch DeskTop. Special > Copy Disk.... Select a source disk. Verify that the OK button enables. Click Read Drives. Verify that the OK button disables. Select a source disk then click OK. Click OK. Select a destination disk. Click Read Drives. Verify that the OK button disables.

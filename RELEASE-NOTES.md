@@ -30,6 +30,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Special > Make Alias now creates link file in same directory as original.
 * Add Edit menu with Cut/Copy/Paste/Clear, relocate Select All.
 * Ensure the modification date for copied folders matches the original.
+* Prompt to re-insert system disk when launching Apple Menu items.
 
 ### Selector
 
