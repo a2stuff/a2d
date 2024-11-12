@@ -64,6 +64,8 @@
 .define res_string_unknown "(desconhecido)"
 .define res_string_empty "(v@cuo)"
 .define res_string_none "(nenhum)"
+.define res_string_duplicate_suffix_pattern " (#)"
+.define res_const_duplicate_suffix_pattern_offset1 3
 .define res_string_cpu_prefix "    CPU: "
 .define res_string_cpu_type_6502 "6502"
 .define res_string_cpu_type_65C02 "65C02"

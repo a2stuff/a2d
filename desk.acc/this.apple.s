@@ -719,9 +719,13 @@ str_unknown:    PASCAL_STRING res_string_unknown
 str_empty:      PASCAL_STRING res_string_empty
 str_none:       PASCAL_STRING res_string_none
 
+str_duplicate_suffix:   PASCAL_STRING res_string_duplicate_suffix_pattern
+kDuplicateCountOffset = res_const_duplicate_suffix_pattern_offset1
+
 ;;; ============================================================
 
 dib_buffer:     .tag    SPDIB
+kMaxSPDeviceNameLength = SPDIB::Device_Type_Code - SPDIB::Device_Name
 
 ;;; ============================================================
 ;;; Per Technical Note: Apple II Miscellaneous #7: Apple II Family Identification
@@ -2151,6 +2155,9 @@ p65802: return16 #str_65802     ; Other boards support 65802
 
 start:
         copy    #$80, empty_flag
+        lda     #0
+        sta     str_last
+        sta     duplicate_count
 
         ;; Locate SmartPort entry point: $Cn00 + ($CnFF) + 3
         ldy     #$FF
@@ -2219,21 +2226,33 @@ next:   dey
 done:
 .endscope
 
+        str_current := dib_buffer+SPDIB::ID_String_Length
+
+        ;; Empty?
+        lda     dib_buffer+SPDIB::ID_String_Length
+    IF_ZERO
+        .assert .strlen(res_string_unknown) < kMaxSPDeviceNameLength, error, "string length"
+        COPY_STRING str_unknown, str_current
+    END_IF
+
+        ;; Same as last?
+        jsr     CompareWithLast
+    IF_EQ
+        inc     duplicate_count
+        bne     next            ; always
+    END_IF
+        jsr     MaybeDrawDuplicateSuffix
+        COPY_STRING str_current, str_last
+
         ;; Need a comma?
         bit     empty_flag
     IF_PLUS
         param_call DrawString, str_list_separator
     END_IF
+        copy    #0, empty_flag  ; saw a unit!
 
         ;; Draw the device name
-        copy    #0, empty_flag  ; saw a unit!
-        lda     dib_buffer+SPDIB::ID_String_Length
-    IF_ZERO
-        ldax    #str_unknown
-    ELSE
-        ldax    #dib_buffer+SPDIB::ID_String_Length
-    END_IF
-        jsr     DrawString
+        param_call DrawString, str_current
 
         ;; Next!
 next:   lda     status_params::unit_num
@@ -2243,6 +2262,8 @@ next:   lda     status_params::unit_num
         jmp     device_loop
 
 finish:
+        jsr     MaybeDrawDuplicateSuffix
+
         ;; If no units, populate with "(none)"
         bit     empty_flag
     IF_MINUS
@@ -2252,6 +2273,10 @@ finish:
 
         rts
 
+str_last:
+        .res    ::kMaxSPDeviceNameLength+1
+duplicate_count:
+        .byte   0
 empty_flag:
         .byte   0
 num_devices:
@@ -2268,6 +2293,32 @@ num_devices:
 .endproc ; SmartPortCall
         sp_addr = SmartPortCall::sp_addr
 
+.proc CompareWithLast
+        lda     str_current
+        cmp     str_last
+        bne     ret
+        tax
+:       lda     str_current,x
+        cmp     str_last,x
+        bne     ret
+        dex
+        bne     :-
+ret:    rts
+.endproc ; CompareWithLast
+
+.proc MaybeDrawDuplicateSuffix
+        ldx     duplicate_count
+    IF_NOT_ZERO
+        inx
+        txa
+        ora     #'0'
+        sta     str_duplicate_suffix + kDuplicateCountOffset
+        param_call DrawString, str_duplicate_suffix
+        lda     #0
+        sta     duplicate_count
+    END_IF
+        rts
+.endproc ; MaybeDrawDuplicateSuffix
 
 .endproc ; ShowSmartPortDeviceNamesImpl
 ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
