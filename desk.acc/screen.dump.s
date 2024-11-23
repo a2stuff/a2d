@@ -49,7 +49,7 @@ sig_bytes:
 :       ldx     sig_offsets,y
         lda     SLOT1,x
         cmp     sig_bytes,y
-        bne     ret
+        bne     no_device
         dey
         bpl     :-
 
@@ -67,6 +67,10 @@ sig_bytes:
         bit     LCBANK1
         bit     LCBANK1
 ret:    rts
+
+no_device:
+        lda     #ERR_DEVICE_NOT_CONNECTED
+        jmp     JUMP_TABLE_SHOW_ALERT
 
 .proc SendSpacing
         ldy     #0

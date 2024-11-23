@@ -61,7 +61,8 @@
         param_call CheckSlot1Signature, sigtable_parallel
         beq     :+
 
-        rts
+        lda     #ERR_DEVICE_NOT_CONNECTED
+        jmp     JUMP_TABLE_SHOW_ALERT
 :
         ;; Get top DeskTop window (if any) and find its path
         JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
