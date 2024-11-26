@@ -5307,7 +5307,7 @@ failure:
 
         ;; Was a move?
         ;; NOTE: Only applies in file icon case.
-        bit     move_flag
+        bit     operations__move_flag
     IF_NS
         ;; Update source vol's contents
         jsr     MaybeStashDropTargetName ; in case target is in window...
@@ -10324,7 +10324,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 ;;; Used by Duplicate command for a single file copy
 .proc DoCopyFile
         copy    #0, operation_flags ; copy/delete
-        copy    #0, move_flag
+        copy    #0, operations::move_flag
         tsx
         stx     stack_stash
 
@@ -10336,7 +10336,7 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 .endproc ; DoCopyFile
 
 .proc DoCopyCommon
-        copy    #0, move_flag   ; TODO: Remove, redundant with callers?
+        copy    #0, operations::move_flag   ; TODO: Remove, redundant with callers?
         jsr     CopyProcessNotSelectedFile
         jsr     InvokeOperationCompleteCallback
         FALL_THROUGH_TO FinishOperation
@@ -10347,7 +10347,7 @@ FinishOperation:
 
 ;;; Used when running a Shortcut, to copy to RAMCard
 .proc DoCopyToRAM
-        copy    #0, move_flag
+        copy    #0, operations::move_flag
         copy    #%11000000, operation_flags
         tsx
         stx     stack_stash
@@ -10369,7 +10369,7 @@ FinishOperation:
 ;;; Used for drag/drop copy as well as deleting selection
 ;;; (if `drag_drop_params::result` equals `trash_icon_num`)
 .proc DoDrop
-        copy    #0, move_flag
+        copy    #0, operations::move_flag
         lda     drag_drop_params::result
         cmp     trash_icon_num
         bne     :+
@@ -10454,7 +10454,7 @@ common:
 @drop:  lda     selected_window_id
         jsr     GetWindowPath
         jsr     CheckMoveOrCopy
-@store: sta     move_flag
+@store: sta     operations::move_flag
         jsr     OpenCopyProgressDialog
         jmp     iterate_selection
 
@@ -10542,12 +10542,6 @@ finish: jsr     InvokeOperationCompleteCallback
         return  #0
 .endproc ; BeginOperation
 
-.endscope ; operations
-        DoCopySelection := operations::DoCopySelection
-        DoCopyToRAM := operations::DoCopyToRAM
-        DoCopyFile := operations::DoCopyFile
-        DoDrop := operations::DoDrop
-
 ;;; ============================================================
 
 ;;; Called for each file during enumeration; A,X = file count
@@ -10569,6 +10563,8 @@ InvokeOperationConfirmCallback:
 InvokeOperationTooLargeCallback:
         operation_toolarge_callback := *+1
         jmp     SELF_MODIFIED
+
+;;; ============================================================
 
 stack_stash:
         .byte   0
@@ -10593,6 +10589,15 @@ move_flag:
         ;; bit 7 set = "all" selected in Yes / No / All prompt
 all_flag:
         .byte   0
+
+;;; ============================================================
+
+.endscope ; operations
+        DoCopySelection := operations::DoCopySelection
+        DoCopyToRAM := operations::DoCopyToRAM
+        DoCopyFile := operations::DoCopyFile
+        DoDrop := operations::DoDrop
+        operations__move_flag := operations::move_flag
 
 ;;; ============================================================
 ;;; Input: A = icon
@@ -10737,6 +10742,10 @@ done:   rts
         control_unit_number := control_params::unit_number
 list:   .word   0               ; 0 items in list
 .endproc ; SmartportEject
+
+;;; ============================================================
+
+.scope modal_dialogs
 
 ;;; ============================================================
 ;;; "Get Info" dialog state and logic
@@ -11006,9 +11015,9 @@ done:   copy    #0, path_buf4
 
         copy16  #GetInfoProcessDirEntry, op_jt_addr1
         copy16  #DoNothing, op_jt_addr3
-        copy16  #DoNothing, operation_complete_callback ; handle error
+        copy16  #DoNothing, operations::operation_complete_callback ; handle error
         tsx
-        stx     stack_stash
+        stx     operations::stack_stash
         jsr     ProcessDir
         jmp     UpdateDirSizeDisplay ; in case 0 files were seen
 .endproc ; GetDirSize
@@ -11084,6 +11093,146 @@ write_protected_flag:
 .endproc ; DoGetInfo
 
 ;;; ============================================================
+;;; "Get Info" dialog
+
+.proc GetInfoDialogProc
+        lda     get_info_dialog_params::state
+
+        ;; --------------------------------------------------
+        ;; GetInfoDialogState::prepare_*
+    IF_NS
+        ;; Draw the field labels (e.g. "Size:")
+        copy    #0, has_input_field_flag
+        lda     get_info_dialog_params::state
+        pha
+        lsr     a               ; bit 1 set if multiple
+        lsr     a               ; so configure buttons appropriately
+        ror     a
+        eor     #$80
+        jsr     OpenPromptWindow
+        jsr     SetPortForDialogWindow
+
+        param_call DrawDialogTitle, aux::label_get_info
+        pla                     ; A = get_info_dialog_params::state
+        pha                     ; bit 0 set if volume
+
+        ;; Draw labels
+        param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_info_name
+        param_call DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_info_type
+        param_call DrawDialogLabel, 4 | DDL_LRIGHT, aux::str_info_create
+        param_call DrawDialogLabel, 5 | DDL_LRIGHT, aux::str_info_mod
+
+        pla                     ; bit 0 set if volume
+        and     #$01
+      IF_NOT_ZERO
+        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
+        param_jump DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
+      ELSE
+        param_jump DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
+      END_IF
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; GetInfoDialogState::* (name, type, etc)
+        ;; Draw a specific value
+
+        cmp     #GetInfoDialogState::prompt
+    IF_NE
+        cmp     #GetInfoDialogState::locked
+     IF_EQ
+        lda     get_info_dialog_params::locked ; bit 7 = file, bit 6 = locked
+       IF_NS
+        asl                     ; now bit 7 = locked = checked
+        sta     locked_button::state
+        BTK_CALL BTK::CheckboxDraw, locked_button
+        copy16  #HandleClick, main::PromptDialogClickHandlerHook
+        copy16  #HandleKey, main::PromptDialogKeyHandlerHook
+        rts
+       END_IF
+     END_IF
+
+        jsr     SetPortForDialogWindow
+        lda     get_info_dialog_params::state
+        ora     #DDL_VALUE
+        tay
+
+        ;; Draw the string at `get_info_dialog_params::a_str`
+        ldax    get_info_dialog_params::a_str
+        jmp     DrawDialogLabel
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; GetInfoDialogState::prompt
+:       jsr     PromptInputLoop
+        bmi     :-
+
+        pha
+        jsr     ClosePromptDialog
+        pla
+        rts
+
+.proc HandleClick
+        MGTK_CALL MGTK::InRect, locked_button::rect
+    IF_NOT_ZERO
+        jsr     ToggleFileLock
+    END_IF
+        return #$FF
+.endproc ; HandleClick
+
+.proc HandleKey
+        cmp     #CHAR_CTRL_L
+        beq     ToggleFileLock
+        rts
+.endproc ; HandleKey
+
+.proc ToggleFileLock
+        ;; Modify file
+        lda     src_file_info_params::access
+        bit     locked_button::state
+    IF_NS
+        ;; Unlock
+        ora     #LOCKED_MASK
+    ELSE
+        ;; Lock
+        and     #AS_BYTE(~LOCKED_MASK)
+    END_IF
+        sta     src_file_info_params::access
+        jsr     SetSrcFileInfo
+        bcs     ret
+        ;; TODO: Show alert, offer retry on failure?
+
+        ;; Toggle UI
+        lda     locked_button::state
+        eor     #$80
+        sta     locked_button::state
+        BTK_CALL BTK::CheckboxUpdate, locked_button
+
+        ;; Update FileRecord
+        icon_ptr := $06
+        file_record_ptr := $08
+
+        ldx     get_info_dialog_params::index
+        lda     selected_icon_list,x
+        jsr     GetIconEntry
+        stax    icon_ptr
+        jsr     SetFileRecordPtrFromIconPtr
+
+        bit     LCBANK2
+        bit     LCBANK2
+        lda     src_file_info_params::access
+        ldy     #FileRecord::access
+        sta     (file_record_ptr),y
+        bit     LCBANK1
+        bit     LCBANK1
+
+        copy    #$80, get_info_dialog_params::refresh
+
+ret:    return  #$FF
+.endproc ; ToggleFileLock
+
+.endproc ; GetInfoDialogProc
+
+;;; ============================================================
 
 .enum RenameDialogState
         open  = $00
@@ -11102,7 +11251,6 @@ a_prev: .addr   old_name_buf
 a_path: .addr   SELF_MODIFIED_BYTE
         DEFINE_RECT rect,0,0,0,0
 .endparams
-rename_dialog_params__a_prev := rename_dialog_params::a_prev
 
 ;;; Assert: Single icon selected, and it's not Trash.
 .proc DoRenameImpl
@@ -11358,6 +11506,170 @@ DoRename        := DoRenameImpl::start
 .endproc ; SetFileRecordPtrFromIconPtr
 
 ;;; ============================================================
+;;; "Rename" dialog
+
+;;; This uses a minimal dialog window to simulate modeless rename.
+
+.proc RenameDialogProc
+        lda     rename_dialog_params::state
+
+        ;; ----------------------------------------
+        cmp     #RenameDialogState::open
+    IF_EQ
+        ldy     #LETK::kLineEditOptionsNormal
+        jsr     GetSelectionViewBy
+        cmp     #kViewByIcon
+      IF_EQ
+        ldy     #LETK::kLineEditOptionsCentered
+      END_IF
+        sty     rename_line_edit_rec::options
+
+        COPY_STRUCT MGTK::Point, rename_dialog_params::rect::topleft, winfo_rename_dialog::viewloc
+
+        jsr     OpenRenameWindow
+        copy16  rename_dialog_params::a_prev, $08
+        param_call CopyPtr2ToBuf, text_input_buf
+        LETK_CALL LETK::Init, rename_le_params
+        LETK_CALL LETK::Activate, rename_le_params
+        rts
+    END_IF
+
+        ;; --------------------------------------------------
+        cmp     #RenameDialogState::run
+    IF_EQ
+loop:   jsr     RenameInputLoop
+        bmi     loop            ; continue?
+        bne     do_close        ; canceled!
+
+        lda     text_input_buf  ; treat empty as cancel
+        beq     do_close
+
+        ;; Validate path length before committing
+        copy16  rename_dialog_params::a_path, $08
+        param_call CopyPtr2ToBuf, path_buf0
+        lda     path_buf0       ; full path okay?
+        clc
+        adc     text_input_buf
+        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
+      IF_GE
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
+        jmp     loop
+      END_IF
+
+        ldxy    #text_input_buf
+        return  #0
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; RenameDialogState::close
+do_close:
+        MGTK_CALL MGTK::CloseWindow, winfo_rename_dialog
+        jsr     ClearUpdates     ; following CloseWindow
+        jsr     SetCursorPointer ; when closing dialog
+        return  #1
+.endproc ; RenameDialogProc
+
+;;; ============================================================
+
+;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
+
+.proc RenameInputLoop
+        LETK_CALL LETK::Idle, rename_le_params
+
+        jsr     SystemTask
+        jsr     GetNextEvent
+
+        cmp     #MGTK::EventKind::button_down
+        jeq     RenameClickHandler
+
+        cmp     #MGTK::EventKind::key_down
+        jeq     RenameKeyHandler
+
+        cmp     #kEventKindMouseMoved
+        bne     RenameInputLoop
+
+        ;; Check if mouse is over window, change cursor appropriately.
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+        bne     out
+        lda     findwindow_params::window_id
+        cmp     #winfo_rename_dialog::kWindowId
+        bne     out
+
+        jsr     SetCursorIBeamWithFlag
+        jmp     RenameInputLoop
+
+out:    jsr     SetCursorPointerWithFlag
+        jmp     RenameInputLoop
+.endproc ; RenameInputLoop
+
+;;; Click handler for rename dialog
+
+.proc RenameClickHandler
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+    IF_NE
+        return  #PromptResult::ok
+    END_IF
+
+        lda     findwindow_params::window_id
+        cmp     #winfo_rename_dialog::kWindowId
+    IF_NE
+        return  #PromptResult::ok
+    END_IF
+
+        copy    winfo_rename_dialog, event_params
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, rename_le_params::coords
+        LETK_CALL LETK::Click, rename_le_params
+
+        return  #$FF
+.endproc ; RenameClickHandler
+
+;;; Key handler for rename dialog
+
+.proc RenameKeyHandler
+        lda     event_params::key
+        sta     rename_le_params::key
+
+        ;; Modifiers?
+        ldx     event_params::modifiers
+        stx     rename_le_params::modifiers
+        bne     allow           ; pass through modified keys
+
+        ;; No modifiers
+        cmp     #CHAR_RETURN
+      IF_EQ
+        return  #PromptResult::ok
+      END_IF
+
+        cmp     #CHAR_ESCAPE
+      IF_EQ
+        return  #PromptResult::cancel
+      END_IF
+
+        jsr     IsControlChar   ; pass through control characters
+        bcc     allow
+        ldy     rename_line_edit_rec+LETK::LineEditRecord::caret_pos
+        jsr     IsFilenameChar
+        bcs     ignore
+allow:  LETK_CALL LETK::Key, rename_le_params
+ignore:
+        return  #$FF
+.endproc ; RenameKeyHandler
+
+;;; ============================================================
+
+.endscope ; modal_dialogs
+DoGetInfo := modal_dialogs::DoGetInfo
+DoRename := modal_dialogs::DoRename
+rename_dialog_params__a_prev := modal_dialogs::rename_dialog_params::a_prev
+old_name_buf := modal_dialogs::old_name_buf
+
+;;; ============================================================
 ;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
 ;;; update any affected paths.
 ;;;
@@ -11540,6 +11852,10 @@ assign: ldy     new_path
 .endproc ; MaybeUpdateTargetPath
 
 .endproc ; NotifyPathChanged
+
+;;; ============================================================
+
+.scope operation_dialogs
 
 ;;; ============================================================
 
@@ -11853,8 +12169,8 @@ a_dst:  .addr   dst_path_buf
 
 .proc OpenCopyProgressDialog
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #CopyDialogEnumerationCallback, operation_enumeration_callback
-        copy16  #CopyDialogCompleteCallback, operation_complete_callback
+        copy16  #CopyDialogEnumerationCallback, operations::operation_enumeration_callback
+        copy16  #CopyDialogCompleteCallback, operations::operation_complete_callback
         jmp     CopyDialogProc
 
 .proc CopyDialogEnumerationCallback
@@ -11875,7 +12191,7 @@ a_dst:  .addr   dst_path_buf
         dey
         bpl     :-
 
-        copy    #0, all_flag
+        copy    #0, operations::all_flag
         copy    #1, do_op_flag
         rts
 .endproc ; PrepCallbacksForCopy
@@ -11885,8 +12201,8 @@ a_dst:  .addr   dst_path_buf
 
 .proc OpenDownloadProgressDialog
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #DownloadDialogEnumerationCallback, operation_enumeration_callback
-        copy16  #DownloadDialogCompleteCallback, operation_complete_callback
+        copy16  #DownloadDialogEnumerationCallback, operations::operation_enumeration_callback
+        copy16  #DownloadDialogCompleteCallback, operations::operation_complete_callback
         jmp     DownloadDialogProc
 
 .proc DownloadDialogEnumerationCallback
@@ -11907,8 +12223,8 @@ a_dst:  .addr   dst_path_buf
         dey
         bpl     :-
 
-        copy    #$80, all_flag
-        copy16  #DownloadDialogTooLargeCallback, operation_toolarge_callback
+        copy    #$80, operations::all_flag
+        copy16  #DownloadDialogTooLargeCallback, operations::operation_toolarge_callback
         copy    #1, do_op_flag
         rts
 
@@ -11947,7 +12263,7 @@ common:
         jsr     CopyPathsFromBufsToSrcAndDst
 
         ;; If "Copy to RAMCard", make sure there's enough room.
-        bit     operation_flags ; CopyToRAM has N=1/V=1, otherwise N=0/V=0
+        bit     operations::operation_flags ; CopyToRAM has N=1/V=1, otherwise N=0/V=0
     IF_NS
         jsr     CheckVolBlocksFree
     END_IF
@@ -11993,7 +12309,7 @@ common:
         jsr     TryCreateDst
         bcs     done
 
-        bit     move_flag       ; same volume relink move?
+        bit     operations::move_flag       ; same volume relink move?
     IF_VS
         jmp     RelinkFile
     END_IF
@@ -12007,7 +12323,7 @@ dir:
         jsr     TryCreateDst
         bcs     done
 
-        bit     move_flag       ; same volume relink move?
+        bit     operations::move_flag       ; same volume relink move?
     IF_VS
         jsr     RelinkFile
         jmp     NotifyPathChanged
@@ -12018,7 +12334,7 @@ copy_dir_contents:
         jsr     GetAndApplySrcInfoToDst ; copy modified date/time
         jsr     MaybeFinishFileMove
 
-        bit     move_flag
+        bit     operations::move_flag
     IF_NS
         jsr     NotifyPathChanged
     END_IF
@@ -12080,7 +12396,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 
 .proc MaybeFinishFileMove
         ;; Copy or move?
-        bit     move_flag
+        bit     operations::move_flag
         bpl     done
 
         ;; Was a move - delete file
@@ -12116,7 +12432,7 @@ done:   rts
 
 :       sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
         cmp16   blocks_free, op_block_count
-        jcc     InvokeOperationTooLargeCallback
+        jcc     operations::InvokeOperationTooLargeCallback
 
         rts
 
@@ -12180,7 +12496,7 @@ retry:  copy    dst_path_buf, saved_length
 
         ;; Show appropriate message
         ldax    #aux::str_large_copy_prompt
-        bit     move_flag
+        bit     operations::move_flag
     IF_NS
         ldax    #aux::str_large_move_prompt
     END_IF
@@ -12206,7 +12522,7 @@ existing_size:
 ;;; Output: C=0 on success, C=1 on failure
 
 .proc TryCreateDst
-        bit     move_flag       ; same volume relink move?
+        bit     operations::move_flag       ; same volume relink move?
     IF_VC
         ;; No, verify that there is room.
         jsr     CheckSpaceAndShowPrompt
@@ -12253,7 +12569,7 @@ retry:  jsr     GetDstFileInfo
         jmp     CloseFilesCancelDialogWithFailedResult
     END_IF
         ;; Prompt to replace
-        bit     all_flag
+        bit     operations::all_flag
         bmi     yes
 
         param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_exists_prompt
@@ -12265,7 +12581,7 @@ retry:  jsr     GetDstFileInfo
         beq     failure
         cmp     #kAlertResultAll
         bne     cancel
-        copy    #$80, all_flag
+        copy    #$80, operations::all_flag
 yes:
         MLI_CALL DESTROY, destroy_dst_params
         bcs     retry
@@ -12347,8 +12663,6 @@ ret:    rts
 
 ret:    rts
 .endproc ; WriteDstCaseBits
-
-case_bits:      .word   0
 
 ;;; ============================================================
 ;;; Relink - swaps source and target, then deletes source.
@@ -12681,10 +12995,10 @@ a_path: .addr   src_path_buf
 
 .proc OpenDeleteProgressDialog
         copy    #DeleteDialogLifecycle::open, delete_dialog_params::phase
-        copy16  #DeleteDialogConfirmCallback, operation_confirm_callback
-        copy16  #DeleteDialogEnumerationCallback, operation_enumeration_callback
+        copy16  #DeleteDialogConfirmCallback, operations::operation_confirm_callback
+        copy16  #DeleteDialogEnumerationCallback, operations::operation_enumeration_callback
         jsr     DeleteDialogProc
-        copy16  #DeleteDialogCompleteCallback, operation_complete_callback
+        copy16  #DeleteDialogCompleteCallback, operations::operation_complete_callback
         rts
 
 .proc DeleteDialogEnumerationCallback
@@ -12720,7 +13034,7 @@ a_path: .addr   src_path_buf
         dey
         bpl     :-
 
-        copy    #0, all_flag
+        copy    #0, operations::all_flag
         copy    #1, do_op_flag
         rts
 .endproc ; PrepCallbacksForDelete
@@ -12779,7 +13093,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         ;; e.g. if it contained files that could not be deleted.
         cmp     #ERR_ACCESS_ERROR
         bne     error
-        bit     all_flag
+        bit     operations::all_flag
         bmi     unlock
 
         param_call ShowAlertParams, AlertButtonOptions::YesNoAllCancel, aux::str_delete_locked_file
@@ -12791,7 +13105,7 @@ retry:  MLI_CALL DESTROY, destroy_src_params
         beq     unlock
         cmp     #kAlertResultAll
         bne     :+
-        copy    #$80, all_flag
+        copy    #$80, operations::all_flag
         bne     unlock          ; always
 :       jmp     CloseFilesCancelDialogWithFailedResult
 
@@ -12907,7 +13221,7 @@ callbacks_for_size_or_count:
         ;; `src_file_info_params` populated.
         jsr     EnumerationProcessDirectoryEntry
 
-        bit     move_flag       ; same volume relink move?
+        bit     operations::move_flag       ; same volume relink move?
         RTS_IF_VS
 
 is_dir:
@@ -12922,7 +13236,7 @@ is_dir:
         ;; will be counted during copy, so include it to avoid
         ;; off-by-one.
         ;; https://github.com/a2stuff/a2d/issues/462
-        bit     operation_flags
+        bit     operations::operation_flags
         bvc     :+
         inc16   op_file_count
 :       rts
@@ -12936,7 +13250,7 @@ do_sum_file_size:
 
 .proc EnumerationProcessDirectoryEntry
         ;; If operation is "get size" or "download", add the block count to the sum
-        bit     operation_flags
+        bit     operations::operation_flags
     IF_VS
         ;; Called with `src_file_info_params` pre-populated
         add16   op_block_count, src_file_info_params::blocks_used, op_block_count
@@ -12944,7 +13258,7 @@ do_sum_file_size:
 
         inc16   op_file_count
         ldax    op_file_count
-        jmp     InvokeOperationEnumerationCallback
+        jmp     operations::InvokeOperationEnumerationCallback
 .endproc ; EnumerationProcessDirectoryEntry
 
 op_file_count:
@@ -13001,12 +13315,176 @@ map:    .byte   FileEntry::access
 .endproc ; ConvertFileEntryToFileInfo
 
 ;;; ============================================================
+
+.proc CopyDialogProc
+        lda     copy_dialog_params::phase
+
+        ;; --------------------------------------------------
+        cmp     #CopyDialogLifecycle::open
+    IF_EQ
+        copy    #0, has_input_field_flag
+        jmp     OpenProgressDialog
+    END_IF
+
+        ;; --------------------------------------------------
+        cmp     #CopyDialogLifecycle::count
+    IF_EQ
+        ldax    copy_dialog_params::count
+        stax    file_count
+        stax    total_count
+        jsr     SetPortForProgressDialog
+        bit     operations::move_flag
+      IF_NC
+        param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
+      ELSE
+        param_call DrawProgressDialogLabel, 0, aux::str_move_moving
+      END_IF
+        jmp     DrawFileCountWithSuffix
+    END_IF
+
+        ;; --------------------------------------------------
+        cmp     #CopyDialogLifecycle::show
+    IF_EQ
+        copy16  copy_dialog_params::count, file_count
+        jsr     SetPortForProgressDialog
+
+        ldax    copy_dialog_params::a_src
+        jsr     CopyToBuf0
+        param_call DrawProgressDialogLabel, 1, aux::str_copy_from
+        jsr     ClearTargetFileRectAndSetPos
+        jsr     DrawDialogPathBuf0
+
+        ldax    copy_dialog_params::a_dst
+        jsr     CopyToBuf0
+        param_call DrawProgressDialogLabel, 2, aux::str_copy_to
+        jsr     ClearDestFileRectAndSetPos
+        jsr     DrawDialogPathBuf0
+
+        jmp     DrawProgressDialogFilesRemaining
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; CopyDialogLifecycle::close
+        jmp     CloseProgressDialog
+.endproc ; CopyDialogProc
+
+;;; ============================================================
+;;; "DownLoad" dialog
+
+DownloadDialogProc := CopyDialogProc
+
+;;; ============================================================
+;;; "Delete File" dialog
+
+.proc DeleteDialogProc
+        lda     delete_dialog_params::phase
+
+        ;; --------------------------------------------------
+        cmp     #DeleteDialogLifecycle::open
+    IF_EQ
+        copy    #0, has_input_field_flag
+        jmp     OpenProgressDialog
+    END_IF
+
+        ;; --------------------------------------------------
+        cmp     #DeleteDialogLifecycle::count
+    IF_EQ
+        ldax    delete_dialog_params::count
+        stax    total_count
+        stax    file_count
+        jsr     SetPortForProgressDialog
+        param_call DrawProgressDialogLabel, 0, aux::str_delete_count
+        jmp     DrawFileCountWithSuffix
+    END_IF
+
+        ;; --------------------------------------------------
+        cmp     #DeleteDialogLifecycle::show
+    IF_EQ
+        copy16  delete_dialog_params::count, file_count
+        jsr     SetPortForProgressDialog
+
+        ldax    delete_dialog_params::a_path
+        jsr     CopyToBuf0
+        param_call DrawProgressDialogLabel, 1, aux::str_file_colon
+        jsr     ClearTargetFileRectAndSetPos
+        jsr     DrawDialogPathBuf0
+
+        jmp     DrawProgressDialogFilesRemaining
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; DeleteDialogLifecycle::close
+        jmp     CloseProgressDialog
+.endproc ; DeleteDialogProc
+
+;;; ============================================================
+
+;;; `file_count` must be populated
+.proc DrawFileCountWithSuffix
+        jsr     ComposeFileCountString
+        param_call DrawString, str_file_count
+        param_jump_indirect DrawString, ptr_str_files_suffix
+.endproc ; DrawFileCountWithSuffix
+
+;;; `file_count` must be populated
+.proc DrawProgressDialogFilesRemaining
+        MGTK_CALL MGTK::MoveTo, progress_dialog_remaining_pos
+        param_call DrawString, aux::str_files_remaining
+
+        jsr     ComposeFileCountString
+        param_call DrawString, str_file_count
+        param_call DrawString, str_2_spaces
+
+        ;; Update progress bar
+        sub16   total_count, file_count, z:muldiv_numerator
+        copy16  total_count, z:muldiv_denominator
+        copy16  #kProgressBarWidth, z:muldiv_number
+        jsr     MulDiv
+        add16   z:muldiv_result, progress_dialog_bar_meter::x1, progress_dialog_bar_meter::x2
+        jsr     SetPenModeCopy
+        MGTK_CALL MGTK::SetPattern, progress_pattern
+        MGTK_CALL MGTK::PaintRect, progress_dialog_bar_meter
+
+        rts
+.endproc ; DrawProgressDialogFilesRemaining
+
+;;; ============================================================
 ;;; Append name at `file_entry_buf` to path at `src_path_buf`
 
 .proc AppendFileEntryToSrcPath
         ldax    #file_entry_buf
         jmp     AppendFilenameToSrcPath
 .endproc ; AppendFileEntryToSrcPath
+
+;;; ============================================================
+;;; Append name at `file_entry_buf` to path at `dst_path_buf`
+
+.proc AppendFileEntryToDstPath
+        ldax    #file_entry_buf
+        jmp     AppendFilenameToDstPath
+.endproc ; AppendFileEntryToDstPath
+
+;;; ============================================================
+
+.endscope ; operation_dialogs
+;;; TODO: Goal is to move/merge this scope w/ operations
+PrepCallbacksForEnumeration := operation_dialogs::PrepCallbacksForEnumeration
+PrepCallbacksForCopy := operation_dialogs::PrepCallbacksForCopy
+PrepCallbacksForDelete := operation_dialogs::PrepCallbacksForDelete
+PrepCallbacksForDownload := operation_dialogs::PrepCallbacksForDownload
+OpenCopyProgressDialog := operation_dialogs::OpenCopyProgressDialog
+OpenDeleteProgressDialog := operation_dialogs::OpenDeleteProgressDialog
+OpenDownloadProgressDialog := operation_dialogs::OpenDownloadProgressDialog
+do_op_flag := operation_dialogs::do_op_flag
+OpProcessSelectedFile := operation_dialogs::OpProcessSelectedFile
+op_jt_addr1 := operation_dialogs::op_jt_addr1
+op_jt_addr3 := operation_dialogs::op_jt_addr3
+DoNothing := operation_dialogs::DoNothing
+ProcessDir := operation_dialogs::ProcessDir
+EnumerationProcessSelectedFile := operation_dialogs::EnumerationProcessSelectedFile
+CopyProcessSelectedFile := operation_dialogs::CopyProcessSelectedFile
+CopyProcessNotSelectedFile := operation_dialogs::CopyProcessNotSelectedFile
+on_line_params2 := operation_dialogs::on_line_params2
 
 ;;; ============================================================
 ;;; Remove segment from path at `src_path_buf`
@@ -13047,14 +13525,6 @@ found:  dey
 finish: jsr     PopPointers     ; do not tail-call optimize!
         rts
 .endproc ; RemovePathSegment
-
-;;; ============================================================
-;;; Append name at `file_entry_buf` to path at `dst_path_buf`
-
-.proc AppendFileEntryToDstPath
-        ldax    #file_entry_buf
-        jmp     AppendFilenameToDstPath
-.endproc ; AppendFileEntryToDstPath
 
 ;;; ============================================================
 ;;; Remove segment from path at `dst_path_buf`
@@ -13214,11 +13684,11 @@ canceled:
         lda     #kOperationCanceled
 
         sta     @result
-        jsr     InvokeOperationCompleteCallback
+        jsr     operations::InvokeOperationCompleteCallback
 
         MLI_CALL CLOSE, close_params
 
-        ldx     stack_stash     ; restore stack, in case recursion was aborted
+        ldx     operations::stack_stash     ; restore stack, in case recursion was aborted
         txs
 
         @result := *+1
@@ -13828,436 +14298,6 @@ ignore: sec
 close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
         jmp     ClearUpdates ; following CloseWindow
 .endproc ; AboutDialogProc
-
-;;; ============================================================
-
-.proc CopyDialogProc
-        lda     copy_dialog_params::phase
-
-        ;; --------------------------------------------------
-        cmp     #CopyDialogLifecycle::open
-    IF_EQ
-        copy    #0, has_input_field_flag
-        jmp     OpenProgressDialog
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #CopyDialogLifecycle::count
-    IF_EQ
-        ldax    copy_dialog_params::count
-        stax    file_count
-        stax    total_count
-        jsr     SetPortForProgressDialog
-        bit     move_flag
-      IF_NC
-        param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
-      ELSE
-        param_call DrawProgressDialogLabel, 0, aux::str_move_moving
-      END_IF
-        jmp     DrawFileCountWithSuffix
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #CopyDialogLifecycle::show
-    IF_EQ
-        copy16  copy_dialog_params::count, file_count
-        jsr     SetPortForProgressDialog
-
-        ldax    copy_dialog_params::a_src
-        jsr     CopyToBuf0
-        param_call DrawProgressDialogLabel, 1, aux::str_copy_from
-        jsr     ClearTargetFileRectAndSetPos
-        jsr     DrawDialogPathBuf0
-
-        ldax    copy_dialog_params::a_dst
-        jsr     CopyToBuf0
-        param_call DrawProgressDialogLabel, 2, aux::str_copy_to
-        jsr     ClearDestFileRectAndSetPos
-        jsr     DrawDialogPathBuf0
-
-        jmp     DrawProgressDialogFilesRemaining
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; CopyDialogLifecycle::close
-        jmp     CloseProgressDialog
-.endproc ; CopyDialogProc
-
-;;; ============================================================
-;;; "DownLoad" dialog
-
-DownloadDialogProc := CopyDialogProc
-
-;;; ============================================================
-;;; "Delete File" dialog
-
-.proc DeleteDialogProc
-        lda     delete_dialog_params::phase
-
-        ;; --------------------------------------------------
-        cmp     #DeleteDialogLifecycle::open
-    IF_EQ
-        copy    #0, has_input_field_flag
-        jmp     OpenProgressDialog
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #DeleteDialogLifecycle::count
-    IF_EQ
-        ldax    delete_dialog_params::count
-        stax    total_count
-        stax    file_count
-        jsr     SetPortForProgressDialog
-        param_call DrawProgressDialogLabel, 0, aux::str_delete_count
-        jmp     DrawFileCountWithSuffix
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #DeleteDialogLifecycle::show
-    IF_EQ
-        copy16  delete_dialog_params::count, file_count
-        jsr     SetPortForProgressDialog
-
-        ldax    delete_dialog_params::a_path
-        jsr     CopyToBuf0
-        param_call DrawProgressDialogLabel, 1, aux::str_file_colon
-        jsr     ClearTargetFileRectAndSetPos
-        jsr     DrawDialogPathBuf0
-
-        jmp     DrawProgressDialogFilesRemaining
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; DeleteDialogLifecycle::close
-        jmp     CloseProgressDialog
-.endproc ; DeleteDialogProc
-
-;;; ============================================================
-;;; "Get Info" dialog
-
-.proc GetInfoDialogProc
-        lda     get_info_dialog_params::state
-
-        ;; --------------------------------------------------
-        ;; GetInfoDialogState::prepare_*
-    IF_NS
-        ;; Draw the field labels (e.g. "Size:")
-        copy    #0, has_input_field_flag
-        lda     get_info_dialog_params::state
-        pha
-        lsr     a               ; bit 1 set if multiple
-        lsr     a               ; so configure buttons appropriately
-        ror     a
-        eor     #$80
-        jsr     OpenPromptWindow
-        jsr     SetPortForDialogWindow
-
-        param_call DrawDialogTitle, aux::label_get_info
-        pla                     ; A = get_info_dialog_params::state
-        pha                     ; bit 0 set if volume
-
-        ;; Draw labels
-        param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_info_name
-        param_call DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_info_type
-        param_call DrawDialogLabel, 4 | DDL_LRIGHT, aux::str_info_create
-        param_call DrawDialogLabel, 5 | DDL_LRIGHT, aux::str_info_mod
-
-        pla                     ; bit 0 set if volume
-        and     #$01
-      IF_NOT_ZERO
-        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
-        param_jump DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
-      ELSE
-        param_jump DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
-      END_IF
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; GetInfoDialogState::* (name, type, etc)
-        ;; Draw a specific value
-
-        cmp     #GetInfoDialogState::prompt
-    IF_NE
-        cmp     #GetInfoDialogState::locked
-     IF_EQ
-        lda     get_info_dialog_params::locked ; bit 7 = file, bit 6 = locked
-       IF_NS
-        asl                     ; now bit 7 = locked = checked
-        sta     locked_button::state
-        BTK_CALL BTK::CheckboxDraw, locked_button
-        copy16  #HandleClick, main::PromptDialogClickHandlerHook
-        copy16  #HandleKey, main::PromptDialogKeyHandlerHook
-        rts
-       END_IF
-     END_IF
-
-        jsr     SetPortForDialogWindow
-        lda     get_info_dialog_params::state
-        ora     #DDL_VALUE
-        tay
-
-        ;; Draw the string at `get_info_dialog_params::a_str`
-        ldax    get_info_dialog_params::a_str
-        jmp     DrawDialogLabel
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; GetInfoDialogState::prompt
-:       jsr     PromptInputLoop
-        bmi     :-
-
-        pha
-        jsr     ClosePromptDialog
-        pla
-        rts
-
-.proc HandleClick
-        MGTK_CALL MGTK::InRect, locked_button::rect
-    IF_NOT_ZERO
-        jsr     ToggleFileLock
-    END_IF
-        return #$FF
-.endproc ; HandleClick
-
-.proc HandleKey
-        cmp     #CHAR_CTRL_L
-        beq     ToggleFileLock
-        rts
-.endproc ; HandleKey
-
-.proc ToggleFileLock
-        ;; Modify file
-        lda     src_file_info_params::access
-        bit     locked_button::state
-    IF_NS
-        ;; Unlock
-        ora     #LOCKED_MASK
-    ELSE
-        ;; Lock
-        and     #AS_BYTE(~LOCKED_MASK)
-    END_IF
-        sta     src_file_info_params::access
-        jsr     SetSrcFileInfo
-        bcs     ret
-        ;; TODO: Show alert, offer retry on failure?
-
-        ;; Toggle UI
-        lda     locked_button::state
-        eor     #$80
-        sta     locked_button::state
-        BTK_CALL BTK::CheckboxUpdate, locked_button
-
-        ;; Update FileRecord
-        icon_ptr := $06
-        file_record_ptr := $08
-
-        ldx     get_info_dialog_params::index
-        lda     selected_icon_list,x
-        jsr     GetIconEntry
-        stax    icon_ptr
-        jsr     SetFileRecordPtrFromIconPtr
-
-        bit     LCBANK2
-        bit     LCBANK2
-        lda     src_file_info_params::access
-        ldy     #FileRecord::access
-        sta     (file_record_ptr),y
-        bit     LCBANK1
-        bit     LCBANK1
-
-        copy    #$80, get_info_dialog_params::refresh
-
-ret:    return  #$FF
-.endproc ; ToggleFileLock
-
-.endproc ; GetInfoDialogProc
-
-;;; ============================================================
-;;; "Rename" dialog
-
-;;; This uses a minimal dialog window to simulate modeless rename.
-
-.proc RenameDialogProc
-        lda     rename_dialog_params::state
-
-        ;; ----------------------------------------
-        cmp     #RenameDialogState::open
-    IF_EQ
-        ldy     #LETK::kLineEditOptionsNormal
-        jsr     GetSelectionViewBy
-        cmp     #kViewByIcon
-      IF_EQ
-        ldy     #LETK::kLineEditOptionsCentered
-      END_IF
-        sty     rename_line_edit_rec::options
-
-        COPY_STRUCT MGTK::Point, rename_dialog_params::rect::topleft, winfo_rename_dialog::viewloc
-
-        jsr     OpenRenameWindow
-        copy16  rename_dialog_params::a_prev, $08
-        param_call CopyPtr2ToBuf, text_input_buf
-        LETK_CALL LETK::Init, rename_le_params
-        LETK_CALL LETK::Activate, rename_le_params
-        rts
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #RenameDialogState::run
-    IF_EQ
-loop:   jsr     RenameInputLoop
-        bmi     loop            ; continue?
-        bne     do_close        ; canceled!
-
-        lda     text_input_buf  ; treat empty as cancel
-        beq     do_close
-
-        ;; Validate path length before committing
-        copy16  rename_dialog_params::a_path, $08
-        param_call CopyPtr2ToBuf, path_buf0
-        lda     path_buf0       ; full path okay?
-        clc
-        adc     text_input_buf
-        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
-      IF_GE
-        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
-        jmp     loop
-      END_IF
-
-        ldxy    #text_input_buf
-        return  #0
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; RenameDialogState::close
-do_close:
-        MGTK_CALL MGTK::CloseWindow, winfo_rename_dialog
-        jsr     ClearUpdates     ; following CloseWindow
-        jsr     SetCursorPointer ; when closing dialog
-        return  #1
-.endproc ; RenameDialogProc
-
-;;; ============================================================
-
-;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
-
-.proc RenameInputLoop
-        LETK_CALL LETK::Idle, rename_le_params
-
-        jsr     SystemTask
-        jsr     GetNextEvent
-
-        cmp     #MGTK::EventKind::button_down
-        jeq     RenameClickHandler
-
-        cmp     #MGTK::EventKind::key_down
-        jeq     RenameKeyHandler
-
-        cmp     #kEventKindMouseMoved
-        bne     RenameInputLoop
-
-        ;; Check if mouse is over window, change cursor appropriately.
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
-        bne     out
-        lda     findwindow_params::window_id
-        cmp     #winfo_rename_dialog::kWindowId
-        bne     out
-
-        jsr     SetCursorIBeamWithFlag
-        jmp     RenameInputLoop
-
-out:    jsr     SetCursorPointerWithFlag
-        jmp     RenameInputLoop
-.endproc ; RenameInputLoop
-
-;;; Click handler for rename dialog
-
-.proc RenameClickHandler
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
-    IF_NE
-        return  #PromptResult::ok
-    END_IF
-
-        lda     findwindow_params::window_id
-        cmp     #winfo_rename_dialog::kWindowId
-    IF_NE
-        return  #PromptResult::ok
-    END_IF
-
-        copy    winfo_rename_dialog, event_params
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, rename_le_params::coords
-        LETK_CALL LETK::Click, rename_le_params
-
-        return  #$FF
-.endproc ; RenameClickHandler
-
-;;; Key handler for rename dialog
-
-.proc RenameKeyHandler
-        lda     event_params::key
-        sta     rename_le_params::key
-
-        ;; Modifiers?
-        ldx     event_params::modifiers
-        stx     rename_le_params::modifiers
-        bne     allow           ; pass through modified keys
-
-        ;; No modifiers
-        cmp     #CHAR_RETURN
-      IF_EQ
-        return  #PromptResult::ok
-      END_IF
-
-        cmp     #CHAR_ESCAPE
-      IF_EQ
-        return  #PromptResult::cancel
-      END_IF
-
-        jsr     IsControlChar   ; pass through control characters
-        bcc     allow
-        ldy     rename_line_edit_rec+LETK::LineEditRecord::caret_pos
-        jsr     IsFilenameChar
-        bcs     ignore
-allow:  LETK_CALL LETK::Key, rename_le_params
-ignore:
-        return  #$FF
-.endproc ; RenameKeyHandler
-
-;;; ============================================================
-
-;;; `file_count` must be populated
-.proc DrawFileCountWithSuffix
-        jsr     ComposeFileCountString
-        param_call DrawString, str_file_count
-        param_jump_indirect DrawString, ptr_str_files_suffix
-.endproc ; DrawFileCountWithSuffix
-
-;;; `file_count` must be populated
-.proc DrawProgressDialogFilesRemaining
-        MGTK_CALL MGTK::MoveTo, progress_dialog_remaining_pos
-        param_call DrawString, aux::str_files_remaining
-
-        jsr     ComposeFileCountString
-        param_call DrawString, str_file_count
-        param_call DrawString, str_2_spaces
-
-        ;; Update progress bar
-        sub16   total_count, file_count, z:muldiv_numerator
-        copy16  total_count, z:muldiv_denominator
-        copy16  #kProgressBarWidth, z:muldiv_number
-        jsr     MulDiv
-        add16   z:muldiv_result, progress_dialog_bar_meter::x1, progress_dialog_bar_meter::x2
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::SetPattern, progress_pattern
-        MGTK_CALL MGTK::PaintRect, progress_dialog_bar_meter
-
-        rts
-.endproc ; DrawProgressDialogFilesRemaining
 
 ;;; ============================================================
 
@@ -15799,6 +15839,8 @@ list_view_filerecord:
 datetime_for_conversion := list_view_filerecord + FileRecord::modification_date
 
 ;;; ============================================================
+
+case_bits:      .word   0
 
 ;;; Holds a single filename
 clipboard:
