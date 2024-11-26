@@ -3327,7 +3327,6 @@ ret:    rts
 
         ;; ... but callers can override and use this entry point instead.
 ep2:
-        stax    rename_dialog_params__a_prev
         jsr     DoRename
         pha                     ; A = result
 
@@ -10311,6 +10310,13 @@ RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 ;;; These operate on the entire selection recursively, e.g.
 ;;; computing size, deleting, copying, etc., and share common
 ;;; logic.
+;;;
+;;; Importantly, the procs in this `operations` scope are modal
+;;; operations. This allows this code to be paged out when other modal
+;;; operations are performed, such as accessories that need a large
+;;; buffer.
+
+;;; ============================================================
 
 .enum PromptResult
         ok      = 0
@@ -10592,1273 +10598,6 @@ all_flag:
 
 ;;; ============================================================
 
-.endscope ; operations
-        DoCopySelection := operations::DoCopySelection
-        DoCopyToRAM := operations::DoCopyToRAM
-        DoCopyFile := operations::DoCopyFile
-        DoDrop := operations::DoDrop
-        operations__move_flag := operations::move_flag
-
-;;; ============================================================
-;;; Input: A = icon
-;;; Output: A,X = icon name ptr
-
-.proc GetIconName
-        jsr     GetIconEntry
-        clc
-        adc     #IconEntry::name
-        bcc     :+
-        inx
-:       rts
-.endproc ; GetIconName
-
-;;; ============================================================
-;;; Concatenate paths.
-;;; Inputs: Base path in $08, second path in $06
-;;; Output: `path_buf3`
-
-.proc JoinPaths
-        str1 := $8
-        str2 := $6
-        buf  := path_buf3
-
-        ldx     #0
-
-        lda     str1            ; check for nullptr (volume)
-        ora     str1+1
-        beq     do_str2
-
-        ldy     #0              ; check for empty string
-        lda     (str1),y
-        beq     do_str2
-
-        ;; Copy $8 (str1)
-        sta     @len
-:       iny
-        inx
-        lda     (str1),y
-        sta     buf,x
-        @len := *+1
-        cpy     #SELF_MODIFIED_BYTE
-        bne     :-
-
-do_str2:
-        ;; Add path separator
-        inx
-        lda     #'/'
-        sta     buf,x
-
-        ;; Append $6 (str2)
-        ldy     #0
-        lda     (str2),y
-        beq     done
-        sta     @len
-:       iny
-        inx
-        lda     (str2),y
-        sta     buf,x
-        @len := *+1
-        cpy     #SELF_MODIFIED_BYTE
-        bne     :-
-
-done:   stx     buf
-        rts
-.endproc ; JoinPaths
-
-;;; ============================================================
-
-.proc DoEject
-        lda     selected_icon_count
-        beq     ret
-
-        ldx     selected_icon_count
-        stx     $800
-        dex
-:       lda     selected_icon_list,x
-        sta     $0801,x
-        dex
-        bpl     :-
-
-        jsr     ClearSelection
-        ldx     #0
-        stx     index
-        index := *+1
-loop:   ldx     #SELF_MODIFIED_BYTE
-        lda     $0801,x
-        cmp     #$01
-        beq     :+
-        jsr     SmartportEject
-:       inc     index
-        ldx     index
-        cpx     $800
-        bne     loop
-
-ret:    rts
-.endproc ; DoEject
-
-;;; ============================================================
-;;; Inputs: A = icon number
-
-.proc SmartportEject
-        dib_buffer := ::IO_BUFFER
-
-        ;; Look up device index by icon number
-        jsr     IconToDeviceIndex
-        RTS_IF_ZC
-
-        lda     DEVLST,x        ; A = unit_number
-        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `FindSmartportDispatchAddress` handles it.
-
-        ;; Compute SmartPort dispatch address
-        jsr     FindSmartportDispatchAddress
-        bcs     done            ; not SP
-        stax    status_dispatch
-        stax    control_dispatch
-        sty     status_unit_number
-        sty     control_unit_number
-
-        ;; Execute SmartPort call
-        status_dispatch := *+1
-        jsr     SELF_MODIFIED
-        .byte   SPCall::Status
-        .addr   status_params
-        bcs     done            ; failure
-        lda     dib_buffer+SPDIB::Device_Type_Code
-        cmp     #SPDeviceType::Disk35
-        bne     done            ; not 3.5, don't issue command
-
-        ;; Execute SmartPort call
-        control_dispatch := *+1
-        jsr     SELF_MODIFIED
-        .byte   SPCall::Control
-        .addr   control_params
-
-done:   rts
-
-        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
-        status_unit_number := status_params::unit_num
-
-        DEFINE_SP_CONTROL_PARAMS control_params, SELF_MODIFIED_BYTE, list, $04 ; For Apple/UniDisk 3.3: Eject disk
-        control_unit_number := control_params::unit_number
-list:   .word   0               ; 0 items in list
-.endproc ; SmartportEject
-
-;;; ============================================================
-
-.scope modal_dialogs
-
-;;; ============================================================
-;;; "Get Info" dialog state and logic
-;;; ============================================================
-
-        DEFINE_READ_BLOCK_PARAMS getinfo_block_params, $800, $A
-
-.params get_info_dialog_params
-state:  .byte   0
-a_str:  .addr   0               ; e.g. string address
-locked: .byte   0               ; bit7 = 1 if file, bit6 = 1 if locked
-index:  .byte   0               ; index in selected icon list
-refresh:.byte   0               ; bit7 = 1 if selection modified
-.endparams
-
-.enum GetInfoDialogState
-        name    = 1
-        type    = 2             ; blank for vol
-        size    = 3             ; blocks (file)/size (volume)
-        created = 4
-        modified = 5
-        locked  = 6             ; locked (file)/protected (volume)
-
-        prompt  = 7             ; signals the dialog to enter loop
-
-        prepare_file = $80      ; +2 if multiple
-        prepare_vol  = $81      ; +2 if multiple
-.endenum
-
-
-;;; ============================================================
-;;; Get Info
-;;; Returns: A has bit7 = 1 if selected items were modified
-;;; Assert: At least one icon is selected
-
-.proc DoGetInfo
-        lda     selected_icon_count
-        RTS_IF_ZERO
-
-        lda     #0
-        sta     get_info_dialog_params::index
-        sta     get_info_dialog_params::refresh
-
-loop:   ldx     get_info_dialog_params::index
-        cpx     selected_icon_count
-        jeq     done
-
-        ldx     get_info_dialog_params::index
-        lda     selected_icon_list,x
-        cmp     trash_icon_num
-        jeq     next
-
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
-    IF_NE
-        jsr     ShowAlert
-        jmp     next
-    END_IF
-
-        ldy     path_buf3       ; Copy to `src_path_buf`
-:       copy    path_buf3,y, src_path_buf,y
-        dey
-        bpl     :-
-
-        ;; Try to get file info
-common: jsr     GetSrcFileInfo
-    IF_CS
-        jsr     ShowAlert
-        cmp     #kAlertResultTryAgain
-        beq     common
-        jmp     next
-    END_IF
-
-        lda     selected_window_id
-        beq     vol_icon2
-
-        ;; File icon
-        copy    #GetInfoDialogState::prepare_file, get_info_dialog_params::state
-        lda     get_info_dialog_params::index
-        clc
-        adc     #1
-        cmp     selected_icon_count
-        beq     :+
-        inc     get_info_dialog_params::state
-        inc     get_info_dialog_params::state
-:       jsr     RunGetInfoDialogProc
-        jmp     common2
-
-vol_icon2:
-        copy    #GetInfoDialogState::prepare_vol, get_info_dialog_params::state
-        lda     get_info_dialog_params::index
-        clc
-        adc     #1
-        cmp     selected_icon_count
-        beq     :+
-        inc     get_info_dialog_params::state
-        inc     get_info_dialog_params::state
-:       jsr     RunGetInfoDialogProc
-        copy    #0, write_protected_flag
-        ldx     get_info_dialog_params::index
-        lda     selected_icon_list,x
-
-        ;; Map icon to unit number
-        jsr     IconToDeviceIndex
-        bne     common2
-
-        lda     DEVLST,x
-        and     #UNIT_NUM_MASK
-        sta     getinfo_block_params::unit_num
-        MLI_CALL READ_BLOCK, getinfo_block_params
-        bcs     common2
-        MLI_CALL WRITE_BLOCK, getinfo_block_params
-        cmp     #ERR_WRITE_PROTECTED
-        bne     common2
-        copy    #$80, write_protected_flag
-
-common2:
-        ;; --------------------------------------------------
-        ;; Name
-        copy    #GetInfoDialogState::name, get_info_dialog_params::state
-        ldx     get_info_dialog_params::index
-        lda     selected_icon_list,x
-        jsr     GetIconName
-        stax    get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
-
-        ;; --------------------------------------------------
-        ;; Type
-        copy    #GetInfoDialogState::type, get_info_dialog_params::state
-        lda     selected_window_id
-    IF_ZERO
-        ;; Volume
-        COPY_STRING str_volume, text_buffer2
-    ELSE
-        ;; File
-        lda     src_file_info_params::file_type
-        pha
-        jsr     ComposeFileTypeString
-        COPY_STRING str_file_type, text_buffer2
-        pla                     ; A = file type
-        cmp     #FT_DIRECTORY
-      IF_NE
-        ldax    src_file_info_params::aux_type
-        jsr     AppendAuxType
-      END_IF
-    END_IF
-        copy16  #text_buffer2, get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
-
-        ;; --------------------------------------------------
-        ;; Size/Blocks
-        copy    #GetInfoDialogState::size, get_info_dialog_params::state
-
-        ;; Compose "12345K" or "12345K / 67890K" string
-        copy    #0, text_input_buf
-
-        lda     selected_window_id ; volume?
-        beq     volume                ; yes
-
-        ;; A file, so just show the size
-        ldax    src_file_info_params::blocks_used
-        jmp     append_size
-
-        ;; A volume.
-volume:
-        ;; ProDOS TRM 4.4.5:
-        ;; "When file information about a volume directory is requested, the
-        ;; total number of blocks on the volume is returned in the aux_type
-        ;; field and the total blocks for all files is returned in blocks_used.
-
-        ldax    src_file_info_params::blocks_used
-        stax    vol_used_blocks
-        jsr     ComposeSizeString
-        param_call AppendToTextInputBuf, text_buffer2
-        param_call AppendToTextInputBuf, aux::str_info_size_slash
-
-        ;; Load up the total volume size...
-        ldax    src_file_info_params::aux_type
-        stax    vol_total_blocks
-
-        ;; Compute "12345K" (either volume size or file size)
-append_size:
-        jsr     ComposeSizeString
-        param_call AppendToTextInputBuf, text_buffer2
-
-        copy16  #text_input_buf, get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
-
-        ;; --------------------------------------------------
-        ;; Created date
-        copy    #GetInfoDialogState::created, get_info_dialog_params::state
-        COPY_STRUCT DateTime, src_file_info_params::create_date, datetime_for_conversion
-        jsr     ComposeDateString
-        copy16  #text_buffer2, get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
-
-        ;; --------------------------------------------------
-        ;; Modified date
-        copy    #GetInfoDialogState::modified, get_info_dialog_params::state
-        COPY_STRUCT DateTime, src_file_info_params::mod_date, datetime_for_conversion
-        jsr     ComposeDateString
-        copy16  #text_buffer2, get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
-
-        ;; --------------------------------------------------
-        ;; Locked/Protected
-        copy    #GetInfoDialogState::locked, get_info_dialog_params::state
-
-        lda     selected_window_id
-    IF_ZERO
-        ;; Volume
-        ldax    #aux::str_info_no
-        bit     write_protected_flag
-      IF_NS
-        ldax    #aux::str_info_yes
-      END_IF
-        stax    get_info_dialog_params::a_str
-        lda     #0              ; not file
-    ELSE
-        ;; File
-        lda     src_file_info_params::access ; File
-        and     #ACCESS_DEFAULT
-        cmp     #ACCESS_DEFAULT
-      IF_EQ
-        lda     #$80            ; file, not locked
-      ELSE
-        lda     #$C0            ; file, locked
-      END_IF
-    END_IF
-        sta     get_info_dialog_params::locked
-        jsr     RunGetInfoDialogProc
-
-        ;; --------------------------------------------------
-        ;; Descendant size/file count
-
-        lda     src_file_info_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        beq     do_dir
-        cmp     #ST_LINKED_DIRECTORY
-        bne     :+
-do_dir:
-        jsr     SetCursorWatch
-        jsr     GetDirSize
-        jsr     SetCursorPointer
-:
-        ;; --------------------------------------------------
-
-        copy    #GetInfoDialogState::prompt, get_info_dialog_params::state
-        jsr     RunGetInfoDialogProc
-        bne     done
-
-next:   inc     get_info_dialog_params::index
-        jmp     loop
-
-done:   copy    #0, path_buf4
-        lda     get_info_dialog_params::refresh
-        rts
-
-.proc GetDirSize
-        lda     selected_window_id
-    IF_NOT_ZERO
-        copy16  #1, file_count
-        copy16  src_file_info_params::blocks_used, num_blocks
-    ELSE
-        copy16  #0, file_count
-        copy16  #0, num_blocks
-    END_IF
-
-        copy16  #GetInfoProcessDirEntry, op_jt_addr1
-        copy16  #DoNothing, op_jt_addr3
-        copy16  #DoNothing, operations::operation_complete_callback ; handle error
-        tsx
-        stx     operations::stack_stash
-        jsr     ProcessDir
-        jmp     UpdateDirSizeDisplay ; in case 0 files were seen
-.endproc ; GetDirSize
-
-.proc GetInfoProcessDirEntry
-        add16   num_blocks, src_file_info_params::blocks_used, num_blocks
-        inc16   file_count
-        FALL_THROUGH_TO UpdateDirSizeDisplay
-.endproc ; GetInfoProcessDirEntry
-
-.proc UpdateDirSizeDisplay
-        ;; Dir: "<size>K for <count> file(s)"
-        ;; Vol: "<size>K for <count> file(s) / <total>K>"
-        copy    #0, text_input_buf
-
-        ;; "<size>K"
-        ldax    num_blocks
-        ldy     selected_window_id
-     IF_ZERO
-        ldax    vol_used_blocks
-     END_IF
-        jsr     ComposeSizeString
-        param_call AppendToTextInputBuf, text_buffer2
-
-        ;; " for "
-        param_call AppendToTextInputBuf, aux::str_info_size_infix
-
-        ;; "<count> "
-        jsr     ComposeFileCountString
-        param_call AppendToTextInputBuf, str_file_count
-
-        ;; "file(s)"
-        ldax    #aux::str_info_size_suffix
-        ldy     file_count+1
-        bne     :+
-        ldy     file_count
-        cpy     #1
-        bne     :+
-        ldax    #aux::str_info_size_suffix_singular
-:       jsr     AppendToTextInputBuf
-
-        lda     selected_window_id
-    IF_ZERO
-        ;; " / "
-        param_call AppendToTextInputBuf, aux::str_info_size_slash
-        ;; "<total>K"
-        ldax    vol_total_blocks
-        jsr     ComposeSizeString
-        param_call AppendToTextInputBuf, text_buffer2
-    END_IF
-        ;; In case it shrank
-        param_call AppendToTextInputBuf, str_2_spaces
-
-        copy16  #text_input_buf, get_info_dialog_params::a_str
-        copy    #GetInfoDialogState::size, get_info_dialog_params::state
-        jsr     RunGetInfoDialogProc
-
-        rts
-.endproc ; UpdateDirSizeDisplay
-num_blocks:
-        .word   0
-vol_used_blocks:
-        .word   0
-vol_total_blocks:
-        .word   0
-
-write_protected_flag:
-        .byte   0
-
-.proc RunGetInfoDialogProc
-        jmp     GetInfoDialogProc
-.endproc ; RunGetInfoDialogProc
-.endproc ; DoGetInfo
-
-;;; ============================================================
-;;; "Get Info" dialog
-
-.proc GetInfoDialogProc
-        lda     get_info_dialog_params::state
-
-        ;; --------------------------------------------------
-        ;; GetInfoDialogState::prepare_*
-    IF_NS
-        ;; Draw the field labels (e.g. "Size:")
-        copy    #0, has_input_field_flag
-        lda     get_info_dialog_params::state
-        pha
-        lsr     a               ; bit 1 set if multiple
-        lsr     a               ; so configure buttons appropriately
-        ror     a
-        eor     #$80
-        jsr     OpenPromptWindow
-        jsr     SetPortForDialogWindow
-
-        param_call DrawDialogTitle, aux::label_get_info
-        pla                     ; A = get_info_dialog_params::state
-        pha                     ; bit 0 set if volume
-
-        ;; Draw labels
-        param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_info_name
-        param_call DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_info_type
-        param_call DrawDialogLabel, 4 | DDL_LRIGHT, aux::str_info_create
-        param_call DrawDialogLabel, 5 | DDL_LRIGHT, aux::str_info_mod
-
-        pla                     ; bit 0 set if volume
-        and     #$01
-      IF_NOT_ZERO
-        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
-        param_jump DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
-      ELSE
-        param_jump DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
-      END_IF
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; GetInfoDialogState::* (name, type, etc)
-        ;; Draw a specific value
-
-        cmp     #GetInfoDialogState::prompt
-    IF_NE
-        cmp     #GetInfoDialogState::locked
-     IF_EQ
-        lda     get_info_dialog_params::locked ; bit 7 = file, bit 6 = locked
-       IF_NS
-        asl                     ; now bit 7 = locked = checked
-        sta     locked_button::state
-        BTK_CALL BTK::CheckboxDraw, locked_button
-        copy16  #HandleClick, main::PromptDialogClickHandlerHook
-        copy16  #HandleKey, main::PromptDialogKeyHandlerHook
-        rts
-       END_IF
-     END_IF
-
-        jsr     SetPortForDialogWindow
-        lda     get_info_dialog_params::state
-        ora     #DDL_VALUE
-        tay
-
-        ;; Draw the string at `get_info_dialog_params::a_str`
-        ldax    get_info_dialog_params::a_str
-        jmp     DrawDialogLabel
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; GetInfoDialogState::prompt
-:       jsr     PromptInputLoop
-        bmi     :-
-
-        pha
-        jsr     ClosePromptDialog
-        pla
-        rts
-
-.proc HandleClick
-        MGTK_CALL MGTK::InRect, locked_button::rect
-    IF_NOT_ZERO
-        jsr     ToggleFileLock
-    END_IF
-        return #$FF
-.endproc ; HandleClick
-
-.proc HandleKey
-        cmp     #CHAR_CTRL_L
-        beq     ToggleFileLock
-        rts
-.endproc ; HandleKey
-
-.proc ToggleFileLock
-        ;; Modify file
-        lda     src_file_info_params::access
-        bit     locked_button::state
-    IF_NS
-        ;; Unlock
-        ora     #LOCKED_MASK
-    ELSE
-        ;; Lock
-        and     #AS_BYTE(~LOCKED_MASK)
-    END_IF
-        sta     src_file_info_params::access
-        jsr     SetSrcFileInfo
-        bcs     ret
-        ;; TODO: Show alert, offer retry on failure?
-
-        ;; Toggle UI
-        lda     locked_button::state
-        eor     #$80
-        sta     locked_button::state
-        BTK_CALL BTK::CheckboxUpdate, locked_button
-
-        ;; Update FileRecord
-        icon_ptr := $06
-        file_record_ptr := $08
-
-        ldx     get_info_dialog_params::index
-        lda     selected_icon_list,x
-        jsr     GetIconEntry
-        stax    icon_ptr
-        jsr     SetFileRecordPtrFromIconPtr
-
-        bit     LCBANK2
-        bit     LCBANK2
-        lda     src_file_info_params::access
-        ldy     #FileRecord::access
-        sta     (file_record_ptr),y
-        bit     LCBANK1
-        bit     LCBANK1
-
-        copy    #$80, get_info_dialog_params::refresh
-
-ret:    return  #$FF
-.endproc ; ToggleFileLock
-
-.endproc ; GetInfoDialogProc
-
-;;; ============================================================
-
-.enum RenameDialogState
-        open  = $00
-        run   = $80
-        close = $40
-.endenum
-
-        old_name_buf := $1F00
-        new_name_buf := stashed_name
-
-        DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
-
-.params rename_dialog_params
-state:  .byte   0
-a_prev: .addr   old_name_buf
-a_path: .addr   SELF_MODIFIED_BYTE
-        DEFINE_RECT rect,0,0,0,0
-.endparams
-
-;;; Assert: Single icon selected, and it's not Trash.
-.proc DoRenameImpl
-
-start:
-        lda     #0
-        sta     result_flags
-
-        ;; Dialog needs base path to ensure new name is valid path
-        jsr     GetSelectionWindow
-        jsr     GetWindowOrRootPath
-        stax    rename_dialog_params::a_path
-
-        ;; Original path
-        lda     selected_icon_list
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
-    IF_NE
-        jsr     ShowAlert
-        return  result_flags
-    END_IF
-        param_call CopyToSrcPath, path_buf3
-
-        ;; Copy original name for display/default
-        lda     selected_icon_list
-        jsr     GetIconName
-        stax    $06
-        param_call CopyPtr1ToBuf, old_name_buf
-
-        lda     selected_icon_list
-        sta     icon_param
-        ITK_CALL IconTK::GetRenameRect, icon_param
-        COPY_STRUCT MGTK::Rect, tmp_rect, rename_dialog_params::rect
-
-        ;; Open the dialog
-        lda     #RenameDialogState::open
-        jsr     RunDialogProc
-
-        ;; Run the dialog
-retry:  lda     #RenameDialogState::run
-        jsr     RunDialogProc
-        beq     success
-
-        ;; Failure
-fail:   return  result_flags
-
-        ;; --------------------------------------------------
-        ;; Success, new name in X,Y
-
-success:
-        new_name_ptr := $08
-        stxy    new_name_ptr
-
-        ;; Copy the name somewhere LCBANK-safe
-        param_call CopyPtr2ToBuf, new_name_buf
-
-        ;; File or Volume?
-        lda     selected_window_id
-    IF_NOT_ZERO
-        jsr     GetWindowPath
-    ELSE
-        ldax    #str_empty
-    END_IF
-
-        ;; Copy window path as prefix
-        jsr     CopyToDstPath
-
-        ;; Append new filename
-        ldax    #new_name_buf
-        jsr     AppendFilenameToDstPath
-
-        ;; Did the name change (ignoring case)?
-        copy16  #old_name_buf, $06
-        copy16  #new_name_buf, $08
-        jsr     CompareStrings
-        beq     no_change
-
-        ;; Already exists? (Mostly for volumes, but works for files as well)
-        jsr     GetDstFileInfo
-        bcs     :+
-        lda     #ERR_DUPLICATE_FILENAME
-        jsr     ShowAlert
-        jmp     retry
-
-        ;; Try to rename
-:
-no_change:
-        ;; Update case bits, in memory or on disk
-        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
-
-        MLI_CALL RENAME, rename_params
-        bcc     finish
-        ;; Failed, maybe retry
-        jsr     ShowAlert       ; Alert options depend on specific ProDOS error
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
-        jeq     retry           ; `kAlertResultTryAgain` = 0
-        lda     #RenameDialogState::close
-        jsr     RunDialogProc
-        jmp     fail
-
-        ;; --------------------------------------------------
-        ;; Completed - tear down the dialog...
-finish: lda     #RenameDialogState::close
-        jsr     RunDialogProc
-
-        lda     selected_icon_list
-        sta     icon_param
-
-        ;; Erase the icon, in case new name is shorter
-        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED - takes care of ports
-
-        ;; Copy new string in
-        icon_name_ptr := $06
-        lda     selected_icon_list
-        jsr     GetIconName
-        stax    icon_name_ptr
-
-        ldy     new_name_buf
-:       lda     new_name_buf,y
-        sta     (icon_name_ptr),y
-        dey
-        bpl     :-
-
-        ;; If not volume, find and update associated FileEntry
-        lda     selected_window_id
-        jeq     end_filerecord_and_icon_update
-
-        ;; Dig up the index of the icon within the window.
-        icon_ptr := $06
-        lda     icon_param
-        jsr     GetIconEntry
-        stax    icon_ptr
-
-        ;; Compute bounds of icon bitmap
-        jsr     GetSelectionViewBy
-        .assert kViewByIcon = 0, error, "enum mismatch"
-    IF_ZERO
-        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
-        sub16_8 tmp_rect::y2, #kIconLabelHeight + kIconLabelGap, tmp_rect::y2
-    END_IF
-
-        file_record_ptr := $08
-        jsr     SetFileRecordPtrFromIconPtr
-
-        ;; Bank in FileRecords, and copy the new name in.
-        bit     LCBANK2
-        bit     LCBANK2
-        .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
-        ldy     new_name_buf
-:       lda     new_name_buf,y
-        sta     (file_record_ptr),y
-        dey
-        bpl     :-
-
-        ;; Filename change may alter icon. Don't bank out FileRecords yet.
-        ldy     #FileRecord::file_type
-        lda     (file_record_ptr),y
-        sta     icontype_filetype
-        ldy     #FileRecord::aux_type
-        copy16in (file_record_ptr),y, icontype_auxtype
-        ldy     #FileRecord::blocks
-        copy16in (file_record_ptr),y, icontype_blocks
-        copy16  #new_name_buf, icontype_filename
-
-        ;; Now we're done with FileRecords.
-        bit     LCBANK1
-        bit     LCBANK1
-
-        jsr     GetSelectionViewBy
-        .assert kViewByIcon = 0, error, "enum mismatch"
-    IF_ZERO
-        sta     view_by
-        jsr     GetIconType
-        view_by := *+1
-        ldy     #SELF_MODIFIED_BYTE
-        jsr     CreateIconsForWindowImpl::FindIconDetailsForIconType
-
-        ;; Use new `icon_height` to offset vertically.
-        ;; Add old icon height to make icony top of text
-        ldy     #IconEntry::icony
-        sub16in tmp_rect::y2, CreateIconsForWindowImpl::icon_height, (icon_ptr),y
-        ;; Use `icon_type` to populate IconEntry::type
-        ldy     #IconEntry::type
-        copy    CreateIconsForWindowImpl::icon_type, (icon_ptr),y
-        ;; Assumes `iconentry_flags` will not change, regardless of icon.
-    END_IF
-
-end_filerecord_and_icon_update:
-
-        ;; Draw the (maybe new) icon
-        ITK_CALL IconTK::DrawIcon, icon_param
-
-        ;; Is there a window for the folder/volume?
-        jsr     FindWindowForSrcPath
-    IF_NOT_ZERO
-        dst := $06
-        ;; Update the window title
-        jsr     GetWindowTitlePath
-        stax    dst
-        ldy     new_name_buf
-:       lda     new_name_buf,y
-        sta     (dst),y
-        dey
-        bpl     :-
-
-        lda     result_flags
-        ora     #$80
-        sta     result_flags
-    END_IF
-
-        ;; Update affected window paths, ProDOS prefix
-        jsr     NotifyPathChanged
-
-        ;; --------------------------------------------------
-        ;; Totally done
-
-        return result_flags
-
-.proc RunDialogProc
-        sta     rename_dialog_params
-        jmp     RenameDialogProc
-.endproc ; RunDialogProc
-
-;;; N bit ($80) set if a window title was changed
-result_flags:
-        .byte   0
-.endproc ; DoRenameImpl
-DoRename        := DoRenameImpl::start
-
-;;; ============================================================
-;;; Input: $06 has `IconEntry` ptr
-;;; Output: $08 has `FileRecord` ptr
-
-.proc SetFileRecordPtrFromIconPtr
-        icon_ptr := $06
-        file_record_ptr := $08
-
-        ldy     #IconEntry::record_num
-        lda     (icon_ptr),y
-        pha                     ; A = index of icon in window
-
-        ;; Find the window's FileRecord list.
-        lda     selected_window_id
-        jsr     GetFileRecordListForWindow
-        stax    file_record_ptr ; points at head of list (entry count)
-        inc16   file_record_ptr ; now points at first FileRecord in list
-
-        ;; Look up the FileRecord within the list.
-        pla                     ; A = index
-        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
-        jsr     ATimes32        ; A,X = index * 32
-        addax   file_record_ptr, file_record_ptr
-        rts
-.endproc ; SetFileRecordPtrFromIconPtr
-
-;;; ============================================================
-;;; "Rename" dialog
-
-;;; This uses a minimal dialog window to simulate modeless rename.
-
-.proc RenameDialogProc
-        lda     rename_dialog_params::state
-
-        ;; ----------------------------------------
-        cmp     #RenameDialogState::open
-    IF_EQ
-        ldy     #LETK::kLineEditOptionsNormal
-        jsr     GetSelectionViewBy
-        cmp     #kViewByIcon
-      IF_EQ
-        ldy     #LETK::kLineEditOptionsCentered
-      END_IF
-        sty     rename_line_edit_rec::options
-
-        COPY_STRUCT MGTK::Point, rename_dialog_params::rect::topleft, winfo_rename_dialog::viewloc
-
-        jsr     OpenRenameWindow
-        copy16  rename_dialog_params::a_prev, $08
-        param_call CopyPtr2ToBuf, text_input_buf
-        LETK_CALL LETK::Init, rename_le_params
-        LETK_CALL LETK::Activate, rename_le_params
-        rts
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #RenameDialogState::run
-    IF_EQ
-loop:   jsr     RenameInputLoop
-        bmi     loop            ; continue?
-        bne     do_close        ; canceled!
-
-        lda     text_input_buf  ; treat empty as cancel
-        beq     do_close
-
-        ;; Validate path length before committing
-        copy16  rename_dialog_params::a_path, $08
-        param_call CopyPtr2ToBuf, path_buf0
-        lda     path_buf0       ; full path okay?
-        clc
-        adc     text_input_buf
-        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
-      IF_GE
-        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
-        jmp     loop
-      END_IF
-
-        ldxy    #text_input_buf
-        return  #0
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; RenameDialogState::close
-do_close:
-        MGTK_CALL MGTK::CloseWindow, winfo_rename_dialog
-        jsr     ClearUpdates     ; following CloseWindow
-        jsr     SetCursorPointer ; when closing dialog
-        return  #1
-.endproc ; RenameDialogProc
-
-;;; ============================================================
-
-;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
-
-.proc RenameInputLoop
-        LETK_CALL LETK::Idle, rename_le_params
-
-        jsr     SystemTask
-        jsr     GetNextEvent
-
-        cmp     #MGTK::EventKind::button_down
-        jeq     RenameClickHandler
-
-        cmp     #MGTK::EventKind::key_down
-        jeq     RenameKeyHandler
-
-        cmp     #kEventKindMouseMoved
-        bne     RenameInputLoop
-
-        ;; Check if mouse is over window, change cursor appropriately.
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
-        bne     out
-        lda     findwindow_params::window_id
-        cmp     #winfo_rename_dialog::kWindowId
-        bne     out
-
-        jsr     SetCursorIBeamWithFlag
-        jmp     RenameInputLoop
-
-out:    jsr     SetCursorPointerWithFlag
-        jmp     RenameInputLoop
-.endproc ; RenameInputLoop
-
-;;; Click handler for rename dialog
-
-.proc RenameClickHandler
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
-    IF_NE
-        return  #PromptResult::ok
-    END_IF
-
-        lda     findwindow_params::window_id
-        cmp     #winfo_rename_dialog::kWindowId
-    IF_NE
-        return  #PromptResult::ok
-    END_IF
-
-        copy    winfo_rename_dialog, event_params
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, rename_le_params::coords
-        LETK_CALL LETK::Click, rename_le_params
-
-        return  #$FF
-.endproc ; RenameClickHandler
-
-;;; Key handler for rename dialog
-
-.proc RenameKeyHandler
-        lda     event_params::key
-        sta     rename_le_params::key
-
-        ;; Modifiers?
-        ldx     event_params::modifiers
-        stx     rename_le_params::modifiers
-        bne     allow           ; pass through modified keys
-
-        ;; No modifiers
-        cmp     #CHAR_RETURN
-      IF_EQ
-        return  #PromptResult::ok
-      END_IF
-
-        cmp     #CHAR_ESCAPE
-      IF_EQ
-        return  #PromptResult::cancel
-      END_IF
-
-        jsr     IsControlChar   ; pass through control characters
-        bcc     allow
-        ldy     rename_line_edit_rec+LETK::LineEditRecord::caret_pos
-        jsr     IsFilenameChar
-        bcs     ignore
-allow:  LETK_CALL LETK::Key, rename_le_params
-ignore:
-        return  #$FF
-.endproc ; RenameKeyHandler
-
-;;; ============================================================
-
-.endscope ; modal_dialogs
-DoGetInfo := modal_dialogs::DoGetInfo
-DoRename := modal_dialogs::DoRename
-rename_dialog_params__a_prev := modal_dialogs::rename_dialog_params::a_prev
-old_name_buf := modal_dialogs::old_name_buf
-
-;;; ============================================================
-;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
-;;; update any affected paths.
-;;;
-;;; * Window paths (so operations within windows still work)
-;;; * ProDOS PREFIX (which points at DeskTop's folder)
-;;; * Original PREFIX (if copied to RAMCard)
-;;; * Restart PREFIX (in the ProDOS Selector code)
-;;;
-;;; Assert: The path actually changed.
-
-.proc NotifyPathChanged
-
-        ;; --------------------------------------------------
-        ;; Update any affected window paths
-
-        ldx     #kMaxDeskTopWindows
-wloop:  txa
-        pha
-        ldy     window_to_dir_icon_table-1,x ; X = 1-based id, so -1 to index
-        beq     wnext           ; not in use
-        jsr     GetWindowPath
-        jsr     MaybeUpdateTargetPath
-wnext:  pla
-        tax
-        dex
-        bne     wloop
-
-        ;; --------------------------------------------------
-        ;; Update prefixes
-
-        path := tmp_path_buf    ; depends on `src_path_buf`, `dst_path_buf`
-
-        ;; ProDOS Prefix
-        MLI_CALL GET_PREFIX, get_set_prefix_params
-        param_call MaybeUpdateTargetPath, path
-    IF_NE
-        MLI_CALL SET_PREFIX, get_set_prefix_params
-    END_IF
-
-        ;; Original Prefix
-        jsr     GetCopiedToRAMCardFlag
-    IF_MINUS
-        sta     ALTZPOFF
-        bit     LCBANK2
-        bit     LCBANK2
-        param_call MaybeUpdateTargetPath, DESKTOP_ORIG_PREFIX
-        param_call MaybeUpdateTargetPath, RAMCARD_PREFIX
-        sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
-    END_IF
-
-        ;; Restart Prefix
-        sta     ALTZPOFF
-        bit     LCBANK2
-        bit     LCBANK2
-        param_call MaybeUpdateTargetPath, SELECTOR + QuitRoutine::prefix_buffer_offset
-        sta     ALTZPON
-        bit     LCBANK1
-        bit     LCBANK1
-
-        rts
-
-        DEFINE_GET_PREFIX_PARAMS get_set_prefix_params, path
-
-;;; ============================================================
-;;; Replace `src_path_buf` as the prefix of path at $06 with `dst_path_buf`.
-;;; Assert: `src_path_buf` is a prefix of the path at $06!
-;;; Inputs: A,X = path to update, `src_path_buf` and `dst_path_buf`,
-;;; Outputs: Path updated.
-;;; Modifies `tmp_path_buf` and $1F00
-;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
-;;; Trashes $06
-
-.proc UpdateTargetPath
-        dst := $06
-
-        old_path := $1F00
-        new_path := tmp_path_buf   ; arbitrary usage of this buffer
-
-        stax    dst
-
-        ;; Set `old_path` to the old path (should be `src_path_buf` + suffix)
-        param_call CopyPtr1ToBuf, old_path
-
-        ;; Set `new_path` to the new prefix
-        ldy     dst_path_buf
-:       lda     dst_path_buf,y
-        sta     new_path,y
-        dey
-        bpl     :-
-
-        ;; Copy the suffix from `old_path` to `new_path`
-        ldx     src_path_buf
-        cpx     old_path
-        beq     assign          ; paths are equal, no copying needed
-
-        ldy     dst_path_buf
-:       inx                     ; advance into suffix
-        iny
-        lda     old_path,x
-        sta     new_path,y
-        cpx     old_path
-        bne     :-
-        sty     new_path
-
-        ;; Assign the new window path
-assign: ldy     new_path
-:       lda     new_path,y
-        sta     (dst),y
-        dey
-        bpl     :-
-
-        rts
-.endproc ; UpdateTargetPath
-
-;;; ============================================================
-;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
-;;; update the target path if needed.
-;;;
-;;; Inputs: A,X = pointer to path to update
-;;; Outputs: Z=0 if updated, Z=1 if no change
-;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
-;;; Trashes $06, $08
-
-.proc MaybeUpdateTargetPath
-        ptr := $08
-
-        stax    ptr
-        jsr     MaybeStripSlash
-
-        ;; Is `src_path_buf` a prefix?
-        copy16  #src_path_buf, $06
-        jsr     IsPathPrefixOf  ; Z=0 if a prefix
-        php
-    IF_NE
-        ;; It's a prefix! Do the replacement
-        param_call_indirect UpdateTargetPath, ptr
-    END_IF
-
-        jsr     MaybeRestoreSlash
-        plp                     ; Z=0 if updated
-        rts
-
-.proc MaybeStripSlash
-        ;; Did path end with a '/'? If so, set flag and remove.
-        ldy     #0
-        sty     slash_flag
-        lda     (ptr),y
-        tay                     ; Y=target path length
-        lda     (ptr),y
-        cmp     #'/'
-        bne     :+
-        sta     slash_flag      ; need to restore it later, but
-        ldy     #0              ; remove the '/' for now
-        lda     (ptr),y
-        sec
-        sbc     #1
-        sta     (ptr),y
-:       rts
-.endproc ; MaybeStripSlash
-
-.proc MaybeRestoreSlash
-        ;; Restore trailing '/' if needed
-        slash_flag := *+1       ; non-zero if trailing slash needed
-        lda     #SELF_MODIFIED_BYTE
-        beq     :+
-        ldy     #0
-        lda     (ptr),y
-        clc
-        adc     #1
-        sta     (ptr),y
-        tay
-        lda     #'/'
-        sta     (ptr),y
-:       rts
-.endproc ; MaybeRestoreSlash
-        slash_flag := MaybeRestoreSlash::slash_flag
-
-.endproc ; MaybeUpdateTargetPath
-
-.endproc ; NotifyPathChanged
-
-;;; ============================================================
-
-.scope operation_dialogs
-
-;;; ============================================================
-
 ;;; Memory Map
 ;;; ...
 ;;; $1F80 - $1FFF   - dst path buffer
@@ -11922,6 +10661,10 @@ file_entry_buf          .tag    FileEntry
         ;; overlayed indirect jump table
         kOpJTAddrsSize = 6
 
+op_jt0: jmp     (op_jt_addr0)   ; process selected file
+op_jt1: jmp     (op_jt_addr1)   ; process directory entry
+op_jt3: jmp     (op_jt_addr3)   ; when finished directory
+
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
 op_jt_addrs:
@@ -11929,10 +10672,6 @@ op_jt_addr0:  .addr   0
 op_jt_addr1:  .addr   0
 op_jt_addr3:  .addr   0
         ASSERT_TABLE_SIZE op_jt_addrs, kOpJTAddrsSize
-
-op_jt0: jmp     (op_jt_addr0)   ; process selected file
-op_jt1: jmp     (op_jt_addr1)   ; process directory entry
-op_jt3: jmp     (op_jt_addr3)   ; when finished directory
 
 OpProcessSelectedFile   := op_jt0
 OpProcessDirectoryEntry := op_jt1
@@ -13276,6 +12015,54 @@ op_block_count:
 .endproc ; DecrementOpFileCount
 
 ;;; ============================================================
+;;; Copy `path_buf3` to `src_path_buf`, `path_buf4` to `dst_path_buf`
+;;; and note last '/' in src.
+
+.proc CopyPathsFromBufsToSrcAndDst
+        ldy     #0
+        sty     src_path_slash_index
+        dey
+
+        ;; Copy `path_buf3` to `src_path_buf`
+        ;; ... but record index of last '/'
+loop:   iny
+        lda     path_buf3,y
+        cmp     #'/'
+        bne     :+
+        sty     src_path_slash_index
+:       sta     src_path_buf,y
+        cpy     path_buf3
+        bne     loop
+
+        ;; Copy `path_buf4` to `dst_path_buf`
+        ldax    #path_buf4
+        jmp     CopyToDstPath
+.endproc ; CopyPathsFromBufsToSrcAndDst
+
+src_path_slash_index:
+        .byte   0
+
+;;; ============================================================
+;;; Assuming CopyPathsFromBufsToSrcAndDst has been called, append
+;;; the last path segment of `src_path_buf` to `dst_path_buf`.
+;;; Assert: `src_path_slash_index` is set properly.
+
+.proc AppendSrcPathLastSegmentToDstPath
+        ldx     dst_path_buf
+        ldy     src_path_slash_index
+        dey
+:       iny
+        inx
+        lda     src_path_buf,y
+        sta     dst_path_buf,x
+        cpy     src_path_buf
+        bne     :-
+
+        stx     dst_path_buf
+        rts
+.endproc ; AppendSrcPathLastSegmentToDstPath
+
+;;; ============================================================
 
 ;;; Populate `src_file_info_params` from `file_entry_buf`
 
@@ -13465,192 +12252,6 @@ DownloadDialogProc := CopyDialogProc
 .endproc ; AppendFileEntryToDstPath
 
 ;;; ============================================================
-
-.endscope ; operation_dialogs
-;;; TODO: Goal is to move/merge this scope w/ operations
-PrepCallbacksForEnumeration := operation_dialogs::PrepCallbacksForEnumeration
-PrepCallbacksForCopy := operation_dialogs::PrepCallbacksForCopy
-PrepCallbacksForDelete := operation_dialogs::PrepCallbacksForDelete
-PrepCallbacksForDownload := operation_dialogs::PrepCallbacksForDownload
-OpenCopyProgressDialog := operation_dialogs::OpenCopyProgressDialog
-OpenDeleteProgressDialog := operation_dialogs::OpenDeleteProgressDialog
-OpenDownloadProgressDialog := operation_dialogs::OpenDownloadProgressDialog
-do_op_flag := operation_dialogs::do_op_flag
-OpProcessSelectedFile := operation_dialogs::OpProcessSelectedFile
-op_jt_addr1 := operation_dialogs::op_jt_addr1
-op_jt_addr3 := operation_dialogs::op_jt_addr3
-DoNothing := operation_dialogs::DoNothing
-ProcessDir := operation_dialogs::ProcessDir
-EnumerationProcessSelectedFile := operation_dialogs::EnumerationProcessSelectedFile
-CopyProcessSelectedFile := operation_dialogs::CopyProcessSelectedFile
-CopyProcessNotSelectedFile := operation_dialogs::CopyProcessNotSelectedFile
-on_line_params2 := operation_dialogs::on_line_params2
-
-;;; ============================================================
-;;; Remove segment from path at `src_path_buf`
-
-.proc RemoveSrcPathSegment
-        ldax    #src_path_buf
-        FALL_THROUGH_TO RemovePathSegment
-.endproc ; RemoveSrcPathSegment
-
-;;; ============================================================
-;;; Remove segment from path at A,X
-;;; Inputs: A,X = path
-;;; Output: A = length
-
-.proc RemovePathSegment
-        jsr     PushPointers
-
-        ptr := $06
-        stax    ptr
-
-        ldy     #0
-        lda     (ptr),y         ; length
-        beq     finish
-
-        tay
-:       lda     (ptr),y
-        cmp     #'/'
-        beq     found
-        dey
-        bne     :-
-        iny
-
-found:  dey
-        tya
-        ldy     #0
-        sta     (ptr),y
-
-finish: jsr     PopPointers     ; do not tail-call optimize!
-        rts
-.endproc ; RemovePathSegment
-
-;;; ============================================================
-;;; Remove segment from path at `dst_path_buf`
-
-.proc RemoveDstPathSegment
-        param_jump RemovePathSegment, dst_path_buf
-.endproc ; RemoveDstPathSegment
-
-;;; ============================================================
-;;; Check if `src_path_buf` is inside `dst_path_buf`.
-;;; Output: Z=1 if ok, Z=0 otherwise.
-
-.proc CheckRecursion
-        copy16  #src_path_buf, $06
-        copy16  #dst_path_buf, $08
-        jmp     IsPathPrefixOf
-.endproc ; CheckRecursion
-
-;;; ============================================================
-;;; Check for replacing an item with itself or a descendant.
-;;; Input: `src_path_buf` and `dst_path_buf` are full paths
-;;; Output: A=0 if ok, A=err code otherwise.
-
-.proc CheckBadReplacement
-
-        ;; Examples:
-        ;; src: '/a/p'   dst: '/a/p' (replace with self)
-        ;; src: '/a/c/c' dst: '/a/c' (replace with item inside self)
-
-        ;; Check for dst being subset of src
-
-        copy16  #dst_path_buf, $06
-        copy16  #src_path_buf, $08
-        jmp     IsPathPrefixOf
-.endproc ; CheckBadReplacement
-
-;;; ============================================================
-;;; Check if $06 is same path or parent of $08.
-;;; Returns Z=1 if not, Z=0 if it is.
-
-.proc IsPathPrefixOf
-        ptr1 := $06
-        ptr2 := $08
-
-        ldy     #0
-        lda     (ptr1),y        ; Compare string lengths. If the same, need
-        cmp     (ptr2),y        ; to compare strings. If `ptr1` > `ptr2`
-        beq     compare         ; ('/a/b' vs. '/a'), then it's not a problem.
-        bcs     ok
-
-        ;; Assert: `ptr1` is shorter then `ptr2`
-        tay                     ; See if `ptr2` is possibly a subfolder
-        iny
-        lda     (ptr2),y        ; ('/a/b/c' vs. '/a/b') or a sibling
-        cmp     #'/'            ; ('/a/bc' vs. /a/b').
-        bne     ok              ; At worst, a sibling - that's okay.
-
-        ;; Potentially self or a subfolder; compare strings.
-compare:
-        ldy     #0
-        lda     (ptr1),y
-        tay
-:       lda     (ptr1),y
-        jsr     ToUpperCase
-        sta     @char
-        lda     (ptr2),y
-        jsr     ToUpperCase
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     ok
-        dey
-        bne     :-
-
-        ;; Self or subfolder
-        return  #$FF
-
-ok:     return  #0
-.endproc ; IsPathPrefixOf
-
-;;; ============================================================
-;;; Copy `path_buf3` to `src_path_buf`, `path_buf4` to `dst_path_buf`
-;;; and note last '/' in src.
-
-.proc CopyPathsFromBufsToSrcAndDst
-        ldy     #0
-        sty     src_path_slash_index
-        dey
-
-        ;; Copy `path_buf3` to `src_path_buf`
-        ;; ... but record index of last '/'
-loop:   iny
-        lda     path_buf3,y
-        cmp     #'/'
-        bne     :+
-        sty     src_path_slash_index
-:       sta     src_path_buf,y
-        cpy     path_buf3
-        bne     loop
-
-        ;; Copy `path_buf4` to `dst_path_buf`
-        ldax    #path_buf4
-        jmp     CopyToDstPath
-.endproc ; CopyPathsFromBufsToSrcAndDst
-
-src_path_slash_index:
-        .byte   0
-
-;;; ============================================================
-;;; Assuming CopyPathsFromBufsToSrcAndDst has been called, append
-;;; the last path segment of `src_path_buf` to `dst_path_buf`.
-;;; Assert: `src_path_slash_index` is set properly.
-
-.proc AppendSrcPathLastSegmentToDstPath
-        ldx     dst_path_buf
-        ldy     src_path_slash_index
-        dey
-:       iny
-        inx
-        lda     src_path_buf,y
-        sta     dst_path_buf,x
-        cpy     src_path_buf
-        bne     :-
-
-        stx     dst_path_buf
-        rts
-.endproc ; AppendSrcPathLastSegmentToDstPath
 
 ;;; ============================================================
 ;;; If Escape is pressed, abort the operation.
@@ -13862,6 +12463,1391 @@ flag:   .byte   0
 .endproc ; ShowErrorAlertImpl
 ShowErrorAlert  := ShowErrorAlertImpl::flag_clear
 ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
+
+;;; ============================================================
+;;; "Get Info" dialog state and logic
+;;; ============================================================
+
+.scope get_info
+
+        DEFINE_READ_BLOCK_PARAMS getinfo_block_params, $800, $A
+
+.params get_info_dialog_params
+state:  .byte   0
+a_str:  .addr   0               ; e.g. string address
+locked: .byte   0               ; bit7 = 1 if file, bit6 = 1 if locked
+index:  .byte   0               ; index in selected icon list
+refresh:.byte   0               ; bit7 = 1 if selection modified
+.endparams
+
+.enum GetInfoDialogState
+        name    = 1
+        type    = 2             ; blank for vol
+        size    = 3             ; blocks (file)/size (volume)
+        created = 4
+        modified = 5
+        locked  = 6             ; locked (file)/protected (volume)
+
+        prompt  = 7             ; signals the dialog to enter loop
+
+        prepare_file = $80      ; +2 if multiple
+        prepare_vol  = $81      ; +2 if multiple
+.endenum
+
+
+;;; ============================================================
+;;; Get Info
+;;; Returns: A has bit7 = 1 if selected items were modified
+;;; Assert: At least one icon is selected
+
+.proc DoGetInfo
+        lda     selected_icon_count
+        RTS_IF_ZERO
+
+        lda     #0
+        sta     get_info_dialog_params::index
+        sta     get_info_dialog_params::refresh
+
+loop:   ldx     get_info_dialog_params::index
+        cpx     selected_icon_count
+        jeq     done
+
+        ldx     get_info_dialog_params::index
+        lda     selected_icon_list,x
+        cmp     trash_icon_num
+        jeq     next
+
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+    IF_NE
+        jsr     ShowAlert
+        jmp     next
+    END_IF
+
+        ldy     path_buf3       ; Copy to `src_path_buf`
+:       copy    path_buf3,y, src_path_buf,y
+        dey
+        bpl     :-
+
+        ;; Try to get file info
+common: jsr     GetSrcFileInfo
+    IF_CS
+        jsr     ShowAlert
+        cmp     #kAlertResultTryAgain
+        beq     common
+        jmp     next
+    END_IF
+
+        lda     selected_window_id
+        beq     vol_icon2
+
+        ;; File icon
+        copy    #GetInfoDialogState::prepare_file, get_info_dialog_params::state
+        lda     get_info_dialog_params::index
+        clc
+        adc     #1
+        cmp     selected_icon_count
+        beq     :+
+        inc     get_info_dialog_params::state
+        inc     get_info_dialog_params::state
+:       jsr     RunGetInfoDialogProc
+        jmp     common2
+
+vol_icon2:
+        copy    #GetInfoDialogState::prepare_vol, get_info_dialog_params::state
+        lda     get_info_dialog_params::index
+        clc
+        adc     #1
+        cmp     selected_icon_count
+        beq     :+
+        inc     get_info_dialog_params::state
+        inc     get_info_dialog_params::state
+:       jsr     RunGetInfoDialogProc
+        copy    #0, write_protected_flag
+        ldx     get_info_dialog_params::index
+        lda     selected_icon_list,x
+
+        ;; Map icon to unit number
+        jsr     IconToDeviceIndex
+        bne     common2
+
+        lda     DEVLST,x
+        and     #UNIT_NUM_MASK
+        sta     getinfo_block_params::unit_num
+        MLI_CALL READ_BLOCK, getinfo_block_params
+        bcs     common2
+        MLI_CALL WRITE_BLOCK, getinfo_block_params
+        cmp     #ERR_WRITE_PROTECTED
+        bne     common2
+        copy    #$80, write_protected_flag
+
+common2:
+        ;; --------------------------------------------------
+        ;; Name
+        copy    #GetInfoDialogState::name, get_info_dialog_params::state
+        ldx     get_info_dialog_params::index
+        lda     selected_icon_list,x
+        jsr     GetIconName
+        stax    get_info_dialog_params::a_str
+        jsr     RunGetInfoDialogProc
+
+        ;; --------------------------------------------------
+        ;; Type
+        copy    #GetInfoDialogState::type, get_info_dialog_params::state
+        lda     selected_window_id
+    IF_ZERO
+        ;; Volume
+        COPY_STRING str_volume, text_buffer2
+    ELSE
+        ;; File
+        lda     src_file_info_params::file_type
+        pha
+        jsr     ComposeFileTypeString
+        COPY_STRING str_file_type, text_buffer2
+        pla                     ; A = file type
+        cmp     #FT_DIRECTORY
+      IF_NE
+        ldax    src_file_info_params::aux_type
+        jsr     AppendAuxType
+      END_IF
+    END_IF
+        copy16  #text_buffer2, get_info_dialog_params::a_str
+        jsr     RunGetInfoDialogProc
+
+        ;; --------------------------------------------------
+        ;; Size/Blocks
+        copy    #GetInfoDialogState::size, get_info_dialog_params::state
+
+        ;; Compose "12345K" or "12345K / 67890K" string
+        copy    #0, text_input_buf
+
+        lda     selected_window_id ; volume?
+        beq     volume                ; yes
+
+        ;; A file, so just show the size
+        ldax    src_file_info_params::blocks_used
+        jmp     append_size
+
+        ;; A volume.
+volume:
+        ;; ProDOS TRM 4.4.5:
+        ;; "When file information about a volume directory is requested, the
+        ;; total number of blocks on the volume is returned in the aux_type
+        ;; field and the total blocks for all files is returned in blocks_used.
+
+        ldax    src_file_info_params::blocks_used
+        stax    vol_used_blocks
+        jsr     ComposeSizeString
+        param_call AppendToTextInputBuf, text_buffer2
+        param_call AppendToTextInputBuf, aux::str_info_size_slash
+
+        ;; Load up the total volume size...
+        ldax    src_file_info_params::aux_type
+        stax    vol_total_blocks
+
+        ;; Compute "12345K" (either volume size or file size)
+append_size:
+        jsr     ComposeSizeString
+        param_call AppendToTextInputBuf, text_buffer2
+
+        copy16  #text_input_buf, get_info_dialog_params::a_str
+        jsr     RunGetInfoDialogProc
+
+        ;; --------------------------------------------------
+        ;; Created date
+        copy    #GetInfoDialogState::created, get_info_dialog_params::state
+        COPY_STRUCT DateTime, src_file_info_params::create_date, datetime_for_conversion
+        jsr     ComposeDateString
+        copy16  #text_buffer2, get_info_dialog_params::a_str
+        jsr     RunGetInfoDialogProc
+
+        ;; --------------------------------------------------
+        ;; Modified date
+        copy    #GetInfoDialogState::modified, get_info_dialog_params::state
+        COPY_STRUCT DateTime, src_file_info_params::mod_date, datetime_for_conversion
+        jsr     ComposeDateString
+        copy16  #text_buffer2, get_info_dialog_params::a_str
+        jsr     RunGetInfoDialogProc
+
+        ;; --------------------------------------------------
+        ;; Locked/Protected
+        copy    #GetInfoDialogState::locked, get_info_dialog_params::state
+
+        lda     selected_window_id
+    IF_ZERO
+        ;; Volume
+        ldax    #aux::str_info_no
+        bit     write_protected_flag
+      IF_NS
+        ldax    #aux::str_info_yes
+      END_IF
+        stax    get_info_dialog_params::a_str
+        lda     #0              ; not file
+    ELSE
+        ;; File
+        lda     src_file_info_params::access ; File
+        and     #ACCESS_DEFAULT
+        cmp     #ACCESS_DEFAULT
+      IF_EQ
+        lda     #$80            ; file, not locked
+      ELSE
+        lda     #$C0            ; file, locked
+      END_IF
+    END_IF
+        sta     get_info_dialog_params::locked
+        jsr     RunGetInfoDialogProc
+
+        ;; --------------------------------------------------
+        ;; Descendant size/file count
+
+        lda     src_file_info_params::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        beq     do_dir
+        cmp     #ST_LINKED_DIRECTORY
+        bne     :+
+do_dir:
+        jsr     SetCursorWatch
+        jsr     GetDirSize
+        jsr     SetCursorPointer
+:
+        ;; --------------------------------------------------
+
+        copy    #GetInfoDialogState::prompt, get_info_dialog_params::state
+        jsr     RunGetInfoDialogProc
+        bne     done
+
+next:   inc     get_info_dialog_params::index
+        jmp     loop
+
+done:   copy    #0, path_buf4
+        lda     get_info_dialog_params::refresh
+        rts
+
+.proc GetDirSize
+        lda     selected_window_id
+    IF_NOT_ZERO
+        copy16  #1, file_count
+        copy16  src_file_info_params::blocks_used, num_blocks
+    ELSE
+        copy16  #0, file_count
+        copy16  #0, num_blocks
+    END_IF
+
+        copy16  #GetInfoProcessDirEntry, op_jt_addr1
+        copy16  #DoNothing, op_jt_addr3
+        copy16  #DoNothing, operations::operation_complete_callback ; handle error
+        tsx
+        stx     operations::stack_stash
+        jsr     ProcessDir
+        jmp     UpdateDirSizeDisplay ; in case 0 files were seen
+.endproc ; GetDirSize
+
+.proc GetInfoProcessDirEntry
+        add16   num_blocks, src_file_info_params::blocks_used, num_blocks
+        inc16   file_count
+        FALL_THROUGH_TO UpdateDirSizeDisplay
+.endproc ; GetInfoProcessDirEntry
+
+.proc UpdateDirSizeDisplay
+        ;; Dir: "<size>K for <count> file(s)"
+        ;; Vol: "<size>K for <count> file(s) / <total>K>"
+        copy    #0, text_input_buf
+
+        ;; "<size>K"
+        ldax    num_blocks
+        ldy     selected_window_id
+     IF_ZERO
+        ldax    vol_used_blocks
+     END_IF
+        jsr     ComposeSizeString
+        param_call AppendToTextInputBuf, text_buffer2
+
+        ;; " for "
+        param_call AppendToTextInputBuf, aux::str_info_size_infix
+
+        ;; "<count> "
+        jsr     ComposeFileCountString
+        param_call AppendToTextInputBuf, str_file_count
+
+        ;; "file(s)"
+        ldax    #aux::str_info_size_suffix
+        ldy     file_count+1
+        bne     :+
+        ldy     file_count
+        cpy     #1
+        bne     :+
+        ldax    #aux::str_info_size_suffix_singular
+:       jsr     AppendToTextInputBuf
+
+        lda     selected_window_id
+    IF_ZERO
+        ;; " / "
+        param_call AppendToTextInputBuf, aux::str_info_size_slash
+        ;; "<total>K"
+        ldax    vol_total_blocks
+        jsr     ComposeSizeString
+        param_call AppendToTextInputBuf, text_buffer2
+    END_IF
+        ;; In case it shrank
+        param_call AppendToTextInputBuf, str_2_spaces
+
+        copy16  #text_input_buf, get_info_dialog_params::a_str
+        copy    #GetInfoDialogState::size, get_info_dialog_params::state
+        jsr     RunGetInfoDialogProc
+
+        rts
+.endproc ; UpdateDirSizeDisplay
+num_blocks:
+        .word   0
+vol_used_blocks:
+        .word   0
+vol_total_blocks:
+        .word   0
+
+write_protected_flag:
+        .byte   0
+
+.proc RunGetInfoDialogProc
+        jmp     GetInfoDialogProc
+.endproc ; RunGetInfoDialogProc
+.endproc ; DoGetInfo
+
+;;; ============================================================
+;;; "Get Info" dialog
+
+.proc GetInfoDialogProc
+        lda     get_info_dialog_params::state
+
+        ;; --------------------------------------------------
+        ;; GetInfoDialogState::prepare_*
+    IF_NS
+        ;; Draw the field labels (e.g. "Size:")
+        copy    #0, has_input_field_flag
+        lda     get_info_dialog_params::state
+        pha
+        lsr     a               ; bit 1 set if multiple
+        lsr     a               ; so configure buttons appropriately
+        ror     a
+        eor     #$80
+        jsr     OpenPromptWindow
+        jsr     SetPortForDialogWindow
+
+        param_call DrawDialogTitle, aux::label_get_info
+        pla                     ; A = get_info_dialog_params::state
+        pha                     ; bit 0 set if volume
+
+        ;; Draw labels
+        param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_info_name
+        param_call DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_info_type
+        param_call DrawDialogLabel, 4 | DDL_LRIGHT, aux::str_info_create
+        param_call DrawDialogLabel, 5 | DDL_LRIGHT, aux::str_info_mod
+
+        pla                     ; bit 0 set if volume
+        and     #$01
+      IF_NOT_ZERO
+        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
+        param_jump DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
+      ELSE
+        param_jump DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
+      END_IF
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; GetInfoDialogState::* (name, type, etc)
+        ;; Draw a specific value
+
+        cmp     #GetInfoDialogState::prompt
+    IF_NE
+        cmp     #GetInfoDialogState::locked
+     IF_EQ
+        lda     get_info_dialog_params::locked ; bit 7 = file, bit 6 = locked
+       IF_NS
+        asl                     ; now bit 7 = locked = checked
+        sta     locked_button::state
+        BTK_CALL BTK::CheckboxDraw, locked_button
+        copy16  #HandleClick, main::PromptDialogClickHandlerHook
+        copy16  #HandleKey, main::PromptDialogKeyHandlerHook
+        rts
+       END_IF
+     END_IF
+
+        jsr     SetPortForDialogWindow
+        lda     get_info_dialog_params::state
+        ora     #DDL_VALUE
+        tay
+
+        ;; Draw the string at `get_info_dialog_params::a_str`
+        ldax    get_info_dialog_params::a_str
+        jmp     DrawDialogLabel
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; GetInfoDialogState::prompt
+:       jsr     PromptInputLoop
+        bmi     :-
+
+        pha
+        jsr     ClosePromptDialog
+        pla
+        rts
+
+.proc HandleClick
+        MGTK_CALL MGTK::InRect, locked_button::rect
+    IF_NOT_ZERO
+        jsr     ToggleFileLock
+    END_IF
+        return #$FF
+.endproc ; HandleClick
+
+.proc HandleKey
+        cmp     #CHAR_CTRL_L
+        beq     ToggleFileLock
+        rts
+.endproc ; HandleKey
+
+.proc ToggleFileLock
+        ;; Modify file
+        lda     src_file_info_params::access
+        bit     locked_button::state
+    IF_NS
+        ;; Unlock
+        ora     #LOCKED_MASK
+    ELSE
+        ;; Lock
+        and     #AS_BYTE(~LOCKED_MASK)
+    END_IF
+        sta     src_file_info_params::access
+        jsr     SetSrcFileInfo
+        bcs     ret
+        ;; TODO: Show alert, offer retry on failure?
+
+        ;; Toggle UI
+        lda     locked_button::state
+        eor     #$80
+        sta     locked_button::state
+        BTK_CALL BTK::CheckboxUpdate, locked_button
+
+        ;; Update FileRecord
+        icon_ptr := $06
+        file_record_ptr := $08
+
+        ldx     get_info_dialog_params::index
+        lda     selected_icon_list,x
+        jsr     GetIconEntry
+        stax    icon_ptr
+        jsr     SetFileRecordPtrFromIconPtr
+
+        bit     LCBANK2
+        bit     LCBANK2
+        lda     src_file_info_params::access
+        ldy     #FileRecord::access
+        sta     (file_record_ptr),y
+        bit     LCBANK1
+        bit     LCBANK1
+
+        copy    #$80, get_info_dialog_params::refresh
+
+ret:    return  #$FF
+.endproc ; ToggleFileLock
+
+.endproc ; GetInfoDialogProc
+
+.endscope ; get_info
+
+;;; ============================================================
+
+.scope rename
+.enum RenameDialogState
+        open  = $00
+        run   = $80
+        close = $40
+.endenum
+
+        old_name_buf := $1F00
+        new_name_buf := stashed_name
+
+        DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
+
+.params rename_dialog_params
+state:  .byte   0
+a_prev: .addr   old_name_buf
+a_path: .addr   SELF_MODIFIED_BYTE
+        DEFINE_RECT rect,0,0,0,0
+.endparams
+
+;;; Inputs: A,X = address of buffer holding previous name
+;;; Assert: Single icon selected, and it's not Trash.
+.proc DoRenameImpl
+
+start:
+        stax    rename_dialog_params::a_prev
+
+        lda     #0
+        sta     result_flags
+
+        ;; Dialog needs base path to ensure new name is valid path
+        jsr     GetSelectionWindow
+        jsr     GetWindowOrRootPath
+        stax    rename_dialog_params::a_path
+
+        ;; Original path
+        lda     selected_icon_list
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+    IF_NE
+        jsr     ShowAlert
+        return  result_flags
+    END_IF
+        param_call CopyToSrcPath, path_buf3
+
+        ;; Copy original name for display/default
+        lda     selected_icon_list
+        jsr     GetIconName
+        stax    $06
+        param_call CopyPtr1ToBuf, old_name_buf
+
+        lda     selected_icon_list
+        sta     icon_param
+        ITK_CALL IconTK::GetRenameRect, icon_param
+        COPY_STRUCT MGTK::Rect, tmp_rect, rename_dialog_params::rect
+
+        ;; Open the dialog
+        lda     #RenameDialogState::open
+        jsr     RunDialogProc
+
+        ;; Run the dialog
+retry:  lda     #RenameDialogState::run
+        jsr     RunDialogProc
+        beq     success
+
+        ;; Failure
+fail:   return  result_flags
+
+        ;; --------------------------------------------------
+        ;; Success, new name in X,Y
+
+success:
+        new_name_ptr := $08
+        stxy    new_name_ptr
+
+        ;; Copy the name somewhere LCBANK-safe
+        param_call CopyPtr2ToBuf, new_name_buf
+
+        ;; File or Volume?
+        lda     selected_window_id
+    IF_NOT_ZERO
+        jsr     GetWindowPath
+    ELSE
+        ldax    #str_empty
+    END_IF
+
+        ;; Copy window path as prefix
+        jsr     CopyToDstPath
+
+        ;; Append new filename
+        ldax    #new_name_buf
+        jsr     AppendFilenameToDstPath
+
+        ;; Did the name change (ignoring case)?
+        copy16  #old_name_buf, $06
+        copy16  #new_name_buf, $08
+        jsr     CompareStrings
+        beq     no_change
+
+        ;; Already exists? (Mostly for volumes, but works for files as well)
+        jsr     GetDstFileInfo
+        bcs     :+
+        lda     #ERR_DUPLICATE_FILENAME
+        jsr     ShowAlert
+        jmp     retry
+
+        ;; Try to rename
+:
+no_change:
+        ;; Update case bits, in memory or on disk
+        jsr     ApplyCaseBits ; applies `stashed_name` to `src_path_buf`
+
+        MLI_CALL RENAME, rename_params
+        bcc     finish
+        ;; Failed, maybe retry
+        jsr     ShowAlert       ; Alert options depend on specific ProDOS error
+        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        jeq     retry           ; `kAlertResultTryAgain` = 0
+        lda     #RenameDialogState::close
+        jsr     RunDialogProc
+        jmp     fail
+
+        ;; --------------------------------------------------
+        ;; Completed - tear down the dialog...
+finish: lda     #RenameDialogState::close
+        jsr     RunDialogProc
+
+        lda     selected_icon_list
+        sta     icon_param
+
+        ;; Erase the icon, in case new name is shorter
+        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED - takes care of ports
+
+        ;; Copy new string in
+        icon_name_ptr := $06
+        lda     selected_icon_list
+        jsr     GetIconName
+        stax    icon_name_ptr
+
+        ldy     new_name_buf
+:       lda     new_name_buf,y
+        sta     (icon_name_ptr),y
+        dey
+        bpl     :-
+
+        ;; If not volume, find and update associated FileEntry
+        lda     selected_window_id
+        jeq     end_filerecord_and_icon_update
+
+        ;; Dig up the index of the icon within the window.
+        icon_ptr := $06
+        lda     icon_param
+        jsr     GetIconEntry
+        stax    icon_ptr
+
+        ;; Compute bounds of icon bitmap
+        jsr     GetSelectionViewBy
+        .assert kViewByIcon = 0, error, "enum mismatch"
+    IF_ZERO
+        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
+        sub16_8 tmp_rect::y2, #kIconLabelHeight + kIconLabelGap, tmp_rect::y2
+    END_IF
+
+        file_record_ptr := $08
+        jsr     SetFileRecordPtrFromIconPtr
+
+        ;; Bank in FileRecords, and copy the new name in.
+        bit     LCBANK2
+        bit     LCBANK2
+        .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
+        ldy     new_name_buf
+:       lda     new_name_buf,y
+        sta     (file_record_ptr),y
+        dey
+        bpl     :-
+
+        ;; Filename change may alter icon. Don't bank out FileRecords yet.
+        ldy     #FileRecord::file_type
+        lda     (file_record_ptr),y
+        sta     icontype_filetype
+        ldy     #FileRecord::aux_type
+        copy16in (file_record_ptr),y, icontype_auxtype
+        ldy     #FileRecord::blocks
+        copy16in (file_record_ptr),y, icontype_blocks
+        copy16  #new_name_buf, icontype_filename
+
+        ;; Now we're done with FileRecords.
+        bit     LCBANK1
+        bit     LCBANK1
+
+        jsr     GetSelectionViewBy
+        .assert kViewByIcon = 0, error, "enum mismatch"
+    IF_ZERO
+        sta     view_by
+        jsr     GetIconType
+        view_by := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        jsr     CreateIconsForWindowImpl::FindIconDetailsForIconType
+
+        ;; Use new `icon_height` to offset vertically.
+        ;; Add old icon height to make icony top of text
+        ldy     #IconEntry::icony
+        sub16in tmp_rect::y2, CreateIconsForWindowImpl::icon_height, (icon_ptr),y
+        ;; Use `icon_type` to populate IconEntry::type
+        ldy     #IconEntry::type
+        copy    CreateIconsForWindowImpl::icon_type, (icon_ptr),y
+        ;; Assumes `iconentry_flags` will not change, regardless of icon.
+    END_IF
+
+end_filerecord_and_icon_update:
+
+        ;; Draw the (maybe new) icon
+        ITK_CALL IconTK::DrawIcon, icon_param
+
+        ;; Is there a window for the folder/volume?
+        jsr     FindWindowForSrcPath
+    IF_NOT_ZERO
+        dst := $06
+        ;; Update the window title
+        jsr     GetWindowTitlePath
+        stax    dst
+        ldy     new_name_buf
+:       lda     new_name_buf,y
+        sta     (dst),y
+        dey
+        bpl     :-
+
+        lda     result_flags
+        ora     #$80
+        sta     result_flags
+    END_IF
+
+        ;; Update affected window paths, ProDOS prefix
+        jsr     NotifyPathChanged
+
+        ;; --------------------------------------------------
+        ;; Totally done
+
+        return result_flags
+
+.proc RunDialogProc
+        sta     rename_dialog_params
+        jmp     RenameDialogProc
+.endproc ; RunDialogProc
+
+;;; N bit ($80) set if a window title was changed
+result_flags:
+        .byte   0
+.endproc ; DoRenameImpl
+DoRename        := DoRenameImpl::start
+
+;;; ============================================================
+;;; "Rename" dialog
+
+;;; This uses a minimal dialog window to simulate modeless rename.
+
+.proc RenameDialogProc
+        lda     rename_dialog_params::state
+
+        ;; ----------------------------------------
+        cmp     #RenameDialogState::open
+    IF_EQ
+        ldy     #LETK::kLineEditOptionsNormal
+        jsr     GetSelectionViewBy
+        cmp     #kViewByIcon
+      IF_EQ
+        ldy     #LETK::kLineEditOptionsCentered
+      END_IF
+        sty     rename_line_edit_rec::options
+
+        COPY_STRUCT MGTK::Point, rename_dialog_params::rect::topleft, winfo_rename_dialog::viewloc
+
+        jsr     OpenRenameWindow
+        copy16  rename_dialog_params::a_prev, $08
+        param_call CopyPtr2ToBuf, text_input_buf
+        LETK_CALL LETK::Init, rename_le_params
+        LETK_CALL LETK::Activate, rename_le_params
+        rts
+    END_IF
+
+        ;; --------------------------------------------------
+        cmp     #RenameDialogState::run
+    IF_EQ
+loop:   jsr     RenameInputLoop
+        bmi     loop            ; continue?
+        bne     do_close        ; canceled!
+
+        lda     text_input_buf  ; treat empty as cancel
+        beq     do_close
+
+        ;; Validate path length before committing
+        copy16  rename_dialog_params::a_path, $08
+        param_call CopyPtr2ToBuf, path_buf0
+        lda     path_buf0       ; full path okay?
+        clc
+        adc     text_input_buf
+        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
+      IF_GE
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
+        jmp     loop
+      END_IF
+
+        ldxy    #text_input_buf
+        return  #0
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; RenameDialogState::close
+do_close:
+        MGTK_CALL MGTK::CloseWindow, winfo_rename_dialog
+        jsr     ClearUpdates     ; following CloseWindow
+        jsr     SetCursorPointer ; when closing dialog
+        return  #1
+.endproc ; RenameDialogProc
+
+;;; ============================================================
+
+;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
+
+.proc RenameInputLoop
+        LETK_CALL LETK::Idle, rename_le_params
+
+        jsr     SystemTask
+        jsr     GetNextEvent
+
+        cmp     #MGTK::EventKind::button_down
+        jeq     RenameClickHandler
+
+        cmp     #MGTK::EventKind::key_down
+        jeq     RenameKeyHandler
+
+        cmp     #kEventKindMouseMoved
+        bne     RenameInputLoop
+
+        ;; Check if mouse is over window, change cursor appropriately.
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+        bne     out
+        lda     findwindow_params::window_id
+        cmp     #winfo_rename_dialog::kWindowId
+        bne     out
+
+        jsr     SetCursorIBeamWithFlag
+        jmp     RenameInputLoop
+
+out:    jsr     SetCursorPointerWithFlag
+        jmp     RenameInputLoop
+.endproc ; RenameInputLoop
+
+;;; Click handler for rename dialog
+
+.proc RenameClickHandler
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+    IF_NE
+        return  #PromptResult::ok
+    END_IF
+
+        lda     findwindow_params::window_id
+        cmp     #winfo_rename_dialog::kWindowId
+    IF_NE
+        return  #PromptResult::ok
+    END_IF
+
+        copy    winfo_rename_dialog, event_params
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, rename_le_params::coords
+        LETK_CALL LETK::Click, rename_le_params
+
+        return  #$FF
+.endproc ; RenameClickHandler
+
+;;; Key handler for rename dialog
+
+.proc RenameKeyHandler
+        lda     event_params::key
+        sta     rename_le_params::key
+
+        ;; Modifiers?
+        ldx     event_params::modifiers
+        stx     rename_le_params::modifiers
+        bne     allow           ; pass through modified keys
+
+        ;; No modifiers
+        cmp     #CHAR_RETURN
+      IF_EQ
+        return  #PromptResult::ok
+      END_IF
+
+        cmp     #CHAR_ESCAPE
+      IF_EQ
+        return  #PromptResult::cancel
+      END_IF
+
+        jsr     IsControlChar   ; pass through control characters
+        bcc     allow
+        ldy     rename_line_edit_rec+LETK::LineEditRecord::caret_pos
+        jsr     IsFilenameChar
+        bcs     ignore
+allow:  LETK_CALL LETK::Key, rename_le_params
+ignore:
+        return  #$FF
+.endproc ; RenameKeyHandler
+
+.endscope ; rename
+
+;;; ============================================================
+;;; Input: $06 has `IconEntry` ptr
+;;; Output: $08 has `FileRecord` ptr
+
+.proc SetFileRecordPtrFromIconPtr
+        icon_ptr := $06
+        file_record_ptr := $08
+
+        ldy     #IconEntry::record_num
+        lda     (icon_ptr),y
+        pha                     ; A = index of icon in window
+
+        ;; Find the window's FileRecord list.
+        lda     selected_window_id
+        jsr     GetFileRecordListForWindow
+        stax    file_record_ptr ; points at head of list (entry count)
+        inc16   file_record_ptr ; now points at first FileRecord in list
+
+        ;; Look up the FileRecord within the list.
+        pla                     ; A = index
+        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        jsr     ATimes32        ; A,X = index * 32
+        addax   file_record_ptr, file_record_ptr
+        rts
+.endproc ; SetFileRecordPtrFromIconPtr
+
+;;; ============================================================
+
+.endscope ; operations
+
+        DoCopySelection := operations::DoCopySelection
+        DoCopyToRAM := operations::DoCopyToRAM
+        DoCopyFile := operations::DoCopyFile
+        DoDrop := operations::DoDrop
+        operations__move_flag := operations::move_flag
+
+        DoGetInfo := operations::get_info::DoGetInfo
+
+        DoRename := operations::rename::DoRename
+        old_name_buf := operations::rename::old_name_buf
+
+;;; ============================================================
+;;; Input: A = icon
+;;; Output: A,X = icon name ptr
+
+.proc GetIconName
+        jsr     GetIconEntry
+        clc
+        adc     #IconEntry::name
+        bcc     :+
+        inx
+:       rts
+.endproc ; GetIconName
+
+;;; ============================================================
+;;; Concatenate paths.
+;;; Inputs: Base path in $08, second path in $06
+;;; Output: `path_buf3`
+
+.proc JoinPaths
+        str1 := $8
+        str2 := $6
+        buf  := path_buf3
+
+        ldx     #0
+
+        lda     str1            ; check for nullptr (volume)
+        ora     str1+1
+        beq     do_str2
+
+        ldy     #0              ; check for empty string
+        lda     (str1),y
+        beq     do_str2
+
+        ;; Copy $8 (str1)
+        sta     @len
+:       iny
+        inx
+        lda     (str1),y
+        sta     buf,x
+        @len := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :-
+
+do_str2:
+        ;; Add path separator
+        inx
+        lda     #'/'
+        sta     buf,x
+
+        ;; Append $6 (str2)
+        ldy     #0
+        lda     (str2),y
+        beq     done
+        sta     @len
+:       iny
+        inx
+        lda     (str2),y
+        sta     buf,x
+        @len := *+1
+        cpy     #SELF_MODIFIED_BYTE
+        bne     :-
+
+done:   stx     buf
+        rts
+.endproc ; JoinPaths
+
+;;; ============================================================
+
+.proc DoEject
+        lda     selected_icon_count
+        beq     ret
+
+        ldx     selected_icon_count
+        stx     $800
+        dex
+:       lda     selected_icon_list,x
+        sta     $0801,x
+        dex
+        bpl     :-
+
+        jsr     ClearSelection
+        ldx     #0
+        stx     index
+        index := *+1
+loop:   ldx     #SELF_MODIFIED_BYTE
+        lda     $0801,x
+        cmp     #$01
+        beq     :+
+        jsr     SmartportEject
+:       inc     index
+        ldx     index
+        cpx     $800
+        bne     loop
+
+ret:    rts
+.endproc ; DoEject
+
+;;; ============================================================
+;;; Inputs: A = icon number
+
+.proc SmartportEject
+        dib_buffer := ::IO_BUFFER
+
+        ;; Look up device index by icon number
+        jsr     IconToDeviceIndex
+        RTS_IF_ZC
+
+        lda     DEVLST,x        ; A = unit_number
+        ;; NOTE: Not masked with `UNIT_NUM_MASK`, `FindSmartportDispatchAddress` handles it.
+
+        ;; Compute SmartPort dispatch address
+        jsr     FindSmartportDispatchAddress
+        bcs     done            ; not SP
+        stax    status_dispatch
+        stax    control_dispatch
+        sty     status_unit_number
+        sty     control_unit_number
+
+        ;; Execute SmartPort call
+        status_dispatch := *+1
+        jsr     SELF_MODIFIED
+        .byte   SPCall::Status
+        .addr   status_params
+        bcs     done            ; failure
+        lda     dib_buffer+SPDIB::Device_Type_Code
+        cmp     #SPDeviceType::Disk35
+        bne     done            ; not 3.5, don't issue command
+
+        ;; Execute SmartPort call
+        control_dispatch := *+1
+        jsr     SELF_MODIFIED
+        .byte   SPCall::Control
+        .addr   control_params
+
+done:   rts
+
+        DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
+        status_unit_number := status_params::unit_num
+
+        DEFINE_SP_CONTROL_PARAMS control_params, SELF_MODIFIED_BYTE, list, $04 ; For Apple/UniDisk 3.3: Eject disk
+        control_unit_number := control_params::unit_number
+list:   .word   0               ; 0 items in list
+.endproc ; SmartportEject
+
+;;; ============================================================
+;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
+;;; update any affected paths.
+;;;
+;;; * Window paths (so operations within windows still work)
+;;; * ProDOS PREFIX (which points at DeskTop's folder)
+;;; * Original PREFIX (if copied to RAMCard)
+;;; * Restart PREFIX (in the ProDOS Selector code)
+;;;
+;;; Assert: The path actually changed.
+
+.proc NotifyPathChanged
+
+        ;; --------------------------------------------------
+        ;; Update any affected window paths
+
+        ldx     #kMaxDeskTopWindows
+wloop:  txa
+        pha
+        ldy     window_to_dir_icon_table-1,x ; X = 1-based id, so -1 to index
+        beq     wnext           ; not in use
+        jsr     GetWindowPath
+        jsr     MaybeUpdateTargetPath
+wnext:  pla
+        tax
+        dex
+        bne     wloop
+
+        ;; --------------------------------------------------
+        ;; Update prefixes
+
+        path := tmp_path_buf    ; depends on `src_path_buf`, `dst_path_buf`
+
+        ;; ProDOS Prefix
+        MLI_CALL GET_PREFIX, get_set_prefix_params
+        param_call MaybeUpdateTargetPath, path
+    IF_NE
+        MLI_CALL SET_PREFIX, get_set_prefix_params
+    END_IF
+
+        ;; Original Prefix
+        jsr     GetCopiedToRAMCardFlag
+    IF_MINUS
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+        param_call MaybeUpdateTargetPath, DESKTOP_ORIG_PREFIX
+        param_call MaybeUpdateTargetPath, RAMCARD_PREFIX
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+    END_IF
+
+        ;; Restart Prefix
+        sta     ALTZPOFF
+        bit     LCBANK2
+        bit     LCBANK2
+        param_call MaybeUpdateTargetPath, SELECTOR + QuitRoutine::prefix_buffer_offset
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+
+        rts
+
+        DEFINE_GET_PREFIX_PARAMS get_set_prefix_params, path
+
+;;; ============================================================
+;;; Replace `src_path_buf` as the prefix of path at $06 with `dst_path_buf`.
+;;; Assert: `src_path_buf` is a prefix of the path at $06!
+;;; Inputs: A,X = path to update, `src_path_buf` and `dst_path_buf`,
+;;; Outputs: Path updated.
+;;; Modifies `tmp_path_buf` and $1F00
+;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
+;;; Trashes $06
+
+.proc UpdateTargetPath
+        dst := $06
+
+        old_path := $1F00
+        new_path := tmp_path_buf   ; arbitrary usage of this buffer
+
+        stax    dst
+
+        ;; Set `old_path` to the old path (should be `src_path_buf` + suffix)
+        param_call CopyPtr1ToBuf, old_path
+
+        ;; Set `new_path` to the new prefix
+        ldy     dst_path_buf
+:       lda     dst_path_buf,y
+        sta     new_path,y
+        dey
+        bpl     :-
+
+        ;; Copy the suffix from `old_path` to `new_path`
+        ldx     src_path_buf
+        cpx     old_path
+        beq     assign          ; paths are equal, no copying needed
+
+        ldy     dst_path_buf
+:       inx                     ; advance into suffix
+        iny
+        lda     old_path,x
+        sta     new_path,y
+        cpx     old_path
+        bne     :-
+        sty     new_path
+
+        ;; Assign the new window path
+assign: ldy     new_path
+:       lda     new_path,y
+        sta     (dst),y
+        dey
+        bpl     :-
+
+        rts
+.endproc ; UpdateTargetPath
+
+;;; ============================================================
+;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
+;;; update the target path if needed.
+;;;
+;;; Inputs: A,X = pointer to path to update
+;;; Outputs: Z=0 if updated, Z=1 if no change
+;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
+;;; Trashes $06, $08
+
+.proc MaybeUpdateTargetPath
+        ptr := $08
+
+        stax    ptr
+        jsr     MaybeStripSlash
+
+        ;; Is `src_path_buf` a prefix?
+        copy16  #src_path_buf, $06
+        jsr     IsPathPrefixOf  ; Z=0 if a prefix
+        php
+    IF_NE
+        ;; It's a prefix! Do the replacement
+        param_call_indirect UpdateTargetPath, ptr
+    END_IF
+
+        jsr     MaybeRestoreSlash
+        plp                     ; Z=0 if updated
+        rts
+
+.proc MaybeStripSlash
+        ;; Did path end with a '/'? If so, set flag and remove.
+        ldy     #0
+        sty     slash_flag
+        lda     (ptr),y
+        tay                     ; Y=target path length
+        lda     (ptr),y
+        cmp     #'/'
+        bne     :+
+        sta     slash_flag      ; need to restore it later, but
+        ldy     #0              ; remove the '/' for now
+        lda     (ptr),y
+        sec
+        sbc     #1
+        sta     (ptr),y
+:       rts
+.endproc ; MaybeStripSlash
+
+.proc MaybeRestoreSlash
+        ;; Restore trailing '/' if needed
+        slash_flag := *+1       ; non-zero if trailing slash needed
+        lda     #SELF_MODIFIED_BYTE
+        beq     :+
+        ldy     #0
+        lda     (ptr),y
+        clc
+        adc     #1
+        sta     (ptr),y
+        tay
+        lda     #'/'
+        sta     (ptr),y
+:       rts
+.endproc ; MaybeRestoreSlash
+        slash_flag := MaybeRestoreSlash::slash_flag
+
+.endproc ; MaybeUpdateTargetPath
+
+.endproc ; NotifyPathChanged
+
+;;; ============================================================
+;;; Remove segment from path at `src_path_buf`
+
+.proc RemoveSrcPathSegment
+        ldax    #src_path_buf
+        FALL_THROUGH_TO RemovePathSegment
+.endproc ; RemoveSrcPathSegment
+
+;;; ============================================================
+;;; Remove segment from path at A,X
+;;; Inputs: A,X = path
+;;; Output: A = length
+
+.proc RemovePathSegment
+        jsr     PushPointers
+
+        ptr := $06
+        stax    ptr
+
+        ldy     #0
+        lda     (ptr),y         ; length
+        beq     finish
+
+        tay
+:       lda     (ptr),y
+        cmp     #'/'
+        beq     found
+        dey
+        bne     :-
+        iny
+
+found:  dey
+        tya
+        ldy     #0
+        sta     (ptr),y
+
+finish: jsr     PopPointers     ; do not tail-call optimize!
+        rts
+.endproc ; RemovePathSegment
+
+;;; ============================================================
+;;; Remove segment from path at `dst_path_buf`
+
+.proc RemoveDstPathSegment
+        param_jump RemovePathSegment, dst_path_buf
+.endproc ; RemoveDstPathSegment
+
+;;; ============================================================
+;;; Check if `src_path_buf` is inside `dst_path_buf`.
+;;; Output: Z=1 if ok, Z=0 otherwise.
+
+.proc CheckRecursion
+        copy16  #src_path_buf, $06
+        copy16  #dst_path_buf, $08
+        jmp     IsPathPrefixOf
+.endproc ; CheckRecursion
+
+;;; ============================================================
+;;; Check for replacing an item with itself or a descendant.
+;;; Input: `src_path_buf` and `dst_path_buf` are full paths
+;;; Output: A=0 if ok, A=err code otherwise.
+
+.proc CheckBadReplacement
+
+        ;; Examples:
+        ;; src: '/a/p'   dst: '/a/p' (replace with self)
+        ;; src: '/a/c/c' dst: '/a/c' (replace with item inside self)
+
+        ;; Check for dst being subset of src
+
+        copy16  #dst_path_buf, $06
+        copy16  #src_path_buf, $08
+        FALL_THROUGH_TO IsPathPrefixOf
+.endproc ; CheckBadReplacement
+
+;;; ============================================================
+;;; Check if $06 is same path or parent of $08.
+;;; Returns Z=1 if not, Z=0 if it is.
+
+.proc IsPathPrefixOf
+        ptr1 := $06
+        ptr2 := $08
+
+        ldy     #0
+        lda     (ptr1),y        ; Compare string lengths. If the same, need
+        cmp     (ptr2),y        ; to compare strings. If `ptr1` > `ptr2`
+        beq     compare         ; ('/a/b' vs. '/a'), then it's not a problem.
+        bcs     ok
+
+        ;; Assert: `ptr1` is shorter then `ptr2`
+        tay                     ; See if `ptr2` is possibly a subfolder
+        iny
+        lda     (ptr2),y        ; ('/a/b/c' vs. '/a/b') or a sibling
+        cmp     #'/'            ; ('/a/bc' vs. /a/b').
+        bne     ok              ; At worst, a sibling - that's okay.
+
+        ;; Potentially self or a subfolder; compare strings.
+compare:
+        ldy     #0
+        lda     (ptr1),y
+        tay
+:       lda     (ptr1),y
+        jsr     ToUpperCase
+        sta     @char
+        lda     (ptr2),y
+        jsr     ToUpperCase
+        @char := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     ok
+        dey
+        bne     :-
+
+        ;; Self or subfolder
+        return  #$FF
+
+ok:     return  #0
+.endproc ; IsPathPrefixOf
 
 ;;; ============================================================
 ;;; Given a path and a prospective name, update the filesystem with
