@@ -177,7 +177,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
 .proc SystemTask
         inc     loop_counter
         inc     loop_counter
@@ -634,7 +634,7 @@ dispatch_click:
 .endproc ; UnsafeSetPortFromWindowId
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
 .proc SafeSetPortFromWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -1183,7 +1183,7 @@ LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
 
 ;;; ============================================================
 
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
         .include "../lib/uppercase.s"
 
 ;;; ============================================================
@@ -6561,7 +6561,7 @@ UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 ;;; ============================================================
 ;;; Draw all entries (icons or list items) in (cached) window
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc DrawWindowEntries
         ;; --------------------------------------------------
         ;; Icons
@@ -6623,7 +6623,7 @@ done:
 ;;; Output: A = icon's record index in its window
 ;;; Trashes $06
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc GetIconRecordNum
         jsr     GetIconEntry
         ptr := $06
@@ -6723,14 +6723,14 @@ skip:
 
 ;;; ============================================================
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc CachedIconsScreenToWindow
         param_jump CachedIconsXToY, IconPtrScreenToWindow
 .endproc ; CachedIconsScreenToWindow
 
 ;;; ============================================================
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc CachedIconsWindowToScreen
         param_jump CachedIconsXToY, IconPtrWindowToScreen
 .endproc ; CachedIconsWindowToScreen
@@ -6738,7 +6738,7 @@ skip:
 ;;; ============================================================
 
 ;;; Inputs: A,X = proc to call for each icon
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc CachedIconsXToY
         stax    proc
 
@@ -8172,7 +8172,7 @@ flags:  .byte   0
 ;;; ============================================================
 ;;; Draw header (items/K in disk/K available/lines) for active window
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc DrawWindowHeader
 
 ;;; Local variables on ZP
@@ -8750,7 +8750,7 @@ CompareFileRecords_sort_by := CompareFileRecords::sort_by
 ;;; ============================================================
 ;;; A = entry number
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc DrawListViewRow
 
         ptr := $06
@@ -8858,7 +8858,7 @@ set_pos:
 ;;; ============================================================
 ;;; Populate `text_buffer2` with "12,345K"
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc ComposeSizeString
         stax    value           ; size in 512-byte blocks
 
@@ -8922,7 +8922,7 @@ value:  .word   0
 
 ;;; ============================================================
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc ComposeDateString
         copy    #0, text_buffer2
         copy16  #text_buffer2, $8
@@ -9026,7 +9026,7 @@ min     := parsed_date + ParsedDateTime::minute
 
 ;;; ============================================================
 
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
 
 ;;; A,X = A * 16
 .proc ATimes16
@@ -10211,7 +10211,7 @@ next:   dec     step
 ;;;  4 = shortcut editor          - L$7000,L$ 800
 ;;;  5 = restore shortcut picker  - A$5000,L$1000 (restore $5000...$5FFF)
 ;;;  6 = restore file dialog      - A$6000,L$1400 (restore $6000...$73FF)
-;;;  7 = restore 10K buffer       - A$5000,L$2800 (restore $5000...$77FF)
+;;;  7 = restore buffer           - A$5000,L$2800 (restore $5000...$77FF)
 ;;;
 ;;; Routines 1-5 need appropriate "restore routines" applied when complete.
 
@@ -10224,7 +10224,7 @@ pos_table:
         .dword  kOverlayShortcutPickOffset, kOverlayFileDialogOffset
         .dword  kOverlayFileCopyOffset
         .dword  kOverlayShortcutEditOffset, kOverlayDeskTopRestoreSPOffset
-        .dword  kOverlayDeskTopRestoreFDOffset, kOverlayDeskTopRestore10KOffset
+        .dword  kOverlayDeskTopRestoreFDOffset, kOverlayDeskTopRestoreBufferOffset
         ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
 
 len_table:
@@ -10232,7 +10232,7 @@ len_table:
         .word   kOverlayShortcutPickLength, kOverlayFileDialogLength
         .word   kOverlayFileCopyLength
         .word   kOverlayShortcutEditLength, kOverlayDeskTopRestoreSPLength
-        .word   kOverlayDeskTopRestoreFDLength, kOverlayDeskTopRestore10KLength
+        .word   kOverlayDeskTopRestoreFDLength, kOverlayDeskTopRestoreBufferLength
         ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
 
 addr_table:
@@ -10240,7 +10240,7 @@ addr_table:
         .word   kOverlayShortcutPickAddress, kOverlayFileDialogAddress
         .word   kOverlayFileCopyAddress
         .word   kOverlayShortcutEditAddress, kOverlayDeskTopRestoreSPAddress
-        .word   kOverlayDeskTopRestoreFDAddress, kOverlayDeskTopRestore10KAddress
+        .word   kOverlayDeskTopRestoreFDAddress, kOverlayDeskTopRestoreBufferAddress
         ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
 
         DEFINE_OPEN_PARAMS open_params, str_desktop, IO_BUFFER
@@ -14801,7 +14801,7 @@ ret:    rts
 ;;;
 ;;; ============================================================
 
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
 
 ;;; ============================================================
 
@@ -14856,7 +14856,7 @@ params:  .res    3
 ;;; ============================================================
 
 ;;; Preserves A
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
 .proc SetCursorWatch
         pha
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
@@ -14864,13 +14864,13 @@ params:  .res    3
         rts
 .endproc ; SetCursorWatch
 
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
 .proc SetCursorPointer
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 .endproc ; SetCursorPointer
 
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
 .proc SetCursorIBeam
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
@@ -15179,7 +15179,7 @@ ptr_str_files_suffix:
 
 ;;; ============================================================
 
-        .assert * >= $7800, error, "Routines used by overlays in overlay zone"
+        .assert * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routines used by overlays in overlay zone"
 
 ;;; Wrapper for `MGTK::GetEvent`, returns the `EventKind` in A
 .proc GetEvent
@@ -15281,7 +15281,7 @@ done:   rts
 ;;; Inputs: A = window id
 ;;; Outputs: Z = 1 if found, and X = index in `window_id_to_filerecord_list_entries`
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc FindIndexInFilerecordListEntries
         ldx     window_id_to_filerecord_list_count
         dex
@@ -15295,7 +15295,7 @@ done:   rts
 ;;; Input: A = window_id
 ;;; Output: A,X = address of FileRecord list (first entry is length)
 ;;; Assert: Window is found in list.
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc GetFileRecordListForWindow
         jsr     FindIndexInFilerecordListEntries
         txa
@@ -15321,7 +15321,7 @@ done:   rts
 .endproc ; GetActiveWindowViewBy
 
 ;;; Assert: There is a cached window
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc GetCachedWindowViewBy
         ldx     cached_window_id
         lda     win_view_by_table-1,x
@@ -15351,7 +15351,7 @@ done:   rts
 ;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
 ;;; Output: A=high bit/N flag set if either is down.
 
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
 .proc ModifierDown
         lda     BUTN0
         ora     BUTN1
@@ -15384,7 +15384,7 @@ ret:    rts
 ;;; Test if shift is down (if it can be detected).
 ;;; Output: A=high bit/N flag set if down.
 
-        .assert * < $5000 || * >= $7800, error, "Routine used by overlays in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
 .proc ShiftDown
         ldx     #DeskTopSettings::system_capabilities
         jsr     ReadSetting
@@ -15423,7 +15423,7 @@ ret:    rts
 ;;; ============================================================
 
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 ;;; Input: A = window_id (0=desktop)
 .proc LoadWindowEntryTable
         sta     cached_window_id
@@ -15546,7 +15546,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 ;;; logic with 127 icons. A simpler fix may be possible, see commit
 ;;; 41ebde49 for another attempt, but that introduces other issues.
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc LoadActiveWindowEntryTable
         lda     active_window_id
         jmp     LoadWindowEntryTable
@@ -15574,7 +15574,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 ;;; Library Routines
 ;;; ============================================================
 
-        .assert * >= $7800, error, "Routines used by overlays in overlay zone"
+        .assert * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routines used by overlays in overlay zone"
 
         RC_AUXMEM = 1
         RC_LCBANK = 1
@@ -15790,7 +15790,7 @@ desktop_icon_usage_table:
 
 ;;; ============================================================
 
-        .assert * < $5000 || * >= $6000, error, "Routine used when clearing updates in overlay zone"
+        .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 ;;; FileRecord for list view
 list_view_filerecord:
         .tag FileRecord

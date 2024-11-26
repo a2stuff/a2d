@@ -55,10 +55,10 @@ kOverlayDeskTopRestoreFDOffset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRes
 .assert (kOverlayFileCopyAddress + kOverlayFileCopyLength) <= (kOverlayDeskTopRestoreFDAddress + kOverlayDeskTopRestoreFDLength), error, "restore coverage"
 .assert (kOverlayShortcutEditAddress + kOverlayShortcutEditLength) <= (kOverlayDeskTopRestoreFDAddress + kOverlayDeskTopRestoreFDLength), error, "restore coverage"
 
-;;; Restore after 10K buffer is used by Desk Accessories
-kOverlayDeskTopRestore10KLength = kOverlay10KBufferSize
-kOverlayDeskTopRestore10KAddress = OVERLAY_10K_BUFFER
-kOverlayDeskTopRestore10KOffset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestore10KAddress - kSegmentDeskTopMainAddress)
+;;; Restore after buffer is used by Desk Accessories
+kOverlayDeskTopRestoreBufferLength = kOverlayBufferSize
+kOverlayDeskTopRestoreBufferAddress = OVERLAY_BUFFER
+kOverlayDeskTopRestoreBufferOffset = kSegmentDeskTopMainOffset + (kOverlayDeskTopRestoreBufferAddress - kSegmentDeskTopMainAddress)
 
 ;;; ============================================================
 ;;; DeskTop module

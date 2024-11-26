@@ -28,10 +28,10 @@ kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS
 DEFAULT_FONT    := $8600
 
 ;;; A 10k buffer that can be restored using overlays; load
-;;; `kDynamicRoutineRestore10K` and call `JUMP_TABLE_RESTORE_OVL`
+;;; `kDynamicRoutineRestoreBuffer` and call `JUMP_TABLE_RESTORE_OVL`
 ;;; to restore DeskTop afterwards.
-OVERLAY_10K_BUFFER      := $5000
-kOverlay10KBufferSize   = $2800
+OVERLAY_BUFFER      := $5000
+kOverlayBufferSize   = $2800
 
 ;;; DAs must start with a header declaring sizes of the two
 ;;; segments (aux and main).
@@ -159,7 +159,7 @@ kDynamicRoutineFileCopy         = 3
 kDynamicRoutineShortcutEdit     = 4
 kDynamicRoutineRestoreSP        = 5
 kDynamicRoutineRestoreFD        = 6
-kDynamicRoutineRestore10K       = 7
+kDynamicRoutineRestoreBuffer       = 7
 
 ;;; ============================================================
 ;;; Error codes used for alerts which are not ProDOS errors

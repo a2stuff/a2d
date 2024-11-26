@@ -185,7 +185,7 @@ highlighted in DeskTop. This can be done by copying the full path to
   screen holes.
 * DAs can overwrite 10k of Main memory normally used for DeskTop code
   that isn't used while a DA is running (e.g. command logic). This is
-  at `OVERLAY_10K_BUFFER` and the size is `kOverlay10KBufferSize`. To
+  at `OVERLAY_BUFFER` and the size is `kOverlayBufferSize`. To
   restore DeskTop, the DA *must* call DeskTop's `JUMP_TABLE_RESTORE_OVL`
 
 See examples in the Screen Saver and Show XYZ File code.

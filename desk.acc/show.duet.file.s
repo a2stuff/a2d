@@ -52,8 +52,8 @@
 ;;; There is not enough room in the DA load area to hold 6k of audio
 ;;; data. A 10k buffer is available in DeskTop itself, in an area
 ;;; that can be restored after use.
-data_buf        := OVERLAY_10K_BUFFER
-kReadLength      = kOverlay10KBufferSize
+data_buf        := OVERLAY_BUFFER
+kReadLength      = kOverlayBufferSize
 
 ;;; ============================================================
 
@@ -285,7 +285,7 @@ ret:    rts
         JSR_TO_AUX aux::Init
 
         ;; Page DeskTop's code back in.
-        lda     #kDynamicRoutineRestore10K
+        lda     #kDynamicRoutineRestoreBuffer
         jsr     JUMP_TABLE_RESTORE_OVL
 
         jsr     JUMP_TABLE_CLEAR_UPDATES
