@@ -50,7 +50,7 @@
 ;;;
 
 ;;; There is not enough room in the DA load area to hold 6k of audio
-;;; data. A 10k buffer is available in DeskTop itself, in an area
+;;; data. A larger buffer is available in DeskTop itself, in an area
 ;;; that can be restored after use.
 data_buf        := OVERLAY_BUFFER
 kReadLength      = kOverlayBufferSize

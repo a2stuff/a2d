@@ -27,11 +27,11 @@ kDAMaxSize      = DA_IO_BUFFER - DA_LOAD_ADDRESS
 ;;; Used by DAs for window definitions
 DEFAULT_FONT    := $8600
 
-;;; A 10k buffer that can be restored using overlays; load
+;;; A 16k buffer that can be restored using overlays; load
 ;;; `kDynamicRoutineRestoreBuffer` and call `JUMP_TABLE_RESTORE_OVL`
 ;;; to restore DeskTop afterwards.
 OVERLAY_BUFFER      := $5000
-kOverlayBufferSize   = $2800
+kOverlayBufferSize   = $4000
 
 ;;; DAs must start with a header declaring sizes of the two
 ;;; segments (aux and main).

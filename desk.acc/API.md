@@ -183,7 +183,7 @@ highlighted in DeskTop. This can be done by copying the full path to
 * If the DA uses the text or lores screens, it *must* save the visible
   bytes on entry and restore them on exit, and *must not* modify the
   screen holes.
-* DAs can overwrite 10k of Main memory normally used for DeskTop code
+* DAs can overwrite 16k of Main memory normally used for DeskTop code
   that isn't used while a DA is running (e.g. command logic). This is
   at `OVERLAY_BUFFER` and the size is `kOverlayBufferSize`. To
   restore DeskTop, the DA *must* call DeskTop's `JUMP_TABLE_RESTORE_OVL`

@@ -57,6 +57,10 @@ JT_READ_SETTING:        jmp     ReadSetting             ; *
 
         .assert JUMP_TABLE_LAST = *, error, "Jump table mismatch"
 
+.macro PROC_USED_IN_OVERLAY
+        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+.endmacro
+
 ;;; ============================================================
 ;;; Main event loop for the application
 
@@ -177,7 +181,7 @@ ClearUpdates := ClearUpdatesImpl::clear
 ;;; Called by main and nested event loops to do periodic tasks.
 ;;; Returns 0 if the periodic tasks were run.
 
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
 .proc SystemTask
         inc     loop_counter
         inc     loop_counter
@@ -634,7 +638,7 @@ dispatch_click:
 .endproc ; UnsafeSetPortFromWindowId
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
 .proc SafeSetPortFromWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -1183,7 +1187,7 @@ LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
 
 ;;; ============================================================
 
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
         .include "../lib/uppercase.s"
 
 ;;; ============================================================
@@ -1191,6 +1195,7 @@ LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
 ;;; Input: A,X = Address
 ;;; Trashes $06
 
+        PROC_USED_IN_OVERLAY
 .proc UpcaseString
         ptr := $06
 
@@ -1588,6 +1593,7 @@ secondary:
 ;;; Inputs: Source string at $06, target buffer at A,X
 ;;; Output: String length in A
 
+        PROC_USED_IN_OVERLAY
 .proc CopyPtr1ToBuf
         ptr1 := $06
 
@@ -9024,43 +9030,6 @@ min     := parsed_date + ParsedDateTime::minute
 
 
 ;;; ============================================================
-
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
-
-;;; A,X = A * 16
-.proc ATimes16
-        ldx     #4
-        bne     AShiftX       ; always
-.endproc ; ATimes16
-
-;;; A,X = A * 32
-.proc ATimes32
-        ldx     #5
-        bne     AShiftX       ; always
-.endproc ; ATimes32
-
-;;; A,X = A * 64
-.proc ATimes64
-        ldx     #6
-        bne     AShiftX       ; always
-.endproc ; ATimes64
-
-;;; A,X = A << X
-.proc AShiftX
-        ldy     #0
-        sty     hi
-
-:       asl     a
-        rol     hi
-        dex
-        bne     :-
-
-        hi := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        rts
-.endproc ; AShiftX
-
-;;; ============================================================
 ;;; Look up an icon address.
 ;;; Inputs: A = icon number
 ;;; Output: A,X = IconEntry address
@@ -9275,53 +9244,6 @@ finish:
 
         rts
 .endproc ; AppendFilenameToDstPath
-
-;;; ============================================================
-;;; Append aux type (in A,X) to text_buffer2
-
-.proc AppendAuxType
-        stax    auxtype
-        ldy     text_buffer2
-
-        ;; Append prefix
-        ldx     #0
-:       lda     str_auxtype_prefix+1,x
-        sta     text_buffer2+1,y
-        inx
-        iny
-        cpx     str_auxtype_prefix
-        bne     :-
-
-        ;; Append type
-        lda     auxtype+1
-        jsr     DoByte
-        lda     auxtype
-        jsr     DoByte
-
-        sty     text_buffer2
-        rts
-
-DoByte:
-        pha
-        lsr
-        lsr
-        lsr
-        lsr
-        tax
-        lda     hex_digits,x
-        sta     text_buffer2+1,y
-        iny
-        pla
-        and     #%00001111
-        tax
-        lda     hex_digits,x
-        sta     text_buffer2+1,y
-        iny
-        rts
-
-auxtype:
-        .word 0
-.endproc ; AppendAuxType
 
 ;;; ============================================================
 ;;; Draw text right aligned, pascal string address in A,X
@@ -10193,116 +10115,6 @@ next:   dec     step
         MGTK_CALL MGTK::FrameRect, tmp_rect
         rts
 .endproc ; FrameTmpRect
-
-;;; ============================================================
-;;; Dynamically load parts of Desktop
-
-;;; Call `LoadDynamicRoutine` or `RestoreDynamicRoutine`
-;;; with A set to routine number (0-8); routine is loaded
-;;; from DeskTop file to target address. Returns with
-;;; minus flag set on failure.
-
-;;; Routines are:
-;;;  0 = format/erase disk        - A$ 800,L$1400 call w/ A = 4 = format, A = 5 = erase
-;;;  1 = shortcut picker          - A$9000,L$1000
-;;;  2 = common file dialog       - A$6000,L$1000
-;;;  3 = part of copy file        - A$7000,L$ 800
-;;;  4 = shortcut editor          - L$7000,L$ 800
-;;;  5 = restore shortcut picker  - A$5000,L$1000 (restore $5000...$5FFF)
-;;;  6 = restore file dialog      - A$6000,L$1400 (restore $6000...$73FF)
-;;;  7 = restore buffer           - A$5000,L$2800 (restore $5000...$77FF)
-;;;
-;;; Routines 1-5 need appropriate "restore routines" applied when complete.
-
-.proc LoadDynamicRoutineImpl
-
-kNumOverlays = 8
-
-pos_table:
-        .dword  kOverlayFormatEraseOffset
-        .dword  kOverlayShortcutPickOffset, kOverlayFileDialogOffset
-        .dword  kOverlayFileCopyOffset
-        .dword  kOverlayShortcutEditOffset, kOverlayDeskTopRestoreSPOffset
-        .dword  kOverlayDeskTopRestoreFDOffset, kOverlayDeskTopRestoreBufferOffset
-        ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
-
-len_table:
-        .word   kOverlayFormatEraseLength
-        .word   kOverlayShortcutPickLength, kOverlayFileDialogLength
-        .word   kOverlayFileCopyLength
-        .word   kOverlayShortcutEditLength, kOverlayDeskTopRestoreSPLength
-        .word   kOverlayDeskTopRestoreFDLength, kOverlayDeskTopRestoreBufferLength
-        ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
-
-addr_table:
-        .word   kOverlayFormatEraseAddress
-        .word   kOverlayShortcutPickAddress, kOverlayFileDialogAddress
-        .word   kOverlayFileCopyAddress
-        .word   kOverlayShortcutEditAddress, kOverlayDeskTopRestoreSPAddress
-        .word   kOverlayDeskTopRestoreFDAddress, kOverlayDeskTopRestoreBufferAddress
-        ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
-
-        DEFINE_OPEN_PARAMS open_params, str_desktop, IO_BUFFER
-
-str_desktop:
-        PASCAL_STRING kPathnameDeskTop
-
-        DEFINE_SET_MARK_PARAMS set_mark_params, 0
-
-        DEFINE_READ_PARAMS read_params, 0, 0
-        DEFINE_CLOSE_PARAMS close_params
-
-        ;; Called with routine # in A
-
-load:   pha
-        copy    #AlertButtonOptions::OKCancel, button_options
-        .assert AlertButtonOptions::OKCancel <> 0, error, "bne always assumption"
-        bne     :+              ; always
-
-restore:
-        pha
-        ;; Need to set low bit in this case to override the default.
-        copy    #AlertButtonOptions::OK|%00000001, button_options
-
-:       jsr     SetCursorWatch ; before loading overlay
-        pla
-        asl     a               ; y = A * 2 (to index into word table)
-        tay
-        asl     a               ; x = A * 4 (to index into dword table)
-        tax
-
-        lda     pos_table,x
-        sta     set_mark_params::position
-        lda     pos_table+1,x
-        sta     set_mark_params::position+1
-        lda     pos_table+2,x
-        sta     set_mark_params::position+2
-
-        copy16  len_table,y, read_params::request_count
-        copy16  addr_table,y, read_params::data_buffer
-
-retry:  MLI_CALL OPEN, open_params
-        bcc     :+
-
-        lda     #kErrInsertSystemDisk
-        button_options := *+1
-        ldx     #SELF_MODIFIED_BYTE
-        jsr     ShowAlertOption
-        cmp     #kAlertResultOK
-        beq     retry
-        return  #$FF            ; failed
-
-:       lda     open_params::ref_num
-        sta     read_params::ref_num
-        sta     set_mark_params::ref_num
-        MLI_CALL SET_MARK, set_mark_params
-        MLI_CALL READ, read_params
-        MLI_CALL CLOSE, close_params
-        jmp     SetCursorPointer ; after loading overlay
-
-.endproc ; LoadDynamicRoutineImpl
-LoadDynamicRoutine      := LoadDynamicRoutineImpl::load
-RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
 
 ;;; ============================================================
 ;;; Operations performed on selection
@@ -12951,6 +12763,53 @@ ret:    return  #$FF
 
 .endproc ; GetInfoDialogProc
 
+;;; ============================================================
+;;; Append aux type (in A,X) to text_buffer2
+
+.proc AppendAuxType
+        stax    auxtype
+        ldy     text_buffer2
+
+        ;; Append prefix
+        ldx     #0
+:       lda     str_auxtype_prefix+1,x
+        sta     text_buffer2+1,y
+        inx
+        iny
+        cpx     str_auxtype_prefix
+        bne     :-
+
+        ;; Append type
+        lda     auxtype+1
+        jsr     DoByte
+        lda     auxtype
+        jsr     DoByte
+
+        sty     text_buffer2
+        rts
+
+DoByte:
+        pha
+        lsr
+        lsr
+        lsr
+        lsr
+        tax
+        lda     hex_digits,x
+        sta     text_buffer2+1,y
+        iny
+        pla
+        and     #%00001111
+        tax
+        lda     hex_digits,x
+        sta     text_buffer2+1,y
+        iny
+        rts
+
+auxtype:
+        .word 0
+.endproc ; AppendAuxType
+
 .endscope ; get_info
 
 ;;; ============================================================
@@ -13732,53 +13591,6 @@ assign: ldy     new_path
 .endproc ; NotifyPathChanged
 
 ;;; ============================================================
-;;; Remove segment from path at `src_path_buf`
-
-.proc RemoveSrcPathSegment
-        ldax    #src_path_buf
-        FALL_THROUGH_TO RemovePathSegment
-.endproc ; RemoveSrcPathSegment
-
-;;; ============================================================
-;;; Remove segment from path at A,X
-;;; Inputs: A,X = path
-;;; Output: A = length
-
-.proc RemovePathSegment
-        jsr     PushPointers
-
-        ptr := $06
-        stax    ptr
-
-        ldy     #0
-        lda     (ptr),y         ; length
-        beq     finish
-
-        tay
-:       lda     (ptr),y
-        cmp     #'/'
-        beq     found
-        dey
-        bne     :-
-        iny
-
-found:  dey
-        tya
-        ldy     #0
-        sta     (ptr),y
-
-finish: jsr     PopPointers     ; do not tail-call optimize!
-        rts
-.endproc ; RemovePathSegment
-
-;;; ============================================================
-;;; Remove segment from path at `dst_path_buf`
-
-.proc RemoveDstPathSegment
-        param_jump RemovePathSegment, dst_path_buf
-.endproc ; RemoveDstPathSegment
-
-;;; ============================================================
 ;;; Check if `src_path_buf` is inside `dst_path_buf`.
 ;;; Output: Z=1 if ok, Z=0 otherwise.
 
@@ -13848,6 +13660,204 @@ compare:
 
 ok:     return  #0
 .endproc ; IsPathPrefixOf
+
+;;; ============================================================
+;;; Dynamically load parts of Desktop
+
+;;; Call `LoadDynamicRoutine` or `RestoreDynamicRoutine`
+;;; with A set to routine number (0-8); routine is loaded
+;;; from DeskTop file to target address. Returns with
+;;; minus flag set on failure.
+
+;;; Routines are:
+;;;  0 = format/erase disk        - A$ 800,L$1400 call w/ A = 4 = format, A = 5 = erase
+;;;  1 = shortcut picker          - A$9000,L$1000
+;;;  2 = common file dialog       - A$6000,L$1000
+;;;  3 = part of copy file        - A$7000,L$ 800
+;;;  4 = shortcut editor          - L$7000,L$ 800
+;;;  5 = restore shortcut picker  - A$5000,L$1000 (restore $5000...$5FFF)
+;;;  6 = restore file dialog      - A$6000,L$1400 (restore $6000...$73FF)
+;;;  7 = restore buffer           - A$5000,L$2800 (restore $5000...$77FF)
+;;;
+;;; Routines 1-5 need appropriate "restore routines" applied when complete.
+
+        PROC_USED_IN_OVERLAY
+
+.proc LoadDynamicRoutineImpl
+
+kNumOverlays = 8
+
+pos_table:
+        .dword  kOverlayFormatEraseOffset
+        .dword  kOverlayShortcutPickOffset, kOverlayFileDialogOffset
+        .dword  kOverlayFileCopyOffset
+        .dword  kOverlayShortcutEditOffset, kOverlayDeskTopRestoreSPOffset
+        .dword  kOverlayDeskTopRestoreFDOffset, kOverlayDeskTopRestoreBufferOffset
+        ASSERT_RECORD_TABLE_SIZE pos_table, kNumOverlays, 4
+
+len_table:
+        .word   kOverlayFormatEraseLength
+        .word   kOverlayShortcutPickLength, kOverlayFileDialogLength
+        .word   kOverlayFileCopyLength
+        .word   kOverlayShortcutEditLength, kOverlayDeskTopRestoreSPLength
+        .word   kOverlayDeskTopRestoreFDLength, kOverlayDeskTopRestoreBufferLength
+        ASSERT_RECORD_TABLE_SIZE len_table, kNumOverlays, 2
+
+addr_table:
+        .word   kOverlayFormatEraseAddress
+        .word   kOverlayShortcutPickAddress, kOverlayFileDialogAddress
+        .word   kOverlayFileCopyAddress
+        .word   kOverlayShortcutEditAddress, kOverlayDeskTopRestoreSPAddress
+        .word   kOverlayDeskTopRestoreFDAddress, kOverlayDeskTopRestoreBufferAddress
+        ASSERT_ADDRESS_TABLE_SIZE addr_table, kNumOverlays
+
+        DEFINE_OPEN_PARAMS open_params, str_desktop, IO_BUFFER
+
+str_desktop:
+        PASCAL_STRING kPathnameDeskTop
+
+        DEFINE_SET_MARK_PARAMS set_mark_params, 0
+
+        DEFINE_READ_PARAMS read_params, 0, 0
+        DEFINE_CLOSE_PARAMS close_params
+
+        ;; Called with routine # in A
+
+load:   pha
+        copy    #AlertButtonOptions::OKCancel, button_options
+        .assert AlertButtonOptions::OKCancel <> 0, error, "bne always assumption"
+        bne     :+              ; always
+
+restore:
+        pha
+        ;; Need to set low bit in this case to override the default.
+        copy    #AlertButtonOptions::OK|%00000001, button_options
+
+:       jsr     SetCursorWatch ; before loading overlay
+        pla
+        asl     a               ; y = A * 2 (to index into word table)
+        tay
+        asl     a               ; x = A * 4 (to index into dword table)
+        tax
+
+        lda     pos_table,x
+        sta     set_mark_params::position
+        lda     pos_table+1,x
+        sta     set_mark_params::position+1
+        lda     pos_table+2,x
+        sta     set_mark_params::position+2
+
+        copy16  len_table,y, read_params::request_count
+        copy16  addr_table,y, read_params::data_buffer
+
+retry:  MLI_CALL OPEN, open_params
+        bcc     :+
+
+        lda     #kErrInsertSystemDisk
+        button_options := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        jsr     ShowAlertOption
+        cmp     #kAlertResultOK
+        beq     retry
+        return  #$FF            ; failed
+
+:       lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     set_mark_params::ref_num
+        MLI_CALL SET_MARK, set_mark_params
+        MLI_CALL READ, read_params
+        MLI_CALL CLOSE, close_params
+        jmp     SetCursorPointer ; after loading overlay
+
+.endproc ; LoadDynamicRoutineImpl
+LoadDynamicRoutine      := LoadDynamicRoutineImpl::load
+RestoreDynamicRoutine   := LoadDynamicRoutineImpl::restore
+
+;;; ============================================================
+
+        PROC_USED_IN_OVERLAY
+
+;;; A,X = A * 16
+.proc ATimes16
+        ldx     #4
+        bne     AShiftX       ; always
+.endproc ; ATimes16
+
+;;; A,X = A * 32
+.proc ATimes32
+        ldx     #5
+        bne     AShiftX       ; always
+.endproc ; ATimes32
+
+;;; A,X = A * 64
+.proc ATimes64
+        ldx     #6
+        bne     AShiftX       ; always
+.endproc ; ATimes64
+
+;;; A,X = A << X
+.proc AShiftX
+        ldy     #0
+        sty     hi
+
+:       asl     a
+        rol     hi
+        dex
+        bne     :-
+
+        hi := *+1
+        ldx     #SELF_MODIFIED_BYTE
+        rts
+.endproc ; AShiftX
+
+;;; ============================================================
+;;; Remove segment from path at `src_path_buf`
+
+.proc RemoveSrcPathSegment
+        ldax    #src_path_buf
+        FALL_THROUGH_TO RemovePathSegment
+.endproc ; RemoveSrcPathSegment
+
+;;; ============================================================
+;;; Remove segment from path at A,X
+;;; Inputs: A,X = path
+;;; Output: A = length
+
+        PROC_USED_IN_OVERLAY
+
+.proc RemovePathSegment
+        jsr     PushPointers
+
+        ptr := $06
+        stax    ptr
+
+        ldy     #0
+        lda     (ptr),y         ; length
+        beq     finish
+
+        tay
+:       lda     (ptr),y
+        cmp     #'/'
+        beq     found
+        dey
+        bne     :-
+        iny
+
+found:  dey
+        tya
+        ldy     #0
+        sta     (ptr),y
+
+finish: jsr     PopPointers     ; do not tail-call optimize!
+        rts
+.endproc ; RemovePathSegment
+
+;;; ============================================================
+;;; Remove segment from path at `dst_path_buf`
+
+.proc RemoveDstPathSegment
+        param_jump RemovePathSegment, dst_path_buf
+.endproc ; RemoveDstPathSegment
 
 ;;; ============================================================
 ;;; Given a path and a prospective name, update the filesystem with
@@ -14005,6 +14015,9 @@ get_case_bits_per_option_and_adjust_string:
 ;;; Input: A,X = name
 ;;; Output: A,X = case bits
 ;;; Trashes: $06/$08
+
+        PROC_USED_IN_OVERLAY
+
 .proc CalculateCaseBits
         ptr  := $06
         bits := $08
@@ -14030,6 +14043,8 @@ get_case_bits_per_option_and_adjust_string:
 ;;; Message handler for OK/Cancel dialog
 
 ;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
+
+        PROC_USED_IN_OVERLAY
 
 .proc PromptInputLoop
         bit     has_input_field_flag
@@ -14287,6 +14302,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
 
 ;;; ============================================================
 
+        PROC_USED_IN_OVERLAY
 .proc SetCursorPointerWithFlag
         bit     cursor_ibeam_flag
         bpl     :+
@@ -14827,7 +14843,7 @@ ret:    rts
 ;;;
 ;;; ============================================================
 
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
 
 ;;; ============================================================
 
@@ -14882,7 +14898,7 @@ params:  .res    3
 ;;; ============================================================
 
 ;;; Preserves A
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
 .proc SetCursorWatch
         pha
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
@@ -14890,13 +14906,13 @@ params:  .res    3
         rts
 .endproc ; SetCursorWatch
 
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
 .proc SetCursorPointer
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 .endproc ; SetCursorPointer
 
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
 .proc SetCursorIBeam
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         rts
@@ -14905,6 +14921,8 @@ params:  .res    3
 ;;; ============================================================
 
 ;;; Inputs: A = new `prompt_button_flags` value
+
+        PROC_USED_IN_OVERLAY
 
 .proc OpenPromptWindow
         sta     prompt_button_flags
@@ -14956,6 +14974,7 @@ done:   rts
 
 ;;; ============================================================
 
+        PROC_USED_IN_OVERLAY
 .proc SetPortForDialogWindow
         lda     #winfo_prompt_dialog::kWindowId
         jmp     SafeSetPortFromWindowId
@@ -14973,6 +14992,7 @@ done:   rts
         DDL_RIGHT  = $30      ; Right aligned
         DDL_LRIGHT = $40      ; Right aligned relative to `kDialogLabelRightX`
 
+        PROC_USED_IN_OVERLAY
 .proc DrawDialogLabel
         textwidth_params := $8
         textptr := $8
@@ -15040,6 +15060,7 @@ calc_y:
 
 ;;; ============================================================
 
+        PROC_USED_IN_OVERLAY
 .proc UpdateOKButton
         bit     format_erase_overlay_flag
     IF_NS
@@ -15068,6 +15089,8 @@ set_state:
 ret:    rts
 .endproc ; UpdateOKButton
 
+        PROC_USED_IN_OVERLAY
+
 .proc EraseOKCancelButtons
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::PaintRect, ok_button::rect
@@ -15079,6 +15102,7 @@ ret:    rts
 ;;; Draw text, pascal string address in A,X
 ;;; String must be in aux or LC memory.
 
+        PROC_USED_IN_OVERLAY
 .proc DrawString
         params := $6
         textptr := $6
@@ -15095,6 +15119,7 @@ done:   rts
 
 ;;; ============================================================
 
+        PROC_USED_IN_OVERLAY
 .proc DrawDialogTitle
         text_params     := $6
         text_addr       := text_params + 0
@@ -15117,6 +15142,8 @@ done:   rts
 
 ;;; ============================================================
 
+        PROC_USED_IN_OVERLAY
+
 .proc NoOp
         rts
 .endproc ; NoOp
@@ -15125,6 +15152,8 @@ done:   rts
 ;;; Frames and initializes the line edit control in the prompt
 ;;; dialog. Call after `text_input_buf` is populated so caret is set
 ;;; correctly.
+
+        PROC_USED_IN_OVERLAY
 
 .proc InitNameInput
         jsr     SetPenModeNotCopy
@@ -15181,6 +15210,7 @@ ptr_str_files_suffix:
 
 ;;; Input: A,X = string to copy
 ;;; Trashes: $06
+        PROC_USED_IN_OVERLAY
 .proc CopyToBuf0
         ptr1 := $06
         stax    ptr1
@@ -15205,7 +15235,7 @@ ptr_str_files_suffix:
 
 ;;; ============================================================
 
-        .assert * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routines used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
 
 ;;; Wrapper for `MGTK::GetEvent`, returns the `EventKind` in A
 .proc GetEvent
@@ -15365,6 +15395,7 @@ done:   rts
 
 ;;; ============================================================
 
+        PROC_USED_IN_OVERLAY
 .proc ToggleMenuHilite
         lda     menu_click_params::menu_id
         beq     :+
@@ -15377,7 +15408,7 @@ done:   rts
 ;;; Test if either modifier (Open-Apple or Solid-Apple) is down.
 ;;; Output: A=high bit/N flag set if either is down.
 
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
 .proc ModifierDown
         lda     BUTN0
         ora     BUTN1
@@ -15410,7 +15441,7 @@ ret:    rts
 ;;; Test if shift is down (if it can be detected).
 ;;; Output: A=high bit/N flag set if down.
 
-        .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
+        PROC_USED_IN_OVERLAY
 .proc ShiftDown
         ldx     #DeskTopSettings::system_capabilities
         jsr     ReadSetting

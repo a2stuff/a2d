@@ -59,7 +59,7 @@
         MLIEntry := MLI
 
 ;;; There is not enough room in the DA load area to a directory with
-;;; 127 entries, the maximum number of icons DeskTop can handle. A 10k
+;;; 127 entries, the maximum number of icons DeskTop can handle. A
 ;;; buffer is available in DeskTop itself, in an area that can be
 ;;; restored after use.
 dir_data_buffer         := OVERLAY_BUFFER

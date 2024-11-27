@@ -226,13 +226,13 @@ slideshow_counter:
 
 ;;; ============================================================
 
-restore_10k_overlay_flag:
+restore_buffer_overlay_flag:
         .byte   0
 
 .proc Exit
         jsr     MaybeCallExitHook
 
-        bit     restore_10k_overlay_flag
+        bit     restore_buffer_overlay_flag
     IF_NS
         lda     #kDynamicRoutineRestoreBuffer
         jsr     JUMP_TABLE_RESTORE_OVL
@@ -394,7 +394,7 @@ signature:
 .proc ShowLZ4FHFile
         sta     PAGE2OFF
 
-        copy    #$80, restore_10k_overlay_flag
+        copy    #$80, restore_buffer_overlay_flag
         copy16  #OVERLAY_BUFFER, read_params::data_buffer
         JUMP_TABLE_MLI_CALL READ, read_params
         copy16  #$2000, read_params::data_buffer
