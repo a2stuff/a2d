@@ -708,6 +708,7 @@ str_network:    PASCAL_STRING res_string_card_type_network
 str_mockingboard: PASCAL_STRING res_string_card_type_mockingboard
 str_z80:        PASCAL_STRING res_string_card_type_z80
 str_uthernet2:  PASCAL_STRING res_string_card_type_uthernet2
+str_passport:   PASCAL_STRING res_string_card_type_passport
 str_lcmeve:     PASCAL_STRING res_string_card_type_lcmeve
 str_vidhd:      PASCAL_STRING res_string_card_type_vidhd
 str_grappler:   PASCAL_STRING res_string_card_type_grappler
@@ -1656,6 +1657,11 @@ sigtable_booti:         .byte   3, $07, $3C, $0B, $B0, $0C, $01
         bcc     :+
         return16 #str_uthernet2
 :
+
+        param_call WithInterruptsDisabled, DetectPassportMIDI
+        bcc     :+
+        return16 #str_passport
+:
         clc
         rts
 .endproc ; ProbeSlotNoFirmware
@@ -1792,6 +1798,105 @@ success:
 fail:   clc
         rts
 .endproc ; DetectUthernet2
+
+;;; Detect Passport MIDI Card
+;;; Assumes $06 points at $Cn00, returns carry set if found
+
+.proc DetectPassportMIDI
+        .include "../inc/passport_midi.inc"
+
+        ;; Set up `read` and `write` subroutines
+        lda     $07             ; A = $Cn
+        asl
+        asl
+        asl
+        asl                     ; A = $n0
+        clc
+        adc     #$80
+        sta     read_lo
+        sta     write_lo
+
+        ;; ----------------------------------------
+        ;; Initialize 6840 PTM timers
+
+        kOpFlags = kInternalClock | kCounterSingle16Bit | kModeSingleShot | kInterruptsDisabled
+        kMSBPattern1 = %10101010
+        kLSBPattern1 = %11001001
+        kMSBPattern2 = %01010101
+        kLSBPattern2 = %00110110
+
+        ;; Reset and hold timers
+        lda     #(kOpFlags | 1) ; give write access to CR#1
+        ldx     #kOffsetWriteCR2
+        jsr     write
+        lda     #(kOpFlags | 1) ; timers hold (reset)
+        ldx     #kOffsetWriteCR13
+        jsr     write
+
+        ;; ----------------------------------------
+        ;; Write to both Timer 1 and Timer 2
+
+        ;; Write to MSB Buffer
+        lda     #kMSBPattern1
+        ldx     #kOffsetWriteMSBBuffer
+        jsr     write
+        ;; Write to Timer 1 LSB
+        lda     #kLSBPattern1
+        ldx     #kOffsetWriteTimer1LSB
+        jsr     write
+        ;; Write to MSB Buffer
+        lda     #kMSBPattern2
+        ldx     #kOffsetWriteMSBBuffer
+        jsr     write
+        ;; Write to Timer 2 LSB
+        lda     #kLSBPattern2
+        ldx     #kOffsetWriteTimer2LSB
+        jsr     write
+
+        ;; ----------------------------------------
+        ;; Read back and verify
+
+        ;; Read Timer 1 MSB
+        ldx     #kOffsetReadTimer1MSB
+        jsr     read
+        cmp     #kMSBPattern1
+        bne     fail
+        ;; Read LSB Buffer
+        ldx     #kOffsetReadLSBBuffer
+        jsr     read
+        cmp     #kLSBPattern1
+        bne     fail
+        ;; Read Timer 2 MSB
+        ldx     #kOffsetReadTimer2MSB
+        jsr     read
+        cmp     #kMSBPattern2
+        bne     fail
+        ;; Read LSB Buffer
+        ldx     #kOffsetReadLSBBuffer
+        jsr     read
+        cmp     #kLSBPattern2
+        bne     fail
+
+        ;; Probe successful
+success:
+        sec
+        rts
+
+fail:   clc
+        rts
+
+        ;; ----------------------------------------
+        ;; LDX offset / JSR read / A = value
+        read_lo := *+1
+read:   lda     $C080,x         ; self-modified to $C0n0
+        rts
+
+        ;; ----------------------------------------
+        ;; LDA value / LDX offset / JSR write
+        write_lo := *+1
+write:  sta     $C080,x         ; self-modified to $C0n0
+        rts
+.endproc ; DetectPassportMIDI
 
         .include "../lib/detect_mockingboard.s"
         .include "../lib/detect_thecricket.s"

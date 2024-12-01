@@ -52,6 +52,7 @@
 .define res_string_card_type_mockingboard "Mockingboard"
 .define res_string_card_type_z80 "Z-80 Kort"
 .define res_string_card_type_uthernet2 "Uthernet II"
+.define res_string_card_type_passport "Passport MIDI"
 .define res_string_card_type_lcmeve "Le Chat Mauve Eve"
 .define res_string_card_type_vidhd "VidHD"
 .define res_string_card_type_grappler "Grappler Parallel Printer Card"

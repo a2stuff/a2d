@@ -41,6 +41,7 @@ Project Page: https://github.com/a2stuff/a2d
 * About This Apple II
   * Detect Microdigital TK-3000 //e
   * Detect Pravetz 8A/C
+  * Detect Passport MIDI card
   * Show duplicate SmartPort device names with counts.
 * Screen Dump
   * Improve use of SSC and IW2.
