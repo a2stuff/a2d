@@ -31,6 +31,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Add Edit menu with Cut/Copy/Paste/Clear, relocate Select All.
 * Ensure the modification date for copied folders matches the original.
 * Prompt to re-insert system disk when launching Apple Menu items.
+* Add Text-to-Speech file type ($D9) and icon.
 
 ### Selector
 
@@ -51,6 +52,10 @@ Project Page: https://github.com/a2stuff/a2d
   * Show alert on startup if no printer card found.
 * Options: Add option to show invisible files.
 * Calendar: Allow modifiers when clicking, double-modifiers for decade. ([#693](https://github.com/a2stuff/a2d/issues/693))
+
+### Misc
+
+* Add TTS.system (and SAM) for playing "speech" files.
 
 ## 1.4
 
