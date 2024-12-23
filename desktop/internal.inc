@@ -24,6 +24,7 @@ kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
         music
         tracker
         audio
+        speech
         font
         relocatable
         command

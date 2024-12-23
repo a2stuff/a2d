@@ -63,7 +63,7 @@ add_file () {
     fi
     cadius DELETEFILE "$INSTALL_IMG" "$dst_dir/$dst_file" > /dev/null || true
     suppress cadius ADDFILE "$INSTALL_IMG" "$dst_dir" "$tmp_file" --quiet
-    rm "$tmp_file"
+    rm -rf "$tmp_file"
 }
 
 

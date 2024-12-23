@@ -625,6 +625,7 @@ type_icons_table:
         .addr   mus             ; music
         .addr   mus             ; tracker
         .addr   snd             ; audio
+        .addr   tts             ; speech
         .addr   fnt             ; font
         .addr   rel             ; relocatable
         .addr   cmd             ; command
@@ -1007,6 +1008,7 @@ portptr:        .addr   0
         DEFINE_ICON_RESOURCE anm, video_icon, 4, 26, 12, graphics_mask
         DEFINE_ICON_RESOURCE mus, music_icon, 4, 25, 15, generic_mask
         DEFINE_ICON_RESOURCE snd, audio_icon, 4, 25, 15, generic_mask
+        DEFINE_ICON_RESOURCE tts, tts_icon, 4, 25, 15, generic_mask
         DEFINE_ICON_RESOURCE adb, adb_icon, 4, 25, 15, generic_mask
         DEFINE_ICON_RESOURCE awp, awp_icon, 4, 25, 15, generic_mask
         DEFINE_ICON_RESOURCE asp, asp_icon, 4, 25, 15, generic_mask
@@ -1373,6 +1375,24 @@ audio_icon:
         PIXELS  "#........##........#.....#"
         PIXELS  "#........................#"
         PIXELS  "##########################"
+
+tts_icon:                       ; Text-to-Speech
+        PIXELS "####################......"
+        PIXELS "#..........#.....#..##...."
+        PIXELS "#..........#.....#....##.."
+        PIXELS "#...##.....#.....#......##"
+        PIXELS "#...##.....#.....#########"
+        PIXELS "#..........#.............#"
+        PIXELS "#..........#.............#"
+        PIXELS "#......#####.......#.....#"
+        PIXELS "#........#......#...#....#"
+        PIXELS "#........#...#...#...#...#"
+        PIXELS "#....#####....#..#...#...#"
+        PIXELS "#........#....#..#...#...#"
+        PIXELS "#........#...#...#...#...#"
+        PIXELS "##########......#...#....#"
+        PIXELS "#..................#.....#"
+        PIXELS "##########################"
 
 adb_icon:                       ; AppleWorks Database
         PIXELS  "####################......"

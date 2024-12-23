@@ -65,7 +65,6 @@
         beq     load_target
         .assert INVOKER_FILENAME = PRODOS_SYS_PATH, error, "protocol mismatch"
 
-
 ;;; ProDOS 16 System file (S16) - invoke via QUIT call
         cmp     #FT_S16
         beq     quit_call
@@ -76,17 +75,19 @@ ret:    rts
 ;;; ============================================================
 ;;; Interpreter - `INVOKER_INTERPRETER` populated by caller
 
-;;; ProDOS 2.4's Bitsy Bye invokes BASIS.SYSTEM with:
-;;; * ProDOS prefix set to directory containing file.
-;;; * Path buffer in BASIS.SYSTEM ($2006) set to filename.
-;;; * $280 set to path of launched file (e.g. "/VOL/MEDIA")
-;;; * $380 set to path of launched SYS (e.g. "/VOL/BASIS.SYSTEM")
-;;; Not all should be necessary, but not doing so may lead to future
-;;; compatibility issues.
-
-BITSY_FILE_PATH  = $280
-BITSY_SYS_PATH = $380
-.assert INVOKER_INTERPRETER = BITSY_SYS_PATH, error, "location mismatch"
+;;; Per "Starting System Programs" in the ProDOS 8 Technical Reference
+;;; Manual:
+;;; * $280 set to path of launched SYS (e.g. "/VOL/PROG.SYSTEM")
+;;; * Path buffer at $2006 set to file path (e.g. "/DATA/MYFILE")
+;;; * Paths may be absolute or relative (to prefix)
+;;; * Prefix not guaranteed to be set to anything
+;;; This is followed by the ProDOS 2.0.x selector and BASIC.SYSTEM
+;;; when invoking SYS files.
+;;;
+;;; Note that ProDOS 2.4's Bitsy Bye has subtly different behavior:
+;;; $280 is set to the path containing the invoked file, and $380 has
+;;; the full path to the interpreter itself i.e. `BASIC.SYSTEM` or
+;;; `BASIS.SYSTEM`.
 
 use_interpreter:
         copy16  #INVOKER_INTERPRETER, open_params__pathname
@@ -116,11 +117,10 @@ load_target:
         dey
         bpl     :-
 
-        ;; Also populate path (like Bitsy) now that memory is free.
-        .assert INVOKER_FILENAME = BITSY_FILE_PATH, error, "location mismatch"
-        ldx     INVOKER_PREFIX
-:       lda     INVOKER_PREFIX,x
-        sta     BITSY_FILE_PATH,x
+        ;; Populate path to interpreter now that memory is free
+        ldx     INVOKER_INTERPRETER
+:       lda     INVOKER_INTERPRETER,x
+        sta     PRODOS_SYS_PATH,x
         dex
         bpl     :-
     END_IF

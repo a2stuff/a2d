@@ -4,6 +4,7 @@
 # * https://github.com/a2stuff/prodos-drivers - CLOCK.SYSTEM
 # * https://github.com/a2stuff/intbasic - INTBASIC.SYSTEM
 # * https://github.com/StewBC/pt3plr - PT3PLR.SYSTEM
+# * https://github.com/a2stuff/prodos-sam - TTS.SYSTEM, SAM
 
 set -e
 cd "$(dirname "$0")/.."
@@ -29,3 +30,5 @@ roll () {
 roll "../intbasic" "out/intbasic.system.SYS" "res/package" "INTBASIC.SYSTEM"
 roll "../prodos-drivers/" "out/clock.system.SYS" "res/package" "CLOCK.SYSTEM"
 roll "../pt3plr" "pt3plr.apple2" "res/package" "PT3PLR.SYSTEM"
+roll "../prodos-sam" "out/tts.system.SYS" "res/package" "TTS.SYSTEM"
+roll "../prodos-sam" "res/SAM.BIN" "res/package" "SAM.BIN"

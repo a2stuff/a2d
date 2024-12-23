@@ -22,6 +22,10 @@ AUTO UnShrinkIt by Andrew E. Nicholas:
 BinSCII by David Whitney:
 * BINSCII
 
+Text-to-Speech (https://github.com/a2stuff/prodos-sam):
+* TTS.SYSTEM
+* SAM.BIN
+
 The other files go into the Sample Media folder, and are examples of various file types, including images, text, and music.
 
 * WOZ.BREAKOUT is the original published version

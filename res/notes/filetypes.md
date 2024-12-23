@@ -30,5 +30,5 @@ Proposed types:
 * $D8 SND / $330x - Sampled Sound - Binary Time constant (BTC) - https://github.com/frankmilliron/play.zc.system
   * $3300 - includes cover art
   * $3301 - no cover art
-* $D9 TTS / ????? - Text-to-Speech
+* $D9 TTS / $0001 - Text-to-Speech - S.A.M.
 * $E1 LNK / $0001 - Link - [definition](../../docs/Link_File_Format.md)

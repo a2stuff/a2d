@@ -109,6 +109,8 @@ emit add_file $disposition "res/package/INTBASIC.SYSTEM" "Extras" "IntBASIC.syst
 emit add_file $disposition "res/package/BASIC.SYSTEM" "Extras" "BASIC.system" FF2000
 emit add_file $disposition "out/awlaunch.system.SYS" "Extras" "AWLaunch.system" FF2000
 emit add_file $disposition "res/package/PT3PLR.SYSTEM" "Extras" "PT3PLR.system" FF2000
+emit add_file $disposition "res/package/TTS.SYSTEM" "Extras" "TTS.system" FF0000
+emit add_file $disposition "res/package/SAM.BIN" "Extras" "SAM" 000000
 
 # --------------------------------------------------
 # Part 5: Desk Accessories (optional and extra)
@@ -147,6 +149,7 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "res/package/APPLEVISION"   $mediadir "AppleVision"    FA0000
     emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "Karateka.Yell"  060800
     emit add_file $disposition "res/package/AUTUMN.PT3"    $mediadir "Autumn.pt3"     000000
+    emit add_file $disposition "res/package/JABBERWOCKY"   $mediadir "Jabberwocky"    D90001
 
     disposition="fonts"
 

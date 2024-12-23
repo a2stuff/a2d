@@ -53,7 +53,6 @@
 ;;; Apple II DeskTop Integration
 ;;;
 ;;; * Conversion to ca65 syntax and A2D coding style
-;;; * Bitsy Bye launch protocol (sys path at $380)
 ;;; * Looks on current vol in /<vol>/AW5/APLWORKS.SYSTEM
 ;;; * For further discussion, see:
 ;;;    https://groups.google.com/g/comp.sys.apple2/c/lFRfyX0llhI
@@ -68,13 +67,6 @@
         .include "../common.inc"
 
         MLIEntry := MLI
-
-;;; ProDOS 2.4's Bitsy Bye invokes BASIS.SYSTEM with:
-;;; * ProDOS prefix set to directory containing file.
-;;; * Path buffer in BASIS.SYSTEM ($2006) set to filename.
-;;; * $280 set to name of root volume (e.g. "/VOL")
-;;; * $380 set to path of launched SYS (e.g. "/VOL/BASIS.SYSTEM")
-BITSY_SYS_PATH  :=  $380
 
 ;;; AppleWorks
 TaskStrup       = $11B1+$1000   ; flag to NOT load default
@@ -164,7 +156,7 @@ ConstructPath:
         ldy     #0
 :       iny
         inx
-        lda     BITSY_SYS_PATH,y
+        lda     SYS_PATH,y
         and     #$7F             ; clear high bit (c/o Bitsy Bye)
         sta     SYS_PATH,x
         cmp     #'/'

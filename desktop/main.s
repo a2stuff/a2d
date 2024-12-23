@@ -1006,6 +1006,7 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
         INVOKE_TABLE_ENTRY      InvokePreview, str_preview_mus ; music
         INVOKE_TABLE_ENTRY      interpreter, str_preview_pt3   ; tracker
         INVOKE_TABLE_ENTRY      fallback, 0                    ; audio
+        INVOKE_TABLE_ENTRY      interpreter, str_tts           ; speech
         INVOKE_TABLE_ENTRY      InvokePreview, str_preview_fnt ; font
         INVOKE_TABLE_ENTRY      fallback, 0                    ; relocatable
         INVOKE_TABLE_ENTRY      fallback, 0                    ; command
@@ -1248,6 +1249,9 @@ str_intbasic:
 
 str_about_this_apple:
         PASCAL_STRING .concat(kFilenameModulesDir, "/this.apple")
+
+str_tts:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/TTS.system")
 
 str_awlauncher:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/AWLaunch.system")
@@ -15744,6 +15748,7 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_MUSIC,     ICT_FLAGS_NONE, 0, 0, IconType::music         ; $D5 MUS
         DEFINE_ICTRECORD $FF, FT_ARCHIVE,   ICT_FLAGS_AUX, $8002, 0, IconType::archive    ; NuFX
         DEFINE_ICTRECORD $FF, FT_LINK,      ICT_FLAGS_AUX, kLinkFileAuxType, 0, IconType::link ; $E1 LNK
+        DEFINE_ICTRECORD $FF, FT_SPEECH,    ICT_FLAGS_AUX, $0001, 0, IconType::speech     ; $D9 Speech
 
         ;; IIgs-Specific Files (ranges)
         DEFINE_ICTRECORD $F0, $50,    ICT_FLAGS_NONE, 0, 0, IconType::iigs        ; IIgs General  $5x
@@ -15950,6 +15955,7 @@ icontype_iconentryflags_table := * - IconType::VOL_COUNT
         .byte   0                    ; music
         .byte   0                    ; tracker
         .byte   0                    ; audio
+        .byte   0                    ; speech
         .byte   0                    ; font
         .byte   0                    ; relocatable
         .byte   0                    ; command
@@ -15981,6 +15987,7 @@ icontype_to_smicon_table := * - IconType::VOL_COUNT
         .byte      IconType::small_generic ; music
         .byte      IconType::small_generic ; tracker
         .byte      IconType::small_generic ; audio
+        .byte      IconType::small_generic ; speech
         .byte      IconType::small_generic ; font
         .byte      IconType::small_generic ; relocatable
         .byte      IconType::small_generic ; command

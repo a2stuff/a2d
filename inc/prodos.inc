@@ -115,6 +115,7 @@ FT_PNT          = $C0           ; IIgs Packed Super Hi-Res picture
 FT_PIC          = $C1           ; IIgs Super Hi-Res picture
 FT_MUSIC        = $D5           ; Music File
 FT_SOUND        = $D8           ; Sampled Sound File
+FT_SPEECH       = $D9           ; Speech (e.g. Text-to-Speech)
 FT_ARCHIVE      = $E0           ; Archival library
 FT_LINK         = $E1           ; Link
 FT_PAS          = $EF           ; Pascal Area *
