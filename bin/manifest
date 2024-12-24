@@ -149,7 +149,7 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "res/package/APPLEVISION"   $mediadir "AppleVision"    FA0000
     emit add_file $disposition "res/package/KARATEKA.YELL" $mediadir "Karateka.Yell"  060800
     emit add_file $disposition "res/package/AUTUMN.PT3"    $mediadir "Autumn.pt3"     000000
-    emit add_file $disposition "res/package/JABBERWOCKY"   $mediadir "Jabberwocky"    D90001
+    emit add_file $disposition "res/package/EMERGENCY"     $mediadir "Emergency"      D90001
 
     disposition="fonts"
 
