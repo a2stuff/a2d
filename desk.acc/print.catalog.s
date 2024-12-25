@@ -113,6 +113,8 @@ no_windows:
 
 continue:
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        ;; SSC operations trash the text page (if 80 col firmware active?)
+        jsr     SaveTextPage
 
         ldy     #SSC::PInit
         jsr     GoCard
@@ -128,6 +130,7 @@ continue:
         ;; Recurse and print
         jsr     PrintCatalog
 
+        jsr     RestoreTextPage
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
 
@@ -917,6 +920,7 @@ str_from_int:   PASCAL_STRING "000,000"    ; Filled in by IntToString
 
         .include "../lib/filetypestring.s"
         .include "../lib/inttostring.s"
+        .include "../lib/save_textpage.s"
 
 ;;; ============================================================
 

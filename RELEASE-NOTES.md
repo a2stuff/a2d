@@ -47,6 +47,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Screen Dump
   * Improve use of SSC and IW2.
   * Show alert on startup if no SSC found.
+  * Don't corrupt "File" on menu bar. ([#810](https://github.com/a2stuff/a2d/issues/810))
 * Print Catalog
   * Improve use of SSC and IW2.
   * Show alert on startup if no printer card found.

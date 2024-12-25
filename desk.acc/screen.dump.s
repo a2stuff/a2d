@@ -61,7 +61,10 @@ sig_bytes:
         sta     ALTZPOFF
         bit     ROMIN2
 
+        ;; SSC operations trash the text page (if 80 col firmware active?)
+        jsr     SaveTextPage
         jsr     PrintScreen
+        jsr     RestoreTextPage
 
         sta     ALTZPON
         bit     LCBANK1
@@ -113,6 +116,9 @@ init_graphics:
         lda     #1
         sta     mask
         copy16  #0, x_coord
+
+        ;; Uses PAGE2 flag to control main/aux reads
+        sta     SET80STORE
 
 col_loop:
         lda     #4              ; 8 vertical pixels per row (doubled)
@@ -281,6 +287,8 @@ restore_sequence:
         kLenRestoreSequence = * - restore_sequence
 
 .endproc ; DumpScreen
+
+        .include "../lib/save_textpage.s"
 
 ;;; ============================================================
 
