@@ -1136,12 +1136,12 @@ With Sci.Calc:
 
 * Launch DeskTop. Open a window with at least two files. Apple Menu > Find Files. Type "*" and click Search. Press Down Arrow once. Type Return. Press Down Arrow again. Verify that only one entry in the list appears highlighted.
 
-## Screen Dump
+## Print Screen
 
-* Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Screen Dump DA. Verify it prints a screenshot.
-* Configure a system with a non-SSC in Slot 1. Invoke the Screen Dump DA. Verify nothing happens.
-* Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Screen Dump DA. Invoke the Print Catalog DA. Verify that the catalog is printed on separate lines, not all overprinted on the same line onto one.
-* Using MAME (e.g. via Ample), configure a system with an SSC in Slot 1 and a Serial Printer. Invoke the Screen Dump DA. Verify that the File menu is not corrupted.
+* Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Print Screen DA. Verify it prints a screenshot.
+* Configure a system with a non-SSC in Slot 1. Invoke the Print Screen DA. Verify nothing happens.
+* Configure a system with an SSC in Slot 1 and an ImageWriter II. Invoke the Print Screen DA. Invoke the Print Catalog DA. Verify that the catalog is printed on separate lines, not all overprinted on the same line onto one.
+* Using MAME (e.g. via Ample), configure a system with an SSC in Slot 1 and a Serial Printer. Invoke the Print Screen DA. Verify that the File menu is not corrupted.
 
 # Shortcuts (Module)
 

@@ -320,7 +320,7 @@ DRIVER_COMMAND_FORMAT  = 3
 .endmacro
 
 
-.macro DEFINE_OPEN_PARAMS name, pn, io, rn
+.macro DEFINE_OPEN_PARAMS name, pn, io
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"

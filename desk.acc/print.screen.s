@@ -1,5 +1,5 @@
 ;;; ============================================================
-;;; SCREEN.DUMP - Desk Accessory
+;;; PRINT.SCREEN - Desk Accessory
 ;;;
 ;;; Dumps the contents of the graphics screen to an ImageWriter
 ;;; printer connected to a Super Serial Card in Slot 1.

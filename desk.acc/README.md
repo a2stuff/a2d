@@ -76,8 +76,10 @@
 
 * [Darkness](darkness.s)
   * A debugging tool that paints the whole screen a dark pattern.
-* [Screen Dump](screen.dump.s)
-  * Dumps a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1.
+* [Print Screen](print.screen.s)
+  * Prints a screenshot to an ImageWriter II attached to a Super Serial Card in Slot 1.
+* [Screenshot](screenshot.dump.s)
+  * Saves a screenshot to the application directory.
 * [Benchmark](benchmark.s)
   * Measures CPU speed using VBL.
 

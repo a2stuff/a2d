@@ -30,11 +30,11 @@ find.files                      Apple.Menu                      optional
 key.caps                        Apple.Menu                      optional
 run.basic.here                  Apple.Menu                      optional
 sort.directory                  Apple.Menu                      optional
-cd.remote                       Extras                          extra
 benchmark                       Extras                          extra
+cd.remote                       Extras                          extra
 darkness                        Extras                          extra
-sci.calc                        Extras                          extra
-screen.dump                     Extras                          extra
 print.catalog                   Extras                          extra
+print.screen                    Extras                          extra
 round.corners                   Extras                          extra
-
+sci.calc                        Extras                          extra
+screenshot                      Extras                          extra

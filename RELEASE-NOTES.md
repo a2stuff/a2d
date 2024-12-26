@@ -44,7 +44,8 @@ Project Page: https://github.com/a2stuff/a2d
   * Detect Pravetz 8A/C
   * Detect Passport MIDI card
   * Show duplicate SmartPort device names with counts.
-* Screen Dump
+* Print Screen
+  * Renamed from "Screen Dump"
   * Improve use of SSC and IW2.
   * Show alert on startup if no SSC found.
   * Don't corrupt "File" on menu bar. ([#810](https://github.com/a2stuff/a2d/issues/810))
@@ -53,6 +54,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Show alert on startup if no printer card found.
 * Options: Add option to show invisible files.
 * Calendar: Allow modifiers when clicking, double-modifiers for decade. ([#693](https://github.com/a2stuff/a2d/issues/693))
+* New DA (in Extras): "Screenshot" - saves screenshot file to application directory.
 
 ### Misc
 
