@@ -64,7 +64,7 @@ not_found:
 ;;; Map ProDOS file type to string (for listings/Get Info).
 ;;; If not found, $XX is used (like CATALOG).
 
-        kNumFileTypes = 25
+        kNumFileTypes = 26
 type_table:
         .byte   FT_TYPELESS   ; unknown
         .byte   FT_BAD        ; bad block
@@ -82,6 +82,7 @@ type_table:
         .byte   FT_PIC        ; IIgs Super Hi-Res picture
         .byte   FT_MUSIC      ; music
         .byte   FT_SOUND      ; sampled sound
+        .byte   FT_SPEECH     ; speech
         .byte   FT_ARCHIVE    ; archival library
         .byte   FT_LINK       ; link
         .byte   FT_CMD        ; command
@@ -111,6 +112,7 @@ type_names_table:
         .byte   "PIC" ; IIgs Super Hi-Res picture
         .byte   "MUS" ; music
         .byte   "SND" ; sampled sound
+        .byte   "TTS" ; speech
         .byte   "LBR" ; archival library
         .byte   "LNK" ; link
         .byte   "CMD" ; command *
