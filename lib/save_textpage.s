@@ -5,7 +5,7 @@
 ;;; might trash the text page (e.g. initializing SSC)
 ;;; ============================================================
 
-.scope
+.scope save_textpage_impl
 
         ptr_screen := $06
         ptr_aux_buf := $08
@@ -40,7 +40,7 @@ loop2:  sta     PAGE2ON
         bmi     :+
         sta     CLR80STORE
 :       rts
-.endproc
+.endproc ; SaveTextPage
 
 ;;; Restores text page (except screen holes)
 .proc RestoreTextPage
@@ -67,26 +67,27 @@ loop2:  sta     PAGE2ON
         bmi     :+
         sta     CLR80STORE
 :       rts
-.endproc
+.endproc ; RestoreTextPage
 
 .proc InitPointers
         copy16  #$400, ptr_screen
         copy16  #textpage_aux_buf, ptr_aux_buf
         copy16  #textpage_main_buf, ptr_main_buf
         rts
-.endproc
+.endproc ; InitPointers
 
 .proc IncPointers
         add16_8 ptr_screen, #kSegmentStride
         add16_8 ptr_aux_buf, #kSegmentWidth
         add16_8 ptr_main_buf, #kSegmentWidth
         rts
-.endproc
+.endproc ; IncPointers
 
 textpage_main_buf:      .res    24*40
 textpage_aux_buf:       .res    24*40
 
+.endscope ; save_textpage_impl
+
 ;;; Exports
-::SaveTextPage := SaveTextPage
-::RestoreTextPage := RestoreTextPage
-.endscope
+SaveTextPage := save_textpage_impl::SaveTextPage
+RestoreTextPage := save_textpage_impl::RestoreTextPage

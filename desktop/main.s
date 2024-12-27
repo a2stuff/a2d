@@ -12211,7 +12211,7 @@ match:  lda     flag
 .proc GetAndApplySrcInfoToDst
         jsr     GetSrcFileInfo
         FALL_THROUGH_TO ApplySrcInfoToDst
-.endproc  ; GetAndApplySrcInfoToDst
+.endproc ; GetAndApplySrcInfoToDst
 
 .proc ApplySrcInfoToDst
         COPY_BYTES 11, src_file_info_params::access, dst_file_info_params::access
