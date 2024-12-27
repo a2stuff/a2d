@@ -13,7 +13,7 @@
 
 ;;; `ADJUSTCASE_BLOCK_BUFFER` must be defined; used for volume names
 
-.proc AdjustCaseImpl
+.scope adjustfilecase_impl
 
         DEFINE_READ_BLOCK_PARAMS volname_block_params, ADJUSTCASE_BLOCK_BUFFER, kVolumeDirKeyBlock
 
@@ -132,8 +132,9 @@ file_name:
 
 case_bits:
         .word   0
-.endproc ; AdjustCaseImpl
+.endscope ; adjustfilecase_impl
 
-AdjustFileNameCase      := AdjustCaseImpl::file_name
-AdjustFileEntryCase     := AdjustCaseImpl::file_entry
-AdjustOnLineEntryCase   := AdjustCaseImpl::online_entry
+;;; Exports
+AdjustFileNameCase      := adjustfilecase_impl::file_name
+AdjustFileEntryCase     := adjustfilecase_impl::file_entry
+AdjustOnLineEntryCase   := adjustfilecase_impl::online_entry

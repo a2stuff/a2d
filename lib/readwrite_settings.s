@@ -12,7 +12,7 @@
 ;;;         Z/N set appropriately for A
 ;;; ============================================================
 
-.proc ReadWriteSettingsImpl
+.scope readwrite_settings_impl
 
 read:   ldy     #OPC_LDA_abx
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
@@ -55,6 +55,8 @@ op:     lda     SETTINGS,x      ; self-modified
         pla
         rts
 
-.endproc ; ReadWriteSettingsImpl
-        ReadSetting := ReadWriteSettingsImpl::read
-        WriteSetting := ReadWriteSettingsImpl::write
+.endscope ; readwrite_settings_impl
+
+;;; Exports
+ReadSetting     := readwrite_settings_impl::read
+WriteSetting    := readwrite_settings_impl::write

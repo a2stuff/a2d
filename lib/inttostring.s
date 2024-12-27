@@ -5,7 +5,7 @@
 ;;; Input: 16-bit unsigned integer in A,X
 ;;; Output: length-prefixed string in str_from_int
 
-.scope IntToStringImpl
+.scope inttostring_impl
 
 ;;; Entry point: with thousands separators
 sep:    sec
@@ -85,7 +85,8 @@ nonzero_flag:                ; high bit set once a non-zero digit seen
         .byte   0
 separator_flag:
         .byte   0
-.endscope ; IntToStringImpl
+.endscope ; inttostring_impl
 
-IntToString                 := IntToStringImpl::nosep
-IntToStringWithSeparators   := IntToStringImpl::sep
+;;; Exports
+IntToString                 := inttostring_impl::nosep
+IntToStringWithSeparators   := inttostring_impl::sep

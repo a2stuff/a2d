@@ -7,9 +7,7 @@
 ;;; Assert: Called with ROMIN/ALTZPOFF
 ;;; ============================================================
 
-.proc LoadSettings
-        jmp     start
-
+.scope load_settings_impl
         DEFINE_OPEN_PARAMS open_cfg_params, str_config, SETTINGS_IO_BUF
         DEFINE_READ_PARAMS read_cfgver_params, version_byte, 1
         DEFINE_READ_PARAMS read_cfg_params, DefaultSettings, .sizeof(DeskTopSettings)
@@ -28,7 +26,7 @@ str_sound:
 version_byte:
         .byte   0
 
-start:
+LoadSettings:
         ;; --------------------------------------------------
         ;; Init machine-specific default settings in case load fails
         ;; (e.g. the file doesn't exist, version mismatch, etc)
@@ -122,4 +120,7 @@ close:  MLI_CALL CLOSE, close_params
         .include "../lib/default_sound.s"
         .include "../lib/default_settings.s"
 
-.endproc ; LoadSettings
+.endscope ; load_settings_impl
+
+;;; Exports
+LoadSettings    := load_settings_impl::LoadSettings

@@ -8,7 +8,7 @@
 ;;;    `str_time` to populate
 ;;;    `str_4_spaces`
 
-.proc ShowClockImpl
+.scope menuclock_impl
 ;;; Entry point: force an update, even if time hasn't changed
 force_update:
         copy    #$80, force_flag
@@ -138,6 +138,8 @@ last_s2:.byte   0               ; previous settings
 
 force_flag:
         .byte   0               ; force update if high bit set
-.endproc ; ShowClockImpl
-ShowClock := ShowClockImpl::normal
-ShowClockForceUpdate := ShowClockImpl::force_update
+.endscope ; menuclock_impl
+
+;;; Exports
+ShowClock               := menuclock_impl::normal
+ShowClockForceUpdate    := menuclock_impl::force_update
