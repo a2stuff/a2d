@@ -117,10 +117,15 @@ load_target:
         dey
         bpl     :-
 
+        ;; ProDOS 2.4's Bitsy Bye populates $380 with the path to the
+        ;; interpreter, so set both for good measure.
+        BITSY_SYS_PATH := $380
+
         ;; Populate path to interpreter now that memory is free
         ldx     INVOKER_INTERPRETER
 :       lda     INVOKER_INTERPRETER,x
         sta     PRODOS_SYS_PATH,x
+        sta     BITSY_SYS_PATH,x
         dex
         bpl     :-
     END_IF
