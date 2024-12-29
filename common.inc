@@ -331,6 +331,7 @@ INVOKER_PREFIX          := $220 ; Prefix to set
 INVOKER                 := $290 ; Invoke other programs
 INVOKER_FILENAME        := $280 ; File to invoke (PREFIX must be set)
 INVOKER_INTERPRETER     := $380 ; If non-empty, use path as interpreter.
+INVOKER_BITSY_COMPAT    := $3C1 ; bit7 = set $280 like Bitsy does
 
 ;;; ============================================================
 ;;; Default Font

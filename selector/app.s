@@ -1572,6 +1572,7 @@ fail:   jmp     ClearSelectedIndex
         ;; Ensure it's BIN, SYS, S16 or BAS (if BS is present)
 
 check_type:
+        copy    #0, INVOKER_BITSY_COMPAT
         lda     file_info_params::file_type
         cmp     #FT_BASIC
         bne     not_basic
@@ -1591,7 +1592,10 @@ not_basic:
         beq     check_path
 
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
-        beq     check_path
+    IF_EQ
+        copy    #$80, INVOKER_BITSY_COMPAT
+        bmi     check_path      ; always
+    END_IF
 
         ;; Don't know how to invoke
         lda     #AlertID::selector_unable_to_run

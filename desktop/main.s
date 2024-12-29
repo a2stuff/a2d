@@ -890,7 +890,9 @@ sys_disk:
         jsr     SetCursorWatch ; before invoking
 
         ;; Assume no interpreter to start
-        copy    #0, INVOKER_INTERPRETER
+        lda     #0
+        sta     INVOKER_INTERPRETER
+        sta     INVOKER_BITSY_COMPAT
 
         ;; Easiest to assume absolute path later.
         param_call MakePathAbsolute, src_path_buf
@@ -937,7 +939,10 @@ retry:  jsr     GetSrcFileInfo
         ;; Fallback - try BASIS.SYSTEM
 fallback:
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
-        bcc     launch           ; yes, continue below
+    IF_CC                        ; yes, continue below
+        copy    #$80, INVOKER_BITSY_COMPAT
+        bmi     launch          ; always
+    END_IF
         param_jump ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_cannot_open
 
         ;; --------------------------------------------------

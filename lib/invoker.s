@@ -128,6 +128,19 @@ load_target:
         sta     BITSY_SYS_PATH,x
         dex
         bpl     :-
+
+        ;; When launching BASIS.SYTEM, ProDOS 2.4's Bitsy Bye populates
+        ;; $280 with the path containing the target file.
+        BITSY_DIR_PATH := $280
+        bit     INVOKER_BITSY_COMPAT
+      IF_NS
+        ldy     INVOKER_PREFIX
+:       lda     INVOKER_PREFIX,y
+        sta     BITSY_DIR_PATH,y
+        dey
+        bpl     :-
+      END_IF
+
     END_IF
 
         ;; Set return address to the QUIT call below
@@ -149,6 +162,8 @@ exit:   rts
 
         PAD_TO ::INVOKER_INTERPRETER
         .res    ::kPathBufferSize, 0
+        ASSERT_ADDRESS ::INVOKER_BITSY_COMPAT
+        .byte   0
 
 ;;; ============================================================
 
