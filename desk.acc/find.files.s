@@ -142,7 +142,6 @@ nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
-        DEFINE_RECT highlight_rect, 0,0,kResultsWidth,0
         DEFINE_POINT cur_pos, 0, 0
 cur_line:       .byte   0
 
@@ -557,8 +556,6 @@ show_index:     .byte   $FF
         num_items = num_entries
         item_pos = cur_pos
         selected_index = aux::selected_index
-        highlight_rect = aux::highlight_rect
-
 .endscope ; listbox
 
         .include "../lib/listbox.s"
