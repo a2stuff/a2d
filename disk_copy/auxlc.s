@@ -202,48 +202,6 @@ nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
-kListBoxOffsetLeft = 20
-kListBoxOffsetTop = 30
-kListBoxLeft = kDialogLeft + kListBoxOffsetLeft
-kListBoxTop = kDialogTop + kListBoxOffsetTop
-kListBoxWidth = 150
-kListBoxHeight = kListItemHeight*kListRows-1
-
-.params winfo_drive_select
-        kWindowId = 2
-window_id:      .byte   kWindowId
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_normal
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   3
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   100
-mincontheight:  .word   50
-maxcontwidth:   .word   150
-maxcontheight:  .word   150
-port:
-        DEFINE_POINT viewloc, kListBoxLeft, kListBoxTop
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT maprect, 0, 0, kListBoxWidth, kListBoxHeight
-pattern:        .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   MGTK::textbg_white
-textfont:       .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-        REF_WINFO_MEMBERS
-.endparams
-
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME rect_frame, kDialogWidth, kDialogHeight
 
@@ -301,9 +259,6 @@ bg_black:
 bg_white:
         .byte   $7F
 
-current_drive_selection:        ; $FF if no selection
-        .byte   0
-
 kListRows = 8                   ; number of visible rows
 
 selection_mode:
@@ -313,10 +268,6 @@ selection_mode:
 kListEntrySlotOffset    = 8
 kListEntryDriveOffset   = 40
 kListEntryNameOffset    = 65
-        DEFINE_POINT list_entry_pos, 0, 0
-
-num_drives:
-        .byte   0
 
 num_src_drives:
         .byte   0
@@ -366,7 +317,7 @@ block_count_div8:              ; calculated when reading volume bitmap
         .word   0
 
 .params win_frame_rect_params
-id:     .byte   winfo_drive_select::kWindowId
+id:     .byte   kListBoxWindowId
 rect:   .tag    MGTK::Rect
 .endparams
 
@@ -422,6 +373,30 @@ str_pascal_disk_copy:
 
 str_prodos_disk_copy:
         PASCAL_STRING res_string_prodos_disk_copy
+
+;;; ============================================================
+;;; List Box
+;;; ============================================================
+
+kListBoxOffsetLeft = 20
+kListBoxOffsetTop = 30
+kListBoxLeft = kDialogLeft + kListBoxOffsetLeft
+kListBoxTop = kDialogTop + kListBoxOffsetTop
+kListBoxWidth = 150
+kListBoxHeight = kListItemHeight*kListRows-1
+
+        kListBoxWindowId = 2
+        DEFINE_LIST_BOX_WINFO winfo_drive_select, kListBoxWindowId, kListBoxLeft, kListBoxTop, kListBoxWidth, kListBoxHeight, DEFAULT_FONT
+
+        DEFINE_LIST_BOX listbox_rec, winfo_drive_select, kListRows, SELF_MODIFIED_BYTE, DrawListEntryProc, NoOp, NoOp
+num_drives := listbox_rec::num_items
+current_drive_selection := listbox_rec::selected_index
+
+        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
+
+        DEFINE_POINT list_entry_pos, 0, 0
+
+NoOp:   rts
 
 ;;; ============================================================
 
@@ -498,7 +473,7 @@ InitDialog:
         jsr     SetCursorPointer
         copy    #$00, selection_mode
 
-        jsr     ListInit
+        LBTK_CALL LBTK::Init, lb_params
 
         ;; --------------------------------------------------
         ;; Loop until there's a selection (or drive check)
@@ -521,7 +496,7 @@ InitDialog:
         ;; Prepare for destination selection
         jsr     EnumerateDestinationDevices
         copy    #$80, selection_mode
-        jsr     ListInit
+        LBTK_CALL LBTK::Init, lb_params
         jsr     UpdateOKButton
 
         ;; --------------------------------------------------
@@ -903,9 +878,15 @@ menu_offset_table:
         bit     listbox_enabled_flag
     IF_NS
         lda     event_params::key
-        jsr     IsListKey
+
+        cmp     #CHAR_UP
+        beq     :+
+        cmp     #CHAR_DOWN
+:
       IF_EQ
-        jsr     ListKey
+        sta     lb_params::key
+        copy    event_params::modifiers, lb_params::modifiers
+        LBTK_CALL LBTK::Key, lb_params
         jsr     UpdateOKButton
         return  #$FF
       END_IF
@@ -1013,7 +994,11 @@ ret:    rts
         cmp     #winfo_dialog::kWindowId
         beq     HandleDialogClick
         cmp     winfo_drive_select
-        jsr     ListClick
+        bne     :+
+
+        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        LBTK_CALL LBTK::Click, lb_params
+
         php
         jsr     UpdateOKButton
         plp
@@ -1324,6 +1309,9 @@ match:  clc
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry
 
+        .include "../toolkits/lbtk.s"
+        LBTKEntry := lbtk::LBTKEntry
+
 ;;; ============================================================
 
 .proc DrawString
@@ -1421,24 +1409,19 @@ fallback:
 .endproc ; SetPortForDialog
 
 ;;; ============================================================
-;;; List Box
-;;; ============================================================
 
-.scope listbox
-        winfo = winfo_drive_select
-        kRows = kListRows
-        num_items = num_drives
-        item_pos = list_entry_pos
-
-        selected_index = current_drive_selection
-.endscope ; listbox
-
-        .include "../lib/listbox.s"
-
-;;; ============================================================
-
-;;; Called with A = index
+;;; Called with A = index, X,Y = addr of drawing pos (MGTK::Point)
 .proc DrawListEntryProc
+        pha
+        pt_ptr := $06
+        stxy    pt_ptr
+        ldy     #.sizeof(MGTK::Point)-1
+:       lda     (pt_ptr),y
+        sta     list_entry_pos,y
+        dey
+        bpl     :-
+        pla
+
         bit     selection_mode  ; source or destination?
         bpl     draw
 
@@ -1634,19 +1617,19 @@ src_block_count:
 
         ;; Slot
         lda     #kListEntrySlotOffset
-        sta     list_entry_pos::xcoord
+        sta     list_entry_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, list_entry_pos
         param_call DrawString, str_s
 
         ;; Drive
         lda     #kListEntryDriveOffset
-        sta     list_entry_pos::xcoord
+        sta     list_entry_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, list_entry_pos
         param_call DrawString, str_d
 
         ;; Name
         lda     #kListEntryNameOffset
-        sta     list_entry_pos::xcoord
+        sta     list_entry_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, list_entry_pos
 
         lda     device_index

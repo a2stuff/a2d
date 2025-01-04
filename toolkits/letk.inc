@@ -99,6 +99,8 @@ Update          = $06           ; Redraw control, e.g. after control moves or te
 
 .endscope ; LETK
 
+;;; ============================================================
+
 .macro DEFINE_LINE_EDIT_PARAMS name, rec
 .params name
 record: .addr   rec

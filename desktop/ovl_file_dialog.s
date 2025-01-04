@@ -12,6 +12,7 @@
         MGTKEntry := MGTKRelayImpl
         LETKEntry := LETKRelayImpl
         BTKEntry := BTKRelayImpl
+        LBTKEntry := LBTKRelayImpl
 
 ;;; ============================================================
 

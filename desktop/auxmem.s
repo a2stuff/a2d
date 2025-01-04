@@ -19,6 +19,8 @@
         jmp     btk__BTKEntry
         .assert * = LETKAuxEntry, error, "entry point"
         jmp     letk__LETKEntry
+        .assert * = LBTKAuxEntry, error, "entry point"
+        jmp     lbtk__LBTKEntry
 
 ;;; ============================================================
 ;;; MouseGraphics ToolKit - fixed location for DAs to reference
@@ -49,6 +51,9 @@
 
         .include "../toolkits/btk.s"
         btk__BTKEntry := btk::BTKEntry
+
+        .include "../toolkits/lbtk.s"
+        lbtk__LBTKEntry := lbtk::LBTKEntry
 
 ;;; ============================================================
 ;;; Resources
@@ -581,6 +586,7 @@ start:
         AD_YESNOALL = 1
         Bell := BellFromAux
         BTKEntry := BTKAuxEntry
+        LBTKEntry := LBTKAuxEntry
         .include "../lib/alert_dialog.s"
         .include "../lib/drawstring.s"
 

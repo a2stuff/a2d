@@ -17,6 +17,7 @@
         .include "../mgtk/mgtk.inc"
         .include "../toolkits/letk.inc"
         .include "../toolkits/btk.inc"
+        .include "../toolkits/lbtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
@@ -108,41 +109,6 @@ nextwinfo:      .addr   0
         REF_WINFO_MEMBERS
 .endparams
 
-.params winfo_results
-window_id:      .byte   kResultsWindowId
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   kMaxFilePaths - kResultsRows
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   kResultsWidth
-mincontheight:  .word   kResultsHeight
-maxcontwidth:   .word   kResultsWidth
-maxcontheight:  .word   kResultsHeight
-port:
-        DEFINE_POINT viewloc, kResultsLeft, kResultsTop
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT maprect, 0, 0, kResultsWidth, kResultsHeight
-pattern:        .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   MGTK::textbg_white
-textfont:       .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-        REF_WINFO_MEMBERS
-.endparams
-
-        DEFINE_POINT cur_pos, 0, 0
 cur_line:       .byte   0
 
 entry_buf:
@@ -193,6 +159,18 @@ pattern:        .res    16      ; null-terminated/upcased version
         DEFINE_LINE_EDIT_PARAMS le_params, line_edit_rec
 
 ;;; ============================================================
+;;; List Box
+
+        DEFINE_LIST_BOX_WINFO winfo_results, kResultsWindowId, kResultsLeft, kResultsTop, kResultsWidth, kResultsHeight, DEFAULT_FONT
+
+        DEFINE_LIST_BOX listbox_rec, winfo_results, kResultsRows, SELF_MODIFIED_BYTE, DrawListEntryProc, NoOp, NoOp
+
+selected_index := listbox_rec::selected_index
+num_entries := listbox_rec::num_items
+
+        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
+
+;;; ============================================================
 
 .proc Init
         ;; Prep input string
@@ -212,7 +190,7 @@ pattern:        .res    16      ; null-terminated/upcased version
         MGTK_CALL MGTK::ShowCursor
 
         copy    #0, num_entries
-        jsr     ListInit
+        LBTK_CALL LBTK::Init, lb_params
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -248,16 +226,22 @@ pattern:        .res    16      ; null-terminated/upcased version
 
 .proc HandleKey
         lda     event_params::key
+        ldx     event_params::modifiers
         sta     le_params::key
+        stx     le_params::modifiers
+        sta     lb_params::key
+        stx     lb_params::modifiers
 
-        jsr     IsListKey
+        cmp     #CHAR_UP
+        beq     :+
+        cmp     #CHAR_DOWN
+:
     IF_EQ
-        jsr     ListKey
+        LBTK_CALL LBTK::Key, lb_params
         jmp     InputLoop
     END_IF
 
-        ldx     event_params::modifiers
-        stx     le_params::modifiers
+        cpx     #0
     IF_NOT_ZERO
         ;; Modified
         lda     event_params::key
@@ -358,7 +342,7 @@ path_length:
 
         copy    #0, num_entries
         copy    #$ff, selected_index
-        jsr     ListInit
+        LBTK_CALL LBTK::Init, lb_params
         jsr     PrepDrawIncrementalResults
 
         lda     path_length
@@ -393,8 +377,8 @@ endloop:
         ldy     num_entries     ; A,X are trashed by macro
         JSR_TO_MAIN  main__RecursiveCatalog__Start
         sty     num_entries
-        tya
-        jsr     ListSetSize     ; update scrollbar
+        sty     lb_params::new_size
+        LBTK_CALL LBTK::SetSize, lb_params ; update scrollbar
 
         lda     path_length
         cmp     #1
@@ -424,12 +408,13 @@ finish:
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
-        bne     done
+        jne     done
 
         lda     findwindow_params::window_id
         cmp     #kResultsWindowId
     IF_EQ
-        jsr     ListClick
+        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        LBTK_CALL LBTK::Click, lb_params
         bmi     :+
         jsr     DetectDoubleClick
         bmi     :+
@@ -544,21 +529,10 @@ done:   rts
 ;;; List Box
 ;;; ============================================================
 
-num_entries:    .byte   0
-selected_index: .byte   $FF
-
-;;; Set to the selected index to should show the result on exit.
+;;; Set to the selected index to show on exit.
 show_index:     .byte   $FF
 
-.scope listbox
-        winfo = winfo_results
-        kRows = kResultsRows
-        num_items = num_entries
-        item_pos = cur_pos
-        selected_index = aux::selected_index
-.endscope ; listbox
-
-        .include "../lib/listbox.s"
+NoOp:   rts
 
 ;;; ============================================================
 
@@ -570,11 +544,13 @@ show_index:     .byte   $FF
 
 ;;; ============================================================
 
+        DEFINE_POINT cur_pos, 0, 0
+
 .proc PrepDrawIncrementalResults
         MGTK_CALL MGTK::SetPort, winfo_results::port
         copy    #0, cur_line
-        copy16  #kListItemTextOffsetX, cur_pos::xcoord
-        copy16  #kListItemTextOffsetY, cur_pos::ycoord
+        copy16  #kListItemTextOffsetX, cur_pos+MGTK::Point::xcoord
+        copy16  #kListItemTextOffsetY, cur_pos+MGTK::Point::ycoord
         rts
 .endproc ; PrepDrawIncrementalResults
 
@@ -584,7 +560,7 @@ show_index:     .byte   $FF
         lda     cur_line
         jsr     DrawListEntryProc
 
-        add16_8 cur_pos::ycoord, #kListItemHeight
+        add16_8 cur_pos+MGTK::Point::ycoord, #kListItemHeight
         inc     cur_line
         rts
 .endproc ; DrawNextResult

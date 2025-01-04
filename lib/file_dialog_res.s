@@ -14,11 +14,6 @@ filename_buf:
 
         DEFINE_POINT pos_title, 0, 14
 
-        kListBoxWidth = 125
-        kListRows = 7
-
-        DEFINE_POINT picker_entry_pos, 2, 0
-
 str_folder:
         PASCAL_STRING {kGlyphFolderLeft, kGlyphFolderRight}
 str_file:
@@ -35,6 +30,8 @@ str_vol:
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME dialog_frame_rect, kFilePickerDlgWidth, kFilePickerDlgHeight
+
+        DEFINE_POINT item_pos, 0, 0
 
 .ifdef FD_EXTENDED
         DEFINE_RECT_FRAME dialog_ex_frame_rect, kFilePickerDlgExWidth, kFilePickerDlgExHeight
@@ -129,57 +126,48 @@ nextwinfo:      .addr   0
 
 kEntryListCtlWindowID = $3F
 
-.params winfo_listbox
-        kWidth = kListBoxWidth
-        kHeight = kListItemHeight * kListRows - 1
-        kLeft =   kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
-        kTop =    kFilePickerDlgTop + kControlsTop + 1
+        kListRows       = 7
+        kListBoxLeft    = kFilePickerDlgLeft + kControlsLeft + 1 ; +1 for external border
+        kListBoxTop     = kFilePickerDlgTop + kControlsTop + 1
+        kListBoxWidth   = 125
+        kListBoxHeight  = kListItemHeight * kListRows - 1
 .ifdef FD_EXTENDED
-        kExLeft =   kFilePickerDlgExLeft + kControlsLeft + 1 ; +1 for external border
-        kExTop =    kFilePickerDlgExTop + 28
+        kExListBoxLeft  = kFilePickerDlgExLeft + kControlsLeft + 1 ; +1 for external border
+        kExListBoxTop   = kFilePickerDlgExTop + 28
 .endif
 
-window_id:      .byte   kEntryListCtlWindowID
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_normal
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   3
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   100
-mincontheight:  .word   kHeight
-maxcontwidth:   .word   100
-maxcontheight:  .word   kHeight
-port:
-        DEFINE_POINT viewloc, kLeft, kTop
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
-pattern:        .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   MGTK::textbg_white
-textfont:       .addr   FONT
-nextwinfo:      .addr   0
-        REF_WINFO_MEMBERS
-.endparams
+        DEFINE_LIST_BOX_WINFO winfo_listbox, kEntryListCtlWindowID, kListBoxLeft, kListBoxTop, kListBoxWidth, kListBoxHeight, FONT
+
+.ifdef FD_EXTENDED
+;;; Needed in DeskTop (LBTK in Aux, File Dialog in Main)
+.proc DrawEntryProc
+        jsr     BankInMain
+        jsr     ::file_dialog_impl__DrawListEntryProc
+        jmp     BankInAux
+.endproc ; DrawEntryProc
+.proc OnSelChange
+        jsr     BankInMain
+        jsr     ::file_dialog_impl__OnListSelectionChange
+        jmp     BankInAux
+.endproc ; OnSelChange
+.else
+DrawEntryProc := ::file_dialog_impl__DrawListEntryProc
+OnSelChange   := ::file_dialog_impl__OnListSelectionChange
+.endif
+
+        DEFINE_LIST_BOX listbox_rec, file_dialog_res::winfo_listbox, file_dialog_res::kListRows, SELF_MODIFIED_BYTE, DrawEntryProc, OnSelChange, NoOp
+        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
+
+NoOp:   rts
 
 .ifdef FD_EXTENDED
         DEFINE_POINT extra_viewloc, kFilePickerDlgExLeft, kFilePickerDlgExTop
         DEFINE_POINT extra_size, kFilePickerDlgExWidth, kFilePickerDlgExHeight
-        DEFINE_POINT extra_listloc, winfo_listbox::kExLeft, winfo_listbox::kExTop
+        DEFINE_POINT extra_listloc, kExListBoxLeft, kExListBoxTop
 
         DEFINE_POINT normal_viewloc, kFilePickerDlgLeft, kFilePickerDlgTop
         DEFINE_POINT normal_size, kFilePickerDlgWidth, kFilePickerDlgHeight
-        DEFINE_POINT normal_listloc, winfo_listbox::kLeft, winfo_listbox::kTop
+        DEFINE_POINT normal_listloc, kListBoxLeft, kListBoxTop
 .endif
 
 ;;; ============================================================

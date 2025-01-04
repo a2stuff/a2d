@@ -1905,6 +1905,9 @@ loop_counter:
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry
 
+        .include "../toolkits/lbtk.s"
+        LBTKEntry := lbtk::LBTKEntry
+
 ;;; ============================================================
 
 .endscope ; app

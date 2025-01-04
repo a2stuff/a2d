@@ -1,6 +1,6 @@
 HEADERS = $(COMMON_HEADERS) \
 	$(SYS_FONTS) \
-	../mgtk/mgtk.inc ../toolkits/btk.inc
+	../mgtk/mgtk.inc ../toolkits/btk.inc ../toolkits/lbtk.inc
 
 include ../res/Makefile.common
 
@@ -18,7 +18,7 @@ clean:
 	rm -f $(OUTDIR)/*.fonts
 	rm -f $(TARGETS)
 
-$(OUTDIR)/selector.o: selector.s $(HEADERS) loader.s app.s alert_dialog.s ovl_*.s ../mgtk/mgtk.s ../toolkits/btk.s
+$(OUTDIR)/selector.o: selector.s $(HEADERS) loader.s app.s alert_dialog.s ovl_*.s ../mgtk/mgtk.s ../toolkits/btk.s ../toolkits/lbtk.s
 	../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 $(OUTDIR)/%.built: $(OUTDIR)/%.o ../res/asm.cfg

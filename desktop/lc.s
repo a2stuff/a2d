@@ -118,6 +118,15 @@ params:  .res    3
 
 
 ;;; ============================================================
+;;; ListBoxTK call from main>aux, MLI-style params
+
+.proc LBTKRelayImpl
+        ldax    #aux::lbtk::LBTKEntry
+        jmp     ParamsRelayImpl
+.endproc ; LBTKRelayImpl
+
+
+;;; ============================================================
 ;;; Within an update event, adjust the update port of a window after
 ;;; the header has been drawn, if needed, so that the window contents
 ;;; are appropriately clipped.

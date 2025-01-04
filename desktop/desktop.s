@@ -11,6 +11,7 @@
         .include "../toolkits/icontk.inc"
         .include "../toolkits/letk.inc"
         .include "../toolkits/btk.inc"
+        .include "../toolkits/lbtk.inc"
         .include "../common.inc"
         .include .concat("../desk.acc/res/filenames.res.", kBuildLang)
 
@@ -37,7 +38,7 @@
         ;; Dynamically loaded overlays
         DEFSEG OverlayFormatErase,  $0800, $1100
         DEFSEG OverlayShortcutPick, $5000, $0A00
-        DEFSEG OverlayFileDialog,   $6000, $0D00
+        DEFSEG OverlayFileDialog,   $6000, $0A00
         DEFSEG OverlayFileCopy,     $7000, $0100
         DEFSEG OverlayShortcutEdit, $7000, $0300
 

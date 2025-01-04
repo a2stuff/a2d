@@ -10,6 +10,7 @@
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../toolkits/btk.inc"
+        .include "../toolkits/lbtk.inc"
         .include "../common.inc"
 
 SAVE_AREA_BUFFER:= $0800
@@ -47,11 +48,11 @@ basic_system_not_found  = $FF
         INITSEG kLoaderOffset
         DEFSEG SegmentLoader,     $2000,        $0200
         DEFSEG SegmentInvoker,    INVOKER,      $0160
-        DEFSEG SegmentApp,        $4000,        $6500
+        DEFSEG SegmentApp,        $4000,        $6900
         DEFSEG SegmentAlert,      $D000,        $0600
 
         ;; Dynamically loaded overlays
-        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $0D00
+        DEFSEG OverlayFileDialog, OVERLAY_ADDR, $0A00
         DEFSEG OverlayCopyDialog, OVERLAY_ADDR, $0B00
 
 ;;; ============================================================

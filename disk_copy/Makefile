@@ -1,6 +1,6 @@
 HEADERS = $(COMMON_HEADERS) \
 	$(SYS_FONTS) \
-	../mgtk/mgtk.inc ../toolkits/btk.inc
+	../mgtk/mgtk.inc ../toolkits/btk.inc ../toolkits/lbtk.inc
 
 include ../res/Makefile.common
 
@@ -18,7 +18,7 @@ clean:
 	rm -f $(OUTDIR)/*.font
 	rm -f $(TARGETS)
 
-$(OUTDIR)/disk_copy.o: disk_copy.s $(HEADERS) loader.s auxlc.s main.s ../toolkits/btk.s
+$(OUTDIR)/disk_copy.o: disk_copy.s $(HEADERS) loader.s auxlc.s main.s ../toolkits/btk.s ../toolkits/lbtk.s
 	../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 $(OUTDIR)/%.built: $(OUTDIR)/%.o ../res/asm.cfg

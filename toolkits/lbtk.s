@@ -1,0 +1,763 @@
+;;; ============================================================
+;;; List Box ToolKit
+;;; ============================================================
+
+;;; * Routines dirty $10...$19 and $50...$6F
+
+.scope lbtk
+        LBTKEntry := *
+
+        ;; `MulDiv` uses $10...$19
+
+        kMaxCommandDataSize = 6
+
+        params_addr     := $50
+        command_data    := $52
+        lbr_ptr         := $52  ; always first element of `command_data`
+
+        lbr_copy        := command_data + kMaxCommandDataSize
+        winfo_ptr       := lbr_copy + LBTK::ListBoxRecord::winfo
+
+        tmp_space       := $63
+        tmp_point       := $63  ; used by `_Draw`
+        tmp_rect        := $67  ; used by `_Draw`
+        .assert tmp_space >= lbr_copy + .sizeof(LBTK::ListBoxRecord), error, "collision"
+
+;;; ============================================================
+
+PARAM_BLOCK event_params, lbtk::tmp_space
+kind    .byte
+.union
+;;; if `kind` is key_down
+  .struct
+    key             .byte
+    modifiers       .byte
+  .endstruct
+;;; if `kind` is no_event, button_down/up, drag, or apple_key:
+  .struct
+    coords           .tag MGTK::Point
+  .endstruct
+  .struct
+    xcoord          .word
+    ycoord          .word
+  .endstruct
+;;; if `kind` is update:
+  .struct
+    window_id       .byte
+  .endstruct
+.endunion
+END_PARAM_BLOCK
+
+PARAM_BLOCK setctlmax_params, lbtk::tmp_space
+which_ctl       .byte
+ctlmax          .byte
+END_PARAM_BLOCK
+
+PARAM_BLOCK activatectl_params, lbtk::tmp_space
+which_ctl       .byte
+activate        .byte
+END_PARAM_BLOCK
+
+PARAM_BLOCK updatethumb_params, lbtk::tmp_space
+which_ctl       .byte
+thumbpos        .byte
+END_PARAM_BLOCK
+
+PARAM_BLOCK trackthumb_params, lbtk::tmp_space
+which_ctl       .byte
+mousex          .word
+mousey          .word
+thumbpos        .byte
+thumbmoved      .byte
+END_PARAM_BLOCK
+.assert trackthumb_params::mousex = event_params::xcoord, error, "param mismatch"
+.assert trackthumb_params::mousey = event_params::ycoord, error, "param mismatch"
+
+.assert setctlmax_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
+.assert trackthumb_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
+.assert updatethumb_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
+
+PARAM_BLOCK screentowindow_params, lbtk::tmp_space
+window_id       .byte
+.union
+   screen       .tag MGTK::Point
+   .struct
+     screenx    .word
+     screeny    .word
+   .endstruct
+.endunion
+.union
+   window       .tag MGTK::Point
+   .struct
+     windowx    .word
+     windowy    .word
+   .endstruct
+.endunion
+END_PARAM_BLOCK
+.assert screentowindow_params::screenx = event_params::xcoord, error, "param mismatch"
+.assert screentowindow_params::screeny = event_params::ycoord, error, "param mismatch"
+
+PARAM_BLOCK findwindow_params, lbtk::tmp_space+1
+mousex          .word
+mousey          .word
+which_area      .byte
+window_id       .byte
+END_PARAM_BLOCK
+.assert findwindow_params::mousex = event_params::xcoord, error, "param mismatch"
+.assert findwindow_params::mousey = event_params::ycoord, error, "param mismatch"
+
+PARAM_BLOCK findcontrol_params, lbtk::tmp_space+1
+mousex          .word
+mousey          .word
+which_ctl       .byte
+which_part      .byte
+END_PARAM_BLOCK
+.assert findcontrol_params::mousex = event_params::xcoord, error, "param mismatch"
+.assert findcontrol_params::mousey = event_params::ycoord, error, "param mismatch"
+
+;;; ============================================================
+
+        .assert LBTKEntry = Dispatch, error, "dispatch addr"
+.proc Dispatch
+
+        params_addr := lbr_ptr
+
+        ;; Adjust stack/stash at `params_addr`
+        pla
+        sta     params_addr
+        clc
+        adc     #<3
+        tax
+        pla
+        sta     params_addr+1
+        adc     #>3
+        pha
+        txa
+        pha
+
+        ;; Grab command number
+        ldy     #1              ; Note: rts address is off-by-one
+        lda     (params_addr),y
+        asl     a
+        tax
+        copy16  jump_table,x, jump_addr
+
+        ;; Point `params_addr` at actual params
+        iny
+        lda     (params_addr),y
+        pha
+        iny
+        lda     (params_addr),y
+        sta     params_addr+1
+        pla
+        sta     params_addr
+
+        ;; Copy param data to `command_data`
+        ldy     #kMaxCommandDataSize-1
+:       copy    (params_addr),y, command_data,y
+        dey
+        bpl     :-
+
+        ;; Cache static of the record in `lbr_copy`, for convenience
+        ldy     #.sizeof(LBTK::ListBoxRecord)-1
+:       lda     (lbr_ptr),y
+        sta     lbr_copy,y
+        dey
+        bpl     :-
+
+        jump_addr := *+1
+        jmp     SELF_MODIFIED
+
+jump_table:
+        .addr   InitImpl
+        .addr   ClickImpl
+        .addr   KeyImpl
+        .addr   SetSelectionImpl
+        .addr   SetSizeImpl
+
+.endproc ; Dispatch
+
+DrawEntryProc:  jmp     (lbr_copy + LBTK::ListBoxRecord::draw_entry_proc)
+OnSelChange:    jmp     (lbr_copy + LBTK::ListBoxRecord::on_sel_change)
+OnNoChange:     jmp     (lbr_copy + LBTK::ListBoxRecord::on_no_change)
+
+;;; ============================================================
+;;; Call to initialize (or reset) the list. The caller must set
+;;; `LBTK::ListBoxRecord::num_items` and `LBTK::ListBoxRecord::selected_index` first.
+;;; This procedure will:
+;;; * Update the scrollbar, based on `LBTK::ListBoxRecord::num_items`
+;;; * Draw the list items
+;;; * If `LBTK::ListBoxRecord::selected_index` is not none, that item will
+;;;   be scrolled into view and highlighted.
+
+.proc InitImpl
+        PARAM_BLOCK params, lbtk::command_data
+a_record        .addr
+        END_PARAM_BLOCK
+
+        jsr     _EnableScrollbar
+        lda     lbr_copy + LBTK::ListBoxRecord::selected_index
+        bpl     :+
+        lda     #0
+:       ora     #$80            ; high bit = force draw
+        jmp     _ScrollIntoView
+.endproc ; InitImpl
+
+;;; ============================================================
+;;; Call when a button down event occurs on the list Winfo.
+;;;
+;;; Output: Z=1/A=$00 on click on an item
+;;;         N=1/A=$FF otherwise
+
+.proc ClickImpl
+        PARAM_BLOCK params, lbtk::command_data
+a_record        .addr
+coords          .tag MGTK::Point
+        END_PARAM_BLOCK
+
+        COPY_STRUCT MGTK::Point, params::coords, event_params::coords
+
+        jsr     _FindControlIsVerticalScrollBar
+    IF_EQ
+        jsr     _HandleListScroll
+        return  #$FF            ; not an item
+    END_IF
+
+        cmp     #MGTK::Ctl::not_a_control
+    IF_NE
+        return  #$FF            ; not an item
+    END_IF
+
+        ldy     #MGTK::Winfo::window_id
+        lda     (winfo_ptr),y
+        sta     screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
+        add16in (winfo_ptr),y, screentowindow_params::windowy, screentowindow_params::windowy
+
+        copy16  screentowindow_params::windowy, z:muldiv_numerator
+        copy16  #kListItemHeight, z:muldiv_denominator
+        copy16  #1, z:muldiv_number
+        jsr     MulDiv
+        lda     z:muldiv_result
+
+        ;; Validate
+        cmp     lbr_copy + LBTK::ListBoxRecord::num_items
+    IF_GE
+        lda     #$FF
+        jsr     _SetSelection
+        jsr     OnSelChange
+        return  #$FF            ; not an item
+    END_IF
+
+        ;; Update selection (if different)
+        cmp     lbr_copy + LBTK::ListBoxRecord::selected_index
+    IF_NE
+        jsr     _SetSelection
+        jsr     OnSelChange
+    ELSE
+        jsr     OnNoChange
+    END_IF
+
+        return  #0              ; an item
+.endproc ; ClickImpl
+
+;;; ============================================================
+;;; Handle scroll bar
+
+.proc _HandleListScrollWithPart
+        sta     findcontrol_params::which_part
+        FALL_THROUGH_TO _HandleListScroll
+.endproc ; _HandleListScrollWithPart
+
+.proc _HandleListScroll
+        ;; Ignore unless vscroll is enabled
+        ldy     #MGTK::Winfo::vscroll
+        lda     (winfo_ptr),y
+        and     #MGTK::Scroll::option_active
+        bne     :+
+ret:    rts
+:
+        lda     findcontrol_params::which_part
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::up_arrow
+    IF_EQ
+repeat:
+        ldy     #MGTK::Winfo::vthumbpos
+        lda     (winfo_ptr),y
+        beq     ret
+
+        sec
+        sbc     #1
+        jsr     update
+        jsr     _CheckArrowRepeat
+        jmp     repeat
+    END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::down_arrow
+    IF_EQ
+repeat:
+        ldy     #MGTK::Winfo::vthumbpos
+        lda     (winfo_ptr),y
+        ldy     #MGTK::Winfo::vthumbmax
+        cmp     (winfo_ptr),y
+        beq     ret
+
+        clc
+        adc     #1
+        jsr     update
+        jsr     _CheckArrowRepeat
+        jmp     repeat
+    END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::page_up
+    IF_EQ
+        ldy     #MGTK::Winfo::vthumbpos
+        lda     (winfo_ptr),y
+        cmp     lbr_copy + LBTK::ListBoxRecord::num_rows
+        bcs     :+
+        lda     #0
+        beq     update          ; always
+:       sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
+        jmp     update
+    END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Part::page_down
+    IF_EQ
+        ldy     #MGTK::Winfo::vthumbpos
+        lda     (winfo_ptr),y
+        clc
+        adc     lbr_copy + LBTK::ListBoxRecord::num_rows
+        ldy     #MGTK::Winfo::vthumbmax
+        cmp     (winfo_ptr),y
+        bcc     update
+        ldy     #MGTK::Winfo::vthumbmax
+        lda     (winfo_ptr),y
+        jmp     update
+    END_IF
+
+        ;; --------------------------------------------------
+
+        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_params::thumbmoved
+        jeq     ret
+        lda     trackthumb_params::thumbpos
+        FALL_THROUGH_TO update
+
+        ;; --------------------------------------------------
+
+update: jsr     _UpdateThumb
+        jmp     _Draw
+.endproc ; _HandleListScroll
+
+;;; ============================================================
+
+.proc _CheckArrowRepeat
+        MGTK_CALL MGTK::PeekEvent, event_params
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::button_down
+        beq     :+
+        cmp     #MGTK::EventKind::drag
+        bne     cancel
+:
+        MGTK_CALL MGTK::GetEvent, event_params
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::window_id
+        ldy     #MGTK::Winfo::window_id
+        cmp     (winfo_ptr),y
+        bne     cancel
+
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+        bne     cancel
+
+        jsr     _FindControlIsVerticalScrollBar
+        bne     cancel
+
+        lda     findcontrol_params::which_part
+        cmp     #MGTK::Part::page_up ; up_arrow or down_arrow ?
+        bcc     ret                  ; Yes, continue
+
+cancel: pla
+        pla
+ret:    rts
+.endproc ; _CheckArrowRepeat
+
+;;; ============================================================
+;;; Call when a key event occurs, if `LBIsListKey` indicates it
+;;; will be handled. This handles scrolling and/or updating
+;;; the selection.
+
+.proc KeyImpl
+        PARAM_BLOCK params, lbtk::command_data
+a_record        .addr
+key             .byte
+modifiers       .byte
+        END_PARAM_BLOCK
+
+        lda     lbr_copy + LBTK::ListBoxRecord::num_items
+        bne     :+
+ret:    rts
+:
+        lda     params::key
+        ldx     params::modifiers
+
+        ;; --------------------------------------------------
+        ;; No modifiers
+
+        ;; Up/Down move selection
+    IF_ZERO
+        cmp     #CHAR_UP
+      IF_EQ
+        ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
+        beq     ret
+       IF_NS
+        ldx     lbr_copy + LBTK::ListBoxRecord::num_items
+       END_IF
+        dex
+        txa
+        bpl     SetSelection    ; always
+      END_IF
+        ;; CHAR_DOWN
+        ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
+      IF_NS
+        ldx     #0
+      ELSE
+        inx
+        cpx     lbr_copy + LBTK::ListBoxRecord::num_items
+        beq     ret
+      END_IF
+        txa
+        bpl     SetSelection    ; always
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Double modifiers
+
+        ;; Home/End move selection to first/last
+        cpx     #3
+    IF_EQ
+        cmp     #CHAR_UP
+      IF_EQ
+        lda     lbr_copy + LBTK::ListBoxRecord::selected_index
+        beq     ret
+        lda     #0
+        bpl     SetSelection    ; always
+      END_IF
+        ;; CHAR_DOWN
+        ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
+      IF_NC
+        inx
+        cpx     lbr_copy + LBTK::ListBoxRecord::num_items
+        beq     ret
+      END_IF
+        ldx     lbr_copy + LBTK::ListBoxRecord::num_items
+        dex
+        txa
+        bpl     SetSelection    ; always
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Single modifier
+        cmp     #CHAR_UP
+    IF_EQ
+        lda     #MGTK::Part::page_up
+        jmp     _HandleListScrollWithPart
+    END_IF
+        ;; CHAR_DOWN
+        lda     #MGTK::Part::page_down
+        jmp     _HandleListScrollWithPart
+
+SetSelection:
+        jsr     _SetSelection
+        jmp     OnSelChange
+.endproc ; KeyImpl
+
+;;; ============================================================
+
+.proc SetSelectionImpl
+        PARAM_BLOCK params, lbtk::command_data
+a_record        .addr
+new_selection   .byte
+        END_PARAM_BLOCK
+
+        lda     params::new_selection
+        FALL_THROUGH_TO _SetSelection
+.endproc ; SetSelectionImpl
+
+;;; ============================================================
+;;; Sets the selected item index. If not none, it is scrolled
+;;; into view.
+;;; Input: A = new selection (negative if none)
+;;; Note: Does not call `OnListSelectionChange`
+
+.proc _SetSelection
+        pha                     ; A = new selection
+        lda     lbr_copy + LBTK::ListBoxRecord::selected_index
+        jsr     _HighlightIndex
+        pla                     ; A = new selection
+        ldy     #LBTK::ListBoxRecord::selected_index
+        sta     (lbr_ptr),y
+        sta     lbr_copy + LBTK::ListBoxRecord::selected_index ; keep copy in sync
+        bmi     :+
+        jmp     _ScrollIntoView
+:       rts
+.endproc ; _SetSelection
+
+;;; ============================================================
+;;; Input: A = row to highlight
+
+.proc _HighlightIndex
+        cmp     #0              ; don't assume caller has flags set
+        bmi     ret
+
+        pha                     ; A = row
+        jsr     _SetPort        ; also uses `tmp_rect`
+        pla                     ; A = row
+
+        ldx     #0              ; hi (A=lo)
+        ldy     #kListItemHeight
+        jsr     _Multiply
+        stax    tmp_rect+MGTK::Rect::y1
+        addax   #kListItemHeight-1, tmp_rect+MGTK::Rect::y2
+        copy16  #0, tmp_rect+MGTK::Rect::x1
+        copy16  #kScreenWidth, tmp_rect+MGTK::Rect::x2
+
+        MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::PaintRect, tmp_rect
+ret:    rts
+.endproc ; _HighlightIndex
+
+;;; ============================================================
+;;; Call to update `LBTK::ListBoxRecord::num_items` after `LBInit` is called,
+;;; to update the scrollbar alone. The list items will not be redrawn.
+;;; This is useful if the list is populated asynchronously.
+
+.proc SetSizeImpl
+        PARAM_BLOCK params, lbtk::command_data
+a_record        .addr
+new_size        .byte
+        END_PARAM_BLOCK
+
+        lda     params::new_size
+        ldy     #LBTK::ListBoxRecord::num_items
+        sta     (lbr_ptr),y
+        sta     lbr_copy + LBTK::ListBoxRecord::num_items ; keep copy in sync
+        FALL_THROUGH_TO _EnableScrollbar
+.endproc ; SetSizeImpl
+
+;;; ============================================================
+;;; Enable/disable scrollbar as appropriate; resets thumb pos.
+;;; Assert: `LBTK::ListBoxRecord::num_items` is set.
+
+.proc _EnableScrollbar
+        ;; Reset thumb pos
+        lda     #0
+        jsr     _UpdateThumb
+
+        lda     lbr_copy + LBTK::ListBoxRecord::num_items
+        cmp     lbr_copy + LBTK::ListBoxRecord::num_rows
+        beq     :+
+        bcs     greater
+:
+        ;; Deactivate
+        lda     #MGTK::activatectl_deactivate
+        .assert MGTK::activatectl_deactivate = 0, error, "enum mismatch"
+        beq     activate        ; always
+
+greater:
+        ;; Set max and activate
+        lda     lbr_copy + LBTK::ListBoxRecord::num_items
+        sec
+        sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
+        sta     setctlmax_params::ctlmax
+        MGTK_CALL MGTK::SetCtlMax, setctlmax_params
+
+        lda     #MGTK::activatectl_activate
+
+activate:
+        sta     activatectl_params::activate
+        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        MGTK_CALL MGTK::ActivateCtl, activatectl_params
+        rts
+.endproc ; _EnableScrollbar
+
+;;; ============================================================
+;;; Input: A = row to ensure visible; high bit = force redraw,
+;;;   even if no scrolling occured.
+;;; Assert: `LBTK::ListBoxRecord::winfo`'s `MGTK::Winfo::vthumbpos` is set.
+
+.proc _ScrollIntoView
+        sta     force_draw_flag
+        and     #$7F            ; A = index
+
+        ldy     #MGTK::Winfo::vthumbpos
+        cmp     (winfo_ptr),y
+        bcc     update
+
+        sec
+        sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
+        clc
+        adc     #1
+        bmi     skip
+        ldy     #MGTK::Winfo::vthumbpos
+        cmp     (winfo_ptr),y
+        beq     skip
+        bcs     update
+skip:
+        force_draw_flag := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jmi     _Draw ; will highlight selection
+
+        lda     lbr_copy + LBTK::ListBoxRecord::selected_index
+        jmp     _HighlightIndex
+
+update:
+        jsr     _UpdateThumb
+        jmp     _Draw
+.endproc ; _ScrollIntoView
+
+;;; ============================================================
+;;; Update thumb position.
+;;; Input: A = new thumb pos
+.proc _UpdateThumb
+        sta     updatethumb_params::thumbpos
+        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+        rts
+.endproc ; _UpdateThumb
+
+;;; ============================================================
+
+;;; Runs `MGTK::FindControl` with coords from `event_params`.
+;;; Output: Z=1 if over vertical scrollbar, Z=0 otherwise
+.proc _FindControlIsVerticalScrollBar
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        rts
+.endproc ; _FindControlIsVerticalScrollBar
+
+;;; ============================================================
+;;; Adjusts the viewport given the scroll position, and selects
+;;; the GrafPort of the control.
+
+.proc _SetPort
+        ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+.sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     (winfo_ptr),y
+        sta     tmp_rect,x
+        dey
+        dex
+        bpl     :-
+
+        ;; Set y2 to height
+        sub16   tmp_rect+MGTK::Rect::y2, tmp_rect+MGTK::Rect::y1, tmp_rect+MGTK::Rect::y2
+
+        ldy     #MGTK::Winfo::vthumbpos
+        lda     (winfo_ptr),y
+        tay
+        ldax    #kListItemHeight
+        jsr     _Multiply
+        ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
+        stax    tmp_rect+MGTK::Rect::y1
+
+        ;; Set y2 to bottom
+        addax   tmp_rect+MGTK::Rect::y2, tmp_rect+MGTK::Rect::y2
+
+        ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+.sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     tmp_rect,x
+        sta     (winfo_ptr),y
+        dey
+        dex
+        bpl     :-
+
+        add16   winfo_ptr, #MGTK::Winfo::port, setport_addr
+        MGTK_CALL MGTK::SetPort, SELF_MODIFIED, setport_addr
+        rts
+
+.endproc ; _SetPort
+
+;;; ============================================================
+
+;;; Calls `DrawListEntryProc` for each entry.
+.proc _Draw
+        jsr     _SetPort
+
+        add16   winfo_ptr, #MGTK::Winfo::port+MGTK::GrafPort::maprect, rect_addr
+
+        MGTK_CALL MGTK::HideCursor
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr
+
+        lda     lbr_copy + LBTK::ListBoxRecord::num_items
+        jeq     finish
+
+        lda     lbr_copy + LBTK::ListBoxRecord::num_rows
+        sta     rows
+        ldy     #MGTK::Winfo::vthumbpos
+        lda     (winfo_ptr),y
+        sta     index
+
+        copy16  #kListItemTextOffsetX, tmp_point+MGTK::Point::xcoord
+        ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
+        add16in (winfo_ptr),y, #kListItemTextOffsetY, tmp_point+MGTK::Point::ycoord
+
+loop:
+        MGTK_CALL MGTK::MoveTo, tmp_point
+
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
+        ldxy    #tmp_point
+        jsr     DrawEntryProc
+
+        add16_8 tmp_point+MGTK::Point::ycoord, #kListItemHeight
+
+        lda     index
+        cmp     lbr_copy + LBTK::ListBoxRecord::selected_index
+    IF_EQ
+        jsr     _HighlightIndex
+    END_IF
+
+        inc     index
+        lda     index
+        cmp     lbr_copy + LBTK::ListBoxRecord::num_items
+        beq     :+
+        dec     rows
+        bne     loop
+:
+
+finish: MGTK_CALL MGTK::ShowCursor
+        rts
+
+rows:   .byte   0
+.endproc ; _Draw
+
+;;; ============================================================
+
+;;; A,X = A,X * Y
+.proc _Multiply
+        stax    z:muldiv_number
+        sty     z:muldiv_numerator
+        copy    #0, z:muldiv_numerator+1
+        copy16  #1, z:muldiv_denominator
+        jsr     MulDiv
+        ldax    z:muldiv_result
+        rts
+.endproc ; _Multiply
+
+        .include "../lib/muldiv.s"
+
+;;; ============================================================
+
+.endscope ; lbtk

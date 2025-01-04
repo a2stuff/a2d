@@ -76,8 +76,6 @@ path_buf        := $1620        ; 65 bytes for path+length
 ;;; set for directories.
 file_list_index := $1780
 
-num_file_names  := $177F
-
 ;;; Sequence of 16-byte records, filenames in current directory.
 file_names      := $1800
 
@@ -97,9 +95,6 @@ only_show_dirs_flag:            ; set when selecting copy destination
         .byte   0
 
 dir_count:
-        .byte   0
-
-selected_index:                 ; $FF if none
         .byte   0
 
 ;;; ============================================================
@@ -210,7 +205,8 @@ ret:    rts
         lda     findwindow_params::window_id
         cmp     #file_dialog_res::kFilePickerDlgWindowID
         beq     not_list
-        jsr     ListClick
+        COPY_STRUCT MGTK::Point, event_params::coords, file_dialog_res::lb_params::coords
+        LBTK_CALL LBTK::Click, file_dialog_res::lb_params
         bmi     ret
         jsr     DetectDoubleClick
         bmi     ret
@@ -313,7 +309,7 @@ not_list:
         jsr     _ReadDir
         jsr     _UpdateDiskAndDirNames
         copy    #$FF, selected_index
-        jsr     ListInit
+        LBTK_CALL LBTK::Init, file_dialog_res::lb_params
         jmp     _UpdateDynamicButtons
 .endproc ; UpdateListFromPath
 
@@ -333,7 +329,7 @@ not_list:
         jsr     _FindFilenameIndex
         sta     selected_index
 
-        jsr     ListInit
+        LBTK_CALL LBTK::Init, file_dialog_res::lb_params
         jmp     _UpdateDynamicButtons
 .endproc ; UpdateListFromPathAndSelectFile
 .endif
@@ -480,13 +476,21 @@ ret:    rts
 
 .proc _HandleKeyEvent
         lda     event_params::key
-        jsr     IsListKey
+        ldx     event_params::modifiers
+        sta     file_dialog_res::lb_params::key
+        stx     file_dialog_res::lb_params::modifiers
+
+        cmp     #CHAR_UP
+        beq     :+
+        cmp     #CHAR_DOWN
+:
     IF_EQ
         copy    #0, type_down_buf
-        jmp     ListKey
+        LBTK_CALL LBTK::Key, file_dialog_res::lb_params
+        rts
     END_IF
 
-        ldx     event_params::modifiers
+        cpx     #0
     IF_NE
         ;; With modifiers
         jsr     _CheckTypeDown
@@ -617,7 +621,8 @@ file_char:
         bmi     done
         cmp     selected_index
         beq     done
-        jsr     ListSetSelection
+        sta     file_dialog_res::lb_params::new_selection
+        LBTK_CALL LBTK::SetSelection, file_dialog_res::lb_params
         jmp     _UpdateDynamicButtons
 
 done:   return  #0
@@ -1435,25 +1440,30 @@ HandleCancel:   jmp     0
 ;;; List Box
 ;;; ============================================================
 
+.assert .sizeof(file_dialog_res::listbox_rec) = .sizeof(LBTK::ListBoxRecord), error, "mismatch"
+listbox_rec__num_items := file_dialog_res::listbox_rec::num_items
+num_file_names := file_dialog_res::listbox_rec::num_items
+selected_index := file_dialog_res::listbox_rec::selected_index
+
 .proc OnListSelectionChange
         jsr     _UpdateDynamicButtons
         rts
 .endproc ; OnListSelectionChange
 
-.scope listbox
-        winfo = file_dialog_res::winfo_listbox
-        kRows = file_dialog_res::kListRows
-        num_items = num_file_names
-        item_pos = file_dialog_res::picker_entry_pos
-.endscope ; listbox
-listbox::selected_index = selected_index
-
-        .include "../lib/listbox.s"
-
 ;;; ============================================================
 
-;;; Called with A = index
+;;; Called with A = index, X,Y = addr of drawing pos (MGTK::Point)
 .proc DrawListEntryProc
+        pha
+        pt_ptr := $06
+        stxy    pt_ptr
+        ldy     #.sizeof(MGTK::Point)-1
+:       lda     (pt_ptr),y
+        sta     file_dialog_res::item_pos,y
+        dey
+        bpl     :-
+        pla
+
         tax
         lda     file_list_index,x
         pha
@@ -1467,13 +1477,13 @@ listbox::selected_index = selected_index
         sta     file_dialog_res::filename_buf,x
         dex
         bpl     :-
-        copy16  #kListViewNameX, listbox::item_pos+MGTK::Point::xcoord
-        MGTK_CALL MGTK::MoveTo, listbox::item_pos
+        copy16  #kListViewNameX, file_dialog_res::item_pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::item_pos
         param_call DrawString, file_dialog_res::filename_buf
 
         ;; Folder glyph?
-        copy16  #kListViewIconX, listbox::item_pos+MGTK::Point::xcoord
-        MGTK_CALL MGTK::MoveTo, listbox::item_pos
+        copy16  #kListViewIconX, file_dialog_res::item_pos+MGTK::Point::xcoord
+        MGTK_CALL MGTK::MoveTo, file_dialog_res::item_pos
         pla
     IF_NS
         ldax    #file_dialog_res::str_folder
@@ -1506,6 +1516,9 @@ UpdateListFromPath := file_dialog_impl::UpdateListFromPath
 
 only_show_dirs_flag := file_dialog_impl::only_show_dirs_flag
 path_buf := file_dialog_impl::path_buf
+
+::file_dialog_impl__DrawListEntryProc := file_dialog_impl::DrawListEntryProc
+::file_dialog_impl__OnListSelectionChange := file_dialog_impl::OnListSelectionChange
 
 .ifdef FD_EXTENDED
 DrawLineEditLabel := file_dialog_impl::DrawLineEditLabel

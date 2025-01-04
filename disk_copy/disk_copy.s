@@ -11,6 +11,7 @@
         .include "../mgtk/mgtk.inc"
         .include "../common.inc"
         .include "../toolkits/btk.inc"
+        .include "../toolkits/lbtk.inc"
         .include "disk_copy.inc"
 
 ;;; ============================================================

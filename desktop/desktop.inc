@@ -14,6 +14,8 @@ MGTKAuxEntry    := $4000
 BTKAuxEntry     := $4003
 ;;; LETK loaded into AUX
 LETKAuxEntry    := $4006
+;;; LBTK loaded into AUX
+LBTKAuxEntry    := $4009
 
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) and Aux
 ;;; ($800-$1BFF) using an I/O buffer (Main $1C00-1FFF).
@@ -45,6 +47,7 @@ kOverlayBufferSize   = $4000
         MGTKEntry := MGTKAuxEntry
         BTKEntry := BTKAuxEntry
         LETKEntry := LETKAuxEntry
+        LBTKEntry := LBTKAuxEntry
         ReadSetting := ReadSettingFromAux
         WriteSetting := WriteSettingFromAux
 

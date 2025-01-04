@@ -10,6 +10,7 @@
         .org ::OVERLAY_ADDR
 
         BTKEntry := app::BTKEntry
+        LBTKEntry := app::LBTKEntry
 
 ;;; ============================================================
 

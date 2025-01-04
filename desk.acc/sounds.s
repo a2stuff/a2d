@@ -14,6 +14,7 @@
         .include "../inc/prodos.inc"
         .include "../mgtk/mgtk.inc"
         .include "../toolkits/btk.inc"
+        .include "../toolkits/lbtk.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 
@@ -151,50 +152,15 @@ nextwinfo:      .addr   0
 
         DEFINE_RECT listbox_rect, kListLeft, kListTop, kListRight, kListBottom
 
+;;; ============================================================
+;;; List Box
+;;; ============================================================
 
-kMaxTop = kNumSounds - kListRows
 kListBoxWindowId = kDAWindowId + 1
 
-.params winfo_listbox
-        kLeft =   kListLeft + kDALeft
-        kTop =    kListTop + kDATop
-        kWidth = kListRight - kListLeft
-        kHeight = kListHeight
-
-window_id:      .byte   kListBoxWindowId
-options:        .byte   MGTK::Option::dialog_box
-title:          .addr   0
-hscroll:        .byte   MGTK::Scroll::option_none
-vscroll:        .byte   MGTK::Scroll::option_normal
-hthumbmax:      .byte   0
-hthumbpos:      .byte   0
-vthumbmax:      .byte   kMaxTop
-vthumbpos:      .byte   0
-status:         .byte   0
-reserved:       .byte   0
-mincontwidth:   .word   100
-mincontheight:  .word   kHeight
-maxcontwidth:   .word   100
-maxcontheight:  .word   kHeight
-port:
-        DEFINE_POINT viewloc, kLeft, kTop
-mapbits:        .addr   MGTK::screen_mapbits
-mapwidth:       .byte   MGTK::screen_mapwidth
-reserved2:      .byte   0
-        DEFINE_RECT maprect, 0, 0, kWidth, kHeight
-pattern:        .res    8, $FF
-colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   1
-penheight:      .byte   1
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   MGTK::textbg_white
-textfont:       .addr   DEFAULT_FONT
-nextwinfo:      .addr   0
-        REF_WINFO_MEMBERS
-.endparams
-
-        DEFINE_POINT itempos, kListItemTextOffsetX, 0
+        DEFINE_LIST_BOX_WINFO winfo_listbox, kListBoxWindowId, kListLeft + kDALeft, kListTop + kDATop, kListRight - kListLeft, kListHeight, DEFAULT_FONT
+        DEFINE_LIST_BOX listbox_rec, winfo_listbox, kListRows, kNumSounds, DrawListEntryProc, OnListSelectionChange, OnListSelectionChange
+        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
 
 ;;; ============================================================
 
@@ -221,11 +187,6 @@ str_obn_phasor: PASCAL_STRING res_string_name_obnoxious_phasor
 str_obn_gleep:  PASCAL_STRING res_string_name_obnoxious_gleep
         kNumSounds = 21
 
-;;; This is in anticipation of factoring out ListBox code, and/or
-;;; dynamically populating the list of sounds from files, etc.
-num_sounds:
-        .byte   kNumSounds
-
 name_table:
         .addr   str_buzz, str_bonk, str_bell, str_silent, str_awbeep
         .addr   str_dazzledraw, str_koala, str_816paint, str_panic1
@@ -242,8 +203,6 @@ proc_table:
         .addr   AALKlaxon, OBNWhopi, OBNPhasor, OBNGleep
         ASSERT_ADDRESS_TABLE_SIZE proc_table, kNumSounds
 
-selected_index:
-        .byte   $FF
 original_index:
         .byte   $FF
 
@@ -267,12 +226,13 @@ grafport_win:       .tag    MGTK::GrafPort
         jsr     DrawWindow
 
         MGTK_CALL MGTK::OpenWindow, winfo_listbox
-        jsr     ListInit
+        LBTK_CALL LBTK::Init, lb_params
 
         jsr     SearchForCurrent
         ; keep it around in case we want to cancel
         sta     original_index
-        jsr     ListSetSelection
+        sta     lb_params::new_selection
+        LBTK_CALL LBTK::SetSelection, lb_params
 
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -301,13 +261,20 @@ grafport_win:       .tag    MGTK::GrafPort
 
 .proc HandleKey
         lda     event_params::key
-        jsr     IsListKey
+        ldx     event_params::modifiers
+
+        cmp     #CHAR_UP
+        beq     :+
+        cmp     #CHAR_DOWN
+:
     IF_EQ
-        jsr     ListKey
+        sta     lb_params::key
+        stx     lb_params::modifiers
+        LBTK_CALL LBTK::Key, lb_params
         jmp     InputLoop
     END_IF
 
-        ldx     event_params::modifiers
+        cpx     #0
     IF_NOT_ZERO
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
@@ -349,7 +316,8 @@ grafport_win:       .tag    MGTK::GrafPort
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
       IF_EQ
-        jsr     ListClick
+        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        LBTK_CALL LBTK::Click, lb_params
         jmp     InputLoop
       END_IF
     END_IF
@@ -507,7 +475,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
 next:   inc     index
         lda     index
-        cmp     num_sounds
+        cmp     listbox_rec::num_items
         bne     loop
 
         ;; Not Found
@@ -1375,9 +1343,11 @@ END_SOUND_PROC
         .res    ::kBellProcLength
 
 ;;; ============================================================
+;;; List Box
+;;; ============================================================
 
 .proc OnListSelectionChange
-        lda     selected_index
+        lda     listbox_rec::selected_index
         RTS_IF_NS
 
         jmp     PlayIndex
@@ -1385,23 +1355,6 @@ END_SOUND_PROC
 
 ;;; Play sound if same item is re-clicked.
 OnListSelectionNoChange := OnListSelectionChange
-
-;;; ============================================================
-;;; List Box
-;;; ============================================================
-
-.scope listbox
-        winfo = winfo_listbox
-        kRows = kListRows
-        num_items = num_sounds
-        item_pos = itempos
-
-        selected_index = aux::selected_index
-.endscope ; listbox
-
-        .include "../lib/listbox.s"
-
-;;; ============================================================
 
 ;;; Called with A = index
 .proc DrawListEntryProc

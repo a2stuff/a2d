@@ -18,6 +18,7 @@
         MGTKEntry := ::MGTKRelayImpl
         LETKEntry := LETKRelayImpl
         BTKEntry := BTKRelayImpl
+        LBTKEntry := LBTKRelayImpl
         ITKEntry  := ITKRelayImpl
 
 src_path_buf    := INVOKER_PREFIX

@@ -59,6 +59,17 @@ Mac/IIgs Developers: You can think of this as analogous to the "Line Edit" tools
 The interface is similar to the ProDOS MLI, with JSR to a known address, with a command byte and pointer to parameter block following the JSR. The library is built into DeskTop, the entry point address can move but is fixed at build-time.
 
 
+## ListBox ToolKit (LBTK)
+
+[LBTK Documentation](../toolkits/LBTK.md)
+
+This library was written specifically for DeskTop, but is isolated from the rest of the application logic, depending only on MGTK. It provides operations to draw and interact with list box controls.
+
+Mac/IIgs Developers: You can think of this as analogous to the "List Manager" toolset.
+
+The interface is similar to the ProDOS MLI, with JSR to a known address, with a command byte and pointer to parameter block following the JSR. The library is built into DeskTop, the entry point address can move but is fixed at build-time.
+
+
 ## Libraries
 
 A handful of re-usable libraries that don't have fancy MLI-style interfaces are provided in the [`lib`](../lib) directory. Ones that are important to understand for building DeskTop and other applications are:
@@ -66,7 +77,6 @@ A handful of re-usable libraries that don't have fancy MLI-style interfaces are 
 * [Alert Dialog](../lib/alert_dialog.s) - simple error and prompt dialogs
 * [File Dialog](../lib/file_dialog.s) - file open / save
 * [Option Picker](../lib/option_picker.s) - pick from grid of options
-* [List Box](../lib/listbox.s) - list box controls
 * [Get Next Event](../lib/get_next_event.s) - helper to detect no-ops and moves
 * [Detect Double Click](../lib/doubleclick.s) - helper to detect double clicks
 * [Read/Write Settings](../lib/readwrite_settings.s) - access/modify options
