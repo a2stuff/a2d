@@ -136,7 +136,13 @@ kEntryListCtlWindowID = $3F
         kExListBoxTop   = kFilePickerDlgExTop + 28
 .endif
 
-        DEFINE_LIST_BOX_WINFO winfo_listbox, kEntryListCtlWindowID, kListBoxLeft, kListBoxTop, kListBoxWidth, kListBoxHeight, FONT
+        DEFINE_LIST_BOX_WINFO winfo_listbox, \
+                kEntryListCtlWindowID, \
+                kListBoxLeft, \
+                kListBoxTop, \
+                kListBoxWidth, \
+                kListBoxHeight, \
+                FONT
 
 .ifdef FD_EXTENDED
 ;;; Needed in DeskTop (LBTK in Aux, File Dialog in Main)
@@ -155,7 +161,9 @@ DrawEntryProc := ::file_dialog_impl__DrawListEntryProc
 OnSelChange   := ::file_dialog_impl__OnListSelectionChange
 .endif
 
-        DEFINE_LIST_BOX listbox_rec, file_dialog_res::winfo_listbox, file_dialog_res::kListRows, SELF_MODIFIED_BYTE, DrawEntryProc, OnSelChange, NoOp
+        DEFINE_LIST_BOX listbox_rec, file_dialog_res::winfo_listbox, \
+                file_dialog_res::kListRows, SELF_MODIFIED_BYTE, \
+                DrawEntryProc, OnSelChange, NoOp
         DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
 
 NoOp:   rts

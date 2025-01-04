@@ -8,6 +8,7 @@
 
         .setcpu "6502"
         .feature string_escapes
+        .feature line_continuations
 
 ;;; Product Info
 

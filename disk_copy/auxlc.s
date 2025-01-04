@@ -386,13 +386,21 @@ kListBoxWidth = 150
 kListBoxHeight = kListItemHeight*kListRows-1
 
         kListBoxWindowId = 2
-        DEFINE_LIST_BOX_WINFO winfo_drive_select, kListBoxWindowId, kListBoxLeft, kListBoxTop, kListBoxWidth, kListBoxHeight, DEFAULT_FONT
+        DEFINE_LIST_BOX_WINFO winfo_drive_select, \
+                kListBoxWindowId, \
+                kListBoxLeft, \
+                kListBoxTop, \
+                kListBoxWidth, \
+                kListBoxHeight, \
+                DEFAULT_FONT
+        DEFINE_LIST_BOX listbox_rec, winfo_drive_select, \
+                kListRows, SELF_MODIFIED_BYTE, \
+                DrawListEntryProc, NoOp, NoOp
+        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
 
-        DEFINE_LIST_BOX listbox_rec, winfo_drive_select, kListRows, SELF_MODIFIED_BYTE, DrawListEntryProc, NoOp, NoOp
 num_drives := listbox_rec::num_items
 current_drive_selection := listbox_rec::selected_index
 
-        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
 
         DEFINE_POINT list_entry_pos, 0, 0
 

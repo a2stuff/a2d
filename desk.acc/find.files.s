@@ -161,14 +161,20 @@ pattern:        .res    16      ; null-terminated/upcased version
 ;;; ============================================================
 ;;; List Box
 
-        DEFINE_LIST_BOX_WINFO winfo_results, kResultsWindowId, kResultsLeft, kResultsTop, kResultsWidth, kResultsHeight, DEFAULT_FONT
-
-        DEFINE_LIST_BOX listbox_rec, winfo_results, kResultsRows, SELF_MODIFIED_BYTE, DrawListEntryProc, NoOp, NoOp
+        DEFINE_LIST_BOX_WINFO winfo_results, \
+                kResultsWindowId, \
+                kResultsLeft, \
+                kResultsTop, \
+                kResultsWidth, \
+                kResultsHeight, \
+                DEFAULT_FONT
+        DEFINE_LIST_BOX listbox_rec, winfo_results, \
+                kResultsRows, SELF_MODIFIED_BYTE, \
+                DrawListEntryProc, NoOp, NoOp
+        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
 
 selected_index := listbox_rec::selected_index
 num_entries := listbox_rec::num_items
-
-        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
 
 ;;; ============================================================
 

@@ -158,8 +158,16 @@ nextwinfo:      .addr   0
 
 kListBoxWindowId = kDAWindowId + 1
 
-        DEFINE_LIST_BOX_WINFO winfo_listbox, kListBoxWindowId, kListLeft + kDALeft, kListTop + kDATop, kListRight - kListLeft, kListHeight, DEFAULT_FONT
-        DEFINE_LIST_BOX listbox_rec, winfo_listbox, kListRows, kNumSounds, DrawListEntryProc, OnListSelectionChange, OnListSelectionChange
+        DEFINE_LIST_BOX_WINFO winfo_listbox, \
+                kListBoxWindowId, \
+                kListLeft + kDALeft, \
+                kListTop + kDATop, \
+                kListRight - kListLeft, \
+                kListHeight, \
+                DEFAULT_FONT
+        DEFINE_LIST_BOX listbox_rec, winfo_listbox, \
+                kListRows, kNumSounds, \
+                DrawListEntryProc, OnListSelectionChange, OnListSelectionChange
         DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
 
 ;;; ============================================================
