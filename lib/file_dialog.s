@@ -7,7 +7,6 @@
 ;;; * lib/event_params.s
 ;;; * lib/file_dialog_res.s
 ;;; * lib/get_next_event.s
-;;; * lib/muldiv.s
 ;;;
 ;;; Requires these macros to be functional:
 ;;; * `MLI_CALL`

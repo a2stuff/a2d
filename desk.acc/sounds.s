@@ -1381,7 +1381,6 @@ OnListSelectionNoChange := OnListSelectionChange
 
         .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
-        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 

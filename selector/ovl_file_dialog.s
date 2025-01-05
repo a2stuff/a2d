@@ -71,11 +71,6 @@ SystemTask              := app::SystemTask
 DetectDoubleClick       := app::DetectDoubleClick
 AdjustOnLineEntryCase   := app::AdjustOnLineEntryCase
 AdjustFileEntryCase     := app::AdjustFileEntryCase
-MulDiv                  := app::MulDiv
-muldiv_number           := app::muldiv_number
-muldiv_numerator        := app::muldiv_numerator
-muldiv_denominator      := app::muldiv_denominator
-muldiv_result           := app::muldiv_result
 
         .include "../lib/file_dialog.s"
         .include "../lib/get_next_event.s"

@@ -293,7 +293,7 @@ repeat:
         sbc     #1
         jsr     update
         jsr     _CheckArrowRepeat
-        jmp     repeat
+        bcc     repeat          ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -303,7 +303,8 @@ repeat:
 repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
-        ldy     #MGTK::Winfo::vthumbmax
+        .assert MGTK::Winfo::vthumbmax = MGTK::Winfo::vthumbpos - 1, error, "layout"
+        dey                     ; Y = MGTK::Winfo::vthumbmax
         cmp     (winfo_ptr),y
         beq     ret
 
@@ -311,7 +312,7 @@ repeat:
         adc     #1
         jsr     update
         jsr     _CheckArrowRepeat
-        jmp     repeat
+        bcc     repeat          ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -336,20 +337,22 @@ repeat:
         lda     (winfo_ptr),y
         clc
         adc     lbr_copy + LBTK::ListBoxRecord::num_rows
-        ldy     #MGTK::Winfo::vthumbmax
+        .assert MGTK::Winfo::vthumbmax = MGTK::Winfo::vthumbpos - 1, error, "layout"
+        dey                     ; Y = MGTK::Winfo::vthumbmax
         cmp     (winfo_ptr),y
         bcc     update
-        ldy     #MGTK::Winfo::vthumbmax
+        ;; Assert: Y = MGTK::Winfo::vthumbmax
         lda     (winfo_ptr),y
         jmp     update
     END_IF
 
         ;; --------------------------------------------------
+        ;; MGTK::Part::thumb
 
         copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
-        jeq     ret
+        beq     ret
         lda     trackthumb_params::thumbpos
         FALL_THROUGH_TO update
 
@@ -361,14 +364,13 @@ update: jsr     _UpdateThumb
 
 ;;; ============================================================
 
+;;; Output: C=0 if repeat, or pops caller off stack otherwise
 .proc _CheckArrowRepeat
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        beq     :+
         cmp     #MGTK::EventKind::drag
         bne     cancel
-:
+
         MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
@@ -430,12 +432,12 @@ ret:    rts
         ;; CHAR_DOWN
         ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
       IF_NS
-        ldx     #0
-      ELSE
+        lda     #0
+        beq     SetSelection    ; always
+      END_IF
         inx
         cpx     lbr_copy + LBTK::ListBoxRecord::num_items
         beq     ret
-      END_IF
         txa
         bpl     SetSelection    ; always
     END_IF
@@ -471,7 +473,7 @@ ret:    rts
         cmp     #CHAR_UP
     IF_EQ
         lda     #MGTK::Part::page_up
-        jmp     _HandleListScrollWithPart
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
     END_IF
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
@@ -609,14 +611,14 @@ activate:
         clc
         adc     #1
         bmi     skip
-        ldy     #MGTK::Winfo::vthumbpos
+        ;; Assert: Y = MGTK::Winfo::vthumbpos
         cmp     (winfo_ptr),y
         beq     skip
         bcs     update
 skip:
         force_draw_flag := *+1
         lda     #SELF_MODIFIED_BYTE
-        jmi     _Draw ; will highlight selection
+        bmi     _Draw ; will highlight selection
 
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         jmp     _HighlightIndex
@@ -701,7 +703,7 @@ update:
         MGTK_CALL MGTK::PaintRect, SELF_MODIFIED, rect_addr
 
         lda     lbr_copy + LBTK::ListBoxRecord::num_items
-        jeq     finish
+        beq     finish
 
         lda     lbr_copy + LBTK::ListBoxRecord::num_rows
         sta     rows
@@ -749,8 +751,11 @@ rows:   .byte   0
 .proc _Multiply
         stax    z:muldiv_number
         sty     z:muldiv_numerator
-        copy    #0, z:muldiv_numerator+1
-        copy16  #1, z:muldiv_denominator
+        ldy     #0
+        sty     z:muldiv_numerator+1
+        sty     z:muldiv_denominator+1
+        iny
+        sty     z:muldiv_denominator
         jsr     MulDiv
         ldax    z:muldiv_result
         rts

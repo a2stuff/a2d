@@ -65,6 +65,8 @@ Handle click within window.
 
 In response to an `EventKind::button_down` event, the caller should identify the target window using `MGTK::FindWindow`. If the target is the list box's window, the caller should copy the unmapped coordinates (an `MGTK::Point`) from the event into the parameter block for this call.
 
+Returns with N=0 if an item was clicked, N=1 otherwise.
+
 Parameters:
 ```
 .addr       a_record        Address of the ListBoxRecord
