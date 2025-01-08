@@ -797,7 +797,7 @@ loop:   ldx     screentowindow_params::windowx
 
         ;; Repeat until mouse-up
 event:  MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_kind
+        lda     event_params::kind
         cmp     #MGTK::EventKind::button_up
         jeq     InputLoop
 
@@ -936,7 +936,7 @@ dblclick_speed: .word   0
 
         ;; Set the cursor to the same position (c/o last move),
         ;; to avoid it warping due to the scale change.
-        copy    #MGTK::EventKind::no_event, event_kind
+        copy    #MGTK::EventKind::no_event, event_params::kind
         COPY_STRUCT MGTK::Point, last_mouse_pos, event_params::coords
         MGTK_CALL MGTK::PostEvent, event_params
 

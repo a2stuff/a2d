@@ -14,111 +14,122 @@
 ;;; `beginupdate_params` (with matching event window_id)
 ;;; ============================================================
 
-.params event_params
-kind := * + 0
-        ;; if `kind` is key_down
-key := * + 1
-modifiers := * + 2
-        ;; if `kind` is no_event, button_down/up, drag, or apple_key:
-coords := * + 1
-xcoord := * + 1
-ycoord := * + 3
-        ;; if `kind` is update:
-window_id := * + 1
-.endparams
-event_kind := event_params::kind
-event_coords := event_params::coords
+PARAM_BLOCK event_params, *
+kind    .byte
+.union
+;;; if `kind` is key_down
+  .struct
+    key             .byte
+    modifiers       .byte
+  .endstruct
+;;; if `kind` is no_event, button_down/up, drag, or apple_key:
+  .struct
+    coords           .tag MGTK::Point
+  .endstruct
+  .struct
+    xcoord          .word
+    ycoord          .word
+  .endstruct
+;;; if `kind` is update:
+  .struct
+    window_id       .byte
+  .endstruct
+.endunion
+END_PARAM_BLOCK
 
-.params setctlmax_params
-which_ctl := * + 0
-ctlmax    := * + 1
-.endparams
+PARAM_BLOCK setctlmax_params, *
+which_ctl       .byte
+ctlmax          .byte
+END_PARAM_BLOCK
 
-.params activatectl_params
-which_ctl := * + 0
-activate  := * + 1
-.endparams
+PARAM_BLOCK activatectl_params, *
+which_ctl       .byte
+activate        .byte
+END_PARAM_BLOCK
 
-.params trackthumb_params
-which_ctl := * + 0
-mousex := * + 1
-mousey := * + 3
-thumbpos := * + 5
-thumbmoved := * + 6
-        .assert mousex = event_params::xcoord, error, "param mismatch"
-        .assert mousey = event_params::ycoord, error, "param mismatch"
-.endparams
+PARAM_BLOCK updatethumb_params, *
+which_ctl       .byte
+thumbpos        .byte
+END_PARAM_BLOCK
 
-.params updatethumb_params
-which_ctl := * + 0
-thumbpos := * + 1
-.endproc
+PARAM_BLOCK trackthumb_params, *
+which_ctl       .byte
+mousex          .word
+mousey          .word
+thumbpos        .byte
+thumbmoved      .byte
+END_PARAM_BLOCK
+.assert trackthumb_params::mousex = event_params::xcoord, error, "param mismatch"
+.assert trackthumb_params::mousey = event_params::ycoord, error, "param mismatch"
 
 .assert setctlmax_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
 .assert trackthumb_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
 .assert updatethumb_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
 
-.params screentowindow_params
-window_id := * + 0
-screen  := * + 1
-screenx := * + 1
-screeny := * + 3
-window  := * + 5
-windowx := * + 5
-windowy := * + 7
-        .assert screenx = event_params::xcoord, error, "param mismatch"
-        .assert screeny = event_params::ycoord, error, "param mismatch"
-.endproc
+PARAM_BLOCK screentowindow_params, *
+window_id       .byte
+.union
+   screen       .tag MGTK::Point
+   .struct
+     screenx    .word
+     screeny    .word
+   .endstruct
+.endunion
+.union
+   window       .tag MGTK::Point
+   .struct
+     windowx    .word
+     windowy    .word
+   .endstruct
+.endunion
+END_PARAM_BLOCK
+.assert screentowindow_params::screenx = event_params::xcoord, error, "param mismatch"
+.assert screentowindow_params::screeny = event_params::ycoord, error, "param mismatch"
 
-.params dragwindow_params
-window_id      := *
-dragx   := * + 1
-dragy   := * + 3
-moved   := * + 5
-        .assert dragx = event_params::xcoord, error, "param mismatch"
-        .assert dragy = event_params::ycoord, error, "param mismatch"
-.endparams
+PARAM_BLOCK dragwindow_params, *
+window_id       .byte
+dragx           .word
+dragy           .word
+moved           .byte
+END_PARAM_BLOCK
+.assert dragwindow_params::dragx = event_params::xcoord, error, "param mismatch"
+.assert dragwindow_params::dragy = event_params::ycoord, error, "param mismatch"
 
 ;;; --------------------------------------------------
 
 ;;; The following are offset so x/y overlap event_params x/y
-.pushorg *+1
 
-.params findwindow_params
-mousex := * + 0
-mousey := * + 2
-which_area := * + 4
-window_id := * + 5
-        .assert mousex = event_params::xcoord, error, "param mismatch"
-        .assert mousey = event_params::ycoord, error, "param mismatch"
-.endparams
+PARAM_BLOCK findwindow_params, *+1
+mousex          .word
+mousey          .word
+which_area      .byte
+window_id       .byte
+END_PARAM_BLOCK
+.assert findwindow_params::mousex = event_params::xcoord, error, "param mismatch"
+.assert findwindow_params::mousey = event_params::ycoord, error, "param mismatch"
 
-.params findcontrol_params
-mousex := * + 0
-mousey := * + 2
-which_ctl := * + 4
-which_part := * + 5
-        .assert mousex = event_params::xcoord, error, "param mismatch"
-        .assert mousey = event_params::ycoord, error, "param mismatch"
-.endparams
+PARAM_BLOCK findcontrol_params, *+1
+mousex          .word
+mousey          .word
+which_ctl       .byte
+which_part      .byte
+END_PARAM_BLOCK
+.assert findcontrol_params::mousex = event_params::xcoord, error, "param mismatch"
+.assert findcontrol_params::mousey = event_params::ycoord, error, "param mismatch"
 
-.params findicon_params
-mousex := * + 0
-mousey := * + 2
-which_icon := * + 4
-window_id := * + 5
-        .assert mousex = event_params::xcoord, error, "param mismatch"
-        .assert mousey = event_params::ycoord, error, "param mismatch"
-.endparams
+PARAM_BLOCK findicon_params, *+1
+mousex          .word
+mousey          .word
+which_icon      .byte
+window_id       .byte
+END_PARAM_BLOCK
+.assert findicon_params::mousex = event_params::xcoord, error, "param mismatch"
+.assert findicon_params::mousey = event_params::ycoord, error, "param mismatch"
 
-.params beginupdate_params
-window_id := * + 0
-        .assert window_id = event_params::window_id, error, "param mismatch"
-.endparams
-
-.poporg
-
-;;; --------------------------------------------------
+PARAM_BLOCK beginupdate_params, *+1
+window_id       .byte
+END_PARAM_BLOCK
+.assert beginupdate_params::window_id = event_params::window_id, error, "param mismatch"
 
 ;;; Union of preceding param blocks
         .res    10, 0
