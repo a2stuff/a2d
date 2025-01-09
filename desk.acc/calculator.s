@@ -36,42 +36,8 @@
 ;;; ============================================================
 ;;; Call Params (and other data)
 
-        ;; The following params blocks overlap for data re-use
-
-.params screentowindow_params
-window_id      := *
-screen  := * + 1
-screenx := * + 1 ; aligns with event_params::xcoord
-screeny := * + 3 ; aligns with event_params::ycoord
-window  := * + 5
-windowx := * + 5
-windowy := * + 7
-.endparams
-
-.params dragwindow_params
-window_id      := *
-xcoord  := * + 1 ; aligns with event_params::xcoord
-ycoord  := * + 3 ; aligns with event_params::ycoord
-moved   := * + 5
-.endparams
-
-.params event_params
-kind:  .byte   0
-xcoord    := *                  ; if state is 0,1,2,4
-ycoord    := * + 2              ; "
-key       := *                  ; if state is 3
-modifiers := * + 1              ; "
-.endparams
-
-.params findwindow_params
-mousex:         .word   0       ; aligns with event_params::xcoord
-mousey:         .word   0       ; aligns with event_params::ycoord
-which_area:     .byte   0
-window_id:      .byte   0
-.endparams
-
-        .byte 0, 0              ; fills out space for screentowindow_params
-        .byte 0, 0              ; ???
+        .include "../lib/event_params.s"
+        .res    1               ; unused
 
 .params trackgoaway_params
 goaway:  .byte   0

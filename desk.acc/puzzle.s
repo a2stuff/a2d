@@ -26,41 +26,9 @@
 ;;; ============================================================
 ;;; Param Blocks
 
-        ;; following memory space is re-used so x/y overlap
-.params dragwindow_params
-window_id       := * + 0
-dragx           := * + 1                 ; x overlap
-dragy           := * + 3                 ; y overlap
-it_moved        := * + 5                 ; ignored
-.endparams
+        .include "../lib/event_params.s"
 
-.params screentowindow_params
-window_id       := * + 0
-screenx         := * + 1                 ; x overlap
-screeny         := * + 3                 ; y overlap
-windowx         := * + 5
-windowy         := * + 7
-.endparams
-
-.params event_params
-kind:           .byte   0
-key             := *
-modifiers       := *+1
-
-xcoord          := *            ; x overlap
-ycoord          := *+2          ; y overlap
-.endparams
-
-.params findwindow_params
-mousex          := *            ; x overlap
-mousey          := * + 2        ; y overlap
-which_area      := * + 4
-window_id       := * + 5
-.endparams
-
-        .res    8, 0            ; storage for above
-
-        .byte   0,0             ; ???
+        .res 1                  ; unused
 
 .params trackgoaway_params
 goaway: .byte   0
@@ -606,7 +574,7 @@ check_title:
         lda     #kDAWindowId
         sta     dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        bit     dragwindow_params::it_moved
+        bit     dragwindow_params::moved
         bpl     ret
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawWindow
