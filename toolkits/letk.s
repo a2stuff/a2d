@@ -37,10 +37,15 @@ length  .byte
 width   .word
         END_PARAM_BLOCK
         .assert text_params = command_data + 6, error, "mismatch"
-        .assert text_params+.sizeof(text_params) <= $2F, error, "mismatch"
+
+        tmpw := text_params+.sizeof(text_params)
+
+        .assert tmpw+2 <= $30, error, "mismatch"
 
         .assert LETKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
+
+        jump_addr := tmpw
 
         ;; Adjust stack/stash at `params_addr`
         pla
@@ -92,8 +97,7 @@ width   .word
 
         jsr     _CalcPos
 
-        jump_addr := *+1
-        jmp     SELF_MODIFIED
+        jmp     (jump_addr)
 
 jump_table:
         .addr   InitImpl
@@ -323,18 +327,17 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::MoveTo, point
 
         jsr     _PrepTextParams
-        sta     len
+        pha                     ; A = len
 
+        caret_pos := tmpw
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
         sta     caret_pos
 
         add16_8 text_params::data, caret_pos
-        len := *+1
-        lda     #SELF_MODIFIED_BYTE
+        pla                     ; A = len
         sec
-        caret_pos := *+1
-        sbc     #SELF_MODIFIED_BYTE
+        sbc     caret_pos
         beq     :+
         sta     text_params::length
         MGTK_CALL MGTK::DrawText, text_params
@@ -369,6 +372,8 @@ ycoord  .word
         END_PARAM_BLOCK
         .assert a_record = params::a_record, error, "a_record must be first"
 
+        len := tmpw
+
         jsr     _PrepTextParams
         beq     ret
         sta     len
@@ -388,8 +393,7 @@ loop:   cmp16   text_params::width, params::xcoord
         bcs     :+
         inc     text_params::length
         lda     text_params::length
-        len := *+1
-        cmp     #SELF_MODIFIED_BYTE
+        cmp     len
         beq     :+
         MGTK_CALL MGTK::TextWidth, text_params
         beq     loop            ; always
@@ -533,12 +537,15 @@ modified:
 ;;; When a non-control key is hit - insert the passed character
 
 .proc _InsertChar
+        char := tmpw
+        caret_pos := tmpw+1
+
         sta     char
 
         ;; Stash current caret pos
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
-        sta     @caret_pos
+        sta     caret_pos
 
         ;; Is there room?
         ldy     #0
@@ -548,8 +555,7 @@ modified:
 
         ;; Move everything to right of caret up
         tay
-        @caret_pos := *+1
-:       cpy     #SELF_MODIFIED_BYTE
+:       cpy     caret_pos
         beq     :+
         lda     (a_buf),y
         iny
@@ -559,8 +565,7 @@ modified:
         bne     :-              ; always
 :
         ;; Insert
-        char := *+1
-        lda     #SELF_MODIFIED_BYTE
+        lda     char
         iny
         sta     (a_buf),y
         ldy     #0
@@ -640,20 +645,21 @@ ret:    rts
 ;;; Common logic for DeleteLeft/DeleteRight
 
 .proc _DeleteCharCommon
+        len := tmpw
+
         ;; Shrink buffer
         ldy     #0
         lda     (a_buf),y
         sec
         sbc     #1
         sta     (a_buf),y
-        sta     @len
+        sta     len
 
         ;; Move everything to the right of the caret down
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
         tay
-        @len := *+1
-:       cpy     #SELF_MODIFIED_BYTE
+:       cpy     len
         beq     :+
         iny
         iny

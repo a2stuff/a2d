@@ -121,6 +121,7 @@ END_PARAM_BLOCK
 .proc Dispatch
 
         params_addr := lbr_ptr
+        jump_addr := tmp_space
 
         ;; Adjust stack/stash at `params_addr`
         pla
@@ -165,8 +166,7 @@ END_PARAM_BLOCK
         dey
         bpl     :-
 
-        jump_addr := *+1
-        jmp     SELF_MODIFIED
+        jmp     (tmp_space)
 
 jump_table:
         .addr   InitImpl
@@ -245,16 +245,14 @@ coords          .tag MGTK::Point
         cmp     lbr_copy + LBTK::ListBoxRecord::num_items
     IF_GE
         lda     #$FF
-        jsr     _SetSelection
-        jsr     OnSelChange
+        jsr     _SetSelectionAndNotify
         return  #$FF            ; not an item
     END_IF
 
         ;; Update selection (if different)
         cmp     lbr_copy + LBTK::ListBoxRecord::selected_index
     IF_NE
-        jsr     _SetSelection
-        jsr     OnSelChange
+        jsr     _SetSelectionAndNotify
     ELSE
         jsr     OnNoChange
     END_IF
@@ -274,8 +272,9 @@ coords          .tag MGTK::Point
         ;; Ignore unless vscroll is enabled
         ldy     #MGTK::Winfo::vscroll
         lda     (winfo_ptr),y
-        and     #MGTK::Scroll::option_active
-        bne     :+
+        .assert MGTK::Scroll::option_active = %00000001, error, "flag mismatch"
+        ror                     ; C = "active?"
+        bcc     :+
 ret:    rts
 :
         lda     findcontrol_params::which_part
@@ -358,8 +357,7 @@ repeat:
 
         ;; --------------------------------------------------
 
-update: jsr     _UpdateThumb
-        jmp     _Draw
+update: jmp     _UpdateThumbAndDraw
 .endproc ; _HandleListScroll
 
 ;;; ============================================================
@@ -427,19 +425,19 @@ ret:    rts
        END_IF
         dex
         txa
-        bpl     SetSelection    ; always
+        bpl     _SetSelectionAndNotify ; always
       END_IF
         ;; CHAR_DOWN
         ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
       IF_NS
         lda     #0
-        beq     SetSelection    ; always
+        beq     _SetSelectionAndNotify ; always
       END_IF
         inx
         cpx     lbr_copy + LBTK::ListBoxRecord::num_items
         beq     ret
         txa
-        bpl     SetSelection    ; always
+        bpl     _SetSelectionAndNotify ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -453,7 +451,7 @@ ret:    rts
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret
         lda     #0
-        bpl     SetSelection    ; always
+        bpl     _SetSelectionAndNotify ; always
       END_IF
         ;; CHAR_DOWN
         ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
@@ -465,7 +463,7 @@ ret:    rts
         ldx     lbr_copy + LBTK::ListBoxRecord::num_items
         dex
         txa
-        bpl     SetSelection    ; always
+        bpl     _SetSelectionAndNotify ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -478,11 +476,14 @@ ret:    rts
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down
         jmp     _HandleListScrollWithPart
+.endproc ; KeyImpl
 
-SetSelection:
+;;; ============================================================
+
+.proc _SetSelectionAndNotify
         jsr     _SetSelection
         jmp     OnSelChange
-.endproc ; KeyImpl
+.endproc ; _SetSelectionAndNotify
 
 ;;; ============================================================
 
@@ -599,6 +600,8 @@ activate:
 ;;; Assert: `LBTK::ListBoxRecord::winfo`'s `MGTK::Winfo::vthumbpos` is set.
 
 .proc _ScrollIntoView
+        force_draw_flag := tmp_space
+
         sta     force_draw_flag
         and     #$7F            ; A = index
 
@@ -616,16 +619,14 @@ activate:
         beq     skip
         bcs     update
 skip:
-        force_draw_flag := *+1
-        lda     #SELF_MODIFIED_BYTE
+        lda     force_draw_flag
         bmi     _Draw ; will highlight selection
 
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         jmp     _HighlightIndex
 
 update:
-        jsr     _UpdateThumb
-        jmp     _Draw
+        jmp     _UpdateThumbAndDraw
 .endproc ; _ScrollIntoView
 
 ;;; ============================================================
@@ -670,7 +671,6 @@ update:
         tay
         ldax    #kListItemHeight
         jsr     _Multiply
-        ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
         stax    tmp_rect+MGTK::Rect::y1
 
         ;; Set y2 to bottom
@@ -692,6 +692,11 @@ update:
 
 ;;; ============================================================
 
+.proc _UpdateThumbAndDraw
+        jsr     _UpdateThumb
+        FALL_THROUGH_TO _Draw
+.endproc
+
 ;;; Calls `DrawListEntryProc` for each entry.
 .proc _Draw
         jsr     _SetPort
@@ -704,6 +709,8 @@ update:
 
         lda     lbr_copy + LBTK::ListBoxRecord::num_items
         beq     finish
+
+        index := tmp_point + .sizeof(MGTK::Point)
 
         lda     lbr_copy + LBTK::ListBoxRecord::num_rows
         sta     rows
@@ -718,8 +725,7 @@ update:
 loop:
         MGTK_CALL MGTK::MoveTo, tmp_point
 
-        index := *+1
-        lda     #SELF_MODIFIED_BYTE
+        lda     index
         ldxy    #tmp_point
         jsr     DrawEntryProc
 

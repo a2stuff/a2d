@@ -25,6 +25,8 @@
         .assert BTKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
 
+        jump_addr := zp_scratch
+
         ;; Adjust stack/stash at `params_addr`
         pla
         sta     params_addr
@@ -64,8 +66,7 @@
         dey
         bpl     :-
 
-        jump_addr := *+1
-        jmp     SELF_MODIFIED
+        jmp     (jump_addr)
 
 jump_table:
         .addr   DrawImpl
