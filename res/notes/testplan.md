@@ -1364,7 +1364,7 @@ Watch out for:
  * Caret being placed in the wrong place by a click.
  * Mispaint when cleared with Control+X (or Clear key on IIgs)
 
-# List Boxes Controls
+# List Box Controls
 
 This covers:
 * File Pickers
@@ -1395,7 +1395,6 @@ Repeat for each list box:
     * Selects the last item.
 * Hold down the mouse button on the scrollbar's up arrow or down arrow; verify that the scrolling continues as long as the button is held down.
 * Click on an item. Verify it is selected. Click on white space below the items (if possible). Verify that selection is cleared.
-* Hold the down arrow to scroll to the bottom of the list. Hold the up arrow to scroll to the top. Verify the correct items redraw.
 
 For the Sounds DA:
 * Click on an item. Verify it is selected, and plays the sound. Click on the same selected item. Verify it plays the sound again.

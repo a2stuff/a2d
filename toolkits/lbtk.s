@@ -507,8 +507,8 @@ new_selection   .byte
         pha                     ; A = new selection
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         jsr     _HighlightIndex
-        pla                     ; A = new selection
         ldy     #LBTK::ListBoxRecord::selected_index
+        pla                     ; A = new selection
         sta     (lbr_ptr),y
         sta     lbr_copy + LBTK::ListBoxRecord::selected_index ; keep copy in sync
         bmi     :+
@@ -710,6 +710,8 @@ update:
         lda     lbr_copy + LBTK::ListBoxRecord::num_items
         beq     finish
 
+        index := tmp_point + .sizeof(MGTK::Point)
+
         lda     lbr_copy + LBTK::ListBoxRecord::num_rows
         sta     rows
         ldy     #MGTK::Winfo::vthumbpos
@@ -723,8 +725,7 @@ update:
 loop:
         MGTK_CALL MGTK::MoveTo, tmp_point
 
-        index := *+1
-        lda     #SELF_MODIFIED_BYTE
+        lda     index
         ldxy    #tmp_point
         jsr     DrawEntryProc
 
