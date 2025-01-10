@@ -710,8 +710,6 @@ update:
         lda     lbr_copy + LBTK::ListBoxRecord::num_items
         beq     finish
 
-        index := tmp_point + .sizeof(MGTK::Point)
-
         lda     lbr_copy + LBTK::ListBoxRecord::num_rows
         sta     rows
         ldy     #MGTK::Winfo::vthumbpos
@@ -725,7 +723,8 @@ update:
 loop:
         MGTK_CALL MGTK::MoveTo, tmp_point
 
-        lda     index
+        index := *+1
+        lda     #SELF_MODIFIED_BYTE
         ldxy    #tmp_point
         jsr     DrawEntryProc
 
