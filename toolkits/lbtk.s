@@ -274,7 +274,7 @@ coords          .tag MGTK::Point
         lda     (winfo_ptr),y
         .assert MGTK::Scroll::option_active = %00000001, error, "flag mismatch"
         ror                     ; C = "active?"
-        bcc     :+
+        bcs     :+
 ret:    rts
 :
         lda     findcontrol_params::which_part
