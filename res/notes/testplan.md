@@ -1267,6 +1267,8 @@ Test the following in all of the above, except where called out specifically:
 
 * Create a directory, and in the directory create a file named "A.B" then a file named "A". Browse to the directory. Verify "A" sorts before "A.B".
 
+* Create or locate an "invisible" file (e.g. the GS/OS FINDER.DATA file). Use DeskTop's Options Control Panel and enable "Show invisible files". Use the file picker to browse to the folder containing the file. Verify that it appears in the list. Disable the option. Use the file picker again, and verify that the file does not appear in the list.
+
 * In Shortcuts > Add/Edit a Shortcut... name field:
   * Type a non-path, non-control character. Verify that it is accepted.
   * Type a control character that is not an alias for an Arrow key (so not Control+H, J, K, or U), editing key (so not Control+F, Control+X), Return (Control+M), Escape (Control+[), or a button shortcut (so not Control+D, O, or C) e.g. Control+Q. Verify that it is ignored.

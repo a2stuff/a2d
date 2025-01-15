@@ -93,9 +93,6 @@ file_names      := $1800
 only_show_dirs_flag:            ; set when selecting copy destination
         .byte   0
 
-dir_count:
-        .byte   0
-
 ;;; ============================================================
 
 .proc Init
@@ -1035,12 +1032,11 @@ err:    copy    #1, path_buf
         jmp     _ReadDrives
 :
         lda     #0
-        sta     d1
-        sta     d2
-        sta     dir_count
+        sta     entry_index
         lda     #1
-        sta     d3
-        copy16  dir_read_buf+SubdirectoryHeader::entry_length, entry_length
+        sta     entry_in_block
+        copy    dir_read_buf+SubdirectoryHeader::entry_length, entry_length
+        copy    dir_read_buf+SubdirectoryHeader::entries_per_block, entries_per_block
         lda     dir_read_buf+SubdirectoryHeader::file_count
         and     #$7F
         sta     num_file_names
@@ -1052,55 +1048,67 @@ err:    copy    #1, path_buf
 
 l1:     param_call_indirect AdjustFileEntryCase, ptr
 
-        ldy     #0
+        ldy     #FileEntry::storage_type_name_length
         lda     (ptr),y
         and     #NAME_LENGTH_MASK
-        bne     l2
-        jmp     l6
+        beq     l6              ; deleted entry
 
-l2:     ldx     d1
+        ldx     entry_index
         txa
         sta     file_list_index,x
-        ldy     #0
+
+        ;; Invisible?
+        ldx     #DeskTopSettings::options
+        jsr     ReadSetting
+        and     #DeskTopSettings::kOptionsShowInvisible
+    IF_ZERO
+        ldy     #FileEntry::access
+        lda     (ptr),y
+        and     #ACCESS_I
+      IF_NE
+        dec     num_file_names  ; skip
+        jmp     l6
+      END_IF
+    END_IF
+
+        ;; Directory?
+        ldy     #FileEntry::storage_type_name_length
         lda     (ptr),y
         and     #STORAGE_TYPE_MASK
         cmp     #ST_LINKED_DIRECTORY << 4
-        beq     l3
+        beq     l3              ; is dir
         bit     only_show_dirs_flag
-        bpl     l4
-        inc     d2
+        bpl     l4              ; not dir, but show
+        dec     num_file_names  ; skip
         jmp     l6
 
-l3:     lda     file_list_index,x
+        ;; Flag as "is dir"
+l3:     ldx     entry_index
+        lda     file_list_index,x
         ora     #$80
         sta     file_list_index,x
-        inc     dir_count
-l4:     ldy     #$00
+
+l4:     ldy     #FileEntry::storage_type_name_length
         lda     (ptr),y
         and     #NAME_LENGTH_MASK
         sta     (ptr),y
 
-        lda     d1
+        lda     entry_index
         jsr     _CopyIntoNthFilename
 
-        inc     d1
-        inc     d2
-l6:     inc     d3
-        lda     d2
+        inc     entry_index
+l6:     inc     entry_in_block
+        lda     entry_index
         cmp     num_file_names
         bne     next
 
 close:  MLI_CALL CLOSE, close_params
-        bit     only_show_dirs_flag
-        bpl     :+
-        lda     dir_count
-        sta     num_file_names
-:       jsr     _SortFileNames
+        jsr     _SortFileNames
         clc
         rts
 
-next:   lda     d3
-        cmp     d4
+next:   lda     entry_in_block
+        cmp     entries_per_block
         beq     :+
         add16_8 ptr, entry_length
         jmp     l1
@@ -1108,15 +1116,17 @@ next:   lda     d3
 :       MLI_CALL READ, read_params
         copy16  #dir_read_buf+$04, ptr
         lda     #$00
-        sta     d3
+        sta     entry_in_block
         jmp     l1
 
-d1:     .byte   0
-d2:     .byte   0
-d3:     .byte   0
+entry_index:
+        .byte   0
+entry_in_block:
+        .byte   0
 entry_length:
         .byte   0
-d4:     .byte   0
+entries_per_block:
+        .byte   0
 .endproc ; _ReadDir
 
 ;;; ============================================================

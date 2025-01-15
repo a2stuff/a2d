@@ -71,6 +71,7 @@ SystemTask              := app::SystemTask
 DetectDoubleClick       := app::DetectDoubleClick
 AdjustOnLineEntryCase   := app::AdjustOnLineEntryCase
 AdjustFileEntryCase     := app::AdjustFileEntryCase
+ReadSetting             := app::ReadSetting
 
         .include "../lib/file_dialog.s"
         .include "../lib/get_next_event.s"

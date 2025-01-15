@@ -11,6 +11,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Correctly exit 80-column firmware when exiting.
 * Option "Copy to RAMCard" now defaults to off.
 * Option "Preserve uppercase and lowercase in names" no defaults to on.
+* Hide "invisible" files in file dialogs by default.
 
 ### Launcher
 
