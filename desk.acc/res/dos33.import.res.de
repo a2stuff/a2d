@@ -1,4 +1,4 @@
-.define res_string_select_disk "W{hlen Sie die DOS 3.3-Festplatte aus:"
+.define res_string_select_disk "W{hle DOS 3.3 Disk:"
 .define res_string_slot_drive_pattern "Steckplatz #  Laufwerk #"
 .define res_const_slot_drive_pattern_offset1 12
 .define res_const_slot_drive_pattern_offset2 24
