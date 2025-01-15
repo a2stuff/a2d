@@ -33,6 +33,7 @@ sort.directory                  Apple.Menu                      optional
 benchmark                       Extras                          extra
 cd.remote                       Extras                          extra
 darkness                        Extras                          extra
+dos33.import                    Extras                          extra
 print.catalog                   Extras                          extra
 print.screen                    Extras                          extra
 round.corners                   Extras                          extra

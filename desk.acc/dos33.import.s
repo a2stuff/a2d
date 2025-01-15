@@ -1,0 +1,1565 @@
+;;; ============================================================
+;;; DOS3.3.IMPORT - Desk Accessory
+;;; ============================================================
+
+        .include "../config.inc"
+        RESOURCE_FILE "dos33.import.res"
+
+        .include "apple2.inc"
+        .include "../inc/apple2.inc"
+        .include "../inc/macros.inc"
+        .include "../inc/prodos.inc"
+        .include "../inc/dos33.inc"
+        .include "../mgtk/mgtk.inc"
+        .include "../common.inc"
+        .include "../desktop/desktop.inc"
+        .include "../toolkits/btk.inc"
+        .include "../toolkits/lbtk.inc"
+
+;;; ============================================================
+;;; Memory map
+;;;
+;;;              Main           Aux
+;;;          :           : :           :
+;;;          |           | |           |
+;;;          | DHR       | | DHR       |
+;;;  $2000   +-----------+ +-----------+
+;;;          | Block Buf | |           |
+;;;  $1E00   +-----------+ |           |
+;;;          | RWTS Buf1 | |           |
+;;;  $1D00   +-----------+ |           |
+;;;          | T/S List  | |           |
+;;;  $1C00   +-----------+ |    ^      |
+;;;          | I/O Buf   | |    |      |
+;;;          |           | |    |      |
+;;;  $1800   +-----------+ |  Catalog  |
+;;;          |           | |  Entries  |
+;;;          |           | +-----------+ ~$1200
+;;;          :           : :           :
+;;;          | (unused)  | | (unused)  |
+;;;          |           | +-----------+ ????
+;;;   ????   +-----------+ |           |
+;;;          |           | | DA GUI    |
+;;;          | DA Logic  | | Code &    |
+;;;          | & RWTS    | | Resources |
+;;;   $800   +-----------+ +-----------+
+;;;          :           : :           :
+
+;;; ============================================================
+
+.struct ControlBlock
+num_entries     .byte
+dev_count       .byte
+dev_list        .res 14
+unit_num        .byte
+volume_number   .byte
+selected_index  .byte
+progress_num    .word
+progress_denom  .word
+.endstruct
+
+;;; ============================================================
+
+        DA_HEADER
+
+        DA_START_AUX_SEGMENT
+
+.struct CatalogEntry
+TypeFlags .byte
+Name      .res 1 + dos33::MaxFilenameLen ; length-prefixed
+Length    .word
+Track     .byte
+Sector    .byte
+.endstruct
+
+kMaxCatalogEntries = 105
+
+        EntryBuffer := $2000 - kMaxCatalogEntries * .sizeof(CatalogEntry)
+
+
+;;; ============================================================
+;;; Resources used across windows
+
+        .include "../lib/event_params.s"
+
+NoOp:    rts
+
+pensize_normal: .byte   1, 1
+pensize_frame:  .byte   kBorderDX, kBorderDY
+
+grafport_win:   .tag    MGTK::GrafPort
+
+control_block:  .tag    ControlBlock
+
+;;; ============================================================
+
+.scope DevicePicker
+
+kDAWindowId     = $80
+kDAWidth        = 270
+kDAHeight       = kPickerHeight + 45
+kDALeft         = (kScreenWidth - kDAWidth)/2
+kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
+
+kButtonsTop  = kDAHeight - 20
+kButtonsRight = kDAWidth - 19
+kButtonsGap  = 10
+
+kPickerRows            = 6
+kPickerWindowId        = kDAWindowId+1
+kPickerWidth           = kDAWidth - 60
+kPickerWidthSB         = kPickerWidth + 20
+kPickerHeight          = kPickerRows * kListItemHeight - 1
+kPickerLeft            = kDALeft + (kDAWidth - kPickerWidthSB) / 2
+kPickerTop             = kDATop + 20
+
+
+.params winfo_picker
+window_id:      .byte   kDAWindowId
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   kDAWidth
+mincontheight:  .word   kDAHeight
+maxcontwidth:   .word   kDAWidth
+maxcontheight:  .word   kDAHeight
+port:
+        DEFINE_POINT viewloc, kDALeft, kDATop
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::notpencopy
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+        REF_WINFO_MEMBERS
+.endparams
+
+        DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
+
+        DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kButtonsRight - kButtonWidth*2 - kButtonsGap, kButtonsTop
+        DEFINE_BUTTON cancel_button, kDAWindowId, res_string_button_cancel, res_string_button_cancel_shortcut, kButtonsRight - kButtonWidth, kButtonsTop
+
+
+        DEFINE_LIST_BOX_WINFO winfo_picker_listbox, \
+                kPickerWindowId, \
+                kPickerLeft, \
+                kPickerTop, \
+                kPickerWidth, \
+                kPickerHeight, \
+                DEFAULT_FONT
+        DEFINE_LIST_BOX listbox_rec, winfo_picker_listbox, \
+                kPickerRows, 0, \
+                DrawListEntryProc, OnSelChange, NoOp
+        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
+
+.params getwinport_params
+window_id:      .byte   kDAWindowId
+port:           .addr   grafport_win
+.endparams
+
+;;; ============================================================
+
+.proc Init
+        copy    control_block+ControlBlock::dev_count, listbox_rec::num_items
+        copy    #BTK::kButtonStateDisabled, ok_button::state
+
+        MGTK_CALL MGTK::OpenWindow, winfo_picker
+        MGTK_CALL MGTK::OpenWindow, winfo_picker_listbox
+
+        MGTK_CALL MGTK::HideCursor
+        jsr     DrawWindow
+        MGTK_CALL MGTK::ShowCursor
+
+        LBTK_CALL LBTK::Init, lb_params
+
+        MGTK_CALL MGTK::FlushEvents
+        FALL_THROUGH_TO InputLoop
+.endproc ; Init
+
+.proc InputLoop
+        JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
+        jsr     GetNextEvent
+
+        cmp     #MGTK::EventKind::button_down
+        jeq     HandleDown
+
+        cmp     #MGTK::EventKind::key_down
+        beq     HandleKey
+
+        bne     InputLoop       ; always
+.endproc ; InputLoop
+
+.proc Exit
+        ldx     listbox_rec::selected_index
+    IF_NC
+        lda     control_block+ControlBlock::dev_list,x
+        sta     control_block+ControlBlock::unit_num
+    END_IF
+
+        MGTK_CALL MGTK::CloseWindow, winfo_picker_listbox
+        MGTK_CALL MGTK::CloseWindow, winfo_picker
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        rts
+.endproc ; Exit
+
+;;; ============================================================
+
+.proc HandleKey
+        lda     event_params::key
+
+        cmp     #CHAR_UP
+        beq     :+
+        cmp     #CHAR_DOWN
+:
+    IF_EQ
+        copy    event_params::key, lb_params::key
+        copy    event_params::modifiers, lb_params::modifiers
+        LBTK_CALL LBTK::Key, lb_params
+        jmp     InputLoop
+    END_IF
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        ;; Modified
+        lda     event_params::key
+        jsr     ToUpperCase
+
+        cmp     #kShortcutCloseWindow
+        jeq     Exit
+
+        jmp     InputLoop
+    END_IF
+
+        ;; Not modified
+        cmp     #CHAR_ESCAPE
+      IF_EQ
+        jmp     Exit
+      END_IF
+
+        cmp     #CHAR_RETURN
+      IF_EQ
+        jmp     Exit
+      END_IF
+
+        jmp     InputLoop
+.endproc ; HandleKey
+
+;;; ============================================================
+
+.proc HandleDown
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+        bne     done
+
+        lda     findwindow_params::window_id
+        cmp     #kPickerWindowId
+    IF_EQ
+        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        LBTK_CALL LBTK::Click, lb_params
+        bmi     :+
+        jsr     DetectDoubleClick
+        jpl     Exit
+:       jmp     InputLoop
+    END_IF
+
+        cmp     #kDAWindowId
+        bne     done
+
+        ;; Click in DA content area
+        copy    #kDAWindowId, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+
+        MGTK_CALL MGTK::InRect, ok_button::rect
+    IF_NE
+        BTK_CALL BTK::Track, ok_button
+        bmi     done
+        jmp     Exit
+    END_IF
+
+        MGTK_CALL MGTK::InRect, cancel_button::rect
+    IF_NE
+        BTK_CALL BTK::Track, cancel_button
+        bmi     done
+        copy    #$FF, listbox_rec::selected_index
+        jmp     Exit
+    END_IF
+
+        ;; TODO: Buttons in window
+
+done:   jmp     InputLoop
+.endproc ; HandleDown
+
+;;; ============================================================
+
+        DEFINE_LABEL prompt, res_string_select_disk, 20, 16
+
+.proc DrawWindow
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        ;; ASSERT: Not obscured.
+        MGTK_CALL MGTK::SetPort, grafport_win
+
+        MGTK_CALL MGTK::HideCursor
+
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+
+        MGTK_CALL MGTK::MoveTo, prompt_label_pos
+        param_call DrawString, prompt_label_str
+
+        BTK_CALL BTK::Draw, ok_button
+        BTK_CALL BTK::Draw, cancel_button
+
+
+        MGTK_CALL MGTK::ShowCursor
+done:   rts
+.endproc ; DrawWindow
+
+
+str_template:
+        PASCAL_STRING res_string_slot_drive_pattern
+        kSlotOffset = res_const_slot_drive_pattern_offset1
+        kDriveOffset = res_const_slot_drive_pattern_offset2
+
+;;; Called with A = index
+.proc DrawListEntryProc
+
+        tax                     ; X = index
+        lda     control_block+ControlBlock::dev_list,x
+        pha                     ; A = unit number
+
+        and     #%01110000      ; A = 0sss0000
+        lsr                     ; A = 00sss000
+        lsr                     ; A = 000sss00
+        lsr                     ; A = 0000sss0
+        lsr                     ; A = 00000sss
+        ora     #'0'
+        sta     str_template + kSlotOffset
+
+        pla                     ; A = unit number
+        rol                     ; C = drive 1/2
+        lda     #'1'
+        adc     #0
+        sta     str_template + kDriveOffset
+
+        param_jump DrawString, str_template
+.endproc ; DrawListEntryProc
+
+.proc OnSelChange
+        lda     listbox_rec::selected_index
+        .assert BTK::kButtonStateChecked = %10000000, error, "mismatch"
+        and     #BTK::kButtonStateChecked
+        sta     ok_button::state
+        BTK_CALL BTK::Hilite, ok_button
+        rts
+.endproc
+
+.endscope ; DevicePicker
+
+;;; ============================================================
+
+.scope Catalog
+
+kDAWindowId     = $80
+kDAWidth        = 355
+kDAHeight       = kCatalogHeight + 46
+kDALeft         = (kScreenWidth - kDAWidth)/2
+kDATop          = (kScreenHeight - kMenuBarHeight - kDAHeight)/2 + kMenuBarHeight
+
+kButtonsTop  = 8
+kButtonsRight = kDAWidth - 19
+kButtonsGap  = 10
+
+kProgressBarTop = 23
+kProgressBarInset = 20
+kProgressBarWidth = kDAWidth - kProgressBarInset*2
+kProgressBarHeight = 7
+
+kCatalogRows            = 11
+kCatalogWindowId        = kDAWindowId+1
+kCatalogWidth           = kDAWidth - 60
+kCatalogWidthSB         = kCatalogWidth + 20
+kCatalogHeight          = kCatalogRows * kListItemHeight - 1
+kCatalogLeft            = kDALeft + (kDAWidth - kCatalogWidthSB) / 2
+kCatalogTop             = kDATop + 36
+
+.params winfo_catalog
+window_id:      .byte   kDAWindowId
+options:        .byte   MGTK::Option::dialog_box
+title:          .addr   0
+hscroll:        .byte   MGTK::Scroll::option_none
+vscroll:        .byte   MGTK::Scroll::option_none
+hthumbmax:      .byte   0
+hthumbpos:      .byte   0
+vthumbmax:      .byte   0
+vthumbpos:      .byte   0
+status:         .byte   0
+reserved:       .byte   0
+mincontwidth:   .word   kDAWidth
+mincontheight:  .word   kDAHeight
+maxcontwidth:   .word   kDAWidth
+maxcontheight:  .word   kDAHeight
+port:
+        DEFINE_POINT viewloc, kDALeft, kDATop
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved2:      .byte   0
+        DEFINE_RECT maprect, 0, 0, kDAWidth, kDAHeight
+pattern:        .res    8, $FF
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+        DEFINE_POINT penloc, 0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::notpencopy
+textback:       .byte   MGTK::textbg_white
+textfont:       .addr   DEFAULT_FONT
+nextwinfo:      .addr   0
+        REF_WINFO_MEMBERS
+.endparams
+
+        DEFINE_RECT_FRAME frame_rect, kDAWidth, kDAHeight
+
+        DEFINE_BUTTON import_button, kDAWindowId, res_string_button_import, kGlyphReturn, kButtonsRight - kButtonWidth*2 - kButtonsGap, kButtonsTop
+        DEFINE_BUTTON close_button, kDAWindowId, res_string_button_close, res_string_button_cancel_shortcut, kButtonsRight - kButtonWidth, kButtonsTop
+
+        DEFINE_RECT_SZ progress_frame, kProgressBarInset-1, kProgressBarTop-1, kProgressBarWidth+2, kProgressBarHeight+2
+        DEFINE_RECT_SZ progress_meter, kProgressBarInset, kProgressBarTop, kProgressBarWidth, kProgressBarHeight
+
+pencopy:        .byte   MGTK::pencopy
+
+progress_pattern:
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+        .byte   %01000100
+        .byte   %00010001
+
+        DEFINE_LIST_BOX_WINFO winfo_catalog_listbox, \
+                kCatalogWindowId, \
+                kCatalogLeft, \
+                kCatalogTop, \
+                kCatalogWidth, \
+                kCatalogHeight, \
+                DEFAULT_FONT
+        DEFINE_LIST_BOX listbox_rec, winfo_catalog_listbox, \
+                kCatalogRows, 0, \
+                DrawListEntryProc, OnSelChange, NoOp
+        DEFINE_LIST_BOX_PARAMS lb_params, listbox_rec
+
+.params getwinport_params
+window_id:      .byte   kDAWindowId
+port:           .addr   grafport_win
+.endparams
+
+        DEFINE_LABEL disk_vol, res_string_disk_volume_prefix, 20, 18
+
+;;; ============================================================
+
+.proc Init
+        copy    control_block+ControlBlock::num_entries, listbox_rec::num_items
+        copy    #BTK::kButtonStateDisabled, import_button::state
+
+        MGTK_CALL MGTK::OpenWindow, winfo_catalog
+        MGTK_CALL MGTK::OpenWindow, winfo_catalog_listbox
+
+        MGTK_CALL MGTK::HideCursor
+        jsr     DrawWindow
+        MGTK_CALL MGTK::ShowCursor
+
+        LBTK_CALL LBTK::Init, lb_params
+
+        MGTK_CALL MGTK::FlushEvents
+        FALL_THROUGH_TO InputLoop
+.endproc ; Init
+
+.proc InputLoop
+        JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
+        jsr     GetNextEvent
+
+        cmp     #MGTK::EventKind::button_down
+        jeq     HandleDown
+
+        cmp     #MGTK::EventKind::key_down
+        beq     HandleKey
+
+        bne     InputLoop       ; always
+.endproc ; InputLoop
+
+.proc ExitOK
+        lda     #0
+        FALL_THROUGH_TO Exit
+.endproc ; ExitOK
+
+.proc Exit
+        pha                     ; A = error code (0 = success)
+        MGTK_CALL MGTK::CloseWindow, winfo_catalog_listbox
+        MGTK_CALL MGTK::CloseWindow, winfo_catalog
+        JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
+        pla                     ; A = error code (0 = success)
+        rts
+.endproc ; Exit
+
+;;; ============================================================
+
+.proc HandleKey
+        lda     event_params::key
+
+        cmp     #CHAR_UP
+        beq     :+
+        cmp     #CHAR_DOWN
+:
+    IF_EQ
+        copy    event_params::key, lb_params::key
+        copy    event_params::modifiers, lb_params::modifiers
+        LBTK_CALL LBTK::Key, lb_params
+        jmp     InputLoop
+    END_IF
+
+        ldx     event_params::modifiers
+    IF_NOT_ZERO
+        ;; Modified
+        lda     event_params::key
+        jsr     ToUpperCase
+
+        cmp     #kShortcutCloseWindow
+        jeq     ExitOK
+
+        jmp     InputLoop
+    END_IF
+
+        ;; Not modified
+        cmp     #CHAR_ESCAPE
+      IF_EQ
+        jmp     ExitOK
+      END_IF
+
+        cmp     #CHAR_RETURN
+      IF_EQ
+        jmp     Import
+      END_IF
+
+        jmp     InputLoop
+.endproc ; HandleKey
+
+;;; ============================================================
+
+.proc HandleDown
+        MGTK_CALL MGTK::FindWindow, findwindow_params
+        lda     findwindow_params::which_area
+        cmp     #MGTK::Area::content
+        bne     done
+
+        lda     findwindow_params::window_id
+        cmp     #kCatalogWindowId
+    IF_EQ
+        COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
+        LBTK_CALL LBTK::Click, lb_params
+        bmi     :+
+        jsr     DetectDoubleClick
+        jpl     Import
+:       jmp     InputLoop
+    END_IF
+
+        cmp     #kDAWindowId
+        bne     done
+
+        ;; Click in DA content area
+        copy    #kDAWindowId, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+
+        MGTK_CALL MGTK::InRect, import_button::rect
+    IF_NE
+        BTK_CALL BTK::Track, import_button
+        bmi     done
+        jmp     Import
+    END_IF
+
+        MGTK_CALL MGTK::InRect, close_button::rect
+    IF_NE
+        BTK_CALL BTK::Track, close_button
+        bmi     done
+        jmp     ExitOK
+    END_IF
+
+done:   jmp     InputLoop
+.endproc ; HandleDown
+
+;;; ============================================================
+
+.proc Import
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        copy    listbox_rec::selected_index, control_block+ControlBlock::selected_index
+        JSR_TO_MAIN main__DoImport
+        pha                     ; A = error code (0 = success)
+        jsr     ClearProgressMeter
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        pla                     ; A = error code (0 = success
+        jne     Exit
+        jmp     InputLoop
+.endproc ; Import
+
+;;; ============================================================
+
+.proc DrawWindow
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        ;; ASSERT: Not obscured.
+        MGTK_CALL MGTK::SetPort, grafport_win
+
+        MGTK_CALL MGTK::HideCursor
+
+        MGTK_CALL MGTK::SetPenSize, pensize_frame
+        MGTK_CALL MGTK::FrameRect, frame_rect
+        MGTK_CALL MGTK::SetPenSize, pensize_normal
+
+        MGTK_CALL MGTK::FrameRect, progress_frame
+
+        MGTK_CALL MGTK::MoveTo, disk_vol_label_pos
+        param_call DrawString, disk_vol_label_str
+
+        lda     control_block+ControlBlock::volume_number
+        ldx     #0
+        jsr     To3DigitString
+        param_call DrawString, str_from_int
+
+        BTK_CALL BTK::Draw, import_button
+        BTK_CALL BTK::Draw, close_button
+
+        MGTK_CALL MGTK::ShowCursor
+done:   rts
+.endproc ; DrawWindow
+
+        DEFINE_POINT pt, 0, 0
+
+;;; Called with A = index
+.proc DrawListEntryProc
+        pha
+        pt_ptr := $06
+        stxy    pt_ptr
+        ldy     #.sizeof(MGTK::Point)-1
+:       lda     (pt_ptr),y
+        sta     pt,y
+        dey
+        bpl     :-
+        pla
+
+        ;; Calculate address of `CatalogEntry`
+        ptr := $04
+        sta     z:muldiv_number
+        copy    #0, z:muldiv_number+1
+        copy16  #.sizeof(CatalogEntry), z:muldiv_numerator
+        copy16  #1, z:muldiv_denominator
+        jsr     MulDiv
+        add16   z:muldiv_result, #EntryBuffer, ptr
+
+        kLockedX = 8
+        kTypeX   = 20
+        kSizeX   = 32
+        kNameX   = 57
+
+        ;; Locked?
+        ldy     #CatalogEntry::TypeFlags
+        lda     (ptr),y
+    IF_NS
+        copy16  #kLockedX, pt::xcoord
+        MGTK_CALL MGTK::MoveTo, pt
+        param_call DrawString, str_locked
+    END_IF
+
+        ;; Type
+        copy16  #kTypeX, pt::xcoord
+        MGTK_CALL MGTK::MoveTo, pt
+        ldy     #CatalogEntry::TypeFlags
+        lda     (ptr),y
+        and     #$7F
+        jsr     clz
+        lda     type_table,x
+        sta     str_type+1
+        param_call DrawString, str_type
+
+        ;; Size
+        copy16  #kSizeX, pt::xcoord
+        MGTK_CALL MGTK::MoveTo, pt
+        ldy     #CatalogEntry::Length+1
+        lda     (ptr),y
+        tax
+        dey
+        lda     (ptr),y
+        jsr     To3DigitString
+        param_call DrawString, str_from_int
+
+        ;; Name
+        copy16  #kNameX, pt::xcoord
+        MGTK_CALL MGTK::MoveTo, pt
+        add16_8 ptr, #CatalogEntry::Name
+        ldax    ptr
+        jmp     DrawString
+.endproc ; DrawListEntryProc
+
+str_locked:     PASCAL_STRING "*"
+str_type:       PASCAL_STRING "?"
+
+;;; Index is count of leading zeros
+type_table:
+        .byte   'I', 'A', 'B', 'S', 'R', '1', '2', '?', 'T'
+
+;;; Count leading zeros
+;;; Input: A = byte
+;;; Output: X = leading zeros (0...8)
+.proc clz
+        ldx     #0
+:       lsr     a
+        bcs     ret
+        inx
+        cpx     #8
+        bne     :-
+ret:    rts
+.endproc
+
+.proc OnSelChange
+        lda     listbox_rec::selected_index
+        .assert BTK::kButtonStateChecked = %10000000, error, "mismatch"
+        and     #BTK::kButtonStateChecked
+        sta     import_button::state
+        BTK_CALL BTK::Hilite, import_button
+        rts
+.endproc
+
+.proc UpdateProgressMeter
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        ;; ASSERT: Not obscured.
+        MGTK_CALL MGTK::SetPort, grafport_win
+
+        copy16  control_block+ControlBlock::progress_num, z:muldiv_numerator
+        copy16  control_block+ControlBlock::progress_denom, z:muldiv_denominator
+        copy16  #kProgressBarWidth, z:muldiv_number
+        jsr     MulDiv
+        add16   z:muldiv_result, progress_meter::x1, progress_meter::x2
+
+        MGTK_CALL MGTK::SetPattern, progress_pattern
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, progress_meter
+        rts
+.endproc
+
+.proc ClearProgressMeter
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        ;; ASSERT: Not obscured.
+        MGTK_CALL MGTK::SetPort, grafport_win
+
+        add16   #kProgressBarWidth, progress_meter::x1, progress_meter::x2
+
+        MGTK_CALL MGTK::SetPenMode, pencopy
+        MGTK_CALL MGTK::PaintRect, progress_meter
+        rts
+.endproc
+
+.endscope ; Catalog
+
+;;; ============================================================
+
+.proc To3DigitString
+        jsr     IntToString
+
+        ;; TODO: Make this more elegant
+        lda     str_from_int
+        cmp     #1
+    IF_EQ
+        lda     str_from_int+1
+        sta     str_from_int+3
+        lda     #'0'
+        sta     str_from_int+1
+        sta     str_from_int+2
+        lda     #3
+        sta     str_from_int
+        rts
+    END_IF
+
+        cmp     #2
+    IF_EQ
+        lda     str_from_int+2
+        sta     str_from_int+3
+        lda     str_from_int+1
+        sta     str_from_int+2
+        lda     #'0'
+        sta     str_from_int+1
+        lda     #3
+        sta     str_from_int
+        rts
+    END_IF
+
+        rts
+.endproc ; To3DigitString
+
+str_from_int:   PASCAL_STRING "000000" ; filled in by IntToString
+
+;;; ============================================================
+
+        .include "../lib/uppercase.s"
+        .include "../lib/drawstring.s"
+        .include "../lib/get_next_event.s"
+        .include "../lib/doubleclick.s"
+        .include "../lib/muldiv.s"
+        .include "../lib/inttostring.s"
+
+        .assert * < EntryBuffer, error, "DA too large"
+;;; ============================================================
+
+        DA_END_AUX_SEGMENT
+
+;;; ============================================================
+
+        DA_START_MAIN_SEGMENT
+.scope main
+
+;;; ============================================================
+
+        RWTS_BLOCK_BUF  := $1E00 ; 512 bytes
+        RWTS_SECTOR_BUF := $1D00 ; 256 bytes
+        TS_BUF          := $1C00 ; 256 bytes File Track/Sector List buffer
+        IO_BUF          := $1800 ; 1kB ProDOS buffer
+
+;;; ============================================================
+
+start:
+        ;; Get active window's path
+        jsr     GetWinPath
+    IF_NE
+        lda     #kErrNoWindowsOpen
+        jmp     JUMP_TABLE_SHOW_ALERT
+    END_IF
+
+        copy    #0, dirty_flag
+
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        jsr     EnumerateDrives
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+
+        jsr     SendControlBlock
+        JSR_TO_AUX aux::DevicePicker::Init
+        jsr     FetchControlBlock
+
+        lda     control_block+ControlBlock::unit_num
+        RTS_IF_EQ
+
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
+        jsr     LoadCatalogEntries
+        JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
+        jsr     SendControlBlock
+        JSR_TO_AUX aux::Catalog::Init
+        pha                     ; A = error code (0 = success)
+        jsr     FetchControlBlock
+        pla                     ; A = error code (0 = success)
+    IF_NE
+        jsr     JUMP_TABLE_SHOW_ALERT
+    END_IF
+
+
+        bit     dirty_flag
+        RTS_IF_NC               ; no change
+
+        ;; Force window refresh
+        window_id := $06
+        JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, window_id
+        lda     window_id
+        jmp     JUMP_TABLE_ACTIVATE_WINDOW
+
+.proc EnumerateDrives
+        ;; TODO: Iterate slot/drive vs. DEVLST? Order?
+
+        copy    DEVCNT, index
+        copy    #0, control_block+ControlBlock::dev_count
+
+loop:   ldx     index
+        lda     DEVLST,x
+        and     #UNIT_NUM_MASK
+        jsr     IsDiskII
+        bne     next
+        ldx     index
+        lda     DEVLST,x
+        and     #UNIT_NUM_MASK
+        jsr     IsDOS33
+        bne     next
+
+        ;; It is DOS 3.3 - append it to the list
+        ldx     index
+        lda     DEVLST,x
+        and     #UNIT_NUM_MASK
+
+        ldx     control_block+ControlBlock::dev_count
+        sta     control_block+ControlBlock::dev_list,x
+        inc     control_block+ControlBlock::dev_count
+
+next:   dec     index
+        bpl     loop
+
+        rts
+
+index:  .byte   0
+
+.endproc ; EnumerateDrives
+
+
+.proc LoadCatalogEntries
+        copy    #0, control_block+ControlBlock::num_entries
+        copy16  #aux::EntryBuffer, aux_entry_ptr
+
+        ;; Read VTOC
+        lda     #dos33::VTOCTrack
+        ldx     #dos33::VTOCSector
+        jsr     do_read
+        jcs     exit_error
+        lda     RWTS_SECTOR_BUF + dos33::VTOC::NumTracks
+        cmp     #35
+        jne     exit_error
+        lda     RWTS_SECTOR_BUF + dos33::VTOC::NumSectors
+        cmp     #16
+        jne     exit_error
+
+        copy    RWTS_SECTOR_BUF + dos33::VTOC::VolumeNumber, control_block+ControlBlock::volume_number
+
+        lda     RWTS_SECTOR_BUF + dos33::VTOC::FirstCatTrack
+        ldx     RWTS_SECTOR_BUF + dos33::VTOC::FirstCatSector
+sector_loop:
+        jsr     do_read
+        jcs     exit_error
+
+        ldy     #dos33::FirstFileOffset
+file_loop:
+        sty     cur_cat_sector_offset ; +$00 `FileEntry::Track`
+        lda     RWTS_SECTOR_BUF,y
+        jeq     exit_success    ; $00 = entry free, so done
+
+        cmp     #$FF            ; $FF = entry is deleted, so skip
+        beq     next_file
+
+        ;; Process valid file entry
+
+        sta     entry_buf+aux::CatalogEntry::Track
+
+        iny                     ; +$01 `FileEntry::Sector`
+        lda     RWTS_SECTOR_BUF,y
+        sta     entry_buf+aux::CatalogEntry::Sector
+
+        iny                     ; +$02 `FileEntry::TypeFlags`
+        lda     RWTS_SECTOR_BUF+aux::CatalogEntry::TypeFlags,y
+        sta     entry_buf+aux::CatalogEntry::TypeFlags
+
+        iny                     ; +$03 `FileEntry::Name`
+        ldx     #0
+:       lda     RWTS_SECTOR_BUF,y
+        and     #$7F            ; strip high bit
+        sta     entry_buf+aux::CatalogEntry::Name+1,x
+        iny
+        inx
+        cpx     #dos33::MaxFilenameLen
+        bne     :-
+
+:       dex
+        lda     entry_buf+aux::CatalogEntry::Name+1,x
+        cmp     #' '
+        beq     :-
+        inx
+        stx     entry_buf+aux::CatalogEntry::Name
+
+        lda     cur_cat_sector_offset
+        clc
+        adc     #dos33::FileEntry::Length
+        tay
+        copy16  RWTS_SECTOR_BUF,y, entry_buf+aux::CatalogEntry::Length
+
+        ;; Copy to buffer in Aux
+        copy16  #entry_buf, STARTLO
+        copy16  #entry_buf+.sizeof(aux::CatalogEntry)-1, ENDLO
+        copy16  aux_entry_ptr, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+        add16_8 aux_entry_ptr, #.sizeof(aux::CatalogEntry)
+        inc     control_block+ControlBlock::num_entries
+
+next_file:
+        lda     cur_cat_sector_offset
+        clc
+        adc     #.sizeof(dos33::FileEntry)
+        tay
+        jcc     file_loop
+
+next_sector:
+        lda     RWTS_SECTOR_BUF + dos33::NextCatSectorTrack
+        ldx     RWTS_SECTOR_BUF + dos33::NextCatSectorSector
+        jne     sector_loop
+
+exit_success:
+        rts
+
+exit_error:
+        ;; TODO: Something useful here
+        brk
+
+aux_entry_ptr:
+        .addr   0
+
+cur_cat_sector_offset:
+        .byte   0
+
+entry_buf:
+        .tag    aux::CatalogEntry
+
+;;; A = track, X = sector
+.proc do_read
+        ldy     #<RWTS_SECTOR_BUF
+        sty     $06
+        ldy     #>RWTS_SECTOR_BUF
+        sty     $06+1
+        ldy     control_block+ControlBlock::unit_num
+        jmp     RWTSRead
+.endproc
+
+.endproc ; LoadCatalogEntries
+
+;;; ============================================================
+
+;;; Copied back and forth from main to aux
+control_block:
+        .tag    ControlBlock
+
+.proc SendControlBlock
+        ;; Copy to Aux
+        copy16  #control_block, STARTLO
+        copy16  #control_block+.sizeof(ControlBlock)-1, ENDLO
+        copy16  #aux::control_block, DESTINATIONLO
+        sec                     ; main>aux
+        jmp     AUXMOVE
+.endproc
+
+.proc FetchControlBlock
+        ;; Copy from Aux
+        copy16  #aux::control_block, STARTLO
+        copy16  #aux::control_block+.sizeof(ControlBlock)-1, ENDLO
+        copy16  #control_block, DESTINATIONLO
+        clc                     ; aux>main
+        jmp     AUXMOVE
+.endproc
+
+;;; ============================================================
+
+.proc DoImport
+        jmp     start
+
+        DEFINE_CREATE_PARAMS create_params, path_buf, ACCESS_DEFAULT, SELF_MODIFIED_BYTE, SELF_MODIFIED
+        DEFINE_OPEN_PARAMS open_params, path_buf, IO_BUF
+        DEFINE_WRITE_PARAMS write_params, RWTS_SECTOR_BUF, $100
+        DEFINE_SET_EOF_PARAMS set_eof_params, SELF_MODIFIED
+        DEFINE_CLOSE_PARAMS close_params
+set_eof_flag:   .byte   0
+tslist_offset:  .byte   0
+
+start:
+        jsr     FetchControlBlock
+
+        ;; Fetch `CatalogEntry`
+        copy    control_block+ControlBlock::selected_index, z:muldiv_number
+        copy    #0, z:muldiv_number+1
+        copy16  #.sizeof(aux::CatalogEntry), z:muldiv_numerator
+        copy16  #1, z:muldiv_denominator
+        jsr     MulDiv
+        add16   z:muldiv_result, #aux::EntryBuffer, STARTLO
+        add16   STARTLO, #.sizeof(aux::CatalogEntry)-1, ENDLO
+        copy16  #entry_buf, DESTINATIONLO
+        clc                     ; aux>main
+        jsr     AUXMOVE
+
+        copy16  #0, control_block+ControlBlock::progress_num
+        copy16  entry_buf+aux::CatalogEntry::Length, control_block+ControlBlock::progress_denom
+
+        ;; --------------------------------------------------
+        ;; Make the name ProDOS-friendly
+        str_name := entry_buf + aux::CatalogEntry::Name
+
+        ;; Truncate to 15 or less
+        lda     str_name
+        cmp     #15
+        bcc     :+
+        lda     #15
+:       sta     str_name
+        tax
+
+        ;; Make uppercase or '.'
+cloop:
+        lda     str_name,x
+
+        ;; Digit is fine
+        jsr     IsDigit
+        bcc     cnext
+
+        ;; Uppercase is fine
+        jsr     IsUpperCase
+        bcc     cnext
+
+        ;; Lowercase folded to uppercase
+        jsr     IsLowerCase
+    IF_CC
+        and     #CASE_MASK      ; make uppercase
+        bne     cstore          ; always
+    END_IF
+
+        ;; Anything else becomes '.'
+        lda     #'.'
+
+cstore: sta     str_name,x
+cnext:  dex
+        bne     cloop
+
+        ;; Can't start with non-alpha, replace with 'X'
+        lda     str_name+1
+        cmp     #'A'
+    IF_LT
+        lda     #'X'
+        sta     str_name+1
+    END_IF
+
+        ;; --------------------------------------------------
+
+        ;; Construct full path
+
+        lda     prefix_path
+        clc
+        adc     str_name
+        cmp     #kMaxPathLength ; not +1 because we'll add '/'
+    IF_GE
+        lda     #ERR_INVALID_PATHNAME
+        rts
+    END_IF
+
+        COPY_STRING prefix_path, path_buf
+
+        ldx     #0
+        ldy     path_buf
+        iny
+        lda     #'/'
+        sta     path_buf,y
+:       inx
+        iny
+        lda     str_name,x
+        sta     path_buf,y
+        cpx     str_name
+        bne     :-
+        sty     path_buf
+
+        ;; NOTE: Can't show alerts, as that will trash aux $E00...$1FFF
+
+        ;; --------------------------------------------------
+
+        ;; Load file's first Track/Sector List sector
+        copy16  #TS_BUF, $06
+        lda     entry_buf+aux::CatalogEntry::Track
+        ldx     entry_buf+aux::CatalogEntry::Sector
+        ldy     control_block+ControlBlock::unit_num
+        jsr     RWTSRead
+        RTS_IF_CS
+        jsr     IncProgress
+
+        ;; Load first file sector
+        copy16  #RWTS_SECTOR_BUF, $06
+        lda     TS_BUF+dos33::TSList::FirstDataT
+        ldx     TS_BUF+dos33::TSList::FirstDataS
+        ldy     control_block+ControlBlock::unit_num
+        jsr     RWTSRead
+        RTS_IF_CS
+        jsr     IncProgress
+        copy    #dos33::TSList::FirstDataT+2, tslist_offset
+
+        ;; Data offsets depend on type
+        lda     entry_buf+aux::CatalogEntry::TypeFlags
+        and     #$7F
+        pha                     ; A = type
+
+        cmp     #dos33::FileTypeBinary
+    IF_EQ
+        ;; Binary header:
+        ;; +$00 WORD address (low/high)
+        ;; +$02 WORD length (low/high)
+        copy16  RWTS_SECTOR_BUF+0, create_params::aux_type
+        copy    #$80, set_eof_flag
+        copy16  RWTS_SECTOR_BUF+2, set_eof_params::eof
+        copy16  #RWTS_SECTOR_BUF+4, write_params::data_buffer
+        copy16  #256-4, write_params::request_count
+        jmp     translate_type
+    END_IF
+
+        cmp     #dos33::FileTypeApplesoft
+    IF_EQ
+        ;; Applesoft BASIC header:
+        ;; +$00 WORD length (low/high)
+        copy16  #$0801, create_params::aux_type
+        copy16  RWTS_SECTOR_BUF+0, set_eof_params::eof
+        copy    #$80, set_eof_flag
+        copy16  #RWTS_SECTOR_BUF+2, write_params::data_buffer
+        copy16  #256-2, write_params::request_count
+        jmp     translate_type
+    END_IF
+
+        cmp     #dos33::FileTypeInteger
+    IF_EQ
+        ;; Integer BASIC header:
+        ;; +$00 WORD length (low/high)
+        copy16  #$0000, create_params::aux_type
+        copy16  RWTS_SECTOR_BUF+0, set_eof_params::eof
+        copy    #$80, set_eof_flag
+        copy16  #RWTS_SECTOR_BUF+2, write_params::data_buffer
+        copy16  #256-2, write_params::request_count
+        jmp     translate_type
+    END_IF
+
+        copy16  #0, create_params::aux_type
+        copy    #0, set_eof_flag
+        copy16  #RWTS_SECTOR_BUF, write_params::data_buffer
+        copy16  #256, write_params::request_count
+        FALL_THROUGH_TO translate_type
+
+translate_type:
+        ;; Set the type
+        pla                     ; A = type
+        jsr     clz
+        lda     prodos_type_table,x
+        sta     create_params::file_type
+
+        ;; Create target file
+        JUMP_TABLE_MLI_CALL CREATE, create_params
+        RTS_IF_CS
+        JUMP_TABLE_MLI_CALL OPEN, open_params
+        RTS_IF_CS
+        lda     open_params::ref_num
+        sta     write_params::ref_num
+        sta     set_eof_params::ref_num
+        sta     close_params::ref_num
+
+        ;; --------------------------------------------------
+        ;; Loop over sectors
+
+write_sector:
+        JUMP_TABLE_MLI_CALL WRITE, write_params
+        ;; TODO: CLOSE on error
+        RTS_IF_CS
+
+read_sector:
+        ;; Read next sector
+        ldy     tslist_offset
+        beq     next_tslist_sector
+        copy16  #RWTS_SECTOR_BUF, $06
+        lda     TS_BUF+0,y      ; Track
+        beq     finish
+        ldx     TS_BUF+1,y      ; Sector
+        ldy     control_block+ControlBlock::unit_num
+        jsr     RWTSRead
+        RTS_IF_CS
+        jsr     IncProgress
+        inc     tslist_offset
+        inc     tslist_offset
+
+        ;; All remaining sectors are full data
+        copy16  #RWTS_SECTOR_BUF, write_params::data_buffer
+        copy16  #$100, write_params::request_count
+
+        jmp     write_sector
+
+        ;; --------------------------------------------------
+        ;; Advance to file's next T/S List sector
+
+next_tslist_sector:
+        copy16  #TS_BUF, $06
+        lda     TS_BUF+dos33::TSList::NextTrack
+        beq     finish
+        ldx     TS_BUF+dos33::TSList::NextSector
+        ldy     control_block+ControlBlock::unit_num
+        jsr     RWTSRead
+        RTS_IF_CS
+        jsr     IncProgress
+        copy    #dos33::TSList::FirstDataT, tslist_offset
+        jmp     read_sector
+
+        ;; --------------------------------------------------
+        ;; Truncate to exact length (if known)
+
+finish:
+        copy16  control_block+ControlBlock::progress_denom, control_block+ControlBlock::progress_num
+        jsr     SendControlBlock
+        JSR_TO_AUX aux::Catalog::UpdateProgressMeter
+
+        bit     set_eof_flag
+    IF_NS
+        JUMP_TABLE_MLI_CALL SET_EOF, set_eof_params
+    END_IF
+        JUMP_TABLE_MLI_CALL CLOSE, close_params
+
+        copy    #$80, dirty_flag
+        return  #0              ; success
+
+;;; C=1 if false
+.proc IsUpperCase
+        cmp     #'A'
+        bcc     no
+        cmp     #'Z'+1
+        bcs     no
+        rts
+
+no:     sec
+        rts
+.endproc
+
+;;; C=1 if false
+.proc IsLowerCase
+        cmp     #'a'
+        bcc     no
+        cmp     #'z'+1
+        bcs     no
+        rts
+
+no:     sec
+        rts
+.endproc
+
+;;; C=1 if false
+.proc IsDigit
+        cmp     #'0'
+        bcc     no
+        cmp     #'9'+1
+        bcs     no
+        rts
+
+no:     sec
+        rts
+.endproc
+
+;;; Count leading zeros
+;;; Input: A = byte
+;;; Output: X = leading zeros (0...8)
+.proc clz
+        ldx     #0
+:       lsr     a
+        bcs     ret
+        inx
+        cpx     #8
+        bne     :-
+ret:    rts
+.endproc
+
+.proc IncProgress
+        inc16   control_block+ControlBlock::progress_num
+        jsr     SendControlBlock
+        JSR_TO_AUX aux::Catalog::UpdateProgressMeter
+        rts
+.endproc ; IncProgress
+
+entry_buf:
+        .tag    aux::CatalogEntry
+
+path_buf:
+        .res    ::kPathBufferSize, 0
+
+;;; Index is CLZ of DOS 3.3 type
+prodos_type_table:
+        .byte   FT_INT          ; 'I'
+        .byte   FT_BASIC        ; 'A'
+        .byte   FT_BINARY       ; 'B'
+        .byte   FT_TYPELESS     ; 'S'
+        .byte   FT_REL          ; 'R'
+        .byte   FT_TYPELESS     ; '1'
+        .byte   FT_TYPELESS     ; '2'
+        .byte   FT_TYPELESS     ; (unused)
+        .byte   FT_TEXT         ; 'T'
+
+.endproc ; DoImport
+
+;;; ============================================================
+
+dirty_flag:     .byte   0
+
+prefix_path:    .res    ::kPathBufferSize, 0
+
+.proc GetWinPath
+        ptr := $06
+
+        JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
+        lda     ptr             ; any window open?
+        beq     fail
+        cmp     #kMaxDeskTopWindows+1
+        bcs     fail
+
+        jsr     JUMP_TABLE_GET_WIN_PATH
+        stax    ptr
+
+        ldy     #0
+        lda     (ptr),y
+        tay
+:       copy    (ptr),y, prefix_path,y
+        dey
+        bpl     :-
+        return  #0
+
+fail:   return  #1
+
+.endproc ; GetWinPath
+
+;;; ============================================================
+
+;;; Inspect boot block for DOS 3.3 signature
+;;; Input: A = `unit_num`
+;;; Output: Z=1 if DOS 3.3 disk, Z=0 otherwise
+.proc IsDOS33Impl
+        DEFINE_READ_BLOCK_PARAMS read_block_params, RWTS_BLOCK_BUF, 0
+
+start:
+        sta     read_block_params::unit_num
+        JUMP_TABLE_MLI_CALL READ_BLOCK, read_block_params
+        bne     ret
+
+        lda     RWTS_BLOCK_BUF+1
+        cmp     #$A5
+        bne     ret
+
+        lda     RWTS_BLOCK_BUF+2
+        cmp     #$27
+
+ret:    rts
+.endproc
+IsDOS33 := IsDOS33Impl::start
+
+;;; ============================================================
+
+;;; Input: A = Track, X = Sector, Y = unit_num, $06/$07 = 256-byte buffer
+;;; Output: C=0 on success, C=1 on error
+;;; Trashes: $08/$09
+.scope RWTSImpl
+
+;;; See ProDOS-8 Technical Reference Manual
+;;; Appendix B.5 DOS 3.3 Disk Organization
+;;; Block = (8 * Track) + Sector Offset
+offset_table:   .byte   0, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 0, 7
+half_table:     .byte   0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1
+
+block_buf := RWTS_BLOCK_BUF
+
+DEFINE_READ_BLOCK_PARAMS block_params, block_buf, 0
+
+.proc Read
+        dst_ptr := $06
+        src_ptr := $08
+
+        jsr     ProcessParams
+
+        lda     #<block_buf
+        sta     src_ptr
+        lda     #>block_buf
+        adc     #0              ; C=1 if upper half
+        sta     src_ptr+1
+
+        ;; Read the whole block
+        JUMP_TABLE_MLI_CALL READ_BLOCK, block_params
+        RTS_IF_CS
+
+        ;; Copy sector data out from appropriate half
+        ldy     #0
+:       lda     (src_ptr),y
+        sta     (dst_ptr),y
+        dey
+        bne     :-
+
+        clc
+        rts
+.endproc ; Read
+
+.proc Write
+        src_ptr := $06
+        dst_ptr := $08
+
+        ;; TODO: Untested! Do not use until carefully verified
+        brk
+
+        jsr     ProcessParams
+
+        lda     #<block_buf
+        sta     dst_ptr
+        lda     #>block_buf
+        adc     #0              ; C=1 if upper half
+        sta     dst_ptr+1
+
+        ;; Read the whole block
+        JUMP_TABLE_MLI_CALL READ_BLOCK, block_params
+        RTS_IF_CS
+
+        ;; Copy sector data into place in appropriate half
+        ldy     #0
+:       lda     (src_ptr),y
+        sta     (dst_ptr),y
+        dey
+        bne     :-
+
+        ;; Write the updated block back out
+        JUMP_TABLE_MLI_CALL WRITE_BLOCK, block_params
+        rts
+.endproc ; Write
+
+
+.proc ProcessParams
+        sty     block_params::unit_num
+
+        ;; Calculate `block_num`/`half`
+        ;; Block = (8 * Track) + Sector Offset
+        pha
+        lda     #0
+        sta     block_params::block_num+1
+        pla
+        asl     a
+        rol     block_params::block_num+1
+        asl     a
+        rol     block_params::block_num+1
+        asl     a
+        rol     block_params::block_num+1
+        clc
+        adc     offset_table,x
+        sta     block_params::block_num
+        bcc     :+
+        inc     block_params::block_num+1
+:
+        lda     half_table,x
+        ror     a               ; flag -> C
+        rts
+.endproc ; ProcessParams
+.endscope ; RWTSImpl
+
+;;; Exports
+RWTSRead  := RWTSImpl::Read
+RWTSWrite := RWTSImpl::Write
+
+;;; ============================================================
+
+        .include "../lib/is_diskii.s"
+        .include "../lib/muldiv.s"
+
+;;; ============================================================
+
+.endscope ; main
+        DA_END_MAIN_SEGMENT
+main__DoImport := main::DoImport
+
+;;; ============================================================

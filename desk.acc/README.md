@@ -22,6 +22,8 @@
   * Dumps a recursive catalog of filenames to a printer attached to Slot 1.
 * [Change Type](change.type.s)
   * Shows the type and auxtype of selected files, and allows changing them.
+* [DOS 3.3 Importer](dos33.import.s)
+  * Allows importing from DOS 3.3 disks to the current window.
 
 ## Control Panels
 
