@@ -957,6 +957,7 @@ noop:   rts
         ;; Switch back to color DHR mode
         jsr     SetColorMode
         sta     CLR80VID        ; back off, after `SetColorMode` call
+        sta     DHIRESOFF
 
         rts
 .endproc ; RestoreTextMode

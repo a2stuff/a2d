@@ -33,6 +33,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Ensure the modification date for copied folders matches the original.
 * Prompt to re-insert system disk when launching Apple Menu items.
 * Add Text-to-Speech file type ($D9) and icon.
+* Ensure DHIRES mode is exited when exiting to BASIC.
 
 ### Selector
 

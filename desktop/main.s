@@ -2945,6 +2945,7 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         sta     ALTZPON
         jsr     SetColorMode    ; depends on state in Aux LC
         sta     CLR80VID        ; back off, after `SetColorMode` call
+        sta     DHIRESOFF
         sta     ALTZPOFF
         bit     ROMIN2
 
