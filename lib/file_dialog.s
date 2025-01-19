@@ -1450,7 +1450,6 @@ HandleCancel:   jmp     0
 ;;; ============================================================
 
 .assert .sizeof(file_dialog_res::listbox_rec) = .sizeof(LBTK::ListBoxRecord), error, "mismatch"
-listbox_rec__num_items := file_dialog_res::listbox_rec::num_items
 num_file_names := file_dialog_res::listbox_rec::num_items
 selected_index := file_dialog_res::listbox_rec::selected_index
 
@@ -1518,7 +1517,6 @@ CloseWindow := file_dialog_impl::CloseWindow
 EventLoop := file_dialog_impl::EventLoop
 GetPath := file_dialog_impl::GetPath
 InitPathWithDefaultDevice := file_dialog_impl::InitPathWithDefaultDevice
-NoOp := file_dialog_impl::NoOp
 OpenWindow := file_dialog_impl::OpenWindow
 Init := file_dialog_impl::Init
 UpdateListFromPath := file_dialog_impl::UpdateListFromPath

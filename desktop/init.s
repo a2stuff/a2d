@@ -532,7 +532,6 @@ process_block:
 
         ;; Allow anything else
 
-include:
         ;; Compute slot in DA name table
         ldy     desk_acc_num
         ldax    #kDAMenuItemSize

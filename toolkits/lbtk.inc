@@ -23,6 +23,15 @@ selected_index: .byte   $FF
 draw_entry_proc:.addr   _draw_entry_proc
 on_sel_change:  .addr   _on_sel_change
 on_no_change:   .addr   _on_no_change
+
+        .refto winfo
+        .refto num_rows
+        .refto num_items
+        .refto selected_index
+        .refto draw_entry_proc
+        .refto on_sel_change
+        .refto on_no_change
+
 .endparams
 .assert .sizeof(name) = .sizeof(LBTK::ListBoxRecord), error, "struct size"
 .endmacro

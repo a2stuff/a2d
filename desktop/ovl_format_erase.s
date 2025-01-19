@@ -162,7 +162,7 @@ loop2:
         copy    #0, text_input_buf
         param_call AppendToTextInputBuf, aux::str_confirm_erase_prefix
         param_call AppendToTextInputBuf, ovl_string_buf
-        param_call AppendToTextInputBuf, aux::str_delete_confirm_suffix
+        param_call AppendToTextInputBuf, aux::str_confirm_erase_suffix
 
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, text_input_buf
         cmp     #kAlertResultOK
@@ -221,12 +221,12 @@ l12:    pha
         jsr     ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     cancel          ; `kAlertResultCancel` = 1
-        jmp     l8              ; `kAlertResultTryAgain` = 0
+        beq     l8              ; `kAlertResultTryAgain` = 0
 
 l13:
         param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_formatting_error
-l14:    cmp     #kAlertResultCancel
-        jne     l8
+        cmp     #kAlertResultCancel
+        bne     l8
 
 cancel:
         pha
@@ -267,14 +267,14 @@ l7:
         pla
         bne     l8
         lda     #$00
-        jmp     cancel
+        beq     cancel          ; always
 
 l8:     cmp     #ERR_WRITE_PROTECTED
         bne     l9
         jsr     ShowAlert
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
         bne     cancel          ; `kAlertResultCancel` = 1
-        jmp     l7              ; `kAlertResultTryAgain` = 0
+        beq     l7              ; `kAlertResultTryAgain` = 0
 
 l9:
         param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_erasing_error

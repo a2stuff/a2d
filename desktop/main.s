@@ -13905,7 +13905,7 @@ finish: jsr     PopPointers     ; do not tail-call optimize!
 
         ;; --------------------------------------------------
         ;; File
-file:
+
         param_call GetFileEntryBlock, src_path_buf
         bcs     ret
         stax    block_number
