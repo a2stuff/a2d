@@ -368,7 +368,7 @@ str_template:
         sta     ok_button::state
         BTK_CALL BTK::Hilite, ok_button
         rts
-.endproc
+.endproc ; OnSelChange
 
 .endscope ; DevicePicker
 
@@ -733,7 +733,7 @@ type_table:
         cpx     #8
         bne     :-
 ret:    rts
-.endproc
+.endproc ; clz
 
 .proc OnSelChange
         lda     listbox_rec::selected_index
@@ -742,7 +742,7 @@ ret:    rts
         sta     import_button::state
         BTK_CALL BTK::Hilite, import_button
         rts
-.endproc
+.endproc ; OnSelChange
 
 .proc UpdateProgressMeter
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -759,7 +759,7 @@ ret:    rts
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, progress_meter
         rts
-.endproc
+.endproc ; UpdateProgressMeter
 
 .proc ClearProgressMeter
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -771,7 +771,7 @@ ret:    rts
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, progress_meter
         rts
-.endproc
+.endproc ; ClearProgressMeter
 
 .endscope ; Catalog
 
@@ -1032,7 +1032,7 @@ entry_buf:
         sty     $06+1
         ldy     control_block+ControlBlock::unit_num
         jmp     RWTSRead
-.endproc
+.endproc ; do_read
 
 .endproc ; LoadCatalogEntries
 
@@ -1049,7 +1049,7 @@ control_block:
         copy16  #aux::control_block, DESTINATIONLO
         sec                     ; main>aux
         jmp     AUXMOVE
-.endproc
+.endproc ; SendControlBlock
 
 .proc FetchControlBlock
         ;; Copy from Aux
@@ -1058,7 +1058,7 @@ control_block:
         copy16  #control_block, DESTINATIONLO
         clc                     ; aux>main
         jmp     AUXMOVE
-.endproc
+.endproc ; FetchControlBlock
 
 ;;; ============================================================
 
@@ -1324,7 +1324,7 @@ finish:
 
 no:     sec
         rts
-.endproc
+.endproc ; IsUpperCase
 
 ;;; C=1 if false
 .proc IsLowerCase
@@ -1336,7 +1336,7 @@ no:     sec
 
 no:     sec
         rts
-.endproc
+.endproc ; IsLowerCase
 
 ;;; C=1 if false
 .proc IsDigit
@@ -1348,7 +1348,7 @@ no:     sec
 
 no:     sec
         rts
-.endproc
+.endproc ; IsDigit
 
 ;;; Count leading zeros
 ;;; Input: A = byte
@@ -1361,7 +1361,7 @@ no:     sec
         cpx     #8
         bne     :-
 ret:    rts
-.endproc
+.endproc ; clz
 
 .proc IncProgress
         inc16   control_block+ControlBlock::progress_num
@@ -1441,7 +1441,7 @@ start:
         cmp     #$27
 
 ret:    rts
-.endproc
+.endproc ; IsDOS33Impl
 IsDOS33 := IsDOS33Impl::start
 
 ;;; ============================================================

@@ -695,7 +695,7 @@ update:
 .proc _UpdateThumbAndDraw
         jsr     _UpdateThumb
         FALL_THROUGH_TO _Draw
-.endproc
+.endproc ; _UpdateThumbAndDraw
 
 ;;; Calls `DrawListEntryProc` for each entry.
 .proc _Draw
