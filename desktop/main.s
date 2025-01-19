@@ -97,7 +97,7 @@ loop:
         cmp     #kEventKindMouseMoved
     IF_EQ
         jsr     ClearTypeDown
-        jmp     MainLoop
+        jmp     loop            ; no state change
     END_IF
 
         ;; Is it a key down event?
@@ -347,9 +347,6 @@ offset_table:
         .byte   menu_end - dispatch_table
         ASSERT_TABLE_SIZE offset_table, ::kMenuNumItems+1
 
-        ;; Set if there are open windows
-window_open_flag:   .byte   $00
-
         ;; Handle accelerator keys
 HandleKeydown:
         lda     event_params::modifiers
@@ -413,8 +410,9 @@ modifiers:
         jeq     CmdOpenFromKeyboard
         cmp     #CHAR_UP        ; Apple-Up (Open Parent)
         jeq     CmdOpenParent
-        bit     window_open_flag
-        bpl     menu_accelerators
+
+        ldx     active_window_id
+    IF_NOT_ZERO
         cmp     #kShortcutGrowWindow ; Apple-G (Resize)
         jeq     CmdResize
         cmp     #kShortcutMoveWindow  ; Apple-M (Move)
@@ -426,8 +424,10 @@ modifiers:
         cmp     #'~'            ; Shift-Apple-` (Cycle Windows)
         beq     cycle
         cmp     #CHAR_TAB       ; Apple-Tab (Cycle Windows)
-        bne     menu_accelerators
+        bne     :+
 cycle:  jmp     CmdCycleWindows
+:
+    END_IF
 
         ;; Not one of our shortcuts - check for menu keys
         ;; (shortcuts or entering keyboard menu mode)
@@ -468,7 +468,6 @@ call_proc:
 
 HandleKeydown   := HandleKeydownImpl::HandleKeydown
 MenuDispatch2   := HandleKeydownImpl::MenuDispatch2
-window_open_flag := HandleKeydownImpl::window_open_flag
 
 ;;; ============================================================
 ;;; Handle click
@@ -571,23 +570,8 @@ dispatch_click:
         ;; Repaint the contents
         jsr     UpdateWindowUsedFreeDisplayValues
         jsr     LoadActiveWindowEntryTable
-        jsr     DrawCachedWindowHeaderAndEntries
-
-        FALL_THROUGH_TO UncheckAndCheckViewMenuItemForActiveWindow
+        jmp     DrawCachedWindowHeaderAndEntries
 .endproc ; ActivateWindow
-
-.proc UncheckAndCheckViewMenuItemForActiveWindow
-        jsr     UncheckViewMenuItem
-        FALL_THROUGH_TO CheckViewMenuItemForActiveWindow
-.endproc ; UncheckAndCheckViewMenuItemForActiveWindow
-
-.proc CheckViewMenuItemForActiveWindow
-        jsr     GetActiveWindowViewBy
-        and     #kViewByMenuMask
-        sta     checkitem_params::menu_item
-        inc     checkitem_params::menu_item
-        jmp     CheckViewMenuItem
-.endproc ; CheckViewMenuItemForActiveWindow
 
 ;;; ============================================================
 
@@ -759,18 +743,33 @@ finish: sta     result
 ;;; ============================================================
 
 .proc UpdateMenuItemStates
+        ;; --------------------------------------------------
+        ;; Windows
+
+        jsr     UncheckViewMenuItem
+        lda     active_window_id
+    IF_NOT_ZERO
+        jsr     GetActiveWindowViewBy
+        and     #kViewByMenuMask
+        tax
+        inx
+        stx     checkitem_params::menu_item
+        jsr     CheckViewMenuItem
+
+        jsr     EnableMenuItemsRequiringWindow
+    ELSE
+        jsr     DisableMenuItemsRequiringWindow
+    END_IF
+
+        ;; --------------------------------------------------
         ;; Selector List
+
         lda     num_selector_list_items
-        beq     :+
-
-        bit     selector_menu_items_updated_flag
-        bmi     check_selection
+    IF_NOT_ZERO
         jsr     EnableSelectorMenuItems
-        jmp     check_selection
-
-:       bit     selector_menu_items_updated_flag
-        bmi     check_selection
+    ELSE
         jsr     DisableSelectorMenuItems
+    END_IF
 
 check_selection:
         lda     selected_icon_count
@@ -823,7 +822,192 @@ no_selection:
         jsr     DisableMenuItemsRequiringSelection
         jmp     DisableMenuItemsRequiringSingleSelection
 
+;;; ------------------------------------------------------------
+;;; Calls DisableItem menu_item in A (to enable or disable).
+;;; Set disableitem_params' disable flag and menu_id before calling.
+
+.proc DisableMenuItem
+        sta     disableitem_params::menu_item
+        MGTK_CALL MGTK::DisableItem, disableitem_params
+        rts
+.endproc ; DisableMenuItem
+
+;;; ------------------------------------------------------------
+
+;;; Inputs: A = MGTK::checkitem_check or MGTK::checkitem_uncheck
+;;; Assumes checkitem_params::menu_item has been updated or is last checked.
+.proc CheckViewMenuItemImpl
+check:  lda     #MGTK::checkitem_check
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::checkitem_uncheck <> $C0, error, "Bad BIT skip"
+uncheck:lda     #MGTK::checkitem_uncheck
+
+        sta     checkitem_params::check
+        MGTK_CALL MGTK::CheckItem, checkitem_params
+        rts
+.endproc ; CheckViewMenuItemImpl
+CheckViewMenuItem := CheckViewMenuItemImpl::check
+UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
+
+;;; ------------------------------------------------------------
+
+.proc ToggleMenuItemsRequiringWindow
+        .assert MGTK::disablemenu_enable = MGTK::disableitem_enable, error, "enum mismatch"
+        .assert MGTK::disablemenu_disable = MGTK::disableitem_disable, error, "enum mismatch"
+
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disablemenu_params::disable
+        sta     disableitem_params::disable
+
+        ;; View
+        MGTK_CALL MGTK::DisableMenu, disablemenu_params
+
+        ;; File
+        copy    #kMenuIdFile, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdNewFolder
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdClose
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdCloseAll
+        jmp     DisableMenuItem
+.endproc ; ToggleMenuItemsRequiringWindow
+EnableMenuItemsRequiringWindow := ToggleMenuItemsRequiringWindow::enable
+DisableMenuItemsRequiringWindow := ToggleMenuItemsRequiringWindow::disable
+
+;;; ------------------------------------------------------------
+;;; Disable menu items for operating on a selection
+
+.proc ToggleMenuItemsRequiringSelection
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
+
+        ;; File
+        copy    #kMenuIdFile, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdOpen
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdGetInfo
+        jmp     DisableMenuItem
+.endproc ; ToggleMenuItemsRequiringSelection
+EnableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::enable
+DisableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::disable
+
+;;; ------------------------------------------------------------
+;;; Disable menu items for operating on a single selection
+
+.proc ToggleMenuItemsRequiringSingleSelection
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
+
+        ;; File
+        copy    #kMenuIdFile, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdRenameIcon
+        jsr     DisableMenuItem
+
+        ;; Edit
+        copy    #kMenuIdEdit, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdCut
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdCopy
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdPaste
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdClear
+        jmp     DisableMenuItem
+.endproc ; ToggleMenuItemsRequiringSingleSelection
+EnableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::enable
+DisableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::disable
+
+;;; ------------------------------------------------------------
+
+.proc ToggleMenuItemsRequiringFileSelection
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
+
+        copy    #kMenuIdFile, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdCopyFile
+        jsr     DisableMenuItem
+        lda     #aux::kMenuItemIdDeleteFile
+        jmp     DisableMenuItem
+.endproc ; ToggleMenuItemsRequiringFileSelection
+EnableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::enable
+DisableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::disable
+
+;;; ------------------------------------------------------------
+
+.proc ToggleMenuItemsRequiringSingleFileSelection
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
+
+        ;; File
+        copy    #kMenuIdFile, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdDuplicate
+        jsr     DisableMenuItem
+
+        ;; Special
+        copy    #kMenuIdSpecial, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdMakeLink
+        jmp     DisableMenuItem
+.endproc ; ToggleMenuItemsRequiringSingleFileSelection
+EnableMenuItemsRequiringSingleFileSelection := ToggleMenuItemsRequiringSingleFileSelection::enable
+DisableMenuItemsRequiringSingleFileSelection := ToggleMenuItemsRequiringSingleFileSelection::disable
+
+;;; ------------------------------------------------------------
+
+.proc ToggleMenuItemsRequiringVolumeSelection
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
+
+        copy    #kMenuIdSpecial, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdEject
+        jsr     DisableMenuItem
+
+        copy    #kMenuIdSpecial, disableitem_params::menu_id
+        lda     #aux::kMenuItemIdCheckDrive
+        jmp     DisableMenuItem
+.endproc ; ToggleMenuItemsRequiringVolumeSelection
+EnableMenuItemsRequiringVolumeSelection := ToggleMenuItemsRequiringVolumeSelection::enable
+DisableMenuItemsRequiringVolumeSelection := ToggleMenuItemsRequiringVolumeSelection::disable
+
+;;; ------------------------------------------------------------
+
+.proc ToggleSelectorMenuItems
+enable: lda     #MGTK::disableitem_enable
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
+disable:lda     #MGTK::disableitem_disable
+        sta     disableitem_params::disable
+
+        copy    #kMenuIdSelector, disableitem_params::menu_id
+        lda     #kMenuItemIdSelectorEdit
+        jsr     DisableMenuItem
+        lda     #kMenuItemIdSelectorDelete
+        jsr     DisableMenuItem
+        lda     #kMenuItemIdSelectorRun
+        jmp     DisableMenuItem
+.endproc ; ToggleSelectorMenuItems
+EnableSelectorMenuItems := ToggleSelectorMenuItems::enable
+DisableSelectorMenuItems := ToggleSelectorMenuItems::disable
+
 .endproc ; UpdateMenuItemStates
+
 
 ;;; ============================================================
 ;;; Common re-used param blocks
@@ -2984,7 +3168,6 @@ menu_item_to_view_by:
         lda     #SELF_MODIFIED_BYTE
         ldx     active_window_id
         sta     win_view_by_table-1,x
-        jsr     UpdateViewMenuCheck
 
 ;;; Entry point when view needs refreshing, e.g. rename when sorted.
 entry2:
@@ -3126,17 +3309,6 @@ selection_preserved_count:
         ;; Update scrollbars based on contents/viewport
         jmp     ScrollUpdate
 .endproc ; RedrawAfterContentChange
-
-;;; ============================================================
-
-.proc UpdateViewMenuCheck
-        ;; Uncheck last checked
-        jsr     UncheckViewMenuItem
-
-        ;; Check the new one
-        copy    menu_click_params::item_num, checkitem_params::menu_item
-        jmp     CheckViewMenuItem
-.endproc ; UpdateViewMenuCheck
 
 ;;; ============================================================
 ;;; Destroy all of the icons in the active window.
@@ -5524,9 +5696,6 @@ exception_flag:
     IF_NE
         sta     active_window_id
         MGTK_CALL MGTK::SelectWindow, active_window_id
-
-        ;; Update menu items
-        jsr     UncheckAndCheckViewMenuItemForActiveWindow
     END_IF
 
         ;; Clear background
@@ -5882,10 +6051,8 @@ update: lda     window_id
         lda     cached_window_id
         cmp     active_window_id
     IF_EQ
-        ;; Yes, update all the things
+        ;; Yes, record the new one
         MGTK_CALL MGTK::FrontWindow, active_window_id
-        jsr     UncheckViewMenuItem
-        jsr     UpdateWindowMenuItems
     END_IF
 
         jsr     ClearUpdates ; following CloseWindow above
@@ -6005,207 +6172,6 @@ done:   rts
         jsr     AssignActiveWindowCliprect
         jmp     CachedIconsWindowToScreen
 .endproc ; AssignActiveWindowCliprectAndUpdateCachedIcons
-
-
-;;; ============================================================
-;;; If a window is open, ensure the right view item is checked,.
-;;; Otherwise, ensure the necessary menu items are disabled.
-;;; (Called on window close)
-
-.proc UpdateWindowMenuItems
-        lda     active_window_id
-        beq     DisableMenuItemsRequiringWindow
-
-        ;; Check appropriate view menu item
-        jsr     GetActiveWindowViewBy
-        and     #kViewByMenuMask
-        tax
-        inx
-        stx     checkitem_params::menu_item
-        jmp     CheckViewMenuItem
-.endproc ; UpdateWindowMenuItems
-
-;;; ============================================================
-
-.proc ToggleMenuItemsRequiringWindow
-enable:
-        copy    #MGTK::disablemenu_enable, disablemenu_params::disable
-        copy    #MGTK::disableitem_enable, disableitem_params::disable
-        copy    #$80, window_open_flag
-        jmp     :+
-
-disable:
-        copy    #MGTK::disablemenu_disable, disablemenu_params::disable
-        copy    #MGTK::disableitem_disable, disableitem_params::disable
-        copy    #0, window_open_flag
-
-:       MGTK_CALL MGTK::DisableMenu, disablemenu_params ; View menu
-
-        copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdNewFolder
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdClose
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdCloseAll
-        jsr     DisableMenuItem
-
-        rts
-.endproc ; ToggleMenuItemsRequiringWindow
-EnableMenuItemsRequiringWindow := ToggleMenuItemsRequiringWindow::enable
-DisableMenuItemsRequiringWindow := ToggleMenuItemsRequiringWindow::disable
-
-
-;;; ============================================================
-;;; Disable menu items for operating on a selection
-
-.proc ToggleMenuItemsRequiringSelection
-enable: lda     #MGTK::disableitem_enable
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
-disable:lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
-
-        ;; File
-        copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdOpen
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdGetInfo
-        jmp     DisableMenuItem
-.endproc ; ToggleMenuItemsRequiringSelection
-EnableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::enable
-DisableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::disable
-
-;;; ============================================================
-;;; Disable menu items for operating on a single selection
-
-.proc ToggleMenuItemsRequiringSingleSelection
-enable: lda     #MGTK::disableitem_enable
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
-disable:lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
-
-        ;; File
-        copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdRenameIcon
-        jsr     DisableMenuItem
-
-        ;; Edit
-        copy    #kMenuIdEdit, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdCut
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdCopy
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdPaste
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdClear
-        jsr     DisableMenuItem
-
-        rts
-.endproc ; ToggleMenuItemsRequiringSingleSelection
-EnableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::enable
-DisableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::disable
-
-;;; ============================================================
-;;; Calls DisableItem menu_item in A (to enable or disable).
-;;; Set disableitem_params' disable flag and menu_id before calling.
-
-.proc DisableMenuItem
-        sta     disableitem_params::menu_item
-        MGTK_CALL MGTK::DisableItem, disableitem_params
-        rts
-.endproc ; DisableMenuItem
-
-;;; ============================================================
-
-.proc ToggleMenuItemsRequiringFileSelection
-enable: lda     #MGTK::disableitem_enable
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
-disable:lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
-
-        copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdCopyFile
-        jsr     DisableMenuItem
-        lda     #aux::kMenuItemIdDeleteFile
-        jsr     DisableMenuItem
-
-        rts
-
-.endproc ; ToggleMenuItemsRequiringFileSelection
-EnableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::enable
-DisableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::disable
-
-;;; ============================================================
-
-.proc ToggleMenuItemsRequiringSingleFileSelection
-enable: lda     #MGTK::disableitem_enable
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
-disable:lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
-
-        ;; File
-        copy    #kMenuIdFile, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdDuplicate
-        jsr     DisableMenuItem
-
-        ;; Special
-        copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdMakeLink
-        jsr     DisableMenuItem
-
-        rts
-
-.endproc ; ToggleMenuItemsRequiringSingleFileSelection
-EnableMenuItemsRequiringSingleFileSelection := ToggleMenuItemsRequiringSingleFileSelection::enable
-DisableMenuItemsRequiringSingleFileSelection := ToggleMenuItemsRequiringSingleFileSelection::disable
-
-;;; ============================================================
-
-.proc ToggleMenuItemsRequiringVolumeSelection
-enable: lda     #MGTK::disableitem_enable
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
-disable:lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
-
-        copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdEject
-        jsr     DisableMenuItem
-
-        copy    #kMenuIdSpecial, disableitem_params::menu_id
-        lda     #aux::kMenuItemIdCheckDrive
-        jsr     DisableMenuItem
-
-        rts
-
-.endproc ; ToggleMenuItemsRequiringVolumeSelection
-EnableMenuItemsRequiringVolumeSelection := ToggleMenuItemsRequiringVolumeSelection::enable
-DisableMenuItemsRequiringVolumeSelection := ToggleMenuItemsRequiringVolumeSelection::disable
-
-;;; ============================================================
-
-.proc ToggleSelectorMenuItems
-enable: lda     #MGTK::disableitem_enable
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-        .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
-disable:lda     #MGTK::disableitem_disable
-        sta     disableitem_params::disable
-
-        copy    #kMenuIdSelector, disableitem_params::menu_id
-        lda     #kMenuItemIdSelectorEdit
-        jsr     DisableMenuItem
-        lda     #kMenuItemIdSelectorDelete
-        jsr     DisableMenuItem
-        lda     #kMenuItemIdSelectorRun
-        jsr     DisableMenuItem
-        copy    #$80, selector_menu_items_updated_flag
-        rts
-.endproc ; ToggleSelectorMenuItems
-EnableSelectorMenuItems := ToggleSelectorMenuItems::enable
-DisableSelectorMenuItems := ToggleSelectorMenuItems::disable
 
 ;;; ============================================================
 
@@ -6384,15 +6350,6 @@ no_win:
         lda     #SELF_MODIFIED_BYTE
         sta     win_view_by_table-1,x
 
-        lda     num_open_windows ; Was there already a window open?
-        cmp     #2
-    IF_LT
-        jsr     EnableMenuItemsRequiringWindow
-    ELSE
-        jsr     UncheckViewMenuItem
-        ;; Correct item will be checked below after window opens
-    END_IF
-
         ;; This ensures `ptr` points at IconEntry (real or virtual)
         jsr     UpdateIcon
 
@@ -6405,7 +6362,6 @@ no_win:
         stax    @addr
         MGTK_CALL MGTK::OpenWindow, 0, @addr
 
-        jsr     CheckViewMenuItemForActiveWindow
         jsr     DrawCachedWindowHeaderAndEntries
         jmp     ScrollUpdate
 
@@ -6556,23 +6512,6 @@ ret:    rts
     END_IF
         jmp     FindIconByName
 .endproc ; FindIconForPath
-
-;;; ============================================================
-
-;;; Inputs: A = MGTK::checkitem_check or MGTK::checkitem_uncheck
-;;; Assumes checkitem_params::menu_item has been updated or is last checked.
-.proc CheckViewMenuItemImpl
-check:  lda     #MGTK::checkitem_check
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-        .assert MGTK::checkitem_uncheck <> $C0, error, "Bad BIT skip"
-uncheck:lda     #MGTK::checkitem_uncheck
-
-        sta     checkitem_params::check
-        MGTK_CALL MGTK::CheckItem, checkitem_params
-        rts
-.endproc ; CheckViewMenuItemImpl
-CheckViewMenuItem := CheckViewMenuItemImpl::check
-UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
 
 ;;; ============================================================
 ;;; Draw all entries (icons or list items) in (cached) window
@@ -7255,15 +7194,11 @@ finish: copy16  record_ptr, filerecords_free_start
         sta     drive_to_refresh ; icon_number
         jsr     CheckDriveByIconNumber
 
-        ;; A window was allocated but unused, so restore the count
-        ;; and menu item state.
+        ;; A window was allocated but unused, so restore the count.
 :       dec     num_open_windows
-        lda     num_open_windows
-        bne     :+
-        jsr     DisableMenuItemsRequiringWindow
 
         ;; A table entry was possibly allocated - free it.
-:       ldy     cached_window_id
+        ldy     cached_window_id
         dey
         bmi     :+
         lda     #0

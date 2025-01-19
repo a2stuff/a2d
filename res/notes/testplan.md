@@ -498,6 +498,8 @@
 * Launch DeskTop. Open a window containing file icons. Hold Open-Apple and select multiple files in a specific order. Select a different View option. Apple Menu > Sort Directory. View > as Icons. Verify that the icons appear in the selected order.
 * Launch DeskTop. Open a window containing file icons. Select one or more volume icons on the desktop. Select a different View option. Verify that the volume icons on the desktop remain selected.
 
+* Launch DeskTop. Open a window. Verify that the appropriate View option is checked. Close the window. Verify that the View menu items are all disabled, and that none are checked.
+
 
 ## ProDOS Interaction
 

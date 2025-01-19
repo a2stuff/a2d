@@ -338,8 +338,6 @@ done:
         adc     selector_list_data_buf + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
 
-        copy    #0, selector_menu_items_updated_flag
-
         lda     selector_list_data_buf
         sta     count
 L0A3B:  lda     index
@@ -997,12 +995,7 @@ unit_num:
         ;; Final MGTK configuration
         MGTK_CALL MGTK::CheckEvents
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        lda     #0
-        sta     active_window_id
-        jsr     main::UpdateWindowMenuItems
-        jsr     main::DisableMenuItemsRequiringVolumeSelection
-        jsr     main::DisableMenuItemsRequiringFileSelection
-        jsr     main::DisableMenuItemsRequiringSelection
+        copy    #0, active_window_id
 
         ;; Add desktop icons
         ldx     #0

@@ -36,7 +36,6 @@ L9017:  lda     selector_list + kSelectorListNumPrimaryRunListOffset
         clc
         adc     selector_list + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
-        copy    #0, selector_menu_items_updated_flag
         jsr     main::GetCopiedToRAMCardFlag
         cmp     #$80
         bne     L9015
