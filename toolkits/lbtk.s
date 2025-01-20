@@ -291,8 +291,9 @@ repeat:
         sec
         sbc     #1
         jsr     update
-        jsr     _CheckArrowRepeat
-        bcc     repeat          ; always
+        lda     #MGTK::Part::up_arrow
+        jsr     _CheckControlRepeat
+        beq     repeat          ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -310,28 +311,34 @@ repeat:
         clc
         adc     #1
         jsr     update
-        jsr     _CheckArrowRepeat
-        bcc     repeat          ; always
+        lda     #MGTK::Part::down_arrow
+        jsr     _CheckControlRepeat
+        beq     repeat          ; always
     END_IF
 
         ;; --------------------------------------------------
 
         cmp     #MGTK::Part::page_up
     IF_EQ
+repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
         cmp     lbr_copy + LBTK::ListBoxRecord::num_rows
         bcs     :+
         lda     #0
-        beq     update          ; always
+        beq     do              ; always
 :       sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
-        jmp     update
+do:     jsr     update
+        lda     #MGTK::Part::page_up
+        jsr     _CheckControlRepeat
+        beq     repeat          ; always
     END_IF
 
         ;; --------------------------------------------------
 
         cmp     #MGTK::Part::page_down
     IF_EQ
+repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
         clc
@@ -339,10 +346,13 @@ repeat:
         .assert MGTK::Winfo::vthumbmax = MGTK::Winfo::vthumbpos - 1, error, "layout"
         dey                     ; Y = MGTK::Winfo::vthumbmax
         cmp     (winfo_ptr),y
-        bcc     update
+        bcc     do
         ;; Assert: Y = MGTK::Winfo::vthumbmax
         lda     (winfo_ptr),y
-        jmp     update
+do:     jsr     update
+        lda     #MGTK::Part::page_down
+        jsr     _CheckControlRepeat
+        beq     repeat          ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -362,8 +372,10 @@ update: jmp     _UpdateThumbAndDraw
 
 ;;; ============================================================
 
-;;; Output: C=0 if repeat, or pops caller off stack otherwise
-.proc _CheckArrowRepeat
+;;; Output: Z=1 if repeat, or pops caller off stack otherwise
+.proc _CheckControlRepeat
+        sta     ctl
+
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::drag
@@ -384,13 +396,14 @@ update: jmp     _UpdateThumbAndDraw
         bne     cancel
 
         lda     findcontrol_params::which_part
-        cmp     #MGTK::Part::page_up ; up_arrow or down_arrow ?
-        bcc     ret                  ; Yes, continue
+        ctl := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        beq     ret                  ; Yes, continue
 
 cancel: pla
         pla
 ret:    rts
-.endproc ; _CheckArrowRepeat
+.endproc ; _CheckControlRepeat
 
 ;;; ============================================================
 ;;; Call when a key event occurs, if `LBIsListKey` indicates it

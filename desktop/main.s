@@ -4185,10 +4185,8 @@ ret:    rts
 ;;; ============================================================
 
 .proc CmdSelectAll
-        lda     selected_icon_count
-        beq     :+
         jsr     ClearSelection
-:
+
         jsr     LoadActiveWindowEntryTable
         lda     cached_window_entry_count
         beq     finish          ; nothing to select!
@@ -5053,7 +5051,6 @@ check_drive_flags:
 ;;; ============================================================
 
 .proc CmdStartupItem
-        ;; Determine the slot by looking at the menu item string.
         ldx     menu_click_params::item_num
         dex
         lda     startup_slot_table,x
