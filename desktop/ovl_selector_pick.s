@@ -841,7 +841,7 @@ loop:   dec     index
         lda     index
         jsr     GetResourceEntryAddr
         stax    ptr_res
-        jsr     CopyString
+        jsr     _CopyString
 
         ;; Flags
         ldy     #kSelectorEntryFlagsOffset
@@ -855,7 +855,7 @@ loop:   dec     index
         lda     index
         jsr     GetResourcePathAddr
         stax    ptr_res
-        jsr     CopyString
+        jsr     _CopyString
 
         jmp     loop
 
@@ -882,7 +882,7 @@ finish:
         rts
 
 ;;; Copy the string at `ptr_file` to `ptr_res`.
-.proc CopyString
+.proc _CopyString
         ldy     #0
         lda     (ptr_file),y
         tay
@@ -892,7 +892,7 @@ finish:
         bpl     :-
 
         rts
-.endproc ; CopyString
+.endproc ; _CopyString
 
 index:  .byte   0
 .endproc ; UpdateMenuResources

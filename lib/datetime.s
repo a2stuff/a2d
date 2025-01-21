@@ -41,7 +41,7 @@
         lda     #12             ; 0 -> 12
 :
 
-skip:   jsr     Split
+skip:   jsr     _Split
         pha
         txa                     ; tens (if > 0)
         bit     clock_24hours
@@ -64,7 +64,7 @@ ones:   pla                     ; ones
 
         ;; Minutes
         lda     min
-        jsr     Split
+        jsr     _Split
         pha
         txa                     ; tens
         ora     #'0'
@@ -105,7 +105,7 @@ clock_24hours:
 
 ;;; Input: A = number
 ;;; Output: X = tens, A = ones
-.proc Split
+.proc _Split
         ldx     #0
 
 loop:   cmp     #10
@@ -116,7 +116,7 @@ loop:   cmp     #10
         bne     loop            ; always
 
 done:   rts
-.endproc ; Split
+.endproc ; _Split
 
 .endproc ; MakeTimeString
 

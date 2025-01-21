@@ -122,16 +122,16 @@ retry:
         MLI_CALL SET_PREFIX, prefix_params
         bcs     prompt_for_system_disk
         MLI_CALL OPEN, open_params
-        bcs     ErrorHandler
+        bcs     _ErrorHandler
         lda     open_params__ref_num
         sta     set_mark_params__ref_num
         sta     read_params__ref_num
         MLI_CALL SET_MARK, set_mark_params
-        bcs     ErrorHandler
+        bcs     _ErrorHandler
         MLI_CALL READ, read_params
-        bcs     ErrorHandler
+        bcs     _ErrorHandler
         MLI_CALL CLOSE, close_params
-        bcs     ErrorHandler
+        bcs     _ErrorHandler
 
         ;; Invoke it
         jmp     kSegmentLoaderAddress
@@ -163,9 +163,9 @@ wait:   sta     KBDSTRB
 ;;; ============================================================
 ;;; Error Handler
 
-.proc ErrorHandler
+.proc _ErrorHandler
         brk                     ; just crash
-.endproc ; ErrorHandler
+.endproc ; _ErrorHandler
 
 ;;; ============================================================
 ;;; Strings

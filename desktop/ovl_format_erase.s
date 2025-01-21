@@ -718,7 +718,7 @@ L1398:  stxy    total_blocks
 
         ;; Main loop to build the volume bitmap
 bitmaploop:
-        jsr     BuildBlock      ; Build a bitmap for the current block
+        jsr     _BuildBlock     ; Build a bitmap for the current block
 
         lda     write_block_params::block_num+1 ; Are we at a block >255?
         bne     L1483           ; Then something's gone horribly wrong and we need to stop
@@ -789,7 +789,7 @@ lastblock:
 ;;; 512 $FF values, except for the last block in the entire VBM, which
 ;;; gets cleared to $00's following the final byte position.
 
-.proc BuildBlock
+.proc _BuildBlock
         ldy     #$00
         lda     #$FF
 ffloop: sta     block_buffer,y  ; Fill this entire block
@@ -831,7 +831,7 @@ zerosecond:
 
 builddone:
         rts                     ; And we're done
-.endproc ; BuildBlock
+.endproc ; _BuildBlock
 
 .endproc ; WriteHeaderBlocks
 
@@ -908,7 +908,7 @@ prodos_loader_blocks:
 ;;; Input: A = unit number
 ;;; Output: `ovl_string_buf` is populated.
 
-.proc GetNonprodosVolName
+.proc GetNonProDOSVolName
         kPascalSig1  = $E0
         kPascalSig2a = $70
         kPascalSig2b = $60
@@ -934,10 +934,10 @@ prodos_loader_blocks:
         ;; Unknown, just use slot and drive
 unknown:
         lda     read_block_params::unit_num
-        jsr     GetSlotChar
+        jsr     _GetSlotChar
         sta     the_disk_in_slot_label + kTheDiskInSlotSlotCharOffset
         lda     read_block_params::unit_num
-        jsr     GetDriveChar
+        jsr     _GetDriveChar
         sta     the_disk_in_slot_label + kTheDiskInSlotDriveCharOffset
         ldx     the_disk_in_slot_label
 L1974:  lda     the_disk_in_slot_label,x
@@ -960,15 +960,15 @@ maybe_dos:
 
         ;; DOS 3.3, use slot and drive
         lda     read_block_params::unit_num
-        jsr     GetSlotChar
+        jsr     _GetSlotChar
         sta     the_dos_33_disk_label + kTheDos33DiskSlotCharOffset
         lda     read_block_params::unit_num
-        jsr     GetDriveChar
+        jsr     _GetDriveChar
         sta     the_dos_33_disk_label + kTheDos33DiskDriveCharOffset
         COPY_STRING the_dos_33_disk_label, ovl_string_buf
         rts
 
-.proc GetSlotChar
+.proc _GetSlotChar
         and     #$70
         lsr     a
         lsr     a
@@ -977,15 +977,15 @@ maybe_dos:
         clc
         adc     #'0'
         rts
-.endproc ; GetSlotChar
+.endproc ; _GetSlotChar
 
-.proc GetDriveChar
+.proc _GetDriveChar
         and     #$80
         asl     a
         rol     a
         adc     #'1'
         rts
-.endproc ; GetDriveChar
+.endproc ; _GetDriveChar
 
 ;;; Handle Pascal disk - name suffixed with ':'
 pascal_disk:
@@ -1010,7 +1010,7 @@ pascal_disk:
         lda     #':'
         sta     ovl_string_buf,x
         rts
-.endproc ; GetNonprodosVolName
+.endproc ; GetNonProDOSVolName
 
 ;;; ============================================================
 ;;; Get a volume name, for ProDOS or non-ProDOS disk.
@@ -1037,7 +1037,7 @@ pascal_disk:
 
 non_pro:
         lda     on_line_params::unit_num
-        jmp     GetNonprodosVolName
+        jmp     GetNonProDOSVolName
 .endproc ; GetVolName
 
 ;;; ============================================================

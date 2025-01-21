@@ -2179,7 +2179,7 @@ start:
     IF_EQ                       ; kAlertMsgInsertSource
         cpx     #0
         beq     find_in_alert_table
-        jsr     IsDriveEjectable
+        jsr     _IsDriveEjectable
         beq     find_in_alert_table ; nope, stick with kAlertMsgInsertSource
         lda     #kAlertMsgInsertSourceOrCancel
         bne     find_in_alert_table ; always
@@ -2189,7 +2189,7 @@ start:
     IF_EQ
         cpx     #0
         beq     find_in_alert_table
-        jsr     IsDriveEjectable
+        jsr     _IsDriveEjectable
         beq     :+              ; nope
         lda     #kAlertMsgInsertDestinationOrCancel
         bne     find_in_alert_table ; always
@@ -2199,14 +2199,14 @@ start:
 
         cmp     #kAlertMsgConfirmErase
     IF_EQ
-        jsr     AppendToConfirmErase
+        jsr     _AppendToConfirmErase
         lda     #kAlertMsgConfirmErase
         bne     find_in_alert_table ; always
     END_IF
 
         cmp     #kAlertMsgConfirmEraseSlotDrive
     IF_EQ
-        jsr     SetConfirmEraseSdSlotDrive
+        jsr     _SetConfirmEraseSdSlotDrive
         lda     #kAlertMsgConfirmEraseSlotDrive
         FALL_THROUGH_TO find_in_alert_table
     END_IF
@@ -2237,7 +2237,7 @@ find_in_alert_table:
 ;;; --------------------------------------------------
 ;;; Inputs: X,Y = volume name
 
-.proc AppendToConfirmErase
+.proc _AppendToConfirmErase
         ptr := $06
         stxy    ptr
         ldy     #$00
@@ -2263,12 +2263,12 @@ find_in_alert_table:
 
         sty     str_confirm_erase
         rts
-.endproc ; AppendToConfirmErase
+.endproc ; _AppendToConfirmErase
 
 ;;; --------------------------------------------------
 ;;; Inputs: X = %DSSSxxxx
 
-.proc SetConfirmEraseSdSlotDrive
+.proc _SetConfirmEraseSdSlotDrive
         txa
         jsr     UnitNumToSlotDigit
         sta     str_confirm_erase_sd  + kStrConfirmEraseSDSlotOffset
@@ -2276,20 +2276,20 @@ find_in_alert_table:
         jsr     UnitNumToDriveDigit
         sta     str_confirm_erase_sd + kStrConfirmEraseSDDriveOffset
         rts
-.endproc ; SetConfirmEraseSdSlotDrive
+.endproc ; _SetConfirmEraseSdSlotDrive
 
 ;;; --------------------------------------------------
 
 ;;; Y = unit number
 ;;; If ejectable, sets `ejectable_flag`
-.proc IsDriveEjectable
+.proc _IsDriveEjectable
         sty     unit_num
         tya
         jsr     main__IsDriveEjectable
         beq     :+
         sta     ejectable_flag
 :       rts
-.endproc ; IsDriveEjectable
+.endproc ; _IsDriveEjectable
 
 .endproc ; ShowAlertDialog
 

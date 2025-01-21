@@ -406,13 +406,13 @@ check:
         sty     L0FE4
 L0F51:  stax    mem_block_addr
         jsr     AdvanceToNextBlock
-        bcc     ReadOrWriteBlock
+        bcc     _ReadOrWriteBlock
         bne     :+
         cpx     #$00
         beq     L0F69
 :       ldy     #$80
         sty     L0FE5
-        bne     ReadOrWriteBlock
+        bne     _ReadOrWriteBlock
 
 L0F69:  return  #$80
 
@@ -421,7 +421,7 @@ success:
 
 error:  return  #1
 
-.proc ReadOrWriteBlock
+.proc _ReadOrWriteBlock
         stax    block_params::block_num
 
         ;; A,X = address in memory
@@ -498,7 +498,7 @@ use_lcbank2:
 :       jsr     WriteBlockFromLcbank2
         bmi     error
         jmp     loop
-.endproc ; ReadOrWriteBlock
+.endproc ; _ReadOrWriteBlock
 
 L0FE4:  .byte   0
 L0FE5:  .byte   0
@@ -522,17 +522,17 @@ repeat: jsr     LookupInVolumeBitmap ; A,X=block number, Y=free?
         cpy     #0
         bne     free
         pha
-        jsr     Next
+        jsr     _Next
         pla
         rts
 
-free:   jsr     Next
+free:   jsr     _Next
         bcc     repeat          ; repeat unless last block
         lda     #0
         tax
         rts
 
-.proc Next
+.proc _Next
         dec     auxlc::block_num_shift
         bmi     :+
 
@@ -548,7 +548,7 @@ not_last:
 
         sec
         rts
-.endproc ; Next
+.endproc ; _Next
 .endproc ; AdvanceToNextBlock
 
 ;;; ============================================================
@@ -634,18 +634,18 @@ table:  .byte   7,6,5,4,3,2,1,0
         cpy     #0
         beq     :+
         pha
-        jsr     Next
+        jsr     _Next
         pla
         rts
 
-:       jsr     Next
+:       jsr     _Next
         bcc     AdvanceToNextBlockIndex
         lda     #$00
         tax
         rts
 
 ;;; Advance to next
-.proc Next
+.proc _Next
         dec     auxlc::block_index_shift
         bmi     :+
 
@@ -661,7 +661,7 @@ ok:     clc
 
         sec
         rts
-.endproc ; Next
+.endproc ; _Next
 .endproc ; AdvanceToNextBlockIndex
 
 ;;; ============================================================
@@ -724,7 +724,7 @@ bit_shift_table:
         lda     #0
         sta     count
 loop:   lda     page_num
-        jsr     MarkFreeInMemoryBitmap
+        jsr     _MarkFreeInMemoryBitmap
         inc     page_num
         inc     page_num
         inc     count
@@ -737,12 +737,12 @@ loop:   lda     page_num
         bcc     loop
         rts
 
-.proc MarkFreeInMemoryBitmap
+.proc _MarkFreeInMemoryBitmap
         jsr     GetBitmapOffsetMask
         ora     memory_bitmap,y
         sta     memory_bitmap,y
         rts
-.endproc ; MarkFreeInMemoryBitmap
+.endproc ; _MarkFreeInMemoryBitmap
 .endproc ; FreeVolBitmapPages
 
 ;;; ============================================================

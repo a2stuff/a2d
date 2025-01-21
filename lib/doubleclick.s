@@ -26,7 +26,7 @@ loop:   dec16   counter
         MGTK_CALL MGTK::PeekEvent, event_params
 
         ;; Check coords, bail if pixel delta exceeded
-        jsr     CheckDelta
+        jsr     _CheckDelta
         bmi     exit            ; moved past delta; no double-click
 
         lda     event_params::kind
@@ -56,7 +56,7 @@ consume:
         jmp     loop
 
         ;; Is the new coord within range of the old coord?
-.proc CheckDelta
+.proc _CheckDelta
         ;; compute x delta
         lda     event_params + MGTK::Event::xcoord
         sec
@@ -97,7 +97,7 @@ check_y:
         cmp     #kDoubleClickDeltaY
         bcs     fail
 ok:     return  #0
-.endproc ; CheckDelta
+.endproc ; _CheckDelta
 
 counter:
         .word   0

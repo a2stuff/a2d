@@ -624,7 +624,7 @@ inside: pla
         sta     trash_flag
 
 ;;; Determine if it's a drag or just a click
-.proc DragDetectImpl
+.proc _DragDetectImpl
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
@@ -668,7 +668,7 @@ check_deltay:
 y_lo:   cpx     #kDragDelta
         bcc     peek
         FALL_THROUGH_TO is_drag
-.endproc ; DragDetectImpl
+.endproc ; _DragDetectImpl
 
         ;; --------------------------------------------------
         ;; Meets the threshold - it is a drag, not just a click.
@@ -677,7 +677,7 @@ is_drag:
         ;; Count number of highlighted icons
         copy    #0, highlight_count
 
-        INVOKE_WITH_LAMBDA IterateHighlightedIcons
+        INVOKE_WITH_LAMBDA _IterateHighlightedIcons
         ;; Count this one, and remember as potentially last
         inc     highlight_count
         sta     last_highlighted_icon
@@ -695,7 +695,7 @@ is_drag:
         lda     highlight_count
         cmp     max_draggable_icons
         beq     :+                      ; equal okay
-        bcs     DragDetectImpl::ignore_drag ; too many
+        bcs     _DragDetectImpl::ignore_drag ; too many
 :
         ;; Was there a selection?
         lda     highlight_count
@@ -724,7 +724,7 @@ is_drag:
         copy16  polybuf_addr, $08
         copy    #$80, poly::lastpoly  ; more to follow
 
-        INVOKE_WITH_LAMBDA IterateHighlightedIcons
+        INVOKE_WITH_LAMBDA _IterateHighlightedIcons
 
         jsr     CalcIconPoly
 
@@ -749,7 +749,7 @@ is_drag:
 
         ;; --------------------------------------------------
 
-        jsr     XdrawOutline
+        jsr     _XDrawOutline
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
@@ -777,13 +777,13 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         ;; Mouse moved - check for (un)highlighting, and
         ;; update the drag outline.
 moved:
-        jsr     XdrawOutline
+        jsr     _XDrawOutline
 
         ;; Check for highlighting changes
         bit     trash_flag      ; Trash is not drop-able, so skip if in selection
         bmi     update_poly
 
-        jsr     FindIconValidateWindow
+        jsr     _FindIconValidateWindow
         cmp     highlight_icon_id
         beq     update_poly     ; no change
 
@@ -791,13 +791,13 @@ moved:
         pha
         lda     highlight_icon_id
         beq     :+
-        jsr     UnhighlightIcon
+        jsr     _UnhighlightIcon
         copy    #0, highlight_icon_id
 :
         ;; Is the new icon valid?
         pla
         beq     update_poly
-        jsr     ValidateTargetAndHighlight
+        jsr     _ValidateTargetAndHighlight
 
 update_poly:
         ;; Update poly coordinates
@@ -825,17 +825,17 @@ vloop:  add16in (poly_ptr),y, poly_dx, (poly_ptr),y
         inc     poly_ptr+1
         bcs     ploop
 :
-        jsr     XdrawOutline
+        jsr     _XDrawOutline
         jmp     peek
 
         ;; --------------------------------------------------
         ;; End of the drag - figure out how to finish up
 not_drag:
-        jsr     XdrawOutline
+        jsr     _XDrawOutline
 
         lda     highlight_icon_id
         beq     :+
-        jsr     UnhighlightIcon
+        jsr     _UnhighlightIcon
 :
         ;; Drag ended by a keystroke?
         lda     peekevent_params::kind
@@ -860,7 +860,7 @@ not_drag:
 
         lda     findwindow_params::window_id
         bne     different_window ; if drag onto desktop, ignore it
-ignore: jmp     DragDetectImpl::ignore_drag
+ignore: jmp     _DragDetectImpl::ignore_drag
 
         ;; Drop selection onto a window
 different_window:
@@ -883,7 +883,7 @@ same_window:
         cmp     #MGTK::Area::content
         bne     finish          ; don't move
 
-        jsr     CheckRealContentArea
+        jsr     _CheckRealContentArea
         bcs     finish          ; don't move
 
         bit     fixed
@@ -894,7 +894,7 @@ same_window:
         ldx     #0              ; don't clip (not desktop; unnecessary)
 move_ok:
         stx     ::drag_highlighted_lambda_clip_flag
-        INVOKE_WITH_LAMBDA IterateHighlightedIcons
+        INVOKE_WITH_LAMBDA _IterateHighlightedIcons
         ::drag_highlighted_lambda_clip_flag := *+1
         ldx     #SELF_MODIFIED_BYTE
         clc                     ; don't redraw highlighted
@@ -907,7 +907,7 @@ move_ok:
         sub16   findwindow_params::mousex, initial_coords+MGTK::Point::xcoord, poly_dx
         sub16   findwindow_params::mousey, initial_coords+MGTK::Point::ycoord, poly_dy
 
-        INVOKE_WITH_LAMBDA IterateHighlightedIcons
+        INVOKE_WITH_LAMBDA _IterateHighlightedIcons
         jsr     GetIconPtr
         stax    $06
 
@@ -959,7 +959,7 @@ last_highlighted_icon:
 
 ;;; Inputs: A,X = proc; called with A = icon id
 ;;;
-.proc IterateHighlightedIcons
+.proc _IterateHighlightedIcons
         stax    proc
 
         ldx     #0
@@ -983,7 +983,7 @@ next:   inc     index
         bne     loop
 
         rts
-.endproc ; IterateHighlightedIcons
+.endproc ; _IterateHighlightedIcons
 
 
 
@@ -994,7 +994,7 @@ next:   inc     index
 ;;; Outputs: A = icon (0 if none found), `findwindow_params::window_id` populated
 ;;; Trashes $06
 
-.proc FindIconValidateWindow
+.proc _FindIconValidateWindow
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         .assert MGTK::Area::desktop = 0, error, "enum mismatch"
@@ -1005,7 +1005,7 @@ next:   inc     index
         cmp     #MGTK::Area::content
         bne     fail            ; menubar, titlebar, etc
 
-        jsr     CheckRealContentArea
+        jsr     _CheckRealContentArea
         bcc     find_icon
 
 fail:   return  #0              ; no icon
@@ -1021,14 +1021,14 @@ find_icon:
         ITK_CALL IconTK::FindIcon, findwindow_params
         lda     findwindow_params::which_area ; Icon ID
         rts
-.endproc ; FindIconValidateWindow
+.endproc ; _FindIconValidateWindow
 
 ;;; Dig deeper into FindWindow results to ensure it's really content.
 ;;; Input: `findwindow_params` populated
 ;;; Output: C=0 if content, C=1 if non-content
 ;;; Assert: `FindWindow` was called and returned `Area::content`
 ;;; Trashes $06
-.proc CheckRealContentArea
+.proc _CheckRealContentArea
         COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
         copy    findwindow_params::window_id, findcontrol_params::window_id
         MGTK_CALL MGTK::FindControlEx, findcontrol_params
@@ -1056,10 +1056,10 @@ fail:   sec
 
 headery:
         .word   0
-.endproc ; CheckRealContentArea
+.endproc ; _CheckRealContentArea
 
 ;;; Trashes $06
-.proc ValidateTargetAndHighlight
+.proc _ValidateTargetAndHighlight
         ;; Over an icon
         sta     icon_num
 
@@ -1086,31 +1086,31 @@ headery:
         icon_num := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     highlight_icon_id
-        jsr     HighlightIcon
+        jsr     _HighlightIcon
 
 done:   rts
-.endproc ; ValidateTargetAndHighlight
+.endproc ; _ValidateTargetAndHighlight
 
-.proc XdrawOutline
+.proc _XDrawOutline
         MGTK_CALL MGTK::SetPort, drag_outline_grafport
         copy16  polybuf_addr, addr
         MGTK_CALL MGTK::FramePoly, SELF_MODIFIED, addr
         rts
-.endproc ; XdrawOutline
+.endproc ; _XDrawOutline
 
-.proc HighlightIcon
+.proc _HighlightIcon
         MGTK_CALL MGTK::SetPort, icon_grafport
         ITK_CALL IconTK::HighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
-.endproc ; HighlightIcon
+.endproc ; _HighlightIcon
 
-.proc UnhighlightIcon
+.proc _UnhighlightIcon
         MGTK_CALL MGTK::SetPort, icon_grafport
         ITK_CALL IconTK::UnhighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
-.endproc ; UnhighlightIcon
+.endproc ; _UnhighlightIcon
 
 .endproc ; DragHighlightedImpl
 
@@ -1449,7 +1449,7 @@ clip_dy:
         ;; Determine if we want clipping, based on icon type and flags.
 
         bit     clip_icons_flag
-        bpl     DoPaint         ; no clipping, just paint
+        bpl     _DoPaint        ; no clipping, just paint
 
         ;; Set up clipping structs and port
         lda     clip_window_id
@@ -1465,7 +1465,7 @@ clip_dy:
         bcs     ret             ; nothing remaining to draw
 
         jsr     OffsetPortAndIcon
-        jsr     DoPaint
+        jsr     _DoPaint
         jsr     OffsetPortAndIcon
 
         lda     more_drawing_needed_flag
@@ -1474,7 +1474,7 @@ clip_dy:
 ret:    rts
 
 
-.proc DoPaint
+.proc _DoPaint
         label_pos := $06
 
         ;; Prep coords
@@ -1507,7 +1507,7 @@ ret:    rts
         bit     state
     IF_NS
         MGTK_CALL MGTK::SetPattern, dark_pattern
-        jsr     Shade
+        jsr     _Shade
     END_IF
 
         ;; Mask (cleared to white or black)
@@ -1524,7 +1524,7 @@ ret:    rts
         .assert kIconEntryStateDimmed = $80, error, "flag mismatch"
         bit     state
     IF_NS
-        jsr     Shade
+        jsr     _Shade
     END_IF
 
         ;; Icon (drawn in black or white)
@@ -1549,13 +1549,13 @@ ret:    rts
 
         return  #0
 
-.proc Shade
+.proc _Shade
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintRect, bitmap_rect
         rts
-.endproc ; Shade
+.endproc ; _Shade
 
-.endproc ; DoPaint
+.endproc ; _DoPaint
 
 state:                          ; copy of IconEntry::state
         .byte   0
@@ -1977,12 +1977,12 @@ rect:   .tag    MGTK::Rect
         bne     :-
 :
     END_IF
-        FALL_THROUGH_TO RedrawIconsAfterErase
+        FALL_THROUGH_TO _RedrawIconsAfterErase
 
 ;;; ============================================================
 ;;; After erasing an icon, redraw any overlapping icons
 
-.proc RedrawIconsAfterErase
+.proc _RedrawIconsAfterErase
         COPY_STRUCT MGTK::Rect, bounding_rect, icon_rect
 
         jsr     PushPointers
@@ -2029,16 +2029,16 @@ next:   pla
         tax
         bpl     loop            ; always
 
-.endproc ; RedrawIconsAfterErase
+.endproc ; _RedrawIconsAfterErase
 
-        ;; For `RedrawIconsAfterErase`
+        ;; For `_RedrawIconsAfterErase`
 redraw_highlighted_flag:
         .byte   0
 erase_icon_id:
         .byte   0
 
         ;; IconTK::DrawIconXXX params
-        ;; IconTK::IconInRect params (in `RedrawIconsAfterErase`)
+        ;; IconTK::IconInRect params (in `_RedrawIconsAfterErase`)
 icon:   .byte   0
 icon_rect:
         .tag    MGTK::Rect

@@ -11,7 +11,7 @@
         .assert .lobyte(::BELLPROC) = 0, error, "Must be page-aligned"
 
         ;; Put routine into location
-        jsr     Swap
+        jsr     _Swap
 
         ;; `BELLPROC` starting with 0 byte (BRK) signals silent bell
         lda     BELLPROC
@@ -47,9 +47,9 @@ loop:   dec     ptr
     END_IF
 
         ;; Restore memory
-        FALL_THROUGH_TO Swap
+        FALL_THROUGH_TO _Swap
 
-.proc Swap
+.proc _Swap
         .assert kBellProcLength <= 128, error, "Can't BPL this loop"
 
         ;; Save and change banking
@@ -92,6 +92,6 @@ loop:   dec     ptr
         sta     ALTZPON         ; restore ALTZPON
 :
         rts
-.endproc ; Swap
+.endproc ; _Swap
 
 .endproc ; Bell

@@ -330,7 +330,7 @@ done:
         MGTK_CALL MGTK::CheckEvents
 
         copy    #0, index
-        jsr     ReadSelectorList
+        jsr     _ReadSelectorList
         jne     done
 
         lda     selector_list_data_buf + kSelectorListNumPrimaryRunListOffset
@@ -350,7 +350,7 @@ L0A3B:  lda     index
         lda     index
         jsr     main::ATimes16
         addax   #run_list_entries, ptr2
-        jsr     CopyPtr1ToPtr2
+        jsr     _CopyPtr1ToPtr2
 
         ;; Copy entry flags into place
         ldy     #15
@@ -364,7 +364,7 @@ L0A3B:  lda     index
         lda     index
         jsr     main::ATimes64
         addax   #main::run_list_paths, ptr2
-        jsr     CopyPtr1ToPtr2
+        jsr     _CopyPtr1ToPtr2
 
         inc     index
         inc     selector_menu
@@ -375,7 +375,7 @@ done:   jmp     end
 index:  .byte   0
 count:  .byte   0
 
-.proc CopyPtr1ToPtr2
+.proc _CopyPtr1ToPtr2
         ptr1 := $06
         ptr2 := $08
 
@@ -387,7 +387,7 @@ count:  .byte   0
         dey
         bpl     :-
         rts
-.endproc ; CopyPtr1ToPtr2
+.endproc ; _CopyPtr1ToPtr2
 
 ;;; --------------------------------------------------
 
@@ -399,21 +399,21 @@ str_selector_list:
         DEFINE_READ_PARAMS read_params, selector_list_data_buf, kSelectorListShortSize
         DEFINE_CLOSE_PARAMS close_params
 
-.proc ReadSelectorList
+.proc _ReadSelectorList
         MLI_CALL OPEN, open_params
-        bcs     WriteSelectorList
+        bcs     _WriteSelectorList
 
         lda     open_params::ref_num
         sta     read_params::ref_num
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
         rts
-.endproc ; ReadSelectorList
+.endproc ; _ReadSelectorList
 
         DEFINE_CREATE_PARAMS create_params, str_selector_list, ACCESS_DEFAULT, $F1
         DEFINE_WRITE_PARAMS write_params, selector_list_data_buf, kSelectorListShortSize
 
-.proc WriteSelectorList
+.proc _WriteSelectorList
         ptr := $06
 
         ;; Clear buffer
@@ -440,7 +440,7 @@ ploop:  ldy     #0
         MLI_CALL CLOSE, close_params
 
 done:   rts
-.endproc ; WriteSelectorList
+.endproc ; _WriteSelectorList
 
 end:
         ;; No separator if it is last
@@ -1101,7 +1101,7 @@ loop:   ldy     #0
         lda     #$80
         sta     main::copy_new_window_bounds_flag
         sta     main::OpenDirectory::suppress_error_on_open_flag
-        jsr     MaybeOpenWindow
+        jsr     _MaybeOpenWindow
         lda     #0
         sta     main::copy_new_window_bounds_flag
         sta     main::OpenDirectory::suppress_error_on_open_flag
@@ -1113,14 +1113,14 @@ next:   jsr     PopPointers
 
 exit:   jmp     main::LoadDesktopEntryTable
 
-.proc MaybeOpenWindow
+.proc _MaybeOpenWindow
         ;; Save stack for restore on error. If the call
         ;; fails, the routine will restore the stack then
         ;; rts, returning to our caller.
         tsx
         stx     saved_stack
         jmp     main::OpenWindowForPath
-.endproc ; MaybeOpenWindow
+.endproc ; _MaybeOpenWindow
 
 .endproc ; RestoreWindows
 

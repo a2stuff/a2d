@@ -54,19 +54,19 @@
 
         ;; Send "Read Cricket ID", code 0
         lda     #0
-        jsr     sendbyte
+        jsr     _SendByte
         bcs     not_found_with_restore ; timeout
 
-        jsr     readbyte
+        jsr     _ReadByte
         bcs     not_found_with_restore ; timeout
         cmp     #'C'|$80
         bne     not_found_with_restore
 
-        jsr     readbyte
+        jsr     _ReadByte
         bcs     not_found_with_restore ; timeout
         bcc     digit           ; always
 
-:       jsr     readbyte
+:       jsr     _ReadByte
         bcs     not_found_with_restore ; timeout
         cmp     #CHAR_RETURN|$80
         beq     found
@@ -100,7 +100,7 @@ restore:
         rts
 
         ;; Write byte in A
-.proc sendbyte
+.proc _SendByte
         WRITE_DELAY_HI = $3 * 3 ; ($300 iterations is normal * 3.6MHz)
 
         tries := $100 * WRITE_DELAY_HI
@@ -128,10 +128,10 @@ ready:  pla
         sta     (ptr),y         ; actually write to the register
         clc
         rts
-.endproc ; sendbyte
+.endproc ; _SendByte
 
         ;; Read byte into A, or carry set if timed out
-.proc readbyte
+.proc _ReadByte
         READ_DELAY_HI = $3 * 3 ; ($300 iterations is normal * 3.6MHz)
 
         tries := $100 * READ_DELAY_HI
@@ -156,7 +156,7 @@ ready:  ldy     #RDREG
         lda     (ptr),y         ; actually read the register
         clc
         rts
-.endproc ; readbyte
+.endproc ; _ReadByte
 
 ;;; SSC Signature
 sig_offset:     .byte   $05, $07, $0B, $0C

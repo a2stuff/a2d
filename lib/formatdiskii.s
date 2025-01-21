@@ -7,7 +7,7 @@
 
 .macro exit_with_result arg
         lda     #arg
-        jmp     Exit
+        jmp     _Exit
 .endmacro
 
         php
@@ -44,7 +44,7 @@ L0823:  asl     a
         lsr     a
         tay
         lda     seltrack_track
-        jsr     SelectTrack
+        jsr     _SelectTrack
         lsr     current_track
         rts
 
@@ -70,7 +70,7 @@ L0853:  lda     ENABLE,x        ; Turn drive on
         jsr     L0823
 L0864:  lda     $DA
         beq     L086E
-        jsr     L0B3A
+        jsr     _L0B3A
         jmp     L0864
 
 L086E:  lda     #$01
@@ -103,7 +103,7 @@ L0882:  lda     $D1
         cpy     L0C1F
         bcs     L08B2
         lda     #4
-L08B2:  jmp     Exit
+L08B2:  jmp     _Exit
 
 L08B5:  ldy     $D4
         cpy     L0C1F
@@ -121,12 +121,12 @@ L08D1:  dec     L0C25
         exit_with_result 1
 
 L08DB:  ldx     L0C23
-        jsr     L096A
+        jsr     _L096A
         bcs     L08D1
         lda     $D8
         bne     L08D1
         ldx     L0C23
-        jsr     L0907
+        jsr     _L0907
         bcs     L08D1
         inc     $D1
         lda     $D1
@@ -134,9 +134,9 @@ L08DB:  ldx     L0C23
         bcc     L0882
 
         lda     #0
-        FALL_THROUGH_TO Exit
+        FALL_THROUGH_TO _Exit
 
-.proc Exit
+.proc _Exit
         pha
         ldx     L0C23
         lda     DISABLE,x       ; Turn drive off
@@ -144,11 +144,11 @@ L08DB:  ldx     L0C23
         jsr     L0823
         pla
         rts
-.endproc ; Exit
+.endproc ; _Exit
 
 ;;; ============================================================
 
-.proc L0907
+.proc _L0907
         ldy     #$20
 L0909:  dey
         beq     return_with_carry_set
@@ -201,12 +201,12 @@ L093C:  sty     $D5
         cmp     #$AA
         beq     return_with_carry_clear
         FALL_THROUGH_TO return_with_carry_set
-.endproc ; L0907
+.endproc ; _L0907
 return_with_carry_set:
         sec
         rts
 
-.proc L096A
+.proc _L096A
         ldy     #$FC
         sty     $DC
 L096E:  iny
@@ -255,7 +255,7 @@ L0995:  sta     $DB
         cmp     #$AA
         bne     return_with_carry_set
         FALL_THROUGH_TO return_with_carry_clear
-.endproc ; L096A
+.endproc ; _L096A
 return_with_carry_clear:
         clc
         rts
@@ -263,7 +263,7 @@ return_with_carry_clear:
 ;;; ============================================================
 ;;; Move head to track - A = track, X = slot * 16
 
-.proc SelectTrack
+.proc _SelectTrack
         stx     seltrack_slot
         sta     seltrack_track
         cmp     current_track
@@ -290,15 +290,15 @@ L09F8:  cmp     #$0C
 L09FD:  sec
         jsr     L0A1D
         lda     phase_on_table,y
-        jsr     L0B3A
+        jsr     _L0B3A
         lda     L0C39
         clc
         jsr     motor
         lda     phase_off_table,y
-        jsr     L0B3A
+        jsr     _L0B3A
         inc     L0C38
         bne     L09D6
-L0A19:  jsr     L0B3A
+L0A19:  jsr     _L0B3A
         clc
 L0A1D:  lda     current_track
 
@@ -310,11 +310,11 @@ motor:  and     #$03            ; PHASE0 + 2 * phase
         ldx     seltrack_slot
 
 done:   rts
-.endproc ; SelectTrack
+.endproc ; _SelectTrack
 
 ;;; ============================================================
 
-.proc FormatSector
+.proc _FormatSector
         jsr     rts2
         lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
@@ -389,11 +389,11 @@ Write2: pha
         sta     DATA,x
         cmp     XMIT,x
         rts
-.endproc ; FormatSector
+.endproc ; _FormatSector
 
 ;;; ============================================================
 
-.proc L0AAE
+.proc _L0AAE
         sec
         lda     TESTWP,x        ; Check write protect
         lda     WPRES,x
@@ -443,7 +443,7 @@ loop:   jsr     rts1
 L0B15:  lda     RDMODE,x        ; Turn off write mode
         lda     XMIT,x
 rts1:   rts
-.endproc ; L0AAE
+.endproc ; _L0AAE
 
 ;;; ============================================================
 
@@ -469,7 +469,7 @@ L0B2D:  nop
         .byte   0
         .byte   0
 
-.proc L0B3A
+.proc _L0B3A
 start:  ldx     #$11
 :       dex
         bne     :-
@@ -478,7 +478,7 @@ start:  ldx     #$11
         sbc     #1
         bne     start
         rts
-.endproc ; L0B3A
+.endproc ; _L0B3A
 
 ;;; Timing (100-usecs)
 phase_on_table:  .byte   $01, $30, $28, $24, $20, $1E, $1D, $1C, $1C, $1C, $1C, $1C
@@ -493,12 +493,12 @@ L0B68:  ldy     #$80
 
 L0B71:  ldy     $D4
 L0B73:  ldx     L0C23
-        jsr     L0AAE
+        jsr     _L0AAE
         bcc     L0B7E
         jmp     rts2
 
 L0B7E:  ldx     L0C23
-        jsr     FormatSector
+        jsr     _FormatSector
         inc     $D2
         lda     $D2
         cmp     #$10
@@ -523,7 +523,7 @@ L0BA2:  jsr     rts2
         dey
         bne     L0BA2
         ldx     L0C23
-        jsr     L096A
+        jsr     _L096A
         bcs     L0BF3
         lda     $D8
         beq     L0BCE
@@ -535,10 +535,10 @@ L0BA2:  jsr     rts2
         rts
 
 L0BC6:  ldx     L0C23
-        jsr     L096A
+        jsr     _L096A
         bcs     L0BE8
 L0BCE:  ldx     L0C23
-        jsr     L0907
+        jsr     _L0907
         bcs     L0BE8
         ldy     $D8
         lda     L0C26,y
@@ -561,7 +561,7 @@ L0BF3:  lda     L0C22
         asl     a
         sta     L0C25
 L0BFA:  ldx     L0C23
-        jsr     L096A
+        jsr     _L096A
         bcs     L0C08
         lda     $D8
         cmp     #$0F

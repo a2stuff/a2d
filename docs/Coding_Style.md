@@ -35,8 +35,6 @@ syntax details.
 
 ## Naming
 
-The naming style is in flux: see https://github.com/a2stuff/a2d/issues/112
-
 * Internal labels (for both code and data) should use `snake_case`; this include parameter blocks.
 
 * External labels ("equates") should use `UPPERCASE`, and are defined with `:=`, e.g. `SPKR := $C030`
@@ -44,6 +42,8 @@ The naming style is in flux: see https://github.com/a2stuff/a2d/issues/112
 * Constants (symbols) should use `kTitleCase`, and are defined with `=`, e.g. `kExample = 1234`
 
 * Callable procedures should use `TitleCase`, and are defined with `.proc`
+
+* Nested or otherwise "private" callable procedures should use `_TitleCase` with `_` prefix to make scoping more obvious.
 
 * Structure definitions (`.struct`) should use `TitleCase`, with member labels in `snake_case`.
 

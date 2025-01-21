@@ -746,7 +746,7 @@ finish: sta     result
         ;; --------------------------------------------------
         ;; Windows
 
-        jsr     UncheckViewMenuItem
+        jsr     _UncheckViewMenuItem
         lda     active_window_id
     IF_NOT_ZERO
         jsr     GetActiveWindowViewBy
@@ -754,11 +754,11 @@ finish: sta     result
         tax
         inx
         stx     checkitem_params::menu_item
-        jsr     CheckViewMenuItem
+        jsr     _CheckViewMenuItem
 
-        jsr     EnableMenuItemsRequiringWindow
+        jsr     _EnableMenuItemsRequiringWindow
     ELSE
-        jsr     DisableMenuItemsRequiringWindow
+        jsr     _DisableMenuItemsRequiringWindow
     END_IF
 
         ;; --------------------------------------------------
@@ -766,9 +766,9 @@ finish: sta     result
 
         lda     num_selector_list_items
     IF_NOT_ZERO
-        jsr     EnableSelectorMenuItems
+        jsr     _EnableSelectorMenuItems
     ELSE
-        jsr     DisableSelectorMenuItems
+        jsr     _DisableSelectorMenuItems
     END_IF
 
 check_selection:
@@ -784,9 +784,9 @@ check_selection:
         lda     selected_icon_list
         cmp     trash_icon_num
         beq     no_selection    ; trash only - treat as no selection
-        jsr     EnableMenuItemsRequiringSingleSelection
+        jsr     _EnableMenuItemsRequiringSingleSelection
         jmp     :+
-multi:  jsr     DisableMenuItemsRequiringSingleSelection
+multi:  jsr     _DisableMenuItemsRequiringSingleSelection
 :
         ;; Files or Volumes?
         lda     selected_window_id ; In a window?
@@ -795,48 +795,48 @@ multi:  jsr     DisableMenuItemsRequiringSingleSelection
         ;; --------------------------------------------------
         ;; Files selected (not volumes)
 
-        jsr     DisableMenuItemsRequiringVolumeSelection
+        jsr     _DisableMenuItemsRequiringVolumeSelection
         jsr     GetSingleSelectedIcon
     IF_NOT_ZERO
-        jsr     EnableMenuItemsRequiringSingleFileSelection
+        jsr     _EnableMenuItemsRequiringSingleFileSelection
     ELSE
-        jsr     DisableMenuItemsRequiringSingleFileSelection
+        jsr     _DisableMenuItemsRequiringSingleFileSelection
     END_IF
-        jsr     EnableMenuItemsRequiringFileSelection
-        jmp     EnableMenuItemsRequiringSelection
+        jsr     _EnableMenuItemsRequiringFileSelection
+        jmp     _EnableMenuItemsRequiringSelection
 
         ;; --------------------------------------------------
         ;; Volumes selected (not files)
 
-:       jsr     EnableMenuItemsRequiringVolumeSelection
-        jsr     DisableMenuItemsRequiringSingleFileSelection
-        jsr     DisableMenuItemsRequiringFileSelection
-        jmp     EnableMenuItemsRequiringSelection
+:       jsr     _EnableMenuItemsRequiringVolumeSelection
+        jsr     _DisableMenuItemsRequiringSingleFileSelection
+        jsr     _DisableMenuItemsRequiringFileSelection
+        jmp     _EnableMenuItemsRequiringSelection
 
         ;; --------------------------------------------------
         ;; No Selection
 no_selection:
-        jsr     DisableMenuItemsRequiringVolumeSelection
-        jsr     DisableMenuItemsRequiringSingleFileSelection
-        jsr     DisableMenuItemsRequiringFileSelection
-        jsr     DisableMenuItemsRequiringSelection
-        jmp     DisableMenuItemsRequiringSingleSelection
+        jsr     _DisableMenuItemsRequiringVolumeSelection
+        jsr     _DisableMenuItemsRequiringSingleFileSelection
+        jsr     _DisableMenuItemsRequiringFileSelection
+        jsr     _DisableMenuItemsRequiringSelection
+        jmp     _DisableMenuItemsRequiringSingleSelection
 
 ;;; ------------------------------------------------------------
 ;;; Calls DisableItem menu_item in A (to enable or disable).
 ;;; Set disableitem_params' disable flag and menu_id before calling.
 
-.proc DisableMenuItem
+.proc _DisableMenuItem
         sta     disableitem_params::menu_item
         MGTK_CALL MGTK::DisableItem, disableitem_params
         rts
-.endproc ; DisableMenuItem
+.endproc ; _DisableMenuItem
 
 ;;; ------------------------------------------------------------
 
 ;;; Inputs: A = MGTK::checkitem_check or MGTK::checkitem_uncheck
 ;;; Assumes checkitem_params::menu_item has been updated or is last checked.
-.proc CheckViewMenuItemImpl
+.proc _CheckViewMenuItemImpl
 check:  lda     #MGTK::checkitem_check
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
         .assert MGTK::checkitem_uncheck <> $C0, error, "Bad BIT skip"
@@ -845,13 +845,13 @@ uncheck:lda     #MGTK::checkitem_uncheck
         sta     checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
         rts
-.endproc ; CheckViewMenuItemImpl
-CheckViewMenuItem := CheckViewMenuItemImpl::check
-UncheckViewMenuItem := CheckViewMenuItemImpl::uncheck
+.endproc ; _CheckViewMenuItemImpl
+_CheckViewMenuItem := _CheckViewMenuItemImpl::check
+_UncheckViewMenuItem := _CheckViewMenuItemImpl::uncheck
 
 ;;; ------------------------------------------------------------
 
-.proc ToggleMenuItemsRequiringWindow
+.proc _ToggleMenuItemsRequiringWindow
         .assert MGTK::disablemenu_enable = MGTK::disableitem_enable, error, "enum mismatch"
         .assert MGTK::disablemenu_disable = MGTK::disableitem_disable, error, "enum mismatch"
 
@@ -868,19 +868,19 @@ disable:lda     #MGTK::disableitem_disable
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdNewFolder
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
         lda     #aux::kMenuItemIdClose
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
         lda     #aux::kMenuItemIdCloseAll
-        jmp     DisableMenuItem
-.endproc ; ToggleMenuItemsRequiringWindow
-EnableMenuItemsRequiringWindow := ToggleMenuItemsRequiringWindow::enable
-DisableMenuItemsRequiringWindow := ToggleMenuItemsRequiringWindow::disable
+        jmp     _DisableMenuItem
+.endproc ; _ToggleMenuItemsRequiringWindow
+_EnableMenuItemsRequiringWindow := _ToggleMenuItemsRequiringWindow::enable
+_DisableMenuItemsRequiringWindow := _ToggleMenuItemsRequiringWindow::disable
 
 ;;; ------------------------------------------------------------
 ;;; Disable menu items for operating on a selection
 
-.proc ToggleMenuItemsRequiringSelection
+.proc _ToggleMenuItemsRequiringSelection
 enable: lda     #MGTK::disableitem_enable
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
         .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
@@ -890,17 +890,17 @@ disable:lda     #MGTK::disableitem_disable
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdOpen
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
         lda     #aux::kMenuItemIdGetInfo
-        jmp     DisableMenuItem
-.endproc ; ToggleMenuItemsRequiringSelection
-EnableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::enable
-DisableMenuItemsRequiringSelection := ToggleMenuItemsRequiringSelection::disable
+        jmp     _DisableMenuItem
+.endproc ; _ToggleMenuItemsRequiringSelection
+_EnableMenuItemsRequiringSelection := _ToggleMenuItemsRequiringSelection::enable
+_DisableMenuItemsRequiringSelection := _ToggleMenuItemsRequiringSelection::disable
 
 ;;; ------------------------------------------------------------
 ;;; Disable menu items for operating on a single selection
 
-.proc ToggleMenuItemsRequiringSingleSelection
+.proc _ToggleMenuItemsRequiringSingleSelection
 enable: lda     #MGTK::disableitem_enable
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
         .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
@@ -910,25 +910,25 @@ disable:lda     #MGTK::disableitem_disable
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdRenameIcon
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
 
         ;; Edit
         copy    #kMenuIdEdit, disableitem_params::menu_id
         lda     #aux::kMenuItemIdCut
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
         lda     #aux::kMenuItemIdCopy
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
         lda     #aux::kMenuItemIdPaste
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
         lda     #aux::kMenuItemIdClear
-        jmp     DisableMenuItem
-.endproc ; ToggleMenuItemsRequiringSingleSelection
-EnableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::enable
-DisableMenuItemsRequiringSingleSelection := ToggleMenuItemsRequiringSingleSelection::disable
+        jmp     _DisableMenuItem
+.endproc ; _ToggleMenuItemsRequiringSingleSelection
+_EnableMenuItemsRequiringSingleSelection := _ToggleMenuItemsRequiringSingleSelection::enable
+_DisableMenuItemsRequiringSingleSelection := _ToggleMenuItemsRequiringSingleSelection::disable
 
 ;;; ------------------------------------------------------------
 
-.proc ToggleMenuItemsRequiringFileSelection
+.proc _ToggleMenuItemsRequiringFileSelection
 enable: lda     #MGTK::disableitem_enable
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
         .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
@@ -937,16 +937,16 @@ disable:lda     #MGTK::disableitem_disable
 
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdCopyFile
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
         lda     #aux::kMenuItemIdDeleteFile
-        jmp     DisableMenuItem
-.endproc ; ToggleMenuItemsRequiringFileSelection
-EnableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::enable
-DisableMenuItemsRequiringFileSelection := ToggleMenuItemsRequiringFileSelection::disable
+        jmp     _DisableMenuItem
+.endproc ; _ToggleMenuItemsRequiringFileSelection
+_EnableMenuItemsRequiringFileSelection := _ToggleMenuItemsRequiringFileSelection::enable
+_DisableMenuItemsRequiringFileSelection := _ToggleMenuItemsRequiringFileSelection::disable
 
 ;;; ------------------------------------------------------------
 
-.proc ToggleMenuItemsRequiringSingleFileSelection
+.proc _ToggleMenuItemsRequiringSingleFileSelection
 enable: lda     #MGTK::disableitem_enable
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
         .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
@@ -956,19 +956,19 @@ disable:lda     #MGTK::disableitem_disable
         ;; File
         copy    #kMenuIdFile, disableitem_params::menu_id
         lda     #aux::kMenuItemIdDuplicate
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
 
         ;; Special
         copy    #kMenuIdSpecial, disableitem_params::menu_id
         lda     #aux::kMenuItemIdMakeLink
-        jmp     DisableMenuItem
-.endproc ; ToggleMenuItemsRequiringSingleFileSelection
-EnableMenuItemsRequiringSingleFileSelection := ToggleMenuItemsRequiringSingleFileSelection::enable
-DisableMenuItemsRequiringSingleFileSelection := ToggleMenuItemsRequiringSingleFileSelection::disable
+        jmp     _DisableMenuItem
+.endproc ; _ToggleMenuItemsRequiringSingleFileSelection
+_EnableMenuItemsRequiringSingleFileSelection := _ToggleMenuItemsRequiringSingleFileSelection::enable
+_DisableMenuItemsRequiringSingleFileSelection := _ToggleMenuItemsRequiringSingleFileSelection::disable
 
 ;;; ------------------------------------------------------------
 
-.proc ToggleMenuItemsRequiringVolumeSelection
+.proc _ToggleMenuItemsRequiringVolumeSelection
 enable: lda     #MGTK::disableitem_enable
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
         .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
@@ -977,18 +977,18 @@ disable:lda     #MGTK::disableitem_disable
 
         copy    #kMenuIdSpecial, disableitem_params::menu_id
         lda     #aux::kMenuItemIdEject
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
 
         copy    #kMenuIdSpecial, disableitem_params::menu_id
         lda     #aux::kMenuItemIdCheckDrive
-        jmp     DisableMenuItem
-.endproc ; ToggleMenuItemsRequiringVolumeSelection
-EnableMenuItemsRequiringVolumeSelection := ToggleMenuItemsRequiringVolumeSelection::enable
-DisableMenuItemsRequiringVolumeSelection := ToggleMenuItemsRequiringVolumeSelection::disable
+        jmp     _DisableMenuItem
+.endproc ; _ToggleMenuItemsRequiringVolumeSelection
+_EnableMenuItemsRequiringVolumeSelection := _ToggleMenuItemsRequiringVolumeSelection::enable
+_DisableMenuItemsRequiringVolumeSelection := _ToggleMenuItemsRequiringVolumeSelection::disable
 
 ;;; ------------------------------------------------------------
 
-.proc ToggleSelectorMenuItems
+.proc _ToggleSelectorMenuItems
 enable: lda     #MGTK::disableitem_enable
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
         .assert MGTK::disableitem_disable <> $C0, error, "Bad BIT skip"
@@ -997,14 +997,14 @@ disable:lda     #MGTK::disableitem_disable
 
         copy    #kMenuIdSelector, disableitem_params::menu_id
         lda     #kMenuItemIdSelectorEdit
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
         lda     #kMenuItemIdSelectorDelete
-        jsr     DisableMenuItem
+        jsr     _DisableMenuItem
         lda     #kMenuItemIdSelectorRun
-        jmp     DisableMenuItem
-.endproc ; ToggleSelectorMenuItems
-EnableSelectorMenuItems := ToggleSelectorMenuItems::enable
-DisableSelectorMenuItems := ToggleSelectorMenuItems::disable
+        jmp     _DisableMenuItem
+.endproc ; _ToggleSelectorMenuItems
+_EnableSelectorMenuItems := _ToggleSelectorMenuItems::enable
+_DisableSelectorMenuItems := _ToggleSelectorMenuItems::disable
 
 .endproc ; UpdateMenuItemStates
 
@@ -1123,7 +1123,7 @@ retry:  jsr     GetSrcFileInfo
         ;; --------------------------------------------------
         ;; Fallback - try BASIS.SYSTEM
 fallback:
-        jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
+        jsr     _CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
     IF_CC                        ; yes, continue below
         copy    #$80, INVOKER_BITSY_COMPAT
         bmi     launch          ; always
@@ -1142,7 +1142,7 @@ interpreter:
 
         ;; Construct absolute path
         ldax    ptr1
-        jsr     GetPrefixAndAppendToInvokerInterpreter
+        jsr     _GetPrefixAndAppendToInvokerInterpreter
         FALL_THROUGH_TO launch
 
         ;; --------------------------------------------------
@@ -1161,7 +1161,7 @@ launch:
 
         ;; --------------------------------------------------
         ;; BASIC program
-basic:  jsr     CheckBasicSystem ; Only launch if BASIC.SYSTEM is found
+basic:  jsr     _CheckBasicSystem ; Only launch if BASIC.SYSTEM is found
         jcc     launch
         lda     #kErrBasicSysNotFound
         jmp     ShowAlert
@@ -1200,15 +1200,15 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
         INVOKE_TABLE_ENTRY      InvokePreview, str_preview_fnt ; font
         INVOKE_TABLE_ENTRY      fallback, 0                    ; relocatable
         INVOKE_TABLE_ENTRY      fallback, 0                    ; command
-        INVOKE_TABLE_ENTRY      OpenFolder, 0                  ; folder
-        INVOKE_TABLE_ENTRY      OpenFolder, 0                  ; system_folder
+        INVOKE_TABLE_ENTRY      _OpenFolder, 0                 ; folder
+        INVOKE_TABLE_ENTRY      _OpenFolder, 0                 ; system_folder
         INVOKE_TABLE_ENTRY      fallback, 0                    ; iigs
         INVOKE_TABLE_ENTRY      interpreter, str_awlauncher    ; appleworks_wp
         INVOKE_TABLE_ENTRY      interpreter, str_awlauncher    ; appleworks_sp
         INVOKE_TABLE_ENTRY      interpreter, str_awlauncher    ; appleworks_db
         INVOKE_TABLE_ENTRY      interpreter, str_unshrink      ; archive
         INVOKE_TABLE_ENTRY      interpreter, str_binscii       ; encoded
-        INVOKE_TABLE_ENTRY      InvokeLink, 0                  ; link
+        INVOKE_TABLE_ENTRY      _InvokeLink, 0                 ; link
         INVOKE_TABLE_ENTRY      InvokeDeskAccByPath, 0         ; desk_accessory
         INVOKE_TABLE_ENTRY      basic, 0                       ; basic
         INVOKE_TABLE_ENTRY      interpreter, str_intbasic      ; intbasic
@@ -1224,7 +1224,7 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
 ;;; Input: `src_path_buf` set to target path
 ;;; Output: C=0 if found, C=1 if not found
 
-.proc CheckBasixSystemImpl
+.proc _CheckBasixSystemImpl
         launch_path := INVOKER_PREFIX
         interp_path := INVOKER_INTERPRETER
 
@@ -1244,7 +1244,7 @@ pop_segment:
         inc     interp_path     ; restore trailing '/'
 
         ;; Append BASI?.SYSTEM to path and check for file.
-        param_call AppendToInvokerInterpreter, str_basix_system
+        param_call _AppendToInvokerInterpreter, str_basix_system
         param_call GetFileInfo, interp_path
         bcc     ret
 
@@ -1255,22 +1255,22 @@ no_bs:  copy    #0, interp_path ; null out the path
         sec
 
 ret:    rts
-.endproc ; CheckBasixSystemImpl
-CheckBasisSystem        := CheckBasixSystemImpl::basis
+.endproc ; _CheckBasixSystemImpl
+_CheckBasisSystem        := _CheckBasixSystemImpl::basis
 
-.proc CheckBasicSystem
+.proc _CheckBasicSystem
         ldax    #str_extras_basic
-        jsr     GetPrefixAndAppendToInvokerInterpreter
+        jsr     _GetPrefixAndAppendToInvokerInterpreter
         param_call GetFileInfo, INVOKER_INTERPRETER
-        jcs     CheckBasixSystemImpl::basic ; nope, look relative to launch path
+        jcs     _CheckBasixSystemImpl::basic ; nope, look relative to launch path
         rts
-.endproc ; CheckBasicSystem
+.endproc ; _CheckBasicSystem
 
 ;;; --------------------------------------------------
 
 ;;; Input: A,X = relative path to append
 ;;; Output: `INVOKER_INTERPRETER` has absolute path
-.proc GetPrefixAndAppendToInvokerInterpreter
+.proc _GetPrefixAndAppendToInvokerInterpreter
         pha
         txa
         pha
@@ -1280,14 +1280,14 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
         pla
         tax
         pla
-        FALL_THROUGH_TO AppendToInvokerInterpreter
-.endproc ; GetPrefixAndAppendToInvokerInterpreter
+        FALL_THROUGH_TO _AppendToInvokerInterpreter
+.endproc ; _GetPrefixAndAppendToInvokerInterpreter
 
 ;;; --------------------------------------------------
 
 ;;; Input: A,X = relative path to append
 ;;; Output: `INVOKER_INTERPRETER` updated
-.proc AppendToInvokerInterpreter
+.proc _AppendToInvokerInterpreter
         jsr     PushPointers
 
         ptr1 := $06
@@ -1308,23 +1308,23 @@ CheckBasisSystem        := CheckBasixSystemImpl::basis
 
         jsr     PopPointers     ; do not tail-call optimize!
         rts
-.endproc ; AppendToInvokerInterpreter
+.endproc ; _AppendToInvokerInterpreter
 
 ;;; --------------------------------------------------
 
-.proc OpenFolder
+.proc _OpenFolder
         tsx
         stx     saved_stack
 
         jsr     OpenWindowForPath
 
         jmp     SetCursorPointer ; after opening folder
-.endproc ; OpenFolder
+.endproc ; _OpenFolder
 
 
 ;;; --------------------------------------------------
 
-.proc InvokeLink
+.proc _InvokeLink
         read_buf := $800
 
         MLI_CALL OPEN, open_params
@@ -1367,7 +1367,7 @@ check_header:
         DEFINE_CLOSE_PARAMS close_params
         close_params__ref_num := close_params::ref_num
 
-.endproc ; InvokeLink
+.endproc ; _InvokeLink
 
 ;;; --------------------------------------------------
 
@@ -1375,6 +1375,7 @@ check_header:
 
 .endproc ; LaunchFileWithPath
 LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
+MakePathAbsoluteInInvokerInterpreter := LaunchFileWithPath::_GetPrefixAndAppendToInvokerInterpreter
 
 ;;; ============================================================
 
@@ -1600,7 +1601,7 @@ done:   rts
         ;; Stash path, which may be from the picker (if not in the
         ;; primary list) and may be trashed (if the entry is copied
         ;; to RAMCard later.
-        jsr     SetEntryPathPtr
+        jsr     _SetEntryPathPtr
         param_call CopyPtr1ToBuf, entry_path
 
         ;; Is there a RAMCard at all?
@@ -1609,7 +1610,7 @@ done:   rts
 
         ;; Look at the entry's flags
         lda     entry_num
-        jsr     SetEntryPtr
+        jsr     _SetEntryPtr
 
         ldy     #kSelectorEntryFlagsOffset ; flag byte following name
         lda     (ptr),y
@@ -1625,7 +1626,7 @@ done:   rts
         bmi     use_ramcard_path ; already copied!
 
         ;; Need to copy to RAMCard
-        jsr     PrepEntryCopyPaths
+        jsr     _PrepEntryCopyPaths
         jsr     DoCopyToRAM
 
         cmp     #kOperationCanceled
@@ -1654,7 +1655,7 @@ on_boot:
         ;; --------------------------------------------------
         ;; Copied to RAMCard - use copied path
 use_ramcard_path:
-        jsr     ComposeRAMCardEntryPath
+        jsr     _ComposeRAMCardEntryPath
         stax    ptr
         jmp     launch
 
@@ -1673,14 +1674,14 @@ entry_num:
 ;;; --------------------------------------------------
 ;;; Input: `entry_path` is populated
 ;;; Output: paths prepared for `DoCopyToRAM`
-.proc PrepEntryCopyPaths
+.proc _PrepEntryCopyPaths
         entry_original_path := $800
         entry_ramcard_path := $840
 
         COPY_STRING entry_path, entry_original_path
 
         ;; Copy "down loaded" path to `entry_ramcard_path`
-        jsr     ComposeRAMCardEntryPath
+        jsr     _ComposeRAMCardEntryPath
         stax    ptr
         param_call CopyPtr1ToBuf, entry_ramcard_path
 
@@ -1696,14 +1697,14 @@ entry_num:
         copy16  #entry_original_path, $06
         copy16  #entry_ramcard_path, $08
         jmp     CopyPathsFromPtrsToBufsAndSplitName
-.endproc ; PrepEntryCopyPaths
+.endproc ; _PrepEntryCopyPaths
 
 ;;; --------------------------------------------------
 ;;; Compose path using RAM card prefix plus last two segments of path
 ;;; (e.g. "/RAM" + "/MOUSEPAINT/MP.SYSTEM") into `src_path_buf`
 ;;; Input: `entry_path` is populated
 ;;; Output: A,X = `src_path_buf`
-.proc ComposeRAMCardEntryPath
+.proc _ComposeRAMCardEntryPath
         ;; Initialize buffer
         param_call CopyRAMCardPrefix, src_path_buf
         ldy     entry_path
@@ -1736,7 +1737,7 @@ entry_num:
         stx     src_path_buf
         ldax    #src_path_buf
         rts
-.endproc ; ComposeRAMCardEntryPath
+.endproc ; _ComposeRAMCardEntryPath
 
 ;;; --------------------------------------------------
 ;;; Input: A = entry num
@@ -1744,7 +1745,7 @@ entry_num:
 ;;; NOTE: If in the "primary" list, points at the permanently loaded
 ;;; copy. Otherwise, assumes the picker just ran and points at the
 ;;; temporarily loaded copy.
-.proc SetEntryPtr
+.proc _SetEntryPtr
         ptr := $06
 
         cmp     #kSelectorListNumPrimaryRunListEntries
@@ -1757,7 +1758,7 @@ secondary:
         jsr     ATimes16
         addax   #SELECTOR_FILE_BUF + kSelectorListEntriesOffset, ptr
         rts
-.endproc ; SetEntryPtr
+.endproc ; _SetEntryPtr
 
 ;;; --------------------------------------------------
 ;;; Input: A = entry num
@@ -1765,7 +1766,7 @@ secondary:
 ;;; NOTE: If in the "primary" list, points at the permanently loaded
 ;;; copy. Otherwise, assumes the picker just ran and points at the
 ;;; temporarily loaded copy.
-.proc SetEntryPathPtr
+.proc _SetEntryPathPtr
         ptr := $06
 
         cmp     #kSelectorListNumPrimaryRunListEntries
@@ -1778,7 +1779,7 @@ secondary:
         jsr     ATimes64
         addax   #SELECTOR_FILE_BUF + kSelectorListPathsOffset, ptr
         rts
-.endproc ; SetEntryPathPtr
+.endproc ; _SetEntryPathPtr
 
 .endproc ; InvokeSelectorEntry
 
@@ -1835,7 +1836,7 @@ secondary:
 
 ;;; ============================================================
 
-.proc CmdDeskaccImpl
+.proc CmdDeskAccImpl
         ptr := $6
         path := INVOKER_PREFIX
 
@@ -1887,8 +1888,8 @@ skip:   iny
 
         ;; Allow arbitrary types in menu (e.g. folders)
         jmp     LaunchFileWithPathOnSystemDisk
-.endproc ; CmdDeskaccImpl
-CmdDeskAcc      := CmdDeskaccImpl::start
+.endproc ; CmdDeskAccImpl
+CmdDeskAcc      := CmdDeskAccImpl::start
 
 ;;; ============================================================
 ;;; Invoke a Preview DA
@@ -2040,7 +2041,7 @@ main_length:    .word   0
 
         ;; Get prefix and append path
         ldax    ptr
-        jsr     LaunchFileWithPath::GetPrefixAndAppendToInvokerInterpreter
+        jsr     MakePathAbsoluteInInvokerInterpreter
 
         ;; Copy back to original buffer
         ldy     INVOKER_INTERPRETER
@@ -3173,7 +3174,7 @@ menu_item_to_view_by:
 entry2:
         ;; Selection not preserved in other entry points
         ;; because file records are not retained.
-        jsr     PreserveSelection
+        jsr     _PreserveSelection
 
         ;; Destroy existing icons
         jsr     DestroyIconsInActiveWindow
@@ -3196,7 +3197,7 @@ entry3:
         jsr     InitWindowEntriesAndIcons
         jsr     AdjustViewportForNewIcons
 
-        jsr     RestoreSelection
+        jsr     _RestoreSelection
 
         jmp     RedrawAfterContentChange
 
@@ -3205,7 +3206,7 @@ entry3:
 ;;; with their corresponding record indexes, which remain
 ;;; valid across view changes.
 
-.proc PreserveSelection
+.proc _PreserveSelection
         lda     selected_window_id
         cmp     active_window_id
         bne     ret
@@ -3226,13 +3227,13 @@ entry3:
         copy    #0, selected_window_id
 
 ret:    rts
-.endproc ; PreserveSelection
+.endproc ; _PreserveSelection
 
 ;;; --------------------------------------------------
 ;;; Restores selection after a view change, reversing what
-;;; `PreserveSelection` did.
+;;; `_PreserveSelection` did.
 
-.proc RestoreSelection
+.proc _RestoreSelection
         lda     selection_preserved_count
         beq     ret
 
@@ -3250,7 +3251,7 @@ ret:    rts
         copy    cached_window_id, selected_window_id
 
 ret:    rts
-.endproc ; RestoreSelection
+.endproc ; _RestoreSelection
 
 selection_preserved_count:
         .byte   0
@@ -3937,7 +3938,7 @@ file_char:
         beq     done
 
         ;; Find a match.
-        jsr     FindMatch
+        jsr     _FindMatch
 
         ;; Icon to select
         tax
@@ -3962,7 +3963,7 @@ done:   lda     #0
 
 ;;; Find the substring match for `typedown_buf`, or the next
 ;;; match in lexicographic order, or the last item in the table.
-.proc FindMatch
+.proc _FindMatch
         ptr     := $06
 
         copy    #0, index
@@ -4001,7 +4002,7 @@ next:   inc     index
         bne     loop
         dec     index
 found:  return  index
-.endproc ; FindMatch
+.endproc ; _FindMatch
 
 .endproc ; CheckTypeDown
 
@@ -5496,7 +5497,7 @@ failure:
     IF_NS
         ;; Update source vol's contents
         jsr     MaybeStashDropTargetName ; in case target is in window...
-        jsr     UpdateSelectedWindow
+        jsr     _UpdateSelectedWindow
         jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
     END_IF
 
@@ -5510,7 +5511,7 @@ failure:
         ;; Update used/free for same-vol windows
     IF_EQ
         copy    #$80, validate_windows_flag
-        bne     UpdateSelectedWindow ; always
+        bne     _UpdateSelectedWindow ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -5537,10 +5538,10 @@ failure:
         and     #$7F            ; mask off window number
         bne     UpdateActivateAndRefreshWindow ; always
 
-.proc UpdateSelectedWindow
+.proc _UpdateSelectedWindow
         lda     selected_window_id
         FALL_THROUGH_TO UpdateActivateAndRefreshWindow
-.endproc ; UpdateSelectedWindow
+.endproc ; _UpdateSelectedWindow
 
 .endproc ; PerformPostDropUpdates
 
@@ -5653,7 +5654,7 @@ failure:
 
 .proc ActivateAndRefreshWindowOrClose
         pha
-        jsr     TryActivateAndRefreshWindow
+        jsr     _TryActivateAndRefreshWindow
         pla
 
         bit     exception_flag
@@ -5664,7 +5665,7 @@ failure:
         jsr     CloseSpecifiedWindow
         return  #$FF
 
-.proc TryActivateAndRefreshWindow
+.proc _TryActivateAndRefreshWindow
         ldx     #$80
         stx     exception_flag
         tsx
@@ -5673,7 +5674,7 @@ failure:
         ldx     #0
         stx     exception_flag
         rts
-.endproc ; TryActivateAndRefreshWindow
+.endproc ; _TryActivateAndRefreshWindow
 
 exception_flag:
         .byte   0
@@ -5762,7 +5763,7 @@ END_PARAM_BLOCK
 
     IF_NOT_ZERO
         ;; Map initial event coordinates
-        jsr     CoordsScreenToWindow
+        jsr     _CoordsScreenToWindow
     END_IF
 
         ;; Stash initial coords
@@ -5872,7 +5873,7 @@ done_icon:
         ;; Check movement threshold
 update: lda     window_id
     IF_NOT_ZERO
-        jsr     CoordsScreenToWindow
+        jsr     _CoordsScreenToWindow
     END_IF
         sub16   event_params::xcoord, last_pos+MGTK::Point::xcoord, deltax
         sub16   event_params::ycoord, last_pos+MGTK::Point::ycoord, deltay
@@ -5930,7 +5931,7 @@ update: lda     window_id
         jsr     FrameTmpRect
         jmp     event_loop
 
-.proc CoordsScreenToWindow
+.proc _CoordsScreenToWindow
         jsr     PushPointers
         jsr     PrepActiveWindowScreenMapping
 
@@ -5941,7 +5942,7 @@ update: lda     window_id
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc ; CoordsScreenToWindow
+.endproc ; _CoordsScreenToWindow
 .endproc ; DragSelect
 
 ;;; ============================================================
@@ -6348,7 +6349,7 @@ no_win:
         sta     win_view_by_table-1,x
 
         ;; This ensures `ptr` points at IconEntry (real or virtual)
-        jsr     UpdateIcon
+        jsr     _UpdateIcon
 
         ;; Set path (using `ptr`), size, contents, and volume free/used.
         jsr     PrepareNewWindow
@@ -6367,7 +6368,7 @@ no_win:
 ;;;   Points `ptr` at IconEntry, marks it open and repaints it, and sets `ptr`.
 ;;; * Otherwise:
 ;;;   Points `ptr` at a virtual IconEntry, to allow referencing the icon name.
-.proc UpdateIcon
+.proc _UpdateIcon
         lda     icon_param      ; set to $FF if opening via path
         jpl     MarkIconOpen
 
@@ -6394,7 +6395,7 @@ no_win:
         ;; Adjust ptr as if it's pointing at an IconEntry
         copy16  #buf_filename - IconEntry::name, ptr
         rts
-.endproc ; UpdateIcon
+.endproc ; _UpdateIcon
 .endproc ; OpenWindowForIcon
 
 ;;; ============================================================
@@ -6921,7 +6922,7 @@ found_windows_list:
 ;;; ============================================================
 
 .proc OpenDirectory
-        jmp     Start
+        jmp     _Start
 
         DEFINE_OPEN_PARAMS open_params, src_path_buf, $800
 
@@ -6942,16 +6943,16 @@ index_in_dir:           .byte   0
 
 record_count:           .byte   0
 
-.proc Start
+.proc _Start
         sta     window_id
         jsr     PushPointers
         jsr     SetCursorWatch ; before loading directory
 
-        jsr     DoOpen
+        jsr     _DoOpen
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
-        jsr     DoRead
+        jsr     _DoRead
         jsr     GetVolUsedFreeViaPath ; uses `src_path_buf`
 
         ldx     #0
@@ -6979,7 +6980,7 @@ record_count:           .byte   0
         bcs     enough_room
 
 too_many_files:
-        jsr     DoClose
+        jsr     _DoClose
 
         ldax    #aux::str_warning_window_must_be_closed ; too many files to show
         ldy     active_window_id ; is a window open?
@@ -7043,7 +7044,7 @@ next:   inc     index_in_block
 
 L71E7:  copy    #$00, index_in_block
         copy16  #$0C04, entry_ptr
-        jsr     DoRead
+        jsr     _DoRead
 
 L71F7:  ldx     #$00
         ldy     #$00
@@ -7158,15 +7159,15 @@ finish: copy16  record_ptr, filerecords_free_start
         bit     LCBANK1
         bit     LCBANK1
 
-        jsr     DoClose
+        jsr     _DoClose
         jsr     SetCursorPointer ; after loading directory
         jsr     PopPointers      ; do not tail-call optimise!
         rts
-.endproc ; Start
+.endproc ; _Start
 
 ;;; --------------------------------------------------
 
-.proc DoOpen
+.proc _DoOpen
         MLI_CALL OPEN, open_params
         bcc     done
 
@@ -7208,20 +7209,22 @@ finish: copy16  record_ptr, filerecords_free_start
         txs
 
 done:   rts
-.endproc ; DoOpen
+.endproc ; _DoOpen
 
 suppress_error_on_open_flag:
         .byte   0
 
 ;;; --------------------------------------------------
 
-DoRead:
+.proc _DoRead
         MLI_CALL READ, read_params
         rts
+.endproc ; _DoRead
 
-DoClose:
+.proc _DoClose
         MLI_CALL CLOSE, close_params
         rts
+.endproc ; _DoClose
 
 ;;; --------------------------------------------------
 .endproc ; OpenDirectory
@@ -7598,7 +7601,7 @@ init_smicon_view:
         .word   kSmallIconViewInitialLeft, kSmallIconViewInitialTop
         .assert * - init_smicon_view = init_view_size, error, "struct size"
 
-.proc Start
+.proc _Start
         jsr     PushPointers
 
         ;; Select the template
@@ -7668,7 +7671,7 @@ init_smicon_view:
         record_ptr := $06
         addax   records_base_ptr, record_ptr
         pla                     ; A = record_num-1
-        jsr     AllocAndPopulateFileIcon
+        jsr     _AllocAndPopulateFileIcon
 
         inc     index
         bne     :-              ; always
@@ -7679,13 +7682,13 @@ init_smicon_view:
 records_base_ptr:
         .word   0
 
-.endproc ; Start
+.endproc ; _Start
 
 ;;; ============================================================
 ;;; Create icon
 ;;; Inputs: A = record_num
 
-.proc AllocAndPopulateFileIcon
+.proc _AllocAndPopulateFileIcon
         file_record := $6
         icon_entry := $8
         name_tmp := $1800
@@ -7742,7 +7745,7 @@ records_base_ptr:
         jsr     GetIconType
         view_by := *+1
         ldy     #SELF_MODIFIED_BYTE
-        jsr     FindIconDetailsForIconType
+        jsr     _FindIconDetailsForIconType
 
         ldy     #IconEntry::name
         ldx     #0
@@ -7829,13 +7832,13 @@ L7870:  lda     cached_window_id
         sta     (icon_entry),y
 :
         rts
-.endproc ; AllocAndPopulateFileIcon
+.endproc ; _AllocAndPopulateFileIcon
 
 ;;; ============================================================
 ;;; Inputs: A = `IconType` member, Y = `kViewByXXX` value
 ;;; Outputs: Populates `iconentry_flags`, `icon_type`, `icon_height`
 
-.proc FindIconDetailsForIconType
+.proc _FindIconDetailsForIconType
         ptr := $6
 
         sty     view_by
@@ -7873,10 +7876,15 @@ L7870:  lda     cached_window_id
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc ; FindIconDetailsForIconType
+.endproc ; _FindIconDetailsForIconType
 
 .endproc ; CreateIconsForWindowImpl
-CreateIconsForWindow := CreateIconsForWindowImpl::Start
+CreateIconsForWindow := CreateIconsForWindowImpl::_Start
+FindIconDetailsForIconType := CreateIconsForWindowImpl::_FindIconDetailsForIconType
+.scope FindIconDetailsForIconType
+icon_type := CreateIconsForWindowImpl::icon_type
+icon_height := CreateIconsForWindowImpl::icon_height
+.endscope ; FindIconDetailsForIconType
 
 ;;; ============================================================
 ;;; Compute the window initial size for `cached_window_id`,
@@ -8205,21 +8213,21 @@ END_PARAM_BLOCK
 
         ;; Measure strings
         ldax    num_items
-        jsr     MeasureIntString
+        jsr     _MeasureIntString
         stax    width_num_items
-        param_call_indirect MeasureString, ptr_str_items_suffix
+        param_call_indirect _MeasureString, ptr_str_items_suffix
         addax   width_num_items
 
         ldax    k_in_disk
-        jsr     MeasureIntString
+        jsr     _MeasureIntString
         stax    width_k_in_disk
-        param_call MeasureString, str_k_in_disk
+        param_call _MeasureString, str_k_in_disk
         addax   width_k_in_disk
 
         ldax    k_available
-        jsr     MeasureIntString
+        jsr     _MeasureIntString
         stax    width_k_available
-        param_call MeasureString, str_k_available
+        param_call _MeasureString, str_k_available
         addax   width_k_available
 
         ;; Determine gap for centering
@@ -8240,35 +8248,35 @@ END_PARAM_BLOCK
         add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
         MGTK_CALL MGTK::MoveTo, header_text_pos
         ldax    num_items
-        jsr     DrawIntString
+        jsr     _DrawIntString
         param_call_indirect DrawString, ptr_str_items_suffix
 
         ;; Draw "XXXK in disk"
         MGTK_CALL MGTK::Move, header_text_delta
         ldax    k_in_disk
-        jsr     DrawIntString
+        jsr     _DrawIntString
         param_call DrawString, str_k_in_disk
 
         ;; Draw "XXXK available"
         MGTK_CALL MGTK::Move, header_text_delta
         ldax    k_available
-        jsr     DrawIntString
+        jsr     _DrawIntString
         param_jump DrawString, str_k_available
 
-.proc DrawIntString
+.proc _DrawIntString
         jsr     IntToStringWithSeparators
         param_jump DrawString, str_from_int
-.endproc ; DrawIntString
+.endproc ; _DrawIntString
 
-.proc MeasureIntString
+.proc _MeasureIntString
         jsr     IntToStringWithSeparators
         ldax    #str_from_int
-        FALL_THROUGH_TO MeasureString
-.endproc ; MeasureIntString
+        FALL_THROUGH_TO _MeasureString
+.endproc ; _MeasureIntString
 
 ;;; Measure text, pascal string address in A,X; result in A,X
 ;;; String must be in LC area (visible to both main and aux code)
-.proc MeasureString
+.proc _MeasureString
         ptr := $6
         len := $8
         result := $9
@@ -8281,7 +8289,7 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::TextWidth, ptr
         ldax    result
         rts
-.endproc ; MeasureString
+.endproc ; _MeasureString
 
 .endproc ; DrawWindowHeader
 
@@ -8460,7 +8468,7 @@ list_start_ptr  := $801
 num_records     := $803
 scratch_space   := $804         ; can be used by comparison funcs
 
-        sta     CompareFileRecords_sort_by
+        sta     _CompareFileRecords_sort_by
 
         lda     cached_window_entry_count
         cmp     #2
@@ -8487,7 +8495,7 @@ scratch_space   := $804         ; can be used by comparison funcs
 
         outer := *+1
 oloop:  lda     #SELF_MODIFIED_BYTE
-        jsr     CalcPtr
+        jsr     _CalcPtr
         stax    ptr2
 
         lda     #0
@@ -8495,12 +8503,12 @@ oloop:  lda     #SELF_MODIFIED_BYTE
 
         inner := *+1
 iloop:  lda     #SELF_MODIFIED_BYTE
-        jsr     CalcPtr
+        jsr     _CalcPtr
         stax    ptr1
 
         bit     LCBANK2
         bit     LCBANK2
-        jsr     CompareFileRecords
+        jsr     _CompareFileRecords
         php
         bit     LCBANK1
         bit     LCBANK1
@@ -8518,7 +8526,7 @@ iloop:  lda     #SELF_MODIFIED_BYTE
         sta     cached_window_entry_list,y
 
         lda     outer
-        jsr     CalcPtr
+        jsr     _CalcPtr
         stax    ptr2
 
 next:   inc     inner
@@ -8535,7 +8543,7 @@ next:   inc     inner
 ;;; Input: A = index in list being sorted
 ;;; Output: A,X = pointer to FileRecord
 
-.proc CalcPtr
+.proc _CalcPtr
         ;; Map from sorting list index to FileRecord index
         tax
         ldy     cached_window_entry_list,x
@@ -8555,14 +8563,14 @@ next:   inc     inner
         pla
 
         rts
-.endproc ; CalcPtr
+.endproc ; _CalcPtr
 
 ;;; --------------------------------------------------
 
 ;;; Inputs: $06 and $08 point at FileRecords
 ;;; Assert: LCBANK2 banked in so FileRecords are visible
 
-.proc CompareFileRecords
+.proc _CompareFileRecords
         ptr1 := $06
         ptr2 := $08
 
@@ -8661,11 +8669,11 @@ done:   rts
         scratch := $804
         ldy     #FileRecord::file_type
         lda     (ptr1),y
-        jsr     ComposeFileTypeStringForSorting
+        jsr     _ComposeFileTypeStringForSorting
         COPY_STRING str_file_type, scratch
         ldy     #FileRecord::file_type
         lda     (ptr2),y
-        jsr     ComposeFileTypeStringForSorting
+        jsr     _ComposeFileTypeStringForSorting
 
         bit     LCBANK1
         bit     LCBANK1
@@ -8679,10 +8687,10 @@ done:   rts
 
         rts
 
-.endproc ; CompareFileRecords
-CompareFileRecords_sort_by := CompareFileRecords::sort_by
+.endproc ; _CompareFileRecords
+_CompareFileRecords_sort_by := _CompareFileRecords::sort_by
 
-.proc ComposeFileTypeStringForSorting
+.proc _ComposeFileTypeStringForSorting
         jsr     ComposeFileTypeString
         lda     str_file_type+1
         cmp     #'$'
@@ -8690,7 +8698,7 @@ CompareFileRecords_sort_by := CompareFileRecords::sort_by
         lda     #$FF
         sta     str_file_type+1
 :       rts
-.endproc ; ComposeFileTypeStringForSorting
+.endproc ; _ComposeFileTypeStringForSorting
 
 .endproc ; SortRecords
 
@@ -8733,17 +8741,17 @@ ret:    rts
 in_range:
         ldax    #kColLock
         jsr     set_pos
-        jsr     PrepareColLock
+        jsr     _PrepareColLock
         param_call DrawString, text_buffer2
 
         ldax    #kColType
         jsr     set_pos
-        jsr     PrepareColType
+        jsr     _PrepareColType
         param_call DrawString, text_buffer2
 
         ldax    #kColSize
         jsr     set_pos
-        jsr     PrepareColSize
+        jsr     _PrepareColSize
         param_call DrawStringRight, text_buffer2
 
         ldax    #kColDate
@@ -8758,7 +8766,7 @@ set_pos:
 
 ;;; ============================================================
 
-.proc PrepareColType
+.proc _PrepareColType
         file_type := list_view_filerecord + FileRecord::file_type
 
         lda     file_type
@@ -8767,9 +8775,9 @@ set_pos:
         COPY_BYTES 4, str_file_type, text_buffer2 ; 3 characters + length
 
         rts
-.endproc ; PrepareColType
+.endproc ; _PrepareColType
 
-.proc PrepareColLock
+.proc _PrepareColLock
         copy    #0, text_buffer2
 
         access := list_view_filerecord + FileRecord::access
@@ -8782,9 +8790,9 @@ set_pos:
     END_IF
 
         rts
-.endproc ; PrepareColLock
+.endproc ; _PrepareColLock
 
-.proc PrepareColSize
+.proc _PrepareColSize
         file_type := list_view_filerecord + FileRecord::file_type
 
         lda     file_type
@@ -8799,7 +8807,7 @@ set_pos:
 
         ldax    blocks
         FALL_THROUGH_TO ComposeSizeString
-.endproc ; PrepareColSize
+.endproc ; _PrepareColSize
 
 .endproc ; DrawListViewRow
 
@@ -8878,7 +8886,7 @@ value:  .word   0
         ora     datetime_for_conversion+1
         bne     append_date_strings
         sta     month           ; 0 is "no date" string
-        jmp     AppendMonthString
+        jmp     _AppendMonthString
 
 append_date_strings:
         copy16  #parsed_date, $0A
@@ -8887,7 +8895,7 @@ append_date_strings:
 
         ecmp16  datetime_for_conversion, DATELO
     IF_EQ
-        param_call ConcatenateDatePart, str_today
+        param_call _ConcatenateDatePart, str_today
 
     ELSE
         ldx     #DeskTopSettings::intl_date_order
@@ -8895,48 +8903,48 @@ append_date_strings:
         .assert DeskTopSettings::kDateOrderMDY = 0, error, "enum mismatch"
       IF_EQ
         ;; Month Day, Year
-        jsr     AppendMonthString
-        param_call ConcatenateDatePart, str_space
-        jsr     AppendDayString
-        param_call ConcatenateDatePart, str_comma
+        jsr     _AppendMonthString
+        param_call _ConcatenateDatePart, str_space
+        jsr     _AppendDayString
+        param_call _ConcatenateDatePart, str_comma
       ELSE
         ;; Day Month Year
-        jsr     AppendDayString
-        param_call ConcatenateDatePart, str_space
-        jsr     AppendMonthString
-        param_call ConcatenateDatePart, str_space
+        jsr     _AppendDayString
+        param_call _ConcatenateDatePart, str_space
+        jsr     _AppendMonthString
+        param_call _ConcatenateDatePart, str_space
       END_IF
-        jsr     AppendYearString
+        jsr     _AppendYearString
     END_IF
 
 
-        param_call ConcatenateDatePart, str_at
+        param_call _ConcatenateDatePart, str_at
         ldax    #parsed_date
         jsr     MakeTimeString
-        param_jump ConcatenateDatePart, str_time
+        param_jump _ConcatenateDatePart, str_time
 
-.proc AppendDayString
+.proc _AppendDayString
         lda     day
         ldx     #0
         jsr     IntToString
 
-        param_jump ConcatenateDatePart, str_from_int
-.endproc ; AppendDayString
+        param_jump _ConcatenateDatePart, str_from_int
+.endproc ; _AppendDayString
 
-.proc AppendMonthString
+.proc _AppendMonthString
         lda     month
         asl     a
         tay
         ldax    month_table,y
 
-        jmp     ConcatenateDatePart
-.endproc ; AppendMonthString
+        jmp     _ConcatenateDatePart
+.endproc ; _AppendMonthString
 
-.proc AppendYearString
+.proc _AppendYearString
         ldax    year
         jsr     IntToString
-        param_jump ConcatenateDatePart, str_from_int
-.endproc ; AppendYearString
+        param_jump _ConcatenateDatePart, str_from_int
+.endproc ; _AppendYearString
 
 year    := parsed_date + ParsedDateTime::year
 month   := parsed_date + ParsedDateTime::month
@@ -8944,7 +8952,7 @@ day     := parsed_date + ParsedDateTime::day
 hour    := parsed_date + ParsedDateTime::hour
 min     := parsed_date + ParsedDateTime::minute
 
-.proc ConcatenateDatePart
+.proc _ConcatenateDatePart
         stax    $06
         ldy     #$00
         lda     ($08),y
@@ -8967,7 +8975,7 @@ min     := parsed_date + ParsedDateTime::minute
         cpy     #SELF_MODIFIED_BYTE
         bcc     :-
         rts
-.endproc ; ConcatenateDatePart
+.endproc ; _ConcatenateDatePart
 
 .endproc ; ComposeDateString
 
@@ -9613,7 +9621,7 @@ success:
         jmp     error
 :
         param_call AdjustOnLineEntryCase, cvi_data_buffer
-        jsr     CompareNames
+        jsr     _CompareNames
         bne     error
 
         icon_ptr := $6
@@ -9714,7 +9722,7 @@ offset:         .word   0
 ;;; Inputs: String to compare against is in `cvi_data_buffer`
 ;;; Output: A=0 if not a duplicate, ERR_DUPLICATE_VOLUME if there is a duplicate.
 ;;; Assert: `cached_window_entry_count` is one greater than actual count
-.proc CompareNames
+.proc _CompareNames
 
         icon_ptr := $06
 
@@ -9749,8 +9757,7 @@ next:   dec     index
 
 finish: jsr     PopPointers     ; do not tail-call optimise!
         rts
-.endproc ; CompareNames
-
+.endproc ; _CompareNames
 
 .endproc ; CreateVolumeIcon
 
@@ -10663,20 +10670,20 @@ a_dst:  .addr   dst_path_buf
 
 .proc OpenCopyProgressDialog
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #CopyDialogEnumerationCallback, operations::operation_enumeration_callback
-        copy16  #CopyDialogCompleteCallback, operations::operation_complete_callback
+        copy16  #_CopyDialogEnumerationCallback, operations::operation_enumeration_callback
+        copy16  #_CopyDialogCompleteCallback, operations::operation_complete_callback
         jmp     CopyDialogProc
 
-.proc CopyDialogEnumerationCallback
+.proc _CopyDialogEnumerationCallback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
         jmp     CopyDialogProc
-.endproc ; CopyDialogEnumerationCallback
+.endproc ; _CopyDialogEnumerationCallback
 
-.proc CopyDialogCompleteCallback
+.proc _CopyDialogCompleteCallback
         copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
         jmp     CopyDialogProc
-.endproc ; CopyDialogCompleteCallback
+.endproc ; _CopyDialogCompleteCallback
 .endproc ; OpenCopyProgressDialog
 
 .proc PrepCallbacksForCopy
@@ -10695,20 +10702,20 @@ a_dst:  .addr   dst_path_buf
 
 .proc OpenDownloadProgressDialog
         copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
-        copy16  #DownloadDialogEnumerationCallback, operations::operation_enumeration_callback
-        copy16  #DownloadDialogCompleteCallback, operations::operation_complete_callback
+        copy16  #_DownloadDialogEnumerationCallback, operations::operation_enumeration_callback
+        copy16  #_DownloadDialogCompleteCallback, operations::operation_complete_callback
         jmp     DownloadDialogProc
 
-.proc DownloadDialogEnumerationCallback
+.proc _DownloadDialogEnumerationCallback
         stax    copy_dialog_params::count
         copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
         jmp     DownloadDialogProc
-.endproc ; DownloadDialogEnumerationCallback
+.endproc ; _DownloadDialogEnumerationCallback
 
-.proc DownloadDialogCompleteCallback
+.proc _DownloadDialogCompleteCallback
         copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
         jmp     DownloadDialogProc
-.endproc ; DownloadDialogCompleteCallback
+.endproc ; _DownloadDialogCompleteCallback
 .endproc ; OpenDownloadProgressDialog
 
 .proc PrepCallbacksForDownload
@@ -10718,14 +10725,14 @@ a_dst:  .addr   dst_path_buf
         bpl     :-
 
         copy    #$80, operations::all_flag
-        copy16  #DownloadDialogTooLargeCallback, operations::operation_toolarge_callback
+        copy16  #_DownloadDialogTooLargeCallback, operations::operation_toolarge_callback
         copy    #1, do_op_flag
         rts
 
-.proc DownloadDialogTooLargeCallback
+.proc _DownloadDialogTooLargeCallback
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_ramcard_full
         jmp     CloseFilesCancelDialogWithFailedResult
-.endproc ; DownloadDialogTooLargeCallback
+.endproc ; _DownloadDialogTooLargeCallback
 .endproc ; PrepCallbacksForDownload
 
 ;;; ============================================================
@@ -11200,7 +11207,7 @@ Start:  lda     DEVNUM
         ;; --------------------------------------------------
         ;; Load the directory blocks containing FileEntry records
 
-        jsr     ReadBlocks
+        jsr     _ReadBlocks
 
         ;; --------------------------------------------------
         ;; Swap the File Entry fields between the blocks, but
@@ -11234,7 +11241,7 @@ Start:  lda     DEVNUM
         ;; --------------------------------------------------
         ;; Write out the updated blocks
 
-        jsr     WriteBlocks
+        jsr     _WriteBlocks
 
         ;; --------------------------------------------------
         ;; If a subdirectory, need to modify parent links
@@ -11253,7 +11260,7 @@ Start:  lda     DEVNUM
         copy    (dst_ptr),y, dst_block_params::block_num+1
 
         ;; Load the key blocks of the source/dest files
-        jsr     ReadBlocks
+        jsr     _ReadBlocks
 
         ;; Swap the `parent_pointer`/`parent_entry_number` fields between subdir headers
         ldx     #2
@@ -11266,7 +11273,7 @@ Start:  lda     DEVNUM
         bpl     :-
 
         ;; Write out the updated key blocks
-        jsr     WriteBlocks
+        jsr     _WriteBlocks
     END_IF
 
         ;; --------------------------------------------------
@@ -11281,7 +11288,7 @@ Start:  lda     DEVNUM
 
 ;;; --------------------------------------------------
 
-.proc ReadBlocks
+.proc _ReadBlocks
 :
         MLI_CALL READ_BLOCK, src_block_params
         bcc     :+
@@ -11294,11 +11301,11 @@ Start:  lda     DEVNUM
         jmp     :-
 :
         rts
-.endproc ; ReadBlocks
+.endproc ; _ReadBlocks
 
 ;;; --------------------------------------------------
 
-.proc WriteBlocks
+.proc _WriteBlocks
 :
         MLI_CALL WRITE_BLOCK, src_block_params
         bcc     :+
@@ -11311,7 +11318,7 @@ Start:  lda     DEVNUM
         jmp     :-
 :
         rts
-.endproc ; WriteBlocks
+.endproc ; _WriteBlocks
 
 .endproc ; RelinkFileImpl
         RelinkFile := RelinkFileImpl::Start
@@ -11330,35 +11337,35 @@ Start:  lda     DEVNUM
         sta     mark_dst_params::position+1
         sta     mark_dst_params::position+2
 
-        jsr     OpenSrc
-        jsr     CopySrcRefNum
-        jsr     OpenDst
+        jsr     _OpenSrc
+        jsr     _CopySrcRefNum
+        jsr     _OpenDst
         beq     :+
 
         ;; Destination not available; note it, can prompt later
         copy    #$FF, src_dst_exclusive_flag
         bne     read            ; always
-:       jsr     CopyDstRefNum
+:       jsr     _CopyDstRefNum
 
         ;; Read
-read:   jsr     ReadSrc
+read:   jsr     _ReadSrc
         bit     src_dst_exclusive_flag
         bpl     write
-        jsr     CloseSrc        ; swap if necessary
-:       jsr     OpenDst
+        jsr     _CloseSrc       ; swap if necessary
+:       jsr     _OpenDst
         bne     :-
-        jsr     CopyDstRefNum
+        jsr     _CopyDstRefNum
         MLI_CALL SET_MARK, mark_dst_params
 
         ;; Write
 write:  bit     src_eof_flag
         bmi     eof
-        jsr     WriteDst
+        jsr     _WriteDst
         bit     src_dst_exclusive_flag
         bpl     read
-        jsr     CloseDst       ; swap if necessary
-        jsr     OpenSrc
-        jsr     CopySrcRefNum
+        jsr     _CloseDst       ; swap if necessary
+        jsr     _OpenSrc
+        jsr     _CopySrcRefNum
 
         MLI_CALL SET_MARK, mark_src_params
         bcc     read
@@ -11366,29 +11373,29 @@ write:  bit     src_eof_flag
         jmp     read
 
         ;; EOF
-eof:    jsr     CloseDst
+eof:    jsr     _CloseDst
         bit     src_dst_exclusive_flag
         bmi     :+
-        jsr     CloseSrc
+        jsr     _CloseSrc
 :       jmp     ApplySrcInfoToDst
 
-.proc OpenSrc
+.proc _OpenSrc
 @retry: MLI_CALL OPEN, open_src_params
         bcc     :+
         jsr     ShowErrorAlert
         jmp     @retry
 :       rts
-.endproc ; OpenSrc
+.endproc ; _OpenSrc
 
-.proc CopySrcRefNum
+.proc _CopySrcRefNum
         lda     open_src_params::ref_num
         sta     read_src_params::ref_num
         sta     close_src_params::ref_num
         sta     mark_src_params::ref_num
         rts
-.endproc ; CopySrcRefNum
+.endproc ; _CopySrcRefNum
 
-.proc OpenDst
+.proc _OpenDst
 @retry: MLI_CALL OPEN, open_dst_params
         bcc     done
         cmp     #ERR_VOL_NOT_FOUND
@@ -11401,17 +11408,17 @@ not_found:
         lda     #ERR_VOL_NOT_FOUND
 
 done:   rts
-.endproc ; OpenDst
+.endproc ; _OpenDst
 
-.proc CopyDstRefNum
+.proc _CopyDstRefNum
         lda     open_dst_params::ref_num
         sta     write_dst_params::ref_num
         sta     close_dst_params::ref_num
         sta     mark_dst_params::ref_num
         rts
-.endproc ; CopyDstRefNum
+.endproc ; _CopyDstRefNum
 
-.proc ReadSrc
+.proc _ReadSrc
         copy16  #kBufSize, read_src_params::request_count
 @retry: MLI_CALL READ, read_src_params
         bcc     :+
@@ -11426,26 +11433,26 @@ done:   rts
 eof:    copy    #$FF, src_eof_flag
 :       MLI_CALL GET_MARK, mark_src_params
         rts
-.endproc ; ReadSrc
+.endproc ; _ReadSrc
 
-.proc WriteDst
+.proc _WriteDst
 @retry: MLI_CALL WRITE, write_dst_params
         bcc     :+
         jsr     ShowErrorAlertDst
         jmp     @retry
 :       MLI_CALL GET_MARK, mark_dst_params
         rts
-.endproc ; WriteDst
+.endproc ; _WriteDst
 
-.proc CloseDst
+.proc _CloseDst
         MLI_CALL CLOSE, close_dst_params
         rts
-.endproc ; CloseDst
+.endproc ; _CloseDst
 
-.proc CloseSrc
+.proc _CloseSrc
         MLI_CALL CLOSE, close_src_params
         rts
-.endproc ; CloseSrc
+.endproc ; _CloseSrc
 
         ;; Set if src/dst can't be open simultaneously.
 src_dst_exclusive_flag:
@@ -11489,19 +11496,19 @@ a_path: .addr   src_path_buf
 
 .proc OpenDeleteProgressDialog
         copy    #DeleteDialogLifecycle::open, delete_dialog_params::phase
-        copy16  #DeleteDialogConfirmCallback, operations::operation_confirm_callback
-        copy16  #DeleteDialogEnumerationCallback, operations::operation_enumeration_callback
+        copy16  #_DeleteDialogConfirmCallback, operations::operation_confirm_callback
+        copy16  #_DeleteDialogEnumerationCallback, operations::operation_enumeration_callback
         jsr     DeleteDialogProc
         copy16  #DeleteDialogCompleteCallback, operations::operation_complete_callback
         rts
 
-.proc DeleteDialogEnumerationCallback
+.proc _DeleteDialogEnumerationCallback
         stax    delete_dialog_params::count
         copy    #DeleteDialogLifecycle::count, delete_dialog_params::phase
         jmp     DeleteDialogProc
-.endproc ; DeleteDialogEnumerationCallback
+.endproc ; _DeleteDialogEnumerationCallback
 
-.proc DeleteDialogConfirmCallback
+.proc _DeleteDialogConfirmCallback
         ;; `text_input_buf` is used rather than `text_buffer2` due to size
         jsr ComposeFileCountString
         copy    #0, text_input_buf
@@ -11517,7 +11524,7 @@ a_path: .addr   src_path_buf
         beq     :+
         jmp     CloseFilesCancelDialogWithCanceledResult
 :       rts
-.endproc ; DeleteDialogConfirmCallback
+.endproc ; _DeleteDialogConfirmCallback
 .endproc ; OpenDeleteProgressDialog
 
 ;;; ============================================================
@@ -12304,7 +12311,7 @@ common: jsr     GetSrcFileInfo
         beq     :+
         inc     get_info_dialog_params::state
         inc     get_info_dialog_params::state
-:       jsr     RunGetInfoDialogProc
+:       jsr     _RunGetInfoDialogProc
         jmp     common2
 
 vol_icon2:
@@ -12316,7 +12323,7 @@ vol_icon2:
         beq     :+
         inc     get_info_dialog_params::state
         inc     get_info_dialog_params::state
-:       jsr     RunGetInfoDialogProc
+:       jsr     _RunGetInfoDialogProc
         copy    #0, write_protected_flag
         ldx     get_info_dialog_params::index
         lda     selected_icon_list,x
@@ -12343,7 +12350,7 @@ common2:
         lda     selected_icon_list,x
         jsr     GetIconName
         stax    get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
+        jsr     _RunGetInfoDialogProc
 
         ;; --------------------------------------------------
         ;; Type
@@ -12366,7 +12373,7 @@ common2:
       END_IF
     END_IF
         copy16  #text_buffer2, get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
+        jsr     _RunGetInfoDialogProc
 
         ;; --------------------------------------------------
         ;; Size/Blocks
@@ -12405,7 +12412,7 @@ append_size:
         param_call AppendToTextInputBuf, text_buffer2
 
         copy16  #text_input_buf, get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
+        jsr     _RunGetInfoDialogProc
 
         ;; --------------------------------------------------
         ;; Created date
@@ -12413,7 +12420,7 @@ append_size:
         COPY_STRUCT DateTime, src_file_info_params::create_date, datetime_for_conversion
         jsr     ComposeDateString
         copy16  #text_buffer2, get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
+        jsr     _RunGetInfoDialogProc
 
         ;; --------------------------------------------------
         ;; Modified date
@@ -12421,7 +12428,7 @@ append_size:
         COPY_STRUCT DateTime, src_file_info_params::mod_date, datetime_for_conversion
         jsr     ComposeDateString
         copy16  #text_buffer2, get_info_dialog_params::a_str
-        jsr     RunGetInfoDialogProc
+        jsr     _RunGetInfoDialogProc
 
         ;; --------------------------------------------------
         ;; Locked/Protected
@@ -12449,7 +12456,7 @@ append_size:
       END_IF
     END_IF
         sta     get_info_dialog_params::locked
-        jsr     RunGetInfoDialogProc
+        jsr     _RunGetInfoDialogProc
 
         ;; --------------------------------------------------
         ;; Descendant size/file count
@@ -12461,13 +12468,13 @@ append_size:
         bne     :+
 do_dir:
         jsr     SetCursorWatch
-        jsr     GetDirSize
+        jsr     _GetDirSize
         jsr     SetCursorPointer
 :
         ;; --------------------------------------------------
 
         copy    #GetInfoDialogState::prompt, get_info_dialog_params::state
-        jsr     RunGetInfoDialogProc
+        jsr     _RunGetInfoDialogProc
         bne     done
 
 next:   inc     get_info_dialog_params::index
@@ -12477,7 +12484,7 @@ done:   copy    #0, path_buf4
         lda     get_info_dialog_params::refresh
         rts
 
-.proc GetDirSize
+.proc _GetDirSize
         lda     selected_window_id
     IF_NOT_ZERO
         copy16  #1, file_count
@@ -12487,22 +12494,22 @@ done:   copy    #0, path_buf4
         copy16  #0, num_blocks
     END_IF
 
-        copy16  #GetInfoProcessDirEntry, op_jt_addr1
+        copy16  #_GetInfoProcessDirEntry, op_jt_addr1
         copy16  #DoNothing, op_jt_addr3
         copy16  #DoNothing, operations::operation_complete_callback ; handle error
         tsx
         stx     operations::stack_stash
         jsr     ProcessDir
-        jmp     UpdateDirSizeDisplay ; in case 0 files were seen
-.endproc ; GetDirSize
+        jmp     _UpdateDirSizeDisplay ; in case 0 files were seen
+.endproc ; _GetDirSize
 
-.proc GetInfoProcessDirEntry
+.proc _GetInfoProcessDirEntry
         add16   num_blocks, src_file_info_params::blocks_used, num_blocks
         inc16   file_count
-        FALL_THROUGH_TO UpdateDirSizeDisplay
-.endproc ; GetInfoProcessDirEntry
+        FALL_THROUGH_TO _UpdateDirSizeDisplay
+.endproc ; _GetInfoProcessDirEntry
 
-.proc UpdateDirSizeDisplay
+.proc _UpdateDirSizeDisplay
         ;; Dir: "<size>K for <count> file(s)"
         ;; Vol: "<size>K for <count> file(s) / <total>K>"
         copy    #0, text_input_buf
@@ -12547,10 +12554,10 @@ done:   copy    #0, path_buf4
 
         copy16  #text_input_buf, get_info_dialog_params::a_str
         copy    #GetInfoDialogState::size, get_info_dialog_params::state
-        jsr     RunGetInfoDialogProc
+        jsr     _RunGetInfoDialogProc
 
         rts
-.endproc ; UpdateDirSizeDisplay
+.endproc ; _UpdateDirSizeDisplay
 num_blocks:
         .word   0
 vol_used_blocks:
@@ -12561,9 +12568,9 @@ vol_total_blocks:
 write_protected_flag:
         .byte   0
 
-.proc RunGetInfoDialogProc
+.proc _RunGetInfoDialogProc
         jmp     GetInfoDialogProc
-.endproc ; RunGetInfoDialogProc
+.endproc ; _RunGetInfoDialogProc
 .endproc ; DoGetInfo
 
 ;;; ============================================================
@@ -12619,8 +12626,8 @@ write_protected_flag:
         asl                     ; now bit 7 = locked = checked
         sta     locked_button::state
         BTK_CALL BTK::CheckboxDraw, locked_button
-        copy16  #HandleClick, main::PromptDialogClickHandlerHook
-        copy16  #HandleKey, main::PromptDialogKeyHandlerHook
+        copy16  #_HandleClick, main::PromptDialogClickHandlerHook
+        copy16  #_HandleKey, main::PromptDialogKeyHandlerHook
         rts
        END_IF
      END_IF
@@ -12645,21 +12652,21 @@ write_protected_flag:
         pla
         rts
 
-.proc HandleClick
+.proc _HandleClick
         MGTK_CALL MGTK::InRect, locked_button::rect
     IF_NOT_ZERO
-        jsr     ToggleFileLock
+        jsr     _ToggleFileLock
     END_IF
         return #$FF
-.endproc ; HandleClick
+.endproc ; _HandleClick
 
-.proc HandleKey
+.proc _HandleKey
         cmp     #CHAR_CTRL_L
-        beq     ToggleFileLock
+        beq     _ToggleFileLock
         rts
-.endproc ; HandleKey
+.endproc ; _HandleKey
 
-.proc ToggleFileLock
+.proc _ToggleFileLock
         ;; Modify file
         lda     src_file_info_params::access
         bit     locked_button::state
@@ -12702,7 +12709,7 @@ write_protected_flag:
         copy    #$80, get_info_dialog_params::refresh
 
 ret:    return  #$FF
-.endproc ; ToggleFileLock
+.endproc ; _ToggleFileLock
 
 .endproc ; GetInfoDialogProc
 
@@ -12813,11 +12820,11 @@ start:
 
         ;; Open the dialog
         lda     #RenameDialogState::open
-        jsr     RunDialogProc
+        jsr     _RunDialogProc
 
         ;; Run the dialog
 retry:  lda     #RenameDialogState::run
-        jsr     RunDialogProc
+        jsr     _RunDialogProc
         beq     success
 
         ;; Failure
@@ -12874,13 +12881,13 @@ no_change:
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         jeq     retry           ; `kAlertResultTryAgain` = 0
         lda     #RenameDialogState::close
-        jsr     RunDialogProc
+        jsr     _RunDialogProc
         jmp     fail
 
         ;; --------------------------------------------------
         ;; Completed - tear down the dialog...
 finish: lda     #RenameDialogState::close
-        jsr     RunDialogProc
+        jsr     _RunDialogProc
 
         lda     selected_icon_list
         sta     icon_param
@@ -12952,15 +12959,15 @@ finish: lda     #RenameDialogState::close
         jsr     GetIconType
         view_by := *+1
         ldy     #SELF_MODIFIED_BYTE
-        jsr     CreateIconsForWindowImpl::FindIconDetailsForIconType
+        jsr     FindIconDetailsForIconType
 
         ;; Use new `icon_height` to offset vertically.
         ;; Add old icon height to make icony top of text
         ldy     #IconEntry::icony
-        sub16in tmp_rect::y2, CreateIconsForWindowImpl::icon_height, (icon_ptr),y
+        sub16in tmp_rect::y2, FindIconDetailsForIconType::icon_height, (icon_ptr),y
         ;; Use `icon_type` to populate IconEntry::type
         ldy     #IconEntry::type
-        copy    CreateIconsForWindowImpl::icon_type, (icon_ptr),y
+        copy    FindIconDetailsForIconType::icon_type, (icon_ptr),y
         ;; Assumes `iconentry_flags` will not change, regardless of icon.
     END_IF
 
@@ -12995,10 +13002,10 @@ end_filerecord_and_icon_update:
 
         return result_flags
 
-.proc RunDialogProc
+.proc _RunDialogProc
         sta     rename_dialog_params
         jmp     RenameDialogProc
-.endproc ; RunDialogProc
+.endproc ; _RunDialogProc
 
 ;;; N bit ($80) set if a window title was changed
 result_flags:
@@ -13371,7 +13378,7 @@ wloop:  txa
         ldy     window_to_dir_icon_table-1,x ; X = 1-based id, so -1 to index
         beq     wnext           ; not in use
         jsr     GetWindowPath
-        jsr     MaybeUpdateTargetPath
+        jsr     _MaybeUpdateTargetPath
 wnext:  pla
         tax
         dex
@@ -13384,7 +13391,7 @@ wnext:  pla
 
         ;; ProDOS Prefix
         MLI_CALL GET_PREFIX, get_set_prefix_params
-        param_call MaybeUpdateTargetPath, path
+        param_call _MaybeUpdateTargetPath, path
     IF_NE
         MLI_CALL SET_PREFIX, get_set_prefix_params
     END_IF
@@ -13395,8 +13402,8 @@ wnext:  pla
         sta     ALTZPOFF
         bit     LCBANK2
         bit     LCBANK2
-        param_call MaybeUpdateTargetPath, DESKTOP_ORIG_PREFIX
-        param_call MaybeUpdateTargetPath, RAMCARD_PREFIX
+        param_call _MaybeUpdateTargetPath, DESKTOP_ORIG_PREFIX
+        param_call _MaybeUpdateTargetPath, RAMCARD_PREFIX
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
@@ -13406,7 +13413,7 @@ wnext:  pla
         sta     ALTZPOFF
         bit     LCBANK2
         bit     LCBANK2
-        param_call MaybeUpdateTargetPath, SELECTOR + QuitRoutine::prefix_buffer_offset
+        param_call _MaybeUpdateTargetPath, SELECTOR + QuitRoutine::prefix_buffer_offset
         sta     ALTZPON
         bit     LCBANK1
         bit     LCBANK1
@@ -13424,7 +13431,7 @@ wnext:  pla
 ;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
 ;;; Trashes $06
 
-.proc UpdateTargetPath
+.proc _UpdateTargetPath
         dst := $06
 
         old_path := $1F00
@@ -13464,7 +13471,7 @@ assign: ldy     new_path
         bpl     :-
 
         rts
-.endproc ; UpdateTargetPath
+.endproc ; _UpdateTargetPath
 
 ;;; ============================================================
 ;;; Following a rename or move of `src_path_buf` to `dst_path_buf`,
@@ -13475,11 +13482,11 @@ assign: ldy     new_path
 ;;; NOTE: Sometimes called with LCBANK2; must not assume LCBANK1 present!
 ;;; Trashes $06, $08
 
-.proc MaybeUpdateTargetPath
+.proc _MaybeUpdateTargetPath
         ptr := $08
 
         stax    ptr
-        jsr     MaybeStripSlash
+        jsr     _MaybeStripSlash
 
         ;; Is `src_path_buf` a prefix?
         copy16  #src_path_buf, $06
@@ -13487,14 +13494,14 @@ assign: ldy     new_path
         php
     IF_NE
         ;; It's a prefix! Do the replacement
-        param_call_indirect UpdateTargetPath, ptr
+        param_call_indirect _UpdateTargetPath, ptr
     END_IF
 
-        jsr     MaybeRestoreSlash
+        jsr     _MaybeRestoreSlash
         plp                     ; Z=0 if updated
         rts
 
-.proc MaybeStripSlash
+.proc _MaybeStripSlash
         ;; Did path end with a '/'? If so, set flag and remove.
         ldy     #0
         sty     slash_flag
@@ -13510,9 +13517,9 @@ assign: ldy     new_path
         sbc     #1
         sta     (ptr),y
 :       rts
-.endproc ; MaybeStripSlash
+.endproc ; _MaybeStripSlash
 
-.proc MaybeRestoreSlash
+.proc _MaybeRestoreSlash
         ;; Restore trailing '/' if needed
         slash_flag := *+1       ; non-zero if trailing slash needed
         lda     #SELF_MODIFIED_BYTE
@@ -13526,10 +13533,10 @@ assign: ldy     new_path
         lda     #'/'
         sta     (ptr),y
 :       rts
-.endproc ; MaybeRestoreSlash
-        slash_flag := MaybeRestoreSlash::slash_flag
+.endproc ; _MaybeRestoreSlash
+        slash_flag := _MaybeRestoreSlash::slash_flag
 
-.endproc ; MaybeUpdateTargetPath
+.endproc ; _MaybeUpdateTargetPath
 
 .endproc ; NotifyPathChanged
 
@@ -14101,13 +14108,13 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         ;; No modifiers
 
         cmp     #CHAR_RETURN
-        beq     HandleKeyOK
+        beq     _HandleKeyOK
 
         cmp     #CHAR_ESCAPE
       IF_EQ
         bit     prompt_button_flags
-        bpl     HandleKeyCancel
-        bmi     HandleKeyOK     ; always
+        bpl     _HandleKeyCancel
+        bmi     _HandleKeyOK    ; always
       END_IF
 
         bit     has_input_field_flag
@@ -14133,19 +14140,19 @@ ignore:
 KeyHookRelay:
         jmp     (PromptDialogKeyHandlerHook)
 
-.proc HandleKeyOK
+.proc _HandleKeyOK
         bit     ok_button::state
         .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         bmi     ret
         BTK_CALL BTK::Flash, ok_button
         lda     #PromptResult::ok
 ret:    rts
-.endproc ; HandleKeyOK
+.endproc ; _HandleKeyOK
 
-.proc HandleKeyCancel
+.proc _HandleKeyCancel
         BTK_CALL BTK::Flash, cancel_button
         return  #PromptResult::cancel
-.endproc ; HandleKeyCancel
+.endproc ; _HandleKeyCancel
 
 .endproc ; PromptKeyHandler
 
@@ -14447,7 +14454,7 @@ recurse_down:
         jmp     recurse_down
 
 recurse_up:
-        jsr     WriteWindowInfo
+        jsr     _WriteWindowInfo
         depth := *+1            ; Last window?
         lda     #SELF_MODIFIED_BYTE
         beq     finish          ; Yes - we're done!
@@ -14500,7 +14507,7 @@ finish: ldy     #0              ; Write sentinel
 
 exit:   rts
 
-.proc WriteWindowInfo
+.proc _WriteWindowInfo
         path_ptr := $0A
 
         ;; Find name
@@ -14561,7 +14568,7 @@ exit:   rts
         add16_8 data_ptr, #.sizeof(DeskTopFileItem)
         rts
 
-.endproc ; WriteWindowInfo
+.endproc ; _WriteWindowInfo
 
 window_id := findwindow_params::window_id
 

@@ -37,7 +37,7 @@ filename_buffer:
         ldax    #filename
         stax    create_params::pathname
         stax    open_params::pathname
-        jsr     DoWrite
+        jsr     _DoWrite
         bcs     done            ; failed and canceled
 
         ;; Write to the original file location, if necessary
@@ -47,12 +47,12 @@ filename_buffer:
         stax    create_params::pathname
         stax    open_params::pathname
         jsr     JUMP_TABLE_GET_ORIG_PREFIX
-        jsr     AppendFilename
-        jsr     DoWrite
+        jsr     _AppendFilename
+        jsr     _DoWrite
 
 done:   rts
 
-.proc AppendFilename
+.proc _AppendFilename
         ;; Append filename to buffer
         inc     filename_buffer ; Add '/' separator
         ldx     filename_buffer
@@ -69,9 +69,9 @@ done:   rts
         bne     :-
         sty     filename_buffer
         rts
-.endproc ; AppendFilename
+.endproc ; _AppendFilename
 
-.proc DoWrite
+.proc _DoWrite
         ;; First time - ask if we should even try.
         copy    #kErrSaveChanges, message
 
@@ -109,6 +109,6 @@ ret:    rts
 
 second_try_flag:
         .byte   0
-.endproc ; DoWrite
+.endproc ; _DoWrite
 
 .endproc ; SaveSettings
