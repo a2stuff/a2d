@@ -1175,7 +1175,7 @@ done:   rts
 ;;; ============================================================
 ;;; IconInRect
 
-.proc IconInRectImpl
+.proc IconInRectImplImpl
         params := $06
 .struct IconInRectParams
         icon    .byte
@@ -1183,8 +1183,6 @@ done:   rts
 .endstruct
 
         ptr := $06
-
-        jmp     start
 
 icon:   .byte   0
         DEFINE_RECT rect, 0, 0, 0, 0
@@ -1245,7 +1243,8 @@ outside:
 
 inside:
         return  #1
-.endproc ; IconInRectImpl
+.endproc ; IconInRectImplImpl
+IconInRectImpl := IconInRectImplImpl::start
 
 ;;; ============================================================
 ;;; GetIconBounds
@@ -2171,8 +2170,7 @@ empty:  return #$FF
 ;;; paint call is needed, and `more_drawing_needed_flag` is non-zero
 ;;; if another call to this proc is needed after the paint. Returns
 ;;; C=1 if no clipping rect remains, so no drawing is needed.
-.proc CalcWindowIntersections
-        jmp     start
+.proc CalcWindowIntersectionsImpl
 
 .params findwindow_params
 mousex:         .word   0
@@ -2409,7 +2407,8 @@ case2:
 :       copy    #0, more_drawing_needed_flag
         sec                     ; C=1 means no clipping rect remains
         rts
-.endproc ; CalcWindowIntersections
+.endproc ; CalcWindowIntersectionsImpl
+CalcWindowIntersections := CalcWindowIntersectionsImpl::start
 
 ;;; ============================================================
 ;;; Used when doing clipped drawing to map viewport and icon

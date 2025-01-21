@@ -430,8 +430,7 @@ str_alert_unreadable_format:
 ;;;   1 = Cancel
 ;;;   2 = OK
 
-.proc AlertById
-        jmp     start
+.proc AlertByIdImpl
 
 ;;; --------------------------------------------------
 ;;; Messages
@@ -572,7 +571,8 @@ start:
 
         ldax    #alert_params
         FALL_THROUGH_TO Alert
-.endproc ; AlertById
+.endproc ; AlertByIdImpl
+AlertById := AlertByIdImpl::start
 
 ;;; ============================================================
 ;;; Display alert

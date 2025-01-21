@@ -2065,8 +2065,7 @@ ret:    rts
 ;;; ============================================================
 
 
-.proc ShowAlertDialog
-        jmp     start
+.proc ShowAlertDialogImpl
 
 ;;; --------------------------------------------------
 ;;; Messages
@@ -2291,7 +2290,8 @@ find_in_alert_table:
 :       rts
 .endproc ; _IsDriveEjectable
 
-.endproc ; ShowAlertDialog
+.endproc ; ShowAlertDialogImpl
+ShowAlertDialog := ShowAlertDialogImpl::start
 
 ;;; ============================================================
 

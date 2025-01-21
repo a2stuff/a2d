@@ -1074,13 +1074,13 @@ sys_disk:
 
         jsr     SetCursorWatch ; before invoking
 
+        ;; Easiest to assume absolute path later.
+        jsr     _MakeSrcPathAbsolute ; Trashes `INVOKER_INTERPRETER`
+
         ;; Assume no interpreter to start
         lda     #0
         sta     INVOKER_INTERPRETER
         sta     INVOKER_BITSY_COMPAT
-
-        ;; Easiest to assume absolute path later.
-        param_call MakePathAbsolute, src_path_buf
 
         ;; Get the file info to determine type.
 retry:  jsr     GetSrcFileInfo
@@ -1142,7 +1142,7 @@ interpreter:
 
         ;; Construct absolute path
         ldax    ptr1
-        jsr     _GetPrefixAndAppendToInvokerInterpreter
+        jsr     _MakeRelPathAbsoluteIntoInvokerInterpreter
         FALL_THROUGH_TO launch
 
         ;; --------------------------------------------------
@@ -1260,7 +1260,7 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 
 .proc _CheckBasicSystem
         ldax    #str_extras_basic
-        jsr     _GetPrefixAndAppendToInvokerInterpreter
+        jsr     _MakeRelPathAbsoluteIntoInvokerInterpreter
         param_call GetFileInfo, INVOKER_INTERPRETER
         jcs     _CheckBasixSystemImpl::basic ; nope, look relative to launch path
         rts
@@ -1270,7 +1270,7 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 
 ;;; Input: A,X = relative path to append
 ;;; Output: `INVOKER_INTERPRETER` has absolute path
-.proc _GetPrefixAndAppendToInvokerInterpreter
+.proc _MakeRelPathAbsoluteIntoInvokerInterpreter
         pha
         txa
         pha
@@ -1281,7 +1281,7 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
         tax
         pla
         FALL_THROUGH_TO _AppendToInvokerInterpreter
-.endproc ; _GetPrefixAndAppendToInvokerInterpreter
+.endproc ; _MakeRelPathAbsoluteIntoInvokerInterpreter
 
 ;;; --------------------------------------------------
 
@@ -1371,11 +1371,33 @@ check_header:
 
 ;;; --------------------------------------------------
 
+;;; Trashes: `INVOKER_INTERPRETER`
+.proc _MakeSrcPathAbsolute
+        ;; Already absolute?
+        lda     src_path_buf+1
+        cmp     #'/'
+    IF_NE
+        ;; Get prefix and append path
+        ldax    #src_path_buf
+        jsr     _MakeRelPathAbsoluteIntoInvokerInterpreter
+
+        ;; Copy back to original buffer
+        ldy     INVOKER_INTERPRETER
+:       lda     INVOKER_INTERPRETER,y
+        sta     src_path_buf,y
+        dey
+        bpl     :-
+    END_IF
+
+        rts
+.endproc ; _MakeSrcPathAbsolute
+
+;;; --------------------------------------------------
+
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
 
 .endproc ; LaunchFileWithPath
 LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
-MakePathAbsoluteInInvokerInterpreter := LaunchFileWithPath::_GetPrefixAndAppendToInvokerInterpreter
 
 ;;; ============================================================
 
@@ -2025,34 +2047,6 @@ main_length:    .word   0
 
 ;;; ============================================================
 
-;;; Make a path absolute using current prefix. No-op if already absolute.
-;;; Inputs: A,X = path
-;;; Outputs: $06 is path, which is updated
-;;; Trashes: `INVOKER_INTERPRETER`
-.proc MakePathAbsolute
-        ptr := $06
-        stax    ptr
-
-        ;; Already absolute?
-        ldy     #1
-        lda     (ptr),y
-        cmp     #'/'
-        beq     ret
-
-        ;; Get prefix and append path
-        ldax    ptr
-        jsr     MakePathAbsoluteInInvokerInterpreter
-
-        ;; Copy back to original buffer
-        ldy     INVOKER_INTERPRETER
-:       lda     INVOKER_INTERPRETER,y
-        sta     (ptr),y
-        dey
-        bpl     :-
-
-ret:    rts
-.endproc ; MakePathAbsolute
-
 ;;; ============================================================
 
 ;;; Inputs: A,X = absolute path
@@ -2565,9 +2559,7 @@ done:   rts
 
 ;;; ============================================================
 
-.proc CmdDiskCopy
-        jmp     start
-
+.proc CmdDiskCopyImpl
         DEFINE_OPEN_PARAMS open_params, str_disk_copy, IO_BUFFER
         DEFINE_READ_PARAMS read_params, DISK_COPY_BOOTSTRAP, kDiskCopyBootstrapLength
         DEFINE_CLOSE_PARAMS close_params
@@ -2631,7 +2623,8 @@ start:
         bit     ROMIN2
 
         jmp     DISK_COPY_BOOTSTRAP
-.endproc ; CmdDiskCopy
+.endproc ; CmdDiskCopyImpl
+CmdDiskCopy := CmdDiskCopyImpl::start
 
 ;;; ============================================================
 
@@ -6921,9 +6914,7 @@ found_windows_list:
 
 ;;; ============================================================
 
-.proc OpenDirectory
-        jmp     _Start
-
+.proc OpenDirectoryImpl
         DEFINE_OPEN_PARAMS open_params, src_path_buf, $800
 
         dir_buffer := $C00
@@ -7227,7 +7218,8 @@ suppress_error_on_open_flag:
 .endproc ; _DoClose
 
 ;;; --------------------------------------------------
-.endproc ; OpenDirectory
+.endproc ; OpenDirectoryImpl
+OpenDirectory := OpenDirectoryImpl::_Start
 
 ;;; ============================================================
 ;;; Inputs: `src_path_buf` set to full path (not modified)
