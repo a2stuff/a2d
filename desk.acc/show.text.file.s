@@ -242,7 +242,7 @@ reserved:       .byte   0
         beq     title
         cmp     #MGTK::Area::grow_box ; not enabled, so this will never match
         beq     InputLoop
-        jsr     OnClientClick
+        jsr     OnContentClick
         jmp     InputLoop
 
 title:  jsr     OnTitleBarClick
@@ -340,17 +340,17 @@ no_mod:
 .endproc ; DoClose
 
 ;;; ============================================================
-;;; Click on Client Area
+;;; Click on Content Area
 
-;;; Non-title (client) area clicked
-.proc OnClientClick
+;;; Non-title (content) area clicked
+.proc OnContentClick
         ;; On one of the scroll bars?
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
         beq     OnVScrollClick
 end:    rts
-.endproc ; OnClientClick
+.endproc ; OnContentClick
 
 ;;; ============================================================
 ;;; Click on Vertical Scroll Bar

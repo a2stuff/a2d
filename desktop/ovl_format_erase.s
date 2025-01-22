@@ -10,6 +10,7 @@
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
+        LETKEntry := LETKRelayImpl
         BTKEntry := BTKRelayImpl
 
         block_buffer := $1A00
@@ -84,7 +85,7 @@ selected_index:
         copy    #$FF, selected_index
         copy16  #HandleClick, main::PromptDialogClickHandlerHook
         copy16  #HandleKey, main::PromptDialogKeyHandlerHook
-        copy    #$80, format_erase_overlay_flag
+        copy    #$80, has_device_picker_flag
         jsr     main::UpdateOKButton
 
 :       jsr     main::PromptInputLoop
@@ -109,7 +110,7 @@ skip_select:
         MGTK_CALL MGTK::FrameRect, name_input_rect
         copy    #$80, has_input_field_flag
         copy    #0, text_input_buf
-        copy    #$00, format_erase_overlay_flag
+        copy    #$00, has_device_picker_flag
 
         param_call main::DrawDialogLabel, 2, aux::str_location
 
@@ -127,7 +128,10 @@ skip_select:
         jsr     main::DrawString
 
         param_call main::DrawDialogLabel, 4, aux::str_new_volume
-        jsr     main::InitNameInput
+
+        LETK_CALL LETK::Init, prompt_le_params
+        LETK_CALL LETK::Activate, prompt_le_params
+        jsr     main::UpdateOKButton
 
 loop2:
         jsr     main::PromptInputLoop
@@ -154,7 +158,8 @@ loop2:
 
         copy    #0, has_input_field_flag
         jsr     SetPortAndClear
-        jsr     main::EraseOKCancelButtons
+        MGTK_CALL MGTK::PaintRect, ok_button::rect
+        MGTK_CALL MGTK::PaintRect, cancel_button::rect
 
         lda     unit_num
         jsr     GetVolName      ; populates `ovl_string_buf`

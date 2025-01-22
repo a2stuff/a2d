@@ -541,7 +541,7 @@ not_menu:
 
 dispatch_click:
         cmp     #MGTK::Area::content
-        jeq     HandleClientClick
+        jeq     HandleContentClick
         cmp     #MGTK::Area::dragbar
         jeq     HandleTitleClick
         cmp     #MGTK::Area::grow_box
@@ -5184,12 +5184,30 @@ err:    jmp     ShowAlert
 
 ;;; ============================================================
 
-.proc HandleClientClick
+.proc HandleContentClick
         jsr     LoadActiveWindowEntryTable
 
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
-        jeq     HandleContentClick ; 0 = ctl_not_a_control
+
+        .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
+     IF_ZERO
+        ;; Ignore clicks in the header area
+        copy    active_window_id, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        lda     screentowindow_params::windowy
+        cmp     #kWindowHeaderHeight
+        RTS_IF_LT
+
+        copy    active_window_id, findicon_params::window_id
+        ITK_CALL IconTK::FindIcon, findicon_params
+        lda     findicon_params::which_icon
+        jne     HandleIconClick
+
+        ;; Not an icon - maybe a drag?
+        lda     active_window_id
+        jmp     DragSelect
+     END_IF
 
         ;; --------------------------------------------------
 
@@ -5290,7 +5308,7 @@ err:    jmp     ShowAlert
         jsr     CheckControlRepeat
         bpl     :-
         rts
-.endproc ; HandleClientClick
+.endproc ; HandleContentClick
 
 ;;; ============================================================
 
@@ -5330,26 +5348,6 @@ bail:   return  #$FF            ; high bit set = not repeating
         bne     bail
         return  #0              ; high bit set = repeating
 .endproc ; CheckControlRepeat
-
-;;; ============================================================
-
-.proc HandleContentClick
-        ;; Ignore clicks in the header area
-        copy    active_window_id, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     screentowindow_params::windowy
-        cmp     #kWindowHeaderHeight
-        RTS_IF_LT
-
-        copy    active_window_id, findicon_params::window_id
-        ITK_CALL IconTK::FindIcon, findicon_params
-        lda     findicon_params::which_icon
-        bne     HandleIconClick
-
-        ;; Not an icon - maybe a drag?
-        lda     active_window_id
-        jmp     DragSelect
-.endproc ; HandleContentClick
 
 ;;; ============================================================
 ;;; Handle a click on an icon, either windowed or desktop. They
@@ -7384,7 +7382,7 @@ size:   .word   0               ; size of a window's list
         jsr     PushPointers
 
         lda     cached_window_id
-        jsr     GetWindowTitlePath
+        jsr     GetWindowTitle
         stax    title_ptr
 
         add16_8 icon_ptr, #IconEntry::name, name_ptr
@@ -9030,11 +9028,11 @@ str_root_path:  PASCAL_STRING "/"
 .endproc ; GetWindowOrRootPath
 
 ;;; ============================================================
-;;; Look up window title path.
+;;; Look up window title.
 ;;; Input: A = window_id
-;;; Output: A,X = title path address
+;;; Output: A,X = title address
 
-.proc GetWindowTitlePath
+.proc GetWindowTitle
         asl     a
         tax
         lda     window_title_addr_table,x
@@ -9043,7 +9041,7 @@ str_root_path:  PASCAL_STRING "/"
         tax
         pla
         rts
-.endproc ; GetWindowTitlePath
+.endproc ; GetWindowTitle
 
 ;;; ============================================================
 ;;; Inputs: A = icon id (volume or file)
@@ -12973,7 +12971,7 @@ end_filerecord_and_icon_update:
     IF_NOT_ZERO
         dst := $06
         ;; Update the window title
-        jsr     GetWindowTitlePath
+        jsr     GetWindowTitle
         stax    dst
         ldy     new_name_buf
 :       lda     new_name_buf,y
@@ -14886,7 +14884,7 @@ done:   rts
 
         lda     #0
         sta     has_input_field_flag
-        sta     format_erase_overlay_flag
+        sta     has_device_picker_flag
         sta     cursor_ibeam_flag
         jsr     SetCursorPointer
 
@@ -15004,7 +15002,7 @@ calc_y:
 
         PROC_USED_IN_OVERLAY
 .proc UpdateOKButton
-        bit     format_erase_overlay_flag
+        bit     has_device_picker_flag
     IF_NS
         lda     #0
         jsr     format_erase_overlay__ValidSelection ; preserves A
@@ -15030,15 +15028,6 @@ set_state:
 
 ret:    rts
 .endproc ; UpdateOKButton
-
-        PROC_USED_IN_OVERLAY
-
-.proc EraseOKCancelButtons
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, ok_button::rect
-        MGTK_CALL MGTK::PaintRect, cancel_button::rect
-        rts
-.endproc ; EraseOKCancelButtons
 
 ;;; ============================================================
 ;;; Draw text, pascal string address in A,X
@@ -15089,21 +15078,6 @@ done:   rts
 .proc NoOp
         rts
 .endproc ; NoOp
-
-;;; ============================================================
-;;; Frames and initializes the line edit control in the prompt
-;;; dialog. Call after `text_input_buf` is populated so caret is set
-;;; correctly.
-
-        PROC_USED_IN_OVERLAY
-
-.proc InitNameInput
-        jsr     SetPenModeNotCopy
-        MGTK_CALL MGTK::FrameRect, name_input_rect
-        LETK_CALL LETK::Init, prompt_le_params
-        LETK_CALL LETK::Activate, prompt_le_params
-        jmp     UpdateOKButton
-.endproc ; InitNameInput
 
 ;;; ============================================================
 
