@@ -207,13 +207,7 @@ ClearUpdates := ClearUpdatesImpl::clear
         cmp     #kMaxDeskTopWindows+1 ; directory windows are 1-8
         RTS_IF_GE
 
-        ;; Temporarily overwrite `active_window_id`, for called procs
-        tax
-        lda     active_window_id
-        pha
-        stx     active_window_id
-
-        jsr     LoadActiveWindowEntryTable
+        jsr     LoadWindowEntryTable
 
         ;; This correctly uses the clipped port provided by BeginUpdate.
 
@@ -228,10 +222,6 @@ ClearUpdates := ClearUpdatesImpl::clear
         ;; Actually draw the window icons/list
         jsr     DrawWindowEntries
     END_IF
-
-        ;; Restore `active_window_id`
-        pla
-        sta     active_window_id
 
         rts
 .endproc ; UpdateWindow
@@ -570,7 +560,7 @@ dispatch_click:
         ;; Repaint the contents
         jsr     UpdateWindowUsedFreeDisplayValues
         jsr     LoadActiveWindowEntryTable
-        jmp     DrawCachedWindowHeaderAndEntries
+        FALL_THROUGH_TO DrawCachedWindowHeaderAndEntries
 .endproc ; ActivateWindow
 
 ;;; ============================================================
@@ -2966,8 +2956,8 @@ doney:
         ;; Apply the viewport (accounting for header)
         sub16_8 window_grafport::maprect::y1, #kWindowHeaderHeight - 1
         jsr     AssignActiveWindowCliprectAndUpdateCachedIcons
-        jsr     ScrollUpdate
         jsr     ClearAndDrawActiveWindowEntries
+        jsr     ScrollUpdate
 
 done:   rts
 
@@ -3192,7 +3182,8 @@ entry3:
 
         jsr     _RestoreSelection
 
-        jmp     RedrawAfterContentChange
+        jsr     ClearAndDrawActiveWindowEntries
+        jmp     ScrollUpdate
 
 ;;; --------------------------------------------------
 ;;; Preserves selection by replacing selected icon ids
@@ -3294,15 +3285,6 @@ selection_preserved_count:
         jsr     PopPointers     ; do not tail-call optimize!
         rts
 .endproc ; GetIconWindow
-
-;;; ============================================================
-
-.proc RedrawAfterContentChange
-        jsr     ClearAndDrawActiveWindowEntries
-
-        ;; Update scrollbars based on contents/viewport
-        jmp     ScrollUpdate
-.endproc ; RedrawAfterContentChange
 
 ;;; ============================================================
 ;;; Destroy all of the icons in the active window.
@@ -5398,7 +5380,10 @@ replace_selection:
 
         ;; --------------------------------------------------
 check_double_click:
-        jsr     StashCoordsAndDetectDoubleClick
+        ;; Stash initial coords so dragging is accurate.
+        COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
+
+        jsr     DetectDoubleClick
         jpl     CmdOpenFromDoubleClick
 
         ;; --------------------------------------------------
@@ -5512,7 +5497,10 @@ failure:
     IF_POS
         ;; Yes, on an icon; update used/free for same-vol windows
         pha
-        jsr     UpdateUsedFreeViaIcon
+        jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
+      IF_ZERO
+        param_call UpdateUsedFreeViaPath, path_buf3
+      END_IF
         pla
         jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
       IF_EQ
@@ -5544,7 +5532,8 @@ failure:
 
 .proc UpdateActivateAndRefreshWindow
         pha
-        jsr     UpdateUsedFreeViaWindow
+        jsr     GetWindowPath   ; into A,X
+        jsr     UpdateUsedFreeViaPath
         pla
         jmp     ActivateAndRefreshWindowOrClose
 .endproc ; UpdateActivateAndRefreshWindow
@@ -6223,17 +6212,6 @@ ret:    rts
 .endproc ; GetSingleSelectedIcon
 
 ;;; ============================================================
-;;; Double Click Detection helper specifically for dragging.
-;;; Returns with A=0 if double click, A=$FF otherwise.
-;;; Stashes initial coords so dragging is accurate.
-
-.proc StashCoordsAndDetectDoubleClick
-        COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
-
-        jmp     DetectDoubleClick
-.endproc ; StashCoordsAndDetectDoubleClick
-
-;;; ============================================================
 ;;; Open a folder/volume icon
 ;;; Input: A = icon
 ;;; Note: stack will be restored via `saved_stack` on failure
@@ -6687,7 +6665,8 @@ skip:
         stax    proc
 
         jsr     PushPointers
-        jsr     PrepActiveWindowScreenMapping
+        lda     cached_window_id
+        jsr     PrepWindowScreenMapping
 
         copy    #0, index
         index := *+1
@@ -6728,26 +6707,6 @@ done:   jsr     PopPointers     ; do not tail-call optimize!
         copy16  window_k_free_table-2,x, window_draw_k_free_table-2,x
         rts
 .endproc ; UpdateWindowUsedFreeDisplayValues
-
-;;; ============================================================
-;;; Update used/free values for windows related to volume icon
-;;; Input: A = icon number
-
-.proc UpdateUsedFreeViaIcon
-        jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
-        RTS_IF_NE               ; too long
-
-        param_jump UpdateUsedFreeViaPath, path_buf3
-.endproc ; UpdateUsedFreeViaIcon
-
-;;; ============================================================
-;;; Refresh vol used/free for windows of same volume as win in A.
-;;; Input: A = window id
-
-.proc UpdateUsedFreeViaWindow
-        jsr     GetWindowPath   ; into A,X
-        jmp     UpdateUsedFreeViaPath
-.endproc ; UpdateUsedFreeViaWindow
 
 ;;; ============================================================
 ;;; Refresh vol used/free for windows of same volume as path in A,X.
@@ -8116,7 +8075,7 @@ flags:  .byte   0
 
 
 ;;; ============================================================
-;;; Draw header (items/K in disk/K available/lines) for active window
+;;; Draw header (items/K in disk/K available/lines) for `cached_window_id`
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc DrawWindowHeader
@@ -8176,7 +8135,7 @@ END_PARAM_BLOCK
         ;; Labels (Items/K in disk/K available)
 
         ;; Cache values
-        lda     active_window_id
+        lda     cached_window_id
         jsr     GetFileRecordCountForWindow
         ldx     #0
         stax    num_items
@@ -8189,7 +8148,7 @@ END_PARAM_BLOCK
     END_IF
         stax    ptr_str_items_suffix
 
-        ldx     active_window_id
+        ldx     cached_window_id
         dex                     ; index 0 is window 1
         txa
         asl     a
@@ -9306,9 +9265,13 @@ ret:    rts
 ;;; Trashes: $08
 
 .proc PrepActiveWindowScreenMapping
+        lda     active_window_id
+        FALL_THROUGH_TO PrepWindowScreenMapping
+.endproc ; PrepActiveWindowScreenMapping
+
+.proc PrepWindowScreenMapping
         winfo_ptr := $8
 
-        lda     active_window_id
         jsr     WindowLookup
         stax    winfo_ptr
 
@@ -9331,7 +9294,7 @@ ret:    rts
         bpl     :-
 
         rts
-.endproc ; PrepActiveWindowScreenMapping
+.endproc ; PrepWindowScreenMapping
 
 ;;; ============================================================
 ;;; Input: A = unmasked unit number
@@ -11890,14 +11853,12 @@ map:    .byte   FileEntry::access
         ldax    copy_dialog_params::a_src
         jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_copy_from
-        jsr     ClearTargetFileRectAndSetPos
-        jsr     DrawDialogPathBuf0
+        jsr     DrawTargetFilePath
 
         ldax    copy_dialog_params::a_dst
         jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 2, aux::str_copy_to
-        jsr     ClearDestFileRectAndSetPos
-        jsr     DrawDialogPathBuf0
+        jsr     DrawDestFilePath
 
         jmp     DrawProgressDialogFilesRemaining
     END_IF
@@ -11945,8 +11906,7 @@ DownloadDialogProc := CopyDialogProc
         ldax    delete_dialog_params::a_path
         jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_file_colon
-        jsr     ClearTargetFileRectAndSetPos
-        jsr     DrawDialogPathBuf0
+        jsr     DrawTargetFilePath
 
         jmp     DrawProgressDialogFilesRemaining
     END_IF
@@ -11955,6 +11915,22 @@ DownloadDialogProc := CopyDialogProc
         ;; DeleteDialogLifecycle::close
         jmp     CloseProgressDialog
 .endproc ; DeleteDialogProc
+
+;;; ============================================================
+
+.proc DrawTargetFilePath
+        jsr     SetPenModeCopy
+        MGTK_CALL MGTK::PaintRect, aux::current_target_file_rect
+        MGTK_CALL MGTK::MoveTo,  aux::current_target_file_pos
+        jmp     DrawDialogPathBuf0
+.endproc ; DrawTargetFilePath
+
+.proc DrawDestFilePath
+        jsr     SetPenModeCopy
+        MGTK_CALL MGTK::PaintRect, aux::current_dest_file_rect
+        MGTK_CALL MGTK::MoveTo,  aux::current_dest_file_pos
+        jmp     DrawDialogPathBuf0
+.endproc ; DrawDestFilePath
 
 ;;; ============================================================
 
@@ -13000,7 +12976,7 @@ end_filerecord_and_icon_update:
         return result_flags
 
 .proc _RunDialogProc
-        sta     rename_dialog_params
+        sta     rename_dialog_params::state
         jmp     RenameDialogProc
 .endproc ; _RunDialogProc
 
@@ -14261,7 +14237,7 @@ close:  MGTK_CALL MGTK::CloseWindow, winfo_about_dialog
 .proc SetCursorIBeamWithFlag
         bit     cursor_ibeam_flag
         bmi     :+
-        jsr     SetCursorIBeam ; toggle routine
+        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         copy    #$80, cursor_ibeam_flag
 :       rts
 .endproc ; SetCursorIBeamWithFlag
@@ -14859,12 +14835,6 @@ params:  .res    3
         rts
 .endproc ; SetCursorPointer
 
-        PROC_USED_IN_OVERLAY
-.proc SetCursorIBeam
-        MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        rts
-.endproc ; SetCursorIBeam
-
 ;;; ============================================================
 
 ;;; Inputs: A = new `prompt_button_flags` value
@@ -15139,22 +15109,6 @@ ptr_str_files_suffix:
         stax    ptr1
         param_jump CopyPtr1ToBuf, path_buf0
 .endproc ; CopyToBuf0
-
-;;; ============================================================
-
-.proc ClearTargetFileRectAndSetPos
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::current_target_file_rect
-        MGTK_CALL MGTK::MoveTo,  aux::current_target_file_pos
-        rts
-.endproc ; ClearTargetFileRectAndSetPos
-
-.proc ClearDestFileRectAndSetPos
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, aux::current_dest_file_rect
-        MGTK_CALL MGTK::MoveTo,  aux::current_dest_file_pos
-        rts
-.endproc ; ClearDestFileRectAndSetPos
 
 ;;; ============================================================
 
