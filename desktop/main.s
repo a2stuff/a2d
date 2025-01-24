@@ -583,7 +583,7 @@ dispatch_click:
         lda     active_window_id
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
     IF_ZERO
-        jsr     ClearWindowBackground
+        MGTK_CALL MGTK::PaintRect, window_grafport::maprect
         jsr     DrawWindowEntries
     END_IF
         rts
@@ -5680,7 +5680,7 @@ exception_flag:
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
     IF_ZERO
-        jsr     ClearWindowBackground
+        MGTK_CALL MGTK::PaintRect, window_grafport::maprect
     END_IF
 
         ;; Remove old FileRecords
@@ -5713,16 +5713,6 @@ exception_flag:
         ;; Create icons and draw contents
         jmp     ViewByCommon::entry3
 .endproc ; ActivateAndRefreshWindow
-
-;;; ============================================================
-;;; Clear the window background
-;;; Assert: Valid port is set
-
-.proc ClearWindowBackground
-        jsr     SetPenModeCopy
-        MGTK_CALL MGTK::PaintRect, window_grafport::maprect
-        rts
-.endproc ; ClearWindowBackground
 
 ;;; ============================================================
 ;;; Drag Selection
@@ -12986,7 +12976,11 @@ DoRename        := DoRenameImpl::start
 
         COPY_STRUCT MGTK::Point, rename_dialog_params::rect::topleft, winfo_rename_dialog::viewloc
 
-        jsr     OpenRenameWindow
+        copy    #0, cursor_ibeam_flag
+        jsr     SetCursorPointer
+
+        MGTK_CALL MGTK::OpenWindow, winfo_rename_dialog
+
         copy16  rename_dialog_params::a_prev, $08
         param_call CopyPtr2ToBuf, text_input_buf
         LETK_CALL LETK::Init, rename_le_params
@@ -13957,10 +13951,10 @@ get_case_bits_per_option_and_adjust_string:
         jsr     GetNextEvent
 
         cmp     #MGTK::EventKind::button_down
-        jeq     PromptClickHandler
+        jeq     _ClickHandler
 
         cmp     #MGTK::EventKind::key_down
-        jeq     PromptKeyHandler
+        jeq     _KeyHandler
 
         ;; Does the dialog have an input field?
         bit     has_input_field_flag
@@ -13981,11 +13975,10 @@ get_case_bits_per_option_and_adjust_string:
 
 out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         jmp     PromptInputLoop
-.endproc ; PromptInputLoop
 
 ;;; Click handler for prompt dialog
 
-.proc PromptClickHandler
+.proc _ClickHandler
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
@@ -14034,11 +14027,11 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
     END_IF
 
         return  #$FF
-.endproc ; PromptClickHandler
+.endproc ; _ClickHandler
 
 ;;; Key handler for prompt dialog
 
-.proc PromptKeyHandler
+.proc _KeyHandler
         lda     event_params::key
         sta     prompt_le_params::key
 
@@ -14106,7 +14099,9 @@ ret:    rts
         return  #PromptResult::cancel
 .endproc ; _HandleKeyCancel
 
-.endproc ; PromptKeyHandler
+.endproc ; _KeyHandler
+
+.endproc ; PromptInputLoop
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
@@ -14825,17 +14820,6 @@ params:  .res    3
 
         copy    #0, text_input_buf
 
-        jsr     OpenDialogWindow
-        BTK_CALL BTK::Draw, ok_button
-        bit     prompt_button_flags
-        bmi     done
-        BTK_CALL BTK::Draw, cancel_button
-done:   rts
-.endproc ; OpenPromptWindow
-
-;;; ============================================================
-
-.proc OpenDialogWindow
         copy    #BTK::kButtonStateNormal, ok_button::state
 
         lda     #0
@@ -14853,20 +14837,15 @@ done:   rts
         MGTK_CALL MGTK::SetPenSize, pensize_frame
         MGTK_CALL MGTK::FrameRect, aux::prompt_dialog_frame_rect
         MGTK_CALL MGTK::SetPenSize, pensize_normal
-        jsr     SetPenModeXOR
+
+        BTK_CALL BTK::Draw, ok_button
+        bit     prompt_button_flags
+    IF_NC
+        BTK_CALL BTK::Draw, cancel_button
+    END_IF
+
         rts
-.endproc ; OpenDialogWindow
-
-;;; ============================================================
-
-.proc OpenRenameWindow
-        lda     #0
-        sta     cursor_ibeam_flag
-        jsr     SetCursorPointer
-
-        MGTK_CALL MGTK::OpenWindow, winfo_rename_dialog
-        rts
-.endproc ; OpenRenameWindow
+.endproc ; OpenPromptWindow
 
 ;;; ============================================================
 
