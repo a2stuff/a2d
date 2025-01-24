@@ -12738,19 +12738,12 @@ auxtype:
 ;;; ============================================================
 
 .scope rename
-.enum RenameDialogState
-        open  = $00
-        run   = $80
-        close = $40
-.endenum
-
         old_name_buf := $1F00
         new_name_buf := stashed_name
 
         DEFINE_RENAME_PARAMS rename_params, src_path_buf, dst_path_buf
 
 .params rename_dialog_params
-state:  .byte   0
 a_prev: .addr   old_name_buf
 a_path: .addr   SELF_MODIFIED_BYTE
         DEFINE_RECT rect,0,0,0,0
@@ -12792,12 +12785,10 @@ start:
         COPY_STRUCT MGTK::Rect, tmp_rect, rename_dialog_params::rect
 
         ;; Open the dialog
-        lda     #RenameDialogState::open
-        jsr     _RunDialogProc
+        jsr     _DialogOpen
 
         ;; Run the dialog
-retry:  lda     #RenameDialogState::run
-        jsr     _RunDialogProc
+retry:  jsr     _DialogRun
         beq     success
 
         ;; Failure
@@ -12853,14 +12844,12 @@ no_change:
         jsr     ShowAlert       ; Alert options depend on specific ProDOS error
         .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
         jeq     retry           ; `kAlertResultTryAgain` = 0
-        lda     #RenameDialogState::close
-        jsr     _RunDialogProc
+        jsr     _DialogClose
         jmp     fail
 
         ;; --------------------------------------------------
         ;; Completed - tear down the dialog...
-finish: lda     #RenameDialogState::close
-        jsr     _RunDialogProc
+finish: jsr     _DialogClose
 
         lda     selected_icon_list
         sta     icon_param
@@ -12975,11 +12964,6 @@ end_filerecord_and_icon_update:
 
         return result_flags
 
-.proc _RunDialogProc
-        sta     rename_dialog_params::state
-        jmp     RenameDialogProc
-.endproc ; _RunDialogProc
-
 ;;; N bit ($80) set if a window title was changed
 result_flags:
         .byte   0
@@ -12991,12 +12975,7 @@ DoRename        := DoRenameImpl::start
 
 ;;; This uses a minimal dialog window to simulate modeless rename.
 
-.proc RenameDialogProc
-        lda     rename_dialog_params::state
-
-        ;; ----------------------------------------
-        cmp     #RenameDialogState::open
-    IF_EQ
+.proc _DialogOpen
         ldy     #LETK::kLineEditOptionsNormal
         jsr     GetSelectionViewBy
         cmp     #kViewByIcon
@@ -13013,17 +12992,17 @@ DoRename        := DoRenameImpl::start
         LETK_CALL LETK::Init, rename_le_params
         LETK_CALL LETK::Activate, rename_le_params
         rts
-    END_IF
+.endproc ; _DialogOpen
 
-        ;; --------------------------------------------------
-        cmp     #RenameDialogState::run
-    IF_EQ
-loop:   jsr     RenameInputLoop
+;;; ============================================================
+
+.proc _DialogRun
+loop:   jsr     _InputLoop
         bmi     loop            ; continue?
-        bne     do_close        ; canceled!
+        bne     _DialogClose    ; canceled!
 
         lda     text_input_buf  ; treat empty as cancel
-        beq     do_close
+        beq     _DialogClose
 
         ;; Validate path length before committing
         copy16  rename_dialog_params::a_path, $08
@@ -13039,35 +13018,35 @@ loop:   jsr     RenameInputLoop
 
         ldxy    #text_input_buf
         return  #0
-    END_IF
+.endproc ; _DialogRun
 
-        ;; --------------------------------------------------
-        ;; RenameDialogState::close
-do_close:
+;;; ============================================================
+
+.proc _DialogClose
         MGTK_CALL MGTK::CloseWindow, winfo_rename_dialog
         jsr     ClearUpdates     ; following CloseWindow
         jsr     SetCursorPointer ; when closing dialog
         return  #1
-.endproc ; RenameDialogProc
+.endproc ; _DialogClose
 
 ;;; ============================================================
 
 ;;; Outputs: N=0/Z=1 if ok, N=0/Z=0 if canceled; N=1 means call again
 
-.proc RenameInputLoop
+.proc _InputLoop
         LETK_CALL LETK::Idle, rename_le_params
 
         jsr     SystemTask
         jsr     GetNextEvent
 
         cmp     #MGTK::EventKind::button_down
-        jeq     RenameClickHandler
+        jeq     _ClickHandler
 
         cmp     #MGTK::EventKind::key_down
-        jeq     RenameKeyHandler
+        jeq     _KeyHandler
 
         cmp     #kEventKindMouseMoved
-        bne     RenameInputLoop
+        bne     _InputLoop
 
         ;; Check if mouse is over window, change cursor appropriately.
         MGTK_CALL MGTK::FindWindow, findwindow_params
@@ -13079,15 +13058,15 @@ do_close:
         bne     out
 
         jsr     SetCursorIBeamWithFlag
-        jmp     RenameInputLoop
+        jmp     _InputLoop
 
 out:    jsr     SetCursorPointerWithFlag
-        jmp     RenameInputLoop
-.endproc ; RenameInputLoop
+        jmp     _InputLoop
+.endproc ; _InputLoop
 
 ;;; Click handler for rename dialog
 
-.proc RenameClickHandler
+.proc _ClickHandler
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
@@ -13108,11 +13087,11 @@ out:    jsr     SetCursorPointerWithFlag
         LETK_CALL LETK::Click, rename_le_params
 
         return  #$FF
-.endproc ; RenameClickHandler
+.endproc ; _ClickHandler
 
 ;;; Key handler for rename dialog
 
-.proc RenameKeyHandler
+.proc _KeyHandler
         lda     event_params::key
         sta     rename_le_params::key
 
@@ -13140,7 +13119,7 @@ out:    jsr     SetCursorPointerWithFlag
 allow:  LETK_CALL LETK::Key, rename_le_params
 ignore:
         return  #$FF
-.endproc ; RenameKeyHandler
+.endproc ; _KeyHandler
 
 .endscope ; rename
 
