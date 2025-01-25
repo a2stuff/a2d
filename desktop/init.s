@@ -1100,11 +1100,11 @@ loop:   ldy     #0
 
         lda     #$80
         sta     main::copy_new_window_bounds_flag
-        sta     main::OpenDirectoryImpl::suppress_error_on_open_flag
+        sta     main::CreateFileRecordsForWindowImpl::suppress_error_on_open_flag
         jsr     _MaybeOpenWindow
         lda     #0
         sta     main::copy_new_window_bounds_flag
-        sta     main::OpenDirectoryImpl::suppress_error_on_open_flag
+        sta     main::CreateFileRecordsForWindowImpl::suppress_error_on_open_flag
 
 next:   jsr     PopPointers
 

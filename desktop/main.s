@@ -472,7 +472,7 @@ offset_table:
         copy    #0, findwindow_params::window_id
         ITK_CALL IconTK::FindIcon, event_params::coords
         lda     findicon_params::which_icon
-        jne     HandleIconClick
+        jne     _IconClick
 
         jsr     LoadDesktopEntryTable
         lda     #0
@@ -559,7 +559,7 @@ dispatch_click:
         copy    active_window_id, findicon_params::window_id
         ITK_CALL IconTK::FindIcon, findicon_params
         lda     findicon_params::which_icon
-        jne     HandleIconClick
+        jne     _IconClick
 
         ;; Not an icon - maybe a drag?
         lda     active_window_id
@@ -575,7 +575,7 @@ dispatch_click:
     IF_EQ
         ;; Vertical scrollbar
         lda     active_window_id
-        jsr     WindowLookup
+        jsr     GetWindowPtr
         stax    $06
         ldy     #MGTK::Winfo::vscroll
         lda     ($06),y
@@ -622,7 +622,7 @@ dispatch_click:
 
         ;; Horizontal scrollbar
         lda     active_window_id
-        jsr     WindowLookup
+        jsr     GetWindowPtr
         stax    $06
         ldy     #MGTK::Winfo::hscroll
         lda     ($06),y
@@ -708,15 +708,13 @@ bail:   return  #$FF            ; high bit set = not repeating
 .endproc ; _ContentClick
 
 ;;; ------------------------------------------------------------
-
-;;; ============================================================
 ;;; Handle a click on an icon, either windowed or desktop. They
 ;;; are processed the same way, unless a drag occurs.
 ;;; Input: A = icon
 ;;;   `findicon_params::which_icon` and `findicon_params::window_id`
 ;;;   must still be populated
 
-.proc HandleIconClick
+.proc _IconClick
         pha
         jsr     GetSingleSelectedIcon
         sta     prev_selected_icon
@@ -776,7 +774,7 @@ check_double_click:
         beq     _VolumeIconDrag
 
         FALL_THROUGH_TO _FileIconDrag
-.endproc ; HandleIconClick
+.endproc ; _IconClick
 
 ;;; ============================================================
 ;;; Inputs: A = `IconTK::DragHighlighted` return value, and
@@ -789,13 +787,13 @@ check_double_click:
 
 process_drop:
         jsr     DoDrop
-        jmp     PerformPostDropUpdates
+        jmp     _PerformPostDropUpdates
 
         ;; --------------------------------------------------
 
 same_or_desktop:
         cpx     #2              ; not a drag
-        beq     CheckRenameClick
+        beq     _CheckRenameClick
 
         cpx     #$FF
         beq     failure
@@ -843,13 +841,13 @@ failure:
         jsr     DoDrop
         ;; NOTE: If drop target is trash, `JTDrop` relays to
         ;; `CmdEject` and pops the return address.
-        jmp     PerformPostDropUpdates
+        jmp     _PerformPostDropUpdates
 
         ;; --------------------------------------------------
 
 same_or_desktop:
         cpx     #2              ; file icon dragged to desktop?
-        beq     CheckRenameClick
+        beq     _CheckRenameClick
 
         ;; Icons moved on desktop - update and redraw
         jmp     RedrawSelectedIcons
@@ -863,7 +861,7 @@ prev_selected_icon:
 
 ;;; Prior to processing the click, `prev_selected_icon` should
 ;;; be set to the result of `GetSingleSelectedIcon`.
-.proc CheckRenameClick
+.proc _CheckRenameClick
         jsr     GetSingleSelectedIcon
         cmp     prev_selected_icon
         bne     ret
@@ -873,14 +871,14 @@ prev_selected_icon:
         MGTK_CALL MGTK::InRect, tmp_rect
         jne     CmdRename
 ret:    rts
-.endproc ; CheckRenameClick
+.endproc ; _CheckRenameClick
 
 ;;;------------------------------------------------------------
 ;;; After an icon drop (file or volume), update any affected
 ;;; windows.
 ;;; Inputs: A = result from `DoDrop`, and `drag_drop_params::result`
 
-.proc PerformPostDropUpdates
+.proc _PerformPostDropUpdates
         ;; --------------------------------------------------
         ;; (1/4) Canceled?
 
@@ -893,7 +891,7 @@ ret:    rts
     IF_NS
         ;; Update source vol's contents
         jsr     MaybeStashDropTargetName ; in case target is in window...
-        jsr     _UpdateSelectedWindow
+        jsr     UpdateActivateAndRefreshSelectedWindow
         jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
     END_IF
 
@@ -907,7 +905,7 @@ ret:    rts
         ;; Update used/free for same-vol windows
     IF_EQ
         copy    #$80, validate_windows_flag
-        bne     _UpdateSelectedWindow ; always
+        jmp     UpdateActivateAndRefreshSelectedWindow
     END_IF
 
         ;; --------------------------------------------------
@@ -936,13 +934,7 @@ ret:    rts
 
         and     #$7F            ; mask off window number
         jmp     UpdateActivateAndRefreshWindow
-
-.proc _UpdateSelectedWindow
-        lda     selected_window_id
-        jmp     UpdateActivateAndRefreshWindow
-.endproc ; _UpdateSelectedWindow
-
-.endproc ; PerformPostDropUpdates
+.endproc ; _PerformPostDropUpdates
 
 .endproc ; HandleClick
 
@@ -1798,11 +1790,6 @@ check_header:
 LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
 
 ;;; ============================================================
-
-        PROC_USED_IN_OVERLAY
-        .include "../lib/uppercase.s"
-
-;;; ============================================================
 ;;; Uppercase a string
 ;;; Input: A,X = Address
 ;;; Trashes $06
@@ -2442,8 +2429,6 @@ main_length:    .word   0
         close_ref_num := close_params::ref_num
 
 .endproc ; InvokeDeskAccWithIcon
-
-;;; ============================================================
 
 ;;; ============================================================
 
@@ -3538,12 +3523,6 @@ menu_item_to_view_by:
 .proc CmdViewBy
         ldx     menu_click_params::item_num
         lda     menu_item_to_view_by-1,x
-        FALL_THROUGH_TO ViewByCommon
-.endproc ; CmdViewBy
-
-;;; ============================================================
-
-.proc ViewByCommon
         sta     view
 
         ;; Valid?
@@ -3560,6 +3539,13 @@ menu_item_to_view_by:
         lda     #SELF_MODIFIED_BYTE
         ldx     active_window_id
         sta     win_view_by_table-1,x
+
+        FALL_THROUGH_TO RefreshViewPreserveSelection
+.endproc ; CmdViewBy
+
+;;; ============================================================
+
+.proc RefreshViewImpl
 
 ;;; Entry point when view needs refreshing, e.g. rename when sorted.
 entry2:
@@ -3647,7 +3633,9 @@ ret:    rts
 
 selection_preserved_count:
         .byte   0
-.endproc ; ViewByCommon
+.endproc ; RefreshViewImpl
+RefreshViewPreserveSelection := RefreshViewImpl::entry2
+RefreshView := RefreshViewImpl::entry3
 
 ;;; ============================================================
 ;;; Find the icon for the cached window's given record index.
@@ -3914,7 +3902,7 @@ ep2:
         cmp     #kViewByName
       IF_EQ
         txa                     ; X = window id
-        jsr     ViewByCommon::entry2
+        jsr     RefreshViewPreserveSelection
 
         lda     selected_icon_list
         jsr     ScrollIconIntoView
@@ -5572,13 +5560,16 @@ err:    jmp     ShowAlert
 .endproc ; CmdMakeLinkImpl
         CmdMakeLink := CmdMakeLinkImpl::start
 
-
-
 ;;; ============================================================
 ;;; Given a window, update used/free data for all same-volume windows,
 ;;; then activate the window (if needed) and refresh the contents
 ;;; (closing on error).
 ;;; Same inputs/outputs as `ActivateAndRefreshWindowOrClose`
+
+.proc UpdateActivateAndRefreshSelectedWindow
+        lda     selected_window_id
+        FALL_THROUGH_TO UpdateActivateAndRefreshWindow
+.endproc
 
 .proc UpdateActivateAndRefreshWindow
         pha
@@ -5736,7 +5727,7 @@ exception_flag:
         ;; Remove old FileRecords
         lda     active_window_id
         pha
-        jsr     RemoveWindowFilerecordEntries
+        jsr     RemoveWindowFileRecords
 
         ;; Remove old icons
         jsr     DestroyIconsInActiveWindow
@@ -5749,7 +5740,7 @@ exception_flag:
 
         ;; Load new FileRecords
         pla                     ; window id
-        jsr     OpenDirectory
+        jsr     CreateFileRecordsForWindow
 
         ;; Draw header
         jsr     UpdateWindowUsedFreeDisplayValues
@@ -5761,7 +5752,7 @@ exception_flag:
     END_IF
 
         ;; Create icons and draw contents
-        jmp     ViewByCommon::entry3
+        jmp     RefreshView
 .endproc ; ActivateAndRefreshWindow
 
 ;;; ============================================================
@@ -6058,7 +6049,7 @@ update: lda     window_id
         ;; Tidy up after closing window
 
         lda     cached_window_id
-        jsr     RemoveWindowFilerecordEntries
+        jsr     RemoveWindowFileRecords
 
         ldx     cached_window_id
         lda     #0
@@ -6149,7 +6140,7 @@ done:   rts
         ptr := $06
 
         lda     active_window_id
-        jsr     WindowLookup
+        jsr     GetWindowPtr
         addax   #MGTK::Winfo::port, ptr
         ldy     #.sizeof(MGTK::GrafPort) - 1
 :       lda     (ptr),y
@@ -6173,7 +6164,7 @@ done:   rts
         ptr := $6
 
         lda     active_window_id
-        jsr     WindowLookup
+        jsr     GetWindowPtr
         stax    ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
@@ -6321,7 +6312,7 @@ no_win:
 
         ;; Create the window
         lda     cached_window_id
-        jsr     WindowLookup   ; A,X points at Winfo
+        jsr     GetWindowPtr   ; A,X points at Winfo
         stax    @addr
         MGTK_CALL MGTK::OpenWindow, 0, @addr
 
@@ -6643,21 +6634,21 @@ skip:
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc CachedIconsScreenToWindow
-        param_jump CachedIconsXToY, IconPtrScreenToWindow
+        param_jump _CachedIconsXToY, IconPtrScreenToWindow
 .endproc ; CachedIconsScreenToWindow
 
 ;;; ============================================================
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc CachedIconsWindowToScreen
-        param_jump CachedIconsXToY, IconPtrWindowToScreen
+        param_jump _CachedIconsXToY, IconPtrWindowToScreen
 .endproc ; CachedIconsWindowToScreen
 
 ;;; ============================================================
 
 ;;; Inputs: A,X = proc to call for each icon
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
-.proc CachedIconsXToY
+.proc _CachedIconsXToY
         stax    proc
 
         jsr     PushPointers
@@ -6681,7 +6672,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
 
 done:   jsr     PopPointers     ; do not tail-call optimize!
         rts
-.endproc ; CachedIconsXToY
+.endproc ; _CachedIconsXToY
 
 ;;; ============================================================
 ;;; Adjust grafport for header.
@@ -6867,7 +6858,7 @@ found_windows_list:
 
 ;;; ============================================================
 
-.proc OpenDirectoryImpl
+.proc CreateFileRecordsForWindowImpl
         DEFINE_OPEN_PARAMS open_params, src_path_buf, $800
 
         dir_buffer := $C00
@@ -7171,8 +7162,8 @@ suppress_error_on_open_flag:
 .endproc ; _DoClose
 
 ;;; --------------------------------------------------
-.endproc ; OpenDirectoryImpl
-OpenDirectory := OpenDirectoryImpl::_Start
+.endproc ; CreateFileRecordsForWindowImpl
+CreateFileRecordsForWindow := CreateFileRecordsForWindowImpl::_Start
 
 ;;; ============================================================
 ;;; Inputs: `src_path_buf` set to full path (not modified)
@@ -7217,7 +7208,7 @@ vol_kb_used:  .word   0
 ;;; the space.
 ;;; A = window id
 
-.proc RemoveWindowFilerecordEntries
+.proc RemoveWindowFileRecords
         ;; Find address of FileRecord list
         jsr     FindIndexInFilerecordListEntries
         RTS_IF_ZC
@@ -7318,7 +7309,7 @@ finish:
 
 deltam: .word   0               ; memory delta
 size:   .word   0               ; size of a window's list
-.endproc ; RemoveWindowFilerecordEntries
+.endproc ; RemoveWindowFileRecords
 
 ;;; ============================================================
 ;;; Set up path and coords for new window, contents and free/used.
@@ -7372,7 +7363,7 @@ size:   .word   0               ; size of a window's list
 
         ;; Set window coordinates
         lda     cached_window_id
-        jsr     WindowLookup
+        jsr     GetWindowPtr
         stax    winfo_ptr
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc
 
@@ -7427,7 +7418,7 @@ size:   .word   0               ; size of a window's list
         ;; Read FileRecords
 
         lda     cached_window_id
-        jsr     OpenDirectory
+        jsr     CreateFileRecordsForWindow
 
         ;; --------------------------------------------------
         ;; Update used/free table
@@ -7846,7 +7837,7 @@ icon_height := CreateIconsForWindowImpl::icon_height
         winfo_ptr := $06
 
         lda     cached_window_id
-        jsr     WindowLookup
+        jsr     GetWindowPtr
         stax    winfo_ptr
 
         ;; convert right/bottom to width/height
@@ -7935,7 +7926,7 @@ assign_height:
         beq     ret
 
         lda     cached_window_id
-        jsr     WindowLookup
+        jsr     GetWindowPtr
         stax    winfo_ptr
 
         ;; Adjust view bounds of new window so it matches icon bounding box.
@@ -8335,13 +8326,15 @@ next:   inc     icon_num
 ;;; created, this order is used but the list is re-populated
 ;;; with icon numbers.
 ;;;
-;;; icons, these are replaced by icon numbers.
 ;;; Inputs: `cached_window_id` is set
 ;;; Outputs: Populates `cached_window_entry_count` with count and
 ;;;          `cached_window_entry_list` with indexes 1...N
 ;;; Assert: LCBANK1 is active
 
-.proc InitCachedWindowEntries
+.proc InitWindowEntriesAndIcons
+        ;; --------------------------------------------------
+        ;; Create generic entries for window
+
         jsr     PushPointers
 
         ;; Get the entry count via FileRecord list
@@ -8361,23 +8354,24 @@ next:   inc     icon_num
     END_IF
 
         jsr     PopPointers     ; do not tail-call optimize!
-        rts
-.endproc ; InitCachedWindowEntries
 
-;;; ============================================================
+        ;; --------------------------------------------------
+        ;; Sort (if needed)
 
-.proc InitWindowEntriesAndIcons
-        jsr     InitCachedWindowEntries
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF_NEG
         jsr     SortRecords
     END_IF
+
+        ;; --------------------------------------------------
+        ;; Create icons
+
         jsr     CreateIconsForWindow
         jmp     StoreWindowEntryTable
 .endproc ; InitWindowEntriesAndIcons
 
 ;;; ============================================================
-;;; Fetch the entry count for a window; valid after `OpenDirectory`,
+;;; Fetch the entry count for a window; valid after `CreateFileRecordsForWindow`,
 ;;; does not depend on icon creation state.
 ;;; Input: A = window_od
 ;;; Output: A = entry count
@@ -8942,7 +8936,7 @@ min     := parsed_date + ParsedDateTime::minute
 ;;; Inputs: A = window id
 ;;; Output: A,X = Winfo address
 
-.proc WindowLookup
+.proc GetWindowPtr
         asl     a
         tax
         lda     win_table,x
@@ -8951,7 +8945,7 @@ min     := parsed_date + ParsedDateTime::minute
         tax
         pla
         rts
-.endproc ; WindowLookup
+.endproc ; GetWindowPtr
 
 ;;; ============================================================
 ;;; Look up window path.
@@ -9268,7 +9262,7 @@ ret:    rts
 .proc PrepWindowScreenMapping
         winfo_ptr := $8
 
-        jsr     WindowLookup
+        jsr     GetWindowPtr
         stax    winfo_ptr
 
         ;; Screen space
@@ -9842,7 +9836,7 @@ open:   ldy     #$00
         ;; --------------------------------------------------
         ;; Get window rect - used as last rect
 
-        jsr     WindowLookup    ; copy window's port somewhere handy
+        jsr     GetWindowPtr    ; copy window's port somewhere handy
         stax    ptr
         ldy     #MGTK::Winfo::port + .sizeof(MGTK::GrafPort)-1
         ldx     #.sizeof(MGTK::GrafPort)-1
@@ -14125,8 +14119,7 @@ PromptDialogKeyHandlerHook:
         bcs     yes
 
         cmp     #' '
-        bcc     yes
-        rts                     ; C=1
+        rts                     ; C=0 (if less) or 1
 
 yes:    clc                     ; C=0
         rts
@@ -14383,7 +14376,7 @@ str_desktop_file:
         MGTK_CALL MGTK::FrontWindow, window_id
         lda     window_id
         beq     finish
-        jsr     WindowLookup
+        jsr     GetWindowPtr
         stax    winfo_ptr
         copy    #0, depth
 
@@ -15496,6 +15489,7 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
         .include "../lib/monocolor.s"
         .include "../lib/speed.s"
         .include "../lib/bell.s"
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 ;;; Resources (that are only used from Main, i.e. not MGTK)
@@ -15649,7 +15643,7 @@ str_pt3_suffix:                 ; Vortex Tracker PT3
 ;;;  |                     2   |
 ;;;  |                     3   |
 ;;;  |                     4   |
-;;;  |        13  12  11   5   |
+;;;  |     14  13  12  11  5   |
 ;;;  | 10  9   8   7   6 Trash |
 ;;;  +-------------------------+
 

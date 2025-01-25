@@ -299,8 +299,7 @@ ignore:
         bcs     yes
 
         cmp     #' '
-        bcc     yes
-        rts                     ; C=1
+        rts                     ; C=0 (if less) or 1
 
 yes:    clc                     ; C=0
         rts
