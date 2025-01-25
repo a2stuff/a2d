@@ -12197,29 +12197,6 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 
         DEFINE_READ_BLOCK_PARAMS getinfo_block_params, $800, $A
 
-.params get_info_dialog_params
-state:  .byte   0
-a_str:  .addr   0               ; e.g. string address
-locked: .byte   0               ; bit7 = 1 if file, bit6 = 1 if locked
-index:  .byte   0               ; index in selected icon list
-refresh:.byte   0               ; bit7 = 1 if selection modified
-.endparams
-
-.enum GetInfoDialogState
-        name    = 1
-        type    = 2             ; blank for vol
-        size    = 3             ; blocks (file)/size (volume)
-        created = 4
-        modified = 5
-        locked  = 6             ; locked (file)/protected (volume)
-
-        prompt  = 7             ; signals the dialog to enter loop
-
-        prepare_file = $80      ; +2 if multiple
-        prepare_vol  = $81      ; +2 if multiple
-.endenum
-
-
 ;;; ============================================================
 ;;; Get Info
 ;;; Returns: A has bit7 = 1 if selected items were modified
@@ -12229,18 +12206,24 @@ refresh:.byte   0               ; bit7 = 1 if selection modified
         lda     selected_icon_count
         RTS_IF_ZERO
 
-        lda     #0
-        sta     get_info_dialog_params::index
-        sta     get_info_dialog_params::refresh
+        ;; --------------------------------------------------
+        ;; Loop over selected icons
 
-loop:   ldx     get_info_dialog_params::index
+        lda     #0
+        sta     icon_index
+        sta     result_flag
+
+loop:   ldx     icon_index
         cpx     selected_icon_count
         jeq     done
 
-        ldx     get_info_dialog_params::index
+        ldx     icon_index
         lda     selected_icon_list,x
         cmp     trash_icon_num
         jeq     next
+
+        ;; --------------------------------------------------
+        ;; Get the file / volume info from ProDOS
 
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
     IF_NE
@@ -12253,7 +12236,7 @@ loop:   ldx     get_info_dialog_params::index
         dey
         bpl     :-
 
-        ;; Try to get file info
+        ;; Try to get file/volume info
 common: jsr     GetSrcFileInfo
     IF_CS
         jsr     ShowAlert
@@ -12262,62 +12245,113 @@ common: jsr     GetSrcFileInfo
         jmp     next
     END_IF
 
+        ;; Special cases for volumes
         lda     selected_window_id
-        beq     vol_icon2
-
-        ;; File icon
-        copy    #GetInfoDialogState::prepare_file, get_info_dialog_params::state
-        lda     get_info_dialog_params::index
-        clc
-        adc     #1
-        cmp     selected_icon_count
-        beq     :+
-        inc     get_info_dialog_params::state
-        inc     get_info_dialog_params::state
-:       jsr     _RunGetInfoDialogProc
-        jmp     common2
-
-vol_icon2:
-        copy    #GetInfoDialogState::prepare_vol, get_info_dialog_params::state
-        lda     get_info_dialog_params::index
-        clc
-        adc     #1
-        cmp     selected_icon_count
-        beq     :+
-        inc     get_info_dialog_params::state
-        inc     get_info_dialog_params::state
-:       jsr     _RunGetInfoDialogProc
+    IF_ZERO
+        ;; Volume - determine write-protect state
         copy    #0, write_protected_flag
-        ldx     get_info_dialog_params::index
+        ldx     icon_index
         lda     selected_icon_list,x
-
-        ;; Map icon to unit number
         jsr     IconToDeviceIndex
-        bne     common2
-
+        bne     skip
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
         sta     getinfo_block_params::unit_num
         MLI_CALL READ_BLOCK, getinfo_block_params
-        bcs     common2
+        bcs     skip
         MLI_CALL WRITE_BLOCK, getinfo_block_params
         cmp     #ERR_WRITE_PROTECTED
-        bne     common2
+        bne     skip
         copy    #$80, write_protected_flag
+skip:
+    END_IF
 
-common2:
+        ;; --------------------------------------------------
+        ;; Open and populate dialog
+
+        jsr     _DialogOpen
+
+        ;; --------------------------------------------------
+        ;; Descendant size/file count
+
+        lda     src_file_info_params::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        beq     do_dir
+        cmp     #ST_LINKED_DIRECTORY
+        bne     :+
+do_dir:
+        jsr     SetCursorWatch
+        jsr     _GetDirSize
+        jsr     SetCursorPointer
+:
+        ;; --------------------------------------------------
+        ;; Run the dialog, until OK or Cancel
+
+        jsr     _DialogRun
+        bne     done
+
+next:   inc     icon_index
+        jmp     loop
+
+done:   copy    #0, path_buf4
+        lda     result_flag
+        rts
+
+icon_index:
+        .byte   0
+result_flag:
+        .byte   0
+vol_used_blocks:
+        .word   0
+vol_total_blocks:
+        .word   0
+write_protected_flag:
+        .byte   0
+
+;;; ------------------------------------------------------------
+;;; Open and populate the dialog
+
+.proc _DialogOpen
+        copy    #0, has_input_field_flag
+
+        lda     #$00            ; OK only
+        ldx     icon_index
+        inx
+        cpx     selected_icon_count
+    IF_EQ
+        lda     #$80            ; OK/Cancel
+    END_IF
+        jsr     OpenPromptWindow
+        jsr     SetPortForDialogWindow
+
+        param_call DrawDialogTitle, aux::label_get_info
+
+        ;; Draw labels
+        param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_info_name
+        param_call DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_info_type
+        param_call DrawDialogLabel, 4 | DDL_LRIGHT, aux::str_info_create
+        param_call DrawDialogLabel, 5 | DDL_LRIGHT, aux::str_info_mod
+
+        lda     selected_window_id
+      IF_ZERO
+        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
+        param_call DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
+      ELSE
+        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
+      END_IF
+
         ;; --------------------------------------------------
         ;; Name
-        copy    #GetInfoDialogState::name, get_info_dialog_params::state
-        ldx     get_info_dialog_params::index
+
+        ldx     icon_index
         lda     selected_icon_list,x
         jsr     GetIconName
-        stax    get_info_dialog_params::a_str
-        jsr     _RunGetInfoDialogProc
+        ldy     #1 | DDL_VALUE
+        jsr     DrawDialogLabel
 
         ;; --------------------------------------------------
         ;; Type
-        copy    #GetInfoDialogState::type, get_info_dialog_params::state
+
         lda     selected_window_id
     IF_ZERO
         ;; Volume
@@ -12335,12 +12369,10 @@ common2:
         jsr     AppendAuxType
       END_IF
     END_IF
-        copy16  #text_buffer2, get_info_dialog_params::a_str
-        jsr     _RunGetInfoDialogProc
+        param_call DrawDialogLabel, 2 | DDL_VALUE, text_buffer2
 
         ;; --------------------------------------------------
         ;; Size/Blocks
-        copy    #GetInfoDialogState::size, get_info_dialog_params::state
 
         ;; Compose "12345K" or "12345K / 67890K" string
         copy    #0, text_input_buf
@@ -12373,79 +12405,57 @@ volume:
 append_size:
         jsr     ComposeSizeString
         param_call AppendToTextInputBuf, text_buffer2
-
-        copy16  #text_input_buf, get_info_dialog_params::a_str
-        jsr     _RunGetInfoDialogProc
+        param_call DrawDialogLabel, 3 | DDL_VALUE, text_input_buf
 
         ;; --------------------------------------------------
         ;; Created date
-        copy    #GetInfoDialogState::created, get_info_dialog_params::state
+
         COPY_STRUCT DateTime, src_file_info_params::create_date, datetime_for_conversion
         jsr     ComposeDateString
-        copy16  #text_buffer2, get_info_dialog_params::a_str
-        jsr     _RunGetInfoDialogProc
+        param_call DrawDialogLabel, 4 | DDL_VALUE, text_buffer2
 
         ;; --------------------------------------------------
         ;; Modified date
-        copy    #GetInfoDialogState::modified, get_info_dialog_params::state
+
         COPY_STRUCT DateTime, src_file_info_params::mod_date, datetime_for_conversion
         jsr     ComposeDateString
-        copy16  #text_buffer2, get_info_dialog_params::a_str
-        jsr     _RunGetInfoDialogProc
+        param_call DrawDialogLabel, 5 | DDL_VALUE, text_buffer2
 
         ;; --------------------------------------------------
         ;; Locked/Protected
-        copy    #GetInfoDialogState::locked, get_info_dialog_params::state
 
         lda     selected_window_id
     IF_ZERO
-        ;; Volume
+        ;; Volume - regular label
         ldax    #aux::str_info_no
         bit     write_protected_flag
       IF_NS
         ldax    #aux::str_info_yes
       END_IF
-        stax    get_info_dialog_params::a_str
-        lda     #0              ; not file
+        ldy     #6 | DDL_VALUE
+        jsr     DrawDialogLabel
     ELSE
-        ;; File
-        lda     src_file_info_params::access ; File
+        ;; File - checkbox control
+        ldx     #BTK::kButtonStateNormal
+        lda     src_file_info_params::access
         and     #ACCESS_DEFAULT
         cmp     #ACCESS_DEFAULT
-      IF_EQ
-        lda     #$80            ; file, not locked
-      ELSE
-        lda     #$C0            ; file, locked
+      IF_NE
+        ldx     #BTK::kButtonStateChecked ; locked
       END_IF
+        stx     locked_button::state
+        BTK_CALL BTK::CheckboxDraw, locked_button
+
+        ;; Assign hooks; reset in `OpenPromptWindow`
+        copy16  #_HandleClick, main::PromptDialogClickHandlerHook
+        copy16  #_HandleKey, main::PromptDialogKeyHandlerHook
     END_IF
-        sta     get_info_dialog_params::locked
-        jsr     _RunGetInfoDialogProc
 
-        ;; --------------------------------------------------
-        ;; Descendant size/file count
-
-        lda     src_file_info_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        beq     do_dir
-        cmp     #ST_LINKED_DIRECTORY
-        bne     :+
-do_dir:
-        jsr     SetCursorWatch
-        jsr     _GetDirSize
-        jsr     SetCursorPointer
-:
-        ;; --------------------------------------------------
-
-        copy    #GetInfoDialogState::prompt, get_info_dialog_params::state
-        jsr     _RunGetInfoDialogProc
-        bne     done
-
-next:   inc     get_info_dialog_params::index
-        jmp     loop
-
-done:   copy    #0, path_buf4
-        lda     get_info_dialog_params::refresh
         rts
+.endproc
+
+;;; ------------------------------------------------------------
+;;; Recursively count child files / sizes
 
 .proc _GetDirSize
         lda     selected_window_id
@@ -12464,7 +12474,6 @@ done:   copy    #0, path_buf4
         stx     operations::stack_stash
         jsr     ProcessDir
         jmp     _UpdateDirSizeDisplay ; in case 0 files were seen
-.endproc ; _GetDirSize
 
 .proc _GetInfoProcessDirEntry
         add16   num_blocks, src_file_info_params::blocks_used, num_blocks
@@ -12515,98 +12524,17 @@ done:   copy    #0, path_buf4
         ;; In case it shrank
         param_call AppendToTextInputBuf, str_2_spaces
 
-        copy16  #text_input_buf, get_info_dialog_params::a_str
-        copy    #GetInfoDialogState::size, get_info_dialog_params::state
-        jsr     _RunGetInfoDialogProc
-
-        rts
+        param_jump DrawDialogLabel, 3 | DDL_VALUE, text_input_buf
 .endproc ; _UpdateDirSizeDisplay
+
 num_blocks:
         .word   0
-vol_used_blocks:
-        .word   0
-vol_total_blocks:
-        .word   0
+.endproc ; _GetDirSize
 
-write_protected_flag:
-        .byte   0
+;;; ------------------------------------------------------------
+;;; Input loop and (hooked) event handlers
 
-.proc _RunGetInfoDialogProc
-        jmp     GetInfoDialogProc
-.endproc ; _RunGetInfoDialogProc
-.endproc ; DoGetInfo
-
-;;; ============================================================
-;;; "Get Info" dialog
-
-.proc GetInfoDialogProc
-        lda     get_info_dialog_params::state
-
-        ;; --------------------------------------------------
-        ;; GetInfoDialogState::prepare_*
-    IF_NS
-        ;; Draw the field labels (e.g. "Size:")
-        copy    #0, has_input_field_flag
-        lda     get_info_dialog_params::state
-        pha
-        lsr     a               ; bit 1 set if multiple
-        lsr     a               ; so configure buttons appropriately
-        ror     a
-        eor     #$80
-        jsr     OpenPromptWindow
-        jsr     SetPortForDialogWindow
-
-        param_call DrawDialogTitle, aux::label_get_info
-        pla                     ; A = get_info_dialog_params::state
-        pha                     ; bit 0 set if volume
-
-        ;; Draw labels
-        param_call DrawDialogLabel, 1 | DDL_LRIGHT, aux::str_info_name
-        param_call DrawDialogLabel, 2 | DDL_LRIGHT, aux::str_info_type
-        param_call DrawDialogLabel, 4 | DDL_LRIGHT, aux::str_info_create
-        param_call DrawDialogLabel, 5 | DDL_LRIGHT, aux::str_info_mod
-
-        pla                     ; bit 0 set if volume
-        and     #$01
-      IF_NOT_ZERO
-        param_call DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_vol_size
-        param_jump DrawDialogLabel, 6 | DDL_LRIGHT, aux::str_info_protected
-      ELSE
-        param_jump DrawDialogLabel, 3 | DDL_LRIGHT, aux::str_info_file_size
-      END_IF
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; GetInfoDialogState::* (name, type, etc)
-        ;; Draw a specific value
-
-        cmp     #GetInfoDialogState::prompt
-    IF_NE
-        cmp     #GetInfoDialogState::locked
-     IF_EQ
-        lda     get_info_dialog_params::locked ; bit 7 = file, bit 6 = locked
-       IF_NS
-        asl                     ; now bit 7 = locked = checked
-        sta     locked_button::state
-        BTK_CALL BTK::CheckboxDraw, locked_button
-        copy16  #_HandleClick, main::PromptDialogClickHandlerHook
-        copy16  #_HandleKey, main::PromptDialogKeyHandlerHook
-        rts
-       END_IF
-     END_IF
-
-        jsr     SetPortForDialogWindow
-        lda     get_info_dialog_params::state
-        ora     #DDL_VALUE
-        tay
-
-        ;; Draw the string at `get_info_dialog_params::a_str`
-        ldax    get_info_dialog_params::a_str
-        jmp     DrawDialogLabel
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; GetInfoDialogState::prompt
+.proc _DialogRun
 :       jsr     PromptInputLoop
         bmi     :-
 
@@ -12614,6 +12542,8 @@ write_protected_flag:
         jsr     ClosePromptDialog
         pla
         rts
+
+.endproc ; _DialogRun
 
 .proc _HandleClick
         MGTK_CALL MGTK::InRect, locked_button::rect
@@ -12655,7 +12585,7 @@ write_protected_flag:
         icon_ptr := $06
         file_record_ptr := $08
 
-        ldx     get_info_dialog_params::index
+        ldx     icon_index
         lda     selected_icon_list,x
         jsr     GetIconEntry
         stax    icon_ptr
@@ -12669,12 +12599,12 @@ write_protected_flag:
         bit     LCBANK1
         bit     LCBANK1
 
-        copy    #$80, get_info_dialog_params::refresh
+        copy    #$80, result_flag
 
 ret:    return  #$FF
 .endproc ; _ToggleFileLock
 
-.endproc ; GetInfoDialogProc
+.endproc ; DoGetInfo
 
 ;;; ============================================================
 ;;; Append aux type (in A,X) to text_buffer2
