@@ -229,7 +229,127 @@ ClearUpdates := ClearUpdatesImpl::clear
 ;;; ============================================================
 ;;; Menu Dispatch
 
-.proc HandleKeydownImpl
+.proc HandleKeydown
+        ;; Handle accelerator keys
+        lda     event_params::modifiers
+        bne     modifiers       ; either Open-Apple or Solid-Apple ?
+
+        ;; --------------------------------------------------
+        ;; No modifiers
+
+        lda     event_params::key
+        jsr     CheckTypeDown
+        RTS_IF_ZERO
+
+        jsr     ClearTypeDown
+
+        lda     event_params::key
+        cmp     #CHAR_LEFT
+        jeq     CmdHighlightLeft
+        cmp     #CHAR_UP
+        jeq     CmdHighlightUp
+        cmp     #CHAR_RIGHT
+        jeq     CmdHighlightRight
+        cmp     #CHAR_DOWN
+        jeq     CmdHighlightDown
+        cmp     #CHAR_TAB
+        jeq     CmdHighlightAlpha
+        cmp     #'`'
+        jeq     CmdHighlightAlphaNext ; like Tab
+        cmp     #'~'
+        jeq     CmdHighlightAlphaPrev ; like Shift+Tab
+        jmp     menu_accelerators
+
+        ;; --------------------------------------------------
+        ;; Modifiers
+
+modifiers:
+        jsr     ClearTypeDown
+
+        lda     event_params::modifiers
+        cmp     #3              ; both Open-Apple + Solid-Apple ?
+    IF_EQ
+        ;; Double-modifier shortcuts
+        lda     event_params::key
+        jsr     ToUpperCase
+        cmp     #res_char_menu_item_open_shortcut
+        jeq     CmdOpenThenCloseCurrent
+        cmp     #CHAR_DOWN
+        jeq     CmdOpenThenCloseCurrent
+        cmp     #CHAR_UP
+        jeq     CmdOpenParentThenCloseCurrent
+        cmp     #kShortcutCloseWindow
+        jeq     CmdCloseAll
+        cmp     #CHAR_CTRL_F
+        jeq     CmdFlipScreen
+        rts
+    END_IF
+
+        ;; Non-menu keys
+        lda     event_params::key
+        jsr     ToUpperCase
+        cmp     #CHAR_DOWN      ; Apple-Down (Open)
+        jeq     CmdOpenFromKeyboard
+        cmp     #CHAR_UP        ; Apple-Up (Open Parent)
+        jeq     CmdOpenParent
+
+        ldx     active_window_id
+    IF_NOT_ZERO
+        cmp     #kShortcutGrowWindow ; Apple-G (Resize)
+        jeq     CmdResize
+        cmp     #kShortcutMoveWindow  ; Apple-M (Move)
+        jeq     CmdMove
+        cmp     #kShortcutScrollWindow ; Apple-S (Scroll)
+        jeq     CmdScroll
+        cmp     #'`'            ; Apple-` (Cycle Windows)
+        beq     cycle
+        cmp     #'~'            ; Shift-Apple-` (Cycle Windows)
+        beq     cycle
+        cmp     #CHAR_TAB       ; Apple-Tab (Cycle Windows)
+        bne     :+
+cycle:  jmp     CmdCycleWindows
+:
+    END_IF
+
+        ;; Not one of our shortcuts - check for menu keys
+        ;; (shortcuts or entering keyboard menu mode)
+menu_accelerators:
+        copy    event_params::key, menu_click_params::which_key
+        copy    event_params::modifiers, menu_click_params::key_mods
+        copy    #0, menu_modified_click_flag ; note that source is not Apple+click
+        MGTK_CALL MGTK::MenuKey, menu_click_params
+
+        FALL_THROUGH_TO MenuDispatch
+.endproc ; HandleKeydown
+
+.proc MenuDispatch
+        ldx     menu_click_params::menu_id
+        RTS_IF_ZERO
+
+        dex                     ; x has top level menu id
+        lda     offset_table,x
+        tax
+        ldy     menu_click_params::item_num
+        dey
+        tya
+        asl     a
+        sta     proc_addr
+        txa
+        clc
+        adc     proc_addr
+        tax
+        copy16  dispatch_table,x, proc_addr
+        jsr     call_proc
+        MGTK_CALL MGTK::HiliteMenu, menu_click_params
+        copy    #0, menu_click_params::menu_id ; for `ToggleMenuHilite`
+        rts
+
+call_proc:
+        tsx
+        stx     saved_stack
+        proc_addr := *+1
+        jmp     SELF_MODIFIED
+
 
         ;; Keep in sync with aux::menu_item_id_*
 
@@ -336,128 +456,7 @@ offset_table:
         .byte   menu7_start - dispatch_table
         .byte   menu_end - dispatch_table
         ASSERT_TABLE_SIZE offset_table, ::kMenuNumItems+1
-
-        ;; Handle accelerator keys
-HandleKeydown:
-        lda     event_params::modifiers
-        bne     modifiers       ; either Open-Apple or Solid-Apple ?
-
-        ;; --------------------------------------------------
-        ;; No modifiers
-
-        lda     event_params::key
-        jsr     CheckTypeDown
-        RTS_IF_ZERO
-
-        jsr     ClearTypeDown
-
-        lda     event_params::key
-        cmp     #CHAR_LEFT
-        jeq     CmdHighlightLeft
-        cmp     #CHAR_UP
-        jeq     CmdHighlightUp
-        cmp     #CHAR_RIGHT
-        jeq     CmdHighlightRight
-        cmp     #CHAR_DOWN
-        jeq     CmdHighlightDown
-        cmp     #CHAR_TAB
-        jeq     CmdHighlightAlpha
-        cmp     #'`'
-        jeq     CmdHighlightAlphaNext ; like Tab
-        cmp     #'~'
-        jeq     CmdHighlightAlphaPrev ; like Shift+Tab
-        jmp     menu_accelerators
-
-        ;; --------------------------------------------------
-        ;; Modifiers
-
-modifiers:
-        jsr     ClearTypeDown
-
-        lda     event_params::modifiers
-        cmp     #3              ; both Open-Apple + Solid-Apple ?
-    IF_EQ
-        ;; Double-modifier shortcuts
-        lda     event_params::key
-        jsr     ToUpperCase
-        cmp     #res_char_menu_item_open_shortcut
-        jeq     CmdOpenThenCloseCurrent
-        cmp     #CHAR_DOWN
-        jeq     CmdOpenThenCloseCurrent
-        cmp     #CHAR_UP
-        jeq     CmdOpenParentThenCloseCurrent
-        cmp     #kShortcutCloseWindow
-        jeq     CmdCloseAll
-        cmp     #CHAR_CTRL_F
-        jeq     CmdFlipScreen
-        rts
-    END_IF
-
-        ;; Non-menu keys
-        lda     event_params::key
-        jsr     ToUpperCase
-        cmp     #CHAR_DOWN      ; Apple-Down (Open)
-        jeq     CmdOpenFromKeyboard
-        cmp     #CHAR_UP        ; Apple-Up (Open Parent)
-        jeq     CmdOpenParent
-
-        ldx     active_window_id
-    IF_NOT_ZERO
-        cmp     #kShortcutGrowWindow ; Apple-G (Resize)
-        jeq     CmdResize
-        cmp     #kShortcutMoveWindow  ; Apple-M (Move)
-        jeq     CmdMove
-        cmp     #kShortcutScrollWindow ; Apple-S (Scroll)
-        jeq     CmdScroll
-        cmp     #'`'            ; Apple-` (Cycle Windows)
-        beq     cycle
-        cmp     #'~'            ; Shift-Apple-` (Cycle Windows)
-        beq     cycle
-        cmp     #CHAR_TAB       ; Apple-Tab (Cycle Windows)
-        bne     :+
-cycle:  jmp     CmdCycleWindows
-:
-    END_IF
-
-        ;; Not one of our shortcuts - check for menu keys
-        ;; (shortcuts or entering keyboard menu mode)
-menu_accelerators:
-        copy    event_params::key, menu_click_params::which_key
-        copy    event_params::modifiers, menu_click_params::key_mods
-        copy    #0, menu_modified_click_flag ; note that source is not Apple+click
-        MGTK_CALL MGTK::MenuKey, menu_click_params
-
-MenuDispatch2:
-        ldx     menu_click_params::menu_id
-        RTS_IF_ZERO
-
-        dex                     ; x has top level menu id
-        lda     offset_table,x
-        tax
-        ldy     menu_click_params::item_num
-        dey
-        tya
-        asl     a
-        sta     proc_addr
-        txa
-        clc
-        adc     proc_addr
-        tax
-        copy16  dispatch_table,x, proc_addr
-        jsr     call_proc
-        MGTK_CALL MGTK::HiliteMenu, menu_click_params
-        copy    #0, menu_click_params::menu_id ; for `ToggleMenuHilite`
-        rts
-
-call_proc:
-        tsx
-        stx     saved_stack
-        proc_addr := *+1
-        jmp     SELF_MODIFIED
-.endproc ; HandleKeydownImpl
-
-HandleKeydown   := HandleKeydownImpl::HandleKeydown
-MenuDispatch2   := HandleKeydownImpl::MenuDispatch2
+.endproc ; MenuDispatch
 
 ;;; ============================================================
 ;;; Handle click
@@ -505,7 +504,7 @@ not_desktop:
         ora     menu_modified_click_flag
         sta     menu_modified_click_flag
 
-        jmp     MenuDispatch2
+        jmp     MenuDispatch
 
 not_menu:
         pha                     ; A = MGTK::Area::*
@@ -531,15 +530,424 @@ not_menu:
 
 dispatch_click:
         cmp     #MGTK::Area::content
-        jeq     HandleContentClick
+        beq     _ContentClick
         cmp     #MGTK::Area::dragbar
-        jeq     HandleTitleClick
+        jeq     DoWindowDrag
         cmp     #MGTK::Area::grow_box
-        jeq     HandleResizeClick
+        jeq     DoWindowResize
         cmp     #MGTK::Area::close_box
         jeq     HandleCloseClick
         rts
+
+;;; --------------------------------------------------
+
+.proc _ContentClick
+        jsr     LoadActiveWindowEntryTable
+
+        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+
+        .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
+     IF_ZERO
+        ;; Ignore clicks in the header area
+        copy    active_window_id, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        lda     screentowindow_params::windowy
+        cmp     #kWindowHeaderHeight
+        RTS_IF_LT
+
+        copy    active_window_id, findicon_params::window_id
+        ITK_CALL IconTK::FindIcon, findicon_params
+        lda     findicon_params::which_icon
+        jne     HandleIconClick
+
+        ;; Not an icon - maybe a drag?
+        lda     active_window_id
+        jmp     DragSelect
+     END_IF
+
+        ;; --------------------------------------------------
+
+        cmp     #MGTK::Ctl::dead_zone
+        RTS_IF_EQ
+
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+    IF_EQ
+        ;; Vertical scrollbar
+        lda     active_window_id
+        jsr     WindowLookup
+        stax    $06
+        ldy     #MGTK::Winfo::vscroll
+        lda     ($06),y
+        and     #MGTK::Scroll::option_active
+        RTS_IF_EQ
+
+        lda     findcontrol_params::which_part
+        cmp     #MGTK::Part::thumb
+        jeq     _TrackThumb
+
+        cmp     #MGTK::Part::up_arrow
+      IF_EQ
+:       jsr     ScrollUp
+        lda     #MGTK::Part::up_arrow
+        jsr     _CheckControlRepeat
+        bpl     :-
+        rts
+      END_IF
+
+        cmp     #MGTK::Part::down_arrow
+      IF_EQ
+:       jsr     ScrollDown
+        lda     #MGTK::Part::down_arrow
+        jsr     _CheckControlRepeat
+        bpl     :-
+        rts
+      END_IF
+
+        cmp     #MGTK::Part::page_up
+      IF_EQ
+:       jsr     ScrollPageUp
+        lda     #MGTK::Part::page_up
+        jsr     _CheckControlRepeat
+        bpl     :-
+        rts
+      END_IF
+
+:       jsr     ScrollPageDown
+        lda     #MGTK::Part::page_down
+        jsr     _CheckControlRepeat
+        bpl     :-
+        rts
+    END_IF
+
+        ;; Horizontal scrollbar
+        lda     active_window_id
+        jsr     WindowLookup
+        stax    $06
+        ldy     #MGTK::Winfo::hscroll
+        lda     ($06),y
+        and     #MGTK::Scroll::option_active
+        RTS_IF_EQ
+
+        lda     findcontrol_params::which_part
+        cmp     #MGTK::Part::thumb
+        jeq     _TrackThumb
+
+        cmp     #MGTK::Part::left_arrow
+      IF_EQ
+:       jsr     ScrollLeft
+        lda     #MGTK::Part::left_arrow
+        jsr     _CheckControlRepeat
+        bpl     :-
+        rts
+      END_IF
+
+        cmp     #MGTK::Part::right_arrow
+      IF_EQ
+:       jsr     ScrollRight
+        lda     #MGTK::Part::right_arrow
+        jsr     _CheckControlRepeat
+        bpl     :-
+        rts
+      END_IF
+
+        cmp     #MGTK::Part::page_left
+      IF_EQ
+:       jsr     ScrollPageLeft
+        lda     #MGTK::Part::page_left
+        jsr     _CheckControlRepeat
+        bpl     :-
+        rts
+      END_IF
+
+:       jsr     ScrollPageRight
+        lda     #MGTK::Part::page_right
+        jsr     _CheckControlRepeat
+        bpl     :-
+        rts
+
+;;; ------------------------------------------------------------
+
+.proc _TrackThumb
+        lda     findcontrol_params::which_ctl
+        sta     trackthumb_params::which_ctl
+        MGTK_CALL MGTK::TrackThumb, trackthumb_params
+        lda     trackthumb_params::thumbmoved
+        RTS_IF_ZERO
+
+        lda     trackthumb_params::which_ctl
+        cmp     #MGTK::Ctl::vertical_scroll_bar
+        bne     :+
+        jmp     ScrollTrackVThumb
+:       jmp     ScrollTrackHThumb
+.endproc ; _TrackThumb
+
+;;; ------------------------------------------------------------
+;;; Handle mouse held down on scroll arrow/pager
+
+.proc _CheckControlRepeat
+        sta     ctl
+        jsr     PeekEvent
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::drag
+        beq     :+
+bail:   return  #$FF            ; high bit set = not repeating
+
+:       MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findcontrol_params::which_ctl
+        beq     bail
+        cmp     #MGTK::Ctl::dead_zone
+        beq     bail
+        lda     findcontrol_params::which_part
+        ctl := *+1
+        cmp     #SELF_MODIFIED_BYTE
+        bne     bail
+        return  #0              ; high bit set = repeating
+.endproc ; _CheckControlRepeat
+
+.endproc ; _ContentClick
+
+;;; ------------------------------------------------------------
+
+;;; ============================================================
+;;; Handle a click on an icon, either windowed or desktop. They
+;;; are processed the same way, unless a drag occurs.
+;;; Input: A = icon
+;;;   `findicon_params::which_icon` and `findicon_params::window_id`
+;;;   must still be populated
+
+.proc HandleIconClick
+        pha
+        jsr     GetSingleSelectedIcon
+        sta     prev_selected_icon
+        pla
+
+        jsr     IsIconSelected
+        bne     not_selected
+
+        ;; --------------------------------------------------
+        ;; Icon was already selected
+        jsr     ExtendSelectionModifierDown
+        bpl     :+
+
+        ;; Modifier down - remove from selection
+        lda     findicon_params::which_icon
+        jmp     UnhighlightAndDeselectIcon ; deselect, nothing further
+
+        ;; Double click or drag?
+:       jmp     check_double_click
+
+        ;; --------------------------------------------------
+        ;; Icon was not already selected
+not_selected:
+        jsr     ExtendSelectionModifierDown
+        bpl     replace_selection
+
+        ;; Modifier down - add to selection
+        lda     findicon_params::window_id
+        cmp     selected_window_id
+        bne     replace_selection
+        lda     findicon_params::which_icon
+        jmp     AddIconToSelection ; select, nothing further
+
+        ;; Replace selection with clicked icon
+replace_selection:
+        lda     findicon_params::which_icon
+        jsr     SelectIcon
+        FALL_THROUGH_TO check_double_click
+
+        ;; --------------------------------------------------
+check_double_click:
+        ;; Stash initial coords so dragging is accurate.
+        COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
+
+        jsr     DetectDoubleClick
+        jpl     CmdOpenFromDoubleClick
+
+        ;; --------------------------------------------------
+        ;; Drag of file icon
+
+        copy    findicon_params::which_icon, drag_drop_params::icon
+        jsr     GetSelectionViewBy
+        .assert kViewByName >= $80, error, "enum mismatch"
+        sta     drag_drop_params::fixed
+        ITK_CALL IconTK::DragHighlighted, drag_drop_params
+        ldy     findicon_params::window_id
+        beq     _VolumeIconDrag
+
+        FALL_THROUGH_TO _FileIconDrag
+.endproc ; HandleIconClick
+
+;;; ============================================================
+;;; Inputs: A = `IconTK::DragHighlighted` return value, and
+;;;         `drag_drop_params::result` is set.
+
+.proc _FileIconDrag
+        tax
+        lda     drag_drop_params::result
+        beq     same_or_desktop
+
+process_drop:
+        jsr     DoDrop
+        jmp     PerformPostDropUpdates
+
+        ;; --------------------------------------------------
+
+same_or_desktop:
+        cpx     #2              ; not a drag
+        beq     CheckRenameClick
+
+        cpx     #$FF
+        beq     failure
+
+        ;; Icons moved within window - update and redraw
+        lda     active_window_id
+        jsr     SafeSetPortFromWindowId ; ASSERT: not obscured
+
+        jsr     CachedIconsScreenToWindow
+        ;; Adjust grafport for header.
+        jsr     OffsetWindowGrafportAndSet
+
+        ldx     #0
+:       txa
+        pha
+        copy    selected_icon_list,x, icon_param
+        ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag)
+        pla
+        tax
+        inx
+        cpx     selected_icon_count
+        bne     :-
+
+        jsr     CachedIconsWindowToScreen
+        jmp     ScrollUpdate
+
+failure:
+        ldx     saved_stack
+        txs
+        rts
+
+        ;; --------------------------------------------------
+
+.endproc ; _FileIconDrag
+
+;;; ------------------------------------------------------------
+
+;;; Inputs: A = `IconTK::DragHighlighted` return value, and
+;;;         `drag_drop_params::result` is set.
+.proc _VolumeIconDrag
+        tax
+        lda     drag_drop_params::result
+        beq     same_or_desktop
+
+        jsr     DoDrop
+        ;; NOTE: If drop target is trash, `JTDrop` relays to
+        ;; `CmdEject` and pops the return address.
+        jmp     PerformPostDropUpdates
+
+        ;; --------------------------------------------------
+
+same_or_desktop:
+        cpx     #2              ; file icon dragged to desktop?
+        beq     CheckRenameClick
+
+        ;; Icons moved on desktop - update and redraw
+        jmp     RedrawSelectedIcons
+.endproc ; _VolumeIconDrag
+
+;;; ------------------------------------------------------------
+
+;;; Used during icon click to trigger rename
+prev_selected_icon:
+        .byte   0
+
+;;; Prior to processing the click, `prev_selected_icon` should
+;;; be set to the result of `GetSingleSelectedIcon`.
+.proc CheckRenameClick
+        jsr     GetSingleSelectedIcon
+        cmp     prev_selected_icon
+        bne     ret
+        sta     icon_param
+        ITK_CALL IconTK::GetRenameRect, icon_param
+        MGTK_CALL MGTK::MoveTo, event_params::coords
+        MGTK_CALL MGTK::InRect, tmp_rect
+        jne     CmdRename
+ret:    rts
+.endproc ; CheckRenameClick
+
+;;;------------------------------------------------------------
+;;; After an icon drop (file or volume), update any affected
+;;; windows.
+;;; Inputs: A = result from `DoDrop`, and `drag_drop_params::result`
+
+.proc PerformPostDropUpdates
+        ;; --------------------------------------------------
+        ;; (1/4) Canceled?
+
+        cmp     #kOperationCanceled
+        RTS_IF_EQ
+
+        ;; Was a move?
+        ;; NOTE: Only applies in file icon case.
+        bit     operations__move_flag
+    IF_NS
+        ;; Update source vol's contents
+        jsr     MaybeStashDropTargetName ; in case target is in window...
+        jsr     _UpdateSelectedWindow
+        jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; (2/4) Dropped on trash?
+
+        ;; NOTE: Only applies in file icon case; this proc is not called
+        ;; when dropping volume icons on trash.
+        lda     drag_drop_params::result
+        cmp     trash_icon_num
+        ;; Update used/free for same-vol windows
+    IF_EQ
+        copy    #$80, validate_windows_flag
+        bne     _UpdateSelectedWindow ; always
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; (3/4) Dropped on icon?
+
+        lda     drag_drop_params::result
+    IF_POS
+        ;; Yes, on an icon; update used/free for same-vol windows
+        pha
+        jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
+      IF_ZERO
+        param_call UpdateUsedFreeViaPath, path_buf3
+      END_IF
+        pla
+        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
+      IF_EQ
+        inx
+        txa
+        jmp     ActivateAndRefreshWindowOrClose
+      END_IF
+        rts
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; (4/4) Dropped on window!
+
+        and     #$7F            ; mask off window number
+        jmp     UpdateActivateAndRefreshWindow
+
+.proc _UpdateSelectedWindow
+        lda     selected_window_id
+        jmp     UpdateActivateAndRefreshWindow
+.endproc ; _UpdateSelectedWindow
+
+.endproc ; PerformPostDropUpdates
+
 .endproc ; HandleClick
+
+;;; Used for delete shortcut; set `drag_drop_params::icon` first
+process_drop := HandleClick::_FileIconDrag::process_drop
 
 ;;; ============================================================
 ;;; Activate the window, draw contents, and update menu items
@@ -4222,7 +4630,7 @@ finish: rts
 
 .proc CmdResize
         MGTK_CALL MGTK::KeyboardMouse
-        jmp     HandleResizeClick
+        jmp     DoWindowResize
 .endproc ; CmdResize
 
 ;;; ============================================================
@@ -4230,7 +4638,7 @@ finish: rts
 
 .proc CmdMove
         MGTK_CALL MGTK::KeyboardMouse
-        jmp     HandleTitleClick
+        jmp     DoWindowDrag
 .endproc ; CmdMove
 
 ;;; ============================================================
@@ -5164,365 +5572,7 @@ err:    jmp     ShowAlert
 .endproc ; CmdMakeLinkImpl
         CmdMakeLink := CmdMakeLinkImpl::start
 
-;;; ============================================================
 
-.proc HandleContentClick
-        jsr     LoadActiveWindowEntryTable
-
-        MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::which_ctl
-
-        .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
-     IF_ZERO
-        ;; Ignore clicks in the header area
-        copy    active_window_id, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        lda     screentowindow_params::windowy
-        cmp     #kWindowHeaderHeight
-        RTS_IF_LT
-
-        copy    active_window_id, findicon_params::window_id
-        ITK_CALL IconTK::FindIcon, findicon_params
-        lda     findicon_params::which_icon
-        jne     HandleIconClick
-
-        ;; Not an icon - maybe a drag?
-        lda     active_window_id
-        jmp     DragSelect
-     END_IF
-
-        ;; --------------------------------------------------
-
-        cmp     #MGTK::Ctl::dead_zone
-        RTS_IF_EQ
-
-        cmp     #MGTK::Ctl::vertical_scroll_bar
-    IF_EQ
-        ;; Vertical scrollbar
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    $06
-        ldy     #MGTK::Winfo::vscroll
-        lda     ($06),y
-        and     #MGTK::Scroll::option_active
-        RTS_IF_EQ
-
-        lda     findcontrol_params::which_part
-        cmp     #MGTK::Part::thumb
-        jeq     DoTrackThumb
-
-        cmp     #MGTK::Part::up_arrow
-      IF_EQ
-:       jsr     ScrollUp
-        lda     #MGTK::Part::up_arrow
-        jsr     CheckControlRepeat
-        bpl     :-
-        rts
-      END_IF
-
-        cmp     #MGTK::Part::down_arrow
-      IF_EQ
-:       jsr     ScrollDown
-        lda     #MGTK::Part::down_arrow
-        jsr     CheckControlRepeat
-        bpl     :-
-        rts
-      END_IF
-
-        cmp     #MGTK::Part::page_up
-      IF_EQ
-:       jsr     ScrollPageUp
-        lda     #MGTK::Part::page_up
-        jsr     CheckControlRepeat
-        bpl     :-
-        rts
-      END_IF
-
-:       jsr     ScrollPageDown
-        lda     #MGTK::Part::page_down
-        jsr     CheckControlRepeat
-        bpl     :-
-        rts
-    END_IF
-
-        ;; Horizontal scrollbar
-        lda     active_window_id
-        jsr     WindowLookup
-        stax    $06
-        ldy     #MGTK::Winfo::hscroll
-        lda     ($06),y
-        and     #MGTK::Scroll::option_active
-        RTS_IF_EQ
-
-        lda     findcontrol_params::which_part
-        cmp     #MGTK::Part::thumb
-        jeq     DoTrackThumb
-
-        cmp     #MGTK::Part::left_arrow
-      IF_EQ
-:       jsr     ScrollLeft
-        lda     #MGTK::Part::left_arrow
-        jsr     CheckControlRepeat
-        bpl     :-
-        rts
-      END_IF
-
-        cmp     #MGTK::Part::right_arrow
-      IF_EQ
-:       jsr     ScrollRight
-        lda     #MGTK::Part::right_arrow
-        jsr     CheckControlRepeat
-        bpl     :-
-        rts
-      END_IF
-
-        cmp     #MGTK::Part::page_left
-      IF_EQ
-:       jsr     ScrollPageLeft
-        lda     #MGTK::Part::page_left
-        jsr     CheckControlRepeat
-        bpl     :-
-        rts
-      END_IF
-
-:       jsr     ScrollPageRight
-        lda     #MGTK::Part::page_right
-        jsr     CheckControlRepeat
-        bpl     :-
-        rts
-.endproc ; HandleContentClick
-
-;;; ============================================================
-
-.proc DoTrackThumb
-        lda     findcontrol_params::which_ctl
-        sta     trackthumb_params::which_ctl
-        MGTK_CALL MGTK::TrackThumb, trackthumb_params
-        lda     trackthumb_params::thumbmoved
-        RTS_IF_ZERO
-
-        lda     trackthumb_params::which_ctl
-        cmp     #MGTK::Ctl::vertical_scroll_bar
-        bne     :+
-        jmp     ScrollTrackVThumb
-:       jmp     ScrollTrackHThumb
-.endproc ; DoTrackThumb
-
-;;; ============================================================
-;;; Handle mouse held down on scroll arrow/pager
-
-.proc CheckControlRepeat
-        sta     ctl
-        jsr     PeekEvent
-        lda     event_params::kind
-        cmp     #MGTK::EventKind::drag
-        beq     :+
-bail:   return  #$FF            ; high bit set = not repeating
-
-:       MGTK_CALL MGTK::FindControl, findcontrol_params
-        lda     findcontrol_params::which_ctl
-        beq     bail
-        cmp     #MGTK::Ctl::dead_zone
-        beq     bail
-        lda     findcontrol_params::which_part
-        ctl := *+1
-        cmp     #SELF_MODIFIED_BYTE
-        bne     bail
-        return  #0              ; high bit set = repeating
-.endproc ; CheckControlRepeat
-
-;;; ============================================================
-;;; Handle a click on an icon, either windowed or desktop. They
-;;; are processed the same way, unless a drag occurs.
-;;; Input: A = icon
-;;;   `findicon_params::which_icon` and `findicon_params::window_id`
-;;;   must still be populated
-
-.proc HandleIconClick
-        pha
-        jsr     GetSingleSelectedIcon
-        sta     prev_selected_icon
-        pla
-
-        jsr     IsIconSelected
-        bne     not_selected
-
-        ;; --------------------------------------------------
-        ;; Icon was already selected
-        jsr     ExtendSelectionModifierDown
-        bpl     :+
-
-        ;; Modifier down - remove from selection
-        lda     findicon_params::which_icon
-        jmp     UnhighlightAndDeselectIcon ; deselect, nothing further
-
-        ;; Double click or drag?
-:       jmp     check_double_click
-
-        ;; --------------------------------------------------
-        ;; Icon was not already selected
-not_selected:
-        jsr     ExtendSelectionModifierDown
-        bpl     replace_selection
-
-        ;; Modifier down - add to selection
-        lda     findicon_params::window_id
-        cmp     selected_window_id
-        bne     replace_selection
-        lda     findicon_params::which_icon
-        jmp     AddIconToSelection ; select, nothing further
-
-        ;; Replace selection with clicked icon
-replace_selection:
-        lda     findicon_params::which_icon
-        jsr     SelectIcon
-        FALL_THROUGH_TO check_double_click
-
-        ;; --------------------------------------------------
-check_double_click:
-        ;; Stash initial coords so dragging is accurate.
-        COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
-
-        jsr     DetectDoubleClick
-        jpl     CmdOpenFromDoubleClick
-
-        ;; --------------------------------------------------
-        ;; Drag of file icon
-
-        copy    findicon_params::which_icon, drag_drop_params::icon
-        jsr     GetSelectionViewBy
-        .assert kViewByName >= $80, error, "enum mismatch"
-        sta     drag_drop_params::fixed
-        ITK_CALL IconTK::DragHighlighted, drag_drop_params
-        ldy     findicon_params::window_id
-        jeq     HandleVolumeIconDrag
-
-        FALL_THROUGH_TO HandleFileIconDrag
-.endproc ; HandleIconClick
-
-;;; ============================================================
-;;; Inputs: A = `IconTK::DragHighlighted` return value, and
-;;;         `drag_drop_params::result` is set.
-
-.proc HandleFileIconDrag
-        tax
-        lda     drag_drop_params::result
-        beq     same_or_desktop
-
-process_drop:
-        jsr     DoDrop
-        jmp     PerformPostDropUpdates
-
-        ;; --------------------------------------------------
-
-same_or_desktop:
-        cpx     #2              ; not a drag
-        jeq     CheckRenameClick
-
-        cpx     #$FF
-        beq     failure
-
-        ;; Icons moved within window - update and redraw
-        lda     active_window_id
-        jsr     SafeSetPortFromWindowId ; ASSERT: not obscured
-
-        jsr     CachedIconsScreenToWindow
-        ;; Adjust grafport for header.
-        jsr     OffsetWindowGrafportAndSet
-
-        ldx     #0
-:       txa
-        pha
-        copy    selected_icon_list,x, icon_param
-        ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag)
-        pla
-        tax
-        inx
-        cpx     selected_icon_count
-        bne     :-
-
-        jsr     CachedIconsWindowToScreen
-        jmp     ScrollUpdate
-
-failure:
-        ldx     saved_stack
-        txs
-        rts
-
-        ;; --------------------------------------------------
-
-.endproc ; HandleFileIconDrag
-        ;; Used for delete shortcut; set `drag_drop_params::icon` first
-        process_drop := HandleFileIconDrag::process_drop
-
-;;; ============================================================
-;;; After an icon drop (file or volume), update any affected
-;;; windows.
-;;; Inputs: A = result from `DoDrop`, and `drag_drop_params::result`
-
-.proc PerformPostDropUpdates
-        ;; --------------------------------------------------
-        ;; (1/4) Canceled?
-
-        cmp     #kOperationCanceled
-        RTS_IF_EQ
-
-        ;; Was a move?
-        ;; NOTE: Only applies in file icon case.
-        bit     operations__move_flag
-    IF_NS
-        ;; Update source vol's contents
-        jsr     MaybeStashDropTargetName ; in case target is in window...
-        jsr     _UpdateSelectedWindow
-        jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; (2/4) Dropped on trash?
-
-        ;; NOTE: Only applies in file icon case; this proc is not called
-        ;; when dropping volume icons on trash.
-        lda     drag_drop_params::result
-        cmp     trash_icon_num
-        ;; Update used/free for same-vol windows
-    IF_EQ
-        copy    #$80, validate_windows_flag
-        bne     _UpdateSelectedWindow ; always
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; (3/4) Dropped on icon?
-
-        lda     drag_drop_params::result
-    IF_POS
-        ;; Yes, on an icon; update used/free for same-vol windows
-        pha
-        jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
-      IF_ZERO
-        param_call UpdateUsedFreeViaPath, path_buf3
-      END_IF
-        pla
-        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
-      IF_EQ
-        inx
-        txa
-        jmp     ActivateAndRefreshWindowOrClose
-      END_IF
-        rts
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; (4/4) Dropped on window!
-
-        and     #$7F            ; mask off window number
-        bne     UpdateActivateAndRefreshWindow ; always
-
-.proc _UpdateSelectedWindow
-        lda     selected_window_id
-        FALL_THROUGH_TO UpdateActivateAndRefreshWindow
-.endproc ; _UpdateSelectedWindow
-
-.endproc ; PerformPostDropUpdates
 
 ;;; ============================================================
 ;;; Given a window, update used/free data for all same-volume windows,
@@ -5917,7 +5967,7 @@ update: lda     window_id
 
 ;;; ============================================================
 
-.proc HandleTitleClick
+.proc DoWindowDrag
         copy    active_window_id, dragwindow_params::window_id
 
         jsr     LoadActiveWindowEntryTable
@@ -5930,15 +5980,15 @@ update: lda     window_id
         jsr     StoreWindowEntryTable
 
         rts
-.endproc ; HandleTitleClick
+.endproc ; DoWindowDrag
 
 ;;; ============================================================
 
-.proc HandleResizeClick
+.proc DoWindowResize
         copy    active_window_id, event_params
         MGTK_CALL MGTK::GrowWindow, event_params
         jmp     ScrollUpdate
-.endproc ; HandleResizeClick
+.endproc ; DoWindowResize
 
 ;;; ============================================================
 
@@ -6140,50 +6190,6 @@ done:   rts
         jsr     AssignActiveWindowCliprect
         jmp     CachedIconsWindowToScreen
 .endproc ; AssignActiveWindowCliprectAndUpdateCachedIcons
-
-;;; ============================================================
-
-;;; Inputs: A = `IconTK::DragHighlighted` return value, and
-;;;         `drag_drop_params::result` is set.
-.proc HandleVolumeIconDrag
-        tax
-        lda     drag_drop_params::result
-        beq     same_or_desktop
-
-        jsr     DoDrop
-        ;; NOTE: If drop target is trash, `JTDrop` relays to
-        ;; `CmdEject` and pops the return address.
-        jmp     PerformPostDropUpdates
-
-        ;; --------------------------------------------------
-
-same_or_desktop:
-        cpx     #2              ; file icon dragged to desktop?
-        beq     CheckRenameClick
-
-        ;; Icons moved on desktop - update and redraw
-        jmp     RedrawSelectedIcons
-.endproc ; HandleVolumeIconDrag
-
-;;; ============================================================
-
-;;; Used during icon click to trigger rename
-prev_selected_icon:
-        .byte   0
-
-;;; Prior to processing the click, `prev_selected_icon` should
-;;; be set to the result of `GetSingleSelectedIcon`.
-.proc CheckRenameClick
-        jsr     GetSingleSelectedIcon
-        cmp     prev_selected_icon
-        bne     ret
-        sta     icon_param
-        ITK_CALL IconTK::GetRenameRect, icon_param
-        MGTK_CALL MGTK::MoveTo, event_params::coords
-        MGTK_CALL MGTK::InRect, tmp_rect
-        jne     CmdRename
-ret:    rts
-.endproc ; CheckRenameClick
 
 ;;; ============================================================
 
