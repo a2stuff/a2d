@@ -34,7 +34,7 @@ JT_CLEAR_UPDATES:       jmp     ClearUpdates            ; *
 JT_SYSTEM_TASK:         jmp     SystemTask              ; *
 JT_ACTIVATE_WINDOW:     jmp     ActivateAndRefreshWindow ; *
 JT_SHOW_ALERT:          jmp     ShowAlert               ; *
-JT_SHOW_ALERT_PARAMS :  jmp     ShowAlertStruct         ; *
+JT_SHOW_ALERT_PARAMS:   jmp     ShowAlertStruct         ; *
 JT_LAUNCH_FILE:         jmp     LaunchFileWithPath
 JT_SHOW_FILE:           jmp     ShowFileWithPath        ; *
 JT_RESTORE_OVL:         jmp     RestoreDynamicRoutine   ; *
@@ -12355,21 +12355,21 @@ write_protected_flag:
         lda     selected_window_id
     IF_ZERO
         ;; Volume
-        COPY_STRING str_volume, text_buffer2
+        param_call DrawDialogLabel, 2 | DDL_VALUE, aux::str_volume
     ELSE
         ;; File
         lda     src_file_info_params::file_type
         pha
         jsr     ComposeFileTypeString
-        COPY_STRING str_file_type, text_buffer2
+        COPY_STRING str_file_type, text_input_buf
         pla                     ; A = file type
         cmp     #FT_DIRECTORY
       IF_NE
         ldax    src_file_info_params::aux_type
-        jsr     AppendAuxType
+        jsr     _AppendAuxType
       END_IF
+        param_call DrawDialogLabel, 2 | DDL_VALUE, text_input_buf
     END_IF
-        param_call DrawDialogLabel, 2 | DDL_VALUE, text_buffer2
 
         ;; --------------------------------------------------
         ;; Size/Blocks
@@ -12532,6 +12532,41 @@ num_blocks:
 .endproc ; _GetDirSize
 
 ;;; ------------------------------------------------------------
+;;; Append aux type (in A,X) to `text_input_buf`
+
+.proc _AppendAuxType
+        pha
+        txa
+        pha
+        param_call AppendToTextInputBuf, aux::str_auxtype_prefix
+
+        ;; Append type
+        pla
+        jsr     do_byte
+        pla
+        FALL_THROUGH_TO do_byte
+
+do_byte:
+        pha
+        lsr
+        lsr
+        lsr
+        lsr
+        jsr     do_nibble
+        pla
+        FALL_THROUGH_TO do_nibble
+
+do_nibble:
+        and     #%00001111
+        tax
+        lda     hex_digits,x
+        inc     text_input_buf
+        ldx     text_input_buf
+        sta     text_input_buf,x
+        rts
+.endproc ; _AppendAuxType
+
+;;; ------------------------------------------------------------
 ;;; Input loop and (hooked) event handlers
 
 .proc _DialogRun
@@ -12605,53 +12640,6 @@ ret:    return  #$FF
 .endproc ; _ToggleFileLock
 
 .endproc ; DoGetInfo
-
-;;; ============================================================
-;;; Append aux type (in A,X) to text_buffer2
-
-.proc AppendAuxType
-        stax    auxtype
-        ldy     text_buffer2
-
-        ;; Append prefix
-        ldx     #0
-:       lda     str_auxtype_prefix+1,x
-        sta     text_buffer2+1,y
-        inx
-        iny
-        cpx     str_auxtype_prefix
-        bne     :-
-
-        ;; Append type
-        lda     auxtype+1
-        jsr     DoByte
-        lda     auxtype
-        jsr     DoByte
-
-        sty     text_buffer2
-        rts
-
-DoByte:
-        pha
-        lsr
-        lsr
-        lsr
-        lsr
-        tax
-        lda     hex_digits,x
-        sta     text_buffer2+1,y
-        iny
-        pla
-        and     #%00001111
-        tax
-        lda     hex_digits,x
-        sta     text_buffer2+1,y
-        iny
-        rts
-
-auxtype:
-        .word 0
-.endproc ; AppendAuxType
 
 .endscope ; get_info
 
@@ -15780,9 +15768,6 @@ run_list_paths:
 ;;; Localized strings (may change length)
 ;;; ============================================================
 
-str_auxtype_prefix:
-        PASCAL_STRING res_string_auxtype_prefix
-
 str_device_type_diskii:
         PASCAL_STRING res_string_volume_type_disk_ii
 str_device_type_ramdisk:
@@ -15791,9 +15776,6 @@ str_device_type_appletalk:
         PASCAL_STRING res_string_volume_type_fileshare
 str_device_type_vdrive:
         PASCAL_STRING res_string_volume_type_vdrive
-
-str_volume:
-        PASCAL_STRING res_string_volume
 
 ;;; ============================================================
 

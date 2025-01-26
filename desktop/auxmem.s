@@ -359,7 +359,12 @@ str_info_size_suffix_singular:
         PASCAL_STRING res_string_get_info_label_size_suffix_singular
 str_info_size_slash:
         PASCAL_STRING res_string_get_info_label_size_slash
+str_auxtype_prefix:
+        PASCAL_STRING res_string_auxtype_prefix
+str_volume:
+        PASCAL_STRING res_string_volume
 
+        ;; Format / Erase dialog strings
 str_select_format:
         PASCAL_STRING res_string_format_disk_label_select
 str_location:
