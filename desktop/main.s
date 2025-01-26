@@ -12524,6 +12524,7 @@ append_size:
         ;; In case it shrank
         param_call AppendToTextInputBuf, str_2_spaces
 
+        jsr     SetPortForDialogWindow
         param_jump DrawDialogLabel, 3 | DDL_VALUE, text_input_buf
 .endproc ; _UpdateDirSizeDisplay
 

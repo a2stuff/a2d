@@ -610,6 +610,7 @@
 * Launch DeskTop. Select two files on a 5.25 disk. Remove the disk. File > Get Info. Verify that an alert is shown. Insert the disk again. Click OK. Verify that details are shown for the second file.
 
 * Select a volume or folder containing multiple files. File > Get Info. During the count of the files, press Escape. Verify that the count is canceled.
+* Select a volume or folder containing multiple files. File > Get Info. During the count of the files, eject the disk. Verify that an alert appears. Reinsert the disk. Click Try Again. Verify that the count of files continues and paints in the correct location.
 
 
 ## New Folder, Rename & Duplicate
