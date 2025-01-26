@@ -97,6 +97,12 @@ Calls into other toolkits (Button TK, Line Edit TK) directly from Main
 are not currently supported. (But this is straightforward to add, if
 needed.)
 
+The other `JUMP_TABLE_XYZ` calls defined in
+[../desktop/desktop.inc](../desktop/desktop.inc) and documented in
+[../desktop/APIs.md](../desktop/APIs.md) provide access to DeskTop
+state such as icon selection and window paths, and expose some common
+functions like reading persisted settings and accelerator control.
+
 ### Execution from Aux Memory
 
 DAs can make toolkit calls directly by using macros. The entry points
@@ -106,11 +112,16 @@ required by the macros are defined automatically by the
 * MGTK: use `MGTK_CALL`
 * Button TK: use `BTK_CALL`
 * LineEdit TK: use `LETK_CALL`
+* ListBox TK: use `LBTK_CALL`
 
 ProDOS MLI calls directly from Aux memory are _not supported_. DAs
 running from Aux memory need to implement helper methods in Main which
 they can call to do file operations, and any loaded data needs to
 be proxied back to Aux memory using `AUXMOVE`.
+
+In addition, `ReadSetting` and `WriteSetting` are defined which allow
+for convenient access to persisted settings from aux memory. Call with
+X = `DeskTopSettings::*` byte index, and A = input/output value.
 
 ## UI Lifecycle
 

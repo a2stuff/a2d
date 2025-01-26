@@ -9,7 +9,9 @@ Desk Accessories:
   * [Icon ToolKit](../toolkits/IconTK.md)
   * [LineEdit ToolKit](../toolkits/LETK.md)
   * [Button TookKit](../toolkits/BTK.md)
+  * [ListBox TookKit](../toolkits/LBTK.md)
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
+* Aux Entry Points
 
 <!-- ============================================================ -->
 
@@ -47,7 +49,7 @@ Use the `JUMP_TABLE_MLI_CALL` macro (yes, same name) for convenience.
 
 #### `JUMP_TABLE_CLEAR_UPDATES` *
 
-Clear update events - i.e. redraw windows as needed after move/resize/close.
+Tell DeskTop to process update events - i.e. redraw the desktop (volume icons) and directory windows as needed after move/resize/close. DeskTop will only redraw its own windows; Desk Accessories must redraw their own window.
 
 #### `JUMP_TABLE_YIELD_LOOP` *
 
@@ -73,7 +75,7 @@ NOTE: This will use Aux $E00...$1FFF to save the alert background; be careful wh
 
 Show alert, with custom parameters.
 
-A,X is the address of an `AlertParams` structure; see `common.inc`.
+A,X is the address of an `AlertParams` structure; see `../common.inc`.
 
 NOTE: This will use Aux $E00...$1FFF to save the alert background; be careful when calling from a Desk Accessory, which may run from the same area.
 
@@ -159,3 +161,18 @@ Input: A,X = Path buffer.
 #### `JUMP_TABLE_BELL` *
 
 Play the alert sound, as specified in settings.
+
+#### `JUMP_TABLE_SLOW_SPEED` *
+
+Slow system accelerator; see `../lib/speed.s` for notes.
+
+#### `JUMP_TABLE_RESUME_SPEED` *
+
+Resume system accelerator; see `../lib/speed.s` for notes.
+
+#### `JUMP_TABLE_READ_SETTING` *
+
+Load a byte from the persisted settings defined by `DeskTopSettings` in `../common.inc`.
+
+Input: X = DeskTopSetting::* index
+Output: A = value, X = unchanged (handy for loading multi-byte values)
