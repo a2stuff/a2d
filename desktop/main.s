@@ -12146,6 +12146,13 @@ match:  lda     flag
 
 .proc GetAndApplySrcInfoToDst
         jsr     GetSrcFileInfo
+
+        ;; Skip if source is volume; the contents are copied not the
+        ;; item itself, so it doesn't make sense.
+        lda     src_file_info_params::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        RTS_IF_EQ
+
         FALL_THROUGH_TO ApplySrcInfoToDst
 .endproc ; GetAndApplySrcInfoToDst
 

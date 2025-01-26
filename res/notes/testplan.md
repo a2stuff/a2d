@@ -577,6 +577,8 @@
 
 * Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
 * Launch DeskTop. Find a folder containing files and folders. Copy the folder to another volume. Using File > Get Info, compare the source and destination folders and files (both the top level folder and nested folders). Verify that the creation and modification dates match the original.
+* Launch DeskTop. Drag a volume icon onto another volume icon (with sufficient capacity). Verify that no alert is shown. Repeat, but drag onto a volume window instead.
+* Launch DeskTop. Drag a volume icon onto a folder icon (with sufficient capacity). Verify that no alert is shown, and that the folder's creation and modification dates are unchanged. Repeat, but drag onto a folder window instead.
 
 * Launch DeskTop. Open two windows containing multiple files. Select multiples files in the first window. File > Copy To.... Select the second window's location as a destination and click OK. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed, and that the second window's contents do not refresh.
 * Launch DeskTop. Open two windows containing multiple files. Select multiples files in the first window. File > Copy To.... Select the second window's location as a destination and click OK. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the second window's contents do refresh.
