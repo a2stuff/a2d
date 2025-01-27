@@ -148,7 +148,7 @@ params:  .res    3
         dey
         bpl     :-
 
-        ;; Determine the update's maprect is already below the header; if
+        ;; Determine if the update's maprect is already below the header; if
         ;; not, we need to offset the maprect below the header.
         sub16   desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, tmpw
         scmp16  tmpw, #kWindowHeaderHeight
@@ -158,11 +158,6 @@ params:  .res    3
         add16 window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
         add16 window_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
 
-        ;; MGTK doesn't like offscreen grafports, so if we end up with
-        ;; nothing to draw, skip drawing!
-        ;; https://github.com/a2stuff/a2d/issues/369
-        scmp16  desktop_grafport+MGTK::GrafPort::viewloc + MGTK::Point::ycoord, #kScreenHeight
-        bpl     fail
         MGTK_CALL MGTK::SetPort, desktop_grafport
         bne     fail
 
