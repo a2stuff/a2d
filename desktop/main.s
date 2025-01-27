@@ -245,19 +245,19 @@ ClearUpdates := ClearUpdatesImpl::clear
 
         lda     event_params::key
         cmp     #CHAR_LEFT
-        jeq     CmdHighlightLeft
+        jeq     KeyboardHighlightLeft
         cmp     #CHAR_UP
-        jeq     CmdHighlightUp
+        jeq     KeyboardHighlightUp
         cmp     #CHAR_RIGHT
-        jeq     CmdHighlightRight
+        jeq     KeyboardHighlightRight
         cmp     #CHAR_DOWN
-        jeq     CmdHighlightDown
+        jeq     KeyboardHighlightDown
         cmp     #CHAR_TAB
-        jeq     CmdHighlightAlpha
+        jeq     KeyboardHighlightAlpha
         cmp     #'`'
-        jeq     CmdHighlightAlphaNext ; like Tab
+        jeq     KeyboardHighlightAlphaNext ; like Tab
         cmp     #'~'
-        jeq     CmdHighlightAlphaPrev ; like Shift+Tab
+        jeq     KeyboardHighlightAlphaPrev ; like Shift+Tab
         jmp     menu_accelerators
 
         ;; --------------------------------------------------
@@ -1579,15 +1579,15 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
         ;; Volume types skipped via above math; GET_FILE_INFO yields
         ;; `FT_DIRECTORY` which maps to a folder
         INVOKE_TABLE_ENTRY      fallback, 0                    ; generic
-        INVOKE_TABLE_ENTRY      InvokePreview, str_preview_txt ; text
+        INVOKE_TABLE_ENTRY      _InvokePreview, str_preview_txt ; text
         INVOKE_TABLE_ENTRY      binary, 0                      ; binary
-        INVOKE_TABLE_ENTRY      InvokePreview, str_preview_fot ; graphics
+        INVOKE_TABLE_ENTRY      _InvokePreview, str_preview_fot ; graphics
         INVOKE_TABLE_ENTRY      fallback, 0                    ; animation
-        INVOKE_TABLE_ENTRY      InvokePreview, str_preview_mus ; music
+        INVOKE_TABLE_ENTRY      _InvokePreview, str_preview_mus ; music
         INVOKE_TABLE_ENTRY      interpreter, str_preview_pt3   ; tracker
         INVOKE_TABLE_ENTRY      fallback, 0                    ; audio
         INVOKE_TABLE_ENTRY      interpreter, str_tts           ; speech
-        INVOKE_TABLE_ENTRY      InvokePreview, str_preview_fnt ; font
+        INVOKE_TABLE_ENTRY      _InvokePreview, str_preview_fnt ; font
         INVOKE_TABLE_ENTRY      fallback, 0                    ; relocatable
         INVOKE_TABLE_ENTRY      fallback, 0                    ; command
         INVOKE_TABLE_ENTRY      _OpenFolder, 0                 ; folder
@@ -1711,6 +1711,22 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
         jmp     SetCursorPointer ; after opening folder
 .endproc ; _OpenFolder
 
+
+;;; --------------------------------------------------
+;;; Invoke a Preview DA
+;;; Inputs: A,X = relative path to DA; `src_path_buf` is file to preview
+
+.proc _InvokePreview
+        pha
+        txa
+        pha
+        param_call IconToAnimate, src_path_buf
+        tay
+        pla
+        tax
+        pla
+        jmp     InvokeDeskAccWithIcon
+.endproc ; _InvokePreview
 
 ;;; --------------------------------------------------
 
@@ -2297,22 +2313,6 @@ skip:   iny
         jmp     LaunchFileWithPathOnSystemDisk
 .endproc ; CmdDeskAccImpl
 CmdDeskAcc      := CmdDeskAccImpl::start
-
-;;; ============================================================
-;;; Invoke a Preview DA
-;;; Inputs: A,X = relative path to DA; `src_path_buf` is file to preview
-
-.proc InvokePreview
-        pha
-        txa
-        pha
-        param_call IconToAnimate, src_path_buf
-        tay
-        pla
-        tax
-        pla
-        jmp     InvokeDeskAccWithIcon
-.endproc ; InvokePreview
 
 ;;; ============================================================
 ;;; Invoke a DA, with path set to first file selection
@@ -3991,7 +3991,7 @@ error:
 ;;; ============================================================
 ;;; Handle keyboard-based icon selection ("highlighting")
 
-.proc CmdHighlightImpl
+.proc KeyboardHighlightImpl
 
 ;;; Local variables on ZP
 PARAM_BLOCK, $50
@@ -4073,16 +4073,16 @@ select_index:
 
 ret:    rts
 
-.endproc ; CmdHighlightImpl
-CmdHighlightPrev := CmdHighlightImpl::prev
-CmdHighlightNext := CmdHighlightImpl::next
-CmdHighlightAlpha := CmdHighlightImpl::alpha
-CmdHighlightAlphaPrev := CmdHighlightImpl::a_prev
-CmdHighlightAlphaNext := CmdHighlightImpl::a_next
+.endproc ; KeyboardHighlightImpl
+KeyboardHighlightPrev := KeyboardHighlightImpl::prev
+KeyboardHighlightNext := KeyboardHighlightImpl::next
+KeyboardHighlightAlpha := KeyboardHighlightImpl::alpha
+KeyboardHighlightAlphaPrev := KeyboardHighlightImpl::a_prev
+KeyboardHighlightAlphaNext := KeyboardHighlightImpl::a_next
 
 ;;; ============================================================
 
-.proc CmdHighlightSpatialImpl
+.proc KeyboardHighlightSpatialImpl
 
 ;;; Local variables on ZP
 PARAM_BLOCK, $50
@@ -4120,8 +4120,8 @@ down:   lda     #kDirDown
     IF_NEG
         lda     dir
         cmp     #kDirUp
-        beq     CmdHighlightPrev
-        bcs     CmdHighlightNext
+        beq     KeyboardHighlightPrev
+        bcs     KeyboardHighlightNext
         rts                     ; ignore if left/right
     END_IF
 
@@ -4259,11 +4259,11 @@ fallback:
 select:
         jmp     SelectIconAndEnsureVisible
 
-.endproc ; CmdHighlightSpatialImpl
-CmdHighlightLeft  := CmdHighlightSpatialImpl::left
-CmdHighlightRight := CmdHighlightSpatialImpl::right
-CmdHighlightDown  := CmdHighlightSpatialImpl::down
-CmdHighlightUp    := CmdHighlightSpatialImpl::up
+.endproc ; KeyboardHighlightSpatialImpl
+KeyboardHighlightLeft  := KeyboardHighlightSpatialImpl::left
+KeyboardHighlightRight := KeyboardHighlightSpatialImpl::right
+KeyboardHighlightDown  := KeyboardHighlightSpatialImpl::down
+KeyboardHighlightUp    := KeyboardHighlightSpatialImpl::up
 
 ;;; ============================================================
 ;;; Type Down Selection
@@ -6253,7 +6253,7 @@ check_path:
         txa                     ; stash window id - 1
         pha
         lda     icon_param
-        jsr     MarkIconOpen
+        jsr     MarkIconDimmed
         pla                     ; restore window id - 1
         tax
 :       jmp     found_win       ; wants X = window id - 1
@@ -6326,7 +6326,7 @@ no_win:
 ;;;   Points `ptr` at a virtual IconEntry, to allow referencing the icon name.
 .proc _UpdateIcon
         lda     icon_param      ; set to $FF if opening via path
-        jpl     MarkIconOpen
+        jpl     MarkIconDimmed
 
         ;; Find last '/'
         ldy     src_path_buf
@@ -6359,7 +6359,7 @@ no_win:
 ;;; Input: A = icon id
 ;;; Output: `ptr` ($06) points at IconEntry
 
-.proc MarkIconOpen
+.proc MarkIconDimmed
         ptr := $06
         sta     icon_param
         jsr     GetIconEntry
@@ -6373,7 +6373,7 @@ no_win:
 
         ITK_CALL IconTK::DrawIcon, icon_param
         rts
-.endproc ; MarkIconOpen
+.endproc ; MarkIconDimmed
 
 ;;; ============================================================
 ;;; Give a file path, tries to open/show a window for the containing
@@ -6431,7 +6431,7 @@ err:    rts
         ;; Associate window with icon, and mark it open.
         ldx     active_window_id
         sta     window_to_dir_icon_table-1,x
-        jsr     MarkIconOpen
+        jsr     MarkIconDimmed
 
 ret:    rts
 .endproc ; OpenWindowForPath
