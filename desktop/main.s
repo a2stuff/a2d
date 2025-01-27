@@ -798,26 +798,7 @@ same_or_desktop:
         cpx     #$FF
         beq     failure
 
-        ;; Icons moved within window - update and redraw
-        lda     active_window_id
-        jsr     SafeSetPortFromWindowId ; ASSERT: not obscured
-
-        jsr     CachedIconsScreenToWindow
-        ;; Adjust grafport for header.
-        jsr     OffsetWindowGrafportAndSet
-
-        ldx     #0
-:       txa
-        pha
-        copy    selected_icon_list,x, icon_param
-        ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag)
-        pla
-        tax
-        inx
-        cpx     selected_icon_count
-        bne     :-
-
-        jsr     CachedIconsWindowToScreen
+        jsr     RedrawSelectedIcons
         jmp     ScrollUpdate
 
 failure:
@@ -4572,16 +4553,9 @@ ret:    rts
         copy    cached_window_entry_count, selected_icon_count
         copy    active_window_id, selected_window_id
 
-        lda     selected_window_id
-    IF_ZERO
-        jsr     InitSetDesktopPort
-    ELSE
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-    END_IF
-        pha                     ; A = obscured?
-
         ;; --------------------------------------------------
         ;; Mark all icons as highlighted
+
         ldx     #0
 :       txa
         pha
@@ -4596,17 +4570,19 @@ ret:    rts
         ;; --------------------------------------------------
         ;; Repaint the icons
 
-        pla                     ; A = obscured?
+        ;; Assert: `selected_window_id` == `active_window_id`
+        ;; Assert: `selected_window_id` == `cached_window_id`
+
+        lda     selected_window_id
+    IF_ZERO
+        jsr     InitSetDesktopPort
+    ELSE
+        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
+    END_IF
     IF_ZERO                     ; Skip drawing if obscured
-        lda     cached_window_id
-        beq     :+
         jsr     CachedIconsScreenToWindow
-:
         ITK_CALL IconTK::DrawAll, cached_window_id ; CHECKED
-        lda     cached_window_id
-        beq     :+
         jsr     CachedIconsWindowToScreen
-:
     END_IF
 
 finish: rts
@@ -6563,17 +6539,37 @@ done:
 
         ;; --------------------------------------------------
         ;; Repaint the icons
-        lda     selected_window_id
-    IF_ZERO
-        ;; Desktop
+
         jsr     RedrawSelectedIcons
-    ELSE
-        ;; Windowed
+
+        ;; --------------------------------------------------
+        ;; Clear selection list
+        lda     #0
+        sta     selected_icon_count
+        sta     selected_window_id
+        rts
+.endproc ; ClearSelection
+
+;;; ============================================================
+
+;;; Repaint all selected icons. This uses a fast path if selection
+;;; is in the active window, since a clipped port is sufficient.
+;;; Otherwise, IconTK's smart (but slow) clipping is used.
+
+.proc RedrawSelectedIcons
+        lda     selected_window_id
+        beq     unoptimized     ; Desktop
+
         cmp     active_window_id
-      IF_EQ
-        ;; Fast path - use a clipped port
+        bne     unoptimized
+
+        ;; --------------------------------------------------
+        ;; Fast path. Since selection is in the top-most window,
+        ;; drawing can be done using `IconTK::DrawIconRaw` in a
+        ;; clipped port.
+
         jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
-        bne     skip             ; obscured
+        RTS_IF_NOT_ZERO                            ; obscured
 
         jsr     PushPointers
         jsr     PrepActiveWindowScreenMapping
@@ -6594,29 +6590,15 @@ done:
         inx
         cpx     selected_icon_count
         bne     :-
-        jsr     PopPointers     ; do not tail-call optimize!
-      ELSE
-        jsr     RedrawSelectedIcons
-      END_IF
 
-skip:
-    END_IF
+        jsr     PopPointers     ; do not tail-call optimize!
+        rts
 
         ;; --------------------------------------------------
-        ;; Clear selection list
-        lda     #0
-        sta     selected_icon_count
-        sta     selected_window_id
-        rts
-.endproc ; ClearSelection
+        ;; Slow path. This uses `IconTK::DrawIcon` which clips icons
+        ;; against overlapping windows.
 
-;;; ============================================================
-
-;;; Note: This uses IconTK::DrawIcon which will clip icons against
-;;; overlapping windows; if the selection is in the top-most window
-;;; then more optimized drawing should be used.
-
-.proc RedrawSelectedIcons
+unoptimized:
         ldx     #0
 :       txa
         pha
@@ -6627,6 +6609,7 @@ skip:
         inx
         cpx     selected_icon_count
         bne     :-
+
         rts
 .endproc ; RedrawSelectedIcons
 
@@ -6647,12 +6630,14 @@ skip:
 ;;; ============================================================
 
 ;;; Inputs: A,X = proc to call for each icon
+;;; Note: No-op if `cached_window_id` = 0 (desktop)
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc _CachedIconsXToY
         stax    proc
 
         jsr     PushPointers
         lda     cached_window_id
+        beq     done
         jsr     PrepWindowScreenMapping
 
         copy    #0, index
