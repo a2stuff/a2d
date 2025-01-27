@@ -5696,13 +5696,14 @@ exception_flag:
         ;; Clear background
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
-    IF_ZERO
+        pha                               ; A = obscured?
+    IF_ZERO                               ; skip if obscured
         MGTK_CALL MGTK::PaintRect, window_grafport::maprect
     END_IF
 
         ;; Remove old FileRecords
         lda     active_window_id
-        pha
+        pha                     ; A = `active_window_id`
         jsr     RemoveWindowFileRecords
 
         ;; Remove old icons
@@ -5710,19 +5711,19 @@ exception_flag:
         jsr     ClearActiveWindowEntryCount
 
         ;; Copy window path to `src_path_buf`
-        lda     active_window_id
+        pla                     ; A = `active_window_id`
+        pha                     ; A = `active_window_id`
         jsr     GetWindowPath
         jsr     CopyToSrcPath
 
         ;; Load new FileRecords
-        pla                     ; window id
+        pla                     ; A = `active_window_id`
         jsr     CreateFileRecordsForWindow
 
         ;; Draw header
         jsr     UpdateWindowUsedFreeDisplayValues
-        lda     active_window_id
-        jsr     UnsafeSetPortFromWindowId ; CHECKED
-    IF_ZERO                     ; Skip drawing if obscured
+        pla                     ; A = obscured?
+    IF_ZERO                     ; skip if obscured
         jsr     LoadActiveWindowEntryTable
         jsr     DrawWindowHeader
     END_IF
