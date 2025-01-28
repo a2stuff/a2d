@@ -5545,7 +5545,7 @@ err:    jmp     ShowAlert
 .proc UpdateActivateAndRefreshSelectedWindow
         lda     selected_window_id
         FALL_THROUGH_TO UpdateActivateAndRefreshWindow
-.endproc
+.endproc ; UpdateActivateAndRefreshSelectedWindow
 
 .proc UpdateActivateAndRefreshWindow
         pha
@@ -6049,15 +6049,7 @@ update: lda     window_id
         icon := *+1
         lda     #SELF_MODIFIED_BYTE
     IF_NE
-        ;; Have parent icon - mark as not dimmed
-        sta     icon_param
-        jsr     GetIconEntry
-        stax    icon_ptr
-
-        ldy     #IconEntry::state ; clear dimmed state
-        lda     (icon_ptr),y
-        and     #AS_BYTE(~kIconEntryStateDimmed)
-        sta     (icon_ptr),y
+        jsr     MarkIconNotDimmedNoDraw
         ;; Assert: `icon` == `anim_icon`, and will get redrawn next.
     END_IF
 
@@ -6338,7 +6330,6 @@ no_win:
 
 .proc MarkIconDimmed
         ptr := $06
-        sta     icon_param
         jsr     GetIconEntry
         stax    ptr
 
@@ -6351,6 +6342,54 @@ no_win:
         ITK_CALL IconTK::DrawIcon, icon_param
         rts
 .endproc ; MarkIconDimmed
+
+;;; ============================================================
+;;; Mark the icon as not open; does not redraw as not all clients need
+;;; it, e.g. if they will subsequently select the icon.
+;;; Input: A = `icon_id`
+;;; Trashes $06
+
+.proc MarkIconNotDimmedNoDraw
+        ptr := $06
+        jsr     GetIconEntry
+        stax    ptr
+
+        ;; Clear dimmed flag
+        ldy     #IconEntry::state
+        lda     (ptr),y
+        and     #AS_BYTE(~kIconEntryStateDimmed)
+        sta     (ptr),y
+
+        ;; Redrawing is left to caller
+        rts
+.endproc ; MarkIconNotDimmedNoDraw
+
+;;; ============================================================
+;;; Used when recovering from a failed open (bad path, too many icons, etc)
+;;; Inputs: `icon_param` points at icon
+
+.proc MarkIconNotDimmed
+        icon_ptr := $6
+
+        ;; Find open window for the icon
+        lda     icon_param
+        beq     ret
+
+        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
+    IF_EQ
+        ;; If found, remove from the table.
+        ;; Note: 0 not $FF because we know the window doesn't exist
+        ;; any more.
+        copy    #0, window_to_dir_icon_table,x
+    END_IF
+
+        ;; Update the icon and redraw
+        lda     icon_param
+        jsr     MarkIconNotDimmedNoDraw
+        ITK_CALL IconTK::DrawIcon, icon_param
+
+ret:    rts
+.endproc ; MarkIconNotDimmed
 
 ;;; ============================================================
 ;;; Give a file path, tries to open/show a window for the containing
@@ -9757,38 +9796,6 @@ done:   rts
 .endproc ; FindWindowIndexForDirIcon
 
 ;;; ============================================================
-;;; Used when recovering from a failed open (bad path, too many icons, etc)
-;;; Inputs: `icon_param` points at icon
-
-.proc MarkIconNotDimmed
-        icon_ptr := $6
-
-        ;; Find open window for the icon
-        lda     icon_param
-        beq     ret
-
-        jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
-    IF_EQ
-        ;; If found, remove from the table.
-        ;; Note: 0 not $FF because we know the window doesn't exist
-        ;; any more.
-        copy    #0, window_to_dir_icon_table,x
-    END_IF
-
-        ;; Update the icon and redraw
-        lda     icon_param
-        jsr     GetIconEntry
-        stax    icon_ptr
-        ldy     #IconEntry::state
-        lda     (icon_ptr),y
-        and     #AS_BYTE(~kIconEntryStateDimmed)
-        sta     (icon_ptr),y
-        ITK_CALL IconTK::DrawIcon, icon_param
-
-ret:    rts
-.endproc ; MarkIconNotDimmed
-
-;;; ============================================================
 
 .proc AnimateWindowImpl
         ptr := $06
@@ -12438,7 +12445,7 @@ append_size:
     END_IF
 
         rts
-.endproc
+.endproc ; _DialogOpen
 
 ;;; ------------------------------------------------------------
 ;;; Recursively count child files / sizes
