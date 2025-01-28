@@ -12186,6 +12186,9 @@ ShowErrorAlertDst       := ShowErrorAlertImpl::flag_set
 ;;; "Get Info" dialog state and logic
 ;;; ============================================================
 
+;;; NOTE: Inside `operations` scope due to reuse of recursive
+;;; directory enumeration logic (`ProcessDir` etc)
+
 .scope get_info
 
         DEFINE_READ_BLOCK_PARAMS getinfo_block_params, $800, $A
@@ -12639,6 +12642,18 @@ ret:    return  #$FF
 
 ;;; ============================================================
 
+.endscope ; operations
+
+        DoCopySelection := operations::DoCopySelection
+        DoCopyToRAM := operations::DoCopyToRAM
+        DoCopyFile := operations::DoCopyFile
+        DoDrop := operations::DoDrop
+        operations__move_flag := operations::move_flag
+
+        DoGetInfo := operations::get_info::DoGetInfo
+
+;;; ============================================================
+
 .scope rename
         old_name_buf := $1F00
         new_name_buf := stashed_name
@@ -13028,6 +13043,8 @@ ignore:
 .endproc ; _KeyHandler
 
 .endscope ; rename
+        DoRename := rename::DoRename
+        old_name_buf := rename::old_name_buf
 
 ;;; ============================================================
 ;;; Input: $06 has `IconEntry` ptr
@@ -13054,21 +13071,6 @@ ignore:
         addax   file_record_ptr, file_record_ptr
         rts
 .endproc ; SetFileRecordPtrFromIconPtr
-
-;;; ============================================================
-
-.endscope ; operations
-
-        DoCopySelection := operations::DoCopySelection
-        DoCopyToRAM := operations::DoCopyToRAM
-        DoCopyFile := operations::DoCopyFile
-        DoDrop := operations::DoDrop
-        operations__move_flag := operations::move_flag
-
-        DoGetInfo := operations::get_info::DoGetInfo
-
-        DoRename := operations::rename::DoRename
-        old_name_buf := operations::rename::old_name_buf
 
 ;;; ============================================================
 ;;; Input: A = icon
