@@ -7586,6 +7586,7 @@ END_PARAM_BLOCK
         init_view_size = 3 + .sizeof(MGTK::Point)
 
         ;; Templates for populating initial values, based on view type
+init_views:
 init_list_view:
         .byte   1, 0, kListItemHeight
         .word   kListViewInitialLeft, kListViewInitialTop
@@ -7605,23 +7606,22 @@ init_smicon_view:
         ;; Select the template
         jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
     IF_NEG
-        ldax    #init_list_view
+        ldy     #init_list_view - init_views + init_view_size-1
     ELSE
         .assert kViewByIcon = 0, error, "enum mismatch"
       IF_ZERO
-        ldax    #init_icon_view
+        ldy     #init_icon_view - init_views + init_view_size-1
       ELSE
-        ldax    #init_smicon_view
+        ldy     #init_smicon_view - init_views + init_view_size-1
       END_IF
     END_IF
 
         ;; Populate the initial values from the template
-        ptr := $06
-        stax    ptr
-        ldy     #init_view_size-1
-:       lda     (ptr),y
-        sta     init_view,y
+        ldx     #init_view_size-1
+:       lda     init_views,y
+        sta     init_view,x
         dey
+        dex
         bpl     :-
 
         ;; Init/zero out the rest of the state
@@ -7712,17 +7712,13 @@ records_base_ptr:
         bit     LCBANK2
 
         ;; Copy the name out of LCBANK2
-        ldy     #FileRecord::name
-        lda     (file_record),y
-        sta     name_tmp
-        iny
-        ldx     #0
+        ldy     #FileRecord::name + kMaxFilenameLength
+        ldx     #kMaxFilenameLength
 :       lda     (file_record),y
-        sta     name_tmp+1,x
-        inx
-        iny
-        cpx     name_tmp
-        bne     :-
+        sta     name_tmp,x
+        dey
+        dex
+        bpl     :-
 
         ;; Find the icon type
         ldy     #FileRecord::file_type
@@ -7745,26 +7741,22 @@ records_base_ptr:
         ldy     #SELF_MODIFIED_BYTE
         jsr     _FindIconDetailsForIconType
 
-        ldy     #IconEntry::name
-        ldx     #0
-L77F0:  lda     name_tmp,x
+        ldy     #IconEntry::name + kMaxFilenameLength
+        ldx     #kMaxFilenameLength
+:       lda     name_tmp,x
         sta     (icon_entry),y
-        iny
-        inx
-        cpx     name_tmp
-        bne     L77F0
-        lda     name_tmp,x
-        sta     (icon_entry),y
+        dey
+        dex
+        bpl     :-
 
         ;; Assign location
-        ldx     #0
-        ldy     #IconEntry::iconx
+        ldy     #IconEntry::iconx + .sizeof(MGTK::Point) - 1
+        ldx     #.sizeof(MGTK::Point) - 1
 :       lda     row_coords,x
         sta     (icon_entry),y
-        inx
-        iny
-        cpx     #.sizeof(MGTK::Point)
-        bne     :-
+        dey
+        dex
+        bpl     :-
 
         jsr     GetCachedWindowViewBy
         .assert kViewByIcon = 0, error, "enum mismatch"
