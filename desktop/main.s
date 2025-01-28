@@ -10227,13 +10227,21 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         bit     copy_delete_flags
         bmi     :+
         jsr     CopyPathsFromBufsToSrcAndDst
-        jsr     CheckRecursion
+
+        ;; Check for copying/moving an item into itself.
+        copy16  #src_path_buf, $06
+        copy16  #dst_path_buf, $08
+        jsr     IsPathPrefixOf
     IF_NE
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_move_copy_into_self
         jmp     CloseFilesCancelDialogWithCanceledResult
     END_IF
         jsr     AppendSrcPathLastSegmentToDstPath
-        jsr     CheckBadReplacement
+
+        ;; Check for replacing an item with itself or a descendant.
+        copy16  #dst_path_buf, $06
+        copy16  #src_path_buf, $08
+        jsr     IsPathPrefixOf
     IF_NE
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_bad_replacement
         jmp     CloseFilesCancelDialogWithCanceledResult
@@ -13420,34 +13428,6 @@ assign: ldy     new_path
 .endproc ; _MaybeUpdateTargetPath
 
 .endproc ; NotifyPathChanged
-
-;;; ============================================================
-;;; Check if `src_path_buf` is inside `dst_path_buf`.
-;;; Output: Z=1 if ok, Z=0 otherwise.
-
-.proc CheckRecursion
-        copy16  #src_path_buf, $06
-        copy16  #dst_path_buf, $08
-        jmp     IsPathPrefixOf
-.endproc ; CheckRecursion
-
-;;; ============================================================
-;;; Check for replacing an item with itself or a descendant.
-;;; Input: `src_path_buf` and `dst_path_buf` are full paths
-;;; Output: A=0 if ok, A=err code otherwise.
-
-.proc CheckBadReplacement
-
-        ;; Examples:
-        ;; src: '/a/p'   dst: '/a/p' (replace with self)
-        ;; src: '/a/c/c' dst: '/a/c' (replace with item inside self)
-
-        ;; Check for dst being subset of src
-
-        copy16  #dst_path_buf, $06
-        copy16  #src_path_buf, $08
-        FALL_THROUGH_TO IsPathPrefixOf
-.endproc ; CheckBadReplacement
 
 ;;; ============================================================
 ;;; Check if $06 is same path or parent of $08.
