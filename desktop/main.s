@@ -12663,7 +12663,6 @@ ret:    return  #$FF
 .params rename_dialog_params
 a_prev: .addr   old_name_buf
 a_path: .addr   SELF_MODIFIED_BYTE
-        DEFINE_RECT rect,0,0,0,0
 .endparams
 
 ;;; Inputs: A,X = address of buffer holding previous name
@@ -12698,8 +12697,7 @@ start:
 
         lda     selected_icon_list
         sta     icon_param
-        ITK_CALL IconTK::GetRenameRect, icon_param
-        COPY_STRUCT MGTK::Rect, tmp_rect, rename_dialog_params::rect
+        ITK_CALL IconTK::GetRenameRect, icon_param ; populates `tmp_rect`
 
         ;; Open the dialog
         jsr     _DialogOpen
@@ -12901,7 +12899,7 @@ DoRename        := DoRenameImpl::start
       END_IF
         sty     rename_line_edit_rec::options
 
-        COPY_STRUCT MGTK::Point, rename_dialog_params::rect::topleft, winfo_rename_dialog::viewloc
+        COPY_STRUCT MGTK::Point, tmp_rect::topleft, winfo_rename_dialog::viewloc
 
         copy    #0, cursor_ibeam_flag
         jsr     SetCursorPointer
