@@ -4780,22 +4780,9 @@ _Preamble:
         ;; Make `ubox` bound both viewport and icons; needed to ensure
         ;; offset cases are handled.
         COPY_STRUCT MGTK::Rect, iconbb_rect, ubox
-        scmp16  viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1
-    IF_NEG
-        copy16  viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1
-    END_IF
-        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
-    IF_POS
-        copy16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
-    END_IF
-        scmp16  viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1
-    IF_NEG
-        copy16  viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1
-    END_IF
-        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
-    IF_POS
-        copy16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
-    END_IF
+        copy16  #viewport, $06
+        copy16  #ubox, $08
+        jsr     UnionRects
 
         rts
 
@@ -5122,6 +5109,56 @@ ScrollTrackVThumb := ScrollManager::TrackVThumb
 ;;; viewport and contents.
 ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
 
+;;; ============================================================
+
+;;; Inputs: $06 = `rect1_ptr`, $08 = `rect2_ptr`
+;;; Output: rect2 grown to encompass rect1; $06/$08 modified
+.proc UnionRects
+        rect1_ptr := $06
+        rect2_ptr := $08
+
+        ldy     #0
+        jsr     do_pair
+        ldy     #2
+        FALL_THROUGH_TO do_pair
+
+        ;; Process a pair (e.g. x1 and x2, or y1 and y2)
+do_pair:
+        ;; left or top
+        jsr     compare
+        bpl     :+
+        jsr     assign
+:       iny
+        iny
+        iny
+
+        ;; right or bottom
+        jsr     compare
+        bmi     :+
+        jsr     assign
+:
+        rts
+
+compare:
+        lda     (rect1_ptr),y
+        cmp     (rect2_ptr),y
+        iny
+        lda     (rect1_ptr),y
+        sbc     (rect2_ptr),y
+        bvc     :+              ; signed compare
+        eor     #$80
+:       rts
+
+assign:
+        dey
+        lda     (rect1_ptr),y
+        sta     (rect2_ptr),y
+        iny
+        lda     (rect1_ptr),y
+        sta     (rect2_ptr),y
+        rts
+
+.endproc ; UnionRects
 
 ;;; ============================================================
 
@@ -8320,24 +8357,10 @@ more:   lda     cached_window_entry_list,x
         ;; Compare X coords
 
 compare:
-        scmp16  tmp_rect::x1, iconbb_rect::x1
-        bpl     :+
-        copy16  tmp_rect::x1, iconbb_rect::x1
-:       scmp16  tmp_rect::x2, iconbb_rect::x2
-        bmi     :+
-        copy16  tmp_rect::x2, iconbb_rect::x2
-:
+        copy16  #tmp_rect, $06
+        copy16  #iconbb_rect, $08
+        jsr     UnionRects
 
-        ;; --------------------------------------------------
-        ;; Compare Y coords
-
-        scmp16  tmp_rect::y1, iconbb_rect::y1
-        bpl     :+
-        copy16  tmp_rect::y1, iconbb_rect::y1
-:       scmp16  tmp_rect::y2, iconbb_rect::y2
-        bmi     :+
-        copy16  tmp_rect::y2, iconbb_rect::y2
-:
         ;; --------------------------------------------------
 
 next:   inc     icon_num

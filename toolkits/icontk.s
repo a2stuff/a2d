@@ -1695,6 +1695,7 @@ stash_rename_rect:
 
         COPY_STRUCT MGTK::Rect, bitmap_rect, bounding_rect
 
+        ;; Union of rectangles (expand `bounding_rect` to encompass `label_rect`)
         scmp16  label_rect::x1, bounding_rect::x1
     IF_NEG
         copy16  label_rect::x1, bounding_rect::x1
@@ -2134,7 +2135,7 @@ reserved:       .byte   0
 ;;; Output: Z=1 if ready to paint, Z=0 if nothing to draw
 
 .proc DuplicateClipStructsAndSetPortBits
-        ;; Union `portbits::maprect` with `bounding_rect`
+        ;; Intersect `portbits::maprect` with `bounding_rect`
         scmp16  portbits::maprect::x1, bounding_rect::x1
         bpl     :+
         copy16  bounding_rect::x1, portbits::maprect::x1
