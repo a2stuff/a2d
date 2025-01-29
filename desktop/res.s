@@ -100,12 +100,6 @@ y_exponent:     .byte   0       ; ... doubled on IIc / IIc+
 num_selector_list_items:
         .byte   0
 
-buf_filename:  .res    16, 0
-
-        ;; Used during launching
-buf_win_path:
-        .res    kPathBufferSize, 0
-
 ;;; Generic path buffer. In file dialog, used as current path.
 path_buf0:
         .res    kPathBufferSize, 0

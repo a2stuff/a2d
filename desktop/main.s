@@ -1769,11 +1769,7 @@ check_header:
         jsr     _MakeRelPathAbsoluteIntoInvokerInterpreter
 
         ;; Copy back to original buffer
-        ldy     INVOKER_INTERPRETER
-:       lda     INVOKER_INTERPRETER,y
-        sta     src_path_buf,y
-        dey
-        bpl     :-
+        param_call CopyToSrcPath, INVOKER_INTERPRETER
     END_IF
 
         rts
@@ -1935,10 +1931,11 @@ devlst_backup:
         lda     selected_icon_count
         beq     :+
 
-        jsr     CopyAndComposeWinIconPaths
-        jne     ShowAlert
+        lda     selected_icon_list
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jne     ShowAlert       ; too long
 
-        COPY_STRING src_path_buf, path_buf0
+        COPY_STRING path_buf3, path_buf0
 :
     END_IF
 
@@ -2312,8 +2309,8 @@ CmdDeskAcc      := CmdDeskAccImpl::start
         lda     selected_icon_list ; first selected icon
         cmp     trash_icon_num     ; ignore trash
         beq     :+
-        jsr     GetIconPath
-        jne     ShowAlert
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jne     ShowAlert       ; too long
         param_call CopyToSrcPath, path_buf3
 :
         param_call IconToAnimate, tmp_path_buf
@@ -2728,7 +2725,8 @@ next_icon:
 
         ;; File (executable or data)
 maybe_open_file:
-        pla                     ; A = icon id; no longer needed
+        pla                     ; A = icon id
+        tax                     ; X = icon id
 
         lda     selected_icon_count_copy
         cmp     #2              ; multiple files open?
@@ -2736,8 +2734,10 @@ maybe_open_file:
 
         pla                     ; A = index; no longer needed
 
-        jsr     CopyAndComposeWinIconPaths
-        jne     ShowAlert
+        txa                     ; A = icon id
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        jne     ShowAlert       ; too long
+        param_call CopyToSrcPath, path_buf3
 
         jmp     LaunchFileWithPath
 .endproc ; CmdOpen
@@ -2762,67 +2762,6 @@ done:   rts
 ;;; Parent window to close
 window_id_to_close:
         .byte   0
-
-;;; ============================================================
-;;; Copy selection window and first selected icon paths to
-;;; `buf_win_path` and `buf_filename` respectively, and
-;;; compose into `src_path_buf`.
-;;; Output: Z=1/A=0 on success, Z=0/A=error if path too long
-
-.proc CopyAndComposeWinIconPaths
-        ;; Copy window path to buf_win_path
-        win_path_ptr := $06
-
-        lda     selected_window_id
-        jsr     GetWindowPath
-        stax    win_path_ptr
-        param_call CopyPtr1ToBuf, buf_win_path
-
-        ;; Copy file path to buf_filename
-        name_ptr := $06
-
-        lda     selected_icon_list
-        jsr     GetIconName
-        stax    name_ptr
-
-        ldy     #0
-        lda     (name_ptr),y    ; check length
-        tay
-        clc
-        adc     buf_win_path
-        cmp     #kMaxPathLength ; not +1 because we'll add '/'
-        bcc     :+
-        lda     #ERR_INVALID_PATHNAME
-        rts
-:
-
-:       lda     (name_ptr),y
-        sta     buf_filename,y
-        dey
-        bpl     :-
-
-        ;; Compose window path plus icon path
-        ldx     #$FF
-:       inx
-        copy    buf_win_path,x, src_path_buf,x
-        cpx     buf_win_path
-        bne     :-
-
-        inx
-        copy    #'/', src_path_buf,x
-
-        ldy     #0
-:       iny
-        inx
-        copy    buf_filename,y, src_path_buf,x
-        cpy     buf_filename
-        bne     :-
-        stx     src_path_buf
-
-        lda     #0              ; success
-        rts
-.endproc ; CopyAndComposeWinIconPaths
-
 
 ;;; ============================================================
 
@@ -5479,7 +5418,7 @@ start:
 
         lda     selected_icon_list
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
-        jne     ShowAlert
+        jne     ShowAlert       ; too long
 
         ldx     #kHeaderSize-1
 :       copy    header,x, link_struct,x
@@ -6341,14 +6280,14 @@ no_win:
 :       iny
         inx
         lda     src_path_buf,y
-        sta     buf_filename,x
+        sta     filename_buf,x
         cpy     src_path_buf
         bne     :-
 
-        stx     buf_filename
+        stx     filename_buf
 
         ;; Adjust ptr as if it's pointing at an IconEntry
-        copy16  #buf_filename - IconEntry::name, ptr
+        copy16  #filename_buf - IconEntry::name, ptr
         rts
 .endproc ; _UpdateIcon
 .endproc ; OpenWindowForIcon
@@ -7265,7 +7204,7 @@ vol_kb_used:  .word   0
 
 .proc RemoveWindowFileRecords
         ;; Find address of FileRecord list
-        jsr     FindIndexInFilerecordListEntries
+        jsr     FindIndexInFileRecordListEntries
         RTS_IF_ZC
 
         ;; Move list entries down by one
@@ -12232,11 +12171,7 @@ loop:   ldx     icon_index
         jsr     ShowAlert
         jmp     next
     END_IF
-
-        ldy     path_buf3       ; Copy to `src_path_buf`
-:       copy    path_buf3,y, src_path_buf,y
-        dey
-        bpl     :-
+        param_call CopyToSrcPath, path_buf3
 
         ;; Try to get file/volume info
 common: jsr     GetSrcFileInfo
@@ -15061,7 +14996,7 @@ done:   rts
 ;;; Outputs: Z = 1 if found, and X = index in `window_id_to_filerecord_list_entries`
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
-.proc FindIndexInFilerecordListEntries
+.proc FindIndexInFileRecordListEntries
         ldx     window_id_to_filerecord_list_count
         dex
 :       cmp     window_id_to_filerecord_list_entries,x
@@ -15069,14 +15004,14 @@ done:   rts
         dex
         bpl     :-
 :       rts
-.endproc ; FindIndexInFilerecordListEntries
+.endproc ; FindIndexInFileRecordListEntries
 
 ;;; Input: A = window_id
 ;;; Output: A,X = address of FileRecord list (first entry is length)
 ;;; Assert: Window is found in list.
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc GetFileRecordListForWindow
-        jsr     FindIndexInFilerecordListEntries
+        jsr     FindIndexInFileRecordListEntries
         txa
         asl
         tax

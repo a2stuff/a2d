@@ -154,7 +154,7 @@ loop2:
         ;; --------------------------------------------------
         ;; Confirm operation
 .scope
-        COPY_STRING text_input_buf, buf_filename
+        COPY_STRING text_input_buf, main::filename_buf
 
         copy    #0, has_input_field_flag
         jsr     SetPortAndClear
@@ -263,7 +263,7 @@ l7:
         param_call main::DrawDialogLabel, 7, aux::str_tip_prodos
         jsr     main::SetCursorWatch
 
-        ldxy    #buf_filename
+        ldxy    #main::filename_buf
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
         jsr     WriteHeaderBlocks
