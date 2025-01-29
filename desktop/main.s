@@ -9218,19 +9218,11 @@ ret:    rts
 
         ;; iconx
         ldy     #IconEntry::iconx
-        add16in (entry_ptr),y, pos_screen, (entry_ptr),y
-        iny
+        sub16in (entry_ptr),y, map_delta_x, (entry_ptr),y
 
         ;; icony
-        add16in (entry_ptr),y, pos_screen+2, (entry_ptr),y
-
-        ;; iconx
-        ldy     #IconEntry::iconx
-        sub16in (entry_ptr),y, pos_win, (entry_ptr),y
         iny
-
-        ;; icony
-        sub16in (entry_ptr),y, pos_win+2, (entry_ptr),y
+        sub16in (entry_ptr),y, map_delta_y, (entry_ptr),y
 
         rts
 .endproc ; IconPtrWindowToScreen
@@ -9260,29 +9252,21 @@ ret:    rts
 
         ;; iconx
         ldy     #IconEntry::iconx
-        sub16in (entry_ptr),y, pos_screen, (entry_ptr),y
-        iny
+        add16in (entry_ptr),y, map_delta_x, (entry_ptr),y
 
         ;; icony
-        sub16in (entry_ptr),y, pos_screen+2, (entry_ptr),y
-
-        ;; iconx
-        ldy     #IconEntry::iconx
-        add16in (entry_ptr),y, pos_win, (entry_ptr),y
         iny
-
-        ;; icony
-        add16in (entry_ptr),y, pos_win+2, (entry_ptr),y
+        add16in (entry_ptr),y, map_delta_y, (entry_ptr),y
 
         rts
 .endproc ; IconPtrScreenToWindow
 
 ;;; ============================================================
 
-        DEFINE_POINT pos_screen, 0, 0
-        DEFINE_POINT pos_win, 0, 0
+map_delta_x:    .word   0
+map_delta_y:    .word   0
 
-;;; Inits `pos_screen` and `pos_window` for window/screen mapping
+;;; Inits `map_delta_x` and `map_delta_y` for window/screen mapping
 ;;; for active window.
 ;;; Inputs: `active_window_id` set
 ;;; Trashes: $08
@@ -9298,25 +9282,34 @@ ret:    rts
         jsr     GetWindowPtr
         stax    winfo_ptr
 
-        ;; Screen space
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 3
-        ldx     #3
-:       lda     (winfo_ptr),y
-        sta     pos_screen,x
-        dey
-        dex
-        bpl     :-
+        ;; Compute delta x
+        sec
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 0
+        lda     (winfo_ptr),y
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 0
+        sbc     (winfo_ptr),y
+        sta     map_delta_x
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 1
+        lda     (winfo_ptr),y
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 1
+        sbc     (winfo_ptr),y
+        sta     map_delta_x+1
 
-        ;; Window space
+        ;; Compute delta y
+        sec
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 2
+        lda     (winfo_ptr),y
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 2
+        sbc     (winfo_ptr),y
+        sta     map_delta_y
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + 3
-        ldx     #3
-:       lda     (winfo_ptr),y
-        sta     pos_win,x
-        dey
-        dex
-        bpl     :-
+        lda     (winfo_ptr),y
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + 3
+        sbc     (winfo_ptr),y
+        sta     map_delta_y+1
 
         rts
+
 .endproc ; PrepWindowScreenMapping
 
 ;;; ============================================================
