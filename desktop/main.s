@@ -2591,6 +2591,7 @@ volume:
 
 ;;; ============================================================
 ;;; Split filename off `INVOKER_PREFIX` into `INVOKER_FILENAME`
+;;; Assert: `INVOKER_PREFIX` is a file path not volume path
 
 .proc SplitInvokerPath
         param_call FindLastPathSegment, INVOKER_PREFIX ; point Y at last '/'
@@ -2838,43 +2839,31 @@ normal: lda     #0
 
         jsr     GetWindowPath
         jsr     CopyToSrcPath
-        copy    src_path_buf, prev ; previous length
 
         ;; Try removing last segment
         param_call FindLastPathSegment, src_path_buf ; point Y at last '/'
         cpy     src_path_buf
 
         beq     volume
-        sty     src_path_buf
 
         ;; --------------------------------------------------
         ;; Windowed
+
+        ;; Calc the name
+        .assert src_path_buf = INVOKER_PREFIX, error, "mismatch"
+        jsr     SplitInvokerPath
 
         ;; Try to open by path.
         tsx
         stx     saved_stack
         jsr     OpenWindowForPath
 
-        ;; Calc the name
-        name_ptr := $08
-        copy16  #src_path_buf, name_ptr
-        inc     src_path_buf           ; past the '/'
-        add16_8 name_ptr, src_path_buf ; point at suffix
-        prev := *+1
-        lda     #SELF_MODIFIED_BYTE
-        sec
-        sbc     src_path_buf ; A = name length
-        ldy     #0
-        sta     (name_ptr),y    ; assign string length
-
-        jsr     PushPointers
         jsr     MaybeCloseWindowAfterOpen
-        jsr     PopPointers
 
         ;; Select by name (if not already done via close)
         lda     selected_icon_count
     IF_ZERO
-        param_call_indirect SelectFileIconByName, name_ptr
+        param_call SelectFileIconByName, INVOKER_FILENAME
     END_IF
 
 done:   rts
@@ -2882,19 +2871,15 @@ done:   rts
         ;; --------------------------------------------------
         ;; Find volume icon by name and select it.
 
-volume: lda     window_id_to_close
-        beq     :+
-        jsr     CloseActiveWindow
-:
-        ldx     src_path_buf ; Strip '/'
-        dex
-        stx     src_path_buf+1
-        ldax    #src_path_buf+1
-        ldy     #0              ; 0=desktop
-        jsr     FindIconByName
+volume:
+        jsr     MaybeCloseWindowAfterOpen
+
+        ldax    #src_path_buf
+        jsr     FindIconForPath
         beq     :+
         jsr     SelectIconAndEnsureVisible
-:       rts
+:
+        rts
 .endproc ; CmdOpenParentImpl
 CmdOpenParent := CmdOpenParentImpl::normal
 CmdOpenParentThenCloseCurrent := CmdOpenParentImpl::close_current
@@ -3262,13 +3247,14 @@ concatenate:
         sta     icon_param
 
         ;; Map coordinates to window
+        pha                     ; A = icon
         jsr     IconScreenToWindow
 
         ;; Grab the icon bounds
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
 
         ;; Restore coordinates
-        lda     icon_param
+        pla                     ; A = icon
         jsr     IconWindowToScreen
 
         ;; Get the viewport, and adjust for header
@@ -3803,11 +3789,8 @@ ret:    rts
         lda     selected_window_id
       IF_NOT_ZERO               ; windowed (not desktop); no refresh needed
         cmp     active_window_id
-       IF_EQ
-        jsr     ClearAndDrawActiveWindowEntries ; active - just repaint
-       ELSE
-        jsr     ActivateWindow  ; inactive - activate, it will repaint
-       END_IF
+        jeq     ClearAndDrawActiveWindowEntries ; active - just repaint
+        jmp     ActivateWindow  ; inactive - activate, it will repaint
       END_IF
     END_IF
 
@@ -4142,7 +4125,7 @@ down:   lda     #kDirDown
         tay
         pla
 
-        ;; `tmp_rect`+y += A,X
+        ;; `tmp_rect`,y += A,X
         clc
         adc     tmp_rect,y
         sta     tmp_rect,y
@@ -4504,6 +4487,14 @@ ret:    rts
 ;;; Inputs: A = icon id
 
 .proc SelectIconAndEnsureVisible
+        ;; No-op if already single selected icon
+        ldy     selected_icon_count
+        dey
+        bne     continue
+        cmp     selected_icon_list
+        beq     ret
+
+continue:
         pha
         jsr     ClearSelection
         pla
@@ -4532,7 +4523,7 @@ ret:    rts
 
         ITK_CALL IconTK::DrawIcon, selected_icon_list
 
-        rts
+ret:    rts
 .endproc ; SelectIconAndEnsureVisible
 
 ;;; ============================================================
@@ -4762,13 +4753,15 @@ _Preamble:
         jsr     GetActiveWindowViewBy ; N=0 is icon view, N=1 is list view
     IF_POS
         ;; Icon view
-        copy    #kIconViewScrollTickH, tick_h
-        copy    #kIconViewScrollTickV, tick_v
+        ldx     #kIconViewScrollTickH
+        ldy     #kIconViewScrollTickV
     ELSE
         ;; List view
-        copy    #kListViewScrollTickH, tick_h
-        copy    #kListViewScrollTickV, tick_v
+        ldx     #kListViewScrollTickH
+        ldy     #kListViewScrollTickV
     END_IF
+        stx     tick_h
+        sty     tick_v
 
         ;; Compute effective viewport
         jsr     ApplyActiveWinfoToWindowGrafport
@@ -6490,7 +6483,7 @@ ret:    rts
 .endproc ; OpenWindowForPath
 
 ;;; ============================================================
-;;; Find an icon for a given path. May be volume in any window.
+;;; Find an icon for a given path. May be volume or in any window.
 ;;;
 ;;; Inputs: A,X has path
 ;;; Output: A=icon id and Z=0 if found, Z=1 if no match
@@ -10742,8 +10735,7 @@ common:
         jsr     AppendSrcPathLastSegmentToDstPath
     ELSE
         ;; Used passed filename for destination (e.g. for Duplicate)
-        ldax    #filename_buf
-        jsr     AppendFilenameToDstPath
+        param_call AppendFilenameToDstPath, filename_buf
     END_IF
 
         ;; Paths are set up - update dialog and populate `src_file_info_params`
@@ -11973,16 +11965,14 @@ DownloadDialogProc := CopyDialogProc
 ;;; Append name at `file_entry_buf` to path at `src_path_buf`
 
 .proc AppendFileEntryToSrcPath
-        ldax    #file_entry_buf
-        jmp     AppendFilenameToSrcPath
+        param_jump AppendFilenameToSrcPath, file_entry_buf
 .endproc ; AppendFileEntryToSrcPath
 
 ;;; ============================================================
 ;;; Append name at `file_entry_buf` to path at `dst_path_buf`
 
 .proc AppendFileEntryToDstPath
-        ldax    #file_entry_buf
-        jmp     AppendFilenameToDstPath
+        param_jump AppendFilenameToDstPath, file_entry_buf
 .endproc ; AppendFileEntryToDstPath
 
 ;;; ============================================================
@@ -12754,8 +12744,7 @@ success:
         jsr     CopyToDstPath
 
         ;; Append new filename
-        ldax    #new_name_buf
-        jsr     AppendFilenameToDstPath
+        param_call AppendFilenameToDstPath, new_name_buf
 
         ;; Did the name change (ignoring case)?
         copy16  #old_name_buf, $06
