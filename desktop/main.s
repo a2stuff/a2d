@@ -10537,38 +10537,25 @@ callbacks_for_copy:
         .addr   CopyFinishDirectory
         ASSERT_TABLE_SIZE callbacks_for_copy, kOpJTAddrsSize
 
-.enum CopyDialogLifecycle
-        open            = 0
-        count           = 1
-        show            = 2
-        close           = 3
-.endenum
-
 ;;; Also used for Download
 .params copy_dialog_params
-phase:  .byte   0
 count:  .addr   0
 a_src:  .addr   src_path_buf
 a_dst:  .addr   dst_path_buf
 .endparams
 
 .proc OpenCopyProgressDialog
-        copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #_CopyDialogEnumerationCallback, operations::operation_enumeration_callback
-        copy16  #_CopyDialogCompleteCallback, operations::operation_complete_callback
-        jmp     CopyDialogProc
+        copy16  #CloseProgressDialog, operations::operation_complete_callback
+        jmp     OpenProgressDialog
 
 .proc _CopyDialogEnumerationCallback
         stax    copy_dialog_params::count
-        copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
-        jmp     CopyDialogProc
+        jmp     UpdateCopyDialogCount
 .endproc ; _CopyDialogEnumerationCallback
-
-.proc _CopyDialogCompleteCallback
-        copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
-        jmp     CopyDialogProc
-.endproc ; _CopyDialogCompleteCallback
 .endproc ; OpenCopyProgressDialog
+
+;;; ============================================================
 
 .proc PrepCallbacksForCopy
         ldy     #kOpJTAddrsSize-1
@@ -10585,21 +10572,14 @@ a_dst:  .addr   dst_path_buf
 ;;; "Download" - shares heavily with Copy
 
 .proc OpenDownloadProgressDialog
-        copy    #CopyDialogLifecycle::open, copy_dialog_params::phase
         copy16  #_DownloadDialogEnumerationCallback, operations::operation_enumeration_callback
-        copy16  #_DownloadDialogCompleteCallback, operations::operation_complete_callback
-        jmp     DownloadDialogProc
+        copy16  #CloseProgressDialog, operations::operation_complete_callback
+        jmp     OpenProgressDialog
 
 .proc _DownloadDialogEnumerationCallback
         stax    copy_dialog_params::count
-        copy    #CopyDialogLifecycle::count, copy_dialog_params::phase
-        jmp     DownloadDialogProc
+        jmp     UpdateDownloadDialogCount
 .endproc ; _DownloadDialogEnumerationCallback
-
-.proc _DownloadDialogCompleteCallback
-        copy    #CopyDialogLifecycle::close, copy_dialog_params::phase
-        jmp     DownloadDialogProc
-.endproc ; _DownloadDialogCompleteCallback
 .endproc ; OpenDownloadProgressDialog
 
 .proc PrepCallbacksForDownload
@@ -10644,7 +10624,6 @@ not_selected:
 
 common:
         sta     use_selection_flag
-        copy    #CopyDialogLifecycle::show, copy_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
 
         ;; If "Copy to RAMCard", make sure there's enough room.
@@ -10802,7 +10781,7 @@ done:   rts
 .proc DecFileCountAndRunCopyDialogProc
         jsr     DecrementOpFileCount
         stax    copy_dialog_params::count
-        jmp     CopyDialogProc
+        jmp     UpdateCopyDialogProgress
 .endproc ; DecFileCountAndRunCopyDialogProc
 
 ;;; ============================================================
@@ -11364,31 +11343,20 @@ callbacks_for_delete:
         .addr   DeleteFinishDirectory
         ASSERT_TABLE_SIZE callbacks_for_delete, kOpJTAddrsSize
 
-.enum DeleteDialogLifecycle
-        open            = 0
-        count           = 1
-        show            = 2
-        close           = 3
-.endenum
-
 .params delete_dialog_params
-phase:  .byte   0
 count:  .word   0
 a_path: .addr   src_path_buf
 .endparams
 
 .proc OpenDeleteProgressDialog
-        copy    #DeleteDialogLifecycle::open, delete_dialog_params::phase
         copy16  #_DeleteDialogConfirmCallback, operations::operation_confirm_callback
         copy16  #_DeleteDialogEnumerationCallback, operations::operation_enumeration_callback
-        jsr     DeleteDialogProc
-        copy16  #DeleteDialogCompleteCallback, operations::operation_complete_callback
-        rts
+        copy16  #CloseProgressDialog, operations::operation_complete_callback
+        jmp     OpenProgressDialog
 
 .proc _DeleteDialogEnumerationCallback
         stax    delete_dialog_params::count
-        copy    #DeleteDialogLifecycle::count, delete_dialog_params::phase
-        jmp     DeleteDialogProc
+        jmp     UpdateDeleteDialogCount
 .endproc ; _DeleteDialogEnumerationCallback
 
 .proc _DeleteDialogConfirmCallback
@@ -11423,21 +11391,15 @@ a_path: .addr   src_path_buf
         rts
 .endproc ; PrepCallbacksForDelete
 
-.proc DeleteDialogCompleteCallback
-        copy    #DeleteDialogLifecycle::close, delete_dialog_params::phase
-        jmp     DeleteDialogProc
-.endproc ; DeleteDialogCompleteCallback
-
 ;;; ============================================================
 ;;; Handle deletion of a selected file.
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
 .proc DeleteProcessSelectedFile
-        copy    #DeleteDialogLifecycle::show, delete_dialog_params::phase
         jsr     CopyPathsFromBufsToSrcAndDst
 
         ;; Path is set up - update dialog and populate `src_file_info_params`
-        jsr     DecFileCountAndRunDeleteDialogProc
+        jsr     DecFileCountAndUpdateDeleteDialogProgress
 
 @retry: jsr     GetSrcFileInfo
         bcc     :+
@@ -11456,7 +11418,7 @@ a_path: .addr   src_path_buf
 is_dir:
         ;; Recurse, and process directory
         jsr     ProcessDir
-        jsr     DeleteDialogProc ; update path display
+        jsr     UpdateDeleteDialogProgress ; update path display
         ;; ST_VOLUME_DIRECTORY excluded because volumes are ejected.
         FALL_THROUGH_TO do_destroy
 
@@ -11520,7 +11482,7 @@ done:   rts
 
 .proc DeleteProcessDirectoryEntry
         jsr     AppendFileEntryToSrcPath
-        jsr     DecFileCountAndRunDeleteDialogProc
+        jsr     DecFileCountAndUpdateDeleteDialogProgress
 
         ;; Called with `src_file_info_params` pre-populated
         ;; Directories will be processed separately
@@ -11539,17 +11501,17 @@ next_file:
 ;;; Delete directory when exiting via traversal
 
 .proc DeleteFinishDirectory
-        jsr     DeleteDialogProc
+        jsr     UpdateDeleteDialogProgress
         jmp     DeleteFileCommon
 .endproc ; DeleteFinishDirectory
 
 ;;; ============================================================
 
-.proc DecFileCountAndRunDeleteDialogProc
+.proc DecFileCountAndUpdateDeleteDialogProgress
         jsr     DecrementOpFileCount
         stax    delete_dialog_params::count
-        jmp     DeleteDialogProc
-.endproc ; DecFileCountAndRunDeleteDialogProc
+        jmp     UpdateDeleteDialogProgress
+.endproc ; DecFileCountAndUpdateDeleteDialogProgress
 
 ;;; ============================================================
 ;;; Most operations start by doing a traversal to just count
@@ -11747,20 +11709,9 @@ map:    .byte   FileEntry::access
 .endproc ; ConvertFileEntryToFileInfo
 
 ;;; ============================================================
+;;; "Copy" progress dialog
 
-.proc CopyDialogProc
-        lda     copy_dialog_params::phase
-
-        ;; --------------------------------------------------
-        cmp     #CopyDialogLifecycle::open
-    IF_EQ
-        copy    #0, has_input_field_flag
-        jmp     OpenProgressDialog
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #CopyDialogLifecycle::count
-    IF_EQ
+.proc UpdateCopyDialogCount
         ldax    copy_dialog_params::count
         stax    file_count
         stax    total_count
@@ -11772,11 +11723,9 @@ map:    .byte   FileEntry::access
         param_call DrawProgressDialogLabel, 0, aux::str_move_moving
       END_IF
         jmp     DrawFileCountWithSuffix
-    END_IF
+.endproc ; UpdateCopyDialogCount
 
-        ;; --------------------------------------------------
-        cmp     #CopyDialogLifecycle::show
-    IF_EQ
+.proc UpdateCopyDialogProgress
         copy16  copy_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
@@ -11791,45 +11740,27 @@ map:    .byte   FileEntry::access
         jsr     DrawDestFilePath
 
         jmp     DrawProgressDialogFilesRemaining
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; CopyDialogLifecycle::close
-        jmp     CloseProgressDialog
-.endproc ; CopyDialogProc
+.endproc ; UpdateCopyDialogProgress
 
 ;;; ============================================================
-;;; "DownLoad" dialog
+;;; "Download" progress dialog
 
-DownloadDialogProc := CopyDialogProc
+UpdateDownloadDialogCount := UpdateCopyDialogCount
+UpdateDownloadDialogProgress := UpdateCopyDialogProgress
 
 ;;; ============================================================
-;;; "Delete File" dialog
+;;; "Delete" progress dialog
 
-.proc DeleteDialogProc
-        lda     delete_dialog_params::phase
-
-        ;; --------------------------------------------------
-        cmp     #DeleteDialogLifecycle::open
-    IF_EQ
-        copy    #0, has_input_field_flag
-        jmp     OpenProgressDialog
-    END_IF
-
-        ;; --------------------------------------------------
-        cmp     #DeleteDialogLifecycle::count
-    IF_EQ
+.proc UpdateDeleteDialogCount
         ldax    delete_dialog_params::count
         stax    total_count
         stax    file_count
         jsr     SetPortForProgressDialog
         param_call DrawProgressDialogLabel, 0, aux::str_delete_count
         jmp     DrawFileCountWithSuffix
-    END_IF
+.endproc ; UpdateDeleteDialogCount
 
-        ;; --------------------------------------------------
-        cmp     #DeleteDialogLifecycle::show
-    IF_EQ
+.proc UpdateDeleteDialogProgress
         copy16  delete_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
@@ -11839,12 +11770,7 @@ DownloadDialogProc := CopyDialogProc
         jsr     DrawTargetFilePath
 
         jmp     DrawProgressDialogFilesRemaining
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; DeleteDialogLifecycle::close
-        jmp     CloseProgressDialog
-.endproc ; DeleteDialogProc
+.endproc ; DeleteDialogShow
 
 ;;; ============================================================
 
