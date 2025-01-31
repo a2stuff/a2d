@@ -6298,6 +6298,8 @@ no_win:
 ;;; Output: `ptr` ($06) points at IconEntry
 
 .proc MarkIconDimmed
+        sta     icon_param      ; Needed for `IconTK::DrawIcon` call below
+
         ptr := $06
         jsr     GetIconEntry
         stax    ptr
