@@ -6139,59 +6139,65 @@ done:   rts
 .endproc ; GetSingleSelectedIcon
 
 ;;; ============================================================
-;;; Open a folder/volume icon
+;;; Open a folder/volume, either by icon or path
+;;; `OpenWindowForIcon`
 ;;; Input: A = icon
+;;; `OpenWindowForPath`
+;;; Input: `src_path_buf` populated
 ;;; Note: stack will be restored via `saved_stack` on failure
 
-.proc OpenWindowForIcon
-        ptr := $06
+.proc OpenWindowImpl
 
-        sta     icon_param
+        ;; --------------------------------------------------
+        ;; A = icon, `src_path_buf` not set
+for_icon:
+        sta     icon_param      ; stash for later
 
         ;; Already an open window for the icon?
         jsr     FindWindowIndexForDirIcon
-        bne     no_linked_win
-
-        ;; --------------------------------------------------
-        ;; There is an existing window associated with icon.
-
-found_win:                      ; X = window id - 1
+    IF_EQ
         inx
         txa
         jmp     ActivateWindow  ; no-op if already active
+    END_IF
 
-        ;; --------------------------------------------------
-        ;; No associated window - check for matching path.
-
-no_linked_win:
-        ;; Compute the path (will be needed anyway).
+        ;; Compute the path, if it fits
         lda     icon_param
         jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
-    IF_NE
+    IF_NOT_ZERO
         jsr     ShowAlert       ; A has error if `GetIconPath` fails
-
-        dec     num_open_windows
         ldx     saved_stack
         txs
         rts
     END_IF
-        param_call CopyToSrcPath, path_buf3
+        param_call CopyToSrcPath, path_buf3 ; set `src_path_buf`
+        jmp     no_win
 
-        ;; Alternate entry point, called by:
-        ;; `OpenWindowForPath` with `icon_param` = `kWindowToDirIconNone`
-        ;; and `src_path_buf` set.
-check_path:
+        ;; --------------------------------------------------
+        ;; `src_path_buf` set by caller
+for_path:
+        jsr     ClearSelection
+        copy    #kWindowToDirIconNone, icon_param
+
+        ;; Already an open window for the path?
         jsr     FindWindowForSrcPath
-        beq     no_win
+        jne     ActivateWindow  ; no-op if already active
 
-        ;; Found a match
-        tax                     ; A = window id
-        dex                     ; 1-based to 0-based
-        bpl     found_win       ; always; wants X = window id - 1
+        ;; Find icon, if it exists
+        param_call FindIconForPath, src_path_buf
+    IF_NOT_ZERO
+        sta     icon_param
+    END_IF
+
+        FALL_THROUGH_TO no_win
 
         ;; --------------------------------------------------
         ;; No window - need to open one.
 
+        ;; `src_path_buf` has path
+        ;; `icon_param` has icon (or `kWindowToDirIconNone`)
+
+        ptr := $06
 no_win:
         ;; Is there a free window?
         lda     num_open_windows
@@ -6212,7 +6218,7 @@ no_win:
         jmp     :-
 
         ;; Map the window to its source icon
-:       lda     icon_param      ; set to `kWindowToDirIconNone` if opening via path
+:       lda     icon_param      ; possibly `kWindowToDirIconNone` if opening via path
         sta     window_to_dir_icon_table,x
         inx                     ; 0-based to 1-based
 
@@ -6236,6 +6242,7 @@ no_win:
         sta     win_view_by_table-1,x
 
         ;; This ensures `ptr` points at IconEntry (real or virtual)
+        ;; and marks/paints the icon (if there is one) as dimmed.
         jsr     _UpdateIcon
 
         ;; Set path (using `ptr`), size, contents, and volume free/used.
@@ -6283,7 +6290,9 @@ no_win:
         copy16  #filename_buf - IconEntry::name, ptr
         rts
 .endproc ; _UpdateIcon
-.endproc ; OpenWindowForIcon
+.endproc ; OpenWindowImpl
+OpenWindowForIcon := OpenWindowImpl::for_icon
+OpenWindowForPath := OpenWindowImpl::for_path
 
 ;;; ============================================================
 ;;; Marks icon as open and repaints it.
@@ -6383,36 +6392,6 @@ ret:    rts
 
 err:    rts
 .endproc ; ShowFileWithPath
-
-;;; ============================================================
-;;; Open a folder/volume icon
-;;; Input: `src_path_buf` should have full path.
-;;;   If a case match for existing window path, it will be activated.
-;;; Note: stack will be restored via `saved_stack` on failure
-;;;
-;;; Set `suppress_error_on_open_flag` to avoid alert.
-
-.proc OpenWindowForPath
-        jsr     ClearSelection
-        copy    #kWindowToDirIconNone, icon_param
-        jsr     OpenWindowForIcon::check_path
-
-        ;; Is there already an icon associated with this window?
-        ldx     active_window_id
-        lda     window_to_dir_icon_table-1,x
-        bpl     ret             ; not `kWindowToDirIconNone`
-
-        ;; Try to find a matching volume or folder icon.
-        param_call FindIconForPath, src_path_buf
-        beq     ret
-
-        ;; Associate window with icon, and mark it open.
-        ldx     active_window_id
-        sta     window_to_dir_icon_table-1,x
-        jsr     MarkIconDimmed
-
-ret:    rts
-.endproc ; OpenWindowForPath
 
 ;;; ============================================================
 ;;; Find an icon for a given path. May be volume or in any window.
