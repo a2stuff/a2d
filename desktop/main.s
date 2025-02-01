@@ -3617,7 +3617,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         lda     cached_window_entry_list,x
         jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
     IF_EQ
-        copy    #$FF, window_to_dir_icon_table,x ; $FF = dir icon freed
+        copy    #kWindowToDirIconNone, window_to_dir_icon_table,x
     END_IF
 
         inc     index
@@ -4566,7 +4566,7 @@ finish: rts
         bne     :+
         ldx     #0
 :       lda     window_to_dir_icon_table,x
-        bne     found           ; 0 = window free
+        bne     found           ; not `kWindowToDirIconFree`
         inx
         bne     @loop           ; always
 
@@ -4580,7 +4580,7 @@ reverse:
         bpl     :+
         ldx     #kMaxDeskTopWindows-1
 :       lda     window_to_dir_icon_table,x
-        beq     @loop           ; 0 = window free
+        beq     @loop           ; is `kWindowToDirIconFree`
         FALL_THROUGH_TO found
 
 found:  inx
@@ -5977,7 +5977,7 @@ update: lda     window_id
         copy    #0, icon
         ldx     cached_window_id
         lda     window_to_dir_icon_table-1,x
-        bmi     :+              ; $FF = dir icon freed
+        bmi     :+              ; is `kWindowToDirIconNone`
         sta     icon
 :
 
@@ -5998,9 +5998,11 @@ update: lda     window_id
         jsr     RemoveWindowFileRecords
 
         ldx     cached_window_id
+        .assert kWindowToDirIconFree = 0, error, "enum mismatch"
+        .assert kViewByIcon = 0, error, "enum mismatch"
         lda     #0
-        sta     window_to_dir_icon_table-1,x ; 0 = window free
-        sta     win_view_by_table-1,x
+        sta     window_to_dir_icon_table-1,x ; `kWindowToDirIconFree`
+        sta     win_view_by_table-1,x        ; `kViewByIcon`
 
         ;; Was it the active window?
         lda     cached_window_id
@@ -6051,7 +6053,7 @@ loop:
         window_id := *+1
         ldx     #SELF_MODIFIED_BYTE
         lda     window_to_dir_icon_table-1,x
-        beq     next
+        beq     next            ; is `kWindowToDirIconFree`
 
         ;; Get and copy its path somewhere useful
         txa
@@ -6176,7 +6178,7 @@ no_linked_win:
         param_call CopyToSrcPath, path_buf3
 
         ;; Alternate entry point, called by:
-        ;; `OpenWindowForPath` with `icon_param` = $FF
+        ;; `OpenWindowForPath` with `icon_param` = `kWindowToDirIconNone`
         ;; and `src_path_buf` set.
 check_path:
         jsr     FindWindowForSrcPath
@@ -6185,7 +6187,7 @@ check_path:
         ;; Found a match - associate the window.
         tax                     ; A = window id
         dex                     ; 1-based to 0-based
-        lda     icon_param      ; set to $FF if opening via path
+        lda     icon_param      ; set to `kWindowToDirIconNone` if opening via path
         bmi     :+
         sta     window_to_dir_icon_table,x
         txa                     ; stash window id - 1
@@ -6214,12 +6216,12 @@ no_win:
         ;; Search window-icon map to find an unused window.
 :       ldx     #0
 :       lda     window_to_dir_icon_table,x
-        beq     :+              ; 0 = window free
+        beq     :+              ; is `kWindowToDirIconFree`
         inx
         jmp     :-
 
         ;; Map the window to its source icon
-:       lda     icon_param      ; set to $FF if opening via path
+:       lda     icon_param      ; set to `kWindowToDirIconNone` if opening via path
         sta     window_to_dir_icon_table,x
         inx                     ; 0-based to 1-based
 
@@ -6263,7 +6265,7 @@ no_win:
 ;;; * Otherwise:
 ;;;   Points `ptr` at a virtual IconEntry, to allow referencing the icon name.
 .proc _UpdateIcon
-        lda     icon_param      ; set to $FF if opening via path
+        lda     icon_param      ; set to `kWindowToDirIconNone` if opening via path
         jpl     MarkIconDimmed
 
         ;; Find last '/'
@@ -6349,9 +6351,7 @@ no_win:
         jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
     IF_EQ
         ;; If found, remove from the table.
-        ;; Note: 0 not $FF because we know the window doesn't exist
-        ;; any more.
-        copy    #0, window_to_dir_icon_table,x
+        copy    #kWindowToDirIconFree, window_to_dir_icon_table,x
     END_IF
 
         ;; Update the icon and redraw
@@ -6403,13 +6403,13 @@ err:    rts
 
 .proc OpenWindowForPath
         jsr     ClearSelection
-        copy    #$FF, icon_param
+        copy    #kWindowToDirIconNone, icon_param
         jsr     OpenWindowForIcon::check_path
 
         ;; Is there already an icon associated with this window?
         ldx     active_window_id
         lda     window_to_dir_icon_table-1,x
-        bpl     ret             ; yes, so skip
+        bpl     ret             ; not `kWindowToDirIconNone`
 
         ;; Try to find a matching volume or folder icon.
         param_call FindIconForPath, src_path_buf
@@ -6820,7 +6820,7 @@ loop:   inc     window_num
 check_window:
         tax
         lda     window_to_dir_icon_table-1,x
-        beq     loop
+        beq     loop            ; is `kWindowToDirIconFree`
 
         lda     window_num
         jsr     GetWindowPath
@@ -7130,7 +7130,7 @@ finish: copy16  record_ptr, filerecords_free_start
         ldy     cached_window_id
         dey
         bmi     :+
-        lda     #0
+        lda     #kWindowToDirIconFree
         sta     window_to_dir_icon_table,y
         sta     cached_window_id
 
@@ -7419,7 +7419,7 @@ size:   .word   0               ; size of a window's list
         ;; --------------------------------------------------
         ;; Update used/free table
 
-        lda     icon_param      ; set to $FF if opening via path
+        lda     icon_param      ; set to `kWindowToDirIconNone` if opening via path
     IF_NC
         ;; If a windowed icon, source from that
         jsr     GetIconWindow
@@ -13102,7 +13102,7 @@ list:   .word   0               ; 0 items in list
 wloop:  txa
         pha
         ldy     window_to_dir_icon_table-1,x ; X = 1-based id, so -1 to index
-        beq     wnext           ; not in use
+        beq     wnext           ; is `kWindowToDirIconFree`
         jsr     GetWindowPath
         jsr     _MaybeUpdateTargetPath
 wnext:  pla

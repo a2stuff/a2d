@@ -917,11 +917,11 @@ fixed:  .byte   0
 active_window_id:
         .byte   0
 
-;;; $00 = window not in use
-;;; $FF = window in use, but dir (vol/folder) icon deleted
+kWindowToDirIconFree = $00      ; window not in use
+kWindowToDirIconNone = $FF      ; no icon
 ;;; Otherwise, dir (vol/folder) icon associated with window.
 window_to_dir_icon_table:
-        .res    kMaxDeskTopWindows, 0
+        .res    kMaxDeskTopWindows, kWindowToDirIconFree
 
 num_open_windows:
         .byte   0
