@@ -6184,19 +6184,10 @@ check_path:
         jsr     FindWindowForSrcPath
         beq     no_win
 
-        ;; Found a match - associate the window.
+        ;; Found a match
         tax                     ; A = window id
         dex                     ; 1-based to 0-based
-        lda     icon_param      ; set to `kWindowToDirIconNone` if opening via path
-        bmi     :+
-        sta     window_to_dir_icon_table,x
-        txa                     ; stash window id - 1
-        pha
-        lda     icon_param
-        jsr     MarkIconDimmed
-        pla                     ; restore window id - 1
-        tax
-:       jmp     found_win       ; wants X = window id - 1
+        bpl     found_win       ; always; wants X = window id - 1
 
         ;; --------------------------------------------------
         ;; No window - need to open one.
