@@ -2241,15 +2241,13 @@ secondary:
         ptr := $6
         path := INVOKER_PREFIX
 
-        DEFINE_GET_PREFIX_PARAMS get_prefix_params, path
-
 str_desk_acc:
         PASCAL_STRING .concat(kFilenameDADir, "/")
 
 start:  jsr     SetCursorWatch  ; before loading DA
 
-        ;; Get current prefix
-        MLI_CALL GET_PREFIX, get_prefix_params
+        ;; Append DA directory name
+        param_call CopyToSrcPath, str_desk_acc
 
         ;; Find DA name
         lda     menu_click_params::item_num           ; menu item index (1-based)
@@ -2260,17 +2258,8 @@ start:  jsr     SetCursorWatch  ; before loading DA
         jsr     Multiply_16_8_16
         addax   #desk_acc_names, ptr
 
-        ;; Append DA directory name
-        ldx     path
-        ldy     #0
-:       inx
-        iny
-        lda     str_desk_acc,y
-        sta     path,x
-        cpy     str_desk_acc
-        bne     :-
-
         ;; Append name to path
+        ldx     path
         ldy     #0
         lda     ($06),y
         sta     len
