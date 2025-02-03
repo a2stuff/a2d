@@ -377,6 +377,7 @@ jump_table:
         .addr   SaveScreenRectImpl  ; $56 SaveScreenRect
         .addr   RestoreScreenRectImpl ; $57 RestoreScreenRect
         .addr   InflateRectImpl     ; $58 InflateRect
+        .addr   UnionRectsImpl      ; $59 UnionRects
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -504,6 +505,7 @@ param_lengths:
         PARAM_DEFN  8, $92, 1                ; $56 SaveScreenRect
         PARAM_DEFN  8, $92, 1                ; $57 RestoreScreenRect
         PARAM_DEFN  6, $82, 0                ; $58 InflateRect
+        PARAM_DEFN  4, $82, 0                ; $59 UnionRectsImpl
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -10647,6 +10649,57 @@ ydelta     .word
 
         rts
 .endproc ; InflateRectImpl
+
+;;; ============================================================
+
+.proc UnionRectsImpl
+        PARAM_BLOCK, $82
+rect1_ptr  .addr
+rect2_ptr  .addr
+        END_PARAM_BLOCK
+
+        ldy     #0
+        jsr     do_pair
+        ldy     #2
+        FALL_THROUGH_TO do_pair
+
+        ;; Process a pair (e.g. x1 and x2, or y1 and y2)
+do_pair:
+        ;; left or top
+        jsr     compare
+        bpl     :+
+        jsr     assign
+:       iny
+        iny
+        iny
+
+        ;; right or bottom
+        jsr     compare
+        bmi     :+
+        jsr     assign
+:
+        rts
+
+compare:
+        lda     (rect1_ptr),y
+        cmp     (rect2_ptr),y
+        iny
+        lda     (rect1_ptr),y
+        sbc     (rect2_ptr),y
+        bvc     :+              ; signed compare
+        eor     #$80
+:       rts
+
+assign:
+        dey
+        lda     (rect1_ptr),y
+        sta     (rect2_ptr),y
+        iny
+        lda     (rect1_ptr),y
+        sta     (rect2_ptr),y
+        rts
+
+.endproc ; UnionRectsImpl
 
 ;;; ============================================================
 

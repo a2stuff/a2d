@@ -1696,27 +1696,16 @@ stash_rename_rect:
         COPY_STRUCT MGTK::Rect, bitmap_rect, bounding_rect
 
         ;; Union of rectangles (expand `bounding_rect` to encompass `label_rect`)
-        scmp16  label_rect::x1, bounding_rect::x1
-    IF_NEG
-        copy16  label_rect::x1, bounding_rect::x1
-    END_IF
-        scmp16  label_rect::y1, bounding_rect::y1
-    IF_NEG
-        copy16  label_rect::y1, bounding_rect::y1
-    END_IF
-
-        scmp16  bounding_rect::x2, label_rect::x2
-    IF_NEG
-        copy16  label_rect::x2, bounding_rect::x2
-    END_IF
-        scmp16  bounding_rect::y2, label_rect::y2
-    IF_NEG
-        copy16  label_rect::y2, bounding_rect::y2
-    END_IF
+        MGTK_CALL MGTK::UnionRects, unionrects_label_bounding
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 .endproc ; CalcIconBoundingRect
+
+.params unionrects_label_bounding
+        .addr   label_rect
+        .addr   bounding_rect
+.endparams
 
 kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 

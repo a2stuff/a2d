@@ -674,11 +674,22 @@ addr:   .addr   0
 ;;; Used by DeskTop to compute bounding box for icons
         DEFINE_RECT iconbb_rect, 0, 0, 0, 0
 
-;;; Used by DeskTop to pad `iconbb_rect`
+;;; Used by DeskTop to pad/expand `iconbb_rect`
 .params bbox_pad_iconbb_rect
         .addr   iconbb_rect
         .word   kIconBBoxPaddingX, kIconBBoxPaddingY
 .endparams
+.params unionrects_tmp_iconbb
+        .addr   tmp_rect
+        .addr   iconbb_rect
+.endparams
+
+;;; Used by DeskTop to expand `iconbb_rect` in `ScrollManager`
+.params unionrects_viewport_iconbb
+        .addr   window_grafport::maprect
+        .addr   iconbb_rect
+.endparams
+
 
 ;;; ============================================================
 ;;; Alerts

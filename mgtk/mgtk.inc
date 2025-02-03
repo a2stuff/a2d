@@ -551,6 +551,10 @@ InflateRect           = $58
 ;;; .word       xdelta
 ;;; .word       ydelta
 
+UnionRects            = $59
+;;; .addr       rect1           Address of MGTK::Rect
+;;; .addr       rect2           Address of MGTK::Rect
+
 ;;; ============================================================
 ;;; Graphics Primitives Constants
 

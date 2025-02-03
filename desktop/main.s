@@ -4695,11 +4695,8 @@ _Preamble:
 
         ;; Make `ubox` bound both viewport and icons; needed to ensure
         ;; offset cases are handled.
+        MGTK_CALL MGTK::UnionRects, unionrects_viewport_iconbb
         COPY_STRUCT MGTK::Rect, iconbb_rect, ubox
-        copy16  #viewport, $06
-        copy16  #ubox, $08
-        jsr     UnionRects
-
         rts
 
 ;;; --------------------------------------------------
@@ -5024,57 +5021,6 @@ ScrollTrackVThumb := ScrollManager::TrackVThumb
 ;;; both horizontal and vertical scrollbars, based on the window's
 ;;; viewport and contents.
 ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
-
-;;; ============================================================
-
-;;; Inputs: $06 = `rect1_ptr`, $08 = `rect2_ptr`
-;;; Output: rect2 grown to encompass rect1; $06/$08 modified
-.proc UnionRects
-        rect1_ptr := $06
-        rect2_ptr := $08
-
-        ldy     #0
-        jsr     do_pair
-        ldy     #2
-        FALL_THROUGH_TO do_pair
-
-        ;; Process a pair (e.g. x1 and x2, or y1 and y2)
-do_pair:
-        ;; left or top
-        jsr     compare
-        bpl     :+
-        jsr     assign
-:       iny
-        iny
-        iny
-
-        ;; right or bottom
-        jsr     compare
-        bmi     :+
-        jsr     assign
-:
-        rts
-
-compare:
-        lda     (rect1_ptr),y
-        cmp     (rect2_ptr),y
-        iny
-        lda     (rect1_ptr),y
-        sbc     (rect2_ptr),y
-        bvc     :+              ; signed compare
-        eor     #$80
-:       rts
-
-assign:
-        dey
-        lda     (rect1_ptr),y
-        sta     (rect2_ptr),y
-        iny
-        lda     (rect1_ptr),y
-        sta     (rect2_ptr),y
-        rts
-
-.endproc ; UnionRects
 
 ;;; ============================================================
 
@@ -8226,22 +8172,14 @@ more:   lda     cached_window_entry_list,x
         sub16   tmp_rect::y2, #kMaxIconTotalHeight, tmp_rect::y1
     END_IF
 
-        ;; First icon (index 0) - just use its coordinates as min/max
         lda     icon_num
-        bne     compare
-
+    IF_ZERO
+        ;; First icon (index 0) - just use its coordinates as min/max
         COPY_STRUCT MGTK::Rect, tmp_rect, iconbb_rect
-        jmp     next
-
-        ;; --------------------------------------------------
-        ;; Compare X coords
-
-compare:
-        copy16  #tmp_rect, $06
-        copy16  #iconbb_rect, $08
-        jsr     UnionRects
-
-        ;; --------------------------------------------------
+    ELSE
+        ;; Expand bounding rect to encompass icon's rect
+        MGTK_CALL MGTK::UnionRects, unionrects_tmp_iconbb
+    END_IF
 
 next:   inc     icon_num
         jmp     check_icon

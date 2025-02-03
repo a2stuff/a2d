@@ -1124,7 +1124,7 @@ Rect        rect
 This must only be used following a `SaveScreenRect` call and must be
 passed the same rectangle dimensions. No error checking is done.
 
-#### InflateRect ($57)
+#### InflateRect ($58)
 Expand the referenced rectangle by `xdelta` and `ydelta`, which can be negative.
 
 Parameters:
@@ -1132,6 +1132,15 @@ Parameters:
 .addr       rect            Address of MGTK::Rect
 .word       xdelta          pixels
 .word       ydelta          pixels
+```
+
+#### UnionRects ($59)
+Expand the second rectangle to encompass the first rectangle.
+
+Parameters:
+```
+.addr       rect1           Address of MGTK::Rect. No modified
+.addr       rect2           Address of MGTK::Rect. Expanded if needed.
 ```
 
 # Creating Applications and DeskTop Desk Accessories
