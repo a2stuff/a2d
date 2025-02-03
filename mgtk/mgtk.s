@@ -5663,6 +5663,11 @@ set_x:  stax    current_penloc_x
         rts
 .endproc ; SetPenloc
 
+.proc SetFillModeXOR
+        lda     #MGTK::penXOR
+        FALL_THROUGH_TO SetFillMode
+.endproc ; SetFillModeXOR
+
         ;; Set fill mode to A
 .proc SetFillMode
         sta     current_penmode
@@ -6037,8 +6042,7 @@ loop:   lda     curmenu::x_min,x
         dex
         bpl     loop
 
-        lda     #MGTK::penXOR
-        jsr     SetFillMode
+        jsr     SetFillModeXOR
         MGTK_CALL MGTK::PaintRect, hilite_menu_rect
         rts
 .endproc ; HiliteMenu
@@ -6676,6 +6680,12 @@ last_cursor_pos:
         rts
 .endproc ; SavebehindGetVidaddr
 
+;;; ============================================================
+
+.proc SaveScreenRectImpl
+        jsr     SetUpRectSavebehind
+        FALL_THROUGH_TO DoSavebehind
+.endproc ; SaveScreenRectImpl
 
 .proc DoSavebehind
 loop:   jsr     SavebehindGetVidaddr
@@ -6708,6 +6718,11 @@ row:    ldy     savebehind_mapwidth
         inc     savebehind_buf_addr+1
 :       rts
 .endproc ; SavebehindNextLine
+
+.proc RestoreScreenRectImpl
+        jsr     SetUpRectSavebehind
+        jmp     RestoreSavebehind
+.endproc ; RestoreScreenRectImpl
 
 .proc RestoreMenuSavebehind
         jsr     SetUpMenuSavebehind
@@ -6903,8 +6918,7 @@ ep2:    jsr     SetFillMode
         MGTK_CALL MGTK::PaintRect, menu_item_rect
         MGTK_CALL MGTK::SetPattern, standard_port::pattern
 
-        lda     #MGTK::penXOR
-        jmp     SetFillMode
+        jmp     SetFillModeXOR
 .endproc ; DimMenuitem
 
 .proc DrawFiller
@@ -6953,8 +6967,7 @@ hmrts:  rts
         sty     menu_fill_rect+MGTK::Rect::y2
         jsr     HideCursorImpl
 
-        lda     #MGTK::penXOR
-        jsr     SetFillMode
+        jsr     SetFillModeXOR
         MGTK_CALL MGTK::PaintRect, menu_fill_rect
         jmp     ShowCursorImpl
 .endproc ; HiliteMenuItem
@@ -7561,8 +7574,8 @@ stripes_pattern_alt := *+1
         copy16  winrect::y2, bottom
 
         lda     winrect::y1
-        and     #1
-        beq     :+
+        ror
+        bcc     :+
         MGTK_CALL MGTK::SetPattern, stripes_pattern
         rts
 
@@ -7574,7 +7587,7 @@ stripes_pattern_alt := *+1
 .proc EraseWinframe
         lda     #MGTK::penOR
         ldx     #0
-        beq     :+
+        beq     :+              ; always
 .endproc ; EraseWinframe
 
 .proc DrawWinframe
@@ -8325,8 +8338,7 @@ in_close_box:  .byte   0
         lda     #$80
 toggle: sta     in_close_box
 
-        lda     #MGTK::penXOR
-        jsr     SetFillMode
+        jsr     SetFillModeXOR
 
         jsr     HideCursorImpl
         MGTK_CALL MGTK::PaintRect, winrect
@@ -8417,8 +8429,7 @@ drag_or_grow:
 :       jsr     HideCursorSaveParams
         jsr     WinframeToSetPort
 
-        lda     #MGTK::penXOR
-        jsr     SetFillMode
+        jsr     SetFillModeXOR
         MGTK_CALL MGTK::SetPattern, checkerboard_pattern
 
 loop:   jsr     GetWindow
@@ -9365,8 +9376,7 @@ got_ctl:lda     params::which_ctl
         jsr     SaveParamsAndStack
         jsr     SetDesktopPort
 
-        lda     #MGTK::penXOR
-        jsr     SetFillMode
+        jsr     SetFillModeXOR
         MGTK_CALL MGTK::SetPattern, light_speckles_pattern
 
         jsr     HideCursorImpl
@@ -10591,25 +10601,10 @@ rect       .tag MGTK::Rect
 .proc FlashMenuBarImpl
         jsr     SaveParamsAndStack
         jsr     SetStandardPort
-        lda     #MGTK::penXOR
-        jsr     SetFillMode
+        jsr     SetFillModeXOR
         MGTK_CALL MGTK::PaintRect, menu_bar_rect
         jmp     RestoreParamsActivePort
 .endproc ; FlashMenuBarImpl
-
-;;; ============================================================
-
-.proc SaveScreenRectImpl
-        jsr     SetUpRectSavebehind
-        jmp     DoSavebehind
-.endproc ; SaveScreenRectImpl
-
-;;; ============================================================
-
-.proc RestoreScreenRectImpl
-        jsr     SetUpRectSavebehind
-        jmp     RestoreSavebehind
-.endproc ; RestoreScreenRectImpl
 
 ;;; ============================================================
 
