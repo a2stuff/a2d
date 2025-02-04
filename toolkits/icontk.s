@@ -172,16 +172,6 @@ white_pattern:
         .byte   %11111111
         .byte   %11111111
 
-checkerboard_pattern:
-        .byte   %01010101
-        .byte   %10101010
-        .byte   %01010101
-        .byte   %10101010
-        .byte   %01010101
-        .byte   %10101010
-        .byte   %01010101
-        .byte   %10101010
-
 dark_pattern:
         .byte   %00010001
         .byte   %01000100
@@ -255,8 +245,34 @@ which_part:     .byte   0
 window_id:      .byte   0       ; For FindControlEx
 .endparams
 
-;;; GrafPort used to draw icon outlines during drag
-drag_outline_grafport:  .tag    MGTK::GrafPort
+;;; GrafPort used to draw icon outlines during drag. Set up with the
+;;; correct pen and pattern. Does not include the menu bar area.
+.params drag_outline_grafport
+viewloc:        .word   0, kMenuBarHeight
+mapbits:        .addr   MGTK::screen_mapbits
+mapwidth:       .byte   MGTK::screen_mapwidth
+reserved:       .byte   0
+maprect:        .word   0, kMenuBarHeight, kScreenWidth-1, kScreenHeight-1
+pattern:        .byte   %01010101
+                .byte   %10101010
+                .byte   %01010101
+                .byte   %10101010
+                .byte   %01010101
+                .byte   %10101010
+                .byte   %01010101
+                .byte   %10101010
+colormasks:     .byte   MGTK::colormask_and, MGTK::colormask_or
+penloc:         .word   0, 0
+penwidth:       .byte   1
+penheight:      .byte   1
+penmode:        .byte   MGTK::penXOR
+textback:       .byte   MGTK::textbg_black
+textfont:       .addr   0
+        REF_GRAFPORT_MEMBERS
+.endparams
+        .assert .sizeof(drag_outline_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
+desktop_bounds := drag_outline_grafport::maprect
+
 
 .params getwinport_params
 window_id:      .byte   0
@@ -707,17 +723,6 @@ is_drag:
         jsr     GetIconWin
         sta     source_window_id
 
-        ;; Prepare grafports
-        MGTK_CALL MGTK::InitPort, icon_grafport
-        MGTK_CALL MGTK::InitPort, drag_outline_grafport
-        MGTK_CALL MGTK::SetPort, drag_outline_grafport
-        MGTK_CALL MGTK::SetPattern, checkerboard_pattern
-        MGTK_CALL MGTK::SetPenMode, penXOR
-
-        ;; Since SetZP1 is used, ask MGTK to update the GrafPort.
-        port_ptr := $06
-        MGTK_CALL MGTK::GetPort, port_ptr
-
         ;; --------------------------------------------------
         ;; Build drag polygon
 
@@ -1092,21 +1097,19 @@ done:   rts
 .endproc ; _ValidateTargetAndHighlight
 
 .proc _XDrawOutline
-        MGTK_CALL MGTK::SetPort, drag_outline_grafport
         copy16  polybuf_addr, addr
+        MGTK_CALL MGTK::SetPort, drag_outline_grafport
         MGTK_CALL MGTK::FramePoly, SELF_MODIFIED, addr
         rts
 .endproc ; _XDrawOutline
 
 .proc _HighlightIcon
-        MGTK_CALL MGTK::SetPort, icon_grafport
         ITK_CALL IconTK::HighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
 .endproc ; _HighlightIcon
 
 .proc _UnhighlightIcon
-        MGTK_CALL MGTK::SetPort, icon_grafport
         ITK_CALL IconTK::UnhighlightIcon, highlight_icon_id
         ITK_CALL IconTK::DrawIcon, highlight_icon_id
         rts
@@ -1389,6 +1392,8 @@ clip_dy:
 ;;; * Does not erase background
 
 .proc DrawIconImpl
+        jsr     InitSetIconPort
+
         lda     #$80            ; `clip_icons_flag`
         FALL_THROUGH_TO DrawIconCommon
 .endproc ; DrawIconImpl
@@ -1936,8 +1941,7 @@ rect:   .tag    MGTK::Rect
         stax    ptr
         jsr     CalcIconPoly
 
-        MGTK_CALL MGTK::InitPort, icon_grafport
-        MGTK_CALL MGTK::SetPort, icon_grafport
+        jsr     InitSetIconPort
 
         ldy     #IconEntry::win_flags
         lda     (ptr),y
@@ -1948,7 +1952,7 @@ rect:   .tag    MGTK::Rect
     IF_ZERO
         jsr     SetPortForVolIcon
         MGTK_CALL MGTK::GetDeskPat, addr
-        MGTK_CALL MGTK::SetPattern, 0, addr
+        MGTK_CALL MGTK::SetPattern, SELF_MODIFIED, addr
     ELSE
         jsr     SetPortForWinIcon
         RTS_IF_NE               ; obscured!
@@ -2075,13 +2079,11 @@ reserved:       .byte   0
 
 ;;; ============================================================
 
-        DEFINE_RECT screen_bounds, 0, kMenuBarHeight, kScreenWidth-1, kScreenHeight-1
-
 .proc SetPortForVolIcon
         jsr     CalcIconPoly    ; also populates `bounding_rect` (needed in erase case)
 
         ;; Will need to clip to screen bounds
-        COPY_STRUCT MGTK::Rect, screen_bounds, portbits::maprect
+        COPY_STRUCT MGTK::Rect, desktop_bounds, portbits::maprect
 
         jmp     DuplicateClipStructsAndSetPortBits
 .endproc ; SetPortForVolIcon
@@ -2508,6 +2510,14 @@ free_icon_map:
         .byte   $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FF
         .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
         .assert * - free_icon_map = (::kMaxIconCount + 7)/8, error, "table size"
+
+;;; ============================================================
+
+.proc InitSetIconPort
+        MGTK_CALL MGTK::InitPort, icon_grafport
+        MGTK_CALL MGTK::SetPort, icon_grafport
+        rts
+.endproc ; InitSetIconPort
 
 ;;; ============================================================
 ;;; Pushes two words from $6/$8 to stack; preserves Y only
