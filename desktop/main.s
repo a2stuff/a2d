@@ -7808,6 +7808,7 @@ assign_height:
         jsr     ComputeIconsBBox
 
         winfo_ptr := $06
+        tmpw := $08
 
         ;; No-op if window is empty
         lda     cached_window_entry_count
@@ -7829,8 +7830,6 @@ assign_height:
         jsr     CachedIconsWindowToScreen
 
 ret:    rts
-
-tmpw:   .word   0
 .endproc ; AdjustViewportForNewIcons
 
 

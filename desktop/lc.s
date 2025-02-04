@@ -137,6 +137,7 @@ params:  .res    3
 
 .proc MaybeOffsetUpdatePort
         port_ptr := $06
+        tmpw := $08
 
         jsr     BankInAux
         MGTKEntry := aux::MGTKEntry
@@ -166,8 +167,6 @@ skip:   clc
 
 fail:   sec
         jmp     BankInMain
-
-tmpw:   .word   0
 .endproc ; MaybeOffsetUpdatePort
 
 

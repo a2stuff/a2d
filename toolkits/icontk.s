@@ -1353,9 +1353,9 @@ IconInRectImpl := IconInRectImplImpl::start
 
 ;;; ============================================================
 
-;;; Used by `DrawIcon` and `EraseIcon`. Expected to be 0 on first call
+;;; Used by `DrawIcon` and `EraseIcon`. Has bit7 = 0 on first call
 ;;; to `CalcWindowIntersections` to signal the start of a clipping
-;;; sequence. Set to 1 if a subsequent call is needed, and back to 0
+;;; sequence. Set bit7 if a subsequent call is needed, and clear
 ;;; once all drawing is complete.
 more_drawing_needed_flag:
         .byte   0
@@ -1472,8 +1472,8 @@ clip_dy:
         jsr     _DoPaint
         jsr     OffsetPortAndIcon
 
-        lda     more_drawing_needed_flag
-        bne     :-
+        bit     more_drawing_needed_flag
+        bmi     :-
 
 ret:    rts
 
@@ -1966,8 +1966,8 @@ rect:   .tag    MGTK::Rect
 :       jsr     CalcWindowIntersections
         bcs     :+              ; nothing remaining to draw
         MGTK_CALL MGTK::PaintPoly, poly
-        lda     more_drawing_needed_flag
-        bne     :-
+        bit     more_drawing_needed_flag
+        bmi     :-
 :
     END_IF
         FALL_THROUGH_TO _RedrawIconsAfterErase
@@ -2159,7 +2159,7 @@ empty:  return #$FF
 ;;; ============================================================
 
 ;;; Returns C=0 if a non-degenerate clipping rect is returned, so a
-;;; paint call is needed, and `more_drawing_needed_flag` is non-zero
+;;; paint call is needed, and `more_drawing_needed_flag` bit7 = 1
 ;;; if another call to this proc is needed after the paint. Returns
 ;;; C=1 if no clipping rect remains, so no drawing is needed.
 .proc CalcWindowIntersectionsImpl
@@ -2198,8 +2198,8 @@ stash_r: .word   0
         cr_r := portbits::maprect::x2
         cr_b := portbits::maprect::y2
 
-start:  lda     more_drawing_needed_flag
-        beq     reclip
+start:  bit     more_drawing_needed_flag
+        bpl     reclip
 
         ;; --------------------------------------------------
         ;; Re-entry - pick up where we left off
@@ -2273,10 +2273,7 @@ set_bits:
 :       MGTK_CALL MGTK::SetPortBits, portbits
         ;; if (cr_r < clip_bounds::x2) more drawing is needed
         cmp16   cr_r, clip_bounds::x2
-        asl                     ; C=1 if more drawing needed
-        lda     #0
-        rol                     ; A=1 if more drawing needed
-        sta     more_drawing_needed_flag
+        sta     more_drawing_needed_flag ; update bit7
         clc                     ; C=0 means clipping rect is valid
         rts
 
@@ -2396,7 +2393,8 @@ case2:
         jmp     reclip
 
         ;; Case 5 - done!
-:       copy    #0, more_drawing_needed_flag
+:       clc
+        ror     more_drawing_needed_flag ; clear bit7
         sec                     ; C=1 means no clipping rect remains
         rts
 .endproc ; CalcWindowIntersectionsImpl
