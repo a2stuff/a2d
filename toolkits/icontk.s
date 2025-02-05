@@ -2339,61 +2339,60 @@ do_pt:  lda     pt_num
         ;; if (cr_r > win_r)
         ;; . cr_r = win_r
         scmp16  win_r, cr_r
-        bpl     case789
-
+    IF_NEG
         copy16  win_r, cr_r
         jmp     vert
+    END_IF
 
         ;; Cases 7/8/9 (and done)
         ;; if (win_l > cr_l)
         ;; . cr_r = win_l - 1
-case789:
         scmp16  cr_l, win_l
-        bpl     vert
-
+    IF_NEG
         sub16   win_l, #1, cr_r
         jmp     reclip
+    END_IF
 
+vert:
         ;; Cases 3/6 (and done)
         ;; if (win_t > cr_t)
         ;; . cr_b = win_t - 1
-vert:   scmp16  cr_t, win_t
-        bpl     :+
-
+        scmp16  cr_t, win_t
+    IF_NEG
         sub16   win_t, #1, cr_b
         jmp     reclip
+    END_IF
 
         ;; Cases 1/4 (and done)
         ;; if (win_b < cr_b)
         ;; . cr_t = win_b + 1
         ;; . vy   = win_b + 1
-:       scmp16  win_b, cr_b
-        bpl     case2
-
+        scmp16  win_b, cr_b
+    IF_NEG
         ldxy    win_b
         inxy
         stxy    cr_t
         stxy    vy
         jmp     reclip
+    END_IF
 
         ;; Case 2
         ;; if (win_r < stash_r)
         ;; . cr_l = win_r + 1
         ;; . vx   = win_r + 1
         ;; . cr_r = stash_r + 2 (workaround for https://github.com/a2stuff/a2d/issues/153)
-case2:
         scmp16  stash_r, win_r
-        bmi     :+
-
+    IF_POS
         ldxy    win_r
         inxy
         stxy    cr_l
         stxy    vx
         add16   stash_r, #2, cr_r
         jmp     reclip
+    END_IF
 
         ;; Case 5 - done!
-:       clc
+        clc
         ror     more_drawing_needed_flag ; clear bit7
         sec                     ; C=1 means no clipping rect remains
         rts
