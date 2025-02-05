@@ -2335,15 +2335,6 @@ do_pt:  lda     pt_num
 
         copy16  cr_r, stash_r   ; in case this turns out to be case 2
 
-        ;; Cases 1/2/3 (and continue below)
-        ;; if (cr_r > win_r)
-        ;; . cr_r = win_r
-        scmp16  win_r, cr_r
-    IF_NEG
-        copy16  win_r, cr_r
-        jmp     vert
-    END_IF
-
         ;; Cases 7/8/9 (and done)
         ;; if (win_l > cr_l)
         ;; . cr_r = win_l - 1
@@ -2353,7 +2344,14 @@ do_pt:  lda     pt_num
         jmp     reclip
     END_IF
 
-vert:
+        ;; Cases 1/2/3 (and continue below)
+        ;; if (cr_r > win_r)
+        ;; . cr_r = win_r
+        scmp16  win_r, cr_r
+    IF_NEG
+        copy16  win_r, cr_r
+    END_IF
+
         ;; Cases 3/6 (and done)
         ;; if (win_t > cr_t)
         ;; . cr_b = win_t - 1
