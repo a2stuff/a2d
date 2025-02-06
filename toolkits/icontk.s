@@ -2220,8 +2220,8 @@ reentry:
         ;; vy = cr_t
         copy16  cr_t, vy
 
-        ;; Are we starting off with a degenerate width? If so
-        ;; we are completely done with this icon.
+        ;; Are we (re)starting with a degenerate width? If so we are
+        ;; completely done with this icon.
         scmp16  cr_r, cr_l
     IF_NEG
         copy    #0, more_drawing_needed_flag
@@ -2229,8 +2229,13 @@ reentry:
         rts
     END_IF
 
+        ;; --------------------------------------------------
+        ;; Reduce the clip rect to the next minimal chunk to paint;
+        ;; may be called multiple times before returning to caller.
+
 reclip:
-        ;; Did we end up with a degenerate width?
+        ;; Did we end up with a degenerate width? If so, this clipping
+        ;; rect was exhausted. Start with the next chunk.
         scmp16  cr_r, cr_l
         bmi     reentry
 
@@ -2278,18 +2283,11 @@ next_pt:
         ;; --------------------------------------------------
         ;; Finish up
 
-set_bits:
-        ;; Ensure clip right does not exceed screen bounds.
-        ;; Fixes https://github.com/a2stuff/a2d/issues/182
-        ;; TODO: Enforce this in the algorithm instead?
-        cmp16   cr_r, clip_bounds::x2
-        bcc     :+
-        copy16  clip_bounds::x2, cr_r
-
-:       MGTK_CALL MGTK::SetPortBits, portbits
+        scmp16   cr_r, clip_bounds::x2
         ;; if (cr_r < clip_bounds::x2) more drawing is needed
-        cmp16   cr_r, clip_bounds::x2
         sta     more_drawing_needed_flag ; update bit7
+
+        MGTK_CALL MGTK::SetPortBits, portbits
         clc                     ; C=0 means clipping rect is valid
         rts
 
