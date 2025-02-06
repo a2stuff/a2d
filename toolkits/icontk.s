@@ -1642,9 +1642,6 @@ kIconLabelGapV = 2
 
         jsr     stash_rename_rect
 
-        ;; Label right
-        add16   label_rect::x1, textwidth_params::result, label_rect::x2
-
         ;; Force bitmap bottom to same height
         copy16  label_rect::y2, bitmap_rect::y2
     ELSE
@@ -1674,10 +1671,10 @@ kIconLabelGapV = 2
         sub16_8 rename_rect::x1, #kIconRenameLineEditWidth, rename_rect::x1
         asr16   rename_rect::x1
 
+    END_IF
+
         ;; Label right
         add16   label_rect::x1, textwidth_params::result, label_rect::x2
-
-    END_IF
 
         add16_8 rename_rect::x1, #kIconRenameLineEditWidth, rename_rect::x2
         dec16   rename_rect::y1
@@ -2206,11 +2203,9 @@ start:  bit     more_drawing_needed_flag
 
 reentry:
         ;; cr_l = cr_r + 1
-        ;; vx   = cr_r + 1
         ldxy    cr_r
         inxy
         stxy    cr_l
-        stxy    vx
 
         ;; cr_t = clip_bounds::y1
         ;; cr_r = clip_bounds::x2
@@ -2218,13 +2213,13 @@ reentry:
         COPY_BYTES 6, clip_bounds::y1, cr_t
 
         ;; vy = cr_t
-        copy16  cr_t, vy
 
         ;; Are we (re)starting with a degenerate width? If so we are
         ;; completely done with this icon.
-        scmp16  cr_r, cr_l
+        jsr     is_degenerate
     IF_NEG
-        copy    #0, more_drawing_needed_flag
+        clc
+        ror     more_drawing_needed_flag ; clear bit7
         sec
         rts
     END_IF
@@ -2236,7 +2231,7 @@ reentry:
 reclip:
         ;; Did we end up with a degenerate width? If so, this clipping
         ;; rect was exhausted. Start with the next chunk.
-        scmp16  cr_r, cr_l
+        jsr     is_degenerate
         bmi     reentry
 
         ;; Corners of bounding rect (clockwise from upper-left)
@@ -2282,6 +2277,9 @@ next_pt:
 
         ;; --------------------------------------------------
         ;; Finish up
+
+        copy16  cr_l, vx
+        copy16  cr_t, vy
 
         scmp16   cr_r, clip_bounds::x2
         ;; if (cr_r < clip_bounds::x2) more drawing is needed
@@ -2379,27 +2377,23 @@ do_pt:  lda     pt_num
         ;; Cases 1/4 (and done)
         ;; if (win_b < cr_b)
         ;; . cr_t = win_b + 1
-        ;; . vy   = win_b + 1
         scmp16  win_b, cr_b
     IF_NEG
         ldxy    win_b
         inxy
         stxy    cr_t
-        stxy    vy
         jmp     reclip
     END_IF
 
         ;; Case 2
         ;; if (win_r < stash_r)
         ;; . cr_l = win_r + 1
-        ;; . vx   = win_r + 1
         ;; . cr_r = stash_r
         scmp16  stash_r, win_r
     IF_POS
         ldxy    win_r
         inxy
         stxy    cr_l
-        stxy    vx
         copy16  stash_r, cr_r
         jmp     reclip
     END_IF
@@ -2407,6 +2401,13 @@ do_pt:  lda     pt_num
         ;; Case 5 - done!
         ;; ... with this clip rect, but whole icon may need more painting.
         jmp     reentry
+
+        ;; --------------------------------------------------
+
+is_degenerate:
+        scmp16  cr_r, cr_l
+        rts
+
 .endproc ; CalcWindowIntersectionsImpl
 CalcWindowIntersections := CalcWindowIntersectionsImpl::start
 
