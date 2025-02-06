@@ -2204,6 +2204,7 @@ start:  bit     more_drawing_needed_flag
         ;; --------------------------------------------------
         ;; Re-entry - pick up where we left off
 
+reentry:
         ;; cr_l = cr_r + 1
         ;; vx   = cr_r + 1
         ldxy    cr_r
@@ -2219,12 +2220,27 @@ start:  bit     more_drawing_needed_flag
         ;; vy = cr_t
         copy16  cr_t, vy
 
+        ;; Are we starting off with a degenerate width? If so
+        ;; we are completely done with this icon.
+        scmp16  cr_r, cr_l
+    IF_NEG
+        copy    #0, more_drawing_needed_flag
+        sec
+        rts
+    END_IF
+
+reclip:
+        ;; Did we end up with a degenerate width?
+        scmp16  cr_r, cr_l
+        bmi     reentry
+
         ;; Corners of bounding rect (clockwise from upper-left)
         ;; pt1::xcoord = pt4::xcoord = cr_l
         ;; pt1::ycoord = pt2::ycoord = cr_t
         ;; pt2::xcoord = pt3::xcoord = cr_r
         ;; pt3::ycoord = pt4::ycoord = cr_b
-reclip: lda     cr_l
+
+        lda     cr_l
         sta     pt1::xcoord
         sta     pt4::xcoord
         lda     cr_l+1
@@ -2350,6 +2366,7 @@ do_pt:  lda     pt_num
         scmp16  win_r, cr_r
     IF_NEG
         copy16  win_r, cr_r
+        ;; in case 2 this will be reset
     END_IF
 
         ;; Cases 3/6 (and done)
@@ -2378,22 +2395,20 @@ do_pt:  lda     pt_num
         ;; if (win_r < stash_r)
         ;; . cr_l = win_r + 1
         ;; . vx   = win_r + 1
-        ;; . cr_r = stash_r + 2 (workaround for https://github.com/a2stuff/a2d/issues/153)
+        ;; . cr_r = stash_r
         scmp16  stash_r, win_r
     IF_POS
         ldxy    win_r
         inxy
         stxy    cr_l
         stxy    vx
-        add16   stash_r, #2, cr_r
+        copy16  stash_r, cr_r
         jmp     reclip
     END_IF
 
         ;; Case 5 - done!
-        clc
-        ror     more_drawing_needed_flag ; clear bit7
-        sec                     ; C=1 means no clipping rect remains
-        rts
+        ;; ... with this clip rect, but whole icon may need more painting.
+        jmp     reentry
 .endproc ; CalcWindowIntersectionsImpl
 CalcWindowIntersections := CalcWindowIntersectionsImpl::start
 

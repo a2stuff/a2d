@@ -331,8 +331,11 @@
 * Open a window. Position two icons so one overlaps another. Select both. Drag both to a new location. Verify that the icons are repainted in the new location, and erased from the old location.
 * Open a window. Position two icons so one overlaps another. Select only one icon. Drag it to a new location. Verify that the the both icons repaint correctly.
 
-* Position a volume icon in the middle of the DeskTop. Incrementally move a window so that it obscures all 8 positions around it (top, top right, right, etc). Ensure the icon repaints fully, and no part of the window is over-drawn.
+* Position a volume icon in the middle of the DeskTop. Incrementally move a window so that it obscures all 8 positions around it (top, top right, right, etc). Select and deselect the icon at each position. Ensure the icon repaints fully, and no part of the window is over-drawn.
 * Position a window partially overlapping desktop icons. Select overlapped desktop icons. Drag icons a few pixels to the right. Verify that window is not over-drawn.
+* Position two windows so that the right edges are exactly aligned, and the windows vertically overlap by several pixels. Activate the upper window. Drag a floppy disk volume icon so that it is partially occluded by the bottom-right of the upper window. Verify that the visible parts of the icon repaint correctly and that DeskTop does not hang.
+* Position two windows so that the left edges are exactly aligned, and the windows vertically overlap by several pixels. Activate the upper window. Drag a floppy disk volume icon so that it is partially occluded by the bottom-left corner of the upper window. Verify that the visible parts of the icon repaint correctly and that DeskTop does not hang.
+* Position two windows so that the bottom-right corner of one overlaps the top-left corner of the other by several few pixels. Drag a floppy disk volume icon so that it should show on both sides of overlap. Verify that the visible parts of the icon repaint correctly.
 
 * Repeat the following cases with these modifiers: Open-Apple, Shift (on a IIgs), Shift (on a Platinum IIe):
   * Launch DeskTop. Open a volume window with many icons. Click on a file icon to select it. Modifier-click the icon to deselect it. Drag-select on the desktop covering a large area. Verify that no file icons are erroneously painted.
