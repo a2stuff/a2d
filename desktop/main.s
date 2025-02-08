@@ -9630,6 +9630,8 @@ done:   rts
 
 ;;; ============================================================
 
+kMaxAnimationStep = 7
+
 .proc AnimateWindowImpl
         ptr := $06
         rect_table := $800
@@ -9683,45 +9685,40 @@ open:   ldy     #$00
         ;; --------------------------------------------------
         ;; Compute intermediate rects
 
-        lda     #0
-        sta     step
+        delta := $06
 
-        ;; TODO: Shrink this code with pointers and loops.
+        ;; Iterate over all 4 rectangle edges
+        ldy     #0              ; Y = offset into MGTK::Rect
+edge_loop:
+        sub16   win_rect,y, icon_rect,y, delta
 
-        delta_x1 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 0
-        delta_y1 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 2
-        delta_x2 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 4
-        delta_y2 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 6
+        ;; Iterate over all N animation steps
+        ldx     #0              ; X = step
+step_loop:
+        txa                     ; A = step
+        pha
 
-        sub16   win_rect+MGTK::Rect::x1, icon_rect+MGTK::Rect::x1, delta_x1
-        sub16   win_rect+MGTK::Rect::y1, icon_rect+MGTK::Rect::y1, delta_y1
-        sub16   win_rect+MGTK::Rect::x2, icon_rect+MGTK::Rect::x2, delta_x2
-        sub16   win_rect+MGTK::Rect::y2, icon_rect+MGTK::Rect::y2, delta_y2
-
-loop:   asr16   delta_x1        ; divide by two (signed)
-        asr16   delta_y1
-        asr16   delta_x2
-        asr16   delta_y2
+        asr16   delta           ; divide by two (signed)
 
         ;; Address of target rect
-        lda     #kMaxAnimationStep - 1
-        sec
-        sbc     step
-        asl     a
-        asl     a
-        asl     a
+        tya                     ; offset *into* rect
+        clc
+        adc     table,x         ; plus offset *of* rect
         tax
 
-        add16   rect_table+MGTK::Rect::x1, delta_x1, rect_table+MGTK::Rect::x1,x
-        add16   rect_table+MGTK::Rect::y1, delta_y1, rect_table+MGTK::Rect::y1,x
-        add16   rect_table+MGTK::Rect::x2, delta_x2, rect_table+MGTK::Rect::x2,x
-        add16   rect_table+MGTK::Rect::y2, delta_y2, rect_table+MGTK::Rect::y2,x
+        ;; Apply delta
+        add16   rect_table,y, delta, rect_table,x
 
-        inc     step
-        step := *+1
-        lda     #SELF_MODIFIED_BYTE
-        cmp     #kMaxAnimationStep-1
-        jne     loop
+        pla                     ; A = step
+        tax                     ; X = step
+        inx
+        cpx     #kMaxAnimationStep-1
+        bne     step_loop
+
+        iny
+        iny
+        cpy     #.sizeof(MGTK::Rect)
+        bne     edge_loop
 
         ;; --------------------------------------------------
         ;; Animate it
@@ -9734,13 +9731,17 @@ loop:   asr16   delta_x1        ; divide by two (signed)
 
 close_flag:
         .byte   0
+
+table:
+        .repeat main::kMaxAnimationStep, i
+        .byte   (main::kMaxAnimationStep - 1 - i) * .sizeof(MGTK::Rect)
+        .endrepeat
+
 .endproc ; AnimateWindowImpl
 AnimateWindowClose      := AnimateWindowImpl::close
 AnimateWindowOpen       := AnimateWindowImpl::open
 
 ;;; ============================================================
-
-kMaxAnimationStep = 7
 
 .proc AnimateWindowOpenImpl
         ;; Loop N = 0 to 13
