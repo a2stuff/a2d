@@ -686,6 +686,8 @@ dispatch_click:
 ;;; Handle mouse held down on scroll arrow/pager
 
 .proc _CheckControlRepeat
+        ctl := $06
+
         sta     ctl
         jsr     PeekEvent
         lda     event_params::kind
@@ -699,8 +701,7 @@ bail:   return  #$FF            ; high bit set = not repeating
         cmp     #MGTK::Ctl::dead_zone
         beq     bail
         lda     findcontrol_params::which_part
-        ctl := *+1
-        cmp     #SELF_MODIFIED_BYTE
+        cmp     ctl
         bne     bail
         return  #0              ; high bit set = repeating
 .endproc ; _CheckControlRepeat
@@ -1657,6 +1658,8 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
         jsr     PushPointers
 
         ptr1 := $06
+        len  := $08
+
         stax    ptr1
 
         ldy     #0
@@ -1667,8 +1670,7 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
         inx
         lda     (ptr1),y
         sta     INVOKER_INTERPRETER,x
-        len := *+1
-        cpy     #SELF_MODIFIED_BYTE
+        cpy     len
         bne     :-
         stx     INVOKER_INTERPRETER
 
@@ -2234,6 +2236,7 @@ secondary:
 
 .proc CmdDeskAccImpl
         ptr := $6
+        len := $8
         path := INVOKER_PREFIX
 
 str_desk_acc:
@@ -2266,8 +2269,7 @@ skip:   iny
         bne     :+
         lda     #'.'
 :       sta     path,x
-        len := *+1
-        cpy     #SELF_MODIFIED_BYTE
+        cpy     len
         bne     loop
         stx     path
 
@@ -2440,6 +2442,8 @@ main_length:    .word   0
         jsr     PushPointers
 
         ptr := $06
+        pathlen := $08
+
         stax    ptr
 
         ldy     #0
@@ -2448,8 +2452,7 @@ main_length:    .word   0
         iny                     ; start at 2nd character
 :
         iny
-        pathlen := *+1
-        cpy     #SELF_MODIFIED_BYTE
+        cpy     pathlen
         beq     :+
         lda     (ptr),y
         cmp     #'/'
@@ -3184,10 +3187,14 @@ concatenate:
         jsr     ApplyActiveWinfoToWindowGrafport
         add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight - 1
 
-        copy    #0, dirty
 
         ;; Padding
         MGTK_CALL MGTK::InflateRect, bbox_pad_tmp_rect
+
+        delta := $06
+        dirty := $08
+
+        copy    #0, dirty
 
         ;; --------------------------------------------------
         ;; X adjustment
@@ -3232,8 +3239,7 @@ adjusty:
         add16   window_grafport::maprect::y2, delta, window_grafport::maprect::y2
 
 doney:
-        dirty := *+1
-        lda     #SELF_MODIFIED_BYTE
+        lda     dirty
         beq     done
 
         ;; Apply the viewport (accounting for header)
@@ -3244,7 +3250,6 @@ doney:
 
 done:   rts
 
-delta:  .word   0
 .endproc ; ScrollIconIntoView
 
 ;;; ============================================================
@@ -4223,6 +4228,7 @@ done:   lda     #0
 ;;; match in lexicographic order, or the last item in the table.
 .proc _FindMatch
         ptr     := $06
+        len     := $08
 
         copy    #0, index
 
@@ -4249,8 +4255,7 @@ cloop:  lda     (ptr),y
         beq     found
 
         iny
-        len := *+1
-        cpy     #SELF_MODIFIED_BYTE
+        cpy     len
         bcc     cloop
         beq     cloop
 
@@ -7138,6 +7143,9 @@ vol_kb_used:  .word   0
         ptr_src := $08
         ptr_dst := $06
 
+        deltam  := $0A          ; memory delta
+        size    := $0C          ; size of a window's list
+
         ;; Need to compact FileRecords space - shift memory down.
         ;;  +----------+------+----------+---------+
         ;;  |##########|xxxxxx|mmmmmmmmmm|         |
@@ -7202,9 +7210,6 @@ finish:
         tax
         add16   window_filerecord_table,x, deltam, filerecords_free_start
         rts
-
-deltam: .word   0               ; memory delta
-size:   .word   0               ; size of a window's list
 .endproc ; RemoveWindowFileRecords
 
 ;;; ============================================================
@@ -7841,6 +7846,7 @@ ret:    rts
 
 .proc GetIconType
         ptr := $06
+        flags := $08
 
         jsr     PushPointers
         copy16  #icontype_table, ptr
@@ -7934,17 +7940,12 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         ;; Have a match
         ldy     #ICTRecord::icontype
         lda     (ptr),y
-        sta     tmp
         jsr     PopPointers
-        tmp := *+1
-        lda     #SELF_MODIFIED_BYTE
         rts
 
         ;; Next entry
 next:   add16_8 ptr, #.sizeof(ICTRecord)
         jmp     loop
-
-flags:  .byte   0
 .endproc ; GetIconType
 
 
@@ -8617,9 +8618,12 @@ set_pos:
 
 ;;; ============================================================
 ;;; Populate `text_buffer2` with "12,345K"
+;;; Trashes: $06
 
         .assert * < OVERLAY_BUFFER || * >= $6000, error, "Routine used when clearing updates in overlay zone"
 .proc ComposeSizeString
+        value := $06
+
         stax    value           ; size in 512-byte blocks
 
         ldx     #DeskTopSettings::intl_deci_sep
@@ -8675,9 +8679,6 @@ set_pos:
 
         stx     text_buffer2
         rts
-
-value:  .word   0
-
 .endproc ; ComposeSizeString
 
 ;;; ============================================================
@@ -9427,6 +9428,7 @@ success:
 
         icon_ptr := $6
         icon_defn_ptr := $8
+        offset := $A
 
         jsr     PushPointers
 
@@ -9516,8 +9518,6 @@ success:
 
         jsr     PopPointers
         return  #0
-
-offset:         .word   0
 
 ;;; Compare a volume name against existing volume icons for drives.
 ;;; Inputs: String to compare against is in `cvi_data_buffer`
@@ -9634,12 +9634,6 @@ done:   rts
         ptr := $06
         rect_table := $800
 
-        delta_x1 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 0
-        delta_y1 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 2
-        delta_x2 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 4
-        delta_y2 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 6
-
-
 close:  ldy     #$80
         .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 open:   ldy     #$00
@@ -9691,6 +9685,13 @@ open:   ldy     #$00
 
         lda     #0
         sta     step
+
+        ;; TODO: Shrink this code with pointers and loops.
+
+        delta_x1 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 0
+        delta_y1 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 2
+        delta_x2 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 4
+        delta_y2 := rect_table + (kMaxAnimationStep+1) * .sizeof(MGTK::Rect) + 6
 
         sub16   win_rect+MGTK::Rect::x1, icon_rect+MGTK::Rect::x1, delta_x1
         sub16   win_rect+MGTK::Rect::y1, icon_rect+MGTK::Rect::y1, delta_y1
@@ -10433,8 +10434,6 @@ callbacks_for_copy:
 ;;; Also used for Download
 .params copy_dialog_params
 count:  .addr   0
-a_src:  .addr   src_path_buf
-a_dst:  .addr   dst_path_buf
 .endparams
 
 .proc OpenCopyProgressDialog
@@ -10516,7 +10515,7 @@ not_selected:
         lda     #0
 
 common:
-        sta     use_selection_flag
+        pha                     ; A = use selection?
         jsr     CopyPathsFromBufsToSrcAndDst
 
         ;; If "Copy to RAMCard", make sure there's enough room.
@@ -10525,8 +10524,7 @@ common:
         jsr     CheckVolBlocksFree
     END_IF
 
-        use_selection_flag := *+1
-        lda     #SELF_MODIFIED_BYTE
+        pla                     ; A = use selection?
     IF_NS
         ;; If source is a volume icon, just copy the volume's contents.
         ;; Note that this is different than when a shortcut is being
@@ -11238,7 +11236,6 @@ callbacks_for_delete:
 
 .params delete_dialog_params
 count:  .word   0
-a_path: .addr   src_path_buf
 .endparams
 
 .proc OpenDeleteProgressDialog
@@ -11622,12 +11619,12 @@ map:    .byte   FileEntry::access
         copy16  copy_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
-        ldax    copy_dialog_params::a_src
+        ldax    #src_path_buf
         jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_copy_from
         jsr     DrawTargetFilePath
 
-        ldax    copy_dialog_params::a_dst
+        ldax    #dst_path_buf
         jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 2, aux::str_copy_to
         jsr     DrawDestFilePath
@@ -11657,7 +11654,7 @@ UpdateDownloadDialogProgress := UpdateCopyDialogProgress
         copy16  delete_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
-        ldax    delete_dialog_params::a_path
+        ldax    #src_path_buf
         jsr     CopyToBuf0
         param_call DrawProgressDialogLabel, 1, aux::str_file_colon
         jsr     DrawTargetFilePath
