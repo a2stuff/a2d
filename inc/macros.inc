@@ -1408,11 +1408,17 @@ skip:
         ;; Padding to block-align this segment in the file
         .res .ident(.sprintf("k%sAlignmentPadding", .string(name)))
 
-        .out .sprintf("Segment: %20s  addr: $%04X  len: $%04X  offset: $%06X", .string(name), .ident(.sprintf("k%sAddress", .string(name))), .ident(.sprintf("k%sLength", .string(name))), .ident(.sprintf("k%sOffset", .string(name))))
-
         .org .ident(.sprintf("k%sAddress", .string(name)))
 .endmacro
 
 .macro ENDSEG name
+        .out .sprintf("Segment: %20s  addr: $%04X  len: $%04X  offset: $%06X  padding: $%04X", \
+          .string(name), \
+          .ident(.sprintf("k%sAddress", .string(name))),\
+          .ident(.sprintf("k%sLength", .string(name))),\
+          .ident(.sprintf("k%sOffset", .string(name))),\
+          .ident(.sprintf("k%sAddress", .string(name))) + .ident(.sprintf("k%sLength", .string(name))) - *\
+        )
+
         PAD_TO .ident(.sprintf("k%sAddress", .string(name))) + .ident(.sprintf("k%sLength", .string(name)))
 .endmacro

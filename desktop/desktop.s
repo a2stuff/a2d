@@ -31,8 +31,8 @@
         DEFSEG SegmentLoader,      $2000, $0200
         DEFSEG SegmentDeskTopAux,  $4000, $8000
         DEFSEG SegmentDeskTopLC,   $D000, $2100
-        DEFSEG SegmentDeskTopMain, $4000, $7400
-        DEFSEG SegmentInitializer, $0800, $0900
+        DEFSEG SegmentDeskTopMain, $4000, $7300
+        DEFSEG SegmentInitializer, $0800, $0800
         DEFSEG SegmentInvoker,     $0290, $0160
 
         ;; Dynamically loaded overlays
