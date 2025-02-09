@@ -34,6 +34,8 @@ Project Page: https://github.com/a2stuff/a2d
 * Prompt to re-insert system disk when launching Apple Menu items.
 * Add Text-to-Speech file type ($D9) and icon.
 * Ensure DHIRES mode is exited when exiting to BASIC.
+* Fix clipping bug when icon is underneath aligned right edges of two windows.
+* Fix clipping bug when icon's middle is obscured by overlapping windows.
 
 ### Selector
 
