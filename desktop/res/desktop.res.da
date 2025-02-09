@@ -42,6 +42,7 @@
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_rename_icon "Omd|b"
 .define res_string_menu_item_duplicate "Duplikere"
+.define res_char_menu_item_duplicate_shortcut 'D'
 .define res_string_new_folder_default "New.Folder"
 .define res_string_about_text_line5 "Forfattere: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais og Luc Barthelet"

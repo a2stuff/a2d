@@ -42,6 +42,7 @@
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_rename_icon "Wijzig naam"
 .define res_string_menu_item_duplicate "Dupliceer"
+.define res_char_menu_item_duplicate_shortcut 'D'
 .define res_string_new_folder_default "New.Folder"
 .define res_string_about_text_line5 "Auteurs: Stephane Cavril, Bernard Gallet, Henri Lamiraux"
 .define res_string_about_text_line6 "Richard Danais en Luc Barthelet"

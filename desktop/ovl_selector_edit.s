@@ -354,19 +354,19 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         RTS_IF_ZERO
 
         lda     event_params::key
-        cmp     #'1'
+        cmp     #res_char_shortcut_apple_1
         jeq     ClickPrimaryRunListCtrl
 
-        cmp     #'2'
+        cmp     #res_char_shortcut_apple_2
         jeq     ClickSecondaryRunListCtrl
 
-        cmp     #'3'
+        cmp     #res_char_shortcut_apple_3
         jeq     ClickAtFirstBootCtrl
 
-        cmp     #'4'
+        cmp     #res_char_shortcut_apple_4
         jeq     ClickAtFirstUseCtrl
 
-        cmp     #'5'
+        cmp     #res_char_shortcut_apple_5
         jeq     ClickNeverCtrl
 
         rts

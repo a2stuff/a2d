@@ -727,7 +727,7 @@ UpdateWindow := PaintWindow::update
         bcs     :-
         add16   tmp, #1000, tmp
         txa
-        ora     #'0'
+        ora     #'0'            ; convert to digit
         sta     str_year,y
         iny
 
@@ -737,7 +737,7 @@ UpdateWindow := PaintWindow::update
         bcs     :-
         add16   tmp, #100, tmp
         txa
-        ora     #'0'
+        ora     #'0'            ; convert to digit
         sta     str_year,y
         iny
 
@@ -747,12 +747,12 @@ UpdateWindow := PaintWindow::update
         bcs     :-
         add16   tmp, #10, tmp
         txa
-        ora     #'0'
+        ora     #'0'            ; convert to digit
         sta     str_year,y
         iny
 
         lda     tmp
-        ora     #'0'
+        ora     #'0'            ; convert to digit
         sta     str_year,y
         rts
 

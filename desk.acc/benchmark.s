@@ -228,10 +228,10 @@ probe_count:
 
         ldx     event_params::modifiers
     IF_NOT_ZERO
-        cmp     #'5'
+        cmp     #res_char_shortcut_apple_5
         jeq     OnClick50Hz
 
-        cmp     #'6'
+        cmp     #res_char_shortcut_apple_6
         jeq     OnClick60Hz
 
         cmp     #kShortcutCloseWindow

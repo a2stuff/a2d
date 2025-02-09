@@ -211,13 +211,13 @@ init_window:
         cmp     #kShortcutCloseWindow
         jeq     OnKeyOK
 
-        cmp     #'1'
+        cmp     #res_char_shortcut_apple_1
         jeq     OnClickMDY
-        cmp     #'2'
+        cmp     #res_char_shortcut_apple_2
         jeq     OnClickDMY
-        cmp     #'3'
+        cmp     #res_char_shortcut_apple_3
         jeq     OnClick12Hour
-        cmp     #'4'
+        cmp     #res_char_shortcut_apple_4
         jeq     OnClick24Hour
         rts
     END_IF

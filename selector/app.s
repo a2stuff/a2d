@@ -369,9 +369,9 @@ check_key_down:
         bmi     :+
         bit     BUTN1           ; Solid Apple?
         bpl     check_key
-:       cmp     #'1'            ; Solid Apple + 1...7 = boot slot
+:       cmp     #'1'            ; Apple + 1...7 = boot slot
         bcc     check_key
-        cmp     #'8'
+        cmp     #'7'+1
         bcs     check_key
         and     #%00001111      ; ASCII to number
         sta     quick_boot_slot
