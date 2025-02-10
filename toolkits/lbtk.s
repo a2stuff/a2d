@@ -2,12 +2,10 @@
 ;;; List Box ToolKit
 ;;; ============================================================
 
-;;; * Routines dirty $10...$19 and $50...$6F
+;;; * Routines dirty $50...$6F
 
 .scope lbtk
         LBTKEntry := *
-
-        ;; `MulDiv` uses $10...$19
 
         kMaxCommandDataSize = 6
 
@@ -209,6 +207,14 @@ a_record        .addr
 ;;; Output: Z=1/A=$00 on click on an item
 ;;;         N=1/A=$FF otherwise
 
+.params divide_params
+number:         .word   1               ; (in) constant
+numerator:      .word   0               ; (in) populated dynamically
+denominator:    .word   kListItemHeight ; (in) constant
+result:         .word   0               ; (out)
+remainder:      .word   0               ; (out)
+.endparams
+
 .proc ClickImpl
         PARAM_BLOCK params, lbtk::command_data
 a_record        .addr
@@ -235,11 +241,9 @@ coords          .tag MGTK::Point
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
         add16in (winfo_ptr),y, screentowindow_params::windowy, screentowindow_params::windowy
 
-        copy16  screentowindow_params::windowy, z:muldiv_numerator
-        copy16  #kListItemHeight, z:muldiv_denominator
-        copy16  #1, z:muldiv_number
-        jsr     MulDiv
-        lda     z:muldiv_result
+        copy16  screentowindow_params::windowy, divide_params::numerator
+        MGTK_CALL MGTK::MulDiv, divide_params
+        lda     divide_params::result
 
         ;; Validate
         cmp     lbr_copy + LBTK::ListBoxRecord::num_items
@@ -765,21 +769,22 @@ rows:   .byte   0
 
 ;;; ============================================================
 
+.params multiply_params
+number:         .word   0       ; (in) populated dynamically
+numerator:      .word   0       ; (in) populated dynamically
+denominator:    .word   1       ; (in) constant
+result:         .word   0       ; (out)
+remainder:      .word   0       ; (out)
+.endparams
+
 ;;; A,X = A,X * Y
 .proc _Multiply
-        stax    z:muldiv_number
-        sty     z:muldiv_numerator
-        ldy     #0
-        sty     z:muldiv_numerator+1
-        sty     z:muldiv_denominator+1
-        iny
-        sty     z:muldiv_denominator
-        jsr     MulDiv
-        ldax    z:muldiv_result
+        stax    multiply_params::number
+        sty     multiply_params::numerator ; high byte remains 0
+        MGTK_CALL MGTK::MulDiv, multiply_params
+        ldax    multiply_params::result
         rts
 .endproc ; _Multiply
-
-        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 

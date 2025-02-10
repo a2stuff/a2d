@@ -299,6 +299,14 @@ progress_pattern:
         .byte   %01000100
         .byte   %00010001
 
+.params progress_muldiv_params
+number:         .word   kProgressBarWidth ; (in) constant
+numerator:      .word   0                 ; (in) populated dynamically
+denominator:    .word   0                 ; (in) populated dynamically
+result:         .word   0                 ; (out)
+remainder:      .word   0                 ; (out)
+.endparams
+
 ;;; ============================================================
 ;;; "About Apple II DeskTop" Dialog
 
@@ -921,6 +929,25 @@ icon:
 result: .byte   0
         DEFINE_POINT coords, 0, 0
 fixed:  .byte   0
+.endparams
+
+;;; ============================================================
+;;; Resources for scrollbar calculations
+
+.params track_muldiv_params
+number:         .word   0               ; (in) populated dynamically
+numerator:      .word   0               ; (in) populated dynamically
+denominator:    .word   kScrollThumbMax ; (in) constant
+result:         .word   0               ; (out)
+remainder:      .word   0               ; (out)
+.endparams
+
+.params setthumb_muldiv_params
+number:         .word   0               ; (in) populated dynamically
+numerator:      .word   kScrollThumbMax ; (in) constant
+denominator:    .word   0               ; (in) populated dynamically
+result:         .word   0               ; (out)
+remainder:      .word   0               ; (out)
 .endparams
 
 ;;; ============================================================

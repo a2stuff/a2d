@@ -1143,6 +1143,28 @@ Parameters:
 .addr       rect2           Address of MGTK::Rect. Expanded if needed.
 ```
 
+#### MulDiv ($5A)
+Multiplies two 16-bit values and then divides the 32-bit result by a
+third 16-bit value, yielding a 16-bit result and a 16-bit remainder.
+
+Parameters:
+```
+.word       number          (in)
+.word       numerator       (in)
+.word       denominator     (in)
+.word       result          (out)
+.word       remainder       (out)
+```
+
+This operation is commonly used for scaling, for example setting a
+scroll bar thumb position based on the viewport offset or vice versa,
+or calculating a progress bar's position. By using a denominator or
+numerator of 1 this can be used for simple multiplication or division,
+respectively.
+
+Note that if the result does not fit into 16 bits, the output is
+undefined.
+
 # Creating Applications and DeskTop Desk Accessories
 
 ### Application Use

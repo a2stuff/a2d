@@ -21,7 +21,7 @@
 MGTKAuxEntry    := $4000
 
 ;;; Font - left over in  Aux by DeskTop
-DEFAULT_FONT    := $8600
+DEFAULT_FONT    := $8800
 
 ;;; ============================================================
 ;;; File Structure

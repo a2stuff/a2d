@@ -8,8 +8,6 @@
 ;;; * `HandleOptionPickerClick` - `screentowindow_params` must be mapped
 ;;; * `SetOptionPickerSelection` - A = selection ($FF to clear)
 ;;;
-;;; Required includes:
-;;; * lib/muldiv.s
 ;;; Requires `MGTK_CALL` macro to be functional.
 ;;;
 ;;; Required constants:
@@ -27,7 +25,7 @@
 ;;; Requires the following proc definitions:
 ;;; * `IsIndexValid` - proc, Z=1 if A is valid index, Z=0 otherwise
 ;;; Notes:
-;;; * Routines dirty $20...$2F
+;;; * Routines dirty $10...$2F
 ;;; ============================================================
 
 .scope option_picker_impl
@@ -95,7 +93,7 @@ ret:    rts
 
 ;;; ============================================================
 ;;; Get the coordinates of an option by index.
-;;; Input: A = volume index
+;;; Input: A = index
 ;;; Output: A,X = x coordinate, Y = y coordinate
 .proc _GetOptionPos
         ldx     #0              ; hi
@@ -331,14 +329,22 @@ loop:   clc
 
 ;;; ============================================================
 
+PARAM_BLOCK muldiv_params, $10
+number          .word           ; (in)
+numerator       .word           ; (in)
+denominator     .word           ; (in)
+result          .word           ; (out)
+remainder       .word           ; (out)
+END_PARAM_BLOCK
+
 ;;; A,X = A,X * Y
 .proc _Multiply
-        stax    z:muldiv_number
-        sty     z:muldiv_numerator
-        copy    #0, z:muldiv_numerator+1
-        copy16  #1, z:muldiv_denominator
-        jsr     MulDiv
-        ldax    z:muldiv_result
+        stax    muldiv_params::number
+        sty     muldiv_params::numerator
+        copy    #0, muldiv_params::numerator+1
+        copy16  #1, muldiv_params::denominator
+        MGTK_CALL MGTK::MulDiv, muldiv_params
+        ldax    muldiv_params::result
         rts
 .endproc ; _Multiply
 
@@ -346,13 +352,13 @@ loop:   clc
 
 ;;; A,X = A,X / Y, Y = remainder
 .proc _Divide
-        stax    z:muldiv_numerator
-        sty     z:muldiv_denominator
-        copy    #0, z:muldiv_denominator+1
-        copy16  #1, z:muldiv_number
-        jsr     MulDiv
-        ldax    z:muldiv_result
-        ldy     z:muldiv_remainder
+        stax    muldiv_params::numerator
+        sty     muldiv_params::denominator
+        copy    #0, muldiv_params::denominator+1
+        copy16  #1, muldiv_params::number
+        MGTK_CALL MGTK::MulDiv, muldiv_params
+        ldax    muldiv_params::result
+        ldy     muldiv_params::remainder
         rts
 .endproc ; _Divide
 

@@ -1013,7 +1013,7 @@ memory_bitmap:
         .byte   %00000000       ; $50-$5F - MGTK code
         .byte   %00000000       ; $60-$6F - MGTK code
         .byte   %00000000       ; $70-$7F - MGTK code
-        .byte   %00000011       ; $80-$8F - MGTK, font (but $8C-$8F free)
+        .byte   %00000001       ; $80-$8F - MGTK, font (but $8E-$8F free)
         .byte   %11111111       ; $90-$9F - free
         .byte   %11111111       ; $A0-$AF - free
         .byte   %11111111       ; $B0-$BF - free
@@ -1026,6 +1026,7 @@ memory_bitmap:
         .byte   %11111111       ; $D0-$DF - free
 kMemoryBitmapSize = * - memory_bitmap
 
+        .assert DEFAULT_FONT + 1283 < $8E00, error, "Update memory_bitmap if MGTK+font extends past $8E00"
 
 ;;; ============================================================
 ;;; Inputs: A = unit num (DSSS0000), X,Y = driver address

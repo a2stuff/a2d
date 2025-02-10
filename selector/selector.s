@@ -48,7 +48,7 @@ basic_system_not_found  = $FF
         INITSEG kLoaderOffset
         DEFSEG SegmentLoader,     $2000,        $0200
         DEFSEG SegmentInvoker,    INVOKER,      $0160
-        DEFSEG SegmentApp,        $4000,        $6900
+        DEFSEG SegmentApp,        $4000,        $6A00
         DEFSEG SegmentAlert,      $D000,        $0600
 
         ;; Dynamically loaded overlays

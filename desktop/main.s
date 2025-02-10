@@ -4661,6 +4661,8 @@ old     .tag    MGTK::Point
 ;;; Increment/decrement sizes (depends on view type)
 tick_h  .byte
 tick_v  .byte
+
+tmpw    .word
 END_PARAM_BLOCK
 
 ;;; --------------------------------------------------
@@ -4780,29 +4782,28 @@ _Preamble:
 
 .proc TrackHThumb
         jsr     _Preamble
-        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, z:muldiv_number
-        sub16   z:muldiv_number, width, z:muldiv_number
+        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, tmpw
+        sub16   tmpw, width, track_muldiv_params::number
         jsr     _TrackMulDiv
-        add16   z:muldiv_result, ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
+        add16   track_muldiv_params::result, ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
         add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
         jmp     _MaybeUpdateHThumb
 .endproc ; TrackHThumb
 
 .proc TrackVThumb
         jsr     _Preamble
-        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, z:muldiv_number
-        sub16   z:muldiv_number, height, z:muldiv_number
+        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, tmpw
+        sub16   tmpw, height, track_muldiv_params::number
         jsr     _TrackMulDiv
-        add16   z:muldiv_result, ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
+        add16   track_muldiv_params::result, ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
         add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
         jmp     _MaybeUpdateVThumb
 .endproc ; TrackVThumb
 
 .proc _TrackMulDiv
-        copy    trackthumb_params::thumbpos, z:muldiv_numerator
-        copy    #0, z:muldiv_numerator+1
-        copy16  #kScrollThumbMax, z:muldiv_denominator
-        jmp     MulDiv
+        copy    trackthumb_params::thumbpos, track_muldiv_params::numerator
+        MGTK_CALL MGTK::MulDiv, track_muldiv_params
+        rts
 .endproc ; _TrackMulDiv
 
 ;;; --------------------------------------------------
@@ -4906,24 +4907,22 @@ _Preamble:
 
 ;;; Set hthumb position relative to `maprect` and `ubox`.
 .proc _SetHThumbFromViewport
-        sub16   viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1, z:muldiv_number
-        copy16  #kScrollThumbMax, z:muldiv_numerator
-        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, z:muldiv_denominator
-        sub16   z:muldiv_denominator, width, z:muldiv_denominator
-        jsr     MulDiv
-        lda     z:muldiv_result
+        sub16   viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1, setthumb_muldiv_params::number
+        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, tmpw
+        sub16   tmpw, width, setthumb_muldiv_params::denominator
+        MGTK_CALL MGTK::MulDiv, setthumb_muldiv_params
+        lda     setthumb_muldiv_params::result
         ldx     #MGTK::Ctl::horizontal_scroll_bar
         jmp     _UpdateThumb
 .endproc ; _SetHThumbFromViewport
 
 ;;; Set vthumb position relative to `maprect` and `ubox`.
 .proc _SetVThumbFromViewport
-        sub16   viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1, z:muldiv_number
-        copy16  #kScrollThumbMax, z:muldiv_numerator
-        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, z:muldiv_denominator
-        sub16   z:muldiv_denominator, height, z:muldiv_denominator
-        jsr     MulDiv
-        lda     z:muldiv_result
+        sub16   viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1, setthumb_muldiv_params::number
+        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, tmpw
+        sub16   tmpw, height, setthumb_muldiv_params::denominator
+        MGTK_CALL MGTK::MulDiv, setthumb_muldiv_params
+        lda     setthumb_muldiv_params::result
         ldx     #MGTK::Ctl::vertical_scroll_bar
         jmp     _UpdateThumb
 .endproc ; _SetVThumbFromViewport
@@ -11698,11 +11697,10 @@ UpdateDownloadDialogProgress := UpdateCopyDialogProgress
         param_call DrawString, str_2_spaces
 
         ;; Update progress bar
-        sub16   total_count, file_count, z:muldiv_numerator
-        copy16  total_count, z:muldiv_denominator
-        copy16  #kProgressBarWidth, z:muldiv_number
-        jsr     MulDiv
-        add16   z:muldiv_result, progress_dialog_bar_meter::x1, progress_dialog_bar_meter::x2
+        sub16   total_count, file_count, progress_muldiv_params::numerator
+        copy16  total_count, progress_muldiv_params::denominator
+        MGTK_CALL MGTK::MulDiv, progress_muldiv_params
+        add16   progress_muldiv_params::result, progress_dialog_bar_meter::x1, progress_dialog_bar_meter::x2
         jsr     SetPenModeCopy
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::PaintRect, progress_dialog_bar_meter
@@ -15093,12 +15091,20 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
 
 ;;; A,X = A,X * Y
 .proc Multiply_16_8_16
-        stax    z:muldiv_number
-        sty     z:muldiv_numerator
-        copy    #0, z:muldiv_numerator+1
-        copy16  #1, z:muldiv_denominator
-        jsr     MulDiv
-        ldax    z:muldiv_result
+PARAM_BLOCK muldiv_params, $10
+number          .word           ; (in)
+numerator       .word           ; (in)
+denominator     .word           ; (in)
+result          .word           ; (out)
+remainder       .word           ; (out)
+END_PARAM_BLOCK
+
+        stax    muldiv_params::number
+        sty     muldiv_params::numerator
+        copy    #0, muldiv_params::numerator+1
+        copy16  #1, muldiv_params::denominator
+        MGTK_CALL MGTK::MulDiv, muldiv_params
+        ldax    muldiv_params::result
         rts
 .endproc ; Multiply_16_8_16
 
@@ -15126,7 +15132,6 @@ window_entry_table:             .res    ::kMaxIconCount+1, 0
         .include "../lib/reconnect_ram.s"
         .include "../lib/readwrite_settings.s"
         .include "../lib/get_next_event.s"
-        .include "../lib/muldiv.s"
         .include "../lib/monocolor.s"
         .include "../lib/speed.s"
         .include "../lib/bell.s"
@@ -15516,12 +15521,6 @@ str_device_type_vdrive:
         DetectDoubleClick := main::DetectDoubleClick
         AdjustOnLineEntryCase := main::AdjustOnLineEntryCase
         AdjustFileEntryCase := main::AdjustFileEntryCase
-        MulDiv := main::MulDiv
-        muldiv_number := main::muldiv_number
-        muldiv_numerator := main::muldiv_numerator
-        muldiv_denominator := main::muldiv_denominator
-        muldiv_result := main::muldiv_result
-        muldiv_remainder := main::muldiv_remainder
 
 ;;; ============================================================
 

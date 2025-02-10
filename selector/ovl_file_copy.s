@@ -980,6 +980,14 @@ progress_pattern:
 
 ;;; ============================================================
 
+.params progress_muldiv_params
+number:         .word   kProgressBarWidth ; (in) constant
+numerator:      .word   0                 ; (in) populated dynamically
+denominator:    .word   0                 ; (in) populated dynamically
+result:         .word   0                 ; (out)
+remainder:      .word   0                 ; (out)
+.endparams
+
 .proc DrawWindowContent
         lda     #winfo::kWindowId
         jsr     app::GetWindowPort
@@ -1011,11 +1019,10 @@ ep2:    dec     file_count
         param_call app::DrawString, str_from_int
         param_call app::DrawString, str_spaces
 
-        sub16   total_count, file_count, z:muldiv_numerator
-        copy16  total_count, z:muldiv_denominator
-        copy16  #kProgressBarWidth, z:muldiv_number
-        jsr     MulDiv
-        add16   z:muldiv_result, progress_meter::x1, progress_meter::x2
+        sub16   total_count, file_count, progress_muldiv_params::numerator
+        copy16  total_count, progress_muldiv_params::denominator
+        MGTK_CALL MGTK::MulDiv, progress_muldiv_params
+        add16   progress_muldiv_params::result, progress_meter::x1, progress_meter::x2
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::PaintRect, progress_meter
 
@@ -1095,7 +1102,6 @@ ret:    rts
 
 ;;; ============================================================
 
-        .include "../lib/muldiv.s"
         ReadSetting := app::ReadSetting
         .include "../lib/inttostring.s"
 

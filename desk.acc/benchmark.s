@@ -121,6 +121,22 @@ counter:        .word   0       ; set by `ProbeSpeed`
         DEFINE_RECT_SZ meter_left, kMeterLeft, kMeterTop, kMeterWidth, kMeterHeight
         DEFINE_RECT_SZ meter_right, kMeterLeft, kMeterTop, kMeterWidth, kMeterHeight
 
+.params ticks_muldiv_params
+number:         .word   kMeterWidth ; (in) constant
+numerator:      .word   0           ; (in) populated dynamically
+denominator:    .word   kSpeedMax   ; (in) constant
+result:         .word   0           ; (out)
+remainder:      .word   0           ; (out)
+.endparams
+
+.params progress_muldiv_params
+number:         .word   kMeterWidth ; (in) constant
+numerator:      .word   0           ; (in) populated dynamically
+denominator:    .word   0           ; (in) populated dynamically
+result:         .word   0           ; (out)
+remainder:      .word   0           ; (out)
+.endparams
+
 pattern_left:
         .byte   %01000100
         .byte   %00010001
@@ -163,12 +179,9 @@ pattern_right:
 
         lda     #0
 loop:   pha
-        sta     z:muldiv_numerator
-        copy    #0, z:muldiv_numerator+1
-        copy16  #kSpeedMax, z:muldiv_denominator
-        copy16  #kMeterWidth, z:muldiv_number
-        jsr     MulDiv
-        add16   meter_left::x1, z:muldiv_result, pt_tick::xcoord
+        sta     ticks_muldiv_params::numerator
+        MGTK_CALL MGTK::MulDiv, ticks_muldiv_params
+        add16   meter_left::x1, ticks_muldiv_params::result, pt_tick::xcoord
         MGTK_CALL MGTK::MoveTo, pt_tick
         MGTK_CALL MGTK::Line, pt_tickdelta
         pla
@@ -338,17 +351,16 @@ done:   jmp     InputLoop
 .proc UpdateMeter
         jsr     ProbeSpeed
 
-        copy16  counter, z:muldiv_numerator
+        copy16  counter, progress_muldiv_params::numerator
         bit     radio_60hz_button::state
     IF_NS
-        copy16  #kSpeedMax * kSpeedDefault60Hz, z:muldiv_denominator
+        copy16  #kSpeedMax * kSpeedDefault60Hz, progress_muldiv_params::denominator
     ELSE
-        copy16  #kSpeedMax * kSpeedDefault50Hz, z:muldiv_denominator
+        copy16  #kSpeedMax * kSpeedDefault50Hz, progress_muldiv_params::denominator
     END_IF
-        copy16  #kMeterWidth, z:muldiv_number
 
-        jsr     MulDiv
-        add16   meter_left::x1, z:muldiv_result, meter_left::x2
+        MGTK_CALL MGTK::MulDiv, progress_muldiv_params
+        add16   meter_left::x1, progress_muldiv_params::result, meter_left::x2
         add16   meter_left::x2, #1, meter_right::x1
 
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -502,7 +514,6 @@ loop2c:
 
 ;;; ============================================================
 
-        .include "../lib/muldiv.s"
         .include "../lib/inttostring.s"
         .include "../lib/uppercase.s"
 

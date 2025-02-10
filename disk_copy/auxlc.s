@@ -1788,31 +1788,38 @@ blocks_written:
 transfer_blocks:
         .word   0
 
+.params progress_muldiv_params
+number:         .word   kProgressWidth ; (in) constant
+numerator:      .word   0              ; (in) populated dynamically
+denominator:    .word   0              ; (in) populated dynamically
+result:         .word   0              ; (out)
+remainder:      .word   0              ; (out)
+.endparams
+
 .proc DrawProgressBar
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FrameRect, progress_frame
-        copy16  transfer_blocks, z:muldiv_denominator
+        copy16  transfer_blocks, progress_muldiv_params::denominator
 
         ;; read+written will not fit in 16 bits if total is > $7FFF
         ;; so scale appropriately
-        tmp_read := muldiv_numerator
-        tmp_written := muldiv_number
+        tmp_read := progress_muldiv_params::numerator
+        tmp_written := progress_muldiv_params::number
         copy16  blocks_read, tmp_read
         copy16  blocks_written, tmp_written
-        bit     z:muldiv_denominator+1
+        bit     progress_muldiv_params::denominator+1
     IF_NC
         ;; Use (read + written) / total*2
-        asl16   z:muldiv_denominator
+        asl16   progress_muldiv_params::denominator
     ELSE
         ;; Use ((read + written) / 2) / total
-        lsr16   z:tmp_read
-        lsr16   z:tmp_written
+        lsr16   tmp_read
+        lsr16   tmp_written
     END_IF
-        add16   z:tmp_read, z:tmp_written, z:muldiv_numerator
+        add16   tmp_read, tmp_written, progress_muldiv_params::numerator
 
-        copy16  #kProgressWidth, z:muldiv_number
-        jsr     MulDiv
-        add16   progress_bar::x1, z:muldiv_result, progress_bar::x2
+        MGTK_CALL MGTK::MulDiv, progress_muldiv_params
+        add16   progress_bar::x1, progress_muldiv_params::result, progress_bar::x2
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::PaintRect, progress_bar
@@ -2365,7 +2372,6 @@ Alert := alert_dialog::Alert
 .endproc ; SystemTask
 
         .include "../lib/is_diskii.s"
-        .include "../lib/muldiv.s"
         .include "../lib/doubleclick.s"
 
 ;;; ============================================================

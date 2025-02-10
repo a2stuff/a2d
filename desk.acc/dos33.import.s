@@ -472,6 +472,22 @@ port:           .addr   grafport_win
 
         DEFINE_LABEL disk_vol, res_string_disk_volume_prefix, 20, 18
 
+.params entry_muldiv_params
+number:         .word   0                     ; (in) populated dynamically
+numerator:      .word   .sizeof(CatalogEntry) ; (in) constant
+denominator:    .word   1                     ; (in) constant
+result:         .word   0                     ; (out)
+remainder:      .word   0                     ; (out)
+.endparams
+
+.params progress_muldiv_params
+number:         .word   kProgressBarWidth ; (in) constant
+numerator:      .word   0                 ; (in) populated dynamically
+denominator:    .word   0                 ; (in) populated dynamically
+result:         .word   0                 ; (out)
+remainder:      .word   0                 ; (out)
+.endparams
+
 ;;; ============================================================
 
 .proc Init
@@ -664,12 +680,9 @@ done:   rts
 
         ;; Calculate address of `CatalogEntry`
         ptr := $04
-        sta     z:muldiv_number
-        copy    #0, z:muldiv_number+1
-        copy16  #.sizeof(CatalogEntry), z:muldiv_numerator
-        copy16  #1, z:muldiv_denominator
-        jsr     MulDiv
-        add16   z:muldiv_result, #EntryBuffer, ptr
+        sta     entry_muldiv_params::number
+        MGTK_CALL MGTK::MulDiv, entry_muldiv_params
+        add16   entry_muldiv_params::result, #EntryBuffer, ptr
 
         kLockedX = 8
         kTypeX   = 20
@@ -749,11 +762,10 @@ ret:    rts
         ;; ASSERT: Not obscured.
         MGTK_CALL MGTK::SetPort, grafport_win
 
-        copy16  control_block+ControlBlock::progress_num, z:muldiv_numerator
-        copy16  control_block+ControlBlock::progress_denom, z:muldiv_denominator
-        copy16  #kProgressBarWidth, z:muldiv_number
-        jsr     MulDiv
-        add16   z:muldiv_result, progress_meter::x1, progress_meter::x2
+        copy16  control_block+ControlBlock::progress_num, progress_muldiv_params::numerator
+        copy16  control_block+ControlBlock::progress_denom, progress_muldiv_params::denominator
+        MGTK_CALL MGTK::MulDiv, progress_muldiv_params
+        add16   progress_muldiv_params::result, progress_meter::x1, progress_meter::x2
 
         MGTK_CALL MGTK::SetPattern, progress_pattern
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -818,7 +830,6 @@ str_from_int:   PASCAL_STRING "000000" ; filled in by IntToString
         .include "../lib/drawstring.s"
         .include "../lib/get_next_event.s"
         .include "../lib/doubleclick.s"
-        .include "../lib/muldiv.s"
         .include "../lib/inttostring.s"
 
         .assert * < EntryBuffer, error, "DA too large"
@@ -1073,16 +1084,24 @@ control_block:
 set_eof_flag:   .byte   0
 tslist_offset:  .byte   0
 
+PARAM_BLOCK muldiv_params, $10
+number          .word           ; (in)
+numerator       .word           ; (in)
+denominator     .word           ; (in)
+result          .word           ; (out)
+remainder       .word           ; (out)
+END_PARAM_BLOCK
+
 start:
         jsr     FetchControlBlock
 
         ;; Fetch `CatalogEntry`
-        copy    control_block+ControlBlock::selected_index, z:muldiv_number
-        copy    #0, z:muldiv_number+1
-        copy16  #.sizeof(aux::CatalogEntry), z:muldiv_numerator
-        copy16  #1, z:muldiv_denominator
-        jsr     MulDiv
-        add16   z:muldiv_result, #aux::EntryBuffer, STARTLO
+        copy    control_block+ControlBlock::selected_index, muldiv_params::number
+        copy    #0, muldiv_params::number+1
+        copy16  #.sizeof(aux::CatalogEntry), muldiv_params::numerator
+        copy16  #1, muldiv_params::denominator
+        JUMP_TABLE_MGTK_CALL MGTK::MulDiv, muldiv_params
+        add16   muldiv_params::result, #aux::EntryBuffer, STARTLO
         add16   STARTLO, #.sizeof(aux::CatalogEntry)-1, ENDLO
         copy16  #entry_buf, DESTINATIONLO
         clc                     ; aux>main
@@ -1554,7 +1573,6 @@ RWTSWrite := RWTSImpl::Write
 ;;; ============================================================
 
         .include "../lib/is_diskii.s"
-        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 

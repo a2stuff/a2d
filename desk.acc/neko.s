@@ -1011,14 +1011,22 @@ result: .byte   1
 
 ;;; ============================================================
 
+PARAM_BLOCK muldiv_params, $10
+number          .word           ; (in)
+numerator       .word           ; (in)
+denominator     .word           ; (in)
+result          .word           ; (out)
+remainder       .word           ; (out)
+END_PARAM_BLOCK
+
 ;;; A,X = A,X * Y
 .proc Multiply_16_8_16
-        stax    z:muldiv_number
-        sty     z:muldiv_numerator
-        copy    #0, z:muldiv_numerator+1
-        copy16  #1, z:muldiv_denominator
-        jsr     MulDiv
-        ldax    z:muldiv_result
+        stax    muldiv_params::number
+        sty     muldiv_params::numerator
+        copy    #0, muldiv_params::numerator+1
+        copy16  #1, muldiv_params::denominator
+        JUMP_TABLE_MGTK_CALL MGTK::MulDiv, muldiv_params
+        ldax    muldiv_params::result
         rts
 .endproc ; Multiply_16_8_16
 
@@ -1026,20 +1034,19 @@ result: .byte   1
 
 ;;; A,X = A,X / Y, Y = remainder
 .proc Divide_16_8_16
-        stax    z:muldiv_numerator
-        sty     z:muldiv_denominator
-        copy    #0, z:muldiv_denominator+1
-        copy16  #1, z:muldiv_number
-        jsr     MulDiv
-        ldax    z:muldiv_result
-        ldy     z:muldiv_remainder
+        stax    muldiv_params::numerator
+        sty     muldiv_params::denominator
+        copy    #0, muldiv_params::denominator+1
+        copy16  #1, muldiv_params::number
+        JUMP_TABLE_MGTK_CALL MGTK::MulDiv, muldiv_params
+        ldax    muldiv_params::result
+        ldy     muldiv_params::remainder
         rts
 .endproc ; Divide_16_8_16
 
 ;;; ============================================================
 
         .include "../lib/uppercase.s"
-        .include "../lib/muldiv.s"
 
 ;;; ============================================================
 

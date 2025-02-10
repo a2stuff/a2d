@@ -29,6 +29,39 @@ kMapTop = 5
 kMapWidth = 230
 kMapHeight = 52
 
+.params y_to_lat
+number:         .word   180        ; (in) constant
+numerator:      .word   0          ; (in) populated dynamically
+denominator:    .word   kMapHeight ; (in) constant
+result:         .word   0          ; (out)
+remainder:      .word   0          ; (out)
+.endparams
+
+.params x_to_long
+number:         .word   360       ; (in) constant
+numerator:      .word   0         ; (in) populated dynamically
+denominator:    .word   kMapWidth ; (in) constant
+result:         .word   0         ; (out)
+remainder:      .word   0         ; (out)
+.endparams
+
+.params lat_to_y
+number:         .word   kMapHeight ; (in) constant
+numerator:      .word   0          ; (in) populated dynamically
+denominator:    .word   180        ; (in) constant
+result:         .word   0          ; (out)
+remainder:      .word   0          ; (out)
+.endparams
+
+.params long_to_x
+number:         .word   kMapWidth ; (in) constant
+numerator:      .word   0         ; (in) populated dynamically
+denominator:    .word   360       ; (in) constant
+result:         .word   0         ; (out)
+remainder:      .word   0         ; (out)
+.endparams
+
+
 pensize_normal: .byte   1, 1
 pensize_frame:  .byte   2, 1
 
@@ -465,22 +498,16 @@ index:  .byte   0
     END_IF
 
         ;; Compute new position
-        sub16   screentowindow_params::windowx, #kMapLeft+1, long
-        sub16   screentowindow_params::windowy, #kMapTop, lat
 
         ;; Map latitude to +90...-90
-        copy16  lat, z:muldiv_numerator
-        copy16  #kMapHeight, z:muldiv_denominator
-        copy16  #180, z:muldiv_number
-        jsr     MulDiv
-        sub16   #90, z:muldiv_result, lat
+        sub16   screentowindow_params::windowy, #kMapTop, y_to_lat::numerator
+        MGTK_CALL MGTK::MulDiv, y_to_lat
+        sub16   #90, y_to_lat::result, lat
 
         ;; Map longitude to -180...+180
-        copy16  long, z:muldiv_numerator
-        copy16  #kMapWidth, z:muldiv_denominator
-        copy16  #360, z:muldiv_number
-        jsr     MulDiv
-        sub16   z:muldiv_result, #180, long
+        sub16   screentowindow_params::windowx, #kMapLeft+1, x_to_long::numerator
+        MGTK_CALL MGTK::MulDiv, x_to_long
+        sub16   x_to_long::result, #180, long
 
         ;; Update display
         jsr     SetPort
@@ -680,21 +707,15 @@ blink_counter:
 
 .proc UpdateCoordsFromLatLong
         ;; Map latitude from +90...-90
-        sub16   #90, lat, z:muldiv_numerator ; 90...-90 to 0...180
-        copy16  #180, z:muldiv_denominator
-        copy16  #kMapHeight, z:muldiv_number
-        jsr     MulDiv
-        copy16  z:muldiv_result, ycoord
+        sub16   #90, lat, lat_to_y::numerator ; 90...-90 to 0...180
+        MGTK_CALL MGTK::MulDiv, lat_to_y
+        add16   lat_to_y::result, #kMapTop    - (kPositionMarkerHeight/2), ycoord
 
         ;; Map longitude from -180...+180
-        add16   long, #180, z:muldiv_numerator ; -180...180 to 0...360
-        copy16  #360, z:muldiv_denominator
-        copy16  #kMapWidth, z:muldiv_number
-        jsr     MulDiv
-        copy16  z:muldiv_result, xcoord
+        add16   long, #180, long_to_x::numerator ; -180...180 to 0...360
+        MGTK_CALL MGTK::MulDiv, long_to_x
+        add16   long_to_x::result, #kMapLeft+1 - (kPositionMarkerWidth/2), xcoord
 
-        add16   xcoord, #kMapLeft+1 - (kPositionMarkerWidth/2), xcoord
-        add16   ycoord, #kMapTop    - (kPositionMarkerHeight/2), ycoord
         rts
 .endproc ; UpdateCoordsFromLatLong
 
@@ -702,7 +723,6 @@ blink_counter:
 
         .include "../lib/drawstring.s"
         .include "../lib/inttostring.s"
-        .include "../lib/muldiv.s"
         .include "../lib/get_next_event.s"
 
 ;;; ============================================================

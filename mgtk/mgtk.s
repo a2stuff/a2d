@@ -364,6 +364,7 @@ jump_table:
         .addr   UpdateThumbImpl     ; $4B UpdateThumb
         .addr   ActivateCtlImpl     ; $4C ActivateCtl
 
+        ;; ----------------------------------------
         ;; Extra Calls
         .addr   BitBltImpl          ; $4D BitBlt
         .addr   GetDeskPatImpl      ; $4E GetDeskPat
@@ -378,6 +379,7 @@ jump_table:
         .addr   RestoreScreenRectImpl ; $57 RestoreScreenRect
         .addr   InflateRectImpl     ; $58 InflateRect
         .addr   UnionRectsImpl      ; $59 UnionRects
+        .addr   MulDivImpl          ; $5A MulDiv
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -505,7 +507,8 @@ param_lengths:
         PARAM_DEFN  8, $92, 1                ; $56 SaveScreenRect
         PARAM_DEFN  8, $92, 1                ; $57 RestoreScreenRect
         PARAM_DEFN  6, $82, 0                ; $58 InflateRect
-        PARAM_DEFN  4, $82, 0                ; $59 UnionRectsImpl
+        PARAM_DEFN  4, $82, 0                ; $59 UnionRects
+        PARAM_DEFN  6, $82, 0                ; $5A MulDiv
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -10703,7 +10706,141 @@ assign:
 
 ;;; ============================================================
 
+.proc MulDivImpl
+        PARAM_BLOCK params, $82
+number          .word           ; (in)
+numerator       .word           ; (in)
+denominator     .word           ; (in)
+result          .word           ; (out)
+remainder       .word           ; (out)
+        END_PARAM_BLOCK
+
+AUXL    := params::number       ; $54 in original routines
+AUXH    := params::number+1
+ACL     := params::numerator    ; $50 in original routines
+ACH     := params::numerator+1
+AUX2L   := params::denominator  ; not in original routines
+AUX2H   := params::denominator+1
+XTNDL   := $90                  ; $52 in original routines
+XTNDH   := $91
+TMPL    := $92                  ; not in original routines
+TMPH    := $93
+
+        ;; Prepare, per "Apple II Monitors Peeled" pp.71
+
+        lda     #0
+        sta     XTNDL
+        sta     XTNDH
+
+        ;; From MUL routine in Apple II Monitor, by Woz
+        ;; "Apple II Reference Manual" pp.162
+
+        ldy     #16             ; Index for 16 bits
+MUL2:   lda     ACL             ; ACX * AUX + XTND
+        lsr                     ;   to AC, XTND
+        bcc     MUL4            ; If no carry,
+        clc                     ;   no partial product.
+        ldx     #AS_BYTE(-2)
+MUL3:   lda     XTNDL+2,x       ; Add multiplicand (AUX)
+        adc     AUXL+2,x        ;  to partial product
+        sta     XTNDL+2,x       ;     (XTND).
+        inx
+        bne     MUL3
+
+;;; Original has this which is one byte shorter but requires AC and
+;;; XTND to be adjacent:
+;;;
+;;; MUL4:   ldx     #3
+;;; MUL5:   ror     ACL,x
+;;;         dex
+;;;         bpl     MUL5
+
+MUL4:   ror     XTNDH
+        ror     XTNDL
+        ror     ACH
+        ror     ACL
+
+        dey
+        bne     MUL2
+
+        ;; Numerator: ACX,XTNDX
+        ;; Denominator: AUX2X
+        ;; Remainder: AUXX,TMPH
+
+        lda     #0              ; clear remainder
+        sta     AUXL
+        sta     AUXH
+        sta     TMPL
+        sta     TMPH
+
+        ldy     #32             ; bits remaining
+
+DIV2:   asl     ACL             ; shift high bits of numerator...
+        rol     ACH
+        rol     XTNDL
+        rol     XTNDH
+
+        rol     AUXL            ; into remainder
+        rol     AUXH
+        rol     TMPL
+        rol     TMPH
+
+        sec                     ; is remainder > denominator?
+
+        lda     AUXL            ; temp = remainder - denominator
+        sbc     AUX2L
+        pha
+        lda     AUXH
+        sbc     AUX2H
+        pha
+        lda     TMPL
+        sbc     #0
+        tax
+        lda     TMPH
+        sbc     #0
+
+        bcs     DIV3
+
+        pla                     ; no, drop temp value
+        pla
+        jmp     next
+
+DIV3:   inc     ACL             ; yes
+
+        sta     TMPH            ; remainder = temp
+        stx     TMPL
+        pla
+        sta     AUXH
+        pla
+        sta     AUXL
+
+next:   dey
+        bne     DIV2
+        FALL_THROUGH_TO finish
+
+        ;; --------------------------------------------------
+        ;; Update `result`/`remainder` in passed param block
+
+finish:
+        lda     ACL             ; result
+        ldy     #(params::result - params)
+        sta     (params_addr),y
+        iny
+        lda     ACL+1
+        sta     (params_addr),y
+        iny
+        lda     AUXL            ; remainder
+        sta     (params_addr),y
+        iny
+        lda     AUXL+1
+        sta     (params_addr),y
+
+        rts
+.endproc ; MulDivImpl
+
+;;; ============================================================
+
 .endscope ; mgtk
 
         ;; Room for future expansion
-        PAD_TO $8600
+        PAD_TO $8800
