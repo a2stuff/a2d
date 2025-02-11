@@ -1,6 +1,6 @@
 ## Build Instructions
 
-Cross-development on a Unix-like system. Tested on macOS 10.15 and Linux Ubuntu Xenial 16.04.
+Cross-development on a Unix-like system. Tested on macOS 14 and Linux Ubuntu Xenial 16.04.
 
 Fetch, build, and install [cc65](http://cc65.github.io/cc65/):
 
@@ -19,7 +19,7 @@ cd a2d
 make
 ```
 
-This will build all targets, including DeskTop itself, desk accessories, and preview accessories, and the optional Selector app.
+This will build all targets, including DeskTop itself, desk accessories, and preview accessories, and the optional Shortcuts app.
 
 ## Getting DeskTop Onto Your Apple II
 
@@ -38,7 +38,7 @@ make -C cadius && make -C cadius install
 
 Then run: `make package`
 
-This will generate: `A2DeskTop-...2mg` and `.hdv` (800KB/32MB images containing the full application) and `A2DeskTop-..._140k_disk1.po`, `..._disk2.po` and `..._disk3.po` (the files split across multiple 140k images). The version (e.g. `alpha30`) and language (e.g. `en`) are defined in `config.inc`.
+This will generate: `A2DeskTop-...2mg` and `.hdv` (800KB/32MB images containing the full application) and `A2DeskTop-..._140k_disk1.po`, `..._disk2.po`, etc. (the files split across multiple 140k images). The version (e.g. `alpha30`) and language (e.g. `en`) are defined in `config.inc`.
 
 Mount these disk images in your emulator, or transfer them to real floppies with [ADTPro](http://adtpro.com/), then follow the install instructions below.
 
@@ -59,7 +59,7 @@ Then run: `make install`
 
 This will create the target ProDOS directory if necessary, then copy the built files in, overwriting any existing files.
 
-After building and installing, you can use `bin/setopt sel` and `bin/setopt nosel` to toggle whether Selector starts or not, and `bin/setopt ram` and `bin/setopt noram` to toggle whether DeskTop is copied to a RAMCard or not. These can be controlled within DeskTop using the Options control panel, but being able to toggle these on the command line is useful during development.
+After building and installing, you can use `bin/setopt sel` and `bin/setopt nosel` to toggle whether Shortcuts starts or not, and `bin/setopt ram` and `bin/setopt noram` to toggle whether DeskTop is copied to a RAMCard or not. These can be controlled within DeskTop using the Options control panel, but being able to toggle these on the command line is useful during development.
 
 If DeskTop hasn't created `LOCAL/DESKTOP.CONFIG` yet, run `bin/defopt` first to create a default options file.
 
@@ -75,7 +75,7 @@ If you use [Virtual \]\[](http://www.virtualii.com/) as your emulator, you can s
 
 After building, run: `make mount`
 
-This will copy the built files into the `mount/` directory  with appropriate file types/auxtypes set. Run Virtual ]\[ and use the **Media** > **Mount Folder as ProDOS Disk...** menu item, then select the `mount/` folder. A new ProDOS volume called `/MOUNT` will be available, containing DeskTop.
+This will copy the built files into the `mount/` directory with appropriate file types/auxtypes set. Run Virtual ]\[ and use the **Media** > **Mount Folder as ProDOS Disk...** menu item, then select the `mount/` folder. A new ProDOS volume called `/MOUNT` will be available, containing DeskTop.
 
 ### Option #4: Build ShrinkIt file
 
@@ -106,7 +106,7 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
          ...
        APPLE.MENU/        DIR
          CALCULATOR       $F1   $0642
-         EYES             $F1   $0642
+         CALENDAR         $F1   $0642
          CONTROL.PANELS/  DIR
            DATE.AND.TIME  $F1   $0642
            SYSTEM.SPEED   $F1   $0642
@@ -119,4 +119,4 @@ Apple II DeskTop works best on a mass storage device. Once you have the files ac
 
 ## Running
 
-Invoke `DESKTOP.SYSTEM` to launch the app. By default, DeskTop will launch. You can use the control panel Options to configure Selector to start instead, which will show a dialog containing any shortcuts you have configured in DeskTop, for faster access to programs.
+Invoke `DESKTOP.SYSTEM` to launch the app. By default, DeskTop will launch. You can use the control panel Options to configure Shortcuts to start instead, which will show a dialog containing any shortcuts you have configured in DeskTop, for faster access to programs.

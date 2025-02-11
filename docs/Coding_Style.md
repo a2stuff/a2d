@@ -107,8 +107,7 @@ xcoord  .word
 :       rts
 ```
 
-* **Do** use [cheap local labels](https://cc65.github.io/doc/ca65.html#ss6.5)
-    to highlight repeated patterns. For example, retries:
+* **Do** use [cheap local labels](https://cc65.github.io/doc/ca65.html#ss6.5) to highlight repeated patterns. For example, retries:
 
 ```asm
 @retry: MLI_CALL GET_FILE_INFO, params
@@ -139,10 +138,10 @@ xcoord  .word
 
 * Use binary `%00110110` for bit patterns
 * Use decimal for numbers (counts, dimensions, etc)
-* Use hex for geeky values, e.g. $7F (bit mask), $80 (high bit),
-   $FF (all bits set) when bits would be less readable.
+    * For negative numbers, the `AS_BYTE(-1)` and `AS_WORD(-1)` macros are handy.
+* Use hex for geeky values, e.g. $7F (bit mask), $80 (high bit), $FF (all bits set) when bits would be less readable.
 * Avoid magic numbers where possible:
-    * Define local variables (e.g. `ptr := $06`)
+    * Define local symbols (e.g. `ptr := $06`)
     * Define offsets, constants, etc.
     * Use `.struct` definitions to define offsets into structures
     * Use math where necessary (e.g. `ldy #offset2 - offset1`)
@@ -235,7 +234,7 @@ The following macros should be used to improve code readability by eliminating r
 
 ## Param Blocks
 
-Parameter blocks are used for ProDOS MLI, MGTK and IconTK calls.
+Parameter blocks are used for ProDOS MLI, MGTK and other toolkit calls.
 
 * Wrap param data in `.params` blocks:
 
@@ -261,22 +260,34 @@ flag2   .byte
 END_PARAM_BLOCK
 ```
 
-This is equivalent to (and is defined using) ca65's `.struct` with
-`.org`, but also defines a label for the block itself.
+This is equivalent to (and is defined using) ca65's `.struct` with `.org`, but also defines a label for the block itself.
+
+* Use helper macros for defining common parameter blocks:
+
+```asm
+        ;; Examples from inc/prodos.inc
+        DEFINE_OPEN_PARAMS open_params, pathname, io_buffer
+        DEFINE_READ_PARAMS read_params, buffer, kBufferSize
+        DEFINE_CLOSE_PARAMS close_params
+
+        ;; Examples from mgtk/mgtk.inc
+        DEFINE_RECT rect, kLeft, kTop, kRight, kBottom
+        DEFINE_MENU kMenuSizeEdit
+        DEFINE_MENU_ITEM label_select_all
+
+        ;; Examples from other toolkits
+        DEFINE_BUTTON ok_button, kWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kButtonTop
+        DEFINE_LINE_EDIT line_edit, kWindowId, str_buffer, kTextBoxLeft, kTextBoxTop, kTextBoxWidth, kMaxLength
+```
 
 ## Namespaces
 
-Currently, only MGTK constants are wrapped in a `.scope` to provide
-a namespace. We may want to do that for ProDOS and DeskTop stuff as
-well in the future.
+Currently, only MGTK constants are wrapped in a `.scope` to provide a namespace. We may want to do that for ProDOS and DeskTop stuff as well in the future.
 
 
 ## Self-modifying code
 
-* Add a label for the value being modified (byte or address). Use
-   [cheap local labels](https://cc65.github.io/doc/ca65.html#ss6.5) via the
-   `@`-prefix where possible to make self-modification references more
-   visible.
+* Add a label for the value being modified (byte or address). Use [cheap local labels](https://cc65.github.io/doc/ca65.html#ss6.5) via the `@`-prefix where possible to make self-modification references more visible.
 * Use `SELF_MODIFIED` ($1234) or `SELF_MODIFIED_BYTE` ($12) to self-document.
 
 ```asm
