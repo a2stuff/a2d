@@ -212,8 +212,6 @@ nextwinfo:      .addr   0
         DEFINE_RECT_SZ name_input_rect, kNameInputLeft, kNameInputTop, kNameInputWidth, kTextBoxHeight
         DEFINE_POINT pos_dialog_title, 0, aux::kDialogTitleY
 
-        DEFINE_POINT dialog_label_base_pos, kDialogLabelDefaultX, aux::kDialogLabelBaseY
-
         DEFINE_POINT dialog_label_pos, kDialogLabelDefaultX, 0
 
         kPromptWindowId = winfo_prompt_dialog::kWindowId
@@ -918,10 +916,6 @@ str_k_available:
 
 str_from_int:                   ; populated by IntToString
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator
-
-;;; Computed when painted
-        DEFINE_POINT pos_k_in_disk, 0, 0
-        DEFINE_POINT pos_k_available, 0, 0
 
 ;;; Selection drag/drop icon/result, and coords
 .params drag_drop_params

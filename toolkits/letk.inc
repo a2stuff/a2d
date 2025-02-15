@@ -60,6 +60,7 @@ dirty_flag:     .byte   0
 
         .refto window_id
         .refto a_buf
+        .refto rect
         .refto max_length
         .refto options
         .refto dirty_flag

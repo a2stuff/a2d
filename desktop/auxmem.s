@@ -258,8 +258,6 @@ kDialogLabelRow6        = kDialogLabelBaseY + kDialogLabelHeight * 6
         kPromptDialogInsetBottom = 20
         DEFINE_RECT clear_dialog_labels_rect, kPromptDialogInsetLeft, kPromptDialogInsetTop, kPromptDialogWidth-kPromptDialogInsetRight, kPromptDialogHeight-kPromptDialogInsetBottom
 
-        DEFINE_RECT prompt_rect, 40, kDialogLabelRow5+1, 360, kDialogLabelRow6
-
 ;;; ============================================================
 ;;; Progress dialog resources
 

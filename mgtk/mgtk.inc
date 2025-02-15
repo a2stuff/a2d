@@ -756,7 +756,6 @@ y1:     .word   AS_WORD(top)
 bottomright:
 x2:     .word   AS_WORD(right)
 y2:     .word   AS_WORD(bottom)
-        .refto ident
         .refto topleft
         .refto x1
         .refto y1
@@ -776,7 +775,6 @@ y1:     .word   AS_WORD(top)
 bottomright:
 x2:     .word   AS_WORD((left) + (width))
 y2:     .word   AS_WORD((top) + (height))
-        .refto ident
         .refto topleft
         .refto x1
         .refto y1
@@ -796,7 +794,6 @@ y1:     .word   AS_WORD(top)
 bottomright:
 x2:     .word   AS_WORD((width) - (left))
 y2:     .word   AS_WORD((height) - (top))
-        .refto ident
         .refto topleft
         .refto x1
         .refto y1
@@ -813,7 +810,6 @@ y2:     .word   AS_WORD((height) - (top))
 .scope ident
 xcoord: .word   left
 ycoord: .word   top
-        .refto ident
         .refto xcoord
         .refto ycoord
 .endscope

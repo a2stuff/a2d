@@ -14562,7 +14562,7 @@ calc_y:
         ldx     #0                  ; high byte
         ldy     #aux::kDialogLabelHeight
         jsr     Multiply_16_8_16
-        addax   dialog_label_base_pos::ycoord, dialog_label_pos::ycoord
+        addax   #aux::kDialogLabelBaseY, dialog_label_pos::ycoord
         MGTK_CALL MGTK::MoveTo, dialog_label_pos
         param_call_indirect DrawString, ptr
 
