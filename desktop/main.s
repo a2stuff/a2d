@@ -15188,8 +15188,8 @@ icontype_table:
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_a2hr_suffix, 0, IconType::graphics ; Apple II High Resolution
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bsc_suffix, 0, IconType::encoded ; BinSCII
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bsq_suffix, 0, IconType::encoded ; BinSCII - ShrinkIt
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_btc_suffix, 0, IconType::audio ; Zero-Crossing Audio
-        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_zc_suffix, 0, IconType::audio ; Binary Time Constant Audio
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_btc_suffix, 0, IconType::audio ; Binary Time Constant Audio
+        DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_zc_suffix, 0, IconType::audio ; Zero-Crossing Audio
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_pt3_suffix, 0, IconType::tracker ; Vortex Tracker PT3
 
         ;; Binary files ($06) identified as graphics (hi-res, double hi-res, minipix)
