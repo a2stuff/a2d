@@ -23,7 +23,7 @@
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          | MP Src    | | MP Dst    |
-;;;  $1600   +-----------+ +-----------+
+;;;  $1900   +-----------+ +-----------+
 ;;;          |           | |           |
 ;;;          |           | |           |
 ;;;          |           | |           |
@@ -36,9 +36,9 @@
         kHiresSize = $2000
 
         ;; Minipix/Print Shop images are loaded/converted
-        minipix_src_buf := $1600 ; Load address (main)
+        minipix_src_buf := $1900 ; Load address (main)
         kMinipixSrcSize = 576
-        minipix_dst_buf := $1600 ; Convert address (aux)
+        minipix_dst_buf := $1900 ; Convert address (aux)
         kMinipixDstSize = 26*52
 
         dir_path := $380
@@ -168,6 +168,8 @@ event_params:   .tag MGTK::Event
         ;; --------------------------------------------------
         ;; Key Event
 on_key:
+        ;; Stop slideshow on any keypress
+        ldy     slideshow_flag  ; Y = previous `slideshow_flag` state
         copy    #0, slideshow_flag
 
         lda     event_params + MGTK::Event::key
@@ -193,7 +195,12 @@ on_key:
         cmp     #CHAR_RIGHT
         jeq     NextFile
         cmp     #'S'
-        beq     SetSlideshowMode
+    IF_EQ
+        cpy     #$00             ; Y = previous `slideshow_flag` state
+        bne     InputLoop        ; Ignore (so toggle) if slideshow mode was on
+        beq     SetSlideshowMode ; always
+    END_IF
+
         cmp     #' '
         bne     :+
         jsr     ToggleMode

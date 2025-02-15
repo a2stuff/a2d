@@ -967,6 +967,9 @@ Image File:
 * Configure a system with a real-time clock. Launch DeskTop. Preview an image file. Exit the preview. Verify that the menu bar clock reappears immediately.
 * In a directory with multiple images, preview one image. Verify that Left Arrow shows the previous image (and wraps around), Right Arrow shows the next image (and wraps around), Apple+Left Arrow shows the first image, and Apple+Right Arrow shows the last image. Note that order is per the natural directory order, e.g. as shown in View > as Icons.
 * Preview a packed FOT file (e.g. SAMPLE.MEDIA/MONARCH). Verify that the preview does not immediately exit after the image loads.
+* In a directory with multiple images, preview one image. Press S. Verify that a slideshow starts. Press S again, verify that the slideshow stops.
+* In a directory with multiple images, preview one image. Press S. Verify that a slideshow starts. Press D (or any key that doesn't have a special purpose). Verify that the slideshow stops. Press S. Verify that a slideshow starts again.
+* In a directory with multiple images, preview one image. Press S. Verify that a slideshow starts. Press Left Arrow. Verify that the previous image is shown, and that the slideshow stops. Press S. Verify that a slideshow starts again.
 
 * Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.

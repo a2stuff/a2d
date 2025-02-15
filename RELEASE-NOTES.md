@@ -58,6 +58,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Show alert on startup if no printer card found.
 * Options: Add option to show invisible files.
 * Calendar: Allow modifiers when clicking, double-modifiers for decade. ([#693](https://github.com/a2stuff/a2d/issues/693))
+* Show Image File: Allow 'S' to toggle slideshow off. ([#825](https://github.com/a2stuff/a2d/issues/825))
 * New DA (in Extras): "Screenshot" - saves screenshot file to application directory.
 * New DA (in Extras): "DOS33.Import" - allows importing files from DOS 3.3 disks.
 
