@@ -339,6 +339,29 @@ ignore: sec
 
 ;;; ============================================================
 
+;;; Called during iteration; this ensures the mouse cursor remains
+;;; responsive.
+;;; Output: A=CHAR_ESCAPE if Esc key was pressed, A=0 otherwise
+
+.proc CheckEvents
+        MGTK_CALL MGTK::CheckEvents
+        MGTK_CALL MGTK::PeekEvent, event_params
+        MGTK_CALL MGTK::FlushEvents
+
+        lda     event_params::kind
+        cmp     #MGTK::EventKind::key_down
+        bne     nope
+        lda     event_params::key
+        cmp     #CHAR_ESCAPE
+        bne     nope
+        rts
+
+nope:   lda     #0
+        rts
+.endproc ; CheckEvents
+
+;;; ============================================================
+
 path_length:
         .byte   0
 
@@ -902,12 +925,9 @@ ItsADir:
         jsr     VisitDir
 
 nextEntry:
-        lda     KBD
-        bpl     :+
-        sta     KBDSTRB
-        cmp     #$80|CHAR_ESCAPE
+        jsr     CheckEventsFromMain
+        cmp     #CHAR_ESCAPE
         beq     Terminate
-:
 
         jsr     GetNext         ; get pointer to next entry
         bcc     loop            ; Carry set means we're done
@@ -1365,6 +1385,24 @@ fail:   clc                     ; Yes, no match found, return with C=0
 
         rts
 .endproc ; DrawNextResultFromMain
+
+;;; ============================================================
+
+;;; Called from Main with normal ZP/ROM. Bank in everything
+;;; needed for MGTK, check events, and restore banks.
+
+.proc CheckEventsFromMain
+        sta     ALTZPON
+        bit     LCBANK1
+        bit     LCBANK1
+
+        JSR_TO_AUX aux::CheckEvents
+
+        sta     ALTZPOFF
+        bit     ROMIN2
+
+        rts
+.endproc ; CheckEventsFromMain
 
 ;;; ============================================================
 
