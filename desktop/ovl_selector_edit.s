@@ -38,6 +38,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
 
         jsr     file_dialog::Init
         copy    #$80, file_dialog::extra_controls_flag
+        copy    #$C0, file_dialog::require_selection_flag ; bit7 = selection required; bit6 = volumes ok
 
         lda     #BTK::kButtonStateNormal
         sta     primary_run_list_button::state
@@ -74,10 +75,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
     ELSE
         COPY_STRING path_buf0, file_dialog::path_buf
 
-        ;; Was it just a volume name, e.g. "/VOL"?
-        jsr     IsVolPath
-      IF_CS
-        ;; No, strip to parent directory
+        ;; Strip to parent directory
         param_call main::RemovePathSegment, file_dialog::path_buf
 
         ;; And populate `buffer` with filename
@@ -91,7 +89,6 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         cpx     path_buf0
         bne     :-
         sty     buffer
-      END_IF
     END_IF
         param_call file_dialog::UpdateListFromPathAndSelectFile, buffer
         jmp     file_dialog::EventLoop

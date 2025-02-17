@@ -36,6 +36,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Ensure DHIRES mode is exited when exiting to BASIC.
 * Fix clipping bug when icon is underneath aligned right edges of two windows.
 * Fix clipping bug when icon's middle is obscured by overlapping windows.
+* Improve adding/editing shortcuts for volumes. ([#831](https://github.com/a2stuff/a2d/issues/831))
 
 ### Selector
 

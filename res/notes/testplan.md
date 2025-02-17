@@ -753,11 +753,11 @@
 
 * Launch DeskTop. Create 8 shortcuts. Shortcuts > Add a Shortcut.... Check the first radio button. Pick a file, enter a name, OK. Verify that a relevant alert is shown.
 
-* Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume directory that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that the file picker shows the correct disk name.
+* Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that the file picker shows the volume name as selected.
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Verify that if the target is a volume directory and either "at boot" or "at first use" is selected, then an alert is shown when trying to commit the dialog.
 
 * Launch DeskTop. Select a file icon. Shortcuts > Add a Shortcut... Verify that the file dialog is navigated to the selected file's folder and the file is selected.
-* Launch DeskTop. Select a volume icon. Shortcuts > Add a Shortcut... Verify that the file dialog is initialized to the boot volume and no file is selected.
+* Launch DeskTop. Select a volume icon. Shortcuts > Add a Shortcut... Verify that the file dialog is initialized to the list of drives and the volume is selected.
 * Launch DeskTop. Clear selection. Shortcuts > Add a Shortcut... Verify that the file dialog is initialized to the boot volume and no file is selected.
 
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at boot". Reboot, and launch DESKTOP.SYSTEM. While DeskTop is being copied to RAMCard, press Escape to cancel. Verify that none of the program's files were copied to the RAMCard. Once DeskTop starts, invoke the shortcut. Verify that the program starts correctly.
@@ -1297,19 +1297,28 @@ Repeat for each file picker:
 * Select a non-folder in the list box. Verify that the Open button is dimmed.
 * Navigate to the root directory of a disk. Verify that the Close button is not dimmed.
 * Open a folder. Verify that the Close button is not dimmed, that there is no selection, and that Open is dimmed. Hit Close until at the root. Verify that Close is dimmed.
-* Click Drives. Verify that the Close button is dimmed.
-* Click Drives. Verify that the OK button is dimmed. Click a volume name and click Open. Verify that the OK button is no longer dimmed.
+* Click the Drives button. Verify that the Close button is dimmed.
+* Click the Drives button. Verify that the OK button is dimmed. Click a volume name and click Open. Verify that the OK button is no longer dimmed.
 * Verify that dimmed buttons don't respond to clicks.
 * Verify that dimmed buttons don't respond to keyboard shortcuts (Return for OK, Control+O for Open, Control+C for Close).
+
+For DeskTop's File > Copy To... file picker:
+* Open a volume or folder. Clear selection. Verify that the OK button is not dimmed.
+* Click the Drives button. Verify that the OK button is dimmed.
+* Click the Drives button. Select a volume icon. Verify that the OK button is dimmed.
 
 For DeskTop's Shortcut > Edit a Shortcut... file picker:
 * Create a shortcut not on the startup volume. Edit the shortcut. Verify that the file picker shows the shortcut target volume and file selected.
 * Create a shortcut on a removable volume. Eject the volume. Edit the shortcut. Verify that the file picker initializes to the drives list, and does not crash or show corrupted results.
+* Clear selection. Verify that the OK button is dimmed.
+* Click the Drives button. Select a volume. Verify that the OK button is not dimmed.
 
 For Shortcuts's File > Run a Program... file picker:
 * Navigate to an empty volume and don't select anything. Click OK. Verify that an alert is shown.
 * Move the mouse cursor over a folder in the list, and click to select it. Move the mouse cursor away from the click location but over the same item. Double-click. Verify that the folder opens with only the two clicks.
 * Move the mouse cursor over a folder in the list that is not selected. Double-click. Verify that the folder opens with only the two clicks.
+* Clear selection. Verify that the OK button is dimmed.
+* Click the Drives button. Select a volume. Verify that the OK button is dimmed.
 
 # Text Input Fields
 

@@ -1923,8 +1923,6 @@ devlst_backup:
         sta     path_buf0
 
         ;; If there's a selection, put it in `path_buf0`
-        lda     selected_window_id
-        beq     :+
         lda     selected_icon_count
         beq     :+
 

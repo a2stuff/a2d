@@ -93,6 +93,9 @@ file_names      := $1800
 only_show_dirs_flag:            ; set when selecting copy destination
         .byte   0
 
+require_selection_flag:         ; bit7 = require selection; bit6 = volumes ok
+        .byte   0
+
 ;;; ============================================================
 
 .proc Init
@@ -414,6 +417,17 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 ;;; ============================================================
 
+;;; Output: Z=1 if path is just '/'
+;;; Trashes: A
+
+.proc _IsRootPath
+        lda     path_buf
+        cmp     #1
+        rts
+.endproc ; _IsRootPath
+
+;;; ============================================================
+
 ;;; Output: C=0 if allowed, C=1 if not.
 .proc _IsOpenAllowed
         lda     selected_index
@@ -433,20 +447,31 @@ no:     sec
 
 ;;; Output: C=0 if allowed, C=1 if not.
 .proc _IsCloseAllowed
-        lda     path_buf
-        cmp     #1
-        beq     no
+        jsr     _IsRootPath
+        beq     _IsOpenAllowed::no
 
         clc
-        rts
-
-no:     sec
         rts
 .endproc ; _IsCloseAllowed
 
 ;;; ============================================================
 
-_IsOKAllowed := _IsCloseAllowed
+;;; Output: C=0 if allowed, C=1 if not.
+.proc _IsOKAllowed
+        bit     require_selection_flag ; bit7 = selection required
+        bpl     _IsCloseAllowed
+
+        ;; Otherwise, must have selection
+        bit     selected_index
+        bmi     _IsOpenAllowed::no
+
+        ;; Volume ok?
+        bit     require_selection_flag ; bit6 = volume selection allowed
+        bvc     _IsCloseAllowed
+
+        clc
+        rts
+.endproc ; _IsOKAllowed
 
 ;;; ============================================================
 
@@ -1017,8 +1042,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
 ;;; ============================================================
 
 .proc _ReadDir
-        lda     path_buf
-        cmp     #1
+        jsr     _IsRootPath
         jeq     _ReadDrives
 
         MLI_CALL OPEN, open_params
@@ -1216,8 +1240,7 @@ finish:
         MGTK_CALL MGTK::SetPenMode, file_dialog_res::pencopy
         MGTK_CALL MGTK::PaintRect, file_dialog_res::disk_name_rect
 
-        lda     path_buf
-        cmp     #1
+        jsr     _IsRootPath
     IF_NE
         copy16  #path_buf, $06
 
@@ -1246,8 +1269,7 @@ finish:
         MGTK_CALL MGTK::PaintRect, file_dialog_res::dir_name_rect
         copy16  #path_buf, $06
 
-        lda     path_buf
-        cmp     #1
+        jsr     _IsRootPath
     IF_NE
         ;; Copy last segment
         ldx     path_buf
@@ -1522,6 +1544,7 @@ Init := file_dialog_impl::Init
 UpdateListFromPath := file_dialog_impl::UpdateListFromPath
 
 only_show_dirs_flag := file_dialog_impl::only_show_dirs_flag
+require_selection_flag := file_dialog_impl::require_selection_flag
 path_buf := file_dialog_impl::path_buf
 
 ::file_dialog_impl__DrawListEntryProc := file_dialog_impl::DrawListEntryProc
