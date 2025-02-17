@@ -40,6 +40,8 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Selector
 
+* Prevent crash after alert is shown from File > Run a Program... ([#832](https://github.com/a2stuff/a2d/issues/832))
+
 ### Disk Copy
 
 ### Desk Accessories

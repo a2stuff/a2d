@@ -84,5 +84,44 @@ ReadSetting             := app::ReadSetting
 file_dialog_init   := file_dialog::ep_init
 file_dialog_loop   := file_dialog::ep_loop
 
+;;; ============================================================
+
+;;; File Dialog and Alerts compete over "save area" (main $800-$1FFF)
+;;; so allow preserving the state while an alert is shown.
+
+.proc SaveFileDialogState
+        sec                          ; main>aux
+        bcs     _MoveFileDialogState ; always
+.endproc ; SaveFileDialogState
+
+.proc RestoreFileDialogState
+        clc                          ; aux>main
+        FALL_THROUGH_TO _MoveFileDialogState
+.endproc ; RestoreFileDialogState
+
+;;; C set by caller
+.proc _MoveFileDialogState
+        pha
+        txa
+        pha
+        tya
+        pha
+
+        copy16  #file_dialog::STATE_START, STARTLO
+        copy16  #file_dialog::STATE_END, ENDLO
+        copy16  #file_dialog::STATE_START, DESTINATIONLO
+        jsr     AUXMOVE
+
+        pla
+        tay
+        pla
+        tax
+        pla
+
+        rts
+.endproc ; _MoveFileDialogState
+
+;;; ============================================================
+
         ENDSEG OverlayFileDialog
         .assert * <= $BF00, error, "Overwrites ProDOS Global Page"

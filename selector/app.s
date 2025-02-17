@@ -802,7 +802,9 @@ retry:
         ;; Returns Z=1 on success, Y,X = path to launch
         bne     cancel
 ok:     tya                     ; now A,X = path
+        jsr     SaveFileDialogState
         jsr     LaunchPath
+        jsr     RestoreFileDialogState
         jsr     file_dialog_loop ; ditto
         beq     ok
 

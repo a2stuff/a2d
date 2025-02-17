@@ -65,6 +65,12 @@
 
 .scope file_dialog_impl
 
+;;; Clients that do fancy things like show alerts without tearing down
+;;; the dialog may overwrite the file dialog's state. By exporting
+;;; where the state lives, clients can save/restore it as necessary
+state_start     := $1600
+state_end       := $1FFF
+
 ;;; Buffer used when selecting filename by holding Apple key and typing name.
 ;;; Length-prefixed string, initialized to 0 when the dialog is shown.
 type_down_buf   := $1600        ; 16 bytes
@@ -1546,6 +1552,9 @@ UpdateListFromPath := file_dialog_impl::UpdateListFromPath
 only_show_dirs_flag := file_dialog_impl::only_show_dirs_flag
 require_selection_flag := file_dialog_impl::require_selection_flag
 path_buf := file_dialog_impl::path_buf
+
+STATE_START := file_dialog_impl::state_start
+STATE_END   := file_dialog_impl::state_end
 
 ::file_dialog_impl__DrawListEntryProc := file_dialog_impl::DrawListEntryProc
 ::file_dialog_impl__OnListSelectionChange := file_dialog_impl::OnListSelectionChange
