@@ -120,38 +120,52 @@
 * Launch DeskTop. Clear the selection (e.g. by clicking on the DeskTop). Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
   * File > Duplicate and Special > Make Alias are disabled.
-  * File > Rename is disabled.
-  * File > Open and File > Get Info are disabled.
+  * File > Rename and Edit > Cut/Copy/Paste/Clear are disabled.
+  * File > Delete is disabled.
+  * File > Open, File > Get Info, and File > Copy To... are disabled.
+  * File > Duplicate and Special > Make Alias are disabled.
 * Launch DeskTop. Select only the Trash icon. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
   * File > Duplicate and Special > Make Alias are disabled.
-  * File > Rename is disabled.
-  * File > Open and File > Get Info are disabled.
+  * File > Rename and Edit > Cut/Copy/Paste/Clear are disabled.
+  * File > Delete is disabled.
+  * File > Open, File > Get Info, and File > Copy To... are disabled.
+  * File > Duplicate and Special > Make Alias are disabled.
 * Launch DeskTop. Select a volume. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
   * File > Duplicate and Special > Make Alias are disabled.
-  * File > Rename is enabled.
-  * File > Open and File > Get Info are enabled.
+  * File > Rename and Edit > Cut/Copy/Paste/Clear are enabled.
+  * File > Delete is disabled.
+  * File > Open, File > Get Info, and File > Copy To... are enabled.
+  * File > Duplicate and Special > Make Alias are disabled.
 * Launch DeskTop. Select two volume icons. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
   * File > Duplicate and Special > Make Alias are disabled.
-  * File > Rename is disabled.
-  * File > Open and File > Get Info are enabled.
+  * File > Rename and Edit > Cut/Copy/Paste/Clear are disabled.
+  * File > Delete is disabled.
+  * File > Open, File > Get Info, and File > Copy To... are enabled.
+  * File > Duplicate and Special > Make Alias are disabled.
 * Launch DeskTop. Select a volume icon and the Trash icon. Verify that:
   * Special > Eject Disk and Special > Check Drive are enabled.
   * File > Duplicate and Special > Make Alias are disabled.
-  * File > Rename is disabled.
-  * File > Open and File > Get Info are enabled.
-* Launch DeskTop. Open a volume window, and select a file. Verify that:
+  * File > Rename and Edit > Cut/Copy/Paste/Clear are disabled.
+  * File > Delete is disabled.
+  * File > Open, File > Get Info, and File > Copy To... are enabled.
+  * File > Duplicate and Special > Make Alias are disabled.
+* Launch DeskTop. Open a volume window, and select a single file. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
   * File > Duplicate and Special > Make Alias are enabled.
-  * File > Rename is enabled.
-  * File > Open and File > Get Info are enabled.
+  * File > Rename and Edit > Cut/Copy/Paste/Clear are enabled.
+  * File > Delete is enabled.
+  * File > Open, File > Get Info, and File > Copy To... are enabled.
+  * File > Duplicate and Special > Make Alias are enabled.
 * Launch DeskTop. Open a volume window, and select two files. Verify that:
   * Special > Eject Disk and Special > Check Drive are disabled.
   * File > Duplicate and Special > Make Alias are disabled.
-  * File > Rename is disabled.
-  * File > Open and File > Get Info are enabled.
+  * File > Rename and Edit > Cut/Copy/Paste/Clear are disabled.
+  * File > Delete is enabled.
+  * File > Open, File > Get Info, and File > Copy To... are enabled.
+  * File > Duplicate and Special > Make Alias are disabled.
 * Launch DeskTop. Close all windows. Verify that File > New Folder, File > Close, File > Close All, and everything in the View menu are disabled.
 * Launch DeskTop. Open a window. Verify that File > New Folder, File > Close, File > Close All, and everything in the View menu are enabled.
 * Launch DeskTop. Open a window for a removable disk. Quit DeskTop. Remove the disk. Restart DeskTop. Open a different volume's window. Close it. Open it again. Verify that items in the File menu needing a window (New Folder, Close, etc) are correctly enabled.

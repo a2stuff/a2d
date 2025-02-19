@@ -173,7 +173,7 @@ file_menu:
         kMenuItemIdRenameIcon  = 7
         kMenuItemIdDuplicate   = 8
         ;; --------------------
-        kMenuItemIdCopyFile    = 10
+        kMenuItemIdCopySelection = 10
         kMenuItemIdDeleteFile  = 11
         ;; --------------------
         kMenuItemIdQuit        = 13

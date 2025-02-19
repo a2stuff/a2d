@@ -1277,6 +1277,7 @@ disable:ldy     #MGTK::disableitem_disable
 table:
         .byte   kMenuIdFile, aux::kMenuItemIdOpen
         .byte   kMenuIdFile, aux::kMenuItemIdGetInfo
+        .byte   kMenuIdFile, aux::kMenuItemIdCopySelection
         .byte   0
 .endproc ; _ToggleMenuItemsRequiringSelection
 _EnableMenuItemsRequiringSelection := _ToggleMenuItemsRequiringSelection::enable
@@ -1313,7 +1314,6 @@ disable:ldy     #MGTK::disableitem_disable
 
         param_jump _ToggleMenuItems, table
 table:
-        .byte   kMenuIdFile, aux::kMenuItemIdCopyFile
         .byte   kMenuIdFile, aux::kMenuItemIdDeleteFile
         .byte   0
 .endproc ; _ToggleMenuItemsRequiringFileSelection
