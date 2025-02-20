@@ -136,8 +136,8 @@ label_duplicate_icon:
 label_make_link:
         PASCAL_STRING res_string_menu_item_make_link
 
-desktop_menu:
-        DEFINE_MENU_BAR kMenuNumItems
+        ;; Menu bar
+        DEFINE_MENU_BAR desktop_menu, kMenuNumItems
 @items: DEFINE_MENU_BAR_ITEM kMenuIdApple, label_apple, apple_menu
         DEFINE_MENU_BAR_ITEM kMenuIdFile, label_file, file_menu
         DEFINE_MENU_BAR_ITEM kMenuIdEdit, label_edit, edit_menu
@@ -147,8 +147,8 @@ desktop_menu:
         DEFINE_MENU_BAR_ITEM kMenuIdSelector, label_selector, selector_menu
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuNumItems, .sizeof(MGTK::MenuBarItem)
 
-file_menu:
-        DEFINE_MENU kMenuSizeFile
+        ;; File menu
+        DEFINE_MENU file_menu, kMenuSizeFile
 @items: DEFINE_MENU_ITEM label_new_folder, res_char_menu_item_new_folder_shortcut
         DEFINE_MENU_ITEM label_open, res_char_menu_item_open_shortcut
         DEFINE_MENU_ITEM label_close, res_char_shortcut_close
@@ -178,8 +178,8 @@ file_menu:
         ;; --------------------
         kMenuItemIdQuit        = 13
 
-edit_menu:
-        DEFINE_MENU kMenuSizeEdit
+        ;; Edit menu
+        DEFINE_MENU edit_menu, kMenuSizeEdit
 @items: DEFINE_MENU_ITEM label_cut, res_char_menu_item_cut_shortcut
         DEFINE_MENU_ITEM label_copy, res_char_menu_item_copy_shortcut
         DEFINE_MENU_ITEM label_paste, res_char_menu_item_paste_shortcut
@@ -195,8 +195,8 @@ edit_menu:
         ;; --------------------
         kMenuItemIdSelectAll = 6
 
-view_menu:
-        DEFINE_MENU kMenuSizeView
+        ;; View menu
+        DEFINE_MENU view_menu, kMenuSizeView
 @items: DEFINE_MENU_ITEM label_by_icon
         DEFINE_MENU_ITEM label_by_small_icon
         DEFINE_MENU_ITEM label_by_name
@@ -212,8 +212,8 @@ view_menu:
         kMenuItemIdViewBySize      = 5
         kMenuItemIdViewByType      = 6
 
-special_menu:
-        DEFINE_MENU kMenuSizeSpecial
+        ;; Special menu
+        DEFINE_MENU special_menu, kMenuSizeSpecial
 @items: DEFINE_MENU_ITEM label_check_all_drives
         DEFINE_MENU_ITEM label_check_drive
         DEFINE_MENU_ITEM label_eject, res_char_menu_item_eject_shortcut

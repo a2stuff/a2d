@@ -817,7 +817,8 @@ ycoord: .word   top
 
 ;;; Menus (common cases; other options are possible)
 
-.macro DEFINE_MENU_BAR count
+.macro DEFINE_MENU_BAR ident, count
+        ident := *
         .byte   count           ; num menus
         .byte   0               ; reserved
 .endmacro
@@ -830,7 +831,8 @@ ycoord: .word   top
         .res    6, 0            ; 6 reserved bytes
 .endmacro
 
-.macro DEFINE_MENU count
+.macro DEFINE_MENU ident, count
+        ident := *
         .byte   count           ; num items
         .res    5, 0            ; 5 reserved bytes
 .endmacro

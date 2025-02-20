@@ -731,8 +731,8 @@ menu_item:      .byte   0
 disable:        .byte   0
 .endparams
 
-startup_menu:
-        DEFINE_MENU kMenuSizeStartup
+        ;; Startup menu
+        DEFINE_MENU startup_menu, kMenuSizeStartup
 @items: DEFINE_MENU_ITEM startup_menu_item_1
         DEFINE_MENU_ITEM startup_menu_item_2
         DEFINE_MENU_ITEM startup_menu_item_3
@@ -770,8 +770,8 @@ startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern
 
 ;;; ============================================================
 
-selector_menu:
-        DEFINE_MENU kSelectorMenuFixedItems
+        ;; Shortcuts menu
+        DEFINE_MENU selector_menu, kSelectorMenuFixedItems
 @items: DEFINE_MENU_ITEM label_add
         DEFINE_MENU_ITEM label_edit
         DEFINE_MENU_ITEM label_del
@@ -804,9 +804,8 @@ label_run:
 
 kDAMenuItemSize = 19            ; length (1) + filename (15) + folder glyphs prefix (3)
 
-        ;; Apple Menu
-apple_menu:
-        DEFINE_MENU kAppleMenuFixedItems
+        ;; Apple menu
+        DEFINE_MENU apple_menu, kAppleMenuFixedItems
 @items: DEFINE_MENU_ITEM label_about
         DEFINE_MENU_ITEM label_about_this_apply
         DEFINE_MENU_SEPARATOR

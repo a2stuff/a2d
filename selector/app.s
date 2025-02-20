@@ -60,25 +60,26 @@ key_mods:
         .byte   $00
 .endparams
 
-menu:   DEFINE_MENU_BAR 3
+        ;; Menu bar
+        DEFINE_MENU_BAR menu, 3
         DEFINE_MENU_BAR_ITEM 1, str_apple, apple_menu
         DEFINE_MENU_BAR_ITEM 2, str_file, file_menu
         DEFINE_MENU_BAR_ITEM 3, str_startup, startup_menu
 
-apple_menu:
-        DEFINE_MENU 5
+        ;; Apple menu
+        DEFINE_MENU apple_menu, 5
         DEFINE_MENU_ITEM str_a2desktop
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM str_copyright1
         DEFINE_MENU_ITEM str_copyright2
         DEFINE_MENU_ITEM str_copyright3
 
-file_menu:
-        DEFINE_MENU 1
+        ;; File menu
+        DEFINE_MENU file_menu, 1
         DEFINE_MENU_ITEM str_run_a_program, res_char_menu_item_run_a_program_shortcut
 
-startup_menu:
-        DEFINE_MENU 1
+        ;; Startup menu
+        DEFINE_MENU startup_menu, 1
 
 kMenuItemShortcutOffset = 2
 

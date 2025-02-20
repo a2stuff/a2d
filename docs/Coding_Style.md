@@ -272,7 +272,7 @@ This is equivalent to (and is defined using) ca65's `.struct` with `.org`, but a
 
         ;; Examples from mgtk/mgtk.inc
         DEFINE_RECT rect, kLeft, kTop, kRight, kBottom
-        DEFINE_MENU kMenuSizeEdit
+        DEFINE_MENU menu_edit, kMenuSizeEdit
         DEFINE_MENU_ITEM label_select_all
 
         ;; Examples from other toolkits

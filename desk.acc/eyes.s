@@ -664,15 +664,15 @@ skip:
         rts
 
 tmpw:   .word   0
-tmpf:   DEFINE_FLOAT
+        DEFINE_FLOAT tmpf
 
-scale:  DEFINE_FLOAT
-dx:     DEFINE_FLOAT
-dy:     DEFINE_FLOAT
-pry:    DEFINE_FLOAT
-prx:    DEFINE_FLOAT
-cxf:    DEFINE_FLOAT
-cyf:    DEFINE_FLOAT
+        DEFINE_FLOAT scale
+        DEFINE_FLOAT dx
+        DEFINE_FLOAT dy
+        DEFINE_FLOAT pry
+        DEFINE_FLOAT prx
+        DEFINE_FLOAT cxf
+        DEFINE_FLOAT cyf
 .endproc ; ComputePupilPos
 
 ;;; ============================================================
