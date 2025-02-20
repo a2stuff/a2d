@@ -1683,7 +1683,7 @@ kIconLabelGapV = 2
         rts
 
 stash_rename_rect:
-        COPY_STRUCT MGTK::Rect, label_rect, rename_rect
+        COPY_BLOCK label_rect, rename_rect
         rts
 .endproc ; CalcIconRects
 
@@ -1695,7 +1695,7 @@ stash_rename_rect:
 
         jsr     CalcIconRects
 
-        COPY_STRUCT MGTK::Rect, bitmap_rect, bounding_rect
+        COPY_BLOCK bitmap_rect, bounding_rect
 
         ;; Union of rectangles (expand `bounding_rect` to encompass `label_rect`)
         MGTK_CALL MGTK::UnionRects, unionrects_label_bounding
@@ -1973,7 +1973,7 @@ rect:   .tag    MGTK::Rect
 ;;; After erasing an icon, redraw any overlapping icons
 
 .proc _RedrawIconsAfterErase
-        COPY_STRUCT MGTK::Rect, bounding_rect, icon_rect
+        COPY_BLOCK bounding_rect, icon_rect
 
         jsr     PushPointers
         ldx     num_icons
@@ -2144,7 +2144,7 @@ reserved:       .byte   0
         bmi     empty
 
         ;; Duplicate structs needed for clipping
-        COPY_STRUCT MGTK::Rect, portbits::maprect, clip_bounds
+        COPY_BLOCK portbits::maprect, clip_bounds
         COPY_STRUCT MGTK::Point, portbits::maprect::topleft, portbits::viewloc
 
         MGTK_CALL MGTK::SetPortBits, portbits

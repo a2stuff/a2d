@@ -615,7 +615,7 @@ dloop:  lda     index
         sta     col
         lda     #0
         sta     row
-        COPY_STRUCT MGTK::Point, date_base, date_pos
+        COPY_BLOCK date_base, date_pos
 
 day_loop:
         ;; Assume it's an empty cell.

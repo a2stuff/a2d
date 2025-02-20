@@ -4701,7 +4701,7 @@ _Preamble:
         ;; Make `ubox` bound both viewport and icons; needed to ensure
         ;; offset cases are handled.
         MGTK_CALL MGTK::UnionRects, unionrects_viewport_iconbb
-        COPY_STRUCT MGTK::Rect, iconbb_rect, ubox
+        COPY_BLOCK iconbb_rect, ubox
         rts
 
 ;;; --------------------------------------------------
@@ -6371,7 +6371,7 @@ err:    rts
 
 .ifdef DEBUG
         jsr     ComputeIconsBBox
-        COPY_STRUCT MGTK::Rect, iconbb_rect, tmp_rect
+        COPY_BLOCK iconbb_rect, tmp_rect
         jsr     FrameTmpRect
 .endif
 
@@ -8172,7 +8172,7 @@ more:   lda     cached_window_entry_list,x
         lda     icon_num
     IF_ZERO
         ;; First icon (index 0) - just use its coordinates as min/max
-        COPY_STRUCT MGTK::Rect, tmp_rect, iconbb_rect
+        COPY_BLOCK tmp_rect, iconbb_rect
     ELSE
         ;; Expand bounding rect to encompass icon's rect
         MGTK_CALL MGTK::UnionRects, unionrects_tmp_iconbb
@@ -9677,7 +9677,7 @@ open:   ldy     #$00
         ;; Get icon position - used as first rect
 
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
-        COPY_STRUCT MGTK::Rect, tmp_rect, icon_rect
+        COPY_BLOCK tmp_rect, icon_rect
 
         ;; --------------------------------------------------
         ;; Compute intermediate rects
