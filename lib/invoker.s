@@ -16,17 +16,6 @@
 
         copy16  #PRODOS_SYS_START, jmp_addr
 
-        ;; Initialize system bitmap
-        ldx     #BITMAP_SIZE-1
-        lda     #0
-:       sta     BITMAP,x
-        dex
-        bpl     :-
-        lda     #%00000001      ; ProDOS global page
-        sta     BITMAP+BITMAP_SIZE-1
-        lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     BITMAP
-
         ;; Interpreter?
         lda     INVOKER_INTERPRETER
         bne     use_interpreter ; Yes, load it

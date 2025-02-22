@@ -40,17 +40,6 @@ start:
         sta     $0101           ; Aux stack pointer, in Aux ZP
         sta     ALTZPOFF
 
-        ;; Initialize system bitmap
-        ldx     #BITMAP_SIZE-1
-        lda     #0
-:       sta     BITMAP,x
-        dex
-        bpl     :-
-        lda     #%00000001      ; ProDOS global page
-        sta     BITMAP+BITMAP_SIZE-1
-        lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     BITMAP
-
         MLI_CALL OPEN, open_params
         jcs     fail
         lda     open_params::ref_num

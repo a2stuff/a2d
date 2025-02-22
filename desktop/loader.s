@@ -93,17 +93,6 @@ start:
         ;; Do this for good measure.
         cli
 
-        ;; Initialize system bitmap
-        ldx     #BITMAP_SIZE-1
-        lda     #0
-:       sta     BITMAP,x
-        dex
-        bpl     :-
-        lda     #%00000001      ; ProDOS global page
-        sta     BITMAP+BITMAP_SIZE-1
-        lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     BITMAP
-
         jsr     DetectMousetext
         jsr     InitProgress
 

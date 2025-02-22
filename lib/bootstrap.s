@@ -108,6 +108,7 @@ retry:
         MLI_CALL CLOSE, close_params
 
         ;; Initialize system bitmap
+        ;; Initialize system bitmap
         ldx     #BITMAP_SIZE-1
         lda     #0
 :       sta     BITMAP,x

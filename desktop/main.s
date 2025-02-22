@@ -2864,17 +2864,6 @@ start:
         MGTK_CALL MGTK::CloseAll
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve
 
-        ;; Initialize system bitmap
-        ldx     #BITMAP_SIZE-1
-        lda     #0
-:       sta     BITMAP,x
-        dex
-        bpl     :-
-        lda     #%00000001      ; ProDOS global page
-        sta     BITMAP+BITMAP_SIZE-1
-        lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     BITMAP
-
         ;; Did we detach S3D2 /RAM?
         ;; NOTE: ReconnectRAM is not used here because (1) it will be
         ;; disconnected immediately by Disk Copy anyway and (2) we
