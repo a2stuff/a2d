@@ -474,7 +474,6 @@ offset_table:
         lda     findicon_params::which_icon
         jne     _IconClick
 
-        jsr     LoadDesktopEntryTable
         lda     #0
         jmp     DragSelect
 
@@ -542,8 +541,6 @@ dispatch_click:
 ;;; --------------------------------------------------
 
 .proc _ContentClick
-        jsr     LoadActiveWindowEntryTable
-
         MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
 
@@ -3436,7 +3433,8 @@ entry2:
         jsr     _PreserveSelection
 
         ;; Destroy existing icons
-        jsr     DestroyIconsInActiveWindow
+        jsr     LoadActiveWindowEntryTable
+        jsr     RemoveAndFreeCachedWindowIcons
 
 ;;; Entry point when refreshing window contents
 entry3:
@@ -3565,20 +3563,17 @@ RefreshView := RefreshViewImpl::entry3
 .endproc ; GetIconWindow
 
 ;;; ============================================================
-;;; Destroy all of the icons in the active window.
 
-.proc DestroyIconsInActiveWindow
-        ITK_CALL IconTK::RemoveAll, active_window_id
-        jsr     LoadActiveWindowEntryTable ; restored below
+.proc RemoveAndFreeCachedWindowIcons
         lda     icon_count
         sec
         sbc     cached_window_entry_count
         sta     icon_count
 
-        jsr     FreeCachedWindowIcons
+        ITK_CALL IconTK::RemoveAll, cached_window_id
 
-        jmp     StoreWindowEntryTable
-.endproc ; DestroyIconsInActiveWindow
+        FALL_THROUGH_TO FreeCachedWindowIcons
+.endproc ; RemoveAndFreeCachedWindowIcons
 
 ;;; ============================================================
 
@@ -3601,17 +3596,6 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
 done:   rts
 .endproc ; FreeCachedWindowIcons
-
-;;; ============================================================
-;;; Clear active window entry count
-
-.proc ClearActiveWindowEntryCount
-        jsr     LoadActiveWindowEntryTable
-
-        copy    #0, cached_window_entry_count
-
-        jmp     StoreWindowEntryTable
-.endproc ; ClearActiveWindowEntryCount
 
 ;;; ============================================================
 
@@ -5597,7 +5581,8 @@ exception_flag:
         jsr     RemoveWindowFileRecords
 
         ;; Remove old icons
-        jsr     DestroyIconsInActiveWindow
+        jsr     LoadActiveWindowEntryTable
+        jsr     RemoveAndFreeCachedWindowIcons
         jsr     ClearActiveWindowEntryCount
 
         ;; Copy window path to `src_path_buf`
@@ -5638,7 +5623,9 @@ last_pos        .tag    MGTK::Point
 END_PARAM_BLOCK
 
         sta     window_id
+        jsr     LoadWindowEntryTable
 
+        lda     window_id
     IF_NOT_ZERO
         ;; Map initial event coordinates
         jsr     _CoordsScreenToWindow
@@ -5835,7 +5822,6 @@ update: lda     window_id
         ;; `dragwindow_params::moved` is not checked; harmless if it didn't.
 
         jsr     CachedIconsWindowToScreen
-        jsr     StoreWindowEntryTable
 
         rts
 .endproc ; DoWindowDrag
@@ -5877,18 +5863,10 @@ update: lda     window_id
 
         jsr     ClearSelection
 
-        lda     icon_count
-        sec
-        sbc     cached_window_entry_count
-        sta     icon_count
-
-        ITK_CALL IconTK::RemoveAll, cached_window_id
-
-        jsr     FreeCachedWindowIcons
+        jsr     RemoveAndFreeCachedWindowIcons
 
         dec     num_open_windows
-        copy    #0, cached_window_entry_count
-        jsr     StoreWindowEntryTable
+        jsr     ClearAndStoreCachedWindowEntryTable
 
         MGTK_CALL MGTK::CloseWindow, cached_window_id
 
@@ -14966,6 +14944,16 @@ done_load:
 
         rts
 .endproc ; LoadWindowEntryTable
+
+.proc ClearActiveWindowEntryCount
+        jsr     LoadActiveWindowEntryTable
+        FALL_THROUGH_TO ClearAndStoreCachedWindowEntryTable
+.endproc ; ClearActiveWindowEntryCount
+
+.proc ClearAndStoreCachedWindowEntryTable
+        copy    #0, cached_window_entry_count
+        FALL_THROUGH_TO StoreWindowEntryTable
+.endproc ; ClearAndStoreCachedWindowEntryTable
 
 ;;; Assert: `cached_window_id` and `icon_count` is up-to-date
 .proc StoreWindowEntryTable

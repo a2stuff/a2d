@@ -210,7 +210,7 @@ STATEREG        := $C068        ; Mega II chip (IIgs, etc)
 RAMWORKS_BANK   := $C073
 LASER128EX_CFG  := $C074        ; high two bits control speed
 
-ROMIN2          := $C082
+ROMIN2          := $C082        ; (W) Read ROM; no write
 
 
 ;;; Le Chat Mauve Eve registers
