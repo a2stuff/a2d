@@ -1082,6 +1082,8 @@ With Sci.Calc:
 * Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA. Change the setting to 24 hour. Click where the AM/PM field would be, to the right of the minutes field. Verify that nothing happens.
 * Configure a system without a real-time clock. Launch DeskTop. Run the Date and Time DA. Click the year field. Click the up arrow. Verify that the year increments. Click the down arrow. Verify that the year decrements. Verify that only the clicked buttons highlight, and that they un-highlight correctly when the button is released.
 
+* Open the Control Panels folder. View > by Name. Open Date and Time. Change the date format from M/D/Y to D/M/Y or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.
+
 ## Calendar
 
 * Configure a system with a real-time clock. Launch DeskTop. Run the Calendar DA. Verify that it starts up showing the current month and year correctly.

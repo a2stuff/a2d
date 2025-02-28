@@ -877,6 +877,14 @@ dialog_result:  .byte   0
 
 .proc Destroy
         MGTK_CALL MGTK::CloseWindow, closewindow_params
+
+        ;; Dates in DeskTop list views may be invalidated, so if any
+        ;; settings changed, force a full redraw to avoid artifacts.
+        bit     dialog_result
+    IF_VS
+        MGTK_CALL MGTK::RedrawDeskTop
+    END_IF
+
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
 .endproc ; Destroy
