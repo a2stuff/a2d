@@ -905,6 +905,10 @@ same_window:
         bit     fixed
         bmi     finish          ; don't move
 
+        lda     BUTN0
+        ora     BUTN1
+        bmi     finish          ; don't move
+
         ;; --------------------------------------------------
 
         ldx     #0              ; don't clip (not desktop; unnecessary)

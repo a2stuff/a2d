@@ -592,6 +592,13 @@
   * Drag a file icon in B onto C while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Drag a file icon in B onto D while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
 
+* Drag a single file icon and drop it within the same window. Verify the icon is moved.
+* Drag multiple file icons and drop them within the same window. Verify the icons are moved.
+* Drag a single file icon and drop it within the same window while holding either Open-Apple or Solid-Apple. Verify the icon is duplicated.
+* Drag multiple file icons and drop them within the same window while holding either Open-Apple or Solid-Apple. Verify nothing happens.
+* Drag a single file icon and drop it within the same window while both Open-Apple and Solid-Apple. Verify nothing happens.
+* Drag multiple file icons and drop them within the same window while holding both Open-Apple and Solid-Apple. Verify nothing happens.
+
 * Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
 * Launch DeskTop. Find a folder containing files and folders. Copy the folder to another volume. Using File > Get Info, compare the source and destination folders and files (both the top level folder and nested folders). Verify that the creation and modification dates match the original.
 * Launch DeskTop. Drag a volume icon onto another volume icon (with sufficient capacity). Verify that no alert is shown. Repeat, but drag onto a volume window instead.

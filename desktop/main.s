@@ -796,6 +796,10 @@ same_or_desktop:
         cpx     #$FF
         beq     failure
 
+        lda     BUTN0
+        ora     BUTN1
+        bmi     modified
+
         jsr     RedrawSelectedIcons
         jmp     ScrollUpdate
 
@@ -804,7 +808,15 @@ failure:
         txs
         rts
 
-        ;; --------------------------------------------------
+modified:
+        lda     BUTN0
+        eor     BUTN1
+        RTS_IF_NC               ; ignore unless only one is down
+
+        jsr     GetSingleSelectedIcon
+        RTS_IF_ZERO
+
+        jmp     CmdDuplicate
 
 .endproc ; _FileIconDrag
 
