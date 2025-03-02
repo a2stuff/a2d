@@ -70,12 +70,12 @@
 
 * Launch DeskTop. Open a folder containing subfolders. Select all the icons in the folder. Double-click one of the subfolders. Verify that the selection is retained in the parent window, with the subfolder icons dimmed. Position a child window over top of the parent so it overlaps some of the icons. Close the child window. Verify that the parent window correctly shows only the previously opened folder as selected.
 
-* Launch DeskTop. Open a window containing folders and files. Scroll the window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). drag a file icon over the obscured part of the folder. Verify the folder doesn't highlight.
-* Launch DeskTop. Open a window containing folders and files. Scroll the window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). drag a file icon over the visible part of the folder. Verify the folder highlights but doesn't render past window bounds. Continue dragging over the obscured part of the folder. Verify that the folder unhighlights.
+* Launch DeskTop. Open a window containing folders and files. Scroll the window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file icon over the obscured part of the folder. Verify the folder doesn't highlight.
+* Launch DeskTop. Open a window containing folders and files. Scroll the window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file icon over the visible part of the folder. Verify the folder highlights but doesn't render past window bounds. Continue dragging over the obscured part of the folder. Verify that the folder unhighlights.
 
-* Launch DeskTop. Open two windows containing folders and files. drag a file icon from one window over a folder in the other window. Verify that the folder highlights. Drop the file. Verify that the file is copied or moved to the correct target folder.
-* Launch DeskTop. Open two windows containing folders and files. Scroll one window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). drag a file icon from the other window over the obscured part of the folder. Verify the folder doesn't highlight.
-* Launch DeskTop. Open two windows containing folders and files. Scroll one window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). drag a file icon from the other window over the visible part of the folder. Verify the folder highlights but doesn't render past window bounds. Continue dragging over the obscured part of the folder. Verify that the folder unhighlights.
+* Launch DeskTop. Open two windows containing folders and files. Drag a file icon from one window over a folder in the other window. Verify that the folder highlights. Drop the file. Verify that the file is copied or moved to the correct target folder.
+* Launch DeskTop. Open two windows containing folders and files. Scroll one window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file icon from the other window over the obscured part of the folder. Verify the folder doesn't highlight.
+* Launch DeskTop. Open two windows containing folders and files. Scroll one window so a folder is partially or fully outside the visual area (e.g. behind title bar, header, or scrollbars). Drag a file icon from the other window over the visible part of the folder. Verify the folder highlights but doesn't render past window bounds. Continue dragging over the obscured part of the folder. Verify that the folder unhighlights.
 
 * Launch DeskTop. Open a window containing folders and files. Open another window, for an empty volume. Drag an icon from the first to the second. Ensure no scrollbars activate in the target window.
 * Launch DeskTop. Open a window containing folders and files, with no scrollbars active. Open another window. Drag an icon from the first to the second. Ensure no scrollbars activate in the source window.
@@ -95,7 +95,7 @@
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Verify that 127 icons can be shown.
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. File > New Folder. Verify that a warning is shown and the window is closed. Repeat, with multiple windows open. Verify that everything repaints correctly, and that no volume or folder icon incorrectly displays as dimmed.
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Use File > Copy To... to copy a file into a directory represented by an open window. Verify that after the copy, a warning is shown, the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
-* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. drag a file icon from another volume (to copy it) into an open window. Verify that after a copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
+* Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Drag a file icon from another volume (to copy it) into an open window. Verify that after a copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open windows bringing the total icons to 127. Drag a volume icon into an open window. Verify that after the copy, a warning is shown and the window is closed, and that no volume or folder icon incorrectly displays as dimmed.
 
 * Use an emulator that supports dynamically inserting SmartPort disks, e.g. Virtual ][. Insert disks A, B, C, D in drives starting at the highest slot first, e.g. S7D1, S7D2, S5D1, S5D2. Launch DeskTop. Verify that the disks appear in order A, B, C, D. Eject the disks, and wait for DeskTop to remove the icons. Pause the emulator, and reinsert the disks in the same drives. Un-pause the emulator. Verify that the disks appear on the DeskTop in the same order. Eject the disks again, pause, and insert the disks into the drives in reverse order (A in S5D2, etc). Un-pause the emulator. Verify that the disks appear in reverse order on the DeskTop.
@@ -323,7 +323,7 @@
   * Select the innermost folder. File > Duplicate
   * Select the innermost folder. File > Copy To... (and pick a target)
   * Select the innermost folder. Shortcuts > Add a Shortcut...
-  * drag a file icon onto the innermost folder.
+  * Drag a file icon onto the innermost folder.
   * Drag the innermost folder to another volume.
   * Drag the innermost folder to the Trash.
 * Repeat the previous case, but with an image file as the innermost file instead of a folder. Select the file. File > Open. Verify that an alert is shown.
@@ -563,7 +563,7 @@
 * Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to move it into itself by dragging. Verify that an error is shown.
 * Load DeskTop. Create a folder e.g. /RAM/F, and a sibling folder e.g. /RAM/B. Open the containing window, and the first folder itself. Select both folders, and try to move both into the first folder's window by dragging. Verify that an error is shown before any moves occur.
 * Load DeskTop. Create a folder e.g. /RAM/F. Open the containing window, and the folder itself. Try to copy it into itself by dragging with an Apple key depressed. Verify that an error is shown.
-* Load DeskTop. Open a volume window. drag a file icon from the volume window to the volume icon. Verify that an error is shown.
+* Load DeskTop. Open a volume window. Drag a file icon from the volume window to the volume icon. Verify that an error is shown.
 * Load DeskTop. Create a folder, and a file within the folder with the same name as the folder (e.g. /RAM/F and /RAM/F/F). Try to copy the file over the folder using File > Copy To.... Verify that an error is shown.
 * Load DeskTop. Create a folder, and a file within the folder with the same name as the folder (e.g. /RAM/F and /RAM/F/F). Try to move the file over the folder using drag and drop. Verify that an error is shown.
 * Load DeskTop. Create a folder, and a file within the folder with the same name as the folder, and another file (e.g. /RAM/F and /RAM/F/F and /RAM/F/B). Select both files and try to move them into the parent folder using drag and drop. Verify that an error is shown before any files are moved.
@@ -574,23 +574,23 @@
 
 * Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. `/HD` but that shows as "Hd". Launch DeskTop. Open the startup volume. Apple Menu > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
 
-* Launch DeskTop. drag a file icon to a same-volume window so it is moved, not copied. Use File > Copy To... to copy a file. Verify that the file is indeed copied, not moved.
+* Launch DeskTop. Drag a file icon to a same-volume window so it is moved, not copied. Use File > Copy To... to copy a file. Verify that the file is indeed copied, not moved.
 
 # TODO: Rewrite this A -> Vol's icon, B -> Vol's window, C -> Folder's icon, D -> Folder's window
 
 * Repeat the following, with a volume icon (A), an open volume window (B) with a folder icon (C), and a window for that folder (D).
-  * drag a file icon from another volume onto A. Verify that B activates and refreshes, and that B's used/free numbers update. Click on D. Verify that D's used/free numbers update.
-  * drag a file icon from another volume onto B. Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Drag a file icon from another volume onto A. Verify that B activates and refreshes, and that B's used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Drag a file icon from another volume onto B. Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Copy a file from another volume to A using File > Copy To.... Verify that B activates and refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
-  * drag a file icon from another volume onto D. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Drag a file icon from another volume onto D. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Copy file from another volume to C using File > Copy File.... Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
-  * drag a file icon from B to the trash. Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
+  * Drag a file icon from B to the trash. Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
   * Delete a file from B using File > Delete. Verify that B refreshes, and that B's item count/used/free numbers update. Click on D. Verify that D's used/free numbers update.
-  * drag a file icon from D to the trash. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Drag a file icon from D to the trash. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Delete a file from D using File > Delete. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Duplicate a file in D using File > Duplicate. Verify that D refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
-  * drag a file icon in B onto C while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
-  * drag a file icon in B onto D while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Drag a file icon in B onto C while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
+  * Drag a file icon in B onto D while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
 
 * Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
 * Launch DeskTop. Find a folder containing files and folders. Copy the folder to another volume. Using File > Get Info, compare the source and destination folders and files (both the top level folder and nested folders). Verify that the creation and modification dates match the original.
@@ -869,7 +869,7 @@ The following tests all require:
   * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at boot. Ensure DeskTop is set to copy to RAMCard on startup. Restart DeskTop. Verify that the directory is successfully copied.
   * Launch DeskTop. Create a shortcut for the system file, set to copy to RAMCard at first use. Ensure DeskTop is set to copy to RAMCard on startup. Ensure DeskTop is set to launch Shortcuts. Quit DeskTop. Launch Shortcuts. Select the shortcut. Verify that the directory is successfully copied.
 
-* Launch DeskTop, ensure it copies itself to RAMCard. drag a file icon to a same-volume window so it is moved. Configure a shortcut to copy to RAMCard "at first use". Invoke the shortcut. Verify that the shortcut's files were indeed copied, not moved.
+* Launch DeskTop, ensure it copies itself to RAMCard. Drag a file icon to a same-volume window so it is moved. Configure a shortcut to copy to RAMCard "at first use". Invoke the shortcut. Verify that the shortcut's files were indeed copied, not moved.
 
 * Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Shortcuts. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
 * Launch DeskTop, ensure it copies itself to RAMCard. Configure a shortcut with the target in a directory, not the root of a volume, and to Copy to RAMCard at first use. Quit DeskTop. Launch Shortcuts. Invoke the shortcut. Verify that the copy count goes to zero and doesn't blank out.
