@@ -5,6 +5,15 @@
 .scope icon_toolkit
         ITKEntry := *
 
+        ;; Zero Page usage (saved/restored around calls)
+        ;; $06/$07 and $08/$09 are used as generic pointers
+
+        poly_dx := $0A
+        poly_dy := $0C
+
+        clip_dx := $0A
+        clip_dy := $0C
+
         .assert ITKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
         ;; Stash return value from stack, adjust by 3
@@ -21,9 +30,11 @@
         txa
         pha
 
-        ;; Save $06..$09 on the stack
-        ldx     #AS_BYTE(-4)
-:       lda     $06 + 4,x
+        kBytesToSave = 8
+
+        ;; Save $06... on the stack
+        ldx     #AS_BYTE(-kBytesToSave)
+:       lda     $06 + kBytesToSave,x
         pha
         inx
         bne     :-
@@ -47,8 +58,8 @@
         jsr     SELF_MODIFIED
         tay                     ; A = result
 
-        ;; Restore $06..$09
-        ldx     #3
+        ;; Restore $06...
+        ldx     #kBytesToSave-1
 :       pla
         sta     $06,x
         dex
@@ -954,9 +965,6 @@ trash_flag:             .byte   0 ; if Trash is included in selection
         DEFINE_POINT initial_coords, 0, 0
         DEFINE_POINT last_coords, 0, 0
 
-poly_dx:        .word   0
-poly_dy:        .word   0
-
 highlight_count:
         .byte   0
 last_highlighted_icon:
@@ -1367,12 +1375,6 @@ clip_icons_flag:
 ;;; Window containing the icon, used during clipping/redrawing
 clip_window_id:
         .byte   0
-
-;;; Deltas mapping screen to window coordinates
-clip_dx:
-        .word   0
-clip_dy:
-        .word   0
 
 ;;; ============================================================
 ;;; DrawIconRaw
