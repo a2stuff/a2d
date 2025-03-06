@@ -781,16 +781,31 @@ check_double_click:
 .proc _FileIconDrag
         tax
         lda     drag_drop_params::result
+
+        ;; A=0, X=0 for drag in same window
+        ;; A=0, X=2 for drag to desktop
+        ;; A=$80|win_id, X=0 for drag to window
+        ;; A=icon_id,    X=0 for drag to icon
+
         beq     same_or_desktop
 
-process_drop:
-        jsr     DoDrop
+        ;; Trash?
+        cmp     trash_icon_num
+        jeq     CmdDeleteSelection
+
+        ;; Copy/Move
+        jsr     SetPathBuf4FromDragDropResult
+        RTS_IF_CS               ; failure, e.g. path too long
+
+        ;; TODO: If double-mod: if single sel, CmdMakeLink (via new ep)
+
+        jsr     DoCopySelection
         jmp     _PerformPostDropUpdates
 
         ;; --------------------------------------------------
 
 same_or_desktop:
-        cpx     #2              ; not a drag
+        cpx     #2              ; not a drag, drag to desktop, or other ignored
         beq     _CheckRenameClick
 
         cpx     #$FF
@@ -827,17 +842,30 @@ modified:
 .proc _VolumeIconDrag
         tax
         lda     drag_drop_params::result
+
+        ;; A=0, X=0 for drag on desktop
+        ;; A=$80|win_id, X=0 for drag to window
+        ;; A=icon_id,    X=0 for drag to icon
+
         beq     same_or_desktop
 
-        jsr     DoDrop
-        ;; NOTE: If drop target is trash, `JTDrop` relays to
-        ;; `CmdEject` and pops the return address.
+        ;; Trash?
+        cmp     trash_icon_num
+        jeq     CmdEject
+
+        ;; Copy
+        jsr     SetPathBuf4FromDragDropResult
+        RTS_IF_CS               ; failure, e.g. path too long
+
+        ;; TODO: If double-mod: if single sel, CmdMakeLink (via new ep)
+
+        jsr     DoCopySelection
         jmp     _PerformPostDropUpdates
 
         ;; --------------------------------------------------
 
 same_or_desktop:
-        cpx     #2              ; file icon dragged to desktop?
+        cpx     #2              ; not a drag
         beq     _CheckRenameClick
 
         ;; Icons moved on desktop - update and redraw
@@ -867,7 +895,7 @@ ret:    rts
 ;;;------------------------------------------------------------
 ;;; After an icon drop (file or volume), update any affected
 ;;; windows.
-;;; Inputs: A = result from `DoDrop`, and `drag_drop_params::result`
+;;; Inputs: A = `kOperationXYZ`, and `drag_drop_params::result`
 
 .proc _PerformPostDropUpdates
         ;; --------------------------------------------------
@@ -876,27 +904,16 @@ ret:    rts
         cmp     #kOperationCanceled
         RTS_IF_EQ
 
-        ;; Was a move?
+        ;; --------------------------------------------------
+        ;; (2/4) Was a move?
         ;; NOTE: Only applies in file icon case.
+
         bit     operations__move_flag
     IF_NS
         ;; Update source vol's contents
         jsr     MaybeStashDropTargetName ; in case target is in window...
         jsr     UpdateActivateAndRefreshSelectedWindow
         jsr     MaybeUpdateDropTargetFromName ; ...restore after update.
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; (2/4) Dropped on trash?
-
-        ;; NOTE: Only applies in file icon case; this proc is not called
-        ;; when dropping volume icons on trash.
-        lda     drag_drop_params::result
-        cmp     trash_icon_num
-        ;; Update used/free for same-vol windows
-    IF_EQ
-        copy    #$80, validate_windows_flag
-        jmp     UpdateActivateAndRefreshSelectedWindow
     END_IF
 
         ;; --------------------------------------------------
@@ -928,9 +945,6 @@ ret:    rts
 .endproc ; _PerformPostDropUpdates
 
 .endproc ; HandleClick
-
-;;; Used for delete shortcut; set `drag_drop_params::icon` first
-process_drop := HandleClick::_FileIconDrag::process_drop
 
 ;;; ============================================================
 ;;; Activate the window, draw contents, and update menu items
@@ -1152,7 +1166,6 @@ finish: sta     result
         jsr     _DisableSelectorMenuItems
     END_IF
 
-check_selection:
         lda     selected_icon_count
         beq     no_selection
 
@@ -2498,7 +2511,7 @@ main_length:    .word   0
         ;; --------------------------------------------------
         ;; Try the copy
 
-        param_call CopyPtr1ToBuf, path_buf3
+        param_call CopyPtr1ToBuf, path_buf4
         jsr     DoCopySelection
 
         cmp     #kOperationCanceled
@@ -3711,10 +3724,15 @@ ret:    rts
 ;;; ============================================================
 
 .proc CmdDeleteSelection
-        ;; Re-uses 'drop on trash' logic which handles updating
-        ;; the source window.
-        copy    trash_icon_num, drag_drop_params::icon
-        jmp     process_drop
+        lda     selected_window_id
+        jeq     CmdEject
+
+        jsr     DoDeleteSelection
+        cmp     #kOperationCanceled
+        RTS_IF_EQ
+
+        copy    #$80, validate_windows_flag
+        jmp     UpdateActivateAndRefreshSelectedWindow
 .endproc ; CmdDeleteSelection
 
 ;;; ============================================================
@@ -9833,13 +9851,51 @@ next:   dec     step
 .endenum
 
 ;;; ============================================================
+;;; For drop onto window/icon, compute target prefix.
+;;; Input: `drag_drop_params::result` set
+;;; Output: C=0, `path_buf4` populated with target path
+;;;         C=1 on error (e.g. path too long); alert is shown
+.proc SetPathBuf4FromDragDropResult
+        ;; Is drop on a window or an icon?
+        ;; hi bit clear = target is an icon
+        ;; hi bit set = target is a window; get window number
+        lda     drag_drop_params::result
+        bpl     target_is_icon
+
+        ;; Drop is on a window
+        and     #%01111111      ; get window id
+        jsr     GetWindowPath
+        stax    $06
+        param_call CopyPtr1ToBuf, path_buf4
+        clc
+        rts                     ; success
+
+        ;; Drop is on an icon.
+target_is_icon:
+        jsr     GetIconPath     ; `path_buf4` set to path; A=0 on success
+    IF_NE
+        jsr     ShowAlert
+        sec                     ; failure
+        rts
+    END_IF
+
+        COPY_STRING path_buf3, path_buf4
+        clc                     ; success
+        rts
+.endproc ; SetPathBuf4FromDragDropResult
+
+;;; ============================================================
 
 .scope operations
 
-;;; Used by Duplicate command for a single file copy
+;;; ============================================================
+;;; Operations where source/target paths are passed by callers
+
+;;; File > Duplicate - for a single file copy
+;;; Caller sets `path_buf3` (source) and `path_buf4` (destination
 .proc DoCopyFile
-        copy    #0, operation_flags ; copy/delete
-        copy    #0, operations::move_flag
+        copy    #0, operation_flags ; bit7=0 = copy/delete
+        copy    #0, move_flag
         tsx
         stx     stack_stash
 
@@ -9851,7 +9907,6 @@ next:   dec     step
 .endproc ; DoCopyFile
 
 .proc DoCopyCommon
-        copy    #0, operations::move_flag   ; TODO: Remove, redundant with callers?
         jsr     CopyProcessNotSelectedFile
         jsr     InvokeOperationCompleteCallback
         FALL_THROUGH_TO FinishOperation
@@ -9860,10 +9915,11 @@ next:   dec     step
 FinishOperation:
         return  #kOperationSucceeded
 
-;;; Used when running a Shortcut, to copy to RAMCard
+;;; Shortcuts > Run a Shortcut... w/ "Copy to RAMCard"/"at first use"
+;;; Caller sets `path_buf3` (source) and `path_buf4` (destination)
 .proc DoCopyToRAM
-        copy    #0, operations::move_flag
-        copy    #%11000000, operation_flags
+        copy    #0, move_flag
+        copy    #%11000000, operation_flags ; bits7&6=1 = copy to RAMCard
         tsx
         stx     stack_stash
         jsr     PrepCallbacksForEnumeration
@@ -9873,128 +9929,58 @@ FinishOperation:
         jmp     DoCopyCommon
 .endproc ; DoCopyToRAM
 
-;;; --------------------------------------------------
+;;; ============================================================
+;;; Operations on selection (source)
 
+;;; File > Copy To...
+;;; Drag / Drop (to anything but Trash)
+;;; Caller sets `path_buf4` (destination)
 .proc DoCopySelection
-        copy    #0, operation_flags ; copy/delete
-        copy    #$40, copy_delete_flags ; target is `path_buf3`
-        jmp     DoOpOnSelectionCommon
-.endproc ; DoCopySelection
+        copy    #0, operation_flags ; bit7=0 = copy/delete
+        copy    #$00, copy_delete_flags ; bit7=0 = copy
 
-;;; Used for drag/drop copy as well as deleting selection
-;;; (if `drag_drop_params::result` equals `trash_icon_num`)
-.proc DoDrop
-        copy    #0, operations::move_flag
-        lda     drag_drop_params::result
-        cmp     trash_icon_num
-        bne     :+
-        lda     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
-:       lda     #$00
-        sta     copy_delete_flags
-        copy    #0, operation_flags ; copy/delete
-        jmp     DoOpOnSelectionCommon
-.endproc ; DoDrop
+        lda     selected_window_id
+        beq     :+              ; dragging volume always copies
+        jsr     GetWindowPath
+        jsr     CheckMoveOrCopy
+:       sta     move_flag
 
-.proc DoOpOnSelectionCommon
         tsx
         stx     stack_stash
-        lda     operation_flags
-        jne     BeginOperation  ; copy/delete
+        jsr     PrepCallbacksForEnumeration
+        jsr     OpenCopyProgressDialog
+        jmp     OperationOnSelection
+.endproc ; DoCopySelection
 
-        ;; Copy or delete
-        bit     copy_delete_flags
-        bvs     common                ; path target
-        bpl     compute_target_prefix ; drop target
+;;; File > Delete
+;;; Drag / Drop to Trash (except volumes)
+.proc DoDeleteSelection
+        copy    #0, move_flag
+        copy    #0, operation_flags ; bit7=0 = copy/delete
+        copy    #$80, copy_delete_flags ; bit7=1 = delete
 
-        ;; --------------------------------------------------
-        ;; Delete - are selected icons volumes?
-        lda     selected_window_id
-        jne     BeginOperation ; no, just files
-
-        ;; Yes - eject it!
-        pla
-        pla
-        jmp     CmdEject
-
-;;; --------------------------------------------------
-;;; For drop onto window/icon, compute target prefix.
-
-        ;; Is drop on a window or an icon?
-        ;; hi bit clear = target is an icon
-        ;; hi bit set = target is a window; get window number
-compute_target_prefix:
-        lda     drag_drop_params::result
-        bpl     target_is_icon
-
-        ;; Drop is on a window
-        and     #%01111111      ; get window id
-        jsr     GetWindowPath
-        stax    $08
-        copy16  #str_empty, $06
-        jsr     JoinPaths
-        dec     path_buf3       ; remove trailing '/'
-        jmp     common
-
-        ;; Drop is on an icon.
-target_is_icon:
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
-    IF_NE
-        jsr     ShowAlert
-        return  #kOperationCanceled
-    END_IF
-
-common:
-        ldy     path_buf3
-:       copy    path_buf3,y, path_buf4,y
-        dey
-        bpl     :-
-        FALL_THROUGH_TO BeginOperation
-.endproc ; DoOpOnSelectionCommon
+        tsx
+        stx     stack_stash
+        jsr     PrepCallbacksForEnumeration
+        jsr     OpenDeleteProgressDialog
+        FALL_THROUGH_TO OperationOnSelection
+.endproc ; DoDeleteSelection
 
 ;;; --------------------------------------------------
 ;;; Start the actual operation
 
-.proc BeginOperation
-        jsr     PrepCallbacksForEnumeration
-        bit     copy_delete_flags
-        bmi     @trash
+.proc OperationOnSelection
 
-        ;; Copy or Move?
-        bvc     @drop
-        ;; Target is path - always a copy
-        lda     #0
-        beq     @store      ; always
-        ;; Drag/drop - compare src/dst paths (etc)
-@drop:  lda     selected_window_id
-        jsr     GetWindowPath
-        jsr     CheckMoveOrCopy
-@store: sta     operations::move_flag
-        jsr     OpenCopyProgressDialog
-        jmp     iterate_selection
-
-@trash: jsr     OpenDeleteProgressDialog
-        jmp     iterate_selection
-
-;;; Perform operation
-
-perform:
-        bit     copy_delete_flags
-        bmi     @trash
-        jsr     PrepCallbacksForCopy
-        jmp     iterate_selection
-
-@trash: jsr     PrepCallbacksForDelete
-        FALL_THROUGH_TO iterate_selection
+        ;; Selection is iterated twice, once to get a file count, then
+        ;; again to do the real work.
 
 iterate_selection:
-        lda     selected_icon_count
-        jeq     finish
-
         ldx     #0
-        stx     icon_count
+        stx     icon_index
 
-        icon_count := *+1
+        ;; --------------------------------------------------
+
+        icon_index := *+1
 loop:   ldx     #SELF_MODIFIED_BYTE
         lda     selected_icon_list,x
         cmp     trash_icon_num
@@ -10010,9 +9996,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         ;; run this for copy using paths (i.e. Duplicate, Copy to RAMCard)
         lda     do_op_flag
         bne     :+
-        bit     operation_flags
-        bmi     :+
-        bit     copy_delete_flags
+        bit     copy_delete_flags ; bit7=0 = copy
         bmi     :+
         jsr     CopyPathsFromBufsToSrcAndDst
 
@@ -10039,31 +10023,40 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
 next_icon:
 
-        inc     icon_count
-        ldx     icon_count
+        inc     icon_index
+        ldx     icon_index
         cpx     selected_icon_count
         bne     loop
 
+        ;; --------------------------------------------------
+
         ;; Done icons - did we complete the operation?
         lda     do_op_flag
-        bne     finish
+    IF_NE
+        jsr     InvokeOperationCompleteCallback
+        return  #0
+    END_IF
 
         ;; No, we finished enumerating. Now do the real work.
 
         ;; Do we need to show a confirmation dialog? (i.e. Delete)
-        bit     operation_flags
-        bmi     no_confirm      ; lock
-        bit     copy_delete_flags
-        bpl     no_confirm
-
+        bit     copy_delete_flags ; bit7=1 = delete
+    IF_NS
         jsr     InvokeOperationConfirmCallback
+    END_IF
 
-no_confirm:
-        jmp     perform
+        ;; Set up callbacks for the real work.
+        bit     copy_delete_flags ; bit7=0 = copy
+    IF_NC
+        jsr     PrepCallbacksForCopy
+    ELSE
+        jsr     PrepCallbacksForDelete
+    END_IF
 
-finish: jsr     InvokeOperationCompleteCallback
-        return  #0
-.endproc ; BeginOperation
+        ;; And iterate selection again.
+        jmp     iterate_selection
+
+.endproc ; OperationOnSelection
 
 ;;; ============================================================
 
@@ -10099,8 +10092,6 @@ operation_flags:
         .byte   0
 
         ;; bit 7 set = delete, clear = copy
-        ;; bit 6 set = target is `drag_drop_params::result`
-        ;;       clear = target is `path_buf3`
 copy_delete_flags:
         .byte   0
 
@@ -10472,10 +10463,9 @@ count:  .addr   0
 ;;; Handle copying of a file.
 ;;; Calls into the recursion logic of `ProcessDir` as necessary.
 
-
 ;;; Used for these operations:
-;;; * File > Duplicate (via `not_selected` entry point) - operates on passed path, `operation_flags` = $C0
-;;; * Run a Shortcut (via `not_selected` entry point) - operates on passed path, `operation_flags` = $00
+;;; * File > Duplicate (via `not_selected` entry point) - operates on passed path, `operation_flags` = $00
+;;; * Run a Shortcut (via `not_selected` entry point) - operates on passed path, `operation_flags` = $C0
 ;;; * File > Copy To - operates on selection, `operation_flags` = $00
 ;;; * Drag/Drop (to non-Trash) - operates on selection, `operation_flags` = $00
 
@@ -10484,35 +10474,40 @@ count:  .addr   0
 selected:
         ;; Caller sets `move_flag` appropriately
         lda     #$80
-        bne     common          ; always
+        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
 
         ;; Via File > Duplicate or copying to RAMCard
 not_selected:
         ;; Caller sets `move_flag` to $00
         lda     #0
 
-common:
         pha                     ; A = use selection?
         jsr     CopyPathsFromBufsToSrcAndDst
 
         ;; If "Copy to RAMCard", make sure there's enough room.
         bit     operations::operation_flags ; CopyToRAM has N=1/V=1, otherwise N=0/V=0
-    IF_NS
+    IF_VS
         jsr     CheckVolBlocksFree
     END_IF
 
         pla                     ; A = use selection?
     IF_NS
+        ;; File > Copy To...
+        ;; Drag/Drop
+
         ;; If source is a volume icon, just copy the volume's contents.
         ;; Note that this is different than when a shortcut is being
         ;; copied; in that case if the parent is a volume, we create
         ;; a corresponding folder.
         lda     selected_window_id ; dragging from desktop?
-        jeq     copy_dir_contents
+        beq     copy_dir_contents
 
         ;; Use last segment of source for destination (e.g. for Copy/Move)
         jsr     AppendSrcPathLastSegmentToDstPath
     ELSE
+        ;; File > Duplicate
+        ;; Shortcuts > Run a Shortcut...
+
         ;; Used passed filename for destination (e.g. for Duplicate)
         param_call AppendFilenameToDstPath, filename_buf
     END_IF
@@ -10540,7 +10535,7 @@ common:
         jsr     TryCreateDst
         bcs     done
 
-        bit     operations::move_flag       ; same volume relink move?
+        bit     move_flag       ; same volume relink move?
     IF_VS
         jmp     RelinkFile
     END_IF
@@ -10554,7 +10549,7 @@ dir:
         jsr     TryCreateDst
         bcs     done
 
-        bit     operations::move_flag       ; same volume relink move?
+        bit     move_flag       ; same volume relink move?
     IF_VS
         jsr     RelinkFile
         jmp     NotifyPathChanged
@@ -10565,7 +10560,7 @@ copy_dir_contents:
         jsr     GetAndApplySrcInfoToDst ; copy modified date/time
         jsr     MaybeFinishFileMove
 
-        bit     operations::move_flag
+        bit     move_flag
     IF_NS
         jsr     NotifyPathChanged
     END_IF
@@ -10627,7 +10622,7 @@ ok_dir: jsr     RemoveSrcPathSegment
 
 .proc MaybeFinishFileMove
         ;; Copy or move?
-        bit     operations::move_flag
+        bit     move_flag
         bpl     done
 
         ;; Was a move - delete file
@@ -10727,7 +10722,7 @@ retry:  copy    dst_path_buf, saved_length
 
         ;; Show appropriate message
         ldax    #aux::str_large_copy_prompt
-        bit     operations::move_flag
+        bit     move_flag
     IF_NS
         ldax    #aux::str_large_move_prompt
     END_IF
@@ -10753,7 +10748,7 @@ existing_size:
 ;;; Output: C=0 on success, C=1 on failure
 
 .proc TryCreateDst
-        bit     operations::move_flag       ; same volume relink move?
+        bit     move_flag       ; same volume relink move?
     IF_VC
         ;; No, verify that there is room.
         jsr     CheckSpaceAndShowPrompt
@@ -11434,7 +11429,7 @@ callbacks_for_size_or_count:
         ;; `src_file_info_params` populated.
         jsr     EnumerationProcessDirectoryEntry
 
-        bit     operations::move_flag       ; same volume relink move?
+        bit     move_flag       ; same volume relink move?
         RTS_IF_VS
 
 is_dir:
@@ -11583,7 +11578,7 @@ map:    .byte   FileEntry::access
         stax    file_count
         stax    total_count
         jsr     SetPortForProgressDialog
-        bit     operations::move_flag
+        bit     move_flag
       IF_NC
         param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
       ELSE
@@ -12378,9 +12373,9 @@ ret:    return  #$FF
 .endscope ; operations
 
         DoCopySelection := operations::DoCopySelection
+        DoDeleteSelection := operations::DoDeleteSelection
         DoCopyToRAM := operations::DoCopyToRAM
         DoCopyFile := operations::DoCopyFile
-        DoDrop := operations::DoDrop
         operations__move_flag := operations::move_flag
 
         DoGetInfo := operations::get_info::DoGetInfo
