@@ -14,10 +14,9 @@ DrawIconRaw     = $03   ; { .byte icon }
 RemoveIcon      = $04   ; { .byte icon }
 RemoveAll       = $05   ; { .byte window_id }
 FindIcon        = $06   ; { .word mousex, .word mousey, .byte result, .byte window_id }
-DragHighlighted = $07   ; { .byte icon/result, .word mousex, .word mousey, .byte fixed }
+DragHighlighted = $07   ; { .byte icon/target, .word mousex, .word mousey, .byte fixed }
                         ; Input: specific icon being dragged, mouse coords
-                        ; Output: result byte is:
-                        ;  * 0: A = 0 = icon move, 2 = not a drag, 3 = no selection
+                        ; Output: A = kDragResultXYZ; if drop, then target byte is:
                         ;  * hi bit clear: low bits are target icon
                         ;  * hi bit set:   low bits are target window
 UnhighlightIcon = $08   ; { .byte icon }
@@ -31,6 +30,13 @@ GetRenameRect   = $0F   ; { .byte icon, rect bounds out }
 GetBitmapRect   = $10   ; { .byte icon, rect bounds out }
 
 ;;; `icon` is the icon number, i.e. first field in icon entry
+
+;;; Result of `DragHighlighted`:
+kDragResultDrop         = 0
+kDragResultNotADrag     = 1
+kDragResultMove         = 2
+kDragResultMoveModified = 3
+kDragResultCanceled     = 4
 
 .endscope ; IconTK
 

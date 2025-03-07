@@ -768,109 +768,95 @@ check_double_click:
         .assert kViewByName >= $80, error, "enum mismatch"
         sta     drag_drop_params::fixed
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
-        ldy     findicon_params::window_id
-        beq     _VolumeIconDrag
 
-        FALL_THROUGH_TO _FileIconDrag
-.endproc ; _IconClick
+        cmp     #IconTK::kDragResultCanceled
+        RTS_IF_EQ
 
-;;; ============================================================
-;;; Inputs: A = `IconTK::DragHighlighted` return value, and
-;;;         `drag_drop_params::result` is set.
-
-.proc _FileIconDrag
-        tax
-        lda     drag_drop_params::result
-
-        ;; A=0, X=0 for drag in same window
-        ;; A=0, X=2 for drag to desktop
-        ;; A=$80|win_id, X=0 for drag to window
-        ;; A=icon_id,    X=0 for drag to icon
-
-        beq     same_or_desktop
-
-        ;; Trash?
-        cmp     trash_icon_num
-        jeq     CmdDeleteSelection
-
-        ;; Copy/Move
-        jsr     SetPathBuf4FromDragDropResult
-        RTS_IF_CS               ; failure, e.g. path too long
-
-        ;; TODO: If double-mod: if single sel, CmdMakeLink (via new ep)
-
-        jsr     DoCopySelection
-        jmp     _PerformPostDropUpdates
-
-        ;; --------------------------------------------------
-
-same_or_desktop:
-        cpx     #2              ; not a drag, drag to desktop, or other ignored
+        cmp     #IconTK::kDragResultNotADrag
         beq     _CheckRenameClick
 
-        cpx     #$FF
-        beq     failure
+        ;; ----------------------------------------
 
-        lda     BUTN0
-        ora     BUTN1
-        bmi     modified
-
+        cmp     #IconTK::kDragResultMove
+     IF_EQ
         jsr     RedrawSelectedIcons
+        lda     selected_window_id
+        RTS_IF_ZERO
+
         jmp     ScrollUpdate
+     END_IF
 
-failure:
-        ldx     saved_stack
-        txs
-        rts
+        ;; ----------------------------------------
+        ;; File drop on same window:
+        ;; * No modifiers - move (see `kDragResultMove` case above)
+        ;; * Single modifier - duplicate
+        ;; * Double modifiers - make link (future, see #838)
 
-modified:
-        lda     BUTN0
-        eor     BUTN1
-        RTS_IF_NC               ; ignore unless only one is down
+        ;; Volume drop on desktop:
+        ;; * No modifiers - move (see `kDragResultMove` case above)
+        ;; * Single modifier - ignore
+        ;; * Double modifiers - ignore
+
+        cmp     #IconTK::kDragResultMoveModified
+     IF_EQ
+        lda     selected_window_id
+        RTS_IF_ZERO
+
+        ;; File drop on same window, but with modifier(s) down so not a move
 
         jsr     GetSingleSelectedIcon
         RTS_IF_ZERO
 
+        ;; Double modifier?
+        lda     BUTN0
+        and     BUTN1
+        RTS_IF_NS               ; TODO: `CmdMakeLink` (via new ep)
+
+        ;; Single modifier
         jmp     CmdDuplicate
+     END_IF
 
-.endproc ; _FileIconDrag
+        ;; ----------------------------------------
+        ;; A = `IconTK::kDragResultDrop`
 
-;;; ------------------------------------------------------------
+        ;; File drop on target:
+        ;; * No modifiers - copy/move (depending on other/same vol)
+        ;; * Single modifier - copy/move (ditto, but opposite)
+        ;; * Double modifiers - make link (future, see #838)
 
-;;; Inputs: A = `IconTK::DragHighlighted` return value, and
-;;;         `drag_drop_params::result` is set.
-.proc _VolumeIconDrag
-        tax
-        lda     drag_drop_params::result
+        ;; Volume drop on target:
+        ;; * No modifiers - copy
+        ;; * Single modifier - copy
+        ;; * Double modifiers - make link (future, see #838)
 
-        ;; A=0, X=0 for drag on desktop
-        ;; A=$80|win_id, X=0 for drag to window
-        ;; A=icon_id,    X=0 for drag to icon
-
-        beq     same_or_desktop
+        lda     drag_drop_params::target
 
         ;; Trash?
         cmp     trash_icon_num
+    IF_EQ
+        lda     selected_window_id
         jeq     CmdEject
+        jmp     CmdDeleteSelection
+    END_IF
 
-        ;; Copy
+        ;; Desktop?
+        cmp     #$80
+        RTS_IF_EQ               ; ignore
+
+        ;; Path for target
         jsr     SetPathBuf4FromDragDropResult
         RTS_IF_CS               ; failure, e.g. path too long
 
+        ;; Double modifier?
         ;; TODO: If double-mod: if single sel, CmdMakeLink (via new ep)
+        lda     BUTN0
+        and     BUTN1               ; TODO: `CmdMakeLink` (via new ep)
+        RTS_IF_NS
 
+        ;; Copy/Move
         jsr     DoCopySelection
         jmp     _PerformPostDropUpdates
-
-        ;; --------------------------------------------------
-
-same_or_desktop:
-        cpx     #2              ; not a drag
-        beq     _CheckRenameClick
-
-        ;; Icons moved on desktop - update and redraw
-        jmp     RedrawSelectedIcons
-.endproc ; _VolumeIconDrag
+.endproc
 
 ;;; ------------------------------------------------------------
 
@@ -895,7 +881,7 @@ ret:    rts
 ;;;------------------------------------------------------------
 ;;; After an icon drop (file or volume), update any affected
 ;;; windows.
-;;; Inputs: A = `kOperationXYZ`, and `drag_drop_params::result`
+;;; Inputs: A = `kOperationXYZ`, and `drag_drop_params::target`
 
 .proc _PerformPostDropUpdates
         ;; --------------------------------------------------
@@ -919,7 +905,7 @@ ret:    rts
         ;; --------------------------------------------------
         ;; (3/4) Dropped on icon?
 
-        lda     drag_drop_params::result
+        lda     drag_drop_params::target
     IF_POS
         ;; Yes, on an icon; update used/free for same-vol windows
         pha
@@ -3037,7 +3023,7 @@ next:   inc     icon
 ;;; ============================================================
 ;;; Save/Restore drop target icon ID in case the window was rebuilt.
 
-;;; Inputs: `drag_drop_params::result`
+;;; Inputs: `drag_drop_params::target`
 ;;; Assert: If target is a file icon, icon is in active window.
 ;;; Trashes $06
 .proc MaybeStashDropTargetName
@@ -3046,7 +3032,7 @@ next:   inc     icon
         sty     stashed_name
 
         ;; Is the target an icon?
-        lda     drag_drop_params::result
+        lda     drag_drop_params::target
         bmi     done            ; high bit set = window
 
         jsr     GetIconWindow   ; file icon?
@@ -3054,7 +3040,7 @@ next:   inc     icon
 
         ;; Stash name
         ptr1 := $06
-        lda     drag_drop_params::result
+        lda     drag_drop_params::target
         jsr     GetIconName
         stax    ptr1
         param_call CopyPtr1ToBuf, stashed_name
@@ -3062,7 +3048,7 @@ next:   inc     icon
 done:   rts
 .endproc ; MaybeStashDropTargetName
 
-;;; Outputs: `drag_drop_params::result` updated if needed
+;;; Outputs: `drag_drop_params::target` updated if needed
 ;;; Assert: `MaybeStashDropTargetName` was previously called
 ;;; Trashes $06
 
@@ -3077,7 +3063,7 @@ done:   rts
         beq     done            ; no match
 
         ;; Update drop target with new icon id.
-        sta     drag_drop_params::result
+        sta     drag_drop_params::target
 
 done:   rts
 .endproc ; MaybeUpdateDropTargetFromName
@@ -9852,14 +9838,14 @@ next:   dec     step
 
 ;;; ============================================================
 ;;; For drop onto window/icon, compute target prefix.
-;;; Input: `drag_drop_params::result` set
+;;; Input: `drag_drop_params::target` set
 ;;; Output: C=0, `path_buf4` populated with target path
 ;;;         C=1 on error (e.g. path too long); alert is shown
 .proc SetPathBuf4FromDragDropResult
         ;; Is drop on a window or an icon?
         ;; hi bit clear = target is an icon
         ;; hi bit set = target is a window; get window number
-        lda     drag_drop_params::result
+        lda     drag_drop_params::target
         bpl     target_is_icon
 
         ;; Drop is on a window

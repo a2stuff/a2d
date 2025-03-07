@@ -916,10 +916,10 @@ str_k_available:
 str_from_int:                   ; populated by IntToString
         PASCAL_STRING "000,000" ; 6 digits plus thousands separator
 
-;;; Selection drag/drop icon/result, and coords
+;;; Selection drag/drop icon/target, and coords
 .params drag_drop_params
 icon:
-result: .byte   0
+target: .byte   0
         DEFINE_POINT coords, 0, 0
 fixed:  .byte   0
 .endparams

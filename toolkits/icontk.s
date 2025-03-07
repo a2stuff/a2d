@@ -656,14 +656,13 @@ inside: pla
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
         cmp     #MGTK::EventKind::drag
-        beq     drag
-
-ignore_drag:
-        lda     #2              ; return value - not a drag
-        jmp     just_select
+    IF_NE
+        lda     #IconTK::kDragResultNotADrag
+        jmp     exit_with_a
+    END_IF
 
         ;; Compute mouse delta
-drag:   lda     findwindow_params::mousex
+        lda     findwindow_params::mousex
         sec
         sbc     last_coords+MGTK::Point::xcoord
         tax
@@ -718,19 +717,15 @@ is_drag:
         rts
         END_OF_LAMBDA
 
+        ;; Assert: there are highlighted icons
+
         ;; Make sure there's room
         lda     highlight_count
         cmp     max_draggable_icons
         beq     :+                      ; equal okay
-        bcs     _DragDetectImpl::ignore_drag ; too many
+        jcs     exit_canceled           ; too many
 :
-        ;; Was there a selection?
-        lda     highlight_count
-        bne     :+
-        lda     #3              ; return value - nothing highlighted
-        jmp     just_select
-
-:       lda     last_highlighted_icon
+        lda     last_highlighted_icon
         jsr     GetIconWin
         sta     source_window_id
 
@@ -856,38 +851,24 @@ not_drag:
         ;; Drag ended by a keystroke?
         lda     peekevent_params::kind
         cmp     #MGTK::EventKind::key_down ; cancel?
-        bne     :+
-        copy    #0, highlight_icon_id
-        jmp     finish
-:
+        jeq     exit_canceled
+
         ;; Drag ended over an icon?
         lda     highlight_icon_id
-        beq     :+
-        jmp     finish
-:
-        ;; Drag ended over a window/desktop?
+        jne     exit_drop
+
+        ;; Drag ended over a window or desktop?
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         cmp     source_window_id
         beq     same_window
 
         bit     trash_flag
-        bmi     includes_trash
+        jmi     exit_canceled
 
-        lda     findwindow_params::window_id
-        bne     different_window ; if drag onto desktop, ignore it
-ignore: jmp     _DragDetectImpl::ignore_drag
-
-        ;; Drop selection onto a window
-different_window:
         ora     #$80
         sta     highlight_icon_id
-        jmp     finish
-
-        ;; Drop selection *including Trash* on a window
-includes_trash:
-        lda     source_window_id
-        beq     ignore          ; TODO: always true for Trash?
+        jne     exit_drop
 
         ;; Drag within same window (or desktop)
 same_window:
@@ -897,23 +878,30 @@ same_window:
         beq     move_ok
 
         cmp     #MGTK::Area::content
-        bne     finish          ; don't move
+        jne     exit_canceled   ; don't move
 
         jsr     _CheckRealContentArea
-        bcs     finish          ; don't move
+        jcs     exit_canceled   ; don't move
 
         bit     fixed
-        bmi     finish          ; don't move
-
-        lda     BUTN0
-        ora     BUTN1
-        bmi     finish          ; don't move
+        jmi     exit_canceled   ; don't move
 
         ;; --------------------------------------------------
+        ;; Probably a move within the same window...
 
         ldx     #0              ; don't clip (not desktop; unnecessary)
 move_ok:
         stx     ::drag_highlighted_lambda_clip_flag
+
+        ;; ... but skip if modifier(s) down; allows other gestures.
+        lda     BUTN0
+        ora     BUTN1
+    IF_NS
+        lda     #IconTK::kDragResultMoveModified
+        .assert IconTK::kDragResultMoveModified <> 0, error, "enum mismatch"
+        bne     exit_with_a
+    END_IF
+
         INVOKE_WITH_LAMBDA _IterateHighlightedIcons
         ::drag_highlighted_lambda_clip_flag := *+1
         ldx     #SELF_MODIFIED_BYTE
@@ -938,11 +926,12 @@ move_ok:
         rts
         END_OF_LAMBDA
 
+        lda     #IconTK::kDragResultMove
+        FALL_THROUGH_TO exit_with_a
+
         ;; --------------------------------------------------
 
-finish: lda     #0              ; return value
-
-just_select:
+exit_with_a:
         tay                     ; A = return value
         jsr     PopPointers     ; restore `params`
         tya                     ; A = return value
@@ -952,6 +941,17 @@ just_select:
         sta     (params),y
         txa                     ; A = return value
         rts
+
+exit_drop:
+        lda     #IconTK::kDragResultDrop
+        .assert IconTK::kDragResultDrop = 0, error, "enum mismatch"
+        beq     exit_with_a
+
+exit_canceled:
+        lda     #IconTK::kDragResultCanceled
+        .assert IconTK::kDragResultCanceled <> 0, error, "enum mismatch"
+        bne     exit_with_a
+
 
 ;;; ============================================================
 

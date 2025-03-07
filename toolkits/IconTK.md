@@ -159,7 +159,7 @@ Initiates a drag of the highlighted icon(s).
 
 Parameters:
 ```
-.byte       param           (in) icon number; (out) result
+.byte       param           (in) icon number; (out) target
 .word       mousex          Click x location (screen coordinates)
 .word       mousey          Click y location (screen coordinates)
 .byte       fixed           High bit set if layout fixed (i.e. list view)
@@ -167,16 +167,14 @@ Parameters:
 
 Call with set `param` to the specific icon being dragged, and the event mouse coordinates.
 
-If successful, the `param` will be:
-
-* 0 if the drop was just a move, i.e. dragging icons within a window or within the desktop.
-* High bit clear if the drop target was an icon, and the low bits are the icon number.
-* High bit set if the drop target was a window, and the low bits are the window number.
-
 Result codes (in A):
-* 0 = success
-* 2 = non-drag event seen
-* 3 = no selection
+* `kDragResultDrop` = 0 - drop on a target; `param` identifies the target:
+  * High bit clear if the drop target was an icon, and the low bits are the icon number.
+  * High bit set if the drop target was a window, and the low bits are the window number.
+* `kDragResultNotADrag` = 1 - not a drag; e.g. another click.
+* `kDragResultMove` = 2 - icons moved within window/desktop; erased, caller should repaint.
+* `kDragResultMoveModified` = 3 - icons moved within window/desktop but modifier down.
+* `kDragResultCanceled` = 4 - operation cancelled, e.g. via keypress, drag to non-target, etc.
 
 ### `IconTK::UnhighlightIcon` ($08)
 
