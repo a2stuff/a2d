@@ -49,9 +49,10 @@ Project Page: https://github.com/a2stuff/a2d
 ### Desk Accessories
 
 * About This Apple II
-  * Detect Microdigital TK-3000 //e
-  * Detect Pravetz 8A/C
-  * Detect Passport MIDI card
+  * Detect Microdigital TK-3000 //e.
+  * Detect Pravetz 8A/C.
+  * Detect Passport MIDI card.
+  * Detect Xdrive card. ([#841](https://github.com/a2stuff/a2d/issues/841))
   * Show duplicate SmartPort device names with counts.
 * Print Screen
   * Renamed from "Screen Dump"

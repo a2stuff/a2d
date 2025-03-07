@@ -62,6 +62,7 @@
 .define res_string_device_type_cricket "The Cricket!"
 .define res_string_device_type_nvram "NVRAM Block Device"
 .define res_string_device_type_booti "BOOTI Block Device"
+.define res_string_device_type_xdrive "Xdrive Block Device"
 .define res_string_unknown "(sconosciuto)"
 .define res_string_empty "(vuoto)"
 .define res_string_none "(nessuno)"

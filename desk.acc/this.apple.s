@@ -688,6 +688,7 @@ kMaxSmartportDevices = 8
 str_diskii:     PASCAL_STRING res_string_card_type_diskii
 str_nvram:      PASCAL_STRING res_string_device_type_nvram
 str_booti:      PASCAL_STRING res_string_device_type_booti
+str_xdrive:     PASCAL_STRING res_string_device_type_xdrive
 str_block:      PASCAL_STRING res_string_card_type_block
 str_smartport:  PASCAL_STRING res_string_card_type_smartport
 str_ssc:        PASCAL_STRING res_string_card_type_ssc
@@ -1451,6 +1452,11 @@ ret:    rts
         bcc     :+
         return16 #str_booti
 :
+        ldax    #sigtable_xdrive
+        jsr     SigCheck
+        bcc     :+
+        return16 #str_xdrive
+:
         sec
         return16 #str_block
 
@@ -1630,7 +1636,8 @@ sigtable_parallel:      .byte   2, $05, $48, $07, $48
 
 ;;; Block Devices
 sigtable_nvram:         .byte   3, $07, $3C, $0B, $58, $0C, $FF
-sigtable_booti:         .byte   3, $07, $3C, $0B, $B0, $0C, $01
+sigtable_booti:         .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $D5
+sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
 
 .endproc ; ProbeSlot
 
