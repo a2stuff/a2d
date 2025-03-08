@@ -705,9 +705,7 @@ finish:
         jsr     DrawField
 :
         ;; Set dirty bit
-        lda     #$80
-        ora     dialog_result
-        sta     dialog_result
+        copy    #$80, dialog_result
 
         ;; Update ProDOS
         jmp     UpdateProDOS
@@ -872,7 +870,6 @@ str_pm: PASCAL_STRING "PM"
 
 ;;; Used in Aux to store result during tear-down
 ;;; bit7 = time changed
-;;; bit6 = settings changed
 dialog_result:  .byte   0
 
 .proc Destroy
@@ -881,7 +878,7 @@ dialog_result:  .byte   0
         ;; Dates in DeskTop list views may be invalidated, so if any
         ;; settings changed, force a full redraw to avoid artifacts.
         bit     dialog_result
-    IF_VS
+    IF_NS
         MGTK_CALL MGTK::RedrawDeskTop
     END_IF
 
@@ -1249,9 +1246,7 @@ loop:   cmp     #10
         jsr     UpdateOptionButtons
 
         ;; Set dirty bit
-        lda     #$40
-        ora     dialog_result
-        sta     dialog_result
+        copy    #$80, dialog_result
 
         lda     selected_field
         cmp     #Field::period
