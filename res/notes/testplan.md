@@ -300,6 +300,7 @@
 * Launch DeskTop. Select a volume icon. Drag it over another icon on the desktop, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled, the target icon is unhighlighted, and the dragged icon does not move.
 * Launch DeskTop. Select a file icon. Drag it over an empty space in the window. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled and the icon does not move.
 * Launch DeskTop. Select a file icon. Drag it over a folder icon, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled, the target icon is unhighlighted, and the dragged icon does not move.
+* Launch DeskTop. Clear selection. Hold both Open-Apple and Solid-Apple and start to drag a volume icon. Verify that the drag outline of the volume is shown.
 
 * Repeat the following:
   * For these permutations, as the specified window area:

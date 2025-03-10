@@ -740,6 +740,8 @@ not_selected:
         bpl     replace_selection
 
         ;; Modifier down - add to selection
+        lda     selected_icon_count
+        beq     replace_selection
         lda     findicon_params::window_id
         cmp     selected_window_id
         bne     replace_selection
