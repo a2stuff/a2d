@@ -6611,13 +6611,13 @@ done:   jsr     PopPointers     ; do not tail-call optimize!
 
         ldy     found_windows_count
         beq     done
-loop:   lda     found_windows_list,y
+loop:   lda     found_windows_list-1,y
         asl     a
         tax
         copy16  vol_kb_used, window_k_used_table-2,x ; 1-based to 0-based
         copy16  vol_kb_free, window_k_free_table-2,x
         dey
-        bpl     loop
+        bne     loop
 
 done:   rts
 .endproc ; UpdateUsedFreeViaPath

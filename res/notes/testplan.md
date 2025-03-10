@@ -417,6 +417,7 @@
 
 * Launch DeskTop. Select a volume icon. Open it. Verify that the open animation starts at the icon location. (This will be easier to observe in emulators with acceleration disabled.)
 
+* Launch DeskTop. Close all windows. Open an empty volume (e.g. /RAMA). Repeat File > New Folder... 7 times, accepting the default names (New.Folder through New.Folder.7). Edit > Select All. File > Open. File > New Folder. Verify that the new folder is created within New.Folder.7 and no alert appears.
 
 ## Close Window
 

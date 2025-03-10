@@ -39,6 +39,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve adding/editing shortcuts for volumes. ([#831](https://github.com/a2stuff/a2d/issues/831))
 * Enable File > Copy To... for volume icons. ([#830](https://github.com/a2stuff/a2d/issues/830))
 * Dragging and dropping a file within the same window while holding either Apple key duplicates it. ([#837](https://github.com/a2stuff/a2d/issues/837))
+* Fix memory corruption causing operations on 8th window to fail.
 
 ### Selector
 
