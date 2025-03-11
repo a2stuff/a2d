@@ -860,15 +860,18 @@ not_drag:
         ;; Drag ended over a window or desktop?
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
+        pha
+        ora     #$80
+        sta     highlight_icon_id
+        pla
+
         cmp     source_window_id
         beq     same_window
 
         bit     trash_flag
         jmi     exit_canceled
 
-        ora     #$80
-        sta     highlight_icon_id
-        jne     exit_drop
+        jmp     exit_drop
 
         ;; Drag within same window (or desktop)
 same_window:

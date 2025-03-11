@@ -763,7 +763,7 @@ check_double_click:
         jpl     CmdOpenFromDoubleClick
 
         ;; --------------------------------------------------
-        ;; Drag of file icon
+        ;; Drag of icon
 
         copy    findicon_params::which_icon, drag_drop_params::icon
         jsr     GetSelectionViewBy
@@ -792,7 +792,7 @@ check_double_click:
         ;; File drop on same window:
         ;; * No modifiers - move (see `kDragResultMove` case above)
         ;; * Single modifier - duplicate
-        ;; * Double modifiers - make link (future, see #838)
+        ;; * Double modifiers - make link
 
         ;; Volume drop on desktop:
         ;; * No modifiers - move (see `kDragResultMove` case above)
@@ -812,7 +812,11 @@ check_double_click:
         ;; Double modifier?
         lda     BUTN0
         and     BUTN1
-        RTS_IF_NS               ; TODO: `CmdMakeLink` (via new ep)
+      IF_NS
+        jsr     SetPathBuf4FromDragDropResult
+        RTS_IF_CS               ; failure, e.g. path too long
+        jmp     MakeLinkInTarget
+      END_IF
 
         ;; Single modifier
         jmp     CmdDuplicate
@@ -824,12 +828,12 @@ check_double_click:
         ;; File drop on target:
         ;; * No modifiers - copy/move (depending on other/same vol)
         ;; * Single modifier - copy/move (ditto, but opposite)
-        ;; * Double modifiers - make link (future, see #838)
+        ;; * Double modifiers - make link
 
         ;; Volume drop on target:
         ;; * No modifiers - copy
         ;; * Single modifier - copy
-        ;; * Double modifiers - make link (future, see #838)
+        ;; * Double modifiers - make link
 
         lda     drag_drop_params::target
 
@@ -850,15 +854,18 @@ check_double_click:
         RTS_IF_CS               ; failure, e.g. path too long
 
         ;; Double modifier?
-        ;; TODO: If double-mod: if single sel, CmdMakeLink (via new ep)
         lda     BUTN0
-        and     BUTN1               ; TODO: `CmdMakeLink` (via new ep)
-        RTS_IF_NS
+        and     BUTN1
+    IF_NS
+        jsr     GetSingleSelectedIcon
+        RTS_IF_ZERO
+        jmp     MakeLinkInTarget
+    END_IF
 
         ;; Copy/Move
         jsr     DoCopySelection
         jmp     _PerformPostDropUpdates
-.endproc
+.endproc ; _IconClick
 
 ;;; ------------------------------------------------------------
 
@@ -2808,8 +2815,7 @@ done:   rts
 volume:
         jsr     MaybeCloseWindowAfterOpen
 
-        ldax    #src_path_buf
-        jsr     FindIconForPath
+        param_call FindIconForPath, src_path_buf
         beq     :+
         jsr     SelectIconAndEnsureVisible
 :
@@ -2959,14 +2965,20 @@ CmdNewFolder    := CmdNewFolderImpl::start
 ;;; ============================================================
 ;;; Select and scroll into view an icon in the active window.
 ;;; Inputs: A,X = name
+;;; Output: C=0 on success
 ;;; Trashes $06
 
 .proc SelectFileIconByName
         ldy     active_window_id
         jsr     FindIconByName
-        RTS_IF_ZERO             ; not found
+    IF_ZERO                     ; not found
+        sec
+        rts
+    END_IF
 
-        jmp     SelectIconAndEnsureVisible
+        jsr     SelectIconAndEnsureVisible
+        clc
+        rts
 .endproc ; SelectFileIconByName
 
 ;;; ============================================================
@@ -5335,7 +5347,18 @@ suffix: .byte   kAliasSuffix
         DEFINE_WRITE_PARAMS write_params, link_struct, 0
         DEFINE_CLOSE_PARAMS close_params
 
-start:
+        ;; --------------------------------------------------
+        ;; Stash target directory name
+
+;;; Entry point where selection's window is used as target path
+target_selection:
+        jsr     GetSelectionWindow
+        jsr     GetWindowPath
+        jsr     CopyToBuf4
+
+;;; Entry point where caller sets `path_buf4`
+arbitrary_target:
+
         ;; --------------------------------------------------
         ;; Prep struct for writing
 
@@ -5380,9 +5403,7 @@ start:
         bpl     :-
 
         ;; Repeat to find a free name
-retry:  jsr     GetSelectionWindow
-        jsr     GetWindowPath
-        jsr     CopyToDstPath
+retry:  param_call CopyToDstPath, path_buf4
         param_call AppendFilenameToDstPath, stashed_name
         jsr     GetDstFileInfo
         bcc     spin
@@ -5415,9 +5436,11 @@ create:
 
         ;; --------------------------------------------------
         ;; Update cached used/free for all same-volume windows, and refresh
-        lda     selected_window_id
-        jsr     UpdateActivateAndRefreshWindow
-        RTS_IF_NE
+
+        param_call UpdateUsedFreeViaPath, dst_path_buf
+
+        jsr     ShowFileWithPath
+        RTS_IF_CS
 
         ;; Select and rename the file
         jmp     TriggerRenameForFileIconWithStashedName
@@ -5426,7 +5449,8 @@ create:
 err:    jmp     ShowAlert
 
 .endproc ; CmdMakeLinkImpl
-        CmdMakeLink := CmdMakeLinkImpl::start
+        CmdMakeLink := CmdMakeLinkImpl::target_selection
+        MakeLinkInTarget := CmdMakeLinkImpl::arbitrary_target
 
 ;;; ============================================================
 ;;; Given a window, update used/free data for all same-volume windows,
@@ -6283,6 +6307,7 @@ ret:    rts
 ;;; Give a file path, tries to open/show a window for the containing
 ;;; directory, and if successful select/show the file.
 ;;; Input: `INVOKER_PREFIX` has full path to file
+;;; Output: C=0 on success
 ;;; Assert: Path is not a volume path
 
 .proc ShowFileWithPath
@@ -6305,9 +6330,12 @@ ret:    rts
         bne     err
     END_IF
 
-        param_jump SelectFileIconByName, INVOKER_FILENAME
+        param_call SelectFileIconByName, INVOKER_FILENAME
+        clc
+        rts
 
-err:    rts
+err:    sec
+        rts
 .endproc ; ShowFileWithPath
 
 ;;; ============================================================
@@ -6318,8 +6346,7 @@ err:    rts
 ;;; Trashes $06 and `path_buf4`
 
 .proc FindIconForPath
-        stax    $06
-        param_call CopyPtr1ToBuf, path_buf4
+        jsr     CopyToBuf4
         param_call FindLastPathSegment, path_buf4
         cpy     path_buf4       ; was there a filename?
     IF_EQ
@@ -9853,14 +9880,13 @@ next:   dec     step
         ;; Drop is on a window
         and     #%01111111      ; get window id
         jsr     GetWindowPath
-        stax    $06
-        param_call CopyPtr1ToBuf, path_buf4
+        jsr     CopyToBuf4
         clc
         rts                     ; success
 
         ;; Drop is on an icon.
 target_is_icon:
-        jsr     GetIconPath     ; `path_buf4` set to path; A=0 on success
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
     IF_NE
         jsr     ShowAlert
         sec                     ; failure
@@ -11492,8 +11518,7 @@ loop:   iny
         bne     loop
 
         ;; Copy `path_buf4` to `dst_path_buf`
-        ldax    #path_buf4
-        jmp     CopyToDstPath
+        param_jump CopyToDstPath, path_buf4
 .endproc ; CopyPathsFromBufsToSrcAndDst
 
 src_path_slash_index:
@@ -11579,13 +11604,11 @@ map:    .byte   FileEntry::access
         copy16  copy_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
-        ldax    #src_path_buf
-        jsr     CopyToBuf0
+        param_call CopyToBuf0, src_path_buf
         param_call DrawProgressDialogLabel, 1, aux::str_copy_from
         jsr     DrawTargetFilePath
 
-        ldax    #dst_path_buf
-        jsr     CopyToBuf0
+        param_call CopyToBuf0, dst_path_buf
         param_call DrawProgressDialogLabel, 2, aux::str_copy_to
         jsr     DrawDestFilePath
 
@@ -11614,13 +11637,12 @@ UpdateDownloadDialogProgress := UpdateCopyDialogProgress
         copy16  delete_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
-        ldax    #src_path_buf
-        jsr     CopyToBuf0
+        param_call CopyToBuf0, src_path_buf
         param_call DrawProgressDialogLabel, 1, aux::str_file_colon
         jsr     DrawTargetFilePath
 
         jmp     DrawProgressDialogFilesRemaining
-.endproc ; DeleteDialogShow
+.endproc ; UpdateDeleteDialogProgress
 
 ;;; ============================================================
 
@@ -14665,6 +14687,16 @@ ptr_str_files_suffix:
         stax    ptr1
         param_jump CopyPtr1ToBuf, path_buf0
 .endproc ; CopyToBuf0
+
+;;; ============================================================
+
+;;; Input: A,X = string to copy
+;;; Trashes: $06
+.proc CopyToBuf4
+        ptr1 := $06
+        stax    ptr1
+        param_jump CopyPtr1ToBuf, path_buf4
+.endproc ; CopyToBuf4
 
 ;;; ============================================================
 

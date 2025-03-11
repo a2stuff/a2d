@@ -168,13 +168,17 @@ Parameters:
 Call with set `param` to the specific icon being dragged, and the event mouse coordinates.
 
 Result codes (in A):
-* `kDragResultDrop` = 0 - drop on a target; `param` identifies the target:
-  * High bit clear if the drop target was an icon, and the low bits are the icon number.
-  * High bit set if the drop target was a window, and the low bits are the window number.
+* `kDragResultDrop` = 0 - drop on a target
 * `kDragResultNotADrag` = 1 - not a drag; e.g. another click.
 * `kDragResultMove` = 2 - icons moved within window/desktop; erased, caller should repaint.
 * `kDragResultMoveModified` = 3 - icons moved within window/desktop but modifier down.
 * `kDragResultCanceled` = 4 - operation cancelled, e.g. via keypress, drag to non-target, etc.
+
+For `kDragResultDrop`, `kDragResultMove` and `kDragResultMoveModified`, `param` identifies the target:
+* High bit clear if the drop target was an icon, and the low bits are the icon number.
+* High bit set if the drop target was a window, and the low bits are the window number.
+
+(For `kDragResultMove` and `kDragResultMoveModified` the target is implicitly the dragged icon's parent window, but set as a convenience for callers.)
 
 ### `IconTK::UnhighlightIcon` ($08)
 

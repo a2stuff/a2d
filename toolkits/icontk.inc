@@ -16,7 +16,7 @@ RemoveAll       = $05   ; { .byte window_id }
 FindIcon        = $06   ; { .word mousex, .word mousey, .byte result, .byte window_id }
 DragHighlighted = $07   ; { .byte icon/target, .word mousex, .word mousey, .byte fixed }
                         ; Input: specific icon being dragged, mouse coords
-                        ; Output: A = kDragResultXYZ; if drop, then target byte is:
+                        ; Output: A = kDragResultXYZ; if drop/move, then target byte is:
                         ;  * hi bit clear: low bits are target icon
                         ;  * hi bit set:   low bits are target window
 UnhighlightIcon = $08   ; { .byte icon }
