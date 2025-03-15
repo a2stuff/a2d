@@ -38,6 +38,7 @@
 .define res_string_menu_item_erase_disk "Borrar Disco..."
 .define res_string_menu_item_disk_copy "Copiar Disco..."
 .define res_string_menu_item_make_link "Crear alias"
+.define res_string_menu_item_show_original "Mostrar original"
 .define res_string_menu_item_get_info "Obtener Informaci\x13n"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_rename_icon "Renombrar"

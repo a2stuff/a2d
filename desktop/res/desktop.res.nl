@@ -38,6 +38,7 @@
 .define res_string_menu_item_erase_disk "Schijf wissen..."
 .define res_string_menu_item_disk_copy "Schijf kopi\x10ren..."
 .define res_string_menu_item_make_link "Maak alias aan"
+.define res_string_menu_item_show_original "Toon origineel"
 .define res_string_menu_item_get_info "Toon info"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_rename_icon "Wijzig naam"

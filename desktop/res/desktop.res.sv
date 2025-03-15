@@ -38,6 +38,7 @@
 .define res_string_menu_item_erase_disk "Radera disk..."
 .define res_string_menu_item_disk_copy "Kopia disk ..."
 .define res_string_menu_item_make_link "Skapa alias"
+.define res_string_menu_item_show_original "Visa original"
 .define res_string_menu_item_get_info "Visa info"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_rename_icon "Byt namn"

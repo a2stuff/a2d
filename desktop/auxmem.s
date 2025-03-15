@@ -135,6 +135,8 @@ label_duplicate_icon:
         PASCAL_STRING res_string_menu_item_duplicate
 label_make_link:
         PASCAL_STRING res_string_menu_item_make_link
+label_show_link:
+        PASCAL_STRING res_string_menu_item_show_original
 
         ;; Menu bar
         DEFINE_MENU_BAR desktop_menu, kMenuNumItems
@@ -223,17 +225,19 @@ label_make_link:
         DEFINE_MENU_ITEM label_disk_copy
         DEFINE_MENU_SEPARATOR
         DEFINE_MENU_ITEM label_make_link
+        DEFINE_MENU_ITEM label_show_link
         ASSERT_RECORD_TABLE_SIZE @items, ::kMenuSizeSpecial, .sizeof(MGTK::MenuItem)
 
-        kMenuItemIdCheckAll    = 1
-        kMenuItemIdCheckDrive  = 2
-        kMenuItemIdEject       = 3
+        kMenuItemIdCheckAll     = 1
+        kMenuItemIdCheckDrive   = 2
+        kMenuItemIdEject        = 3
         ;; --------------------
-        kMenuItemIdFormatDisk  = 5
-        kMenuItemIdEraseDisk   = 6
-        kMenuItemIdDiskCopy    = 7
+        kMenuItemIdFormatDisk   = 5
+        kMenuItemIdEraseDisk    = 6
+        kMenuItemIdDiskCopy     = 7
         ;; --------------------
-        kMenuItemIdMakeLink    = 9
+        kMenuItemIdMakeLink     = 9
+        kMenuItemIdShowOriginal = 10
 
 ;;; ============================================================
 

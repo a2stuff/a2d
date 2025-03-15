@@ -38,6 +38,7 @@
 .define res_string_menu_item_erase_disk "Laufwerk L|schen..."
 .define res_string_menu_item_disk_copy "Laufwerk Kopiere..."
 .define res_string_menu_item_make_link "Alias erzeugen"
+.define res_string_menu_item_show_original "Original zeigen"
 .define res_string_menu_item_get_info "Information"
 .define res_char_menu_item_get_info_shortcut 'I'
 .define res_string_menu_item_rename_icon "Umbenennen"

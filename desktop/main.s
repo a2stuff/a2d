@@ -413,6 +413,7 @@ dispatch_table:
         .addr   CmdDiskCopy
         .addr   CmdNoOp         ; --------
         .addr   CmdMakeLink
+        .addr   CmdShowLink
         ASSERT_ADDRESS_TABLE_SIZE menu5_start, ::kMenuSizeSpecial
 
         ;; Startup menu (6)
@@ -1141,6 +1142,7 @@ finish: sta     result
         kSingleSel    = %00001000
         kFileSel      = %00010000
         kVolSel       = %00100000
+        kLinkSel      = %01000000
 
         ;; --------------------------------------------------
         ;; Windows
@@ -1182,10 +1184,25 @@ finish: sta     result
         ;; Single?
         cpx     #1
       IF_EQ
-        ldx     selected_icon_list
+        ldx     selected_icon_list ; X = icon id
         cpx     trash_icon_num
         beq     set_flags       ; trash only - treat as no selection
         ora     #kSingleSel     ; A = flags
+
+        ;; Link?
+        pha                     ; A = flags
+        txa                     ; A = icon id
+        jsr     GetIconEntry
+        ptr := $06
+        stax    ptr
+        ldy     #IconEntry::type
+        lda     (ptr),y
+        tax                     ; X = icon type
+        pla                     ; A = flags
+        cpx     #IconType::link
+       IF_EQ
+        ora     #kLinkSel       ; A = flags
+       END_IF
       END_IF
 
         ;; Files or Volumes?
@@ -1251,6 +1268,7 @@ table:
         .byte   kMenuIdSpecial, aux::kMenuItemIdCheckDrive,   kVolSel
         .byte   kMenuIdSpecial, aux::kMenuItemIdEject,        kVolSel
         .byte   kMenuIdSpecial, aux::kMenuItemIdMakeLink,     kSingleSel | kFileSel
+        .byte   kMenuIdSpecial, aux::kMenuItemIdShowOriginal, kLinkSel
 
         .byte   kMenuIdSelector, kMenuItemIdSelectorEdit,     kHasShortcuts
         .byte   kMenuIdSelector, kMenuItemIdSelectorDelete,   kHasShortcuts
@@ -1611,48 +1629,9 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 ;;; --------------------------------------------------
 
 .proc _InvokeLink
-        read_buf := $800
-
-        MLI_CALL OPEN, open_params
-        bcs     err
-        lda     open_params__ref_num
-        sta     read_params__ref_num
-        sta     close_params__ref_num
-        MLI_CALL READ, read_params
-        php
-        MLI_CALL CLOSE, close_params
-        plp
-        bcs     err
-
-        lda     read_params__trans_count
-        cmp     #kLinkFilePathLengthOffset
-        bcc     bad
-
-        ldx     #kCheckHeaderLength-1
-:       lda     read_buf,x
-        cmp     check_header,x
-        bne     bad
-        dex
-        bpl     :-
-
-        param_call CopyToSrcPath, read_buf + kLinkFilePathLengthOffset
+        jsr     ReadLinkFile
+        RTS_IF_CS
         jmp     LaunchFileWithPath
-
-bad:    lda     #kErrUnknown
-err:    jmp     ShowAlert
-
-check_header:
-        .byte   kLinkFileSig1Value, kLinkFileSig2Value, kLinkFileCurrentVersion
-        kCheckHeaderLength = * - check_header
-
-        DEFINE_OPEN_PARAMS open_params, src_path_buf, $1C00
-        open_params__ref_num := open_params::ref_num
-        DEFINE_READ_PARAMS read_params, read_buf, kLinkFileMaxSize
-        read_params__ref_num := read_params::ref_num
-        read_params__trans_count := read_params::trans_count
-        DEFINE_CLOSE_PARAMS close_params
-        close_params__ref_num := close_params::ref_num
-
 .endproc ; _InvokeLink
 
 ;;; --------------------------------------------------
@@ -1680,6 +1659,60 @@ check_header:
 
 .endproc ; LaunchFileWithPath
 LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
+
+;;; ============================================================
+
+;;; Inputs: `src_path_buf` has path to LNK file
+;;; Output: C=0, `src_path_buf` has target on success
+;;;         C=1 and alert is shown on error
+
+.proc ReadLinkFile
+        read_buf := $800
+
+        MLI_CALL OPEN, open_params
+        bcs     err
+        lda     open_params__ref_num
+        sta     read_params__ref_num
+        sta     close_params__ref_num
+        MLI_CALL READ, read_params
+        php
+        MLI_CALL CLOSE, close_params
+        plp
+        bcs     err
+
+        lda     read_params__trans_count
+        cmp     #kLinkFilePathLengthOffset
+        bcc     bad
+
+        ldx     #kCheckHeaderLength-1
+:       lda     read_buf,x
+        cmp     check_header,x
+        bne     bad
+        dex
+        bpl     :-
+
+        param_call CopyToSrcPath, read_buf + kLinkFilePathLengthOffset
+        clc
+        rts
+
+bad:    lda     #kErrUnknown
+err:    jsr     ShowAlert
+        sec
+        rts
+
+check_header:
+        .byte   kLinkFileSig1Value, kLinkFileSig2Value, kLinkFileCurrentVersion
+        kCheckHeaderLength = * - check_header
+
+        DEFINE_OPEN_PARAMS open_params, src_path_buf, $1C00
+        open_params__ref_num := open_params::ref_num
+        DEFINE_READ_PARAMS read_params, read_buf, kLinkFileMaxSize
+        read_params__ref_num := read_params::ref_num
+        read_params__trans_count := read_params::trans_count
+        DEFINE_CLOSE_PARAMS close_params
+        close_params__ref_num := close_params::ref_num
+
+.endproc ; ReadLinkFile
 
 ;;; ============================================================
 ;;; Uppercase a string
@@ -5336,6 +5369,30 @@ err:    jmp     ShowAlert
 .endproc ; CmdMakeLinkImpl
         CmdMakeLink := CmdMakeLinkImpl::target_selection
         MakeLinkInTarget := CmdMakeLinkImpl::arbitrary_target
+
+;;; ============================================================
+
+.proc CmdShowLink
+        ;; Assert: single LNK file icon selected
+        jsr     GetSingleSelectedIcon
+        jsr     GetIconPath     ; `path_buf3` set to path, A=0 on success
+        bne     alert           ; too long
+        param_call CopyToSrcPath, path_buf3
+        jsr     ReadLinkFile
+        RTS_IF_CS
+
+        ;; File or volume?
+        param_call FindLastPathSegment, src_path_buf ; point Y at last '/'
+        cpy     src_path_buf
+        jne     ShowFileWithPath
+
+        ;; Volume
+        param_call FindIconForPath, src_path_buf
+        jne     SelectIconAndEnsureVisible
+
+        lda     #ERR_VOL_NOT_FOUND
+alert:  jmp     ShowAlert
+.endproc ; CmdShowLink
 
 ;;; ============================================================
 ;;; Given a window, update used/free data for all same-volume windows,
