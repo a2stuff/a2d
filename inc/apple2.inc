@@ -244,8 +244,12 @@ DESTINATIONHI   := $43
 XFERSTARTLO     := $03ED
 XFERSTARTHI     := $03EE
 FW80MODE        := $04FB        ; 80 Col firmware mode ($FF = inactive)
+.ifndef OURCH
 OURCH           := $057B        ; 80 Col horizontal position
+.endif
+.ifndef OURCV
 OURCV           := $05FB        ; 80 Col vertical position
+.endif
 
 ;;; ============================================================
 ;;; Super Serial Card
