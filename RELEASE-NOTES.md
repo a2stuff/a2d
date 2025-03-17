@@ -42,6 +42,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Dragging and dropping a file with both Apple keys down now creates alias. ([#838](https://github.com/a2stuff/a2d/issues/838))
 * Fix memory corruption causing operations on 8th window to fail.
 * Added Special > Show Original command for inspecting aliases. ([#811](https://github.com/a2stuff/a2d/issues/811))
+* Create containing folder when copying volume to another disk. ([#846](https://github.com/a2stuff/a2d/issues/846))
 
 ### Selector
 

@@ -10451,13 +10451,6 @@ not_selected:
         ;; File > Copy To...
         ;; Drag/Drop
 
-        ;; If source is a volume icon, just copy the volume's contents.
-        ;; Note that this is different than when a shortcut is being
-        ;; copied; in that case if the parent is a volume, we create
-        ;; a corresponding folder.
-        lda     selected_window_id ; dragging from desktop?
-        beq     copy_dir_contents
-
         ;; Use last segment of source for destination (e.g. for Copy/Move)
         jsr     AppendSrcPathLastSegmentToDstPath
     ELSE
@@ -11395,13 +11388,9 @@ is_dir:
         cmp     #ST_VOLUME_DIRECTORY
         bne     :+              ; if a subdirectory
 
-        ;; If copying a volume dir to RAMCard, the volume dir
-        ;; will not be counted as a file during enumeration but
-        ;; will be counted during copy, so include it to avoid
-        ;; off-by-one.
-        ;; https://github.com/a2stuff/a2d/issues/462
-        bit     operations::operation_flags
-        bvc     :+
+        ;; If copying a volume dir, it will not be counted as a file
+        ;; during enumeration but will be counted during copy, so
+        ;; include it to avoid off-by-one.
         inc16   op_file_count
 :       rts
 
