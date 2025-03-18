@@ -1,0 +1,8 @@
+.define res_string_window_title "Listados"
+.define res_string_initial_view "Estilo de lista inicial:"
+.define res_string_radio_button_by_icon "por Iconos"
+.define res_string_radio_button_by_small_icon "por Iconos Peque|os"
+.define res_string_radio_button_by_name "por Nombre"
+.define res_string_radio_button_by_date "por Fecha"
+.define res_string_radio_button_by_size "por Tama|o"
+.define res_string_radio_button_by_type "por Tipo"

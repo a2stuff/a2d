@@ -1,0 +1,8 @@
+.define res_string_window_title "Views"
+.define res_string_initial_view "Initial view style:"
+.define res_string_radio_button_by_icon "as Icons"
+.define res_string_radio_button_by_small_icon "as Small Icons"
+.define res_string_radio_button_by_name "by Name"
+.define res_string_radio_button_by_date "by Date"
+.define res_string_radio_button_by_size "by Size"
+.define res_string_radio_button_by_type "by Type"

@@ -11,6 +11,7 @@ map                             Apple.Menu/Control.Panels       optional
 options                         Apple.Menu/Control.Panels       optional
 sounds                          Apple.Menu/Control.Panels       optional
 system.speed                    Apple.Menu/Control.Panels       optional
+views                           Apple.Menu/Control.Panels       optional
 analog.clock                    Apple.Menu/Screen.Savers        optional
 digital.clock                   Apple.Menu/Screen.Savers        optional
 flying.toasters                 Apple.Menu/Screen.Savers        optional

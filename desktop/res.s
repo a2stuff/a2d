@@ -832,7 +832,7 @@ window_title_addr_table:
 
 ;;; `win_view_by_table` is indexed by window id - 1; allow referencing
 ;;; the desktop (window id 0), which is always icon view.
-        .byte   kViewByIcon
+        .byte   DeskTopSettings::kViewByIcon
 win_view_by_table:
         .res    kMaxDeskTopWindows, 0
 

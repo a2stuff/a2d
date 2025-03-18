@@ -50,6 +50,9 @@
         ASSERT_ADDRESS settings_start + DeskTopSettings::intl_date_order
         .byte   res_const_date_order
 
+        ASSERT_ADDRESS settings_start + DeskTopSettings::default_view
+        .byte   DeskTopSettings::kViewByIcon
+
         ;; Reserved for future use...
 
         PAD_TO settings_start + .sizeof(DeskTopSettings)

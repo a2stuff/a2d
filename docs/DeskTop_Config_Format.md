@@ -40,7 +40,8 @@ File offset +$0001. The remaining 128 bytes the file are defined by the
 |  +$0012  |  byte (1)  | thousands separator  |
 |  +$0013  |  byte (1)  | decimal separator    |
 |  +$0014  |  byte (1)  | date order           |
-|  +$0015  |  107       | reserved             |
+|  +$0015  |  byte (1)  | default view         |
+|  +$0016  |  107       | reserved             |
 
 * **pattern**
 
@@ -115,6 +116,21 @@ File offset +$0001. The remaining 128 bytes the file are defined by the
    |------:|:-------------------|
    | $00   | Month / Day / Year |
    | $01   | Day / Month / Year |
+
+* **default view**
+
+   Determines the default view style for windows opened from volume
+   icons, the Apple menu, or Shortcuts. Folder windows inherit the
+   style from their parent window.
+
+   | Value | Meaning            |
+   |------:|:-------------------|
+   | $00   | as Icons           |
+   | $01   | as Small Icons     |
+   | $82   | by Name            |
+   | $83   | by Date            |
+   | $84   | by Size            |
+   | $85   | by Type            |
 
 * **reserved**
 

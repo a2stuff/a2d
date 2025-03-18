@@ -1,0 +1,8 @@
+.define res_string_window_title "Vis#es"
+.define res_string_initial_view "Estilo de vis[o inicial:"
+.define res_string_radio_button_by_icon "como Icones"
+.define res_string_radio_button_by_small_icon "como Icones Pequenos"
+.define res_string_radio_button_by_name "por Nome"
+.define res_string_radio_button_by_date "por Data"
+.define res_string_radio_button_by_size "por Tamanho"
+.define res_string_radio_button_by_type "por Tipo"

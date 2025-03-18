@@ -200,7 +200,9 @@ kDeskTopSettingsSize    = $80
         intl_deci_sep   .byte   ; decimal separator
         intl_date_order .byte   ; kDateOrderXYZ
 
-        reserved        .res 106
+        default_view    .byte   ; kViewByXYZ
+
+        reserved        .res 105
 
         ;; Written on every startup, in settings for convenience
         system_capabilities .byte ; kSysCapXYZ
@@ -223,6 +225,16 @@ DeskTopSettings::kSysCapIsIIeCard  = %00001000
 DeskTopSettings::kSysCapIsLaser128 = %00010000
 DeskTopSettings::kSysCapMegaII     = %00100000
 DeskTopSettings::kSysCapLCMEve     = %01000000
+
+;;; (low nibble must match menu order in DeskTop)
+DeskTopSettings::kViewByIcon      = $00
+DeskTopSettings::kViewBySmallIcon = $01
+DeskTopSettings::kViewByName      = $82
+DeskTopSettings::kViewByDate      = $83
+DeskTopSettings::kViewBySize      = $84
+DeskTopSettings::kViewByType      = $85
+DeskTopSettings::kViewByIndexMask = $0F ; Convert kViewByXYZ to menu index in DeskTop
+DeskTopSettings::kViewByDefault   = DeskTopSettings::kViewByIcon
 
 kDeskTopSettingsFileVersion = 3
 kDeskTopSettingsFileSize = 1 + .sizeof(DeskTopSettings)

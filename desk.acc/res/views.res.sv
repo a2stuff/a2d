@@ -1,0 +1,8 @@
+.define res_string_window_title "Inneh}llen"
+.define res_string_initial_view "Inledande inneh}ll stil:"
+.define res_string_radio_button_by_icon "Som symboler"
+.define res_string_radio_button_by_small_icon "Som sm} symboler"
+.define res_string_radio_button_by_name "vid Namn"
+.define res_string_radio_button_by_date "efter Datum"
+.define res_string_radio_button_by_size "efter Storlek"
+.define res_string_radio_button_by_type "efter Typ"

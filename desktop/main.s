@@ -768,7 +768,7 @@ check_double_click:
 
         copy    findicon_params::which_icon, drag_drop_params::icon
         jsr     GetSelectionViewBy
-        .assert kViewByName >= $80, error, "enum mismatch"
+        .assert DeskTopSettings::kViewByName >= $80, error, "enum mismatch"
         sta     drag_drop_params::fixed
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
 
@@ -1151,7 +1151,7 @@ finish: sta     result
         lda     active_window_id
     IF_NOT_ZERO
         jsr     GetActiveWindowViewBy
-        and     #kViewByMenuMask
+        and     #DeskTopSettings::kViewByIndexMask
         tax
         inx
         stx     checkitem_params::menu_item
@@ -3339,8 +3339,12 @@ ResetHandler    := CmdQuitImpl::ResetHandler
 ;;; ============================================================
 
 menu_item_to_view_by:
-        .byte   kViewByIcon, kViewBySmallIcon
-        .byte   kViewByName, kViewByDate, kViewBySize, kViewByType
+        .byte   DeskTopSettings::kViewByIcon
+        .byte   DeskTopSettings::kViewBySmallIcon
+        .byte   DeskTopSettings::kViewByName
+        .byte   DeskTopSettings::kViewByDate
+        .byte   DeskTopSettings::kViewBySize
+        .byte   DeskTopSettings::kViewByType
 
 .proc CmdViewBy
         ldx     menu_click_params::item_num
@@ -3710,7 +3714,7 @@ ep2:
         lda     selected_window_id
     IF_NE
         jsr     GetSelectionViewBy
-        cmp     #kViewByName
+        cmp     #DeskTopSettings::kViewByName
       IF_EQ
         txa                     ; X = window id
         jsr     RefreshViewPreserveSelection
@@ -5882,10 +5886,10 @@ update: lda     window_id
 
         ldx     cached_window_id
         .assert kWindowToDirIconFree = 0, error, "enum mismatch"
-        .assert kViewByIcon = 0, error, "enum mismatch"
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
         lda     #0
         sta     window_to_dir_icon_table-1,x ; `kWindowToDirIconFree`
-        sta     win_view_by_table-1,x        ; `kViewByIcon`
+        sta     win_view_by_table-1,x        ; `DeskTopSettings::kViewByIcon`
 
         ;; Was it the active window?
         lda     cached_window_id
@@ -6111,11 +6115,14 @@ no_win:
         ;; Update View and other menus
         inc     num_open_windows
 
-        copy    #kViewByDefault, initial_view_by
+        ldx     #DeskTopSettings::default_view
+        jsr     ReadSetting
+        sta     initial_view_by
+
         lda     icon_param
         bmi     :+              ; no source icon, use default
         jsr     GetIconWindow
-        beq     :+              ; windowed, use default
+        beq     :+              ; not windowed, use default
         tax
         copy    win_view_by_table-1,x, initial_view_by
 :
@@ -7303,7 +7310,7 @@ finish:
 
         bit     copy_new_window_bounds_flag
     IF_NS
-        ;; kViewByXXX
+        ;; DeskTopSettings::kViewByXXX
         ldx     cached_window_id
         copy    new_window_view_by, win_view_by_table-1,x
 
@@ -7398,7 +7405,7 @@ init_smicon_view:
     IF_NEG
         ldy     #init_list_view - init_views + init_view_size-1
     ELSE
-        .assert kViewByIcon = 0, error, "enum mismatch"
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
       IF_ZERO
         ldy     #init_icon_view - init_views + init_view_size-1
       ELSE
@@ -7549,7 +7556,7 @@ records_base_ptr:
         bpl     :-
 
         jsr     GetCachedWindowViewBy
-        .assert kViewByIcon = 0, error, "enum mismatch"
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
     IF_ZERO
         ;; Icon view: include y-offset
         ldy     #IconEntry::icony
@@ -7615,7 +7622,7 @@ L7870:  lda     cached_window_id
 .endproc ; _AllocAndPopulateFileIcon
 
 ;;; ============================================================
-;;; Inputs: A = `IconType` member, Y = `kViewByXXX` value
+;;; Inputs: A = `IconType` member, Y = `DeskTopSettings::kViewByXXX` value
 ;;; Outputs: Populates `iconentry_flags`, `icon_type`, `icon_height`
 
 .proc _FindIconDetailsForIconType
@@ -8117,7 +8124,7 @@ more:   lda     cached_window_entry_list,x
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
 
         jsr     GetCachedWindowViewBy
-        .assert kViewByIcon = 0, error, "enum mismatch"
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
     IF_ZERO
         ;; Pretend icon is max height
         sub16   tmp_rect::y2, #kMaxIconTotalHeight, tmp_rect::y1
@@ -8215,7 +8222,7 @@ next:   inc     icon_num
 ;;; Populates and sorts `cached_window_entry_list`.
 ;;; Assumes `InitCachedWindowEntries` has been invoked
 ;;; (`cached_window_entry_count` is valid, etc)
-;;; Inputs: A=kViewBy* for `cached_window_id`
+;;; Inputs: A=DeskTopSettings::kViewBy* for `cached_window_id`
 
 .proc SortRecords
         ptr := $06
@@ -8333,13 +8340,13 @@ next:   inc     inner
         ;; Set by caller
         sort_by := *+1
         lda     #SELF_MODIFIED_BYTE
-        cmp     #kViewByName
+        cmp     #DeskTopSettings::kViewByName
     IF_EQ
         .assert FileRecord::name = 0, error, "Assumes name is at offset 0"
         jmp     CompareStrings
     END_IF
 
-        cmp     #kViewByDate
+        cmp     #DeskTopSettings::kViewByDate
     IF_EQ
 PARAM_BLOCK scratch, $804       ; `scratch_space`
 date_a  .tag    DateTime
@@ -8391,7 +8398,7 @@ END_PARAM_BLOCK
 done:   rts
     END_IF
 
-        cmp     #kViewBySize
+        cmp     #DeskTopSettings::kViewBySize
     IF_EQ
         ;; Copy sizes somewhere convenient
         size1 := $804
@@ -8421,7 +8428,7 @@ done:   rts
         rts
     END_IF
 
-        ;; Assert: kViewByType
+        ;; Assert: DeskTopSettings::kViewByType
         scratch := $804
         ldy     #FileRecord::file_type
         lda     (ptr1),y
@@ -12464,7 +12471,7 @@ finish: jsr     _DialogClose
 
         ;; Compute bounds of icon bitmap
         jsr     GetSelectionViewBy
-        .assert kViewByIcon = 0, error, "enum mismatch"
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
     IF_ZERO
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
         sub16_8 tmp_rect::y2, #kIconLabelHeight + kIconLabelGap, tmp_rect::y2
@@ -12498,7 +12505,7 @@ finish: jsr     _DialogClose
         bit     LCBANK1
 
         jsr     GetSelectionViewBy
-        .assert kViewByIcon = 0, error, "enum mismatch"
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
     IF_ZERO
         sta     view_by
         jsr     GetIconType
@@ -12561,7 +12568,7 @@ DoRename        := DoRenameImpl::start
 .proc _DialogOpen
         ldy     #LETK::kLineEditOptionsNormal
         jsr     GetSelectionViewBy
-        cmp     #kViewByIcon
+        cmp     #DeskTopSettings::kViewByIcon
       IF_EQ
         ldy     #LETK::kLineEditOptionsCentered
       END_IF
@@ -14762,8 +14769,8 @@ done:   rts
 .endproc ; GetFileRecordListForWindow
 
 ;;; ============================================================
-;;; Outputs: A = kViewBy* value for active window, X = window id
-;;; If kViewByIcon, Z=1 and N=0; otherwise Z=0 and N=1
+;;; Outputs: A = DeskTopSettings::kViewBy* value for active window, X = window id
+;;; If DeskTopSettings::kViewByIcon, Z=1 and N=0; otherwise Z=0 and N=1
 
 ;;; Assert: There is an active window
 .proc GetActiveWindowViewBy

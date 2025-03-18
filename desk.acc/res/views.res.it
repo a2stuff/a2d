@@ -1,0 +1,8 @@
+.define res_string_window_title "Esposizioni"
+.define res_string_initial_view "Stile di esposizione iniziale:"
+.define res_string_radio_button_by_icon "per Icone"
+.define res_string_radio_button_by_small_icon "per Icone Piccole"
+.define res_string_radio_button_by_name "per Nome"
+.define res_string_radio_button_by_date "per Data"
+.define res_string_radio_button_by_size "per Dimensione"
+.define res_string_radio_button_by_type "per Tipo"

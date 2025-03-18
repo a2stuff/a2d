@@ -1,0 +1,8 @@
+.define res_string_window_title "Pr{sentations"
+.define res_string_initial_view "Style de pr{sentation initiale :"
+.define res_string_radio_button_by_icon "Par icone"
+.define res_string_radio_button_by_small_icon "Par petite icone"
+.define res_string_radio_button_by_name "Par nom"
+.define res_string_radio_button_by_date "Par date"
+.define res_string_radio_button_by_size "Par taille"
+.define res_string_radio_button_by_type "Par type"

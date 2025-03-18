@@ -1,0 +1,8 @@
+.define res_string_window_title "Inhalt"
+.define res_string_initial_view "Stil des ersten Inhalts:"
+.define res_string_radio_button_by_icon "Als Symbol"
+.define res_string_radio_button_by_small_icon "Als kleines Symbol"
+.define res_string_radio_button_by_name "Nach Name"
+.define res_string_radio_button_by_date "Nach Datum"
+.define res_string_radio_button_by_size "Nach Gr|~e"
+.define res_string_radio_button_by_type "Nach Art"

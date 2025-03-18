@@ -1,0 +1,8 @@
+.define res_string_window_title "Oversigter"
+.define res_string_initial_view "Indledende oversigtsstil:"
+.define res_string_radio_button_by_icon "Som symboler"
+.define res_string_radio_button_by_small_icon "Som sm} symboler"
+.define res_string_radio_button_by_name "ved Navn"
+.define res_string_radio_button_by_date "efter Dato"
+.define res_string_radio_button_by_size "efter St|rrelse"
+.define res_string_radio_button_by_type "efter Type"
