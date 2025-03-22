@@ -388,7 +388,6 @@ check:
         cmp     #(CHAR_ESCAPE | $80)
         bne     :+
         bit     KBDSTRB
-        jsr     auxlc::FlashEscapeMessage
         jmp     error
 :
 

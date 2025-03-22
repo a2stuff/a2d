@@ -205,15 +205,18 @@ nextwinfo:      .addr   0
 pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT_FRAME rect_frame, kDialogWidth, kDialogHeight
 
+        kEraseLeft = 8
+        kEraseRight = kDialogWidth-8
+
         ;; For erasing parts of the window
-        DEFINE_RECT rect_erase_dialog_upper, 8, 20, kDialogWidth-8, 103 ; under title to bottom of buttons
-        DEFINE_RECT rect_erase_dialog_lower, 8, 103, kDialogWidth-8, kDialogHeight-4 ; top of buttons to bottom of dialog
+        DEFINE_RECT rect_erase_dialog_upper, kEraseLeft, 20, kEraseRight, 103 ; under title to bottom of buttons
+        DEFINE_RECT rect_erase_dialog_lower, kEraseLeft, 103, kEraseRight, kDialogHeight-4 ; top of buttons to bottom of dialog
 
         DEFINE_BUTTON ok_button, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
 
         ;; For drawing/updating the dialog title
         DEFINE_POINT point_title, kDialogWidth/2, 15
-        DEFINE_RECT rect_title, 8, 4, kDialogWidth-8, 15
+        DEFINE_RECT rect_title, kEraseLeft, 4, kEraseRight, 15
 
         DEFINE_RECT rect_erase_select_src, 270, 38, 420, 46
 
@@ -226,7 +229,7 @@ str_select_destination:
         PASCAL_STRING res_string_prompt_select_destination
 
         DEFINE_POINT point_status, kDialogWidth/2, 68
-        DEFINE_RECT rect_status, 8, 57, kDialogWidth-8, 68
+        DEFINE_RECT rect_status, kEraseLeft, 57, kEraseRight, 68
 str_formatting:
         PASCAL_STRING res_string_label_status_formatting
 str_writing:
@@ -340,22 +343,33 @@ disk_copy_flag:                 ; bit7 0 = Quick Copy, 1 = Disk Copy
 str_2_spaces:   PASCAL_STRING "  "
 str_from_int:   PASCAL_STRING "000,000" ; filled in by IntToString
 
-        DEFINE_LABEL blocks_read, res_string_label_blocks_read, 300, 125
-        DEFINE_LABEL blocks_written, res_string_label_blocks_written, 300, 135
-        DEFINE_LABEL blocks_to_transfer, res_string_label_blocks_to_transfer, 300, 115
-        DEFINE_LABEL source, res_string_source, 40, 125
-        DEFINE_LABEL destination, res_string_destination, 40, 135
+        kInfoTextY   = 115
+        kSourceTextY = 125
+        kDestTextY   = 135
+        kTipTextY    = 145
 
-        DEFINE_POINT point_source_slot_drive, 110, 125
-        DEFINE_POINT point_destination_slot_drive, 110, 135
-        DEFINE_POINT point_disk_copy, 40, 115
+        kOverviewTextX  =  40
+        kSlotDriveTextX = 110
+        kBlocksTextX    = 300
 
-        DEFINE_LABEL select_quit, .sprintf(res_string_label_select_quit, res_string_dc_menu_item_quit, res_string_dc_menu_bar_item_file, ::kGlyphOpenApple, res_char_dc_menu_item_quit_shortcut), 20, 145
-        DEFINE_RECT rect_select_quit, 20, 136, 400, 145
+        DEFINE_LABEL blocks_read, res_string_label_blocks_read, kBlocksTextX, kSourceTextY
+        DEFINE_LABEL blocks_written, res_string_label_blocks_written, kBlocksTextX, kDestTextY
+        DEFINE_LABEL blocks_to_transfer, res_string_label_blocks_to_transfer, kBlocksTextX, kInfoTextY
 
-        DEFINE_LABEL escape_stop_copy, res_string_escape_stop_copy, 300, 145
-        DEFINE_LABEL error_writing, res_string_error_writing, 40, 100
-        DEFINE_LABEL error_reading, res_string_error_reading, 40, 90
+        DEFINE_LABEL source, res_string_source, kOverviewTextX, kSourceTextY
+        DEFINE_LABEL destination, res_string_destination, kOverviewTextX, kDestTextY
+
+        DEFINE_POINT point_source_slot_drive, kSlotDriveTextX, kSourceTextY
+        DEFINE_POINT point_destination_slot_drive, kSlotDriveTextX, kDestTextY
+        DEFINE_POINT point_disk_copy, kOverviewTextX, kInfoTextY
+
+
+        DEFINE_LABEL select_quit, .sprintf(res_string_label_select_quit, res_string_dc_menu_item_quit, res_string_dc_menu_bar_item_file, ::kGlyphOpenApple, res_char_dc_menu_item_quit_shortcut), kDialogWidth/2, kTipTextY
+        DEFINE_RECT rect_select_quit, kEraseLeft, kTipTextY-(kSystemFontHeight+2), kEraseRight, kTipTextY
+
+        DEFINE_LABEL escape_stop_copy, res_string_escape_stop_copy, kDialogWidth/2, kTipTextY
+        DEFINE_LABEL error_writing, res_string_error_writing, kOverviewTextX, 102
+        DEFINE_LABEL error_reading, res_string_error_reading, kOverviewTextX, 92
 
 str_slot_drive_pattern:
         PASCAL_STRING res_string_slot_drive_pattern
@@ -466,7 +480,7 @@ InitDialog:
         MGTK_CALL MGTK::MoveTo, select_source_label_pos
         param_call DrawString, select_source_label_str
         MGTK_CALL MGTK::MoveTo, select_quit_label_pos
-        param_call DrawString, select_quit_label_str
+        param_call DrawStringCentered, select_quit_label_str
 
         ;; --------------------------------------------------
         ;; Drive select listbox
@@ -1890,38 +1904,9 @@ show_name:
 .proc DrawEscToStopCopyHint
         jsr     SetPortForDialog
         MGTK_CALL MGTK::MoveTo, escape_stop_copy_label_pos
-        param_call DrawString, escape_stop_copy_label_str
+        param_call DrawStringCentered, escape_stop_copy_label_str
         rts
 .endproc ; DrawEscToStopCopyHint
-
-;;; ============================================================
-;;; Flash the message when escape is pressed
-
-.proc FlashEscapeMessage
-        jsr     SetPortForDialog
-        copy    #10, count
-        copy    #$80, flag
-
-loop:   dec     count
-        beq     finish
-
-        lda     flag
-        eor     #$80
-        sta     flag
-        beq     :+
-        MGTK_CALL MGTK::SetTextBG, bg_white
-        beq     move
-:       MGTK_CALL MGTK::SetTextBG, bg_black
-move:   MGTK_CALL MGTK::MoveTo, escape_stop_copy_label_pos
-        param_call DrawString, escape_stop_copy_label_str
-        jmp     loop
-
-finish: MGTK_CALL MGTK::SetTextBG, bg_white
-        rts
-
-count:  .byte   0
-flag:   .byte   0
-.endproc ; FlashEscapeMessage
 
 ;;; ============================================================
 ;;; Inputs: A = error code, X = writing flag
