@@ -1892,7 +1892,6 @@ loop_counter:
         .include "../lib/menuclock.s"
         .include "../lib/datetime.s"
         .include "../lib/doubleclick.s"
-        .include "../lib/drawstring.s"
 
         .include "../lib/speed.s"
         .include "../lib/bell.s"

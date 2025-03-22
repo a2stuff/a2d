@@ -595,7 +595,6 @@ AlertById := AlertByIdImpl::start
         BTKEntry := BTKAuxEntry
         LBTKEntry := LBTKAuxEntry
         .include "../lib/alert_dialog.s"
-        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 

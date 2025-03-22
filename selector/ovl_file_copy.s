@@ -974,7 +974,7 @@ progress_pattern:
         MGTK_CALL MGTK::SetPenSize, app::pensize_normal
 
         MGTK_CALL MGTK::MoveTo, download_label_pos
-        param_call app::DrawString, download_label_str
+        param_call DrawString, download_label_str
         rts
 .endproc ; OpenWindow
 
@@ -1012,12 +1012,12 @@ ep2:    dec     file_count
         jsr     IntToString
         MGTK_CALL MGTK::PaintRect, rect_clear_count
         MGTK_CALL MGTK::MoveTo, pos_copying
-        param_call app::DrawString, str_copying
-        param_call app::DrawString, pathname_src
+        param_call DrawString, str_copying
+        param_call DrawString, pathname_src
         MGTK_CALL MGTK::MoveTo, pos_remaining
-        param_call app::DrawString, str_files_remaining
-        param_call app::DrawString, str_from_int
-        param_call app::DrawString, str_spaces
+        param_call DrawString, str_files_remaining
+        param_call DrawString, str_from_int
+        param_call DrawString, str_spaces
 
         sub16   total_count, file_count, progress_muldiv_params::numerator
         copy16  total_count, progress_muldiv_params::denominator
@@ -1038,9 +1038,9 @@ ep2:    dec     file_count
         ldax    file_count
         jsr     IntToString
         MGTK_CALL MGTK::MoveTo, pos_copying
-        param_call app::DrawString, str_files_to_copy
-        param_call app::DrawString, str_from_int
-        param_jump app::DrawString, str_spaces
+        param_call DrawString, str_files_to_copy
+        param_call DrawString, str_from_int
+        param_jump DrawString, str_spaces
 .endproc ; UpdateFileCountDisplay
 
 ;;; ============================================================
@@ -1104,6 +1104,7 @@ ret:    rts
 
         ReadSetting := app::ReadSetting
         .include "../lib/inttostring.s"
+        .include "../lib/drawstring.s"
 
 ;;; ============================================================
 
