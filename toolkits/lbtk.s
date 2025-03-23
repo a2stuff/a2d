@@ -118,7 +118,6 @@ END_PARAM_BLOCK
         .assert LBTKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
 
-        params_addr := lbr_ptr
         jump_addr := tmp_space
 
         ;; Adjust stack/stash at `params_addr`
