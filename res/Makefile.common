@@ -32,6 +32,6 @@ $(OUTDIR)/%.SYS: $(OUTDIR)/%.o ../res/asm.cfg
 
 # Fonts
 .SECONDEXPANSION:
-$(OUTDIR)/%.font: ../mgtk/fonts/$$(basename $$*).latin1
-	../bin/build_font_from_latin1.pl $(subst .,,$(suffix $*)) < ../mgtk/fonts/$(basename $*).latin1 > $@
+$(OUTDIR)/%.font: ../mgtk/fonts/$$(basename $$*).unicode.txt
+	../bin/build_font_from_unicode_txt.pl $(subst .,,$(suffix $*)) < ../mgtk/fonts/$(basename $*).unicode.txt > $@
 .NOTINTERMEDIATE: $(SYS_FONTS) $(MONO_FONTS)
