@@ -1352,16 +1352,9 @@ fill_mode_table_onechar_high:
         add16   x_offset, x1, x1
         add16   y_offset, top, top
 
-        lsr     x2+1
-        bne     rl_ge256
-
-        lda     x2
-        ror     a
-        tax
-        lda     div7_table,x
-        ldy     mod7_table,x
-
-set_x2_bytes:
+        lda     x2+1
+        ldx     x2
+        jsr     DivMod7
         sta     x2_bytes
         tya
         rol     a
@@ -1371,15 +1364,9 @@ set_x2_bytes:
         lda     main_right_masks,y
         sta     right_masks_table
 
-        lsr     x1+1
-        bne     ll_ge256
-        lda     x1
-        ror     a
-        tax
-        lda     div7_table,x
-        ldy     mod7_table,x
-
-set_x1_bytes:
+        lda     x1+1
+        ldx     x1
+        jsr     DivMod7
         sta     x1_bytes
         tya
         rol     a
@@ -1413,36 +1400,24 @@ set_width:                                      ; Set width for destination.
 
 :       copylohi  fill_mode_table_low,x, fill_mode_table_high,x, fillmode_jmp+1
         rts
-
-ll_ge256:                               ; Divmod for left limit >= 256
-        lda     x1
-        jsr     xx_ge256
-        bpl     set_x1_bytes
-
-rl_ge256:                               ; Divmod for right limit >= 256
-        lda     x2
-        jsr     xx_ge256
-        bmi     DivMod7
-        jmp     set_x2_bytes
 .endproc ; SetUpFillMode
 
+;;; Inputs: X = x lo, A = x hi
+;;; Outputs: A = (x/2) / 7, Y = (x/2) % 7
 .proc DivMod7
         lsr     a
-        bne     xx_ge256x
+        bne     :+
+
+        ;; x < 512
         txa
         ror     a
         tax
         lda     div7_table,x
         ldy     mod7_table,x
         rts
-.endproc ; DivMod7
 
-.proc xx_ge256x
-        txa
-        FALL_THROUGH_TO xx_ge256
-.endproc ; xx_ge256x
-
-.proc xx_ge256
+        ;; x >= 512
+:       txa
         ror     a
         tax
         php
@@ -1452,7 +1427,7 @@ rl_ge256:                               ; Divmod for right limit >= 256
         plp
         ldy     mod7_table+4,x
         rts
-.endproc ; xx_ge256
+.endproc ; DivMod7
 
         ;; Set up destination (for either on-screen or off-screen bitmap.)
 
@@ -6609,19 +6584,13 @@ last_cursor_pos:
 
 .proc SetUpMenuSavebehind
         lda     curmenuinfo::x_min+1
-        lsr     a
-        lda     curmenuinfo::x_min
-        ror     a
-        tax
-        lda     div7_table,x
+        ldx     curmenuinfo::x_min
+        jsr     DivMod7
         sta     savebehind_left_bytes
 
         lda     curmenuinfo::x_max+1
-        lsr     a
-        lda     curmenuinfo::x_max
-        ror     a
-        tax
-        lda     div7_table,x
+        ldx     curmenuinfo::x_max
+        jsr     DivMod7
         sec
         sbc     savebehind_left_bytes
         sta     savebehind_mapwidth
@@ -6648,19 +6617,13 @@ last_cursor_pos:
         rect := $92
 
         lda     rect+MGTK::Rect::x1+1
-        lsr     a
-        lda     rect+MGTK::Rect::x1
-        ror     a
-        tax
-        lda     div7_table,x
+        ldx     rect+MGTK::Rect::x1
+        jsr     DivMod7
         sta     savebehind_left_bytes
 
         lda     rect+MGTK::Rect::x2+1
-        lsr     a
-        lda     rect+MGTK::Rect::x2
-        ror     a
-        tax
-        lda     div7_table,x
+        ldx     rect+MGTK::Rect::x2
+        jsr     DivMod7
         sec
         sbc     savebehind_left_bytes
         sta     savebehind_mapwidth
