@@ -1144,6 +1144,9 @@ With Sci.Calc:
 
 * Launch DeskTop. Apple Menu > Screen Savers. Run Matrix. Click the mouse button. Verify that the screen saver exits. Run Matrix. Press a key. Verify that the screen saver exits.
 
+* Configure a system with no real-time clock. Launch DeskTop. Apple Menu > Screen Savers. Run Analog Clock. Verify that an alert is shown.
+* Configure a system with no real-time clock. Launch DeskTop. Apple Menu > Screen Savers. Run Digital Clock. Verify that an alert is shown.
+
 ## About This Apple II
 
 * Configure a system with a Mockingboard and a Zip Chip, with acceleration enabled (MAME works). Launch DeskTop. Apple Menu > About This Apple II. Verify that the Mockingboard is detected.
