@@ -1817,8 +1817,8 @@ remainder:      .word   0              ; (out)
 
         ;; read+written will not fit in 16 bits if total is > $7FFF
         ;; so scale appropriately
-        tmp_read := progress_muldiv_params::numerator
-        tmp_written := progress_muldiv_params::number
+        tmp_read := $06
+        tmp_written := $08
         copy16  blocks_read, tmp_read
         copy16  blocks_written, tmp_written
         bit     progress_muldiv_params::denominator+1
