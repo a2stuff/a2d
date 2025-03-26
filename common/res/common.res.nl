@@ -72,5 +72,6 @@
 .define res_char_time_separator '.'
 .define res_const_date_order 1
 .define res_const_clock_format 128
+.define res_const_first_dow 1
 .define res_string_version_format_long "%s Versie %d.%d%s"
 .define res_string_noprod_version_format_long "Versie %d.%d%s"

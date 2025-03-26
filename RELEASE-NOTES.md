@@ -67,12 +67,15 @@ Project Page: https://github.com/a2stuff/a2d
   * Improve use of SSC and IW2.
   * Show alert on startup if no printer card found.
 * Options: Add option to show invisible files.
-* Calendar: Allow modifiers when clicking, double-modifiers for decade. ([#693](https://github.com/a2stuff/a2d/issues/693))
+* Calendar:
+  * Allow modifiers when clicking, double-modifiers for decade. ([#693](https://github.com/a2stuff/a2d/issues/693))
+  * Follow "first day of week" setting in Control Panel > International.
 * Show Image File: Allow 'S' to toggle slideshow off. ([#825](https://github.com/a2stuff/a2d/issues/825))
 * Find Files: Make mouse cursor responsive during iteration.
 * Date and Time:
   * Refresh windows if 12/24-hour setting changes. ([#835](https://github.com/a2stuff/a2d/issues/835))
   * Refresh windows if date changes. ([#843](https://github.com/a2stuff/a2d/issues/843))
+* International: Add "first day of week" setting.
 * New DA (in Extras): "Screenshot" - saves screenshot file to application directory.
 * New DA (in Extras): "DOS33.Import" - allows importing files from DOS 3.3 disks.
 * New DA (in Control Panels): "Views" - allows setting the default view style.

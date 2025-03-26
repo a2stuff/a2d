@@ -216,6 +216,9 @@ minute: .byte   0
 .endparams
         .assert .sizeof(datetime) = .sizeof(ParsedDateTime), error, "size mismatch"
 
+first_dow:
+        .byte   0
+
 ;;; ============================================================
 
 .proc Init
@@ -234,6 +237,11 @@ minute: .byte   0
         ldax    #auxdt          ; use current date
         jsr     ParseDatetime
     END_IF
+
+        ;; Load "first day of week" from settings
+        ldx     #DeskTopSettings::intl_first_dow
+        jsr     ReadSetting
+        sta     first_dow
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
@@ -568,13 +576,18 @@ lloop:  lda     index
         copy    #6, index
 dloop:  lda     index
         asl
-        pha
         tax
-
         copy16  day_pos_table,x, pos_addr
         MGTK_CALL MGTK::MoveTo, SELF_MODIFIED, pos_addr
 
-        pla
+        lda     index
+        clc
+        adc     first_dow
+        cmp     #7
+        bcc     :+
+        sbc     #7
+:
+        asl
         tax
         lda     day_str_table,x
         pha
@@ -602,7 +615,13 @@ dloop:  lda     index
         lda     #1
         sec
         sbc     tmp
-        sta     date
+        clc
+        adc     first_dow
+        bmi     :+
+        cmp     #2
+        bcc     :+
+        sbc     #7
+:       sta     date
 
         ;; Find length of month
         ldx     datetime + ParsedDateTime::month

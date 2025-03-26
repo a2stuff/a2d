@@ -6,3 +6,4 @@
 .define res_string_label_dmy "Dag M}nad ]r"
 .define res_string_label_clock_12hour "12 tim"
 .define res_string_label_clock_24hour "24 tim"
+.define res_string_label_first_dow "F|rsta dagen i veckan:"

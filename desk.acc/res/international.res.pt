@@ -6,3 +6,4 @@
 .define res_string_label_dmy "Dia M&s Ano"
 .define res_string_label_clock_12hour "12hr"
 .define res_string_label_clock_24hour "24hr"
+.define res_string_label_first_dow "Primeiro dia da semana:"

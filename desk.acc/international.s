@@ -63,6 +63,7 @@
         kRow2 = 25
         kRow3 = 40
         kRow4 = 55
+        kRow5 = 70
 
         kLabelLeft = kControlMarginX
         kFieldLeft = 160
@@ -97,6 +98,11 @@
         kOKButtonLeft = kDialogWidth - kButtonWidth - kControlMarginX
         kOKButtonTop = kDialogHeight - kButtonHeight - 7
         DEFINE_BUTTON ok_button, kDAWindowId, res_string_button_ok, kGlyphReturn, kOKButtonLeft, kOKButtonTop
+
+        DEFINE_LABEL first_dow, res_string_label_first_dow, kLabelLeft, kRow5+2+kSystemFontHeight
+        DEFINE_BUTTON sunday_button, kDAWindowId, res_string_weekday_abbrev_1, res_string_shortcut_apple_5, kFieldLeft, kRow5+3
+        DEFINE_BUTTON monday_button, kDAWindowId, res_string_weekday_abbrev_2, res_string_shortcut_apple_6, kFieldLeft+60, kRow5+3
+
 
 .params settextbg_black_params
 backcolor:   .byte   0          ; black
@@ -219,6 +225,10 @@ init_window:
         jeq     OnClick12Hour
         cmp     #res_char_shortcut_apple_4
         jeq     OnClick24Hour
+        cmp     #res_char_shortcut_apple_5
+        jeq     OnClickSunday
+        cmp     #res_char_shortcut_apple_6
+        jeq     OnClickMonday
         rts
     END_IF
 
@@ -345,6 +355,12 @@ hit:
         MGTK_CALL MGTK::InRect, date_dmy_button::rect
         jne     OnClickDMY
 
+        MGTK_CALL MGTK::InRect, sunday_button::rect
+        jne     OnClickSunday
+
+        MGTK_CALL MGTK::InRect, monday_button::rect
+        jne     OnClickMonday
+
         ;; --------------------------------------------------
 
         MGTK_CALL MGTK::InRect, date_rect
@@ -425,6 +441,22 @@ hit:
         jmp     UpdateDateOptionButtons
 .endproc ; OnClickDMY
 
+.proc OnClickSunday
+        lda     #0
+        ldx     #DeskTopSettings::intl_first_dow
+        jsr     WriteSetting
+        copy    #$80, dialog_result
+        jmp     UpdateFirstDOWOptionButtons
+.endproc ; OnClickSunday
+
+.proc OnClickMonday
+        lda     #1
+        ldx     #DeskTopSettings::intl_first_dow
+        jsr     WriteSetting
+        copy    #$80, dialog_result
+        jmp     UpdateFirstDOWOptionButtons
+.endproc ; OnClickMonday
+
 ;;; ============================================================
 ;;; Tear down the window and exit
 
@@ -490,10 +522,16 @@ dialog_result:  .byte   0
         BTK_CALL BTK::RadioDraw, clock_12hour_button
         BTK_CALL BTK::RadioDraw, clock_24hour_button
 
+        MGTK_CALL MGTK::MoveTo, first_dow_label_pos
+        param_call DrawString, first_dow_label_str
+        BTK_CALL BTK::RadioDraw, sunday_button
+        BTK_CALL BTK::RadioDraw, monday_button
+
         FALL_THROUGH_TO UpdateOptionButtons
 .endproc ; DrawWindow
 
 .proc UpdateOptionButtons
+        jsr     UpdateFirstDOWOptionButtons
         jsr     UpdateDateOptionButtons
         FALL_THROUGH_TO UpdateClockOptionButtons
 .endproc ; UpdateOptionButtons
@@ -501,13 +539,14 @@ dialog_result:  .byte   0
 .proc UpdateClockOptionButtons
         ldx     #DeskTopSettings::clock_24hours
         jsr     ReadSetting
+
+        pha
         cmp     #0
         jsr     ZToButtonState
         sta     clock_12hour_button::state
         BTK_CALL BTK::RadioUpdate, clock_12hour_button
 
-        ldx     #DeskTopSettings::clock_24hours
-        jsr     ReadSetting
+        pla
         cmp     #$80
         jsr     ZToButtonState
         sta     clock_24hour_button::state
@@ -519,13 +558,14 @@ dialog_result:  .byte   0
 .proc UpdateDateOptionButtons
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
+
+        pha
         cmp     #DeskTopSettings::kDateOrderMDY
         jsr     ZToButtonState
         sta     date_mdy_button::state
         BTK_CALL BTK::RadioUpdate, date_mdy_button
 
-        ldx     #DeskTopSettings::intl_date_order
-        jsr     ReadSetting
+        pla
         cmp     #DeskTopSettings::kDateOrderDMY
         jsr     ZToButtonState
         sta     date_dmy_button::state
@@ -533,6 +573,25 @@ dialog_result:  .byte   0
 
         rts
 .endproc ; UpdateDateOptionButtons
+
+.proc UpdateFirstDOWOptionButtons
+        ldx     #DeskTopSettings::intl_first_dow
+        jsr     ReadSetting
+
+        pha
+        cmp     #0
+        jsr     ZToButtonState
+        sta     sunday_button::state
+        BTK_CALL BTK::RadioUpdate, sunday_button
+
+        pla
+        cmp     #1
+        jsr     ZToButtonState
+        sta     monday_button::state
+        BTK_CALL BTK::RadioUpdate, monday_button
+
+        rts
+.endproc ; UpdateFirstDOWOptionButtons
 
 .proc ZToButtonState
         beq     :+

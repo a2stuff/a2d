@@ -132,6 +132,16 @@ File offset +$0001. The remaining 128 bytes the file are defined by the
    | $84   | by Size            |
    | $85   | by Type            |
 
+* **first day of week**
+
+   Determines what is considered the first day of the week when a
+   calendar is shown.
+
+   | Value | Meaning            |
+   |------:|:-------------------|
+   | $00   | Sunday             |
+   | $01   | Monday             |
+
 * **reserved**
 
    Bytes must be 0. If possible, future settings will be added with 0

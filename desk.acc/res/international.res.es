@@ -6,3 +6,4 @@
 .define res_string_label_dmy "D\x12a Mes A|o"
 .define res_string_label_clock_12hour "12hr"
 .define res_string_label_clock_24hour "24hr"
+.define res_string_label_first_dow "Primer d\x12a de la semana:"

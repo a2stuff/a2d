@@ -202,7 +202,9 @@ kDeskTopSettingsSize    = $80
 
         default_view    .byte   ; kViewByXYZ
 
-        reserved        .res 105
+        intl_first_dow  .byte   ; 0 = Sunday, 1 = Monday
+
+        reserved        .res 104
 
         ;; Written on every startup, in settings for convenience
         system_capabilities .byte ; kSysCapXYZ

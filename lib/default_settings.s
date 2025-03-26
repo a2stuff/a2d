@@ -53,6 +53,9 @@
         ASSERT_ADDRESS settings_start + DeskTopSettings::default_view
         .byte   DeskTopSettings::kViewByIcon
 
+        ASSERT_ADDRESS settings_start + DeskTopSettings::intl_first_dow
+        .byte   res_const_first_dow
+
         ;; Reserved for future use...
 
         PAD_TO settings_start + .sizeof(DeskTopSettings)
