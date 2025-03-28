@@ -75,3 +75,12 @@ progress () {
 fini_progress () {
     echo -ne "\r$(tput el)"
 }
+
+# ============================================================
+# Extract metadata for the build
+
+vmajor=$(grep 'kDeskTopVersionMajor =' config.inc | sed -e 's/.* = //')
+vminor=$(grep 'kDeskTopVersionMinor =' config.inc | sed -e 's/.* = //')
+vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc | cut -d'"' -f2)
+lang=$(grep 'define kBuildLang' config.inc | cut -d'"' -f2)
+version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})

@@ -2,6 +2,7 @@
 
 set -e
 cd "$(dirname "$0")/.."
+source "bin/util.sh"
 
 # ============================================================
 # Tweak config
@@ -16,15 +17,6 @@ perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-
 
 make
 make package
-
-# ============================================================
-# Extract metadata for the build
-
-vmajor=$(grep 'kDeskTopVersionMajor =' config.inc | sed -e 's/.* = //')
-vminor=$(grep 'kDeskTopVersionMinor =' config.inc | sed -e 's/.* = //')
-vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc | cut -d'"' -f2)
-lang=$(grep 'define kBuildLang' config.inc | cut -d'"' -f2)
-version=$(echo ${vmajor}.${vminor}${vsuffix}-${lang})
 
 # ============================================================
 # Copy the built 2MG file and set options
