@@ -1125,21 +1125,15 @@ start:
         ;; Make uppercase or '.'
 cloop:
         lda     str_name,x
+        jsr     ToUpperCase
 
         ;; Digit is fine
         jsr     IsDigit
         bcc     cnext
 
         ;; Uppercase is fine
-        jsr     IsUpperCase
+        jsr     IsUpperAlpha
         bcc     cnext
-
-        ;; Lowercase folded to uppercase
-        jsr     IsLowerCase
-    IF_CC
-        and     #CASE_MASK      ; make uppercase
-        bne     cstore          ; always
-    END_IF
 
         ;; Anything else becomes '.'
         lda     #'.'
@@ -1334,7 +1328,7 @@ finish:
         return  #0              ; success
 
 ;;; C=1 if false
-.proc IsUpperCase
+.proc IsUpperAlpha
         cmp     #'A'
         bcc     no
         cmp     #'Z'+1
@@ -1343,19 +1337,7 @@ finish:
 
 no:     sec
         rts
-.endproc ; IsUpperCase
-
-;;; C=1 if false
-.proc IsLowerCase
-        cmp     #'a'
-        bcc     no
-        cmp     #'z'+1
-        bcs     no
-        rts
-
-no:     sec
-        rts
-.endproc ; IsLowerCase
+.endproc ; IsUpperAlpha
 
 ;;; C=1 if false
 .proc IsDigit
@@ -1573,6 +1555,7 @@ RWTSWrite := RWTSImpl::Write
 ;;; ============================================================
 
         .include "../lib/is_diskii.s"
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 

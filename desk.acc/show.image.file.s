@@ -173,7 +173,7 @@ on_key:
         copy    #0, slideshow_flag
 
         lda     event_params + MGTK::Event::key
-        jsr     ToUppercase
+        jsr     ToUpperCase
 
         ldx     event_params + MGTK::Event::modifiers
     IF_NOT_ZERO
@@ -974,7 +974,7 @@ done:
 
 ;;; ============================================================
 ;;; Check suffix on `INVOKE_PATH` to see if it matches passed string
-;;; Inputs: A,X = pointer to suffix
+;;; Inputs: A,X = pointer to suffix (uppercase)
 ;;; Outputs: C=0 on match, C=1 otherwise
 ;;; Trashes $06
 
@@ -987,13 +987,9 @@ done:
         lda     (ptr),y
         tay
         ldx     INVOKE_PATH
-:       lda     (ptr),y
-        jsr     ToUppercase
-        sta     @char
-        lda     INVOKE_PATH,x
-        jsr     ToUppercase
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
+:       lda     INVOKE_PATH,x
+        jsr     ToUpperCase     ; passed suffix is always uppercase
+        cmp     (ptr),y
         bne     no              ; different - not a match
         dey
         beq     yes             ; out of suffix - it's a match
@@ -1200,15 +1196,6 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
 
 ;;; ============================================================
 
-.proc ToUppercase
-        cmp     #'a' ; Assumes valid filename character
-        bcc     :+
-        and     #CASE_MASK ; Make upper-case
-:       rts
-.endproc ; ToUppercase
-
-;;; ============================================================
-
 ;;; Inputs: A,X = `FileEntry`
 ;;; Output: C=1 if it's an image file we can preview, C=0 otherwise
 ;;; Trashes: $06
@@ -1292,7 +1279,7 @@ yes:    sec
 
         ;; --------------------------------------------------
 
-;;; Input: A,X = suffix to check against `entry`
+;;; Input: A,X = suffix to check against `entry` (uppercase)
 ;;; Output: C=0 on match, C=1 otherwise
 .proc check_suffix
         ptr := $06
@@ -1304,13 +1291,9 @@ yes:    sec
         lda     (ptr),y
         tay
         ldx     path
-:       lda     (ptr),y
-        jsr     ToUppercase
-        sta     @char
-        lda     path,x
-        jsr     ToUppercase
-        @char := *+1
-        cmp     #SELF_MODIFIED_BYTE
+:       lda     path,x
+        jsr     ToUpperCase     ; passed suffix is always uppercase
+        cmp     (ptr),y
         bne     no              ; different - not a match
         dey
         beq     yes             ; out of suffix - it's a match
@@ -1459,7 +1442,7 @@ saw_header_flag:
 :       inx
         iny
         lda     dir_path,x
-        jsr     ToUppercase
+        jsr     ToUpperCase
         sta     cur_filename,y
         cpx     INVOKE_PATH
         bne     :-
@@ -1534,7 +1517,7 @@ fail:   jmp     Init
         sta     (ptr),y
         tay
 :       lda     (ptr),y
-        jsr     ToUppercase
+        jsr     ToUpperCase
         sta     last_filename,y
         dey
         bpl     :-
@@ -1611,6 +1594,7 @@ str_a2hr_suffix:
 
 ;;; ============================================================
 
+        .include "../lib/uppercase.s"
         .include "../inc/hires_table.inc"
         .include "inc/hr_to_dhr.inc"
 

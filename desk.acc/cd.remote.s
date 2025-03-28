@@ -792,14 +792,8 @@ CheckUserInput:
 
 HandleKey:
         lda     event_params::key
+        jsr     ToUpperCase
 
-        ;; Map lowercase to uppercase
-        cmp     #'a'
-        bcc     :+
-        cmp     #'z'
-        bcs     :+
-        and     #CASE_MASK
-:
         ldx     event_params::modifiers
     IF_NOT_ZERO
         cmp     #kShortcutCloseWindow
@@ -2467,6 +2461,10 @@ cdremote__PlayButtonState       := cdremote::PlayButtonState
 cdremote__PauseButtonState      := cdremote::PauseButtonState
 cdremote__LoopButtonState       := cdremote::LoopButtonState
 cdremote__RandomButtonState     := cdremote::RandomButtonState
+
+;;; ============================================================
+
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 

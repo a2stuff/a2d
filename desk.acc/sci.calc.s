@@ -94,15 +94,10 @@ setzp_params_preserve:          ; convenience over performance
 
 kLabelStrSize = 4               ; for padding, so button structs are consistent size
 
-.macro CALC_BUTTON identifier, func, labelstr, left, top
+.macro CALC_BUTTON identifier, func, labelstr, left, top, key_char
 .params identifier
 function:       .byte   func
-key:
-.if .strlen(labelstr) = 1
-                .byte   labelstr
-.else
-                .byte   0
-.endif
+key:            .byte   key_char
         .refto function
         .refto key
         DEFINE_POINT viewloc, left - kBorderLeftTop, top - kBorderLeftTop
@@ -197,26 +192,25 @@ port:           .word   left, top, left+kSciButtonWidth-3, top+kCalcButtonHeight
 
 .endenum
 
-
         first_button := *
-        CALC_BUTTON btn_c,   Function::clear,    "c", kCol1Left, kRow1Top
-        CALC_BUTTON btn_e,   Function::exp,      "e", kCol2Left, kRow1Top
-        CALC_BUTTON btn_eq,  Function::equals,   "=", kCol3Left, kRow1Top
-        CALC_BUTTON btn_mul, Function::op_multiply, "*", kCol4Left, kRow1Top
+        CALC_BUTTON btn_c,   Function::clear,       "c", kCol1Left, kRow1Top, 'C'
+        CALC_BUTTON btn_e,   Function::exp,         "e", kCol2Left, kRow1Top, 'E'
+        CALC_BUTTON btn_eq,  Function::equals,      "=", kCol3Left, kRow1Top, '='
+        CALC_BUTTON btn_mul, Function::op_multiply, "*", kCol4Left, kRow1Top, '*'
 
-        CALC_BUTTON btn_7,   Function::digit7, "7", kCol1Left, kRow2Top
-        CALC_BUTTON btn_8,   Function::digit8, "8", kCol2Left, kRow2Top
-        CALC_BUTTON btn_9,   Function::digit9, "9", kCol3Left, kRow2Top
-        CALC_BUTTON btn_div, Function::op_divide, "/", kCol4Left, kRow2Top
+        CALC_BUTTON btn_7,   Function::digit7,      "7", kCol1Left, kRow2Top, '7'
+        CALC_BUTTON btn_8,   Function::digit8,      "8", kCol2Left, kRow2Top, '8'
+        CALC_BUTTON btn_9,   Function::digit9,      "9", kCol3Left, kRow2Top, '9'
+        CALC_BUTTON btn_div, Function::op_divide,   "/", kCol4Left, kRow2Top, '/'
 
-        CALC_BUTTON btn_4,   Function::digit4, "4", kCol1Left, kRow3Top
-        CALC_BUTTON btn_5,   Function::digit5, "5", kCol2Left, kRow3Top
-        CALC_BUTTON btn_6,   Function::digit6, "6", kCol3Left, kRow3Top
-        CALC_BUTTON btn_sub, Function::op_subtract, "-", kCol4Left, kRow3Top
+        CALC_BUTTON btn_4,   Function::digit4,      "4", kCol1Left, kRow3Top, '4'
+        CALC_BUTTON btn_5,   Function::digit5,      "5", kCol2Left, kRow3Top, '5'
+        CALC_BUTTON btn_6,   Function::digit6,      "6", kCol3Left, kRow3Top, '6'
+        CALC_BUTTON btn_sub, Function::op_subtract, "-", kCol4Left, kRow3Top, '-'
 
-        CALC_BUTTON btn_1,   Function::digit1, "1", kCol1Left, kRow4Top
-        CALC_BUTTON btn_2,   Function::digit2, "2", kCol2Left, kRow4Top
-        CALC_BUTTON btn_3,   Function::digit3, "3", kCol3Left, kRow4Top
+        CALC_BUTTON btn_1,   Function::digit1,      "1", kCol1Left, kRow4Top, '1'
+        CALC_BUTTON btn_2,   Function::digit2,      "2", kCol2Left, kRow4Top, '2'
+        CALC_BUTTON btn_3,   Function::digit3,      "3", kCol3Left, kRow4Top, '3'
 
 .params btn_0
         left = kCol1Left
@@ -692,10 +686,10 @@ ret:    rts
 
 .proc OnKeyPress
         lda     event_params::key
+        jsr     ToUpperCase
 
         ldx     event_params::modifiers
     IF_NOT_ZERO
-        jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
       IF_EQ
         pla                     ; pop OnKeyPress
@@ -705,13 +699,6 @@ ret:    rts
         rts
     END_IF
 
-        ;; To lowercase
-        cmp     #'A'
-        bcc     :+
-        cmp     #'Z'+1
-        bcs     :+
-        ora     #AS_BYTE(~CASE_MASK)
-:
         cmp     #'.'            ; allow either
         bne     :+
         lda     intl_deci_sep

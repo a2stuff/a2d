@@ -1743,9 +1743,7 @@ ret:    rts
 ;;; A is trashed
 
 .proc IsAlpha
-        cmp     #'@'            ; in upper/lower "plane" ?
-        bcc     nope
-        and     #CASE_MASK      ; force upper-case
+        jsr     ToUpperCase
         cmp     #'A'
         bcc     nope
         cmp     #'Z'+1
@@ -7873,19 +7871,17 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         sta     suffix_pos
         lda     (ptr_filename),y
         sta     filename_pos
+:
         ;; Case-insensitive compare each character
-        suffix_pos := *+1
-:       ldy     #SELF_MODIFIED_BYTE
-        lda     (ptr_suffix),y
-        jsr     ToUpperCase
-        sta     char
         filename_pos := *+1
         ldy     #SELF_MODIFIED_BYTE
         lda     (ptr_filename),y
         jsr     ToUpperCase
-        char := *+1
-        cmp     #SELF_MODIFIED_BYTE
+        suffix_pos := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        cmp     (ptr_suffix),y  ; already uppercase
         bne     next            ; no match
+
         ;; Move to previous characters
         dec     suffix_pos
         beq     :+              ; if we ran out of suffix, it's a match
@@ -15181,7 +15177,7 @@ icontype_table:
         DEFINE_ICTRECORD $FF, kDAFileType,  ICT_FLAGS_AUX, kDAFileAuxType|$8000, 0, IconType::desk_accessory
         .byte   kICTSentinel
 
-;;; Suffixes
+;;; Suffixes (must be uppercase)
 str_sys_suffix:                 ; SYS files with .SYSTEM suffix are given "application" icon
         PASCAL_STRING ".SYSTEM"
 

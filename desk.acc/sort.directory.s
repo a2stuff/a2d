@@ -563,11 +563,11 @@ loop:   dex
 next:   iny
 
         lda     (entry_ptr),y
-        jsr     ToUppercase
+        jsr     ToUpperCase
         sta     cmp_char
 
         lda     (filename),y
-        jsr     ToUppercase
+        jsr     ToUpperCase
 
         cmp_char := *+1
         cmp     #SELF_MODIFIED_BYTE
@@ -606,11 +606,11 @@ loop2:  dex
 next2:  iny
 
         lda     (entry_ptr),y
-        jsr     ToUppercase
+        jsr     ToUpperCase
         sta     cmp_char2
 
         lda     (filename2),y
-        jsr     ToUppercase
+        jsr     ToUpperCase
 
         cmp_char2 := *+1
         cmp     #SELF_MODIFIED_BYTE
@@ -783,14 +783,8 @@ len1:   .byte   0
 .endproc ; CompareFileEntryNames
 
 ;;; ============================================================
-;;; Convert filename character to uppercase
 
-.proc ToUppercase
-        cmp     #'a'            ; Assumes valid filename character
-        bcc     :+
-        and     #CASE_MASK      ; Make upper-case
-:       rts
-.endproc ; ToUppercase
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 

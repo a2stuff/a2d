@@ -400,12 +400,9 @@ loop:
         bne     next
 
         tay
-cloop:  lda     (ptr),y
+cloop:  lda     buf_search,y
         jsr     ToUpperCase
-        sta     @char
-        lda     buf_search,y
-        jsr     ToUpperCase
-        @char := *+1
+        lda     (ptr),y
         cmp     #SELF_MODIFIED_BYTE
         bne     next
         dey
@@ -736,84 +733,84 @@ blink_counter:
 .endmacro
 
 location_table:
-        DEFINE_LOCATION "Abidjan", 5, -4
-        DEFINE_LOCATION "Alexandria", 31, 29
-        DEFINE_LOCATION "Auckland", -36, 174
-        DEFINE_LOCATION "Bangalore", 12, 77
-        DEFINE_LOCATION "Bangkok", 13, 100
-        DEFINE_LOCATION "Beijing", 39, 116
-        DEFINE_LOCATION "Berlin", 52, 13
-        DEFINE_LOCATION "Bogota", 4, -74
-        DEFINE_LOCATION "Bucharest", 44, 26
-        DEFINE_LOCATION "Buenos Aires", -34, -58
-        DEFINE_LOCATION "Cairo", 30, 31
-        DEFINE_LOCATION "Calgary", 51, -114
-        DEFINE_LOCATION "Cape Town", -33, 18
-        DEFINE_LOCATION "Caracas", 10, -66
-        DEFINE_LOCATION "Chengdu", 30, 104
-        DEFINE_LOCATION "Chennai", 13, 80
-        DEFINE_LOCATION "Chicago", 41, -87
-        DEFINE_LOCATION "Chongqing", 29, 106
-        DEFINE_LOCATION "Cupertino", 37, -122
-        DEFINE_LOCATION "Dar es Salaam", -6, 39
-        DEFINE_LOCATION "Delhi", 28, 77
-        DEFINE_LOCATION "Dhaka", 23, 90
-        DEFINE_LOCATION "Guangzhou", 23, 113
-        DEFINE_LOCATION "Havana", 23, -82
-        DEFINE_LOCATION "Ho Chi Minh", 10, 106
-        DEFINE_LOCATION "Hong Kong", 22, 114
-        DEFINE_LOCATION "Honolulu", 21, -157
-        DEFINE_LOCATION "Houston", 29, -95
-        DEFINE_LOCATION "Hyderabad", 17, 78
-        DEFINE_LOCATION "Istanbul", 41, 28
-        DEFINE_LOCATION "Jakarta", -6, 106
-        DEFINE_LOCATION "Johannesburg", -26, 28
-        DEFINE_LOCATION "Kansas City", 39, -94
-        DEFINE_LOCATION "Karachi", 24, 67
-        DEFINE_LOCATION "Khartoum", 15, 32
-        DEFINE_LOCATION "Kinshasa", -4, 15
-        DEFINE_LOCATION "Kolkata", 22, 88
-        DEFINE_LOCATION "Kyiv", 50, 30
-        DEFINE_LOCATION "Lagos", 6, 3
-        DEFINE_LOCATION "Lahore", 31, 74
-        DEFINE_LOCATION "Lima", -12, -77
-        DEFINE_LOCATION "Lisbon", 38, -9
-        DEFINE_LOCATION "London", 51, 0
-        DEFINE_LOCATION "Los Angeles", 34, -118
-        DEFINE_LOCATION "Madrid", 40, -3
-        DEFINE_LOCATION "Manila", 14, 120
-        DEFINE_LOCATION "Mexico City", 19, -99
-        DEFINE_LOCATION "Moscow", 55, 37
-        DEFINE_LOCATION "Montreal", 45, -73
-        DEFINE_LOCATION "Mumbai", 19, 72
-        DEFINE_LOCATION "Nagoya", 35, 136
-        DEFINE_LOCATION "Nairobi", -1, 36
-        DEFINE_LOCATION "New York", 40, -74
-        DEFINE_LOCATION "Osaka", 34, 135
-        DEFINE_LOCATION "Ottawa", 45, -75
-        DEFINE_LOCATION "Papeete", -17, -149
-        DEFINE_LOCATION "Paris", 48, 2
-        DEFINE_LOCATION "Rio de Janeiro", -22, -43
-        DEFINE_LOCATION "Rome", 41, 12
-        DEFINE_LOCATION "St Petersburg", 59, 30
-        DEFINE_LOCATION "San Francisco", 37, -122
-        DEFINE_LOCATION "Santiago", -33, -70
-        DEFINE_LOCATION "Sao Paulo", -23, -46
-        DEFINE_LOCATION "Seattle", 47, -122
-        DEFINE_LOCATION "Seoul", 37, 126
-        DEFINE_LOCATION "Shanghai", 31, 121
-        DEFINE_LOCATION "Shenzhen", 22, 114
-        DEFINE_LOCATION "Singapore", 1, 103
-        DEFINE_LOCATION "Springfield", 40, -90
-        DEFINE_LOCATION "Suzhou", 31, 120
-        DEFINE_LOCATION "Sydney", -33, 151
-        DEFINE_LOCATION "Tianjin", 39, 117
-        DEFINE_LOCATION "Tehran", 35, 51
-        DEFINE_LOCATION "Tokyo", 35, 139
-        DEFINE_LOCATION "Toronto", 43, -79
-        DEFINE_LOCATION "Vancouver", 49, -123
-        DEFINE_LOCATION "Washington", 38, -77
-        DEFINE_LOCATION "Xiamen", 24, 118
+        DEFINE_LOCATION "ABIDJAN", 5, -4
+        DEFINE_LOCATION "ALEXANDRIA", 31, 29
+        DEFINE_LOCATION "AUCKLAND", -36, 174
+        DEFINE_LOCATION "BANGALORE", 12, 77
+        DEFINE_LOCATION "BANGKOK", 13, 100
+        DEFINE_LOCATION "BEIJING", 39, 116
+        DEFINE_LOCATION "BERLIN", 52, 13
+        DEFINE_LOCATION "BOGOTA", 4, -74
+        DEFINE_LOCATION "BUCHAREST", 44, 26
+        DEFINE_LOCATION "BUENOS AIRES", -34, -58
+        DEFINE_LOCATION "CAIRO", 30, 31
+        DEFINE_LOCATION "CALGARY", 51, -114
+        DEFINE_LOCATION "CAPE TOWN", -33, 18
+        DEFINE_LOCATION "CARACAS", 10, -66
+        DEFINE_LOCATION "CHENGDU", 30, 104
+        DEFINE_LOCATION "CHENNAI", 13, 80
+        DEFINE_LOCATION "CHICAGO", 41, -87
+        DEFINE_LOCATION "CHONGQING", 29, 106
+        DEFINE_LOCATION "CUPERTINO", 37, -122
+        DEFINE_LOCATION "DAR ES SALAAM", -6, 39
+        DEFINE_LOCATION "DELHI", 28, 77
+        DEFINE_LOCATION "DHAKA", 23, 90
+        DEFINE_LOCATION "GUANGZHOU", 23, 113
+        DEFINE_LOCATION "HAVANA", 23, -82
+        DEFINE_LOCATION "HO CHI MINH", 10, 106
+        DEFINE_LOCATION "HONG KONG", 22, 114
+        DEFINE_LOCATION "HONOLULU", 21, -157
+        DEFINE_LOCATION "HOUSTON", 29, -95
+        DEFINE_LOCATION "HYDERABAD", 17, 78
+        DEFINE_LOCATION "ISTANBUL", 41, 28
+        DEFINE_LOCATION "JAKARTA", -6, 106
+        DEFINE_LOCATION "JOHANNESBURG", -26, 28
+        DEFINE_LOCATION "KANSAS CITY", 39, -94
+        DEFINE_LOCATION "KARACHI", 24, 67
+        DEFINE_LOCATION "KHARTOUM", 15, 32
+        DEFINE_LOCATION "KINSHASA", -4, 15
+        DEFINE_LOCATION "KOLKATA", 22, 88
+        DEFINE_LOCATION "KYIV", 50, 30
+        DEFINE_LOCATION "LAGOS", 6, 3
+        DEFINE_LOCATION "LAHORE", 31, 74
+        DEFINE_LOCATION "LIMA", -12, -77
+        DEFINE_LOCATION "LISBON", 38, -9
+        DEFINE_LOCATION "LONDON", 51, 0
+        DEFINE_LOCATION "LOS ANGELES", 34, -118
+        DEFINE_LOCATION "MADRID", 40, -3
+        DEFINE_LOCATION "MANILA", 14, 120
+        DEFINE_LOCATION "MEXICO CITY", 19, -99
+        DEFINE_LOCATION "MOSCOW", 55, 37
+        DEFINE_LOCATION "MONTREAL", 45, -73
+        DEFINE_LOCATION "MUMBAI", 19, 72
+        DEFINE_LOCATION "NAGOYA", 35, 136
+        DEFINE_LOCATION "NAIROBI", -1, 36
+        DEFINE_LOCATION "NEW YORK", 40, -74
+        DEFINE_LOCATION "OSAKA", 34, 135
+        DEFINE_LOCATION "OTTAWA", 45, -75
+        DEFINE_LOCATION "PAPEETE", -17, -149
+        DEFINE_LOCATION "PARIS", 48, 2
+        DEFINE_LOCATION "RIO DE JANEIRO", -22, -43
+        DEFINE_LOCATION "ROME", 41, 12
+        DEFINE_LOCATION "ST PETERSBURG", 59, 30
+        DEFINE_LOCATION "SAN FRANCISCO", 37, -122
+        DEFINE_LOCATION "SANTIAGO", -33, -70
+        DEFINE_LOCATION "SAO PAULO", -23, -46
+        DEFINE_LOCATION "SEATTLE", 47, -122
+        DEFINE_LOCATION "SEOUL", 37, 126
+        DEFINE_LOCATION "SHANGHAI", 31, 121
+        DEFINE_LOCATION "SHENZHEN", 22, 114
+        DEFINE_LOCATION "SINGAPORE", 1, 103
+        DEFINE_LOCATION "SPRINGFIELD", 40, -90
+        DEFINE_LOCATION "SUZHOU", 31, 120
+        DEFINE_LOCATION "SYDNEY", -33, 151
+        DEFINE_LOCATION "TIANJIN", 39, 117
+        DEFINE_LOCATION "TEHRAN", 35, 51
+        DEFINE_LOCATION "TOKYO", 35, 139
+        DEFINE_LOCATION "TORONTO", 43, -79
+        DEFINE_LOCATION "VANCOUVER", 49, -123
+        DEFINE_LOCATION "WASHINGTON", 38, -77
+        DEFINE_LOCATION "XIAMEN", 24, 118
 
 kNumLocations = loc_count
 

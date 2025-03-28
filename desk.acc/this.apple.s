@@ -2442,9 +2442,7 @@ ShowSmartPortDeviceNames := ShowSmartPortDeviceNamesImpl::start
 ;;; A is trashed
 
 .proc IsAlpha
-        cmp     #'@'            ; in upper/lower "plane" ?
-        bcc     nope
-        and     #CASE_MASK      ; force upper-case
+        jsr     ToUpperCase
         cmp     #'A'
         bcc     nope
         cmp     #'Z'+1

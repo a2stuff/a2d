@@ -587,10 +587,10 @@ exit := OnClick::exit
 
 .proc OnKeyPress
         lda     event_params::key
+        jsr     ToUpperCase
 
         ldx     event_params::modifiers
     IF_NOT_ZERO
-        jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         beq     exit
         bne     bail            ; always
@@ -615,7 +615,6 @@ exit := OnClick::exit
 clear:  lda     #'C'            ; otherwise turn Escape into Clear
 
 :
-        jsr     ToUpperCase
 
 process:
         jmp     ProcessKey
