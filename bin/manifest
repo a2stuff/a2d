@@ -145,7 +145,7 @@ if [[ -z "$no_sample_media" ]]; then
     disposition="fonts"
 
     # MGTK Fonts
-    for l in en fr de it es pt sv da nl; do
+    for l in en fr de it es pt sv da nl bg; do
       emit add_file $disposition "out/System.$l.font"      $mediafnt "System.$l"      070000
       emit add_file $disposition "out/Monaco.$l.font"      $mediafnt "Monaco.$l"      070000
     done
@@ -169,6 +169,8 @@ if [[ -z "$no_sample_media" ]]; then
     emit add_file $disposition "mgtk/fonts/erin/MischkeBd.en"    $mediafnt "MischkeBd.en"   070000
     emit add_file $disposition "mgtk/fonts/erin/Monterey.en"     $mediafnt "Monterey.en"    070000
     emit add_file $disposition "mgtk/fonts/erin/MontereyBd.en"   $mediafnt "MontereyBd.en"  070000
+
+    disposition="fonts2"
 
     # HRCG conversions
     emit add_file $disposition "mgtk/fonts/hrcg/ASCII"           $mediafnt "ASCII"          070000

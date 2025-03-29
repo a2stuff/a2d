@@ -30,6 +30,7 @@ IMGFILE_PART2="out/A2DeskTop-${version}_140k_disk2.po"
 IMGFILE_PART3="out/A2DeskTop-${version}_140k_disk3.po"
 IMGFILE_PART4="out/A2DeskTop-${version}_140k_disk4.po"
 IMGFILE_PART5="out/A2DeskTop-${version}_140k_disk5.po"
+IMGFILE_PART6="out/A2DeskTop-${version}_140k_disk6.po"
 
 VOLNAME_COMPLETE="A2.DeskTop"
 VOLNAME_PART1="A2.DeskTop.1"
@@ -37,8 +38,9 @@ VOLNAME_PART2="A2.DeskTop.2"
 VOLNAME_PART3="A2.DeskTop.3"
 VOLNAME_PART4="A2.DeskTop.4"
 VOLNAME_PART5="A2.DeskTop.5"
+VOLNAME_PART6="A2.DeskTop.6"
 
-IMAGES="$IMGFILE_COMPLETE_2MG $IMGFILE_COMPLETE_HDV $IMGFILE_PART1 $IMGFILE_PART2 $IMGFILE_PART3 $IMGFILE_PART4 $IMGFILE_PART5"
+IMAGES="$IMGFILE_COMPLETE_2MG $IMGFILE_COMPLETE_HDV $IMGFILE_PART1 $IMGFILE_PART2 $IMGFILE_PART3 $IMGFILE_PART4 $IMGFILE_PART5 $IMGFILE_PART6"
 
 # Create disk images.
 
@@ -53,6 +55,7 @@ suppress cadius CREATEVOLUME $IMGFILE_PART2 $VOLNAME_PART2 140KB --quiet
 suppress cadius CREATEVOLUME $IMGFILE_PART3 $VOLNAME_PART3 140KB --quiet
 suppress cadius CREATEVOLUME $IMGFILE_PART4 $VOLNAME_PART4 140KB --quiet
 suppress cadius CREATEVOLUME $IMGFILE_PART5 $VOLNAME_PART5 140KB --quiet
+suppress cadius CREATEVOLUME $IMGFILE_PART6 $VOLNAME_PART6 140KB --quiet
 
 # ============================================================
 # Implementation for manifest operations
@@ -72,6 +75,9 @@ add_file () {
 
         if [ "$suffix" = "040000" ]; then
             perl -p -i -e 's/\r?\n/\r/g' "$tmp_file" # Ensure Apple line endings
+            if [ "$supports_lowercase" != "1" ]; then
+                perl -p -i -e 'tr/a-z/A-Z/' "$tmp_file"
+            fi
         fi
 
         if [ "$folder" != "" ]; then
@@ -99,8 +105,13 @@ add_file () {
         add_file_internal $IMGFILE_PART3 "$src_file" "/$VOLNAME_PART3/$folder" "$dst_file" "$suffix"
     elif [ "$disposition" = "sample" ]; then
         add_file_internal $IMGFILE_PART4 "$src_file" "/$VOLNAME_PART4/$folder" "$dst_file" "$suffix"
-    else # fonts
+    elif [ "$disposition" = "fonts" ]; then
         add_file_internal $IMGFILE_PART5 "$src_file" "/$VOLNAME_PART5/$folder" "$dst_file" "$suffix"
+    elif [ "$disposition" = "fonts2" ]; then
+        add_file_internal $IMGFILE_PART6 "$src_file" "/$VOLNAME_PART6/$folder" "$dst_file" "$suffix"
+    else
+        echo "Unknown disposition: $disposition" 1>&2
+        exit 1
     fi
 }
 

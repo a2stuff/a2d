@@ -4,7 +4,7 @@
 
 # args: dir lang
 #   dir: "encode" (UTF-8 to Apple) or "decode" (Apple to UTF-8)
-#   lang: "fr", "de", "it", "es", "da", "sv", "pt", "nl"
+#   lang: "fr", "de", "it", "es", "da", "sv", "pt", "nl", "bg"
 #   e.g. transcode.pl to fr < in > out
 #   e.g. transcode.pl from fr < in > out
 

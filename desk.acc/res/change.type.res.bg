@@ -1,0 +1,3 @@
+.define res_string_label_type "tip: $"
+.define res_string_label_auxtype "AUXTYPE:  $"
+.define res_string_err_no_files_selected "nqma izbrani fajlowe."

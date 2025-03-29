@@ -1,0 +1,12 @@
+.define res_string_128k_required "iziskwa se 128K i IIE ili po-kysna\r\rnatisnete klawi{ za izhod"
+.define res_string_copying_to_ramcard "kopirane na APPLE II DESKTOP w RAMCARD..."
+.define res_string_esc_to_cancel "natisni ESC za otkaz."
+.define res_string_label_tip_skip_copying "za da propusne{ kopiraneto w RAMCARD, zadryv \x0F\x1B\x41\x18\x0E pri startirane."
+.define res_string_label_copying "kopirane w RAMCARD: "
+.define res_string_prompt_ram_not_empty "/RAM }e byde uni}ovena. natisni RETURN, za da prodylvi{ ili ESC."
+.define res_string_prompt_insert_source "postawi izhodniq disk i natisni RETURN, za da prodylvi{ ili ESC za otmqna."
+.define res_string_prompt_ramcard_full "nqma dostaty~no mqsto w RAM kartata. natisni RETURN, za da prodylvi{."
+.define res_string_error_prefix "wyznikna gre{ka $"
+.define res_string_error_suffix " pri kopirane "
+.define res_string_prompt_copy_not_completed "kopiraneto ne e zawyr{eno. natisni nazad, za da prodylvi{."
+.define res_char_monitor_shortcut 'M'

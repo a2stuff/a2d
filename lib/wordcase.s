@@ -4,6 +4,7 @@
 
 ;;; Requires `ptr` to be defined.
 
+.assert kBuildSupportsLowercase, error, "Do not use if lowercase not allowed"
 .scope
         ldy     #0
         lda     (ptr),y
@@ -30,7 +31,7 @@ check_alpha:
         lda     (ptr),y
         cmp     #'A'
         bcc     :+
-        ora     #AS_BYTE(~CASE_MASK)
+        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
 :       dey
         bpl     loop            ; always

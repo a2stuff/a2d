@@ -1,0 +1,3 @@
+.define res_string_window_title "CPU test (MHZ)"
+.define res_string_60hz "60HZ"
+.define res_string_50hz "50HZ"

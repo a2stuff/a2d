@@ -325,10 +325,15 @@ yes:    clc                     ; C=0
         bcc     ignore
         cmp     #'Z'+1
         bcc     insert
+
+.if kBuildSupportsLowercase
         cmp     #'a'
         bcc     ignore
         cmp     #'z'+1
         bcs     ignore
+.else
+        bcs     ignore          ; always
+.endif
 
 insert: clc
         rts

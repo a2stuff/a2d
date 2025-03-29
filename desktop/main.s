@@ -9199,6 +9199,7 @@ is_sp:  lda     unit_number
 done:   sty     dib_buffer+SPDIB::ID_String_Length
 .endscope
 
+.if kBuildSupportsLowercase
         ;; Case-adjust
 .scope
         ldy     dib_buffer+SPDIB::ID_String_Length
@@ -9215,13 +9216,14 @@ loop:   lda     dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
         jsr     IsAlpha
         bne     next
         lda     dib_buffer+SPDIB::Device_Name,y
-        ora     #AS_BYTE(~CASE_MASK)
+        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     dib_buffer+SPDIB::Device_Name,y
 
 next:   dey
         bne     loop
 done:
 .endscope
+.endif
 
         ;; Check device type
         ;; Technical Note: SmartPort #4: SmartPort Device Types
@@ -13698,10 +13700,12 @@ yes:    clc                     ; C=0
         cmp     #'Z'+1
         bcc     allow
 
+.if kBuildSupportsLowercase
         cmp     #'a'
         bcc     ignore
         cmp     #'z'+1
         bcc     allow
+.endif
         bcs     ignore          ; always
 
 allow_if_not_first:

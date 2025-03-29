@@ -12,7 +12,7 @@ COMMON_HEADERS = $(wildcard ../*.inc ../inc/*.inc *.inc inc/*.inc) \
 	$(wildcard ../lib/*.s) \
 	$(wildcard res/*.res.?? ../common/res/*.res.??)
 
-LANGS = da de en es fr it nl pt sv
+LANGS = da de en es fr it nl pt sv bg
 SYS_FONTS = $(foreach LANG,$(LANGS),$(OUTDIR)/System.$(LANG).font)
 MONO_FONTS = $(foreach LANG,$(LANGS),$(OUTDIR)/Monaco.$(LANG).font)
 

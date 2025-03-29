@@ -2313,6 +2313,7 @@ device_loop:
 done:   sty     dib_buffer+SPDIB::ID_String_Length
 .endscope
 
+.if kBuildSupportsLowercase
         ;; Case-adjust
 .scope
         ldy     dib_buffer+SPDIB::ID_String_Length
@@ -2329,7 +2330,7 @@ loop:   lda     dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
         jsr     IsAlpha
         bne     next
         lda     dib_buffer+SPDIB::Device_Name,y
-        ora     #AS_BYTE(~CASE_MASK)
+        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     dib_buffer+SPDIB::Device_Name,y
 
 next:   dey
@@ -2337,6 +2338,7 @@ next:   dey
         bne     loop
 done:
 .endscope
+.endif
 
         str_current := dib_buffer+SPDIB::ID_String_Length
 

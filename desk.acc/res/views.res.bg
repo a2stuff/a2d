@@ -1,0 +1,8 @@
+.define res_string_window_title "izgledi"
+.define res_string_initial_view "pyrwona~alen izgled:"
+.define res_string_radio_button_by_icon "kato ikoni"
+.define res_string_radio_button_by_small_icon "kato malki ikoni"
+.define res_string_radio_button_by_name "po ime"
+.define res_string_radio_button_by_date "po data"
+.define res_string_radio_button_by_size "po razmer"
+.define res_string_radio_button_by_type "po tip"

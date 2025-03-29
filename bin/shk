@@ -37,6 +37,9 @@ add_file() {
 
     if [ "$suffix" = "040000" ]; then
         perl -p -i -e 's/\r?\n/\r/g' "$tmp_file" # Ensure Apple line endings
+        if [ "$supports_lowercase" != "1" ]; then
+            perl -p -i -e 'tr/a-z/A-Z/' "$tmp_file"
+        fi
     fi
 }
 

@@ -1,0 +1,47 @@
+.define res_string_dc_menu_bar_item_file "fajl"
+.define res_string_menu_bar_item_facilities "opcii"
+.define res_string_dc_menu_item_quit "izhod"
+.define res_char_dc_menu_item_quit_shortcut 'Q'
+.define res_string_menu_item_quick_copy "byrzo kopirane"
+.define res_string_dc_menu_item_disk_copy "kopirane na disk"
+.define res_string_button_read_drive "pro~eti u-wata"
+.define res_char_button_read_drive_shortcut 'R'
+.define res_string_label_slot_drive_name "slot, u-wo, ime"
+.define res_string_prompt_select_source "izberete ot disk"
+.define res_string_prompt_select_destination "izberete kym disk"
+.define res_string_label_status_formatting "formatirane na diska..."
+.define res_string_label_status_writing "zapiswane...   "
+.define res_string_label_status_reading "~etene...    "
+.define res_string_unknown "neizwesten"
+.define res_string_label_select_quit "izberi %s ot men`to %s (%c%c), za da se wyrne{ kym rabotniq plot."
+.define res_string_label_blocks_read "pro~eteni blokowe: "
+.define res_string_label_blocks_written "zapisani blokowe: "
+.define res_string_label_blocks_to_transfer "ob}o blokowe: "
+.define res_string_source "ot "
+.define res_string_destination "kym "
+.define res_string_slot_drive_pattern "slot # disk #"
+.define res_const_slot_drive_pattern_offset1 6
+.define res_const_slot_drive_pattern_offset2 13
+.define res_string_dos33_s_d_pattern "DOS 3.3 S#, D# "
+.define res_const_dos33_s_d_pattern_offset1 10
+.define res_const_dos33_s_d_pattern_offset2 14
+.define res_string_dos33_disk_copy "kopirane na dos 3.3 disk"
+.define res_string_pascal_disk_copy "kopirane na paskal disk"
+.define res_string_prodos_disk_copy "kopirane na prodos disk"
+.define res_string_escape_stop_copy "natisni ESC, za da spre kopiraneto."
+.define res_string_error_writing "gre{ka pri zapis na blok "
+.define res_string_error_reading "gre{ka pri ~etene na blok "
+.define res_string_prompt_insert_source "postawi izhodniq disk i }rakni OK."
+.define res_string_prompt_insert_destination "postawi wtoriqt disk i }rakni OK."
+.define res_string_prompt_erase_prefix "siguren li si, ~e iska{ da iztrie{ \x22"
+.define res_string_prompt_erase_suffix "\x22?"
+.define res_string_prompt_erase_slot_drive_pattern "siguren li si, ~e iska{ da iztrie{ diska w slot # u-wo #?"
+.define res_const_prompt_erase_slot_drive_pattern_offset1 49
+.define res_const_prompt_erase_slot_drive_pattern_offset2 56
+.define res_string_errmsg_dest_format_fail "diskyt ne move da byde formatiran!"
+.define res_string_errmsg_dest_protected "diskyt e za}iten ot zapis!"
+.define res_string_errmsg_format_error "gre{ka pri formatiraneto."
+.define res_string_label_status_copy_success "kopiraneto be{e uspe{no."
+.define res_string_label_status_copy_fail "kopiraneto ne e zawyr{eno."
+.define res_string_prompt_insert_source_or_cancel "postawi izhodniq disk ili natisni ESC za otmqna."
+.define res_string_prompt_insert_dest_or_cancel "postawi wtoriqt disk ili natisni ESC za otmqna."

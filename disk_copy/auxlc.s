@@ -1379,6 +1379,7 @@ match:  clc
 ;;; Output: entry is length-prefix, case-adjusted
 
 .proc AdjustOnLineEntryCase
+.if kBuildSupportsLowercase
         ptr := $A
 
         stax    ptr
@@ -1408,7 +1409,7 @@ match:  clc
 bloop:  asl16   case_bits       ; Shift out high byte first
         bcc     :+
         lda     (ptr),y
-        ora     #AS_BYTE(~CASE_MASK)
+        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
 :       iny
         cpy     #16             ; bits
@@ -1419,6 +1420,9 @@ bloop:  asl16   case_bits       ; Shift out high byte first
         ;; Use heuristic
 fallback:
         .include "../lib/wordcase.s"
+.else
+        rts
+.endif
 .endproc ; AdjustOnLineEntryCase
 
 ;;; ============================================================

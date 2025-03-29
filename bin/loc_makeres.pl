@@ -115,13 +115,13 @@ sub check($$$$) {
 my $header = <STDIN>; # ignore header
 my $last_file = '';
 my %fhs = ();
-my @langs = ('en', 'fr', 'de', 'it', 'es', 'pt', 'sv', 'da', 'nl');
+my @langs = ('en', 'fr', 'de', 'it', 'es', 'pt', 'sv', 'da', 'nl', 'bg');
 
 my %dupes = ();
 
 while (<STDIN>) {
-  my ($file, $label, $comment, $en, $fr, $de, $it, $es, $pt, $sv, $da, $nl) = split(/\t/);
-  my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es, pt => $pt, sv => $sv, da => $da, nl => $nl);
+  my ($file, $label, $comment, $en, $fr, $de, $it, $es, $pt, $sv, $da, $nl, $bg) = split(/\t/);
+  my %strings = (en => $en, fr => $fr, de => $de, it => $it, es => $es, pt => $pt, sv => $sv, da => $da, nl => $nl, bg => $bg);
 
   next unless $file and $label;
 
@@ -151,6 +151,11 @@ while (<STDIN>) {
 
     if ($lang ne 'en') {
       $str = check($lang, $label, $en, $str);
+
+      if ($lang eq 'bg') {
+        $str =~ s/(%\w|\\r|\\x\w\w|.)/length $1 == 1 ? uc($1) : $1/eg;
+      }
+
       $str = encode($lang, $str);
     } else {
       check($lang, $label, $en, $en);

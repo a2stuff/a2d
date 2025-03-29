@@ -24,5 +24,6 @@ kBuildDD = 9
 
 ;;; Localization - applies language suffix to filename
 
-        .define kBuildLang "en"
-        .define RESOURCE_FILE(basename) .include .concat("res/", basename, ".", kBuildLang)
+.define kBuildLang "en"
+.define RESOURCE_FILE(basename) .include .concat("res/", basename, ".", kBuildLang)
+.define kBuildSupportsLowercase 1

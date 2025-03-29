@@ -5,9 +5,22 @@ cd "$(dirname "$0")/.."
 
 test $# -eq 1 || (echo "Usage: $0 LANG"; exit 1)
 lang=$1
+decoded_a=$(echo 'a' | bin/transcode.pl decode $lang)
+supports_lowercase=$(if [ "$decoded_a" == "a" ]; then echo 1; else echo 0; fi);
 date=$(bin/setdate $lang)
 
-perl -pni -e "s/define kBuildLang .*/define kBuildLang \"$lang\"/" config.inc
+git checkout config.inc
+perl -pni \
+     -e "s/(?<=define kBuildLang ).*/\"$lang\"/;" \
+     -e "s/(?<=define kBuildSupportsLowercase ).*/$supports_lowercase/" \
+     config.inc
+
+if [ "$supports_lowercase" != "1" ]; then
+  perl -pni \
+       -e 's/(?<=define kDeskTopProductName )"(.*)"/"\U$1\E"/;' \
+       -e 's/(?<=define kDeskTopVersionSuffix )"(.*)"/"\U$1\E"/;' \
+       config.inc
+fi
 
 echo Set lang to: $lang
 bin/setdate $lang

@@ -13,8 +13,22 @@
 
 ;;; `ADJUSTCASE_BLOCK_BUFFER` must be defined; used for volume names
 
-.scope adjustfilecase_impl
+.if !kBuildSupportsLowercase
 
+;;; Some encodings preclude lowercase ASCII, so no case adjust
+
+AdjustOnLineEntryCase:
+AdjustFileEntryCase:
+        ptr := $A
+        stax    ptr
+        ldy     #0
+        lda     (ptr),y
+        and     #NAME_LENGTH_MASK
+        sta     (ptr),y
+AdjustFileNameCase:
+        rts
+.else
+.scope adjustfilecase_impl
         DEFINE_READ_BLOCK_PARAMS volname_block_params, ADJUSTCASE_BLOCK_BUFFER, kVolumeDirKeyBlock
 
         ptr := $A
@@ -87,7 +101,7 @@ apply_bits:
 @bloop: asl16   case_bits   ; NOTE: Shift out high byte first
         bcc     :+
         lda     (ptr),y
-        ora     #AS_BYTE(~CASE_MASK)
+        ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
 :       iny
         cpy     #16             ; bits
@@ -138,3 +152,4 @@ case_bits:
 AdjustFileNameCase      := adjustfilecase_impl::file_name
 AdjustFileEntryCase     := adjustfilecase_impl::file_entry
 AdjustOnLineEntryCase   := adjustfilecase_impl::online_entry
+.endif
