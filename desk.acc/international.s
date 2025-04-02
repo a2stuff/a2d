@@ -54,8 +54,8 @@
 ;;; ============================================================
 ;;; Param blocks
 
-        kDialogWidth = 420
-        kDialogHeight = 90
+        kDialogWidth = 430
+        kDialogHeight = 89
 
         kControlMarginX = 16
 
@@ -101,7 +101,7 @@
 
         DEFINE_LABEL first_dow, res_string_label_first_dow, kLabelLeft, kRow5+2+kSystemFontHeight
         DEFINE_BUTTON sunday_button, kDAWindowId, res_string_weekday_abbrev_1, res_string_shortcut_apple_5, kFieldLeft, kRow5+3
-        DEFINE_BUTTON monday_button, kDAWindowId, res_string_weekday_abbrev_2, res_string_shortcut_apple_6, kFieldLeft+60, kRow5+3
+        DEFINE_BUTTON monday_button, kDAWindowId, res_string_weekday_abbrev_2, res_string_shortcut_apple_6, kFieldLeft+70, kRow5+3
 
 
 .params settextbg_black_params
