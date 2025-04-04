@@ -51,6 +51,8 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### Disk Copy
 
+* Preselect volume if one was selected in DeskTop. ([#849](https://github.com/a2stuff/a2d/issues/849))
+
 ### Desk Accessories
 
 * About This Apple II

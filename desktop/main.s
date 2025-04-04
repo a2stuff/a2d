@@ -2777,6 +2777,10 @@ start:
         ;; Do this now since we'll use up the space later.
         jsr     SaveWindows
 
+        ;; Smuggle through the selected unit, if any.
+        jsr     GetSelectedUnitNum
+        sta     DISK_COPY_INITIAL_UNIT_NUM
+
         MLI_CALL OPEN, open_params
         bcc     :+
         lda     #kErrInsertSystemDisk

@@ -490,6 +490,7 @@ InitDialog:
 
         jsr     SetCursorWatch
         jsr     EnumerateDevices
+        copy    #0, DISK_COPY_INITIAL_UNIT_NUM
         jsr     GetAllBlockCounts
 
         jsr     SetCursorPointer
@@ -1495,17 +1496,18 @@ loop:   lda     device_index    ; <16
         iny                     ; name_len=0 signifies an error
         lda     ($06),y         ; error code in second byte
         cmp     #ERR_DEVICE_NOT_CONNECTED
-        bne     LE1CD
+        bne     non_prodos
         dey
         lda     ($06),y
         jsr     IsDiskII
         jne     next_device
         lda     #ERR_DEVICE_NOT_CONNECTED
-        bne     LE1CD           ; always
+        bne     non_prodos      ; always
 
 done:   rts
 
-LE1CD:  pha
+non_prodos:
+        pha
         ldy     #0
         lda     ($06),y
         and     #UNIT_NUM_MASK
@@ -1539,6 +1541,11 @@ is_prodos:
         and     #UNIT_NUM_MASK
         ldx     num_drives
         sta     drive_unitnum_table,x
+
+        cmp     DISK_COPY_INITIAL_UNIT_NUM
+    IF_EQ
+        copy    num_drives, current_drive_selection
+    END_IF
 
         ldax    $06
         jsr     AdjustOnLineEntryCase
