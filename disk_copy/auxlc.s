@@ -497,6 +497,7 @@ InitDialog:
         copy    #$00, selection_mode
 
         LBTK_CALL LBTK::Init, lb_params
+        jsr     UpdateOKButton
 
         ;; --------------------------------------------------
         ;; Loop until there's a selection (or drive check)
