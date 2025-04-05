@@ -31,9 +31,9 @@ version=$(echo ${vmajor}.${vminor}-${vtype}${vrel})
 # --------------------------------------------------
 echo "Bumping to ${version}..."
 
-perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-${vtype}${vrel}\"/" config.inc
-
 bin/setlang "en"
+
+perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-${vtype}${vrel}\"/" config.inc
 
 git commit -a -m "Bump verson to ${version}" > /dev/null
 git tag "v${version}" > /dev/null
