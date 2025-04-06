@@ -704,11 +704,7 @@ finish:
         lda     #Field::day
         jsr     DrawField
 :
-        ;; Set dirty bit
-        copy    #$80, dialog_result
-
-        ;; Update ProDOS
-        jmp     UpdateProDOS
+        rts
 
 min:    .byte   0
 max:    .byte   0
@@ -870,15 +866,16 @@ str_pm: PASCAL_STRING "PM"
 
 ;;; Used in Aux to store result during tear-down
 ;;; bit7 = time changed
+;;; bit6 = options changed
 dialog_result:  .byte   0
 
 .proc Destroy
         MGTK_CALL MGTK::CloseWindow, closewindow_params
 
-        ;; Dates in DeskTop list views may be invalidated, so if any
-        ;; settings changed, force a full redraw to avoid artifacts.
-        bit     dialog_result
-    IF_NS
+        ;; Dates in DeskTop list views may be invalidated, so if date
+        ;; or settings changed, force a full redraw to avoid artifacts.
+        lda     dialog_result
+    IF_NOT_ZERO
         MGTK_CALL MGTK::RedrawDeskTop
     END_IF
 
@@ -1246,7 +1243,9 @@ loop:   cmp     #10
         jsr     UpdateOptionButtons
 
         ;; Set dirty bit
-        copy    #$80, dialog_result
+        lda     dialog_result
+        ora     #$40            ; settings changed
+        sta     dialog_result
 
         lda     selected_field
         cmp     #Field::period
@@ -1280,7 +1279,7 @@ loop:   cmp     #10
 ;;; Assert: Called from Aux
 
 .proc UpdateProDOS
-        ;; Pack the date bytes and store in ProDOS GP
+        ;; Pack the date bytes
         lda     month
         asl     a
         asl     a
@@ -1298,11 +1297,37 @@ loop:   cmp     #10
         lda     hour
         sta     auxdt::TIMEHI
 
+        ;; Get the current ProDOS date/time
+        copy16  #DATELO, STARTLO
+        copy16  #DATELO+.sizeof(DateTime)-1, ENDLO
+        copy16  #current, DESTINATIONLO
+        sec                     ; main>aux
+        jsr     AUXMOVE
+
+        ;; Is it different?
+        ecmp16  current+DateTime::datelo, auxdt::DATELO
+        bne     update
+        ecmp16  current+DateTime::timelo, auxdt::TIMELO
+        beq     done
+
+update:
+        ;; Update the ProDOS date/time
         copy16  #auxdt, STARTLO
         copy16  #auxdt+.sizeof(DateTime)-1, ENDLO
         copy16  #DATELO, DESTINATIONLO
         clc                     ; aux>main
-        jmp     AUXMOVE
+        jsr     AUXMOVE
+
+        ;; Set dirty bit
+        lda     dialog_result
+        ora     #$80            ; date changed
+        sta     dialog_result
+
+done:   rts
+
+current:
+        .tag    DateTime
+
 .endproc ; UpdateProDOS
 
 ;;; ============================================================

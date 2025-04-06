@@ -1114,6 +1114,7 @@ With Sci.Calc:
 
 * Open the Control Panels folder. View > by Name. Open Date and Time. Change the date format from M/D/Y to D/M/Y or vice versa. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with the new format.
 * Run DeskTop on a system without a system clock. View > by Name. Run Apple Menu > Control Panels > Date and Time. Change the date to the same date as one of the files in the folder. Click OK. Verify that the entire desktop repaints, and that dates in the window are shown with "Today".
+* Configure a system without a real-time system clock. Start with a fresh disk image. Run DeskTop. Apple Menu > Control Panels. View > by Name. Open Date and Time. Verify that the date shown in the dialog matches the file dates. Click OK without changing anything. Verify that the entire desktop repaints, and that dates in the window are shown with "Today". Open Date and Time. Click OK without changing anything. Verify that the entire desktop does not repaint.
 
 ## Calendar
 
