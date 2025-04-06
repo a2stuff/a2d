@@ -14,6 +14,7 @@
 
         jsr     file_dialog::Init
         copy    #$80, file_dialog::only_show_dirs_flag
+        copy    #$40, file_dialog::require_selection_flag ; bit6 = volumes ok
 
         param_call file_dialog::OpenWindow, label_copy_selection
         jsr     file_dialog::InitPathWithDefaultDevice

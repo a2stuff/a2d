@@ -464,15 +464,20 @@ no:     sec
 
 ;;; Output: C=0 if allowed, C=1 if not.
 .proc _IsOKAllowed
-        bit     require_selection_flag ; bit7 = selection required
-        bpl     _IsCloseAllowed
+        bit     require_selection_flag
+        php
 
-        ;; Otherwise, must have selection
         bit     selected_index
+    IF_NS
+        ;; No selection
+        plp                     ; bit7 = selection required
         bmi     _IsOpenAllowed::no
+        clc
+        rts
+    END_IF
 
         ;; Volume ok?
-        bit     require_selection_flag ; bit6 = volume selection allowed
+        plp                     ; bit6 = volume selection allowed
         bvc     _IsCloseAllowed
 
         clc

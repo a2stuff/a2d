@@ -1359,9 +1359,9 @@ Repeat for each file picker:
 * Verify that dimmed buttons don't respond to keyboard shortcuts (Return for OK, Control+O for Open, Control+C for Close).
 
 For DeskTop's File > Copy To... file picker:
-* Open a volume or folder. Clear selection. Verify that the OK button is not dimmed.
-* Click the Drives button. Verify that the OK button is dimmed.
-* Click the Drives button. Select a volume icon. Verify that the OK button is dimmed.
+* Launch DeskTop. Select a file icon. File > Copy To.... Open a volume or folder. Clear selection. Verify that the OK button is not dimmed.
+* Launch DeskTop. Select a file icon. File > Copy To.... Click the Drives button. Verify that the OK button is dimmed.
+* Launch DeskTop. Select a file icon. File > Copy To.... Click the Drives button. Select a volume icon. Verify that the OK button is not dimmed. Click OK. Verify that the file is copied into the selected volume's root directory.
 
 For DeskTop's Shortcut > Edit a Shortcut... file picker:
 * Create a shortcut not on the startup volume. Edit the shortcut. Verify that the file picker shows the shortcut target volume and file selected.

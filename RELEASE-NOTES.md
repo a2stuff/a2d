@@ -39,6 +39,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Fix clipping bug when icon's middle is obscured by overlapping windows.
 * Improve adding/editing shortcuts for volumes. ([#831](https://github.com/a2stuff/a2d/issues/831))
 * Enable File > Copy To... for volume icons. ([#830](https://github.com/a2stuff/a2d/issues/830))
+* Enable OK button in File > Copy To... when a volume is selected as the target. ([#851](https://github.com/a2stuff/a2d/issues/851))
 * Dragging and dropping a file within the same window while holding either Apple key now duplicates it. ([#837](https://github.com/a2stuff/a2d/issues/837))
 * Dragging and dropping a file with both Apple keys down now creates alias. ([#838](https://github.com/a2stuff/a2d/issues/838))
 * Fix memory corruption causing operations on 8th window to fail.
