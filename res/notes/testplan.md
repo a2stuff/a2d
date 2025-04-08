@@ -488,6 +488,7 @@
 
 * Ensure the startup volume has a name that would be case-adjusted by DeskTop, e.g. `/HD` but that shows as "Hd". Launch DeskTop. Open the startup volume. Apple Menu > Control Panels. Drag a DA file to the startup volume window. Verify that the file is moved, not copied.
 
+* Launch DeskTop. Use File > Copy To... to copy a file. Verify that the file is indeed copied, not moved.
 * Launch DeskTop. Drag a file icon to a same-volume window so it is moved, not copied. Use File > Copy To... to copy a file. Verify that the file is indeed copied, not moved.
 
 # TODO: Rewrite this A -> Vol's icon, B -> Vol's window, C -> Folder's icon, D -> Folder's window

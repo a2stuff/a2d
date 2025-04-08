@@ -864,7 +864,7 @@ check_double_click:
     END_IF
 
         ;; Copy/Move
-        jsr     DoCopySelection
+        jsr     DoCopyOrMoveSelection
         jmp     _PerformPostDropUpdates
 .endproc ; _IconClick
 
@@ -9900,22 +9900,28 @@ FinishOperation:
 ;;; File > Copy To...
 ;;; Drag / Drop (to anything but Trash)
 ;;; Caller sets `path_buf4` (destination)
-.proc DoCopySelection
-        copy    #0, operation_flags ; bit7=0 = copy/delete
-        copy    #$00, copy_delete_flags ; bit7=0 = copy
-
+.proc DoCopyOrMoveSelection
         lda     selected_window_id
         beq     :+              ; dragging volume always copies
         jsr     GetWindowPath
         jsr     CheckMoveOrCopy
-:       sta     move_flag
+:       .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+
+ep_always_copy:
+        lda     #0
+
+        sta     move_flag
+
+        copy    #0, operation_flags ; bit7=0 = copy/delete
+        copy    #$00, copy_delete_flags ; bit7=0 = copy
 
         tsx
         stx     stack_stash
         jsr     PrepCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
         jmp     OperationOnSelection
-.endproc ; DoCopySelection
+.endproc ; DoCopyOrMoveSelection
+DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
 
 ;;; File > Delete
 ;;; Drag / Drop to Trash (except volumes)
@@ -12322,6 +12328,7 @@ ret:    return  #$FF
 
 .endscope ; operations
 
+        DoCopyOrMoveSelection := operations::DoCopyOrMoveSelection
         DoCopySelection := operations::DoCopySelection
         DoDeleteSelection := operations::DoDeleteSelection
         DoCopyToRAM := operations::DoCopyToRAM
