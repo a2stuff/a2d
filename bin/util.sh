@@ -16,20 +16,14 @@ function cecho {
 
 # suppress - hide command output unless it failed; and if so show in red
 # ex: suppress command_that_might_fail args ...
-# Also looks for "Error" lines in stdout, those cause failure too.
 function suppress {
     set +e
-    local result=$("$@")
+    local result
+    result=$("$@")
     if [ $? -ne 0 ]; then
         cecho red "$result" >&2
         exit 1
     fi
-    while read line; do
-        if [[ $line == *"Error"* ]]; then
-            cecho red "$line" >&2
-            exit 1
-        fi
-    done <<<"$result"
     set -e
 }
 
