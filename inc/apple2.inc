@@ -133,6 +133,7 @@ CON_QUARTER     := $F070        ; 1/4
 
 ;;; Other
 FBUFFR          := $100
+MSLOT           := $7F8         ; Slot in use, in case of IRQ
 
 
 ;;; ============================================================

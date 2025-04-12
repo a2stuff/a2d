@@ -870,6 +870,9 @@ fail:
         stx     vector+1
         ldx     #>SLOT1                  ; X = $Cn
         ldy     #((>SLOT1)<<4)&%11110000 ; Y = $n0
+        ;; A2MISC TechNote #3 SSC C800 space
+        stx     MSLOT
+        stx     $CFFF
 vector: jsr     SLOT1                    ; self-modified
 
         ;; Back to what DeskTop expects
