@@ -14,10 +14,10 @@ cd "$(dirname "$0")/.."
 # ============================================================
 # Extract metadata for the build
 
-vmajor=$(grep 'kDeskTopVersionMajor =' config.inc | sed -e 's/.* = //')
-vminor=$(grep 'kDeskTopVersionMinor =' config.inc | sed -e 's/.* = //')
-vsuffix=$(grep 'define kDeskTopVersionSuffix' config.inc | cut -d'"' -f2)
-lang=$(grep 'define kBuildLang' config.inc | cut -d'"' -f2)
+vmajor=$(grep 'kDeskTopVersionMajor =' src/config.inc | sed -e 's/.* = //')
+vminor=$(grep 'kDeskTopVersionMinor =' src/config.inc | sed -e 's/.* = //')
+vsuffix=$(grep 'define kDeskTopVersionSuffix' src/config.inc | cut -d'"' -f2)
+lang=$(grep 'define kBuildLang' src/config.inc | cut -d'"' -f2)
 vtype=$(echo "$vsuffix" | sed -E -e 's/^-//' -e 's/[0-9]+$//')
 vrel=$(echo "$vsuffix" | sed -E -e 's/[^0-9]*//')
 
@@ -33,7 +33,7 @@ echo "Bumping to ${version}..."
 
 bin/setlang "en"
 
-perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-${vtype}${vrel}\"/" config.inc
+perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-${vtype}${vrel}\"/" src/config.inc
 
 git commit -a -m "Bump verson to ${version}" > /dev/null
 git tag "v${version}" > /dev/null

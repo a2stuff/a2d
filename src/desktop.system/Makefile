@@ -1,6 +1,6 @@
 HEADERS = $(COMMON_HEADERS)
 
-include ../res/Makefile.common
+include ../common/Makefile.common
 
 TARGETS = $(OUTDIR)/desktop.system.SYS
 

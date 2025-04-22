@@ -52,7 +52,8 @@ Single width fonts can be 1-7 pixels wide. Double width fonts can be
 (kerning); MGTK does not add this. This allows special glyphs to be
 used to produce small graphics, similar to MouseText's folder glyphs.
 
-The `System.latin1` and `Monaco.latin1` files are fonts with 256
-glyphs representing the ISO-8859-1 (Latin-1) code page. These are used
-with the `bin/build_fonts_from_latin1.pl` script which generates the
-per-language fonts. This eases maintenance of the fonts.
+The `System.unicode.txt` and `Monaco.unicode.txt` files are textual
+representations of fonts, with sparse coverage of several Unicode
+ranges. These are used with the `bin/build_fonts_from_unicode_txt.pl`
+script which generates the per-language binary font files at build
+time. This eases maintenance of the fonts.

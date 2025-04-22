@@ -47,7 +47,7 @@ config="$tempdir/DeskTop.config#F10000"
 # ============================================================
 # Modify bytes based on command line args
 
-# See config.inc for the DeskTopSettings definition. Note that first byte
+# See src/config.inc for the DeskTopSettings definition. Note that first byte
 # of the file is version number, rest is settings struct.
 #
 # file_version       = offset  0 len 1

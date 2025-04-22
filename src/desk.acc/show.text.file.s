@@ -1068,7 +1068,7 @@ window_id:      .byte   kDAWindowId
 ;;; ============================================================
 
 fixed_font:
-        .incbin .concat("../out/Monaco.", kBuildLang, ".font")
+        .incbin .concat("../../out/Monaco.", kBuildLang, ".font")
 
 ;;; ============================================================
 

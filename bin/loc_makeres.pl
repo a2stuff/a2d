@@ -131,7 +131,7 @@ while (<STDIN>) {
       my $outfile = $file;
       $outfile =~ s|/|/res/|;
       $outfile =~ s|\.s$|.res.$lang|;
-      open $fhs{$lang}, '>'.$outfile or die $!;
+      open $fhs{$lang}, '>src/'.$outfile or die $!;
     }
 
     %dupes = ();

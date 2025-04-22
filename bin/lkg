@@ -7,10 +7,10 @@ source "bin/util.sh"
 # ============================================================
 # Tweak config
 
-git checkout config.inc
+git checkout src/config.inc
 bin/setdate en
 hash=$(git rev-parse --short HEAD)
-perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-build-${hash}\"/" config.inc
+perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-build-${hash}\"/" src/config.inc
 
 # ============================================================
 # Do a build and package
@@ -29,4 +29,4 @@ INSTALL_IMG="${lkg}" INSTALL_PATH="/A2.DESKTOP" bin/setopt noram nosel noshort c
 # ============================================================
 # Reset config
 
-git checkout config.inc
+git checkout src/config.inc

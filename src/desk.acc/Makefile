@@ -3,9 +3,9 @@ HEADERS = $(COMMON_HEADERS) \
 	$(wildcard neko_frames/*.bin) \
 	../desktop/desktop.inc ../mgtk/mgtk.inc $(wildcard ../toolkits/*.inc)
 
-include ../res/Makefile.common
+include ../common/Makefile.common
 
-DAS = $(shell cat TARGETS | ../bin/targets.pl targets)
+DAS = $(shell cat TARGETS | ../../bin/targets.pl targets)
 
 TARGETS = $(patsubst %,$(OUTDIR)/%.da,$(DAS))
 

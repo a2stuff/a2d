@@ -16,7 +16,7 @@
 ;;; Font
 
         FONT := *
-        .incbin .concat("../out/System.", kBuildLang, ".font")
+        .incbin .concat("../../out/System.", kBuildLang, ".font")
 
 ;;; ============================================================
 ;;; Generic Resources (outside scope for convenience)

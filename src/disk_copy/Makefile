@@ -2,7 +2,7 @@ HEADERS = $(COMMON_HEADERS) \
 	$(SYS_FONTS) \
 	../mgtk/mgtk.inc ../toolkits/btk.inc ../toolkits/lbtk.inc
 
-include ../res/Makefile.common
+include ../common/Makefile.common
 
 TARGETS = $(OUTDIR)/disk_copy.built
 
@@ -19,7 +19,7 @@ clean:
 	rm -f $(TARGETS)
 
 $(OUTDIR)/disk_copy.o: disk_copy.s $(HEADERS) loader.s auxlc.s main.s ../toolkits/btk.s ../toolkits/lbtk.s
-	../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
+	../../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
-$(OUTDIR)/%.built: $(OUTDIR)/%.o ../res/asm.cfg
-	../bin/colorize ld65 $(LDFLAGS) -o '$@' $<
+$(OUTDIR)/%.built: $(OUTDIR)/%.o ../common/asm.cfg
+	../../bin/colorize ld65 $(LDFLAGS) -o '$@' $<

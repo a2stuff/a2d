@@ -1,7 +1,7 @@
 HEADERS = $(COMMON_HEADERS) \
 	$(wildcard *.bin)
 
-include ../res/Makefile.common
+include ../common/Makefile.common
 
 TARGETS = $(OUTDIR)/awlaunch.system.SYS
 

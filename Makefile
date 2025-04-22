@@ -11,7 +11,7 @@ all: vercheck $(targets)
 # Build all targets
 $(targets):
 	@tput setaf 3 && echo "Building: $@" && tput sgr0
-	@$(MAKE) -C $@ \
+	@$(MAKE) -C src/$@ \
 	  && (tput setaf 2 && echo "make $@ good" && tput sgr0) \
           || (tput blink && tput setaf 1 && echo "MAKE $@ BAD" && tput sgr0 && false)
 
@@ -35,7 +35,7 @@ shk:
 clean:
 	@for dir in $(targets); do \
 	  tput setaf 2 && echo "cleaning $$dir" && tput sgr0; \
-	  $(MAKE) -C $$dir clean; \
+	  $(MAKE) -C src/$$dir clean; \
 	done
 
 # Ensure minimum cc65 version

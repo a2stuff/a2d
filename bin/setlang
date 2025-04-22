@@ -9,17 +9,17 @@ decoded_a=$(echo 'a' | bin/transcode.pl decode $lang)
 supports_lowercase=$(if [ "$decoded_a" == "a" ]; then echo 1; else echo 0; fi);
 date=$(bin/setdate $lang)
 
-git checkout config.inc
+git checkout src/config.inc
 perl -pni \
      -e "s/(?<=define kBuildLang ).*/\"$lang\"/;" \
      -e "s/(?<=define kBuildSupportsLowercase ).*/$supports_lowercase/" \
-     config.inc
+     src/config.inc
 
 if [ "$supports_lowercase" != "1" ]; then
   perl -pni \
        -e 's/(?<=define kDeskTopProductName )"(.*)"/"\U$1\E"/;' \
        -e 's/(?<=define kDeskTopVersionSuffix )"(.*)"/"\U$1\E"/;' \
-       config.inc
+       src/config.inc
 fi
 
 echo Set lang to: $lang
