@@ -80,6 +80,7 @@ Project Page: https://github.com/a2stuff/a2d
   * Refresh windows if 12/24-hour setting changes. ([#835](https://github.com/a2stuff/a2d/issues/835))
   * Refresh windows if date changes. ([#843](https://github.com/a2stuff/a2d/issues/843))
 * International: Add "first day of week" setting.
+* Benchmark: Don't overflow meter if over 16MHz.
 * New DA (in Extras): "Screenshot" - saves screenshot file to application directory.
 * New DA (in Extras): "DOS33.Import" - allows importing files from DOS 3.3 disks.
 * New DA (in Control Panels): "Views" - allows setting the default view style.

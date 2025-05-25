@@ -155,6 +155,15 @@ pattern_right:
         .byte   %11111111
         .byte   %10111011
         .byte   %11111111
+pattern_plaid:
+        .byte   %01011010
+        .byte   %11111111
+        .byte   %01011010
+        .byte   %01011010
+        .byte   %01011010
+        .byte   %11111111
+        .byte   %01011010
+        .byte   %01011010
 
         DEFINE_POINT pt_tick, 0, kMeterTop + kMeterHeight + 2
         DEFINE_POINT pt_tickdelta, 0, 2
@@ -349,6 +358,8 @@ done:   jmp     InputLoop
 ;;; ============================================================
 
 .proc UpdateMeter
+        MGTK_CALL MGTK::SetPattern, pattern_left
+
         jsr     ProbeSpeed
 
         copy16  counter, progress_muldiv_params::numerator
@@ -360,11 +371,18 @@ done:   jmp     InputLoop
     END_IF
 
         MGTK_CALL MGTK::MulDiv, progress_muldiv_params
+
+        ;; Max out the meter
+        cmp16   progress_muldiv_params::result, #kMeterWidth
+    IF_GE
+        copy16  #kMeterWidth, progress_muldiv_params::result
+        MGTK_CALL MGTK::SetPattern, pattern_plaid
+    END_IF
+
         add16   meter_left::x1, progress_muldiv_params::result, meter_left::x2
         add16   meter_left::x2, #1, meter_right::x1
 
         MGTK_CALL MGTK::SetPenMode, pencopy
-        MGTK_CALL MGTK::SetPattern, pattern_left
         MGTK_CALL MGTK::PaintRect, meter_left
         MGTK_CALL MGTK::SetPattern, pattern_right
         MGTK_CALL MGTK::PaintRect, meter_right
