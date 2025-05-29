@@ -8,9 +8,9 @@ Project Page: https://github.com/a2stuff/a2d
 
 ### General
 
-* Correctly exit 80-column firmware when exiting.
+* Correctly exit 80-column firmware when quitting.
 * Option "Copy to RAMCard" now defaults to off.
-* Option "Preserve uppercase and lowercase in names" no defaults to on.
+* Option "Preserve uppercase and lowercase in names" now defaults to on.
 * Hide "invisible" files in file dialogs by default.
 * New localization: Bulgarian
 
@@ -26,7 +26,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Ignore non-alpha character typed at start when naming file/volume.
 * Hold either Apple key when selecting File > Close to Close All.
 * Fix Apple+O to not "Open and Close" when menu already showing. ([#796](https://github.com/a2stuff/a2d/issues/796))
-* Show tip about copying PRODOS during Format/Erase process.
+* Show tip about copying `PRODOS` during Format/Erase process.
 * Arrow keys now move icon selection in appropriate direction. ([#300](https://github.com/a2stuff/a2d/issues/300))
 * More consistently refresh (or don't refresh) window contents after canceled or failed operations.
 * Special > Make Alias now creates link file in same directory as original.
