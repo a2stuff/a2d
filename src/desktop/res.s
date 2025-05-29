@@ -535,6 +535,10 @@ str_at:
         PASCAL_STRING res_string_at_infix
 str_today:
         PASCAL_STRING res_string_today
+str_yesterday:
+        PASCAL_STRING res_string_yesterday
+str_tomorrow:
+        PASCAL_STRING res_string_tomorrow
 
 ;;; ============================================================
 ;;; Shortcuts ("run list")

@@ -165,3 +165,5 @@
 .define res_string_comma_infix ", "
 .define res_string_at_infix " um "
 .define res_string_today "Heute"
+.define res_string_yesterday "Gestern"
+.define res_string_tomorrow "Morgen"

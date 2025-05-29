@@ -8656,11 +8656,33 @@ append_date_strings:
         ldax    #datetime_for_conversion
         jsr     ParseDatetime
 
+        jsr     _AppendDateString
+        param_call _ConcatenateDatePart, str_at
+        param_call MakeTimeString, parsed_date
+        param_jump _ConcatenateDatePart, str_time
+
+        tmp_date := $0A
+
+.proc _AppendDateString
         ecmp16  datetime_for_conversion, DATELO
     IF_EQ
-        param_call _ConcatenateDatePart, str_today
+        param_jump _ConcatenateDatePart, str_today
+    END_IF
 
-    ELSE
+        copy16  datetime_for_conversion, tmp_date
+        jsr     _DecP8Date
+        ecmp16  DATELO, tmp_date
+    IF_EQ
+        param_jump _ConcatenateDatePart, str_tomorrow
+    END_IF
+
+        copy16  DATELO, tmp_date
+        jsr     _DecP8Date
+        ecmp16  datetime_for_conversion, tmp_date
+    IF_EQ
+        param_jump _ConcatenateDatePart, str_yesterday
+    END_IF
+
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
         .assert DeskTopSettings::kDateOrderMDY = 0, error, "enum mismatch"
@@ -8677,14 +8699,8 @@ append_date_strings:
         jsr     _AppendMonthString
         param_call _ConcatenateDatePart, str_space
       END_IF
-        jsr     _AppendYearString
-    END_IF
-
-
-        param_call _ConcatenateDatePart, str_at
-        ldax    #parsed_date
-        jsr     MakeTimeString
-        param_jump _ConcatenateDatePart, str_time
+        jmp     _AppendYearString
+.endproc ; _AppendDateString
 
 .proc _AppendDayString
         lda     day
@@ -8740,8 +8756,75 @@ min     := parsed_date + ParsedDateTime::minute
         rts
 .endproc ; _ConcatenateDatePart
 
-.endproc ; ComposeDateString
 
+.proc _DecP8Date
+        DATELO := tmp_date
+        DATEHI := tmp_date+1
+
+;;; ====================================================
+;;;  DecP8Date - Takes a 16-bit P8 date and
+;;;              calculates the previous day
+;;; ----------------------------------------------------
+;;;  Written 5/30/2025 by John Brooks as part of the
+;;;  open-source AppleII Desktop code-golf challenge
+;;;  64-bytes
+;;; ====================================================
+
+;;;        7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+;;;       +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+;;; DATE: |    year     |  month  |   day   |
+;;;       +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+
+        dec     DATELO          ; dec day
+        lda     DATELO
+        and     #%00011111      ; day
+        bne     done
+
+        lsr     DATEHI          ; C = month high bit, year in DATEHI
+        lda     DATELO
+        ror                     ; A = month * 16
+        sbc     #1*16-1         ; dec month * 16 (-1 for c=0)
+        bne     calc_days
+
+        dec     DATEHI          ; year - 1
+        bpl     year_okay
+        lda     #99
+        sta     DATEHI          ; wrap to year 99 (not 127)
+year_okay:
+        lda     #12*16          ; month = december
+
+calc_days:
+        tax                     ; X = month * 16
+        sta     DATELO
+        bpl     pre_august
+        eor     #1*16           ; 31 days in odd months 1-7 and in even months 8-12
+pre_august:
+        and     #1*16
+        adc     #$f0            ; C=1 if 31-day month (except Feb)
+        lda     #30/2
+        rol                     ; A = days in new month, 30 or 31
+
+        cpx     #2*16           ; Is new month == feb?
+        bne     not_feb
+
+        lda     DATEHI          ; C=1 from cpx above
+        and     #3              ; is year divisible by 4?
+        beq     is_leap
+        clc                     ; 28 days if not a leap year
+is_leap:
+        lda     #28/2           ; if C=1, 29 day leap year
+        rol
+
+not_feb:
+        asl     DATELO          ; 3 month bits in LO, top bit in C
+        ora     DATELO          ; merge day in A with 3 month bits
+        sta     DATELO          ; save day & month
+        rol     DATEHI          ; save year and month high bit
+done:
+        rts
+.endproc ; _DecP8Date
+
+.endproc ; ComposeDateString
 
 ;;; ============================================================
 ;;; Look up an icon address.

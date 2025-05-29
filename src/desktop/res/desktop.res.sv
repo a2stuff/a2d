@@ -165,3 +165,5 @@
 .define res_string_comma_infix ", "
 .define res_string_at_infix " p} "
 .define res_string_today "Idag"
+.define res_string_yesterday "Ig}r"
+.define res_string_tomorrow "Imorgon"

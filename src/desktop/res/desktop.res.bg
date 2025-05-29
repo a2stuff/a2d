@@ -165,3 +165,5 @@
 .define res_string_comma_infix ", "
 .define res_string_at_infix " w "
 .define res_string_today "dnes"
+.define res_string_yesterday "w~era"
+.define res_string_tomorrow "utre"
