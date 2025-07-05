@@ -771,7 +771,7 @@ shortcut_table_addr_hi:
         and     mask1,x
         beq     :+
         lda     #0
-        beq     @store          ; always
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 :       lda     #$FF
 @store: sta     flag
 
@@ -1288,7 +1288,8 @@ yloop:  copy    #0, xpos
 xloop:  ror     row
         bcc     zero
         lda     #MGTK::pencopy
-        bpl     store           ; always
+        SKIP_NEXT_2_BYTE_INSTRUCTION
+        .assert MGTK::notpencopy <> $C0, error, "Bad BIT skip"
 zero:   lda     #MGTK::notpencopy
 store:  cmp     mode
         beq     :+

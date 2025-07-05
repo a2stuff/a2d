@@ -329,7 +329,8 @@ repeat:
         cmp     lbr_copy + LBTK::ListBoxRecord::num_rows
         bcs     :+
         lda     #0
-        beq     do              ; always
+        SKIP_NEXT_2_BYTE_INSTRUCTION
+        .assert lbr_copy + LBTK::ListBoxRecord::num_rows <> $C0, error, "bad BIT skip"
 :       sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
 do:     jsr     update
         lda     #MGTK::Part::page_up
