@@ -87,7 +87,7 @@ ones:   pla                     ; ones
         cmp     #12
         bcs     :+
         lda     #'A'
-        bne     store             ; always
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 :       lda     #'P'
 store:  iny
         sta     str_time,y
