@@ -1683,7 +1683,7 @@ str_basix_system:
         interp_path := INVOKER_INTERPRETER
 
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         sta     str_basix_system + kBSOffset
 

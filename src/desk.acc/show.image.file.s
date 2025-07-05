@@ -1,7 +1,6 @@
         .include "../config.inc"
 
         .include "apple2.inc"
-        .include "opcodes.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
@@ -868,7 +867,7 @@ UnpackRead := UnpackReadImpl::start
 
 dhr_file:
         lda     #$C0            ; S = is dhr?, V = is aux page?
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 hr_file:
         lda     #0
         sta     dhr_flag
@@ -1011,7 +1010,7 @@ yes:    clc                     ; match!
 
 packed:
         lda     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 unpacked:
         lda     #0
         sta     packed_flag

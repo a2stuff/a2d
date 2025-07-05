@@ -1282,7 +1282,7 @@ table:
 ;;; Assumes checkitem_params::menu_item has been updated or is last checked.
 .proc _CheckViewMenuItemImpl
 check:  lda     #MGTK::checkitem_check
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
         .assert MGTK::checkitem_uncheck <> $C0, error, "Bad BIT skip"
 uncheck:lda     #MGTK::checkitem_uncheck
 
@@ -1516,7 +1516,7 @@ invoke_table := * - (4 * IconType::VOL_COUNT)
         interp_path := INVOKER_INTERPRETER
 
 basic:  lda     #'C'            ; "BASI?" -> "BASIC"
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         sta     str_basix_system + kBSOffset
 
@@ -2687,7 +2687,7 @@ window_id_to_close:
 
 close_current:
         lda     active_window_id
-        .byte   OPC_BIT_abs     ; Skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 normal: lda     #0
         sta     window_id_to_close
 
@@ -3187,7 +3187,7 @@ done:   rts
         buffer := $1800
 
 eject:  lda     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 check:  lda     #0
         sta     eject_flag
 
@@ -3558,7 +3558,7 @@ drive_to_refresh:
 
 .proc CmdFormatEraseDiskImpl
 format: lda     #FormatEraseAction::format
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 erase:  lda     #FormatEraseAction::erase
         sta     action
 
@@ -3824,7 +3824,7 @@ alpha:  jsr     ShiftDown
         FALL_THROUGH_TO a_prev
 
 a_prev: lda     #AS_BYTE(-1)
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 a_next: lda     #1
 
         sta     delta
@@ -3834,7 +3834,7 @@ a_next: lda     #1
         ;; ----------------------------------------
         ;; Arrows - next/prev in icon order
 prev:   lda     #AS_BYTE(-1)
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 next:   lda     #1
 
         sta     delta
@@ -3918,13 +3918,13 @@ END_PARAM_BLOCK
         kDirDown  = 3
 
 left:   lda     #kDirLeft
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 
 right:  lda     #kDirRight
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 
 up:     lda     #kDirUp
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 
 down:   lda     #kDirDown
 
@@ -5055,12 +5055,12 @@ pending_alert:
         ;; After open/eject/rename
 by_icon_number:
         lda     #$C0            ; NOTE: This not safe to skip!
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 
         ;; After polling drives
 by_index:
         lda     #$00
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 
         ;; After format/erase
 by_unit_number:
@@ -9597,7 +9597,7 @@ kMaxAnimationStep = 7
         rect_table := $800
 
 close:  ldy     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 open:   ldy     #$00
         sty     close_flag
 
@@ -9905,7 +9905,7 @@ FinishOperation:
         beq     :+              ; dragging volume always copies
         jsr     GetWindowPath
         jsr     CheckMoveOrCopy
-:       .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+:       SKIP_NEXT_2_BYTE_INSTRUCTION
 
 ep_always_copy:
         lda     #0
@@ -10445,7 +10445,7 @@ count:  .addr   0
 selected:
         ;; Caller sets `move_flag` appropriately
         lda     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 
         ;; Via File > Duplicate or copying to RAMCard
 not_selected:
@@ -11678,7 +11678,7 @@ cancel: lda     do_op_flag
 .proc CloseFilesCancelDialogImpl
 failed:
         lda     #kOperationFailed
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 
 canceled:
         lda     #kOperationCanceled
@@ -11832,7 +11832,7 @@ done:   rts
 
 flag_set:
         ldx     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 flag_clear:
         ldx     #0
         stx     flag

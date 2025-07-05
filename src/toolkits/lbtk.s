@@ -487,7 +487,7 @@ ret:    rts
         cmp     #CHAR_UP
     IF_EQ
         lda     #MGTK::Part::page_up
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
     END_IF
         ;; CHAR_DOWN
         lda     #MGTK::Part::page_down

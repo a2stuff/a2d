@@ -15,7 +15,7 @@
 .scope readwrite_settings_impl
 
 read:   ldy     #OPC_LDA_abx
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 write:  ldy     #OPC_STA_abx
         .assert (OPC_STA_abs & $F0) <> $C0, error, "bad BIT usage"
         sty     op

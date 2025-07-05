@@ -133,6 +133,13 @@ end:
     .endif
 .endmacro
 
+;;; This uses BIT to treat the next 2-byte instruction as data.
+;;; Note that it has side effects on flags. If the high byte
+;;; is potentially $C0 then it must not be used.
+.macro SKIP_NEXT_2_BYTE_INSTRUCTION
+        .byte   $2C             ; OPC_BIT_abs
+.endmacro
+
 ;;; ============================================================
 ;;; Calls with one parameter (address in A,X) or two (Y, plus A,X)
 ;;; Usage: param_call target, ax_arg

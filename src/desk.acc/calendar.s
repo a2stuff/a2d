@@ -8,7 +8,6 @@
         RESOURCE_FILE "calendar.res"
 
         .include "apple2.inc"
-        .include "opcodes.inc"
         .include "../inc/apple2.inc"
         .include "../inc/macros.inc"
         .include "../inc/prodos.inc"
@@ -471,7 +470,7 @@ notpenXOR:      .byte   MGTK::notpenXOR
 .proc PaintWindow
 
 draw:   lda     #$80
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 update: lda     #0
         sta     full_flag
 

@@ -43,7 +43,7 @@
         cmp     #$0C            ; If loading at page < $0C00
         bcs     :+
         lda     #$BB            ; ... use a high address buffer ($BB00)
-        .byte   OPC_BIT_abs     ; skip next 2-byte instruction
+        SKIP_NEXT_2_BYTE_INSTRUCTION
 :       lda     #$08            ; ... otherwise a low address buffer ($0800)
         sta     open_params__io_buffer+1
         jmp     load_target
