@@ -17,7 +17,7 @@
 .define res_string_button_desktop "Bureaublad"
 .define res_char_button_desktop_shortcut 'B'
 .define res_string_label_download "Kopi\x10ren naar RAMCard..."
-.define res_string_label_copying "Kopi\x10ren: "
+.define res_string_label_copying "Kopi\x10ren:"
 .define res_string_errmsg_not_enough_room "Niet genoeg ruimte op de RAMCard om de applicatie te kopi\x10ren."
 .define res_string_errmsg_copy_incomplete "Er is een fout opgetreden. De kopie is niet voltooid."
 .define res_string_label_files_to_copy "Bestanden om te kopi\x10ren: "

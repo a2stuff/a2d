@@ -104,6 +104,10 @@ pathname_dst:
 pathname_src:
         .res    ::kPathBufferSize, 0
 
+;;; Copy of `pathname_src` modified for display
+display_path:
+        .res    ::kPathBufferSize, 0
+
 ;;; Paths for overall operation
 dst_path:       .res    64, 0
 src_path:       .res    64, 0
@@ -925,8 +929,13 @@ nextwinfo:      .addr   0
 
         DEFINE_LABEL download, res_string_label_download, 116, 16
 
-        DEFINE_POINT pos_copying, 20, 32
-        DEFINE_POINT pos_remaining, 20, 45
+        kProgressDialogDefaultX = 20
+        kProgressDialogPathLeft = 100
+        kProgressDialogPathWidth = winfo::kWidth - kProgressDialogPathLeft - kProgressDialogDefaultX
+
+        DEFINE_POINT pos_copying, kProgressDialogDefaultX, 32
+        DEFINE_POINT pos_path, kProgressDialogPathLeft, 32
+        DEFINE_POINT pos_remaining, kProgressDialogDefaultX, 45
 
 str_copying:
         PASCAL_STRING res_string_label_copying
@@ -1013,7 +1022,9 @@ ep2:    dec     file_count
         MGTK_CALL MGTK::PaintRect, rect_clear_count
         MGTK_CALL MGTK::MoveTo, pos_copying
         param_call DrawString, str_copying
-        param_call DrawString, pathname_src
+        MGTK_CALL MGTK::MoveTo, pos_path
+        COPY_STRING pathname_src, display_path
+        param_call DrawDialogPath, display_path
         MGTK_CALL MGTK::MoveTo, pos_remaining
         param_call DrawString, str_files_remaining
         param_call DrawString, str_from_int
@@ -1101,6 +1112,8 @@ ret:    rts
 .endproc ; CheckEscapeKeyDown
 
 ;;; ============================================================
+
+        .include "../lib/drawdialogpath.s"
 
         ReadSetting := app::ReadSetting
         .include "../lib/inttostring.s"

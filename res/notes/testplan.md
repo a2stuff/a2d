@@ -1236,6 +1236,7 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. Verify that the files are copied to the RAMCard, and that the program starts correctly. Return to Shortcuts by quitting the program. Eject the disk containing the program. Invoke the shortcut. Verify that the program starts correctly.
 * Configure a shortcut for a folder (or another target type that can't be run outside of DeskTop, e.g. an image or desk accessory) to copy to RAMCard "at first use". Invoke the shortcut. When the "Unable to run the program." alert is shown, verify that the list of shortcuts renders correctly. Click OK. Verify that the list of shortcuts renders correctly.
 * Configure a shortcut for a program with many associated files to copy to RAMCard "at first use". Invoke the shortcut. While the program's files are being copied to RAMCard, press Escape to cancel. Verify that not all of the files were copied to the RAMCard. Invoke the shortcut again. Verify that the files are copied to the RAMCard and that the program starts correctly.
+* Configure a shortcut for a program with a long path to copy to RAMCard "at first use". Invoke the shortcut. Verify that long paths do not render over the dialog's frame.
 
 * Configure a shortcut for the BINSCII system utility. Launch Shortcuts. Invoke the BINSCII system file. Verify that the display is not truncated.
 
