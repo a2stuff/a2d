@@ -1493,6 +1493,7 @@ check_entry_flags:
         lda     selected_index
         jsr     file_copier__Exec
         pha
+        jsr     LoadSelectorList
         jsr     CheckAndClearUpdates
         pla
     IF_NOT_ZERO
