@@ -18,6 +18,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Don't trust a partial copy of DeskTop on RAMCard; use DESKTOP.SYSTEM itself as a sentinel.
 * If running from a RAMCard, don't try to copy DeskTop to it.
+* Consume Esc keypress when canceling shortcut copy to RAMCard. ([#868](https://github.com/a2stuff/a2d/issues/868))
 
 ### DeskTop
 

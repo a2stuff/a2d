@@ -698,6 +698,7 @@ close:  MLI_CALL CLOSE, close_dstfile_params
 .proc CheckCancel
         lda     KBD
         bpl     ret
+        sta     KBDSTRB
         cmp     #$80|CHAR_ESCAPE
         beq     cancel
 ret:    rts
@@ -2108,15 +2109,14 @@ str_not_completed:
         sta     KBDSTRB
 loop:   lda     KBD
         bpl     loop
-        and     #CHAR_MASK
         sta     KBDSTRB
 
-        cmp     #kShortcutMonitor ; Easter Egg: If 'M', enter monitor
+        cmp     #$80|kShortcutMonitor ; Easter Egg: If 'M', enter monitor
         beq     monitor
-        cmp     #TO_LOWER(kShortcutMonitor)
+        cmp     #$80|TO_LOWER(kShortcutMonitor)
         beq     monitor
 
-        cmp     #CHAR_RETURN
+        cmp     #$80|CHAR_RETURN
         bne     loop
 
         jmp     FinishAndInvoke
@@ -2369,10 +2369,9 @@ done:   rts
 :       lda     KBD
         bpl     :-
         sta     KBDSTRB
-        and     #CHAR_MASK
-        cmp     #CHAR_ESCAPE
+        cmp     #$80|CHAR_ESCAPE
         beq     done
-        cmp     #CHAR_RETURN
+        cmp     #$80|CHAR_RETURN
         bne     :-
 done:   rts
 .endproc ; WaitEnterEscape

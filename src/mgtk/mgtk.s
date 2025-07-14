@@ -4812,6 +4812,8 @@ reset_desktop:
         jsr     SaveParamsAndStack
         jsr     SetDesktopPort
 
+        ;; TODO: Consider clearing `KBDSTRB` to avoid lingering keypresses.
+
         ;; Fills the desktop background on startup (menu left black)
         MGTK_CALL MGTK::SetPattern, desktop_pattern
         MGTK_CALL MGTK::PaintRect, desktop_mapinfo+MGTK::MapInfo::maprect
@@ -5377,16 +5379,18 @@ eventbuf:
 
         .res    kEventBufSize*MGTK::short_event_size
 
-
 .proc FlushEventsImpl
         php
         sei
         lda     #0
         sta     eventbuf_tail
         sta     eventbuf_head
+        ;; TODO: Consider clearing `KBDSTRB` to avoid a race where the
+        ;; keypress hasn't been seen yet when `FlushEvents` is called.
         plp
         rts
 .endproc ; FlushEventsImpl
+
         ;; called during PostEvent and a few other places
 .proc PutEvent
         lda     eventbuf_head
