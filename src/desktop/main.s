@@ -880,6 +880,8 @@ prev_selected_icon:
         jsr     GetSingleSelectedIcon
         cmp     prev_selected_icon
         bne     ret
+        cmp     trash_icon_num
+        beq     ret
         sta     icon_param
         ITK_CALL IconTK::GetRenameRect, icon_param
         MGTK_CALL MGTK::MoveTo, event_params::coords

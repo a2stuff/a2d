@@ -590,6 +590,8 @@
   * Launch DeskTop. With no selection, click the icon's name. Verify that no rename prompt appears.
   * Launch DeskTop. With multiple icons selected, click an icon's name. Verify that no rename prompt appears.
 
+* Launch DeskTop. Select the Trash icon. Click the icon's name. Verify that no rename prompt appears.
+
 * Launch DeskTop. Select a file icon. Position the window so that the icon is entirely off-screen. File > Rename. Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.
 * Launch DeskTop. Close all windows. Select a volume icon. Move the icon so that the name is entirely off-screen. File > Rename. Press Escape to cancel. Verify that nothing mispaints on the desktop.
 * Launch DeskTop. Open a window. Select a volume icon. Move the icon so that the name is entirely off-screen. File > Rename. Press Escape to cancel. Verify that the window title bar activates and nothing mispaints on the desktop.

@@ -47,6 +47,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Added Special > Show Original command for inspecting aliases. ([#811](https://github.com/a2stuff/a2d/issues/811))
 * Create containing folder when copying volume to another disk. ([#846](https://github.com/a2stuff/a2d/issues/846))
 * Show "Yesterday" and "Tomorrow" when appropriate in file dates. ([#836](https://github.com/a2stuff/a2d/issues/836))
+* Prevent initiating rename of Trash icon. ([#871](https://github.com/a2stuff/a2d/issues/871))
 
 ### Selector
 
