@@ -1,4 +1,3 @@
-
 * [common](common)
   * Resources used across build targets.
 * [desk.acc](desk.acc)
@@ -18,7 +17,7 @@
 * [mgtk](mgtk)
   * The MouseGraphics ToolKit which provides windows, menus, cursors, and drawing primitives.
 * [selector](selector)
-  * A seprate module optionally launched instead of DeskTop showing only shortcuts.
+  * A separate module optionally launched instead of DeskTop showing only shortcuts.
 * [toolkits](toolkits)
   * Other toolkits built on top of MGTK, including buttons, line edits, list boxes, and icons.
 * [common.inc](common.inc)
