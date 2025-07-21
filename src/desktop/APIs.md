@@ -8,8 +8,8 @@ Desk Accessories:
   * [MouseGraphics ToolKit](../mgtk/MGTK.md)
   * [Icon ToolKit](../toolkits/IconTK.md)
   * [LineEdit ToolKit](../toolkits/LETK.md)
-  * [Button TookKit](../toolkits/BTK.md)
-  * [ListBox TookKit](../toolkits/LBTK.md)
+  * [Button ToolKit](../toolkits/BTK.md)
+  * [ListBox ToolKit](../toolkits/LBTK.md)
 * DeskTop Jump Table - simple JSR calls starting at $4003 MAIN, no arguments
 * Aux Entry Points
 
