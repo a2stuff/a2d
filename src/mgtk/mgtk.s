@@ -9235,7 +9235,7 @@ window_id       .byte
         COPY_STRUCT MGTK::Point, params::mousex, current_penloc
 
         ;; Needed for WindowByIdOrExit
-        copy    params::window_id, $82
+        copy8   params::window_id, $82
 
         jsr     WindowByIdOrExit
         jmp     FindControlImpl::ep

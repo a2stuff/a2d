@@ -265,7 +265,7 @@ joystick_bitmap:
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
+        copy8   winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
@@ -314,7 +314,7 @@ notpencopy:     .byte   MGTK::notpencopy
         BTK_CALL BTK::RadioDraw, joy_btn1_button
         BTK_CALL BTK::RadioDraw, joy_btn2_button
 
-        copy    #$80, force_draw_flag
+        copy8   #$80, force_draw_flag
         MGTK_CALL MGTK::ShowCursor
 
 ret:    rts
@@ -364,7 +364,7 @@ ret:    rts
         sta     curr+InputState::butn2
 
         ;; Mark current state as valid
-        copy    #$80, curr+InputState::valid
+        copy8   #$80, curr+InputState::valid
 
         ;; --------------------------------------------------
 
@@ -378,7 +378,7 @@ ret:    rts
         lda     curr+InputState::pdl3
         cmp     last+InputState::pdl3
         beq     :+
-set:    copy    #$80, joy2_valid_flag
+set:    copy8   #$80, joy2_valid_flag
 :
     END_IF
 
@@ -398,7 +398,7 @@ set:    copy    #$80, joy2_valid_flag
         ;; --------------------------------------------------
 
         COPY_STRUCT InputState, curr, last
-        copy    #0, force_draw_flag
+        copy8   #0, force_draw_flag
 
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
@@ -421,24 +421,24 @@ set:    copy    #$80, joy2_valid_flag
 
 .scope joy1
         joy_x := joy_marker::viewloc::xcoord
-        copy    curr+InputState::pdl0, joy_x
-        copy    #0, joy_x+1
+        copy8   curr+InputState::pdl0, joy_x
+        copy8   #0, joy_x+1
         add16   joy_x, #kJoystickDisplayX + 1, joy_x
 
         joy_y := joy_marker::viewloc::ycoord
-        copy    curr+InputState::pdl1, joy_y
-        copy    #0, joy_y+1
+        copy8   curr+InputState::pdl1, joy_y
+        copy8   #0, joy_y+1
         add16   joy_y, #kJoystickDisplayY + 1, joy_y
 .endscope ; joy1
 .scope joy2
         joy_x := joy_marker2::viewloc::xcoord
-        copy    curr+InputState::pdl2, joy_x
-        copy    #0, joy_x+1
+        copy8   curr+InputState::pdl2, joy_x
+        copy8   #0, joy_x+1
         add16   joy_x, #kJoystickDisplayX + 1, joy_x
 
         joy_y := joy_marker2::viewloc::ycoord
-        copy    curr+InputState::pdl3, joy_y
-        copy    #0, joy_y+1
+        copy8   curr+InputState::pdl3, joy_y
+        copy8   #0, joy_y+1
         add16   joy_y, #kJoystickDisplayY + 1, joy_y
 .endscope ; joy2
 

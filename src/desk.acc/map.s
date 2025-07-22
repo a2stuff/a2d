@@ -268,7 +268,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 ;;; ============================================================
 
 .proc Init
-        copy    #0, buf_search
+        copy8   #0, buf_search
 
         MGTK_CALL MGTK::OpenWindow, winfo
         LETK_CALL LETK::Init, le_params
@@ -326,8 +326,8 @@ buf_search:     .res    kBufSize, 0 ; search term
         jmp     InputLoop
     END_IF
 
-        copy    event_params::key, le_params::key
-        copy    event_params::modifiers, le_params::modifiers
+        copy8   event_params::key, le_params::key
+        copy8   event_params::modifiers, le_params::modifiers
         LETK_CALL LETK::Key, le_params
         jmp     InputLoop
 .endproc ; HandleKey
@@ -361,7 +361,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    #kDAWindowId, dragwindow_params::window_id
+        copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
         bpl     :+
@@ -390,7 +390,7 @@ buf_search:     .res    kBufSize, 0 ; search term
     END_IF
 
         copy16  #location_table, ptr
-        copy    #0, index
+        copy8   #0, index
 
 loop:
         ;; Compare lengths
@@ -463,7 +463,7 @@ index:  .byte   0
 ;;; ============================================================
 
 .proc HandleClick
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -533,7 +533,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleMouseMove
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -543,14 +543,14 @@ ret:    rts
 outside:
         bit     cursor_ibeam_flag
         bpl     done
-        copy    #0, cursor_ibeam_flag
+        copy8   #0, cursor_ibeam_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jmp     done
 
 inside:
         bit     cursor_ibeam_flag
         bmi     done
-        copy    #$80, cursor_ibeam_flag
+        copy8   #$80, cursor_ibeam_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
 
 done:   jmp     InputLoop
@@ -598,10 +598,10 @@ ret:    rts
 .proc DrawLatLong
         ;; Latitude
         copy16  lat, tmp
-        copy    #0, sflag
+        copy8   #0, sflag
         bit     tmp+1
     IF_NS
-        copy    #$80, sflag
+        copy8   #$80, sflag
         sub16   #0, tmp, tmp
     END_IF
 
@@ -620,10 +620,10 @@ ret:    rts
 
         ;; Longitude
         copy16  long, tmp
-        copy    #0, sflag
+        copy8   #0, sflag
         bit     tmp+1
     IF_NS
-        copy    #$80, sflag
+        copy8   #$80, sflag
         sub16   #0, tmp, tmp
     END_IF
 

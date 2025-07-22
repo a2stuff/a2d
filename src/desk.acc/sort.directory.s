@@ -211,7 +211,7 @@ exit1:  jmp     Exit
         sta     close_params::ref_num
 
         ;; Save last accessed device's unit_num for block operations.
-        copy    DEVNUM, unit_num
+        copy8   DEVNUM, unit_num
 
         jsr     Read
         jsr     Close
@@ -271,8 +271,8 @@ loop:
         ;; Write the directory back out
 
 .scope write
-        copy    unit_num, block_params::unit_num
-        copy    #0, block_index
+        copy8   unit_num, block_params::unit_num
+        copy8   #0, block_index
 
         ;; Write the blocks listed in the table out.
 loop1:  lda     block_index
@@ -286,7 +286,7 @@ loop1:  lda     block_index
         clc
         adc     #>dir_data_buffer
         sta     block_params::data_buffer+1
-        copy    #0, block_params::data_buffer
+        copy8   #0, block_params::data_buffer
         jsr     WriteBlock      ; Write it out
         bne     jmp_exit
         inc     block_index
@@ -326,7 +326,7 @@ loop2:  jsr     SetPtrToNextEntry
 
         ;; Update pointers and rewrite key block.
         copy16  block_num_table,y, block_buf + SubdirectoryHeader::parent_pointer
-        copy    entry_num, block_buf + SubdirectoryHeader::parent_entry_number
+        copy8   entry_num, block_buf + SubdirectoryHeader::parent_entry_number
         jsr     WriteBlock
         jmp     loop2
 

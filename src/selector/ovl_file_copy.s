@@ -174,10 +174,10 @@ entry_index_in_block:   .byte   0
         bcc     :+
         jmp     HandleErrorCode
 :
-        copy    #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
+        copy8   #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
         jsr     ReadFileEntry          ; read the rest of the header
 
-        copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
+        copy8   file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
 
         rts
 .endproc ; OpenSrcDir
@@ -516,7 +516,7 @@ ep2:    MLI_CALL GET_FILE_INFO, get_src_file_info_params
 
 exists: copy16  get_dst_file_info_params::blocks_used, existing_blocks
 
-LA5A1:  copy    pathname_dst, saved_length
+LA5A1:  copy8   pathname_dst, saved_length
         ;; Strip to vol name - either end of string or next slash
         ldy     #1
 :       iny

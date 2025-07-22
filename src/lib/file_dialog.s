@@ -115,7 +115,7 @@ require_selection_flag:         ; bit7 = require selection; bit6 = volumes ok
         sta     extra_controls_flag
 .endif
 
-        copy    #$FF, selected_index
+        copy8   #$FF, selected_index
 
         lda     #BTK::kButtonStateNormal
         sta     file_dialog_res::open_button::state
@@ -313,7 +313,7 @@ not_list:
 .proc UpdateListFromPath
         jsr     _ReadDir
         jsr     _UpdateDiskAndDirNames
-        copy    #$FF, selected_index
+        copy8   #$FF, selected_index
         LBTK_CALL LBTK::Init, file_dialog_res::lb_params
         jmp     _UpdateDynamicButtons
 .endproc ; UpdateListFromPath
@@ -346,7 +346,7 @@ not_list:
         bit     cursor_ibeam_flag
         bmi     :+
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        copy    #$80, cursor_ibeam_flag
+        copy8   #$80, cursor_ibeam_flag
 :       rts
 .endproc ; _SetCursorIBeam
 
@@ -354,7 +354,7 @@ not_list:
         bit     cursor_ibeam_flag
         bpl     :+
         jsr     _SetCursorPointer
-        copy    #0, cursor_ibeam_flag
+        copy8   #0, cursor_ibeam_flag
 :       rts
 .endproc ; _UnsetCursorIBeam
 
@@ -416,8 +416,8 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 ;;; Set `path_buf` to "/"
 
 .proc _SetRootPath
-        copy    #1, path_buf
-        copy    #'/', path_buf+1
+        copy8   #1, path_buf
+        copy8   #'/', path_buf+1
         rts
 .endproc ; _SetRootPath
 
@@ -517,7 +517,7 @@ ret:    rts
         cmp     #CHAR_DOWN
 :
     IF_EQ
-        copy    #0, type_down_buf
+        copy8   #0, type_down_buf
         LBTK_CALL LBTK::Key, file_dialog_res::lb_params
         rts
     END_IF
@@ -528,7 +528,7 @@ ret:    rts
         jsr     _CheckTypeDown
         jeq     exit
 
-        copy    #0, type_down_buf
+        copy8   #0, type_down_buf
         ldx     event_params::modifiers
         lda     event_params::key
 
@@ -560,7 +560,7 @@ ret:    rts
       END_IF
 .endif
 
-        copy    #0, type_down_buf
+        copy8   #0, type_down_buf
         lda     event_params::key
 
         cmp     #CHAR_RETURN
@@ -608,8 +608,8 @@ ret:    rts
         bit     extra_controls_flag
       IF_NS
         ;; Edit control
-        copy    event_params::key, file_dialog_res::le_params::key
-        copy    event_params::modifiers, file_dialog_res::le_params::modifiers
+        copy8   event_params::key, file_dialog_res::le_params::key
+        copy8   event_params::modifiers, file_dialog_res::le_params::modifiers
         LETK_CALL LETK::Key, file_dialog_res::le_params
       END_IF
 .endif
@@ -664,7 +664,7 @@ done:   return  #0
         bne     :+
         return  #$FF
 :
-        copy    #0, index
+        copy8   #0, index
 
         index := *+1
 loop:   ldx     #SELF_MODIFIED_BYTE
@@ -803,13 +803,13 @@ found:  return  index
         ldx     #.sizeof(MGTK::Point)-1
 :       bit     extra_controls_flag
     IF_NS
-        copy    file_dialog_res::extra_viewloc,x, file_dialog_res::winfo::viewloc,x
-        copy    file_dialog_res::extra_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
-        copy    file_dialog_res::extra_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
+        copy8   file_dialog_res::extra_viewloc,x, file_dialog_res::winfo::viewloc,x
+        copy8   file_dialog_res::extra_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
+        copy8   file_dialog_res::extra_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
     ELSE
-        copy    file_dialog_res::normal_viewloc,x, file_dialog_res::winfo::viewloc,x
-        copy    file_dialog_res::normal_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
-        copy    file_dialog_res::normal_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
+        copy8   file_dialog_res::normal_viewloc,x, file_dialog_res::winfo::viewloc,x
+        copy8   file_dialog_res::normal_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
+        copy8   file_dialog_res::normal_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
     END_IF
         dex
         bpl     :-
@@ -959,7 +959,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc InitPathWithDefaultDevice
-        copy    DEVCNT, device_num
+        copy8   DEVCNT, device_num
 
         device_num := *+1
 retry:  ldx     #SELF_MODIFIED_BYTE
@@ -974,7 +974,7 @@ retry:  ldx     #SELF_MODIFIED_BYTE
 
         dec     device_num
         bpl     retry
-        copy    DEVCNT, device_num
+        copy8   DEVCNT, device_num
         jmp     retry
 
 found:  param_call AdjustOnLineEntryCase, on_line_buffer
@@ -1063,15 +1063,15 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
         sta     close_params::ref_num
         MLI_CALL READ, read_params
         bcc     :+
-err:    copy    #1, path_buf
+err:    copy8   #1, path_buf
         jmp     _ReadDrives
 :
         lda     #0
         sta     entry_index
         lda     #1
         sta     entry_in_block
-        copy    dir_read_buf+SubdirectoryHeader::entry_length, entry_length
-        copy    dir_read_buf+SubdirectoryHeader::entries_per_block, entries_per_block
+        copy8   dir_read_buf+SubdirectoryHeader::entry_length, entry_length
+        copy8   dir_read_buf+SubdirectoryHeader::entries_per_block, entries_per_block
         lda     dir_read_buf+SubdirectoryHeader::file_count
         and     #$7F
         sta     num_file_names
@@ -1176,7 +1176,7 @@ entries_per_block:
         ptr := $06
         copy16  #dir_read_buf, ptr
 
-        copy    #0, num_file_names
+        copy8   #0, num_file_names
 
 loop:   ldy     #0
         lda     (ptr),y         ; A = unit_num | name_len
@@ -1208,7 +1208,7 @@ finish:
 
         jsr     _SetCursorPointer
 .ifdef FD_EXTENDED
-        copy    #0, cursor_ibeam_flag
+        copy8   #0, cursor_ibeam_flag
 .endif
 
         clc
@@ -1241,9 +1241,9 @@ finish:
 .proc _UpdateDiskAndDirNames
         MGTK_CALL MGTK::SetPort, file_dialog_res::winfo::port
 
-        copy    #kGlyphDiskLeft, file_dialog_res::filename_buf+1
-        copy    #kGlyphDiskRight, file_dialog_res::filename_buf+2
-        copy    #kGlyphSpacer, file_dialog_res::filename_buf+3
+        copy8   #kGlyphDiskLeft, file_dialog_res::filename_buf+1
+        copy8   #kGlyphDiskRight, file_dialog_res::filename_buf+2
+        copy8   #kGlyphSpacer, file_dialog_res::filename_buf+3
 
         ;; --------------------------------------------------
         ;; Disk Name
@@ -1293,8 +1293,8 @@ finish:
 
         cpx     #2
       IF_NE
-        copy    #kGlyphFolderLeft, file_dialog_res::filename_buf+1
-        copy    #kGlyphFolderRight, file_dialog_res::filename_buf+2
+        copy8   #kGlyphFolderLeft, file_dialog_res::filename_buf+1
+        copy8   #kGlyphFolderRight, file_dialog_res::filename_buf+2
       END_IF
 
         ldy     #4
@@ -1385,8 +1385,8 @@ next:   inc     inner
 ;;; Returns C=0 for 1<2 , C=1 for 1>=2, Z=1 for 1=2
 .proc _CompareStrings
         ldy     #0
-        copy    (ptr1),y, len1
-        copy    (ptr2),y, len2
+        copy8   (ptr1),y, len1
+        copy8   (ptr2),y, len2
         iny
 
 loop:   lda     (ptr2),y

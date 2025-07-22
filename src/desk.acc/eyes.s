@@ -313,7 +313,7 @@ delta:  .word   0
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
+        copy8   winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
@@ -348,7 +348,7 @@ common: lda     dragwindow_params::moved
         bcc     nope
 
         ;; Initiate the grow... re-using the drag logic
-        copy    winfo::window_id, dragwindow_params::window_id
+        copy8   winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::GrowWindow, dragwindow_params

@@ -11,11 +11,11 @@
 .scope menuclock_impl
 ;;; Entry point: force an update, even if time hasn't changed
 force_update:
-        copy    #$80, force_flag
+        copy8   #$80, force_flag
         bne     common          ; always
 
 ;;; Entry point: only update if time has changed
-normal: copy    #0, force_flag
+normal: copy8   #0, force_flag
 
 common: lda     MACHID
         and     #1              ; bit 0 = clock card

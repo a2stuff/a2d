@@ -161,7 +161,7 @@ last:   .tag    DateTime
         MGTK_CALL MGTK::SetPenMode, pencopy
 
         ;; Iterate over string, draw each char
-        copy    #1, idx
+        copy8   #1, idx
         idx := *+1
 :       ldx     #SELF_MODIFIED_BYTE
         lda     str_time,x
@@ -198,7 +198,7 @@ ploop:  lda     (ptr),y         ; A = num vertices
         iny
 
         ;; For each vertex...
-        copy    #0, vindex
+        copy8   #0, vindex
 vloop:  lda     (ptr),y         ; A = x coord
         sta     cur::xcoord
         iny

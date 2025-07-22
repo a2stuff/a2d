@@ -209,9 +209,9 @@ remainder:      .word   0       ; (out)
         MGTK_CALL MGTK::SetPort, winfo::port
         jsr     CalcAndDrawMode
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-        copy    #$80, record_offsets_flag
+        copy8   #$80, record_offsets_flag
         jsr     DrawContent
-        copy    #$00, record_offsets_flag
+        copy8   #$00, record_offsets_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jsr     InitScrollBar
         MGTK_CALL MGTK::FlushEvents
@@ -379,15 +379,15 @@ end:    rts
 .endproc ; OnVScrollClick
 
 .proc OnVScrollThumbClick
-        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
+        copy8   #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     end
 
         ;; `first_visible_line` = `trackthumb_params::thumbpos` * `max_visible_line` / `kVScrollMax`
         copy16  max_visible_line, muldiv_params::number
-        copy    trackthumb_params::thumbpos, muldiv_params::numerator ; lo
-        copy    #0, muldiv_params::numerator+1                        ; hi
+        copy8   trackthumb_params::thumbpos, muldiv_params::numerator ; lo
+        copy8   #0, muldiv_params::numerator+1                        ; hi
         copy16  #kVScrollMax, muldiv_params::denominator
         MGTK_CALL MGTK::MulDiv, muldiv_params
         copy16  muldiv_params::result, first_visible_line
@@ -541,7 +541,7 @@ ForceScrollBottom := ScrollBottom::force
     END_IF
         sta     updatethumb_params::thumbpos
 
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        copy8   #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
 
         jmp     DrawContent
@@ -582,7 +582,7 @@ end:    rts
         ;; offsets for every Nth line as we go.
         copy16  #0, line_offsets
         copy16  #line_offsets+2, offset_ptr
-        copy    #kLineOffsetDelta, offset_counter
+        copy8   #kLineOffsetDelta, offset_counter
 
         ;; Start off on 0th line, start of file, and top of window
         copy16  #0, current_line
@@ -653,9 +653,9 @@ do_line:
         add16_8 line_pos::base, #kLineSpacing
         copy16  #kWrapWidth, remaining_width
         copy16  #kLinePosLeft, line_pos::left
-        copy    #0, tab_flag
+        copy8   #0, tab_flag
 
-        copy    #0, visible_flag
+        copy8   #0, visible_flag
         cmp16   current_line, first_visible_line
         bcc     :+
         cmp16   last_visible_line, current_line
@@ -693,7 +693,7 @@ moveto: MGTK_CALL MGTK::MoveTo, line_pos
         ldy     #0
         copy16in cur_offset, (offset_ptr),y
         add16_8 offset_ptr, #2
-        copy    #kLineOffsetDelta, offset_counter ; reset
+        copy8   #kLineOffsetDelta, offset_counter ; reset
 
         ;; Keep mouse cursor somewhat responsive
         MGTK_CALL MGTK::CheckEvents
@@ -955,7 +955,7 @@ prep:   lda     #$00
         ldx     #MGTK::activatectl_deactivate
     END_IF
         stx     activatectl_params::activate
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        copy8   #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
 .endproc ; InitScrollBar
@@ -978,9 +978,9 @@ prep:   lda     #$00
 
         jsr     DrawMode
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-        copy    #$80, record_offsets_flag
+        copy8   #$80, record_offsets_flag
         jsr     ForceScrollTop
-        copy    #$00, record_offsets_flag
+        copy8   #$00, record_offsets_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jsr     InitScrollBar
         sec                     ; Click consumed

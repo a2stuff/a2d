@@ -289,7 +289,7 @@ view_by_table:
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
+        copy8   winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
@@ -318,7 +318,7 @@ common: bit     dragwindow_params::moved
         ;; ----------------------------------------
 
         ;; Check all the button rects
-        copy    #kNumButtons-1, index
+        copy8   #kNumButtons-1, index
 loop:
         index := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -357,7 +357,7 @@ next:   dec     index
         MGTK_CALL MGTK::MoveTo, view_style_label_pos
         param_call DrawString, view_style_label_str
 
-        copy    #kNumButtons-1, index
+        copy8   #kNumButtons-1, index
 loop:
         index := *+1
         lda     #SELF_MODIFIED_BYTE

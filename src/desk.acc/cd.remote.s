@@ -393,7 +393,7 @@ ret:    lda     #$FF            ; not a button
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    #aux::kDAWindowId, dragwindow_params::window_id
+        copy8   #aux::kDAWindowId, dragwindow_params::window_id
         jsr     CopyEventDataToAux
         JUMP_TABLE_MGTK_CALL MGTK::DragWindow, aux::dragwindow_params
         jsr     CopyEventDataToMain
@@ -413,14 +413,14 @@ skip:   lda     #$FF            ; not a button
 ;;; ============================================================
 
 .proc HandleClick
-        copy    #aux::kDAWindowId, screentowindow_params::window_id
+        copy8   #aux::kDAWindowId, screentowindow_params::window_id
         jsr     CopyEventDataToAux
         JUMP_TABLE_MGTK_CALL MGTK::ScreenToWindow, aux::screentowindow_params
         JUMP_TABLE_MGTK_CALL MGTK::MoveTo, aux::screentowindow_params::window
 
         ;; ----------------------------------------
 
-        copy    #0, event_params::modifiers
+        copy8   #0, event_params::modifiers
 
         JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::play_button_rect
     IF_NOT_ZERO
@@ -472,14 +472,14 @@ skip:   lda     #$FF            ; not a button
 
         JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::back_button_rect
     IF_NOT_ZERO
-        copy    #1, event_params::modifiers
+        copy8   #1, event_params::modifiers
         lda     #CHAR_LEFT
         bne     set_key         ; always
     END_IF
 
         JUMP_TABLE_MGTK_CALL MGTK::InRect, aux::fwd_button_rect
     IF_NOT_ZERO
-        copy    #1, event_params::modifiers
+        copy8   #1, event_params::modifiers
         lda     #CHAR_RIGHT
         bne     set_key         ; always
     END_IF

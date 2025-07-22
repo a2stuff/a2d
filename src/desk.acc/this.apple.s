@@ -1087,25 +1087,25 @@ found:
 v_1x:   and     #$0F
         ora     #'0'
         sta     str_prodos_version + kVersionStrMinor
-        copy    #'1', str_prodos_version + kVersionStrMajor
-        copy    #10, str_prodos_version ; length
+        copy8   #'1', str_prodos_version + kVersionStrMajor
+        copy8   #10, str_prodos_version ; length
         bne     done
 
         ;; $20...$23 are 2.0.x (roughly)
 v_20x:  and     #$0F
         ora     #'0'
         sta     str_prodos_version + kVersionStrPatch
-        copy    #'0', str_prodos_version + kVersionStrMinor
-        copy    #'2', str_prodos_version + kVersionStrMajor
-        copy    #12, str_prodos_version ; length
+        copy8   #'0', str_prodos_version + kVersionStrMinor
+        copy8   #'2', str_prodos_version + kVersionStrMajor
+        copy8   #12, str_prodos_version ; length
         bne     done
 
         ;; $24...??? are 2.x (so far?)
 v_2x:   and     #$0F
         ora     #'0'
         sta     str_prodos_version + kVersionStrMinor
-        copy    #'2', str_prodos_version + kVersionStrMajor
-        copy    #10, str_prodos_version ; length
+        copy8   #'2', str_prodos_version + kVersionStrMajor
+        copy8   #10, str_prodos_version ; length
         bne     done
 
 done:   rts
@@ -1188,7 +1188,7 @@ done:   rts
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    #aux::kDAWindowId, dragwindow_params::window_id
+        copy8   #aux::kDAWindowId, dragwindow_params::window_id
         jsr     CopyEventDataToAux
         JUMP_TABLE_MGTK_CALL MGTK::DragWindow, aux::dragwindow_params
         jsr     CopyEventDataToMain
@@ -1704,7 +1704,7 @@ sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
         sta     Z80Routine::patch
 
         ;; Clear detection flag
-        copy    #0, Z80Routine::flag
+        copy8   #0, Z80Routine::flag
 
         ;; Put routine in place
         jsr     SwapRoutine
@@ -1938,7 +1938,7 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 :       lsr16   memory          ; / 16
         dey
         bne     :-
-        copy    #$80, memory_is_mb_flag
+        copy8   #$80, memory_is_mb_flag
     END_IF
 
         ldax    memory
@@ -1989,8 +1989,8 @@ write:  sta     $C080,x         ; self-modified to $C0n0
 .scope
         ldx     #255            ; bank we are checking
 :       stx     RAMWORKS_BANK
-        copy    sigb0, buf0,x   ; preserve bytes
-        copy    sigb1, buf1,x
+        copy8   sigb0, buf0,x   ; preserve bytes
+        copy8   sigb1, buf1,x
         txa                     ; bank num as first signature
         sta     sigb0
         eor     #$FF            ; complement as second signature
@@ -2025,8 +2025,8 @@ loop:   stx     RAMWORKS_BANK   ; select bank
         eor     #$FF
         cmp     sigb1           ; verify second signature
         bne     next
-        copy    buf0,x, sigb0   ; match - restore it
-        copy    buf1,x, sigb1
+        copy8   buf0,x, sigb0   ; match - restore it
+        copy8   buf1,x, sigb1
 next:   inx                     ; next bank
         bne     loop            ; if we hit 256 banks, make sure we exit
 .endscope
@@ -2266,7 +2266,7 @@ p65802: return16 #str_65802     ; Other boards support 65802
         slot_ptr := $06
 
 start:
-        copy    #$80, empty_flag
+        copy8   #$80, empty_flag
         lda     #0
         sta     str_last
         sta     duplicate_count
@@ -2281,8 +2281,8 @@ start:
         sta     sp_addr+1
 
         ;; Query number of devices
-        copy    #0, status_params::unit_num ; SmartPort status itself
-        copy    #0, status_params::status_code
+        copy8   #0, status_params::unit_num ; SmartPort status itself
+        copy8   #0, status_params::status_code
         jsr     SmartPortCall
         lda     dib_buffer+SPDIB::Number_Devices
         cmp     #kMaxSmartportDevices
@@ -2293,8 +2293,8 @@ start:
         jmp     finish          ; no devices!
 
         ;; Start with unit #1
-:       copy    #1, status_params::unit_num
-        copy    #3, status_params::status_code ; Return Device Information Block (DIB)
+:       copy8   #1, status_params::unit_num
+        copy8   #3, status_params::status_code ; Return Device Information Block (DIB)
 
 device_loop:
         ;; Make the call
@@ -2363,7 +2363,7 @@ done:
     IF_PLUS
         param_call DrawString, str_list_separator
     END_IF
-        copy    #0, empty_flag  ; saw a unit!
+        copy8   #0, empty_flag  ; saw a unit!
 
         ;; Draw the device name
         param_call DrawString, str_current

@@ -17,8 +17,8 @@
         copy16  saved_ram_drvec, RAMSLOT
 
         ;; /RAM FORMAT call; see ProDOS 8 TRM 5.2.2.4 for details
-        copy    #$B0, DRIVER_UNIT_NUMBER
-        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
+        copy8   #$B0, DRIVER_UNIT_NUMBER
+        copy8   #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         copy16  #$2000, DRIVER_BUFFER
         bit     LCBANK1
         bit     LCBANK1

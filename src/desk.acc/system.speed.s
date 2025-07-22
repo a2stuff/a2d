@@ -411,13 +411,13 @@ hit:    lda     winfo::window_id
         lda     frame_counter
         cmp     #kNumAnimFrames * 4
         bne     :+
-        copy    #0, frame_counter
+        copy8   #0, frame_counter
 
 :       inc     run_pos
         lda     run_pos
         cmp     #kRunDistance
         bne     :+
-        copy    #0, run_pos
+        copy8   #0, run_pos
 
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden

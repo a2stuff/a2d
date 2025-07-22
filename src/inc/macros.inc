@@ -114,7 +114,7 @@ end:
         rts
 .endmacro
 
-.macro copy arg1, arg2, arg3, arg4
+.macro copy8 arg1, arg2, arg3, arg4
     .if _is_register {arg2} && _is_register {arg4}
         ;; indexed load/indexed store
         lda     arg1,arg2

@@ -84,14 +84,14 @@ width   .word
         lda     length_table,y
         tay
         dey
-:       copy    (params_addr),y, command_data,y
+:       copy8   (params_addr),y, command_data,y
         dey
         bpl     :-
 
         ;; Cache static fields from the record, for convenience
         .assert LETK::LineEditRecord::window_id = 0, error, "mismatch"
         ldy     #kCacheSize
-:       copy    (a_record),y, window_id,y
+:       copy8   (a_record),y, window_id,y
         dey
         bpl     :-
 
@@ -260,7 +260,7 @@ grafport_win:   .tag    MGTK::GrafPort
 
 .proc _SetPort
         ;; Set the port
-        copy    window_id, getwinport_params::window_id
+        copy8   window_id, getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         bne     obscured
         MGTK_CALL MGTK::SetPort, grafport_win

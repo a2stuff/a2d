@@ -572,9 +572,9 @@ start:
         and     #$FE            ; ignore low bit, e.g. treat $01 as $00
         sta     alert_params+AlertParams::buttons
       ELSE
-        copy    alert_options_table,y, alert_params+AlertParams::buttons
+        copy8   alert_options_table,y, alert_params+AlertParams::buttons
       END_IF
-        copy    #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
+        copy8   #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
 
         ldax    #alert_params
         FALL_THROUGH_TO Alert

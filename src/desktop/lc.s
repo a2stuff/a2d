@@ -145,7 +145,7 @@ params:  .res    3
 
         ;; Copy somewhere easier to work with
         ldy     #.sizeof(MGTK::GrafPort)-1
-:       copy    (port_ptr),y, desktop_grafport,y
+:       copy8   (port_ptr),y, desktop_grafport,y
         dey
         bpl     :-
 
@@ -205,7 +205,7 @@ op:     lda     SELF_MODIFIED
         jsr     BankInAux
         stax    alert_params+AlertParams::text
         sty     alert_params+AlertParams::buttons
-        copy    #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
+        copy8   #AlertOptions::Beep|AlertOptions::SaveBack, alert_params+AlertParams::options
         param_call aux::Alert, alert_params
         jmp     BankInMain
 .endproc ; ShowAlertParams

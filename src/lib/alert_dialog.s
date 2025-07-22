@@ -283,13 +283,13 @@ test:   sty     textwidth_params::length
         bne     advance         ; no, keep looking
 
         ;; Whole string fits, just draw it.
-        copy    len, textwidth_params::length
+        copy8   len, textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt2
         MGTK_CALL MGTK::DrawText, textwidth_params
         jmp     done
 
         ;; Split string over two lines.
-split:  copy    split_pos, textwidth_params::length
+split:  copy8   split_pos, textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt1
         MGTK_CALL MGTK::DrawText, textwidth_params
         lda     textwidth_params::data

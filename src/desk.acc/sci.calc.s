@@ -667,7 +667,7 @@ loop:   lda     chrget_routine-1,x
 
         cmp     #MGTK::Area::dragbar ; Title bar?
     IF_EQ
-        copy    #kDAWindowId, dragwindow_params::window_id
+        copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
         bpl     ret
@@ -1151,7 +1151,7 @@ do_op:
 ;;; ============================================================
 
 .proc PostOp
-        copy    #0, calc_f
+        copy8   #0, calc_f
 
         ldxy    #farg           ; save intermediate result
         ROM_CALL ROUND          ; (Y,A) = ROUND(FAC)

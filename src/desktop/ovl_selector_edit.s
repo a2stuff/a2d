@@ -37,8 +37,8 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         stx     saved_stack
 
         jsr     file_dialog::Init
-        copy    #$80, file_dialog::extra_controls_flag
-        copy    #$C0, file_dialog::require_selection_flag ; bit7 = selection required; bit6 = volumes ok
+        copy8   #$80, file_dialog::extra_controls_flag
+        copy8   #$C0, file_dialog::require_selection_flag ; bit7 = selection required; bit6 = volumes ok
 
         lda     #BTK::kButtonStateNormal
         sta     primary_run_list_button::state
@@ -66,7 +66,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
 
         copy16  #HandleClick, file_dialog::click_handler_hook
         copy16  #HandleKey, file_dialog::key_handler_hook
-        copy    #kSelectorMaxNameLength, file_dialog_res::line_edit::max_length
+        copy8   #kSelectorMaxNameLength, file_dialog_res::line_edit::max_length
 
         ;; If we were passed a path (`path_buf0`), prep the file dialog with it.
         lda     path_buf0

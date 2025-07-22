@@ -353,11 +353,11 @@ IsDriveEjectable := IsDriveEjectableImpl::start
 
     IF_NEG
         copy16  auxlc::start_block_div8, auxlc::block_num_div8
-        copy    auxlc::start_block_shift, auxlc::block_num_shift
+        copy8   auxlc::start_block_shift, auxlc::block_num_shift
         ldx     auxlc::dest_drive_index
     ELSE
         copy16  auxlc::block_num_div8, auxlc::start_block_div8
-        copy    auxlc::block_num_shift, auxlc::start_block_shift
+        copy8   auxlc::block_num_shift, auxlc::start_block_shift
         ldx     auxlc::source_drive_index
     END_IF
         lda     auxlc::drive_unitnum_table,x

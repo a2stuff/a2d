@@ -62,7 +62,7 @@
 
         ;; Cache static fields from the record, for convenience
         ldy     #.sizeof(BTK::ButtonRecord)-1
-:       copy    (params_addr),y, cache,y
+:       copy8   (params_addr),y, cache,y
         dey
         bpl     :-
 
@@ -135,7 +135,7 @@ ret:
 ;;; ============================================================
 
 .proc UpdateImpl
-        copy    #$80, update_flag
+        copy8   #$80, update_flag
         FALL_THROUGH_TO DrawImpl
 .endproc ; UpdateImpl
 
@@ -328,7 +328,7 @@ window          .tag MGTK::Point
         jsr     _SetPort
 
         ;; Initial state
-        copy    #0, down_flag
+        copy8   #0, down_flag
 
         ;; Do initial inversion
         jsr     _Invert

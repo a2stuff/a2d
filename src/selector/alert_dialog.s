@@ -111,7 +111,7 @@ start:  pha                     ; alert number
         tya                     ; Y = index * 2
         lsr     a
         tay                     ; Y = index
-        copy    alert_options_table,y, alert_params::buttons
+        copy8   alert_options_table,y, alert_params::buttons
 
         ldax    #alert_params
         jmp     Alert

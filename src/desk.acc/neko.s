@@ -262,8 +262,8 @@ reserved:       .byte   0
         sty     frame
         MGTK_CALL MGTK::SetPenMode, notpencopy
         ldx     frame
-        copy    frame_addr_table_lo,x, LZSA_SRC_LO
-        copy    frame_addr_table_hi,x, LZSA_SRC_LO+1
+        copy8   frame_addr_table_lo,x, LZSA_SRC_LO
+        copy8   frame_addr_table_hi,x, LZSA_SRC_LO+1
         copy16  #FRAMEBUFFER, LZSA_DST_LO
         jsr     decompress_lzsa2_fast
         jsr     FrameDouble
@@ -295,7 +295,7 @@ frame:  .byte   0
         count := $0C
 
         kFrameSizeUndoubled = 160
-        copy    #kFrameSizeUndoubled, count
+        copy8   #kFrameSizeUndoubled, count
         copy16  #FRAMEBUFFER+kFrameSizeUndoubled, src
         copy16  #FRAMEBUFFER+kFrameSizeUndoubled*2, dst
         ldy     #0
@@ -466,7 +466,7 @@ ep_size := * - ep_start
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    #aux::kDAWindowId, dragwindow_params::window_id
+        copy8   #aux::kDAWindowId, dragwindow_params::window_id
         jsr     CopyEventDataToAux
         JUMP_TABLE_MGTK_CALL MGTK::DragWindow, aux::dragwindow_params
 common: jsr     CopyEventDataToMain
@@ -490,7 +490,7 @@ finish: jmp     InputLoop
         tmpw := $06
 
         ;; Is the hit within the grow box area?
-        copy    #aux::kDAWindowId, screentowindow_params::window_id
+        copy8   #aux::kDAWindowId, screentowindow_params::window_id
         jsr     CopyEventDataToAux
         JUMP_TABLE_MGTK_CALL MGTK::ScreenToWindow, aux::screentowindow_params
         jsr     CopyEventDataToMain
@@ -503,7 +503,7 @@ finish: jmp     InputLoop
         bcc     HandleDrag::finish
 
         ;; Initiate the grow... re-using the drag logic
-        copy    #aux::kDAWindowId, dragwindow_params::window_id
+        copy8   #aux::kDAWindowId, dragwindow_params::window_id
         jsr     CopyEventDataToAux
         JUMP_TABLE_MGTK_CALL MGTK::GrowWindow, aux::dragwindow_params
         jmp     HandleDrag::common
@@ -553,7 +553,7 @@ skip:   .word   0
         tmp16   := $0C
         dir     := $0E
 
-        copy    #aux::kDAWindowId, screentowindow_params::window_id
+        copy8   #aux::kDAWindowId, screentowindow_params::window_id
         jsr     CopyEventDataToAux
         JUMP_TABLE_MGTK_CALL MGTK::ScreenToWindow, aux::screentowindow_params
         jsr     CopyEventDataToMain
@@ -606,7 +606,7 @@ skip:   .word   0
         ldy     x_delta
         jsr     Divide_16_8_16  ; A,X = kMove * y_delta / x_delta
         sta     y_delta
-        copy    #kMove, x_delta
+        copy8   #kMove, x_delta
     ELSE
         ;; y dominant
         ;; * x_delta = kMove * x_delta / y_delta
@@ -619,7 +619,7 @@ skip:   .word   0
         ldy     y_delta
         jsr     Divide_16_8_16  ; A,X = kMove * x_delta / y_delta
         sta     x_delta
-        copy    #kMove, y_delta
+        copy8   #kMove, y_delta
     END_IF
 
         ;; --------------------------------------------------
@@ -719,7 +719,7 @@ new_state:
         jsr     MoveAndClamp
         cpy     #0              ; Y = clamped
       IF_NE
-        copy    dir, scratch_dir
+        copy8   dir, scratch_dir
         lda     #NekoState::scratch
         bne     new_state       ; always
       END_IF
@@ -1023,7 +1023,7 @@ END_PARAM_BLOCK
 .proc Multiply_16_8_16
         stax    muldiv_params::number
         sty     muldiv_params::numerator
-        copy    #0, muldiv_params::numerator+1
+        copy8   #0, muldiv_params::numerator+1
         copy16  #1, muldiv_params::denominator
         JUMP_TABLE_MGTK_CALL MGTK::MulDiv, muldiv_params
         ldax    muldiv_params::result
@@ -1036,7 +1036,7 @@ END_PARAM_BLOCK
 .proc Divide_16_8_16
         stax    muldiv_params::numerator
         sty     muldiv_params::denominator
-        copy    #0, muldiv_params::denominator+1
+        copy8   #0, muldiv_params::denominator+1
         copy16  #1, muldiv_params::number
         JUMP_TABLE_MGTK_CALL MGTK::MulDiv, muldiv_params
         ldax    muldiv_params::result

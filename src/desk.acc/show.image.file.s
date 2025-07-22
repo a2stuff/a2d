@@ -110,7 +110,7 @@ event_params:   .tag MGTK::Event
 ;;; ============================================================
 
 .proc Init
-        copy    #0, mode
+        copy8   #0, mode
 
         ;; In case we're re-entered c/o switching to another file
         jsr     MaybeCallExitHook
@@ -169,7 +169,7 @@ event_params:   .tag MGTK::Event
 on_key:
         ;; Stop slideshow on any keypress
         ldy     slideshow_flag  ; Y = previous `slideshow_flag` state
-        copy    #0, slideshow_flag
+        copy8   #0, slideshow_flag
 
         lda     event_params + MGTK::Event::key
         jsr     ToUpperCase
@@ -209,7 +209,7 @@ on_key:
 ;;; ============================================================
 
 .proc SetSlideshowMode
-        copy    #$80, slideshow_flag
+        copy8   #$80, slideshow_flag
         jsr     InitSlideshowCounter
         jmp     InputLoop
 .endproc ; SetSlideshowMode
@@ -400,7 +400,7 @@ signature:
 .proc ShowLZ4FHFile
         sta     PAGE2OFF
 
-        copy    #$80, restore_buffer_overlay_flag
+        copy8   #$80, restore_buffer_overlay_flag
         copy16  #OVERLAY_BUFFER, read_params::data_buffer
         JUMP_TABLE_MLI_CALL READ, read_params
         copy16  #$2000, read_params::data_buffer
@@ -537,12 +537,12 @@ fail:   sec                     ; failure
         lda     #0              ; row
 rloop:  pha
         tax
-        copy    hires_table_lo,x, ptr
-        copy    hires_table_hi,x, ptr+1
+        copy8   hires_table_lo,x, ptr
+        copy8   hires_table_hi,x, ptr+1
 
         ldy     #kCols-1         ; col
 
-        copy    #0, spill       ; spill-over
+        copy8   #0, spill       ; spill-over
 
 cloop:  lda     (ptr),y
         tax
@@ -717,7 +717,7 @@ mode:   .byte   0               ; 0 = B&W, $80 = color
 .proc SetColorMode
         lda     mode
         bne     done
-        copy    #$80, mode
+        copy8   #$80, mode
 
         jsr     JUMP_TABLE_COLOR_MODE
 
@@ -727,7 +727,7 @@ done:   rts
 .proc SetBWMode
         lda     mode
         beq     done
-        copy    #0, mode
+        copy8   #0, mode
 
         jsr     JUMP_TABLE_MONO_MODE
 
@@ -745,10 +745,10 @@ done:   rts
 start:
         stax    write_proc
 
-        copy    open_params::ref_num, read_buf_params::ref_num
+        copy8   open_params::ref_num, read_buf_params::ref_num
 
         ;; Read next op/count byte
-loop:   copy    #1, read_buf_params::request_count
+loop:   copy8   #1, read_buf_params::request_count
         JUMP_TABLE_MLI_CALL READ, read_buf_params
         bcc     body
 
@@ -769,7 +769,7 @@ body:   lda     read_buf
         ;; --------------------------------------------------
         ;; %00...... = 1 to 64 bytes follow - all different
 
-        copy    count, read_buf_params::request_count
+        copy8   count, read_buf_params::request_count
         JUMP_TABLE_MLI_CALL READ, read_buf_params
         ldy     #0
 
@@ -790,7 +790,7 @@ not_00: cmp     #%01000000
         ;; --------------------------------------------------
         ;; %01...... = 3, 5, 6, or 7 repeats of next byte
 
-        copy    #1, read_buf_params::request_count
+        copy8   #1, read_buf_params::request_count
         JUMP_TABLE_MLI_CALL READ, read_buf_params
         ldy     #0
         lda     read_buf
@@ -809,7 +809,7 @@ not_01: cmp     #%10000000
         ;; --------------------------------------------------
         ;; %10...... = 1 to 64 repeats of next 4 bytes
 
-        copy    #4, read_buf_params::request_count
+        copy8   #4, read_buf_params::request_count
         JUMP_TABLE_MLI_CALL READ, read_buf_params
         ldy     #0
 
@@ -832,7 +832,7 @@ not_10:
         ;; --------------------------------------------------
         ;; %11...... = 1 to 64 repeats of next byte taken as 4 bytes
 
-        copy    #1, read_buf_params::request_count
+        copy8   #1, read_buf_params::request_count
         JUMP_TABLE_MLI_CALL READ, read_buf_params
         ldy     #0
         lda     read_buf
@@ -907,7 +907,7 @@ hr_file:
 
         bit     dhr_flag        ; if DHR aux half, need to copy page to aux
         bvc     exit            ; nope
-        copy    #$80, dhr_flag
+        copy8   #$80, dhr_flag
 
         ;; Save ptr, X, Y
         lda     ptr
@@ -1328,7 +1328,7 @@ kEntriesPerBlock = $0D
 
         stax    callback
 
-        copy    #0, saw_header_flag
+        copy8   #0, saw_header_flag
 
         ;; Open directory
         JUMP_TABLE_MLI_CALL OPEN, open_params
@@ -1341,7 +1341,7 @@ kEntriesPerBlock = $0D
 next_block:
         JUMP_TABLE_MLI_CALL READ, read_params
         bcs     close
-        copy    #AS_BYTE(-1), entry_in_block
+        copy8   #AS_BYTE(-1), entry_in_block
         entry_ptr := $08
         copy16  #(block_buf+4 - .sizeof(FileEntry)), entry_ptr
 

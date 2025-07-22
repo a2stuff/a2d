@@ -330,7 +330,7 @@ first_dow:
         dec     datetime + ParsedDateTime::month
         bne     fin
 
-        copy    #12, datetime + ParsedDateTime::month
+        copy8   #12, datetime + ParsedDateTime::month
 year:   dec16   datetime + ParsedDateTime::year
 check:  cmp16   datetime + ParsedDateTime::year, #1901
         bcs     fin
@@ -382,7 +382,7 @@ fin:    jsr     UpdateWindow
         cmp     #13
         bcc     fin
 
-        copy    #1, datetime + ParsedDateTime::month
+        copy8   #1, datetime + ParsedDateTime::month
 year:   inc16   datetime + ParsedDateTime::year
 check:  cmp16   datetime + ParsedDateTime::year, #2155
         bcc     fin
@@ -426,7 +426,7 @@ fin:    jsr     UpdateWindow
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
+        copy8   winfo::window_id, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 common: bit     dragwindow_params::moved
         bpl     :+
@@ -445,7 +445,7 @@ common: bit     dragwindow_params::moved
 ;;; ============================================================
 
 .proc HandleClick
-        copy    winfo::window_id, screentowindow_params::window_id
+        copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -538,7 +538,7 @@ update: lda     #0
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPenSize, grid_pen
 
-        copy    #kNumGridLines - 1, index
+        copy8   #kNumGridLines - 1, index
 lloop:  lda     index
         asl                     ; *8 == .sizeof(MGTK::Point) * 2
         asl
@@ -572,7 +572,7 @@ lloop:  lda     index
 
         bit full_flag
     IF_MINUS
-        copy    #6, index
+        copy8   #6, index
 dloop:  lda     index
         asl
         tax
@@ -637,7 +637,7 @@ dloop:  lda     index
 
 day_loop:
         ;; Assume it's an empty cell.
-        copy    #3, str_date
+        copy8   #3, str_date
         lda     #' '
         sta     str_date+1
         sta     str_date+2
@@ -649,8 +649,8 @@ day_loop:
         bcs     draw_date
 
         ;; Create the string.
-        copy    #2, str_date
-        copy    #' ', str_date+1 ; assume 1 digit
+        copy8   #2, str_date
+        copy8   #' ', str_date+1 ; assume 1 digit
         lda     date
         ldx     #0
 :       cmp     #10
@@ -677,7 +677,7 @@ draw_date:
         lda     col
         cmp     #7
     IF_EQ
-        copy    #0, col
+        copy8   #0, col
         inc     row
         copy16  date_base::xcoord, date_pos
         add16_8 date_pos::ycoord, #kDayDY

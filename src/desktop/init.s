@@ -92,8 +92,8 @@ start:
         ;; See Apple II Miscellaneous #7: Apple II Family Identification
 
         ;; Now stash the bytes we need
-        copy    VERSION, tmp_version  ; $06 = IIe or later
-        copy    ZIDBYTE, tmp_idbyte   ; $00 = IIc or later
+        copy8   VERSION, tmp_version  ; $06 = IIe or later
+        copy8   ZIDBYTE, tmp_idbyte   ; $00 = IIc or later
 
         ;; ... and page in LCBANK1
         sta     ALTZPON
@@ -138,7 +138,7 @@ end:
 ;;; Snapshot state of PB2 (shift key mod)
 
 .scope pb2_state
-        copy    BUTN2, pb2_initial_state
+        copy8   BUTN2, pb2_initial_state
         ;; fall through
 .endscope ; pb2_state
 
@@ -150,7 +150,7 @@ end:
         .assert DEVLST = DEVCNT+1, error, "DEVCNT must precede DEVLST"
         ldx     DEVCNT          ; number of devices
         inx                     ; include DEVCNT itself
-:       copy    DEVLST-1,x, main::devlst_backup,x ; DEVCNT is at DEVLST-1
+:       copy8   DEVLST-1,x, main::devlst_backup,x ; DEVCNT is at DEVLST-1
         dex
         bpl     :-
         ;; fall through
@@ -161,13 +161,13 @@ end:
 
 .scope
         ;; Find the startup volume's unit number
-        copy    DEVNUM, target
+        copy8   DEVNUM, target
         jsr     main::GetCopiedToRAMCardFlag
     IF_MINUS
         param_call main::CopyDeskTopOriginalPrefix, INVOKER_PREFIX
         MLI_CALL GET_FILE_INFO, main::src_file_info_params
         bcs     :+
-        copy    DEVNUM, target
+        copy8   DEVNUM, target
 :
     END_IF
 
@@ -233,7 +233,7 @@ done:
         jsr     WriteSetting
     END_IF
 
-        copy    #$80, main::mli_relay_checkevents_flag
+        copy8   #$80, main::mli_relay_checkevents_flag
 
         ;; --------------------------------------------------
         ;; Cursor tracking
@@ -278,7 +278,7 @@ done:
 .proc CreateTrashIcon
         ptr := $6
 
-        copy    #0, cached_window_id
+        copy8   #0, cached_window_id
         lda     #1
         sta     cached_window_entry_count
         sta     icon_count
@@ -291,14 +291,14 @@ done:
 
         ;; Trash is a drop target
         ldy     #IconEntry::win_flags
-        copy    #kIconEntryFlagsDropTarget|kIconEntryFlagsNotDropSource, (ptr),y
+        copy8   #kIconEntryFlagsDropTarget|kIconEntryFlagsNotDropSource, (ptr),y
 
         ldy     #IconEntry::iconx
         copy16in #main::kTrashIconX, (ptr),y
         ldy     #IconEntry::icony
         copy16in #main::kTrashIconY, (ptr),y
         ldy     #IconEntry::type
-        copy    #IconType::trash, (ptr),y
+        copy8   #IconType::trash, (ptr),y
 
         iny
         ldx     #0
@@ -329,7 +329,7 @@ done:
 
         MGTK_CALL MGTK::CheckEvents
 
-        copy    #0, index
+        copy8   #0, index
         jsr     _ReadSelectorList
         jne     done
 
@@ -558,9 +558,9 @@ process_block:
         dey
         bne     :-
 
-        copy    #kGlyphFolderLeft, name_buf+1
-        copy    #kGlyphFolderRight, name_buf+2
-        copy    #kGlyphSpacer, name_buf+3
+        copy8   #kGlyphFolderLeft, name_buf+1
+        copy8   #kGlyphFolderRight, name_buf+2
+        copy8   #kGlyphSpacer, name_buf+3
         inc     name_buf
         inc     name_buf
         inc     name_buf
@@ -799,8 +799,8 @@ cvi_result:
 .proc RemoveDevice
         dex
 :       inx
-        copy    DEVLST+1,x, DEVLST,x
-        copy    main::device_to_icon_map+1,x, main::device_to_icon_map,x
+        copy8   DEVLST+1,x, DEVLST,x
+        copy8   main::device_to_icon_map+1,x, main::device_to_icon_map,x
         cpx     DEVCNT
         bne     :-
         dec     DEVCNT
@@ -903,7 +903,7 @@ loop:   ldy     index
         bvs     append          ; remapped SmartPort, it's usable
         bne     next            ; if RAM-based driver (not $CnXX), skip
         stx     slot_ptr+1      ; just need high byte ($Cn)
-        copy    #0, slot_ptr    ; make $Cn00
+        copy8   #0, slot_ptr    ; make $Cn00
         ldy     #$FF            ; Firmware ID byte
         lda     (slot_ptr),y    ; $CnFF: $00=Disk II, $FF=13-sector, else=block
         beq     next
@@ -924,7 +924,7 @@ next:   inc     index
         ;; Make copy of table
         ldx     main::disk_in_device_table
         beq     done
-:       copy    main::disk_in_device_table,x, main::last_disk_in_devices_table,x
+:       copy8   main::disk_in_device_table,x, main::last_disk_in_devices_table,x
         dex
         bpl     :-
 
@@ -995,7 +995,7 @@ unit_num:
         ;; Final MGTK configuration
         MGTK_CALL MGTK::CheckEvents
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        copy    #0, active_window_id
+        copy8   #0, active_window_id
 
         ;; Add desktop icons
         ldx     #0
@@ -1012,7 +1012,7 @@ iloop:  cpx     cached_window_entry_count
         jmp     iloop
 :
         ;; Desktop icons are cached now
-        copy    #0, cached_window_id
+        copy8   #0, cached_window_id
         jsr     main::StoreWindowEntryTable
 
         ;; Restore state from previous session
@@ -1073,7 +1073,7 @@ loop:   ldy     #0
         stx     INVOKER_PREFIX+1 ; overwrite leading '/' with length
         param_call main::FindIconByName, 0, INVOKER_PREFIX+1 ; 0=desktop
         beq     next
-        copy    #'/', INVOKER_PREFIX+1 ; restore leading '/'
+        copy8   #'/', INVOKER_PREFIX+1 ; restore leading '/'
 
         ;; Copy view type to `new_window_view_by`
         ldy     #DeskTopFileItem::view_by

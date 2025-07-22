@@ -180,7 +180,7 @@ num_entries := listbox_rec::num_items
 
 .proc Init
         ;; Prep input string
-        copy    #0, buf_search
+        copy8   #0, buf_search
 
 
         param_call MeasureString, find_label_str
@@ -195,7 +195,7 @@ num_entries := listbox_rec::num_items
         LETK_CALL LETK::Activate, le_params
         MGTK_CALL MGTK::ShowCursor
 
-        copy    #0, num_entries
+        copy8   #0, num_entries
         LBTK_CALL LBTK::Init, lb_params
 
         MGTK_CALL MGTK::FlushEvents
@@ -373,8 +373,8 @@ path_length:
 .proc DoSearch
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
 
-        copy    #0, num_entries
-        copy    #$ff, selected_index
+        copy8   #0, num_entries
+        copy8   #$ff, selected_index
         LBTK_CALL LBTK::Init, lb_params
         jsr     PrepDrawIncrementalResults
 
@@ -391,7 +391,7 @@ search:
         ;; Convert `buf_search` to a null-terminated uppercase string
         ;; and copy to main
         ldy     buf_search
-        copy    #0, pattern,y   ; null-terminate
+        copy8   #0, pattern,y   ; null-terminate
         cpy     #0
         beq     endloop
 loop:   lda     buf_search,y    ; copy characters
@@ -451,7 +451,7 @@ finish:
         bmi     :+
         jsr     DetectDoubleClick
         bmi     :+
-        copy    selected_index, show_index
+        copy8   selected_index, show_index
         jmp     Exit
 
 :       jmp     InputLoop
@@ -461,7 +461,7 @@ finish:
         bne     done
 
         ;; Click in DA content area
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -490,7 +490,7 @@ done:   jmp     InputLoop
 ;;; ============================================================
 
 .proc HandleMouseMove
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -500,14 +500,14 @@ done:   jmp     InputLoop
 outside:
         bit     cursor_ibeam_flag
         bpl     done
-        copy    #0, cursor_ibeam_flag
+        copy8   #0, cursor_ibeam_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         jmp     done
 
 inside:
         bit     cursor_ibeam_flag
         bmi     done
-        copy    #$80, cursor_ibeam_flag
+        copy8   #$80, cursor_ibeam_flag
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
 
 done:   jmp     InputLoop
@@ -581,7 +581,7 @@ NoOp:   rts
 
 .proc PrepDrawIncrementalResults
         MGTK_CALL MGTK::SetPort, winfo_results::port
-        copy    #0, cur_line
+        copy8   #0, cur_line
         copy16  #kListItemTextOffsetX, cur_pos+MGTK::Point::xcoord
         copy16  #kListItemTextOffsetY, cur_pos+MGTK::Point::ycoord
         rts
@@ -685,8 +685,8 @@ entry:
 
 no_windows:
         ;; Signal this mode with a path of just "/"
-        copy    #1, searchPath
-        copy    #'/', searchPath+1
+        copy8   #1, searchPath
+        copy8   #'/', searchPath+1
 
         ;; --------------------------------------------------
 
@@ -849,7 +849,7 @@ num_entries:
         bit     KBDSTRB         ; clear strobe
 
         ldy     searchPath      ; prime the search path
-:       copy    searchPath,y, nameBuffer,y
+:       copy8   searchPath,y, nameBuffer,y
         dey
         bpl     :-
 
@@ -975,7 +975,7 @@ hitDirEnd:
         MLI_CALL READ, ReadParms ; read the first block
         bcs     OpenDone
 
-        copy    block_buffer+SubdirectoryHeader::entry_length, entryLen ; init 'entryLen'
+        copy8   block_buffer+SubdirectoryHeader::entry_length, entryLen ; init 'entryLen'
 
         copy16  #(block_buffer+4), entPtr ; init ptr to first entry
 
@@ -983,7 +983,7 @@ hitDirEnd:
         sta     ThisBEntry      ; values in the dir header
         sta     entPerBlk
 
-        copy    #0, ThisBlock   ; init block offset into dir.
+        copy8   #0, ThisBlock   ; init block offset into dir.
 
         clc                     ; say that open was OK
 
@@ -1264,7 +1264,7 @@ ReadNext:
         copy16  #(block_buffer+4),entPtr ; set entry pointer to beginning
                                    ; of first entry in block
 
-        copy    entPerBlk, ThisBEntry ; re-init 'entries in this block'
+        copy8   entPerBlk, ThisBEntry ; re-init 'entries in this block'
         dec     ThisBEntry
         clc                     ; return 'No error'
         rts
@@ -1303,7 +1303,7 @@ string:         .res    16      ; 15 + null terminator
         lda     (entPtr),y
         and     #NAME_LENGTH_MASK
         tay
-        copy    #0, string,y    ; null-terminate
+        copy8   #0, string,y    ; null-terminate
         cpy     #0
         beq     endloop
 loop:   lda     (entPtr),y      ; copy characters
@@ -1420,7 +1420,7 @@ devidx: .byte   0
 
 ;;; Call before calling `NextVolume` to begin enumeration.
 .proc InitVolumes
-        copy    DEVCNT, devidx
+        copy8   DEVCNT, devidx
         rts
 .endproc ; InitVolumes
 
@@ -1443,11 +1443,11 @@ repeat: ldx     devidx
         param_call JUMP_TABLE_ADJUST_ONLINEENTRY, on_line_buffer
 
         ldx     #0
-:       copy    on_line_buffer+1,x, searchPath+2,x
+:       copy8   on_line_buffer+1,x, searchPath+2,x
         inx
         cpx     on_line_buffer
         bne     :-
-        copy    #'/', searchPath+2,x ; add trailing '/'
+        copy8   #'/', searchPath+2,x ; add trailing '/'
         inx
         inx
         stx     searchPath

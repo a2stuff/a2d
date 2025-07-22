@@ -152,7 +152,7 @@ END_PARAM_BLOCK
 
         ;; Copy param data to `command_data`
         ldy     #kMaxCommandDataSize-1
-:       copy    (params_addr),y, command_data,y
+:       copy8   (params_addr),y, command_data,y
         dey
         bpl     :-
 
@@ -362,7 +362,7 @@ do:     jsr     update
         ;; --------------------------------------------------
         ;; MGTK::Part::thumb
 
-        copy    #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
+        copy8   #MGTK::Ctl::vertical_scroll_bar, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         beq     ret
@@ -606,7 +606,7 @@ greater:
 
 activate:
         sta     activatectl_params::activate
-        copy    #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
+        copy8   #MGTK::Ctl::vertical_scroll_bar, activatectl_params::which_ctl
         MGTK_CALL MGTK::ActivateCtl, activatectl_params
         rts
 .endproc ; _EnableScrollbar
@@ -651,7 +651,7 @@ update:
 ;;; Input: A = new thumb pos
 .proc _UpdateThumb
         sta     updatethumb_params::thumbpos
-        copy    #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
+        copy8   #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
         rts
 .endproc ; _UpdateThumb

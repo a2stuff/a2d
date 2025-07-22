@@ -123,7 +123,7 @@ tloop:  ldx     tindex
     IF_ZERO
         copy16  ticks_inner2_xs,x, pt2::xcoord
         copy16  ticks_inner2_ys,x, pt2::ycoord
-        copy    #4, tfives
+        copy8   #4, tfives
     ELSE
         copy16  ticks_inner1_xs,x, pt2::xcoord
         copy16  ticks_inner1_ys,x, pt2::ycoord

@@ -89,7 +89,7 @@ UpdateProgress__count := UpdateProgress::count
         cmp     #$E0   ; IIe original has $EA, Enh. IIe, IIgs have $E0
         bne     done
 
-enh:    copy    #$80, supports_mousetext
+enh:    copy8   #$80, supports_mousetext
 
 done:   rts
 .endproc ; DetectMousetext

@@ -104,7 +104,7 @@ start:
         sta     set_mark_params::ref_num
         sta     read_params::ref_num
 
-        copy    #0, segment_num
+        copy8   #0, segment_num
 
 loop:   jsr     UpdateProgress
 segment_num := * + 1
@@ -120,9 +120,9 @@ segment_num := * + 1
         jmp     kSegmentInitializerAddress
 
 continue:
-        copy    segment_offset_table_low,x,  set_mark_params::position+0
-        copy    segment_offset_table_high,x, set_mark_params::position+1
-        copy    segment_offset_table_bank,x, set_mark_params::position+2
+        copy8   segment_offset_table_low,x,  set_mark_params::position+0
+        copy8   segment_offset_table_high,x, set_mark_params::position+1
+        copy8   segment_offset_table_bank,x, set_mark_params::position+2
         MLI_CALL SET_MARK, set_mark_params
         bcc     :+
         brk                     ; crash

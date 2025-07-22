@@ -502,7 +502,7 @@ hit:
         MGTK_CALL MGTK::SetPort, winfo::port
         MGTK_CALL MGTK::SetPenMode, penXOR
 
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -635,15 +635,15 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         lda     hour
         cmp     #12
       IF_LT
-        copy    #kHourMin, min_table + Field::hour - 1
-        copy    #11, max_table + Field::hour - 1
+        copy8   #kHourMin, min_table + Field::hour - 1
+        copy8   #11, max_table + Field::hour - 1
       ELSE
-        copy    #12, min_table + Field::hour - 1
-        copy    #kHourMax, max_table + Field::hour - 1
+        copy8   #12, min_table + Field::hour - 1
+        copy8   #kHourMax, max_table + Field::hour - 1
       END_IF
     ELSE
-        copy    #kHourMin, min_table + Field::hour - 1
-        copy    #kHourMax, max_table + Field::hour - 1
+        copy8   #kHourMin, min_table + Field::hour - 1
+        copy8   #kHourMax, max_table + Field::hour - 1
     END_IF
 
         lda     selected_field
@@ -655,8 +655,8 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         tax                     ; X = byte table offset
         asl     a
         tay                     ; Y = address table offset
-        copy    min_table-1,x, min
-        copy    max_table-1,x, max
+        copy8   min_table-1,x, min
+        copy8   max_table-1,x, max
         copy16  prepare_proc_table-2,y, prepare_proc
         copy16  field_table-2,y, ptr
 
@@ -1428,7 +1428,7 @@ done:   rts
 
 .proc DoWrite
         ;; First time - ask if we should even try.
-        copy    #kErrSaveChanges, message
+        copy8   #kErrSaveChanges, message
 
 retry:
         JUMP_TABLE_MLI_CALL OPEN, open_params

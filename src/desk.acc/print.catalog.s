@@ -103,8 +103,8 @@
 
 no_windows:
         ;; Signal this mode with a path of just "/"
-        copy    #1, searchPath
-        copy    #'/', searchPath+1
+        copy8   #1, searchPath
+        copy8   #'/', searchPath+1
 
         sec
         ror     vol_flag
@@ -161,7 +161,7 @@ next:
         cpx     searchPath
         bcc     :-
         jsr     CROut
-        copy    #1, indent
+        copy8   #1, indent
 
         ;; And invoke it!
         jsr     RecursiveCatalog__Start
@@ -315,7 +315,7 @@ saved_stack:
         bit     KBDSTRB         ; clear strobe
 
         ldy     searchPath      ; prime the search path
-:       copy    searchPath,y, nameBuffer,y
+:       copy8   searchPath,y, nameBuffer,y
         dey
         bpl     :-
 
@@ -438,7 +438,7 @@ hitDirEnd:
         JUMP_TABLE_MLI_CALL READ, ReadParms ; read the first block
         bcs     OpenDone
 
-        copy    block_buffer+SubdirectoryHeader::entry_length, entryLen ; init 'entryLen'
+        copy8   block_buffer+SubdirectoryHeader::entry_length, entryLen ; init 'entryLen'
 
         copy16  #(block_buffer+4), entPtr ; init ptr to first entry
 
@@ -446,7 +446,7 @@ hitDirEnd:
         sta     ThisBEntry      ; values in the dir header
         sta     entPerBlk
 
-        copy    #0, ThisBlock   ; init block offset into dir.
+        copy8   #0, ThisBlock   ; init block offset into dir.
 
         clc                     ; say that open was OK
 
@@ -779,7 +779,7 @@ ReadNext:
         copy16  #(block_buffer+4),entPtr ; set entry pointer to beginning
                                    ; of first entry in block
 
-        copy    entPerBlk, ThisBEntry ; re-init 'entries in this block'
+        copy8   entPerBlk, ThisBEntry ; re-init 'entries in this block'
         dec     ThisBEntry
         clc                     ; return 'No error'
         rts
@@ -817,7 +817,7 @@ devidx: .byte   0
 
 ;;; Call before calling `NextVolume` to begin enumeration.
 .proc InitVolumes
-        copy    DEVCNT, devidx
+        copy8   DEVCNT, devidx
         rts
 .endproc ; InitVolumes
 
@@ -840,11 +840,11 @@ repeat: ldx     devidx
         param_call JUMP_TABLE_ADJUST_ONLINEENTRY, on_line_buffer
 
         ldx     #0
-:       copy    on_line_buffer+1,x, searchPath+2,x
+:       copy8   on_line_buffer+1,x, searchPath+2,x
         inx
         cpx     on_line_buffer
         bne     :-
-        copy    #'/', searchPath+2,x ; add trailing '/'
+        copy8   #'/', searchPath+2,x ; add trailing '/'
         inx
         inx
         stx     searchPath

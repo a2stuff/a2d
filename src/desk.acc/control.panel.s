@@ -508,7 +508,7 @@ caret_blink_caret_bitmap:
 
 .proc HandleMove
         COPY_STRUCT MGTK::Point, event_params::coords, last_mouse_pos
-        copy    winfo::window_id, screentowindow_params::window_id
+        copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, anim_cursor_rect
@@ -601,7 +601,7 @@ shortcut_table_addr_hi:
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
+        copy8   winfo::window_id, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
         bpl     :+
@@ -620,7 +620,7 @@ shortcut_table_addr_hi:
 ;;; ============================================================
 
 .proc HandleClick
-        copy    winfo::window_id, screentowindow_params::window_id
+        copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         ;; ----------------------------------------
@@ -713,7 +713,7 @@ shortcut_table_addr_hi:
         lda     pattern_index
         cmp     #kPatternCount
         IF_GE
-        copy    #0, pattern_index
+        copy8   #0, pattern_index
         END_IF
 
         jmp     UpdatePattern
@@ -723,7 +723,7 @@ shortcut_table_addr_hi:
         dec     pattern_index
 
         IF_NEG
-        copy    #kPatternCount-1, pattern_index
+        copy8   #kPatternCount-1, pattern_index
         END_IF
 
         jmp     UpdatePattern
@@ -801,7 +801,7 @@ event:  MGTK_CALL MGTK::GetEvent, event_params
         cmp     #MGTK::EventKind::button_up
         jeq     InputLoop
 
-        copy    winfo::window_id, screentowindow_params::window_id
+        copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -867,7 +867,7 @@ loop:   ecmp16  dblclick_speed, dblclick_speed_table-2,x
 next:   dex
         dex
         bpl     loop
-        copy    #0, dblclick_selection ; not found
+        copy8   #0, dblclick_selection ; not found
         rts
 
 dblclick_speed: .word   0
@@ -911,8 +911,8 @@ dblclick_speed: .word   0
         ;; --------------------------------------------------
         ;; Update MGTK
 
-        copy    #1, scalemouse_params::x_exponent
-        copy    #0, scalemouse_params::y_exponent
+        copy8   #1, scalemouse_params::x_exponent
+        copy8   #0, scalemouse_params::y_exponent
 
         ;; Doubled if option selected
         pla
@@ -936,7 +936,7 @@ dblclick_speed: .word   0
 
         ;; Set the cursor to the same position (c/o last move),
         ;; to avoid it warping due to the scale change.
-        copy    #MGTK::EventKind::no_event, event_params::kind
+        copy8   #MGTK::EventKind::no_event, event_params::kind
         COPY_STRUCT MGTK::Point, last_mouse_pos, event_params::coords
         MGTK_CALL MGTK::PostEvent, event_params
 
@@ -1046,7 +1046,7 @@ notpencopy:     .byte   MGTK::notpencopy
 
         ;; Arrows
 .scope
-        copy    #0, arrow_num
+        copy8   #0, arrow_num
         copy16  #arrows_table, addr
 
 loop:   ldy     #3
@@ -1227,7 +1227,7 @@ arrow_num:
 .proc DrawPreview
 
         ldx     #7
-:       copy    pattern,x, rotated_pattern,x
+:       copy8   pattern,x, rotated_pattern,x
         dex
         bpl     :-
 
@@ -1273,17 +1273,17 @@ rotated_pattern:
         ;; but 64 draw calls is still slow, ~1s to update fully at 1MHz
 
         MGTK_CALL MGTK::SetPattern, winfo::pattern
-        copy    #$FF, mode
+        copy8   #$FF, mode
 
-        copy    #0, ypos
+        copy8   #0, ypos
         copy16  fatbits_rect::y1, bitrect::y1
         add16_8 bitrect::y1, #kFatBitHeight-1, bitrect::y2
 
-yloop:  copy    #0, xpos
+yloop:  copy8   #0, xpos
         copy16  fatbits_rect::x1, bitrect::x1
         add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2
         ldy     ypos
-        copy    pattern,y, row
+        copy8   pattern,y, row
 
 xloop:  ror     row
         bcc     zero
@@ -1610,7 +1610,7 @@ loop:   ecmp16  caret_blink_speed, caret_blink_speed_table-2,x
 next:   dex
         dex
         bpl     loop
-        copy    #0, caret_blink_selection ; not found
+        copy8   #0, caret_blink_selection ; not found
         rts
 
 caret_blink_speed: .word   0

@@ -309,7 +309,7 @@ ret:    rts
 
 update:
         jsr     WriteSetting
-        copy    #$80, dialog_result
+        copy8   #$80, dialog_result
         lda     selected_field
         jmp     DrawField
 .endproc ; OnKeyChar
@@ -332,7 +332,7 @@ hit:
 
         MGTK_CALL MGTK::SetPort, winfo::port
 
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -413,7 +413,7 @@ hit:
         lda     #0
         ldx     #DeskTopSettings::clock_24hours
         jsr     WriteSetting
-        copy    #$80, dialog_result
+        copy8   #$80, dialog_result
         jmp     UpdateClockOptionButtons
 .endproc ; OnClick12Hour
 
@@ -421,7 +421,7 @@ hit:
         lda     #$80
         ldx     #DeskTopSettings::clock_24hours
         jsr     WriteSetting
-        copy    #$80, dialog_result
+        copy8   #$80, dialog_result
         jmp     UpdateClockOptionButtons
 .endproc ; OnClick24Hour
 
@@ -429,7 +429,7 @@ hit:
         lda     #DeskTopSettings::kDateOrderMDY
         ldx     #DeskTopSettings::intl_date_order
         jsr     WriteSetting
-        copy    #$80, dialog_result
+        copy8   #$80, dialog_result
         jmp     UpdateDateOptionButtons
 .endproc ; OnClickMDY
 
@@ -437,7 +437,7 @@ hit:
         lda     #DeskTopSettings::kDateOrderDMY
         ldx     #DeskTopSettings::intl_date_order
         jsr     WriteSetting
-        copy    #$80, dialog_result
+        copy8   #$80, dialog_result
         jmp     UpdateDateOptionButtons
 .endproc ; OnClickDMY
 
@@ -445,7 +445,7 @@ hit:
         lda     #0
         ldx     #DeskTopSettings::intl_first_dow
         jsr     WriteSetting
-        copy    #$80, dialog_result
+        copy8   #$80, dialog_result
         jmp     UpdateFirstDOWOptionButtons
 .endproc ; OnClickSunday
 
@@ -453,7 +453,7 @@ hit:
         lda     #1
         ldx     #DeskTopSettings::intl_first_dow
         jsr     WriteSetting
-        copy    #$80, dialog_result
+        copy8   #$80, dialog_result
         jmp     UpdateFirstDOWOptionButtons
 .endproc ; OnClickMonday
 

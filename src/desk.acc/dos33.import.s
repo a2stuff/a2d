@@ -174,8 +174,8 @@ port:           .addr   grafport_win
 ;;; ============================================================
 
 .proc Init
-        copy    control_block+ControlBlock::dev_count, listbox_rec::num_items
-        copy    #BTK::kButtonStateDisabled, ok_button::state
+        copy8   control_block+ControlBlock::dev_count, listbox_rec::num_items
+        copy8   #BTK::kButtonStateDisabled, ok_button::state
 
         MGTK_CALL MGTK::OpenWindow, winfo_picker
         MGTK_CALL MGTK::OpenWindow, winfo_picker_listbox
@@ -226,8 +226,8 @@ port:           .addr   grafport_win
         cmp     #CHAR_DOWN
 :
     IF_EQ
-        copy    event_params::key, lb_params::key
-        copy    event_params::modifiers, lb_params::modifiers
+        copy8   event_params::key, lb_params::key
+        copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
         jmp     InputLoop
     END_IF
@@ -281,7 +281,7 @@ port:           .addr   grafport_win
         bne     done
 
         ;; Click in DA content area
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -296,7 +296,7 @@ port:           .addr   grafport_win
     IF_NE
         BTK_CALL BTK::Track, cancel_button
         bmi     done
-        copy    #$FF, listbox_rec::selected_index
+        copy8   #$FF, listbox_rec::selected_index
         jmp     Exit
     END_IF
 
@@ -491,8 +491,8 @@ remainder:      .word   0                 ; (out)
 ;;; ============================================================
 
 .proc Init
-        copy    control_block+ControlBlock::num_entries, listbox_rec::num_items
-        copy    #BTK::kButtonStateDisabled, import_button::state
+        copy8   control_block+ControlBlock::num_entries, listbox_rec::num_items
+        copy8   #BTK::kButtonStateDisabled, import_button::state
 
         MGTK_CALL MGTK::OpenWindow, winfo_catalog
         MGTK_CALL MGTK::OpenWindow, winfo_catalog_listbox
@@ -544,8 +544,8 @@ remainder:      .word   0                 ; (out)
         cmp     #CHAR_DOWN
 :
     IF_EQ
-        copy    event_params::key, lb_params::key
-        copy    event_params::modifiers, lb_params::modifiers
+        copy8   event_params::key, lb_params::key
+        copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
         jmp     InputLoop
     END_IF
@@ -599,7 +599,7 @@ remainder:      .word   0                 ; (out)
         bne     done
 
         ;; Click in DA content area
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -624,7 +624,7 @@ done:   jmp     InputLoop
 
 .proc Import
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
-        copy    listbox_rec::selected_index, control_block+ControlBlock::selected_index
+        copy8   listbox_rec::selected_index, control_block+ControlBlock::selected_index
         JSR_TO_MAIN main__DoImport
         pha                     ; A = error code (0 = success)
         jsr     ClearProgressMeter
@@ -859,7 +859,7 @@ start:
         jmp     JUMP_TABLE_SHOW_ALERT
     END_IF
 
-        copy    #0, dirty_flag
+        copy8   #0, dirty_flag
 
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         jsr     EnumerateDrives
@@ -897,8 +897,8 @@ start:
 .proc EnumerateDrives
         ;; TODO: Iterate slot/drive vs. DEVLST? Order?
 
-        copy    DEVCNT, index
-        copy    #0, control_block+ControlBlock::dev_count
+        copy8   DEVCNT, index
+        copy8   #0, control_block+ControlBlock::dev_count
 
 loop:   ldx     index
         lda     DEVLST,x
@@ -931,7 +931,7 @@ index:  .byte   0
 
 
 .proc LoadCatalogEntries
-        copy    #0, control_block+ControlBlock::num_entries
+        copy8   #0, control_block+ControlBlock::num_entries
         copy16  #aux::EntryBuffer, aux_entry_ptr
 
         ;; Read VTOC
@@ -946,7 +946,7 @@ index:  .byte   0
         cmp     #16
         jne     exit_error
 
-        copy    RWTS_SECTOR_BUF + dos33::VTOC::VolumeNumber, control_block+ControlBlock::volume_number
+        copy8   RWTS_SECTOR_BUF + dos33::VTOC::VolumeNumber, control_block+ControlBlock::volume_number
 
         lda     RWTS_SECTOR_BUF + dos33::VTOC::FirstCatTrack
         ldx     RWTS_SECTOR_BUF + dos33::VTOC::FirstCatSector
@@ -1096,8 +1096,8 @@ start:
         jsr     FetchControlBlock
 
         ;; Fetch `CatalogEntry`
-        copy    control_block+ControlBlock::selected_index, muldiv_params::number
-        copy    #0, muldiv_params::number+1
+        copy8   control_block+ControlBlock::selected_index, muldiv_params::number
+        copy8   #0, muldiv_params::number+1
         copy16  #.sizeof(aux::CatalogEntry), muldiv_params::numerator
         copy16  #1, muldiv_params::denominator
         JUMP_TABLE_MGTK_CALL MGTK::MulDiv, muldiv_params
@@ -1199,7 +1199,7 @@ cnext:  dex
         jsr     RWTSRead
         RTS_IF_CS
         jsr     IncProgress
-        copy    #dos33::TSList::FirstDataT+2, tslist_offset
+        copy8   #dos33::TSList::FirstDataT+2, tslist_offset
 
         ;; Data offsets depend on type
         lda     entry_buf+aux::CatalogEntry::TypeFlags
@@ -1212,7 +1212,7 @@ cnext:  dex
         ;; +$00 WORD address (low/high)
         ;; +$02 WORD length (low/high)
         copy16  RWTS_SECTOR_BUF+0, create_params::aux_type
-        copy    #$80, set_eof_flag
+        copy8   #$80, set_eof_flag
         copy16  RWTS_SECTOR_BUF+2, set_eof_params::eof
         copy16  #RWTS_SECTOR_BUF+4, write_params::data_buffer
         copy16  #256-4, write_params::request_count
@@ -1225,7 +1225,7 @@ cnext:  dex
         ;; +$00 WORD length (low/high)
         copy16  #$0801, create_params::aux_type
         copy16  RWTS_SECTOR_BUF+0, set_eof_params::eof
-        copy    #$80, set_eof_flag
+        copy8   #$80, set_eof_flag
         copy16  #RWTS_SECTOR_BUF+2, write_params::data_buffer
         copy16  #256-2, write_params::request_count
         jmp     translate_type
@@ -1237,14 +1237,14 @@ cnext:  dex
         ;; +$00 WORD length (low/high)
         copy16  #$0000, create_params::aux_type
         copy16  RWTS_SECTOR_BUF+0, set_eof_params::eof
-        copy    #$80, set_eof_flag
+        copy8   #$80, set_eof_flag
         copy16  #RWTS_SECTOR_BUF+2, write_params::data_buffer
         copy16  #256-2, write_params::request_count
         jmp     translate_type
     END_IF
 
         copy16  #0, create_params::aux_type
-        copy    #0, set_eof_flag
+        copy8   #0, set_eof_flag
         copy16  #RWTS_SECTOR_BUF, write_params::data_buffer
         copy16  #256, write_params::request_count
         FALL_THROUGH_TO translate_type
@@ -1307,7 +1307,7 @@ next_tslist_sector:
         jsr     RWTSRead
         RTS_IF_CS
         jsr     IncProgress
-        copy    #dos33::TSList::FirstDataT, tslist_offset
+        copy8   #dos33::TSList::FirstDataT, tslist_offset
         jmp     read_sector
 
         ;; --------------------------------------------------
@@ -1324,7 +1324,7 @@ finish:
     END_IF
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
-        copy    #$80, dirty_flag
+        copy8   #$80, dirty_flag
         return  #0              ; success
 
 ;;; C=1 if false
@@ -1412,7 +1412,7 @@ prefix_path:    .res    ::kPathBufferSize, 0
         ldy     #0
         lda     (ptr),y
         tay
-:       copy    (ptr),y, prefix_path,y
+:       copy8   (ptr),y, prefix_path,y
         dey
         bpl     :-
         return  #0

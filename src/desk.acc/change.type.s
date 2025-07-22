@@ -142,9 +142,9 @@ auxtype:        .word   SELF_MODIFIED
 .proc RunDA
         bit     data::type_valid
     IF_NC
-        copy    #0, str_type
+        copy8   #0, str_type
     ELSE
-        copy    #2, str_type
+        copy8   #2, str_type
         lda     data::type
         jsr     GetDigits
         sta     str_type+1
@@ -153,9 +153,9 @@ auxtype:        .word   SELF_MODIFIED
 
         bit     data::auxtype_valid
     IF_NC
-        copy    #0, str_auxtype
+        copy8   #0, str_auxtype
     ELSE
-        copy    #4, str_auxtype
+        copy8   #4, str_auxtype
         lda     data::auxtype+1
         jsr     GetDigits
         sta     str_auxtype+1
@@ -207,7 +207,7 @@ auxtype:        .word   SELF_MODIFIED
 ;;; ==================================================
 
 .proc HandleMouseMoved
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -233,7 +233,7 @@ cursor_ibeam_flag: .byte   0
         RTS_IF_NS
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
-        copy    #$80, cursor_ibeam_flag
+        copy8   #$80, cursor_ibeam_flag
         rts
 .endproc ; SetCursorIBeam
 
@@ -242,7 +242,7 @@ cursor_ibeam_flag: .byte   0
         RTS_IF_NC
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
-        copy    #0, cursor_ibeam_flag
+        copy8   #0, cursor_ibeam_flag
         rts
 .endproc ; SetCursorPointer
 .endproc ; HandleMouseMoved
@@ -255,7 +255,7 @@ cursor_ibeam_flag: .byte   0
         cmp     #kDAWindowId
         jne     InputLoop
 
-        copy    #kDAWindowId, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -338,11 +338,11 @@ cursor_ibeam_flag: .byte   0
         bit     auxtype_focused_flag
     IF_NC
         sta     type_le_params::key
-        copy    event_params::modifiers, type_le_params::modifiers
+        copy8   event_params::modifiers, type_le_params::modifiers
         LETK_CALL LETK::Key, type_le_params
     ELSE
         sta     auxtype_le_params::key
-        copy    event_params::modifiers, auxtype_le_params::modifiers
+        copy8   event_params::modifiers, auxtype_le_params::modifiers
         LETK_CALL LETK::Key, auxtype_le_params
     END_IF
 
@@ -393,7 +393,7 @@ yes:    clc
 
         LETK_CALL LETK::Deactivate, auxtype_le_params
         LETK_CALL LETK::Activate, type_le_params
-        copy    #0, auxtype_focused_flag
+        copy8   #0, auxtype_focused_flag
 
         rts
 .endproc ; FocusType
@@ -405,7 +405,7 @@ yes:    clc
 
         LETK_CALL LETK::Deactivate, type_le_params
         LETK_CALL LETK::Activate, auxtype_le_params
-        copy    #$80, auxtype_focused_flag
+        copy8   #$80, auxtype_focused_flag
 
         rts
 .endproc ; FocusAuxtype
@@ -416,8 +416,8 @@ yes:    clc
 :       lda     str_type
         cmp     #2
         beq     :+
-        copy    str_type+1, str_type+2
-        copy    #'0', str_type+1
+        copy8   str_type+1, str_type+2
+        copy8   #'0', str_type+1
         inc     str_type
         bne     :-              ; always
 :
@@ -428,10 +428,10 @@ yes:    clc
 :       lda     str_auxtype
         cmp     #4
         beq     :+
-        copy    str_auxtype+3, str_auxtype+4
-        copy    str_auxtype+2, str_auxtype+3
-        copy    str_auxtype+1, str_auxtype+2
-        copy    #'0', str_auxtype+1
+        copy8   str_auxtype+3, str_auxtype+4
+        copy8   str_auxtype+2, str_auxtype+3
+        copy8   str_auxtype+1, str_auxtype+2
+        copy8   #'0', str_auxtype+1
         inc     str_auxtype
         bne     :-              ; always
 :
@@ -457,9 +457,9 @@ yes:    clc
 
         lda     str_type
     IF_ZERO
-        copy    #0, data::type_valid
+        copy8   #0, data::type_valid
     ELSE
-        copy    #$80, data::type_valid
+        copy8   #$80, data::type_valid
         jsr     PadType
         lda     str_type+1
         ldx     str_type+2
@@ -469,9 +469,9 @@ yes:    clc
 
         lda     str_auxtype
     IF_ZERO
-        copy    #0, data::auxtype_valid
+        copy8   #0, data::auxtype_valid
     ELSE
-        copy    #$80, data::auxtype_valid
+        copy8   #$80, data::auxtype_valid
         jsr     PadAuxtype
         lda     str_auxtype+1
         ldx     str_auxtype+2
@@ -686,7 +686,7 @@ callback:
         pla
     IF_ZERO
         ;; First - use this type/auxtype
-        copy    gfi_params::file_type, data::type
+        copy8   gfi_params::file_type, data::type
         copy16  gfi_params::aux_type, data::auxtype
         lda     #$80
         sta     data::type_valid
@@ -696,12 +696,12 @@ callback:
         lda     gfi_params::file_type
         cmp     data::type
       IF_NE
-        copy    #0, data::type_valid
+        copy8   #0, data::type_valid
       END_IF
 
         ecmp16  gfi_params::aux_type, data::auxtype
       IF_NE
-        copy    #0, data::auxtype_valid
+        copy8   #0, data::auxtype_valid
       END_IF
 
     END_IF
@@ -724,7 +724,7 @@ callback:
 
         bit     data::type_valid
     IF_NS
-        copy    data::type, gfi_params::file_type
+        copy8   data::type, gfi_params::file_type
     END_IF
 
         bit     data::auxtype_valid
@@ -739,7 +739,7 @@ IterationCallback:
         .word   SELF_MODIFIED
 
 .proc IterateSelectedFiles
-        copy    #0, index
+        copy8   #0, index
         ptr := $06
 
         ;; Get win path
@@ -803,14 +803,14 @@ index:  .byte   0
 .endproc ; IterateSelectedFiles
 
 .proc GetFileInfo
-        copy    #$A, gfi_params::param_count ; GET_FILE_INFO
+        copy8   #$A, gfi_params::param_count ; GET_FILE_INFO
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, gfi_params
         jcs     Abort
         rts
 .endproc ; GetFileInfo
 
 .proc SetFileInfo
-        copy    #7, gfi_params::param_count ; SET_FILE_INFO
+        copy8   #7, gfi_params::param_count ; SET_FILE_INFO
         JUMP_TABLE_MLI_CALL SET_FILE_INFO, gfi_params
         jcs     Abort
         rts

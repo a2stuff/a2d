@@ -832,7 +832,7 @@ loop:   txa
         dex
         bne     loop
 
-        copy    #0, scrambled_flag
+        copy8   #0, scrambled_flag
 .endproc ; OnVictory
 
 after_click:
@@ -1103,7 +1103,7 @@ ploop:  lda     position_table+1,y
 .proc Scramble
         jsr     SwapTables      ; swap
 
-        copy    #$80, scrambled_flag
+        copy8   #$80, scrambled_flag
         jsr     DrawAll
         jsr     FindHole
 

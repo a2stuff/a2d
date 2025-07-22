@@ -5,7 +5,7 @@
 .proc DetectDoubleClick
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
-:       copy    event_params::coords,x, coords,x
+:       copy8   event_params::coords,x, coords,x
 
         dex
         bpl     :-

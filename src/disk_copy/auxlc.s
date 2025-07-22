@@ -432,11 +432,11 @@ init:   jsr     DisconnectRAM
         MGTK_CALL MGTK::SetMenu, menu_definition
         jsr     SetCursorPointer
 
-        copy    #kMenuItemIdQuickCopy, checkitem_params::menu_item
-        copy    #MGTK::checkitem_check, checkitem_params::check
+        copy8   #kMenuItemIdQuickCopy, checkitem_params::menu_item
+        copy8   #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        copy    #0, disk_copy_flag
+        copy8   #0, disk_copy_flag
 
         ;; Open dialog window
         MGTK_CALL MGTK::OpenWindow, winfo_dialog
@@ -446,14 +446,14 @@ init:   jsr     DisconnectRAM
         MGTK_CALL MGTK::FrameRect, rect_frame
 
 InitDialog:
-        copy    #0, listbox_enabled_flag
-        copy    #$FF, current_drive_selection
-        copy    #BTK::kButtonStateDisabled, ok_button::state
+        copy8   #0, listbox_enabled_flag
+        copy8   #$FF, current_drive_selection
+        copy8   #BTK::kButtonStateDisabled, ok_button::state
 
         lda     #$81            ; other
         sta     source_disk_format
 
-        copy    #MGTK::disablemenu_enable, disablemenu_params::disable
+        copy8   #MGTK::disablemenu_enable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
 
         ;; --------------------------------------------------
@@ -486,15 +486,15 @@ InitDialog:
         ;; Drive select listbox
 
         MGTK_CALL MGTK::OpenWindow, winfo_drive_select
-        copy    #$FF, listbox_enabled_flag
+        copy8   #$FF, listbox_enabled_flag
 
         jsr     SetCursorWatch
         jsr     EnumerateDevices
-        copy    #0, DISK_COPY_INITIAL_UNIT_NUM
+        copy8   #0, DISK_COPY_INITIAL_UNIT_NUM
         jsr     GetAllBlockCounts
 
         jsr     SetCursorPointer
-        copy    #$00, selection_mode
+        copy8   #$00, selection_mode
 
         LBTK_CALL LBTK::Init, lb_params
         jsr     UpdateOKButton
@@ -504,7 +504,7 @@ InitDialog:
         jsr     WaitForSelection
 
         ;; Have a source selection
-        copy    #MGTK::disablemenu_disable, disablemenu_params::disable
+        copy8   #MGTK::disablemenu_disable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
 
         lda     current_drive_selection
@@ -519,7 +519,7 @@ InitDialog:
 
         ;; Prepare for destination selection
         jsr     EnumerateDestinationDevices
-        copy    #$80, selection_mode
+        copy8   #$80, selection_mode
         LBTK_CALL LBTK::Init, lb_params
         jsr     UpdateOKButton
 
@@ -909,7 +909,7 @@ menu_offset_table:
 :
       IF_EQ
         sta     lb_params::key
-        copy    event_params::modifiers, lb_params::modifiers
+        copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
         jsr     UpdateOKButton
         return  #$FF
@@ -962,14 +962,14 @@ do_jump:
         bit     disk_copy_flag
         bpl     ret
 
-        copy    #MGTK::checkitem_uncheck, checkitem_params::check
+        copy8   #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        copy    #kMenuItemIdQuickCopy, checkitem_params::menu_item
-        copy    #MGTK::checkitem_check, checkitem_params::check
+        copy8   #kMenuItemIdQuickCopy, checkitem_params::menu_item
+        copy8   #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        copy    #0, disk_copy_flag
+        copy8   #0, disk_copy_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         MGTK_CALL MGTK::MoveTo, point_title
@@ -982,14 +982,14 @@ ret:    rts
         bit     disk_copy_flag
         bmi     ret
 
-        copy    #MGTK::checkitem_uncheck, checkitem_params::check
+        copy8   #MGTK::checkitem_uncheck, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        copy    #kMenuItemIdDiskCopy, checkitem_params::menu_item
-        copy    #MGTK::checkitem_check, checkitem_params::check
+        copy8   #kMenuItemIdDiskCopy, checkitem_params::menu_item
+        copy8   #MGTK::checkitem_check, checkitem_params::check
         MGTK_CALL MGTK::CheckItem, checkitem_params
 
-        copy    #$80, disk_copy_flag
+        copy8   #$80, disk_copy_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::PaintRect, rect_title
         MGTK_CALL MGTK::MoveTo, point_title
@@ -1050,7 +1050,7 @@ ret:    rts
 
 .proc HandleDialogClick
         jsr     SetPortForDialog
-        copy    #winfo_dialog::kWindowId, screentowindow_params::window_id
+        copy8   #winfo_dialog::kWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -1545,7 +1545,7 @@ is_prodos:
 
         cmp     DISK_COPY_INITIAL_UNIT_NUM
     IF_EQ
-        copy    num_drives, current_drive_selection
+        copy8   num_drives, current_drive_selection
     END_IF
 
         ldax    $06
@@ -2172,7 +2172,7 @@ options:        .byte   0       ; AlertOptions
 
 start:
         pha                     ; A = alert id
-        copy    #0, ejectable_flag
+        copy8   #0, ejectable_flag
 
         ;; --------------------------------------------------
         ;; Determine alert options
@@ -2232,8 +2232,8 @@ find_in_alert_table:
         tya
         lsr     a
         tay
-        copy    alert_button_options_table,y, alert_params::buttons
-        copy    alert_options_table,y, alert_params::options
+        copy8   alert_button_options_table,y, alert_params::buttons
+        copy8   alert_options_table,y, alert_params::options
 
         param_jump Alert, alert_params
 
@@ -2360,7 +2360,7 @@ Alert := alert_dialog::Alert
         lda     #SELF_MODIFIED_BYTE
         cmp     #kMaxCounter
         bcc     :+
-        copy    #0, loop_counter
+        copy8   #0, loop_counter
 
         jsr     main__ResetIIgsRGB ; in case it was reset by control panel
 

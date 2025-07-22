@@ -208,7 +208,7 @@ char_label:  .byte   0
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
+        copy8   winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
@@ -265,7 +265,7 @@ END_PARAM_BLOCK
         copy16  #kInitialY, pos::ycoord
 
 
-        copy    #0, index
+        copy8   #0, index
 loop:   lda     index
         asl
         tax
@@ -425,7 +425,7 @@ expected_size:
         .word   0
 
 .proc CalcFontSize
-        copy    #0, expected_size
+        copy8   #0, expected_size
 
         ;; File size should be 3 + (lastchar + 1) + ((lastchar + 1) * height) * (double?2:1)
 

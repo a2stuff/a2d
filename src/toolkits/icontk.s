@@ -308,7 +308,7 @@ a_heap          .addr
         table_ptr := $08
 
         ldy     #InitToolKitParams::headersize
-        copy    (params),y, header_height
+        copy8   (params),y, header_height
         iny                     ; Y = InitToolKitParams::a_polybuf
         copy16in (params),y, polybuf_addr
         iny                     ; Y = InitToolKitParams::bufsize
@@ -701,7 +701,7 @@ y_lo:   cpx     #kDragDelta
 is_drag:
 
         ;; Count number of highlighted icons
-        copy    #0, highlight_count
+        copy8   #0, highlight_count
 
         INVOKE_WITH_LAMBDA _IterateHighlightedIcons
         ;; Count this one, and remember as potentially last
@@ -712,7 +712,7 @@ is_drag:
         jsr     GetIconFlags
         and     #kIconEntryFlagsNotDropSource
         beq     :+
-        copy    #$80, trash_flag
+        copy8   #$80, trash_flag
 :
         rts
         END_OF_LAMBDA
@@ -733,7 +733,7 @@ is_drag:
         ;; Build drag polygon
 
         copy16  polybuf_addr, $08
-        copy    #$80, poly::lastpoly  ; more to follow
+        copy8   #$80, poly::lastpoly  ; more to follow
 
         INVOKE_WITH_LAMBDA _IterateHighlightedIcons
 
@@ -756,7 +756,7 @@ is_drag:
         lda     #0              ; last polygon
         sta     ($08),y
 
-        copy    #0, poly::lastpoly ; restore default
+        copy8   #0, poly::lastpoly ; restore default
 
         ;; --------------------------------------------------
 
@@ -772,7 +772,7 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         cmp     #CHAR_ESCAPE | $80
         bne     :+
         bit     KBDSTRB         ; consume the keypress
-        copy    #MGTK::EventKind::key_down, peekevent_params::kind
+        copy8   #MGTK::EventKind::key_down, peekevent_params::kind
         jmp     not_drag
 :
         ;; Coords changed?
@@ -803,7 +803,7 @@ moved:
         lda     highlight_icon_id
         beq     :+
         jsr     _UnhighlightIcon
-        copy    #0, highlight_icon_id
+        copy8   #0, highlight_icon_id
 :
         ;; Is the new icon valid?
         pla
@@ -1050,7 +1050,7 @@ find_icon:
 ;;; Trashes $06
 .proc _CheckRealContentArea
         COPY_STRUCT MGTK::Point, findwindow_params::mousex, findcontrol_params::mousex
-        copy    findwindow_params::window_id, findcontrol_params::window_id
+        copy8   findwindow_params::window_id, findcontrol_params::window_id
         MGTK_CALL MGTK::FindControlEx, findcontrol_params
         bne     fail
         lda     findcontrol_params::which_ctl
@@ -1845,7 +1845,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         sta     dest + 1
         sta     dest,y
 
-        copy    drawtext_params::textlen, textwidth_params::textlen
+        copy8   drawtext_params::textlen, textwidth_params::textlen
         MGTK_CALL MGTK::TextWidth, textwidth_params
 
         rts
@@ -2329,7 +2329,7 @@ do_pt:  lda     pt_num
         win_r := getwinframerect_params::rect::x2
         win_b := getwinframerect_params::rect::y2
 
-        copy    findwindow_params::window_id, getwinframerect_params::window_id
+        copy8   findwindow_params::window_id, getwinframerect_params::window_id
         MGTK_CALL MGTK::GetWinFrameRect, getwinframerect_params
 
         ;; ==================================================

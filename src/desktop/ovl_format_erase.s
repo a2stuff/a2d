@@ -52,7 +52,7 @@ selected_index:
         ;; --------------------------------------------------
         ;; Prompt for device
 .scope
-        copy    #$00, has_input_field_flag
+        copy8   #$00, has_input_field_flag
         jsr     main::OpenPromptWindow
         jsr     main::SetPortForDialogWindow
         bit     erase_flag
@@ -82,10 +82,10 @@ selected_index:
         MGTK_CALL MGTK::LineTo, vol_picker_line2_end
 
         jsr     DrawVolumeLabels
-        copy    #$FF, selected_index
+        copy8   #$FF, selected_index
         copy16  #HandleClick, main::PromptDialogClickHandlerHook
         copy16  #HandleKey, main::PromptDialogKeyHandlerHook
-        copy    #$80, has_device_picker_flag
+        copy8   #$80, has_device_picker_flag
         jsr     main::UpdateOKButton
 
 :       jsr     main::PromptInputLoop
@@ -108,9 +108,9 @@ skip_select:
         jsr     SetPortAndClear
         jsr     main::SetPenModeNotCopy
         MGTK_CALL MGTK::FrameRect, name_input_rect
-        copy    #$80, has_input_field_flag
-        copy    #0, text_input_buf
-        copy    #$00, has_device_picker_flag
+        copy8   #$80, has_input_field_flag
+        copy8   #0, text_input_buf
+        copy8   #$00, has_device_picker_flag
 
         param_call main::DrawDialogLabel, 2, aux::str_location
 
@@ -156,7 +156,7 @@ loop2:
 .scope
         COPY_STRING text_input_buf, main::filename_buf
 
-        copy    #0, has_input_field_flag
+        copy8   #0, has_input_field_flag
         jsr     SetPortAndClear
         MGTK_CALL MGTK::PaintRect, ok_button::rect
         MGTK_CALL MGTK::PaintRect, cancel_button::rect
@@ -164,7 +164,7 @@ loop2:
         lda     unit_num
         jsr     GetVolName      ; populates `ovl_string_buf`
 
-        copy    #0, text_input_buf
+        copy8   #0, text_input_buf
         param_call AppendToTextInputBuf, aux::str_confirm_erase_prefix
         param_call AppendToTextInputBuf, ovl_string_buf
         param_call AppendToTextInputBuf, aux::str_confirm_erase_suffix
@@ -445,7 +445,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         clc
         adc     #1
         sta     path
-        copy    #'/', path+1
+        copy8   #'/', path+1
 
         MLI_CALL GET_FILE_INFO, get_file_info_params
         bcs     no_match
@@ -524,7 +524,7 @@ driver: lda     unit_num
 
         sta     ALTZPOFF        ; Main ZP/LCBANKs
 
-        copy    #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
+        copy8   #DRIVER_COMMAND_FORMAT, DRIVER_COMMAND
         unit_num := *+1
         lda     #SELF_MODIFIED_BYTE
         sta     DRIVER_UNIT_NUMBER
@@ -611,7 +611,7 @@ unit_num:
 
         sta     ALTZPOFF        ; Main ZP/LCBANKs
 
-        copy    #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
+        copy8   #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
         lda     unit_num
         sta     DRIVER_UNIT_NUMBER
         lda     #$00
@@ -680,15 +680,15 @@ L1398:  stxy    total_blocks
         jsr     WriteBlockAndZero
 
         ;; Subsequent volume directory blocks (4 total)
-        copy    #2, block_buffer ; block 3, points at 2 and 4
-        copy    #4, block_buffer+2
+        copy8   #2, block_buffer ; block 3, points at 2 and 4
+        copy8   #4, block_buffer+2
         jsr     WriteBlockAndZero
 
-        copy    #3, block_buffer ; block 4, points at 3 and 5
-        copy    #5, block_buffer+2
+        copy8   #3, block_buffer ; block 4, points at 3 and 5
+        copy8   #5, block_buffer+2
         jsr     WriteBlockAndZero
 
-        copy    #4, block_buffer ; block 4, points back at 4
+        copy8   #4, block_buffer ; block 4, points back at 4
         jsr     WriteBlockAndZero
 
         ;; --------------------------------------------------
@@ -732,12 +732,12 @@ bitmaploop:
         bne     gowrite         ; Then go ahead and write the bitmap block as-is
 
         ;; Block 6 - Set up the volume bitmap to protect the blocks at the beginning of the volume
-        copy    #$01, block_buffer ; Mark blocks 0-6 in use
+        copy8   #$01, block_buffer ; Mark blocks 0-6 in use
         lda     lastblock       ; What's the last block we need to protect?
         cmp     #7
         bcc     gowrite         ; If it's less than 7, default to always protecting 0-6
 
-        copy    #$00, block_buffer ; Otherwise (>=7) mark blocks 0-7 as "in use"
+        copy8   #$00, block_buffer ; Otherwise (>=7) mark blocks 0-7 as "in use"
         lda     lastblock       ; and check again
         cmp     #15
         bcs     :+              ; Is it 15 or more? Skip ahead.
@@ -747,7 +747,7 @@ bitmaploop:
         sta     block_buffer+1  ; put it in the bitmap
         bcc     gowrite         ; and write the block
 
-:       copy    #$00, block_buffer+1 ; (>=15) Mark blocks 8-15 as "in use"
+:       copy8   #$00, block_buffer+1 ; (>=15) Mark blocks 8-15 as "in use"
         lda     lastblock       ; Then finally
         and     #$07            ; take the low three bits
         tax
@@ -998,9 +998,9 @@ pascal_disk:
         MLI_CALL READ_BLOCK, read_block_params
         bcc     :+
         ;; Pascal disk, empty name - use " :" (weird, but okay?)
-        copy    #2, ovl_string_buf
-        copy    #' ', ovl_string_buf+1
-        copy    #':', ovl_string_buf+2
+        copy8   #2, ovl_string_buf
+        copy8   #' ', ovl_string_buf+1
+        copy8   #':', ovl_string_buf+2
         rts
 
         ;; Pascal disk, use name

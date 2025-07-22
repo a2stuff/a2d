@@ -130,20 +130,20 @@ quit:   MLI_CALL QUIT, quit_params
         ;; Not there - search from `prefix_path` upwards
         ldx     prefix_path
         stx     path_length
-:       copy    prefix_path,x, bs_path,x
+:       copy8   prefix_path,x, bs_path,x
         dex
         bpl     :-
 
         inc     bs_path
         ldx     bs_path
-        copy    #'/', bs_path,x
+        copy8   #'/', bs_path,x
 loop:
         ;; Append BASIC.SYSTEM to path and check for file.
         ldx     bs_path
         ldy     #0
 :       inx
         iny
-        copy    str_basic_system,y, bs_path,x
+        copy8   str_basic_system,y, bs_path,x
         cpy     str_basic_system
         bne     :-
         stx     bs_path
@@ -197,7 +197,7 @@ str_basic_system:
         ldy     #0
         lda     (ptr),y
         tay
-:       copy    (ptr),y, prefix_path,y
+:       copy8   (ptr),y, prefix_path,y
         dey
         bpl     :-
         return  #0

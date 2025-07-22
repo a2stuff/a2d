@@ -27,7 +27,7 @@ filename_buffer:
         bit     LCBANK2
 
         COPY_STRUCT DeskTopSettings, SETTINGS, write_buffer + kDeskTopSettingsFileOffset
-        copy    #kDeskTopSettingsFileVersion, write_buffer
+        copy8   #kDeskTopSettingsFileVersion, write_buffer
 
         sta     ALTZPON
         bit     LCBANK1
@@ -73,7 +73,7 @@ done:   rts
 
 .proc _DoWrite
         ;; First time - ask if we should even try.
-        copy    #kErrSaveChanges, message
+        copy8   #kErrSaveChanges, message
 
 retry:
         ;; Create if necessary

@@ -1465,7 +1465,7 @@ done:   rts
 
 .proc DoWrite
         ;; First time - ask if we should even try.
-        copy    #kErrSaveChanges, message
+        copy8   #kErrSaveChanges, message
 
 retry:
         ;; Create if necessary

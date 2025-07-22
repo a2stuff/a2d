@@ -246,7 +246,7 @@ str_self_filename:
         lda     file_info_params + 7         ; storage_type
         cmp     #ST_LINKED_DIRECTORY
         bne     ret
-        copy    #7, file_info_params + 0     ; SET_FILE_INFO param_count
+        copy8   #7, file_info_params + 0     ; SET_FILE_INFO param_count
         copy16  #$8000, file_info_params + 5 ; aux_type
         MLI_CALL SET_FILE_INFO, file_info_params
 ret:    rts
@@ -277,7 +277,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 ;;; Probe system capabilities, `DeskTopSettings::system_capabilities`
 ;;; Assert: ROM is banked in
 .proc DetectSystem
-        copy    #0, syscap
+        copy8   #0, syscap
 
         ;; IIgs?
         sec                     ; Follow detection protocol
@@ -686,9 +686,9 @@ close:  MLI_CALL CLOSE, close_dstfile_params
         bcs     fail
         COPY_BYTES $B, get_path2_info_params::access, get_path1_info_params::access
 
-        copy    #7, get_path1_info_params ; `SET_FILE_INFO` param_count
+        copy8   #7, get_path1_info_params ; `SET_FILE_INFO` param_count
         MLI_CALL SET_FILE_INFO, get_path1_info_params
-        copy    #10, get_path1_info_params ; `GET_FILE_INFO` param_count
+        copy8   #10, get_path1_info_params ; `GET_FILE_INFO` param_count
 
         rts
 .endproc ; CopyNormalFile
@@ -801,10 +801,10 @@ fail:
 
         ;; Header size is next/prev blocks + a file entry
         .assert .sizeof(SubdirectoryHeader) = .sizeof(FileEntry) + 4, error, "incorrect struct size"
-        copy    #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
+        copy8   #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
         jsr     ReadFileEntry          ; read the rest of the header
 
-        copy    file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
+        copy8   file_entry-4 + SubdirectoryHeader::entries_per_block, entries_per_block
 
         rts
 .endproc ; OpenSrcDir
@@ -1118,7 +1118,7 @@ str_slash_desktop:
         jsr     SetCopiedToRAMCardFlag
 
         ;; Remember the current volume
-        copy    DEVNUM, current_unit_num
+        copy8   DEVNUM, current_unit_num
 
         ;; Skip RAMCard install if flag is set
         ldx     #DeskTopSettings::options
@@ -1136,7 +1136,7 @@ str_slash_desktop:
         ;; Look for RAM disk
 
 .proc SearchDevices
-        copy    DEVCNT, devnum
+        copy8   DEVCNT, devnum
 
 loop:   ldx     devnum
         lda     DEVLST,x
@@ -1241,7 +1241,7 @@ test_unit_num:
         jsr     SetCopiedToRAMCardFlag
         jsr     SetHeaderOrigPrefix
         jsr     CopyOrigPrefixToDesktopOrigPrefix
-        copy    dst_path, copied_flag
+        copy8   dst_path, copied_flag
         jmp     FinishDeskTopCopy ; sets prefix, etc.
 .endproc ; SearchDevices
 .endproc ; Start
@@ -1287,8 +1287,8 @@ test_unit_num:
         tsx                     ; In case of error
         stx     saved_stack
 
-        copy    dst_path, copied_flag ; reset on error
-        copy    #0, filenum
+        copy8   dst_path, copied_flag ; reset on error
+        copy8   #0, filenum
 
 file_loop:
         jsr     UpdateProgress
@@ -1344,7 +1344,7 @@ file_loop:
 ;;; ============================================================
 
 .proc DidNotCopy
-        copy    #0, copied_flag
+        copy8   #0, copied_flag
         jmp     FinishDeskTopCopy
 .endproc ; DidNotCopy
 
@@ -2300,7 +2300,7 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
 
 found:
         ;; Found it in DEVLST, X = index
-        copy    DEVLST,x, read_block_params::unit_num
+        copy8   DEVLST,x, read_block_params::unit_num
         MLI_CALL READ_BLOCK, read_block_params
         bcs     ret
 

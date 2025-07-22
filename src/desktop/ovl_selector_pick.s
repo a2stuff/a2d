@@ -132,8 +132,8 @@ copy_when:  .byte   0
         lda     #$00
         sta     num_primary_run_list_entries
         sta     num_secondary_run_list_entries
-        copy    #$FF, selected_index
-        copy    #BTK::kButtonStateDisabled, entry_picker_ok_button::state
+        copy8   #$FF, selected_index
+        copy8   #BTK::kButtonStateDisabled, entry_picker_ok_button::state
         jsr     OpenWindow
         jsr     ReadFileAndDrawEntries
         bpl     :+
@@ -1004,7 +1004,7 @@ filename:
         bne     :-
         sty     filename_buffer
 
-        copy    #0, second_try_flag
+        copy8   #0, second_try_flag
 
 @retry: MLI_CALL CREATE, create_params
         MLI_CALL OPEN, open_origpfx_params

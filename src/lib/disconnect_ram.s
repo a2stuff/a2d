@@ -21,7 +21,7 @@
         rts
 
         ;; Remove it, shuffle everything else down.
-remove: copy    DEVLST,x, saved_ram_unitnum
+remove: copy8   DEVLST,x, saved_ram_unitnum
         copy16  RAMSLOT, saved_ram_drvec
         copy16  NODEV, RAMSLOT
 

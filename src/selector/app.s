@@ -340,10 +340,10 @@ portptr:        .addr   0
 
 entry:
 .scope AppInit
-        copy    #$FF, selected_index
-        copy    #BTK::kButtonStateDisabled, ok_button::state
+        copy8   #$FF, selected_index
+        copy8   #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
-        copy    #1, invoked_during_boot_flag
+        copy8   #1, invoked_during_boot_flag
         lda     num_secondary_run_list_entries
         ora     num_primary_run_list_entries
         bne     check_key_down
@@ -411,7 +411,7 @@ check_key:
 
 done_keys:
         sta     KBDSTRB
-        copy    #0, invoked_during_boot_flag
+        copy8   #0, invoked_during_boot_flag
 
         ;; --------------------------------------------------
 
@@ -525,14 +525,14 @@ set_startup_menu_items:
 
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern
 
-        copy    VERSION, startdesktop_params::machine
-        copy    ZIDBYTE, startdesktop_params::subid
+        copy8   VERSION, startdesktop_params::machine
+        copy8   ZIDBYTE, startdesktop_params::subid
 
         jsr     ClearDHRToBlack
 
         MGTK_CALL MGTK::SetZP1, setzp_params
         MGTK_CALL MGTK::StartDeskTop, startdesktop_params
-        copy    #$80, desktop_started_flag
+        copy8   #$80, desktop_started_flag
         jsr     SetRGBMode
         MGTK_CALL MGTK::SetMenu, menu
         jsr     ShowClock
@@ -577,8 +577,8 @@ set_startup_menu_items:
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     GetPortAndDrawWindow
-        copy    #$FF, selected_index
-        copy    #BTK::kButtonStateDisabled, ok_button::state
+        copy8   #$FF, selected_index
+        copy8   #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
         jsr     PopulateEntriesFlagTable
         jsr     DrawEntries
@@ -1123,8 +1123,8 @@ count:  .byte   0
         MLI_CALL READ, read_selector_list_params
         MLI_CALL CLOSE, close_params
 
-cache:  copy    selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
-        copy    selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
+cache:  copy8   selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
+        copy8   selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
         rts
 .endproc ; LoadSelectorList
 
@@ -1167,18 +1167,18 @@ error:  lda     #AlertID::insert_system_disk
         .assert DEVLST = DEVCNT+1, error, "DEVCNT must precede DEVLST"
         ldx     DEVCNT
         inx                     ; include DEVCNT itself
-:       copy    DEVCNT,x, backup_devlst,x
+:       copy8   DEVCNT,x, backup_devlst,x
         dex
         bpl     :-
 
         ;; Find the startup volume's unit number
-        copy    DEVNUM, target
+        copy8   DEVNUM, target
         jsr     GetCopiedToRAMCardFlag
     IF_MINUS
         param_call CopyDeskTopOriginalPrefix, INVOKER_PREFIX
         param_call GetFileInfo, INVOKER_PREFIX
         bcs     :+
-        copy    DEVNUM, target
+        copy8   DEVNUM, target
 :
     END_IF
 
@@ -1218,7 +1218,7 @@ done:   rts
         bmi     ret             ; backup was never done
 
         inx                     ; include DEVCNT itself
-:       copy    backup_devlst,x, DEVCNT,x
+:       copy8   backup_devlst,x, DEVCNT,x
         dex
         bpl     :-
 
@@ -1577,7 +1577,7 @@ fail:   jmp     ClearSelectedIndex
         ;; Ensure it's BIN, SYS, S16 or BAS (if BS is present)
 
 check_type:
-        copy    #0, INVOKER_BITSY_COMPAT
+        copy8   #0, INVOKER_BITSY_COMPAT
         lda     file_info_params::file_type
         cmp     #FT_BASIC
         bne     not_basic
@@ -1598,7 +1598,7 @@ not_basic:
 
         jsr     CheckBasisSystem ; Is fallback BASIS.SYSTEM present?
     IF_EQ
-        copy    #$80, INVOKER_BITSY_COMPAT
+        copy8   #$80, INVOKER_BITSY_COMPAT
         bmi     check_path      ; always
     END_IF
 
@@ -1691,7 +1691,7 @@ basis:  lda     #'S'            ; "BASI?" -> "BASIS"
         ;; Start off with `interp_path` = `launch_path`
         ldx     launch_path
         stx     path_length
-:       copy    launch_path,x, interp_path,x
+:       copy8   launch_path,x, interp_path,x
         dex
         bpl     :-
 
@@ -1705,7 +1705,7 @@ pop_segment:
         dex
         bne     :-
 
-no_bs:  copy    #0, interp_path ; null out the path
+no_bs:  copy8   #0, interp_path ; null out the path
         return  #$FF            ; non-zero is failure
 
 found_slash:
@@ -1720,7 +1720,7 @@ found_slash:
         ldy     #0
 :       inx
         iny
-        copy    str_basix_system,y, interp_path,x
+        copy8   str_basix_system,y, interp_path,x
         cpy     str_basix_system
         bne     :-
         stx     interp_path
@@ -1876,7 +1876,7 @@ len:    .byte   0
         lda     loop_counter
         cmp     #kMaxCounter
         bcc     :+
-        copy    #0, loop_counter
+        copy8   #0, loop_counter
 
         jsr     ShowClock
         jsr     ResetIIgsRGB   ; in case it was reset by control panel

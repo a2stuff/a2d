@@ -43,7 +43,7 @@ found:  tya
 
         ;; Type not found - use generic "$xx"
 not_found:
-        copy    #'$', str_file_type+1
+        copy8   #'$', str_file_type+1
 
         lda     file_type
         pha
@@ -52,12 +52,12 @@ not_found:
         lsr     a
         lsr     a
         tax
-        copy    hex_digits,x, str_file_type+2
+        copy8   hex_digits,x, str_file_type+2
 
         pla                     ; A = file_type
         and     #$0F
         tax
-        copy    hex_digits,x, str_file_type+3
+        copy8   hex_digits,x, str_file_type+3
 
         rts
 

@@ -59,7 +59,7 @@ kOptionPickerMaxEntries = kOptionPickerRows * kOptionPickerCols
         ;; No, clear selection
         lda     selected_index
         jsr     _HighlightIndex
-        copy    #$FF, selected_index
+        copy8   #$FF, selected_index
 
 done:   return  #$FF
 
@@ -341,7 +341,7 @@ END_PARAM_BLOCK
 .proc _Multiply
         stax    muldiv_params::number
         sty     muldiv_params::numerator
-        copy    #0, muldiv_params::numerator+1
+        copy8   #0, muldiv_params::numerator+1
         copy16  #1, muldiv_params::denominator
         MGTK_CALL MGTK::MulDiv, muldiv_params
         ldax    muldiv_params::result
@@ -354,7 +354,7 @@ END_PARAM_BLOCK
 .proc _Divide
         stax    muldiv_params::numerator
         sty     muldiv_params::denominator
-        copy    #0, muldiv_params::denominator+1
+        copy8   #0, muldiv_params::denominator+1
         copy16  #1, muldiv_params::number
         MGTK_CALL MGTK::MulDiv, muldiv_params
         ldax    muldiv_params::result

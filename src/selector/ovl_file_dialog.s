@@ -18,7 +18,7 @@ ep_init:
         tsx
         stx     saved_stack
 
-        copy    #$80, require_selection_flag
+        copy8   #$80, require_selection_flag
         jsr     Init
         param_call OpenWindow, app::str_run_a_program
         jsr     InitPathWithDefaultDevice

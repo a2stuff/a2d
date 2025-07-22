@@ -48,7 +48,7 @@ break:  lda     digit
 not_pad:
         ora     #'0'
         pha
-        copy    #$80, nonzero_flag
+        copy8   #$80, nonzero_flag
         pla
 
         ;; Place the character

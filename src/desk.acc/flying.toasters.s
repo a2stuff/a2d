@@ -115,12 +115,12 @@ exit:
         MGTK_CALL MGTK::SetPenMode, pencopy
 
         ;; For each toaster...
-        copy    #kToasterCount-1, index
+        copy8   #kToasterCount-1, index
 loop:
 
         ;; Stash current toaster's values
         ldx     index
-        copy    frame_table,x, frame
+        copy8   frame_table,x, frame
         txa
         asl
         tax
@@ -152,7 +152,7 @@ loop:
         lda     frame
         cmp     #4              ; num frames
         bne     :+
-        copy    #0, frame
+        copy8   #0, frame
 :
 
         ;; Draw new pos
@@ -166,7 +166,7 @@ loop:
 
         ;; Store updated values
         ldx     index
-        copy    frame, frame_table,x
+        copy8   frame, frame_table,x
         txa
         asl
         tax

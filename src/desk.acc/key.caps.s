@@ -532,7 +532,7 @@ tmp_poly:
 :       bcc     continue
 
         ;; Swap in alternate layout
-        copy    #$80, extended_layout_flag
+        copy8   #$80, extended_layout_flag
         COPY_BLOCK empty_rect, rect_gap ; Gap is eliminated
         COPY_BLOCK rect_new_bshl, kr5C ; [\|] replaces Solid Apple
         COPY_BLOCK rect_new_bshl, kr7C
@@ -649,7 +649,7 @@ return_flag:
 ;;; ============================================================
 
 .proc HandleDrag
-        copy    winfo::window_id, dragwindow_params::window_id
+        copy8   winfo::window_id, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
@@ -696,7 +696,7 @@ return_flag:
         MGTK_CALL MGTK::FrameRect, rect_oap
         MGTK_CALL MGTK::FrameRect, rect_sap
 
-        copy    #127, char
+        copy8   #127, char
 
 loop:
         lda     char
@@ -709,7 +709,7 @@ loop:
 
         ;; Compute address of key record
 :       sta     ptr
-        copy    #0, ptr+1
+        copy8   #0, ptr+1
         asl16   ptr             ; * 8 = .sizeof(MGTK::Rect)
         asl16   ptr
         asl16   ptr
@@ -814,7 +814,7 @@ check:  sec
 normal:
         ;; Compute address of rect
         sta     ptr
-        copy    #0, ptr+1
+        copy8   #0, ptr+1
         asl16   ptr             ; * 8 = .sizeof(MGTK::Rect)
         asl16   ptr
         asl16   ptr
@@ -826,8 +826,8 @@ normal:
         dey
         bpl     :-
 
-        copy    #5, tmp_poly+0  ; # vertices
-        copy    #0, tmp_poly+1  ; no more polys
+        copy8   #5, tmp_poly+0  ; # vertices
+        copy8   #0, tmp_poly+1  ; no more polys
         add16   tmp_rect::x1, #4, tmp_poly+2 + (0 * .sizeof(MGTK::Point))
         add16   tmp_rect::y1, #2, tmp_poly+2 + (0 * .sizeof(MGTK::Point))+2
 
