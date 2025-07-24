@@ -244,7 +244,7 @@ not_list:
         ;; Open button
 
         MGTK_CALL MGTK::InRect, file_dialog_res::open_button::rect
-     IF_NOT_ZERO
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::open_button
         bmi     :+
         jsr     _DoOpen

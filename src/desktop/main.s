@@ -546,7 +546,7 @@ dispatch_click:
         lda     findcontrol_params::which_ctl
 
         .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
-     IF_ZERO
+    IF_ZERO
         ;; Ignore clicks in the header area
         copy8   active_window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
@@ -562,7 +562,7 @@ dispatch_click:
         ;; Not an icon - maybe a drag?
         lda     active_window_id
         jmp     DragSelect
-     END_IF
+    END_IF
 
         ;; --------------------------------------------------
 
@@ -781,13 +781,13 @@ check_double_click:
         ;; ----------------------------------------
 
         cmp     #IconTK::kDragResultMove
-     IF_EQ
+    IF_EQ
         jsr     RedrawSelectedIcons
         lda     selected_window_id
         RTS_IF_ZERO
 
         jmp     ScrollUpdate
-     END_IF
+    END_IF
 
         ;; ----------------------------------------
         ;; File drop on same window:
@@ -801,7 +801,7 @@ check_double_click:
         ;; * Double modifiers - ignore
 
         cmp     #IconTK::kDragResultMoveModified
-     IF_EQ
+    IF_EQ
         lda     selected_window_id
         RTS_IF_ZERO
 
@@ -821,7 +821,7 @@ check_double_click:
 
         ;; Single modifier
         jmp     CmdDuplicate
-     END_IF
+    END_IF
 
         ;; ----------------------------------------
         ;; A = `IconTK::kDragResultDrop`
@@ -12254,9 +12254,9 @@ append_size:
         ;; "<size>K"
         ldax    num_blocks
         ldy     selected_window_id
-     IF_ZERO
+    IF_ZERO
         ldax    vol_used_blocks
-     END_IF
+    END_IF
         jsr     ComposeSizeString
         param_call AppendToTextInputBuf, text_buffer2
 
@@ -14489,19 +14489,19 @@ params:  .res    3
         pla                     ; A = flags
 
         cmp     #DDL_CENTER
-     IF_EQ
+    IF_EQ
         sub16   #kPromptDialogWidth, result, dialog_label_pos::xcoord
         lsr16   dialog_label_pos::xcoord
         jmp     calc_y
-     END_IF
+    END_IF
 
         cmp     #DDL_RIGHT
-     IF_EQ
+    IF_EQ
         sub16   #kPromptDialogWidth - kDialogLabelDefaultX, result, dialog_label_pos::xcoord
-     ELSE
+    ELSE
         ;; DDL_LRIGHT
         sub16   #kDialogLabelRightX, result, dialog_label_pos::xcoord
-     END_IF
+    END_IF
 
 calc_y:
         ;; y = base + aux::kDialogLabelHeight * line
