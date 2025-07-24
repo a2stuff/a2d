@@ -328,6 +328,7 @@ DRIVER_COMMAND_FORMAT  = 3
     .if .xmatch(.string(io), "io_buffer")
         .error "Can't pass 'io_buffer' label to DEFINE_*_PARAMS"
     .endif
+    .assert pn < $C000, error, "MLI params can't be in LC RAM"
 .params name
 param_count:    .byte   3
 pathname:       .addr   pn
@@ -393,6 +394,7 @@ ref_num:        .byte   0
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
+    .assert pn < $C000, error, "MLI params can't be in LC RAM"
 .params name
 param_count:    .byte  $A
 pathname:       .addr   pn
@@ -495,6 +497,9 @@ int_num:        .byte   0
 .endmacro
 
 .macro DEFINE_QUIT_PARAMS name, ext, pathname
+    .ifnblank pathname
+        .assert pathname < $C000, error, "MLI params can't be in LC RAM"
+    .endif
 .params name
 param_count:    .byte   4
     .ifnblank ext
@@ -518,6 +523,7 @@ param_count:    .byte   4
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
+    .assert pn < $C000, error, "MLI params can't be in LC RAM"
 .params name
 param_count:    .byte   1
 pathname:       .addr   pn
@@ -531,6 +537,7 @@ pathname:       .addr   pn
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
+    .assert pn < $C000, error, "MLI params can't be in LC RAM"
 .params name
 param_count:    .byte   1
 pathname:       .addr   pn
@@ -544,6 +551,7 @@ pathname:       .addr   pn
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
+    .assert pn < $C000, error, "MLI params can't be in LC RAM"
 .params name
 param_count:    .byte   1
 pathname:       .addr   pn
@@ -557,6 +565,7 @@ pathname:       .addr   pn
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
+    .assert pn < $C000, error, "MLI params can't be in LC RAM"
 .params name
 param_count:    .byte   7
 pathname:       .addr   pn
@@ -625,6 +634,7 @@ eof:            .faraddr 0
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
     .endif
+    .assert pn < $C000, error, "MLI params can't be in LC RAM"
 .params name
 param_count:    .byte   2
 pathname:       .addr   pn

@@ -20,6 +20,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
 
 .scope SelectorEditOverlay
 
+        MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
         BTKEntry := BTKRelayImpl
 
@@ -135,8 +136,11 @@ jt_callbacks:
 ;;;          X = which run list (1=primary, 2=secondary)
 ;;;          Y = copy when (1=boot, 2=use, 3=never)
 
+DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, main::tmp_path_buf
+
 .proc HandleOK
         param_call file_dialog::GetPath, path_buf0
+        param_call file_dialog::GetPath, main::tmp_path_buf
 
         ;; If name is empty, use last path segment
         lda     text_input_buf
@@ -166,16 +170,21 @@ jt_callbacks:
 :       sty     text_input_buf
     END_IF
 
-        jsr     IsVolPath
-        bcs     ok              ; nope
-        lda     copy_when       ; Disallow copying volume to ramcard
+        ;; Disallow copying some types to ramcard
+        lda     copy_when
         cmp     #kCopyNever
         beq     ok
-        FALL_THROUGH_TO invalid
 
-invalid:
-        lda     #ERR_INVALID_PATHNAME
-        jmp     ShowAlert
+        MLI_CALL GET_FILE_INFO, get_file_info_params
+        bcs     alert
+        ;; Volume?
+        lda     get_file_info_params::storage_type
+        cmp     #ST_VOLUME_DIRECTORY
+        beq     invalid
+        ;; Link?
+        lda     get_file_info_params::file_type
+        cmp     #FT_LINK
+        beq     invalid
 
 ok:     jsr     file_dialog::CloseWindow
         ldx     saved_stack
@@ -183,21 +192,12 @@ ok:     jsr     file_dialog::CloseWindow
         ldx     which_run_list
         ldy     copy_when
         return  #0
+
+invalid:
+        lda     #ERR_INVALID_PATHNAME
+alert:  jmp     ShowAlert
+
 .endproc ; HandleOK
-
-;;; Returns C=0 if `path_buf0` is a volume path, C=1 otherwise
-;;; Assert: Path is valid
-.proc IsVolPath
-        ldy     path_buf0
-:       lda     path_buf0,y
-        cmp     #'/'
-        beq     found
-        dey
-        bne     :-
-
-found:  cpy     #2
-        rts
-.endproc ; IsVolPath
 
 ;;; ============================================================
 

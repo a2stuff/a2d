@@ -707,6 +707,7 @@
 
 * Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that the file picker shows the volume name as selected.
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Verify that if the target is a volume directory and either "at boot" or "at first use" is selected, then an alert is shown when trying to commit the dialog.
+* Launch DeskTop. Shortcuts > Add a Shortcut.... Verify that if the target is an alias (link file) and either "at boot" or "at first use" is selected, then an alert is shown when trying to commit the dialog.
 
 * Launch DeskTop. Select a file icon. Shortcuts > Add a Shortcut... Verify that the file dialog is navigated to the selected file's folder and the file is selected.
 * Launch DeskTop. Select a volume icon. Shortcuts > Add a Shortcut... Verify that the file dialog is initialized to the list of drives and the volume is selected.
