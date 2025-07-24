@@ -10,6 +10,7 @@
 ;;; `screentowindow_params` (with screen x/y matching event x/y)
 ;;; `findwindow_params` (with x/y matching event x/y)
 ;;; `findcontrol_params` (with x/y matching event x/y)
+;;; `findcontrolex_params` (with x/y matching event x/y)
 ;;; `findicon_params` (with x/y matching event x/y)
 ;;; `beginupdate_params` (with matching event window_id)
 ;;; ============================================================
@@ -116,6 +117,16 @@ which_part      .byte
 END_PARAM_BLOCK
 .assert findcontrol_params::mousex = event_params::xcoord, error, "param mismatch"
 .assert findcontrol_params::mousey = event_params::ycoord, error, "param mismatch"
+
+PARAM_BLOCK findcontrolex_params, *+1
+mousex          .word
+mousey          .word
+which_ctl       .byte
+which_part      .byte
+window_id       .byte
+END_PARAM_BLOCK
+.assert findcontrolex_params::mousex = event_params::xcoord, error, "param mismatch"
+.assert findcontrolex_params::mousey = event_params::ycoord, error, "param mismatch"
 
 PARAM_BLOCK findicon_params, *+1
 mousex          .word

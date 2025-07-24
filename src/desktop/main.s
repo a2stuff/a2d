@@ -470,7 +470,9 @@ offset_table:
         bne     not_desktop
 
         ;; Click on desktop
-        copy8   #0, findwindow_params::window_id
+        lda     #0
+        sta     clicked_window_id
+        sta     findwindow_params::window_id
         ITK_CALL IconTK::FindIcon, event_params::coords
         lda     findicon_params::which_icon
         jne     _IconClick
@@ -507,14 +509,7 @@ not_desktop:
         jmp     MenuDispatch
 
 not_menu:
-        pha                     ; A = MGTK::Area::*
-
-        ;; Activate if needed
-        lda     findwindow_params::window_id
-        jsr     ActivateWindow  ; no-op if already active
-
-        pla                     ; A = MGTK::Area::*
-        jsr     dispatch_click
+        jsr     window_click
 
         lda     selected_icon_count
     IF_ZERO
@@ -528,9 +523,16 @@ not_menu:
     END_IF
         rts
 
-dispatch_click:
+window_click:
         cmp     #MGTK::Area::content
         beq     _ContentClick
+
+        pha                     ; A = MGTK::Area::*
+        ;; Activate if needed
+        lda     findwindow_params::window_id
+        jsr     ActivateWindow  ; no-op if already active
+        pla                     ; A = MGTK::Area::*
+
         cmp     #MGTK::Area::dragbar
         jeq     DoWindowDrag
         cmp     #MGTK::Area::grow_box
@@ -542,24 +544,32 @@ dispatch_click:
 ;;; --------------------------------------------------
 
 .proc _ContentClick
-        MGTK_CALL MGTK::FindControl, findcontrol_params
+        lda     findwindow_params::window_id
+        sta     clicked_window_id
+        sta     findcontrolex_params::window_id
+
+        MGTK_CALL MGTK::FindControlEx, findcontrolex_params
         lda     findcontrol_params::which_ctl
 
         .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
     IF_ZERO
         ;; Ignore clicks in the header area
-        copy8   active_window_id, screentowindow_params::window_id
+        copy8   clicked_window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowy
         cmp     #kWindowHeaderHeight
-        RTS_IF_LT
+      IF_LT
+        jmp     _ActivateClickedWindow ; no-op if already active
+      END_IF
 
-        copy8   active_window_id, findicon_params::window_id
+        ;; On an icon?
+        copy8   clicked_window_id, findicon_params::window_id
         ITK_CALL IconTK::FindIcon, findicon_params
         lda     findicon_params::which_icon
         jne     _IconClick
 
         ;; Not an icon - maybe a drag?
+        jsr     _ActivateClickedWindow ; no-op if already active
         lda     active_window_id
         jmp     DragSelect
     END_IF
@@ -567,12 +577,15 @@ dispatch_click:
         ;; --------------------------------------------------
 
         cmp     #MGTK::Ctl::dead_zone
-        RTS_IF_EQ
+        jeq     _ActivateClickedWindow ; no-op if already active
 
         cmp     #MGTK::Ctl::vertical_scroll_bar
     IF_EQ
         ;; Vertical scrollbar
-        lda     active_window_id
+        lda     clicked_window_id
+        cmp     active_window_id
+        jne     ActivateWindow
+
         jsr     GetWindowPtr
         stax    $06
         ldy     #MGTK::Winfo::vscroll
@@ -619,7 +632,10 @@ dispatch_click:
     END_IF
 
         ;; Horizontal scrollbar
-        lda     active_window_id
+        lda     clicked_window_id
+        cmp     active_window_id
+        jne     ActivateWindow
+
         jsr     GetWindowPtr
         stax    $06
         ldy     #MGTK::Winfo::hscroll
@@ -729,7 +745,8 @@ bail:   return  #$FF            ; high bit set = not repeating
 
         ;; Modifier down - remove from selection
         lda     findicon_params::which_icon
-        jmp     UnhighlightAndDeselectIcon ; deselect, nothing further
+        jsr     UnhighlightAndDeselectIcon
+        jmp     _ActivateClickedWindow ; no-op if already active
 
         ;; Double click or drag?
 :       jmp     check_double_click
@@ -747,7 +764,8 @@ not_selected:
         cmp     selected_window_id
         bne     replace_selection
         lda     findicon_params::which_icon
-        jmp     AddIconToSelection ; select, nothing further
+        jsr     AddIconToSelection
+        jmp     check_double_click
 
         ;; Replace selection with clicked icon
 replace_selection:
@@ -761,7 +779,10 @@ check_double_click:
         COPY_STRUCT MGTK::Point, event_params::coords, drag_drop_params::coords
 
         jsr     DetectDoubleClick
-        jpl     CmdOpenFromDoubleClick
+    IF_NC
+        jsr     _ActivateClickedWindow ; no-op if already active
+        jmp     CmdOpenFromDoubleClick
+    END_IF
 
         ;; --------------------------------------------------
         ;; Drag of icon
@@ -776,13 +797,19 @@ check_double_click:
         RTS_IF_EQ
 
         cmp     #IconTK::kDragResultNotADrag
-        beq     _CheckRenameClick
+    IF_EQ
+        jsr     _ActivateClickedWindow ; no-op if already active
+        jmp     _CheckRenameClick
+    END_IF
 
         ;; ----------------------------------------
 
         cmp     #IconTK::kDragResultMove
     IF_EQ
         jsr     RedrawSelectedIcons
+
+        jsr     _ActivateClickedWindow ; no-op if already active
+
         lda     selected_window_id
         RTS_IF_ZERO
 
@@ -804,6 +831,8 @@ check_double_click:
     IF_EQ
         lda     selected_window_id
         RTS_IF_ZERO
+
+        jsr     _ActivateClickedWindow
 
         ;; File drop on same window, but with modifier(s) down so not a move
 
@@ -941,6 +970,14 @@ ret:    rts
         and     #$7F            ; mask off window number
         jmp     UpdateActivateAndRefreshWindow
 .endproc ; _PerformPostDropUpdates
+
+
+.proc _ActivateClickedWindow
+        window_id := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jmp     ActivateWindow
+.endproc
+clicked_window_id := _ActivateClickedWindow::window_id
 
 .endproc ; HandleClick
 

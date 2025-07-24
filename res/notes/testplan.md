@@ -80,7 +80,7 @@
 * Launch DeskTop. Open a window for a volume icon. Special > Check All Drives. Verify that all windows close, and that volume icons are correctly updated.
 * Launch DeskTop. Special > Check All Drives. Verify that no error is shown.
 
-* Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double click on B. Verify that the existing B window activates.
+* Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double-click on B. Verify that the existing B window activates.
 
 * Launch DeskTop. Open a volume window containing a folder. Open the folder window. Note that the folder icon is dimmed. Close the volume window. Open the volume window again. Verify that the folder icon is dimmed.
 * Launch DeskTop. Open a volume window. In the volume window, create a new folder F1 and open it. Note that the F1 icon is dimmed. In the volume window, create a new folder F2. Verify that the F1 icon is still dimmed.
@@ -164,6 +164,18 @@
   * Launch DeskTop. Open a window. Hold modifier and double-click on a non-selected file icon. Verify that it highlights then unhighlights, and does not open.
   * Launch DeskTop. Open a window. Select a file icon. Wait a few seconds for the double-click timer to expire. Hold modifier and double-click the selected file icon. Verify that it unhighlights then highlights, and does not open.
   * Launch DeskTop. Open a volume window. Hold modifier, and drag-select icons in the window. Release the modifier. Verify that the volume icon is no longer selected. Click an empty area in the window to clear selection. Verify that the selection in the window clears, and that the volume icon becomes selected.
+  * Launch DeskTop. Open a volume window. Select a folder icon. Hold modifier, and double-click another folder icon. Verify that both folders are opened.
+
+* Launch DeskTop. Open two windows containing file icons. Clear selection by clicking on the desktop. Run these cases:
+  * Click on an icon in the inactive window. Verify that the icon highlights on mouse down, and the window activates on mouse up.
+  * Drag an icon within in the inactive window. Verify that the icon moves and the window does not activate until mouse-up.
+  * Drag an icon from the inactive window to a volume icon that does not have an open window. Verify that the active window remains active.
+  * Open a volume icon so a third window appears. Click the first window to activate it. Drag an icon from the second window to the volume icon. Verify that the third window activates.
+
+* Launch DeskTop. Open two windows containing file icons. Clear selection by clicking on the desktop. Repeat the following cases with these modifiers: Open-Apple, Shift (on a IIgs), Shift (on a Platinum IIe):
+  * Select an icon. Activate the other window by clicking on the title bar. Hold modifier and click another icon in the inactive window. Verify that the icon highlights on mouse down, and the window activates on mouse up, and both icons are selected.
+  * Select an icon. Activate the other window by clicking on the title bar. Hold modifier and click the selected icon in the inactive window. Verify that the icon unhighlights and the window activates on mouse down.
+  * Select an icon. Activate the other window by clicking on the title bar. Hold modifier and drag another icon within the inactive window. Verify that the icon highlights and both icons are dragged, and that the window activates on mouse down.
 
 * Launch DeskTop. Click on a volume icon. Hold Solid-Apple and click on a different volume icon. Verify that selection changes to the second icon.
 * Launch DeskTop. Open a volume containing files. Click on a file icon. Hold Solid-Apple and click on a different file icon. Verify that selection changes to the second icon.
@@ -508,12 +520,13 @@
   * Drag a file icon in B onto C while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
   * Drag a file icon in B onto D while holding Apple to copy it. Verify that D activates and refreshes, and that D's item count/used/free numbers update. Click on B. Verify that B's used/free numbers update.
 
-* Drag a single file icon and drop it within the same window. Verify the icon is moved.
-* Drag multiple file icons and drop them within the same window. Verify the icons are moved.
-* Drag a single file icon and drop it within the same window while holding either Open-Apple or Solid-Apple. Verify the icon is duplicated.
-* Drag multiple file icons and drop them within the same window while holding either Open-Apple or Solid-Apple. Verify nothing happens.
-* Drag a single file icon and drop it within the same window while both Open-Apple and Solid-Apple. Verify nothing happens.
-* Drag multiple file icons and drop them within the same window while holding both Open-Apple and Solid-Apple. Verify nothing happens.
+* Repeat the following in an active and inactive window. In the inactive window case, verify that at the end of the test that the window is activated.
+  * Drag a single file icon and drop it within the same window. Verify the icon is moved.
+  * Drag multiple file icons and drop them within the same window. Verify the icons are moved.
+  * Drag a single file icon and drop it within the same window while holding either Open-Apple or Solid-Apple. Verify the icon is duplicated.
+  * Drag multiple file icons and drop them within the same window while holding either Open-Apple or Solid-Apple. Verify nothing happens.
+  * Drag a single file icon and drop it within the same window while both Open-Apple and Solid-Apple. Verify nothing happens.
+  * Drag multiple file icons and drop them within the same window while holding both Open-Apple and Solid-Apple. Verify nothing happens.
 
 * Launch DeskTop. Find a folder containing a file where the folder and file's creation dates (File > Get Info) differ. Copy the folder. Select the file in the copied folder. File > Get Info. Verify that the file creation and modification dates match the original.
 * Launch DeskTop. Find a folder containing files and folders. Copy the folder to another volume. Using File > Get Info, compare the source and destination folders and files (both the top level folder and nested folders). Verify that the creation and modification dates match the original.
