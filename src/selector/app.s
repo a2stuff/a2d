@@ -1578,7 +1578,15 @@ fail:   jmp     ClearSelectedIndex
 
 check_type:
         copy8   #0, INVOKER_BITSY_COMPAT
+
         lda     file_info_params::file_type
+        cmp     #FT_LINK
+    IF_EQ
+        jsr     ReadLinkFile
+        bcs     err
+        bcc     retry
+    END_IF
+
         cmp     #FT_BASIC
         bne     not_basic
         jsr     CheckBasicSystem
@@ -1603,7 +1611,7 @@ not_basic:
     END_IF
 
         ;; Don't know how to invoke
-        lda     #AlertID::selector_unable_to_run
+err:    lda     #AlertID::selector_unable_to_run
         jsr     ShowAlert
         jmp     ClearSelectedIndex
 
@@ -1669,14 +1677,67 @@ check_path:
 
 ;;; ============================================================
 
+;;; Inputs: `INVOKER_PREFIX` has path to LNK file
+;;; Output: C=0, `INVOKER_PREFIX` has target on success
+;;;         C=1 on error
+
+.proc ReadLinkFile
+        read_buf := $800
+        io_buf := $1C00
+
+        MLI_CALL OPEN, open_params
+        bcs     err
+        lda     open_params__ref_num
+        sta     read_params__ref_num
+        sta     close_params__ref_num
+        MLI_CALL READ, read_params
+        php
+        MLI_CALL CLOSE, close_params
+        plp
+        bcs     err
+
+        lda     read_params__trans_count
+        cmp     #kLinkFilePathLengthOffset
+        bcc     err
+
+        ldx     #kCheckHeaderLength-1
+:       lda     read_buf,x
+        cmp     check_header,x
+        bne     err
+        dex
+        bpl     :-
+
+        COPY_STRING read_buf + kLinkFilePathLengthOffset, INVOKER_PREFIX
+        clc
+        rts
+
+err:    sec
+        rts
+
+check_header:
+        .byte   kLinkFileSig1Value, kLinkFileSig2Value, kLinkFileCurrentVersion
+        kCheckHeaderLength = * - check_header
+
+        DEFINE_OPEN_PARAMS open_params, INVOKER_PREFIX, io_buf
+        open_params__ref_num := open_params::ref_num
+        DEFINE_READ_PARAMS read_params, read_buf, kLinkFileMaxSize
+        read_params__ref_num := read_params::ref_num
+        read_params__trans_count := read_params::trans_count
+        DEFINE_CLOSE_PARAMS close_params
+        close_params__ref_num := close_params::ref_num
+
+.endproc ; ReadLinkFile
+
+;;; ============================================================
+
 kBSOffset       = 5             ; Offset of 'x' in BASIx.SYSTEM
 str_basix_system:
         PASCAL_STRING "BASIx.SYSTEM"
 
 ;;; --------------------------------------------------
-;;; Check `src_path_buf`'s ancestors to see if the desired interpreter
+;;; Check `INVOKER_PREFIX`'s ancestors to see if the desired interpreter
 ;;; (BASIC.SYSTEM or BASIS.SYSTEM) is present.
-;;; Input: `src_path_buf` set to target path
+;;; Input: `INVOKER_PREFIX` set to target path
 ;;; Output: zero if found, non-zero if not found
 
 .proc CheckBasixSystemImpl

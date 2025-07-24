@@ -1251,6 +1251,12 @@ Prerequisite: In DeskTop, Apple Menu > Control Panels > Options, check Show Shor
 
 * Configure a system with DeskTop booting from slot 7 and a floppy drive in slot 6. Place a ProDOS formatted disk without `PRODOS` in the floppy drive. Invoke `DESKTOP.SYSTEM`. While the "Starting Shortcuts..." progress bar is displayed, hold down Apple and 6. Verify that when the progress bar disappears the screen clears completely to black and that the message "UNABLE TO LOAD PRODOS" is displayed properly in 40-column mode.
 
+For the following cases, start by using DeskTop to create an alias for a program supported by Shortcuts (e.g. `BASIC.SYSTEM`).
+* Launch Shortcuts. File > Run a Program.... Select the alias. Verify that the program starts.
+* Rename the alias's target. Launch Shortcuts. File > Run a Program.... Select the alias. Verify that an alert is shown.
+* Create a shortcut for the alias. Launch Shortcuts. Invoke the shortcut. Verify that the program starts.
+* Create a shortcut for the alias. Rename the alias's target. Launch Shortcuts. Invoke the shortcut. Verify that an alert is shown.
+* Create a shortcut for the alias. Delete the alias. Launch Shortcuts. Invoke the shortcut. Verify that the program starts.
 
 # Disk Copy
 

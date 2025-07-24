@@ -54,6 +54,7 @@ Project Page: https://github.com/a2stuff/a2d
 
 * Prevent crash after alert is shown from File > Run a Program... ([#832](https://github.com/a2stuff/a2d/issues/832))
 * Ellipsify long paths in "Copying to RAMCard..." dialog. ([#867](https://github.com/a2stuff/a2d/issues/867))
+* Support launching aliases. ([#880](https://github.com/a2stuff/a2d/issues/880))
 
 ### Disk Copy
 
