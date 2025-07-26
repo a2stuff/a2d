@@ -220,18 +220,16 @@ Result codes (in A):
 
 ### `IconTK::EraseIcon` ($0B)
 
-Erases the specified icon by number.
+Erases the specified icon by number. Any overlapping icons are redrawn.
 
 Parameters:
 ```
 .byte       icon            Icon number
 ```
 
-No error checking is done, no result codes. If the icon is in a window, it must be in the active window.
+No error checking is done, no result codes.
 
-Note that unlike `IconTK::DrawIconRaw`, this call does _not_ require a GrafPort to be set by the caller.
-
-Icons on the desktop are clipped against overlapping windows.
+Note that unlike `IconTK::DrawIconRaw`, this call does _not_ require a GrafPort to be set by the caller. Icons in windows are clipped to the visible portion of the window (including overlapping windows). Icons on the desktop are clipped against overlapping windows.
 
 ### `IconTK::GetIconBounds` ($0C)
 
