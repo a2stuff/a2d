@@ -654,7 +654,7 @@ type_icons_table:
 ;;; * IconTK::HighlightIcon
 ;;; * IconTK::IconInRect (with following `tmp_rect`)
 ;;; * IconTK::DrawIcon
-;;; * IconTK::RemoveIcon
+;;; * IconTK::FreeIcon
 ;;; * IconTK::UnhighlightIcon
 ;;; * IconTK::GetIconBounds (with following `tmp_rect`)
 ;;; * IconTK::GetRenameRect (with following `tmp_rect`)

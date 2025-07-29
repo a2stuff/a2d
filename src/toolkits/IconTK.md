@@ -2,13 +2,9 @@
 
 This was written specifically for DeskTop (unlike the [MouseGraphics ToolKit](MGTK.md)), but is isolated from the rest of the application logic, depending only on MGTK.
 
-* An internal table of icon number &rarr; IconEntry is maintained.
-* An internal list of highlighted (selected) icons is maintained.
-* Window-centric calls assume a GrafPort for the window is already the current GrafPort.
-
 Definitions are in `icontk.inc`.
 
-Client code must define `IconTKEntry` (referencing the instance's `icon_toolkit::IconTKEntry`) and can then use the `ITK_CALL` macro, with the typical call number / parameter address supplied. The code must be instantiated in the same memory bank as MGTK so it can make calls and reference resources directly.
+Client code must define `ITKEntry` (referencing the instance's `icon_toolkit::ITKEntry`) and can then use the `ITK_CALL` macro, with the typical call number / parameter address supplied. The code must be instantiated in the same memory bank as MGTK so it can make calls and reference resources directly.
 
 The zero page addresses $06..$09 are preserved across calls.
 
@@ -71,7 +67,7 @@ Parameters:
 * `bufsize` is the size of the above buffer
 * `a_typemap` is a table mapping (via index) from `IconEntry::type` to `IconResource`
 
-Since the buffer is only used during modal drag operations, it is safe to use the same "save area" given to MGTK, which is used only in modal menu operations. $D00 is enough for the maximum number of supported icons.
+Since the buffer is only used during modal drag operations, it is safe to use the same "save area" given to MGTK, which is used only in modal menu operations. $D00 bytes is enough for the maximum number of supported icons.
 
 ### `IconTK::AllocIcon` ($01)
 
@@ -83,11 +79,11 @@ Parameters:
 .addr       entry           (out) Address of IconEntry
 ```
 
-Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc. `RemoveIcon` will de-allocate the icon.
+Note that it does not paint the icon. Callers must make a subsequent call to `IconTK::DrawIcon`, etc. `IconTK::FreeIcon` will deallocate the icon.
 
 ### `IconTK::HighlightIcon` ($02)
 
-Highlights (selects) an icon by number.
+Highlights (selects) the specified icon.
 
 Parameters:
 ```
@@ -98,7 +94,7 @@ Note that it does not paint the icon. Callers must make a subsequent call to `Ic
 
 ### `IconTK::DrawIconRaw` ($03)
 
-Draws an icon by number. No clipping is done.
+Draws the specified icon. No clipping is done.
 
 Parameters:
 ```
@@ -109,27 +105,27 @@ No error checking is done, no result codes.
 
 The appropriate GrafPort must be selected, and the icons must be mapped into appropriate coordinates (i.e. mapped from screen space into window space). Icons are not clipped against overlapping windows. (See `IconTK::DrawIcon`)
 
-Due to the lack clipping, this call is faster than `IconTK::DrawIcon`, and should be used if possible when multiple icons are being updated.
+Due to the lack clipping, this call is faster than `IconTK::DrawIcon`, and should be used if possible when multiple icons are being updated in the top-most window.
 
 
-### `IconTK::RemoveIcon` ($04)
+### `IconTK::FreeIcon` ($04)
 
-Removes an icon by number.
+Deallocates the specified icon.
 
 Parameters:
 ```
 .byte       icon            Icon number
 ```
 
-Note that it does not erase the icon. Callers must make a previous call to `IconTK::EraseIcon`.
+Note that it does not erase the icon. Callers must make a prior call to `IconTK::EraseIcon`.
 
 Result codes (in A):
 * 0 = success
 * 1 = icon not found (`DEBUG` only)
 
-### `IconTK::RemoveAll` ($05)
+### `IconTK::FreeAll` ($05)
 
-Removes all icons from specified window (0 = desktop). No redrawing is done.
+Deallocates all icons in the specified window (0 = desktop). No redrawing is done.
 
 Parameters:
 ```
@@ -141,7 +137,7 @@ Result codes (in A):
 
 ### `IconTK::FindIcon` ($06)
 
-Find the icon number at the given coordinates.
+Find the icon at the given coordinates, if any.
 
 Parameters:
 ```
@@ -193,20 +189,20 @@ Note that it does not paint the icon. Callers must make a subsequent call to `Ic
 
 ### `IconTK::DrawAll` ($09)
 
-Draws the icons in the selected window. No clipping is done.
+Draws all the icons in the specified window. No clipping is done.
 
 Parameters:
 ```
 .byte       window_id       Window ID, or 0 for desktop
 ```
 
-For the desktop, this call should only be performed in response to an MGTK `update` event with `window_id` of 0, indicating that the desktop needs to be repainted. It assumes that overlapping windows will be repainted on top so no additional clipping is done beyond the active grafport.
+For the desktop, this call should only be performed in response to an MGTK `update` event with `window_id` of 0, indicating that the desktop needs to be repainted. It assumes that overlapping windows will be repainted on top so no additional clipping is done beyond the active GrafPort.
 
-For overlapping windows, the active grafport must be set up correctly to clip to the window's content area, excluding the header, scrollbars and grow box.
+For overlapping windows, the active GrafPort must be set up correctly to clip to the window's content area, excluding the header, scrollbars and grow box.
 
 ### `IconTK::IconInRect` ($0A)
 
-Tests to see if the given icon (by number) overlaps the passed rect.
+Tests if the specified icon overlaps the passed rect.
 
 Parameters:
 ```
@@ -220,7 +216,7 @@ Result codes (in A):
 
 ### `IconTK::EraseIcon` ($0B)
 
-Erases the specified icon by number. Any overlapping icons are redrawn.
+Erases the specified icon; any overlapping icons are redrawn. The operation is clipped to the containing window (if relevant) and against overlapping windows.
 
 Parameters:
 ```
@@ -229,11 +225,11 @@ Parameters:
 
 No error checking is done, no result codes.
 
-Note that unlike `IconTK::DrawIconRaw`, this call does _not_ require a GrafPort to be set by the caller. Icons in windows are clipped to the visible portion of the window (including overlapping windows). Icons on the desktop are clipped against overlapping windows.
+Like `IconTK::DrawIcon` (but unlike `IconTK::DrawIconRaw`) this call does _not_ require a GrafPort to be set by the caller. Icons in windows are clipped to the visible portion of the window (including overlapping windows). Icons on the desktop are clipped against overlapping windows.
 
 ### `IconTK::GetIconBounds` ($0C)
 
-Populates the `bounds` rectangle with a bounding rect surrounding the icon bitmap and label.
+Populates the `bounds` rectangle with a bounding rect surrounding the bitmap and label of the specified icon.
 
 Parameters:
 ```
@@ -243,7 +239,7 @@ MGTK::Rect  bounds          (out) Bounding rectangle
 
 ### `IconTK::DrawIcon` ($0D)
 
-Redraws an icon by number, into any window (or the desktop), with appropriate clipping.
+Draws the specified icon. The icon is clipped to the containing window (if relevant) and against overlapping windows.
 
 Parameters:
 ```
@@ -259,7 +255,7 @@ Due to the clipping, this call is slower than `IconTK::DrawIconRaw`, and should 
 
 ### `IconTK::GetIconEntry` ($0E)
 
-Given an icon number, returns the address of its `IconEntry` struct.
+Returns the address of the specified icon's `IconEntry` struct.
 
 Parameters:
 ```
@@ -272,8 +268,7 @@ No error checking is done, no result codes.
 
 ### `IconTK::GetRenameRect` ($0F)
 
-Given an icon number, returns the maximum bounds of the name, used
-for positioning a rename entry field.
+Returns the maximum bounds of the name of the specified icon; used for positioning a rename entry field.
 
 Parameters:
 ```
@@ -286,7 +281,7 @@ No error checking is done, no result codes.
 
 ### `IconTK::GetBitmapRect` ($10)
 
-Populates the `bounds` rectangle with a bounding rect surrounding just the icon bitmap.
+Populates the `bounds` rectangle with a bounding rect surrounding just the bitmap of the specified icon.
 
 Parameters:
 ```

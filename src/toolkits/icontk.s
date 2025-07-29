@@ -76,8 +76,8 @@ jump_table_low:
         .byte   <AllocIconImpl
         .byte   <HighlightIconImpl
         .byte   <DrawIconRawImpl
-        .byte   <RemoveIconImpl
-        .byte   <RemoveAllImpl
+        .byte   <FreeIconImpl
+        .byte   <FreeAllImpl
         .byte   <FindIconImpl
         .byte   <DragHighlightedImpl
         .byte   <UnhighlightIconImpl
@@ -95,8 +95,8 @@ jump_table_high:
         .byte   >AllocIconImpl
         .byte   >HighlightIconImpl
         .byte   >DrawIconRawImpl
-        .byte   >RemoveIconImpl
-        .byte   >RemoveAllImpl
+        .byte   >FreeIconImpl
+        .byte   >FreeAllImpl
         .byte   >FindIconImpl
         .byte   >DragHighlightedImpl
         .byte   >UnhighlightIconImpl
@@ -433,17 +433,17 @@ done:   rts
 .endproc ; HighlightIconImpl
 
 ;;; ============================================================
-;;; RemoveIcon
+;;; FreeIcon
 
 ;;; param is pointer to icon number
 
-.proc RemoveIconImpl
+.proc FreeIconImpl
         params := $06
-.struct RemoveIconParams
+.struct FreeIconParams
         icon    .byte
 .endstruct
 
-        ldy     #RemoveIconParams::icon
+        ldy     #FreeIconParams::icon
         lda     (params),y
 
 .ifdef DEBUG
@@ -454,15 +454,15 @@ done:   rts
 :
 .endif ; DEBUG
 
-        jsr     RemoveIconCommon ; A = icon id
+        jsr     FreeIconCommon ; A = icon id
         return  #0
-.endproc ; RemoveIconImpl
+.endproc ; FreeIconImpl
 
 ;;; ============================================================
 ;;; Remove the icon
 ;;; Inputs: A = icon id
 
-.proc RemoveIconCommon
+.proc FreeIconCommon
         pha                     ; A = icon id
 
         ;; Find index
@@ -485,7 +485,7 @@ done:   rts
         ;; Mark it as free
         pla                     ; A = icon id
         jmp     FreeIcon
-.endproc ; RemoveIconCommon
+.endproc ; FreeIconCommon
 
 ;;; ============================================================
 ;;; EraseIcon
@@ -505,17 +505,17 @@ done:   rts
 .endproc ; EraseIconImpl
 
 ;;; ============================================================
-;;; RemoveAll
+;;; FreeAll
 
 ;;; param is window id (0 = desktop)
 
-.proc RemoveAllImpl
+.proc FreeAllImpl
         params := $06
-.struct RemoveAllParams
+.struct FreeAllParams
         window_id       .byte
 .endstruct
 
-        ldy     #RemoveAllParams::window_id
+        ldy     #FreeAllParams::window_id
         lda     (params),y
         sta     window_id
 
@@ -538,10 +538,10 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         ldx     count
         lda     icon_list,x
-        jsr     RemoveIconCommon ; A = icon id
+        jsr     FreeIconCommon ; A = icon id
 
         jmp     loop
-.endproc ; RemoveAllImpl
+.endproc ; FreeAllImpl
 
 ;;; ============================================================
 ;;; FindIcon

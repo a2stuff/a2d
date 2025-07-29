@@ -1005,7 +1005,7 @@ iloop:  cpx     cached_window_entry_count
         pha
         lda     cached_window_entry_list,x
         sta     icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::DrawIcon, icon_param
         pla
         tax
         inx

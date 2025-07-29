@@ -2835,7 +2835,7 @@ start:
         MLI_CALL CLOSE, close_params
 
         ;; Successful - start to clean up
-        ITK_CALL IconTK::RemoveAll, 0 ; volume icons
+        ITK_CALL IconTK::FreeAll, 0 ; volume icons
         MGTK_CALL MGTK::CloseAll
         MGTK_CALL MGTK::SetZP1, setzp_params_preserve
 
@@ -3558,7 +3558,7 @@ RefreshView := RefreshViewImpl::entry3
         sbc     cached_window_entry_count
         sta     icon_count
 
-        ITK_CALL IconTK::RemoveAll, cached_window_id
+        ITK_CALL IconTK::FreeAll, cached_window_id
 
         FALL_THROUGH_TO FreeCachedWindowIcons
 .endproc ; RemoveAndFreeCachedWindowIcons
@@ -5011,8 +5011,8 @@ loop:   lda     cached_window_entry_list,x
         pha
         lda     cached_window_entry_list,x
         sta     icon_param
-        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
-        ITK_CALL IconTK::RemoveIcon, icon_param
+        ITK_CALL IconTK::EraseIcon, icon_param
+        ITK_CALL IconTK::FreeIcon, icon_param
         lda     icon_param
         jsr     FreeDesktopIconPosition
         dec     cached_window_entry_count
@@ -5069,7 +5069,7 @@ cont:   txa
         beq     next
 
         sta     icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::DrawIcon, icon_param
 
 next:   pla
         tax
@@ -5190,8 +5190,8 @@ not_in_map:
         dec     icon_count
         lda     icon_param
         jsr     FreeDesktopIconPosition
-        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED (desktop)
-        ITK_CALL IconTK::RemoveIcon, icon_param
+        ITK_CALL IconTK::EraseIcon, icon_param
+        ITK_CALL IconTK::FreeIcon, icon_param
 
 :       lda     cached_window_entry_count
         sta     previous_icon_count
@@ -5249,7 +5249,7 @@ add_icon:
         dex
         lda     cached_window_entry_list,x
         sta     icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (desktop)
+        ITK_CALL IconTK::DrawIcon, icon_param
 
 :       jmp     StoreWindowEntryTable
 
@@ -5747,7 +5747,7 @@ iloop:  cpx     cached_window_entry_count
 
         lda     window_id
     IF_ZERO
-        ITK_CALL IconTK::DrawIcon, icon_param ; CHECKED (drag select)
+        ITK_CALL IconTK::DrawIcon, icon_param
     ELSE
         ITK_CALL IconTK::DrawIconRaw, icon_param ; CHECKED (drag select)
     END_IF
@@ -12576,7 +12576,7 @@ finish: jsr     _DialogClose
         sta     icon_param
 
         ;; Erase the icon, in case new name is shorter
-        ITK_CALL IconTK::EraseIcon, icon_param ; CHECKED - takes care of ports
+        ITK_CALL IconTK::EraseIcon, icon_param
 
         ;; Copy new string in
         icon_name_ptr := $06
