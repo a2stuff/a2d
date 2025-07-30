@@ -925,7 +925,6 @@ str_from_int:                   ; populated by IntToString
 icon:
 target: .byte   0
         DEFINE_POINT coords, 0, 0
-fixed:  .byte   0
 .endparams
 
 ;;; ============================================================

@@ -24,7 +24,7 @@ This defines an icon instance.
                 bit 4 = small icon
                 bit 5 = not valid drop source flag (i.e. trash)
                 bit 6 = drop target flag (trash, folder, dir)
-                bit 7 = (unused)
+                bit 7 = fixed location
 .word iconx     (pixels)
 .word icony     (pixels)
 .type type      (type, mapped to IconResource)
@@ -158,7 +158,6 @@ Parameters:
 .byte       param           (in) icon number; (out) target
 .word       mousex          Click x location (screen coordinates)
 .word       mousey          Click y location (screen coordinates)
-.byte       fixed           High bit set if layout fixed (i.e. list view)
 ```
 
 Call with set `param` to the specific icon being dragged, and the event mouse coordinates.

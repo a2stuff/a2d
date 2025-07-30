@@ -75,7 +75,7 @@ label   := *
 ;;;                      bit 4 = small icon
 ;;;                      bit 5 = not valid drop source flag (i.e. trash)
 ;;;                      bit 6 = drop target flag (trash, folder, dir)
-;;;                      bit 7 = (unused)
+;;;                      bit 7 = fixed location
 ;;;      .word iconx     (pixels)
 ;;;      .word icony     (pixels)
 ;;;      .byte type      mapped to IconResource (see InitToolKit)
@@ -102,6 +102,7 @@ kIconEntryStateDimmed      = %10000000
 kIconEntryStateHighlighted = %01000000
 
 ;;; Masks for IconEntry::win_flags
+kIconEntryFlagsFixed            = %10000000
 kIconEntryFlagsDropTarget       = %01000000
 kIconEntryFlagsNotDropSource    = %00100000
 kIconEntryFlagsSmall            = %00010000

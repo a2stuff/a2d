@@ -422,6 +422,7 @@ done:   rts
         ;; Pointer to IconEntry
         ldy     #HighlightIconParams::icon
         lda     (params),y
+        pha                     ; A = icon
         ptr := $06              ; Overwrites params
         jsr     GetIconState    ; sets `ptr`/$06 too
 
@@ -429,7 +430,8 @@ done:   rts
         ora     #kIconEntryStateHighlighted
         sta     (ptr),y
 
-        rts
+        pla                     ; A = icon
+        jmp     MaybeMoveIconToTop
 .endproc ; HighlightIconImpl
 
 ;;; ============================================================
@@ -463,14 +465,29 @@ done:   rts
 ;;; Inputs: A = icon id
 
 .proc FreeIconCommon
-        pha                     ; A = icon id
+        ;; Remove it
+        jsr     RemoveIconFromList ; returns A unchanged
+        dec     num_icons
+
+        ;; Mark it as free
+        jmp     FreeIcon
+.endproc ; RemoveIconCommon
+
+;;; ============================================================
+
+;;; Remove icon from `icon_list` and compact list, but don't
+;;; modify `num_icons`; the last entry of the list will be garbage.
+;;; Input: A = icon
+;;; Output: A unchanged, X = `num_icons`
+;;; Assert: icon is in `icon_list`
+.proc RemoveIconFromList
+        pha                     ; A = icon
 
         ;; Find index
-        ldx     #0
-:       cmp     icon_list,x
-        beq     :+
-        inx
-        bne     :-              ; always
+        ldx     num_icons
+:       dex
+        cmp     icon_list,x
+        bne     :-
 
         ;; Shift items down
 :       lda     icon_list+1,x
@@ -479,13 +496,44 @@ done:   rts
         cpx     num_icons
         bne     :-
 
-        ;; Remove it
-        dec     num_icons
+        pla                     ; A = icon
+        rts
+.endproc ; RemoveIconFromList
 
-        ;; Mark it as free
-        pla                     ; A = icon id
-        jmp     FreeIcon
-.endproc ; FreeIconCommon
+;;; ============================================================
+
+;;; Input: A = icon
+;;; Output: Z=0 if fixed, Z=1 if not fixed
+;;; Trashes $06
+.proc IsIconFixed
+        jsr     GetIconPtr
+        stax    $06
+        ldy     #IconEntry::win_flags
+        lda     ($06),y
+        and     #kIconEntryFlagsFixed
+        rts
+.endproc ; IsIconFixed
+
+;;; ============================================================
+
+;;; Move icon to end of `icon_list`, i.e. top of z-order, unless
+;;; it has `kIconEntryFlagsFixed`.
+;;; Input: A = icon
+;;; Trashes $06
+;;; Assert: icon is in `icon_list`
+.proc MaybeMoveIconToTop
+        pha                     ; A = icon
+        jsr     IsIconFixed
+    IF_NOT_ZERO
+        pla                     ; discard
+        rts
+    END_IF
+
+        pla                     ; A = icon
+        jsr     RemoveIconFromList ; returns with A unchanged, X = `num_icons`
+        sta     icon_list-1,x
+        rts
+.endproc ; MoveIconToTop
 
 ;;; ============================================================
 ;;; EraseIcon
@@ -568,40 +616,41 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         MGTK_CALL MGTK::MoveTo, SELF_MODIFIED, moveto_params_addr
 
-        ldx     #0
-loop:   cpx     num_icons
-        bne     :+
-
-        ;; Nothing found
-        ldy     #FindIconParams::result
-        lda     #0
-        sta     (out_params),y
-        rts
+        ldx     num_icons
+        beq     failed
+loop:   dex
+        txa
+        pha
 
         ;; Check the icon
-:       txa
-        pha
         lda     icon_list,x
         jsr     GetIconWin      ; sets `icon_ptr`/$06 too
 
         ;; Matching window?
         window_id := * + 1
         cmp     #SELF_MODIFIED_BYTE
-        bne     :+
+        bne     next            ; nope, ignore
 
         ;; In poly?
         jsr     CalcIconPoly    ; requires `icon_ptr` set
         MGTK_CALL MGTK::InRect, bounding_rect
-        beq     :+              ; nope, skip poly test
+        beq     next            ; nope, skip poly test
 
         MGTK_CALL MGTK::InPoly, poly
         bne     inside          ; yes!
 
+next:
         ;; Nope, next
-:       pla
+        pla
         tax
-        inx
-        bne     loop            ; always
+        bne     loop
+
+failed:
+        ;; Nothing found
+        ldy     #FindIconParams::result
+        lda     #0
+        sta     (out_params),y
+        rts
 
         ;; Found one!
 inside: pla
@@ -620,7 +669,6 @@ inside: pla
 .struct DragHighlightedParams
         icon    .byte
         coords  .tag    MGTK::Point
-        fixed   .byte
 .endstruct
 
         ldy     #DragHighlightedParams::icon
@@ -629,10 +677,6 @@ inside: pla
         .assert DragHighlightedParams::icon = 0, error, "enum mismatch"
         tya
         sta     (params),y
-
-        ldy     #DragHighlightedParams::fixed
-        lda     (params),y
-        sta     fixed
 
         ;; Copy initial coords to `initial_coords` and `last_coords`
         ldy     #DragHighlightedParams::coords + .sizeof(MGTK::Point)-1
@@ -886,8 +930,9 @@ same_window:
         jsr     _CheckRealContentArea
         jcs     exit_canceled   ; don't move
 
-        bit     fixed
-        jmi     exit_canceled   ; don't move
+        lda     last_highlighted_icon
+        jsr     IsIconFixed     ; Z=0 if fixed
+        jne     exit_canceled   ; don't move
 
         ;; --------------------------------------------------
         ;; Probably a move within the same window...
@@ -960,7 +1005,6 @@ exit_canceled:
 
 icon_id:
         .byte   0
-fixed:  .byte   0               ; high bit set if list view
 
         ;; IconTK::HighlightIcon params
         ;; also used as the return value
@@ -1180,6 +1224,7 @@ done:   rts
         ;; Pointer to IconEntry
         ldy     #UnhighlightIconParams::icon
         lda     (params),y
+        pha                     ; A = icon
         ptr := $06              ; Overwrites params
         jsr     GetIconState    ; sets `ptr`/$06 too
 
@@ -1187,7 +1232,8 @@ done:   rts
         and     #AS_BYTE(~kIconEntryStateHighlighted)
         sta     (ptr),y
 
-        rts
+        pla                     ; A = icon
+        jmp     MaybeMoveIconToTop
 .endproc ; UnhighlightIconImpl
 
 ;;; ============================================================

@@ -264,6 +264,8 @@
 * Launch DeskTop. Position a volume icon near the center of the screen. Open the volume icon, and move/size the window to ensure the volume icon is visible. Open a second volume icon, and move/size the window to ensure the first volume icon is visible. Drag a file icon from the second window into the first window. Repeat the drag, and cancel the copy dialog. Verify that after the copy dialog closes, the volume icon is still visible.
 * Launch DeskTop. Position a volume icon near the center of the screen. Open the volume icon, and move/size the window to ensure the volume icon is visible. Drag a file icon to the trash. Verify that after the delete dialog closes, the volume icon is still visible.
 
+* Launch DeskTop. Open two windows. In the first window, position two icons so they overlap. Select the first icon. Verify that it draws "on top" of the other icon. Activate the other window without changing selection. Drag it over the icons. Drag it off the icons. Verify that the selected icon is still "on top". Hold Open-Apple and click the selected icon to deselect it. Verify that it draws "on top" of the other icon. Activate the other window without changing selection. Drag it over the icons. Drag it off the icons. Verify that the previously selected icon is still "on top". Repeat the above tests with the other icon.
+
 
 ## Menus
 

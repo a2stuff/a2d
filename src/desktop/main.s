@@ -788,9 +788,6 @@ check_double_click:
         ;; Drag of icon
 
         copy8   findicon_params::which_icon, drag_drop_params::icon
-        jsr     GetSelectionViewBy
-        .assert DeskTopSettings::kViewByName >= $80, error, "enum mismatch"
-        sta     drag_drop_params::fixed
         ITK_CALL IconTK::DragHighlighted, drag_drop_params
 
         cmp     #IconTK::kDragResultCanceled
@@ -7682,8 +7679,13 @@ L7870:  lda     cached_window_id
         lda     #SELF_MODIFIED_BYTE
     IF_NE
         ;; List View / Small Icon View
+        php
         lda     iconentry_flags
         ora     #kIconEntryFlagsSmall
+        plp
+      IF_NS
+        ora     #kIconEntryFlagsFixed
+      END_IF
         sta     iconentry_flags
 
         lda     icontype_to_smicon_table,y
