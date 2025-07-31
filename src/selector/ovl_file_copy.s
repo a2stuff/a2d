@@ -8,20 +8,16 @@
 
 .scope file_copier
 
+;;; Called with `INVOKER_PREFIX` set to path of entry to copy
 .proc Exec
-        sta     selected_index
         jsr     OpenWindow
 
-        lda     selected_index
-        jsr     app::GetSelectorListPathAddr
         jsr     PrepSrcAndDstPaths
         jsr     EnumerateFiles
         bne     skip
 
         jsr     DrawWindowContent
 
-        lda     selected_index
-        jsr     app::GetSelectorListPathAddr
         jsr     PrepSrcAndDstPaths
         jsr     CopyFiles
 
@@ -31,9 +27,6 @@ skip:
         pla
 
         rts
-
-selected_index:
-        .byte   $00
 .endproc ; Exec
 
 ;;; ============================================================
@@ -841,19 +834,10 @@ loop:   iny
 .endproc ; CopyPathsFromBufsToSrcAndDst
 
 ;;; ============================================================
-;;; Input: A,X = pointer to entry path to copy
+;;; Input: `INVOKER_PREFIX` has path to copy
 
 .proc PrepSrcAndDstPaths
-        ptr := $06
-
-        stax    ptr
-        ldy     #0
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     src_path,y
-        dey
-        bpl     :-
+        COPY_STRING INVOKER_PREFIX, src_path
 
         ldy     src_path
 l2:     lda     src_path,y

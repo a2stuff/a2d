@@ -1489,8 +1489,12 @@ check_entry_flags:
         bmi     use_ramcard_path ; already copied
 
         ;; Need to copy to RAMCard
-        jsr     LoadOverlayCopyDialog
+        path_addr := $06
         lda     selected_index
+        jsr     GetSelectorListPathAddr
+        jsr     CopyPathToInvokerPrefix
+
+        jsr     LoadOverlayCopyDialog ; Trashes in-memory selector list
         jsr     file_copier__Exec
         pha
         jsr     LoadSelectorList
@@ -1536,17 +1540,7 @@ use_entry_path:
 ;;; ============================================================
 ;;; Launch specified path (A,X = path)
 .proc LaunchPath
-        ptr := $06
-
-        ;; Copy path to INVOKER_PREFIX
-        stax    ptr
-        ldy     #$00
-        lda     (ptr),y
-        tay
-:       lda     (ptr),y
-        sta     INVOKER_PREFIX,y
-        dey
-        bpl     :-
+        jsr     CopyPathToInvokerPrefix
 
 retry:
         param_call GetFileInfo, INVOKER_PREFIX
@@ -1674,6 +1668,26 @@ check_path:
         sta     selected_index
 :       rts
 .endproc ; ClearSelectedIndex
+
+;;; ============================================================
+
+;;; Copy path to INVOKER_PREFIX
+;;; Input: A,X = path
+;;; Trashes $06
+.proc CopyPathToInvokerPrefix
+        ptr := $06
+
+        stax    ptr
+        ldy     #$00
+        lda     (ptr),y
+        tay
+:       lda     (ptr),y
+        sta     INVOKER_PREFIX,y
+        dey
+        bpl     :-
+
+        rts
+.endproc ; CopyPathToInvokerPrefix
 
 ;;; ============================================================
 
