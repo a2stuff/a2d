@@ -50,6 +50,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Prevent initiating rename of Trash icon. ([#871](https://github.com/a2stuff/a2d/issues/871))
 * Disallow creating a shortcut for an alias copied to RAMCard.
 * Support dragging from inactive windows. ([#353](https://github.com/a2stuff/a2d/issues/353))
+* Improve rendering of overlapping icons. ([#875](https://github.com/a2stuff/a2d/issues/875))
 
 ### Selector
 
@@ -91,6 +92,7 @@ Project Page: https://github.com/a2stuff/a2d
 * New DA (in Extras): "Screenshot" - saves screenshot file to application directory.
 * New DA (in Extras): "DOS33.Import" - allows importing files from DOS 3.3 disks.
 * New DA (in Control Panels): "Views" - allows setting the default view style.
+* New DA (in Toys): "Lights Out" game.
 
 ### Misc
 
