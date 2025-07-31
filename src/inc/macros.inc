@@ -96,6 +96,16 @@ end:
 .endmacro
 
 ;;; ============================================================
+;;; Pad if necessary to avoid a page boundary
+
+.macro PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY
+    .if .lobyte(*) = $FF
+        .out .sprintf("Padding 1 byte to avoid page boundary at $%04X", *)
+        .res    1
+    .endif
+.endmacro
+
+;;; ============================================================
 ;;; Common patterns
 
 .define AS_BYTE(arg)        (arg) & $FF

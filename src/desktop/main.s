@@ -13816,8 +13816,11 @@ ret:    rts
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
+PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY
 PromptDialogClickHandlerHook:
         .addr   SELF_MODIFIED
+
+PAD_IF_NEEDED_TO_AVOID_PAGE_BOUNDARY
 PromptDialogKeyHandlerHook:
         .addr   SELF_MODIFIED
 
