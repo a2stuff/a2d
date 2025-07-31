@@ -49,7 +49,7 @@
 .define res_string_about_text_line6 "RICHARD DANAIS EN LUC BARTHELET"
 .define res_string_about_text_line7 "s blagodarnost kym: A. GERARD, J. GERBER, P. PAHL, J. BERNARD"
 .define res_string_label_files_remaining "ostawa}i fajlowe: "
-.define res_string_copy_label_status "kopirane:"
+.define res_string_copy_label_status "kopirane: "
 .define res_string_copy_label_from "ot:"
 .define res_string_copy_label_to "kym:"
 .define res_string_move_label_status "premestwane: "
