@@ -55,6 +55,7 @@ JT_BELL:                jmp     Bell                    ; *
 JT_SLOW_SPEED:          jmp     SlowSpeed               ; *
 JT_RESUME_SPEED:        jmp     ResumeSpeed             ; *
 JT_READ_SETTING:        jmp     ReadSetting             ; *
+JT_GET_TICKS:           jmp     GetTickCount            ; *
 
         .assert JUMP_TABLE_LAST = *, error, "Jump table mismatch"
 
@@ -184,6 +185,12 @@ ClearUpdates := ClearUpdatesImpl::clear
 
         PROC_USED_IN_OVERLAY
 .proc SystemTask
+        inc     tick_counter
+        bne     :+
+        inc     tick_counter+1
+        bne     :+
+        inc     tick_counter+2
+
         inc     loop_counter
         inc     loop_counter
         loop_counter := *+1
@@ -198,6 +205,18 @@ ClearUpdates := ClearUpdatesImpl::clear
 :       lda     loop_counter
         rts
 .endproc ; SystemTask
+
+;;; ============================================================
+
+.proc GetTickCount
+        lda     tick_counter
+        ldx     tick_counter+1
+        ldy     tick_counter+2
+        rts
+.endproc ; GetTickCount
+
+tick_counter:
+        .faraddr 0
 
 ;;; ============================================================
 

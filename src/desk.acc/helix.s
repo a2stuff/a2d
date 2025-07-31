@@ -276,11 +276,12 @@ R4:     .byte  0
 .endproc ; Random
 
 .proc InitRand
-        lda #$FF                ; empirically good seed
+        ;; Use current 24-bit tick count as seed
+        JSR_TO_MAIN JUMP_TABLE_GET_TICKS
         sta R1
-        sta R3
         sta R2
-        sta R4
+        stx R3
+        sty R4
         ldx #$20                ; Generate a few random numbers
 InitLoop:
         jsr Random              ; to kick things off

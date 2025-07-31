@@ -49,7 +49,7 @@
 .define res_string_about_text_line6 "Richard Danais e Luc Barthelet"
 .define res_string_about_text_line7 "Grazie a: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
 .define res_string_label_files_remaining "File rimanenti: "
-.define res_string_copy_label_status "Copia: "
+.define res_string_copy_label_status "Copia:"
 .define res_string_copy_label_from "da:"
 .define res_string_copy_label_to "a:"
 .define res_string_move_label_status "Spostamento: "

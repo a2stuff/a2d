@@ -1,6 +1,7 @@
 .define res_filename_calculator "Lommeregner"
 .define res_filename_date_and_time "Dato.og.Tid"
 .define res_filename_puzzle "Gade"
+.define res_filename_lights_out "Lights.Out"
 .define res_filename_sort_directory "Sort.Mappe"
 .define res_filename_eyes "Ojne"
 .define res_filename_print_screen "Print.Skaerm"

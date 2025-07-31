@@ -17,7 +17,7 @@
 .define res_string_button_desktop "DeskTop"
 .define res_char_button_desktop_shortcut 'D'
 .define res_string_label_download "Copying to RAMCard..."
-.define res_string_label_copying "Copying:"
+.define res_string_label_copying "Copying: "
 .define res_string_errmsg_not_enough_room "Not enough room in the RAMCard to copy the application."
 .define res_string_errmsg_copy_incomplete "An error occurred during the download. The copy was not completed."
 .define res_string_label_files_to_copy "Files to copy: "

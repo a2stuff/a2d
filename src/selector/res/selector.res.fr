@@ -17,7 +17,7 @@
 .define res_string_button_desktop "DeskTop"
 .define res_char_button_desktop_shortcut 'D'
 .define res_string_label_download "En cours de copie vers la carte RAM..."
-.define res_string_label_copying "Copie :"
+.define res_string_label_copying "Copie : "
 .define res_string_errmsg_not_enough_room "M{moire insuffisante en carte RAM pour copier l'application."
 .define res_string_errmsg_copy_incomplete "Erreur pendant le t{l{chargement. Copie arret{e."
 .define res_string_label_files_to_copy "Fichiers @ copier : "

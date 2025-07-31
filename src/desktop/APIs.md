@@ -176,3 +176,9 @@ Load a byte from the persisted settings defined by `DeskTopSettings` in `../comm
 
 Input: X = DeskTopSetting::* index
 Output: A = value, X = unchanged (handy for loading multi-byte values)
+
+#### `JUMP_TABLE_GET_TICKS` *
+
+Read a 24-bit tick counter initialized on startup.
+
+Output: A,X,Y (low byte to high byte)

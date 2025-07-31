@@ -398,12 +398,12 @@ R4:     .byte  0
 .endproc ; Random
 
 .proc InitRand
-        lda $4E                 ; Seed the random number generator
-        sta R1                  ; based on delay between keypresses
-        sta R3
-        lda $4F
+        ;; Use current 24-bit tick count as seed
+        jsr JUMP_TABLE_GET_TICKS
+        sta R1
         sta R2
-        sta R4
+        stx R3
+        sty R4
         ldx #$20                ; Generate a few random numbers
 InitLoop:
         jsr Random              ; to kick things off

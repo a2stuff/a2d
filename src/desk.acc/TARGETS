@@ -24,6 +24,7 @@ rods.pattern                    Apple.Menu/Screen.Savers        optional
 eyes                            Apple.Menu/Toys                 optional
 neko                            Apple.Menu/Toys                 optional
 puzzle                          Apple.Menu/Toys                 optional
+lights.out                      Apple.Menu/Toys                 optional
 calculator                      Apple.Menu                      optional
 calendar                        Apple.Menu                      optional
 change.type                     Apple.Menu                      optional

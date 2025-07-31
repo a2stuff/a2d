@@ -1,6 +1,7 @@
 .define res_filename_calculator "CALCULATOR"
 .define res_filename_date_and_time "DATE.AND.TIME"
 .define res_filename_puzzle "PUZZLE"
+.define res_filename_lights_out "LIGHTS.OUT"
 .define res_filename_sort_directory "SORT.DIRECTORY"
 .define res_filename_eyes "EYES"
 .define res_filename_print_screen "PRINT.SCREEN"

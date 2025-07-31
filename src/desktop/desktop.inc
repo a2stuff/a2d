@@ -112,6 +112,7 @@ JT_ENTRY JUMP_TABLE_BELL          ; Play settings-specified alert sound *
 JT_ENTRY JUMP_TABLE_SLOW_SPEED    ; Disable accelerator *
 JT_ENTRY JUMP_TABLE_RESUME_SPEED  ; Resume accelerator *
 JT_ENTRY JUMP_TABLE_READ_SETTING  ; Read setting byte (in: X=offset) *
+JT_ENTRY JUMP_TABLE_GET_TICKS     ; Read 24-bit tick counter (out: A,X) *
 JT_ENTRY JUMP_TABLE_LAST
 
 ;;; ============================================================

@@ -381,15 +381,12 @@ down_flag:
 ;;; Padding between radio/checkbox and label
 kLabelPadding = 5
 
-kRadioButtonWidth       = 15
-kRadioButtonHeight      = 7
-
 .params rb_params
         DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kRadioButtonWidth, kRadioButtonHeight
+        DEFINE_RECT maprect, 0, 0, BTK::kRadioButtonWidth, BTK::kRadioButtonHeight
         REF_MAPINFO_MEMBERS
 .endparams
 
@@ -419,15 +416,15 @@ unchecked_rb_bitmap:
         jsr     _SetPort
 
         ;; Initial size is just the button
-        add16_8 rect+MGTK::Rect::x1, #kRadioButtonWidth, rect+MGTK::Rect::x2
-        add16_8 rect+MGTK::Rect::y1, #kRadioButtonHeight, rect+MGTK::Rect::y2
+        add16_8 rect+MGTK::Rect::x1, #BTK::kRadioButtonWidth, rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::y1, #BTK::kRadioButtonHeight, rect+MGTK::Rect::y2
 
         lda     a_label
         ora     a_label+1
     IF_NOT_ZERO
         ;; Draw the label
         pos := $B
-        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + kRadioButtonWidth, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kRadioButtonWidth, pos+MGTK::Point::xcoord
         add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight - 1, pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
@@ -436,7 +433,7 @@ unchecked_rb_bitmap:
         jsr     _MeasureLabel
         addax   rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::x2, #kLabelPadding
-        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kRadioButtonHeight
+        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kRadioButtonHeight
     END_IF
 
         jsr     _MaybeDrawAndMeasureShortcut
@@ -469,15 +466,12 @@ unchecked_rb_bitmap:
 
 ;;; ============================================================
 
-kCheckboxWidth       = 17
-kCheckboxHeight      = 8
-
 .params cb_params
         DEFINE_POINT viewloc, 0, 0
 mapbits:        .addr   SELF_MODIFIED
 mapwidth:       .byte   3
 reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, kCheckboxWidth, kCheckboxHeight
+        DEFINE_RECT maprect, 0, 0, BTK::kCheckboxWidth, BTK::kCheckboxHeight
         REF_MAPINFO_MEMBERS
 .endparams
 
@@ -509,15 +503,15 @@ unchecked_cb_bitmap:
         jsr     _SetPort
 
         ;; Initial size is just the button
-        add16_8 rect+MGTK::Rect::x1, #kCheckboxWidth, rect+MGTK::Rect::x2
-        add16_8 rect+MGTK::Rect::y1, #kCheckboxHeight, rect+MGTK::Rect::y2
+        add16_8 rect+MGTK::Rect::x1, #BTK::kCheckboxWidth, rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::y1, #BTK::kCheckboxHeight, rect+MGTK::Rect::y2
 
         lda     a_label
         ora     a_label+1
     IF_NOT_ZERO
         ;; Draw the label
         pos := $B
-        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + kCheckboxWidth, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kCheckboxWidth, pos+MGTK::Point::xcoord
         add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight, pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
@@ -526,7 +520,7 @@ unchecked_cb_bitmap:
         jsr     _MeasureLabel
         addax   rect+MGTK::Rect::x2
         add16_8 rect+MGTK::Rect::x2, #kLabelPadding
-        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - kCheckboxHeight
+        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kCheckboxHeight
     END_IF
 
         jsr     _MaybeDrawAndMeasureShortcut

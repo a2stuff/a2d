@@ -106,6 +106,13 @@ CheckboxDraw    = $07           ; Draw a checkbox button (and update hit rect)
 
 CheckboxUpdate  = $08           ; Update a checkbox button after a click
 ;;; .addr       record
+
+kRadioButtonWidth       = 15
+kRadioButtonHeight      = 7
+
+kCheckboxWidth       = 17
+kCheckboxHeight      = 8
+
 .endif
 
 .endscope ; BTK

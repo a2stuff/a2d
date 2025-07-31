@@ -49,7 +49,7 @@
 .define res_string_about_text_line6 "Richard Danais og Luc Barthelet"
 .define res_string_about_text_line7 "Med tak til: A. Gerard, J. Gerber, P. Pahl, J. Bernard"
 .define res_string_label_files_remaining "Filer tilbage: "
-.define res_string_copy_label_status "Kopiering: "
+.define res_string_copy_label_status "Kopiering:"
 .define res_string_copy_label_from "fra:"
 .define res_string_copy_label_to "til:"
 .define res_string_move_label_status "Flytning: "
