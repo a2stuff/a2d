@@ -51,6 +51,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Disallow creating a shortcut for an alias copied to RAMCard.
 * Support dragging from inactive windows. ([#353](https://github.com/a2stuff/a2d/issues/353))
 * Improve rendering of overlapping icons. ([#875](https://github.com/a2stuff/a2d/issues/875))
+* Improve the appearance of the Trash icon.
 
 ### Selector
 
