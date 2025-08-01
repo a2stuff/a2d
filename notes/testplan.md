@@ -36,6 +36,8 @@
 * Launch DeskTop. Open a window with a single icon. Move the icon so it overlaps the left edge of the window. Verify scrollbar appears. Hold scroll arrow. Verify icon scrolls into view, and eventually the scrollbar deactivates. Repeat with right edge.
 * Launch DeskTop. Open a window with 11-15 icons. Verify scrollbars are not active.
 
+* Launch DeskTop. Open a volume window with multiple icons but that do not require the scrollbars to be active. Drag the first icon over to the right so that it is partially clipped by the window's right or bottom edge. Verify that the appropriate scrollbars activate.
+
 * Launch DeskTop. Open a folder using Apple menu (e.g. Control Panels) or a shortcut. Verify that the used/free numbers are non-zero.
 
 * Launch DeskTop. Open a folder containing subfolders. Select all the icons in the folder. Double-click one of the subfolders. Verify that the selection is retained in the parent window, with the subfolder icons dimmed. Position a child window over top of the parent so it overlaps some of the icons. Close the child window. Verify that the parent window correctly shows only the previously opened folder as selected.
@@ -74,11 +76,14 @@
 
 * Launch DeskTop. Select multiple volume icons (at least 4). Drag the bottom icon up so that the top two icons are completely off the screen. Release the mouse button. Drag the icons back down. Verify that while dragging, all icons have outlines, and when done dragging all icons reposition correctly.
 * Launch DeskTop. Open a window with at least 3 rows of icons. Position the window at the top of the screen. Edit > Select All. Drag an icon from the bottom row so that the top icons end up completely off-screen. Release the mouse button. Drag the icons back down. Verify that all icons reposition correctly.
+* Launch DeskTop. Open a window with multiple icons. Select multiple icons (e.g. 3). Start dragging the icons. Note the shape of the drag outlines. Drag over a volume icon. Verify that the drag outline does not become permanently clipped.
 * Launch DeskTop. Open a window with multiple icons. Resize the window so some of the icons aren't visible without scrolling. Edit > Select All. Drag the icons. Verify that drag outlines are shown even for hidden icons.
+* Launch DeskTop. Open a window with 100 icons. Edit > Select All. Start dragging the icons. Verify that the drag is not prevented.
 
 * Launch DeskTop. Open a window for a volume icon. Open a folder within the window. Select the volume icon. Special > Check Drive. Verify that both windows are closed.
 * Launch DeskTop. Open a window for a volume icon. Special > Check All Drives. Verify that all windows close, and that volume icons are correctly updated.
 * Launch DeskTop. Special > Check All Drives. Verify that no error is shown.
+* Launch DeskTop. Mount a new drive that will appear in the middle of the drive order. Special > Check All Drives. Verify that no new volumes overdraw old volumes.
 
 * Launch DeskTop. Open a window. Create folders A, B and C. Open A, and create a folder X. Open B, and create a folder Y. Drag A and B into C. Double-click on X. Verify it opens. Double-click on Y. Verify it opens. Open C. Double-click on A. Verify that the existing A window activates. Double-click on B. Verify that the existing B window activates.
 
@@ -106,6 +111,8 @@
 * Launch DeskTop. Select a file icon. Drag it over an empty space in the window. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled and the icon does not move.
 * Launch DeskTop. Select a file icon. Drag it over a folder icon, which should highlight. Without releasing the mouse button, press the Escape key. Verify that the drag is canceled, the target icon is unhighlighted, and the dragged icon does not move.
 * Launch DeskTop. Clear selection. Hold both Open-Apple and Solid-Apple and start to drag a volume icon. Verify that the drag outline of the volume is shown.
+
+* Launch DeskTop. Open a window containing a file icon and a folder icon. Start dragging the file icon. Start dragging the file and do not release the button. Drag it over then off the folder icon. Verify the folder highlights/unhighlights. Drag it over then off a volume icon. Verify that the volume icon highlights/unhighlights. Drag it over the folder icon again. Verify that the folder highlights.
 
 * Repeat the following:
   * For these permutations, as the specified window area:
@@ -142,6 +149,11 @@
   * Select multiple files. Start the operation. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the operation is canceled and the progress dialog is closed, and that the window contents do refresh.
 
 * Open a directory with more than 30 files, without resizing the window. Scroll up and down by one tick, by one page, and to the top/bottom. Verify that such operations scroll by an integral number of icons, i.e. the last row of labels are always the same distance from the bottom of the window.
+
+* Launch DeskTop. Open a volume window with enough icons that a scrollbar appears. Click on an active part of the scrollbar. Verify that the scrollbar responds immediately, not after the double-click detection delay expires.
+
+* Use BASIC.SYSTEM to create a file with type $08 e.g. `CREATE TEST08,T$08`. Launch DeskTop. Open the appropriate window. Verify that an icon appears for the file.
+* Use BASIC.SYSTEM to create a file with type $01 e.g. `CREATE TEST01,T$01`. Launch DeskTop. Open the appropriate window. Verify that an icon appears for the file.
 
 
 ## Selection
@@ -192,6 +204,8 @@
 
 * Launch DeskTop, ensuring no windows are open. Edit > Select All. Verify that the volume icons are selected.
 
+* Launch DeskTop. Open a volume window. Drag a selection rectangle so that it covers only the top row of pixels of an icon. Verify that the icon is selected.
+
 
 ## Repaints
 
@@ -203,6 +217,8 @@
 * Position two windows so that the right edges are exactly aligned, and the windows vertically overlap by several pixels. Activate the upper window. Drag a floppy disk volume icon so that it is partially occluded by the bottom-right of the upper window. Verify that the visible parts of the icon repaint correctly and that DeskTop does not hang.
 * Position two windows so that the left edges are exactly aligned, and the windows vertically overlap by several pixels. Activate the upper window. Drag a floppy disk volume icon so that it is partially occluded by the bottom-left corner of the upper window. Verify that the visible parts of the icon repaint correctly and that DeskTop does not hang.
 * Position two windows so that the bottom-right corner of one overlaps the top-left corner of the other by several few pixels. Drag a floppy disk volume icon so that it should show on both sides of overlap. Verify that the visible parts of the icon repaint correctly.
+* Position a window so that the right edge overlaps volume icons. Select the volume icons. Clear selection by clicking on the desktop. Verify that the right edge of the window is not overdrawn.
+* Open five volume windows containing many files so that the windows have large initial sizes. Drag the top-most so that the right edge aligns with another window's right edge and overlaps a volume icon. Drag another window that was previously overlapping the same icon so that the right edge aligns with the other windows. Verify that the volume icons repaint correctly and that the system does not hang.
 
 * Repeat the following cases with these modifiers: Open-Apple, Shift (on a IIgs), Shift (on a Platinum IIe):
   * Launch DeskTop. Open a volume window with many icons. Click on a file icon to select it. Modifier-click the icon to deselect it. Drag-select on the desktop covering a large area. Verify that no file icons are erroneously painted.
@@ -265,6 +281,13 @@
 * Launch DeskTop. Position a volume icon near the center of the screen. Open the volume icon, and move/size the window to ensure the volume icon is visible. Drag a file icon to the trash. Verify that after the delete dialog closes, the volume icon is still visible.
 
 * Launch DeskTop. Open two windows. In the first window, position two icons so they overlap. Select the first icon. Verify that it draws "on top" of the other icon. Activate the other window without changing selection. Drag it over the icons. Drag it off the icons. Verify that the selected icon is still "on top". Hold Open-Apple and click the selected icon to deselect it. Verify that it draws "on top" of the other icon. Activate the other window without changing selection. Drag it over the icons. Drag it off the icons. Verify that the previously selected icon is still "on top". Repeat the above tests with the other icon.
+
+* Launch DeskTop. Open a volume. Open a folder within the volume. Activate the first window. Special > Check All Drives. Verify that the icons are erased and repaint properly.
+
+* Launch DeskTop. Open a volume. Open a folder. Drag the folder window so that it obscures the top-most edge of an icon in the volume window. Drag the folder away. Verify that the icon in the volume window repaints.
+
+* Launch DeskTop. Open a volume. Drag the window so that it partially covers some volume icons. Drag the window to the bottom of the screen so that only the top of the title bar is visible. Verify that the volume icons repaint correctly.
+* Launch DeskTop. Open a volume containing a file icon. Select the file icon. Drag the window to the bottom of the screen so that only the top of the title bar is visible. Verify that the file icon doesn't mispaint onto the desktop.
 
 
 ## Menus
@@ -344,6 +367,11 @@
 
 * Launch DeskTop. Close all windows. Open an empty volume (e.g. /RAMA). Repeat File > New Folder... 7 times, accepting the default names (New.Folder through New.Folder.7). Edit > Select All. File > Open. File > New Folder. Verify that the new folder is created within New.Folder.7 and no alert appears.
 
+* Launch DeskTop. Manually (not via DeskTop) eject the startup disk. Select the startup volume icon. File > Open. Verify that the alert displays correctly.
+
+* Configure a system with `/HD1`, `/HD1/FOLDER1`, and `/HD2`. Launch DeskTop. Open `/HD1`. Open `/HD1/FOLDER1`. Close `/HD1`. Open `/HD2`. Re-open `/HD1`. Re-open `/HD/FOLDER1`. Verify that the previously opened window is activated.
+
+
 ## Close Window
 
 * Open two windows. Click the close box on the active window. Verify that only the active window closes.
@@ -356,6 +384,12 @@
 * Launch DeskTop. Open a window. Select a folder icon. Open the File menu, then press Open-Apple+O. Verify that the folder opens, and the original window remains open. Repeat with Caps Lock off.
 
 * Launch DeskTop. Open a window and select multiple folder icons. File > Open. Verify that the folders open, and that the icons remain selected and become dimmed.
+
+* Launch DeskTop. Open a window. Click the close box. Verify that the close animation runs. Open a window. File > Close. Verify that the close animation runs.
+
+* Launch DeskTop. Open a volume icon. Open a folder icon. Activate the volume window. Click the close box. Verify that the close animation doesn't leave garbage in the menu bar.
+
+* Launch DeskTop. Open a window. Click the close box. Verify that the close animation does not leave a stray rectangle on the screen.
 
 
 ## Open Then Close
@@ -401,6 +435,8 @@
 
 
 ## View Menu
+
+* Open folder with files. View > by Date. Verify that DeskTop does not hang.
 
 * Open folder with new files. Use View > by Date; verify dates after 1999 show correctly.
 * Open folder with new files. Use View > by Date. Verify that two files modified on the same date are correctly ordered by time.
@@ -506,7 +542,7 @@
 * Launch DeskTop. Use File > Copy To... to copy a file. Verify that the file is indeed copied, not moved.
 * Launch DeskTop. Drag a file icon to a same-volume window so it is moved, not copied. Use File > Copy To... to copy a file. Verify that the file is indeed copied, not moved.
 
-# TODO: Rewrite this A -> Vol's icon, B -> Vol's window, C -> Folder's icon, D -> Folder's window
+> TODO: Rewrite this A -> Vol's icon, B -> Vol's window, C -> Folder's icon, D -> Folder's window
 
 * Repeat the following, with a volume icon (A), an open volume window (B) with a folder icon (C), and a window for that folder (D).
   * Drag a file icon from another volume onto A. Verify that B activates and refreshes, and that B's used/free numbers update. Click on D. Verify that D's used/free numbers update.
@@ -537,6 +573,8 @@
 
 * Launch DeskTop. Open two windows containing multiple files. Select multiples files in the first window. File > Copy To.... Select the second window's location as a destination and click OK. During the initial count of the files, press Escape. Verify that the count is canceled and the progress dialog is closed, and that the second window's contents do not refresh.
 * Launch DeskTop. Open two windows containing multiple files. Select multiples files in the first window. File > Copy To.... Select the second window's location as a destination and click OK. After the initial count of the files is complete and the actual operation has started, press Escape. Verify that the second window's contents do refresh.
+
+* Launch DeskTop. Open a volume window. Create a new empty folder. Drag it to another volume. Verify that it is copied.
 
 
 ## File Deletion
@@ -580,6 +618,8 @@
 * Select a volume or folder containing multiple files. File > Get Info. During the count of the files, press Escape. Verify that the count is canceled.
 * Select a volume or folder containing multiple files. File > Get Info. During the count of the files, eject the disk. Verify that an alert appears. Reinsert the disk. Click Try Again. Verify that the count of files continues and paints in the correct location.
 
+* Open a folder containing a regular file. Select the file. File > Get Info. Verify that the AuxType displays correctly. Click OK. View > by Name. View > as Icons. File > Get Info. Verify that the AuxType still displays correctly.
+
 
 ## New Folder, Rename & Duplicate
 
@@ -619,13 +659,15 @@
 * Launch DeskTop. Open a volume. File > New Folder, create A. File > New Folder, create B. Drag B onto A. File > New Folder. Verify DeskTop doesn't hang.
 
 * Launch DeskTop. Try to rename a volume to have the same name as another. Verify that an error is shown.
-* Launch DeskTop. Select a volume icon. File > Rename. Enter the name of another volume. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing.
-* Launch DeskTop. Open a window. Select a file icon. File > Rename. Enter the name of a file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing.
+* Launch DeskTop. Select a volume icon. File > Rename. Enter the name of another volume. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing with the entered name and it is editable.
+* Launch DeskTop. Open a window. Select a file icon. File > Rename. Enter the name of a file in the same window. Verify that a "That name already exists." alert is shown. Click OK. Verify that the rename prompt is still showing with the entered name and it is editable.
 * Launch DeskTop. Open a volume window. Open a folder window. Select the volume icon and rename it. Verify that neither window is closed, and volume window is renamed.
 * Launch DeskTop. Open a volume window. Open a folder window. Activate the volume window. View > By Name. Select the folder icon. Rename it. Verify that the folder window is renamed.
 * Launch DeskTop. Open a volume window. Position a file icon with a short name near the left edge of the window, but far enough away that the scrollbars are not active. Rename the file icon with a long name. Verify that the window's scrollbars activate.
 * Launch DeskTop. Open a volume window. Position a file icon with a long name near the left edge of the window, so that the name is partially cut off and the scrollbars activate. Rename the file icon with a short name. Verify that the window's scrollbars deactivate.
 * Launch DeskTop. Close all windows. Select a volume icon. File > Rename, enter a new name. Verify that there is no mis-painting of a scrollbar on the desktop.
+
+* Launch DeskTop. Give a volume a long name (e.g. 15 'M's). Move the icon to the top third of the screen, and so that the name is partially offscreen to the right. Verify that the name is clipped by the right edge of the screen and doesn't mispaint on the left edge. Open the volume. Move the window so the name in the title bar is in the top third of the screen and partially offscreen to the right. Verify that the name is clipped and does not mispaint within the window.
 
 * Launch DeskTop. Open a window. File > New Folder, enter a unique name. File > New Folder, enter the same name. Verify that an alert is shown. Dismiss the alert. Verify that the input field still has the previously typed name.
 * Launch DeskTop. Open a window. File > New Folder, enter a unique name. File > New Folder, enter the same name. Verify that an alert is shown. Dismiss the alert. Enter a new unique name. Verify that the second folder is created as a sibling to the first folder, not as a child.
@@ -699,11 +741,13 @@
 * Rename the APPLE.MENU directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.
 * Create a new APPLE.MENU directory. Launch DeskTop. Verify that the Apple Menu has two "About" items and no separator.
 * Create a new APPLE.MENU directory. Copy the CHANGE.TYPE accessory into it. Launch DeskTop. Verify that the Apple Menu has two "About" items, a separator, and "Change Type". Select the Change Type icon. Apple Menu > Change Type. Change the type to $8642. Restart DeskTop. Verify that the Apple Menu has two "About" items, and no separator.
+* Open the APPLE.MENU directory. Use Apple Menu > Change Type accessory to change the AuxType of an accessory (e.g. CALCULATOR) from $0642 to $8642. Restart DeskTop. Verify that the accessory is not shown in the Apple Menu.
 * Eject the startup disk. Select an accessory (e.g. Calculator) from the Apple Menu. Verify that an alert is shown prompting to reinsert the startup disk. Insert the startup disk and click OK. Verify that the accessory launches.
 * Eject the startup disk. Select a folder (e.g. Control Panels) from the Apple Menu. Verify that an alert is shown prompting to reinsert the startup disk. Insert the startup disk and click OK. Verify that the folder window opens.
 
 ## Shortcuts (in DeskTop)
 
+* Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that DeskTop does not hang.
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled, and the menu has no separator. Add a shortcut. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled, and the menu has a separator, and the shortcut appears. Delete the shortcut. Verify that the menu has its initial state again.
 * Delete the LOCAL/SELECTOR.LIST file from the startup disk, if it was present. Launch DeskTop. Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are disabled, and the menu has no separator. Add a shortcut to "list only". Verify that Shortcuts > Edit a Shortcut..., Shortcuts > Delete a Shortcut..., and Shortcuts > Run a Shortcut... are now enabled, but the menu still has no separator or shortcuts. Delete the shortcut. Verify that the menu has its initial state again.
 
@@ -749,6 +793,9 @@
 * Launch DeskTop. Shortcuts > Run a Shortcut. Verify the OK button is disabled. Click on an item. Verify the OK button becomes enabled. Click on a blank option. Verify the OK button becomes disabled. Use the arrow keys to move selection. Verify that the OK button becomes enabled.
 
 * Configure DeskTop to copy to RAMCard on start. Add a shortcut for an application file that can be launched from DeskTop in the root of a disk named with mixed case using GS/OS, and configure it to copy to RAMCard "on first use". Invoke the shortcut. Exit back to DeskTop. Verify that the folder name on the RAMCard has the same mixed case as the original disk.
+
+* Launch DeskTop. Create a Shortcut for a folder that is the 8th entry in the menu. Shortcuts > Edit a Shortcut... Select the entry. Click OK. Verify that DeskTop does not hang.
+
 
 ## File Types
 
@@ -899,9 +946,12 @@
 
 ## Hardware Configurations
 
+* Configure a system with a drive controller (Disk II or SmartPort) in slot 2. Launch DeskTop. Verify that Slot 2 appears in the Startup menu.
+
 ### Real-Time Clock
 
 * Run on system with real-time clock; verify that time shows in top-right of menu.
+* Run on system with real-time clock. Click on a volume icon. Verify that the clock still renders correctly.
 
 ### RAM Expansions
 
@@ -957,7 +1007,6 @@ The following tests all require:
 * On an RGB system (IIgs, etc), go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Preview an image, and verify that the image shows in color and the DeskTop returns to monochrome after exiting.
 * Using MAME (e.g. via Ample), configure a system with Machine Configuration > Monitor Type > Video-7 RGB. Start DeskTop. Open a window. Apple Menu > Run Basic Here. Type `HGR : HCOLOR=3 : HPLOT 0,0 TO 100,100`. Verify a diagonal line appears.
 
-
 ### Z80 Card
 
 * Configure a system with a Z80 card and without a No-Slot Clock. Boot a package disk including the CLOCK.SYSTEM driver. Verify that it doesn't hang.
@@ -967,6 +1016,8 @@ The following tests all require:
 * Run DeskTop on a IIe with a ZIP CHIP installed.. Apple Menu > About This Apple II. Verify that a ZIP CHIP is reported.
 
 ### Apple IIgs
+
+* On a IIgs, launch DeskTop. Verify that it appears in monochrome. Quit DeskTop and launch another graphical ProDOS-8 program. Verify that it appears in color.
 
 * On an IIgs, go to Control Panel, check RGB Color. Verify that the display shows in color. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop remains in color.
 * On an IIgs, go to Control Panel, uncheck RGB Color. Verify that the display shows in monochrome. Enter the IIgs control panel (Control+Shift+Open-Apple+Esc), and exit. Verify that DeskTop resets to monochrome.
@@ -981,7 +1032,11 @@ The following tests all require:
 
 * On a IIgs, launch DeskTop. Launch a IIgs-native program e.g. NoiseTracker. Exit and return to DeskTop. Verify that the display is not garbled.
 
+* On the KEGS, GSport or GSplus IIgs emulators, launch DeskTop. Verify the emulator does not crash.
+
 * On the Crossrunner IIgs emulator, launch DeskTop. Verify it does not hang on startup.
+
+* Use the Options control panel (in DeskTop) to show Shortcuts on startup. Launch Shortcuts. File > Quit. Verify that super-hires mode is not erroneously activated.
 
 ### Apple IIc
 
@@ -998,13 +1053,18 @@ The following tests all require:
 * Run on Laser 128; verify that 800k image files on Floppy Emu show as 3.5" floppy icons.
 * Run on Laser 128, with a Floppy Emu. Select a volume icon. Special > Eject Disk. Verify that the Floppy Emu does not crash.
 * Run on Laser 128. Launch DeskTop. Open a volume. Click on icons one by one. Verify selection changes from icon to icon, and isn't extended as if a Open-Apple key/button or Shift is down.
+* Run on Laser 128EX at 3.6MHz and multiple SmartPort devices. Launch DeskTop. Move the mouse for several seconds. Verify that the system does not hang.
 
+### Macintosh IIe Option Card
+
+* Run on a Macintosh equipped with the IIe Option Card. Verify that DeskTop runs and the system does not hang.
 
 # Preview
 
 Text File:
 * Verify that Escape key exits.
 * Verify that Space toggles Proportional/Fixed mode.
+* Verify that clicking in the right part of the title bar toggles Proportional/Fixed mode.
 * Verify that DeskTop's selection is not cleared on exit.
 * Preview a text file that can be displayed entirely within the window. Verify that the scrollbar is inactive.
 * Preview a text file that is longer than one screen.
@@ -1034,6 +1094,8 @@ Image File:
 * In a directory with multiple images, preview one image. Press S. Verify that a slideshow starts. Press S again, verify that the slideshow stops.
 * In a directory with multiple images, preview one image. Press S. Verify that a slideshow starts. Press D (or any key that doesn't have a special purpose). Verify that the slideshow stops. Press S. Verify that a slideshow starts again.
 * In a directory with multiple images, preview one image. Press S. Verify that a slideshow starts. Press Left Arrow. Verify that the previous image is shown, and that the slideshow stops. Press S. Verify that a slideshow starts again.
+* Click on the File menu, then close it. Double-click an image file. Press Escape to close the preview. Verify that the File menu is not highlighted.
+
 
 * Put `SHOW.IMAGE.FILE` in `APPLE.MENU`, start DeskTop.
     * Select no icon, select DA from Apple menu. Verify nothing happens.
@@ -1058,6 +1120,8 @@ Image File:
 
 # Desk Accessories
 
+* Launch DeskTop. Open the APPLE.MENU folder. Select a desk accessory icon. File > Open. Verify that the desk accessory launches.
+
 Repeat for every desk accessory that runs in a movable window:
 * Launch DeskTop. Open the DA. Click on the title bar but don't move the window. Verify that the window doesn't repaint if the window is not moved.
 
@@ -1074,6 +1138,8 @@ Repeat for every desk accessory that runs in a window.
 * Open the Control Panel DA. Eject the startup volume. Modify a setting and close the DA. Verify that you are prompted to save.
 
 * Configure a system with a color display. Open the Control Panel DA. Check "RGB Color" if needed to ensure the display is in color. Select one of the vertically striped patterns that appears as a solid color. Click the preview area. Verify that the color matches the preview. Move the DA window. Verify that colors still match. Repeat with other patterns.
+
+* Configure a system with a RAMCard, and ensure DeskTop is configured to copy to RAMCard on startup. Launch DeskTop. Apple Menu > Control Panels. Open Control Panel. Modify a setting e.g. the desktop pattern. Close the window. Reboot the system. Verify that the setting is retained.
 
 ## Options
 
@@ -1093,6 +1159,10 @@ Repeat for every desk accessory that runs in a window.
 
 ## Calculator and Sci.Calc
 
+* Run Apple Menu > Calculator. Move the Calculator window. Verify that the mouse cursor is drawn correctly.
+
+* Run Apple Menu > Calculator. Verify that the mouse cursor does not jump to the top-left of the screen.
+
 * Run Apple Menu > Calculator. Drag the Calculator window over a volume icon. Then drag the Calculator window to the bottom of the screen so that only the title bar is visible. Verify that volume icon redraws properly.
 
 * Run Apple Menu > Calculator. Drag the Calculator window to bottom of screen so only title bar is visible. Type numbers on the keyboard. Verify no numbers are painted on screen. Move window back up. Verify the typed numbers were input.
@@ -1100,6 +1170,7 @@ Repeat for every desk accessory that runs in a window.
 Repeat for Calculator and Sci.Calc:
 * With an English build, run the DA. Verify that '.' appears as the decimal separator in calculation results and that '.' when typed functions as a decimal separator.
 * With an Italian build, run the DA. Verify that ',' appears as the decimal separator in calculation result and that ',' when typed functions as a decimal separator. Verify that when '.' is typed, ',' appears.
+* Enter '1' '-' '2' '='. Verify that the system does not hang.
 * Enter '1' '/' '2' '='. Verify that the result has a 0 before the decimal (i.e. "0.5").
 * Enter '0' '-' '.' '5' '='. Verify that the result has a 0 before the decimal (i.e. "-0.5").
 
@@ -1143,6 +1214,8 @@ With Sci.Calc:
 
 ## Sort Directory
 
+* Launch DeskTop. Open a window. File > Quit. Re-launch DeskTop. Apple Menu > Sort Directory. Verify that the files in the window are sorted.
+
 * Open a folder containing a folder. Open the folder by double-clicking. Apple Menu > Sort Directory. Verify that files are sorted by type/name.
 
 * Load DeskTop. Ensure that every ProDOS device is online and represented by an icon. Open a volume window. Create a folder. Open the folder window, and close the volume window. Apple Menu > Run Basic Here. Run a program such as `10 FOR I = 1 to 127-14 : ?CHR$(4);"SAVE F";I : NEXT` to create as many files as possible while keeping the total icon count to 127. `BYE` to return to DeskTop. Apple Menu > Sort Directory. Make sure all the files are sorted lexicographically (e.g. F1, F10, F100, F101, ...)
@@ -1156,6 +1229,7 @@ With Sci.Calc:
   * Launch DeskTop. Apple Menu > Key Caps. Verify that the "original" layout is shown, with the backslash above the Return key.
 * Repeat on an Apple IIc+ and Apple IIgs:
   * Launch DeskTop. Apple Menu > Key Caps. Verify that the "extended" layout is shown, with the backslash to the right of the space bar.
+* Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Press the semicolon/colon key. Verify that the highlight is correctly positioned.
 
 
 ## Screen Savers
@@ -1182,6 +1256,8 @@ With Sci.Calc:
 
 * Configure a IIe system with a 16MB RAMFactor card (e.g. GR8RAM from https://garrettsworkshop.com/) with a single 16MB partition. Apple > About This Apple II. Verify that the calculated memory size is accurate, i.e. it is not off by 64k.
 
+* Configure a system without a RAMWorks. Verify that the DA does not erroneously detect 16MB of RAMWorks memory.
+
 ## System Speed
 
 * Run System Speed DA. Click Normal then click OK. Verify DeskTop does not lock up.
@@ -1199,12 +1275,15 @@ With Sci.Calc:
 
 ## Run Basic Here
 
+* Launch DeskTop. Open a volume window. Apple Menu > Run Basic Here. Verify that /RAM exists.
+* Launch DeskTop. Open a window for a volume that is not the startup volume. Apple Menu > Run Basic Here. Verify that the PREFIX is set correctly.
 * Configure a system with a RAMCard. Launch DeskTop, ensure it copies itself to RAMCard. Ensure BASIC.SYSTEM is present on the boot volume. Open a window. Apple Menu > Run Basic Here. Verify that BASIC.SYSTEM starts.
 
 ## Joystick
 
 * Configure a system with only a single joystick (or paddles 0 and 1). Run the DA. Verify that only a single indicator is shown.
 * Configure a system with two joysticks (or paddles 2 and 3). Run the DA. Verify that after the second joystick is moved, a second indicator is shown.
+* Configure a system with a single joystick. Run the DA. Move the joystick to the right and bottom extremes. Verify that the indicator does not wrap to the left or top edges.
 
 ## Find Files
 
