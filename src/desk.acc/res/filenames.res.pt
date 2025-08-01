@@ -19,6 +19,7 @@
 .define res_filename_toys "Brinquedos"
 .define res_filename_flying_toasters "Toast.Voladoras"
 .define res_filename_helix "Helice"
+.define res_filename_bounce "Quicar"
 .define res_filename_neko "Neko"
 .define res_filename_map "Mapa"
 .define res_filename_melt "Fundicao"

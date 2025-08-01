@@ -19,6 +19,7 @@
 .define res_filename_toys "Leksaker"
 .define res_filename_flying_toasters "Brodrostar"
 .define res_filename_helix "Helix"
+.define res_filename_bounce "Studsa"
 .define res_filename_neko "Neko"
 .define res_filename_map "Karta"
 .define res_filename_melt "Smalta"

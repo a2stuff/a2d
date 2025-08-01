@@ -19,6 +19,7 @@
 .define res_filename_toys "Juguetes"
 .define res_filename_flying_toasters "Tosta.Voladoras"
 .define res_filename_helix "Helice"
+.define res_filename_bounce "Rebotar"
 .define res_filename_neko "Neko"
 .define res_filename_map "Mapa"
 .define res_filename_melt "Derretir"

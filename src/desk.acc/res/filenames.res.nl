@@ -19,6 +19,7 @@
 .define res_filename_toys "Speeltjes"
 .define res_filename_flying_toasters "Vliegende.Toast"
 .define res_filename_helix "Helix"
+.define res_filename_bounce "Stuiteren"
 .define res_filename_neko "Neko"
 .define res_filename_map "Kaart"
 .define res_filename_melt "Smelten"

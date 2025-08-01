@@ -371,7 +371,7 @@ skip:
 ;;; Core for add16in/sub16in
 .macro _addsub16in op, opc, arg1, arg2, arg3, arg4, arg5, arg6
     .if _is_y_register {arg2} && _is_y_register {arg4} && _is_y_register {arg6}
-        ;; xxx16in $1111,y, $2222,y, $3333,y
+        ;; xxx16in ($1111),y, ($2222),y, ($3333),y
         lda     (arg1),y
         opc
         op      (arg3),y
@@ -381,7 +381,8 @@ skip:
         op      (arg3),y
         sta     (arg5),y
     .elseif _is_y_register {arg2} && _is_y_register {arg4}
-        ;; xxx16in $1111,y, $2222,y, $3333
+        ;; xxx16in ($1111),y, ($2222),y, $3333
+        ;; xxx16in ($1111),y, ($2222),y, #$3333
         lda     (arg1),y
         opc
         op      (arg3),y
@@ -391,8 +392,8 @@ skip:
         op      (arg3),y
         sta     arg5+1
     .elseif _is_y_register {arg2} && _is_y_register {arg5}
-        ;; xxx16in $1111,y, $2222, $3333,y
-        ;; xxx16in $1111,y, #$2222, $3333,y
+        ;; xxx16in ($1111),y, $2222, ($3333),y
+        ;; xxx16in ($1111),y, #$2222, ($3333),y
         lda     (arg1),y
         opc
         _op_lo  op, {arg3}
@@ -401,9 +402,22 @@ skip:
         lda     (arg1),y
         _op_hi  op, {arg3}
         sta     (arg4),y
+    .elseif _is_y_register {arg3} && _is_y_register {arg5}
+        ;; xxx16in $1111, ($2222),y, ($3333),y
+        ;; xxx16in #$1111, ($2222),y, ($3333),y
+        _op_lo  lda, {arg1}
+        opc
+        op      (arg2),y
+        sta     (arg4),y
+        iny
+        _op_hi  lda, {arg1}
+        op      (arg2),y
+        sta     (arg4),y
     .elseif _is_y_register {arg2}
-        ;; xxx16in $1111,x, $2222, $3333
-        ;; xxx16in $1111,x, #$2222, $3333
+        ;; xxx16in ($1111),y, $2222, $3333
+        ;; xxx16in ($1111),y, #$2222, $3333
+        ;; xxx16in ($1111),y, $2222, #$3333
+        ;; xxx16in ($1111),y, #$2222, #$3333
         lda     (arg1),y
         opc
         _op_lo  op, {arg3}
@@ -413,8 +427,10 @@ skip:
         _op_hi  op, {arg3}
         sta     arg4+1
     .elseif _is_y_register {arg3}
-        ;; xxx16in $1111, $2222,y $3333
-        ;; xxx16in #$1111, $2222,y $3333
+        ;; xxx16in $1111, ($2222),y $3333
+        ;; xxx16in #$1111, ($2222),y $3333
+        ;; xxx16in $1111, ($2222),y #$3333
+        ;; xxx16in #$1111, ($2222),y #$3333
         _op_lo  lda, {arg1}
         opc
         op      (arg2),y

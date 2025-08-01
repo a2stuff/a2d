@@ -19,6 +19,7 @@
 .define res_filename_toys "Giochi"
 .define res_filename_flying_toasters "Tostap.Volanti"
 .define res_filename_helix "Elica"
+.define res_filename_bounce "Rimbalzo"
 .define res_filename_neko "Neko"
 .define res_filename_map "Mappa"
 .define res_filename_melt "Sciolto"

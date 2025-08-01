@@ -19,6 +19,7 @@
 .define res_filename_toys "Legetoj"
 .define res_filename_flying_toasters "Brodristere"
 .define res_filename_helix "Helix"
+.define res_filename_bounce "Bounce"
 .define res_filename_neko "Neko"
 .define res_filename_map "Kort"
 .define res_filename_melt "Smelte"

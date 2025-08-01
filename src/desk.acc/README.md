@@ -44,6 +44,8 @@
 
 ## Entertainment
 
+* [Bounce](bounce.s)
+  * Bouncing shapes.
 * [Eyes](eyes.s)
   * Eyes that follow the mouse.
 * [Puzzle](puzzle.s)

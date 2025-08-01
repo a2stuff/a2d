@@ -808,8 +808,8 @@ y2:     .word   AS_WORD((height) - (top))
 .macro DEFINE_POINT ident, left, top
         ident := *
 .scope ident
-xcoord: .word   left
-ycoord: .word   top
+xcoord: .word   AS_WORD(left)
+ycoord: .word   AS_WORD(top)
         .refto xcoord
         .refto ycoord
 .endscope
