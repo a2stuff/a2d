@@ -1466,16 +1466,19 @@ Repeat for each file picker:
 * Verify that dimmed buttons don't respond to clicks.
 * Verify that dimmed buttons don't respond to keyboard shortcuts (Return for OK, Control+O for Open, Control+C for Close).
 
-For DeskTop's File > Copy To... file picker:
-* Launch DeskTop. Select a file icon. File > Copy To.... Open a volume or folder. Clear selection. Verify that the OK button is not dimmed.
-* Launch DeskTop. Select a file icon. File > Copy To.... Click the Drives button. Verify that the OK button is dimmed.
-* Launch DeskTop. Select a file icon. File > Copy To.... Click the Drives button. Select a volume icon. Verify that the OK button is not dimmed. Click OK. Verify that the file is copied into the selected volume's root directory.
+For DeskTop's File > Copy To... file picker, start by selecting a file icon, then File > Copy To...:
+* Open a volume or folder. Clear selection. Verify that the OK button is not dimmed.
+* Clear selection. Verify that the OK button is dimmed.
+* Click the Drives button. Verify that the OK button is dimmed.
+* Click the Drives button. Select a volume icon. Verify that the OK button is not dimmed. Click OK. Verify that the file is copied into the selected volume's root directory.
 
 For DeskTop's Shortcut > Edit a Shortcut... file picker:
 * Create a shortcut not on the startup volume. Edit the shortcut. Verify that the file picker shows the shortcut target volume and file selected.
 * Create a shortcut on a removable volume. Eject the volume. Edit the shortcut. Verify that the file picker initializes to the drives list, and does not crash or show corrupted results.
 * Clear selection. Verify that the OK button is dimmed.
+* Click the Drives button. Verify that the OK button is dimmed.
 * Click the Drives button. Select a volume. Verify that the OK button is not dimmed.
+* Select a folder. Select a volume. Verify that the OK button is not dimmed.
 
 For Shortcuts's File > Run a Program... file picker:
 * Navigate to an empty volume and don't select anything. Click OK. Verify that an alert is shown.
@@ -1483,6 +1486,7 @@ For Shortcuts's File > Run a Program... file picker:
 * Move the mouse cursor over a folder in the list that is not selected. Double-click. Verify that the folder opens with only the two clicks.
 * Clear selection. Verify that the OK button is dimmed.
 * Click the Drives button. Select a volume. Verify that the OK button is dimmed.
+* Select a folder. Verify that the OK button is dimmed.
 
 # Text Input Fields
 

@@ -99,7 +99,13 @@ file_names      := $1800
 only_show_dirs_flag:            ; set when selecting copy destination
         .byte   0
 
-require_selection_flag:         ; bit7 = require selection; bit6 = volumes ok
+;;; bit7 = 0 = no selection required
+;;;   bit6 = 0 = no root
+;;;   bit6 = 1 = root ok -- NOT USED
+;;; bit7 = 1 = selection required
+;;;   bit6 = 0 = no dirs
+;;;   bit6 = 1 = dirs ok
+selection_requirement_flags:
         .byte   0
 
 ;;; ============================================================
@@ -442,7 +448,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         lda     file_list_index,x
         bpl     no              ; not a folder
 
-        clc
+yes:    clc
         rts
 
 no:     sec
@@ -464,24 +470,42 @@ no:     sec
 
 ;;; Output: C=0 if allowed, C=1 if not.
 .proc _IsOKAllowed
-        bit     require_selection_flag
-        php
+        allowed     := _IsOpenAllowed::yes
+        not_allowed := _IsOpenAllowed::no
 
-        bit     selected_index
+        .assert kSelectionOptional           & $80 = $00, error, "enum mismatch"
+        .assert kSelectionOptionalUnlessRoot & $80 = $00, error, "enum mismatch"
+        .assert kSelectionRequiredNoDirs     & $80 = $80, error, "enum mismatch"
+        .assert kSelectionRequiredDirsOK     & $80 = $80, error, "enum mismatch"
+
+        bit     selection_requirement_flags
     IF_NS
-        ;; No selection
-        plp                     ; bit7 = selection required
-        bmi     _IsOpenAllowed::no
-        clc
-        rts
+        ;; Selection required
+        bit     selected_index
+        bmi     _IsOpenAllowed::no ; no selection
+
+        .assert kSelectionRequiredNoDirs & $40 = $00, error, "enum mismatch"
+        .assert kSelectionRequiredDirsOK & $40 = $40, error, "enum mismatch"
+
+        ;; bit6 = dirs ok?
+        bit     selection_requirement_flags
+        bvs     allowed         ; dirs ok
+        jsr     _IsOpenAllowed  ; C=0 if open allowed
+        bcc     not_allowed     ; but we want the inverse
+        bcs     allowed         ; always
     END_IF
 
-        ;; Volume ok?
-        plp                     ; bit6 = volume selection allowed
-        bvc     _IsCloseAllowed
+        ;; No selection required
+        .assert kSelectionOptional           & $40 = $00, error, "enum mismatch"
+        .assert kSelectionOptionalUnlessRoot & $40 = $40, error, "enum mismatch"
 
-        clc
-        rts
+        ;; bit6 = root w/ no selection ok?
+        bvc     allowed
+
+        ;; selection required if not root
+        bit     selected_index
+        bmi     _IsCloseAllowed ; no selection, so only if not root
+        bpl     allowed         ; always
 .endproc ; _IsOKAllowed
 
 ;;; ============================================================
@@ -1555,7 +1579,12 @@ Init := file_dialog_impl::Init
 UpdateListFromPath := file_dialog_impl::UpdateListFromPath
 
 only_show_dirs_flag := file_dialog_impl::only_show_dirs_flag
-require_selection_flag := file_dialog_impl::require_selection_flag
+selection_requirement_flags := file_dialog_impl::selection_requirement_flags
+kSelectionOptional           = %00000000 ; unused
+kSelectionOptionalUnlessRoot = %01000000
+kSelectionRequiredNoDirs     = %10000000
+kSelectionRequiredDirsOK     = %11000000
+
 path_buf := file_dialog_impl::path_buf
 
 STATE_START := file_dialog_impl::state_start

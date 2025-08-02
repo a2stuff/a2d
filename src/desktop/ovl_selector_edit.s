@@ -39,7 +39,7 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
 
         jsr     file_dialog::Init
         copy8   #$80, file_dialog::extra_controls_flag
-        copy8   #$C0, file_dialog::require_selection_flag ; bit7 = selection required; bit6 = volumes ok
+        copy8   #file_dialog::kSelectionRequiredDirsOK, file_dialog::selection_requirement_flags
 
         lda     #BTK::kButtonStateNormal
         sta     primary_run_list_button::state
