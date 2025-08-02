@@ -343,6 +343,11 @@ loop:   txa
 .endproc ; XDrawObjects
 
 .proc MoveObjects
+        MGTK_CALL MGTK::GetWinPort, getwinport_params
+        RTS_IF_NOT_ZERO         ; obscured
+        MGTK_CALL MGTK::SetPort, grafport
+        MGTK_CALL MGTK::SetPenMode, penXOR
+
         pos_ptr   := $06
         delta_ptr := $08
         tmpw      := $0A
