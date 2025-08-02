@@ -441,17 +441,6 @@ reserved:       .byte   0
         REF_MAPINFO_MEMBERS
 .endparams
 
-kCursorWidth    = 8
-kCursorHeight   = 12
-kSlop           = 14            ; Two DHR bytes worth of pixels
-        ;; Bounding rect for where the blinking caret and cursor could overlap.
-        ;; If the cursor is inside this rect, it is hidden before drawing
-        ;; the bitmap.
-        DEFINE_RECT_SZ anim_cursor_rect, kCaretBmpPosX - kCursorWidth - kSlop,  kCaretBmpPosY - kCursorHeight, kCursorWidth + kCaretBmpWidth + 2*kSlop, kCursorHeight + kCaretBmpHeight
-cursor_flag:
-        .byte   0
-
-
 caret_blink_caret_bitmap:
         PIXELS  "##"
         PIXELS  "##"
@@ -507,12 +496,14 @@ caret_blink_caret_bitmap:
 ;;; ============================================================
 
 .proc HandleMove
+        ;; For warping the cursor after scaling change
         COPY_STRUCT MGTK::Point, event_params::coords, last_mouse_pos
+
+        ;; For insertion point animation
         copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, anim_cursor_rect
-        sta     cursor_flag
+        param_call PrepShieldCursor, screentowindow_params::window
+
         jmp     InputLoop
 .endproc ; HandleMove
 
@@ -1662,17 +1653,10 @@ caret_blink_speed: .word   0
         bne     done            ; obscured
         MGTK_CALL MGTK::SetPort, grafport
 
-        bit     cursor_flag
-        bpl     :+
-        MGTK_CALL MGTK::HideCursor
-:
+        param_call ShieldCursor, caret_blink_bitmap_caret_params
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintBits, caret_blink_bitmap_caret_params
-
-        bit     cursor_flag
-        bpl     :+
-        MGTK_CALL MGTK::ShowCursor
-:
+        jsr     UnShieldCursor
 
 done:   rts
 
@@ -1758,6 +1742,7 @@ done:   rts
 
 ;;; ============================================================
 
+        .include "../lib/shieldcursor.s"
         .include "../lib/uppercase.s"
         .include "../lib/get_next_event.s"
 

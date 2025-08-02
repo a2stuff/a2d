@@ -293,9 +293,11 @@ finish: jmp     InputLoop
 ;;; ============================================================
 
 .proc HandleNoEvent
-        MGTK_CALL MGTK::HideCursor
-        jsr     MoveObjects
-        MGTK_CALL MGTK::ShowCursor
+        copy8   winfo::window_id, screentowindow_params::window_id
+        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
+        param_call PrepShieldCursor, screentowindow_params::window
+
+        jsr     AnimateObjects
 
         jmp     InputLoop
 .endproc ; HandleNoEvent
@@ -316,6 +318,7 @@ finish: jmp     InputLoop
 
 ;;; ============================================================
 
+;;; Caller is responsible for hiding the cursor.
 .proc XDrawObjects
         MGTK_CALL MGTK::SetPenMode, penXOR
 
@@ -330,7 +333,7 @@ loop:   txa
         sta     object_params::viewloc,y
         dey
         bpl     :-
-        MGTK_CALL MGTK::PaintBitsHC, object_params
+        MGTK_CALL MGTK::PaintBits, object_params
 
         add16_8 pos_ptr, #.sizeof(MGTK::Point)
 
@@ -342,7 +345,9 @@ loop:   txa
         rts
 .endproc ; XDrawObjects
 
-.proc MoveObjects
+;;; ============================================================
+
+.proc AnimateObjects
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         RTS_IF_NOT_ZERO         ; obscured
         MGTK_CALL MGTK::SetPort, grafport
@@ -431,7 +436,9 @@ loop:   txa
         sta     object_params::viewloc,y
         dey
         bpl     :-
-        MGTK_CALL MGTK::PaintBitsHC, object_params
+        param_call ShieldCursor, object_params
+        MGTK_CALL MGTK::PaintBits, object_params
+        jsr     UnShieldCursor
 
         ;; Old coords
         ldy     #.sizeof(MGTK::Point)-1
@@ -439,7 +446,9 @@ loop:   txa
         sta     object_params::viewloc,y
         dey
         bpl     :-
-        MGTK_CALL MGTK::PaintBitsHC, object_params
+        param_call ShieldCursor, object_params
+        MGTK_CALL MGTK::PaintBits, object_params
+        jsr     UnShieldCursor
 
         ;; --------------------------------------------------
         ;; Next
@@ -453,7 +462,7 @@ loop:   txa
         jpl     loop
 
         rts
-.endproc ; MoveObjects
+.endproc ; AnimateObjects
 
 ;;; ============================================================
 ;;; Pseudorandom Number Generation
@@ -505,6 +514,7 @@ InitLoop:
 
 ;;; ============================================================
 
+        .include "../lib/shieldcursor.s"
         .include "../lib/uppercase.s"
 
 ;;; ============================================================

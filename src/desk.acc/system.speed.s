@@ -124,17 +124,6 @@ kRunHeight = 11
 run_pos:
         .byte   0
 
-kCursorWidth  = 14
-kCursorHeight = 12
-
-        ;; Bounding rect for where the animation and cursor could overlap.
-        ;; If the cursor is inside this rect, it is hidden before drawing
-        ;; the bitmap.
-        DEFINE_RECT_SZ anim_cursor_rect, kRunPosX - kCursorWidth + 1, kRunPosY - kCursorHeight + 2, kRunWidth + kRunDistance + kCursorWidth - 1, kRunHeight + kCursorHeight - 2
-cursor_flag:
-        .byte   0
-
-
 .params frame_params
         DEFINE_POINT viewloc, kRunPosX, kRunPosY
 mapbits:        .addr   frame1
@@ -286,12 +275,9 @@ frame_counter:
 ;;; ============================================================
 
 .proc OnMove
-        lda     winfo::window_id
-        sta     screentowindow_params::window_id
+        copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
-        MGTK_CALL MGTK::InRect, anim_cursor_rect
-        sta     cursor_flag
+        param_call PrepShieldCursor, screentowindow_params::window
         jmp     InputLoop
 .endproc ; OnMove
 
@@ -398,11 +384,7 @@ hit:    lda     winfo::window_id
 
         add16_8   #kRunPosX, run_pos, frame_params::viewloc::xcoord
 
-        bit     cursor_flag
-        bpl     :+
-        MGTK_CALL MGTK::HideCursor
-:
-
+        param_call ShieldCursor, frame_params
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden
@@ -423,17 +405,12 @@ hit:    lda     winfo::window_id
         MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden
 
 :
-
-        bit     cursor_flag
-        bpl     :+
-        MGTK_CALL MGTK::ShowCursor
-:
-
-        rts
+        jmp     UnShieldCursor
 .endproc ; AnimFrame
 
 ;;; ============================================================
 
+        .include "../lib/shieldcursor.s"
         .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
 
