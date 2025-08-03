@@ -218,9 +218,6 @@ frame_counter:
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
 
-        cmp     #MGTK::EventKind::no_event
-        jeq     OnMove
-
         cmp     #MGTK::EventKind::button_down
         jeq     OnClick
 
@@ -271,15 +268,6 @@ frame_counter:
         JSR_TO_MAIN DoFast
         jmp     InputLoop
 .endproc ; OnKeyFast
-
-;;; ============================================================
-
-.proc OnMove
-        copy8   winfo::window_id, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        param_call PrepShieldCursor, screentowindow_params::window
-        jmp     InputLoop
-.endproc ; OnMove
 
 ;;; ============================================================
 
@@ -384,10 +372,10 @@ hit:    lda     winfo::window_id
 
         add16_8   #kRunPosX, run_pos, frame_params::viewloc::xcoord
 
-        param_call ShieldCursor, frame_params
-
         MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::ShieldCursor, frame_params
         MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden
+        MGTK_CALL MGTK::UnshieldCursor
 
         inc     frame_counter
         lda     frame_counter
@@ -402,15 +390,15 @@ hit:    lda     winfo::window_id
         copy8   #0, run_pos
 
         MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::ShieldCursor, frame_params
         MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden
-
+        MGTK_CALL MGTK::UnshieldCursor
 :
-        jmp     UnShieldCursor
+
 .endproc ; AnimFrame
 
 ;;; ============================================================
 
-        .include "../lib/shieldcursor.s"
         .include "../lib/uppercase.s"
         .include "../lib/drawstring.s"
 

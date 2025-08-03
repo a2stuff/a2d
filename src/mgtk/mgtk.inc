@@ -562,6 +562,12 @@ MulDiv                = $5A
 ;;; .word       result
 ;;; .word       remainder
 
+ShieldCursor          = $5B     ; Hide cursor if intersects rect
+;;; (input is address of MapInfo record)
+
+UnshieldCursor        = $5C
+;;; (no parameters)
+
 ;;; ============================================================
 ;;; Graphics Primitives Constants
 

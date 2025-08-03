@@ -1113,6 +1113,8 @@ or other modal effects without requiring underlying windows to update.
 Note that no error checking is done that the passed rect is valid or
 that the save area passed to `StartDeskTop` is large enough.
 
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
 #### RestoreScreenRect ($57)
 Restore the passed screen rectangle from the save area.
 
@@ -1124,6 +1126,8 @@ Rect        rect
 This must only be used following a `SaveScreenRect` call and must be
 passed the same rectangle dimensions. No error checking is done.
 
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
 #### InflateRect ($58)
 Expand the referenced rectangle by `xdelta` and `ydelta`, which can be negative.
 
@@ -1134,6 +1138,8 @@ Parameters:
 .word       ydelta          pixels
 ```
 
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
 #### UnionRects ($59)
 Expand the second rectangle to encompass the first rectangle.
 
@@ -1142,6 +1148,8 @@ Parameters:
 .addr       rect1           Address of MGTK::Rect. No modified
 .addr       rect2           Address of MGTK::Rect. Expanded if needed.
 ```
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 #### MulDiv ($5A)
 Multiplies two 16-bit values and then divides the 32-bit result by a
@@ -1164,6 +1172,29 @@ respectively.
 
 Note that if the result does not fit into 16 bits, the output is
 undefined.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### ShieldCursor ($5B)
+Conditionally hide the cursor.
+
+Parameters:
+```
+(input is address of MapInfo record)
+```
+
+If the cursor would overlap with the offset/rectangle described by the passed `MapInfo`, offset by the current `GrafPort`, the cursor is hidden. A `MapInfo` is used for convenience as this call is often used in conjunction with `PaintBits` when performing an animation.
+
+Calls to `ShieldCursor` must not be nested, and must be balanced by a corresponding `UnshieldCursor` call. Nesting `ShieldCursor`/`UnshieldCursor` within `HideCursor`/`ShowCursor` or vice versa is supported, however.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### UnshieldCursor ($5C)
+Balance a previous call to `UnshieldCursor`.
+
+No parameters.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 # Creating Applications and DeskTop Desk Accessories
 

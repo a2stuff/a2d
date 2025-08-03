@@ -380,6 +380,8 @@ jump_table:
         .addr   InflateRectImpl     ; $58 InflateRect
         .addr   UnionRectsImpl      ; $59 UnionRects
         .addr   MulDivImpl          ; $5A MulDiv
+        .addr   ShieldCursorImpl    ; $5B ShieldCursor
+        .addr   UnshieldCursorImpl  ; $5C UnshieldCursor
 
         ;; Entry point param lengths
         ;; (length, ZP destination, hide cursor flag)
@@ -509,6 +511,8 @@ param_lengths:
         PARAM_DEFN  6, $82, 0                ; $58 InflateRect
         PARAM_DEFN  4, $82, 0                ; $59 UnionRects
         PARAM_DEFN  6, $82, 0                ; $5A MulDiv
+        PARAM_DEFN 16, $8A, 0                ; $5B ShieldCursor
+        PARAM_DEFN  0, $00, 0                ; $5C UnshieldCursor
 
 ;;; ============================================================
 ;;; Pre-Shift Tables
@@ -10804,6 +10808,93 @@ finish:
 
         rts
 .endproc ; MulDivImpl
+
+;;; ============================================================
+;;; ShieldCursor
+
+;;; 16 bytes of params, copied to $8A
+
+.proc ShieldCursorImpl
+        ;; Input is a `MapInfo`
+        left   := $8A
+        top    := $8C
+        bitmap := $8E           ; unused
+        stride := $90           ; unused
+        hoff   := $92           ; unused (TODO: should it be?)
+        voff   := $94           ; unused (TODO: should it be?)
+        width  := $96
+        height := $98
+
+        right   := width
+        bottom  := height
+
+        kSlop = 14    ; Two DHR bytes worth of pixels
+
+        jsr     CheckRect
+
+        ;; Offset passed rect by current port
+        ldx     #2              ; loop over dimensions
+:       add16   left,x, current_winport::viewloc+MGTK::Point::xcoord,x, left,x
+        dex
+        dex
+        bpl     :-
+
+        ;; Offset passed rect by hotspot
+        add16_8 left, cursor_hotspot_x
+        add16_8 top, cursor_hotspot_y
+
+        ;; Compute the far edges
+        ldx     #2              ; loop over dimensions
+:       add16   left,x, width,x, right,x
+        dex
+        dex
+        bpl     :-
+
+        ;; Account for cursor size and render slop
+        sub16_8 left, #MGTK::cursor_width * 7 + kSlop
+        add16_8 right, #kSlop
+        sub16_8 top, #MGTK::cursor_height
+
+        ldx     #2              ; loop over dimensions
+loop:
+        lda     cursor_pos+1,x
+        cmp     left+1,x
+        bmi     outside
+        bne     :+
+        lda     cursor_pos,x
+        cmp     left,x
+        bcc     outside
+:
+        lda     cursor_pos+1,x
+        cmp     right+1,x
+        bmi     :+
+        bne     outside
+        lda     cursor_pos,x
+        cmp     right,x
+        bcc     :+
+        bne     outside
+:
+        dex
+        dex
+        bpl     loop
+
+        sec
+        ror     cursor_shielded_flag
+        jmp     HideCursorImpl
+
+outside:
+        rts
+.endproc ; ShieldCursorImpl
+
+.proc UnshieldCursorImpl
+        rol     cursor_shielded_flag
+        bcc     :+
+        jsr     ShowCursorImpl
+:       rts
+.endproc ; UnshieldCursorImpl
+
+cursor_shielded_flag:
+        .byte   0
 
 ;;; ============================================================
 

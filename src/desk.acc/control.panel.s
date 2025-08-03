@@ -499,11 +499,6 @@ caret_blink_caret_bitmap:
         ;; For warping the cursor after scaling change
         COPY_STRUCT MGTK::Point, event_params::coords, last_mouse_pos
 
-        ;; For insertion point animation
-        copy8   winfo::window_id, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        param_call PrepShieldCursor, screentowindow_params::window
-
         jmp     InputLoop
 .endproc ; HandleMove
 
@@ -1653,10 +1648,10 @@ caret_blink_speed: .word   0
         bne     done            ; obscured
         MGTK_CALL MGTK::SetPort, grafport
 
-        param_call ShieldCursor, caret_blink_bitmap_caret_params
         MGTK_CALL MGTK::SetPenMode, penXOR
+        MGTK_CALL MGTK::ShieldCursor, caret_blink_bitmap_caret_params
         MGTK_CALL MGTK::PaintBits, caret_blink_bitmap_caret_params
-        jsr     UnShieldCursor
+        MGTK_CALL MGTK::UnshieldCursor
 
 done:   rts
 
@@ -1742,7 +1737,6 @@ done:   rts
 
 ;;; ============================================================
 
-        .include "../lib/shieldcursor.s"
         .include "../lib/uppercase.s"
         .include "../lib/get_next_event.s"
 

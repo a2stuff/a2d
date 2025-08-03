@@ -293,10 +293,6 @@ finish: jmp     InputLoop
 ;;; ============================================================
 
 .proc HandleNoEvent
-        copy8   winfo::window_id, screentowindow_params::window_id
-        MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        param_call PrepShieldCursor, screentowindow_params::window
-
         jsr     AnimateObjects
 
         jmp     InputLoop
@@ -436,9 +432,9 @@ loop:   txa
         sta     object_params::viewloc,y
         dey
         bpl     :-
-        param_call ShieldCursor, object_params
+        MGTK_CALL MGTK::ShieldCursor, object_params
         MGTK_CALL MGTK::PaintBits, object_params
-        jsr     UnShieldCursor
+        MGTK_CALL MGTK::UnshieldCursor
 
         ;; Old coords
         ldy     #.sizeof(MGTK::Point)-1
@@ -446,9 +442,9 @@ loop:   txa
         sta     object_params::viewloc,y
         dey
         bpl     :-
-        param_call ShieldCursor, object_params
+        MGTK_CALL MGTK::ShieldCursor, object_params
         MGTK_CALL MGTK::PaintBits, object_params
-        jsr     UnShieldCursor
+        MGTK_CALL MGTK::UnshieldCursor
 
         ;; --------------------------------------------------
         ;; Next
@@ -514,7 +510,6 @@ InitLoop:
 
 ;;; ============================================================
 
-        .include "../lib/shieldcursor.s"
         .include "../lib/uppercase.s"
 
 ;;; ============================================================
