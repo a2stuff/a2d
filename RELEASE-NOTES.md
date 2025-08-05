@@ -59,6 +59,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Ellipsify long paths in "Copying to RAMCard..." dialog. ([#867](https://github.com/a2stuff/a2d/issues/867))
 * Support launching aliases. ([#880](https://github.com/a2stuff/a2d/issues/880))
 * Disable OK in File > Run a Program.... if folder selected. ([#888](https://github.com/a2stuff/a2d/issues/888))
+* Support launching Integer BASIC programs. ([#879](https://github.com/a2stuff/a2d/issues/879))
 
 ### Disk Copy
 

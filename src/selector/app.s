@@ -1571,7 +1571,9 @@ fail:   jmp     ClearSelectedIndex
         ;; Ensure it's BIN, SYS, S16 or BAS (if BS is present)
 
 check_type:
-        copy8   #0, INVOKER_BITSY_COMPAT
+        lda     #0
+        sta     INVOKER_INTERPRETER
+        sta     INVOKER_BITSY_COMPAT
 
         lda     file_info_params::file_type
         cmp     #FT_LINK
@@ -1582,15 +1584,25 @@ check_type:
     END_IF
 
         cmp     #FT_BASIC
-        bne     not_basic
-        jsr     CheckBasicSystem
-        jeq     check_path
+    IF_EQ
+        param_call CheckInterpreter, str_extras_basic
+        bcc     check_path
+        jsr     CheckBasicSystem ; try relative to launch path
+        beq     check_path
 
         lda     #AlertID::basic_system_not_found
         jsr     ShowAlert
         jmp     ClearSelectedIndex
+    END_IF
 
-not_basic:
+        cmp     #FT_INT
+    IF_EQ
+        param_call CheckInterpreter, str_extras_intbasic
+        bcc     check_path
+        jsr     ShowAlert
+        jmp     ClearSelectedIndex
+    END_IF
+
         cmp     #FT_BINARY
         beq     check_path
         cmp     #FT_SYSTEM
@@ -1805,28 +1817,34 @@ found_slash:
         rts                     ; zero is success
 .endproc ; CheckBasixSystemImpl
 CheckBasisSystem        := CheckBasixSystemImpl::basis
+CheckBasicSystem        := CheckBasixSystemImpl::basic
 
-str_extras_basic:
-        PASCAL_STRING .concat(kFilenameExtrasDir, "/BASIC.system")
+;;; ============================================================
 
-.proc CheckBasicSystem
+;;; Input: A,X = relative path to interpreter
+;;; Output: `INVOKER_INTERPRETER` is abs path, flags have `GET_FILE_INFO` result
+.proc CheckInterpreter
+        ptr := $06
+
+        stax    $06
         MLI_CALL GET_PREFIX, get_prefix_params
-
         ldy     #0
+        lda     (ptr),y
+        sta     len
         ldx     INVOKER_INTERPRETER
 :       iny
         inx
-        lda     str_extras_basic,y
+        lda     (ptr),y
         sta     INVOKER_INTERPRETER,x
-        cpy     str_extras_basic
+        len := *+1
+        cpy     #SELF_MODIFIED_BYTE
         bne     :-
         stx     INVOKER_INTERPRETER
-        param_call GetFileInfo, INVOKER_INTERPRETER
-        jcs     CheckBasixSystemImpl::basic ; nope, look relative to launch path
-        rts
+
+        param_jump GetFileInfo, INVOKER_INTERPRETER
 
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, INVOKER_INTERPRETER
-.endproc ; CheckBasicSystem
+.endproc ; CheckInterpreter
 
 ;;; ============================================================
 
@@ -1857,6 +1875,13 @@ str_extras_basic:
         bne     @loop
 ret:    rts
 .endproc ; UpcaseString
+
+;;; ============================================================
+
+str_extras_basic:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/BASIC.system")
+str_extras_intbasic:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/IntBASIC.system")
 
 ;;; ============================================================
 
