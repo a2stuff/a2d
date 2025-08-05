@@ -10883,14 +10883,13 @@ loop:
         jmp     HideCursorImpl
 
 outside:
-        rts
+ret:    rts
 .endproc ; ShieldCursorImpl
 
 .proc UnshieldCursorImpl
         rol     cursor_shielded_flag
-        bcc     :+
-        jsr     ShowCursorImpl
-:       rts
+        bcc     ShieldCursorImpl::ret
+        jmp     ShowCursorImpl
 .endproc ; UnshieldCursorImpl
 
 cursor_shielded_flag:
