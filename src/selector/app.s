@@ -1603,6 +1603,18 @@ check_type:
         jmp     ClearSelectedIndex
     END_IF
 
+        cmp     #FT_AWP
+        beq     :+
+        cmp     #FT_ASP
+        beq     :+
+        cmp     #FT_ADB
+:   IF_EQ
+        param_call CheckInterpreter, str_extras_awlaunch
+        bcc     check_path
+        jsr     ShowAlert
+        jmp     ClearSelectedIndex
+    END_IF
+
         cmp     #FT_BINARY
         beq     check_path
         cmp     #FT_SYSTEM
@@ -1882,6 +1894,8 @@ str_extras_basic:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/BASIC.system")
 str_extras_intbasic:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/IntBASIC.system")
+str_extras_awlaunch:
+        PASCAL_STRING .concat(kFilenameExtrasDir, "/AWLaunch.system")
 
 ;;; ============================================================
 
