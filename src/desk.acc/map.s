@@ -402,8 +402,7 @@ loop:
         tay
 cloop:  lda     buf_search,y
         jsr     ToUpperCase
-        lda     (ptr),y
-        cmp     #SELF_MODIFIED_BYTE
+        cmp     (ptr),y
         bne     next
         dey
         bne     cloop
@@ -810,6 +809,7 @@ location_table:
         DEFINE_LOCATION "TOKYO", 35, 139
         DEFINE_LOCATION "TORONTO", 43, -79
         DEFINE_LOCATION "VANCOUVER", 49, -123
+        DEFINE_LOCATION "VICTORIA", 48, -123
         DEFINE_LOCATION "WASHINGTON", 38, -77
         DEFINE_LOCATION "XIAMEN", 24, 118
 

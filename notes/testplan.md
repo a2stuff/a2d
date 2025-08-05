@@ -1231,6 +1231,10 @@ With Sci.Calc:
   * Launch DeskTop. Apple Menu > Key Caps. Verify that the "extended" layout is shown, with the backslash to the right of the space bar.
 * Launch DeskTop. Run Apple Menu > Key Caps desk accessory. Press the semicolon/colon key. Verify that the highlight is correctly positioned.
 
+## Map
+
+* Launch DeskTop. Apple Menu > Control Panels. Open Map. Type a known city name e.g. "San Francisco". Click Find. Verify that the city is highlighted on the map and the Latitude/Longitude are updated.
+
 
 ## Screen Savers
 
