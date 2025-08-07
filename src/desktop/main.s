@@ -1440,7 +1440,7 @@ retry:  jsr     GetSrcFileInfo
 
         ;; Check file type.
 :       ldax    #src_path_buf
-        jsr     GetIconType     ; uses passed name and `src_file_info_params`
+        jsr     DetermineIconType ; uses passed name and `src_file_info_params`
 
         ;; Handler based on type
         asl                     ; *= 4
@@ -7517,7 +7517,7 @@ init_smicon_view:
         pha                     ; A = record_num-1
         .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
         jsr     ATimes32        ; A,X = A * 32
-        record_ptr := $06
+        record_ptr := $08
         addax   records_base_ptr, record_ptr
         pla                     ; A = record_num-1
         jsr     _AllocAndPopulateFileIcon
@@ -7535,11 +7535,11 @@ records_base_ptr:
 
 ;;; ============================================================
 ;;; Create icon
-;;; Inputs: A = record_num
+;;; Inputs: A = record_num, $08 = `FileRecord`
 
 .proc _AllocAndPopulateFileIcon
-        file_record := $6
-        icon_entry := $8
+        icon_entry  := $06
+        file_record := $08
         name_tmp := $1800
 
         pha                     ; A = record_num
@@ -7558,39 +7558,35 @@ records_base_ptr:
         ldy     #IconEntry::record_num
         sta     (icon_entry),y
 
-        ;; Bank in the FileRecord entries
+        ;; Bank in the `FileRecord` entries
         bit     LCBANK2
         bit     LCBANK2
 
-        ;; Copy the name out of LCBANK2
-        ldy     #FileRecord::name + kMaxFilenameLength
-        ldx     #kMaxFilenameLength
+        ;; Copy the name out
+        .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
+        ldy     #kMaxFilenameLength
 :       lda     (file_record),y
-        sta     name_tmp,x
+        sta     name_tmp,y
         dey
-        dex
         bpl     :-
 
-        ;; Find the icon type
-        ldy     #FileRecord::file_type
-        copy8   (file_record),y, src_file_info_params::file_type
-        ldy     #FileRecord::aux_type
-        copy16in (file_record),y, src_file_info_params::aux_type
-        ldy     #FileRecord::blocks
-        copy16in (file_record),y, src_file_info_params::blocks_used
+        ;; Copy out file metadata needed to determine icon type
+        jsr     FileRecordToSrcFileInfo ; uses `FileRecord` ptr in $08
 
-        ;; Bank in the resources we need
+        ;; Done with `FileRecord` entries
         bit     LCBANK1
         bit     LCBANK1
 
+        ;; Determine icon type
         jsr     GetCachedWindowViewBy
         sta     view_by
         ldax    #name_tmp
-        jsr     GetIconType     ; uses passed name and `src_file_info_params`
+        jsr     DetermineIconType ; uses passed name and `src_file_info_params`
         view_by := *+1
         ldy     #SELF_MODIFIED_BYTE
         jsr     _FindIconDetailsForIconType
 
+        ;; Copy name into `IconEntry`
         ldy     #IconEntry::name + kMaxFilenameLength
         ldx     #kMaxFilenameLength
 :       lda     name_tmp,x
@@ -7860,7 +7856,7 @@ ret:    rts
 ;;; Input: `src_file_info_params` (`file_type`, `aux_type`, `blocks_used`) and A,X = filename
 ;;; Output: A is IconType to use (for icons, open/preview, etc)
 
-.proc GetIconType
+.proc DetermineIconType
         ptr := $06
         flags := $08
         ptr_filename := $0A
@@ -7965,8 +7961,21 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         ;; Next entry
 next:   add16_8 ptr, #.sizeof(ICTRecord)
         jmp     loop
-.endproc ; GetIconType
+.endproc ; DetermineIconType
 
+;;; ============================================================
+
+;;; Input: $08 = `FileRecord` pointer
+.proc FileRecordToSrcFileInfo
+        file_record := $08
+        ldy     #FileRecord::file_type
+        copy8   (file_record),y, src_file_info_params::file_type
+        ldy     #FileRecord::aux_type
+        copy16in (file_record),y, src_file_info_params::aux_type
+        ldy     #FileRecord::blocks
+        copy16in (file_record),y, src_file_info_params::blocks_used
+        rts
+.endproc ; FileRecordToSrcFileInfo
 
 ;;; ============================================================
 ;;; Draw header (items/K in disk/K available/lines) for `cached_window_id`
@@ -12633,9 +12642,11 @@ finish: jsr     _DialogClose
         file_record_ptr := $08
         jsr     SetFileRecordPtrFromIconPtr
 
-        ;; Bank in FileRecords, and copy the new name in.
+        ;; Bank in the `FileRecord` entries
         bit     LCBANK2
         bit     LCBANK2
+
+        ;; Copy the new name in
         .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
         ldy     new_name_buf
 :       lda     new_name_buf,y
@@ -12643,24 +12654,20 @@ finish: jsr     _DialogClose
         dey
         bpl     :-
 
-        ;; Filename change may alter icon. Don't bank out FileRecords yet.
-        ldy     #FileRecord::file_type
-        copy8   (file_record_ptr),y, src_file_info_params::file_type
-        ldy     #FileRecord::aux_type
-        copy16in (file_record_ptr),y, src_file_info_params::aux_type
-        ldy     #FileRecord::blocks
-        copy16in (file_record_ptr),y, src_file_info_params::blocks_used
+        ;; Copy out file metadata needed to determine icon type
+        jsr     FileRecordToSrcFileInfo ; uses `FileRecord` ptr in $08
 
-        ;; Now we're done with FileRecords.
+        ;; Done with `FileRecord` entries
         bit     LCBANK1
         bit     LCBANK1
 
+        ;; Determine icon type
         jsr     GetSelectionViewBy
         .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
     IF_ZERO
         sta     view_by
         ldax    #new_name_buf
-        jsr     GetIconType     ; uses passed name and `src_file_info_params`
+        jsr     DetermineIconType ; uses passed name and `src_file_info_params`
         view_by := *+1
         ldy     #SELF_MODIFIED_BYTE
         jsr     FindIconDetailsForIconType
