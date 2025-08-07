@@ -7923,11 +7923,6 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         lda     flags
         and     #ICT_FLAGS_SUFFIX
     IF_NOT_ZERO
-        ;; Don't consider suffix matches for directories
-        lda     icontype_filetype
-        cmp     #FT_DIRECTORY
-        beq     next
-
         ;; Set up pointers to suffix and filename
         ptr_suffix      := $08
         ptr_filename    := $0A
@@ -15212,6 +15207,10 @@ icontype_blocks:     .word   0
 icontype_filename:   .addr   0
 
 icontype_table:
+        ;; Types where suffix shouldn't override other metadata
+        DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_AUX, $8000, 0, IconType::system_folder ; $0F
+        DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_NONE, 0, 0, IconType::folder        ; $0F
+
         ;; Types entirely defined by file suffix
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_shk_suffix, 0, IconType::archive ; NuFX
         DEFINE_ICTRECORD 0, 0, ICT_FLAGS_SUFFIX, str_bny_suffix, 0, IconType::archive ; Binary II
@@ -15239,8 +15238,6 @@ icontype_table:
         DEFINE_ICTRECORD $FF, FT_FONT,      ICT_FLAGS_NONE, 0, 0, IconType::font          ; $07
         DEFINE_ICTRECORD $FF, FT_GRAPHICS,  ICT_FLAGS_NONE, 0, 0, IconType::graphics      ; $08
 
-        DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_AUX, $8000, 0, IconType::system_folder ; $0F
-        DEFINE_ICTRECORD $FF, FT_DIRECTORY, ICT_FLAGS_NONE, 0, 0, IconType::folder        ; $0F
         DEFINE_ICTRECORD $FF, FT_ADB,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_db ; $19
         DEFINE_ICTRECORD $FF, FT_AWP,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_wp ; $1A
         DEFINE_ICTRECORD $FF, FT_ASP,       ICT_FLAGS_NONE, 0, 0, IconType::appleworks_sp ; $1B
