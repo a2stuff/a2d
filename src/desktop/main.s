@@ -1439,11 +1439,8 @@ retry:  jsr     GetSrcFileInfo
         rts                     ; cancel, so fail
 
         ;; Check file type.
-:       copy8   src_file_info_params::file_type, icontype_filetype
-        copy16  src_file_info_params::aux_type, icontype_auxtype
-        copy16  src_file_info_params::blocks_used, icontype_blocks
-        copy16  #src_path_buf, icontype_filename
-        jsr     GetIconType
+:       ldax    #src_path_buf
+        jsr     GetIconType     ; uses passed name and `src_file_info_params`
 
         ;; Handler based on type
         asl                     ; *= 4
@@ -7576,13 +7573,11 @@ records_base_ptr:
 
         ;; Find the icon type
         ldy     #FileRecord::file_type
-        lda     (file_record),y
-        sta     icontype_filetype
+        copy8   (file_record),y, src_file_info_params::file_type
         ldy     #FileRecord::aux_type
-        copy16in (file_record),y, icontype_auxtype
+        copy16in (file_record),y, src_file_info_params::aux_type
         ldy     #FileRecord::blocks
-        copy16in (file_record),y, icontype_blocks
-        copy16  #name_tmp, icontype_filename
+        copy16in (file_record),y, src_file_info_params::blocks_used
 
         ;; Bank in the resources we need
         bit     LCBANK1
@@ -7590,7 +7585,8 @@ records_base_ptr:
 
         jsr     GetCachedWindowViewBy
         sta     view_by
-        jsr     GetIconType
+        ldax    #name_tmp
+        jsr     GetIconType     ; uses passed name and `src_file_info_params`
         view_by := *+1
         ldy     #SELF_MODIFIED_BYTE
         jsr     _FindIconDetailsForIconType
@@ -7653,7 +7649,7 @@ L7870:  lda     cached_window_id
         jsr     IconWindowToScreen
 
         ;; If folder, see if there's an associated window
-        lda     icontype_filetype
+        lda     src_file_info_params::file_type
         cmp     #FT_DIRECTORY
         bne     :+
         icon_num := *+1
@@ -7861,12 +7857,19 @@ ret:    rts
 ;;; ============================================================
 ;;; Map file type (etc) to icon type
 
-;;; Input: `icontype_filetype`, `icontype_auxtype`, `icontype_blocks`, `icontype_filename` populated
+;;; Input: `src_file_info_params` (`file_type`, `aux_type`, `blocks_used`) and A,X = filename
 ;;; Output: A is IconType to use (for icons, open/preview, etc)
 
 .proc GetIconType
         ptr := $06
         flags := $08
+        ptr_filename := $0A
+
+        file_type   := src_file_info_params::file_type
+        aux_type    := src_file_info_params::aux_type
+        blocks_used := src_file_info_params::blocks_used
+
+        stax    ptr_filename
 
         jsr     PushPointers
         copy16  #icontype_table, ptr
@@ -7880,7 +7883,7 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         rts
 
         ;; Check type (with mask)
-:       and     icontype_filetype    ; A = type & mask
+:       and     file_type       ; A = type & mask
         iny                     ; ASSERT: Y = ICTRecord::filetype
         .assert ICTRecord::filetype = ICTRecord::mask+1, error, "enum mismatch"
         cmp     (ptr),y         ; type check
@@ -7897,11 +7900,11 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
     IF_NS                       ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux_suf
         .assert ICTRecord::aux_suf = ICTRecord::flags+1, error, "enum mismatch"
-        lda     icontype_auxtype
+        lda     aux_type
         cmp     (ptr),y
         bne     next
         iny
-        lda     icontype_auxtype+1
+        lda     aux_type+1
         cmp     (ptr),y
         bne     next
     END_IF
@@ -7910,11 +7913,11 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         bit     flags
     IF_VS                       ; bit 6 = compare blocks
         ldy     #ICTRecord::blocks
-        lda     icontype_blocks
+        lda     blocks_used
         cmp     (ptr),y
         bne     next
         iny
-        lda     icontype_blocks+1
+        lda     blocks_used+1
         cmp     (ptr),y
         bne     next
     END_IF
@@ -7925,10 +7928,8 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
     IF_NOT_ZERO
         ;; Set up pointers to suffix and filename
         ptr_suffix      := $08
-        ptr_filename    := $0A
         ldy     #ICTRecord::aux_suf
         copy16in (ptr),y, ptr_suffix
-        copy16  icontype_filename, ptr_filename
         ;; Start at the end of the strings
         ldy     #0
         lda     (ptr_suffix),y
@@ -12644,13 +12645,11 @@ finish: jsr     _DialogClose
 
         ;; Filename change may alter icon. Don't bank out FileRecords yet.
         ldy     #FileRecord::file_type
-        lda     (file_record_ptr),y
-        sta     icontype_filetype
+        copy8   (file_record_ptr),y, src_file_info_params::file_type
         ldy     #FileRecord::aux_type
-        copy16in (file_record_ptr),y, icontype_auxtype
+        copy16in (file_record_ptr),y, src_file_info_params::aux_type
         ldy     #FileRecord::blocks
-        copy16in (file_record_ptr),y, icontype_blocks
-        copy16  #new_name_buf, icontype_filename
+        copy16in (file_record_ptr),y, src_file_info_params::blocks_used
 
         ;; Now we're done with FileRecords.
         bit     LCBANK1
@@ -12660,7 +12659,8 @@ finish: jsr     _DialogClose
         .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
     IF_ZERO
         sta     view_by
-        jsr     GetIconType
+        ldax    #new_name_buf
+        jsr     GetIconType     ; uses passed name and `src_file_info_params`
         view_by := *+1
         ldy     #SELF_MODIFIED_BYTE
         jsr     FindIconDetailsForIconType
@@ -15199,12 +15199,6 @@ window_draw_k_used_table:  .res    ::kMaxDeskTopWindows*2, 0
 window_draw_k_free_table:  .res    ::kMaxDeskTopWindows*2, 0
 
 ;;; ============================================================
-
-;;; Params for icontype_lookup
-icontype_filetype:   .byte   0
-icontype_auxtype:    .word   0
-icontype_blocks:     .word   0
-icontype_filename:   .addr   0
 
 icontype_table:
         ;; Types where suffix shouldn't override other metadata
