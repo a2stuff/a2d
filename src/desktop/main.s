@@ -5943,7 +5943,6 @@ update: lda     window_id
         .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
         lda     #0
         sta     window_to_dir_icon_table-1,x ; `kWindowToDirIconFree`
-        sta     win_view_by_table-1,x        ; `DeskTopSettings::kViewByIcon`
 
         ;; Was it the active window?
         lda     cached_window_id
@@ -10672,7 +10671,7 @@ dir:
         jmp     NotifyPathChanged
     END_IF
 
-copy_dir_contents:
+        ;; Copy directory contents
         jsr     ProcessDir
         jsr     GetAndApplySrcInfoToDst ; copy modified date/time
         jsr     MaybeFinishFileMove

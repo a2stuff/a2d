@@ -303,6 +303,7 @@ numerator:      .word   0                 ; (in) populated dynamically
 denominator:    .word   0                 ; (in) populated dynamically
 result:         .word   0                 ; (out)
 remainder:      .word   0                 ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 ;;; ============================================================
@@ -563,7 +564,7 @@ new_window_view_by:     .byte   0
 icon_count:
         .byte   0
 
-;;; Copy from aux memory of icon list for active window (0=desktop)
+;;; Copy out of `window_entry_table` of icon list for active window (0=desktop)
 
         ;; which window buffer is copied
         ;; (see `window_entry_count_table`, `window_entry_list_table`)
@@ -585,7 +586,7 @@ selected_icon_count:
 selected_icon_list:
         .res    kMaxIconCount, 0
 
-;;; Table of desktop window winfo addresses
+;;; Table of desktop window `Winfo` addresses
 win_table:
         .addr   0
         .repeat ::kMaxDeskTopWindows,i
@@ -936,6 +937,7 @@ numerator:      .word   0               ; (in) populated dynamically
 denominator:    .word   kScrollThumbMax ; (in) constant
 result:         .word   0               ; (out)
 remainder:      .word   0               ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 .params setthumb_muldiv_params
@@ -944,6 +946,7 @@ numerator:      .word   kScrollThumbMax ; (in) constant
 denominator:    .word   0               ; (in) populated dynamically
 result:         .word   0               ; (out)
 remainder:      .word   0               ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 ;;; ============================================================

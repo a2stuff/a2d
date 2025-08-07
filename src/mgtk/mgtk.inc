@@ -949,6 +949,14 @@ ycoord: .word   AS_WORD(top)
         .refto maprect
 .endmacro
 
+.macro REF_MULDIV_MEMBERS
+        .refto number
+        .refto numerator
+        .refto denominator
+        .refto result
+        .refto remainder
+.endmacro
+
 ;;; ------------------------------------
 
 ;;; Define pattern for PaintBits as a string

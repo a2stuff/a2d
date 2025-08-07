@@ -212,6 +212,7 @@ numerator:      .word   0               ; (in) populated dynamically
 denominator:    .word   kListItemHeight ; (in) constant
 result:         .word   0               ; (out)
 remainder:      .word   0               ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 .proc ClickImpl
@@ -775,6 +776,7 @@ numerator:      .word   0       ; (in) populated dynamically
 denominator:    .word   1       ; (in) constant
 result:         .word   0       ; (out)
 remainder:      .word   0       ; (out)
+        REF_MULDIV_MEMBERS
 .endparams
 
 ;;; A,X = A,X * Y
