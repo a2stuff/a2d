@@ -52,6 +52,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Support dragging from inactive windows. ([#353](https://github.com/a2stuff/a2d/issues/353))
 * Improve rendering of overlapping icons. ([#875](https://github.com/a2stuff/a2d/issues/875))
 * Improve the appearance of the Trash icon.
+* Ignore suffix when determining icon type for directories.
 
 ### Selector
 

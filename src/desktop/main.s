@@ -7923,6 +7923,11 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         lda     flags
         and     #ICT_FLAGS_SUFFIX
     IF_NOT_ZERO
+        ;; Don't consider suffix matches for directories
+        lda     icontype_filetype
+        cmp     #FT_DIRECTORY
+        beq     next
+
         ;; Set up pointers to suffix and filename
         ptr_suffix      := $08
         ptr_filename    := $0A
