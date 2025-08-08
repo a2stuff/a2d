@@ -6,15 +6,25 @@
         ITKEntry := *
 
         ;; Zero Page usage (saved/restored around calls)
-        ;; $06/$07 and $08/$09 are used as generic pointers
 
-        poly_coords := $0A
-        poly_dx := $0A
-        poly_dy := $0C
+PARAM_BLOCK, $06
+generic_ptr1    .addr
+generic_ptr2    .addr
 
-        clip_coords := $0A
-        clip_dx := $0A
-        clip_dy := $0C
+poly_coords     .tag    MGTK::Point ; used in `DragHighlighted`
+initial_coords  .tag    MGTK::Point ; used in `DragHighlighted`
+last_coords     .tag    MGTK::Point ; used in `DragHighlighted`
+
+clip_coords     .tag    MGTK::Point ; Used for clipped drawing
+clip_bounds     .tag    MGTK::Rect  ; Used for clipped drawing
+
+bitmap_rect     .tag    MGTK::Rect  ; populated by `CalcIconRects`
+label_rect      .tag    MGTK::Rect  ; populated by `CalcIconRects`
+bounding_rect   .tag    MGTK::Rect  ; populated by `CalcIconRects`
+rename_rect     .tag    MGTK::Rect  ; populated by `CalcIconRects`
+END_PARAM_BLOCK
+        ASSERT_EQUALS rename_rect + .sizeof(MGTK::Rect), $42
+        kBytesToSave = $42 - $06
 
         .assert ITKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
@@ -32,7 +42,6 @@
         txa
         pha
 
-        kBytesToSave = 8
 
         ;; Save $06... on the stack
         ldx     #AS_BYTE(-kBytesToSave)
@@ -113,13 +122,6 @@ jump_table_high:
 
 ;;; ============================================================
 
-;;; Set by CalcIconXXXX methods
-
-        DEFINE_RECT bitmap_rect, 0,0,0,0 ; bitmap portion of icon
-        DEFINE_RECT label_rect, 0,0,0,0  ; label portion of icon
-        DEFINE_RECT bounding_rect, 0,0,0,0 ; overall bounding box of above
-        DEFINE_RECT rename_rect, 0,0,0,0 ; rect if name was maximum size
-
 kPolySize = 8
 
 .params poly
@@ -198,6 +200,15 @@ dark_pattern:
 penOR:  .byte   MGTK::penOR
 penXOR: .byte   MGTK::penXOR
 penBIC: .byte   MGTK::penBIC
+
+;;; ============================================================
+
+;;; Used by `DrawAllImpl` and `EraseIconCommon` (which are not
+;;; mutually re-entrant)
+.params icon_in_rect_params
+icon:   .byte   0
+rect:   .tag    MGTK::Rect
+.endparams
 
 ;;; ============================================================
 ;;; Icon (i.e. file, volume) details
@@ -673,6 +684,9 @@ inside: pla
         coords  .tag    MGTK::Point
 .endstruct
 
+        poly_dx := poly_coords + MGTK::Point::xcoord
+        poly_dy := poly_coords + MGTK::Point::ycoord
+
         ldy     #DragHighlightedParams::icon
         lda     (params),y
         sta     icon_id
@@ -1010,9 +1024,6 @@ highlight_icon_id:  .byte   $00
 source_window_id:       .byte   0 ; source window of drag (0=desktop)
 trash_flag:             .byte   0 ; if Trash is included in selection
 
-        DEFINE_POINT initial_coords, 0, 0
-        DEFINE_POINT last_coords, 0, 0
-
 highlight_count:
         .byte   0
 last_highlighted_icon:
@@ -1271,11 +1282,11 @@ start:  ldy     #IconInRectParams::icon
         ldx     #2              ; loop over dimensions
 :
         ;; top/left of bitmap > bottom/right of rect --> outside
-        scmp16  rect::bottomright,x, bitmap_rect::topleft,x
+        scmp16  rect::bottomright,x, bitmap_rect+MGTK::Rect::topleft,x
         bmi     :+
 
         ;; bottom/right of bitmap < top/left of rect --> outside
-        scmp16  bitmap_rect::bottomright,x, rect::topleft,x
+        scmp16  bitmap_rect+MGTK::Rect::bottomright,x, rect::topleft,x
         bmi     :+
 
         dex                     ; next dimension
@@ -1289,11 +1300,11 @@ start:  ldy     #IconInRectParams::icon
         ldx     #2              ; loop over dimensions
 :
         ;; top/left of text > bottom/right of rect --> outside
-        scmp16  rect::bottomright,x, label_rect::topleft,x
+        scmp16  rect::bottomright,x, label_rect+MGTK::Rect::topleft,x
         bmi     outside
 
         ;; bottom/right of text < top/left of rect --> outside
-        scmp16  label_rect::bottomright,x, rect::topleft,x
+        scmp16  label_rect+MGTK::Rect::bottomright,x, rect::topleft,x
         bmi     outside
 
         dex                     ; next dimension
@@ -1666,16 +1677,16 @@ kIconLabelGapV = 2
         ldy     #IconEntry::iconx+3
         ldx     #3
 :       lda     (entry_ptr),y
-        sta     bitmap_rect::topleft,x
+        sta     bitmap_rect+MGTK::Rect::topleft,x
         dey
         dex
         bpl     :-
 
         ;; Bitmap bottom/right
         ldy     #IconResource::maprect + MGTK::Rect::x2
-        add16in bitmap_rect::x1, (bitmap_ptr),y, bitmap_rect::x2
+        add16in bitmap_rect+MGTK::Rect::x1, (bitmap_ptr),y, bitmap_rect+MGTK::Rect::x2
         iny
-        add16in bitmap_rect::y1, (bitmap_ptr),y, bitmap_rect::y2
+        add16in bitmap_rect+MGTK::Rect::y1, (bitmap_ptr),y, bitmap_rect+MGTK::Rect::y2
 
         ldy     #IconEntry::win_flags
         lda     (entry_ptr),y
@@ -1685,27 +1696,27 @@ kIconLabelGapV = 2
         ;; Small icon
 
         ;; Label top
-        copy16  bitmap_rect::y1, label_rect::y1
+        copy16  bitmap_rect+MGTK::Rect::y1, label_rect+MGTK::Rect::y1
 
         ;; Label bottom
-        add16_8 label_rect::y1, #kSystemFontHeight+1, label_rect::y2
+        add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight+1, label_rect+MGTK::Rect::y2
 
         ;; Left edge of label
-        add16_8 bitmap_rect::x2, #kListViewIconGap-2, label_rect::x1
+        add16_8 bitmap_rect+MGTK::Rect::x2, #kListViewIconGap-2, label_rect+MGTK::Rect::x1
 
         jsr     stash_rename_rect
 
         ;; Force bitmap bottom to same height
-        copy16  label_rect::y2, bitmap_rect::y2
+        copy16  label_rect+MGTK::Rect::y2, bitmap_rect+MGTK::Rect::y2
     ELSE
         ;; ----------------------------------------
         ;; Regular icon
 
         ;; Label top
-        add16_8 bitmap_rect::y2, #kIconLabelGapV, label_rect::y1
+        add16_8 bitmap_rect+MGTK::Rect::y2, #kIconLabelGapV, label_rect+MGTK::Rect::y1
 
         ;; Label bottom
-        add16_8 label_rect::y1, #kSystemFontHeight, label_rect::y2
+        add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight, label_rect+MGTK::Rect::y2
 
         ;; Center horizontally
 
@@ -1713,30 +1724,30 @@ kIconLabelGapV = 2
         ;;  text_left = icon_left + icon_width/2 - text_width/2
         ;;            = (icon_left*2 + icon_width - text_width) / 2
         ;; NOTE: Left is computed before right to match rendering code
-        copy16  bitmap_rect::x1, label_rect::x1
-        asl16   label_rect::x1
+        copy16  bitmap_rect+MGTK::Rect::x1, label_rect+MGTK::Rect::x1
+        asl16   label_rect+MGTK::Rect::x1
         ldy     #IconResource::maprect + MGTK::Rect::x2
-        add16in label_rect::x1, (bitmap_ptr),y, label_rect::x1
+        add16in label_rect+MGTK::Rect::x1, (bitmap_ptr),y, label_rect+MGTK::Rect::x1
         jsr     stash_rename_rect
-        sub16   label_rect::x1, textwidth_params::result, label_rect::x1
-        asr16   label_rect::x1 ; signed
+        sub16   label_rect+MGTK::Rect::x1, textwidth_params::result, label_rect+MGTK::Rect::x1
+        asr16   label_rect+MGTK::Rect::x1 ; signed
 
-        sub16_8 rename_rect::x1, #kIconRenameLineEditWidth, rename_rect::x1
-        asr16   rename_rect::x1
+        sub16_8 rename_rect+MGTK::Rect::x1, #kIconRenameLineEditWidth, rename_rect+MGTK::Rect::x1
+        asr16   rename_rect+MGTK::Rect::x1
 
     END_IF
 
         ;; Label right
-        add16   label_rect::x1, textwidth_params::result, label_rect::x2
+        add16   label_rect+MGTK::Rect::x1, textwidth_params::result, label_rect+MGTK::Rect::x2
 
-        add16_8 rename_rect::x1, #kIconRenameLineEditWidth, rename_rect::x2
-        dec16   rename_rect::y1
+        add16_8 rename_rect+MGTK::Rect::x1, #kIconRenameLineEditWidth, rename_rect+MGTK::Rect::x2
+        dec16   rename_rect+MGTK::Rect::y1
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 
 stash_rename_rect:
-        COPY_BLOCK label_rect, rename_rect
+        COPY_STRUCT MGTK::Rect, label_rect, rename_rect
         rts
 .endproc ; CalcIconRects
 
@@ -1791,7 +1802,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
         ;; Start off making all (except v6) the same
         ldy     #.sizeof(MGTK::Point)-1
-:       lda     bitmap_rect::topleft,y
+:       lda     bitmap_rect+MGTK::Rect::topleft,y
         sta     poly::v0,y
         sta     poly::v1,y
         sta     poly::v2,y
@@ -1803,11 +1814,11 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         bpl     :-
 
         ;; Then tweak remaining vertices on right/bottom
-        ldax    label_rect::x2
+        ldax    label_rect+MGTK::Rect::x2
         stax    poly::v5::xcoord
         stax    poly::v6::xcoord
 
-        ldax    bitmap_rect::y2
+        ldax    bitmap_rect+MGTK::Rect::y2
         stax    poly::v6::ycoord
         stax    poly::v7::ycoord
 
@@ -1829,13 +1840,13 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         ;; Even vertexes are (mostly) direct copies from rects
 
         ;; v0/v2 (and extend bitmap rect down to top of text)
-        COPY_STRUCT MGTK::Point, bitmap_rect::topleft, poly::v0
-        copy16  bitmap_rect::x2, poly::v2::xcoord
-        copy16  label_rect::y1, poly::v2::ycoord
+        COPY_STRUCT MGTK::Point, bitmap_rect+MGTK::Rect::topleft, poly::v0
+        copy16  bitmap_rect+MGTK::Rect::x2, poly::v2::xcoord
+        copy16  label_rect+MGTK::Rect::y1, poly::v2::ycoord
 
         ;; v6/v4
-        COPY_STRUCT MGTK::Point, label_rect::topleft, poly::v6
-        COPY_STRUCT MGTK::Point, label_rect::bottomright, poly::v4
+        COPY_STRUCT MGTK::Point, label_rect+MGTK::Rect::topleft, poly::v6
+        COPY_STRUCT MGTK::Point, label_rect+MGTK::Rect::bottomright, poly::v4
 
         ;; Odd vertexes are combinations
 
@@ -1914,7 +1925,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #MGTK::MapInfo::maprect + .sizeof(MGTK::Rect)-1
 :       lda     (port_ptr),y
-        sta     rect,x
+        sta     icon_in_rect_params::rect,x
         dey
         dex
         bpl     :-
@@ -1928,7 +1939,7 @@ loop:   inx
         pha
 
         lda     icon_list,x
-        sta     icon
+        sta     icon_in_rect_params::icon
         ptr := $06
         jsr     GetIconWin      ; sets `ptr`/$06 too
 
@@ -1938,10 +1949,10 @@ loop:   inx
         bne     next            ; no, skip it
 
         ;; In maprect?
-        ITK_CALL IconTK::IconInRect, icon
+        ITK_CALL IconTK::IconInRect, icon_in_rect_params
         beq     next            ; no, skip it
 
-        ITK_CALL IconTK::DrawIconRaw, icon
+        ITK_CALL IconTK::DrawIconRaw, icon_in_rect_params::icon
 
 next:   pla
         tax
@@ -1949,9 +1960,6 @@ next:   pla
 
 done:   rts
 
-        ;; IconTK::DrawIconRaw and IconTK::IconInRect params
-icon:   .byte   0
-rect:   .tag    MGTK::Rect
 
 .endproc ; DrawAllImpl
 
@@ -2026,7 +2034,7 @@ rect:   .tag    MGTK::Rect
 ;;; After erasing an icon, redraw any overlapping icons
 
 .proc _RedrawIconsAfterErase
-        COPY_BLOCK bounding_rect, icon_rect
+        COPY_BLOCK bounding_rect, icon_in_rect_params::rect
 
         jsr     PushPointers
         ldx     num_icons
@@ -2042,7 +2050,7 @@ loop:   dex                     ; any icons to draw?
         cmp     erase_icon_id
         beq     next
 
-        sta     icon
+        sta     icon_in_rect_params::icon
         ptr := $06
         jsr     GetIconWin      ; sets `ptr`/$06 too
 
@@ -2058,13 +2066,13 @@ loop:   dex                     ; any icons to draw?
         bne     next
     END_IF
 
-        ITK_CALL IconTK::IconInRect, icon
+        ITK_CALL IconTK::IconInRect, icon_in_rect_params
     IF_NOT_ZERO
         lda     clip_window_id
       IF_ZERO
-        ITK_CALL IconTK::DrawIcon, icon
+        ITK_CALL IconTK::DrawIcon, icon_in_rect_params::icon
       ELSE
-        ITK_CALL IconTK::DrawIconRaw, icon
+        ITK_CALL IconTK::DrawIconRaw, icon_in_rect_params::icon
       END_IF
     END_IF
 
@@ -2079,12 +2087,6 @@ redraw_highlighted_flag:
         .byte   0
 erase_icon_id:
         .byte   0
-
-        ;; IconTK::DrawIconXXX params
-        ;; IconTK::IconInRect params (in `_RedrawIconsAfterErase`)
-icon:   .byte   0
-icon_rect:
-        .tag    MGTK::Rect
 .endproc ; EraseIconCommon
 
 
@@ -2114,9 +2116,6 @@ icon_rect:
 ;;;    an updated left edge.
 ;;;
 ;;; ============================================================
-
-;;; Initial bounds, saved for re-entry.
-        DEFINE_RECT clip_bounds, 0,0,0,0
 
 .params portbits
         DEFINE_POINT viewloc, 0, 0
@@ -2183,14 +2182,14 @@ reserved:       .byte   0
 
         ldx     #2              ; loop over dimensions
 :
-        scmp16  portbits::maprect::topleft,x, bounding_rect::topleft,x
+        scmp16  portbits::maprect::topleft,x, bounding_rect+MGTK::Rect::topleft,x
     IF_NEG
-        copy16  bounding_rect::topleft,x, portbits::maprect::topleft,x
+        copy16  bounding_rect+MGTK::Rect::topleft,x, portbits::maprect::topleft,x
     END_IF
 
-        scmp16  bounding_rect::bottomright,x, portbits::maprect::bottomright,x
+        scmp16  bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
     IF_NEG
-        copy16  bounding_rect::bottomright,x, portbits::maprect::bottomright,x
+        copy16  bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
     END_IF
 
         ;; Is there anything left?
@@ -2268,7 +2267,7 @@ reentry:
         ;; cr_t = clip_bounds::y1
         ;; cr_r = clip_bounds::x2
         ;; cr_b = clip_bounds::y2
-        COPY_BYTES 6, clip_bounds::y1, cr_t
+        COPY_BYTES 6, clip_bounds+MGTK::Rect::y1, cr_t
 
         ;; vy = cr_t
 
@@ -2329,9 +2328,8 @@ reclip:
 next_pt:
         ;; Done all 4 points?
         lda     pt_num
-        eor     #4
+        cmp     #4
         bne     do_pt
-        sta     pt_num
 
         ;; --------------------------------------------------
         ;; Finish up
@@ -2339,7 +2337,7 @@ next_pt:
         copy16  cr_l, vx
         copy16  cr_t, vy
 
-        scmp16   cr_r, clip_bounds::x2
+        scmp16   cr_r, clip_bounds+MGTK::Rect::x2
         ;; if (cr_r < clip_bounds::x2) more drawing is needed
         sta     more_drawing_needed_flag ; update bit7
 
@@ -2478,19 +2476,22 @@ CalcWindowIntersections := CalcWindowIntersectionsImpl::start
         lda     clip_window_id
         RTS_IF_ZERO
 
+        clip_dx := clip_coords + MGTK::Point::xcoord
+        clip_dy := clip_coords + MGTK::Point::xcoord
+
         ldxy    clip_dx
         addxy   portbits::maprect::x1
         addxy   portbits::maprect::x2
-        addxy   bitmap_rect::x1
-        addxy   bitmap_rect::x2 ; `bitmap_rect` used for dimming
-        addxy   label_rect::x1  ; x2 not used for clipping
+        addxy   bitmap_rect+MGTK::Rect::x1
+        addxy   bitmap_rect+MGTK::Rect::x2 ; `bitmap_rect` used for dimming
+        addxy   label_rect+MGTK::Rect::x1  ; x2 not used for clipping
 
         ldxy    clip_dy
         addxy   portbits::maprect::y1
         addxy   portbits::maprect::y2
-        addxy   bitmap_rect::y1
-        addxy   bitmap_rect::y2 ; `bitmap_rect` used for dimming
-        addxy   label_rect::y1  ; y2 not used for clipping
+        addxy   bitmap_rect+MGTK::Rect::y1
+        addxy   bitmap_rect+MGTK::Rect::y2 ; `bitmap_rect` used for dimming
+        addxy   label_rect+MGTK::Rect::y1  ; y2 not used for clipping
 
         MGTK_CALL MGTK::SetPortBits, portbits
 
