@@ -63,7 +63,6 @@ Point       topleft
 Point       bottomright
 ```
 
-
 ### Pattern
 A simple repeating 8x8 pattern is defined by 8 bytes. All bits of each byte are used.
 ```
@@ -322,6 +321,22 @@ In general, `PaintBitsHC` should be preferred except for truly
 performance-sensitive operations (e.g. animations) where the cursor
 remains visible but is hidden conditionally.
 
+#### PaintBitsHC ($54)
+Like `PaintBits`, but hides/restores the cursor for the operation.
+
+Parameters:
+```
+(input is address of MapInfo record)
+```
+
+If the cursor is already hidden (via a call to `ShowCursor` or
+`ObscureCursor`) then this is the same as `PaintBits`, with no
+performance penalty. If the cursor is not already hidden, then
+this is equivalent in behavior but faster than surrounding
+a `PaintBits` call with `ShowCursor`/`HideCursor` because the
+extra dispatch is avoided.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 #### PaintPoly ($15)
 Fill multiple closed polygons with the pattern of the current grafport.
@@ -348,7 +363,6 @@ Parameters:
 ```
 
 ### Text - draw and measure text
-
 
 #### TextWidth ($18)
 Measure the width of a string in pixels
@@ -420,7 +434,6 @@ Parameters:
 * To enter Mouse Keys mode, hold down both the Open-Apple key and the Solid-Apple (Option) key and then press the Space key. A confirmation sound will play.
 * Move the mouse cursor using the arrow keys. Use the Solid-Apple (or Option) key as the mouse button.
 * To exit Mouse Keys mode, press Escape. A confirmation sound will play.
-
 
 ## Concepts
 
@@ -559,7 +572,6 @@ No parameters.
 
 #### SetUserHook ($1F)
 
-
 Parameters:
 ```
 .byte       hook_id         0=before, 1=after event checking
@@ -599,6 +611,34 @@ Parameters:
 
 > This call is not present in the 1985 APDA documentation. All subsequent call numbers are offset by one.
 
+#### GetDeskPat ($4E)
+Get address of desktop pattern.
+
+Parameters:
+```
+.addr       pattern         (out) 8x8 pixel pattern
+```
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### SetDeskPat ($4F)
+Set new desktop pattern. Note that this does NOT redraw anything.
+Applications can use `RedrawDeskTop` to force a redraw.
+
+Parameters:
+```
+.res 8      pattern         8x8 pixel pattern
+```
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### RedrawDeskTop ($52)
+Redraws the desktop background, and posts update events for the desktop and all
+windows.
+
+No parameters.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 ### Cursor Manager - set, show, hide
 
@@ -637,6 +677,27 @@ Parameters:
 .addr definition            (out) Address of cursor record
 ```
 
+#### ShieldCursor ($5B)
+Conditionally hide the cursor.
+
+Parameters:
+```
+(input is address of MapInfo record)
+```
+
+If the cursor would overlap with the offset/rectangle described by the passed `MapInfo`, offset by the current `GrafPort`, the cursor is hidden. A `MapInfo` is used for convenience as this call is often used in conjunction with `PaintBits` when performing an animation.
+
+Calls to `ShieldCursor` must not be nested, and must be balanced by a corresponding `UnshieldCursor` call. Nesting `ShieldCursor`/`UnshieldCursor` within `HideCursor`/`ShowCursor` or vice versa is supported, however.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### UnshieldCursor ($5C)
+Balance a previous call to `UnshieldCursor`.
+
+No parameters.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
 ### Event Manager - get, peek, post
 
 #### CheckEvents ($29)
@@ -655,7 +716,6 @@ Parameters:
 _DA specific:_
 
 * Call `JUMP_TABLE_YIELD_LOOP` to allow DeskTop to do periodic tasks.
-
 
 #### FlushEvents ($2B)
 Drop any pending events from the queue.
@@ -687,7 +747,6 @@ Parameters:
 ```
 .byte       handle_keys     high bit set = ignore keyboard, otherwise check
 ```
-
 
 ### Menu Manager - configure, enable, disable, select
 
@@ -781,11 +840,27 @@ Parameters:
 .byte       mark_char       char code to use for mark
 ```
 
+#### DrawMenuBar ($50)
+Redraws the current menu bar. Useful after full-screen operations.
+Note that hilite state of menu bar items is not restored; this must
+be done by a manual call to `HiliteMenu`
+
+No parameters.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### FlashMenuBar ($55)
+Negates (XOR) the pixels of the menu bar. Useful for silent alerts.
+This should be called an even number of times before another MGTK call
+is made so the menu bar is left in a normal state.
+
+No parameters.
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 ### Window Manager - open, close, drag, grow, update
 
 #### OpenWindow ($38)
-
 
 Parameters:
 ```
@@ -794,14 +869,12 @@ Parameters:
 
 #### CloseWindow ($39)
 
-
 Parameters:
 ```
 .byte window_id
 ```
 
 #### CloseAll ($3A)
-
 
 No parameters.
 
@@ -825,7 +898,6 @@ Parameters:
 
 Returns `Error::window_obscured` if the content area of the window is completely offscreen and drawing must be skipped. (The port rect will be invalid.)
 
-
 #### SetWinPort ($3D)
 Update port of window
 
@@ -834,7 +906,6 @@ Parameters:
 .byte       window_id
 .addr       port            GrafPort to copy from
 ```
-
 
 #### BeginUpdate ($3E)
 Respond to update event for desktop/window
@@ -850,11 +921,9 @@ Returns `Error::window_obscured` if the content area of the window is completely
 
 #### EndUpdate ($3F)
 
-
 No parameters.
 
 #### FindWindow ($40)
-
 
 Parameters:
 ```
@@ -882,14 +951,12 @@ Parameters:
 
 #### TrackGoAway ($43)
 
-
 Parameters:
 ```
 .byte       clicked         (out) 0 = canceled, 1 = close
 ```
 
 #### DragWindow ($44)
-
 
 Parameters:
 ```
@@ -902,7 +969,6 @@ Parameters:
 > The 1986 APDA documentation specified that the `moved` parameter has values of 1 for yes, 0 for no. The implementation uses the high bit instead.
 
 #### GrowWindow ($45)
-
 
 Parameters:
 ```
@@ -938,11 +1004,22 @@ Parameters:
 .word       screeny         (out)
 ```
 
+#### GetWinFrameRect ($51)
+Get the rectangle framing a window. This is in screen coordinates,
+and is the same rectangle that would be drawn for grow or move
+operations.
+
+Parameters:
+```
+.byte       window_id
+Rect        rect            (out)
+```
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 ### Control Manager - scrollbars
 
 #### FindControl ($48)
-
 
 Parameters:
 ```
@@ -952,8 +1029,21 @@ Parameters:
 .byte       which_part      (out) MGTK::Part::*
 ```
 
-#### SetCtlMax ($49)
+#### FindControlEx ($53)
+Like `FindControl`, but works on all windows, not just the topmost window.
 
+Parameters:
+```
+.word       mousex
+.word       mousey
+.byte       which_ctl       (out) MGTK::Ctl::*
+.byte       which_part      (out) MGTK::Part::*
+.byte       window_id
+```
+
+> This call is a modern addition, so is not present in the 1985 APDA documentation.
+
+#### SetCtlMax ($49)
 
 Parameters:
 ```
@@ -962,7 +1052,6 @@ Parameters:
 ```
 
 #### TrackThumb ($4A)
-
 
 Parameters:
 ```
@@ -973,9 +1062,7 @@ Parameters:
 .byte       thumbmobed      (out) 0 = no change, 1 = moved
 ```
 
-
 #### UpdateThumb ($4B)
-
 
 Parameters:
 ```
@@ -992,7 +1079,6 @@ Parameters:
 .byte       activate        0=deactivate, 1=activate
 ```
 
-
 ### Miscellaneous
 
 #### BitBlt ($4D)
@@ -1006,97 +1092,6 @@ Parameters:
 ```
 
 > This call was not listed in the 1985 APDA documentation, so the behavior is inferred from the source.
-
-#### GetDeskPat ($4E)
-Get address of desktop pattern.
-
-Parameters:
-```
-.addr       pattern         (out) 8x8 pixel pattern
-```
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
-
-#### SetDeskPat ($4F)
-Set new desktop pattern. Note that this does NOT redraw anything.
-Applications can use `RedrawDeskTop` to force a redraw.
-
-Parameters:
-```
-.res 8      pattern         8x8 pixel pattern
-```
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
-
-#### DrawMenuBar ($50)
-Redraws the current menu bar. Useful after full-screen operations.
-Note that hilite state of menu bar items is not restored; this must
-be done by manual calls to `HiliteMenu`
-
-No parameters.
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
-
-#### GetWinFrameRect ($51)
-Get the rectangle framing a window. This is in screen coordinates,
-and is the same rectangle that would be drawn for grow or move
-operations.
-
-Parameters:
-```
-.byte       window_id
-Rect        rect            (out)
-```
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
-
-#### RedrawDeskTop ($52)
-Redraws the desktop background, and posts update events for the desktop and all
-windows.
-
-No parameters.
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
-
-#### FindControlEx ($53)
-Like `FindControl`, but works on all windows, not just the topmost window.
-
-Parameters:
-```
-.word       mousex
-.word       mousey
-.byte       which_ctl       (out) MGTK::Ctl::*
-.byte       which_part      (out) MGTK::Part::*
-.byte       window_id
-```
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
-
-#### PaintBitsHC ($54)
-Like `PaintBits`, but hides/restores the cursor for the operation.
-
-Parameters:
-```
-(input is address of MapInfo record)
-```
-
-If the cursor is already hidden (via a call to `ShowCursor` or
-`ObscureCursor`) then this is the same as `PaintBits`, with no
-performance penalty. If the cursor is not already hidden, then
-this is equivalent in behavior but faster than surrounding
-a `PaintBits` call with `ShowCursor`/`HideCursor` because the
-extra dispatch is avoided.
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
-
-#### FlashMenuBar ($55)
-Negates (XOR) the pixels of the menu bar. Useful for silent alerts.
-This should be called an even number of times before another MGTK call
-is made so the menu bar is left in a normal state.
-
-No parameters.
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
 
 #### SaveScreenRect ($56)
 Save the passed screen rectangle to the save area.
@@ -1175,27 +1170,6 @@ undefined.
 
 > This call is a modern addition, so is not present in the 1985 APDA documentation.
 
-#### ShieldCursor ($5B)
-Conditionally hide the cursor.
-
-Parameters:
-```
-(input is address of MapInfo record)
-```
-
-If the cursor would overlap with the offset/rectangle described by the passed `MapInfo`, offset by the current `GrafPort`, the cursor is hidden. A `MapInfo` is used for convenience as this call is often used in conjunction with `PaintBits` when performing an animation.
-
-Calls to `ShieldCursor` must not be nested, and must be balanced by a corresponding `UnshieldCursor` call. Nesting `ShieldCursor`/`UnshieldCursor` within `HideCursor`/`ShowCursor` or vice versa is supported, however.
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
-
-#### UnshieldCursor ($5C)
-Balance a previous call to `UnshieldCursor`.
-
-No parameters.
-
-> This call is a modern addition, so is not present in the 1985 APDA documentation.
-
 # Creating Applications and DeskTop Desk Accessories
 
 ### Application Use
@@ -1210,7 +1184,6 @@ _Notes specific to DeskTop Desk Accessories (DA) are included where usage differ
 * `SetMenu`
 * Run main loop until quit
 * `StopDeskTop`
-
 
 #### Main Loop
 
@@ -1252,7 +1225,6 @@ _DA specific:_
 * optional: `ShowCursor` - if it was hidden above
 * optional: `SetWinPort` - save changed attributes (penpos, etc) if desired
 
-
 #### Handle Key
 
 * `MenuKey`
@@ -1264,7 +1236,6 @@ _DA specific:_
 
 _DA specific: Menus are not supported in DAs, so the first steps here can be skipped._
 
-
 #### Handle Menu
 
 * `MenuSelect` to initiate menu modal loop
@@ -1273,7 +1244,6 @@ _DA specific: Menus are not supported in DAs, so the first steps here can be ski
 * `HiliteMenu` to toggle state back off when done
 
 _DA specific: Menus are not supported in DAs._
-
 
 #### Handle Window Drag
 
@@ -1287,7 +1257,6 @@ _DA specific:_
 
 * Call `JUMP_TABLE_CLEAR_UPDATES` to allow DeskTop to handle update events. This will not redraw the DA window, however.
 * [Redraw](#redraw-window) DA window content
-
 
 #### Handle Window Close
 
@@ -1314,7 +1283,6 @@ _DA specific:_
   * Scroll by a "line"
   * [Redraw](#redraw-window) window content
   * `UpdateThumb`
-
 
 #### Handle Window Resize
 
