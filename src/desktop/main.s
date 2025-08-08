@@ -3172,64 +3172,47 @@ concatenate:
         ;; Padding
         MGTK_CALL MGTK::InflateRect, bbox_pad_tmp_rect
 
+        ;; --------------------------------------------------
+        ;; Adjustments
+
         delta := $06
         dirty := $08
 
         copy8   #0, dirty
-
-        ;; --------------------------------------------------
-        ;; X adjustment
-
+        ldx     #2              ; loop over dimensions
+loop:
         ;; Is left of icon beyond window? If so, adjust by delta (negative)
-        sub16   tmp_rect::x1, window_grafport::maprect::x1, delta
-        bmi     adjustx
+        sub16   tmp_rect::topleft,x, window_grafport::maprect::topleft,x, delta
+        bmi     adjust
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
-        sub16   tmp_rect::x2, window_grafport::maprect::x2, delta
-        bmi     donex
+        sub16   tmp_rect::bottomright,x, window_grafport::maprect::bottomright,x, delta
+        bmi     done
 
-adjustx:
+adjust:
         lda     delta
         ora     delta+1
-        beq     donex
-
-        inc     dirty
-        add16   window_grafport::maprect::x1, delta, window_grafport::maprect::x1
-        add16   window_grafport::maprect::x2, delta, window_grafport::maprect::x2
-
-donex:
-
-        ;; --------------------------------------------------
-        ;; Y adjustment
-
-        ;; Is top of icon beyond window? If so, adjust by delta (negative)
-        sub16   tmp_rect::y1, window_grafport::maprect::y1, delta
-        bmi     adjusty
-
-        ;; Is bottom of icon beyond window? If so, adjust by delta (positive)
-        sub16   tmp_rect::y2, window_grafport::maprect::y2, delta
-        bmi     doney
-
-adjusty:
-        lda     delta
-        ora     delta+1
-        beq     doney
-
-        inc     dirty
-        add16   window_grafport::maprect::y1, delta, window_grafport::maprect::y1
-        add16   window_grafport::maprect::y2, delta, window_grafport::maprect::y2
-
-doney:
-        lda     dirty
         beq     done
 
+        inc     dirty
+        add16   window_grafport::maprect::topleft,x, delta, window_grafport::maprect::topleft,x
+        add16   window_grafport::maprect::bottomright,x, delta, window_grafport::maprect::bottomright,x
+
+done:
+        dex                     ; next dimension
+        dex
+        bpl     loop
+
+        lda     dirty
+    IF_NOT_ZERO
         ;; Apply the viewport (accounting for header)
         sub16_8 window_grafport::maprect::y1, #kWindowHeaderHeight - 1
         jsr     AssignActiveWindowCliprectAndUpdateCachedIcons
         jsr     ClearAndDrawActiveWindowEntries
         jsr     ScrollUpdate
+    END_IF
 
-done:   rts
+        rts
 
 .endproc ; ScrollIconIntoView
 
@@ -4641,6 +4624,7 @@ tick_v  .byte
 
 tmpw    .word
 END_PARAM_BLOCK
+dimensions := width
 
 ;;; --------------------------------------------------
 ;;; Compute the necessary data for scroll operations:
@@ -4789,21 +4773,24 @@ _Preamble:
 ;;;   2. vp.lo = vp.hi - size
 ;;;   3. goto update
 
-.proc _Clamp_x2
-        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
+.proc _Clamp_hi
+        scmp16  viewport+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::bottomright,x
     IF_POS
-        copy16  ubox+MGTK::Rect::x2, viewport+MGTK::Rect::x2
+        copy16  ubox+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::bottomright,x
     END_IF
-        sub16   viewport+MGTK::Rect::x2, width, viewport+MGTK::Rect::x1
+        sub16   viewport+MGTK::Rect::bottomright,x, dimensions,x, viewport+MGTK::Rect::topleft,x
+        rts
+.endproc ; _Clamp_hi
+
+.proc _Clamp_x2
+        ldx     #0
+        jsr     _Clamp_hi
         jmp     _MaybeUpdateHThumb
 .endproc ; _Clamp_x2
 
 .proc _Clamp_y2
-        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
-    IF_POS
-        copy16  ubox+MGTK::Rect::y2, viewport+MGTK::Rect::y2
-    END_IF
-        sub16   viewport+MGTK::Rect::y2, height, viewport+MGTK::Rect::y1
+        ldx     #2
+        jsr     _Clamp_hi
         jmp     _MaybeUpdateVThumb
 .endproc ; _Clamp_y2
 
@@ -4813,21 +4800,24 @@ _Preamble:
 ;;;   2. vp.hi = vp.lo + size
 ;;;   3. goto update
 
-.proc _Clamp_x1
-        scmp16  viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1
+.proc _Clamp_lo
+        scmp16  viewport+MGTK::Rect::topleft,x, ubox+MGTK::Rect::topleft,x
     IF_NEG
-        copy16  ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
+        copy16  ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x
     END_IF
-        add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
+        add16   viewport+MGTK::Rect::topleft,x, dimensions,x, viewport+MGTK::Rect::bottomright,x
+        rts
+.endproc ; _Clamp_lo
+
+.proc _Clamp_x1
+        ldx     #0
+        jsr     _Clamp_lo
         jmp     _MaybeUpdateHThumb
 .endproc ; _Clamp_x1
 
 .proc _Clamp_y1
-        scmp16  viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1
-    IF_NEG
-        copy16  ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
-    END_IF
-        add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
+        ldx     #2
+        jsr     _Clamp_lo
         jmp     _MaybeUpdateVThumb
 .endproc ; _Clamp_y1
 
@@ -5658,8 +5648,7 @@ exception_flag:
 
 PARAM_BLOCK, $10
 window_id       .byte    ; 0 = desktop, assumed to be active otherwise
-deltax          .word
-deltay          .word
+delta           .tag    MGTK::Point
 initial_pos     .tag    MGTK::Point
 last_pos        .tag    MGTK::Point
 END_PARAM_BLOCK
@@ -5782,32 +5771,30 @@ update: lda     window_id
     IF_NOT_ZERO
         jsr     _CoordsScreenToWindow
     END_IF
-        sub16   event_params::xcoord, last_pos+MGTK::Point::xcoord, deltax
-        sub16   event_params::ycoord, last_pos+MGTK::Point::ycoord, deltay
 
-        lda     deltax+1
-        bpl     :+
-        lda     deltax          ; negate
-        eor     #$FF
-        sta     deltax
-        inc     deltax
+        ldx     #2              ; loop over dimensions
+dloop:
+        sub16   event_params::coords,x, last_pos,x, delta,x
 
-:       lda     deltay+1
-        bpl     :+
-        lda     deltay          ; negate
+        lda     delta+1,x
+    IF_NEG
+        lda     delta,x        ; negate
         eor     #$FF
-        sta     deltay
-        inc     deltay
+        sta     delta,x
+        inc     delta,x
+    END_IF
 
         ;; TODO: Experiment with making this lower.
         kDragBoundThreshold = 5
 
-:       lda     deltax
+        lda     delta,x
         cmp     #kDragBoundThreshold
         bcs     :+
-        lda     deltay
-        cmp     #kDragBoundThreshold
-        jcc     event_loop
+
+        dex                     ; next dimension
+        dex
+        bpl     dloop
+        jmp     event_loop
 
         ;; Beyond threshold; erase rect
 :       jsr     FrameTmpRect
@@ -5817,23 +5804,18 @@ update: lda     window_id
         ;; --------------------------------------------------
         ;; Figure out coords for rect's left/top/bottom/right
 
-        scmp16  event_params::xcoord, initial_pos+MGTK::Point::xcoord
+        ldx     #2              ; loop over dimensions
+:       scmp16  event_params::coords,x, initial_pos,x
     IF_NEG
-        copy16  event_params::xcoord, tmp_rect::x1
-        copy16  initial_pos+MGTK::Point::xcoord, tmp_rect::x2
+        copy16  event_params::coords,x, tmp_rect::topleft,x
+        copy16  initial_pos,x, tmp_rect::bottomright,x
     ELSE
-        copy16  initial_pos+MGTK::Point::xcoord, tmp_rect::x1
-        copy16  event_params::xcoord, tmp_rect::x2
+        copy16  initial_pos,x, tmp_rect::topleft,x
+        copy16  event_params::coords,x, tmp_rect::bottomright,x
     END_IF
-
-        scmp16  event_params::ycoord, initial_pos+MGTK::Point::ycoord
-    IF_NEG
-        copy16  event_params::ycoord, tmp_rect::y1
-        copy16  initial_pos+MGTK::Point::ycoord, tmp_rect::y2
-    ELSE
-        copy16  initial_pos+MGTK::Point::ycoord, tmp_rect::y1
-        copy16  event_params::ycoord, tmp_rect::y2
-    END_IF
+        dex                     ; next dimension
+        dex
+        bpl     :-
 
         jsr     FrameTmpRect
         jmp     event_loop
@@ -6033,10 +6015,12 @@ done:   rts
 ;;; NOTE: Does not update icon positions, so only use in empty windows.
 .proc ResetActiveWindowViewport
         jsr     ApplyActiveWinfoToWindowGrafport
-        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, window_grafport::maprect::x2
-        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, window_grafport::maprect::y2
-        copy16  #0, window_grafport::maprect::x1
-        copy16  #0, window_grafport::maprect::y1
+        ldx     #2              ; loop over dimensions
+:       sub16   window_grafport::maprect::bottomright,x, window_grafport::maprect::topleft,x, window_grafport::maprect::bottomright,x
+        copy16  #0, window_grafport::maprect::topleft,x
+        dex                     ; next dimension
+        dex
+        bpl     :-
         FALL_THROUGH_TO AssignActiveWindowCliprect
 .endproc ; ResetActiveWindowViewport
 
@@ -9768,10 +9752,12 @@ open:   ldy     #$00
 
         ;; Convert viewloc and maprect to bounding rect
         COPY_STRUCT MGTK::Point, window_grafport + MGTK::GrafPort::viewloc, win_rect + MGTK::Rect::topleft
-        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, win_rect + MGTK::Rect::x2
-        sub16   window_grafport::maprect::y2, window_grafport::maprect::y1, win_rect + MGTK::Rect::y2
-        add16   win_rect + MGTK::Rect::x1, win_rect + MGTK::Rect::x2, win_rect + MGTK::Rect::x2
-        add16   win_rect + MGTK::Rect::y1, win_rect + MGTK::Rect::y2, win_rect + MGTK::Rect::y2
+        ldx     #2              ; loop over dimensions
+:       sub16   window_grafport::maprect::bottomright,x, window_grafport::maprect::topleft,x, win_rect + MGTK::Rect::bottomright,x
+        add16   win_rect + MGTK::Rect::topleft,x, win_rect + MGTK::Rect::bottomright,x, win_rect + MGTK::Rect::bottomright,x
+        dex                     ; next dimension
+        dex
+        bpl     :-
     END_IF
 
         ;; --------------------------------------------------
