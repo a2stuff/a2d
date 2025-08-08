@@ -7418,19 +7418,18 @@ copy_new_window_bounds_flag:
 ;;; Local variables on ZP
 PARAM_BLOCK, $50
 icon_type       .addr
-iconentry_flags .byte
+icon_flags      .byte
 icon_height     .word
 
         ;; Updated based on view type
 initial_xcoord  .word
 icons_this_row  .byte
-icon_coords     .tag    MGTK::Point
 
         ;; Initial values when populating a list view
 icons_per_row   .byte
 col_spacing     .byte
 row_spacing     .byte
-row_coords      .tag    MGTK::Point
+icon_coords     .tag    MGTK::Point
 END_PARAM_BLOCK
         init_view := icons_per_row
         init_view_size = 3 + .sizeof(MGTK::Point)
@@ -7475,7 +7474,7 @@ init_smicon_view:
         bpl     :-
 
         ;; Init/zero out the rest of the state
-        copy16  row_coords+MGTK::Point::xcoord, initial_xcoord
+        copy16  icon_coords+MGTK::Point::xcoord, initial_xcoord
 
         lda     #0
         sta     icons_this_row
@@ -7524,6 +7523,7 @@ init_smicon_view:
         inc     index
         bne     :-              ; always
 :
+        jsr     CachedIconsWindowToScreen
         jsr     PopPointers     ; do not tail-call optimise!
         rts
 
@@ -7597,7 +7597,7 @@ records_base_ptr:
         ;; Assign location
         ldy     #IconEntry::iconx + .sizeof(MGTK::Point) - 1
         ldx     #.sizeof(MGTK::Point) - 1
-:       lda     row_coords,x
+:       lda     icon_coords,x
         sta     (icon_entry),y
         dey
         dex
@@ -7611,37 +7611,27 @@ records_base_ptr:
         sub16in (icon_entry),y, icon_height, (icon_entry),y
     END_IF
 
-        lda     cached_window_entry_count
-        cmp     icons_per_row
-        beq     L781A
-        bcs     L7826
-L781A:  copy16  row_coords+MGTK::Point::xcoord, icon_coords+MGTK::Point::xcoord
-L7826:  copy16  row_coords+MGTK::Point::ycoord, icon_coords+MGTK::Point::ycoord
+        ;; Next col
+        add16_8 icon_coords+MGTK::Point::xcoord, col_spacing
         inc     icons_this_row
+        ;; Next row?
         lda     icons_this_row
         cmp     icons_per_row
-        bne     L7862
+    IF_EQ
+        add16_8 icon_coords+MGTK::Point::ycoord, row_spacing
+        copy16  initial_xcoord, icon_coords+MGTK::Point::xcoord
+        copy8   #0, icons_this_row
+    END_IF
 
-        ;; Next row (and initial column) if necessary
-        add16_8 row_coords+MGTK::Point::ycoord, row_spacing
-        copy16  initial_xcoord, row_coords+MGTK::Point::xcoord
-        lda     #0
-        sta     icons_this_row
-        jmp     L7870
-
-        ;; Next column otherwise
-L7862:  add16_8 row_coords+MGTK::Point::xcoord, col_spacing
-
-L7870:  lda     cached_window_id
-        ora     iconentry_flags
+        ;; Assign `IconEntry::win_flags`
+        lda     cached_window_id
+        ora     icon_flags
         ldy     #IconEntry::win_flags
         sta     (icon_entry),y
+
+        ;; Assign `IconEntry::type`
         ldy     #IconEntry::type
         copy8   icon_type, (icon_entry),y
-        ldx     cached_window_entry_count
-        dex
-        lda     cached_window_entry_list,x
-        jsr     IconWindowToScreen
 
         ;; If folder, see if there's an associated window
         lda     src_file_info_params::file_type
@@ -7655,12 +7645,12 @@ L7870:  lda     cached_window_id
         jsr     PushPointers
         param_call FindWindowForPath, path_buf3
         jsr     PopPointers
-        cmp     #0              ; A = window id, 0 if none
+        tax                     ; A = window id, 0 if none
         beq     :+
-        tax
         lda     icon_num
         sta     window_to_dir_icon_table-1,x
 
+        ;; Update `IconEntry::state`
         ldy     #IconEntry::state ; mark as dimmed
         lda     (icon_entry),y
         ora     #kIconEntryStateDimmed
@@ -7671,7 +7661,7 @@ L7870:  lda     cached_window_id
 
 ;;; ============================================================
 ;;; Inputs: A = `IconType` member, Y = `DeskTopSettings::kViewByXXX` value
-;;; Outputs: Populates `iconentry_flags`, `icon_type`, `icon_height`
+;;; Outputs: Populates `icon_flags`, `icon_type`, `icon_height`
 
 .proc _FindIconDetailsForIconType
         ptr := $6
@@ -7682,7 +7672,7 @@ L7870:  lda     cached_window_id
         ;; For populating `IconEntry::win_flags`
         tay                     ; Y = `IconType`
         lda     icontype_iconentryflags_table,y
-        sta     iconentry_flags
+        sta     icon_flags
 
         ;; Adjust type and flags based on view
         view_by := *+1
@@ -7690,13 +7680,13 @@ L7870:  lda     cached_window_id
     IF_NE
         ;; List View / Small Icon View
         php
-        lda     iconentry_flags
+        lda     icon_flags
         ora     #kIconEntryFlagsSmall
         plp
       IF_NS
         ora     #kIconEntryFlagsFixed
       END_IF
-        sta     iconentry_flags
+        sta     icon_flags
 
         lda     icontype_to_smicon_table,y
         tay
@@ -12678,7 +12668,7 @@ finish: jsr     _DialogClose
         ;; Use `icon_type` to populate IconEntry::type
         ldy     #IconEntry::type
         copy8   FindIconDetailsForIconType::icon_type, (icon_ptr),y
-        ;; Assumes `iconentry_flags` will not change, regardless of icon.
+        ;; Assumes `icon_flags` will not change, regardless of icon.
     END_IF
 
 end_filerecord_and_icon_update:
