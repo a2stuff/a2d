@@ -8,9 +8,11 @@
         ;; Zero Page usage (saved/restored around calls)
         ;; $06/$07 and $08/$09 are used as generic pointers
 
+        poly_coords := $0A
         poly_dx := $0A
         poly_dy := $0C
 
+        clip_coords := $0A
         clip_dx := $0A
         clip_dy := $0C
 
@@ -705,39 +707,28 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         jmp     exit_with_a
     END_IF
 
-        ;; Compute mouse delta
-        lda     findwindow_params::mousex
-        sec
-        sbc     last_coords+MGTK::Point::xcoord
-        tax
-        lda     findwindow_params::mousex + 1
-        sbc     last_coords+MGTK::Point::xcoord + 1
-
         kDragDelta = 5
 
-        ;; compare x delta
-        bpl     x_lo
-        cpx     #AS_BYTE(-kDragDelta)
-        bcc     is_drag
-        bcs     check_deltay
-x_lo:   cpx     #kDragDelta
+        ;; Compute mouse delta
+        ldx     #2              ; loop over dimensions
+loop:   lda     findwindow_params,x
+        sec
+        sbc     last_coords,x
+        tay
+        lda     findwindow_params+1,x
+        sbc     last_coords+1,x
+    IF_NEG
+        cpy     #AS_BYTE(-kDragDelta)
+        bcc     is_drag         ; above threshold, so drag
+        bcs     next            ; always
+    END_IF
+        cpy     #kDragDelta     ; above threshold, so drag
         bcs     is_drag
 
-        ;; compare y delta
-check_deltay:
-        lda     findwindow_params::mousey
-        sec
-        sbc     last_coords+MGTK::Point::ycoord
-        tax
-        lda     findwindow_params::mousey + 1
-        sbc     last_coords+MGTK::Point::ycoord + 1
-        bpl     y_lo
-        cpx     #AS_BYTE(-kDragDelta)
-        bcc     is_drag
-        bcs     peek
-y_lo:   cpx     #kDragDelta
-        bcc     peek
-        FALL_THROUGH_TO is_drag
+next:   dex
+        dex
+        bpl     loop
+        bmi     peek            ; always
 .endproc ; _DragDetectImpl
 
         ;; --------------------------------------------------
@@ -856,8 +847,11 @@ moved:
 
 update_poly:
         ;; Update poly coordinates
-        sub16   findwindow_params::mousex, last_coords+MGTK::Point::xcoord, poly_dx
-        sub16   findwindow_params::mousey, last_coords+MGTK::Point::ycoord, poly_dy
+        ldx     #2              ; loop over dimensions
+:       sub16   findwindow_params,x, last_coords,x, poly_coords,x
+        dex                     ; next dimension
+        dex
+        bpl     :-
         COPY_STRUCT MGTK::Point, findwindow_params, last_coords
 
         poly_ptr := $08
@@ -960,8 +954,11 @@ move_ok:
         ;; --------------------------------------------------
         ;; Update icons with new positions (based on delta)
 
-        sub16   findwindow_params::mousex, initial_coords+MGTK::Point::xcoord, poly_dx
-        sub16   findwindow_params::mousey, initial_coords+MGTK::Point::ycoord, poly_dy
+        ldx     #2              ; loop over dimensions
+:       sub16   findwindow_params,x, initial_coords,x, poly_coords,x
+        dex                     ; next dimension
+        dex
+        bpl     :-
 
         INVOKE_WITH_LAMBDA _IterateHighlightedIcons
         jsr     GetIconPtr
@@ -1269,44 +1266,45 @@ start:  ldy     #IconInRectParams::icon
 
         ;; Compare the rect against both the bitmap and label rects
 
-        ;; top of bitmap > bottom of rect --> outside
-        scmp16  rect::y2, bitmap_rect::y1
-        bmi     :+
-
-        ;; left of bitmap > right of rect --> outside
-        scmp16  rect::x2, bitmap_rect::x1
-        bmi     :+
-
-        ;; bottom of bitmap < top of rect --> outside
-        scmp16  bitmap_rect::y2, rect::y1
-        bmi     :+
-
-        ;; right of bitmap < left of rect --> outside
-        scmp16  bitmap_rect::x2, rect::x1
-        bpl     inside
-
+        ;; --------------------------------------------------
+        ;; Bitmap
+        ldx     #2              ; loop over dimensions
 :
-        ;; top of text > bottom of rect --> outside
-        scmp16  rect::y2, label_rect::y1
+        ;; top/left of bitmap > bottom/right of rect --> outside
+        scmp16  rect::bottomright,x, bitmap_rect::topleft,x
+        bmi     :+
+
+        ;; bottom/right of bitmap < top/left of rect --> outside
+        scmp16  bitmap_rect::bottomright,x, rect::topleft,x
+        bmi     :+
+
+        dex                     ; next dimension
+        dex
+        bpl     :-
+        bmi     inside          ; always
+:
+        ;; --------------------------------------------------
+        ;; Label
+
+        ldx     #2              ; loop over dimensions
+:
+        ;; top/left of text > bottom/right of rect --> outside
+        scmp16  rect::bottomright,x, label_rect::topleft,x
         bmi     outside
 
-        ;; left of text > right of rect --> outside
-        scmp16  rect::x2, label_rect::x1
+        ;; bottom/right of text < top/left of rect --> outside
+        scmp16  label_rect::bottomright,x, rect::topleft,x
         bmi     outside
 
-        ;; bottom of text < top of rect --> outside
-        scmp16  label_rect::y2, rect::y1
-        bmi     outside
-
-        ;; right of text < left of rect --> outside
-        scmp16  label_rect::x2, rect::x1
-        bpl     inside
-
-outside:
-        return  #0
+        dex                     ; next dimension
+        dex
+        bpl     :-
 
 inside:
         return  #1
+
+outside:
+        return  #0
 .endproc ; IconInRectImplImpl
 IconInRectImpl := IconInRectImplImpl::start
 
@@ -2154,17 +2152,20 @@ reserved:       .byte   0
         viewloc := icon_grafport+MGTK::GrafPort::viewloc
         maprect := icon_grafport+MGTK::GrafPort::maprect
 
+        ldx     #2              ; loop over dimensions
+:
         ;; Stash, needed to offset port when drawing to get correct patterns
-        sub16   maprect+MGTK::Rect::x1, viewloc+MGTK::Point::xcoord, clip_dx
-        sub16   maprect+MGTK::Rect::y1, viewloc+MGTK::Point::ycoord, clip_dy
+        sub16   maprect+MGTK::Rect::topleft,x, viewloc,x, clip_coords,x
 
         ;; Adjust `icon_grafport` so that `viewloc` and `maprect` are just
         ;; a clipping rectangle in screen coords.
-        sub16   maprect+MGTK::Rect::x2, maprect+MGTK::Rect::x1, portbits::maprect+MGTK::Rect::x2
-        sub16   maprect+MGTK::Rect::y2, maprect+MGTK::Rect::y1, portbits::maprect+MGTK::Rect::y2
-        COPY_STRUCT MGTK::Point, icon_grafport+MGTK::GrafPort::viewloc, portbits::maprect
-        add16   portbits::maprect+MGTK::Rect::x1, portbits::maprect+MGTK::Rect::x2, portbits::maprect+MGTK::Rect::x2
-        add16   portbits::maprect+MGTK::Rect::y1, portbits::maprect+MGTK::Rect::y2, portbits::maprect+MGTK::Rect::y2
+        sub16   maprect+MGTK::Rect::bottomright,x, maprect+MGTK::Rect::topleft,x, portbits::maprect+MGTK::Rect::bottomright,x
+        copy16  viewloc,x, portbits::maprect::topleft,x
+        add16   portbits::maprect+MGTK::Rect::topleft,x, portbits::maprect+MGTK::Rect::bottomright,x, portbits::maprect+MGTK::Rect::bottomright,x
+
+        dex                     ; next dimension
+        dex
+        bpl     :-
 
         ;; For window's items/used/free space bar
         add16_8 portbits::maprect+MGTK::Rect::y1, header_height
@@ -2179,24 +2180,26 @@ reserved:       .byte   0
 
 .proc DuplicateClipStructsAndSetPortBits
         ;; Intersect `portbits::maprect` with `bounding_rect`
-        scmp16  portbits::maprect::x1, bounding_rect::x1
-        bpl     :+
-        copy16  bounding_rect::x1, portbits::maprect::x1
-:       scmp16  portbits::maprect::y1, bounding_rect::y1
-        bpl     :+
-        copy16  bounding_rect::y1, portbits::maprect::y1
-:       scmp16  bounding_rect::y2, portbits::maprect::y2
-        bpl     :+
-        copy16  bounding_rect::y2, portbits::maprect::y2
-:       scmp16  bounding_rect::x2, portbits::maprect::x2
-        bpl     :+
-        copy16  bounding_rect::x2, portbits::maprect::x2
+
+        ldx     #2              ; loop over dimensions
 :
+        scmp16  portbits::maprect::topleft,x, bounding_rect::topleft,x
+    IF_NEG
+        copy16  bounding_rect::topleft,x, portbits::maprect::topleft,x
+    END_IF
+
+        scmp16  bounding_rect::bottomright,x, portbits::maprect::bottomright,x
+    IF_NEG
+        copy16  bounding_rect::bottomright,x, portbits::maprect::bottomright,x
+    END_IF
+
         ;; Is there anything left?
-        scmp16  portbits::maprect::x2, portbits::maprect::x1
+        scmp16  portbits::maprect::bottomright,x, portbits::maprect::topleft,x
         bmi     empty
-        scmp16  portbits::maprect::y2, portbits::maprect::y1
-        bmi     empty
+
+        dex                     ; next dimension
+        dex
+        bpl     :-
 
         ;; Duplicate structs needed for clipping
         COPY_BLOCK portbits::maprect, clip_bounds
@@ -2492,8 +2495,11 @@ CalcWindowIntersections := CalcWindowIntersectionsImpl::start
         MGTK_CALL MGTK::SetPortBits, portbits
 
         ;; Invert for the next call
-        sub16   #0, clip_dx, clip_dx
-        sub16   #0, clip_dy, clip_dy
+        ldx     #2              ; loop over dimensions
+:       sub16   #0, clip_coords,x, clip_coords,x
+        dex                     ; next dimension
+        dex
+        bpl     :-
         rts
 .endproc ; OffsetPortAndIcon
 
