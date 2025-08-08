@@ -7677,7 +7677,8 @@ records_base_ptr:
         ;; Adjust type and flags based on view
         view_by := *+1
         lda     #SELF_MODIFIED_BYTE
-    IF_NE
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+    IF_NOT_ZERO
         ;; List View / Small Icon View
         php
         lda     icon_flags
@@ -7710,11 +7711,6 @@ records_base_ptr:
 
 .endproc ; CreateIconsForWindowImpl
 CreateIconsForWindow := CreateIconsForWindowImpl::_Start
-FindIconDetailsForIconType := CreateIconsForWindowImpl::_FindIconDetailsForIconType
-.scope FindIconDetailsForIconType
-icon_type := CreateIconsForWindowImpl::icon_type
-icon_height := CreateIconsForWindowImpl::icon_height
-.endscope ; FindIconDetailsForIconType
 
 ;;; ============================================================
 ;;; Compute the window initial size for `cached_window_id`,
@@ -12620,14 +12616,6 @@ finish: jsr     _DialogClose
         jsr     GetIconEntry
         stax    icon_ptr
 
-        ;; Compute bounds of icon bitmap
-        jsr     GetSelectionViewBy
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
-    IF_ZERO
-        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
-        sub16_8 tmp_rect::y2, #kIconLabelHeight + kIconLabelGap, tmp_rect::y2
-    END_IF
-
         file_record_ptr := $08
         jsr     SetFileRecordPtrFromIconPtr
 
@@ -12650,25 +12638,43 @@ finish: jsr     _DialogClose
         bit     LCBANK1
         bit     LCBANK1
 
-        ;; Determine icon type
+        ;; Determine new icon type
         jsr     GetSelectionViewBy
         .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
     IF_ZERO
-        sta     view_by
+        tmpy := $50
+
+        ;; Compute bounds of icon bitmap
+        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
+        copy16  tmp_rect::y2, tmpy
+
         ldax    #new_name_buf
         jsr     DetermineIconType ; uses passed name and `src_file_info_params`
-        view_by := *+1
-        ldy     #SELF_MODIFIED_BYTE
-        jsr     FindIconDetailsForIconType
-
-        ;; Use new `icon_height` to offset vertically.
-        ;; Add old icon height to make icony top of text
-        ldy     #IconEntry::icony
-        sub16in tmp_rect::y2, FindIconDetailsForIconType::icon_height, (icon_ptr),y
-        ;; Use `icon_type` to populate IconEntry::type
         ldy     #IconEntry::type
-        copy8   FindIconDetailsForIconType::icon_type, (icon_ptr),y
-        ;; Assumes `icon_flags` will not change, regardless of icon.
+        sta     (icon_ptr),y
+        ;; Assumes flags will not change, regardless of icon.
+
+        ;; Update location so bottom (name) is in the same place
+        ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
+        ;; A,X = `tmpy` - `tmp_rect::y2` (delta between old and new bottom)
+        lda     tmpy
+        sec
+        sbc     tmp_rect::y2
+        pha
+        lda     tmpy+1
+        sbc     tmp_rect::y2+1
+        tax
+        pla
+
+        ;; `icony` += A,X
+        ldy     #IconEntry::icony
+        clc
+        adc     (icon_ptr),y
+        sta     (icon_ptr),y
+        txa
+        iny
+        adc     (icon_ptr),y
+        sta     (icon_ptr),y
     END_IF
 
 end_filerecord_and_icon_update:
