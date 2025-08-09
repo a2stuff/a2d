@@ -133,7 +133,7 @@ repmatch_or_large_offset:
 					; 10Z: 13 bit offset
 
 	jsr	getcombinedbits		; rotate Z bit into bit 8, read nibble for bits 12-9
-	adc	#$DE			; set bits 15-13 to 1 and substract 2 (to substract 512)
+	adc	#$DE			; set bits 15-13 to 1 and subtract 2 (to subtract 512)
 	bne	got_offset_hi		; go store high byte, read low byte of match offset and prepare match
 					; (*same as JMP GOT_OFFSET_HI but shorter)
 
@@ -153,7 +153,7 @@ got_offset_lo:
 rep_match:
 .ifdef BACKWARD_DECOMPRESS
 
-	; Backward decompression - substract match offset
+	; Backward decompression - subtract match offset
 
 	sec				; add dest + match offset
 	lda	putdst+1		; low 8 bits
