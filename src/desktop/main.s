@@ -190,7 +190,7 @@ ClearUpdates := ClearUpdatesImpl::clear
         inc     tick_counter+1
         bne     :+
         inc     tick_counter+2
-
+:
         inc     loop_counter
         inc     loop_counter
         loop_counter := *+1
