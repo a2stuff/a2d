@@ -118,7 +118,7 @@ load_target:
         dex
         bpl     :-
 
-        ;; When launching BASIS.SYTEM, ProDOS 2.4's Bitsy Bye populates
+        ;; When launching BASIS.SYSTEM, ProDOS 2.4's Bitsy Bye populates
         ;; $280 with the path containing the target file.
         BITSY_DIR_PATH := $280
         bit     INVOKER_BITSY_COMPAT
