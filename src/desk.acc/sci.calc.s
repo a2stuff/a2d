@@ -282,10 +282,10 @@ port:           .word   kCol4Left,kRow4Top,kCol4Right,kRow5Bot
         .byte   0               ; sentinel
 
 
-        .assert .sizeof(btn_c) = .sizeof(btn_0),   error, "Size mismatch"
-        .assert .sizeof(btn_c) = .sizeof(btn_sin), error, "Size mismatch"
-        .assert .sizeof(btn_c) = .sizeof(btn_dec), error, "Size mismatch"
-        .assert .sizeof(btn_c) = .sizeof(btn_add), error, "Size mismatch"
+        ASSERT_EQUALS .sizeof(btn_c), .sizeof(btn_0)
+        ASSERT_EQUALS .sizeof(btn_c), .sizeof(btn_sin)
+        ASSERT_EQUALS .sizeof(btn_c), .sizeof(btn_dec)
+        ASSERT_EQUALS .sizeof(btn_c), .sizeof(btn_add)
 
         ;; Button bitmaps. These are used as bitmaps for
         ;; drawing the shadowed buttons.

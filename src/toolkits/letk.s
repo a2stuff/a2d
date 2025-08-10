@@ -16,10 +16,10 @@
         rect       := $15
         max_length := $1D
         options    := $1E
-        .assert (a_buf - window_id) = (LETK::LineEditRecord::a_buf - LETK::LineEditRecord::window_id), error, "mismatch"
-        .assert (rect - window_id) = (LETK::LineEditRecord::rect - LETK::LineEditRecord::window_id), error, "mismatch"
-        .assert (max_length - window_id) = (LETK::LineEditRecord::max_length - LETK::LineEditRecord::window_id), error, "mismatch"
-        .assert (options - window_id) = (LETK::LineEditRecord::options - LETK::LineEditRecord::window_id), error, "mismatch"
+        ASSERT_EQUALS a_buf - window_id, LETK::LineEditRecord::a_buf - LETK::LineEditRecord::window_id
+        ASSERT_EQUALS rect - window_id, LETK::LineEditRecord::rect - LETK::LineEditRecord::window_id
+        ASSERT_EQUALS max_length - window_id, LETK::LineEditRecord::max_length - LETK::LineEditRecord::window_id
+        ASSERT_EQUALS options - window_id, LETK::LineEditRecord::options - LETK::LineEditRecord::window_id
         kCacheSize = options - window_id
 
         ;; Calculated from rect
@@ -36,7 +36,7 @@ data    .addr
 length  .byte
 width   .word
         END_PARAM_BLOCK
-        .assert text_params = command_data + 6, error, "mismatch"
+        ASSERT_EQUALS text_params, command_data + 6
 
         tmpw := text_params+.sizeof(text_params)
 
@@ -89,7 +89,7 @@ width   .word
         bpl     :-
 
         ;; Cache static fields from the record, for convenience
-        .assert LETK::LineEditRecord::window_id = 0, error, "mismatch"
+        ASSERT_EQUALS LETK::LineEditRecord::window_id, 0
         ldy     #kCacheSize
 :       copy8   (a_record),y, window_id,y
         dey
@@ -160,13 +160,13 @@ a_record  .addr
         sta     (a_record),y
         iny
         sta     (a_record),y
-        .assert (LETK::LineEditRecord::caret_pos - LETK::LineEditRecord::active_flag) = 1, error, "order"
+        ASSERT_EQUALS LETK::LineEditRecord::caret_pos - LETK::LineEditRecord::active_flag, 1
         iny
         sta     (a_record),y
-        .assert (LETK::LineEditRecord::caret_flag - LETK::LineEditRecord::caret_pos) = 1, error, "order"
+        ASSERT_EQUALS LETK::LineEditRecord::caret_flag - LETK::LineEditRecord::caret_pos, 1
         iny
         sta     (a_record),y
-        .assert (LETK::LineEditRecord::caret_counter - LETK::LineEditRecord::caret_flag) = 1, error, "order"
+        ASSERT_EQUALS LETK::LineEditRecord::caret_counter - LETK::LineEditRecord::caret_flag, 1
 
         jsr     UpdateImpl
 

@@ -363,7 +363,7 @@ str_template:
 
 .proc OnSelChange
         lda     listbox_rec::selected_index
-        .assert BTK::kButtonStateChecked = %10000000, error, "mismatch"
+        ASSERT_EQUALS BTK::kButtonStateChecked, %10000000
         and     #BTK::kButtonStateChecked
         sta     ok_button::state
         BTK_CALL BTK::Hilite, ok_button
@@ -750,7 +750,7 @@ ret:    rts
 
 .proc OnSelChange
         lda     listbox_rec::selected_index
-        .assert BTK::kButtonStateChecked = %10000000, error, "mismatch"
+        ASSERT_EQUALS BTK::kButtonStateChecked, %10000000
         and     #BTK::kButtonStateChecked
         sta     import_button::state
         BTK_CALL BTK::Hilite, import_button

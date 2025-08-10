@@ -181,7 +181,7 @@ key_handler_hook:
       IF_NS
         jsr     _MoveToWindowCoords
         MGTK_CALL MGTK::InRect, file_dialog_res::line_edit_rect
-        .assert MGTK::inrect_outside = 0, error, "enum mismatch"
+        ASSERT_EQUALS MGTK::inrect_outside, 0
         beq     out
         jsr     _SetCursorIBeam
         jmp     EventLoop
@@ -773,7 +773,7 @@ found:  return  index
         jsr     _IsOKAllowed
         lda     #0
         ror                     ; C into high bit
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
         cmp     file_dialog_res::ok_button::state
         beq     :+              ; no change
 
@@ -785,7 +785,7 @@ found:  return  index
         jsr     _IsOpenAllowed
         lda     #0
         ror                     ; C into high bit
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
         cmp     file_dialog_res::open_button::state
         beq     :+              ; no change
 
@@ -797,7 +797,7 @@ found:  return  index
         jsr     _IsCloseAllowed
         lda     #0
         ror                     ; C into high bit
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
         cmp     file_dialog_res::close_button::state
         beq     :+              ; no change
 
@@ -874,7 +874,7 @@ found:  return  index
 
         jsr     _IsOKAllowed
         ror
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
         sta     file_dialog_res::ok_button::state
         BTK_CALL BTK::Draw, file_dialog_res::ok_button
 
@@ -883,13 +883,13 @@ found:  return  index
 
         jsr     _IsOpenAllowed
         ror
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
         sta     file_dialog_res::open_button::state
         BTK_CALL BTK::Draw, file_dialog_res::open_button
 
         jsr     _IsCloseAllowed
         ror
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
         sta     file_dialog_res::close_button::state
         BTK_CALL BTK::Draw, file_dialog_res::close_button
 
@@ -1498,7 +1498,7 @@ kJumpTableSize = 6
 jump_table:
 HandleOK:       jmp     0
 HandleCancel:   jmp     0
-        .assert * - jump_table = kJumpTableSize, error, "Table size mismatch"
+        ASSERT_EQUALS * - jump_table, kJumpTableSize
 
 .endif ; FD_EXTENDED
 
@@ -1506,7 +1506,7 @@ HandleCancel:   jmp     0
 ;;; List Box
 ;;; ============================================================
 
-.assert .sizeof(file_dialog_res::listbox_rec) = .sizeof(LBTK::ListBoxRecord), error, "mismatch"
+ASSERT_EQUALS .sizeof(file_dialog_res::listbox_rec), .sizeof(LBTK::ListBoxRecord)
 num_file_names := file_dialog_res::listbox_rec::num_items
 selected_index := file_dialog_res::listbox_rec::selected_index
 

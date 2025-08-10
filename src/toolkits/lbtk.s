@@ -68,12 +68,12 @@ mousey          .word
 thumbpos        .byte
 thumbmoved      .byte
 END_PARAM_BLOCK
-.assert trackthumb_params::mousex = event_params::xcoord, error, "param mismatch"
-.assert trackthumb_params::mousey = event_params::ycoord, error, "param mismatch"
+ASSERT_EQUALS trackthumb_params::mousex, event_params::xcoord
+ASSERT_EQUALS trackthumb_params::mousey, event_params::ycoord
 
-.assert setctlmax_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
-.assert trackthumb_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
-.assert updatethumb_params::which_ctl = activatectl_params::which_ctl, error, "param mismatch"
+ASSERT_EQUALS setctlmax_params::which_ctl, activatectl_params::which_ctl
+ASSERT_EQUALS trackthumb_params::which_ctl, activatectl_params::which_ctl
+ASSERT_EQUALS updatethumb_params::which_ctl, activatectl_params::which_ctl
 
 PARAM_BLOCK screentowindow_params, lbtk::tmp_space
 window_id       .byte
@@ -92,8 +92,8 @@ window_id       .byte
    .endstruct
 .endunion
 END_PARAM_BLOCK
-.assert screentowindow_params::screenx = event_params::xcoord, error, "param mismatch"
-.assert screentowindow_params::screeny = event_params::ycoord, error, "param mismatch"
+ASSERT_EQUALS screentowindow_params::screenx, event_params::xcoord
+ASSERT_EQUALS screentowindow_params::screeny, event_params::ycoord
 
 PARAM_BLOCK findwindow_params, lbtk::tmp_space+1
 mousex          .word
@@ -101,8 +101,8 @@ mousey          .word
 which_area      .byte
 window_id       .byte
 END_PARAM_BLOCK
-.assert findwindow_params::mousex = event_params::xcoord, error, "param mismatch"
-.assert findwindow_params::mousey = event_params::ycoord, error, "param mismatch"
+ASSERT_EQUALS findwindow_params::mousex, event_params::xcoord
+ASSERT_EQUALS findwindow_params::mousey, event_params::ycoord
 
 PARAM_BLOCK findcontrol_params, lbtk::tmp_space+1
 mousex          .word
@@ -110,8 +110,8 @@ mousey          .word
 which_ctl       .byte
 which_part      .byte
 END_PARAM_BLOCK
-.assert findcontrol_params::mousex = event_params::xcoord, error, "param mismatch"
-.assert findcontrol_params::mousey = event_params::ycoord, error, "param mismatch"
+ASSERT_EQUALS findcontrol_params::mousex, event_params::xcoord
+ASSERT_EQUALS findcontrol_params::mousey, event_params::ycoord
 
 ;;; ============================================================
 
@@ -276,7 +276,7 @@ coords          .tag MGTK::Point
         ;; Ignore unless vscroll is enabled
         ldy     #MGTK::Winfo::vscroll
         lda     (winfo_ptr),y
-        .assert MGTK::Scroll::option_active = %00000001, error, "flag mismatch"
+        ASSERT_EQUALS MGTK::Scroll::option_active, %00000001
         ror                     ; C = "active?"
         bcs     :+
 ret:    rts
@@ -307,7 +307,7 @@ repeat:
 repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
-        .assert MGTK::Winfo::vthumbmax = MGTK::Winfo::vthumbpos - 1, error, "layout"
+        ASSERT_EQUALS MGTK::Winfo::vthumbmax, MGTK::Winfo::vthumbpos - 1
         dey                     ; Y = MGTK::Winfo::vthumbmax
         cmp     (winfo_ptr),y
         beq     ret
@@ -331,7 +331,7 @@ repeat:
         bcs     :+
         lda     #0
         SKIP_NEXT_2_BYTE_INSTRUCTION
-        .assert lbr_copy + LBTK::ListBoxRecord::num_rows <> $C0, error, "bad BIT skip"
+        ASSERT_NOT_EQUALS lbr_copy + LBTK::ListBoxRecord::num_rows, $C0, "bad BIT skip"
 :       sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
 do:     jsr     update
         lda     #MGTK::Part::page_up
@@ -348,7 +348,7 @@ repeat:
         lda     (winfo_ptr),y
         clc
         adc     lbr_copy + LBTK::ListBoxRecord::num_rows
-        .assert MGTK::Winfo::vthumbmax = MGTK::Winfo::vthumbpos - 1, error, "layout"
+        ASSERT_EQUALS MGTK::Winfo::vthumbmax, MGTK::Winfo::vthumbpos - 1
         dey                     ; Y = MGTK::Winfo::vthumbmax
         cmp     (winfo_ptr),y
         bcc     do
@@ -592,7 +592,7 @@ new_size        .byte
 :
         ;; Deactivate
         lda     #MGTK::activatectl_deactivate
-        .assert MGTK::activatectl_deactivate = 0, error, "enum mismatch"
+        ASSERT_EQUALS MGTK::activatectl_deactivate, 0
         beq     activate        ; always
 
 greater:

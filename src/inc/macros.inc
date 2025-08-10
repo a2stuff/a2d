@@ -1067,8 +1067,20 @@ __pushorg_depth__ .set 0
 ;;; Assertions
 ;;; ============================================================
 
-.macro ASSERT_EQUALS actual, expected
-    .assert (actual) = (expected), error, .sprintf("expected %d actual %d", (expected), (actual))
+.macro ASSERT_EQUALS actual, expected, message
+    .if .paramcount = 3
+        .assert (actual) = (expected), error, .sprintf("expected %d actual %d: %s", (expected), (actual), message)
+    .else
+        .assert (actual) = (expected), error, .sprintf("expected %d actual %d", (expected), (actual))
+    .endif
+.endmacro
+
+.macro ASSERT_NOT_EQUALS actual, expected, message
+    .if .paramcount = 3
+        .assert (actual) <> (expected), error, .sprintf("unexpected %d: %s", (expected), message)
+    .else
+        .assert (actual) <> (expected), error, .sprintf("unexpected %d", (expected))
+    .endif
 .endmacro
 
 .macro ASSERT_ADDRESS addr, opt_message

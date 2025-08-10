@@ -402,7 +402,7 @@ ShowCopyingScreen:
         ;; Used for reading directory structure
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
         kBlockPointersSize = 4
-        .assert .sizeof(SubdirectoryHeader) - .sizeof(FileEntry) = kBlockPointersSize, error, "bad structs"
+        ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
         DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
 buf_block_pointers:     .res    kBlockPointersSize, 0
 
@@ -800,7 +800,7 @@ fail:
         bcs     fail
 
         ;; Header size is next/prev blocks + a file entry
-        .assert .sizeof(SubdirectoryHeader) = .sizeof(FileEntry) + 4, error, "incorrect struct size"
+        ASSERT_EQUALS .sizeof(SubdirectoryHeader), .sizeof(FileEntry) + 4
         copy8   #13, entries_per_block ; so ReadFileEntry doesn't immediately advance
         jsr     ReadFileEntry          ; read the rest of the header
 
@@ -1178,7 +1178,7 @@ loop:   ldx     devnum
         ;; Technical Note: SmartPort #4: SmartPort Device Types
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer+SPDIB::Device_Type_Code
-        .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
+        ASSERT_EQUALS SPDeviceType::MemoryExpansionCard, 0
         bne     next_unit       ; $00 = Memory Expansion Card (RAM Disk)
         lda     unit_num
         bne     test_unit_num   ; always

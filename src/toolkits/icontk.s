@@ -294,7 +294,7 @@ textback:       .byte   MGTK::textbg_black
 textfont:       .addr   0
         REF_GRAFPORT_MEMBERS
 .endparams
-        .assert .sizeof(drag_outline_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
+        ASSERT_EQUALS .sizeof(drag_outline_grafport), .sizeof(MGTK::GrafPort)
 desktop_bounds := drag_outline_grafport::maprect
 
 
@@ -397,7 +397,7 @@ bufsize:
         ;; Initialize IconEntry::state
         lda     #0
         ;; ldy     #IconEntry::state
-        .assert IconEntry::state = 0, error, "enum mismatch"
+        ASSERT_EQUALS IconEntry::state, 0
         tay
         sta     (ptr_icon),y
 
@@ -620,7 +620,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         ldax    params
         stax    out_params
-        .assert FindIconParams::coords = 0, error, "coords must be first"
+        ASSERT_EQUALS FindIconParams::coords, 0, "coords must be first"
         stax    moveto_params_addr
 
         ldy     #FindIconParams::window_id
@@ -690,7 +690,7 @@ inside: pla
         ldy     #DragHighlightedParams::icon
         lda     (params),y
         sta     icon_id
-        .assert DragHighlightedParams::icon = 0, error, "enum mismatch"
+        ASSERT_EQUALS DragHighlightedParams::icon, 0
         tya
         sta     (params),y
 
@@ -701,7 +701,7 @@ inside: pla
         sta     last_coords-1,y
         dey
         ;;cpy     #DragHighlightedParams::coords-1
-        .assert DragHighlightedParams::coords = 1, error, "coords must be 1"
+        ASSERT_EQUALS DragHighlightedParams::coords, 1
         bne     :-
 
         jsr     PushPointers    ; save `params`
@@ -929,7 +929,7 @@ not_drag:
 same_window:
         ldx     #$80            ; clip (if desktop)
         lda     findwindow_params::which_area
-        .assert MGTK::Area::desktop = 0, error, "enum mismatch"
+        ASSERT_EQUALS MGTK::Area::desktop, 0
         beq     move_ok
 
         cmp     #MGTK::Area::content
@@ -954,7 +954,7 @@ move_ok:
         ora     BUTN1
     IF_NS
         lda     #IconTK::kDragResultMoveModified
-        .assert IconTK::kDragResultMoveModified <> 0, error, "enum mismatch"
+        ASSERT_NOT_EQUALS IconTK::kDragResultMoveModified, 0
         bne     exit_with_a
     END_IF
 
@@ -1003,12 +1003,12 @@ exit_with_a:
 
 exit_drop:
         lda     #IconTK::kDragResultDrop
-        .assert IconTK::kDragResultDrop = 0, error, "enum mismatch"
+        ASSERT_EQUALS IconTK::kDragResultDrop, 0
         beq     exit_with_a
 
 exit_canceled:
         lda     #IconTK::kDragResultCanceled
-        .assert IconTK::kDragResultCanceled <> 0, error, "enum mismatch"
+        ASSERT_NOT_EQUALS IconTK::kDragResultCanceled, 0
         bne     exit_with_a
 
 
@@ -1069,7 +1069,7 @@ next:   inc     index
 .proc _FindIconValidateWindow
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        .assert MGTK::Area::desktop = 0, error, "enum mismatch"
+        ASSERT_EQUALS MGTK::Area::desktop, 0
         beq     desktop
 
         ;; --------------------------------------------------
@@ -1106,7 +1106,7 @@ find_icon:
         MGTK_CALL MGTK::FindControlEx, findcontrol_params
         bne     fail
         lda     findcontrol_params::which_ctl
-        .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
+        ASSERT_EQUALS MGTK::Ctl::not_a_control, 0
         bne     fail            ; scrollbar, etc.
 
         ;; Ignore if y coord < window's header height
@@ -1146,7 +1146,7 @@ headery:
 
         ;; Is it a drop target?
         ;;ldy     #IconEntry::win_flags
-        .assert (IconEntry::win_flags - IconEntry::state) = 1, error, "win_flags must be 1 more than state"
+        ASSERT_EQUALS (IconEntry::win_flags - IconEntry::state), 1
         iny
         lda     (ptr),y
         ;;and     #kIconEntryFlagsDropTarget
@@ -1362,8 +1362,8 @@ IconInRectImpl := IconInRectImplImpl::start
 .endstruct
 
         ;; Calc icon bounds
-        .assert params = $06, error, "param placement"
-        .assert GetRenameRectParams::icon = 0, error, "struct layout"
+        ASSERT_EQUALS params, $06
+        ASSERT_EQUALS GetRenameRectParams::icon, 0
         jsr     GetXYZRectImplHelper
 
         ;; Copy rect into out params
@@ -1389,8 +1389,8 @@ IconInRectImpl := IconInRectImplImpl::start
 .endstruct
 
         ;; Calc icon bounds
-        .assert params = $06, error, "param placement"
-        .assert GetBitmapRectParams::icon = 0, error, "struct layout"
+        ASSERT_EQUALS params, $06
+        ASSERT_EQUALS GetBitmapRectParams::icon, 0
         jsr     GetXYZRectImplHelper
 
         ;; Copy rect into out params
@@ -1489,7 +1489,7 @@ clip_window_id:
         ldy     #IconEntry::state
         lda     (ptr),y
         sta     state
-        .assert IconEntry::win_flags = IconEntry::state + 1, error, "enum mismatch"
+        ASSERT_EQUALS IconEntry::win_flags, IconEntry::state + 1
         iny
         lda     ($06),y
         sta     win_flags
@@ -2580,7 +2580,7 @@ table:  .byte   1<<0, 1<<1, 1<<2, 1<<3, 1<<4, 1<<5, 1<<6, 1<<7
 free_icon_map:
         .byte   $FE, $FF, $FF, $FF, $FF, $FF, $FF, $FF
         .byte   $FF, $FF, $FF, $FF, $FF, $FF, $FF, $FF
-        .assert * - free_icon_map = (::kMaxIconCount + 7)/8, error, "table size"
+        ASSERT_TABLE_SIZE free_icon_map, (::kMaxIconCount + 7)/8
 
 ;;; ============================================================
 
