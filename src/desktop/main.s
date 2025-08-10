@@ -221,7 +221,6 @@ tick_counter:
 ;;; ============================================================
 
 ;;; Inputs: A = `window_id` from `update` event
-;;; NOTE: Modifies `active_window_id` which must be restored
 .proc UpdateWindow
         cmp     #kMaxDeskTopWindows+1 ; directory windows are 1-8
         RTS_IF_GE
@@ -235,12 +234,9 @@ tick_counter:
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         jsr     DrawWindowHeader
 
-        ;; `MaybeOffsetUpdatePort` also relies on `window_grafport`
-        jsr     MaybeOffsetUpdatePort
-    IF_CC
-        ;; Actually draw the window icons/list
+        ;; `AdjustUpdatePortForEntries` also relies on `window_grafport`
+        jsr     AdjustUpdatePortForEntries
         jsr     DrawWindowEntries
-    END_IF
 
         rts
 .endproc ; UpdateWindow
@@ -1026,7 +1022,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
         jsr     UnsafeSetPortFromWindowId ; CHECKED
     IF_ZERO
         jsr     DrawWindowHeader
-        jsr     OffsetWindowGrafportAndSet
+        jsr     AdjustWindowPortForEntries
         jsr     DrawWindowEntries
     END_IF
         rts
@@ -1037,7 +1033,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
 
 .proc ClearAndDrawActiveWindowEntries
         lda     active_window_id
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
+        jsr     UnsafeSetPortFromWindowIdAndAdjustForEntries ; CHECKED
     IF_ZERO
         MGTK_CALL MGTK::PaintRect, window_grafport::maprect
         jsr     DrawWindowEntries
@@ -1049,13 +1045,13 @@ clicked_window_id := _ActivateClickedWindow::window_id
 
 ;;; Used only for file windows; adjusts port to account for header.
 ;;; Returns 0 if ok, `MGTK::Error::window_obscured` if the window is obscured.
-.proc UnsafeOffsetAndSetPortFromWindowId
+.proc UnsafeSetPortFromWindowIdAndAdjustForEntries
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
         bne     :+              ; MGTK::Error::window_obscured
-        jsr     OffsetWindowGrafportAndSet
+        jsr     AdjustWindowPortForEntries
 :       rts
-.endproc ; UnsafeOffsetAndSetPortFromWindowId
+.endproc ; UnsafeSetPortFromWindowIdAndAdjustForEntries
 
 ;;; Used for all sorts of windows, not just file windows.
 ;;; For file windows, used for drawing headers (sometimes);
@@ -4456,7 +4452,7 @@ ret:    rts
     IF_ZERO
         jsr     InitSetDesktopPort
     ELSE
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
+        jsr     UnsafeSetPortFromWindowIdAndAdjustForEntries ; CHECKED
     END_IF
     IF_ZERO                     ; Skip drawing if obscured
         jsr     CachedIconsScreenToWindow
@@ -5696,7 +5692,7 @@ clear:  jsr     ClearSelection
         ;; Set up drawing port, draw initial rect
         lda     window_id
     IF_NOT_ZERO
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; ASSERT: not obscured
+        jsr     UnsafeSetPortFromWindowIdAndAdjustForEntries ; ASSERT: not obscured
     ELSE
         jsr     InitSetDesktopPort
     END_IF
@@ -6479,7 +6475,7 @@ done:
         ;; drawing can be done using `IconTK::DrawIconRaw` in a
         ;; clipped port.
 
-        jsr     UnsafeOffsetAndSetPortFromWindowId ; CHECKED
+        jsr     UnsafeSetPortFromWindowIdAndAdjustForEntries ; CHECKED
         RTS_IF_NOT_ZERO                            ; obscured
 
         jsr     PushPointers
@@ -6573,12 +6569,12 @@ done:   jsr     PopPointers     ; do not tail-call optimize!
 ;;; ============================================================
 ;;; Adjust grafport for header.
 
-.proc OffsetWindowGrafportAndSet
+.proc AdjustWindowPortForEntries
         add16_8 window_grafport::viewloc::ycoord, #kWindowHeaderHeight
         add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight
         MGTK_CALL MGTK::SetPort, window_grafport
         rts
-.endproc ; OffsetWindowGrafportAndSet
+.endproc ; AdjustWindowPortForEntries
 
 ;;; ============================================================
 

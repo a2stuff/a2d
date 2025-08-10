@@ -131,11 +131,10 @@ params:  .res    3
 ;;; the header has been drawn, if needed, so that the window contents
 ;;; are appropriately clipped.
 ;;;
-;;; Output: C=0 if valid port set, C=1 if degenerate (so don't paint)
 ;;; Assert: Within a `BeginUpdate`...`EndUpdate` sequence with port set
 ;;; Assert: `window_grafport` is set to window's raw port
 
-.proc MaybeOffsetUpdatePort
+.proc AdjustUpdatePortForEntries
         port_ptr := $06
         tmpw := $08
 
@@ -150,25 +149,20 @@ params:  .res    3
         bpl     :-
 
         ;; Determine if the update's maprect is already below the header; if
-        ;; not, we need to offset the maprect below the header.
+        ;; not, we need to offset the maprect below the header to prevent
+        ;; icons from drawing over the header when vertically scrolled.
         sub16   desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, tmpw
         scmp16  tmpw, #kWindowHeaderHeight
-        bpl     skip
-
+    IF_NEG
         ;; Adjust grafport to account for header
         add16 window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord
         add16 window_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kWindowHeaderHeight, desktop_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1
 
         MGTK_CALL MGTK::SetPort, desktop_grafport
-        bne     fail
+    END_IF
 
-skip:   clc
-        .byte   OPC_BCS         ; mask next byte (sec)
-
-fail:   sec
         jmp     BankInMain
-.endproc ; MaybeOffsetUpdatePort
-
+.endproc ; AdjustUpdatePortForEntries
 
 ;;; ============================================================
 ;;; From MAIN, load AUX (A,X) into A
