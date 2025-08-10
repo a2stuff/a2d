@@ -10252,6 +10252,10 @@ op_jt3: jmp     (op_jt_addr3)   ; when finished directory
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
+.if .lobyte(*) > $100 - 6
+        .out .sprintf("Padding 5 bytes to avoid page boundary at $%04X", *)
+        .res 5
+.endif
 op_jt_addrs:
 op_jt_addr0:  .addr   0
 op_jt_addr1:  .addr   0
