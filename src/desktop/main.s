@@ -1127,8 +1127,12 @@ last_disk_in_devices_table:
 
 ;;; ============================================================
 
+;;; Preserves Y
 .proc CheckDisksInDevices
         status_buffer := $800
+
+        tya                     ; preserve Y
+        pha
 
         ldx     removable_device_table
         beq     done
@@ -1138,19 +1142,21 @@ last_disk_in_devices_table:
         sta     disk_in_device_table,x
         dex
         bne     :-
-done:   rts
+done:
+        pla
+        tay                     ; restore Y
+        rts
 
+;;; Input: A = unit_number
+;;; Preserves X
 check_disk_in_drive:
-        sta     unit_number
-        txa
+        tay                     ; Y = unit_number
+        txa                     ; preserve X
         pha
-        tya
-        pha
+        tya                     ; A = unit_number
 
-        unit_number := *+1
-        lda     #SELF_MODIFIED_BYTE
         jsr     FindSmartportDispatchAddress
-        bcs     notsp           ; not SmartPort
+    IF_CC                       ; is SmartPort
         stax    dispatch
         sty     status_unit_num
 
@@ -1162,19 +1168,17 @@ check_disk_in_drive:
 
         lda     status_buffer
         and     #$10            ; general status byte, $10 = disk in drive
-        beq     notsp
-        lda     #$FF
-        bne     finish
+      IF_NOT_ZERO
+        ldy     #$FF            ; is SmartPort and disk in drive
+        bne     finish          ; always
+      END_IF
+    END_IF
 
-notsp:  lda     #0              ; not SmartPort (or no disk in drive)
+        ldy     #0              ; not SmartPort or no disk in drive
 
-finish: sta     result
-        pla
-        tay
-        pla
-        tax
-        result := *+1
-        lda     #SELF_MODIFIED_BYTE
+finish: pla
+        tax                     ; restore X
+        tya                     ; A = result
         rts
 
         ;; params for call
@@ -3552,30 +3556,24 @@ RefreshView := RefreshViewImpl::entry3
 
         ITK_CALL IconTK::FreeAll, cached_window_id
 
-        FALL_THROUGH_TO FreeCachedWindowIcons
-.endproc ; RemoveAndFreeCachedWindowIcons
-
-;;; ============================================================
-
-.proc FreeCachedWindowIcons
-        copy8   #0, index
-
-        index := *+1
-loop:   ldx     #SELF_MODIFIED_BYTE
-        cpx     cached_window_entry_count
+        ;; Remove any associations with windows
+        ldx     cached_window_entry_count
         beq     done
 
-        lda     cached_window_entry_list,x
+loop:   txa                     ; X = index+1
+        pha                     ; A = index+1
+        lda     cached_window_entry_list-1,x
         jsr     FindWindowIndexForDirIcon ; X = window id-1 if found
     IF_EQ
         copy8   #kWindowToDirIconNone, window_to_dir_icon_table,x
     END_IF
-
-        inc     index
+        pla                     ; A = index+1
+        tax                     ; X = index+1
+        dex
         bne     loop
 
 done:   rts
-.endproc ; FreeCachedWindowIcons
+.endproc ; RemoveAndFreeCachedWindowIcons
 
 ;;; ============================================================
 
@@ -6169,7 +6167,7 @@ no_win:
         jsr     _UpdateIcon
 
         ;; Set path (using `ptr`), size, contents, and volume free/used.
-        jsr     PrepareNewWindow
+        jsr     _PrepareNewWindow
 
         ;; Create the window
         lda     cached_window_id
@@ -6213,6 +6211,190 @@ no_win:
         copy16  #filename_buf - IconEntry::name, ptr
         rts
 .endproc ; _UpdateIcon
+
+;;; ------------------------------------------------------------
+;;; Set up path and coords for new window, contents and free/used.
+;;; Inputs: IconEntry pointer in $06, new window id in `cached_window_id`,
+;;;         `src_path_buf` has full path
+;;; Outputs: Winfo configured, window path table entry set
+
+.proc _PrepareNewWindow
+        icon_ptr := $06
+
+        ;; Copy icon name to window title
+.scope
+        name_ptr := icon_ptr
+        title_ptr := $08
+
+        jsr     PushPointers
+
+        lda     cached_window_id
+        jsr     GetWindowTitle
+        stax    title_ptr
+
+        add16_8 icon_ptr, #IconEntry::name, name_ptr
+
+        ldy     #0
+        lda     (name_ptr),y
+        tay
+:       lda     (name_ptr),y
+        sta     (title_ptr),y
+        dey
+        bpl     :-
+
+        jsr     PopPointers
+.endscope
+
+        ;; --------------------------------------------------
+        path_ptr := $08
+
+        ;; Copy previously composed path into window path
+        lda     cached_window_id
+        jsr     GetWindowPath
+        stax    path_ptr
+        ldy     src_path_buf
+:       lda     src_path_buf,y
+        sta     (path_ptr),y
+        dey
+        bpl     :-
+
+        ;; --------------------------------------------------
+
+        winfo_ptr := $06
+
+        ;; Set window coordinates
+        lda     cached_window_id
+        jsr     GetWindowPtr
+        stax    winfo_ptr
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc
+
+        ;; xcoord = (window_id-1) * 16 + kWindowXOffset
+        ;; ycoord = (window_id-1) * 8 + kWindowYOffset
+
+        lda     cached_window_id
+        sec
+        sbc     #1              ; * 16
+        asl     a
+        asl     a
+        asl     a
+        asl     a
+
+        pha
+        adc     #kWindowXOffset
+        sta     (winfo_ptr),y   ; viewloc::xcoord
+        iny
+        lda     #0
+        sta     (winfo_ptr),y
+        iny
+        pla
+
+        lsr     a               ; / 2
+        clc
+        adc     #kWindowYOffset
+        sta     (winfo_ptr),y   ; viewloc::ycoord
+        iny
+        lda     #0
+        sta     (winfo_ptr),y
+
+        ;; Map rect (initially empty, size assigned in `ComputeInitialWindowSize`)
+        lda     #0
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       sta     (winfo_ptr),y
+        dey
+        dex
+        bpl     :-
+
+        ;; --------------------------------------------------
+        ;; Scrollbars - start off inactive but ready to go
+
+        lda     #MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
+        ldy     #MGTK::Winfo::hscroll
+        sta     (winfo_ptr),y
+        .assert MGTK::Winfo::vscroll = MGTK::Winfo::hscroll + 1, error, "enum mismatch"
+        iny
+        sta     (winfo_ptr),y
+
+        ;; --------------------------------------------------
+        ;; Read FileRecords
+
+        lda     cached_window_id
+        jsr     CreateFileRecordsForWindow
+
+        ;; --------------------------------------------------
+        ;; Update used/free table
+
+        lda     icon_param      ; set to `kWindowToDirIconNone` if opening via path
+    IF_NC
+        ;; If a windowed icon, source from that
+        jsr     GetIconWindow
+      IF_NOT_ZERO
+        ;; Windowed (folder) icon
+        asl     a
+        tax
+        copy16  window_k_used_table-2,x, vol_kb_used ; 1-based to 0-based
+        copy16  window_k_free_table-2,x, vol_kb_free
+      END_IF
+    END_IF
+
+        ;; Used cached window's details, which are correct now.
+        lda     cached_window_id
+        asl     a
+        tax
+        copy16  vol_kb_used, window_k_used_table-2,x ; 1-based to 0-based
+        copy16  vol_kb_free, window_k_free_table-2,x
+
+        copy16  window_k_used_table-2,x, window_draw_k_used_table-2,x ; 1-based to 0-based
+        copy16  window_k_free_table-2,x, window_draw_k_free_table-2,x
+
+        ;; --------------------------------------------------
+        ;; Create window and icons
+
+        bit     copy_new_window_bounds_flag
+    IF_NS
+        ;; DeskTopSettings::kViewByXXX
+        ldx     cached_window_id
+        copy8   new_window_view_by, win_view_by_table-1,x
+
+        ;; viewloc
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
+        ldx     #.sizeof(MGTK::Point)-1
+:       lda     new_window_viewloc,x
+        sta     (winfo_ptr),y
+        dey
+        dex
+        bpl     :-
+
+        ;; maprect
+        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
+        ldx     #.sizeof(MGTK::Rect)-1
+:       lda     new_window_maprect,x
+        sta     (winfo_ptr),y
+        dey
+        dex
+        bpl     :-
+    END_IF
+
+        jsr     InitWindowEntriesAndIcons
+
+        bit     copy_new_window_bounds_flag
+    IF_NC
+        jsr     ComputeInitialWindowSize
+        jsr     AdjustViewportForNewIcons
+    END_IF
+
+        ;; --------------------------------------------------
+        ;; Animate the window being opened
+
+        lda     cached_window_id
+        jsr     GetWindowPath
+        jsr     IconToAnimate
+        ldx     cached_window_id
+        jsr     AnimateWindowOpen
+
+        rts
+.endproc ; _PrepareNewWindow
+
 .endproc ; OpenWindowImpl
 OpenWindowForIcon := OpenWindowImpl::for_icon
 OpenWindowForPath := OpenWindowImpl::for_path
@@ -7203,494 +7385,9 @@ finish:
         rts
 .endproc ; RemoveWindowFileRecords
 
-;;; ============================================================
-;;; Set up path and coords for new window, contents and free/used.
-;;; Inputs: IconEntry pointer in $06, new window id in `cached_window_id`,
-;;;         `src_path_buf` has full path
-;;; Outputs: Winfo configured, window path table entry set
-
-.proc PrepareNewWindow
-        icon_ptr := $06
-
-        ;; Copy icon name to window title
-.scope
-        name_ptr := icon_ptr
-        title_ptr := $08
-
-        jsr     PushPointers
-
-        lda     cached_window_id
-        jsr     GetWindowTitle
-        stax    title_ptr
-
-        add16_8 icon_ptr, #IconEntry::name, name_ptr
-
-        ldy     #0
-        lda     (name_ptr),y
-        tay
-:       lda     (name_ptr),y
-        sta     (title_ptr),y
-        dey
-        bpl     :-
-
-        jsr     PopPointers
-.endscope
-
-        ;; --------------------------------------------------
-        path_ptr := $08
-
-        ;; Copy previously composed path into window path
-        lda     cached_window_id
-        jsr     GetWindowPath
-        stax    path_ptr
-        ldy     src_path_buf
-:       lda     src_path_buf,y
-        sta     (path_ptr),y
-        dey
-        bpl     :-
-
-        ;; --------------------------------------------------
-
-        winfo_ptr := $06
-
-        ;; Set window coordinates
-        lda     cached_window_id
-        jsr     GetWindowPtr
-        stax    winfo_ptr
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc
-
-        ;; xcoord = (window_id-1) * 16 + kWindowXOffset
-        ;; ycoord = (window_id-1) * 8 + kWindowYOffset
-
-        lda     cached_window_id
-        sec
-        sbc     #1              ; * 16
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-
-        pha
-        adc     #kWindowXOffset
-        sta     (winfo_ptr),y   ; viewloc::xcoord
-        iny
-        lda     #0
-        sta     (winfo_ptr),y
-        iny
-        pla
-
-        lsr     a               ; / 2
-        clc
-        adc     #kWindowYOffset
-        sta     (winfo_ptr),y   ; viewloc::ycoord
-        iny
-        lda     #0
-        sta     (winfo_ptr),y
-
-        ;; Map rect (initially empty, size assigned in `ComputeInitialWindowSize`)
-        lda     #0
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
-        ldx     #.sizeof(MGTK::Rect)-1
-:       sta     (winfo_ptr),y
-        dey
-        dex
-        bpl     :-
-
-        ;; --------------------------------------------------
-        ;; Scrollbars - start off inactive but ready to go
-
-        lda     #MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
-        ldy     #MGTK::Winfo::hscroll
-        sta     (winfo_ptr),y
-        .assert MGTK::Winfo::vscroll = MGTK::Winfo::hscroll + 1, error, "enum mismatch"
-        iny
-        sta     (winfo_ptr),y
-
-        ;; --------------------------------------------------
-        ;; Read FileRecords
-
-        lda     cached_window_id
-        jsr     CreateFileRecordsForWindow
-
-        ;; --------------------------------------------------
-        ;; Update used/free table
-
-        lda     icon_param      ; set to `kWindowToDirIconNone` if opening via path
-    IF_NC
-        ;; If a windowed icon, source from that
-        jsr     GetIconWindow
-      IF_NOT_ZERO
-        ;; Windowed (folder) icon
-        asl     a
-        tax
-        copy16  window_k_used_table-2,x, vol_kb_used ; 1-based to 0-based
-        copy16  window_k_free_table-2,x, vol_kb_free
-      END_IF
-    END_IF
-
-        ;; Used cached window's details, which are correct now.
-        lda     cached_window_id
-        asl     a
-        tax
-        copy16  vol_kb_used, window_k_used_table-2,x ; 1-based to 0-based
-        copy16  vol_kb_free, window_k_free_table-2,x
-
-        copy16  window_k_used_table-2,x, window_draw_k_used_table-2,x ; 1-based to 0-based
-        copy16  window_k_free_table-2,x, window_draw_k_free_table-2,x
-
-        ;; --------------------------------------------------
-        ;; Create window and icons
-
-        bit     copy_new_window_bounds_flag
-    IF_NS
-        ;; DeskTopSettings::kViewByXXX
-        ldx     cached_window_id
-        copy8   new_window_view_by, win_view_by_table-1,x
-
-        ;; viewloc
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::viewloc + .sizeof(MGTK::Point)-1
-        ldx     #.sizeof(MGTK::Point)-1
-:       lda     new_window_viewloc,x
-        sta     (winfo_ptr),y
-        dey
-        dex
-        bpl     :-
-
-        ;; maprect
-        ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
-        ldx     #.sizeof(MGTK::Rect)-1
-:       lda     new_window_maprect,x
-        sta     (winfo_ptr),y
-        dey
-        dex
-        bpl     :-
-    END_IF
-
-        jsr     InitWindowEntriesAndIcons
-
-        bit     copy_new_window_bounds_flag
-    IF_NC
-        jsr     ComputeInitialWindowSize
-        jsr     AdjustViewportForNewIcons
-    END_IF
-
-        ;; --------------------------------------------------
-        ;; Animate the window being opened
-
-        lda     cached_window_id
-        jsr     GetWindowPath
-        jsr     IconToAnimate
-        ldx     cached_window_id
-        jsr     AnimateWindowOpen
-
-        rts
-.endproc ; PrepareNewWindow
 
 copy_new_window_bounds_flag:
         .byte   0
-
-;;; ============================================================
-;;; File Icon Entry Construction
-;;; Inputs: `cached_window_id` must be set
-
-.proc CreateIconsForWindowImpl
-
-;;; Local variables on ZP
-PARAM_BLOCK, $50
-icon_type       .addr
-icon_flags      .byte
-icon_height     .word
-
-        ;; Updated based on view type
-initial_xcoord  .word
-icons_this_row  .byte
-
-        ;; Initial values when populating a list view
-icons_per_row   .byte
-col_spacing     .byte
-row_spacing     .byte
-icon_coords     .tag    MGTK::Point
-END_PARAM_BLOCK
-        init_view := icons_per_row
-        init_view_size = 3 + .sizeof(MGTK::Point)
-
-        ;; Templates for populating initial values, based on view type
-init_views:
-init_list_view:
-        .byte   1, 0, kListItemHeight
-        .word   kListViewInitialLeft, kListViewInitialTop
-        .assert * - init_list_view = init_view_size, error, "struct size"
-init_icon_view:
-        .byte   kIconViewIconsPerRow, kIconViewSpacingX, kIconViewSpacingY
-        .word   kIconViewInitialLeft, kIconViewInitialTop
-        .assert * - init_icon_view = init_view_size, error, "struct size"
-init_smicon_view:
-        .byte   kSmallIconViewIconsPerRow, kSmallIconViewSpacingX, kSmallIconViewSpacingY
-        .word   kSmallIconViewInitialLeft, kSmallIconViewInitialTop
-        .assert * - init_smicon_view = init_view_size, error, "struct size"
-
-.proc _Start
-        jsr     PushPointers
-
-        ;; Select the template
-        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
-    IF_NEG
-        ldy     #init_list_view - init_views + init_view_size-1
-    ELSE
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
-      IF_ZERO
-        ldy     #init_icon_view - init_views + init_view_size-1
-      ELSE
-        ldy     #init_smicon_view - init_views + init_view_size-1
-      END_IF
-    END_IF
-
-        ;; Populate the initial values from the template
-        ldx     #init_view_size-1
-:       lda     init_views,y
-        sta     init_view,x
-        dey
-        dex
-        bpl     :-
-
-        ;; Init/zero out the rest of the state
-        copy16  icon_coords+MGTK::Point::xcoord, initial_xcoord
-
-        lda     #0
-        sta     icons_this_row
-        sta     index
-
-        ;; Copy `cached_window_entry_list` to temp location
-        record_order_list := $800
-        ldx     cached_window_entry_count
-        stx     num_files
-        dex
-:       lda     cached_window_entry_list,x
-        sta     record_order_list,x
-        dex
-        bpl     :-
-
-        copy8   #0, cached_window_entry_count
-
-        ;; Get base pointer to records
-        lda     cached_window_id
-        jsr     GetFileRecordListForWindow
-        addax   #1, records_base_ptr ; first byte in list is the list size
-
-        lda     cached_window_id
-        sta     active_window_id
-
-        ;; Loop over files, creating icon for each
-        index := *+1
-:       ldx     #SELF_MODIFIED_BYTE
-        num_files := *+1
-        cpx     #SELF_MODIFIED_BYTE
-        beq     :+
-
-        ;; Get record from ordered list
-        lda     record_order_list,x
-        tax                     ; 1-based to 0-based
-        dex
-        txa
-        pha                     ; A = record_num-1
-        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
-        jsr     ATimes32        ; A,X = A * 32
-        record_ptr := $08
-        addax   records_base_ptr, record_ptr
-        pla                     ; A = record_num-1
-        jsr     _AllocAndPopulateFileIcon
-
-        inc     index
-        bne     :-              ; always
-:
-        jsr     CachedIconsWindowToScreen
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
-
-records_base_ptr:
-        .word   0
-
-.endproc ; _Start
-
-;;; ============================================================
-;;; Create icon
-;;; Inputs: A = record_num, $08 = `FileRecord`
-
-.proc _AllocAndPopulateFileIcon
-        icon_entry  := $06
-        file_record := $08
-        name_tmp := $1800
-
-        pha                     ; A = record_num
-
-        inc     icon_count
-        ITK_CALL IconTK::AllocIcon, get_icon_entry_params
-        copy16  get_icon_entry_params::addr, icon_entry
-        lda     get_icon_entry_params::id
-        sta     icon_num
-        ldx     cached_window_entry_count
-        inc     cached_window_entry_count
-        sta     cached_window_entry_list,x
-
-        ;; Assign record number
-        pla                     ; A = record_num
-        ldy     #IconEntry::record_num
-        sta     (icon_entry),y
-
-        ;; Bank in the `FileRecord` entries
-        bit     LCBANK2
-        bit     LCBANK2
-
-        ;; Copy the name out
-        .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
-        ldy     #kMaxFilenameLength
-:       lda     (file_record),y
-        sta     name_tmp,y
-        dey
-        bpl     :-
-
-        ;; Copy out file metadata needed to determine icon type
-        jsr     FileRecordToSrcFileInfo ; uses `FileRecord` ptr in $08
-
-        ;; Done with `FileRecord` entries
-        bit     LCBANK1
-        bit     LCBANK1
-
-        ;; Determine icon type
-        jsr     GetCachedWindowViewBy
-        sta     view_by
-        ldax    #name_tmp
-        jsr     DetermineIconType ; uses passed name and `src_file_info_params`
-        view_by := *+1
-        ldy     #SELF_MODIFIED_BYTE
-        jsr     _FindIconDetailsForIconType
-
-        ;; Copy name into `IconEntry`
-        ldy     #IconEntry::name + kMaxFilenameLength
-        ldx     #kMaxFilenameLength
-:       lda     name_tmp,x
-        sta     (icon_entry),y
-        dey
-        dex
-        bpl     :-
-
-        ;; Assign location
-        ldy     #IconEntry::iconx + .sizeof(MGTK::Point) - 1
-        ldx     #.sizeof(MGTK::Point) - 1
-:       lda     icon_coords,x
-        sta     (icon_entry),y
-        dey
-        dex
-        bpl     :-
-
-        jsr     GetCachedWindowViewBy
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
-    IF_ZERO
-        ;; Icon view: include y-offset
-        ldy     #IconEntry::icony
-        sub16in (icon_entry),y, icon_height, (icon_entry),y
-    END_IF
-
-        ;; Next col
-        add16_8 icon_coords+MGTK::Point::xcoord, col_spacing
-        inc     icons_this_row
-        ;; Next row?
-        lda     icons_this_row
-        cmp     icons_per_row
-    IF_EQ
-        add16_8 icon_coords+MGTK::Point::ycoord, row_spacing
-        copy16  initial_xcoord, icon_coords+MGTK::Point::xcoord
-        copy8   #0, icons_this_row
-    END_IF
-
-        ;; Assign `IconEntry::win_flags`
-        lda     cached_window_id
-        ora     icon_flags
-        ldy     #IconEntry::win_flags
-        sta     (icon_entry),y
-
-        ;; Assign `IconEntry::type`
-        ldy     #IconEntry::type
-        copy8   icon_type, (icon_entry),y
-
-        ;; If folder, see if there's an associated window
-        lda     src_file_info_params::file_type
-        cmp     #FT_DIRECTORY
-        bne     :+
-        icon_num := *+1
-        lda     #SELF_MODIFIED_BYTE
-        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
-        bne     :+              ; too long
-
-        jsr     PushPointers
-        param_call FindWindowForPath, path_buf3
-        jsr     PopPointers
-        tax                     ; A = window id, 0 if none
-        beq     :+
-        lda     icon_num
-        sta     window_to_dir_icon_table-1,x
-
-        ;; Update `IconEntry::state`
-        ldy     #IconEntry::state ; mark as dimmed
-        lda     (icon_entry),y
-        ora     #kIconEntryStateDimmed
-        sta     (icon_entry),y
-:
-        rts
-.endproc ; _AllocAndPopulateFileIcon
-
-;;; ============================================================
-;;; Inputs: A = `IconType` member, Y = `DeskTopSettings::kViewByXXX` value
-;;; Outputs: Populates `icon_flags`, `icon_type`, `icon_height`
-
-.proc _FindIconDetailsForIconType
-        ptr := $6
-
-        sty     view_by
-        jsr     PushPointers
-
-        ;; For populating `IconEntry::win_flags`
-        tay                     ; Y = `IconType`
-        lda     icontype_iconentryflags_table,y
-        sta     icon_flags
-
-        ;; Adjust type and flags based on view
-        view_by := *+1
-        lda     #SELF_MODIFIED_BYTE
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
-    IF_NOT_ZERO
-        ;; List View / Small Icon View
-        php
-        lda     icon_flags
-        ora     #kIconEntryFlagsSmall
-        plp
-      IF_NS
-        ora     #kIconEntryFlagsFixed
-      END_IF
-        sta     icon_flags
-
-        lda     icontype_to_smicon_table,y
-        tay
-   END_IF
-
-        ;; For populating `IconEntry::type`
-        sty     icon_type
-
-        ;; Icon height will be needed too
-        tya
-        asl                     ; *= 2
-        tay
-        ldax    type_icons_table,y
-        stax    ptr
-        ldy     #IconResource::maprect + MGTK::Rect::y2
-        copy16in (ptr),y, icon_height
-
-        jsr     PopPointers     ; do not tail-call optimise!
-        rts
-.endproc ; _FindIconDetailsForIconType
-
-.endproc ; CreateIconsForWindowImpl
-CreateIconsForWindow := CreateIconsForWindowImpl::_Start
 
 ;;; ============================================================
 ;;; Compute the window initial size for `cached_window_id`,
@@ -8225,8 +7922,308 @@ next:   inc     icon_num
         ;; --------------------------------------------------
         ;; Create icons
 
-        jsr     CreateIconsForWindow
+        jsr     _CreateIconsForWindow
         jmp     StoreWindowEntryTable
+
+;;; ------------------------------------------------------------
+;;; File Icon Entry Construction
+;;; Inputs: `cached_window_id` must be set
+
+.proc _CreateIconsForWindow
+
+;;; Local variables on ZP
+PARAM_BLOCK, $50
+icon_type       .addr
+icon_flags      .byte
+icon_height     .word
+
+        ;; Updated based on view type
+initial_xcoord  .word
+icons_this_row  .byte
+
+        ;; Initial values when populating a list view
+icons_per_row   .byte
+col_spacing     .byte
+row_spacing     .byte
+icon_coords     .tag    MGTK::Point
+END_PARAM_BLOCK
+        init_view := icons_per_row
+        init_view_size = 3 + .sizeof(MGTK::Point)
+
+        jsr     PushPointers
+
+        ;; Select the template
+        jsr     GetCachedWindowViewBy ; N=0 is icon view, N=1 is list view
+    IF_NEG
+        ldy     #init_list_view - init_views + init_view_size-1
+    ELSE
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+      IF_ZERO
+        ldy     #init_icon_view - init_views + init_view_size-1
+      ELSE
+        ldy     #init_smicon_view - init_views + init_view_size-1
+      END_IF
+    END_IF
+
+        ;; Populate the initial values from the template
+        ldx     #init_view_size-1
+:       lda     init_views,y
+        sta     init_view,x
+        dey
+        dex
+        bpl     :-
+
+        ;; Init/zero out the rest of the state
+        copy16  icon_coords+MGTK::Point::xcoord, initial_xcoord
+
+        lda     #0
+        sta     icons_this_row
+        sta     index
+
+        ;; Copy `cached_window_entry_list` to temp location
+        record_order_list := $800
+        ldx     cached_window_entry_count
+        stx     num_files
+        dex
+:       lda     cached_window_entry_list,x
+        sta     record_order_list,x
+        dex
+        bpl     :-
+
+        copy8   #0, cached_window_entry_count
+
+        ;; Get base pointer to records
+        lda     cached_window_id
+        jsr     GetFileRecordListForWindow
+        addax   #1, records_base_ptr ; first byte in list is the list size
+
+        lda     cached_window_id
+        sta     active_window_id
+
+        ;; Loop over files, creating icon for each
+        index := *+1
+:       ldx     #SELF_MODIFIED_BYTE
+        num_files := *+1
+        cpx     #SELF_MODIFIED_BYTE
+        beq     :+
+
+        ;; Get record from ordered list
+        lda     record_order_list,x
+        tax                     ; 1-based to 0-based
+        dex
+        txa
+        pha                     ; A = record_num-1
+        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        jsr     ATimes32        ; A,X = A * 32
+        record_ptr := $08
+        addax   records_base_ptr, record_ptr
+        pla                     ; A = record_num-1
+        jsr     _AllocAndPopulateFileIcon
+
+        inc     index
+        bne     :-              ; always
+:
+        jsr     CachedIconsWindowToScreen
+        jsr     PopPointers     ; do not tail-call optimise!
+        rts
+
+        ;; Templates for populating initial values, based on view type
+init_views:
+init_list_view:
+        .byte   1, 0, kListItemHeight
+        .word   kListViewInitialLeft, kListViewInitialTop
+        .assert * - init_list_view = init_view_size, error, "struct size"
+init_icon_view:
+        .byte   kIconViewIconsPerRow, kIconViewSpacingX, kIconViewSpacingY
+        .word   kIconViewInitialLeft, kIconViewInitialTop
+        .assert * - init_icon_view = init_view_size, error, "struct size"
+init_smicon_view:
+        .byte   kSmallIconViewIconsPerRow, kSmallIconViewSpacingX, kSmallIconViewSpacingY
+        .word   kSmallIconViewInitialLeft, kSmallIconViewInitialTop
+        .assert * - init_smicon_view = init_view_size, error, "struct size"
+
+records_base_ptr:
+        .word   0
+
+;;; ============================================================
+;;; Create icon
+;;; Inputs: A = record_num, $08 = `FileRecord`
+
+.proc _AllocAndPopulateFileIcon
+        icon_entry  := $06
+        file_record := $08
+        name_tmp := $1800
+
+        pha                     ; A = record_num
+
+        inc     icon_count
+        ITK_CALL IconTK::AllocIcon, get_icon_entry_params
+        copy16  get_icon_entry_params::addr, icon_entry
+        lda     get_icon_entry_params::id
+        sta     icon_num
+        ldx     cached_window_entry_count
+        inc     cached_window_entry_count
+        sta     cached_window_entry_list,x
+
+        ;; Assign record number
+        pla                     ; A = record_num
+        ldy     #IconEntry::record_num
+        sta     (icon_entry),y
+
+        ;; Bank in the `FileRecord` entries
+        bit     LCBANK2
+        bit     LCBANK2
+
+        ;; Copy the name out
+        .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
+        ldy     #kMaxFilenameLength
+:       lda     (file_record),y
+        sta     name_tmp,y
+        dey
+        bpl     :-
+
+        ;; Copy out file metadata needed to determine icon type
+        jsr     FileRecordToSrcFileInfo ; uses `FileRecord` ptr in $08
+
+        ;; Done with `FileRecord` entries
+        bit     LCBANK1
+        bit     LCBANK1
+
+        ;; Determine icon type
+        jsr     GetCachedWindowViewBy
+        sta     view_by
+        ldax    #name_tmp
+        jsr     DetermineIconType ; uses passed name and `src_file_info_params`
+        view_by := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        jsr     _FindIconDetailsForIconType
+
+        ;; Copy name into `IconEntry`
+        ldy     #IconEntry::name + kMaxFilenameLength
+        ldx     #kMaxFilenameLength
+:       lda     name_tmp,x
+        sta     (icon_entry),y
+        dey
+        dex
+        bpl     :-
+
+        ;; Assign location
+        ldy     #IconEntry::iconx + .sizeof(MGTK::Point) - 1
+        ldx     #.sizeof(MGTK::Point) - 1
+:       lda     icon_coords,x
+        sta     (icon_entry),y
+        dey
+        dex
+        bpl     :-
+
+        jsr     GetCachedWindowViewBy
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+    IF_ZERO
+        ;; Icon view: include y-offset
+        ldy     #IconEntry::icony
+        sub16in (icon_entry),y, icon_height, (icon_entry),y
+    END_IF
+
+        ;; Next col
+        add16_8 icon_coords+MGTK::Point::xcoord, col_spacing
+        inc     icons_this_row
+        ;; Next row?
+        lda     icons_this_row
+        cmp     icons_per_row
+    IF_EQ
+        add16_8 icon_coords+MGTK::Point::ycoord, row_spacing
+        copy16  initial_xcoord, icon_coords+MGTK::Point::xcoord
+        copy8   #0, icons_this_row
+    END_IF
+
+        ;; Assign `IconEntry::win_flags`
+        lda     cached_window_id
+        ora     icon_flags
+        ldy     #IconEntry::win_flags
+        sta     (icon_entry),y
+
+        ;; Assign `IconEntry::type`
+        ldy     #IconEntry::type
+        copy8   icon_type, (icon_entry),y
+
+        ;; If folder, see if there's an associated window
+        lda     src_file_info_params::file_type
+        cmp     #FT_DIRECTORY
+        bne     :+
+        icon_num := *+1
+        lda     #SELF_MODIFIED_BYTE
+        jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
+        bne     :+              ; too long
+
+        jsr     PushPointers
+        param_call FindWindowForPath, path_buf3
+        jsr     PopPointers
+        tax                     ; A = window id, 0 if none
+        beq     :+
+        lda     icon_num
+        sta     window_to_dir_icon_table-1,x
+
+        ;; Update `IconEntry::state`
+        ldy     #IconEntry::state ; mark as dimmed
+        lda     (icon_entry),y
+        ora     #kIconEntryStateDimmed
+        sta     (icon_entry),y
+:
+        rts
+.endproc ; _AllocAndPopulateFileIcon
+
+;;; ============================================================
+;;; Inputs: A = `IconType` member, Y = `DeskTopSettings::kViewByXXX` value
+;;; Outputs: Populates `icon_flags`, `icon_type`, `icon_height`
+
+.proc _FindIconDetailsForIconType
+        ptr := $6
+
+        sty     view_by
+        jsr     PushPointers
+
+        ;; For populating `IconEntry::win_flags`
+        tay                     ; Y = `IconType`
+        lda     icontype_iconentryflags_table,y
+        sta     icon_flags
+
+        ;; Adjust type and flags based on view
+        view_by := *+1
+        lda     #SELF_MODIFIED_BYTE
+        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+    IF_NOT_ZERO
+        ;; List View / Small Icon View
+        php
+        lda     icon_flags
+        ora     #kIconEntryFlagsSmall
+        plp
+      IF_NS
+        ora     #kIconEntryFlagsFixed
+      END_IF
+        sta     icon_flags
+
+        lda     icontype_to_smicon_table,y
+        tay
+   END_IF
+
+        ;; For populating `IconEntry::type`
+        sty     icon_type
+
+        ;; Icon height will be needed too
+        tya
+        asl                     ; *= 2
+        tay
+        ldax    type_icons_table,y
+        stax    ptr
+        ldy     #IconResource::maprect + MGTK::Rect::y2
+        copy16in (ptr),y, icon_height
+
+        jsr     PopPointers     ; do not tail-call optimise!
+        rts
+.endproc ; _FindIconDetailsForIconType
+
+.endproc ; _CreateIconsForWindow
+
 .endproc ; InitWindowEntriesAndIcons
 
 ;;; ============================================================
@@ -9977,7 +9974,7 @@ target_is_icon:
 ;;; Operations where source/target paths are passed by callers
 
 ;;; File > Duplicate - for a single file copy
-;;; Caller sets `path_buf3` (source) and `path_buf4` (destination
+;;; Caller sets `path_buf3` (source) and `path_buf4` (destination)
 .proc DoCopyFile
         copy8   #0, operation_flags ; bit7=0 = copy/delete
         copy8   #0, move_flag
@@ -10067,12 +10064,8 @@ DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
 
 iterate_selection:
         ldx     #0
-        stx     icon_index
-
-        ;; --------------------------------------------------
-
-        icon_index := *+1
-loop:   ldx     #SELF_MODIFIED_BYTE
+loop:   txa                     ; X = index
+        pha                     ; A = index
         lda     selected_icon_list,x
         cmp     trash_icon_num
         beq     next_icon
@@ -10113,9 +10106,9 @@ loop:   ldx     #SELF_MODIFIED_BYTE
         jsr     OpProcessSelectedFile
 
 next_icon:
-
-        inc     icon_index
-        ldx     icon_index
+        pla                     ; A = index
+        tax                     ; X = index
+        inx
         cpx     selected_icon_count
         bne     loop
 
@@ -10129,19 +10122,12 @@ next_icon:
     END_IF
 
         ;; No, we finished enumerating. Now do the real work.
-
-        ;; Do we need to show a confirmation dialog? (i.e. Delete)
         bit     copy_delete_flags ; bit7=1 = delete
     IF_NS
         jsr     InvokeOperationConfirmCallback
-    END_IF
-
-        ;; Set up callbacks for the real work.
-        bit     copy_delete_flags ; bit7=0 = copy
-    IF_NC
-        jsr     PrepCallbacksForCopy
-    ELSE
         jsr     PrepCallbacksForDelete
+    ELSE
+        jsr     PrepCallbacksForCopy
     END_IF
 
         ;; And iterate selection again.
