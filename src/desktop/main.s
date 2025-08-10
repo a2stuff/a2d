@@ -1850,9 +1850,6 @@ str_preview_mus:
 str_preview_pt3:
         PASCAL_STRING .concat(kFilenameExtrasDir, "/PT3PLR.system")
 
-str_date_and_time:
-        PASCAL_STRING .concat(kFilenameDADir, "/", res_filename_control_panels, "/", res_filename_date_and_time)
-
 ;;; ============================================================
 
 str_empty:
@@ -2883,9 +2880,6 @@ CmdDiskCopy := CmdDiskCopyImpl::start
 
         ;; access = destroy/rename/write/read
         DEFINE_CREATE_PARAMS create_params, src_path_buf, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
-
-str_new_folder:
-        PASCAL_STRING res_string_new_folder_default
 
 start:
         ;; Create with current date
@@ -10252,10 +10246,6 @@ op_jt3: jmp     (op_jt_addr3)   ; when finished directory
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
-.if .lobyte(*) > $100 - 6
-        .out .sprintf("Padding 5 bytes to avoid page boundary at $%04X", *)
-        .res 5
-.endif
 op_jt_addrs:
 op_jt_addr0:  .addr   0
 op_jt_addr1:  .addr   0
@@ -15503,6 +15493,10 @@ str_device_type_appletalk:
         PASCAL_STRING res_string_volume_type_fileshare
 str_device_type_vdrive:
         PASCAL_STRING res_string_volume_type_vdrive
+str_new_folder:
+        PASCAL_STRING res_string_new_folder_default
+str_date_and_time:
+        PASCAL_STRING .concat(kFilenameDADir, "/", res_filename_control_panels, "/", res_filename_date_and_time)
 
 ;;; ============================================================
 
