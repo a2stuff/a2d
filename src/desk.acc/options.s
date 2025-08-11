@@ -375,8 +375,8 @@ loop:
 
 ;;; Inputs: A = bit to read from DeskTopSettings::options
 ;;; Outputs: A = $80 if set, $00 if unset
-.assert BTK::kButtonStateNormal = $00, error, "enum mismatch"
-.assert BTK::kButtonStateChecked = $80, error, "const mismatch"
+ASSERT_EQUALS BTK::kButtonStateNormal, $00
+ASSERT_EQUALS BTK::kButtonStateChecked, $80
 .proc GetBit
         sta     mask
         ldx     #DeskTopSettings::options

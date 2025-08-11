@@ -1717,7 +1717,7 @@ entry_loop:
 
         ldy     #kSelectorEntryFlagsOffset ; Check Copy-to-RamCARD flags
         lda     (ptr),y
-        .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
+        ASSERT_EQUALS ::kSelectorEntryCopyOnBoot, 0
         bne     next_entry
         lda     entry_num
         jsr     ComputePathAddr
@@ -1753,7 +1753,7 @@ entry_loop:
 
         ldy     #kSelectorEntryFlagsOffset ; Check Copy-to-RamCARD flags
         lda     (ptr),y
-        .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
+        ASSERT_EQUALS ::kSelectorEntryCopyOnBoot, 0
         bne     next_entry
         lda     entry_num
         clc

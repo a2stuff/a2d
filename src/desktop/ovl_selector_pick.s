@@ -545,7 +545,7 @@ ret:    rts
 
 .proc HandleKeyReturn
         bit     entry_picker_ok_button::state
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
         bmi     ret
         BTK_CALL BTK::Flash, entry_picker_ok_button
         lda     #0
@@ -1035,7 +1035,7 @@ write:  lda     open_origpfx_params::ref_num
 @retry: MLI_CALL WRITE, write_params
         bcc     close
         jsr     ShowAlert
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     @retry          ; `kAlertResultTryAgain` = 0
 
 close:  MLI_CALL CLOSE, close_params
@@ -1087,7 +1087,7 @@ write:  lda     open_curpfx_params::ref_num
 @retry: MLI_CALL WRITE, write_params
         bcc     close
         jsr     ShowAlert
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     @retry          ; `kAlertResultTryAgain` = 0
 
 close:  MLI_CALL CLOSE, close_params

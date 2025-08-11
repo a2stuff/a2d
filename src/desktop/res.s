@@ -37,7 +37,7 @@ textback:       .byte   MGTK::textbg_black
 textfont:       .addr   0
         REF_GRAFPORT_MEMBERS
 .endparams
-        .assert .sizeof(window_grafport) = .sizeof(MGTK::GrafPort), error, "size mismatch"
+        ASSERT_EQUALS .sizeof(window_grafport), .sizeof(MGTK::GrafPort)
 
 ;;; GrafPort used for nearly all operations. Usually re-initialized
 ;;; before use.
@@ -66,7 +66,7 @@ pb2_initial_state:
 .params initmenu_params
 open_char:      .byte   kGlyphOpenApple
 solid_char:     .byte   kGlyphSolidApple
-        .assert (solid_char - open_char) = 1, error, "solid_char must follow open_char immediately"
+        ASSERT_EQUALS (solid_char - open_char), 1, "solid_char must follow open_char immediately"
 check_char:     .byte   kGlyphCheckmark
 control_char:   .byte   '^'
 .endparams
@@ -793,10 +793,10 @@ startup_menu_item_7:    PASCAL_STRING res_string_menu_item_slot_pattern
         kMenuItemIdSelectorDelete    = 3
         kMenuItemIdSelectorRun       = 4
 
-        .assert kMenuItemIdSelectorAdd = SelectorAction::add, error, "enum mismatch"
-        .assert kMenuItemIdSelectorEdit = SelectorAction::edit, error, "enum mismatch"
-        .assert kMenuItemIdSelectorDelete = SelectorAction::delete, error, "enum mismatch"
-        .assert kMenuItemIdSelectorRun = SelectorAction::run, error, "enum mismatch"
+        ASSERT_EQUALS ::kMenuItemIdSelectorAdd, SelectorAction::add
+        ASSERT_EQUALS ::kMenuItemIdSelectorEdit, SelectorAction::edit
+        ASSERT_EQUALS ::kMenuItemIdSelectorDelete, SelectorAction::delete
+        ASSERT_EQUALS ::kMenuItemIdSelectorRun, SelectorAction::run
 
 label_add:
         PASCAL_STRING res_string_menu_item_add_entry ; also dialog title

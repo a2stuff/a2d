@@ -57,7 +57,7 @@ JT_RESUME_SPEED:        jmp     ResumeSpeed             ; *
 JT_READ_SETTING:        jmp     ReadSetting             ; *
 JT_GET_TICKS:           jmp     GetTickCount            ; *
 
-        .assert JUMP_TABLE_LAST = *, error, "Jump table mismatch"
+        ASSERT_EQUALS ::JUMP_TABLE_LAST, *
 
 .macro PROC_USED_IN_OVERLAY
         .assert * < OVERLAY_BUFFER || * >= OVERLAY_BUFFER + kOverlayBufferSize, error, "Routine used by overlays in overlay zone"
@@ -566,7 +566,7 @@ window_click:
         MGTK_CALL MGTK::FindControlEx, findcontrolex_params
         lda     findcontrol_params::which_ctl
 
-        .assert MGTK::Ctl::not_a_control = 0, error, "enum mismatch"
+        ASSERT_EQUALS MGTK::Ctl::not_a_control, 0
     IF_ZERO
         ;; Ignore clicks in the header area
         copy8   clicked_window_id, screentowindow_params::window_id
@@ -1338,7 +1338,7 @@ table:
 .proc _CheckViewMenuItemImpl
 check:  lda     #MGTK::checkitem_check
         SKIP_NEXT_2_BYTE_INSTRUCTION
-        .assert MGTK::checkitem_uncheck <> $C0, error, "Bad BIT skip"
+        ASSERT_NOT_EQUALS MGTK::checkitem_uncheck, $C0, "Bad BIT skip"
 uncheck:lda     #MGTK::checkitem_uncheck
 
         sta     checkitem_params::check
@@ -1992,7 +1992,7 @@ done:   rts
 
         ldy     #kSelectorEntryFlagsOffset ; flag byte following name
         lda     (ptr),y
-        .assert kSelectorEntryCopyOnBoot = 0, error, "enum mismatch"
+        ASSERT_EQUALS ::kSelectorEntryCopyOnBoot, 0
         beq     on_boot
         cmp     #kSelectorEntryCopyNever
         beq     use_entry_path  ; not copied
@@ -3815,7 +3815,7 @@ spin:   jsr     GetSelectionWindow
         ;; If operation failed, then just leave the default name.
         result := *+1
         lda     #SELF_MODIFIED_BYTE
-        .assert kOperationFailed <> 0, error, "enum mismatch"
+        ASSERT_NOT_EQUALS kOperationFailed, 0
         RTS_IF_NOT_ZERO
 
         ;; Select and rename the file
@@ -3933,7 +3933,7 @@ icon_rect  .tag MGTK::Rect
 best_icon  .byte
 best_value .word
 END_PARAM_BLOCK
-        .assert icon_rect = cur_icon+1, error, "Must be adjacent"
+        ASSERT_EQUALS icon_rect, cur_icon+1, "Must be adjacent"
 
         kDirLeft  = 0
         kDirRight = 1
@@ -5909,8 +5909,8 @@ dloop:
         jsr     RemoveWindowFileRecords
 
         ldx     cached_window_id
-        .assert kWindowToDirIconFree = 0, error, "enum mismatch"
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+        ASSERT_EQUALS ::kWindowToDirIconFree, 0
+        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
         lda     #0
         sta     window_to_dir_icon_table-1,x ; `kWindowToDirIconFree`
 
@@ -6305,7 +6305,7 @@ no_win:
         lda     #MGTK::Scroll::option_present | MGTK::Scroll::option_thumb
         ldy     #MGTK::Winfo::hscroll
         sta     (winfo_ptr),y
-        .assert MGTK::Winfo::vscroll = MGTK::Winfo::hscroll + 1, error, "enum mismatch"
+        ASSERT_EQUALS MGTK::Winfo::vscroll, MGTK::Winfo::hscroll + 1
         iny
         sta     (winfo_ptr),y
 
@@ -7537,13 +7537,13 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         ;; Check type (with mask)
 :       and     file_type       ; A = type & mask
         iny                     ; ASSERT: Y = ICTRecord::filetype
-        .assert ICTRecord::filetype = ICTRecord::mask+1, error, "enum mismatch"
+        ASSERT_EQUALS ICTRecord::filetype, ICTRecord::mask+1
         cmp     (ptr),y         ; type check
         jne     next
 
         ;; Flags
         iny                     ; ASSERT: Y = ICTRecord::flags
-        .assert ICTRecord::flags = ICTRecord::filetype+1, error, "enum mismatch"
+        ASSERT_EQUALS ICTRecord::flags, ICTRecord::filetype+1
         lda     (ptr),y
         sta     flags
 
@@ -7551,7 +7551,7 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         bit     flags
     IF_NS                       ; bit 7 = compare aux
         iny                     ; ASSERT: Y = FTORecord::aux_suf
-        .assert ICTRecord::aux_suf = ICTRecord::flags+1, error, "enum mismatch"
+        ASSERT_EQUALS ICTRecord::aux_suf, ICTRecord::flags+1
         lda     aux_type
         cmp     (ptr),y
         bne     next
@@ -7850,7 +7850,7 @@ more:   lda     cached_window_entry_list,x
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
 
         jsr     GetCachedWindowViewBy
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
     IF_ZERO
         ;; Pretend icon is max height
         sub16   tmp_rect::y2, #kMaxIconTotalHeight, tmp_rect::y1
@@ -7951,7 +7951,7 @@ END_PARAM_BLOCK
     IF_NEG
         ldy     #init_list_view - init_views + init_view_size-1
     ELSE
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
       IF_ZERO
         ldy     #init_icon_view - init_views + init_view_size-1
       ELSE
@@ -8007,7 +8007,7 @@ END_PARAM_BLOCK
         dex
         txa
         pha                     ; A = record_num-1
-        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        ASSERT_EQUALS .sizeof(FileRecord), 32
         jsr     ATimes32        ; A,X = A * 32
         record_ptr := $08
         addax   records_base_ptr, record_ptr
@@ -8026,15 +8026,15 @@ init_views:
 init_list_view:
         .byte   1, 0, kListItemHeight
         .word   kListViewInitialLeft, kListViewInitialTop
-        .assert * - init_list_view = init_view_size, error, "struct size"
+        ASSERT_EQUALS * - init_list_view, init_view_size
 init_icon_view:
         .byte   kIconViewIconsPerRow, kIconViewSpacingX, kIconViewSpacingY
         .word   kIconViewInitialLeft, kIconViewInitialTop
-        .assert * - init_icon_view = init_view_size, error, "struct size"
+        ASSERT_EQUALS * - init_icon_view, init_view_size
 init_smicon_view:
         .byte   kSmallIconViewIconsPerRow, kSmallIconViewSpacingX, kSmallIconViewSpacingY
         .word   kSmallIconViewInitialLeft, kSmallIconViewInitialTop
-        .assert * - init_smicon_view = init_view_size, error, "struct size"
+        ASSERT_EQUALS * - init_smicon_view, init_view_size
 
 records_base_ptr:
         .word   0
@@ -8069,7 +8069,7 @@ records_base_ptr:
         bit     LCBANK2
 
         ;; Copy the name out
-        .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
+        ASSERT_EQUALS FileRecord::name, 0
         ldy     #kMaxFilenameLength
 :       lda     (file_record),y
         sta     name_tmp,y
@@ -8111,7 +8111,7 @@ records_base_ptr:
         bpl     :-
 
         jsr     GetCachedWindowViewBy
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
     IF_ZERO
         ;; Icon view: include y-offset
         ldy     #IconEntry::icony
@@ -8184,7 +8184,7 @@ records_base_ptr:
         ;; Adjust type and flags based on view
         view_by := *+1
         lda     #SELF_MODIFIED_BYTE
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
     IF_NOT_ZERO
         ;; List View / Small Icon View
         php
@@ -8340,7 +8340,7 @@ next:   inc     inner
         tya
 
         ;; Calculate the pointer
-        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        ASSERT_EQUALS .sizeof(FileRecord), 32
         jsr     ATimes32
 
         clc
@@ -8368,7 +8368,7 @@ next:   inc     inner
         lda     #SELF_MODIFIED_BYTE
         cmp     #DeskTopSettings::kViewByName
     IF_EQ
-        .assert FileRecord::name = 0, error, "Assumes name is at offset 0"
+        ASSERT_EQUALS FileRecord::name, 0
         jmp     CompareStrings
     END_IF
 
@@ -8500,7 +8500,7 @@ _CompareFileRecords_sort_by := _CompareFileRecords::sort_by
 
         ptr := $06
 
-        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        ASSERT_EQUALS .sizeof(FileRecord), 32
         jsr     ATimes32      ; A,X = A * 32
         addax   file_record_ptr, ptr
 
@@ -8711,7 +8711,7 @@ append_date_strings:
 
         ldx     #DeskTopSettings::intl_date_order
         jsr     ReadSetting
-        .assert DeskTopSettings::kDateOrderMDY = 0, error, "enum mismatch"
+        ASSERT_EQUALS DeskTopSettings::kDateOrderMDY, 0
       IF_EQ
         ;; Month Day, Year
         jsr     _AppendMonthString
@@ -9342,7 +9342,7 @@ done:
         ;; Technical Note: SmartPort #4: SmartPort Device Types
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/smpt/tn.smpt.4.html
         lda     dib_buffer+SPDIB::Device_Type_Code
-        .assert SPDeviceType::MemoryExpansionCard = 0, error, "enum mismatch"
+        ASSERT_EQUALS SPDeviceType::MemoryExpansionCard, 0
         bne     :+            ; $00 = Memory Expansion Card (RAM Disk)
         ldax    #dib_buffer+SPDIB::ID_String_Length
         ldy     #IconType::ramdisk
@@ -10190,7 +10190,7 @@ all_flag:
 
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
         .define kBlockPointersSize 4
-        .assert .sizeof(SubdirectoryHeader) - .sizeof(FileEntry) = kBlockPointersSize, error, "bad structs"
+        ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
 
         ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
         ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
@@ -10296,7 +10296,7 @@ do_op_flag:
         bcc     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialogWithFailedResult
 
@@ -10308,7 +10308,7 @@ do_op_flag:
         bcc     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     @retry2         ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialogWithFailedResult
 
@@ -10322,7 +10322,7 @@ do_op_flag:
         bcc     :+
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialogWithFailedResult
 
@@ -10339,7 +10339,7 @@ do_op_flag:
         beq     eof
         ldx     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertOption
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     @retry          ; `kAlertResultTryAgain` = 0
         jmp     CloseFilesCancelDialogWithFailedResult
 
@@ -11943,7 +11943,7 @@ flag_clear:
         beq     not_found
 
         jsr     ShowAlert
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         bne     close           ; not kAlertResultTryAgain = 0
         jmp     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
 
@@ -11954,7 +11954,7 @@ not_found:
         ldax    #aux::str_alert_insert_destination
 :       ldy     #AlertButtonOptions::TryAgainCancel
         jsr     ShowAlertParams ; A,X = string, Y = AlertButtonOptions
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         bne     close           ; not kAlertResultTryAgain = 0
         jsr     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
 
@@ -12541,7 +12541,7 @@ no_change:
         bcc     finish
         ;; Failed, maybe retry
         jsr     ShowAlert       ; Alert options depend on specific ProDOS error
-        .assert kAlertResultTryAgain = 0, error, "Branch assumes enum value"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         jeq     retry           ; `kAlertResultTryAgain` = 0
         jsr     _DialogClose
         jmp     fail
@@ -12586,7 +12586,7 @@ finish: jsr     _DialogClose
         bit     LCBANK2
 
         ;; Copy the new name in
-        .assert FileRecord::name = 0, error, "Name must be at start of FileRecord"
+        ASSERT_EQUALS FileRecord::name, 0, "Name must be at start of FileRecord"
         ldy     new_name_buf
 :       lda     new_name_buf,y
         sta     (file_record_ptr),y
@@ -12602,7 +12602,7 @@ finish: jsr     _DialogClose
 
         ;; Determine new icon type
         jsr     GetSelectionViewBy
-        .assert DeskTopSettings::kViewByIcon = 0, error, "enum mismatch"
+        ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
     IF_ZERO
         tmpy := $50
 
@@ -12855,7 +12855,7 @@ ignore:
 
         ;; Look up the FileRecord within the list.
         pla                     ; A = index
-        .assert .sizeof(FileRecord) = 32, error, "FileRecord size must be 2^5"
+        ASSERT_EQUALS .sizeof(FileRecord), 32
         jsr     ATimes32        ; A,X = index * 32
         addax   file_record_ptr, file_record_ptr
         rts
@@ -13296,7 +13296,7 @@ str_desktop:
 
 load:   pha
         copy8   #AlertButtonOptions::OKCancel, button_options
-        .assert AlertButtonOptions::OKCancel <> 0, error, "bne always assumption"
+        ASSERT_NOT_EQUALS AlertButtonOptions::OKCancel, 0
         bne     :+              ; always
 
 restore:
@@ -13643,7 +13643,7 @@ get_case_bits_per_option_and_adjust_string:
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, name_input_rect
-        .assert MGTK::inrect_outside = 0, error, "enum mismatch"
+        ASSERT_EQUALS MGTK::inrect_outside, 0
         beq     out
         jsr     SetCursorIBeamWithFlag ; toggling in prompt dialog
         jmp     PromptInputLoop
@@ -13762,7 +13762,7 @@ KeyHookRelay:
 
 .proc _HandleKeyOK
         bit     ok_button::state
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
         bmi     ret
         BTK_CALL BTK::Flash, ok_button
         lda     #PromptResult::ok
@@ -14076,7 +14076,7 @@ exit:   rts
         stax    path_ptr
 
         ;; Copy path in
-        .assert DeskTopFileItem::window_path = 0, error, "struct layout"
+        ASSERT_EQUALS DeskTopFileItem::window_path, 0
         ldy     #::kPathBufferSize-1
 :       lda     (path_ptr),y
         sta     (data_ptr),y
@@ -14287,7 +14287,7 @@ next_entry:
         cmp     filename
         bne     next_entry
         tay
-        .assert FileEntry::file_name = 1, error, "member offset"
+        ASSERT_EQUALS FileEntry::file_name, 1
 nloop:  lda     (entry_ptr),y
         cmp     filename,y
         bne     next_entry

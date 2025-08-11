@@ -455,19 +455,19 @@ set:    copy8   #$80, joy2_valid_flag
 
         lda     curr+InputState::butn0
         and     #$80
-        .assert BTK::kButtonStateChecked = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateChecked, $80
         sta     joy_btn0_button::state
         BTK_CALL BTK::RadioDraw, joy_btn0_button
 
         lda     curr+InputState::butn1
         and     #$80
-        .assert BTK::kButtonStateChecked = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateChecked, $80
         sta     joy_btn1_button::state
         BTK_CALL BTK::RadioDraw, joy_btn1_button
 
         lda     curr+InputState::butn2
         and     #$80
-        .assert BTK::kButtonStateChecked = $80, error, "const mismatch"
+        ASSERT_EQUALS BTK::kButtonStateChecked, $80
         sta     joy_btn2_button::state
         BTK_CALL BTK::RadioDraw, joy_btn2_button
 

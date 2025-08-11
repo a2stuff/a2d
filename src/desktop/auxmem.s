@@ -13,13 +13,13 @@
 .scope aux
 
         ;; Fixed location entry points
-        .assert * = MGTKAuxEntry, error, "entry point"
+        ASSERT_EQUALS *, ::MGTKAuxEntry, "entry point"
         jmp     MGTKEntry
-        .assert * = BTKAuxEntry, error, "entry point"
+        ASSERT_EQUALS *, ::BTKAuxEntry, "entry point"
         jmp     btk__BTKEntry
-        .assert * = LETKAuxEntry, error, "entry point"
+        ASSERT_EQUALS *, ::LETKAuxEntry, "entry point"
         jmp     letk__LETKEntry
-        .assert * = LBTKAuxEntry, error, "entry point"
+        ASSERT_EQUALS *, ::LBTKAuxEntry, "entry point"
         jmp     lbtk__LBTKEntry
 
 ;;; ============================================================

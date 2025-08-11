@@ -13,7 +13,7 @@
 ;;; ============================================================
 ;;; Exported entry points for main>aux and aux>main calls
 
-.assert * = CallMainToAux, error, "entry point mismatch"
+ASSERT_EQUALS *, CallMainToAux, "entry point"
 .proc CallMainToAuxImpl
         stax    call_addr
         jsr     BankInAux
@@ -22,7 +22,7 @@
         jmp     BankInMain
 .endproc ; CallMainToAuxImpl
 
-.assert * = CallAuxToMain, error, "entry point mismatch"
+ASSERT_EQUALS *, CallAuxToMain, "entry point"
 .proc CallAuxToMainImpl
         stax    call_addr
         jsr     BankInMain
@@ -31,14 +31,14 @@
         jmp     BankInAux
 .endproc ; CallAuxToMainImpl
 
-.assert * = ReadSettingFromAux, error, "entry point mismatch"
+ASSERT_EQUALS *, ReadSettingFromAux, "entry point"
 .proc ReadSettingFromAuxImpl
         jsr     BankInMain
         jsr     ReadSetting
         jmp     BankInAux
 .endproc ; ReadSettingFromAuxImpl
 
-.assert * = WriteSettingFromAux, error, "entry point mismatch"
+ASSERT_EQUALS *, WriteSettingFromAux, "entry point"
 .proc WriteSettingFromAuxImpl
         jsr     BankInMain
         jsr     WriteSetting

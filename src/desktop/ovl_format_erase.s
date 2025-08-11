@@ -224,7 +224,7 @@ l12:    pha
         cmp     #ERR_WRITE_PROTECTED
         bne     l13
         jsr     ShowAlert
-        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     cancel          ; `kAlertResultCancel` = 1
         beq     l8              ; `kAlertResultTryAgain` = 0
 
@@ -277,7 +277,7 @@ l7:
 l8:     cmp     #ERR_WRITE_PROTECTED
         bne     l9
         jsr     ShowAlert
-        .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
+        ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     cancel          ; `kAlertResultCancel` = 1
         beq     l7              ; `kAlertResultTryAgain` = 0
 

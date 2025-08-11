@@ -146,7 +146,7 @@ text:           .addr   0
 buttons:        .byte   0       ; AlertButtonOptions
 options:        .byte   0       ; AlertOptions flags
 .endparams
-.assert .sizeof(alert_params) = .sizeof(AlertParams), error, "struct mismatch"
+ASSERT_EQUALS .sizeof(alert_params), .sizeof(AlertParams)
 
         kShortcutTryAgain = res_char_button_try_again_shortcut
 
@@ -427,7 +427,7 @@ HandleButtonDown:
         BTK_CALL BTK::Track, cancel_button
         jne     was_no_button
         lda     #kAlertResultCancel
-        .assert kAlertResultCancel <> 0, error, "kAlertResultCancel must be non-zero"
+        ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     finish          ; always
     END_IF
 
@@ -444,7 +444,7 @@ HandleButtonDown:
         BTK_CALL BTK::Track, yes_button
         bne     was_no_button
         lda     #kAlertResultYes
-        .assert kAlertResultYes <> 0, error, "constant mismatch"
+        ASSERT_NOT_EQUALS ::kAlertResultYes, 0
         bne     finish          ; always
       END_IF
 
@@ -453,7 +453,7 @@ HandleButtonDown:
         BTK_CALL BTK::Track, no_button
         bne     was_no_button
         lda     #kAlertResultNo
-        .assert kAlertResultNo <> 0, error, "constant mismatch"
+        ASSERT_NOT_EQUALS ::kAlertResultNo, 0
         bne     finish          ; always
       END_IF
 
@@ -462,7 +462,7 @@ HandleButtonDown:
         BTK_CALL BTK::Track, all_button
         bne     was_no_button
         lda     #kAlertResultAll
-        .assert kAlertResultAll <> 0, error, "constant mismatch"
+        ASSERT_NOT_EQUALS ::kAlertResultAll, 0
         bne     finish          ; always
     END_IF
 .endif
@@ -473,7 +473,7 @@ HandleButtonDown:
         BTK_CALL BTK::Track, try_again_button
         bne     was_no_button
         lda     #kAlertResultTryAgain
-        .assert kAlertResultTryAgain = 0, error, "kAlertResultTryAgain must be non-zero"
+        ASSERT_EQUALS ::kAlertResultTryAgain, 0
         beq     finish          ; always
 
         ;; OK
@@ -483,7 +483,7 @@ check_ok_rect:
         BTK_CALL BTK::Track, ok_button
         bne     was_no_button
         lda     #kAlertResultOK
-        .assert kAlertResultOK <> 0, error, "constant mismatch"
+        ASSERT_NOT_EQUALS ::kAlertResultOK, 0
         bne     finish          ; always
 
 was_no_button:

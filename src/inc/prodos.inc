@@ -240,7 +240,7 @@ NAME_LENGTH_MASK        = $0F
         bit_map_pointer .word
         total_blocks    .word
 .endstruct
-        .assert .sizeof(VolumeDirectoryHeader) = $2B, error, "incorrect struct size"
+        ASSERT_EQUALS .sizeof(VolumeDirectoryHeader), $2B
         VolumeDirectoryHeader::case_bits = $1A
 
 ;;; Subdirectory Header structure
@@ -263,7 +263,7 @@ NAME_LENGTH_MASK        = $0F
         parent_entry_number .byte
         parent_entry_length .byte
 .endstruct
-        .assert .sizeof(SubdirectoryHeader) = $2B, error, "incorrect struct size"
+        ASSERT_EQUALS .sizeof(SubdirectoryHeader), $2B
 
 ;; File Entry structure
 .struct FileEntry
@@ -283,7 +283,7 @@ NAME_LENGTH_MASK        = $0F
         mod_time        .word
         header_pointer  .word
 .endstruct
-        .assert .sizeof(FileEntry) = $27, error, "incorrect struct size"
+        ASSERT_EQUALS .sizeof(FileEntry), $27
         FileEntry::case_bits = FileEntry::version
 
 ;;; ============================================================

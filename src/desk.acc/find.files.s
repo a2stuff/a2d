@@ -1297,8 +1297,8 @@ string:         .res    16      ; 15 + null terminator
 
 .scope
         ;; Copy filename to null terminated string buffer
-        .assert FileEntry::storage_type_name_length = 0, error, "Can't treat as Pascal string"
-        .assert FileEntry::file_name = 1, error, "Can't treat as Pascal string"
+        ASSERT_EQUALS FileEntry::storage_type_name_length, 0, "Can't treat as Pascal string"
+        ASSERT_EQUALS FileEntry::file_name, 1, "Can't treat as Pascal string"
         ldy     #FileEntry::storage_type_name_length
         lda     (entPtr),y
         and     #NAME_LENGTH_MASK

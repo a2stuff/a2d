@@ -259,7 +259,7 @@ which_area:     .byte   0
 window_id:      .byte   0
 .endparams
 window_ptr:     .word   0       ; do not move this; see above
-        .assert window_ptr = findwindow_params::window_id + 1, error, "struct moved"
+        ASSERT_EQUALS window_ptr, findwindow_params::window_id + 1, "struct moved"
 
 .params findcontrol_params
 mousex:         .word   0
@@ -1140,7 +1140,7 @@ headery:
 
         ;; Highlighted?
         ;;and     #kIconEntryStateHighlighted
-        .assert kIconEntryStateHighlighted = $40, error, "kIconEntryStateHighlighted must be $40"
+        ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
         asl
         bmi     done            ; Not valid (it's being dragged)
 
@@ -1150,7 +1150,7 @@ headery:
         iny
         lda     (ptr),y
         ;;and     #kIconEntryFlagsDropTarget
-        .assert kIconEntryFlagsDropTarget = $40, error, "kIconEntryFlagsDropTarget must be $40"
+        ASSERT_EQUALS ::kIconEntryFlagsDropTarget, $40
         asl
         bpl     done
 
@@ -1558,7 +1558,7 @@ ret:    rts
 
         ;; Set text background color
         lda     #MGTK::textbg_white
-        .assert kIconEntryStateHighlighted = $40, error, "flag mismatch"
+        ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
         bit     state           ; highlighted?
         bvc     :+
         lda     #MGTK::textbg_black
@@ -1571,7 +1571,7 @@ ret:    rts
         ;; Icon
 
         ;; Shade (XORs background)
-        .assert kIconEntryStateDimmed = $80, error, "flag mismatch"
+        ASSERT_EQUALS ::kIconEntryStateDimmed, $80
         bit     state
     IF_NS
         MGTK_CALL MGTK::SetPattern, dark_pattern
@@ -1579,7 +1579,7 @@ ret:    rts
     END_IF
 
         ;; Mask (cleared to white or black)
-        .assert kIconEntryStateHighlighted = $40, error, "flag mismatch"
+        ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
         bit     state
     IF_VS
         MGTK_CALL MGTK::SetPenMode, penBIC
@@ -1589,14 +1589,14 @@ ret:    rts
         MGTK_CALL MGTK::PaintBitsHC, mask_paintbits_params
 
         ;; Shade again (restores background)
-        .assert kIconEntryStateDimmed = $80, error, "flag mismatch"
+        ASSERT_EQUALS ::kIconEntryStateDimmed, $80
         bit     state
     IF_NS
         jsr     _Shade
     END_IF
 
         ;; Icon (drawn in black or white)
-        .assert kIconEntryStateHighlighted = $40, error, "flag mismatch"
+        ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
         bit     state
     IF_VS
         MGTK_CALL MGTK::SetPenMode, penOR
