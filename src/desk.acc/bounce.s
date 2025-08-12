@@ -461,55 +461,8 @@ loop:   txa
 .endproc ; AnimateObjects
 
 ;;; ============================================================
-;;; Pseudorandom Number Generation
 
-;;; From https://www.apple2.org.za/gswv/a2zine/GS.WorldView/v1999/Nov/Articles.and.Reviews/Apple2RandomNumberGenerator.htm
-;;; By David Empson
-
-;;; NOTE: low bit of N and high bit of N+2 are coupled
-
-R1:     .byte  0
-R2:     .byte  0
-R3:     .byte  0
-R4:     .byte  0
-
-.proc Random
-        ror R4                  ; Bit 25 to carry
-        lda R3                  ; Shift left 8 bits
-        sta R4
-        lda R2
-        sta R3
-        lda R1
-        sta R2
-        lda R4                  ; Get original bits 17-24
-        ror                     ; Now bits 18-25 in ACC
-        rol R1                  ; R1 holds bits 1-7
-        eor R1                  ; Seven bits at once
-        ror R4                  ; Shift right by one bit
-        ror R3
-        ror R2
-        ror
-        sta R1
-        rts
-.endproc ; Random
-
-.proc InitRand
-        ;; Use current 24-bit tick count as seed
-        JSR_TO_MAIN JUMP_TABLE_GET_TICKS
-        sta R1
-        sta R2
-        stx R3
-        sty R4
-        ldx #$20                ; Generate a few random numbers
-InitLoop:
-        jsr Random              ; to kick things off
-        dex
-        bne InitLoop
-        rts
-.endproc ; InitRand
-
-;;; ============================================================
-
+        .include "../lib/prng.s"
         .include "../lib/uppercase.s"
 
 ;;; ============================================================

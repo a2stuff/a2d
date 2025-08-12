@@ -43,6 +43,7 @@ kOverlayBufferSize   = $4000
 .endmacro
 .macro DA_START_AUX_SEGMENT
         .org DA_LOAD_ADDRESS
+        DA_IN_AUX_SEGMENT .set 1
 .scope aux
         MGTKEntry := MGTKAuxEntry
         BTKEntry := BTKAuxEntry
@@ -54,6 +55,7 @@ kOverlayBufferSize   = $4000
 .endmacro
 .macro DA_END_AUX_SEGMENT
 .endscope ; aux
+        DA_IN_AUX_SEGMENT .set 0
         __da_aux_segment_end__ := *
         .assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
 .endmacro
@@ -68,6 +70,7 @@ kOverlayBufferSize   = $4000
         .assert * < DA_IO_BUFFER, error, .sprintf("DA too big (at $%X)", *)
 .endmacro
 
+        DA_IN_AUX_SEGMENT .set 0
 
 ;;; ============================================================
 ;;; Constants
