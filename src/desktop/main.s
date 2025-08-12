@@ -6565,19 +6565,22 @@ err:    sec
         stax    pos_col::ycoord
 
         ;; Draw each list view row
-        lda     #0
-        sta     rows_done
-        rows_done := *+1
-rloop:  lda     #SELF_MODIFIED_BYTE
-        cmp     cached_window_entry_count
+        ldx     #0              ; X = index
+rloop:  cpx     cached_window_entry_count
         beq     done
-        tax
+        txa                     ; A = index
+        pha
         lda     cached_window_entry_list,x
 
         ;; Look up file record number
         jsr     GetIconRecordNum
         jsr     DrawListViewRow
-        inc     rows_done
+
+        MGTK_CALL MGTK::CheckEvents
+
+        pla                     ; A = index
+        tax                     ; X = index
+        inx
         jmp     rloop
 
         ;; --------------------------------------------------

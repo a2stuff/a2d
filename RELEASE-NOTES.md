@@ -53,6 +53,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve rendering of overlapping icons. ([#875](https://github.com/a2stuff/a2d/issues/875))
 * Improve the appearance of the Trash icon.
 * Ignore suffix when determining icon type for directories.
+* Improve mouse responsiveness while list views are drawn.
 
 ### Selector
 
