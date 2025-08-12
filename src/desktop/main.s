@@ -9998,7 +9998,7 @@ FinishOperation:
         tsx
         stx     stack_stash
         jsr     PrepCallbacksForEnumeration
-        jsr     OpenDownloadProgressDialog
+        jsr     OpenCopyProgressDialog
         jsr     EnumerationProcessSelectedFile
         jsr     PrepCallbacksForDownload
         jmp     DoCopyCommon
@@ -10469,7 +10469,6 @@ callbacks_for_copy:
         .addr   CopyFinishDirectory
         ASSERT_TABLE_SIZE callbacks_for_copy, kOpJTAddrsSize
 
-;;; Also used for Download
 .params copy_dialog_params
 count:  .addr   0
 .endparams
@@ -10481,8 +10480,23 @@ count:  .addr   0
 
 .proc _CopyDialogEnumerationCallback
         stax    copy_dialog_params::count
-        jmp     UpdateCopyDialogCount
+        FALL_THROUGH_TO UpdateCopyDialogCount
 .endproc ; _CopyDialogEnumerationCallback
+
+.proc UpdateCopyDialogCount
+        ldax    copy_dialog_params::count
+        stax    file_count
+        stax    total_count
+        jsr     SetPortForProgressDialog
+        bit     move_flag
+      IF_NC
+        param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
+      ELSE
+        param_call DrawProgressDialogLabel, 0, aux::str_move_moving
+      END_IF
+        jmp     DrawFileCountWithSuffix
+.endproc ; UpdateCopyDialogCount
+
 .endproc ; OpenCopyProgressDialog
 
 ;;; ============================================================
@@ -10500,17 +10514,6 @@ count:  .addr   0
 
 ;;; ============================================================
 ;;; "Download" - shares heavily with Copy
-
-.proc OpenDownloadProgressDialog
-        copy16  #_DownloadDialogEnumerationCallback, operations::operation_enumeration_callback
-        copy16  #CloseProgressDialog, operations::operation_complete_callback
-        jmp     OpenProgressDialog
-
-.proc _DownloadDialogEnumerationCallback
-        stax    copy_dialog_params::count
-        jmp     UpdateDownloadDialogCount
-.endproc ; _DownloadDialogEnumerationCallback
-.endproc ; OpenDownloadProgressDialog
 
 .proc PrepCallbacksForDownload
         ldy     #kOpJTAddrsSize-1
@@ -10576,7 +10579,7 @@ not_selected:
     END_IF
 
         ;; Paths are set up - update dialog and populate `src_file_info_params`
-        jsr     DecFileCountAndRunCopyDialogProc
+        jsr     DecFileCountAndUpdateCopyDialogProgress
 
 @retry: jsr     GetSrcFileInfo
         bcc     :+
@@ -10640,7 +10643,7 @@ done:
 .proc CopyProcessDirectoryEntry
         jsr     AppendFileEntryToDstPath
         jsr     AppendFileEntryToSrcPath
-        jsr     DecFileCountAndRunCopyDialogProc
+        jsr     DecFileCountAndUpdateCopyDialogProgress
 
         ;; Called with `src_file_info_params` pre-populated
         lda     src_file_info_params::storage_type
@@ -10704,11 +10707,26 @@ done:   rts
 
 ;;; ============================================================
 
-.proc DecFileCountAndRunCopyDialogProc
+.proc DecFileCountAndUpdateCopyDialogProgress
         jsr     DecrementOpFileCount
         stax    copy_dialog_params::count
-        jmp     UpdateCopyDialogProgress
-.endproc ; DecFileCountAndRunCopyDialogProc
+        FALL_THROUGH_TO UpdateCopyDialogProgress
+.endproc ; DecFileCountAndUpdateCopyDialogProgress
+
+.proc UpdateCopyDialogProgress
+        copy16  copy_dialog_params::count, file_count
+        jsr     SetPortForProgressDialog
+
+        param_call CopyToBuf0, src_path_buf
+        param_call DrawProgressDialogLabel, 1, aux::str_copy_from
+        jsr     DrawTargetFilePath
+
+        param_call CopyToBuf0, dst_path_buf
+        param_call DrawProgressDialogLabel, 2, aux::str_copy_to
+        jsr     DrawDestFilePath
+
+        jmp     DrawProgressDialogFilesRemaining
+.endproc ; UpdateCopyDialogProgress
 
 ;;; ============================================================
 ;;; Used before "Copy to RAMCard", to ensure everything will fit.
@@ -11281,8 +11299,17 @@ count:  .word   0
 
 .proc _DeleteDialogEnumerationCallback
         stax    delete_dialog_params::count
-        jmp     UpdateDeleteDialogCount
+        FALL_THROUGH_TO UpdateDeleteDialogCount
 .endproc ; _DeleteDialogEnumerationCallback
+
+.proc UpdateDeleteDialogCount
+        ldax    delete_dialog_params::count
+        stax    total_count
+        stax    file_count
+        jsr     SetPortForProgressDialog
+        param_call DrawProgressDialogLabel, 0, aux::str_delete_count
+        jmp     DrawFileCountWithSuffix
+.endproc ; UpdateDeleteDialogCount
 
 .proc _DeleteDialogConfirmCallback
         ;; `text_input_buf` is used rather than `text_buffer2` due to size
@@ -11435,8 +11462,19 @@ next_file:
 .proc DecFileCountAndUpdateDeleteDialogProgress
         jsr     DecrementOpFileCount
         stax    delete_dialog_params::count
-        jmp     UpdateDeleteDialogProgress
+        FALL_THROUGH_TO UpdateDeleteDialogProgress
 .endproc ; DecFileCountAndUpdateDeleteDialogProgress
+
+.proc UpdateDeleteDialogProgress
+        copy16  delete_dialog_params::count, file_count
+        jsr     SetPortForProgressDialog
+
+        param_call CopyToBuf0, src_path_buf
+        param_call DrawProgressDialogLabel, 1, aux::str_file_colon
+        jsr     DrawTargetFilePath
+
+        jmp     DrawProgressDialogFilesRemaining
+.endproc ; UpdateDeleteDialogProgress
 
 ;;; ============================================================
 ;;; Most operations start by doing a traversal to just count
@@ -11627,67 +11665,6 @@ map:    .byte   FileEntry::access
         .byte   FileEntry::creation_time+1
         kMapSize = * - map
 .endproc ; ConvertFileEntryToFileInfo
-
-;;; ============================================================
-;;; "Copy" progress dialog
-
-.proc UpdateCopyDialogCount
-        ldax    copy_dialog_params::count
-        stax    file_count
-        stax    total_count
-        jsr     SetPortForProgressDialog
-        bit     move_flag
-      IF_NC
-        param_call DrawProgressDialogLabel, 0, aux::str_copy_copying
-      ELSE
-        param_call DrawProgressDialogLabel, 0, aux::str_move_moving
-      END_IF
-        jmp     DrawFileCountWithSuffix
-.endproc ; UpdateCopyDialogCount
-
-.proc UpdateCopyDialogProgress
-        copy16  copy_dialog_params::count, file_count
-        jsr     SetPortForProgressDialog
-
-        param_call CopyToBuf0, src_path_buf
-        param_call DrawProgressDialogLabel, 1, aux::str_copy_from
-        jsr     DrawTargetFilePath
-
-        param_call CopyToBuf0, dst_path_buf
-        param_call DrawProgressDialogLabel, 2, aux::str_copy_to
-        jsr     DrawDestFilePath
-
-        jmp     DrawProgressDialogFilesRemaining
-.endproc ; UpdateCopyDialogProgress
-
-;;; ============================================================
-;;; "Download" progress dialog
-
-UpdateDownloadDialogCount := UpdateCopyDialogCount
-UpdateDownloadDialogProgress := UpdateCopyDialogProgress
-
-;;; ============================================================
-;;; "Delete" progress dialog
-
-.proc UpdateDeleteDialogCount
-        ldax    delete_dialog_params::count
-        stax    total_count
-        stax    file_count
-        jsr     SetPortForProgressDialog
-        param_call DrawProgressDialogLabel, 0, aux::str_delete_count
-        jmp     DrawFileCountWithSuffix
-.endproc ; UpdateDeleteDialogCount
-
-.proc UpdateDeleteDialogProgress
-        copy16  delete_dialog_params::count, file_count
-        jsr     SetPortForProgressDialog
-
-        param_call CopyToBuf0, src_path_buf
-        param_call DrawProgressDialogLabel, 1, aux::str_file_colon
-        jsr     DrawTargetFilePath
-
-        jmp     DrawProgressDialogFilesRemaining
-.endproc ; UpdateDeleteDialogProgress
 
 ;;; ============================================================
 
