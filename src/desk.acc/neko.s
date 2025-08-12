@@ -218,9 +218,6 @@ frame_addr_table_hi:
         .byte >.ident(.sprintf("neko_frame_%02d", i+1))
 .endrepeat
 
-;;; The compressed frames are used as a (poor) source of pseudo-random bytes.
-noise:
-
 .repeat ::kNumFrames, i
         .ident(.sprintf("neko_frame_%02d", i+1)) := *
         .incbin .sprintf("neko_frames/neko_frame_%02d.bin.lzsa", i+1)
@@ -392,6 +389,8 @@ ep_size := * - ep_start
 ;;; ============================================================
 
 .proc Init
+        jsr     InitRand
+
         JUMP_TABLE_MGTK_CALL MGTK::OpenWindow, aux::winfo
         jsr     DrawWindow
         JUMP_TABLE_MGTK_CALL MGTK::FlushEvents
@@ -539,7 +538,6 @@ skip:   .word   0
 
         ;; --------------------------------------------------
         ;; Tick once per frame; used to alternate frames
-        ;; and select "random" numbers
 
         inc     tick
 
@@ -662,8 +660,7 @@ new_state:
         sta     state           ; for states that swap
 
         pha
-        lda     tick
-        jsr     GetRandom
+        jsr     Random
         tay
         pla
 
@@ -985,32 +982,6 @@ ret:    rts
 
 ;;; ============================================================
 
-;;; A really bad random number generator; this uses the
-;;; compressed data over in Aux as the entropy.
-
-;;; Input: A = seed
-;;; Output: A = "random" value
-.proc GetRandom
-        clc
-        adc     #<aux::noise
-        sta     STARTLO
-        sta     ENDLO
-        lda     #>aux::noise
-        adc     #0
-        sta     STARTHI
-        sta     ENDHI
-        copy16  #result, DESTINATIONLO
-        clc                     ; aux>main
-        jsr     AUXMOVE
-
-        lda     result
-        rts
-
-result: .byte   1
-.endproc ; GetRandom
-
-;;; ============================================================
-
 PARAM_BLOCK muldiv_params, $10
 number          .word           ; (in)
 numerator       .word           ; (in)
@@ -1046,6 +1017,7 @@ END_PARAM_BLOCK
 
 ;;; ============================================================
 
+        .include "../lib/prng.s"
         .include "../lib/uppercase.s"
 
 ;;; ============================================================
