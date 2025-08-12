@@ -5987,9 +5987,13 @@ done:   rts
 ;;; ============================================================
 
 .proc ApplyActiveWinfoToWindowGrafport
+        lda     active_window_id
+        FALL_THROUGH_TO ApplyWinfoToWindowGrafport
+.endproc ; ApplyActiveWinfoToWindowGrafport
+
+.proc ApplyWinfoToWindowGrafport
         ptr := $06
 
-        lda     active_window_id
         jsr     GetWindowPtr
         addax   #MGTK::Winfo::port, ptr
         ldy     #.sizeof(MGTK::GrafPort) - 1
@@ -5998,7 +6002,7 @@ done:   rts
         dey
         bpl     :-
         rts
-.endproc ; ApplyActiveWinfoToWindowGrafport
+.endproc ; ApplyWinfoToWindowGrafport
 
 ;;; NOTE: Does not update icon positions, so only use in empty windows.
 .proc ResetActiveWindowViewport
@@ -9730,15 +9734,7 @@ open:   ldy     #$00
         ;; --------------------------------------------------
         ;; Get window rect - used as last rect
 
-        jsr     GetWindowPtr    ; copy window's port somewhere handy
-        stax    ptr
-        ldy     #MGTK::Winfo::port + .sizeof(MGTK::GrafPort)-1
-        ldx     #.sizeof(MGTK::GrafPort)-1
-:       lda     (ptr),y
-        sta     window_grafport,x
-        dey
-        dex
-        bpl     :-
+        jsr     ApplyWinfoToWindowGrafport
 
         ;; Convert viewloc and maprect to bounding rect
         COPY_STRUCT MGTK::Point, window_grafport + MGTK::GrafPort::viewloc, win_rect + MGTK::Rect::topleft
