@@ -55,9 +55,9 @@ src_io_buffer   := $E00         ; 1024 bytes for I/O
 dst_io_buffer   := $1200        ; 1024 bytes for I/O
 selector_buffer := $1600        ; Room for `kSelectorListBufSize`
 
-copy_buffer     := $3900
+copy_buffer     := $3B00
 kCopyBufferSize = MLI - copy_buffer
-        .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "better performance for an integral number of blocks"
+        .assert (kCopyBufferSize .mod BLOCK_SIZE) = 0, error, "integral number of blocks needed for sparse copies and performance"
 
 ;;; ============================================================
 
@@ -424,6 +424,7 @@ buf_padding_bytes:      .res    kMaxPaddingBytes, 0
         DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, kCopyBufferSize
         DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, kCopyBufferSize
         DEFINE_CREATE_PARAMS create_dir_params, path1, ACCESS_DEFAULT
+        DEFINE_SET_MARK_PARAMS mark_dstfile_params, 0
 
 file_entry:
 filename:
@@ -649,7 +650,13 @@ dst_size:       .word   0
         sta     close_srcfile_params::ref_num
         lda     open_dstfile_params::ref_num
         sta     write_dstfile_params::ref_num
+        sta     mark_dstfile_params::ref_num
         sta     close_dstfile_params::ref_num
+
+        lda     #0
+        sta     mark_dstfile_params::position
+        sta     mark_dstfile_params::position+1
+        sta     mark_dstfile_params::position+2
 
         ;; Read a chunk
 loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
@@ -660,22 +667,17 @@ loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
         beq     close
 fail:
         jmp     (hook_handle_error_code)
+:
+        ;; EOF?
+        lda     read_srcfile_params::trans_count
+        ora     read_srcfile_params::trans_count+1
+        beq     close
 
         ;; Write the chunk
-:       copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
-        ora     read_srcfile_params::trans_count
-        beq     close
         jsr     CheckCancel
-        MLI_CALL WRITE, write_dstfile_params
+        jsr     _WriteDst
         bcs     fail
-
-        ;; More to copy?
-        lda     write_dstfile_params::trans_count
-        cmp     #<kCopyBufferSize
-        bne     close
-        lda     write_dstfile_params::trans_count+1
-        cmp     #>kCopyBufferSize
-        beq     loop
+        bcc     loop            ; always
 
         ;; Close source and destination
 close:  MLI_CALL CLOSE, close_dstfile_params
@@ -691,6 +693,88 @@ close:  MLI_CALL CLOSE, close_dstfile_params
         copy8   #10, get_path1_info_params ; `GET_FILE_INFO` param_count
 
         rts
+
+;;; Write the buffer to the destination file, being mindful of sparse blocks.
+.proc _WriteDst
+        ;; Always start off at start of copy buffer
+        copy16  read_srcfile_params::data_buffer, write_dstfile_params::data_buffer
+loop:
+        ;; Assume we're going to write everything we read. We may
+        ;; later determine we need to write it out block-by-block.
+        copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
+
+        ;; Assert: We're only ever copying to a RAMDisk, not AppleShare.
+        ;; https://prodos8.com/docs/technote/30
+
+        ;; Is there less than a full block? If so, just write it.
+        lda     read_srcfile_params::trans_count+1
+        cmp     #.hibyte(BLOCK_SIZE)
+        bcc     do_write        ; ...and done!
+
+        ;; Otherwise we'll go block-by-block, treating all zeros
+        ;; specially.
+        copy16  #BLOCK_SIZE, write_dstfile_params::request_count
+
+        ;; First two blocks are never made sparse. The first block is
+        ;; never sparsely allocated (P8 TRM B.3.6 - Sparse Files) and
+        ;; the transition from seedling to sapling is not handled
+        ;; correctly in all versions of ProDOS.
+        ;; https://prodos8.com/docs/technote/30
+        ;; Assert: mark low byte is $00
+        lda     mark_dstfile_params::position+1
+        and     #%11111100
+        ora     mark_dstfile_params::position+2
+        beq     not_sparse
+
+        ;; Is this block all zeros? Scan all $200 bytes
+        ;; (Note: coded for size, not speed, since we're I/O bound)
+        ptr := $06
+        copy16  write_dstfile_params::data_buffer, ptr ; first half
+        ldy     #0
+        tya
+:       ora     (ptr),y
+        iny
+        bne     :-
+        inc     ptr+1           ; second half
+:       ora     (ptr),y
+        iny
+        bne     :-
+        tay
+        bne     not_sparse
+
+        ;; Block is all zeros, skip over it
+        add16_8  mark_dstfile_params::position+1, #.hibyte(BLOCK_SIZE)
+        MLI_CALL SET_EOF, mark_dstfile_params
+        MLI_CALL SET_MARK, mark_dstfile_params
+        jmp     next_block
+
+        ;; Block is not sparse, write it
+not_sparse:
+        jsr     do_write
+        bcs     ret
+        FALL_THROUGH_TO next_block
+
+        ;; Advance to next block
+next_block:
+        inc     write_dstfile_params::data_buffer+1
+        inc     write_dstfile_params::data_buffer+1
+        ;; Assert: `read_srcfile_params::trans_count` >= `BLOCK_SIZE`
+        dec     read_srcfile_params::trans_count+1
+        dec     read_srcfile_params::trans_count+1
+
+        ;; Anything left to write?
+        lda     read_srcfile_params::trans_count
+        ora     read_srcfile_params::trans_count+1
+        bne     loop
+        clc
+        rts
+
+do_write:
+        MLI_CALL WRITE, write_dstfile_params
+        bcs     ret
+        MLI_CALL GET_MARK, mark_dstfile_params
+ret:    rts
+.endproc ; _WriteDst
 .endproc ; CopyNormalFile
 
 ;;; ============================================================

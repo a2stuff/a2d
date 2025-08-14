@@ -9369,13 +9369,12 @@ done:
 not_sp:
         ;; Not SmartPort - try AppleTalk
         MLI_CALL READ_BLOCK, block_params
-        bcc     :+
         cmp     #ERR_NETWORK_ERROR
-        bne     :+
+    IF_EQ
         ldax    #str_device_type_appletalk
         ldy     #IconType::fileshare
         rts
-:
+    END_IF
 
         ;; RAM-based driver or not SmartPort
 generic:
@@ -9976,6 +9975,7 @@ target_is_icon:
 
         jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
+        jsr     SetDstIsAppleShareFlag  ; uses `path_buf4`, may fail
         jsr     EnumerationProcessSelectedFile
         jsr     PrepTraversalCallbacksForCopy
         FALL_THROUGH_TO DoCopyCommon
@@ -9995,6 +9995,7 @@ FinishOperation:
 .proc DoCopyToRAM
         copy8   #0, move_flag
         copy8   #%11000000, operation_flags ; bits7&6=1 = copy to RAMCard
+        copy8   #0, dst_is_appleshare_flag  ; by definition, not AppleShare
         tsx
         stx     stack_stash
 
@@ -10019,18 +10020,18 @@ FinishOperation:
 :       SKIP_NEXT_2_BYTE_INSTRUCTION
 
 ep_always_copy:
-        lda     #0
+        lda     #0              ; do not convert to `copy8`!
 
         sta     move_flag
 
         copy8   #0, operation_flags ; bit7=0 = copy/delete
         copy8   #$00, copy_delete_flags ; bit7=0 = copy
-
         tsx
         stx     stack_stash
 
         jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
+        jsr     SetDstIsAppleShareFlag  ; uses `path_buf4`, may fail
         jmp     OperationOnSelection
 .endproc ; DoCopyOrMoveSelection
 DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
@@ -10149,6 +10150,10 @@ move_flag:
 all_flag:
         .byte   0
 
+        ;; bit 7 set = destination is an AppleShare (network) drive
+dst_is_appleshare_flag:
+        .byte   0
+
 ;;; ============================================================
 
 ;;; Memory Map
@@ -10190,7 +10195,7 @@ file_entry_buf          .tag    FileEntry
         file_data_buffer := $1500
         kBufSize = $A00
         .assert file_data_buffer + kBufSize <= dst_path_buf, error, "Buffer overlap"
-        .assert (kBufSize .mod BLOCK_SIZE) = 0, error, "better performance for an integral number of blocks"
+        .assert (kBufSize .mod BLOCK_SIZE) = 0, error, "integral number of blocks needed for sparse copies and performance"
 
         DEFINE_CLOSE_PARAMS close_src_params
         DEFINE_CLOSE_PARAMS close_dst_params
@@ -10371,6 +10376,32 @@ do_op_flag:
 
 eof:    return  #$FF
 .endproc ; ReadFileEntry
+
+;;; ============================================================
+
+;;; Input: Destination path in `path_buf4`
+;;; Output: `dst_is_appleshare_flag` is set
+.proc SetDstIsAppleShareFlag
+        copy8   #0, dst_is_appleshare_flag
+
+        ;; Issue a `GET_FILE_INFO` on destination to set `DEVNUM`
+@retry: param_call GetFileInfo, path_buf4
+        bcc     :+
+        jsr     ShowErrorAlertDst
+        jmp     @retry
+:
+        ;; Try to read a block off device; if AppleShare will fail.
+        copy8   DEVNUM, unit_number
+        MLI_CALL READ_BLOCK, block_params
+        cmp     #ERR_NETWORK_ERROR
+    IF_EQ
+        copy8   #$80, dst_is_appleshare_flag
+    END_IF
+ret:    rts
+
+        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, kVolumeDirKeyBlock
+        unit_number := block_params::unit_num
+.endproc ; SetDstIsAppleShareFlag
 
 ;;; ============================================================
 
@@ -11224,8 +11255,8 @@ done:   lda     open_dst_params::ref_num
         jsr     ShowErrorAlert
         jmp     @retry
 
-:       copy16  read_src_params::trans_count, write_dst_params::request_count
-        ora     read_src_params::trans_count
+:       lda     read_src_params::trans_count
+        ora     read_src_params::trans_count+1
         bne     :+
 eof:    copy8   #$FF, src_eof_flag
 :       MLI_CALL GET_MARK, mark_src_params
@@ -11233,6 +11264,80 @@ eof:    copy8   #$FF, src_eof_flag
 .endproc ; _ReadSrc
 
 .proc _WriteDst
+        ;; Always start off at start of copy buffer
+        copy16  read_src_params::data_buffer, write_dst_params::data_buffer
+loop:
+        ;; Assume we're going to write everything we read. We may
+        ;; later determine we need to write it out block-by-block.
+        copy16  read_src_params::trans_count, write_dst_params::request_count
+
+        ;; ProDOS Tech Note #30: AppleShare servers do not support
+        ;; sparse files. https://prodos8.com/docs/technote/30
+        bit     dst_is_appleshare_flag
+        bmi     do_write        ; ...and done!
+
+        ;; Is there less than a full block? If so, just write it.
+        lda     read_src_params::trans_count+1
+        cmp     #.hibyte(BLOCK_SIZE)
+        bcc     do_write        ; ...and done!
+
+        ;; Otherwise we'll go block-by-block, treating all zeros
+        ;; specially.
+        copy16  #BLOCK_SIZE, write_dst_params::request_count
+
+        ;; First two blocks are never made sparse. The first block is
+        ;; never sparsely allocated (P8 TRM B.3.6 - Sparse Files) and
+        ;; the transition from seedling to sapling is not handled
+        ;; correctly in all versions of ProDOS.
+        ;; https://prodos8.com/docs/technote/30
+        ;; Assert: mark low byte is $00
+        lda     mark_dst_params::position+1
+        and     #%11111100
+        ora     mark_dst_params::position+2
+        beq     not_sparse
+
+        ;; Is this block all zeros? Scan all $200 bytes
+        ;; (Note: coded for size, not speed, since we're I/O bound)
+        ptr := $06
+        copy16  write_dst_params::data_buffer, ptr ; first half
+        ldy     #0
+        tya
+:       ora     (ptr),y
+        iny
+        bne     :-
+        inc     ptr+1           ; second half
+:       ora     (ptr),y
+        iny
+        bne     :-
+        tay
+        bne     not_sparse
+
+        ;; Block is all zeros, skip over it
+        add16_8  mark_dst_params::position+1, #.hibyte(BLOCK_SIZE)
+        MLI_CALL SET_EOF, mark_dst_params
+        MLI_CALL SET_MARK, mark_dst_params
+        jmp     next_block
+
+        ;; Block is not sparse, write it
+not_sparse:
+        jsr     do_write
+        FALL_THROUGH_TO next_block
+
+        ;; Advance to next block
+next_block:
+        inc     write_dst_params::data_buffer+1
+        inc     write_dst_params::data_buffer+1
+        ;; Assert: `read_src_params::trans_count` >= `BLOCK_SIZE`
+        dec     read_src_params::trans_count+1
+        dec     read_src_params::trans_count+1
+
+        ;; Anything left to write?
+        lda     read_src_params::trans_count
+        ora     read_src_params::trans_count+1
+        bne     loop
+        rts
+
+do_write:
 @retry: MLI_CALL WRITE, write_dst_params
         bcc     :+
         jsr     ShowErrorAlertDst
