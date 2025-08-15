@@ -484,7 +484,7 @@ done:   rts
 
         ;; Mark it as free
         jmp     FreeIcon
-.endproc ; RemoveIconCommon
+.endproc ; FreeIconCommon
 
 ;;; ============================================================
 
@@ -546,7 +546,7 @@ done:   rts
         jsr     RemoveIconFromList ; returns with A unchanged, X = `num_icons`
         sta     icon_list-1,x
         rts
-.endproc ; MoveIconToTop
+.endproc ; MaybeMoveIconToTop
 
 ;;; ============================================================
 ;;; EraseIcon

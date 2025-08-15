@@ -988,7 +988,7 @@ ret:    rts
         window_id := *+1
         lda     #SELF_MODIFIED_BYTE
         jmp     ActivateWindow
-.endproc
+.endproc ; _ActivateClickedWindow
 clicked_window_id := _ActivateClickedWindow::window_id
 
 .endproc ; HandleClick
@@ -11144,14 +11144,11 @@ Start:  lda     DEVNUM
         sta     mark_dst_params::position+2
 
         jsr     _OpenSrc
-        jsr     _CopySrcRefNum
         jsr     _OpenDst
-        beq     :+
-
+    IF_NOT_ZERO
         ;; Destination not available; note it, can prompt later
         copy8   #$FF, src_dst_exclusive_flag
-        bne     read            ; always
-:       jsr     _CopyDstRefNum
+    END_IF
 
         ;; Read
 read:   jsr     _ReadSrc
@@ -11160,7 +11157,6 @@ read:   jsr     _ReadSrc
         jsr     _CloseSrc       ; swap if necessary
 :       jsr     _OpenDst
         bne     :-
-        jsr     _CopyDstRefNum
         MLI_CALL SET_MARK, mark_dst_params
 
         ;; Write
@@ -11171,7 +11167,6 @@ write:  bit     src_eof_flag
         bpl     read
         jsr     _CloseDst       ; swap if necessary
         jsr     _OpenSrc
-        jsr     _CopySrcRefNum
 
         MLI_CALL SET_MARK, mark_src_params
         bcc     read
@@ -11190,16 +11185,13 @@ eof:    jsr     _CloseDst
         bcc     :+
         jsr     ShowErrorAlert
         jmp     @retry
-:       rts
-.endproc ; _OpenSrc
-
-.proc _CopySrcRefNum
+:
         lda     open_src_params::ref_num
         sta     read_src_params::ref_num
         sta     close_src_params::ref_num
         sta     mark_src_params::ref_num
-        rts
-.endproc ; _CopySrcRefNum
+        return  #0
+.endproc ; _OpenSrc
 
 .proc _OpenDst
 @retry: MLI_CALL OPEN, open_dst_params
@@ -11211,18 +11203,14 @@ eof:    jsr     _CloseDst
 
 not_found:
         jsr     ShowErrorAlertDst
-        lda     #ERR_VOL_NOT_FOUND
+        return  #ERR_VOL_NOT_FOUND
 
-done:   rts
-.endproc ; _OpenDst
-
-.proc _CopyDstRefNum
-        lda     open_dst_params::ref_num
+done:   lda     open_dst_params::ref_num
         sta     write_dst_params::ref_num
         sta     close_dst_params::ref_num
         sta     mark_dst_params::ref_num
-        rts
-.endproc ; _CopyDstRefNum
+        return  #0
+.endproc ; _OpenDst
 
 .proc _ReadSrc
         copy16  #kBufSize, read_src_params::request_count
