@@ -10481,11 +10481,10 @@ count:  .addr   0
 
 .proc _CopyDialogEnumerationCallback
         stax    copy_dialog_params::count
-        FALL_THROUGH_TO UpdateCopyDialogCount
-.endproc ; _CopyDialogEnumerationCallback
 
-.proc UpdateCopyDialogCount
+        ;; TODO: Remove the following line
         ldax    copy_dialog_params::count
+
         stax    file_count
         stax    total_count
         jsr     SetPortForProgressDialog
@@ -10496,7 +10495,7 @@ count:  .addr   0
         param_call DrawProgressDialogLabel, 0, aux::str_move_moving
       END_IF
         jmp     DrawFileCountWithSuffix
-.endproc ; UpdateCopyDialogCount
+.endproc ; _CopyDialogEnumerationCallback
 
 .endproc ; OpenCopyProgressDialog
 
@@ -10711,10 +10710,7 @@ done:   rts
 .proc DecFileCountAndUpdateCopyDialogProgress
         jsr     DecrementOpFileCount
         stax    copy_dialog_params::count
-        FALL_THROUGH_TO UpdateCopyDialogProgress
-.endproc ; DecFileCountAndUpdateCopyDialogProgress
 
-.proc UpdateCopyDialogProgress
         copy16  copy_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
@@ -10727,7 +10723,7 @@ done:   rts
         jsr     DrawDestFilePath
 
         jmp     DrawProgressDialogFilesRemaining
-.endproc ; UpdateCopyDialogProgress
+.endproc ; DecFileCountAndUpdateCopyDialogProgress
 
 ;;; ============================================================
 ;;; Used before "Copy to RAMCard", to ensure everything will fit.
@@ -11290,17 +11286,16 @@ count:  .word   0
 
 .proc _DeleteDialogEnumerationCallback
         stax    delete_dialog_params::count
-        FALL_THROUGH_TO UpdateDeleteDialogCount
-.endproc ; _DeleteDialogEnumerationCallback
 
-.proc UpdateDeleteDialogCount
+        ;; TODO: Remove the following line
         ldax    delete_dialog_params::count
+
         stax    total_count
         stax    file_count
         jsr     SetPortForProgressDialog
         param_call DrawProgressDialogLabel, 0, aux::str_delete_count
         jmp     DrawFileCountWithSuffix
-.endproc ; UpdateDeleteDialogCount
+.endproc ; _DeleteDialogEnumerationCallback
 
 .proc _DeleteDialogConfirmCallback
         ;; `text_input_buf` is used rather than `text_buffer2` due to size
