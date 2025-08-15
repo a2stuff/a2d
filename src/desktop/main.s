@@ -10239,9 +10239,12 @@ file_entry_buf          .tag    FileEntry
         ;; overlayed indirect jump table
         kOpJTAddrsSize = 6
 
-op_jt0: jmp     (op_jt_addr0)   ; process selected file
-op_jt1: jmp     (op_jt_addr1)   ; process directory entry
-op_jt3: jmp     (op_jt_addr3)   ; when finished directory
+OpProcessSelectedFile:
+        jmp     (op_jt_addr0)
+OpProcessDirectoryEntry:
+        jmp     (op_jt_addr1)
+OpFinishDirectory:
+        jmp     (op_jt_addr3)
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
@@ -10251,15 +10254,13 @@ op_jt_addr1:  .addr   0
 op_jt_addr3:  .addr   0
         ASSERT_TABLE_SIZE op_jt_addrs, kOpJTAddrsSize
 
-OpProcessSelectedFile   := op_jt0
-OpProcessDirectoryEntry := op_jt1
-OpFinishDirectory       := op_jt3
-
 DoNothing:   rts
 
 ;;; 0 for count/size pass, non-zero for actual operation
 do_op_flag:
         .byte   0
+
+;;; ============================================================
 
 .proc PushEntryCount
         ldx     entry_count_stack_index
