@@ -9997,6 +9997,7 @@ FinishOperation:
         copy8   #%11000000, operation_flags ; bits7&6=1 = copy to RAMCard
         tsx
         stx     stack_stash
+
         jsr     PrepCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
         jsr     EnumerationProcessSelectedFile
@@ -10039,9 +10040,9 @@ DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
         copy8   #0, move_flag
         copy8   #0, operation_flags ; bit7=0 = copy/delete
         copy8   #$80, copy_delete_flags ; bit7=1 = delete
-
         tsx
         stx     stack_stash
+
         jsr     PrepCallbacksForEnumeration
         jsr     OpenDeleteProgressDialog
         FALL_THROUGH_TO OperationOnSelection
@@ -10470,21 +10471,12 @@ callbacks_for_copy:
         .addr   CopyFinishDirectory
         ASSERT_TABLE_SIZE callbacks_for_copy, kOpJTAddrsSize
 
-.params copy_dialog_params
-count:  .addr   0
-.endparams
-
 .proc OpenCopyProgressDialog
         copy16  #_CopyDialogEnumerationCallback, operations::operation_enumeration_callback
         copy16  #CloseProgressDialog, operations::operation_complete_callback
         jmp     OpenProgressDialog
 
 .proc _CopyDialogEnumerationCallback
-        stax    copy_dialog_params::count
-
-        ;; TODO: Remove the following line
-        ldax    copy_dialog_params::count
-
         stax    file_count
         stax    total_count
         jsr     SetPortForProgressDialog
@@ -10496,16 +10488,12 @@ count:  .addr   0
       END_IF
         jmp     DrawFileCountWithSuffix
 .endproc ; _CopyDialogEnumerationCallback
-
 .endproc ; OpenCopyProgressDialog
 
 ;;; ============================================================
 
 .proc PrepCallbacksForCopy
-        ldy     #kOpJTAddrsSize-1
-:       copy8   callbacks_for_copy,y,  op_jt_addrs,y
-        dey
-        bpl     :-
+        COPY_BYTES kOpJTAddrsSize, callbacks_for_copy, op_jt_addrs
 
         copy8   #0, operations::all_flag
         copy8   #1, do_op_flag
@@ -10516,10 +10504,7 @@ count:  .addr   0
 ;;; "Download" - shares heavily with Copy
 
 .proc PrepCallbacksForDownload
-        ldy     #kOpJTAddrsSize-1
-:       copy8   callbacks_for_copy,y, op_jt_addrs,y
-        dey
-        bpl     :-
+        COPY_BYTES kOpJTAddrsSize, callbacks_for_copy, op_jt_addrs
 
         copy8   #$80, operations::all_flag
         copy16  #_DownloadDialogTooLargeCallback, operations::operation_toolarge_callback
@@ -10709,9 +10694,7 @@ done:   rts
 
 .proc DecFileCountAndUpdateCopyDialogProgress
         jsr     DecrementOpFileCount
-        stax    copy_dialog_params::count
-
-        copy16  copy_dialog_params::count, file_count
+        stax    file_count
         jsr     SetPortForProgressDialog
 
         param_call CopyToBuf0, src_path_buf
@@ -11274,10 +11257,6 @@ callbacks_for_delete:
         .addr   DeleteFinishDirectory
         ASSERT_TABLE_SIZE callbacks_for_delete, kOpJTAddrsSize
 
-.params delete_dialog_params
-count:  .word   0
-.endparams
-
 .proc OpenDeleteProgressDialog
         copy16  #_DeleteDialogConfirmCallback, operations::operation_confirm_callback
         copy16  #_DeleteDialogEnumerationCallback, operations::operation_enumeration_callback
@@ -11285,13 +11264,8 @@ count:  .word   0
         jmp     OpenProgressDialog
 
 .proc _DeleteDialogEnumerationCallback
-        stax    delete_dialog_params::count
-
-        ;; TODO: Remove the following line
-        ldax    delete_dialog_params::count
-
-        stax    total_count
         stax    file_count
+        stax    total_count
         jsr     SetPortForProgressDialog
         param_call DrawProgressDialogLabel, 0, aux::str_delete_count
         jmp     DrawFileCountWithSuffix
@@ -11319,10 +11293,7 @@ count:  .word   0
 ;;; ============================================================
 
 .proc PrepCallbacksForDelete
-        ldy     #kOpJTAddrsSize-1
-:       copy8   callbacks_for_delete,y, op_jt_addrs,y
-        dey
-        bpl     :-
+        COPY_BYTES kOpJTAddrsSize, callbacks_for_delete, op_jt_addrs
 
         copy8   #0, operations::all_flag
         copy8   #1, do_op_flag
@@ -11447,12 +11418,11 @@ next_file:
 
 .proc DecFileCountAndUpdateDeleteDialogProgress
         jsr     DecrementOpFileCount
-        stax    delete_dialog_params::count
+        stax    file_count
         FALL_THROUGH_TO UpdateDeleteDialogProgress
 .endproc ; DecFileCountAndUpdateDeleteDialogProgress
 
 .proc UpdateDeleteDialogProgress
-        copy16  delete_dialog_params::count, file_count
         jsr     SetPortForProgressDialog
 
         param_call CopyToBuf0, src_path_buf
@@ -11473,15 +11443,15 @@ next_file:
 ;;; (finishing a directory is a no-op)
 
 ;;; Overlays for size operation (`op_jt_addrs`)
-callbacks_for_size_or_count:
+callbacks_for_enumeration:
         .addr   EnumerationProcessSelectedFile
         .addr   EnumerationProcessDirectoryEntry
         .addr   DoNothing
-        ASSERT_TABLE_SIZE callbacks_for_size_or_count, kOpJTAddrsSize
+        ASSERT_TABLE_SIZE callbacks_for_enumeration, kOpJTAddrsSize
 
 .proc PrepCallbacksForEnumeration
         ldy     #kOpJTAddrsSize-1
-:       copy8   callbacks_for_size_or_count,y, op_jt_addrs,y
+:       copy8   callbacks_for_enumeration,y, op_jt_addrs,y
         dey
         bpl     :-
 
@@ -11552,6 +11522,8 @@ do_sum_file_size:
         jmp     operations::InvokeOperationEnumerationCallback
 .endproc ; EnumerationProcessDirectoryEntry
 
+;;; Count of files - increases during enumeration, decreases as
+;;; files are processed.
 op_file_count:
         .word   0
 
@@ -12209,13 +12181,19 @@ append_size:
         copy16  #0, num_blocks
     END_IF
 
-        copy16  #_GetInfoProcessDirEntry, op_jt_addr1
-        copy16  #DoNothing, op_jt_addr3
+        COPY_BYTES kOpJTAddrsSize, callbacks_for_getinfo, op_jt_addrs
+
         copy16  #DoNothing, operations::operation_complete_callback ; handle error
         tsx
         stx     operations::stack_stash
         jsr     ProcessDir
         jmp     _UpdateDirSizeDisplay ; in case 0 files were seen
+
+callbacks_for_getinfo:
+        .addr   DoNothing
+        .addr   _GetInfoProcessDirEntry
+        .addr   DoNothing
+        ASSERT_TABLE_SIZE callbacks_for_getinfo, operations::kOpJTAddrsSize
 
 .proc _GetInfoProcessDirEntry
         add16   num_blocks, src_file_info_params::blocks_used, num_blocks
