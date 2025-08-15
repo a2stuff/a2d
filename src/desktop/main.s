@@ -9974,10 +9974,10 @@ target_is_icon:
         tsx
         stx     stack_stash
 
-        jsr     PrepCallbacksForEnumeration
+        jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
         jsr     EnumerationProcessSelectedFile
-        jsr     PrepCallbacksForCopy
+        jsr     PrepTraversalCallbacksForCopy
         FALL_THROUGH_TO DoCopyCommon
 .endproc ; DoCopyFile
 
@@ -9998,10 +9998,10 @@ FinishOperation:
         tsx
         stx     stack_stash
 
-        jsr     PrepCallbacksForEnumeration
+        jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
         jsr     EnumerationProcessSelectedFile
-        jsr     PrepCallbacksForDownload
+        jsr     PrepTraversalCallbacksForDownload
         jmp     DoCopyCommon
 .endproc ; DoCopyToRAM
 
@@ -10028,7 +10028,8 @@ ep_always_copy:
 
         tsx
         stx     stack_stash
-        jsr     PrepCallbacksForEnumeration
+
+        jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenCopyProgressDialog
         jmp     OperationOnSelection
 .endproc ; DoCopyOrMoveSelection
@@ -10043,7 +10044,7 @@ DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
         tsx
         stx     stack_stash
 
-        jsr     PrepCallbacksForEnumeration
+        jsr     PrepTraversalCallbacksForEnumeration
         jsr     OpenDeleteProgressDialog
         FALL_THROUGH_TO OperationOnSelection
 .endproc ; DoDeleteSelection
@@ -10116,40 +10117,13 @@ next_icon:
     END_IF
 
         ;; No, we finished enumerating. Now do the real work.
-        bit     copy_delete_flags ; bit7=1 = delete
-    IF_NS
         jsr     InvokeOperationConfirmCallback
-        jsr     PrepCallbacksForDelete
-    ELSE
-        jsr     PrepCallbacksForCopy
-    END_IF
+        jsr     InvokeOperationPrepTraversalCallback
 
         ;; And iterate selection again.
         jmp     iterate_selection
 
 .endproc ; OperationOnSelection
-
-;;; ============================================================
-
-;;; Called for each file during enumeration; A,X = file count
-InvokeOperationEnumerationCallback:
-        operation_enumeration_callback := *+1
-        jmp     SELF_MODIFIED
-
-;;; Called on operation completion (success or failure)
-InvokeOperationCompleteCallback:
-        operation_complete_callback := *+1
-        jmp     SELF_MODIFIED
-
-;;; Called once enumeration is complete, to confirm the operation.
-InvokeOperationConfirmCallback:
-        operation_confirm_callback := *+1
-        jmp     SELF_MODIFIED
-
-;;; Called when there are not enough free blocks on destination.
-InvokeOperationTooLargeCallback:
-        operation_toolarge_callback := *+1
-        jmp     SELF_MODIFIED
 
 ;;; ============================================================
 
@@ -10236,24 +10210,66 @@ file_entry_buf          .tag    FileEntry
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, SELF_MODIFIED
 
 ;;; ============================================================
-
-        ;; overlayed indirect jump table
-        kOpJTAddrsSize = 6
-
-OpProcessSelectedFile:
-        jmp     (op_jt_addr0)
-OpProcessDirectoryEntry:
-        jmp     (op_jt_addr1)
-OpFinishDirectory:
-        jmp     (op_jt_addr3)
+;;; Callbacks used during operations. There are two sets:
+;;;
+;;; * Callbacks for the overall operation lifecycle
+;;; * Callbacks for selection and file system traversal
+;;;
+;;; These are separate because the latter are swapped out between the
+;;; initial enumeration phase and the actual operation phase.
 
 ;;; NOTE: These are referenced by indirect JMP and *must not*
 ;;; cross page boundaries.
-op_jt_addrs:
-op_jt_addr0:  .addr   0
-op_jt_addr1:  .addr   0
-op_jt_addr3:  .addr   0
-        ASSERT_TABLE_SIZE op_jt_addrs, kOpJTAddrsSize
+operation_lifecycle_callbacks:
+operation_enumeration_callback: .addr   SELF_MODIFIED
+operation_complete_callback:    .addr   SELF_MODIFIED
+operation_confirm_callback:     .addr   SELF_MODIFIED
+operation_prep_callback:        .addr   SELF_MODIFIED
+        kOpLifecycleCallbacksSize = * - operation_lifecycle_callbacks
+
+;;; NOTE: These are referenced by indirect JMP and *must not*
+;;; cross page boundaries.
+operation_traversal_callbacks:
+op_process_selected_file_callback:      .addr   SELF_MODIFIED
+op_process_dir_entry_callback:          .addr   SELF_MODIFIED
+op_finish_directory_callback:           .addr   SELF_MODIFIED
+        kOpTraversalCallbacksSize = * - operation_traversal_callbacks
+
+;;; ------------------------------------------------------------
+;;; Operation lifecycle callbacks
+
+;;; Called for each file during enumeration; A,X = file count
+InvokeOperationEnumerationCallback:
+        jmp     (operation_enumeration_callback)
+
+;;; Called on operation completion (success or failure)
+InvokeOperationCompleteCallback:
+        jmp     (operation_complete_callback)
+
+;;; Called once enumeration is complete, to confirm the operation.
+InvokeOperationConfirmCallback:
+        jmp     (operation_confirm_callback)
+
+;;; Called once selection enumeration is complete, to prepare for the actual op.
+InvokeOperationPrepTraversalCallback:
+        jmp     (operation_prep_callback)
+
+;;; ------------------------------------------------------------
+;;; Selection and file system traversal callbacks
+
+;;; Called for each file in the selection
+OpProcessSelectedFile:
+        jmp     (op_process_selected_file_callback)
+
+;;; Called for each file in a directory
+OpProcessDirectoryEntry:
+        jmp     (op_process_dir_entry_callback)
+
+;;; Called when a directory is complete
+OpFinishDirectory:
+        jmp     (op_finish_directory_callback)
+
+;;; ------------------------------------------------------------
 
 DoNothing:   rts
 
@@ -10464,16 +10480,15 @@ ok:     clc
 ;;; `CopyFinishDirectory`
 ;;;  - if dir and op=move, deletes dir
 
-;;; Overlays for copy operation (`op_jt_addrs`)
-callbacks_for_copy:
+;;; Traversal callbacks for copy operation (`operation_traversal_callbacks`)
+operation_traversal_callbacks_for_copy:
         .addr   CopyProcessSelectedFile
         .addr   CopyProcessDirectoryEntry
         .addr   CopyFinishDirectory
-        ASSERT_TABLE_SIZE callbacks_for_copy, kOpJTAddrsSize
+        ASSERT_TABLE_SIZE operation_traversal_callbacks_for_copy, kOpTraversalCallbacksSize
 
 .proc OpenCopyProgressDialog
-        copy16  #_CopyDialogEnumerationCallback, operations::operation_enumeration_callback
-        copy16  #CloseProgressDialog, operations::operation_complete_callback
+        COPY_BYTES kOpLifecycleCallbacksSize, operation_lifecycle_callbacks_for_copy, operation_lifecycle_callbacks
         jmp     OpenProgressDialog
 
 .proc _CopyDialogEnumerationCallback
@@ -10488,34 +10503,37 @@ callbacks_for_copy:
       END_IF
         jmp     DrawFileCountWithSuffix
 .endproc ; _CopyDialogEnumerationCallback
+
+;;; Lifecycle callbacks for copy operation (`operation_lifecycle_callbacks`)
+operation_lifecycle_callbacks_for_copy:
+        .addr   _CopyDialogEnumerationCallback
+        .addr   CloseProgressDialog
+        .addr   operations::DoNothing
+        .addr   PrepTraversalCallbacksForCopy
+        ASSERT_TABLE_SIZE operation_lifecycle_callbacks_for_copy, operations::kOpLifecycleCallbacksSize
+
 .endproc ; OpenCopyProgressDialog
 
 ;;; ============================================================
 
-.proc PrepCallbacksForCopy
-        COPY_BYTES kOpJTAddrsSize, callbacks_for_copy, op_jt_addrs
+.proc PrepTraversalCallbacksForCopy
+        COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_copy, operation_traversal_callbacks
 
         copy8   #0, operations::all_flag
         copy8   #1, do_op_flag
         rts
-.endproc ; PrepCallbacksForCopy
+.endproc ; PrepTraversalCallbacksForCopy
 
 ;;; ============================================================
 ;;; "Download" - shares heavily with Copy
 
-.proc PrepCallbacksForDownload
-        COPY_BYTES kOpJTAddrsSize, callbacks_for_copy, op_jt_addrs
+.proc PrepTraversalCallbacksForDownload
+        COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_copy, operation_traversal_callbacks
 
         copy8   #$80, operations::all_flag
-        copy16  #_DownloadDialogTooLargeCallback, operations::operation_toolarge_callback
         copy8   #1, do_op_flag
         rts
-
-.proc _DownloadDialogTooLargeCallback
-        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_ramcard_full
-        jmp     CloseFilesCancelDialogWithFailedResult
-.endproc ; _DownloadDialogTooLargeCallback
-.endproc ; PrepCallbacksForDownload
+.endproc ; PrepTraversalCallbacksForDownload
 
 ;;; ============================================================
 ;;; Handle copying of a file.
@@ -10719,7 +10737,10 @@ done:   rts
 
 :       sub16   dst_file_info_params::aux_type, dst_file_info_params::blocks_used, blocks_free
         cmp16   blocks_free, op_block_count
-        jcc     operations::InvokeOperationTooLargeCallback
+    IF_LT
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_ramcard_full
+        jmp     CloseFilesCancelDialogWithFailedResult
+    END_IF
 
         rts
 
@@ -11250,17 +11271,15 @@ src_eof_flag:
 ;;; `DeleteFinishDirectory`
 ;;;  - destroys dir via `DeleteFileCommon`
 
-;;; Overlays for delete operation (`op_jt_addrs`)
-callbacks_for_delete:
+;;; Traversal callbacks for delete operation (`operation_traversal_callbacks`)
+operation_traversal_callbacks_for_delete:
         .addr   DeleteProcessSelectedFile
         .addr   DeleteProcessDirectoryEntry
         .addr   DeleteFinishDirectory
-        ASSERT_TABLE_SIZE callbacks_for_delete, kOpJTAddrsSize
+        ASSERT_TABLE_SIZE operation_traversal_callbacks_for_delete, kOpTraversalCallbacksSize
 
 .proc OpenDeleteProgressDialog
-        copy16  #_DeleteDialogConfirmCallback, operations::operation_confirm_callback
-        copy16  #_DeleteDialogEnumerationCallback, operations::operation_enumeration_callback
-        copy16  #CloseProgressDialog, operations::operation_complete_callback
+        COPY_BYTES kOpLifecycleCallbacksSize, operation_lifecycle_callbacks_for_delete, operation_lifecycle_callbacks
         jmp     OpenProgressDialog
 
 .proc _DeleteDialogEnumerationCallback
@@ -11288,17 +11307,26 @@ callbacks_for_delete:
         jmp     CloseFilesCancelDialogWithCanceledResult
 :       rts
 .endproc ; _DeleteDialogConfirmCallback
+
+;;; Lifecycle callbacks for delete operation (`operation_lifecycle_callbacks`)
+operation_lifecycle_callbacks_for_delete:
+        .addr   _DeleteDialogEnumerationCallback
+        .addr   CloseProgressDialog
+        .addr   _DeleteDialogConfirmCallback
+        .addr   PrepTraversalCallbacksForDelete
+        ASSERT_TABLE_SIZE operation_lifecycle_callbacks_for_delete, operations::kOpLifecycleCallbacksSize
+
 .endproc ; OpenDeleteProgressDialog
 
 ;;; ============================================================
 
-.proc PrepCallbacksForDelete
-        COPY_BYTES kOpJTAddrsSize, callbacks_for_delete, op_jt_addrs
+.proc PrepTraversalCallbacksForDelete
+        COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_delete, operation_traversal_callbacks
 
         copy8   #0, operations::all_flag
         copy8   #1, do_op_flag
         rts
-.endproc ; PrepCallbacksForDelete
+.endproc ; PrepTraversalCallbacksForDelete
 
 ;;; ============================================================
 ;;; Handle deletion of a selected file.
@@ -11442,18 +11470,15 @@ next_file:
 ;;;  - increments file count; if op=size, sums size
 ;;; (finishing a directory is a no-op)
 
-;;; Overlays for size operation (`op_jt_addrs`)
-callbacks_for_enumeration:
+;;; Traversal callbacks for size operation (`operation_traversal_callbacks`)
+operation_traversal_callbacks_for_enumeration:
         .addr   EnumerationProcessSelectedFile
         .addr   EnumerationProcessDirectoryEntry
         .addr   DoNothing
-        ASSERT_TABLE_SIZE callbacks_for_enumeration, kOpJTAddrsSize
+        ASSERT_TABLE_SIZE operation_traversal_callbacks_for_enumeration, kOpTraversalCallbacksSize
 
-.proc PrepCallbacksForEnumeration
-        ldy     #kOpJTAddrsSize-1
-:       copy8   callbacks_for_enumeration,y, op_jt_addrs,y
-        dey
-        bpl     :-
+.proc PrepTraversalCallbacksForEnumeration
+        COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_enumeration, operation_traversal_callbacks
 
         lda     #0
         sta     op_file_count
@@ -11463,7 +11488,7 @@ callbacks_for_enumeration:
         sta     do_op_flag
 
         rts
-.endproc ; PrepCallbacksForEnumeration
+.endproc ; PrepTraversalCallbacksForEnumeration
 
 ;;; ============================================================
 ;;; Handle sizing (or just counting) of a selected file.
@@ -12181,7 +12206,7 @@ append_size:
         copy16  #0, num_blocks
     END_IF
 
-        COPY_BYTES kOpJTAddrsSize, callbacks_for_getinfo, op_jt_addrs
+        COPY_BYTES kOpTraversalCallbacksSize, operation_traversal_callbacks_for_getinfo, operation_traversal_callbacks
 
         copy16  #DoNothing, operations::operation_complete_callback ; handle error
         tsx
@@ -12189,11 +12214,12 @@ append_size:
         jsr     ProcessDir
         jmp     _UpdateDirSizeDisplay ; in case 0 files were seen
 
-callbacks_for_getinfo:
+;;; Traversal callbacks for get info operation (`operation_traversal_callbacks`)
+operation_traversal_callbacks_for_getinfo:
         .addr   DoNothing
         .addr   _GetInfoProcessDirEntry
         .addr   DoNothing
-        ASSERT_TABLE_SIZE callbacks_for_getinfo, operations::kOpJTAddrsSize
+        ASSERT_TABLE_SIZE operation_traversal_callbacks_for_getinfo, operations::kOpTraversalCallbacksSize
 
 .proc _GetInfoProcessDirEntry
         add16   num_blocks, src_file_info_params::blocks_used, num_blocks
