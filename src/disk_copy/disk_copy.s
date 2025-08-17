@@ -39,6 +39,9 @@ DEFAULT_FONT    := $8800
 
         RESOURCE_FILE "disk_copy.res"
 
+        PREDEFINE_SCOPE ::auxlc
+        PREDEFINE_SCOPE ::main
+
         .include "loader.s"
         .include "auxlc.s"
         .include "main.s"

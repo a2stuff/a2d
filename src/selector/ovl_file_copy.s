@@ -1107,6 +1107,4 @@ ret:    rts
 
 .endscope ; file_copier
 
-file_copier__Exec   := file_copier::Exec
-
         ENDSEG OverlayCopyDialog

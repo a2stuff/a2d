@@ -6,7 +6,7 @@
 
         BEGINSEG OverlayFormatErase
 
-.scope format_erase_overlay
+.scope FormatEraseOverlay
 
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
@@ -216,7 +216,7 @@ l8:
         bcs     l12
 l9:
         lda     unit_num
-        jmp     EraseDisk__EP2
+        jmp     ::FormatEraseOverlay::EraseDisk::EP2
 
 l12:    pha
         jsr     main::SetCursorPointer
@@ -295,7 +295,6 @@ cancel:
         pla
         rts
 .endproc ; EraseDisk
-EraseDisk__EP2 := EraseDisk::EP2
 
 ;;; ============================================================
 
@@ -1065,10 +1064,6 @@ non_pro:
 
 ;;; ============================================================
 
-.endscope ; format_erase_overlay
-
-format_erase_overlay__ValidSelection := format_erase_overlay::ValidSelection
-
-format_erase_overlay__Exec := format_erase_overlay::Exec
+.endscope ; FormatEraseOverlay
 
         ENDSEG OverlayFormatErase

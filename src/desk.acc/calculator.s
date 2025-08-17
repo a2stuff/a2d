@@ -47,7 +47,6 @@ goaway:  .byte   0
 window_id:     .byte   kDAWindowId
         .addr   grafport
 .endparams
-        getwinport_params_window_id := getwinport_params::window_id
 
 setzp_params_nopreserve:        ; performance over convenience
         .byte   MGTK::zp_overwrite

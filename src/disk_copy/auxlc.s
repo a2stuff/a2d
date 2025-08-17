@@ -568,8 +568,8 @@ prompt_insert_source:
 
         ldx     source_drive_index
         lda     drive_unitnum_table,x
-        sta     main__on_line_params2_unit_num
-        jsr     main__CallOnLine2
+        sta     main::on_line_params2::unit_num
+        jsr     main::CallOnLine2
         bcc     source_is_pro
 
 check_source_error:
@@ -577,19 +577,19 @@ check_source_error:
         bne     prompt_insert_source
 
         ;; Source is non-ProDOS
-        jsr     main__IdentifySourceNonProDOSDiskType
+        jsr     main::IdentifySourceNonProDOSDiskType
         jsr     DrawSourceDriveInfo
         jmp     check_source_finish
 
         ;; Source is ProDOS
 source_is_pro:
-        lda     main__on_line_buffer2
+        lda     main::on_line_buffer2
         and     #$0F            ; mask off name length
         bne     :+              ; 0 signals error
-        lda     main__on_line_buffer2+1
+        lda     main::on_line_buffer2+1
         jmp     check_source_error
 :
-        param_call AdjustOnLineEntryCase, main__on_line_buffer2
+        param_call AdjustOnLineEntryCase, main::on_line_buffer2
         jsr     DrawSourceDriveInfo
 
 check_source_finish:
@@ -618,18 +618,18 @@ check_source_finish:
 
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        sta     main__on_line_params2_unit_num
-        jsr     main__CallOnLine2
+        sta     main::on_line_params2::unit_num
+        jsr     main::CallOnLine2
         bcc     dest_is_pro
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     dest_ok
         jmp     try_format      ; Can't even read drive - try formatting
 
 dest_is_pro:
-        lda     main__on_line_buffer2
+        lda     main::on_line_buffer2
         and     #NAME_LENGTH_MASK
         bne     dest_ok         ; 0 signals error
-        lda     main__on_line_buffer2+1
+        lda     main::on_line_buffer2+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     dest_ok
         jmp     try_format      ; Some other error - proceed with format
@@ -639,22 +639,22 @@ dest_ok:
         ;; --------------------------------------------------
         ;; Confirm erasure of the destination disk
 
-        lda     main__on_line_buffer2
+        lda     main::on_line_buffer2
         and     #NAME_LENGTH_MASK
     IF_ZERO
         ;; Not ProDOS - try to read Pascal name
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        sta     main__block_params_unit_num
-        copy16  #0, main__block_params_block_num
-        copy16  #default_block_buffer, main__block_params_data_buffer
-        jsr     main__ReadBlock
+        sta     main::block_params::unit_num
+        copy16  #0, main::block_params::block_num
+        copy16  #default_block_buffer, main::block_params::data_buffer
+        jsr     main::ReadBlock
         bcs     use_sd
         jsr     IsPascalBootBlock
         bcs     use_sd
 
-        param_call GetPascalVolName, main__on_line_buffer2
-        ldxy    #main__on_line_buffer2
+        param_call GetPascalVolName, main::on_line_buffer2
+        ldxy    #main::on_line_buffer2
         lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
         jmp     show
 
@@ -665,8 +665,8 @@ use_sd:
         tax                     ; slot/drive
         lda     #kAlertMsgConfirmEraseSlotDrive ; X = unit number
     ELSE
-        param_call AdjustOnLineEntryCase, main__on_line_buffer2
-        ldxy    #main__on_line_buffer2
+        param_call AdjustOnLineEntryCase, main::on_line_buffer2
+        ldxy    #main::on_line_buffer2
         lda     #kAlertMsgConfirmErase ; X,Y = ptr to volume name
     END_IF
 show:   jsr     ShowAlertDialog
@@ -692,7 +692,7 @@ try_format:
 
         ldx     dest_drive_index
         lda     drive_unitnum_table,x
-        jsr     main__DeviceDriverAddress ; Z=1 if firmware
+        jsr     main::DeviceDriverAddress ; Z=1 if firmware
         stax    $06
         bne     do_copy         ; if not firmware, skip these checks
 
@@ -704,7 +704,7 @@ try_format:
         beq     do_copy
 
 format: param_call DrawStatus, str_formatting
-        jsr     main__FormatDevice
+        jsr     main::FormatDevice
         bcc     do_copy
         cmp     #ERR_WRITE_PROTECTED
         beq     :+
@@ -736,7 +736,7 @@ do_copy:
 
         jsr     SetCursorWatch
 
-        jsr     main__ReadVolumeBitmap
+        jsr     main::ReadVolumeBitmap
 
         ;; Current block
         lda     #0
@@ -746,7 +746,7 @@ do_copy:
         sta     block_num_shift
 
         ;; Blocks to copy
-        jsr     main__CountActiveBlocksInVolumeBitmap
+        jsr     main::CountActiveBlocksInVolumeBitmap
         stax    transfer_blocks
         jsr     DrawTotalBlocks
 
@@ -764,7 +764,7 @@ copy_loop:
 
         jsr     DrawStatusReading
         lda     #$00
-        jsr     main__CopyBlocks
+        jsr     main::CopyBlocks
         cmp     #$01
         beq     copy_failure
 
@@ -775,7 +775,7 @@ copy_loop:
 
         jsr     DrawStatusWriting
         lda     #$80
-        jsr     main__CopyBlocks
+        jsr     main::CopyBlocks
         bmi     copy_success
         bne     copy_failure
 
@@ -786,21 +786,21 @@ copy_loop:
 copy_success:
         jsr     SetCursorWatch
 
-        jsr     main__FreeVolBitmapPages
+        jsr     main::FreeVolBitmapPages
         ldx     source_drive_index
         lda     drive_unitnum_table,x
-        jsr     main__EjectDisk
+        jsr     main::EjectDisk
         ldx     dest_drive_index
         cpx     source_drive_index
         beq     :+
         lda     drive_unitnum_table,x
-        jsr     main__EjectDisk
+        jsr     main::EjectDisk
 :       lda     #kAlertMsgCopySuccessful ; no args
         jsr     ShowAlertDialog
         jmp     InitDialog
 
 copy_failure:
-        jsr     main__FreeVolBitmapPages
+        jsr     main::FreeVolBitmapPages
         lda     #kAlertMsgCopyFailure ; no args
         jsr     ShowAlertDialog
         jmp     InitDialog
@@ -840,7 +840,7 @@ check:  lda     current_drive_selection
         tax                     ; A = index
         lda     drive_unitnum_table,x
         pha                     ; A = unit num
-        jsr     main__EjectDisk
+        jsr     main::EjectDisk
         pla                     ; A = unit num
         tay                     ; Y = unit num
 
@@ -882,13 +882,13 @@ loop:   jsr     SystemTask
 
 menu_command_table:
         ;; Apple menu
-        .addr   main__NoOp
-        .addr   main__NoOp
-        .addr   main__NoOp
-        .addr   main__NoOp
-        .addr   main__NoOp
+        .addr   main::NoOp
+        .addr   main::NoOp
+        .addr   main::NoOp
+        .addr   main::NoOp
+        .addr   main::NoOp
         ;; File menu
-        .addr   main__Quit
+        .addr   main::Quit
         ;; Facilities menu
         .addr   CmdQuickCopy
         .addr   CmdDiskCopy
@@ -1153,13 +1153,13 @@ check_return:
 ;;; Input: A=unit number
 ;;; Output: Z=1 if successful
 
-default_block_buffer := main__default_block_buffer
+default_block_buffer := main::default_block_buffer
 
 .proc NameNonProDOSVolume
-        sta     main__block_params_unit_num
-        copy16  #0, main__block_params_block_num
-        copy16  #default_block_buffer, main__block_params_data_buffer
-        jsr     main__ReadBlock
+        sta     main::block_params::unit_num
+        copy16  #0, main::block_params::block_num
+        copy16  #default_block_buffer, main::block_params::data_buffer
+        jsr     main::ReadBlock
         bcs     fail
 
         jsr     IsPascalBootBlock
@@ -1182,12 +1182,12 @@ try_dos33:
 ;;; ============================================================
 ;;; Construct DOS 3.3 volume name (referencing slot/drive)
 ;;; Uses `str_dos33_s_d` template to construct volume name
-;;; Inputs: `num_drives` and `main__block_params_unit_num` are set
+;;; Inputs: `num_drives` and `main::block_params::unit_num` are set
 ;;; Outputs: Nth `drive_name_table` entry is populated
 
 .proc GetDos33VolName
         ;; Mask off slot and drive, inject into template
-        lda     main__block_params_unit_num
+        lda     main::block_params::unit_num
         pha
         jsr     UnitNumToSlotDigit
         sta     str_dos33_s_d + kStrDOS33SlotOffset
@@ -1282,8 +1282,8 @@ match:  clc
         ptr := $06
 
         stax    ptr
-        copy16  #kVolumeDirKeyBlock, main__block_params_block_num
-        jsr     main__ReadBlock
+        copy16  #kVolumeDirKeyBlock, main::block_params::block_num
+        jsr     main::ReadBlock
     IF_CS
         ;; Just use a single space as the name
         ldy     #0
@@ -1326,8 +1326,8 @@ match:  clc
 ;;; ============================================================
 
         .include "../lib/inttostring.s"
-        saved_ram_unitnum := main__saved_ram_unitnum
-        saved_ram_drvec   := main__saved_ram_drvec
+        saved_ram_unitnum := main::saved_ram_unitnum
+        saved_ram_drvec   := main::saved_ram_drvec
         .include "../lib/disconnect_ram.s"
 
         .include "../toolkits/btk.s"
@@ -1390,7 +1390,7 @@ match:  clc
         lda     (ptr),y
         pha
         and     #UNIT_NUM_MASK  ; stash unit number
-        sta     main__block_params_unit_num
+        sta     main::block_params::unit_num
         pla
         and     #NAME_LENGTH_MASK
         sta     (ptr),y         ; mask off length
@@ -1398,9 +1398,9 @@ match:  clc
         ;; --------------------------------------------------
         ;; Check for GS/OS case bits, apply if found
 
-        copy16  #kVolumeDirKeyBlock, main__block_params_block_num
-        copy16  #default_block_buffer, main__block_params_data_buffer
-        jsr     main__ReadBlock
+        copy16  #kVolumeDirKeyBlock, main::block_params::block_num
+        copy16  #default_block_buffer, main::block_params::data_buffer
+        jsr     main::ReadBlock
         bcs     fallback
 
         case_bits := default_block_buffer + VolumeDirectoryHeader::case_bits
@@ -1464,8 +1464,8 @@ draw:   jmp     DrawDeviceListEntry
 ;;; Populates `num_drives`, `drive_unitnum_table` and `drive_name_table`
 .proc EnumerateDevices
         lda     #$00
-        sta     main__on_line_params2_unit_num
-        jsr     main__CallOnLine2
+        sta     main::on_line_params2::unit_num
+        jsr     main::CallOnLine2
         bcc     :+
 
         brk                     ; rude!
@@ -1479,10 +1479,10 @@ loop:   lda     device_index    ; <16
         asl     a
         asl     a
         clc
-        adc     #<main__on_line_buffer2
+        adc     #<main::on_line_buffer2
         sta     $06
         lda     #0
-        adc     #>main__on_line_buffer2
+        adc     #>main::on_line_buffer2
         sta     $06+1
 
         ;; Check first byte of record
@@ -1710,7 +1710,7 @@ index:  .byte   0
         pha
         tax
         lda     drive_unitnum_table,x
-        jsr     main__DeviceDriverAddress ; Z=1 if firmware
+        jsr     main::DeviceDriverAddress ; Z=1 if firmware
         stax    $06
         jmp     use_driver
 
@@ -1733,7 +1733,7 @@ use_driver:
         lda     drive_unitnum_table,x
         ldxy    $06
 
-        jsr     main__GetDeviceBlocksUsingDriver
+        jsr     main::GetDeviceBlocksUsingDriver
 
         stx     tmp             ; blocks available low
         pla
@@ -1873,7 +1873,7 @@ remainder:      .word   0              ; (out)
 
 show_name:
         param_call DrawString, str_2_spaces
-        COPY_STRING main__on_line_buffer2, device_name_buf
+        COPY_STRING main::on_line_buffer2, device_name_buf
         param_call DrawString, device_name_buf
         rts
 .endproc ; DrawSourceDriveInfo
@@ -1928,7 +1928,7 @@ show_name:
 
         cmp     #ERR_WRITE_PROTECTED
         bne     l2
-        jsr     main__Bell
+        jsr     main::Bell
         lda     #kAlertMsgDestinationProtected ; no args
         jsr     ShowAlertDialog
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
@@ -1936,13 +1936,13 @@ show_name:
         jsr     DrawStatusWriting ; Try Again
         return  #1
 
-:       jsr     main__FreeVolBitmapPages
+:       jsr     main::FreeVolBitmapPages
         return  #$80
 
-l2:     jsr     main__Bell
+l2:     jsr     main::Bell
         jsr     SetPortForDialog
-        lda     main__block_params_block_num
-        ldx     main__block_params_block_num+1
+        lda     main::block_params::block_num
+        ldx     main::block_params::block_num+1
         jsr     IntToStringWithSeparators
         lda     err_writing_flag
         bne     :+
@@ -1970,10 +1970,10 @@ err_writing_flag:
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        jsr     main__PrepBlockPtrs
+        jsr     main::PrepBlockPtrs
 
         ;; Read block
-        jsr     main__ReadBlockWithRetry
+        jsr     main::ReadBlockWithRetry
         bmi     ret
 
         ;; Copy block from main to aux
@@ -2005,7 +2005,7 @@ ret:    rts
         ptr1 := $06
         ptr2 := $08             ; one page up
 
-        jsr     main__PrepBlockPtrs
+        jsr     main::PrepBlockPtrs
 
         ;; Copy block aux to main
         sta     RAMRDON
@@ -2024,7 +2024,7 @@ ret:    rts
         sta     RAMWRTOFF
 
         ;; Write block
-        jmp     main__WriteBlockWithRetry
+        jmp     main::WriteBlockWithRetry
 .endproc ; WriteBlockFromAuxmem
 
 ;;; ============================================================
@@ -2288,7 +2288,7 @@ find_in_alert_table:
 .proc _IsDriveEjectable
         sty     unit_num
         tya
-        jsr     main__IsDriveEjectable
+        jsr     main::IsDriveEjectable
         beq     :+
         sta     ejectable_flag
 :       rts
@@ -2302,7 +2302,7 @@ ShowAlertDialog := ShowAlertDialogImpl::start
 .scope alert_dialog
 
         alert_grafport := grafport
-        Bell := main__Bell
+        Bell := main::Bell
 
         AD_EJECTABLE = 1
         .include "../lib/alert_dialog.s"
@@ -2316,16 +2316,16 @@ ShowAlertDialog := ShowAlertDialogImpl::start
         ;; Poll drive until something is present
         ;; (either a ProDOS disk or a non-ProDOS disk)
         lda     unit_num
-        sta     main__on_line_params_unit_num
-        jsr     main__CallOnLine
+        sta     main::on_line_params::unit_num
+        jsr     main::CallOnLine
         bcc     done
 
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
-        lda     main__on_line_buffer
+        lda     main::on_line_buffer
         and     #NAME_LENGTH_MASK
         bne     done
-        lda     main__on_line_buffer+1
+        lda     main::on_line_buffer+1
         cmp     #ERR_NOT_PRODOS_VOLUME
         beq     done
 
@@ -2362,7 +2362,7 @@ Alert := alert_dialog::Alert
         bcc     :+
         copy8   #0, loop_counter
 
-        jsr     main__ResetIIgsRGB ; in case it was reset by control panel
+        jsr     main::ResetIIgsRGB ; in case it was reset by control panel
 
 :       lda     loop_counter
         rts
@@ -2389,6 +2389,5 @@ Alert := alert_dialog::Alert
 
         .assert * <= $F200, error, "Update memory_bitmap if code extends past $F200"
 .endscope ; auxlc
-        auxlc__start := auxlc::start
 
         ENDSEG SegmentAuxLC

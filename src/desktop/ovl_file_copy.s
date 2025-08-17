@@ -56,6 +56,5 @@ jt_callbacks:
 ;;; ============================================================
 
 .endscope ; FileCopyOverlay
-FileCopyOverlay__Run := FileCopyOverlay::Run
 
         ENDSEG OverlayFileCopy

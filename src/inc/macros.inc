@@ -1044,6 +1044,13 @@ __pushorg_depth__ .set 0
         ::__pushorg_depth__ .set ::__pushorg_depth__ - 1
 .endmacro
 
+;;; ============================================================
+;;; Pre-Defining Scopes
+;;; ============================================================
+
+.macro PREDEFINE_SCOPE scope_name
+    scope_name::__predefine_scope__ = 0
+.endmacro
 
 ;;; ============================================================
 ;;; Parameter Blocks - named scopes that indicate data
