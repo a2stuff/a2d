@@ -69,7 +69,7 @@ start:
         bit     LCBANK1
         bit     LCBANK1
 
-        jmp     auxlc__start
+        jmp     auxlc::start
 
 ;;; This mimics the original behavior - just hang if the load fails.
 ;;; Note that a ProDOS QUIT will likely fail since the installed

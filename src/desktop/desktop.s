@@ -77,6 +77,10 @@ kOverlayDeskTopRestoreBufferOffset = kSegmentDeskTopMainOffset + (kOverlayDeskTo
         ;; Ensure loader.starts at correct offset from start of file.
         .res    kSegmentLoaderOffset - (.sizeof(InstallAsQuit) + .sizeof(QuitRoutine))
 
+        PREDEFINE_SCOPE ::FormatEraseOverlay
+        PREDEFINE_SCOPE ::FileCopyOverlay
+        PREDEFINE_SCOPE ::SelectorEditOverlay
+
         ;; Segments
         .include "loader.s"
         .include "auxmem.s"

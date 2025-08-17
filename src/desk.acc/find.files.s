@@ -48,6 +48,7 @@
 
         DA_HEADER
         DA_START_AUX_SEGMENT
+        PREDEFINE_SCOPE ::main
 
 ;;; ============================================================
 
@@ -381,8 +382,8 @@ path_length:
         lda     path_length
         cmp     #1
     IF_EQ
-        JSR_TO_MAIN main__InitVolumes
-        JSR_TO_MAIN main__NextVolume
+        JSR_TO_MAIN main::InitVolumes
+        JSR_TO_MAIN main::NextVolume
         bcs     finish
     END_IF
 
@@ -402,13 +403,13 @@ loop:   lda     buf_search,y    ; copy characters
 endloop:
         copy16  #pattern, STARTLO
         copy16  #pattern+kMaxFilenameLength, ENDLO
-        copy16  #main__RecursiveCatalog__pattern, DESTINATIONLO
+        copy16  #main::RecursiveCatalog::pattern, DESTINATIONLO
         clc                     ; aux>main
         jsr     AUXMOVE
 
         ;; And invoke it!
         ldy     num_entries     ; A,X are trashed by macro
-        JSR_TO_MAIN  main__RecursiveCatalog__Start
+        JSR_TO_MAIN  main::RecursiveCatalog::Start
         sty     num_entries
         sty     lb_params::new_size
         LBTK_CALL LBTK::SetSize, lb_params ; update scrollbar
@@ -419,7 +420,7 @@ endloop:
         lda     num_entries
         cmp     #kMaxFilePaths
         beq     finish
-        JSR_TO_MAIN main__NextVolume
+        JSR_TO_MAIN main::NextVolume
         bcc     search
     END_IF
 
@@ -613,7 +614,7 @@ NoOp:   rts
         dex
         bne     :-
         add16_8 offset, num ; offset += num, so * 65
-        add16   offset, #main__entries_buffer, offset
+        add16   offset, #main::entries_buffer, offset
 
         ldax    offset
         rts
@@ -1473,11 +1474,6 @@ entries_buffer := *
 
 ;;; ============================================================
 .endscope ; main
-        main__entries_buffer := main::entries_buffer
-        main__RecursiveCatalog__Start := main::RecursiveCatalog::Start
-        main__RecursiveCatalog__pattern := main::RecursiveCatalog::pattern
-        main__InitVolumes := main::InitVolumes
-        main__NextVolume := main::NextVolume
 
         DA_END_MAIN_SEGMENT
 

@@ -1721,18 +1721,22 @@ LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
 .proc ReadLinkFile
         read_buf := $800
 
+        PREDEFINE_SCOPE ReadLinkFile::open_params
+        PREDEFINE_SCOPE ReadLinkFile::read_params
+        PREDEFINE_SCOPE ReadLinkFile::close_params
+
         MLI_CALL OPEN, open_params
         bcs     err
-        lda     open_params__ref_num
-        sta     read_params__ref_num
-        sta     close_params__ref_num
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
         MLI_CALL READ, read_params
         php
         MLI_CALL CLOSE, close_params
         plp
         bcs     err
 
-        lda     read_params__trans_count
+        lda     read_params::trans_count
         cmp     #kLinkFilePathLengthOffset
         bcc     bad
 
@@ -1757,12 +1761,8 @@ check_header:
         kCheckHeaderLength = * - check_header
 
         DEFINE_OPEN_PARAMS open_params, src_path_buf, $1C00
-        open_params__ref_num := open_params::ref_num
         DEFINE_READ_PARAMS read_params, read_buf, kLinkFileMaxSize
-        read_params__ref_num := read_params::ref_num
-        read_params__trans_count := read_params::trans_count
         DEFINE_CLOSE_PARAMS close_params
-        close_params__ref_num := close_params::ref_num
 
 .endproc ; ReadLinkFile
 
@@ -2291,7 +2291,13 @@ CmdDeskAcc      := CmdDeskAccImpl::start
 ;;;        Y = icon id to animate ($FF for none)
 
 .proc InvokeDeskAccWithIcon
-        stax    open_pathname
+        PREDEFINE_SCOPE InvokeDeskAccWithIcon::DAHeader
+        PREDEFINE_SCOPE InvokeDeskAccWithIcon::open_params
+        PREDEFINE_SCOPE InvokeDeskAccWithIcon::read_header_params
+        PREDEFINE_SCOPE InvokeDeskAccWithIcon::read_params
+        PREDEFINE_SCOPE InvokeDeskAccWithIcon::close_params
+
+        stax    open_params::pathname
 
         tya
         sta     icon            ; can't use stack, as DAs can modify
@@ -2309,27 +2315,27 @@ retry:  MLI_CALL OPEN, open_params
         beq     retry           ; ok, so try again
         rts                     ; cancel, so fail
 :
-        lda     open_ref_num
-        sta     read_header_ref_num
-        sta     read_ref_num
-        sta     close_ref_num
+        lda     open_params::ref_num
+        sta     read_header_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
         MLI_CALL READ, read_header_params
 
-        lda     DAHeader__aux_length
-        ora     DAHeader__aux_length+1
+        lda     DAHeader::aux_length
+        ora     DAHeader::aux_length+1
         beq     main
 
         ;; Aux memory segment
-        copy16  DAHeader__aux_length, read_request_count
+        copy16  DAHeader::aux_length, read_params::request_count
         MLI_CALL READ, read_params
         copy16  #DA_LOAD_ADDRESS, STARTLO
         copy16  #DA_LOAD_ADDRESS, DESTINATIONLO
-        add16   #DA_LOAD_ADDRESS-1, DAHeader__aux_length, ENDLO
+        add16   #DA_LOAD_ADDRESS-1, DAHeader::aux_length, ENDLO
         sec ; main>aux
         jsr     AUXMOVE
 
         ;; Main memory segment
-main:   copy16  DAHeader__main_length, read_request_count
+main:   copy16  DAHeader::main_length, read_params::request_count
         MLI_CALL READ, read_params
         MLI_CALL CLOSE, close_params
 
@@ -2355,22 +2361,11 @@ main:   copy16  DAHeader__main_length, read_request_count
 aux_length:     .word   0
 main_length:    .word   0
 .endparams
-        DAHeader__aux_length := DAHeader::aux_length
-        DAHeader__main_length := DAHeader::main_length
 
         DEFINE_OPEN_PARAMS open_params, 0, DA_IO_BUFFER
-        open_ref_num := open_params::ref_num
-        open_pathname := open_params::pathname
-
         DEFINE_READ_PARAMS read_header_params, DAHeader, .sizeof(DAHeader)
-        read_header_ref_num := read_header_params::ref_num
-
         DEFINE_READ_PARAMS read_params, DA_LOAD_ADDRESS, kDAMaxSize
-        read_ref_num := read_params::ref_num
-        read_request_count := read_params::request_count
-
         DEFINE_CLOSE_PARAMS close_params
-        close_ref_num := close_params::ref_num
 
 .endproc ; InvokeDeskAccWithIcon
 
@@ -2458,7 +2453,7 @@ main_length:    .word   0
         jsr     LoadDynamicRoutine
         RTS_IF_NS
 
-        jsr     FileCopyOverlay__Run
+        jsr     FileCopyOverlay::Run
         pha                     ; A = dialog result
         lda     #kDynamicRoutineRestoreFD
         jsr     RestoreDynamicRoutine
@@ -3596,7 +3591,7 @@ exec:   lda     #kDynamicRoutineFormatErase
         ldx     #SELF_MODIFIED_BYTE
         action := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     format_erase_overlay__Exec
+        jsr     FormatEraseOverlay::Exec
         stx     drive_to_refresh ; X = unit number
         pha                      ; A = result
         jsr     ClearUpdates     ; following dialog close
@@ -11784,6 +11779,8 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 ;;;           bit 6 set if same vol move and block ops supported
 
 .proc CheckMoveOrCopy
+        PREDEFINE_SCOPE CheckMoveOrCopy::block_params
+
         src_ptr := $08
         dst_buf := path_buf4
         block_buffer := $800
@@ -11854,7 +11851,7 @@ match:  lda     flag
         jmp     @retry
 :
         lda     DEVNUM
-        sta     block_params__unit_num
+        sta     block_params::unit_num
         MLI_CALL READ_BLOCK, block_params
         lda     #$80            ; bit 7 = move
         bcs     :+
@@ -11862,7 +11859,6 @@ match:  lda     flag
 :       rts
 
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, kVolumeDirKeyBlock
-        block_params__unit_num := block_params::unit_num
 .endproc ; CheckMoveOrCopy
 
 ;;; ============================================================
@@ -14151,6 +14147,10 @@ SaveWindows := save_restore_windows::Save
 ;;;         If successful, $06 points at `FileEntry` in block buffer
 .proc GetFileEntryBlock
 
+        PREDEFINE_SCOPE GetFileEntryBlock::open_params
+        PREDEFINE_SCOPE GetFileEntryBlock::read_params
+        PREDEFINE_SCOPE GetFileEntryBlock::close_params
+
 ;;; Memory Map
 io_buf    := $1000              ; $1000-$13FF
 block_buf := $1400              ; $1400-$15FF
@@ -14214,9 +14214,9 @@ sloop:  lda     path_buf,y      ; find last '/'
         JUMP_TABLE_MLI_CALL OPEN, open_params
         jcs     exit
 
-        lda     open_params_ref_num
-        sta     read_params_ref_num
-        sta     close_params_ref_num
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
 
 next_block:
         ;; This is the block we're about to read; save for later.
@@ -14285,9 +14285,6 @@ exit:
         DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
         DEFINE_READ_PARAMS read_params, block_buf, BLOCK_SIZE
         DEFINE_CLOSE_PARAMS close_params
-        open_params_ref_num := open_params::ref_num
-        read_params_ref_num := read_params::ref_num
-        close_params_ref_num := close_params::ref_num
 
 .endproc ; GetFileEntryBlock
 
@@ -14527,7 +14524,7 @@ calc_y:
         bit     has_device_picker_flag
     IF_NS
         lda     #0
-        jsr     format_erase_overlay__ValidSelection ; preserves A
+        jsr     FormatEraseOverlay::ValidSelection ; preserves A
         bpl     set_state
         lda     #$80
         bne     set_state       ; always

@@ -336,17 +336,20 @@ Currently, only MGTK constants are wrapped in a `.scope` to provide a namespace.
         sizeof_relocate = .sizeof(relocate)
 ```
 
-* ca65 does not allow the members of a named scope to be referenced before the scope definition. (https://github.com/cc65/cc65/issues/479) To work around this, add a label definition after the procedure.
+* ca65 does not allow the members of a named scope to be referenced before the scope is defined. (https://github.com/cc65/cc65/issues/479) To work around this, pre-define the scope using the `PREDEFINE_SCOPE` macro.
 
 ```asm
-        sta     data_ref
+.proc StoreTheThing
+        PREDEFINE_SCOPE DoTheThing::data
+        sta     data::ref
         rts
 
 .params data        ; alias for .proc
 ref:    .byte   0
 buf:    .res    16
 .endparams          ; alias for .endproc
-        data_ref = data::ref
+
+.endproc ; StoreTheThing
 ```
 
 ## Localization

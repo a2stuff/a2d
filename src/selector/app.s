@@ -1495,7 +1495,7 @@ check_entry_flags:
         jsr     CopyPathToInvokerPrefix
 
         jsr     LoadOverlayCopyDialog ; Trashes in-memory selector list
-        jsr     file_copier__Exec
+        jsr     file_copier::Exec
         pha
         jsr     LoadSelectorList
         jsr     CheckAndClearUpdates
@@ -1723,18 +1723,22 @@ check_path:
         read_buf := $800
         io_buf := $1C00
 
+        PREDEFINE_SCOPE ReadLinkFile::open_params
+        PREDEFINE_SCOPE ReadLinkFile::read_params
+        PREDEFINE_SCOPE ReadLinkFile::close_params
+
         MLI_CALL OPEN, open_params
         bcs     err
-        lda     open_params__ref_num
-        sta     read_params__ref_num
-        sta     close_params__ref_num
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
         MLI_CALL READ, read_params
         php
         MLI_CALL CLOSE, close_params
         plp
         bcs     err
 
-        lda     read_params__trans_count
+        lda     read_params::trans_count
         cmp     #kLinkFilePathLengthOffset
         bcc     err
 
@@ -1757,12 +1761,8 @@ check_header:
         kCheckHeaderLength = * - check_header
 
         DEFINE_OPEN_PARAMS open_params, INVOKER_PREFIX, io_buf
-        open_params__ref_num := open_params::ref_num
         DEFINE_READ_PARAMS read_params, read_buf, kLinkFileMaxSize
-        read_params__ref_num := read_params::ref_num
-        read_params__trans_count := read_params::trans_count
         DEFINE_CLOSE_PARAMS close_params
-        close_params__ref_num := close_params::ref_num
 
 .endproc ; ReadLinkFile
 
@@ -2028,7 +2028,6 @@ loop_counter:
 ;;; ============================================================
 
 .endscope ; app
-        app__entry := app::entry
 
         ENDSEG SegmentApp
         ASSERT_ADDRESS OVERLAY_ADDR

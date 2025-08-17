@@ -16,11 +16,11 @@
         ASSERT_EQUALS *, ::MGTKAuxEntry, "entry point"
         jmp     MGTKEntry
         ASSERT_EQUALS *, ::BTKAuxEntry, "entry point"
-        jmp     btk__BTKEntry
+        jmp     aux::btk::BTKEntry
         ASSERT_EQUALS *, ::LETKAuxEntry, "entry point"
-        jmp     letk__LETKEntry
+        jmp     aux::letk::LETKEntry
         ASSERT_EQUALS *, ::LBTKAuxEntry, "entry point"
-        jmp     lbtk__LBTKEntry
+        jmp     aux::lbtk::LBTKEntry
 
 ;;; ============================================================
 ;;; MouseGraphics ToolKit - fixed location for DAs to reference
@@ -47,13 +47,8 @@
         ITKEntry := icon_toolkit::ITKEntry
 
         .include "../toolkits/letk.s"
-        letk__LETKEntry := letk::LETKEntry
-
         .include "../toolkits/btk.s"
-        btk__BTKEntry := btk::BTKEntry
-
         .include "../toolkits/lbtk.s"
-        lbtk__LBTKEntry := lbtk::LBTKEntry
 
 ;;; ============================================================
 ;;; Resources

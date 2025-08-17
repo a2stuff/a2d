@@ -75,6 +75,8 @@ done:   rts
 
         rts
 .endproc ; UpdateProgress
+
+;;; Export, since qualified name is not known by this lib/.
 UpdateProgress__count := UpdateProgress::count
 
 ;;; ============================================================
