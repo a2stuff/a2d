@@ -12,11 +12,6 @@
 
         MLIEntry := MLI
 
-        ;; Reference local params, not any shadowed in the parent scope
-        PREDEFINE_SCOPE invoker::open_params
-        PREDEFINE_SCOPE invoker::read_params
-        PREDEFINE_SCOPE invoker::close_params
-
 ;;; ============================================================
 
         copy16  #PRODOS_SYS_START, jmp_addr
@@ -26,31 +21,31 @@
         bne     use_interpreter ; Yes, load it
 
         ;; Set prefix
-        MLI_CALL SET_PREFIX, set_prefix_params
+        MLI_CALL SET_PREFIX, invoker::set_prefix_params
         bcs     ret
 
         ;; Check file type
-        MLI_CALL GET_FILE_INFO, get_info_params
+        MLI_CALL GET_FILE_INFO, invoker::get_info_params
         bcs     ret
-        lda     get_info_params::file_type
+        lda     invoker::get_info_params::file_type
 
 ;;; Binary file (BIN) - load and invoke at A$=AuxType
         cmp     #FT_BINARY
     IF_EQ
 
-        lda     get_info_params::aux_type
+        lda     invoker::get_info_params::aux_type
         sta     jmp_addr
-        sta     read_params::data_buffer
-        lda     get_info_params::aux_type+1
+        sta     invoker::read_params::data_buffer
+        lda     invoker::get_info_params::aux_type+1
         sta     jmp_addr+1
-        sta     read_params::data_buffer+1
+        sta     invoker::read_params::data_buffer+1
 
         cmp     #$0C            ; If loading at page < $0C00
         bcs     :+
         lda     #$BB            ; ... use a high address buffer ($BB00)
         SKIP_NEXT_2_BYTE_INSTRUCTION
 :       lda     #$08            ; ... otherwise a low address buffer ($0800)
-        sta     open_params::io_buffer+1
+        sta     invoker::open_params::io_buffer+1
         jmp     load_target
     END_IF
 
@@ -84,26 +79,26 @@ ret:    rts
 ;;; `BASIS.SYSTEM`.
 
 use_interpreter:
-        copy16  #INVOKER_INTERPRETER, open_params::pathname
+        copy16  #INVOKER_INTERPRETER, invoker::open_params::pathname
         FALL_THROUGH_TO load_target
 
 ;;; ============================================================
 ;;; Load target at given address
 
 load_target:
-        MLI_CALL OPEN, open_params
+        MLI_CALL OPEN, invoker::open_params
         bcs     exit
-        lda     open_params::ref_num
-        sta     read_params::ref_num
-        MLI_CALL READ, read_params
+        lda     invoker::open_params::ref_num
+        sta     invoker::read_params::ref_num
+        MLI_CALL READ, invoker::read_params
         bcs     exit
-        MLI_CALL CLOSE, close_params
+        MLI_CALL CLOSE, invoker::close_params
         bcs     exit
 
         ;; If interpreter, copy filename to interpreter buffer.
         lda     INVOKER_INTERPRETER
     IF_NE
-        MLI_CALL SET_PREFIX, set_prefix_params
+        MLI_CALL SET_PREFIX, invoker::set_prefix_params
         bcs     exit
         ldy     INVOKER_FILENAME
 :       lda     INVOKER_FILENAME,y
@@ -148,7 +143,7 @@ load_target:
         jmp     PRODOS_SYS_START
 
 quit_call:
-        MLI_CALL QUIT, quit_params
+        MLI_CALL QUIT, invoker::quit_params
 
 exit:   rts
 

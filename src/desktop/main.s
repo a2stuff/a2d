@@ -11769,9 +11769,6 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 ;;;           bit 6 set if same vol move and block ops supported
 
 .proc CheckMoveOrCopy
-        ;; Reference local params, not any shadowed in the parent scope
-        PREDEFINE_SCOPE CheckMoveOrCopy::block_params
-
         src_ptr := $08
         dst_buf := path_buf4
         block_buffer := $800
@@ -11842,14 +11839,14 @@ match:  lda     flag
         jmp     @retry
 :
         lda     DEVNUM
-        sta     block_params::unit_num
-        MLI_CALL READ_BLOCK, block_params
+        sta     test_block_params::unit_num
+        MLI_CALL READ_BLOCK, test_block_params
         lda     #$80            ; bit 7 = move
         bcs     :+
         eor     #$40            ; bit 6 = relink supported
 :       rts
 
-        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, kVolumeDirKeyBlock
+        DEFINE_READ_BLOCK_PARAMS test_block_params, block_buffer, kVolumeDirKeyBlock
 .endproc ; CheckMoveOrCopy
 
 ;;; ============================================================
