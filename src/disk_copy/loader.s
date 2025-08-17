@@ -71,7 +71,7 @@ start:
         bit     LCBANK1
         bit     LCBANK1
 
-        jmp     auxlc__start
+        jmp     auxlc::start
 
 ;;; This mimics the original behavior - just hang if the load fails.
 ;;; Note that a ProDOS QUIT will likely fail since the installed
@@ -123,8 +123,8 @@ fail:   jmp     fail
 
 ;;; ============================================================
 
-        saved_ram_unitnum := main__saved_ram_unitnum
-        saved_ram_drvec   := main__saved_ram_drvec
+        saved_ram_unitnum := main::saved_ram_unitnum
+        saved_ram_drvec   := main::saved_ram_drvec
         saved_ram_buffer: .res 16
         .include "../lib/disconnect_ram.s"
 

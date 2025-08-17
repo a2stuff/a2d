@@ -369,6 +369,5 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 ;;; ============================================================
 
 .endscope ; SelectorEditOverlay
-SelectorEditOverlay__Run := SelectorEditOverlay::Run
 
         ENDSEG OverlayShortcutEdit

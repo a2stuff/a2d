@@ -17,9 +17,11 @@
         kProgressHtab = (80 - (kProgressTick * kProgressStops)) / 2
         kProgressWidth = kProgressStops * kProgressTick
 
+PREDEFINE_SCOPE UpdateProgress
+
 .proc InitProgress
         lda     #0
-        sta     UpdateProgress__count
+        sta     UpdateProgress::count
 
         bit     supports_mousetext
         bpl     done
@@ -77,7 +79,6 @@ done:   rts
 
         rts
 .endproc ; UpdateProgress
-UpdateProgress__count := UpdateProgress::count
 
 ;;; ============================================================
 ;;; Try to detect an Enhanced IIe or later (IIc, IIgs, etc),

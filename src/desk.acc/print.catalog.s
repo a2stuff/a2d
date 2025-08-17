@@ -161,7 +161,7 @@ next:
         copy8   #1, indent
 
         ;; And invoke it!
-        jsr     RecursiveCatalog__Start
+        jsr     ::RecursiveCatalog::Start
 
         ;; If we're doing multiple volumes, do the next one
         bit     vol_flag
@@ -898,7 +898,6 @@ entryLen:       .res    1       ; length of each directory entry
 entPerBlk:      .res    1       ; entries per block
 
 .endscope ; RecursiveCatalog
-        RecursiveCatalog__Start := RecursiveCatalog::Start
 
 ;;; ============================================================
 

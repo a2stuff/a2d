@@ -6,7 +6,7 @@
 
         BEGINSEG OverlayFormatErase
 
-.scope format_erase_overlay
+.scope FormatEraseOverlay
 
 ;;; Memory Map
 ;;; ...
@@ -222,7 +222,7 @@ retry:
         bcs     l12
 l9:
         lda     unit_num
-        jmp     EraseDisk__EP2
+        jmp     ::FormatEraseOverlay::EraseDisk::EP2
 
 l12:    pha
         jsr     main::SetCursorPointer
@@ -304,7 +304,6 @@ finish:
         pla
         rts
 .endproc ; EraseDisk
-EraseDisk__EP2 := EraseDisk::EP2
 
 ;;; ============================================================
 
@@ -1046,12 +1045,6 @@ non_pro:
 
 ;;; ============================================================
 
-.endscope ; format_erase_overlay
-
-format_erase_overlay__Exec := format_erase_overlay::Exec
-format_erase_overlay__IsEntryCallback := format_erase_overlay::IsEntryCallback
-format_erase_overlay__DrawEntryCallback := format_erase_overlay::DrawEntryCallback
-format_erase_overlay__SelChangeCallback := format_erase_overlay::SelChangeCallback
-format_erase_overlay__ValidSelection := format_erase_overlay::ValidSelection
+.endscope ; FormatEraseOverlay
 
         ENDSEG OverlayFormatErase

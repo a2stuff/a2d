@@ -26,7 +26,7 @@
 remove: lda     DEVLST,x
         sta     saved_ram_unitnum
         and     #UNIT_NUM_MASK
-        sta     on_line_params__unit_num
+        sta     on_line_params::unit_num
         copy16  RAMSLOT, saved_ram_drvec
         copy16  NODEV, RAMSLOT
 
@@ -49,6 +49,5 @@ shift:  lda     DEVLST+1,x
         rts
 
         DEFINE_ON_LINE_PARAMS on_line_params, SELF_MODIFIED_BYTE, saved_ram_buffer
-        on_line_params__unit_num := on_line_params::unit_num
 
 .endproc ; DisconnectRAM

@@ -391,17 +391,17 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 ;;; OPTK callbacks need to be aux-callable, so use these relays
 ShortcutPickerIsEntryCallback:
         jsr     BankInMain
-        jsr     SelectorPickOverlay__IsEntryCallback
+        jsr     SelectorPickOverlay::IsEntryCallback
         jmp     BankInAux
 
 ShortcutPickerDrawEntryCallback:
         jsr     BankInMain
-        jsr     SelectorPickOverlay__DrawEntryCallback
+        jsr     SelectorPickOverlay::DrawEntryCallback
         jmp     BankInAux
 
 ShortcutPickerSelChangeCallback:
         jsr     BankInMain
-        jsr     SelectorPickOverlay__SelChangeCallback
+        jsr     SelectorPickOverlay::SelChangeCallback
         jmp     BankInAux
 
 
@@ -434,17 +434,17 @@ ShortcutPickerSelChangeCallback:
 ;;; OPTK callbacks need to be aux-callable, so use these relays
 VolPickerIsEntryCallback:
         jsr     BankInMain
-        jsr     format_erase_overlay__IsEntryCallback
+        jsr     FormatEraseOverlay::IsEntryCallback
         jmp     BankInAux
 
 VolPickerDrawEntryCallback:
         jsr     BankInMain
-        jsr     format_erase_overlay__DrawEntryCallback
+        jsr     FormatEraseOverlay::DrawEntryCallback
         jmp     BankInAux
 
 VolPickerSelChangeCallback:
         jsr     BankInMain
-        jsr     format_erase_overlay__SelChangeCallback
+        jsr     FormatEraseOverlay::SelChangeCallback
         jmp     BankInAux
 
         ;; Label pos

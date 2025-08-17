@@ -48,7 +48,6 @@ goaway:  .byte   0
 window_id:     .byte   kDAWindowId
         .addr   grafport
 .endparams
-        getwinport_params_window_id := getwinport_params::window_id
 
 setzp_params_nopreserve:        ; performance over convenience
         .byte   MGTK::zp_overwrite
@@ -258,9 +257,6 @@ port:           .word   kCol3Left,kRow5Top,kCol3Right,kRow5Bot
         .refto pos
         .refto port
 .endparams
-btn_dec_key   := btn_dec::key
-btn_dec_label := btn_dec::label+1
-
 
 .params btn_add
 function:       .byte   Function::op_add

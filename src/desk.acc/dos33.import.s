@@ -608,7 +608,7 @@ done:   jmp     InputLoop
 .proc Import
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         copy8   listbox_rec::selected_index, control_block+ControlBlock::selected_index
-        JSR_TO_MAIN main__DoImport
+        JSR_TO_MAIN ::main::DoImport
         pha                     ; A = error code (0 = success)
         jsr     ClearProgressMeter
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
@@ -1525,6 +1525,5 @@ RWTSWrite := RWTSImpl::Write
 
 .endscope ; main
         DA_END_MAIN_SEGMENT
-main__DoImport := main::DoImport
 
 ;;; ============================================================

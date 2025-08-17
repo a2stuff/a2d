@@ -192,7 +192,7 @@ ret:
         MGTK_CALL MGTK::SetPattern, solid_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect
-        beq     HiliteImpl__skip_port ; always
+        beq     btk::HiliteImpl::skip_port ; always
 .endproc ; UpdateImpl
 
 ;;; ============================================================
@@ -273,7 +273,6 @@ skip_port:
 
         rts
 .endproc ; HiliteImpl
-HiliteImpl__skip_port := HiliteImpl::skip_port
 
 ;;; ============================================================
 

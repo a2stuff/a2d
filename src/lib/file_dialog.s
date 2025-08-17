@@ -1572,6 +1572,7 @@ path_buf := file_dialog_impl::path_buf
 STATE_START := file_dialog_impl::state_start
 STATE_END   := file_dialog_impl::state_end
 
+;;; Export, since qualified name is not known by this lib/.
 ::file_dialog_impl__DrawListEntryProc := file_dialog_impl::DrawListEntryProc
 ::file_dialog_impl__OnListSelectionChange := file_dialog_impl::OnListSelectionChange
 

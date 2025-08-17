@@ -38,7 +38,7 @@
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params
 
-        prefix_buffer := QuitRoutine + ::QuitRoutine__prefix_buffer_offset
+        prefix_buffer := ::QuitRoutine + ::QuitRoutine::prefix_buffer_offset
         DEFINE_GET_PREFIX_PARAMS prefix_params, prefix_buffer
 .endproc ; InstallAsQuit
 
@@ -123,9 +123,9 @@ retry:
         bcs     prompt_for_system_disk
         MLI_CALL OPEN, open_params
         bcs     _ErrorHandler
-        lda     open_params__ref_num
-        sta     set_mark_params__ref_num
-        sta     read_params__ref_num
+        lda     open_params::ref_num
+        sta     set_mark_params::ref_num
+        sta     read_params::ref_num
         MLI_CALL SET_MARK, set_mark_params
         bcs     _ErrorHandler
         MLI_CALL READ, read_params
@@ -187,11 +187,8 @@ str_loading:
         .assert io_buf + $400 <= kSegmentLoaderAddress, error, "memory overlap"
 
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
-        open_params__ref_num := open_params::ref_num
         DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentLoaderOffset
-        set_mark_params__ref_num := set_mark_params::ref_num
         DEFINE_READWRITE_PARAMS read_params, kSegmentLoaderAddress, kSegmentLoaderLength
-        read_params__ref_num := read_params::ref_num
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_SET_PREFIX_PARAMS prefix_params, prefix_buffer
 
@@ -208,7 +205,6 @@ prefix_buffer_offset := prefix_buffer - self
 
 .endproc ; QuitRoutine
 sizeof_QuitRoutine = .sizeof(QuitRoutine)
-QuitRoutine__prefix_buffer_offset := QuitRoutine::prefix_buffer_offset
 
 ;;; ============================================================
 

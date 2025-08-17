@@ -62,7 +62,7 @@ DoAdd:  ldx     #kRunListPrimary
         ;; A = (obsolete, was dialog type)
         ;; Y = is_add_flag | copy_when
         ;; X = which_run_list
-        jsr     SelectorEditOverlay__Run
+        jsr     ::SelectorEditOverlay::Run
         pha
         txa
         pha
@@ -235,7 +235,7 @@ dialog_loop:
         ;; A = (obsolete, was dialog type)
         ;; Y = is_add_flag | copy_when
         ;; X = which_run_list
-        jsr     SelectorEditOverlay__Run
+        jsr     ::SelectorEditOverlay::Run
         pha
         txa
         pha
@@ -1134,11 +1134,5 @@ close:  MLI_CALL CLOSE, close_params
 ;;; ============================================================
 
 .endscope ; SelectorPickOverlay
-
-selector_picker__Exec    := SelectorPickOverlay::Exec
-
-SelectorPickOverlay__IsEntryCallback   := SelectorPickOverlay::IsEntryCallback
-SelectorPickOverlay__DrawEntryCallback := SelectorPickOverlay::DrawEntryCallback
-SelectorPickOverlay__SelChangeCallback := SelectorPickOverlay::SelChangeCallback
 
         ENDSEG OverlayShortcutPick

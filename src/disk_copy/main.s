@@ -161,7 +161,7 @@ disk_ii:
 .proc EjectDiskImpl
 
         DEFINE_SP_CONTROL_PARAMS control_params, 0, list, $04 ; For Apple/UniDisk 3.3: Eject disk
-        control_params_unit_number := control_params::unit_number
+
 list:   .word   0               ; 0 items in list
 
 start:
@@ -169,7 +169,7 @@ start:
         bcs     done
 
         stax    dispatch
-        sty     control_params_unit_number
+        sty     control_params::unit_number
 
         ;; Do SmartPort call
         dispatch := *+1
@@ -1100,37 +1100,6 @@ done:   rts
 
         end_of_main := *
 .endscope ; main
-
-main__FormatDevice              := main::FormatDevice
-main__IdentifySourceNonProDOSDiskType := main::IdentifySourceNonProDOSDiskType
-main__ReadVolumeBitmap          := main::ReadVolumeBitmap
-main__IsDriveEjectable          := main::IsDriveEjectable
-main__CopyBlocks                := main::CopyBlocks
-main__FreeVolBitmapPages        := main::FreeVolBitmapPages
-main__CallOnLine2               := main::CallOnLine2
-main__CallOnLine                := main::CallOnLine
-main__CountActiveBlocksInVolumeBitmap := main::CountActiveBlocksInVolumeBitmap
-main__PrepBlockPtrs             := main::PrepBlockPtrs
-main__ReadBlock                 := main::ReadBlock
-main__ReadBlockWithRetry        := main::ReadBlockWithRetry
-main__WriteBlockWithRetry       := main::WriteBlockWithRetry
-main__default_block_buffer      := main::default_block_buffer
-main__block_params_block_num    := main::block_params::block_num
-main__block_params_data_buffer  := main::block_params::data_buffer
-main__block_params_unit_num     := main::block_params::unit_num
-main__EjectDisk                 := main::EjectDisk
-main__NoOp                      := main::NoOp
-main__on_line_buffer            := main::on_line_buffer
-main__on_line_params2_unit_num  := main::on_line_params2::unit_num
-main__on_line_params_unit_num   := main::on_line_params::unit_num
-main__Quit                      := main::Quit
-main__DeviceDriverAddress       := main::DeviceDriverAddress
-main__GetDeviceBlocksUsingDriver := main::GetDeviceBlocksUsingDriver
-main__on_line_buffer2           := main::on_line_buffer2
-main__ResetIIgsRGB              := main::ResetIIgsRGB
-main__saved_ram_unitnum         := main::saved_ram_unitnum
-main__saved_ram_drvec           := main::saved_ram_drvec
-main__Bell                      := main::Bell
 
 ReadSetting := main::ReadSetting
 

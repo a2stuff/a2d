@@ -302,7 +302,7 @@ buf_string := *
 
 ;;; ============================================================
 
-        jmp     cdremote__MAIN
+        jmp     ::cdremote::MAIN
 
 ;;; ============================================================
 
@@ -520,7 +520,7 @@ set_key:
         JUMP_TABLE_MGTK_CALL MGTK::FrameRect, aux::.ident(.sprintf("%s_button_rect", .string(name)))
         JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, aux::.ident(.sprintf("%s_bitmap_params", .string(name)))
   .if .paramcount > 1
-        bit     .ident(.sprintf("cdremote__%s", .string(flag)))
+        bit     ::cdremote::flag
     IF_NS
         param_call InvertButton, aux::.ident(.sprintf("%s_button_rect", .string(name)))
     END_IF
@@ -2446,14 +2446,6 @@ PlayedListAddr:
         .addr   PlayedList
 
 .endscope ; cdremote
-
-;;; Exports
-cdremote__MAIN  := cdremote::MAIN
-cdremote__StopButtonState       := cdremote::StopButtonState
-cdremote__PlayButtonState       := cdremote::PlayButtonState
-cdremote__PauseButtonState      := cdremote::PauseButtonState
-cdremote__LoopButtonState       := cdremote::LoopButtonState
-cdremote__RandomButtonState     := cdremote::RandomButtonState
 
 ;;; ============================================================
 

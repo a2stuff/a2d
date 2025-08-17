@@ -450,16 +450,16 @@ not_found:
         MLI_CALL GET_FILE_INFO, get_file_info_params
         jcs     end
 
-        lda     get_file_info_type
+        lda     get_file_info_params::file_type
         cmp     #FT_DIRECTORY
         beq     open_dir
         jmp     end
 
 open_dir:
         MLI_CALL OPEN, open_params
-        lda     open_ref_num
-        sta     read_ref_num
-        sta     close_ref_num
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
         MLI_CALL READ, read_params
 
         lda     #0
@@ -592,17 +592,10 @@ close_dir:
         jmp     end
 
         DEFINE_OPEN_PARAMS open_params, str_desk_acc, IO_BUFFER
-        open_ref_num := open_params::ref_num
-
         .assert BLOCK_SIZE <= kDataBufferSize, error, "Buffer size error"
         DEFINE_READWRITE_PARAMS read_params, read_dir_buffer, BLOCK_SIZE
-        read_ref_num := read_params::ref_num
-
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, str_desk_acc
-        get_file_info_type := get_file_info_params::file_type
-
         DEFINE_CLOSE_PARAMS close_params
-        close_ref_num := close_params::ref_num
 
 str_desk_acc:
         PASCAL_STRING kFilenameDADir

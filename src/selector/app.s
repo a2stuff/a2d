@@ -683,7 +683,6 @@ menu_addr_table:
 
         SelChangeCallback := UpdateOKButton
         DEFINE_OPTION_PICKER op_record, winfo::kDialogId, kEntryPickerLeft, kEntryPickerTop, kEntryPickerRows, kEntryPickerCols, kEntryPickerItemWidth, kEntryPickerItemHeight, kEntryPickerTextHOffset, kEntryPickerTextVOffset, IsEntryCallback, DrawEntryCallback, SelChangeCallback
-        op_record__selected_index := op_record::selected_index
 
         DEFINE_OPTION_PICKER_PARAMS op_params, op_record
 
@@ -1317,7 +1316,7 @@ hi:     .byte   0
         lda     (ptr),y
         clc
         adc     #3
-        sta     text_params__length
+        sta     text_params::length
 
         pla
     IF_A_GE     #8              ; first 8?
@@ -1343,7 +1342,6 @@ common: MGTK_CALL MGTK::DrawText, text_params
 data:   .addr   entry_string_buf+1
 length: .byte   SELF_MODIFIED_BYTE
 .endparams
-        text_params__length := text_params::length
 .endproc ; DrawEntryCallback
 
 ;;; ============================================================
@@ -1424,7 +1422,7 @@ start:
         jsr     CopyPathToInvokerPrefix
 
         jsr     LoadOverlayCopyDialog ; Trashes in-memory selector list
-        jsr     file_copier__Exec
+        jsr     ::file_copier::Exec
         pha
         jsr     LoadSelectorList
         jsr     CheckAndClearUpdates
@@ -1650,18 +1648,23 @@ check_path:
         read_buf := $800
         io_buf := $1C00
 
+        ;; Reference local params, not the ones in parent scope
+        PREDEFINE_SCOPE ReadLinkFile::open_params
+        PREDEFINE_SCOPE ReadLinkFile::read_params
+        PREDEFINE_SCOPE ReadLinkFile::close_params
+
         MLI_CALL OPEN, open_params
         bcs     err
-        lda     open_params__ref_num
-        sta     read_params__ref_num
-        sta     close_params__ref_num
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
         MLI_CALL READ, read_params
         php
         MLI_CALL CLOSE, close_params
         plp
         bcs     err
 
-        lda     read_params__trans_count
+        lda     read_params::trans_count
         cmp     #kLinkFilePathLengthOffset
         bcc     err
 
@@ -1685,12 +1688,8 @@ check_header:
         kCheckHeaderLength = * - check_header
 
         DEFINE_OPEN_PARAMS open_params, INVOKER_PREFIX, io_buf
-        open_params__ref_num := open_params::ref_num
         DEFINE_READWRITE_PARAMS read_params, read_buf, kLinkFileMaxSize
-        read_params__ref_num := read_params::ref_num
-        read_params__trans_count := read_params::trans_count
         DEFINE_CLOSE_PARAMS close_params
-        close_params__ref_num := close_params::ref_num
 
 .endproc ; ReadLinkFile
 
@@ -1962,7 +1961,6 @@ loop_counter:
 ;;; ============================================================
 
 .endscope ; app
-        app__entry := app::entry
 
         ENDSEG SegmentApp
         ASSERT_ADDRESS OVERLAY_ADDR

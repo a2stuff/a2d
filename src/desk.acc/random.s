@@ -219,9 +219,9 @@ kEntriesPerBlock = $0D
         JUMP_TABLE_MLI_CALL OPEN, open_params
         jcs     exit
 
-        lda     open_params__ref_num
-        sta     read_params__ref_num
-        sta     close_params__ref_num
+        lda     open_params::ref_num
+        sta     read_params::ref_num
+        sta     close_params::ref_num
 
 next_block:
         JUMP_TABLE_MLI_CALL READ, read_params
@@ -266,9 +266,6 @@ exit:
         DEFINE_OPEN_PARAMS open_params, dir_path, io_buf
         DEFINE_READWRITE_PARAMS read_params, block_buf, BLOCK_SIZE
         DEFINE_CLOSE_PARAMS close_params
-        open_params__ref_num := open_params::ref_num
-        read_params__ref_num := read_params::ref_num
-        close_params__ref_num := close_params::ref_num
 
 entry_in_block:
         .byte   0

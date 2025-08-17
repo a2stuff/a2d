@@ -110,7 +110,7 @@ start:
 
         ;; --------------------------------------------------
         ;; Invoke the Selector application
-        jmp     app__entry
+        jmp     ::app::entry
 
 crash:  brk
 
