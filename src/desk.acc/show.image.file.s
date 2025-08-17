@@ -90,15 +90,15 @@ reserved:       .byte   0
 
         INVOKE_PATH := $220
 
-        DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
+        DEFINE_OPEN_PARAMS open_image_params, INVOKE_PATH, DA_IO_BUFFER
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, INVOKE_PATH
         DEFINE_GET_EOF_PARAMS get_eof_params
 
-        DEFINE_READWRITE_PARAMS read_params, hires, kHiresSize
+        DEFINE_READWRITE_PARAMS read_image_params, hires, kHiresSize
         DEFINE_READWRITE_PARAMS read_minipix_params, minipix_src_buf, kMinipixSrcSize
         DEFINE_READWRITE_PARAMS read_lores_params, lores_src_buf, kLoresBufferSize
 
-        DEFINE_CLOSE_PARAMS close_params
+        DEFINE_CLOSE_PARAMS close_image_params
 
 ;;; ============================================================
 
@@ -122,13 +122,13 @@ event_params:   .tag MGTK::Event
         ;; In case we're re-entered c/o switching to another file
         jsr     MaybeCallExitHook
 
-        JUMP_TABLE_MLI_CALL OPEN, open_params
-        lda     open_params::ref_num
+        JUMP_TABLE_MLI_CALL OPEN, open_image_params
+        lda     open_image_params::ref_num
         sta     get_eof_params::ref_num
-        sta     read_params::ref_num
+        sta     read_image_params::ref_num
         sta     read_minipix_params::ref_num
         sta     read_lores_params::ref_num
-        sta     close_params::ref_num
+        sta     close_image_params::ref_num
 
         JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         jsr     ClearScreen
@@ -136,7 +136,7 @@ event_params:   .tag MGTK::Event
         jsr     ShowFile        ; C=1 on failure
         php
         JUMP_TABLE_MGTK_CALL MGTK::ShowCursor
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        JUMP_TABLE_MLI_CALL CLOSE, close_image_params
         plp
         jcs     Exit
 
@@ -375,7 +375,7 @@ kSigDHR         = %00000010
 
         ;; At least one page...
         sta     PAGE2OFF
-        JUMP_TABLE_MLI_CALL READ, read_params
+        JUMP_TABLE_MLI_CALL READ, read_image_params
 
         copy8   SIGNATURE, signature
 
@@ -389,7 +389,7 @@ kSigDHR         = %00000010
 
         ;; If DHR, copy Main>Aux and load Main page.
 dhr:    jsr     CopyHiresToAux
-        JUMP_TABLE_MLI_CALL READ, read_params
+        JUMP_TABLE_MLI_CALL READ, read_image_params
 
 finish:
         lda     signature
@@ -412,13 +412,13 @@ signature:
         sta     PAGE2OFF
 
         SET_BIT7_FLAG restore_buffer_overlay_flag
-        copy16  #OVERLAY_BUFFER, read_params::data_buffer
-        JUMP_TABLE_MLI_CALL READ, read_params
-        copy16  #$2000, read_params::data_buffer
+        copy16  #OVERLAY_BUFFER, read_image_params::data_buffer
+        JUMP_TABLE_MLI_CALL READ, read_image_params
+        copy16  #$2000, read_image_params::data_buffer
 
         ;; NOTE: `Init` also calls `CLOSE`, but it's harmless to call
         ;; it twice.
-        JUMP_TABLE_MLI_CALL CLOSE, close_params
+        JUMP_TABLE_MLI_CALL CLOSE, close_image_params
 
         copy16  #OVERLAY_BUFFER, z:::LZ4FH::in_src
         copy16  #$2000, z:::LZ4FH::in_dst
@@ -446,7 +446,7 @@ fail:   sec                     ; failure
     END_IF
 
         sta     PAGE2OFF
-        JUMP_TABLE_MLI_CALL READ, read_params
+        JUMP_TABLE_MLI_CALL READ, read_image_params
 
         jsr     HRToDHR
 
@@ -469,7 +469,7 @@ fail:   sec                     ; failure
 
         ;; AUX memory half
         sta     PAGE2OFF
-        JUMP_TABLE_MLI_CALL READ, read_params
+        JUMP_TABLE_MLI_CALL READ, read_image_params
 
         ;; NOTE: Why not just load into Aux directly by setting
         ;; PAGE2ON? This works unless loading from a RamWorks-based
@@ -480,7 +480,7 @@ fail:   sec                     ; failure
         jsr     CopyHiresToAux
 
         ;; MAIN memory half
-        JUMP_TABLE_MLI_CALL READ, read_params
+        JUMP_TABLE_MLI_CALL READ, read_image_params
 
         clc                     ; success
         rts
@@ -901,7 +901,7 @@ color_mode_flag:   .byte   0    ; bit7=0 = B&W, bit7=1 = color
 start:
         stax    write_proc
 
-        copy8   open_params::ref_num, read_buf_params::ref_num
+        copy8   open_image_params::ref_num, read_buf_params::ref_num
 
         ;; Read next op/count byte
 loop:   copy8   #1, read_buf_params::request_count
@@ -1252,7 +1252,7 @@ packed_flag:                    ; bit7
 
     DO
         ;; Load data
-        JUMP_TABLE_MLI_CALL READ, read_params
+        JUMP_TABLE_MLI_CALL READ, read_image_params
 
         ;; Copy into SHR screen
         .pushcpu
@@ -1471,11 +1471,6 @@ entry:  .tag    FileEntry
 ;;; Note: Callbacks must not modify $08, but can use $06
 
 .proc EnumerateDirectory
-
-        ;; Reference local params, not the ones in parent scope
-        PREDEFINE_SCOPE EnumerateDirectory::open_params
-        PREDEFINE_SCOPE EnumerateDirectory::read_params
-        PREDEFINE_SCOPE EnumerateDirectory::close_params
 
 ;;; Memory Map
 io_buf    := DA_IO_BUFFER              ; $1C00-$1FFF

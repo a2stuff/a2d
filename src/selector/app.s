@@ -256,7 +256,7 @@ str_selector_list:
 str_desktop:
         PASCAL_STRING kPathnameDeskTop
 
-        DEFINE_CLOSE_PARAMS close_params
+        DEFINE_CLOSE_PARAMS close_desktop_params
 
         DEFINE_OPEN_PARAMS open_selector_params, str_selector, $800
 
@@ -267,7 +267,7 @@ str_selector:
         DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, kOverlayCopyDialogOffset
         DEFINE_READWRITE_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlayFileDialogLength
         DEFINE_READWRITE_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogLength
-        DEFINE_CLOSE_PARAMS close_params2
+        DEFINE_CLOSE_PARAMS close_overlay_params
 
 str_desktop_2:
         PASCAL_STRING kPathnameDeskTop
@@ -762,7 +762,7 @@ retry:
         sta     read_overlay1_params::ref_num
         MLI_CALL SET_MARK, set_mark_overlay1_params
         MLI_CALL READ, read_overlay1_params
-        MLI_CALL CLOSE, close_params2
+        MLI_CALL CLOSE, close_overlay_params
 
         ;; Invoke file dialog
         jsr     file_dialog_init
@@ -883,7 +883,7 @@ noop:   rts
         lda     open_desktop_params::ref_num
         sta     read_desktop_params::ref_num
         MLI_CALL READ, read_desktop_params
-        MLI_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_desktop_params
         jmp     desktop_load_addr
 .endproc ; RunDesktop
 
@@ -1040,7 +1040,7 @@ entries_flag_table:
         lda     open_selector_list_params::ref_num
         sta     read_selector_list_params::ref_num
         MLI_CALL READ, read_selector_list_params
-        MLI_CALL CLOSE, close_params
+        MLI_CALL CLOSE, close_desktop_params
 
 cache:  copy8   selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
         copy8   selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
@@ -1057,7 +1057,7 @@ start:  MLI_CALL OPEN, open_selector_params
         sta     read_overlay2_params::ref_num
         MLI_CALL SET_MARK, set_mark_overlay2_params
         MLI_CALL READ, read_overlay2_params
-        MLI_CALL CLOSE, close_params2
+        MLI_CALL CLOSE, close_overlay_params
         rts
 
 error:  lda     #AlertID::insert_system_disk
@@ -1647,11 +1647,6 @@ check_path:
 .proc ReadLinkFile
         read_buf := $800
         io_buf := $1C00
-
-        ;; Reference local params, not the ones in parent scope
-        PREDEFINE_SCOPE ReadLinkFile::open_params
-        PREDEFINE_SCOPE ReadLinkFile::read_params
-        PREDEFINE_SCOPE ReadLinkFile::close_params
 
         MLI_CALL OPEN, open_params
         bcs     err
