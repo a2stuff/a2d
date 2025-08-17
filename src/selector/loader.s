@@ -108,7 +108,7 @@ L2049:  lda     open_params::ref_num
 
         ;; --------------------------------------------------
         ;; Invoke the Selector application
-        jmp     app::entry
+        jmp     ::app::entry
 
 crash:  brk
 

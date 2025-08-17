@@ -1495,7 +1495,7 @@ check_entry_flags:
         jsr     CopyPathToInvokerPrefix
 
         jsr     LoadOverlayCopyDialog ; Trashes in-memory selector list
-        jsr     file_copier::Exec
+        jsr     ::file_copier::Exec
         pha
         jsr     LoadSelectorList
         jsr     CheckAndClearUpdates
@@ -1723,6 +1723,7 @@ check_path:
         read_buf := $800
         io_buf := $1C00
 
+        ;; Reference local params, not the ones in parent scope
         PREDEFINE_SCOPE ReadLinkFile::open_params
         PREDEFINE_SCOPE ReadLinkFile::read_params
         PREDEFINE_SCOPE ReadLinkFile::close_params

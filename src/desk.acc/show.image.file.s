@@ -1320,6 +1320,7 @@ entry:  .tag    FileEntry
 
 .proc EnumerateDirectory
 
+        ;; Reference local params, not the ones in parent scope
         PREDEFINE_SCOPE EnumerateDirectory::open_params
         PREDEFINE_SCOPE EnumerateDirectory::read_params
         PREDEFINE_SCOPE EnumerateDirectory::close_params

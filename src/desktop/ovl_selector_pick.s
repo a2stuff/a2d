@@ -56,7 +56,7 @@ L9052:  lda     #$00
         ;; A = (obsolete, was dialog type)
         ;; Y = is_add_flag | copy_when
         ;; X = which_run_list
-        jsr     SelectorEditOverlay::Run
+        jsr     ::SelectorEditOverlay::Run
         pha
         txa
         pha
@@ -218,7 +218,7 @@ dialog_loop:
         ;; A = (obsolete, was dialog type)
         ;; Y = is_add_flag | copy_when
         ;; X = which_run_list
-        jsr     SelectorEditOverlay::Run
+        jsr     ::SelectorEditOverlay::Run
         pha
         txa
         pha

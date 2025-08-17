@@ -68,9 +68,6 @@ basic_system_not_found  = $FF
         ;; Ensure loader.starts at correct offset from start of file.
         .res    kSegmentLoaderOffset - (.sizeof(InstallAsQuit) + .sizeof(QuitRoutine))
 
-        PREDEFINE_SCOPE ::app
-        PREDEFINE_SCOPE ::file_copier
-
         ;; Segments
         .include "loader.s"
         .include "../lib/invoker.s"

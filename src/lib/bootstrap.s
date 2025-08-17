@@ -9,8 +9,6 @@
 ;;; Install QuitRoutine to the ProDOS QUIT routine
 ;;; (Main, LCBANK2) and invoke it.
 
-        PREDEFINE_SCOPE ::QuitRoutine
-
 .proc InstallAsQuit
         MLIEntry := MLI
 
@@ -40,7 +38,7 @@
         MLI_CALL QUIT, quit_params
         DEFINE_QUIT_PARAMS quit_params
 
-        prefix_buffer := QuitRoutine + ::QuitRoutine::prefix_buffer_offset
+        prefix_buffer := ::QuitRoutine + ::QuitRoutine::prefix_buffer_offset
         DEFINE_GET_PREFIX_PARAMS prefix_params, prefix_buffer
 .endproc ; InstallAsQuit
 
@@ -52,11 +50,6 @@
         .org ::SELECTOR_ORG
 
         MLIEntry := MLI
-
-        PREDEFINE_SCOPE QuitRoutine::open_params
-        PREDEFINE_SCOPE QuitRoutine::set_mark_params
-        PREDEFINE_SCOPE QuitRoutine::read_params
-        PREDEFINE_SCOPE QuitRoutine::close_params
 
 self:
         ;; ProDOS 8 Technical Reference Manual 5.1.5.2

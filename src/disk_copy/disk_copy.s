@@ -41,9 +41,6 @@ DEFAULT_FONT    := $8800
 
         PREDEFINE_SCOPE ::auxlc
         PREDEFINE_SCOPE ::main
-        PREDEFINE_SCOPE ::main::on_line_params
-        PREDEFINE_SCOPE ::main::on_line_params2
-        PREDEFINE_SCOPE ::main::block_params
 
         .include "loader.s"
         .include "auxlc.s"

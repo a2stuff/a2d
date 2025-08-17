@@ -42,8 +42,6 @@
 ;;;
 ;;; ============================================================
 
-        PREDEFINE_SCOPE ::cdremote
-
         DA_HEADER
         DA_START_AUX_SEGMENT
 
@@ -304,7 +302,7 @@ buf_string := *
 
 ;;; ============================================================
 
-        jmp     cdremote::MAIN
+        jmp     ::cdremote::MAIN
 
 ;;; ============================================================
 
@@ -524,7 +522,7 @@ set_key:
         JUMP_TABLE_MGTK_CALL MGTK::FrameRect, aux::.ident(.sprintf("%s_button_rect", .string(name)))
         JUMP_TABLE_MGTK_CALL MGTK::PaintBitsHC, aux::.ident(.sprintf("%s_bitmap_params", .string(name)))
   .if .paramcount > 1
-        bit     cdremote::flag
+        bit     ::cdremote::flag
     IF_NS
         param_call InvertButton, aux::.ident(.sprintf("%s_button_rect", .string(name)))
     END_IF

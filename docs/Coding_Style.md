@@ -336,20 +336,44 @@ Currently, only MGTK constants are wrapped in a `.scope` to provide a namespace.
         sizeof_relocate = .sizeof(relocate)
 ```
 
-* ca65 does not allow the members of a named scope to be referenced before the scope is defined. (https://github.com/cc65/cc65/issues/479) To work around this, pre-define the scope using the `PREDEFINE_SCOPE` macro.
+* ca65 allows the members of a named scope to be referenced before the scope is defined, but infers the scope to be in the local scope. If this is not the case, an explicit scope reference can be used (e.g. `jsr ::main::DoTheThing`) or the scope can be predefined using the `PREDEFINE_SCOPE` macro.
 
 ```asm
-.proc StoreTheThing
-        PREDEFINE_SCOPE DoTheThing::data
-        sta     data::ref
-        rts
+.scope aux
+        PREDEFINE_SCOPE ::main
+        ...
+        jsr     main::DoTheThing
+        ...
+.endscope ; aux
 
-.params data        ; alias for .proc
-ref:    .byte   0
-buf:    .res    16
-.endparams          ; alias for .endproc
+.scope main
+        ...
+.proc DoTheThing
+        ...
+.endproc ; DoTheThing
+.endscope ; main
+```
 
-.endproc ; StoreTheThing
+This is especially critical if "name shadowing" is used:
+
+```asm
+;; in parent scope
+.params foo_params
+bar:    .byte   123
+.endparams
+
+.proc DoTheThing
+
+        ;; Reference local params, not the ones in parent scope
+        PREDEFINE_SCOPE DoTheThing::foo_params
+        lda     foo_params::bar
+
+;; in local scope
+.params foo_params
+bar:    .byte   456
+.endparams
+
+.endproc ; DoTheThing
 ```
 
 ## Localization

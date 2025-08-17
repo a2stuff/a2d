@@ -1721,10 +1721,6 @@ LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
 .proc ReadLinkFile
         read_buf := $800
 
-        PREDEFINE_SCOPE ReadLinkFile::open_params
-        PREDEFINE_SCOPE ReadLinkFile::read_params
-        PREDEFINE_SCOPE ReadLinkFile::close_params
-
         MLI_CALL OPEN, open_params
         bcs     err
         lda     open_params::ref_num
@@ -2291,12 +2287,6 @@ CmdDeskAcc      := CmdDeskAccImpl::start
 ;;;        Y = icon id to animate ($FF for none)
 
 .proc InvokeDeskAccWithIcon
-        PREDEFINE_SCOPE InvokeDeskAccWithIcon::DAHeader
-        PREDEFINE_SCOPE InvokeDeskAccWithIcon::open_params
-        PREDEFINE_SCOPE InvokeDeskAccWithIcon::read_header_params
-        PREDEFINE_SCOPE InvokeDeskAccWithIcon::read_params
-        PREDEFINE_SCOPE InvokeDeskAccWithIcon::close_params
-
         stax    open_params::pathname
 
         tya
@@ -2453,7 +2443,7 @@ main_length:    .word   0
         jsr     LoadDynamicRoutine
         RTS_IF_NS
 
-        jsr     FileCopyOverlay::Run
+        jsr     ::FileCopyOverlay::Run
         pha                     ; A = dialog result
         lda     #kDynamicRoutineRestoreFD
         jsr     RestoreDynamicRoutine
@@ -3591,7 +3581,7 @@ exec:   lda     #kDynamicRoutineFormatErase
         ldx     #SELF_MODIFIED_BYTE
         action := *+1
         lda     #SELF_MODIFIED_BYTE
-        jsr     FormatEraseOverlay::Exec
+        jsr     ::FormatEraseOverlay::Exec
         stx     drive_to_refresh ; X = unit number
         pha                      ; A = result
         jsr     ClearUpdates     ; following dialog close
@@ -11779,6 +11769,7 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 ;;;           bit 6 set if same vol move and block ops supported
 
 .proc CheckMoveOrCopy
+        ;; Reference local params, not the ones in parent scope
         PREDEFINE_SCOPE CheckMoveOrCopy::block_params
 
         src_ptr := $08
@@ -14147,10 +14138,6 @@ SaveWindows := save_restore_windows::Save
 ;;;         If successful, $06 points at `FileEntry` in block buffer
 .proc GetFileEntryBlock
 
-        PREDEFINE_SCOPE GetFileEntryBlock::open_params
-        PREDEFINE_SCOPE GetFileEntryBlock::read_params
-        PREDEFINE_SCOPE GetFileEntryBlock::close_params
-
 ;;; Memory Map
 io_buf    := $1000              ; $1000-$13FF
 block_buf := $1400              ; $1400-$15FF
@@ -14524,7 +14511,7 @@ calc_y:
         bit     has_device_picker_flag
     IF_NS
         lda     #0
-        jsr     FormatEraseOverlay::ValidSelection ; preserves A
+        jsr     ::FormatEraseOverlay::ValidSelection ; preserves A
         bpl     set_state
         lda     #$80
         bne     set_state       ; always

@@ -8,8 +8,6 @@
 
 .scope FormatEraseOverlay
 
-        PREDEFINE_SCOPE FormatEraseOverlay::EraseDisk
-
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
         LETKEntry := LETKRelayImpl
@@ -218,7 +216,7 @@ l8:
         bcs     l12
 l9:
         lda     unit_num
-        jmp     EraseDisk::EP2
+        jmp     ::FormatEraseOverlay::EraseDisk::EP2
 
 l12:    pha
         jsr     main::SetCursorPointer
