@@ -12,7 +12,7 @@
 
         MLIEntry := MLI
 
-        ;; Reference local params, not the ones in parent scope
+        ;; Reference local params, not any shadowed in the parent scope
         PREDEFINE_SCOPE invoker::open_params
         PREDEFINE_SCOPE invoker::read_params
         PREDEFINE_SCOPE invoker::close_params

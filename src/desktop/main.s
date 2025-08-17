@@ -11769,7 +11769,7 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 ;;;           bit 6 set if same vol move and block ops supported
 
 .proc CheckMoveOrCopy
-        ;; Reference local params, not the ones in parent scope
+        ;; Reference local params, not any shadowed in the parent scope
         PREDEFINE_SCOPE CheckMoveOrCopy::block_params
 
         src_ptr := $08

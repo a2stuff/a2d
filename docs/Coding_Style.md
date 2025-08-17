@@ -364,7 +364,7 @@ bar:    .byte   123
 
 .proc DoTheThing
 
-        ;; Reference local params, not the ones in parent scope
+        ;; Reference local params, not any shadowed in the parent scope
         PREDEFINE_SCOPE DoTheThing::foo_params
         lda     foo_params::bar
 
