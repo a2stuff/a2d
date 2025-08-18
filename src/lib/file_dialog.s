@@ -225,7 +225,7 @@ ret:    rts
         lda     file_list_index,x
     IF_NC
         ;; File - accept it.
-        BTK_CALL BTK::Flash, file_dialog_res::ok_button
+        BTK_CALL BTK::Flash, file_dialog_res::fdok_button
         jmp     HandleOK
     END_IF
         ;; Folder - open it.
@@ -271,9 +271,9 @@ not_list:
         ;; --------------------------------------------------
         ;; OK button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::ok_button::rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::fdok_button::rect
     IF_NOT_ZERO
-        BTK_CALL BTK::Track, file_dialog_res::ok_button
+        BTK_CALL BTK::Track, file_dialog_res::fdok_button
         bmi     :+
         jsr     HandleOK
 :       rts
@@ -282,9 +282,9 @@ not_list:
         ;; --------------------------------------------------
         ;; Cancel button
 
-        MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button::rect
+        MGTK_CALL MGTK::InRect, file_dialog_res::fdcancel_button::rect
     IF_NOT_ZERO
-        BTK_CALL BTK::Track, file_dialog_res::cancel_button
+        BTK_CALL BTK::Track, file_dialog_res::fdcancel_button
         bmi     :+
         jsr     HandleCancel
 :       rts
@@ -592,13 +592,13 @@ ret:    rts
         jsr     _IsOKAllowed
         RTS_IF_CS
 
-        BTK_CALL BTK::Flash, file_dialog_res::ok_button
+        BTK_CALL BTK::Flash, file_dialog_res::fdok_button
         jmp     HandleOK
       END_IF
 
         cmp     #CHAR_ESCAPE
       IF_EQ
-        BTK_CALL BTK::Flash, file_dialog_res::cancel_button
+        BTK_CALL BTK::Flash, file_dialog_res::fdcancel_button
         jmp     HandleCancel
       END_IF
 
@@ -774,11 +774,11 @@ found:  return  index
         lda     #0
         ror                     ; C into high bit
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-        cmp     file_dialog_res::ok_button::state
+        cmp     file_dialog_res::fdok_button::state
         beq     :+              ; no change
 
-        sta     file_dialog_res::ok_button::state
-        BTK_CALL BTK::Hilite, file_dialog_res::ok_button
+        sta     file_dialog_res::fdok_button::state
+        BTK_CALL BTK::Hilite, file_dialog_res::fdok_button
 :
         ;; --------------------------------------------------
         ;; Open
@@ -875,10 +875,10 @@ found:  return  index
         jsr     _IsOKAllowed
         ror
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-        sta     file_dialog_res::ok_button::state
-        BTK_CALL BTK::Draw, file_dialog_res::ok_button
+        sta     file_dialog_res::fdok_button::state
+        BTK_CALL BTK::Draw, file_dialog_res::fdok_button
 
-        BTK_CALL BTK::Draw, file_dialog_res::cancel_button
+        BTK_CALL BTK::Draw, file_dialog_res::fdcancel_button
         BTK_CALL BTK::Draw, file_dialog_res::drives_button
 
         jsr     _IsOpenAllowed

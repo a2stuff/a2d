@@ -15,6 +15,7 @@ on_no_change    .addr            ; +$09 called on click when `selected_index` ha
 .endstruct                       ; length = $0B
 
 .macro DEFINE_LIST_BOX name, _winfo, _num_rows, _num_items, _draw_entry_proc, _on_sel_change, _on_no_change
+        WARN_IF_SHADOWING name
 .params name
 winfo:          .addr   _winfo
 num_rows:       .byte   _num_rows
@@ -66,6 +67,7 @@ SetSize         = $04
 ;;; ============================================================
 
 .macro DEFINE_LIST_BOX_PARAMS name, _record
+        WARN_IF_SHADOWING name
 .params name
 record: .addr   _record
 ;;; For `LBTK::SetSelection` calls:
@@ -96,6 +98,7 @@ ycoord        := *+2
 ;;; ============================================================
 
 .macro DEFINE_LIST_BOX_WINFO name, id, left, top, width, height, font
+        WARN_IF_SHADOWING name
 .params name
 window_id:      .byte   id
 options:        .byte   MGTK::Option::dialog_box

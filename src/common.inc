@@ -406,6 +406,8 @@ kGlyphCheckmark         = $1D
 ;;; Macros (specific to this project)
 
 .macro DEFINE_LABEL ident, label, xpos, ypos
+        WARN_IF_SHADOWING .ident(.sprintf("%s_label_pos", .string(ident)))
+        WARN_IF_SHADOWING .ident(.sprintf("%s_label_str", .string(ident)))
 
         DEFINE_POINT .ident(.sprintf("%s_label_pos", .string(ident))), (xpos), (ypos)
         .ident(.sprintf("%s_label_str", .string(ident))) := *
@@ -418,6 +420,7 @@ kGlyphCheckmark         = $1D
 kBorderDX = 4
 kBorderDY = 2
 .macro DEFINE_RECT_FRAME ident, width, height
+        WARN_IF_SHADOWING ident
         ident := *
 .scope ident
 x1:     .word   kBorderDX

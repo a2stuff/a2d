@@ -212,7 +212,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         DEFINE_RECT rect_erase_dialog_upper, kEraseLeft, 20, kEraseRight, 103 ; under title to bottom of buttons
         DEFINE_RECT rect_erase_dialog_lower, kEraseLeft, 103, kEraseRight, kDialogHeight-4 ; top of buttons to bottom of dialog
 
-        DEFINE_BUTTON ok_button, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
+        DEFINE_BUTTON dialog_ok_button, winfo_dialog::kWindowId, res_string_button_ok, kGlyphReturn, 350, 90
 
         ;; For drawing/updating the dialog title
         DEFINE_POINT point_title, kDialogWidth/2, 15
@@ -448,7 +448,7 @@ init:   jsr     DisconnectRAM
 InitDialog:
         copy8   #0, listbox_enabled_flag
         copy8   #$FF, current_drive_selection
-        copy8   #BTK::kButtonStateDisabled, ok_button::state
+        copy8   #BTK::kButtonStateDisabled, dialog_ok_button::state
 
         lda     #$81            ; other
         sta     source_disk_format
@@ -472,7 +472,7 @@ InitDialog:
     END_IF
         jsr     DrawStringCentered
 
-        BTK_CALL BTK::Draw, ok_button
+        BTK_CALL BTK::Draw, dialog_ok_button
         jsr     UpdateOKButton
         BTK_CALL BTK::Draw, read_drive_button
         MGTK_CALL MGTK::MoveTo, slot_drive_name_label_pos
@@ -1038,10 +1038,10 @@ ret:    rts
         and     #$80
         .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
 
-        cmp     ok_button::state
+        cmp     dialog_ok_button::state
         beq     ret
-        sta     ok_button::state
-        BTK_CALL BTK::Hilite, ok_button
+        sta     dialog_ok_button::state
+        BTK_CALL BTK::Hilite, dialog_ok_button
 
 ret:    rts
 .endproc ; UpdateOKButton
@@ -1054,9 +1054,9 @@ ret:    rts
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
-        MGTK_CALL MGTK::InRect, ok_button::rect
+        MGTK_CALL MGTK::InRect, dialog_ok_button::rect
     IF_NOT_ZERO
-        BTK_CALL BTK::Track, ok_button
+        BTK_CALL BTK::Track, dialog_ok_button
         bmi     :+
         lda     #$00
 :       rts
@@ -1123,10 +1123,10 @@ params: .res    3
 check_return:
         cmp     #CHAR_RETURN
     IF_EQ
-        bit     ok_button::state
+        bit     dialog_ok_button::state
         .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
         bmi     :+
-        BTK_CALL BTK::Flash, ok_button
+        BTK_CALL BTK::Flash, dialog_ok_button
         lda     #$00
 :       rts
     END_IF

@@ -1,6 +1,7 @@
 ;;; Floating Point macros
 
 .macro  DEFINE_FLOAT ident
+        WARN_IF_SHADOWING ident
         ident := *
         .res    5, 0
 .endmacro

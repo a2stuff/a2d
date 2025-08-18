@@ -321,6 +321,7 @@ DRIVER_COMMAND_FORMAT  = 3
 
 
 .macro DEFINE_OPEN_PARAMS name, pn, io
+        WARN_IF_SHADOWING name
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
@@ -342,6 +343,7 @@ ref_num:        .byte   0
 .endmacro
 
 .macro DEFINE_READ_PARAMS name, db, rc
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   4
 ref_num:        .byte   0
@@ -357,6 +359,7 @@ trans_count:    .word   0
 .endmacro
 
 .macro DEFINE_WRITE_PARAMS name, db, rc
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   4
 ref_num:        .byte   0
@@ -372,6 +375,7 @@ trans_count:    .word   0
 .endmacro
 
 .macro DEFINE_CLOSE_PARAMS name
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   1
 ref_num:        .byte   0
@@ -381,6 +385,7 @@ ref_num:        .byte   0
 .endmacro
 
 .macro DEFINE_FLUSH_PARAMS name
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   1
 ref_num:        .byte   0
@@ -390,6 +395,7 @@ ref_num:        .byte   0
 .endmacro
 
 .macro DEFINE_GET_FILE_INFO_PARAMS name, pn
+        WARN_IF_SHADOWING name
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
@@ -422,6 +428,7 @@ create_time:    .word   0
 .endmacro
 
 .macro DEFINE_SET_MARK_PARAMS name, pos
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   2
 ref_num:        .byte   0
@@ -433,6 +440,7 @@ position:       .faraddr pos
 .endmacro
 
 .macro DEFINE_ON_LINE_PARAMS name, un, db
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   2
 
@@ -450,6 +458,7 @@ data_buffer:    .addr   db
 .endmacro
 
 .macro DEFINE_READ_BLOCK_PARAMS name, db, bn
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   3
 unit_num:       .byte   0
@@ -464,6 +473,7 @@ block_num:      .word   bn
 
 
 .macro DEFINE_WRITE_BLOCK_PARAMS name, db, bn
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   3
 unit_num:       .byte   0
@@ -477,7 +487,8 @@ block_num:      .word   bn
 .endmacro
 
 .macro DEFINE_ALLOC_INTERRUPT_PARAMS name, ic
-.params alloc_interrupt_params
+        WARN_IF_SHADOWING name
+.params name
 param_count:    .byte   2
 int_num:        .byte   0
 int_code:       .addr   ic
@@ -488,7 +499,8 @@ int_code:       .addr   ic
 .endmacro
 
 .macro DEFINE_DEALLOC_INTERRUPT_PARAMS name
-.params dealloc_interrupt_params
+        WARN_IF_SHADOWING name
+.params name
 param_count:    .byte   1
 int_num:        .byte   0
         .refto param_count
@@ -497,6 +509,7 @@ int_num:        .byte   0
 .endmacro
 
 .macro DEFINE_QUIT_PARAMS name, ext, pathname
+        WARN_IF_SHADOWING name
     .ifnblank pathname
         .assert pathname < $C000, error, "MLI params can't be in LC RAM"
     .endif
@@ -519,6 +532,7 @@ param_count:    .byte   4
 .endmacro
 
 .macro DEFINE_SET_PREFIX_PARAMS name, pn
+        WARN_IF_SHADOWING name
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
@@ -533,6 +547,7 @@ pathname:       .addr   pn
 .endmacro
 
 .macro DEFINE_GET_PREFIX_PARAMS name, pn
+        WARN_IF_SHADOWING name
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
@@ -547,6 +562,7 @@ pathname:       .addr   pn
 .endmacro
 
 .macro DEFINE_DESTROY_PARAMS name, pn
+        WARN_IF_SHADOWING name
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
@@ -561,6 +577,7 @@ pathname:       .addr   pn
 .endmacro
 
 .macro DEFINE_CREATE_PARAMS name, pn, ac, ft, at, st
+        WARN_IF_SHADOWING name
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"
@@ -608,6 +625,7 @@ create_time:    .word   0
 .endmacro
 
 .macro DEFINE_SET_EOF_PARAMS name, eo
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   2
 ref_num:        .byte   0
@@ -619,6 +637,7 @@ eof:            .faraddr eo
 .endmacro
 
 .macro DEFINE_GET_EOF_PARAMS name
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   2
 ref_num:        .byte   0
@@ -630,6 +649,7 @@ eof:            .faraddr 0
 .endmacro
 
 .macro DEFINE_RENAME_PARAMS name, pn, np
+        WARN_IF_SHADOWING name
     .if .xmatch(.string(pn), "pathname")
         ;; If 'pathname' is passed then expansion yields a circular reference.
         .error "Can't pass 'pathname' label to DEFINE_*_PARAMS"

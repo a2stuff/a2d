@@ -50,8 +50,8 @@ kMaxNameWidth = 140
         DEFINE_BUTTON drives_button, kFilePickerDlgWindowID, res_string_button_drives, res_string_shortcut_drives,        kButtonsLeft, kControlsTop + 0 * (kButtonHeight + kButtonGap)
         DEFINE_BUTTON open_button, kFilePickerDlgWindowID,   res_string_button_open,   res_string_shortcut_open,          kButtonsLeft, kControlsTop + 1 * (kButtonHeight + kButtonGap)
         DEFINE_BUTTON close_button, kFilePickerDlgWindowID,  res_string_button_close,  res_string_shortcut_close,         kButtonsLeft, kControlsTop + 2 * (kButtonHeight + kButtonGap)
-        DEFINE_BUTTON cancel_button, kFilePickerDlgWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kButtonsLeft, kControlsTop + 3 * (kButtonHeight + kButtonGap) + kSep
-        DEFINE_BUTTON ok_button, kFilePickerDlgWindowID,     res_string_button_ok,     kGlyphReturn,                      kButtonsLeft, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
+        DEFINE_BUTTON fdcancel_button, kFilePickerDlgWindowID, res_string_button_cancel, res_string_button_cancel_shortcut, kButtonsLeft, kControlsTop + 3 * (kButtonHeight + kButtonGap) + kSep
+        DEFINE_BUTTON fdok_button, kFilePickerDlgWindowID,     res_string_button_ok,     kGlyphReturn,                      kButtonsLeft, kControlsTop + 4 * (kButtonHeight + kButtonGap) + kSep
 
 .ifdef FD_EXTENDED
 ;;; Dividing line

@@ -259,10 +259,10 @@ prefix_buf := $800
 ;;; ============================================================
 
 local_dir:      PASCAL_STRING kFilenameLocalDir
-        DEFINE_CREATE_PARAMS create_params, local_dir, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
+        DEFINE_CREATE_PARAMS create_localdir_params, local_dir, ACCESS_DEFAULT, FT_DIRECTORY,, ST_LINKED_DIRECTORY
 
 .proc CreateLocalDir
-        MLI_CALL CREATE, create_params
+        MLI_CALL CREATE, create_localdir_params
         rts
 .endproc ; CreateLocalDir
 

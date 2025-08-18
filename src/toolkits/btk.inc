@@ -34,6 +34,7 @@ kButtonStateDisabled = %10000000 ; push buttons
 kButtonStateChecked  = %10000000 ; checkboxes/radio buttons
 
 .macro DEFINE_BUTTON name, winid, label, shortcut, left, top, width, height
+        WARN_IF_SHADOWING name
 .params name
 window_id:      .byte   winid
 

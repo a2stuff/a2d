@@ -70,6 +70,7 @@ Version                 .word
 .endenum
 
 .macro DEFINE_SP_STATUS_PARAMS name, un, lp, sc
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   3
 unit_num:       .byte   un
@@ -83,6 +84,7 @@ status_code:    .byte   sc
 .endmacro
 
 .macro DEFINE_SP_CONTROL_PARAMS name, un, cl, cc
+        WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   3
 unit_number:    .byte   un

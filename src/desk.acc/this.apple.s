@@ -114,6 +114,7 @@ grafport:       .tag    MGTK::GrafPort
 ;;; ============================================================
 
 .macro DEFINE_BITMAP identifier, width, height
+        WARN_IF_SHADOWING .ident(.sprintf("%s_bitmap", .string(identifier)))
 .params .ident(.sprintf("%s_bitmap", .string(identifier)))
         DEFINE_POINT viewloc, 88 - (width/2), 19 - (height/2)
 mapbits:        .addr   .ident(.sprintf("%s_bits", .string(identifier)))

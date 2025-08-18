@@ -754,6 +754,7 @@ event_size                      = 5        ; any kind of event
 ;;; Rect definition.
 ;;;    DEFINE_RECT ident,0,0,20,30
 .macro DEFINE_RECT ident, left, top, right, bottom
+        WARN_IF_SHADOWING ident
         ident := *
 .scope ident
 topleft:
@@ -773,6 +774,7 @@ y2:     .word   AS_WORD(bottom)
 
 ;;; Define a rect by size (right = left + width, bottom = top + height)
 .macro DEFINE_RECT_SZ ident, left, top, width, height
+        WARN_IF_SHADOWING ident
         ident := *
 .scope ident
 topleft:
@@ -792,6 +794,7 @@ y2:     .word   AS_WORD((top) + (height))
 
 ;;; Define an inset rect rect by size
 .macro DEFINE_RECT_INSET ident, left, top, width, height
+        WARN_IF_SHADOWING ident
         ident := *
 .scope ident
 topleft:
@@ -812,6 +815,7 @@ y2:     .word   AS_WORD((height) - (top))
 ;;; Point definition.
 ;;;    DEFINE_POINT ident,10,20
 .macro DEFINE_POINT ident, left, top
+        WARN_IF_SHADOWING ident
         ident := *
 .scope ident
 xcoord: .word   AS_WORD(left)
@@ -824,6 +828,7 @@ ycoord: .word   AS_WORD(top)
 ;;; Menus (common cases; other options are possible)
 
 .macro DEFINE_MENU_BAR ident, count
+        WARN_IF_SHADOWING ident
         ident := *
         .byte   count           ; num menus
         .byte   0               ; reserved
@@ -838,6 +843,7 @@ ycoord: .word   AS_WORD(top)
 .endmacro
 
 .macro DEFINE_MENU ident, count
+        WARN_IF_SHADOWING ident
         ident := *
         .byte   count           ; num items
         .res    5, 0            ; 5 reserved bytes

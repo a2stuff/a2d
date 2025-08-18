@@ -45,6 +45,7 @@ kLineEditOptionsNormal   = %00000000
 kLineEditOptionsCentered = %10000000
 
 .macro DEFINE_LINE_EDIT name, winid, buf, left, top, width, maxlen, options_param
+        WARN_IF_SHADOWING name
 .params name
 window_id:      .byte   winid
 a_buf:          .addr   buf
@@ -104,6 +105,7 @@ Update          = $06           ; Redraw control, e.g. after control moves or te
 ;;; ============================================================
 
 .macro DEFINE_LINE_EDIT_PARAMS name, rec
+        WARN_IF_SHADOWING name
 .params name
 record: .addr   rec
 ;;; For `LETK::Key` calls:

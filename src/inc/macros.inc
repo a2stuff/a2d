@@ -954,6 +954,7 @@ skip:   dec     arg
 
 .macro PARAM_BLOCK name, addr
     .ifnblank name
+        ;; TODO: WARN_IF_SHADOWING name
         name := addr
         .refto name
     .endif
@@ -1011,6 +1012,7 @@ loop:   lda     src,x
 ;;;       .assert * = back to normal
 
 .macro PROC_AT name, addr
+        WARN_IF_SHADOWING name
 .proc name
         .pushorg addr
 .endmacro
@@ -1044,6 +1046,19 @@ __pushorg_depth__ .set 0
         ::__pushorg_depth__ .set ::__pushorg_depth__ - 1
 .endmacro
 
+;;; ============================================================
+;;; Scope Helpers
+;;; ============================================================
+
+.macro PREDEFINE_SCOPE scope_name
+    scope_name::__predefine_scope__ = 0
+.endmacro
+
+.macro WARN_IF_SHADOWING ident
+    .ifdef ident
+        .warning .sprintf("Declaration of '%s' shadows existing '%s'", .string(ident), .string(ident))
+    .endif
+.endmacro
 
 ;;; ============================================================
 ;;; Parameter Blocks - named scopes that indicate data
@@ -1055,6 +1070,7 @@ __pushorg_depth__ .set 0
 ;;; .endparams
 
 .macro .params label
+        ;; TODO: WARN_IF_SHADOWING label
         .proc label
 .endmacro
 
