@@ -954,7 +954,7 @@ skip:   dec     arg
 
 .macro PARAM_BLOCK name, addr
     .ifnblank name
-        ;; TODO: WARN_IF_SHADOWING name
+        WARN_IF_SHADOWING name
         name := addr
         .refto name
     .endif
@@ -1054,10 +1054,23 @@ __pushorg_depth__ .set 0
     scope_name::__predefine_scope__ = 0
 .endmacro
 
+__shadow_warning_suppress_count__ .set 0
+
+;;; TODO: More careful scoping throughout the project to eliminate these
+.macro SUPPRESS_SHADOW_WARNING
+::__shadow_warning_suppress_count__ .set ::__shadow_warning_suppress_count__ + 1
+.endmacro
+
+.macro UNSUPPRESS_SHADOW_WARNING
+::__shadow_warning_suppress_count__ .set ::__shadow_warning_suppress_count__ - 1
+.endmacro
+
 .macro WARN_IF_SHADOWING ident
+  .if !::__shadow_warning_suppress_count__
     .ifdef ident
         .warning .sprintf("Declaration of '%s' shadows existing '%s'", .string(ident), .string(ident))
     .endif
+  .endif
 .endmacro
 
 ;;; ============================================================
@@ -1070,7 +1083,7 @@ __pushorg_depth__ .set 0
 ;;; .endparams
 
 .macro .params label
-        ;; TODO: WARN_IF_SHADOWING label
+        WARN_IF_SHADOWING label
         .proc label
 .endmacro
 

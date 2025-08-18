@@ -104,10 +104,14 @@ checkerboard_pattern:
 
 ;;; ============================================================
 
+;;; Shadows params in Selector's `app` and Disk Copy's `auxlc` scopes.
+;;; TODO: Rework scoping to eliminate this.
+SUPPRESS_SHADOW_WARNING
 .params getwinport_params
 window_id:      .byte   0
 port:           .addr   grafport_win
 .endparams
+UNSUPPRESS_SHADOW_WARNING
 
 grafport_win:   .tag    MGTK::GrafPort
 
@@ -305,6 +309,10 @@ END_PARAM_BLOCK
 
 
 .proc TrackImpl
+
+;;; Shadows params in Selector's `app` and Disk Copy's `auxlc` scopes.
+;;; TODO: Rework scoping to eliminate this.
+SUPPRESS_SHADOW_WARNING
         ;; Use ZP for temporary params
         PARAM_BLOCK event_params, btk::zp_scratch
 kind    .byte
@@ -318,6 +326,7 @@ window          .tag MGTK::Point
         END_PARAM_BLOCK
         .assert screentowindow_params + .sizeof(screentowindow_params) <= $2F, error, "bounds"
         .assert screentowindow_params::screen = event_params::coords, error, "mismatch"
+UNSUPPRESS_SHADOW_WARNING
 
         ;; If disabled, return canceled
         bit     state

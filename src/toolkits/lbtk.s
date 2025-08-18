@@ -23,6 +23,10 @@
 
 ;;; ============================================================
 
+;;; Shadows params in Selector's `app` and Disk Copy's `auxlc` scopes.
+;;; TODO: Rework scoping to eliminate this.
+SUPPRESS_SHADOW_WARNING
+
 PARAM_BLOCK event_params, lbtk::tmp_space
 kind    .byte
 .union
@@ -112,6 +116,8 @@ which_part      .byte
 END_PARAM_BLOCK
 ASSERT_EQUALS findcontrol_params::mousex, event_params::xcoord
 ASSERT_EQUALS findcontrol_params::mousey, event_params::ycoord
+
+UNSUPPRESS_SHADOW_WARNING
 
 ;;; ============================================================
 
