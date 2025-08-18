@@ -2218,13 +2218,6 @@ empty:  return #$FF
 ;;; C=1 if no clipping rect remains, so no drawing is needed.
 .proc CalcWindowIntersectionsImpl
 
-.params findwindow_params
-mousex:         .word   0
-mousey:         .word   0
-which_area:     .byte   0
-window_id:      .byte   0
-.endparams
-
 pt_num: .byte   0
 
 ;;; Points at corners of icon's bounding rect
