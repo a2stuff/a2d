@@ -198,9 +198,9 @@ out:    jsr     _UnsetCursorIBeam
 
 .proc _MoveToWindowCoords
         lda     #file_dialog_res::kFilePickerDlgWindowID
-        sta     screentowindow_params::window_id
+        sta     screentowindow_params+MGTK::ScreenToWindowParams::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
-        MGTK_CALL MGTK::MoveTo, screentowindow_params::window
+        MGTK_CALL MGTK::MoveTo, screentowindow_params+MGTK::ScreenToWindowParams::window
         rts
 .endproc ; _MoveToWindowCoords
 
@@ -208,15 +208,15 @@ out:    jsr     _UnsetCursorIBeam
 
 .proc _HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::which_area
+        lda     findwindow_params+MGTK::FindWindowParams::which_area
         cmp     #MGTK::Area::content
         beq     :+
 ret:    rts
 :
-        lda     findwindow_params::window_id
+        lda     findwindow_params+MGTK::FindWindowParams::window_id
         cmp     #file_dialog_res::kFilePickerDlgWindowID
         beq     not_list
-        COPY_STRUCT MGTK::Point, event_params::coords, file_dialog_res::lb_params::coords
+        COPY_STRUCT MGTK::Point, event_params+MGTK::Event::coords, file_dialog_res::lb_params::coords
         LBTK_CALL LBTK::Click, file_dialog_res::lb_params
         bmi     ret
         jsr     DetectDoubleClick
@@ -299,7 +299,7 @@ not_list:
         ;; Text Edit
         MGTK_CALL MGTK::InRect, file_dialog_res::line_edit_rect
       IF_NOT_ZERO
-        COPY_STRUCT MGTK::Point, screentowindow_params::window, file_dialog_res::le_params::coords
+        COPY_STRUCT MGTK::Point, screentowindow_params+MGTK::ScreenToWindowParams::window, file_dialog_res::le_params::coords
         LETK_CALL LETK::Click, file_dialog_res::le_params
         rts
       END_IF
@@ -531,8 +531,8 @@ ret:    rts
 ;;; Key handler
 
 .proc _HandleKeyEvent
-        lda     event_params::key
-        ldx     event_params::modifiers
+        lda     event_params+MGTK::Event::key
+        ldx     event_params+MGTK::Event::modifiers
         sta     file_dialog_res::lb_params::key
         stx     file_dialog_res::lb_params::modifiers
 
@@ -553,8 +553,8 @@ ret:    rts
         jeq     exit
 
         copy8   #0, type_down_buf
-        ldx     event_params::modifiers
-        lda     event_params::key
+        ldx     event_params+MGTK::Event::modifiers
+        lda     event_params+MGTK::Event::key
 
 .ifdef FD_EXTENDED
         bit     extra_controls_flag
@@ -585,7 +585,7 @@ ret:    rts
 .endif
 
         copy8   #0, type_down_buf
-        lda     event_params::key
+        lda     event_params+MGTK::Event::key
 
         cmp     #CHAR_RETURN
       IF_EQ
@@ -632,8 +632,8 @@ ret:    rts
         bit     extra_controls_flag
       IF_NS
         ;; Edit control
-        copy8   event_params::key, file_dialog_res::le_params::key
-        copy8   event_params::modifiers, file_dialog_res::le_params::modifiers
+        copy8   event_params+MGTK::Event::key, file_dialog_res::le_params::key
+        copy8   event_params+MGTK::Event::modifiers, file_dialog_res::le_params::modifiers
         LETK_CALL LETK::Key, file_dialog_res::le_params
       END_IF
 .endif
@@ -644,7 +644,7 @@ exit:   rts
 ;;; ============================================================
 
 .proc _CheckTypeDown
-        lda     event_params::key
+        lda     event_params+MGTK::Event::key
         jsr     _ToUpperCase
         cmp     #'A'
         bcc     :+

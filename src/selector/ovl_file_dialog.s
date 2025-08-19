@@ -74,6 +74,11 @@ AdjustOnLineEntryCase   := app::AdjustOnLineEntryCase
 AdjustFileEntryCase     := app::AdjustFileEntryCase
 ReadSetting             := app::ReadSetting
 
+;;; Required data definitions
+event_params            := app::event_params
+findwindow_params       := app::findwindow_params
+screentowindow_params   := app::screentowindow_params
+
         .include "../lib/file_dialog.s"
         .include "../lib/get_next_event.s"
 

@@ -961,7 +961,7 @@ progress_pattern:
         lda     #winfo::kWindowId
         jsr     app::GetWindowPort
 
-        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenMode, app::notpencopy
         MGTK_CALL MGTK::SetPenSize, app::pensize_frame
         MGTK_CALL MGTK::FrameRect, rect_frame
         MGTK_CALL MGTK::SetPenSize, app::pensize_normal
@@ -986,7 +986,7 @@ remainder:      .word   0                 ; (out)
         jsr     app::GetWindowPort
         MGTK_CALL MGTK::PaintRect, rect_clear_details
 
-        MGTK_CALL MGTK::SetPenMode, notpencopy
+        MGTK_CALL MGTK::SetPenMode, app::notpencopy
         MGTK_CALL MGTK::FrameRect, progress_frame
 
         copy16  file_count, total_count
@@ -1086,11 +1086,11 @@ ep2:    dec     file_count
 
 ;;; Output: Z=1 if Escape is down
 .proc CheckEscapeKeyDown
-        MGTK_CALL MGTK::GetEvent, event_params
-        lda     event_params::kind
+        MGTK_CALL MGTK::GetEvent, app::event_params
+        lda     app::event_params::kind
         cmp     #MGTK::EventKind::key_down
         bne     ret
-        lda     event_params::key
+        lda     app::event_params::key
         cmp     #CHAR_ESCAPE
 ret:    rts
 .endproc ; CheckEscapeKeyDown

@@ -5,7 +5,7 @@
 .proc DetectDoubleClick
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
-:       copy8   event_params::coords,x, coords,x
+:       copy8   event_params+MGTK::Event::coords,x, coords,x
 
         dex
         bpl     :-
@@ -29,7 +29,7 @@ loop:   dec16   counter
         jsr     _CheckDelta
         bmi     exit            ; moved past delta; no double-click
 
-        lda     event_params::kind
+        lda     event_params+MGTK::Event::kind
         cmp     #MGTK::EventKind::no_event
         beq     loop            ; nothing to consume
 

@@ -8,7 +8,7 @@
 ;;; where mouse movement is worth distinguishing.
 ;;;
 ;;; Requires:
-;;; * lib/event_params.s
+;;; * `event_params` e.g. c/o lib/event_params.s
 
 ;;; ============================================================
 
@@ -18,11 +18,11 @@
         ;; GetEvent
         MGTK_CALL MGTK::GetEvent, event_params
 
-        lda     event_params::kind
+        lda     event_params+MGTK::Event::kind
         .assert MGTK::EventKind::no_event = 0, error, "enum mismatch"
     IF_ZERO
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_params::coords,x
+:       lda     event_params+MGTK::Event::coords,x
         cmp     coords,x
         bne     diff
         dex
@@ -30,12 +30,12 @@
         lda     #MGTK::EventKind::no_event
         beq     set             ; always
 
-diff:   COPY_STRUCT MGTK::Point, event_params::coords, coords
+diff:   COPY_STRUCT MGTK::Point, event_params+MGTK::Event::coords, coords
         lda     #kEventKindMouseMoved
         FALL_THROUGH_TO set
     END_IF
 
-set:    sta     event_params::kind
+set:    sta     event_params+MGTK::Event::kind
         rts
 
         DEFINE_POINT coords, 0, 0

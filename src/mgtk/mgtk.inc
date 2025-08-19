@@ -288,10 +288,13 @@ GetCursorAdr    = $28           ; Get cursor definition
         window_id .byte
       .endstruct
 
-      .struct                   ; otherwise
+      .union                    ; otherwise
+        coords  .word 2
+      .struct
         xcoord  .word
         ycoord  .word
       .endstruct
+      .endunion
     .endunion
 .endstruct
 
@@ -441,6 +444,12 @@ FindWindow      = $40
 ;;; .word       mousey
 ;;; .byte       which_area      (out) Area::*
 ;;; .byte       window_id       (out) of window
+.struct FindWindowParams
+mousex          .word
+mousey          .word
+which_area      .byte
+window_id       .byte
+.endstruct
 
 FrontWindow     = $41           ; Get id of top window
 ;;; .byte       window_id       (out) window, or 0 if none
@@ -469,6 +478,23 @@ ScreenToWindow  = $46           ; Map screen coords to content coords
 ;;; .word       screeny
 ;;; .word       windowx         (out)
 ;;; .word       windowy         (out)
+.struct ScreenToWindowParams
+window_id       .byte
+.union
+screen          .tag MGTK::Point
+.struct
+screenx         .word
+screeny         .word
+.endstruct
+.endunion
+.union
+window          .tag MGTK::Point
+.struct
+windowx         .word
+windowy         .word
+.endstruct
+.endunion
+.endstruct
 
 WindowToScreen  = $47           ; Map content coords to screen coords
 ;;; .byte       window_id
@@ -476,6 +502,23 @@ WindowToScreen  = $47           ; Map content coords to screen coords
 ;;; .word       windowy
 ;;; .word       screenx         (out)
 ;;; .word       screeny         (out)
+.struct WindowToScreenParams
+window_id       .byte
+.union
+window          .tag MGTK::Point
+.struct
+windowx         .word
+windowy         .word
+.endstruct
+.endunion
+.union
+screen          .tag MGTK::Point
+.struct
+screenx         .word
+screeny         .word
+.endstruct
+.endunion
+.endstruct
 
 ;;; --------------------------------------------------
 ;;; Control Manager Calls

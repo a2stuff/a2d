@@ -19,20 +19,17 @@
         .incbin .concat("../../out/System.", kBuildLang, ".font")
 
 ;;; ============================================================
-;;; Generic Resources (outside scope for convenience)
 
+.scope app
+
+;;; ============================================================
+
+;;; TODO: Move these somewhere more sensible
 pencopy:        .byte   MGTK::pencopy
 penXOR:         .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 
-;;; ============================================================
-;;; Event Params (and overlapping param structs)
-
         .include "../lib/event_params.s"
-
-;;; ============================================================
-
-.scope app
 
 ;;; See docs/Selector_List_Format.md for file format
 selector_list   := $B300
@@ -2019,6 +2016,7 @@ loop_counter:
          ADJUSTCASE_BLOCK_BUFFER := $1C00
         .include "../lib/adjustfilecase.s"
 
+        ;; TODO: Move these out of the `app` scope
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry
 

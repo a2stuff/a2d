@@ -1330,6 +1330,7 @@ match:  clc
         saved_ram_drvec   := main__saved_ram_drvec
         .include "../lib/disconnect_ram.s"
 
+        ;; TODO: Move these out of the `auxlc` scope
         .include "../toolkits/btk.s"
         BTKEntry := btk::BTKEntry
 
