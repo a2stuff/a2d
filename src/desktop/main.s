@@ -10964,7 +10964,7 @@ cancel: jmp     CloseFilesCancelDialogWithFailedResult
     IF_EQ
         ;; Volume
         copy8   DEVNUM, unit_number
-        MLI_CALL READ_BLOCK, block_params
+        MLI_CALL READ_BLOCK, vol_block_params
         bcs     ret
         copy16  block_buffer + VolumeDirectoryHeader::case_bits, case_bits
     ELSE
@@ -10980,8 +10980,8 @@ cancel: jmp     CloseFilesCancelDialogWithFailedResult
         clc                     ; success
 ret:    rts
 
-        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, kVolumeDirKeyBlock
-        unit_number := block_params::unit_num
+        DEFINE_READ_BLOCK_PARAMS vol_block_params, block_buffer, kVolumeDirKeyBlock
+        unit_number := vol_block_params::unit_num
 .endproc ; ReadSrcCaseBits
 
 .proc WriteDstCaseBits
