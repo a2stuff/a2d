@@ -10213,6 +10213,7 @@ file_entry_buf          .tag    FileEntry
 
         block_buffer := file_data_buffer
         DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, SELF_MODIFIED
+        DEFINE_READ_BLOCK_PARAMS vol_key_block_params, block_buffer, kVolumeDirKeyBlock
 
 ;;; ============================================================
 ;;; Callbacks used during operations. There are two sets:
@@ -10391,16 +10392,13 @@ eof:    return  #$FF
         jmp     @retry
 :
         ;; Try to read a block off device; if AppleShare will fail.
-        copy8   DEVNUM, unit_number
-        MLI_CALL READ_BLOCK, block_params
+        copy8   DEVNUM, vol_key_block_params::unit_num
+        MLI_CALL READ_BLOCK, vol_key_block_params
         cmp     #ERR_NETWORK_ERROR
     IF_EQ
         copy8   #$80, dst_is_appleshare_flag
     END_IF
 ret:    rts
-
-        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, kVolumeDirKeyBlock
-        unit_number := block_params::unit_num
 .endproc ; SetDstIsAppleShareFlag
 
 ;;; ============================================================
@@ -10963,8 +10961,8 @@ cancel: jmp     CloseFilesCancelDialogWithFailedResult
         cmp     #ST_VOLUME_DIRECTORY
     IF_EQ
         ;; Volume
-        copy8   DEVNUM, unit_number
-        MLI_CALL READ_BLOCK, vol_block_params
+        copy8   DEVNUM, vol_key_block_params::unit_num
+        MLI_CALL READ_BLOCK, vol_key_block_params
         bcs     ret
         copy16  block_buffer + VolumeDirectoryHeader::case_bits, case_bits
     ELSE
@@ -10979,9 +10977,6 @@ cancel: jmp     CloseFilesCancelDialogWithFailedResult
 
         clc                     ; success
 ret:    rts
-
-        DEFINE_READ_BLOCK_PARAMS vol_block_params, block_buffer, kVolumeDirKeyBlock
-        unit_number := vol_block_params::unit_num
 .endproc ; ReadSrcCaseBits
 
 .proc WriteDstCaseBits
@@ -11874,7 +11869,6 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 .proc CheckMoveOrCopy
         src_ptr := $08
         dst_buf := path_buf4
-        block_buffer := $800
 
         stax    src_ptr
 
@@ -11941,16 +11935,12 @@ match:  lda     flag
         jsr     ShowErrorAlert
         jmp     @retry
 :
-        lda     DEVNUM
-        sta     block_params__unit_num
-        MLI_CALL READ_BLOCK, block_params
+        copy8   DEVNUM, vol_key_block_params
+        MLI_CALL READ_BLOCK, vol_key_block_params
         lda     #$80            ; bit 7 = move
         bcs     :+
         eor     #$40            ; bit 6 = relink supported
 :       rts
-
-        DEFINE_READ_BLOCK_PARAMS block_params, block_buffer, kVolumeDirKeyBlock
-        block_params__unit_num := block_params::unit_num
 .endproc ; CheckMoveOrCopy
 
 ;;; ============================================================
