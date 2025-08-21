@@ -163,7 +163,7 @@ exit:   rts
         open_params__io_buffer := open_params::io_buffer
         open_params__pathname := open_params::pathname
 
-        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
+        DEFINE_READWRITE_PARAMS read_params, PRODOS_SYS_START, MLI - PRODOS_SYS_START
         read_params__ref_num := read_params::ref_num
         read_params__data_buffer := read_params::data_buffer
 

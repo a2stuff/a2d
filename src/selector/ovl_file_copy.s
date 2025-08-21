@@ -38,20 +38,20 @@ skip:
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
         kBlockPointersSize = 4
         ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
-        DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
+        DEFINE_READWRITE_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
 buf_block_pointers:
         .res    kBlockPointersSize, 0
 
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_CLOSE_PARAMS close_everything_params ; used in case of error
 
-        DEFINE_READ_PARAMS read_fileentry_params, file_entry, .sizeof(FileEntry)
+        DEFINE_READWRITE_PARAMS read_fileentry_params, file_entry, .sizeof(FileEntry)
 
         ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
         ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
         ;; block pointers are the next 4.
         kMaxPaddingBytes = 5
-        DEFINE_READ_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
+        DEFINE_READWRITE_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
 buf_padding_bytes:
         .res    kMaxPaddingBytes, 0
 
@@ -68,8 +68,8 @@ buf_padding_bytes:
         kDirCopyBufSize = $A00
         .assert (kDirCopyBufSize .mod BLOCK_SIZE) = 0, error, "integral number of blocks needed for sparse copies and performance"
 
-        DEFINE_READ_PARAMS read_params_src, data_buf, kDirCopyBufSize
-        DEFINE_WRITE_PARAMS write_params_dst, data_buf, kDirCopyBufSize
+        DEFINE_READWRITE_PARAMS read_params_src, data_buf, kDirCopyBufSize
+        DEFINE_READWRITE_PARAMS write_params_dst, data_buf, kDirCopyBufSize
         DEFINE_SET_MARK_PARAMS mark_params_dst, 0
 
         DEFINE_CREATE_PARAMS create_params2, pathname_dst, ACCESS_DEFAULT

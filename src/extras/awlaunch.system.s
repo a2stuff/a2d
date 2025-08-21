@@ -129,7 +129,7 @@ str_aplworks_path:
         PASCAL_STRING   "AW5/APLWORKS.SYSTEM"
 
         DEFINE_OPEN_PARAMS open_params, SYS_PATH, IO_BUFFER
-        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, $FFFF
+        DEFINE_READWRITE_PARAMS read_params, PRODOS_SYS_START, $FFFF
         DEFINE_CLOSE_PARAMS close_params
 
         DEFINE_GET_PREFIX_PARAMS prefix_params, PATHBUF2

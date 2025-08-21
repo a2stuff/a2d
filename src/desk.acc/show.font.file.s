@@ -319,7 +319,7 @@ index:  .byte   0
 filename:       .res    16
 
         DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
-        DEFINE_READ_PARAMS read_params, font_buffer, kReadLength
+        DEFINE_READWRITE_PARAMS read_params, font_buffer, kReadLength
         DEFINE_CLOSE_PARAMS close_params
 
 ;;; ============================================================

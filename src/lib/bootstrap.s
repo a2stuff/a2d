@@ -190,7 +190,7 @@ str_loading:
         open_params__ref_num := open_params::ref_num
         DEFINE_SET_MARK_PARAMS set_mark_params, kSegmentLoaderOffset
         set_mark_params__ref_num := set_mark_params::ref_num
-        DEFINE_READ_PARAMS read_params, kSegmentLoaderAddress, kSegmentLoaderLength
+        DEFINE_READWRITE_PARAMS read_params, kSegmentLoaderAddress, kSegmentLoaderLength
         read_params__ref_num := read_params::ref_num
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_SET_PREFIX_PARAMS prefix_params, prefix_buffer

@@ -245,14 +245,14 @@ str_selector_title:
         io_buf_sl = $BB00
 
         DEFINE_OPEN_PARAMS open_selector_list_params, str_selector_list, io_buf_sl
-        DEFINE_READ_PARAMS read_selector_list_params, selector_list, kSelectorListBufSize
+        DEFINE_READWRITE_PARAMS read_selector_list_params, selector_list, kSelectorListBufSize
 
         io_buf_desktop = $1C00
         desktop_load_addr = $2000
         kDeskTopLoadSize = $400
 
         DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, io_buf_desktop
-        DEFINE_READ_PARAMS read_desktop_params, desktop_load_addr, kDeskTopLoadSize
+        DEFINE_READWRITE_PARAMS read_desktop_params, desktop_load_addr, kDeskTopLoadSize
 
 str_selector_list:
         PASCAL_STRING kPathnameSelectorList
@@ -269,8 +269,8 @@ str_selector:
 
         DEFINE_SET_MARK_PARAMS set_mark_overlay1_params, kOverlayFileDialogOffset
         DEFINE_SET_MARK_PARAMS set_mark_overlay2_params, kOverlayCopyDialogOffset
-        DEFINE_READ_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlayFileDialogLength
-        DEFINE_READ_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogLength
+        DEFINE_READWRITE_PARAMS read_overlay1_params, OVERLAY_ADDR, kOverlayFileDialogLength
+        DEFINE_READWRITE_PARAMS read_overlay2_params, OVERLAY_ADDR, kOverlayCopyDialogLength
         DEFINE_CLOSE_PARAMS close_params2
 
 str_desktop_2:
@@ -1755,7 +1755,7 @@ check_header:
 
         DEFINE_OPEN_PARAMS open_params, INVOKER_PREFIX, io_buf
         open_params__ref_num := open_params::ref_num
-        DEFINE_READ_PARAMS read_params, read_buf, kLinkFileMaxSize
+        DEFINE_READWRITE_PARAMS read_params, read_buf, kLinkFileMaxSize
         read_params__ref_num := read_params::ref_num
         read_params__trans_count := read_params::trans_count
         DEFINE_CLOSE_PARAMS close_params

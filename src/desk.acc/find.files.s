@@ -761,7 +761,7 @@ offset: .addr   0
 ;;; ProDOS command parameter blocks
 ;;;
         DEFINE_OPEN_PARAMS OpenParms, 0, DA_IO_BUFFER
-        DEFINE_READ_PARAMS ReadParms, block_buffer, 512
+        DEFINE_READWRITE_PARAMS ReadParms, block_buffer, 512
         DEFINE_CLOSE_PARAMS CloseParms
         DEFINE_SET_MARK_PARAMS SetMParms, 0
 

@@ -53,7 +53,7 @@ prefix_path:    .res    kPathBufferSize, 0
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, bs_path
         DEFINE_OPEN_PARAMS open_params, bs_path, DA_IO_BUFFER
-        DEFINE_READ_PARAMS read_params, PRODOS_SYS_START, MLI-PRODOS_SYS_START
+        DEFINE_READWRITE_PARAMS read_params, PRODOS_SYS_START, MLI-PRODOS_SYS_START
         DEFINE_CLOSE_PARAMS close_params
         DEFINE_SET_PREFIX_PARAMS set_prefix_params, prefix_path
         DEFINE_QUIT_PARAMS quit_params

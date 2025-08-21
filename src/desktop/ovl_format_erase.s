@@ -473,8 +473,8 @@ no_match:
         ;; Used to get current volume name (if a ProDOS volume)
         DEFINE_ON_LINE_PARAMS on_line_params,, on_line_buffer
 
-        DEFINE_READ_BLOCK_PARAMS read_block_params, read_buffer, 0
-        DEFINE_WRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
+        DEFINE_READWRITE_BLOCK_PARAMS read_block_params, read_buffer, 0
+        DEFINE_READWRITE_BLOCK_PARAMS write_block_params, prodos_loader_blocks, 0
 
         ;; Used to check for existing volume with same name
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, path

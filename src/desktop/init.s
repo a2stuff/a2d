@@ -396,7 +396,7 @@ count:  .byte   0
 str_selector_list:
         PASCAL_STRING kPathnameSelectorList
 
-        DEFINE_READ_PARAMS read_params, selector_list_data_buf, kSelectorListShortSize
+        DEFINE_READWRITE_PARAMS read_params, selector_list_data_buf, kSelectorListShortSize
         DEFINE_CLOSE_PARAMS close_params
 
 .proc _ReadSelectorList
@@ -411,7 +411,7 @@ str_selector_list:
 .endproc ; _ReadSelectorList
 
         DEFINE_CREATE_PARAMS create_params, str_selector_list, ACCESS_DEFAULT, $F1
-        DEFINE_WRITE_PARAMS write_params, selector_list_data_buf, kSelectorListShortSize
+        DEFINE_READWRITE_PARAMS write_params, selector_list_data_buf, kSelectorListShortSize
 
 .proc _WriteSelectorList
         ptr := $06
@@ -618,7 +618,7 @@ close_dir:
         open_ref_num := open_params::ref_num
 
         .assert BLOCK_SIZE <= kDataBufferSize, error, "Buffer size error"
-        DEFINE_READ_PARAMS read_params, read_dir_buffer, BLOCK_SIZE
+        DEFINE_READWRITE_PARAMS read_params, read_dir_buffer, BLOCK_SIZE
         read_ref_num := read_params::ref_num
 
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, str_desk_acc

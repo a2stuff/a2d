@@ -88,8 +88,8 @@ reserved:       .byte   0
         DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, INVOKE_PATH
         DEFINE_GET_EOF_PARAMS get_eof_params
 
-        DEFINE_READ_PARAMS read_params, hires, kHiresSize
-        DEFINE_READ_PARAMS read_minipix_params, minipix_src_buf, kMinipixSrcSize
+        DEFINE_READWRITE_PARAMS read_params, hires, kHiresSize
+        DEFINE_READWRITE_PARAMS read_minipix_params, minipix_src_buf, kMinipixSrcSize
 
         DEFINE_CLOSE_PARAMS close_params
 
@@ -740,7 +740,7 @@ done:   rts
 ;;;    A = byte, Y = 0 on entry/exit
 ;;; Output: C=0 on success, C=1 on failure
 .proc UnpackReadImpl
-        DEFINE_READ_PARAMS read_buf_params, read_buf, 0
+        DEFINE_READWRITE_PARAMS read_buf_params, read_buf, 0
 
 start:
         stax    write_proc
@@ -1380,7 +1380,7 @@ exit:
         rts
 
         DEFINE_OPEN_PARAMS open_params, dir_path, io_buf
-        DEFINE_READ_PARAMS read_params, block_buf, BLOCK_SIZE
+        DEFINE_READWRITE_PARAMS read_params, block_buf, BLOCK_SIZE
         DEFINE_CLOSE_PARAMS close_params
         open_params_ref_num := open_params::ref_num
         read_params_ref_num := read_params::ref_num

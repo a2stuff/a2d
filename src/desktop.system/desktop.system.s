@@ -403,17 +403,17 @@ ShowCopyingScreen:
         ;; 4 bytes is .sizeof(SubdirectoryHeader) - .sizeof(FileEntry)
         kBlockPointersSize = 4
         ASSERT_EQUALS .sizeof(SubdirectoryHeader) - .sizeof(FileEntry), kBlockPointersSize
-        DEFINE_READ_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
+        DEFINE_READWRITE_PARAMS read_block_pointers_params, buf_block_pointers, kBlockPointersSize ; For skipping prev/next pointers in directory data
 buf_block_pointers:     .res    kBlockPointersSize, 0
 
         DEFINE_CLOSE_PARAMS close_params
-        DEFINE_READ_PARAMS read_fileentry_params, file_entry, .sizeof(FileEntry)
+        DEFINE_READWRITE_PARAMS read_fileentry_params, file_entry, .sizeof(FileEntry)
 
         ;; Blocks are 512 bytes, 13 entries of 39 bytes each leaves 5 bytes between.
         ;; Except first block, directory header is 39+4 bytes, leaving 1 byte, but then
         ;; block pointers are the next 4.
         kMaxPaddingBytes = 5
-        DEFINE_READ_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
+        DEFINE_READWRITE_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
 buf_padding_bytes:      .res    kMaxPaddingBytes, 0
         .res    4, 0
         DEFINE_CLOSE_PARAMS close_srcfile_params
@@ -421,8 +421,8 @@ buf_padding_bytes:      .res    kMaxPaddingBytes, 0
 
         DEFINE_OPEN_PARAMS open_srcfile_params, path2, src_io_buffer
         DEFINE_OPEN_PARAMS open_dstfile_params, path1, dst_io_buffer
-        DEFINE_READ_PARAMS read_srcfile_params, copy_buffer, kCopyBufferSize
-        DEFINE_WRITE_PARAMS write_dstfile_params, copy_buffer, kCopyBufferSize
+        DEFINE_READWRITE_PARAMS read_srcfile_params, copy_buffer, kCopyBufferSize
+        DEFINE_READWRITE_PARAMS write_dstfile_params, copy_buffer, kCopyBufferSize
         DEFINE_CREATE_PARAMS create_dir_params, path1, ACCESS_DEFAULT
         DEFINE_SET_MARK_PARAMS mark_dstfile_params, 0
 
@@ -1705,7 +1705,7 @@ str_sentinel_path:
         DEFINE_OPEN_PARAMS open_params, str_self_filename, dst_io_buffer
 str_self_filename:
         PASCAL_STRING kFilenameLauncher
-        DEFINE_WRITE_PARAMS write_params, PRODOS_SYS_START, kWriteBackSize
+        DEFINE_READWRITE_PARAMS write_params, PRODOS_SYS_START, kWriteBackSize
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params
@@ -1974,7 +1974,7 @@ loop2:  lda     entry_path1,y
         DEFINE_OPEN_PARAMS open_params, str_selector_list, src_io_buffer
 str_selector_list:
         PASCAL_STRING kPathnameSelectorList
-        DEFINE_READ_PARAMS read_params, selector_buffer, kSelectorListBufSize
+        DEFINE_READWRITE_PARAMS read_params, selector_buffer, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS close_params
 
 start:  MLI_CALL OPEN, open_params
@@ -2234,7 +2234,7 @@ CopySelectorEntriesToRAMCard := CopySelectorEntriesToRAMCardImpl::Start
 
         DEFINE_OPEN_PARAMS open_desktop_params, str_desktop, src_io_buffer
         DEFINE_OPEN_PARAMS open_selector_params, str_selector, src_io_buffer
-        DEFINE_READ_PARAMS read_params, MODULE_BOOTSTRAP, kModuleBootstrapSize
+        DEFINE_READWRITE_PARAMS read_params, MODULE_BOOTSTRAP, kModuleBootstrapSize
         DEFINE_CLOSE_PARAMS close_everything_params
 
 str_selector:
@@ -2322,7 +2322,7 @@ END_PROC_AT
         kQuitCodeSize = $400
         DEFINE_CREATE_PARAMS create_params, str_quit_code, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, str_quit_code, quit_code_io
-        DEFINE_WRITE_PARAMS write_params, quit_code_addr, kQuitCodeSize
+        DEFINE_READWRITE_PARAMS write_params, quit_code_addr, kQuitCodeSize
         DEFINE_CLOSE_PARAMS close_params
 
 start:  bit     LCBANK2
@@ -2380,7 +2380,7 @@ PreserveQuitCode        := PreserveQuitCodeImpl::start
 
         rts                     ; not found
 
-        DEFINE_READ_BLOCK_PARAMS read_block_params, block_buffer, kVolumeDirKeyBlock
+        DEFINE_READWRITE_BLOCK_PARAMS read_block_params, block_buffer, kVolumeDirKeyBlock
 
 found:
         ;; Found it in DEVLST, X = index

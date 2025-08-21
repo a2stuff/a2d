@@ -342,7 +342,7 @@ ref_num:        .byte   0
 .endparams
 .endmacro
 
-.macro DEFINE_READ_PARAMS name, db, rc
+.macro DEFINE_READWRITE_PARAMS name, db, rc
         WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   4
@@ -354,22 +354,6 @@ trans_count:    .word   0
         .refto ref_num
         .refto data_buffer
         .refto request_count
-        .refto trans_count
-.endparams
-.endmacro
-
-.macro DEFINE_WRITE_PARAMS name, db, rc
-        WARN_IF_SHADOWING name
-.params name
-param_count:    .byte   4
-ref_num:        .byte   0
-data_buffer:    .addr   db
-request_count:  .word   rc
-trans_count:    .word   0
-        .refto param_count
-        .refto ref_num
-        .refto request_count
-        .refto data_buffer
         .refto trans_count
 .endparams
 .endmacro
@@ -457,22 +441,7 @@ data_buffer:    .addr   db
 .endparams
 .endmacro
 
-.macro DEFINE_READ_BLOCK_PARAMS name, db, bn
-        WARN_IF_SHADOWING name
-.params name
-param_count:    .byte   3
-unit_num:       .byte   0
-data_buffer:    .addr   db
-block_num:      .word   bn
-        .refto param_count
-        .refto unit_num
-        .refto data_buffer
-        .refto block_num
-.endparams
-.endmacro
-
-
-.macro DEFINE_WRITE_BLOCK_PARAMS name, db, bn
+.macro DEFINE_READWRITE_BLOCK_PARAMS name, db, bn
         WARN_IF_SHADOWING name
 .params name
 param_count:    .byte   3

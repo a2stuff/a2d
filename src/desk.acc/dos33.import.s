@@ -1078,7 +1078,7 @@ control_block:
 
         DEFINE_CREATE_PARAMS create_params, path_buf, ACCESS_DEFAULT, SELF_MODIFIED_BYTE, SELF_MODIFIED
         DEFINE_OPEN_PARAMS open_params, path_buf, IO_BUF
-        DEFINE_WRITE_PARAMS write_params, RWTS_SECTOR_BUF, $100
+        DEFINE_READWRITE_PARAMS write_params, RWTS_SECTOR_BUF, $100
         DEFINE_SET_EOF_PARAMS set_eof_params, SELF_MODIFIED
         DEFINE_CLOSE_PARAMS close_params
 set_eof_flag:   .byte   0
@@ -1427,7 +1427,7 @@ fail:   return  #1
 ;;; Input: A = `unit_num`
 ;;; Output: Z=1 if DOS 3.3 disk, Z=0 otherwise
 .proc IsDOS33Impl
-        DEFINE_READ_BLOCK_PARAMS read_block_params, RWTS_BLOCK_BUF, 0
+        DEFINE_READWRITE_BLOCK_PARAMS read_block_params, RWTS_BLOCK_BUF, 0
 
 start:
         sta     read_block_params::unit_num
@@ -1460,7 +1460,7 @@ half_table:     .byte   0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1
 
 block_buf := RWTS_BLOCK_BUF
 
-DEFINE_READ_BLOCK_PARAMS block_params, block_buf, 0
+DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buf, 0
 
 .proc Read
         dst_ptr := $06

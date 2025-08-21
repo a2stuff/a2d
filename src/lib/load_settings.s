@@ -9,11 +9,11 @@
 
 .scope load_settings_impl
         DEFINE_OPEN_PARAMS open_cfg_params, str_config, SETTINGS_IO_BUF
-        DEFINE_READ_PARAMS read_cfgver_params, version_byte, 1
-        DEFINE_READ_PARAMS read_cfg_params, DefaultSettings, .sizeof(DeskTopSettings)
+        DEFINE_READWRITE_PARAMS read_cfgver_params, version_byte, 1
+        DEFINE_READWRITE_PARAMS read_cfg_params, DefaultSettings, .sizeof(DeskTopSettings)
 
         DEFINE_OPEN_PARAMS open_snd_params, str_sound, SETTINGS_IO_BUF
-        DEFINE_READ_PARAMS read_snd_params, DefaultBell, kBellProcLength
+        DEFINE_READWRITE_PARAMS read_snd_params, DefaultBell, kBellProcLength
 
         DEFINE_CLOSE_PARAMS close_params
 

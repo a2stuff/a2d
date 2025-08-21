@@ -93,7 +93,7 @@ file_names      := $1800
         kDirReadSize = $200
 
         DEFINE_OPEN_PARAMS open_params, path_buf, io_buf
-        DEFINE_READ_PARAMS read_params, dir_read_buf, kDirReadSize
+        DEFINE_READWRITE_PARAMS read_params, dir_read_buf, kDirReadSize
         DEFINE_CLOSE_PARAMS close_params
 
 only_show_dirs_flag:            ; set when selecting copy destination

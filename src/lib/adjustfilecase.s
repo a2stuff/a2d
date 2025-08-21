@@ -29,7 +29,7 @@ AdjustFileNameCase:
         rts
 .else
 .scope adjustfilecase_impl
-        DEFINE_READ_BLOCK_PARAMS volname_block_params, ADJUSTCASE_BLOCK_BUFFER, kVolumeDirKeyBlock
+        DEFINE_READWRITE_BLOCK_PARAMS volname_block_params, ADJUSTCASE_BLOCK_BUFFER, kVolumeDirKeyBlock
 
         ptr := $A
 

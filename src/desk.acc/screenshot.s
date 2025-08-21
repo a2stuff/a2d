@@ -31,8 +31,8 @@
 
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, FT_GRAPHICS, $2000
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_WRITE_PARAMS write_block_params, BLOCK_BUFFER, kBlockSize
-        DEFINE_WRITE_PARAMS write_screen_params, $2000, $2000
+        DEFINE_READWRITE_PARAMS write_block_params, BLOCK_BUFFER, kBlockSize
+        DEFINE_READWRITE_PARAMS write_screen_params, $2000, $2000
         DEFINE_CLOSE_PARAMS close_params
 
 

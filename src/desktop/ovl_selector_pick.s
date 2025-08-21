@@ -983,8 +983,8 @@ filename_buffer := $1C00
 filename:
         PASCAL_STRING kPathnameSelectorList
 
-        DEFINE_READ_PARAMS read_params, selector_list, kSelectorListBufSize
-        DEFINE_WRITE_PARAMS write_params, selector_list, kSelectorListBufSize
+        DEFINE_READWRITE_PARAMS read_params, selector_list, kSelectorListBufSize
+        DEFINE_READWRITE_PARAMS write_params, selector_list, kSelectorListBufSize
         DEFINE_CLOSE_PARAMS close_params
 
 .proc WriteFileToOriginalPrefix

@@ -19,7 +19,7 @@ load_buf := $4000
         DEFINE_OPEN_PARAMS open_params, filename, io_buf
 filename:   PASCAL_STRING kPathnameDiskCopy
 
-        DEFINE_READ_PARAMS read_params, 0, 0
+        DEFINE_READWRITE_PARAMS read_params, 0, 0
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
         DEFINE_CLOSE_PARAMS close_params
 

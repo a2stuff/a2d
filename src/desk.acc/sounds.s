@@ -1408,7 +1408,7 @@ filename_buffer:
 
         DEFINE_CREATE_PARAMS create_params, filename, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, filename, DA_IO_BUFFER
-        DEFINE_WRITE_PARAMS write_params, write_buffer, kBellProcLength
+        DEFINE_READWRITE_PARAMS write_params, write_buffer, kBellProcLength
         DEFINE_CLOSE_PARAMS close_params
 
 ;;; ============================================================

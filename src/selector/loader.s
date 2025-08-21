@@ -20,9 +20,9 @@
         io_buf := $3000
 
         DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
-        DEFINE_READ_PARAMS read_params1, kSegmentInvokerAddress, kSegmentInvokerLength
-        DEFINE_READ_PARAMS read_params2, kSegmentAppAddress, kSegmentAppLength
-        DEFINE_READ_PARAMS read_params3, alert_load_addr, kSegmentAlertLength
+        DEFINE_READWRITE_PARAMS read_params1, kSegmentInvokerAddress, kSegmentInvokerLength
+        DEFINE_READWRITE_PARAMS read_params2, kSegmentAppAddress, kSegmentAppLength
+        DEFINE_READWRITE_PARAMS read_params3, alert_load_addr, kSegmentAlertLength
 
         DEFINE_SET_MARK_PARAMS set_mark_params1, kSegmentInvokerOffset
         DEFINE_SET_MARK_PARAMS set_mark_params2, kSegmentAppOffset

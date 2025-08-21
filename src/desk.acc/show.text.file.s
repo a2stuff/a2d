@@ -48,7 +48,7 @@
 ;;; Keep in sync with main copy!
 mli_params:
         DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
-        DEFINE_READ_PARAMS read_params, default_buffer, kReadLength
+        DEFINE_READWRITE_PARAMS read_params, default_buffer, kReadLength
         DEFINE_GET_EOF_PARAMS get_eof_params
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
         DEFINE_CLOSE_PARAMS close_params
@@ -1216,7 +1216,7 @@ kLineOffsetDelta = 1 << kLineOffsetShift
 ;;; Keep in sync with aux copy!
 mli_params:
         DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
-        DEFINE_READ_PARAMS read_params, default_buffer, kReadLength
+        DEFINE_READWRITE_PARAMS read_params, default_buffer, kReadLength
         DEFINE_GET_EOF_PARAMS get_eof_params
         DEFINE_SET_MARK_PARAMS set_mark_params, 0
         DEFINE_CLOSE_PARAMS close_params

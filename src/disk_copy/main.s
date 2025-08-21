@@ -35,7 +35,7 @@ on_line_buffer  .res    16      ; enough for single device
 on_line_buffer2 .res    256     ; enough for all devices
 .endstruct
 
-        DEFINE_READ_BLOCK_PARAMS block_params, default_block_buffer, 0
+        DEFINE_READWRITE_BLOCK_PARAMS block_params, default_block_buffer, 0
 
 ;;; This must allow $2000 bytes of contiguous space in the
 ;;; default memory bitmap.

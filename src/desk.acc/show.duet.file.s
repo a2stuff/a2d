@@ -210,7 +210,7 @@ filename:       .res    16, 0
 
         DEFINE_GET_FILE_INFO_PARAMS get_info_params, INVOKE_PATH
         DEFINE_OPEN_PARAMS open_params, INVOKE_PATH, DA_IO_BUFFER
-        DEFINE_READ_PARAMS read_params, data_buf, kReadLength
+        DEFINE_READWRITE_PARAMS read_params, data_buf, kReadLength
         DEFINE_CLOSE_PARAMS close_params
 
 ;;; ============================================================
