@@ -1037,9 +1037,9 @@ iloop:  cpx     cached_window_entry_count
         jsr     main::save_restore_windows::Open
         jcs     exit
         lda     main::save_restore_windows::open_params::ref_num
-        sta     main::save_restore_windows::read_params::ref_num
+        sta     main::save_restore_windows::rw_params::ref_num
         sta     main::save_restore_windows::close_params::ref_num
-        MLI_CALL READ, main::save_restore_windows::read_params
+        MLI_CALL READ, main::save_restore_windows::rw_params
         jsr     main::save_restore_windows::Close
 
         ;; Validate file format version byte

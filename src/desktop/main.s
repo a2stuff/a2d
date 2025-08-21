@@ -14030,8 +14030,7 @@ cursor_ibeam_flag:          ; high bit set if I-beam, clear if pointer
 
         DEFINE_CREATE_PARAMS create_params, str_desktop_file, ACCESS_DEFAULT, $F1
         DEFINE_OPEN_PARAMS open_params, str_desktop_file, desktop_file_io_buf
-        DEFINE_READWRITE_PARAMS read_params, desktop_file_data_buf, kFileSize
-        DEFINE_READWRITE_PARAMS write_params, desktop_file_data_buf, kFileSize
+        DEFINE_READWRITE_PARAMS rw_params, desktop_file_data_buf, kFileSize
         DEFINE_CLOSE_PARAMS close_params
 str_desktop_file:
         PASCAL_STRING kPathnameDeskTopState
@@ -14116,12 +14115,9 @@ finish: ldy     #0              ; Write sentinel
         sty     tmp_path_buf
 
         ;; Write the file
-        lda     #<tmp_path_buf
-        sta     create_params::pathname
-        sta     open_params::pathname
-        lda     #>tmp_path_buf
-        sta     create_params::pathname+1
-        sta     open_params::pathname+1
+        ldax    #tmp_path_buf
+        stax    create_params::pathname
+        stax    open_params::pathname
         jsr     WriteOutFile
 
 exit:   rts
@@ -14208,9 +14204,9 @@ window_id := findwindow_params::window_id
         jsr     Open
         bcs     :+
         lda     open_params::ref_num
-        sta     write_params::ref_num
+        sta     rw_params::ref_num
         sta     close_params::ref_num
-        MLI_CALL WRITE, write_params
+        MLI_CALL WRITE, rw_params
         jsr     Close
 :       rts
 .endproc ; WriteOutFile
