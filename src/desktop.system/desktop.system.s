@@ -2132,7 +2132,7 @@ str_not_completed:
         sta     OURCH
         param_call CoutString, str_insert
         jsr     WaitEnterEscape
-        cmp     #CHAR_ESCAPE
+        cmp     #$80|CHAR_ESCAPE
         bne     :+
 
         ldx     saved_stack
@@ -2399,7 +2399,7 @@ found:
         jsr     VTABZ
         param_call CoutString, str_ram_not_empty
         jsr     WaitEnterEscape
-        cmp     #CHAR_ESCAPE
+        cmp     #$80|CHAR_ESCAPE
         beq     quit
         jsr     HOME
 
