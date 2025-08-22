@@ -1144,6 +1144,7 @@ trash_name:  PASCAL_STRING res_string_trash_icon_name
         .include "../lib/clear_dhr.s"
         saved_ram_unitnum := main::saved_ram_unitnum
         saved_ram_drvec   := main::saved_ram_drvec
+        saved_ram_buffer  := IO_BUFFER
         .include "../lib/disconnect_ram.s"
 
 ;;; ============================================================

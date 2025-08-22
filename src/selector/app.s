@@ -2008,6 +2008,7 @@ loop_counter:
         .include "../lib/speed.s"
         .include "../lib/bell.s"
         .include "../lib/clear_dhr.s"
+        saved_ram_buffer := $1C00
         .include "../lib/disconnect_ram.s"
         .include "../lib/reconnect_ram.s"
         .include "../lib/readwrite_settings.s"

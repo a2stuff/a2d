@@ -3,6 +3,7 @@
 ;;; Requires:
 ;;; * `saved_ram_unitnum` (byte) to be defined
 ;;; * `saved_ram_drvec` (word) to be defined
+;;; * `saved_ram_buffer` (16 bytes) to be defined
 ;;; ============================================================
 
 .proc DisconnectRAM
@@ -21,7 +22,10 @@
         rts
 
         ;; Remove it, shuffle everything else down.
-remove: copy8   DEVLST,x, saved_ram_unitnum
+remove: lda     DEVLST,x
+        sta     saved_ram_unitnum
+        and     #UNIT_NUM_MASK
+        sta     on_line_params__unit_num
         copy16  RAMSLOT, saved_ram_drvec
         copy16  NODEV, RAMSLOT
 
@@ -34,10 +38,16 @@ shift:  lda     DEVLST+1,x
 
 :       dec     DEVCNT
 
-        ;; TODO: Issue ON_LINE call to device after disconnecting it
-        ;; to erases the VCB entry for the disconnected device, per
+        ;; Issue ON_LINE call to device after disconnecting it to
+        ;; erase the VCB entry for the disconnected device, per
         ;; Technical Note: ProDOS #8: Dealing with /RAM
-        ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.08.html
+        ;; https://prodos8.com/docs/technote/08/
+        MLI_CALL ON_LINE, on_line_params
+        ;; Should fail with `ERR_DEVICE_NOT_CONNECTED` ($28)
 
         rts
+
+        DEFINE_ON_LINE_PARAMS on_line_params, SELF_MODIFIED_BYTE, saved_ram_buffer
+        on_line_params__unit_num := on_line_params::unit_num
+
 .endproc ; DisconnectRAM

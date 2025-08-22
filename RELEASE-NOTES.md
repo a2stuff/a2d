@@ -14,6 +14,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Hide "invisible" files in file dialogs by default.
 * New localization: Bulgarian
 * ProDOS "sparse" files are now copied correctly. ([#878](https://github.com/a2stuff/a2d/issues/878))
+* Issue ON_LINE call after disconnecting /RAM.
 
 ### Launcher
 

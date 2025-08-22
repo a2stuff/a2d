@@ -422,8 +422,7 @@ NoOp:   rts
 
 ;;; ============================================================
 
-init:   jsr     DisconnectRAM
-
+init:
         ;; DeskTop will have left a no-longer valid port selected,
         ;; so init a new port before we do anything else.
         MGTK_CALL MGTK::InitPort, grafport
@@ -1324,9 +1323,6 @@ match:  clc
 ;;; ============================================================
 
         .include "../lib/inttostring.s"
-        saved_ram_unitnum := main__saved_ram_unitnum
-        saved_ram_drvec   := main__saved_ram_drvec
-        .include "../lib/disconnect_ram.s"
 
         ;; TODO: Move these out of the `auxlc` scope
         .include "../toolkits/btk.s"
