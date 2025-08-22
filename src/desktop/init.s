@@ -804,6 +804,13 @@ cvi_result:
         cpx     DEVCNT
         bne     :-
         dec     DEVCNT
+
+        ;; ProDOS requires an ON_LINE call after a device is
+        ;; disconnected in order to clean up the VCB entry. However,
+        ;; we only remove devices here if the device already failed an
+        ;; ON_LINE call with `ERR_DEVICE_NOT_CONNECTED` so it should
+        ;; not be necessary.
+
         rts
 .endproc ; RemoveDevice
 
