@@ -35,7 +35,7 @@ bin/setlang "en"
 
 perl -pni -e "s/define kDeskTopVersionSuffix .*/define kDeskTopVersionSuffix \"-${vtype}${vrel}\"/" src/config.inc
 
-git commit -a -m "Bump verson to ${version}" > /dev/null
+git commit -a -m "Bump version to ${version}" > /dev/null
 git tag "v${version}" > /dev/null
 
 # --------------------------------------------------
