@@ -160,8 +160,13 @@ ret:
 ;;; ============================================================
 
 .proc FlashImpl
-        jsr     _SetPort
+        ;; If disabled, return canceled
+        bit     state
+    IF_NS
+        return  #$80
+    END_IF
 
+        jsr     _SetPort
         jsr     _Invert
         FALL_THROUGH_TO _Invert
 .endproc ; FlashImpl
@@ -171,6 +176,7 @@ ret:
         MGTK_CALL MGTK::InflateRect, shrink_rect
         MGTK_CALL MGTK::PaintRect, rect
         MGTK_CALL MGTK::InflateRect, grow_rect
+        ;; returns MGTK success (A=0/Z=1/N=0)
         rts
 .endproc ; _Invert
 

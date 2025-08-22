@@ -13822,12 +13822,11 @@ KeyHookRelay:
         jmp     (PromptDialogKeyHandlerHook)
 
 .proc _HandleKeyOK
-        bit     ok_button::state
-        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-        bmi     ret
         BTK_CALL BTK::Flash, ok_button
-        lda     #PromptResult::ok
-ret:    rts
+     IF_NS
+        return  #$FF            ; ignore
+     END_IF
+        return  #PromptResult::ok
 .endproc ; _HandleKeyOK
 
 .proc _HandleKeyCancel

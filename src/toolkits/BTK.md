@@ -41,8 +41,7 @@ This should only be used when processing update events i.e. between `MGTK::Begin
 
 
 ### Flash ($02)
-Flash the button label. Used after a keypress.
-
+Flash the button label (if enabled). Used after a keypress. Returns with N=0/Z=1 normally, but N=1/Z=0 if disabled.
 
 ### Hilite ($03)
 Redraw the control label, considering the disable state.

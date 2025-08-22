@@ -544,12 +544,11 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleKeyReturn
-        bit     entry_picker_ok_button::state
-        ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-        bmi     ret
         BTK_CALL BTK::Flash, entry_picker_ok_button
-        lda     #0
-ret:    rts
+    IF_NS
+        return #$FF             ; ignore
+    END_IF
+        return  #0
 .endproc ; HandleKeyReturn
 
 ;;; ============================================================

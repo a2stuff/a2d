@@ -242,9 +242,8 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::drives_button::rect
     IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::drives_button
-        bmi     :+
-        jsr     _DoDrives
-:       rts
+        RTS_IF_NS
+        jmp     _DoDrives
     END_IF
 
         ;; --------------------------------------------------
@@ -253,9 +252,8 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::open_button::rect
     IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::open_button
-        bmi     :+
-        jsr     _DoOpen
-:       rts
+        RTS_IF_NS
+        jmp     _DoOpen
     END_IF
 
         ;; --------------------------------------------------
@@ -264,9 +262,8 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::close_button::rect
     IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::close_button
-        bmi     :+
-        jsr     _DoClose
-:       rts
+        RTS_IF_NS
+        jmp     _DoClose
     END_IF
 
         ;; --------------------------------------------------
@@ -275,9 +272,8 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::ok_button::rect
     IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::ok_button
-        bmi     :+
-        jsr     HandleOK
-:       rts
+        RTS_IF_NS
+        jmp     HandleOK
     END_IF
 
         ;; --------------------------------------------------
@@ -286,9 +282,8 @@ ret:    rts
         MGTK_CALL MGTK::InRect, file_dialog_res::cancel_button::rect
     IF_NOT_ZERO
         BTK_CALL BTK::Track, file_dialog_res::cancel_button
-        bmi     :+
-        jsr     HandleCancel
-:       rts
+        RTS_IF_NS
+        jmp     HandleCancel
     END_IF
 
 
@@ -591,40 +586,36 @@ ret:    rts
 
         cmp     #CHAR_RETURN
       IF_EQ
-        jsr     _IsOKAllowed
-        RTS_IF_CS
-
         BTK_CALL BTK::Flash, file_dialog_res::ok_button
+        RTS_IF_NS
         jmp     HandleOK
       END_IF
 
         cmp     #CHAR_ESCAPE
       IF_EQ
         BTK_CALL BTK::Flash, file_dialog_res::cancel_button
+        ;; always enabled
         jmp     HandleCancel
       END_IF
 
         cmp     #CHAR_CTRL_O
       IF_EQ
-        jsr     _IsOpenAllowed
-        RTS_IF_CS
-
         BTK_CALL BTK::Flash, file_dialog_res::open_button
+        RTS_IF_NS
         jmp     _DoOpen
       END_IF
 
         cmp     #CHAR_CTRL_D
       IF_EQ
         BTK_CALL BTK::Flash, file_dialog_res::drives_button
+        ;; always enabled
         jmp     _DoDrives
       END_IF
 
         cmp     #CHAR_CTRL_C
       IF_EQ
         jsr     _IsCloseAllowed
-        RTS_IF_CS
-
-        BTK_CALL BTK::Flash, file_dialog_res::close_button
+        RTS_IF_NS
         jmp     _DoClose
       END_IF
 

@@ -1113,25 +1113,23 @@ params: .res    3
 
 .proc dialog_shortcuts
         lda     event_params::key
+
         cmp     #kShortcutReadDisk
         beq     :+
         cmp     #TO_LOWER(kShortcutReadDisk)
-        bne     check_return
-:       BTK_CALL BTK::Flash, read_drive_button
-        return  #$01
-
-check_return:
-        cmp     #CHAR_RETURN
-    IF_EQ
-        bit     dialog_ok_button::state
-        .assert BTK::kButtonStateDisabled = $80, error, "const mismatch"
-        bmi     :+
-        BTK_CALL BTK::Flash, dialog_ok_button
-        lda     #$00
-:       rts
+:   IF_EQ
+        BTK_CALL BTK::Flash, read_drive_button
+        return  #1
     END_IF
 
-        return  #$FF
+        cmp     #CHAR_RETURN
+    IF_EQ
+        BTK_CALL BTK::Flash, dialog_ok_button
+        bmi     ignore          ; disabled
+        return  #0
+    END_IF
+
+ignore: return  #$FF
 .endproc ; dialog_shortcuts
 
 ;;; ============================================================
