@@ -595,14 +595,14 @@ SOUND_PROC Bonk
 ;;; *       Copyright Michael J. Mahon, 12/08/2009           *
 ;;; *                                                        *
 ;;; *  Uses 21.3kHz PWM to synthesize a squarewave sound of  *
-;;; *  diminishing volume, mimicing the "bonk" IIgs sound.   *
+;;; *  diminishing volume, mimicking the "bonk" IIgs sound.  *
 ;;; *                                                        *
 ;;; *  The PWM pulses are generated in 46-cycle loops, with  *
 ;;; *  the high duty cycle pulses varying between 7 cycles   *
 ;;; *  and 37 cycles, and the low duty cycle pulses always   *
 ;;; *  7 cycles.                                             *
 ;;; *                                                        *
-;;; *  Sound generaton begins at maximum duty cycle (volume) *
+;;; *  Sound generator begins at maximum duty cycle (volume) *
 ;;; *  and diminshes by 1/15 on each volume step, until the  *
 ;;; *  volume has been reduced to zero (equal high and low   *
 ;;; *  duty cycle half-periods).                             *
