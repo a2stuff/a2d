@@ -52,7 +52,7 @@ Return value in A, 0=success.
 
 ### `IconTK::InitToolKit` ($00)
 
-Initializes the tookit with key information about the client.
+Initializes the toolkit with key information about the client.
 
 Parameters:
 ```
