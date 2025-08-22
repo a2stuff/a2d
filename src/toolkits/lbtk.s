@@ -180,9 +180,16 @@ jump_table:
 
 .endproc ; Dispatch
 
+;;; ============================================================
+
 DrawEntryProc:  jmp     (lbr_copy + LBTK::ListBoxRecord::draw_entry_proc)
 OnSelChange:    jmp     (lbr_copy + LBTK::ListBoxRecord::on_sel_change)
 OnNoChange:     jmp     (lbr_copy + LBTK::ListBoxRecord::on_no_change)
+
+;;; ============================================================
+
+pencopy:        .byte   MGTK::pencopy
+penXOR:         .byte   MGTK::penXOR
 
 ;;; ============================================================
 ;;; Call to initialize (or reset) the list. The caller must set

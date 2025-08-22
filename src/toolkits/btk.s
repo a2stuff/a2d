@@ -387,6 +387,8 @@ down_flag:
 .ifndef BTK_SHORT
 ;;; ============================================================
 
+notpencopy:     .byte   MGTK::notpencopy
+
 ;;; Padding between radio/checkbox and label
 kLabelPadding = 5
 
