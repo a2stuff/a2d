@@ -602,7 +602,7 @@ SOUND_PROC Bonk
 ;;; *  and 37 cycles, and the low duty cycle pulses always   *
 ;;; *  7 cycles.                                             *
 ;;; *                                                        *
-;;; *  Sound generaton begins at maximum duty cycle (volume) *
+;;; *  Sound generator begins at maximum duty cycle (volume) *
 ;;; *  and diminshes by 1/15 on each volume step, until the  *
 ;;; *  volume has been reduced to zero (equal high and low   *
 ;;; *  duty cycle half-periods).                             *
