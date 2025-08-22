@@ -620,7 +620,7 @@ activate:
 
 ;;; ============================================================
 ;;; Input: A = row to ensure visible; high bit = force redraw,
-;;;   even if no scrolling occured.
+;;;   even if no scrolling occurred.
 ;;; Assert: `LBTK::ListBoxRecord::winfo`'s `MGTK::Winfo::vthumbpos` is set.
 
 .proc _ScrollIntoView
