@@ -16,6 +16,8 @@ BTKAuxEntry     := $4003
 LETKAuxEntry    := $4006
 ;;; LBTK loaded into AUX
 LBTKAuxEntry    := $4009
+;;; OPTK loaded into AUX
+OPTKAuxEntry    := $400C
 
 ;;; Desk Accessories are loaded in Main ($800-$1BFF) and Aux
 ;;; ($800-$1BFF) using an I/O buffer (Main $1C00-1FFF).

@@ -12,6 +12,7 @@
         MGTKEntry := MGTKRelayImpl
         LETKEntry := LETKRelayImpl
         BTKEntry := BTKRelayImpl
+        OPTKEntry := OPTKRelayImpl
 
         block_buffer := $1A00
         read_buffer := $1C00
@@ -32,12 +33,6 @@ Exec:
         cmp     #FormatEraseAction::format
         jeq     FormatDisk
         jmp     EraseDisk
-
-;;; ============================================================
-
-;;; The selected index (0-based), or $FF if no drive is selected
-selected_index:
-        .byte   0
 
 ;;; ============================================================
 ;;; Show the device prompt, name prompt, and confirmation.
@@ -81,11 +76,12 @@ selected_index:
         MGTK_CALL MGTK::MoveTo, vol_picker_line2_start
         MGTK_CALL MGTK::LineTo, vol_picker_line2_end
 
-        jsr     DrawVolumeLabels
-        copy8   #$FF, selected_index
+        copy8   #$FF, vol_picker_record::selected_index
         copy16  #HandleClick, main::PromptDialogClickHandlerHook
         copy16  #HandleKey, main::PromptDialogKeyHandlerHook
         copy8   #$80, has_device_picker_flag
+
+        OPTK_CALL OPTK::Draw, vol_picker_params
         jsr     main::UpdateOKButton
 
 :       jsr     main::PromptInputLoop
@@ -307,35 +303,18 @@ EraseDisk__EP2 := EraseDisk::EP2
 
 ;;; ============================================================
 
-.scope option_picker
-kOptionPickerRows = kVolPickerRows
-kOptionPickerCols = kVolPickerCols
-kOptionPickerItemWidth = kVolPickerItemWidth
-kOptionPickerItemHeight = kVolPickerItemHeight
-kOptionPickerTextHOffset = kVolPickerTextHOffset
-kOptionPickerTextVOffset = kVolPickerTextVOffset
-kOptionPickerLeft = kVolPickerLeft
-kOptionPickerTop = kVolPickerTop
-
-        .include "../lib/option_picker.s"
-.endscope ; option_picker
-
-;;; ============================================================
-
 ;;; Output: N=0 if there is a valid selection, N=1 if no selection
 ;;; A,X,Y unmodified
 .proc ValidSelection
-        bit     selected_index
+        bit     vol_picker_record::selected_index
         rts
 .endproc ; ValidSelection
 
 ;;; ============================================================
 
 .proc HandleClick
-        jsr     option_picker::HandleOptionPickerClick
-        php
-        jsr     main::UpdateOKButton
-        plp
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, vol_picker_params::coords
+        OPTK_CALL OPTK::Click, vol_picker_params
         bmi     ret
         jsr     DetectDoubleClick
     IF_NC
@@ -349,10 +328,16 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleKey
-        jsr     option_picker::IsOptionPickerKey
-    IF_EQ
-        jsr     option_picker::HandleOptionPickerKey
-        jsr     main::UpdateOKButton
+        cmp     #CHAR_UP
+        beq     :+
+        cmp     #CHAR_DOWN
+        beq     :+
+        cmp     #CHAR_LEFT
+        beq     :+
+        cmp     #CHAR_RIGHT
+:   IF_EQ
+        sta     vol_picker_params::key
+        OPTK_CALL OPTK::Key, vol_picker_params
     END_IF
 
         return  #$FF
@@ -361,42 +346,32 @@ ret:    rts
 ;;; ============================================================
 
 ;;; Input: A = index
-;;; Output: A unchanged, Z=1 if valid, Z=0 if not valid
-.proc IsIndexValid
-        cmp     DEVCNT
+;;; Output: N=0 if valid entry
+.proc IsEntryCallback
+        cmp     DEVCNT          ; num volumes - 1
         beq     yes
         bcs     no
-yes:    ldx     #0              ; clear N
+yes:    lda     #$00
         rts
-no:     ldx     #$FF            ; set N
+no:     lda     #$80
         rts
-.endproc ; IsIndexValid
+.endproc ; IsEntryCallback
 
-;;; ============================================================
-;;; Draw volume labels
-
-.proc DrawVolumeLabels
-        lda     #0
-        sta     vol
-
-        vol := *+1
-loop:   lda     #SELF_MODIFIED_BYTE
-        cmp     DEVCNT
-        bcc     :+
-        beq     :+
-        rts
-:
+.proc DrawEntryCallback
         ;; Reverse order, so boot volume is first
+        sta     index
         lda     DEVCNT
         sec
-        sbc     vol
-        jsr     GetDeviceNameForIndex
-        ldy     vol
-        jsr     option_picker::DrawOption
+        index := *+1
+        sbc     #SELF_MODIFIED_BYTE
 
-        inc     vol
-        jmp     loop
-.endproc ; DrawVolumeLabels
+        jsr     GetDeviceNameForIndex
+        jmp     main::DrawString
+.endproc ; DrawEntryCallback
+
+.proc SelChangeCallback
+        jmp     main::UpdateOKButton
+.endproc ; SelChangeCallback
 
 ;;; ============================================================
 
@@ -412,13 +387,13 @@ loop:   lda     #SELF_MODIFIED_BYTE
 ;;; ============================================================
 ;;; Gets the selected unit number from `DEVLST`
 ;;; Output: A = unit number (with low nibble intact)
-;;; Assert: `selected_index` is valid (i.e. not $FF)
+;;; Assert: `vol_picker_record::selected_index` is valid (i.e. not $FF)
 
 .proc GetSelectedUnitNum
         ;; Reverse order, so boot volume is first
         lda     DEVCNT
         sec
-        sbc     selected_index
+        sbc     vol_picker_record::selected_index
         tax
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
@@ -1067,8 +1042,10 @@ non_pro:
 
 .endscope ; format_erase_overlay
 
-format_erase_overlay__ValidSelection := format_erase_overlay::ValidSelection
-
 format_erase_overlay__Exec := format_erase_overlay::Exec
+format_erase_overlay__IsEntryCallback := format_erase_overlay::IsEntryCallback
+format_erase_overlay__DrawEntryCallback := format_erase_overlay::DrawEntryCallback
+format_erase_overlay__SelChangeCallback := format_erase_overlay::SelChangeCallback
+format_erase_overlay__ValidSelection := format_erase_overlay::ValidSelection
 
         ENDSEG OverlayFormatErase

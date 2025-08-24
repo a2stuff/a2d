@@ -77,7 +77,7 @@ Parameters:
 ### Key ($02)
 Handle key press.
 
-In response to an `EventKind::key_down` event, the caller should inspect the `key` property of the event to determine if the key is `CHAR_UP` or `CHAR_DOWN`. If it is, the caller should copy the `key` and `modifiers` properties of the event into te parameter block for this call.
+In response to an `EventKind::key_down` event, the caller should inspect the `key` property of the event to determine if the key is `CHAR_UP` or `CHAR_DOWN`. If it is, the caller should copy the `key` and `modifiers` properties of the event into the parameter block for this call.
 
 Parameters:
 ```

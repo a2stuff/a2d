@@ -11,6 +11,7 @@
         .include "../mgtk/mgtk.inc"
         .include "../toolkits/btk.inc"
         .include "../toolkits/lbtk.inc"
+        .include "../toolkits/optk.inc"
         .include "../common.inc"
 
 SAVE_AREA_BUFFER:= $0800

@@ -12,6 +12,7 @@
         .include "../toolkits/letk.inc"
         .include "../toolkits/btk.inc"
         .include "../toolkits/lbtk.inc"
+        .include "../toolkits/optk.inc"
         .include "../common.inc"
         .include .concat("../desk.acc/res/filenames.res.", kBuildLang)
 
@@ -31,13 +32,13 @@
         DEFSEG SegmentLoader,      $2000, $0200
         DEFSEG SegmentDeskTopAux,  $4000, $8000
         DEFSEG SegmentDeskTopLC,   $D000, $2100
-        DEFSEG SegmentDeskTopMain, $4000, $7300
+        DEFSEG SegmentDeskTopMain, $4000, $7100
         DEFSEG SegmentInitializer, $0800, $0800
         DEFSEG SegmentInvoker,     $0290, $0160
 
         ;; Dynamically loaded overlays
-        DEFSEG OverlayFormatErase,  $0800, $1100
-        DEFSEG OverlayShortcutPick, $5000, $0A00
+        DEFSEG OverlayFormatErase,  $0800, $0F00
+        DEFSEG OverlayShortcutPick, $5000, $0800
         DEFSEG OverlayFileDialog,   $6000, $0A00
         DEFSEG OverlayFileCopy,     $7000, $0100
         DEFSEG OverlayShortcutEdit, $7000, $0300

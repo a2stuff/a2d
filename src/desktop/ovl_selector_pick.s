@@ -13,6 +13,7 @@
         MLIEntry := main::MLIRelayImpl
         MGTKEntry := MGTKRelayImpl
         BTKEntry := BTKRelayImpl
+        OPTKEntry := OPTKRelayImpl
 
 io_buf := $0800
 
@@ -132,14 +133,21 @@ copy_when:  .byte   0
         lda     #$00
         sta     num_primary_run_list_entries
         sta     num_secondary_run_list_entries
-        copy8   #$FF, selected_index
+        copy8   #$FF, shortcut_picker_record::selected_index
         copy8   #BTK::kButtonStateDisabled, entry_picker_ok_button::state
-        jsr     OpenWindow
-        jsr     ReadFileAndDrawEntries
-        bpl     :+
-        jmp     CloseWindow
 
-:       jsr     PopulateEntriesFlagTable
+        jsr     OpenWindow
+        jsr     ReadFile
+    IF_NS
+        jmp     CloseWindow
+    END_IF
+
+        copy8   selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
+        copy8   selector_list + kSelectorListNumSecondaryRunListOffset, num_secondary_run_list_entries
+        jsr     PopulateEntriesFlagTable
+
+        OPTK_CALL OPTK::Draw, shortcut_picker_params
+
         FALL_THROUGH_TO dialog_loop
 .endproc ; Init
 
@@ -151,7 +159,7 @@ dialog_loop:
         jmp     DoCancel
 
         ;; Which action are we?
-:       lda     selected_index
+:       lda     shortcut_picker_record::selected_index
         bmi     dialog_loop
         lda     selector_action
         cmp     #SelectorAction::edit
@@ -169,7 +177,7 @@ dialog_loop:
 
 .proc DoDelete
         jsr     main::SetCursorWatch
-        lda     selected_index
+        lda     shortcut_picker_record::selected_index
         jsr     RemoveEntry
         bne     :+              ; Z set on success
 
@@ -184,7 +192,7 @@ dialog_loop:
 .proc DoEdit
         jsr     CloseWindow
 
-        lda     selected_index
+        lda     shortcut_picker_record::selected_index
         jsr     GetFileEntryAddr
         stax    $06
         param_call main::CopyPtr1ToBuf, text_input_buf
@@ -193,12 +201,12 @@ dialog_loop:
         lda     ($06),y
         sta     flags
 
-        lda     selected_index
+        lda     shortcut_picker_record::selected_index
         jsr     GetFilePathAddr
         jsr     main::CopyToBuf0
 
         ldx     #kRunListPrimary
-        lda     selected_index
+        lda     shortcut_picker_record::selected_index
         cmp     #kSelectorListNumPrimaryRunListEntries
         bcc     :+
         inx
@@ -244,7 +252,7 @@ dialog_loop:
         bpl     l7
         jmp     CloseWindow
 
-l7:     lda     selected_index
+l7:     lda     shortcut_picker_record::selected_index
         cmp     #kSelectorListNumPrimaryRunListEntries
         bcc     l10
         lda     which_run_list
@@ -255,7 +263,7 @@ l7:     lda     selected_index
         bne     l8
         jmp     L90F4
 
-l8:     lda     selected_index
+l8:     lda     shortcut_picker_record::selected_index
         jsr     RemoveEntry
         beq     l9
         jmp     CloseWindow
@@ -274,7 +282,7 @@ l10:    lda     which_run_list
         bne     l11
         jmp     Init
 
-l11:    lda     selected_index
+l11:    lda     shortcut_picker_record::selected_index
         jsr     RemoveEntry
         beq     l12
         jmp     CloseWindow
@@ -287,7 +295,7 @@ l12:    ldx     num_secondary_run_list_entries
         adc     #$07
         jmp     l14
 
-l13:    lda     selected_index
+l13:    lda     shortcut_picker_record::selected_index
 l14:    ldy     copy_when
         jsr     AssignEntryData
         jsr     WriteFile
@@ -312,7 +320,7 @@ copy_when_conversion_table:
 .proc DoRun
         jsr     CloseWindow
         jsr     main::ClearUpdates       ; Run dialog OK
-        lda     selected_index
+        lda     shortcut_picker_record::selected_index
         rts
 .endproc ; DoRun
 
@@ -347,9 +355,6 @@ copy_when_conversion_table:
 num_primary_run_list_entries:
         .byte   0
 num_secondary_run_list_entries:
-        .byte   0
-
-selected_index:
         .byte   0
 
 selector_action:
@@ -390,37 +395,6 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 
         param_jump DrawTitleCentered, label_run
 .endproc ; OpenWindow
-
-;;; ============================================================
-
-.scope option_picker
-kOptionPickerRows = kShortcutPickerRows
-kOptionPickerCols = kShortcutPickerCols
-kOptionPickerItemWidth = kShortcutPickerItemWidth
-kOptionPickerItemHeight = kShortcutPickerItemHeight
-kOptionPickerTextHOffset = kShortcutPickerTextHOffset
-kOptionPickerTextVOffset = kShortcutPickerTextVOffset
-kOptionPickerLeft = kShortcutPickerLeft
-kOptionPickerTop = kShortcutPickerTop
-
-        .include "../lib/option_picker.s"
-.endscope ; option_picker
-
-;;; ============================================================
-
-;;; Inputs: A,X=string, Y=index
-.proc DrawEntry
-        ptr1 := $06
-        stax    ptr1
-        tya
-        pha
-
-        param_call main::CopyPtr1ToBuf, text_buffer2
-        pla
-        tay
-
-        param_jump option_picker::DrawOption, text_buffer2
-.endproc ; DrawEntry
 
 ;;; ============================================================
 
@@ -497,10 +471,8 @@ handle_button:
 :       rts
     END_IF
 
-        jsr     option_picker::HandleOptionPickerClick
-        php
-        jsr     UpdateOKButton
-        plp
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, shortcut_picker_params::coords
+        OPTK_CALL OPTK::Click, shortcut_picker_params
         bmi     ret
         jsr     DetectDoubleClick
     IF_NC
@@ -531,10 +503,16 @@ ret:    rts
         ora     num_secondary_run_list_entries
     IF_NE
         lda     event_params::key
-        jsr     option_picker::IsOptionPickerKey
-      IF_EQ
-        jsr     option_picker::HandleOptionPickerKey
-        jsr     UpdateOKButton
+        cmp     #CHAR_UP
+        beq     :+
+        cmp     #CHAR_DOWN
+        beq     :+
+        cmp     #CHAR_LEFT
+        beq     :+
+        cmp     #CHAR_RIGHT
+:     IF_EQ
+        sta     shortcut_picker_params::key
+        OPTK_CALL OPTK::Key, shortcut_picker_params
       END_IF
     END_IF
 
@@ -562,7 +540,7 @@ ret:    rts
 
 .proc UpdateOKButton
         lda     #BTK::kButtonStateNormal
-        bit     selected_index
+        bit     shortcut_picker_record::selected_index
         bpl     :+
         lda     #BTK::kButtonStateDisabled
 :       cmp     entry_picker_ok_button::state
@@ -572,16 +550,6 @@ ret:    rts
 :       rts
 
 .endproc ; UpdateOKButton
-
-;;; ============================================================
-
-;;; Input: A = index
-;;; Output: A unchanged, Z=1 if valid, Z=0 if not valid
-.proc IsIndexValid
-        tay
-        ldx     entries_flag_table,y
-        rts
-.endproc ; IsIndexValid
 
 ;;; ============================================================
 
@@ -1095,75 +1063,43 @@ close:  MLI_CALL CLOSE, close_params
 
 ;;; ============================================================
 
-.proc ReadFileAndDrawEntries
-        jsr     ReadFile
-        RTS_IF_NS
-        FALL_THROUGH_TO  DrawAllEntries
-.endproc ; ReadFileAndDrawEntries
-
-;;; ============================================================
-
-.proc DrawAllEntries
-        lda     selector_list + kSelectorListNumPrimaryRunListOffset
-        sta     num_primary_run_list_entries
-        beq     secondary_run_list
-
-        ;; Draw "primary run list" entries
-        lda     #0
-        sta     index
-loop1:  lda     index
-        cmp     num_primary_run_list_entries
-        beq     secondary_run_list
-        jsr     main::ATimes16
-        clc
-        adc     #kSelectorListEntriesOffset
-        pha
-        txa
-        adc     #>selector_list
-        tax
-        pla
-        ldy     index
-        jsr     DrawEntry
-        inc     index
-        jmp     loop1
-
-        ;; Draw "secondary run list" entries
-secondary_run_list:
-        lda     selector_list + kSelectorListNumSecondaryRunListOffset
-        sta     num_secondary_run_list_entries
-        beq     done
-        lda     #0
-        sta     index
-loop2:  lda     index
-        cmp     num_secondary_run_list_entries
-        beq     done
-        clc
-        adc     #8
-        jsr     main::ATimes16
-        clc
-        adc     #kSelectorListEntriesOffset
-        pha
-        txa
-        adc     #>selector_list
-        tax
-        lda     index
-        clc
-        adc     #8
+.proc IsEntryCallback
         tay
+        ldx     entries_flag_table,y
+        rts
+.endproc ; IsEntryCallback
+
+.proc DrawEntryCallback
+        addr := selector_list + kSelectorListEntriesOffset
+
+        jsr     main::ATimes16
+        clc
+        adc     #<addr
+        pha
+        txa
+        adc     #>addr
+        tax
         pla
-        jsr     DrawEntry
-        inc     index
-        jmp     loop2
 
-done:   return  #0
+        ptr1 := $06
+        stax    ptr1
+        param_call main::CopyPtr1ToBuf, text_buffer2
+        param_jump main::DrawString, text_buffer2
+.endproc ; DrawEntryCallback
 
-index:  .byte   0
-.endproc ; DrawAllEntries
+.proc SelChangeCallback
+        jmp     UpdateOKButton
+.endproc ; SelChangeCallback
+
 
 ;;; ============================================================
 
 .endscope ; SelectorPickOverlay
 
 selector_picker__Exec    := SelectorPickOverlay::Exec
+
+SelectorPickOverlay__IsEntryCallback   := SelectorPickOverlay::IsEntryCallback
+SelectorPickOverlay__DrawEntryCallback := SelectorPickOverlay::DrawEntryCallback
+SelectorPickOverlay__SelChangeCallback := SelectorPickOverlay::SelChangeCallback
 
         ENDSEG OverlayShortcutPick

@@ -76,7 +76,6 @@ A handful of re-usable libraries that don't have fancy MLI-style interfaces are 
 
 * [Alert Dialog](../lib/alert_dialog.s) - simple error and prompt dialogs
 * [File Dialog](../lib/file_dialog.s) - file open / save
-* [Option Picker](../lib/option_picker.s) - pick from grid of options
 * [Get Next Event](../lib/get_next_event.s) - helper to detect no-ops and moves
 * [Detect Double Click](../lib/doubleclick.s) - helper to detect double clicks
 * [Read/Write Settings](../lib/readwrite_settings.s) - access/modify options

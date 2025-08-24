@@ -25,7 +25,6 @@
 ;;; ============================================================
 
 ;;; TODO: Move these somewhere more sensible
-pencopy:        .byte   MGTK::pencopy
 penXOR:         .byte   MGTK::penXOR
 notpencopy:     .byte   MGTK::notpencopy
 
@@ -281,10 +280,6 @@ desktop_available_flag:
 
         DEFINE_GET_FILE_INFO_PARAMS file_info_params, SELF_MODIFIED
 
-;;; Index of selected entry, or $FF if none
-selected_index:
-        .byte   0
-
 entry_string_buf:
         .res    20
 
@@ -337,7 +332,6 @@ portptr:        .addr   0
 
 entry:
 .scope AppInit
-        copy8   #$FF, selected_index
         copy8   #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
         copy8   #1, invoked_during_boot_flag
@@ -384,7 +378,7 @@ check_key:
         bmi     done_keys
         cmp     num_primary_run_list_entries
         bcs     done_keys
-        sta     selected_index
+        sta     invoke_index
         jsr     GetSelectorListEntryAddr
 
         entry_ptr := $06
@@ -397,11 +391,13 @@ check_key:
     IF_NE
         jsr     GetCopiedToRAMCardFlag
         beq     done_keys       ; no RAMCard, skip
-        ldx     selected_index
+        ldx     invoke_index
         jsr     GetEntryCopiedToRAMCardFlag
         bpl     done_keys       ; wasn't copied!
     END_IF
-        lda     selected_index
+
+        invoke_index := *+1
+        lda     #SELF_MODIFIED_BYTE
         jsr     InvokeEntry
 
         ;; --------------------------------------------------
@@ -574,11 +570,12 @@ set_startup_menu_items:
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     GetPortAndDrawWindow
-        copy8   #$FF, selected_index
         copy8   #BTK::kButtonStateDisabled, ok_button::state
         jsr     LoadSelectorList
         jsr     PopulateEntriesFlagTable
-        jsr     DrawEntries
+
+        OPTK_CALL OPTK::Draw, op_params
+
         jmp     EventLoop
 
 quick_boot_slot:
@@ -661,7 +658,9 @@ ClearUpdates:
         bne     done            ; obscured
         lda     #$80            ; is update
         jsr     DrawWindow
-        jsr     DrawEntries
+
+        OPTK_CALL OPTK::Update, op_params
+
         MGTK_CALL MGTK::EndUpdate
 done:   rts
 
@@ -699,18 +698,11 @@ menu_addr_table:
 
 ;;; ============================================================
 
-.scope option_picker
-kOptionPickerRows = kEntryPickerRows
-kOptionPickerCols = kEntryPickerCols
-kOptionPickerItemWidth = kEntryPickerItemWidth
-kOptionPickerItemHeight = kEntryPickerItemHeight
-kOptionPickerTextHOffset = kEntryPickerTextHOffset
-kOptionPickerTextVOffset = kEntryPickerTextVOffset
-kOptionPickerLeft = kEntryPickerLeft
-kOptionPickerTop = kEntryPickerTop
+        SelChangeCallback := UpdateOKButton
+        DEFINE_OPTION_PICKER op_record, winfo::kDialogId, kEntryPickerLeft, kEntryPickerTop, kEntryPickerRows, kEntryPickerCols, kEntryPickerItemWidth, kEntryPickerItemHeight, kEntryPickerTextHOffset, kEntryPickerTextVOffset, IsEntryCallback, DrawEntryCallback, SelChangeCallback
+        op_record__selected_index := op_record::selected_index
 
-        .include "../lib/option_picker.s"
-.endscope ; option_picker
+        DEFINE_OPTION_PICKER_PARAMS op_params, op_record
 
 ;;; ============================================================
 
@@ -779,9 +771,7 @@ L93EB:  tsx
 ;;; ============================================================
 
 .proc CmdRunAProgram
-        lda     #$FF
-        jsr     option_picker::SetOptionPickerSelection
-        jsr     UpdateOKButton
+        jsr     ClearSelectedIndex
 retry:
         jsr     SetCursorWatch
 
@@ -874,15 +864,13 @@ check_desktop_btn:
     END_IF
 
         ;; Entry selection?
-        jsr     option_picker::HandleOptionPickerClick
-        php
-        jsr     UpdateOKButton
-        plp
+        COPY_STRUCT MGTK::Point, screentowindow_params::window, op_params::coords
+        OPTK_CALL OPTK::Click, op_params
         bmi     ret
         jsr     DetectDoubleClick
     IF_NC
         BTK_CALL BTK::Flash, ok_button
-        jmp     InvokeEntry
+        jmp     TryInvokeSelectedIndex
     END_IF
 ret:    rts
 .endproc ; HandleButtonDown
@@ -891,7 +879,7 @@ ret:    rts
 
 .proc UpdateOKButton
         lda     #BTK::kButtonStateNormal
-        bit     selected_index
+        bit     op_record::selected_index
         bpl     :+
         lda     #BTK::kButtonStateDisabled
 :       cmp     ok_button::state
@@ -964,16 +952,6 @@ noop:   rts
 
 ;;; ============================================================
 
-;;; Input: A = index
-;;; Output: A unchanged, Z=1 if valid, Z=0 if not valid
-.proc IsIndexValid
-        tay
-        ldx     entries_flag_table,y
-        rts
-.endproc ; IsIndexValid
-
-;;; ============================================================
-
 .proc HandleNonmenuKey
 
         lda     #winfo::kDialogId
@@ -998,7 +976,8 @@ noop:   rts
         cmp     num_primary_run_list_entries
         RTS_IF_GE
 
-        jsr     option_picker::SetOptionPickerSelection
+        sta     op_params::new_selection
+        OPTK_CALL OPTK::SetSelection, op_params
         jmp     UpdateOKButton
 
         ;; --------------------------------------------------
@@ -1020,10 +999,17 @@ not_return:
         ora     num_secondary_run_list_entries
     IF_NE
         lda     event_params::key
-        jsr     option_picker::IsOptionPickerKey
-      IF_EQ
-        jsr     option_picker::HandleOptionPickerKey
-        jmp     UpdateOKButton
+        cmp     #CHAR_UP
+        beq     :+
+        cmp     #CHAR_DOWN
+        beq     :+
+        cmp     #CHAR_LEFT
+        beq     :+
+        cmp     #CHAR_RIGHT
+:     IF_EQ
+        sta     op_params::key
+        OPTK_CALL OPTK::Key, op_params
+        rts
       END_IF
     END_IF
 
@@ -1067,42 +1053,10 @@ entries_flag_table:
 ;;; ============================================================
 
 .proc TryInvokeSelectedIndex
-        lda     selected_index
-        bmi     :+
-        jsr     InvokeEntry
-:       rts
+        lda     op_record::selected_index
+        RTS_IF_NS
+        jmp     InvokeEntry
 .endproc ; TryInvokeSelectedIndex
-
-;;; ============================================================
-
-.proc DrawEntries
-
-        ;; Primary Run List
-        lda     #0
-        sta     count
-:       lda     count
-        cmp     num_primary_run_list_entries
-        beq     :+
-        jsr     DrawListEntry
-        inc     count
-        jmp     :-
-
-        ;; Secondary Run List
-:       lda     #0
-        sta     count
-:       lda     count
-        cmp     num_secondary_run_list_entries
-        beq     done
-        clc
-        adc     #8
-        jsr     DrawListEntry
-        inc     count
-        jmp     :-
-
-done:   rts
-
-count:  .byte   0
-.endproc ; DrawEntries
 
 ;;; ============================================================
 
@@ -1362,8 +1316,18 @@ hi:    .byte   0
 
 ;;; ============================================================
 ;;; Input: A = entry number
+;;; Output: N=0 if valid entry
 
-.proc DrawListEntry
+.proc IsEntryCallback
+        tay
+        ldx     entries_flag_table,y
+        rts
+.endproc ; IsEntryCallback
+
+;;; ============================================================
+;;; Input: A = entry number
+
+.proc DrawEntryCallback
         ptr := $06
 
         pha
@@ -1384,38 +1348,35 @@ hi:    .byte   0
         lda     (ptr),y
         clc
         adc     #3
-        sta     entry_string_buf
+        sta     text_params::length
 
         pla
-        pha
         cmp     #8              ; first 8?
-        bcc     prefix
-
+    IF_GE
         ;; Prefix with spaces
         lda     #' '
         sta     entry_string_buf+1
         sta     entry_string_buf+2
         sta     entry_string_buf+3
-        jmp     common
-
+    ELSE
         ;; Prefix with number
-prefix: pla
-        pha
-        clc
         adc     #'1'
         sta     entry_string_buf+1
         lda     #' '
         sta     entry_string_buf+2
         sta     entry_string_buf+3
+    END_IF
 
         ;; Draw the string
-common: lda     #winfo::kDialogId
-        jsr     GetWindowPort
-        pla
-        tay
-        param_call option_picker::DrawOption, entry_string_buf
+common: MGTK_CALL MGTK::DrawText, text_params
         rts
-.endproc ; DrawListEntry
+
+.params text_params
+data:   .addr   entry_string_buf+1
+length: .byte   SELF_MODIFIED_BYTE
+.endparams
+        text_params__length := text_params::length
+.endproc ; DrawEntryCallback
 
 ;;; ============================================================
 
@@ -1436,26 +1397,30 @@ StartupSlot := CmdStartup::set
 
 ;;; ============================================================
 
-.proc InvokeEntry
+;;; Input: A = index
+;;; Does not rely on the UI's selected index as this may predate
+;;; the UI display.
+.proc InvokeEntryImpl
         ptr := $06
+
+invoke_index:
+        .byte   SELF_MODIFIED_BYTE
+
+start:
+        sta     invoke_index
 
         ;; --------------------------------------------------
         ;; Highlight entry in UI, if needed
         lda     invoked_during_boot_flag
-        bne     :+              ; skip if there's no UI yet
+    IF_ZERO                     ; skip if there's no UI yet
         jsr     SetCursorWatch
-        lda     selected_index
-        pha
-        lda     #$FF            ; clear hilite
-        jsr     option_picker::SetOptionPickerSelection
-        jsr     UpdateOKButton
-        pla
-        sta     selected_index  ; needed below; will be cleared on failure
-:
+        jsr     ClearSelectedIndex
+    END_IF
+
         ;; --------------------------------------------------
         ;; Figure out entry path, given entry options and overrides
         lda     invoked_during_boot_flag
-        bne     check_entry_flags
+    IF_ZERO
         bit     BUTN0           ; if Open-Apple is down, skip RAMCard copy
         bpl     :+
         jmp     use_entry_path
@@ -1463,10 +1428,10 @@ StartupSlot := CmdStartup::set
         ;; Is there a RAMCard at all?
         jsr     GetCopiedToRAMCardFlag
         beq     use_entry_path  ; no RAMCard, skip
+    END_IF
 
         ;; Look at the entry's flags
-check_entry_flags:
-        lda     selected_index
+        lda     invoke_index
         jsr     GetSelectorListEntryAddr
         stax    ptr
         ldy     #kSelectorEntryFlagsOffset
@@ -1481,13 +1446,13 @@ check_entry_flags:
         lda     invoked_during_boot_flag
         bne     use_ramcard_path ; skip if no UI
 
-        ldx     selected_index
+        ldx     invoke_index
         jsr     GetEntryCopiedToRAMCardFlag
         bmi     use_ramcard_path ; already copied
 
         ;; Need to copy to RAMCard
         path_addr := $06
-        lda     selected_index
+        lda     invoke_index
         jsr     GetSelectorListPathAddr
         jsr     CopyPathToInvokerPrefix
 
@@ -1502,7 +1467,7 @@ check_entry_flags:
         jmp     ClearSelectedIndex ; canceled!
     END_IF
 
-        ldx     selected_index
+        ldx     invoke_index
         lda     #$FF
         jsr     SetEntryCopiedToRAMCardFlag
         jmp     use_ramcard_path
@@ -1511,28 +1476,29 @@ check_entry_flags:
         ;; `kSelectorEntryCopyOnBoot`
 on_boot:
         lda     invoked_during_boot_flag
-        bne     use_ramcard_path         ; skip if no UI
-
-        ldx     selected_index
+    IF_ZERO                     ; skip if no UI
+        ldx     invoke_index
         jsr     GetEntryCopiedToRAMCardFlag
         bpl     use_entry_path  ; wasn't copied!
         FALL_THROUGH_TO use_ramcard_path
+    END_IF
 
         ;; --------------------------------------------------
         ;; Copied to RAMCard - use copied path
 use_ramcard_path:
-        lda     selected_index
+        lda     invoke_index
         jsr     ComposeRAMCardEntryPath
         jmp     LaunchPath
 
         ;; --------------------------------------------------
         ;; Not copied to RAMCard - just use entry's path
 use_entry_path:
-        lda     selected_index
+        lda     invoke_index
         jsr     GetSelectorListPathAddr
 
         FALL_THROUGH_TO LaunchPath
-.endproc ; InvokeEntry
+.endproc ; InvokeEntryImpl
+InvokeEntry := InvokeEntryImpl::start
 
 ;;; ============================================================
 ;;; Launch specified path (A,X = path)
@@ -1546,7 +1512,7 @@ retry:
         ;; Not present; maybe show a retry prompt
         tax
         lda     invoked_during_boot_flag
-        bne     fail
+    IF_ZERO
         txa
         pha
         jsr     ShowAlert
@@ -1559,6 +1525,7 @@ retry:
         bne     fail            ; `kAlertResultCancel` = 1
         jsr     SetCursorWatch
         jmp     retry
+    END_IF
 
 fail:   jmp     ClearSelectedIndex
 
@@ -1684,10 +1651,12 @@ check_path:
 
 .proc ClearSelectedIndex
         lda     invoked_during_boot_flag
-        bne     :+
-        lda     #$FF
-        sta     selected_index
-:       rts
+    IF_ZERO
+        copy8   #$FF, op_params::new_selection
+        OPTK_CALL OPTK::SetSelection, op_params
+        jsr     UpdateOKButton
+    END_IF
+        rts
 .endproc ; ClearSelectedIndex
 
 ;;; ============================================================
@@ -2023,6 +1992,9 @@ loop_counter:
 
         .include "../toolkits/lbtk.s"
         LBTKEntry := lbtk::LBTKEntry
+
+        .include "../toolkits/optk.s"
+        OPTKEntry := optk::OPTKEntry
 
 ;;; ============================================================
 

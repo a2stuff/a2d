@@ -402,6 +402,26 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         kShortcutPickerTextHOffset = 10
         kShortcutPickerTextVOffset = kShortcutPickerItemHeight - 1
 
+        DEFINE_OPTION_PICKER shortcut_picker_record, winfo_entry_picker::kWindowId, kShortcutPickerLeft, kShortcutPickerTop, kShortcutPickerRows, kShortcutPickerCols, kShortcutPickerItemWidth, kShortcutPickerItemHeight, kShortcutPickerTextHOffset, kShortcutPickerTextVOffset, ShortcutPickerIsEntryCallback, ShortcutPickerDrawEntryCallback, ShortcutPickerSelChangeCallback
+        DEFINE_OPTION_PICKER_PARAMS shortcut_picker_params, shortcut_picker_record
+
+;;; OPTK callbacks need to be aux-callable, so use these relays
+ShortcutPickerIsEntryCallback:
+        jsr     BankInMain
+        jsr     SelectorPickOverlay__IsEntryCallback
+        jmp     BankInAux
+
+ShortcutPickerDrawEntryCallback:
+        jsr     BankInMain
+        jsr     SelectorPickOverlay__DrawEntryCallback
+        jmp     BankInAux
+
+ShortcutPickerSelChangeCallback:
+        jsr     BankInMain
+        jsr     SelectorPickOverlay__SelChangeCallback
+        jmp     BankInAux
+
+
         ;; Line endpoints
         DEFINE_POINT entry_picker_line1_start, kBorderDX*2, 22
         DEFINE_POINT entry_picker_line1_end, winfo_entry_picker::kWidth - kBorderDX*2, 22
@@ -424,6 +444,25 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         kVolPickerItemHeight = kListItemHeight
         kVolPickerTextHOffset = 1
         kVolPickerTextVOffset = kVolPickerItemHeight-1
+
+        DEFINE_OPTION_PICKER vol_picker_record, winfo_prompt_dialog::kWindowId, kVolPickerLeft, kVolPickerTop, kVolPickerRows, kVolPickerCols, kVolPickerItemWidth, kVolPickerItemHeight, kVolPickerTextHOffset, kVolPickerTextVOffset, VolPickerIsEntryCallback, VolPickerDrawEntryCallback, VolPickerSelChangeCallback
+        DEFINE_OPTION_PICKER_PARAMS vol_picker_params, vol_picker_record
+
+;;; OPTK callbacks need to be aux-callable, so use these relays
+VolPickerIsEntryCallback:
+        jsr     BankInMain
+        jsr     format_erase_overlay__IsEntryCallback
+        jmp     BankInAux
+
+VolPickerDrawEntryCallback:
+        jsr     BankInMain
+        jsr     format_erase_overlay__DrawEntryCallback
+        jmp     BankInAux
+
+VolPickerSelChangeCallback:
+        jsr     BankInMain
+        jsr     format_erase_overlay__SelChangeCallback
+        jmp     BankInAux
 
         ;; Label pos
         DEFINE_POINT vol_picker_select_pos, kDialogLabelDefaultX, kVolPickerTop - 4

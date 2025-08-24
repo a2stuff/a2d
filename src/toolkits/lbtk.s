@@ -2,7 +2,8 @@
 ;;; List Box ToolKit
 ;;; ============================================================
 
-;;; * Routines dirty $50...$6F
+;;; Routines dirty $50...$6F
+;;; TODO: Spill to stack?
 
 .scope lbtk
         LBTKEntry := *
@@ -783,6 +784,7 @@ rows:   .byte   0
 
 ;;; ============================================================
 
+        ;; TODO: Move into `tmp_space`
 .params multiply_params
 number:         .word   0       ; (in) populated dynamically
 numerator:      .word   0       ; (in) populated dynamically

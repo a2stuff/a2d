@@ -1,6 +1,8 @@
+TOOLKITS = btk lbtk optk
 HEADERS = $(COMMON_HEADERS) \
 	$(SYS_FONTS) \
-	../mgtk/mgtk.inc ../toolkits/btk.inc ../toolkits/lbtk.inc
+	../mgtk/mgtk.inc \
+	$(foreach TK,$(TOOLKITS),../toolkits/$(TK).inc)
 
 include ../common/Makefile.common
 
@@ -18,7 +20,7 @@ clean:
 	rm -f $(OUTDIR)/*.fonts
 	rm -f $(TARGETS)
 
-$(OUTDIR)/selector.o: selector.s $(HEADERS) loader.s app.s alert_dialog.s ovl_*.s ../mgtk/mgtk.s ../toolkits/btk.s ../toolkits/lbtk.s
+$(OUTDIR)/selector.o: selector.s $(HEADERS) loader.s app.s alert_dialog.s ovl_*.s ../mgtk/mgtk.s $(foreach TK,$(TOOLKITS),../toolkits/$(TK).s)
 	../../bin/colorize ca65 $(CAFLAGS) --listing $(basename $@).list -o $@ $<
 
 $(OUTDIR)/%.built: $(OUTDIR)/%.o ../common/asm.cfg

@@ -20,6 +20,12 @@ These are parts of A2D that expose MLI-style interfaces. Like the [MouseGraphics
 * `lbtk.inc` - header file to include
 * `lbtk.s` - toolkit source - build as part of application
 
+## Option Picker ToolKit
+
+* `OPTK.md` - ToolKit documentation
+* `optk.inc` - header file to include
+* `optk.s` - toolkit source - build as part of application
+
 ## Icon ToolKit
 
 * `IconTK.md` - ToolKit documentation

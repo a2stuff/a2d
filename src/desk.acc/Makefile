@@ -1,7 +1,10 @@
+TOOLKITS = letk btk lbtk
 HEADERS = $(COMMON_HEADERS) \
 	$(MONO_FONTS) \
 	$(wildcard neko_frames/*.bin) \
-	../desktop/desktop.inc ../mgtk/mgtk.inc $(wildcard ../toolkits/*.inc)
+	../desktop/desktop.inc \
+        ../mgtk/mgtk.inc \
+	$(foreach TK,$(TOOLKITS),../toolkits/$(TK).inc)
 
 include ../common/Makefile.common
 

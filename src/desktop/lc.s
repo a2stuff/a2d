@@ -125,6 +125,14 @@ params:  .res    3
         jmp     ParamsRelayImpl
 .endproc ; LBTKRelayImpl
 
+;;; ============================================================
+;;; OptionPickerTK call from main>aux, MLI-style params
+
+.proc OPTKRelayImpl
+        ldax    #aux::optk::OPTKEntry
+        jmp     ParamsRelayImpl
+.endproc ; OPTKRelayImpl
+
 
 ;;; ============================================================
 ;;; Within an update event, adjust the update port of a window after

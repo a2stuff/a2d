@@ -21,6 +21,8 @@
         jmp     letk__LETKEntry
         ASSERT_EQUALS *, ::LBTKAuxEntry, "entry point"
         jmp     lbtk__LBTKEntry
+        ASSERT_EQUALS *, ::OPTKAuxEntry, "entry point"
+        jmp     optk__OPTKEntry
 
 ;;; ============================================================
 ;;; MouseGraphics ToolKit - fixed location for DAs to reference
@@ -54,6 +56,9 @@
 
         .include "../toolkits/lbtk.s"
         lbtk__LBTKEntry := lbtk::LBTKEntry
+
+        .include "../toolkits/optk.s"
+        optk__OPTKEntry := optk::OPTKEntry
 
 ;;; ============================================================
 ;;; Resources

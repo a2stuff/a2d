@@ -3,6 +3,7 @@
 ;;; ============================================================
 
 ;;; Routines dirty $06...$2F
+;;; TODO: Spill to stack?
 
 .scope letk
         LETKEntry := *
