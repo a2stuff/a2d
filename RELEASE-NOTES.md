@@ -56,6 +56,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve the appearance of the Trash icon.
 * Ignore suffix when determining icon type for directories.
 * Improve mouse responsiveness while list views are drawn.
+* Prevent crash after clicking Cancel if `LOCAL/SELECTOR.LIST` is unavailable.
 
 ### Selector
 

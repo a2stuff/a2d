@@ -139,7 +139,7 @@ copy_when:  .byte   0
         jsr     OpenWindow
         jsr     ReadFile
     IF_NS
-        jmp     CloseWindow
+        jmp     DoCancel
     END_IF
 
         copy8   selector_list + kSelectorListNumPrimaryRunListOffset, num_primary_run_list_entries
