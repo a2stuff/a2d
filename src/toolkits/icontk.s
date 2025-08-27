@@ -2218,6 +2218,13 @@ empty:  return #$FF
 ;;; C=1 if no clipping rect remains, so no drawing is needed.
 .proc CalcWindowIntersectionsImpl
 
+.params cwi_findwindow_params
+mousex:         .word   0
+mousey:         .word   0
+which_area:     .byte   0
+window_id:      .byte   0
+.endparams
+
 pt_num: .byte   0
 
 ;;; Points at corners of icon's bounding rect
@@ -2349,15 +2356,15 @@ do_pt:  lda     pt_num
         ;; Look up window at Nth point
         ldy     #0
 :       lda     pt1::xcoord,x
-        sta     findwindow_params,y
+        sta     cwi_findwindow_params,y
         iny
         inx
         cpy     #4
         bne     :-
 
         inc     pt_num
-        MGTK_CALL MGTK::FindWindow, findwindow_params
-        lda     findwindow_params::window_id
+        MGTK_CALL MGTK::FindWindow, cwi_findwindow_params
+        lda     cwi_findwindow_params::window_id
         cmp     clip_window_id
         beq     next_pt
 
@@ -2369,7 +2376,7 @@ do_pt:  lda     pt_num
         win_r := getwinframerect_params::rect::x2
         win_b := getwinframerect_params::rect::y2
 
-        copy8   findwindow_params::window_id, getwinframerect_params::window_id
+        copy8   cwi_findwindow_params::window_id, getwinframerect_params::window_id
         MGTK_CALL MGTK::GetWinFrameRect, getwinframerect_params
 
         ;; ==================================================
