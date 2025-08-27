@@ -1348,7 +1348,7 @@ hi:    .byte   0
         lda     (ptr),y
         clc
         adc     #3
-        sta     text_params::length
+        sta     text_params__length
 
         pla
         cmp     #8              ; first 8?
