@@ -6238,7 +6238,7 @@ event_loop:
         cmp     #MGTK::EventKind::key_down
     IF_EQ
         ;; Set up `sel_menu_*`
-        lda     menu_index      ; TODO: Verify this is valid
+        lda     z:menu_index    ; TODO: Verify this is valid
         sta     sel_menu_index
         sta     last_menu_index
         lda     cur_hilited_menu_item
