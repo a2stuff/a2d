@@ -178,6 +178,11 @@ TextWidth       = $18           ; Measure the width of a string in pixels
 ;;; .addr       data
 ;;; .byte       length
 ;;; .word       width           (out) result in pixels
+.struct TextWidthParams
+data    .addr
+length  .byte
+width   .word
+.endstruct
 
 DrawText        = $19           ; Drawn at penpos as left, baseline
 ;;; .addr       data

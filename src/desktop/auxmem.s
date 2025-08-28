@@ -46,7 +46,7 @@
         ReadSetting := ReadSettingFromAux
 
         .include "../toolkits/icontk.s"
-        ITKEntry := icon_toolkit::ITKEntry
+        ITKEntry := icontk::ITKEntry
 
         .include "../toolkits/letk.s"
         letk__LETKEntry := letk::LETKEntry

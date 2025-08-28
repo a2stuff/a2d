@@ -2,23 +2,39 @@
 ;;; Option Picker ToolKit
 ;;; ============================================================
 
-;;; Routines dirty $50...$77
-;;; TODO: Spill to stack?
-
 .scope optk
         OPTKEntry := *
 
+;;; ============================================================
+;;; Zero Page usage (saved/restored around calls)
+
+        zp_start := $50
         kMaxCommandDataSize = 6
+        kMaxTmpSpace = 10       ; MulDiv param size
 
-        ;; Initially points at the call site, then at passed params
-        params_addr     := $50
+PARAM_BLOCK, zp_start
+;;; Initially points at the call site, then at passed params
+params_addr     .addr
 
-        ;; Copy of the passed params
-        command_data    := params_addr+2
-        opr_ptr         := params_addr+2 ; always first element of `command_data`
+;;; Copy of the passed params
+command_data    .res    kMaxCommandDataSize
 
-        ;; A temporary copy of the `OptionPickerRecord` is placed here:
-        opr_copy        := command_data + kMaxCommandDataSize
+;;; A temporary copy of the control record
+opr_copy        .tag    OPTK::OptionPickerRecord
+
+;;; Other ZP usage
+max_entries     .byte
+max_entries_minus_one .byte
+tmp_space       .res    kMaxTmpSpace
+
+;;; For size calculation, not actually used
+zp_end          .byte
+END_PARAM_BLOCK
+
+        .assert zp_end <= $78, error, "too big"
+        kBytesToSave = zp_end - zp_start
+
+        a_record        := command_data ; always first element of `command_data`
 
         ;; Aliases for the copy's members:
         oprc_window_id  := opr_copy + OPTK::OptionPickerRecord::window_id
@@ -32,51 +48,52 @@
         oprc_voffset    := opr_copy + OPTK::OptionPickerRecord::voffset
         oprc_selected_index := opr_copy + OPTK::OptionPickerRecord::selected_index
 
-        ;; Other ZP usage
-        max_entries     := opr_copy + .sizeof(OPTK::OptionPickerRecord)
-        max_entries_minus_one := opr_copy + .sizeof(OPTK::OptionPickerRecord) + 1
-        tmp_space       := max_entries + 2
-
-        kMaxTmpSpace = 10       ; MulDiv param size
-
-        .assert tmp_space + kMaxTmpSpace <= $78, error, "too big"
-
 ;;; ============================================================
 
         .assert OPTKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
-
-        jump_addr := tmp_space
-
-        ;; Adjust stack/stash at `params_addr`
+        ;; Adjust stack/stash
         pla
-        sta     params_addr
+        sta     params_lo
         clc
         adc     #<3
         tax
         pla
-        sta     params_addr+1
+        sta     params_hi
         adc     #>3
         pha
         txa
         pha
 
+        ;; Save ZP
+        ldx     #AS_BYTE(-kBytesToSave)
+:       lda     zp_start + kBytesToSave,x
+        pha
+        inx
+        bne     :-
+
+        ;; Point `params_addr` at the call site
+        params_lo := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     params_addr
+        params_hi := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     params_addr+1
+
         ;; Grab command number
         ldy     #1              ; Note: rts address is off-by-one
         lda     (params_addr),y
-        asl     a
         tax
-        copy16  jump_table,x, jump_addr
+        copylohi jump_table_lo,x, jump_table_hi,x, dispatch
 
         ;; Point `params_addr` at actual params
         iny
         lda     (params_addr),y
-        pha
+        tax
         iny
         lda     (params_addr),y
         sta     params_addr+1
-        pla
-        sta     params_addr
+        stx     params_addr
 
         ;; Copy param data to `command_data`
         ldy     #kMaxCommandDataSize-1
@@ -84,34 +101,51 @@
         dey
         bpl     :-
 
-        ;; Cache static of the record in `opr_copy`, for convenience
+        ;; Cache static copy of the record in `opr_copy`, for convenience
         ldy     #.sizeof(OPTK::OptionPickerRecord)-1
-:       lda     (opr_ptr),y
-        sta     opr_copy,y
+:       copy8   (a_record),y, opr_copy,y
         dey
         bpl     :-
 
         ;; Compute constants
-        ;; `_Multiply` is not used as it trashes `tmp_space`
-        ldx     oprc_num_cols
-        lda     #0
-        clc
-:       adc     oprc_num_rows
+        lda     #0              ; lo
+        ldx     oprc_num_cols   ; hi
+        ldy     oprc_num_rows
+        jsr     _Multiply
+        stx     max_entries
         dex
-        bne     :-
-        sta     max_entries
-        sta     max_entries_minus_one
-        dec     max_entries_minus_one
+        stx     max_entries_minus_one
 
-        jmp     (jump_addr)
+        ;; Invoke the command
+        dispatch := *+1
+        jsr     SELF_MODIFIED
+        tay                     ; A = result
 
-jump_table:
-        .addr   DrawImpl
-        .addr   UpdateImpl
-        .addr   ClickImpl
-        .addr   KeyImpl
-        .addr   SetSelectionImpl
+        ;; Restore ZP
+        ldx     #kBytesToSave-1
+:       pla
+        sta     zp_start,x
+        dex
+        bpl     :-
 
+        tya                     ; A = result
+        rts
+
+jump_table_lo:
+        .lobytes   DrawImpl
+        .lobytes   UpdateImpl
+        .lobytes   ClickImpl
+        .lobytes   KeyImpl
+        .lobytes   SetSelectionImpl
+
+jump_table_hi:
+        .hibytes   DrawImpl
+        .hibytes   UpdateImpl
+        .hibytes   ClickImpl
+        .hibytes   KeyImpl
+        .hibytes   SetSelectionImpl
+
+        ASSERT_EQUALS *-jump_table_hi, jump_table_hi-jump_table_lo
 .endproc ; Dispatch
 
 ;;; ============================================================
@@ -119,7 +153,6 @@ jump_table:
 IsEntryProc:    jmp     (opr_copy + OPTK::OptionPickerRecord::is_entry_proc)
 DrawEntryProc:  jmp     (opr_copy + OPTK::OptionPickerRecord::draw_entry_proc)
 OnSelChange:    jmp     (opr_copy + OPTK::OptionPickerRecord::on_sel_change)
-
 
 ;;; ============================================================
 
@@ -287,7 +320,7 @@ loop:
         cmp     max_entries
     IF_GE
         sec
-        sbc     max_entries_minus_one
+        sbc     z:max_entries_minus_one
     END_IF
         jsr     _CallIsEntryProc
         bmi     loop
@@ -299,24 +332,18 @@ loop:
 
 .proc _HandleKeyLeft
         lda     oprc_selected_index
-    IF_NS
-        lda     max_entries     ; no selection, start at last
-        sec
-        sbc     #1
+        bmi     last            ; no selection, start at last
+        bne     loop            ; or if first, start at last
+
+last:   lda     max_entries_minus_one
         clc
         adc     oprc_num_rows
-    END_IF
-    IF_EQ
-        lda     max_entries_minus_one ; first, start at last
-        clc
-        adc     oprc_num_rows
-    END_IF
 
 loop:   sec
         sbc     oprc_num_rows
     IF_NEG
         clc
-        adc     max_entries_minus_one
+        adc     z:max_entries_minus_one
     END_IF
         jsr     _CallIsEntryProc
         bmi     loop
@@ -416,7 +443,7 @@ new_selection   .byte
         jsr     _HighlightIndex
         ldy     #OPTK::OptionPickerRecord::selected_index
         pla                     ; A = new selection
-        sta     (opr_ptr),y
+        sta     (a_record),y
         sta     oprc_selected_index ; keep copy in sync
         jmp     _HighlightIndex
 .endproc ; SetSelectionImpl

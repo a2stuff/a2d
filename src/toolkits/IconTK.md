@@ -6,8 +6,6 @@ Definitions are in `icontk.inc`.
 
 Client code must define `ITKEntry` (referencing the instance's `icon_toolkit::ITKEntry`) and can then use the `ITK_CALL` macro, with the typical call number / parameter address supplied. The code must be instantiated in the same memory bank as MGTK so it can make calls and reference resources directly.
 
-The zero page addresses $06..$09 are preserved across calls.
-
 > This is not exposed to Desk Accessories, although DeskTop does provide a jump table API to iterate over selected IconEntry records.
 
 ## Concepts

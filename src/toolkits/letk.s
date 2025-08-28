@@ -2,122 +2,144 @@
 ;;; LineEdit ToolKit
 ;;; ============================================================
 
-;;; Routines dirty $06...$2F
-;;; TODO: Spill to stack?
-
 .scope letk
         LETKEntry := *
 
-        ;; Points at call parameters
-        params_addr := $10
+;;; ============================================================
+;;; Zero Page usage (saved/restored around calls)
 
-        ;; Cache of static fields from the record
-        window_id  := $12
-        a_buf      := $13
-        rect       := $15
-        max_length := $1D
-        options    := $1E
-        ASSERT_EQUALS a_buf - window_id, LETK::LineEditRecord::a_buf - LETK::LineEditRecord::window_id
-        ASSERT_EQUALS rect - window_id, LETK::LineEditRecord::rect - LETK::LineEditRecord::window_id
-        ASSERT_EQUALS max_length - window_id, LETK::LineEditRecord::max_length - LETK::LineEditRecord::window_id
-        ASSERT_EQUALS options - window_id, LETK::LineEditRecord::options - LETK::LineEditRecord::window_id
-        kCacheSize = options - window_id
+        zp_start := $50
+        kMaxCommandDataSize = 6
+        kMaxTmpSpace = .sizeof(MGTK::Point)
 
-        ;; Calculated from rect
-        pos        := $1F
+PARAM_BLOCK, zp_start
+;;; Points at call parameters (i.e. ButtonRecord)
+params_addr     .addr
 
-        ;; Call parameters copied here (0...6 bytes)
-        command_data := pos + .sizeof(MGTK::Point)
+;;; Copy of the passed params
+command_data    .res    kMaxCommandDataSize
 
-        ;; LineEditRecord address, in all param blocks
-        a_record := command_data
+;;; A temporary copy of the control record
+ler_copy        .tag    LETK::LineEditRecord
 
-        PARAM_BLOCK text_params, $29
-data    .addr
-length  .byte
-width   .word
-        END_PARAM_BLOCK
-        ASSERT_EQUALS text_params, command_data + 6
+;;; Other ZP usage
+pos             .tag    MGTK::Point ; Calculated from rect
+text_params     .tag    MGTK::TextWidthParams
+tmp_space       .res    kMaxTmpSpace
 
-        tmpw := text_params+.sizeof(text_params)
+;;; For size calculation, not actually used
+zp_end          .byte
+END_PARAM_BLOCK
 
-        .assert tmpw+2 <= $30, error, "mismatch"
+        .assert zp_end <= $78, error, "too big"
+        kBytesToSave = zp_end - zp_start
+
+        a_record        := command_data ; always first element of `command_data`
+        tmpw            := tmp_space
+
+        ;; Aliases for the copy's members:
+        window_id  := ler_copy + LETK::LineEditRecord::window_id
+        a_buf      := ler_copy + LETK::LineEditRecord::a_buf
+        rect       := ler_copy + LETK::LineEditRecord::rect
+        max_length := ler_copy + LETK::LineEditRecord::max_length
+        options    := ler_copy + LETK::LineEditRecord::options
+
+;;; ============================================================
 
         .assert LETKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
-
-        jump_addr := tmpw
-
-        ;; Adjust stack/stash at `params_addr`
+        ;; Adjust stack/stash
         pla
-        sta     params_addr
+        sta     params_lo
         clc
         adc     #<3
         tax
         pla
-        sta     params_addr+1
+        sta     params_hi
         adc     #>3
         pha
         txa
         pha
 
+        ;; Save ZP
+        ldx     #AS_BYTE(-kBytesToSave)
+:       lda     zp_start + kBytesToSave,x
+        pha
+        inx
+        bne     :-
+
+        ;; Point `params_addr` at the call site
+        params_lo := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     params_addr
+        params_hi := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     params_addr+1
+
         ;; Grab command number
         ldy     #1              ; Note: rts address is off-by-one
         lda     (params_addr),y
-        pha                     ; A = command number
-        asl     a
         tax
-        copy16  jump_table,x, jump_addr
+        copylohi jump_table_lo,x, jump_table_hi,x, dispatch
 
         ;; Point `params_addr` at actual params
         iny
         lda     (params_addr),y
-        pha
+        tax
         iny
         lda     (params_addr),y
         sta     params_addr+1
-        pla
-        sta     params_addr
+        stx     params_addr
 
         ;; Copy param data to `command_data`
-        pla                       ; A = command number
-        tay
-        lda     length_table,y
-        tay
-        dey
+        ldy     #kMaxCommandDataSize-1
 :       copy8   (params_addr),y, command_data,y
         dey
         bpl     :-
 
-        ;; Cache static fields from the record, for convenience
-        ASSERT_EQUALS LETK::LineEditRecord::window_id, 0
-        ldy     #kCacheSize
-:       copy8   (a_record),y, window_id,y
+        ;; Cache static copy of the record in `ler_copy`, for convenience
+        ldy     #.sizeof(LETK::LineEditRecord)-1
+:       copy8   (a_record),y, ler_copy,y
         dey
         bpl     :-
 
+        ;; Compute constants
         jsr     _CalcPos
 
-        jmp     (jump_addr)
+        ;; Invoke the command
+        dispatch := *+1
+        jsr     SELF_MODIFIED
+        tay                     ; A = result
 
-jump_table:
-        .addr   InitImpl
-        .addr   IdleImpl
-        .addr   ActivateImpl
-        .addr   DeactivateImpl
-        .addr   ClickImpl
-        .addr   KeyImpl
-        .addr   UpdateImpl
+        ;; Restore ZP
+        ldx     #kBytesToSave-1
+:       pla
+        sta     zp_start,x
+        dex
+        bpl     :-
 
-        ;; Must be non-zero
-length_table:
-        .byte   2               ; Init
-        .byte   2               ; Idle
-        .byte   2               ; Activate
-        .byte   2               ; Deactivate
-        .byte   6               ; Click
-        .byte   4               ; Key
-        .byte   2               ; Draw
+        tya                     ; A = result
+        rts
+
+jump_table_lo:
+        .lobytes   InitImpl
+        .lobytes   IdleImpl
+        .lobytes   ActivateImpl
+        .lobytes   DeactivateImpl
+        .lobytes   ClickImpl
+        .lobytes   KeyImpl
+        .lobytes   UpdateImpl
+
+jump_table_hi:
+        .hibytes   InitImpl
+        .hibytes   IdleImpl
+        .hibytes   ActivateImpl
+        .hibytes   DeactivateImpl
+        .hibytes   ClickImpl
+        .hibytes   KeyImpl
+        .hibytes   UpdateImpl
+
+        ASSERT_EQUALS *-jump_table_hi, jump_table_hi-jump_table_lo
 .endproc ; Dispatch
 
 ;;; ============================================================
@@ -134,15 +156,15 @@ penXOR:         .byte   MGTK::penXOR
 
         bit     options         ; bit7 = centered
     IF_NS
-        add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
+        add16   z:rect+MGTK::Rect::x1, z:rect+MGTK::Rect::x2, z:pos+MGTK::Point::xcoord
 
         jsr     _PrepTextParams
       IF_NOT_ZERO
         MGTK_CALL MGTK::TextWidth, text_params
       END_IF
 
-        sub16   pos+MGTK::Point::xcoord, text_params::width, pos+MGTK::Point::xcoord
-        lsr16   pos+MGTK::Point::xcoord
+        sub16   z:pos+MGTK::Point::xcoord, z:text_params+MGTK::TextWidthParams::width, z:pos+MGTK::Point::xcoord
+        lsr16   z:pos+MGTK::Point::xcoord
    END_IF
 
         rts
@@ -221,16 +243,17 @@ ret:    rts
 .endproc ; IdleImpl
 
 .proc _XDrawCaret
-        point := $6
-        xcoord := $6
-        ycoord := $8
+PARAM_BLOCK point, letk::tmp_space
+xcoord  .word
+ycoord  .word
+END_PARAM_BLOCK
 
         jsr     _SetPort
 
         jsr     _CalcCaretPos
-        stax    xcoord
-        dec16   xcoord          ; between characters
-        copy16  pos + MGTK::Point::ycoord, ycoord
+        stax    point::xcoord
+        dec16   point::xcoord          ; between characters
+        copy16  pos + MGTK::Point::ycoord, point::ycoord
 
         MGTK_CALL MGTK::MoveTo, point
         MGTK_CALL MGTK::SetPenMode, penXOR
@@ -317,7 +340,7 @@ a_record  .addr
 .proc _RedrawRightOfCaret
         jsr     _SetPort
 
-PARAM_BLOCK point, $06
+PARAM_BLOCK point, letk::tmp_space
 xcoord  .word
 ycoord  .word
 END_PARAM_BLOCK
@@ -335,12 +358,12 @@ END_PARAM_BLOCK
         lda     (a_record),y
         sta     caret_pos
 
-        add16_8 text_params::data, caret_pos
+        add16_8 text_params+MGTK::TextWidthParams::data, caret_pos
         pla                     ; A = len
         sec
         sbc     caret_pos
         beq     :+
-        sta     text_params::length
+        sta     text_params+MGTK::TextWidthParams::length
         MGTK_CALL MGTK::DrawText, text_params
 :
         rts
@@ -349,17 +372,17 @@ END_PARAM_BLOCK
 ;;; ============================================================
 ;;; Prepare params for a TextWidth or DrawText call
 ;;; Output: A=length (and Z=1 if empty)
-;;;         `text_params::width` set to 0
+;;;         `text_params+MGTK::TextWidthParams::width` set to 0
 
 .proc _PrepTextParams
         ldxy    a_buf
         inxy
-        stxy    text_params::data
+        stxy    text_params+MGTK::TextWidthParams::data
         ldy     #0
-        sty     text_params::width
-        sty     text_params::width+1
+        sty     text_params+MGTK::TextWidthParams::width
+        sty     text_params+MGTK::TextWidthParams::width+1
         lda     (a_buf),y
-        sta     text_params::length
+        sta     text_params+MGTK::TextWidthParams::length
         rts
 .endproc ; _PrepTextParams
 
@@ -387,19 +410,19 @@ ycoord  .word
 
         ;; Iterate to find the position
         lda     #0
-        sta     text_params::width
-        sta     text_params::width+1
-        sta     text_params::length
-loop:   cmp16   text_params::width, params::xcoord
+        sta     text_params+MGTK::TextWidthParams::width
+        sta     text_params+MGTK::TextWidthParams::width+1
+        sta     text_params+MGTK::TextWidthParams::length
+loop:   cmp16   text_params+MGTK::TextWidthParams::width, params::xcoord
         bcs     :+
-        inc     text_params::length
-        lda     text_params::length
+        inc     text_params+MGTK::TextWidthParams::length
+        lda     text_params+MGTK::TextWidthParams::length
         cmp     len
         beq     :+
         MGTK_CALL MGTK::TextWidth, text_params
         beq     loop            ; always
 :
-        lda     text_params::length
+        lda     text_params+MGTK::TextWidthParams::length
 set:    pha
         jsr     _HideCaret
         pla
@@ -680,7 +703,7 @@ ret:    rts
         jsr     _PrepTextParams
     IF_NOT_ZERO
         MGTK_CALL MGTK::TextWidth, text_params
-        add16   pos, text_params::width, rect+MGTK::Rect::x1
+        add16   pos, text_params+MGTK::TextWidthParams::width, rect+MGTK::Rect::x1
     END_IF
         jmp     _ClearRect
 .endproc ; _DeleteCharCommon
@@ -694,15 +717,15 @@ ret:    rts
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
     IF_NOT_ZERO
-        sta     text_params::length
+        sta     text_params+MGTK::TextWidthParams::length
         MGTK_CALL MGTK::TextWidth, text_params
     END_IF
 
-        lda     text_params::width
+        lda     text_params+MGTK::TextWidthParams::width
         clc
         adc     pos + MGTK::Point::xcoord
         tay
-        lda     text_params::width+1
+        lda     text_params+MGTK::TextWidthParams::width+1
         adc     pos + MGTK::Point::xcoord+1
         tax
         tya

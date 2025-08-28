@@ -31,7 +31,7 @@ The parameter for every call is just the address of the `ButtonRecord`.
 ### Draw ($00)
 Draw the button, including frame and label, considering the disable state.
 
-If the `window_id` is no-zero, the control's window GrafPort is selected before any drawing is performed. When processing update events, use `Update` instead.
+If the `window_id` is non-zero, the control's window GrafPort is selected before any drawing is performed. When processing update events, use `Update` instead.
 
 
 ### Update ($01)
@@ -42,6 +42,7 @@ This should only be used when processing update events i.e. between `MGTK::Begin
 
 ### Flash ($02)
 Flash the button label (if enabled). Used after a keypress. Returns with N=0/Z=1 normally, but N=1/Z=0 if disabled.
+
 
 ### Hilite ($03)
 Redraw the control label, considering the disable state.
@@ -54,10 +55,9 @@ Start a nested event loop tracking after a click is initiated in the control. Re
 ### RadioDraw ($05)
 Draw a radio button.
 
-
 The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
 
-The shortcut is ignored. After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
+After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
 
 
 ### RadioUpdate ($06)
@@ -71,7 +71,7 @@ Draw a checkbox button.
 
 The high bit of the `ButtonRecord::state` signifies whether or not the button is checked.
 
-The shortcut is ignored. After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
+After the call, the `ButtonRecord::rect` is updated to the bounding box of the button and (if not null) the label. This can be used for later hit testing.
 
 
 ### CheckboxUpdate ($08)

@@ -2,86 +2,137 @@
 ;;; Button ToolKit
 ;;; ============================================================
 
-;;; Routines dirty $06...$2F
-;;; TODO: Spill to stack?
-
 .scope btk
         BTKEntry := *
 
-        ;; Points at call parameters (i.e. ButtonRecord)
-        params_addr := $10
+;;; ============================================================
+;;; Zero Page usage (saved/restored around calls)
 
-        update_flag := $12
+        zp_start := $50
+        ;; BTK doesn't have "command data" - just the button record
+        kMaxTmpSpace = 10
 
-        ;; Cache of static fields from the record
-        cache       := $13
+PARAM_BLOCK, zp_start
+;;; Points at call parameters (i.e. ButtonRecord)
+params_addr     .addr
+
+;;; A temporary copy of the control record
+cache           .tag    BTK::ButtonRecord
+
+;;; Used in `TrackImpl`
+down_flag       .byte
+
+zp_scratch      .res    kMaxTmpSpace
+
+;;; For size calculation, not actually used
+zp_end          .byte
+END_PARAM_BLOCK
+
+        .assert zp_end <= $78, error, "too big"
+        kBytesToSave = zp_end - zp_start
+
+        ;; Aliases for the cache's members:
         window_id   := cache + BTK::ButtonRecord::window_id
         a_label     := cache + BTK::ButtonRecord::a_label
         a_shortcut  := cache + BTK::ButtonRecord::a_shortcut
         rect        := cache + BTK::ButtonRecord::rect
         state       := cache + BTK::ButtonRecord::state
 
-        zp_scratch  := cache + .sizeof(BTK::ButtonRecord)
+;;; ============================================================
 
         .assert BTKEntry = Dispatch, error, "dispatch addr"
 .proc Dispatch
-
-        jump_addr := zp_scratch
-
-        ;; Adjust stack/stash at `params_addr`
+        ;; Adjust stack/stash
         pla
-        sta     params_addr
+        sta     params_lo
         clc
         adc     #<3
         tax
         pla
-        sta     params_addr+1
+        sta     params_hi
         adc     #>3
         pha
         txa
         pha
 
+        ;; Save ZP
+        ldx     #AS_BYTE(-kBytesToSave)
+:       lda     zp_start + kBytesToSave,x
+        pha
+        inx
+        bne     :-
+
+        ;; Point `params_addr` at the call site
+        params_lo := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     params_addr
+        params_hi := *+1
+        lda     #SELF_MODIFIED_BYTE
+        sta     params_addr+1
+
         ;; Grab command number
         ldy     #1              ; Note: rts address is off-by-one
         lda     (params_addr),y
-        asl     a
         tax
-        copy16  jump_table,x, jump_addr
+        copylohi jump_table_lo,x, jump_table_hi,x, dispatch
 
         ;; Point `params_addr` at actual params
         iny
         lda     (params_addr),y
-        pha
+        tax
         iny
         lda     (params_addr),y
         sta     params_addr+1
-        pla
-        sta     params_addr
+        stx     params_addr
 
-        lda     #0
-        sta     update_flag     ; default for most commands
-
-        ;; Cache static fields from the record, for convenience
+        ;; Cache static copy of the record in `cache`, for convenience
         ldy     #.sizeof(BTK::ButtonRecord)-1
 :       copy8   (params_addr),y, cache,y
         dey
         bpl     :-
 
-        jmp     (jump_addr)
+        ;; Invoke the command
+        dispatch := *+1
+        jsr     SELF_MODIFIED
+        tay                     ; A = result
 
-jump_table:
-        .addr   DrawImpl
-        .addr   UpdateImpl
-        .addr   FlashImpl
-        .addr   HiliteImpl
-        .addr   TrackImpl
+        ;; Restore ZP
+        ldx     #kBytesToSave-1
+:       pla
+        sta     zp_start,x
+        dex
+        bpl     :-
+
+        tya                     ; A = result
+        rts
+
+jump_table_lo:
+        .lobytes   DrawImpl
+        .lobytes   UpdateImpl
+        .lobytes   FlashImpl
+        .lobytes   HiliteImpl
+        .lobytes   TrackImpl
 .ifndef BTK_SHORT
-        .addr   RadioDrawImpl
-        .addr   RadioUpdateImpl
-        .addr   CheckboxDrawImpl
-        .addr   CheckboxUpdateImpl
+        .lobytes   RadioDrawImpl
+        .lobytes   RadioUpdateImpl
+        .lobytes   CheckboxDrawImpl
+        .lobytes   CheckboxUpdateImpl
 .endif ; BTK_SHORT
 
+jump_table_hi:
+        .hibytes   DrawImpl
+        .hibytes   UpdateImpl
+        .hibytes   FlashImpl
+        .hibytes   HiliteImpl
+        .hibytes   TrackImpl
+.ifndef BTK_SHORT
+        .hibytes   RadioDrawImpl
+        .hibytes   RadioUpdateImpl
+        .hibytes   CheckboxDrawImpl
+        .hibytes   CheckboxUpdateImpl
+.endif ; BTK_SHORT
+
+        ASSERT_EQUALS *-jump_table_hi, jump_table_hi-jump_table_lo
 .endproc ; Dispatch
 
 ;;; ============================================================
@@ -118,9 +169,6 @@ grafport_win:   .tag    MGTK::GrafPort
 
 ;;; If obscured, execution will not return to the caller.
 .proc _SetPort
-        bit     update_flag
-        bmi     ret
-
         ;; Set the port
         lda     window_id
         beq     ret
@@ -139,24 +187,22 @@ ret:
 
 ;;; ============================================================
 
-.proc UpdateImpl
-        copy8   #$80, update_flag
-        FALL_THROUGH_TO DrawImpl
-.endproc ; UpdateImpl
-
-;;; ============================================================
-
 .proc DrawImpl
         jsr     _SetPort
 
+        FALL_THROUGH_TO UpdateImpl
+.endproc ; DrawImpl
+
+
+;;; ============================================================
+
+.proc UpdateImpl
         MGTK_CALL MGTK::SetPattern, solid_pattern
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::FrameRect, rect
 
         jmp     HiliteImpl__skip_port
-
-.endproc ; DrawImpl
-
+.endproc ; UpdateImpl
 
 ;;; ============================================================
 
@@ -197,7 +243,7 @@ skip_port:
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF_NOT_ZERO
         ;; Draw the string (left aligned)
-        add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
+        add16_8 z:rect+MGTK::Rect::x1, #kButtonTextHOffset, z:pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
 
@@ -208,8 +254,8 @@ skip_port:
         width := $9
         jsr     _MeasureShortcut
         stax    width
-        sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
-        sub16   pos+MGTK::Point::xcoord, width, pos+MGTK::Point::xcoord
+        sub16_8 z:rect+MGTK::Rect::x2, #kButtonTextHOffset-2, z:pos+MGTK::Point::xcoord
+        sub16   z:pos+MGTK::Point::xcoord, width, z:pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawShortcut
       END_IF
@@ -219,9 +265,9 @@ skip_port:
         jsr     _MeasureLabel
         stax    width
 
-        add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
-        sub16   pos+MGTK::Point::xcoord, width, pos+MGTK::Point::xcoord
-        asr16   pos+MGTK::Point::xcoord
+        add16   z:rect+MGTK::Rect::x1, z:rect+MGTK::Rect::x2, z:pos+MGTK::Point::xcoord
+        sub16   z:pos+MGTK::Point::xcoord, width, z:pos+MGTK::Point::xcoord
+        asr16   z:pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
     END_IF
@@ -241,23 +287,20 @@ HiliteImpl__skip_port := HiliteImpl::skip_port
 ;;; ============================================================
 
 ;;; Input: `a_shortcut` points at string
-;;; Trashes $06..$08
 .proc _DrawShortcut
         ldax    a_shortcut
         jmp     _DrawString
 .endproc ; _DrawShortcut
 
 ;;; Input: `a_label` points at string
-;;; Trashes $06..$08
 .proc _DrawLabel
         ldax    a_label
         FALL_THROUGH_TO _DrawString
 .endproc ; _DrawLabel
 
 ;;; Inputs: A,X points at string
-;;; Trashes $06..$08
 .proc _DrawString
-PARAM_BLOCK dt_params, $6
+PARAM_BLOCK dt_params, btk::zp_scratch
 textptr .addr
 textlen .byte
 END_PARAM_BLOCK
@@ -273,7 +316,6 @@ END_PARAM_BLOCK
 
 ;;; Inputs: `a_shortcut` points at string
 ;;; Output: A,X = width
-;;; Trashes: $06..$0A
 .proc _MeasureShortcut
         ldax    a_shortcut
         jmp     _MeasureString
@@ -281,7 +323,6 @@ END_PARAM_BLOCK
 
 ;;; Inputs: `a_label` points at string
 ;;; Output: A,X = width
-;;; Trashes: $06..$0A
 .proc _MeasureLabel
         ldax    a_label
         FALL_THROUGH_TO _MeasureString
@@ -289,9 +330,8 @@ END_PARAM_BLOCK
 
 ;;; Inputs: A,X points at string
 ;;; Output: A,X = width
-;;; Trashes: $06..$0A
 .proc _MeasureString
-PARAM_BLOCK tw_params, $6
+PARAM_BLOCK tw_params, btk::zp_scratch
 textptr .addr
 textlen .byte
 width   .word
@@ -326,13 +366,14 @@ kind    .byte
 coords  .tag MGTK::Point
         END_PARAM_BLOCK
         .assert .sizeof(event_params) = .sizeof(MGTK::Event), error, "size mismatch"
+        .assert .sizeof(event_params) <= kMaxTmpSpace, error, "size mismatch"
         PARAM_BLOCK screentowindow_params, btk::zp_scratch
 window_id       .byte
 screen          .tag MGTK::Point
 window          .tag MGTK::Point
         END_PARAM_BLOCK
-        .assert screentowindow_params + .sizeof(screentowindow_params) <= $2F, error, "bounds"
         .assert screentowindow_params::screen = event_params::coords, error, "mismatch"
+        .assert .sizeof(screentowindow_params) <= kMaxTmpSpace, error, "size mismatch"
 UNSUPPRESS_SHADOW_WARNING
 
         ;; If disabled, return canceled
@@ -382,13 +423,6 @@ exit:   lda     down_flag       ; was depressed?
         jsr     _Invert
 :       lda     down_flag
         rts
-
-        ;; --------------------------------------------------
-
-down_flag:
-        .byte   0
-
-
 .endproc ; TrackImpl
 
 .ifndef BTK_SHORT
@@ -434,24 +468,24 @@ unchecked_rb_bitmap:
         jsr     _SetPort
 
         ;; Initial size is just the button
-        add16_8 rect+MGTK::Rect::x1, #BTK::kRadioButtonWidth, rect+MGTK::Rect::x2
-        add16_8 rect+MGTK::Rect::y1, #BTK::kRadioButtonHeight, rect+MGTK::Rect::y2
+        add16_8 z:rect+MGTK::Rect::x1, #BTK::kRadioButtonWidth, z:rect+MGTK::Rect::x2
+        add16_8 z:rect+MGTK::Rect::y1, #BTK::kRadioButtonHeight, z:rect+MGTK::Rect::y2
 
         lda     a_label
         ora     a_label+1
     IF_NOT_ZERO
         ;; Draw the label
         pos := $B
-        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kRadioButtonWidth, pos+MGTK::Point::xcoord
-        add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight - 1, pos+MGTK::Point::ycoord
+        add16_8 z:rect+MGTK::Rect::x1, #kLabelPadding + BTK::kRadioButtonWidth, pos+MGTK::Point::xcoord
+        add16_8 z:rect+MGTK::Rect::y1, #kSystemFontHeight - 1, pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
 
         ;; And measure it for hit testing
         jsr     _MeasureLabel
-        addax   rect+MGTK::Rect::x2
-        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
-        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kRadioButtonHeight
+        addax   z:rect+MGTK::Rect::x2
+        add16_8 z:rect+MGTK::Rect::x2, #kLabelPadding
+        add16_8 z:rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kRadioButtonHeight
     END_IF
 
         jsr     _MaybeDrawAndMeasureShortcut
@@ -521,24 +555,24 @@ unchecked_cb_bitmap:
         jsr     _SetPort
 
         ;; Initial size is just the button
-        add16_8 rect+MGTK::Rect::x1, #BTK::kCheckboxWidth, rect+MGTK::Rect::x2
-        add16_8 rect+MGTK::Rect::y1, #BTK::kCheckboxHeight, rect+MGTK::Rect::y2
+        add16_8 z:rect+MGTK::Rect::x1, #BTK::kCheckboxWidth, rect+MGTK::Rect::x2
+        add16_8 z:rect+MGTK::Rect::y1, #BTK::kCheckboxHeight, rect+MGTK::Rect::y2
 
         lda     a_label
         ora     a_label+1
     IF_NOT_ZERO
         ;; Draw the label
         pos := $B
-        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kCheckboxWidth, pos+MGTK::Point::xcoord
-        add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight, pos+MGTK::Point::ycoord
+        add16_8 z:rect+MGTK::Rect::x1, #kLabelPadding + BTK::kCheckboxWidth, pos+MGTK::Point::xcoord
+        add16_8 z:rect+MGTK::Rect::y1, #kSystemFontHeight, pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
 
         ;; And measure it for hit testing
         jsr     _MeasureLabel
-        addax   rect+MGTK::Rect::x2
-        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
-        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kCheckboxHeight
+        addax   z:rect+MGTK::Rect::x2
+        add16_8 z:rect+MGTK::Rect::x2, #kLabelPadding
+        add16_8 z:rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kCheckboxHeight
     END_IF
 
         jsr     _MaybeDrawAndMeasureShortcut
