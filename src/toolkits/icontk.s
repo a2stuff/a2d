@@ -701,7 +701,7 @@ END_PARAM_BLOCK
         sta     trash_flag
 
 ;;; Determine if it's a drag or just a click
-.proc _DragDetectImpl
+.scope _DragDetectImpl
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
@@ -733,7 +733,7 @@ next:   dex
         dex
         bpl     loop
         bmi     peek            ; always
-.endproc ; _DragDetectImpl
+.endscope ; _DragDetectImpl
 
         ;; --------------------------------------------------
         ;; Meets the threshold - it is a drag, not just a click.
@@ -791,7 +791,7 @@ is_drag:
         END_OF_LAMBDA
 
         ;; Mark last icon
-        sub16_8 z:poly_ptr, #kIconPolySize
+        sub16_8 poly_ptr, #kIconPolySize
         ldy     #1              ; MGTK Polygon "not last" flag
         lda     #0              ; last polygon
         sta     (poly_ptr),y
@@ -857,7 +857,7 @@ update_poly:
         dex                     ; next dimension
         dex
         bpl     :-
-        COPY_STRUCT MGTK::Point, findwindow_params, z:last_coords
+        COPY_STRUCT MGTK::Point, findwindow_params, last_coords
 
         copy16  polybuf_addr, poly_ptr
 ploop:  ldy     #2              ; offset in poly to first vertex
@@ -1474,8 +1474,8 @@ ret:    rts
         label_pos := generic_ptr
 
         ;; Prep coords
-        copy16  label_rect+MGTK::Rect::x1, z:label_pos+MGTK::Point::xcoord
-        add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight-1, z:label_pos+MGTK::Point::ycoord
+        copy16  label_rect+MGTK::Rect::x1, label_pos+MGTK::Point::xcoord
+        add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight-1, label_pos+MGTK::Point::ycoord
 
         ldax    bitmap_rect+MGTK::Rect::x1
         stax    icon_paintbits_params::viewloc::xcoord
@@ -1668,7 +1668,7 @@ kIconLabelGapV = 2
         rts
 
 stash_rename_rect:
-        COPY_STRUCT MGTK::Rect, z:label_rect, z:rename_rect
+        COPY_STRUCT MGTK::Rect, label_rect, rename_rect
         rts
 .endproc ; CalcIconRects
 
@@ -1753,13 +1753,13 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         ;; Even vertexes are (mostly) direct copies from rects
 
         ;; v0/v2 (and extend bitmap rect down to top of text)
-        COPY_STRUCT MGTK::Point, z:bitmap_rect+MGTK::Rect::topleft, poly::v0
+        COPY_STRUCT MGTK::Point, bitmap_rect+MGTK::Rect::topleft, poly::v0
         copy16  bitmap_rect+MGTK::Rect::x2, poly::v2::xcoord
         copy16  label_rect+MGTK::Rect::y1, poly::v2::ycoord
 
         ;; v6/v4
-        COPY_STRUCT MGTK::Point, z:label_rect+MGTK::Rect::topleft, poly::v6
-        COPY_STRUCT MGTK::Point, z:label_rect+MGTK::Rect::bottomright, poly::v4
+        COPY_STRUCT MGTK::Point, label_rect+MGTK::Rect::topleft, poly::v6
+        COPY_STRUCT MGTK::Point, label_rect+MGTK::Rect::bottomright, poly::v4
 
         ;; Odd vertexes are combinations
 
@@ -2084,7 +2084,7 @@ reserved:       .byte   0
         copy16  z:bounding_rect+MGTK::Rect::topleft,x, portbits::maprect::topleft,x
     END_IF
 
-        scmp16  z:bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
+        scmp16  bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
     IF_NEG
         copy16  z:bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
     END_IF
@@ -2381,14 +2381,14 @@ CalcWindowIntersections := CalcWindowIntersectionsImpl::start
         addxy   portbits::maprect::x2
         addxy   bitmap_rect+MGTK::Rect::x1
         addxy   bitmap_rect+MGTK::Rect::x2 ; `bitmap_rect` used for dimming
-        addxy   z:label_rect+MGTK::Rect::x1  ; x2 not used for clipping
+        addxy   label_rect+MGTK::Rect::x1  ; x2 not used for clipping
 
         ldxy    clip_dy
         addxy   portbits::maprect::y1
         addxy   portbits::maprect::y2
         addxy   bitmap_rect+MGTK::Rect::y1
         addxy   bitmap_rect+MGTK::Rect::y2 ; `bitmap_rect` used for dimming
-        addxy   z:label_rect+MGTK::Rect::y1  ; y2 not used for clipping
+        addxy   label_rect+MGTK::Rect::y1  ; y2 not used for clipping
 
         MGTK_CALL MGTK::SetPortBits, portbits
 

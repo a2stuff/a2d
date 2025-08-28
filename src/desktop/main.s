@@ -4655,7 +4655,7 @@ _Preamble:
         ;; Make `ubox` bound both viewport and icons; needed to ensure
         ;; offset cases are handled.
         MGTK_CALL MGTK::UnionRects, unionrects_viewport_iconbb
-        COPY_BLOCK iconbb_rect, z:ubox
+        COPY_BLOCK iconbb_rect, ubox
         rts
 
 ;;; --------------------------------------------------
@@ -4734,20 +4734,20 @@ _Preamble:
 
 .proc TrackHThumb
         jsr     _Preamble
-        sub16   z:ubox+MGTK::Rect::x2, z:ubox+MGTK::Rect::x1, tmpw
+        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, tmpw
         sub16   tmpw, width, track_muldiv_params::number
         jsr     _TrackMulDiv
-        add16   track_muldiv_params::result, z:ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
+        add16   track_muldiv_params::result, ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
         add16   viewport+MGTK::Rect::x1, width, viewport+MGTK::Rect::x2
         jmp     _MaybeUpdateHThumb
 .endproc ; TrackHThumb
 
 .proc TrackVThumb
         jsr     _Preamble
-        sub16   z:ubox+MGTK::Rect::y2, z:ubox+MGTK::Rect::y1, tmpw
+        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, tmpw
         sub16   tmpw, height, track_muldiv_params::number
         jsr     _TrackMulDiv
-        add16   track_muldiv_params::result, z:ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
+        add16   track_muldiv_params::result, ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
         add16   viewport+MGTK::Rect::y1, height, viewport+MGTK::Rect::y2
         jmp     _MaybeUpdateVThumb
 .endproc ; TrackVThumb
@@ -4765,7 +4765,7 @@ _Preamble:
 ;;;   3. goto update
 
 .proc _Clamp_hi
-        scmp16  viewport+MGTK::Rect::bottomright,x, z:ubox+MGTK::Rect::bottomright,x
+        scmp16  viewport+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::bottomright,x
     IF_POS
         copy16  z:ubox+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::bottomright,x
     END_IF
@@ -4792,7 +4792,7 @@ _Preamble:
 ;;;   3. goto update
 
 .proc _Clamp_lo
-        scmp16  viewport+MGTK::Rect::topleft,x, z:ubox+MGTK::Rect::topleft,x
+        scmp16  viewport+MGTK::Rect::topleft,x, ubox+MGTK::Rect::topleft,x
     IF_NEG
         copy16  z:ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x
     END_IF
@@ -4865,8 +4865,8 @@ _Preamble:
 
 ;;; Set hthumb position relative to `maprect` and `ubox`.
 .proc _SetHThumbFromViewport
-        sub16   viewport+MGTK::Rect::x1, z:ubox+MGTK::Rect::x1, setthumb_muldiv_params::number
-        sub16   z:ubox+MGTK::Rect::x2, z:ubox+MGTK::Rect::x1, tmpw
+        sub16   viewport+MGTK::Rect::x1, ubox+MGTK::Rect::x1, setthumb_muldiv_params::number
+        sub16   ubox+MGTK::Rect::x2, ubox+MGTK::Rect::x1, tmpw
         sub16   tmpw, width, setthumb_muldiv_params::denominator
         MGTK_CALL MGTK::MulDiv, setthumb_muldiv_params
         lda     setthumb_muldiv_params::result
@@ -4876,8 +4876,8 @@ _Preamble:
 
 ;;; Set vthumb position relative to `maprect` and `ubox`.
 .proc _SetVThumbFromViewport
-        sub16   viewport+MGTK::Rect::y1, z:ubox+MGTK::Rect::y1, setthumb_muldiv_params::number
-        sub16   z:ubox+MGTK::Rect::y2, z:ubox+MGTK::Rect::y1, tmpw
+        sub16   viewport+MGTK::Rect::y1, ubox+MGTK::Rect::y1, setthumb_muldiv_params::number
+        sub16   ubox+MGTK::Rect::y2, ubox+MGTK::Rect::y1, tmpw
         sub16   tmpw, height, setthumb_muldiv_params::denominator
         MGTK_CALL MGTK::MulDiv, setthumb_muldiv_params
         lda     setthumb_muldiv_params::result
@@ -4902,9 +4902,9 @@ _Preamble:
 .proc ActivateCtlsSetThumbs
         jsr     _Preamble
 
-        scmp16  z:ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
+        scmp16  ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
         bmi     activate_hscroll
-        scmp16  viewport+MGTK::Rect::x2, z:ubox+MGTK::Rect::x2
+        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
         bmi     activate_hscroll
 
         ;; deactivate horizontal scrollbar
@@ -4926,9 +4926,9 @@ activate_hscroll:
         ;; --------------------------------------------------
 
 check_vscroll:
-        scmp16  z:ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
+        scmp16  ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
         bmi     activate_vscroll
-        scmp16  viewport+MGTK::Rect::y2, z:ubox+MGTK::Rect::y2
+        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
         bmi     activate_vscroll
 
         ;; deactivate vertical scrollbar
@@ -7978,10 +7978,10 @@ END_PARAM_BLOCK
         bpl     :-
 
         ;; Init/zero out the rest of the state
-        copy16  z:icon_coords+MGTK::Point::xcoord, z:initial_xcoord
+        copy16  icon_coords+MGTK::Point::xcoord, initial_xcoord
 
         lda     #0
-        sta     z:icons_this_row
+        sta     icons_this_row
         sta     index
 
         ;; Copy `cached_window_entry_list` to temp location
@@ -8129,11 +8129,11 @@ records_base_ptr:
     END_IF
 
         ;; Next col
-        add16_8 z:icon_coords+MGTK::Point::xcoord, z:col_spacing
-        inc     z:icons_this_row
+        add16_8 icon_coords+MGTK::Point::xcoord, col_spacing
+        inc     icons_this_row
         ;; Next row?
-        lda     z:icons_this_row
-        cmp     z:icons_per_row
+        lda     icons_this_row
+        cmp     icons_per_row
     IF_EQ
         add16_8 z:icon_coords+MGTK::Point::ycoord, z:row_spacing
         copy16  z:initial_xcoord, z:icon_coords+MGTK::Point::xcoord
@@ -8142,13 +8142,13 @@ records_base_ptr:
 
         ;; Assign `IconEntry::win_flags`
         lda     cached_window_id
-        ora     z:icon_flags
+        ora     icon_flags
         ldy     #IconEntry::win_flags
         sta     (icon_entry),y
 
         ;; Assign `IconEntry::type`
         ldy     #IconEntry::type
-        copy8   z:icon_type, (icon_entry),y
+        copy8   icon_type, (icon_entry),y
 
         ;; If folder, see if there's an associated window
         lda     src_file_info_params::file_type
@@ -8189,7 +8189,7 @@ records_base_ptr:
         ;; For populating `IconEntry::win_flags`
         tay                     ; Y = `IconType`
         lda     icontype_iconentryflags_table,y
-        sta     z:icon_flags
+        sta     icon_flags
 
         ;; Adjust type and flags based on view
         view_by := *+1
@@ -8211,7 +8211,7 @@ records_base_ptr:
    END_IF
 
         ;; For populating `IconEntry::type`
-        sty     z:icon_type
+        sty     icon_type
 
         ;; Icon height will be needed too
         tya
@@ -8220,7 +8220,7 @@ records_base_ptr:
         ldax    type_icons_table,y
         stax    ptr
         ldy     #IconResource::maprect + MGTK::Rect::y2
-        copy16in (ptr),y, z:icon_height
+        copy16in (ptr),y, icon_height
 
         jsr     PopPointers     ; do not tail-call optimise!
         rts

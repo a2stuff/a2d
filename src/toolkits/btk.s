@@ -468,8 +468,8 @@ unchecked_rb_bitmap:
         jsr     _SetPort
 
         ;; Initial size is just the button
-        add16_8 z:rect+MGTK::Rect::x1, #BTK::kRadioButtonWidth, z:rect+MGTK::Rect::x2
-        add16_8 z:rect+MGTK::Rect::y1, #BTK::kRadioButtonHeight, z:rect+MGTK::Rect::y2
+        add16_8 rect+MGTK::Rect::x1, #BTK::kRadioButtonWidth, rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::y1, #BTK::kRadioButtonHeight, rect+MGTK::Rect::y2
 
         lda     a_label
         ora     a_label+1
@@ -555,8 +555,8 @@ unchecked_cb_bitmap:
         jsr     _SetPort
 
         ;; Initial size is just the button
-        add16_8 z:rect+MGTK::Rect::x1, #BTK::kCheckboxWidth, rect+MGTK::Rect::x2
-        add16_8 z:rect+MGTK::Rect::y1, #BTK::kCheckboxHeight, rect+MGTK::Rect::y2
+        add16_8 rect+MGTK::Rect::x1, #BTK::kCheckboxWidth, rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::y1, #BTK::kCheckboxHeight, rect+MGTK::Rect::y2
 
         lda     a_label
         ora     a_label+1

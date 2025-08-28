@@ -258,7 +258,7 @@ a_record        .addr
         END_PARAM_BLOCK
 
         jsr     _EnableScrollbar
-        lda     z:lbr_copy + LBTK::ListBoxRecord::selected_index
+        lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         bpl     :+
         lda     #0
 :       ora     #$80            ; high bit = force draw
@@ -487,7 +487,7 @@ key             .byte
 modifiers       .byte
         END_PARAM_BLOCK
 
-        lda     z:lbr_copy + LBTK::ListBoxRecord::num_items
+        lda     lbr_copy + LBTK::ListBoxRecord::num_items
         bne     :+
 ret:    rts
 :
@@ -588,7 +588,7 @@ new_selection   .byte
 
 .proc _SetSelection
         pha                     ; A = new selection
-        lda     z:lbr_copy + LBTK::ListBoxRecord::selected_index
+        lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         jsr     _HighlightIndex
         ldy     #LBTK::ListBoxRecord::selected_index
         pla                     ; A = new selection
@@ -650,8 +650,8 @@ new_size        .byte
         lda     #0
         jsr     _UpdateThumb
 
-        lda     z:lbr_copy + LBTK::ListBoxRecord::num_items
-        cmp     z:lbr_copy + LBTK::ListBoxRecord::num_rows
+        lda     lbr_copy + LBTK::ListBoxRecord::num_items
+        cmp     lbr_copy + LBTK::ListBoxRecord::num_rows
         beq     :+
         bcs     greater
 :

@@ -611,7 +611,7 @@ done:   rts
         row    := $0C
 
         ;; Copy the writing code to the ZP
-        COPY_BYTES sizeof_PutBitProc, PutBitProc, PutBitProcTarget
+        COPY_BYTES sizeof_PutBitProc, PutBitProc, a:PutBitProcTarget
 
         copy16  #minipix_src_buf, src
         copy16  #minipix_dst_buf, dst

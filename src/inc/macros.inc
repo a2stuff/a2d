@@ -972,13 +972,12 @@ skip:   dec     arg
 ;;; ============================================================
 
 .macro COPY_BYTES size, src, dst
-.scope
+.local loop
         ldx     #size - 1
 loop:   lda     src,x
         sta     dst,x
         dex
         bpl     loop
-.endscope
 .endmacro
 
 .macro COPY_STRUCT type, src, dst
@@ -990,14 +989,13 @@ loop:   lda     src,x
 .endmacro
 
 .macro COPY_STRING src, dst
-.scope
+.local loop
         ldx     src
 loop:   lda     src,x
         sta     dst,x
         dex
         cpx     #$FF
         bne     loop
-.endscope
 .endmacro
 
 
