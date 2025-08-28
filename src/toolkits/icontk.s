@@ -8,7 +8,8 @@
 ;;; ============================================================
 ;;; Zero Page usage (saved/restored around calls)
 
-        zp_start := $30
+        zp_start := $06
+        kMaxZPAddress = $50
         kMaxCommandDataSize = 9
 
 PARAM_BLOCK, zp_start
@@ -39,7 +40,7 @@ rename_rect     .tag    MGTK::Rect  ; populated by `CalcIconRects`
 zp_end          .byte
 END_PARAM_BLOCK
 
-        .assert zp_end <= $78, error, "too big"
+        .assert zp_end <= kMaxZPAddress, error, "too big"
         kBytesToSave = zp_end - zp_start
 
 ;;; ============================================================
@@ -88,6 +89,14 @@ END_PARAM_BLOCK
         lda     (params_addr),y
         sta     params_addr+1
         stx     params_addr
+
+.ifdef DEBUG
+        ;; Bad if param block overlaps our zero page useage
+        cmp16   params_addr, #zp_end
+    IF_LT
+        brk
+    END_IF
+.endif ; DEBUG
 
         ;; Copy param data to `command_data`
         ldy     #kMaxCommandDataSize-1

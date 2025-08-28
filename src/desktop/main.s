@@ -4031,6 +4031,9 @@ icon_loop:
         ITK_CALL IconTK::IconInRect, icon_param ; tests against `tmp_rect`
         beq     next_icon
 
+        ;; NOTE: This is the only IconTK call which passes a param block
+        ;; on the zero page; it must not collide with IconTK's own use
+        ;; of the zero page.
         ITK_CALL IconTK::GetIconBounds, cur_icon ; result in `icon_rect`
 
         ldx     dir

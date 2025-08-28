@@ -48,6 +48,9 @@ maskbits        .addr
 
 Return value in A, 0=success.
 
+The passed parameter block can be on the zero page, but must be after
+$50.
+
 ### `IconTK::InitToolKit` ($00)
 
 Initializes the toolkit with key information about the client.
