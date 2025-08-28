@@ -6551,7 +6551,7 @@ finish: rts
         and     #MGTK::MenuOpt::disable_flag | MGTK::MenuOpt::item_is_filler
         bne     fail
 
-        lda     menu_index
+        lda     z:menu_index
         sta     sel_menu_index
         sec
         .byte   OPC_BCC         ; mask next byte (clc)
