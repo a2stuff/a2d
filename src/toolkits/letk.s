@@ -156,15 +156,15 @@ penXOR:         .byte   MGTK::penXOR
 
         bit     options         ; bit7 = centered
     IF_NS
-        add16   z:rect+MGTK::Rect::x1, z:rect+MGTK::Rect::x2, z:pos+MGTK::Point::xcoord
+        add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
 
         jsr     _PrepTextParams
       IF_NOT_ZERO
         MGTK_CALL MGTK::TextWidth, text_params
       END_IF
 
-        sub16   z:pos+MGTK::Point::xcoord, z:text_params+MGTK::TextWidthParams::width, z:pos+MGTK::Point::xcoord
-        lsr16   z:pos+MGTK::Point::xcoord
+        sub16   pos+MGTK::Point::xcoord, text_params+MGTK::TextWidthParams::width, pos+MGTK::Point::xcoord
+        lsr16   pos+MGTK::Point::xcoord
    END_IF
 
         rts

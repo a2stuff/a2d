@@ -243,7 +243,7 @@ skip_port:
         and     #DeskTopSettings::kOptionsShowShortcuts
     IF_NOT_ZERO
         ;; Draw the string (left aligned)
-        add16_8 z:rect+MGTK::Rect::x1, #kButtonTextHOffset, z:pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::x1, #kButtonTextHOffset, pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
 
@@ -251,23 +251,23 @@ skip_port:
         lda     a_shortcut
         ora     a_shortcut+1
       IF_NOT_ZERO
-        width := $9
+        @width := $9
         jsr     _MeasureShortcut
-        stax    width
-        sub16_8 z:rect+MGTK::Rect::x2, #kButtonTextHOffset-2, z:pos+MGTK::Point::xcoord
-        sub16   z:pos+MGTK::Point::xcoord, width, z:pos+MGTK::Point::xcoord
+        stax    @width
+        sub16_8 rect+MGTK::Rect::x2, #kButtonTextHOffset-2, pos+MGTK::Point::xcoord
+        sub16   pos+MGTK::Point::xcoord, @width, pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawShortcut
       END_IF
     ELSE
         ;; Draw the label (centered)
-        width := $9
+        @width := $9
         jsr     _MeasureLabel
-        stax    width
+        stax    @width
 
-        add16   z:rect+MGTK::Rect::x1, z:rect+MGTK::Rect::x2, z:pos+MGTK::Point::xcoord
-        sub16   z:pos+MGTK::Point::xcoord, width, z:pos+MGTK::Point::xcoord
-        asr16   z:pos+MGTK::Point::xcoord
+        add16   rect+MGTK::Rect::x1, rect+MGTK::Rect::x2, pos+MGTK::Point::xcoord
+        sub16   pos+MGTK::Point::xcoord, @width, pos+MGTK::Point::xcoord
+        asr16   pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
     END_IF
@@ -476,16 +476,16 @@ unchecked_rb_bitmap:
     IF_NOT_ZERO
         ;; Draw the label
         pos := $B
-        add16_8 z:rect+MGTK::Rect::x1, #kLabelPadding + BTK::kRadioButtonWidth, pos+MGTK::Point::xcoord
-        add16_8 z:rect+MGTK::Rect::y1, #kSystemFontHeight - 1, pos+MGTK::Point::ycoord
+        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kRadioButtonWidth, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight - 1, pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
 
         ;; And measure it for hit testing
         jsr     _MeasureLabel
-        addax   z:rect+MGTK::Rect::x2
-        add16_8 z:rect+MGTK::Rect::x2, #kLabelPadding
-        add16_8 z:rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kRadioButtonHeight
+        addax   rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
+        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kRadioButtonHeight
     END_IF
 
         jsr     _MaybeDrawAndMeasureShortcut
@@ -563,16 +563,16 @@ unchecked_cb_bitmap:
     IF_NOT_ZERO
         ;; Draw the label
         pos := $B
-        add16_8 z:rect+MGTK::Rect::x1, #kLabelPadding + BTK::kCheckboxWidth, pos+MGTK::Point::xcoord
-        add16_8 z:rect+MGTK::Rect::y1, #kSystemFontHeight, pos+MGTK::Point::ycoord
+        add16_8 rect+MGTK::Rect::x1, #kLabelPadding + BTK::kCheckboxWidth, pos+MGTK::Point::xcoord
+        add16_8 rect+MGTK::Rect::y1, #kSystemFontHeight, pos+MGTK::Point::ycoord
         MGTK_CALL MGTK::MoveTo, pos
         jsr     _DrawLabel
 
         ;; And measure it for hit testing
         jsr     _MeasureLabel
-        addax   z:rect+MGTK::Rect::x2
-        add16_8 z:rect+MGTK::Rect::x2, #kLabelPadding
-        add16_8 z:rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kCheckboxHeight
+        addax   rect+MGTK::Rect::x2
+        add16_8 rect+MGTK::Rect::x2, #kLabelPadding
+        add16_8 rect+MGTK::Rect::y2, #kSystemFontHeight - BTK::kCheckboxHeight
     END_IF
 
         jsr     _MaybeDrawAndMeasureShortcut

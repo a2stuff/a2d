@@ -4767,7 +4767,7 @@ _Preamble:
 .proc _Clamp_hi
         scmp16  viewport+MGTK::Rect::bottomright,x, ubox+MGTK::Rect::bottomright,x
     IF_POS
-        copy16  z:ubox+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::bottomright,x
+        copy16  ubox+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::bottomright,x
     END_IF
         sub16   viewport+MGTK::Rect::bottomright,x, dimensions,x, viewport+MGTK::Rect::topleft,x
         rts
@@ -4794,7 +4794,7 @@ _Preamble:
 .proc _Clamp_lo
         scmp16  viewport+MGTK::Rect::topleft,x, ubox+MGTK::Rect::topleft,x
     IF_NEG
-        copy16  z:ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x
+        copy16  ubox+MGTK::Rect::topleft,x, viewport+MGTK::Rect::topleft,x
     END_IF
         add16   viewport+MGTK::Rect::topleft,x, dimensions,x, viewport+MGTK::Rect::bottomright,x
         rts
@@ -4830,9 +4830,9 @@ _Preamble:
 
         ;; Handle offset case - may be able to deactivate scrollbar now
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
-        scmp16  z:ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
+        scmp16  ubox+MGTK::Rect::x1, viewport+MGTK::Rect::x1
         bmi     :+
-        scmp16  viewport+MGTK::Rect::x2, z:ubox+MGTK::Rect::x2
+        scmp16  viewport+MGTK::Rect::x2, ubox+MGTK::Rect::x2
         bmi     :+
         ldx     #MGTK::Ctl::horizontal_scroll_bar
         lda     #MGTK::activatectl_deactivate
@@ -4851,9 +4851,9 @@ _Preamble:
 
         ;; Handle offset case - may be able to deactivate scrollbar now
         jsr     _Preamble       ; Need updated `ubox` and `maprect`
-        scmp16  z:ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
+        scmp16  ubox+MGTK::Rect::y1, viewport+MGTK::Rect::y1
         bmi     :+
-        scmp16  viewport+MGTK::Rect::y2, z:ubox+MGTK::Rect::y2
+        scmp16  viewport+MGTK::Rect::y2, ubox+MGTK::Rect::y2
         bmi     :+
         ldx     #MGTK::Ctl::vertical_scroll_bar
         lda     #MGTK::activatectl_deactivate
@@ -8125,7 +8125,7 @@ records_base_ptr:
     IF_ZERO
         ;; Icon view: include y-offset
         ldy     #IconEntry::icony
-        sub16in (icon_entry),y, z:icon_height, (icon_entry),y
+        sub16in (icon_entry),y, icon_height, (icon_entry),y
     END_IF
 
         ;; Next col
@@ -8135,9 +8135,9 @@ records_base_ptr:
         lda     icons_this_row
         cmp     icons_per_row
     IF_EQ
-        add16_8 z:icon_coords+MGTK::Point::ycoord, z:row_spacing
-        copy16  z:initial_xcoord, z:icon_coords+MGTK::Point::xcoord
-        copy8   #0, z:icons_this_row
+        add16_8 icon_coords+MGTK::Point::ycoord, row_spacing
+        copy16  initial_xcoord, icon_coords+MGTK::Point::xcoord
+        copy8   #0, icons_this_row
     END_IF
 
         ;; Assign `IconEntry::win_flags`
@@ -8198,13 +8198,13 @@ records_base_ptr:
     IF_NOT_ZERO
         ;; List View / Small Icon View
         php
-        lda     z:icon_flags
+        lda     icon_flags
         ora     #kIconEntryFlagsSmall
         plp
       IF_NS
         ora     #kIconEntryFlagsFixed
       END_IF
-        sta     z:icon_flags
+        sta     icon_flags
 
         lda     icontype_to_smicon_table,y
         tay
@@ -8465,7 +8465,6 @@ done:   rts
     END_IF
 
         ;; Assert: DeskTopSettings::kViewByType
-        scratch := $804
         ldy     #FileRecord::file_type
         lda     (ptr1),y
         jsr     _ComposeFileTypeStringForSorting

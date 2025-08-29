@@ -352,7 +352,7 @@ ret:    rts
 
         cmp     #MGTK::Part::up_arrow
     IF_EQ
-repeat:
+@repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
         beq     ret
@@ -362,14 +362,14 @@ repeat:
         jsr     update
         lda     #MGTK::Part::up_arrow
         jsr     _CheckControlRepeat
-        beq     repeat          ; always
+        beq     @repeat         ; always
     END_IF
 
         ;; --------------------------------------------------
 
         cmp     #MGTK::Part::down_arrow
     IF_EQ
-repeat:
+@repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
         ASSERT_EQUALS MGTK::Winfo::vthumbmax, MGTK::Winfo::vthumbpos - 1
@@ -382,7 +382,7 @@ repeat:
         jsr     update
         lda     #MGTK::Part::down_arrow
         jsr     _CheckControlRepeat
-        beq     repeat          ; always
+        beq     @repeat         ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -398,7 +398,7 @@ repeat:
         SKIP_NEXT_2_BYTE_INSTRUCTION
         ASSERT_NOT_EQUALS lbr_copy + LBTK::ListBoxRecord::num_rows, $C0, "bad BIT skip"
 :       sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
-do:     jsr     update
+        jsr     update
         lda     #MGTK::Part::page_up
         jsr     _CheckControlRepeat
         beq     repeat          ; always
@@ -408,7 +408,7 @@ do:     jsr     update
 
         cmp     #MGTK::Part::page_down
     IF_EQ
-repeat:
+@repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
         clc
@@ -416,13 +416,13 @@ repeat:
         ASSERT_EQUALS MGTK::Winfo::vthumbmax, MGTK::Winfo::vthumbpos - 1
         dey                     ; Y = MGTK::Winfo::vthumbmax
         cmp     (winfo_ptr),y
-        bcc     do
+        bcc     @do
         ;; Assert: Y = MGTK::Winfo::vthumbmax
         lda     (winfo_ptr),y
-do:     jsr     update
+@do:    jsr     update
         lda     #MGTK::Part::page_down
         jsr     _CheckControlRepeat
-        beq     repeat          ; always
+        beq     @repeat         ; always
     END_IF
 
         ;; --------------------------------------------------
@@ -501,23 +501,23 @@ ret:    rts
     IF_ZERO
         cmp     #CHAR_UP
       IF_EQ
-        ldx     z:lbr_copy + LBTK::ListBoxRecord::selected_index
+        ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret
        IF_NS
-        ldx     z:lbr_copy + LBTK::ListBoxRecord::num_items
+        ldx     lbr_copy + LBTK::ListBoxRecord::num_items
        END_IF
         dex
         txa
         bpl     _SetSelectionAndNotify ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     z:lbr_copy + LBTK::ListBoxRecord::selected_index
+        ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
       IF_NS
         lda     #0
         beq     _SetSelectionAndNotify ; always
       END_IF
         inx
-        cpx     z:lbr_copy + LBTK::ListBoxRecord::num_items
+        cpx     lbr_copy + LBTK::ListBoxRecord::num_items
         beq     ret
         txa
         bpl     _SetSelectionAndNotify ; always
@@ -531,19 +531,19 @@ ret:    rts
     IF_EQ
         cmp     #CHAR_UP
       IF_EQ
-        lda     z:lbr_copy + LBTK::ListBoxRecord::selected_index
+        lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret
         lda     #0
         bpl     _SetSelectionAndNotify ; always
       END_IF
         ;; CHAR_DOWN
-        ldx     z:lbr_copy + LBTK::ListBoxRecord::selected_index
+        ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
       IF_NC
         inx
-        cpx     z:lbr_copy + LBTK::ListBoxRecord::num_items
+        cpx     lbr_copy + LBTK::ListBoxRecord::num_items
         beq     ret
       END_IF
-        ldx     z:lbr_copy + LBTK::ListBoxRecord::num_items
+        ldx     lbr_copy + LBTK::ListBoxRecord::num_items
         dex
         txa
         bpl     _SetSelectionAndNotify ; always

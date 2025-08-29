@@ -870,7 +870,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         cmp     #Function::exp
     IF_EQ
         ldy     calc_e
-        bne     ret
+        bne     @ret
         ldy     calc_l
         bne     :+
         inc     calc_l
@@ -880,7 +880,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
 :       lda     #'E'
         sta     calc_e
         jmp     Insert
-ret:    rts
+@ret:   rts
     END_IF
 
         cmp     #Function::op_subtract
@@ -902,7 +902,7 @@ ret:    rts
     IF_EQ
         lda     calc_d
         ora     calc_e
-        bne     ret
+        bne     @ret
         lda     calc_l
         bne     :+
         inc     calc_l
@@ -910,7 +910,7 @@ ret:    rts
         sta     calc_d
         jmp     Insert
 
-ret:    rts
+@ret:   rts
     END_IF
 
         cmp     #Function::digit0

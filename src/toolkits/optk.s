@@ -320,7 +320,7 @@ loop:
         cmp     max_entries
     IF_GE
         sec
-        sbc     z:max_entries_minus_one
+        sbc     max_entries_minus_one
     END_IF
         jsr     _CallIsEntryProc
         bmi     loop
@@ -343,7 +343,7 @@ loop:   sec
         sbc     oprc_num_rows
     IF_NEG
         clc
-        adc     z:max_entries_minus_one
+        adc     max_entries_minus_one
     END_IF
         jsr     _CallIsEntryProc
         bmi     loop

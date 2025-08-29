@@ -716,7 +716,7 @@ new_state:
         jsr     MoveAndClamp
         cpy     #0              ; Y = clamped
       IF_NE
-        copy8   dir, scratch_dir
+        copy8   a:dir, scratch_dir
         lda     #NekoState::scratch
         bne     new_state       ; always
       END_IF
@@ -809,17 +809,17 @@ set_frame:
         asl     x_delta
         bit     x_neg
     IF_POS
-        add16_8 x_pos, x_delta
+        add16_8 a:x_pos, a:x_delta
     ELSE
-        sub16_8 x_pos, x_delta
+        sub16_8 a:x_pos, a:x_delta
     END_IF
         lsr     x_delta
 
         bit     y_neg
     IF_POS
-        add16_8 y_pos, y_delta
+        add16_8 a:y_pos, y_delta
     ELSE
-        sub16_8 y_pos, y_delta
+        sub16_8 a:y_pos, y_delta
     END_IF
 
         ;; Clamp
@@ -843,7 +843,7 @@ set_frame:
         sub16_8 tmp16, #kNekoWidth-1, tmp16
         cmp16   x_pos, tmp16
     IF_CS
-        copy16  tmp16, x_pos
+        copy16  a:tmp16, x_pos
         iny
     END_IF
 
@@ -851,7 +851,7 @@ set_frame:
         sub16_8 tmp16, #kNekoHeight + aux::kGrowBoxHeight, tmp16
         cmp16   y_pos, tmp16
     IF_CS
-        copy16  tmp16, y_pos
+        copy16  a:tmp16, y_pos
         iny
     END_IF
 

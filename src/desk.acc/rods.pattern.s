@@ -431,7 +431,7 @@ bcnt:   dex
         .setcpu "65816"
         lda     #$0F
         trb     CLOCKCTL
-        lda     cgs
+        lda     a:cgs
         tsb     CLOCKCTL
         .popcpu
     END_IF

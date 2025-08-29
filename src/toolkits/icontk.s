@@ -786,7 +786,7 @@ is_drag:
         dey
         bpl     :-
 
-        add16_8 z:poly_ptr, #kIconPolySize
+        add16_8 poly_ptr, #kIconPolySize
         rts
         END_OF_LAMBDA
 
@@ -1618,24 +1618,24 @@ kIconLabelGapV = 2
         ;; Small icon
 
         ;; Label top
-        copy16  z:bitmap_rect+MGTK::Rect::y1, z:label_rect+MGTK::Rect::y1
+        copy16  bitmap_rect+MGTK::Rect::y1, label_rect+MGTK::Rect::y1
 
         ;; Label bottom
         add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight+1, label_rect+MGTK::Rect::y2
 
         ;; Left edge of label
-        add16_8 z:bitmap_rect+MGTK::Rect::x2, #kListViewIconGap-2, z:label_rect+MGTK::Rect::x1
+        add16_8 bitmap_rect+MGTK::Rect::x2, #kListViewIconGap-2, label_rect+MGTK::Rect::x1
 
         jsr     stash_rename_rect
 
         ;; Force bitmap bottom to same height
-        copy16  z:label_rect+MGTK::Rect::y2, z:bitmap_rect+MGTK::Rect::y2
+        copy16  label_rect+MGTK::Rect::y2, bitmap_rect+MGTK::Rect::y2
     ELSE
         ;; ----------------------------------------
         ;; Regular icon
 
         ;; Label top
-        add16_8 z:bitmap_rect+MGTK::Rect::y2, #kIconLabelGapV, z:label_rect+MGTK::Rect::y1
+        add16_8 bitmap_rect+MGTK::Rect::y2, #kIconLabelGapV, label_rect+MGTK::Rect::y1
 
         ;; Label bottom
         add16_8 label_rect+MGTK::Rect::y1, #kSystemFontHeight, label_rect+MGTK::Rect::y2
@@ -1646,7 +1646,7 @@ kIconLabelGapV = 2
         ;;  text_left = icon_left + icon_width/2 - text_width/2
         ;;            = (icon_left*2 + icon_width - text_width) / 2
         ;; NOTE: Left is computed before right to match rendering code
-        copy16  z:bitmap_rect+MGTK::Rect::x1, z:label_rect+MGTK::Rect::x1
+        copy16  bitmap_rect+MGTK::Rect::x1, label_rect+MGTK::Rect::x1
         asl16   label_rect+MGTK::Rect::x1
         ldy     #IconResource::maprect + MGTK::Rect::x2
         add16in label_rect+MGTK::Rect::x1, (res_ptr),y, label_rect+MGTK::Rect::x1
@@ -2081,12 +2081,12 @@ reserved:       .byte   0
 :
         scmp16  portbits::maprect::topleft,x, bounding_rect+MGTK::Rect::topleft,x
     IF_NEG
-        copy16  z:bounding_rect+MGTK::Rect::topleft,x, portbits::maprect::topleft,x
+        copy16  bounding_rect+MGTK::Rect::topleft,x, portbits::maprect::topleft,x
     END_IF
 
         scmp16  bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
     IF_NEG
-        copy16  z:bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
+        copy16  bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
     END_IF
 
         ;; Is there anything left?

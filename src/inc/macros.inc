@@ -1158,52 +1158,78 @@ __shadow_warning_suppress_count__ .set 0
 
 __depth__ .set 0
 
+
+;;; Increment a numeric variable; if not initialized, treated as 0
+.macro __INC_IDENT__ ident
+    .if .not(.defined(ident))
+        ident .set 0
+    .endif
+    ident .set ident + 1
+.endmacro
+
+;;; Decrement a numeric variable
+.macro __DEC_IDENT__ ident
+        ident .set ident - 1
+.endmacro
+
+;;; Change to 1 to enable logging
+.define __block_debug__ 0
+
+;;; Easier way to reference the `__depth__` numeric variable in the right scope
+.define __block_depth__ ::__depth__
+
+;;; Produce an identifier, the "Nth" block at depth D. Used to mint
+;;; identifiers unique to this block, without using scopes.
+.define __block_count_at_depth__ ::.ident(.sprintf("__block_cad_%d__", __block_depth__))
+
+;;; Produce a unique identifier for this block, e.g. `__block_ident__
+;;; {"else"}`
+.define __block_ident__(prefix) ::.ident(.sprintf("__block_id_%s_%d_%d__", prefix, __block_depth__, __block_count_at_depth__))
+
+;;; If debugging enabled, log a message with block details
+.macro __BLOCK_LOG__ msg
+    .if __block_debug__
+        .out .sprintf("%s, depth: %d, bcad: %d", msg, __block_depth__, __block_count_at_depth__)
+    .endif
+.endmacro
+
+.macro _IF_FOR_OP_ branchOp
+        __INC_IDENT__ __block_depth__
+        __INC_IDENT__ __block_count_at_depth__
+        __BLOCK_LOG__ "if"
+        branchOp __block_ident__ {"else"}
+.endmacro
+
 .macro IF_EQ
-        ::__depth__ .set ::__depth__ + 1
-        .scope
-        bne     .ident(.sprintf("__else__%d", ::__depth__))
+        _IF_FOR_OP_ bne
 .endmacro
 
 .macro IF_NE
-        ::__depth__ .set ::__depth__ + 1
-        .scope
-        beq     .ident(.sprintf("__else__%d", ::__depth__))
+        _IF_FOR_OP_ beq
 .endmacro
 
 .macro IF_CC
-        ::__depth__ .set ::__depth__ + 1
-        .scope
-        bcs     .ident(.sprintf("__else__%d", ::__depth__))
+        _IF_FOR_OP_ bcs
 .endmacro
 
 .macro IF_CS
-        ::__depth__ .set ::__depth__ + 1
-        .scope
-        bcc     .ident(.sprintf("__else__%d", ::__depth__))
+        _IF_FOR_OP_ bcc
 .endmacro
 
 .macro IF_NC
-        ::__depth__ .set ::__depth__ + 1
-        .scope
-        bmi     .ident(.sprintf("__else__%d", ::__depth__))
+        _IF_FOR_OP_ bmi
 .endmacro
 
 .macro IF_NS
-        ::__depth__ .set ::__depth__ + 1
-        .scope
-        bpl     .ident(.sprintf("__else__%d", ::__depth__))
+        _IF_FOR_OP_ bpl
 .endmacro
 
 .macro IF_VC
-        ::__depth__ .set ::__depth__ + 1
-        .scope
-        bvs     .ident(.sprintf("__else__%d", ::__depth__))
+        _IF_FOR_OP_ bvs
 .endmacro
 
 .macro IF_VS
-        ::__depth__ .set ::__depth__ + 1
-        .scope
-        bvc     .ident(.sprintf("__else__%d", ::__depth__))
+        _IF_FOR_OP_ bvc
 .endmacro
 
         .define IF_ZERO IF_EQ
@@ -1218,8 +1244,9 @@ __depth__ .set 0
 ;;; --------------------------------------------------
 
 .macro ELSE
-        jmp     .ident(.sprintf("__endif__%d", ::__depth__))
-        .ident(.sprintf("__else__%d", ::__depth__)) := *
+        __BLOCK_LOG__ "else"
+        jmp     __block_ident__ {"endif"}
+        __block_ident__ {"else"} := *
 .endmacro
 
 .macro ELSE_IF
@@ -1233,18 +1260,22 @@ __depth__ .set 0
 ;;; --------------------------------------------------
 
 .macro END_IF
-    .if .not(.defined(.ident(.sprintf("__else__%d", ::__depth__))))
-        .ident(.sprintf("__else__%d", ::__depth__)) := *
+    .ifndef __block_ident__ {"else"}
+        __BLOCK_LOG__ "no else"
+        __block_ident__ {"else"} := *
     .endif
-        .ident(.sprintf("__endif__%d", ::__depth__)) := *
-        .refto .ident(.sprintf("__endif__%d", ::__depth__))
-.endscope
-        ::__depth__ .set ::__depth__ - 1
+
+        __BLOCK_LOG__ "endif"
+        __block_ident__ {"endif"} := *
+
+        .refto __block_ident__ {"endif"}
+        __DEC_IDENT__ __block_depth__
 .endmacro
 
 .macro ENDIF
         .error "Do you mean END_IF ?"
 .endmacro
+
 
 ;;; --------------------------------------------------
 
@@ -1266,57 +1297,49 @@ __depth__ .set 0
 ;;;     WHILE_NS           aliases: WHILE_NEG, WHILE_MINUS
 
 .macro DO
-        ::__depth__ .set ::__depth__ + 1
-        .scope
-        .ident(.sprintf("__do_while__%d", ::__depth__)) := *
+        __INC_IDENT__ __block_depth__
+        __INC_IDENT__ __block_count_at_depth__
+
+        __BLOCK_LOG__ "do"
+        __block_ident__ {"do_while"} := *
+.endmacro
+
+.macro _WHILE_FOR_OP_ branchOp
+        __BLOCK_LOG__ "while"
+        branchOp __block_ident__ {"do_while"}
+        __DEC_IDENT__ __block_depth__
 .endmacro
 
 .macro WHILE_ZC
-        bne     .ident(.sprintf("__do_while__%d", ::__depth__))
-.endscope
-        ::__depth__ .set ::__depth__ - 1
+        _WHILE_FOR_OP_ bne
 .endmacro
 
 .macro WHILE_ZS
-        beq     .ident(.sprintf("__do_while__%d", ::__depth__))
-.endscope
-        ::__depth__ .set ::__depth__ - 1
+        _WHILE_FOR_OP_ beq
 .endmacro
 
 .macro WHILE_CC
-        bcc     .ident(.sprintf("__do_while__%d", ::__depth__))
-.endscope
-        ::__depth__ .set ::__depth__ - 1
+        _WHILE_FOR_OP_ bcc
 .endmacro
 
 .macro WHILE_CS
-        bcs     .ident(.sprintf("__do_while__%d", ::__depth__))
-.endscope
-        ::__depth__ .set ::__depth__ - 1
+        _WHILE_FOR_OP_ bcs
 .endmacro
 
 .macro WHILE_VC
-        bvc     .ident(.sprintf("__do_while__%d", ::__depth__))
-.endscope
-        ::__depth__ .set ::__depth__ - 1
+        _WHILE_FOR_OP_ bvc
 .endmacro
 
 .macro WHILE_VS
-        bvs     .ident(.sprintf("__do_while__%d", ::__depth__))
-.endscope
-        ::__depth__ .set ::__depth__ - 1
+        _WHILE_FOR_OP_ bvs
 .endmacro
 
 .macro WHILE_NC
-        bpl     .ident(.sprintf("__do_while__%d", ::__depth__))
-.endscope
-        ::__depth__ .set ::__depth__ - 1
+        _WHILE_FOR_OP_ bpl
 .endmacro
 
 .macro WHILE_CNS
-        bmi     .ident(.sprintf("__do_while__%d", ::__depth__))
-.endscope
-        ::__depth__ .set ::__depth__ - 1
+        _WHILE_FOR_OP_ bmi
 .endmacro
 
         .define WHILE_EQ WHILE_ZS
