@@ -25,6 +25,7 @@
 .define res_filename_melt "Smelten"
 .define res_filename_matrix "Matrix"
 .define res_filename_invert "Negatief"
+.define res_filename_random "Willekeurig"
 .define res_filename_rods_pattern "Rods.Pattern"
 .define res_filename_calendar "Kalender"
 .define res_filename_sounds "Geluiden"

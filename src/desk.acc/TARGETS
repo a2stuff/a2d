@@ -20,6 +20,7 @@ invert                          Apple.Menu/Screen.Savers        optional
 matrix                          Apple.Menu/Screen.Savers        optional
 melt                            Apple.Menu/Screen.Savers        optional
 message                         Apple.Menu/Screen.Savers        optional
+random                          Apple.Menu/Screen.Savers        optional
 rods.pattern                    Apple.Menu/Screen.Savers        optional
 bounce                          Apple.Menu/Toys                 optional
 eyes                            Apple.Menu/Toys                 optional

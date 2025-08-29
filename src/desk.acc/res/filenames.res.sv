@@ -25,6 +25,7 @@
 .define res_filename_melt "Smalta"
 .define res_filename_matrix "Matrix"
 .define res_filename_invert "Negativ"
+.define res_filename_random "Slumpmassigt"
 .define res_filename_rods_pattern "Rods.Pattern"
 .define res_filename_calendar "Kalender"
 .define res_filename_sounds "Ljud"

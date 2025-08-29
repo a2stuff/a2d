@@ -103,6 +103,7 @@ Project Page: https://github.com/a2stuff/a2d
 * New DA (in Control Panels): "Views" - allows setting the default view style.
 * New DA (in Toys): "Lights Out" game.
 * New DA (in Toys): "Bounce".
+* New DA (in Screen Savers): "Random" - runs a random screen saver.
 
 ### Misc
 

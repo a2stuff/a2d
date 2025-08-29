@@ -2,9 +2,6 @@
 ;;; DeskTop Internals
 ;;; ============================================================
 
-kDAFileType     = $F1
-kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
-
 .enum IconType
         ;; Volumes
         trash                   ; pseudo-volume

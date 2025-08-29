@@ -403,6 +403,12 @@ kGlyphCheckmark         = $1D
 ;;;   Control     $01
 
 ;;; ============================================================
+;;; File Types
+
+kDAFileType     = $F1
+kDAFileAuxType  = $642           ; High bit set = don't show in Apple menu
+
+;;; ============================================================
 ;;; Macros (specific to this project)
 
 .macro DEFINE_LABEL ident, label, xpos, ypos
