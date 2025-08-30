@@ -120,7 +120,7 @@ xcoord  .word
     * As always, add comments if the usage might not be obvious (e.g. not at the end of a proc)
     * The con of this is the true call stack is obscured, making debugging more difficult, but the pattern is common enough that this can't be relied on.
 
-* **Do** use `IF_xx` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
+* **Do** use `IF_xx` / `ELSE_IF_yy` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
 
 * Annotate fall-through. A `;; fall through` comment can be used, but the preferred form is with the `FALL_THROUGH_TO` assertion macro to prevent refactoring mistakes.
 
@@ -228,7 +228,7 @@ The following macros should be used to improve code readability by eliminating r
 * structural:
   * `PAD_TO` to introduce padding to a known address
   * `COPY_xx` for fixed size copy loops
-  * `IF_xx`/`ELSE`/`END_IF` for conditional sections, to avoid throw-away labels
+  * `IF_xx`/`ELSE_IF_yy`/`ELSE`/`END_IF` for conditional sections, to avoid throw-away labels
 * definitions:
   * `PASCAL_STRING` for length-prefixed strings
 

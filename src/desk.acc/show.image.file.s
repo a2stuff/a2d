@@ -1459,21 +1459,19 @@ saw_header_flag:
       ELSE
         ldax    #first_filename
       END_IF
-    ELSE
-      IF_NS
+    ELSE_IF_NS
         lda     next_filename
-       IF_NOT_ZERO
+      IF_NOT_ZERO
         ldax    #next_filename
-       ELSE
-        ldax    #first_filename
-       END_IF
       ELSE
+        ldax    #first_filename
+      END_IF
+    ELSE
         lda     prev_filename
-       IF_NOT_ZERO
+      IF_NOT_ZERO
         ldax    #prev_filename
-       ELSE
+      ELSE
         ldax    #last_filename
-       END_IF
       END_IF
     END_IF
 
