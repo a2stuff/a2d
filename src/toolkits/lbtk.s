@@ -294,8 +294,7 @@ coords          .tag MGTK::Point
         return  #$FF            ; not an item
     END_IF
 
-        cmp     #MGTK::Ctl::not_a_control
-    IF_NE
+    IF_A_NE     #MGTK::Ctl::not_a_control
         return  #$FF            ; not an item
     END_IF
 
@@ -311,16 +310,14 @@ coords          .tag MGTK::Point
         lda     divide_params::result
 
         ;; Validate
-        cmp     lbr_copy + LBTK::ListBoxRecord::num_items
-    IF_GE
+    IF_A_GE     lbr_copy + LBTK::ListBoxRecord::num_items
         lda     #$FF
         jsr     _SetSelectionAndNotify
         return  #$FF            ; not an item
     END_IF
 
         ;; Update selection (if different)
-        cmp     lbr_copy + LBTK::ListBoxRecord::selected_index
-    IF_NE
+    IF_A_NE     lbr_copy + LBTK::ListBoxRecord::selected_index
         jsr     _SetSelectionAndNotify
     ELSE
         jsr     OnNoChange
@@ -350,8 +347,7 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-        cmp     #MGTK::Part::up_arrow
-    IF_EQ
+    IF_A_EQ     #MGTK::Part::up_arrow
 @repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -367,8 +363,7 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-        cmp     #MGTK::Part::down_arrow
-    IF_EQ
+    IF_A_EQ     #MGTK::Part::down_arrow
 @repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -387,8 +382,7 @@ ret:    rts
 
         ;; --------------------------------------------------
 
-        cmp     #MGTK::Part::page_up
-    IF_EQ
+    IF_A_EQ     #MGTK::Part::page_up
 repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -406,8 +400,7 @@ repeat:
 
         ;; --------------------------------------------------
 
-        cmp     #MGTK::Part::page_down
-    IF_EQ
+    IF_A_EQ     #MGTK::Part::page_down
 @repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
@@ -499,8 +492,7 @@ ret:    rts
 
         ;; Up/Down move selection
     IF_ZERO
-        cmp     #CHAR_UP
-      IF_EQ
+      IF_A_EQ   #CHAR_UP
         ldx     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret
        IF_NS
@@ -529,8 +521,7 @@ ret:    rts
         ;; Home/End move selection to first/last
         cpx     #3
     IF_EQ
-        cmp     #CHAR_UP
-      IF_EQ
+      IF_A_EQ   #CHAR_UP
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret
         lda     #0
@@ -551,8 +542,7 @@ ret:    rts
 
         ;; --------------------------------------------------
         ;; Single modifier
-        cmp     #CHAR_UP
-    IF_EQ
+    IF_A_EQ     #CHAR_UP
         lda     #MGTK::Part::page_up
         SKIP_NEXT_2_BYTE_INSTRUCTION
     END_IF
@@ -814,8 +804,7 @@ loop:
         add16_8 tmp_point+MGTK::Point::ycoord, #kListItemHeight
 
         lda     index
-        cmp     lbr_copy + LBTK::ListBoxRecord::selected_index
-    IF_EQ
+    IF_A_EQ     lbr_copy + LBTK::ListBoxRecord::selected_index
         jsr     _HighlightIndex
     END_IF
 

@@ -30,8 +30,7 @@
         lda     get_info_params__file_type
 
 ;;; Binary file (BIN) - load and invoke at A$=AuxType
-        cmp     #FT_BINARY
-    IF_EQ
+    IF_A_EQ     #FT_BINARY
 
         lda     get_info_params__aux_type
         sta     jmp_addr

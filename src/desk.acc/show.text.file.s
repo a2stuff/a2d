@@ -271,27 +271,23 @@ title:  jsr     OnTitleBarClick
         cpx     #3
     IF_EQ
         ;; Double modifiers
-        cmp     #CHAR_UP        ; OA+SA+Up = Home
-      IF_EQ
+      IF_A_EQ   #CHAR_UP        ; OA+SA+Up = Home
         jsr     ScrollTop
         jmp     InputLoop
       END_IF
 
-        cmp     #CHAR_DOWN      ; OA+SA+Down = End
-      IF_EQ
+      IF_A_EQ   #CHAR_DOWN      ; OA+SA+Down = End
         jsr     ScrollBottom
         ;; jmp     InputLoop
       END_IF
     ELSE
         ;; Single modifier
-        cmp     #CHAR_UP        ; Apple+Up = Page Up
-      IF_EQ
+      IF_A_EQ   #CHAR_UP        ; Apple+Up = Page Up
         jsr     PageUp
         jmp     InputLoop
       END_IF
 
-        cmp     #CHAR_DOWN      ; Apple+Down = Page Down
-      IF_EQ
+      IF_A_EQ   #CHAR_DOWN      ; Apple+Down = Page Down
         jsr     PageDown
         ;; jmp     InputLoop
       END_IF
@@ -309,20 +305,17 @@ no_mod:
         cmp     #CHAR_ESCAPE
         jeq     DoClose
 
-        cmp     #' '
-    IF_EQ
+    IF_A_EQ     #' '
         jsr     ToggleMode
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_UP
-    IF_EQ
+    IF_A_EQ     #CHAR_UP
         jsr     ScrollUp
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_DOWN
-    IF_EQ
+    IF_A_EQ     #CHAR_DOWN
         jsr     ScrollDown
         ;; jmp     InputLoop
     END_IF
@@ -876,8 +869,7 @@ end:    rts
 
         ;; Pointing at second page already?
         lda     drawtext_params::textptr+1
-        cmp     #>default_buffer
-    IF_NE
+    IF_A_NE     #>default_buffer
         ;; Yes, shift second page down.
         ldy     #0
 :       lda     default_buffer+$100,y

@@ -1121,8 +1121,7 @@ params: .res    3
         return  #1
     END_IF
 
-        cmp     #CHAR_RETURN
-    IF_EQ
+    IF_A_EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, dialog_ok_button
         bmi     ignore          ; disabled
         return  #0
@@ -1538,8 +1537,7 @@ is_prodos:
         ldx     num_drives
         sta     drive_unitnum_table,x
 
-        cmp     DISK_COPY_INITIAL_UNIT_NUM
-    IF_EQ
+    IF_A_EQ     DISK_COPY_INITIAL_UNIT_NUM
         copy8   num_drives, current_drive_selection
     END_IF
 
@@ -2183,8 +2181,7 @@ start:
         bne     find_in_alert_table ; always
     END_IF
 
-        cmp     #kAlertMsgInsertDestination
-    IF_EQ
+    IF_A_EQ     #kAlertMsgInsertDestination
         cpx     #0
         beq     find_in_alert_table
         jsr     _IsDriveEjectable
@@ -2195,15 +2192,13 @@ start:
         bne     find_in_alert_table ; always
     END_IF
 
-        cmp     #kAlertMsgConfirmErase
-    IF_EQ
+    IF_A_EQ     #kAlertMsgConfirmErase
         jsr     _AppendToConfirmErase
         lda     #kAlertMsgConfirmErase
         bne     find_in_alert_table ; always
     END_IF
 
-        cmp     #kAlertMsgConfirmEraseSlotDrive
-    IF_EQ
+    IF_A_EQ     #kAlertMsgConfirmEraseSlotDrive
         jsr     _SetConfirmEraseSdSlotDrive
         lda     #kAlertMsgConfirmEraseSlotDrive
         FALL_THROUGH_TO find_in_alert_table

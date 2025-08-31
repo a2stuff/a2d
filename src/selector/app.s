@@ -387,8 +387,7 @@ check_key:
         stax    entry_ptr
         ldy     #kSelectorEntryFlagsOffset
         lda     (entry_ptr),y
-        cmp     #kSelectorEntryCopyNever
-    IF_NE
+    IF_A_NE     #kSelectorEntryCopyNever
         jsr     GetCopiedToRAMCardFlag
         beq     done_keys       ; no RAMCard, skip
         ldx     invoke_index
@@ -589,8 +588,7 @@ quick_boot_slot:
         jsr     SystemTask
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::button_down
         jsr     HandleButtonDown
         jmp     EventLoop
     END_IF
@@ -605,8 +603,7 @@ quick_boot_slot:
     IF_NC
         lda     event_params::key
         jsr     ToUpperCase
-        cmp     #kShortcutRunDeskTop
-      IF_EQ
+      IF_A_EQ   #kShortcutRunDeskTop
 
         BTK_CALL BTK::Flash, desktop_button
 retry:  param_call GetFileInfo, str_desktop_2
@@ -813,8 +810,7 @@ L9443:  lda     #AlertID::insert_system_disk
         ASSERT_EQUALS MGTK::Area::desktop, 0
         RTS_IF_ZERO
 
-        cmp     #MGTK::Area::menubar
-    IF_EQ
+    IF_A_EQ     #MGTK::Area::menubar
         MGTK_CALL MGTK::MenuSelect, menu_params
         jmp     HandleMenu
     END_IF
@@ -1351,8 +1347,7 @@ hi:    .byte   0
         sta     text_params__length
 
         pla
-        cmp     #8              ; first 8?
-    IF_GE
+    IF_A_GE     #8              ; first 8?
         ;; Prefix with spaces
         lda     #' '
         sta     entry_string_buf+1
@@ -1540,15 +1535,13 @@ check_type:
         sta     INVOKER_BITSY_COMPAT
 
         lda     file_info_params::file_type
-        cmp     #FT_LINK
-    IF_EQ
+    IF_A_EQ     #FT_LINK
         jsr     ReadLinkFile
         bcs     err
         bcc     retry
     END_IF
 
-        cmp     #FT_BASIC
-    IF_EQ
+    IF_A_EQ     #FT_BASIC
         param_call CheckInterpreter, str_extras_basic
         bcc     check_path
         jsr     CheckBasicSystem ; try relative to launch path
@@ -1559,8 +1552,7 @@ check_type:
         jmp     ClearSelectedIndex
     END_IF
 
-        cmp     #FT_INT
-    IF_EQ
+    IF_A_EQ     #FT_INT
         param_call CheckInterpreter, str_extras_intbasic
         bcc     check_path
         jsr     ShowAlert

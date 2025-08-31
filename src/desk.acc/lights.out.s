@@ -145,14 +145,12 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
         MGTK_CALL MGTK::GetEvent, event_params
 
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
     END_IF
 
-        cmp     #MGTK::EventKind::key_down
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::key_down
         jsr     OnKey
         jmp     InputLoop
     END_IF

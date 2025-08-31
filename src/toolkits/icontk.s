@@ -705,8 +705,7 @@ END_PARAM_BLOCK
 
 peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
         lda     peekevent_params::kind
-        cmp     #MGTK::EventKind::drag
-    IF_NE
+    IF_A_NE     #MGTK::EventKind::drag
         lda     #IconTK::kDragResultNotADrag
         jmp     exit_with_a
     END_IF

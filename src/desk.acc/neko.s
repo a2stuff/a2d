@@ -591,8 +591,7 @@ skip:   .word   0
 :
         ;; Yes - do math to scale the deltas
         lda     x_delta
-        cmp     y_delta
-    IF_CS
+    IF_A_GE     y_delta
         ;; x dominant:
         ;; * y_delta = kMove * y_delta / x_delta
         ;; * x_delta = kMove
@@ -733,8 +732,7 @@ new_state:
         ;; ------------------------------
     IF_EQ
         lda     dir
-        cmp     scratch_dir
-      IF_NE
+      IF_A_NE   scratch_dir
         ldx     #NekoState::chase
         lda     #NekoFrame::surprise
         jmp     set_state_and_frame

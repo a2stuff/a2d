@@ -392,15 +392,13 @@ init_window:
         cmp     #kShortcutCloseWindow
         jeq     OnKeyOK
 
-        cmp     #'1'
-      IF_EQ
+      IF_A_EQ   #'1'
         lda     #$00
         jsr     HandleOptionClick
         jmp     InputLoop
       END_IF
 
-        cmp     #'2'
-      IF_EQ
+      IF_A_EQ   #'2'
         lda     #$80
         jsr     HandleOptionClick
         jmp     InputLoop
@@ -633,8 +631,7 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         bit     clock_24hours
     IF_NC
         lda     hour
-        cmp     #12
-      IF_LT
+      IF_A_LT   #12
         copy8   #kHourMin, min_table + Field::hour - 1
         copy8   #11, max_table + Field::hour - 1
       ELSE
@@ -718,8 +715,7 @@ hit_rect_index:
 .proc TogglePeriod
         ;; Flip to other period
         lda     hour
-        cmp     #12             ; also sets C correctly for adc/sbc
-    IF_LT
+    IF_A_LT     #12             ; also sets C correctly for adc/sbc
         adc     #12
     ELSE
         sbc     #12
@@ -1022,8 +1018,7 @@ label_downarrow:
 ;;; A = field
 .proc DrawField
         pha
-        cmp     selected_field
-    IF_EQ
+    IF_A_EQ     selected_field
         MGTK_CALL MGTK::SetTextBG, settextbg_black_params
     ELSE
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
@@ -1078,8 +1073,7 @@ label_downarrow:
         param_call DrawString, spaces_string
     ELSE
         lda     hour
-        cmp     #12
-      IF_LT
+      IF_A_LT   #12
         param_jump DrawString, str_am
       ELSE
         param_jump DrawString, str_pm
@@ -1248,8 +1242,7 @@ loop:   cmp     #10
         sta     dialog_result
 
         lda     selected_field
-        cmp     #Field::period
-    IF_EQ
+    IF_A_EQ     #Field::period
         lda     #Field::minute
         jsr     SelectField
     END_IF

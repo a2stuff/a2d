@@ -978,8 +978,7 @@ fail:   ldy     #0
 
 match:  tya
 
-        cmp     #model::iie_original
-    IF_EQ
+    IF_A_EQ     #model::iie_original
         ;; Is it a Pravetz 8A/C?
         ldx     #kPravetz8ACSequenceLength-1
 :       lda     PRAVETZ_8AC_ID_ADDR,x
@@ -997,8 +996,7 @@ match:  tya
 
         ;; A has model; but now test for IIgs, TLC, and TK3000;
         ;; all masquerade as Enhanced IIe.
-        cmp     #model::iie_enhanced
-    IF_EQ
+    IF_A_EQ     #model::iie_enhanced
 
         sec
         jsr     IDROUTINE
@@ -1329,8 +1327,7 @@ draw:   php
 
         ;; Special case for Slot 2
         lda     slot
-        cmp     #2
-    IF_EQ
+    IF_A_EQ     #2
         jsr     SetSlotPtr
         param_call WithInterruptsDisabled, DetectTheCricket
       IF_CS
@@ -1341,8 +1338,7 @@ draw:   php
 
         ;; Special case for Slot 3 cards
         lda     slot
-        cmp     #3
-    IF_EQ
+    IF_A_EQ     #3
         bit     ROMIN2
         jsr     DetectLeChatMauveEve
         php
@@ -2190,8 +2186,7 @@ str_from_int:
 
         ;; 65C02 - check for ZIP CHIP (except on IIc Plus)
         lda     model           ; cached
-        cmp     #model::iic_plus
-    IF_NE
+    IF_A_NE     #model::iic_plus
         php                     ; timing sensitive
         sei
 

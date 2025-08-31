@@ -309,16 +309,14 @@ key             .byte
     END_IF
 
 loop:
-        cmp     max_entries_minus_one
-    IF_EQ
+    IF_A_EQ     max_entries_minus_one
         lda     #0              ; last, wrap to first
     ELSE
         clc
         adc     oprc_num_rows
     END_IF
 
-        cmp     max_entries
-    IF_GE
+    IF_A_GE     max_entries
         sec
         sbc     max_entries_minus_one
     END_IF
@@ -384,8 +382,7 @@ loop:   sec
 
 loop:   clc
         adc     #1
-        cmp     max_entries
-    IF_EQ
+    IF_A_EQ     max_entries
         lda     #0
     END_IF
         jsr     _CallIsEntryProc

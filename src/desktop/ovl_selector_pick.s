@@ -383,13 +383,11 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
         BTK_CALL BTK::Draw, entry_picker_cancel_button
 
         lda     selector_action
-        cmp     #SelectorAction::edit
-    IF_EQ
+    IF_A_EQ     #SelectorAction::edit
         param_jump DrawTitleCentered, label_edit
     END_IF
 
-        cmp     #SelectorAction::delete
-    IF_EQ
+    IF_A_EQ     #SelectorAction::delete
         param_jump DrawTitleCentered, label_del
     END_IF
 
@@ -833,8 +831,7 @@ finish:
         adc     #kSelectorMenuFixedItems
         sta     selector_menu
         ;; No separator if it is last
-        cmp     #kSelectorMenuFixedItems
-    IF_EQ
+    IF_A_EQ     #kSelectorMenuFixedItems
         dec     selector_menu
     END_IF
 

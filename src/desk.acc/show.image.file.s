@@ -193,8 +193,8 @@ on_key:
         jeq     PreviousFile
         cmp     #CHAR_RIGHT
         jeq     NextFile
-        cmp     #'S'
-    IF_EQ
+
+    IF_A_EQ     #'S'
         cpy     #$00             ; Y = previous `slideshow_flag` state
         bne     InputLoop        ; Ignore (so toggle) if slideshow mode was on
         beq     SetSlideshowMode ; always
@@ -1230,15 +1230,13 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         cmp     #FT_GRAPHICS
         jeq     yes
 
-        cmp     #FT_PNT
-    IF_EQ
+    IF_A_EQ     #FT_PNT
         ecmp16  entry+FileEntry::aux_type, #$0001
         jeq     yes
         jmp     no
     END_IF
 
-        cmp     #FT_PIC
-    IF_EQ
+    IF_A_EQ     #FT_PIC
         ecmp16  entry+FileEntry::aux_type, #$0000
         beq     yes
         bne     no              ; always

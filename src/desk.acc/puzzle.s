@@ -605,30 +605,26 @@ ret:    rts
         ldx     hole_x
         ldy     hole_y
 
-        cmp     #CHAR_DOWN
-    IF_EQ
+    IF_A_EQ     #CHAR_DOWN
         dey
         bmi     ret
         bpl     move            ; always
     END_IF
 
-        cmp     #CHAR_UP
-    IF_EQ
+    IF_A_EQ     #CHAR_UP
         iny
         cpy     #4
         bcs     ret
         bcc     move            ; always
     END_IF
 
-        cmp     #CHAR_RIGHT
-    IF_EQ
+    IF_A_EQ     #CHAR_RIGHT
         dex
         bmi     ret
         bpl     move            ; always
     END_IF
 
-        cmp     #CHAR_LEFT
-    IF_EQ
+    IF_A_EQ     #CHAR_LEFT
         inx
         cpx     #4
         bcs     ret

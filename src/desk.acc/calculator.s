@@ -1095,8 +1095,7 @@ cloop:  lda     FBUFFR-1,y
         bne     cloop
 
         ;; Add leading zero if starting with decimal
-        cmp     #'-'
-    IF_EQ
+    IF_A_EQ     #'-'
         ;; skip leading '-' temporarily
         inx
         jsr     MaybeAddLeadingZero

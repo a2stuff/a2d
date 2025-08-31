@@ -256,8 +256,7 @@ num_entries := listbox_rec::num_items
         cmp     #kShortcutCloseWindow
         jeq     Exit
 
-        cmp     #'O'
-      IF_EQ
+      IF_A_EQ   #'O'
         lda     selected_index
         bmi     InputLoop
         sta     show_index
@@ -269,17 +268,15 @@ num_entries := listbox_rec::num_items
     END_IF
 
         ;; Not modified
-        cmp     #CHAR_ESCAPE
-      IF_EQ
+    IF_A_EQ     #CHAR_ESCAPE
         BTK_CALL BTK::Flash, cancel_button
         jmp     Exit
-      END_IF
+    END_IF
 
-        cmp     #CHAR_RETURN
-      IF_EQ
+    IF_A_EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, search_button
         jmp     DoSearch
-      END_IF
+    END_IF
 
         jsr     IsControlChar
         bcc     allow
@@ -379,8 +376,7 @@ path_length:
         jsr     PrepDrawIncrementalResults
 
         lda     path_length
-        cmp     #1
-    IF_EQ
+    IF_A_EQ     #1
         JSR_TO_MAIN main__InitVolumes
         JSR_TO_MAIN main__NextVolume
         bcs     finish
@@ -414,8 +410,7 @@ endloop:
         LBTK_CALL LBTK::SetSize, lb_params ; update scrollbar
 
         lda     path_length
-        cmp     #1
-    IF_EQ
+    IF_A_EQ     #1
         lda     num_entries
         cmp     #kMaxFilePaths
         beq     finish
@@ -444,8 +439,7 @@ finish:
         jne     done
 
         lda     findwindow_params::window_id
-        cmp     #kResultsWindowId
-    IF_EQ
+    IF_A_EQ     #kResultsWindowId
         COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
         bmi     :+

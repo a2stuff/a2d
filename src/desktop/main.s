@@ -95,15 +95,13 @@ loop:
         jsr     GetNextEvent
 
         ;; Did the mouse move?
-        cmp     #kEventKindMouseMoved
-    IF_EQ
+    IF_A_EQ     #kEventKindMouseMoved
         jsr     ClearTypeDown
         jmp     loop            ; no state change
     END_IF
 
         ;; Is it a key down event?
-        cmp     #MGTK::EventKind::key_down
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::key_down
         jsr     HandleKeydown
         jmp     MainLoop
     END_IF
@@ -120,8 +118,7 @@ click:
 :
 
         ;; Is it an update event?
-        cmp     #MGTK::EventKind::update
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::update
         jsr     ClearUpdatesNoPeek
     END_IF
 
@@ -282,8 +279,7 @@ modifiers:
         jsr     ClearTypeDown
 
         lda     event_params::modifiers
-        cmp     #3              ; both Open-Apple + Solid-Apple ?
-    IF_EQ
+    IF_A_EQ     #3              ; both Open-Apple + Solid-Apple ?
         ;; Double-modifier shortcuts
         lda     event_params::key
         jsr     ToUpperCase
@@ -572,8 +568,7 @@ window_click:
         copy8   clicked_window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowy
-        cmp     #kWindowHeaderHeight
-      IF_LT
+      IF_A_LT   #kWindowHeaderHeight
         jmp     _ActivateClickedWindow ; no-op if already active
       END_IF
 
@@ -594,8 +589,7 @@ window_click:
         cmp     #MGTK::Ctl::dead_zone
         jeq     _ActivateClickedWindow ; no-op if already active
 
-        cmp     #MGTK::Ctl::vertical_scroll_bar
-    IF_EQ
+    IF_A_EQ     #MGTK::Ctl::vertical_scroll_bar
         ;; Vertical scrollbar
         lda     clicked_window_id
         cmp     active_window_id
@@ -612,8 +606,7 @@ window_click:
         cmp     #MGTK::Part::thumb
         jeq     _TrackThumb
 
-        cmp     #MGTK::Part::up_arrow
-      IF_EQ
+      IF_A_EQ   #MGTK::Part::up_arrow
 :       jsr     ScrollUp
         lda     #MGTK::Part::up_arrow
         jsr     _CheckControlRepeat
@@ -621,8 +614,7 @@ window_click:
         rts
       END_IF
 
-        cmp     #MGTK::Part::down_arrow
-      IF_EQ
+      IF_A_EQ   #MGTK::Part::down_arrow
 :       jsr     ScrollDown
         lda     #MGTK::Part::down_arrow
         jsr     _CheckControlRepeat
@@ -630,8 +622,7 @@ window_click:
         rts
       END_IF
 
-        cmp     #MGTK::Part::page_up
-      IF_EQ
+      IF_A_EQ   #MGTK::Part::page_up
 :       jsr     ScrollPageUp
         lda     #MGTK::Part::page_up
         jsr     _CheckControlRepeat
@@ -662,8 +653,7 @@ window_click:
         cmp     #MGTK::Part::thumb
         jeq     _TrackThumb
 
-        cmp     #MGTK::Part::left_arrow
-      IF_EQ
+      IF_A_EQ   #MGTK::Part::left_arrow
 :       jsr     ScrollLeft
         lda     #MGTK::Part::left_arrow
         jsr     _CheckControlRepeat
@@ -671,8 +661,7 @@ window_click:
         rts
       END_IF
 
-        cmp     #MGTK::Part::right_arrow
-      IF_EQ
+      IF_A_EQ   #MGTK::Part::right_arrow
 :       jsr     ScrollRight
         lda     #MGTK::Part::right_arrow
         jsr     _CheckControlRepeat
@@ -680,8 +669,7 @@ window_click:
         rts
       END_IF
 
-        cmp     #MGTK::Part::page_left
-      IF_EQ
+      IF_A_EQ   #MGTK::Part::page_left
 :       jsr     ScrollPageLeft
         lda     #MGTK::Part::page_left
         jsr     _CheckControlRepeat
@@ -808,16 +796,14 @@ check_double_click:
         cmp     #IconTK::kDragResultCanceled
         RTS_IF_EQ
 
-        cmp     #IconTK::kDragResultNotADrag
-    IF_EQ
+    IF_A_EQ     #IconTK::kDragResultNotADrag
         jsr     _ActivateClickedWindow ; no-op if already active
         jmp     _CheckRenameClick
     END_IF
 
         ;; ----------------------------------------
 
-        cmp     #IconTK::kDragResultMove
-    IF_EQ
+    IF_A_EQ     #IconTK::kDragResultMove
         jsr     RedrawSelectedIcons
 
         jsr     _ActivateClickedWindow ; no-op if already active
@@ -839,8 +825,7 @@ check_double_click:
         ;; * Single modifier - ignore
         ;; * Double modifiers - ignore
 
-        cmp     #IconTK::kDragResultMoveModified
-    IF_EQ
+    IF_A_EQ     #IconTK::kDragResultMoveModified
         lda     selected_window_id
         RTS_IF_ZERO
 
@@ -880,8 +865,7 @@ check_double_click:
         lda     drag_drop_params::target
 
         ;; Trash?
-        cmp     trash_icon_num
-    IF_EQ
+    IF_A_EQ     trash_icon_num
         lda     selected_window_id
         jeq     CmdEject
         jmp     CmdDeleteSelection
@@ -1289,8 +1273,7 @@ loop:   lda     table,y         ; menu_id
         lda     table,y         ; flags
         flags := *+1
         and     #SELF_MODIFIED_BYTE
-        cmp     table,y
-    IF_EQ
+    IF_A_EQ     table,y
         ldx     #MGTK::disableitem_enable
     END_IF
         stx     disableitem_params::disable
@@ -1692,8 +1675,7 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 .proc _MakeSrcPathAbsolute
         ;; Already absolute?
         lda     src_path_buf+1
-        cmp     #'/'
-    IF_NE
+    IF_A_NE     #'/'
         ;; Get prefix and append path
         ldax    #src_path_buf
         jsr     _MakeRelPathAbsoluteIntoInvokerInterpreter
@@ -1899,8 +1881,7 @@ devlst_backup:
 .proc CmdSelectorAction
         ;; If adding, try to default to the current selection.
         lda     menu_click_params::item_num
-        cmp     #kMenuItemIdSelectorAdd
-    IF_EQ
+    IF_A_EQ     #kMenuItemIdSelectorAdd
         lda     #0
         sta     path_buf0
 
@@ -2010,8 +1991,7 @@ done:   rts
         cmp     #kOperationCanceled
         RTS_IF_EQ
 
-        cmp     #kOperationFailed
-    IF_EQ
+    IF_A_EQ     #kOperationFailed
         param_call CopyRAMCardPrefix, path_buf4
         jmp     RefreshWindowForPathBuf4
     END_IF
@@ -3118,8 +3098,7 @@ concatenate:
         lda     #14
         sec
         sbc     digits
-        cmp     stashed_name
-    IF_LT
+    IF_A_LT     stashed_name
         sta     stashed_name
     END_IF
 
@@ -3739,8 +3718,7 @@ ep2:
         lda     selected_window_id
     IF_NE
         jsr     GetSelectionViewBy
-        cmp     #DeskTopSettings::kViewByName
-      IF_EQ
+      IF_A_EQ   #DeskTopSettings::kViewByName
         txa                     ; X = window id
         jsr     RefreshViewPreserveSelection
 
@@ -5198,8 +5176,7 @@ not_in_map:
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
         jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
 
-        cmp     #ERR_NOT_PRODOS_VOLUME
-    IF_EQ
+    IF_A_EQ     #ERR_NOT_PRODOS_VOLUME
         param_call ShowAlertParams, AlertButtonOptions::OKCancel, aux::str_alert_unreadable_format
         cmp     #kAlertResultCancel
         RTS_IF_EQ
@@ -5584,8 +5561,7 @@ exception_flag:
 
         ;; Bring window to front if needed
         pla                     ; A = window_id
-        cmp     active_window_id
-    IF_NE
+    IF_A_NE     active_window_id
         sta     active_window_id
         MGTK_CALL MGTK::SelectWindow, active_window_id
     END_IF
@@ -5919,8 +5895,7 @@ dloop:
 
         ;; Was it the active window?
         lda     cached_window_id
-        cmp     active_window_id
-    IF_EQ
+    IF_A_EQ     active_window_id
         ;; Yes, record the new one
         MGTK_CALL MGTK::FrontWindow, active_window_id
     END_IF
@@ -6048,8 +6023,7 @@ done:   rts
 ;;; Z=0 and A=icon num if only one, Z=0 and A=0 otherwise
 .proc GetSingleSelectedIcon
         lda     selected_icon_count
-        cmp     #1
-    IF_NE
+    IF_A_NE     #1
         lda     #0
         rts
     END_IF
@@ -8133,8 +8107,7 @@ records_base_ptr:
         inc     icons_this_row
         ;; Next row?
         lda     icons_this_row
-        cmp     icons_per_row
-    IF_EQ
+    IF_A_EQ     icons_per_row
         add16_8 icon_coords+MGTK::Point::ycoord, row_spacing
         copy16  initial_xcoord, icon_coords+MGTK::Point::xcoord
         copy8   #0, icons_this_row
@@ -8376,14 +8349,12 @@ next:   inc     inner
         ;; Set by caller
         sort_by := *+1
         lda     #SELF_MODIFIED_BYTE
-        cmp     #DeskTopSettings::kViewByName
-    IF_EQ
+    IF_A_EQ     #DeskTopSettings::kViewByName
         ASSERT_EQUALS FileRecord::name, 0
         jmp     CompareStrings
     END_IF
 
-        cmp     #DeskTopSettings::kViewByDate
-    IF_EQ
+    IF_A_EQ     #DeskTopSettings::kViewByDate
 PARAM_BLOCK scratch, $804       ; `scratch_space`
 date_a  .tag    DateTime
 date_b  .tag    DateTime
@@ -8434,8 +8405,7 @@ END_PARAM_BLOCK
 done:   rts
     END_IF
 
-        cmp     #DeskTopSettings::kViewBySize
-    IF_EQ
+    IF_A_EQ     #DeskTopSettings::kViewBySize
         ;; Copy sizes somewhere convenient
         size1 := $804
         size2 := $806
@@ -8449,13 +8419,11 @@ done:   rts
         ;; Treat directories as 0
         ldy     #FileRecord::file_type
         lda     (ptr1),y
-        cmp     #FT_DIRECTORY
-      IF_EQ
+      IF_A_EQ   #FT_DIRECTORY
         copy16  #0, size1
       END_IF
         lda     (ptr2),y
-        cmp     #FT_DIRECTORY
-      IF_EQ
+      IF_A_EQ   #FT_DIRECTORY
         copy16  #0, size2
       END_IF
 
@@ -8581,8 +8549,7 @@ set_pos:
         access := list_view_filerecord + FileRecord::access
         lda     access
         and     #ACCESS_DEFAULT
-        cmp     #ACCESS_DEFAULT
-    IF_NE
+    IF_A_NE     #ACCESS_DEFAULT
         inc     text_buffer2
         copy8   #kGlyphLock, text_buffer2+1
     END_IF
@@ -8594,8 +8561,7 @@ set_pos:
         file_type := list_view_filerecord + FileRecord::file_type
 
         lda     file_type
-        cmp     #FT_DIRECTORY
-    IF_EQ
+    IF_A_EQ     #FT_DIRECTORY
         copy8   #1, text_buffer2
         copy8   #'-', text_buffer2+1
         rts
@@ -9371,8 +9337,7 @@ done:
 not_sp:
         ;; Not SmartPort - try AppleTalk
         MLI_CALL READ_BLOCK, block_params
-        cmp     #ERR_NETWORK_ERROR
-    IF_EQ
+    IF_A_EQ     #ERR_NETWORK_ERROR
         ldax    #str_device_type_appletalk
         ldy     #IconType::fileshare
         rts
@@ -10396,8 +10361,7 @@ eof:    return  #$FF
         ;; Try to read a block off device; if AppleShare will fail.
         copy8   DEVNUM, vol_key_block_params::unit_num
         MLI_CALL READ_BLOCK, vol_key_block_params
-        cmp     #ERR_NETWORK_ERROR
-    IF_EQ
+    IF_A_EQ     #ERR_NETWORK_ERROR
         copy8   #$80, dst_is_appleshare_flag
     END_IF
 ret:    rts
@@ -10900,8 +10864,7 @@ retry:  jsr     GetDstFileInfo
 
         ;; File exists
         lda     dst_file_info_params::storage_type
-        cmp     #ST_LINKED_DIRECTORY
-    IF_EQ
+    IF_A_EQ     #ST_LINKED_DIRECTORY
         ;; TODO: In the future, prompt and recursively delete
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_no_overwrite_dir
         jsr     SetCursorWatch
@@ -10960,8 +10923,7 @@ cancel: jmp     CloseFilesCancelDialogWithFailedResult
         bcs     ret
 
         lda     src_file_info_params::storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-    IF_EQ
+    IF_A_EQ     #ST_VOLUME_DIRECTORY
         ;; Volume
         copy8   DEVNUM, vol_key_block_params::unit_num
         MLI_CALL READ_BLOCK, vol_key_block_params
@@ -11086,8 +11048,7 @@ Start:  lda     DEVNUM
         ldy     #FileEntry::storage_type_name_length
         lda     (src_ptr),y
         and     #STORAGE_TYPE_MASK
-        cmp     #ST_LINKED_DIRECTORY<<4
-    IF_EQ
+    IF_A_EQ     #ST_LINKED_DIRECTORY<<4
         ;; Identify the key blocks of the src/dst file
         ldy     #FileEntry::key_pointer
         copy8   (src_ptr),y, src_block_params::block_num
@@ -12199,8 +12160,7 @@ write_protected_flag:
         jsr     ComposeFileTypeString
         COPY_STRING str_file_type, text_input_buf
         pla                     ; A = file type
-        cmp     #FT_DIRECTORY
-      IF_NE
+      IF_A_NE   #FT_DIRECTORY
         ldax    src_file_info_params::aux_type
         jsr     _AppendAuxType
       END_IF
@@ -12275,8 +12235,7 @@ append_size:
         ldx     #BTK::kButtonStateNormal
         lda     src_file_info_params::access
         and     #ACCESS_DEFAULT
-        cmp     #ACCESS_DEFAULT
-      IF_NE
+      IF_A_NE   #ACCESS_DEFAULT
         ldx     #BTK::kButtonStateChecked ; locked
       END_IF
         stx     locked_button::state
@@ -12747,8 +12706,7 @@ DoRename        := DoRenameImpl::start
 .proc _DialogOpen
         ldy     #LETK::kLineEditOptionsNormal
         jsr     GetSelectionViewBy
-        cmp     #DeskTopSettings::kViewByIcon
-      IF_EQ
+      IF_A_EQ   #DeskTopSettings::kViewByIcon
         ldy     #LETK::kLineEditOptionsCentered
       END_IF
         sty     rename_line_edit_rec::options
@@ -12783,8 +12741,7 @@ loop:   jsr     _InputLoop
         lda     path_buf0       ; full path okay?
         clc
         adc     text_input_buf
-        cmp     #::kMaxPathLength ; not +1 because we'll add '/'
-      IF_GE
+      IF_A_GE   #::kMaxPathLength ; not +1 because we'll add '/'
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_name_too_long
         jmp     loop
       END_IF
@@ -12842,14 +12799,12 @@ out:    jsr     SetCursorPointerWithFlag
 .proc _ClickHandler
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
-    IF_NE
+    IF_A_NE     #MGTK::Area::content
         return  #PromptResult::ok
     END_IF
 
         lda     findwindow_params::window_id
-        cmp     #winfo_rename_dialog::kWindowId
-    IF_NE
+    IF_A_NE     #winfo_rename_dialog::kWindowId
         return  #PromptResult::ok
     END_IF
 
@@ -12874,13 +12829,11 @@ out:    jsr     SetCursorPointerWithFlag
         bne     allow           ; pass through modified keys
 
         ;; No modifiers
-        cmp     #CHAR_RETURN
-      IF_EQ
+      IF_A_EQ   #CHAR_RETURN
         return  #PromptResult::ok
       END_IF
 
-        cmp     #CHAR_ESCAPE
-      IF_EQ
+      IF_A_EQ   #CHAR_ESCAPE
         return  #PromptResult::cancel
       END_IF
 
@@ -13793,8 +13746,7 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
         cmp     #CHAR_RETURN
         beq     _HandleKeyOK
 
-        cmp     #CHAR_ESCAPE
-      IF_EQ
+      IF_A_EQ   #CHAR_ESCAPE
         bit     prompt_button_flags
         bpl     _HandleKeyCancel
         bmi     _HandleKeyOK    ; always
@@ -14554,8 +14506,7 @@ params:  .res    3
         and     #%11110000      ; A = flags
         beq     calc_y          ; DDL_LEFT
 
-        cmp     #DDL_VALUE
-    IF_EQ
+    IF_A_EQ     #DDL_VALUE
         copy16  #kDialogValueLeft, dialog_label_pos::xcoord
         jmp     calc_y
     END_IF
@@ -14571,15 +14522,13 @@ params:  .res    3
         MGTK_CALL MGTK::TextWidth, textwidth_params
         pla                     ; A = flags
 
-        cmp     #DDL_CENTER
-    IF_EQ
+    IF_A_EQ     #DDL_CENTER
         sub16   #kPromptDialogWidth, result, dialog_label_pos::xcoord
         lsr16   dialog_label_pos::xcoord
         jmp     calc_y
     END_IF
 
-        cmp     #DDL_RIGHT
-    IF_EQ
+    IF_A_EQ     #DDL_RIGHT
         sub16   #kPromptDialogWidth - kDialogLabelDefaultX, result, dialog_label_pos::xcoord
     ELSE
         ;; DDL_LRIGHT

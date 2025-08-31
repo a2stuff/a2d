@@ -648,15 +648,13 @@ loop:   lda     chrget_routine-1,x
         bne     ret
 
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content ; Content area?
-    IF_EQ
+    IF_A_EQ     #MGTK::Area::content ; Content area?
         jsr     MapClickToFunction
         beq     ret
         jmp     ProcessFunction
     END_IF
 
-        cmp     #MGTK::Area::close_box ; Close box?
-    IF_EQ
+    IF_A_EQ     #MGTK::Area::close_box ; Close box?
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         beq     ret
@@ -665,8 +663,7 @@ loop:   lda     chrget_routine-1,x
         jmp     ExitDA
     END_IF
 
-        cmp     #MGTK::Area::dragbar ; Title bar?
-    IF_EQ
+    IF_A_EQ     #MGTK::Area::dragbar ; Title bar?
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
@@ -690,8 +687,7 @@ ret:    rts
 
         ldx     event_params::modifiers
     IF_NOT_ZERO
-        cmp     #kShortcutCloseWindow
-      IF_EQ
+      IF_A_EQ   #kShortcutCloseWindow
         pla                     ; pop OnKeyPress
         pla
         jmp     ExitDA
@@ -703,8 +699,7 @@ ret:    rts
         bne     :+
         lda     intl_deci_sep
 :
-        cmp     #CHAR_ESCAPE
-    IF_EQ
+    IF_A_EQ     #CHAR_ESCAPE
         lda     calc_p
         bne     :+           ; empty state?
         lda     calc_l
@@ -717,8 +712,7 @@ ret:    rts
         jmp     ProcessFunction
     END_IF
 
-        cmp     #CHAR_DELETE
-    IF_EQ
+    IF_A_EQ     #CHAR_DELETE
         ldy     calc_l
         beq     ret
         cpy     #1
@@ -751,14 +745,12 @@ loop:   lda     text_buffer1,x
         jmp     DisplayBuffer1
     END_IF
 
-        cmp     #CHAR_CLEAR
-    IF_EQ
+    IF_A_EQ     #CHAR_CLEAR
         lda     #Function::clear
         jmp     ProcessFunction
     END_IF
 
-        cmp     #CHAR_RETURN
-    IF_EQ
+    IF_A_EQ     #CHAR_RETURN
         lda     #Function::equals
         jmp     ProcessFunction
     END_IF
@@ -850,8 +842,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
 ;;; Inputs: A = Function enum member
 
 .proc ProcessFunction
-        cmp     #Function::clear
-    IF_EQ
+    IF_A_EQ     #Function::clear
         lda     #0
         ROM_CALL FLOAT
         ldxy    #farg
@@ -867,8 +858,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         jmp     ResetBuffersAndDisplay
     END_IF
 
-        cmp     #Function::exp
-    IF_EQ
+    IF_A_EQ     #Function::exp
         ldy     calc_e
         bne     @ret
         ldy     calc_l
@@ -883,8 +873,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
 @ret:   rts
     END_IF
 
-        cmp     #Function::op_subtract
-    IF_EQ
+    IF_A_EQ     #Function::op_subtract
         lda     calc_e          ; negate vs. subtract
         beq     :+
         lda     calc_n
@@ -898,8 +887,7 @@ next:   add16_8 ptr, #.sizeof(btn_c)
         jmp     DoOp
     END_IF
 
-        cmp     #Function::decimal
-    IF_EQ
+    IF_A_EQ     #Function::decimal
         lda     calc_d
         ora     calc_e
         bne     @ret
@@ -983,26 +971,25 @@ cloop:  lda     text_buffer1,x
 
         ;; --------------------------------------------------
         ;; Function? These modify the FAC in place
-        cmp     #Function::fn_sin
-    IF_EQ
+    IF_A_EQ     #Function::fn_sin
         jsr     DegToRad
         ROM_CALL SIN
         jmp     PostFunc
     END_IF
-        cmp     #Function::fn_cos
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_cos
         jsr     DegToRad
         ROM_CALL COS
         jmp     PostFunc
     END_IF
-        cmp     #Function::fn_tan
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_tan
         jsr     DegToRad
         ROM_CALL TAN
         jmp     PostFunc
     END_IF
-        cmp     #Function::fn_asin
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_asin
         ;; ASIN(x) = ATN(X/SQR(-X*X+1))
         ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
@@ -1019,8 +1006,8 @@ cloop:  lda     text_buffer1,x
         jsr     RadToDeg
         jmp     PostFunc
     END_IF
-        cmp     #Function::fn_acos
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_acos
         ;; ACOS(x) = -ATN(X/SQR(-X*X+l))+1.5708
         ROM_CALL FAC_TO_ARG_R   ; ARG = X
         jsr     PushARG
@@ -1040,34 +1027,34 @@ cloop:  lda     text_buffer1,x
         jsr     RadToDeg
         jmp     PostFunc
     END_IF
-        cmp     #Function::fn_atan
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_atan
         ROM_CALL ATN
         jsr     RadToDeg
         jmp     PostFunc
     END_IF
-        cmp     #Function::fn_sqrt
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_sqrt
         ROM_CALL SQR
         jmp     PostFunc
     END_IF
-        cmp     #Function::fn_neg
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_neg
         ROM_CALL NEGOP
         jmp     PostFunc
     END_IF
-        cmp     #Function::fn_ln
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_ln
         ROM_CALL LOG
         jmp     PostFunc
     END_IF
-        cmp     #Function::fn_exp
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_exp
         ROM_CALL EXP
         jmp     PostOp
     END_IF
-        cmp     #Function::fn_inv
-    IF_EQ
+
+    IF_A_EQ     #Function::fn_inv
         lday    #CON_ONE
         ROM_CALL FDIV
         jmp     PostFunc
@@ -1080,8 +1067,7 @@ cloop:  lda     text_buffer1,x
         ;; Look at last operation
         lda     calc_op
 
-        cmp     #Function::equals
-    IF_EQ
+    IF_A_EQ     #Function::equals
         lda     calc_g          ; last input was a digit insertion or func?
         ora     calc_f
         bne     do_op           ; reparsed above, proceed
@@ -1178,8 +1164,7 @@ cloop:  lda     FBUFFR-1,y
         bne     cloop
 
         ;; Add leading zero if starting with decimal
-        cmp     #'-'
-    IF_EQ
+    IF_A_EQ     #'-'
         ;; skip leading '-' temporarily
         inx
         jsr     MaybeAddLeadingZero

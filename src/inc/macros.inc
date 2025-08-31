@@ -1147,6 +1147,11 @@ __shadow_warning_suppress_count__ .set 0
 ;;;     ...
 ;;;     END_IF
 ;;;
+;;;     lda     foo
+;;;     IF_A_EQ bar
+;;;     ...
+;;;     END_IF
+;;;
 ;;; Macros:
 ;;;     IF_ZS           aliases: IF_ZERO, IF_EQ
 ;;;     IF_ZC           aliases: IF_NOT_ZERO, IF_NE
@@ -1157,6 +1162,11 @@ __shadow_warning_suppress_count__ .set 0
 ;;;     IF_NC           aliases: IF_POS, IF_PLUS
 ;;;     IF_NS           aliases: IF_NEG, IF_MINUS
 ;;; ... and ditto for ELSE_IF_*
+;;;
+;;;     IF_A_EQ / ELSE_IF_A_EQ
+;;;     IF_A_NE / ELSE_IF_A_NE
+;;;     IF_A_LT / ELSE_IF_A_LT
+;;;     IF_A_GE / ELSE_IF_A_GE
 
 ;;; --------------------------------------------------
 ;;; Flow control infrastructure
@@ -1206,7 +1216,7 @@ __shadow_warning_suppress_count__ .set 0
 ;;; --------------------------------------------------
 ;;; IF/ELSE_IF/ELSE/END_IF
 
-.macro _IF_FOR_OP_ branchOp
+.macro _IF_BOP_ branchOp
         __INC_IDENT__ __flow_depth__
         __INC_IDENT__ __flow_count_at_depth__
         __INC_IDENT__ __flow_ident_counter__
@@ -1214,12 +1224,40 @@ __shadow_warning_suppress_count__ .set 0
         branchOp __flow_ident_block__
 .endmacro
 
-.macro _ELSE_IF_FOR_OP_ branchOp
+.macro _IF_CMP_BOP_ arg1, arg2, arg3
+        __INC_IDENT__ __flow_depth__
+        __INC_IDENT__ __flow_count_at_depth__
+        __INC_IDENT__ __flow_ident_counter__
+        __FLOW_LOG__ "if"
+.if .paramcount < 3
+        cmp     arg1
+        arg2 __flow_ident_block__
+.else
+        cmp     arg1,arg2
+        arg3 __flow_ident_block__
+.endif
+.endmacro
+
+.macro _ELSE_IF_BOP_ branchOp
         __FLOW_LOG__ "else_if"
         jmp     __flow_ident__ {"endif"}
         __flow_ident_block__ := *
         __INC_IDENT__ __flow_ident_counter__
         branchOp __flow_ident_block__
+.endmacro
+
+.macro _ELSE_IF_CMP_BOP_ arg1, arg2, arg3
+        __FLOW_LOG__ "else_if"
+        jmp     __flow_ident__ {"endif"}
+        __flow_ident_block__ := *
+        __INC_IDENT__ __flow_ident_counter__
+.if .paramcount < 3
+        cmp     arg1
+        arg2 __flow_ident_block__
+.else
+        cmp     arg1,arg2
+        arg3 __flow_ident_block__
+.endif
 .endmacro
 
 .macro ELSE
@@ -1249,14 +1287,14 @@ __shadow_warning_suppress_count__ .set 0
 ;;; --------------------------------------------------
 ;;; User-friendly IF/ELSE_IF macros
 
-.define IF_ZS _IF_FOR_OP_ bne
-.define IF_ZC _IF_FOR_OP_ beq
-.define IF_CC _IF_FOR_OP_ bcs
-.define IF_CS _IF_FOR_OP_ bcc
-.define IF_NC _IF_FOR_OP_ bmi
-.define IF_NS _IF_FOR_OP_ bpl
-.define IF_VC _IF_FOR_OP_ bvs
-.define IF_VS _IF_FOR_OP_ bvc
+.define IF_ZS _IF_BOP_ bne
+.define IF_ZC _IF_BOP_ beq
+.define IF_CC _IF_BOP_ bcs
+.define IF_CS _IF_BOP_ bcc
+.define IF_NC _IF_BOP_ bmi
+.define IF_NS _IF_BOP_ bpl
+.define IF_VC _IF_BOP_ bvs
+.define IF_VS _IF_BOP_ bvc
 
 .define IF_ZERO     IF_ZS
 .define IF_NOT_ZERO IF_ZC
@@ -1269,14 +1307,43 @@ __shadow_warning_suppress_count__ .set 0
 .define IF_POS      IF_NC
 .define IF_NEG      IF_NS
 
-.define ELSE_IF_ZS _ELSE_IF_FOR_OP_ bne
-.define ELSE_IF_ZC _ELSE_IF_FOR_OP_ beq
-.define ELSE_IF_CC _ELSE_IF_FOR_OP_ bcs
-.define ELSE_IF_CS _ELSE_IF_FOR_OP_ bcc
-.define ELSE_IF_NC _ELSE_IF_FOR_OP_ bmi
-.define ELSE_IF_NS _ELSE_IF_FOR_OP_ bpl
-.define ELSE_IF_VC _ELSE_IF_FOR_OP_ bvs
-.define ELSE_IF_VS _ELSE_IF_FOR_OP_ bvc
+.macro IF_A_EQ arg1,arg2
+    .if .paramcount > 1
+        _IF_CMP_BOP_ arg1,arg2,bne
+    .else
+        _IF_CMP_BOP_ arg1,bne
+    .endif
+.endmacro
+.macro IF_A_NE arg1,arg2
+    .if .paramcount > 1
+        _IF_CMP_BOP_ arg1,arg2,beq
+    .else
+        _IF_CMP_BOP_ arg1,beq
+    .endif
+.endmacro
+.macro IF_A_LT arg1,arg2
+    .if .paramcount > 1
+        _IF_CMP_BOP_ arg1,arg2,bcs
+    .else
+        _IF_CMP_BOP_ arg1,bcs
+    .endif
+.endmacro
+.macro IF_A_GE arg1,arg2
+    .if .paramcount > 1
+        _IF_CMP_BOP_ arg1,arg2,bcc
+    .else
+        _IF_CMP_BOP_ arg1,bcc
+    .endif
+.endmacro
+
+.define ELSE_IF_ZS _ELSE_IF_BOP_ bne
+.define ELSE_IF_ZC _ELSE_IF_BOP_ beq
+.define ELSE_IF_CC _ELSE_IF_BOP_ bcs
+.define ELSE_IF_CS _ELSE_IF_BOP_ bcc
+.define ELSE_IF_NC _ELSE_IF_BOP_ bmi
+.define ELSE_IF_NS _ELSE_IF_BOP_ bpl
+.define ELSE_IF_VC _ELSE_IF_BOP_ bvs
+.define ELSE_IF_VS _ELSE_IF_BOP_ bvc
 
 .define ELSE_IF_ZERO     ELSE_IF_ZS
 .define ELSE_IF_NOT_ZERO ELSE_IF_ZC
@@ -1288,6 +1355,35 @@ __shadow_warning_suppress_count__ .set 0
 .define ELSE_IF_MINUS    ELSE_IF_NS
 .define ELSE_IF_POS      ELSE_IF_NC
 .define ELSE_IF_NEG      ELSE_IF_NS
+
+.macro ELSE_IF_A_EQ arg1,arg2
+    .if .paramcount > 1
+        _ELSE_IF_CMP_BOP_ arg1,arg2,bne
+    .else
+        _ELSE_IF_CMP_BOP_ arg1,bne
+    .endif
+.endmacro
+.macro ELSE_IF_A_NE arg1,arg2
+    .if .paramcount > 1
+        _ELSE_IF_CMP_BOP_ arg1,arg2,beq
+    .else
+        _ELSE_IF_CMP_BOP_ arg1,beq
+    .endif
+.endmacro
+.macro ELSE_IF_A_LT arg1,arg2
+    .if .paramcount > 1
+        _ELSE_IF_CMP_BOP_ arg1,arg2,bcs
+    .else
+        _ELSE_IF_CMP_BOP_ arg1,bcs
+    .endif
+.endmacro
+.macro ELSE_IF_A_GE arg1,arg2
+    .if .paramcount > 1
+        _ELSE_IF_CMP_BOP_ arg1,arg2,bcc
+    .else
+        _ELSE_IF_CMP_BOP_ arg1,bcc
+    .endif
+.endmacro
 
 ;;; --------------------------------------------------
 
@@ -1316,20 +1412,20 @@ __shadow_warning_suppress_count__ .set 0
         __flow_ident__ {"do_while"} := *
 .endmacro
 
-.macro _WHILE_FOR_OP_ branchOp
+.macro _WHILE_BOP_ branchOp
         __FLOW_LOG__ "while"
         branchOp __flow_ident__ {"do_while"}
         __DEC_IDENT__ __flow_depth__
 .endmacro
 
-.define WHILE_ZC _WHILE_FOR_OP_ bne
-.define WHILE_ZS _WHILE_FOR_OP_ beq
-.define WHILE_CC _WHILE_FOR_OP_ bcc
-.define WHILE_CS _WHILE_FOR_OP_ bcs
-.define WHILE_VC _WHILE_FOR_OP_ bvc
-.define WHILE_VS _WHILE_FOR_OP_ bvs
-.define WHILE_NC _WHILE_FOR_OP_ bpl
-.define WHILE_NS _WHILE_FOR_OP_ bmi
+.define WHILE_ZC _WHILE_BOP_ bne
+.define WHILE_ZS _WHILE_BOP_ beq
+.define WHILE_CC _WHILE_BOP_ bcc
+.define WHILE_CS _WHILE_BOP_ bcs
+.define WHILE_VC _WHILE_BOP_ bvc
+.define WHILE_VS _WHILE_BOP_ bvs
+.define WHILE_NC _WHILE_BOP_ bpl
+.define WHILE_NS _WHILE_BOP_ bmi
 
 .define WHILE_EQ WHILE_ZS
 .define WHILE_NE WHILE_ZC

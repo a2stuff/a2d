@@ -342,8 +342,7 @@ fin:    jsr     UpdateWindow
 
 .proc InvertDec
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-    IF_NE
+    IF_A_NE     #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
         MGTK_CALL MGTK::InflateRect, shrink
@@ -394,8 +393,7 @@ fin:    jsr     UpdateWindow
 
 .proc InvertInc
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-    IF_NE
+    IF_A_NE     #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, notpenXOR
         MGTK_CALL MGTK::InflateRect, shrink
@@ -675,8 +673,7 @@ draw_date:
         ;; Next
         inc     col
         lda     col
-        cmp     #7
-    IF_EQ
+    IF_A_EQ     #7
         copy8   #0, col
         inc     row
         copy16  date_base::xcoord, date_pos

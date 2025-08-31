@@ -779,12 +779,12 @@ CheckUserInput:
         jsr     CopyEventDataToMain
 
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::button_down
         jsr     ::HandleDown
         bpl     HandleKey       ; was a button, mapped to key event
         jmp     MainLoop
     END_IF
+
         cmp     #MGTK::EventKind::key_down
         bne     MainLoop
 
@@ -854,8 +854,7 @@ HandleKey:
         jmp     MainLoop
 :
         ;; $08 = ^H, LA (Previous Track, Scan Backward)
-        cmp     #CHAR_LEFT
-    IF_EQ
+    IF_A_EQ     #CHAR_LEFT
         lda     event_params::modifiers
       IF_NOT_ZERO
         jsr     DoScanBackAction
@@ -867,8 +866,7 @@ HandleKey:
     END_IF
 
         ;; $15 = ^U, RA (Next Track/Scan Forward)
-        cmp     #CHAR_RIGHT
-    IF_EQ
+    IF_A_EQ     #CHAR_RIGHT
         lda     event_params::modifiers
       IF_NOT_ZERO
         jsr     DoScanFwdAction
@@ -1422,8 +1420,7 @@ ExitScanFwdAction:
 
 WrapCheck:
         lda     BCDRelTrack
-        cmp     BCDFirstTrackTOC
-    IF_EQ
+    IF_A_EQ     BCDFirstTrackTOC
         ;; If we're not at the "first" track, just decrement track #
         ;; Otherwise, wrap to the "last" track instead
         lda     BCDLastTrackTOC
@@ -1481,8 +1478,7 @@ Counter:
 
 WrapCheck:
         lda     BCDRelTrack
-        cmp     BCDLastTrackTOC
-    IF_EQ
+    IF_A_EQ     BCDLastTrackTOC
         ;; If we're not at the "last" track, just increment track #
         ;; Otherwise, wrap to the "first" track instead
         lda     BCDFirstTrackTOC

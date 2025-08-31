@@ -306,20 +306,17 @@ cursor_ibeam_flag: .byte   0
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_ESCAPE
-    IF_EQ
+    IF_A_EQ     #CHAR_ESCAPE
         BTK_CALL BTK::Flash, cancel_button
         jmp     ExitCancel
     END_IF
 
-        cmp     #CHAR_RETURN
-    IF_EQ
+    IF_A_EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
         jmp     ExitOK
     END_IF
 
-        cmp     #CHAR_TAB
-    IF_EQ
+    IF_A_EQ     #CHAR_TAB
         bit     auxtype_focused_flag
       IF_NC
         jsr     FocusAuxtype
@@ -694,8 +691,7 @@ callback:
     ELSE
         ;; Rest - determine if same type/auxtype
         lda     gfi_params::file_type
-        cmp     data::type
-      IF_NE
+      IF_A_NE   data::type
         copy8   #0, data::type_valid
       END_IF
 

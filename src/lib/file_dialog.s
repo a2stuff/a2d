@@ -157,22 +157,19 @@ key_handler_hook:
         jsr     SystemTask
         jsr     GetNextEvent
 
-        cmp     #MGTK::EventKind::key_down
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::key_down
         jsr     _HandleKeyEvent
         jmp     EventLoop
     END_IF
 
-        cmp     #MGTK::EventKind::button_down
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::button_down
         ldx     #0              ; Clear type-down
         stx     type_down_buf
         jsr     _HandleButtonDown
         jmp     EventLoop
     END_IF
 
-        cmp     #kEventKindMouseMoved
-    IF_EQ
+    IF_A_EQ     #kEventKindMouseMoved
         ldx     #0              ; Clear type-down
         stx     type_down_buf
 .ifdef FD_EXTENDED
@@ -214,8 +211,7 @@ ret:    rts
 :
         ;; Dialog window?
         lda     findwindow_params+MGTK::FindWindowParams::window_id
-        cmp     #file_dialog_res::kFilePickerDlgWindowID
-    IF_NE
+    IF_A_NE     #file_dialog_res::kFilePickerDlgWindowID
         ;; No, assume list box (will fail gracefully if not)
         COPY_STRUCT MGTK::Point, event_params+MGTK::Event::coords, file_dialog_res::lb_params::coords
         LBTK_CALL LBTK::Click, file_dialog_res::lb_params
@@ -584,36 +580,31 @@ ret:    rts
         copy8   #0, type_down_buf
         lda     event_params+MGTK::Event::key
 
-        cmp     #CHAR_RETURN
-      IF_EQ
+      IF_A_EQ   #CHAR_RETURN
         BTK_CALL BTK::Flash, file_dialog_res::ok_button
         RTS_IF_NS
         jmp     HandleOK
       END_IF
 
-        cmp     #CHAR_ESCAPE
-      IF_EQ
+      IF_A_EQ   #CHAR_ESCAPE
         BTK_CALL BTK::Flash, file_dialog_res::cancel_button
         ;; always enabled
         jmp     HandleCancel
       END_IF
 
-        cmp     #CHAR_CTRL_O
-      IF_EQ
+      IF_A_EQ   #CHAR_CTRL_O
         BTK_CALL BTK::Flash, file_dialog_res::open_button
         RTS_IF_NS
         jmp     _DoOpen
       END_IF
 
-        cmp     #CHAR_CTRL_D
-      IF_EQ
+      IF_A_EQ   #CHAR_CTRL_D
         BTK_CALL BTK::Flash, file_dialog_res::drives_button
         ;; always enabled
         jmp     _DoDrives
       END_IF
 
-        cmp     #CHAR_CTRL_C
-      IF_EQ
+      IF_A_EQ   #CHAR_CTRL_C
         jsr     _IsCloseAllowed
         RTS_IF_NS
         jmp     _DoClose

@@ -6224,8 +6224,7 @@ event_loop:
 
         ;; --------------------
 
-        cmp     #MGTK::EventKind::button_up
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::button_up
         bit     was_in_menu_flag
         jmi     handle_click
         lda     cur_open_menu_id
@@ -6235,8 +6234,7 @@ event_loop:
 
         ;; --------------------
 
-        cmp     #MGTK::EventKind::key_down
-    IF_EQ
+    IF_A_EQ     #MGTK::EventKind::key_down
         ;; Set up `sel_menu_*`
         lda     menu_index    ; TODO: Verify this is valid
         sta     sel_menu_index

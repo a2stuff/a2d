@@ -539,8 +539,7 @@ caret_blink_caret_bitmap:
         cmp     #CHAR_RIGHT
         jeq     HandleRArrClick
 
-        cmp     #CHAR_CTRL_D
-    IF_EQ
+    IF_A_EQ     #CHAR_CTRL_D
         BTK_CALL BTK::Flash, pattern_button
         jmp     HandlePatternClick
     END_IF
@@ -697,10 +696,9 @@ shortcut_table_addr_hi:
         inc     pattern_index
 
         lda     pattern_index
-        cmp     #kPatternCount
-        IF_GE
+    IF_A_GE     #kPatternCount
         copy8   #0, pattern_index
-        END_IF
+    END_IF
 
         jmp     UpdatePattern
 .endproc ; HandleRArrClick
@@ -708,9 +706,9 @@ shortcut_table_addr_hi:
 .proc HandleLArrClick
         dec     pattern_index
 
-        IF_NEG
+    IF_NEG
         copy8   #kPatternCount-1, pattern_index
-        END_IF
+    END_IF
 
         jmp     UpdatePattern
 .endproc ; HandleLArrClick
@@ -1287,22 +1285,20 @@ store:  cmp     mode
         ;; next x
         inc     xpos
         lda     xpos
-        cmp     #8
-        IF_NE
+    IF_A_NE     #8
         add16_8 bitrect::x1, #kFatBitWidth
         add16_8 bitrect::x2, #kFatBitWidth
         jmp     xloop
-        END_IF
+    END_IF
 
         ;; next y
         inc     ypos
         lda     ypos
-        cmp     #8
-        IF_NE
+    IF_A_NE     #8
         add16_8 bitrect::y1, #kFatBitHeight
         add16_8 bitrect::y2, #kFatBitHeight
         jmp     yloop
-        END_IF
+    END_IF
 
         rts
 

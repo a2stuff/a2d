@@ -319,8 +319,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         cmp     #CHAR_ESCAPE
         beq     Exit
 
-        cmp     #CHAR_RETURN
-    IF_EQ
+    IF_A_EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, find_button
         jsr     DoFind
         jmp     InputLoop

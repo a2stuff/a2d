@@ -445,8 +445,7 @@ done:   rts
 end:
         ;; No separator if it is last
         lda     selector_menu
-        cmp     #kSelectorMenuFixedItems
-    IF_EQ
+    IF_A_EQ     #kSelectorMenuFixedItems
         dec     selector_menu
     END_IF
 
@@ -516,8 +515,7 @@ process_block:
 
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
-        cmp     #kDAFileType    ; DA? (must match type/auxtype)
-    IF_EQ
+    IF_A_EQ     #kDAFileType    ; DA? (must match type/auxtype)
         ldy     #FileEntry::aux_type
         lda     (dir_ptr),y
         cmp     #<kDAFileAuxType
@@ -550,8 +548,7 @@ process_block:
         ;; If a directory, prepend name with folder glyphs
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
-        cmp     #FT_DIRECTORY   ; Directory?
-    IF_EQ
+    IF_A_EQ     #FT_DIRECTORY   ; Directory?
         ldy     name_buf
 :       lda     name_buf,y
         sta     name_buf+3,y
@@ -642,8 +639,7 @@ name_buf:       .res    ::kDAMenuItemSize, 0
 end:
         ;; No separator if it is last
         lda     apple_menu
-        cmp     #kAppleMenuFixedItems
-    IF_EQ
+    IF_A_EQ     #kAppleMenuFixedItems
         dec     apple_menu
     END_IF
 

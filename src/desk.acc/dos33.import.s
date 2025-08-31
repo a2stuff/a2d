@@ -245,15 +245,13 @@ port:           .addr   grafport_win
     END_IF
 
         ;; Not modified
-        cmp     #CHAR_ESCAPE
-      IF_EQ
+    IF_A_EQ     #CHAR_ESCAPE
         jmp     Exit
-      END_IF
+    END_IF
 
-        cmp     #CHAR_RETURN
-      IF_EQ
+    IF_A_EQ     #CHAR_RETURN
         jmp     Exit
-      END_IF
+    END_IF
 
         jmp     InputLoop
 .endproc ; HandleKey
@@ -267,8 +265,7 @@ port:           .addr   grafport_win
         bne     done
 
         lda     findwindow_params::window_id
-        cmp     #kPickerWindowId
-    IF_EQ
+    IF_A_EQ     #kPickerWindowId
         COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
         bmi     :+
@@ -563,15 +560,13 @@ remainder:      .word   0                 ; (out)
     END_IF
 
         ;; Not modified
-        cmp     #CHAR_ESCAPE
-      IF_EQ
+    IF_A_EQ     #CHAR_ESCAPE
         jmp     ExitOK
-      END_IF
+    END_IF
 
-        cmp     #CHAR_RETURN
-      IF_EQ
+    IF_A_EQ     #CHAR_RETURN
         jmp     Import
-      END_IF
+    END_IF
 
         jmp     InputLoop
 .endproc ; HandleKey
@@ -585,8 +580,7 @@ remainder:      .word   0                 ; (out)
         bne     done
 
         lda     findwindow_params::window_id
-        cmp     #kCatalogWindowId
-    IF_EQ
+    IF_A_EQ     #kCatalogWindowId
         COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
         bmi     :+
@@ -794,8 +788,7 @@ ret:    rts
 
         ;; TODO: Make this more elegant
         lda     str_from_int
-        cmp     #1
-    IF_EQ
+    IF_A_EQ     #1
         lda     str_from_int+1
         sta     str_from_int+3
         lda     #'0'
@@ -806,8 +799,7 @@ ret:    rts
         rts
     END_IF
 
-        cmp     #2
-    IF_EQ
+    IF_A_EQ     #2
         lda     str_from_int+2
         sta     str_from_int+3
         lda     str_from_int+1
@@ -1144,8 +1136,7 @@ cnext:  dex
 
         ;; Can't start with non-alpha, replace with 'X'
         lda     str_name+1
-        cmp     #'A'
-    IF_LT
+    IF_A_LT     #'A'
         lda     #'X'
         sta     str_name+1
     END_IF
@@ -1157,8 +1148,7 @@ cnext:  dex
         lda     prefix_path
         clc
         adc     str_name
-        cmp     #kMaxPathLength ; not +1 because we'll add '/'
-    IF_GE
+    IF_A_GE     #kMaxPathLength ; not +1 because we'll add '/'
         lda     #ERR_INVALID_PATHNAME
         rts
     END_IF
@@ -1206,8 +1196,7 @@ cnext:  dex
         and     #$7F
         pha                     ; A = type
 
-        cmp     #dos33::FileTypeBinary
-    IF_EQ
+    IF_A_EQ     #dos33::FileTypeBinary
         ;; Binary header:
         ;; +$00 WORD address (low/high)
         ;; +$02 WORD length (low/high)
@@ -1219,8 +1208,7 @@ cnext:  dex
         jmp     translate_type
     END_IF
 
-        cmp     #dos33::FileTypeApplesoft
-    IF_EQ
+    IF_A_EQ     #dos33::FileTypeApplesoft
         ;; Applesoft BASIC header:
         ;; +$00 WORD length (low/high)
         copy16  #$0801, create_params::aux_type
@@ -1231,8 +1219,7 @@ cnext:  dex
         jmp     translate_type
     END_IF
 
-        cmp     #dos33::FileTypeInteger
-    IF_EQ
+    IF_A_EQ     #dos33::FileTypeInteger
         ;; Integer BASIC header:
         ;; +$00 WORD length (low/high)
         copy16  #$0000, create_params::aux_type

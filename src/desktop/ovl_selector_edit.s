@@ -310,8 +310,7 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
         bcc     :+
         ldx     #BTK::kButtonStateChecked
 :
-        cmp     #kRunListPrimary
-    IF_EQ
+    IF_A_EQ     #kRunListPrimary
         stx     primary_run_list_button::state
         BTK_CALL BTK::RadioUpdate, primary_run_list_button
     ELSE

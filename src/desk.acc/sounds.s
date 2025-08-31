@@ -290,14 +290,12 @@ grafport_win:       .tag    MGTK::GrafPort
         jmp     InputLoop
     END_IF
 
-        cmp     #CHAR_ESCAPE
-    IF_EQ
+    IF_A_EQ     #CHAR_ESCAPE
         BTK_CALL BTK::Flash, cancel_button
         jmp     DoCancel
     END_IF
 
-        cmp     #CHAR_RETURN
-    IF_EQ
+    IF_A_EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
         jmp     Exit
     END_IF
@@ -311,19 +309,16 @@ grafport_win:       .tag    MGTK::GrafPort
         MGTK_CALL MGTK::FindWindow, findwindow_params
 
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
-    IF_EQ
+    IF_A_EQ     winfo::window_id
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         beq     HandleDialogClick
         jmp     InputLoop
     END_IF
 
-        cmp     winfo_listbox::window_id
-    IF_EQ
+    IF_A_EQ     winfo_listbox::window_id
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
-      IF_EQ
+      IF_A_EQ   #MGTK::Area::content
         COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
         jmp     InputLoop

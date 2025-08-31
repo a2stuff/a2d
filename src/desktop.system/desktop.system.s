@@ -296,8 +296,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
         ;; IIc Plus?
         lda     ZIDBYTE2        ; ROM version
-        cmp     #$05            ; IIc Plus = $05
-      IF_EQ
+      IF_A_EQ   #$05            ; IIc Plus = $05
         lda     #DeskTopSettings::kSysCapIsIIcPlus
         jsr     set_bit
       END_IF
@@ -306,8 +305,7 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
         ;; Laser 128?
         lda     IDBYTELASER128
-        cmp     #$AC
-    IF_EQ
+    IF_A_EQ     #$AC
         lda     #DeskTopSettings::kSysCapIsLaser128
         jsr     set_bit
         jmp     done_machid
@@ -315,11 +313,9 @@ local_dir:      PASCAL_STRING kFilenameLocalDir
 
         ;; Macintosh IIe Option Card?
         lda     ZIDBYTE
-        cmp     #$E0            ; Enhanced IIe
-    IF_EQ
+    IF_A_EQ     #$E0            ; Enhanced IIe
         lda     IDBYTEMACIIE
-        cmp     #$02            ; Mac IIe Option Card
-      IF_EQ
+      IF_A_EQ   #$02            ; Mac IIe Option Card
         lda     #DeskTopSettings::kSysCapIsIIeCard
         jsr     set_bit
         jmp     done_machid
