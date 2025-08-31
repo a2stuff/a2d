@@ -409,8 +409,8 @@ signature:
         ;; it twice.
         JUMP_TABLE_MLI_CALL CLOSE, close_params
 
-        copy16  #OVERLAY_BUFFER, LZ4FH__in_src
-        copy16  #$2000, LZ4FH__in_dst
+        copy16  #OVERLAY_BUFFER, z:LZ4FH__in_src
+        copy16  #$2000, z:LZ4FH__in_dst
         jsr     LZ4FH
         bne     fail
 

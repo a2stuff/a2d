@@ -891,7 +891,7 @@ rotate:
         bne     shift
 
         ;; Only need 16.16 result
-        copy32  product+2, oval+OvalRec::oddNum
+        copy32  product+2, z:oval+OvalRec::oddNum
 .endscope
 
         ;; --------------------------------------------------

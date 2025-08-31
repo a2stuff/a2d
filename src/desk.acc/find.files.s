@@ -970,7 +970,7 @@ hitDirEnd:
 
         copy8   block_buffer+SubdirectoryHeader::entry_length, entryLen ; init 'entryLen'
 
-        copy16  #(block_buffer+4), entPtr ; init ptr to first entry
+        copy16  #(block_buffer+4), z:entPtr ; init ptr to first entry
 
         lda     block_buffer+SubdirectoryHeader::entries_per_block ; init these values based on
         sta     ThisBEntry      ; values in the dir header
@@ -1086,9 +1086,9 @@ exit:   rts
 ;;; Save everything we can think of (the women,
 ;;; the children, the beer, etc.).
 ;;;
-        lda     entPtr+1
+        lda     z:entPtr+1
         pha
-        lda     entPtr
+        lda     z:entPtr
         pha
         lda     ThisBEntry
         pha
@@ -1134,9 +1134,9 @@ reOpened:
         pla
         sta     ThisBEntry
         pla
-        sta     entPtr
+        sta     z:entPtr
         pla
-        sta     entPtr+1
+        sta     z:entPtr+1
 
         lda     #0
         sta     SetMParms::position
@@ -1239,12 +1239,12 @@ ChopLoop:
         beq     ReadNext        ; done w/this block, get next one
 
         clc                     ; else bump up index
-        lda     entPtr
+        lda     z:entPtr
         adc     entryLen
-        sta     entPtr
-        lda     entPtr+1
+        sta     z:entPtr
+        lda     z:entPtr+1
         adc     #0
-        sta     entPtr+1
+        sta     z:entPtr+1
         clc                     ; say that the buffer's good
         rts
 
@@ -1254,7 +1254,7 @@ ReadNext:
 
         inc     ThisBlock
 
-        copy16  #(block_buffer+4),entPtr ; set entry pointer to beginning
+        copy16  #(block_buffer+4),z:entPtr ; set entry pointer to beginning
                                    ; of first entry in block
 
         copy8   entPerBlk, ThisBEntry ; re-init 'entries in this block'
