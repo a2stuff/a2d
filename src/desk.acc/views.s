@@ -368,8 +368,7 @@ loop:
 
         lda     #BTK::kButtonStateNormal
         ldx     current_view_index
-        cpx     index
-    IF_EQ
+    IF_X_EQ     index
         lda     #BTK::kButtonStateChecked
     END_IF
 

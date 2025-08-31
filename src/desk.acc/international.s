@@ -281,26 +281,22 @@ ret:    rts
 .proc OnKeyChar
         ldx     selected_field
 
-        cpx     #Field::date
-    IF_EQ
+    IF_X_EQ     #Field::date
         ldx     #DeskTopSettings::intl_date_sep
         bne     update          ; always
     END_IF
 
-        cpx     #Field::time
-    IF_EQ
+    IF_X_EQ     #Field::time
         ldx     #DeskTopSettings::intl_time_sep
         bne     update          ; always
     END_IF
 
-        cpx     #Field::deci
-    IF_EQ
+    IF_X_EQ     #Field::deci
         ldx     #DeskTopSettings::intl_deci_sep
         bne     update          ; always
     END_IF
 
-        cpx     #Field::thou
-    IF_EQ
+    IF_X_EQ     #Field::thou
         ldx     #DeskTopSettings::intl_thou_sep
         bne     update          ; always
     END_IF

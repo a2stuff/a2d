@@ -1221,8 +1221,7 @@ finish: pla
         ldx     selected_icon_count
     IF_NOT_ZERO
         ;; Single?
-        cpx     #1
-      IF_EQ
+      IF_X_EQ   #1
         ldx     selected_icon_list ; X = icon id
         cpx     trash_icon_num
         beq     set_flags       ; trash only - treat as no selection
@@ -1238,8 +1237,7 @@ finish: pla
         lda     (ptr),y
         tax                     ; X = icon type
         pla                     ; A = flags
-        cpx     #IconType::link
-       IF_EQ
+       IF_X_EQ  #IconType::link
         ora     #kLinkSel       ; A = flags
        END_IF
       END_IF
@@ -6487,8 +6485,7 @@ err:    sec
 .proc FindIconForPath
         jsr     CopyToBuf4
         param_call FindLastPathSegment, path_buf4
-        cpy     path_buf4       ; was there a filename?
-    IF_EQ
+    IF_Y_EQ     path_buf4       ; was there a filename?
         ;; Volume - make it a filename
         ldx     path_buf4       ; Strip '/'
         dex
@@ -7685,8 +7682,7 @@ END_PARAM_BLOCK
 
         tay
         ldax    #str_items_suffix
-        cpy     #1
-    IF_EQ
+    IF_Y_EQ     #1
         ldax    #str_item_suffix
     END_IF
         stax    ptr_str_items_suffix
@@ -12114,8 +12110,7 @@ write_protected_flag:
         lda     #$00            ; OK only
         ldx     icon_index
         inx
-        cpx     selected_icon_count
-    IF_EQ
+    IF_X_EQ     selected_icon_count
         lda     #$80            ; OK/Cancel
     END_IF
         jsr     OpenPromptWindow

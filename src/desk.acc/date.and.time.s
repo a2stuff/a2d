@@ -1215,8 +1215,7 @@ loop:   cmp     #10
         ;; Month lengths
         ldx     month
         ldy     month_length_table-1,x
-        cpx     #2              ; February?
-    IF_EQ
+    IF_X_EQ     #2              ; February?
         lda     year            ; Handle leap years; interpreted as either
         and     #3              ; (1900+Y) or (Y<40 ? 2000+Y : 1900+Y) - which is
         bne     :+              ; correct for 1901 through 2199, so good enough.

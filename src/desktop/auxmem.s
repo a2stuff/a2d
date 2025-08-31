@@ -571,8 +571,7 @@ start:
         ;; %10...... e.g. $80 = Try Again, Cancel
         ;; %11...... e.g. $C0 = OK, Cancel
 
-        cpx     #0
-      IF_NE
+      IF_X_NE   #0
         txa
         and     #$FE            ; ignore low bit, e.g. treat $01 as $00
         sta     alert_params+AlertParams::buttons

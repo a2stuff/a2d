@@ -1224,17 +1224,17 @@ __shadow_warning_suppress_count__ .set 0
         branchOp __flow_ident_block__
 .endmacro
 
-.macro _IF_CMP_BOP_ arg1, arg2, arg3
+.macro _IF_COP_BOP_ compareOp, branchOp, arg1, arg2
         __INC_IDENT__ __flow_depth__
         __INC_IDENT__ __flow_count_at_depth__
         __INC_IDENT__ __flow_ident_counter__
         __FLOW_LOG__ "if"
-.if .paramcount < 3
-        cmp     arg1
-        arg2 __flow_ident_block__
+.ifblank arg2
+        compareOp arg1
+        branchOp __flow_ident_block__
 .else
-        cmp     arg1,arg2
-        arg3 __flow_ident_block__
+        compareOp arg1,arg2
+        branchOp __flow_ident_block__
 .endif
 .endmacro
 
@@ -1246,17 +1246,17 @@ __shadow_warning_suppress_count__ .set 0
         branchOp __flow_ident_block__
 .endmacro
 
-.macro _ELSE_IF_CMP_BOP_ arg1, arg2, arg3
+.macro _ELSE_IF_COP_BOP_ compareOp, branchOp, arg1, arg2
         __FLOW_LOG__ "else_if"
         jmp     __flow_ident__ {"endif"}
         __flow_ident_block__ := *
         __INC_IDENT__ __flow_ident_counter__
-.if .paramcount < 3
-        cmp     arg1
-        arg2 __flow_ident_block__
+.ifblank arg2
+        compareOp arg1
+        branchOp __flow_ident_block__
 .else
-        cmp     arg1,arg2
-        arg3 __flow_ident_block__
+        compareOp arg1,arg2
+        branchOp __flow_ident_block__
 .endif
 .endmacro
 
@@ -1307,34 +1307,20 @@ __shadow_warning_suppress_count__ .set 0
 .define IF_POS      IF_NC
 .define IF_NEG      IF_NS
 
-.macro IF_A_EQ arg1,arg2
-    .if .paramcount > 1
-        _IF_CMP_BOP_ arg1,arg2,bne
-    .else
-        _IF_CMP_BOP_ arg1,bne
-    .endif
-.endmacro
-.macro IF_A_NE arg1,arg2
-    .if .paramcount > 1
-        _IF_CMP_BOP_ arg1,arg2,beq
-    .else
-        _IF_CMP_BOP_ arg1,beq
-    .endif
-.endmacro
-.macro IF_A_LT arg1,arg2
-    .if .paramcount > 1
-        _IF_CMP_BOP_ arg1,arg2,bcs
-    .else
-        _IF_CMP_BOP_ arg1,bcs
-    .endif
-.endmacro
-.macro IF_A_GE arg1,arg2
-    .if .paramcount > 1
-        _IF_CMP_BOP_ arg1,arg2,bcc
-    .else
-        _IF_CMP_BOP_ arg1,bcc
-    .endif
-.endmacro
+.define IF_A_EQ _IF_COP_BOP_ cmp,bne,
+.define IF_A_NE _IF_COP_BOP_ cmp,beq,
+.define IF_A_LT _IF_COP_BOP_ cmp,bcs,
+.define IF_A_GE _IF_COP_BOP_ cmp,bcc,
+
+.define IF_X_EQ _IF_COP_BOP_ cpx,bne,
+.define IF_X_NE _IF_COP_BOP_ cpx,beq,
+.define IF_X_LT _IF_COP_BOP_ cpx,bcs,
+.define IF_X_GE _IF_COP_BOP_ cpx,bcc,
+
+.define IF_Y_EQ _IF_COP_BOP_ cpy,bne,
+.define IF_Y_NE _IF_COP_BOP_ cpy,beq,
+.define IF_Y_LT _IF_COP_BOP_ cpy,bcs,
+.define IF_Y_GE _IF_COP_BOP_ cpy,bcc,
 
 .define ELSE_IF_ZS _ELSE_IF_BOP_ bne
 .define ELSE_IF_ZC _ELSE_IF_BOP_ beq
@@ -1356,34 +1342,20 @@ __shadow_warning_suppress_count__ .set 0
 .define ELSE_IF_POS      ELSE_IF_NC
 .define ELSE_IF_NEG      ELSE_IF_NS
 
-.macro ELSE_IF_A_EQ arg1,arg2
-    .if .paramcount > 1
-        _ELSE_IF_CMP_BOP_ arg1,arg2,bne
-    .else
-        _ELSE_IF_CMP_BOP_ arg1,bne
-    .endif
-.endmacro
-.macro ELSE_IF_A_NE arg1,arg2
-    .if .paramcount > 1
-        _ELSE_IF_CMP_BOP_ arg1,arg2,beq
-    .else
-        _ELSE_IF_CMP_BOP_ arg1,beq
-    .endif
-.endmacro
-.macro ELSE_IF_A_LT arg1,arg2
-    .if .paramcount > 1
-        _ELSE_IF_CMP_BOP_ arg1,arg2,bcs
-    .else
-        _ELSE_IF_CMP_BOP_ arg1,bcs
-    .endif
-.endmacro
-.macro ELSE_IF_A_GE arg1,arg2
-    .if .paramcount > 1
-        _ELSE_IF_CMP_BOP_ arg1,arg2,bcc
-    .else
-        _ELSE_IF_CMP_BOP_ arg1,bcc
-    .endif
-.endmacro
+.define ELSE_IF_A_EQ _ELSE_IF_COP_BOP cmp,bne,
+.define ELSE_IF_A_NE _ELSE_IF_COP_BOP cmp,beq,
+.define ELSE_IF_A_LT _ELSE_IF_COP_BOP cmp,bcs,
+.define ELSE_IF_A_GE _ELSE_IF_COP_BOP cmp,bcc,
+
+.define ELSE_IF_X_EQ _ELSE_IF_COP_BOP cpx,bne,
+.define ELSE_IF_X_NE _ELSE_IF_COP_BOP cpx,beq,
+.define ELSE_IF_X_LT _ELSE_IF_COP_BOP cpx,bcs,
+.define ELSE_IF_X_GE _ELSE_IF_COP_BOP cpx,bcc,
+
+.define ELSE_IF_Y_EQ _ELSE_IF_COP_BOP cpy,bne,
+.define ELSE_IF_Y_NE _ELSE_IF_COP_BOP cpy,beq,
+.define ELSE_IF_Y_LT _ELSE_IF_COP_BOP cpy,bcs,
+.define ELSE_IF_Y_GE _ELSE_IF_COP_BOP cpy,bcc,
 
 ;;; --------------------------------------------------
 

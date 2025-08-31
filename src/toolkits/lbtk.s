@@ -519,8 +519,7 @@ ret:    rts
         ;; Double modifiers
 
         ;; Home/End move selection to first/last
-        cpx     #3
-    IF_EQ
+    IF_X_EQ     #3
       IF_A_EQ   #CHAR_UP
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
         beq     ret

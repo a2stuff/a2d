@@ -282,8 +282,7 @@ grafport_win:       .tag    MGTK::GrafPort
         jmp     InputLoop
     END_IF
 
-        cpx     #0
-    IF_NOT_ZERO
+    IF_X_NE     #0
         jsr     ToUpperCase
         cmp     #kShortcutCloseWindow
         jeq     Exit

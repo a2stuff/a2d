@@ -143,8 +143,7 @@ printable:
 
         ldx     text_params::length
         dex
-        cpx     #kMaxStringLength-1
-    IF_LT
+    IF_X_LT     #kMaxStringLength-1
         sta     buf,x
         lda     #kPadChar
         sta     buf+1,x

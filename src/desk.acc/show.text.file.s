@@ -268,8 +268,7 @@ title:  jsr     OnTitleBarClick
         lda     event_params::key
         jsr     ToUpperCase
 
-        cpx     #3
-    IF_EQ
+    IF_X_EQ     #3
         ;; Double modifiers
       IF_A_EQ   #CHAR_UP        ; OA+SA+Up = Home
         jsr     ScrollTop

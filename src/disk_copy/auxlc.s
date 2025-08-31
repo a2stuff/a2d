@@ -1304,8 +1304,7 @@ match:  clc
         sta     (ptr),y
 
         ;; If less than 15 characters, increase len by one
-        cpy     #15
-    IF_LT
+    IF_Y_LT     #15
         iny
         tya
         ldy     #0

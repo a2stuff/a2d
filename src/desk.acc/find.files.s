@@ -247,8 +247,7 @@ num_entries := listbox_rec::num_items
         jmp     InputLoop
     END_IF
 
-        cpx     #0
-    IF_NOT_ZERO
+    IF_X_NE     #0
         ;; Modified
         lda     event_params::key
         jsr     ToUpperCase

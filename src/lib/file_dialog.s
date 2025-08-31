@@ -539,8 +539,7 @@ ret:    rts
         rts
     END_IF
 
-        cpx     #0
-    IF_NE
+    IF_X_NE     #0
         ;; With modifiers
         jsr     _CheckTypeDown
         jeq     exit
@@ -1299,8 +1298,7 @@ finish:
         bne     :-              ; always
 :       inx
 
-        cpx     #2
-      IF_NE
+      IF_X_NE   #2
         copy8   #kGlyphFolderLeft, file_dialog_res::filename_buf+1
         copy8   #kGlyphFolderRight, file_dialog_res::filename_buf+2
       END_IF
@@ -1538,8 +1536,7 @@ selected_index := file_dialog_res::listbox_rec::selected_index
         ldax    #file_dialog_res::str_folder
 
         ldy     path_buf
-        cpy     #1
-      IF_EQ
+      IF_Y_EQ   #1
         ldax    #file_dialog_res::str_vol
       END_IF
 

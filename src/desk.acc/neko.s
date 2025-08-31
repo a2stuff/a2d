@@ -674,22 +674,19 @@ new_state:
         jmp     set_state_and_frame
       END_IF
 
-        cpy     #$10            ; Y = random
-      IF_CC
+      IF_Y_LT   #$10            ; Y = random
         ldx     #NekoState::itch
         lda     #NekoFrame::itch1
         jmp     set_state_and_frame
       END_IF
 
-        cpy     #$20            ; Y = random
-      IF_CC
+      IF_Y_LT   #$20            ; Y = random
         ldx     #NekoState::yawn
         lda     #NekoFrame::yawning
         jmp     set_state_and_frame
       END_IF
 
-        cpy     #$30            ; Y = random
-      IF_CC
+      IF_Y_LT   #$30            ; Y = random
         lda     #NekoFrame::lick
         jmp     set_frame
       END_IF
@@ -713,8 +710,7 @@ new_state:
         ror     moved_flag
 
         jsr     MoveAndClamp
-        cpy     #0              ; Y = clamped
-      IF_NE
+      IF_Y_NE   #0              ; Y = clamped
         copy8   dir, scratch_dir
         lda     #NekoState::scratch
         bne     new_state       ; always
@@ -749,8 +745,7 @@ new_state:
         cmp     #NekoState::itch
         ;; ------------------------------
     IF_EQ
-        cpy     #$20            ; Y = random
-      IF_CC
+      IF_Y_LT   #$20            ; Y = random
         ldx     #NekoState::rest
         lda     #NekoFrame::sitting
         bne     set_state_and_frame ; always
@@ -765,8 +760,7 @@ new_state:
         cmp     #NekoState::yawn
         ;; ------------------------------
     IF_EQ
-        cpy     #$20            ; Y = random
-      IF_CC
+      IF_Y_LT   #$20            ; Y = random
         ldx     #NekoState::sleep
         lda     #NekoFrame::sleep1
         bne     set_state_and_frame ; always
