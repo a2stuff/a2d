@@ -4,29 +4,14 @@
 ;;; Generic Macros
 ;;; ============================================================
 
-.define _is_immediate(arg)       (.match (.mid (0, 1, {arg}), #))
-.define _is_register(arg)        (.match ({arg}, x) .or .match ({arg}, y))
-.define _is_y_register(arg)      (.match ({arg}, y))
-.define _immediate_value(arg)    (.right (.tcount ({arg}) - 1, {arg}))
+.define _is_immediate(arg)       .xmatch (.mid (0, 1, {arg}), #)
+.define _is_register(arg)        .xmatch ({arg}, x) .or .xmatch ({arg}, y)
+.define _is_y_register(arg)      .xmatch ({arg}, y)
+.define _immediate_value(arg)    .right (.tcount ({arg}) - 1, {arg})
 
-;;; 16-bit helpers
-.macro _op_lo op, arg
-    .if _is_immediate {arg}
-        op #<_immediate_value {arg}
-    .else
-        op arg
-    .endif
-.endmacro
+;;; Helpers for multi-byte operations
 
-.macro _op_hi op, arg
-    .if _is_immediate {arg}
-        op #>_immediate_value {arg}
-    .else
-        op arg+1
-    .endif
-.endmacro
-
-;;; 32-bit helpers
+;;; Emit specified opcode accessing the Nth byte, either immediate or absolute
 .macro _op_b0 op, arg
     .if _is_immediate {arg}
         op #.lobyte(_immediate_value {arg})
@@ -58,6 +43,55 @@
         op arg+3
     .endif
 .endmacro
+
+;;; Like `_op_b*` but emit nothing if immediate and lower byte was the
+;;; same, assuming previous byte was already loaded into the register.
+.macro _op_x1 op, arg
+    .if _is_immediate {arg}
+      .define _iv_ _immediate_value {arg}
+      .if .const(_iv_) && .lobyte(_iv_) = .hibyte(_iv_)
+        ;; already loaded into relevant register
+      .else
+        op #.hibyte(_iv_)
+      .endif
+      .undefine _iv_
+    .else
+        op arg+1
+    .endif
+.endmacro
+
+.macro _op_x2 op, arg
+    .if _is_immediate {arg}
+      .define _iv_ _immediate_value {arg}
+      .if .const(_iv_) && .hibyte(_iv_) = .bankbyte(_iv_)
+        ;; already loaded into relevant register
+      .else
+        op #.bankbyte(_iv_)
+      .endif
+      .undefine _iv_
+    .else
+        op arg+2
+    .endif
+.endmacro
+
+.macro _op_x3 op, arg
+    .if _is_immediate {arg}
+      .define _iv_ _immediate_value {arg}
+      .if .const(_iv_) && .bankbyte(_iv_) = .hibyte(.hiword(_iv_))
+        ;; already loaded into relevant register
+      .else
+        op #.hibyte(.hiword(_iv_))
+      .endif
+      .undefine _iv_
+    .else
+        op arg+3
+    .endif
+.endmacro
+
+;;; Aliases for 16-bit helpers
+.define _op_lo _op_b0
+.define _op_hi _op_b1
+.define _op_hx _op_x1
 
 ;;; ============================================================
 ;;; Strings
@@ -125,7 +159,7 @@ end:
 .endmacro
 
 .macro copy8 arg1, arg2, arg3, arg4
-    .if _is_register {arg2} && _is_register {arg4}
+    .if (_is_register {arg2}) && (_is_register {arg4})
         ;; indexed load/indexed store
         lda     arg1,arg2
         sta     arg3,arg4
@@ -221,6 +255,7 @@ end:
         lda    arg, reg
         ldx    arg+1, reg
     .else
+        ;; TODO: Use `TAX` if immediate and lo=hi
         _op_lo lda, {arg}
         _op_hi ldx, {arg}
     .endif
@@ -230,6 +265,7 @@ end:
 ;;;    lday #$1234      ; immediate
 ;;;    lday $1234       ; absolute
 .macro lday arg
+        ;; TODO: Use `TAY` if immediate and lo=hi
         _op_lo lda, {arg}
         _op_hi ldy, {arg}
 .endmacro
@@ -273,40 +309,40 @@ skip:
 .endmacro
 
 ;;; Core for add16/sub16
-.macro _addsub16 op, opc, arg1, arg2, arg3, arg4, arg5, arg6
-    .if _is_register {arg2} && _is_register {arg4} && _is_register {arg6}
+.macro _addsub16 op, carryOp, arg1, arg2, arg3, arg4, arg5, arg6
+    .if (_is_register {arg2}) && (_is_register {arg4}) && (_is_register {arg6})
         ;; xxx16 $1111,x, $2222,x, $3333,x
         lda     arg1,arg2
-        opc
+        carryOp
         op      arg3,arg4
         sta     arg5,arg6
         lda     arg1+1,arg2
         op      arg3+1,arg4
         sta     arg5+1,arg6
-    .elseif _is_register {arg2} && _is_register {arg4}
+    .elseif (_is_register {arg2}) && (_is_register {arg4})
         ;; xxx16 $1111,x, $2222,x, $3333
         lda     arg1,arg2
-        opc
+        carryOp
         op      arg3,arg4
         sta     arg5
         lda     arg1+1,arg2
         op      arg3+1,arg4
         sta     arg5+1
-    .elseif _is_register {arg2} && _is_register {arg5}
+    .elseif (_is_register {arg2}) && (_is_register {arg5})
         ;; xxx16 $1111,x, $2222, $3333,x
         ;; xxx16 $1111,x, #$2222, $3333,x
         lda     arg1,arg2
-        opc
+        carryOp
         _op_lo  op, {arg3}
         sta     arg4,arg5
         lda     arg1+1,arg2
         _op_hi  op, {arg3}
         sta     arg4+1,arg5
-    .elseif _is_register {arg3} && _is_register {arg5}
+    .elseif (_is_register {arg3}) && (_is_register {arg5})
         ;; xxx16 $1111, $2222,x, $3333,x
         ;; xxx16 #$1111, $2222,x, $3333,x
         _op_lo  lda, {arg1}
-        opc
+        carryOp
         op      arg2,arg3
         sta     arg4,arg5
         _op_hi  lda, {arg1}
@@ -316,7 +352,7 @@ skip:
         ;; xxx16 $1111,x, $2222, $3333
         ;; xxx16 $1111,x, #$2222, $3333
         lda     arg1,arg2
-        opc
+        carryOp
         _op_lo  op, {arg3}
         sta     arg4
         lda     arg1+1,arg2
@@ -326,7 +362,7 @@ skip:
         ;; xxx16 $1111, $2222,x $3333
         ;; xxx16 #$1111, $2222,x $3333
         _op_lo  lda, {arg1}
-        opc
+        carryOp
         op      arg2,arg3
         sta     arg4
         _op_hi  lda, {arg1}
@@ -338,7 +374,7 @@ skip:
         ;; xxx16 $1111, #$2222, $3333,x
         ;; xxx16 #$1111, #$2222, $3333,x
         _op_lo  lda, {arg1}
-        opc
+        carryOp
         _op_lo  op, {arg2}
         sta     arg3,arg4
         _op_hi  lda, {arg1}
@@ -350,7 +386,7 @@ skip:
         ;; xxx16 $1111, #$2222, $3333
         ;; xxx16 #$1111, #$2222, $3333
         _op_lo lda, {arg1}
-        opc
+        carryOp
         _op_lo op, {arg2}
         sta     arg3
         _op_hi lda, {arg1}
@@ -361,11 +397,11 @@ skip:
 
 
 ;;; Core for add16in/sub16in
-.macro _addsub16in op, opc, arg1, arg2, arg3, arg4, arg5, arg6
+.macro _addsub16in op, carryOp, arg1, arg2, arg3, arg4, arg5, arg6
     .if _is_y_register {arg2} && _is_y_register {arg4} && _is_y_register {arg6}
         ;; xxx16in ($1111),y, ($2222),y, ($3333),y
         lda     (arg1),y
-        opc
+        carryOp
         op      (arg3),y
         sta     (arg5),y
         iny
@@ -376,7 +412,7 @@ skip:
         ;; xxx16in ($1111),y, ($2222),y, $3333
         ;; xxx16in ($1111),y, ($2222),y, #$3333
         lda     (arg1),y
-        opc
+        carryOp
         op      (arg3),y
         sta     arg5
         iny
@@ -387,7 +423,7 @@ skip:
         ;; xxx16in ($1111),y, $2222, ($3333),y
         ;; xxx16in ($1111),y, #$2222, ($3333),y
         lda     (arg1),y
-        opc
+        carryOp
         _op_lo  op, {arg3}
         sta     (arg4),y
         iny
@@ -398,7 +434,7 @@ skip:
         ;; xxx16in $1111, ($2222),y, ($3333),y
         ;; xxx16in #$1111, ($2222),y, ($3333),y
         _op_lo  lda, {arg1}
-        opc
+        carryOp
         op      (arg2),y
         sta     (arg4),y
         iny
@@ -411,7 +447,7 @@ skip:
         ;; xxx16in ($1111),y, $2222, #$3333
         ;; xxx16in ($1111),y, #$2222, #$3333
         lda     (arg1),y
-        opc
+        carryOp
         _op_lo  op, {arg3}
         sta     arg4
         iny
@@ -424,7 +460,7 @@ skip:
         ;; xxx16in $1111, ($2222),y #$3333
         ;; xxx16in #$1111, ($2222),y #$3333
         _op_lo  lda, {arg1}
-        opc
+        carryOp
         op      (arg2),y
         sta     arg4
         iny
@@ -437,7 +473,7 @@ skip:
         ;; xxx16in $1111, #$2222, $3333,y
         ;; xxx16in #$1111, #$2222, $3333,y
         _op_lo  lda, {arg1}
-        opc
+        carryOp
         _op_lo  op, {arg2}
         sta     (arg3),y
         iny
@@ -596,7 +632,7 @@ skip:
 ;;;    copy16 $1111,x $2222,x   ; indirect load, indirect store
 ;;;    copy16 #$1111, $2222,x   ; immediate load, indirect store
 .macro copy16 arg1, arg2, arg3, arg4
-    .if _is_register {arg2} && _is_register {arg4}
+    .if (_is_register {arg2}) && (_is_register {arg4})
         ;; indexed load/indexed store
         lda     arg1,arg2
         sta     arg3,arg4
@@ -610,41 +646,15 @@ skip:
         sta     arg3+1
     .elseif _is_register {arg3}
         ;; indexed store variant (arg3 is x or y)
-      .if _is_immediate {arg1}
-       .if .const(_immediate_value {arg1}) && .loword(_immediate_value {arg1}) = .hiword(_immediate_value {arg1})
-        lda     #<(_immediate_value {arg1})
-        sta     arg2,arg3
-        sta     arg2+1,arg3
-       .else
         _op_lo  lda, {arg1}
         sta     arg2,arg3
-        _op_hi  lda, {arg1}
+        _op_hx  lda, {arg1}     ; optimized
         sta     arg2+1,arg3
-       .endif
-      .else
-        _op_lo  lda, {arg1}
-        sta     arg2,arg3
-        _op_hi  lda, {arg1}
-        sta     arg2+1,arg3
-      .endif
     .else
-      .if _is_immediate {arg1}
-       .if .const(_immediate_value {arg1}) && .loword(_immediate_value {arg1}) = .hiword(_immediate_value {arg1})
-        lda     #<(_immediate_value {arg1})
-        sta     arg2
-        sta     arg2+1
-       .else
         _op_lo  lda, {arg1}
         sta     arg2
-        _op_hi  lda, {arg1}
+        _op_hx  lda, {arg1}     ; optimized
         sta     arg2+1
-       .endif
-      .else
-        _op_lo  lda, {arg1}
-        sta     arg2
-        _op_hi  lda, {arg1}
-        sta     arg2+1
-      .endif
     .endif
 .endmacro
 
@@ -674,7 +684,7 @@ skip:
         _op_lo  lda, {arg1}
         sta     (arg2),y
         iny
-        _op_hi  lda, {arg1}
+        _op_hx  lda, {arg1}
         sta     (arg2),y
     .else
         .error "Indirect indexed required at least one use of y reg"
@@ -690,9 +700,8 @@ skip:
 ;;;    copylohi $1111,x, $2222,x, $3333    ; indirect load, absolute store
 ;;;    copylohi $1111, $2222,x, $3333,x    ; absolute load, indirect store
 .macro copylohi arg1, arg2, arg3, arg4, arg5
-    .if _is_register {arg2}
+    .if (_is_register {arg2}) && (_is_register {arg4})
         ;; indexed load
-        ;; arg4 is also a register
         lda     arg1,arg2
         sta     arg5
         lda     arg3,arg4
@@ -725,25 +734,26 @@ skip:
 ;;;    cmp16 #$1111, $2222,x   ; immediate, indexed
 ;;;    cmp16 $1111,x, $2222,x  ; indexed, indexed
 .macro cmp16 arg1, arg2, arg3, arg4
-    .if _is_register {arg2} && _is_register {arg4}
-        ;; indexed variant (arg2+arg4 is x or y)
+    .if (_is_register {arg2}) && (_is_register {arg4})
+        ;; indexed, indexed
         lda     arg1,arg2
         cmp     arg3,arg4
         lda     arg1+1,arg2
         sbc     arg3+1,arg4
     .elseif _is_register {arg2}
-        ;; indexed variant (arg2 is x or y)
+        ;; indexed, absolute/immediate
         lda     arg1,arg2
         _op_lo  cmp, {arg3}
         lda     arg1+1,arg2
         _op_hi  sbc, {arg3}
     .elseif _is_register {arg3}
-        ;; indexed variant (arg3 is x or y)
+        ;; absolute/immediate, indexed
         _op_lo  lda, {arg1}
         cmp     arg2,arg3
         _op_hi  lda, {arg1}
         sbc     arg2+1,arg3
     .else
+        ;; absolute/immediate, absolute/immediate
         _op_lo  lda, {arg1}
         _op_lo  cmp, {arg2}
         _op_hi  lda, {arg1}
@@ -782,28 +792,29 @@ skip:
 ;;;    ecmp16 $1111,x, $2222,x ; indexed, indexed
 .macro ecmp16 arg1, arg2, arg3, arg4
     .local skip
-    .if _is_register {arg2} && _is_register {arg4}
-        ;; indexed variant (arg2+arg4 is x or y)
+    .if (_is_register {arg2}) && (_is_register {arg4})
+        ;; indexed, indexed
         lda     arg1,arg2
         cmp     arg3,arg4
         bne     skip
         lda     arg1+1,arg2
         cmp     arg3+1,arg4
     .elseif _is_register {arg2}
-        ;; indexed variant (arg2 is x or y)
+        ;; indexed, absolute/immediate
         lda     arg1,arg2
         _op_lo  cmp, {arg3}
         bne     skip
         lda     arg1+1,arg2
         _op_hi  cmp, {arg3}
     .elseif _is_register {arg3}
-        ;; indexed variant (arg3 is x or y)
+        ;; absolute/immediate, indexed
         _op_lo  lda, {arg1}
         cmp     arg2,arg3
         bne     skip
         _op_hi  lda, {arg1}
         cmp     arg2+1,arg3
     .else
+        ;; absolute/immediate, absolute/immediate
         _op_lo  lda, {arg1}
         _op_lo  cmp, {arg2}
         bne     skip
@@ -859,8 +870,8 @@ skip:   dec     arg
 ;;; 32-bit pseudo-ops
 
 ;;; Core for add32/sub32
-.macro _addsub32 op, opc, arg1, arg2, arg3
-        opc
+.macro _addsub32 op, carryOp, arg1, arg2, arg3
+        carryOp
         _op_b0 lda, {arg1}
         _op_b0 op, {arg2}
         sta     arg3
@@ -893,24 +904,14 @@ skip:   dec     arg
 ;;;    copy32 #$11111111, $2222 ; immediate, absolute
 ;;;    copy32 $1111, $2222      ; absolute, absolute
 .macro copy32 arg1, arg2
-    .if .xmatch ({arg1}, #0)
-        ;; Common special case
-        ;; TODO: Generalize this!
-        lda     #0
-        sta     arg2
-        sta     arg2+1
-        sta     arg2+2
-        sta     arg2+3
-    .else
         _op_b0  lda, {arg1}
         sta     arg2
-        _op_b1  lda, {arg1}
+        _op_x1  lda, {arg1}     ; optimized
         sta     arg2+1
-        _op_b2  lda, {arg1}
+        _op_x2  lda, {arg1}     ; optimized
         sta     arg2+2
-        _op_b3  lda, {arg1}
+        _op_x3  lda, {arg1}     ; optimized
         sta     arg2+3
-    .endif
 .endmacro
 
 ;;; Shift 32-bit values
