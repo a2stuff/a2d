@@ -247,27 +247,49 @@ end:
 ;;; 16-bit pseudo-ops
 
 ;;; Load A,X
-;;;    ldax #$1234      ; immediate
+;;;    ldax #$1234      ; immediate (optimized if lo=hi)
 ;;;    ldax $1234       ; absolute
 ;;;    ldax $1234,y     ; absolute,y
 .macro ldax arg, reg
     .ifnblank reg
         lda    arg, reg
         ldx    arg+1, reg
+    .elseif !_is_immediate {arg}
+        lda   arg
+        ldx   arg+1
     .else
-        ;; TODO: Use `TAX` if immediate and lo=hi
-        _op_lo lda, {arg}
-        _op_hi ldx, {arg}
+        lda   #.lobyte(_immediate_value {arg})
+      .if .const(_immediate_value {arg})
+       .if .lobyte(_immediate_value {arg}) = .hibyte(_immediate_value {arg})
+        tax                     ; lo=hi
+       .else
+        ldx   #.hibyte(_immediate_value {arg})
+       .endif
+      .else
+        ldx   #.hibyte(_immediate_value {arg})
+      .endif
     .endif
 .endmacro
 
 ;;; Load A,Y
-;;;    lday #$1234      ; immediate
+;;;    lday #$1234      ; immediate (optimized if lo=hi)
 ;;;    lday $1234       ; absolute
 .macro lday arg
-        ;; TODO: Use `TAY` if immediate and lo=hi
-        _op_lo lda, {arg}
-        _op_hi ldy, {arg}
+    .if !_is_immediate {arg}
+        lda     arg
+        ldx     arg+1
+    .else
+        lda     #.lobyte(_immediate_value {arg})
+      .if .const(_immediate_value {arg})
+       .if .lobyte(_immediate_value {arg}) = .hibyte(_immediate_value {arg})
+        tay                     ; lo=hi
+       .else
+        ldy     #.hibyte(_immediate_value {arg})
+       .endif
+      .else
+        ldy     #.hibyte(_immediate_value {arg})
+      .endif
+    .endif
 .endmacro
 
 ;;; Load X,Y
