@@ -889,6 +889,20 @@ skip:   dec     arg
 .endmacro
 
 ;;; ============================================================
+;;; 24-bit pseudo-ops
+
+;;; Increment 24-bit value
+.macro inc24    arg
+        .local skip
+        inc     arg
+        bne     skip
+        inc     arg+1
+        bne     skip
+        inc     arg+2
+skip:
+.endmacro
+
+;;; ============================================================
 ;;; 32-bit pseudo-ops
 
 ;;; Core for add32/sub32

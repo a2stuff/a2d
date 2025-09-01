@@ -182,12 +182,8 @@ ClearUpdates := ClearUpdatesImpl::clear
 
         PROC_USED_IN_OVERLAY
 .proc SystemTask
-        inc     tick_counter
-        bne     :+
-        inc     tick_counter+1
-        bne     :+
-        inc     tick_counter+2
-:
+        inc24   tick_counter
+
         inc     loop_counter
         inc     loop_counter
         loop_counter := *+1
