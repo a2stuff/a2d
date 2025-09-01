@@ -7,7 +7,7 @@
 .define _is_immediate(arg)       (.match (.mid (0, 1, {arg}), #))
 .define _is_register(arg)        (.match ({arg}, x) .or .match ({arg}, y))
 .define _is_y_register(arg)      (.match ({arg}, y))
-.define _immediate_value(arg)    (.right (.tcount ({arg})-1, {arg}))
+.define _immediate_value(arg)    (.right (.tcount ({arg}) - 1, {arg}))
 
 ;;; 16-bit helpers
 .macro _op_lo op, arg
@@ -74,9 +74,9 @@
         .byte   end - data
 data:   .byte   str
 end:
-.if     .paramcount > 1
+    .ifnblank res
         .res    res - (end - data), 0
-.endif
+    .endif
 .endmacro
 
 .define TO_LOWER(char) (char | %00100000)
@@ -156,58 +156,50 @@ end:
 ;;;        param_call target, y_arg, ax_arg
 
 .macro param_call target, param1, param2
-.if     .paramcount = 2
+    .ifblank param2
         lda     #<(param1)
         ldx     #>(param1)
-.elseif .paramcount = 3
+    .else
         ldy     #param1
         lda     #<(param2)
         ldx     #>(param2)
-.else
-        .error "incorrect macro usage"
-.endif
+    .endif
         jsr     target
 .endmacro
 
 .macro param_call_indirect target, param1, param2
-.if     .paramcount = 2
+    .ifblank param2
         lda     param1
         ldx     param1+1
-.elseif .paramcount = 3
+    .else
         ldy     #param1
         lda     param2
         ldx     param2+1
-.else
-        .error "incorrect macro usage"
-.endif
+    .endif
         jsr     target
 .endmacro
 
 .macro param_jump target, param1, param2
-.if     .paramcount = 2
+    .ifblank param2
         lda     #<(param1)
         ldx     #>(param1)
-.elseif .paramcount = 3
+    .else
         ldy     #param1
         lda     #<(param2)
         ldx     #>(param2)
-.else
-        .error "incorrect macro usage"
-.endif
+    .endif
         jmp     target
 .endmacro
 
 .macro param_jump_indirect target, param1, param2
-.if     .paramcount = 2
+    .ifblank param2
         lda     param1
         ldx     param1+1
-.elseif .paramcount = 3
+    .else
         ldy     #param1
         lda     param2
         ldx     param2+1
-.else
-        .error "incorrect macro usage"
-.endif
+    .endif
         jmp     target
 .endmacro
 
@@ -225,7 +217,7 @@ end:
 ;;;    ldax $1234       ; absolute
 ;;;    ldax $1234,y     ; absolute,y
 .macro ldax arg, reg
-    .if .paramcount > 1
+    .ifnblank reg
         lda    arg, reg
         ldx    arg+1, reg
     .else
@@ -520,7 +512,7 @@ skip:
         txa
         _op_hi adc, {arg1}
         sta     arg2+1
-     .endif
+    .endif
 .endmacro
 
 ;;; Add X,Y into arg1 (X,Y remain unchanged)
@@ -544,7 +536,7 @@ skip:
         tya
         _op_hi adc, {arg1}
         sta     arg2+1
-     .endif
+    .endif
 .endmacro
 
 ;;; Subtract arg2 from arg1, store to arg3
@@ -618,11 +610,17 @@ skip:
         sta     arg3+1
     .elseif _is_register {arg3}
         ;; indexed store variant (arg3 is x or y)
-      .if .xmatch ({arg1}, #0)
-        ;; Common special case
-        lda     #0
+      .if _is_immediate {arg1}
+       .if .const(_immediate_value {arg1}) && .loword(_immediate_value {arg1}) = .hiword(_immediate_value {arg1})
+        lda     #<(_immediate_value {arg1})
         sta     arg2,arg3
         sta     arg2+1,arg3
+       .else
+        _op_lo  lda, {arg1}
+        sta     arg2,arg3
+        _op_hi  lda, {arg1}
+        sta     arg2+1,arg3
+       .endif
       .else
         _op_lo  lda, {arg1}
         sta     arg2,arg3
@@ -630,11 +628,17 @@ skip:
         sta     arg2+1,arg3
       .endif
     .else
-      .if .xmatch ({arg1}, #0)
-        ;; Common special case
-        lda     #0
+      .if _is_immediate {arg1}
+       .if .const(_immediate_value {arg1}) && .loword(_immediate_value {arg1}) = .hiword(_immediate_value {arg1})
+        lda     #<(_immediate_value {arg1})
         sta     arg2
         sta     arg2+1
+       .else
+        _op_lo  lda, {arg1}
+        sta     arg2
+        _op_hi  lda, {arg1}
+        sta     arg2+1
+       .endif
       .else
         _op_lo  lda, {arg1}
         sta     arg2
@@ -889,14 +893,15 @@ skip:   dec     arg
 ;;;    copy32 #$11111111, $2222 ; immediate, absolute
 ;;;    copy32 $1111, $2222      ; absolute, absolute
 .macro copy32 arg1, arg2
-      .if .xmatch ({arg1}, #0)
+    .if .xmatch ({arg1}, #0)
         ;; Common special case
+        ;; TODO: Generalize this!
         lda     #0
         sta     arg2
         sta     arg2+1
         sta     arg2+2
         sta     arg2+3
-      .else
+    .else
         _op_b0  lda, {arg1}
         sta     arg2
         _op_b1  lda, {arg1}
@@ -905,7 +910,7 @@ skip:   dec     arg
         sta     arg2+2
         _op_b3  lda, {arg1}
         sta     arg2+3
-      .endif
+    .endif
 .endmacro
 
 ;;; Shift 32-bit values
@@ -1095,7 +1100,7 @@ __shadow_warning_suppress_count__ .set 0
 ;;; ============================================================
 
 .macro ASSERT_EQUALS actual, expected, message
-    .if .paramcount = 3
+    .ifnblank message
         .assert (actual) = (expected), error, .sprintf("expected %d actual %d: %s", (expected), (actual), message)
     .else
         .assert (actual) = (expected), error, .sprintf("expected %d actual %d", (expected), (actual))
@@ -1103,7 +1108,7 @@ __shadow_warning_suppress_count__ .set 0
 .endmacro
 
 .macro ASSERT_NOT_EQUALS actual, expected, message
-    .if .paramcount = 3
+    .ifnblank message
         .assert (actual) <> (expected), error, .sprintf("unexpected %d: %s", (expected), message)
     .else
         .assert (actual) <> (expected), error, .sprintf("unexpected %d", (expected))
@@ -1111,7 +1116,7 @@ __shadow_warning_suppress_count__ .set 0
 .endmacro
 
 .macro ASSERT_ADDRESS addr, opt_message
-    .if .paramcount = 2
+    .ifnblank opt_message
         .assert * = (addr), error, .sprintf("%s mismatch, expected $%X actual $%X", opt_message, (addr), *)
     .else
         .assert * = (addr), error, .sprintf("Address mismatch, expected $%X actual $%X", (addr), *)
@@ -1176,7 +1181,7 @@ __shadow_warning_suppress_count__ .set 0
     .if .not(.defined(ident))
         ident .set 0
     .endif
-    ident .set ident + 1
+        ident .set ident + 1
 .endmacro
 
 ;;; Decrement a numeric variable
@@ -1229,13 +1234,13 @@ __shadow_warning_suppress_count__ .set 0
         __INC_IDENT__ __flow_count_at_depth__
         __INC_IDENT__ __flow_ident_counter__
         __FLOW_LOG__ "if"
-.ifblank arg2
+    .ifblank arg2
         compareOp arg1
         branchOp __flow_ident_block__
-.else
+    .else
         compareOp arg1,arg2
         branchOp __flow_ident_block__
-.endif
+    .endif
 .endmacro
 
 .macro _ELSE_IF_BOP_ branchOp
@@ -1251,13 +1256,13 @@ __shadow_warning_suppress_count__ .set 0
         jmp     __flow_ident__ {"endif"}
         __flow_ident_block__ := *
         __INC_IDENT__ __flow_ident_counter__
-.ifblank arg2
+    .ifblank arg2
         compareOp arg1
         branchOp __flow_ident_block__
-.else
+    .else
         compareOp arg1,arg2
         branchOp __flow_ident_block__
-.endif
+    .endif
 .endmacro
 
 .macro ELSE
@@ -1268,10 +1273,10 @@ __shadow_warning_suppress_count__ .set 0
 .endmacro
 
 .macro END_IF
-        .ifndef __flow_ident_block__
+    .ifndef __flow_ident_block__
         __FLOW_LOG__ "no else"
         __flow_ident_block__ := *
-        .endif
+    .endif
 
         __FLOW_LOG__ "endif"
         __flow_ident__ {"endif"} := *
@@ -1422,72 +1427,32 @@ __shadow_warning_suppress_count__ .set 0
 ;;;     RTS_IF_NC           aliases: RTS_IF_POS, RTS_IF_PLUS
 ;;;     RTS_IF_NS           aliases: RTS_IF_NEG, RTS_IF_MINUS
 
-.macro RTS_IF_ZS
+.macro _RTS_IF_BOP_ bop
         .local  skip
-        bne     skip
+        bop     skip
         rts
 skip:
 .endmacro
 
-.macro RTS_IF_ZC
-        .local  skip
-        beq     skip
-        rts
-skip:
-.endmacro
+.define RTS_IF_ZS _RTS_IF_BOP_ bne
+.define RTS_IF_ZC _RTS_IF_BOP_ beq
+.define RTS_IF_CS _RTS_IF_BOP_ bcc
+.define RTS_IF_CC _RTS_IF_BOP_ bcs
+.define RTS_IF_VS _RTS_IF_BOP_ bvc
+.define RTS_IF_VC _RTS_IF_BOP_ bvs
+.define RTS_IF_NS _RTS_IF_BOP_ bpl
+.define RTS_IF_NC _RTS_IF_BOP_ bmi
 
-.macro RTS_IF_CS
-        .local  skip
-        bcc     skip
-        rts
-skip:
-.endmacro
-
-.macro RTS_IF_CC
-        .local  skip
-        bcs     skip
-        rts
-skip:
-.endmacro
-
-.macro RTS_IF_VC
-        .local  skip
-        bvs     skip
-        rts
-skip:
-.endmacro
-
-.macro RTS_IF_VS
-        .local  skip
-        bvc     skip
-        rts
-skip:
-.endmacro
-
-.macro RTS_IF_NC
-        .local  skip
-        bmi     skip
-        rts
-skip:
-.endmacro
-
-.macro RTS_IF_NS
-        .local  skip
-        bpl     skip
-        rts
-skip:
-.endmacro
-
-        .define RTS_IF_EQ RTS_IF_ZS
-        .define RTS_IF_NE RTS_IF_ZC
-        .define RTS_IF_ZERO RTS_IF_EQ
-        .define RTS_IF_NOT_ZERO RTS_IF_NE
-        .define RTS_IF_GE RTS_IF_CS
-        .define RTS_IF_LT RTS_IF_CC
-        .define RTS_IF_PLUS RTS_IF_NC
-        .define RTS_IF_MINUS RTS_IF_NS
-        .define RTS_IF_POS RTS_IF_NC
-        .define RTS_IF_NEG RTS_IF_NS
+.define RTS_IF_EQ RTS_IF_ZS
+.define RTS_IF_NE RTS_IF_ZC
+.define RTS_IF_ZERO RTS_IF_EQ
+.define RTS_IF_NOT_ZERO RTS_IF_NE
+.define RTS_IF_GE RTS_IF_CS
+.define RTS_IF_LT RTS_IF_CC
+.define RTS_IF_PLUS RTS_IF_NC
+.define RTS_IF_MINUS RTS_IF_NS
+.define RTS_IF_POS RTS_IF_NC
+.define RTS_IF_NEG RTS_IF_NS
 
 
 ;;; ============================================================
@@ -1548,11 +1513,11 @@ skip:
 
         ;; Align file segments to block boundaries
         __curoffset__ .set __segoffset__ + len
-        .if __curoffset__ .mod BLOCK_SIZE
-            __nextsegpad__ .set BLOCK_SIZE - (__curoffset__ .mod BLOCK_SIZE)
-        .else
-            __nextsegpad__ .set 0
-        .endif
+    .if __curoffset__ .mod BLOCK_SIZE
+        __nextsegpad__ .set BLOCK_SIZE - (__curoffset__ .mod BLOCK_SIZE)
+    .else
+        __nextsegpad__ .set 0
+    .endif
         __segoffset__ .set __curoffset__ + __nextsegpad__
 .endmacro
 
