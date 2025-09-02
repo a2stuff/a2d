@@ -150,9 +150,10 @@ end:
         .assert DEVLST = DEVCNT+1, error, "DEVCNT must precede DEVLST"
         ldx     DEVCNT          ; number of devices
         inx                     ; include DEVCNT itself
-:       copy8   DEVLST-1,x, main::devlst_backup,x ; DEVCNT is at DEVLST-1
+    DO
+        copy8   DEVLST-1,x, main::devlst_backup,x ; DEVCNT is at DEVLST-1
         dex
-        bpl     :-
+    WHILE_POS
         ;; fall through
 .endscope
 
@@ -163,35 +164,35 @@ end:
         ;; Find the startup volume's unit number
         copy8   DEVNUM, target
         jsr     main::GetCopiedToRAMCardFlag
-    IF_MINUS
+    IF_NS
         param_call main::CopyDeskTopOriginalPrefix, INVOKER_PREFIX
         MLI_CALL GET_FILE_INFO, main::src_file_info_params
-        bcs     :+
+      IF_CC
         copy8   DEVNUM, target
-:
+      END_IF
     END_IF
 
         ;; Find the device's index in the list
         ldx     #0
-:       lda     DEVLST,x
+    DO
+        lda     DEVLST,x
         and     #UNIT_NUM_MASK  ; to compare against DEVNUM
         target := *+1
         cmp     #SELF_MODIFIED_BYTE
         beq     found
         inx
-        cpx     DEVCNT
-        bcc     :-
+    WHILE_X_LT  DEVCNT
         bcs     done            ; last one or not found
 
         ;; Save it
 found:  ldy     DEVLST,x
 
         ;; Move everything up
-:       lda     DEVLST+1,x
+    DO
+        lda     DEVLST+1,x
         sta     DEVLST,x
         inx
-        cpx     DEVCNT
-        bne     :-
+    WHILE_X_NE  DEVCNT
 
         ;; Place it at the end
         tya
@@ -211,11 +212,11 @@ done:
         ;; Copy pattern from settings to somewhere MGTK can see
         tmp_pattern := $00
         ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
-:       jsr     ReadSetting
+    DO
+        jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
         dex
-        cpx     #AS_BYTE(DeskTopSettings::pattern-1)
-        bne     :-
+    WHILE_X_NE  #AS_BYTE(DeskTopSettings::pattern-1)
 
         MGTK_CALL MGTK::SetZP1, setzp_params_nopreserve
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern
@@ -302,12 +303,12 @@ done:
 
         iny
         ldx     #0
-:       lda     trash_name,x
+    DO
+        lda     trash_name,x
         sta     (ptr),y
         iny
         inx
-        cpx     trash_name
-        bne     :-
+    WHILE_X_NE  trash_name
         lda     trash_name,x
         sta     (ptr),y
 
@@ -382,10 +383,11 @@ count:  .byte   0
         ldy     #0
         lda     (ptr1),y
         tay
-:       lda     (ptr1),y
+    DO
+        lda     (ptr1),y
         sta     (ptr2),y
         dey
-        bpl     :-
+    WHILE_POS
         rts
 .endproc ; _CopyPtr1ToPtr2
 
@@ -420,13 +422,15 @@ str_selector_list:
         copy16  #selector_list_data_buf, ptr
         ldx     #>kSelectorListShortSize ; number of pages
         lda     #0
-ploop:  ldy     #0
-:       sta     (ptr),y
+    DO
+        ldy     #0
+      DO
+        sta     (ptr),y
         dey
-        bne     :-
+      WHILE_NOT_ZERO
         inc     ptr+1
         dex
-        bne     ploop
+    WHILE_NOT_ZERO
 
         ;; Write out file
         MLI_CALL CREATE, create_params
@@ -461,10 +465,9 @@ end:
 
         ;; Does the directory exist?
         MLI_CALL GET_FILE_INFO, get_file_info_params
-        bcc     :+
-        jmp     end
+        jcs     end
 
-:       lda     get_file_info_type
+        lda     get_file_info_type
         cmp     #FT_DIRECTORY
         beq     open_dir
         jmp     end
@@ -540,20 +543,22 @@ process_block:
         and     #NAME_LENGTH_MASK
         sta     name_buf
         tay
-:       lda     (dir_ptr),y
+    DO
+        lda     (dir_ptr),y
         sta     name_buf,y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; If a directory, prepend name with folder glyphs
         ldy     #FileEntry::file_type
         lda     (dir_ptr),y
     IF_A_EQ     #FT_DIRECTORY   ; Directory?
         ldy     name_buf
-:       lda     name_buf,y
+      DO
+        lda     name_buf,y
         sta     name_buf+3,y
         dey
-        bne     :-
+      WHILE_NOT_ZERO
 
         copy8   #kGlyphFolderLeft, name_buf+1
         copy8   #kGlyphFolderRight, name_buf+2
@@ -568,13 +573,14 @@ process_block:
         lda     name_buf,y
         sta     (da_ptr),y
         tay
-loop:   lda     name_buf,y
-        cmp     #'.'
-        bne     :+
+    DO
+        lda     name_buf,y
+      IF_A_EQ   #'.'
         lda     #' '
-:       sta     (da_ptr),y
+      END_IF
+        sta     (da_ptr),y
         dey
-        bne     loop
+    WHILE_NOT_ZERO
 
         inc     desk_acc_num
         inc     apple_menu      ; number of menu items
@@ -583,28 +589,26 @@ next_entry:
         ;; Room for more DAs?
         lda     desk_acc_num
         cmp     #kMaxDeskAccCount
-        bcc     :+
-        jmp     close_dir
+        jcs     close_dir
 
         ;; Any more entries in dir?
-:       lda     entry_num
+        lda     entry_num
         cmp     file_count
-        bne     :+
-        jmp     close_dir
+        jeq     close_dir
 
         ;; Any more entries in block?
-:       inc     entry_in_block
+        inc     entry_in_block
         lda     entry_in_block
-        cmp     entries_per_block
-        bne     :+
+    IF_A_EQ     entries_per_block
         MLI_CALL READ, read_params
         copy16  #read_dir_buffer + 4, dir_ptr
 
         lda     #0
         sta     entry_in_block
         jmp     process_block
+    END_IF
 
-:       add16_8 dir_ptr, entry_length
+        add16_8 dir_ptr, entry_length
         jmp     process_block
 
 close_dir:
@@ -691,13 +695,11 @@ process_volume:
         ;; A = unit number, X = (nothing), Y = device_index
 
         pha                     ; save unit number on the stack
-        lda     cvi_result
-        cmp     #ERR_DEVICE_NOT_CONNECTED
-        bne     :+
 
+        lda     cvi_result
+    IF_A_EQ     #ERR_DEVICE_NOT_CONNECTED
         ;; If device is not connected, remove it from DEVLST
         ;; unless it's a Disk II.
-
         ldy     device_index
         lda     DEVLST,y
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
@@ -706,8 +708,9 @@ process_volume:
         ldx     device_index
         jsr     RemoveDevice
         jmp     next
+    END_IF
 
-:       cmp     #ERR_DUPLICATE_VOLUME
+        cmp     #ERR_DUPLICATE_VOLUME
         bne     select_template
         lda     #kErrDuplicateVolName
         sta     main::pending_alert
@@ -729,9 +732,9 @@ select_template:
         ;; Empty?
         ldy     #0
         lda     (src),y
-        bne     :+
+    IF_ZERO
         copy16  #str_volume_type_unknown, src
-:
+    END_IF
 
         ;; Set final length
         lda     (src),y         ; Y = 0
@@ -742,10 +745,11 @@ select_template:
         ;; Copy string into template, after prefix
         lda     (src),y         ; Y = 0
         tay                     ; Y = length
-:       lda     (src),y
+    DO
+        lda     (src),y
         sta     str_sdname_buffer + kSDPrefixLength,y
         dey
-        bne     :-              ; leave length alone
+    WHILE_NOT_ZERO              ; leave length alone
 
         ;; Insert Slot #
         pla                     ; unit number into A
@@ -770,16 +774,17 @@ select_template:
 
         ;; Copy name into table
         ldy     str_sdname_buffer
-:       lda     str_sdname_buffer,y
+   DO
+        lda     str_sdname_buffer,y
         sta     (devname_ptr),y
         dey
-        bpl     :-
+   WHILE_POS
 
 next:   pla
         dec     device_index
         lda     device_index
 
-        bpl     :+
+        bpl     :+              ; TODO: Remove this line
         bmi     PopulateStartupMenu
 :       jmp     process_volume  ; next!
 
@@ -794,11 +799,12 @@ cvi_result:
         ;; Remove device num in X from devices list
 .proc RemoveDevice
         dex
-:       inx
+   DO
+        inx
         copy8   DEVLST+1,x, DEVLST,x
         copy8   main::device_to_icon_map+1,x, main::device_to_icon_map,x
         cpx     DEVCNT
-        bne     :-
+   WHILE_NOT_ZERO
         dec     DEVCNT
 
         ;; ProDOS requires an ON_LINE call after a device is
@@ -823,7 +829,8 @@ cvi_result:
         tax                     ; X = menu entry
 
         ;; Identify ProDOS device in slot by ID bytes
-loop:   lda     slot
+    DO
+        lda     slot
         ora     #$C0            ; hi byte of $Cn00
         sta     slot_ptr+1
 
@@ -862,7 +869,7 @@ loop:   lda     slot
         inx
 
 next:   dec     slot
-        bne     loop
+    WHILE_NOT_ZERO
 
         ;; Set number of menu items.
         stx     startup_menu
@@ -898,7 +905,8 @@ slot_string_table:
         sta     count
         sta     index
 
-loop:   ldy     index
+    DO
+        ldy     index
         lda     DEVLST,y
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, `DeviceDriverAddress` handles it.
         sta     unit_num
@@ -916,8 +924,7 @@ loop:   ldy     index
 
 next:   inc     index
         lda     DEVCNT          ; continue while index <= DEVCNT
-        cmp     index
-        bcs     loop
+    WHILE_A_GE  index
 
         lda     count
         sta     main::removable_device_table
@@ -926,12 +933,14 @@ next:   inc     index
 
         ;; Make copy of table
         ldx     main::disk_in_device_table
-        beq     done
-:       copy8   main::disk_in_device_table,x, main::last_disk_in_devices_table,x
+    IF_NOT_ZERO
+      DO
+        copy8   main::disk_in_device_table,x, main::last_disk_in_devices_table,x
         dex
-        bpl     :-
+      WHILE_POS
+    END_IF
 
-done:   jmp     FinalSetup
+        jmp     FinalSetup
 
         DEFINE_SP_STATUS_PARAMS status_params, SELF_MODIFIED_BYTE, dib_buffer, 3 ; Return Device Information Block (DIB)
 
@@ -1012,7 +1021,7 @@ iloop:  cpx     cached_window_entry_count
         pla
         tax
         inx
-        jmp     iloop
+        jmp     iloop           ; TODO: Make this BNE
 :
         ;; Desktop icons are cached now
         copy8   #0, cached_window_id
@@ -1023,10 +1032,10 @@ iloop:  cpx     cached_window_entry_count
 
         ;; Display any pending error messages
         lda     main::pending_alert
-        beq     :+
+    IF_NOT_ZERO
         tay
         jsr     ShowAlert
-:
+    END_IF
 
         ;; And start pumping events
         jmp     main::MainLoop
@@ -1057,22 +1066,23 @@ loop:   ldy     #0
         beq     exit
 
         tay
-:       lda     (data_ptr),y
+    DO
+        lda     (data_ptr),y
         sta     INVOKER_PREFIX,y
         dey
-        bpl     :-
+    WHILE_POS
 
         jsr     PushPointers
 
         ;; Is there a matching volume icon? (If not, skip)
         ldx     #1              ; past leading '/'
-:       lda     INVOKER_PREFIX+1,x
-        cmp     #'/'            ; look for next '/'
-        beq     :+
+    DO
+        lda     INVOKER_PREFIX+1,x
+        BREAK_IF_A_EQ #'/'      ; look for next '/'
         inx
-        cpx     INVOKER_PREFIX
-        bne     :-
-:       dex
+    WHILE_X_NE  INVOKER_PREFIX
+
+        dex
         stx     INVOKER_PREFIX+1 ; overwrite leading '/' with length
         param_call main::FindIconByName, 0, INVOKER_PREFIX+1 ; 0=desktop
         beq     next
@@ -1086,20 +1096,22 @@ loop:   ldy     #0
         ;; Copy loc to `new_window_viewloc`
         ldy     #DeskTopFileItem::viewloc+.sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     (data_ptr),y
+    DO
+        lda     (data_ptr),y
         sta     new_window_viewloc,x
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; Copy bounds to `new_window_maprect`
         ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     (data_ptr),y
+    DO
+        lda     (data_ptr),y
         sta     new_window_maprect,x
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         lda     #$80
         sta     main::copy_new_window_bounds_flag

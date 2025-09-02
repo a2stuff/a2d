@@ -188,14 +188,13 @@ ClearUpdates := ClearUpdatesImpl::clear
         inc     loop_counter
         loop_counter := *+1
         lda     #SELF_MODIFIED_BYTE
-        cmp     periodic_task_delay    ; for per-machine timing
-        bcc     :+
+    IF_A_GE     periodic_task_delay    ; for per-machine timing
         copy8   #0, loop_counter
 
         jsr     ShowClock
         jsr     ResetIIgsRGB   ; in case it was reset by control panel
-
-:       lda     loop_counter
+    END_IF
+        lda     loop_counter
         rts
 .endproc ; SystemTask
 
@@ -603,33 +602,37 @@ window_click:
         jeq     _TrackThumb
 
       IF_A_EQ   #MGTK::Part::up_arrow
-:       jsr     ScrollUp
+       DO
+        jsr     ScrollUp
         lda     #MGTK::Part::up_arrow
         jsr     _CheckControlRepeat
-        bpl     :-
+       WHILE_NC
         rts
       END_IF
 
       IF_A_EQ   #MGTK::Part::down_arrow
-:       jsr     ScrollDown
+       DO
+        jsr     ScrollDown
         lda     #MGTK::Part::down_arrow
         jsr     _CheckControlRepeat
-        bpl     :-
+       WHILE_NC
         rts
       END_IF
 
       IF_A_EQ   #MGTK::Part::page_up
-:       jsr     ScrollPageUp
+       DO
+        jsr     ScrollPageUp
         lda     #MGTK::Part::page_up
         jsr     _CheckControlRepeat
-        bpl     :-
+       WHILE_NC
         rts
       END_IF
 
-:       jsr     ScrollPageDown
+      DO
+        jsr     ScrollPageDown
         lda     #MGTK::Part::page_down
         jsr     _CheckControlRepeat
-        bpl     :-
+      WHILE_NC
         rts
     END_IF
 
@@ -650,33 +653,37 @@ window_click:
         jeq     _TrackThumb
 
       IF_A_EQ   #MGTK::Part::left_arrow
-:       jsr     ScrollLeft
+       DO
+        jsr     ScrollLeft
         lda     #MGTK::Part::left_arrow
         jsr     _CheckControlRepeat
-        bpl     :-
+       WHILE_NC
         rts
       END_IF
 
       IF_A_EQ   #MGTK::Part::right_arrow
-:       jsr     ScrollRight
+       DO
+        jsr     ScrollRight
         lda     #MGTK::Part::right_arrow
         jsr     _CheckControlRepeat
-        bpl     :-
+       WHILE_NC
         rts
       END_IF
 
       IF_A_EQ   #MGTK::Part::page_left
-:       jsr     ScrollPageLeft
+       DO
+        jsr     ScrollPageLeft
         lda     #MGTK::Part::page_left
         jsr     _CheckControlRepeat
-        bpl     :-
+       WHILE_NC
         rts
       END_IF
 
-:       jsr     ScrollPageRight
+      DO
+        jsr     ScrollPageRight
         lda     #MGTK::Part::page_right
         jsr     _CheckControlRepeat
-        bpl     :-
+      WHILE_NC
         rts
 
 ;;; ------------------------------------------------------------
@@ -690,9 +697,8 @@ window_click:
 
         lda     trackthumb_params::which_ctl
         cmp     #MGTK::Ctl::vertical_scroll_bar
-        bne     :+
-        jmp     ScrollTrackVThumb
-:       jmp     ScrollTrackHThumb
+        jeq     ScrollTrackVThumb
+        jmp     ScrollTrackHThumb
 .endproc ; _TrackThumb
 
 ;;; ------------------------------------------------------------
@@ -704,11 +710,11 @@ window_click:
         sta     ctl
         jsr     PeekEvent
         lda     event_params::kind
-        cmp     #MGTK::EventKind::drag
-        beq     :+
+    IF_A_NE     #MGTK::EventKind::drag
 bail:   return  #$FF            ; high bit set = not repeating
+    END_IF
 
-:       MGTK_CALL MGTK::FindControl, findcontrol_params
+        MGTK_CALL MGTK::FindControl, findcontrol_params
         lda     findcontrol_params::which_ctl
         beq     bail
         cmp     #MGTK::Ctl::dead_zone
@@ -740,15 +746,15 @@ bail:   return  #$FF            ; high bit set = not repeating
         ;; --------------------------------------------------
         ;; Icon was already selected
         jsr     ExtendSelectionModifierDown
-        bpl     :+
-
+    IF_NS
         ;; Modifier down - remove from selection
         lda     findicon_params::which_icon
         jsr     UnhighlightAndDeselectIcon
         jmp     _ActivateClickedWindow ; no-op if already active
+    END_IF
 
         ;; Double click or drag?
-:       jmp     check_double_click
+        jmp     check_double_click
 
         ;; --------------------------------------------------
         ;; Icon was not already selected
@@ -1028,9 +1034,10 @@ clicked_window_id := _ActivateClickedWindow::window_id
 .proc UnsafeSetPortFromWindowIdAndAdjustForEntries
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        bne     :+              ; MGTK::Error::window_obscured
+    IF_ZERO                     ; not MGTK::Error::window_obscured
         jsr     AdjustWindowPortForEntries
-:       rts
+    END_IF
+        rts
 .endproc ; UnsafeSetPortFromWindowIdAndAdjustForEntries
 
 ;;; Used for all sorts of windows, not just file windows.
@@ -1039,9 +1046,10 @@ clicked_window_id := _ActivateClickedWindow::window_id
 .proc UnsafeSetPortFromWindowId
         sta     getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        bne     :+              ; MGTK::Error::window_obscured
+    IF_ZERO                     ; not MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, window_grafport
-:       rts
+    END_IF
+        rts
 .endproc ; UnsafeSetPortFromWindowId
 
 ;;; Used for windows that can never be obscured (e.g. dialogs)
@@ -1061,27 +1069,31 @@ clicked_window_id := _ActivateClickedWindow::window_id
 
 .proc CheckDiskInsertedEjected
         lda     disk_in_device_table
-        beq     done
+    IF_NOT_ZERO
         jsr     CheckDisksInDevices
         ldx     disk_in_device_table
-:       lda     disk_in_device_table,x
+      DO
+        lda     disk_in_device_table,x
         cmp     last_disk_in_devices_table,x
         bne     changed
         dex
-        bne     :-
-done:   return  #0
+      WHILE_NOT_ZERO
+    END_IF
+        return  #0
 
 changed:
         copy8   disk_in_device_table,x, last_disk_in_devices_table,x
 
         lda     removable_device_table,x
         ldy     DEVCNT
-:       cmp     DEVLST,y
-        beq     :+
+    DO
+        cmp     DEVLST,y
+        beq     found
         dey
-        bpl     :-
+    WHILE_POS
         rts
-:
+
+found:
         sty     drive_to_refresh ; DEVLST index
         jsr     CheckDriveByIndex
         rts
@@ -1115,14 +1127,16 @@ last_disk_in_devices_table:
         pha
 
         ldx     removable_device_table
-        beq     done
+    IF_NOT_ZERO
         stx     disk_in_device_table
-:       lda     removable_device_table,x
+      DO
+        lda     removable_device_table,x
         jsr     check_disk_in_drive
         sta     disk_in_device_table,x
         dex
-        bne     :-
-done:
+      WHILE_NOT_ZERO
+    END_IF
+
         pla
         tay                     ; restore Y
         rts
@@ -1403,8 +1417,7 @@ sys_disk:
 
         ;; Get the file info to determine type.
 retry:  jsr     GetSrcFileInfo
-        bcc     :+
-
+    IF_CS
         sys_prompt_flag := *+1
         lda     #SELF_MODIFIED_BYTE
         jpl     ShowAlert
@@ -1414,9 +1427,10 @@ retry:  jsr     GetSrcFileInfo
         cmp     #kAlertResultOK
         beq     retry           ; ok, so try again
         rts                     ; cancel, so fail
+    END_IF
 
         ;; Check file type.
-:       ldax    #src_path_buf
+        ldax    #src_path_buf
         jsr     DetermineIconType ; uses passed name and `src_file_info_params`
 
         ;; Handler based on type
@@ -1615,12 +1629,12 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
         ldx     INVOKER_INTERPRETER
         lda     (ptr1),y
         sta     len
-:       iny
+    DO
+        iny
         inx
         lda     (ptr1),y
         sta     INVOKER_INTERPRETER,x
-        cpy     len
-        bne     :-
+    WHILE_Y_NE  len
         stx     INVOKER_INTERPRETER
 
         jsr     PopPointers     ; do not tail-call optimize!
@@ -1713,11 +1727,12 @@ LaunchFileWithPathOnSystemDisk := LaunchFileWithPath::sys_disk
         bcc     bad
 
         ldx     #kCheckHeaderLength-1
-:       lda     read_buf,x
+    DO
+        lda     read_buf,x
         cmp     check_header,x
         bne     bad
         dex
-        bpl     :-
+    WHILE_POS
 
         param_call CopyToSrcPath, read_buf + kLinkFilePathLengthOffset
         clc
@@ -1854,9 +1869,10 @@ filerecords_free_start:
 .proc RestoreDeviceList
         ldx     devlst_backup
         inx                     ; include the count itself
-:       copy8   devlst_backup,x, DEVLST-1,x ; DEVCNT is at DEVLST-1
+    DO
+        copy8   devlst_backup,x, DEVLST-1,x ; DEVCNT is at DEVLST-1
         dex
-        bpl     :-
+    WHILE_POS
         rts
 .endproc ; RestoreDeviceList
 
@@ -1881,14 +1897,13 @@ devlst_backup:
 
         ;; If there's a selection, put it in `path_buf0`
         lda     selected_icon_count
-        beq     :+
-
+      IF_NOT_ZERO
         lda     selected_icon_list
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
         jne     ShowAlert       ; too long
 
         COPY_STRING path_buf3, path_buf0
-:
+      END_IF
     END_IF
 
         lda     #kDynamicRoutineShortcutPick
@@ -2062,29 +2077,29 @@ entry_num:
         ldy     entry_path
 
         ;; Walk back one segment
-:       lda     entry_path,y
-        cmp     #'/'
-        beq     :+
+    DO
+        lda     entry_path,y
+        BREAK_IF_A_EQ #'/'
         dey
-        bne     :-
-:       dey
+    WHILE_NOT_ZERO
+        dey
 
         ;; Walk back a second segment
-:       lda     entry_path,y
-        cmp     #'/'
-        beq     :+
+    DO
+        lda     entry_path,y
+        BREAK_IF_A_EQ #'/'
         dey
-        bne     :-
-:       dey
+    WHILE_NOT_ZERO
+        dey
 
         ;; Append last two segments to `src_path_buf`
         ldx     src_path_buf
-:       inx
+    DO
+        inx
         iny
         lda     entry_path,y
         sta     src_path_buf,x
-        cpy     entry_path
-        bne     :-
+    WHILE_Y_NE  entry_path
 
         stx     src_path_buf
         ldax    #src_path_buf
@@ -2148,11 +2163,12 @@ secondary:
         ldy     #0
         lda     (ptr1),y
         tay
-:       lda     (ptr1),y
+    DO
+        lda     (ptr1),y
         addr := *+1
         sta     SELF_MODIFIED,y
         dey
-        bpl     :-
+    WHILE_POS
         rts
 .endproc ; CopyPtr1ToBuf
 
@@ -2166,11 +2182,12 @@ secondary:
         ldy     #0
         lda     (ptr2),y
         tay
-:       lda     (ptr2),y
+    DO
+        lda     (ptr2),y
         addr := *+1
         sta     SELF_MODIFIED,y
         dey
-        bpl     :-
+    WHILE_POS
         rts
 .endproc ; CopyPtr2ToBuf
 
@@ -2220,9 +2237,10 @@ skip:   iny
         lda     ($06),y
         cmp     #' '            ; Convert spaces back to periods
         bcc     skip            ; Ignore control characters
-        bne     :+
+    IF_EQ
         lda     #'.'
-:       sta     path,x
+    END_IF
+        sta     path,x
         cpy     len
         bne     loop
         stx     path
@@ -2245,14 +2263,14 @@ CmdDeskAcc      := CmdDeskAccImpl::start
 
         ;; As a convenience for DAs, pass path to first selected icon.
         lda     selected_icon_count
-        beq     :+
+    IF_NOT_ZERO
         lda     selected_icon_list ; first selected icon
-        cmp     trash_icon_num     ; ignore trash
-        beq     :+
+      IF_A_NE   trash_icon_num     ; ignore trash
         jsr     GetIconPath     ; `path_buf3` set to path; A=0 on success
         jne     ShowAlert       ; too long
         param_call CopyToSrcPath, path_buf3
-:
+      END_IF
+    END_IF
         param_call IconToAnimate, tmp_path_buf
         tay
         ldax    #tmp_path_buf
@@ -2276,13 +2294,14 @@ CmdDeskAcc      := CmdDeskAccImpl::start
 
         ;; Load the DA
 retry:  MLI_CALL OPEN, open_params
-        bcc     :+
+    IF_CS
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
         cmp     #kAlertResultOK
         beq     retry           ; ok, so try again
         rts                     ; cancel, so fail
-:
+    END_IF
+
         lda     open_ref_num
         sta     read_header_ref_num
         sta     read_ref_num
@@ -2503,7 +2522,7 @@ main_length:    .word   0
         beq     :+
         iny
         inx
-        jmp     :-
+        jmp     :-              ; TODO: Make this BNE
 
 :       stx     filename_buf
 
@@ -2519,10 +2538,11 @@ main_length:    .word   0
 volume:
         dey
         sty     filename_buf
-:       lda     path_buf4+1,y
+    DO
+        lda     path_buf4+1,y
         sta     filename_buf,y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
         copy8   #1, path_buf4
         rts
 .endproc ; SplitPathBuf4
@@ -2538,13 +2558,13 @@ volume:
         ldx     #1
         iny                     ; +1 for length byte
         iny                     ; +1 to skip past '/'
-:       copy8   INVOKER_PREFIX,y, INVOKER_FILENAME,x
-        cpy     INVOKER_PREFIX
-        beq     :+
+    DO
+        copy8   INVOKER_PREFIX,y, INVOKER_FILENAME,x
+        BREAK_IF_Y_EQ INVOKER_PREFIX
         iny
         inx
-        bne     :-              ; always
-:       stx     INVOKER_FILENAME
+    WHILE_NOT_ZERO              ; always
+        stx     INVOKER_FILENAME
         pla
         sta     INVOKER_PREFIX
 
@@ -2600,9 +2620,9 @@ from_keyboard:
 from_double_click:
         copy8   #0, window_id_to_close
         jsr     ModifierDown
-        bpl     :+
+    IF_NS
         copy8   selected_window_id, window_id_to_close
-:
+    END_IF
         FALL_THROUGH_TO common
 
         ;; --------------------------------------------------
@@ -2612,10 +2632,11 @@ common:
         ;; Make a copy of selection
         ldx     selected_icon_count
         stx     selected_icon_count_copy
-:       lda     selected_icon_list-1,x
+    DO
+        lda     selected_icon_list-1,x
         sta     selected_icon_list_copy-1,x
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         ldx     #0
 loop:   cpx     selected_icon_count_copy
@@ -2755,9 +2776,9 @@ volume:
         jsr     MaybeCloseWindowAfterOpen
 
         param_call FindIconForPath, src_path_buf
-        beq     :+
+    IF_NOT_ZERO
         jsr     SelectIconAndEnsureVisible
-:
+    END_IF
         rts
 .endproc ; CmdOpenParentImpl
 CmdOpenParent := CmdOpenParentImpl::normal
@@ -2796,7 +2817,7 @@ str_disk_copy:
         PASCAL_STRING kPathnameDiskCopy
 
 start:
-@retry:
+retry:
         ;; Do this now since we'll use up the space later.
         jsr     SaveWindows
 
@@ -2805,13 +2826,14 @@ start:
         sta     DISK_COPY_INITIAL_UNIT_NUM
 
         MLI_CALL OPEN, open_params
-        bcc     :+
+    IF_CS
         lda     #kErrInsertSystemDisk
         jsr     ShowAlert
         cmp     #kAlertResultOK
-        beq     @retry          ; ok, so try again
+        beq     retry           ; ok, so try again
         rts                     ; cancel, so fail
-:
+    END_IF
+
         lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
@@ -2944,15 +2966,14 @@ CmdNewFolder    := CmdNewFolderImpl::start
 
         icon := *+1
 loop:   ldx     #SELF_MODIFIED_BYTE
-        cpx     cached_window_entry_count
-        bne     :+
-
+    IF_X_EQ     cached_window_entry_count
         ;; Not found
         copy8   #0, icon
         beq     done            ; always
+    END_IF
 
         ;; Compare with name from dialog
-:       lda     cached_window_entry_list,x
+        lda     cached_window_entry_list,x
         jsr     GetIconName
         stax    ptr_icon_name
         jsr     CompareStrings
@@ -3037,22 +3058,22 @@ stashed_name:
         ;; Zero out counter (a digit string, in reverse)
         lda     #'0'
         ldy     #15
-:       sta     digits,y
+    DO
+        sta     digits,y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; While digits, pop from string (X=len) onto digits (Y=len)
         ldx     stashed_name
-:       lda     stashed_name,x
-        cmp     #'0'
-        bcc     :+
-        cmp     #'9'+1
-        bcs     :+
+    DO
+        lda     stashed_name,x
+        BREAK_IF_A_LT #'0'
+        BREAK_IF_A_GE #'9'+1
         iny
         sta     digits,y        ; stash digits as we go
         dex
-        bne     :-              ; always (name must start w/ letter)
-:
+    WHILE_NOT_ZERO              ; always (name must start w/ letter)
+
         ;; Did the string end with '.' then digits?
         cmp     #'.'            ; dot before numbers?
         bne     just_append
@@ -3065,18 +3086,18 @@ stashed_name:
         sty     digits
 
         ldx     #0              ; increment
-:       inc     digits+1,x
+    DO
+      DO
+        inc     digits+1,x
         lda     digits+1,x
         cmp     #'9'+1
         bne     concatenate     ; done
         lda     #'0'
         sta     digits+1,x
         inx
-        cpx     digits
-        bne     :-
+      WHILE_X_NE digits
         inc     digits
-        cpx     #13             ; max of 13 digits
-        bne     :-
+    WHILE_X_NE  #13             ; max of 13 digits
         beq     SpinName        ; restart
 
         ;; --------------------------------------------------
@@ -3101,11 +3122,12 @@ concatenate:
         lda     #'.'
         sta     stashed_name,x
         ldy     digits
-:       lda     digits,y
+    DO
+        lda     digits,y
         inx
         sta     stashed_name,x
         dey
-        bne     :-
+    WHILE_NOT_ZERO
         stx     stashed_name
         rts
 .endproc ; SpinName
@@ -3208,11 +3230,11 @@ done:   rts
         tax
         tay
 loop1:  lda     selected_icon_list,y
-        cmp     trash_icon_num
-        beq     :+
+    IF_A_NE     trash_icon_num
         sta     buffer,x
         inx
-:       iny
+    END_IF
+        iny
         cpy     selected_icon_count
         bne     loop1
         dex
@@ -3220,9 +3242,9 @@ loop1:  lda     selected_icon_list,y
 
         ;; Do the ejection
         bit     eject_flag
-        bpl     :+
+    IF_NS
         jsr     DoEject
-:
+    END_IF
 
         ;; Check each of the recorded volumes
         count := *+1
@@ -3391,12 +3413,12 @@ entry2:
 entry3:
         ;; Clear selection if in the window
         lda     selected_window_id
-        cmp     active_window_id
-        bne     :+
+    IF_A_EQ     active_window_id
         lda     #0
         sta     selected_icon_count
         sta     selected_window_id
-:
+    END_IF
+
         ;; Reset the viewport
         jsr     ResetActiveWindowViewport ; Must precede icon creation
 
@@ -3425,13 +3447,14 @@ entry3:
 
         ;; For each selected icon, replace icon number
         ;; with its corresponding file record number.
-:       ldx     selected_icon_count
+    DO
+        ldx     selected_icon_count
         lda     selected_icon_list-1,x
         jsr     GetIconRecordNum
         ldx     selected_icon_count
         sta     selected_icon_list-1,x
         dec     selected_icon_count
-        bne     :-
+    WHILE_NOT_ZERO
 
         copy8   #0, selected_window_id
 
@@ -3444,22 +3467,24 @@ ret:    rts
 
 .proc _RestoreSelection
         lda     selection_preserved_count
-        beq     ret
+    IF_NOT_ZERO
 
         ;; For each record num in the list, find and
         ;; highlight the corresponding icon.
-:       ldx     selected_icon_count
+      DO
+        ldx     selected_icon_count
         lda     selected_icon_list,x
         jsr     FindIconForRecordNum
         jsr     AddToSelectionList
         sta     icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
         dec     selection_preserved_count
-        bne     :-
+      WHILE_NOT_ZERO
 
         copy8   cached_window_id, selected_window_id
+    END_IF
 
-ret:    rts
+        rts
 .endproc ; _RestoreSelection
 
 selection_preserved_count:
@@ -3481,17 +3506,18 @@ RefreshView := RefreshViewImpl::entry3
         lda     cached_window_entry_count
         sta     index
 
+    DO
         index := *+1
-:       ldx     #SELF_MODIFIED_BYTE
+        ldx     #SELF_MODIFIED_BYTE
         lda     cached_window_entry_list-1,x
         jsr     GetIconRecordNum
         record_num := *+1
         cmp     #SELF_MODIFIED_BYTE
-        beq     :+
+        BREAK_IF_EQ
         dec     index
-        bpl     :-
+    WHILE_POS
 
-:       ldx     index
+        ldx     index
         lda     cached_window_entry_list-1,x
         rts
 .endproc ; FindIconForRecordNum
@@ -3725,10 +3751,11 @@ ep2:
     END_IF
 
         pla                     ; A = result
-        bpl     :+              ; N = window renamed
+    IF_NS                       ; N = window renamed
         ;; TODO: Avoid repainting everything
         MGTK_CALL MGTK::RedrawDeskTop
-:
+    END_IF
+
         rts
 .endproc ; CmdRename
 CmdRenameWithDefaultNameGiven := CmdRename::ep2 ; A,X = name
@@ -3854,10 +3881,11 @@ common:
         lda     selected_icon_list ; Only consider first, otherwise N^2
         ldx     buffer             ; count
         dex                        ; index
-:       cmp     buffer+1,x
+    DO
+        cmp     buffer+1,x
         beq     pick_next_prev
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; If not in our list, use a fallback.
 fallback:
@@ -4061,15 +4089,15 @@ fallback:
         tay                     ; make last (Y) be Trash (0)
         inx                     ; and first (X) be 1st volume icon
         cpx     cached_window_entry_count
-        bne     :+              ; unless there isn't one
+      IF_EQ                      ; unless there isn't one
         dex
-:
+      END_IF
     END_IF
         ror     dir             ; C = 1 if right/down
         lda     cached_window_entry_list,x
-        bcs     :+
+    IF_CC
         lda     cached_window_entry_list,y
-:
+    END_IF
 
 select:
         jmp     SelectIconAndEnsureVisible
@@ -4207,14 +4235,13 @@ typedown_buf:
 
         jsr     LoadActiveWindowEntryTable
         ldx     #0
-:
-        cpx     cached_window_entry_count
-        beq     :+
+    DO
+        BREAK_IF_X_EQ cached_window_entry_count
         lda     cached_window_entry_list,x
         sta     buffer+1,x
         inx
-        bne     :-              ; always
-:
+    WHILE_NE                  ; always
+
         stx     buffer
         rts
 .endproc ; GetKeyboardSelectableIcons
@@ -4315,13 +4342,14 @@ loop:   lda     (ptr2),y
         ;; End of string 1?
         len1 := *+1
         cpy     #SELF_MODIFIED_BYTE
-        bne     :+
+    IF_EQ
         cpy     len2            ; 1<2 or 1=2 ?
         rts
+    END_IF
 
         ;; End of string 2?
         len2 := *+1
-:       cpy     #SELF_MODIFIED_BYTE
+        cpy     #SELF_MODIFIED_BYTE
         beq     gt              ; 1>2
         iny
         bne     loop            ; always
@@ -4367,10 +4395,10 @@ continue:
 
         ;; If windowed, ensure it is visible
         lda     selected_window_id
-        beq     :+
+    IF_NOT_ZERO
         lda     selected_icon_list
         jsr     ScrollIconIntoView
-:
+    END_IF
 
         ITK_CALL IconTK::DrawIcon, selected_icon_list
 
@@ -4388,9 +4416,10 @@ ret:    rts
 
         ldx     cached_window_entry_count
         dex
-:       copy8   cached_window_entry_list,x, selected_icon_list,x
+    DO
+        copy8   cached_window_entry_list,x, selected_icon_list,x
         dex
-        bpl     :-
+    WHILE_POS
 
         copy8   cached_window_entry_count, selected_icon_count
         copy8   active_window_id, selected_window_id
@@ -4399,15 +4428,15 @@ ret:    rts
         ;; Mark all icons as highlighted
 
         ldx     #0
-:       txa
+    DO
+        txa
         pha
         copy8   selected_icon_list,x, icon_param
         ITK_CALL IconTK::HighlightIcon, icon_param
         pla
         tax
         inx
-        cpx     selected_icon_count
-        bne     :-
+    WHILE_X_NE  selected_icon_count
 
         ;; --------------------------------------------------
         ;; Repaint the icons
@@ -4474,13 +4503,14 @@ finish: rts
         ;; ID is 1-based, table is 0-based, so don't need to start
         ;; with an increment
         ldx     active_window_id
-@loop:  cpx     #kMaxDeskTopWindows
-        bne     :+
+loop:
+    IF_X_EQ     #kMaxDeskTopWindows
         ldx     #0
-:       lda     window_to_dir_icon_table,x
+    END_IF
+        lda     window_to_dir_icon_table,x
         bne     found           ; not `kWindowToDirIconFree`
         inx
-        bne     @loop           ; always
+        bne     loop            ; always
 
         ;; --------------------------------------------------
         ;; Search downwards through window-icon map to find next.
@@ -4488,11 +4518,14 @@ finish: rts
 reverse:
         ldx     active_window_id
         dex
-@loop:  dex
-        bpl     :+
+    DO
+        dex
+      IF_NEG
         ldx     #kMaxDeskTopWindows-1
-:       lda     window_to_dir_icon_table,x
-        beq     @loop           ; is `kWindowToDirIconFree`
+      END_IF
+        lda     window_to_dir_icon_table,x
+    WHILE_ZERO                  ; is `kWindowToDirIconFree`
+
         FALL_THROUGH_TO found
 
 found:  inx
@@ -4528,26 +4561,25 @@ loop:   jsr     GetEvent        ; no need to synthesize events
         cmp     #CHAR_RETURN
         beq     done
         cmp     #CHAR_ESCAPE
-        bne     :+
-
+    IF_EQ
 done:   rts
+    END_IF
 
-:
-        cmp     #CHAR_RIGHT
-        bne     :+
+    IF_A_EQ     #CHAR_RIGHT
         jsr     ScrollRight
         jmp     loop
-:
-        cmp     #CHAR_LEFT
-        bne     :+
+    END_IF
+
+    IF_A_EQ     #CHAR_LEFT
         jsr     ScrollLeft
         jmp     loop
-:
-        cmp     #CHAR_DOWN
-        bne     :+
+    END_IF
+
+    IF_A_EQ     #CHAR_DOWN
         jsr     ScrollDown
         jmp     loop
-:
+    END_IF
+
         cmp     #CHAR_UP
         bne     loop
         jsr     ScrollUp
@@ -4998,7 +5030,7 @@ next:   dex
         ldy     DEVCNT
         sty     devlst_index
         devlst_index := *+1
-@loop:  ldy     #SELF_MODIFIED_BYTE
+loop:   ldy     #SELF_MODIFIED_BYTE
         inc     cached_window_entry_count
         inc     icon_count
         lda     #0
@@ -5006,12 +5038,12 @@ next:   dex
         lda     DEVLST,y
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
         jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
-        cmp     #ERR_DUPLICATE_VOLUME
-        bne     :+
+    IF_A_EQ     #ERR_DUPLICATE_VOLUME
         lda     #kErrDuplicateVolName
         sta     pending_alert
-:       dec     devlst_index
-        bpl     @loop
+    END_IF
+        dec     devlst_index
+        bpl     loop
 .endscope
 
         ;; --------------------------------------------------
@@ -5023,9 +5055,10 @@ loop:   cpx     cached_window_entry_count
 
         ;; finish up
         lda     pending_alert
-        beq     :+
+    IF_NOT_ZERO
         jsr     ShowAlert
-:       jmp     StoreWindowEntryTable
+    END_IF
+        jmp     StoreWindowEntryTable
 
 
 cont:   txa
@@ -5150,16 +5183,16 @@ not_in_map:
 
         lda     device_to_icon_map,y
         sta     icon_param
-        beq     :+
-
+    IF_NOT_ZERO
         jsr     RemoveIconFromWindow
         dec     icon_count
         lda     icon_param
         jsr     FreeDesktopIconPosition
         ITK_CALL IconTK::EraseIcon, icon_param
         ITK_CALL IconTK::FreeIcon, icon_param
+    END_IF
 
-:       lda     cached_window_entry_count
+        lda     cached_window_entry_count
         sta     previous_icon_count
         inc     cached_window_entry_count
         inc     icon_count
@@ -5207,16 +5240,16 @@ add_icon:
         lda     cached_window_entry_count
         previous_icon_count := *+1
         cmp     #SELF_MODIFIED_BYTE
-        beq     :+
-
+    IF_NE
         ;; If a new icon was added, more work is needed.
         ldx     cached_window_entry_count
         dex
         lda     cached_window_entry_list,x
         sta     icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
+    END_IF
 
-:       jmp     StoreWindowEntryTable
+        jmp     StoreWindowEntryTable
 
 ;;; 0 = command, $80 = format/erase, $C0 = open/eject/rename
 check_drive_flags:
@@ -5318,17 +5351,18 @@ arbitrary_target:
         lda     stashed_name
         clc
         adc     #.strlen(kAliasSuffix)
-        cmp     #kMaxFilenameLength+1
-        bcc     :+
+    IF_A_GE     #kMaxFilenameLength+1
         lda     #kMaxFilenameLength
-:       tax
+    END_IF
+        tax
         sta     stashed_name
         ldy     #.strlen(kAliasSuffix)-1
-:       lda     suffix,y
+    DO
+        lda     suffix,y
         sta     stashed_name,x
         dex
         dey
-        bpl     :-
+    WHILE_POS
 
         ;; Repeat to find a free name
 retry:  param_call CopyToDstPath, path_buf4
@@ -5523,10 +5557,11 @@ alert:  jmp     ShowAlert
         pla
 
         bit     exception_flag
-        bmi     :+
+    IF_NC
         return  #0
+    END_IF
 
-:       inc     num_open_windows ; was decremented on failure
+        inc     num_open_windows ; was decremented on failure
         jsr     CloseSpecifiedWindow
         return  #$FF
 
@@ -5625,23 +5660,23 @@ END_PARAM_BLOCK
 
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     event_params::coords,x
+    DO
+        lda     event_params::coords,x
         sta     tmp_rect::topleft,x
         sta     tmp_rect::bottomright,x
         sta     initial_pos,x
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; Is this actually a drag?
         jsr     PeekEvent
         lda     event_params::kind
-        cmp     #MGTK::EventKind::drag
-        beq     :+              ; yes
+    IF_A_NE     #MGTK::EventKind::drag
         ;; No, just a click; optionally clear selection
         jsr     ExtendSelectionModifierDown
         jpl     ClearSelection  ; don't clear if mis-clicking
         rts
-:
+    END_IF
 
         ;; --------------------------------------------------
         ;; Prep selection
@@ -5734,31 +5769,32 @@ update: lda     window_id
     END_IF
 
         ldx     #2              ; loop over dimensions
-dloop:
+    DO
         sub16   event_params::coords,x, last_pos,x, delta,x
 
         lda     delta+1,x
-    IF_NEG
+      IF_NEG
         lda     delta,x        ; negate
         eor     #$FF
         sta     delta,x
         inc     delta,x
-    END_IF
+      END_IF
 
         ;; TODO: Experiment with making this lower.
         kDragBoundThreshold = 5
 
         lda     delta,x
         cmp     #kDragBoundThreshold
-        bcs     :+
+        bcs     beyond
 
         dex                     ; next dimension
         dex
-        bpl     dloop
+    WHILE_POS
         jmp     event_loop
 
         ;; Beyond threshold; erase rect
-:       jsr     FrameTmpRect
+beyond:
+        jsr     FrameTmpRect
 
         COPY_STRUCT MGTK::Point, event_params::coords, last_pos
 
