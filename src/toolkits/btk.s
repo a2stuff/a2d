@@ -307,11 +307,12 @@ END_PARAM_BLOCK
         stax    dt_params::textptr
         ldy     #0
         lda     (dt_params::textptr),y
-        beq     :+
+    IF_NOT_ZERO
         sta     dt_params::textlen
         inc16   dt_params::textptr
         MGTK_CALL MGTK::DrawText, dt_params
-:       rts
+    END_IF
+        rts
 .endproc ; _DrawString
 
 ;;; Inputs: `a_shortcut` points at string
@@ -340,11 +341,12 @@ END_PARAM_BLOCK
 
         ldy     #0
         lda     (tw_params::textptr),y
-        bne     :+
+    IF_ZERO
         lda     #0
         tax
         rts
-:
+    END_IF
+
         sta     tw_params::textlen
         inc16   tw_params::textptr
         MGTK_CALL MGTK::TextWidth, tw_params
@@ -419,9 +421,10 @@ toggle: jsr     _Invert
         jmp     loop
 
 exit:   lda     down_flag       ; was depressed?
-        bne     :+
+    IF_ZERO
         jsr     _Invert
-:       lda     down_flag
+    END_IF
+        lda     down_flag
         rts
 .endproc ; TrackImpl
 
@@ -630,11 +633,12 @@ unchecked_cb_bitmap:
         ;; Write rect back to button record
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
-:       lda     rect,x
+    DO
+        lda     rect,x
         sta     (params_addr),y
         dey
         dex
-        bpl     :-
+    WHILE_POS
         rts
 .endproc ; _WriteRectBackToButtonRecord
 

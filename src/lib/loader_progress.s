@@ -37,17 +37,18 @@
 
         ;; Draw progress track (alternating checkerboards)
         ldx     #kProgressWidth
-:       lda     #'V'|$80
+    DO
+        lda     #'V'|$80
         jsr     COUT
         dex
-        beq     :+
+        BREAK_IF_ZERO
         lda     #'W'|$80
         jsr     COUT
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; Disable MouseText
-:       lda     #$18|$80
+        lda     #$18|$80
         jsr     COUT
         lda     #$0E|$80
         jsr     COUT
@@ -69,9 +70,10 @@ done:   rts
 
         tax
         lda     #' '            ; inverse
-:       jsr     COUT
+    DO
+        jsr     COUT
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         rts
 .endproc ; UpdateProgress

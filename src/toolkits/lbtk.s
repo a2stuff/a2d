@@ -160,10 +160,11 @@ UNSUPPRESS_SHADOW_WARNING
 
         ;; Save ZP
         ldx     #AS_BYTE(-kBytesToSave)
-:       lda     zp_start + kBytesToSave,x
+    DO
+        lda     zp_start + kBytesToSave,x
         pha
         inx
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; Point `params_addr` at the call site
         params_lo := *+1
@@ -190,15 +191,17 @@ UNSUPPRESS_SHADOW_WARNING
 
         ;; Copy param data to `command_data`
         ldy     #kMaxCommandDataSize-1
-:       copy8   (params_addr),y, command_data,y
+     DO
+        copy8   (params_addr),y, command_data,y
         dey
-        bpl     :-
+     WHILE_POS
 
         ;; Cache static copy of the record in `lbr_copy`, for convenience
         ldy     #.sizeof(LBTK::ListBoxRecord)-1
-:       copy8   (a_record),y, lbr_copy,y
+     DO
+        copy8   (a_record),y, lbr_copy,y
         dey
-        bpl     :-
+     WHILE_POS
 
         ;; Invoke the command
         dispatch := *+1
@@ -207,10 +210,11 @@ UNSUPPRESS_SHADOW_WARNING
 
         ;; Restore ZP
         ldx     #kBytesToSave-1
-:       pla
+    DO
+        pla
         sta     zp_start,x
         dex
-        bpl     :-
+    WHILE_POS
 
         tya                     ; A = result
         rts
@@ -259,9 +263,10 @@ a_record        .addr
 
         jsr     _EnableScrollbar
         lda     lbr_copy + LBTK::ListBoxRecord::selected_index
-        bpl     :+
+    IF_NS
         lda     #0
-:       ora     #$80            ; high bit = force draw
+    END_IF
+        ora     #$80            ; high bit = force draw
         jmp     _ScrollIntoView
 .endproc ; InitImpl
 
@@ -340,9 +345,10 @@ coords          .tag MGTK::Point
         lda     (winfo_ptr),y
         ASSERT_EQUALS MGTK::Scroll::option_active, %00000001
         ror                     ; C = "active?"
-        bcs     :+
+    IF_CC
 ret:    rts
-:
+    END_IF
+
         lda     findcontrol_params::which_part
 
         ;; --------------------------------------------------
@@ -386,12 +392,12 @@ ret:    rts
 repeat:
         ldy     #MGTK::Winfo::vthumbpos
         lda     (winfo_ptr),y
-        cmp     lbr_copy + LBTK::ListBoxRecord::num_rows
-        bcs     :+
+    IF_A_LT     lbr_copy + LBTK::ListBoxRecord::num_rows
         lda     #0
         SKIP_NEXT_2_BYTE_INSTRUCTION
         ASSERT_NOT_EQUALS lbr_copy + LBTK::ListBoxRecord::num_rows, $C0, "bad BIT skip"
-:       sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
+    END_IF
+        sbc     lbr_copy + LBTK::ListBoxRecord::num_rows
         jsr     update
         lda     #MGTK::Part::page_up
         jsr     _CheckControlRepeat
@@ -481,9 +487,10 @@ modifiers       .byte
         END_PARAM_BLOCK
 
         lda     lbr_copy + LBTK::ListBoxRecord::num_items
-        bne     :+
+    IF_ZERO
 ret:    rts
-:
+    END_IF
+
         lda     params::key
         ldx     params::modifiers
 
@@ -583,9 +590,10 @@ new_selection   .byte
         pla                     ; A = new selection
         sta     (a_record),y
         sta     lbr_copy + LBTK::ListBoxRecord::selected_index ; keep copy in sync
-        bmi     :+
+    IF_NC
         jmp     _ScrollIntoView
-:       rts
+    END_IF
+        rts
 .endproc ; _SetSelection
 
 ;;; ============================================================
@@ -729,11 +737,12 @@ update:
 .proc _SetPort
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     (winfo_ptr),y
+    DO
+        lda     (winfo_ptr),y
         sta     tmp_rect,x
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; Set y2 to height
         sub16   tmp_rect+MGTK::Rect::y2, tmp_rect+MGTK::Rect::y1, tmp_rect+MGTK::Rect::y2
@@ -750,11 +759,12 @@ update:
 
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
-:       lda     tmp_rect,x
+    DO
+        lda     tmp_rect,x
         sta     (winfo_ptr),y
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         add16   winfo_ptr, #MGTK::Winfo::port, setport_addr
         MGTK_CALL MGTK::SetPort, SELF_MODIFIED, setport_addr
@@ -792,7 +802,7 @@ update:
         ldy     #MGTK::Winfo::port+MGTK::GrafPort::maprect+MGTK::Rect::y1
         add16in (winfo_ptr),y, #kListItemTextOffsetY, tmp_point+MGTK::Point::ycoord
 
-loop:
+    DO
         MGTK_CALL MGTK::MoveTo, tmp_point
 
         index := *+1
@@ -803,17 +813,15 @@ loop:
         add16_8 tmp_point+MGTK::Point::ycoord, #kListItemHeight
 
         lda     index
-    IF_A_EQ     lbr_copy + LBTK::ListBoxRecord::selected_index
+      IF_A_EQ   lbr_copy + LBTK::ListBoxRecord::selected_index
         jsr     _HighlightIndex
-    END_IF
+      END_IF
 
         inc     index
         lda     index
-        cmp     lbr_copy + LBTK::ListBoxRecord::num_items
-        beq     :+
+        BREAK_IF_A_EQ lbr_copy + LBTK::ListBoxRecord::num_items
         dec     rows
-        bne     loop
-:
+    WHILE_NOT_ZERO
 
 finish: MGTK_CALL MGTK::ShowCursor
         rts

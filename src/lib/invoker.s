@@ -39,11 +39,12 @@
         sta     jmp_addr+1
         sta     read_params__data_buffer+1
 
-        cmp     #$0C            ; If loading at page < $0C00
-        bcs     :+
+      IF_A_LT   #$0C            ; If loading at page < $0C00
         lda     #$BB            ; ... use a high address buffer ($BB00)
         SKIP_NEXT_2_BYTE_INSTRUCTION
-:       lda     #$08            ; ... otherwise a low address buffer ($0800)
+      END_IF
+        lda     #$08            ; ... otherwise a low address buffer ($0800)
+
         sta     open_params__io_buffer+1
         jmp     load_target
     END_IF
@@ -100,10 +101,11 @@ load_target:
         MLI_CALL SET_PREFIX, set_prefix_params
         bcs     exit
         ldy     INVOKER_FILENAME
-:       lda     INVOKER_FILENAME,y
+      DO
+        lda     INVOKER_FILENAME,y
         sta     PRODOS_INTERPRETER_BUF,y         ; ProDOS interpreter protocol
         dey
-        bpl     :-
+      WHILE_POS
 
         ;; ProDOS 2.4's Bitsy Bye populates $380 with the path to the
         ;; interpreter, so set both for good measure.
@@ -111,11 +113,12 @@ load_target:
 
         ;; Populate path to interpreter now that memory is free
         ldx     INVOKER_INTERPRETER
-:       lda     INVOKER_INTERPRETER,x
+     DO
+        lda    INVOKER_INTERPRETER,x
         sta     PRODOS_SYS_PATH,x
         sta     BITSY_SYS_PATH,x
         dex
-        bpl     :-
+     WHILE_POS
 
         ;; When launching BASIS.SYSTEM, ProDOS 2.4's Bitsy Bye populates
         ;; $280 with the path containing the target file.
@@ -123,10 +126,11 @@ load_target:
         bit     INVOKER_BITSY_COMPAT
       IF_NS
         ldy     INVOKER_PREFIX
-:       lda     INVOKER_PREFIX,y
+       DO
+        lda     INVOKER_PREFIX,y
         sta     BITSY_DIR_PATH,y
         dey
-        bpl     :-
+       WHILE_POS
       END_IF
 
     END_IF

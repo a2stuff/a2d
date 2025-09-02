@@ -370,7 +370,7 @@ END_PARAM_BLOCK
         ;; Populate `icon_ptrs_low/high` table
 
         ldx     #1
-:
+    DO
         ;; Populate table entry
         lda     table_ptr
         sta     icon_ptrs_low,x
@@ -380,19 +380,19 @@ END_PARAM_BLOCK
         ;; Next entry
         add16_8 table_ptr, #.sizeof(IconEntry)
         inx
-        cpx     #kMaxIconCount+1 ; allow up to the maximum
-        bne     :-
+    WHILE_X_NE  #kMaxIconCount+1 ; allow up to the maximum
 
         ;; --------------------------------------------------
         ;; MaxDraggableItems = BufferSize / kIconPolySize
 
         ldy     #0
-:       sub16_8 bufsize, #kIconPolySize
+    DO
+        sub16_8 bufsize, #kIconPolySize
         bit     bufsize+1
-        bmi     :+
+        BREAK_IF_NS
         iny
-        bne     :-              ; always
-:       sty     max_draggable_icons
+    WHILE_NOT_ZERO              ; always
+        sty     max_draggable_icons
 
         rts
 
@@ -491,9 +491,9 @@ END_PARAM_BLOCK
 .ifdef DEBUG
         ;; Is it in `icon_list`?
         jsr     IsInIconList
-        beq     :+
+    IF_NOT_ZERO
         return  #1              ; Not found
-:
+    END_IF
 .endif ; DEBUG
 
         jsr     FreeIconCommon ; A = icon id
@@ -749,9 +749,9 @@ is_drag:
         ;; Also check if Trash, and set flag appropriately
         jsr     GetIconFlags
         and     #kIconEntryFlagsNotDropSource
-        beq     :+
+    IF_NOT_ZERO
         copy8   #$80, trash_flag
-:
+    END_IF
         rts
         END_OF_LAMBDA
 
@@ -780,10 +780,11 @@ is_drag:
 
         ;; Copy poly into place
         ldy     #kIconPolySize-1
-:       lda     poly,y
+    DO
+        lda     poly,y
         sta     (poly_ptr),y
         dey
-        bpl     :-
+    WHILE_POS
 
         add16_8 poly_ptr, #kIconPolySize
         rts
@@ -808,19 +809,20 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
 
         ;; Escape key?
         lda     KBD             ; MGTK doesn't process keys during drag
-        cmp     #CHAR_ESCAPE | $80
-        bne     :+
+    IF_A_EQ     #CHAR_ESCAPE | $80
         bit     KBDSTRB         ; consume the keypress
         copy8   #MGTK::EventKind::key_down, peekevent_params::kind
         jmp     not_drag
-:
+    END_IF
+
         ;; Coords changed?
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     findwindow_params,x
+    DO
+        lda     findwindow_params,x
         cmp     last_coords,x
         bne     moved
         dex
-        bpl     :-
+    WHILE_POS
         bmi     peek            ; always
 
         ;; --------------------------------------------------
@@ -840,10 +842,11 @@ moved:
         ;; No longer over the highlighted icon - unhighlight it
         pha
         lda     highlight_icon_id
-        beq     :+
+    IF_NOT_ZERO
         jsr     _UnhighlightIcon
         copy8   #0, highlight_icon_id
-:
+    END_IF
+
         ;; Is the new icon valid?
         pla
         beq     update_poly
@@ -852,10 +855,11 @@ moved:
 update_poly:
         ;; Update poly coordinates
         ldx     #2              ; loop over dimensions
-:       sub16   findwindow_params,x, last_coords,x, poly_coords,x
+    DO
+        sub16   findwindow_params,x, last_coords,x, poly_coords,x
         dex                     ; next dimension
         dex
-        bpl     :-
+    WHILE_POS
         COPY_STRUCT MGTK::Point, findwindow_params, last_coords
 
         copy16  polybuf_addr, poly_ptr
@@ -868,7 +872,7 @@ vloop:  add16in (poly_ptr),y, poly_dx, (poly_ptr),y
         bne     vloop
         ldy     #1              ; MGTK Polygon "not last" flag
         lda     (poly_ptr),y
-        beq     :+
+    IF_NOT_ZERO
         lda     poly_ptr
         clc
         adc     #kIconPolySize
@@ -876,7 +880,7 @@ vloop:  add16in (poly_ptr),y, poly_dx, (poly_ptr),y
         bcc     ploop
         inc     poly_ptr+1
         bcs     ploop
-:
+    END_IF
         jsr     _XDrawOutline
         jmp     peek
 
@@ -886,9 +890,10 @@ not_drag:
         jsr     _XDrawOutline
 
         lda     highlight_icon_id
-        beq     :+
+    IF_NOT_ZERO
         jsr     _UnhighlightIcon
-:
+    END_IF
+
         ;; Drag ended by a keystroke?
         lda     peekevent_params::kind
         cmp     #MGTK::EventKind::key_down ; cancel?
@@ -958,10 +963,11 @@ move_ok:
         ;; Update icons with new positions (based on delta)
 
         ldx     #2              ; loop over dimensions
-:       sub16   findwindow_params,x, initial_coords,x, poly_coords,x
+    DO
+        sub16   findwindow_params,x, initial_coords,x, poly_coords,x
         dex                     ; next dimension
         dex
-        bpl     :-
+    WHILE_POS
 
         INVOKE_WITH_LAMBDA _IterateHighlightedIcons
         jsr     SetIconPtr
@@ -1234,7 +1240,7 @@ start:
         ;; --------------------------------------------------
         ;; Bitmap
         ldx     #2              ; loop over dimensions
-:
+    DO
         ;; top/left of bitmap > bottom/right of rect --> outside
         scmp16  params::rect+MGTK::Rect::bottomright,x, bitmap_rect+MGTK::Rect::topleft,x
         bmi     :+
@@ -1245,14 +1251,14 @@ start:
 
         dex                     ; next dimension
         dex
-        bpl     :-
+    WHILE_POS
         bmi     inside          ; always
 :
         ;; --------------------------------------------------
         ;; Label
 
         ldx     #2              ; loop over dimensions
-:
+    DO
         ;; top/left of text > bottom/right of rect --> outside
         scmp16  params::rect+MGTK::Rect::bottomright,x, label_rect+MGTK::Rect::topleft,x
         bmi     outside
@@ -1263,7 +1269,7 @@ start:
 
         dex                     ; next dimension
         dex
-        bpl     :-
+    WHILE_POS
 
 inside:
         return  #1
@@ -1290,11 +1296,12 @@ END_PARAM_BLOCK
         ;; Copy rect into out params
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #(params::rect - params) + .sizeof(MGTK::Rect)-1
-:       lda     bounding_rect,x
+    DO
+        lda     bounding_rect,x
         sta     (params_addr),y
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         rts
 .endproc ; GetIconBoundsImpl
@@ -1315,11 +1322,12 @@ END_PARAM_BLOCK
         ;; Copy rect into out params
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #(params::rect - params) + .sizeof(MGTK::Rect)-1
-:       lda     rename_rect,x
+    DO
+        lda     rename_rect,x
         sta     (params_addr),y
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         rts
 .endproc ; GetRenameRectImpl
@@ -1340,11 +1348,12 @@ END_PARAM_BLOCK
         ;; Copy rect into out params
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #(params::rect - params) + .sizeof(MGTK::Rect)-1
-:       lda     bitmap_rect,x
+    DO
+        lda     bitmap_rect,x
         sta     (params_addr),y
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         rts
 .endproc ; GetBitmapRectImpl
@@ -1431,11 +1440,12 @@ END_PARAM_BLOCK
         ;; copy icon definition bits
         jsr     GetIconResource ; sets `res_ptr` based on `icon_ptr`
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point) - 1
-:       lda     (res_ptr),y
+    DO
+        lda     (res_ptr),y
         sta     icon_paintbits_params::mapbits,y
         sta     mask_paintbits_params::mapbits,y
         dey
-        bpl     :-
+    WHILE_POS
 
         ;; Icon definition is followed by pointer to mask address.
         ldy     #.sizeof(MGTK::MapInfo) - .sizeof(MGTK::Point)
@@ -1456,15 +1466,16 @@ END_PARAM_BLOCK
     END_IF
 
         ;; Paint icon iteratively, handling overlapping windows
-:       jsr     CalcWindowIntersections
-        bcs     ret             ; nothing remaining to draw
+    DO
+        jsr     CalcWindowIntersections
+        BREAK_IF_CS             ; nothing remaining to draw
 
         jsr     OffsetPortAndIcon
         jsr     _DoPaint
         jsr     OffsetPortAndIcon
 
         bit     more_drawing_needed_flag
-        bmi     :-
+    WHILE_NS
 
 ret:    rts
 
@@ -1487,9 +1498,10 @@ ret:    rts
         lda     #MGTK::textbg_white
         ASSERT_EQUALS ::kIconEntryStateHighlighted, $40
         bit     state           ; highlighted?
-        bvc     :+
+    IF_VS
         lda     #MGTK::textbg_black
-:       sta     settextbg_params
+    END_IF
+        sta     settextbg_params
         MGTK_CALL MGTK::SetTextBG, settextbg_params
 
         MGTK_CALL MGTK::HideCursor
@@ -1597,11 +1609,12 @@ kIconLabelGapV = 2
         ;; Bitmap top/left - copy from icon entry
         ldy     #IconEntry::iconx+3
         ldx     #3
-:       lda     (icon_ptr),y
+    DO
+        lda     (icon_ptr),y
         sta     bitmap_rect+MGTK::Rect::topleft,x
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; Bitmap bottom/right
         ldy     #IconResource::maprect + MGTK::Rect::x2
@@ -1714,7 +1727,8 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
         ;; Start off making all (except v6) the same
         ldx     #.sizeof(MGTK::Point)-1
-:       lda     bitmap_rect+MGTK::Rect::topleft,x
+    DO
+        lda     bitmap_rect+MGTK::Rect::topleft,x
         sta     poly::v0,x
         sta     poly::v1,x
         sta     poly::v2,x
@@ -1723,7 +1737,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         sta     poly::v5,x
         sta     poly::v7,x
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; Then tweak remaining vertices on right/bottom
         ldax    label_rect+MGTK::Rect::x2
@@ -1795,11 +1809,12 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
 
         ldy     #.sizeof(IconEntry)
         ldx     #.sizeof(IconEntry) - IconEntry::name
-:       lda     (icon_ptr),y
+    DO
+        lda     (icon_ptr),y
         sta     dest + 1,x
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         ldy     dest + 1
         iny
@@ -1829,11 +1844,12 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::GetPort, port_ptr
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #MGTK::MapInfo::maprect + .sizeof(MGTK::Rect)-1
-:       lda     (port_ptr),y
+    DO
+        lda     (port_ptr),y
         sta     icon_in_rect_params::rect,x
         dey
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; Loop over all icons
         ldx     #AS_BYTE(-1)
@@ -1918,12 +1934,12 @@ END_PARAM_BLOCK
     IF_NC
         MGTK_CALL MGTK::PaintPoly, poly
     ELSE
-:       jsr     CalcWindowIntersections
-        bcs     :+              ; nothing remaining to draw
+      DO
+        jsr     CalcWindowIntersections
+        BREAK_IF_CS             ; nothing remaining to draw
         MGTK_CALL MGTK::PaintPoly, poly
         bit     more_drawing_needed_flag
-        bmi     :-
-:
+      WHILE_NS
     END_IF
         FALL_THROUGH_TO _RedrawIconsAfterErase
 
@@ -1935,11 +1951,9 @@ END_PARAM_BLOCK
 
         ldx     num_icons
 loop:   dex                     ; any icons to draw?
-        bpl     :+
+        RTS_IF_NEG
 
-        rts
-
-:       txa
+        txa
         pha
         lda     icon_list,x
         cmp     erase_icon_id
@@ -2048,7 +2062,7 @@ reserved:       .byte   0
         maprect := icon_grafport+MGTK::GrafPort::maprect
 
         ldx     #2              ; loop over dimensions
-:
+    DO
         ;; Stash, needed to offset port when drawing to get correct patterns
         sub16   maprect+MGTK::Rect::topleft,x, viewloc,x, clip_coords,x
 
@@ -2060,7 +2074,7 @@ reserved:       .byte   0
 
         dex                     ; next dimension
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; For window's items/used/free space bar
         add16_8 portbits::maprect+MGTK::Rect::y1, header_height
@@ -2077,16 +2091,16 @@ reserved:       .byte   0
         ;; Intersect `portbits::maprect` with `bounding_rect`
 
         ldx     #2              ; loop over dimensions
-:
+    DO
         scmp16  portbits::maprect::topleft,x, bounding_rect+MGTK::Rect::topleft,x
-    IF_NEG
+      IF_NEG
         copy16  bounding_rect+MGTK::Rect::topleft,x, portbits::maprect::topleft,x
-    END_IF
+      END_IF
 
         scmp16  bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
-    IF_NEG
+      IF_NEG
         copy16  bounding_rect+MGTK::Rect::bottomright,x, portbits::maprect::bottomright,x
-    END_IF
+      END_IF
 
         ;; Is there anything left?
         scmp16  portbits::maprect::bottomright,x, portbits::maprect::topleft,x
@@ -2094,7 +2108,7 @@ reserved:       .byte   0
 
         dex                     ; next dimension
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; Duplicate structs needed for clipping
         COPY_BLOCK portbits::maprect, clip_bounds
@@ -2251,12 +2265,12 @@ do_pt:  lda     pt_num
 
         ;; Look up window at Nth point
         ldy     #0
-:       lda     pt1::xcoord,x
+    DO
+        lda     pt1::xcoord,x
         sta     cwi_findwindow_params,y
         iny
         inx
-        cpy     #4
-        bne     :-
+    WHILE_Y_NE  #4
 
         inc     pt_num
         MGTK_CALL MGTK::FindWindow, cwi_findwindow_params
@@ -2393,10 +2407,11 @@ CalcWindowIntersections := CalcWindowIntersectionsImpl::start
 
         ;; Invert for the next call
         ldx     #2              ; loop over dimensions
-:       sub16   #0, clip_coords,x, clip_coords,x
+    DO
+        sub16   #0, clip_coords,x, clip_coords,x
         dex                     ; next dimension
         dex
-        bpl     :-
+    WHILE_POS
         rts
 .endproc ; OffsetPortAndIcon
 
@@ -2410,11 +2425,12 @@ CalcWindowIntersections := CalcWindowIntersectionsImpl::start
 .proc AllocateIcon
         ;; Search for first byte with a set (available) bit
         ldx     #0
-loop:   lda     free_icon_map,x
-        bne     :+
+    DO
+        lda     free_icon_map,x
+        BREAK_IF_NOT_ZERO
         inx
-        bne     loop            ; always
-:
+    WHILE_NOT_ZERO              ; always
+
         ;; X has byte offset - turn into index
         pha                     ; A = table byte
         txa                     ; X = offset
@@ -2426,9 +2442,10 @@ loop:   lda     free_icon_map,x
         ;; Add in the bit offset
         pla                     ; A = table byte
         dex
-:       inx
+    DO
+        inx
         ror
-        bcc     :-              ; clear = in use
+    WHILE_CC                    ; clear = in use
         txa
 
         ;; Mark it used

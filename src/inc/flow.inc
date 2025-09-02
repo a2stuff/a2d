@@ -6,8 +6,17 @@
 ;;; throw-away labels.
 
 ;;; * IF_* / ELSE_IF_* / ELSE / END_IF
-;;; * DO / WHILE_*
+;;; * DO / BREAK_IF_* / WHILE_*
 ;;; * RTS_IF_*
+;;;
+;;; Conditions (the "*" above) take the form of flag tests or
+;;; register comparisons (with an argument):
+;;;
+;;; Flag tests: ZS ZC CS CC VS VC NS NC
+;;; (Aliases: EQ, NE, ZERO, NOT_ZERO, LT, GE, POS, NEG, PLUS, MINUS)
+;;;
+;;; Comparisons: A_EQ, A_NE, A_LT, A_GE; ditto for X and Y
+
 
 ;;; ============================================================
 ;;; Flow control infrastructure
@@ -89,6 +98,7 @@
 ;;;     IF_A_NE / ELSE_IF_A_NE
 ;;;     IF_A_LT / ELSE_IF_A_LT
 ;;;     IF_A_GE / ELSE_IF_A_GE
+;;; ... and ditto for *_X_* and *_Y_*
 
 .macro _IF_BOP_ branchOp
         __INC_IDENT__ __flow_depth__
@@ -98,16 +108,16 @@
         branchOp __flow_ident_block__
 .endmacro
 
-.macro _IF_COP_BOP_ compareOp, branchOp, arg1, arg2
+.macro _IF_COP_BOP_ compareOp, branchOp, arg, reg
         __INC_IDENT__ __flow_depth__
         __INC_IDENT__ __flow_count_at_depth__
         __INC_IDENT__ __flow_ident_counter__
         __FLOW_LOG__ "if"
-    .ifblank arg2
-        compareOp arg1
+    .ifblank reg
+        compareOp arg
         branchOp __flow_ident_block__
     .else
-        compareOp arg1,arg2
+        compareOp arg,reg
         branchOp __flow_ident_block__
     .endif
 .endmacro
@@ -120,16 +130,16 @@
         branchOp __flow_ident_block__
 .endmacro
 
-.macro _ELSE_IF_COP_BOP_ compareOp, branchOp, arg1, arg2
+.macro _ELSE_IF_COP_BOP_ compareOp, branchOp, arg, reg
         __FLOW_LOG__ "else_if"
         jmp     __flow_ident__ {"endif"}
         __flow_ident_block__ := *
         __INC_IDENT__ __flow_ident_counter__
-    .ifblank arg2
-        compareOp arg1
+    .ifblank reg
+        compareOp arg
         branchOp __flow_ident_block__
     .else
-        compareOp arg1,arg2
+        compareOp arg,reg
         branchOp __flow_ident_block__
     .endif
 .endmacro
@@ -148,9 +158,10 @@
     .endif
 
         __FLOW_LOG__ "endif"
-        __flow_ident__ {"endif"} := *
 
+        __flow_ident__ {"endif"} := *
         .refto __flow_ident__ {"endif"}
+
         __DEC_IDENT__ __flow_depth__
 .endmacro
 
@@ -232,15 +243,23 @@
 .define ELSE_IF_Y_GE _ELSE_IF_COP_BOP cpy,bcc,
 
 ;;; ============================================================
-;;; DO / WHILE_*
+;;; DO / BREAK_IF_* / WHILE_*
 ;;; ============================================================
 
 ;;; Usage:
 ;;;     ldx #17
 ;;;     DO
 ;;;     ...
+;;;     BREAK_IF_A_EQ #89
+;;;     ...
+;;;     BREAK_IF_VS
+;;;     ...
 ;;;     dex
 ;;;     WHILE_POS
+;;;
+;;;     DO
+;;;     ...
+;;;     WHILE_A_NE #'/'
 ;;;
 ;;; Macros:
 ;;;     WHILE_ZS           aliases: WHILE_EQ, WHILE_ZERO
@@ -251,6 +270,27 @@
 ;;;     WHILE_VS
 ;;;     WHILE_NC           aliases: WHILE_POS, WHILE_PLUS
 ;;;     WHILE_NS           aliases: WHILE_NEG, WHILE_MINUS
+;;;
+;;;     WHILE_A_EQ
+;;;     WHILE_A_NE
+;;;     WHILE_A_LT
+;;;     WHILE_A_GE
+;;; ... and ditto for *_X_* and *_Y_*
+;;;
+;;;     BREAK_IF_ZS        aliases: BREAK_IF_EQ, BREAK_IF_ZERO
+;;;     BREAK_IF_ZC        aliases: BREAK_IF_NE, BREAK_IF_NOT_ZERO
+;;;     BREAK_IF_CC        aliases: BREAK_IF_LT
+;;;     BREAK_IF_CS        aliases: BREAK_IF_GE
+;;;     BREAK_IF_VC
+;;;     BREAK_IF_VS
+;;;     BREAK_IF_NC        aliases: BREAK_IF_POS, BREAK_IF_PLUS
+;;;     BREAK_IF_NS        aliases: BREAK_IF_NEG, BREAK_IF_MINUS
+;;;
+;;;     BREAK_IF_A_EQ
+;;;     BREAK_IF_A_NE
+;;;     BREAK_IF_A_LT
+;;;     BREAK_IF_A_GE
+;;; ... and ditto for *_X_* and *_Y_*
 
 .macro DO
         __INC_IDENT__ __flow_depth__
@@ -260,9 +300,43 @@
         __flow_ident__ {"do_while"} := *
 .endmacro
 
+.macro _BREAK_IF_BOP_ branchOp
+        __FLOW_LOG__ "else_if"
+        branchOp __flow_ident__ {"break"}
+.endmacro
+
+.macro _BREAK_IF_COP_BOP_ compareOp, branchOp, arg, reg
+        __FLOW_LOG__ "else_if"
+      .ifblank reg
+        compareOp arg
+      .else
+        compareOp arg,reg
+      .endif
+        branchOp __flow_ident__ {"break"}
+.endmacro
+
 .macro _WHILE_BOP_ branchOp
         __FLOW_LOG__ "while"
         branchOp __flow_ident__ {"do_while"}
+
+        __flow_ident__ {"break"} := *
+        .refto __flow_ident__ {"break"}
+
+        __DEC_IDENT__ __flow_depth__
+.endmacro
+
+.macro _WHILE_COP_BOP_ compareOp, branchOp, arg, reg
+        __FLOW_LOG__ "while"
+      .ifblank reg
+        compareOp arg
+      .else
+        compareOp arg,reg
+      .endif
+        branchOp __flow_ident__ {"do_while"}
+
+        __flow_ident__ {"break"} := *
+        .refto __flow_ident__ {"break"}
+
         __DEC_IDENT__ __flow_depth__
 .endmacro
 
@@ -285,6 +359,57 @@
 .define WHILE_MINUS WHILE_NS
 .define WHILE_POS WHILE_NC
 .define WHILE_NEG WHILE_NS
+
+.define WHILE_A_EQ _WHILE_COP_BOP_ cmp,beq,
+.define WHILE_A_NE _WHILE_COP_BOP_ cmp,bne,
+.define WHILE_A_LT _WHILE_COP_BOP_ cmp,bcc,
+.define WHILE_A_GE _WHILE_COP_BOP_ cmp,bcs,
+
+.define WHILE_X_EQ _WHILE_COP_BOP_ cpx,beq,
+.define WHILE_X_NE _WHILE_COP_BOP_ cpx,bne,
+.define WHILE_X_LT _WHILE_COP_BOP_ cpx,bcc,
+.define WHILE_X_GE _WHILE_COP_BOP_ cpx,bcs,
+
+.define WHILE_Y_EQ _WHILE_COP_BOP_ cpy,beq,
+.define WHILE_Y_NE _WHILE_COP_BOP_ cpy,bne,
+.define WHILE_Y_LT _WHILE_COP_BOP_ cpy,bcc,
+.define WHILE_Y_GE _WHILE_COP_BOP_ cpy,bcs,
+
+.define BREAK_IF_ZS _BREAK_IF_BOP_ beq
+.define BREAK_IF_ZC _BREAK_IF_BOP_ bne
+.define BREAK_IF_CS _BREAK_IF_BOP_ bcs
+.define BREAK_IF_CC _BREAK_IF_BOP_ bcc
+.define BREAK_IF_VS _BREAK_IF_BOP_ bvs
+.define BREAK_IF_VC _BREAK_IF_BOP_ bvc
+.define BREAK_IF_NS _BREAK_IF_BOP_ bmi
+.define BREAK_IF_NC _BREAK_IF_BOP_ bpl
+
+.define BREAK_IF_EQ BREAK_IF_ZS
+.define BREAK_IF_NE BREAK_IF_ZC
+.define BREAK_IF_ZERO BREAK_IF_EQ
+.define BREAK_IF_NOT_ZERO BREAK_IF_NE
+.define BREAK_IF_GE BREAK_IF_CS
+.define BREAK_IF_LT BREAK_IF_CC
+.define BREAK_IF_PLUS BREAK_IF_NC
+.define BREAK_IF_MINUS BREAK_IF_NS
+.define BREAK_IF_POS BREAK_IF_NC
+.define BREAK_IF_NEG BREAK_IF_NS
+
+.define BREAK_IF_A_EQ _BREAK_IF_COP_BOP_ cmp,beq,
+.define BREAK_IF_A_NE _BREAK_IF_COP_BOP_ cmp,bne,
+.define BREAK_IF_A_LT _BREAK_IF_COP_BOP_ cmp,bcc,
+.define BREAK_IF_A_GE _BREAK_IF_COP_BOP_ cmp,bcs,
+
+.define BREAK_IF_X_EQ _BREAK_IF_COP_BOP_ cpx,beq,
+.define BREAK_IF_X_NE _BREAK_IF_COP_BOP_ cpx,bne,
+.define BREAK_IF_X_LT _BREAK_IF_COP_BOP_ cpx,bcc,
+.define BREAK_IF_X_GE _BREAK_IF_COP_BOP_ cpx,bcs,
+
+.define BREAK_IF_Y_EQ _BREAK_IF_COP_BOP_ cpy,beq,
+.define BREAK_IF_Y_NE _BREAK_IF_COP_BOP_ cpy,bne,
+.define BREAK_IF_Y_LT _BREAK_IF_COP_BOP_ cpy,bcc,
+.define BREAK_IF_Y_GE _BREAK_IF_COP_BOP_ cpy,bcs,
+
 
 ;;; ============================================================
 ;;; RTS_IF_*

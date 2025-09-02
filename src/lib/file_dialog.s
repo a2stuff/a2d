@@ -205,10 +205,10 @@ out:    jsr     _UnsetCursorIBeam
 .proc _HandleButtonDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params+MGTK::FindWindowParams::which_area
-        cmp     #MGTK::Area::content
-        beq     :+
+    IF_A_NE     #MGTK::Area::content
 ret:    rts
-:
+    END_IF
+
         ;; Dialog window?
         lda     findwindow_params+MGTK::FindWindowParams::window_id
     IF_A_NE     #file_dialog_res::kFilePickerDlgWindowID
@@ -342,18 +342,20 @@ ret:    rts
 .ifdef FD_EXTENDED
 .proc _SetCursorIBeam
         bit     cursor_ibeam_flag
-        bmi     :+
+    IF_NC
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::ibeam
         copy8   #$80, cursor_ibeam_flag
-:       rts
+    END_IF
+        rts
 .endproc ; _SetCursorIBeam
 
 .proc _UnsetCursorIBeam
         bit     cursor_ibeam_flag
-        bpl     :+
+    IF_NS
         jsr     _SetCursorPointer
         copy8   #0, cursor_ibeam_flag
-:       rts
+    END_IF
+        rts
 .endproc ; _UnsetCursorIBeam
 
 cursor_ibeam_flag:              ; high bit set when cursor is I-beam
@@ -382,11 +384,12 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
     END_IF
 
         ldy     path_buf
-:       lda     path_buf,y
+    DO
+        lda     path_buf,y
         ptr := *+1
         sta     SELF_MODIFIED,y
         dey
-        bpl     :-
+    WHILE_POS
 
         bit     selected_index
     IF_NC
@@ -505,19 +508,19 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
 
 .proc _DoClose
         jsr     _IsCloseAllowed
-        bcs     ret
-
+    IF_CC
         ;; Remove last segment
         jsr     _StripPathBufSegment
 
         lda     path_buf
-        bne     :+
+      IF_ZERO
         jsr     _SetRootPath
-:
+      END_IF
 
         jsr     UpdateListFromPath
+    END_IF
 
-ret:    rts
+        rts
 .endproc ; _DoClose
 
 ;;; ============================================================
@@ -532,8 +535,7 @@ ret:    rts
         cmp     #CHAR_UP
         beq     :+
         cmp     #CHAR_DOWN
-:
-    IF_EQ
+:   IF_EQ
         copy8   #0, type_down_buf
         LBTK_CALL LBTK::Key, file_dialog_res::lb_params
         rts
@@ -668,9 +670,10 @@ done:   return  #0
 
 .proc _FindMatch
         lda     num_file_names
-        bne     :+
+    IF_ZERO
         return  #$FF
-:
+    END_IF
+
         copy8   #0, index
 
         index := *+1
@@ -757,36 +760,33 @@ found:  return  index
         lda     #0
         ror                     ; C into high bit
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-        cmp     file_dialog_res::ok_button::state
-        beq     :+              ; no change
-
+    IF_A_NE     file_dialog_res::ok_button::state
         sta     file_dialog_res::ok_button::state
         BTK_CALL BTK::Hilite, file_dialog_res::ok_button
-:
+    END_IF
+
         ;; --------------------------------------------------
         ;; Open
         jsr     _IsOpenAllowed
         lda     #0
         ror                     ; C into high bit
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-        cmp     file_dialog_res::open_button::state
-        beq     :+              ; no change
-
+    IF_A_NE     file_dialog_res::open_button::state
         sta     file_dialog_res::open_button::state
         BTK_CALL BTK::Hilite, file_dialog_res::open_button
-:
+    END_IF
+
         ;; --------------------------------------------------
         ;; Close
         jsr     _IsCloseAllowed
         lda     #0
         ror                     ; C into high bit
         ASSERT_EQUALS BTK::kButtonStateDisabled, $80
-        cmp     file_dialog_res::close_button::state
-        beq     :+              ; no change
-
+    IF_A_NE     file_dialog_res::close_button::state
         sta     file_dialog_res::close_button::state
         BTK_CALL BTK::Hilite, file_dialog_res::close_button
-:
+    END_IF
+
         rts
 .endproc ; _UpdateDynamicButtons
 
@@ -808,18 +808,19 @@ found:  return  index
 .ifdef FD_EXTENDED
         ;; Set correct sizes for the windows (dialog and listbox) based on options.
         ldx     #.sizeof(MGTK::Point)-1
-:       bit     extra_controls_flag
-    IF_NS
+    DO
+        bit     extra_controls_flag
+      IF_NS
         copy8   file_dialog_res::extra_viewloc,x, file_dialog_res::winfo::viewloc,x
         copy8   file_dialog_res::extra_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
         copy8   file_dialog_res::extra_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
-    ELSE
+      ELSE
         copy8   file_dialog_res::normal_viewloc,x, file_dialog_res::winfo::viewloc,x
         copy8   file_dialog_res::normal_size,x, file_dialog_res::winfo::maprect+MGTK::Rect::bottomright,x
         copy8   file_dialog_res::normal_listloc,x, file_dialog_res::winfo_listbox::viewloc,x
-    END_IF
+      END_IF
         dex
-        bpl     :-
+    WHILE_POS
 .endif
 
         MGTK_CALL MGTK::OpenWindow, file_dialog_res::winfo
@@ -1010,13 +1011,15 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
 .proc _AppendToPathBuf
         ptr := $06
         stax    ptr
+
         ldx     path_buf
-        cpx     #1
-        beq     :+
+    IF_X_NE     #1
         lda     #'/'
         sta     path_buf+1,x
         inc     path_buf
-:       ldy     #0
+    END_IF
+
+        ldy     #0
         lda     (ptr),y
         tay
         clc
@@ -1024,18 +1027,19 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
 
         ;; Enough room?
         cmp     #kPathBufferSize
-        bcc     :+
+    IF_GE
         dec     path_buf
         rts                     ; C=1 failure
-:
+    END_IF
+
         pha
         tax
-:       lda     (ptr),y
+    DO
+        lda     (ptr),y
         sta     path_buf,x
         dey
         dex
-        cpx     path_buf
-        bne     :-
+    WHILE_X_NE  path_buf
 
         pla
         sta     path_buf
@@ -1047,14 +1051,14 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
 ;;; ============================================================
 
 .proc _StripPathBufSegment
-:       ldx     path_buf
-        cpx     #0
-        beq     :+
+    DO
+        ldx     path_buf
+        cpx     #0              ; TODO: Can eliminate this line
+        BREAK_IF_EQ
         dec     path_buf
         lda     path_buf,x
-        cmp     #'/'
-        bne     :-
-:       rts
+    WHILE_A_NE  #'/'
+        rts
 .endproc ; _StripPathBufSegment
 
 ;;; ============================================================
@@ -1069,10 +1073,11 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
         sta     read_params::ref_num
         sta     close_params::ref_num
         MLI_CALL READ, read_params
-        bcc     :+
-err:    copy8   #1, path_buf
+    IF_CS
+err:    copy8   #1, path_buf    ; TODO: `jsr _SetRootPath` instead
         jmp     _ReadDrives
-:
+    END_IF
+
         lda     #0
         sta     entry_index
         lda     #1
@@ -1080,20 +1085,20 @@ err:    copy8   #1, path_buf
         copy8   dir_read_buf+SubdirectoryHeader::entry_length, entry_length
         copy8   dir_read_buf+SubdirectoryHeader::entries_per_block, entries_per_block
         lda     dir_read_buf+SubdirectoryHeader::file_count
-        and     #$7F
+        and     #$7F            ; TODO: max of 128 entries, but this is still weird
         sta     num_file_names
-        bne     :+
-        jmp     close
+        jeq     close
 
         ptr := $06
-:       copy16  #dir_read_buf+.sizeof(SubdirectoryHeader), ptr
+        copy16  #dir_read_buf+.sizeof(SubdirectoryHeader), ptr
 
-l1:     param_call_indirect AdjustFileEntryCase, ptr
+do_entry:
+        param_call_indirect AdjustFileEntryCase, ptr
 
         ldy     #FileEntry::storage_type_name_length
         lda     (ptr),y
         and     #NAME_LENGTH_MASK
-        beq     l6              ; deleted entry
+        beq     done_entry      ; deleted entry
 
         ldx     entry_index
         txa
@@ -1108,8 +1113,8 @@ l1:     param_call_indirect AdjustFileEntryCase, ptr
         lda     (ptr),y
         and     #ACCESS_I
       IF_NE
-        dec     num_file_names  ; skip
-        jmp     l6
+        dec     num_file_names  ; invisible, so skip
+        jmp     done_entry
       END_IF
     END_IF
 
@@ -1118,19 +1123,22 @@ l1:     param_call_indirect AdjustFileEntryCase, ptr
         lda     (ptr),y
         and     #STORAGE_TYPE_MASK
         cmp     #ST_LINKED_DIRECTORY << 4
-        beq     l3              ; is dir
+        beq     is_dir
+
         bit     only_show_dirs_flag
-        bpl     l4              ; not dir, but show
-        dec     num_file_names  ; skip
-        jmp     l6
+        bpl     not_dir         ; not dir, but show
+        dec     num_file_names  ; not dir, so skip
+        jmp     done_entry
 
         ;; Flag as "is dir"
-l3:     ldx     entry_index
+is_dir:
+        ldx     entry_index
         lda     file_list_index,x
         ora     #$80
         sta     file_list_index,x
 
-l4:     ldy     #FileEntry::storage_type_name_length
+not_dir:
+        ldy     #FileEntry::storage_type_name_length
         lda     (ptr),y
         and     #NAME_LENGTH_MASK
         sta     (ptr),y
@@ -1139,7 +1147,9 @@ l4:     ldy     #FileEntry::storage_type_name_length
         jsr     _CopyIntoNthFilename
 
         inc     entry_index
-l6:     inc     entry_in_block
+
+done_entry:
+        inc     entry_in_block
         lda     entry_index
         cmp     num_file_names
         bne     next
@@ -1150,16 +1160,16 @@ close:  MLI_CALL CLOSE, close_params
         rts
 
 next:   lda     entry_in_block
-        cmp     entries_per_block
-        beq     :+
+    IF_A_NE     entries_per_block
         add16_8 ptr, entry_length
-        jmp     l1
+        jmp     do_entry
+    END_IF
 
-:       MLI_CALL READ, read_params
-        copy16  #dir_read_buf+$04, ptr
-        lda     #$00
-        sta     entry_in_block
-        jmp     l1
+        ;; Next block
+        MLI_CALL READ, read_params
+        copy16  #dir_read_buf+$04, ptr ; skip past pointers
+        copy8   #0, entry_in_block
+        jmp     do_entry
 
 entry_index:
         .byte   0
@@ -1188,12 +1198,13 @@ entries_per_block:
 loop:   ldy     #0
         lda     (ptr),y         ; A = unit_num | name_len
         and     #NAME_LENGTH_MASK
-        bne     :+
+    IF_ZERO
         iny                     ; 0 signals error or complete
         lda     (ptr),y
         bne     next            ; error, so skip
         beq     finish          ; always
-:
+    END_IF
+
         param_call_indirect AdjustOnLineEntryCase, ptr
 
         lda     num_file_names
@@ -1235,10 +1246,11 @@ finish:
         ldy     #0
         lda     (src_ptr),y
         tay
-:       lda     (src_ptr),y
+    DO
+        lda     (src_ptr),y
         sta     (dst_ptr),y
         dey
-        bpl     :-
+    WHILE_POS
 
         rts
 .endproc ; _CopyIntoNthFilename
@@ -1266,16 +1278,15 @@ finish:
 
         ;; Copy first segment
         ldx     #2              ; skip leading slash
-:       lda     path_buf,x
-        cmp     #'/'
-        beq     :+
+      DO
+        lda     path_buf,x
+        BREAK_IF_A_EQ #'/'
         iny
         sta     file_dialog_res::filename_buf,y
-        cpx     path_buf
-        beq     :+
+        BREAK_IF_X_EQ path_buf
         inx
-        bne     :-              ; always
-:       sty     file_dialog_res::filename_buf
+      WHILE_NOT_ZERO            ; always
+        sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::disk_label_pos
         param_call _DrawStringCentered, file_dialog_res::filename_buf
@@ -1291,12 +1302,12 @@ finish:
     IF_NE
         ;; Copy last segment
         ldx     path_buf
-:       lda     path_buf,x
-        cmp     #'/'
-        beq     :+
+      DO
+        lda     path_buf,x
+        BREAK_IF_A_EQ #'/'
         dex
-        bne     :-              ; always
-:       inx
+      WHILE_NOT_ZERO            ; always
+        inx
 
       IF_X_NE   #2
         copy8   #kGlyphFolderLeft, file_dialog_res::filename_buf+1
@@ -1304,14 +1315,14 @@ finish:
       END_IF
 
         ldy     #4
-:       lda     path_buf,x
+      DO
+        lda     path_buf,x
         sta     file_dialog_res::filename_buf,y
-        cpx     path_buf
-        beq     :+
+        BREAK_IF_X_EQ path_buf
         iny
         inx
-        bne     :-              ; always
-:       sty     file_dialog_res::filename_buf
+      WHILE_NOT_ZERO            ; always
+        sty     file_dialog_res::filename_buf
 
         MGTK_CALL MGTK::MoveTo, file_dialog_res::dir_label_pos
         param_call _DrawStringCentered, file_dialog_res::filename_buf
@@ -1407,13 +1418,14 @@ loop:   lda     (ptr2),y
         ;; End of string 1?
         len1 := *+1
         cpy     #SELF_MODIFIED_BYTE
-        bne     :+
+    IF_EQ
         cpy     len2            ; 1<2 or 1=2 ?
         rts
+    END_IF
 
         ;; End of string 2?
         len2 := *+1
-:       cpy     #SELF_MODIFIED_BYTE
+        cpy     #SELF_MODIFIED_BYTE
         beq     gt              ; 1>2
         iny
         bne     loop            ; always
@@ -1460,11 +1472,11 @@ failed: return  #$FF
 
         ;; Now find index
 found:  ldx     num_file_names
-:       dex
+    DO
+        dex
         lda     file_list_index,x
         and     #$7F
-        cmp     index
-        bne     :-
+    WHILE_A_NE  index
         txa
         rts
 .endproc ; _FindFilenameIndex
@@ -1505,10 +1517,11 @@ selected_index := file_dialog_res::listbox_rec::selected_index
         pt_ptr := $06
         stxy    pt_ptr
         ldy     #.sizeof(MGTK::Point)-1
-:       lda     (pt_ptr),y
+    DO
+        lda     (pt_ptr),y
         sta     file_dialog_res::item_pos,y
         dey
-        bpl     :-
+    WHILE_POS
         pla
 
         tax
@@ -1519,11 +1532,12 @@ selected_index := file_dialog_res::listbox_rec::selected_index
         jsr     _GetNthFilename
         stax    ptr
         ldx     #kMaxFilenameLength
+    DO
         ptr := *+1
-:       lda     SELF_MODIFIED,x
+        lda     SELF_MODIFIED,x
         sta     file_dialog_res::filename_buf,x
         dex
-        bpl     :-
+    WHILE_POS
         copy16  #kListViewNameX, file_dialog_res::item_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, file_dialog_res::item_pos
         param_call DrawString, file_dialog_res::filename_buf

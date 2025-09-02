@@ -159,13 +159,14 @@ ASSERT_EQUALS .sizeof(alert_params), .sizeof(AlertParams)
         ;; Actual entry point
 start:
         ;; Copy passed params
-        stax    @addr
+        stax    addr
         ldx     #.sizeof(AlertParams)-1
-        @addr := *+1
-:       lda     SELF_MODIFIED,x
+    DO
+        addr := *+1
+        lda     SELF_MODIFIED,x
         sta     alert_params,x
         dex
-        bpl     :-
+    WHILE_POS
 
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
 
@@ -263,19 +264,17 @@ done_buttons:
 
         ;; Search for space or end of string
 advance:
-:       iny
-        cpy     len
-        beq     test
+    DO
+        iny
+        BREAK_IF_Y_EQ len
         lda     (ptr),y
-        cmp     #' '
-        bne     :-
+    WHILE_A_NE  #' '
 
         ;; Does this much fit?
 test:   sty     textwidth_params::length
         MGTK_CALL MGTK::TextWidth, textwidth_params
         cmp16   textwidth_params::width, #kWrapWidth
-        bcs     split           ; no! so we know where to split now
-
+    IF_LT
         ;; Yes, record possible split position, maybe continue.
         ldy     textwidth_params::length
         sty     split_pos
@@ -287,18 +286,14 @@ test:   sty     textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt2
         MGTK_CALL MGTK::DrawText, textwidth_params
         jmp     done
+   END_IF
 
         ;; Split string over two lines.
-split:  copy8   split_pos, textwidth_params::length
+        copy8   split_pos, textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt1
         MGTK_CALL MGTK::DrawText, textwidth_params
-        lda     textwidth_params::data
-        clc
-        adc     split_pos
-        sta     textwidth_params::data
-        bcc     :+
-        inc     textwidth_params::data + 1
-:       lda     len
+        add16_8 textwidth_params::data, split_pos
+        lda     len
         sec
         sbc     split_pos
         sta     textwidth_params::length
@@ -325,9 +320,8 @@ event_loop:
         bit     ejectable_flag
     IF_NS
         jsr     WaitForDiskOrEsc
-        bne     :+
-        jmp     finish_ok
-:       jmp     finish_cancel
+        jeq     finish_ok
+        jmp     finish_cancel
     END_IF
 .endif ; AD_EJECTABLE
 
@@ -349,15 +343,15 @@ event_loop:
         bpl     check_only_ok
 
         cmp     #CHAR_ESCAPE
-        bne     :+
-
+    IF_EQ
         ;; Cancel
         BTK_CALL BTK::Flash, cancel_button
 finish_cancel:
         lda     #kAlertResultCancel
         jmp     finish
+    END_IF
 
-:       bit     alert_params::buttons ; V bit set = Cancel + OK
+        bit     alert_params::buttons ; V bit set = Cancel + OK
         bvs     check_ok
 
 .ifdef AD_YESNOALL
@@ -366,36 +360,37 @@ finish_cancel:
         and     #$0F
     IF_NOT_ZERO
         pla
-        cmp     #kShortcutNo
-        bne     :+
+
+      IF_A_EQ   #kShortcutNo
         BTK_CALL BTK::Flash, no_button
         lda     #kAlertResultNo
         jmp     finish
-:
-        cmp     #kShortcutYes
-        bne     :+
+      END_IF
+
+      IF_A_EQ   #kShortcutYes
         BTK_CALL BTK::Flash, yes_button
         lda     #kAlertResultYes
         jmp     finish
-:
-        cmp     #kShortcutAll
-        bne     :+
+      END_IF
+
+      IF_A_EQ   #kShortcutAll
         BTK_CALL BTK::Flash, all_button
         lda     #kAlertResultAll
         jmp     finish
-:
+      END_IF
+
         jmp     event_loop
     END_IF
         pla
 .endif ; AD_YESNOALL
 
-        cmp     #kShortcutTryAgain
-        bne     :+
+    IF_A_EQ     #kShortcutTryAgain
 do_try_again:
         BTK_CALL BTK::Flash, try_again_button
         lda     #kAlertResultTryAgain
         jmp     finish
-:
+    END_IF
+
         cmp     #CHAR_RETURN    ; also allow Return as default
         beq     do_try_again
         jmp     event_loop

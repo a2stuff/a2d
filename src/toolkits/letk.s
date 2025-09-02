@@ -362,10 +362,10 @@ END_PARAM_BLOCK
         pla                     ; A = len
         sec
         sbc     caret_pos
-        beq     :+
+    IF_NOT_ZERO
         sta     text_params+MGTK::TextWidthParams::length
         MGTK_CALL MGTK::DrawText, text_params
-:
+    END_IF
         rts
 .endproc ; _RedrawRightOfCaret
 
@@ -413,15 +413,15 @@ ycoord  .word
         sta     text_params+MGTK::TextWidthParams::width
         sta     text_params+MGTK::TextWidthParams::width+1
         sta     text_params+MGTK::TextWidthParams::length
-loop:   cmp16   text_params+MGTK::TextWidthParams::width, params::xcoord
-        bcs     :+
+    DO
+        cmp16   text_params+MGTK::TextWidthParams::width, params::xcoord
+        BREAK_IF_CS
         inc     text_params+MGTK::TextWidthParams::length
         lda     text_params+MGTK::TextWidthParams::length
-        cmp     len
-        beq     :+
+        BREAK_IF_A_EQ len
         MGTK_CALL MGTK::TextWidth, text_params
-        beq     loop            ; always
-:
+    WHILE_ZERO                  ; always
+
         lda     text_params+MGTK::TextWidthParams::length
 set:    pha
         jsr     _HideCaret
@@ -458,15 +458,14 @@ ret:    rts
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y    ; A = caret_pos
         ldy     #0
-        cmp     (a_buf),y
-        beq     ret
-
+    IF_A_NE     (a_buf),y
         clc
         adc     #1
         ldy     #LETK::LineEditRecord::caret_pos
         sta     (a_record),y
+    END_IF
 
-ret:    rts
+        rts
 .endproc ; _MoveCaretRight
 
 ;;; ============================================================
@@ -476,15 +475,14 @@ ret:    rts
         ;; Anything to delete?
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y    ; A = caret_pos
-        beq     ret
-
+    IF_NOT_ZERO
         sec
         sbc     #1
         sta     (a_record),y
-
         jsr     _DeleteCharCommon
+    END_IF
 
-ret:    rts
+        rts
 .endproc ; _DeleteLeft
 
 ;;; ============================================================
@@ -496,12 +494,11 @@ ret:    rts
         lda     (a_record),y    ; A = caret_pos
 
         ldy     #0
-        cmp     (a_buf),y
-        beq     ret
-
+    IF_A_NE     (a_buf),y
         jsr     _DeleteCharCommon
+    END_IF
 
-ret:    rts
+        rts
 .endproc ; _DeleteRight
 
 ;;; ============================================================
@@ -579,15 +576,15 @@ modified:
 
         ;; Move everything to right of caret up
         tay
-:       cpy     caret_pos
-        beq     :+
+    DO
+        BREAK_IF_Y_EQ caret_pos
         lda     (a_buf),y
         iny
         sta     (a_buf),y
         dey
         dey
-        bne     :-              ; always
-:
+    WHILE_NOT_ZERO              ; always
+
         ;; Insert
         lda     char
         iny
@@ -683,15 +680,15 @@ ret:    rts
         ldy     #LETK::LineEditRecord::caret_pos
         lda     (a_record),y
         tay
-:       cpy     len
-        beq     :+
+    DO
+        BREAK_IF_Y_EQ len
         iny
         iny
         lda     (a_buf),y
         dey
         sta     (a_buf),y
-        bne     :-              ; always
-:
+    WHILE_NE                    ; always
+
         bit     options         ; bit7 = centered
     IF_NS
         ;; Redraw everything
@@ -768,9 +765,10 @@ a_record  .addr
         lda     (a_buf),y
         ldy     #LETK::LineEditRecord::caret_pos
         cmp     (a_record),y    ; len >= caret_pos
-        bcs     :+
+    IF_LT
         sta     (a_record),y    ; no, clamp caret_pos
-:
+    END_IF
+
         jmp     _ShowCaret
 .endproc ; UpdateImpl
 
