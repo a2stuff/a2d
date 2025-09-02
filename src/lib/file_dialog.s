@@ -1173,12 +1173,12 @@ entries_per_block:
 
 ;;; ============================================================
 
-        DEFINE_ON_LINE_PARAMS on_line_params_drives, 0, dir_read_buf
+        DEFINE_ON_LINE_PARAMS on_line_drives_params, 0, dir_read_buf
 
 .proc _ReadDrives
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
 
-        MLI_CALL ON_LINE, on_line_params_drives
+        MLI_CALL ON_LINE, on_line_drives_params
 
         ptr := $06
         copy16  #dir_read_buf, ptr

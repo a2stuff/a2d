@@ -412,15 +412,15 @@ buf_block_pointers:     .res    kBlockPointersSize, 0
         DEFINE_READWRITE_PARAMS read_padding_bytes_params, buf_padding_bytes, kMaxPaddingBytes
 buf_padding_bytes:      .res    kMaxPaddingBytes, 0
         .res    4, 0
-        DEFINE_CLOSE_PARAMS close_srcfile_params
-        DEFINE_CLOSE_PARAMS close_dstfile_params
+        DEFINE_CLOSE_PARAMS close_src_params
+        DEFINE_CLOSE_PARAMS close_dst_params
 
-        DEFINE_OPEN_PARAMS open_srcfile_params, path2, src_io_buffer
-        DEFINE_OPEN_PARAMS open_dstfile_params, path1, dst_io_buffer
-        DEFINE_READWRITE_PARAMS read_srcfile_params, copy_buffer, kCopyBufferSize
-        DEFINE_READWRITE_PARAMS write_dstfile_params, copy_buffer, kCopyBufferSize
+        DEFINE_OPEN_PARAMS open_src_params, path2, src_io_buffer
+        DEFINE_OPEN_PARAMS open_dst_params, path1, dst_io_buffer
+        DEFINE_READWRITE_PARAMS read_src_params, copy_buffer, kCopyBufferSize
+        DEFINE_READWRITE_PARAMS write_dst_params, copy_buffer, kCopyBufferSize
         DEFINE_CREATE_PARAMS create_dir_params, path1, ACCESS_DEFAULT
-        DEFINE_SET_MARK_PARAMS mark_dstfile_params, 0
+        DEFINE_SET_MARK_PARAMS mark_dst_params, 0
 
 file_entry:
 filename:
@@ -628,36 +628,36 @@ dst_size:       .word   0
 
 ;;; ============================================================
 ;;; Copy a normal (non-directory) file. File info is copied too.
-;;; Inputs: `open_srcfile_params` populated
-;;;         `open_dstfile_params` populated; file already created
+;;; Inputs: `open_src_params` populated
+;;;         `open_dst_params` populated; file already created
 ;;; Errors: `hook_handle_error_code` is invoked
 
 .proc CopyNormalFile
         ;; Open source
-        MLI_CALL OPEN, open_srcfile_params
+        MLI_CALL OPEN, open_src_params
         bcs     fail
 
         ;; Open destination
-        MLI_CALL OPEN, open_dstfile_params
+        MLI_CALL OPEN, open_dst_params
         bcs     fail
 
-        lda     open_srcfile_params::ref_num
-        sta     read_srcfile_params::ref_num
-        sta     close_srcfile_params::ref_num
-        lda     open_dstfile_params::ref_num
-        sta     write_dstfile_params::ref_num
-        sta     mark_dstfile_params::ref_num
-        sta     close_dstfile_params::ref_num
+        lda     open_src_params::ref_num
+        sta     read_src_params::ref_num
+        sta     close_src_params::ref_num
+        lda     open_dst_params::ref_num
+        sta     write_dst_params::ref_num
+        sta     mark_dst_params::ref_num
+        sta     close_dst_params::ref_num
 
         lda     #0
-        sta     mark_dstfile_params::position
-        sta     mark_dstfile_params::position+1
-        sta     mark_dstfile_params::position+2
+        sta     mark_dst_params::position
+        sta     mark_dst_params::position+1
+        sta     mark_dst_params::position+2
 
         ;; Read a chunk
-loop:   copy16  #kCopyBufferSize, read_srcfile_params::request_count
+loop:   copy16  #kCopyBufferSize, read_src_params::request_count
         jsr     CheckCancel
-        MLI_CALL READ, read_srcfile_params
+        MLI_CALL READ, read_src_params
         bcc     :+
         cmp     #ERR_END_OF_FILE
         beq     close
@@ -665,8 +665,8 @@ fail:
         jmp     (hook_handle_error_code)
 :
         ;; EOF?
-        lda     read_srcfile_params::trans_count
-        ora     read_srcfile_params::trans_count+1
+        lda     read_src_params::trans_count
+        ora     read_src_params::trans_count+1
         beq     close
 
         ;; Write the chunk
@@ -676,8 +676,8 @@ fail:
         bcc     loop            ; always
 
         ;; Close source and destination
-close:  MLI_CALL CLOSE, close_dstfile_params
-        MLI_CALL CLOSE, close_srcfile_params
+close:  MLI_CALL CLOSE, close_dst_params
+        MLI_CALL CLOSE, close_src_params
 
         ;; Copy file info
         MLI_CALL GET_FILE_INFO, get_path2_info_params
@@ -693,23 +693,23 @@ close:  MLI_CALL CLOSE, close_dstfile_params
 ;;; Write the buffer to the destination file, being mindful of sparse blocks.
 .proc _WriteDst
         ;; Always start off at start of copy buffer
-        copy16  read_srcfile_params::data_buffer, write_dstfile_params::data_buffer
+        copy16  read_src_params::data_buffer, write_dst_params::data_buffer
 loop:
         ;; Assume we're going to write everything we read. We may
         ;; later determine we need to write it out block-by-block.
-        copy16  read_srcfile_params::trans_count, write_dstfile_params::request_count
+        copy16  read_src_params::trans_count, write_dst_params::request_count
 
         ;; Assert: We're only ever copying to a RAMDisk, not AppleShare.
         ;; https://prodos8.com/docs/technote/30
 
         ;; Is there less than a full block? If so, just write it.
-        lda     read_srcfile_params::trans_count+1
+        lda     read_src_params::trans_count+1
         cmp     #.hibyte(BLOCK_SIZE)
         bcc     do_write        ; ...and done!
 
         ;; Otherwise we'll go block-by-block, treating all zeros
         ;; specially.
-        copy16  #BLOCK_SIZE, write_dstfile_params::request_count
+        copy16  #BLOCK_SIZE, write_dst_params::request_count
 
         ;; First two blocks are never made sparse. The first block is
         ;; never sparsely allocated (P8 TRM B.3.6 - Sparse Files) and
@@ -717,15 +717,15 @@ loop:
         ;; correctly in all versions of ProDOS.
         ;; https://prodos8.com/docs/technote/30
         ;; Assert: mark low byte is $00
-        lda     mark_dstfile_params::position+1
+        lda     mark_dst_params::position+1
         and     #%11111100
-        ora     mark_dstfile_params::position+2
+        ora     mark_dst_params::position+2
         beq     not_sparse
 
         ;; Is this block all zeros? Scan all $200 bytes
         ;; (Note: coded for size, not speed, since we're I/O bound)
         ptr := $06
-        copy16  write_dstfile_params::data_buffer, ptr ; first half
+        copy16  write_dst_params::data_buffer, ptr ; first half
         ldy     #0
         tya
 :       ora     (ptr),y
@@ -739,9 +739,9 @@ loop:
         bne     not_sparse
 
         ;; Block is all zeros, skip over it
-        add16_8  mark_dstfile_params::position+1, #.hibyte(BLOCK_SIZE)
-        MLI_CALL SET_EOF, mark_dstfile_params
-        MLI_CALL SET_MARK, mark_dstfile_params
+        add16_8  mark_dst_params::position+1, #.hibyte(BLOCK_SIZE)
+        MLI_CALL SET_EOF, mark_dst_params
+        MLI_CALL SET_MARK, mark_dst_params
         jmp     next_block
 
         ;; Block is not sparse, write it
@@ -752,23 +752,23 @@ not_sparse:
 
         ;; Advance to next block
 next_block:
-        inc     write_dstfile_params::data_buffer+1
-        inc     write_dstfile_params::data_buffer+1
-        ;; Assert: `read_srcfile_params::trans_count` >= `BLOCK_SIZE`
-        dec     read_srcfile_params::trans_count+1
-        dec     read_srcfile_params::trans_count+1
+        inc     write_dst_params::data_buffer+1
+        inc     write_dst_params::data_buffer+1
+        ;; Assert: `read_src_params::trans_count` >= `BLOCK_SIZE`
+        dec     read_src_params::trans_count+1
+        dec     read_src_params::trans_count+1
 
         ;; Anything left to write?
-        lda     read_srcfile_params::trans_count
-        ora     read_srcfile_params::trans_count+1
+        lda     read_src_params::trans_count
+        ora     read_src_params::trans_count+1
         bne     loop
         clc
         rts
 
 do_write:
-        MLI_CALL WRITE, write_dstfile_params
+        MLI_CALL WRITE, write_dst_params
         bcs     ret
-        MLI_CALL GET_MARK, mark_dstfile_params
+        MLI_CALL GET_MARK, mark_dst_params
 ret:    rts
 .endproc ; _WriteDst
 .endproc ; CopyNormalFile

@@ -10168,7 +10168,7 @@ file_entry_buf          .tag    FileEntry
 
         DEFINE_SET_MARK_PARAMS mark_src_params, 0
         DEFINE_SET_MARK_PARAMS mark_dst_params, 0
-        DEFINE_ON_LINE_PARAMS on_line_params2,, $800
+        DEFINE_ON_LINE_PARAMS on_line_all_drives_params,, $800
 
         block_buffer := file_data_buffer
         DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buffer, SELF_MODIFIED
@@ -11968,7 +11968,7 @@ not_found:
         jsr     SetCursorWatch  ; undone by `ClosePromptDialog` or `CloseProgressDialog`
 
         ;; Poll drives before trying again
-        MLI_CALL ON_LINE, on_line_params2
+        MLI_CALL ON_LINE, on_line_all_drives_params
         rts
 
 close:  jmp     CloseFilesCancelDialogWithFailedResult

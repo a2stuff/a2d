@@ -20,13 +20,13 @@
         io_buf := $3000
 
         DEFINE_OPEN_PARAMS open_params, str_selector, io_buf
-        DEFINE_READWRITE_PARAMS read_params1, kSegmentInvokerAddress, kSegmentInvokerLength
-        DEFINE_READWRITE_PARAMS read_params2, kSegmentAppAddress, kSegmentAppLength
-        DEFINE_READWRITE_PARAMS read_params3, alert_load_addr, kSegmentAlertLength
+        DEFINE_READWRITE_PARAMS read_segment_invoker_params, kSegmentInvokerAddress, kSegmentInvokerLength
+        DEFINE_READWRITE_PARAMS read_segment_app_params, kSegmentAppAddress, kSegmentAppLength
+        DEFINE_READWRITE_PARAMS read_segment_alert_params, alert_load_addr, kSegmentAlertLength
 
-        DEFINE_SET_MARK_PARAMS set_mark_params1, kSegmentInvokerOffset
-        DEFINE_SET_MARK_PARAMS set_mark_params2, kSegmentAppOffset
-        DEFINE_SET_MARK_PARAMS set_mark_params3, kSegmentAlertOffset
+        DEFINE_SET_MARK_PARAMS set_mark_segment_invoker_params, kSegmentInvokerOffset
+        DEFINE_SET_MARK_PARAMS set_mark_segment_app_params, kSegmentAppOffset
+        DEFINE_SET_MARK_PARAMS set_mark_segment_alert_params, kSegmentAlertOffset
         DEFINE_CLOSE_PARAMS close_params
 
 str_selector:
@@ -48,33 +48,33 @@ start:
         brk
 
 L2049:  lda     open_params::ref_num
-        sta     set_mark_params1::ref_num
-        sta     set_mark_params2::ref_num
-        sta     set_mark_params3::ref_num
-        sta     read_params1::ref_num
-        sta     read_params2::ref_num
-        sta     read_params3::ref_num
+        sta     set_mark_segment_invoker_params::ref_num
+        sta     set_mark_segment_app_params::ref_num
+        sta     set_mark_segment_alert_params::ref_num
+        sta     read_segment_invoker_params::ref_num
+        sta     read_segment_app_params::ref_num
+        sta     read_segment_alert_params::ref_num
 
         kNumSegments = 3
 
         ;; Read various segments into final or temp locations
         jsr     UpdateProgress
 
-        MLI_CALL SET_MARK, set_mark_params1
+        MLI_CALL SET_MARK, set_mark_segment_invoker_params
         jcs     crash
-        MLI_CALL READ, read_params1
-        jcs     crash
-        jsr     UpdateProgress
-
-        MLI_CALL SET_MARK, set_mark_params2
-        jcs     crash
-        MLI_CALL READ, read_params2
+        MLI_CALL READ, read_segment_invoker_params
         jcs     crash
         jsr     UpdateProgress
 
-        MLI_CALL SET_MARK, set_mark_params3
+        MLI_CALL SET_MARK, set_mark_segment_app_params
         jcs     crash
-        MLI_CALL READ, read_params3
+        MLI_CALL READ, read_segment_app_params
+        jcs     crash
+        jsr     UpdateProgress
+
+        MLI_CALL SET_MARK, set_mark_segment_alert_params
+        jcs     crash
+        MLI_CALL READ, read_segment_alert_params
         jcs     crash
         jsr     UpdateProgress
 
