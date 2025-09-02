@@ -4549,11 +4549,11 @@ rts4:   rts
         bmi     do_scale_x
 
         ldx     mouse_firmware_hi
-        lda     MOUSE_X_LO,x
+        lda     MOUSE_X_LO->$C000,x
         sta     mouse_x
-        lda     MOUSE_X_HI,x
+        lda     MOUSE_X_HI->$C000,x
         sta     mouse_x+1
-        lda     MOUSE_Y_LO,x
+        lda     MOUSE_Y_LO->$C000,x
         sta     mouse_y
 
         ;; Scale X
@@ -4578,7 +4578,7 @@ do_scale_y:
 done_scaling:
         bit     mouse_hooked_flag
         bmi     done
-        lda     MOUSE_STATUS,x
+        lda     MOUSE_STATUS->$C000,x
         sta     mouse_status
 done:   rts
 .endproc ; ReadMousePos
@@ -9666,9 +9666,9 @@ kbd_mouse_status:  .byte   $00
         jsr     ScaleMouseCoord
 
         ldx     mouse_firmware_hi
-        sta     MOUSE_X_LO,x
+        sta     MOUSE_X_LO->$C000,x
         tya
-        sta     MOUSE_X_HI,x
+        sta     MOUSE_X_HI->$C000,x
 
         pla
         ldy     #$00
@@ -9676,9 +9676,9 @@ kbd_mouse_status:  .byte   $00
         jsr     ScaleMouseCoord
 
         ldx     mouse_firmware_hi
-        sta     MOUSE_Y_LO,x
+        sta     MOUSE_Y_LO->$C000,x
         tya
-        sta     MOUSE_Y_HI,x
+        sta     MOUSE_Y_HI->$C000,x
 
         ldy     #POSMOUSE
         jmp     CallMouse

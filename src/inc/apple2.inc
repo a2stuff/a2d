@@ -27,11 +27,13 @@ IRQ_VECTOR      := $FFFE        ; on IRQ or BRK
 
 kIntVectorsSize = 6             ; 3 vectors, 2 bytes each
 
+
 ;;; ============================================================
 ;;; Monitor ROM
 ;;; ============================================================
 
-;;; Monitor
+;;; ROM locations
+
 IDBYTELASER128  := $FB1E        ; $AC = Laser 128
 INIT            := $FB2F        ; Initialize text screen.
 SETPWRC         := $FB6F        ; Create power-up byte.
@@ -51,6 +53,8 @@ MOVE            := $FE2C        ; Original Monitor Move routine.
 SETKBD          := $FE89        ; Reset input to keyboard.
 SETVID          := $FE93        ; Reset output to screen.
 MONZ            := $FF69        ; Standard Monitor entry point.
+
+;;; Constants
 
 F8VERSION       := $06
 
@@ -73,6 +77,7 @@ ARG_SIGN        := $AA
 SGNCPR          := $AB          ; FAC_SIGN xor ARG_SIGN
 
 ;;; Entry Points
+
 GIVAYF          := $E2F2        ; FAC from signed integer in (Y,A)
 CONINT          := $E6FB        ; FAC = X as unsigned byte
 GETADR          := $E752        ; FAC to unsigned integer in LINNUM
@@ -115,7 +120,8 @@ SIN             := $EFF1        ; FAC = SIN(FAC)
 TAN             := $F03A        ; FAC = TAN(FAC)
 ATN             := $F09E        ; FAC = ATN(FAC)
 
-;;; Constants
+;;; Constants in ROM
+
 CON_ONE         := $E913        ; 1
 CON_SQR_HALF    := $E92D        ; SQR(1/2)
 CON_SQR_TWO     := $E932        ; SQR(2)
@@ -132,6 +138,7 @@ CON_TWO_PI      := $F06B        ; pi/*2
 CON_QUARTER     := $F070        ; 1/4
 
 ;;; Other
+
 FBUFFR          := $100
 MSLOT           := $7F8         ; Slot in use, in case of IRQ
 
@@ -213,7 +220,6 @@ LASER128EX_CFG  := $C074        ; high two bits control speed
 
 ROMIN2          := $C082        ; (W) Read ROM; no write
 
-
 ;;; Le Chat Mauve Eve registers
 HR1_OFF         := $C0B2
 HR1_ON          := $C0B3
@@ -223,6 +229,7 @@ HR3_OFF         := $C0B6
 HR3_ON          := $C0B7
 TEXT16_OFF      := $C0B8
 TEXT16_ON       := $C0B9
+
 
 ;;; ============================================================
 ;;; Aux Memory / Extended 80 Column Card
@@ -252,6 +259,7 @@ OURCH           := $057B        ; 80 Col horizontal position
 OURCV           := $05FB        ; 80 Col vertical position
 .endif
 
+
 ;;; ============================================================
 ;;; Super Serial Card
 ;;; ============================================================
@@ -265,6 +273,7 @@ OURCV           := $05FB        ; 80 Col vertical position
         PWrite  = $0F
         PStatus = $10
 .endenum
+
 
 ;;; ============================================================
 ;;; Disk II / IWM I/O locations
@@ -313,22 +322,22 @@ MOUSE_MODE_TRANS= $01
 MOUSE_MODE_INT  = $03
 MOUSE_MODE_BTN  = $05
 
-;;; RAM Locations
+;;; RAM Locations (scratch areas)
 
 CLAMP_MIN_LO    := $478
-CLAMP_MIN_HI    := $578
 CLAMP_MAX_LO    := $4F8
+CLAMP_MIN_HI    := $578
 CLAMP_MAX_HI    := $5F8
 
-;;; RAM Locations
-;;; (Add $Cn where n is slot to these)
+;;; RAM Locations (screen holes, add $0n where n is slot)
 
-MOUSE_X_LO      := $03B8
-MOUSE_X_HI      := $04B8
-MOUSE_Y_LO      := $0438
-MOUSE_Y_HI      := $0538
-MOUSE_STATUS    := $06B8
-MOUSE_MODE      := $0738
+MOUSE_X_LO      := $478
+MOUSE_Y_LO      := $4F8
+MOUSE_X_HI      := $578
+MOUSE_Y_HI      := $5F8
+MOUSE_STATUS    := $778
+MOUSE_MODE      := $7F8
+
 
 ;;; ============================================================
 ;;; ZIP CHIP
