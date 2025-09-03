@@ -441,12 +441,7 @@ rtcs:   sec
         ptr2 := $08
 
         ldy     #.sizeof(FileEntry) - 1
-loop:   lda     (ptr1),y
-        pha
-        lda     (ptr2),y
-        sta     (ptr1),y
-        pla
-        sta     (ptr2),y
+loop:   swap8   (ptr1),y, (ptr2),y
         dey
         bpl     loop
         rts

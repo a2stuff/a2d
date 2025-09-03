@@ -124,6 +124,41 @@
     .endif
 .endmacro
 
+.macro swap8 arg1, arg2, arg3, arg4
+    .if (_is_register {arg2}) && (_is_register {arg4})
+        ;; indexed load/indexed store
+        lda     arg1,arg2
+        pha
+        lda     arg3,arg4
+        sta     arg1,arg2
+        pla
+        sta     arg3,arg4
+    .elseif _is_register {arg2}
+        ;; indexed load variant (arg2 is x or y)
+        lda     arg1,arg2
+        pha
+        lda     arg3
+        sta     arg1,arg2
+        pla
+        sta     arg3
+    .elseif _is_register {arg3}
+        ;; indexed store variant (arg3 is x or y)
+        lda     arg1
+        pha
+        lda     arg2,arg3
+        sta     arg1
+        pla
+        sta     arg2,arg3
+    .else
+        lda     arg1
+        pha
+        lda     arg2
+        sta     arg1
+        pla
+        sta     arg2
+    .endif
+.endmacro
+
 ;;; ============================================================
 ;;; 16-bit pseudo-ops
 

@@ -689,8 +689,7 @@ window_click:
 ;;; ------------------------------------------------------------
 
 .proc _TrackThumb
-        lda     findcontrol_params::which_ctl
-        sta     trackthumb_params::which_ctl
+        copy8   findcontrol_params::which_ctl, trackthumb_params::which_ctl
         MGTK_CALL MGTK::TrackThumb, trackthumb_params
         lda     trackthumb_params::thumbmoved
         RTS_IF_ZERO
@@ -1269,7 +1268,7 @@ set_flags:
 
         ldy     #0
 loop:   lda     table,y         ; menu_id
-        RTS_IF_ZERO
+        RTS_IF_ZERO             ; sentinel
         sta     disableitem_params::menu_id
         iny
 
@@ -1438,10 +1437,7 @@ retry:  jsr     GetSrcFileInfo
         asl
         tax
 
-        lda     invoke_table+0,x
-        sta     handler
-        lda     invoke_table+1,x
-        sta     handler+1
+        copy16  invoke_table,x, handler
         lda     invoke_table+2,x
         pha
         lda     invoke_table+3,x
@@ -1627,13 +1623,11 @@ _CheckBasisSystem        := _CheckBasixSystemImpl::basis
 
         ldy     #0
         ldx     INVOKER_INTERPRETER
-        lda     (ptr1),y
-        sta     len
+        copy8   (ptr1),y, len
     DO
         iny
         inx
-        lda     (ptr1),y
-        sta     INVOKER_INTERPRETER,x
+        copy8   (ptr1),y, INVOKER_INTERPRETER,x
     WHILE_Y_NE  len
         stx     INVOKER_INTERPRETER
 
@@ -1892,8 +1886,7 @@ devlst_backup:
         ;; If adding, try to default to the current selection.
         lda     menu_click_params::item_num
     IF_A_EQ     #kMenuItemIdSelectorAdd
-        lda     #0
-        sta     path_buf0
+        copy8   #0, path_buf0
 
         ;; If there's a selection, put it in `path_buf0`
         lda     selected_icon_count
@@ -2097,8 +2090,7 @@ entry_num:
     DO
         inx
         iny
-        lda     entry_path,y
-        sta     src_path_buf,x
+        copy8   entry_path,y, src_path_buf,x
     WHILE_Y_NE  entry_path
 
         stx     src_path_buf
@@ -2230,8 +2222,7 @@ start:  jsr     SetCursorWatch  ; before loading DA
         ;; Append name to path
         ldx     path
         ldy     #0
-        lda     ($06),y
-        sta     len
+        copy8   ($06),y, len
 loop:   inx
 skip:   iny
         lda     ($06),y
@@ -2420,8 +2411,7 @@ main_length:    .word   0
         stax    ptr
 
         ldy     #0
-        lda     (ptr),y
-        sta     pathlen
+        copy8   (ptr),y, pathlen
         iny                     ; start at 2nd character
     DO
         iny
@@ -2516,8 +2506,7 @@ main_length:    .word   0
         iny                     ; +1 for length byte
         iny                     ; +1 to skip past '/'
     DO
-        lda     path_buf4,y
-        sta     filename_buf,x
+        copy8   path_buf4,y, filename_buf,x
         BREAK_IF_Y_EQ path_buf4
         iny
         inx
@@ -2537,8 +2526,7 @@ volume:
         dey
         sty     filename_buf
     DO
-        lda     path_buf4+1,y
-        sta     filename_buf,y
+        copy8   path_buf4+1,y, filename_buf,y
         dey
     WHILE_NOT_ZERO
         copy8   #1, path_buf4
@@ -2631,8 +2619,7 @@ common:
         ldx     selected_icon_count
         stx     selected_icon_count_copy
     DO
-        lda     selected_icon_list-1,x
-        sta     selected_icon_list_copy-1,x
+        copy8   selected_icon_list-1,x, selected_icon_list_copy-1,x
         dex
     WHILE_NOT_ZERO
 
@@ -2730,8 +2717,7 @@ window_id_to_close:
 close_current:
         lda     active_window_id
         SKIP_NEXT_2_BYTE_INSTRUCTION
-normal: lda     #0
-        sta     window_id_to_close
+normal: copy8   #0, window_id_to_close
 
         lda     active_window_id
         beq     done
@@ -2979,8 +2965,7 @@ loop:   ldx     #SELF_MODIFIED_BYTE
 
         ;; Match!
         ldx     icon
-        lda     cached_window_entry_list,x
-        sta     icon
+        copy8   cached_window_entry_list,x, icon
 
 done:
         pla
@@ -3090,8 +3075,7 @@ stashed_name:
         lda     digits+1,x
         cmp     #'9'+1
         bne     concatenate     ; done
-        lda     #'0'
-        sta     digits+1,x
+        copy8   #'0', digits+1,x
         inx
       WHILE_X_NE digits
         inc     digits
@@ -3100,10 +3084,8 @@ stashed_name:
 
         ;; --------------------------------------------------
 just_append:
-        lda     #1
-        sta     digits
-        lda     #'2'
-        sta     digits+1
+        copy8   #1, digits
+        copy8   #'2', digits+1
         FALL_THROUGH_TO concatenate
 
         ;; --------------------------------------------------
@@ -3117,8 +3099,7 @@ concatenate:
 
         ldx     stashed_name
         inx
-        lda     #'.'
-        sta     stashed_name,x
+        copy8   #'.', stashed_name,x
         ldy     digits
     DO
         lda     digits,y
@@ -3248,8 +3229,7 @@ loop1:  lda     selected_icon_list,y
         ;; Check each of the recorded volumes
         count := *+1
 loop2:  ldx     #SELF_MODIFIED_BYTE
-        lda     buffer,x
-        sta     drive_to_refresh ; icon number
+        copy8   buffer,x, drive_to_refresh ; icon number
         jsr     CheckDriveByIconNumber
         dec     count
         bpl     loop2
@@ -3334,10 +3314,8 @@ ResetHandler    := CmdQuitImpl::ResetHandler
         lda     #0              ; INIT is not used as that briefly
         sta     WNDLFT          ; displays the dirty text page
         sta     WNDTOP
-        lda     #80
-        sta     WNDWDTH
-        lda     #24
-        sta     WNDBTM
+        copy8   #80, WNDWDTH
+        copy8   #24, WNDBTM
         jsr     HOME            ; Clear 80-col screen
         sta     TXTSET          ; ... and show it
 
@@ -3373,8 +3351,7 @@ menu_item_to_view_by:
 
 .proc CmdViewBy
         ldx     menu_click_params::item_num
-        lda     menu_item_to_view_by-1,x
-        sta     view
+        copy8   menu_item_to_view_by-1,x, view
 
         ;; Valid?
         lda     active_window_id
@@ -3502,8 +3479,7 @@ RefreshView := RefreshViewImpl::entry3
 .proc FindIconForRecordNum
         sta     record_num
 
-        lda     cached_window_entry_count
-        sta     index
+        copy8   cached_window_entry_count, index
 
     DO
         index := *+1
@@ -3976,8 +3952,7 @@ down:   lda     #kDirDown
         cmp     selected_window_id
         jne     fallback
 
-        lda     selected_icon_list ; use first
-        sta     icon_param
+        copy8   selected_icon_list, icon_param ; use first
 
 ;;; --------------------------------------------------
 ;;; Get bounds
@@ -4155,8 +4130,7 @@ file_char:
 
         ;; Icon to select
         tax
-        lda     table,x         ; index to icon
-        sta     icon
+        copy8   table,x, icon   ; index to icon
 
         ;; Already the selection?
         jsr     GetSingleSelectedIcon
@@ -4190,8 +4164,7 @@ loop:   lda     #SELF_MODIFIED_BYTE
         ;; NOTE: Can't use `CompareStrings` as we want to match
         ;; on subset-or-equals.
         ldy     #0
-        lda     (ptr),y
-        sta     len
+        copy8   (ptr),y, len
 
         ldy     #1
 cloop:  lda     (ptr),y
@@ -4236,8 +4209,7 @@ typedown_buf:
         ldx     #0
     DO
         BREAK_IF_X_EQ cached_window_entry_count
-        lda     cached_window_entry_list,x
-        sta     buffer+1,x
+        copy8   cached_window_entry_list,x, buffer+1,x
         inx
     WHILE_NE                  ; always
 
@@ -4270,8 +4242,7 @@ oloop:  lda     #SELF_MODIFIED_BYTE
         jsr     GetNthSelectableIconName
         stax    ptr2
 
-        lda     #0
-        sta     inner
+        copy8   #0, inner
 
         inner := *+1
 iloop:  lda     #SELF_MODIFIED_BYTE
@@ -4284,12 +4255,7 @@ iloop:  lda     #SELF_MODIFIED_BYTE
         ;; Swap
         ldx     inner
         ldy     outer
-        lda     buffer+1,x
-        pha
-        lda     buffer+1,y
-        sta     buffer+1,x
-        pla
-        sta     buffer+1,y
+        swap8   buffer+1,x, buffer+1,y
         tya
         jsr     GetNthSelectableIconName
         stax    ptr2
@@ -5008,8 +4974,7 @@ loop:   lda     cached_window_entry_list,x
 
         txa
         pha
-        lda     cached_window_entry_list,x
-        sta     icon_param
+        copy8   cached_window_entry_list,x, icon_param
         ITK_CALL IconTK::EraseIcon, icon_param
         ITK_CALL IconTK::FreeIcon, icon_param
         lda     icon_param
@@ -5034,14 +4999,12 @@ next:   dex
 loop:   ldy     #SELF_MODIFIED_BYTE
         inc     cached_window_entry_count
         inc     icon_count
-        lda     #0
-        sta     device_to_icon_map,y
+        copy8   #0, device_to_icon_map,y
         lda     DEVLST,y
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
         jsr     CreateVolumeIcon ; A = unmasked unit num, Y = device index
     IF_A_EQ     #ERR_DUPLICATE_VOLUME
-        lda     #kErrDuplicateVolName
-        sta     pending_alert
+        copy8   #kErrDuplicateVolName, pending_alert
     END_IF
         dec     devlst_index
         bpl     loop
@@ -5184,8 +5147,7 @@ not_in_map:
         tay
         pha
 
-        lda     device_to_icon_map,y
-        sta     icon_param
+        copy8   device_to_icon_map,y, icon_param
     IF_NOT_ZERO
         jsr     RemoveIconFromWindow
         dec     icon_count
@@ -5195,8 +5157,7 @@ not_in_map:
         ITK_CALL IconTK::FreeIcon, icon_param
     END_IF
 
-        lda     cached_window_entry_count
-        sta     previous_icon_count
+        copy8   cached_window_entry_count, previous_icon_count
         inc     cached_window_entry_count
         inc     icon_count
 
@@ -5247,8 +5208,7 @@ add_icon:
         ;; If a new icon was added, more work is needed.
         ldx     cached_window_entry_count
         dex
-        lda     cached_window_entry_list,x
-        sta     icon_param
+        copy8   cached_window_entry_list,x, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
     END_IF
 
@@ -5362,8 +5322,7 @@ arbitrary_target:
         sta     stashed_name
         ldy     #.strlen(kAliasSuffix)-1
     DO
-        lda     suffix,y
-        sta     stashed_name,x
+        copy8   suffix,y, stashed_name,x
         dex
         dey
     WHILE_POS
@@ -5536,8 +5495,7 @@ alert:  jmp     ShowAlert
 
         ;; Move everything down
     DO
-        lda     selected_icon_list+1,x
-        sta     selected_icon_list,x
+        copy8   selected_icon_list+1,x, selected_icon_list,x
         inx
     WHILE_X_NE  selected_icon_count
 
@@ -5925,8 +5883,7 @@ beyond:
         ldx     cached_window_id
         ASSERT_EQUALS ::kWindowToDirIconFree, 0
         ASSERT_EQUALS DeskTopSettings::kViewByIcon, 0
-        lda     #0
-        sta     window_to_dir_icon_table-1,x ; `kWindowToDirIconFree`
+        copy8   #0, window_to_dir_icon_table-1,x ; `kWindowToDirIconFree`
 
         ;; Was it the active window?
         lda     cached_window_id
@@ -6147,8 +6104,7 @@ no_win:
         jmp     :-              ; TODO: Make this BNE
 
         ;; Map the window to its source icon
-:       lda     icon_param      ; possibly `kWindowToDirIconNone` if opening via path
-        sta     window_to_dir_icon_table,x
+:       copy8   icon_param, window_to_dir_icon_table,x ; possibly `kWindowToDirIconNone` if opening via path
         inx                     ; 0-based to 1-based
 
         txa
@@ -6213,8 +6169,7 @@ no_win:
     DO
         iny
         inx
-        lda     src_path_buf,y
-        sta     filename_buf,x
+        copy8   src_path_buf,y, filename_buf,x
     WHILE_Y_NE  src_path_buf
         stx     filename_buf
 
@@ -6294,8 +6249,7 @@ no_win:
         adc     #kWindowXOffset
         sta     (winfo_ptr),y   ; viewloc::xcoord
         iny
-        lda     #0
-        sta     (winfo_ptr),y
+        copy8   #0, (winfo_ptr),y
         iny
         pla
 
@@ -6304,8 +6258,7 @@ no_win:
         adc     #kWindowYOffset
         sta     (winfo_ptr),y   ; viewloc::ycoord
         iny
-        lda     #0
-        sta     (winfo_ptr),y
+        copy8   #0, (winfo_ptr),y
 
         ;; Map rect (initially empty, size assigned in `ComputeInitialWindowSize`)
         lda     #0
@@ -6489,8 +6442,7 @@ ret:    rts
 .proc ShowFileWithPath
         jsr     SplitInvokerPath
 
-        lda     num_open_windows
-        sta     old
+        copy8   num_open_windows, old
 
         tsx
         stx     saved_stack
@@ -6930,8 +6882,7 @@ check_window:
         jsr     IsPathPrefixOf  ; Z=0 if prefix
         beq     loop
         ldx     found_windows_count
-        lda     window_num
-        sta     found_windows_list,x
+        copy8   window_num, found_windows_list,x
         inc     found_windows_count
         bne     loop            ; always
 
@@ -6982,8 +6933,7 @@ record_count:           .byte   0
 
         ldx     #0
     DO
-        lda     dir_buffer+SubdirectoryHeader::entry_length,x
-        sta     dir_header,x
+        copy8   dir_buffer+SubdirectoryHeader::entry_length,x, dir_header,x
         inx
     WHILE_X_NE  #.sizeof(dir_header)
 
@@ -7203,8 +7153,7 @@ finish: copy16  record_ptr, filerecords_free_start
         lda     selected_window_id
       IF_ZERO
         ;; Volume icon - check that it's still valid.
-        lda     icon_param
-        sta     drive_to_refresh ; icon_number
+        copy8   icon_param, drive_to_refresh ; icon_number
         jsr     CheckDriveByIconNumber
       END_IF
     END_IF
@@ -7299,8 +7248,7 @@ vol_kb_used:  .word   0
         dex
     DO
         inx
-        lda     window_id_to_filerecord_list_entries+1,x
-        sta     window_id_to_filerecord_list_entries,x
+        copy8   window_id_to_filerecord_list_entries+1,x, window_id_to_filerecord_list_entries,x
     WHILE_X_NE  window_id_to_filerecord_list_count
 
         ;; List is now shorter by one...
@@ -7555,8 +7503,7 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         ;; Flags
         iny                     ; ASSERT: Y = ICTRecord::flags
         ASSERT_EQUALS ICTRecord::flags, ICTRecord::filetype+1
-        lda     (ptr),y
-        sta     flags
+        copy8   (ptr),y, flags
 
         ;; Does Aux Type matter, and if so does it match?
         bit     flags
@@ -7595,10 +7542,8 @@ loop:   ldy     #ICTRecord::mask ; $00 if done
         copy16in (ptr),y, ptr_suffix
         ;; Start at the end of the strings
         ldy     #0
-        lda     (ptr_suffix),y
-        sta     suffix_pos
-        lda     (ptr_filename),y
-        sta     filename_pos
+        copy8   (ptr_suffix),y, suffix_pos
+        copy8   (ptr_filename),y, filename_pos
 
         ;; Case-insensitive compare each character
       DO
@@ -7801,8 +7746,7 @@ END_PARAM_BLOCK
 
         stax    ptr
         ldy     #0
-        lda     (ptr),y
-        sta     len
+        copy8   (ptr),y, len
         inc16   ptr
         MGTK_CALL MGTK::TextWidth, ptr
         ldax    result
@@ -7856,8 +7800,7 @@ check_icon:
 
         rts
 
-more:   lda     cached_window_entry_list,x
-        sta     icon_param
+more:   copy8   cached_window_entry_list,x, icon_param
         ITK_CALL IconTK::GetIconBounds, icon_param ; inits `tmp_rect`
 
         jsr     GetCachedWindowViewBy
@@ -8003,8 +7946,7 @@ END_PARAM_BLOCK
         jsr     GetFileRecordListForWindow
         addax   #1, records_base_ptr ; first byte in list is the list size
 
-        lda     cached_window_id
-        sta     active_window_id
+        copy8   cached_window_id, active_window_id
 
         ;; Loop over files, creating icon for each
     DO
@@ -8066,8 +8008,7 @@ records_base_ptr:
         inc     icon_count
         ITK_CALL IconTK::AllocIcon, get_icon_entry_params
         copy16  get_icon_entry_params::addr, icon_entry
-        lda     get_icon_entry_params::id
-        sta     icon_num
+        copy8   get_icon_entry_params::id, icon_num
         ldx     cached_window_entry_count
         inc     cached_window_entry_count
         sta     cached_window_entry_list,x
@@ -8190,8 +8131,7 @@ records_base_ptr:
 
         ;; For populating `IconEntry::win_flags`
         tay                     ; Y = `IconType`
-        lda     icontype_iconentryflags_table,y
-        sta     icon_flags
+        copy8   icontype_iconentryflags_table,y, icon_flags
 
         ;; Adjust type and flags based on view
         view_by := *+1
@@ -8299,8 +8239,7 @@ oloop:  lda     #SELF_MODIFIED_BYTE
         jsr     _CalcPtr
         stax    ptr2
 
-        lda     #0
-        sta     inner
+        copy8   #0, inner
 
         inner := *+1
 iloop:  lda     #SELF_MODIFIED_BYTE
@@ -8319,12 +8258,7 @@ iloop:  lda     #SELF_MODIFIED_BYTE
         ;; Swap
         ldx     inner
         ldy     outer
-        lda     cached_window_entry_list,x
-        pha
-        lda     cached_window_entry_list,y
-        sta     cached_window_entry_list,x
-        pla
-        sta     cached_window_entry_list,y
+        swap8   cached_window_entry_list,x, cached_window_entry_list,y
 
         lda     outer
         jsr     _CalcPtr
@@ -8515,8 +8449,7 @@ _CompareFileRecords_sort_by := _CompareFileRecords::sort_by
         bit     LCBANK2
         ldy     #.sizeof(FileRecord)-1
     DO
-        lda     (ptr),y
-        sta     list_view_filerecord,y
+        copy8   (ptr),y, list_view_filerecord,y
         dey
     WHILE_POS
         bit     LCBANK1
@@ -8762,13 +8695,11 @@ min     := parsed_date + ParsedDateTime::minute
 .proc _ConcatenateDatePart
         stax    $06
         ldy     #$00
-        lda     ($08),y
-        sta     concat_len
+        copy8   ($08),y, concat_len
         clc
         adc     ($06),y
         sta     ($08),y
-        lda     ($06),y
-        sta     compare_y
+        copy8   ($06),y, compare_y
     DO
         inc     concat_len
         iny
@@ -8816,10 +8747,9 @@ min     := parsed_date + ParsedDateTime::minute
         bne     calc_days
 
         dec     DATEHI          ; year - 1
-        bpl     year_okay
-        lda     #99
-        sta     DATEHI          ; wrap to year 99 (not 127)
-year_okay:
+    IF_NEG
+        copy8   #99, DATEHI     ; wrap to year 99 (not 127)
+    END_IF
         lda     #12*16          ; month = december
 
 calc_days:
@@ -9024,8 +8954,7 @@ finish:
         ;; Append '/'
         ldx     src_path_buf
         inx
-        lda     #'/'
-        sta     src_path_buf,x
+        copy8   #'/', src_path_buf,x
 
         ;; Append new filename
         ldy     #0
@@ -9485,8 +9414,7 @@ GetBlockCount   := GetBlockCountImpl::start
 
 error:  pha                     ; save error
         ldy     devlst_index      ; remove unit from list
-        lda     #0
-        sta     device_to_icon_map,y
+        copy8   #0, device_to_icon_map,y
         dec     cached_window_entry_count
         dec     icon_count
         pla
@@ -9555,13 +9483,11 @@ success:
 
         ;; Assign icon flags
         ldy     #IconEntry::win_flags
-        lda     #kIconEntryFlagsDropTarget
-        sta     (icon_ptr),y
+        copy8   #kIconEntryFlagsDropTarget, (icon_ptr),y
 
         ;; Invalid record
         ldy     #IconEntry::record_num
-        lda     #$FF
-        sta     (icon_ptr),y
+        copy8   #$FF, (icon_ptr),y
 
         ;; Assign icon coordinates
         devlst_index := *+1
@@ -9666,8 +9592,7 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
    DO
         dex
    WHILE_A_NE   desktop_icon_usage_table,x
-        lda     #0
-        sta     desktop_icon_usage_table,x
+        copy8   #0, desktop_icon_usage_table,x
         rts
 .endproc ; FreeDesktopIconPosition
 
@@ -9682,8 +9607,7 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
         bpl     :-
         rts
 
-remove: lda     cached_window_entry_list+1,x
-        sta     cached_window_entry_list,x
+remove: copy8   cached_window_entry_list+1,x, cached_window_entry_list,x
         inx
         cpx     cached_window_entry_count
         bne     remove
@@ -9820,8 +9744,7 @@ AnimateWindowOpen       := AnimateWindowImpl::open
         ;; If N in 0..11, draw N
         ;; If N in 2..13, erase N-2 (i.e. 0..11, 2 behind)
 
-        lda     #0
-        sta     step
+        copy8   #0, step
         jsr     InitSetDesktopPort
 
         ;; If N in 0..11, draw N
@@ -9852,8 +9775,7 @@ next:   inc     step
         ;; If N in 0..11, draw N
         ;; If N in -2..9, erase N+2 (0..11, i.e. 2 behind)
 
-        lda     #kMaxAnimationStep
-        sta     step
+        copy8   #kMaxAnimationStep, step
         jsr     InitSetDesktopPort
 
         ;; If N in 0..11, draw N
@@ -10291,11 +10213,9 @@ do_op_flag:
 
 .proc PushEntryCount
         ldx     entry_count_stack_index
-        lda     entries_to_skip
-        sta     entry_count_stack,x
+        copy8   entries_to_skip, entry_count_stack,x
         inx
-        lda     entries_to_skip+1
-        sta     entry_count_stack,x
+        copy8   entries_to_skip+1, entry_count_stack,x
         inx
         stx     entry_count_stack_index
         rts
@@ -10304,11 +10224,9 @@ do_op_flag:
 .proc PopEntryCount
         ldx     entry_count_stack_index
         dex
-        lda     entry_count_stack,x
-        sta     entries_to_skip+1
+        copy8   entry_count_stack,x, entries_to_skip+1
         dex
-        lda     entry_count_stack,x
-        sta     entries_to_skip
+        copy8   entry_count_stack,x, entries_to_skip
         stx     entry_count_stack_index
         rts
 .endproc ; PopEntryCount
@@ -10345,8 +10263,7 @@ retry2: MLI_CALL READ, read_block_pointers_params
 .endproc ; OpenSrcDir
 
 .proc CloseSrcDir
-        lda     op_ref_num
-        sta     close_src_dir_params::ref_num
+        copy8   op_ref_num, close_src_dir_params::ref_num
 retry:  MLI_CALL CLOSE, close_src_dir_params
     IF_CS
         ldx     #AlertButtonOptions::TryAgainCancel
@@ -10361,8 +10278,7 @@ retry:  MLI_CALL CLOSE, close_src_dir_params
 
 .proc ReadFileEntry
         inc16   entries_read
-        lda     op_ref_num
-        sta     read_src_dir_entry_params::ref_num
+        copy8   op_ref_num, read_src_dir_entry_params::ref_num
 retry:  MLI_CALL READ, read_src_dir_entry_params
     IF_CS
         cmp     #ERR_END_OF_FILE
@@ -11075,12 +10991,7 @@ Start:  lda     DEVNUM
         ;; Swap everything but `header_pointer`
         ldy     #FileEntry::header_pointer-1
     DO
-        lda     (src_ptr),y
-        pha
-        lda     (dst_ptr),y
-        sta     (src_ptr),y
-        pla
-        sta     (dst_ptr),y
+        swap8   (src_ptr),y, (dst_ptr),y
         dey
     WHILE_POS
 
@@ -11527,8 +11438,7 @@ error:  jsr     ShowErrorAlert
         and     #ACCESS_D       ; destroy enabled bit set?
         bne     done            ; yes, no need to unlock
 
-        lda     #ACCESS_DEFAULT
-        sta     src_file_info_params::access
+        copy8   #ACCESS_DEFAULT, src_file_info_params::access
         jsr     SetSrcFileInfo
 
 done:   rts
@@ -11722,8 +11632,7 @@ src_path_slash_index:
     DO
         iny
         inx
-        lda     src_path_buf,y
-        sta     dst_path_buf,x
+        copy8   src_path_buf,y, dst_path_buf,x
     WHILE_Y_NE  src_path_buf
 
         stx     dst_path_buf
@@ -11899,8 +11808,7 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
 
         ;; Check if same volume
         ldy     #0
-        lda     (src_ptr),y
-        sta     src_len
+        copy8   (src_ptr),y, src_len
         iny                     ; skip leading '/'
         bne     check           ; always
 
@@ -12542,8 +12450,7 @@ a_path: .addr   SELF_MODIFIED_BYTE
 start:
         stax    rename_dialog_params::a_prev
 
-        lda     #0
-        sta     result_flags
+        copy8   #0, result_flags
 
         ;; Dialog needs base path to ensure new name is valid path
         jsr     GetSelectionWindow
@@ -12565,8 +12472,7 @@ start:
         stax    $06
         param_call CopyPtr1ToBuf, old_name_buf
 
-        lda     selected_icon_list
-        sta     icon_param
+        copy8   selected_icon_list, icon_param
         ITK_CALL IconTK::GetRenameRect, icon_param ; populates `tmp_rect`
 
         ;; Open the dialog
@@ -12635,10 +12541,8 @@ no_change:
         ;; Completed - tear down the dialog...
 finish: jsr     _DialogClose
 
-        lda     selected_icon_list
-        sta     icon_param
-
         ;; Erase the icon, in case new name is shorter
+        copy8   selected_icon_list, icon_param
         ITK_CALL IconTK::EraseIcon, icon_param
 
         ;; Copy new string in
@@ -12883,8 +12787,7 @@ out:    jsr     SetCursorPointerWithFlag
 ;;; Key handler for rename dialog
 
 .proc _KeyHandler
-        lda     event_params::key
-        sta     rename_le_params::key
+        copy8   event_params::key, rename_le_params::key
 
         ;; Modifiers?
         ldx     event_params::modifiers
@@ -12977,8 +12880,7 @@ ignore:
         sta     @len
 :       iny
         inx
-        lda     (str1),y
-        sta     buf,x
+        copy8   (str1),y, buf,x
         @len := *+1
         cpy     #SELF_MODIFIED_BYTE
         bne     :-
@@ -12986,8 +12888,7 @@ ignore:
 do_str2:
         ;; Add path separator
         inx
-        lda     #'/'
-        sta     buf,x
+        copy8   #'/', buf,x
 
         ;; Append $6 (str2)
         ldy     #0
@@ -12996,8 +12897,7 @@ do_str2:
         sta     @len
 :       iny
         inx
-        lda     (str2),y
-        sta     buf,x
+        copy8   (str2),y, buf,x
         @len := *+1
         cpy     #SELF_MODIFIED_BYTE
         bne     :-
@@ -13258,8 +13158,7 @@ assign: ldy     new_path
         adc     #1
         sta     (ptr),y
         tay
-        lda     #'/'
-        sta     (ptr),y
+        copy8   #'/', (ptr),y
     END_IF
         rts
 .endproc ; _MaybeRestoreSlash
@@ -13392,12 +13291,9 @@ restore:
         asl     a               ; x = A * 4 (to index into dword table)
         tax
 
-        lda     pos_table,x
-        sta     set_mark_params::position
-        lda     pos_table+1,x
-        sta     set_mark_params::position+1
-        lda     pos_table+2,x
-        sta     set_mark_params::position+2
+        copy8   pos_table+0,x, set_mark_params::position+0
+        copy8   pos_table+1,x, set_mark_params::position+1
+        copy8   pos_table+2,x, set_mark_params::position+2
 
         copy16  len_table,y, read_params::request_count
         copy16  addr_table,y, read_params::data_buffer
@@ -13793,8 +13689,7 @@ out:    jsr     SetCursorPointerWithFlag ; toggling in prompt dialog
 ;;; Key handler for prompt dialog
 
 .proc _KeyHandler
-        lda     event_params::key
-        sta     prompt_le_params::key
+        copy8   event_params::key, prompt_le_params::key
 
         ldx     event_params::modifiers
         stx     prompt_le_params::modifiers
@@ -14124,8 +14019,7 @@ finish: ldy     #0              ; Write sentinel
         ;; Append '/'
         ldy     tmp_path_buf
         iny
-        lda     #'/'
-        sta     tmp_path_buf,y
+        copy8   #'/', tmp_path_buf,y
 
         ;; Append filename
         ldx     #0
@@ -14469,8 +14363,7 @@ mli_relay_checkevents_flag:
         ;; Copy the params here
         ldy     #3      ; ptr is off by 1
     DO
-        lda     (params_src),y
-        sta     params-1,y
+        copy8   (params_src),y, params-1,y
         dey
     WHILE_NOT_ZERO
 
@@ -15027,8 +14920,7 @@ ret:    rts
 
         ;; Load count & entries
         tax
-        lda     window_entry_count_table,x
-        sta     cached_window_entry_count
+        copy8   window_entry_count_table,x, cached_window_entry_count
         beq     done_load       ; no entries, done
         sta     count           ; TODO: Just use `cached_window_entry_count`
 
@@ -15076,8 +14968,7 @@ done_load:
 
         ;; Shift up
         inx                     ; X = next window_id
-        lda     window_entry_offset_table,x
-        sta     last
+        copy8   window_entry_offset_table,x, last
         ldy     icon_count      ; Y = new offset
         tya
         sec
@@ -15101,8 +14992,7 @@ shift_down:
         adc     delta
         tay                     ; Y = new offset
 
-:       lda     window_entry_table,x
-        sta     window_entry_table,y
+:       copy8   window_entry_table,x, window_entry_table,y
         cpy     icon_count
         beq     shift_offsets
         inx
@@ -15126,8 +15016,7 @@ done_shift:
 
         ;; Store count & entries
         ldx     cached_window_id
-        lda     cached_window_entry_count
-        sta     window_entry_count_table,x
+        copy8   cached_window_entry_count, window_entry_count_table,x
         beq     done_store      ; no entries, done
         sta     count           ; TODO: Just use `cached_window_entry_count`
 
@@ -15135,8 +15024,7 @@ done_shift:
         tax                     ; X = offset in table
         ldy     #0              ; Y = index in win
     DO
-        lda     cached_window_entry_list,y
-        sta     window_entry_table,x
+        copy8   cached_window_entry_list,y, window_entry_table,x
         inx
         iny
         count := *+1

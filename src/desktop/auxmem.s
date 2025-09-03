@@ -608,20 +608,8 @@ AlertById := AlertByIdImpl::start
         ldx     #kScreenHeight-1
 
     DO
-        lda     mgtk::hires_table_lo,x
-        pha
-        lda     mgtk::hires_table_lo,y
-        sta     mgtk::hires_table_lo,x
-        pla
-        sta     mgtk::hires_table_lo,y
-
-        lda     mgtk::hires_table_hi,x
-        pha
-        lda     mgtk::hires_table_hi,y
-        sta     mgtk::hires_table_hi,x
-        pla
-        sta     mgtk::hires_table_hi,y
-
+        swap8   mgtk::hires_table_lo,x, mgtk::hires_table_lo,y
+        swap8   mgtk::hires_table_hi,x, mgtk::hires_table_hi,y
         dex
         iny
     WHILE_Y_NE  #kScreenHeight/2

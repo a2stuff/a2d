@@ -1368,12 +1368,7 @@ iloop:  lda     #SELF_MODIFIED_BYTE
         ;; Swap
         ldx     inner
         ldy     outer
-        lda     file_list_index,x
-        pha
-        lda     file_list_index,y
-        sta     file_list_index,x
-        pla
-        sta     file_list_index,y
+        swap8   file_list_index,x, file_list_index,y
 
         lda     outer
         jsr     _CalcPtr

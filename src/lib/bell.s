@@ -68,12 +68,7 @@ loop:   dec     ptr
 
         ;; Swap proc into place
         ldy     #kBellProcLength - 1
-:       lda     BELLPROC,y
-        pha
-        lda     BELLDATA,y
-        sta     BELLPROC,y
-        pla
-        sta     BELLDATA,y
+:       swap8   BELLPROC,y, BELLDATA,y
         dey
         bpl     :-
 
