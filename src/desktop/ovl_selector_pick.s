@@ -155,19 +155,18 @@ dialog_loop:
         jsr     EventLoop
         bmi     dialog_loop     ; N set = nothing selected, re-enter loop
 
-        beq     :+              ; Z set = OK selected
-        jmp     DoCancel
+        jne     DoCancel        ; Z set = OK selected
 
         ;; Which action are we?
-:       lda     shortcut_picker_record::selected_index
+        lda     shortcut_picker_record::selected_index
         bmi     dialog_loop
         lda     selector_action
         cmp     #SelectorAction::edit
         jeq     DoEdit
 
         cmp     #SelectorAction::delete
-        bne     :+
-        beq     DoDelete       ; always
+        bne     :+              ; TODO: Remove this line
+        beq     DoDelete        ; always
 
 :       cmp     #SelectorAction::run
         bne     dialog_loop
@@ -177,13 +176,14 @@ dialog_loop:
 
 .proc DoDelete
         jsr     main::SetCursorWatch
+
         lda     shortcut_picker_record::selected_index
         jsr     RemoveEntry
-        bne     :+              ; Z set on success
-
+    IF_ZS                       ; Z set on success
         inc     clean_flag      ; mark as "dirty"
+    END_IF
 
-:       jsr     main::SetCursorPointer
+        jsr     main::SetCursorPointer
         jmp     DoCancel
 .endproc ; DoDelete
 
@@ -208,9 +208,10 @@ dialog_loop:
         ldx     #kRunListPrimary
         lda     shortcut_picker_record::selected_index
         cmp     #kSelectorListNumPrimaryRunListEntries
-        bcc     :+
-        inx
-:
+    IF_GE
+        inx                     ; #kRunListSecondary
+    END_IF
+
         ;; Map to `kSelectorEntryCopyOnBoot` to `kCopyOnBoot` etc
         .define swizzle(n) (n >> 7) + 1 + (n > 127)
         .assert swizzle kSelectorEntryCopyOnBoot = kCopyOnBoot, error, "const mismatch"
@@ -330,13 +331,12 @@ copy_when_conversion_table:
 
 .proc DoCancel
         lda     selector_action
-        cmp     #SelectorAction::edit
-        bne     :+
-
+    IF_A_EQ     #SelectorAction::edit
         lda     #kDynamicRoutineRestoreFD
         jsr     main::RestoreDynamicRoutine
+    END_IF
 
-:       jsr     CloseWindow
+        jsr     CloseWindow
         jsr     main::ClearUpdates
 
         lda     #$FF
@@ -436,19 +436,20 @@ clean_flag:                     ; high bit set if "clean", cleared if "dirty"
 handle_button:
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::which_area
-        bne     :+
+    IF_ZERO
         return  #$FF
+    END_IF
 
-:       cmp     #MGTK::Area::content
-        beq     :+
+    IF_A_NE     #MGTK::Area::content
         return  #$FF
+    END_IF
 
-:       lda     findwindow_params::window_id
-        cmp     winfo_entry_picker
-        beq     :+
+        lda     findwindow_params::window_id
+    IF_A_NE     winfo_entry_picker
         return  #$FF
+    END_IF
 
-:       lda     #winfo_entry_picker::kWindowId
+        lda     #winfo_entry_picker::kWindowId
         sta     screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
@@ -456,29 +457,33 @@ handle_button:
         MGTK_CALL MGTK::InRect, entry_picker_ok_button::rect
     IF_NOT_ZERO
         BTK_CALL BTK::Track, entry_picker_ok_button
-        bmi     :+
+      IF_NC
         lda     #$00            ; OK selected
-:       rts
+      END_IF
+        rts
     END_IF
 
         MGTK_CALL MGTK::InRect, entry_picker_cancel_button::rect
     IF_NOT_ZERO
         BTK_CALL BTK::Track, entry_picker_cancel_button
-        bmi     :+
+      IF_NC
         lda     #$01            ; cancel selected
-:       rts
+      END_IF
+        rts
     END_IF
 
         COPY_STRUCT MGTK::Point, screentowindow_params::window, shortcut_picker_params::coords
         OPTK_CALL OPTK::Click, shortcut_picker_params
-        bmi     ret
-        jsr     DetectDoubleClick
     IF_NC
+        jsr     DetectDoubleClick
+      IF_NC
         pha
         BTK_CALL BTK::Flash, entry_picker_ok_button
         pla
+      END_IF
     END_IF
-ret:    rts
+
+        rts
 .endproc ; EventLoop
 
 ;;; ============================================================
@@ -486,10 +491,11 @@ ret:    rts
 
 .proc HandleKey
         lda     event_params::modifiers
-        cmp     #MGTK::event_modifier_solid_apple
-        bne     :+
+    IF_A_EQ     #MGTK::event_modifier_solid_apple
         return  #$FF
-:       lda     event_params::key
+    END_IF
+
+        lda     event_params::key
 
         cmp     #CHAR_RETURN
         jeq     HandleKeyReturn
@@ -539,14 +545,15 @@ ret:    rts
 .proc UpdateOKButton
         lda     #BTK::kButtonStateNormal
         bit     shortcut_picker_record::selected_index
-        bpl     :+
+    IF_NS
         lda     #BTK::kButtonStateDisabled
-:       cmp     entry_picker_ok_button::state
-        beq     :+
+    END_IF
+
+    IF_A_NE     entry_picker_ok_button::state
         sta     entry_picker_ok_button::state
         BTK_CALL BTK::Hilite, entry_picker_ok_button
-:       rts
-
+    END_IF
+        rts
 .endproc ; UpdateOKButton
 
 ;;; ============================================================
@@ -554,28 +561,30 @@ ret:    rts
 .proc PopulateEntriesFlagTable
         ldx     #kSelectorListNumEntries - 1
         lda     #$FF
-:       sta     entries_flag_table,x
+    DO
+        sta     entries_flag_table,x
         dex
-        bpl     :-
+    WHILE_POS
 
         ldx     #0
-:       cpx     num_primary_run_list_entries
-        beq     :+
+    DO
+        BREAK_IF_X_EQ num_primary_run_list_entries
         txa
         sta     entries_flag_table,x
         inx
-        bne     :-
+    WHILE_NOT_ZERO
 
-:       ldx     #0
-:       cpx     num_secondary_run_list_entries
-        beq     :+
+        ldx     #0
+    DO
+        BREAK_IF_X_EQ num_secondary_run_list_entries
         txa
         clc
         adc     #8
         sta     entries_flag_table+8,x
         inx
-        bne     :-
-:       rts
+    WHILE_NOT_ZERO
+
+        rts
 .endproc ; PopulateEntriesFlagTable
 
 ;;; Table for 24 entries; index (0...23) if in use, $FF if empty
@@ -591,10 +600,9 @@ entries_flag_table:
 
 .proc AssignEntryData
         cmp     #8
-        bcc     :+
-        jmp     AssignSecondaryRunListEntryData
+        jcs     AssignSecondaryRunListEntryData
 
-:       sta     index
+        sta     index
         tya                     ; flags
         pha
 
@@ -605,10 +613,10 @@ entries_flag_table:
         jsr     GetFileEntryAddr
         stax    ptr_file
         ldy     text_input_buf
-:       lda     text_input_buf,y
-        sta     (ptr_file),y
+    DO
+        copy8   text_input_buf,y, (ptr_file),y
         dey
-        bpl     :-
+    WHILE_POS
 
         ;; Assign flags to file
         ldy     #kSelectorEntryFlagsOffset
@@ -620,10 +628,10 @@ entries_flag_table:
         jsr     GetFilePathAddr
         stax    ptr_file
         ldy     path_buf0
-:       lda     path_buf0,y
-        sta     (ptr_file),y
+    DO
+        copy8   path_buf0,y, (ptr_file),y
         dey
-        bpl     :-
+    WHILE_POS
 
         jsr     UpdateMenuResources
 
@@ -651,10 +659,10 @@ index:  .byte   0
 
         ;; Assign name
         ldy     text_input_buf
-:       lda     text_input_buf,y
-        sta     (ptr),y
+   DO
+        copy8   text_input_buf,y, (ptr),y
         dey
-        bpl     :-
+   WHILE_POS
 
         ;; Assign flags
         ldy     #kSelectorEntryFlagsOffset
@@ -666,10 +674,10 @@ index:  .byte   0
         jsr     GetFilePathAddr
         stax    ptr
         ldy     path_buf0
-:       lda     path_buf0,y
-        sta     (ptr),y
+    DO
+        copy8   path_buf0,y, (ptr),y
         dey
-        bpl     :-
+    WHILE_POS
         rts
 
 index:  .byte   0
@@ -729,14 +737,13 @@ secondary_run_list:
 loop:   lda     index
         sec
         sbc     #ptr2
-        cmp     num_secondary_run_list_entries
-        bne     :+
-
+    IF_A_EQ     num_secondary_run_list_entries
         dec     selector_list + kSelectorListNumSecondaryRunListOffset
         dec     num_secondary_run_list_entries
         jmp     WriteFile
+    END_IF
 
-:       lda     index
+        lda     index
         jsr     MoveEntryDown
 
         inc     index
@@ -756,10 +763,10 @@ index:  .byte   0
         ldy     #0
         lda     (ptr2),y
         tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
+    DO
+        copy8   (ptr2),y, (ptr1),y
         dey
-        bpl     :-
+    WHILE_POS
 
         ;; And flags
         ldy     #kSelectorEntryFlagsOffset
@@ -775,10 +782,10 @@ index:  .byte   0
         ldy     #0
         lda     (ptr2),y
         tay
-:       lda     (ptr2),y
-        sta     (ptr1),y
+    DO
+        copy8   (ptr2),y, (ptr1),y
         dey
-        bpl     :-
+    WHILE_POS
 
         rts
 .endproc ; MoveEntryDown
@@ -850,10 +857,10 @@ finish:
         ldy     #0
         lda     (ptr_file),y
         tay
-:       lda     (ptr_file),y
-        sta     (ptr_res),y
+    DO
+        copy8   (ptr_file),y, (ptr_res),y
         dey
-        bpl     :-
+    WHILE_POS
 
         rts
 .endproc ; _CopyString
@@ -960,35 +967,35 @@ filename:
 
         ldx     #$00            ; Append filename
         ldy     filename_buffer
-:       inx
+    DO
+        inx
         iny
-        lda     filename,x
-        sta     filename_buffer,y
-        cpx     filename
-        bne     :-
+        copy8   filename,x, filename_buffer,y
+    WHILE_X_NE  filename
         sty     filename_buffer
 
         copy8   #0, second_try_flag
 
-@retry: MLI_CALL CREATE, create_params
+retry:  MLI_CALL CREATE, create_params
         MLI_CALL OPEN, open_origpfx_params
         bcc     write
 
         ;; First time - ask if we should even try.
         lda     second_try_flag
-        bne     :+
+    IF_ZERO
         inc     second_try_flag
         lda     #kErrSaveChanges
         jsr     ShowAlert
         cmp     #kAlertResultOK
-        beq     @retry
+        beq     retry
         bne     cancel          ; always
+    END_IF
 
         ;; Second time - prompt to insert.
-:       lda     #kErrInsertSystemDisk
+        lda     #kErrInsertSystemDisk
         jsr     ShowAlert
         cmp     #kAlertResultOK
-        beq     @retry
+        beq     retry
 
 cancel: rts
 

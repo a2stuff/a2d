@@ -553,10 +553,11 @@ start:
 
         ;; Search for alert in table, set Y to index
         ldy     #kNumAlerts-1
-:       cmp     alert_table,y
+   DO
+        cmp     alert_table,y
         beq     :+
         dey
-        bpl     :-
+   WHILE_POS
         iny                     ; default
 :
 
@@ -606,7 +607,8 @@ AlertById := AlertByIdImpl::start
         ldy     #0
         ldx     #kScreenHeight-1
 
-:       lda     mgtk::hires_table_lo,x
+    DO
+        lda     mgtk::hires_table_lo,x
         pha
         lda     mgtk::hires_table_lo,y
         sta     mgtk::hires_table_lo,x
@@ -622,8 +624,7 @@ AlertById := AlertByIdImpl::start
 
         dex
         iny
-        cpy     #kScreenHeight/2
-        bne     :-
+    WHILE_Y_NE  #kScreenHeight/2
 
         rts
 .endproc ; FlipMGTKHiresTable

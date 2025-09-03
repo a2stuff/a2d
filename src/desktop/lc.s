@@ -70,10 +70,10 @@ ASSERT_EQUALS *, WriteSettingFromAux, "entry point"
 
         ;; Copy the params here
         ldy     #3      ; ptr is off by 1
-:       lda     (params_src),y
-        sta     params-1,y
+   DO
+        copy8   (params_src),y, params-1,y
         dey
-        bne     :-
+   WHILE_NOT_ZERO
 
         ;; Bank and call
         jsr     BankInAux
@@ -152,9 +152,10 @@ params:  .res    3
 
         ;; Copy somewhere easier to work with
         ldy     #.sizeof(MGTK::GrafPort)-1
-:       copy8   (port_ptr),y, desktop_grafport,y
+   DO
+        copy8   (port_ptr),y, desktop_grafport,y
         dey
-        bpl     :-
+   WHILE_POS
 
         ;; Determine if the update's maprect is already below the header; if
         ;; not, we need to offset the maprect below the header to prevent
@@ -271,10 +272,11 @@ op:     lda     SELF_MODIFIED
 
         ;; Copy 4 bytes from $8 to stack
         ldx     #AS_BYTE(-4)
-:       lda     $06 + 4,x
+    DO
+        lda     $06 + 4,x
         pha
         inx
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; Restore return address
         hi := *+1
@@ -309,10 +311,11 @@ op:     lda     SELF_MODIFIED
 
         ;; Copy 4 bytes from stack to $6
         ldx     #3
-:       pla
+   DO
+        pla
         sta     $06,x
         dex
-        bpl     :-
+   WHILE_POS
 
         ;; Restore return address to stack
         hi := *+1
@@ -346,15 +349,15 @@ op:     lda     SELF_MODIFIED
         iny
         ldx     text_input_buf
         inx
-:       lda     (ptr),y
-        sta     text_input_buf,x
+    DO
+        copy8   (ptr),y, text_input_buf,x
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-        beq     :+
+        BREAK_IF_EQ
         inx
         iny
-        bne     :-              ; always
-:       stx     text_input_buf
+    WHILE_NOT_ZERO              ; always
+        stx     text_input_buf
 
         jsr     PopPointers
         jmp     BankInMain

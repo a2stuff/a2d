@@ -98,9 +98,10 @@ start:
 
         ;; Open this system file
         MLI_CALL OPEN, open_params
-        bcc     :+
+    IF_CS
         brk                     ; crash
-:       lda     open_params::ref_num
+    END_IF
+        lda     open_params::ref_num
         sta     set_mark_params::ref_num
         sta     read_params::ref_num
 
@@ -114,9 +115,9 @@ segment_num := * + 1
 
         ;; Close
         MLI_CALL CLOSE, close_params
-        bcc     :+
+    IF_CS
         brk                     ; crash
-:
+    END_IF
         jmp     kSegmentInitializerAddress
 
 continue:
@@ -124,22 +125,23 @@ continue:
         copy8   segment_offset_table_high,x, set_mark_params::position+1
         copy8   segment_offset_table_bank,x, set_mark_params::position+2
         MLI_CALL SET_MARK, set_mark_params
-        bcc     :+
+    IF_CS
         brk                     ; crash
-:
+    END_IF
+
         copylohi segment_addr_table_low,x, segment_addr_table_high,x, read_params::data_buffer
         copylohi segment_size_table_low,x, segment_size_table_high,x, read_params::request_count
         MLI_CALL READ, read_params
-        bcc     :+
+    IF_CS
         brk                     ; crash
-:
+    END_IF
+
         ldx     segment_num
         inc     segment_num
         lda     segment_type_table,x
         beq     loop            ; type 0 = main, so done
         cmp     #2              ; carry set if banked, clear if aux
-        bcc     :+
-
+    IF_CS
         ;; Handle bank-switched memory segment
         ;; Disable interrupts, since we may overwrite IRQ vector
         php
@@ -161,10 +163,12 @@ continue:
         lda     #$80
         sta     $0100           ; Main stack pointer, in Aux ZP
         sta     $0101           ; Aux stack pointer, in Aux ZP
+    END_IF
 
         src := $6
         dst := $8
-:       ldy     #0
+
+        ldy     #0
         sty     src
         ldy     segment_dest_table_low,x
         sty     dst
@@ -175,22 +179,23 @@ continue:
 
         ldy     segment_size_table_high,x ; Y = number of pages
         lda     segment_size_table_low,x  ; fractional?
-        beq     :+
+    IF_NOT_ZERO
         iny                     ; if so, round up
-:       tya
+    END_IF
+
+        tya
         tax                     ; X = number of pages to copy
         sta     RAMWRTON
         jsr     CopySegment
         sta     RAMWRTOFF
-        bcc     :+
-
+    IF_CS                       ; carry set if banked
         COPY_BYTES kIntVectorsSize, vector_buf, VECTORS
-
         sta     ALTZPOFF
         bit     ROMIN2
-
         plp
-:       jmp     loop
+    END_IF
+
+        jmp     loop
 
 vector_buf:
         .res    ::kIntVectorsSize, 0

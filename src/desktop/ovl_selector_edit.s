@@ -83,12 +83,11 @@ kCopyNever  = 3                 ; corresponds to `kSelectorEntryCopyNever`
         ldx     file_dialog::path_buf
         inx
         ldy     #0
-:       inx
+      DO
+        inx
         iny
-        lda     path_buf0,x
-        sta     buffer,y
-        cpx     path_buf0
-        bne     :-
+        copy8   path_buf0,x, buffer,y
+      WHILE_X_NE path_buf0
         sty     buffer
     END_IF
         param_call file_dialog::UpdateListFromPathAndSelectFile, buffer
@@ -146,28 +145,27 @@ DEFINE_GET_FILE_INFO_PARAMS get_file_info_params, main::tmp_path_buf
         lda     text_input_buf
     IF_ZERO
         ldx     path_buf0
-:       lda     path_buf0,x
-        cmp     #'/'
-        beq     :+
+      DO
+        lda     path_buf0,x
+        BREAK_IF_A_EQ #'/'
         dex
-        bne     :-              ; always, since path is valid
-:       inx
+      WHILE_NOT_ZERO            ; always, since path is valid
+        inx
 
         ldy     #1
-:       lda     path_buf0,x
-        sta     text_input_buf,y
-        cpx     path_buf0
-        beq     :+
+      DO
+        copy8   path_buf0,x, text_input_buf,y
+        BREAK_IF_X_EQ path_buf0
         inx
         iny
-        bne     :-              ; always
+      WHILE_NOT_ZERO            ; always
 
-:
         ;; Truncate if necessary
         cpy     #kSelectorMaxNameLength+1
-        bcc     :+
+      IF_GE
         ldy     #kSelectorMaxNameLength
-:       sty     text_input_buf
+      END_IF
+        sty     text_input_buf
     END_IF
 
         ;; Disallow copying some types to ramcard
@@ -240,76 +238,75 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc ClickPrimaryRunListCtrl
         lda     which_run_list
-        cmp     #kRunListPrimary
-        beq     :+
+    IF_A_NE     #kRunListPrimary
         clc
         jsr     UpdateRunListButton
-        lda     #kRunListPrimary
-        sta     which_run_list
+        copy8   #kRunListPrimary, which_run_list
         sec
         jsr     UpdateRunListButton
-:       return  #$FF
+    END_IF
+        return  #$FF
 .endproc ; ClickPrimaryRunListCtrl
 
 .proc ClickSecondaryRunListCtrl
         lda     which_run_list
-        cmp     #kRunListSecondary
-        beq     :+
+    IF_A_NE     #kRunListSecondary
         clc
         jsr     UpdateRunListButton
-        lda     #kRunListSecondary
-        sta     which_run_list
+        copy8   #kRunListSecondary, which_run_list
         sec
         jsr     UpdateRunListButton
-:       return  #$FF
+    END_IF
+        return  #$FF
 .endproc ; ClickSecondaryRunListCtrl
 
 .proc ClickAtFirstBootCtrl
         lda     copy_when
-        cmp     #kCopyOnBoot
-        beq     :+
+    IF_A_NE     #kCopyOnBoot
         clc
         jsr     DrawCopyWhenButton
         lda     #kCopyOnBoot
         sta     copy_when
         sec
         jsr     DrawCopyWhenButton
-:       return  #$FF
+    END_IF
+        return  #$FF
 .endproc ; ClickAtFirstBootCtrl
 
 .proc ClickAtFirstUseCtrl
         lda     copy_when
-        cmp     #kCopyOnUse
-        beq     :+
+    IF_A_NE     #kCopyOnUse
         clc
         jsr     DrawCopyWhenButton
         lda     #kCopyOnUse
         sta     copy_when
         sec
         jsr     DrawCopyWhenButton
-:       return  #$FF
+    END_IF
+        return  #$FF
 .endproc ; ClickAtFirstUseCtrl
 
 .proc ClickNeverCtrl
         lda     copy_when
-        cmp     #kCopyNever
-        beq     :+
+    IF_A_NE     #kCopyNever
         clc
         jsr     DrawCopyWhenButton
         lda     #kCopyNever
         sta     copy_when
         sec
         jsr     DrawCopyWhenButton
-:       return  #$FF
+    END_IF
+        return  #$FF
 .endproc ; ClickNeverCtrl
 
 ;;; ============================================================
 
 .proc UpdateRunListButton
         ldx     #BTK::kButtonStateNormal
-        bcc     :+
+    IF_CS
         ldx     #BTK::kButtonStateChecked
-:
+    END_IF
+
     IF_A_EQ     #kRunListPrimary
         stx     primary_run_list_button::state
         BTK_CALL BTK::RadioUpdate, primary_run_list_button
@@ -323,21 +320,22 @@ is_add_flag:                    ; high bit set = Add, clear = Edit
 
 .proc DrawCopyWhenButton
         ldx     #BTK::kButtonStateNormal
-        bcc     :+
+    IF_CS
         ldx     #BTK::kButtonStateChecked
-:
-        cmp     #kCopyOnBoot
-        bne     :+
+    END_IF
+
+    IF_A_EQ     #kCopyOnBoot
         stx     at_first_boot_button::state
         BTK_CALL BTK::RadioUpdate, at_first_boot_button
         rts
-:
-        cmp     #kCopyOnUse
-        bne     :+
+    END_IF
+
+    IF_A_EQ     #kCopyOnUse
         stx     at_first_use_button::state
         BTK_CALL BTK::RadioUpdate, at_first_use_button
         rts
-:
+    END_IF
+
         stx     never_button::state
         BTK_CALL BTK::RadioUpdate, never_button
         rts

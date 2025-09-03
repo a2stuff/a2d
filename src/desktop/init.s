@@ -1010,8 +1010,8 @@ unit_num:
 
         ;; Add desktop icons
         ldx     #0
-iloop:  cpx     cached_window_entry_count
-        beq     :+
+    DO
+        BREAK_IF_X_EQ cached_window_entry_count
         txa
         pha
         lda     cached_window_entry_list,x
@@ -1020,8 +1020,8 @@ iloop:  cpx     cached_window_entry_count
         pla
         tax
         inx
-        bne     iloop           ; always
-:
+    WHILE_NOT_ZERO              ; always
+
         ;; Desktop icons are cached now
         copy8   #0, cached_window_id
         jsr     main::StoreWindowEntryTable

@@ -84,8 +84,9 @@ Exec:
         OPTK_CALL OPTK::Draw, vol_picker_params
         jsr     main::UpdateOKButton
 
-:       jsr     main::PromptInputLoop
-        bmi     :-              ; not done
+    DO
+        jsr     main::PromptInputLoop
+    WHILE_NS                 ; not done
         jne     cancel          ; cancel
 
         jsr     GetSelectedUnitNum
@@ -112,11 +113,11 @@ skip_select:
 
         ;; Find `DEVLST` index of selected/specified device
         ldx     #AS_BYTE(-1)
-:       inx
+    DO
+        inx
         lda     DEVLST,x
         and     #UNIT_NUM_MASK
-        cmp     unit_num
-        bne     :-
+    WHILE_A_NE  unit_num
         ;; NOTE: Assertion violation if not found
 
         txa
@@ -413,10 +414,10 @@ no:     lda     #$80
         ldy     #0
         lda     (ptr),y
         tay
-:       lda     (ptr),y
-        sta     path+1,y
+    DO
+        copy8   (ptr),y, path+1,y
         dey
-        bpl     :-
+    WHILE_POS
         clc
         adc     #1
         sta     path
@@ -612,11 +613,10 @@ L1398:  stxy    total_blocks
         copy16  #prodos_loader_blocks, write_block_params::data_buffer
         copy16  #0, write_block_params::block_num
         MLI_CALL WRITE_BLOCK, write_block_params
-        bcc     :+
-        jmp     fail2
+        jcs     fail2
 
         ;; Write second block of loader
-:       inc     write_block_params::block_num     ; next block needs...
+        inc     write_block_params::block_num     ; next block needs...
         inc     write_block_params::data_buffer+1 ; next $200 of data
         inc     write_block_params::data_buffer+1
         jsr     WriteBlockAndZero
@@ -632,23 +632,23 @@ L1398:  stxy    total_blocks
         tya
         ora     #ST_VOLUME_DIRECTORY << 4
         sta     block_buffer + VolumeDirectoryHeader::storage_type_name_length
-:       lda     vol_name_buf,y
-        sta     block_buffer + VolumeDirectoryHeader::file_name - 1,y
+    DO
+        copy8   vol_name_buf,y, block_buffer + VolumeDirectoryHeader::file_name - 1,y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         ldy     #kNumKeyBlockHeaderBytes-1 ; other header bytes
-:       lda     key_block_header_bytes,y
-        sta     block_buffer+kKeyBlockHeaderOffset,y
+    DO
+        copy8   key_block_header_bytes,y, block_buffer+kKeyBlockHeaderOffset,y
         dey
-        bpl     :-
+    WHILE_POS
 
         MLI_CALL GET_TIME ; Apply timestamp
         ldy     #3
-:       lda     DATELO,y
-        sta     block_buffer + VolumeDirectoryHeader::creation_date,y
+    DO
+        copy8   DATELO,y, block_buffer + VolumeDirectoryHeader::creation_date,y
         dey
-        bpl     :-
+    WHILE_POS
 
         copy16  case_bits, block_buffer + VolumeDirectoryHeader::case_bits
 
@@ -714,15 +714,15 @@ bitmaploop:
 
         copy8   #$00, block_buffer ; Otherwise (>=7) mark blocks 0-7 as "in use"
         lda     lastblock       ; and check again
-        cmp     #15
-        bcs     :+              ; Is it 15 or more? Skip ahead.
+    IF_A_LT     #15             ; Is it 15 or more? Skip ahead.
         and     #$07            ; Otherwise (7-14) take the low three bits
         tax
         lda     freemask,x      ; convert them to the correct VBM value using a lookup table
         sta     block_buffer+1  ; put it in the bitmap
         bcc     gowrite         ; and write the block
+    END_IF
 
-:       copy8   #$00, block_buffer+1 ; (>=15) Mark blocks 8-15 as "in use"
+        copy8   #$00, block_buffer+1 ; (>=15) Mark blocks 8-15 as "in use"
         lda     lastblock       ; Then finally
         and     #$07            ; take the low three bits
         tax
@@ -834,12 +834,15 @@ fail2:  sec
 zero_buffers:
         ldy     #0
         tya
-:       sta     block_buffer,y
+        ;; TODO: Combine these two loops
+    DO
+        sta     block_buffer,y
         dey
-        bne     :-
-:       sta     block_buffer+$100,y
+    WHILE_NOT_ZERO
+    DO
+        sta     block_buffer+$100,y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
         rts
 .endproc ; WriteBlockAndZero
 
@@ -899,17 +902,19 @@ prodos_loader_blocks:
         sta     read_block_params::unit_num
         copy16  #0, read_block_params::block_num
         MLI_CALL READ_BLOCK, read_block_params
-        bcs     unknown         ; failure
+    IF_CC
         lda     read_buffer + 1
-        cmp     #kPascalSig1    ; DOS 3.3?
-        beq     :+              ; Maybe...
-        jmp     maybe_dos
-:       lda     read_buffer + 2
+      IF_A_NE     #kPascalSig1  ; DOS 3.3?
+        jmp     maybe_dos       ; Maybe...
+      END_IF
+
+        lda     read_buffer + 2
         cmp     #kPascalSig2a
         beq     pascal
         cmp     #kPascalSig2b
         beq     pascal
         FALL_THROUGH_TO unknown
+    END_IF
 
         ;; Unknown, just use slot and drive
 unknown:
@@ -971,20 +976,22 @@ maybe_dos:
 pascal_disk:
         copy16  #kVolumeDirKeyBlock, read_block_params::block_num
         MLI_CALL READ_BLOCK, read_block_params
-        bcc     :+
+    IF_CS
         ;; Pascal disk, empty name - use " :" (weird, but okay?)
         copy8   #2, ovl_string_buf
         copy8   #' ', ovl_string_buf+1
         copy8   #':', ovl_string_buf+2
         rts
+    END_IF
 
         ;; Pascal disk, use name
-:       lda     read_buffer + 6
+        lda     read_buffer + 6
         tax
-:       lda     read_buffer + 6,x
+    DO
+        lda     read_buffer + 6,x
         sta     ovl_string_buf,x
         dex
-        bpl     :-
+    WHILE_POS
         inc     ovl_string_buf
         ldx     ovl_string_buf
         lda     #':'
@@ -1008,10 +1015,10 @@ pascal_disk:
         param_call AdjustOnLineEntryCase, on_line_buffer
 
         ldx     on_line_buffer
-:       lda     on_line_buffer,x
-        sta     ovl_string_buf,x
+    DO
+        copy8   on_line_buffer,x, ovl_string_buf,x
         dex
-        bpl     :-
+    WHILE_POS
 
         jmp     EnquoteStringBuf
 
@@ -1024,10 +1031,12 @@ non_pro:
 
 .proc EnquoteStringBuf
         ldx     ovl_string_buf
-:       lda     ovl_string_buf,x
+    DO
+        lda     ovl_string_buf,x
         sta     ovl_string_buf+1,x
         dex
-        bne     :-
+    WHILE_NOT_ZERO
+
         ldx     ovl_string_buf
         inx
         inx
