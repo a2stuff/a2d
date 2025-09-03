@@ -2522,7 +2522,7 @@ main_length:    .word   0
         beq     :+
         iny
         inx
-        jmp     :-              ; TODO: Make this BNE
+        bne     :-
 
 :       stx     filename_buf
 

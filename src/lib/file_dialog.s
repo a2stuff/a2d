@@ -1053,7 +1053,6 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
 .proc _StripPathBufSegment
     DO
         ldx     path_buf
-        cpx     #0              ; TODO: Can eliminate this line
         BREAK_IF_EQ
         dec     path_buf
         lda     path_buf,x
@@ -1074,7 +1073,7 @@ found:  param_call AdjustOnLineEntryCase, on_line_buffer
         sta     close_params::ref_num
         MLI_CALL READ, read_params
     IF_CS
-err:    copy8   #1, path_buf    ; TODO: `jsr _SetRootPath` instead
+err:    jsr     _SetRootPath
         jmp     _ReadDrives
     END_IF
 

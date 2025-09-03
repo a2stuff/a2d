@@ -784,9 +784,8 @@ next:   pla
         dec     device_index
         lda     device_index
 
-        bpl     :+              ; TODO: Remove this line
         bmi     PopulateStartupMenu
-:       jmp     process_volume  ; next!
+        jmp     process_volume  ; next!
 
 device_index:
         .byte   0
@@ -1021,7 +1020,7 @@ iloop:  cpx     cached_window_entry_count
         pla
         tax
         inx
-        jmp     iloop           ; TODO: Make this BNE
+        bne     iloop           ; always
 :
         ;; Desktop icons are cached now
         copy8   #0, cached_window_id

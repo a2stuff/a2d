@@ -599,28 +599,27 @@ window_id       .byte
 icon            .byte
 END_PARAM_BLOCK
 
-        ;; TODO: Shave this
-        lda     num_icons
-        sta     count
-count := * + 1
-loop:   ldx     #SELF_MODIFIED_BYTE
-        bne     :+
-        txa
-        rts
-
-:       dec     count
+        ldx     num_icons
         dex
+    DO
+        txa
+        pha
 
         lda     icon_list,x
         jsr     GetIconWin      ; A = window_id
-        cmp     params::window_id
-        bne     loop                 ; nope
-
-        ldx     count
+      IF_A_EQ   params::window_id
+        pla
+        pha
+        tax
         lda     icon_list,x
-        jsr     FreeIconCommon ; A = icon id
+        jsr     FreeIconCommon  ; A = icon id
+      END_IF
 
-        jmp     loop
+        pla
+        tax
+        dex
+    WHILE_POS
+        rts
 .endproc ; FreeAllImpl
 
 ;;; ============================================================
