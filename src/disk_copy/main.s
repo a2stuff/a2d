@@ -64,10 +64,10 @@ volume_bitmap   := $4000
 
         ;; Copy the params here
         ldy     #3      ; ptr is off by 1
-:       lda     (params_src),y
-        sta     params-1,y
+    DO
+        copy8   (params_src),y, params-1,y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; Bank and call
         sta     ALTZPOFF
@@ -199,22 +199,21 @@ EjectDisk := EjectDiskImpl::start
 
         ;; Pascal?
         jsr     auxlc::IsPascalBootBlock
-        bcs     :+
+    IF_CC
         param_call auxlc::GetPascalVolName, on_line_buffer2
-        lda     #$C0            ; Pascal
-        sta     auxlc::source_disk_format
+        copy8   #$C0, auxlc::source_disk_format ; Pascal
         rts
-:
+    END_IF
+
         ;; DOS 3.3?
         jsr     auxlc::IsDOS33BootBlock
-        bcs     :+
-        lda     #$80            ; DOS 3.3
-        sta     auxlc::source_disk_format
+    IF_CC
+        copy8   #$80,auxlc::source_disk_format ; DOS 3.3
         rts
-:
+    END_IF
+
         ;; Anything else
-fail:   lda     #$81            ; Other
-        sta     auxlc::source_disk_format
+fail:   copy8   #$81, auxlc::source_disk_format ; Other
         rts
 .endproc ; IdentifySourceNonProDOSDiskType
 
@@ -249,11 +248,12 @@ fail:   lda     #$81            ; Other
         ;; Zero out the volume bitmap
         add16   #volume_bitmap, auxlc::block_count_div8, ptr
         ldy     #0
-:       dec16   ptr
+   DO
+        dec16   ptr
         tya
         sta     (ptr),y
         ecmp16  ptr, #volume_bitmap
-        bne     :-
+   WHILE_NE
 
         ;; Now mark block-pages used in memory bitmap
         page := $07          ; high byte of `volume_bitmap` from above
@@ -290,9 +290,10 @@ loop:
         lda     block_params::data_buffer+1
         jsr     MarkUsedInMemoryBitmap
         jsr     ReadBlock
-        bcc     :+
+    IF_CS
         brk                     ; rude!
-:
+    END_IF
+
         sub16   block_count_div8, #$200, block_count_div8
         lda     block_count_div8+1
         RTS_IF_NEG
@@ -385,11 +386,10 @@ loop:
 check:
         ;; Check for keypress
         lda     KBD
-        cmp     #(CHAR_ESCAPE | $80)
-        bne     :+
+    IF_A_EQ     #(CHAR_ESCAPE | $80)
         bit     KBDSTRB
         jmp     error
-:
+    END_IF
 
         bit     L0FE4
         bmi     success
@@ -438,12 +438,13 @@ error:  return  #1
         ;; $00-$0F = 0/$0000 - 0/$FFFF
 
         bit     write_flag
-        bmi     :+
+    IF_NC
         jsr     ReadBlockToMain
         bmi     error
         jmp     loop
+    END_IF
 
-:       jsr     WriteBlockFromMain
+        jsr     WriteBlockFromMain
         bmi     error
         jmp     loop
 
@@ -461,12 +462,13 @@ need_move:
         ;; $1D-$1F = 1/$D000 - 1/$FFFF
 
         bit     write_flag
-        bmi     :+
+    IF_NC
         jsr     ReadBlockToLcbank1
         bmi     error
         jmp     loop
+    END_IF
 
-:       jsr     WriteBlockFromLcbank1
+        jsr     WriteBlockFromLcbank1
         bmi     error
         jmp     loop
 
@@ -475,12 +477,13 @@ need_move:
         ;; $10-$1C = 1/$0000 - 1/$CFFF
 use_auxmem:
         bit     write_flag      ; 16-28
-        bmi     :+
+    IF_NC
         jsr     auxlc::ReadBlockToAuxmem
         bmi     error
         jmp     loop
+    END_IF
 
-:       jsr     auxlc::WriteBlockFromAuxmem
+        jsr     auxlc::WriteBlockFromAuxmem
         bmi     error
         jmp     loop
 
@@ -489,12 +492,13 @@ use_auxmem:
         ;; $20+ = 1b/$D000 - 1b/$DFFF
 use_lcbank2:
         bit     write_flag
-        bmi     :+
+    IF_NC
         jsr     ReadBlockToLcbank2
         bmi     error
         jmp     loop
+    END_IF
 
-:       jsr     WriteBlockFromLcbank2
+        jsr     WriteBlockFromLcbank2
         bmi     error
         jmp     loop
 .endproc ; _ReadOrWriteBlock
@@ -630,14 +634,14 @@ table:  .byte   7,6,5,4,3,2,1,0
 
 .proc AdvanceToNextBlockIndex
         jsr     ComputeMemoryPageSignature
-        cpy     #0
-        beq     :+
+    IF_Y_NE     #0
         pha
         jsr     _Next
         pla
         rts
+    END_IF
 
-:       jsr     _Next
+        jsr     _Next
         bcc     AdvanceToNextBlockIndex
         lda     #$00
         tax
@@ -646,12 +650,12 @@ table:  .byte   7,6,5,4,3,2,1,0
 ;;; Advance to next
 .proc _Next
         dec     auxlc::block_index_shift
-        bmi     :+
-
+    IF_POS
 ok:     clc
         rts
+    END_IF
 
-:       lda     #7
+        lda     #7
         sta     auxlc::block_index_shift
         inc     auxlc::block_index_div8
         lda     auxlc::block_index_div8
@@ -679,8 +683,7 @@ ok:     clc
 
         ;; Now compute address to store in memory
         lda     auxlc::block_index_div8
-        cmp     #$10
-        bcs     :+
+    IF_A_LT     #$10
 
         ;; $00-$0F is main pages $00...$FE
         ;; $10-$1F is aux  pages $00...$FE
@@ -696,14 +699,15 @@ calc:   asl     a               ; *= 16
         tax
         lda     #$00
         rts
+    END_IF
 
-:       cmp     #$20            ; 16-31
-        bcs     :+
+    IF_A_LT     #$20            ; 16-31
         sec
         sbc     #$10
         jmp     calc
+    END_IF
 
-:       sec
+        sec
         sbc     #$13
         jmp     calc
 

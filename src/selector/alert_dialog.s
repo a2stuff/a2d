@@ -82,10 +82,11 @@ options:        .byte   AlertOptions::Beep | AlertOptions::SaveBack
 
 start:  pha                     ; alert number
         lda     app::invoked_during_boot_flag ; if no UI, just return cancel
-        beq     :+
+    IF_NOT_ZERO
         pla
         return  #kAlertResultCancel
-:       pla                     ; alert number
+    END_IF
+        pla                     ; alert number
 
         ;; --------------------------------------------------
         ;; Process Options, populate `alert_params`
@@ -94,10 +95,11 @@ start:  pha                     ; alert number
 
         ;; Search for alert in table, set Y to index
         ldy     #kNumAlerts-1
-:       cmp     alert_table,y
+    DO
+        cmp     alert_table,y
         beq     :+
         dey
-        bpl     :-
+    WHILE_POS
         ldy     #0              ; default
 :
 

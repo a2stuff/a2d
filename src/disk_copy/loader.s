@@ -102,16 +102,18 @@ fail:   jmp     fail
 
         ;; Do the copy
         ldy     #0
-loop:   lda     (src),y
+    DO
+        lda     (src),y
         sta     (dst),y
         inc     src
         inc     dst
         lda     src
-        bne     :+
+      IF_ZERO
         inc     src+1
         inc     dst+1
-:       ecmp16  src, end
-        bne     loop
+      END_IF
+        ecmp16  src, end
+    WHILE_NE
 
         ;; Bank in ROM
         sta     ALTZPOFF
