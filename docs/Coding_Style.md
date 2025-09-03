@@ -90,6 +90,22 @@ xcoord  .word
 
 ## Flow control
 
+* **Do** use `IF_xx` / `ELSE_IF_yy` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
+
+* **Do** use `DO` / `BREAK_IF_xx` / `WHILE_yy` macros to avoid throw-away local labels.
+
+* Annotate fall-through. A `;; fall through` comment can be used, but the preferred form is with the `FALL_THROUGH_TO` assertion macro to prevent refactoring mistakes.
+
+```asm
+        ...
+        lda     #alert_num
+        FALL_THROUGH_TO ShowAlert
+.endproc
+
+.proc ShowAlert
+        ...
+```
+
 * **Do** make use of [unnamed labels](http://cc65.github.io/doc/ca65.html#ss6.6) for local loops and forward branches to avoid pointless names.
 * **Do Not** use more than one level (i.e. no `:--` or `:++`)
 
@@ -119,20 +135,6 @@ xcoord  .word
 * **Do** use tail-call optimization (replacing `JSR label` / `RTS` with `JMP label`) as this pattern is well understood.
     * As always, add comments if the usage might not be obvious (e.g. not at the end of a proc)
     * The con of this is the true call stack is obscured, making debugging more difficult, but the pattern is common enough that this can't be relied on.
-
-* **Do** use `IF_xx` / `ELSE_IF_yy` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
-
-* Annotate fall-through. A `;; fall through` comment can be used, but the preferred form is with the `FALL_THROUGH_TO` assertion macro to prevent refactoring mistakes.
-
-```asm
-        ...
-        lda     #alert_num
-        FALL_THROUGH_TO ShowAlert
-.endproc
-
-.proc ShowAlert
-        ...
-```
 
 ## Literals
 
@@ -229,6 +231,7 @@ The following macros should be used to improve code readability by eliminating r
   * `PAD_TO` to introduce padding to a known address
   * `COPY_xx` for fixed size copy loops
   * `IF_xx`/`ELSE_IF_yy`/`ELSE`/`END_IF` for conditional sections, to avoid throw-away labels
+  * `DO`/`BREAK_IF_xx`/`WHILE_yy` for looping sections, to avoid throw-away labels
 * definitions:
   * `PASCAL_STRING` for length-prefixed strings
 
