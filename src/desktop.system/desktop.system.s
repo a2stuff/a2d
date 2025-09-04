@@ -1731,9 +1731,7 @@ start:  MLI_CALL OPEN, open_params
         sta     write_params::ref_num
         sta     close_params::ref_num
         MLI_CALL WRITE, write_params
-      IF_CC                     ; TODO: Do this unconditionally
         MLI_CALL CLOSE, close_params
-      END_IF
     END_IF
         rts
 .endproc ; UpdateSelfFileImpl

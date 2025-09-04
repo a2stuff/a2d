@@ -165,10 +165,9 @@ dialog_loop:
         jeq     DoEdit
 
         cmp     #SelectorAction::delete
-        bne     :+              ; TODO: Remove this line
-        beq     DoDelete        ; always
+        beq     DoDelete
 
-:       cmp     #SelectorAction::run
+        cmp     #SelectorAction::run
         bne     dialog_loop
         jmp     DoRun
 

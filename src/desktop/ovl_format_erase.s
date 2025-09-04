@@ -834,12 +834,8 @@ fail2:  sec
 zero_buffers:
         ldy     #0
         tya
-        ;; TODO: Combine these two loops
     DO
         sta     block_buffer,y
-        dey
-    WHILE_NOT_ZERO
-    DO
         sta     block_buffer+$100,y
         dey
     WHILE_NOT_ZERO

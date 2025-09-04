@@ -1980,8 +1980,7 @@ err_writing_flag:
         sta     RAMRDOFF
         sta     RAMWRTON
 
-        ldy     #$FF
-        iny                     ; TODO: just start at $00
+        ldy     #$00
     DO
         copy8   default_block_buffer,y,      (ptr1),y
         copy8   default_block_buffer+$100,y, (ptr2),y
@@ -2010,8 +2009,7 @@ ret:    rts
         sta     RAMRDON
         sta     RAMWRTOFF
 
-        ldy     #$FF            ; TODO: Just start at $00
-        iny
+        ldy     #$00
     DO
         copy8   (ptr1),y, default_block_buffer,y
         copy8   (ptr2),y, default_block_buffer+$100,y

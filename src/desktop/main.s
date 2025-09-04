@@ -6098,13 +6098,14 @@ no_win:
 
         ;; Search window-icon map to find an unused window.
         ldx     #0
-:       lda     window_to_dir_icon_table,x
-        beq     :+              ; is `kWindowToDirIconFree`
+    DO
+        lda     window_to_dir_icon_table,x
+        BREAK_IF_ZERO           ; is `kWindowToDirIconFree`
         inx
-        jmp     :-              ; TODO: Make this BNE
+    WHILE_NOT_ZERO              ; always
 
         ;; Map the window to its source icon
-:       copy8   icon_param, window_to_dir_icon_table,x ; possibly `kWindowToDirIconNone` if opening via path
+        copy8   icon_param, window_to_dir_icon_table,x ; possibly `kWindowToDirIconNone` if opening via path
         inx                     ; 0-based to 1-based
 
         txa
@@ -7162,10 +7163,9 @@ finish: copy16  record_ptr, filerecords_free_start
 
         ;; A table entry was possibly allocated - free it.
         ldy     cached_window_id
-        dey                     ; TODO: Remove this, use IF_NOT_ZERO, and -1 below
-    IF_POS
+    IF_NOT_ZERO
         lda     #kWindowToDirIconFree
-        sta     window_to_dir_icon_table,y
+        sta     window_to_dir_icon_table-1,y
         sta     cached_window_id
     END_IF
         ;; And return via saved stack.
@@ -10657,8 +10657,9 @@ retry:  MLI_CALL DESTROY, destroy_src_params
       IF_A_EQ   #ERR_ACCESS_ERROR
         jsr     UnlockSrcFile
         beq     retry
-        bne     done            ; silently leave file TODO: Just RTS
+        rts                     ; silently leave file
       END_IF
+
         jsr     ShowErrorAlert
         jmp     retry
     END_IF
@@ -14194,7 +14195,6 @@ kEntriesPerBlock = $0D
 
         tya
         pha                     ; A = new path length
-        stx     filename        ; TODO: Remove this line
 
         iny
         ldx     #0              ; copy out filename
@@ -14922,20 +14922,17 @@ ret:    rts
         ;; Load count & entries
         tax
         copy8   window_entry_count_table,x, cached_window_entry_count
-        beq     done_load       ; no entries, done
-        sta     count           ; TODO: Just use `cached_window_entry_count`
-
+    IF_NOT_ZERO
         lda     window_entry_offset_table,x
         tax                     ; X = offset in table
         ldy     #0              ; Y = index in win
-    DO
+      DO
         copy8   window_entry_table,x, cached_window_entry_list,y
         inx
         iny
-        count := *+1
-        cpy     #SELF_MODIFIED_BYTE
-    WHILE_NE
-done_load:
+        cpy     cached_window_entry_count
+      WHILE_NE
+    END_IF
 
         rts
 .endproc ; LoadWindowEntryTable
@@ -15018,20 +15015,17 @@ done_shift:
         ;; Store count & entries
         ldx     cached_window_id
         copy8   cached_window_entry_count, window_entry_count_table,x
-        beq     done_store      ; no entries, done
-        sta     count           ; TODO: Just use `cached_window_entry_count`
-
+    IF_NOT_ZERO
         lda     window_entry_offset_table,x
         tax                     ; X = offset in table
         ldy     #0              ; Y = index in win
-    DO
+      DO
         copy8   cached_window_entry_list,y, window_entry_table,x
         inx
         iny
-        count := *+1
-        cpy     #SELF_MODIFIED_BYTE
-    WHILE_NE
-done_store:
+        cpy     cached_window_entry_count
+      WHILE_NE
+    END_IF
 
         rts
 .endproc ; StoreWindowEntryTable

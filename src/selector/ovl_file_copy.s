@@ -549,9 +549,7 @@ CheckSpace2 := CheckSpace::ep2
 
 .proc CopyFile
         MLI_CALL OPEN, open_src_params
-    IF_CS
-        jsr     HandleErrorCode ; TODO: jmp, since this doesn't return
-    END_IF
+        jcs     HandleErrorCode
 
         MLI_CALL OPEN, open_dst_params
         jcs     HandleErrorCode
