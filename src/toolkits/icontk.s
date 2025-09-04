@@ -372,10 +372,8 @@ END_PARAM_BLOCK
         ldx     #1
     DO
         ;; Populate table entry
-        lda     table_ptr
-        sta     icon_ptrs_low,x
-        lda     table_ptr+1
-        sta     icon_ptrs_high,x
+        copy8   table_ptr, icon_ptrs_low,x
+        copy8   table_ptr+1, icon_ptrs_high,x
 
         ;; Next entry
         add16_8 table_ptr, #.sizeof(IconEntry)
@@ -530,8 +528,7 @@ END_PARAM_BLOCK
         bne     :-
 
         ;; Shift items down
-:       lda     icon_list+1,x
-        sta     icon_list,x
+:       copy8   icon_list+1,x, icon_list,x
         inx
         cpx     num_icons
         bne     :-
@@ -780,8 +777,7 @@ is_drag:
         ;; Copy poly into place
         ldy     #kIconPolySize-1
     DO
-        lda     poly,y
-        sta     (poly_ptr),y
+        copy8   poly,y, (poly_ptr),y
         dey
     WHILE_POS
 
@@ -792,8 +788,7 @@ is_drag:
         ;; Mark last icon
         sub16_8 poly_ptr, #kIconPolySize
         ldy     #1              ; MGTK Polygon "not last" flag
-        lda     #0              ; last polygon
-        sta     (poly_ptr),y
+        copy8   #0, (poly_ptr),y ; last polygon
 
         copy8   #0, poly::lastpoly ; restore default
 
@@ -986,8 +981,7 @@ move_ok:
 exit_with_a:
         tax                     ; A = return value
         ldy     #params::icon - params
-        lda     highlight_icon_id
-        sta     (params_addr),y
+        copy8   highlight_icon_id, (params_addr),y
         txa                     ; A = return value
         rts
 
@@ -1296,8 +1290,7 @@ END_PARAM_BLOCK
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #(params::rect - params) + .sizeof(MGTK::Rect)-1
     DO
-        lda     bounding_rect,x
-        sta     (params_addr),y
+        copy8   bounding_rect,x, (params_addr),y
         dey
         dex
     WHILE_POS
@@ -1322,8 +1315,7 @@ END_PARAM_BLOCK
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #(params::rect - params) + .sizeof(MGTK::Rect)-1
     DO
-        lda     rename_rect,x
-        sta     (params_addr),y
+        copy8   rename_rect,x, (params_addr),y
         dey
         dex
     WHILE_POS
@@ -1348,8 +1340,7 @@ END_PARAM_BLOCK
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #(params::rect - params) + .sizeof(MGTK::Rect)-1
     DO
-        lda     bitmap_rect,x
-        sta     (params_addr),y
+        copy8   bitmap_rect,x, (params_addr),y
         dey
         dex
     WHILE_POS
@@ -1425,12 +1416,10 @@ END_PARAM_BLOCK
 
         ;; Stash some flags
         ldy     #IconEntry::state
-        lda     (icon_ptr),y
-        sta     state
+        copy8   (icon_ptr),y, state
         ASSERT_EQUALS IconEntry::win_flags, IconEntry::state + 1
         iny
-        lda     (icon_ptr),y
-        sta     win_flags
+        copy8   (icon_ptr),y, win_flags
 
         ;; For quick access
         and     #kIconEntryWinIdMask
@@ -1609,8 +1598,7 @@ kIconLabelGapV = 2
         ldy     #IconEntry::iconx+3
         ldx     #3
     DO
-        lda     (icon_ptr),y
-        sta     bitmap_rect+MGTK::Rect::topleft,x
+        copy8   (icon_ptr),y, bitmap_rect+MGTK::Rect::topleft,x
         dey
         dex
     WHILE_POS
@@ -1809,8 +1797,7 @@ kIconPolySize = (8 * .sizeof(MGTK::Point)) + 2
         ldy     #.sizeof(IconEntry)
         ldx     #.sizeof(IconEntry) - IconEntry::name
     DO
-        lda     (icon_ptr),y
-        sta     dest + 1,x
+        copy8   (icon_ptr),y, dest + 1,x
         dey
         dex
     WHILE_POS
@@ -1844,8 +1831,7 @@ END_PARAM_BLOCK
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #MGTK::MapInfo::maprect + .sizeof(MGTK::Rect)-1
     DO
-        lda     (port_ptr),y
-        sta     icon_in_rect_params::rect,x
+        copy8   (port_ptr),y, icon_in_rect_params::rect,x
         dey
         dex
     WHILE_POS
@@ -1858,8 +1844,7 @@ loop:   inx
         txa
         pha
 
-        lda     icon_list,x
-        sta     icon_in_rect_params::icon
+        copy8   icon_list,x, icon_in_rect_params::icon
         jsr     GetIconWin      ; A = window_id, sets `icon_ptr` too
 
         ;; Is it in the target window?
@@ -2052,8 +2037,7 @@ reserved:       .byte   0
         jsr     CalcIconBoundingRect
 
         ;; Get window clip rect (in screen space)
-        lda     clip_window_id
-        sta     getwinport_params::window_id
+        copy8   clip_window_id, getwinport_params::window_id
         MGTK_CALL MGTK::GetWinPort, getwinport_params ; into `icon_grafport`
         RTS_IF_NE                                     ; obscured
 
@@ -2231,8 +2215,7 @@ reclip:
         sta     pt3::ycoord+1
         sta     pt4::ycoord+1
 
-        lda     #0
-        sta     pt_num
+        copy8   #0, pt_num
 
 next_pt:
         ;; Done all 4 points?
@@ -2265,8 +2248,7 @@ do_pt:  lda     pt_num
         ;; Look up window at Nth point
         ldy     #0
     DO
-        lda     pt1::xcoord,x
-        sta     cwi_findwindow_params,y
+        copy8   pt1::xcoord,x, cwi_findwindow_params,y
         iny
         inx
     WHILE_Y_NE  #4

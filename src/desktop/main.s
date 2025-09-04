@@ -6088,13 +6088,13 @@ no_win:
         ;; Is there a free window?
         lda     num_open_windows
         cmp     #kMaxDeskTopWindows
-   IF_GE
+    IF_GE
         ;; Nope, show error.
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_warning_too_many_windows
         ldx     saved_stack
         txs
         rts
-   END_IF
+    END_IF
 
         ;; Search window-icon map to find an unused window.
         ldx     #0
@@ -10344,9 +10344,10 @@ retry:  param_call GetFileInfo, path_buf4
         jsr     OpenSrcDir
 
 :       cmp16   entries_read, entries_to_skip
-        bcs     done
+    IF_LT
         jsr     ReadFileEntry
         jmp     :-
+    END_IF
 done:   rts
 .endproc ; FinishDir
 
@@ -11902,11 +11903,11 @@ retry:  param_call_indirect GetFileInfo, src_ptr
         pha
         copy8   #$A, dst_file_info_params::param_count ; GET_FILE_INFO
         pla
-        bcc     done
+    IF_CS
         jsr     ShowErrorAlertDst
         jmp     :-
-
-done:   rts
+    END_IF
+        rts
 .endproc ; SetDstFileInfo
 
 ;;; ============================================================

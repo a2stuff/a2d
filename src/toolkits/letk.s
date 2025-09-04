@@ -313,8 +313,7 @@ a_record  .addr
 
         ;; Set active flag
         ldy     #LETK::LineEditRecord::active_flag
-        lda     #$80
-        sta     (a_record),y
+        copy8   #$80, (a_record),y
 
         jmp     _ShowCaret
 .endproc ; ActivateImpl
@@ -355,8 +354,7 @@ END_PARAM_BLOCK
 
         caret_pos := tmpw
         ldy     #LETK::LineEditRecord::caret_pos
-        lda     (a_record),y
-        sta     caret_pos
+        copy8   (a_record),y, caret_pos
 
         add16_8 text_params+MGTK::TextWidthParams::data, caret_pos
         pla                     ; A = len
@@ -381,8 +379,7 @@ END_PARAM_BLOCK
         ldy     #0
         sty     text_params+MGTK::TextWidthParams::width
         sty     text_params+MGTK::TextWidthParams::width+1
-        lda     (a_buf),y
-        sta     text_params+MGTK::TextWidthParams::length
+        copy8   (a_buf),y, text_params+MGTK::TextWidthParams::length
         rts
 .endproc ; _PrepTextParams
 
@@ -565,8 +562,7 @@ modified:
 
         ;; Stash current caret pos
         ldy     #LETK::LineEditRecord::caret_pos
-        lda     (a_record),y
-        sta     caret_pos
+        copy8   (a_record),y, caret_pos
 
         ;; Is there room?
         ldy     #0

@@ -348,8 +348,7 @@ quick_run_desktop:
         ;; Check for key down
 
 check_key_down:
-        lda     #0
-        sta     quick_boot_slot
+        copy8   #0, quick_boot_slot
 
         lda     KBD
         bpl     done_keys
@@ -414,8 +413,7 @@ done_keys:
 .scope
         slot_ptr := $06         ; pointed at $Cn00
 
-        lda     #0
-        sta     slot_ptr
+        copy8   #0, slot_ptr
         ldx     #7              ; slot
 
 loop:   txa
@@ -461,8 +459,7 @@ next:   dex
         jmp     set_startup_menu_items
 
 set_startup_menu_items:
-        lda     slot_table
-        sta     startup_menu
+        copy8   slot_table, startup_menu
 
         lda     slot_x1
         ora     #$30            ; number to ASCII digit
@@ -728,8 +725,7 @@ has_modifiers:
 
 menukey:
         sta     menu_params::which_key
-        lda     event_params::modifiers
-        sta     menu_params::key_mods
+        copy8   event_params::modifiers, menu_params::key_mods
         MGTK_CALL MGTK::MenuKey, menu_params::menu_id
         FALL_THROUGH_TO HandleMenu
 .endproc ; HandleKey
@@ -826,8 +822,7 @@ L9443:  lda     #AlertID::insert_system_disk
 
         lda     #winfo::kDialogId
         jsr     GetWindowPort
-        lda     #winfo::kDialogId
-        sta     screentowindow_params::window_id
+        copy8   #winfo::kDialogId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -930,10 +925,8 @@ noop:   rts
         lda     #0              ; INIT is not used as that briefly
         sta     WNDLFT          ; displays the dirty text page
         sta     WNDTOP
-        lda     #80
-        sta     WNDWDTH
-        lda     #24
-        sta     WNDBTM
+        copy8   #80, WNDWDTH
+        copy8   #24, WNDBTM
         jsr     HOME            ; Clear 80-col screen
         sta     TXTSET          ; ... and show it
 
@@ -1154,8 +1147,7 @@ found:  ldy     DEVLST,x
 
         ;; Move everything up
     DO
-        lda     DEVLST+1,x
-        sta     DEVLST,x
+        copy8   DEVLST+1,x, DEVLST,x
         inx
      WHILE_X_NE DEVCNT
 
@@ -1243,8 +1235,7 @@ backup_devlst:
 
         stax    text_addr       ; input is length-prefixed string
         ldy     #0
-        lda     (text_addr),y
-        sta     text_length
+        copy8   (text_addr),y, text_length
         inc16   text_addr       ; point past length
         MGTK_CALL MGTK::TextWidth, text_params
 
@@ -1812,14 +1803,12 @@ CheckBasicSystem        := CheckBasixSystemImpl::basic
         stax    $06
         MLI_CALL GET_PREFIX, get_prefix_params
         ldy     #0
-        lda     (ptr),y
-        sta     len
+        copy8   (ptr),y, len
         ldx     INVOKER_INTERPRETER
     DO
         iny
         inx
-        lda     (ptr),y
-        sta     INVOKER_INTERPRETER,x
+        copy8   (ptr),y, INVOKER_INTERPRETER,x
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
     WHILE_NE
@@ -1888,8 +1877,7 @@ str_extras_awlaunch:
 
         stax    path_addr
         ldy     #0
-        lda     (path_addr),y
-        sta     len
+        copy8   (path_addr),y, len
         tay
     DO
         lda     (path_addr),y

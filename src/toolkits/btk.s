@@ -634,8 +634,7 @@ unchecked_cb_bitmap:
         ldx     #.sizeof(MGTK::Rect)-1
         ldy     #BTK::ButtonRecord::rect + .sizeof(MGTK::Rect)-1
     DO
-        lda     rect,x
-        sta     (params_addr),y
+        copy8   rect,x, (params_addr),y
         dey
         dex
     WHILE_POS
