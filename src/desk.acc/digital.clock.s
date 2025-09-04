@@ -115,11 +115,12 @@ exit:
 
         ;; Compare
         ldx     #.sizeof(DateTime)-1
-:       lda     datetime,x
+    DO
+        lda     datetime,x
         cmp     last,x
         bne     diff
         dex
-        bpl     :-
+    WHILE_POS
         rts                     ; no change
 
         ;; Different! update
@@ -145,14 +146,18 @@ last:   .tag    DateTime
         copy16  #kCharY, vector_cursor::ycoord
         copy16  #0, vector_cursor::xcoord
         ldx     str_time        ; A = string length
-:       add16_8 vector_cursor::xcoord, #kCharWidth+1
+    DO
+        add16_8 vector_cursor::xcoord, #kCharWidth+1
         dex
-        bne     :-
+    WHILE_NOT_ZERO
+
         dec16   vector_cursor::xcoord
         ldx     #kCharXShift    ; scale x
-:       asl16   vector_cursor::xcoord
+    DO
+        asl16   vector_cursor::xcoord
         dex
-        bne     :-
+    WHILE_NOT_ZERO
+
         sub16   #kScreenWidth, vector_cursor::xcoord, vector_cursor::xcoord
         asr16   vector_cursor::xcoord
 
@@ -162,17 +167,17 @@ last:   .tag    DateTime
 
         ;; Iterate over string, draw each char
         copy8   #1, idx
+    DO
         idx := *+1
-:       ldx     #SELF_MODIFIED_BYTE
+        ldx     #SELF_MODIFIED_BYTE
         lda     str_time,x
 
         jsr     DrawVectorChar
 
         lda     idx
-        cmp     str_time
-        beq     done
+        BREAK_IF_A_EQ str_time
         inc     idx
-        bne     :-
+    WHILE_NOT_ZERO
 
 done:
         rts
@@ -211,14 +216,16 @@ vloop:  lda     (ptr),y         ; A = x coord
 
         ;; Scale
         ldx     #kCharXShift    ; scale x
-:       asl16   cur::xcoord
+    DO
+        asl16   cur::xcoord
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         ldx     #kCharYShift    ; scale y
-:       asl16   cur::ycoord
+    DO
+        asl16   cur::ycoord
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; Offset
         add16   vector_cursor::xcoord, cur::xcoord, cur::xcoord
@@ -264,11 +271,11 @@ more_flag:      .byte   0
 .proc GetPoly
         ;; Find index
         ldx     #0
-:       cmp     char_to_index,x
-        beq     :+
+    DO
+        BREAK_IF_A_EQ char_to_index,x
         inx
-        bne     :-              ; always
-:
+    WHILE_NOT_ZERO              ; always
+
         ;; Get poly address
         txa
         asl

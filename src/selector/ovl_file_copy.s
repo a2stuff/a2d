@@ -127,11 +127,9 @@ entry_index_in_block:   .byte   0
 
 .proc PushIndexToStack
         ldx     stack_index
-        lda     target_index
-        sta     index_stack,x
+        copy8   target_index, index_stack,x
         inx
-        lda     target_index+1
-        sta     index_stack,x
+        copy8   target_index+1, index_stack,x
         inx
         stx     stack_index
         rts
@@ -142,11 +140,9 @@ entry_index_in_block:   .byte   0
 .proc PopIndexFromStack
         ldx     stack_index
         dex
-        lda     index_stack,x
-        sta     target_index+1
+        copy8   index_stack,x, target_index+1
         dex
-        lda     index_stack,x
-        sta     target_index
+        copy8   index_stack,x, target_index
         stx     stack_index
         rts
 .endproc ; PopIndexFromStack
@@ -207,8 +203,7 @@ entry_index_in_block:   .byte   0
         bcc     done
 
         ;; Advance to first entry in next "block"
-        lda     #0
-        sta     entry_index_in_block
+        copy8   #0, entry_index_in_block
         lda     ref_num
         sta     read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
@@ -252,37 +247,37 @@ eof:    return  #$FF
 ;;; ============================================================
 
 .proc HandleDirectory
-        lda     #$00
-        sta     recursion_depth
+        copy8   #0, recursion_depth
         jsr     OpenSrcDir
-l1:     jsr     ReadFileEntry
-        bne     l2
-
+loop:
+        jsr     ReadFileEntry
+    IF_ZERO
         param_call app::AdjustFileEntryCase, file_entry
 
         lda     file_entry+FileEntry::storage_type_name_length
-        beq     l1
+        beq     loop
         and     #NAME_LENGTH_MASK
         sta     file_entry+FileEntry::storage_type_name_length
-        lda     #$00
-        sta     copy_err_flag
+        copy8   #0, copy_err_flag
         jsr     op_jt1
         lda     copy_err_flag
-        bne     l1
+        bne     loop
         lda     file_entry+FileEntry::file_type
         cmp     #FT_DIRECTORY
-        bne     l1
+        bne     loop
         jsr     DescendDirectory
         inc     recursion_depth
-        jmp     l1
+        jmp     loop
+    END_IF
 
-l2:     lda     recursion_depth
-        beq     l3
+        lda     recursion_depth
+    IF_NOT_ZERO
         jsr     AscendDirectory
         dec     recursion_depth
-        jmp     l1
+        jmp     loop
+    END_IF
 
-l3:     jmp     DoCloseFile
+        jmp     DoCloseFile
 .endproc ; HandleDirectory
 
 ;;; ============================================================
@@ -316,8 +311,7 @@ copy_jt:
         tsx
         stx     saved_stack
 
-        lda     #$FF
-        sta     LA4F9
+        copy8   #$FF, LA4F9
         jsr     CopyPathsFromBufsToSrcAndDst
         MLI_CALL GET_FILE_INFO, get_dst_file_info_params
         jcs     HandleErrorCode
@@ -331,16 +325,14 @@ copy_jt:
 
         ;; Append `filename` to `pathname_dst`
         ldx     pathname_dst
-        lda     #'/'
-        sta     pathname_dst+1,x
+        copy8   #'/', pathname_dst+1,x
         inc     pathname_dst
         ldy     #0
         ldx     pathname_dst
     DO
         iny
         inx
-        lda     filename,y
-        sta     pathname_dst,x
+        copy8   filename,y, pathname_dst,x
     WHILE_Y_NE filename
         stx     pathname_dst
 
@@ -398,8 +390,7 @@ LA4BF:  ldy     #(get_src_file_info_params::create_time+1 - get_src_file_info_pa
 
         lda     create_params::storage_type
     IF_A_EQ     #ST_VOLUME_DIRECTORY
-        lda     #ST_LINKED_DIRECTORY
-        sta     create_params::storage_type
+        copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
 
         MLI_CALL CREATE, create_params
@@ -455,8 +446,7 @@ PopDstSegment:
 
 err:    jsr     RemoveSegmentFromDstPathname
         jsr     RemoveSegmentFromSrcPathname
-        lda     #$FF
-        sta     copy_err_flag
+        copy8   #$FF, copy_err_flag
         rts
 
 LA528:  jsr     AppendFilenameToDstPathname
@@ -532,8 +522,7 @@ LA5A1:  copy8   pathname_dst, saved_length
 has_room:
         clc
 
-LA603:  lda     saved_length
-        sta     pathname_dst
+LA603:  copy8   saved_length, pathname_dst
         rts
 
 blocks_free:              ; Blocks free on volume
@@ -738,8 +727,7 @@ retry:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
 err:    jmp     HandleErrorCode
     END_IF
 
-        lda     get_src_file_info_params::storage_type
-        sta     storage_type
+        copy8   get_src_file_info_params::storage_type, storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
@@ -811,18 +799,16 @@ blocks_total:
 
         ldx     #$00
         ldy     pathname_src
-        lda     #'/'
-        sta     pathname_src+1,y
+        copy8   #'/', pathname_src+1,y
         iny
-l2:     cpx     file_entry+FileEntry::storage_type_name_length
-        bcs     l3
-        lda     file_entry+FileEntry::file_name,x
-        sta     pathname_src+1,y
+:       cpx     file_entry+FileEntry::storage_type_name_length
+        bcs     :+
+        copy8   file_entry+FileEntry::file_name,x, pathname_src+1,y
         inx
         iny
-        jmp     l2
-
-l3:     sty     pathname_src
+        jmp     :-
+:
+        sty     pathname_src
         rts
 .endproc ; AppendFilenameToSrcPathname
 
@@ -854,18 +840,16 @@ l3:     sty     pathname_src
 
         ldx     #$00
         ldy     pathname_dst
-        lda     #'/'
-        sta     pathname_dst+1,y
+        copy8   #'/', pathname_dst+1,y
         iny
-l2:     cpx     file_entry+FileEntry::storage_type_name_length
-        bcs     l3
-        lda     file_entry+FileEntry::file_name,x
-        sta     pathname_dst+1,y
+:       cpx     file_entry+FileEntry::storage_type_name_length
+        bcs     :+
+        copy8   file_entry+FileEntry::file_name,x, pathname_dst+1,y
         inx
         iny
-        jmp     l2
-
-l3:     sty     pathname_dst
+        jmp     :-
+:
+        sty     pathname_dst
         rts
 .endproc ; AppendFilenameToDstPathname
 
@@ -875,15 +859,16 @@ l3:     sty     pathname_dst
         ldx     pathname_dst
         RTS_IF_ZERO
 
-l1:     lda     pathname_dst,x
+    DO
+        lda     pathname_dst,x
         cmp     #'/'
-        beq     l2
+        beq     :+
         dex
-        bne     l1
+    WHILE_NOT_ZERO
         stx     pathname_dst
         rts
-
-l2:     dex
+:
+        dex
         stx     pathname_dst
         rts
 .endproc ; RemoveSegmentFromDstPathname
@@ -925,27 +910,26 @@ l2:     dex
         COPY_STRING INVOKER_PREFIX, src_path
 
         ldy     src_path
-l2:     lda     src_path,y
-        cmp     #'/'
-        beq     l3
+    DO
+        lda     src_path,y
+        BREAK_IF_A_EQ #'/'
         dey
-        bne     l2
-l3:     dey
+    WHILE_NOT_ZERO
+        dey
         sty     src_path
 
-l4:     lda     src_path,y
-        cmp     #'/'
-        beq     l5
-        dey
-        bpl     l4
-l5:
-        ldx     #0
-l6:     iny
-        inx
+    DO
         lda     src_path,y
-        sta     filename,x
-        cpy     src_path
-        bne     l6
+        BREAK_IF_A_EQ #'/'
+        dey
+    WHILE_POS
+
+        ldx     #0
+    DO
+        iny
+        inx
+        copy8   src_path,y, filename,x
+    WHILE_Y_NE  src_path
         stx     filename
 
         param_call app::CopyRAMCardPrefix, dst_path

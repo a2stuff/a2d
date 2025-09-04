@@ -426,17 +426,17 @@ fin:    jsr     UpdateWindow
 .proc HandleDrag
         copy8   winfo::window_id, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-common: bit     dragwindow_params::moved
-        bpl     :+
-
+common:
+        bit     dragwindow_params::moved
+    IF_NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
+    END_IF
 
-:       jmp     InputLoop
-
+        jmp     InputLoop
 .endproc ; HandleDrag
 
 
@@ -580,10 +580,11 @@ dloop:  lda     index
         lda     index
         clc
         adc     first_dow
-        cmp     #7
-        bcc     :+
+      IF_A_GE   #7
+        ;; C=1
         sbc     #7
-:
+      END_IF
+
         asl
         tax
         lda     day_str_table,x
@@ -614,11 +615,13 @@ dloop:  lda     index
         sbc     tmp
         clc
         adc     first_dow
-        bmi     :+
-        cmp     #2
-        bcc     :+
+    IF_POS
+      IF_A_GE   #2
+        ;; C=1
         sbc     #7
-:       sta     date
+      END_IF
+    END_IF
+        sta     date
 
         ;; Find length of month
         ldx     datetime + ParsedDateTime::month
@@ -651,18 +654,19 @@ day_loop:
         copy8   #' ', str_date+1 ; assume 1 digit
         lda     date
         ldx     #0
-:       cmp     #10
-        bcc     :+
+    DO
+        BREAK_IF_A_LT #10
         sbc     #10
         inx
-        bne     :-              ; always
-:       ora     #'0'            ; convert to digit
+    WHILE_NOT_ZERO              ; always
+
+        ora     #'0'            ; convert to digit
         sta     str_date+2      ; units place
         txa
-        beq     :+
+    IF_NOT_ZERO
         ora     #'0'            ; convert to digit
         sta     str_date+1      ; tens place
-:
+    END_IF
 
         ;; Draw it
 draw_date:
@@ -737,9 +741,10 @@ UpdateWindow := PaintWindow::update
         ldy     #1
 
         ldx     #AS_BYTE(-1)
-:       inx
+    DO
+        inx
         sub16   tmp, #1000, tmp
-        bcs     :-
+    WHILE_CS
         add16   tmp, #1000, tmp
         txa
         ora     #'0'            ; convert to digit
@@ -747,9 +752,10 @@ UpdateWindow := PaintWindow::update
         iny
 
         ldx     #AS_BYTE(-1)
-:       inx
+    DO
+        inx
         sub16   tmp, #100, tmp
-        bcs     :-
+    WHILE_CS
         add16   tmp, #100, tmp
         txa
         ora     #'0'            ; convert to digit
@@ -757,9 +763,10 @@ UpdateWindow := PaintWindow::update
         iny
 
         ldx     #AS_BYTE(-1)
-:       inx
+    DO
+        inx
         sub16   tmp, #10, tmp
-        bcs     :-
+    WHILE_CS
         add16   tmp, #10, tmp
         txa
         ora     #'0'            ; convert to digit

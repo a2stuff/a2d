@@ -159,12 +159,7 @@ UNSUPPRESS_SHADOW_WARNING
         pha
 
         ;; Save ZP
-        ldx     #AS_BYTE(-kBytesToSave)
-    DO
-        lda     zp_start + kBytesToSave,x
-        pha
-        inx
-    WHILE_NOT_ZERO
+        PUSH_BYTES kBytesToSave, zp_start
 
         ;; Point `params_addr` at the call site
         params_lo := *+1
@@ -209,12 +204,7 @@ UNSUPPRESS_SHADOW_WARNING
         tay                     ; A = result
 
         ;; Restore ZP
-        ldx     #kBytesToSave-1
-    DO
-        pla
-        sta     zp_start,x
-        dex
-    WHILE_POS
+        POP_BYTES kBytesToSave, zp_start
 
         tya                     ; A = result
         rts

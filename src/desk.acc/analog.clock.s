@@ -153,11 +153,12 @@ tfives: .byte   0
 
         ;; Compare
         ldx     #.sizeof(DateTime)-1
-:       lda     datetime,x
+    DO
+        lda     datetime,x
         cmp     last,x
         bne     diff
         dex
-        bpl     :-
+    WHILE_POS
         rts                     ; no change
 
         ;; Different! update

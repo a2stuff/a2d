@@ -623,14 +623,16 @@ loop:   lda     chrget_routine-1,x
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
+
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        bne     :+
+    IF_A_EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
+    END_IF
 
-:       cmp     #MGTK::EventKind::key_down
+        cmp     #MGTK::EventKind::key_down
         bne     InputLoop
+
         jsr     OnKeyPress
         jmp     InputLoop
 .endproc ; InputLoop
@@ -695,50 +697,54 @@ ret:    rts
         rts
     END_IF
 
-        cmp     #'.'            ; allow either
-        bne     :+
+    IF_A_EQ     #'.'            ; allow either
         lda     intl_deci_sep
-:
+    END_IF
+
     IF_A_EQ     #CHAR_ESCAPE
         lda     calc_p
-        bne     :+           ; empty state?
+      IF_ZERO                   ; empty state?
         lda     calc_l
-      IF_ZERO
+       IF_ZERO
         pla                     ; pop OnKeyPress
         pla
         jmp     ExitDA
+       END_IF
       END_IF
-:       lda     #Function::clear
+        lda     #Function::clear
         jmp     ProcessFunction
     END_IF
 
     IF_A_EQ     #CHAR_DELETE
         ldy     calc_l
         beq     ret
-        cpy     #1
-        bne     :+
+      IF_Y_EQ   #1
         jsr     ResetBuffer1AndState
         jmp     DisplayBuffer1
+      END_IF
 
-:       dec     calc_l
+        dec     calc_l
         ldx     #0
         lda     text_buffer1 + kTextBufferSize
-        cmp     intl_deci_sep
-        bne     :+
+      IF_A_EQ   intl_deci_sep
         stx     calc_d
-:       cmp     #'E'
-        bne     :+
+      END_IF
+      IF_A_EQ   #'E'
         stx     calc_e
-:       cmp     #'-'
-        bne     :+
+      END_IF
+      IF_A_EQ   #'-'
         stx     calc_n
-:       ldx     #kTextBufferSize-1
-loop:   lda     text_buffer1,x
+      END_IF
+
+        ldx     #kTextBufferSize-1
+      DO
+        lda     text_buffer1,x
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
         dex
         dey
-        bne     loop
+      WHILE_NOT_ZERO
+
         lda     #' '
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
@@ -860,45 +866,51 @@ next:   add16_8 ptr, #.sizeof(btn_c)
 
     IF_A_EQ     #Function::exp
         ldy     calc_e
-        bne     @ret
+        bne     ret2
         ldy     calc_l
-        bne     :+
+      IF_ZERO
         inc     calc_l
         lda     #'1'
         sta     text_buffer1 + kTextBufferSize
         sta     text_buffer2 + kTextBufferSize
-:       lda     #'E'
+      END_IF
+        lda     #'E'
         sta     calc_e
         jmp     Insert
-@ret:   rts
+
+ret2:   rts
     END_IF
 
     IF_A_EQ     #Function::op_subtract
         lda     calc_e          ; negate vs. subtract
-        beq     :+
+      IF_NOT_ZERO
         lda     calc_n
-        bne     :+
+       IF_ZERO
         sec
         ror     calc_n
         pla
         pha
         jmp     Insert
-:       lda     #Function::op_subtract
+       END_IF
+      END_IF
+
+        lda     #Function::op_subtract
         jmp     DoOp
     END_IF
 
     IF_A_EQ     #Function::decimal
         lda     calc_d
         ora     calc_e
-        bne     @ret
+        bne     ret3
         lda     calc_l
-        bne     :+
+      IF_ZERO
         inc     calc_l
-:       lda     intl_deci_sep
+      END_IF
+        lda     intl_deci_sep
         sta     calc_d
         jmp     Insert
 
-@ret:   rts
+ret3:   rts
     END_IF
 
         cmp     #Function::digit0
@@ -911,15 +923,16 @@ next:   add16_8 ptr, #.sizeof(btn_c)
 Insert: sec
         ror     calc_g
         ldy     calc_l
-        bne     :+
+    IF_ZERO
         pha
         jsr     ResetBuffer2
         pla
-        cmp     #'0'
-        bne     :+
+      IF_A_EQ   #'0'
         jmp     DisplayBuffer1
+      END_IF
+    END_IF
 
-:       sec
+        sec
         ror     calc_p
         cpy     #10
         bcs     ret
@@ -930,12 +943,14 @@ Insert: sec
         sec
         sbc     calc_l
         tax
-:       lda     text_buffer1,x
+    DO
+        lda     text_buffer1,x
         sta     text_buffer1-1,x
         sta     text_buffer2-1,x
         inx
         dey
-        bne     :-
+    WHILE_NOT_ZERO
+
 empty:  inc     calc_l
         pla
         sta     text_buffer1 + kTextBufferSize
@@ -956,13 +971,14 @@ ret:   rts
         ;; Parse `text_buffer1` into FAC.
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
-cloop:  lda     text_buffer1,x
-        cmp     intl_deci_sep
-        bne     :+
+      DO
+        lda     text_buffer1,x
+       IF_A_EQ  intl_deci_sep
         lda     #'.'
-:       sta     FBUFFR,x
+       END_IF
+        sta     FBUFFR,x
         dex
-        bpl     cloop
+      WHILE_POS
         copy16  #FBUFFR, TXTPTR
         jsr     CHRGET
         ROM_CALL FIN
@@ -1097,40 +1113,42 @@ do_op:
         sta     calc_op         ; save for later
         lday    #farg           ; A,Y = previous intermediate result
 
-        cpx     #Function::op_add
-        bne     :+
+    IF_X_EQ     #Function::op_add
         ROM_CALL FADD           ; FAC = (Y,A) + FAC
         jmp     PostOp
+    END_IF
 
-:       cpx     #Function::op_subtract
-        bne     :+
+    IF_X_EQ     #Function::op_subtract
         ROM_CALL FSUB           ; FAC = (Y,A) - FAC
         jmp     PostOp
+    END_IF
 
-:       cpx     #Function::op_multiply
-        bne     :+
+    IF_X_EQ     #Function::op_multiply
         ROM_CALL FMULT          ; FAC = (Y,A) * FAC
         jmp     PostOp
+    END_IF
 
-:       cpx     #Function::op_divide
-        bne     :+
+    IF_X_EQ     #Function::op_divide
         ROM_CALL FDIV           ; FAC = (Y,A) / FAC
         jmp     PostOp
+    END_IF
 
-:       cpx     #Function::op_power
-        bne     :+
+    IF_X_EQ     #Function::op_power
         ROM_CALL LOAD_ARG       ; ARG = (Y,A)
         ROM_CALL FPWRT          ; FAC = ARG ^ FAC
         jmp     PostOp
+    END_IF
 
-:       cpx     #Function::equals
-        bne     :+
+    IF_X_EQ     #Function::equals
         ldy     calc_f
-        bne     PostOp
+      IF_ZERO
         ldy     calc_g
-        bne     PostOp
+       IF_ZERO
         jmp     ResetBuffer1AndState
-:
+       END_IF
+      END_IF
+    END_IF
+
         FALL_THROUGH_TO PostOp
 .endproc ; DoOp
 
@@ -1147,21 +1165,23 @@ ep2:    jsr     PushFAC
         jsr     PopFAC
 
         ldy     #0              ; count the size
-sloop:  lda     FBUFFR,y
-        beq     :+
+    DO
+        lda     FBUFFR,y
+        BREAK_IF_ZERO
         iny
-        bne     sloop
+    WHILE_NOT_ZERO
 
-:       ldx     #kTextBufferSize ; copy to text buffers
-cloop:  lda     FBUFFR-1,y
-        cmp     #'.'            ; map decimal character
-        bne     :+
+        ldx     #kTextBufferSize ; copy to text buffers
+    DO
+        lda     FBUFFR-1,y
+      IF_A_EQ   #'.'            ; map decimal character
         lda     intl_deci_sep
-:       sta     text_buffer1,x
+      END_IF
+        sta     text_buffer1,x
         sta     text_buffer2,x
         dex
         dey
-        bne     cloop
+    WHILE_NOT_ZERO
 
         ;; Add leading zero if starting with decimal
     IF_A_EQ     #'-'
@@ -1201,13 +1221,12 @@ end:    jsr     DisplayBuffer1
 
 .proc MaybeAddLeadingZero
         lda     text_buffer1+1,x
-        cmp     intl_deci_sep
-        bne     :+
+    IF_A_EQ     intl_deci_sep
         lda     #'0'
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
-:
+    END_IF
         rts
 .endproc ; MaybeAddLeadingZero
 
@@ -1231,11 +1250,7 @@ kRegSize = 6
         pla
         sta     hi
 
-        ldx     #AS_BYTE(-kRegSize)
-:       lda     FAC + kRegSize,x
-        pha
-        inx
-        bne     :-
+        PUSH_BYTES kRegSize, FAC
 
         hi := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -1253,11 +1268,7 @@ kRegSize = 6
         pla
         sta     hi
 
-        ldx     #kRegSize-1
-:       pla
-        sta     FAC,x
-        dex
-        bpl     :-
+        POP_BYTES kRegSize, FAC
 
         hi := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -1275,11 +1286,7 @@ kRegSize = 6
         pla
         sta     hi
 
-        ldx     #AS_BYTE(-kRegSize)
-:       lda     ARG + kRegSize,x
-        pha
-        inx
-        bne     :-
+        PUSH_BYTES kRegSize, ARG
 
         hi := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -1297,11 +1304,7 @@ kRegSize = 6
         pla
         sta     hi
 
-        ldx     #kRegSize-1
-:       pla
-        sta     ARG,x
-        dex
-        bpl     :-
+        POP_BYTES kRegSize, ARG
 
         hi := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -1404,9 +1407,10 @@ inside: lda     button_state    ; inside, and down
 
 done:   lda     button_state                    ; high bit set if button down
         pha
-        beq     :+
+    IF_NOT_ZERO
         jsr     invert_rect                        ; Back to normal
-:       MGTK_CALL MGTK::SetPenMode, penmode_normal ; Normal draw mode??
+    END_IF
+        MGTK_CALL MGTK::SetPenMode, penmode_normal ; Normal draw mode??
         pla
         rts
 
@@ -1541,13 +1545,13 @@ label:  .addr   0
         jsr     ResetBuffersAndDisplay
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        beq     :+
+    IF_A_NE     #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, error_pos
         param_call DrawString, error_string
+    END_IF
 
-:       jsr     ResetBuffer1AndState
+        jsr     ResetBuffer1AndState
         lda     #Function::equals
         sta     calc_op
         ldx     saved_stack

@@ -81,10 +81,10 @@
         ldy     #0
         lda     (ptr),y
         tay
-:       lda     (ptr),y
-        sta     searchPath,y
+    DO
+        copy8   (ptr),y, searchPath,y
         dey
-        bpl     :-
+    WHILE_POS
 
         ;; Append '/' needed by algorithm
         ldy     searchPath
@@ -121,11 +121,11 @@ continue:
 
         ;; Init IW2 settings
         ldx     #0
-:       lda     iw2_init,x
+    DO
+        lda     iw2_init,x
         jsr     COut
         inx
-        cpx     #kLenIW2Init
-        bne     :-
+    WHILE_X_NE  #kLenIW2Init
 
         ;; Recurse and print
         jsr     PrintCatalog
@@ -137,11 +137,11 @@ continue:
 PrintCatalog:
         ;; Header
         ldx     #0
-:       lda     str_header+1,x
+    DO
+        lda     str_header+1,x
         jsr     COut
         inx
-        cpx     str_header
-        bne     :-
+    WHILE_X_NE  str_header
         jsr     CROut
 
         ;; If we're doing multiple volumes, get started
@@ -155,11 +155,11 @@ PrintCatalog:
         ;; Show the current path
 next:
         ldx     #0
-:       lda     searchPath+1,x
+    DO
+        lda     searchPath+1,x
         jsr     COut
         inx
-        cpx     searchPath
-        bcc     :-
+    WHILE_X_LT  searchPath
         jsr     CROut
         copy8   #1, indent
 
@@ -205,21 +205,20 @@ iw2_init:
         ldy     #0
         lda     (ptr),y         ; first byte in table is number of tuples
         sta     count
-
-:       iny
+    DO
+        iny
         lda     (ptr),y
         tax
         lda     SLOT1,x
         iny
         and     (ptr),y
         iny
-        cmp     (ptr),y
-        bne     ret
+        BREAK_IF_A_NE (ptr),y
 
         dec     count
-        bne     :-
+    WHILE_NOT_ZERO
 
-ret:    rts
+        rts
 
 count:  .byte   0
 .endproc ; CheckSlot1Signature
@@ -315,9 +314,10 @@ saved_stack:
         bit     KBDSTRB         ; clear strobe
 
         ldy     searchPath      ; prime the search path
-:       copy8   searchPath,y, nameBuffer,y
+    DO
+        copy8   searchPath,y, nameBuffer,y
         dey
-        bpl     :-
+    WHILE_POS
 
         lda     #0              ; reset recursion/results state
         sta     Depth
@@ -391,11 +391,11 @@ ItsADir:
 
 nextEntry:
         lda     KBD
-        bpl     :+
+    IF_NS
         sta     KBDSTRB
         cmp     #$80|CHAR_ESCAPE
         beq     Terminate
-:
+    END_IF
 
         jsr     GetNext         ; get pointer to next entry
         bcc     loop            ; Carry set means we're done
@@ -473,9 +473,9 @@ OpenDone:
 
         ldx     #kColType
         lda     #' '
-:       jsr     COut
-        cpx     ch
-        bcs     :-
+    DO
+        jsr     COut
+    WHILE_X_GE  ch
 
         jsr     PrintType
         jsr     PrintSize
@@ -490,10 +490,11 @@ OpenDone:
         ldx     indent
     IF_NOT_ZERO
         lda     #' '
-:       jsr     COut
+      DO
+        jsr     COut
         jsr     COut
         dex
-        bne     :-
+      WHILE_NOT_ZERO
     END_IF
 
         ;; Print name
@@ -502,11 +503,12 @@ OpenDone:
         and     #NAME_LENGTH_MASK
         tax
         ldy     #1
-:       lda     (entPtr),y
+    DO
+        lda     (entPtr),y
         jsr     COut
         iny
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         rts
 .endproc ; PrintName
@@ -519,11 +521,11 @@ OpenDone:
 
         jsr     ComposeFileTypeString
         ldx     #0
-:       lda     str_file_type+1,x
+    DO
+        lda     str_file_type+1,x
         jsr     COut
         inx
-        cpx     str_file_type
-        bne     :-
+    WHILE_X_NE  str_file_type
 
         rts
 .endproc ; PrintType
@@ -544,18 +546,18 @@ OpenDone:
         ;; Left-pad it
         ldx     #kColBlocks - kColType - kTypeWidth
         lda     #' '
-:       jsr     COut
+    DO
+        jsr     COut
         dex
-        cpx     str_from_int
-        bne     :-
+    WHILE_X_NE  str_from_int
 
         ;; Print it
         ldx     #0
-:       lda     str_from_int+1,x
+    DO
+        lda     str_from_int+1,x
         jsr     COut
         inx
-        cpx     str_from_int
-        bne     :-
+    WHILE_X_NE  str_from_int
 
         rts
 .endproc ; PrintSize
@@ -576,12 +578,11 @@ OpenDone:
         kMaxRecursionDepth = 16
 
         lda     Depth
-        cmp     #kMaxRecursionDepth
-        bcs     :+
-
+    IF_A_LT     #kMaxRecursionDepth
         jmp     RecursDir       ; enumerate all entries in sub-dir.
+    END_IF
 
-:       rts
+        rts
 .endproc ; VisitDir
 ;;;
 ;;;******************************************************
@@ -840,10 +841,11 @@ repeat: ldx     devidx
         param_call JUMP_TABLE_ADJUST_ONLINEENTRY, on_line_buffer
 
         ldx     #0
-:       copy8   on_line_buffer+1,x, searchPath+2,x
+    DO
+        copy8   on_line_buffer+1,x, searchPath+2,x
         inx
-        cpx     on_line_buffer
-        bne     :-
+    WHILE_X_NE  on_line_buffer
+
         copy8   #'/', searchPath+2,x ; add trailing '/'
         inx
         inx

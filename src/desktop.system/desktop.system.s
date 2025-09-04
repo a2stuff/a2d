@@ -489,8 +489,7 @@ is_dir:
         lda     create_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY ; if it was a volume dir, make sure we create a subdir
     IF_EQ                            ; (if it was not a directory, just keep the type)
-        lda     #ST_LINKED_DIRECTORY
-        sta     create_params::storage_type
+        copy8   #ST_LINKED_DIRECTORY, create_params::storage_type
     END_IF
         MLI_CALL CREATE, create_params
         bcs     fail
@@ -526,8 +525,7 @@ is_dir:
         bcc     ok
 fail:   jmp     (hook_handle_error_code)
 
-onerr:  lda     #$FF
-        sta     copy_err_flag
+onerr:  copy8   #$FF, copy_err_flag
         bne     copy_err             ; always
 
 ok:     jsr     AppendFilenameToPath1
@@ -597,8 +595,7 @@ got_dst_size:
         ;; Get destination volume free space
 
         ;; Isolate destination volume name
-        lda     path1
-        sta     path1_length    ; save
+        copy8   path1, path1_length ; save
 
         ldy     #1
         lda     #'/'
@@ -628,8 +625,8 @@ got_dst_size:
 
 have_space:
         clc
-        path1_length := *+1         ; save full length of path
 :
+        path1_length := *+1         ; save full length of path
         lda     #SELF_MODIFIED_BYTE ; restore
         sta     path1
         rts
@@ -848,11 +845,9 @@ entry_index_in_block:   .byte   0
 
 .proc PushIndexToStack
         ldx     stack_index
-        lda     target_index
-        sta     index_stack,x
+        copy8   target_index, index_stack,x
         inx
-        lda     target_index+1
-        sta     index_stack,x
+        copy8   target_index+1, index_stack,x
         inx
         stx     stack_index
         rts
@@ -863,11 +858,9 @@ entry_index_in_block:   .byte   0
 .proc PopIndexFromStack
         ldx     stack_index
         dex
-        lda     index_stack,x
-        sta     target_index+1
+        copy8   index_stack,x, target_index+1
         dex
-        lda     index_stack,x
-        sta     target_index
+        copy8   index_stack,x, target_index
         stx     stack_index
         rts
 .endproc ; PopIndexFromStack
@@ -987,8 +980,7 @@ eof:    return  #$FF
 ;;; Inputs: `path2` points at source directory
 
 .proc CopyDirectory
-        lda     #0
-        sta     recursion_depth
+        copy8   #0, recursion_depth
         jsr     OpenSrcDir
 
 loop:   jsr     ReadFileEntry
@@ -1000,8 +992,7 @@ loop:   jsr     ReadFileEntry
         and     #NAME_LENGTH_MASK
         sta     filename
 
-        lda     #0
-        sta     copy_err_flag
+        copy8   #0, copy_err_flag
 
         jsr     CopyEntry
 
@@ -1040,13 +1031,11 @@ copy_err_flag:
 
         ldx     #$00
         ldy     path2
-        lda     #'/'
-        sta     path2+1,y
+        copy8   #'/', path2+1,y
 loop:   iny
         cpx     filename
         bcs     done
-        lda     filename+1,x
-        sta     path2+1,y
+        copy8   filename+1,x, path2+1,y
         inx
         bne     loop            ; always
 
@@ -1082,13 +1071,11 @@ done_ret:
 
         ldx     #0
         ldy     path1
-        lda     #'/'
-        sta     path1+1,y
+        copy8   #'/', path1+1,y
 loop:   iny
         cpx     filename
         bcs     done
-        lda     filename+1,x
-        sta     path1+1,y
+        copy8   filename+1,x, path1+1,y
         inx
         bne     loop            ; always
 
@@ -1303,8 +1290,7 @@ test_unit_num:
         ldy     on_line_buffer
         iny
         sty     dst_path
-        lda     #'/'
-        sta     on_line_buffer
+        copy8   #'/', on_line_buffer
         sta     dst_path+1
     DO
         copy8   on_line_buffer,y, dst_path+1,y
@@ -1420,8 +1406,7 @@ file_loop:
         jsr     UpdateSelfFile
         jsr     CopyOrigPrefixToDesktopOrigPrefix
 
-        lda     #0
-        sta     RAMWORKS_BANK   ; Just in case???
+        copy8   #0, RAMWORKS_BANK ; Just in case???
 
         ;; Initialize system bitmap
         ldx     #BITMAP_SIZE-2
@@ -1429,10 +1414,8 @@ file_loop:
         sta     BITMAP,x
         dex
     WHILE_NOT_ZERO
-        lda     #%00000001      ; ProDOS global page
-        sta     BITMAP+BITMAP_SIZE-1
-        lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     BITMAP
+        copy8   #%00000001, BITMAP+BITMAP_SIZE-1 ; ProDOS global page
+        copy8   #%11001111, BITMAP ; ZP, Stack, Text Page 1
 
         ;; Done! Move on to Part 2.
         jmp     CopySelectorEntriesToRAMCard
@@ -1508,23 +1491,18 @@ file_loop:
 
 .proc AppendFilenameToSrcPath
         lda     filename_buf
-        beq     done_ret
-
+    IF_NOT_ZERO
         ldx     #0
         ldy     src_path
-        lda     #'/'
-        sta     src_path+1,y
-
-loop:   iny
-        cpx     filename_buf
-        bcs     done
-        lda     filename_buf+1,x
-        sta     src_path+1,y
+        copy8   #'/', src_path+1,y
+      DO
+        iny
+        BREAK_IF_X_GE filename_buf
+        copy8   filename_buf+1,x, src_path+1,y
         inx
-        bne     loop            ; always
-
-done:   sty     src_path
-done_ret:
+      WHILE_NOT_ZERO              ; always
+        sty     src_path
+    END_IF
         rts
 .endproc ; AppendFilenameToSrcPath
 
@@ -1532,19 +1510,18 @@ done_ret:
 
 .proc RemoveFilenameFromSrcPath
         ldx     src_path
-        beq     done_ret
-
+    IF_NOT_ZERO
         lda     #'/'
-    DO
+      DO
         cmp     src_path,x
         beq     done
         dex
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         inx
 
 done:   dex
         stx     src_path
-done_ret:
+   END_IF
         rts
 .endproc ; RemoveFilenameFromSrcPath
 
@@ -1552,23 +1529,18 @@ done_ret:
 
 .proc AppendFilenameToDstPath
         lda     filename_buf
-        beq     done_ret
-
+    IF_NOT_ZERO
         ldx     #0
         ldy     dst_path
-        lda     #'/'
-        sta     dst_path+1,y
-
-loop:   iny
-        cpx     filename_buf
-        bcs     done
-        lda     filename_buf+1,x
-        sta     dst_path+1,y
+        copy8   #'/', dst_path+1,y
+      DO
+        iny
+        BREAK_IF_X_GE filename_buf
+        copy8   filename_buf+1,x, dst_path+1,y
         inx
-        bne     loop            ; always
-
-done:   sty     dst_path
-done_ret:
+      WHILE_NOT_ZERO            ; always
+        sty     dst_path
+    END_IF
         rts
 .endproc ; AppendFilenameToDstPath
 
@@ -1576,19 +1548,19 @@ done_ret:
 
 .proc RemoveFilenameFromDstPath
         ldx     dst_path
-        beq     done_ret
+    IF_NOT_ZERO
 
         lda     #'/'
-    DO
+      DO
         cmp     dst_path,x
         beq     done
         dex
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         inx
 
 done:   dex
         stx     dst_path
-done_ret:
+    END_IF
         rts
 .endproc ; RemoveFilenameFromDstPath
 
@@ -1597,30 +1569,26 @@ done_ret:
 .proc ShowCopyingDeskTopScreen
 
         ;; Message
-        lda     #kHtabCopyingMsg
-        sta     OURCH
+        copy8   #kHtabCopyingMsg, OURCH
         lda     #kVtabCopyingMsg
         jsr     VTABZ
         param_call CoutString, str_copying_to_ramcard
 
         ;; Esc to Cancel
-        lda     #kHtabCancelMsg
-        sta     OURCH
+        copy8   #kHtabCancelMsg, OURCH
         lda     #kVtabCancelMsg
         jsr     VTABZ
         param_call CoutString, str_esc_to_cancel
 
         ;; Tip
         bit     supports_mousetext
-        bpl     done
-
-        lda     #kHtabCopyingTip
-        sta     OURCH
+    IF_NS
+        copy8   #kHtabCopyingTip, OURCH
         lda     #kVtabCopyingTip
         jsr     VTABZ
         param_call CoutString, str_tip_skip_copying
-
-done:   rts
+    END_IF
+        rts
 .endproc ; ShowCopyingDeskTopScreen
 
 ;;; ============================================================
@@ -1691,23 +1659,21 @@ noop:
         ;; `path_buf` += "/DeskTop.system"
         ldx     path_buf
         ldy     #0
-loop:   inx
+    DO
+        inx
         iny
-        lda     str_sentinel_path,y
-        sta     path_buf,x
-        cpy     str_sentinel_path
-        bne     loop
+        copy8   str_sentinel_path,y, path_buf,x
+    WHILE_Y_NE  str_sentinel_path
         stx     path_buf
 
         ;; ... and get info
         MLI_CALL GET_FILE_INFO, get_file_info_params4
-        bcs     ret
-
+    IF_CC
         cmp16   #2, get_file_info_params4::blocks_used
         ;; Ensure at least something was written to the file
         ;; (uses 1 block at creation)
-
-ret:    rts
+    END_IF
+        rts
 
         ;; Appended to RAMCard root path e.g. "/RAM5"
 str_sentinel_path:
@@ -1806,8 +1772,7 @@ saved_stack:
 
         ;; Process "primary list" entries (first 8)
 .scope
-        lda     #0
-        sta     entry_num
+        copy8   #0, entry_num
 entry_loop:
         lda     entry_num
         cmp     selector_buffer + kSelectorListNumPrimaryRunListOffset
@@ -1828,8 +1793,7 @@ entry_loop:
         bit     LCBANK2         ; Mark copied
         bit     LCBANK2
         ldx     entry_num
-        lda     #$FF
-        sta     ENTRY_COPIED_FLAGS,x
+        copy8   #$FF, ENTRY_COPIED_FLAGS,x
         bit     ROMIN2
 
 next_entry:
@@ -1840,8 +1804,7 @@ done_entries:
 
         ;; Process "secondary run list" entries (final 16)
 .scope
-        lda     #0
-        sta     entry_num
+        copy8   #0, entry_num
 entry_loop:
         lda     entry_num
         cmp     selector_buffer + kSelectorListNumSecondaryRunListOffset
@@ -1866,8 +1829,7 @@ entry_loop:
         bit     LCBANK2
         bit     LCBANK2
         ldx     entry_num
-        lda     #$FF
-        sta     ENTRY_COPIED_FLAGS+8,x
+        copy8   #$FF, ENTRY_COPIED_FLAGS+8,x
         bit     ROMIN2
 next_entry:
         inc     entry_num
@@ -1898,8 +1860,7 @@ entry_dir_name:
 
         ;; Set up destination dir path, e.g. "/RAM/APPLEWORKS"
         ldx     GenericCopy::path1 ; Append '/' to `path1`
-        lda     #'/'
-        sta     GenericCopy::path1+1,x
+        copy8   #'/', GenericCopy::path1+1,x
         inc     GenericCopy::path1
 
         ldy     #0              ; Append `entry_dir_name` to `path1`
@@ -1929,21 +1890,20 @@ entry_dir_name:
 ;;; Copy `entry_path1/2` to `path1/2`
 
 .proc PreparePathsFromEntryPaths
-        ldy     #$FF
 
         ;; Copy `entry_path2` to `path2`
-loop:   iny
-        lda     entry_path2,y
-        sta     GenericCopy::path2,y
-        cpy     entry_path2
-        bne     loop
+        ldy     #AS_BYTE(-1)
+    DO
+        iny
+        copy8   entry_path2,y, GenericCopy::path2,y
+    WHILE_Y_NE entry_path2
 
         ;; Copy `entry_path1` to `path1`
         ldy     entry_path1
-loop2:  lda     entry_path1,y
-        sta     GenericCopy::path1,y
+    DO
+        copy8   entry_path1,y, GenericCopy::path1,y
         dey
-        bpl     loop2
+    WHILE_POS
 
         rts
 .endproc ; PreparePathsFromEntryPaths
@@ -2130,8 +2090,7 @@ str_not_completed:
         jsr     HOME
         lda     #0
         jsr     VTABZ
-        lda     #0
-        sta     OURCH
+        copy8   #0, OURCH
         param_call CoutString, str_copying
         param_call CoutStringNewline, GenericCopy::path2
         rts
@@ -2143,8 +2102,7 @@ str_not_completed:
 .proc ShowInsertPrompt
         lda     #0
         jsr     VTABZ
-        lda     #0
-        sta     OURCH
+        copy8   #0, OURCH
         param_call CoutString, str_insert
 
         jsr     WaitEnterEscape
@@ -2166,8 +2124,7 @@ str_not_completed:
 
         lda     #0
         jsr     VTABZ
-        lda     #0
-        sta     OURCH
+        copy8   #0, OURCH
         param_call CoutString, str_not_enough
         jsr     WaitEnterEscape
 
@@ -2404,8 +2361,7 @@ found:
         ora     block_buffer + VolumeDirectoryHeader::file_count+1
         beq     ret
 
-        lda     #kHtabRamNotEmptyMsg
-        sta     OURCH
+        copy8   #kHtabRamNotEmptyMsg, OURCH
         lda     #kVtabRamNotEmptyMsg
         jsr     VTABZ
         param_call CoutString, str_ram_not_empty
@@ -2444,8 +2400,7 @@ str_ram_not_empty:
 
         stax    ptr
         ldy     #0
-        lda     (ptr),y
-        sta     len
+        copy8   (ptr),y, len
     IF_NOT_ZERO
       DO
         iny

@@ -189,8 +189,7 @@ found:  ldy     DEVLST,x
 
         ;; Move everything up
     DO
-        lda     DEVLST+1,x
-        sta     DEVLST,x
+        copy8   DEVLST+1,x, DEVLST,x
         inx
     WHILE_X_NE  DEVCNT
 
@@ -304,13 +303,11 @@ done:
         iny
         ldx     #0
     DO
-        lda     trash_name,x
-        sta     (ptr),y
+        copy8   trash_name,x, (ptr),y
         iny
         inx
     WHILE_X_NE  trash_name
-        lda     trash_name,x
-        sta     (ptr),y
+        copy8   trash_name,x, (ptr),y
 
         FALL_THROUGH_TO LoadSelectorList
 .endproc ; CreateTrashIcon
@@ -339,8 +336,7 @@ done:
         adc     selector_list_data_buf + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
 
-        lda     selector_list_data_buf
-        sta     count
+        copy8   selector_list_data_buf, count
 L0A3B:  lda     index
         cmp     count
         beq     done
@@ -355,8 +351,7 @@ L0A3B:  lda     index
 
         ;; Copy entry flags into place
         ldy     #15
-        lda     (ptr1),y
-        sta     (ptr2),y
+        copy8   (ptr1),y, (ptr2),y
 
         ;; Copy entry path into place
         lda     index
@@ -384,8 +379,7 @@ count:  .byte   0
         lda     (ptr1),y
         tay
     DO
-        lda     (ptr1),y
-        sta     (ptr2),y
+        copy8   (ptr1),y, (ptr2),y
         dey
     WHILE_POS
         rts
@@ -483,17 +477,14 @@ open_dir:
         sta     entry_num
         sta     desk_acc_num
 
-        lda     #1              ; First block has header instead of entry
-        sta     entry_in_block
+        copy8   #1, entry_in_block ; First block has header instead of entry
 
         lda     read_dir_buffer + SubdirectoryHeader::file_count
         and     #$7F
         sta     file_count
 
-        lda     read_dir_buffer + SubdirectoryHeader::entries_per_block
-        sta     entries_per_block
-        lda     read_dir_buffer + SubdirectoryHeader::entry_length
-        sta     entry_length
+        copy8   read_dir_buffer + SubdirectoryHeader::entries_per_block, entries_per_block
+        copy8   read_dir_buffer + SubdirectoryHeader::entry_length, entry_length
 
         dir_ptr := $06
         da_ptr := $08
@@ -544,8 +535,7 @@ process_block:
         sta     name_buf
         tay
     DO
-        lda     (dir_ptr),y
-        sta     name_buf,y
+        copy8   (dir_ptr),y, name_buf,y
         dey
     WHILE_NOT_ZERO
 
@@ -555,8 +545,7 @@ process_block:
     IF_A_EQ     #FT_DIRECTORY   ; Directory?
         ldy     name_buf
       DO
-        lda     name_buf,y
-        sta     name_buf+3,y
+        copy8   name_buf,y, name_buf+3,y
         dey
       WHILE_NOT_ZERO
 
@@ -570,8 +559,7 @@ process_block:
 
         ;; Convert periods to spaces, copy into menu
         ldy     #0
-        lda     name_buf,y
-        sta     (da_ptr),y
+        copy8   name_buf,y, (da_ptr),y
         tay
     DO
         lda     name_buf,y
@@ -603,8 +591,7 @@ next_entry:
         MLI_CALL READ, read_params
         copy16  #read_dir_buffer + 4, dir_ptr
 
-        lda     #0
-        sta     entry_in_block
+        copy8   #0, entry_in_block
         jmp     process_block
     END_IF
 
@@ -661,8 +648,7 @@ end:
         sty     main::pending_alert
 
         ;; Enumerate DEVLST in reverse order (most important volumes first)
-        lda     DEVCNT
-        sta     device_index
+        copy8   DEVCNT, device_index
 
 process_volume:
         lda     device_index
@@ -710,10 +696,9 @@ process_volume:
         jmp     next
     END_IF
 
-        cmp     #ERR_DUPLICATE_VOLUME
-        bne     select_template
-        lda     #kErrDuplicateVolName
-        sta     main::pending_alert
+    IF_A_EQ     #ERR_DUPLICATE_VOLUME
+        copy8   #kErrDuplicateVolName, main::pending_alert
+    END_IF
 
         ;; This section populates device_name_table -
         ;; it determines which device type string to use, and
@@ -746,8 +731,7 @@ select_template:
         lda     (src),y         ; Y = 0
         tay                     ; Y = length
     DO
-        lda     (src),y
-        sta     str_sdname_buffer + kSDPrefixLength,y
+        copy8   (src),y, str_sdname_buffer + kSDPrefixLength,y
         dey
     WHILE_NOT_ZERO              ; leave length alone
 
@@ -775,8 +759,7 @@ select_template:
         ;; Copy name into table
         ldy     str_sdname_buffer
    DO
-        lda     str_sdname_buffer,y
-        sta     (devname_ptr),y
+        copy8   str_sdname_buffer,y, (devname_ptr),y
         dey
    WHILE_POS
 
@@ -821,10 +804,8 @@ cvi_result:
         slot_ptr := $06         ; pointed at $Cn00
         table_ptr := $08        ; points into slot_string_table
 
-        lda     #7
-        sta     slot
-        lda     #0
-        sta     slot_ptr
+        copy8   #7, slot
+        copy8   #0, slot_ptr
         tax                     ; X = menu entry
 
         ;; Identify ProDOS device in slot by ID bytes
@@ -849,8 +830,7 @@ cvi_result:
         bne     next
 
         ;; It is a ProDOS device - prepare menu item.
-        lda     slot
-        sta     main::startup_slot_table,x
+        copy8   slot, main::startup_slot_table,x
 
         txa                     ; pointer to nth sNN string
         pha
@@ -990,8 +970,7 @@ append:
         ;; Append the device
         inc     count
         ldx     count
-        lda     unit_num
-        sta     main::removable_device_table,x
+        copy8   unit_num, main::removable_device_table,x
         bne     next            ; always
 
 index:  .byte   0
@@ -1014,8 +993,7 @@ unit_num:
         BREAK_IF_X_EQ cached_window_entry_count
         txa
         pha
-        lda     cached_window_entry_list,x
-        sta     icon_param
+        copy8   cached_window_entry_list,x, icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
         pla
         tax
@@ -1066,8 +1044,7 @@ loop:   ldy     #0
 
         tay
     DO
-        lda     (data_ptr),y
-        sta     INVOKER_PREFIX,y
+        copy8   (data_ptr),y, INVOKER_PREFIX,y
         dey
     WHILE_POS
 
@@ -1089,15 +1066,13 @@ loop:   ldy     #0
 
         ;; Copy view type to `new_window_view_by`
         ldy     #DeskTopFileItem::view_by
-        lda     (data_ptr),y
-        sta     new_window_view_by
+        copy8   (data_ptr),y, new_window_view_by
 
         ;; Copy loc to `new_window_viewloc`
         ldy     #DeskTopFileItem::viewloc+.sizeof(MGTK::Point)-1
         ldx     #.sizeof(MGTK::Point)-1
     DO
-        lda     (data_ptr),y
-        sta     new_window_viewloc,x
+        copy8   (data_ptr),y, new_window_viewloc,x
         dey
         dex
     WHILE_POS
@@ -1106,8 +1081,7 @@ loop:   ldy     #0
         ldy     #DeskTopFileItem::maprect+.sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
     DO
-        lda     (data_ptr),y
-        sta     new_window_maprect,x
+        copy8   (data_ptr),y, new_window_maprect,x
         dey
         dex
     WHILE_POS

@@ -92,13 +92,14 @@ start:  tsx
 .proc Exit
         ldx     save_stack
         txs
-        lda     window_id
-        bne     :+
 
+        lda     window_id
+    IF_ZERO
         lda     #kErrNoWindowsOpen
         jmp     JUMP_TABLE_SHOW_ALERT
+    END_IF
 
-:       lda     #kDynamicRoutineRestoreBuffer
+        lda     #kDynamicRoutineRestoreBuffer
         jsr     JUMP_TABLE_RESTORE_OVL
 
         lda     window_id
@@ -174,24 +175,24 @@ exit1:  jmp     Exit
         beq     exit1           ; nope, bail
 
         cmp     #kMaxDeskTopWindows+1 ; is it DeskTop window?
-        bcc     :+
-        lda     #0              ; nope, bail
-        sta     window_id
+   IF_GE
+        copy8   #0, window_id   ; nope, bail
         beq     exit1           ; always
+   END_IF
 
         ;; Copy window path to buffer
         ptr := $06
 
-:       jsr     JUMP_TABLE_GET_WIN_PATH
+        jsr     JUMP_TABLE_GET_WIN_PATH
         stax    ptr
 
         ldy     #0
         lda     (ptr),y
         tay
-:       lda     (ptr),y
-        sta     path_buf,y
+    DO
+        copy8   (ptr),y, path_buf,y
         dey
-        bpl     :-
+    WHILE_POS
 
         FALL_THROUGH_TO ReadSortWrite
 .endproc ; Start2
@@ -231,8 +232,7 @@ loop:
         sta     block_num_table+1,x
 
         ora     block_num_table,x
-        beq     :+
-
+    IF_NOT_ZERO
         ;; Move to next "block"
         inc     buf_ptr1_hi
         inc     buf_ptr1_hi
@@ -243,21 +243,23 @@ loop:
         inx
         cpx     #>kDirDataBufferLen
         bne     loop
+    END_IF
 
         ;; Prepare for sorting
-:       txa
+        txa
         clc
         adc     #>dir_data_buffer
         sta     end_block_page
 
         ;; Get key block of directory by using header pointer of first entry
         jsr     SetPtrToFirstEntry
-:       jsr     SetPtrToNextEntry
+    DO
+        jsr     SetPtrToNextEntry
         bcs     jmp_exit
         ldy     #0
         lda     (ptr),y
         and     #STORAGE_TYPE_MASK ; skip deleted entries
-        beq     :-
+    WHILE_ZERO
         ldy     #FileEntry::header_pointer
         copy16in (ptr),y, block_num_table
 .endscope ; read
@@ -367,8 +369,7 @@ entry_num:
         ptr1 := $06
         ptr2 := $08
 
-start:  lda     #0
-        sta     flag
+start:  copy8   #0, flag
         jsr     SetPtrToFirstEntry
         jsr     SetPtrToNextEntry
 
@@ -379,9 +380,8 @@ loop:   copy16  ptr1, ptr2
         jsr     CompareFileEntries
         bcc     loop
         jsr     SwapEntries
-        lda     #$FF
-        sta     flag
-        bne     loop
+        copy8   #$FF, flag
+        bne     loop            ; always
 
 done:   lda     flag
         bne     start
@@ -407,10 +407,8 @@ flag:   .byte   0
         cmp     #$FF
         bne     rtcc
         inc     ptr+1
-        lda     #1
-        sta     entry_num
-        lda     #4              ; skip over block header
-        sta     ptr
+        copy8   #1, entry_num
+        copy8   #4, ptr         ; skip over block header
         lda     ptr+1
         cmp     end_block_page
         bcs     rtcs
@@ -427,8 +425,7 @@ rtcs:   sec
 .proc SetPtrToFirstEntry
         ptr := $06
 
-        lda     #1
-        sta     entry_num
+        copy8   #1, entry_num
         copy16  #dir_data_buffer + 4, ptr
         rts
 .endproc ; SetPtrToFirstEntry
@@ -468,16 +465,17 @@ loop:   swap8   (ptr1),y, (ptr2),y
 
         ;; Are we sorting by selection order?
         jsr     JUMP_TABLE_GET_SEL_COUNT
-        beq     :+              ; No selection, so nope.
+    IF_NOT_ZERO                 ; Must have selection
         jsr     JUMP_TABLE_GET_SEL_WIN
-        cmp     window_id       ; Is selection in the active window?
-        bne     :+              ; Nope (desktop or inactive window)
+      IF_A_EQ   window_id       ; Is selection in the active window?
         jmp     CompareSelectionOrders
+      END_IF
+    END_IF
 
         ;; Sorting by type then name
 
         ;; SYS files with ".SYSTEM" suffix sort first
-:       ldax    ptr2
+        ldax    ptr2
         jsr     CheckSystemFile
         php                     ; save first result (in C)
         ldax    ptr1
@@ -488,10 +486,11 @@ loop:   swap8   (ptr1),y, (ptr2),y
         rol                     ; now low 2 bits have 0=yes, 1=no
         beq     sys             ; both, so compare as SYS
         cmp     #%00000011      ; neither, so continue
-        beq     :+
+    IF_NE
         ror                     ; order back into C
         rts
-:
+    END_IF
+
         ;; DIR next
         lda     #FT_DIRECTORY
         jsr     CompareEntryTypesAndNames
@@ -544,8 +543,7 @@ loop:   dex
         tax
         add16   entry_ptr, #IconEntry::name, entry_ptr
         ldy     #0
-        lda     (entry_ptr),y   ; len
-        sta     cmp_len
+        copy8   (entry_ptr),y, cmp_len ; len
 
         lda     (filename),y
         and     #NAME_LENGTH_MASK
@@ -587,8 +585,7 @@ loop2:  dex
         tax
         add16   entry_ptr, #IconEntry::name, entry_ptr
         ldy     #0
-        lda     (entry_ptr),y   ; len
-        sta     cmp_len2
+        copy8   (entry_ptr),y, cmp_len2 ; len
 
         lda     (filename2),y
         and     #NAME_LENGTH_MASK
@@ -649,22 +646,20 @@ match2: .byte   0
         sta     type0
 
         ldy     #kMaxLength
-        lda     (ptr2),y
-        sta     type2
-        lda     (ptr1),y
-        sta     type1
+        copy8   (ptr2),y, type2
+        copy8   (ptr1),y, type1
 
         lda     type2
         cmp     type0
-        beq     :+
-
+    IF_NE
         lda     type1
         cmp     type0
         beq     rtcs
 
-        bne     neither
+        bne     neither         ; always
+    END_IF
 
-:       lda     type1
+        lda     type1
         cmp     type0
         bne     rtcc
         jsr     CompareFileEntryNames
@@ -749,10 +744,11 @@ str_system:
         and     #NAME_LENGTH_MASK
         sta     len1
         cmp     len
-        bcs     :+
+    IF_LT
         sta     len
+    END_IF
 
-:       ldy     #0
+        ldy     #0
 loop:   iny
         lda     (ptr2),y
         cmp     (ptr1),y

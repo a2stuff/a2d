@@ -269,17 +269,17 @@ joystick_bitmap:
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        bit     dragwindow_params::moved
-        bpl     :+
 
+        bit     dragwindow_params::moved
+    IF_NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
+    END_IF
 
-:       jmp     InputLoop
-
+        jmp     InputLoop
 .endproc ; HandleDrag
 
 
@@ -341,11 +341,12 @@ ret:    rts
         ;; Read paddles, copy into our current state
         jsr     ReadPaddles
         ldx     #kNumPaddles-1
-:       lda     pdl0,x
+    DO
+        lda     pdl0,x
         lsr                     ; clamp range to 0...127
         sta     curr+InputState::pdl0,x
         dex
-        bpl     :-
+    WHILE_POS
 
         lsr     curr+InputState::pdl1 ; clamp Y to 0...63 (due to pixel aspect ratio)
         lsr     curr+InputState::pdl3 ; clamp Y to 0...63 (due to pixel aspect ratio)
@@ -386,11 +387,12 @@ set:    copy8   #$80, joy2_valid_flag
         bit     force_draw_flag
     IF_NC
         ldx     #.sizeof(InputState)-1
-:       lda     curr,x
+      DO
+        lda     curr,x
         cmp     last,x
         bne     :+              ; changed - draw
         dex
-        bpl     :-
+      WHILE_POS
         rts                     ; no change - skip
 :
     END_IF
@@ -504,11 +506,12 @@ pdl3:   .byte   0
 
         ;; Read all paddles
         ldx     #kNumPaddles - 1
-:       jsr     PRead
+    DO
+        jsr     PRead
         tya
         sta     pdl0,x
         dex
-        bpl     :-
+    WHILE_POS
 
         JSR_TO_MAIN JUMP_TABLE_RESUME_SPEED
 
@@ -518,27 +521,30 @@ pdl3:   .byte   0
 .proc PRead
         ;; Let any previous timer reset (but don't wait forever)
         ldy     #0
-:       dey
+    DO
+        dey
         nop                     ; Empirically, 4 NOPs are needed here.
         nop                     ; https://github.com/a2stuff/a2d/issues/173
         nop
         nop
-        beq     :+
+        BREAK_IF_ZERO
         lda     PADDL0,x
-        bmi     :-
+    WHILE_NS
 
         ;; Read paddle
         ;; Per Technical Note: Apple IIe #6: The Apple II Paddle Circuits
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/aiie/tn.aiie.06.html
-:       lda     PTRIG           ; Trigger paddles
+        lda     PTRIG           ; Trigger paddles
         ldy     #0              ; Init counter
         nop                     ; ... and wait for first count
         nop
-:       lda     PADDL0,X        ; 11 microsecond loop
+    DO
+        lda     PADDL0,X        ; 11 microsecond loop
         bpl     done
         iny
-        bne     :-
+    WHILE_NOT_ZERO
         dey                     ; handle overflow
+
 done:   rts
 .endproc ; PRead
 

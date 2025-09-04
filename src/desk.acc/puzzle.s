@@ -519,13 +519,13 @@ loop:   tya
     END_IF
 
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        bne     :+
+    IF_A_EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
+    END_IF
 
         ;; key?
-:       cmp     #MGTK::EventKind::key_down
+        cmp     #MGTK::EventKind::key_down
         bne     InputLoop
         jsr     CheckKey
         jmp     InputLoop
@@ -534,29 +534,30 @@ loop:   tya
         ;; click - where?
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
+
         lda     findwindow_params::window_id
         cmp     #kDAWindowId
         bne     bail
+
         lda     findwindow_params::which_area
-        bne     :+
+    IF_ZERO
 bail:   rts
+    END_IF
 
         ;; client area?
-:       cmp     #MGTK::Area::content
-        bne     :+
-
+    IF_A_EQ     #MGTK::Area::content
         bit     scrambled_flag
-    IF_NC
+      IF_NC
         jmp     Scramble
-    END_IF
+      END_IF
 
         jsr     FindClickPiece
         bcc     bail
         jmp     ProcessClick
+    END_IF
 
         ;; close port?
-:       cmp     #MGTK::Area::close_box
-        bne     check_title
+    IF_A_EQ     #MGTK::Area::close_box
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         beq     bail
@@ -566,18 +567,18 @@ destroy:
         MGTK_CALL MGTK::CloseWindow, closewindow_params
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         rts
+    END_IF
 
         ;; title bar?
-check_title:
         cmp     #MGTK::Area::dragbar
         bne     bail
-        lda     #kDAWindowId
-        sta     dragwindow_params::window_id
+        copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
-        bpl     ret
+    IF_NS
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawWindow
+    END_IF
 
 ret:    rts
 .endproc ; OnClick
@@ -654,25 +655,28 @@ move:   stx     click_x
 
         cmp     #kRow1
         bcc     nope
-        cmp     #kRow2+1
-        bcs     :+
+    IF_A_LT     #kRow2+1
         jsr     FindClickX
         bcc     nope
         lda     #0
-        beq     yep
-:       cmp     #kRow3+1
-        bcs     :+
+        beq     yep             ; always
+    END_IF
+
+    IF_A_LT     #kRow3+1
         jsr     FindClickX
         bcc     nope
         lda     #1
-        bne     yep
-:       cmp     #kRow4+1
-        bcs     :+
+        bne     yep             ; always
+    END_IF
+
+    IF_A_LT     #kRow4+1
         jsr     FindClickX
         bcc     nope
         lda     #2
-        bne     yep
-:       cmp     #kRow4+kRowHeight+1
+        bne     yep             ; always
+    END_IF
+
+        cmp     #kRow4+kRowHeight+1
         bcs     nope
         jsr     FindClickX
         bcc     nope
@@ -689,19 +693,22 @@ nope:   clc
 .proc FindClickX
         cpx     #kCol1
         bcc     nope
-        cpx     #kCol2
-        bcs     :+
+    IF_X_LT     #kCol2
         lda     #0
-        beq     yep
-:       cpx     #kCol3+1
-        bcs     :+
+        beq     yep             ; always
+    END_IF
+
+    IF_X_LT     #kCol3+1
         lda     #1
-        bne     yep
-:       cpx     #kCol4+1
-        bcs     :+
+        bne     yep             ; always
+    END_IF
+
+    IF_X_LT     #kCol4+1
         lda     #2
-        bne     yep
-:       cpx     #kCol4+kColWidth
+        bne     yep             ; always
+    END_IF
+
+        cpx     #kCol4+kColWidth
         bcs     nope
         lda     #3
 
@@ -722,13 +729,15 @@ nope:   clc
 
         lda     #0
         ldy     hole_y
-        beq     found
-:       clc
+    IF_NOT_ZERO
+      DO
+        clc
         adc     #4
         dey
-        bne     :-
+      WHILE_NOT_ZERO
+    END_IF
 
-found:  sta     draw_rc
+        sta     draw_rc
         clc
         adc     hole_x
         tay
@@ -745,28 +754,28 @@ miss:   rts                     ; Click on hole, or not row/col with hole
         lda     click_x
         cmp     hole_x
         beq     miss
-        bcs     after
-
+    IF_LT
         lda     hole_x          ; click before of hole
         sec
         sbc     click_x
         tax
-bloop:  lda     position_table-1,y
-        sta     position_table,y
+     DO
+        copy8   position_table-1,y, position_table,y
         dey
         dex
-        bne     bloop
-        beq     row
+     WHILE_NOT_ZERO
+        beq     row             ; always
+    END_IF
 
-after:  lda     click_x         ; click after hole
+        lda     click_x         ; click after hole
         sec
         sbc     hole_x
         tax
-aloop:  lda     position_table+1,y
-        sta     position_table,y
+    DO
+        copy8   position_table+1,y, position_table,y
         iny
         dex
-        bne     aloop
+    WHILE_NOT_ZERO
         beq     row             ; always
 .endproc ; ClickInRow
 
@@ -967,30 +976,35 @@ ret:    rts
 .proc CheckVictory        ; Allows for swapped indistinct pieces, etc.
         ;; 0/12 can be swapped
         lda     position_table
-        beq     :+
+    IF_NOT_ZERO
         cmp     #12
         bne     nope
+    END_IF
 
-:       ldy     #1
-c1234:  tya
+        ;; Check 1/2/3/4
+        ldy     #1
+    DO
+        tya
         cmp     position_table,y
         bne     nope
         iny
-        cpy     #5
-        bcc     c1234
+    WHILE_Y_LT  #5
 
         ;; 5/6 are identical
         lda     position_table+5
-        cmp     #5
-        beq     :+
+    IF_A_NE     #5
         cmp     #6
         bne     nope
-:       lda     position_table+6
-        cmp     #5
-        beq     :+
+    END_IF
+
+        lda     position_table+6
+    IF_A_NE     #5
         cmp     #6
         bne     nope
-:       lda     position_table+7
+    END_IF
+
+        ;; Check 7/8
+        lda     position_table+7
         cmp     #7
         bne     nope
         lda     position_table+8
@@ -999,33 +1013,37 @@ c1234:  tya
 
         ;; 9/10 are identical
         lda     position_table+9
-        cmp     #9
-        beq     :+
+    IF_A_NE     #9
         cmp     #10
         bne     nope
-:       lda     position_table+10
-        cmp     #9
-        beq     :+
-        cmp     #10
-        bne     nope
+    END_IF
 
-:       lda     position_table+11
+        lda     position_table+10
+    IF_A_NE     #9
+        cmp     #10
+        bne     nope
+    END_IF
+
+        ;; Check 11
+        lda     position_table+11
         cmp     #11
         bne     nope
 
         ;; 0/12 can be swapped
         lda     position_table+12
-        beq     :+
+    IF_NOT_ZERO
         cmp     #12
         bne     nope
+    END_IF
 
-:       ldy     #13
-c131415:tya
+        ;; Check 13/14/15/16
+        ldy     #13
+    DO
+        tya
         cmp     position_table,y
         bne     nope
         iny
-        cpy     #16
-        bcc     c131415
+    WHILE_Y_LT  #16
         rts
 
 nope:   clc
@@ -1037,24 +1055,24 @@ nope:   clc
 
 .proc FindHole
         ldy     #15
-loop:   lda     position_table,y
-        cmp     #kHolePiece
-        beq     :+
+    DO
+        lda     position_table,y
+        BREAK_IF_A_EQ #kHolePiece
         dey
-        bpl     loop
+    WHILE_POS                   ; always
 
-:       lda     #0
+        lda     #0
         sta     hole_x
         sta     hole_y
 
         tya
-again:  cmp     #4
-        bcc     done
+    DO
+        BREAK_IF_A_LT #4
         sbc     #4
         inc     hole_y
-        bne     again
+    WHILE_NOT_ZERO
 
-done:   sta     hole_x
+        sta     hole_x
         rts
 .endproc ; FindHole
 
@@ -1110,13 +1128,14 @@ ploop:  lda     position_table+1,y
 
 .proc SwapTables
         ldy     #15
-:       lda     position_table,y
+    DO
+        lda     position_table,y
         ldx     swapped_table,y
         sta     swapped_table,y
         txa
         sta     position_table,y
         dey
-        bpl     :-
+    WHILE_POS
         rts
 .endproc ; SwapTables
 

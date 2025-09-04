@@ -248,6 +248,25 @@ loop:   lda     src,x
         COPY_BYTES .sizeof(block), block, dst
 .endmacro
 
+.macro PUSH_BYTES size, src
+        ldx     #AS_BYTE(-size)
+.local loop
+loop:
+        lda     src + size,x
+        pha
+        inx
+        bne     loop
+.endmacro
+
+.macro POP_BYTES size, dst
+        ldx     #(size)-1
+.local loop
+loop:   pla
+        sta     dst,x
+        dex
+        bpl     loop
+.endmacro
+
 
 ;;; ============================================================
 ;;; Placed Procedures

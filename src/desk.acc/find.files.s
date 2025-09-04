@@ -441,13 +441,15 @@ finish:
     IF_A_EQ     #kResultsWindowId
         COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
-        bmi     :+
+      IF_NC
         jsr     DetectDoubleClick
-        bmi     :+
+       IF_NC
         copy8   selected_index, show_index
         jmp     Exit
+       END_IF
+      END_IF
 
-:       jmp     InputLoop
+        jmp     InputLoop
     END_IF
 
         cmp     #kDAWindowId
@@ -459,17 +461,19 @@ finish:
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
         MGTK_CALL MGTK::InRect, search_button::rect
-        beq     :+
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, search_button
         bmi     done
         jmp     DoSearch
-:
+    END_IF
+
         MGTK_CALL MGTK::InRect, cancel_button::rect
-        beq     :+
+    IF_NOT_ZERO
         BTK_CALL BTK::Track, cancel_button
         bmi     done
         jmp     Exit
-:
+    END_IF
+
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, input_rect
         beq     done
@@ -602,9 +606,11 @@ NoOp:   rts
 
         ;; Compute num * 65
         ldx     #6              ; offset = num * 64
-:       asl16   offset
+    DO
+        asl16   offset
         dex
-        bne     :-
+    WHILE_NOT_ZERO
+
         add16_8 offset, num ; offset += num, so * 65
         add16   offset, #main__entries_buffer, offset
 
@@ -659,10 +665,10 @@ entry:
         ldy     #0
         lda     (ptr),y
         tay
-:       lda     (ptr),y
-        sta     searchPath,y
+    DO
+        copy8   (ptr),y, searchPath,y
         dey
-        bpl     :-
+    WHILE_POS
 
         ;; Append '/' needed by algorithm
         ldy     searchPath
@@ -697,10 +703,10 @@ continue:
         ldy     #0
         lda     ($06),y
         tay
-:       lda     ($06),y
-        sta     INVOKER_PREFIX,y
+      DO
+        copy8   ($06),y, INVOKER_PREFIX,y
         dey
-        bpl     :-
+      WHILE_POS
 
         ;; Inject JT call to stack
         pla
@@ -733,9 +739,10 @@ continue:
 
         ;; Compute num * 65
         ldx     #6              ; offset = num * 64
-:       asl16   offset
+    DO
+        asl16   offset
         dex
-        bne     :-
+    WHILE_NOT_ZERO
         add16_8 offset, num ; offset += num, so * 65
         add16   offset, #entries_buffer, offset
 
@@ -842,9 +849,10 @@ num_entries:
         bit     KBDSTRB         ; clear strobe
 
         ldy     searchPath      ; prime the search path
-:       copy8   searchPath,y, nameBuffer,y
+    DO
+        copy8   searchPath,y, nameBuffer,y
         dey
-        bpl     :-
+    WHILE_POS
 
         lda     #0              ; reset recursion/results state
         sta     Depth
@@ -1001,10 +1009,10 @@ OpenDone:
 
         ;; Does the file match the search pattern?
         lda     pattern         ; Skip if pattern is empty
-        beq     :+
+    IF_NOT_ZERO
         jsr     IsMatch
         bcc     exit            ; No match
-:
+    END_IF
 
         ptr := $0A
         lda     num_entries
@@ -1018,10 +1026,11 @@ OpenDone:
         ldy     #0
         lda     (dirName),y
         tay
-:       lda     (dirName),y
-        sta     (ptr),y
+    DO
+        copy8   (dirName),y, (ptr),y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
+
         lda     (dirName),y     ; Y is 0...
         tax
         dex                     ; Chop off the trailing '/'
@@ -1056,12 +1065,11 @@ exit:   rts
         kMaxRecursionDepth = 16
 
         lda     Depth
-        cmp     #kMaxRecursionDepth
-        bcs     :+
-
+    IF_A_LT     #kMaxRecursionDepth
         jmp     RecursDir       ; enumerate all entries in sub-dir.
+    END_IF
 
-:       rts
+        rts
 .endproc ; VisitDir
 ;;;
 ;;;******************************************************
@@ -1436,10 +1444,11 @@ repeat: ldx     devidx
         param_call JUMP_TABLE_ADJUST_ONLINEENTRY, on_line_buffer
 
         ldx     #0
-:       copy8   on_line_buffer+1,x, searchPath+2,x
+    DO
+        copy8   on_line_buffer+1,x, searchPath+2,x
         inx
-        cpx     on_line_buffer
-        bne     :-
+    WHILE_X_NE  on_line_buffer
+
         copy8   #'/', searchPath+2,x ; add trailing '/'
         inx
         inx

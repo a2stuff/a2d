@@ -283,17 +283,19 @@ test:
         ;; Compute absolute X delta
         sub16   event_params::xcoord, screentowindow_params::screen::xcoord, delta
         lda     delta+1
-        bpl     :+
+    IF_NEG
         sub16   #0, delta, delta ; negate
-:       cmp16   delta, #kMoveThresholdX
+    END_IF
+        cmp16   delta, #kMoveThresholdX
         bcs     moved
 
         ;; Compute absolute Y delta
         sub16   event_params::ycoord, screentowindow_params::screen::ycoord, delta
         lda     delta+1
-        bpl     :+
+    IF_NEG
         sub16   #0, delta, delta ; negate
-:       cmp16   delta, #kMoveThresholdY
+    END_IF
+        cmp16   delta, #kMoveThresholdY
         bcs     moved
 
         ;; Hasn't moved enough
@@ -317,9 +319,9 @@ delta:  .word   0
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-common: lda     dragwindow_params::moved
-        bpl     :+
-
+common:
+        lda     dragwindow_params::moved
+    IF_NS
         ;; Draw DeskTop's windows and icons
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -328,9 +330,9 @@ common: lda     dragwindow_params::moved
         sta     has_last_coords
         sta     has_drawn_outline
         jsr     DrawWindow
+    END_IF
 
-:       jmp     InputLoop
-
+        jmp     InputLoop
 .endproc ; HandleDrag
 
 ;;; ============================================================
@@ -406,9 +408,8 @@ kMoveThresholdY = 5
         MGTK_CALL MGTK::HideCursor
 
         lda     has_drawn_outline
-        beq     :+
-        jmp     erase_pupils
-:       inc     has_drawn_outline
+        jne     erase_pupils
+        inc     has_drawn_outline
 
         MGTK_CALL MGTK::SetPenMode, notpencopy
 
@@ -716,15 +717,16 @@ oval := $50
         ;; if (ovalWidth [16.0] < 0)
         ;;   ovalWidth [16.0] = 0
         bit     ovalWidth+1
-        bpl     :+
+    IF_NEG
         copy16  #0, ovalWidth
-:
+    END_IF
+
         ;; if (ovalHeight [16.0] < 0)
         ;;   ovalHeight [16.0] = 0
         bit     ovalHeight+1
-        bpl     :+
+    IF_NEG
         copy16  #0, ovalHeight
-:
+    END_IF
 
         ;; --------------------------------------------------
         ;; Check ovalWidth/Height, trim if bigger than rect
@@ -735,9 +737,9 @@ oval := $50
         ;; if (ovalWidth [16.0] > d0 [16.0])
         ;;   ovalWidth [16.0] = d0 [16.0]
         cmp16   ovalWidth, d0
-        bcs     :+
+    IF_LT
         copy16  d0, ovalWidth
-:
+    END_IF
 
         ;; d0 [16.0] = rect.bottom [16.0] - rect.top [16.0]
         sub16   io_params::rect::bottom, io_params::rect::top, d0
@@ -745,9 +747,9 @@ oval := $50
         ;; if (ovalHeight [16.0] > d0 [16.0])
         ;;   ovalHeight [16.0] = rect.bottom [16.0] - rect.top [16.0]
         cmp16   ovalHeight, d0
-        bcs     :+
+    IF_LT
         copy16  d0, ovalHeight
-:
+    END_IF
 
         ;; --------------------------------------------------
         ;; Set up left/right edges, numbers
@@ -824,11 +826,11 @@ loop:   asl32   quotient
         tax
         lda     remainder+1
         sbc     divisor+1
-        bcc     :+
+    IF_CS
         stx     remainder
         sta     remainder+1
         inc     quotient
-:
+    END_IF
         dey
         bne     loop
 .endscope ; fixed_div
@@ -1003,9 +1005,10 @@ endloop2:
         copy16  d0, temp        ; temp = d0
         lda     #0
         bit     temp+1          ; sign-extend
-        bpl     :+
+    IF_NS
         lda     #$FF
-:       sta     temp+2
+    END_IF
+        sta     temp+2
         sta     temp+3
 
         add32   temp, #1, temp  ; temp = d0 + 1
@@ -1026,10 +1029,10 @@ endloop2:
         ptr := $06
 
         ldy     #.sizeof(OvalRec)-1
-:       lda     oval,y
-        sta     (ptr),y
+    DO
+        copy8   oval,y, (ptr),y
         dey
-        bpl     :-
+    WHILE_POS
 
         rts
 .endproc ; SaveOval
@@ -1039,10 +1042,10 @@ endloop2:
         ptr := $06
 
         ldy     #.sizeof(OvalRec)-1
-:       lda     (ptr),y
-        sta     oval,y
+    DO
+        copy8   (ptr),y, oval,y
         dey
-        bpl     :-
+    WHILE_POS
 
         rts
 .endproc ; LoadOval

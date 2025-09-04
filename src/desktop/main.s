@@ -9601,13 +9601,15 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
 .proc RemoveIconFromWindow
         ldx     cached_window_entry_count
         dex
-:       cmp     cached_window_entry_list,x
+    DO
+        cmp     cached_window_entry_list,x
         beq     remove
         dex
-        bpl     :-
+    WHILE_POS
         rts
 
-remove: copy8   cached_window_entry_list+1,x, cached_window_entry_list,x
+remove:
+        copy8   cached_window_entry_list+1,x, cached_window_entry_list,x
         inx
         cpx     cached_window_entry_count
         bne     remove

@@ -128,11 +128,12 @@ str_instruct:   PASCAL_STRING res_string_instructions
         ;; Shift it down
         ldx     #0
         ldy     name_buf
-:       lda     name_buf+1,x
+    DO
+        lda     name_buf+1,x
         sta     name_buf,x
         inx
         dey
-        bpl    :-
+    WHILE_POS
 
         MGTK_CALL MGTK::OpenWindow, winfo
 
@@ -230,18 +231,18 @@ ret:    rts
 
         ;; Extract filename
         ldy     INVOKE_PATH
-:       lda     INVOKE_PATH,y   ; find last '/'
-        cmp     #'/'
-        beq     :+
+    DO
+        lda     INVOKE_PATH,y   ; find last '/'
+        BREAK_IF_A_EQ #'/'
         dey
-        bne     :-
-:       ldx     #0
-:       lda     INVOKE_PATH+1,y ; copy filename
-        sta     filename+1,x
+    WHILE_NOT_ZERO
+
+        ldx     #0
+    DO
+        copy8   INVOKE_PATH+1,y, filename+1,x ; copy filename
         inx
         iny
-        cpy     INVOKE_PATH
-        bne     :-
+    WHILE_Y_NE  INVOKE_PATH
         stx     filename
 
         FALL_THROUGH_TO LoadFileAndRunDA
@@ -259,10 +260,12 @@ ret:    rts
 
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         JUMP_TABLE_MLI_CALL OPEN, open_params
-        bcc     :+
+    IF_CS
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
-:       lda     open_params::ref_num
+    END_IF
+
+        lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         JUMP_TABLE_MLI_CALL READ, read_params
@@ -328,31 +331,31 @@ play:   ldax    #data_buf
 redo:
         ;; If a key was pressed, maybe restart with alt player
         lda     KBD
-        bpl     done
+    IF_NS
         bit     KBDSTRB         ; swallow the keypress
 
-        cmp     #'1'|$80
-        bne     :+
+      IF_A_EQ   #'1'|$80
         copy16  #Player, play_routine
         jmp     play
-:
-        cmp     #'2'|$80
-        bne     :+
+      END_IF
+
+      IF_A_EQ   #'2'|$80
         copy16  #Player2, play_routine
         jmp     play
-:
-        cmp     #'3'|$80
-        bne     :+
+      END_IF
+
+      IF_A_EQ   #'3'|$80
         copy16  #PlayerMockingboard, play_routine
         jmp     play
-:
-        cmp     #'4'|$80
-        bne     :+
+      END_IF
+
+      IF_A_EQ   #'4'|$80
         copy16  #PlayerCricket, play_routine
         jmp     play
-:
+      END_IF
+    END_IF
 
-done:   jsr     NORMFAST_fast
+        jsr     NORMFAST_fast
 
         bit     LCBANK1
         bit     LCBANK1

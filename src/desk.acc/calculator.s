@@ -478,8 +478,7 @@ intl_deci_sep:  .byte   0
 
 .scope
         ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
-loop:   lda     chrget_routine-1,x
-        sta     CHRGET-1,x
+loop:   copy8   chrget_routine-1,x, CHRGET-1,x
         dex
         bne     loop
 .endscope
@@ -522,13 +521,14 @@ loop:   lda     chrget_routine-1,x
 .proc InputLoop
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
+
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        bne     :+
+    IF_A_EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
+    END_IF
 
-:       cmp     #MGTK::EventKind::key_down
+        cmp     #MGTK::EventKind::key_down
         bne     InputLoop
         jsr     OnKeyPress
         jmp     InputLoop
@@ -539,26 +539,25 @@ loop:   lda     chrget_routine-1,x
 
 .proc OnClick
         MGTK_CALL MGTK::FindWindow, findwindow_params
+
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::content
         bcc     ignore_click
-        lda     findwindow_params::window_id
-        cmp     #kDAWindowId      ; This window?
-        beq     :+
 
+        lda     findwindow_params::window_id
+    IF_A_NE     #kDAWindowId      ; This window?
 ignore_click:
         rts
+    END_IF
 
-:       lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content ; Content area?
-        bne     :+
-
+        lda     findwindow_params::which_area
+    IF_A_EQ     #MGTK::Area::content ; Content area?
         jsr     MapClickToButton ; try to translate click into key
         bcc     ignore_click
         jmp     ProcessKey
+    END_IF
 
-:       cmp     #MGTK::Area::close_box ; Close box?
-        bne     :+
+    IF_A_EQ     #MGTK::Area::close_box ; Close box?
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::goaway
         beq     ignore_click
@@ -568,16 +567,18 @@ exit:   pla                     ; pop OnClick / OnKeyPress
         MGTK_CALL MGTK::CloseWindow, closewindow_params
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     ExitDA
+    END_IF
 
-:       cmp     #MGTK::Area::dragbar ; Title bar?
+        cmp     #MGTK::Area::dragbar ; Title bar?
         bne     ignore_click
-        lda     #kDAWindowId
-        sta     dragwindow_params::window_id
+
+        copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
-        bpl     ret
+    IF_NS
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
         jmp     DrawContent
+    END_IF
 ret:    rts
 .endproc ; OnClick
 exit := OnClick::exit
@@ -596,25 +597,23 @@ exit := OnClick::exit
         bne     bail            ; always
     END_IF
 
-        cmp     #CHAR_RETURN    ; Treat Return as Equals
-        bne     :+
+    IF_A_EQ     #CHAR_RETURN    ; Treat Return as Equals
         lda     #'='
         bne     process         ; always
-:
-        cmp     #CHAR_CLEAR     ; Treat Control+X as Clear
-        bne     :+
+    END_IF
+
+    IF_A_EQ     #CHAR_CLEAR     ; Treat Control+X as Clear
         lda     #'C'
         bne     process         ; always
-:
-        cmp     #CHAR_ESCAPE    ; Treat Escape as Clear *or* Close
-        bne     :+
+    END_IF
+
+    IF_A_EQ     #CHAR_ESCAPE    ; Treat Escape as Clear *or* Close
         lda     calc_p
         bne     clear           ; empty state?
         lda     calc_l
         beq     exit            ; if so, exit DA
 clear:  lda     #'C'            ; otherwise turn Escape into Clear
-
-:
+    END_IF
 
 process:
         jmp     ProcessKey
@@ -630,8 +629,7 @@ rts1:  rts                     ; used by next proc
 ;;; If a button was clicked, carry is set and accum has key char
 
 .proc MapClickToButton
-        lda     #kDAWindowId
-        sta     screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowx+1        ; ensure high bits of coords are 0
         ora     screentowindow_params::windowy+1
@@ -643,43 +641,42 @@ rts1:  rts                     ; used by next proc
 .proc FindButtonRow
         cmp     #kRow1Top+kBorderLeftTop - 1 ; row 1 ? (- 1 is bug in original?)
         bcc     miss
-        cmp     #kRow1Bot+kBorderBottomRight + 1 ; (+ 1 is bug in original?)
-        bcs     :+
+    IF_A_LT     #kRow1Bot+kBorderBottomRight + 1 ; (+ 1 is bug in original?)
         jsr     FindButtonCol
         bcc     miss
         lda     row1_lookup,x
         rts
+    END_IF
 
-:       cmp     #kRow2Top-kBorderLeftTop             ; row 2?
+        cmp     #kRow2Top-kBorderLeftTop             ; row 2?
         bcc     miss
-        cmp     #kRow2Bot+kBorderBottomRight
-        bcs     :+
+    IF_A_LT     #kRow2Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
         lda     row2_lookup,x
         rts
+    END_IF
 
-:       cmp     #kRow3Top-kBorderLeftTop             ; row 3?
+        cmp     #kRow3Top-kBorderLeftTop             ; row 3?
         bcc     miss
-        cmp     #kRow3Bot+kBorderBottomRight
-        bcs     :+
+    IF_A_LT     #kRow3Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
         lda     row3_lookup,x
         rts
+    END_IF
 
-:       cmp     #kRow4Top-kBorderLeftTop             ; row 4?
+        cmp     #kRow4Top-kBorderLeftTop             ; row 4?
         bcc     miss
-        cmp     #kRow4Bot+kBorderBottomRight
-        bcs     :+
+    IF_A_LT     #kRow4Bot+kBorderBottomRight
         jsr     FindButtonCol
         bcc     miss
         sec
         lda     row4_lookup,x
         rts
+    END_IF
 
-:       cmp     #kRow5Top-kBorderLeftTop             ; special case for tall + button
-        bcs     :+
+    IF_A_LT     #kRow5Top-kBorderLeftTop             ; special case for tall + button
         lda     screentowindow_params::windowx
         cmp     #kCol4Left-kBorderLeftTop
         bcc     miss
@@ -688,22 +685,25 @@ rts1:  rts                     ; used by next proc
         lda     #'+'
         sec
         rts
+    END_IF
 
-:       cmp     #kRow5Bot+kBorderBottomRight             ; row 5?
+        cmp     #kRow5Bot+kBorderBottomRight             ; row 5?
         bcs     miss
+
         jsr     FindButtonCol
-        bcc     :+
+    IF_CS
         lda     row5_lookup,x
         rts
+    END_IF
 
-:       lda     screentowindow_params::windowx ; special case for wide 0 button
-        cmp     #kCol1Left-kBorderLeftTop
-        bcc     miss
-        cmp     #kCol2Right+kBorderBottomRight
-        bcs     miss
+        lda     screentowindow_params::windowx ; special case for wide 0 button
+    IF_A_GE     #kCol1Left-kBorderLeftTop
+      IF_A_LT   #kCol2Right+kBorderBottomRight
         lda     #'0'
         sec
         rts
+      END_IF
+    END_IF
 
 miss:   clc
         rts
@@ -724,35 +724,35 @@ miss:   clc
 .proc FindButtonCol
         cpx     #kCol1Left-kBorderLeftTop             ; col 1?
         bcc     miss
-        cpx     #kCol1Right+kBorderBottomRight
-        bcs     :+
+    IF_X_LT     #kCol1Right+kBorderBottomRight
         ldx     #1
         sec
         rts
+    END_IF
 
-:       cpx     #kCol2Left-kBorderLeftTop             ; col 2?
+        cpx     #kCol2Left-kBorderLeftTop             ; col 2?
         bcc     miss
-        cpx     #kCol2Right+kBorderBottomRight
-        bcs     :+
+    IF_X_LT     #kCol2Right+kBorderBottomRight
         ldx     #2
         sec
         rts
+    END_IF
 
-:       cpx     #kCol3Left-kBorderLeftTop             ; col 3?
+        cpx     #kCol3Left-kBorderLeftTop             ; col 3?
         bcc     miss
-        cpx     #kCol3Right+kBorderBottomRight
-        bcs     :+
+    IF_X_LT     #kCol3Right+kBorderBottomRight
         ldx     #3
         sec
         rts
+    END_IF
 
-:       cpx     #kCol4Left-kBorderLeftTop            ; col 4?
+        cpx     #kCol4Left-kBorderLeftTop            ; col 4?
         bcc     miss
-        cpx     #kCol4Right+kBorderBottomRight - 1       ; bug in original?
-        bcs     miss
+    IF_X_LT     #kCol4Right+kBorderBottomRight - 1       ; bug in original?
         ldx     #4
         sec
         rts
+    END_IF
 
 miss:   clc
         rts
@@ -767,8 +767,7 @@ miss:   clc
 ;;; and during initialization (by sending 'C', etc)
 
 .proc ProcessKey
-        cmp     #'C'            ; Clear?
-        bne     :+
+    IF_A_EQ     #'C'            ; Clear?
         ldxy    #btn_c::port
         lda     #'c'
         jsr     DepressButton
@@ -776,8 +775,7 @@ miss:   clc
         ROM_CALL FLOAT
         ldxy    #farg
         ROM_CALL ROUND
-        lda     #'='
-        sta     calc_op
+        copy8   #'=', calc_op
         lda     #0
         sta     calc_p
         sta     calc_l
@@ -785,201 +783,211 @@ miss:   clc
         sta     calc_e
         sta     calc_n
         jmp     ResetBuffersAndDisplay
+    END_IF
 
-:       cmp     #'E'            ; Exponential?
-        bne     try_eq
+    IF_A_EQ     #'E'            ; Exponential?
         ldxy    #btn_e::port
         lda     #'e'
         jsr     DepressButton
         ldy     calc_e
         bne     rts1
         ldy     calc_l
-        bne     :+
+      IF_ZERO
         inc     calc_l
         lda     #'1'
         sta     text_buffer1 + kTextBufferSize
         sta     text_buffer2 + kTextBufferSize
-:       lda     #'E'
-        sta     calc_e
+      END_IF
+        copy8   #'E', calc_e
         jmp     update
 
 rts1:   rts
+    END_IF
 
-try_eq: cmp     #'='            ; Equals?
-        bne     :+
+    IF_A_EQ     #'='            ; Equals?
         pha
         ldxy    #btn_eq::port
         jmp     DoOpClick
+    END_IF
 
-:       cmp     #'*'            ; Multiply?
-        bne     :+
+    IF_A_EQ     #'*'            ; Multiply?
         pha
         ldxy    #btn_mul::port
         jmp     DoOpClick
+    END_IF
 
-:       cmp     intl_deci_sep   ; Decimal?
+        cmp     intl_deci_sep   ; Decimal?
         beq     dsep
-        cmp     #'.'            ; allow either
-        bne     try_add
+
+    IF_A_EQ     #'.'            ; allow either
 dsep:   ldxy    #btn_dec::port
         jsr     DepressButton
         lda     calc_d
         ora     calc_e
         bne     rts2
         lda     calc_l
-        bne     :+
+      IF_ZERO
         inc     calc_l
-:       lda     intl_deci_sep
-        sta     calc_d
+      END_IF
+        copy8   intl_deci_sep, calc_d
         jmp     update
 
 rts2:   rts
+    END_IF
 
-try_add:cmp     #'+'            ; Add?
-        bne     :+
+    IF_A_EQ     #'+'            ; Add?
         pha
         ldxy    #btn_add::port
         jmp     DoOpClick
+    END_IF
 
-:       cmp     #'-'            ; Subtract?
-        bne     trydiv
+    IF_A_EQ     #'-'            ; Subtract?
         pha
         ldxy    #btn_sub::port
         lda     calc_e          ; negate vs. subtract
-        beq     :+
+      IF_NOT_ZERO
         lda     calc_n
-        bne     :+
+       IF_ZERO
         sec
         ror     calc_n
         pla
         pha
         jmp     do_digit_click
+       END_IF
+      END_IF
 
-:       pla
+        pla
         pha
         jmp     DoOpClick
+    END_IF
 
-trydiv: cmp     #'/'            ; Divide?
-        bne     :+
+    IF_A_EQ     #'/'            ; Divide?
         pha
         ldxy    #btn_div::port
         jmp     DoOpClick
+    END_IF
 
-:       cmp     #'0'            ; Digit 0?
-        bne     :+
+    IF_A_EQ     #'0'            ; Digit 0?
         pha
         ldxy    #btn_0::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #'1'            ; Digit 1?
-        bne     :+
+    IF_A_EQ     #'1'            ; Digit 1?
         pha
         ldxy    #btn_1::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #'2'            ; Digit 2?
-        bne     :+
+    IF_A_EQ     #'2'            ; Digit 2?
         pha
         ldxy    #btn_2::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #'3'            ; Digit 3?
-        bne     :+
+    IF_A_EQ     #'3'            ; Digit 3?
         pha
         ldxy    #btn_3::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #'4'            ; Digit 4?
-        bne     :+
+    IF_A_EQ     #'4'            ; Digit 4?
         pha
         ldxy    #btn_4::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #'5'            ; Digit 5?
-        bne     :+
+    IF_A_EQ     #'5'            ; Digit 5?
         pha
         ldxy    #btn_5::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #'6'            ; Digit 6?
-        bne     :+
+    IF_A_EQ     #'6'            ; Digit 6?
         pha
         ldxy    #btn_6::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #'7'            ; Digit 7?
-        bne     :+
+    IF_A_EQ     #'7'            ; Digit 7?
         pha
         ldxy    #btn_7::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #'8'            ; Digit 8?
-        bne     :+
+    IF_A_EQ     #'8'            ; Digit 8?
         pha
         ldxy    #btn_8::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #'9'            ; Digit 9?
-        bne     :+
+    IF_A_EQ     #'9'            ; Digit 9?
         pha
         ldxy    #btn_9::port
         jmp     do_digit_click
+    END_IF
 
-:       cmp     #CHAR_DELETE    ; Delete?
-        bne     end
+    IF_A_EQ     #CHAR_DELETE    ; Delete?
         ldy     calc_l
         beq     end
-        cpy     #1
-        bne     :+
+      IF_Y_EQ   #1
         jsr     ResetBuffer1AndState
         jmp     DisplayBuffer1
+      END_IF
 
-:       dec     calc_l
+        dec     calc_l
+
         ldx     #0
         lda     text_buffer1 + kTextBufferSize
-        cmp     intl_deci_sep
-        bne     :+
+      IF_A_EQ   intl_deci_sep
         stx     calc_d
-:       cmp     #'E'
-        bne     :+
+      END_IF
+      IF_A_EQ   #'E'
         stx     calc_e
-:       cmp     #'-'
-        bne     :+
+      END_IF
+      IF_A_EQ   #'-'
         stx     calc_n
-:       ldx     #kTextBufferSize-1
-loop:   lda     text_buffer1,x
+      END_IF
+
+        ldx     #kTextBufferSize-1
+      DO
+        lda     text_buffer1,x
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
         dex
         dey
-        bne     loop
+      WHILE_NOT_ZERO
         lda     #' '
+
         sta     text_buffer1+1,x
         sta     text_buffer2+1,x
         jmp     DisplayBuffer1
+    END_IF
 
 end:    rts
 .endproc ; ProcessKey
 
 do_digit_click:
         jsr     DepressButton
-        bne     :+
+    IF_ZERO
         pla
         rts
+    END_IF
 
-:       pla
+        pla
 update: sec
         ror     calc_g
         ldy     calc_l
-        bne     :+
+    IF_ZERO
         pha
         jsr     ResetBuffer2
         pla
-        cmp     #'0'
-        bne     :+
+      IF_A_EQ   #'0'
         jmp     DisplayBuffer1
+      END_IF
+    END_IF
 
-:       sec
+        sec
         ror     calc_p
         cpy     #10
         bcs     rts3
@@ -990,12 +998,14 @@ update: sec
         sec
         sbc     calc_l
         tax
-:       lda     text_buffer1,x
+    DO
+        lda     text_buffer1,x
         sta     text_buffer1-1,x
         sta     text_buffer2-1,x
         inx
         dey
-        bne     :-
+    WHILE_NOT_ZERO
+
 empty:  inc     calc_l
         pla
         sta     text_buffer1 + kTextBufferSize
@@ -1006,20 +1016,21 @@ rts3:   rts
 
 .proc DoOpClick
         jsr     DepressButton
-        bne     :+
+    IF_ZERO
         pla
         rts
+    END_IF
 
-:       lda     calc_op
-        cmp     #'='
-        bne     :+
+        lda     calc_op
+    IF_A_EQ     #'='
         lda     calc_g
         bne     reparse
         lda     #0
         ROM_CALL FLOAT
         jmp     do_op
+    END_IF
 
-:       lda     calc_g
+        lda     calc_g
         bne     reparse
         pla
         sta     calc_op
@@ -1029,10 +1040,10 @@ reparse:
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
 cloop:  lda     text_buffer1,x
-        cmp     intl_deci_sep
-        bne     :+
+    IF_A_EQ     intl_deci_sep
         lda     #'.'
-:       sta     FBUFFR,x
+    END_IF
+        sta     FBUFFR,x
         dex
         bpl     cloop
         copy16  #FBUFFR, TXTPTR
@@ -1045,31 +1056,34 @@ do_op:  pla
         lda     #<farg
         ldy     #>farg
 
-        cpx     #'+'
-        bne     :+
+    IF_X_EQ     #'+'
         ROM_CALL FADD
         jmp     PostOp
+    END_IF
 
-:       cpx     #'-'
-        bne     :+
+    IF_X_EQ     #'-'
         ROM_CALL FSUB
         jmp     PostOp
+    END_IF
 
-:       cpx     #'*'
-        bne     :+
+    IF_X_EQ     #'*'
         ROM_CALL FMULT
         jmp     PostOp
+    END_IF
 
-:       cpx     #'/'
-        bne     :+
+    IF_X_EQ     #'/'
         ROM_CALL FDIV
         jmp     PostOp
+    END_IF
 
-:       cpx     #'='
-        bne     PostOp
+    IF_X_EQ     #'='
         ldy     calc_g
-        bne     PostOp
+      IF_ZERO
         jmp     ResetBuffer1AndState
+      END_IF
+    END_IF
+
+        FALL_THROUGH_TO PostOp
 .endproc ; DoOpClick
 
 .proc PostOp
@@ -1078,21 +1092,23 @@ do_op:  pla
         ROM_CALL FOUT           ; output as null-terminated string to FBUFFR
 
         ldy     #0              ; count the size
-sloop:  lda     FBUFFR,y
-        beq     :+
+    DO
+        lda     FBUFFR,y
+        BREAK_IF_ZERO
         iny
-        bne     sloop
+    WHILE_NOT_ZERO              ; always
 
-:       ldx     #kTextBufferSize ; copy to text buffers
-cloop:  lda     FBUFFR-1,y
-        cmp     #'.'            ; map decimal character
-        bne     :+
+        ldx     #kTextBufferSize ; copy to text buffers
+    DO
+        lda     FBUFFR-1,y
+      IF_A_EQ   #'.'            ; map decimal character
         lda     intl_deci_sep
-:       sta     text_buffer1,x
+      END_IF
+        sta     text_buffer1,x
         sta     text_buffer2,x
         dex
         dey
-        bne     cloop
+    WHILE_NOT_ZERO
 
         ;; Add leading zero if starting with decimal
     IF_A_EQ     #'-'
@@ -1131,13 +1147,12 @@ end:    jsr     DisplayBuffer1
 
 .proc MaybeAddLeadingZero
         lda     text_buffer1+1,x
-        cmp     intl_deci_sep
-        bne     :+
+    IF_A_EQ     intl_deci_sep
         lda     #'0'
         sta     text_buffer1,x
         sta     text_buffer2,x
         dex
-:
+    END_IF
         rts
 .endproc ; MaybeAddLeadingZero
 
@@ -1147,11 +1162,11 @@ end:    jsr     DisplayBuffer1
         stxy    restore_addr
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        bne     :+
+    IF_A_EQ     #MGTK::Error::window_obscured
         lda     #$80            ; key was pressed
         rts
-:       MGTK_CALL MGTK::SetPort, grafport
+    END_IF
+        MGTK_CALL MGTK::SetPort, grafport
 
         button_state := $FC
 
@@ -1167,9 +1182,8 @@ check_button:
         lda     event_params::kind
         cmp     #MGTK::EventKind::drag ; Button down?
         bne     done            ; Nope, done immediately
-        lda     #kDAWindowId
-        sta     screentowindow_params::window_id
 
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, 0, inrect_params
@@ -1190,9 +1204,10 @@ inside: lda     button_state    ; inside, and down
         jmp     invert          ; and show it
 
 done:   lda     button_state                    ; high bit set if button down
-        beq     :+
+    IF_NOT_ZERO
         MGTK_CALL MGTK::PaintRect, 0, restore_addr ; Inverts back to normal
-:       MGTK_CALL MGTK::SetPenMode, penmode_normal ; Normal draw mode??
+    END_IF
+        MGTK_CALL MGTK::SetPenMode, penmode_normal ; Normal draw mode??
         lda     button_state
         rts
 .endproc ; DepressButton
@@ -1202,23 +1217,19 @@ done:   lda     button_state                    ; high bit set if button down
 
 .proc ResetBuffer1
         ldy     #kTextBufferSize
-loop:   lda     #' '
-        sta     text_buffer1-1,y
+loop:   copy8   #' ', text_buffer1-1,y
         dey
         bne     loop
-        lda     #'0'
-        sta     text_buffer1 + kTextBufferSize
+        copy8   #'0', text_buffer1 + kTextBufferSize
         rts
 .endproc ; ResetBuffer1
 
 .proc ResetBuffer2
         ldy     #kTextBufferSize
-loop:   lda     #' '
-        sta     text_buffer2-1,y
+loop:   copy8   #' ', text_buffer2-1,y
         dey
         bne     loop
-        lda     #'0'
-        sta     text_buffer2 + kTextBufferSize
+        copy8   #'0', text_buffer2 + kTextBufferSize
         rts
 .endproc ; ResetBuffer2
 
@@ -1305,8 +1316,7 @@ loop:   ldy     #0
 :       sty     text_addr+1
 
         ldy     #(btn_c::label - btn_c) ; label
-        lda     (ptr),y
-        sta     label
+        copy8   (ptr),y, label
 
         MGTK_CALL MGTK::PaintBitsHC, 0, bitmap_addr ; draw shadowed rect
         MGTK_CALL MGTK::MoveTo, 0, text_addr         ; button label pos
@@ -1359,15 +1369,14 @@ loop:   ldy     #0
         jsr     ResetBuffersAndDisplay
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        beq     :+
+    IF_A_NE     #MGTK::Error::window_obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::MoveTo, error_pos
         param_call DrawString, error_string
+    END_IF
 
-:       jsr     ResetBuffer1AndState
-        lda     #'='
-        sta     calc_op
+        jsr     ResetBuffer1AndState
+        copy8   #'=', calc_op
         ldx     saved_stack
         txs
         jmp     InputLoop

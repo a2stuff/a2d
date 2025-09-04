@@ -588,11 +588,8 @@ unit_num:
         sta     ALTZPOFF        ; Main ZP/LCBANKs
 
         copy8   #DRIVER_COMMAND_STATUS, DRIVER_COMMAND
-        lda     unit_num
-        sta     DRIVER_UNIT_NUMBER
-        lda     #$00
-        sta     DRIVER_BLOCK_NUMBER
-        sta     DRIVER_BLOCK_NUMBER+1
+        copy8   unit_num, DRIVER_UNIT_NUMBER
+        copy16  #0, DRIVER_BLOCK_NUMBER
 
         @driver := *+1
         jsr     SELF_MODIFIED
@@ -625,8 +622,7 @@ L1398:  stxy    total_blocks
         ;; Volume directory key block
 
         copy16  #block_buffer, write_block_params::data_buffer
-        lda     #3              ; block 2, points at 3
-        sta     block_buffer+2
+        copy8   #3, block_buffer+2 ; block 2, points at 3
 
         ldy     vol_name_buf    ; volume name
         tya
@@ -920,11 +916,12 @@ unknown:
         lda     read_block_params::unit_num
         jsr     _GetDriveChar
         sta     the_disk_in_slot_label + kTheDiskInSlotDriveCharOffset
+
         ldx     the_disk_in_slot_label
-L1974:  lda     the_disk_in_slot_label,x
-        sta     ovl_string_buf,x
+    DO
+        copy8   the_disk_in_slot_label,x, ovl_string_buf,x
         dex
-        bpl     L1974
+    WHILE_POS
         rts
 
         ;; Pascal
@@ -984,14 +981,12 @@ pascal_disk:
         lda     read_buffer + 6
         tax
     DO
-        lda     read_buffer + 6,x
-        sta     ovl_string_buf,x
+        copy8   read_buffer + 6,x, ovl_string_buf,x
         dex
     WHILE_POS
         inc     ovl_string_buf
         ldx     ovl_string_buf
-        lda     #':'
-        sta     ovl_string_buf,x
+        copy8   #':', ovl_string_buf,x
         rts
 .endproc ; GetNonProDOSVolName
 
@@ -1028,8 +1023,7 @@ non_pro:
 .proc EnquoteStringBuf
         ldx     ovl_string_buf
     DO
-        lda     ovl_string_buf,x
-        sta     ovl_string_buf+1,x
+        copy8   ovl_string_buf,x, ovl_string_buf+1,x
         dex
     WHILE_NOT_ZERO
 

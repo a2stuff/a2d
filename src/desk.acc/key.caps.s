@@ -524,12 +524,12 @@ tmp_poly:
         ;; Invert Carry if modifier is down
         lda     BUTN0
         ora     BUTN1
-        bpl     :+
+    IF_NS
         rol
         eor     #$01
         ror
-
-:       bcc     continue
+    END_IF
+        bcc     continue
 
         ;; Swap in alternate layout
         copy8   #$80, extended_layout_flag
@@ -589,27 +589,27 @@ start:  lda     KBD
         jsr     ConstructKeyPoly
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        cmp     #MGTK::Error::window_obscured
-        beq     done
+    IF_A_NE     #MGTK::Error::window_obscured
 
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::PaintPoly, tmp_poly
 
-:       bit     KBDSTRB
-        bpl     :+
-
+:
+        bit     KBDSTRB
+      IF_NS
         lda     KBD
         and     #CHAR_MASK
         cmp     last_char
         beq     :-
         MGTK_CALL MGTK::PaintPoly, tmp_poly
         jmp     start
+      END_IF
 
+        MGTK_CALL MGTK::PaintPoly, tmp_poly
+    END_IF
 
-:       MGTK_CALL MGTK::PaintPoly, tmp_poly
-
-done:   jmp     InputLoop
+        jmp     InputLoop
 
 last_char:
         .byte   0
@@ -626,7 +626,7 @@ return_flag:
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bpl     :+
+        bpl     :+              ; TODO: Should be `beq` ?
         jmp     InputLoop
 :       lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
@@ -641,9 +641,8 @@ return_flag:
 .proc HandleClose
         MGTK_CALL MGTK::TrackGoAway, trackgoaway_params
         lda     trackgoaway_params::clicked
-        bne     :+
-        jmp     InputLoop
-:       jmp     Exit
+        jeq     InputLoop
+        jmp     Exit
 .endproc ; HandleClose
 
 ;;; ============================================================
@@ -653,16 +652,17 @@ return_flag:
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-        lda     dragwindow_params::moved
-        bpl     :+
 
+        lda     dragwindow_params::moved
+    IF_NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
+    END_IF
 
-:       jmp     InputLoop
+        jmp     InputLoop
 
 .endproc ; HandleDrag
 
@@ -704,11 +704,10 @@ loop:
 
         tax
         ldy     key_mode,x
-        bpl     :+
-        jmp     next
+        jmi     next
 
         ;; Compute address of key record
-:       sta     ptr
+        sta     ptr
         copy8   #0, ptr+1
         asl16   ptr             ; * 8 = .sizeof(MGTK::Rect)
         asl16   ptr
@@ -716,10 +715,10 @@ loop:
         add16   ptr, #key_locations, ptr
 
         ldy     #.sizeof(MGTK::Rect)-1
-:       lda     (ptr),y
-        sta     tmp_rect,y
+    DO
+        copy8   (ptr),y, tmp_rect,y
         dey
-        bpl     :-
+    WHILE_POS
 
         MGTK_CALL MGTK::FrameRect, tmp_rect
 
@@ -735,12 +734,12 @@ loop:
 
 next:   dec     char
         lda     char
-        bmi     :+
+        bmi     :+              ; TODO: `bpl loop` here
         jmp     loop
 :
 
         bit     extended_layout_flag
-        bpl     :+
+    IF_NS
 
         ;; Extended layout's non-rectangular Return key
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -748,8 +747,9 @@ next:   dec     char
         MGTK_CALL MGTK::PaintPoly, poly_new_ret
         MGTK_CALL MGTK::SetPenMode, notpencopy
         MGTK_CALL MGTK::FramePoly, poly_new_ret
+    END_IF
 
-:       MGTK_CALL MGTK::ShowCursor
+        MGTK_CALL MGTK::ShowCursor
         rts
 
 char:   .byte   0
@@ -774,23 +774,25 @@ char:   .byte   0
         ;; Is IIgs?
 check:  sec
         jsr     IDROUTINE       ; Clears carry if IIgs
-        bcs     :+              ; No, carry still set
+    IF_CC
         sec                     ; Yes, is a IIgs
         rts
+    END_IF
 
         ;; Is IIc+?
-:       lda     ZIDBYTE         ; $00 = IIc
-        bne     :+
+        lda     ZIDBYTE         ; $00 = IIc
+    IF_ZERO
         lda     ZIDBYTE2        ; $05 = IIc Plus
-        cmp     #$05
-        bne     :+
+      IF_A_EQ   #$05
         sec                     ; Yes, is a IIc+
         rts
+      END_IF
+    END_IF
 
         ;; Can't distinguish Platinum IIe, even via shift key mod,
         ;; because unshifted state is high, just like no mod.
 
-:       clc                     ; No - standard layout
+        clc                     ; No - standard layout
         rts
 .endproc ; CheckExtendedLayout
 
@@ -821,10 +823,10 @@ normal:
         add16   ptr, #key_locations, ptr
 
         ldy     #.sizeof(MGTK::Rect)-1
-:       lda     (ptr),y
-        sta     tmp_rect,y
+    DO
+        copy8   (ptr),y, tmp_rect,y
         dey
-        bpl     :-
+    WHILE_POS
 
         copy8   #5, tmp_poly+0  ; # vertices
         copy8   #0, tmp_poly+1  ; no more polys

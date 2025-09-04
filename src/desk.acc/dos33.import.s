@@ -268,10 +268,11 @@ port:           .addr   grafport_win
     IF_A_EQ     #kPickerWindowId
         COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
-        bmi     :+
+      IF_NC
         jsr     DetectDoubleClick
         jpl     Exit
-:       jmp     InputLoop
+      END_IF
+        jmp     InputLoop
     END_IF
 
         cmp     #kDAWindowId
@@ -583,10 +584,11 @@ remainder:      .word   0                 ; (out)
     IF_A_EQ     #kCatalogWindowId
         COPY_STRUCT MGTK::Point, event_params::coords, lb_params::coords
         LBTK_CALL LBTK::Click, lb_params
-        bmi     :+
+      IF_NC
         jsr     DetectDoubleClick
         jpl     Import
-:       jmp     InputLoop
+      END_IF
+        jmp     InputLoop
     END_IF
 
         cmp     #kDAWindowId
@@ -666,10 +668,10 @@ done:   rts
         pt_ptr := $06
         stxy    pt_ptr
         ldy     #.sizeof(MGTK::Point)-1
-:       lda     (pt_ptr),y
-        sta     pt,y
+   DO
+        copy8   (pt_ptr),y, pt,y
         dey
-        bpl     :-
+   WHILE_POS
         pla
 
         ;; Calculate address of `CatalogEntry`
@@ -699,8 +701,7 @@ done:   rts
         lda     (ptr),y
         and     #$7F
         jsr     clz
-        lda     type_table,x
-        sta     str_type+1
+        copy8   type_table,x, str_type+1
         param_call DrawString, str_type
 
         ;; Size
@@ -734,12 +735,12 @@ type_table:
 ;;; Output: X = leading zeros (0...8)
 .proc clz
         ldx     #0
-:       lsr     a
-        bcs     ret
+    DO
+        lsr     a
+        BREAK_IF_CS
         inx
-        cpx     #8
-        bne     :-
-ret:    rts
+    WHILE_X_NE  #8
+        rts
 .endproc ; clz
 
 .proc OnSelChange
@@ -969,18 +970,18 @@ file_loop:
 
         iny                     ; +$03 `FileEntry::Name`
         ldx     #0
-:       lda     RWTS_SECTOR_BUF,y
+    DO
+        lda     RWTS_SECTOR_BUF,y
         and     #$7F            ; strip high bit
         sta     entry_buf+aux::CatalogEntry::Name+1,x
         iny
         inx
-        cpx     #dos33::MaxFilenameLen
-        bne     :-
+    WHILE_X_NE  #dos33::MaxFilenameLen
 
-:       dex
+    DO
+        dex
         lda     entry_buf+aux::CatalogEntry::Name+1,x
-        cmp     #' '
-        beq     :-
+    WHILE_A_EQ  #' '
         inx
         stx     entry_buf+aux::CatalogEntry::Name
 
@@ -1108,10 +1109,10 @@ start:
 
         ;; Truncate to 15 or less
         lda     str_name
-        cmp     #15
-        bcc     :+
+    IF_A_GE     #15
         lda     #15
-:       sta     str_name
+    END_IF
+        sta     str_name
         tax
 
         ;; Make uppercase or '.'
@@ -1160,12 +1161,11 @@ cnext:  dex
         iny
         lda     #'/'
         sta     path_buf,y
-:       inx
+    DO
+        inx
         iny
-        lda     str_name,x
-        sta     path_buf,y
-        cpx     str_name
-        bne     :-
+        copy8   str_name,x, path_buf,y
+    WHILE_X_NE  str_name
         sty     path_buf
 
         ;; NOTE: Can't show alerts, as that will trash aux $E00...$1FFF
@@ -1343,12 +1343,12 @@ no:     sec
 ;;; Output: X = leading zeros (0...8)
 .proc clz
         ldx     #0
-:       lsr     a
-        bcs     ret
+    DO
+        lsr     a
+        BREAK_IF_CS
         inx
-        cpx     #8
-        bne     :-
-ret:    rts
+    WHILE_X_NE  #8
+        rts
 .endproc ; clz
 
 .proc IncProgress
@@ -1399,9 +1399,10 @@ prefix_path:    .res    ::kPathBufferSize, 0
         ldy     #0
         lda     (ptr),y
         tay
-:       copy8   (ptr),y, prefix_path,y
+    DO
+        copy8   (ptr),y, prefix_path,y
         dey
-        bpl     :-
+    WHILE_POS
         return  #0
 
 fail:   return  #1
@@ -1467,10 +1468,10 @@ DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buf, 0
 
         ;; Copy sector data out from appropriate half
         ldy     #0
-:       lda     (src_ptr),y
-        sta     (dst_ptr),y
+    DO
+        copy8   (src_ptr),y, (dst_ptr),y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         clc
         rts
@@ -1497,10 +1498,10 @@ DEFINE_READWRITE_BLOCK_PARAMS block_params, block_buf, 0
 
         ;; Copy sector data into place in appropriate half
         ldy     #0
-:       lda     (src_ptr),y
-        sta     (dst_ptr),y
+    DO
+        copy8   (src_ptr),y, (dst_ptr),y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; Write the updated block back out
         JUMP_TABLE_MLI_CALL WRITE_BLOCK, block_params

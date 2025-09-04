@@ -513,11 +513,8 @@ caret_blink_caret_bitmap:
         cmp     #kShortcutCloseWindow
         beq     Exit
 
-        cmp     #'1'
-        bcc     :+
-        cmp     #'9'+1
-        bcs     :+
-
+      IF_A_GE   #'1'
+       IF_A_LT  #'9'+1
         sec
         sbc     #'1'
         tax
@@ -525,7 +522,8 @@ caret_blink_caret_bitmap:
         lda     shortcut_table_values,x
         addr := *+1
         jmp     SELF_MODIFIED
-:
+       END_IF
+     END_IF
 
         jmp     InputLoop
     END_IF
@@ -589,16 +587,15 @@ shortcut_table_addr_hi:
         copy8   winfo::window_id, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
-        bpl     :+
-
+    IF_NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
+    END_IF
 
-:       jmp     InputLoop
-
+        jmp     InputLoop
 .endproc ; HandleDrag
 
 
@@ -720,21 +717,22 @@ shortcut_table_addr_hi:
         tay
         copy16  patterns,y, ptr
         ldy     #7
-:       lda     (ptr),y
-        sta     pattern,y
+    DO
+        copy8   (ptr),y, pattern,y
         dey
-        bpl     :-
+    WHILE_POS
 
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        bne     :+              ; obscured
+    IF_ZERO                     ; not obscured
         MGTK_CALL MGTK::SetPort, grafport
 
         MGTK_CALL MGTK::HideCursor
         jsr     DrawPreview
         jsr     DrawBits
         MGTK_CALL MGTK::ShowCursor
+    END_IF
 
-:       jmp     InputLoop
+        jmp     InputLoop
 .endproc ; UpdatePattern
 
 ;;; ============================================================
@@ -819,14 +817,16 @@ lasty:  .byte   0
         sub16   screentowindow_params::windowy, fatbits_rect::y1, screentowindow_params::windowy
 
         ldy     #kFatBitWidthShift
-:       lsr16   screentowindow_params::windowx
+    DO
+        lsr16   screentowindow_params::windowx
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         ldy     #kFatBitHeightShift
-:       lsr16   screentowindow_params::windowy
+    DO
+        lsr16   screentowindow_params::windowy
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         rts
 .endproc ; MapCoords
@@ -940,10 +940,10 @@ dblclick_speed: .word   0
 
         MGTK_CALL MGTK::GetDeskPat, ptr
         ldy     #.sizeof(MGTK::Pattern)-1
-:       lda     (ptr),y
-        sta     pattern,y
+    DO
+        copy8   (ptr),y, pattern,y
         dey
-        bpl     :-
+    WHILE_POS
         rts
 .endproc ; InitPattern
 
@@ -951,11 +951,11 @@ dblclick_speed: .word   0
         MGTK_CALL MGTK::SetDeskPat, pattern
 
         ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
-:       lda     pattern - DeskTopSettings::pattern,x
+    DO
+        lda     pattern - DeskTopSettings::pattern,x
         jsr     WriteSetting
         dex
-        cpx     #AS_BYTE(DeskTopSettings::pattern-1)
-        bne     :-
+    WHILE_X_NE  #AS_BYTE(DeskTopSettings::pattern-1)
 
         jsr     MarkDirty
 
@@ -1032,20 +1032,20 @@ notpencopy:     .byte   MGTK::notpencopy
 .scope
         copy8   #0, arrow_num
         copy16  #arrows_table, addr
-
-loop:   ldy     #3
+    DO
+        ldy     #3
+      DO
         addr := *+1
-:       lda     SELF_MODIFIED,y
+        lda     SELF_MODIFIED,y
         sta     darrow_params::viewloc,y
         dey
-        bpl     :-
+      WHILE_POS
 
         MGTK_CALL MGTK::PaintBitsHC, darrow_params
         add16_8 addr, #.sizeof(MGTK::Point)
         inc     arrow_num
         lda     arrow_num
-        cmp     #kNumArrows
-        bne     loop
+    WHILE_A_NE  #kNumArrows
 .endscope
 
         BTK_CALL BTK::RadioDraw, dblclick_button1
@@ -1125,10 +1125,11 @@ arrow_num:
 .endproc ; DrawWindow
 
 .proc ZToButtonState
-        beq     :+
+   IF_NOT_ZERO
         lda     #BTK::kButtonStateNormal
         rts
-:       lda     #BTK::kButtonStateChecked
+   END_IF
+        lda     #BTK::kButtonStateChecked
         rts
 .endproc ; ZToButtonState
 
@@ -1210,10 +1211,7 @@ arrow_num:
 ;;; Assert: called with GrafPort already selected
 .proc DrawPreview
 
-        ldx     #7
-:       copy8   pattern,x, rotated_pattern,x
-        dex
-        bpl     :-
+        COPY_BYTES 8, pattern, rotated_pattern
 
         ;; Offset c/o window position (mod 8 so 8-bit math okay)
         lda     winfo::viewloc::xcoord
@@ -1222,17 +1220,16 @@ arrow_num:
         and     #$07            ; pattern is 8 bits wide
         tay
 
-loop:
+    DO
         ldx     #7              ; 8 rows
-
-:       lda     rotated_pattern,x
+      DO
+        lda     rotated_pattern,x
         cmp     #$80
         rol     rotated_pattern,x
         dex
-        bpl     :-
-
+      WHILE_POS
         dey
-        bpl     loop
+    WHILE_POS
 
         ;; Draw it
 
@@ -1275,11 +1272,12 @@ xloop:  ror     row
         SKIP_NEXT_2_BYTE_INSTRUCTION
         .assert MGTK::notpencopy <> $C0, error, "Bad BIT skip"
 zero:   lda     #MGTK::notpencopy
-store:  cmp     mode
-        beq     :+
+store:
+    IF_A_NE mode
         sta     mode
         MGTK_CALL MGTK::SetPenMode, mode
-:
+    END_IF
+
         MGTK_CALL MGTK::PaintRect, bitrect
 
         ;; next x
@@ -1323,14 +1321,16 @@ mode:   .byte   0
         sta     bitrect::y1+1
 
         ldx     #kFatBitWidthShift
-:       asl16   bitrect::x1
+    DO
+        asl16   bitrect::x1
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         ldx     #kFatBitHeightShift
-:       asl16   bitrect::y1
+    DO
+        asl16   bitrect::y1
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         add16   bitrect::x1, fatbits_rect::x1, bitrect::x1
         add16_8 bitrect::x1, #kFatBitWidth-1, bitrect::x2
@@ -1339,9 +1339,10 @@ mode:   .byte   0
 
         lda     #MGTK::pencopy
         bit     mode
-        bmi     :+
+    IF_NC
         lda     #MGTK::notpencopy
-:       sta     mode
+    END_IF
+        sta     mode
 
         MGTK_CALL MGTK::SetPattern, winfo::pattern
         MGTK_CALL MGTK::SetPenMode, mode

@@ -327,11 +327,13 @@ cursor_ibeam_flag: .byte   0
     END_IF
 
         jsr     IsControlChar
-        bcc     :+
+    IF_CS
         jsr     IsHexChar
-        bcc     :+
+      IF_CS
         jmp     InputLoop
-:
+      END_IF
+    END_IF
+
         bit     auxtype_focused_flag
     IF_NC
         sta     type_le_params::key
@@ -410,28 +412,26 @@ yes:    clc
 ;;; ============================================================
 
 .proc PadType
-:       lda     str_type
-        cmp     #2
-        beq     :+
+    DO
+        lda     str_type
+        BREAK_IF_A_EQ #2
         copy8   str_type+1, str_type+2
         copy8   #'0', str_type+1
         inc     str_type
-        bne     :-              ; always
-:
+    WHILE_NOT_ZERO              ; always
         rts
 .endproc ; PadType
 
 .proc PadAuxtype
-:       lda     str_auxtype
-        cmp     #4
-        beq     :+
+    DO
+        lda     str_auxtype
+        BREAK_IF_A_EQ #4
         copy8   str_auxtype+3, str_auxtype+4
         copy8   str_auxtype+2, str_auxtype+3
         copy8   str_auxtype+1, str_auxtype+2
         copy8   #'0', str_auxtype+1
         inc     str_auxtype
-        bne     :-              ; always
-:
+    WHILE_NOT_ZERO              ; always
         rts
 .endproc ; PadAuxtype
 
@@ -486,12 +486,12 @@ yes:    clc
 ;;; Input: A = ASCII digit
 ;;; Output A = value in low nibble
 .proc DigitToNibble
-        cmp     #'9'+1
-        bcs     :+
+    IF_A_LT     #'9'+1
         and     #%00001111
         rts
+    END_IF
 
-:       sec
+        sec
         sbc     #('A' - 10)
         rts
 .endproc ; DigitToNibble
@@ -745,10 +745,10 @@ IterationCallback:
         ldy     #0
         lda     (ptr),y
         tay
-:       lda     (ptr),y
-        sta     path,y
+    DO
+        copy8   (ptr),y, path,y
         dey
-        bpl     :-
+    WHILE_POS
 
 loop:
         lda     path
@@ -768,13 +768,13 @@ loop:
         ldy     #0
         lda     (ptr),y
         sta     len
-:       iny
+    DO
+        iny
         inx
-        lda     (ptr),y
-        sta     path,x
+        copy8   (ptr),y, path,x
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-        bne     :-
+    WHILE_NE
         stx     path
 
         ;; Execute callback

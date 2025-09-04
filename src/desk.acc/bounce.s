@@ -175,13 +175,14 @@ object_deltas:
         jsr     InitRand
         copy8   #0, tmp+1       ; hi
         ldx     #kNumObjects*2*2-2
-:       jsr     Random
+    DO
+        jsr     Random
         and     #31
         sta     tmp             ; lo
         sub16   tmp, #16, object_deltas,x
         dex
         dex
-        bpl     :-
+    WHILE_POS
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow
@@ -325,10 +326,10 @@ loop:   txa
         pha
 
         ldy     #.sizeof(MGTK::Point)-1
-:       lda     (pos_ptr),y
-        sta     object_params::viewloc,y
+    DO
+        copy8   (pos_ptr),y, object_params::viewloc,y
         dey
-        bpl     :-
+    WHILE_POS
         MGTK_CALL MGTK::PaintBits, object_params
 
         add16_8 pos_ptr, #.sizeof(MGTK::Point)
@@ -364,11 +365,11 @@ loop:   txa
         ;; Stash old coords
 
         ldy     #0
-:       lda     (pos_ptr),y
+    DO
+        lda     (pos_ptr),y
         pha
         iny
-        cpy     #4
-        bne     :-
+    WHILE_Y_NE  #4
 
         ;; --------------------------------------------------
         ;; Update X coordinate and maybe delta
@@ -428,20 +429,22 @@ loop:   txa
 
         ;; New coords
         ldy     #.sizeof(MGTK::Point)-1
-:       lda     (pos_ptr),y
+    DO
+        lda     (pos_ptr),y
         sta     object_params::viewloc,y
         dey
-        bpl     :-
+    WHILE_POS
         MGTK_CALL MGTK::ShieldCursor, object_params
         MGTK_CALL MGTK::PaintBits, object_params
         MGTK_CALL MGTK::UnshieldCursor
 
         ;; Old coords
         ldy     #.sizeof(MGTK::Point)-1
-:       pla
+    DO
+        pla
         sta     object_params::viewloc,y
         dey
-        bpl     :-
+    WHILE_POS
         MGTK_CALL MGTK::ShieldCursor, object_params
         MGTK_CALL MGTK::PaintBits, object_params
         MGTK_CALL MGTK::UnshieldCursor

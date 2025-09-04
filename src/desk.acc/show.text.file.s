@@ -586,14 +586,17 @@ end:    rts
         ;; using floor(`first_visible_line` / `kLineOffsetDelta`) * `kLineOffsetDelta`
         copy16  first_visible_line, current_line
         ldx     #kLineOffsetShift
-:       lsr16   current_line        ; /= `kLineOffsetDelta`
+    DO
+        lsr16   current_line        ; /= `kLineOffsetDelta`
         dex
-        bne     :-
+    WHILE_NOT_ZERO
+
         copy16  current_line, offset_ptr
         ldx     #kLineOffsetShift
-:       asl16   current_line        ; *= `kLineOffsetDelta`
+    DO
+        asl16   current_line        ; *= `kLineOffsetDelta`
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; Use previously recorded offset into file.
         asl16   offset_ptr
@@ -649,11 +652,12 @@ do_line:
 
         copy8   #0, visible_flag
         cmp16   current_line, first_visible_line
-        bcc     :+
+    IF_GE
         cmp16   last_visible_line, current_line
-        bcc     :+
+      IF_GE
         inc     visible_flag
-:
+      END_IF
+    END_IF
 
         ;; Position cursor, update remaining width
 moveto: MGTK_CALL MGTK::MoveTo, line_pos
@@ -771,12 +775,11 @@ loop:
         sta     (ptr),y
         cmp     #CHAR_RETURN
         beq     FinishTextRun
-        cmp     #' '
-        bne     :+
-
+    IF_A_EQ     #' '
         sty     L0F9B
+    END_IF
 
-:       cmp     #CHAR_TAB
+        cmp     #CHAR_TAB
         jeq     HandleTab
 
         jsr     GetCharWidth
@@ -788,17 +791,18 @@ loop:
 :
         ;; Is there room?
         cmp16   remaining_width, run_width
-        bcc     :+
+    IF_GE
         inc     drawtext_params::textlen
         jmp     loop
+    END_IF
 
-:       lda     #0
+        lda     #0
         sta     tab_flag
         lda     L0F9B
-        cmp     #$FF
-        beq     :+
+    IF_A_NE     #$FF
         sta     drawtext_params::textlen
-:       inc     drawtext_params::textlen
+    END_IF
+        inc     drawtext_params::textlen
         FALL_THROUGH_TO FinishTextRun
 .endproc ; FindTextRun
 
@@ -828,14 +832,17 @@ run_width:  .word   0
         add16   run_width, line_pos::left, line_pos::left
         ldx     #0
 loop:   cmp16   times70,x, line_pos::left
-        bcs     :+
+    IF_LT
         inx
         inx
         cpx     #14
         beq     done
         jmp     loop
-:       copy16  times70,x, line_pos::left
+    END_IF
+
+        copy16  times70,x, line_pos::left
         jmp     FinishTextRun
+
 done:   lda     #0
         sta     tab_flag
         jmp     FinishTextRun
@@ -871,10 +878,10 @@ end:    rts
     IF_A_NE     #>default_buffer
         ;; Yes, shift second page down.
         ldy     #0
-:       lda     default_buffer+$100,y
-        sta     default_buffer,y
+      DO
+        copy8   default_buffer+$100,y, default_buffer,y
         iny
-        bne     :-
+      WHILE_NOT_ZERO
 
         ;; Adjust pointers down a page too.
         dec     drawtext_params::textptr+1
@@ -1092,18 +1099,18 @@ filename:       .res    16
 
         ;; Set window title to filename
         ldy     INVOKE_PATH
-:       lda     INVOKE_PATH,y       ; find last '/'
-        cmp     #'/'
-        beq     :+
+    DO
+        lda     INVOKE_PATH,y       ; find last '/'
+        BREAK_IF_A_EQ #'/'
         dey
-        bne     :-
-:       ldx     #0
-:       lda     INVOKE_PATH+1,y     ; copy filename
-        sta     filename+1,x
+    WHILE_NOT_ZERO
+
+        ldx     #0
+    DO
+        copy8   INVOKE_PATH+1,y, filename+1,x ; copy filename
         inx
         iny
-        cpy     INVOKE_PATH
-        bne     :-
+    WHILE_Y_NE  INVOKE_PATH
         stx     filename
 
         copy16  #filename, STARTLO

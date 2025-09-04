@@ -200,10 +200,11 @@ on_key:
         beq     SetSlideshowMode ; always
     END_IF
 
-        cmp     #' '
-        bne     :+
+    IF_A_EQ     #' '
         jsr     ToggleMode
-:       jmp     InputLoop
+    END_IF
+
+        jmp     InputLoop
 .endproc ; InputLoop
 
 ;;; ============================================================
@@ -259,14 +260,12 @@ restore_buffer_overlay_flag:
 .proc MaybeCallExitHook
         lda     hook
         ora     hook+1
-        beq     :+
-
+    IF_NOT_ZERO
         hook := *+1
         jsr     $0000           ; self-modified; 0 = no hook
         copy16  #0, hook
-
-:       rts
-
+    END_IF
+        rts
 .endproc ; MaybeCallExitHook
 
 exit_hook := MaybeCallExitHook::hook
@@ -278,10 +277,11 @@ exit_hook := MaybeCallExitHook::hook
 .proc ShowFile
         ;; Check file type
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
-        bcc     :+
+    IF_CS
 fail:   rts
+    END_IF
 
-:       lda     get_file_info_params::file_type
+        lda     get_file_info_params::file_type
 
         cmp     #FT_DIRECTORY
         RTS_IF_EQ               ; C=1 signals failure
@@ -300,20 +300,20 @@ fail:   rts
         ldx     get_file_info_params::aux_type+1
 
         ;; auxtype $8066 - LZ4FH packed image
-        cpx     #$80
-        bne     :+
-        cmp     #$66
-        bne     :+
+    IF_X_EQ     #$80
+      IF_A_EQ   #$66
         jmp     ShowLZ4FHFile
-:
+      END_IF
+    END_IF
+
         ;; auxtype $4000 / $4001 are packed hires/double-hires
         cpx     #$40
         bne     ShowFOTFile
 
         cmp     #$00
-        bne     :+
-        jmp     ShowPackedHRFile
-:       cmp     #$01
+        jeq     ShowPackedHRFile
+
+        cmp     #$01
         bne     ShowFOTFile
         jmp     ShowPackedDHRFile
 
@@ -329,12 +329,11 @@ get_eof:
         sbc     #>(kHiresSize+1)
         lda     get_eof_params::eof+2
         sbc     #^(kHiresSize+1)
-        bcc     :+
-        jmp     ShowDHRFile
+        jcs     ShowDHRFile
 
         ;; If bigger than 576, assume HR
 
-:       cmp16   get_eof_params::eof, #kMinipixSrcSize+1
+        cmp16   get_eof_params::eof, #kMinipixSrcSize+1
         jcs     ShowHRFile
 
         ;; Otherwise, assume Minipix
@@ -384,9 +383,10 @@ dhr:    jsr     CopyHiresToAux
 finish:
         lda     signature
         and     #kSigColor
-        bne     :+
+    IF_ZERO
         jsr     SetBWMode
-:
+    END_IF
+
         clc                     ; success
         rts
 
@@ -487,13 +487,14 @@ fail:   sec                     ; failure
         copy16  #hires, ptr
         ldx     #>kHiresSize    ; number of pages to copy
         ldy     #0
-:       lda     (ptr),y
-        sta     (ptr),y
+    DO
+      DO
+        copy8   (ptr),y, (ptr),y
         iny
-        bne     :-
+      WHILE_NOT_ZERO
         inc     ptr+1
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         sta     SET80STORE
         sta     RAMWRTOFF
@@ -631,19 +632,20 @@ dorow:  ldx     #8
         ldx     #kCols
 
         ;; Process each bit
-:       jsr     GetBit
+    DO
+        jsr     GetBit
         jsr     PutBit2
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; We've written out 88*2 bits = 176 bits.  This means 1 bit was shifted into
         ;; the last bit.  We need to get it from the MSB to the LSB, so it needs
         ;; to be shifted down 7 bits
-:       clc
+    DO
+        clc
         jsr     PutBit1
         dex
-        cpx     #AS_BYTE(-7)    ; do 7 times == 7 bits
-        bne     :-
+    WHILE_X_NE  #AS_BYTE(-7)    ; do 7 times == 7 bits
 
         dec     row
         bne     dorow
@@ -657,10 +659,8 @@ dorow:  ldx     #8
         dec     srcbit
         bne     done
 
-        inc     src
-        bne     :+
-        inc     src+1
-:       lda     #8
+        inc16   src
+        lda     #8
         sta     srcbit
 
 done:   rts
@@ -686,10 +686,8 @@ PROC_AT PutBitProc, $10
 
         ror                     ; shift once more to get bits in right place
         sta     (dst),y
-        inc     dst
-        bne     :+
-        inc     dst+1
-:       lda     #7
+        inc16   dst
+        lda     #7
         sta     dstbit
 
 done:
@@ -774,11 +772,11 @@ body:   lda     read_buf
         ldy     #0
 
         ldx     #0
-:       lda     read_buf,x
+    DO
+        lda     read_buf,x
         jsr     Write
         inx
-        cpx     count
-        bne     :-
+    WHILE_X_NE  count
 
         jmp     loop
 
@@ -795,9 +793,10 @@ not_00: cmp     #%01000000
         ldy     #0
         lda     read_buf
 
-:       jsr     Write
+     DO
+        jsr     Write
         dec     count
-        bne     :-
+     WHILE_NOT_ZERO
 
         jmp     loop
 
@@ -813,7 +812,8 @@ not_01: cmp     #%10000000
         JUMP_TABLE_MLI_CALL READ, read_buf_params
         ldy     #0
 
-:       lda     read_buf+0
+    DO
+        lda     read_buf+0
         jsr     Write
         lda     read_buf+1
         jsr     Write
@@ -822,7 +822,7 @@ not_01: cmp     #%10000000
         lda     read_buf+3
         jsr     Write
         dec     count
-        bne     :-
+    WHILE_NOT_ZERO
 
         jmp     loop
 
@@ -837,12 +837,13 @@ not_10:
         ldy     #0
         lda     read_buf
 
-:       jsr     Write
+    DO
+        jsr     Write
         jsr     Write
         jsr     Write
         jsr     Write
         dec     count
-        bne     :-
+    WHILE_NOT_ZERO
 
         jmp     loop
 
@@ -879,9 +880,10 @@ hr_file:
         param_call UnpackRead, Write
 
         bit     dhr_flag        ; if hires, need to convert
-        bmi     :+
+    IF_NC
         jsr     HRToDHR
-:
+    END_IF
+
         clc                     ; success
         rts
 
@@ -960,12 +962,14 @@ clear:  copy16  #hires, ptr
         lda     #0              ; clear to black
         ldx     #>kHiresSize    ; number of pages
         ldy     #0              ; pointer within page
-:       sta     (ptr),y
+    DO
+      DO
+        sta     (ptr),y
         iny
-        bne     :-
+      WHILE_NOT_ZERO
         inc     ptr+1
         dex
-        bne     :-
+    WHILE_NOT_ZERO
         rts
 
 done:
@@ -986,14 +990,15 @@ done:
         lda     (ptr),y
         tay
         ldx     INVOKE_PATH
-:       lda     INVOKE_PATH,x
+    DO
+        lda     INVOKE_PATH,x
         jsr     ToUpperCase     ; passed suffix is always uppercase
         cmp     (ptr),y
         bne     no              ; different - not a match
         dey
         beq     yes             ; out of suffix - it's a match
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
 no:     sec                     ; no match
         rts
@@ -1158,12 +1163,7 @@ write:
         addr := *+1
         sta     $123456
 
-        inc     addr
-        bne     :+
-        inc     addr+1
-        bne     :+
-        inc     addr+2
-:
+        inc24   addr
         rts
         .popcpu
 
@@ -1204,10 +1204,10 @@ ShowUnpackedSHR := ShowSHRImpl::unpacked
         ptr := $06
         stax    ptr
         ldy     #.sizeof(FileEntry)-1
-:       lda     (ptr),y
-        sta     entry,y
+    DO
+        copy8   (ptr),y, entry,y
         dey
-        bpl     :-
+    WHILE_POS
 
         ;; TODO: Keep this logic in sync with DeskTop's
         ;; `ICT_RECORD` definitions for graphics files.
@@ -1288,14 +1288,15 @@ yes:    sec
         lda     (ptr),y
         tay
         ldx     path
-:       lda     path,x
+    DO
+        lda     path,x
         jsr     ToUpperCase     ; passed suffix is always uppercase
         cmp     (ptr),y
         bne     no              ; different - not a match
         dey
         beq     yes             ; out of suffix - it's a match
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
 no:     sec                     ; no match
         rts
@@ -1426,23 +1427,23 @@ saw_header_flag:
         COPY_STRING INVOKE_PATH, dir_path
         ldx     dir_path
         inx
-:       dex
+    DO
+        dex
         lda     dir_path,x
-        cmp     #'/'
-        bne     :-
+    WHILE_A_NE  #'/'
         dex
         stx     dir_path
 
         ;; Copy current path's file
         inx
         ldy     #0
-:       inx
+    DO
+        inx
         iny
         lda     dir_path,x
         jsr     ToUpperCase
         sta     cur_filename,y
-        cpx     INVOKE_PATH
-        bne     :-
+    WHILE_X_NE  INVOKE_PATH
         sty     cur_filename
 
         param_call EnumerateDirectory, callback
@@ -1483,13 +1484,14 @@ saw_header_flag:
         sta     len
         ldx     dir_path
         inx
-:       inx
+    DO
+        inx
         iny
         lda     (fnptr),y
         sta     dir_path,x
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-        bne     :-
+    WHILE_NE
         stx     dir_path
 
         COPY_STRING dir_path, INVOKE_PATH
@@ -1511,11 +1513,12 @@ fail:   jmp     Init
         and     #NAME_LENGTH_MASK
         sta     (ptr),y
         tay
-:       lda     (ptr),y
+    DO
+        lda     (ptr),y
         jsr     ToUpperCase
         sta     last_filename,y
         dey
-        bpl     :-
+    WHILE_POS
 
         ;; First seen? might need it
         lda     first_filename
@@ -1527,11 +1530,12 @@ fail:   jmp     Init
         ldx     cur_filename
         cpx     last_filename
         bne     not_cur
-:       lda     cur_filename,x
+    DO
+        lda     cur_filename,x
         cmp     last_filename,x
         bne     not_cur
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         lda     #$80
         sta     seen_flag

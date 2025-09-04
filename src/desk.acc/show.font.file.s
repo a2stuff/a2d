@@ -185,9 +185,10 @@ char_label:  .byte   0
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         cmp     winfo::window_id
-        bpl     :+
+        bpl     :+              ; TODO: `beq`
         jmp     InputLoop
-:       lda     findwindow_params::which_area
+:
+        lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
         cmp     #MGTK::Area::dragbar
@@ -213,16 +214,15 @@ char_label:  .byte   0
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         lda     dragwindow_params::moved
-        bpl     :+
-
+    IF_NS
         ;; Draw DeskTop's windows and icons (from Main)
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
+    END_IF
 
-:       jmp     InputLoop
-
+        jmp     InputLoop
 .endproc ; HandleDrag
 
 ;;; ============================================================
@@ -340,10 +340,12 @@ filename:       .res    16
 
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::watch
         JUMP_TABLE_MLI_CALL OPEN, open_params
-        bcc     :+
+    IF_CS
         JUMP_TABLE_MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         rts
-:       lda     open_params::ref_num
+    END_IF
+
+        lda     open_params::ref_num
         sta     read_params::ref_num
         sta     close_params::ref_num
         JUMP_TABLE_MLI_CALL READ, read_params
@@ -357,12 +359,13 @@ filename:       .res    16
         ;; Try to verify that this is a font file
 
         lda     font_buffer + MGTK::Font::fonttype ; $00 or $80
-        cmp     #$00            ; regular?
-        beq     :+
-        cmp     #$80            ; double-width?
-        jne     exit
+    IF_A_NE     #$00            ; regular?
+      IF_A_NE   #$80            ; double-width?
+        jmp     exit
+      END_IF
+    END_IF
 
-:       lda     font_buffer + MGTK::Font::lastchar ; usually $7F
+        lda     font_buffer + MGTK::Font::lastchar ; usually $7F
         jeq     exit
         jmi     exit
 
@@ -388,18 +391,18 @@ filename:       .res    16
         ;; Set window title to filename
 
         ldy     INVOKE_PATH
-:       lda     INVOKE_PATH,y       ; find last '/'
-        cmp     #'/'
-        beq     :+
+    DO
+        lda     INVOKE_PATH,y       ; find last '/'
+        BREAK_IF_A_EQ #'/'
         dey
-        bne     :-
-:       ldx     #0
-:       lda     INVOKE_PATH+1,y     ; copy filename
-        sta     filename+1,x
+    WHILE_NOT_ZERO
+
+        ldx     #0
+    DO
+        copy8   INVOKE_PATH+1,y, filename+1,x ; copy filename
         inx
         iny
-        cpy     INVOKE_PATH
-        bne     :-
+    WHILE_Y_NE  INVOKE_PATH
         stx     filename
 
         copy16  #filename, STARTLO
@@ -431,14 +434,16 @@ expected_size:
 
         ldx     font_buffer + MGTK::Font::lastchar
         inx                     ; lastchar + 1
-:       add16_8 expected_size, font_buffer + MGTK::Font::height
+    DO
+        add16_8 expected_size, font_buffer + MGTK::Font::height
         dex
-        bne     :-              ; = (lastchar + 1) * height
+    WHILE_NOT_ZERO              ; = (lastchar + 1) * height
 
         bit     font_buffer + MGTK::Font::fonttype
-        bpl     :+
+    IF_NS
         asl16   expected_size   ; *= 2 if double width
-:
+    END_IF
+
         add16_8 expected_size, font_buffer + MGTK::Font::lastchar ; += lastchar
         add16_8 expected_size, #4 ; += 3 + 1
 

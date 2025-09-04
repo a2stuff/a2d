@@ -449,8 +449,7 @@ InitDialog:
         copy8   #$FF, current_drive_selection
         copy8   #BTK::kButtonStateDisabled, dialog_ok_button::state
 
-        lda     #$81            ; other
-        sta     source_disk_format
+        copy8   #$81, source_disk_format ; other
 
         copy8   #MGTK::disablemenu_enable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
@@ -506,8 +505,7 @@ InitDialog:
         copy8   #MGTK::disablemenu_disable, disablemenu_params::disable
         MGTK_CALL MGTK::DisableMenu, disablemenu_params
 
-        lda     current_drive_selection
-        sta     source_drive_index
+        copy8   current_drive_selection, source_drive_index
 
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
@@ -528,10 +526,8 @@ InitDialog:
 
         ;; Have a destination selection
         tax
-        lda     destination_index_table,x
-        sta     dest_drive_index
-        lda     #$00
-        sta     listbox_enabled_flag
+        copy8   destination_index_table,x, dest_drive_index
+        copy8   #$00, listbox_enabled_flag
         jsr     SetPortForDialog
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::PaintRect, rect_erase_dialog_upper
@@ -559,15 +555,13 @@ prompt_insert_source:
         beq     :+              ; OK
         jmp     InitDialog      ; Cancel
 
-:       lda     #$00            ; ProDOS
-        sta     source_disk_format
+:       copy8   #$00, source_disk_format ; ProDOS
 
         ;; --------------------------------------------------
         ;; Check source disk
 
         ldx     source_drive_index
-        lda     drive_unitnum_table,x
-        sta     main__on_line_params2_unit_num
+        copy8   drive_unitnum_table,x, main__on_line_params2_unit_num
         jsr     main__CallOnLine2
         bcc     source_is_pro
 
@@ -616,8 +610,7 @@ check_source_finish:
         ;; Check destination disk
 
         ldx     dest_drive_index
-        lda     drive_unitnum_table,x
-        sta     main__on_line_params2_unit_num
+        copy8   drive_unitnum_table,x, main__on_line_params2_unit_num
         jsr     main__CallOnLine2
         bcc     dest_is_pro
         cmp     #ERR_NOT_PRODOS_VOLUME
@@ -643,8 +636,7 @@ dest_ok:
     IF_ZERO
         ;; Not ProDOS - try to read Pascal name
         ldx     dest_drive_index
-        lda     drive_unitnum_table,x
-        sta     main__block_params_unit_num
+        copy8   drive_unitnum_table,x, main__block_params_unit_num
         copy16  #0, main__block_params_block_num
         copy16  #default_block_buffer, main__block_params_data_buffer
         jsr     main__ReadBlock
@@ -695,8 +687,7 @@ try_format:
         stax    $06
         bne     do_copy         ; if not firmware, skip these checks
 
-        lda     #$00            ; point at $Cn00
-        sta     $06
+        copy8   #$00, $06       ; point at $Cn00
         ldy     #$FE            ; $CnFE
         lda     ($06),y
         and     #$08            ; bit 3 = The device supports formatting.
@@ -741,8 +732,7 @@ do_copy:
         lda     #0
         sta     block_num_div8
         sta     block_num_div8+1
-        lda     #7              ; 7 - (n % 8)
-        sta     block_num_shift
+        copy8   #7, block_num_shift ; 7 - (n % 8)
 
         ;; Blocks to copy
         jsr     main__CountActiveBlocksInVolumeBitmap
@@ -925,10 +915,8 @@ menu_offset_table:
         ;; Modifiers
 :
         ;; Keyboard-based menu selection
-        lda     event_params::key
-        sta     menukey_params::which_key
-        lda     event_params::modifiers
-        sta     menukey_params::key_mods
+        copy8   event_params::key, menukey_params::which_key
+        copy8   event_params::modifiers, menukey_params::key_mods
         MGTK_CALL MGTK::MenuKey, menukey_params
         FALL_THROUGH_TO HandleMenuSelection
 .endproc ; HandleKey
@@ -1288,11 +1276,9 @@ match:  clc
     IF_CS
         ;; Just use a single space as the name
         ldy     #0
-        lda     #1
-        sta     (ptr),y
+        copy8   #1, (ptr),y
         iny
-        lda     #' '
-        sta     (ptr),y
+        copy8   #' ', (ptr),y
         rts
     END_IF
 
@@ -1304,8 +1290,7 @@ match:  clc
         copy8   str_name,y, (ptr),y
         iny
     WHILE_Y_NE  str_name
-        lda     str_name,y
-        sta     (ptr),y
+        copy8   str_name,y, (ptr),y
 
         ;; If less than 15 characters, increase len by one
     IF_Y_LT     #15
@@ -1317,8 +1302,7 @@ match:  clc
     END_IF
 
         ;; Replace last char with ':'
-        lda     #':'
-        sta     (ptr),y
+        copy8   #':', (ptr),y
         rts
 .endproc ; GetPascalVolName
 
@@ -1339,9 +1323,8 @@ match:  clc
         ptr := $0A
 
         stax    ptr
-        ldy     #$00
-        lda     (ptr),y
-        sta     ptr+2
+        ldy     #0
+        copy8   (ptr),y, ptr+2
         inc16   ptr
         MGTK_CALL MGTK::DrawText, ptr
         rts
@@ -1357,8 +1340,7 @@ match:  clc
 
         stax    textptr
         ldy     #0
-        lda     (textptr),y
-        sta     textlen
+        copy8   (textptr),y, textlen
         inc16   textptr
         MGTK_CALL MGTK::TextWidth, params
         lsr16   result
@@ -1461,8 +1443,7 @@ draw:   jmp     DrawDeviceListEntry
 
 ;;; Populates `num_drives`, `drive_unitnum_table` and `drive_name_table`
 .proc EnumerateDevices
-        lda     #$00
-        sta     main__on_line_params2_unit_num
+        copy8   #0, main__on_line_params2_unit_num
         jsr     main__CallOnLine2
     IF_CS
         brk                     ; rude!
@@ -1563,12 +1544,10 @@ is_prodos:
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
         beq     :+
-        lda     ($06),y
-        sta     drive_name_table,x
+        copy8   ($06),y, drive_name_table,x
         jmp     :-
 
-:       lda     ($06),y
-        sta     drive_name_table,x
+:       copy8   ($06),y, drive_name_table,x
         inc     num_drives
 
 
@@ -1593,13 +1572,9 @@ device_index:
         lda     current_drive_selection
         asl     a
         tax
-        lda     block_count_table,x
-        sta     src_block_count
-        lda     block_count_table+1,x
-        sta     src_block_count+1
+        copy16  block_count_table,x, src_block_count
 
-        lda     num_drives
-        sta     num_src_drives
+        copy8   num_drives, num_src_drives
 
         lda     #0
         sta     num_drives
@@ -1626,8 +1601,7 @@ next:   inc     index
         jmp     loop
 
         ;; Clear selection
-finish: lda     #$FF
-        sta     current_drive_selection
+finish: copy8   #$FF, current_drive_selection
         rts
 
 index:  .byte   0
@@ -1646,20 +1620,17 @@ src_block_count:
         jsr     PrepSDStrings
 
         ;; Slot
-        lda     #kListEntrySlotOffset
-        sta     list_entry_pos+MGTK::Point::xcoord
+        copy8   #kListEntrySlotOffset, list_entry_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, list_entry_pos
         param_call DrawString, str_s
 
         ;; Drive
-        lda     #kListEntryDriveOffset
-        sta     list_entry_pos+MGTK::Point::xcoord
+        copy8   #kListEntryDriveOffset, list_entry_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, list_entry_pos
         param_call DrawString, str_d
 
         ;; Name
-        lda     #kListEntryNameOffset
-        sta     list_entry_pos+MGTK::Point::xcoord
+        copy8   #kListEntryNameOffset, list_entry_pos+MGTK::Point::xcoord
         MGTK_CALL MGTK::MoveTo, list_entry_pos
 
         lda     device_index
@@ -1674,8 +1645,7 @@ device_index:
 ;;; Populate block_count_table across all devices
 
 .proc GetAllBlockCounts
-        lda     #0
-        sta     index
+        copy8   #0, index
     DO
         jsr     GetBlockCount
         inc     index
@@ -1714,10 +1684,7 @@ disk_ii:
         pla
         asl     a
         tax
-        lda     #<280
-        sta     block_count_table,x
-        lda     #>280
-        sta     block_count_table+1,x
+        copy16  #280, block_count_table,x
         rts
 
         ;; Use device driver
@@ -1734,8 +1701,7 @@ use_driver:
         pla
         asl     a
         tax
-        lda     tmp
-        sta     block_count_table,x
+        copy8   tmp, block_count_table,x
         tya                     ; blocks available high
         sta     block_count_table+1,x
         rts
@@ -1925,20 +1891,20 @@ show_name:
 .proc ShowBlockError
         stx     err_writing_flag
 
-        cmp     #ERR_WRITE_PROTECTED
-        bne     l2
+    IF_A_EQ     #ERR_WRITE_PROTECTED
         jsr     main__Bell
         lda     #kAlertMsgDestinationProtected ; no args
         jsr     ShowAlertDialog
         .assert kAlertResultCancel <> 0, error, "Branch assumes enum value"
-        bne     :+                ; Cancel
+      IF_ZERO
         jsr     DrawStatusWriting ; Try Again
         return  #1
-
-:       jsr     main__FreeVolBitmapPages
+      END_IF
+        jsr     main__FreeVolBitmapPages
         return  #$80
+    END_IF
 
-l2:     jsr     main__Bell
+        jsr     main__Bell
         jsr     SetPortForDialog
         lda     main__block_params_block_num
         ldx     main__block_params_block_num+1
@@ -2310,8 +2276,7 @@ ShowAlertDialog := ShowAlertDialogImpl::start
 @retry:
         ;; Poll drive until something is present
         ;; (either a ProDOS disk or a non-ProDOS disk)
-        lda     unit_num
-        sta     main__on_line_params_unit_num
+        copy8   unit_num, main__on_line_params_unit_num
         jsr     main__CallOnLine
         bcc     done
 
