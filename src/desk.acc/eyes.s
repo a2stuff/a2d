@@ -196,8 +196,7 @@ eye_rect:
 ;;; ============================================================
 
 .proc Init
-        lda     #0
-        sta     SHIFT_SIGN_EXT  ; Must zero before using FP ops
+        copy8   #0, SHIFT_SIGN_EXT ; Must zero before using FP ops
 
         MGTK_CALL MGTK::OpenWindow, winfo
         jsr     DrawWindow

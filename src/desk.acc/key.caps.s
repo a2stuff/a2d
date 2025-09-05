@@ -699,9 +699,7 @@ return_flag:
         copy8   #127, char
 
 loop:
-        lda     char
-        sta     char_label
-
+        copy8   char, char_label
         tax
         ldy     key_mode,x
         jmi     next

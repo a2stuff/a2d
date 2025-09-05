@@ -577,8 +577,7 @@ digits: .byte   "0123456789ABCDEF"
 
         stax    textptr
         ldy     #0
-        lda     (textptr),y
-        sta     textlen
+        copy8   (textptr),y, textlen
         inc16   textptr
         MGTK_CALL MGTK::TextWidth, params
         sub16   #0, result, result
@@ -762,12 +761,9 @@ loop:
         ;; Compose path
         ldx     path
         inx
-        lda     #'/'
-        sta     path,x
-
+        copy8   #'/', path,x
         ldy     #0
-        lda     (ptr),y
-        sta     len
+        copy8   (ptr),y, len
     DO
         iny
         inx

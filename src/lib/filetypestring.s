@@ -14,12 +14,13 @@ str_file_type:
 
         ;; Search `type_table` for type
         ldy     #kNumFileTypes-1
-:       lda     type_table,y
+    DO
+        lda     type_table,y
         file_type := *+1
         cmp     #SELF_MODIFIED_BYTE
         beq     found
         dey
-        bpl     :-
+    WHILE_POS
         jmp     not_found
 
         ;; Found - copy string from `type_names_table`
@@ -32,12 +33,11 @@ found:  tya
         tay
 
         ldx     #0
-:       lda     type_names_table,y
-        sta     str_file_type+1,x
+    DO
+        copy8   type_names_table,y, str_file_type+1,x
         iny
         inx
-        cpx     #3
-        bne     :-
+    WHILE_X_NE  #3
 
         rts
 

@@ -26,12 +26,12 @@
         copy16  #QuitRoutine, src
         copy16  #SELECTOR, dst
         ldy     #0
-:       lda     (src),y
-        sta     (dst),y
+    DO
+        copy8   (src),y,  (dst),y
         inc16   src
         inc16   dst
         ecmp16  src, #QuitRoutine + sizeof_QuitRoutine
-        bne     :-
+    WHILE_NE
 
         bit     ROMIN2
 
@@ -98,11 +98,11 @@ retry:
         sta     OURCH
 
         ldy     #0
-:       lda     str_loading,y
+    DO
+        lda     str_loading,y
         jsr     COUT
         iny
-        cpy     #kLoadingStringLength
-        bne     :-
+    WHILE_Y_NE  #kLoadingStringLength
 
         ;; Close all open files (just in case)
         MLI_CALL CLOSE, close_params
@@ -111,13 +111,12 @@ retry:
         ;; Initialize system bitmap
         ldx     #BITMAP_SIZE-1
         lda     #0
-:       sta     BITMAP,x
+    DO
+        sta     BITMAP,x
         dex
-        bpl     :-
-        lda     #%00000001      ; ProDOS global page
-        sta     BITMAP+BITMAP_SIZE-1
-        lda     #%11001111      ; ZP, Stack, Text Page 1
-        sta     BITMAP
+    WHILE_POS
+        copy8   #%00000001, BITMAP+BITMAP_SIZE-1 ; ProDOS global page
+        copy8   #%11001111, BITMAP ; ZP, Stack, Text Page 1
 
         ;; Load the target module's loader at $2000
         MLI_CALL SET_PREFIX, prefix_params
@@ -148,13 +147,14 @@ prompt_for_system_disk:
         sta     OURCH
 
         ldy     #0
-:       lda     str_disk_prompt,y
+    DO
+        lda     str_disk_prompt,y
         jsr     COUT
         iny
-        cpy     #kDiskPromptLength
-        bne     :-
+    WHILE_Y_NE  #kDiskPromptLength
 
-wait:   sta     KBDSTRB
+wait:
+        sta     KBDSTRB
 :       lda     KBD
         bpl     :-
         cmp     #CHAR_RETURN | $80

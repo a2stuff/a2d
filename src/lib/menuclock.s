@@ -26,13 +26,16 @@ common: lda     MACHID
         bit     force_flag      ; forced update
         bmi     update
 
-        ;; Changed?
+        ;; Time changed?
         ldx     #.sizeof(DateTime)-1
-:       lda     DATELO,x
+    DO
+        lda     DATELO,x
         cmp     last_dt,x
         bne     update
         dex
-        bpl     :-
+    WHILE_POS
+
+        ;; Settings changed?
         ldx     #DeskTopSettings::clock_24hours
         jsr     ReadSetting
         cmp     last_s1

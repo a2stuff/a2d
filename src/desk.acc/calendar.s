@@ -625,15 +625,12 @@ dloop:  lda     index
 
         ;; Find length of month
         ldx     datetime + ParsedDateTime::month
-        lda     month_len_table-1,x
-        sta     mlen
+        copy8   month_len_table-1,x, mlen
         inc     mlen
 
         ;; Start in top-left of grid
-        lda     #0
-        sta     col
-        lda     #0
-        sta     row
+        copy8   #0, col
+        copy8   #0, row
         COPY_BLOCK date_base, date_pos
 
 day_loop:

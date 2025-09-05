@@ -5,10 +5,10 @@
 .proc DetectDoubleClick
         ;; Stash initial coords
         ldx     #.sizeof(MGTK::Point)-1
-:       copy8   event_params+MGTK::Event::coords,x, coords,x
-
+    DO
+        copy8   event_params+MGTK::Event::coords,x, coords,x
         dex
-        bpl     :-
+    WHILE_POS
 
         ldx     #DeskTopSettings::dblclick_speed
         jsr     ReadSetting
@@ -64,16 +64,15 @@ consume:
         sta     delta
         lda     event_params + MGTK::Event::xcoord+1
         sbc     xcoord+1
-        bpl     :+
-
+    IF_NEG
         ;; is -delta < x < 0 ?
         lda     delta
         cmp     #AS_BYTE(-kDoubleClickDeltaX)
         bcs     check_y
 fail:   return  #$FF
-
+    END_IF
         ;; is 0 < x < delta ?
-:       lda     delta
+        lda     delta
         cmp     #kDoubleClickDeltaX
         bcs     fail
 
@@ -85,17 +84,17 @@ check_y:
         sta     delta
         lda     event_params+MGTK::Event::ycoord+1
         sbc     ycoord+1
-        bpl     :+
-
+    IF_NEG
         ;; is -delta < y < 0 ?
         lda     delta
         cmp     #AS_BYTE(-kDoubleClickDeltaY)
         bcs     ok
-
+    END_IF
         ;; is 0 < y < delta ?
-:       lda     delta
+        lda     delta
         cmp     #kDoubleClickDeltaY
         bcs     fail
+
 ok:     return  #0
 .endproc ; _CheckDelta
 

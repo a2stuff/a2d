@@ -1682,8 +1682,7 @@ done:   rts
 
         stax    textptr
         ldy     #0
-        lda     (textptr),y
-        sta     textlen
+        copy8   (textptr),y, textlen
         inc16   textptr
         MGTK_CALL MGTK::TextWidth, params
         sub16   #0, result, result
@@ -1703,8 +1702,7 @@ done:   rts
 
         stax    textptr
         ldy     #0
-        lda     (textptr),y
-        sta     textlen
+        copy8   (textptr),y, textlen
         inc16   textptr
         MGTK_CALL MGTK::TextWidth, params
         lsr16   result

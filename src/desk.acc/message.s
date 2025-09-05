@@ -145,8 +145,7 @@ printable:
         dex
     IF_X_LT     #kMaxStringLength-1
         sta     buf,x
-        lda     #kPadChar
-        sta     buf+1,x
+        copy8   #kPadChar, buf+1,x
         inc     text_params::length
     END_IF
 
@@ -162,8 +161,7 @@ backspace:
     IF_A_GE     #3
         dec     text_params::length
         ldx     text_params::length
-        lda     #kPadChar
-        sta     buf-1,x
+        copy8   #kPadChar, buf-1,x
     END_IF
 
         jmp     InputLoop

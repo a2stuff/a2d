@@ -284,8 +284,7 @@ frame_counter:
 
 miss:   jmp     InputLoop
 
-hit:    lda     winfo::window_id
-        sta     screentowindow_params::window_id
+hit:    copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -313,18 +312,20 @@ hit:    lda     winfo::window_id
 
 .proc OnClickNorm
         BTK_CALL BTK::Track, norm_button
-        bne     :+
+    IF_ZERO
         JSR_TO_MAIN DoNorm
-:       jmp     InputLoop
+    END_IF
+        jmp     InputLoop
 .endproc ; OnClickNorm
 
 ;;; ============================================================
 
 .proc OnClickFast
         BTK_CALL BTK::Track, fast_button
-        bne     :+
+    IF_ZERO
         JSR_TO_MAIN DoFast
-:       jmp     InputLoop
+    END_IF
+        jmp     InputLoop
 .endproc ; OnClickFast
 
 ;;; ============================================================
@@ -347,8 +348,7 @@ hit:    lda     winfo::window_id
 
         stax    text_addr       ; input is length-prefixed string
         ldy     #0
-        lda     (text_addr),y
-        sta     text_length
+        copy8   (text_addr),y, text_length
         inc16   text_addr       ; point past length
         MGTK_CALL MGTK::TextWidth, text_params
 
@@ -379,21 +379,20 @@ hit:    lda     winfo::window_id
 
         inc     frame_counter
         lda     frame_counter
-        cmp     #kNumAnimFrames * 4
-        bne     :+
+    IF_A_EQ     #kNumAnimFrames * 4
         copy8   #0, frame_counter
+    END_IF
 
-:       inc     run_pos
+        inc     run_pos
         lda     run_pos
-        cmp     #kRunDistance
-        bne     :+
+    IF_A_EQ     #kRunDistance
         copy8   #0, run_pos
 
         MGTK_CALL MGTK::SetPenMode, penXOR
         MGTK_CALL MGTK::ShieldCursor, frame_params
         MGTK_CALL MGTK::PaintBits, frame_params ; cursor conditionally hidden
         MGTK_CALL MGTK::UnshieldCursor
-:
+    END_IF
 
 .endproc ; AnimFrame
 

@@ -7,8 +7,7 @@
 .proc ReconnectRAM
         ;; Did we detach S3D2 /RAM?
         lda     saved_ram_unitnum
-        beq     :+
-
+    IF_NOT_ZERO
         inc     DEVCNT
         ldx     DEVCNT
         sta     DEVLST,x
@@ -24,8 +23,8 @@
         bit     LCBANK1
         jsr     driver
         bit     ROMIN2
-
-:       rts
+    END_IF
+        rts
 
 driver: jmp     (RAMSLOT)
 .endproc ; ReconnectRAM

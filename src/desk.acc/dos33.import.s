@@ -206,8 +206,7 @@ port:           .addr   grafport_win
 .proc Exit
         ldx     listbox_rec::selected_index
     IF_NC
-        lda     control_block+ControlBlock::dev_list,x
-        sta     control_block+ControlBlock::unit_num
+        copy8   control_block+ControlBlock::dev_list,x, control_block+ControlBlock::unit_num
     END_IF
 
         MGTK_CALL MGTK::CloseWindow, winfo_picker_listbox
@@ -790,25 +789,19 @@ type_table:
         ;; TODO: Make this more elegant
         lda     str_from_int
     IF_A_EQ     #1
-        lda     str_from_int+1
-        sta     str_from_int+3
+        copy8   str_from_int+1, str_from_int+3
         lda     #'0'
         sta     str_from_int+1
         sta     str_from_int+2
-        lda     #3
-        sta     str_from_int
+        copy8   #3, str_from_int
         rts
     END_IF
 
     IF_A_EQ     #2
-        lda     str_from_int+2
-        sta     str_from_int+3
-        lda     str_from_int+1
-        sta     str_from_int+2
-        lda     #'0'
-        sta     str_from_int+1
-        lda     #3
-        sta     str_from_int
+        copy8   str_from_int+2, str_from_int+3
+        copy8   str_from_int+1, str_from_int+2
+        copy8   #'0', str_from_int+1
+        copy8   #3, str_from_int
         rts
     END_IF
 
@@ -961,12 +954,10 @@ file_loop:
         sta     entry_buf+aux::CatalogEntry::Track
 
         iny                     ; +$01 `FileEntry::Sector`
-        lda     RWTS_SECTOR_BUF,y
-        sta     entry_buf+aux::CatalogEntry::Sector
+        copy8   RWTS_SECTOR_BUF,y, entry_buf+aux::CatalogEntry::Sector
 
         iny                     ; +$02 `FileEntry::TypeFlags`
-        lda     RWTS_SECTOR_BUF+aux::CatalogEntry::TypeFlags,y
-        sta     entry_buf+aux::CatalogEntry::TypeFlags
+        copy8   RWTS_SECTOR_BUF+aux::CatalogEntry::TypeFlags,y, entry_buf+aux::CatalogEntry::TypeFlags
 
         iny                     ; +$03 `FileEntry::Name`
         ldx     #0
@@ -1138,8 +1129,7 @@ cnext:  dex
         ;; Can't start with non-alpha, replace with 'X'
         lda     str_name+1
     IF_A_LT     #'A'
-        lda     #'X'
-        sta     str_name+1
+        copy8   #'X', str_name+1
     END_IF
 
         ;; --------------------------------------------------
@@ -1159,8 +1149,7 @@ cnext:  dex
         ldx     #0
         ldy     path_buf
         iny
-        lda     #'/'
-        sta     path_buf,y
+        copy8   #'/', path_buf,y
     DO
         inx
         iny
@@ -1240,8 +1229,7 @@ translate_type:
         ;; Set the type
         pla                     ; A = type
         jsr     clz
-        lda     prodos_type_table,x
-        sta     create_params::file_type
+        copy8   prodos_type_table,x, create_params::file_type
 
         ;; Create target file
         JUMP_TABLE_MLI_CALL CREATE, create_params

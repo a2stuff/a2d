@@ -1,7 +1,7 @@
 ;;; ============================================================
 ;;; SCREENSHOT - Desk Accessory
 ;;;
-;;; Saves  the contents of the graphics screen to a file.
+;;; Saves the contents of the graphics screen to a file.
 ;;; ============================================================
 
         .include "../config.inc"
@@ -46,10 +46,11 @@ start:  JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         jsr     JUMP_TABLE_HILITE_MENU
 
         JUMP_TABLE_MLI_CALL CREATE, create_params
-        bcc     :+
+    IF_CS
         cmp     #ERR_DUPLICATE_FILENAME
         bne     done
-:
+    END_IF
+
         JUMP_TABLE_MLI_CALL OPEN, open_params
         bcs     done
         lda     open_params::ref_num
@@ -79,16 +80,21 @@ start:  JUMP_TABLE_MGTK_CALL MGTK::HideCursor
 block_loop:
         sta     SET80STORE
         sta     PAGE2ON
-:       lda     (ptr),y
+
+    DO
+        lda     (ptr),y
         sta     BLOCK_BUFFER,y
         iny
-        bne     :-
+    WHILE_NOT_ZERO
         inc     ptr+1
-:       lda     (ptr),y
+
+    DO
+        lda     (ptr),y
         sta     BLOCK_BUFFER+$100,y
         iny
-        bne     :-
+    WHILE_NOT_ZERO
         inc     ptr+1
+
         sta     PAGE2OFF
         sta     CLR80STORE
 

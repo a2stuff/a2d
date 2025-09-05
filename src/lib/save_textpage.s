@@ -23,23 +23,26 @@
 
         jsr     InitPointers
         ldx     #kNumSegments-1
-loop1:  ldy     #kSegmentWidth-1
-loop2:  sta     PAGE2ON
+    DO
+        ldy     #kSegmentWidth-1
+      DO
+        sta     PAGE2ON
         lda     (ptr_screen),y
         sta     (ptr_aux_buf),y
         sta     PAGE2OFF
         lda     (ptr_screen),y
         sta     (ptr_main_buf),y
         dey
-        bpl     loop2
+      WHILE_POS
         jsr     IncPointers
         dex
-        bpl     loop1
+    WHILE_POS
 
         pla
-        bmi     :+
+    IF_NC
         sta     CLR80STORE
-:       rts
+    END_IF
+        rts
 .endproc ; SaveTextPage
 
 ;;; Restores text page (except screen holes)
@@ -50,23 +53,26 @@ loop2:  sta     PAGE2ON
 
         jsr     InitPointers
         ldx     #kNumSegments-1
-loop1:  ldy     #kSegmentWidth-1
-loop2:  sta     PAGE2ON
+    DO
+        ldy     #kSegmentWidth-1
+      DO
+        sta     PAGE2ON
         lda     (ptr_aux_buf),y
         sta     (ptr_screen),y
         sta     PAGE2OFF
         lda     (ptr_main_buf),y
         sta     (ptr_screen),y
         dey
-        bpl     loop2
+      WHILE_POS
         jsr     IncPointers
         dex
-        bpl     loop1
+    WHILE_POS
 
         pla
-        bmi     :+
+    IF_NC
         sta     CLR80STORE
-:       rts
+    END_IF
+        rts
 .endproc ; RestoreTextPage
 
 .proc InitPointers

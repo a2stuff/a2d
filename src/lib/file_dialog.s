@@ -554,12 +554,11 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         bit     extra_controls_flag
       IF_NS
         ;; Hook for clients
-        cmp     #'0'
-        bcc     :+
-        cmp     #'9'+1
-        bcs     :+
+       IF_A_GE  #'0'
+        IF_A_LT #'9'+1
         jmp     (key_handler_hook)
-:
+        END_IF
+       END_IF
       END_IF
 .endif
 

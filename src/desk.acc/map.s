@@ -363,8 +363,7 @@ buf_search:     .res    kBufSize, 0 ; search term
         copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
-        bpl     :+
-
+    IF_NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
@@ -372,8 +371,9 @@ buf_search:     .res    kBufSize, 0 ; search term
         jsr     DrawWindow
 
         LETK_CALL LETK::Update, le_params ; window moved
+    END_IF
 
-:       jmp     InputLoop
+        jmp     InputLoop
 
 .endproc ; HandleDrag
 
@@ -412,13 +412,11 @@ cloop:  lda     buf_search,y
         tay
         iny                  ; past end of string
         ldx     #0           ; copy next 4 bytes into `lat` and `long`
-:       lda     (ptr),y
-        sta     lat,x
+    DO
+        copy8   (ptr),y, lat,x
         iny
         inx
-        cpx     #4
-        bne     :-
-
+    WHILE_X_NE  #4
         jmp     done
 
         ;; Advance pointer to next record
@@ -469,9 +467,10 @@ index:  .byte   0
         MGTK_CALL MGTK::InRect, find_button::rect
     IF_NOT_ZERO
         BTK_CALL BTK::Track, find_button
-        bmi     :+
+      IF_NC
         jsr     DoFind
-:       jmp     done
+      END_IF
+        jmp     done
     END_IF
 
         ;; Click in line edit?

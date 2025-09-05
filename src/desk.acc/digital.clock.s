@@ -198,17 +198,14 @@ done:
 
         ;; For each poly...
 
-ploop:  lda     (ptr),y         ; A = num vertices
-        sta     num_verts
+ploop:  copy8   (ptr),y, num_verts ; A = num vertices
         iny
 
         ;; For each vertex...
         copy8   #0, vindex
-vloop:  lda     (ptr),y         ; A = x coord
-        sta     cur::xcoord
+vloop:  copy8   (ptr),y, cur::xcoord
         iny
-        lda     (ptr),y         ; A = y coord
-        sta     cur::ycoord
+        copy8   (ptr),y, cur::ycoord
         iny
         lda     #0
         sta     cur::xcoord+1   ; extend to 16 bits

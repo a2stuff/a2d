@@ -430,8 +430,7 @@ loop:   txa
         ;; New coords
         ldy     #.sizeof(MGTK::Point)-1
     DO
-        lda     (pos_ptr),y
-        sta     object_params::viewloc,y
+        copy8   (pos_ptr),y, object_params::viewloc,y
         dey
     WHILE_POS
         MGTK_CALL MGTK::ShieldCursor, object_params

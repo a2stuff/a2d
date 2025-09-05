@@ -50,14 +50,15 @@ ellipsify:
         pha                     ; A = length/2
 
         tay
-:       iny                     ; shift chars from midpoint to
+    DO
+        iny                     ; shift chars from midpoint to
         lda     (ptr),y         ; end of string down by one
         dey
         sta     (ptr),y
         iny
         length := *+1
         cpy     #SELF_MODIFIED_BYTE
-        bne     :-
+    WHILE_NE
 
         pla                     ; A = length/2
 

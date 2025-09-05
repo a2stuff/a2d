@@ -66,18 +66,20 @@ fail:   jmp     JUMP_TABLE_SHOW_ALERT
 start:
         ;; Get active window's path
         jsr     GetWinPath
-        beq     :+
+    IF_NOT_ZERO
         lda     #kErrNoWindowsOpen
         bne     fail            ; always
+    END_IF
 
         ;; Find BASIC.SYSTEM
-:       jsr     CheckBasicSystem
-        beq     :+
+        jsr     CheckBasicSystem
+    IF_NOT_ZERO
         lda     #kErrBasicSysNotFound
         bne     fail
+    END_IF
 
          ;; Restore system state: devices, /RAM, ROM/ZP banks.
-:       jsr     JUMP_TABLE_RESTORE_SYS
+        jsr     JUMP_TABLE_RESTORE_SYS
 
         ;; Load BS
         MLI_CALL OPEN, open_params
@@ -116,12 +118,11 @@ quit:   MLI_CALL QUIT, quit_params
 
         ldy     #0
         ldx     bs_path
-:       iny
+    DO
+        iny
         inx
-        lda     str_extras_basic,y
-        sta     bs_path,x
-        cpy     str_extras_basic
-        bne     :-
+        copy8   str_extras_basic,y, bs_path,x
+    WHILE_Y_NE  str_extras_basic
         stx     bs_path
 
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
@@ -130,9 +131,10 @@ quit:   MLI_CALL QUIT, quit_params
         ;; Not there - search from `prefix_path` upwards
         ldx     prefix_path
         stx     path_length
-:       copy8   prefix_path,x, bs_path,x
+    DO
+        copy8   prefix_path,x, bs_path,x
         dex
-        bpl     :-
+    WHILE_POS
 
         inc     bs_path
         ldx     bs_path
@@ -141,11 +143,11 @@ loop:
         ;; Append BASIC.SYSTEM to path and check for file.
         ldx     bs_path
         ldy     #0
-:       inx
+    DO
+        inx
         iny
         copy8   str_basic_system,y, bs_path,x
-        cpy     str_basic_system
-        bne     :-
+    WHILE_Y_NE  str_basic_system
         stx     bs_path
         JUMP_TABLE_MLI_CALL GET_FILE_INFO, get_file_info_params
         bcs     not_found
@@ -154,11 +156,12 @@ loop:
         ;; Pop off a path segment and try again.
 not_found:
         ldx     path_length
-:       lda     bs_path,x
+    DO
+        lda     bs_path,x
         cmp     #'/'
         beq     found_slash
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
 no_bs:  return  #$FF            ; non-zero is failure
 
@@ -197,9 +200,10 @@ str_basic_system:
         ldy     #0
         lda     (ptr),y
         tay
-:       copy8   (ptr),y, prefix_path,y
+    DO
+        copy8   (ptr),y, prefix_path,y
         dey
-        bpl     :-
+    WHILE_POS
         return  #0
 
 fail:   return  #1

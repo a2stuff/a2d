@@ -83,9 +83,10 @@ mirrored_slot   .byte
         ;; Figure out SmartPort control unit number in Y
         ldy     #1              ; start with unit 1
         bit     unit_number     ; high bit is D
-        bpl     :+
+    IF_NS
         iny                     ; Y = 1 or 2 (for Drive 1 or 2)
-:
+    END_IF
+
         ;; Was it mirrored? (ProDOS 1.x-only behavior)
         unit_number := *+1
         lda     #SELF_MODIFIED_BYTE
@@ -98,11 +99,11 @@ mirrored_slot   .byte
 
         lda     dispatch+1      ; $Cn
         and     #%00001111      ; $0n
-        cmp     mirrored_slot   ; equal = not mirrored
-        beq     :+
+    IF_A_NE     mirrored_slot   ; equal = not mirrored
         iny                     ; now Y = 3 or 4
         iny
-:
+    END_IF
+
         ldax    dispatch
         clc                     ; Y = SmartPort unit number
         rts
@@ -165,13 +166,14 @@ mirrored:
 
         ;; Restore banking
         plp
-        bmi     :+              ; leave LCRAM
+    IF_NC
         bit     ROMIN2          ; restore ROMIN2
-:
+    END_IF
+
         plp
-        bpl     :+              ; leave ALTZPOFF
+    IF_NS
         sta     ALTZPON         ; restore ALTZPON
-:
+    END_IF
 
         ;; Exit
         clc
@@ -201,16 +203,18 @@ mirrored:
         ;; ProDOS 2.x SmartPort mirroring?
         ldy     #(SPVecLP24 - DevAdrP24)
         cmp     #<DevAdrP24
-        bne     :+
+    IF_EQ
         cpx     #>DevAdrP24
         beq     mirrored
-:
+    END_IF
+
         ldy     #(SPVecLP20x - DevAdrP20x)
         cmp     #<DevAdrP20x
-        bne     :+
+    IF_EQ
         cpx     #>DevAdrP20x
         beq     mirrored
-:
+    END_IF
+
         ;; Not mirrored - set Z flag for firmware address
         pha
         txa

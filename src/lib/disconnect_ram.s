@@ -9,7 +9,8 @@
 .proc DisconnectRAM
         ;; Find Slot 3 Drive 2 /RAM device
         ldx     DEVCNT
-:       lda     DEVLST,x
+    DO
+        lda     DEVLST,x
 .ifndef PRODOS_2_5
         and     #$F3            ; per ProDOS 8 Technical Reference Manual
         cmp     #$B3            ; 5.2.2.3 - one of $BF, $BB, $B7, $B3
@@ -18,7 +19,7 @@
 .endif ; PRODOS_2_5
         beq     remove
         dex
-        bpl     :-
+    WHILE_POS
         rts
 
         ;; Remove it, shuffle everything else down.
@@ -32,11 +33,11 @@ remove: lda     DEVLST,x
 shift:  lda     DEVLST+1,x
         sta     DEVLST,x
         cpx     DEVCNT
-        beq     :+
+    IF_NOT_ZERO
         inx
         bne     shift           ; always
-
-:       dec     DEVCNT
+    END_IF
+        dec     DEVCNT
 
         ;; Issue ON_LINE call to device after disconnecting it to
         ;; erase the VCB entry for the disconnected device, per

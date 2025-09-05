@@ -98,14 +98,15 @@ fallback:
 
 apply_bits:
         ldy     #1
-@bloop: asl16   case_bits   ; NOTE: Shift out high byte first
-        bcc     :+
+    DO
+        asl16   case_bits   ; NOTE: Shift out high byte first
+      IF_CS
         lda     (ptr),y
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
-:       iny
-        cpy     #16             ; bits
-        bcc     @bloop
+      END_IF
+        iny
+    WHILE_Y_LT  #16             ; bits
         rts
 
 ;;; --------------------------------------------------

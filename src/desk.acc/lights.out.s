@@ -217,8 +217,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc DoDrag
-        lda     #kDAWindowId
-        sta     dragwindow_params::window_id
+        copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
     IF_NS
@@ -324,22 +323,24 @@ next:   add16_8 rect_ptr, #.sizeof(BTK::ButtonRecord)
         copy16  #button_0_0, rec_ptr
         ldy     #BTK::ButtonRecord::state
         ldx     #kLights-1
-:       lda     (rec_ptr),y
+   DO
+        lda     (rec_ptr),y
         bmi     ret             ; light on, so no
         add16_8 rec_ptr, #.sizeof(BTK::ButtonRecord)
         dex
-        bpl     :-
+   WHILE_POS
 
         ;; Yes, victory!
         ldx     #4
-:       txa
+    DO
+        txa
         pha
         jsr     PlaySound
         jsr     InvertWindow
         pla
         tax
         dex
-        bne     :-
+    WHILE_NOT_ZERO
 
         clc
         ror     scrambled_flag
@@ -403,9 +404,10 @@ ret:    rts
 
         tax
         copy16  #button_0_0 - .sizeof(button_0_0), ptr
-:       add16_8 ptr, #.sizeof(button_0_0)
+    DO
+        add16_8 ptr, #.sizeof(button_0_0)
         dex
-        bpl     :-
+    WHILE_POS
 
         pla                     ; A = index
         rts
@@ -514,12 +516,11 @@ next:   pla
 ;;; Output: X,Y = coords
 .proc IndexToXY
         ldy     #0
-:       cmp     #kCols
-        bcc     :+
+    DO
+        BREAK_IF_A_LT #kCols
         iny
         sbc     #kCols
-        bpl     :-              ; always
-:
+    WHILE_POS                   ; always
         tax
         rts
 
@@ -529,12 +530,13 @@ next:   pla
 ;;; Output: A = index
 .proc XYToIndex
         txa
-:       dey
-        bmi     ret
+    DO
+        dey
+        BREAK_IF_NEG
         clc
         adc     #kCols
-        bne     :-              ; always
-ret:    rts
+    WHILE_NOT_ZERO              ; always
+        rts
 .endproc ; XYToIndex
 
 ;;; Input: X,Y = coords

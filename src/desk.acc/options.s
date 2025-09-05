@@ -282,16 +282,16 @@ button_eor_table:
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params
-common: bit     dragwindow_params::moved
-        bpl     :+
-
+common:
+        bit     dragwindow_params::moved
+    IF_NS
         ;; Draw DeskTop's windows and icons.
         JSR_TO_MAIN JUMP_TABLE_CLEAR_UPDATES
 
         ;; Draw DA's window
         jsr     DrawWindow
-
-:       jmp     InputLoop
+    END_IF
+        jmp     InputLoop
 
 .endproc ; HandleDrag
 

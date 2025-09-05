@@ -365,8 +365,7 @@ kSigDHR         = %00000010
         sta     PAGE2OFF
         JUMP_TABLE_MLI_CALL READ, read_params
 
-        lda     SIGNATURE
-        sta     signature
+        copy8   SIGNATURE, signature
 
         ;; HR or DHR?
         and     #kSigDHR
@@ -660,8 +659,7 @@ dorow:  ldx     #8
         bne     done
 
         inc16   src
-        lda     #8
-        sta     srcbit
+        copy8   #8, srcbit
 
 done:   rts
 .endproc ; GetBit
@@ -687,8 +685,7 @@ PROC_AT PutBitProc, $10
         ror                     ; shift once more to get bits in right place
         sta     (dst),y
         inc16   dst
-        lda     #7
-        sta     dstbit
+        copy8   #7, dstbit
 
 done:
         sta     RAMRDOFF
@@ -870,9 +867,7 @@ dhr_file:
         lda     #$C0            ; S = is dhr?, V = is aux page?
         SKIP_NEXT_2_BYTE_INSTRUCTION
 hr_file:
-        lda     #0
-        sta     dhr_flag
-
+        copy8   #0, dhr_flag
         copy16  #hires, ptr
 
         sta     PAGE2OFF
@@ -904,8 +899,7 @@ hr_file:
         lda     ptr+1
         cmp     #$40            ; did we hit page 2?
         bne     exit
-        lda     #$20            ; yes, back to page 1
-        sta     ptr+1
+        copy8   #$20, ptr+1     ; yes, back to page 1
 
         bit     dhr_flag        ; if DHR aux half, need to copy page to aux
         bvc     exit            ; nope
@@ -1072,8 +1066,7 @@ packed_flag:
         xce
 
         ;; Memory fill
-        lda     #0              ; initialize first byte
-        sta     SHR_SCREEN
+        copy8   #0, SHR_SCREEN  ; initialize first byte
 
         .a16
         .i16
@@ -1100,8 +1093,7 @@ packed_flag:
         ;; Load $2000 bytes at a time, and copy them to
         ;; the SHR screen
 
-        lda     #>.loword(SHR_SCREEN)
-        sta     dest+1
+        copy8   #>.loword(SHR_SCREEN), dest+1
 
 loop:
         ;; Load data
@@ -1143,12 +1135,7 @@ loop:
 
 .proc LoadPackedSHR
 
-        lda     #<SHR_SCREEN
-        sta     addr
-        lda     #>SHR_SCREEN
-        sta     addr+1
-        lda     #^SHR_SCREEN
-        sta     addr+2
+        copy24  #SHR_SCREEN, addr
 
         param_jump UnpackRead, write
 
@@ -1487,8 +1474,7 @@ saw_header_flag:
     DO
         inx
         iny
-        lda     (fnptr),y
-        sta     dir_path,x
+        copy8   (fnptr),y, dir_path,x
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
     WHILE_NE
@@ -1537,8 +1523,7 @@ fail:   jmp     Init
         dex
     WHILE_NOT_ZERO
 
-        lda     #$80
-        sta     seen_flag
+        copy8   #$80, seen_flag
         rts
 
 not_cur:

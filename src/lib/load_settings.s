@@ -42,11 +42,11 @@ LoadSettings:
 
         ;; IIc Plus?
         lda     ZIDBYTE         ; $00 = IIc or later
-        bne     :+
+    IF_ZERO
         lda     ZIDBYTE2        ; IIc ROM Version
         cmp     #5
         beq     update          ; 4x speed
-:
+    END_IF
 
         ;; Laser 128?
         lda     IDBYTELASER128  ; $AC = Laser 128

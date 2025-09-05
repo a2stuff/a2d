@@ -673,8 +673,7 @@ entry:
         ;; Append '/' needed by algorithm
         ldy     searchPath
         iny
-        lda     #'/'
-        sta     searchPath,y
+        copy8   #'/', searchPath,y
         sty     searchPath
 
         jmp     continue

@@ -147,10 +147,10 @@ exit:
 
         ldx     cur_point
         inx
-        cpx     #kNumPoints
-        bne     :+
+    IF_X_EQ     #kNumPoints
         ldx     #0
-:       txa
+    END_IF
+        txa
         asl
         tax
 
@@ -221,10 +221,10 @@ exit:
 
         ldx     cur_point
         inx
-        cpx     #kNumPoints
-        bne     :+
+    IF_X_EQ     #kNumPoints
         ldx     #0
-:       stx     cur_point
+    END_IF
+        stx     cur_point
         txa
         asl
         tax
@@ -251,14 +251,18 @@ exit:
 ;;; Output: A,X = signed in -7...7 but not 0
 .proc GetRandomDelta
         ldx     #0
-:       jsr     Random
+    DO
+        jsr     Random
         and     #%00001111      ; clamp to 0...15
         sec
         sbc     #8              ; map to -7...7
-        beq     :-              ; retry if 0
-        bpl     :+
+    WHILE_ZERO                  ; retry if 0
+
+    IF_NEG
         ldx     #$FF            ; sign-extend into X
-:       rts
+    END_IF
+
+        rts
 .endproc ; GetRandomDelta
 
 ;;; ============================================================

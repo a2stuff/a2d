@@ -357,8 +357,7 @@ init_window:
     END_IF
 
         MGTK_CALL MGTK::OpenWindow, winfo
-        lda     #0
-        sta     selected_field
+        copy8   #0, selected_field
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -370,12 +369,12 @@ init_window:
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        bne     :+
+    IF_A_EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
+    END_IF
 
-:       cmp     #MGTK::EventKind::key_down
+        cmp     #MGTK::EventKind::key_down
         bne     InputLoop
         FALL_THROUGH_TO OnKey
 .endproc ; InputLoop
@@ -431,8 +430,7 @@ init_window:
 
 .proc OnKeyUp
         jsr     InvertUp
-        lda     #kUpRectIndex
-        sta     hit_rect_index
+        copy8   #kUpRectIndex, hit_rect_index
         jsr     DoIncOrDec
         jsr     InvertUp
         jmp     InputLoop
@@ -440,8 +438,7 @@ init_window:
 
 .proc OnKeyDown
         jsr     InvertDown
-        lda     #kDownRectIndex
-        sta     hit_rect_index
+        copy8   #kDownRectIndex, hit_rect_index
         jsr     DoIncOrDec
         jsr     InvertDown
         jmp     InputLoop
@@ -606,13 +603,14 @@ hit_target_jump_table:
 .proc OnUpOrDown
         stx     hit_rect_index
 loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
+
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_up
-        beq     :+
+    IF_A_NE     #MGTK::EventKind::button_up
         jsr     DoIncOrDec
         jmp     loop
+    END_IF
 
-:       lda     hit_rect_index
+        lda     hit_rect_index
         cmp     #kUpRectIndex
         jeq     InvertUp
         jmp     InvertDown
@@ -666,20 +664,20 @@ loop:   MGTK_CALL MGTK::GetEvent, event_params ; Repeat while mouse is down
         beq     incr
 
         ;; Decrement
-        cpx     min
-        bne     :+
+    IF_X_EQ     min
         ldx     max
         inx
-:       dex
+    END_IF
+        dex
         jmp     finish
 
         ;; Increment
 incr:
-        cpx     max
-        bne     :+
+    IF_X_EQ     max
         ldx     min
         dex
-:       inx
+    END_IF
+        inx
         FALL_THROUGH_TO finish
 
 finish:
@@ -693,14 +691,13 @@ finish:
         ;; If month changed, make sure day is in range and update if not.
         jsr     SetMonthLength
         lda     max_table+Field::day-1
-        cmp     day
-        bcs     :+
+    IF_A_LT     day
         sta     day
         MGTK_CALL MGTK::SetTextBG, settextbg_white_params
         jsr     PrepareDayString
         lda     #Field::day
         jsr     DrawField
-:
+    END_IF
         rts
 
 min:    .byte   0
@@ -788,8 +785,7 @@ month_length_table:
         copy16  #str, ptr
 
         ldy     #kLength - 1
-loop:   lda     month_name_table,x
-        sta     (ptr),y
+loop:   copy8   month_name_table,x, (ptr),y
         dex
         dey
         bpl     loop
@@ -827,22 +823,20 @@ str_pm: PASCAL_STRING "PM"
         lda     hour
         bit     clock_24hours
     IF_NC
-        cmp     #0
-        bne     :+
+      IF_A_EQ   #0
         lda     #12
-:       cmp     #13
-        bcc     :+
+      END_IF
+      IF_A_GE   #13
         sbc     #12
-:
+      END_IF
     END_IF
 
         jsr     NumberToASCII
         bit     clock_24hours
     IF_NC
-        cmp     #'0'
-        bne     :+
+      IF_A_EQ   #'0'
         lda     #' '
-:
+      END_IF
     END_IF
         sta     hour_string+1
         stx     hour_string+2
@@ -1008,10 +1002,11 @@ label_downarrow:
 .endproc ; UpdateOptionButtons
 
 .proc ZToButtonState
-        beq     :+
+    IF_ZC
         lda     #BTK::kButtonStateNormal
         rts
-:       lda     #BTK::kButtonStateChecked
+    END_IF
+        lda     #BTK::kButtonStateChecked
         rts
 .endproc ; ZToButtonState
 
@@ -1194,14 +1189,14 @@ loop2:  sbc     #1
 
 .proc NumberToASCII
         ldy     #0
-loop:   cmp     #10
-        bcc     :+
+loop:
+    IF_A_GE     #10
         sec
         sbc     #10
         iny
         jmp     loop
-
-:       ora     #'0'
+    END_IF
+        ora     #'0'
         tax
         tya
         ora     #'0'
@@ -1218,9 +1213,9 @@ loop:   cmp     #10
     IF_X_EQ     #2              ; February?
         lda     year            ; Handle leap years; interpreted as either
         and     #3              ; (1900+Y) or (Y<40 ? 2000+Y : 1900+Y) - which is
-        bne     :+              ; correct for 1901 through 2199, so good enough.
-        iny                     ;
-:
+      IF_ZERO                   ; correct for 1901 through 2199, so good enough.
+        iny
+      END_IF
     END_IF
         sty     max_table + Field::day - 1
         rts
@@ -1284,10 +1279,8 @@ loop:   cmp     #10
         rol     a
         sta     auxdt::DATEHI
 
-        lda     minute
-        sta     auxdt::TIMELO
-        lda     hour
-        sta     auxdt::TIMEHI
+        copy8   minute, auxdt::TIMELO
+        copy8   hour, auxdt::TIMEHI
 
         ;; Get the current ProDOS date/time
         copy16  #DATELO, STARTLO
@@ -1403,17 +1396,15 @@ done:   rts
         ;; Append filename to buffer
         inc     filename_buffer ; Add '/' separator
         ldx     filename_buffer
-        lda     #'/'
-        sta     filename_buffer,x
+        copy8   #'/', filename_buffer,x
 
         ldx     #0              ; Append filename
         ldy     filename_buffer
-:       inx
+    DO
+        inx
         iny
-        lda     filename,x
-        sta     filename_buffer,y
-        cpx     filename
-        bne     :-
+        copy8   filename,x, filename_buffer,y
+    WHILE_X_NE  filename
         sty     filename_buffer
         rts
 .endproc ; AppendFilename

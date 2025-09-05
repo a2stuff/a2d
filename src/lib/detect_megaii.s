@@ -36,14 +36,16 @@
         ;; Restore banking
         rdaltzp_flag := *+1
         ldx     #SELF_MODIFIED_BYTE
-        bmi     :+              ; leave ALTZPON
+    IF_NC
         stx     ALTZPOFF        ; restore ALTZOFF
-:
+    END_IF
+
         rdpage2_flag := *+1
         ldx     #SELF_MODIFIED_BYTE
-        bmi     :+              ; leave PAGE2ON
+    IF_NC
         bit     PAGE2OFF        ; restore PAGE2OFF
-:
+    END_IF
+
         cmp     #%11000000      ; bit7=ALTZP, bit6=PAGE2
         rts
 .endproc ; DetectMegaII

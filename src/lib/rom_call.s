@@ -28,11 +28,12 @@
 
         ;; Copy the actual address
         ldy     #2      ; ptr is off by 1
+    DO
         params := *+1
-:       lda     SELF_MODIFIED,y
+        lda     SELF_MODIFIED,y
         sta     addr-1,y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; Bank in ROM for call
         bit     ROMIN2

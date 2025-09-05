@@ -46,13 +46,13 @@ sig_bytes:
         ;; Check for hardware signature - SSC in Slot 1
 
         ldy     #kSigLen-1
-:       ldx     sig_offsets,y
+    DO
+        ldx     sig_offsets,y
         lda     SLOT1,x
         cmp     sig_bytes,y
         bne     no_device
         dey
-        bpl     :-
-
+    WHILE_POS
 
         hbasl := $6
         kScreenWidth  = 560
@@ -77,31 +77,31 @@ no_device:
 
 .proc SendSpacing
         ldy     #0
-:       lda     spacing_sequence,y
+    DO
+        lda     spacing_sequence,y
         jsr     COut
         iny
-        cpy     #kLenSpacingSequence
-        bne     :-
+    WHILE_Y_NE  #kLenSpacingSequence
         rts
 .endproc ; SendSpacing
 
 .proc SendRestoreState
         ldy     #0
-:       lda     restore_sequence,y
+    DO
+        lda     restore_sequence,y
         jsr     COut
         iny
-        cpy     #kLenRestoreSequence
-        bne     :-
+    WHILE_Y_NE  #kLenRestoreSequence
         rts
 .endproc ; SendRestoreState
 
 .proc SendInitGraphics
         ldx     #0
-:       lda     init_graphics,x
+    DO
+        lda     init_graphics,x
         jsr     COut
         inx
-        cpx     #kLenInitGraphics
-        bne     :-
+    WHILE_X_NE  #kLenInitGraphics
         rts
 init_graphics:
         .byte   CHAR_ESCAPE,"G0560"     ; Graphics, 560 data bytes
@@ -113,18 +113,15 @@ init_graphics:
         jsr     SendInitGraphics
         ldy     #0
         sty     col_num
-        lda     #1
-        sta     mask
+        copy8   #1, mask
         copy16  #0, x_coord
 
         ;; Uses PAGE2 flag to control main/aux reads
         sta     SET80STORE
 
 col_loop:
-        lda     #4              ; 8 vertical pixels per row (doubled)
-        sta     count
-        lda     y_row
-        sta     y_coord
+        copy8   #4, count       ; 8 vertical pixels per row (doubled)
+        copy8   y_row, y_coord
 
         ;; Accumulate 8 pixels
 y_loop: lda     y_coord
@@ -134,10 +131,10 @@ y_loop: lda     y_coord
         lsr     a               ; Even or odd column?
         tay
         sta     PAGE2OFF        ; By default, read main mem $2000-$3FFF
-        bcs     :+              ; But even columns come from aux, so...
+    IF_CC                       ; But even columns come from aux, so...
         sta     PAGE2ON         ; Read aux mem $2000-$3FFF
-
-:       lda     (hbasl),y       ; Grab the whole byte
+    END_IF
+        lda     (hbasl),y       ; Grab the whole byte
         and     mask            ; Isolate the pixel we care about
         cmp     #1              ; Set carry if non-zero
         php
@@ -156,20 +153,20 @@ y_loop: lda     y_coord
 
         ;; Done all pixels across?
         lda     x_coord
-        cmp     #<(kScreenWidth-1)
-        bne     :+
+    IF_A_EQ     #<(kScreenWidth-1)
         lda     x_coord+1
         cmp     #>(kScreenWidth-1)
         beq     done
+    END_IF
 
         ;; Next pixel to the right
-:       asl     mask
-        bpl     :+              ; Only 7 pixels per column
-        lda     #1
-        sta     mask
+        asl     mask
+    IF_NS                       ; Only 7 pixels per column
+        copy8   #1, mask
         inc     col_num
+    END_IF
 
-:       inc     x_coord
+        inc     x_coord
         bne     col_loop
         inc     x_coord+1
         bne     col_loop
@@ -185,20 +182,18 @@ done:   sta     PAGE2OFF        ; Read main mem $2000-$3FFF
 
         jsr     SendSpacing
 
-        lda     #0
-        sta     y_row
+        copy8   #0, y_row
 
         ;; Print a row (560x8), CR+LF
-loop:   jsr     SendRow
+    DO
+        jsr     SendRow
         lda     #CHAR_RETURN
         jsr     COut
         lda     #CHAR_DOWN
         jsr     COut
 
-        lda     y_coord
-        sta     y_row
-        cmp     #kScreenHeight
-        bcc     loop
+        copy8   y_coord, y_row
+    WHILE_A_LT  #kScreenHeight
 
         ;; Finish up
         lda     #CHAR_RETURN

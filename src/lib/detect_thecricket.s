@@ -11,12 +11,13 @@
 
         ;; Look for SSC
         ldx     #kSigSize-1
-:       ldy     sig_offset,x
+    DO
+        ldy     sig_offset,x
         lda     (ptr),y
         cmp     sig_value,x
         bne     not_found
         dex
-        bpl     :-
+    WHILE_POS
 
         ;; Change ptr from $Cs00 to $C0s0
         lda     ptr+1

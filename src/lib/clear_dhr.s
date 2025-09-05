@@ -15,11 +15,13 @@ clear:  copy16  #HIRES_ADDR, ptr
         lda     #0              ; clear to black
         ldx     #>kHiresSize    ; number of pages
         ldy     #0              ; pointer within page
-:       sta     (ptr),y
+    DO
+      DO
+        sta     (ptr),y
         iny
-        bne     :-
+      WHILE_NOT_ZERO
         inc     ptr+1
         dex
-        bne     :-
+    WHILE_NOT_ZERO
         rts
 .endproc ; ClearDHRToBlack

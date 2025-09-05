@@ -68,24 +68,28 @@ loop:   dec     ptr
 
         ;; Swap proc into place
         ldy     #kBellProcLength - 1
-:       swap8   BELLPROC,y, BELLDATA,y
+    DO
+        swap8   BELLPROC,y, BELLDATA,y
         dey
-        bpl     :-
+    WHILE_POS
 
         ;; Restore banking
         plp
-        bmi     :+              ; leave LCBANK2
+    IF_NC
         bit     LCBANK1         ; restore LCBANK1
         bit     LCBANK1
-:
+    END_IF
+
         plp
-        bmi     :+              ; leave LCRAM
+    IF_NC
         bit     ROMIN2          ; restore ROMIN2
-:
+    END_IF
+
         plp
-        bpl     :+              ; leave ALTZPOFF
+    IF_NS
         sta     ALTZPON         ; restore ALTZPON
-:
+    END_IF
+
         rts
 .endproc ; _Swap
 

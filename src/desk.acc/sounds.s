@@ -66,8 +66,7 @@ dialog_result:
 
 ;;; Cancel any changes, restore saved proc
 .proc DoCancel
-        lda     #$00
-        sta     dialog_result
+        copy8   #$00, dialog_result
         lda     original_index
         jsr     InstallIndex
         jmp     Exit
@@ -335,8 +334,7 @@ grafport_win:       .tag    MGTK::GrafPort
 
         ;; ----------------------------------------
 
-        lda     winfo::window_id
-        sta     screentowindow_params::window_id
+        copy8   winfo::window_id, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 
@@ -383,10 +381,10 @@ grafport_win:       .tag    MGTK::GrafPort
 
         .assert kBellProcLength <= 128, error, "Can't BPL this loop"
         ldy     #kBellProcLength - 1
-:       lda     (ptr),y
-        sta     BELLDATA,y
+    DO
+        copy8   (ptr),y, BELLDATA,y
         dey
-        bpl     :-
+    WHILE_POS
 
         sta     ALTZPON
         bit     LCBANK1
@@ -451,8 +449,7 @@ grafport_win:       .tag    MGTK::GrafPort
         sta     crc_lo
         stx     crc_hi
 
-        lda     #0
-        sta     index
+        copy8   #0, index
 
         index := *+1
 loop:   lda     #SELF_MODIFIED_BYTE
@@ -498,12 +495,12 @@ finish: sta     ALTZPON
 .proc CRC
         stax    addr
 
-        lda     #0
-        sta     hi
+        copy8   #0, hi
         dey
 
+    DO
         addr := *+1
-:       eor     SELF_MODIFIED,y
+        eor     SELF_MODIFIED,y
         rol                     ; shift left 16
         rol     hi
         php                     ; but stash the high bit that
@@ -512,7 +509,7 @@ finish: sta     ALTZPON
         rol
 
         dey
-        bpl     :-
+    WHILE_POS
 
         hi := *+1
         ldx     #SELF_MODIFIED_BYTE
@@ -1442,17 +1439,15 @@ done:   rts
         ;; Append filename to buffer
         inc     filename_buffer ; Add '/' separator
         ldx     filename_buffer
-        lda     #'/'
-        sta     filename_buffer,x
+        copy8   #'/', filename_buffer,x
 
         ldx     #0              ; Append filename
         ldy     filename_buffer
-:       inx
+    DO
+        inx
         iny
-        lda     filename,x
-        sta     filename_buffer,y
-        cpx     filename
-        bne     :-
+        copy8   filename,x, filename_buffer,y
+    WHILE_X_NE  filename
         sty     filename_buffer
         rts
 .endproc ; AppendFilename

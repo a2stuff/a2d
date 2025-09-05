@@ -30,25 +30,26 @@
 
         ;; 24->12 hour clock?
         bit     clock_24hours
-        bmi     skip
-
-        cmp     #12
-        bcc     :+
+    IF_NC
+      IF_A_GE   #12
         sec
         sbc     #12             ; 12...23 -> 0...11
-:       cmp     #0
-        bne     :+
-        lda     #12             ; 0 -> 12
-:
+      END_IF
 
-skip:   jsr     _Split
+      IF_A_EQ     #0
+        lda     #12             ; 0 -> 12
+      END_IF
+    END_IF
+
+        jsr     _Split
         pha
         txa                     ; tens (if > 0)
         bit     clock_24hours
-        bmi     :+
+    IF_NC
         cmp     #0              ; if 12-hour clock && 0, skip
         beq     ones
-:       ora     #'0'
+    END_IF
+        ora     #'0'
         iny
         sta     str_time,y
 ones:   pla                     ; ones
@@ -174,9 +175,10 @@ month_offset_table:
         bne     not_null
 
         ldy     #.sizeof(ParsedDateTime)-1
-:       sta     (parsed_ptr),y
+    DO
+        sta     (parsed_ptr),y
         dey
-        bpl     :-
+    WHILE_POS
         rts
 
 not_null:
@@ -220,11 +222,10 @@ year:   lda     #0
         ;; Per Technical Note: ProDOS #28: ProDOS Dates -- 2000 and Beyond
         ;; https://web.archive.org/web/2007/http://web.pdx.edu/~heiss/technotes/pdos/tn.pdos.28.html
 tn28:   lda     ytmp            ; ytmp is still just one byte
-        cmp     #40
-        bcs     :+
+    IF_A_LT     #40
         adc     #100
         sta     ytmp
-:
+    END_IF
 
 do1900: ldy     #ParsedDateTime::year
         add16in ytmp, #1900, (parsed_ptr),y
@@ -328,9 +329,11 @@ prodos_2_5:
         ldy     #0
         copy16in (datetime_ptr),y, ytmp
         ldx     #6
-:       lsr16   ytmp
+    DO
+        lsr16   ytmp
         dex
-        bne     :-
+    WHILE_NOT_ZERO
+
         lda     ytmp
         and     #%00011111      ; should be unnecessary
         ldy     #ParsedDateTime::hour

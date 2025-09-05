@@ -318,11 +318,9 @@ bit_loop:
         ror     tmp
 
         dec16   dst
-        lda     tmp+1
-        sta     (dst),y
+        copy8   tmp+1, (dst),y
         dec16   dst
-        lda     tmp
-        sta     (dst),y
+        copy8   tmp, (dst),y
 
         dec     count
         bne     byte_loop
@@ -531,10 +529,12 @@ skip:   .word   0
         ;; Throttle animation
         lda     skip
         ora     skip+1
-        beq     :+
+    IF_NOT_ZERO
         dec16   skip
         jmp     InputLoop
-:       copy16  #175, skip
+    END_IF
+
+        copy16  #175, skip
 
         ;; --------------------------------------------------
         ;; Tick once per frame; used to alternate frames
@@ -561,8 +561,7 @@ skip:   .word   0
 
         sub16   screentowindow_params::windowx, x_pos, x_delta
         sub16   x_delta, #kNekoWidth / 2, x_delta
-        lda     x_delta+1
-        sta     x_neg
+        copy8   x_delta+1, x_neg
     IF_NEG
         sub16   #0, x_delta, x_delta
     END_IF
@@ -571,8 +570,7 @@ skip:   .word   0
 
         sub16   screentowindow_params::windowy, y_pos, y_delta
         sub16   y_delta, #kNekoHeight / 2, y_delta
-        lda     y_delta+1
-        sta     y_neg
+        copy8   y_delta+1, y_neg
     IF_NEG
         sub16   #0, y_delta, y_delta
     END_IF
@@ -580,15 +578,14 @@ skip:   .word   0
 
         ;; Beyond threshold?
         lda     x_delta
-        cmp     #kThreshold
-        bcs     :+
+    IF_A_LT     #kThreshold
         lda     y_delta
-        cmp     #kThreshold
-        bcs     :+
-
+      IF_A_LT   #kThreshold
         ldx     #0              ; no; null out the deltas
         beq     skip_encode     ; always
-:
+      END_IF
+    END_IF
+
         ;; Yes - do math to scale the deltas
         lda     x_delta
     IF_A_GE     y_delta

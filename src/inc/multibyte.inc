@@ -814,6 +814,19 @@ skip:   dec     arg
 ;;; ============================================================
 ;;; 24-bit pseudo-ops
 
+;;; Copy 24-bit value
+;;;    copy24 #$111111, $2222 ; immediate, absolute
+;;;    copy24 $1111, $2222      ; absolute, absolute
+.macro copy24 arg1, arg2
+        _op_b0  lda, {arg1}
+        sta     arg2
+        _op_x1  lda, {arg1}     ; optimized
+        sta     arg2+1
+        _op_x2  lda, {arg1}     ; optimized
+        sta     arg2+2
+.endmacro
+
+
 ;;; Increment 24-bit value
 .macro inc24    arg
         .local skip

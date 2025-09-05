@@ -61,12 +61,12 @@ done:   rts
 
         ldx     #0              ; Append filename
         ldy     filename_buffer
-:       inx
+    DO
+        inx
         iny
         lda     filename,x
         sta     filename_buffer,y
-        cpx     filename
-        bne     :-
+    WHILE_X_NE  filename
         sty     filename_buffer
         rts
 .endproc ; _AppendFilename

@@ -55,15 +55,17 @@
 
         ;; Try to verify a printer card in slot 1
         param_call CheckSlot1Signature, sigtable_printer
-        beq     :+
+    IF_ZC
         param_call CheckSlot1Signature, sigtable_ssc
-        beq     :+
+      IF_ZC
         param_call CheckSlot1Signature, sigtable_parallel
-        beq     :+
-
+       IF_ZC
         lda     #ERR_DEVICE_NOT_CONNECTED
         jmp     JUMP_TABLE_SHOW_ALERT
-:
+       END_IF
+      END_IF
+    END_IF
+
         ;; Get top DeskTop window (if any) and find its path
         JUMP_TABLE_MGTK_CALL MGTK::FrontWindow, ptr
         lda     ptr             ; any window open?
@@ -89,8 +91,7 @@
         ;; Append '/' needed by algorithm
         ldy     searchPath
         iny
-        lda     #'/'
-        sta     searchPath,y
+        copy8   #'/', searchPath,y
         sty     searchPath
 
         clc
@@ -203,8 +204,7 @@ iw2_init:
         stax    ptr
 
         ldy     #0
-        lda     (ptr),y         ; first byte in table is number of tuples
-        sta     count
+        copy8   (ptr),y, count ; first byte in table is number of tuples
     DO
         iny
         lda     (ptr),y
@@ -886,8 +886,7 @@ vector: jsr     SLOT1                    ; self-modified
 .endproc ; GoCard
 
 .proc CROut
-        lda     #0
-        sta     ch
+        copy8   #0, ch
 
         lda     #CHAR_RETURN
         jsr     COut

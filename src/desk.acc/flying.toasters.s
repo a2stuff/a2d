@@ -133,27 +133,28 @@ loop:
 
         ;; Wrap Y
         cmp16   ypos, #kScreenHeight
-        bvc     :+
+    IF_VS
         eor     #$80
-:       bmi     :+
+    END_IF
+    IF_NC
         copy16  #AS_WORD(-kToasterHeight), ypos
-:
+    END_IF
 
         ;; Wrap X
         cmp16   xpos, #AS_WORD(-kToasterWidth)
-        bvc     :+
+    IF_VS
         eor     #$80
-:       bpl     :+
+    END_IF
+    IF_NS
         copy16  #kScreenWidth+kToasterWidth, xpos
-:
+    END_IF
 
         ;; Next frame
         inc     frame
         lda     frame
-        cmp     #4              ; num frames
-        bne     :+
+    IF_A_EQ     #4              ; num frames
         copy8   #0, frame
-:
+    END_IF
 
         ;; Draw new pos
         copy16  xpos, paintbits_params::viewloc::xcoord
@@ -175,10 +176,8 @@ loop:
 
         ;; Next
         dec     index
-        bmi     :+
-        jmp     loop
-:       rts
-
+        jpl     loop
+        rts
 
 index:  .byte   0
 xpos:   .word   0

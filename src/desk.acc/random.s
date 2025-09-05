@@ -44,10 +44,10 @@
         ;; Extract this DA's directory path
         ldx     dir_path
         inx
-:       dex
+    DO
+        dex
         lda     dir_path,x
-        cmp     #'/'
-        bne     :-
+    WHILE_A_NE  #'/'
         dex
         txa
         pha                     ; A = new `dir_path` length
@@ -55,33 +55,33 @@
         ;; And this DA's file name
         inx
         ldy     #0
-:       inx
+    DO
+        inx
         iny
         lda     dir_path,x
         jsr     ToUpperCase
         sta     self_filename,y
-        cpx     dir_path
-        bne     :-
+    WHILE_X_NE  dir_path
         sty     self_filename
 
         pla                     ; A = new `dir_path` length
         sta     dir_path
 
         ;; Keep going until we find the Nth candidate
-:       param_call EnumerateDirectory, callback
+    DO
+        param_call EnumerateDirectory, callback
         lda     file_num
-        bne     :-
+    WHILE_NOT_ZERO
 
         ;; Append filename to `dir_path`
         ldy     #0
         ldx     dir_path
         inx                     ; past '/'
-:       inx
+    DO
+        inx
         iny
-        lda     filename,y
-        sta     dir_path,x
-        cpy     filename
-        bne     :-
+        copy8   filename,y, dir_path,x
+    WHILE_Y_NE  filename
         stx     dir_path
 
         ;; Inject JT call to stack
@@ -124,10 +124,10 @@
         and     #NAME_LENGTH_MASK
         sta     filename
         tay
-:       lda     (entry_ptr),y
-        sta     filename,y
+    DO
+        copy8   (entry_ptr),y, filename,y
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         sec
         rts
@@ -176,15 +176,15 @@ nope:   sec
 
         ;; Yes, check characters
         ASSERT_EQUALS FileEntry::file_name, 1
-:       lda     (entry_ptr),y
+    DO
+        lda     (entry_ptr),y
         cmp     self_filename,y
         bne     nope
         dey
-        bne     :-
+    WHILE_NOT_ZERO
 
         clc
         rts
-
 
 nope:   sec
         rts

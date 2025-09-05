@@ -30,9 +30,10 @@ check_alpha:
         iny
         lda     (ptr),y
         cmp     #'A'
-        bcc     :+
+    IF_GE
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
-:       dey
+    END_IF
+        dey
         bpl     loop            ; always
 .endscope

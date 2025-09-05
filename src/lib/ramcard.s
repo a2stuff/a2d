@@ -36,7 +36,7 @@
 ;;; Copy the RAMCard prefix (e.g. "/RAM") to the passed buffer.
 ;;; Input: A,X=destination buffer
 .proc CopyRAMCardPrefix
-        stax    @addr
+        stax    addr
 
 .ifdef RC_AUXMEM
         sta     ALTZPOFF
@@ -46,11 +46,12 @@
         bit     LCBANK2
 
         ldx     RAMCARD_PREFIX
-:       lda     RAMCARD_PREFIX,x
-        @addr := *+1
+    DO
+        lda     RAMCARD_PREFIX,x
+        addr := *+1
         sta     SELF_MODIFIED,x
         dex
-        bpl     :-
+    WHILE_POS
 
 .ifdef RC_AUXMEM
         sta     ALTZPON
@@ -69,7 +70,7 @@
 ;;; Copy the original DeskTop prefix (e.g. "/HD/A2D") to the passed buffer.
 ;;; Input: A,X=destination buffer
 .proc CopyDeskTopOriginalPrefix
-        stax    @addr
+        stax    addr
 
 .ifdef RC_AUXMEM
         sta     ALTZPOFF
@@ -79,11 +80,12 @@
         bit     LCBANK2
 
         ldx     DESKTOP_ORIG_PREFIX
-:       lda     DESKTOP_ORIG_PREFIX,x
-        @addr := *+1
+    DO
+        lda     DESKTOP_ORIG_PREFIX,x
+        addr := *+1
         sta     SELF_MODIFIED,x
         dex
-        bpl     :-
+    WHILE_POS
 
 .ifdef RC_AUXMEM
         sta     ALTZPON

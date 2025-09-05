@@ -643,8 +643,7 @@ move:   stx     click_x
 ;;; Map click to piece x/y
 
 .proc FindClickPiece
-        lda     #kDAWindowId
-        sta     screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         lda     screentowindow_params::windowx+1
         ora     screentowindow_params::windowy+1
@@ -789,8 +788,7 @@ miss:   rts                     ; Click on hole, or not row/col with hole
         sec
         sbc     click_y
         tax
-bloop:  lda     position_table-4,y
-        sta     position_table,y
+bloop:  copy8   position_table-4,y, position_table,y
         dey
         dey
         dey
@@ -803,8 +801,7 @@ after:  lda     click_y         ; click after hole
         sec
         sbc     hole_y
         tax
-aloop:  lda     position_table+4,y
-        sta     position_table,y
+aloop:  copy8   position_table+4,y, position_table,y
         iny
         iny
         iny
@@ -813,13 +810,11 @@ aloop:  lda     position_table+4,y
         bne     aloop
 .endproc ; ClickInCol
 
-col:    lda     #kHolePiece
-        sta     position_table,y
+col:    copy8   #kHolePiece, position_table,y
         jsr     DrawCol
         jmp     done
 
-row:    lda     #kHolePiece
-        sta     position_table,y
+row:    copy8   #kHolePiece, position_table,y
         jsr     DrawRow
 
 done:   jsr     CheckVictory
@@ -871,14 +866,12 @@ ret:    rts
         ldy     #1
         sty     draw_inc
         dey
-        lda     #16
-        sta     draw_end
+        copy8   #16, draw_end
         bne     DrawSelected    ; always
 .endproc ; DrawAll
 
 .proc DrawRow                   ; row specified in draw_rc
-        lda     #1
-        sta     draw_inc
+        copy8   #1, draw_inc
         lda     draw_rc
         tay
         clc
@@ -888,11 +881,9 @@ ret:    rts
 .endproc ; DrawRow
 
 .proc DrawCol                   ; col specified in `draw_rc`
-        lda     #4
-        sta     draw_inc
+        copy8   #4, draw_inc
         ldy     hole_x
-        lda     #16
-        sta     draw_end
+        copy8   #16, draw_end
         FALL_THROUGH_TO DrawSelected
 .endproc ; DrawCol
 
@@ -1089,8 +1080,7 @@ sloop:  tya
         pha
         ldx     position_table
         ldy     #0
-ploop:  lda     position_table+1,y
-        sta     position_table,y
+ploop:  copy8   position_table+1,y, position_table,y
         iny
         cpy     #15
         bcc     ploop
@@ -1100,6 +1090,8 @@ ploop:  lda     position_table+1,y
         tay
         dey
         bne     sloop
+
+        ;; swap
         ldx     position_table
         lda     position_table+1
         sta     position_table

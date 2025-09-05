@@ -180,8 +180,7 @@ pensize_frame:  .byte   kBorderDX, kBorderDY
 
 init_window:
         MGTK_CALL MGTK::OpenWindow, winfo
-        lda     #Field::FIRST
-        sta     selected_field
+        copy8   #Field::FIRST, selected_field
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
         FALL_THROUGH_TO InputLoop
@@ -193,12 +192,12 @@ init_window:
         JSR_TO_MAIN JUMP_TABLE_SYSTEM_TASK
         MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::button_down
-        bne     :+
+    IF_A_EQ     #MGTK::EventKind::button_down
         jsr     OnClick
         jmp     InputLoop
+    END_IF
 
-:       cmp     #MGTK::EventKind::key_down
+        cmp     #MGTK::EventKind::key_down
         bne     InputLoop
         jsr     OnKey
         jmp     InputLoop
@@ -590,10 +589,11 @@ dialog_result:  .byte   0
 .endproc ; UpdateFirstDOWOptionButtons
 
 .proc ZToButtonState
-        beq     :+
+    IF_ZC
         lda     #BTK::kButtonStateNormal
         rts
-:       lda     #BTK::kButtonStateChecked
+    END_IF
+        lda     #BTK::kButtonStateChecked
         rts
 .endproc ; ZToButtonState
 
