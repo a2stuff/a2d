@@ -64,6 +64,7 @@
     .endif
 .endmacro
 
+
 ;;; ============================================================
 ;;; IF_* / ELSE_IF_* / ELSE / END_IF
 ;;; ============================================================
@@ -169,78 +170,6 @@
         .error "Do you mean END_IF ?"
 .endmacro
 
-;;; --------------------------------------------------
-;;; User-friendly IF/ELSE_IF macros
-
-.define IF_ZS _IF_BOP_ bne
-.define IF_ZC _IF_BOP_ beq
-.define IF_CC _IF_BOP_ bcs
-.define IF_CS _IF_BOP_ bcc
-.define IF_NC _IF_BOP_ bmi
-.define IF_NS _IF_BOP_ bpl
-.define IF_VC _IF_BOP_ bvs
-.define IF_VS _IF_BOP_ bvc
-
-.define IF_ZERO     IF_ZS
-.define IF_NOT_ZERO IF_ZC
-.define IF_EQ       IF_ZS
-.define IF_NE       IF_ZC
-.define IF_GE       IF_CS
-.define IF_LT       IF_CC
-.define IF_PLUS     IF_NC
-.define IF_MINUS    IF_NS
-.define IF_POS      IF_NC
-.define IF_NEG      IF_NS
-
-.define IF_A_EQ _IF_COP_BOP_ cmp,bne,
-.define IF_A_NE _IF_COP_BOP_ cmp,beq,
-.define IF_A_LT _IF_COP_BOP_ cmp,bcs,
-.define IF_A_GE _IF_COP_BOP_ cmp,bcc,
-
-.define IF_X_EQ _IF_COP_BOP_ cpx,bne,
-.define IF_X_NE _IF_COP_BOP_ cpx,beq,
-.define IF_X_LT _IF_COP_BOP_ cpx,bcs,
-.define IF_X_GE _IF_COP_BOP_ cpx,bcc,
-
-.define IF_Y_EQ _IF_COP_BOP_ cpy,bne,
-.define IF_Y_NE _IF_COP_BOP_ cpy,beq,
-.define IF_Y_LT _IF_COP_BOP_ cpy,bcs,
-.define IF_Y_GE _IF_COP_BOP_ cpy,bcc,
-
-.define ELSE_IF_ZS _ELSE_IF_BOP_ bne
-.define ELSE_IF_ZC _ELSE_IF_BOP_ beq
-.define ELSE_IF_CC _ELSE_IF_BOP_ bcs
-.define ELSE_IF_CS _ELSE_IF_BOP_ bcc
-.define ELSE_IF_NC _ELSE_IF_BOP_ bmi
-.define ELSE_IF_NS _ELSE_IF_BOP_ bpl
-.define ELSE_IF_VC _ELSE_IF_BOP_ bvs
-.define ELSE_IF_VS _ELSE_IF_BOP_ bvc
-
-.define ELSE_IF_ZERO     ELSE_IF_ZS
-.define ELSE_IF_NOT_ZERO ELSE_IF_ZC
-.define ELSE_IF_EQ       ELSE_IF_ZS
-.define ELSE_IF_NE       ELSE_IF_ZC
-.define ELSE_IF_GE       ELSE_IF_CS
-.define ELSE_IF_LT       ELSE_IF_CC
-.define ELSE_IF_PLUS     ELSE_IF_NC
-.define ELSE_IF_MINUS    ELSE_IF_NS
-.define ELSE_IF_POS      ELSE_IF_NC
-.define ELSE_IF_NEG      ELSE_IF_NS
-
-.define ELSE_IF_A_EQ _ELSE_IF_COP_BOP cmp,bne,
-.define ELSE_IF_A_NE _ELSE_IF_COP_BOP cmp,beq,
-.define ELSE_IF_A_LT _ELSE_IF_COP_BOP cmp,bcs,
-.define ELSE_IF_A_GE _ELSE_IF_COP_BOP cmp,bcc,
-
-.define ELSE_IF_X_EQ _ELSE_IF_COP_BOP cpx,bne,
-.define ELSE_IF_X_NE _ELSE_IF_COP_BOP cpx,beq,
-.define ELSE_IF_X_LT _ELSE_IF_COP_BOP cpx,bcs,
-.define ELSE_IF_X_GE _ELSE_IF_COP_BOP cpx,bcc,
-
-.define ELSE_IF_Y_EQ _ELSE_IF_COP_BOP cpy,bne,
-.define ELSE_IF_Y_NE _ELSE_IF_COP_BOP cpy,beq,
-.define ELSE_IF_Y_LT _ELSE_IF_COP_BOP cpy,bcs,
-.define ELSE_IF_Y_GE _ELSE_IF_COP_BOP cpy,bcc,
 
 ;;; ============================================================
 ;;; DO / BREAK_IF_* / WHILE_*
@@ -340,76 +269,6 @@
         __DEC_IDENT__ __flow_depth__
 .endmacro
 
-.define WHILE_ZC _WHILE_BOP_ bne
-.define WHILE_ZS _WHILE_BOP_ beq
-.define WHILE_CC _WHILE_BOP_ bcc
-.define WHILE_CS _WHILE_BOP_ bcs
-.define WHILE_VC _WHILE_BOP_ bvc
-.define WHILE_VS _WHILE_BOP_ bvs
-.define WHILE_NC _WHILE_BOP_ bpl
-.define WHILE_NS _WHILE_BOP_ bmi
-
-.define WHILE_EQ WHILE_ZS
-.define WHILE_NE WHILE_ZC
-.define WHILE_ZERO WHILE_EQ
-.define WHILE_NOT_ZERO WHILE_NE
-.define WHILE_GE WHILE_CS
-.define WHILE_LT WHILE_CC
-.define WHILE_PLUS WHILE_NC
-.define WHILE_MINUS WHILE_NS
-.define WHILE_POS WHILE_NC
-.define WHILE_NEG WHILE_NS
-
-.define WHILE_A_EQ _WHILE_COP_BOP_ cmp,beq,
-.define WHILE_A_NE _WHILE_COP_BOP_ cmp,bne,
-.define WHILE_A_LT _WHILE_COP_BOP_ cmp,bcc,
-.define WHILE_A_GE _WHILE_COP_BOP_ cmp,bcs,
-
-.define WHILE_X_EQ _WHILE_COP_BOP_ cpx,beq,
-.define WHILE_X_NE _WHILE_COP_BOP_ cpx,bne,
-.define WHILE_X_LT _WHILE_COP_BOP_ cpx,bcc,
-.define WHILE_X_GE _WHILE_COP_BOP_ cpx,bcs,
-
-.define WHILE_Y_EQ _WHILE_COP_BOP_ cpy,beq,
-.define WHILE_Y_NE _WHILE_COP_BOP_ cpy,bne,
-.define WHILE_Y_LT _WHILE_COP_BOP_ cpy,bcc,
-.define WHILE_Y_GE _WHILE_COP_BOP_ cpy,bcs,
-
-.define BREAK_IF_ZS _BREAK_IF_BOP_ beq
-.define BREAK_IF_ZC _BREAK_IF_BOP_ bne
-.define BREAK_IF_CS _BREAK_IF_BOP_ bcs
-.define BREAK_IF_CC _BREAK_IF_BOP_ bcc
-.define BREAK_IF_VS _BREAK_IF_BOP_ bvs
-.define BREAK_IF_VC _BREAK_IF_BOP_ bvc
-.define BREAK_IF_NS _BREAK_IF_BOP_ bmi
-.define BREAK_IF_NC _BREAK_IF_BOP_ bpl
-
-.define BREAK_IF_EQ BREAK_IF_ZS
-.define BREAK_IF_NE BREAK_IF_ZC
-.define BREAK_IF_ZERO BREAK_IF_EQ
-.define BREAK_IF_NOT_ZERO BREAK_IF_NE
-.define BREAK_IF_GE BREAK_IF_CS
-.define BREAK_IF_LT BREAK_IF_CC
-.define BREAK_IF_PLUS BREAK_IF_NC
-.define BREAK_IF_MINUS BREAK_IF_NS
-.define BREAK_IF_POS BREAK_IF_NC
-.define BREAK_IF_NEG BREAK_IF_NS
-
-.define BREAK_IF_A_EQ _BREAK_IF_COP_BOP_ cmp,beq,
-.define BREAK_IF_A_NE _BREAK_IF_COP_BOP_ cmp,bne,
-.define BREAK_IF_A_LT _BREAK_IF_COP_BOP_ cmp,bcc,
-.define BREAK_IF_A_GE _BREAK_IF_COP_BOP_ cmp,bcs,
-
-.define BREAK_IF_X_EQ _BREAK_IF_COP_BOP_ cpx,beq,
-.define BREAK_IF_X_NE _BREAK_IF_COP_BOP_ cpx,bne,
-.define BREAK_IF_X_LT _BREAK_IF_COP_BOP_ cpx,bcc,
-.define BREAK_IF_X_GE _BREAK_IF_COP_BOP_ cpx,bcs,
-
-.define BREAK_IF_Y_EQ _BREAK_IF_COP_BOP_ cpy,beq,
-.define BREAK_IF_Y_NE _BREAK_IF_COP_BOP_ cpy,bne,
-.define BREAK_IF_Y_LT _BREAK_IF_COP_BOP_ cpy,bcc,
-.define BREAK_IF_Y_GE _BREAK_IF_COP_BOP_ cpy,bcs,
-
 
 ;;; ============================================================
 ;;; RTS_IF_*
@@ -432,23 +291,56 @@
 skip:
 .endmacro
 
-.define RTS_IF_ZS _RTS_IF_BOP_ bne
-.define RTS_IF_ZC _RTS_IF_BOP_ beq
-.define RTS_IF_CS _RTS_IF_BOP_ bcc
-.define RTS_IF_CC _RTS_IF_BOP_ bcs
-.define RTS_IF_VS _RTS_IF_BOP_ bvc
-.define RTS_IF_VC _RTS_IF_BOP_ bvs
-.define RTS_IF_NS _RTS_IF_BOP_ bpl
-.define RTS_IF_NC _RTS_IF_BOP_ bmi
 
-.define RTS_IF_EQ RTS_IF_ZS
-.define RTS_IF_NE RTS_IF_ZC
-.define RTS_IF_ZERO RTS_IF_EQ
-.define RTS_IF_NOT_ZERO RTS_IF_NE
-.define RTS_IF_GE RTS_IF_CS
-.define RTS_IF_LT RTS_IF_CC
-.define RTS_IF_PLUS RTS_IF_NC
-.define RTS_IF_MINUS RTS_IF_NS
-.define RTS_IF_POS RTS_IF_NC
-.define RTS_IF_NEG RTS_IF_NS
+;;; ============================================================
+;;; Produce the actual user-friendly macros
+;;; ============================================================
 
+.macro _FLOW_DEFINE_FLAG_MACROS_ cond, branchOp1, branchOp2
+        .define .ident(.sprintf("IF_%s", .string(cond))) _IF_BOP_ branchOp2
+        .define .ident(.sprintf("ELSE_IF_%s", .string(cond))) _ELSE_IF_BOP_ branchOp2
+        .define .ident(.sprintf("WHILE_%s", .string(cond))) _WHILE_BOP_ branchOp1
+        .define .ident(.sprintf("BREAK_IF_%s", .string(cond))) _BREAK_IF_BOP_ branchOp1
+        .define .ident(.sprintf("RTS_IF_%s", .string(cond))) _RTS_IF_BOP_ branchOp2
+.endmacro
+.macro _FLOW_DEFINE_COMPARE_MACROS_ reg, cond, compareOp, branchOp1, branchOp2
+        .define .ident(.sprintf("IF_%s_%s", reg, .string(cond))) _IF_COP_BOP_ compareOp, branchOp2,
+        .define .ident(.sprintf("ELSE_IF_%s_%s", reg, .string(cond))) _ELSE_IF_COP_BOP_ compareOp, branchOp2,
+        .define .ident(.sprintf("WHILE_%s_%s", reg, .string(cond))) _WHILE_COP_BOP_ compareOp, branchOp1,
+        .define .ident(.sprintf("BREAK_IF_%s_%s", reg, .string(cond))) _BREAK_IF_COP_BOP_ compareOp, branchOp1,
+.endmacro
+
+_FLOW_DEFINE_FLAG_MACROS_ ZS, beq, bne
+_FLOW_DEFINE_FLAG_MACROS_ ZC, bne, beq
+_FLOW_DEFINE_FLAG_MACROS_ CS, bcs, bcc
+_FLOW_DEFINE_FLAG_MACROS_ CC, bcc, bcs
+_FLOW_DEFINE_FLAG_MACROS_ VS, bvs, bvc
+_FLOW_DEFINE_FLAG_MACROS_ VC, bvc, bvs
+_FLOW_DEFINE_FLAG_MACROS_ NS, bmi, bpl
+_FLOW_DEFINE_FLAG_MACROS_ NC, bpl, bmi
+
+_FLOW_DEFINE_FLAG_MACROS_ EQ,       beq, bne
+_FLOW_DEFINE_FLAG_MACROS_ ZERO,     beq, bne
+_FLOW_DEFINE_FLAG_MACROS_ NE,       bne, beq
+_FLOW_DEFINE_FLAG_MACROS_ NOT_ZERO, bne, beq
+_FLOW_DEFINE_FLAG_MACROS_ GE,       bcs, bcc
+_FLOW_DEFINE_FLAG_MACROS_ LT,       bcc, bcs
+_FLOW_DEFINE_FLAG_MACROS_ MINUS,    bmi, bpl
+_FLOW_DEFINE_FLAG_MACROS_ NEG,      bmi, bpl
+_FLOW_DEFINE_FLAG_MACROS_ PLUS,     bpl, bmi
+_FLOW_DEFINE_FLAG_MACROS_ POS,      bpl, bmi
+
+_FLOW_DEFINE_COMPARE_MACROS_ "A", EQ, cmp, beq, bne
+_FLOW_DEFINE_COMPARE_MACROS_ "A", NE, cmp, bne, beq
+_FLOW_DEFINE_COMPARE_MACROS_ "A", LT, cmp, bcc, bcs
+_FLOW_DEFINE_COMPARE_MACROS_ "A", GE, cmp, bcs, bcc
+
+_FLOW_DEFINE_COMPARE_MACROS_ "X", EQ, cpx, beq, bne
+_FLOW_DEFINE_COMPARE_MACROS_ "X", NE, cpx, bne, beq
+_FLOW_DEFINE_COMPARE_MACROS_ "X", LT, cpx, bcc, bcs
+_FLOW_DEFINE_COMPARE_MACROS_ "X", GE, cpx, bcs, bcc
+
+_FLOW_DEFINE_COMPARE_MACROS_ "Y", EQ, cpy, beq, bne
+_FLOW_DEFINE_COMPARE_MACROS_ "Y", NE, cpy, bne, beq
+_FLOW_DEFINE_COMPARE_MACROS_ "Y", LT, cpy, bcc, bcs
+_FLOW_DEFINE_COMPARE_MACROS_ "Y", GE, cpy, bcs, bcc
