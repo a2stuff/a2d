@@ -241,7 +241,7 @@ joystick_bitmap:
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
+        cmp     #kDAWindowId
         bne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
@@ -265,7 +265,7 @@ joystick_bitmap:
 ;;; ============================================================
 
 .proc HandleDrag
-        copy8   winfo::window_id, dragwindow_params::window_id
+        copy8   #kDAWindowId, dragwindow_params::window_id
         copy16  event_params::xcoord, dragwindow_params::dragx
         copy16  event_params::ycoord, dragwindow_params::dragy
         MGTK_CALL MGTK::DragWindow, dragwindow_params

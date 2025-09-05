@@ -560,7 +560,7 @@ shortcut_table_addr_hi:
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
+        cmp     #kDAWindowId
         jne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
@@ -584,7 +584,7 @@ shortcut_table_addr_hi:
 ;;; ============================================================
 
 .proc HandleDrag
-        copy8   winfo::window_id, dragwindow_params::window_id
+        copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
         bit     dragwindow_params::moved
     IF_NS
@@ -602,7 +602,7 @@ shortcut_table_addr_hi:
 ;;; ============================================================
 
 .proc HandleClick
-        copy8   winfo::window_id, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         ;; ----------------------------------------
@@ -783,7 +783,7 @@ event:  MGTK_CALL MGTK::GetEvent, event_params
         cmp     #MGTK::EventKind::button_up
         jeq     InputLoop
 
-        copy8   winfo::window_id, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window

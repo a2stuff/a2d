@@ -336,7 +336,7 @@ buf_search:     .res    kBufSize, 0 ; search term
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
+        cmp     #kDAWindowId
         jne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box

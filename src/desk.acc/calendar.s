@@ -299,7 +299,7 @@ first_dow:
 .proc HandleDown
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
+        cmp     #kDAWindowId
         jne     InputLoop
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
@@ -424,7 +424,7 @@ fin:    jsr     UpdateWindow
 ;;; ============================================================
 
 .proc HandleDrag
-        copy8   winfo::window_id, dragwindow_params::window_id
+        copy8   #kDAWindowId, dragwindow_params::window_id
         MGTK_CALL MGTK::DragWindow, dragwindow_params
 common:
         bit     dragwindow_params::moved
@@ -443,7 +443,7 @@ common:
 ;;; ============================================================
 
 .proc HandleClick
-        copy8   winfo::window_id, screentowindow_params::window_id
+        copy8   #kDAWindowId, screentowindow_params::window_id
         MGTK_CALL MGTK::ScreenToWindow, screentowindow_params
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
 

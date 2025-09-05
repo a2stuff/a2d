@@ -624,11 +624,12 @@ return_flag:
         copy16  event_params::xcoord, findwindow_params::mousex
         copy16  event_params::ycoord, findwindow_params::mousey
         MGTK_CALL MGTK::FindWindow, findwindow_params
+
         lda     findwindow_params::window_id
-        cmp     winfo::window_id
-        bpl     :+              ; TODO: Should be `beq` ?
-        jmp     InputLoop
-:       lda     findwindow_params::which_area
+        cmp     #kDAWindowId
+        jne     InputLoop
+
+        lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
         cmp     #MGTK::Area::dragbar
@@ -697,13 +698,11 @@ return_flag:
         MGTK_CALL MGTK::FrameRect, rect_sap
 
         copy8   #127, char
-
-loop:
+    DO
         copy8   char, char_label
         tax
         ldy     key_mode,x
-        jmi     next
-
+      IF_NC
         ;; Compute address of key record
         sta     ptr
         copy8   #0, ptr+1
@@ -713,32 +712,29 @@ loop:
         add16   ptr, #key_locations, ptr
 
         ldy     #.sizeof(MGTK::Rect)-1
-    DO
+       DO
         copy8   (ptr),y, tmp_rect,y
         dey
-    WHILE_POS
+       WHILE_POS
 
         MGTK_CALL MGTK::FrameRect, tmp_rect
 
         lda     char
-        cmp     #' '
-        bcc     next
-        cmp     #CHAR_DELETE
-        bcs     next
-
+       IF_A_GE  #' '
+        IF_A_LT #CHAR_DELETE
         MGTK_CALL MGTK::MoveTo, tmp_rect
         MGTK_CALL MGTK::Move, label_relpos
         MGTK_CALL MGTK::DrawText, drawtext_params_char
+        END_IF
+       END_IF
+      END_IF
 
-next:   dec     char
+        dec     char
         lda     char
-        bmi     :+              ; TODO: `bpl loop` here
-        jmp     loop
-:
+    WHILE_POS
 
         bit     extended_layout_flag
     IF_NS
-
         ;; Extended layout's non-rectangular Return key
         MGTK_CALL MGTK::SetPenMode, pencopy
         MGTK_CALL MGTK::SetPattern, winfo::pattern
