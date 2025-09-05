@@ -1239,7 +1239,7 @@ With Sci.Calc:
 ## Map
 
 * Launch DeskTop. Apple Menu > Control Panels. Open Map. Type a known city name e.g. "San Francisco". Click Find. Verify that the city is highlighted on the map and the Latitude/Longitude are updated.
-
+* Launch DeskTop. Apple Menu > Control Panels. Open Map. Wait for the blinking indicator to be visible (this will be easier to observe in emulators with acceleration disabled), and drag the window to a new location. Type a city name (e.g. "San Francisco"). Click Find. Verify that the indicator blinks correctly only in the new location.
 
 ## Screen Savers
 

@@ -556,6 +556,10 @@ done:   jmp     InputLoop
 ;;; ============================================================
 
 .proc DrawWindow
+        ;; If we're drawing the window, the indicator is implicitly
+        ;; not currently visible.
+        copy8   #0, indicator_flag
+
         ;; Defer if content area is not visible
         jsr     SetPort
         bne     ret
