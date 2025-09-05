@@ -7,6 +7,7 @@
 
 ;;; * IF_* / ELSE_IF_* / ELSE / END_IF
 ;;; * DO / BREAK_IF_* / WHILE_*
+;;;   * or REPEAT / UNTIL_* if you prefer
 ;;; * RTS_IF_*
 ;;;
 ;;; Conditions (the "*" above) take the form of flag tests or
@@ -172,7 +173,7 @@
 
 
 ;;; ============================================================
-;;; DO / BREAK_IF_* / WHILE_*
+;;; DO / BREAK_IF_* / WHILE_* or REPEAT / UNTIL_*
 ;;; ============================================================
 
 ;;; Usage:
@@ -186,11 +187,15 @@
 ;;;     dex
 ;;;     WHILE_POS
 ;;;
-;;;     DO
+;;;     REPEAT
 ;;;     ...
-;;;     WHILE_A_NE #'/'
+;;;     BREAK_IF_Y_EQ #0
+;;;     ...
+;;;     UNTIL_A_EQ #'/'
 ;;;
 ;;; Macros:
+;;;     DO                 aliases: REPEAT
+;;;
 ;;;     WHILE_ZS           aliases: WHILE_EQ, WHILE_ZERO
 ;;;     WHILE_ZC           aliases: WHILE_NE, WHILE_NOT_ZERO
 ;;;     WHILE_CC           aliases: WHILE_LT
@@ -199,12 +204,14 @@
 ;;;     WHILE_VS
 ;;;     WHILE_NC           aliases: WHILE_POS, WHILE_PLUS
 ;;;     WHILE_NS           aliases: WHILE_NEG, WHILE_MINUS
+;;; ... and ditto for UNTIL_*
 ;;;
 ;;;     WHILE_A_EQ
 ;;;     WHILE_A_NE
 ;;;     WHILE_A_LT
 ;;;     WHILE_A_GE
 ;;; ... and ditto for *_X_* and *_Y_*
+;;; ... and ditto for UNTIL_*
 ;;;
 ;;;     BREAK_IF_ZS        aliases: BREAK_IF_EQ, BREAK_IF_ZERO
 ;;;     BREAK_IF_ZC        aliases: BREAK_IF_NE, BREAK_IF_NOT_ZERO
@@ -228,6 +235,8 @@
         __FLOW_LOG__ "do"
         __flow_ident__ {"do_while"} := *
 .endmacro
+
+.define REPEAT DO
 
 .macro _BREAK_IF_BOP_ branchOp
         __FLOW_LOG__ "else_if"
@@ -300,6 +309,7 @@ skip:
         .define .ident(.sprintf("IF_%s", .string(cond))) _IF_BOP_ branchOp2
         .define .ident(.sprintf("ELSE_IF_%s", .string(cond))) _ELSE_IF_BOP_ branchOp2
         .define .ident(.sprintf("WHILE_%s", .string(cond))) _WHILE_BOP_ branchOp1
+        .define .ident(.sprintf("UNTIL_%s", .string(cond))) _WHILE_BOP_ branchOp2
         .define .ident(.sprintf("BREAK_IF_%s", .string(cond))) _BREAK_IF_BOP_ branchOp1
         .define .ident(.sprintf("RTS_IF_%s", .string(cond))) _RTS_IF_BOP_ branchOp2
 .endmacro
@@ -307,6 +317,7 @@ skip:
         .define .ident(.sprintf("IF_%s_%s", reg, .string(cond))) _IF_COP_BOP_ compareOp, branchOp2,
         .define .ident(.sprintf("ELSE_IF_%s_%s", reg, .string(cond))) _ELSE_IF_COP_BOP_ compareOp, branchOp2,
         .define .ident(.sprintf("WHILE_%s_%s", reg, .string(cond))) _WHILE_COP_BOP_ compareOp, branchOp1,
+        .define .ident(.sprintf("UNTIL_%s_%s", reg, .string(cond))) _WHILE_COP_BOP_ compareOp, branchOp2,
         .define .ident(.sprintf("BREAK_IF_%s_%s", reg, .string(cond))) _BREAK_IF_COP_BOP_ compareOp, branchOp1,
 .endmacro
 
