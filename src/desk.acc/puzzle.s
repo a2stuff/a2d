@@ -758,11 +758,11 @@ miss:   rts                     ; Click on hole, or not row/col with hole
         sec
         sbc     click_x
         tax
-     DO
+      DO
         copy8   position_table-1,y, position_table,y
         dey
         dex
-     WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         beq     row             ; always
     END_IF
 

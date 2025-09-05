@@ -658,10 +658,10 @@ index:  .byte   0
 
         ;; Assign name
         ldy     text_input_buf
-   DO
+    DO
         copy8   text_input_buf,y, (ptr),y
         dey
-   WHILE_POS
+    WHILE_POS
 
         ;; Assign flags
         ldy     #kSelectorEntryFlagsOffset

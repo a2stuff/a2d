@@ -523,7 +523,7 @@ caret_blink_caret_bitmap:
         addr := *+1
         jmp     SELF_MODIFIED
        END_IF
-     END_IF
+      END_IF
 
         jmp     InputLoop
     END_IF
@@ -1125,10 +1125,10 @@ arrow_num:
 .endproc ; DrawWindow
 
 .proc ZToButtonState
-   IF_NOT_ZERO
+    IF_NOT_ZERO
         lda     #BTK::kButtonStateNormal
         rts
-   END_IF
+    END_IF
         lda     #BTK::kButtonStateChecked
         rts
 .endproc ; ZToButtonState

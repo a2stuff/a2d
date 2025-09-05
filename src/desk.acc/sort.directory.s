@@ -175,10 +175,10 @@ exit1:  jmp     Exit
         beq     exit1           ; nope, bail
 
         cmp     #kMaxDeskTopWindows+1 ; is it DeskTop window?
-   IF_GE
+    IF_GE
         copy8   #0, window_id   ; nope, bail
         beq     exit1           ; always
-   END_IF
+    END_IF
 
         ;; Copy window path to buffer
         ptr := $06

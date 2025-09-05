@@ -1216,9 +1216,9 @@ done:   rts
 
         ldx     egg
         inx
-     IF_X_EQ    #kNumModels
+    IF_X_EQ     #kNumModels
         ldx     #0
-     END_IF
+    END_IF
         stx     egg
 
         jsr     ClearWindow

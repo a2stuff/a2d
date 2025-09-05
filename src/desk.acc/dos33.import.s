@@ -667,10 +667,10 @@ done:   rts
         pt_ptr := $06
         stxy    pt_ptr
         ldy     #.sizeof(MGTK::Point)-1
-   DO
+    DO
         copy8   (pt_ptr),y, pt,y
         dey
-   WHILE_POS
+    WHILE_POS
         pla
 
         ;; Calculate address of `CatalogEntry`

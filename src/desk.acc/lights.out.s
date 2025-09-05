@@ -323,12 +323,12 @@ next:   add16_8 rect_ptr, #.sizeof(BTK::ButtonRecord)
         copy16  #button_0_0, rec_ptr
         ldy     #BTK::ButtonRecord::state
         ldx     #kLights-1
-   DO
+    DO
         lda     (rec_ptr),y
         bmi     ret             ; light on, so no
         add16_8 rec_ptr, #.sizeof(BTK::ButtonRecord)
         dex
-   WHILE_POS
+    WHILE_POS
 
         ;; Yes, victory!
         ldx     #4

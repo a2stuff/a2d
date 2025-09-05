@@ -166,7 +166,7 @@ str_128k_required:
         sta     RAMWRTON
         lda     #$A0
         ldx     #$77
-   DO
+    DO
         sta     $400,x
         sta     $480,x
         sta     $500,x
@@ -217,11 +217,11 @@ str_128k_required:
         ;; Ensure path has high bits clear. Workaround for Bitsy Bye bug:
         ;; https://github.com/ProDOS-8/ProDOS8-Testing/issues/68
         ldx     PRODOS_SYS_PATH
-   DO
+    DO
         asl     PRODOS_SYS_PATH,x
         lsr     PRODOS_SYS_PATH,x
         dex
-   WHILE_NOT_ZERO
+    WHILE_NOT_ZERO
 
         ;; Strip last filename segment
         ldx     PRODOS_SYS_PATH
@@ -1521,7 +1521,7 @@ file_loop:
 
 done:   dex
         stx     src_path
-   END_IF
+    END_IF
         rts
 .endproc ; RemoveFilenameFromSrcPath
 

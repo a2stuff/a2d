@@ -186,17 +186,17 @@ UNSUPPRESS_SHADOW_WARNING
 
         ;; Copy param data to `command_data`
         ldy     #kMaxCommandDataSize-1
-     DO
+    DO
         copy8   (params_addr),y, command_data,y
         dey
-     WHILE_POS
+    WHILE_POS
 
         ;; Cache static copy of the record in `lbr_copy`, for convenience
         ldy     #.sizeof(LBTK::ListBoxRecord)-1
-     DO
+    DO
         copy8   (a_record),y, lbr_copy,y
         dey
-     WHILE_POS
+    WHILE_POS
 
         ;; Invoke the command
         dispatch := *+1

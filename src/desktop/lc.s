@@ -70,10 +70,10 @@ ASSERT_EQUALS *, WriteSettingFromAux, "entry point"
 
         ;; Copy the params here
         ldy     #3      ; ptr is off by 1
-   DO
+    DO
         copy8   (params_src),y, params-1,y
         dey
-   WHILE_NOT_ZERO
+    WHILE_NOT_ZERO
 
         ;; Bank and call
         jsr     BankInAux
@@ -152,10 +152,10 @@ params:  .res    3
 
         ;; Copy somewhere easier to work with
         ldy     #.sizeof(MGTK::GrafPort)-1
-   DO
+    DO
         copy8   (port_ptr),y, desktop_grafport,y
         dey
-   WHILE_POS
+    WHILE_POS
 
         ;; Determine if the update's maprect is already below the header; if
         ;; not, we need to offset the maprect below the header to prevent
@@ -311,11 +311,11 @@ op:     lda     SELF_MODIFIED
 
         ;; Copy 4 bytes from stack to $6
         ldx     #3
-   DO
+    DO
         pla
         sta     $06,x
         dex
-   WHILE_POS
+    WHILE_POS
 
         ;; Restore return address to stack
         hi := *+1

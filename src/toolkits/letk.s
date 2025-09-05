@@ -157,7 +157,7 @@ penXOR:         .byte   MGTK::penXOR
 
         sub16   pos+MGTK::Point::xcoord, text_params+MGTK::TextWidthParams::width, pos+MGTK::Point::xcoord
         lsr16   pos+MGTK::Point::xcoord
-   END_IF
+    END_IF
 
         rts
 .endproc ; _CalcPos

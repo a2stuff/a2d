@@ -672,17 +672,17 @@ ret:    rts
 .proc CreateDstFile
         ;; Copy `file_type`, `aux_type`, and `storage_type`
         ldx     #(get_src_file_info_params::storage_type - get_src_file_info_params)
-   DO
+    DO
         copy8   get_src_file_info_params,x, create_params2,x
         dex
-   WHILE_X_NE   #(get_src_file_info_params::file_type - get_src_file_info_params) - 1
+    WHILE_X_NE  #(get_src_file_info_params::file_type - get_src_file_info_params) - 1
 
         MLI_CALL CREATE, create_params2
-   IF_CS
-     IF_A_NE    #ERR_DUPLICATE_FILENAME
+    IF_CS
+      IF_A_NE   #ERR_DUPLICATE_FILENAME
         jmp     HandleErrorCode
-     END_IF
-   END_IF
+      END_IF
+    END_IF
         clc                     ; treated as success
         rts
 .endproc ; CreateDstFile

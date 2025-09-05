@@ -758,10 +758,10 @@ select_template:
 
         ;; Copy name into table
         ldy     str_sdname_buffer
-   DO
+    DO
         copy8   str_sdname_buffer,y, (devname_ptr),y
         dey
-   WHILE_POS
+    WHILE_POS
 
 next:   pla
         dec     device_index
@@ -781,12 +781,12 @@ cvi_result:
         ;; Remove device num in X from devices list
 .proc RemoveDevice
         dex
-   DO
+    DO
         inx
         copy8   DEVLST+1,x, DEVLST,x
         copy8   main::device_to_icon_map+1,x, main::device_to_icon_map,x
         cpx     DEVCNT
-   WHILE_NOT_ZERO
+    WHILE_NOT_ZERO
         dec     DEVCNT
 
         ;; ProDOS requires an ON_LINE call after a device is

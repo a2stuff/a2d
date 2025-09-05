@@ -196,14 +196,14 @@ kNumCursors = 4
 
         ;; Initialize cursors
         copy8   #kNumCursors-1, index
-   DO
+    DO
         lda     index
         asl
         tax
         copy16  list,x, ptr
         jsr     ResetCursor
         dec     index
-   WHILE_POS
+    WHILE_POS
 
         ;; --------------------------------------------------
 
@@ -263,11 +263,11 @@ exit:   rts
         ldy     #Cursor::mode
         lda     (ptr),y
         and     #%00000001      ; Use low bit
-   IF_ZERO
+    IF_ZERO
         lda     #' '
-   ELSE
+    ELSE
         jsr     GetRandomChar
-   END_IF
+    END_IF
         ora     #$80
 
         ;; Draw it

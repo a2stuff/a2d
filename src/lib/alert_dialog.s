@@ -286,7 +286,7 @@ test:   sty     textwidth_params::length
         MGTK_CALL MGTK::MoveTo, pos_prompt2
         MGTK_CALL MGTK::DrawText, textwidth_params
         jmp     done
-   END_IF
+    END_IF
 
         ;; Split string over two lines.
         copy8   split_pos, textwidth_params::length

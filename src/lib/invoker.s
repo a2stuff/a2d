@@ -113,12 +113,12 @@ load_target:
 
         ;; Populate path to interpreter now that memory is free
         ldx     INVOKER_INTERPRETER
-     DO
+      DO
         lda    INVOKER_INTERPRETER,x
         sta     PRODOS_SYS_PATH,x
         sta     BITSY_SYS_PATH,x
         dex
-     WHILE_POS
+      WHILE_POS
 
         ;; When launching BASIS.SYSTEM, ProDOS 2.4's Bitsy Bye populates
         ;; $280 with the path containing the target file.

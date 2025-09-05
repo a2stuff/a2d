@@ -248,12 +248,12 @@ fail:   copy8   #$81, auxlc::source_disk_format ; Other
         ;; Zero out the volume bitmap
         add16   #volume_bitmap, auxlc::block_count_div8, ptr
         ldy     #0
-   DO
+    DO
         dec16   ptr
         tya
         sta     (ptr),y
         ecmp16  ptr, #volume_bitmap
-   WHILE_NE
+    WHILE_NE
 
         ;; Now mark block-pages used in memory bitmap
         page := $07          ; high byte of `volume_bitmap` from above

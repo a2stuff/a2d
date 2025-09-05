@@ -5291,10 +5291,10 @@ arbitrary_target:
         jne     ShowAlert       ; too long
 
         ldx     #kHeaderSize-1
-   DO
+    DO
         copy8   header,x, link_struct,x
         dex
-   WHILE_POS
+    WHILE_POS
 
         COPY_STRING path_buf3, link_struct::path
         lda     link_struct::path
@@ -8150,7 +8150,7 @@ records_base_ptr:
 
         lda     icontype_to_smicon_table,y
         tay
-   END_IF
+    END_IF
 
         ;; For populating `IconEntry::type`
         sty     icon_type
@@ -9423,10 +9423,10 @@ error:  pha                     ; save error
 success:
         lda     cvi_data_buffer ; dr/slot/name_len
         and     #NAME_LENGTH_MASK
-   IF_ZERO
+    IF_ZERO
         lda     cvi_data_buffer+1 ; if name len is zero, second byte is error
         jmp     error
-   END_IF
+    END_IF
 
         param_call AdjustOnLineEntryCase, cvi_data_buffer
         jsr     _CompareNames
@@ -9589,9 +9589,9 @@ finish: jsr     PopPointers     ; do not tail-call optimise!
 ;;; Input: A = icon num
 .proc FreeDesktopIconPosition
         ldx     #kMaxVolumes-1
-   DO
+    DO
         dex
-   WHILE_A_NE   desktop_icon_usage_table,x
+    WHILE_A_NE  desktop_icon_usage_table,x
         copy8   #0, desktop_icon_usage_table,x
         rts
 .endproc ; FreeDesktopIconPosition
@@ -9722,9 +9722,9 @@ step_loop:
         ;; Animate it
 
         bit     close_flag
-   IF_NC
+    IF_NC
         jmp     AnimateWindowOpenImpl
-   END_IF
+    END_IF
         jmp     AnimateWindowCloseImpl
 
 close_flag:
@@ -12919,10 +12919,10 @@ done:   stx     buf
         ldx     selected_icon_count
         stx     $800
         dex
-   DO
+    DO
         copy8   selected_icon_list,x, $0801,x
         dex
-   WHILE_POS
+    WHILE_POS
 
         jsr     ClearSelection
         ldx     #0
@@ -13746,9 +13746,9 @@ KeyHookRelay:
 
 .proc _HandleKeyOK
         BTK_CALL BTK::Flash, ok_button
-     IF_NS
+    IF_NS
         return  #$FF            ; ignore
-     END_IF
+    END_IF
         return  #PromptResult::ok
 .endproc ; _HandleKeyOK
 
@@ -14027,11 +14027,11 @@ finish: ldy     #0              ; Write sentinel
 
         ;; Append filename
         ldx     #0
-   DO
+    DO
         inx
         iny
         copy8   str_desktop_file,x, tmp_path_buf,y
-   WHILE_X_NE   str_desktop_file
+    WHILE_X_NE  str_desktop_file
         sty     tmp_path_buf
 
         ;; Write the file

@@ -553,11 +553,11 @@ start:
 
         ;; Search for alert in table, set Y to index
         ldy     #kNumAlerts-1
-   DO
+    DO
         cmp     alert_table,y
         beq     :+
         dey
-   WHILE_POS
+    WHILE_POS
         iny                     ; default
 :
 

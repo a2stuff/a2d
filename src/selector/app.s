@@ -506,11 +506,11 @@ set_startup_menu_items:
         ;; Copy pattern from settings
         tmp_pattern := $00
         ldx     #DeskTopSettings::pattern + .sizeof(MGTK::Pattern)-1
-   DO
+    DO
         jsr     ReadSetting
         sta     tmp_pattern - DeskTopSettings::pattern,x
         dex
-   WHILE_X_NE   #AS_BYTE(DeskTopSettings::pattern-1)
+    WHILE_X_NE  #AS_BYTE(DeskTopSettings::pattern-1)
 
         MGTK_CALL MGTK::SetDeskPat, tmp_pattern
 
@@ -1016,28 +1016,28 @@ not_return:
 .proc PopulateEntriesFlagTable
         ldx     #kSelectorListNumEntries - 1
         lda     #$FF
-   DO
+    DO
         sta     entries_flag_table,x
         dex
-   WHILE_POS
+    WHILE_POS
 
         ldx     #0
-   DO
+    DO
         BREAK_IF_X_EQ num_primary_run_list_entries
         txa
         sta     entries_flag_table,x
         inx
-   WHILE_NOT_ZERO
+    WHILE_NOT_ZERO
 
         ldx     #0
-   DO
+    DO
         BREAK_IF_X_EQ num_secondary_run_list_entries
         txa
         clc
         adc     #8
         sta     entries_flag_table+8,x
         inx
-   WHILE_NOT_ZERO
+    WHILE_NOT_ZERO
 
         rts
 .endproc ; PopulateEntriesFlagTable
@@ -1149,7 +1149,7 @@ found:  ldy     DEVLST,x
     DO
         copy8   DEVLST+1,x, DEVLST,x
         inx
-     WHILE_X_NE DEVCNT
+    WHILE_X_NE  DEVCNT
 
         ;; Place it at the end
         tya

@@ -790,10 +790,10 @@ not_00: cmp     #%01000000
         ldy     #0
         lda     read_buf
 
-     DO
+    DO
         jsr     Write
         dec     count
-     WHILE_NOT_ZERO
+    WHILE_NOT_ZERO
 
         jmp     loop
 
