@@ -319,7 +319,7 @@ common: bit     dragwindow_params::moved
 
         ;; Check all the button rects
         copy8   #kNumButtons-1, index
-loop:
+    DO
         index := *+1
         lda     #SELF_MODIFIED_BYTE
         asl
@@ -328,13 +328,13 @@ loop:
         add16_8 rect_addr, #BTK::ButtonRecord::rect
 
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr
-        beq     next
+      IF_NOT_ZERO
 
         lda     index
         jmp     ToggleButton
-
-next:   dec     index
-        bpl     loop
+      END_IF
+        dec     index
+    WHILE_POS
 
         ;; ----------------------------------------
 
@@ -358,7 +358,7 @@ next:   dec     index
         param_call DrawString, view_style_label_str
 
         copy8   #kNumButtons-1, index
-loop:
+    DO
         index := *+1
         lda     #SELF_MODIFIED_BYTE
         asl
@@ -368,9 +368,9 @@ loop:
 
         lda     #BTK::kButtonStateNormal
         ldx     current_view_index
-    IF_X_EQ     index
+      IF_X_EQ   index
         lda     #BTK::kButtonStateChecked
-    END_IF
+      END_IF
 
         ldy     #BTK::ButtonRecord::state
         rec_addr := *+1
@@ -379,7 +379,7 @@ loop:
         BTK_CALL BTK::RadioDraw, SELF_MODIFIED, params_addr
 
         dec     index
-        bpl     loop
+    WHILE_POS
 
         ;; --------------------------------------------------
 

@@ -537,7 +537,8 @@ update: lda     #0
         MGTK_CALL MGTK::SetPenSize, grid_pen
 
         copy8   #kNumGridLines - 1, index
-lloop:  lda     index
+      DO
+        lda     index
         asl                     ; *8 == .sizeof(MGTK::Point) * 2
         asl
         asl
@@ -562,7 +563,7 @@ lloop:  lda     index
         MGTK_CALL MGTK::LineTo, SELF_MODIFIED, pt_end
 
         dec     index
-        bpl     lloop
+      WHILE_POS
     END_IF
 
         ;; --------------------------------------------------
@@ -571,7 +572,8 @@ lloop:  lda     index
         bit full_flag
     IF_MINUS
         copy8   #6, index
-dloop:  lda     index
+      DO
+        lda     index
         asl
         tax
         copy16  day_pos_table,x, pos_addr
@@ -595,7 +597,7 @@ dloop:  lda     index
         jsr     DrawString
 
         dec     index
-        bpl     dloop
+      WHILE_POS
     END_IF
 
         ;; --------------------------------------------------

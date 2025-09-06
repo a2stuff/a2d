@@ -300,8 +300,7 @@ notpencopy:     .byte   MGTK::notpencopy
 .proc DrawWindow
         ;; Defer if content area is not visible
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        bne     ret             ; obscured
-
+    IF_ZERO                     ; not obscured
         MGTK_CALL MGTK::SetPort, grafport
         MGTK_CALL MGTK::HideCursor
 
@@ -316,8 +315,9 @@ notpencopy:     .byte   MGTK::notpencopy
 
         copy8   #$80, force_draw_flag
         MGTK_CALL MGTK::ShowCursor
+    END_IF
 
-ret:    rts
+        rts
 .endproc ; DrawWindow
 
 ;;; ============================================================

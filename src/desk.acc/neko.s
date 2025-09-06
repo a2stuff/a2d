@@ -297,12 +297,12 @@ frame:  .byte   0
         copy16  #FRAMEBUFFER+kFrameSizeUndoubled*2, dst
         ldy     #0
 
-byte_loop:
+    DO
         dec16   src
         lda     (src),y
 
         ldx     #8
-bit_loop:
+      DO
         ror
         php
         ror     tmp+1
@@ -311,7 +311,7 @@ bit_loop:
         ror     tmp+1
         ror     tmp
         dex
-        bne     bit_loop
+      WHILE_NOT_ZERO
 
         rol     tmp
         rol     tmp+1
@@ -323,7 +323,7 @@ bit_loop:
         copy8   tmp, (dst),y
 
         dec     count
-        bne     byte_loop
+    WHILE_NOT_ZERO
         rts
 .endproc ; FrameDouble
 
@@ -918,9 +918,10 @@ scratch_frame_table:
 
 .proc DrawWindow
         jsr     GetSetPort
-        bne     ret             ; obscured
+    IF_ZERO                     ; not obscured
         JSR_TO_AUX aux::DrawGrowBox
-ret:    rts
+    END_IF
+        rts
 .endproc ; DrawWindow
 
 ;;; ============================================================
@@ -929,9 +930,10 @@ ret:    rts
 .proc GetSetPort
         ;; Defer if content area is not visible
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-        bne     ret
+    IF_ZERO
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
-ret:    rts
+    END_IF
+        rts
 .endproc ; GetSetPort
 
 ;;; ============================================================
@@ -948,13 +950,12 @@ cur_frame:                      ; NekoFrame::XXX
 
 .proc DrawCurrentFrame
         jsr     GetSetPort
-        bne     ret
-
+    IF_ZERO
         ;; Erase if needed
         bit     moved_flag
-    IF_NS
+      IF_NS
         JSR_TO_AUX aux::EraseFrame
-    END_IF
+      END_IF
 
         ;; Draw frame
         ldy     cur_frame       ; A,X are trashed by macro
@@ -965,8 +966,8 @@ cur_frame:                      ; NekoFrame::XXX
         sta     SPKR
         sta     SPKR
 .endif
-
-ret:    rts
+    END_IF
+        rts
 .endproc ; DrawCurrentFrame
 
 ;;; ============================================================

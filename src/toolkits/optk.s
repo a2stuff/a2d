@@ -178,10 +178,11 @@ grafport_win:   .tag    MGTK::GrafPort
 
 .proc UpdateImpl
         ldx     #0
-loop:   txa
+    DO
+        txa
 
         jsr     _CallIsEntryProc ; preserves A, sets N
-    IF_NC
+      IF_NC
         point := tmp_space
 
         ;; Is a real entry - prep to draw it
@@ -201,12 +202,11 @@ loop:   txa
         pha                     ; A = index
         jsr     DrawEntryProc
         pla                     ; A = index
-    END_IF
+      END_IF
 
         tax                     ; X = index
         inx
-        cpx     max_entries
-        bne     loop
+    WHILE_X_NE  max_entries
 
         rts
 .endproc ; UpdateImpl
@@ -294,20 +294,20 @@ key             .byte
         sbc     oprc_num_rows
     END_IF
 
-loop:
-    IF_A_EQ     max_entries_minus_one
+    DO
+      IF_A_EQ   max_entries_minus_one
         lda     #0              ; last, wrap to first
-    ELSE
+      ELSE
         clc
         adc     oprc_num_rows
-    END_IF
+      END_IF
 
-    IF_A_GE     max_entries
+      IF_A_GE   max_entries
         sec
         sbc     max_entries_minus_one
-    END_IF
+      END_IF
         jsr     _CallIsEntryProc
-        bmi     loop
+    WHILE_NS
 
         jmp     _SetSelectionAndNotify
 .endproc ; _HandleKeyRight

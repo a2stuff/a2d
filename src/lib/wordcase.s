@@ -14,26 +14,27 @@
         ;; Walk backwards through string. At char N, check char N-1; if
         ;; it is a letter, and char N is also a letter, lower-case it.
         tay
-
-loop:   dey
+    DO
+        dey
         beq     done
-        bpl     :+
+      IF_NEG
 done:   rts
+      END_IF
 
-:       lda     (ptr),y
+        lda     (ptr),y
         cmp     #'A'
         bcs     check_alpha
         dey
-        bpl     loop            ; always
+        CONTINUE_IF_POS         ; always
 
 check_alpha:
         iny
         lda     (ptr),y
         cmp     #'A'
-    IF_GE
+      IF_GE
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     (ptr),y
-    END_IF
+      END_IF
         dey
-        bpl     loop            ; always
+    WHILE_POS                   ; always
 .endscope

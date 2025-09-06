@@ -492,11 +492,12 @@ scrambled_flag:
 
         ;; init pieces
         ldy     #15
-loop:   tya
+    DO
+        tya
         sta     position_table,y
         sta     swapped_table,y
         dey
-        bpl     loop
+    WHILE_POS
 
         jsr     DrawWindow
         MGTK_CALL MGTK::FlushEvents
@@ -788,26 +789,29 @@ miss:   rts                     ; Click on hole, or not row/col with hole
         sec
         sbc     click_y
         tax
-bloop:  copy8   position_table-4,y, position_table,y
+
+    DO
+        copy8   position_table-4,y, position_table,y
         dey
         dey
         dey
         dey
         dex
-        bne     bloop
+    WHILE_NOT_ZERO
         beq     col
 
 after:  lda     click_y         ; click after hole
         sec
         sbc     hole_y
         tax
-aloop:  copy8   position_table+4,y, position_table,y
+    DO
+        copy8   position_table+4,y, position_table,y
         iny
         iny
         iny
         iny
         dex
-        bne     aloop
+    WHILE_NOT_ZERO
 .endproc ; ClickInCol
 
 col:    copy8   #kHolePiece, position_table,y
@@ -823,15 +827,15 @@ done:   jsr     CheckVictory
         ;; Yay! Play the sound 4 times
 .proc OnVictory
         ldx     #4
-loop:   txa
+    DO
+        txa
         pha
         jsr     PlaySound
         jsr     InvertWindow
         pla
         tax
         dex
-        bne     loop
-
+    WHILE_NOT_ZERO
         copy8   #0, scrambled_flag
 .endproc ; OnVictory
 
@@ -844,7 +848,7 @@ after_click:
 
 .proc DrawWindow
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        bne     ret             ; obscured
+    IF_ZERO                     ; not obscured
         MGTK_CALL MGTK::SetPort, setport_params
 
         MGTK_CALL MGTK::SetPattern, pattern_speckles
@@ -855,8 +859,8 @@ after_click:
         MGTK_CALL MGTK::Line, line_params
 
         jsr     DrawAll
-
-ret:    rts
+    END_IF
+        rts
 .endproc ; DrawWindow
 
 ;;; ============================================================
@@ -902,7 +906,8 @@ ret:    rts
         pla
         tay
 
-loop:   tya
+    DO
+        tya
         pha
         asl     a
         asl     a
@@ -918,8 +923,8 @@ loop:   tya
         clc
         adc     draw_inc
         tay
-        cpy     draw_end
-        bcc     loop
+    WHILE_Y_LT  draw_end
+
         MGTK_CALL MGTK::ShowCursor
         rts
 .endproc ; DrawSelected
@@ -1076,20 +1081,22 @@ nope:   clc
 
 redo:
         ldy     #3
-sloop:  tya
+
+    DO
+        tya
         pha
         ldx     position_table
         ldy     #0
-ploop:  copy8   position_table+1,y, position_table,y
+      DO
+        copy8   position_table+1,y, position_table,y
         iny
-        cpy     #15
-        bcc     ploop
+      WHILE_Y_LT #15
 
         stx     position_table+15
         pla
         tay
         dey
-        bne     sloop
+    WHILE_NOT_ZERO
 
         swap8   position_table, position_table+1
 

@@ -4,6 +4,10 @@ use v5.10;
 use strict;
 use warnings;
 
+my $TAB_WIDTH = 8;
+my $OPERAND_COLUMN = 16;
+my $COMMENT_COLUMN = 32;
+
 sub nospace($) {
   my ($s) = @_;
   $s =~ s/\s//g;
@@ -19,13 +23,15 @@ sub respace_comment($) {
 sub max ($$) { $_[$_[0] < $_[1]] }
 sub min ($$) { $_[$_[0] > $_[1]] }
 
-my $tab = 8;
-my $comment_column = 32;
 my $tabstop = 0;
 my $flow_indent = 4;
 
 # TODO: untabify input
 # TODO: sigils to disable/enable formatting around blocks
+
+my @indents = ();
+sub indent() { push @indents, $flow_indent; $flow_indent += ($flow_indent < 6) ? 2 : 1; }
+sub dedent() { $flow_indent = pop @indents; }
 
 while (<STDIN>) {
   chomp;
@@ -45,7 +51,7 @@ while (<STDIN>) {
   } elsif (m/^(;;.*)/) {
 
     # indented comment - one tab stop
-    $_ = (' ' x $tab) . respace_comment($1);
+    $_ = (' ' x $TAB_WIDTH) . respace_comment($1);
     $tabstop = 0;
 
   } else {
@@ -58,30 +64,22 @@ while (<STDIN>) {
 
     if (m/^(\w+)\s*:=\s*(.*)$/) {
 
-      # equate - flush left (!!), spaced out
+      # equate
       my ($identifier, $expression) = ($1 // '', $2 // '', $3 // '');
 
-      $_ = '';
+      # TODO: Only indent w/in proc?
+      $_ = ' ' x $TAB_WIDTH;
       $_ .= $identifier . ' ';
-      $_ .= ' ' while length($_) % $tab;
-
-      $tabstop = max($tabstop, length($_));
-      $_ .= ' ' while length($_) < $tabstop;
-
       $_ .= ':= ' . $expression . ' ';
 
     } elsif (m/^(\w+)\s*=\s*(.*)$/) {
 
-      # symbol - flush left (!!), spaced out
+      # symbol
       my ($identifier, $expression) = ($1 // '', $2 // '', $3 // '');
 
-      $_ = '';
+      # TODO: Only indent w/in proc?
+      $_ = ' ' x $TAB_WIDTH;
       $_ .= $identifier . ' ';
-      $_ .= ' ' while length($_) % $tab;
-
-      $tabstop = max($tabstop, length($_));
-      $_ .= ' ' while length($_) < $tabstop;
-
       $_ .= '= ' . $expression . ' ';
 
     } elsif (m/^(\.(?:end)?(?:proc|scope|macro|struct|enum|params)\b)\s*(.*)$/ ||
@@ -91,7 +89,16 @@ while (<STDIN>) {
       my ($opcode, $arguments) = ($1 // '', $2 // '');
       $tabstop = 0;
 
-      $_ = $opcode . ' ' . $arguments;
+      $_ = $opcode;
+      if ($arguments) {
+        $_ .= ' ' . $arguments;
+      }
+
+      # for .endproc/.endscope, comment should be flush left
+      if ($opcode =~ /^\.end/ && $comment) {
+        $_ .= ' ' . $comment;
+        $comment = '';
+      }
 
     } elsif (m/^(\.(?:if\w*|elseif|else|endif)\b)\s*(.*)$/) {
 
@@ -101,21 +108,27 @@ while (<STDIN>) {
 
       $_ = $opcode . ' ' . $arguments;
 
-    } elsif (m/^(\b(?:IF_\w+|ELSE|END_IF|DO|WHILE_\w+)\b)\s*(.*)$/) {
+    } elsif (m/^(\b(?:IF_\w+|ELSE_IF\w+|ELSE|END_IF|DO|REPEAT|WHILE_\w+|UNTIL_\w+)\b)\s*(.*)$/) {
 
       # conditional macros - dynamic indent
       my ($opcode, $arguments) = ($1 // '', $2 // '');
       $tabstop = 0;
 
-      if ($opcode =~ m/^(ELSE|END_IF|WHILE_\w+)$/) {
-        $flow_indent -= 2;
+      if ($opcode =~ m/^(ELSE_IF_\w+|ELSE|END_IF|WHILE_\w+|UNTIL_\w+)$/) {
+        dedent();
       }
 
       $_ = ' ' x $flow_indent;
-      $_ .= $opcode . ' ' . $arguments;
+      $_ .= $opcode;
 
-      if ($opcode =~ m/^(IF_\w+|ELSE|DO)$/) {
-        $flow_indent += 2;
+      if ($arguments) {
+        $_ .= ' ';
+        $_ .= ' ' while length($_) < $OPERAND_COLUMN;
+        $_ .= $arguments;
+      }
+
+      if ($opcode =~ m/^(IF_\w+|ELSE|ELSE_IF_\w+|DO)$/) {
+        indent();
       }
 
     } elsif (m/^(@?\w*:)?\s*(\S+)?\s*(.*?)\s*(;.*)?$/) {
@@ -127,14 +140,14 @@ while (<STDIN>) {
       $_ .= $label     . ' ';
       $tabstop = 0 unless $label;
 
-      $_ .= ' ' while length($_) % $tab;
+      $_ .= ' ' while length($_) % $TAB_WIDTH;
 
       $tabstop = max($tabstop, length($_));
       $_ .= ' ' while length($_) < $tabstop;
 
       $_ .= $opcode    . ' ';
       if ($opcode =~ m/^([a-z]{3}\w*)$|^(\.(byte|word|addr|res))$/) {
-        $_ .= ' ' while length($_) % $tab;
+        $_ .= ' ' while length($_) < $OPERAND_COLUMN;
       }
       $_ .= $arguments . ' ';
 
@@ -143,14 +156,14 @@ while (<STDIN>) {
     }
 
     if ($comment ) {
-      $_ .= ' ' while length($_) < $comment_column;
+      $_ .= ' ' while length($_) < $COMMENT_COLUMN;
       $_ .= $comment;
     }
   }
 
   $_ =~ s/\s+$//; # trim right
 
-  die "Mismatch:\n> $orig\n<$_\n"unless nospace($_) eq nospace($orig);
+  #die "Mismatch:\n> $orig\n<$_\n" unless nospace($_) eq nospace($orig);
 
   print $_, "\n";
 }

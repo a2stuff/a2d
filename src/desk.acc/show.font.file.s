@@ -266,7 +266,8 @@ END_PARAM_BLOCK
 
 
         copy8   #0, index
-loop:   lda     index
+    DO
+        lda     index
         asl
         tax
         copy16  line_addrs,x, ptr
@@ -287,8 +288,7 @@ loop:   lda     index
 
         inc     index
         lda     index
-        cmp     #kLineCount
-        bne     loop
+    WHILE_A_NE  #kLineCount
 
         MGTK_CALL MGTK::ShowCursor
         rts

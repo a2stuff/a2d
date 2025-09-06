@@ -131,12 +131,13 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         ptr2 := $08
 
         ;; Set BASL/H
-rloop:  jsr     VTAB
+    DO
+        jsr     VTAB
         add16   BASL, #save_buffer-$400, ptr1
         add16   ptr1, #$400, ptr2
         ldy     #39
 
-cloop:
+      DO
         ;; Main
         lda     (BASL),y
         sta     (ptr1),y
@@ -152,12 +153,11 @@ cloop:
         sta     PAGE2OFF
 
         dey
-        bpl     cloop
+      WHILE_POS
 
         inc     CV
         lda     CV
-        cmp     #24
-        bne     rloop
+    WHILE_A_NE  #24
 
         sta     CLR80STORE
         rts
@@ -173,12 +173,13 @@ cloop:
         ptr2 := $08
 
         ;; Set BASL/H
-rloop:  jsr     VTAB
+    DO
+        jsr     VTAB
         add16   BASL, #save_buffer-$400, ptr1
         add16   ptr1, #$400, ptr2
         ldy     #39
 
-cloop:
+      DO
         ;; Main
         lda     (ptr1),y
         sta     (BASL),y
@@ -190,12 +191,11 @@ cloop:
         sta     PAGE2OFF
 
         dey
-        bpl     cloop
+      WHILE_POS
 
         inc     CV
         lda     CV
-        cmp     #24
-        bne     rloop
+    WHILE_A_NE  #24
 
         sta     CLR80STORE
         rts

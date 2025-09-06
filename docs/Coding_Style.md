@@ -92,7 +92,7 @@ xcoord  .word
 
 * **Do** use `IF_xx` / `ELSE_IF_yy` / `ELSE` / `END_IF` macros to avoid throw-away local labels.
 
-* **Do** use `DO` / `BREAK_IF_xx` / `WHILE_yy` macros to avoid throw-away local labels.
+* **Do** use `DO` / `CONTINUE_IF_xx` / `BREAK_IF_xx` / `WHILE_yy` macros to avoid throw-away local labels.
 
 * Annotate fall-through. A `;; fall through` comment can be used, but the preferred form is with the `FALL_THROUGH_TO` assertion macro to prevent refactoring mistakes.
 

@@ -624,8 +624,10 @@ END_PARAM_BLOCK
         MGTK_CALL MGTK::MoveTo, params::coords
 
         ldx     num_icons
-        beq     failed
-loop:   dex
+    IF_NOT_ZERO
+
+      DO
+        dex
         txa
         pha
 
@@ -634,24 +636,22 @@ loop:   dex
         jsr     GetIconWin      ; A = window_id, sets `icon_ptr` too
 
         ;; Matching window?
-        cmp     params::window_id
-        bne     next            ; nope, ignore
-
+       IF_A_EQ  params::window_id
         ;; In poly?
         jsr     CalcIconPoly    ; requires `icon_ptr` set
         MGTK_CALL MGTK::InRect, bounding_rect
-        beq     next            ; nope, skip poly test
-
+        IF_NOT_ZERO
         MGTK_CALL MGTK::InPoly, poly
         bne     inside          ; yes!
+        END_IF
+       END_IF
 
-next:
         ;; Nope, next
         pla
         tax
-        bne     loop
+      WHILE_NOT_ZERO
+    END_IF
 
-failed:
         ;; Nothing found
         lda     #0
         beq     finish          ; always
@@ -702,7 +702,8 @@ peek:   MGTK_CALL MGTK::PeekEvent, peekevent_params
 
         ;; Compute mouse delta
         ldx     #2              ; loop over dimensions
-loop:   lda     findwindow_params,x
+    DO
+        lda     findwindow_params,x
         sec
         sbc     z:last_coords,x
         tay
@@ -718,7 +719,7 @@ loop:   lda     findwindow_params,x
 
 next:   dex
         dex
-        bpl     loop
+    WHILE_POS
         bmi     peek            ; always
 .endscope ; _DragDetectImpl
 
@@ -850,12 +851,13 @@ update_poly:
 
         copy16  polybuf_addr, poly_ptr
 ploop:  ldy     #2              ; offset in poly to first vertex
-vloop:  add16in (poly_ptr),y, poly_dx, (poly_ptr),y
+    DO
+        add16in (poly_ptr),y, poly_dx, (poly_ptr),y
         iny
         add16in (poly_ptr),y, poly_dy, (poly_ptr),y
         iny
-        cpy     #kIconPolySize
-        bne     vloop
+    WHILE_Y_NE #kIconPolySize
+
         ldy     #1              ; MGTK Polygon "not last" flag
         lda     (poly_ptr),y
     IF_NOT_ZERO
@@ -865,7 +867,7 @@ vloop:  add16in (poly_ptr),y, poly_dx, (poly_ptr),y
         sta     poly_ptr
         bcc     ploop
         inc     poly_ptr+1
-        bcs     ploop
+        bcs     ploop           ; TODO: Is this correct?
     END_IF
         jsr     _XDrawOutline
         jmp     peek
@@ -1009,23 +1011,22 @@ last_highlighted_icon:
 
         ldx     #0
         stx     index
-
-loop:   lda     icon_list,x
+    DO
+        lda     icon_list,x
         jsr     GetIconState
         and     #kIconEntryStateHighlighted
-        beq     next
-
+      IF_NOT_ZERO
         ldx     index
         lda     icon_list,x
 
         proc := *+1
         jsr     SELF_MODIFIED
+      END_IF
 
-next:   inc     index
+        inc     index
         index := *+1
         ldx     #SELF_MODIFIED_BYTE
-        cpx     num_icons
-        bne     loop
+    WHILE_X_NE  num_icons
 
         rts
 .endproc ; _IterateHighlightedIcons
@@ -1830,30 +1831,29 @@ END_PARAM_BLOCK
 
         ;; Loop over all icons
         ldx     #AS_BYTE(-1)
-loop:   inx
-        cpx     num_icons
-        beq     done
+    DO
+        inx
+        BREAK_IF_X_EQ num_icons
         txa
         pha
 
         copy8   icon_list,x, icon_in_rect_params::icon
-        jsr     GetIconWin      ; A = window_id, sets `icon_ptr` too
 
         ;; Is it in the target window?
-        cmp     params::window_id
-        bne     next            ; no, skip it
-
+        jsr     GetIconWin      ; A = window_id, sets `icon_ptr` too
+      IF_A_EQ params::window_id
         ;; In maprect?
         ITK_CALL IconTK::IconInRect, icon_in_rect_params
-        beq     next            ; no, skip it
-
+       IF_NOT_ZERO
         ITK_CALL IconTK::DrawIconRaw, icon_in_rect_params::icon
+       END_IF
+      END_IF
 
-next:   pla
+        pla
         tax
-        bpl     loop            ; always
+    WHILE_POS                   ; always
 
-done:   rts
+        rts
 .endproc ; DrawAllImpl
 
 ;;; ============================================================
@@ -1926,7 +1926,8 @@ END_PARAM_BLOCK
         COPY_BLOCK bounding_rect, icon_in_rect_params::rect
 
         ldx     num_icons
-loop:   dex                     ; any icons to draw?
+    DO
+        dex                     ; any icons to draw?
         RTS_IF_NEG
 
         txa
@@ -1943,26 +1944,26 @@ loop:   dex                     ; any icons to draw?
         bne     next
 
         bit     redraw_highlighted_flag
-    IF_NC
+      IF_NC
         ldy     #IconEntry::state
         lda     (icon_ptr),y
         and     #kIconEntryStateHighlighted
         bne     next
-    END_IF
+      END_IF
 
         ITK_CALL IconTK::IconInRect, icon_in_rect_params
-    IF_NOT_ZERO
+      IF_NOT_ZERO
         lda     clip_window_id
-      IF_ZERO
+       IF_ZERO
         ITK_CALL IconTK::DrawIcon, icon_in_rect_params::icon
-      ELSE
+       ELSE
         ITK_CALL IconTK::DrawIconRaw, icon_in_rect_params::icon
+       END_IF
       END_IF
-    END_IF
 
 next:   pla
         tax
-        bpl     loop            ; always
+    WHILE_POS                   ; always
 
 .endproc ; _RedrawIconsAfterErase
 

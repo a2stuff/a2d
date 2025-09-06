@@ -812,8 +812,8 @@ oval := $50
         copy16  #0, remainder
 
         ldy     #32
-
-loop:   asl32   quotient
+    DO
+        asl32   quotient
         asl     dividend
         rol     dividend+1
         rol     remainder
@@ -825,13 +825,13 @@ loop:   asl32   quotient
         tax
         lda     remainder+1
         sbc     divisor+1
-    IF_CS
+      IF_CS
         stx     remainder
         sta     remainder+1
         inc     quotient
-    END_IF
+      END_IF
         dey
-        bne     loop
+    WHILE_NOT_ZERO
 .endscope ; fixed_div
 
 

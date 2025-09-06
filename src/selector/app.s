@@ -416,21 +416,22 @@ done_keys:
         copy8   #0, slot_ptr
         ldx     #7              ; slot
 
-loop:   txa
+    DO
+        txa
         ora     #$C0            ; hi byte of $Cn00
         sta     slot_ptr+1
 
-        ldy     #$01        ; $Cn01 == $20 ?
+        ldy     #$01            ; $Cn01 == $20 ?
         lda     (slot_ptr),y
         cmp     #$20
         bne     next
 
-        ldy     #$03        ; $Cn03 == $00 ?
+        ldy     #$03            ; $Cn03 == $00 ?
         lda     (slot_ptr),y
         cmp     #$00
         bne     next
 
-        ldy     #$05        ; $Cn05 == $03 ?
+        ldy     #$05            ; $Cn05 == $03 ?
         lda     (slot_ptr),y
         cmp     #$03
         bne     next
@@ -442,7 +443,7 @@ loop:   txa
         sta     slot_table,y
 
 next:   dex
-        bne     loop
+    WHILE_NOT_ZERO
 .endscope
 
         ;; --------------------------------------------------
@@ -1827,14 +1828,16 @@ CheckBasicSystem        := CheckBasixSystemImpl::basic
         stax    ptr
         ldy     #$00
         lda     (ptr),y
-        beq     ret
+    IF_NOT_ZERO
         tay
-@loop:  lda     (ptr),y
+      DO
+        lda     (ptr),y
         jsr     ToUpperCase
         sta     (ptr),y
         dey
-        bne     @loop
-ret:    rts
+      WHILE_NOT_ZERO
+    END_IF
+        rts
 .endproc ; UpcaseString
 
 ;;; ============================================================

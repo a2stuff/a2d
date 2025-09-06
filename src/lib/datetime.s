@@ -108,15 +108,13 @@ clock_24hours:
 ;;; Output: X = tens, A = ones
 .proc _Split
         ldx     #0
-
-loop:   cmp     #10
-        bcc     done
+    DO
+        BREAK_IF_A_LT #10
         sec
         sbc     #10
         inx
-        bne     loop            ; always
-
-done:   rts
+    WHILE_NOT_ZERO              ; always
+        rts
 .endproc ; _Split
 
 .endproc ; MakeTimeString

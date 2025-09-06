@@ -95,8 +95,8 @@ deltac: .byte   31
 
         ldx     #kScreenHeight - 1
         stx     row
-
-yloop:  copylohi hires_table_lo,x, hires_table_hi,x, dst_ptr
+    DO
+        copylohi hires_table_lo,x, hires_table_hi,x, dst_ptr
 
         txa
         sec
@@ -112,11 +112,11 @@ yloop:  copylohi hires_table_lo,x, hires_table_hi,x, dst_ptr
 
         dec     row
         ldx     row
-        cpx     delta
-        bcs     yloop
+    WHILE_X_GE  delta
 
         ;; Black in at the top
-yloop2: lda     hires_table_lo,x
+    DO
+        lda     hires_table_lo,x
         sta     dst_ptr
         lda     hires_table_hi,x
         ora     #$20
@@ -129,7 +129,7 @@ yloop2: lda     hires_table_lo,x
         sta     (dst_ptr),y
 
         dex
-        bpl     yloop2
+    WHILE_POS
         rts
 
 row:    .byte   0

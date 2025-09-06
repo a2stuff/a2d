@@ -584,7 +584,7 @@ done:
 .proc _WriteDst
         ;; Always start off at start of copy buffer
         copy16  read_src_params::data_buffer, write_dst_params::data_buffer
-loop:
+    DO
         ;; Assume we're going to write everything we read. We may
         ;; later determine we need to write it out block-by-block.
         copy16  read_src_params::trans_count, write_dst_params::request_count
@@ -618,21 +618,21 @@ loop:
         copy16  write_dst_params::data_buffer, ptr ; first half
         ldy     #0
         tya
-    DO
+      DO
         ora     (ptr),y
         iny
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
 
         inc     ptr+1           ; second half
-    DO
+      DO
         ora     (ptr),y
         iny
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         tay
         bne     not_sparse
 
         ;; Block is all zeros, skip over it
-        add16_8  mark_dst_params::position+1, #.hibyte(BLOCK_SIZE)
+        add16_8 mark_dst_params::position+1, #.hibyte(BLOCK_SIZE)
         MLI_CALL SET_EOF, mark_dst_params
         MLI_CALL SET_MARK, mark_dst_params
         jmp     next_block
@@ -654,7 +654,7 @@ next_block:
         ;; Anything left to write?
         lda     read_src_params::trans_count
         ora     read_src_params::trans_count+1
-        bne     loop
+    WHILE_NOT_ZERO
         clc
         rts
 

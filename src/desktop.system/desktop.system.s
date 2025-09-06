@@ -665,14 +665,15 @@ dst_size:       .word   0
         sta     mark_dst_params::position+2
 
         ;; Read a chunk
-loop:   copy16  #kCopyBufferSize, read_src_params::request_count
+    DO
+        copy16  #kCopyBufferSize, read_src_params::request_count
         jsr     CheckCancel
         MLI_CALL READ, read_src_params
-    IF_CS
+      IF_CS
         cmp     #ERR_END_OF_FILE
         beq     close
 fail:   jmp     (hook_handle_error_code)
-    END_IF
+      END_IF
 
         ;; EOF?
         lda     read_src_params::trans_count
@@ -683,7 +684,7 @@ fail:   jmp     (hook_handle_error_code)
         jsr     CheckCancel
         jsr     _WriteDst
         bcs     fail
-        bcc     loop            ; always
+    WHILE_CC                    ; always
 
         ;; Close source and destination
 close:  MLI_CALL CLOSE, close_dst_params
@@ -704,7 +705,7 @@ close:  MLI_CALL CLOSE, close_dst_params
 .proc _WriteDst
         ;; Always start off at start of copy buffer
         copy16  read_src_params::data_buffer, write_dst_params::data_buffer
-loop:
+    DO
         ;; Assume we're going to write everything we read. We may
         ;; later determine we need to write it out block-by-block.
         copy16  read_src_params::trans_count, write_dst_params::request_count
@@ -738,20 +739,20 @@ loop:
         copy16  write_dst_params::data_buffer, ptr ; first half
         ldy     #0
         tya
-    DO
+      DO
         ora     (ptr),y
         iny
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         inc     ptr+1           ; second half
-    DO
+      DO
         ora     (ptr),y
         iny
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         tay
         bne     not_sparse
 
         ;; Block is all zeros, skip over it
-        add16_8  mark_dst_params::position+1, #.hibyte(BLOCK_SIZE)
+        add16_8 mark_dst_params::position+1, #.hibyte(BLOCK_SIZE)
         MLI_CALL SET_EOF, mark_dst_params
         MLI_CALL SET_MARK, mark_dst_params
         jmp     next_block
@@ -773,7 +774,7 @@ next_block:
         ;; Anything left to write?
         lda     read_src_params::trans_count
         ora     read_src_params::trans_count+1
-        bne     loop
+    WHILE_NOT_ZERO
         clc
         rts
 
@@ -1027,20 +1028,18 @@ copy_err_flag:
 
 .proc AppendFilenameToPath2
         lda     filename
-        beq     done_ret
-
+    IF_NOT_ZERO
         ldx     #$00
         ldy     path2
         copy8   #'/', path2+1,y
-loop:   iny
-        cpx     filename
-        bcs     done
+      DO
+        iny
+        BREAK_IF_X_GE filename
         copy8   filename+1,x, path2+1,y
         inx
-        bne     loop            ; always
-
-done:   sty     path2
-done_ret:
+      WHILE_NOT_ZERO            ; always
+        sty     path2
+    END_IF
         rts
 .endproc ; AppendFilenameToPath2
 
@@ -1048,18 +1047,18 @@ done_ret:
 
 .proc RemoveFilenameFromPath2
         ldx     path2
-        beq     done_ret
+    IF_NOT_ZERO
         lda     #'/'
-
-loop:   cmp     path2,x
+      DO
+        cmp     path2,x
         beq     done
         dex
-        bne     loop
+      WHILE_NOT_ZERO
         inx
 
 done:   dex
         stx     path2
-done_ret:
+    END_IF
         rts
 .endproc ; RemoveFilenameFromPath2
 
@@ -1067,20 +1066,19 @@ done_ret:
 
 .proc AppendFilenameToPath1
         lda     filename
-        beq     done_ret
-
+    IF_NOT_ZERO
         ldx     #0
         ldy     path1
         copy8   #'/', path1+1,y
-loop:   iny
-        cpx     filename
-        bcs     done
+      DO
+        iny
+        BREAK_IF_X_GE filename
         copy8   filename+1,x, path1+1,y
         inx
-        bne     loop            ; always
+      WHILE_NOT_ZERO            ; always
 
 done:   sty     path1
-done_ret:
+    END_IF
         rts
 .endproc ; AppendFilenameToPath1
 
@@ -1088,18 +1086,18 @@ done_ret:
 
 .proc RemoveFilenameFromPath1
         ldx     path1
-        beq     done_ret
+    IF_NOT_ZERO
         lda     #'/'
-
-loop:   cmp     path1,x
+      DO
+        cmp     path1,x
         beq     done
         dex
-        bne     loop
+      WHILE_NOT_ZERO
         inx
 
 done:   dex
         stx     path1
-done_ret:
+    END_IF
         rts
 .endproc ; RemoveFilenameFromPath1
 
@@ -1221,8 +1219,8 @@ str_slash_desktop:
 
 .proc SearchDevices
         copy8   DEVCNT, devnum
-
-loop:   ldx     devnum
+    DO
+        ldx     devnum
         lda     DEVLST,x
         ;; NOTE: Not masked with `UNIT_NUM_MASK` for tests below.
         sta     unit_num
@@ -1241,7 +1239,7 @@ loop:   ldx     devnum
         beq     test_unit_num
 
         ;; Smartport?
-        jsr     FindSmartportDispatchAddress ; handled unmasked unit num
+        jsr     FindSmartportDispatchAddress ; handles unmasked unit num
         bcs     next_unit
         stax    dispatch
         sty     status_params::unit_num
@@ -1269,7 +1267,7 @@ loop:   ldx     devnum
 
 next_unit:
         dec     devnum
-        bpl     loop
+    WHILE_POS
         jmp     DidNotCopy
 
         ;; Have a prospective device.
@@ -1372,7 +1370,7 @@ test_unit_num:
         copy8   dst_path, copied_flag ; reset on error
         copy8   #0, filenum
 
-file_loop:
+    DO
         jsr     UpdateProgress
 
         lda     filenum
@@ -1382,15 +1380,14 @@ file_loop:
         ldy     #0
         lda     (ptr),y
         tay
-    DO
+      DO
         copy8   (ptr),y, filename_buf,y
         dey
-    WHILE_POS
+      WHILE_POS
         jsr     CopyFile
         inc     filenum
         lda     filenum
-        cmp     #kNumFilenames
-        bne     file_loop
+    WHILE_A_NE #kNumFilenames
 
         jsr     UpdateProgress
         FALL_THROUGH_TO FinishDeskTopCopy

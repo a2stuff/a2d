@@ -269,7 +269,7 @@ loop:   lda     page
 
         lda     count
         cmp     auxlc::block_count_div8+1
-        beq     loop
+        beq     loop            ; TODO: `BLE` macro?
         bcc     loop
         rts
 .endscope
@@ -286,16 +286,16 @@ loop:   lda     page
 
         ;; Each volume bitmap block holds $200*8 bits, so keep reading
         ;; blocks until we've accounted for all blocks on the volume.
-loop:
+    DO
         lda     block_params::data_buffer+1
         jsr     MarkUsedInMemoryBitmap
         jsr     ReadBlock
-    IF_CS
+      IF_CS
         brk                     ; rude!
-    END_IF
+      END_IF
 
         sub16   block_count_div8, #$200, block_count_div8
-        lda     block_count_div8+1
+        lda     block_count_div8+1 ; TODO: This LDA can be removed
         RTS_IF_NEG
 
         lda     block_count_div8
@@ -304,7 +304,7 @@ loop:
         add16   block_params::data_buffer, #$200, block_params::data_buffer
 
         inc     block_params::block_num
-        bne     loop            ; always
+    WHILE_NOT_ZERO              ; always
 .endproc ; QuickCopy
 .endproc ; ReadVolumeBitmap
 
@@ -567,7 +567,8 @@ not_last:
         add16   #volume_bitmap, auxlc::block_count_div8, ptr
 
         ldy     #0
-loop:   dec16   ptr
+    DO
+        dec16   ptr
         lda     (ptr),y
 
         ;; Count 0 bits in byte
@@ -587,7 +588,7 @@ bloop:  asl
         sta     count+1
 
         ecmp16  ptr, #volume_bitmap
-        bne     loop
+    WHILE_NE
 
         ldax    count
         rts
@@ -736,7 +737,7 @@ loop:   lda     page_num
         count := *+1
         lda     #SELF_MODIFIED_BYTE
         cmp     auxlc::block_count_div8+1
-        beq     loop
+        beq     loop            ; TODO: `BLE` macro?
         bcc     loop
         rts
 
@@ -831,12 +832,11 @@ done:   rts
 .proc ReadBlockToLcbank1
         jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
-        bne     ret             ; failure
-
+    IF_ZERO
         jsr     CopyFromBlockBuffer
         lda     #0              ; success
-
-ret:    rts
+    END_IF
+        rts
 .endproc ; ReadBlockToLcbank1
 
 ;;; ============================================================
@@ -847,8 +847,7 @@ ret:    rts
 .proc ReadBlockToLcbank2
         jsr     PrepBlockPtrs
         jsr     ReadBlockWithRetry
-        bne     ret             ; failure
-
+    IF_ZERO
         bit     LCBANK2
         bit     LCBANK2
 
@@ -858,8 +857,8 @@ ret:    rts
         bit     LCBANK1
 
         lda     #0              ; success
-
-ret:    rts
+    END_IF
+        rts
 .endproc ; ReadBlockToLcbank2
 
 ;;; ============================================================
@@ -872,14 +871,13 @@ ret:    rts
 
         ldy     #$FF
         iny
-
-loop:   lda     default_block_buffer,y
+    DO
+        lda     default_block_buffer,y
         sta     (ptr1),y
         lda     default_block_buffer+$100,y
         sta     (ptr2),y
         iny
-        bne     loop
-
+    WHILE_NOT_ZERO
         rts
 .endproc ; CopyFromBlockBuffer
 
@@ -945,13 +943,13 @@ done:   rts
 
         ldy     #$FF
         iny
-loop:   lda     (ptr1),y
+    DO
+        lda     (ptr1),y
         sta     default_block_buffer,y
         lda     (ptr2),y
         sta     default_block_buffer+$100,y
         iny
-        bne     loop
-
+    WHILE_NOT_ZERO
         rts
 .endproc ; CopyToBlockBuffer
 

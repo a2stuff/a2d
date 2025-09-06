@@ -187,7 +187,8 @@ pattern_plaid:
         MGTK_CALL MGTK::FrameRect, meter_frame
 
         lda     #0
-loop:   pha
+    DO
+        pha
         sta     ticks_muldiv_params::numerator
         MGTK_CALL MGTK::MulDiv, ticks_muldiv_params
         add16   meter_left::x1, ticks_muldiv_params::result, pt_tick::xcoord
@@ -203,8 +204,7 @@ loop:   pha
         pla
         clc
         adc     #1
-        cmp     #kSpeedMax+1
-        bcc     loop
+    WHILE_A_LT  #kSpeedMax+1
 
         lda     #BTK::kButtonStateChecked
         sta     radio_60hz_button::state
@@ -430,6 +430,13 @@ done:   jmp     InputLoop
         bit     LCBANK1
         cmp     #0
 
+.macro SPIN_CPU
+        ldx     #$20            ; IIgs slows to read VBL; spin
+:       dex                     ; here so bulk of loop is fast.
+        bne     :-              ; c/o Kent Dickey
+.endmacro
+
+
     IF_NE
         ;; IIe / IIgs
 
@@ -440,25 +447,17 @@ done:   jmp     InputLoop
         bmi     :-              ; start off with high bit clear
 
         ;; Loop until full cycle seen
-loop1:
+      DO
         inc16   counter
-
-        ldx     #$20            ; IIgs slows to read VBL; spin
-:       dex                     ; here so bulk of loop is fast.
-        bne     :-              ; c/o Kent Dickey
-
+        SPIN_CPU
         bit     RDVBLBAR
-        bpl     loop1
+      WHILE_NC
 
-loop2:
+      DO
         inc16   counter
-
-        ldx     #$20            ; IIgs slows to read VBL; spin
-:       dex                     ; here so bulk of loop is fast.
-        bne     :-              ; c/o Kent Dickey
-
+        SPIN_CPU
         bit     RDVBLBAR
-        bmi     loop2
+      WHILE_NS
     ELSE
         ;; IIc
 
@@ -479,26 +478,22 @@ loop2:
         bit     IOUDISON        ; = RDIOUDIS (since PTRIG would slow)
 
         ;; Wait for VBL
-loop2c:
+      DO
         inc16   counter
-
-        ldx     #$20            ; IIgs slows to read VBL; spin
-:       dex                     ; here so bulk of loop is fast.
-        bne     :-              ; c/o Kent Dickey
-
+        SPIN_CPU
         bit     RDVBLBAR
-        bpl     loop2c
+      WHILE_NC
         bit     IOUDISON        ; = RDIOUDIS (since PTRIG would slow)
 
         pla                     ; restore VBL interrupt state
-        bmi     :+
+      IF_NC
         sta     DISVBL
-:
+      END_IF
 
         pla                     ; restore IOUDIS state
-        bmi     :+
+      IF_NC
         sta     IOUDISON
-:
+      END_IF
     END_IF
 
         plp

@@ -749,7 +749,7 @@ IterationCallback:
         dey
     WHILE_POS
 
-loop:
+    DO
         lda     path
         pha
 
@@ -764,13 +764,13 @@ loop:
         copy8   #'/', path,x
         ldy     #0
         copy8   (ptr),y, len
-    DO
+      DO
         iny
         inx
         copy8   (ptr),y, path,x
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-    WHILE_NE
+      WHILE_NE
         stx     path
 
         ;; Execute callback
@@ -783,8 +783,7 @@ loop:
 
         inc     index
         jsr     JUMP_TABLE_GET_SEL_COUNT
-        cmp     index
-        bne     loop
+    WHILE_A_NE  index
 
         rts
 

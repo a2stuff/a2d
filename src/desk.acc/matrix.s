@@ -99,12 +99,13 @@ kAuxPageClearByte  = $C0        ; light-green on black, for RGB cards
         ptr2 := $08
 
         ;; Set BASL/H
-rloop:  jsr     VTAB
+    DO
+        jsr     VTAB
         add16   BASL, #save_buffer-$400, ptr1
         add16   ptr1, #$400, ptr2
         ldy     #39
 
-cloop:
+      DO
         ;; Main
         copy8   (BASL),y, (ptr1),y
         copy8   #kMainPageClearByte, (BASL),y
@@ -116,12 +117,11 @@ cloop:
         sta     PAGE2OFF
 
         dey
-        bpl     cloop
+      WHILE_POS
 
         inc     CV
         lda     CV
-        cmp     #24
-        bne     rloop
+    WHILE_A_NE  #24
 
         sta     CLR80STORE
         rts
@@ -136,12 +136,13 @@ cloop:
         ptr2 := $08
 
         ;; Set BASL/H
-rloop:  jsr     VTAB
+    DO
+        jsr     VTAB
         add16   BASL, #save_buffer-$400, ptr1
         add16   ptr1, #$400, ptr2
         ldy     #39
 
-cloop:
+      DO
         ;; Main
         copy8   (ptr1),y, (BASL),y
 
@@ -151,12 +152,11 @@ cloop:
         sta     PAGE2OFF
 
         dey
-        bpl     cloop
+      WHILE_POS
 
         inc     CV
         lda     CV
-        cmp     #24
-        bne     rloop
+    WHILE_A_NE  #24
 
         sta     CLR80STORE
         rts
@@ -226,7 +226,7 @@ MainLoop:
         ;; Iterate over all cursors
         copy8   #kNumCursors-1, index
 
-CursorLoop:
+    DO
         lda     index
         asl
         tax
@@ -234,14 +234,14 @@ CursorLoop:
 
         jsr     Random
         and     #%00011111      ; 1/32 chance of reset
-    IF_ZERO
+      IF_ZERO
         jsr     ResetCursor
-    ELSE
+      ELSE
         jsr     AdvanceCursor
-    END_IF
+      END_IF
 
         dec     index
-        bpl     CursorLoop
+    WHILE_POS
         bmi     MainLoop        ; always
 
 exit:   rts

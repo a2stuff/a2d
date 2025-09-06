@@ -785,10 +785,11 @@ month_length_table:
         copy16  #str, ptr
 
         ldy     #kLength - 1
-loop:   copy8   month_name_table,x, (ptr),y
+    DO
+        copy8   month_name_table,x, (ptr),y
         dex
         dey
-        bpl     loop
+    WHILE_POS
 
         rts
 .endproc ; PrepareMonthString
@@ -881,7 +882,8 @@ dialog_result:  .byte   0
         ldx     #1
         copy16  #first_hit_rect, test_addr
 
-loop:   txa
+    DO
+        txa
         pha
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, test_addr
         bne     done
@@ -890,8 +892,7 @@ loop:   txa
         pla
         tax
         inx
-        cpx     #kNumHitRects+1
-        bne     loop
+    WHILE_X_NE  #kNumHitRects+1
 
         ldx     #0
         rts
@@ -1173,14 +1174,14 @@ fill_period:
 .proc Delay
         lda     #255
         sec
-loop1:  pha
-
-loop2:  sbc     #1
-        bne     loop2
-
+    DO
+        pha
+      DO
+        sbc     #1
+      WHILE_NOT_ZERO
         pla
         sbc     #1
-        bne     loop1
+    WHILE_NOT_ZERO
         rts
 .endproc ; Delay
 

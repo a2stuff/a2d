@@ -77,22 +77,22 @@ start:  JUMP_TABLE_MGTK_CALL MGTK::HideCursor
         copy16  #$2000, ptr
         ldy     #$00
 
-block_loop:
+    DO
         sta     SET80STORE
         sta     PAGE2ON
 
-    DO
+      DO
         lda     (ptr),y
         sta     BLOCK_BUFFER,y
         iny
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         inc     ptr+1
 
-    DO
+      DO
         lda     (ptr),y
         sta     BLOCK_BUFFER+$100,y
         iny
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
         inc     ptr+1
 
         sta     PAGE2OFF
@@ -101,8 +101,7 @@ block_loop:
         JUMP_TABLE_MLI_CALL WRITE, write_block_params
 
         lda     ptr+1
-        cmp     #$40
-        bne     block_loop
+    WHILE_A_NE  #$40
 
         ;; ----------------------------------------
         ;; Write main segment

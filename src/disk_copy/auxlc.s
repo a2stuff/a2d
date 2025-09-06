@@ -551,11 +551,11 @@ prompt_insert_source:
         ldx     #0
         lda     #kAlertMsgInsertSource ; X=0 means just show alert
         jsr     ShowAlertDialog
-        cmp     #kAlertResultOK
-        beq     :+              ; OK
+    IF_A_NE     #kAlertResultOK
         jmp     InitDialog      ; Cancel
+    END_IF
 
-:       copy8   #$00, source_disk_format ; ProDOS
+        copy8   #$00, source_disk_format ; ProDOS
 
         ;; --------------------------------------------------
         ;; Check source disk
@@ -823,8 +823,7 @@ check:  lda     current_drive_selection
         stx     message
 
         lda     source_drive_index
-        cmp     dest_drive_index
-        bne     ret
+    IF_A_EQ     dest_drive_index
 
         tax                     ; A = index
         lda     drive_unitnum_table,x
@@ -833,20 +832,20 @@ check:  lda     current_drive_selection
         pla                     ; A = unit num
         tay                     ; Y = unit num
 
-
         message := *+1
         lda     #SELF_MODIFIED_BYTE
-        ldx     #$80        ; X != 0 means Y=unit number, auto-dismiss
+        ldx     #$80            ; X != 0 means Y=unit number, auto-dismiss
         jsr     ShowAlertDialog
 
         cmp     #kAlertResultOK
-        beq     ret             ; OK
-
+      IF_NOT_ZERO
         pla                     ; Cancel
         pla
         jmp     InitDialog
+      END_IF
+    END_IF
 
-ret:    rts
+        rts
 .endproc ; MaybePromptDiskSwap
 
 ;;; ============================================================
@@ -901,14 +900,13 @@ menu_offset_table:
     END_IF
 
         lda     event_params::modifiers
-        bne     :+
+    IF_ZERO
         lda     event_params::key
-        cmp     #CHAR_ESCAPE
-        beq     :+
+      IF_A_NE   #CHAR_ESCAPE
         jmp     dialog_shortcuts
+      END_IF
+    END_IF
 
-        ;; Modifiers
-:
         ;; Keyboard-based menu selection
         copy8   event_params::key, menukey_params::which_key
         copy8   event_params::modifiers, menukey_params::key_mods

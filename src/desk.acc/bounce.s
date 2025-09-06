@@ -322,14 +322,15 @@ finish: jmp     InputLoop
         pos_ptr := $06
         copy16  #object_positions, pos_ptr
         ldx     #kNumObjects-1
-loop:   txa
+    DO
+        txa
         pha
 
         ldy     #.sizeof(MGTK::Point)-1
-    DO
+      DO
         copy8   (pos_ptr),y, object_params::viewloc,y
         dey
-    WHILE_POS
+      WHILE_POS
         MGTK_CALL MGTK::PaintBits, object_params
 
         add16_8 pos_ptr, #.sizeof(MGTK::Point)
@@ -337,7 +338,7 @@ loop:   txa
         pla
         tax
         dex
-        bpl     loop
+    WHILE_POS
 
         rts
 .endproc ; XDrawObjects
@@ -358,6 +359,7 @@ loop:   txa
         copy16  #object_positions, pos_ptr
         copy16  #object_deltas, delta_ptr
         ldx     #kNumObjects-1
+
 loop:   txa
         pha
 

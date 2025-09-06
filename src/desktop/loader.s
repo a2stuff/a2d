@@ -204,14 +204,14 @@ vector_buf:
         ;; Corresponding vectors are set before call
 .proc CopySegment
         ldy     #0
-loop:   lda     (src),y
-        sta     (dst),y
+    DO
+        copy8   (src),y, (dst),y
         iny
-        bne     loop
+        CONTINUE_IF_NOT_ZERO
         inc     src+1
         inc     dst+1
         dex
-        bne     loop
+    WHILE_NOT_ZERO
         rts
 .endproc ; CopySegment
 

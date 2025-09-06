@@ -124,16 +124,17 @@ col_loop:
         copy8   y_row, y_coord
 
         ;; Accumulate 8 pixels
-y_loop: lda     y_coord
+    DO
+        lda     y_coord
         jsr     ComputeHBASL    ; Row address in screen
 
         lda     col_num
         lsr     a               ; Even or odd column?
         tay
         sta     PAGE2OFF        ; By default, read main mem $2000-$3FFF
-    IF_CC                       ; But even columns come from aux, so...
+      IF_CC                     ; But even columns come from aux, so...
         sta     PAGE2ON         ; Read aux mem $2000-$3FFF
-    END_IF
+      END_IF
         lda     (hbasl),y       ; Grab the whole byte
         and     mask            ; Isolate the pixel we care about
         cmp     #1              ; Set carry if non-zero
@@ -143,7 +144,7 @@ y_loop: lda     y_coord
         ror     accum           ; Doubled
         inc     y_coord
         dec     count
-        bne     y_loop
+    WHILE_NOT_ZERO
 
         ;; Send the 8 pixels to the printer.
         lda     accum           ; Now output it

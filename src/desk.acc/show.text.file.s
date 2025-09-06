@@ -389,30 +389,30 @@ end:    rts
 .endproc ; OnVScrollThumbClick
 
 .proc OnVScrollBelowClick
-loop:   jsr     PageDown
+repeat: jsr     PageDown
         jsr     CheckButtonRelease
-        bcc     loop            ; repeat while button down
+        bcc     repeat            ; repeat while button down
         rts
 .endproc ; OnVScrollBelowClick
 
 .proc OnVScrollAboveClick
-loop:   jsr     PageUp
+repeat: jsr     PageUp
         jsr     CheckButtonRelease
-        bcc     loop            ; repeat while button down
+        bcc     repeat            ; repeat while button down
         rts
 .endproc ; OnVScrollAboveClick
 
 .proc OnVScrollDownClick
-loop:   jsr     ScrollDown
+repeat: jsr     ScrollDown
         jsr     CheckButtonRelease
-        bcc     loop            ; repeat while button down
+        bcc     repeat            ; repeat while button down
         rts
 .endproc ; OnVScrollDownClick
 
 .proc OnVScrollUpClick
-loop:   jsr     ScrollUp
+repeat: jsr     ScrollUp
         jsr     CheckButtonRelease
-        bcc     loop            ; repeat while button down
+        bcc     repeat            ; repeat while button down
         rts
 .endproc ; OnVScrollUpClick
 

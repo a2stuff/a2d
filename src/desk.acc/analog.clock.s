@@ -111,7 +111,8 @@ exit:
         lda     #0
         sta     tindex
         sta     tfives
-tloop:  ldx     tindex
+    DO
+        ldx     tindex
         txa
         asl
         tax
@@ -120,23 +121,22 @@ tloop:  ldx     tindex
         copy16  ticks_outer_ys,x, pt1::ycoord
 
         lda     tfives
-    IF_ZERO
+      IF_ZERO
         copy16  ticks_inner2_xs,x, pt2::xcoord
         copy16  ticks_inner2_ys,x, pt2::ycoord
         copy8   #4, tfives
-    ELSE
+      ELSE
         copy16  ticks_inner1_xs,x, pt2::xcoord
         copy16  ticks_inner1_ys,x, pt2::ycoord
         dec     tfives
-    END_IF
+      END_IF
 
         MGTK_CALL MGTK::MoveTo, pt1
         MGTK_CALL MGTK::LineTo, pt2
 
         inc     tindex
         lda     tindex
-        cmp     #60
-        bne     tloop
+    WHILE_A_NE  #60
 
         rts
 

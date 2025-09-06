@@ -358,9 +358,7 @@ ep_size = * - ep_start
         jsr     CopyEventDataToMain
 
         lda     findwindow_params::window_id
-        cmp     #aux::kDAWindowId
-        bne     ret
-
+    IF_A_EQ     #aux::kDAWindowId
         lda     findwindow_params::which_area
         cmp     #MGTK::Area::close_box
         beq     HandleClose
@@ -368,8 +366,8 @@ ep_size = * - ep_start
         beq     HandleDrag
         cmp     #MGTK::Area::content
         beq     HandleClick
-
-ret:    lda     #$FF            ; not a button
+    END_IF
+        lda     #$FF            ; not a button
         rts
 .endproc ; HandleDown
 
@@ -608,7 +606,7 @@ done:   rts
         stax    ptr
 
         JUMP_TABLE_MGTK_CALL MGTK::GetWinPort, aux::getwinport_params
-        bne     ret
+    IF_ZERO
         JUMP_TABLE_MGTK_CALL MGTK::SetPort, aux::grafport
 
         ;; Copy rectangle
@@ -634,7 +632,8 @@ done:   rts
         ;; Invert it
         JUMP_TABLE_MGTK_CALL MGTK::SetPenMode, aux::penXOR
         JUMP_TABLE_MGTK_CALL MGTK::PaintRect, aux::tmp_rect
-ret:    rts
+    END_IF
+        rts
 
 rect:   .tag    MGTK::Rect
 

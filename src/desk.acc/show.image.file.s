@@ -535,7 +535,8 @@ fail:   sec                     ; failure
         spill   := $08          ; spill-over
 
         lda     #0              ; row
-rloop:  pha
+    DO
+        pha
         tax
         copy8   hires_table_lo,x, ptr
         copy8   hires_table_hi,x, ptr+1
@@ -544,7 +545,8 @@ rloop:  pha
 
         copy8   #0, spill       ; spill-over
 
-cloop:  lda     (ptr),y
+      DO
+        lda     (ptr),y
         tax
 
         bmi     hibitset
@@ -582,13 +584,12 @@ next:
         sta     spill
 
         dey
-        bpl     cloop
+      WHILE_POS
 
         pla
         clc
         adc     #1
-        cmp     #kRows
-        bne     rloop
+    WHILE_A_NE  #kRows
 
 done:   rts
 .endproc ; HRToDHR
@@ -1095,7 +1096,7 @@ packed_flag:
 
         copy8   #>.loword(SHR_SCREEN), dest+1
 
-loop:
+    DO
         ;; Load data
         JUMP_TABLE_MLI_CALL READ, read_params
 
@@ -1111,9 +1112,9 @@ loop:
         rep     #$30            ; 16-bit accum/memory, index registers
         phb                     ; preserve data bank
         ldx     #hires          ; source
-        dest := *+1             ; destination
+        dest := *+1              ; destination
         ldy     #.loword(SHR_SCREEN) ; high byte is self-modified
-        lda     #kHiresSize-1        ; length-1
+        lda     #kHiresSize-1   ; length-1
         mvn     #^hires, #^SHR_SCREEN
         plb                     ; restore data bank
 
@@ -1125,8 +1126,7 @@ loop:
         clc
         adc     #>kHiresSize
         sta     dest+1
-        cmp     #>(SHR_SCREEN+kSHRSize) ; done?
-        bne     loop
+    WHILE_A_NE  #>(SHR_SCREEN+kSHRSize)
 
         rts
 .endproc ; LoadUnpackedSHR

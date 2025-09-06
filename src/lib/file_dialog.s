@@ -671,9 +671,9 @@ done:   return  #0
     END_IF
 
         copy8   #0, index
-
+    DO
         index := *+1
-loop:   ldx     #SELF_MODIFIED_BYTE
+        ldx     #SELF_MODIFIED_BYTE
         lda     file_list_index,x
         and     #$7F
         jsr     _GetNthFilename
@@ -697,13 +697,12 @@ cloop:  lda     ($06),y
         iny
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-        bcc     cloop
+        bcc     cloop           ; TODO: `BLE` macro?
         beq     cloop
 
 next:   inc     index
         lda     index
-        cmp     num_file_names
-        bne     loop
+    WHILE_A_NE  num_file_names
         dec     index
 found:  return  index
 
@@ -1344,23 +1343,22 @@ finish:
         ldx     num_file_names
         dex
         stx     outer
-
+    DO
         outer := *+1
-oloop:  lda     #SELF_MODIFIED_BYTE
+        lda     #SELF_MODIFIED_BYTE
         jsr     _CalcPtr
         stax    ptr2
 
         lda     #0
         sta     inner
-
+      DO
         inner := *+1
-iloop:  lda     #SELF_MODIFIED_BYTE
+        lda     #SELF_MODIFIED_BYTE
         jsr     _CalcPtr
         stax    ptr1
 
         jsr     _CompareStrings
-        bcc     next
-
+       IF_GE
         ;; Swap
         ldx     inner
         ldy     outer
@@ -1369,15 +1367,14 @@ iloop:  lda     #SELF_MODIFIED_BYTE
         lda     outer
         jsr     _CalcPtr
         stax    ptr2
+       END_IF
 
-next:   inc     inner
+        inc     inner
         lda     inner
-        cmp     outer
-        bne     iloop
+      WHILE_A_NE outer
 
         dec     outer
-        bne     oloop
-
+    WHILE_NOT_ZERO
         rts
 
 .proc _CalcPtr
@@ -1395,8 +1392,8 @@ next:   inc     inner
         copy8   (ptr1),y, len1
         copy8   (ptr2),y, len2
         iny
-
-loop:   lda     (ptr2),y
+    DO
+        lda     (ptr2),y
         jsr     _ToUpperCase
         sta     char
         lda     (ptr1),y
@@ -1408,17 +1405,17 @@ loop:   lda     (ptr2),y
         ;; End of string 1?
         len1 := *+1
         cpy     #SELF_MODIFIED_BYTE
-    IF_EQ
+      IF_EQ
         cpy     len2            ; 1<2 or 1=2 ?
         rts
-    END_IF
+      END_IF
 
         ;; End of string 2?
         len2 := *+1
         cpy     #SELF_MODIFIED_BYTE
         beq     gt              ; 1>2
         iny
-        bne     loop            ; always
+    WHILE_NOT_ZERO              ; always
 
 gt:     lda     #$FF            ; Z=0
         sec

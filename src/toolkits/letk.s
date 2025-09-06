@@ -212,9 +212,9 @@ a_record  .addr
 
         ldy     #LETK::LineEditRecord::active_flag
         lda     (a_record),y
-        bmi     :+
+    IF_NC
 ret:    rts
-:
+    END_IF
 
         ldy     #LETK::LineEditRecord::caret_counter
         sub16in (a_record),y, #1, (a_record),y

@@ -476,12 +476,11 @@ intl_deci_sep:  .byte   0
         sta     calc_g
         sta     calc_l
 
-.scope
         ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
-loop:   copy8   chrget_routine-1,x, CHRGET-1,x
+    DO
+        copy8   chrget_routine-1,x, CHRGET-1,x
         dex
-        bne     loop
-.endscope
+    WHILE_NOT_ZERO
 
         lda     #0
         sta     ERRFLG          ; Turn off errors
@@ -1039,13 +1038,14 @@ rts3:   rts
 reparse:
         ;; Copy string to `FBUFFR`, mapping decimal char.
         ldx     #kTextBufferSize
-cloop:  lda     text_buffer1,x
-    IF_A_EQ     intl_deci_sep
+    DO
+        lda     text_buffer1,x
+      IF_A_EQ   intl_deci_sep
         lda     #'.'
-    END_IF
+      END_IF
         sta     FBUFFR,x
         dex
-        bpl     cloop
+    WHILE_POS
         copy16  #FBUFFR, TXTPTR
         jsr     CHRGET
         ROM_CALL FIN
@@ -1217,18 +1217,20 @@ done:   lda     button_state                    ; high bit set if button down
 
 .proc ResetBuffer1
         ldy     #kTextBufferSize
-loop:   copy8   #' ', text_buffer1-1,y
+    DO
+        copy8   #' ', text_buffer1-1,y
         dey
-        bne     loop
+    WHILE_NOT_ZERO
         copy8   #'0', text_buffer1 + kTextBufferSize
         rts
 .endproc ; ResetBuffer1
 
 .proc ResetBuffer2
         ldy     #kTextBufferSize
-loop:   copy8   #' ', text_buffer2-1,y
+    DO
+        copy8   #' ', text_buffer2-1,y
         dey
-        bne     loop
+    WHILE_NOT_ZERO
         copy8   #'0', text_buffer2 + kTextBufferSize
         rts
 .endproc ; ResetBuffer2
@@ -1377,16 +1379,15 @@ loop:   ldy     #0
 
 PROC_AT chrget_routine, ::CHRGET
         dummy_addr := $EA60
-
-loop:   inc16   TXTPTR
+    DO
+        inc16   TXTPTR
 
         .assert * + 1 = TXTPTR, error, "misaligned routine"
         lda     dummy_addr      ; this ends up being aligned on TXTPTR
 
         cmp     #'9'+1          ; after digits?
         bcs     end
-        cmp     #' '            ; space? keep going
-        beq     loop
+    WHILE_A_EQ  #' '            ; space? keep going
         sec
         sbc     #'0'            ; convert to digit...
         sec

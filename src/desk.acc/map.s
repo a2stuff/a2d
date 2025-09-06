@@ -399,12 +399,13 @@ loop:
         bne     next
 
         tay
-cloop:  lda     buf_search,y
+    DO
+        lda     buf_search,y
         jsr     ToUpperCase
         cmp     (ptr),y
         bne     next
         dey
-        bne     cloop
+    WHILE_NOT_ZERO
 
         ;; Match!
         ldy     #0
@@ -522,9 +523,10 @@ notpencopy:     .byte   MGTK::notpencopy
 
 .proc SetPort
         MGTK_CALL MGTK::GetWinPort, getwinport_params
-        bne     ret
+    IF_ZERO
         MGTK_CALL MGTK::SetPort, grafport_win
-ret:    rts
+    END_IF
+        rts
 .endproc ; SetPort
 
 ;;; ============================================================
@@ -562,8 +564,7 @@ done:   jmp     InputLoop
 
         ;; Defer if content area is not visible
         jsr     SetPort
-        bne     ret
-
+    IF_ZERO
         MGTK_CALL MGTK::HideCursor
 
         ;; ==============================
@@ -574,9 +575,9 @@ done:   jmp     InputLoop
         MGTK_CALL MGTK::PaintBitsHC, map_params
 
         MGTK_CALL MGTK::MoveTo, lat_label_pos
-        param_call DrawString, lat_label_str
+        param_call      DrawString, lat_label_str
         MGTK_CALL MGTK::MoveTo, long_label_pos
-        param_call DrawString, long_label_str
+        param_call      DrawString, long_label_str
 
         jsr     DrawLatLong
 
@@ -588,8 +589,8 @@ done:   jmp     InputLoop
         ;; ==============================
 
         MGTK_CALL MGTK::ShowCursor
-
-ret:    rts
+    END_IF
+        rts
 
 .endproc ; DrawWindow
 

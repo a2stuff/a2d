@@ -308,7 +308,7 @@ common:
 
         ;; Check all the button rects
         copy8   #kNumButtons-1, index
-loop:
+    DO
         index := *+1
         lda     #SELF_MODIFIED_BYTE
         asl
@@ -317,13 +317,13 @@ loop:
         add16_8 rect_addr, #BTK::ButtonRecord::rect
 
         MGTK_CALL MGTK::InRect, SELF_MODIFIED, rect_addr
-        beq     next
-
+      IF_NOT_ZERO
         lda     index
         jmp     ToggleButton
+      END_IF
 
-next:   dec     index
-        bpl     loop
+        dec     index
+    WHILE_POS
 
         ;; ----------------------------------------
 
@@ -344,7 +344,7 @@ next:   dec     index
         ;; --------------------------------------------------
 
         copy8   #kNumButtons-1, index
-loop:
+    DO
         index := *+1
         lda     #SELF_MODIFIED_BYTE
         asl
@@ -365,7 +365,7 @@ loop:
         BTK_CALL BTK::CheckboxDraw, SELF_MODIFIED, params_addr
 
         dec     index
-        bpl     loop
+    WHILE_POS
 
         ;; --------------------------------------------------
 

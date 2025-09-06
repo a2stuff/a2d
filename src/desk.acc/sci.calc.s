@@ -580,9 +580,10 @@ init:
 
 .proc CopyToB1
         ldx     #sizeof_chrget_routine + 4 ; should be just + 1 ?
-loop:   copy8   chrget_routine-1,x, CHRGET-1,x
+    DO
+        copy8   chrget_routine-1,x, CHRGET-1,x
         dex
-        bne     loop
+    WHILE_NOT_ZERO
 .endproc ; CopyToB1
 
         lda     #0
@@ -1417,18 +1418,20 @@ invert_rect:
 
 .proc ResetBuffer1
         ldy     #kTextBufferSize
-loop:   copy8   #' ', text_buffer1-1,y
+    DO
+        copy8   #' ', text_buffer1-1,y
         dey
-        bne     loop
+    WHILE_NOT_ZERO
         copy8   #'0', text_buffer1 + kTextBufferSize
         rts
 .endproc ; ResetBuffer1
 
 .proc ResetBuffer2
         ldy     #kTextBufferSize
-loop:   copy8   #' ', text_buffer2-1,y
+    DO
+        copy8   #' ', text_buffer2-1,y
         dey
-        bne     loop
+    WHILE_NOT_ZERO
         copy8   #'0', text_buffer2 + kTextBufferSize
         rts
 .endproc ; ResetBuffer2
@@ -1550,15 +1553,16 @@ label:  .addr   0
 PROC_AT chrget_routine, ::CHRGET
         dummy_addr := $EA60
 
-loop:   inc16   TXTPTR
+    DO
+        inc16   TXTPTR
 
         .assert * + 1 = TXTPTR, error, "misaligned routine"
         lda     dummy_addr      ; this ends up being aligned on TXTPTR
 
         cmp     #'9'+1          ; after digits?
         bcs     end
-        cmp     #' '            ; space? keep going
-        beq     loop
+    WHILE_A_EQ  #' '            ; space? keep going
+
         sec
         sbc     #'0'            ; convert to digit...
         sec

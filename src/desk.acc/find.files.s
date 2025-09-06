@@ -384,13 +384,15 @@ search:
         ldy     buf_search
         copy8   #0, pattern,y   ; null-terminate
         cpy     #0
-        beq     endloop
-loop:   lda     buf_search,y    ; copy characters
+    IF_NOT_ZERO
+      DO
+        lda     buf_search,y    ; copy characters
         jsr     ToUpperCase
         sta     pattern-1,y
         dey
-        bne     loop
-endloop:
+      WHILE_NOT_ZERO
+    END_IF
+
         copy16  #pattern, STARTLO
         copy16  #pattern+kMaxFilenameLength, ENDLO
         copy16  #main__RecursiveCatalog__pattern, DESTINATIONLO
@@ -1301,14 +1303,15 @@ string:         .res    16      ; 15 + null terminator
         tay
         copy8   #0, string,y    ; null-terminate
         cpy     #0
-        beq     endloop
-loop:   lda     (entPtr),y      ; copy characters
+    IF_NOT_ZERO
+      DO
+        lda     (entPtr),y      ; copy characters
         jsr     ToUpperCase
 
         sta     string-1,y
         dey
-        bne     loop
-endloop:
+      WHILE_NOT_ZERO
+    END_IF
 .endscope
 
         str := $0A
