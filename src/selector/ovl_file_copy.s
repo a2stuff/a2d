@@ -343,8 +343,7 @@ copy_jt:
         cmp     #ERR_VOL_NOT_FOUND
         beq     check_src
         cmp     #ERR_PATH_NOT_FOUND
-        beq     check_src       ; TODO: Remove, turn into `IF_A_EQ_ONE_OF`
-        bne     error           ; always
+        bne     error
 
 check_src:
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
@@ -717,14 +716,11 @@ enum_jt:
         jsr     CopyPathsFromBufsToSrcAndDst
 retry:  MLI_CALL GET_FILE_INFO, get_src_file_info_params
     IF_CS
-        cmp     #ERR_VOL_NOT_FOUND
-        beq     :+
-        cmp     #ERR_FILE_NOT_FOUND
-        bne     err
-:       jsr     ShowInsertSourceDiskAlert
+      IF_A_EQ_ONE_OF #ERR_VOL_NOT_FOUND, #ERR_FILE_NOT_FOUND
+        jsr     ShowInsertSourceDiskAlert
         jmp     retry
-
-err:    jmp     HandleErrorCode
+      END_IF
+        jmp     HandleErrorCode
     END_IF
 
         copy8   get_src_file_info_params::storage_type, storage_type
