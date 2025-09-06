@@ -806,7 +806,7 @@ loop:
         jsr     DrawTextRun
         ldy     drawtext_params::textlen
         lda     (ptr),y
-    XIF_A_EQ_ONE_OF #CHAR_TAB, #CHAR_RETURN
+    IF_A_EQ_ONE_OF #CHAR_TAB, #CHAR_RETURN
         inc     drawtext_params::textlen
     END_IF
         clc

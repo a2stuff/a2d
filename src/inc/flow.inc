@@ -130,19 +130,6 @@
     .endif
 .endmacro
 
-.macro _IF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-        cmp     arg1
-    .ifnblank arg2
-        ;; TODO: branch to just after the `BNE`
-        beq     __flow_ident__ {"if_one_of_terminal"}
-        _IF_ONE_OF_HELPER_ arg2,arg3,arg4,arg5,arg6,arg7,arg8
-    .else
-        __flow_ident__ {"if_one_of_terminal"} := *
-        __INC_IDENT__ __flow_ident_counter__
-        bne __flow_ident_block__
-    .endif
-.endmacro
-
 .macro IF_A_EQ_ONE_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
         __INC_IDENT__ __flow_depth__
         __INC_IDENT__ __flow_count_at_depth__
@@ -152,27 +139,17 @@
         _IF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
 .endmacro
 
-;; TODO: Merge these
-.macro _XIF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.macro _IF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
         cmp     arg1
     .ifnblank arg2
         ;; NOTE: Branches to just after the BNE
         beq     __flow_ident__ {"if_one_of_terminal"} + 2
-        _XIF_ONE_OF_HELPER_ arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        _IF_ONE_OF_HELPER_ arg2,arg3,arg4,arg5,arg6,arg7,arg8
     .else
         __flow_ident__ {"if_one_of_terminal"} := *
         __INC_IDENT__ __flow_ident_counter__
         bne __flow_ident_block__
     .endif
-.endmacro
-
-.macro XIF_A_EQ_ONE_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-        __INC_IDENT__ __flow_depth__
-        __INC_IDENT__ __flow_count_at_depth__
-        __INC_IDENT__ __flow_ident_counter__
-        __FLOW_LOG__ "if_one_of"
-
-        _XIF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
 .endmacro
 
 .macro _ELSE_IF_BOP_ branchOp

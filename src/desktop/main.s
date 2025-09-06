@@ -107,7 +107,7 @@ loop:
     END_IF
 
         ;; Is it a button-down event? (including w/ modifiers)
-    XIF_A_EQ_ONE_OF #MGTK::EventKind::button_down, #MGTK::EventKind::apple_key
+    IF_A_EQ_ONE_OF #MGTK::EventKind::button_down, #MGTK::EventKind::apple_key
         jsr     ClearTypeDown
         jsr     HandleClick
         jmp     MainLoop
@@ -304,7 +304,7 @@ modifiers:
         cmp     #kShortcutScrollWindow ; Apple-S (Scroll)
         jeq     CmdScroll
 
-      XIF_A_EQ_ONE_OF #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
+      IF_A_EQ_ONE_OF #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
         jmp     CmdCycleWindows
       END_IF
     END_IF
@@ -9166,7 +9166,7 @@ dib_buffer := $800
         sta     unit_number
 
         ;; Special case for RAM.DRV.SYSTEM/RAMAUX.SYSTEM
-    XIF_A_EQ_ONE_OF #kRamDrvSystemUnitNum, #kRamAuxSystemUnitNum
+    IF_A_EQ_ONE_OF #kRamDrvSystemUnitNum, #kRamAuxSystemUnitNum
         ldax    #str_device_type_ramdisk
         ldy     #IconType::ramdisk
         rts
