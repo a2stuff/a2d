@@ -329,14 +329,7 @@ ret:    rts
 ;;; ============================================================
 
 .proc HandleKey
-        cmp     #CHAR_UP
-        beq     :+
-        cmp     #CHAR_DOWN
-        beq     :+
-        cmp     #CHAR_LEFT
-        beq     :+
-        cmp     #CHAR_RIGHT
-:   IF_EQ
+    IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     vol_picker_params::key
         OPTK_CALL OPTK::Key, vol_picker_params
     END_IF

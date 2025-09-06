@@ -532,10 +532,7 @@ cursor_ibeam_flag:              ; high bit set when cursor is I-beam
         sta     file_dialog_res::lb_params::key
         stx     file_dialog_res::lb_params::modifiers
 
-        cmp     #CHAR_UP
-        beq     :+
-        cmp     #CHAR_DOWN
-:   IF_EQ
+    IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN
         copy8   #0, type_down_buf
         LBTK_CALL LBTK::Key, file_dialog_res::lb_params
         rts

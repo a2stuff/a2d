@@ -219,12 +219,7 @@ port:           .addr   grafport_win
 
 .proc HandleKey
         lda     event_params::key
-
-        cmp     #CHAR_UP
-        beq     :+
-        cmp     #CHAR_DOWN
-:
-    IF_EQ
+    IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN
         copy8   event_params::key, lb_params::key
         copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
@@ -535,12 +530,7 @@ remainder:      .word   0                 ; (out)
 
 .proc HandleKey
         lda     event_params::key
-
-        cmp     #CHAR_UP
-        beq     :+
-        cmp     #CHAR_DOWN
-:
-    IF_EQ
+    IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN
         copy8   event_params::key, lb_params::key
         copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params

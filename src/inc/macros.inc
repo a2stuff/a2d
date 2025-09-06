@@ -46,6 +46,7 @@ loop:   lda     src,x
         bne     loop
 .endmacro
 
+;;; TODO: Guard by .if kBuildSupportsLowercase
 .define TO_LOWER(char) (char | %00100000)
 
 

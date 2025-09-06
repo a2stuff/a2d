@@ -506,14 +506,7 @@ handle_button:
         ora     num_secondary_run_list_entries
     IF_NE
         lda     event_params::key
-        cmp     #CHAR_UP
-        beq     :+
-        cmp     #CHAR_DOWN
-        beq     :+
-        cmp     #CHAR_LEFT
-        beq     :+
-        cmp     #CHAR_RIGHT
-:     IF_EQ
+      IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     shortcut_picker_params::key
         OPTK_CALL OPTK::Key, shortcut_picker_params
       END_IF

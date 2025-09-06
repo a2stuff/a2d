@@ -107,15 +107,11 @@ loop:
     END_IF
 
         ;; Is it a button-down event? (including w/ modifiers)
-        cmp     #MGTK::EventKind::button_down
-        beq     click
-        cmp     #MGTK::EventKind::apple_key
-        bne     :+
-click:
+    XIF_A_EQ_ONE_OF #MGTK::EventKind::button_down, #MGTK::EventKind::apple_key
         jsr     ClearTypeDown
         jsr     HandleClick
         jmp     MainLoop
-:
+    END_IF
 
         ;; Is it an update event?
     IF_A_EQ     #MGTK::EventKind::update
@@ -307,14 +303,10 @@ modifiers:
         jeq     CmdMove
         cmp     #kShortcutScrollWindow ; Apple-S (Scroll)
         jeq     CmdScroll
-        cmp     #'`'            ; Apple-` (Cycle Windows)
-        beq     cycle
-        cmp     #'~'            ; Shift-Apple-` (Cycle Windows)
-        beq     cycle
-        cmp     #CHAR_TAB       ; Apple-Tab (Cycle Windows)
-        bne     :+
-cycle:  jmp     CmdCycleWindows
-:
+
+      XIF_A_EQ_ONE_OF #'`', #'~', #CHAR_TAB ; Apple-`, Shift-Apple-`, Apple-Tab (Cycle Windows)
+        jmp     CmdCycleWindows
+      END_IF
     END_IF
 
         ;; Not one of our shortcuts - check for menu keys
@@ -9174,14 +9166,12 @@ dib_buffer := $800
         sta     unit_number
 
         ;; Special case for RAM.DRV.SYSTEM/RAMAUX.SYSTEM
-        cmp     #kRamDrvSystemUnitNum
-        beq     ram
-        cmp     #kRamAuxSystemUnitNum
-        bne     :+
-ram:    ldax    #str_device_type_ramdisk
+    XIF_A_EQ_ONE_OF #kRamDrvSystemUnitNum, #kRamAuxSystemUnitNum
+        ldax    #str_device_type_ramdisk
         ldy     #IconType::ramdisk
         rts
-:
+    END_IF
+
         ;; Special case for VEDRIVE
         jsr     DeviceDriverAddress
         cmp     #<kVEDRIVEDriverAddress

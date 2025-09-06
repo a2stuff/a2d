@@ -270,11 +270,7 @@ grafport_win:       .tag    MGTK::GrafPort
         lda     event_params::key
         ldx     event_params::modifiers
 
-        cmp     #CHAR_UP
-        beq     :+
-        cmp     #CHAR_DOWN
-:
-    IF_EQ
+    IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN
         sta     lb_params::key
         stx     lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params

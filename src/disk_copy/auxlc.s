@@ -891,12 +891,7 @@ menu_offset_table:
         bit     listbox_enabled_flag
     IF_NS
         lda     event_params::key
-
-        cmp     #CHAR_UP
-        beq     :+
-        cmp     #CHAR_DOWN
-:
-      IF_EQ
+      IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN
         sta     lb_params::key
         copy8   event_params::modifiers, lb_params::modifiers
         LBTK_CALL LBTK::Key, lb_params
@@ -1106,10 +1101,9 @@ params: .res    3
 .proc dialog_shortcuts
         lda     event_params::key
 
-        cmp     #kShortcutReadDisk
-        beq     :+
-        cmp     #TO_LOWER(kShortcutReadDisk)
-:   IF_EQ
+        ;; TODO: Guard by .if kBuildSupportsLowercase
+        ;; and/or use ToUpperCase
+    IF_A_EQ_ONE_OF #kShortcutReadDisk, #TO_LOWER(kShortcutReadDisk)
         BTK_CALL BTK::Flash, read_drive_button
         return  #1
     END_IF

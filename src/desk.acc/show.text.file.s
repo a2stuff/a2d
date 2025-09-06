@@ -806,12 +806,10 @@ loop:
         jsr     DrawTextRun
         ldy     drawtext_params::textlen
         lda     (ptr),y
-        cmp     #CHAR_TAB
-        beq     tab
-        cmp     #CHAR_RETURN
-        bne     :+
-tab:    inc     drawtext_params::textlen
-:       clc
+    XIF_A_EQ_ONE_OF #CHAR_TAB, #CHAR_RETURN
+        inc     drawtext_params::textlen
+    END_IF
+        clc
         rts
 .endproc ; FinishTextRun
 

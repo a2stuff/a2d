@@ -993,14 +993,7 @@ not_return:
         ora     num_secondary_run_list_entries
     IF_NE
         lda     event_params::key
-        cmp     #CHAR_UP
-        beq     :+
-        cmp     #CHAR_DOWN
-        beq     :+
-        cmp     #CHAR_LEFT
-        beq     :+
-        cmp     #CHAR_RIGHT
-:     IF_EQ
+      IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN, #CHAR_LEFT, #CHAR_RIGHT
         sta     op_params::key
         OPTK_CALL OPTK::Key, op_params
         rts
@@ -1558,12 +1551,7 @@ check_type:
         jmp     ClearSelectedIndex
     END_IF
 
-        cmp     #FT_AWP
-        beq     :+
-        cmp     #FT_ASP
-        beq     :+
-        cmp     #FT_ADB
-:   IF_EQ
+    IF_A_EQ_ONE_OF #FT_AWP, #FT_ASP, #FT_ADB
         param_call CheckInterpreter, str_extras_awlaunch
         bcc     check_path
         jsr     ShowAlert

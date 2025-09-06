@@ -343,7 +343,7 @@ copy_jt:
         cmp     #ERR_VOL_NOT_FOUND
         beq     check_src
         cmp     #ERR_PATH_NOT_FOUND
-        beq     check_src
+        beq     check_src       ; TODO: Remove, turn into `IF_A_EQ_ONE_OF`
         bne     error           ; always
 
 check_src:

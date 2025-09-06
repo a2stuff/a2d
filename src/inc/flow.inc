@@ -6,6 +6,7 @@
 ;;; throw-away labels.
 
 ;;; * IF_* / ELSE_IF_* / ELSE / END_IF
+;;;   * and IF_A_EQ_ONE_OF as a common case
 ;;; * DO / BREAK_IF_* / WHILE_*
 ;;;   * or REPEAT / UNTIL_* if you prefer
 ;;; * RTS_IF_*
@@ -17,7 +18,6 @@
 ;;; (Aliases: EQ, NE, ZERO, NOT_ZERO, LT, GE, POS, NEG, PLUS, MINUS)
 ;;;
 ;;; Comparisons: A_EQ, A_NE, A_LT, A_GE; ditto for X and Y
-
 
 ;;; ============================================================
 ;;; Flow control infrastructure
@@ -85,6 +85,10 @@
 ;;;     ...
 ;;;     END_IF
 ;;;
+;;;     IF_A_EQ_ONE_OF #CHAR_UP, #CHAR_DOWN
+;;;     ...
+;;;     END_IF
+;;;
 ;;; Macros:
 ;;;     IF_ZS           aliases: IF_ZERO, IF_EQ
 ;;;     IF_ZC           aliases: IF_NOT_ZERO, IF_NE
@@ -101,6 +105,8 @@
 ;;;     IF_A_LT / ELSE_IF_A_LT
 ;;;     IF_A_GE / ELSE_IF_A_GE
 ;;; ... and ditto for *_X_* and *_Y_*
+;;;
+;;;     IF_A_EQ_ONE_OF
 
 .macro _IF_BOP_ branchOp
         __INC_IDENT__ __flow_depth__
@@ -122,6 +128,51 @@
         compareOp arg,reg
         branchOp __flow_ident_block__
     .endif
+.endmacro
+
+.macro _IF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        cmp     arg1
+    .ifnblank arg2
+        ;; TODO: branch to just after the `BNE`
+        beq     __flow_ident__ {"if_one_of_terminal"}
+        _IF_ONE_OF_HELPER_ arg2,arg3,arg4,arg5,arg6,arg7,arg8
+    .else
+        __flow_ident__ {"if_one_of_terminal"} := *
+        __INC_IDENT__ __flow_ident_counter__
+        bne __flow_ident_block__
+    .endif
+.endmacro
+
+.macro IF_A_EQ_ONE_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        __INC_IDENT__ __flow_depth__
+        __INC_IDENT__ __flow_count_at_depth__
+        __INC_IDENT__ __flow_ident_counter__
+        __FLOW_LOG__ "if_one_of"
+
+        _IF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+.endmacro
+
+;; TODO: Merge these
+.macro _XIF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        cmp     arg1
+    .ifnblank arg2
+        ;; NOTE: Branches to just after the BNE
+        beq     __flow_ident__ {"if_one_of_terminal"} + 2
+        _XIF_ONE_OF_HELPER_ arg2,arg3,arg4,arg5,arg6,arg7,arg8
+    .else
+        __flow_ident__ {"if_one_of_terminal"} := *
+        __INC_IDENT__ __flow_ident_counter__
+        bne __flow_ident_block__
+    .endif
+.endmacro
+
+.macro XIF_A_EQ_ONE_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
+        __INC_IDENT__ __flow_depth__
+        __INC_IDENT__ __flow_count_at_depth__
+        __INC_IDENT__ __flow_ident_counter__
+        __FLOW_LOG__ "if_one_of"
+
+        _XIF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
 .endmacro
 
 .macro _ELSE_IF_BOP_ branchOp
