@@ -3115,11 +3115,8 @@ prepare_font:
         bcs     end
 
         ldax    current_textfont
-        clc
-        adc     #3
-        bcc     :+
-        inx
-:       stax    glyph_widths    ; set $FB/$FC to start of widths
+        addax8  #3
+        stax    glyph_widths    ; set $FB/$FC to start of widths
 
         sec
         adc     glyph_last
@@ -3213,11 +3210,8 @@ loop:   sty     accum+1
         ;;    $FF = height
         ;;
 .proc PenlocToBounds
-        sec
-        sbc     #1
-        bcs     :+
-        dex
-:       clc
+        subax8  #1
+        clc
         adc     current_penloc_x
         sta     right
         txa
@@ -3230,15 +3224,9 @@ loop:   sty     accum+1
         sta     bottom
         ldx     current_penloc_y+1
         stx     bottom+1
-        clc
-        adc     #1
-        bcc     :+
-        inx
-:       sec
-        sbc     glyph_height_p
-        bcs     :+
-        dex
-:       stax    top
+        addax8  #1
+        subax8  glyph_height_p
+        stax    top
         rts
 .endproc ; PenlocToBounds
 
@@ -4175,11 +4163,8 @@ system_cursor_table_hi: .byte   >pointer_cursor, >ibeam_cursor, >watch_cursor
 :
         ldax    params_addr
         stax    active_cursor
-        clc
-        adc     #MGTK::Cursor::mask
-        bcc     :+
-        inx
-:       stax    active_cursor_mask
+        addax8  #MGTK::Cursor::mask
+        stax    active_cursor_mask
 
         ldy     #MGTK::Cursor::hotspot
         lda     (params_addr),y
@@ -5740,12 +5725,8 @@ menuloop:
         jsr     GetMenu
         ldax    current_penloc_x
         stax    curmenu::x_penloc
-
-        sec
-        sbc     #8
-        bcs     :+
-        dex
-:       stax    curmenu::x_min
+        subax8  #8
+        stax    curmenu::x_min
         stax    curmenuinfo::x_min
 
         ldx     #0
@@ -5828,11 +5809,8 @@ filler: ldx     menu_item_index
         jsr     GetMenuAndMenuItem
 
         ldax    current_penloc_x
-        clc
-        adc     #8
-        bcc     :+
-        inx
-:       stax    curmenu::x_max
+        addax8  #8
+        stax    curmenu::x_max
 
         jsr     PutMenu
 
@@ -6863,11 +6841,8 @@ next:   ldx     menu_item_index
         ldy     menu_item_y_table+1,x ; ???
         dey
         ldx     curmenuinfo::x_min+1
-        clc
-        adc     curmenuinfo::x_min
-        bcc     :+
-        inx
-:       jmp     SetPenloc
+        addax8  curmenuinfo::x_min
+        jmp     SetPenloc
 .endproc ; MovetoMenuitem
 
 
@@ -6916,11 +6891,8 @@ ep2:    jsr     SetFillMode
 .proc MovetoFromright
         sta     $82
         ldax    curmenuinfo::x_max
-        sec
-        sbc     $82
-        bcs     :+
-        dex
-:       jmp     SetPenloc::set_x
+        subax8  $82
+        jmp     SetPenloc::set_x
 .endproc ; MovetoFromright
 
 .proc UnhiliteCurMenuItem
@@ -7378,11 +7350,8 @@ vert_scroll:
 .proc GetWinVertScrollRect
         jsr     GetWinFrameRect
         ldax    winrect::x2
-        sec
-        sbc     #$14
-        bcs     :+
-        dex
-:       stax    winrect::x1
+        subax8  #$14
+        stax    winrect::x1
 
         lda     current_winfo::options
         ;;and     #MGTK::Option::dialog_box
@@ -7405,11 +7374,8 @@ vert_scroll:
         jsr     GetWinFrameRect
 get_rect:
         ldax    winrect::y2
-        sec
-        sbc     #$0A
-        bcs     :+
-        dex
-:       stax    winrect::y1
+        subax8  #$0A
+        stax    winrect::y1
         jmp     return_winrect
 .endproc ; GetWinHorizScrollRect
 
@@ -7439,28 +7405,16 @@ get_rect:
         jsr     GetWinTitleBarRect
 
         ldax    winrect::x1
-        clc
-        adc     #kGoAwayLeft
-        bcc     :+
-        inx
-:       stax    winrect::x1
-        clc
-        adc     #kGoAwayWidth
-        bcc     :+
-        inx
-:       stax    winrect::x2
+        addax8  #kGoAwayLeft
+        stax    winrect::x1
+        addax8  #kGoAwayWidth
+        stax    winrect::x2
 
         ldax    winrect::y1
-        clc
-        adc     #kGoAwayTop
-        bcc     :+
-        inx
-:       stax    winrect::y1
-        clc
-        adc     goaway_height
-        bcc     :+
-        inx
-:       stax    winrect::y2
+        addax8  #kGoAwayTop
+        stax    winrect::y1
+        addax8  goaway_height
+        stax    winrect::y2
 
         jmp     return_winrect
 .endproc ; GetWinGoAwayRect
@@ -7593,18 +7547,12 @@ stripes_pattern_alt := *+1
 
         ;; Left edge
         ldax    winrect::x1
-        sec
-        sbc     #kGoAwayLeft - kStripesXInset
-        bcs     :+
-        dex
-:       stax    left
+        subax8  #kGoAwayLeft - kStripesXInset
+        stax    left
 
         ;; Right edge
-        clc
-        adc     #(kGoAwayLeft - kStripesXInset) - kStripesXInset
-        bcc     :+
-        inx
-:       stax    right
+        addax8  #(kGoAwayLeft - kStripesXInset) - kStripesXInset
+        stax    right
 
         jsr     PaintRectImpl
 
@@ -7630,22 +7578,16 @@ no_goaway:
 
         ;; Calculate A,X = left edge (to right of "go away" box, if necessary)
         ldax    winrect::x2     ; right edge of "go away" box
-        clc
-        adc     #kStripesXInset
-        bcc     :+
-        inx
-:       tay
+        addax8  #kStripesXInset
+        tay
 
         lda     current_winfo::options
         and     #MGTK::Option::go_away_box
     IF_ZERO
         ;; There was no "go away" box, so further offset left
         tya
-        sec
-        sbc     #kGoAwayLeft + kGoAwayWidth
-        bcs     :+
-        dex
-:       tay
+        subax8  #kGoAwayLeft + kGoAwayWidth
+        tay
     END_IF
         tya
 
@@ -7708,11 +7650,7 @@ no_titlebar:
 
         inc     up_scroll_params::ycoord
         ldax    winrect::y2
-        sec
-        sbc     #$0A
-        bcs     :+
-        dex
-:
+        subax8  #$0A
         tay
         lda     current_winfo::options
         and     #MGTK::Option::grow_box
@@ -7722,11 +7660,8 @@ no_titlebar:
         bpl     no_hscroll
 
 :       tya
-        sec
-        sbc     #$0B
-        bcs     :+
-        dex
-:       tay
+        subax8  #$0B
+        tay
 
 no_hscroll:
         styx    down_scroll_params::ycoord
@@ -7750,11 +7685,7 @@ no_vscroll:
         bpl     :-
 
         ldax    winrect::x2
-        sec
-        sbc     #$14
-        bcs     :+
-        dex
-:
+        subax8  #$14
         tay
         lda     current_winfo::options
         and     #MGTK::Option::grow_box
@@ -7764,11 +7695,8 @@ no_vscroll:
         bpl     no_vscroll2
 
 :       tya
-        sec
-        sbc     #$15
-        bcs     :+
-        dex
-:       tay
+        subax8  #$15
+        tay
 
 no_vscroll2:
         styx    right_scroll_params
@@ -7856,11 +7784,8 @@ ret:    rts
         ror     current_penloc_x
 
         ldax    winrect::y2
-        sec
-        sbc     #2
-        bcs     :+
-        dex
-:       stax    current_penloc_y
+        subax8  #2
+        stax    current_penloc_y
 
         ldax    $82
         rts
@@ -8825,20 +8750,14 @@ windowy         .word           ; out
 
         txa
         ldx     left+1
-        clc
-        adc     left
-        bcc     :+
-        inx
-:       stax    right
+        addax8  left
+        stax    right
 
         iny
         lda     (icon_ptr),y    ; height
         ldx     top+1
-        clc
-        adc     top
-        bcc     :+
-        inx
-:       stax    bottom
+        addax8  top
+        stax    bottom
 
         iny
         lda     (icon_ptr),y

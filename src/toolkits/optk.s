@@ -187,19 +187,13 @@ loop:   txa
         ;; Is a real entry - prep to draw it
         pha                     ; A = index
         jsr     _GetOptionPos   ; returns A,X=x , Y=y
-        clc
-        adc     oprc_hoffset
-        bcc     :+
-        inx
-:       stax    point + MGTK::Point::xcoord
+        addax8  oprc_hoffset
+        stax    point + MGTK::Point::xcoord
 
         tya
         ldx     #0
-        clc
-        adc     oprc_voffset
-        bcc     :+
-        inx
-:       stax    point + MGTK::Point::ycoord
+        addax8  oprc_voffset
+        stax    point + MGTK::Point::ycoord
 
         MGTK_CALL MGTK::MoveTo, point
 
@@ -448,21 +442,15 @@ new_selection   .byte
 
         jsr     _GetOptionPos
         stax    rect + MGTK::Rect::x1
-        clc
-        adc     oprc_item_width
-        bcc     :+
-        inx
-:       stax    rect + MGTK::Rect::x2
+        addax8  oprc_item_width
+        stax    rect + MGTK::Rect::x2
         dec16   rect + MGTK::Rect::x2
 
         tya                     ; y lo
         ldx     #0              ; y hi
         stax    rect + MGTK::Rect::y1
-        clc
-        adc     oprc_item_height
-        bcc     :+
-        inx
-:       stax    rect + MGTK::Rect::y2
+        addax8  oprc_item_height
+        stax    rect + MGTK::Rect::y2
         dec16   rect + MGTK::Rect::y2
 
         MGTK_CALL MGTK::SetPattern, solid_pattern

@@ -1337,22 +1337,15 @@ loop:   ldy     #0
 .proc DrawTitleBar
         kOffsetLeft     = 115  ; pixels from left of client area
         kOffsetTop      = 22   ; pixels from top of client area (up!)
+
         ldx     winfo::left+1
         lda     winfo::left
-        clc
-        adc     #kOffsetLeft
-        sta     title_bar_bitmap::viewloc::xcoord
-        bcc     :+
-        inx
-:       stx     title_bar_bitmap::viewloc::xcoord+1
+        addax8  #kOffsetLeft, title_bar_bitmap::viewloc::xcoord
+
         ldx     winfo::top+1
         lda     winfo::top
-        sec
-        sbc     #kOffsetTop
-        sta     title_bar_bitmap::viewloc::ycoord
-        bcs     :+
-        dex
-:       stx     title_bar_bitmap::viewloc::ycoord+1
+        subax8  #kOffsetTop, title_bar_bitmap::viewloc::ycoord
+
         MGTK_CALL MGTK::SetPortBits, screen_port ; set clipping rect to whole screen
         MGTK_CALL MGTK::PaintBitsHC, title_bar_bitmap     ; Draws decoration in title bar
         MGTK_CALL MGTK::ShowCursor

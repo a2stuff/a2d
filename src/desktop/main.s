@@ -12839,11 +12839,8 @@ ignore:
 
 .proc GetIconName
         jsr     GetIconEntry
-        clc
-        adc     #IconEntry::name
-        bcc     :+
-        inx
-:       rts
+        addax8  #IconEntry::name
+        rts
 .endproc ; GetIconName
 
 ;;; ============================================================
@@ -14292,20 +14289,13 @@ exit:
 
 .proc GetFileEntryBlockOffset
         ;; Skip prev/next block pointers
-        clc
-        adc     #4
-        bcc     :+
-        inx
-:
+        addax8  #4
         ;; Iterate through entries
         cpy     #0
         beq     ret
 
-loop:   clc
-        adc     #.sizeof(FileEntry)
-        bcc     :+
-        inx
-:       dey
+loop:   addax8  #.sizeof(FileEntry)
+        dey
         bne     loop
 
 ret:    rts
