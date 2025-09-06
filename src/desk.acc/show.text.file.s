@@ -532,8 +532,12 @@ ForceScrollBottom := ScrollBottom::force
     END_IF
         sta     updatethumb_params::thumbpos
 
+        lda     winfo::vscroll
+        and     #MGTK::Scroll::option_active
+    IF_NOT_ZERO
         copy8   #MGTK::Ctl::vertical_scroll_bar, updatethumb_params::which_ctl
         MGTK_CALL MGTK::UpdateThumb, updatethumb_params
+    END_IF
 
         jmp     DrawContent
 .endproc ; UpdateScrollPos

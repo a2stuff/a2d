@@ -1085,6 +1085,8 @@ Text File:
 * Preview a text file with a tab character in the first line. Verify that the file displays all lines correctly.
 * Preview a long text file. Verify that the first page of content appears immediately, and that the watch cursor is shown while the rest of the file is parsed. With any acceleration disabled, use Open-Apple+Solid-Apple+Down to jump to the bottom of the file. Verify that the view is displayed without undue delay.
 * Download SUDOKU.dsk from www.michaeljmahon.com/Sudoku.html and mount it. Open the SUDOKU.STORY text file. Click on "Proportional" to change to "Fixed" font. Scroll down using down arrow key until bottom line reads "with". Scroll down again using down arrow key. Verify that the file correctly scrolled down one line. Scroll to the bottom of the file. Ensure the entire file is visible.
+* Preview a short text file that fits entirely on screen. Verify that the scrollbar is inactive. Click "Proportional". Verify that the scrollbar remains inactive. Click "Fixed". Verify that the scrollbar remains inactive.
+* Preview a text file that fits entirely on screen when "Proportional" but does not when "Fixed". Click "Proportional" to toggle to "Fixed". Verify that the scrollbar activates and that the thumb is at the top. Scroll down. Click "Fixed" to toggle to "Proportional". Verify that the scrollbar deactivates.
 * Preview a text file. Verify that the "Proportional" label has the same baseline as the window title. Click on "Proportional". Verify that the "Fixed" label has the same baseline as the window title.
 
 Image File:

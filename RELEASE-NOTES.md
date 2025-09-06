@@ -99,6 +99,7 @@ Project Page: https://github.com/a2stuff/a2d
 * International: Add "first day of week" setting.
 * Benchmark: Don't overflow meter if over 16MHz.
 * Map: Fix indicator updated after window is moved.
+* Text Preview: Fix scrollbar behavior when toggling fixed/proportional.
 * New DA (in Extras): "Screenshot" - saves screenshot file to application directory.
 * New DA (in Extras): "DOS33.Import" - allows importing files from DOS 3.3 disks.
 * New DA (in Control Panels): "Views" - allows setting the default view style.
