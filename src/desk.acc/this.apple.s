@@ -1728,10 +1728,7 @@ sigtable_xdrive:        .byte   4, $07, $3C, $0B, $B0, $0C, $01, $F0, $CA
 .proc SwapRoutine
         ldx     #.sizeof(Z80Routine)-1
     DO
-        ldy     Z80Routine::target,x
-        copy8   Z80Routine,x, Z80Routine::target,x
-        tya
-        sta     Z80Routine,x
+        swap8   Z80Routine::target,x, Z80Routine,x
         dex
     WHILE_POS
         rts

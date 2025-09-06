@@ -11025,11 +11025,7 @@ Start:  lda     DEVNUM
         ;; Swap the `parent_pointer`/`parent_entry_number` fields between subdir headers
         ldx     #2
       DO
-        ldy     src_block + SubdirectoryHeader::parent_pointer,x
-        lda     dst_block + SubdirectoryHeader::parent_pointer,x
-        sta     src_block + SubdirectoryHeader::parent_pointer,x
-        tya
-        sta     dst_block + SubdirectoryHeader::parent_pointer,x
+        swap8   src_block + SubdirectoryHeader::parent_pointer,x, dst_block + SubdirectoryHeader::parent_pointer,x
         dex
       WHILE_POS
 

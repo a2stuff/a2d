@@ -1091,11 +1091,7 @@ ploop:  copy8   position_table+1,y, position_table,y
         dey
         bne     sloop
 
-        ;; swap
-        ldx     position_table
-        lda     position_table+1
-        sta     position_table
-        stx     position_table+1
+        swap8   position_table, position_table+1
 
         jsr     CheckVictory
         bcs     redo
@@ -1121,11 +1117,7 @@ ploop:  copy8   position_table+1,y, position_table,y
 .proc SwapTables
         ldy     #15
     DO
-        lda     position_table,y
-        ldx     swapped_table,y
-        sta     swapped_table,y
-        txa
-        sta     position_table,y
+        swap8   position_table,y, swapped_table,y
         dey
     WHILE_POS
         rts
