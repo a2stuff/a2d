@@ -1100,10 +1100,9 @@ params: .res    3
 
 .proc dialog_shortcuts
         lda     event_params::key
+        jsr     ToUpperCase
 
-        ;; TODO: Guard by .if kBuildSupportsLowercase
-        ;; and/or use ToUpperCase
-    IF_A_EQ_ONE_OF #kShortcutReadDisk, #TO_LOWER(kShortcutReadDisk)
+    IF_A_EQ     #kShortcutReadDisk
         BTK_CALL BTK::Flash, read_drive_button
         return  #1
     END_IF
@@ -2324,6 +2323,7 @@ Alert := alert_dialog::Alert
 
         .include "../lib/is_diskii.s"
         .include "../lib/doubleclick.s"
+        .include "../lib/uppercase.s"
 
 ;;; ============================================================
 

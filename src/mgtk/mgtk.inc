@@ -906,7 +906,7 @@ ycoord: .word   AS_WORD(top)
         .byte   0               ; mark_char
         .byte   shortcut        ; char1
 
-        .if 'A' <= shortcut && shortcut <= 'Z'
+        .if kBuildSupportsLowercase && 'A' <= shortcut && shortcut <= 'Z'
         .byte   TO_LOWER(shortcut) ; char2
         .else
         .byte   shortcut

@@ -2166,8 +2166,11 @@ loop:   lda     KBD
 
         cmp     #$80|kShortcutMonitor ; Easter Egg: If 'M', enter monitor
         beq     monitor
+
+.if kBuildSupportsLowercase
         cmp     #$80|TO_LOWER(kShortcutMonitor)
         beq     monitor
+.endif
 
         cmp     #$80|CHAR_RETURN
         bne     loop
