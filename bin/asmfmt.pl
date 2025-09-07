@@ -127,7 +127,7 @@ while (<STDIN>) {
         $_ .= $arguments;
       }
 
-      if ($opcode =~ m/^(IF_\w+|ELSE|ELSE_IF_\w+|DO)$/) {
+      if ($opcode =~ m/^(IF_\w+|ELSE|ELSE_IF_\w+|DO|REPEAT)$/) {
         indent();
       }
 

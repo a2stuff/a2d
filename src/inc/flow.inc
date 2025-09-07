@@ -39,29 +39,10 @@
 ;;; Change to 1 to enable logging
 .define __flow_debug__ 0
 
-;;; A numeric variable for the current nesting depth of flow control
-;;; structures. Incremented when entering a structure, decremented
-;;; when leaving.
-.define __flow_depth__ ::__depth__
-
-;;; A numeric variable for the "Nth" flow control structure (if,
-;;; do/while, etc) at depth D. Used to mint various identifiers unique
-;;; to each, without using scopes. Incremented when entering a
-;;; structure.
-.define __flow_count_at_depth__ ::.ident(.sprintf("__flow_cad_%d__", __flow_depth__))
-
-;;; Produce a unique identifier within this flow control structure.
-;;; Usage: `__flow_ident__ {"else"}`
-.define __flow_ident__(prefix) ::.ident(.sprintf("__flow_id_%s_%d_%d__", prefix, __flow_depth__, __flow_count_at_depth__))
-
-;;; Produce unique identifierers for the end of each block
-.define __flow_ident_counter__ __flow_ident__ {"counter"}
-.define __flow_ident_block__ __flow_ident__ {.sprintf("eob%d", __flow_ident_counter__)}
-
-;;; If debugging enabled, log a message with block details
+;;; If debugging enabled, log a message
 .macro __FLOW_LOG__ msg
     .if __flow_debug__
-        .out .sprintf("%s, depth: %d, bcad: %d", msg, __flow_depth__, __flow_count_at_depth__)
+        .out msg
     .endif
 .endmacro
 
@@ -108,32 +89,51 @@
 ;;;
 ;;;     IF_A_EQ_ONE_OF
 
+;;; A numeric variable for the current nesting depth of flow control
+;;; structures. Incremented when entering a structure, decremented
+;;; when leaving.
+.define __flow_branch_depth__ ::__branch_depth__
+
+;;; A numeric variable for the "Nth" flow control structure (if,
+;;; do/while, etc) at depth D. Used to mint various identifiers unique
+;;; to each, without using scopes. Incremented when entering a
+;;; structure.
+.define __flow_branch_count_at_depth__ ::.ident(.sprintf("__flow_branch_cad_%d__", __flow_branch_depth__))
+
+;;; Produce a unique identifier within this flow control structure.
+;;; Usage: `__flow_branch_ident__ {"else"}`
+.define __flow_branch_ident__(prefix) ::.ident(.sprintf("__flow_branch_id_%s_%d_%d__", prefix, __flow_branch_depth__, __flow_branch_count_at_depth__))
+
+;;; Produce unique identifierers for the end of each block
+.define __flow_branch_ident_counter__ __flow_branch_ident__ {"counter"}
+.define __flow_branch_ident_block__ __flow_branch_ident__ {.sprintf("eob%d", __flow_branch_ident_counter__)}
+
 .macro _IF_BOP_ branchOp
-        __INC_IDENT__ __flow_depth__
-        __INC_IDENT__ __flow_count_at_depth__
-        __INC_IDENT__ __flow_ident_counter__
+        __INC_IDENT__ __flow_branch_depth__
+        __INC_IDENT__ __flow_branch_count_at_depth__
+        __INC_IDENT__ __flow_branch_ident_counter__
         __FLOW_LOG__ "if"
-        branchOp __flow_ident_block__
+        branchOp __flow_branch_ident_block__
 .endmacro
 
 .macro _IF_COP_BOP_ compareOp, branchOp, arg, reg
-        __INC_IDENT__ __flow_depth__
-        __INC_IDENT__ __flow_count_at_depth__
-        __INC_IDENT__ __flow_ident_counter__
+        __INC_IDENT__ __flow_branch_depth__
+        __INC_IDENT__ __flow_branch_count_at_depth__
+        __INC_IDENT__ __flow_branch_ident_counter__
         __FLOW_LOG__ "if"
     .ifblank reg
         compareOp arg
-        branchOp __flow_ident_block__
+        branchOp __flow_branch_ident_block__
     .else
         compareOp arg,reg
-        branchOp __flow_ident_block__
+        branchOp __flow_branch_ident_block__
     .endif
 .endmacro
 
 .macro IF_A_EQ_ONE_OF arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
-        __INC_IDENT__ __flow_depth__
-        __INC_IDENT__ __flow_count_at_depth__
-        __INC_IDENT__ __flow_ident_counter__
+        __INC_IDENT__ __flow_branch_depth__
+        __INC_IDENT__ __flow_branch_count_at_depth__
+        __INC_IDENT__ __flow_branch_ident_counter__
         __FLOW_LOG__ "if_one_of"
 
         _IF_ONE_OF_HELPER_ arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8
@@ -143,56 +143,56 @@
         cmp     arg1
     .ifnblank arg2
         ;; NOTE: Branches to just after the BNE
-        beq     __flow_ident__ {"if_one_of_terminal"} + 2
+        beq     __flow_branch_ident__ {"if_one_of_terminal"} + 2
         _IF_ONE_OF_HELPER_ arg2,arg3,arg4,arg5,arg6,arg7,arg8
     .else
-        __flow_ident__ {"if_one_of_terminal"} := *
-        __INC_IDENT__ __flow_ident_counter__
-        bne __flow_ident_block__
+        __flow_branch_ident__ {"if_one_of_terminal"} := *
+        __INC_IDENT__ __flow_branch_ident_counter__
+        bne __flow_branch_ident_block__
     .endif
 .endmacro
 
 .macro _ELSE_IF_BOP_ branchOp
         __FLOW_LOG__ "else_if"
-        jmp     __flow_ident__ {"endif"}
-        __flow_ident_block__ := *
-        __INC_IDENT__ __flow_ident_counter__
-        branchOp __flow_ident_block__
+        jmp     __flow_branch_ident__ {"endif"}
+        __flow_branch_ident_block__ := *
+        __INC_IDENT__ __flow_branch_ident_counter__
+        branchOp __flow_branch_ident_block__
 .endmacro
 
 .macro _ELSE_IF_COP_BOP_ compareOp, branchOp, arg, reg
         __FLOW_LOG__ "else_if"
-        jmp     __flow_ident__ {"endif"}
-        __flow_ident_block__ := *
-        __INC_IDENT__ __flow_ident_counter__
+        jmp     __flow_branch_ident__ {"endif"}
+        __flow_branch_ident_block__ := *
+        __INC_IDENT__ __flow_branch_ident_counter__
     .ifblank reg
         compareOp arg
-        branchOp __flow_ident_block__
+        branchOp __flow_branch_ident_block__
     .else
         compareOp arg,reg
-        branchOp __flow_ident_block__
+        branchOp __flow_branch_ident_block__
     .endif
 .endmacro
 
 .macro ELSE
         __FLOW_LOG__ "else"
-        jmp     __flow_ident__ {"endif"}
-        __flow_ident_block__ := *
-        __INC_IDENT__ __flow_ident_counter__
+        jmp     __flow_branch_ident__ {"endif"}
+        __flow_branch_ident_block__ := *
+        __INC_IDENT__ __flow_branch_ident_counter__
 .endmacro
 
 .macro END_IF
-    .ifndef __flow_ident_block__
+    .ifndef __flow_branch_ident_block__
         __FLOW_LOG__ "no else"
-        __flow_ident_block__ := *
+        __flow_branch_ident_block__ := *
     .endif
 
         __FLOW_LOG__ "endif"
 
-        __flow_ident__ {"endif"} := *
-        .refto __flow_ident__ {"endif"}
+        __flow_branch_ident__ {"endif"} := *
+        .refto __flow_branch_ident__ {"endif"}
 
-        __DEC_IDENT__ __flow_depth__
+        __DEC_IDENT__ __flow_branch_depth__
 .endmacro
 
 .macro ENDIF
@@ -271,19 +271,38 @@
 ;;;     BREAK_IF_A_GE
 ;;; ... and ditto for *_X_* and *_Y_*
 
+;;; A numeric variable for the current nesting depth of flow control
+;;; structures. Incremented when entering a structure, decremented
+;;; when leaving.
+.define __flow_loop_depth__ ::__loop_depth__
+
+;;; A numeric variable for the "Nth" flow control structure (if,
+;;; do/while, etc) at depth D. Used to mint various identifiers unique
+;;; to each, without using scopes. Incremented when entering a
+;;; structure.
+.define __flow_loop_count_at_depth__ ::.ident(.sprintf("__flow_loop_cad_%d__", __flow_loop_depth__))
+
+;;; Produce a unique identifier within this flow control structure.
+;;; Usage: `__flow_loop_ident__ {"else"}`
+.define __flow_loop_ident__(prefix) ::.ident(.sprintf("__flow_loop_id_%s_%d_%d__", prefix, __flow_loop_depth__, __flow_loop_count_at_depth__))
+
+;;; Produce unique identifierers for the end of each block
+.define __flow_loop_ident_counter__ __flow_loop_ident__ {"counter"}
+.define __flow_loop_ident_block__ __flow_loop_ident__ {.sprintf("eob%d", __flow_loop_ident_counter__)}
+
 .macro DO
-        __INC_IDENT__ __flow_depth__
-        __INC_IDENT__ __flow_count_at_depth__
+        __INC_IDENT__ __flow_loop_depth__
+        __INC_IDENT__ __flow_loop_count_at_depth__
 
         __FLOW_LOG__ "do"
-        __flow_ident__ {"do_while"} := *
+        __flow_loop_ident__ {"do_while"} := *
 .endmacro
 
 .define REPEAT DO
 
 .macro _CONTINUE_IF_BOP_ branchOp
         __FLOW_LOG__ "continue_if"
-        branchOp __flow_ident__ {"do_while"}
+        branchOp __flow_loop_ident__ {"do_while"}
 .endmacro
 
 .macro _CONTINUE_IF_COP_BOP_ compareOp, branchOp, arg, reg
@@ -293,12 +312,12 @@
       .else
         compareOp arg,reg
       .endif
-        branchOp __flow_ident__ {"do_while"}
+        branchOp __flow_loop_ident__ {"do_while"}
 .endmacro
 
 .macro _BREAK_IF_BOP_ branchOp
         __FLOW_LOG__ "break_if"
-        branchOp __flow_ident__ {"break"}
+        branchOp __flow_loop_ident__ {"break"}
 .endmacro
 
 .macro _BREAK_IF_COP_BOP_ compareOp, branchOp, arg, reg
@@ -308,17 +327,17 @@
       .else
         compareOp arg,reg
       .endif
-        branchOp __flow_ident__ {"break"}
+        branchOp __flow_loop_ident__ {"break"}
 .endmacro
 
 .macro _WHILE_BOP_ branchOp
         __FLOW_LOG__ "while"
-        branchOp __flow_ident__ {"do_while"}
+        branchOp __flow_loop_ident__ {"do_while"}
 
-        __flow_ident__ {"break"} := *
-        .refto __flow_ident__ {"break"}
+        __flow_loop_ident__ {"break"} := *
+        .refto __flow_loop_ident__ {"break"}
 
-        __DEC_IDENT__ __flow_depth__
+        __DEC_IDENT__ __flow_loop_depth__
 .endmacro
 
 .macro _WHILE_COP_BOP_ compareOp, branchOp, arg, reg
@@ -328,12 +347,12 @@
       .else
         compareOp arg,reg
       .endif
-        branchOp __flow_ident__ {"do_while"}
+        branchOp __flow_loop_ident__ {"do_while"}
 
-        __flow_ident__ {"break"} := *
-        .refto __flow_ident__ {"break"}
+        __flow_loop_ident__ {"break"} := *
+        .refto __flow_loop_ident__ {"break"}
 
-        __DEC_IDENT__ __flow_depth__
+        __DEC_IDENT__ __flow_loop_depth__
 .endmacro
 
 

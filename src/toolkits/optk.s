@@ -294,7 +294,7 @@ key             .byte
         sbc     oprc_num_rows
     END_IF
 
-    DO
+    REPEAT
       IF_A_EQ   max_entries_minus_one
         lda     #0              ; last, wrap to first
       ELSE
@@ -307,7 +307,7 @@ key             .byte
         sbc     max_entries_minus_one
       END_IF
         jsr     _CallIsEntryProc
-    WHILE_NS
+    UNTIL_NC
 
         jmp     _SetSelectionAndNotify
 .endproc ; _HandleKeyRight
@@ -317,20 +317,21 @@ key             .byte
 .proc _HandleKeyLeft
         lda     oprc_selected_index
         bmi     last            ; no selection, start at last
-        bne     loop            ; or if first, start at last
-
+    IF_ZERO                     ; or if first, start at last
 last:   lda     max_entries_minus_one
         clc
         adc     oprc_num_rows
+    END_IF
 
-loop:   sec
+    REPEAT
+        sec
         sbc     oprc_num_rows
-    IF_NEG
+      IF_NEG
         clc
         adc     max_entries_minus_one
-    END_IF
+      END_IF
         jsr     _CallIsEntryProc
-        bmi     loop
+    UNTIL_NC
 
         jmp     _SetSelectionAndNotify
 .endproc ; _HandleKeyLeft
@@ -346,14 +347,15 @@ loop:   sec
         lda     max_entries     ; first, start with last
     END_IF
 
-loop:   sec
+    REPEAT
+        sec
         sbc     #1
-    IF_NEG
+      IF_NEG
         lda     max_entries
-        bne     loop            ; always
-    END_IF
+        CONTINUE_IF_NE          ; always
+      END_IF
         jsr     _CallIsEntryProc
-        bmi     loop
+    UNTIL_NC
 
         jmp     _SetSelectionAndNotify
 .endproc ; _HandleKeyUp
@@ -366,13 +368,14 @@ loop:   sec
         lda     #AS_BYTE(-1)    ; no selection, start at first
     END_IF
 
-loop:   clc
+    REPEAT
+        clc
         adc     #1
-    IF_A_EQ     max_entries
+      IF_A_EQ   max_entries
         lda     #0
-    END_IF
+      END_IF
         jsr     _CallIsEntryProc
-        bmi     loop
+    UNTIL_NC
 
         jmp     _SetSelectionAndNotify
 .endproc ; _HandleKeyDown
