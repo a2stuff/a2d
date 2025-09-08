@@ -104,7 +104,7 @@
 ;;; Usage: `__flow_branch_ident__ {"else"}`
 .define __flow_branch_ident__(prefix) ::.ident(.sprintf("__flow_branch_id_%s_%d_%d__", prefix, __flow_branch_depth__, __flow_branch_count_at_depth__))
 
-;;; Produce unique identifierers for the end of each block
+;;; Produce unique identifiers for the end of each block
 .define __flow_branch_ident_counter__ __flow_branch_ident__ {"counter"}
 .define __flow_branch_ident_block__ __flow_branch_ident__ {.sprintf("eob%d", __flow_branch_ident_counter__)}
 
@@ -286,7 +286,7 @@
 ;;; Usage: `__flow_loop_ident__ {"else"}`
 .define __flow_loop_ident__(prefix) ::.ident(.sprintf("__flow_loop_id_%s_%d_%d__", prefix, __flow_loop_depth__, __flow_loop_count_at_depth__))
 
-;;; Produce unique identifierers for the end of each block
+;;; Produce unique identifiers for the end of each block
 .define __flow_loop_ident_counter__ __flow_loop_ident__ {"counter"}
 .define __flow_loop_ident_block__ __flow_loop_ident__ {.sprintf("eob%d", __flow_loop_ident_counter__)}
 

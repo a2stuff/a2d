@@ -638,7 +638,7 @@ new_size        .byte
 
         lda     lbr_copy + LBTK::ListBoxRecord::num_items
         cmp     lbr_copy + LBTK::ListBoxRecord::num_rows
-        beq     :+
+        beq     :+              ; TODO: `BGT` ?
         bcs     greater
 :
         ;; Deactivate
@@ -685,7 +685,7 @@ activate:
         bmi     skip
         ;; Assert: Y = MGTK::Winfo::vthumbpos
         cmp     (winfo_ptr),y
-        beq     skip
+        beq     skip            ; TODO: `BGT` ?
         bcs     update
 skip:
         lda     force_draw_flag

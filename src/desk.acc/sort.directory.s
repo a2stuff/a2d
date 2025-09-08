@@ -767,7 +767,7 @@ next:   cpy     #SELF_MODIFIED_BYTE
         bne     loop
         lda     len2
         cmp     len1
-        beq     rtcc
+        beq     rtcc            ; TODO: `BGT` ?
         bcs     rtcs
 rtcc:   clc
         rts

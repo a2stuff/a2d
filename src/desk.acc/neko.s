@@ -621,26 +621,28 @@ skip:   .word   0
         ;;  00 = no, 01 = +ve, 10 = -ve, 11 = (not used)
         ldx     #0
         lda     x_delta
-        cmp     #kMove/2
-        bcc     @done_x
+    IF_A_GE     #kMove/2
         bit     x_neg
-        bpl     :+
+      IF_NEG
         inx
-:       inx
-@done_x:
+      END_IF
+        inx
+    END_IF
         txa
         asl
         asl
         tax
 
         lda     y_delta
-        cmp     #kMove/2
-        bcc     @done_y
+    IF_A_GE     #kMove/2
         bit     y_neg
-        bpl     :+
+      IF_NEG
         inx
-:       inx
-@done_y:
+      END_IF
+        inx
+    END_IF
+
+
 skip_encode:
         stx     dir
 

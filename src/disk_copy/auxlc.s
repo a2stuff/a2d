@@ -1356,6 +1356,7 @@ match:  clc
 
         stax    ptr
 
+        ;; TODO: Should still do this part even if !kBuildSupportsLowercase !!!
         ldy     #0
         lda     (ptr),y
         pha
@@ -1520,6 +1521,7 @@ is_prodos:
         ldax    $06
         jsr     AdjustOnLineEntryCase
         lda     num_drives
+        ;; TODO: Use `GetDriveNameTableSlot` and $08 ?
         asl     a
         asl     a
         asl     a
@@ -1527,7 +1529,7 @@ is_prodos:
         tax
         ldy     #$00
         lda     ($06),y
-        and     #NAME_LENGTH_MASK
+        and     #NAME_LENGTH_MASK ; TODO: `AdjustOnLineEntryCase` does it!
         sta     drive_name_table,x
         sta     len
 :       inx
@@ -1535,6 +1537,7 @@ is_prodos:
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
         beq     :+
+        ;; TODO: This seems overly complicated and sketchy
         copy8   ($06),y, drive_name_table,x
         jmp     :-
 

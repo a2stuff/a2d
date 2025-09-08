@@ -802,7 +802,7 @@ blocks_total:
         copy8   file_entry+FileEntry::file_name,x, pathname_src+1,y
         inx
         iny
-        jmp     :-
+        jmp     :-              ; TODO: `BNE`
 :
         sty     pathname_src
         rts
@@ -843,7 +843,7 @@ blocks_total:
         copy8   file_entry+FileEntry::file_name,x, pathname_dst+1,y
         inx
         iny
-        jmp     :-
+        jmp     :-              ; TODO: `BNE`
 :
         sty     pathname_dst
         rts

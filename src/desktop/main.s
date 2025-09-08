@@ -2937,40 +2937,44 @@ CmdNewFolder    := CmdNewFolderImpl::start
         pha
 
         tya
-        jsr     LoadWindowEntryTable
+                jsr     LoadWindowEntryTable
 
         ;; Iterate icons
         copy8   #0, icon
 
+    DO
         icon := *+1
-loop:   ldx     #SELF_MODIFIED_BYTE
-    IF_X_EQ     cached_window_entry_count
+        ldx     #SELF_MODIFIED_BYTE
+      IF_X_EQ   cached_window_entry_count
         ;; Not found
         copy8   #0, icon
         beq     done            ; always
-    END_IF
+      END_IF
 
         ;; Compare with name from dialog
         lda     cached_window_entry_list,x
         jsr     GetIconName
         stax    ptr_icon_name
         jsr     CompareStrings
-        bne     next
-
+      IF_EQ
         ;; Match!
         ldx     icon
         copy8   cached_window_entry_list,x, icon
 
+        ;; the "not found" case goes here too
 done:
         pla
         jsr     LoadWindowEntryTable
         jsr     PopPointers
         lda     icon
         rts
+      END_IF
 
-next:   inc     icon
-        bne     loop
-.endproc ; FindIconByName
+        inc     icon
+    WHILE_NOT_ZERO              ; always
+
+.endproc
+ ; FindIconByName
 
 ;;; ============================================================
 ;;; Save/Restore drop target icon ID in case the window was rebuilt.
@@ -3987,10 +3991,9 @@ down:   lda     #kDirDown
         sta     best_icon
         sta     index
 
-icon_loop:
+    DO
         ldx     index
-        cpx     cached_window_entry_count
-        beq     finish_loop
+        BREAK_IF_X_EQ cached_window_entry_count
 
         lda     cached_window_entry_list,x
         sta     cur_icon
@@ -4029,7 +4032,7 @@ best:
 
 next_icon:
         inc     index
-        bne     icon_loop       ; always
+    WHILE_NOT_ZERO              ; always
 
 finish_loop:
         lda     best_icon
@@ -4168,7 +4171,7 @@ cloop:  lda     (ptr),y
         jsr     ToUpperCase
         cmp     typedown_buf,y
         bcc     next
-        beq     :+
+        beq     :+              ; TODO: `BGT` ?
         bcs     found
 :
         cpy     typedown_buf
@@ -4176,7 +4179,7 @@ cloop:  lda     (ptr),y
 
         iny
         cpy     len
-        bcc     cloop
+        bcc     cloop           ; TODO: `BLE` ?
         beq     cloop
 
 next:   inc     index
@@ -6849,41 +6852,42 @@ start:  stax    ptr1
         lda     #0
         sta     found_windows_count
         sta     window_num
-
-loop:   inc     window_num
+    DO
+        inc     window_num
 
         window_num := *+1
         lda     #SELF_MODIFIED_BYTE
         cmp     #kMaxDeskTopWindows+1 ; directory windows are 1-8
         bcc     check_window
         bit     exact_match_flag
-    IF_NS
+      IF_NS
         lda     #0
-    END_IF
+      END_IF
         rts
 
 check_window:
         tax
         lda     window_to_dir_icon_table-1,x
-        beq     loop            ; is `kWindowToDirIconFree`
+        ASSERT_EQUALS ::kWindowToDirIconFree, 0
+        CONTINUE_IF_ZERO
 
         lda     window_num
         jsr     GetWindowPath
         stax    ptr2
 
         bit     exact_match_flag
-    IF_NS
+      IF_NS
         jsr     CompareStrings  ; Z=1 if equal
-        bne     loop
+        CONTINUE_IF_ZC
         return  window_num
-    END_IF
+      END_IF
 
         jsr     IsPathPrefixOf  ; Z=0 if prefix
-        beq     loop
+        CONTINUE_IF_ZS
         ldx     found_windows_count
         copy8   window_num, found_windows_list,x
         inc     found_windows_count
-        bne     loop            ; always
+    WHILE_NOT_ZERO              ; always
 
 exact_match_flag:
         .byte   0
@@ -9987,7 +9991,9 @@ DoCopySelection := DoCopyOrMoveSelection::ep_always_copy
 
 iterate_selection:
         ldx     #0
-loop:   txa                     ; X = index
+
+    DO
+        txa                     ; X = index
         pha                     ; A = index
         lda     selected_icon_list,x
         cmp     trash_icon_num
@@ -10011,20 +10017,20 @@ loop:   txa                     ; X = index
         copy16  #src_path_buf, $06
         copy16  #dst_path_buf, $08
         jsr     IsPathPrefixOf
-    IF_NE
+      IF_NE
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_move_copy_into_self
         jmp     CloseFilesCancelDialogWithCanceledResult
-    END_IF
+      END_IF
         jsr     AppendSrcPathLastSegmentToDstPath
 
         ;; Check for replacing an item with itself or a descendant.
         copy16  #dst_path_buf, $06
         copy16  #src_path_buf, $08
         jsr     IsPathPrefixOf
-    IF_NE
+      IF_NE
         param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_alert_bad_replacement
         jmp     CloseFilesCancelDialogWithCanceledResult
-    END_IF
+      END_IF
 :
         jsr     OpProcessSelectedFile
 
@@ -10032,8 +10038,7 @@ next_icon:
         pla                     ; A = index
         tax                     ; X = index
         inx
-        cpx     selected_icon_count
-        bne     loop
+    WHILE_X_NE  selected_icon_count
 
         ;; --------------------------------------------------
 
@@ -11808,8 +11813,9 @@ CloseFilesCancelDialogWithCanceledResult := CloseFilesCancelDialogImpl::canceled
         iny                     ; skip leading '/'
         bne     check           ; always
 
+    DO
         ;; Chars the same?
-loop:   lda     (src_ptr),y
+        lda     (src_ptr),y
         jsr     ToUpperCase
         sta     @char
         lda     dst_buf,y
@@ -11825,21 +11831,21 @@ loop:   lda     (src_ptr),y
         ;; End of src?
         src_len := *+1
 check:  cpy     #SELF_MODIFIED_BYTE
-    IF_GE
+      IF_GE
         cpy     dst_buf         ; dst also done?
         bcs     match
         lda     path_buf4+1,y   ; is next char in dst a slash?
         bne     check_slash     ; always
-    END_IF
+      END_IF
 
-    IF_Y_GE     dst_buf         ; src is not done, is dst?
+      IF_Y_GE   dst_buf         ; src is not done, is dst?
         iny
         lda     (src_ptr),y     ; is next char in src a slash?
         bne     check_slash     ; always
-    END_IF
+      END_IF
 
         iny                     ; next char
-        bne     loop            ; always
+    WHILE_NOT_ZERO              ; always
 
 check_slash:
         cmp     #'/'

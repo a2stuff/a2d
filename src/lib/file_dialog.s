@@ -688,7 +688,7 @@ cloop:  lda     ($06),y
         jsr     _ToUpperCase
         cmp     type_down_buf,y
         bcc     next
-        beq     :+
+        beq     :+              ; TODO: `BGT` ?
         bcs     found
 :
         cpy     type_down_buf
@@ -697,7 +697,7 @@ cloop:  lda     ($06),y
         iny
         len := *+1
         cpy     #SELF_MODIFIED_BYTE
-        bcc     cloop           ; TODO: `BLE` macro?
+        bcc     cloop           ; TODO: `BLE` ?
         beq     cloop
 
 next:   inc     index

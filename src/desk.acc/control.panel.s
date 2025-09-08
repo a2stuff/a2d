@@ -762,12 +762,13 @@ loop:   ldx     screentowindow_params::windowx
         ldy     screentowindow_params::windowy
         lda     pattern,y
         bit     flag
-        bpl     :+
+    IF_NS
         ora     mask1,x         ; set bit
-        jmp     @store
-:       and     mask2,x         ; clear bit
-@store: cmp     pattern,y       ; did it change?
-        beq     event
+    ELSE
+        and     mask2,x         ; clear bit
+    END_IF
+        cmp     pattern,y       ; did it change?
+    IF_NE
         sta     pattern,y
 
         ldx     screentowindow_params::windowx
@@ -776,9 +777,11 @@ loop:   ldx     screentowindow_params::windowx
         jsr     DrawBit
 
         jsr     DrawPreview
+    END_IF
 
         ;; Repeat until mouse-up
-event:  MGTK_CALL MGTK::GetEvent, event_params
+    DO
+        MGTK_CALL MGTK::GetEvent, event_params
         lda     event_params::kind
         cmp     #MGTK::EventKind::button_up
         jeq     InputLoop
@@ -788,15 +791,13 @@ event:  MGTK_CALL MGTK::GetEvent, event_params
 
         MGTK_CALL MGTK::MoveTo, screentowindow_params::window
         MGTK_CALL MGTK::InRect, fatbits_rect
-        beq     event
+        CONTINUE_IF_ZERO
 
         jsr     MapCoords
         ldx     screentowindow_params::windowx
         ldy     screentowindow_params::windowy
-        cpx     lastx
-        bne     moved
-        cpy     lasty
-        beq     event
+        BREAK_IF_X_NE lastx
+    WHILE_Y_EQ  lasty
 
 moved:  stx     lastx
         sty     lasty
