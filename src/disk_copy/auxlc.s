@@ -1276,15 +1276,15 @@ match:  clc
         ;; Copy the name out of the block
         str_name := default_block_buffer+6
 
-        ldy     #0
+        ldy     #kMaxFilenameLength
     DO
         copy8   str_name,y, (ptr),y
-        iny
-    WHILE_Y_NE  str_name
-        copy8   str_name,y, (ptr),y
+        dey
+    WHILE_POS
 
         ;; If less than 15 characters, increase len by one
-    IF_Y_LT     #15
+        ldy     str_name
+    IF_Y_LT     #kMaxFilenameLength
         iny
         tya
         ldy     #0
@@ -1351,12 +1351,10 @@ match:  clc
 ;;; Output: entry is length-prefix, case-adjusted
 
 .proc AdjustOnLineEntryCase
-.if kBuildSupportsLowercase
         ptr := $A
 
         stax    ptr
 
-        ;; TODO: Should still do this part even if !kBuildSupportsLowercase !!!
         ldy     #0
         lda     (ptr),y
         pha
@@ -1365,6 +1363,8 @@ match:  clc
         pla
         and     #NAME_LENGTH_MASK
         sta     (ptr),y         ; mask off length
+
+.if kBuildSupportsLowercase
 
         ;; --------------------------------------------------
         ;; Check for GS/OS case bits, apply if found
@@ -1441,6 +1441,8 @@ draw:   jmp     DrawDeviceListEntry
         brk                     ; rude!
     END_IF
 
+        on_line_ptr := $06
+
         lda     #0
         sta     device_index
         sta     num_drives
@@ -1451,26 +1453,26 @@ loop:   lda     device_index    ; <16
         asl     a
         clc
         adc     #<main__on_line_buffer2
-        sta     $06
+        sta     on_line_ptr
         lda     #0
         adc     #>main__on_line_buffer2
-        sta     $06+1
+        sta     on_line_ptr+1
 
         ;; Check first byte of record
         ldy     #0
-        lda     ($06),y
+        lda     (on_line_ptr),y
         and     #NAME_LENGTH_MASK
         bne     is_prodos
 
-        lda     ($06),y         ; 0?
+        lda     (on_line_ptr),y ; 0?
         beq     done            ; done!
 
         iny                     ; name_len=0 signifies an error
-        lda     ($06),y         ; error code in second byte
+        lda     (on_line_ptr),y ; error code in second byte
         cmp     #ERR_DEVICE_NOT_CONNECTED
         bne     non_prodos
         dey
-        lda     ($06),y
+        lda     (on_line_ptr),y
         jsr     IsDiskII
         jne     next_device
         lda     #ERR_DEVICE_NOT_CONNECTED
@@ -1481,7 +1483,7 @@ done:   rts
 non_prodos:
         pha
         ldy     #0
-        lda     ($06),y
+        lda     (on_line_ptr),y
         and     #UNIT_NUM_MASK
         ldx     num_drives
         sta     drive_unitnum_table,x
@@ -1509,7 +1511,7 @@ next:   inc     num_drives
         ;; Valid ProDOS volume
 is_prodos:
         ldy     #0
-        lda     ($06),y
+        lda     (on_line_ptr),y
         and     #UNIT_NUM_MASK
         ldx     num_drives
         sta     drive_unitnum_table,x
@@ -1518,32 +1520,20 @@ is_prodos:
         copy8   num_drives, current_drive_selection
     END_IF
 
-        ldax    $06
+        name_ptr := $08
+
+        ldax    on_line_ptr
         jsr     AdjustOnLineEntryCase
         lda     num_drives
-        ;; TODO: Use `GetDriveNameTableSlot` and $08 ?
-        asl     a
-        asl     a
-        asl     a
-        asl     a
-        tax
-        ldy     #$00
-        lda     ($06),y
-        and     #NAME_LENGTH_MASK ; TODO: `AdjustOnLineEntryCase` does it!
-        sta     drive_name_table,x
-        sta     len
-:       inx
-        iny
-        len := *+1
-        cpy     #SELF_MODIFIED_BYTE
-        beq     :+
-        ;; TODO: This seems overly complicated and sketchy
-        copy8   ($06),y, drive_name_table,x
-        jmp     :-
+        jsr     GetDriveNameTableSlot
+        stax    name_ptr
+        ldy     #kMaxFilenameLength
+    DO
+        copy8   (on_line_ptr),y, (name_ptr),y
+        dey
+    WHILE_POS
 
-:       copy8   ($06),y, drive_name_table,x
         inc     num_drives
-
 
 next_device:
         inc     device_index
