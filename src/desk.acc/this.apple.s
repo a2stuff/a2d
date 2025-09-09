@@ -1091,7 +1091,7 @@ v_1x:   and     #$0F
         sta     str_prodos_version + kVersionStrMinor
         copy8   #'1', str_prodos_version + kVersionStrMajor
         copy8   #10, str_prodos_version ; length
-        bne     done
+        bne     done                    ; always TODO: Just `RTS`
 
         ;; $20...$23 are 2.0.x (roughly)
 v_20x:  and     #$0F
@@ -1100,7 +1100,7 @@ v_20x:  and     #$0F
         copy8   #'0', str_prodos_version + kVersionStrMinor
         copy8   #'2', str_prodos_version + kVersionStrMajor
         copy8   #12, str_prodos_version ; length
-        bne     done
+        bne     done                    ; always TODO: Just `RTS`
 
         ;; $24...??? are 2.x (so far?)
 v_2x:   and     #$0F
@@ -1108,7 +1108,7 @@ v_2x:   and     #$0F
         sta     str_prodos_version + kVersionStrMinor
         copy8   #'2', str_prodos_version + kVersionStrMajor
         copy8   #10, str_prodos_version ; length
-        bne     done
+        bne     done                    ; always TODO: Just `RTS`
 
 done:   rts
 .endproc ; IdentifyProDOSVersion
@@ -1297,8 +1297,7 @@ loop:   lda     slot
         ;; Check ProDOS slot bit mask
         lda     SLTBYT
         and     mask
-        beq     pro_no
-
+    IF_NOT_ZERO
         ;; ProDOS thinks there's a card...
         lda     slot
         jsr     ProbeSlot       ; check for matching firmware
@@ -1309,8 +1308,8 @@ loop:   lda     slot
 
         ldax    #str_unknown
         bne     draw            ; always
+    END_IF
 
-pro_no:
         lda     slot
         jsr     ProbeSlotNoFirmware
         bcs     draw
@@ -2007,13 +2006,13 @@ write:  sta     $C080,x         ; self-modified to $C0n0
     DO
         stx     RAMWORKS_BANK   ; select bank
         txa
-        cmp     sigb0           ; verify first signature
-        bne     next
+      IF_A_EQ   sigb0           ; verify first signature
         eor     #$FF
-        cmp     sigb1           ; verify second signature
-        bne     next
+       IF_A_EQ  sigb1           ; verify second signature
         iny                     ; match - count it
-next:   inx                     ; next bank
+       END_IF
+      END_IF
+        inx                     ; next bank
     WHILE_NOT_ZERO              ; if we hit 256 banks, make sure we exit
 .endscope
 
@@ -2049,36 +2048,27 @@ next:   inx                     ; next bank
         jsr     IDROUTINE
         bit     LCBANK1
         bit     LCBANK1
-        bcs     done
-        cpy     #0              ; Y = IIgs ROM revision
-        beq     rom0
-
+    IF_CC
         .pushcpu
         .setcpu "65816"
-
+      IF_Y_NE   #0              ; Y = IIgs ROM revision
         ;; From the IIgs Memory Manager tool set source
         ;; c/o Antoine Vignau and Dagen Brock (ROM 1 & ROM 3)
         NumBanks := $E11624
-
         copy16  NumBanks, memory
-        jmp     finish_iigs
-
+      ELSE
         ;; ROM0 location is slightly different
         ;; c/o Frank Milliron
-rom0:
         NumBanks0 := $E1161A
-
         copy16  NumBanks0, memory
-        FALL_THROUGH_TO finish_iigs
-        .popcpu
-
-finish_iigs:
+      END_IF
         ;; The memory manager only counts banks $DF and downward,
         ;; which skips ROM ($Fx) and slow RAM ($Ex). Assume the
         ;; two banks of slow RAM that every IIgs has ($E0/$E1)
         add16_8 memory, #2
-
-done:   rts
+        .popcpu
+    END_IF
+        rts
 .endproc ; CheckIIgsMemory
 
 ;;; ============================================================
@@ -2090,18 +2080,20 @@ done:   rts
 
         copy8   #7, slot
 
-        ;; Point at $Cn00, look for SmartPort signature bytes
-loop:   lda     slot
+    DO
+        ;; Point at $Cn00
+        lda     slot
         jsr     SetSlotPtr
 
+        ;; Look for SmartPort signature bytes
         ldx     #3
-    DO
+      DO
         ldy     sig_offsets,x
         lda     (slot_ptr),y
         cmp     sig_values,x
         bne     next
         dex
-    WHILE_POS
+      WHILE_POS
 
         ;; Now look for device type
         ldy     #$FB            ; $CnFB is SmartPort ID Type byte
@@ -2128,22 +2120,22 @@ loop:   lda     slot
 
         ;; Convert blocks (0.5k) to banks (64k)
         ldx     #7
-    DO
+      DO
         lsr     dib_buffer+SPDIB::Device_Size_Hi
         ror     dib_buffer+SPDIB::Device_Size_Med
         ror     dib_buffer+SPDIB::Device_Size_Lo
         dex
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
 
         ;; Rounding up if needed
-    IF_CS
+      IF_CS
         inc16   dib_buffer+SPDIB::Device_Size_Lo
-    END_IF
+      END_IF
 
         add16   memory, dib_buffer+SPDIB::Device_Size_Lo, memory
 
 next:   dec     slot
-        bne     loop
+    WHILE_NOT_ZERO
         rts
 
 sig_offsets:
@@ -2241,9 +2233,10 @@ p658xx: bit     ROMIN2
         jsr     IDROUTINE
         bit     LCBANK1
         bit     LCBANK1
-        bcs     p65802
+    IF_CC
         return16 #str_65816     ; Only IIgs supports 65816
-p65802: return16 #str_65802     ; Other boards support 65802
+    END_IF
+        return16 #str_65802     ; Other boards support 65802
 .endproc ; CPUId
 
 ;;; ============================================================
@@ -2312,26 +2305,27 @@ device_loop:
         ;; Case-adjust
 .scope
         ldy     dib_buffer+SPDIB::ID_String_Length
-        beq     done
+    IF_NOT_ZERO
         dey
-        beq     done
-
+      IF_NOT_ZERO
         ;; Look at prior and current character; if both are alpha,
         ;; lowercase current.
-loop:   lda     dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
+       DO
+        lda     dib_buffer+SPDIB::Device_Name-1,y ; Test previous character
         jsr     IsAlpha
-        bne     next
+        IF_EQ
         lda     dib_buffer+SPDIB::Device_Name,y ; Adjust this one if also alpha
         jsr     IsAlpha
-        bne     next
+         IF_EQ
         lda     dib_buffer+SPDIB::Device_Name,y
         ora     #AS_BYTE(~CASE_MASK) ; guarded by `kBuildSupportsLowercase`
         sta     dib_buffer+SPDIB::Device_Name,y
-
-next:   dey
-        cpy     #0
-        bne     loop
-done:
+         END_IF
+        END_IF
+        dey
+       WHILE_Y_NE #0                   ; TODO: Just `WHILE_NOT_ZERO` ?
+      END_IF
+    END_IF
 .endscope
 .endif
 
@@ -2465,7 +2459,7 @@ nope:   lda     #$FF
         stax    STARTLO
         ldy     #0
         lda     (textptr),y
-        beq     done
+    IF_NOT_ZERO
         sta     textlen
         copy16  #aux::buf_string+1, textptr
 
@@ -2475,7 +2469,8 @@ nope:   lda     #$FF
         jsr     AUXMOVE
 
         JUMP_TABLE_MGTK_CALL MGTK::DrawText, params
-done:   rts
+    END_IF
+        rts
 .endproc ; DrawString
 
 ;;; ============================================================

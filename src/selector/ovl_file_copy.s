@@ -188,8 +188,7 @@ entry_index_in_block:   .byte   0
         inc16   entry_index_in_dir
 
         ;; Skip entry
-        lda     ref_num
-        sta     read_fileentry_params::ref_num
+        copy8   ref_num, read_fileentry_params::ref_num
         MLI_CALL READ, read_fileentry_params
     IF_CS
         cmp     #ERR_END_OF_FILE
@@ -199,17 +198,15 @@ entry_index_in_block:   .byte   0
 
         inc     entry_index_in_block
         lda     entry_index_in_block
-        cmp     entries_per_block
-        bcc     done
-
+    IF_A_GE     entries_per_block
         ;; Advance to first entry in next "block"
         copy8   #0, entry_index_in_block
-        lda     ref_num
-        sta     read_padding_bytes_params::ref_num
+        copy8   ref_num, read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
         jcs     HandleErrorCode
+    END_IF
 
-done:   return  #0
+        return  #0
 
 eof:    return  #$FF
 .endproc ; ReadFileEntry
@@ -347,25 +344,27 @@ copy_jt:
 
 check_src:
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        bcc     LA491
+    IF_CS
         cmp     #ERR_VOL_NOT_FOUND
-        beq     LA488
+        beq     :+
         cmp     #ERR_FILE_NOT_FOUND
         bne     error
-LA488:  jsr     ShowInsertSourceDiskAlert
+:       jsr     ShowInsertSourceDiskAlert
         jmp     check_src       ; retry
 
 error:  jmp     HandleErrorCode
+    END_IF
 
-LA491:  lda     get_src_file_info_params::storage_type
+        lda     get_src_file_info_params::storage_type
         cmp     #ST_VOLUME_DIRECTORY
         beq     is_dir
         cmp     #ST_LINKED_DIRECTORY
         beq     is_dir
         lda     #0
-        beq     LA4A2
+        beq     :+
 is_dir: lda     #$FF
-LA4A2:  sta     is_dir_flag
+:
+        sta     is_dir_flag
 
         ldy     #$07
     DO
@@ -375,11 +374,12 @@ LA4A2:  sta     is_dir_flag
 
         copy8   #ACCESS_DEFAULT, create_params::access
         jsr     CheckSpace2
-        bcc     LA4BF
+    IF_CS
         jmp     ShowDiskFullError
+    END_IF
 
         ;; Copy creation date/time
-LA4BF:  ldy     #(get_src_file_info_params::create_time+1 - get_src_file_info_params)
+        ldy     #(get_src_file_info_params::create_time+1 - get_src_file_info_params)
         ldx     #(create_params::create_time+1 - create_params)
     DO
         copy8   get_src_file_info_params,y, create_params,x
@@ -432,15 +432,13 @@ PopDstSegment:
         jeq     RestoreStackAndReturn
 
         lda     file_entry+FileEntry::file_type
-        cmp     #FT_DIRECTORY
-        bne     is_file
-
+    IF_A_EQ     #FT_DIRECTORY
         ;; --------------------------------------------------
         ;; Directory
         jsr     AppendFilenameToSrcPathname
-        jsr     draw_window_content_ep2
+        jsr     UpdateWindowContent
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
-        bcc     LA528
+        bcc     got_src_info
         jmp     HandleErrorCode
 
 err:    jsr     RemoveSegmentFromDstPathname
@@ -448,17 +446,18 @@ err:    jsr     RemoveSegmentFromDstPathname
         copy8   #$FF, copy_err_flag
         rts
 
-LA528:  jsr     AppendFilenameToDstPathname
+got_src_info:
+        jsr     AppendFilenameToDstPathname
         jsr     CreateDstFile
         bcs     err
         jmp     RemoveSegmentFromSrcPathname
+    END_IF
 
         ;; --------------------------------------------------
         ;; Regular File
-is_file:
         jsr     AppendFilenameToDstPathname
         jsr     AppendFilenameToSrcPathname
-        jsr     draw_window_content_ep2
+        jsr     UpdateWindowContent
         MLI_CALL GET_FILE_INFO, get_src_file_info_params
         jcs     HandleErrorCode
 
@@ -610,35 +609,33 @@ done:
         lda     mark_dst_params::position+1
         and     #%11111100
         ora     mark_dst_params::position+2
-        beq     not_sparse
-
+      IF_NOT_ZERO
         ;; Is this block all zeros? Scan all $200 bytes
         ;; (Note: coded for size, not speed, since we're I/O bound)
         ptr := $06
         copy16  write_dst_params::data_buffer, ptr ; first half
         ldy     #0
         tya
-      DO
+       DO
         ora     (ptr),y
         iny
-      WHILE_NOT_ZERO
-
+       WHILE_NOT_ZERO
         inc     ptr+1           ; second half
-      DO
+       DO
         ora     (ptr),y
         iny
-      WHILE_NOT_ZERO
+       WHILE_NOT_ZERO
         tay
-        bne     not_sparse
-
+       IF_ZERO
         ;; Block is all zeros, skip over it
         add16_8 mark_dst_params::position+1, #.hibyte(BLOCK_SIZE)
         MLI_CALL SET_EOF, mark_dst_params
         MLI_CALL SET_MARK, mark_dst_params
         jmp     next_block
+       END_IF
+      END_IF
 
         ;; Block is not sparse, write it
-not_sparse:
         jsr     do_write
         bcs     ret
         FALL_THROUGH_TO next_block
@@ -734,10 +731,9 @@ is_dir: lda     #$FF
 set:    sta     is_dir_flag
         beq     visit
         jsr     HandleDirectory
-        lda     storage_type
-        cmp     #ST_VOLUME_DIRECTORY
-        bne     visit
 
+        lda     storage_type
+    IF_A_EQ     #ST_VOLUME_DIRECTORY
         ;; If copying a volume dir to RAMCard, the volume dir
         ;; will not be counted as a file during enumeration but
         ;; will be counted during copy, so include it to avoid
@@ -747,10 +743,12 @@ set:    sta     is_dir_flag
         jsr     UpdateFileCountDisplay
         return  #0
 
+        ;; TODO: Move these somewhere more sensible.
 is_dir_flag:
         .byte   0
 storage_type:
         .byte   0
+    END_IF
 
 visit:  jsr     EnumerateVisitFile
         return  #0
@@ -1055,8 +1053,11 @@ remainder:      .word   0                 ; (out)
         MGTK_CALL MGTK::FrameRect, progress_frame
 
         copy16  file_count, total_count
+        FALL_THROUGH_TO UpdateWindowContent
+.endproc
 
-ep2:    dec     file_count
+.proc UpdateWindowContent
+        dec     file_count
         lda     file_count
     IF_A_EQ     #$FF
         dec     file_count+1
@@ -1086,8 +1087,8 @@ ep2:    dec     file_count
         MGTK_CALL MGTK::PaintRect, progress_meter
 
         rts
-.endproc ; DrawWindowContent
-        draw_window_content_ep2 := DrawWindowContent::ep2
+.endproc ; UpdateWindowContent
+
 ;;; ============================================================
 
 .proc UpdateFileCountDisplay

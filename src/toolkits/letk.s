@@ -559,19 +559,17 @@ modified:
         ;; Is there room?
         ldy     #0
         lda     (a_buf),y
-        cmp     max_length
-        bcs     ret
-
+    IF_A_LT     max_length
         ;; Move everything to right of caret up
         tay
-    DO
+      DO
         BREAK_IF_Y_EQ caret_pos
         lda     (a_buf),y
         iny
         sta     (a_buf),y
         dey
         dey
-    WHILE_NOT_ZERO              ; always
+      WHILE_NOT_ZERO            ; always
 
         ;; Insert
         lda     char
@@ -584,13 +582,13 @@ modified:
         sta     (a_buf),y
 
         bit     options         ; bit7 = centered
-    IF_NS
+      IF_NS
         ;; Redraw everything
         jsr     _ClearAndDrawText
-    ELSE
+      ELSE
         ;; Redraw string to right of old caret position
         jsr     _RedrawRightOfCaret
-    END_IF
+      END_IF
 
         ;; Now move caret to new position
         ldy     #LETK::LineEditRecord::caret_pos
@@ -598,6 +596,7 @@ modified:
         clc
         adc     #1
         sta     (a_record),y
+    END_IF
 
 ret:    rts
 .endproc ; _InsertChar

@@ -655,14 +655,15 @@ file_char:
         sta     type_down_buf,x
 
         jsr     _FindMatch
-        bmi     done
-        cmp     selected_index
-        beq     done
+    IF_NC
+      IF_A_NE   selected_index
         sta     file_dialog_res::lb_params::new_selection
         LBTK_CALL LBTK::SetSelection, file_dialog_res::lb_params
         jmp     _UpdateDynamicButtons
+      END_IF
+    END_IF
 
-done:   return  #0
+        return  #0
 
 .proc _FindMatch
         lda     num_file_names

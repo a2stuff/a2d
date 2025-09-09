@@ -436,30 +436,30 @@ update: jmp     _UpdateThumbAndDraw
 
         MGTK_CALL MGTK::PeekEvent, event_params
         lda     event_params::kind
-        cmp     #MGTK::EventKind::drag
-        bne     cancel
-
+    IF_A_EQ     #MGTK::EventKind::drag
         MGTK_CALL MGTK::GetEvent, event_params
         MGTK_CALL MGTK::FindWindow, findwindow_params
         lda     findwindow_params::window_id
         ldy     #MGTK::Winfo::window_id
-        cmp     (winfo_ptr),y
-        bne     cancel
-
+      IF_A_EQ   (winfo_ptr),y
         lda     findwindow_params::which_area
-        cmp     #MGTK::Area::content
-        bne     cancel
-
+       IF_A_EQ  #MGTK::Area::content
         jsr     _FindControlIsVerticalScrollBar
-        bne     cancel
+        IF_EQ
 
         lda     findcontrol_params::which_part
         ctl := *+1
         cmp     #SELF_MODIFIED_BYTE
-        beq     ret                  ; Yes, continue
+        beq     ret             ; Yes, continue
 
-cancel: pla
+        END_IF
+       END_IF
+      END_IF
+    END_IF
+
         pla
+        pla
+
 ret:    rts
 .endproc ; _CheckControlRepeat
 

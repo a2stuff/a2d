@@ -197,7 +197,7 @@ erase_flag:
 
         ;; --------------------------------------------------
         ;; Proceed with format
-l8:
+retry:
         jsr     SetPortAndClear
         param_call main::DrawDialogLabel, 1, aux::str_formatting
         param_call main::DrawDialogLabel, 7, aux::str_tip_prodos
@@ -218,17 +218,17 @@ l9:
 l12:    pha
         jsr     main::SetCursorPointer
         pla
-        cmp     #ERR_WRITE_PROTECTED
-        bne     l13
+    IF_A_EQ     #ERR_WRITE_PROTECTED
+
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     cancel          ; `kAlertResultCancel` = 1
-        beq     l8              ; `kAlertResultTryAgain` = 0
+        beq     retry           ; `kAlertResultTryAgain` = 0
+    END_IF
 
-l13:
         param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_formatting_error
         cmp     #kAlertResultCancel
-        bne     l8
+        bne     retry
 
 cancel:
         pha
@@ -254,7 +254,7 @@ EP2:
 
         ;; --------------------------------------------------
         ;; Proceed with erase
-l7:
+retry:
         jsr     SetPortAndClear
         param_call main::DrawDialogLabel, 1, aux::str_erasing
         param_call main::DrawDialogLabel, 7, aux::str_tip_prodos
@@ -267,21 +267,22 @@ l7:
         pha
         jsr     main::SetCursorPointer
         pla
-        bne     l8
+    IF_ZERO
         lda     #$00
         beq     cancel          ; always
+    END_IF
 
-l8:     cmp     #ERR_WRITE_PROTECTED
-        bne     l9
+    IF_A_EQ     #ERR_WRITE_PROTECTED
+
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     cancel          ; `kAlertResultCancel` = 1
-        beq     l7              ; `kAlertResultTryAgain` = 0
+        beq     retry           ; `kAlertResultTryAgain` = 0
+    END_IF
 
-l9:
         param_call ShowAlertParams, AlertButtonOptions::TryAgainCancel, aux::str_erasing_error
         cmp     #kAlertResultCancel
-        bne     l7
+        bne     retry
 
 cancel:
         pha                     ; cancel
@@ -316,14 +317,15 @@ EraseDisk__EP2 := EraseDisk::EP2
 .proc HandleClick
         COPY_STRUCT MGTK::Point, screentowindow_params::window, vol_picker_params::coords
         OPTK_CALL OPTK::Click, vol_picker_params
-        bmi     ret
-        jsr     DetectDoubleClick
     IF_NC
+        jsr     DetectDoubleClick
+      IF_NC
         pha
         BTK_CALL BTK::Flash, ok_button
         pla
+      END_IF
     END_IF
-ret:    rts
+        rts
 .endproc ; HandleClick
 
 ;;; ============================================================
@@ -417,22 +419,20 @@ no:     lda     #$80
         copy8   #'/', path+1
 
         MLI_CALL GET_FILE_INFO, get_file_info_params
-        bcs     no_match
-
+    IF_CC
         ;; A volume with that name exists... but is it the one
         ;; we're about to format/erase?
         lda     DEVNUM
-
         unit_num := *+1
         cmp     #SELF_MODIFIED_BYTE
-        beq     no_match
-
+      IF_NE
         ;; Not the same device, so a match. Return C=1
         sec
         rts
+      END_IF
+    END_IF
 
         ;; No match we care about, so return C=0.
-no_match:
         clc
         rts
 .endproc ; CheckConflictingVolumeName
@@ -480,14 +480,14 @@ path:
         sta     unit_num
 
         jsr     main::IsDiskII
-        bne     driver
-
+    IF_EQ
         ;; Format as Disk II
         lda     unit_num
         jmp     FormatDiskII
+    END_IF
 
         ;; Format using driver
-driver: lda     unit_num
+        lda     unit_num
         jsr     GetDriverAddress
         stax    driver_addr
 
@@ -515,8 +515,7 @@ driver: lda     unit_num
         sta     unit_num
 
         jsr     main::IsDiskII
-        beq     supported
-
+    IF_NE
         ;; Check if the driver is firmware ($CnXX).
         lda     unit_num
         jsr     GetDriverAddress
@@ -524,17 +523,18 @@ driver: lda     unit_num
         txa                     ; high byte
         and     #$F0            ; look at high nibble
         cmp     #$C0            ; firmware? ($Cn)
-        bne     supported       ; TODO: Should we guess yes or no here???
-
+      IF_EQ                     ; TODO: Should we guess yes or no here???
         ;; Check the firmware status byte
         addr := *+1
         lda     $C0FE           ; $CnFE, high byte is self-modified above
         and     #%00001000      ; Bit 3 = Supports format
-        bne     supported
+       IF_ZERO
 
         return  #$FF            ; no, does not support format
+       END_IF
+      END_IF
+    END_IF
 
-supported:
         return  #$00            ; yes, supports format
 
 unit_num:
@@ -571,8 +571,7 @@ unit_num:
         ;; Check if it's a Disk II
         lda     unit_num
         jsr     main::IsDiskII
-        beq     disk_ii
-
+    IF_NE
         ;; Not Disk II - use the driver.
         lda     unit_num
         jsr     GetDriverAddress
@@ -589,12 +588,13 @@ unit_num:
 
         sta     ALTZPON         ; Aux ZP/LCBANKs
 
-        bcc     L1398           ; success
-        jmp     L1483           ; failure
+        bcc     got_blocks      ; success
+        jmp     fail            ; failure
+    END_IF
 
-disk_ii:
         ldxy    #kDefaultFloppyBlocks
-L1398:  stxy    total_blocks
+got_blocks:
+        stxy    total_blocks
 
         ;; --------------------------------------------------
         ;; Loader blocks
@@ -691,7 +691,7 @@ L1398:  stxy    total_blocks
         jsr     _BuildBlock     ; Build a bitmap for the current block
 
         lda     write_block_params::block_num+1 ; Are we at a block >255?
-        bne     L1483           ; Then something's gone horribly wrong and we need to stop
+        bne     fail            ; Then something's gone horribly wrong and we need to stop
         lda     write_block_params::block_num
         cmp     #6              ; Are we anywhere other than block 6?
         bne     gowrite         ; Then go ahead and write the bitmap block as-is
@@ -731,7 +731,7 @@ gowrite:
         clc
         rts
 
-L1483:  sec
+fail:   sec
         rts
 
 unit_num:
@@ -807,16 +807,18 @@ builddone:
 
 ;;; ============================================================
 
-fail:   pla
+pop_and_fail:
         pla
-fail2:  sec
+        pla
+fail2:
+        sec
         rts
 
 ;;; ============================================================
 
 .proc WriteBlockAndZero
         MLI_CALL WRITE_BLOCK, write_block_params
-        bcs     fail
+        bcs     pop_and_fail
         jsr     zero_buffers
         inc     write_block_params::block_num
         rts

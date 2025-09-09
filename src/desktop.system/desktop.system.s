@@ -212,29 +212,31 @@ str_128k_required:
         ;; NOTE: If everything followed the convention, we could
         ;; skip this and set the prefix unconditionally.
         MLI_CALL GET_FILE_INFO, get_file_info_params
-        bcc     ret
+    IF_CS
 
         ;; Ensure path has high bits clear. Workaround for Bitsy Bye bug:
         ;; https://github.com/ProDOS-8/ProDOS8-Testing/issues/68
         ldx     PRODOS_SYS_PATH
-    DO
+      DO
         asl     PRODOS_SYS_PATH,x
         lsr     PRODOS_SYS_PATH,x
         dex
-    WHILE_NOT_ZERO
+      WHILE_NOT_ZERO
 
         ;; Strip last filename segment
         ldx     PRODOS_SYS_PATH
         lda     #'/'
-    DO
+      DO
         dex
         beq     ret
-    WHILE_A_NE  PRODOS_SYS_PATH,x
+      WHILE_A_NE PRODOS_SYS_PATH,x
         dex
         stx     PRODOS_SYS_PATH
 
         ;; Set prefix
         MLI_CALL SET_PREFIX, set_prefix_params
+    END_IF
+
 ret:    rts
 
 str_self_filename:
@@ -248,14 +250,15 @@ str_self_filename:
 .proc BrandSystemFolder
         MLI_CALL GET_PREFIX, get_prefix_params
         MLI_CALL GET_FILE_INFO, file_info_params
-        bcs     ret
-        lda     file_info_params + 7         ; storage_type
-        cmp     #ST_LINKED_DIRECTORY
-        bne     ret
-        copy8   #7, file_info_params + 0     ; SET_FILE_INFO param_count
+    IF_CC
+        lda     file_info_params + 7 ; storage_type
+      IF_A_EQ   #ST_LINKED_DIRECTORY
+        copy8   #7, file_info_params + 0 ; SET_FILE_INFO param_count
         copy16  #$8000, file_info_params + 5 ; aux_type
         MLI_CALL SET_FILE_INFO, file_info_params
-ret:    rts
+      END_IF
+    END_IF
+        rts
 
 prefix_buf := $800
         DEFINE_GET_PREFIX_PARAMS get_prefix_params, prefix_buf
@@ -349,10 +352,11 @@ done_machid:
         lda     syscap
         jmp     WriteSetting
 
-set_bit:
+.proc set_bit
         ora     syscap
         sta     syscap
         rts
+.endproc ; set_bit
 
 syscap: .byte   0
 
@@ -439,15 +443,9 @@ filename:
 .proc DoCopy
         ;; Check destination dir
         MLI_CALL GET_FILE_INFO, get_path1_info_params
-        cmp     #ERR_FILE_NOT_FOUND
-        beq     okerr
-        cmp     #ERR_VOL_NOT_FOUND
-        beq     okerr
-        cmp     #ERR_PATH_NOT_FOUND
-        bne     fail            ; Otherwise, fall through to okerr
-
+    IF_A_EQ_ONE_OF #ERR_FILE_NOT_FOUND, #ERR_VOL_NOT_FOUND, #ERR_PATH_NOT_FOUND
         ;; Get source dir info
-okerr:  MLI_CALL GET_FILE_INFO, get_path2_info_params
+repeat: MLI_CALL GET_FILE_INFO, get_path2_info_params
         bcc     gfi_ok
         cmp     #ERR_VOL_NOT_FOUND
         beq     prompt
@@ -455,7 +453,8 @@ okerr:  MLI_CALL GET_FILE_INFO, get_path2_info_params
         bne     fail
 
 prompt: jsr     ShowInsertPrompt
-        jmp     okerr
+        jmp     repeat
+    END_IF
 
 fail:   jmp     (hook_handle_error_code)
 
@@ -514,9 +513,7 @@ is_dir:
 
 .proc CopyEntry
         lda     file_entry + FileEntry::file_type
-        cmp     #FT_DIRECTORY
-        bne     do_file
-
+    IF_A_EQ     #FT_DIRECTORY
         ;; --------------------------------------------------
         ;; Directory
         jsr     AppendFilenameToPath2
@@ -532,10 +529,11 @@ ok:     jsr     AppendFilenameToPath1
         jsr     CreateDir
         bcs     onerr
         jmp     RemoveFilenameFromPath2
+    END_IF
 
         ;; --------------------------------------------------
         ;; File
-do_file:
+
         jsr     AppendFilenameToPath1
         jsr     AppendFilenameToPath2
         jsr     ShowCopyingScreen
@@ -731,34 +729,33 @@ close:  MLI_CALL CLOSE, close_dst_params
         lda     mark_dst_params::position+1
         and     #%11111100
         ora     mark_dst_params::position+2
-        beq     not_sparse
-
+      IF_NOT_ZERO
         ;; Is this block all zeros? Scan all $200 bytes
         ;; (Note: coded for size, not speed, since we're I/O bound)
         ptr := $06
         copy16  write_dst_params::data_buffer, ptr ; first half
         ldy     #0
         tya
-      DO
+       DO
         ora     (ptr),y
         iny
-      WHILE_NOT_ZERO
+       WHILE_NOT_ZERO
         inc     ptr+1           ; second half
-      DO
+       DO
         ora     (ptr),y
         iny
-      WHILE_NOT_ZERO
+       WHILE_NOT_ZERO
         tay
-        bne     not_sparse
-
+       IF_ZERO
         ;; Block is all zeros, skip over it
         add16_8 mark_dst_params::position+1, #.hibyte(BLOCK_SIZE)
         MLI_CALL SET_EOF, mark_dst_params
         MLI_CALL SET_MARK, mark_dst_params
         jmp     next_block
+       END_IF
+      END_IF
 
         ;; Block is not sparse, write it
-not_sparse:
         jsr     do_write
         bcs     ret
         FALL_THROUGH_TO next_block
@@ -933,17 +930,16 @@ fail:   jmp     (hook_handle_error_code)
         inc     entry_index_in_block
         lda     entry_index_in_block
         cmp     entries_per_block
-        lda     #0
-        bcc     done
-
+        lda     #0              ; result if branch not taken
+    IF_GE
         ;; Advance to first entry in next "block"
         sta     entry_index_in_block
         lda     ref_num
         sta     read_padding_bytes_params::ref_num
         MLI_CALL READ, read_padding_bytes_params
         bcs     fail
-
-done:   rts
+    END_IF
+        rts
 
 eof:    return  #$FF
 .endproc ; ReadFileEntry

@@ -27,13 +27,15 @@ Exec:
         beq     DoAdd
         jmp     Init
 
-L900F:  pha
+.proc Exit
+        pha
         lda     clean_flag
-        bpl     L9017           ; dirty, check about saving
+    IF_NS                       ; dirty, check about saving
 L9015:  pla
-L9016:  rts
+ret:    rts
+    END_IF
 
-L9017:  lda     selector_list + kSelectorListNumPrimaryRunListOffset
+        lda     selector_list + kSelectorListNumPrimaryRunListOffset
         clc
         adc     selector_list + kSelectorListNumSecondaryRunListOffset
         sta     num_selector_list_items
@@ -43,16 +45,17 @@ L9017:  lda     selector_list + kSelectorListNumPrimaryRunListOffset
         jsr     WriteFileToOriginalPrefix
         pla
         rts
+.endproc
 
 ;;; ============================================================
 
 DoAdd:  ldx     #kRunListPrimary
         lda     selector_menu
-        cmp     #kSelectorMenuFixedItems + 8
-        bcc     L9052
+    IF_A_GE     #kSelectorMenuFixedItems + 8
         inx
-L9052:  lda     #$00
-        sta     text_input_buf    ; clear name, but leave path alone
+    END_IF
+        lda     #$00
+        sta     text_input_buf  ; clear name, but leave path alone
         ldy     #kCopyNever | $80 ; high bit set = Add
         ;; A = (obsolete, was dialog type)
         ;; Y = is_add_flag | copy_when
@@ -71,42 +74,43 @@ L9052:  lda     #$00
         pla
         tax
         pla
-        bne     L900F
+        bne     Exit
         inc     clean_flag      ; mark as "dirty"
         stx     which_run_list
         sty     copy_when
+
         lda     #$00
-L9080:  dey
-        beq     L9088
+:       dey
+        beq     :+
         sec
         ror     a
-        jmp     L9080
-
-L9088:  sta     copy_when
+        jmp     :-
+:
+        sta     copy_when
         jsr     ReadFile
-        bpl     L9093
-        jmp     L9016
+    IF_NEG
+        jmp     Exit::ret
+    END_IF
 
-L9093:  copy16  selector_list, num_primary_run_list_entries
+        copy16  selector_list, num_primary_run_list_entries
         lda     which_run_list
-        cmp     #kRunListPrimary
-        bne     L90D3
+    IF_A_EQ     #kRunListPrimary
         lda     num_primary_run_list_entries
         cmp     #kSelectorListNumPrimaryRunListEntries
-        beq     L90F4
+        beq     ShowFullAlert
         ldy     copy_when       ; Flags
         lda     num_primary_run_list_entries
         inc     selector_list + kSelectorListNumPrimaryRunListOffset
         jsr     AssignEntryData
         jsr     WriteFile
-        bpl     L90D0
-        jmp     L9016
+      IF_NEG
+        jmp     Exit::ret
+      END_IF
+        jmp     Exit
+    END_IF
 
-L90D0:  jmp     L900F
-
-L90D3:  lda     num_secondary_run_list_entries
-        cmp     #kSelectorListNumSecondaryRunListEntries
-        beq     L90F4
+        lda     num_secondary_run_list_entries
+    IF_A_NE     #kSelectorListNumSecondaryRunListEntries
         ldy     copy_when       ; Flags
         lda     num_secondary_run_list_entries
         clc
@@ -114,18 +118,21 @@ L90D3:  lda     num_secondary_run_list_entries
         jsr     AssignSecondaryRunListEntryData
         inc     selector_list + kSelectorListNumSecondaryRunListOffset
         jsr     WriteFile
-        bpl     L90F1
-        jmp     L9016
+      IF_NEG
+        jmp     Exit::ret
+      END_IF
+        jmp     Exit
+    END_IF
 
-L90F1:  jmp     L900F
-
-L90F4:  param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_warning_selector_list_full
+ShowFullAlert:
+        param_call ShowAlertParams, AlertButtonOptions::OK, aux::str_warning_selector_list_full
         dec     clean_flag      ; reset to "clean"
-        jmp     L9016
+        jmp     Exit::ret
 
 which_run_list:
         .byte   0
-copy_when:  .byte   0
+copy_when:
+        .byte   0
 
 ;;; ============================================================
 
@@ -249,61 +256,73 @@ dialog_loop:
         lda     copy_when_conversion_table-1,y
         sta     copy_when
         jsr     ReadFile
-        bpl     l7
+    IF_NS
         jmp     CloseWindow
+    END_IF
 
-l7:     lda     shortcut_picker_record::selected_index
-        cmp     #kSelectorListNumPrimaryRunListEntries
-        bcc     l10
+        lda     shortcut_picker_record::selected_index
+    IF_A_GE     #kSelectorListNumPrimaryRunListEntries
+        ;; Was on secondary run list - is it still?
         lda     which_run_list
         cmp     #kRunListSecondary
-        beq     l13
+        beq     reuse_same_index
+
         lda     num_primary_run_list_entries
-        cmp     #kSelectorListNumPrimaryRunListEntries
-        bne     l8
-        jmp     L90F4
+      IF_A_EQ   #kSelectorListNumPrimaryRunListEntries
+        jmp     ShowFullAlert
+      END_IF
 
-l8:     lda     shortcut_picker_record::selected_index
+        lda     shortcut_picker_record::selected_index
         jsr     RemoveEntry
-        beq     l9
+      IF_ZC
         jmp     CloseWindow
+      END_IF
 
-l9:     ldx     num_primary_run_list_entries
+        ;; Compute new index
+        ldx     num_primary_run_list_entries
         inc     num_primary_run_list_entries
         inc     selector_list + kSelectorListNumPrimaryRunListOffset
         txa
-        jmp     l14
-
-l10:    lda     which_run_list
+    ELSE
+        ;; Was on primary run list - is it still?
+        lda     which_run_list
         cmp     #kRunListPrimary
-        beq     l13
+        beq     reuse_same_index
+
         lda     num_secondary_run_list_entries
-        cmp     #kSelectorListNumSecondaryRunListEntries
-        bne     l11
-        jmp     Init
+      IF_A_EQ   #kSelectorListNumSecondaryRunListEntries
+        jmp     Init            ; TODO: Why not `ShowFullAlert`?
+      END_IF
 
-l11:    lda     shortcut_picker_record::selected_index
+        lda     shortcut_picker_record::selected_index
         jsr     RemoveEntry
-        beq     l12
+      IF_ZC
         jmp     CloseWindow
+      END_IF
 
-l12:    ldx     num_secondary_run_list_entries
+        ;; Compute new index
+        ldx     num_secondary_run_list_entries
         inc     num_secondary_run_list_entries
         inc     selector_list + kSelectorListNumSecondaryRunListOffset
         lda     num_secondary_run_list_entries
         clc
         adc     #$07
-        jmp     l14
+        jmp     :+
 
-l13:    lda     shortcut_picker_record::selected_index
-l14:    ldy     copy_when
+reuse_same_index:
+        lda     shortcut_picker_record::selected_index
+:
+    END_IF
+
+        ldy     copy_when
         jsr     AssignEntryData
         jsr     WriteFile
-        beq     l15
+    IF_ZC
         jmp     CloseWindow
+    END_IF
 
-l15:    jsr     main::SetCursorPointer
-        jmp     L900F
+        jsr     main::SetCursorPointer
+        jmp     Exit
 
 flags:  .byte   0
 
@@ -339,7 +358,7 @@ copy_when_conversion_table:
         jsr     main::ClearUpdates
 
         lda     #$FF
-        jmp     L900F
+        jmp     Exit
 .endproc ; DoCancel
 
 ;;; ============================================================

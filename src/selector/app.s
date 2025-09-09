@@ -592,42 +592,38 @@ quick_boot_slot:
         jmp     EventLoop
     END_IF
 
-        cmp     #MGTK::EventKind::key_down
-        bne     not_key
-
+    IF_A_EQ     #MGTK::EventKind::key_down
         ;; --------------------------------------------------
         ;; Key Down
-
         bit     desktop_available_flag
-    IF_NC
+      IF_NC
         lda     event_params::key
         jsr     ToUpperCase
-      IF_A_EQ   #kShortcutRunDeskTop
+       IF_A_EQ  #kShortcutRunDeskTop
 
         BTK_CALL BTK::Flash, desktop_button
 retry:  param_call GetFileInfo, str_desktop_2
-       IF_CS
+        IF_CS
         lda     #AlertID::insert_system_disk
         jsr     ShowAlert
         ASSERT_NOT_EQUALS ::kAlertResultCancel, 0
         bne     EventLoop       ; `kAlertResultCancel` = 1
         beq     retry           ; `kAlertResultTryAgain` = 0
-       END_IF
+        END_IF
         jmp     RunDesktop
+       END_IF
       END_IF
-    END_IF
 
         jsr     HandleKey
         jmp     EventLoop
+    END_IF
 
         ;; --------------------------------------------------
 
-not_key:
-        cmp     #MGTK::EventKind::update
-        bne     not_update
+    IF_A_EQ     #MGTK::EventKind::update
         jsr     ClearUpdates
+    END_IF
 
-not_update:
         jmp     EventLoop
 .endproc ; EventLoop
 
@@ -981,11 +977,10 @@ noop:   rts
         ;; Return ?
 
 control_char:
-        cmp     #CHAR_RETURN
-        bne     not_return
+    IF_A_EQ     #CHAR_RETURN
         BTK_CALL BTK::Flash, ok_button
         jmp     TryInvokeSelectedIndex
-not_return:
+    END_IF
 
         ;; --------------------------------------------------
         ;; Arrow keys?
