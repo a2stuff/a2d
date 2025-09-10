@@ -495,6 +495,8 @@
 
 * Preview an image file (e.g. SAMPLE.MEDIA/ROOM). Press Right Arrow to preview the next image. Press Escape to exit. Invoke a system file or binary file (e.g. KARATEKA.YELL). Verify it launches correctly with no crash.
 
+* Configure a system with a Mockingboard. Launch DeskTop. Open `AUTUMN.PT3` in the `SAMPLE.MEDIA` folder. Verify that the `PT3PLR.SYSTEM` player launches correctly and that it plays the selected song.
+
 
 ## File Moving and Copying
 
