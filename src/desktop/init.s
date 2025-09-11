@@ -637,143 +637,47 @@ end:
 .endscope
 
 ;;; ============================================================
-;;; Populate volume icons and device names
-
-;;; TODO: Dedupe with CmdCheckDrives
+;;; Populate volume icons
 
 .scope
-        devname_ptr := $08
-
-        ldy     #0
-        sty     main::pending_alert
+        copy8   #0, main::pending_alert
 
         ;; Enumerate DEVLST in reverse order (most important volumes first)
         copy8   DEVCNT, device_index
-
-process_volume:
-        lda     device_index
-        asl     a
-        tay
-        copy16  device_name_table,y, devname_ptr
-        ldy     device_index
-        lda     DEVLST,y        ;
-        ;; NOTE: Not masked with `UNIT_NUM_MASK`, for `CreateVolumeIcon`.
-
-        pha                     ; save all registers
-        txa
-        pha
-        tya
-        pha
+    DO
+        device_index := *+1
+        ldy     #SELF_MODIFIED_BYTE
+        lda     DEVLST,y
+        pha                     ; A = unmasked unit number
 
         inc     cached_window_entry_count
         inc     icon_count
-        lda     DEVLST,y
         jsr     main::CreateVolumeIcon ; A = unmasked unit number, Y = device index
-        sta     cvi_result
-        MGTK_CALL MGTK::CheckEvents
-
-        pla                     ; restore all registers
-        tay
-        pla
-        tax
-        pla
-
-        ;; A = unit number, X = (nothing), Y = device_index
-
-        pha                     ; save unit number on the stack
-
-        lda     cvi_result
-    IF_A_EQ     #ERR_DEVICE_NOT_CONNECTED
+      IF_A_EQ   #ERR_DEVICE_NOT_CONNECTED
         ;; If device is not connected, remove it from DEVLST
         ;; unless it's a Disk II.
-        ldy     device_index
-        lda     DEVLST,y
+        pla                     ; A = unmasked unit number
+        pha                     ; A = unmasked unit number
         ;; NOTE: Not masked with `UNIT_NUM_MASK`, `IsDiskII` handles it.
         jsr     main::IsDiskII
-        beq     select_template ; skip
+        beq     done_create     ; skip
         ldx     device_index
         jsr     RemoveDevice
         jmp     next
-    END_IF
+      END_IF
 
-    IF_A_EQ     #ERR_DUPLICATE_VOLUME
+      IF_A_EQ   #ERR_DUPLICATE_VOLUME
         copy8   #kErrDuplicateVolName, main::pending_alert
-    END_IF
+      END_IF
 
-        ;; This section populates device_name_table -
-        ;; it determines which device type string to use, and
-        ;; fills in slot and drive as appropriate. Used in the
-        ;; Format/Erase disk dialog.
+done_create:
+        ;; TODO: Draw icons as we add them.
 
-select_template:
-        pla                     ; unit number into A
-        pha
-
-        src := $06
-
-        jsr     main::GetDeviceType
-        stax    src             ; A,X = device name (may be empty)
-
-        ;; Empty?
-        ldy     #0
-        lda     (src),y
-    IF_ZERO
-        copy16  #str_volume_type_unknown, src
-    END_IF
-
-        ;; Set final length
-        lda     (src),y         ; Y = 0
-        clc
-        adc     #kSDPrefixLength
-        sta     str_sdname_buffer
-
-        ;; Copy string into template, after prefix
-        lda     (src),y         ; Y = 0
-        tay                     ; Y = length
-    DO
-        copy8   (src),y, str_sdname_buffer + kSDPrefixLength,y
-        dey
-    WHILE_NOT_ZERO              ; leave length alone
-
-        ;; Insert Slot #
-        pla                     ; unit number into A
-        pha
-
-        and     #%01110000      ; slot (from DSSSxxxx)
-        lsr     a
-        lsr     a
-        lsr     a
-        lsr     a
-        ora     #'0'
-        sta     str_sdname_buffer + kDeviceTemplateSlotOffset
-
-        ;; Insert Drive #
-        pla                     ; unit number into A
-        pha
-
-        rol     a               ; set carry to drive - 1
-        lda     #0              ; 0 + carry + '1'
-        adc     #'1'            ; convert to '1' or '2'
-        sta     str_sdname_buffer + kDeviceTemplateDriveOffset
-
-        ;; Copy name into table
-        ldy     str_sdname_buffer
-    DO
-        copy8   str_sdname_buffer,y, (devname_ptr),y
-        dey
-    WHILE_POS
-
-next:   pla
+next:
+        pla
         dec     device_index
-        lda     device_index
-
-        bmi     PopulateStartupMenu
-        jmp     process_volume  ; next!
-
-device_index:
-        .byte   0
-cvi_result:
-        .byte   0
+    WHILE_POS
+        jmp     PopulateDeviceNames
 .endscope
 
 ;;; ============================================================
@@ -797,6 +701,86 @@ cvi_result:
 
         rts
 .endproc ; RemoveDevice
+
+;;; ============================================================
+;;; This section populates `device_name_table` - it determines which
+;;; device type string to use, and fills in slot and drive as
+;;; appropriate. Used in the Format/Erase disk dialog.
+
+.proc PopulateDeviceNames
+        ;; Enumerate DEVLST in reverse order (most important volumes first)
+        ldy     DEVCNT
+    DO
+        tya                     ; Y = index
+        pha                     ; A = index
+
+        devname_ptr := $08
+        asl     a
+        tax
+        copy16  device_name_table,x, devname_ptr
+
+        lda     DEVLST,y
+        pha                     ; A = unmasked unit number
+
+        src := $06
+
+        jsr     main::GetDeviceType ; A = unmasked unit number
+        stax    src             ; A,X = device name (may be empty)
+
+        ;; Empty?
+        ldy     #0
+        lda     (src),y
+      IF_ZERO
+        copy16  #str_volume_type_unknown, src
+      END_IF
+
+        ;; Set final length
+        lda     (src),y         ; Y = 0
+        clc
+        adc     #kSDPrefixLength
+        sta     str_sdname_buffer
+
+        ;; Copy string into template, after prefix
+        lda     (src),y         ; Y = 0
+        tay                     ; Y = length
+      DO
+        copy8   (src),y, str_sdname_buffer + kSDPrefixLength,y
+        dey
+      WHILE_NOT_ZERO            ; leave length alone
+
+        ;; Insert Slot #
+        pla                     ; A = unmasked unit number
+        pha                     ; A = unmasked unit number
+        and     #UNIT_NUM_SLOT_MASK
+        lsr     a               ; 00111000
+        lsr     a               ; 00011100
+        lsr     a               ; 00001110
+        lsr     a               ; 00000111
+        ora     #'0'
+        sta     str_sdname_buffer + kDeviceTemplateSlotOffset
+
+        ;; Insert Drive #
+        pla                     ; A = unmasked unit number
+        rol     a               ; set carry to drive - 1
+        lda     #0              ; 0 + carry + '1'
+        adc     #'1'            ; convert to '1' or '2'
+        sta     str_sdname_buffer + kDeviceTemplateDriveOffset
+
+        ;; Copy name into table
+        ldy     str_sdname_buffer
+      DO
+        copy8   str_sdname_buffer,y, (devname_ptr),y
+        dey
+      WHILE_POS
+
+        pla                     ; A = index
+        tay                     ; Y = index
+        dey
+    WHILE_POS
+
+        FALL_THROUGH_TO PopulateStartupMenu
+
+.endproc ; PopulateDeviceNames
 
 ;;; ============================================================
 

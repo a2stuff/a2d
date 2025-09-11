@@ -4956,7 +4956,6 @@ ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
 ;;; ============================================================
 
 .proc CmdCheckDrives
-        copy8   #0, pending_alert
         jsr     CmdCloseAll
         jsr     ClearSelection
 
@@ -4989,9 +4988,10 @@ ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
         ;; --------------------------------------------------
         ;; Create new volume icons
 .scope
+        copy8   #0, pending_alert
+
         ;; Enumerate DEVLST in reverse order (most important volumes first)
-        ldy     DEVCNT
-        sty     devlst_index
+        copy8   DEVCNT, devlst_index
     DO
         devlst_index := *+1
         ldy     #SELF_MODIFIED_BYTE
@@ -5004,6 +5004,9 @@ ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
       IF_A_EQ   #ERR_DUPLICATE_VOLUME
         copy8   #kErrDuplicateVolName, pending_alert
       END_IF
+
+        ;; TODO: Draw icons as we add them.
+
         dec     devlst_index
     WHILE_POS
 .endscope
@@ -5011,29 +5014,28 @@ ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
         ;; --------------------------------------------------
         ;; Add them to IconTK
 .scope
+        ;; Assert: `cached_window_entry_count` > 0, c/o trash
         ldx     #0
-loop:
-    IF_X_EQ cached_window_entry_count
-        ;; finish up
-        lda     pending_alert
-      IF_NOT_ZERO
-        jsr     ShowAlert
-      END_IF
-        jmp     StoreWindowEntryTable
-    END_IF
-
+    DO
         txa
         pha
         lda     cached_window_entry_list,x
-    IF_A_NE     trash_icon_num
+      IF_A_NE   trash_icon_num
         sta     icon_param
         ITK_CALL IconTK::DrawIcon, icon_param
-    END_IF
+      END_IF
 
         pla
         tax
         inx
-        jmp     loop
+    WHILE_X_NE  cached_window_entry_count
+
+        lda     pending_alert
+    IF_NOT_ZERO
+        jsr     ShowAlert
+    END_IF
+
+        jmp     StoreWindowEntryTable
 .endscope
 
 .endproc ; CmdCheckDrives
