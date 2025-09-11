@@ -286,6 +286,7 @@ done:
         lda     get_icon_entry_params::id
         sta     main::trash_icon_num
         sta     cached_window_entry_list
+        sta     icon_param
         ldax    get_icon_entry_params::addr
         stax    ptr
 
@@ -308,6 +309,8 @@ done:
         inx
     WHILE_X_NE  trash_name
         copy8   trash_name,x, (ptr),y
+
+        ITK_CALL IconTK::DrawIcon, icon_param
 
         FALL_THROUGH_TO LoadSelectorList
 .endproc ; CreateTrashIcon
@@ -671,7 +674,9 @@ end:
       END_IF
 
 done_create:
-        ;; TODO: Draw icons as we add them.
+        ldx     cached_window_entry_count
+        copy8   cached_window_entry_list-1,x, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param
 
 next:
         pla
@@ -970,19 +975,6 @@ unit_num:
         MGTK_CALL MGTK::CheckEvents
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         copy8   #0, active_window_id
-
-        ;; Add desktop icons
-        ldx     #0
-    DO
-        BREAK_IF_X_EQ cached_window_entry_count
-        txa
-        pha
-        copy8   cached_window_entry_list,x, icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param
-        pla
-        tax
-        inx
-    WHILE_NOT_ZERO              ; always
 
         ;; Desktop icons are cached now
         copy8   #0, cached_window_id

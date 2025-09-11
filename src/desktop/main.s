@@ -5005,30 +5005,12 @@ ScrollUpdate    := ScrollManager::ActivateCtlsSetThumbs
         copy8   #kErrDuplicateVolName, pending_alert
       END_IF
 
-        ;; TODO: Draw icons as we add them.
+        ldx     cached_window_entry_count
+        copy8   cached_window_entry_list-1,x, icon_param
+        ITK_CALL IconTK::DrawIcon, icon_param
 
         dec     devlst_index
     WHILE_POS
-.endscope
-
-        ;; --------------------------------------------------
-        ;; Add them to IconTK
-.scope
-        ;; Assert: `cached_window_entry_count` > 0, c/o trash
-        ldx     #0
-    DO
-        txa
-        pha
-        lda     cached_window_entry_list,x
-      IF_A_NE   trash_icon_num
-        sta     icon_param
-        ITK_CALL IconTK::DrawIcon, icon_param
-      END_IF
-
-        pla
-        tax
-        inx
-    WHILE_X_NE  cached_window_entry_count
 
         lda     pending_alert
     IF_NOT_ZERO

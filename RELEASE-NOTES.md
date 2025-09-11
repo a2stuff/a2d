@@ -58,6 +58,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Improve mouse responsiveness while list views are drawn.
 * Prevent crash after clicking Cancel if `LOCAL/SELECTOR.LIST` is unavailable.
 * Show error when unable to move shortcut to "list only".
+* Draw volume icons during load/check for better feedback.
 
 ### Selector
 
