@@ -682,6 +682,10 @@ next:
         pla
         dec     device_index
     WHILE_POS
+
+        copy8   #0, cached_window_id
+        jsr     main::StoreWindowEntryTable
+
         jmp     PopulateDeviceNames
 .endscope
 
@@ -975,10 +979,6 @@ unit_num:
         MGTK_CALL MGTK::CheckEvents
         MGTK_CALL MGTK::SetCursor, MGTK::SystemCursor::pointer
         copy8   #0, active_window_id
-
-        ;; Desktop icons are cached now
-        copy8   #0, cached_window_id
-        jsr     main::StoreWindowEntryTable
 
         ;; Restore state from previous session
         jsr     RestoreWindows
