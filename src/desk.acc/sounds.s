@@ -15,6 +15,7 @@
         .include "../mgtk/mgtk.inc"
         .include "../toolkits/btk.inc"
         .include "../toolkits/lbtk.inc"
+        .include "../lib/alert_dialog.inc"
         .include "../common.inc"
         .include "../desktop/desktop.inc"
 

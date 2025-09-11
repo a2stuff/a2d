@@ -94,46 +94,6 @@ kDoubleClickDeltaX      = 5
 kDoubleClickDeltaY      = 4
 
 ;;; ============================================================
-;;; Alert library options. See `lib/alert_dialog.s`
-
-;;; Button options
-;;; $C0 (%11xxxxxx) = Cancel + OK
-;;; $81 (%10xxxxx1) = Cancel + Yes + No + All
-;;; $80 (%10xx0000) = Cancel + Try Again
-;;; $00 (%0xxxxxxx) = OK
-;;; Note: Wrapper APIs that take A=id, X=options use X=0 to mean
-;;; "use default options for that id", otherwise X & %00000001.
-.enum AlertButtonOptions
-        OKCancel       = $C0
-        YesNoAllCancel = $81
-        TryAgainCancel = $80
-        OK             = $00
-.endenum
-
-.enum AlertOptions
-        Beep       = %10000000  ; N = play beep sound
-        SaveBack   = %01000000  ; V = save/restore background
-.endenum
-
-kAlertResultTryAgain    = 0
-kAlertResultCancel      = 1
-kAlertResultOK          = 2
-kAlertResultYes         = 3
-kAlertResultNo          = 4
-kAlertResultAll         = 5
-
-.struct AlertParams
-        text           .addr
-        buttons        .byte    ; AlertButtonOptions
-        options        .byte    ; AlertOptions flags
-.endstruct
-
-;;; NOTE: See the Rename code in DeskTop for a use case for having
-;;; TryAgain and OK differ. In that example, the error code determines
-;;; the options (OK vs. Try Again / Cancel), and OK after a failure is
-;;; the same as Cancel (give up), not Try Again.
-
-;;; ============================================================
 ;;; Selector List file
 
 ;;; See `docs/Selector_List_Format.md` for file format.
@@ -340,6 +300,18 @@ SETTINGS := $D380
 
 ;;; DeskTop and Selector both use a routine at $290 to launch
 ;;; other apps. See: `lib/invoker.s`
+;;;
+;;; Example usage:
+;;;
+;;;   COPY_STRING folder_path, INVOKER_PREFIX
+;;;   COPY_STRING filename, INVOKER_FILENAME
+;;;   if using an "interpreter" type, e.g. BASIC.SYSTEM:
+;;;     COPY_STRING interpreter_path, INVOKER_INTERPRETER
+;;;     if interpreter is BASIS.SYSTEM
+;;;        copy8 #$80, INVOKER_BITSY_COMPAT
+;;;     endif
+;;;   endif
+;;;   jsr INVOKER
 
 INVOKER_PREFIX          := $220 ; Prefix to set
 INVOKER                 := $290 ; Invoke other programs

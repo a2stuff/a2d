@@ -12,6 +12,7 @@
         .include "../toolkits/btk.inc"
         .include "../toolkits/lbtk.inc"
         .include "../toolkits/optk.inc"
+        .include "../lib/alert_dialog.inc"
         .include "../common.inc"
 
 SAVE_AREA_BUFFER:= $0800

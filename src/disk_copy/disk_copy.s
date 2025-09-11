@@ -12,6 +12,7 @@
         .include "../common.inc"
         .include "../toolkits/btk.inc"
         .include "../toolkits/lbtk.inc"
+        .include "../lib/alert_dialog.inc"
         .include "disk_copy.inc"
 
 ;;; ============================================================

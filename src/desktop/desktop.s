@@ -13,6 +13,7 @@
         .include "../toolkits/btk.inc"
         .include "../toolkits/lbtk.inc"
         .include "../toolkits/optk.inc"
+        .include "../lib/alert_dialog.inc"
         .include "../common.inc"
         .include .concat("../desk.acc/res/filenames.res.", kBuildLang)
 
