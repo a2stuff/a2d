@@ -2612,8 +2612,10 @@ common:
         dex
     WHILE_NOT_ZERO
 
+        ;; Iterate selected icons
         ldx     #0
-loop:   cpx     selected_icon_count_copy
+    DO
+        cpx     selected_icon_count_copy
         bne     next
 
         ;; Finish up...
@@ -2645,7 +2647,7 @@ next:   txa
         ldy     #IconEntry::win_flags
         lda     (ptr),y
         and     #kIconEntryFlagsDropTarget ; folder or volume?
-        beq     maybe_open_file       ; nope
+        beq     maybe_open_file ; nope
 
         ;; Directory
         copy8   #$80, dir_flag
@@ -2657,7 +2659,7 @@ next_icon:
         pla                     ; A = index
         tax
         inx
-        jmp     loop            ; TODO: `BNE`
+    WHILE_NOT_ZERO              ; always
 
         ;; File (executable or data)
 maybe_open_file:

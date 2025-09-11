@@ -295,7 +295,6 @@ loop:   lda     page
       END_IF
 
         sub16   block_count_div8, #$200, block_count_div8
-        lda     block_count_div8+1 ; TODO: This LDA can be removed
         RTS_IF_NEG
 
         lda     block_count_div8

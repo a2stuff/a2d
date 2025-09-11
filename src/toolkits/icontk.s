@@ -867,7 +867,7 @@ ploop:  ldy     #2              ; offset in poly to first vertex
         sta     poly_ptr
         bcc     ploop
         inc     poly_ptr+1
-        bcs     ploop           ; TODO: Is this correct?
+        bcs     ploop           ; always
     END_IF
         jsr     _XDrawOutline
         jmp     peek

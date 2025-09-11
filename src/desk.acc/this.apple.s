@@ -1091,7 +1091,7 @@ v_1x:   and     #$0F
         sta     str_prodos_version + kVersionStrMinor
         copy8   #'1', str_prodos_version + kVersionStrMajor
         copy8   #10, str_prodos_version ; length
-        bne     done                    ; always TODO: Just `RTS`
+        rts
 
         ;; $20...$23 are 2.0.x (roughly)
 v_20x:  and     #$0F
@@ -1100,7 +1100,7 @@ v_20x:  and     #$0F
         copy8   #'0', str_prodos_version + kVersionStrMinor
         copy8   #'2', str_prodos_version + kVersionStrMajor
         copy8   #12, str_prodos_version ; length
-        bne     done                    ; always TODO: Just `RTS`
+        rts
 
         ;; $24...??? are 2.x (so far?)
 v_2x:   and     #$0F
@@ -1108,9 +1108,7 @@ v_2x:   and     #$0F
         sta     str_prodos_version + kVersionStrMinor
         copy8   #'2', str_prodos_version + kVersionStrMajor
         copy8   #10, str_prodos_version ; length
-        bne     done                    ; always TODO: Just `RTS`
-
-done:   rts
+        rts
 .endproc ; IdentifyProDOSVersion
 
 ;;; ============================================================
@@ -2323,7 +2321,7 @@ device_loop:
          END_IF
         END_IF
         dey
-       WHILE_Y_NE #0                   ; TODO: Just `WHILE_NOT_ZERO` ?
+       WHILE_NOT_ZERO
       END_IF
     END_IF
 .endscope

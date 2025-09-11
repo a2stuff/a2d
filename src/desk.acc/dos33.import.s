@@ -292,8 +292,6 @@ port:           .addr   grafport_win
         jmp     Exit
     END_IF
 
-        ;; TODO: Buttons in window
-
 done:   jmp     InputLoop
 .endproc ; HandleDown
 
