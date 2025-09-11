@@ -5,8 +5,6 @@
 ;;; volumes) to a printer in Slot 1.
 ;;; ============================================================
 
-        ;; TODO: Print modification date
-
         .include "../config.inc"
         RESOURCE_FILE "print.catalog.res"
 
@@ -185,10 +183,12 @@ indent:
         .byte   0
 
 str_header:
-        PASCAL_STRING .sprintf("%29s%6s%6s", res_string_col_name, res_string_col_type, res_string_col_blocks)
+        PASCAL_STRING .sprintf("%28s%6s%6s  %s", res_string_col_name, res_string_col_type, res_string_col_blocks, res_string_col_modified)
         kColType   = 30         ; Left aligned
         kTypeWidth = 3
         kColBlocks = 41         ; Right aligned
+        kBlocksWidth = 6
+        kColMod    = 49
 
 iw2_init:
         .byte   CHAR_ESCAPE, 'Z', $80, $00 ; disable automatic LF after CR
@@ -479,6 +479,7 @@ OpenDone:
 
         jsr     PrintType
         jsr     PrintSize
+        jsr     PrintDate
 
         jmp     CROut
 .endproc ; VisitFile
@@ -561,6 +562,100 @@ OpenDone:
 
         rts
 .endproc ; PrintSize
+
+;;; --------------------------------------------------
+
+.proc PrintDate
+        ;;       byte 1            byte 0
+        ;;  7 6 5 4 3 2 1 0   7 6 5 4 3 2 1 0
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+        ;; |    Year     |  Month  |   Day   |
+        ;; +-+-+-+-+-+-+-+-+ +-+-+-+-+-+-+-+-+
+
+        ;; Day
+        ldy     #FileEntry::mod_date
+        lda     (entPtr),y
+        and     #%00011111      ; lo
+        ldx     #0              ; hi
+        jsr     IntToString
+        lda     str_from_int
+    IF_A_EQ     #1
+        lda     #' '
+        ldx     str_from_int+1
+    ELSE
+        lda     str_from_int+1
+        ldx     str_from_int+2
+    END_IF
+        sta     str_date+1
+        stx     str_date+2
+
+        ;; Month
+        ldy     #FileEntry::mod_date+1
+        lda     (entPtr),y
+        lsr
+        dey
+        lda     (entPtr),y
+        and     #%11100000
+        ror                     ; A = MMMM0000
+        lsr                     ; A = 0MMMM000
+        lsr                     ; A = 00MMMM00
+        lsr                     ; A = 000MMMM0
+        lsr                     ; A = 0000MMMM
+        sta     tmp
+        ;; Assert: C=0
+        adc     tmp             ; A *= 2
+        ;; Assert: C=0
+        adc     tmp             ; A *= 3
+
+        tax
+        lda     month_names_table-3+0,x
+        sta     str_date+4
+        lda     month_names_table-3+1,x
+        sta     str_date+5
+        lda     month_names_table-3+2,x
+        sta     str_date+6
+
+        ;; Year
+        ldy     #FileEntry::mod_date+1
+        lda     (entPtr),y
+        lsr                     ; A = 0YYYYYYY
+    IF_A_GE     #100
+        sec
+        sbc     #100
+    END_IF
+        ldx     #0              ; hi
+        jsr     IntToString
+        lda     str_from_int
+    IF_A_EQ     #1
+        lda     #'0'
+        ldx     str_from_int+1
+    ELSE
+        lda     str_from_int+1
+        ldx     str_from_int+2
+    END_IF
+        sta     str_date+8
+        stx     str_date+9
+
+        ;; Pad it
+        ldx     #kColMod - (kColBlocks + kBlocksWidth)
+        lda     #' '
+    DO
+        jsr     COut
+        dex
+    WHILE_NOT_ZERO
+
+        ;; Print it
+        ldx     #0
+    DO
+        lda     str_date+1,x
+        jsr     COut
+        inx
+    WHILE_X_NE  str_date
+
+        rts
+
+tmp:    .byte   0
+.endproc ; PrintDate
 
 ;;;
 ;;;******************************************************
@@ -921,6 +1016,23 @@ ReadSetting = JUMP_TABLE_READ_SETTING
 
 hex_digits:     .byte   "0123456789ABCDEF" ; Needed by ComposeFileTypeString
 str_from_int:   PASCAL_STRING "000,000"    ; Filled in by IntToString
+
+str_date:       PASCAL_STRING "DD-MMM-YY"
+
+month_names_table:
+        .byte   .sprintf("%3s", res_string_month_abbrev_1)
+        .byte   .sprintf("%3s", res_string_month_abbrev_2)
+        .byte   .sprintf("%3s", res_string_month_abbrev_3)
+        .byte   .sprintf("%3s", res_string_month_abbrev_4)
+        .byte   .sprintf("%3s", res_string_month_abbrev_5)
+        .byte   .sprintf("%3s", res_string_month_abbrev_6)
+        .byte   .sprintf("%3s", res_string_month_abbrev_7)
+        .byte   .sprintf("%3s", res_string_month_abbrev_8)
+        .byte   .sprintf("%3s", res_string_month_abbrev_9)
+        .byte   .sprintf("%3s", res_string_month_abbrev_10)
+        .byte   .sprintf("%3s", res_string_month_abbrev_11)
+        .byte   .sprintf("%3s", res_string_month_abbrev_12)
+        ASSERT_RECORD_TABLE_SIZE month_names_table, 12, 3
 
         .include "../lib/filetypestring.s"
         .include "../lib/inttostring.s"

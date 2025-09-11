@@ -88,6 +88,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Print Catalog
   * Improve use of SSC and IW2.
   * Show alert on startup if no printer card found.
+  * Show modification date.
 * Options: Add option to show invisible files.
 * Calendar:
   * Allow modifiers when clicking, double-modifiers for decade. ([#693](https://github.com/a2stuff/a2d/issues/693))

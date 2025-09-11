@@ -1,3 +1,4 @@
 .define res_string_col_name "ime"
 .define res_string_col_type "tip"
 .define res_string_col_blocks "blokowe"
+.define res_string_col_modified "MODIFIED"
