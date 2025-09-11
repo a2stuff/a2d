@@ -291,7 +291,7 @@ dialog_loop:
 
         lda     num_secondary_run_list_entries
       IF_A_EQ   #kSelectorListNumSecondaryRunListEntries
-        jmp     Init            ; TODO: Why not `ShowFullAlert`?
+        jmp     ShowFullAlert
       END_IF
 
         lda     shortcut_picker_record::selected_index

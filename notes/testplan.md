@@ -767,7 +767,9 @@
 
 * Launch DeskTop. Configure a shortcut with the target being a directory. Open a window. Select a file icon. Invoke the shortcut. Verify that the previously selected file is no longer selected.
 
-* Launch DeskTop. Create 8 shortcuts. Shortcuts > Add a Shortcut.... Check the first radio button. Pick a file, enter a name, OK. Verify that a relevant alert is shown.
+* Launch DeskTop. Create 8 shortcuts. Shortcuts > Add a Shortcut.... Check "menu and list". Pick a file, enter a name, OK. Verify that a relevant alert is shown.
+* Launch DeskTop. Create 1 shortcut which is "menu and list" and 16 shortcuts which are "list only". Shortcuts > Edit a Shortcut.... Select the "menu and list" shortcut and click OK. Check "list only", and click OK. Verify that an alert is shown.
+* Launch DeskTop. Create 8 shortcuts which are "menu and list" and 1 shortcut which is "list only". Shortcuts > Edit a Shortcut.... Select the "list only" shortcut and click OK. Check "menu and list", and click OK. Verify that an alert is shown.
 
 * Launch DeskTop. Shortcuts > Add a Shortcut... and create a shortcut for a volume that is not the first volume on the DeskTop. Shortcuts > Edit a Shortcut... and select the new shortcut. Verify that the file picker shows the volume name as selected.
 * Launch DeskTop. Shortcuts > Add a Shortcut.... Verify that if the target is a volume directory and either "at boot" or "at first use" is selected, then an alert is shown when trying to commit the dialog.

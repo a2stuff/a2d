@@ -57,6 +57,7 @@ Project Page: https://github.com/a2stuff/a2d
 * Ignore suffix when determining icon type for directories.
 * Improve mouse responsiveness while list views are drawn.
 * Prevent crash after clicking Cancel if `LOCAL/SELECTOR.LIST` is unavailable.
+* Show error when unable to move shortcut to "list only".
 
 ### Selector
 
