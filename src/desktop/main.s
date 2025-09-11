@@ -1012,7 +1012,7 @@ clicked_window_id := _ActivateClickedWindow::window_id
         lda     active_window_id
         jsr     UnsafeSetPortFromWindowIdAndAdjustForEntries ; CHECKED
     IF_ZERO
-        MGTK_CALL MGTK::PaintRect, window_grafport::maprect
+        MGTK_CALL MGTK::PaintRect, window_grafport+MGTK::GrafPort::maprect
         jsr     DrawWindowEntries
     END_IF
         rts
@@ -3127,9 +3127,11 @@ concatenate:
         pla                     ; A = icon
         jsr     IconWindowToScreen
 
+        viewport := window_grafport+MGTK::GrafPort::maprect
+
         ;; Get the viewport, and adjust for header
         jsr     ApplyActiveWinfoToWindowGrafport
-        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight - 1
+        add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 1
 
 
         ;; Padding
@@ -3145,11 +3147,11 @@ concatenate:
         ldx     #2              ; loop over dimensions
     DO
         ;; Is left of icon beyond window? If so, adjust by delta (negative)
-        sub16   tmp_rect::topleft,x, window_grafport::maprect::topleft,x, delta
+        sub16   tmp_rect::topleft,x, viewport+MGTK::Rect::topleft,x, delta
         bmi     adjust
 
         ;; Is right of icon beyond window? If so, adjust by delta (positive)
-        sub16   tmp_rect::bottomright,x, window_grafport::maprect::bottomright,x, delta
+        sub16   tmp_rect::bottomright,x, viewport+MGTK::Rect::bottomright,x, delta
         bmi     done
 
 adjust:
@@ -3158,8 +3160,8 @@ adjust:
         beq     done
 
         inc     dirty
-        add16   window_grafport::maprect::topleft,x, delta, window_grafport::maprect::topleft,x
-        add16   window_grafport::maprect::bottomright,x, delta, window_grafport::maprect::bottomright,x
+        add16   viewport+MGTK::Rect::topleft,x, delta, viewport+MGTK::Rect::topleft,x
+        add16   viewport+MGTK::Rect::bottomright,x, delta, viewport+MGTK::Rect::bottomright,x
 
 done:
         dex                     ; next dimension
@@ -3169,7 +3171,7 @@ done:
         lda     dirty
     IF_NOT_ZERO
         ;; Apply the viewport (accounting for header)
-        sub16_8 window_grafport::maprect::y1, #kWindowHeaderHeight - 1
+        sub16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight - 1
         jsr     AssignActiveWindowCliprectAndUpdateCachedIcons
         jsr     ClearAndDrawActiveWindowEntries
         jsr     ScrollUpdate
@@ -4559,7 +4561,7 @@ done:   rts
 
 
 ;;; Effective viewport  ("Effective" discounts the window header.)
-viewport := window_grafport::maprect
+viewport := window_grafport+MGTK::GrafPort::maprect
 
 ;;; Local variables on ZP
 ;;; NOTE: $50...$6F is used because MulDiv uses $10...$19
@@ -5557,7 +5559,7 @@ exception_flag:
         jsr     UnsafeSetPortFromWindowId ; CHECKED
         pha                               ; A = obscured?
     IF_ZERO                               ; skip if obscured
-        MGTK_CALL MGTK::PaintRect, window_grafport::maprect
+        MGTK_CALL MGTK::PaintRect, window_grafport+MGTK::GrafPort::maprect
     END_IF
 
         ;; Remove old FileRecords
@@ -5974,8 +5976,10 @@ validate_windows_flag:
         jsr     ApplyActiveWinfoToWindowGrafport
         ldx     #2              ; loop over dimensions
     DO
-        sub16   window_grafport::maprect::bottomright,x, window_grafport::maprect::topleft,x, window_grafport::maprect::bottomright,x
-        copy16  #0, window_grafport::maprect::topleft,x
+        viewport := window_grafport+MGTK::GrafPort::maprect
+
+        sub16   viewport+MGTK::Rect::bottomright,x, viewport+MGTK::Rect::topleft,x, viewport+MGTK::Rect::bottomright,x
+        copy16  #0, viewport+MGTK::Rect::topleft,x
         dex                     ; next dimension
         dex
     WHILE_POS
@@ -5991,7 +5995,7 @@ validate_windows_flag:
         ldy     #MGTK::Winfo::port + MGTK::GrafPort::maprect + .sizeof(MGTK::Rect)-1
         ldx     #.sizeof(MGTK::Rect)-1
     DO
-        copy8   window_grafport::maprect,x, (ptr),y
+        copy8   window_grafport+MGTK::GrafPort::maprect,x, (ptr),y
         dey
         dex
     WHILE_POS
@@ -6713,8 +6717,8 @@ done:   jsr     PopPointers     ; do not tail-call optimize!
 ;;; Adjust grafport for header.
 
 .proc AdjustWindowPortForEntries
-        add16_8 window_grafport::viewloc::ycoord, #kWindowHeaderHeight
-        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight
+        add16_8 window_grafport+MGTK::GrafPort::viewloc+MGTK::Point::ycoord, #kWindowHeaderHeight
+        add16_8 window_grafport+MGTK::GrafPort::maprect+MGTK::Rect::y1, #kWindowHeaderHeight
         MGTK_CALL MGTK::SetPort, window_grafport
         rts
 .endproc ; AdjustWindowPortForEntries
@@ -7609,17 +7613,19 @@ END_PARAM_BLOCK
         ;; --------------------------------------------------
         ;; Separator Lines
 
+        viewport := window_grafport+MGTK::GrafPort::maprect
+
         ;; x coords
-        copy16  window_grafport::maprect::x1, header_line_left::xcoord
-        copy16  window_grafport::maprect::x2, header_line_right::xcoord
+        copy16  viewport+MGTK::Rect::x1, header_line_left::xcoord
+        copy16  viewport+MGTK::Rect::x2, header_line_right::xcoord
 
         ;; y coords
-        lda     window_grafport::maprect::y1
+        lda     viewport+MGTK::Rect::y1
         clc
         adc     #kWindowHeaderHeight - 3
         sta     header_line_left::ycoord
         sta     header_line_right::ycoord
-        lda     window_grafport::maprect::y1+1
+        lda     viewport+MGTK::Rect::y1+1
         adc     #0
         sta     header_line_left::ycoord+1
         sta     header_line_right::ycoord+1
@@ -7693,7 +7699,7 @@ END_PARAM_BLOCK
 
         ;; Determine gap for centering
         gap := header_text_delta::xcoord
-        sub16   window_grafport::maprect::x2, window_grafport::maprect::x1, gap ; window width
+        sub16   viewport+MGTK::Rect::x2, viewport+MGTK::Rect::x1, gap ; window width
         sub16_8 gap, #kWindowHeaderInsetX * 2, gap ; minus left/right insets
         sub16   gap, width_num_items, gap          ; minus width of all text
         sub16   gap, width_k_in_disk, gap
@@ -7705,8 +7711,8 @@ END_PARAM_BLOCK
     END_IF
 
         ;; Draw "XXX items"
-        add16_8 window_grafport::maprect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
-        add16_8 window_grafport::maprect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
+        add16_8 viewport+MGTK::Rect::x1, #kWindowHeaderInsetX, header_text_pos::xcoord
+        add16_8 viewport+MGTK::Rect::y1, #kWindowHeaderHeight-5, header_text_pos::ycoord
         MGTK_CALL MGTK::MoveTo, header_text_pos
         ldax    num_items
         jsr     _DrawIntString
@@ -8454,14 +8460,16 @@ _CompareFileRecords_sort_by := _CompareFileRecords::sort_by
         bit     LCBANK1
         bit     LCBANK1
 
+        viewport := window_grafport+MGTK::GrafPort::maprect
+
         ;; Below bottom?
-        scmp16  pos_col::ycoord, window_grafport::maprect::y2
+        scmp16  pos_col::ycoord, viewport+MGTK::Rect::y2
         bpl     ret
 
         add16   pos_col::ycoord, #kListViewRowHeight, pos_col::ycoord
 
         ;; Above top?
-        scmp16  pos_col::ycoord, window_grafport::maprect::y1
+        scmp16  pos_col::ycoord, viewport+MGTK::Rect::y1
         bpl     in_range
 ret:    rts
 
@@ -9662,10 +9670,13 @@ open:   ldy     #$00
         jsr     ApplyWinfoToWindowGrafport
 
         ;; Convert viewloc and maprect to bounding rect
-        COPY_STRUCT MGTK::Point, window_grafport + MGTK::GrafPort::viewloc, win_rect + MGTK::Rect::topleft
+        viewloc := window_grafport+MGTK::GrafPort::viewloc
+        maprect := window_grafport+MGTK::GrafPort::maprect
+
+        COPY_STRUCT MGTK::Point, viewloc, win_rect + MGTK::Rect::topleft
         ldx     #2              ; loop over dimensions
       DO
-        sub16   window_grafport::maprect::bottomright,x, window_grafport::maprect::topleft,x, win_rect + MGTK::Rect::bottomright,x
+        sub16   maprect+MGTK::Rect::bottomright,x, maprect+MGTK::Rect::topleft,x, win_rect + MGTK::Rect::bottomright,x
         add16   win_rect + MGTK::Rect::topleft,x, win_rect + MGTK::Rect::bottomright,x, win_rect + MGTK::Rect::bottomright,x
         dex                     ; next dimension
         dex

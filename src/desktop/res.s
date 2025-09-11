@@ -21,23 +21,7 @@ a_grafport:     .addr   window_grafport
 
 ;;; GrafPort used specifically for operations that draw into windows.
 
-.params window_grafport
-        DEFINE_POINT viewloc, 0, 0
-mapbits:        .addr   0
-mapwidth:       .byte   0
-reserved:       .byte   0
-        DEFINE_RECT maprect, 0, 0, 0, 0
-pattern:        .res    8, 0
-colormasks:     .byte   0, 0    ; TODO: Use MGTK::colormask_and, MGTK::colormask_or
-        DEFINE_POINT penloc, 0, 0
-penwidth:       .byte   0
-penheight:      .byte   0
-penmode:        .byte   MGTK::pencopy
-textback:       .byte   MGTK::textbg_black
-textfont:       .addr   0
-        REF_GRAFPORT_MEMBERS
-.endparams
-        ASSERT_EQUALS .sizeof(window_grafport), .sizeof(MGTK::GrafPort)
+window_grafport:        .tag    MGTK::GrafPort
 
 ;;; GrafPort used for nearly all operations. Usually re-initialized
 ;;; before use.
@@ -736,7 +720,7 @@ addr:   .addr   0
 
 ;;; Used by DeskTop to expand `iconbb_rect` in `ScrollManager`
 .params unionrects_viewport_iconbb
-        .addr   window_grafport::maprect
+        .addr   window_grafport+MGTK::GrafPort::maprect
         .addr   iconbb_rect
 .endparams
 
